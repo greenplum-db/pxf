@@ -1,13 +1,10 @@
 # DEFAULT YML FILE #
 
-# Use https in git-remote URLs for public git repos
-# Use git@github.com (SSH) for private repos such as Pivotal-DataFabric
+gpdb-git-remote: https://github.com/greenplum-db/gpdb.git
+gpdb-git-branch: master
 
-# gpdb-git-remote: https://github.com/greenplum-db/gpdb.git
-# gpdb-git-branch: master
+pxf-git-remote: https://github.com/greenplum-db/pxf.git
+pxf-git-branch: master
 
-# pxf-git-remote: https://github.com/apache/incubator-hawq
-# pxf-git-branch: master
-
-# pxf_infra-git-remote: git@github.com:Pivotal-DataFabric/pxf_infra.git
-# pxf_infra-git-branch: master
+pxf_infra-git-remote: https://github.com/greenplum-db/pxf.git
+pxf_infra-git-branch: master
