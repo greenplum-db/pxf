@@ -105,6 +105,90 @@ psql -d template1 -c "CREATE EXTENSION PXF"
 gpstart -a
 ```
 
+## Alternative Setup Instructions
+
+```bash
+# Compile and install GPDB
+make clean
+./configure --enable-debug --with-perl --with-python --with-libxml --disable-orca --prefix=/usr/local/gpdb
+make -j8
+cd /home/build/gpdb
+make install
+/usr/sbin/sshd
+groupadd -g 1000 gpadmin && useradd -u 1000 -g 1000 gpadmin
+echo "gpadmin  ALL=(ALL)       NOPASSWD: ALL" > /etc/sudoers.d/gpadmin
+groupadd supergroup && usermod -a -G supergroup gpadmin
+echo 'export PS1="[\u@\h \W]\$ "' >> /home/gpadmin/.bash_profile && \
+echo 'source /opt/rh/devtoolset-6/enable' >> /home/gpadmin/.bash_profile && \
+echo 'export JAVA_HOME=/etc/alternatives/java_sdk' >> /home/gpadmin/.bash_profile && \
+chown gpadmin:gpadmin /home/gpadmin &&
+    mkdir /home/gpadmin/.ssh && \
+    ssh-keygen -t rsa -N "" -f /home/gpadmin/.ssh/id_rsa && \
+    cat /home/gpadmin/.ssh/id_rsa.pub >> /home/gpadmin/.ssh/authorized_keys && \
+    chmod 0600 /home/gpadmin/.ssh/authorized_keys && \
+    echo -e "password\npassword" | passwd gpadmin 2> /dev/null && \
+    { ssh-keyscan localhost; ssh-keyscan 0.0.0.0; } >> /home/gpadmin/.ssh/known_hosts && \
+    chown -R gpadmin:gpadmin /home/gpadmin/.ssh
+chown -R gpadmin:gpadmin /usr/local/gpdb
+su - gpadmin
+
+# Create demo cluster with GPDB
+sudo pip install psi
+sudo cp -r $(find /usr/lib64 -name psi | sort -r | head -1) ${GPHOME}/lib/python
+cd /home/build/gpdb
+source /usr/local/gpdb/greenplum_path.sh
+make create-demo-cluster
+source ./gpAux/gpdemo/gpdemo-env.sh
+
+# Compile and run PXF
+pushd /pxf_src
+export HADOOP_ROOT=/singlecluster
+export PXF_HOME=/usr/local/gpdb/pxf
+export GPHD_ROOT=/singlecluster
+export PG_MODE=GPDB
+export BUILD_PARAMS="-x test"
+export LANG=en_US.UTF-8
+export JAVA_HOME=/etc/alternatives/java_sdk
+make install DATABASE=gpdb
+$PXF_HOME/bin/pxf init
+$PXF_HOME/bin/pxf start
+popd
+
+# Start Hadoop
+pushd /singlecluster/bin
+echo "y" | ./init-gphd.sh
+./start-zookeeper.sh
+./start-hdfs.sh
+./start-yarn.sh
+./start-hive.sh
+./start-hbase.sh
+popd
+
+# Install PXF client
+pushd /home/build/gpdb/gpAux/extensions/pxf
+make installcheck
+psql -d template1 -c "create extension pxf"
+popd
+
+# Run PXF Automation
+cd /pxf_infra/pxf_automation
+make GROUP=gpdb
+```
+
+Set ulimits in `/etc/security/limits.d/gpadmin-limits.conf`
+
+```
+gpadmin soft core unlimited
+gpadmin soft nproc 131072
+gpadmin soft nofile 65536
+```
+
+Set `PGPORT` for the demo cluster
+
+```
+export PGPORT=15432
+```
+
 ## Setup PXF Automation
 ```
 export PG_MODE=GPDB
