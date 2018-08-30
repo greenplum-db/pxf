@@ -3,8 +3,7 @@
 gpdb-git-remote: https://github.com/greenplum-db/gpdb.git
 gpdb-git-branch: master
 
-pxf-git-remote: https://github.com/greenplum-db/pxf.git
+pxf-git-remote: git@github.com:/greenplum-db/pxf.git
 pxf-git-branch: master
-
-pxf_infra-git-remote: https://github.com/greenplum-db/pxf.git
-pxf_infra-git-branch: master
+pxf-git-key: |
+  YOUR KEY HERE

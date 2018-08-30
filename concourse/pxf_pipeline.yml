@@ -57,9 +57,9 @@ resources:
 - name: pxf_infra_src
   type: git
   source:
-    branch: {{pxf_infra-git-branch}}
-    private_key: {{pxf_infra-git-key}}
-    uri: {{pxf_infra-git-remote}}
+    branch: {{pxf-git-branch}}
+    private_key: {{pxf-git-key}}
+    uri: {{pxf-git-remote}}
 
 - name: pxf_build_number
   type: semver
