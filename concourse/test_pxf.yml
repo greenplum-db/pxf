@@ -3,7 +3,7 @@ image_resource:
   type: docker-image
 inputs:
   - name: gpdb_src
-  - name: pxf_infra_src
+  - name: pxf_src
   - name: bin_gpdb
   - name: pxf_tarball
 params:
@@ -13,4 +13,4 @@ params:
   HADOOP_CLIENT: HDP
   GROUP: smoke
 run:
-  path: pxf_infra_src/concourse/test_pxf.bash
+  path: pxf_src/concourse/test_pxf.bash

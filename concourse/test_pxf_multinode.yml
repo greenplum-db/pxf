@@ -2,10 +2,10 @@ platform: linux
 image_resource:
   type: docker-image
 inputs:
-  - name: pxf_infra_src
+  - name: pxf_src
   - name: cluster_env_files
   - name: hdp_cluster_env_files
   - name: gpdb_binary
   - name: pxf_tarball
 run:
-  path: pxf_infra_src/concourse/test_pxf_multinode.bash
+  path: pxf_src/concourse/test_pxf_multinode.bash

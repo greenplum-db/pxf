@@ -15,7 +15,7 @@ function setup_gpadmin_user() {
     echo -e "gpadmin soft nproc 131072" >> /etc/security/limits.d/gpadmin-limits.conf
     echo -e "gpadmin soft nofile 65536" >> /etc/security/limits.d/gpadmin-limits.conf
     echo -e "export JAVA_HOME=/usr/lib/jvm/java-1.7.0-openjdk.x86_64" >> /home/gpadmin/.bashrc
-    ln -s ${PWD}/pxf_infra_src /home/gpadmin/pxf_infra_src
+    ln -s ${PWD}/pxf_src /home/gpadmin/pxf_src
 }
 
 function setup_sshd() {
@@ -126,8 +126,8 @@ function close_ssh_tunnels() {
 function run_pxf_automation() {
 
     hdfs dfs -chown gpadmin:gpadmin /tmp
-    sed -i 's/sutFile=default.xml/sutFile=MultiNodesCluster.xml/g' pxf_infra_src/pxf_automation/jsystem.properties
-    chown -R gpadmin:gpadmin /home/gpadmin pxf_infra_src/pxf_automation
+    sed -i 's/sutFile=default.xml/sutFile=MultiNodesCluster.xml/g' pxf_src/pxf_automation/jsystem.properties
+    chown -R gpadmin:gpadmin /home/gpadmin pxf_src/pxf_automation
 
     cat > /home/gpadmin/run_pxf_automation_test.sh <<-EOF
 	set -exo pipefail
@@ -139,7 +139,7 @@ function run_pxf_automation() {
 	export PGPORT=5432
 	source \${GPHOME}/greenplum_path.sh
 
-	cd pxf_infra_src/pxf_automation
+	cd pxf_src/pxf_automation
 	make GROUP=gpdb
 
 	exit 0

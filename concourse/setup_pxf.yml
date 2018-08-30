@@ -5,7 +5,7 @@ inputs:
   - name: cluster_env_files
   - name: hdp_cluster_env_files
   - name: ccp_src
-  - name: pxf_infra_src
+  - name: pxf_src
   - name: pxf_tarball
 run:
-  path: pxf_infra_src/concourse/setup_pxf.bash
+  path: pxf_src/concourse/setup_pxf.bash

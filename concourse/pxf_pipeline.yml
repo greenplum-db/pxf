@@ -54,13 +54,6 @@ resources:
     private_key: {{pxf-git-key}}
     uri: {{pxf-git-remote}}
 
-- name: pxf_infra_src
-  type: git
-  source:
-    branch: {{pxf-git-branch}}
-    private_key: {{pxf-git-key}}
-    uri: {{pxf-git-remote}}
-
 - name: pxf_build_number
   type: semver
   source:
@@ -166,10 +159,9 @@ jobs:
     - get: pxf_src
       trigger: true
     - get: gpdb-pxf-dev-centos6
-    - get: pxf_infra_src
   - task: compile_pxf
     image: gpdb-pxf-dev-centos6
-    file: pxf_infra_src/concourse/compile_pxf.yml
+    file: pxf_src/concourse/compile_pxf.yml
   - put: pxf_tarball
     params:
       file: pxf_artifacts/pxf.tar.gz
@@ -182,7 +174,9 @@ jobs:
       - compile_pxf
     - get: bin_gpdb
       resource: bin_gpdb_centos6
-    - get: pxf_infra_src
+    - get: pxf_src
+      passed:
+      - compile_pxf
       trigger: true
     - get: pxf_tarball
       passed:
@@ -190,7 +184,7 @@ jobs:
       trigger: true
     - get: gpdb-pxf-dev-centos6-hdp-server
   - task: test_pxf
-    file: pxf_infra_src/concourse/test_pxf.yml
+    file: pxf_src/concourse/test_pxf.yml
     image: gpdb-pxf-dev-centos6-hdp-server
     params:
       GROUP: gpdb,proxy
@@ -207,7 +201,9 @@ jobs:
       - compile_pxf
     - get: bin_gpdb
       resource: bin_gpdb_centos6
-    - get: pxf_infra_src
+    - get: pxf_src
+      passed:
+      - compile_pxf
       trigger: true
     - get: pxf_tarball
       passed:
@@ -215,7 +211,7 @@ jobs:
       trigger: true
     - get: gpdb-pxf-dev-centos6-hdp-secure
   - task: test_pxf_secure
-    file: pxf_infra_src/concourse/test_pxf_secure.yml
+    file: pxf_src/concourse/test_pxf_secure.yml
     image: gpdb-pxf-dev-centos6-hdp-secure
     privileged: true
     params:
@@ -230,7 +226,9 @@ jobs:
     - compile_pxf
   - get: gpdb_binary
     resource: bin_gpdb_centos6
-  - get: pxf_infra_src
+  - get: pxf_src
+    passed:
+    - compile_pxf
     trigger: true
   - get: pxf_tarball
     passed:
@@ -259,7 +257,7 @@ jobs:
         on_failure:
           <<: *ccp_destroy
         output_mapping: {cluster_env_files: hdp_cluster_env_files}
-        file: pxf_infra_src/concourse/setup_hadoop.yml
+        file: pxf_src/concourse/setup_hadoop.yml
         image: ccp-7
         params:
           AWS_ACCESS_KEY_ID: {{tf-machine-access-key-id}}
@@ -304,13 +302,13 @@ jobs:
         - task: install_hadoop_client
           on_failure:
             <<: *ccp_destroy
-          file: pxf_infra_src/concourse/install_hadoop.yml
+          file: pxf_src/concourse/install_hadoop.yml
           image: ccp-7
 
   - task: setup_pxf
     on_failure:
       <<: *ccp_destroy
-    file: pxf_infra_src/concourse/setup_pxf.yml
+    file: pxf_src/concourse/setup_pxf.yml
     image: gpdb-pxf-dev-centos6-hdp-server
     params:
       IMPERSONATION: {{enable-impersonation-multinode}}
@@ -319,7 +317,7 @@ jobs:
     on_success:
       <<: *ccp_destroy
     image: gpdb-pxf-dev-centos6-hdp-server
-    file: pxf_infra_src/concourse/test_pxf_multinode.yml
+    file: pxf_src/concourse/test_pxf_multinode.yml
     params:
       NO_OF_FILES: {{no_of_files}}
 
@@ -331,7 +329,9 @@ jobs:
       - compile_pxf
     - get: bin_gpdb
       resource: bin_gpdb_centos6
-    - get: pxf_infra_src
+    - get: pxf_src
+      passed:
+      - compile_pxf
       trigger: true
     - get: pxf_tarball
       passed:
@@ -339,7 +339,7 @@ jobs:
       trigger: true
     - get: gpdb-pxf-dev-centos6-cdh-server
   - task: test_pxf
-    file: pxf_infra_src/concourse/test_pxf.yml
+    file: pxf_src/concourse/test_pxf.yml
     image: gpdb-pxf-dev-centos6-cdh-server
     params:
       GROUP: gpdb,proxy
@@ -354,7 +354,9 @@ jobs:
       - compile_pxf
     - get: bin_gpdb
       resource: bin_gpdb_centos6
-    - get: pxf_infra_src
+    - get: pxf_src
+      passed:
+      - compile_pxf
       trigger: true
     - get: pxf_tarball
       passed:
@@ -362,7 +364,7 @@ jobs:
       trigger: true
     - get: gpdb-pxf-dev-centos6-hdp-server
   - task: test_pxf
-    file: pxf_infra_src/concourse/test_pxf.yml
+    file: pxf_src/concourse/test_pxf.yml
     image: gpdb-pxf-dev-centos6-hdp-server
     params:
       IMPERSONATION: false

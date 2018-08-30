@@ -9,7 +9,7 @@ function setup_pxf {
     local segment=${1}
     local hadoop_ip=${2}
     scp -r ${SSH_OPTS} pxf_tarball centos@"${segment}":
-    scp ${SSH_OPTS} pxf_infra_src/concourse/setup_pxf_on_segment.sh centos@${segment}:
+    scp ${SSH_OPTS} pxf_src/concourse/setup_pxf_on_segment.sh centos@${segment}:
     scp ${SSH_OPTS} /singlecluster/hadoop/etc/hadoop/{core,hdfs,mapred}-site.xml centos@${segment}:
     scp ${SSH_OPTS} /singlecluster/hive/conf/hive-site.xml centos@${segment}:
     scp ${SSH_OPTS} /singlecluster/hbase/conf/hbase-site.xml centos@${segment}:

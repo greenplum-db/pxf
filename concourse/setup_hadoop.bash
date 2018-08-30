@@ -11,7 +11,7 @@ function _main() {
     SSH_OPTS="-i cluster_env_files/private_key.pem"
 
     scp ${SSH_OPTS} singlecluster/singlecluster-HDP.tar.gz centos@mdw:
-    scp ${SSH_OPTS} pxf_infra_src/concourse/setup_hadoop_single_cluster.sh centos@mdw:
+    scp ${SSH_OPTS} pxf_src/concourse/setup_hadoop_single_cluster.sh centos@mdw:
     scp ${SSH_OPTS} cluster_env_files/etc_hostfile centos@mdw:
 
     ssh ${SSH_OPTS} centos@mdw "sudo bash -c \"\

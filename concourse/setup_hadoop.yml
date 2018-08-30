@@ -4,13 +4,13 @@ image_resource:
 inputs:
   - name: terraform_hdp
   - name: ccp_src
-  - name: pxf_infra_src
+  - name: pxf_src
   - name: singlecluster
 outputs:
   - name: cluster_env_files
   - name: pxf_artifacts
 run:
-  path: pxf_infra_src/concourse/setup_hadoop.bash
+  path: pxf_src/concourse/setup_hadoop.bash
 params:
   PLATFORM: centos7
   CLOUD_PROVIDER: google

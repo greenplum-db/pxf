@@ -3,11 +3,10 @@ image_resource:
   type: docker-image
 inputs:
   - name: pxf_src
-  - name: pxf_infra_src
 outputs:
   - name: pxf_artifacts
 run:
-  path: pxf_infra_src/concourse/compile_pxf.bash
+  path: pxf_src/concourse/compile_pxf.bash
 params:
   TARGET_OS: centos
   OUTPUT_ARTIFACT_DIR: pxf_artifacts 
