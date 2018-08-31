@@ -36,13 +36,3 @@ Building
     ./gradlew clean build [buildRpm] [distTar]
 
     For all available tasks run: ./gradlew tasks
-
-
-Building for a specific database
-================================
-
-PXF could be built for different databases, currently HAWQ and Greenplum are supported.
-Configuration for target databases are stored in **gradle/profiles**.
-HAWQ is a default database. To build it for Greenplum:
-
-    ./gradlew clean build [buildRpm] [distTar] -Ddatabase="gpdb"
