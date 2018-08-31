@@ -1,5 +1,5 @@
-PXF - Parallel eXtension Framework for Hadoop
-============================================
+PXF
+===
 
 Table of Contents
 =================
@@ -18,7 +18,7 @@ To create these connectors using JAVA plugins, see the PXF API and Reference Gui
 
 Package Contents
 ================
-## pxf_server/
+## pxf/
 Contains the server side code of PXF along with the PXF Service and all the Plugins
 
 ## pxf_automation/
@@ -28,4 +28,21 @@ Contains the automation and integration tests for PXF against the various dataso
 Hadoop testing environment to exercise the pxf automation tests
 
 ## concourse/
-PXF pipeline related resources
+Resources for PXF's Continuous Integration pipelines
+
+Building
+========
+
+    ./gradlew clean build [buildRpm] [distTar]
+
+    For all available tasks run: ./gradlew tasks
+
+
+Building for a specific database
+================================
+
+PXF could be built for different databases, currently HAWQ and Greenplum are supported.
+Configuration for target databases are stored in **gradle/profiles**.
+HAWQ is a default database. To build it for Greenplum:
+
+    ./gradlew clean build [buildRpm] [distTar] -Ddatabase="gpdb"
