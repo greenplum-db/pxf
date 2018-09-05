@@ -16,8 +16,14 @@ PXF includes built-in connectors for accessing data that exists inside HDFS file
 Users can also create their own connectors to other data storages or processing engines.
 To create these connectors using JAVA plugins, see the PXF API and Reference Guide onGPDB.
 
+Development
+===========
+
+Build and run PXF and GPDB on Docker by following the instructions in [DEVELOPMENT.md](DEVELOPMENT.md).
+
 Package Contents
 ================
+
 ## pxf/
 Contains the server side code of PXF along with the PXF Service and all the Plugins
 
