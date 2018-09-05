@@ -282,7 +282,7 @@ public class HiveRcTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(enabled = false, groups = { "features", "gpdb" })
     public void filterBetweenPartitionsInFragmenter() throws Exception {
 
         hawq.runQuery("SET optimizer = on");
@@ -301,7 +301,6 @@ public class HiveRcTest extends HiveBaseTest {
 
         hawq.runQuery("SET optimizer = off");
         filterBetweenPartitions();
-        hawq.runQuery("SET optimizer = on");
     }
 
     private void createHiveExternalTable(String name) throws Exception {

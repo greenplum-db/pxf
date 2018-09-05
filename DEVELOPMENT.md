@@ -53,39 +53,51 @@ Inside the container, configure the Hadoop cluster to allow
 Edit `/singlecluster/hadoop/etc/hadoop/core-site.xml` and `/singlecluster/hbase/conf/hbase-site.xml` and add the
 following properties to both:
 
-```
+```xml
     <property>
          <name>hadoop.proxyuser.gpadmin.hosts</name>
          <value>*</value>
-     </property>
-     <property>
-         <name>hadoop.proxyuser.gpadmin.groups</name>
-         <value>*</value>
-     </property>
-     <property>
-         <name>hadoop.security.authorization</name>
-         <value>true</value>
-     </property>
-     <property>
-         <name>hbase.security.authorization</name>
-         <value>true</value>
-     </property>
-     <property>
-         <name>hbase.rpc.protection</name>
-         <value>authentication</value>
-     </property>
-     <property>
-         <name>hbase.coprocessor.master.classes</name>
-         <value>org.apache.hadoop.hbase.security.access.AccessController</value>
-     </property>
-     <property>
-         <name>hbase.coprocessor.region.classes</name>
-         <value>org.apache.hadoop.hbase.security.access.AccessController,org.apache.hadoop.hbase.security.access.SecureBulkLoadEndpoint</value>
-     </property>
-     <property>
-         <name>hbase.coprocessor.regionserver.classes</name>
-         <value>org.apache.hadoop.hbase.security.access.AccessController</value>
-     </property>
+    </property>
+    <property>
+        <name>hadoop.proxyuser.gpadmin.groups</name>
+        <value>*</value>
+    </property>
+    <property>
+        <name>hadoop.security.authorization</name>
+        <value>true</value>
+    </property>
+    <property>
+        <name>hbase.security.authorization</name>
+        <value>true</value>
+    </property>
+    <property>
+        <name>hbase.rpc.protection</name>
+        <value>authentication</value>
+    </property>
+    <property>
+        <name>hbase.coprocessor.master.classes</name>
+        <value>org.apache.hadoop.hbase.security.access.AccessController</value>
+    </property>
+    <property>
+        <name>hbase.coprocessor.region.classes</name>
+        <value>org.apache.hadoop.hbase.security.access.AccessController,org.apache.hadoop.hbase.security.access.SecureBulkLoadEndpoint</value>
+    </property>
+    <property>
+        <name>hbase.coprocessor.regionserver.classes</name>
+        <value>org.apache.hadoop.hbase.security.access.AccessController</value>
+    </property>
+```
+
+Change `tez` to `mr` in `/singlecluster/hive/conf/hive-site.xml` (tez is not installed in the container by default)
+
+The result looks like this:
+
+```xml
+    <property>
+        <name>hive.execution.engine</name>
+        <value>mr</value>
+        <description>Chooses execution engine. Options are: mr(default), tez, or spark</description>
+    </property>
 ```
 
 ### Build and Install GPDB
