@@ -152,7 +152,7 @@ function _main() {
 
 	time install_gpdb
 	source ${GPHOME}/greenplum_path.sh
-	time install_pxf_client
+	#time install_pxf_client
 	time setup_gpadmin_user
 
 	# untar pxf server only if necessary
