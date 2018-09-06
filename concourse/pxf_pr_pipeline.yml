@@ -118,24 +118,6 @@ resources:
     secret_access_key: {{bucket-secret-access-key}}
     versioned_file: bin_gpdb_centos6/gpdb_branch_((gpdb-branch))/icw_green/bin_gpdb.tar.gz
 
-- name: pxf_tarball
-  type: s3
-  source:
-    access_key_id: {{bucket-access-key-id}}
-    bucket: {{pxf-aws-bucket-name}}
-    region_name: {{aws-region}}
-    secret_access_key: {{bucket-secret-access-key}}
-    versioned_file: pxf_artifacts/((folder-prefix))_((gpdb-branch))/latest/pxf.tar.gz
-
-- name: pxf_tarball_stable
-  type: s3
-  source:
-    access_key_id: {{bucket-access-key-id}}
-    bucket: {{pxf-aws-bucket-name}}
-    region_name: {{aws-region}}
-    secret_access_key: {{bucket-secret-access-key}}
-    versioned_file: pxf_artifacts/((folder-prefix))_((gpdb-branch))/stable/pxf.tar.gz
-
 - name: terraform
   type: terraform
   source:
@@ -168,9 +150,6 @@ jobs:
   - task: compile_pxf
     image: gpdb-pxf-dev-centos6
     file: pxf_src/concourse/compile_pxf.yml
-  - put: pxf_tarball
-    params:
-      file: pxf_artifacts/pxf.tar.gz
 
 - name: test_pxf_hdp
   plan:
@@ -181,10 +160,6 @@ jobs:
     - get: bin_gpdb
       resource: bin_gpdb_centos6
     - get: pxf_src
-      passed:
-      - compile_pxf
-      trigger: true
-    - get: pxf_tarball
       passed:
       - compile_pxf
       trigger: true
@@ -211,10 +186,6 @@ jobs:
       passed:
       - compile_pxf
       trigger: true
-    - get: pxf_tarball
-      passed:
-      - compile_pxf
-      trigger: true
     - get: gpdb-pxf-dev-centos6-hdp-secure
   - task: test_pxf_secure
     file: pxf_src/concourse/test_pxf_secure.yml
@@ -233,10 +204,6 @@ jobs:
   - get: gpdb_binary
     resource: bin_gpdb_centos6
   - get: pxf_src
-    passed:
-    - compile_pxf
-    trigger: true
-  - get: pxf_tarball
     passed:
     - compile_pxf
     trigger: true
@@ -339,10 +306,6 @@ jobs:
       passed:
       - compile_pxf
       trigger: true
-    - get: pxf_tarball
-      passed:
-      - compile_pxf
-      trigger: true
     - get: gpdb-pxf-dev-centos6-cdh-server
   - task: test_pxf
     file: pxf_src/concourse/test_pxf.yml
@@ -364,10 +327,6 @@ jobs:
       passed:
       - compile_pxf
       trigger: true
-    - get: pxf_tarball
-      passed:
-      - compile_pxf
-      trigger: true
     - get: gpdb-pxf-dev-centos6-hdp-server
   - task: test_pxf
     file: pxf_src/concourse/test_pxf.yml
@@ -375,17 +334,3 @@ jobs:
     params:
       IMPERSONATION: false
       TEST_ENV: {{test-env}}
-
-- name: promote_pxf_artifact
-  plan:
-  - get: pxf_tarball
-    passed:
-    - test_pxf_hdp
-    - test_pxf_cdh
-    - test_pxf_hdp_secure
-    - test_pxf_no_impersonation
-    - test_pxf_hdp_multinode_gpdb
-    trigger: true
-  - put: pxf_tarball_stable
-    params:
-      file: pxf_tarball/pxf.tar.gz
