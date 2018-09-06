@@ -24,6 +24,23 @@ fly -t ud set-pipeline -p gpdb_pxf_5X_STABLE -c ./pxf_pipeline.yml \
     -l default.yml -v folder-prefix=prod/gpdb_branch -v test-env= \
     -v gpdb-branch=5X_STABLE -v icw_green_bucket=gpdb5-stable-concourse-builds
 ```
+
+# Deploy the pull-request pipeline
+
+```
+fly -t ud set-pipeline -p dev:pxf_oss_pr -c ./pxf_pr_pipeline.yml \
+  -l ~/workspace/continuous-integration/secrets/gpdb_common-ci-secrets.yml \
+  -l ~/workspace/continuous-integration/secrets/gpdb_5X_STABLE-ci-secrets.yml \
+  -l .pivotal-default.yml \
+  -l pxf-multinode-params.yml \
+  -l ~/workspace/continuous-integration/secrets/ccp_ci_secrets_ud.yml \
+  -l ~/workspace/continuous-integration/secrets/pxf-secrets.yml \
+  -v folder-prefix=dev/pivotal-default \
+  -v test-env=dev \
+  -v gpdb-branch=5X_STABLE \
+  -v icw_green_bucket=gpdb5-stable-concourse-builds
+```
+
 # Deploy development PXF pipelines
 Dev pipelines can be deployed with an optional feature name
 ```
