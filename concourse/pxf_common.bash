@@ -65,6 +65,14 @@ function install_pxf_client() {
 	fi
 }
 
+function install_pxf_server() {
+	export BUILD_NUMBER="${TARGET_OS}"
+	export JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8
+	pushd pxf_src
+	make install -s DATABASE=gpdb
+	popd
+}
+
 function start_pxf_server() {
 	pushd ${PXF_HOME} > /dev/null
 

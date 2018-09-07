@@ -150,29 +150,41 @@ function _main() {
 	# Reserve port 5888 for PXF service
 	echo "pxf             5888/tcp               # PXF Service" >> /etc/services
 
+    # Install GPDB
 	time install_gpdb
 	source ${GPHOME}/greenplum_path.sh
-	#time install_pxf_client
 	time setup_gpadmin_user
 
-	# untar pxf server only if necessary
-	if [ -d ${PXF_HOME} ]; then
-		echo "Skipping pxf_tarball..."
+    # Install PXF Client
+	#time install_pxf_client
+
+    # Install PXF Server
+	if [ -d pxf_tarball ]; then
+	    # untar pxf server only if necessary
+        if [ -d ${PXF_HOME} ]; then
+            echo "Skipping pxf_tarball..."
+        else
+            tar -xzf pxf_tarball/pxf.tar.gz -C ${GPHOME}
+        fi
 	else
-		tar -xzf pxf_tarball/pxf.tar.gz -C ${GPHOME}
-	fi
+	    time install_pxf_server
+    fi
 	chown -R gpadmin:gpadmin ${GPHOME}/pxf
 
-	# setup hadoop before making GPDB cluster to use system python for yum install
+	# Install Hadoop and Hadoop Client
+	# Doing this before making GPDB cluster to use system python for yum install
 	time setup_singlecluster /singlecluster
 	time setup_hadoop_client /singlecluster
 
-	time make_cluster
+    time make_cluster
 	time add_user_access "testuser"
 	time start_pxf_server
+
 	# Let's make sure that pxf_automation/singlecluster directories are writeable
 	chmod a+w pxf_src/pxf_automation /singlecluster
 	find pxf_src/pxf_automation/tinc* -type d -exec chmod a+w {} \;
+
+	# Run Tests
 	time run_regression_test
 	if [ -n "${GROUP}" ]; then
 		time run_pxf_automation /singlecluster
