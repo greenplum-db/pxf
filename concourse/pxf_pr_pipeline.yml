@@ -52,16 +52,16 @@ jobs:
 
 - name: compile_pxf
   plan:
-  - put: pxf_src
-    params:
-      path: pxf_src
-      status: pending
-      context: $BUILD_JOB_NAME
   - aggregate:
     - get: gpdb_src
     - get: pxf_src
       trigger: true
     - get: gpdb-pxf-dev-centos6
+  - put: pxf_src
+    params:
+      path: pxf_src
+      status: pending
+      context: $BUILD_JOB_NAME
   - task: compile_pxf
     image: gpdb-pxf-dev-centos6
     file: pxf_src/concourse/compile_pxf.yml
