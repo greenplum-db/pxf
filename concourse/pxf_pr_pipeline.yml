@@ -52,6 +52,11 @@ jobs:
 
 - name: compile_pxf
   plan:
+  - put: pxf_src
+    params:
+      path: pxf_src
+      status: pending
+      context: $BUILD_JOB_NAME
   - aggregate:
     - get: gpdb_src
     - get: pxf_src
@@ -72,6 +77,7 @@ jobs:
     - get: pxf_src
       passed:
       - compile_pxf
+      trigger: true
     - get: gpdb-pxf-dev-centos6-hdp-server
   - task: test_pxf
     image: gpdb-pxf-dev-centos6-hdp-server
@@ -89,3 +95,15 @@ jobs:
         GROUP: gpdb,proxy
       run:
         path: pxf_src/concourse/test_pxf.bash
+    on_success:
+      put: pxf_src
+      params:
+        path: pxf_src
+        status: success
+        context: $BUILD_JOB_NAME
+    on_failure:
+      put: pxf_src
+      params:
+        path: pxf_src
+        status: failure
+        context: $BUILD_JOB_NAME
