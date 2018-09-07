@@ -75,11 +75,17 @@ jobs:
     - get: gpdb-pxf-dev-centos6-hdp-server
   - task: test_pxf
     image: gpdb-pxf-dev-centos6-hdp-server
-    params:
-      IMPERSONATION: true
-      TARGET_OS: centos
-      TARGET_OS_VERSION: 6
-      HADOOP_CLIENT: HDP
-      GROUP: gpdb,proxy
-    run:
-      path: pxf_src/concourse/test_pxf.bash
+    config:
+      platform: linux
+      inputs:
+      - name: gpdb_src
+      - name: pxf_src
+      - name: bin_gpdb
+      params:
+        IMPERSONATION: true
+        TARGET_OS: centos
+        TARGET_OS_VERSION: 6
+        HADOOP_CLIENT: HDP
+        GROUP: gpdb,proxy
+      run:
+        path: pxf_src/concourse/test_pxf.bash
