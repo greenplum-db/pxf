@@ -5,9 +5,12 @@
 To start, ensure you have a `~/workspace` directory and have cloned the `gpdb` and `pxf` projects.
 (The name `workspace` is not strictly required but will be used throughout this guide.)
 
+NOTE: Since the docker container all Single cluster Hadoop, Greenplum and PXF, we recommend that you have atleast 6GB memory allocated to Docker. This memory setting is available under docker preferences.
+
 ```bash
 mkdir -p ~/workspace
 cd ~/workspace
+
 git clone https://github.com/greenplum-db/gpdb.git
 git clone https://github.com/greenplum-db/pxf.git
 ```
@@ -21,7 +24,7 @@ Untar it:
 ```bash
 mv singlecluster-HDP.tar.gz ~/workspace/
 cd ~/workspace
-tar xzf singlecluster-HDP.tar.gz -C ~/workspace/singlecluster-HDP
+tar xzf singlecluster-HDP.tar.gz
 ```
 
 You'll end up with a directory structure like this:
@@ -110,7 +113,7 @@ intended for the shell.
 
 ```bash
 # Install PXF
-make -C /home/gpadmin/pxf/pxf install DATABASE=gpdb
+make -C /home/gpadmin/pxf/pxf clean install DATABASE=gpdb
 ```
 
 ```bash
@@ -129,5 +132,8 @@ psql -d template1 -c "create extension pxf"
 
 ```bash
 cd /home/gpadmin/pxf/pxf_automation
-make GROUP=gpdb PG_MODE=GPDB
+export PG_MODE=GPDB
+make GROUP=gpdb
+
+make TEST=HdfsSmokeTest # Run specific tests
 ```
