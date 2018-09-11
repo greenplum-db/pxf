@@ -124,6 +124,7 @@ public class Hawq extends DbSystemObject {
 		ShellSystemObject sso = new ShellSystemObject(report.isSilent());
 
 		sso.setHost(getHost());
+		sso.setMasterHost(getMasterHost());
 		sso.setUserName(getSshUserName());
 		sso.setPassword(getSshPassword());
 
@@ -257,10 +258,14 @@ public class Hawq extends DbSystemObject {
 
 		String copyParams = "";
 		if (delim != null) {
-			copyParams += "DELIMITER '" + delim + "' ";
+			if (!delim.startsWith("E")) {
+				delim = "'" + delim + "'";
+			}
+
+			copyParams += "DELIMITER " + delim + " ";
 		}
 		if (nullChar != null) {
-		    copyParams += "NULL as '" + nullChar + "' ";
+		    copyParams += "NULL as " + nullChar + " ";
 		}
 		if (csv) {
 			copyParams += "CSV ";

@@ -33,12 +33,22 @@ function setup_hadoop_client() {
     sed -i -e 's/edw0/hadoop/' /etc/hosts
 }
 
+function add_jdbc_jar_to_pxf_public_classpath() {
+	# append the full path to PostgreSQL JDBC JAR file to pxf_public.classpath for JDBC tests
+	mkdir -p /tmp/jdbc && chmod a+r /tmp/jdbc
+	cp /home/centos/postgresql-jdbc*.jar /tmp/jdbc/
+	chmod a+r /tmp/jdbc/*.*
+	ls /tmp/jdbc/postgresql-jdbc*.jar >> ${PXF_HOME}/conf/pxf-public.classpath
+	cat ${PXF_HOME}/conf/pxf-public.classpath
+}
+
 function _main() {
-	
+
 	tar -xzf pxf_tarball/pxf.tar.gz -C ${GPHOME}
 	chown -R gpadmin:gpadmin ${GPHOME}/pxf
 
 	setup_hadoop_client ${1}
+	add_jdbc_jar_to_pxf_public_classpath
 	start_pxf_server
 }
 

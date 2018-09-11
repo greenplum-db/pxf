@@ -27,6 +27,7 @@ import com.pxf.automation.utils.jsystem.report.ReportUtils;
 public class DbSystemObject extends BaseSystemObject implements IDbFunctionality {
 	protected String db;
 	protected String host;
+	protected String masterHost;
 	protected String port;
 	protected String userName;
     protected String kerberosPrincipal;
@@ -37,7 +38,7 @@ public class DbSystemObject extends BaseSystemObject implements IDbFunctionality
 	// retries for create JDBC connection
 	private int connectionRetries = 10;
 	private final long RETRY_INTERVAL = 1000 * 10;
-	
+
 	public DbSystemObject() {
 	}
 
@@ -386,8 +387,16 @@ public class DbSystemObject extends BaseSystemObject implements IDbFunctionality
 		return host;
 	}
 
+	public String getMasterHost() {
+		return masterHost;
+	}
+
 	public void setHost(String host) {
 		this.host = host;
+	}
+
+	public void setMasterHost(String masterHost) {
+		this.masterHost = masterHost;
 	}
 
 	@Override

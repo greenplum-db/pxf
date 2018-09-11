@@ -26,6 +26,7 @@ function setup_pxf {
     scp ${SSH_OPTS} /singlecluster/hadoop/etc/hadoop/{core,hdfs,mapred}-site.xml centos@${segment}:
     scp ${SSH_OPTS} /singlecluster/hive/conf/hive-site.xml centos@${segment}:
     scp ${SSH_OPTS} /singlecluster/hbase/conf/hbase-site.xml centos@${segment}:
+    scp ${SSH_OPTS} /singlecluster/jdbc/postgresql-jdbc*.jar centos@${segment}:
     scp ${SSH_OPTS} cluster_env_files/etc_hostfile centos@${segment}:
     ssh ${SSH_OPTS} centos@${segment} "sudo bash -c \"\
         cd /home/centos && IMPERSONATION=${IMPERSONATION} PXF_JVM_OPTS='${PXF_JVM_OPTS}' ./setup_pxf_on_segment.sh ${hadoop_ip}
@@ -46,10 +47,27 @@ function install_hadoop_single_cluster() {
     \""
 }
 
+function update_pghba_and_restart_gpdb() {
+    local sdw_ips=("$@")
+
+	for ip in ${sdw_ips}; do
+        echo "host     all         gpadmin         $ip/32    trust" >> pg_hba.patch
+    done
+    scp ${SSH_OPTS} pg_hba.patch gpadmin@mdw:
+
+	ssh ${SSH_OPTS} gpadmin@mdw "cat pg_hba.patch >> /data/gpdata/master/gpseg-1/pg_hba.conf;\
+		cat /data/gpdata/master/gpseg-1/pg_hba.conf; \
+		source /usr/local/greenplum-db-devel/greenplum_path.sh; \
+		export MASTER_DATA_DIRECTORY=/data/gpdata/master/gpseg-1; \
+		gpstop -u"
+}
+
 function _main() {
 
 	cp -R cluster_env_files/.ssh /root/.ssh
-    gpdb_segments=$( < cluster_env_files/etc_hostfile grep -e "sdw\|mdw" | awk '{print $1}')
+    gpdb_nodes=$( < cluster_env_files/etc_hostfile grep -e "sdw\|mdw" | awk '{print $1}')
+    gpdb_segments=$( < cluster_env_files/etc_hostfile grep -e "sdw" | awk '{print $1}')
+
     hadoop_ip=$( < cluster_env_files/etc_hostfile grep "edw0" | awk '{print $1}')
     cat > hdp.repo <<-EOF
 		#VERSION_NUMBER=2.6.5.0-292
@@ -61,15 +79,18 @@ function _main() {
 		enabled=1
 		priority=1
 	EOF
-    for segment in ${gpdb_segments}; do
-        install_hadoop_client ${segment} &
+    for node in ${gpdb_nodes}; do
+        install_hadoop_client ${node} &
     done
     install_hadoop_single_cluster ${hadoop_ip} &
     wait
-    for segment in ${gpdb_segments}; do
-        setup_pxf ${segment} ${hadoop_ip} &
+    for node in ${gpdb_nodes}; do
+        setup_pxf ${node} ${hadoop_ip} &
     done
     wait
+
+    # widen access to mdw to all nodes in the cluster for JDBC test
+    update_pghba_and_restart_gpdb "${gpdb_segments[@]}"
 }
 
 _main "$@"

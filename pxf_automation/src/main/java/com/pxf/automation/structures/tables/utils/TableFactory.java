@@ -362,11 +362,11 @@ public abstract class TableFactory {
         return table;
     }
 
-    private static ExternalTable getPxfJdbcTable(String tableName,
-            String[] fields, String dataSourcePath, String driver,
-            String dbUrl, boolean isPartitioned,
-            Integer partitionByColumnIndex, String rangeExpression,
-            String interval, String user, EnumPartitionType partitionType) {
+    private static ExternalTable getPxfJdbcReadableTable(String tableName,
+                                                         String[] fields, String dataSourcePath, String driver,
+                                                         String dbUrl, boolean isPartitioned,
+                                                         Integer partitionByColumnIndex, String rangeExpression,
+                                                         String interval, String user, EnumPartitionType partitionType) {
         ExternalTable exTable = new ReadableExternalTable(tableName, fields,
                 dataSourcePath, "CUSTOM");
         List<String> userParameters = new ArrayList<String>();
@@ -395,16 +395,45 @@ public abstract class TableFactory {
     }
 
     /**
+     * Generates an External Writable Table using JDBC profile.
+     *
+     * @param tableName name of the external table which will be generated
+     * @param fields fields of the external table
+     * @param dataSourcePath path to the target table to be written to i.e. schema_name.table_name
+     * @param driver full class name of the JDBC driver
+     * @param dbUrl JDBC URL
+     * @param user database user
+     * @return External Writable Table
+     */
+    public static ExternalTable getPxfJdbcWritableTable(String tableName,
+            String[] fields, String dataSourcePath, String driver,
+            String dbUrl, String user) {
+
+        ExternalTable exTable = new WritableExternalTable(tableName, fields, dataSourcePath, "CUSTOM");
+        List<String> userParameters = new ArrayList<String>();
+        userParameters.add("JDBC_DRIVER=" + driver);
+        userParameters.add("DB_URL=" + dbUrl);
+
+        if (user != null) {
+            userParameters.add("USER=" + user);
+        }
+        exTable.setUserParameters(userParameters.toArray(new String[userParameters.size()]));
+        exTable.setProfile("Jdbc");
+        exTable.setFormatter("pxfwritable_export");
+
+        return exTable;
+    }
+
+    /**
      * Generates an External Readable Table using JDBC profile, partitioned by given column
      * on a given range with a given interval.
      * Recommended to use for large tables.
-     * 
+     *
      * @param tableName name of the external table which will be generated
      * @param fields fields of the external table
      * @param dataSourcePath path to the data object i.e. schema_name.table_name
      * @param driver full class name of the JDBC driver
      * @param dbUrl JDBC URL
-     * @param isPartitioned true if table has to be fragmented into partitions
      * @param partitionByColumnIndex index of column which table is partitioned/fragmented by
      * @param rangeExpression partition range expression
      * @param interval interval expression
@@ -412,20 +441,21 @@ public abstract class TableFactory {
      * @param partitionType partition type used to get fragments
      * @return External Readable Table
      */
-    public static ExternalTable getPxfJdbcPartitionedTable(String tableName,
+    public static ExternalTable getPxfJdbcReadablePartitionedTable(
+            String tableName,
             String[] fields, String dataSourcePath, String driver,
             String dbUrl, Integer partitionByColumnIndex,
             String rangeExpression, String interval, String user, EnumPartitionType partitionType) {
 
-        return getPxfJdbcTable(tableName, fields, dataSourcePath, driver,
-                dbUrl, true, partitionByColumnIndex, rangeExpression,
-                interval, user, partitionType);
+        return getPxfJdbcReadableTable(tableName, fields, dataSourcePath, driver,
+            dbUrl, true, partitionByColumnIndex, rangeExpression,
+            interval, user, partitionType);
     }
 
     /**
      * Generates an External Readable Table using JDBC profile.
      * It's not recommended for large tables.
-     * 
+     *
      * @param tableName name of the external table which will be generated
      * @param fields fields of the external table
      * @param dataSourcePath path to the data object i.e. schema_name.table_name
@@ -434,11 +464,11 @@ public abstract class TableFactory {
      * @param user databases user name
      * @return External Readable Table
      */
-    public static ExternalTable getPxfJdbcTable(String tableName,
+    public static ExternalTable getPxfJdbcReadableTable(String tableName,
             String[] fields, String dataSourcePath, String driver, String dbUrl, String user) {
 
-        return getPxfJdbcTable(tableName, fields, dataSourcePath, driver,
-                dbUrl, false, null, null, null, user, null);
+        return getPxfJdbcReadableTable(tableName, fields, dataSourcePath, driver,
+            dbUrl, false, null, null, null, user, null);
 
     }
 }

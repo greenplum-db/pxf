@@ -176,6 +176,8 @@ function _main() {
 	time setup_singlecluster /singlecluster
 	time setup_hadoop_client /singlecluster
 
+	time add_jdbc_jar_to_pxf_public_classpath /singlecluster
+
 	time make_cluster
 	time add_user_access "testuser"
 	time start_pxf_server

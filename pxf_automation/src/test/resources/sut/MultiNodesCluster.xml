@@ -29,6 +29,7 @@
 	<hawq>
 		<class>com.pxf.automation.components.hawq.Hawq</class>
 		<host>localhost</host>
+		<masterHost>mdw</masterHost>
 		<userName>gpadmin</userName>
 		<db>pxfautomation</db>
 	</hawq>

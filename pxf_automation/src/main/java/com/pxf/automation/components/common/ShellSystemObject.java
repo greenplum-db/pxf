@@ -23,6 +23,7 @@ import com.pxf.automation.utils.jsystem.report.ReportUtils;
 public class ShellSystemObject extends BaseSystemObject {
     private PivotalCliConnectionImpl connection;
     private String host = "localHost";
+    private String masterHost = "localHost";
     private String hostName = "";
     private String userName;
     private String password;
@@ -527,6 +528,10 @@ public class ShellSystemObject extends BaseSystemObject {
 
     public void setHost(String host) {
         this.host = host;
+    }
+
+    public void setMasterHost(String masterHost) {
+        this.masterHost = masterHost;
     }
 
     public String getUserName() {
