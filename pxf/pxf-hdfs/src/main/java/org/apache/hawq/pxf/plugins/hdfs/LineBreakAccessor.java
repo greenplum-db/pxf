@@ -20,10 +20,6 @@ package org.apache.hawq.pxf.plugins.hdfs;
  */
 
 
-import org.apache.hawq.pxf.api.OneRow;
-import org.apache.hawq.pxf.api.WriteAccessor;
-import org.apache.hawq.pxf.api.utilities.InputData;
-import org.apache.hawq.pxf.plugins.hdfs.utilities.HdfsUtilities;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -31,7 +27,15 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.compress.CompressionCodec;
-import org.apache.hadoop.mapred.*;
+import org.apache.hadoop.mapred.FileSplit;
+import org.apache.hadoop.mapred.InputSplit;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.LineRecordReader;
+import org.apache.hadoop.mapred.TextInputFormat;
+import org.apache.hawq.pxf.api.OneRow;
+import org.apache.hawq.pxf.api.WriteAccessor;
+import org.apache.hawq.pxf.api.utilities.InputData;
+import org.apache.hawq.pxf.plugins.hdfs.utilities.HdfsUtilities;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -43,9 +47,9 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor implements
         WriteAccessor {
     private DataOutputStream dos;
     private FSDataOutputStream fsdos;
-    private Configuration conf;
     private FileSystem fs;
     private Path file;
+    private boolean isDFS;
     private static final Log LOG = LogFactory.getLog(LineBreakAccessor.class);
 
     /**
@@ -54,14 +58,21 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor implements
      * @param input all input parameters coming from the client request
      */
     public LineBreakAccessor(InputData input) {
+
         super(input, new TextInputFormat());
         ((TextInputFormat) inputFormat).configure(jobConf);
+
+        // Check if the underlying configuration is for HDFS
+        String defaultFS = conf.get("fs.defaultFS");
+        isDFS = (defaultFS != null) && defaultFS.startsWith("hdfs://");
     }
 
     @Override
     protected Object getReader(JobConf jobConf, InputSplit split)
             throws IOException {
-        return new ChunkRecordReader(jobConf, (FileSplit) split);
+
+        return isDFS ? new ChunkRecordReader(jobConf, (FileSplit) split) :
+                new LineRecordReader(jobConf, (FileSplit) split);
     }
 
     /**
@@ -85,15 +96,17 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor implements
         }
 
         file = new Path(fileName);
-
         if (fs.exists(file)) {
             throw new IOException("file " + file.toString()
                     + " already exists, can't write data");
         }
-        org.apache.hadoop.fs.Path parent = file.getParent();
+
+        Path parent = file.getParent();
         if (!fs.exists(parent)) {
             fs.mkdirs(parent);
-            LOG.debug("Created new dir " + parent.toString());
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Created new dir " + parent.toString());
+            }
         }
 
         // create output stream - do not allow overwriting existing file

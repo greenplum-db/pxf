@@ -68,13 +68,13 @@ public class StringPassResolver extends Plugin implements ReadResolver, WriteRes
 		 * 1. performance
 		 * 2. desire to not replicate text parsing logic from the backend into java
 		 */
-        List<OneField> record = new LinkedList<OneField>();
+        List<OneField> record = new LinkedList<>();
 		Object data = onerow.getData();
 		if (data instanceof ChunkWritable) {
 			record.add(new OneField(DataType.BYTEA.getOID(), ((ChunkWritable)data).box));
 		}
 		else {
-			record.add(new OneField(VARCHAR.getOID(), data));
+			record.add(new OneField(VARCHAR.getOID(), data.toString()));
 		}
         return record;
     }
