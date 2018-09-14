@@ -3,7 +3,7 @@ package org.greenplum.pxf.automation.structures.data;
 import java.util.ArrayList;
 
 /*
- * Class for meta data, hold properties of the data to be created and queried later by hawq.
+ * Class for meta data, hold properties of the data to be created and queried later by gpdb.
  * Used to create tables from configuration (like json) and to be tested by automation. 
  */
 public class DataPattern {

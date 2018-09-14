@@ -121,7 +121,7 @@ public class HdfsReadableSequenceTest extends BaseFeature {
         exTable.setDataSchema(schemaPackage + customSchemaFileName);
         exTable.setPath(hdfsPath + writableInsideSequenceFileName);
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         runTincTest("pxf.features.hdfs.readable.sequence.custom_writable.runTest");
     }

@@ -32,7 +32,7 @@ public class FilterPushDownTest extends BaseFeature {
     }
 
     /**
-     * Check PXF receive the expected filter string from hawq/gpdb.
+     * Check PXF receive the expected filter string from gpdb/gpdb.
      * Column delimiter is ",".
      *
      * @throws Exception
@@ -56,13 +56,13 @@ public class FilterPushDownTest extends BaseFeature {
         pxfExternalTable.setHost(pxfHost);
         pxfExternalTable.setPort(pxfPort);
 
-        hawq.createTableAndVerify(pxfExternalTable);
+        gpdb.createTableAndVerify(pxfExternalTable);
 
         runTincTest("pxf.features.filterpushdown.checkFilterPushDown.runTest");
     }
 
     /**
-     * Check PXF receive the expected filter string from hawq/gpdb.
+     * Check PXF receive the expected filter string from gpdb/gpdb.
      * Column delimiter is ",".
      *
      * @throws Exception
@@ -86,7 +86,7 @@ public class FilterPushDownTest extends BaseFeature {
         pxfExternalTable.setHost(pxfHost);
         pxfExternalTable.setPort(pxfPort);
 
-        hawq.createTableAndVerify(pxfExternalTable);
+        gpdb.createTableAndVerify(pxfExternalTable);
 
         runTincTest("pxf.features.filterpushdown.checkFilterPushDownDisabled.runTest");
     }
@@ -116,7 +116,7 @@ public class FilterPushDownTest extends BaseFeature {
         pxfExternalTable.setHost(pxfHost);
         pxfExternalTable.setPort(pxfPort);
 
-        hawq.createTableAndVerify(pxfExternalTable);
+        gpdb.createTableAndVerify(pxfExternalTable);
 
         runTincTest("pxf.features.filterpushdown.checkFilterPushDownHexDelimiter.runTest");
     }

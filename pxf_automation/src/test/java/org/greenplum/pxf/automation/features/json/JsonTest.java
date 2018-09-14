@@ -81,7 +81,7 @@ public class JsonTest extends BaseFeature {
         exTable.setPath(hdfsPath + FILENAME_SIMPLE + SUFFIX_JSON);
         exTable.setFields(new String[] { "name text", "age int" });
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         // Verify results
         runTincTest("pxf.features.hdfs.readable.json.simple.runTest");
@@ -112,7 +112,7 @@ public class JsonTest extends BaseFeature {
         // "type_bytes bytea",
         });
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         // Verify results
         runTincTest("pxf.features.hdfs.readable.json.supported_primitive_types.runTest");
@@ -134,7 +134,7 @@ public class JsonTest extends BaseFeature {
         exTable.setFields(tweetsFields);
         exTable.setUserParameters(new String[] { "IDENTIFIER=created_at" });
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         // Verify results
         runTincTest("pxf.features.hdfs.readable.json.pretty_print.runTest");
@@ -155,7 +155,7 @@ public class JsonTest extends BaseFeature {
         exTable.setFields(tweetsFields);
         exTable.setUserParameters(new String[] { "IDENTIFIER=created_at" });
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         // Verify results
         runTincTest("pxf.features.hdfs.readable.json.missing_identifier.runTest");
@@ -178,7 +178,7 @@ public class JsonTest extends BaseFeature {
                 "IDENTIFIER=created_at",
                 "MAXLENGTH=566" });
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         // Verify results
         runTincTest("pxf.features.hdfs.readable.json.exceed_max_size.runTest");
@@ -200,7 +200,7 @@ public class JsonTest extends BaseFeature {
         exTable.setFields(tweetsFields);
         exTable.setUserParameters(new String[] { "IDENTIFIER=created_at" });
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         // Verify results
         runTincTest("pxf.features.hdfs.readable.json.malformed_record.runTest");

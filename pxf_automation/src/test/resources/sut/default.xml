@@ -4,12 +4,12 @@
 		<host>localhost</host>
 	</cluster>
 
-	<hawq>
-		<class>org.greenplum.pxf.automation.components.hawq.Gpdb</class>
+	<gpdb>
+		<class>org.greenplum.pxf.automation.components.gpdb.Gpdb</class>
 		<host>localhost</host>
 		<masterHost>localhost</masterHost>
 		<db>pxfautomation</db>
-	</hawq>
+	</gpdb>
 
 	<hdfs>
 		<class>org.greenplum.pxf.automation.components.hdfs.Hdfs</class>

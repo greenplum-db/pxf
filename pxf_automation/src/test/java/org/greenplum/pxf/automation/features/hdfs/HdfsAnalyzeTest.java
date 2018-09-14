@@ -190,15 +190,15 @@ public class HdfsAnalyzeTest extends BaseFeature {
 
         exTable.setPath(csvPath);
         exTable.setName("analyze_ok");
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
-        hawq.analyze(exTable);
+        gpdb.analyze(exTable);
 
         verifyPgClassValues(-1, 1000, 10);
         verifyPgStatsEntries(exTable.getFields().length);
 
         ReportUtils.report(null, getClass(), "Sanity: table is queryable");
-        hawq.queryResults(exTable, "SELECT * FROM " + exTable.getName()
+        gpdb.queryResults(exTable, "SELECT * FROM " + exTable.getName()
                 + " ORDER BY n1");
         ComparisonUtils.compareTables(exTable, dataTable, null);
     }
@@ -234,15 +234,15 @@ public class HdfsAnalyzeTest extends BaseFeature {
         exTable.setResolver("org.greenplum.pxf.plugins.hdfs.WritableResolver");
         exTable.setDataSchema(schemaPackage + customSchemaFileName);
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
-        hawq.analyze(exTable);
+        gpdb.analyze(exTable);
 
         verifyPgClassValues(-1, 999, 10);
         verifyPgStatsEntries(exTable.getFields().length);
 
         ReportUtils.report(null, getClass(), "Sanity: table is queryable");
-        hawq.queryResults(exTable, "SELECT COUNT(*) FROM " + exTable.getName());
+        gpdb.queryResults(exTable, "SELECT COUNT(*) FROM " + exTable.getName());
 
         Table countTable = new Table("count", null);
         countTable.addRow(new String[] { "999" });
@@ -274,10 +274,10 @@ public class HdfsAnalyzeTest extends BaseFeature {
         exTable.setAccessor("org.greenplum.pxf.plugins.hdfs.LineBreakAccessor");
         exTable.setResolver("org.greenplum.pxf.plugins.hdfs.StringPassResolver");
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         try {
-            hawq.analyze(exTable);
+            gpdb.analyze(exTable);
             Assert.fail("analyze should fail without existing fragmenter defined");
         } catch (SQLWarning e) {
             ExceptionUtils.validate(
@@ -316,9 +316,9 @@ public class HdfsAnalyzeTest extends BaseFeature {
         exTable.setName("analyze_nopath");
         exTable.setPath(csvPath);
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
         try {
-            hawq.analyze(exTable);
+            gpdb.analyze(exTable);
             Assert.fail("analyze should issue a warning");
         } catch (SQLWarning e) {
             // TODO: check error message with HA environment
@@ -375,10 +375,10 @@ public class HdfsAnalyzeTest extends BaseFeature {
         exTable.setAccessor("org.greenplum.pxf.plugins.hdfs.LineBreakAccessor");
         exTable.setResolver("NoSuchResolver");
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         try {
-            hawq.analyze(exTable);
+            gpdb.analyze(exTable);
             Assert.fail("analyze should fail on resolver");
         } catch (SQLWarning e) {
 
@@ -410,7 +410,7 @@ public class HdfsAnalyzeTest extends BaseFeature {
         ReportUtils.startLevel(null, getClass(),
                 "Verify query also fails on bad resolver");
         try {
-            hawq.queryResults(exTable, "SELECT * FROM " + exTable.getName()
+            gpdb.queryResults(exTable, "SELECT * FROM " + exTable.getName()
                     + " ORDER BY n1");
             Assert.fail("query should fail on resolver");
         } catch (SQLException e) {
@@ -455,10 +455,10 @@ public class HdfsAnalyzeTest extends BaseFeature {
         exTable.setAccessor("org.greenplum.pxf.plugins.hdfs.LineBreakAccessor");
         exTable.setResolver(testPackage + throwOn10000Resolver);
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         try {
-            hawq.analyze(exTable);
+            gpdb.analyze(exTable);
             Assert.fail("analyze should fail on resolver");
         } catch (SQLWarning e) {
 
@@ -488,7 +488,7 @@ public class HdfsAnalyzeTest extends BaseFeature {
         ReportUtils.startLevel(null, getClass(),
                 "Verify query also fails on bad resolver");
         try {
-            hawq.queryResults(exTable, "SELECT * FROM " + exTable.getName()
+            gpdb.queryResults(exTable, "SELECT * FROM " + exTable.getName()
                     + " ORDER BY n1");
             Assert.fail("query should fail on resolver");
         } catch (SQLException e) {
@@ -533,10 +533,10 @@ public class HdfsAnalyzeTest extends BaseFeature {
 
         exTable.setSegmentRejectLimit(5000);
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         try {
-            hawq.analyze(exTable);
+            gpdb.analyze(exTable);
             Assert.fail("analyze should fail on segment reject limit 25 percent");
         } catch (SQLWarning e) {
 
@@ -565,7 +565,7 @@ public class HdfsAnalyzeTest extends BaseFeature {
 
         ReportUtils.startLevel(null, getClass(),
                 "Verify query doesn't fail because reject limit on original table is ok");
-        hawq.queryResults(exTable, "SELECT COUNT(*) FROM " + exTable.getName());
+        gpdb.queryResults(exTable, "SELECT COUNT(*) FROM " + exTable.getName());
 
         Table countTable = new Table("count", null);
         countTable.addRow(new String[] { "6666" });
@@ -603,10 +603,10 @@ public class HdfsAnalyzeTest extends BaseFeature {
         exTable.setFields(fields);
         exTable.setPath(dataPath);
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         try {
-            hawq.analyze(exTable);
+            gpdb.analyze(exTable);
             Assert.fail("analyze should fail on data error");
         } catch (SQLWarning e) {
 
@@ -635,7 +635,7 @@ public class HdfsAnalyzeTest extends BaseFeature {
         ReportUtils.startLevel(null, getClass(),
                 "Verify query also fails on bad resolver");
         try {
-            hawq.queryResults(exTable, "SELECT * FROM " + exTable.getName()
+            gpdb.queryResults(exTable, "SELECT * FROM " + exTable.getName()
                     + " ORDER BY n1");
             Assert.fail("query should fail on data error");
         } catch (SQLException e) {
@@ -679,13 +679,13 @@ public class HdfsAnalyzeTest extends BaseFeature {
                 "STATS-MAX-FRAGMENTS=2",
                 "STATS-SAMPLE-RATIO=1.00" });
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         ReportUtils.report(
                 null,
                 getClass(),
                 "Query table to check STATS-MAX-FRAGMENTS parameter - only 2 fragments should be returned.");
-        hawq.queryResults(exTable, "SELECT * FROM " + exTable.getName()
+        gpdb.queryResults(exTable, "SELECT * FROM " + exTable.getName()
                 + " ORDER BY n1");
 
         dataTable.pumpUpTableData(2);
@@ -718,13 +718,13 @@ public class HdfsAnalyzeTest extends BaseFeature {
                 "STATS-MAX-FRAGMENTS=100",
                 "STATS-SAMPLE-RATIO=0.0010" });
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         ReportUtils.startLevel(
                 null,
                 getClass(),
                 "Query table to check STATS-SAMPLE-RATIO parameter - only 1 record should be returned.");
-        hawq.queryResults(exTable, "SELECT COUNT(*) FROM " + exTable.getName());
+        gpdb.queryResults(exTable, "SELECT COUNT(*) FROM " + exTable.getName());
 
         int countResult = Integer.parseInt(exTable.getData().get(0).get(0));
         Assert.assertTrue(almostEquals(1, countResult, 10));
@@ -734,13 +734,13 @@ public class HdfsAnalyzeTest extends BaseFeature {
                 "STATS-MAX-FRAGMENTS=100",
                 "STATS-SAMPLE-RATIO=0.05" });
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         ReportUtils.startLevel(
                 null,
                 getClass(),
                 "Query table to check STATS-SAMPLE-RATIO parameter - only 50 records should be returned.");
-        hawq.queryResults(exTable, "SELECT COUNT(*) FROM " + exTable.getName());
+        gpdb.queryResults(exTable, "SELECT COUNT(*) FROM " + exTable.getName());
 
         countResult = Integer.parseInt(exTable.getData().get(0).get(0));
         Assert.assertTrue(almostEquals(50, countResult, 10));
@@ -750,13 +750,13 @@ public class HdfsAnalyzeTest extends BaseFeature {
                 "STATS-MAX-FRAGMENTS=100",
                 "STATS-SAMPLE-RATIO=0.935" });
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         ReportUtils.startLevel(
                 null,
                 getClass(),
                 "Query table to check STATS-SAMPLE-RATIO parameter - only 935 record should be returned.");
-        hawq.queryResults(exTable, "SELECT COUNT(*) FROM " + exTable.getName());
+        gpdb.queryResults(exTable, "SELECT COUNT(*) FROM " + exTable.getName());
 
         countResult = Integer.parseInt(exTable.getData().get(0).get(0));
         Assert.assertTrue(almostEquals(935, countResult, 10));
@@ -794,15 +794,15 @@ public class HdfsAnalyzeTest extends BaseFeature {
         exTable.setName("analyze_text_big");
         exTable.setPath(csvPath);
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
-        hawq.analyze(exTable);
+        gpdb.analyze(exTable);
 
         verifyPgClassValues(-1, 1000000, 300000);
         verifyPgStatsEntries(exTable.getFields().length);
 
         ReportUtils.report(null, getClass(), "Sanity: table is queryable");
-        hawq.queryResults(exTable, "SELECT COUNT(*) FROM " + exTable.getName());
+        gpdb.queryResults(exTable, "SELECT COUNT(*) FROM " + exTable.getName());
 
         Table countTable = new Table("count", null);
         countTable.addRow(new String[] { "1000000" });
@@ -849,15 +849,15 @@ public class HdfsAnalyzeTest extends BaseFeature {
         exTable.setDataSchema(schemaPackage + "CustomWritable");
         exTable.setFormatter("pxfwritable_import");
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
-        hawq.analyze(exTable);
+        gpdb.analyze(exTable);
 
         verifyPgClassValues(-1, 9999999, 300000);
         verifyPgStatsEntries(exTable.getFields().length);
 
         ReportUtils.report(null, getClass(), "Sanity: table is queryable");
-        hawq.queryResults(exTable, "SELECT COUNT(*) FROM " + exTable.getName());
+        gpdb.queryResults(exTable, "SELECT COUNT(*) FROM " + exTable.getName());
 
         Table countTable = new Table("count", null);
         countTable.addRow(new String[] { "9999999" });
@@ -885,7 +885,7 @@ public class HdfsAnalyzeTest extends BaseFeature {
 
         Table analyzeResults = new Table("results", null);
 
-        hawq.queryResults(analyzeResults,
+        gpdb.queryResults(analyzeResults,
                 "SELECT relpages::int, reltuples::int FROM pg_class WHERE relname = '"
                         + exTable.getName() + "'");
 
@@ -944,7 +944,7 @@ public class HdfsAnalyzeTest extends BaseFeature {
 
         Table analyzeResults = new Table("results", null);
 
-        hawq.queryResults(analyzeResults,
+        gpdb.queryResults(analyzeResults,
                 "SELECT COUNT(*) FROM pg_stats WHERE schemaname = '" + schema
                         + "' AND tablename = '" + exTable.getName() + "'");
 

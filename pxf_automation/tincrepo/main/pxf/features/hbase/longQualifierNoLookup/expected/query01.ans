@@ -1,7 +1,7 @@
 -- @description query01 for PXF HBase - long qualifier name with no look up table
 
 SELECT * from long_qualifiers_hbase_table;
- recordkey | cf1:very_long_qualifier_name_that_hawq_will_probaly_is_going_to | cf1:short_qualifier 
+ recordkey | cf1:very_long_qualifier_name_that_gpdb_will_probaly_is_going_to | cf1:short_qualifier
 -----------+-----------------------------------------------------------------+---------------------
  000000000 |                                                                 | short_0
  000000010 |                                                                 | short_1

@@ -1059,7 +1059,7 @@ class __gpdbSQLTestCase__(SQLTestCase):
                 self.data_provider = "optimizer_handling"
 
 @tinctest.skipLoading("Test model. No tests loaded.")
-class __hawqSQLTestCase__(SQLTestCase):
+class __gpdbSQLTestCase__(SQLTestCase):
     """
     Since HAWQ doesn't support planner, we should always set it to on
     """

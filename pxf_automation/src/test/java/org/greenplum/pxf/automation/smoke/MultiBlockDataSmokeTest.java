@@ -37,7 +37,7 @@ public class MultiBlockDataSmokeTest extends BaseSmoke {
         exTable.setHost(pxfHost);
         exTable.setPort(pxfPort);
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
     }
 
     @Override

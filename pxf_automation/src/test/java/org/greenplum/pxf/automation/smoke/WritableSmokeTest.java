@@ -37,8 +37,8 @@ public class WritableSmokeTest extends BaseSmoke {
         writableExTable.setDelimiter("|");
         writableExTable.setHost(pxfHost);
         writableExTable.setPort(pxfPort);
-        hawq.createTableAndVerify(writableExTable);
-        hawq.copyFromFile(writableExTable, new File(dataTempFolder + "/" + fileName), "|", false);
+        gpdb.createTableAndVerify(writableExTable);
+        gpdb.copyFromFile(writableExTable, new File(dataTempFolder + "/" + fileName), "|", false);
         // Create Readable External Table
         exTable = TableFactory.getPxfReadableTextTable("pxf_smoke_small_data", new String[] {
                 "name text",
@@ -49,7 +49,7 @@ public class WritableSmokeTest extends BaseSmoke {
         }, hdfs.getWorkingDirectory() + "/bzip", "|");
         exTable.setHost(pxfHost);
         exTable.setPort(pxfPort);
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
     }
 
     @Override

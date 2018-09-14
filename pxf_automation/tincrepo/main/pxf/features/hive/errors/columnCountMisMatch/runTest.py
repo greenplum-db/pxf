@@ -3,7 +3,7 @@ from mpp.models import SQLTestCase
 
 class PxfColumnDataTypeMisMatch(SQLConcurrencyTestCase):
     """
-    @product_version  hawq: [1.3.1-]
+    @product_version  gpdb: [1.3.1-]
     @db_name pxfautomation
     @concurrency 1
     @gpdiff True

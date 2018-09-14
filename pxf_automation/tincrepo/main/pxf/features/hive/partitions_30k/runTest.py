@@ -3,7 +3,7 @@ from mpp.models import SQLConcurrencyTestCase
 
 class PxfHivePartitions30k(SQLConcurrencyTestCase):
     """
-    @product_version  hawq: [1.3.0.3-]
+    @product_version  gpdb: [1.3.0.3-]
     @db_name pxfautomation
     @concurrency 1
     @gpdiff True

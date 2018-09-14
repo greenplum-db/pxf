@@ -67,7 +67,7 @@ public class HBaseSmokeTest extends BaseSmoke {
                         "bool boolean" }, hbaseTable);
         exTable.setHost(pxfHost);
         exTable.setPort(pxfPort);
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         // Create PXF Lookup HBase table
         lookupTable = new LookupTable();

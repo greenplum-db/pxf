@@ -23,16 +23,16 @@ public enum EnumHiveToGpdbType {
     UnionType("uniontype", "text", "[<,>]");
 
     private String hiveType;
-    private String hawqTypeName;
+    private String gpdbTypeName;
     private String splitExpression;
 
-    EnumHiveToGpdbType(String hiveType, String hawqTypeName) {
+    EnumHiveToGpdbType(String hiveType, String gpdbTypeName) {
         this.hiveType = hiveType;
-        this.hawqTypeName = hawqTypeName;
+        this.gpdbTypeName = gpdbTypeName;
     }
 
-    EnumHiveToGpdbType(String hiveType, String hawqTypeName, String splitExpression) {
-        this(hiveType, hawqTypeName);
+    EnumHiveToGpdbType(String hiveType, String gpdbTypeName, String splitExpression) {
+        this(hiveType, gpdbTypeName);
         this.splitExpression = splitExpression;
     }
 
@@ -41,7 +41,7 @@ public enum EnumHiveToGpdbType {
     }
 
     public String getGpdbType() {
-        return this.hawqTypeName;
+        return this.gpdbTypeName;
     }
 
     public String getSplitExpression() {

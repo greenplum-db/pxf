@@ -99,7 +99,7 @@ public class HiveTextTest extends HiveBaseTest {
         createExternalTable(GPDB_HIVE_TYPES_TABLE,
                 PXF_HIVE_TYPES_COLS, hiveTypesTable, true, ",");
 
-        hawq.queryResults(exTable, "SELECT * FROM " + exTable.getName() + " ORDER BY t1");
+        gpdb.queryResults(exTable, "SELECT * FROM " + exTable.getName() + " ORDER BY t1");
         comparisonDataTable.loadDataFromFile(localDataResourcesFolder + "/hive/" + HIVE_TYPES_DATA_FILE_NAME,
                 ",", 0, false);
 
@@ -123,7 +123,7 @@ public class HiveTextTest extends HiveBaseTest {
 
         String queryStr = "SELECT * FROM " + exTable.getName() + " ORDER BY t1";
         try {
-            hawq.queryResults(exTable, queryStr);
+            gpdb.queryResults(exTable, queryStr);
             Assert.fail("Query should fail with schema mismatch error");
         } catch (Exception e) {
             ExceptionUtils.validate(null, e,
@@ -138,7 +138,7 @@ public class HiveTextTest extends HiveBaseTest {
                 tableFieldTypes, hiveTypesTable, false, ",");
 
         try {
-            hawq.queryResults(exTable, queryStr);
+            gpdb.queryResults(exTable, queryStr);
             Assert.fail("Query should fail with schema mismatch error");
         } catch (Exception e) {
             ExceptionUtils.validate(null, e,
@@ -153,7 +153,7 @@ public class HiveTextTest extends HiveBaseTest {
                 tableFieldTypes, hiveTypesTable, false, ",");
 
         try {
-            hawq.queryResults(exTable, queryStr);
+            gpdb.queryResults(exTable, queryStr);
             Assert.fail("Query should fail with schema mismatch error");
         } catch (Exception e) {
             ExceptionUtils.validate(null, e,
@@ -179,8 +179,8 @@ public class HiveTextTest extends HiveBaseTest {
         String createCmd = exTable.constructCreateStmt();
         createCmd = createCmd.replace("LOCATION (E'", "LOCATION ('");
         try {
-            hawq.dropTable(exTable, false);
-            hawq.runQuery(createCmd);
+            gpdb.dropTable(exTable, false);
+            gpdb.runQuery(createCmd);
             if (SystemUtils.getPGMode() == PGModeEnum.HAWQ) {
                 Assert.fail("Query should throw a warning about non standard use of escape");
             }
@@ -188,9 +188,9 @@ public class HiveTextTest extends HiveBaseTest {
             ExceptionUtils.validate(null, e, new Exception(
                             "nonstandard use of escape in a string literal"), true,true);
         }
-        Assert.assertTrue("Table " + exTable.getName() + " was not created", hawq.checkTableExists(exTable));
+        Assert.assertTrue("Table " + exTable.getName() + " was not created", gpdb.checkTableExists(exTable));
 
-        hawq.queryResults(exTable, "SELECT * FROM " + exTable.getName() + " ORDER BY t1");
+        gpdb.queryResults(exTable, "SELECT * FROM " + exTable.getName() + " ORDER BY t1");
         ComparisonUtils.compareTables(exTable, comparisonDataTable, null);
     }
 
@@ -204,7 +204,7 @@ public class HiveTextTest extends HiveBaseTest {
 
         createExternalTable(PXF_HIVE_HETEROGEN_TABLE,
                 PXF_HIVE_SMALLDATA_FMT_COLS, hiveTextPartitionTable);
-        hawq.queryResults(exTable, "SELECT * FROM " + exTable.getName() + " ORDER BY fmt, t1");
+        gpdb.queryResults(exTable, "SELECT * FROM " + exTable.getName() + " ORDER BY fmt, t1");
 
         // pump up the small data to fit the unified data
         comparisonDataTable.loadDataFromFile(localDataResourcesFolder + "/hive/" + HIVE_DATA_FILE_NAME,
@@ -237,7 +237,7 @@ public class HiveTextTest extends HiveBaseTest {
                 PXF_HIVE_SMALLDATA_COLS, hiveTable);
 
         try {
-            hawq.queryResults(exTable, "SELECT * FROM " + exTable.getName() + " ORDER BY fmt, t1");
+            gpdb.queryResults(exTable, "SELECT * FROM " + exTable.getName() + " ORDER BY fmt, t1");
             Assert.fail("Query should fail with nonexistent column error");
         } catch (Exception e) {
             ExceptionUtils.validate(null, e, new Exception(
@@ -278,7 +278,7 @@ public class HiveTextTest extends HiveBaseTest {
         String queryStr = "SELECT * FROM " + exTable.getName() + " ORDER BY fmt, t1";
         exTable.setUserParameters(hiveTestFilter(filterString));
         createTable(exTable);
-        hawq.queryResults(exTable, queryStr);
+        gpdb.queryResults(exTable, queryStr);
 
         // Pump up the small data to fit the unified data
         appendToEachRowOfComparisonTable(Arrays.asList("rc1", "a"));
@@ -288,7 +288,7 @@ public class HiveTextTest extends HiveBaseTest {
         filterString = "a4c25s3drc2o5a5c25s1dbo5l0";
         exTable.setUserParameters(hiveTestFilter(filterString));
         createTable(exTable);
-        hawq.queryResults(exTable, queryStr);
+        gpdb.queryResults(exTable, queryStr);
 
         // Pump up the small data to fit the unified data
         appendToEachRowOfComparisonTable(Arrays.asList("rc2", "b"));
@@ -299,7 +299,7 @@ public class HiveTextTest extends HiveBaseTest {
         exTable.setDelimiter("E'\\x01'");
         exTable.setUserParameters(hiveTestFilter(filterString));
         createTable(exTable);
-        hawq.queryResults(exTable, queryStr);
+        gpdb.queryResults(exTable, queryStr);
 
         // Pump up the small data to fit the unified data
         appendToEachRowOfComparisonTable(Arrays.asList("rc3", "c"));
@@ -311,18 +311,18 @@ public class HiveTextTest extends HiveBaseTest {
         exTable.setUserParameters(hiveTestFilter(filterString));
         createTable(exTable);
         // Query all data, non matched filter is done in PXF
-        hawq.queryResults(exTable, queryStr);
+        gpdb.queryResults(exTable, queryStr);
         ComparisonUtils.compareTables(exTable, new Table("comparisonData", null), null);
 
-        // Disable back hawq filter
-        hawq.runQuery("SET gp_external_enable_filter_pushdown = false;");
+        // Disable back gpdb filter
+        gpdb.runQuery("SET gp_external_enable_filter_pushdown = false;");
 
         // Mixed filter with partition and non partition fields, partition filtering: fmt = 'rc3' AND prt = 'c'
         filterString = "a4c25s3drc3o5a5c25s1dco5l0";
         exTable.setDelimiter("E'\\x01'");
         exTable.setUserParameters(hiveTestFilter(filterString));
         createTable(exTable);
-        hawq.queryResults(exTable,"SELECT * FROM " + exTable.getName()
+        gpdb.queryResults(exTable,"SELECT * FROM " + exTable.getName()
                         + " WHERE t1='row6' AND t2='s_11' AND num1='6' AND dub1='11' ORDER BY fmt, t1");
 
         // Prepare expected data
@@ -335,7 +335,7 @@ public class HiveTextTest extends HiveBaseTest {
         exTable.setDelimiter("E'\\x01'");
         exTable.setUserParameters(hiveTestFilter(filterString));
         createTable(exTable);
-        hawq.queryResults(exTable,"SELECT * FROM " + exTable.getName()
+        gpdb.queryResults(exTable,"SELECT * FROM " + exTable.getName()
                         + " WHERE t1='row6' AND t2='s_11' AND num1='6' AND dub1='11' ORDER BY fmt, t1, prt");
 
         // Prepare expected data
@@ -350,7 +350,7 @@ public class HiveTextTest extends HiveBaseTest {
         exTable.setDelimiter("E'\\x01'");
         exTable.setUserParameters(hiveTestFilter(filterString));
         createTable(exTable);
-        hawq.queryResults(exTable,"SELECT * FROM " + exTable.getName()
+        gpdb.queryResults(exTable,"SELECT * FROM " + exTable.getName()
                         + " WHERE t1='row5' AND t2='s_10' AND num1='5' AND dub1='10' ORDER BY fmt, t1, prt");
 
         // prepare expected data
@@ -372,7 +372,7 @@ public class HiveTextTest extends HiveBaseTest {
         prepareHeteroData();
         createExternalTable(PXF_HIVE_HETEROGEN_TABLE + "_using_filter",
                 PXF_HIVE_SMALLDATA_PRT_COLS, hiveHeteroTable);
-        hawq.queryResults(exTable, "SELECT * FROM " + exTable.getName()
+        gpdb.queryResults(exTable, "SELECT * FROM " + exTable.getName()
                 + " WHERE num1 > 5 AND dub1 < 12 ORDER BY fmt, t1");
 
         // prepare expected data
@@ -396,7 +396,7 @@ public class HiveTextTest extends HiveBaseTest {
         prepareHeteroData();
         createExternalTable(PXF_HIVE_HETEROGEN_TABLE + "_using_filter",
                 PXF_HIVE_SMALLDATA_PRT_COLS, hiveHeteroTable, false);
-        hawq.queryResults(exTable, "SELECT * FROM " + exTable.getName()
+        gpdb.queryResults(exTable, "SELECT * FROM " + exTable.getName()
                 + " WHERE fmt = 'rc1' AND prt = 'a' ORDER BY fmt, t1");
 
         // pump up the small data to fit the unified data

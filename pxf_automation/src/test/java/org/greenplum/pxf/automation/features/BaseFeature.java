@@ -5,11 +5,11 @@ import org.greenplum.pxf.automation.BaseFunctionality;
 
 public abstract class BaseFeature extends BaseFunctionality {
 
-    protected void createTable(ReadableExternalTable hawqExternalTable) throws Exception {
+    protected void createTable(ReadableExternalTable gpdbExternalTable) throws Exception {
 
-        hawqExternalTable.setHost(pxfHost);
-        hawqExternalTable.setPort(pxfPort);
-        hawq.createTableAndVerify(hawqExternalTable);
+        gpdbExternalTable.setHost(pxfHost);
+        gpdbExternalTable.setPort(pxfPort);
+        gpdb.createTableAndVerify(gpdbExternalTable);
     }
 
 }

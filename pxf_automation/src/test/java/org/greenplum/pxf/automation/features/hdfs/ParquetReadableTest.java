@@ -53,7 +53,7 @@ public class ParquetReadableTest extends BaseFeature {
         exTable.setFormatter("pxfwritable_import");
         exTable.setProfile("Parquet");
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
         runTincTest("pxf.features.hdfs.readable.parquet.primitive_types.runTest");
     }
 }

@@ -120,7 +120,7 @@ public class HBaseTest extends BaseFeature {
                 "pxf_hbase_full_names", fields, hbaseTable);
         exTableFullColumnNames.setHost(pxfHost);
         exTableFullColumnNames.setPort(pxfPort);
-        hawq.createTableAndVerify(exTableFullColumnNames);
+        gpdb.createTableAndVerify(exTableFullColumnNames);
         // prepare lookup table with suitable mapping for 2 hbase tables
         prepareLookupTable();
     }
@@ -359,7 +359,7 @@ public class HBaseTest extends BaseFeature {
                 "pxf_hbase_different_columns_names", exTableDifferentFieldsNames, hbaseTable);
         exTableNullHBase.setHost(pxfHost);
         exTableNullHBase.setPort(pxfPort);
-        hawq.createTableAndVerify(exTableNullHBase);
+        gpdb.createTableAndVerify(exTableNullHBase);
         runTincTest("pxf.features.hbase.errors.differentColumnsNames.runTest");
     }
 
@@ -438,7 +438,7 @@ public class HBaseTest extends BaseFeature {
                 "pxf_hbase_integer_key", fields, hbaseTable);
         integerRecordKeyExtTable.setHost(pxfHost);
         integerRecordKeyExtTable.setPort(pxfPort);
-        hawq.createTableAndVerify(integerRecordKeyExtTable);
+        gpdb.createTableAndVerify(integerRecordKeyExtTable);
         String whereClause = " WHERE recordkey > 90 AND recordkey <= 103";
         String filterString = "a0c23s2d90o2a0c23s3d103o3l0";
         verifyFilterResults(hbaseTable, integerRecordKeyExtTable, whereClause,
@@ -458,7 +458,7 @@ public class HBaseTest extends BaseFeature {
                 new HBaseTable("dummy", null));
         notExistsHBaseTableExtTable.setHost(pxfHost);
         notExistsHBaseTableExtTable.setPort(pxfPort);
-        hawq.createTableAndVerify(notExistsHBaseTableExtTable);
+        gpdb.createTableAndVerify(notExistsHBaseTableExtTable);
         runTincTest("pxf.features.hbase.errors.notExistingHBaseTable.runTest");
     }
 
@@ -495,7 +495,7 @@ public class HBaseTest extends BaseFeature {
     public void defaultAnalyze() throws Exception {
 
         // Perform Analyze on external table and check suitable Warnings
-        hawq.runQueryWithExpectedWarning("ANALYZE " + exTable.getName(),
+        gpdb.runQueryWithExpectedWarning("ANALYZE " + exTable.getName(),
                 "ANALYZE for HBase plugin is not supported", true);
         runTincTest("pxf.features.hbase.default_analyze.runTest");
     }
@@ -513,7 +513,7 @@ public class HBaseTest extends BaseFeature {
         wrongProfileHBaseTableExtTable.setHost(pxfHost);
         wrongProfileHBaseTableExtTable.setPort(pxfPort);
         wrongProfileHBaseTableExtTable.setProfile(EnumPxfDefaultProfiles.Hive.toString());
-        hawq.createTableAndVerify(wrongProfileHBaseTableExtTable);
+        gpdb.createTableAndVerify(wrongProfileHBaseTableExtTable);
         runTincTest("pxf.features.hbase.errors.useWrongProfile.runTest");
     }
 
@@ -529,12 +529,12 @@ public class HBaseTest extends BaseFeature {
         HBaseTable longQualifiersNamesHBaseTable = new HBaseTable(
                 "long_qualifiers_hbase_table", new String[] { "cf1" });
         String[] qualifiers = new String[] {
-                "very_long_qualifier_name_that_hawq_will_probaly_is_going_to_cut",
+                "very_long_qualifier_name_that_gpdb_will_probaly_is_going_to_cut",
                 "short_qualifier"
         };
-        String[] hawqFields = new String[] {
+        String[] gpdbFields = new String[] {
                 "recordkey TEXT",
-                "\"cf1:very_long_qualifier_name_that_hawq_will_probaly_is_going_to_cut\" TEXT",
+                "\"cf1:very_long_qualifier_name_that_gpdb_will_probaly_is_going_to_cut\" TEXT",
                 "\"cf1:short_qualifier\" TEXT"
         };
         // create HBase table with data
@@ -545,18 +545,18 @@ public class HBaseTest extends BaseFeature {
         hbase.put(longQualifiersNamesHBaseTable);
         // create external table pointing the the HBase table
         ReadableExternalTable externalTable = TableFactory.getPxfHBaseReadableTable(
-                "long_qualifiers_hbase_table", hawqFields, longQualifiersNamesHBaseTable);
+                "long_qualifiers_hbase_table", gpdbFields, longQualifiersNamesHBaseTable);
         externalTable.setHost(pxfHost);
         externalTable.setPort(pxfPort);
         try {
-            hawq.createTableAndVerify(externalTable);
+            gpdb.createTableAndVerify(externalTable);
             // if no Exception thrown, fail test
             Assert.fail("Exception should have been thrown");
         } catch (Exception e) {
             // Verify message in caught exception
             ExceptionUtils.validate(null, e,
-                    new PSQLException("identifier \"cf1:very_long_qualifier_name_that_hawq_will_probaly_is_going_to_cut\" "
-                            + "will be truncated to \"cf1:very_long_qualifier_name_that_hawq_will_probaly_is_going_to\"",
+                    new PSQLException("identifier \"cf1:very_long_qualifier_name_that_gpdb_will_probaly_is_going_to_cut\" "
+                            + "will be truncated to \"cf1:very_long_qualifier_name_that_gpdb_will_probaly_is_going_to\"",
                             null), false, true);
         }
         // verify query results
@@ -575,11 +575,11 @@ public class HBaseTest extends BaseFeature {
         HBaseTable longQualifiersNamesHBaseTable = new HBaseTable(
                 "long_qualifiers_hbase_table", new String[] { "cf1" });
         String[] qualifiers = new String[] {
-                "very_long_qualifier_name_that_hawq_will_probaly_is_going_to_cut",
+                "very_long_qualifier_name_that_gpdb_will_probaly_is_going_to_cut",
                 "short_qualifier"
         };
         // alias External table column to HBase table qualifiers
-        String[] hawqFields = new String[] {
+        String[] gpdbFields = new String[] {
                 "used_to_be_long TEXT",
                 "short TEXT"
         };
@@ -598,10 +598,10 @@ public class HBaseTest extends BaseFeature {
         hbase.put(addtionalMapping);
 
         ReadableExternalTable externalTable = TableFactory.getPxfHBaseReadableTable(
-                "long_qualifiers_hbase_table", hawqFields, longQualifiersNamesHBaseTable);
+                "long_qualifiers_hbase_table", gpdbFields, longQualifiersNamesHBaseTable);
         externalTable.setHost(pxfHost);
         externalTable.setPort(pxfPort);
-        hawq.createTableAndVerify(externalTable);
+        gpdb.createTableAndVerify(externalTable);
         runTincTest("pxf.features.hbase.longQualifierWithLookup.runTest");
     }
 
@@ -627,7 +627,7 @@ public class HBaseTest extends BaseFeature {
                 "empty_hbase_table", exTableFields, emptyTable);
         exTable.setHost(pxfHost);
         exTable.setPort(pxfPort);
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         verifyFilterResults(emptyTable, exTable, "", NO_FILTER,
                 "empty", false);
@@ -672,11 +672,11 @@ public class HBaseTest extends BaseFeature {
             String whereClause, String filterString, String tincCase, boolean verifyFilterString) throws Exception {
 
         // check using no filter pushdown
-        hawq.runQuery("SET gp_external_enable_filter_pushdown = off");
+        gpdb.runQuery("SET gp_external_enable_filter_pushdown = off");
         // run tinc case to verify filter is working
         runTincTest("pxf.features.hbase." + tincCase + ".runTest");
         // check with filter pushdown
-        hawq.runQuery("SET gp_external_enable_filter_pushdown = on");
+        gpdb.runQuery("SET gp_external_enable_filter_pushdown = on");
         // run tinc case to see filter is working
         runTincTest("pxf.features.hbase." + tincCase + ".runTest");
         // use FilterPrinterAccessor to get the serialized filter in the pxf side
@@ -712,10 +712,10 @@ public class HBaseTest extends BaseFeature {
         externalTableFilterPrinter.setFormatter("pxfwritable_import");
         externalTableFilterPrinter.setHost(pxfHost);
         externalTableFilterPrinter.setPort(pxfPort);
-        hawq.createTableAndVerify(externalTableFilterPrinter);
+        gpdb.createTableAndVerify(externalTableFilterPrinter);
 
         try {
-            hawq.queryResults(externalTableFilterPrinter,
+            gpdb.queryResults(externalTableFilterPrinter,
                     "SELECT * FROM " + externalTableFilterPrinter.getName() +
                             " " + whereClause + " ORDER BY recordkey ASC");
         } catch (Exception e) {
@@ -749,7 +749,7 @@ public class HBaseTest extends BaseFeature {
         externalTableHBaseWithFilter.setUserParameters(new String[] { "TEST-HBASE-FILTER=" + filter });
         externalTableHBaseWithFilter.setHost(pxfHost);
         externalTableHBaseWithFilter.setPort(pxfPort);
-        hawq.createTableAndVerify(externalTableHBaseWithFilter);
+        gpdb.createTableAndVerify(externalTableHBaseWithFilter);
     }
 
     /**
@@ -782,7 +782,7 @@ public class HBaseTest extends BaseFeature {
                 "pxf_" + hbaseTable.getName(), exTableFields, hbaseTable);
         exTable.setHost(pxfHost);
         exTable.setPort(pxfPort);
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
         return exTable;
     }
 }

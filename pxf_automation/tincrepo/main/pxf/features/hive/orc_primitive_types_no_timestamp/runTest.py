@@ -2,7 +2,7 @@ from mpp.models import SQLConcurrencyTestCase
 
 class HiveOrcTypesNoTimestamp(SQLConcurrencyTestCase):
     """
-    @product_version  hawq: [2.0-]
+    @product_version  gpdb: [2.0-]
     @db_name pxfautomation
     @concurrency 1
     @gpdiff True

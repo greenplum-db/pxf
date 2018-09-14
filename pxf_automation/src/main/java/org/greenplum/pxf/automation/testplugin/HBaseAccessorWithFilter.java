@@ -210,7 +210,7 @@ public class HBaseAccessorWithFilter extends Plugin implements ReadAccessor {
 	 *
 	 * use row key ranges to limit split count
 	 * 
-	 * ignores filter from hawq, use user defined filter
+	 * ignores filter from gpdb, use user defined filter
 	 */
 	private void addFilters() throws Exception {
 		

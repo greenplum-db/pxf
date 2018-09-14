@@ -1,3 +1,3 @@
 -- @description query01 for PXF Hive RC binary data case
 
-SELECT * FROM hawq_hive_binary ORDER BY num1;
+SELECT * FROM gpdb_hive_binary ORDER BY num1;

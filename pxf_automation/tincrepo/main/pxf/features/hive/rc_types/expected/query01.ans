@@ -1,6 +1,6 @@
 -- @description query01 for PXF Hive RC types case
 
-SELECT * FROM hawq_hive_types ORDER BY key;
+SELECT * FROM gpdb_hive_types ORDER BY key;
   key  |          t1          | num1 | dub1 |         tm          |  r   |    bg    | b | si | ba 
 -------+----------------------+------+------+---------------------+------+----------+---+----+----
  row1  | row1                 |    1 |    6 | 2013-07-13 21:00:05 |  7.7 | 23456789 | f |  1 | 

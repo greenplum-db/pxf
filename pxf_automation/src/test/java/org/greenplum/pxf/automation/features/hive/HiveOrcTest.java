@@ -89,10 +89,10 @@ public class HiveOrcTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_SMALL_DATA_TABLE,
                 PXF_HIVE_SMALLDATA_COLS, hiveOrcTable);
 
-        Table hawqNativeTable = new Table(GPDB_SMALL_DATA_TABLE, PXF_HIVE_SMALLDATA_COLS);
-        hawqNativeTable.setDistributionFields(new String[] { "t1" });
-        hawq.createTableAndVerify(hawqNativeTable);
-        hawq.copyData(exTable, hawqNativeTable);
+        Table gpdbNativeTable = new Table(GPDB_SMALL_DATA_TABLE, PXF_HIVE_SMALLDATA_COLS);
+        gpdbNativeTable.setDistributionFields(new String[] { "t1" });
+        gpdb.createTableAndVerify(gpdbNativeTable);
+        gpdb.copyData(exTable, gpdbNativeTable);
     }
 
     /**
@@ -209,7 +209,7 @@ public class HiveOrcTest extends HiveBaseTest {
                 PXF_HIVE_SMALLDATA_COLS, hiveSmallDataTable);
 
         // Perform Analyze on external table and check suitable Warnings.
-        hawq.runQueryWithExpectedWarning("ANALYZE " + exTable.getName(),
+        gpdb.runQueryWithExpectedWarning("ANALYZE " + exTable.getName(),
                 "ANALYZE for HiveRc, HiveText, and HiveOrc plugins is not supported", true);
 
         runTincTest("pxf.features.hive.default_analyze.runTest");

@@ -80,7 +80,7 @@ public class ProfilesTest extends BaseFeature {
     @Test(groups = { "features", "sanity" })
     protected void sanity() throws Exception {
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
         runVerificationTinc();
     }
 
@@ -110,7 +110,7 @@ public class ProfilesTest extends BaseFeature {
     public void caseInsensetive() throws Exception {
 
         exTable.setProfile(EnumPxfDefaultProfiles.HdfsTextSimple.toString().toUpperCase());
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
         runVerificationTinc();
     }
 
@@ -125,7 +125,7 @@ public class ProfilesTest extends BaseFeature {
         exTable.setProfile(null);
         exTable.setUserParameters(new String[] { "Ready=Go", "Profile=" +
                 EnumPxfDefaultProfiles.HdfsTextSimple.toString() });
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
         runVerificationTinc();
     }
 
@@ -139,7 +139,7 @@ public class ProfilesTest extends BaseFeature {
 
         // set not exists profile
         exTable.setProfile(EnumPxfDefaultProfiles.HdfsTextSimple.toString() + "_Fake");
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
         runTincTest("pxf.features.profiles.errors.missingProfile.runTest");
     }
 
@@ -160,7 +160,7 @@ public class ProfilesTest extends BaseFeature {
         cluster.restart(PhdCluster.EnumClusterServices.pxf);
 
         exTable.setProfile(EnumPxfDefaultProfiles.HdfsTextSimple.toString());
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
         runTincTest("pxf.features.profiles.errors.emptyProfile.runTest");
     }
 
@@ -180,7 +180,7 @@ public class ProfilesTest extends BaseFeature {
         cluster.restart(PhdCluster.EnumClusterServices.pxf);
 
         exTable.setProfile(EnumPxfDefaultProfiles.HdfsTextSimple.toString());
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
         runVerificationTinc();
     }
 
@@ -201,7 +201,7 @@ public class ProfilesTest extends BaseFeature {
         cluster.restart(PhdCluster.EnumClusterServices.pxf);
 
         exTable.setProfile(EnumPxfDefaultProfiles.HdfsTextSimple.toString());
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
         runTincTest("pxf.features.profiles.errors.missingPlugin.runTest");
     }
 
@@ -226,7 +226,7 @@ public class ProfilesTest extends BaseFeature {
         cluster.copyFileToNodes(pxfProfiles.getXmlFilePath(), cluster.getPxfConfLocation());
         cluster.restart(PhdCluster.EnumClusterServices.pxf);
         exTable.setProfile("BeHereNow");
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
         runVerificationTinc();
     }
 
@@ -242,7 +242,7 @@ public class ProfilesTest extends BaseFeature {
         exTable.setFragmenter("org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter");
         exTable.setAccessor("org.greenplum.pxf.plugins.hdfs.LineBreakAccessor");
         exTable.setResolver("org.greenplum.pxf.plugins.hdfs.StringPassResolver");
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         runVerificationTinc();
 
@@ -268,7 +268,7 @@ public class ProfilesTest extends BaseFeature {
         cluster.restart(PhdCluster.EnumClusterServices.pxf);
         // wait for change to load
         Thread.sleep(2000);
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
         runTincTest("pxf.features.profiles.errors.malformedXmlFile.runTest");
     }
 
@@ -287,7 +287,7 @@ public class ProfilesTest extends BaseFeature {
         });
 
         try {
-            hawq.createTableAndVerify(exTable);
+            gpdb.createTableAndVerify(exTable);
             Assert.fail("Exception should have been thrown because of duplicate profile");
         } catch (PSQLException e) {
             String address = exTable.getHost();
@@ -322,7 +322,7 @@ public class ProfilesTest extends BaseFeature {
         exTable.setResolver("org.greenplum.pxf.plugins.hdfs.StringPassResolver");
         exTable.setUserParameters(new String[] { "Profile=" + EnumPxfDefaultProfiles.HdfsTextSimple });
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         runTincTest("pxf.features.profiles.errors.duplicateProfileParametersCheck.runTest");
         exTable.setFragmenter(null);
@@ -342,7 +342,7 @@ public class ProfilesTest extends BaseFeature {
         exTable.setProfile(EnumPxfDefaultProfiles.HdfsTextSimple.toString());
         exTable.setUserParameters(new String[] { "COMPRESSION_CODEC=org.apache.hadoop.io.compress.BZip2Codec" });
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
         runVerificationTinc();
     }
 

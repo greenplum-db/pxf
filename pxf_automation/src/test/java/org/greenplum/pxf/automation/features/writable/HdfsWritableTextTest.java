@@ -27,7 +27,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
 
     private static final String COMPRESSION_CODEC = "org.apache.hadoop.io.compress.DefaultCodec";
     private Table dataTable;
-    private String[] hawqTableFields;
+    private String[] gpdbTableFields;
     private String hdfsWorkingDataDir;
 
     private enum InsertionMethod {
@@ -39,7 +39,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
     @Override
     protected void beforeClass() throws Exception {
         super.beforeClass();
-        hawqTableFields = new String[] {
+        gpdbTableFields = new String[] {
                 "t1    TEXT",
                 "bi    BIGINT",
                 "b     BIT",
@@ -65,12 +65,12 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
     @Override
     protected void beforeMethod() throws Exception {
         writableExTable = TableFactory.getPxfWritableTextTable(writableTableName,
-                hawqTableFields, hdfsWritePath + writableTableName, ",");
+                gpdbTableFields, hdfsWritePath + writableTableName, ",");
         writableExTable.setHost(pxfHost);
         writableExTable.setPort(pxfPort);
 
         readableExTable = TableFactory.getPxfReadableTextTable(readableTableName,
-                hawqTableFields, hdfsWritePath + writableTableName, ",");
+                gpdbTableFields, hdfsWritePath + writableTableName, ",");
         readableExTable.setHost(pxfHost);
         readableExTable.setPort(pxfPort);
     }
@@ -88,7 +88,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
         writableExTable.setFragmenter("org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter");
         writableExTable.setAccessor("org.greenplum.pxf.plugins.hdfs.LineBreakAccessor");
         writableExTable.setResolver("org.greenplum.pxf.plugins.hdfs.StringPassResolver");
-        hawq.createTableAndVerify(writableExTable);
+        gpdb.createTableAndVerify(writableExTable);
 
         insertData(dataTable, writableExTable, InsertionMethod.INSERT);
         verifyResult(hdfsWritePath + writableTableName, dataTable);
@@ -105,7 +105,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
     public void textFormatInsertThreadSafeFalse() throws Exception {
 
         writableExTable.setUserParameters(new String[] { "THREAD-SAFE=FALSE" });
-        hawq.createTableAndVerify(writableExTable);
+        gpdb.createTableAndVerify(writableExTable);
 
         insertData(dataTable, writableExTable, InsertionMethod.INSERT);
         verifyResult(hdfsWritePath + writableTableName, dataTable);
@@ -123,11 +123,11 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
     public void textFormatInsertDifferentThreadSafeStates() throws Exception {
 
         WritableExternalTable writableExTableFalseThreadSafe = TableFactory.getPxfWritableTextTable(
-                writableTableName, hawqTableFields, hdfsWritePath + writableTableName, ",");
+                writableTableName, gpdbTableFields, hdfsWritePath + writableTableName, ",");
         writableExTableFalseThreadSafe.setUserParameters(new String[] { "THREAD-SAFE=FALSE" });
         writableExTableFalseThreadSafe.setHost(pxfHost);
         writableExTableFalseThreadSafe.setPort(pxfPort);
-        hawq.createTableAndVerify(writableExTable);
+        gpdb.createTableAndVerify(writableExTable);
 
         insertData(dataTable, writableExTable, InsertionMethod.INSERT);
         insertData(dataTable, writableExTableFalseThreadSafe, InsertionMethod.INSERT);
@@ -146,11 +146,11 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
     public void textFormatInsertDefaultCodec() throws Exception {
 
         writableExTable.setCompressionCodec(COMPRESSION_CODEC);
-        hawq.createTableAndVerify(writableExTable);
+        gpdb.createTableAndVerify(writableExTable);
         insertData(dataTable, writableExTable, InsertionMethod.INSERT);
 
-        hawq.createTableAndVerify(readableExTable);
-        hawq.queryResults(readableExTable,
+        gpdb.createTableAndVerify(readableExTable);
+        gpdb.queryResults(readableExTable,
                 "SELECT * FROM " + readableExTable.getName() + " ORDER BY bi");
         ComparisonUtils.compareTables(dataTable, readableExTable, null, "\\\\");
     }
@@ -159,11 +159,11 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
     public void textFormatCopyDefaultCodec() throws Exception {
 
         writableExTable.setCompressionCodec(COMPRESSION_CODEC);
-        hawq.createTableAndVerify(writableExTable);
+        gpdb.createTableAndVerify(writableExTable);
         insertData(dataTable, writableExTable, InsertionMethod.COPY);
 
-        hawq.createTableAndVerify(readableExTable);
-        hawq.queryResults(readableExTable,
+        gpdb.createTableAndVerify(readableExTable);
+        gpdb.queryResults(readableExTable,
                 "SELECT * FROM " + readableExTable.getName() + " ORDER BY bi");
         ComparisonUtils.compareTables(dataTable, readableExTable, null, "\\\\");
     }
@@ -174,17 +174,17 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
         // Generate data to HDFS, create Readable table pointing to HDFS data
         hdfs.writeTableToFile(hdfsWorkingDataDir, dataTable, ",");
         readableExTable.setPath(hdfsWorkingDataDir);
-        hawq.createTableAndVerify(readableExTable);
+        gpdb.createTableAndVerify(readableExTable);
 
         // create Writable table and insert data from the Readable table
         writableExTable.setCompressionCodec(COMPRESSION_CODEC);
-        hawq.createTableAndVerify(writableExTable);
+        gpdb.createTableAndVerify(writableExTable);
 
         insertData(readableExTable, writableExTable, InsertionMethod.INSERT_FROM_TABLE);
         // create another Readable table to verify the data
         readableExTable.setPath(hdfsWritePath + writableTableName);
-        hawq.createTableAndVerify(readableExTable);
-        hawq.queryResults(readableExTable,
+        gpdb.createTableAndVerify(readableExTable);
+        gpdb.queryResults(readableExTable,
                 "SELECT * FROM " + readableExTable.getName() + " ORDER BY bi");
         ComparisonUtils.compareTables(dataTable, readableExTable, null, "\\\\");
     }
@@ -197,7 +197,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
     @Test(groups = { "features", "gpdb" })
     public void textFormatInsert() throws Exception {
 
-        hawq.createTableAndVerify(writableExTable);
+        gpdb.createTableAndVerify(writableExTable);
         insertData(dataTable, writableExTable, InsertionMethod.INSERT);
         verifyResult(hdfsWritePath + writableTableName, dataTable);
     }
@@ -210,7 +210,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
     @Test(groups = { "features", "gpdb" })
     public void textFormatCopyFromStdin() throws Exception {
 
-        hawq.createTableAndVerify(writableExTable);
+        gpdb.createTableAndVerify(writableExTable);
         insertData(dataTable, writableExTable, InsertionMethod.COPY);
         verifyResult(hdfsWritePath + writableTableName, dataTable);
     }
@@ -225,8 +225,8 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
 
         hdfs.writeTableToFile(hdfsWorkingDataDir, dataTable, ",");
         readableExTable.setPath(hdfsWorkingDataDir);
-        hawq.createTableAndVerify(readableExTable);
-        hawq.createTableAndVerify(writableExTable);
+        gpdb.createTableAndVerify(readableExTable);
+        gpdb.createTableAndVerify(writableExTable);
 
         insertData(readableExTable, writableExTable, InsertionMethod.INSERT_FROM_TABLE);
         verifyResult(hdfsWritePath + writableTableName, dataTable);
@@ -243,7 +243,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
         String hdfsPath = hdfsWritePath + writableTableName + "_csv";
         writableExTable.setPath(hdfsPath);
         writableExTable.setFormat("CSV");
-        hawq.createTableAndVerify(writableExTable);
+        gpdb.createTableAndVerify(writableExTable);
 
         insertData(dataTable, writableExTable, InsertionMethod.INSERT);
         verifyResult(hdfsPath, dataTable);
@@ -260,7 +260,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
         String hdfsPath = hdfsWritePath + writableTableName + "_csv";
         writableExTable.setPath(hdfsPath);
         writableExTable.setFormat("CSV");
-        hawq.createTableAndVerify(writableExTable);
+        gpdb.createTableAndVerify(writableExTable);
 
         insertData(dataTable, writableExTable, InsertionMethod.COPY);
         verifyResult(hdfsPath, dataTable);
@@ -276,7 +276,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
 
         hdfs.writeTableToFile(hdfsWorkingDataDir, dataTable, ",");
         readableExTable.setPath(hdfsWorkingDataDir);
-        hawq.createTableAndVerify(readableExTable);
+        gpdb.createTableAndVerify(readableExTable);
 
         String hdfsPath = hdfsWritePath + writableTableName + "_csv";
         writableExTable.setPath(hdfsPath);
@@ -297,7 +297,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
 
         String hdfsPath = hdfsWritePath + writableTableName + "_gzip";
         writableExTable = TableFactory.getPxfWritableGzipTable(writableTableName,
-                hawqTableFields, hdfsPath, ",");
+                gpdbTableFields, hdfsPath, ",");
         createTable(writableExTable);
 
         insertData(dataTable, writableExTable, InsertionMethod.INSERT);
@@ -314,7 +314,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
 
         String hdfsPath = hdfsWritePath + writableTableName + "_gzip";
         writableExTable = TableFactory.getPxfWritableGzipTable(writableTableName,
-                hawqTableFields, hdfsPath, ",");
+                gpdbTableFields, hdfsPath, ",");
         createTable(writableExTable);
 
         insertData(dataTable, writableExTable, InsertionMethod.COPY);
@@ -331,11 +331,11 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
 
         hdfs.writeTableToFile(hdfsWorkingDataDir, dataTable, ",");
         readableExTable.setPath(hdfsWorkingDataDir);
-        hawq.createTableAndVerify(readableExTable);
+        gpdb.createTableAndVerify(readableExTable);
 
         String hdfsPath = hdfsWritePath + writableTableName + "_gzip";
         writableExTable = TableFactory.getPxfWritableGzipTable(writableTableName,
-                hawqTableFields, hdfsPath, ",");
+                gpdbTableFields, hdfsPath, ",");
         createTable(writableExTable);
 
         insertData(readableExTable, writableExTable, InsertionMethod.INSERT_FROM_TABLE);
@@ -352,7 +352,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
 
         String hdfsPath = hdfsWritePath + writableTableName + "_bzip2";
         writableExTable = TableFactory.getPxfWritableBZip2Table(writableTableName,
-                hawqTableFields, hdfsPath, ",");
+                gpdbTableFields, hdfsPath, ",");
         createTable(writableExTable);
 
         insertData(dataTable, writableExTable, InsertionMethod.INSERT);
@@ -369,7 +369,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
 
         String hdfsPath = hdfsWritePath + writableTableName + "_bzip2";
         writableExTable = TableFactory.getPxfWritableBZip2Table(writableTableName,
-                hawqTableFields, hdfsPath, ",");
+                gpdbTableFields, hdfsPath, ",");
         createTable(writableExTable);
 
         insertData(dataTable, writableExTable, InsertionMethod.COPY);
@@ -386,11 +386,11 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
 
         hdfs.writeTableToFile(hdfsWorkingDataDir, dataTable, ",");
         readableExTable.setPath(hdfsWorkingDataDir);
-        hawq.createTableAndVerify(readableExTable);
+        gpdb.createTableAndVerify(readableExTable);
 
         String hdfsPath = hdfsWritePath + writableTableName + "_bzip2";
         writableExTable = TableFactory.getPxfWritableBZip2Table(writableTableName,
-                hawqTableFields, hdfsPath, ",");
+                gpdbTableFields, hdfsPath, ",");
         createTable(writableExTable);
 
         insertData(readableExTable, writableExTable, InsertionMethod.INSERT_FROM_TABLE);
@@ -413,12 +413,12 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
 
         String hdfsPath = hdfsWritePath + writableTableName + "_multi_block";
         writableExTable.setPath(hdfsPath);
-        hawq.createTableAndVerify(writableExTable);
+        gpdb.createTableAndVerify(writableExTable);
 
-        hawq.copyFromFile(writableExTable, new File(multiBlockedLocalFilePath), ",", false);
+        gpdb.copyFromFile(writableExTable, new File(multiBlockedLocalFilePath), ",", false);
         readableExTable.setPath(hdfsPath);
-        hawq.createTableAndVerify(readableExTable);
-        hawq.runAnalyticQuery("SELECT COUNT(*) FROM " + readableExTable.getName(),
+        gpdb.createTableAndVerify(readableExTable);
+        gpdb.runAnalyticQuery("SELECT COUNT(*) FROM " + readableExTable.getName(),
                 String.valueOf(1000 * 15000));
         analyzeAndVerify(writableExTable);
     }
@@ -439,13 +439,13 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
 
         String hdfsPath = hdfsWritePath + writableTableName + "_multi_block_gzip";
         writableExTable = TableFactory.getPxfWritableGzipTable(writableTableName,
-                hawqTableFields, hdfsPath, ",");
+                gpdbTableFields, hdfsPath, ",");
         createTable(writableExTable);
 
-        hawq.copyFromFile(writableExTable, new File(multiBlockedLocalFilePath), ",", false);
+        gpdb.copyFromFile(writableExTable, new File(multiBlockedLocalFilePath), ",", false);
         readableExTable.setPath(hdfsPath);
-        hawq.createTableAndVerify(readableExTable);
-        hawq.runAnalyticQuery("SELECT COUNT(*) FROM " + readableExTable.getName(),
+        gpdb.createTableAndVerify(readableExTable);
+        gpdb.runAnalyticQuery("SELECT COUNT(*) FROM " + readableExTable.getName(),
                 String.valueOf(1000 * 15000));
         analyzeAndVerify(writableExTable);
     }
@@ -469,14 +469,14 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
 
         String hdfsPath = hdfsWritePath + writableTableName + "_multi_block_bzip";
         writableExTable = TableFactory.getPxfWritableBZip2Table(writableTableName,
-                hawqTableFields, hdfsPath, ",");
+                gpdbTableFields, hdfsPath, ",");
         writableExTable.setUserParameters(new String[] { "THREAD-SAFE=FALSE" });
         createTable(writableExTable);
 
-        hawq.copyFromFile(writableExTable, new File(multiBlockedLocalFilePath), ",", false);
+        gpdb.copyFromFile(writableExTable, new File(multiBlockedLocalFilePath), ",", false);
         readableExTable.setPath(hdfsPath);
-        hawq.createTableAndVerify(readableExTable);
-        hawq.runAnalyticQuery("SELECT COUNT(*) FROM " + readableExTable.getName(),
+        gpdb.createTableAndVerify(readableExTable);
+        gpdb.runAnalyticQuery("SELECT COUNT(*) FROM " + readableExTable.getName(),
                 String.valueOf(1000 * 15000));
         analyzeAndVerify(writableExTable);
     }
@@ -513,9 +513,9 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
         writableExTable.setPath(hdfsPath);
         writableExTable.setFormat("CSV");
         writableExTable.setDistributionFields(new String[] { "key" });
-        hawq.createTableAndVerify(writableExTable);
+        gpdb.createTableAndVerify(writableExTable);
 
-        hawq.insertData(dataTable, writableExTable);
+        gpdb.insertData(dataTable, writableExTable);
         Assert.assertEquals("More than one segment wrote to " + hdfsPath,
                 1, hdfs.list(hdfsPath).size());
 
@@ -523,9 +523,9 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
         readableExTable.setPath(hdfsPath);
         readableExTable.setName("verylongrecordimport");
         readableExTable.setFormat("csv");
-        hawq.createTableAndVerify(readableExTable);
+        gpdb.createTableAndVerify(readableExTable);
 
-        hawq.queryResults(readableExTable,
+        gpdb.queryResults(readableExTable,
                 "SELECT * FROM " + readableExTable.getName() + " ORDER BY linenum");
         ComparisonUtils.compareTables(readableExTable, dataTable, null);
     }
@@ -586,13 +586,13 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
 
         switch (insertionMethod) {
             case INSERT:
-                hawq.insertData(data, table);
+                gpdb.insertData(data, table);
                 break;
             case COPY:
-                hawq.copyFromStdin(data, table, ",", false);
+                gpdb.copyFromStdin(data, table, ",", false);
                 break;
             case INSERT_FROM_TABLE:
-                hawq.runQuery("INSERT INTO " + table.getName() + " SELECT * FROM " + data.getName());
+                gpdb.runQuery("INSERT INTO " + table.getName() + " SELECT * FROM " + data.getName());
                 break;
         }
     }
@@ -610,9 +610,9 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
             // skip for gpdb
             return;
         }
-        hawq.analyze(table);
+        gpdb.analyze(table);
         Table analyzeResults = new Table("results", null);
-        hawq.queryResults(analyzeResults, "SELECT COUNT(*) FROM pg_class WHERE relname = '" +
+        gpdb.queryResults(analyzeResults, "SELECT COUNT(*) FROM pg_class WHERE relname = '" +
                 table.getName() + "' AND relpages = 1 AND reltuples = 0");
 
         Table sudoResults = new Table("sudoResults", null);

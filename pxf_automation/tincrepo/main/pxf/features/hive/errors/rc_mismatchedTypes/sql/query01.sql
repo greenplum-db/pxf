@@ -23,4 +23,4 @@
 --
 -- end_matchsubs
 
-SELECT * from hawq_hive_types ORDER BY t1;
+SELECT * from gpdb_hive_types ORDER BY t1;

@@ -11,7 +11,7 @@ import org.greenplum.pxf.api.FilterParser;
 /**
  * Test class for regression tests.
  * The only thing this class does is to take received filter string from GPDB (HAS-FILTER & FILTER).
- * And return it in UserData back to hawq for later validation in Resolver/Accessor
+ * And return it in UserData back to gpdb for later validation in Resolver/Accessor
  */
 public class FilterVerifyFragmenter extends Fragmenter
 {

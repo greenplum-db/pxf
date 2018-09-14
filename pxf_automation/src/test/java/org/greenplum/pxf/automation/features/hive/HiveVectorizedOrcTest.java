@@ -11,7 +11,7 @@ import java.util.ArrayList;
 public class HiveVectorizedOrcTest extends HiveBaseTest {
 
     ArrayList<String> hiveTypesNoTMCols = new ArrayList<>(Arrays.asList(HIVE_TYPES_COLS));
-    ArrayList<String> hawqTypesNoTMCols = new ArrayList<>(Arrays.asList(PXF_HIVE_TYPES_COLS));
+    ArrayList<String> gpdbTypesNoTMCols = new ArrayList<>(Arrays.asList(PXF_HIVE_TYPES_COLS));
 
     void prepareTypesData() throws Exception {
 
@@ -38,7 +38,7 @@ public class HiveVectorizedOrcTest extends HiveBaseTest {
 
     private void preparePxfHiveOrcTypes() throws Exception {
         exTable = TableFactory.getPxfHiveOrcReadableTable(PXF_HIVE_ORC_TABLE,
-                hawqTypesNoTMCols.toArray(new String[hawqTypesNoTMCols.size()]), hiveOrcAllTypes, true);
+                gpdbTypesNoTMCols.toArray(new String[gpdbTypesNoTMCols.size()]), hiveOrcAllTypes, true);
         exTable.setProfile("HiveVectorizedORC");
         createTable(exTable);
     }
@@ -48,7 +48,7 @@ public class HiveVectorizedOrcTest extends HiveBaseTest {
 
         // Remove timestamp column
         hiveTypesNoTMCols.remove(5);
-        hawqTypesNoTMCols.remove(5);
+        gpdbTypesNoTMCols.remove(5);
 
         prepareTypesData();
         prepareSmallData();
@@ -68,10 +68,10 @@ public class HiveVectorizedOrcTest extends HiveBaseTest {
                 PXF_HIVE_SMALLDATA_COLS, hiveOrcTable, true);
         createTable(exTable);
 
-        Table hawqNativeTable = new Table(GPDB_SMALL_DATA_TABLE, PXF_HIVE_SMALLDATA_COLS);
-        hawqNativeTable.setDistributionFields(new String[] { "t1" });
-        hawq.createTableAndVerify(hawqNativeTable);
-        hawq.copyData(exTable, hawqNativeTable);
+        Table gpdbNativeTable = new Table(GPDB_SMALL_DATA_TABLE, PXF_HIVE_SMALLDATA_COLS);
+        gpdbNativeTable.setDistributionFields(new String[] { "t1" });
+        gpdb.createTableAndVerify(gpdbNativeTable);
+        gpdb.copyData(exTable, gpdbNativeTable);
 
         runTincTest("pxf.features.hive.orc_primitive_types_no_timestamp.runTest");
     }

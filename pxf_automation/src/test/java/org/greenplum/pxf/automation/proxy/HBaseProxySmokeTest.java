@@ -87,7 +87,7 @@ public class HBaseProxySmokeTest extends BaseSmoke {
                         "bool boolean" }, hbaseTableAllowed);
         exTableAllowed.setHost(pxfHost);
         exTableAllowed.setPort(pxfPort);
-        hawq.createTableAndVerify(exTableAllowed);
+        gpdb.createTableAndVerify(exTableAllowed);
 
         ReadableExternalTable exTableProhibited = TableFactory.getPxfHBaseReadableTable("pxf_proxy_hbase_small_data_prohibited",
                 new String[] {
@@ -98,7 +98,7 @@ public class HBaseProxySmokeTest extends BaseSmoke {
                         "bool boolean" }, hbaseTableProhibited);
         exTableProhibited.setHost(pxfHost);
         exTableProhibited.setPort(pxfPort);
-        hawq.createTableAndVerify(exTableProhibited);
+        gpdb.createTableAndVerify(exTableProhibited);
 
         // Create PXF Lookup HBase table
         lookupTable = new LookupTable();

@@ -38,8 +38,8 @@ public class JdbcTest extends BaseFeature {
     private ExternalTable pxfJdbcWritable;
 
 
-    final String hawqTypesDataFileName = "hawq_types.txt";
-    private Table hawqNativeTable, hawqWritableTargetTable;
+    final String gpdbTypesDataFileName = "gpdb_types.txt";
+    private Table gpdbNativeTable, gpdbWritableTargetTable;
 
     @Override
     protected void beforeClass() throws Exception {
@@ -56,16 +56,16 @@ public class JdbcTest extends BaseFeature {
     }
 
     private void prepareTypesData() throws Exception {
-        hawqNativeTable = new Table("hawq_types", TYPES_TABLE_FIELDS);
-        hawqNativeTable.setDistributionFields(new String[] { "t1" });
-        hawq.createTableAndVerify(hawqNativeTable);
-        hawq.copyFromFile(hawqNativeTable, new File(localDataResourcesFolder
-                + "/hawq/" + hawqTypesDataFileName), "E'\\t'", "E'\\\\N'", true);
+        gpdbNativeTable = new Table("gpdb_types", TYPES_TABLE_FIELDS);
+        gpdbNativeTable.setDistributionFields(new String[] { "t1" });
+        gpdb.createTableAndVerify(gpdbNativeTable);
+        gpdb.copyFromFile(gpdbNativeTable, new File(localDataResourcesFolder
+                + "/gpdb/" + gpdbTypesDataFileName), "E'\\t'", "E'\\\\N'", true);
 
         // create a table to be filled by the writable test case
-        hawqWritableTargetTable = new Table("hawq_types_target", TYPES_TABLE_FIELDS);
-        hawqWritableTargetTable.setDistributionFields(new String[] { "t1" });
-        hawq.createTableAndVerify(hawqWritableTargetTable);
+        gpdbWritableTargetTable = new Table("gpdb_types_target", TYPES_TABLE_FIELDS);
+        gpdbWritableTargetTable.setDistributionFields(new String[] { "t1" });
+        gpdb.createTableAndVerify(gpdbWritableTargetTable);
 
     }
 
@@ -73,13 +73,13 @@ public class JdbcTest extends BaseFeature {
         pxfJdbcSingleFragment = TableFactory.getPxfJdbcReadableTable(
                 "pxf_jdbc_single_fragment",
                 TYPES_TABLE_FIELDS,
-                hawqNativeTable.getName(),
+                gpdbNativeTable.getName(),
                 POSTGRES_DRIVER_CLASS,
-                GPDB_PXF_AUTOMATION_DB_JDBC + hawq.getMasterHost() + ":" + hawq.getPort() + "/pxfautomation",
-                hawq.getUserName());
+                GPDB_PXF_AUTOMATION_DB_JDBC + gpdb.getMasterHost() + ":" + gpdb.getPort() + "/pxfautomation",
+                gpdb.getUserName());
         pxfJdbcSingleFragment.setHost(pxfHost);
         pxfJdbcSingleFragment.setPort(pxfPort);
-        hawq.createTableAndVerify(pxfJdbcSingleFragment);
+        gpdb.createTableAndVerify(pxfJdbcSingleFragment);
     }
 
     private void prepareMultipleFragmentsByEnum() throws Exception {
@@ -87,17 +87,17 @@ public class JdbcTest extends BaseFeature {
                 .getPxfJdbcReadablePartitionedTable(
                 "pxf_jdbc_multiple_fragments_by_enum",
                 TYPES_TABLE_FIELDS,
-                hawqNativeTable.getName(),
+                gpdbNativeTable.getName(),
                 POSTGRES_DRIVER_CLASS,
-                GPDB_PXF_AUTOMATION_DB_JDBC + hawq.getMasterHost() + ":" + hawq.getPort() + "/pxfautomation",
+                GPDB_PXF_AUTOMATION_DB_JDBC + gpdb.getMasterHost() + ":" + gpdb.getPort() + "/pxfautomation",
                 13,
                 "USD:UAH",
                 "1",
-                hawq.getUserName(),
+                gpdb.getUserName(),
                 EnumPartitionType.ENUM);
         pxfJdbcSingleFragment.setHost(pxfHost);
         pxfJdbcSingleFragment.setPort(pxfPort);
-        hawq.createTableAndVerify(pxfJdbcMultipleFragmentsByEnum);
+        gpdb.createTableAndVerify(pxfJdbcMultipleFragmentsByEnum);
     }
 
     private void prepareMultipleFragmentsByInt() throws Exception {
@@ -105,17 +105,17 @@ public class JdbcTest extends BaseFeature {
                 .getPxfJdbcReadablePartitionedTable(
                 "pxf_jdbc_multiple_fragments_by_int",
                 TYPES_TABLE_FIELDS,
-                hawqNativeTable.getName(),
+                gpdbNativeTable.getName(),
                 POSTGRES_DRIVER_CLASS,
-                GPDB_PXF_AUTOMATION_DB_JDBC + hawq.getMasterHost() + ":" + hawq.getPort() + "/pxfautomation",
+                GPDB_PXF_AUTOMATION_DB_JDBC + gpdb.getMasterHost() + ":" + gpdb.getPort() + "/pxfautomation",
                 2,
                 "1:6",
                 "1",
-                hawq.getUserName(),
+                gpdb.getUserName(),
                 EnumPartitionType.INT);
         pxfJdbcSingleFragment.setHost(pxfHost);
         pxfJdbcSingleFragment.setPort(pxfPort);
-        hawq.createTableAndVerify(pxfJdbcMultipleFragmentsByInt);
+        gpdb.createTableAndVerify(pxfJdbcMultipleFragmentsByInt);
     }
 
     private void prepareMultipleFragmentsByDate() throws Exception {
@@ -123,30 +123,30 @@ public class JdbcTest extends BaseFeature {
                 .getPxfJdbcReadablePartitionedTable(
                 "pxf_jdbc_multiple_fragments_by_date",
                 TYPES_TABLE_FIELDS,
-                hawqNativeTable.getName(),
+                gpdbNativeTable.getName(),
                 POSTGRES_DRIVER_CLASS,
-                GPDB_PXF_AUTOMATION_DB_JDBC + hawq.getMasterHost() + ":" + hawq.getPort() + "/pxfautomation",
+                GPDB_PXF_AUTOMATION_DB_JDBC + gpdb.getMasterHost() + ":" + gpdb.getPort() + "/pxfautomation",
                 11,
                 "2015-03-06:2015-03-20",
                 "1:DAY",
-                hawq.getUserName(),
+                gpdb.getUserName(),
                 EnumPartitionType.DATE);
         pxfJdbcSingleFragment.setHost(pxfHost);
         pxfJdbcSingleFragment.setPort(pxfPort);
-        hawq.createTableAndVerify(pxfJdbcMultipleFragmentsByDate);
+        gpdb.createTableAndVerify(pxfJdbcMultipleFragmentsByDate);
     }
 
     private void prepareWritable() throws Exception {
         pxfJdbcWritable = TableFactory.getPxfJdbcWritableTable(
                 "pxf_jdbc_writable",
                 TYPES_TABLE_FIELDS,
-                hawqNativeTable.getName() + "_target",
+                gpdbNativeTable.getName() + "_target",
                 POSTGRES_DRIVER_CLASS,
-                GPDB_PXF_AUTOMATION_DB_JDBC + hawq.getMasterHost() + ":" + hawq.getPort() + "/pxfautomation",
-                hawq.getUserName());
+                GPDB_PXF_AUTOMATION_DB_JDBC + gpdb.getMasterHost() + ":" + gpdb.getPort() + "/pxfautomation",
+                gpdb.getUserName());
         pxfJdbcSingleFragment.setHost(pxfHost);
         pxfJdbcSingleFragment.setPort(pxfPort);
-        hawq.createTableAndVerify(pxfJdbcWritable);
+        gpdb.createTableAndVerify(pxfJdbcWritable);
     }
 
     @Test(groups = {"features", "gpdb"})

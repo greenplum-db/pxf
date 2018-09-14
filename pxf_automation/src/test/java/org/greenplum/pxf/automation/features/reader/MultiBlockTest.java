@@ -35,7 +35,7 @@ public class MultiBlockTest extends BaseFeature {
 
     /**
      * Main test method. Run on the table collection and in each iteration: -
-     * generate the hawq external table & hdfs data - run the query - verify the
+     * generate the gpdb external table & hdfs data - run the query - verify the
      * result In case test result verify is failed and exception is thrown, the
      * test ends unsuccessfully.
      *
@@ -71,7 +71,7 @@ public class MultiBlockTest extends BaseFeature {
                 table.getDataPattern().getColumnDelimiter());
         exTable.setHost(pxfHost);
         exTable.setPort(pxfPort);
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
     }
 
     /**
@@ -82,7 +82,7 @@ public class MultiBlockTest extends BaseFeature {
      */
     private void runQuery(final Table table) throws Exception {
         Table analyzeResults = new Table("results", null);
-        hawq.queryResults(analyzeResults,
+        gpdb.queryResults(analyzeResults,
                 "SELECT COUNT(*) FROM " + table.getName());
         Table sudoResults = new Table("sudoResults", null);
         sudoResults.addRow(new String[] { new Long(table.getNumberOfLines()).toString() });
