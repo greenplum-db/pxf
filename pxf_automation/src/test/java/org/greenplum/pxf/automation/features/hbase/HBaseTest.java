@@ -680,7 +680,7 @@ public class HBaseTest extends BaseFeature {
         // run tinc case to see filter is working
         runTincTest("pxf.features.hbase." + tincCase + ".runTest");
         // use FilterPrinterAccessor to get the serialized filter in the pxf side
-        createAndQueryPxfHawqFilterTable(hbaseTable, externalTable.getFields(), whereClause, filterString);
+        createAndQueryPxfGpdbFilterTable(hbaseTable, externalTable.getFields(), whereClause, filterString);
         if (verifyFilterString) {
             // create another GPDB external table that uses HBaseAccessorWithFilter to get the
             // filter as user parameter
@@ -701,7 +701,7 @@ public class HBaseTest extends BaseFeature {
      *
      * @throws Exception if test fails to run
      */
-    private void createAndQueryPxfHawqFilterTable(HBaseTable hbaseTable, String[] fields,
+    private void createAndQueryPxfGpdbFilterTable(HBaseTable hbaseTable, String[] fields,
             String whereClause, String expectedFilter) throws Exception {
 
         ReadableExternalTable externalTableFilterPrinter = new ReadableExternalTable(

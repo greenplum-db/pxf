@@ -15,7 +15,7 @@ import org.greenplum.pxf.automation.utils.jsystem.report.ReportUtils;
 /**
  * GPDB system object, defines functionality for GPDB Data Base.
  */
-public class Hawq extends DbSystemObject {
+public class Gpdb extends DbSystemObject {
 
 	private String sshUserName;
 
@@ -23,11 +23,11 @@ public class Hawq extends DbSystemObject {
 
 	private static final String DEFAULT_PORT = "5432";
 
-	public Hawq() {
+	public Gpdb() {
 
 	}
 
-	public Hawq(boolean silenceReport) {
+	public Gpdb(boolean silenceReport) {
 		super(silenceReport);
 	}
 

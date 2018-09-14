@@ -220,7 +220,7 @@ public class HiveTextTest extends HiveBaseTest {
      * @throws Exception if test fails to run
      */
     @Test(groups = { "features", "gpdb" })
-    public void severalTextPartitionsNoPartitonColumInHawq() throws Exception {
+    public void severalTextPartitionsNoPartitonColumInGpdb() throws Exception {
 
         hiveTable = new HiveExternalTable(HIVE_REG_HETEROGEN_TABLE, HIVE_RC_COLS);
         hiveTable.setPartitionedBy(HIVE_PARTITION_COLUMN);

@@ -47,9 +47,9 @@ public class MultiBlockTest extends BaseFeature {
             System.out.println(table.getDataPattern());
             // Create the data and load to HDFS //
             DataUtils.generateAndLoadData(table, hdfs);
-            // Create Hawq external table
+            // Create Gpdb external table
             createExternalTable(table);
-            // Run the Hawq query and verify its result
+            // Run the Gpdb query and verify its result
             runQuery(table);
             // Clean last passed file from HDFS
             String textFilePath = hdfs.getWorkingDirectory() + "/"
