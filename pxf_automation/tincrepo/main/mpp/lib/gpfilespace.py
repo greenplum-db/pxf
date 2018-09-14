@@ -276,7 +276,7 @@ class Gpfilespace(object):
             return False
         return True
 
-class HAWQGpfilespace(object):
+class GPDBGpfilespace(object):
 
     def __init__(self):
         self.gphome = os.environ.get('GPHOME')

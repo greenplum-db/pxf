@@ -10,8 +10,8 @@ from tinctest.lib.gpinitsystem import gpinitsystem
 
 def isGPDB():
     """
-    If DFS_URL is set in environment, assume gpinitsystem for HAWQ
-    @todo: configFile doesn't put DFS_URL in the environment, thus we need another way to confirm HAWQ
+    If DFS_URL is set in environment, assume gpinitsystem for GPDB
+    @todo: configFile doesn't put DFS_URL in the environment, thus we need another way to confirm GPDB
     """
     return not os.environ.has_key("DFS_URL")
 

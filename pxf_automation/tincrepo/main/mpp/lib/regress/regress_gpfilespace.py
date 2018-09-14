@@ -1,13 +1,13 @@
 import unittest2 as unittest
 from mpp.lib.PSQL import PSQL
 from mpp.lib.gpfilespace import Gpfilespace
-from mpp.lib.gpfilespace import HAWQGpfilespace
+from mpp.lib.gpfilespace import GPDBGpfilespace
 
 class GpFilespaceRegressionTests(unittest.TestCase):
 
     def __init__(self, methodName):
         self.gpfs = Gpfilespace()
-        self.gpfs_h = HAWQGpfilespace()
+        self.gpfs_h = GPDBGpfilespace()
         super(GpFilespaceRegressionTests, self).__init__(methodName)
 
     def tearDown(self):

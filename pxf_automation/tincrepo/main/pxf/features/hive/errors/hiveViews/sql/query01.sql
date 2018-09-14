@@ -13,7 +13,7 @@
 -- s/description   .*/description   DESCRIPTION/
 --
 -- m/PXF doesn't support HIVE views/
--- s/PXF doesn't support HIVE views/Hive views are not supported by HAWQ/
+-- s/PXF doesn't support HIVE views/Hive views are not supported by GPDB/
 --
 -- m/DETAIL/
 -- s/DETAIL/GP_IGNORE: DETAIL/

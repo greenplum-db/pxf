@@ -12,6 +12,6 @@
 --
 -- end_matchsubs
 SELECT * FROM hcatalog.default.hive_small_data_view;
-ERROR:  remote component error (500) from 'SOME_IP:SOME_PORT':  type  Exception report   message   Hive views are not supported by HAWQ    description   DESCRIPTION
+ERROR:  remote component error (500) from 'SOME_IP:SOME_PORT':  type  Exception report   message   Hive views are not supported by GPDB    description   DESCRIPTION
 LINE 1: SELECT * FROM hcatalog.default.hive_small_data_view;
                       ^

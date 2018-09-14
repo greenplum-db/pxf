@@ -7,7 +7,7 @@ import org.greenplum.pxf.automation.utils.system.PGModeEnum;
 import org.greenplum.pxf.automation.utils.system.SystemUtils;
 
 /**
- * Represent HAWQ -> PXF external table.
+ * Represent GPDB -> PXF external table.
  */
 public abstract class ExternalTable extends Table {
 

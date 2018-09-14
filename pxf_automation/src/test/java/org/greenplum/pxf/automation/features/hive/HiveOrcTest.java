@@ -89,7 +89,7 @@ public class HiveOrcTest extends HiveBaseTest {
         createExternalTable(PXF_HIVE_SMALL_DATA_TABLE,
                 PXF_HIVE_SMALLDATA_COLS, hiveOrcTable);
 
-        Table hawqNativeTable = new Table(HAWQ_SMALL_DATA_TABLE, PXF_HIVE_SMALLDATA_COLS);
+        Table hawqNativeTable = new Table(GPDB_SMALL_DATA_TABLE, PXF_HIVE_SMALLDATA_COLS);
         hawqNativeTable.setDistributionFields(new String[] { "t1" });
         hawq.createTableAndVerify(hawqNativeTable);
         hawq.copyData(exTable, hawqNativeTable);
