@@ -476,7 +476,7 @@ public class HdfsReadableTextTest extends BaseFeature {
     /**
      * Verify use of LIMIT
      *
-     * TODO The test doesn't verify whether Hawq got all tuples or just the
+     * TODO The test doesn't verify whether Gpdb got all tuples or just the
      * LIMIT. We should test LIMIT cancels the query once it gets LIMIT tuples.
      */
     @Test(groups = { "features", "gpdb" })

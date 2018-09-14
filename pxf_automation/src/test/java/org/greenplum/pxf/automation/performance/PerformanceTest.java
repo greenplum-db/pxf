@@ -82,7 +82,7 @@ public class PerformanceTest extends BaseFeature {
         prepareTextData();
         prepareOrcData();
         prepareRcData();
-        prepareNativeHawqData();
+        prepareNativeGpdbData();
 
     }
 
@@ -111,7 +111,7 @@ public class PerformanceTest extends BaseFeature {
         hive.loadData(hiveTextPerfTable, filePath, false);
 
         hawqTextHiveProfile = TableFactory.getPxfHiveReadableTable(
-                "perf_text_hive_profile", getColumnTypeHawq(),
+                "perf_text_hive_profile", getColumnTypeGpdb(),
                 hiveTextPerfTable, true);
         hawqTextHiveProfile.setProfile(EnumPxfDefaultProfiles.Hive.toString());
         hawqTextHiveProfile.setHost(/* pxfHost */"127.0.0.1");
@@ -119,7 +119,7 @@ public class PerformanceTest extends BaseFeature {
         hawq.createTableAndVerify(hawqTextHiveProfile);
 
         hawqTextHiveTextProfile = TableFactory.getPxfHiveTextReadableTable(
-                "perf_text_hive_text_profile", getColumnTypeHawq(),
+                "perf_text_hive_text_profile", getColumnTypeGpdb(),
                 hiveTextPerfTable, true);
         hawqTextHiveTextProfile.setProfile(EnumPxfDefaultProfiles.HiveText
                 .toString());
@@ -140,7 +140,7 @@ public class PerformanceTest extends BaseFeature {
         hive.insertData(hiveTextPerfTable, hiveOrcPerfTable);
 
         hawqOrcHiveProfile = TableFactory.getPxfHiveReadableTable(
-                "perf_orc_hive_profile", getColumnTypeHawq(), hiveOrcPerfTable,
+                "perf_orc_hive_profile", getColumnTypeGpdb(), hiveOrcPerfTable,
                 true);
 
         hawqOrcHiveProfile.setProfile(EnumPxfDefaultProfiles.Hive.toString());
@@ -159,7 +159,7 @@ public class PerformanceTest extends BaseFeature {
         hive.insertData(hiveTextPerfTable, hiveRcPerfTable);
 
         hawqRcHiveProfile = TableFactory.getPxfHiveReadableTable(
-                "perf_rc_hive_profile", getColumnTypeHawq(), hiveRcPerfTable,
+                "perf_rc_hive_profile", getColumnTypeGpdb(), hiveRcPerfTable,
                 true);
 
         hawqRcHiveProfile.setProfile(EnumPxfDefaultProfiles.Hive.toString());
@@ -168,8 +168,8 @@ public class PerformanceTest extends BaseFeature {
         hawq.createTableAndVerify(hawqRcHiveProfile);
     }
 
-    private void prepareNativeHawqData() throws Exception {
-        hawqNativeTable = new Table("perf_test", getColumnTypeHawq());
+    private void prepareNativeGpdbData() throws Exception {
+        hawqNativeTable = new Table("perf_test", getColumnTypeGpdb());
         hawq.createTableAndVerify(hawqNativeTable);
 
         hawq.insertData(hawqTextHiveProfile, hawqNativeTable);
@@ -313,7 +313,7 @@ public class PerformanceTest extends BaseFeature {
         return result;
     }
 
-    private String[] getColumnTypeHawq() {
+    private String[] getColumnTypeGpdb() {
         String[] result = new String[GENERATE_INT_COLUMNS_NUMBER
                 + GENERATE_TEXT_COLUMNS_NUMBER];
 
@@ -356,10 +356,10 @@ public class PerformanceTest extends BaseFeature {
         if (table instanceof HiveTable)
             return "Hive table stored as " + ((HiveTable) table).getStoredAs();
         else if (table instanceof ReadableExternalTable)
-            return "External Hawq table, using PXF with profile "
+            return "External Gpdb table, using PXF with profile "
                     + ((ReadableExternalTable) table).getProfile();
         else if (table instanceof Table)
-            return "Native Hawq table";
+            return "Native Gpdb table";
         else
             throw new Exception(
                     "Unable to print table details, unknown table: "

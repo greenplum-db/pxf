@@ -17,7 +17,7 @@ import org.greenplum.pxf.automation.structures.tables.hive.HiveTable;
 import org.greenplum.pxf.automation.utils.jsystem.report.ReportUtils;
 import org.junit.Assert;
 
-import org.greenplum.pxf.automation.enums.EnumHiveToHawqType;
+import org.greenplum.pxf.automation.enums.EnumHiveToGpdbType;
 import org.greenplum.pxf.automation.utils.csv.CsvUtils;
 
 /**
@@ -438,7 +438,7 @@ public class ComparisonUtils {
 
                 isEquals = psqlNameAndType[0].equals(hiveColumnName)
                         && psqlNameAndType[1]
-                                .equals(EnumHiveToHawqType.getHawqType(hiveColumnType));
+                                .equals(EnumHiveToGpdbType.getGpdbType(hiveColumnType));
 
                 if (!isEquals) {
                     ReportUtils.report(null, ComparisonUtils.class, "Expected column: "

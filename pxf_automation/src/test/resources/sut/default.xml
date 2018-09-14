@@ -5,7 +5,7 @@
 	</cluster>
 
 	<hawq>
-		<class>org.greenplum.pxf.automation.components.hawq.Hawq</class>
+		<class>org.greenplum.pxf.automation.components.hawq.Gpdb</class>
 		<host>localhost</host>
 		<masterHost>localhost</masterHost>
 		<db>pxfautomation</db>

@@ -1,11 +1,11 @@
 package org.greenplum.pxf.automation.enums;
 
 /**
- * Hive to Hawq types
+ * Hive to Gpdb types
  * Replica of PXF enum, both classes are in sync
- * @see org.greenplum.pxf.plugins.hive.utilities.EnumHiveToHawqType
+ * @see org.greenplum.pxf.plugins.hive.utilities.EnumHiveToGpdbType
  */
-public enum EnumHiveToHawqType {
+public enum EnumHiveToGpdbType {
     StringType("string", "text"),
     TinyintType("tinyint", "int2"),
     SmallintType("smallint", "int2"),
@@ -26,12 +26,12 @@ public enum EnumHiveToHawqType {
     private String hawqTypeName;
     private String splitExpression;
 
-    EnumHiveToHawqType(String hiveType, String hawqTypeName) {
+    EnumHiveToGpdbType(String hiveType, String hawqTypeName) {
         this.hiveType = hiveType;
         this.hawqTypeName = hawqTypeName;
     }
 
-    EnumHiveToHawqType(String hiveType, String hawqTypeName, String splitExpression) {
+    EnumHiveToGpdbType(String hiveType, String hawqTypeName, String splitExpression) {
         this(hiveType, hawqTypeName);
         this.splitExpression = splitExpression;
     }
@@ -40,7 +40,7 @@ public enum EnumHiveToHawqType {
         return this.hiveType;
     }
 
-    public String getHawqType() {
+    public String getGpdbType() {
         return this.hawqTypeName;
     }
 
@@ -49,23 +49,23 @@ public enum EnumHiveToHawqType {
     }
 
     /**
-     * Converts Hive to Hawq type
+     * Converts Hive to Gpdb type
      *
      * @param hiveType Hive type
-     * @return corresponding Hawq type
+     * @return corresponding Gpdb type
      * @throws Exception
      */
-    public static String getHawqType(String hiveType) {
+    public static String getGpdbType(String hiveType) {
         if (hiveType == null || hiveType.length() == 0)
             throw new RuntimeException("Unable to map Hive's type, empty type was passed.");
-        for (EnumHiveToHawqType t : values()) {
+        for (EnumHiveToGpdbType t : values()) {
             String hiveTypeName = hiveType;
             if (t.getSplitExpression() != null) {
                 String[] tokens = hiveType.split(t.getSplitExpression());
                 hiveTypeName = tokens[0];
             }
             if (t.getHiveType().toLowerCase().equals(hiveTypeName.toLowerCase())) {
-                return t.getHawqType();
+                return t.getGpdbType();
             }
         }
         throw new RuntimeException("Unable to map Hive's type: " + hiveType
