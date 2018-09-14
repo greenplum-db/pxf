@@ -41,7 +41,7 @@ import java.util.List;
  *
  * The class is responsible to convert rows from HBase scans (returned as {@link Result} objects)
  * into a List of {@link OneField} objects.
- * That also includes the conversion process of each HBase column's value into its HAWQ assigned type.
+ * That also includes the conversion process of each HBase column's value into its GPDB assigned type.
  *
  * Currently, the class assumes all HBase values are stored as String object Bytes encoded.
  */

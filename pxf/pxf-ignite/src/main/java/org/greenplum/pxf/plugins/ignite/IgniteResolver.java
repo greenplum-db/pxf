@@ -218,6 +218,6 @@ public class IgniteResolver extends IgnitePlugin implements ReadResolver, WriteR
         }
     };
 
-    // HAWQ column descriptors
+    // GPDB column descriptors
     private ArrayList<ColumnDescriptor> columns = null;
 }

@@ -232,7 +232,7 @@ The MySQL JDBC driver files (JAR) are copied to `/usr/lib/pxf` on all cluster no
 
 After this, all PXF segments are restarted.
 
-Then a table in HAWQ is created:
+Then a table in GPDB is created:
 ```
 CREATE EXTERNAL TABLE myclass(
     id integer,
@@ -247,7 +247,7 @@ FORMAT 'CUSTOM' (
 );
 ```
 
-Finally, a query to a HAWQ external table is made:
+Finally, a query to a GPDB external table is made:
 ```
 SELECT * FROM myclass;
 SELECT id, name FROM myclass WHERE id = 2;

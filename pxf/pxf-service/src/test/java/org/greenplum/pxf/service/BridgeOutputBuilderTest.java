@@ -204,7 +204,7 @@ public class BridgeOutputBuilderTest {
             fail("Unsupported data type should throw exception");
         } catch (UnsupportedOperationException e) {
             assertEquals(e.getMessage(),
-                    "Byte is not supported for HAWQ conversion");
+                    "Byte is not supported for GPDB conversion");
         }
     }
 

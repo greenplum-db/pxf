@@ -44,7 +44,7 @@ public class HiveUtilitiesTest {
     Metadata.Item tblDesc;
 
     static String[][] typesMappings = {
-        /* hive type -> hawq type */
+        /* hive type -> gpdb type */
         {"tinyint", "int2"},
         {"smallint", "int2"},
         {"int", "int4"},
@@ -80,7 +80,7 @@ public class HiveUtilitiesTest {
             HiveUtilities.mapHiveType(hiveColumn);
             fail("unsupported type");
         } catch (UnsupportedTypeException e) {
-            assertEquals("Unable to map Hive's type: " + hiveColumn.getType() + " to HAWQ's type", e.getMessage());
+            assertEquals("Unable to map Hive's type: " + hiveColumn.getType() + " to GPDB's type", e.getMessage());
         }
     }
 
@@ -101,11 +101,11 @@ public class HiveUtilitiesTest {
          */
         for (String[] line: typesMappings) {
             String hiveType = line[0];
-            String hawqTypeName = line[1];
+            String gpdbTypeName = line[1];
             hiveColumn = new FieldSchema("field" + hiveType, hiveType, null);
             Metadata.Field result = HiveUtilities.mapHiveType(hiveColumn);
             assertEquals("field" + hiveType, result.getName());
-            assertEquals(hawqTypeName, result.getType().getTypeName());
+            assertEquals(gpdbTypeName, result.getType().getTypeName());
             assertNull(result.getModifiers());
         }
     }
@@ -134,50 +134,50 @@ public class HiveUtilitiesTest {
     public void testCompatibleHiveType() {
 
         String compatibleTypeName = HiveUtilities.toCompatibleHiveType(DataType.BOOLEAN, null);
-        assertEquals(compatibleTypeName, EnumHiveToHawqType.BooleanType.getTypeName());
+        assertEquals(compatibleTypeName, EnumHiveToGpdbType.BooleanType.getTypeName());
 
         compatibleTypeName = HiveUtilities.toCompatibleHiveType(DataType.BYTEA, null);
-        assertEquals(compatibleTypeName, EnumHiveToHawqType.BinaryType.getTypeName());
+        assertEquals(compatibleTypeName, EnumHiveToGpdbType.BinaryType.getTypeName());
 
         compatibleTypeName = HiveUtilities.toCompatibleHiveType(DataType.BPCHAR, null);
-        assertEquals(compatibleTypeName, EnumHiveToHawqType.CharType.getTypeName());
+        assertEquals(compatibleTypeName, EnumHiveToGpdbType.CharType.getTypeName());
 
         compatibleTypeName = HiveUtilities.toCompatibleHiveType(DataType.BIGINT, null);
-        assertEquals(compatibleTypeName, EnumHiveToHawqType.BigintType.getTypeName());
+        assertEquals(compatibleTypeName, EnumHiveToGpdbType.BigintType.getTypeName());
 
         compatibleTypeName = HiveUtilities.toCompatibleHiveType(DataType.SMALLINT, null);
-        assertEquals(compatibleTypeName, EnumHiveToHawqType.SmallintType.getTypeName());
+        assertEquals(compatibleTypeName, EnumHiveToGpdbType.SmallintType.getTypeName());
 
         compatibleTypeName = HiveUtilities.toCompatibleHiveType(DataType.INTEGER, null);
-        assertEquals(compatibleTypeName, EnumHiveToHawqType.IntType.getTypeName());
+        assertEquals(compatibleTypeName, EnumHiveToGpdbType.IntType.getTypeName());
 
         compatibleTypeName = HiveUtilities.toCompatibleHiveType(DataType.TEXT, null);
-        assertEquals(compatibleTypeName, EnumHiveToHawqType.StringType.getTypeName());
+        assertEquals(compatibleTypeName, EnumHiveToGpdbType.StringType.getTypeName());
 
         compatibleTypeName = HiveUtilities.toCompatibleHiveType(DataType.REAL, null);
-        assertEquals(compatibleTypeName, EnumHiveToHawqType.FloatType.getTypeName());
+        assertEquals(compatibleTypeName, EnumHiveToGpdbType.FloatType.getTypeName());
 
         compatibleTypeName = HiveUtilities.toCompatibleHiveType(DataType.FLOAT8, null);
-        assertEquals(compatibleTypeName, EnumHiveToHawqType.DoubleType.getTypeName());
+        assertEquals(compatibleTypeName, EnumHiveToGpdbType.DoubleType.getTypeName());
 
         compatibleTypeName = HiveUtilities.toCompatibleHiveType(DataType.VARCHAR, null);
-        assertEquals(compatibleTypeName, EnumHiveToHawqType.VarcharType.getTypeName());
+        assertEquals(compatibleTypeName, EnumHiveToGpdbType.VarcharType.getTypeName());
 
         compatibleTypeName = HiveUtilities.toCompatibleHiveType(DataType.DATE, null);
-        assertEquals(compatibleTypeName, EnumHiveToHawqType.DateType.getTypeName());
+        assertEquals(compatibleTypeName, EnumHiveToGpdbType.DateType.getTypeName());
 
         compatibleTypeName = HiveUtilities.toCompatibleHiveType(DataType.TIMESTAMP, null);
-        assertEquals(compatibleTypeName, EnumHiveToHawqType.TimestampType.getTypeName());
+        assertEquals(compatibleTypeName, EnumHiveToGpdbType.TimestampType.getTypeName());
 
         compatibleTypeName = HiveUtilities.toCompatibleHiveType(DataType.NUMERIC, null);
-        assertEquals(compatibleTypeName, EnumHiveToHawqType.DecimalType.getTypeName());
+        assertEquals(compatibleTypeName, EnumHiveToGpdbType.DecimalType.getTypeName());
 
         try {
             compatibleTypeName = HiveUtilities.toCompatibleHiveType(DataType.UNSUPPORTED_TYPE, null);
             fail("should fail because there is no mapped Hive type");
         }
         catch (UnsupportedTypeException e) {
-            String errorMsg = "Unable to find compatible Hive type for given HAWQ's type: " + DataType.UNSUPPORTED_TYPE;
+            String errorMsg = "Unable to find compatible Hive type for given GPDB's type: " + DataType.UNSUPPORTED_TYPE;
             assertEquals(errorMsg, e.getMessage());
         }
 
@@ -187,27 +187,27 @@ public class HiveUtilitiesTest {
     @Test
     public void testCompatibleHiveTypeWithModifiers() {
 
-        Integer[] hawqModifiers;
+        Integer[] gpdbModifiers;
         String compatibleTypeName;
 
-        hawqModifiers = new Integer[]{5};
-        compatibleTypeName = HiveUtilities.toCompatibleHiveType(DataType.BPCHAR, hawqModifiers);
-        assertEquals(compatibleTypeName, EnumHiveToHawqType.CharType.getTypeName() + "(" + Joiner.on(",").join(hawqModifiers) + ")");
+        gpdbModifiers = new Integer[]{5};
+        compatibleTypeName = HiveUtilities.toCompatibleHiveType(DataType.BPCHAR, gpdbModifiers);
+        assertEquals(compatibleTypeName, EnumHiveToGpdbType.CharType.getTypeName() + "(" + Joiner.on(",").join(gpdbModifiers) + ")");
 
-        hawqModifiers = new Integer[]{10};
-        compatibleTypeName = HiveUtilities.toCompatibleHiveType(DataType.VARCHAR, hawqModifiers);
-        assertEquals(compatibleTypeName, EnumHiveToHawqType.VarcharType.getTypeName() + "(" + Joiner.on(",").join(hawqModifiers) + ")");
+        gpdbModifiers = new Integer[]{10};
+        compatibleTypeName = HiveUtilities.toCompatibleHiveType(DataType.VARCHAR, gpdbModifiers);
+        assertEquals(compatibleTypeName, EnumHiveToGpdbType.VarcharType.getTypeName() + "(" + Joiner.on(",").join(gpdbModifiers) + ")");
 
-        hawqModifiers = new Integer[]{38, 18};
-        compatibleTypeName = HiveUtilities.toCompatibleHiveType(DataType.NUMERIC, hawqModifiers);
-        assertEquals(compatibleTypeName, EnumHiveToHawqType.DecimalType.getTypeName() + "(" + Joiner.on(",").join(hawqModifiers) + ")");
+        gpdbModifiers = new Integer[]{38, 18};
+        compatibleTypeName = HiveUtilities.toCompatibleHiveType(DataType.NUMERIC, gpdbModifiers);
+        assertEquals(compatibleTypeName, EnumHiveToGpdbType.DecimalType.getTypeName() + "(" + Joiner.on(",").join(gpdbModifiers) + ")");
 
         try {
-            compatibleTypeName = HiveUtilities.toCompatibleHiveType(DataType.UNSUPPORTED_TYPE, hawqModifiers);
+            compatibleTypeName = HiveUtilities.toCompatibleHiveType(DataType.UNSUPPORTED_TYPE, gpdbModifiers);
             fail("should fail because there is no mapped Hive type");
         }
         catch (UnsupportedTypeException e) {
-            String errorMsg = "Unable to find compatible Hive type for given HAWQ's type: " + DataType.UNSUPPORTED_TYPE;
+            String errorMsg = "Unable to find compatible Hive type for given GPDB's type: " + DataType.UNSUPPORTED_TYPE;
             assertEquals(errorMsg, e.getMessage());
         }
 
@@ -218,31 +218,31 @@ public class HiveUtilitiesTest {
     public void validateSchema() throws Exception {
         String columnName = "abc";
 
-        Integer[] hawqModifiers = {};
-        HiveUtilities.validateTypeCompatible(DataType.SMALLINT, hawqModifiers, EnumHiveToHawqType.TinyintType.getTypeName(), columnName);
+        Integer[] gpdbModifiers = {};
+        HiveUtilities.validateTypeCompatible(DataType.SMALLINT, gpdbModifiers, EnumHiveToGpdbType.TinyintType.getTypeName(), columnName);
 
-        HiveUtilities.validateTypeCompatible(DataType.SMALLINT, hawqModifiers, EnumHiveToHawqType.SmallintType.getTypeName(), columnName);
+        HiveUtilities.validateTypeCompatible(DataType.SMALLINT, gpdbModifiers, EnumHiveToGpdbType.SmallintType.getTypeName(), columnName);
 
-        //Both Hive and HAWQ types have the same modifiers
-        hawqModifiers = new Integer[]{38, 18};
-        HiveUtilities.validateTypeCompatible(DataType.NUMERIC, hawqModifiers, "decimal(38,18)", columnName);
+        //Both Hive and GPDB types have the same modifiers
+        gpdbModifiers = new Integer[]{38, 18};
+        HiveUtilities.validateTypeCompatible(DataType.NUMERIC, gpdbModifiers, "decimal(38,18)", columnName);
 
-        //HAWQ datatype doesn't require modifiers, they are empty, Hive has non-empty modifiers
+        //GPDB datatype doesn't require modifiers, they are empty, Hive has non-empty modifiers
         //Types are compatible in this case
-        hawqModifiers = new Integer[]{};
-        HiveUtilities.validateTypeCompatible(DataType.NUMERIC, hawqModifiers, "decimal(38,18)", columnName);
-        hawqModifiers = null;
-        HiveUtilities.validateTypeCompatible(DataType.NUMERIC, hawqModifiers, "decimal(38,18)", columnName);
+        gpdbModifiers = new Integer[]{};
+        HiveUtilities.validateTypeCompatible(DataType.NUMERIC, gpdbModifiers, "decimal(38,18)", columnName);
+        gpdbModifiers = null;
+        HiveUtilities.validateTypeCompatible(DataType.NUMERIC, gpdbModifiers, "decimal(38,18)", columnName);
 
-        //HAWQ has wider modifiers than Hive, types are compatible
-        hawqModifiers = new Integer[]{11, 3};
-        HiveUtilities.validateTypeCompatible(DataType.NUMERIC, hawqModifiers, "decimal(10,2)", columnName);
+        //GPDB has wider modifiers than Hive, types are compatible
+        gpdbModifiers = new Integer[]{11, 3};
+        HiveUtilities.validateTypeCompatible(DataType.NUMERIC, gpdbModifiers, "decimal(10,2)", columnName);
 
 
-        //HAWQ has lesser modifiers than Hive, types aren't compatible
+        //GPDB has lesser modifiers than Hive, types aren't compatible
         try {
-            hawqModifiers = new Integer[]{38, 17};
-            HiveUtilities.validateTypeCompatible(DataType.NUMERIC, hawqModifiers, "decimal(38,18)", columnName);
+            gpdbModifiers = new Integer[]{38, 17};
+            HiveUtilities.validateTypeCompatible(DataType.NUMERIC, gpdbModifiers, "decimal(38,18)", columnName);
             fail("should fail with incompatible modifiers message");
         }
         catch (UnsupportedTypeException e) {
@@ -256,21 +256,21 @@ public class HiveUtilitiesTest {
 
         //Different types, which are not mapped to each other
         try {
-            hawqModifiers = new Integer[]{};
-            HiveUtilities.validateTypeCompatible(DataType.NUMERIC, hawqModifiers, "boolean", columnName);
+            gpdbModifiers = new Integer[]{};
+            HiveUtilities.validateTypeCompatible(DataType.NUMERIC, gpdbModifiers, "boolean", columnName);
             fail("should fail with incompatible types message");
         }
         catch (UnsupportedTypeException e) {
             String errorMsg = "Invalid definition for column " + columnName
-                    + ": expected HAWQ type " + DataType.BOOLEAN
-                    + ", actual HAWQ type " + DataType.NUMERIC;
+                    + ": expected GPDB type " + DataType.BOOLEAN
+                    + ", actual GPDB type " + DataType.NUMERIC;
             assertEquals(errorMsg, e.getMessage());
         }
     }
 
     @Test
     public void extractModifiers() throws Exception {
-        Integer[] mods = EnumHiveToHawqType.extractModifiers("decimal(10,2)");
+        Integer[] mods = EnumHiveToGpdbType.extractModifiers("decimal(10,2)");
         assertArrayEquals(mods, new Integer[]{10, 2});
     }
 
@@ -283,7 +283,7 @@ public class HiveUtilitiesTest {
             HiveUtilities.mapHiveType(hiveColumn);
             fail("should fail with bad numeric type error");
         } catch (UnsupportedTypeException e) {
-            String errorMsg = "HAWQ does not support type " + badHiveType + " (Field badNumeric), " +
+            String errorMsg = "GPDB does not support type " + badHiveType + " (Field badNumeric), " +
                 "expected number of modifiers: 2, actual number of modifiers: 1";
             assertEquals(errorMsg, e.getMessage());
         }
@@ -294,7 +294,7 @@ public class HiveUtilitiesTest {
             HiveUtilities.mapHiveType(hiveColumn);
             fail("should fail with bad char type error");
         } catch (UnsupportedTypeException e) {
-            String errorMsg = "HAWQ does not support type " + badHiveType + " (Field badChar), " +
+            String errorMsg = "GPDB does not support type " + badHiveType + " (Field badChar), " +
                     "expected number of modifiers: 1, actual number of modifiers: 3";
             assertEquals(errorMsg, e.getMessage());
         }
@@ -305,7 +305,7 @@ public class HiveUtilitiesTest {
             HiveUtilities.mapHiveType(hiveColumn);
             fail("should fail with bad modifier error");
         } catch (UnsupportedTypeException e) {
-            String errorMsg = "HAWQ does not support type " + badHiveType + " (Field badModifier), " +
+            String errorMsg = "GPDB does not support type " + badHiveType + " (Field badModifier), " +
                 "modifiers should be integers";
             assertEquals(errorMsg, e.getMessage());
         }
@@ -319,7 +319,7 @@ public class HiveUtilitiesTest {
             HiveUtilities.mapHiveType(hiveColumn);
             fail("should fail with bad modifiers error");
         } catch (UnsupportedTypeException e) {
-            String errorMsg = "HAWQ does not support type " + badHiveType + " (Field numericColumn), modifiers should be integers";
+            String errorMsg = "GPDB does not support type " + badHiveType + " (Field numericColumn), modifiers should be integers";
             assertEquals(errorMsg, e.getMessage());
         }
     }

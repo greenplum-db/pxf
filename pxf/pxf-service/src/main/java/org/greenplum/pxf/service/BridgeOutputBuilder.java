@@ -42,9 +42,9 @@ import java.util.List;
 import static org.greenplum.pxf.api.io.DataType.TEXT;
 
 /**
- * Class creates the output record that is piped by the java process to the HAWQ
+ * Class creates the output record that is piped by the java process to the GPDB
  * backend. Actually, the output record is serialized and the obtained byte
- * string is piped to the HAWQ segment. The output record will implement
+ * string is piped to the GPDB segment. The output record will implement
  * Writable, and the mission of BridgeOutputBuilder will be to translate a list
  * of {@link OneField} objects (obtained from the Resolver) into an output
  * record.
@@ -396,7 +396,7 @@ public class BridgeOutputBuilder {
                     String valClassName = (val != null) ? val.getClass().getSimpleName()
                             : null;
                     throw new UnsupportedOperationException(valClassName
-                            + " is not supported for HAWQ conversion");
+                            + " is not supported for GPDB conversion");
             }
         } catch (GPDBWritable.TypeMismatchException e) {
             throw new BadRecordException(e);

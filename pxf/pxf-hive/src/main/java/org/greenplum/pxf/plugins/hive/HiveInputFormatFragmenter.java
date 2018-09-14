@@ -35,7 +35,7 @@ import java.util.List;
 /**
  * Specialized Hive fragmenter for RC and Text files tables. Unlike the
  * {@link HiveDataFragmenter}, this class does not send the serde properties to
- * the accessor/resolvers. This is done to avoid memory explosion in Hawq. For
+ * the accessor/resolvers. This is done to avoid memory explosion in Gpdb. For
  * RC use together with {@link HiveRCFileAccessor}/
  * {@link HiveColumnarSerdeResolver}. For Text use together with
  * {@link HiveLineBreakAccessor}/{@link HiveStringPassResolver}. <br>
@@ -69,9 +69,9 @@ public class HiveInputFormatFragmenter extends HiveDataFragmenter {
     }
 
     /*
-     * Checks that hive fields and partitions match the HAWQ schema. Throws an
-     * exception if: - the number of fields (+ partitions) do not match the HAWQ
-     * table definition. - the hive fields types do not match the HAWQ fields.
+     * Checks that hive fields and partitions match the GPDB schema. Throws an
+     * exception if: - the number of fields (+ partitions) do not match the GPDB
+     * table definition. - the hive fields types do not match the GPDB fields.
      */
     @Override
     void verifySchema(Table tbl) throws Exception {
@@ -82,7 +82,7 @@ public class HiveInputFormatFragmenter extends HiveDataFragmenter {
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("Hive table: " + hiveColumnsSize + " fields, "
-                    + hivePartitionsSize + " partitions. " + "HAWQ table: "
+                    + hivePartitionsSize + " partitions. " + "GPDB table: "
                     + columnsSize + " fields.");
         }
 

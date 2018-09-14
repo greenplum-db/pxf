@@ -43,7 +43,7 @@ public class ColumnDescriptorCache {
 
 	public ColumnDescriptorCache(ColumnDescriptor columnDescriptor) {
 
-		// HAWQ column type
+		// GPDB column type
 		this.columnType = DataType.get(columnDescriptor.columnTypeCode());
 
 		this.columnName = columnDescriptor.columnName();
@@ -84,7 +84,7 @@ public class ColumnDescriptorCache {
 	}
 
 	/**
-	 * @return Returns the column name as defined in the HAWQ table.
+	 * @return Returns the column name as defined in the GPDB table.
 	 */
 	public String getColumnName() {
 		return columnName;

@@ -47,7 +47,7 @@ import org.greenplum.pxf.api.Metadata;
 import org.greenplum.pxf.api.Metadata.Field;
 import org.greenplum.pxf.api.UnsupportedTypeException;
 import org.greenplum.pxf.api.UserDataException;
-import org.greenplum.pxf.api.utilities.EnumHawqType;
+import org.greenplum.pxf.api.utilities.EnumGpdbType;
 import org.greenplum.pxf.api.utilities.InputData;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.api.io.DataType;
@@ -142,14 +142,14 @@ public class HiveUtilities {
         }
 
         if (TableType.valueOf(tblType) == TableType.VIRTUAL_VIEW) {
-            throw new UnsupportedOperationException("Hive views are not supported by HAWQ");
+            throw new UnsupportedOperationException("Hive views are not supported by GPDB");
         }
 
         return tbl;
     }
 
     /**
-     * Checks if hive type is supported, and if so return its matching HAWQ
+     * Checks if hive type is supported, and if so return its matching GPDB
      * type. Unsupported types will result in an exception. <br>
      * The supported mappings are:
      * <ul>
@@ -175,41 +175,41 @@ public class HiveUtilities {
      *
      * @param hiveColumn
      *            hive column schema
-     * @return field with mapped HAWQ type and modifiers
+     * @return field with mapped GPDB type and modifiers
      * @throws UnsupportedTypeException
      *             if the column type is not supported
-     * @see EnumHiveToHawqType
+     * @see EnumHiveToGpdbType
      */
     public static Metadata.Field mapHiveType(FieldSchema hiveColumn) throws UnsupportedTypeException {
         String fieldName = hiveColumn.getName();
         String hiveType = hiveColumn.getType(); // Type name and modifiers if any
         String hiveTypeName; // Type name
         String[] modifiers = null; // Modifiers
-        EnumHiveToHawqType hiveToHawqType = EnumHiveToHawqType.getHiveToHawqType(hiveType);
-        EnumHawqType hawqType = hiveToHawqType.getHawqType();
+        EnumHiveToGpdbType hiveToGpdbType = EnumHiveToGpdbType.getHiveToGpdbType(hiveType);
+        EnumGpdbType gpdbType = hiveToGpdbType.getGpdbType();
 
-        if (hiveToHawqType.getSplitExpression() != null) {
-            String[] tokens = hiveType.split(hiveToHawqType.getSplitExpression());
+        if (hiveToGpdbType.getSplitExpression() != null) {
+            String[] tokens = hiveType.split(hiveToGpdbType.getSplitExpression());
             hiveTypeName = tokens[0];
-            if (hawqType.getModifiersNum() > 0) {
+            if (gpdbType.getModifiersNum() > 0) {
                 modifiers = Arrays.copyOfRange(tokens, 1, tokens.length);
-                if (modifiers.length != hawqType.getModifiersNum()) {
+                if (modifiers.length != gpdbType.getModifiersNum()) {
                     throw new UnsupportedTypeException(
-                            "HAWQ does not support type " + hiveType
+                            "GPDB does not support type " + hiveType
                                     + " (Field " + fieldName + "), "
                                     + "expected number of modifiers: "
-                                    + hawqType.getModifiersNum()
+                                    + gpdbType.getModifiersNum()
                                     + ", actual number of modifiers: "
                                     + modifiers.length);
                 }
                 if (!verifyIntegerModifiers(modifiers)) {
-                    throw new UnsupportedTypeException("HAWQ does not support type " + hiveType + " (Field " + fieldName + "), modifiers should be integers");
+                    throw new UnsupportedTypeException("GPDB does not support type " + hiveType + " (Field " + fieldName + "), modifiers should be integers");
                 }
             }
         } else
             hiveTypeName = hiveType;
 
-        return new Metadata.Field(fieldName, hawqType, hiveToHawqType.isComplexType(), hiveTypeName, modifiers);
+        return new Metadata.Field(fieldName, gpdbType, hiveToGpdbType.isComplexType(), hiveTypeName, modifiers);
     }
 
     /**
@@ -323,68 +323,68 @@ public class HiveUtilities {
 
 
     /**
-     * Converts HAWQ type to hive type.
-     * @see EnumHiveToHawqType For supported mappings
-     * @param type HAWQ data type
+     * Converts GPDB type to hive type.
+     * @see EnumHiveToGpdbType For supported mappings
+     * @param type GPDB data type
      * @param modifiers Integer array of modifier info
      * @return Hive type
      * @throws UnsupportedTypeException if type is not supported
      */
     public static String toCompatibleHiveType(DataType type, Integer[] modifiers) {
 
-        EnumHiveToHawqType hiveToHawqType = EnumHiveToHawqType.getCompatibleHiveToHawqType(type);
-        return EnumHiveToHawqType.getFullHiveTypeName(hiveToHawqType, modifiers);
+        EnumHiveToGpdbType hiveToGpdbType = EnumHiveToGpdbType.getCompatibleHiveToGpdbType(type);
+        return EnumHiveToGpdbType.getFullHiveTypeName(hiveToGpdbType, modifiers);
     }
 
 
 
     /**
-     * Validates whether given HAWQ and Hive data types are compatible.
-     * If data type could have modifiers, HAWQ data type is valid if it hasn't modifiers at all
-     * or HAWQ's modifiers are greater or equal to Hive's modifiers.
+     * Validates whether given GPDB and Hive data types are compatible.
+     * If data type could have modifiers, GPDB data type is valid if it hasn't modifiers at all
+     * or GPDB's modifiers are greater or equal to Hive's modifiers.
      * <p>
      * For example:
      * <p>
-     * Hive type - varchar(20), HAWQ type varchar - valid.
+     * Hive type - varchar(20), GPDB type varchar - valid.
      * <p>
-     * Hive type - varchar(20), HAWQ type varchar(20) - valid.
+     * Hive type - varchar(20), GPDB type varchar(20) - valid.
      * <p>
-     * Hive type - varchar(20), HAWQ type varchar(25) - valid.
+     * Hive type - varchar(20), GPDB type varchar(25) - valid.
      * <p>
-     * Hive type - varchar(20), HAWQ type varchar(15) - invalid.
+     * Hive type - varchar(20), GPDB type varchar(15) - invalid.
      *
      *
-     * @param hawqDataType HAWQ data type
-     * @param hawqTypeMods HAWQ type modifiers
+     * @param gpdbDataType GPDB data type
+     * @param gpdbTypeMods GPDB type modifiers
      * @param hiveType full Hive type, i.e. decimal(10,2)
-     * @param hawqColumnName Hive column name
+     * @param gpdbColumnName Hive column name
      * @throws UnsupportedTypeException if types are incompatible
      */
-    public static void validateTypeCompatible(DataType hawqDataType, Integer[] hawqTypeMods, String hiveType, String hawqColumnName) {
+    public static void validateTypeCompatible(DataType gpdbDataType, Integer[] gpdbTypeMods, String hiveType, String gpdbColumnName) {
 
-        EnumHiveToHawqType hiveToHawqType = EnumHiveToHawqType.getHiveToHawqType(hiveType);
-        EnumHawqType expectedHawqType = hiveToHawqType.getHawqType();
+        EnumHiveToGpdbType hiveToGpdbType = EnumHiveToGpdbType.getHiveToGpdbType(hiveType);
+        EnumGpdbType expectedGpdbType = hiveToGpdbType.getGpdbType();
 
-        if (!expectedHawqType.getDataType().equals(hawqDataType)) {
-            throw new UnsupportedTypeException("Invalid definition for column " + hawqColumnName
-                                    +  ": expected HAWQ type " + expectedHawqType.getDataType() +
-                    ", actual HAWQ type " + hawqDataType);
+        if (!expectedGpdbType.getDataType().equals(gpdbDataType)) {
+            throw new UnsupportedTypeException("Invalid definition for column " + gpdbColumnName
+                                    +  ": expected GPDB type " + expectedGpdbType.getDataType() +
+                    ", actual GPDB type " + gpdbDataType);
         }
 
-        switch (hawqDataType) {
+        switch (gpdbDataType) {
             case NUMERIC:
             case VARCHAR:
             case BPCHAR:
-                if (hawqTypeMods != null && hawqTypeMods.length > 0) {
-                    Integer[] hiveTypeModifiers = EnumHiveToHawqType
+                if (gpdbTypeMods != null && gpdbTypeMods.length > 0) {
+                    Integer[] hiveTypeModifiers = EnumHiveToGpdbType
                             .extractModifiers(hiveType);
                     for (int i = 0; i < hiveTypeModifiers.length; i++) {
-                        if (hawqTypeMods[i] < hiveTypeModifiers[i])
+                        if (gpdbTypeMods[i] < hiveTypeModifiers[i])
                             throw new UnsupportedTypeException(
-                                    "Invalid definition for column " + hawqColumnName
+                                    "Invalid definition for column " + gpdbColumnName
                                             + ": modifiers are not compatible, "
                                             + Arrays.toString(hiveTypeModifiers) + ", "
-                                            + Arrays.toString(hawqTypeMods));
+                                            + Arrays.toString(gpdbTypeMods));
                     }
                 }
                 break;
@@ -550,7 +550,7 @@ public class HiveUtilities {
 
     /**
      * The method determines whether metadata definition has any complex type
-     * @see EnumHiveToHawqType for complex type attribute definition
+     * @see EnumHiveToGpdbType for complex type attribute definition
      *
      * @param metadata metadata of relation
      * @return true if metadata has at least one field of complex type

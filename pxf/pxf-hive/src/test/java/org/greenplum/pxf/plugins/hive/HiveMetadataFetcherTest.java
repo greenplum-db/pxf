@@ -115,7 +115,7 @@ public class HiveMetadataFetcherTest {
             metadataList = fetcher.getMetadata(tableName);
             fail("Expected an UnsupportedOperationException because PXF doesn't support views");
         } catch (UnsupportedOperationException e) {
-            assertEquals("Hive views are not supported by HAWQ", e.getMessage());
+            assertEquals("Hive views are not supported by GPDB", e.getMessage());
         }
     }
 

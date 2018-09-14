@@ -154,8 +154,8 @@ public class BridgeResource extends RestResource {
                                 + dataDir + ", " + recordCount + " records.");
                     }
                 } catch (ClientAbortException e) {
-                    // Occurs whenever client (HAWQ) decides the end the connection
-                    LOG.error("Remote connection closed by HAWQ", e);
+                    // Occurs whenever client (GPDB) decides the end the connection
+                    LOG.error("Remote connection closed by GPDB", e);
                 } catch (Exception e) {
                     LOG.error("Exception thrown when streaming", e);
                     throw new IOException(e.getMessage());

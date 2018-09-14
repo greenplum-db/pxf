@@ -73,7 +73,7 @@ public class HBaseDataFragmenter extends Fragmenter {
      * Returns list of fragments containing all of the
      * HBase's table data.
      * Lookup table information with mapping between
-     * field names in HAWQ table and HBase table will be
+     * field names in GPDB table and HBase table will be
      * returned as user data.
      *
      * @return a list of fragments

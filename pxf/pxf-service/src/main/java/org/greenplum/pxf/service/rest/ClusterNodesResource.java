@@ -103,7 +103,7 @@ public class ClusterNodesResource {
             LOG.error("Nodes verification failed", e);
             throw e;
         } catch (ClientAbortException e) {
-            LOG.error("Remote connection closed by HAWQ", e);
+            LOG.error("Remote connection closed by GPDB", e);
             throw e;
         } catch (java.io.IOException e) {
             LOG.error("Unhandled exception thrown", e);

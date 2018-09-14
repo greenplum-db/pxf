@@ -25,7 +25,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Supported Data Types and OIDs (HAWQ Data Type identifiers).
+ * Supported Data Types and OIDs (GPDB Data Type identifiers).
  * There's a one-to-one match between a Data Type and it's corresponding OID.
  */
 public enum DataType {
