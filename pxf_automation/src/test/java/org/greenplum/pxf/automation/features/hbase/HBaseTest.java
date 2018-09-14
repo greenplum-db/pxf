@@ -30,7 +30,7 @@ public class HBaseTest extends BaseFeature {
     private HBaseTable hbaseTableWithNulls;
     private LookupTable lookupTable;
     private ReadableExternalTable exTableNullHBase;
-    // used to verify no filter string returned from HAWQ side
+    // used to verify no filter string returned from GPDB side
     private final String NO_FILTER = "No filter";
     // Data preparer to create data matching to the HBase tables
     private HBaseDataPreparer dataPreparer = new HBaseDataPreparer();
@@ -75,7 +75,7 @@ public class HBaseTest extends BaseFeature {
     private String testPackage = "org.greenplum.pxf.automation.testplugin.";
 
     /**
-     * Prepare all components and all data flow (HBase to HAWQ)
+     * Prepare all components and all data flow (HBase to GPDB)
      */
     @Override
     public void beforeClass() throws Exception {
@@ -424,7 +424,7 @@ public class HBaseTest extends BaseFeature {
     }
 
     /**
-     * Recoded key defined as INTEGER in HAWQ table, Filter range of record keys as integer
+     * Recoded key defined as INTEGER in GPDB table, Filter range of record keys as integer
      *
      * @throws Exception if test fails to run
      */
@@ -519,7 +519,7 @@ public class HBaseTest extends BaseFeature {
 
     /**
      * use long HBase table qualifier (over 64 chars) with no lookup table mapping. Verify the
-     * column name in HAWQ is being truncated and data for this column is missing
+     * column name in GPDB is being truncated and data for this column is missing
      *
      * @throws Exception if test fails to run
      */
@@ -682,7 +682,7 @@ public class HBaseTest extends BaseFeature {
         // use FilterPrinterAccessor to get the serialized filter in the pxf side
         createAndQueryPxfHawqFilterTable(hbaseTable, externalTable.getFields(), whereClause, filterString);
         if (verifyFilterString) {
-            // create another HAWQ external table that uses HBaseAccessorWithFilter to get the
+            // create another GPDB external table that uses HBaseAccessorWithFilter to get the
             // filter as user parameter
             createPxfHBaseFilterTable(filterString, hbaseTable, externalTable.getFields());
             // run tinc case to get filtered results

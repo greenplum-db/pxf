@@ -9,7 +9,7 @@ Dependancies
 In order to run PXF automation tests the following are needed
 
 1. Running Hadoop cluster 
-2. Running HAWQ or GPDB
+2. Running GPDB
 3. JRE 1.7
 
 Build & Test
@@ -18,9 +18,9 @@ Build & Test
 Set necessary Environment Vars##
 ```
 export GPHD_ROOT=<parent directory containing hadoop,hive,etc>
-export PGPORT=<hawq port>
+export PGPORT=<gpdb port>
 export GPHOME=<your gphome>
-export PG_MODE=GPDB # Set PG_MODE to your database (GPDB/HAWQ)
+export PG_MODE=GPDB # Set PG_MODE to your database (GPDB/HAWQ). GPDB is the default
 export PXF_HOME=$GPHOME/pxf
 ```
 
@@ -67,7 +67,7 @@ You can read more about TestNG here http://testng.org/doc/index.md
 1.  Decide which category of run cycle (smoke/feature/load)
 2.  Extend the right java class (according to the above test class hierarchy diagram)
 3.  While implementing "smoke" test you can override three methods: "<span><span>prepareData", "</span></span><span><span>createTables" and "</span></span><span><span>queryResults" and than just call "</span></span><span>runTest" method from your test case for running the three mentioned methods in that order. (see *Example 1*)</span>
-4.  Use TINC framework to test HAWQ query results (see below "*Add TINC Cases*" section)
+4.  Use TINC framework to test GPDB query results (see below "*Add TINC Cases*" section)
 
 ## Add TINC Cases
 
@@ -106,7 +106,7 @@ You can read more about TestNG here http://testng.org/doc/index.md
         @Override
         protected void createTables() throws Exception {
             /**
-             * Create HAWQ external table directed to the HDFS file
+             * Create GPDB external table directed to the HDFS file
              */
             exTable = TableFactory.getPxfReadableTextTable("pxf_smoke_small", new String[] {
                     "name text",

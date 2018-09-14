@@ -59,7 +59,7 @@ public class MultiBlockTest extends BaseFeature {
     }
 
     /**
-     * Create external table on HAWQ using table meta info
+     * Create external table on GPDB using table meta info
      *
      * @param table
      * @throws Exception
@@ -75,7 +75,7 @@ public class MultiBlockTest extends BaseFeature {
     }
 
     /**
-     * Run the HAWQ query and verify the expected result
+     * Run the GPDB query and verify the expected result
      *
      * @param table
      * @throws Exception

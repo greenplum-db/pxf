@@ -13,7 +13,7 @@ import org.springframework.util.Assert;
 import org.greenplum.pxf.automation.utils.jsystem.report.ReportUtils;
 
 /**
- * HAWQ system object, defines functionality for HAWQ Data Base.
+ * GPDB system object, defines functionality for GPDB Data Base.
  */
 public class Hawq extends DbSystemObject {
 

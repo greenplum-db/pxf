@@ -13,4 +13,4 @@
 -- end_matchsubs
 
 SELECT * from pxf_hive_collections ORDER BY t1;
-ERROR:  remote component error (500) from 'SOME_IP:SOME_PORT':  type  Exception report   message   Schema mismatch definition: Field t2 (Hive type array&lt;string&gt;, HAWQ type TEXT)    description   DESCRIPTION
+ERROR:  remote component error (500) from 'SOME_IP:SOME_PORT':  type  Exception report   message   Schema mismatch definition: Field t2 (Hive type array&lt;string&gt;, GPDB type TEXT)    description   DESCRIPTION

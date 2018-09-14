@@ -14,7 +14,7 @@ import org.greenplum.pxf.automation.features.BaseFeature;
 public class JdbcTest extends BaseFeature {
 
     private static final String POSTGRES_DRIVER_CLASS = "org.postgresql.Driver";
-    private static final String HAWQ_PXF_AUTOMATION_DB_JDBC = "jdbc:postgresql://";
+    private static final String GPDB_PXF_AUTOMATION_DB_JDBC = "jdbc:postgresql://";
     private static final String[] TYPES_TABLE_FIELDS = new String[] {
         "t1    text",
         "t2    text",
@@ -75,7 +75,7 @@ public class JdbcTest extends BaseFeature {
                 TYPES_TABLE_FIELDS,
                 hawqNativeTable.getName(),
                 POSTGRES_DRIVER_CLASS,
-                HAWQ_PXF_AUTOMATION_DB_JDBC + hawq.getMasterHost() + ":" + hawq.getPort() + "/pxfautomation",
+                GPDB_PXF_AUTOMATION_DB_JDBC + hawq.getMasterHost() + ":" + hawq.getPort() + "/pxfautomation",
                 hawq.getUserName());
         pxfJdbcSingleFragment.setHost(pxfHost);
         pxfJdbcSingleFragment.setPort(pxfPort);
@@ -89,7 +89,7 @@ public class JdbcTest extends BaseFeature {
                 TYPES_TABLE_FIELDS,
                 hawqNativeTable.getName(),
                 POSTGRES_DRIVER_CLASS,
-                HAWQ_PXF_AUTOMATION_DB_JDBC + hawq.getMasterHost() + ":" + hawq.getPort() + "/pxfautomation",
+                GPDB_PXF_AUTOMATION_DB_JDBC + hawq.getMasterHost() + ":" + hawq.getPort() + "/pxfautomation",
                 13,
                 "USD:UAH",
                 "1",
@@ -107,7 +107,7 @@ public class JdbcTest extends BaseFeature {
                 TYPES_TABLE_FIELDS,
                 hawqNativeTable.getName(),
                 POSTGRES_DRIVER_CLASS,
-                HAWQ_PXF_AUTOMATION_DB_JDBC + hawq.getMasterHost() + ":" + hawq.getPort() + "/pxfautomation",
+                GPDB_PXF_AUTOMATION_DB_JDBC + hawq.getMasterHost() + ":" + hawq.getPort() + "/pxfautomation",
                 2,
                 "1:6",
                 "1",
@@ -125,7 +125,7 @@ public class JdbcTest extends BaseFeature {
                 TYPES_TABLE_FIELDS,
                 hawqNativeTable.getName(),
                 POSTGRES_DRIVER_CLASS,
-                HAWQ_PXF_AUTOMATION_DB_JDBC + hawq.getMasterHost() + ":" + hawq.getPort() + "/pxfautomation",
+                GPDB_PXF_AUTOMATION_DB_JDBC + hawq.getMasterHost() + ":" + hawq.getPort() + "/pxfautomation",
                 11,
                 "2015-03-06:2015-03-20",
                 "1:DAY",
@@ -142,7 +142,7 @@ public class JdbcTest extends BaseFeature {
                 TYPES_TABLE_FIELDS,
                 hawqNativeTable.getName() + "_target",
                 POSTGRES_DRIVER_CLASS,
-                HAWQ_PXF_AUTOMATION_DB_JDBC + hawq.getMasterHost() + ":" + hawq.getPort() + "/pxfautomation",
+                GPDB_PXF_AUTOMATION_DB_JDBC + hawq.getMasterHost() + ":" + hawq.getPort() + "/pxfautomation",
                 hawq.getUserName());
         pxfJdbcSingleFragment.setHost(pxfHost);
         pxfJdbcSingleFragment.setPort(pxfPort);

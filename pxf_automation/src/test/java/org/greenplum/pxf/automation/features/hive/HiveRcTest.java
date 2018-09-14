@@ -114,7 +114,7 @@ public class HiveRcTest extends HiveBaseTest {
     @Test(groups = { "features", "gpdb" })
     public void supportedTypesRc() throws Exception {
 
-        createExternalTable(HAWQ_HIVE_TYPES_TABLE,
+        createExternalTable(GPDB_HIVE_TYPES_TABLE,
                 PXF_HIVE_TYPES_LIMITED_COLS, hiveRcTypes, true);
 
         runTincTest("pxf.features.hive.rc_types.runTest");
@@ -156,7 +156,7 @@ public class HiveRcTest extends HiveBaseTest {
 
         String[] mismatchedFields = PXF_HIVE_TYPES_LIMITED_COLS.clone();
         mismatchedFields[8] = "si INTEGER";
-        createExternalTable(HAWQ_HIVE_TYPES_TABLE,
+        createExternalTable(GPDB_HIVE_TYPES_TABLE,
                 mismatchedFields, hiveRcTypes, false);
 
         runTincTest("pxf.features.hive.errors.rc_mismatchedTypes.runTest");
@@ -253,7 +253,7 @@ public class HiveRcTest extends HiveBaseTest {
 
 
     /**
-     * Create HAWQ external table without the partition column. check error.
+     * Create GPDB external table without the partition column. check error.
      *
      * @throws Exception if test fails to run
      */

@@ -45,7 +45,7 @@ class _MPPDUT(object):
     def _get_version_string_output(self):
         # Version string is the output of postgres --gp-version or postgress --version
         # Output in gpdb: "postgres (Greenplum Database) 4.3_PARISTX_ORCA build 43249"
-        # Output in hawq: "postgres (HAWQ) 4.2.0 build 1"
+        # Output in hawq: "postgres (GPDB) 4.2.0 build 1"
         # Output in postgres: "postgres (PostgreSQL) 9.2.4"
 
         # The following command will fail if the DUT is postgres
@@ -460,7 +460,7 @@ class __gpdbMPPTestCase__(MPPTestCase):
 
 class __hawqMPPTestCase__(MPPTestCase):
     """
-    __hawqMPPTestCase__ is a hidden class that overrides HAWQ specific methods of MPPTestCase.
+    __hawqMPPTestCase__ is a hidden class that overrides GPDB specific methods of MPPTestCase.
     This class should never be used as a parent or as an executor for any test cases.
     Presently, this class doesn't override any methods. It is here only for reference.
     """

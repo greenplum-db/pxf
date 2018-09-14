@@ -30,7 +30,7 @@ import org.apache.hadoop.hbase.util.Bytes;
  * Test class for regression tests.
  * The class is based on {@link HBaseAccessor}, with the only difference
  * that the filter is read from a user defined parameter TEST-HBASE-FILTER
- * instead of from HAWQ. 
+ * instead of from GPDB.
  */
 public class HBaseAccessorWithFilter extends Plugin implements ReadAccessor {
 	static private Log Log = LogFactory.getLog(HBaseAccessorWithFilter.class);

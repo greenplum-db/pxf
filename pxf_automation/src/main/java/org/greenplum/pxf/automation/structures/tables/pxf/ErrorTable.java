@@ -3,7 +3,7 @@ package org.greenplum.pxf.automation.structures.tables.pxf;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
 
 /**
- * Represent HAWQ error table.
+ * Represent GPDB error table.
  */
 public class ErrorTable extends Table {
 

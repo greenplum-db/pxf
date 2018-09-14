@@ -13,10 +13,10 @@
 -- s/description   .*/description   DESCRIPTION/
 --
 -- m/PXF doesn't support HIVE views/
--- s/PXF doesn't support HIVE views/Hive views are not supported by HAWQ/
+-- s/PXF doesn't support HIVE views/Hive views are not supported by GPDB/
 --
 -- m/DETAIL/
 -- s/DETAIL/GP_IGNORE: DETAIL/
 -- end_matchsubs
 SELECT *  FROM pxf_hive_view_table;
-ERROR:  remote component error (500) from 'SOME_IP:SOME_PORT':  type  Exception report   message   Hive views are not supported by HAWQ    description   DESCRIPTION
+ERROR:  remote component error (500) from 'SOME_IP:SOME_PORT':  type  Exception report   message   Hive views are not supported by GPDB    description   DESCRIPTION

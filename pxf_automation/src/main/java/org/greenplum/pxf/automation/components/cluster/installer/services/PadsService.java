@@ -9,7 +9,7 @@ import org.greenplum.pxf.automation.components.cluster.installer.nodes.SlaveNode
 import org.greenplum.pxf.automation.utils.jsystem.report.ReportUtils;
 
 /**
- * Installation of PADS components (such HAWQ and PXF) over given cluster.
+ * Installation of PADS components (such GPDB and PXF) over given cluster.
  */
 public class PadsService extends Service {
 	private boolean hawq = false;
@@ -37,7 +37,7 @@ public class PadsService extends Service {
 	}
 
 	private void installHawq(InstallationCluster cluster) throws Exception {
-		ReportUtils.reportTitle(report, getClass(), "HAWQ Installation");
+		ReportUtils.reportTitle(report, getClass(), "GPDB Installation");
 		InstallationNode installtionNode = cluster.getInstalltionNode();
 		MasterNode masterNode = cluster.getMasterNode();
 		SlaveNode[] slaveNodes = cluster.getSlaveNodes();
@@ -56,7 +56,7 @@ public class PadsService extends Service {
 		cluster.copyFileToNodes(slaveNodes, new File(resourcesPath + "hawq/hdfs-client.xml").getAbsolutePath(), "/usr/local/hawq/etc/hdfs-client.xml");
 		// set /data/hawq directory with 'gpadmin' as owner
 		cluster.runParallelCommand("chown -R gpadmin:gpadmin /data/hawq");
-		// prepare HDFS directories for HAWQ with 'gpadmin' as owner
+		// prepare HDFS directories for GPDB with 'gpadmin' as owner
 		masterNode.runCommand("sudo -u hdfs hdfs dfs -mkdir /hawq_data");
 		masterNode.runCommand("sudo -u hdfs hdfs dfs -chown gpadmin:gpadmin /hawq_data");
 		// init and start hawq on master node

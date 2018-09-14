@@ -162,8 +162,8 @@ public class HiveBaseTest extends BaseFeature {
     static final String PXF_HIVE_ORC_TABLE = "pxf_hive_orc_types";
     static final String PXF_HIVE_ORC_ZLIB_TABLE = "pxf_hive_orc_zlib";
     static final String PXF_HIVE_HETEROGEN_TABLE = "pxf_hive_heterogen";
-    static final String HAWQ_SMALL_DATA_TABLE = "hawq_small_data";
-    static final String HAWQ_HIVE_TYPES_TABLE = "hawq_hive_types";
+    static final String GPDB_SMALL_DATA_TABLE = "hawq_small_data";
+    static final String GPDB_HIVE_TYPES_TABLE = "hawq_hive_types";
 
     static final String HIVE_SCHEMA = "userdb";
     static final String AVRO = "AVRO";

@@ -131,10 +131,10 @@ public class HiveTextTest extends HiveBaseTest {
                     true, true);
         }
 
-        // Hive column is DECIMAL(38,18), expected HAWQ type is NUMERIC(38,18) or NUMERIC, but actual is NUMERIC(30,18)
+        // Hive column is DECIMAL(38,18), expected GPDB type is NUMERIC(38,18) or NUMERIC, but actual is NUMERIC(30,18)
         tableFieldTypes = PXF_HIVE_TYPES_COLS.clone();
         tableFieldTypes[4] = "dc1 NUMERIC(30,18)";
-        createExternalTable(HAWQ_HIVE_TYPES_TABLE,
+        createExternalTable(GPDB_HIVE_TYPES_TABLE,
                 tableFieldTypes, hiveTypesTable, false, ",");
 
         try {
@@ -146,10 +146,10 @@ public class HiveTextTest extends HiveBaseTest {
                     true, true);
         }
 
-        // Hive column is DECIMAL(38,18), expected HAWQ type is NUMERIC(38,18) or NUMERIC, but actual is NUMERIC(38)
+        // Hive column is DECIMAL(38,18), expected GPDB type is NUMERIC(38,18) or NUMERIC, but actual is NUMERIC(38)
         tableFieldTypes = PXF_HIVE_TYPES_COLS.clone();
         tableFieldTypes[4] = "dc1 NUMERIC(38)";
-        createExternalTable(HAWQ_HIVE_TYPES_TABLE,
+        createExternalTable(GPDB_HIVE_TYPES_TABLE,
                 tableFieldTypes, hiveTypesTable, false, ",");
 
         try {
@@ -215,7 +215,7 @@ public class HiveTextTest extends HiveBaseTest {
     }
 
     /**
-     * Create HAWQ external table without the partition column. check error.
+     * Create GPDB external table without the partition column. check error.
      *
      * @throws Exception if test fails to run
      */
@@ -428,7 +428,7 @@ public class HiveTextTest extends HiveBaseTest {
     }
 
     /**
-     * Make sure HAWQ is functional for heterogeneous table with three text partitions
+     * Make sure GPDB is functional for heterogeneous table with three text partitions
      *
      * @throws Exception if test fails to run
      */

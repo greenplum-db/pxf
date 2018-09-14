@@ -7,7 +7,7 @@
 ################################################
 
 #### Name of this Greenplum system enclosed in quotes.
-ARRAY_NAME=HAWQ
+ARRAY_NAME=GPDB
 
 #### Naming convention for utility-generated data directories.
 SEG_PREFIX=gpseg

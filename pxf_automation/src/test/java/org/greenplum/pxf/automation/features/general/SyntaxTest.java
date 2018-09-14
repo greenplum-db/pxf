@@ -540,7 +540,7 @@ public class SyntaxTest extends BaseFeature {
 
     /**
      * Netagive test to verify that table with wrong nameservice is not created.
-     * The nameservice is defined in HAWQ's hdfs-client.xml file.
+     * The nameservice is defined in GPDB's hdfs-client.xml file.
      *
      * @throws Exception
      */
@@ -587,7 +587,7 @@ public class SyntaxTest extends BaseFeature {
 
     /**
      * Netagive test to verify that table with wrong nameservice is not created.
-     * The nameservice is defined in HAWQ's hdfs-client.xml file.
+     * The nameservice is defined in GPDB's hdfs-client.xml file.
      *
      * @throws Exception
      */

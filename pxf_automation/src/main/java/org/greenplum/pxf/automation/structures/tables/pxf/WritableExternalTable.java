@@ -1,7 +1,7 @@
 package org.greenplum.pxf.automation.structures.tables.pxf;
 
 /**
- * represents HAWQ -> PXF Writable External Table
+ * represents GPDB -> PXF Writable External Table
  */
 public class WritableExternalTable extends ReadableExternalTable {
 

@@ -12,7 +12,7 @@ import org.greenplum.pxf.api.utilities.Plugin;
 /**
  * Test class for regression tests.
  * The only thing this class does is to throw an exception
- * containing the received filter from HAWQ (HAS-FILTER & FILTER).
+ * containing the received filter from GPDB (HAS-FILTER & FILTER).
  */
 public class FilterPrinterAccessor extends Plugin implements ReadAccessor
 {
