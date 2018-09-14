@@ -36,7 +36,7 @@ public class CustomAutomationReport implements IReporter {
 				ITestContext tc = sr.getTestContext();
 				// go over all cases
 				for (ITestNGMethod method : tc.getAllTestMethods()) {
-					// if a case has "ExpectedFailure" annotation, insert to sBuilder
+					// if a case has "ExpectedFaiGPDBWritable.javalure" annotation, insert to sBuilder
 
 					if (method.getConstructorOrMethod().getMethod().getAnnotation(ExpectedFailure.class) != null) {
 						sBuilder.append(method.getInstance().getClass().getName() + "/" + method.getMethodName()).append(System.lineSeparator());

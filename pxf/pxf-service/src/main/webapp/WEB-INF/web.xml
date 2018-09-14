@@ -46,7 +46,7 @@ under the License.
         </servlet-class>
         <init-param>
             <param-name>com.sun.jersey.config.property.packages</param-name>
-            <param-value>org.apache.hawq.pxf.service.rest</param-value>
+            <param-value>org.greenplum.pxf.service.rest</param-value>
         </init-param>
         <init-param>
             <param-name>jersey.config.server.provider.scanning.recursive</param-name>
@@ -59,11 +59,11 @@ under the License.
         <url-pattern>/*</url-pattern>
     </servlet-mapping>
     <listener>
-       <listener-class>org.apache.hawq.pxf.service.servlet.ServletLifecycleListener</listener-class>
+       <listener-class>org.greenplum.pxf.service.servlet.ServletLifecycleListener</listener-class>
     </listener>
     <filter>
         <filter-name>PXF Security Filter</filter-name>
-        <filter-class>org.apache.hawq.pxf.service.servlet.SecurityServletFilter</filter-class>
+        <filter-class>org.greenplum.pxf.service.servlet.SecurityServletFilter</filter-class>
     </filter>
     <filter-mapping>
         <filter-name>PXF Security Filter</filter-name>

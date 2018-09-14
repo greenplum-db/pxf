@@ -30,4 +30,4 @@
 -- end_matchsubs
 SELECT * FROM pxf_profiles_small_data ORDER BY name;
 ERROR:  remote component error (500) from 'SOME_IP:SOME_PORT':  type  Exception SOME_EXCEPTION
-DETAIL:  External table pxf_profiles_small_data, file pxf://pxf_automation_data/data.txt?FRAGMENTER=org.apache.hawq.pxf.plugins.hdfs.HdfsDataFragmenter&ACCESSOR=org.apache.hawq.pxf.plugins.hdfs.LineBreakAccessor&RESOLVER=org.apache.hawq.pxf.plugins.hdfs.StringPassResolver&Profile=HdfsTextSimple
+DETAIL:  External table pxf_profiles_small_data, file pxf://pxf_automation_data/data.txt?FRAGMENTER=org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter&ACCESSOR=org.greenplum.pxf.plugins.hdfs.LineBreakAccessor&RESOLVER=org.greenplum.pxf.plugins.hdfs.StringPassResolver&Profile=HdfsTextSimple

@@ -1,24 +1,24 @@
 <sut>
 	<cluster>
-		<class>com.pxf.automation.components.cluster.MultiNodeCluster</class>
+		<class>org.greenplum.pxf.automation.components.cluster.MultiNodeCluster</class>
 		<host>localhost</host>
 		<phdRoot>/usr/local/greenplum-db-devel</phdRoot>
 		<nodes index="0">
-			<class>com.pxf.automation.components.cluster.installer.nodes.MasterNode</class>
+			<class>org.greenplum.pxf.automation.components.cluster.installer.nodes.MasterNode</class>
 			<host>mdw</host>
 			<userName>gpadmin</userName>
 			<password></password>
 			<services>hawq,pxf</services>
 		</nodes>
 		<nodes index="1">
-			<class>com.pxf.automation.components.cluster.installer.nodes.SlaveNode</class>
+			<class>org.greenplum.pxf.automation.components.cluster.installer.nodes.SlaveNode</class>
 			<host>sdw1</host>
 			<userName>gpadmin</userName>
 			<password></password>
 			<services>pxf</services>
 		</nodes>
 		<nodes index="2">
-			<class>com.pxf.automation.components.cluster.installer.nodes.SlaveNode</class>
+			<class>org.greenplum.pxf.automation.components.cluster.installer.nodes.SlaveNode</class>
 			<host>sdw2</host>
 			<userName>gpadmin</userName>
 			<password></password>
@@ -27,33 +27,33 @@
 	</cluster>
 
 	<hawq>
-		<class>com.pxf.automation.components.hawq.Hawq</class>
+		<class>org.greenplum.pxf.automation.components.hawq.Hawq</class>
 		<host>localhost</host>
 		<masterHost>mdw</masterHost>
 		<userName>gpadmin</userName>
 		<db>pxfautomation</db>
 	</hawq>
 	<hdfs>
-		<class>com.pxf.automation.components.hdfs.Hdfs</class>
+		<class>org.greenplum.pxf.automation.components.hdfs.Hdfs</class>
 		<host>hadoop</host>
 		<port>8020</port>
 		<workingDirectory>tmp/pxf_automation_data</workingDirectory>
 		<haNameservice></haNameservice>
 	</hdfs>
 	<hbase>
-		<class>com.pxf.automation.components.hbase.HBase</class>
+		<class>org.greenplum.pxf.automation.components.hbase.HBase</class>
 		<host>hadoop</host>
 		<userName>gpadmin</userName>
 		<hbaseRoot>/etc/hbase</hbaseRoot>
 	</hbase>
 	<hive>
-		<class>com.pxf.automation.components.hive.Hive</class>
+		<class>org.greenplum.pxf.automation.components.hive.Hive</class>
 		<host>hadoop</host>
 		<port>10000</port>
 		<userName>gpadmin</userName>
 	</hive>
 	<tinc>
-		<class>com.pxf.automation.components.tinc.Tinc</class>
+		<class>org.greenplum.pxf.automation.components.tinc.Tinc</class>
 		<host>localhost</host>
 		<userName>gpadmin</userName>
 		<gphome>/usr/local/greenplum-db-devel</gphome>
@@ -61,7 +61,7 @@
 		<tincTestsFolder>tincrepo/main</tincTestsFolder>
 	</tinc>
 	<pxf>
-		<class>com.pxf.automation.components.pxf.Pxf</class>
+		<class>org.greenplum.pxf.automation.components.pxf.Pxf</class>
 		<host>localhost</host>
 		<port>5888</port>
 	</pxf>
