@@ -62,12 +62,12 @@ public class PerformanceTest extends BaseFeature {
     HiveTable hiveOrcPerfTable = null;
     HiveTable hiveRcPerfTable = null;
 
-    ReadableExternalTable hawqTextHiveProfile = null;
-    ReadableExternalTable hawqTextHiveTextProfile = null;
-    ReadableExternalTable hawqOrcHiveProfile = null;
-    ReadableExternalTable hawqRcHiveProfile = null;
+    ReadableExternalTable gpdbTextHiveProfile = null;
+    ReadableExternalTable gpdbTextHiveTextProfile = null;
+    ReadableExternalTable gpdbOrcHiveProfile = null;
+    ReadableExternalTable gpdbRcHiveProfile = null;
 
-    Table hawqNativeTable = null;
+    Table gpdbNativeTable = null;
 
     List<Table> allTables = null;
 
@@ -110,23 +110,23 @@ public class PerformanceTest extends BaseFeature {
 
         hive.loadData(hiveTextPerfTable, filePath, false);
 
-        hawqTextHiveProfile = TableFactory.getPxfHiveReadableTable(
+        gpdbTextHiveProfile = TableFactory.getPxfHiveReadableTable(
                 "perf_text_hive_profile", getColumnTypeGpdb(),
                 hiveTextPerfTable, true);
-        hawqTextHiveProfile.setProfile(EnumPxfDefaultProfiles.Hive.toString());
-        hawqTextHiveProfile.setHost(/* pxfHost */"127.0.0.1");
-        hawqTextHiveProfile.setPort(pxfPort);
-        hawq.createTableAndVerify(hawqTextHiveProfile);
+        gpdbTextHiveProfile.setProfile(EnumPxfDefaultProfiles.Hive.toString());
+        gpdbTextHiveProfile.setHost(/* pxfHost */"127.0.0.1");
+        gpdbTextHiveProfile.setPort(pxfPort);
+        gpdb.createTableAndVerify(gpdbTextHiveProfile);
 
-        hawqTextHiveTextProfile = TableFactory.getPxfHiveTextReadableTable(
+        gpdbTextHiveTextProfile = TableFactory.getPxfHiveTextReadableTable(
                 "perf_text_hive_text_profile", getColumnTypeGpdb(),
                 hiveTextPerfTable, true);
-        hawqTextHiveTextProfile.setProfile(EnumPxfDefaultProfiles.HiveText
+        gpdbTextHiveTextProfile.setProfile(EnumPxfDefaultProfiles.HiveText
                 .toString());
-        hawqTextHiveTextProfile.setHost(/* pxfHost */"127.0.0.1");
-        hawqTextHiveTextProfile.setPort(pxfPort);
-        hawqTextHiveTextProfile.setDelimiter(",");
-        hawq.createTableAndVerify(hawqTextHiveTextProfile);
+        gpdbTextHiveTextProfile.setHost(/* pxfHost */"127.0.0.1");
+        gpdbTextHiveTextProfile.setPort(pxfPort);
+        gpdbTextHiveTextProfile.setDelimiter(",");
+        gpdb.createTableAndVerify(gpdbTextHiveTextProfile);
 
     }
 
@@ -139,14 +139,14 @@ public class PerformanceTest extends BaseFeature {
 
         hive.insertData(hiveTextPerfTable, hiveOrcPerfTable);
 
-        hawqOrcHiveProfile = TableFactory.getPxfHiveReadableTable(
+        gpdbOrcHiveProfile = TableFactory.getPxfHiveReadableTable(
                 "perf_orc_hive_profile", getColumnTypeGpdb(), hiveOrcPerfTable,
                 true);
 
-        hawqOrcHiveProfile.setProfile(EnumPxfDefaultProfiles.Hive.toString());
-        hawqOrcHiveProfile.setHost(/* pxfHost */"127.0.0.1");
-        hawqOrcHiveProfile.setPort(pxfPort);
-        hawq.createTableAndVerify(hawqOrcHiveProfile);
+        gpdbOrcHiveProfile.setProfile(EnumPxfDefaultProfiles.Hive.toString());
+        gpdbOrcHiveProfile.setHost(/* pxfHost */"127.0.0.1");
+        gpdbOrcHiveProfile.setPort(pxfPort);
+        gpdb.createTableAndVerify(gpdbOrcHiveProfile);
 
     }
 
@@ -158,21 +158,21 @@ public class PerformanceTest extends BaseFeature {
 
         hive.insertData(hiveTextPerfTable, hiveRcPerfTable);
 
-        hawqRcHiveProfile = TableFactory.getPxfHiveReadableTable(
+        gpdbRcHiveProfile = TableFactory.getPxfHiveReadableTable(
                 "perf_rc_hive_profile", getColumnTypeGpdb(), hiveRcPerfTable,
                 true);
 
-        hawqRcHiveProfile.setProfile(EnumPxfDefaultProfiles.Hive.toString());
-        hawqRcHiveProfile.setHost(/* pxfHost */"127.0.0.1");
-        hawqRcHiveProfile.setPort(pxfPort);
-        hawq.createTableAndVerify(hawqRcHiveProfile);
+        gpdbRcHiveProfile.setProfile(EnumPxfDefaultProfiles.Hive.toString());
+        gpdbRcHiveProfile.setHost(/* pxfHost */"127.0.0.1");
+        gpdbRcHiveProfile.setPort(pxfPort);
+        gpdb.createTableAndVerify(gpdbRcHiveProfile);
     }
 
     private void prepareNativeGpdbData() throws Exception {
-        hawqNativeTable = new Table("perf_test", getColumnTypeGpdb());
-        hawq.createTableAndVerify(hawqNativeTable);
+        gpdbNativeTable = new Table("perf_test", getColumnTypeGpdb());
+        gpdb.createTableAndVerify(gpdbNativeTable);
 
-        hawq.insertData(hawqTextHiveProfile, hawqNativeTable);
+        gpdb.insertData(gpdbTextHiveProfile, gpdbNativeTable);
     }
 
     @Override
@@ -183,11 +183,11 @@ public class PerformanceTest extends BaseFeature {
         allTables.add(hiveTextPerfTable);
         allTables.add(hiveOrcPerfTable);
         allTables.add(hiveRcPerfTable);
-        allTables.add(hawqTextHiveProfile);
-        allTables.add(hawqTextHiveTextProfile);
-        allTables.add(hawqOrcHiveProfile);
-        allTables.add(hawqRcHiveProfile);
-        allTables.add(hawqNativeTable);
+        allTables.add(gpdbTextHiveProfile);
+        allTables.add(gpdbTextHiveTextProfile);
+        allTables.add(gpdbOrcHiveProfile);
+        allTables.add(gpdbRcHiveProfile);
+        allTables.add(gpdbNativeTable);
     }
 
     @Test(groups = "performance")
@@ -346,7 +346,7 @@ public class PerformanceTest extends BaseFeature {
             return hive;
         else if (table instanceof ReadableExternalTable
                 || table instanceof Table)
-            return hawq;
+            return gpdb;
         else
             throw new Exception("Unable to get db engine for table: "
                     + table.getClass());

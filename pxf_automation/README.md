@@ -115,7 +115,7 @@ You can read more about TestNG here http://testng.org/doc/index.md
                     "longNum bigint",
                     "bool boolean" }, hdfs.getWorkingDirectory() + "/" + fileName, ",");
 
-            hawq.createTableAndVerify(exTable);
+            gpdb.createTableAndVerify(exTable);
         }
 
         @Override
@@ -180,7 +180,7 @@ You can read more about TestNG here http://testng.org/doc/index.md
             exTable.setResolver("com.pivotal.pxf.plugins.hdfs.StringPassResolver");
             exTable.setDelimiter(",");
             // create external table
-            hawq.createTableAndVerify(exTable);
+            gpdb.createTableAndVerify(exTable);
             // write data to HDFS
             hdfs.writeTableToFile(hdfsFilePath, dataTable, ",");
             // verify results
@@ -200,7 +200,7 @@ You can read more about TestNG here http://testng.org/doc/index.md
             exTable.setResolver("com.pivotal.pxf.plugins.hdfs.StringPassResolver");
             exTable.setDelimiter(",");
             // create external table
-            hawq.createTableAndVerify(exTable);
+            gpdb.createTableAndVerify(exTable);
             // write data to HDFS
             hdfs.writeTableToFile(hdfsFilePath, dataTable, ",");
             // verify results

@@ -552,7 +552,7 @@ SELECT t_out.t1 FROM pxf_hive_small_data t_out WHERE t_out.num1 IN (SELECT t_in.
  row9
 (5 rows)
 --Join between PXF table and local GPDB table
-SELECT local_t.t1, pxf_t.t2 FROM hawq_small_data local_t, public.pxf_hive_small_data pxf_t WHERE pxf_t.t1 = local_t.t1 AND pxf_t.num1 > 6;
+SELECT local_t.t1, pxf_t.t2 FROM gpdb_small_data local_t, public.pxf_hive_small_data pxf_t WHERE pxf_t.t1 = local_t.t1 AND pxf_t.num1 > 6;
   t1   |  t2  
 -------+------
  row7  | s_12

@@ -48,7 +48,7 @@ class GpFilespaceRegressionTests(unittest.TestCase):
         result = self.gpfs.get_hosts_for_filespace(fs_location.strip())
         self.assertEquals(result[0]['location'],fs_location.strip())
         
-    def test_create_filespace_hawq(self):
+    def test_create_filespace_gpdb(self):
         self.gpfs_h.create_filespace('test_fs_hq')
         fs_list = PSQL.run_sql_command("select fsname from pg_filespace where fsname<>'pg_system';", flags = '-q -t')
         self.assertTrue('test_fs_hq' in fs_list)

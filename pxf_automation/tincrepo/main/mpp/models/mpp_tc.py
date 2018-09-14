@@ -31,7 +31,7 @@ class _MPPDUT(object):
     """
     def __init__(self, product = None, version_string = None):
 
-        # Valid products as of 11/25/13: gpdb, hawq
+        # Valid products as of 11/25/13: gpdb, gpdb
         self.product = product
 
         # version_string has this format: major#.minor#.service_pack#.version_number<hotfix_alphanumeral>
@@ -45,7 +45,7 @@ class _MPPDUT(object):
     def _get_version_string_output(self):
         # Version string is the output of postgres --gp-version or postgress --version
         # Output in gpdb: "postgres (Greenplum Database) 4.3_PARISTX_ORCA build 43249"
-        # Output in hawq: "postgres (GPDB) 4.2.0 build 1"
+        # Output in gpdb: "postgres (GPDB) 4.2.0 build 1"
         # Output in postgres: "postgres (PostgreSQL) 9.2.4"
 
         # The following command will fail if the DUT is postgres
@@ -66,19 +66,19 @@ class _MPPDUT(object):
             version_string_information = self._get_version_string_output()
         except Exception, e:
             tinctest.logger.exception("Failure while getting version information: %s" %e)
-            tinctest.logger.critical("Could not detect one of the supported products (gpdb, hawq or postgres) in your environment. Make sure your environment is set correctly.")
-            raise MPPTestCaseException("Could not detect one of the supported products (gpdb, hawq or postgres) in your environment. Make sure your environment is set correctly.")
+            tinctest.logger.critical("Could not detect one of the supported products (gpdb, gpdb or postgres) in your environment. Make sure your environment is set correctly.")
+            raise MPPTestCaseException("Could not detect one of the supported products (gpdb, gpdb or postgres) in your environment. Make sure your environment is set correctly.")
 
         match_object = re.search("\((.+)\)", version_string_information)
         database_match = match_object.group(0)
 
         if "HAWQ" in database_match:
-            self.product = 'hawq'
-            # Replace version_string_information to point to hawq-version
-            version_command = Command(name = 'get hawq-version', cmdStr = 'postgres --hawq-version')
+            self.product = 'gpdb'
+            # Replace version_string_information to point to gpdb-version
+            version_command = Command(name = 'get gpdb-version', cmdStr = 'postgres --gpdb-version')
             version_command.run(validateAfter = True)
             version_string_information = version_command.get_results().stdout
-            tinctest.logger.info("DUT is detected to be hawq. Version string: %s" %version_string_information)
+            tinctest.logger.info("DUT is detected to be gpdb. Version string: %s" %version_string_information)
         elif "Greenplum Database" in database_match:
             tinctest.logger.info("DUT is detected to be gpdb. Version string: %s" %version_string_information)
             self.product = 'gpdb'
@@ -87,12 +87,12 @@ class _MPPDUT(object):
             self.product = 'postgres'
         else:
             tinctest.logger.critical("Unexpected version string obtained: %s." %version_string_information)
-            tinctest.logger.critical("Could not detect one of the supported products (gpdb, hawq or postgres) in your environment. Make sure your environment is set correctly.")
+            tinctest.logger.critical("Could not detect one of the supported products (gpdb, gpdb or postgres) in your environment. Make sure your environment is set correctly.")
             raise MPPTestCaseException("Unexpected version string obtained: %s" %version_string_information)
                     
         # At this point, version_string_information can be extracted to get the exact version
         # version_string_information for gpdb (--gp_version): "postgres (Greenplum Database) 4.3_PARISTX_ORCA build 43249"
-        # version_string_information for hawq (--hawq_version): "postgres (HAWQ) 1.1.4.0 build dev"
+        # version_string_information for gpdb (--gpdb_version): "postgres (HAWQ) 1.1.4.0 build dev"
         # version_string_information for postgres (--version): "postgres (PostgreSQL) 9.2.4"
         version_string_information_match_list = re.findall("\)\s(.*)", version_string_information)
         if version_string_information_match_list:
@@ -103,7 +103,7 @@ class _MPPDUT(object):
             self.version_string = version_part
         else:
             tinctest.logger.critical("Unexpected version string obtained: %s." %version_string_information)
-            tinctest.logger.critical("Could not detect one of the supported products (gpdb, hawq or postgres) in your environment. Make sure your environment is set correctly.")
+            tinctest.logger.critical("Could not detect one of the supported products (gpdb, gpdb or postgres) in your environment. Make sure your environment is set correctly.")
             raise MPPTestCaseException("Unexpected version string obtained: %s" %version_string_information)
 
     def __str__(self):
@@ -458,9 +458,9 @@ class __gpdbMPPTestCase__(MPPTestCase):
     """
     pass
 
-class __hawqMPPTestCase__(MPPTestCase):
+class __gpdbMPPTestCase__(MPPTestCase):
     """
-    __hawqMPPTestCase__ is a hidden class that overrides GPDB specific methods of MPPTestCase.
+    __gpdbMPPTestCase__ is a hidden class that overrides GPDB specific methods of MPPTestCase.
     This class should never be used as a parent or as an executor for any test cases.
     Presently, this class doesn't override any methods. It is here only for reference.
     """

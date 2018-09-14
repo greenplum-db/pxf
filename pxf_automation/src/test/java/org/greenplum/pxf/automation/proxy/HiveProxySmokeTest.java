@@ -74,7 +74,7 @@ public class HiveProxySmokeTest extends BaseSmoke {
         }, hiveTableAllowed, true);
         exTableAllowed.setHost(pxfHost);
         exTableAllowed.setPort(pxfPort);
-        hawq.createTableAndVerify(exTableAllowed);
+        gpdb.createTableAndVerify(exTableAllowed);
 
         ReadableExternalTable exTableProhibited = TableFactory.getPxfHiveReadableTable("pxf_proxy_hive_small_data_prohibited", new String[] {
                 "name text",
@@ -85,7 +85,7 @@ public class HiveProxySmokeTest extends BaseSmoke {
         }, hiveTableProhibited, true);
         exTableProhibited.setHost(pxfHost);
         exTableProhibited.setPort(pxfPort);
-        hawq.createTableAndVerify(exTableProhibited);
+        gpdb.createTableAndVerify(exTableProhibited);
 
     }
 

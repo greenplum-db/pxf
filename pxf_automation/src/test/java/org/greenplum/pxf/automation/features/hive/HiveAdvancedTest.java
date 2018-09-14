@@ -33,7 +33,7 @@ public class HiveAdvancedTest extends AdvancedFunctionality {
                         "num1 integer" }, hiveTable, true);
         exTable.setHost(pxfHost);
         exTable.setPort(pxfPort);
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
         cluster.stop(PhdCluster.EnumClusterServices.hive);
         runTincTest("pxf.features.hive.errors.hiveMetastoreDown.runTest");
     }

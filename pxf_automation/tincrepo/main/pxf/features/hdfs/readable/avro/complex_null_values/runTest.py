@@ -3,7 +3,7 @@ from mpp.models import SQLConcurrencyTestCase
 
 class PxfHdfsAvroComplexNull(SQLConcurrencyTestCase):
     """
-    @product_version  hawq: [1.3.1.1-]
+    @product_version  gpdb: [1.3.1.1-]
     @db_name pxfautomation
     @concurrency 1
     @gpdiff True

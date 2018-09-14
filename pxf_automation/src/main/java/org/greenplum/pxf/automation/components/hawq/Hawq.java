@@ -1,4 +1,4 @@
-package org.greenplum.pxf.automation.components.hawq;
+package org.greenplum.pxf.automation.components.gpdb;
 
 import java.io.File;
 import java.util.ArrayList;

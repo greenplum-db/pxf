@@ -77,7 +77,7 @@ class GpinitsystemTestCase(unittest.TestCase):
             pass
         
     @unittest.skipIf(isGPDB(), "This test is only for HAWQ")
-    def test_hawq_gpinitsystem(self):
+    def test_gpdb_gpinitsystem(self):
         try:
             self.gpdbinit.run()
             cmd = Command(name='run gpstop', cmdStr='export MASTER_DATA_DIRECTORY=%s; gpstop -a' % (self.mdd))

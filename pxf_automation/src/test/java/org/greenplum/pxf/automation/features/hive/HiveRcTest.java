@@ -140,7 +140,7 @@ public class HiveRcTest extends HiveBaseTest {
         loadDataIntoHive("hiveBinaryRcFormatData", hiveTable);
 
         // create external table with BYTEA field
-        createExternalTable("hawq_hive_binary", new String[] {
+        createExternalTable("gpdb_hive_binary", new String[] {
                 "t1 TEXT", "num1 INTEGER", "data1 BYTEA", "data2 BYTEA" }, hiveTable, true);
 
         runTincTest("pxf.features.hive.rc_binary_data.runTest");
@@ -285,7 +285,7 @@ public class HiveRcTest extends HiveBaseTest {
     @Test(enabled = false, groups = { "features", "gpdb" })
     public void filterBetweenPartitionsInFragmenter() throws Exception {
 
-        hawq.runQuery("SET optimizer = on");
+        gpdb.runQuery("SET optimizer = on");
         filterBetweenPartitions();
     }
 
@@ -299,7 +299,7 @@ public class HiveRcTest extends HiveBaseTest {
     @Test(groups = { "features", "gpdb" })
     public void filterBetweenPartitionsInAccessor() throws Exception {
 
-        hawq.runQuery("SET optimizer = off");
+        gpdb.runQuery("SET optimizer = off");
         filterBetweenPartitions();
     }
 
@@ -390,8 +390,8 @@ public class HiveRcTest extends HiveBaseTest {
         exTable.setUserParameters(hiveTestFilter(filterString));
 
         // Query all data, non matched filter will return null data.
-        hawq.createTableAndVerify(exTable);
-        hawq.queryResults(exTable, "SELECT * FROM " + exTable.getName() + " ORDER BY fmt, t1");
+        gpdb.createTableAndVerify(exTable);
+        gpdb.queryResults(exTable, "SELECT * FROM " + exTable.getName() + " ORDER BY fmt, t1");
         ComparisonUtils.compareTables(exTable, new Table("comparisonData", null), null);
 
         // Mixed filter with partition and non partition fields, partition filtering: fmt = 'rc3' AND part = 'c'
@@ -399,8 +399,8 @@ public class HiveRcTest extends HiveBaseTest {
         exTable.setUserParameters(hiveTestFilter(filterString));
 
         // Query all data
-        hawq.createTableAndVerify(exTable);
-        hawq.queryResults(exTable, "SELECT * FROM " + exTable.getName()
+        gpdb.createTableAndVerify(exTable);
+        gpdb.queryResults(exTable, "SELECT * FROM " + exTable.getName()
                         + " WHERE t1='row6' AND t2='s_11' AND num1='6' AND dub1='11' ORDER BY fmt, t1");
 
         Table dataCompareTable = new Table("dataTable",null);
@@ -417,8 +417,8 @@ public class HiveRcTest extends HiveBaseTest {
         exTable.setUserParameters(hiveTestFilter(filterString));
 
         // Query all data, non matched filter is done in PXF
-        hawq.createTableAndVerify(exTable);
-        hawq.queryResults(exTable, query);
+        gpdb.createTableAndVerify(exTable);
+        gpdb.queryResults(exTable, query);
 
         // Prepare expected data
         dataCompareTable = new Table("dataTable",null);
@@ -432,8 +432,8 @@ public class HiveRcTest extends HiveBaseTest {
         exTable.setUserParameters(hiveTestFilter(filterString));
 
         // Query all data, non matched filter is done in PXF
-        hawq.createTableAndVerify(exTable);
-        hawq.queryResults(exTable,"SELECT * FROM " + exTable.getName()
+        gpdb.createTableAndVerify(exTable);
+        gpdb.queryResults(exTable,"SELECT * FROM " + exTable.getName()
                         + " WHERE t1='row5' AND t2='s_10' AND num1='5' AND dub1='10' ORDER BY fmt, t1, prt");
 
         // Prepare expected data
@@ -449,8 +449,8 @@ public class HiveRcTest extends HiveBaseTest {
         exTable.setUserParameters(hiveTestFilter(filterString));
 
         // Query matched partition name
-        hawq.createTableAndVerify(exTable);
-        hawq.queryResults(exTable, "SELECT * FROM " + exTable.getName() + " ORDER BY fmt, t1");
+        gpdb.createTableAndVerify(exTable);
+        gpdb.queryResults(exTable, "SELECT * FROM " + exTable.getName() + " ORDER BY fmt, t1");
 
         // Pump up the small data to fit the unified data
         if (pumpUpColumns != null)
@@ -494,8 +494,8 @@ public class HiveRcTest extends HiveBaseTest {
         filterString = "a4c25s3drc4o5";
         exTable.setUserParameters(hiveTestFilter(filterString));
 
-        hawq.createTableAndVerify(exTable);
-        hawq.queryResults(exTable, "SELECT * FROM " + exTable.getName() + " ORDER BY fmt, t1");
+        gpdb.createTableAndVerify(exTable);
+        gpdb.queryResults(exTable, "SELECT * FROM " + exTable.getName() + " ORDER BY fmt, t1");
 
         ComparisonUtils.compareTables(exTable, new Table("comparisonData", null), null);
     }

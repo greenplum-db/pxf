@@ -123,7 +123,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
         exTable.setPath(hdfsPath + avroSimpleFileName + SUFFIX_AVRO);
         exTable.setFields(new String[] { "name text", "age int" });
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         // Verify results
         runTincTest("pxf.features.hdfs.readable.avro.simple.runTest");
@@ -150,7 +150,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
                 "type_bytes bytea",
                 "type_boolean bool" });
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         // Verify results
         runTincTest("pxf.features.hdfs.readable.avro.supported_primitive_types.runTest");
@@ -183,7 +183,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
                 "type_boolean bool",
                 "type_boolean_array text", });
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         // Verify results
         runTincTest("pxf.features.hdfs.readable.avro.array_types.runTest");
@@ -210,7 +210,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
                 "type_enum text",
                 "type_fixed bytea" });
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         // Verify results
         runTincTest("pxf.features.hdfs.readable.avro.complex_types.runTest");
@@ -237,7 +237,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
                 "type_enum text",
                 "type_fixed bytea" });
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         // Verify results
         runTincTest("pxf.features.hdfs.readable.avro.null_values.runTest");
@@ -281,7 +281,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
             "metakvpairs varchar(1000)",
             "meta_handlers varchar(1000)"});
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         // Verify results
         runTincTest("pxf.features.hdfs.readable.avro.complex_null_values.runTest");
@@ -319,7 +319,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
         exTable.setDataSchema(avroInSequenceArraysSchemaFile);
         exTable.setFormatter("pxfwritable_import");
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         // Verify results
         runTincTest("pxf.features.hdfs.readable.avro.avro_in_sequence_arrays.runTest");
@@ -357,7 +357,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
         exTable.setDataSchema(avroInSequenceArraysSchemaFileWithSpaces);
         exTable.setFormatter("pxfwritable_import");
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         // Verify results
         runTincTest("pxf.features.hdfs.readable.avro.avro_in_sequence_arrays.runTest");
@@ -403,7 +403,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
         exTable.setProfile("Avro");
         exTable.setFormatter("pxfwritable_import");
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         // Verify results
         runTincTest("pxf.features.hdfs.readable.avro.multi_files.runTest");
@@ -454,7 +454,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
             exTable.setProfile("Avro");
             exTable.setFormatter("pxfwritable_import");
 
-            hawq.createTableAndVerify(exTable);
+            gpdb.createTableAndVerify(exTable);
 
             // Verify results
             runTincTest("pxf.features.hdfs.readable.avro.codec.runTest");
@@ -477,7 +477,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
                 "age int",
                 "alive boolean" });
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         // Verify results
         runTincTest("pxf.features.hdfs.readable.avro.errors.extra_field.runTest");
@@ -496,7 +496,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
         exTable.setPath(hdfsPath + avroSimpleFileName + SUFFIX_AVRO);
         exTable.setFields(new String[] { "name text" });
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         // Verify results
         runTincTest("pxf.features.hdfs.readable.avro.errors.missing_field.runTest");
@@ -533,7 +533,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
         exTable.setDataSchema("i_do_not_exist");
         exTable.setFormatter("pxfwritable_import");
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         // Verify results
         runTincTest("pxf.features.hdfs.readable.avro.errors.no_schema_file.runTest");

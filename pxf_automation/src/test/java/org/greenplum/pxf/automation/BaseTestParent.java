@@ -15,7 +15,7 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.greenplum.pxf.automation.components.cluster.MultiNodeCluster;
 import org.greenplum.pxf.automation.components.cluster.PhdCluster;
 import org.greenplum.pxf.automation.components.cluster.installer.nodes.Node;
-import org.greenplum.pxf.automation.components.hawq.Gpdb;
+import org.greenplum.pxf.automation.components.gpdb.Gpdb;
 import org.greenplum.pxf.automation.components.hdfs.Hdfs;
 import org.greenplum.pxf.automation.components.tinc.Tinc;
 import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
@@ -36,7 +36,7 @@ public abstract class BaseTestParent {
     // Objects used in the tests
     protected PhdCluster cluster;
     protected Tinc tinc;
-    protected Gpdb hawq;
+    protected Gpdb gpdb;
     protected Hdfs hdfs;
     protected ReadableExternalTable exTable;
     // data resources folder
@@ -75,17 +75,17 @@ public abstract class BaseTestParent {
             // Initialize Tinc System Object
             tinc = (Tinc) SystemManagerImpl.getInstance().getSystemObject("tinc");
             // Initialize GPDB System Object
-            hawq = (Gpdb) SystemManagerImpl.getInstance().getSystemObject("hawq");
+            gpdb = (Gpdb) SystemManagerImpl.getInstance().getSystemObject("gpdb");
             // Check if userName data base exists if not create it (TINC requirement)
             String userName = System.getProperty("user.name");
-            if (!hawq.checkDataBaseExists(userName)) {
-                hawq.createDataBase(userName, false);
+            if (!gpdb.checkDataBaseExists(userName)) {
+                gpdb.createDataBase(userName, false);
             }
 
             hdfs.removeDirectory(hdfs.getWorkingDirectory());
             hdfs.createDirectory(hdfs.getWorkingDirectory());
-            if (hawq.getUserName() != null) {
-                hdfs.setOwner("/" + hdfs.getWorkingDirectory(), hawq.getUserName(), hawq.getUserName());
+            if (gpdb.getUserName() != null) {
+                hdfs.setOwner("/" + hdfs.getWorkingDirectory(), gpdb.getUserName(), gpdb.getUserName());
             }
 
             // get pxfHost

@@ -121,7 +121,7 @@ public class HdfsReadableTextTest extends BaseFeature {
         exTable.setResolver("org.greenplum.pxf.plugins.hdfs.StringPassResolver");
         exTable.setDelimiter(",");
         // create external table
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
         // write data to HDFS
         hdfs.writeTableToFile(hdfsFilePath, dataTable, ",");
         // verify results
@@ -141,7 +141,7 @@ public class HdfsReadableTextTest extends BaseFeature {
         exTable.setResolver("org.greenplum.pxf.plugins.hdfs.StringPassResolver");
         exTable.setFormat("CSV");
         // create external table
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
         // create local CSV file
         String tempLocalDataPath = dataTempFolder + "/data.csv";
         CsvUtils.writeTableToCsvFile(dataTable, tempLocalDataPath);
@@ -163,7 +163,7 @@ public class HdfsReadableTextTest extends BaseFeature {
         exTable.setProfile(EnumPxfDefaultProfiles.HdfsTextSimple.toString());
         exTable.setFormat("CSV");
         // create external table
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
         // create local CSV file
         String tempLocalDataPath = dataTempFolder + "/data.csv";
         CsvUtils.writeTableToCsvFile(dataTable, tempLocalDataPath);
@@ -201,7 +201,7 @@ public class HdfsReadableTextTest extends BaseFeature {
         exTable.setResolver("org.greenplum.pxf.plugins.hdfs.StringPassResolver");
         exTable.setHost(pxfHost);
         exTable.setPort(pxfPort);
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
         // Verify results
         runTincTest("pxf.features.hdfs.readable.text.multiblocked_csv_data.runTest");
     }
@@ -232,7 +232,7 @@ public class HdfsReadableTextTest extends BaseFeature {
         exTable.setProfile(EnumPxfDefaultProfiles.HdfsTextMulti.toString());
         exTable.setHost(pxfHost);
         exTable.setPort(pxfPort);
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
         // Verify results
         runTincTest("pxf.features.hdfs.readable.text.multiblocked_csv_data.runTest");
     }
@@ -256,13 +256,13 @@ public class HdfsReadableTextTest extends BaseFeature {
         exTable.setResolver("org.greenplum.pxf.plugins.hdfs.StringPassResolver");
         exTable.setDelimiter(",");
         exTable.setPath(wildcardHdfsPath + "/*.txt");
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
         // verify results
         runTincTest("pxf.features.hdfs.readable.text.wildcard.runTest");
 
         // test ? wildcard
         exTable.setPath(wildcardHdfsPath + "/data?.txt");
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
         // verify results
         runTincTest("pxf.features.hdfs.readable.text.wildcard.runTest");
     }
@@ -294,7 +294,7 @@ public class HdfsReadableTextTest extends BaseFeature {
         exTable.setResolver("org.greenplum.pxf.plugins.hdfs.StringPassResolver");
         exTable.setDelimiter(",");
         exTable.setPath(baseDirectory);
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
         // verify results
         runTincTest("pxf.features.hdfs.readable.text.recursive.runTest");
     }
@@ -311,7 +311,7 @@ public class HdfsReadableTextTest extends BaseFeature {
         exTable.setAccessor("org.greenplum.pxf.plugins.hdfs.LineBreakAccessor");
         exTable.setResolver("org.greenplum.pxf.plugins.hdfs.StringPassResolver");
         exTable.setDelimiter(",");
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
         // write empty data to HDFS
         hdfs.writeTableToFile(hdfsFilePath, new Table("emptyTable", null), ",");
         // verify results
@@ -320,7 +320,7 @@ public class HdfsReadableTextTest extends BaseFeature {
 
     /**
      * Create HDFS text file using "ISO_8859_1" encoding, define external table
-     * with same encoding (called LATIN1 in hawq) and read data.
+     * with same encoding (called LATIN1 in gpdb) and read data.
      *
      * @throws Exception
      */
@@ -333,7 +333,7 @@ public class HdfsReadableTextTest extends BaseFeature {
         exTable.setResolver("org.greenplum.pxf.plugins.hdfs.StringPassResolver");
         exTable.setDelimiter(",");
         exTable.setEncoding("LATIN1");
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
         // prepare data and write to HDFS
         dataTable = new Table("data", null);
         dataTable.addRow(new String[] { "4", "tá sé seo le tástáil dea-" });
@@ -362,14 +362,14 @@ public class HdfsReadableTextTest extends BaseFeature {
         // define and create external table
         exTable.setProfile(EnumPxfDefaultProfiles.HdfsTextSimple.toString());
         exTable.setDelimiter(",");
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
         // set pxf_enable_stat_collection=false
-        hawq.runQuery("SET pxf_enable_stat_collection = false");
+        gpdb.runQuery("SET pxf_enable_stat_collection = false");
         // analyze table with expected warning about GUC
-        hawq.analyze(exTable, true);
+        gpdb.analyze(exTable, true);
         // query results from pg_class table
         Table analyzeResults = new Table("analyzeResults", null);
-        hawq.queryResults(
+        gpdb.queryResults(
                 analyzeResults,
                 "SELECT reltuples FROM pg_class WHERE relname='"
                         + exTable.getName() + "'");
@@ -379,12 +379,12 @@ public class HdfsReadableTextTest extends BaseFeature {
         ComparisonUtils.compareTables(analyzeResults, expectedAnalyzeResults,
                 null);
         // set pxf_enable_stat_collection=true
-        hawq.runQuery("SET pxf_enable_stat_collection = true");
+        gpdb.runQuery("SET pxf_enable_stat_collection = true");
         // analyze
-        hawq.analyze(exTable, false);
+        gpdb.analyze(exTable, false);
         // query results from pg_class table
         analyzeResults.initDataStructures();
-        hawq.queryResults(
+        gpdb.queryResults(
                 analyzeResults,
                 "SELECT reltuples FROM pg_class WHERE relname='"
                         + exTable.getName() + "'");
@@ -434,7 +434,7 @@ public class HdfsReadableTextTest extends BaseFeature {
         hdfs.writeTableToFile(hdfsFilePath, dataTable, ",");
 
         ErrorTable errorTable = new ErrorTable("err_table");
-        hawq.runQueryWithExpectedWarning(
+        gpdb.runQueryWithExpectedWarning(
                 errorTable.constructDropStmt(true),
                 "(drop cascades to external table err_table_test|" + "table \""
                         + errorTable.getName() + "\" does not exist, skipping)",
@@ -449,13 +449,13 @@ public class HdfsReadableTextTest extends BaseFeature {
 
         ReportUtils.startLevel(null, getClass(),
                 "Drop and create table, expect error table notice");
-        hawq.dropTable(exTable, false);
-        hawq.runQueryWithExpectedWarning(exTable.constructCreateStmt(),
+        gpdb.dropTable(exTable, false);
+        gpdb.runQueryWithExpectedWarning(exTable.constructCreateStmt(),
                 "Error table \"" + errorTable.getName() + "\" does not exist. "
                         + "Auto generating an error table with the same name",
                 true, true);
 
-        Assert.assertTrue(hawq.checkTableExists(exTable));
+        Assert.assertTrue(gpdb.checkTableExists(exTable));
         ReportUtils.stopLevel(null);
 
         if (SystemUtils.getPGMode() == PGModeEnum.GPDB) {
@@ -466,7 +466,7 @@ public class HdfsReadableTextTest extends BaseFeature {
         }
         ReportUtils.startLevel(null, getClass(), "table with too many errors");
         exTable.setSegmentRejectLimit(3);
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         runTincTest("pxf.features.hdfs.readable.text.errors.error_table_breached.runTest");
 
@@ -500,7 +500,7 @@ public class HdfsReadableTextTest extends BaseFeature {
         exTable.setProfile(EnumPxfDefaultProfiles.HdfsTextSimple.toString());
         exTable.setDelimiter(",");
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         runTincTest("pxf.features.hdfs.readable.text.limit.runTest");
     }
@@ -526,7 +526,7 @@ public class HdfsReadableTextTest extends BaseFeature {
         exTable.setProfile(EnumPxfDefaultProfiles.HdfsTextSimple.toString());
         exTable.setDelimiter(",");
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         runTincTest("pxf.features.hdfs.readable.text.errors.wrong_type.runTest");
     }
@@ -561,7 +561,7 @@ public class HdfsReadableTextTest extends BaseFeature {
         exTable.setResolver("org.greenplum.pxf.plugins.hdfs.StringPassResolver");
         exTable.setDelimiter(",");
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         runTincTest("pxf.features.hdfs.readable.text.errors.middle_of_stream.runTest");
     }

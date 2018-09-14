@@ -345,7 +345,7 @@ public class HiveTest extends HiveBaseTest {
                 PXF_HIVE_SMALLDATA_COLS, hiveSmallDataTable);
 
         // Perform Analyze on external table and check suitable Warnings.
-        hawq.runQueryWithExpectedWarning("ANALYZE " + exTable.getName(),
+        gpdb.runQueryWithExpectedWarning("ANALYZE " + exTable.getName(),
                 "ANALYZE for Hive plugin is not supported", true);
 
         runTincTest("pxf.features.hive.default_analyze.runTest");
@@ -471,37 +471,37 @@ public class HiveTest extends HiveBaseTest {
         String filterString = "a4c25s2drco5";
         exTable.setUserParameters(hiveTestFilter(filterString));
         exTable.setName(extTableName + "_rc");
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         // Set Filter fragmenter for partition seq, mimic SELECT * WHERE fmt = 'seq'
         filterString = "a4c25s3dseqo5";
         exTable.setUserParameters(hiveTestFilter(filterString));
         exTable.setName(extTableName + "_seq");
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         // Set Filter fragmenter for partition txt, mimic SELECT * WHERE fmt = 'txt'
         filterString = "a4c25s3dtxto5";
         exTable.setUserParameters(hiveTestFilter(filterString));
         exTable.setName(extTableName + "_txt");
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         // Set Filter fragmenter for partition orc, mimic SELECT * WHERE fmt = 'orc'
         filterString = "a4c25s3dorco5";
         exTable.setUserParameters(hiveTestFilter(filterString));
         exTable.setName(extTableName + "_orc");
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         // Set Filter fragmenter for NO partition matching, mimic SELECT * WHERE fmt = 'none'
         filterString = "a4c25s4dnoneo5";
         exTable.setUserParameters(hiveTestFilter(filterString));
         exTable.setName(extTableName + "_none");
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         /*
          * Set Filter fragmenter for partition and non partition filters, mimic
          * SELECT * WHERE t1 = 'row1' AND t2 < 'S_6' AND fmt = 'seq'
          *
-         * but the t1 = 'row1' and t2 < 'S_6' will be ignored in PXF (and hawq
+         * but the t1 = 'row1' and t2 < 'S_6' will be ignored in PXF (and gpdb
          * as it's not known at all)
          */
         filterString = "a0c25s4drow1o5a1c25s3dS_6o1l0a4c25s3dseqo5l0";
@@ -596,7 +596,7 @@ public class HiveTest extends HiveBaseTest {
                         "t3    TEXT",
                         "wrong_field_type    INT" }, hiveTable);
         try {
-            hawq.queryResults(exTable, "SELECT * FROM " + exTable.getName() + " ORDER BY t1");
+            gpdb.queryResults(exTable, "SELECT * FROM " + exTable.getName() + " ORDER BY t1");
             Assert.fail("Querying a complex type using a wrong field type (non Text) should have throw Exception");
         } catch (Exception e) {
             ExceptionUtils.validate(null, e,
@@ -747,10 +747,10 @@ public class HiveTest extends HiveBaseTest {
     public void describeHiveTable() throws Exception {
 
         prepareNonDefaultSchemaData();
-        ShellSystemObject sso = hawq.openPsql();
+        ShellSystemObject sso = gpdb.openPsql();
 
         // two tables with same name in different Hive schemas
-        String psqlOutput = hawq.runSqlCmd(sso, "\\d hcatalog.*.hive_s*m*_data", true);
+        String psqlOutput = gpdb.runSqlCmd(sso, "\\d hcatalog.*.hive_s*m*_data", true);
         List<HiveTable> hiveTables = new ArrayList<>();
         hiveTables.add(hiveSmallDataTable);
         hiveTables.add(hiveNonDefaultSchemaTable);
@@ -763,35 +763,35 @@ public class HiveTest extends HiveBaseTest {
         hive.runQuery("DROP VIEW " + hiveViewName);
         hive.runQuery("CREATE VIEW " + hiveViewName
                 + " AS SELECT name FROM " + HIVE_SCHEMA + "." + hiveNonDefaultSchemaTable.getName());
-        psqlOutput = hawq.runSqlCmd(sso, "\\d hcatalog."+ HIVE_SCHEMA + "." + "*" +
+        psqlOutput = gpdb.runSqlCmd(sso, "\\d hcatalog."+ HIVE_SCHEMA + "." + "*" +
                 hiveNonDefaultSchemaTable.getName() + "*", true);
         hiveTables.remove(0);
 
         Assert.assertTrue(ComparisonUtils.comparePsqlDescribeHive(psqlOutput, hiveTables));
 
         // pattern is a name of a view ( \d should fail )
-        psqlOutput = hawq.runSqlCmd(sso, "\\d hcatalog."+ hiveViewName, false);
+        psqlOutput = gpdb.runSqlCmd(sso, "\\d hcatalog."+ hiveViewName, false);
         Assert.assertTrue(psqlOutput.contains("Hive views are not supported by GPDB"));
 
         // pattern which describes table with complex types ( \d shouldn't fail )
         HiveTable hiveTable = TableFactory.getHiveByRowCommaTable(HIVE_COLLECTIONS_TABLE, HIVE_COLLECTION_COLS);
-        psqlOutput = hawq.runSqlCmd(sso, "\\d hcatalog."+ HIVE_COLLECTIONS_TABLE, false);
+        psqlOutput = gpdb.runSqlCmd(sso, "\\d hcatalog."+ HIVE_COLLECTIONS_TABLE, false);
         hiveTables.clear();
         hiveTables.add(hiveTable);
         Assert.assertTrue(ComparisonUtils.comparePsqlDescribeHive(psqlOutput, hiveTables));
 
         // pattern which describes non existent table ( \d shouldn't fail )
-        hawq.runSqlCmd(sso, "\\d hcatalog."+ "abc*xyz", true);
+        gpdb.runSqlCmd(sso, "\\d hcatalog."+ "abc*xyz", true);
 
         // pattern which describes one non existent table ( \d should fail )
-        psqlOutput = hawq.runSqlCmd(sso, "\\d hcatalog."+ "abcxyz", false);
+        psqlOutput = gpdb.runSqlCmd(sso, "\\d hcatalog."+ "abcxyz", false);
         Assert.assertTrue(psqlOutput.contains("table not found"));
 
         // describe all Hive tables ( shouldn't fail )
-        hawq.runSqlCmd(sso, "\\d hcatalog.*", true);
+        gpdb.runSqlCmd(sso, "\\d hcatalog.*", true);
 
         // describe all Hive tables in verbose mode ( shouldn't fail )
-        hawq.runSqlCmd(sso, "\\d+ hcatalog.*", true);
+        gpdb.runSqlCmd(sso, "\\d+ hcatalog.*", true);
 
         String HIVE_ORDERING_TABLE1 = "hive_abc";
         String HIVE_ORDERING_TABLE2 = "hive_abc222";
@@ -809,7 +809,7 @@ public class HiveTest extends HiveBaseTest {
         // describe three tables with same prefix
         // two tables in default schema, one table is in other schema
         // shouldn't combine them into one
-        psqlOutput = hawq.runSqlCmd(sso, "\\d hcatalog.*." + HIVE_ORDERING_TABLE1 + "*", true);
+        psqlOutput = gpdb.runSqlCmd(sso, "\\d hcatalog.*." + HIVE_ORDERING_TABLE1 + "*", true);
         Assert.assertTrue(psqlOutput.contains("PXF Hive Table \"default." + HIVE_ORDERING_TABLE1 + "\""));
         Assert.assertTrue(psqlOutput.contains("PXF Hive Table \"default." + HIVE_ORDERING_TABLE2 + "\""));
         Assert.assertTrue(psqlOutput.contains("PXF Hive Table \"" + HIVE_SCHEMA + "." + HIVE_ORDERING_TABLE3 + "\""));

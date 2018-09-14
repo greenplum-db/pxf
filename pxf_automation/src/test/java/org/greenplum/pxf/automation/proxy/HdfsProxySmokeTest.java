@@ -45,7 +45,7 @@ public class HdfsProxySmokeTest extends BaseSmoke {
                 }, locationProhibited, ",");
         exTableProhibited.setHost(pxfHost);
         exTableProhibited.setPort(pxfPort);
-        hawq.createTableAndVerify(exTableProhibited);
+        gpdb.createTableAndVerify(exTableProhibited);
 
         ReadableExternalTable exTableAllowed =
                 TableFactory.getPxfReadableTextTable("pxf_proxy_small_data_allowed", new String[] {
@@ -57,7 +57,7 @@ public class HdfsProxySmokeTest extends BaseSmoke {
                 }, locationAllowed, ",");
         exTableAllowed.setHost(pxfHost);
         exTableAllowed.setPort(pxfPort);
-        hawq.createTableAndVerify(exTableAllowed);
+        gpdb.createTableAndVerify(exTableAllowed);
 
     }
 

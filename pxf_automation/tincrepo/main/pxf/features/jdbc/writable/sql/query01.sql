@@ -1,4 +1,4 @@
 -- @description query01 for JDBC writable query
-INSERT INTO pxf_jdbc_writable SELECT * FROM hawq_types;
+INSERT INTO pxf_jdbc_writable SELECT * FROM gpdb_types;
 
-SELECT * FROM hawq_types_target ORDER BY t1;
+SELECT * FROM gpdb_types_target ORDER BY t1;

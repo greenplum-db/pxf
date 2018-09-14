@@ -14,7 +14,7 @@ public class HiveInputFormatFragmenterWithFilter extends HiveInputFormatFragment
 
     public HiveInputFormatFragmenterWithFilter(InputData inputData) {
         super(inputData);
-        addFilters();  // Set the test hive filter (overwrite hawq filter)
+        addFilters();  // Set the test hive filter (overwrite gpdb filter)
 
     }
 
@@ -30,7 +30,7 @@ public class HiveInputFormatFragmenterWithFilter extends HiveInputFormatFragment
     }
 
     /*
-     *  Ignores filter from hawq, use user defined filter
+     *  Ignores filter from gpdb, use user defined filter
      *  Set the protected filterString by reflection (only for regression, dont want to modify the original code)
      */
     private void addFilters() {

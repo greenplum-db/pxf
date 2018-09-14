@@ -8,7 +8,7 @@
 			<host>mdw</host>
 			<userName>gpadmin</userName>
 			<password></password>
-			<services>hawq,pxf</services>
+			<services>gpdb,pxf</services>
 		</nodes>
 		<nodes index="1">
 			<class>org.greenplum.pxf.automation.components.cluster.installer.nodes.SlaveNode</class>
@@ -26,13 +26,13 @@
 		</nodes>
 	</cluster>
 
-	<hawq>
-		<class>org.greenplum.pxf.automation.components.hawq.Gpdb</class>
+	<gpdb>
+		<class>org.greenplum.pxf.automation.components.gpdb.Gpdb</class>
 		<host>localhost</host>
 		<masterHost>mdw</masterHost>
 		<userName>gpadmin</userName>
 		<db>pxfautomation</db>
-	</hawq>
+	</gpdb>
 	<hdfs>
 		<class>org.greenplum.pxf.automation.components.hdfs.Hdfs</class>
 		<host>hadoop</host>

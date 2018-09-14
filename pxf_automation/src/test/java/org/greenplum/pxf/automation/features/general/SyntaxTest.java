@@ -52,7 +52,7 @@ public class SyntaxTest extends BaseFeature {
         exTable.setHost(pxfHost);
         exTable.setPort(pxfPort);
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         exTable.setName("pxf_extable_validations1");
         exTable.setPath(hdfsWorkingFolder);
@@ -64,7 +64,7 @@ public class SyntaxTest extends BaseFeature {
         exTable.setHost(pxfHost);
         exTable.setPort(pxfPort);
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
     }
 
     /**
@@ -88,7 +88,7 @@ public class SyntaxTest extends BaseFeature {
         exTable.setPort(pxfPort);
 
         try {
-            hawq.createTable(exTable);
+            gpdb.createTable(exTable);
             Assert.fail("Table creation should fail with invalid URL error");
         } catch (Exception e) {
             String urlPort = exTable.getPort() == null ? "" : ":"
@@ -123,7 +123,7 @@ public class SyntaxTest extends BaseFeature {
         exTable.setPort(pxfPort);
 
         try {
-            hawq.createTableAndVerify(exTable);
+            gpdb.createTableAndVerify(exTable);
             Assert.fail("Table creation should fail with invalid URI error");
         } catch (PSQLException e) {
             String urlPort = exTable.getPort() == null ? "" : ":"
@@ -158,7 +158,7 @@ public class SyntaxTest extends BaseFeature {
         exTable.setPort(pxfPort);
 
         try {
-            hawq.createTableAndVerify(exTable);
+            gpdb.createTableAndVerify(exTable);
             Assert.fail("Table creation should fail with invalid URI error");
         } catch (PSQLException e) {
             String urlPort = exTable.getPort() == null ? "" : ":"
@@ -195,7 +195,7 @@ public class SyntaxTest extends BaseFeature {
         exTable.setPort(pxfPort);
 
         try {
-            hawq.createTableAndVerify(exTable);
+            gpdb.createTableAndVerify(exTable);
             Assert.fail("Table creation should fail with invalid URI error");
         } catch (PSQLException e) {
             String urlPort = exTable.getPort() == null ? "" : ":"
@@ -231,7 +231,7 @@ public class SyntaxTest extends BaseFeature {
         exTable.setPort(pxfPort);
 
         try {
-            hawq.createTableAndVerify(exTable);
+            gpdb.createTableAndVerify(exTable);
             Assert.fail("Table creation should fail with invalid URI error");
         } catch (PSQLException e) {
             String urlPort = exTable.getPort() == null ? "" : ":"
@@ -287,7 +287,7 @@ public class SyntaxTest extends BaseFeature {
         exTable.setPort(null);
 
         try {
-            hawq.createTableAndVerify(exTable);
+            gpdb.createTableAndVerify(exTable);
             Assert.fail("Table creation should fail with bad nameservice error");
         } catch (Exception e) {
             ExceptionUtils.validate(
@@ -319,7 +319,7 @@ public class SyntaxTest extends BaseFeature {
         weTable.setHost(pxfHost);
         weTable.setPort(pxfPort);
 
-        hawq.createTableAndVerify(weTable);
+        gpdb.createTableAndVerify(weTable);
     }
 
     /**
@@ -340,7 +340,7 @@ public class SyntaxTest extends BaseFeature {
         weTable.setPort(pxfPort);
 
         try {
-            hawq.createTableAndVerify(weTable);
+            gpdb.createTableAndVerify(weTable);
             Assert.fail("Table creation should fail with invalid URI error");
         } catch (Exception e) {
             String urlPort = weTable.getPort() == null ? "" : ":"
@@ -378,7 +378,7 @@ public class SyntaxTest extends BaseFeature {
         createQuery = createQuery.replace("?", "");
 
         try {
-            hawq.runQuery(createQuery);
+            gpdb.runQuery(createQuery);
             Assert.fail("Table creation should fail with invalid URI error");
         } catch (Exception e) {
             String urlPort = weTable.getPort() == null ? "" : ":"
@@ -411,7 +411,7 @@ public class SyntaxTest extends BaseFeature {
         exTable.setHost("badhostname");
         exTable.setPort("5888");
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         String expectedWarningNormal = "Couldn't resolve host '"
                 + exTable.getHost() + "'";
@@ -421,7 +421,7 @@ public class SyntaxTest extends BaseFeature {
                 + expectedWarningSecure + ")";
 
         try {
-            hawq.queryResults(exTable, "SELECT * FROM " + exTable.getName());
+            gpdb.queryResults(exTable, "SELECT * FROM " + exTable.getName());
             Assert.fail("Query should fail with bad host name error");
         } catch (PSQLException e) {
             ExceptionUtils.validate(null, e, new PSQLException(expectedWarning,
@@ -457,17 +457,17 @@ public class SyntaxTest extends BaseFeature {
 
     private void runNegativeAnalyzeTest(String expectedWarning)
             throws Exception {
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         // set pxf_enable_stat_collection=true
-        hawq.runQuery("SET pxf_enable_stat_collection = true");
+        gpdb.runQuery("SET pxf_enable_stat_collection = true");
         // analyze table with expected warning
-        hawq.runQueryWithExpectedWarning("ANALYZE " + exTable.getName(),
+        gpdb.runQueryWithExpectedWarning("ANALYZE " + exTable.getName(),
                 expectedWarning, true);
 
         // query results from pg_class table
         Table analyzeResults = new Table("analyzeResults", null);
-        hawq.queryResults(
+        gpdb.queryResults(
                 analyzeResults,
                 "SELECT reltuples FROM pg_class WHERE relname='"
                         + exTable.getName() + "'");
@@ -487,10 +487,10 @@ public class SyntaxTest extends BaseFeature {
         for (int i = 0; i < 20; i++) {
             ReportUtils.report(null, getClass(), "running analyze for the "
                     + (i + 1) + "/20 time");
-            hawq.runQueryWithExpectedWarning("ANALYZE " + exTable.getName(),
+            gpdb.runQueryWithExpectedWarning("ANALYZE " + exTable.getName(),
                     expectedWarning, true);
         }
-        hawq.queryResults(
+        gpdb.queryResults(
                 analyzeResults,
                 "SELECT reltuples FROM pg_class WHERE relname='"
                         + exTable.getName() + "'");
@@ -522,10 +522,10 @@ public class SyntaxTest extends BaseFeature {
         dataTable.addRow(new String[] { "second", "2" });
         dataTable.addRow(new String[] { "third", "3" });
 
-        hawq.createTableAndVerify(weTable);
+        gpdb.createTableAndVerify(weTable);
 
         try {
-            hawq.insertData(dataTable, weTable);
+            gpdb.insertData(dataTable, weTable);
             Assert.fail("Insert data should fail because of wrong host name");
         } catch (PSQLException e) {
             String expectedWarningNormal = "remote component error \\(0\\): "
@@ -576,7 +576,7 @@ public class SyntaxTest extends BaseFeature {
         exTable.setPort(null);
 
         try {
-            hawq.createTableAndVerify(exTable);
+            gpdb.createTableAndVerify(exTable);
             Assert.fail("Table creation should fail with bad nameservice error");
         } catch (Exception e) {
             Assert.assertEquals(
@@ -623,7 +623,7 @@ public class SyntaxTest extends BaseFeature {
         exTable.setPort(null);
 
         try {
-            hawq.createTableAndVerify(exTable);
+            gpdb.createTableAndVerify(exTable);
             Assert.fail("Table creation should fail with bad nameservice error");
         } catch (Exception e) {
             Assert.assertEquals(
@@ -642,7 +642,7 @@ public class SyntaxTest extends BaseFeature {
     public void remoteCredentialsCatalogTable() throws Exception {
 
         Table results = new Table("results", null);
-        hawq.queryResults(results, "SELECT * FROM pg_remote_credentials");
+        gpdb.queryResults(results, "SELECT * FROM pg_remote_credentials");
 
         Table expected = new Table("expected", null);
         expected.addColumn("rcowner", Types.BIGINT);
@@ -666,16 +666,16 @@ public class SyntaxTest extends BaseFeature {
     public void remoteLoginsView() throws Exception {
         try {
             // SETUP
-            hawq.runQuery("SET allow_system_table_mods = 'DML';");
-            hawq.runQuery("INSERT INTO pg_remote_credentials VALUES (10, 'a', 'b', 'c');");
+            gpdb.runQuery("SET allow_system_table_mods = 'DML';");
+            gpdb.runQuery("INSERT INTO pg_remote_credentials VALUES (10, 'a', 'b', 'c');");
 
             // TEST
             Table results = new Table("results", null);
-            hawq.queryResults(results, "SELECT * FROM pg_remote_logins");
+            gpdb.queryResults(results, "SELECT * FROM pg_remote_logins");
 
             // COMPARISON
-            String aclUser = hawq.getUserName() == null ? System.getProperty("user.name")
-                    : hawq.getUserName();
+            String aclUser = gpdb.getUserName() == null ? System.getProperty("user.name")
+                    : gpdb.getUserName();
             Table expected = new Table("expected", null);
             expected.addColumn("rolname", Types.VARCHAR);
             expected.addColumn("rcservice", Types.VARCHAR);
@@ -687,8 +687,8 @@ public class SyntaxTest extends BaseFeature {
             ComparisonUtils.compareTables(results, expected, null);
         } finally {
             // CLEANUP
-            hawq.runQuery("DELETE FROM pg_remote_credentials WHERE rcowner = 10;");
-            hawq.runQuery("SET allow_system_table_mods = 'NONE';");
+            gpdb.runQuery("DELETE FROM pg_remote_credentials WHERE rcowner = 10;");
+            gpdb.runQuery("SET allow_system_table_mods = 'NONE';");
         }
     }
 
@@ -702,12 +702,12 @@ public class SyntaxTest extends BaseFeature {
 
         // TEST
         Table results = new Table("results", null);
-        hawq.queryResults(results,
+        gpdb.queryResults(results,
                 "SELECT relacl FROM pg_class WHERE relname = 'pg_remote_credentials'");
 
         // COMPARISON
-        String aclUser = hawq.getUserName() == null ? System.getProperty("user.name")
-                : hawq.getUserName();
+        String aclUser = gpdb.getUserName() == null ? System.getProperty("user.name")
+                : gpdb.getUserName();
         Table expected = new Table("expected", null);
         expected.addColumnHeader("relacl");
         expected.addColDataType(Types.ARRAY);
@@ -741,7 +741,7 @@ public class SyntaxTest extends BaseFeature {
         sqlCmd += " (HEADER)"; // adding the HEADER option
 
         try {
-            hawq.runQuery(sqlCmd);
+            gpdb.runQuery(sqlCmd);
             Assert.fail("Table creation should fail with invalid option error");
         } catch (PSQLException e) {
             ExceptionUtils.validate(
@@ -756,7 +756,7 @@ public class SyntaxTest extends BaseFeature {
     /**
      * Test querying tables with plugins specifying the old package name
      * "com.pivotal.pxf" results in an error message recommending using the new
-     * plugin package name "org.hawq.pxf"
+     * plugin package name "org.gpdb.pxf"
      *
      * @throws Exception
      */
@@ -784,7 +784,7 @@ public class SyntaxTest extends BaseFeature {
     /**
      * Test inserting data into tables with plugins specifying the old package
      * name "com.pivotal.pxf" results in an error message recommending using the
-     * new plugin package name "org.hawq.pxf"
+     * new plugin package name "org.gpdb.pxf"
      *
      * @throws Exception
      */
@@ -827,12 +827,12 @@ public class SyntaxTest extends BaseFeature {
         Table dataTable = new Table("data", syntaxFields);
         dataTable.addRow(new String[] { "1", "2", "3" });
 
-        hawq.createTableAndVerify(isWritable ? weTable : exTable);
+        gpdb.createTableAndVerify(isWritable ? weTable : exTable);
         try {
             if (isWritable) {
-                hawq.insertData(dataTable, weTable);
+                gpdb.insertData(dataTable, weTable);
             } else {
-                hawq.queryResults(exTable, "SELECT * FROM " + exTable.getName());
+                gpdb.queryResults(exTable, "SELECT * FROM " + exTable.getName());
             }
             Assert.fail(reason);
         } catch (Exception e) {

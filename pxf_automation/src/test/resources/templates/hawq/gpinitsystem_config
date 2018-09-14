@@ -22,14 +22,14 @@ PORT_BASE=40000
 #### physical host (if multiple addresses for a host are listed in 
 #### the hostfile, the number of segments will be spread evenly across
 #### the specified interface addresses).
-DATA_DIRECTORY=(/data/hawq/p1 /data/hawq/p2)
+DATA_DIRECTORY=(/data/gpdb/p1 /data/gpdb/p2)
 
 #### OS-configured hostname or IP address of the master host.
 MASTER_HOSTNAME=centos64-1
 
 #### File system location where the master data directory 
 #### will be created.
-MASTER_DIRECTORY=/data/hawq/master
+MASTER_DIRECTORY=/data/gpdb/master
 
 #### Port number for the master instance.
 MASTER_PORT=5432
@@ -48,9 +48,9 @@ ENCODING=UNICODE
 #### Distributed File System Informaiton
 ################################################
 DFS_NAME=hdfs
-DFS_URL=centos64-1.localdomain:8020/hawq_data
+DFS_URL=centos64-1.localdomain:8020/gpdb_data
 #### For HA uncomment the following line
-#DFS_URL=${nameservices}/hawq_data
+#DFS_URL=${nameservices}/gpdb_data
 
 
 ################################################

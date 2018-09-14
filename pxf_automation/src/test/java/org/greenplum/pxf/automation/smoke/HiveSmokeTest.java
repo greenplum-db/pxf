@@ -60,7 +60,7 @@ public class HiveSmokeTest extends BaseSmoke {
         }, hiveTable, true);
         exTable.setHost(pxfHost);
         exTable.setPort(pxfPort);
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
     }
 
     @Override

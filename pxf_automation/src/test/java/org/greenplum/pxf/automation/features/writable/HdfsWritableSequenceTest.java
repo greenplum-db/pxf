@@ -157,12 +157,12 @@ public class HdfsWritableSequenceTest extends BaseWritableFeature {
                 writableExTable.setPath(hdfsDir);
                 writableExTable.setCompressionCodec(codec);
                 writableExTable.setUserParameters(userParam);
-                hawq.createTableAndVerify(writableExTable);
+                gpdb.createTableAndVerify(writableExTable);
 
                 readableExTable.setPath(hdfsDir);
-                hawq.createTableAndVerify(readableExTable);
+                gpdb.createTableAndVerify(readableExTable);
 
-                hawq.copyFromFile(writableExTable, path, null, false);
+                gpdb.copyFromFile(writableExTable, path, null, false);
                 Assert.assertNotEquals(hdfs.listSize(hdfsDir), 0);
 
                 runTincTest("pxf.features.hdfs.readable.sequence.custom_writable.runTest");
@@ -186,18 +186,18 @@ public class HdfsWritableSequenceTest extends BaseWritableFeature {
         writableExTable.setFields(fields);
         writableExTable.setPath(hdfsDir);
         writableExTable.setDataSchema(schemaPackage + customSchemaWithCircleFileName);
-        hawq.createTableAndVerify(writableExTable);
+        gpdb.createTableAndVerify(writableExTable);
 
         Table dataTable = new Table("circle", null);
         dataTable.addRow(new String[] { "1", "<(3,3),9>" });
         dataTable.addRow(new String[] { "2", "<(4,4),16>" });
-        hawq.insertData(dataTable, writableExTable);
+        gpdb.insertData(dataTable, writableExTable);
 
         readableExTable.setName("read_circle");
         readableExTable.setFields(fields);
         readableExTable.setPath(hdfsDir);
         readableExTable.setDataSchema(schemaPackage + customSchemaWithCircleFileName);
-        hawq.createTableAndVerify(readableExTable);
+        gpdb.createTableAndVerify(readableExTable);
 
         runTincTest("pxf.features.hdfs.writable.sequence.circle.runTest");
     }
@@ -217,14 +217,14 @@ public class HdfsWritableSequenceTest extends BaseWritableFeature {
         writableExTable.setFields(fields);
         writableExTable.setPath(hdfsDir);
         writableExTable.setDataSchema(schemaPackage + customSchemaWithCharFileName);
-        hawq.createTableAndVerify(writableExTable);
+        gpdb.createTableAndVerify(writableExTable);
 
         Table dataTable = new Table("data", null);
         dataTable.addRow(new String[] { "100", "a" });
         dataTable.addRow(new String[] { "1000", "b" });
 
         try {
-            hawq.insertData(dataTable, writableExTable);
+            gpdb.insertData(dataTable, writableExTable);
             Assert.fail("Insert data should fail because of unsupported type");
         } catch (PSQLException e) {
             ExceptionUtils.validate(null, e, new PSQLException("ERROR.*Type char is not supported " +
@@ -248,14 +248,14 @@ public class HdfsWritableSequenceTest extends BaseWritableFeature {
         writableExTable.setPath(hdfsDir);
         writableExTable.setDataSchema(schemaPackage + customSchemaWithCharFileName);
         writableExTable.setUserParameters(new String[] { "COMPRESSION_TYPE=NONE" });
-        hawq.createTableAndVerify(writableExTable);
+        gpdb.createTableAndVerify(writableExTable);
 
         Table dataTable = new Table("data", null);
         dataTable.addRow(new String[] { "100", "a" });
         dataTable.addRow(new String[] { "1000", "b" });
 
         try {
-            hawq.insertData(dataTable, writableExTable);
+            gpdb.insertData(dataTable, writableExTable);
             Assert.fail("Insert data should fail because of illegal compression type");
         } catch (PSQLException e) {
             ExceptionUtils.validate(null, e,
@@ -283,19 +283,19 @@ public class HdfsWritableSequenceTest extends BaseWritableFeature {
         writableExTable.setPath(hdfsDir);
         writableExTable.setFields(fields);
         writableExTable.setDataSchema(schemaPackage + customSchemaFileName);
-        hawq.createTableAndVerify(writableExTable);
+        gpdb.createTableAndVerify(writableExTable);
 
         Table dataTable = new Table("dataTable", null);
         FileFormatsUtils.prepareData(new CustomSequencePreparer(), 50, dataTable);
         File path = new File(dataTempFolder + "/customwritable_recordkey_data.txt");
         createCustomWritableDataFile(dataTable, path, true);
-        hawq.copyFromFile(writableExTable, path, null, false);
+        gpdb.copyFromFile(writableExTable, path, null, false);
 
         readableExTable.setName("readable_recordkey_text");
         readableExTable.setPath(hdfsDir);
         readableExTable.setFields(fields);
         readableExTable.setDataSchema(schemaPackage + customSchemaFileName);
-        hawq.createTableAndVerify(readableExTable);
+        gpdb.createTableAndVerify(readableExTable);
 
         runTincTest("pxf.features.hdfs.writable.sequence.recordkey_text.runTest");
     }
@@ -322,7 +322,7 @@ public class HdfsWritableSequenceTest extends BaseWritableFeature {
         writableExTable.setPath(hdfsDir);
         writableExTable.setFields(fields);
         writableExTable.setDataSchema(schemaPackage + customSchemaFileName);
-        hawq.createTableAndVerify(writableExTable);
+        gpdb.createTableAndVerify(writableExTable);
 
         Table dataTable = new Table("dataTable", null);
         FileFormatsUtils.prepareData(new CustomSequencePreparer(), 50, dataTable);
@@ -333,13 +333,13 @@ public class HdfsWritableSequenceTest extends BaseWritableFeature {
         String copyCmd = "COPY " + writableExTable.getName() + " FROM '" + path.getAbsolutePath() +
                 "'" + "SEGMENT REJECT LIMIT 5 ROWS;";
         String noticeMsg = "Found 1 data formatting errors (1 or more input rows). Rejected related input data.";
-        hawq.runQueryWithExpectedWarning(copyCmd, noticeMsg, false);
+        gpdb.runQueryWithExpectedWarning(copyCmd, noticeMsg, false);
 
         readableExTable.setName("readable_recordkey_int");
         readableExTable.setPath(hdfsDir);
         readableExTable.setFields(fields);
         readableExTable.setDataSchema(schemaPackage + customSchemaFileName);
-        hawq.createTableAndVerify(readableExTable);
+        gpdb.createTableAndVerify(readableExTable);
 
         runTincTest("pxf.features.hdfs.writable.sequence.recordkey_int.runTest");
     }

@@ -64,8 +64,8 @@ public class PluginTest extends BaseFeature {
         exTable.setHost(pxfHost);
         exTable.setPort(pxfPort);
 
-        hawq.createTableAndVerify(exTable);
-        hawq.queryResults(exTable, "SELECT num1, t1 FROM " + exTable.getName() + " ORDER BY num1, t1");
+        gpdb.createTableAndVerify(exTable);
+        gpdb.queryResults(exTable, "SELECT num1, t1 FROM " + exTable.getName() + " ORDER BY num1, t1");
 
         Table dataCompareTable = new Table("dataCompareTable", null);
 
@@ -78,7 +78,7 @@ public class PluginTest extends BaseFeature {
 
         ComparisonUtils.compareTables(exTable, dataCompareTable, null);
 
-        hawq.analyze(exTable);
+        gpdb.analyze(exTable);
     }
 
     /**
@@ -101,8 +101,8 @@ public class PluginTest extends BaseFeature {
         exTable.setHost(pxfHost);
         exTable.setPort(pxfPort);
 
-        hawq.createTableAndVerify(exTable);
-        hawq.queryResults(exTable, "SELECT num1, t1 FROM " + exTable.getName() + " ORDER BY num1, t1");
+        gpdb.createTableAndVerify(exTable);
+        gpdb.queryResults(exTable, "SELECT num1, t1 FROM " + exTable.getName() + " ORDER BY num1, t1");
 
         Table dataCompareTable = new Table("dataCompareTable", null);
 
@@ -137,7 +137,7 @@ public class PluginTest extends BaseFeature {
         exTable.setHost(pxfHost);
         exTable.setPort(pxfPort);
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
 
         Table dataTable = new Table("dataTable", null);
 
@@ -145,7 +145,7 @@ public class PluginTest extends BaseFeature {
         dataTable.addRow(new String[] { "is", "going" });
         dataTable.addRow(new String[] { "to", "happen" });
 
-        hawq.insertData(dataTable, exTable);
+        gpdb.insertData(dataTable, exTable);
     }
 
     @Test(groups = "features")
@@ -164,16 +164,16 @@ public class PluginTest extends BaseFeature {
         exTable.setHost(pxfHost);
         exTable.setPort(pxfPort);
 
-        hawq.runQuery("SET pxf_remote_service_login = 'mommy'");
-        hawq.runQuery("SET pxf_remote_service_secret = 'daddy'");
-        hawq.createTableAndVerify(exTable);
+        gpdb.runQuery("SET pxf_remote_service_login = 'mommy'");
+        gpdb.runQuery("SET pxf_remote_service_secret = 'daddy'");
+        gpdb.createTableAndVerify(exTable);
         try {
-            hawq.queryResults(exTable, "SELECT num1, t1 FROM " + exTable.getName() + " ORDER BY num1, t1");
+            gpdb.queryResults(exTable, "SELECT num1, t1 FROM " + exTable.getName() + " ORDER BY num1, t1");
         } catch (Exception e) {
             ExceptionUtils.validate(null, e, new PSQLException("FaultyGUCFragmenter: login mommy secret daddy", null), true);
         } finally {
-            hawq.runQuery("SET pxf_remote_service_login = ''");
-            hawq.runQuery("SET pxf_remote_service_secret = ''");
+            gpdb.runQuery("SET pxf_remote_service_login = ''");
+            gpdb.runQuery("SET pxf_remote_service_secret = ''");
         }
     }
 
@@ -193,16 +193,16 @@ public class PluginTest extends BaseFeature {
         exTable.setHost(pxfHost);
         exTable.setPort(pxfPort);
 
-        hawq.runQuery("SET pxf_remote_service_login = 'mommy'");
-        hawq.runQuery("SET pxf_remote_service_secret = 'daddy'");
-        hawq.createTableAndVerify(exTable);
+        gpdb.runQuery("SET pxf_remote_service_login = 'mommy'");
+        gpdb.runQuery("SET pxf_remote_service_secret = 'daddy'");
+        gpdb.createTableAndVerify(exTable);
         try {
-            hawq.queryResults(exTable, "SELECT num1, t1 FROM " + exTable.getName() + " ORDER BY num1, t1");
+            gpdb.queryResults(exTable, "SELECT num1, t1 FROM " + exTable.getName() + " ORDER BY num1, t1");
         } catch (Exception e) {
             ExceptionUtils.validate(null, e, new PSQLException("FaultyGUCAccessor: login mommy secret daddy", null), true);
         } finally {
-            hawq.runQuery("SET pxf_remote_service_login = ''");
-            hawq.runQuery("SET pxf_remote_service_secret = ''");
+            gpdb.runQuery("SET pxf_remote_service_login = ''");
+            gpdb.runQuery("SET pxf_remote_service_secret = ''");
         }
     }
 
@@ -222,11 +222,11 @@ public class PluginTest extends BaseFeature {
         exTable.setHost(pxfHost);
         exTable.setPort(pxfPort);
 
-        hawq.runQuery("SET pxf_remote_service_login = ''");
-        hawq.runQuery("SET pxf_remote_service_secret = ''");
-        hawq.createTableAndVerify(exTable);
+        gpdb.runQuery("SET pxf_remote_service_login = ''");
+        gpdb.runQuery("SET pxf_remote_service_secret = ''");
+        gpdb.createTableAndVerify(exTable);
         try {
-            hawq.queryResults(exTable, "SELECT num1, t1 FROM " + exTable.getName() + " ORDER BY num1, t1");
+            gpdb.queryResults(exTable, "SELECT num1, t1 FROM " + exTable.getName() + " ORDER BY num1, t1");
         } catch (Exception e) {
             ExceptionUtils.validate(null, e, new PSQLException("FaultyGUCAccessor: login null secret null", null), true);
         }
@@ -248,9 +248,9 @@ public class PluginTest extends BaseFeature {
         exTable.setHost(pxfHost);
         exTable.setPort(pxfPort);
 
-        hawq.createTableAndVerify(exTable);
+        gpdb.createTableAndVerify(exTable);
         try {
-            hawq.queryResults(exTable, "SELECT num1, t1 FROM " + exTable.getName() + " ORDER BY num1, t1");
+            gpdb.queryResults(exTable, "SELECT num1, t1 FROM " + exTable.getName() + " ORDER BY num1, t1");
         } catch (Exception e) {
             ExceptionUtils.validate(null, e, new PSQLException("FaultyGUCAccessor: login null secret null", null), true);
         }
