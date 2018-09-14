@@ -50,9 +50,9 @@ The **`<pxf_parameters>`** are:
 {
 PROFILE=JDBC
 |
-FRAGMENTER=org.apache.hawq.pxf.plugins.jdbc.JdbcPartitionFragmenter
-&ACCESSOR=org.apache.hawq.pxf.plugins.jdbc.JdbcAccessor
-&RESOLVER=org.apache.hawq.pxf.plugins.jdbc.JdbcResolver
+FRAGMENTER=org.greenplum.pxf.plugins.jdbc.JdbcPartitionFragmenter
+&ACCESSOR=org.greenplum.pxf.plugins.jdbc.JdbcAccessor
+&RESOLVER=org.greenplum.pxf.plugins.jdbc.JdbcResolver
 }
 ```
 

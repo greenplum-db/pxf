@@ -1,36 +1,36 @@
 <sut>
 	<cluster>
-		<class>com.pxf.automation.components.cluster.SingleCluster</class>
+		<class>org.greenplum.pxf.automation.components.cluster.SingleCluster</class>
 		<host>localhost</host>
 	</cluster>
 
 	<hawq>
-		<class>com.pxf.automation.components.hawq.Hawq</class>
+		<class>org.greenplum.pxf.automation.components.hawq.Hawq</class>
 		<host>localhost</host>
 		<masterHost>localhost</masterHost>
 		<db>pxfautomation</db>
 	</hawq>
 
 	<hdfs>
-		<class>com.pxf.automation.components.hdfs.Hdfs</class>
+		<class>org.greenplum.pxf.automation.components.hdfs.Hdfs</class>
 		<host>localhost</host>
 		<port>8020</port>
 		<workingDirectory>tmp/pxf_automation_data</workingDirectory>
 	</hdfs>
 
 	<hbase>
-		<class>com.pxf.automation.components.hbase.HBase</class>
+		<class>org.greenplum.pxf.automation.components.hbase.HBase</class>
 		<host>localhost</host>
 	</hbase>
 
 	<hive>
-		<class>com.pxf.automation.components.hive.Hive</class>
+		<class>org.greenplum.pxf.automation.components.hive.Hive</class>
 		<host>localhost</host>
 		<port>10000</port>
 	</hive>
 
 	<tinc>
-		<class>com.pxf.automation.components.tinc.Tinc</class>
+		<class>org.greenplum.pxf.automation.components.tinc.Tinc</class>
 		<host>localhost</host>
 		<gphome>$GPHOME</gphome>
 		<tincFolder>tinc/main</tincFolder>
@@ -38,7 +38,7 @@
 	</tinc>
 
 	<pxf>
-		<class>com.pxf.automation.components.pxf.Pxf</class>
+		<class>org.greenplum.pxf.automation.components.pxf.Pxf</class>
 		<host>localhost</host>
 		<port>5888</port>
 	</pxf>
