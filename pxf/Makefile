@@ -57,7 +57,7 @@ help:
 	@echo	"  -  -  LICENSE=<license info> - add license info to created RPMs"
 	@echo	"  -  -  VENDOR=<vendor name> - add vendor name to created RPMs"
 	@echo	"  -  -  PLUGINS_EXCLUDE_RPM=plugin1, plugin2,... - do not build and RPM for given comma-separated list of plugins"
-	@echo	"  -  -  DATABASE=build pxf for specific database(HAWQ is default, other databases are defined under gradle/profiles)"
+	@echo	"  -  -  DATABASE=build pxf for specific database(GPDB is default, other databases are defined under gradle/profiles)"
 	@echo	"  - tomcat - builds tomcat rpm from downloaded tarball"
 	@echo	"  -  -  LICENSE and VENDOR parameters can be used as well"
 	@echo	"  - install - setup PXF along with tomcat in the configured deployPath"

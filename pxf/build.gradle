@@ -45,8 +45,8 @@ repositories {
     }
 }
 
-// Get database property, use HAWQ as a default database
-def database = System.getProperty("database", "hawq");
+// Get database property, use GPDB as a default database
+def database = System.getProperty("database", "gpdb");
 def databaseFileName = "gradle/profiles/" + database + ".properties";
 assert file(databaseFileName).exists()
 def databaseProperties = new Properties()
@@ -71,7 +71,7 @@ def versionedPackageName(packageName) {
 }
 
 subprojects { subProject ->
-    group = 'org.apache.hawq.pxf'
+    group = 'org.greenplum.pxf'
     apply plugin: 'java'
     apply plugin: 'idea'
     apply plugin: 'eclipse'
@@ -187,8 +187,8 @@ project('pxf-service') {
 
     ospackage {
         packageName = versionedPackageName("${project.name}")
-        summary = 'HAWQ Extension Framework (PXF), service REST API'
-        description = 'Rest API for the HAWQ Extenstion framework'
+        summary = 'Pivotal Extension Framework (PXF), service REST API'
+        description = 'Rest API for the Pivotal Extenstion framework'
         packager = ' '
         packageGroup = 'Development/Libraries'
         release = buildNumber() + '.' + project.osFamily
@@ -286,8 +286,8 @@ project('pxf-service') {
 project('pxf') {
     jar.enabled = false
     ospackage {
-        summary = 'HAWQ Extension Framework (PXF)'
-        description = 'HAWQ Extension framework Virtual RPM'
+        summary = 'Pivotal Extension Framework (PXF)'
+        description = 'Pivotal Extension framework Virtual RPM'
         packager = ' '
         packageGroup = 'Development/Libraries'
         release = buildNumber() + '.' + project.osFamily
@@ -334,7 +334,7 @@ project('pxf-hdfs') {
 
     ospackage {
         packageName = versionedPackageName("${project.name}")
-        summary = 'HAWQ Extension Framework (PXF), HDFS plugin'
+        summary = 'Pivotal Extension Framework (PXF), HDFS plugin'
         description = 'Querying external data stored in HDFS'
         packager = ' '
         packageGroup = 'Development/Libraries'
@@ -369,7 +369,7 @@ project('pxf-hive') {
 
     ospackage {
         packageName = versionedPackageName("${project.name}")
-        summary = 'HAWQ Extension Framework (PXF), Hive plugin'
+        summary = 'Pivotal Extension Framework (PXF), Hive plugin'
         description = 'Querying external data stored in Hive'
         packager = ' '
         packageGroup = 'Development/Libraries'
@@ -396,7 +396,7 @@ project('pxf-json') {
     ospackage {
       requires(versionedPackageName('pxf-hdfs'), project.version, GREATER | EQUAL)
         packageName = versionedPackageName("${project.name}")
-        summary = 'HAWQ Extension Framework (PXF), Json plugin'
+        summary = 'Pivotal Extension Framework (PXF), Json plugin'
         description = 'Querying external data stored in HDFS in Json format'
         packager = ' '
         packageGroup = 'Development/Libraries'
@@ -426,7 +426,7 @@ project('pxf-hbase') {
 
     ospackage {
         packageName = versionedPackageName("${project.name}")
-        summary = 'HAWQ Extension Framework (PXF), HBase plugin'
+        summary = 'Pivotal Extension Framework (PXF), HBase plugin'
         description = 'Querying external data stored in HBase'
         packager = ' '
         packageGroup = 'Development/Libraries'
@@ -457,7 +457,7 @@ project('pxf-jdbc') {
 
     ospackage {
         packageName = versionedPackageName("${project.name}")
-        summary = 'HAWQ Extension Framework (PXF), JDBC plugin'
+        summary = 'Pivotal Extension Framework (PXF), JDBC plugin'
         description = 'Querying external data stored in Relation Database using JDBC.'
         packager = ' '
         packageGroup = 'Development/Libraries'
@@ -486,7 +486,7 @@ project('pxf-ignite') {
 
     ospackage {
         packageName = versionedPackageName("${project.name}")
-        summary = 'HAWQ Extension Framework (PXF), Apache Ignite plugin'
+        summary = 'Pivotal Extension Framework (PXF), Apache Ignite plugin'
         description = 'Querying external data stored in the Apache Ignite database.'
         packager = ' '
         packageGroup = 'Development/Libraries'
