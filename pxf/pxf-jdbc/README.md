@@ -189,7 +189,7 @@ CREATE TABLE sales (
     grade varchar(30)
 )
 ```
-and the following HAWQ table:
+and the following GPDB table:
 ```
 CREATE EXTERNAL TABLE sales(
     id integer,
@@ -201,7 +201,7 @@ LOCATION ('pxf://sales?PROFILE=JDBC&JDBC_DRIVER=com.mysql.jdbc.Driver&DB_URL=jdb
 FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
 ```
 
-The PXF JDBC plugin will generate two fragments  for a query `SELECT * FROM sales`. Then HAWQ will assign each of them to a separate PXF segment. Each segment will perform the SELECT query, and the first one will get tuples with `cdate` values for year `2008`, while the second will get tuples for year `2009`. Then each PXF segment will send its results back to HAWQ, where they will be "concatenated" and returned.
+The PXF JDBC plugin will generate two fragments  for a query `SELECT * FROM sales`. Then GPDB will assign each of them to a separate PXF segment. Each segment will perform the SELECT query, and the first one will get tuples with `cdate` values for year `2008`, while the second will get tuples for year `2009`. Then each PXF segment will send its results back to GPDB, where they will be "concatenated" and returned.
 
 
 ## Examples
