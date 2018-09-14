@@ -21,7 +21,7 @@ package org.greenplum.pxf.api.utilities;
 
 
 /**
- * ColumnDescriptor describes one column in hawq database.
+ * ColumnDescriptor describes one column in gpdb database.
  * Currently it means a name, a type id (HAWQ/GPDB OID), a type name and column index.
  */
 public class ColumnDescriptor {

@@ -88,7 +88,7 @@ public class HBaseAccessor extends Plugin implements ReadAccessor {
     }
 
     /**
-     * Constructs {@link HBaseTupleDescription} based on HAWQ table description and
+     * Constructs {@link HBaseTupleDescription} based on GPDB table description and
      * initializes the scan start and end keys of the HBase table to default values.
      *
      * @param input query information, contains HBase table name and filter

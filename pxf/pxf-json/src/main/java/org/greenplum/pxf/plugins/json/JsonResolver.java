@@ -38,7 +38,7 @@ import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 
 /**
- * This JSON resolver for PXF will decode a given object from the {@link JsonAccessor} into a row for HAWQ. It will
+ * This JSON resolver for PXF will decode a given object from the {@link JsonAccessor} into a row for GPDB. It will
  * decode this data into a JsonNode and walk the tree for each column. It supports normal value mapping via projections
  * and JSON array indexing.
  */

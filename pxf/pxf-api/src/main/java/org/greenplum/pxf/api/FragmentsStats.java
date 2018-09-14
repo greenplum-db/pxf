@@ -137,7 +137,7 @@ public class FragmentsStats {
 
     /**
      * Given a {@link FragmentsStats}, serialize it in JSON to be used as the
-     * result string for HAWQ. An example result is as follows:
+     * result string for GPDB. An example result is as follows:
      * <code>{"PXFFragmentsStats":{"fragmentsNumber":3,"firstFragmentSize":{"size"=67108864,"unit":"B"},"totalSize":{"size"=200000000,"unit"="B"}}}</code>
      *
      * @param stats the data to be serialized

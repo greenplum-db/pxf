@@ -58,7 +58,7 @@ public class MetadataResponse implements StreamingOutput {
     }
 
     /**
-     * Serializes the metadata list in JSON, To be used as the result string for HAWQ.
+     * Serializes the metadata list in JSON, To be used as the result string for GPDB.
      */
     @Override
     public void write(OutputStream output) throws IOException {

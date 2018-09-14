@@ -55,7 +55,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Assert;
 
 /**
- * This abstract class contains a number of helpful utilities in developing a PXF extension for HAWQ. Extend this class
+ * This abstract class contains a number of helpful utilities in developing a PXF extension for GPDB. Extend this class
  * and use the various <code>assert</code> methods to check given input against known output.
  */
 public abstract class PxfUnit {

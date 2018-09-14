@@ -27,7 +27,7 @@ import java.util.List;
 import static org.junit.Assert.*;
 
 import org.greenplum.pxf.api.Metadata;
-import org.greenplum.pxf.api.utilities.EnumHawqType;
+import org.greenplum.pxf.api.utilities.EnumGpdbType;
 import org.junit.Test;
 
 public class MetadataResponseFormatterTest {
@@ -50,8 +50,8 @@ public class MetadataResponseFormatterTest {
         List<Metadata.Field> fields = new ArrayList<Metadata.Field>();
         Metadata.Item itemName = new Metadata.Item("default", "table1");
         Metadata metadata = new Metadata(itemName, fields);
-        fields.add(new Metadata.Field("field1", EnumHawqType.Int8Type, "bigint"));
-        fields.add(new Metadata.Field("field2", EnumHawqType.TextType, "string"));
+        fields.add(new Metadata.Field("field1", EnumGpdbType.Int8Type, "bigint"));
+        fields.add(new Metadata.Field("field2", EnumGpdbType.TextType, "string"));
         metadataList.add(metadata);
 
         response = MetadataResponseFormatter.formatResponse(metadataList, "path.file");
@@ -68,8 +68,8 @@ public class MetadataResponseFormatterTest {
         List<Metadata.Field> fields = new ArrayList<Metadata.Field>();
         Metadata.Item itemName = new Metadata.Item("default", "table1");
         Metadata metadata = new Metadata(itemName, fields);
-        fields.add(new Metadata.Field("field1", EnumHawqType.Int8Type, "bigint", null));
-        fields.add(new Metadata.Field("field2", EnumHawqType.TextType, "string", new String[] {}));
+        fields.add(new Metadata.Field("field1", EnumGpdbType.Int8Type, "bigint", null));
+        fields.add(new Metadata.Field("field2", EnumGpdbType.TextType, "string", new String[] {}));
         metadataList.add(metadata);
 
         response = MetadataResponseFormatter.formatResponse(metadataList, "path.file");
@@ -86,10 +86,10 @@ public class MetadataResponseFormatterTest {
         List<Metadata.Field> fields = new ArrayList<Metadata.Field>();
         Metadata.Item itemName = new Metadata.Item("default", "table1");
         Metadata metadata = new Metadata(itemName, fields);
-        fields.add(new Metadata.Field("field1", EnumHawqType.Int8Type, "bigint"));
-        fields.add(new Metadata.Field("field2", EnumHawqType.NumericType, "decimal",
+        fields.add(new Metadata.Field("field1", EnumGpdbType.Int8Type, "bigint"));
+        fields.add(new Metadata.Field("field2", EnumGpdbType.NumericType, "decimal",
                 new String[] {"1349", "1789"}));
-        fields.add(new Metadata.Field("field3", EnumHawqType.BpcharType, "char",
+        fields.add(new Metadata.Field("field3", EnumGpdbType.BpcharType, "char",
                 new String[] {"50"}));
         metadataList.add(metadata);
 
@@ -111,7 +111,7 @@ public class MetadataResponseFormatterTest {
         List<Metadata.Field> fields = new ArrayList<Metadata.Field>();
         Metadata.Item itemName = new Metadata.Item("default", "table1");
         Metadata metadata = new Metadata(itemName, fields);
-        fields.add(new Metadata.Field("field1", EnumHawqType.Float8Type, "double"));
+        fields.add(new Metadata.Field("field1", EnumGpdbType.Float8Type, "double"));
         metadataList.add(metadata);
 
         response = MetadataResponseFormatter.formatResponse(metadataList, "path.file");
@@ -166,7 +166,7 @@ public class MetadataResponseFormatterTest {
         List<Metadata.Field> fields = new ArrayList<Metadata.Field>();
         Metadata.Item itemName = new Metadata.Item("default", "table1");
         Metadata metadata = new Metadata(itemName, fields);
-        fields.add(new Metadata.Field("field1", EnumHawqType.Int8Type, "bigint"));
+        fields.add(new Metadata.Field("field1", EnumGpdbType.Int8Type, "bigint"));
         metadataList.add(null);
         metadataList.add(metadata);
         try {
@@ -185,8 +185,8 @@ public class MetadataResponseFormatterTest {
             List<Metadata.Field> fields = new ArrayList<Metadata.Field>();
             Metadata.Item itemName = new Metadata.Item("default", "table"+i);
             Metadata metadata = new Metadata(itemName, fields);
-            fields.add(new Metadata.Field("field1", EnumHawqType.Int8Type, "bigint"));
-            fields.add(new Metadata.Field("field2", EnumHawqType.TextType, "string"));
+            fields.add(new Metadata.Field("field1", EnumGpdbType.Int8Type, "bigint"));
+            fields.add(new Metadata.Field("field2", EnumGpdbType.TextType, "string"));
             metdataList.add(metadata);
         }
         response = MetadataResponseFormatter.formatResponse(metdataList, "path.file");
@@ -213,8 +213,8 @@ public class MetadataResponseFormatterTest {
             List<Metadata.Field> fields = new ArrayList<Metadata.Field>();
             Metadata.Item itemName = new Metadata.Item("default"+i, "table"+i);
             Metadata metadata = new Metadata(itemName, fields);
-            fields.add(new Metadata.Field("field1", EnumHawqType.Int8Type, "bigint"));
-            fields.add(new Metadata.Field("field2", EnumHawqType.TextType, "string"));
+            fields.add(new Metadata.Field("field1", EnumGpdbType.Int8Type, "bigint"));
+            fields.add(new Metadata.Field("field2", EnumGpdbType.TextType, "string"));
             metdataList.add(metadata);
         }
         response = MetadataResponseFormatter.formatResponse(metdataList, "path.file");

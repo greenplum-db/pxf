@@ -29,7 +29,7 @@ import java.util.ArrayList;
 
 /**
  * Common configuration available to all PXF plugins. Represents input data
- * coming from client applications, such as Hawq or GPDB.
+ * coming from client applications, such as Gpdb or GPDB.
  */
 public class InputData {
 
@@ -170,7 +170,7 @@ public class InputData {
     }
 
     /**
-     * Returns the number of segments in HAWQ.
+     * Returns the number of segments in GPDB.
      *
      * @return number of segments
      */
@@ -179,7 +179,7 @@ public class InputData {
     }
 
     /**
-     * Returns the current segment ID in HAWQ.
+     * Returns the current segment ID in GPDB.
      *
      * @return current segment ID
      */
@@ -311,7 +311,7 @@ public class InputData {
     }
 
     /**
-     * Returns the contents of pxf_remote_service_login set in Hawq. Should the
+     * Returns the contents of pxf_remote_service_login set in Gpdb. Should the
      * user set it to an empty string this function will return null.
      *
      * @return remote login details if set, null otherwise
@@ -321,7 +321,7 @@ public class InputData {
     }
 
     /**
-     * Returns the contents of pxf_remote_service_secret set in Hawq. Should the
+     * Returns the contents of pxf_remote_service_secret set in Gpdb. Should the
      * user set it to an empty string this function will return null.
      *
      * @return remote password if set, null otherwise

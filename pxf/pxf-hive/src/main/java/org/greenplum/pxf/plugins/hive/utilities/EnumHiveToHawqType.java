@@ -24,63 +24,63 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.api.utilities.EnumHawqType;
+import org.greenplum.pxf.api.utilities.EnumGpdbType;
 import org.greenplum.pxf.api.UnsupportedTypeException;
 
 /**
  * 
- * Hive types, which are supported by plugin, mapped to HAWQ's types
- * @see EnumHawqType
+ * Hive types, which are supported by plugin, mapped to GPDB's types
+ * @see EnumGpdbType
  */
-public enum EnumHiveToHawqType {
+public enum EnumHiveToGpdbType {
 
-    TinyintType("tinyint", EnumHawqType.Int2Type, (byte) 1),
-    SmallintType("smallint", EnumHawqType.Int2Type, (byte) 2),
-    IntType("int", EnumHawqType.Int4Type),
-    BigintType("bigint", EnumHawqType.Int8Type),
-    BooleanType("boolean", EnumHawqType.BoolType),
-    FloatType("float", EnumHawqType.Float4Type),
-    DoubleType("double", EnumHawqType.Float8Type),
-    StringType("string", EnumHawqType.TextType),
-    BinaryType("binary", EnumHawqType.ByteaType, true),
-    TimestampType("timestamp", EnumHawqType.TimestampType),
-    DateType("date", EnumHawqType.DateType),
-    DecimalType("decimal", EnumHawqType.NumericType, "[(,)]"),
-    VarcharType("varchar", EnumHawqType.VarcharType, "[(,)]"),
-    CharType("char", EnumHawqType.BpcharType, "[(,)]"),
-    ArrayType("array", EnumHawqType.TextType, "[<,>]", true),
-    MapType("map", EnumHawqType.TextType, "[<,>]", true),
-    StructType("struct", EnumHawqType.TextType, "[<,>]", true),
-    UnionType("uniontype", EnumHawqType.TextType, "[<,>]", true);
+    TinyintType("tinyint", EnumGpdbType.Int2Type, (byte) 1),
+    SmallintType("smallint", EnumGpdbType.Int2Type, (byte) 2),
+    IntType("int", EnumGpdbType.Int4Type),
+    BigintType("bigint", EnumGpdbType.Int8Type),
+    BooleanType("boolean", EnumGpdbType.BoolType),
+    FloatType("float", EnumGpdbType.Float4Type),
+    DoubleType("double", EnumGpdbType.Float8Type),
+    StringType("string", EnumGpdbType.TextType),
+    BinaryType("binary", EnumGpdbType.ByteaType, true),
+    TimestampType("timestamp", EnumGpdbType.TimestampType),
+    DateType("date", EnumGpdbType.DateType),
+    DecimalType("decimal", EnumGpdbType.NumericType, "[(,)]"),
+    VarcharType("varchar", EnumGpdbType.VarcharType, "[(,)]"),
+    CharType("char", EnumGpdbType.BpcharType, "[(,)]"),
+    ArrayType("array", EnumGpdbType.TextType, "[<,>]", true),
+    MapType("map", EnumGpdbType.TextType, "[<,>]", true),
+    StructType("struct", EnumGpdbType.TextType, "[<,>]", true),
+    UnionType("uniontype", EnumGpdbType.TextType, "[<,>]", true);
 
     private String typeName;
-    private EnumHawqType hawqType;
+    private EnumGpdbType gpdbType;
     private String splitExpression;
     private byte size;
     private boolean isComplexType;
 
-    EnumHiveToHawqType(String typeName, EnumHawqType hawqType) {
+    EnumHiveToGpdbType(String typeName, EnumGpdbType gpdbType) {
         this.typeName = typeName;
-        this.hawqType = hawqType;
+        this.gpdbType = gpdbType;
     }
 
-    EnumHiveToHawqType(String typeName, EnumHawqType hawqType, byte size) {
-        this(typeName, hawqType);
+    EnumHiveToGpdbType(String typeName, EnumGpdbType gpdbType, byte size) {
+        this(typeName, gpdbType);
         this.size = size;
     }
 
-    EnumHiveToHawqType(String typeName, EnumHawqType hawqType, boolean isComplexType) {
-        this(typeName, hawqType);
+    EnumHiveToGpdbType(String typeName, EnumGpdbType gpdbType, boolean isComplexType) {
+        this(typeName, gpdbType);
         this.isComplexType = isComplexType;
     }
 
-    EnumHiveToHawqType(String typeName, EnumHawqType hawqType, String splitExpression) {
-        this(typeName, hawqType);
+    EnumHiveToGpdbType(String typeName, EnumGpdbType gpdbType, String splitExpression) {
+        this(typeName, gpdbType);
         this.splitExpression = splitExpression;
     }
 
-    EnumHiveToHawqType(String typeName, EnumHawqType hawqType, String splitExpression, boolean isComplexType) {
-        this(typeName, hawqType, splitExpression);
+    EnumHiveToGpdbType(String typeName, EnumGpdbType gpdbType, String splitExpression, boolean isComplexType) {
+        this(typeName, gpdbType, splitExpression);
         this.isComplexType = isComplexType;
     }
 
@@ -94,10 +94,10 @@ public enum EnumHiveToHawqType {
 
     /**
      * 
-     * @return corresponding HAWQ type
+     * @return corresponding GPDB type
      */
-    public EnumHawqType getHawqType() {
-        return this.hawqType;
+    public EnumGpdbType getGpdbType() {
+        return this.gpdbType;
     }
 
     /**
@@ -109,14 +109,14 @@ public enum EnumHiveToHawqType {
     }
 
     /**
-     * Returns Hive to HAWQ type mapping entry for given Hive type 
+     * Returns Hive to GPDB type mapping entry for given Hive type
      * 
      * @param hiveType full Hive type with modifiers, for example - decimal(10, 0), char(5), binary, array&lt;string&gt;, map&lt;string,float&gt; etc
-     * @return corresponding Hive to HAWQ type mapping entry
-     * @throws UnsupportedTypeException if there is no corresponding HAWQ type
+     * @return corresponding Hive to GPDB type mapping entry
+     * @throws UnsupportedTypeException if there is no corresponding GPDB type
      */
-    public static EnumHiveToHawqType getHiveToHawqType(String hiveType) {
-        for (EnumHiveToHawqType t : values()) {
+    public static EnumHiveToGpdbType getHiveToGpdbType(String hiveType) {
+        for (EnumHiveToGpdbType t : values()) {
             String hiveTypeName = hiveType;
             String splitExpression = t.getSplitExpression();
             if (splitExpression != null) {
@@ -129,51 +129,51 @@ public enum EnumHiveToHawqType {
             }
         }
         throw new UnsupportedTypeException("Unable to map Hive's type: "
-                + hiveType + " to HAWQ's type");
+                + hiveType + " to GPDB's type");
     }
 
 
     /**
      * 
-     * @param dataType Hawq data type
-     * @return compatible Hive type to given Hawq type, if there are more than one compatible types, it returns one with bigger size
-     * @throws UnsupportedTypeException if there is no corresponding Hive type for given Hawq type
+     * @param dataType Gpdb data type
+     * @return compatible Hive type to given Gpdb type, if there are more than one compatible types, it returns one with bigger size
+     * @throws UnsupportedTypeException if there is no corresponding Hive type for given Gpdb type
      */
-    public static EnumHiveToHawqType getCompatibleHiveToHawqType(DataType dataType) {
+    public static EnumHiveToGpdbType getCompatibleHiveToGpdbType(DataType dataType) {
 
-        SortedSet<EnumHiveToHawqType> types = new TreeSet<EnumHiveToHawqType>(
-                new Comparator<EnumHiveToHawqType>() {
-                    public int compare(EnumHiveToHawqType a,
-                            EnumHiveToHawqType b) {
+        SortedSet<EnumHiveToGpdbType> types = new TreeSet<EnumHiveToGpdbType>(
+                new Comparator<EnumHiveToGpdbType>() {
+                    public int compare(EnumHiveToGpdbType a,
+                            EnumHiveToGpdbType b) {
                         return Byte.compare(a.getSize(), b.getSize());
                     }
                 });
 
-        for (EnumHiveToHawqType t : values()) {
-            if (t.getHawqType().getDataType().equals(dataType)) {
+        for (EnumHiveToGpdbType t : values()) {
+            if (t.getGpdbType().getDataType().equals(dataType)) {
                 types.add(t);
             }
         }
 
         if (types.size() == 0)
-            throw new UnsupportedTypeException("Unable to find compatible Hive type for given HAWQ's type: " + dataType);
+            throw new UnsupportedTypeException("Unable to find compatible Hive type for given GPDB's type: " + dataType);
 
         return types.last();
     }
 
     /**
      *
-     * @param hiveToHawqType EnumHiveToHawqType enum
+     * @param hiveToGpdbType EnumHiveToGpdbType enum
      * @param modifiers Array of Modifiers
      * @return full Hive type name including modifiers. eg: varchar(3)
      * This function is used for datatypes with modifier information
      * such as varchar, char, decimal, etc.
      */
-    public static String getFullHiveTypeName(EnumHiveToHawqType hiveToHawqType, Integer[] modifiers) {
-        hiveToHawqType.getTypeName();
+    public static String getFullHiveTypeName(EnumHiveToGpdbType hiveToGpdbType, Integer[] modifiers) {
+        hiveToGpdbType.getTypeName();
         if(modifiers != null && modifiers.length > 0) {
-            String modExpression = hiveToHawqType.getSplitExpression();
-            StringBuilder fullType = new StringBuilder(hiveToHawqType.typeName);
+            String modExpression = hiveToGpdbType.getSplitExpression();
+            StringBuilder fullType = new StringBuilder(hiveToGpdbType.typeName);
             Character start = modExpression.charAt(1);
             Character separator = modExpression.charAt(2);
             Character end = modExpression.charAt(modExpression.length()-2);
@@ -188,7 +188,7 @@ public enum EnumHiveToHawqType {
             fullType.append(end);
             return fullType.toString();
         } else {
-            return hiveToHawqType.getTypeName();
+            return hiveToGpdbType.getTypeName();
         }
     }
 
@@ -200,7 +200,7 @@ public enum EnumHiveToHawqType {
      */
     public static Integer[] extractModifiers(String hiveType) {
         Integer[] result = null;
-        for (EnumHiveToHawqType t : values()) {
+        for (EnumHiveToGpdbType t : values()) {
             String hiveTypeName = hiveType;
             String splitExpression = t.getSplitExpression();
             if (splitExpression != null) {
@@ -216,11 +216,11 @@ public enum EnumHiveToHawqType {
             }
         }
         throw new UnsupportedTypeException("Unable to map Hive's type: "
-                + hiveType + " to HAWQ's type");
+                + hiveType + " to GPDB's type");
     }
 
     /**
-     * This field is needed to find compatible Hive type when more than one Hive type mapped to HAWQ type
+     * This field is needed to find compatible Hive type when more than one Hive type mapped to GPDB type
      * @return size of this type in bytes or 0
      */
     public byte getSize() {

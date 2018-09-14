@@ -337,7 +337,7 @@ public class HiveDataFragmenter extends Fragmenter {
      *
      * For Example for query: SELECT * FROM TABLE1 WHERE part1 = 'AAAA' AND
      * part2 = '1111' For HIVE HiveMetaStoreClient.listPartitionsByFilter, the
-     * incoming HAWQ filter string will be mapped into :
+     * incoming GPDB filter string will be mapped into :
      * "part1 = \"AAAA\" and part2 = \"1111\""
      */
     private String buildFilterStringForHive() throws Exception {

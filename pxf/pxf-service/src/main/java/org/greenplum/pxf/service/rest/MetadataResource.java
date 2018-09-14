@@ -62,7 +62,7 @@ public class MetadataResource extends RestResource {
     /**
      * This function queries the underlying store based on the given profile to get schema for items that match the given pattern
      * metadata: Item name, field names, field types. The types are converted
-     * from the underlying types to HAWQ types.
+     * from the underlying types to GPDB types.
      * Unsupported types result in an error. <br>
      * Response Examples:<br>
      * For a table <code>default.t1</code> with 2 fields (a int, b float) will
@@ -115,7 +115,7 @@ public class MetadataResource extends RestResource {
             return Response.ok(metadataResponse, MediaType.APPLICATION_JSON_TYPE).build();
 
         } catch (ClientAbortException e) {
-            LOG.error("Remote connection closed by HAWQ", e);
+            LOG.error("Remote connection closed by GPDB", e);
             throw e;
         } catch (java.io.IOException e) {
             LOG.error("Unhandled exception thrown", e);

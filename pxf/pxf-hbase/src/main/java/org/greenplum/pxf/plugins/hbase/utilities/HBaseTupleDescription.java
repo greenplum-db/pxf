@@ -79,7 +79,7 @@ public class HBaseTupleDescription {
     /**
      * Loads user information from fragmenter.
      * The data contains optional table mappings from the lookup table,
-     * between field names in HAWQ table and in the HBase table.
+     * between field names in GPDB table and in the HBase table.
      */
     @SuppressWarnings("unchecked")
     private void loadUserData() {
@@ -110,7 +110,7 @@ public class HBaseTupleDescription {
      * Returns the {@link #HBaseColumnDescriptor} for given column.
      * If the column has a lookup table mapping, the HBase column name is used.
      *
-     * @param column HAWQ column description
+     * @param column GPDB column description
      * @return matching HBase column description
      */
     private HBaseColumnDescriptor getHBaseColumn(ColumnDescriptor column) {
@@ -131,7 +131,7 @@ public class HBaseTupleDescription {
     /**
      * Returns the HBase name mapping for the given column name.
      *
-     * @param column HAWQ column description
+     * @param column GPDB column description
      * @return HBase name for the column
      */
     private byte[] getMapping(ColumnDescriptor column) {

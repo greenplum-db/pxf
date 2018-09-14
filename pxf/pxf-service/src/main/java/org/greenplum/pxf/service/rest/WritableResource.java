@@ -95,7 +95,7 @@ public class WritableResource extends RestResource{
 	 * @param servletContext Servlet context contains attributes required by SecuredHDFS
 	 * @param headers Holds HTTP headers from request
 	 * @param path Holds URI path option used in this request
-	 * @param inputStream stream of bytes to write from Hawq
+	 * @param inputStream stream of bytes to write from Gpdb
      * @return ok response if the operation finished successfully
      * @throws Exception in case of wrong request parameters, failure to
      *             initialize bridge or to write data
@@ -153,7 +153,7 @@ public class WritableResource extends RestResource{
                 ++totalWritten;
             }
         } catch (ClientAbortException cae) {
-            LOG.error("Remote connection closed by HAWQ", cae);
+            LOG.error("Remote connection closed by GPDB", cae);
         } catch (Exception e) {
             LOG.error("Exception: totalWritten so far " + totalWritten + " to " + path, e);
             ex = e;

@@ -37,17 +37,17 @@ import java.util.Map;
 /**
  * HBaseLookupTable will load a table's lookup information from HBase pxflookup
  * table if exists.<br>
- * This table holds mappings between HAWQ column names (key) and HBase column
+ * This table holds mappings between GPDB column names (key) and HBase column
  * names (value).<br>
- * E.g. for an HBase table "hbase_table", mappings between HAWQ column names and
- * HBase column names, when <code>"hawq1"</code> is mapped to
- * <code>"cf1:hbase1"</code> and <code>"hawq2"</code> is mapped to
+ * E.g. for an HBase table "hbase_table", mappings between GPDB column names and
+ * HBase column names, when <code>"gpdb1"</code> is mapped to
+ * <code>"cf1:hbase1"</code> and <code>"gpdb2"</code> is mapped to
  * <code>"cf1:hbase2"</code>, will be:<br>
  *
  * <pre>
  * 	ROW                     COLUMN+CELL
- *  hbase_table             column=mapping:hawq1, value=cf1:hbase1
- *  hbase_table             column=mapping:hawq2, value=cf1:hbase2
+ *  hbase_table             column=mapping:gpdb1, value=cf1:hbase1
+ *  hbase_table             column=mapping:gpdb2, value=cf1:hbase2
  * </pre>
  *
  * Data is returned as a map of string and byte array from
@@ -84,14 +84,14 @@ public class HBaseLookupTable implements Closeable {
     }
 
     /**
-     * Returns mappings for given table name between its HAWQ column names and
+     * Returns mappings for given table name between its GPDB column names and
      * HBase column names. If lookup table doesn't exist or no mappings for the
      * table exist, returns null.
      * <p>
-     * All HAWQ column names are returns in low case.
+     * All GPDB column names are returns in low case.
      *
      * @param tableName HBase table name
-     * @return mappings between HAWQ column names and HBase column names
+     * @return mappings between GPDB column names and HBase column names
      * @throws IOException when HBase operations fail
      */
     public Map<String, byte[]> getMappings(String tableName) throws IOException {
@@ -156,8 +156,8 @@ public class HBaseLookupTable implements Closeable {
     }
 
     /**
-     * Returns a map of mappings between HAWQ and HBase column names, with the
-     * HAWQ column values in lower case.
+     * Returns a map of mappings between GPDB and HBase column names, with the
+     * GPDB column values in lower case.
      */
     private Map<String, byte[]> lowerCaseMappings() {
         Map<String, byte[]> lowCaseKeys = new HashMap<String, byte[]>();

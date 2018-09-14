@@ -40,7 +40,7 @@ public class ProfileFactory {
      * The method which returns optimal profile
      *
      * @param inputFormat input format of table/partition
-     * @param hasComplexTypes whether record has complex types, see @EnumHiveToHawqType
+     * @param hasComplexTypes whether record has complex types, see @EnumHiveToGpdbType
      * @param userProfileName profile name provided by user
      * @return name of optimal profile
      */
@@ -65,7 +65,7 @@ public class ProfileFactory {
      * @see ProfileFactory#get(InputFormat, boolean, String)
      *
      * @param inputFormat input format of table/partition
-     * @param hasComplexTypes whether record has complex types, see @EnumHiveToHawqType
+     * @param hasComplexTypes whether record has complex types, see @EnumHiveToGpdbType
      * @return name of optimal profile
      */
     public static String get(InputFormat inputFormat, boolean hasComplexTypes) {

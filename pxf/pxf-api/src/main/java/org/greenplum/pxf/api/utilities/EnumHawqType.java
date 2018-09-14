@@ -28,10 +28,10 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.JsonProcessingException;
 
-class EnumHawqTypeSerializer extends JsonSerializer<EnumHawqType> {
+class EnumGpdbTypeSerializer extends JsonSerializer<EnumGpdbType> {
 
     @Override
-    public void serialize(EnumHawqType value, JsonGenerator generator,
+    public void serialize(EnumGpdbType value, JsonGenerator generator,
               SerializerProvider provider) throws IOException,
               JsonProcessingException {
       generator.writeString(value.getTypeName());
@@ -40,11 +40,11 @@ class EnumHawqTypeSerializer extends JsonSerializer<EnumHawqType> {
 
 /**
  * 
- * HAWQ types which could be used in plugins.
+ * GPDB types which could be used in plugins.
  *
  */
-@JsonSerialize(using = EnumHawqTypeSerializer.class)
-public enum EnumHawqType {
+@JsonSerialize(using = EnumGpdbTypeSerializer.class)
+public enum EnumGpdbType {
     Int2Type("int2", DataType.SMALLINT),
     Int4Type("int4", DataType.INTEGER),
     Int8Type("int8", DataType.BIGINT),
@@ -63,12 +63,12 @@ public enum EnumHawqType {
     private String typeName;
     private byte modifiersNum;
 
-    EnumHawqType(String typeName, DataType dataType) {
+    EnumGpdbType(String typeName, DataType dataType) {
         this.typeName = typeName;
         this.dataType = dataType;
     }
 
-    EnumHawqType(String typeName, DataType dataType, byte modifiersNum) {
+    EnumGpdbType(String typeName, DataType dataType, byte modifiersNum) {
         this(typeName, dataType);
         this.modifiersNum = modifiersNum;
     }

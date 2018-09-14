@@ -61,7 +61,7 @@ public class ProtocolData extends InputData {
      * Constructs a ProtocolData.
      * Parses X-GP-* system configuration variables and
      * X-GP-OPTIONS-* user configuration variables
-     * @param paramsMap contains all query-specific parameters from Hawq
+     * @param paramsMap contains all query-specific parameters from Gpdb
      */
     public ProtocolData(Map<String, String> paramsMap) {
 
@@ -171,7 +171,7 @@ public class ProtocolData extends InputData {
     /**
      * Constructs a ProtocolData. Parses X-GP-* configuration variables.
      *
-     * @param paramsMap contains all query-specific parameters from Hawq
+     * @param paramsMap contains all query-specific parameters from Gpdb
      * @param profileString contains the profile name
      */
     public ProtocolData(Map<String, String> paramsMap, String profileString) {
@@ -340,7 +340,7 @@ public class ProtocolData extends InputData {
 
     /**
      * Statistics parameter. Returns the max number of fragments to return for
-     * ANALYZE sampling. The value is set in HAWQ side using the GUC
+     * ANALYZE sampling. The value is set in GPDB side using the GUC
      * pxf_stats_max_fragments.
      *
      * @return max number of fragments to be processed by analyze
@@ -352,7 +352,7 @@ public class ProtocolData extends InputData {
     /**
      * Statistics parameter. Returns a number between 0.0001 and 1.0,
      * representing the sampling ratio on each fragment for ANALYZE sampling.
-     * The value is set in HAWQ side based on ANALYZE computations and the
+     * The value is set in GPDB side based on ANALYZE computations and the
      * number of sampled fragments.
      *
      * @return sampling ratio

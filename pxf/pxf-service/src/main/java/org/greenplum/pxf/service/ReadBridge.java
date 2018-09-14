@@ -42,7 +42,7 @@ import java.util.zip.ZipException;
  * get records from accessor, let resolver deserialize them and reserialize them
  * using the output conversion class. <br>
  * The class handles BadRecordException and other exception type and marks the
- * record as invalid for HAWQ.
+ * record as invalid for GPDB.
  */
 public class ReadBridge implements Bridge {
     ReadAccessor fileAccessor = null;
@@ -74,7 +74,7 @@ public class ReadBridge implements Bridge {
     }
 
     /**
-     * Fetches next object from file and turn it into a record that the HAWQ
+     * Fetches next object from file and turn it into a record that the GPDB
      * backend can process.
      */
     @Override

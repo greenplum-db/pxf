@@ -614,7 +614,7 @@ public class HiveResolver extends Plugin implements ReadResolver {
     }
     /*
      * Gets the delimiter character from the URL, verify and store it. Must be a
-     * single ascii character (same restriction as Hawq's). If a hex
+     * single ascii character (same restriction as Gpdb's). If a hex
      * representation was passed, convert it to its char.
      */
     void parseDelimiterChar(InputData input) {

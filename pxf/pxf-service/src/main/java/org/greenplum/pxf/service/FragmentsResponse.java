@@ -56,7 +56,7 @@ public class FragmentsResponse implements StreamingOutput {
 
     /**
      * Serializes a fragments list in JSON, To be used as the result string for
-     * HAWQ. An example result is as follows:
+     * GPDB. An example result is as follows:
      * <code>{"PXFFragments":[{"replicas":
      * ["sdw1.corp.emc.com","sdw3.corp.emc.com","sdw8.corp.emc.com"],
      * "sourceName":"text2.csv", "index":"0","metadata":"&lt;base64 metadata for fragment&gt;",
