@@ -1,6 +1,8 @@
-# Developing PXF
+# PXF Development
 
-## IntelliJ Setup
+This document has the steps to build and install PXF and GPDB from source along with its dependencies including Hadoop.
+
+## IDE Setup (IntelliJ)
 
 - Start IntelliJ. Click "Open" and select the directory to which you cloned the `pxf` repo.
 - Select `File > Project Structure`.
@@ -147,7 +149,7 @@ intended for the shell.
 
 ```bash
 # Install PXF
-make -C /home/gpadmin/pxf/pxf clean install DATABASE=gpdb
+make -C /home/gpadmin/pxf/pxf install
 ```
 
 ```bash
@@ -166,10 +168,12 @@ psql -d template1 -c "create extension pxf"
 
 ```bash
 pushd /home/gpadmin/pxf/pxf_automation
-export PG_MODE=GPDB
-make GROUP=gpdb
 
-make TEST=HdfsSmokeTest # Run specific tests
+# Run specific tests. Example: Hdfs Smoke Test
+make TEST=HdfsSmokeTest
+
+# Run all tests
+make GROUP=gpdb
 popd
 ```
 
@@ -181,11 +185,7 @@ To deploy your changes to PXF in the development environment.
 # $PXF_HOME folder is replaced each time you make install.
 # So, if you have any config changes, you may want to back those up.
 $PXF_HOME/bin/pxf stop
-make -C /home/gpadmin/pxf/pxf clean install DATABASE=gpdb
-
-rm -rf /usr/local/greenplum-db-devel/pxf/logs/*
-rm -rf /usr/local/greenplum-db-devel/pxf/pxf-service
-$PXF_HOME/bin/pxf init
+make -C /home/gpadmin/pxf/pxf install
 
 # Make any config changes you had backed up previously
 $PXF_HOME/bin/pxf start

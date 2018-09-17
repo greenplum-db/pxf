@@ -21,6 +21,26 @@ Development
 
 Build and run PXF and GPDB on Docker by following the instructions in [DEVELOPMENT.md](DEVELOPMENT.md).
 
+Alternatively, if you want to build directly without using docker do the following:
+
+Compile & Test PXF
+```bash
+make
+```
+  
+Setup PXF (Requires Greenplum instaled with GPHOME configured)
+
+```bash
+#Install PXF
+make -C pxf install
+
+# Initialize PXF
+$PXF_HOME/bin/pxf init
+
+# Start PXF
+$PXF_HOME/bin/pxf start
+```
+
 Package Contents
 ================
 
@@ -35,10 +55,3 @@ Hadoop testing environment to exercise the pxf automation tests
 
 ## concourse/
 Resources for PXF's Continuous Integration pipelines
-
-Building
-========
-
-    ./gradlew clean build [buildRpm] [distTar]
-
-    For all available tasks run: ./gradlew tasks
