@@ -1,0 +1,10 @@
+platform: linux
+image_resource:
+  type: docker-image
+inputs:
+- name: pxf_src
+- name: cluster_env_files
+- name: gpdb_binary
+- name: pxf_tarball
+run:
+  path: pxf_src/concourse/scripts/pxf-perf-multi-node.bash

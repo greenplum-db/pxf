@@ -159,7 +159,8 @@ jobs:
           generate_random_name: true
           terraform_source: ccp_src/google/
           vars:
-            PLATFORM: centos7{{number_of_gpdb_nodes}}
+            PLATFORM: centos7
+            number_of_nodes: {{number_of_gpdb_nodes}}
             segments_per_host: 4
             instance_type: n1-standard-4
             ccp_reap_minutes: 120
@@ -196,4 +197,4 @@ jobs:
 
   - task: run-perf-multinode
     image: gpdb-pxf-dev-centos6-hdp-server
-    file: pxf_src/concourse/scripts/pxf-perf-multi-node.bash
+    file: pxf_src/concourse/tasks/pxf-perf-multi-node.yml
