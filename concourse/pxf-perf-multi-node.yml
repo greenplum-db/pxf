@@ -1,0 +1,199 @@
+dataproc_destroy_anchor: &ccp_destroy
+  do:
+    - aggregate:
+      - put: terraform_gpdb
+        resource: terraform
+        params:
+          action: destroy
+          env_name_file: terraform_gpdb/name
+          terraform_source: ccp_src/google/
+        get_params:
+          action: destroy
+      - put: terraform_dataproc
+        resource: terraform
+        params:
+          action: destroy
+          env_name_file: terraform_dataproc/name
+          terraform_source: ccp_src/google-dataproc/
+          vars:
+            project: {{google-project-id}}
+        get_params:
+          action: destroy
+
+resource_types:
+- name: terraform
+  type: docker-image
+  source:
+    repository: ljfranklin/terraform-resource
+
+resources:
+- name: ccp_src
+  type: git
+  source:
+    branch: {{ccp-git-branch}}
+    private_key: {{ccp-git-key}}
+    uri: {{ccp-git-remote}}
+
+- name: gpdb_src
+  type: git
+  source:
+    branch: {{gpdb-git-branch}}
+    uri: {{gpdb-git-remote}}
+
+- name: pxf_src
+  type: git
+  source:
+    branch: {{pxf-git-branch}}
+    private_key: {{pxf-git-key}}
+    uri: {{pxf-git-remote}}
+
+- name: pxf_build_number
+  type: semver
+  source:
+    initial_version: 3.3.0
+    bucket: {{pxf-aws-bucket-name}}
+    key: pxf_artifacts/pxf_build_number
+    region_name: {{aws-region}}
+    access_key_id: {{bucket-access-key-id}}
+    secret_access_key: {{bucket-secret-access-key}}
+
+- name: gpdb-pxf-dev-centos6
+  type: docker-image
+  source:
+    repository: pivotaldata/gpdb-pxf-dev
+    tag: centos6
+
+- name: ccp-7
+  type: docker-image
+  source:
+    repository: pivotaldata/ccp
+    tag: 7
+
+- name: gpdb-pxf-dev-centos6-hdp-server
+  type: docker-image
+  source:
+    repository: pivotaldata/gpdb-pxf-dev
+    tag: centos6-hdp-server
+
+- name: bin_gpdb_centos6
+  type: s3
+  source:
+    access_key_id: {{bucket-access-key-id}}
+    bucket: {{icw_green_bucket}}
+    region_name: {{aws-region}}
+    secret_access_key: {{bucket-secret-access-key}}
+    versioned_file: bin_gpdb_centos6/gpdb_branch_((gpdb-branch))/icw_green/bin_gpdb.tar.gz
+
+- name: pxf_tarball
+  type: s3
+  source:
+    access_key_id: {{bucket-access-key-id}}
+    bucket: {{pxf-aws-bucket-name}}
+    region_name: {{aws-region}}
+    secret_access_key: {{bucket-secret-access-key}}
+    versioned_file: pxf_artifacts/((folder-prefix))_((gpdb-branch))/latest/pxf.tar.gz
+
+- name: terraform
+  type: terraform
+  source:
+    env:
+      AWS_ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+      AWS_SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+      GOOGLE_CREDENTIALS: {{google-service-account-key}}
+    vars:
+      project_id: {{google-project-id}}
+    storage:
+      access_key_id: {{tf-machine-access-key-id}}
+      secret_access_key: {{tf-machine-secret-access-key}}
+      region_name: {{aws-region}}
+      bucket: {{tf-bucket-name}}
+      bucket_path: clusters-google-dataproc/
+
+jobs:
+
+- name: compile_pxf
+  plan:
+  - aggregate:
+    - get: gpdb_src
+    - put: pxf_build_number
+      params: {pre: rc}
+    - get: pxf_src
+      trigger: true
+    - get: gpdb-pxf-dev-centos6
+  - task: compile_pxf
+    image: gpdb-pxf-dev-centos6
+    file: pxf_src/concourse/compile_pxf.yml
+  - put: pxf_tarball
+    params:
+      file: pxf_artifacts/pxf.tar.gz
+
+- name: pxf_perf_multinode
+  on_success:
+    <<: *ccp_destroy
+  plan:
+  - get: ccp_src
+  - get: gpdb_src
+    passed:
+    - compile_pxf
+  - get: gpdb_binary
+    resource: bin_gpdb_centos6
+  - get: pxf_src
+    passed:
+    - compile_pxf
+    trigger: true
+  - get: pxf_tarball
+    passed:
+    - compile_pxf
+    trigger: true
+  - get: ccp-7
+  - get: gpdb-pxf-dev-centos6-hdp-server
+
+  - aggregate:
+
+    - do:
+      - put: terraform_gpdb
+        resource: terraform
+        params:
+          action: create
+          delete_on_failure: true
+          generate_random_name: true
+          terraform_source: ccp_src/google/
+          vars:
+            PLATFORM: centos7{{number_of_gpdb_nodes}}
+            segments_per_host: 4
+            instance_type: n1-standard-4
+            ccp_reap_minutes: 120
+      - task: gen_gpdb_cluster
+        input_mapping:
+          terraform: terraform_gpdb
+        file: ccp_src/ci/tasks/gen_cluster.yml
+        image: ccp-7
+        params:
+          AWS_ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+          AWS_SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+          AWS_DEFAULT_REGION: {{aws-region}}
+          BUCKET_PATH: clusters-google-dataproc/
+          BUCKET_NAME: {{tf-bucket-name}}
+          PLATFORM: centos7
+          CLOUD_PROVIDER: google
+      - task: intialize_greenplum
+        file: ccp_src/ci/tasks/gpinitsystem.yml
+
+    - put: terraform_dataproc
+      resource: terraform
+      params:
+        action: create
+        delete_on_failure: true
+        generate_random_name: true
+        terraform_source: ccp_src/google-dataproc/
+        vars:
+          PLATFORM: centos7
+          number_of_nodes: {{hadoop-nodes}}
+          instance_type: n1-standard-4
+          project: {{google-project-id}}
+          internal_ip_only: "false"
+          initialization_script: gs://pxf-perf/scripts/load-lineitem-dataset.sh
+
+  - task: run-perf-multinode
+    image: gpdb-pxf-dev-centos6-hdp-server
+    file: pxf_src/concourse/scripts/pxf-perf-multi-node.bash
