@@ -1,10 +1,11 @@
-package org.greenplum.pxf.automation.installation;
+package com.pxf.automation.installation;
 
 import jsystem.framework.report.ListenerstManager;
 import jsystem.framework.system.SystemManagerImpl;
 
-import org.greenplum.pxf.automation.components.cluster.installer.services.ServicesInstaller;
 import org.testng.annotations.Test;
+
+import com.pxf.automation.components.cluster.installer.services.ServicesInstaller;
 
 /**
  * Contains one case relates to cluster installation. This case using {@link ServicesInstaller} to
