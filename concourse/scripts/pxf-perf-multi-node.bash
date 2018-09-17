@@ -2,6 +2,8 @@
 
 export PGHOST=mdw
 
+set -exo pipefail
+
 function create_database_and_schema {
 	psql <<EOF
 	DROP DATABASE IF EXISTS tpch;
@@ -39,7 +41,6 @@ function write_data_from_external_to_gpdb {
 }
 
 function main {
-	exit 1
 	create_database_and_schema
 	create_readable_external_table
 
@@ -51,3 +52,4 @@ function main {
 #	validate_data
 }
 
+exit 1
