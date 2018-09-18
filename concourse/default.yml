@@ -5,5 +5,3 @@ gpdb-git-branch: master
 
 pxf-git-remote: git@github.com:/greenplum-db/pxf.git
 pxf-git-branch: master
-pxf-git-key: |
-  YOUR KEY HERE
