@@ -4,30 +4,8 @@ set -eo pipefail
 
 GPHOME="/usr/local/greenplum-db-devel"
 SSH_OPTS="-i cluster_env_files/private_key.pem -o StrictHostKeyChecking=no"
-
-function setup_gpadmin_user() {
-
-    groupadd -g 1000 gpadmin && useradd -u 1000 -g 1000 -M gpadmin
-    echo "gpadmin  ALL=(ALL)       NOPASSWD: ALL" > /etc/sudoers.d/gpadmin
-    groupadd supergroup && usermod -a -G supergroup gpadmin
-    echo -e "password\npassword" | passwd gpadmin 2> /dev/null
-    echo -e "gpadmin soft core unlimited" >> /etc/security/limits.d/gpadmin-limits.conf
-    echo -e "gpadmin soft nproc 131072" >> /etc/security/limits.d/gpadmin-limits.conf
-    echo -e "gpadmin soft nofile 65536" >> /etc/security/limits.d/gpadmin-limits.conf
-    echo -e "export JAVA_HOME=/usr/lib/jvm/java-1.7.0-openjdk.x86_64" >> /home/gpadmin/.bashrc
-    ln -s ${PWD}/pxf_src /home/gpadmin/pxf_src
-}
-
-function setup_sshd() {
-
-    service sshd start
-    passwd -u root
-    /bin/cp -Rf cluster_env_files/.ssh/* /root/.ssh
-    /bin/cp -f cluster_env_files/private_key.pem /root/.ssh/id_rsa
-    /bin/cp -f cluster_env_files/public_key.pem /root/.ssh/id_rsa.pub
-    /bin/cp -f cluster_env_files/public_key.openssh /root/.ssh/authorized_keys
-    sed 's/edw0/hadoop/' cluster_env_files/etc_hostfile >> /etc/hosts
-}
+CWDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source "${CWDIR}/pxf_common.bash"
 
 function configure_hdfs() {
 
@@ -39,7 +17,7 @@ function remote_access_to_gpdb() {
 
     ssh ${SSH_OPTS} gpadmin@mdw "source /usr/local/greenplum-db-devel/greenplum_path.sh && \
       export MASTER_DATA_DIRECTORY=/data/gpdata/master/gpseg-1 && \
-      echo 'host all all 192.168.0.0/16 trust' >> /data/gpdata/master/gpseg-1/pg_hba.conf && \
+      echo 'host all all 10.0.0.0/16 trust' >> /data/gpdata/master/gpseg-1/pg_hba.conf && \
       psql -d template1 -c 'CREATE EXTENSION pxf;' && \
       psql -d template1 -c 'CREATE DATABASE gpadmin;' && \
       psql -d template1 -c 'CREATE ROLE root LOGIN;' && \
@@ -83,19 +61,6 @@ function run_multinode_smoke_test() {
 		exit 1
 	fi
 	"
-}
-
-function setup_local_gpdb() {
-
-    mkdir -p ${GPHOME}
-    tar -xzf gpdb_binary/bin_gpdb.tar.gz -C ${GPHOME}
-    tar -xzf pxf_tarball/pxf.tar.gz -C ${GPHOME}
-    psi_dir=$(find /usr/lib64 -name psi | sort -r | head -1)
-    cp -r ${psi_dir} ${GPHOME}/lib/python
-    cp -r cluster_env_files/.ssh /home/gpadmin/.ssh
-    cp /home/gpadmin/.ssh/*.pem /home/gpadmin/.ssh/id_rsa
-    cp cluster_env_files/public_key.openssh /home/gpadmin/.ssh/authorized_keys
-    { ssh-keyscan localhost; ssh-keyscan 0.0.0.0; ssh-keyscan hadoop; } >> /home/gpadmin/.ssh/known_hosts
 }
 
 function open_ssh_tunnels() {

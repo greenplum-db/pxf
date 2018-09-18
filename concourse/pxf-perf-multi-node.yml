@@ -1,24 +1,24 @@
 dataproc_destroy_anchor: &ccp_destroy
   do:
-    - aggregate:
-      - put: terraform_gpdb
-        resource: terraform
-        params:
-          action: destroy
-          env_name_file: terraform_gpdb/name
-          terraform_source: ccp_src/google/
-        get_params:
-          action: destroy
-      - put: terraform_dataproc
-        resource: terraform
-        params:
-          action: destroy
-          env_name_file: terraform_dataproc/name
-          terraform_source: ccp_src/google-dataproc/
-          vars:
-            project: {{google-project-id}}
-        get_params:
-          action: destroy
+  - aggregate:
+    - put: terraform_gpdb
+      resource: terraform
+      params:
+        action: destroy
+        env_name_file: terraform_gpdb/name
+        terraform_source: ccp_src/google/
+      get_params:
+        action: destroy
+    - put: terraform_dataproc
+      resource: terraform
+      params:
+        action: destroy
+        env_name_file: terraform_dataproc/name
+        terraform_source: ccp_src/google-dataproc/
+        vars:
+          project: {{google-project-id}}
+      get_params:
+        action: destroy
 
 resource_types:
 - name: terraform
@@ -130,6 +130,18 @@ jobs:
 - name: pxf_perf_multinode
   on_success:
     <<: *ccp_destroy
+  on_failure:
+    do:
+      - task: sleep_for_two_hours
+        config:
+          platform: linux
+          run:
+            path: bash
+            args:
+            - -c
+            - sleep 7200
+        image: ccp-7
+      - <<: *ccp_destroy
   plan:
   - get: ccp_src
   - get: gpdb_src
@@ -179,6 +191,13 @@ jobs:
           CLOUD_PROVIDER: google
       - task: intialize_greenplum
         file: ccp_src/ci/tasks/gpinitsystem.yml
+      - task: install_hadoop
+        file: pxf_src/concourse/install_hadoop.yml
+        image: gpdb-pxf-dev-centos6-hdp-server
+        params:
+          IMPERSONATION: {{enable-impersonation-multinode}}
+          PXF_JVM_OPTS: {{pxf-jvm-opts}}
+          SKIP_SINGLECLUSTER: true
 
     - put: terraform_dataproc
       resource: terraform

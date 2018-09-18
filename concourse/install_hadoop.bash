@@ -68,7 +68,13 @@ function _main() {
     gpdb_nodes=$( < cluster_env_files/etc_hostfile grep -e "sdw\|mdw" | awk '{print $1}')
     gpdb_segments=$( < cluster_env_files/etc_hostfile grep -e "sdw" | awk '{print $1}')
 
-    hadoop_ip=$( < cluster_env_files/etc_hostfile grep "edw0" | awk '{print $1}')
+    if [ "${SKIP_SINGLECLUSTER}" != "" ]; then
+      hadoop_ip=$( < cluster_env_files/etc_hostfile grep "edw0" | awk '{print $1}')
+      install_hadoop_single_cluster ${hadoop_ip} &
+    else
+      hadoop_ip="ccp-$(cat terraform_dataproc/name)-m"
+    fi
+
     cat > hdp.repo <<-EOF
 		#VERSION_NUMBER=2.6.5.0-292
 		[HDP-2.6.5.0]
@@ -82,7 +88,6 @@ function _main() {
     for node in ${gpdb_nodes}; do
         install_hadoop_client ${node} &
     done
-    install_hadoop_single_cluster ${hadoop_ip} &
     wait
     for node in ${gpdb_nodes}; do
         setup_pxf ${node} ${hadoop_ip} &

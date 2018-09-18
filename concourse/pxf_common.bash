@@ -31,6 +31,30 @@ function install_gpdb() {
 	tar -xzf bin_gpdb/bin_gpdb.tar.gz -C ${GPHOME}
 }
 
+function setup_local_gpdb() {
+
+    mkdir -p ${GPHOME}
+    tar -xzf gpdb_binary/bin_gpdb.tar.gz -C ${GPHOME}
+    tar -xzf pxf_tarball/pxf.tar.gz -C ${GPHOME}
+    psi_dir=$(find /usr/lib64 -name psi | sort -r | head -1)
+    cp -r ${psi_dir} ${GPHOME}/lib/python
+    cp -r cluster_env_files/.ssh /home/gpadmin/.ssh
+    cp /home/gpadmin/.ssh/*.pem /home/gpadmin/.ssh/id_rsa
+    cp cluster_env_files/public_key.openssh /home/gpadmin/.ssh/authorized_keys
+    { ssh-keyscan localhost; ssh-keyscan 0.0.0.0; } >> /home/gpadmin/.ssh/known_hosts
+}
+
+function setup_sshd() {
+
+    service sshd start
+    passwd -u root
+    /bin/cp -Rf cluster_env_files/.ssh/* /root/.ssh
+    /bin/cp -f cluster_env_files/private_key.pem /root/.ssh/id_rsa
+    /bin/cp -f cluster_env_files/public_key.pem /root/.ssh/id_rsa.pub
+    /bin/cp -f cluster_env_files/public_key.openssh /root/.ssh/authorized_keys
+    sed 's/edw0/hadoop/' cluster_env_files/etc_hostfile >> /etc/hosts
+}
+
 function make_cluster() {
 	pushd gpdb_src/gpAux/gpdemo
 	su gpadmin -c "make create-demo-cluster"
@@ -51,7 +75,16 @@ function add_user_access() {
 }
 
 function setup_gpadmin_user() {
-	./gpdb_src/concourse/scripts/setup_gpadmin_user.bash ${TARGET_OS}
+
+    groupadd -g 1000 gpadmin && useradd -u 1000 -g 1000 -M gpadmin
+    echo "gpadmin  ALL=(ALL)       NOPASSWD: ALL" > /etc/sudoers.d/gpadmin
+    groupadd supergroup && usermod -a -G supergroup gpadmin
+    echo -e "password\npassword" | passwd gpadmin 2> /dev/null
+    echo -e "gpadmin soft core unlimited" >> /etc/security/limits.d/gpadmin-limits.conf
+    echo -e "gpadmin soft nproc 131072" >> /etc/security/limits.d/gpadmin-limits.conf
+    echo -e "gpadmin soft nofile 65536" >> /etc/security/limits.d/gpadmin-limits.conf
+    echo -e "export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk.x86_64" >> /home/gpadmin/.bashrc
+    ln -s ${PWD}/pxf_src /home/gpadmin/pxf_src
 }
 
 function install_pxf_client() {
