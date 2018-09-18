@@ -49,7 +49,7 @@ function main {
     setup_gpadmin_user
     setup_sshd
     remote_access_to_gpdb
-    setup_local_gpdb
+    install_gpdb
 
     source ${GPHOME}/greenplum_path.sh
     create_database_and_schema

@@ -111,6 +111,7 @@ function setup_gpadmin_user() {
 
 function install_pxf_client() {
 	# recompile pxf.so file for dev environments only
+	source ${GPHOME}/greenplum_path.sh
 	if [ "${TEST_ENV}" == "dev" ]; then
 		pushd gpdb_src > /dev/null
 		source /opt/gcc_env.sh
