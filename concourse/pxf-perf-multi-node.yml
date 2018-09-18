@@ -191,13 +191,6 @@ jobs:
           CLOUD_PROVIDER: google
       - task: intialize_greenplum
         file: ccp_src/ci/tasks/gpinitsystem.yml
-      - task: install_hadoop
-        file: pxf_src/concourse/install_hadoop.yml
-        image: gpdb-pxf-dev-centos6-hdp-server
-        params:
-          IMPERSONATION: {{enable-impersonation-multinode}}
-          PXF_JVM_OPTS: {{pxf-jvm-opts}}
-          SKIP_SINGLECLUSTER: true
 
     - put: terraform_dataproc
       resource: terraform
@@ -214,6 +207,14 @@ jobs:
           internal_ip_only: "false"
           ccp_reap_minutes: 120
           initialization_script: gs://pxf-perf/scripts/load-lineitem-dataset.sh
+
+  - task: install_hadoop
+    file: pxf_src/concourse/install_hadoop.yml
+    image: gpdb-pxf-dev-centos6-hdp-server
+    params:
+      IMPERSONATION: {{enable-impersonation-multinode}}
+      PXF_JVM_OPTS: {{pxf-jvm-opts}}
+      SKIP_SINGLECLUSTER: true
 
   - task: run-perf-multinode
     image: gpdb-pxf-dev-centos6-hdp-server
