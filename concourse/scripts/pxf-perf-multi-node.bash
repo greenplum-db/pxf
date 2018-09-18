@@ -48,6 +48,7 @@ function write_data_from_external_to_gpdb {
 function main {
     setup_gpadmin_user
     setup_sshd
+    remote_access_to_gpdb
     setup_local_gpdb
 
     source ${GPHOME}/greenplum_path.sh

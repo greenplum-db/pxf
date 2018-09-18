@@ -13,17 +13,6 @@ function configure_hdfs() {
     sed -i -e "s/>tez/>mr/g" /etc/hive/conf/hive-site.xml
 }
 
-function remote_access_to_gpdb() {
-
-    ssh ${SSH_OPTS} gpadmin@mdw "source /usr/local/greenplum-db-devel/greenplum_path.sh && \
-      export MASTER_DATA_DIRECTORY=/data/gpdata/master/gpseg-1 && \
-      echo 'host all all 10.0.0.0/16 trust' >> /data/gpdata/master/gpseg-1/pg_hba.conf && \
-      psql -d template1 -c 'CREATE EXTENSION pxf;' && \
-      psql -d template1 -c 'CREATE DATABASE gpadmin;' && \
-      psql -d template1 -c 'CREATE ROLE root LOGIN;' && \
-      gpstop -u"
-}
-
 function ssh_access_to_hadoop() {
 
     ssh ${SSH_OPTS} centos@hadoop "sudo mkdir -p /root/.ssh && \
