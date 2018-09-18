@@ -192,26 +192,45 @@ jobs:
       - task: intialize_greenplum
         file: ccp_src/ci/tasks/gpinitsystem.yml
 
-    - put: terraform_dataproc
-      resource: terraform
-      params:
-        action: create
-        delete_on_failure: true
-        generate_random_name: true
-        terraform_source: ccp_src/google-dataproc/
-        vars:
-          PLATFORM: centos7
-          number_of_nodes: {{hadoop-nodes}}
-          instance_type: n1-standard-4
-          project: {{google-project-id}}
-          internal_ip_only: "false"
-          ccp_reap_minutes: 120
-          initialization_script: gs://pxf-perf/scripts/noop.sh
+    - do:
+
+      - put: terraform_dataproc
+        resource: terraform
+        params:
+          action: create
+          delete_on_failure: true
+          generate_random_name: true
+          terraform_source: ccp_src/google-dataproc/
+          vars:
+            PLATFORM: centos7
+            number_of_nodes: {{hadoop-nodes}}
+            instance_type: n1-standard-4
+            project: {{google-project-id}}
+            internal_ip_only: "false"
+            ccp_reap_minutes: 120
+            initialization_script: gs://pxf-perf/scripts/noop.sh
+
+      - task: load_data
+        params:
+          GOOGLE_APPLICATION_CREDENTIALS: {{google-service-account-key}}
+          SCALE: 10
+        image: gpdb-pxf-dev-centos6-hdp-server
+        config:
+          inputs:
+          - name: terraform_dataproc
+          platform: linux
+          run:
+            path: bash
+            args:
+            - -exc
+            - |
+              HADOOP_HOSTNAME="ccp-$(cat terraform_dataproc/name)-m"
+              hadoop distcp gs://data-gpdb-ud-tpch/${SCALE}/lineitem.tbl hdfs://${HADOOP_HOSTNAME}:8020/tmp/
 
   - task: setup_pxf
     input_mapping:
       terraform: terraform_gpdb
-      bin_gpdb: gpdb_binary
+      bin_gpdb: bin_gpdb
     file: pxf_src/concourse/tasks/install_pxf.yml
     image: ccp-7
     params:
@@ -228,6 +247,3 @@ jobs:
   - task: run-perf-multinode
     image: gpdb-pxf-dev-centos6-hdp-server
     file: pxf_src/concourse/tasks/pxf-perf-multi-node.yml
-    params:
-      GOOGLE_APPLICATION_CREDENTIALS: {{google-service-account-key}}
-      SCALE: 10

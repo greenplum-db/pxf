@@ -49,10 +49,6 @@ function write_data_from_gpdb_to_external {
     psql -c "INSERT INTO hdfs_lineitem_write select * from lineitem"
 }
 
-function load_dataset {
-    hadoop distcp gs://data-gpdb-ud-tpch/${SCALE}/lineitem.tbl /tmp
-}
-
 function main {
     setup_gpadmin_user
     setup_sshd
@@ -65,7 +61,6 @@ function main {
     echo Read Benchmark
     create_external_tables
 
-    load_dataset
     time write_data_from_external_to_gpdb
     time write_data_from_gpdb_to_external
     exit 1
