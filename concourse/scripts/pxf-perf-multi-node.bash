@@ -37,12 +37,20 @@ EOF
 }
 
 function create_external_tables {
-    psql -c "CREATE EXTERNAL TABLE hdfs_lineitem_read (like lineitem) LOCATION ('pxf://tmp/lineitem.tbl?PROFILE=HdfsTextSimple') FORMAT 'CSV'"
+    psql -c "CREATE EXTERNAL TABLE hdfs_lineitem_read (like lineitem) LOCATION ('pxf://tmp/lineitem.tbl?PROFILE=HdfsTextSimple') FORMAT 'CSV' (DELIMITER '|')"
     psql -c "CREATE WRITABLE EXTERNAL TABLE hdfs_lineitem_write (like lineitem) LOCATION ('pxf://tmp/lineitem_write/?PROFILE=HdfsTextSimple') FORMAT 'CSV'"
 }
 
 function write_data_from_external_to_gpdb {
     psql -c "INSERT INTO lineitem select * from hdfs_lineitem_read;"
+}
+
+function write_data_from_gpdb_to_external {
+    psql -c "INSERT INTO hdfs_lineitem_write select * from lineitem"
+}
+
+function load_dataset {
+    hadoop distcp gs://data-gpdb-ud-tpch/${SCALE}/lineitem.tbl /tmp
 }
 
 function main {
@@ -52,15 +60,16 @@ function main {
     install_gpdb
 
     source ${GPHOME}/greenplum_path.sh
+    echo Write Benchmark
     create_database_and_schema
+    echo Read Benchmark
     create_external_tables
 
+    load_dataset
     time write_data_from_external_to_gpdb
+    time write_data_from_gpdb_to_external
     exit 1
 
-#    create_writable_external_table
-#    write_data_from_gpdb_to_external # time
-#
 #    validate_data
 }
 

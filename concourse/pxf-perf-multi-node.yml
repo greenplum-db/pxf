@@ -228,3 +228,6 @@ jobs:
   - task: run-perf-multinode
     image: gpdb-pxf-dev-centos6-hdp-server
     file: pxf_src/concourse/tasks/pxf-perf-multi-node.yml
+    params:
+      GOOGLE_APPLICATION_CREDENTIALS: {{google-service-account-key}}
+      SCALE: 10
