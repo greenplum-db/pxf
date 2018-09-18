@@ -208,13 +208,21 @@ jobs:
           ccp_reap_minutes: 120
           initialization_script: gs://pxf-perf/scripts/load-lineitem-dataset.sh
 
-  - task: install_hadoop
-    file: pxf_src/concourse/install_hadoop.yml
-    image: gpdb-pxf-dev-centos6-hdp-server
+  - task: setup_pxf
+    input_mapping:
+      terraform: terraform_gpdb
+    file: pxf_infra_src/concourse/tasks/install_pxf.yml
+    image: ccp-7
     params:
-      IMPERSONATION: {{enable-impersonation-multinode}}
+      AWS_ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+      AWS_SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+      AWS_DEFAULT_REGION: {{aws-region}}
+      BUCKET_PATH: {{tf-bucket-path}}
+      BUCKET_NAME: {{tf-bucket-name}}
+      PLATFORM: centos7
+      CLOUD_PROVIDER: google
+      IMPERSONATION: {{multinode-impersonation}}
       PXF_JVM_OPTS: {{pxf-jvm-opts}}
-      SKIP_SINGLECLUSTER: true
 
   - task: run-perf-multinode
     image: gpdb-pxf-dev-centos6-hdp-server
