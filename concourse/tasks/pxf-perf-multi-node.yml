@@ -4,7 +4,7 @@ image_resource:
 inputs:
 - name: pxf_src
 - name: cluster_env_files
-- name: gpdb_binary
+- name: bin_gpdb
 - name: pxf_tarball
 - name: terraform_dataproc
 run:

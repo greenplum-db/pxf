@@ -210,27 +210,36 @@ jobs:
             ccp_reap_minutes: 120
             initialization_script: gs://pxf-perf/scripts/noop.sh
 
-      - task: load_data
-        params:
-          GOOGLE_APPLICATION_CREDENTIALS: {{google-service-account-key}}
-          SCALE: 10
-        image: gpdb-pxf-dev-centos6-hdp-server
-        config:
-          inputs:
-          - name: terraform_dataproc
-          platform: linux
-          run:
-            path: bash
-            args:
-            - -exc
-            - |
-              HADOOP_HOSTNAME="ccp-$(cat terraform_dataproc/name)-m"
-              hadoop distcp gs://data-gpdb-ud-tpch/${SCALE}/lineitem.tbl hdfs://${HADOOP_HOSTNAME}:8020/tmp/
+#      - task: load_data
+#        params:
+#          GOOGLE_CREDENTIALS: {{google-service-account-key}}
+#          SCALE: 10
+#          JAVA_HOME: /etc/alternatives/java_sdk
+#        image: gpdb-pxf-dev-centos6-hdp-server
+#        config:
+#          inputs:
+#          - name: terraform
+#          - name: terraform_dataproc
+#          platform: linux
+#          run:
+#            path: bash
+#            args:
+#            - -exc
+#            - |
+#              GPDB_MASTER="ccp-
+#              HADOOP_HOSTNAME="ccp-$(cat terraform_dataproc/name)-m"
+#              ssh gpadmin@mdw -c "
+#              echo ${GOOGLE_CREDENTIALS} > /tmp/gsc-creds.json
+#              export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gsc-creds.json
+#              wget https://storage.googleapis.com/hadoop-lib/gcs/gcs-connector-hadoop2-latest.jar
+#              mv gcs-connector-hadoop2-latest.jar /usr/hdp/current/hadoop-client/lib/
+#              hadoop distcp gs://data-gpdb-ud-tpch/${SCALE}/lineitem.tbl hdfs://${HADOOP_HOSTNAME}:8020/tmp/
+
 
   - task: setup_pxf
     input_mapping:
       terraform: terraform_gpdb
-      bin_gpdb: bin_gpdb
+      bin_gpdb: gpdb_binary
     file: pxf_src/concourse/tasks/install_pxf.yml
     image: ccp-7
     params:
@@ -245,5 +254,7 @@ jobs:
       PXF_JVM_OPTS: {{pxf-jvm-opts}}
 
   - task: run-perf-multinode
+    input_mapping:
+      bin_gpdb: gpdb_binary
     image: gpdb-pxf-dev-centos6-hdp-server
     file: pxf_src/concourse/tasks/pxf-perf-multi-node.yml
