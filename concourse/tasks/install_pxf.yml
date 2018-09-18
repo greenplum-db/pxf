@@ -5,7 +5,7 @@ image_resource:
 
 inputs:
 - name: gpdb_src
-- name: pxf_infra_src
+- name: pxf_src
 - name: bin_gpdb
 - name: pxf_tarball
 - name: ccp_src
@@ -22,4 +22,4 @@ run:
   - -exc
   - |
     ccp_src/scripts/setup_ssh_to_cluster.sh || exit 1
-    pxf_infra_src/concourse/scripts/install_pxf.bash
+    pxf_src/concourse/scripts/install_pxf.bash

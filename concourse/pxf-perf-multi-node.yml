@@ -211,7 +211,7 @@ jobs:
   - task: setup_pxf
     input_mapping:
       terraform: terraform_gpdb
-    file: pxf_infra_src/concourse/tasks/install_pxf.yml
+    file: pxf_src/concourse/tasks/install_pxf.yml
     image: ccp-7
     params:
       AWS_ACCESS_KEY_ID: {{tf-machine-access-key-id}}
