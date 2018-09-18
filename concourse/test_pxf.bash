@@ -151,12 +151,11 @@ function _main() {
 	echo "pxf             5888/tcp               # PXF Service" >> /etc/services
 
 	# Install GPDB
-	time install_gpdb
-	source ${GPHOME}/greenplum_path.sh
-	time setup_gpadmin_user
+	setup_gpadmin_user
+	install_gpdb
 
-	# Install PXF Client
-	#time install_pxf_client
+	# Install PXF Client (pxf.so file)
+	install_pxf_client
 
 	# Install PXF Server
 	if [ -d pxf_tarball ]; then
@@ -167,20 +166,20 @@ function _main() {
 			tar -xzf pxf_tarball/pxf.tar.gz -C ${GPHOME}
 		fi
 	else
-		time install_pxf_server
+		install_pxf_server
 	fi
 	chown -R gpadmin:gpadmin ${GPHOME}/pxf
 
 	# Install Hadoop and Hadoop Client
 	# Doing this before making GPDB cluster to use system python for yum install
-	time setup_singlecluster /singlecluster
-	time setup_hadoop_client /singlecluster
+	setup_singlecluster /singlecluster
+	setup_hadoop_client /singlecluster
 
-	time add_jdbc_jar_to_pxf_public_classpath /singlecluster
+	add_jdbc_jar_to_pxf_public_classpath /singlecluster
 
-	time make_cluster
-	time add_user_access "testuser"
-	time start_pxf_server
+	make_cluster
+	add_user_access "testuser"
+	start_pxf_server
 
 	# Let's make sure that automation/singlecluster directories are writeable
 	chmod a+w pxf_src/automation /singlecluster
