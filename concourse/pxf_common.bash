@@ -95,6 +95,9 @@ function setup_gpadmin_user() {
     echo -e "gpadmin soft nproc 131072" >> /etc/security/limits.d/gpadmin-limits.conf
     echo -e "gpadmin soft nofile 65536" >> /etc/security/limits.d/gpadmin-limits.conf
     echo -e "export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk.x86_64" >> /home/gpadmin/.bashrc
+    if [ -d gpdb_src/gpAux/gpdemo ]; then
+        chown -R gpadmin:gpadmin gpdb_src/gpAux/gpdemo
+    fi
     ln -s ${PWD}/pxf_src /home/gpadmin/pxf_src
 }
 
