@@ -174,7 +174,7 @@ public class HiveBaseTest extends BaseFeature {
     static final String TEXTFILE = "TEXTFILE";
     static final String FORMAT_ROW = "ROW";
     static final String TEST_PACKAGE = "org.greenplum.pxf.automation.testplugin.";
-    static final String TEST_PACKAGE_LOCATION = "/com/pxf/automation/testplugin/";
+    static final String TEST_PACKAGE_LOCATION = "/org/greenplum/pxf/automation/testplugin/";
     static final String ORC_COMPRESSION = "orc.compression";
     static final String COLUMNAR_SERDE = "org.apache.hadoop.hive.serde2.columnar.ColumnarSerDe";
 

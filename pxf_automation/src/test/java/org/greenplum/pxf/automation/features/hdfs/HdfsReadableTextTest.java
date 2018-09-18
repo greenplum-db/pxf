@@ -37,7 +37,7 @@ public class HdfsReadableTextTest extends BaseFeature {
 
     private final String SUFFIX_CLASS = ".class";
 
-    String testPackageLocation = "/com/pxf/automation/testplugin/";
+    String testPackageLocation = "/org/greenplum/pxf/automation/testplugin/";
     String testPackage = "org.greenplum.pxf.automation.testplugin.";
 
     String throwOn10000Accessor = "ThrowOn10000Accessor";

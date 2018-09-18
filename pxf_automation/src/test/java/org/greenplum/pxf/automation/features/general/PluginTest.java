@@ -18,7 +18,7 @@ public class PluginTest extends BaseFeature {
 
     private final String SUFFIX_CLASS = ".class";
 
-    String testPackageLocation = "/com/pxf/automation/testplugin/";
+    String testPackageLocation = "/org/greenplum/pxf/automation/testplugin/";
     String testPackage = "org.greenplum.pxf.automation.testplugin.";
 
     String[] testPluginFileNames = { "DummyFragmenter", "DummyAccessor", "DummyResolver",

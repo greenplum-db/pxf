@@ -72,7 +72,7 @@ public class HdfsWritableSequenceTest extends BaseWritableFeature {
         hdfsPath = hdfs.getWorkingDirectory() + "/sequence/";
 
         // location of schema and data files
-        String schemaPackageLocation = "/com/pxf/automation/dataschema/";
+        String schemaPackageLocation = "/org/greenplum/pxf/automation/dataschema/";
         String resourcePath = "target/classes" + schemaPackageLocation;
         String SUFFIX_CLASS = ".class";
 

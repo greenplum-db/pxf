@@ -22,7 +22,7 @@ public class HdfsReadableSequenceTest extends BaseFeature {
 
     private final String SUFFIX_CLASS = ".class";
 
-    String schemaPackageLocation = "/com/pxf/automation/dataschema/";
+    String schemaPackageLocation = "/org/greenplum/pxf/automation/dataschema/";
     String schemaPackage = "org.greenplum.pxf.automation.dataschema.";
 
     String customSchemaFileName = "CustomWritable";

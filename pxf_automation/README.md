@@ -56,7 +56,7 @@ _**src/main/java**_ - contains related classes and utilities for the test
 
 **_tincrepo_** - contains tinc test cases.
 
-**_src/main/java/com/pxf/automation/components_** - contains all the supported services/components with simple API abstractions. 
+**_src/main/java/org/greenplum/pxf/automation/components_** - contains all the supported services/components with simple API abstractions. 
 
 ### General Automation Architecture
 TestNG is a powerful Java testing framework very similar to junit which supports several features like grouping, parallel run and test events listeners.

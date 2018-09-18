@@ -49,12 +49,12 @@ public class HdfsAnalyzeTest extends BaseFeature {
 
     private final String SUFFIX_CLASS = ".class";
 
-    String testPackageLocation = "/com/pxf/automation/testplugin/";
+    String testPackageLocation = "/org/greenplum/pxf/automation/testplugin/";
     String testPackage = "org.greenplum.pxf.automation.testplugin.";
 
     String throwOn10000Resolver = "ThrowOn10000Resolver";
 
-    String schemaPackageLocation = "/com/pxf/automation/dataschema/";
+    String schemaPackageLocation = "/org/greenplum/pxf/automation/dataschema/";
     String schemaPackage = "org.greenplum.pxf.automation.dataschema.";
 
     String customSchemaFileName = "CustomWritable";

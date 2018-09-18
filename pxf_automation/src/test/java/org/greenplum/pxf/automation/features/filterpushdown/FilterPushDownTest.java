@@ -11,7 +11,7 @@ import org.greenplum.pxf.automation.features.BaseFeature;
 /** Functional PXF filter pushdown cases */
 public class FilterPushDownTest extends BaseFeature {
 
-    String testPackageLocation = "/com/pxf/automation/testplugin/";
+    String testPackageLocation = "/org/greenplum/pxf/automation/testplugin/";
     String testPackage = "org.greenplum.pxf.automation.testplugin.";
 
     @Override
