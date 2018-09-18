@@ -27,7 +27,7 @@ PXF_HOME="\${GPHOME}/pxf"
 function install_java() {
 	yum install -y -d 1 java-1.8.0-openjdk-devel
 	echo 'export JAVA_HOME=/usr/lib/jvm/jre' | sudo tee -a ~gpadmin/.bash_profile
-	echo 'export JAVA_HOME=/usr/lib/jvm/jre' | sudo tee -a ~centos/.bash_profile &&
+	echo 'export JAVA_HOME=/usr/lib/jvm/jre' | sudo tee -a ~centos/.bash_profile
 }
 
 function install_hadoop_client() {

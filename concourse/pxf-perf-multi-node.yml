@@ -206,11 +206,12 @@ jobs:
           project: {{google-project-id}}
           internal_ip_only: "false"
           ccp_reap_minutes: 120
-          initialization_script: gs://pxf-perf/scripts/load-lineitem-dataset.sh
+          initialization_script: gs://pxf-perf/scripts/noop.sh
 
   - task: setup_pxf
     input_mapping:
       terraform: terraform_gpdb
+      bin_gpdb: gpdb_binary
     file: pxf_src/concourse/tasks/install_pxf.yml
     image: ccp-7
     params:
