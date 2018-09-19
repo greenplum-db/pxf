@@ -63,8 +63,6 @@ function main {
 
     time write_data_from_external_to_gpdb
     time write_data_from_gpdb_to_external
-    exit 1
-
 #    validate_data
 }
 

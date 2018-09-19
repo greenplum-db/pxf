@@ -208,7 +208,7 @@ jobs:
             project: {{google-project-id}}
             internal_ip_only: "false"
             ccp_reap_minutes: 120
-            initialization_script: gs://pxf-perf/scripts/noop.sh
+            initialization_script: gs://pxf-perf/scripts/load-lineitem-dataset.sh
 
 #      - task: load_data
 #        params:
