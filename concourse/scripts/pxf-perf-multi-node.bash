@@ -5,6 +5,7 @@ export PGUSER=gpadmin
 export PGDATABASE=tpch
 GPHOME="/usr/local/greenplum-db-devel"
 CWDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+HADOOP_HOSTNAME="ccp-$(cat terraform_dataproc/name)-m"
 VALIDATION_QUERY="COUNT(*) AS Total, COUNT(DISTINCT l_orderkey) AS ORDERKEYS, SUM(l_partkey) AS PARTKEYSUM, COUNT(DISTINCT l_suppkey) AS SUPPKEYS, SUM(l_linenumber) AS LINENUMBERSUM"
 source "${CWDIR}/../pxf_common.bash"
 
@@ -35,30 +36,42 @@ function create_database_and_schema {
         l_comment VARCHAR(44) NOT NULL
     );
 EOF
+    if [ "${BENCHMARK_GPHDFS}" == "true" ]; then
+        psql -c "CREATE TABLE lineitem_gphdfs (LIKE lineitem)"
+    fi
 }
 
-function create_external_tables {
-    psql -c "CREATE EXTERNAL TABLE hdfs_lineitem_read (like lineitem) LOCATION ('pxf://tmp/lineitem_read/?PROFILE=HdfsTextSimple') FORMAT 'CSV' (DELIMITER '|')"
-    psql -c "CREATE WRITABLE EXTERNAL TABLE hdfs_lineitem_write (like lineitem) LOCATION ('pxf://tmp/lineitem_write/?PROFILE=HdfsTextSimple') FORMAT 'CSV'"
+function create_pxf_external_tables {
+    psql -c "CREATE EXTERNAL TABLE pxf_lineitem_read (like lineitem) LOCATION ('pxf://tmp/lineitem_read/?PROFILE=HdfsTextSimple') FORMAT 'CSV' (DELIMITER '|')"
+    psql -c "CREATE WRITABLE EXTERNAL TABLE pxf_lineitem_write (like lineitem) LOCATION ('pxf://tmp/lineitem_write/?PROFILE=HdfsTextSimple') FORMAT 'CSV'"
 }
 
-function write_data_from_external_to_gpdb {
-    psql -c "INSERT INTO lineitem select * from hdfs_lineitem_read;"
+function create_gphdfs_external_tables {
+    psql -c "CREATE EXTERNAL TABLE gphdfs_lineitem_read (like lineitem) LOCATION ('gphdfs://${HADOOP_HOSTNAME}:8020/tmp/lineitem_read/') FORMAT 'CSV' (DELIMITER '|')"
+    psql -c "CREATE WRITABLE EXTERNAL TABLE gphdfs_lineitem_write (like lineitem) LOCATION ('gphdfs://${HADOOP_HOSTNAME}:8020/tmp/lineitem_write_gphdfs/') FORMAT 'CSV'"
 }
 
-function write_data_from_gpdb_to_external {
-    psql -c "INSERT INTO hdfs_lineitem_write select * from lineitem"
+function write_data {
+    local dest
+    local source
+    dest=${2}
+    source=${1}
+    psql -c "INSERT INTO ${dest} select * from ${source}"
 }
 
 function validate_write_to_gpdb {
-    local external_values=
-    local gpdb_values=
-    external_values=$(psql -t -c "SELECT ${VALIDATION_QUERY} FROM hdfs_lineitem_read")
-    gpdb_values=$(psql -t -c "SELECT ${VALIDATION_QUERY} FROM lineitem")
+    local external
+    local internal
+    local external_values
+    local gpdb_values
+    external=${1}
+    internal=${2}
+    external_values=$(psql -t -c "SELECT ${VALIDATION_QUERY} FROM ${external}")
+    gpdb_values=$(psql -t -c "SELECT ${VALIDATION_QUERY} FROM ${internal}")
 
-    echo Results from external query
+    echo RESULTS FROM EXTERNAL QUERY
     echo ${external_values}
-    echo Results from GPDB query
+    echo RESULTS FROM GPDB INTERNAL QUERY
     echo ${gpdb_values}
 
     if [ ${external_values} != ${gpdb_values} ]; then
@@ -67,13 +80,37 @@ function validate_write_to_gpdb {
     fi
 }
 
-function validate_write_to_external {
-    local external_values=
-    local gpdb_values=
+function gphdfs_validate_write_to_external {
+    psql -c "CREATE EXTERNAL TABLE gphdfs_lineitem_read_after_write (like lineitem) LOCATION ('gphdfs://${HADOOP_HOSTNAME}:8020/tmp/lineitem_write_gphdfs/') FORMAT 'CSV'"
+    local external_values
+    local gpdb_values
+    external_values=$(psql -t -c "SELECT ${VALIDATION_QUERY} FROM gphdfs_lineitem_read_after_write")
+    gpdb_values=$(psql -t -c "SELECT ${VALIDATION_QUERY} FROM lineitem_gphdfs")
 
-    psql -c "CREATE EXTERNAL TABLE hdfs_lineitem_read_after_write (like lineitem) LOCATION ('pxf://tmp/lineitem_write/?PROFILE=HdfsTextSimple') FORMAT 'CSV'"
+    cat << EOF
+  ###############################
+  # Results from external query #
+  ###############################
+EOF
+    echo ${external_values}
+    cat << EOF
+  ###############################
+  #   Results from GPDB query   #
+  ###############################
+EOF
+    echo ${gpdb_values}
 
-    external_values=$(psql -t -c "SELECT ${VALIDATION_QUERY} FROM hdfs_lineitem_read_after_write")
+    if [ ${external_values} != ${gpdb_values} ]; then
+        echo ERROR! Unable to validate data written from GPDB to external
+        exit 1
+    fi
+}
+
+function pxf_validate_write_to_external {
+    psql -c "CREATE EXTERNAL TABLE pxf_lineitem_read_after_write (like lineitem) LOCATION ('pxf://tmp/lineitem_write/?PROFILE=HdfsTextSimple') FORMAT 'CSV'"
+    local external_values
+    local gpdb_values
+    external_values=$(psql -t -c "SELECT ${VALIDATION_QUERY} FROM pxf_lineitem_read_after_write")
     gpdb_values=$(psql -t -c "SELECT ${VALIDATION_QUERY} FROM lineitem")
 
     cat << EOF
@@ -95,6 +132,46 @@ EOF
     fi
 }
 
+function run_pxf_benchmark {
+    create_pxf_external_tables
+
+    cat << EOF
+  ############################
+  #   PXF WRITE BENCHMARK    #
+  ############################
+EOF
+    time write_data "pxf_lineitem_read" "lineitem"
+    validate_write_to_gpdb "pxf_lineitem_read" "lineitem"
+
+    cat << EOF
+  ############################
+  #    PXF READ BENCHMARK    #
+  ############################
+EOF
+    time write_data "lineitem" "pxf_lineitem_write"
+    pxf_validate_write_to_external
+}
+
+function run_gphdfs_benchmark {
+    create_gphdfs_external_tables
+
+    cat << EOF
+  ############################
+  #  GPHDFS WRITE BENCHMARK  #
+  ############################
+EOF
+    time write_data "gphdfs_lineitem_read" "lineitem_gphdfs"
+    validate_write_to_gpdb "gphdfs_lineitem_read" "lineitem_gphdfs"
+
+    cat << EOF
+  ############################
+  #  GPHDFS READ BENCHMARK   #
+  ############################
+EOF
+    time write_data "lineitem_gphdfs" "gphdfs_lineitem_write"
+    gphdfs_validate_write_to_external
+}
+
 function main {
     setup_gpadmin_user
     setup_sshd
@@ -102,23 +179,11 @@ function main {
     install_gpdb
 
     source ${GPHOME}/greenplum_path.sh
-    cat << EOF
-  ############################
-  #     WRITE BENCHMARK      #
-  ############################
-EOF
     create_database_and_schema
-    cat << EOF
-  ############################
-  #      READ BENCHMARK      #
-  ############################
-EOF
-    create_external_tables
-
-    time write_data_from_external_to_gpdb
-    validate_write_to_gpdb
-    time write_data_from_gpdb_to_external
-    validate_write_to_external
+    run_pxf_benchmark
+    if [ "${BENCHMARK_GPHDFS}" == "true" ]; then
+        run_gphdfs_benchmark
+    fi
 }
 
 main

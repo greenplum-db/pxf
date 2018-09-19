@@ -23,6 +23,7 @@ set -euxo pipefail
 
 GPHOME=/usr/local/greenplum-db-devel
 PXF_HOME="\${GPHOME}/pxf"
+export HADOOP_VER=2.6.5.0-292
 
 function install_java() {
 	yum install -y -d 1 java-1.8.0-openjdk-devel
@@ -32,7 +33,6 @@ function install_java() {
 
 function install_hadoop_client() {
 	cat > /etc/yum.repos.d/hdp.repo <<-EOF
-#VERSION_NUMBER=2.6.5.0-292
 [HDP-2.6.5.0]
 name=HDP Version - HDP-2.6.5.0
 baseurl=http://public-repo-1.hortonworks.com/HDP/centos7/2.x/updates/2.6.5.0
@@ -42,8 +42,9 @@ enabled=1
 priority=1
 EOF
 	yum install -y -d 1 hadoop-client hive hbase
-	echo 'export HADOOP_HOME=/usr/hdp/current' | sudo tee -a ~gpadmin/.bash_profile
-	echo 'export HADOOP_HOME=/usr/hdp/current' | sudo tee -a ~centos/.bash_profile
+	echo "export HADOOP_VERSION=\${HADOOP_VER}" | sudo tee -a ~gpadmin/.bash_profile
+	echo "export HADOOP_HOME=/usr/hdp/\${HADOOP_VER}" | sudo tee -a ~gpadmin/.bash_profile
+	echo "export HADOOP_HOME=/usr/hdp/\${HADOOP_VER}" | sudo tee -a ~centos/.bash_profile
 }
 
 function start_pxf_server() {
@@ -153,7 +154,8 @@ function run_pxf_installer_script() {
 	gpscp -f ~gpadmin/segment_host_list -v ~gpadmin/install_pxf.sh centos@=:/home/centos
 	\""
 	ssh "${MASTER_HOSTNAME}" "source /usr/local/greenplum-db-devel/greenplum_path.sh && \
-	gpconfig -c gp_hadoop_home -v '/usr/hdp/current' && \
+	export MASTER_DATA_DIRECTORY=/data/gpdata/master/gpseg-1/ && \
+	gpconfig -c gp_hadoop_home -v '/usr/hdp/2.6.5.0-292' && \
 	gpconfig -c gp_hadoop_target_version -v 'hdp' && gpstop -u && \
 	gpssh -f ~gpadmin/segment_host_list -v -u centos -s -e 'sudo /home/centos/install_pxf.sh'"
 }
