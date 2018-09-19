@@ -458,7 +458,7 @@ public class HdfsReadableTextTest extends BaseFeature {
         Assert.assertTrue(gpdb.checkTableExists(exTable));
         ReportUtils.stopLevel(null);
 
-        if (SystemUtils.getPGMode() == PGModeEnum.GPDB) {
+        if (SystemUtils.getPGMode() == PGModeEnum.HAWQ) {
             runTincTest("pxf.features.hdfs.readable.text.error_table.runTest");
         }
         else {
