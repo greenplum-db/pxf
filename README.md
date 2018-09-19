@@ -58,7 +58,7 @@ JDK version 1.8+ is recommended.
 
 ### Hadoop
 We have all the related hadoop components(hdfs,hive,hbase,zookeeper,etc) mapped into simple artifact named singlecluster. 
-You can [download from S3](https://s3-us-west-2.amazonaws.com/pivotal-public/singlecluster-HDP.tar.gz) and untar the `singlecluster-HDP.tar.gz` file, which contains everything needed to run Hadoop.
+You can [download from here](http://storage.googleapis.com/pxf-public/singlecluster-HDP.tar.gz) and untar the `singlecluster-HDP.tar.gz` file, which contains everything needed to run Hadoop.
 
 ```bash
 mv singlecluster-HDP.tar.gz ~/workspace/

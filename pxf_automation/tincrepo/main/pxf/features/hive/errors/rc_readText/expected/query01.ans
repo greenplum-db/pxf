@@ -27,5 +27,5 @@
 --
 -- end_matchsubs
 SELECT * from pxf_hive_text ORDER BY t1;
-ERROR:  remote component error (500) from 'SOME_IP:SOME_PORT':  type  Exception report   message   java.lang.Exception: org.apache.hawq.pxf.api.UnsupportedTypeException: Unsupported Hive Serde: org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe    description   DESCRIPTION
-DETAIL:  External table pxf_hive_text, file pxf://ADDRESS/hive_small_data?FRAGMENTER=org.apache.hawq.pxf.plugins.hive.HiveInputFormatFragmenter&ACCESSOR=org.apache.hawq.pxf.plugins.hive.HiveRCFileAccessor&RESOLVER=org.apache.hawq.pxf.plugins.hive.HiveColumnarSerdeResolver&delimiter=
+ERROR:  remote component error (500) from 'SOME_IP:SOME_PORT':  type  Exception report   message   java.lang.Exception: org.greenplum.pxf.api.UnsupportedTypeException: Unsupported Hive Serde: org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe    description   DESCRIPTION
+DETAIL:  External table pxf_hive_text, file pxf://ADDRESS/hive_small_data?FRAGMENTER=org.greenplum.pxf.plugins.hive.HiveInputFormatFragmenter&ACCESSOR=org.greenplum.pxf.plugins.hive.HiveRCFileAccessor&RESOLVER=org.greenplum.pxf.plugins.hive.HiveColumnarSerdeResolver&delimiter=
