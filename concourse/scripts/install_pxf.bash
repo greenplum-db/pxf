@@ -42,6 +42,8 @@ enabled=1
 priority=1
 EOF
 	yum install -y -d 1 hadoop-client hive hbase
+	echo 'export HADOOP_HOME=/usr/hdp/current' | sudo tee -a ~gpadmin/.bash_profile
+	echo 'export HADOOP_HOME=/usr/hdp/current' | sudo tee -a ~centos/.bash_profile
 }
 
 function start_pxf_server() {
@@ -151,6 +153,8 @@ function run_pxf_installer_script() {
 	gpscp -f ~gpadmin/segment_host_list -v ~gpadmin/install_pxf.sh centos@=:/home/centos
 	\""
 	ssh "${MASTER_HOSTNAME}" "source /usr/local/greenplum-db-devel/greenplum_path.sh && \
+	gpconfig -c gp_hadoop_home -v '/usr/hdp/current' && \
+	gpconfig -c gp_hadoop_target_version -v 'hdp' && gpstop -u && \
 	gpssh -f ~gpadmin/segment_host_list -v -u centos -s -e 'sudo /home/centos/install_pxf.sh'"
 }
 

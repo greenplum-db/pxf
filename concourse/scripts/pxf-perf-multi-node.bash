@@ -76,9 +76,17 @@ function validate_write_to_external {
     external_values=$(psql -t -c "SELECT ${VALIDATION_QUERY} FROM hdfs_lineitem_read_after_write")
     gpdb_values=$(psql -t -c "SELECT ${VALIDATION_QUERY} FROM lineitem")
 
-    echo Results from external query
+    cat << EOF
+  ###############################
+  # Results from external query #
+  ###############################
+EOF
     echo ${external_values}
-    echo Results from GPDB query
+    cat << EOF
+  ###############################
+  #   Results from GPDB query   #
+  ###############################
+EOF
     echo ${gpdb_values}
 
     if [ ${external_values} != ${gpdb_values} ]; then
@@ -94,9 +102,17 @@ function main {
     install_gpdb
 
     source ${GPHOME}/greenplum_path.sh
-    echo Write Benchmark
+    cat << EOF
+  ############################
+  #     WRITE BENCHMARK      #
+  ############################
+EOF
     create_database_and_schema
-    echo Read Benchmark
+    cat << EOF
+  ############################
+  #      READ BENCHMARK      #
+  ############################
+EOF
     create_external_tables
 
     time write_data_from_external_to_gpdb
