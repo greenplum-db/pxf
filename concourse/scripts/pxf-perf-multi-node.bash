@@ -5,9 +5,10 @@ export PGUSER=gpadmin
 export PGDATABASE=tpch
 GPHOME="/usr/local/greenplum-db-devel"
 CWDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+VALIDATION_QUERY="COUNT(*) AS Total, COUNT(DISTINCT l_orderkey) AS ORDERKEYS, SUM(l_partkey) AS PARTKEYSUM, COUNT(DISTINCT l_suppkey) AS SUPPKEYS, SUM(l_linenumber) AS LINENUMBERSUM"
 source "${CWDIR}/../pxf_common.bash"
 
-set -exo pipefail
+set -eo pipefail
 
 function create_database_and_schema {
     psql -d postgres <<-EOF
@@ -52,18 +53,38 @@ function write_data_from_gpdb_to_external {
 function validate_write_to_gpdb {
     local external_values=
     local gpdb_values=
-    external_values=$(psql -c "SELECT COUNT(*), COUNT(DISTINCT l_orderkey), SUM(l_partkey), COUNT(DISTINCT l_suppkey), SUM(l_linenumber) FROM hdfs_lineitem_read")
-    gpdb_values=$(psql -c "SELECT COUNT(*), COUNT(DISTINCT l_orderkey), SUM(l_partkey), COUNT(DISTINCT l_suppkey), SUM(l_linenumber) FROM lineitem")
+    external_values=$(psql -t -c "SELECT ${VALIDATION_QUERY} FROM hdfs_lineitem_read")
+    gpdb_values=$(psql -t -c "SELECT ${VALIDATION_QUERY} FROM lineitem")
 
     echo Results from external query
     echo ${external_values}
     echo Results from GPDB query
     echo ${gpdb_values}
+
+    if [ ${external_values} != ${gpdb_values} ]; then
+        echo ERROR! Unable to validate data written from external to GPDB
+        exit 1
+    fi
 }
 
 function validate_write_to_external {
-#    psql -c "SELECT COUNT(*), COUNT(DISTINCT l_orderkey), SUM(l_partkey), COUNT(DISTINCT l_suppkey), SUM(l_linenumber) FROM lineitem"
-    echo Not Implemented
+    local external_values=
+    local gpdb_values=
+
+    psql -c "CREATE EXTERNAL TABLE hdfs_lineitem_read_after_write (like lineitem) LOCATION ('pxf://tmp/lineitem_write/?PROFILE=HdfsTextSimple') FORMAT 'CSV'"
+
+    external_values=$(psql -t -c "SELECT ${VALIDATION_QUERY} FROM hdfs_lineitem_read_after_write")
+    gpdb_values=$(psql -t -c "SELECT ${VALIDATION_QUERY} FROM lineitem")
+
+    echo Results from external query
+    echo ${external_values}
+    echo Results from GPDB query
+    echo ${gpdb_values}
+
+    if [ ${external_values} != ${gpdb_values} ]; then
+        echo ERROR! Unable to validate data written from GPDB to external
+        exit 1
+    fi
 }
 
 function main {
