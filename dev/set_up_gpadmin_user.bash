@@ -25,9 +25,9 @@ EOF
 >>/home/gpadmin/.bash_profile cat <<EOF
 export PS1="[\u@\h \W]\$ "
 source /opt/rh/devtoolset-6/enable
-export HADOOP_ROOT=/singlecluster
+export HADOOP_ROOT=~/workspace/singlecluster
 export PXF_HOME=/usr/local/greenplum-db-devel/pxf
-export GPHD_ROOT=/singlecluster
+export GPHD_ROOT=~/workspace/singlecluster
 export BUILD_PARAMS="-x test"
 export LANG=en_US.UTF-8
 export JAVA_HOME=/etc/alternatives/java_sdk

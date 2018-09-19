@@ -1,6 +1,6 @@
 #!/bin/bash
 
->/singlecluster/hadoop/etc/hadoop/core-site.xml cat <<EOF
+>~/workspace/singlecluster/hadoop/etc/hadoop/core-site.xml cat <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
 <!--
@@ -63,7 +63,7 @@
 </configuration>
 EOF
 
->/singlecluster/hbase/conf/hbase-site.xml cat <<EOF
+>~/workspace/singlecluster/hbase/conf/hbase-site.xml cat <<EOF
 <?xml version="1.0"?>
 <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
 <!--
@@ -147,7 +147,7 @@ EOF
 </configuration>
 EOF
 
->/singlecluster/hive/conf/hive-site.xml <<EOF
+>~/workspace/singlecluster/hive/conf/hive-site.xml cat <<EOF
 <configuration>
 	<property>
 		<name>hive.metastore.warehouse.dir</name>

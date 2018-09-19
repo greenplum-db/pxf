@@ -119,6 +119,7 @@ For subsequent minor changes to gpdb source you can simply do the following
 pushd ~/worksapce/gpdb
 make -j4 install
 popd
+
 ```
 
 Create Greenplum Cluster
@@ -134,7 +135,7 @@ Hdfs will be needed to demonstrate functionality. You can choose to start additi
 Setup [User Impersonation](https://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-common/Superusers.html) prior to starting the hadoop components.
 (this allows the `gpadmin` user to access hadoop data).
 ```bash
-~/worksapce/pxf/dev/configure_singlecluster.bash
+~/workspace/pxf/dev/configure_singlecluster.bash
 ```
 
 Setup and start HDFS
@@ -143,6 +144,7 @@ pushd ~/workspace/singlecluster/bin
 echo y | ./init-gphd.sh
 ./start-hdfs.sh
 popd
+
 ```
 
 Start other optional components based on your need
@@ -155,25 +157,26 @@ pushd ~/workspace/singlecluster/bin
 ./start-zookeeper.sh
 ./start-hbase.sh
 popd
+
 ```
 
 ### Setup PXF
-Install PXF client
-```bash
-make -C ~/workspace/gpdb/gpAux/extensions/pxf installcheck
-psql -d template1 -c "create extension pxf"
-```
-
 Install PXF Server
 ```bash
 # Install PXF
-make -C ~/workspace/gpadmin/pxf/pxf install
+make -C ~/workspace/pxf/pxf install
 
 # Initialize PXF
 $PXF_HOME/bin/pxf init
 
 # Start PXF
 $PXF_HOME/bin/pxf start
+```
+
+Install PXF client (ignore if this is already done)
+```bash
+make -C ~/workspace/gpdb/gpAux/extensions/pxf installcheck
+psql -d template1 -c "create extension pxf"
 ```
 
 ### Run PXF Tests
@@ -186,6 +189,7 @@ make TEST=HdfsSmokeTest
 # Run all tests. This will be time consuming.
 make GROUP=gpdb
 popd
+
 ```
 
 ### Make Changes to PXF
