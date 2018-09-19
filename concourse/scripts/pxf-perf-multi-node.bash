@@ -100,7 +100,7 @@ EOF
 EOF
     echo ${gpdb_values}
 
-    if [ ${external_values} != ${gpdb_values} ]; then
+    if [ "${external_values}" != "${gpdb_values}" ]; then
         echo ERROR! Unable to validate data written from GPDB to external
         exit 1
     fi
@@ -126,7 +126,7 @@ EOF
 EOF
     echo ${gpdb_values}
 
-    if [ ${external_values} != ${gpdb_values} ]; then
+    if [ "${external_values}" != "${gpdb_values}" ]; then
         echo ERROR! Unable to validate data written from GPDB to external
         exit 1
     fi
