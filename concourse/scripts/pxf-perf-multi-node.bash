@@ -37,7 +37,7 @@ EOF
 }
 
 function create_external_tables {
-    psql -c "CREATE EXTERNAL TABLE hdfs_lineitem_read (like lineitem) LOCATION ('pxf://tmp/lineitem.tbl?PROFILE=HdfsTextSimple') FORMAT 'CSV' (DELIMITER '|')"
+    psql -c "CREATE EXTERNAL TABLE hdfs_lineitem_read (like lineitem) LOCATION ('pxf://tmp/lineitem_read/?PROFILE=HdfsTextSimple') FORMAT 'CSV' (DELIMITER '|')"
     psql -c "CREATE WRITABLE EXTERNAL TABLE hdfs_lineitem_write (like lineitem) LOCATION ('pxf://tmp/lineitem_write/?PROFILE=HdfsTextSimple') FORMAT 'CSV'"
 }
 
@@ -63,6 +63,7 @@ function validate_write_to_gpdb {
 
 function validate_write_to_external {
 #    psql -c "SELECT COUNT(*), COUNT(DISTINCT l_orderkey), SUM(l_partkey), COUNT(DISTINCT l_suppkey), SUM(l_linenumber) FROM lineitem"
+    echo Not Implemented
 }
 
 function main {
