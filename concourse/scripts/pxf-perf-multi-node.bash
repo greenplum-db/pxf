@@ -49,6 +49,22 @@ function write_data_from_gpdb_to_external {
     psql -c "INSERT INTO hdfs_lineitem_write select * from lineitem"
 }
 
+function validate_write_to_gpdb {
+    local external_values=
+    local gpdb_values=
+    external_values=$(psql -c "SELECT COUNT(*), COUNT(DISTINCT l_orderkey), SUM(l_partkey), COUNT(DISTINCT l_suppkey), SUM(l_linenumber) FROM hdfs_lineitem_read")
+    gpdb_values=$(psql -c "SELECT COUNT(*), COUNT(DISTINCT l_orderkey), SUM(l_partkey), COUNT(DISTINCT l_suppkey), SUM(l_linenumber) FROM lineitem")
+
+    echo Results from external query
+    echo ${external_values}
+    echo Results from GPDB query
+    echo ${gpdb_values}
+}
+
+function validate_write_to_external {
+#    psql -c "SELECT COUNT(*), COUNT(DISTINCT l_orderkey), SUM(l_partkey), COUNT(DISTINCT l_suppkey), SUM(l_linenumber) FROM lineitem"
+}
+
 function main {
     setup_gpadmin_user
     setup_sshd
@@ -62,8 +78,9 @@ function main {
     create_external_tables
 
     time write_data_from_external_to_gpdb
+    validate_write_to_gpdb
     time write_data_from_gpdb_to_external
-#    validate_data
+    validate_write_to_external
 }
 
 main
