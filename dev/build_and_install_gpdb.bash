@@ -1,7 +1,7 @@
 #!/bin/bash
 
 source /opt/gcc_env.sh # set the compiler to gcc6.2, for C++11 support
-pushd /home/gpadmin/gpdb
+pushd ~/workspace/gpdb
 make clean
 ./configure \
   --enable-debug \
