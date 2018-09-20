@@ -5,6 +5,5 @@ inputs:
   - name: cluster_env_files
   - name: pxf_src
   - name: pxf_tarball
-  - name: terraform_dataproc
 run:
   path: pxf_src/concourse/install_hadoop.bash
