@@ -1,6 +1,6 @@
 #!/bin/bash -l
 
-set -eo pipefail
+set -exo pipefail
 
 GPHOME="/usr/local/greenplum-db-devel"
 SSH_OPTS="-i cluster_env_files/private_key.pem -o StrictHostKeyChecking=no"
@@ -104,7 +104,7 @@ function _main() {
 
     open_ssh_tunnels
     configure_hdfs
-    run_multinode_smoke_test
+    # run_multinode_smoke_test
     run_pxf_automation
     close_ssh_tunnels
 }
