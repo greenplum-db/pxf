@@ -71,13 +71,11 @@ function validate_write_to_gpdb {
 
     cat << EOF
 
-
 Results from external query
 ------------------------------
 EOF
     echo ${external_values}
     cat << EOF
-
 
 Results from GPDB query
 ------------------------------
@@ -99,13 +97,11 @@ function gphdfs_validate_write_to_external {
 
     cat << EOF
 
-
 Results from external query
 ------------------------------
 EOF
     echo ${external_values}
     cat << EOF
-
 
 Results from GPDB query
 ------------------------------
@@ -127,13 +123,11 @@ function pxf_validate_write_to_external {
 
     cat << EOF
 
-
 Results from external query
 ------------------------------
 EOF
     echo ${external_values}
     cat << EOF
-
 
 Results from GPDB query
 ------------------------------
@@ -152,7 +146,6 @@ function run_pxf_benchmark {
     cat << EOF
 
 
-
 ############################
 #    PXF READ BENCHMARK    #
 ############################
@@ -161,7 +154,6 @@ EOF
     validate_write_to_gpdb "pxf_lineitem_read" "lineitem"
 
     cat << EOF
-
 
 
 ############################
@@ -178,7 +170,6 @@ function run_gphdfs_benchmark {
     cat << EOF
 
 
-
 ############################
 #  GPHDFS READ BENCHMARK   #
 ############################
@@ -187,7 +178,6 @@ EOF
     validate_write_to_gpdb "gphdfs_lineitem_read" "lineitem_gphdfs"
 
     cat << EOF
-
 
 
 ############################
@@ -206,10 +196,10 @@ function main {
 
     source ${GPHOME}/greenplum_path.sh
     create_database_and_schema
-    run_pxf_benchmark
     if [ "${BENCHMARK_GPHDFS}" == "true" ]; then
         run_gphdfs_benchmark
     fi
+    run_pxf_benchmark
 }
 
 main
