@@ -151,8 +151,9 @@ function _main() {
 	echo "pxf             5888/tcp               # PXF Service" >> /etc/services
 
 	# Install GPDB
-	setup_gpadmin_user
 	install_gpdb
+	setup_gpadmin_user
+	time setup_sshd
 
 	# Install PXF Client (pxf.so file)
 	install_pxf_client

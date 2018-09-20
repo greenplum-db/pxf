@@ -59,11 +59,13 @@ function setup_sshd() {
 
     service sshd start
     passwd -u root
-    /bin/cp -Rf cluster_env_files/.ssh/* /root/.ssh
-    /bin/cp -f cluster_env_files/private_key.pem /root/.ssh/id_rsa
-    /bin/cp -f cluster_env_files/public_key.pem /root/.ssh/id_rsa.pub
-    /bin/cp -f cluster_env_files/public_key.openssh /root/.ssh/authorized_keys
-    sed 's/edw0/hadoop/' cluster_env_files/etc_hostfile >> /etc/hosts
+    if [ -d cluster_env_files ]; then
+        /bin/cp -Rf cluster_env_files/.ssh/* /root/.ssh
+        /bin/cp -f cluster_env_files/private_key.pem /root/.ssh/id_rsa
+        /bin/cp -f cluster_env_files/public_key.pem /root/.ssh/id_rsa.pub
+        /bin/cp -f cluster_env_files/public_key.openssh /root/.ssh/authorized_keys
+        sed 's/edw0/hadoop/' cluster_env_files/etc_hostfile >> /etc/hosts
+    fi
 }
 
 function make_cluster() {

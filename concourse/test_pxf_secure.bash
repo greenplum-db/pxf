@@ -142,6 +142,7 @@ function _main() {
 	time set_hostname
 	time install_gpdb
 	time setup_gpadmin_user
+	time setup_sshd
 	# setup hadoop before making GPDB cluster
 	time start_hadoop_secure
 	source ${GPHOME}/greenplum_path.sh
