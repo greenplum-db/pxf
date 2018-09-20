@@ -68,11 +68,11 @@ function _main() {
     gpdb_nodes=$( < cluster_env_files/etc_hostfile grep -e "sdw\|mdw" | awk '{print $1}')
     gpdb_segments=$( < cluster_env_files/etc_hostfile grep -e "sdw" | awk '{print $1}')
 
-    if [ "${SKIP_SINGLECLUSTER}" != "" ]; then
+    if [ -d terraform_dataproc ]; then
+      hadoop_ip="ccp-$(cat terraform_dataproc/name)-m"
+    else
       hadoop_ip=$( < cluster_env_files/etc_hostfile grep "edw0" | awk '{print $1}')
       install_hadoop_single_cluster ${hadoop_ip} &
-    else
-      hadoop_ip="ccp-$(cat terraform_dataproc/name)-m"
     fi
 
     cat > hdp.repo <<-EOF
