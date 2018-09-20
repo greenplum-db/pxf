@@ -1,0 +1,13 @@
+tf-bucket-path: clusters-google-dataproc/
+
+enable-impersonation-multinode: true
+pxf-jvm-opts: "-Xmx512m -Xms512m"
+perf-ccp-reap-minutes: 120
+
+perf-gpdb-number-of-nodes: 3
+perf-gpdb-segments-per-host: 4
+perf-gpdb-instance-type: n1-standard-4
+
+perf-hadoop-number-of-nodes: 3
+perf-hadoop-initialization-script: gs://pxf-perf/scripts/load-lineitem-dataset.sh
+perf-hadoop-instance-type: n1-standard-4
