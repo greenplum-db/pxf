@@ -69,9 +69,19 @@ function validate_write_to_gpdb {
     external_values=$(psql -t -c "SELECT ${VALIDATION_QUERY} FROM ${external}")
     gpdb_values=$(psql -t -c "SELECT ${VALIDATION_QUERY} FROM ${internal}")
 
-    echo RESULTS FROM EXTERNAL QUERY
+    cat << EOF
+
+
+Results from external query
+------------------------------
+EOF
     echo ${external_values}
-    echo RESULTS FROM GPDB INTERNAL QUERY
+    cat << EOF
+
+
+Results from GPDB query
+------------------------------
+EOF
     echo ${gpdb_values}
 
     if [ "${external_values}" != "${gpdb_values}" ]; then
@@ -90,15 +100,11 @@ function gphdfs_validate_write_to_external {
     cat << EOF
 
 
-
-
 Results from external query
 ------------------------------
 EOF
     echo ${external_values}
     cat << EOF
-
-
 
 
 Results from GPDB query
@@ -116,12 +122,10 @@ function pxf_validate_write_to_external {
     psql -c "CREATE EXTERNAL TABLE pxf_lineitem_read_after_write (like lineitem) LOCATION ('pxf://tmp/lineitem_write/?PROFILE=HdfsTextSimple') FORMAT 'CSV'"
     local external_values
     local gpdb_values
-    external_values=$(psql -c "SELECT ${VALIDATION_QUERY} FROM pxf_lineitem_read_after_write")
-    gpdb_values=$(psql -c "SELECT ${VALIDATION_QUERY} FROM lineitem")
+    external_values=$(psql -t -c "SELECT ${VALIDATION_QUERY} FROM pxf_lineitem_read_after_write")
+    gpdb_values=$(psql -t -c "SELECT ${VALIDATION_QUERY} FROM lineitem")
 
     cat << EOF
-
-
 
 
 Results from external query
@@ -129,8 +133,6 @@ Results from external query
 EOF
     echo ${external_values}
     cat << EOF
-
-
 
 
 Results from GPDB query
@@ -151,7 +153,6 @@ function run_pxf_benchmark {
 
 
 
-
 ############################
 #    PXF READ BENCHMARK    #
 ############################
@@ -160,7 +161,6 @@ EOF
     validate_write_to_gpdb "pxf_lineitem_read" "lineitem"
 
     cat << EOF
-
 
 
 
@@ -179,7 +179,6 @@ function run_gphdfs_benchmark {
 
 
 
-
 ############################
 #  GPHDFS READ BENCHMARK   #
 ############################
@@ -188,7 +187,6 @@ EOF
     validate_write_to_gpdb "gphdfs_lineitem_read" "lineitem_gphdfs"
 
     cat << EOF
-
 
 
 
