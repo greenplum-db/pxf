@@ -37,18 +37,18 @@ function create_database_and_schema {
     );
 EOF
     if [ "${BENCHMARK_GPHDFS}" == "true" ]; then
-        psql -c "CREATE TABLE lineitem_gphdfs (LIKE lineitem)"
+        psql -c "CREATE TABLE lineitem_gphdfs (LIKE lineitem) DISTRIBUTED BY (l_partkey)"
     fi
 }
 
 function create_pxf_external_tables {
-    psql -c "CREATE EXTERNAL TABLE pxf_lineitem_read (like lineitem) LOCATION ('pxf://tmp/lineitem_read/?PROFILE=HdfsTextSimple') FORMAT 'CSV' (DELIMITER '|')"
-    psql -c "CREATE WRITABLE EXTERNAL TABLE pxf_lineitem_write (like lineitem) LOCATION ('pxf://tmp/lineitem_write/?PROFILE=HdfsTextSimple') FORMAT 'CSV'"
+    psql -c "CREATE EXTERNAL TABLE pxf_lineitem_read (like lineitem) LOCATION ('pxf://tmp/lineitem_read/?PROFILE=HdfsTextSimple') FORMAT 'CSV' (DELIMITER '|') DISTRIBUTED BY (l_partkey)"
+    psql -c "CREATE WRITABLE EXTERNAL TABLE pxf_lineitem_write (like lineitem) LOCATION ('pxf://tmp/lineitem_write/?PROFILE=HdfsTextSimple') FORMAT 'CSV' DISTRIBUTED BY (l_partkey)"
 }
 
 function create_gphdfs_external_tables {
-    psql -c "CREATE EXTERNAL TABLE gphdfs_lineitem_read (like lineitem) LOCATION ('gphdfs://${HADOOP_HOSTNAME}:8020/tmp/lineitem_read/') FORMAT 'CSV' (DELIMITER '|')"
-    psql -c "CREATE WRITABLE EXTERNAL TABLE gphdfs_lineitem_write (like lineitem) LOCATION ('gphdfs://${HADOOP_HOSTNAME}:8020/tmp/lineitem_write_gphdfs/') FORMAT 'CSV'"
+    psql -c "CREATE EXTERNAL TABLE gphdfs_lineitem_read (like lineitem) LOCATION ('gphdfs://${HADOOP_HOSTNAME}:8020/tmp/lineitem_read/') FORMAT 'CSV' (DELIMITER '|') DISTRIBUTED BY (l_partkey)"
+    psql -c "CREATE WRITABLE EXTERNAL TABLE gphdfs_lineitem_write (like lineitem) LOCATION ('gphdfs://${HADOOP_HOSTNAME}:8020/tmp/lineitem_write_gphdfs/') FORMAT 'CSV' DISTRIBUTED BY (l_partkey)"
 }
 
 function write_data {
@@ -81,19 +81,23 @@ function validate_write_to_gpdb {
 }
 
 function gphdfs_validate_write_to_external {
-    psql -c "CREATE EXTERNAL TABLE gphdfs_lineitem_read_after_write (like lineitem) LOCATION ('gphdfs://${HADOOP_HOSTNAME}:8020/tmp/lineitem_write_gphdfs/') FORMAT 'CSV'"
+    psql -c "CREATE EXTERNAL TABLE gphdfs_lineitem_read_after_write (like lineitem) LOCATION ('gphdfs://${HADOOP_HOSTNAME}:8020/tmp/lineitem_write_gphdfs/') FORMAT 'CSV' DISTRIBUTED BY (l_partkey)"
     local external_values
     local gpdb_values
     external_values=$(psql -t -c "SELECT ${VALIDATION_QUERY} FROM gphdfs_lineitem_read_after_write")
     gpdb_values=$(psql -t -c "SELECT ${VALIDATION_QUERY} FROM lineitem_gphdfs")
 
     cat << EOF
+
+
   ###############################
   # Results from external query #
   ###############################
 EOF
     echo ${external_values}
     cat << EOF
+
+
   ###############################
   #   Results from GPDB query   #
   ###############################
@@ -107,19 +111,23 @@ EOF
 }
 
 function pxf_validate_write_to_external {
-    psql -c "CREATE EXTERNAL TABLE pxf_lineitem_read_after_write (like lineitem) LOCATION ('pxf://tmp/lineitem_write/?PROFILE=HdfsTextSimple') FORMAT 'CSV'"
+    psql -c "CREATE EXTERNAL TABLE pxf_lineitem_read_after_write (like lineitem) LOCATION ('pxf://tmp/lineitem_write/?PROFILE=HdfsTextSimple') FORMAT 'CSV' DISTRIBUTED BY (l_partkey)"
     local external_values
     local gpdb_values
     external_values=$(psql -t -c "SELECT ${VALIDATION_QUERY} FROM pxf_lineitem_read_after_write")
     gpdb_values=$(psql -t -c "SELECT ${VALIDATION_QUERY} FROM lineitem")
 
     cat << EOF
+
+
   ###############################
   # Results from external query #
   ###############################
 EOF
     echo ${external_values}
     cat << EOF
+
+
   ###############################
   #   Results from GPDB query   #
   ###############################
@@ -136,6 +144,8 @@ function run_pxf_benchmark {
     create_pxf_external_tables
 
     cat << EOF
+
+
   ############################
   #   PXF WRITE BENCHMARK    #
   ############################
@@ -144,6 +154,8 @@ EOF
     validate_write_to_gpdb "pxf_lineitem_read" "lineitem"
 
     cat << EOF
+
+
   ############################
   #    PXF READ BENCHMARK    #
   ############################
@@ -156,6 +168,8 @@ function run_gphdfs_benchmark {
     create_gphdfs_external_tables
 
     cat << EOF
+
+
   ############################
   #  GPHDFS WRITE BENCHMARK  #
   ############################
@@ -164,6 +178,8 @@ EOF
     validate_write_to_gpdb "gphdfs_lineitem_read" "lineitem_gphdfs"
 
     cat << EOF
+
+
   ############################
   #  GPHDFS READ BENCHMARK   #
   ############################
