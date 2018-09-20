@@ -84,17 +84,16 @@ function gphdfs_validate_write_to_external {
     psql -c "CREATE EXTERNAL TABLE gphdfs_lineitem_read_after_write (like lineitem) LOCATION ('gphdfs://${HADOOP_HOSTNAME}:8020/tmp/lineitem_write_gphdfs/') FORMAT 'CSV'"
     local external_values
     local gpdb_values
-    external_values=$(psql -t -c "SELECT ${VALIDATION_QUERY} FROM gphdfs_lineitem_read_after_write")
-    gpdb_values=$(psql -t -c "SELECT ${VALIDATION_QUERY} FROM lineitem_gphdfs")
+    external_values=$(psql -c "SELECT ${VALIDATION_QUERY} FROM gphdfs_lineitem_read_after_write")
+    gpdb_values=$(psql -c "SELECT ${VALIDATION_QUERY} FROM lineitem_gphdfs")
 
     cat << EOF
 
 
 
 
-  ###############################
-  # Results from external query #
-  ###############################
+Results from external query
+------------------------------
 EOF
     echo ${external_values}
     cat << EOF
@@ -102,9 +101,8 @@ EOF
 
 
 
-  ###############################
-  #   Results from GPDB query   #
-  ###############################
+Results from GPDB query
+------------------------------
 EOF
     echo ${gpdb_values}
 
@@ -118,17 +116,16 @@ function pxf_validate_write_to_external {
     psql -c "CREATE EXTERNAL TABLE pxf_lineitem_read_after_write (like lineitem) LOCATION ('pxf://tmp/lineitem_write/?PROFILE=HdfsTextSimple') FORMAT 'CSV'"
     local external_values
     local gpdb_values
-    external_values=$(psql -t -c "SELECT ${VALIDATION_QUERY} FROM pxf_lineitem_read_after_write")
-    gpdb_values=$(psql -t -c "SELECT ${VALIDATION_QUERY} FROM lineitem")
+    external_values=$(psql -c "SELECT ${VALIDATION_QUERY} FROM pxf_lineitem_read_after_write")
+    gpdb_values=$(psql -c "SELECT ${VALIDATION_QUERY} FROM lineitem")
 
     cat << EOF
 
 
 
 
-  ###############################
-  # Results from external query #
-  ###############################
+Results from external query
+------------------------------
 EOF
     echo ${external_values}
     cat << EOF
@@ -136,9 +133,8 @@ EOF
 
 
 
-  ###############################
-  #   Results from GPDB query   #
-  ###############################
+Results from GPDB query
+------------------------------
 EOF
     echo ${gpdb_values}
 
@@ -156,9 +152,9 @@ function run_pxf_benchmark {
 
 
 
-  ############################
-  #    PXF READ BENCHMARK    #
-  ############################
+############################
+#    PXF READ BENCHMARK    #
+############################
 EOF
     time write_data "pxf_lineitem_read" "lineitem"
     validate_write_to_gpdb "pxf_lineitem_read" "lineitem"
@@ -168,9 +164,9 @@ EOF
 
 
 
-  ############################
-  #   PXF WRITE BENCHMARK    #
-  ############################
+############################
+#   PXF WRITE BENCHMARK    #
+############################
 EOF
     time write_data "lineitem" "pxf_lineitem_write"
     pxf_validate_write_to_external
@@ -184,9 +180,9 @@ function run_gphdfs_benchmark {
 
 
 
-  ############################
-  #  GPHDFS READ BENCHMARK   #
-  ############################
+############################
+#  GPHDFS READ BENCHMARK   #
+############################
 EOF
     time write_data "gphdfs_lineitem_read" "lineitem_gphdfs"
     validate_write_to_gpdb "gphdfs_lineitem_read" "lineitem_gphdfs"
@@ -196,9 +192,9 @@ EOF
 
 
 
-  ############################
-  #  GPHDFS WRITE BENCHMARK  #
-  ############################
+############################
+#  GPHDFS WRITE BENCHMARK  #
+############################
 EOF
     time write_data "lineitem_gphdfs" "gphdfs_lineitem_write"
     gphdfs_validate_write_to_external
