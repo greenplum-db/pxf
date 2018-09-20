@@ -9,7 +9,7 @@ _main() {
   export BUILD_NUMBER="${TARGET_OS}"
   export PXF_HOME="${GREENPLUM_INSTALL_DIR}/pxf"
   export JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8
-  pushd pxf_src/pxf
+  pushd pxf_src/server
     make install -s DATABASE=gpdb
   popd
   # Create tarball for PXF

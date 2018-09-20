@@ -159,9 +159,9 @@ function _main() {
 	time make_cluster
 	time add_user_access "gpadmin"
 	time start_pxf_server
-	# Let's make sure that pxf_automation directories are writeable
-	chmod a+w pxf_src/pxf_automation
-	find pxf_src/pxf_automation/tinc* -type d -exec chmod a+w {} \;
+	# Let's make sure that automation directories are writeable
+	chmod a+w pxf_src/automation
+	find pxf_src/automation/tinc* -type d -exec chmod a+w {} \;
 	time run_regression_test
 	if [ -n "${GROUP}" ]; then
 		time run_pxf_smoke_secure ${PWD}

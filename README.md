@@ -10,10 +10,10 @@ To create these connectors using JAVA plugins, see the PXF API and Reference Gui
 Package Contents
 ================
 
-## pxf/
+## server/
 Contains the server side code of PXF along with the PXF Service and all the Plugins
 
-## pxf_automation/
+## automation/
 Contains the automation and integration tests for PXF against the various datasources
 
 ## singlecluster/
@@ -164,7 +164,7 @@ popd
 Install PXF Server
 ```bash
 # Install PXF
-make -C ~/workspace/pxf/pxf install
+make -C ~/workspace/pxf/server install
 
 # Initialize PXF
 $PXF_HOME/bin/pxf init
@@ -181,7 +181,7 @@ psql -d template1 -c "create extension pxf"
 
 ### Run PXF Tests
 ```bash
-pushd ~/workspace/pxf/pxf_automation
+pushd ~/workspace/pxf/automation
 
 # Run specific tests. Example: Hdfs Smoke Test
 make TEST=HdfsSmokeTest
@@ -200,7 +200,7 @@ To deploy your changes to PXF in the development environment.
 # $PXF_HOME folder is replaced each time you make install.
 # So, if you have any config changes, you may want to back those up.
 $PXF_HOME/bin/pxf stop
-make -C ~/workspace/pxf/pxf install
+make -C ~/workspace/pxf/server install
 
 # Make any config changes you had backed up previously
 $PXF_HOME/bin/pxf start
@@ -211,7 +211,7 @@ $PXF_HOME/bin/pxf start
 - Start IntelliJ. Click "Open" and select the directory to which you cloned the `pxf` repo.
 - Select `File > Project Structure`.
 - Make sure you have a JDK selected.
-- In the `Project Settings > Modules` section, import two modules for the `pxf/pxf` and `pxf/pxf_automation` directories. The first time you'll get an error saying that there's
+- In the `Project Settings > Modules` section, import two modules for the `pxf/server` and `pxf/automation` directories. The first time you'll get an error saying that there's
 no JDK set for Gradle. Just cancel and retry. It goes away the second time.
 - Restart IntelliJ
 - Check that it worked by running a test (Cmd+O)

@@ -68,7 +68,7 @@ function install_pxf_client() {
 function install_pxf_server() {
 	export BUILD_NUMBER="${TARGET_OS}"
 	export JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8
-	pushd pxf_src/pxf
+	pushd pxf_src/server
 	make install -s DATABASE=gpdb
 	popd
 }

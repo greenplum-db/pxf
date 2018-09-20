@@ -6,7 +6,6 @@ This PXF Sandbox (docker image) is available in docker hub (only accessible by g
 ```
 docker pull pivotaldata/pxf-dev
 ```
-*Please do not expose it to customers as it contains pivotal repository credentials inside /pxf_automation/settings.xml*
 
 ## Prerequisites
 * Docker for OSX

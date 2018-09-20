@@ -23,7 +23,7 @@ function run_pxf_automation() {
 	psi_dir=\$(find /usr/lib64 -name psi | sort -r | head -1)
 	cp -r \${psi_dir} ${GPHOME}/lib/python
 	psql -d template1 -c "CREATE EXTENSION PXF"
-	cd \${1}/pxf_src/pxf_automation
+	cd \${1}/pxf_src/automation
 	make GROUP=${GROUP}
 
 	exit 0
@@ -182,9 +182,9 @@ function _main() {
 	time add_user_access "testuser"
 	time start_pxf_server
 
-	# Let's make sure that pxf_automation/singlecluster directories are writeable
-	chmod a+w pxf_src/pxf_automation /singlecluster
-	find pxf_src/pxf_automation/tinc* -type d -exec chmod a+w {} \;
+	# Let's make sure that automation/singlecluster directories are writeable
+	chmod a+w pxf_src/automation /singlecluster
+	find pxf_src/automation/tinc* -type d -exec chmod a+w {} \;
 
 	# Run Tests
 	time run_regression_test
