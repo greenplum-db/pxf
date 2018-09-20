@@ -119,7 +119,7 @@ function run_pxf_automation() {
     sed -i 's/sutFile=default.xml/sutFile=MultiNodesCluster.xml/g' pxf_src/automation/jsystem.properties
     chown -R gpadmin:gpadmin /home/gpadmin pxf_src/automation
 
-    cat > /home/gpadmin/run_automation_test.sh <<-EOF
+    cat > /home/gpadmin/run_pxf_automation_test.sh <<-EOF
 	set -exo pipefail
 
 	export GPHOME=/usr/local/greenplum-db-devel
