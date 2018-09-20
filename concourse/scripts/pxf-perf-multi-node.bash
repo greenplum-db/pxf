@@ -74,7 +74,7 @@ function validate_write_to_gpdb {
     echo RESULTS FROM GPDB INTERNAL QUERY
     echo ${gpdb_values}
 
-    if [ ${external_values} != ${gpdb_values} ]; then
+    if [ "${external_values}" != "${gpdb_values}" ]; then
         echo ERROR! Unable to validate data written from external to GPDB
         exit 1
     fi
