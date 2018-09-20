@@ -94,8 +94,8 @@ function gphdfs_validate_write_to_external {
     psql -c "CREATE EXTERNAL TABLE gphdfs_lineitem_read_after_write (like lineitem) LOCATION ('gphdfs://${HADOOP_HOSTNAME}:8020/tmp/lineitem_write_gphdfs/') FORMAT 'CSV'"
     local external_values
     local gpdb_values
-    external_values=$(psql -c "SELECT ${VALIDATION_QUERY} FROM gphdfs_lineitem_read_after_write")
-    gpdb_values=$(psql -c "SELECT ${VALIDATION_QUERY} FROM lineitem_gphdfs")
+    external_values=$(psql -t -c "SELECT ${VALIDATION_QUERY} FROM gphdfs_lineitem_read_after_write")
+    gpdb_values=$(psql -t -c "SELECT ${VALIDATION_QUERY} FROM lineitem_gphdfs")
 
     cat << EOF
 
