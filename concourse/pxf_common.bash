@@ -29,7 +29,6 @@ function run_regression_test() {
 function install_gpdb() {
 	[ ! -d ${GPHOME} ] && mkdir -p ${GPHOME}
 	tar -xzf bin_gpdb/bin_gpdb.tar.gz -C ${GPHOME}
-	chown -R gpadmin:gpadmin ${GPHOME}
 }
 
 function setup_local_gpdb() {
@@ -91,12 +90,12 @@ function setup_gpadmin_user() {
     groupadd -g 1000 gpadmin && useradd -u 1000 -g 1000 -M gpadmin
     echo "gpadmin  ALL=(ALL)       NOPASSWD: ALL" > /etc/sudoers.d/gpadmin
     groupadd supergroup && usermod -a -G supergroup gpadmin
-    mkdir -p /home/gpadmin/.ssh && \
-    ssh-keygen -t rsa -N "" -f /home/gpadmin/.ssh/id_rsa && \
-    cat /home/gpadmin/.ssh/id_rsa.pub >> /home/gpadmin/.ssh/authorized_keys && \
-    chmod 0600 /home/gpadmin/.ssh/authorized_keys && \
-    { ssh-keyscan localhost; ssh-keyscan 0.0.0.0; } >> /home/gpadmin/.ssh/known_hosts && \
-    chown -R gpadmin:gpadmin /home/gpadmin && \
+    mkdir -p /home/gpadmin/.ssh
+    ssh-keygen -t rsa -N "" -f /home/gpadmin/.ssh/id_rsa
+    cat /home/gpadmin/.ssh/id_rsa.pub >> /home/gpadmin/.ssh/authorized_keys
+    chmod 0600 /home/gpadmin/.ssh/authorized_keys
+    { ssh-keyscan localhost; ssh-keyscan 0.0.0.0; } >> /home/gpadmin/.ssh/known_hosts
+	chown -R gpadmin:gpadmin ${GPHOME} /home/gpadmin
     echo -e "password\npassword" | passwd gpadmin 2> /dev/null
     echo -e "gpadmin soft core unlimited" >> /etc/security/limits.d/gpadmin-limits.conf
     echo -e "gpadmin soft nproc 131072" >> /etc/security/limits.d/gpadmin-limits.conf
