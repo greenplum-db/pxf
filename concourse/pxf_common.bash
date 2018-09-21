@@ -38,9 +38,12 @@ function setup_local_gpdb() {
     tar -xzf pxf_tarball/pxf.tar.gz -C ${GPHOME}
     psi_dir=$(find /usr/lib64 -name psi | sort -r | head -1)
     cp -r ${psi_dir} ${GPHOME}/lib/python
-    cp -r cluster_env_files/.ssh /home/gpadmin/.ssh
-    cp /home/gpadmin/.ssh/*.pem /home/gpadmin/.ssh/id_rsa
-    cp cluster_env_files/public_key.openssh /home/gpadmin/.ssh/authorized_keys
+    if [ -d cluster_env_files ]; then
+        rm -rf /home/gpadmin/.ssh/*
+        cp cluster_env_files/.ssh/* /home/gpadmin/.ssh
+        cp cluster_env_files/.ssh/*.pem /home/gpadmin/.ssh/id_rsa
+        cp cluster_env_files/public_key.openssh /home/gpadmin/.ssh/authorized_keys
+    fi
     { ssh-keyscan localhost; ssh-keyscan 0.0.0.0; } >> /home/gpadmin/.ssh/known_hosts
 }
 
