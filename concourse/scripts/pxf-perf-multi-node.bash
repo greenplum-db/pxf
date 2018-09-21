@@ -150,8 +150,7 @@ function run_pxf_benchmark {
 #    PXF READ BENCHMARK    #
 ############################
 EOF
-    time write_data "pxf_lineitem_read" "lineitem"
-    validate_write_to_gpdb "pxf_lineitem_read" "lineitem"
+    time psql -c "select * from pxf_lineitem_read" > /dev/null
 
     cat << EOF
 
@@ -161,6 +160,10 @@ EOF
 ############################
 EOF
     time write_data "lineitem" "pxf_lineitem_write"
+    cat << EOF
+Validating data
+---------------
+EOF
     pxf_validate_write_to_external
 }
 
@@ -174,8 +177,7 @@ function run_gphdfs_benchmark {
 #  GPHDFS READ BENCHMARK   #
 ############################
 EOF
-    time write_data "gphdfs_lineitem_read" "lineitem_gphdfs"
-    validate_write_to_gpdb "gphdfs_lineitem_read" "lineitem_gphdfs"
+    time psql -c "select * from gphdfs_lineitem_read" > /dev/null
 
     cat << EOF
 
@@ -185,6 +187,10 @@ EOF
 ############################
 EOF
     time write_data "lineitem_gphdfs" "gphdfs_lineitem_write"
+    cat << EOF
+Validating data
+---------------
+EOF
     gphdfs_validate_write_to_external
 }
 
@@ -196,6 +202,13 @@ function main {
 
     source ${GPHOME}/greenplum_path.sh
     create_database_and_schema
+
+    echo "Loading data from external into GPDB..."
+    write_data "pxf_lineitem_read" "lineitem"
+    echo "Validating loaded data..."
+    validate_write_to_gpdb "pxf_lineitem_read" "lineitem"
+    echo "Data loading and validation complete!\n"
+
     if [ "${BENCHMARK_GPHDFS}" == "true" ]; then
         run_gphdfs_benchmark
     fi
