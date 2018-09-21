@@ -122,7 +122,7 @@ jobs:
     - get: gpdb-pxf-dev-centos6
   - task: compile_pxf
     image: gpdb-pxf-dev-centos6
-    file: pxf_src/concourse/compile_pxf.yml
+    file: pxf_src/concourse/tasks/compile_pxf.yml
   - put: pxf_tarball
     params:
       file: pxf_artifacts/pxf.tar.gz

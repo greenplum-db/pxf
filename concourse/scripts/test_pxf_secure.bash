@@ -2,12 +2,11 @@
 
 set -exo pipefail
 
-GPHOME="/usr/local/greenplum-db-devel"
-PXF_HOME="${GPHOME}/pxf"
-AMBARI_PREFIX="http://${NODE}:8080/api/v1"
-CURL_OPTS="-u admin:admin -H X-Requested-By:ambari"
 CWDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source "${CWDIR}/pxf_common.bash"
+
+AMBARI_PREFIX="http://${NODE}:8080/api/v1"
+CURL_OPTS="-u admin:admin -H X-Requested-By:ambari"
 
 function run_pxf_smoke_secure() {
 	cat > /home/gpadmin/run_pxf_smoke_secure_test.sh <<-EOF
@@ -125,45 +124,32 @@ function start_hadoop_secure() {
 }
 
 function _main() {
-	if [ -z "${TARGET_OS}" ]; then
-		echo "FATAL: TARGET_OS is not set"
-		exit 1
-	fi
-
-	if [ "${TARGET_OS}" != "centos" -a "${TARGET_OS}" != "sles" ]; then
-		echo "FATAL: TARGET_OS is set to an unsupported value: ${TARGET_OS}"
-		echo "Configure TARGET_OS to be centos or sles"
-		exit 1
-	fi
-
 	# Reserve port 5888 for PXF service
 	echo "pxf             5888/tcp               # PXF Service" >> /etc/services
 
-	time set_hostname
-	time install_gpdb
-	time setup_gpadmin_user
-	time setup_sshd
+	set_hostname
+	install_gpdb
+	setup_gpadmin_user
 	# setup hadoop before making GPDB cluster
-	time start_hadoop_secure
-	source ${GPHOME}/greenplum_path.sh
-	time install_pxf_client
+	start_hadoop_secure
+	install_pxf_client
 
 	# untar pxf server only if necessary
 	if [ -d ${PXF_HOME} ]; then
 		echo "Skipping pxf_tarball..."
 	else
 		tar -xzf pxf_tarball/pxf.tar.gz -C ${GPHOME}
+		chown -R gpadmin:gpadmin ${PXF_HOME}
 	fi
-	chown -R gpadmin:gpadmin ${GPHOME}/pxf
 
-	time secure_pxf
-	time make_cluster
-	time add_user_access "gpadmin"
-	time start_pxf_server
-	# Let's make sure that automation directories are writeable
+	secure_pxf
+	make_cluster
+	add_user_access "gpadmin"
+	start_pxf_server
+	# Let's make sure that pxf_automation directories are writeable
 	chmod a+w pxf_src/automation
 	find pxf_src/automation/tinc* -type d -exec chmod a+w {} \;
-	#time run_regression_test
+	time run_regression_test
 	if [ -n "${GROUP}" ]; then
 		time run_pxf_smoke_secure ${PWD}
 	fi

@@ -68,7 +68,7 @@ jobs:
       context: $BUILD_JOB_NAME
   - task: compile_pxf
     image: gpdb-pxf-dev-centos6
-    file: pxf_src/concourse/compile_pxf.yml
+    file: pxf_src/concourse/tasks/compile_pxf.yml
 
 - name: test_pxf_hdp
   plan:
@@ -129,7 +129,7 @@ jobs:
         HADOOP_CLIENT: HDP
         GROUP: gpdb,proxy
       run:
-        path: pxf_src/concourse/test_pxf.bash
+        path: pxf_src/concourse/tasks/test_pxf.bash
     on_success:
       put: pxf_src
       params:

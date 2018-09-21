@@ -8,9 +8,7 @@ inputs:
   - name: pxf_tarball
 params:
   IMPERSONATION: true
-  TARGET_OS: centos
-  TARGET_OS_VERSION: 6
   HADOOP_CLIENT: HDP
   GROUP: smoke
 run:
-  path: pxf_src/concourse/test_pxf.bash
+  path: pxf_src/concourse/scripts/test_pxf.bash

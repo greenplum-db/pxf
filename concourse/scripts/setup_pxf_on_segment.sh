@@ -27,7 +27,7 @@ function setup_hadoop_client() {
 
     sed -i -e "s/\(0.0.0.0\|localhost\|127.0.0.1\)/${hadoop_ip}/g" *.xml
     sed -i -e "s/>tez/>mr/g" hive-site.xml
-    cp /home/centos/{core,hdfs,mapred}-site.xml /etc/hadoop/conf/
+    cp /home/centos/{core,hdfs,mapred,yarn}-site.xml /etc/hadoop/conf/
 	cp /home/centos/hive-site.xml /etc/hive/conf
 	cp /home/centos/hbase-site.xml /etc/hbase/conf
     sed -i -e 's/edw0/hadoop/' /etc/hosts

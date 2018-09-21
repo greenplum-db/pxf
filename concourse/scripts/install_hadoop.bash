@@ -21,9 +21,9 @@ function setup_pxf {
 
     local segment=${1}
     local hadoop_ip=${2}
-    scp -r ${SSH_OPTS} pxf_tarball centos@"${segment}":
-    scp ${SSH_OPTS} pxf_src/concourse/setup_pxf_on_segment.sh centos@${segment}:
-    scp ${SSH_OPTS} /singlecluster/hadoop/etc/hadoop/{core,hdfs,mapred}-site.xml centos@${segment}:
+    scp -r ${SSH_OPTS} pxf_tarball centos@${segment}:
+    scp ${SSH_OPTS} pxf_src/concourse/scripts/setup_pxf_on_segment.sh centos@${segment}:
+    scp ${SSH_OPTS} /singlecluster/hadoop/etc/hadoop/{core,hdfs,mapred,yarn}-site.xml centos@${segment}:
     scp ${SSH_OPTS} /singlecluster/hive/conf/hive-site.xml centos@${segment}:
     scp ${SSH_OPTS} /singlecluster/hbase/conf/hbase-site.xml centos@${segment}:
     scp ${SSH_OPTS} /singlecluster/jdbc/postgresql-jdbc*.jar centos@${segment}:
@@ -40,7 +40,7 @@ function install_hadoop_single_cluster() {
     cp /tmp/pxf/lib/pxf-hbase-*.jar /singlecluster/hbase/lib
     scp ${SSH_OPTS} cluster_env_files/etc_hostfile centos@edw0:
     scp ${SSH_OPTS} -rq /singlecluster centos@edw0:
-    scp ${SSH_OPTS} pxf_src/concourse/setup_hadoop_single_cluster.sh centos@edw0:
+    scp ${SSH_OPTS} pxf_src/concourse/scripts/setup_hadoop_single_cluster.sh centos@edw0:
 
     ssh ${SSH_OPTS} centos@edw0 "sudo bash -c \"\
         cd /home/centos && IMPERSONATION=${IMPERSONATION} ./setup_hadoop_single_cluster.sh ${hadoop_ip}

@@ -2,10 +2,11 @@
 
 set -exo pipefail
 
-GPHOME="/usr/local/greenplum-db-devel"
-export PXF_HOME="${GPHOME}/pxf"
 CWDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source "${CWDIR}/pxf_common.bash"
+
+export GPHOME=${GPHOME:-"/usr/local/greenplum-db-devel"}
+export PXF_HOME="${GPHOME}/pxf"
 
 function run_pxf_automation() {
 	cat > /home/gpadmin/run_pxf_automation_test.sh <<-EOF
@@ -117,7 +118,7 @@ function setup_hadoop_client() {
 
 	case ${HADOOP_CLIENT} in
 		CDH|HDP)
-			cp ${hdfsrepo}/hadoop/etc/hadoop/{core,hdfs,mapred}-site.xml /etc/hadoop/conf
+			cp ${hdfsrepo}/hadoop/etc/hadoop/{core,hdfs,mapred,yarn}-site.xml /etc/hadoop/conf
 			cp ${hdfsrepo}/hive/conf/hive-site.xml /etc/hive/conf
 			cp ${hdfsrepo}/hbase/conf/hbase-site.xml /etc/hbase/conf
 			;;
@@ -136,24 +137,12 @@ function setup_hadoop_client() {
 }
 
 function _main() {
-	if [ -z "${TARGET_OS}" ]; then
-		echo "FATAL: TARGET_OS is not set"
-		exit 1
-	fi
-
-	if [ "${TARGET_OS}" != "centos" -a "${TARGET_OS}" != "sles" ]; then
-		echo "FATAL: TARGET_OS is set to an unsupported value: ${TARGET_OS}"
-		echo "Configure TARGET_OS to be centos or sles"
-		exit 1
-	fi
-
 	# Reserve port 5888 for PXF service
 	echo "pxf             5888/tcp               # PXF Service" >> /etc/services
 
 	# Install GPDB
 	install_gpdb
 	setup_gpadmin_user
-	time setup_sshd
 
 	# Install PXF Client (pxf.so file)
 	install_pxf_client
@@ -165,11 +154,11 @@ function _main() {
 			echo "Skipping pxf_tarball..."
 		else
 			tar -xzf pxf_tarball/pxf.tar.gz -C ${GPHOME}
+			chown -R gpadmin:gpadmin ${PXF_HOME}
 		fi
 	else
 		install_pxf_server
 	fi
-	chown -R gpadmin:gpadmin ${GPHOME}/pxf
 
 	# Install Hadoop and Hadoop Client
 	# Doing this before making GPDB cluster to use system python for yum install

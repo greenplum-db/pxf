@@ -142,7 +142,7 @@ jobs:
     - get: gpdb-pxf-dev-centos6
   - task: compile_pxf
     image: gpdb-pxf-dev-centos6
-    file: pxf_src/concourse/compile_pxf.yml
+    file: pxf_src/concourse/tasks/compile_pxf.yml
   - put: pxf_tarball
     params:
       file: pxf_artifacts/pxf.tar.gz
@@ -165,7 +165,7 @@ jobs:
       trigger: true
     - get: gpdb-pxf-dev-centos6-hdp-server
   - task: test_pxf
-    file: pxf_src/concourse/test_pxf.yml
+    file: pxf_src/concourse/tasks/test_pxf.yml
     image: gpdb-pxf-dev-centos6-hdp-server
     params:
       GROUP: gpdb,proxy
@@ -192,7 +192,7 @@ jobs:
       trigger: true
     - get: gpdb-pxf-dev-centos6-hdp-secure
   - task: test_pxf_secure
-    file: pxf_src/concourse/test_pxf_secure.yml
+    file: pxf_src/concourse/tasks/test_pxf_secure.yml
     image: gpdb-pxf-dev-centos6-hdp-secure
     privileged: true
     params:
@@ -249,16 +249,18 @@ jobs:
     - task: intialize_greenplum
       file: ccp_src/ci/tasks/gpinitsystem.yml
     - task: install_hadoop
-      file: pxf_src/concourse/install_hadoop.yml
+      file: pxf_src/concourse/tasks/install_hadoop.yml
       image: gpdb-pxf-dev-centos6-hdp-server
       params:
         IMPERSONATION: {{enable-impersonation-multinode}}
         PXF_JVM_OPTS: {{pxf-jvm-opts}}
   - task: test_pxf_multinode
+    input_mapping:
+      bin_gpdb: gpdb_binary
     on_success:
       <<: *ccp_destroy
     image: gpdb-pxf-dev-centos6-hdp-server
-    file: pxf_src/concourse/test_pxf_multinode.yml
+    file: pxf_src/concourse/tasks/test_pxf_multinode.yml
     params:
       NO_OF_FILES: {{no_of_files}}
 
@@ -280,7 +282,7 @@ jobs:
       trigger: true
     - get: gpdb-pxf-dev-centos6-cdh-server
   - task: test_pxf
-    file: pxf_src/concourse/test_pxf.yml
+    file: pxf_src/concourse/tasks/test_pxf.yml
     image: gpdb-pxf-dev-centos6-cdh-server
     params:
       GROUP: gpdb,proxy
@@ -305,7 +307,7 @@ jobs:
       trigger: true
     - get: gpdb-pxf-dev-centos6-hdp-server
   - task: test_pxf
-    file: pxf_src/concourse/test_pxf.yml
+    file: pxf_src/concourse/tasks/test_pxf.yml
     image: gpdb-pxf-dev-centos6-hdp-server
     params:
       IMPERSONATION: false

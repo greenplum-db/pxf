@@ -31,46 +31,6 @@ function install_gpdb() {
 	tar -xzf bin_gpdb/bin_gpdb.tar.gz -C ${GPHOME}
 }
 
-function setup_local_gpdb() {
-
-    mkdir -p ${GPHOME}
-    tar -xzf gpdb_binary/bin_gpdb.tar.gz -C ${GPHOME}
-    tar -xzf pxf_tarball/pxf.tar.gz -C ${GPHOME}
-    psi_dir=$(find /usr/lib64 -name psi | sort -r | head -1)
-    cp -r ${psi_dir} ${GPHOME}/lib/python
-    if [ -d cluster_env_files ]; then
-        rm -rf /home/gpadmin/.ssh/*
-        cp cluster_env_files/.ssh/* /home/gpadmin/.ssh
-        cp cluster_env_files/.ssh/*.pem /home/gpadmin/.ssh/id_rsa
-        cp cluster_env_files/public_key.openssh /home/gpadmin/.ssh/authorized_keys
-    fi
-    { ssh-keyscan localhost; ssh-keyscan 0.0.0.0; } >> /home/gpadmin/.ssh/known_hosts
-}
-
-function remote_access_to_gpdb() {
-
-    ssh ${SSH_OPTS} gpadmin@mdw "source /usr/local/greenplum-db-devel/greenplum_path.sh && \
-      export MASTER_DATA_DIRECTORY=/data/gpdata/master/gpseg-1 && \
-      echo 'host all all 10.0.0.0/16 trust' >> /data/gpdata/master/gpseg-1/pg_hba.conf && \
-      psql -d template1 -c 'CREATE EXTENSION pxf;' && \
-      psql -d template1 -c 'CREATE DATABASE gpadmin;' && \
-      psql -d template1 -c 'CREATE ROLE root LOGIN;' && \
-      gpstop -u"
-}
-
-function setup_sshd() {
-
-    service sshd start
-    passwd -u root
-    if [ -d cluster_env_files ]; then
-        /bin/cp -Rf cluster_env_files/.ssh/* /root/.ssh
-        /bin/cp -f cluster_env_files/private_key.pem /root/.ssh/id_rsa
-        /bin/cp -f cluster_env_files/public_key.pem /root/.ssh/id_rsa.pub
-        /bin/cp -f cluster_env_files/public_key.openssh /root/.ssh/authorized_keys
-        sed 's/edw0/hadoop/' cluster_env_files/etc_hostfile >> /etc/hosts
-    fi
-}
-
 function make_cluster() {
 	pushd gpdb_src/gpAux/gpdemo
 	su gpadmin -c "make create-demo-cluster"
@@ -91,31 +51,11 @@ function add_user_access() {
 }
 
 function setup_gpadmin_user() {
-
-    groupadd -g 1000 gpadmin && useradd -u 1000 -g 1000 -M gpadmin
-    echo "gpadmin  ALL=(ALL)       NOPASSWD: ALL" > /etc/sudoers.d/gpadmin
-    groupadd supergroup && usermod -a -G supergroup gpadmin
-    mkdir -p /home/gpadmin/.ssh
-    ssh-keygen -t rsa -N "" -f /home/gpadmin/.ssh/id_rsa
-    cat /home/gpadmin/.ssh/id_rsa.pub >> /home/gpadmin/.ssh/authorized_keys
-    chmod 0600 /home/gpadmin/.ssh/authorized_keys
-    { ssh-keyscan localhost; ssh-keyscan 0.0.0.0; } >> /home/gpadmin/.ssh/known_hosts
-	chown -R gpadmin:gpadmin ${GPHOME} /home/gpadmin
-    echo -e "password\npassword" | passwd gpadmin 2> /dev/null
-    echo -e "gpadmin soft core unlimited" >> /etc/security/limits.d/gpadmin-limits.conf
-    echo -e "gpadmin soft nproc 131072" >> /etc/security/limits.d/gpadmin-limits.conf
-    echo -e "gpadmin soft nofile 65536" >> /etc/security/limits.d/gpadmin-limits.conf
-    echo -e "export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk.x86_64" >> /home/gpadmin/.bashrc
-    if [ -d gpdb_src/gpAux/gpdemo ]; then
-        chown -R gpadmin:gpadmin gpdb_src/gpAux/gpdemo
-    fi
-    ln -s ${PWD}/gpdb_src /home/gpadmin/gpdb_src
-    ln -s ${PWD}/pxf_src /home/gpadmin/pxf_src
+	./gpdb_src/concourse/scripts/setup_gpadmin_user.bash ${TARGET_OS}
 }
 
 function install_pxf_client() {
 	# recompile pxf.so file for dev environments only
-	source ${GPHOME}/greenplum_path.sh
 	if [ "${TEST_ENV}" == "dev" ]; then
 		pushd gpdb_src > /dev/null
 		source /opt/gcc_env.sh
