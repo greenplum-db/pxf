@@ -16,7 +16,6 @@ function create_database_and_schema {
     DROP DATABASE IF EXISTS tpch;
     CREATE DATABASE tpch;
     \c tpch;
-    DROP TABLE IF EXISTS lineitem;
     CREATE TABLE lineitem (
         l_orderkey    INTEGER NOT NULL,
         l_partkey     INTEGER NOT NULL,
@@ -36,9 +35,7 @@ function create_database_and_schema {
         l_comment VARCHAR(44) NOT NULL
     ) DISTRIBUTED BY (l_partkey);
 EOF
-    if [ "${BENCHMARK_GPHDFS}" == "true" ]; then
-        psql -c "CREATE TABLE lineitem_gphdfs (LIKE lineitem) DISTRIBUTED BY (l_partkey)"
-    fi
+    psql -c "CREATE EXTERNAL TABLE lineitem_external (like lineitem) LOCATION ('pxf://tmp/lineitem_read/?PROFILE=HdfsTextSimple') FORMAT 'CSV' (DELIMITER '|')"
 }
 
 function create_pxf_external_tables {
@@ -49,6 +46,18 @@ function create_pxf_external_tables {
 function create_gphdfs_external_tables {
     psql -c "CREATE EXTERNAL TABLE gphdfs_lineitem_read (like lineitem) LOCATION ('gphdfs://${HADOOP_HOSTNAME}:8020/tmp/lineitem_read_gphdfs/') FORMAT 'CSV' (DELIMITER '|')"
     psql -c "CREATE WRITABLE EXTERNAL TABLE gphdfs_lineitem_write (like lineitem) LOCATION ('gphdfs://${HADOOP_HOSTNAME}:8020/tmp/lineitem_write_gphdfs/') FORMAT 'CSV' DISTRIBUTED BY (l_partkey)"
+}
+
+function setup_sshd {
+    service sshd start
+    passwd -u root
+
+    if [ -d cluster_env_files ]; then
+        /bin/cp -Rf cluster_env_files/.ssh/* /root/.ssh
+        /bin/cp -f cluster_env_files/private_key.pem /root/.ssh/id_rsa
+        /bin/cp -f cluster_env_files/public_key.pem /root/.ssh/id_rsa.pub
+        /bin/cp -f cluster_env_files/public_key.openssh /root/.ssh/authorized_keys
+    fi
 }
 
 function write_data {
@@ -93,7 +102,7 @@ function gphdfs_validate_write_to_external {
     local external_values
     local gpdb_values
     external_values=$(psql -t -c "SELECT ${VALIDATION_QUERY} FROM gphdfs_lineitem_read_after_write")
-    gpdb_values=$(psql -t -c "SELECT ${VALIDATION_QUERY} FROM lineitem_gphdfs")
+    gpdb_values=$(psql -t -c "SELECT ${VALIDATION_QUERY} FROM lineitem")
 
     cat << EOF
 
@@ -186,7 +195,7 @@ EOF
 #  GPHDFS WRITE BENCHMARK  #
 ############################
 EOF
-    time write_data "lineitem_gphdfs" "gphdfs_lineitem_write"
+    time write_data "lineitem" "gphdfs_lineitem_write"
     cat << EOF
 Validating data
 ---------------
@@ -204,9 +213,9 @@ function main {
     create_database_and_schema
 
     echo "Loading data from external into GPDB..."
-    write_data "pxf_lineitem_read" "lineitem"
+    write_data "lineitem_external" "lineitem"
     echo "Validating loaded data..."
-    validate_write_to_gpdb "pxf_lineitem_read" "lineitem"
+    validate_write_to_gpdb "lineitem_external" "lineitem"
     echo "Data loading and validation complete!\n"
 
     if [ "${BENCHMARK_GPHDFS}" == "true" ]; then
