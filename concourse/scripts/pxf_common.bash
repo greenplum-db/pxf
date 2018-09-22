@@ -29,7 +29,7 @@ function run_regression_test() {
 	su gpadmin -c "bash /home/gpadmin/run_regression_test.sh $(pwd)"
 }
 
-function install_gpdb() {
+function install_gpdb_binary() {
     service sshd start
     mkdir -p ${GPHOME}
     tar -xzf bin_gpdb/bin_gpdb.tar.gz -C ${GPHOME}
@@ -67,13 +67,13 @@ function remote_access_to_gpdb() {
 }
 
 
-function make_cluster() {
+function create_gpdb_cluster() {
 	pushd gpdb_src/gpAux/gpdemo
 	su gpadmin -c "make create-demo-cluster"
 	popd
 }
 
-function add_user_access() {
+function add_remote_user_access_for_gpdb() {
 	local username=${1}
 	# load local cluster configuration
 	pushd gpdb_src/gpAux/gpdemo
@@ -142,6 +142,78 @@ function setup_hdp_repo() {
 	EOF
 }
 
+function setup_impersonation() {
+    local GPHD_ROOT=${1}
+
+	# enable impersonation by gpadmin user
+    if [ "${IMPERSONATION}" == "true" ]; then
+         echo 'Impersonation is enabled, adding support for gpadmin proxy user'
+         cat > proxy-config.xml <<-EOF
+         <property>
+             <name>hadoop.proxyuser.gpadmin.hosts</name>
+             <value>*</value>
+         </property>
+         <property>
+             <name>hadoop.proxyuser.gpadmin.groups</name>
+             <value>*</value>
+         </property>
+         <property>
+             <name>hadoop.security.authorization</name>
+             <value>true</value>
+         </property>
+         <property>
+             <name>hbase.security.authorization</name>
+             <value>true</value>
+         </property>
+         <property>
+             <name>hbase.rpc.protection</name>
+             <value>authentication</value>
+         </property>
+         <property>
+             <name>hbase.coprocessor.master.classes</name>
+             <value>org.apache.hadoop.hbase.security.access.AccessController</value>
+         </property>
+         <property>
+             <name>hbase.coprocessor.region.classes</name>
+             <value>org.apache.hadoop.hbase.security.access.AccessController,org.apache.hadoop.hbase.security.access.SecureBulkLoadEndpoint</value>
+         </property>
+         <property>
+             <name>hbase.coprocessor.regionserver.classes</name>
+             <value>org.apache.hadoop.hbase.security.access.AccessController</value>
+         </property>
+EOF
+         sed -i -e '/<configuration>/r proxy-config.xml' ${GPHD_ROOT}/hadoop/etc/hadoop/core-site.xml ${GPHD_ROOT}/hbase/conf/hbase-site.xml
+         rm proxy-config.xml
+    elif [ "${IMPERSONATION}" == "false" ]; then
+        echo 'Impersonation is disabled, updating pxf-env.sh property'
+        su gpadmin -c "sed -i -e 's|^[[:blank:]]*export PXF_USER_IMPERSONATION=.*$|export PXF_USER_IMPERSONATION=false|g' ${PXF_HOME}/conf/pxf-env.sh"
+    else
+        echo "ERROR: Invalid or missing CI property value: IMPERSONATION=${IMPERSONATION}"
+        exit 1
+    fi
+}
+
+function start_hadoop_services() {
+    local GPHD_ROOT=${1}
+
+    # Start all hadoop services
+    ${GPHD_ROOT}/bin/init-gphd.sh
+    ${GPHD_ROOT}/bin/start-hdfs.sh
+    ${GPHD_ROOT}/bin/start-zookeeper.sh
+    ${GPHD_ROOT}/bin/start-yarn.sh
+    ${GPHD_ROOT}/bin/start-hbase.sh
+    ${GPHD_ROOT}/bin/start-hive.sh
+
+	# list running Hadoop daemons
+	jps
+
+	# grant gpadmin user admin privilege for feature tests to be able to run on secured cluster
+	if [ "${IMPERSONATION}" == "true" ]; then
+		echo 'Granting gpadmin user admin privileges for HBase'
+		echo "grant 'gpadmin', 'RWXCA'" | hbase shell
+	fi
+}
+
 function add_jdbc_jar_to_pxf_public_classpath() {
 	local singlecluster=${1}
 
@@ -159,7 +231,6 @@ function start_pxf_server() {
 
 	echo 'Start PXF service'
 
-	su gpadmin -c "bash ./bin/pxf init"
-	su gpadmin -c "bash ./bin/pxf start"
+	su gpadmin -c "./bin/pxf init && ./bin/pxf start"
 	popd > /dev/null
 }

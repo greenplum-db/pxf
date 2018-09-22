@@ -35,10 +35,8 @@ function setup_hadoop_client() {
 
 function add_jdbc_jar_to_pxf_public_classpath() {
 	# append the full path to PostgreSQL JDBC JAR file to pxf_public.classpath for JDBC tests
-	mkdir -p /tmp/jdbc && chmod a+r /tmp/jdbc
-	cp /home/centos/postgresql-jdbc*.jar /tmp/jdbc/
-	chmod a+r /tmp/jdbc/*.*
-	ls /tmp/jdbc/postgresql-jdbc*.jar >> ${PXF_HOME}/conf/pxf-public.classpath
+	cp /home/centos/postgresql-jdbc*.jar ${PXF_HOME}/lib/postgresql-jdbc.jar
+	ls ${PXF_HOME}/lib/postgresql-jdbc.jar >> ${PXF_HOME}/conf/pxf-public.classpath
 	cat ${PXF_HOME}/conf/pxf-public.classpath
 }
 

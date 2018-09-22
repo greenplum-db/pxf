@@ -128,7 +128,7 @@ function _main() {
 	echo "pxf             5888/tcp               # PXF Service" >> /etc/services
 
 	set_hostname
-	install_gpdb
+	install_gpdb_binary
 	setup_gpadmin_user
 	# setup hadoop before making GPDB cluster
 	start_hadoop_secure
@@ -143,8 +143,8 @@ function _main() {
 	fi
 
 	secure_pxf
-	make_cluster
-	add_user_access "gpadmin"
+	create_gpdb_cluster
+	add_remote_user_access_for_gpdb "testuser"
 	start_pxf_server
 	# Let's make sure that pxf_automation directories are writeable
 	chmod a+w pxf_src/automation
@@ -155,4 +155,4 @@ function _main() {
 	fi
 }
 
-_main "$@"
+_main

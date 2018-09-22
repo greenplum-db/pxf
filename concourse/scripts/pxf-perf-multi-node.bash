@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -eo pipefail
+
 export PGHOST=mdw
 export PGUSER=gpadmin
 export PGDATABASE=tpch
@@ -8,8 +10,6 @@ CWDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 HADOOP_HOSTNAME="ccp-$(cat terraform_dataproc/name)-m"
 VALIDATION_QUERY="COUNT(*) AS Total, COUNT(DISTINCT l_orderkey) AS ORDERKEYS, SUM(l_partkey) AS PARTKEYSUM, COUNT(DISTINCT l_suppkey) AS SUPPKEYS, SUM(l_linenumber) AS LINENUMBERSUM"
 source "${CWDIR}/pxf_common.bash"
-
-set -eo pipefail
 
 function create_database_and_schema {
     psql -d postgres <<-EOF
@@ -207,7 +207,7 @@ function main {
     setup_gpadmin_user
     setup_sshd
     remote_access_to_gpdb
-    install_gpdb
+    install_gpdb_binary
 
     source ${GPHOME}/greenplum_path.sh
     create_database_and_schema
