@@ -234,3 +234,6 @@ jobs:
     file: pxf_src/concourse/tasks/pxf-perf-multi-node.yml
     params:
       BENCHMARK_GPHDFS: true
+      AWS_ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+      AWS_SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+      AWS_DEFAULT_REGION: {{aws-region}}

@@ -50,7 +50,7 @@ fly -t ud set-pipeline -p pxf_pr \
 # Deploy the performance pipeline
 
 ```
-fly -t ud set-pipeline -p pxf_perf -c ./pxf-perf-multi-node.yml \
+fly -t ud set-pipeline -p pxf_perf -c ./perf_pipeline.yml \
     -l ~/workspace/continuous-integration/secrets/gpdb_common-ci-secrets.yml \
     -l ~/workspace/continuous-integration/secrets/gpdb_master-ci-secrets.yml \
     -l ~/workspace/continuous-integration/secrets/pxf-secrets.yml \
@@ -61,7 +61,7 @@ fly -t ud set-pipeline -p pxf_perf -c ./pxf-perf-multi-node.yml \
 ```
 
 ```
-fly -t ud set-pipeline -p pxf_perf-<DEV-BRANCH> -c ./pxf-perf-multi-node.yml \
+fly -t ud set-pipeline -p pxf_perf-<DEV-BRANCH> -c ./perf_pipeline.yml \
     -l ~/workspace/continuous-integration/secrets/gpdb_common-ci-secrets.yml \
     -l ~/workspace/continuous-integration/secrets/gpdb_master-ci-secrets.yml \
     -l ~/workspace/continuous-integration/secrets/pxf-secrets.yml \

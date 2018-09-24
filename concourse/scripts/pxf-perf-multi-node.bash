@@ -36,6 +36,30 @@ function create_database_and_schema {
     ) DISTRIBUTED BY (l_partkey);
 EOF
     psql -c "CREATE EXTERNAL TABLE lineitem_external (like lineitem) LOCATION ('pxf://tmp/lineitem_read/?PROFILE=HdfsTextSimple') FORMAT 'CSV' (DELIMITER '|')"
+    psql -c "CREATE OR REPLACE FUNCTION write_to_s3() RETURNS integer AS '\$libdir/gps3ext.so', 's3_export' LANGUAGE C STABLE"
+    psql -c "CREATE OR REPLACE FUNCTION read_from_s3() RETURNS integer AS '\$libdir/gps3ext.so', 's3_import' LANGUAGE C STABLE"
+    psql -c "CREATE PROTOCOL s3 (writefunc = write_to_s3, readfunc = read_from_s3)"
+
+    cat > /tmp/s3.conf <<-EOF
+[default]
+accessid = "${AWS_ACCESS_KEY_ID}"
+secret = "${AWS_SECRET_ACCESS_KEY}"
+threadnum = 4
+chunksize = 67108864
+low_speed_limit = 10240
+low_speed_time = 60
+encryption = true
+version = 1
+proxy = ""
+autocompress = true
+verifycert = true
+server_side_encryption = ""
+# gpcheckcloud config
+gpcheckcloud_newline = "\n"
+EOF
+    cat cluster_env_files/etc_hostfile | grep sdw | cut -d ' ' -f 2 > /tmp/segment_hosts
+    gpssh -u gpadmin -f /tmp/segment_hosts -v -s -e 'mkdir ~/s3/'
+    gpscp -u gpadmin -f /tmp/segment_hosts /tmp/s3.conf =:~/s3/s3.conf
 }
 
 function create_pxf_external_tables {
@@ -203,6 +227,36 @@ EOF
     gphdfs_validate_write_to_external
 }
 
+function create_s3_extension_external_tables {
+    psql -c "CREATE EXTERNAL TABLE lineitem_s3_c (like lineitem)
+        location('s3://s3.us-west-2.amazonaws.com/gpdb-ud-scratch/s3-profile-test/lineitem/10/ config=/home/gpadmin/s3/s3.conf') format 'CSV' (DELIMITER '|');"
+    psql -c "CREATE EXTERNAL TABLE lineitem_s3_pxf (like lineitem)
+        location('pxf://s3-profile-test/lineitem/10/?PROFILE=HdfsTextSimple') format 'CSV' (DELIMITER '|');"
+}
+
+function run_s3_extension_benchmark {
+    create_s3_extension_external_tables
+
+    cat << EOF
+
+
+############################
+# S3 C Ext READ BENCHMARK  #
+############################
+EOF
+    time psql -c "select * from lineitem_s3_c" > /dev/null
+
+    cat << EOF
+
+
+############################
+#  S3 PXF READ BENCHMARK   #
+############################
+EOF
+
+	time psql -c "select * from lineitem_s3_pxf" > /dev/null
+}
+
 function main {
     setup_gpadmin_user
     setup_sshd
@@ -217,6 +271,8 @@ function main {
     echo "Validating loaded data..."
     validate_write_to_gpdb "lineitem_external" "lineitem"
     echo "Data loading and validation complete!\n"
+
+    run_s3_extension_benchmark
 
     if [ "${BENCHMARK_GPHDFS}" == "true" ]; then
         run_gphdfs_benchmark
