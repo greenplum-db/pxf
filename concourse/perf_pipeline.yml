@@ -20,6 +20,61 @@ dataproc_destroy_anchor: &ccp_destroy
       get_params:
         action: destroy
 
+set_failed_gpdb_anchor: &set_failed
+  do:
+  - aggregate:
+    - task: on_failure_set_failed_gpdb
+      input_mapping:
+        terraform: terraform_gpdb
+      config:
+        platform: linux
+        image_resource:
+          type: docker-image
+          source:
+            repository: toolsmiths/ccp
+            tag: "7"
+        inputs:
+        - name: ccp_src
+        - name: terraform_gpdb
+        run:
+          path: 'ccp_src/((tf-cloud-provider))/ccp_failed_test.sh'
+        params:
+          GOOGLE_CREDENTIALS: {{google-service-account-key}}
+          GOOGLE_PROJECT_ID: {{google-project-id}}
+          GOOGLE_ZONE: {{google-zone}}
+          GOOGLE_SERVICE_ACCOUNT: {{google-service-account}}
+          AWS_ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+          AWS_SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+          AWS_DEFAULT_REGION: {{tf-machine-region}}
+          BUCKET_PATH: {{tf-bucket-path}}
+          BUCKET_NAME: {{tf-bucket-name}}
+
+    - task: on_failure_set_failed_dataproc
+      input_mapping:
+        terraform: terraform_dataproc
+      config:
+        platform: linux
+        image_resource:
+          type: docker-image
+          source:
+            repository: toolsmiths/ccp
+            tag: "7"
+        inputs:
+        - name: ccp_src
+        - name: terraform_dataproc
+        run:
+          path: 'ccp_src/((tf-cloud-provider))/ccp_failed_test.sh'
+        params:
+          GOOGLE_CREDENTIALS: {{google-service-account-key}}
+          GOOGLE_PROJECT_ID: {{google-project-id}}
+          GOOGLE_ZONE: {{google-zone}}
+          GOOGLE_SERVICE_ACCOUNT: {{google-service-account}}
+          AWS_ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+          AWS_SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+          AWS_DEFAULT_REGION: {{tf-machine-region}}
+          BUCKET_PATH: {{tf-bucket-path}}
+          BUCKET_NAME: {{tf-bucket-name}}
+
 resource_types:
 - name: terraform
   type: docker-image
@@ -128,20 +183,10 @@ jobs:
       file: pxf_artifacts/pxf.tar.gz
 
 - name: pxf_perf_multinode
+  ensure:
+    <<: *set_failed
   on_success:
     <<: *ccp_destroy
-  on_failure:
-    do:
-      - task: sleep_for_two_hours
-        config:
-          platform: linux
-          run:
-            path: bash
-            args:
-            - -c
-            - sleep 7200
-        image: ccp-7
-      - <<: *ccp_destroy
   plan:
   - get: ccp_src
   - get: gpdb_src
@@ -161,6 +206,20 @@ jobs:
   - get: gpdb-pxf-dev-centos6-hdp-server
 
   - aggregate:
+    - task: clean_up_s3
+      config:
+        platform: linux
+        image_resource:
+          type: docker-image
+          source:
+            repository: toolsmiths/ccp
+            tag: "7"
+        run:
+          cmd: 'aws s3 rm s3://gpdb-ud-scratch/s3-profile-test/lineitem/10/output/*'
+        params:
+          AWS_ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+          AWS_SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+          AWS_DEFAULT_REGION: {{tf-machine-region}}
 
     - do:
       - put: terraform_gpdb

@@ -77,7 +77,7 @@ function download_jar_dependencies {
     popd
     gpscp -r -u gpadmin -f /tmp/segment_hosts pxf-jars =:~/
     rm -rf pxf-jars
-    gpssh -u gpadmin -f /tmp/segment_hosts -v -s -e 'source /usr/local/greenplum-db-devel/greenplum_path.sh && echo /home/gpadmin/pxf-jars/*.jar >> $GPHOME/pxf/conf/pxf-public.classpath && $GPHOME/pxf/bin/pxf restart'
+    gpssh -u gpadmin -f /tmp/segment_hosts -v -s -e 'source /usr/local/greenplum-db-devel/greenplum_path.sh && echo "/home/gpadmin/pxf-jars/*.jar" >> $GPHOME/pxf/conf/pxf-public.classpath && $GPHOME/pxf/bin/pxf restart'
 }
 
 function create_pxf_external_tables {
@@ -247,9 +247,14 @@ EOF
 
 function create_s3_extension_external_tables {
     psql -c "CREATE EXTERNAL TABLE lineitem_s3_c (like lineitem)
-        location('s3://s3.us-west-2.amazonaws.com/gpdb-ud-scratch/s3-profile-test/lineitem/10/ config=/home/gpadmin/s3/s3.conf') format 'CSV' (DELIMITER '|');"
+        location('s3://s3.us-west-2.amazonaws.com/gpdb-ud-scratch/s3-profile-test/lineitem/10/ config=/home/gpadmin/s3/s3.conf') FORMAT 'CSV' (DELIMITER '|')"
     psql -c "CREATE EXTERNAL TABLE lineitem_s3_pxf (like lineitem)
         location('pxf://s3-profile-test/lineitem/10/?PROFILE=HdfsTextSimple') format 'CSV' (DELIMITER '|');"
+
+    psql -c "CREATE WRITABLE EXTERNAL TABLE lineitem_s3_c_write (like lineitem)
+        LOCATION('s3://s3.us-west-2.amazonaws.com/gpdb-ud-scratch/s3-profile-test/lineitem/10/output/ config=/home/gpadmin/s3/s3.conf') FORMAT 'CSV'"
+    psql -c "CREATE WRITABLE EXTERNAL TABLE lineitem_s3_pxf_write (LIKE lineitem)
+        LOCATION('pxf://s3-profile-test/lineitem/10/output/?PROFILE=HdfsTextSimple') FORMAT 'CSV'"
 }
 
 function run_s3_extension_benchmark {
@@ -264,6 +269,15 @@ function run_s3_extension_benchmark {
 ############################
 EOF
     time psql -c "SELECT * FROM lineitem_s3_c" > /dev/null
+
+    cat << EOF
+
+
+############################
+# S3 C Ext WRITE BENCHMARK #
+############################
+EOF
+    time psql -c "INSERT INTO lineitem_s3_c_write SELECT * FROM lineitem"
 
     # We need to update core-site.xml to point to the the S3 bucket
     # and we need to provide AWS credentials
@@ -302,6 +316,15 @@ EOF
 
 	time psql -c "SELECT * FROM lineitem_s3_pxf" > /dev/null
 
+    cat << EOF
+
+
+############################
+#  S3 PXF WRITE BENCHMARK  #
+############################
+EOF
+    time psql -c "INSERT INTO lineitem_s3_pxf_write SELECT * FROM lineitem"
+
 	# Restore core-site
 	gpssh -u centos -f /tmp/segment_hosts -v -s -e "sudo cp /etc/hadoop/conf/core-site.xml /etc/hadoop/conf/core-site.xml.s3"
     gpssh -u centos -f /tmp/segment_hosts -v -s -e "sudo cp /etc/hadoop/conf/core-site.xml.back /etc/hadoop/conf/core-site.xml"
@@ -321,7 +344,7 @@ function main {
     write_data "lineitem_external" "lineitem"
     echo "Validating loaded data..."
     validate_write_to_gpdb "lineitem_external" "lineitem"
-    echo "Data loading and validation complete!\n"
+    echo -e "Data loading and validation complete\n"
 
     run_s3_extension_benchmark
 

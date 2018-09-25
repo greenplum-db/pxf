@@ -1,4 +1,4 @@
-tf-bucket-path: clusters-google-dataproc/
+tf-bucket-path: clusters-google/
 
 enable-impersonation-multinode: true
 pxf-jvm-opts: "-Xmx512m -Xms512m"
