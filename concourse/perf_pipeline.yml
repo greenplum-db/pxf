@@ -219,7 +219,8 @@ jobs:
           args:
           - s3
           - rm
-          - s3://gpdb-ud-scratch/s3-profile-test/output/*
+          - s3://gpdb-ud-scratch/s3-profile-test/output/
+          - --recursive
         params:
           AWS_ACCESS_KEY_ID: {{tf-machine-access-key-id}}
           AWS_SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
