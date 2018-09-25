@@ -5,7 +5,7 @@ if [[ "${ROLE}" == 'Master' ]]; then
   hadoop fs -cp /tmp/lineitem_read /tmp/lineitem_read_gphdfs
 fi
 
-cat > /tmp/core-site-patch.xml <<EOF
+cat > /tmp/core-site-patch.xml <<-EOF
   <property>
     <name>hadoop.proxyuser.gpadmin.hosts</name>
     <value>*</value>
@@ -16,6 +16,6 @@ cat > /tmp/core-site-patch.xml <<EOF
   </property>
 EOF
 
-sed -i '/<\/configuration>/e cat /tmp/core-site-patch.xml' \
+sed -i -e '/<configuration>/r /tmp/core-site-patch.xml' \
      /etc/hadoop/conf/core-site.xml
 rm -rf /tmp/core-site-patch.xml
