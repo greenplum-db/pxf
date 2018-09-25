@@ -62,6 +62,23 @@ EOF
     gpscp -u gpadmin -f /tmp/segment_hosts /tmp/s3.conf =:~/s3/s3.conf
 }
 
+function download_jar_dependencies {
+    mkdir pxf-jars
+    pushd pxf-jars
+        wget http://central.maven.org/maven2/com/amazonaws/aws-java-sdk-core/1.11.406/aws-java-sdk-core-1.11.406.jar
+        wget http://central.maven.org/maven2/com/amazonaws/aws-java-sdk-kms/1.11.406/aws-java-sdk-kms-1.11.406.jar
+        wget http://central.maven.org/maven2/com/amazonaws/aws-java-sdk-s3/1.11.406/aws-java-sdk-s3-1.11.406.jar
+        wget http://central.maven.org/maven2/org/apache/hadoop/hadoop-aws/2.8.2/hadoop-aws-2.8.2.jar
+        wget http://central.maven.org/maven2/org/apache/httpcomponents/httpclient/4.5.2/httpclient-4.5.2.jar
+        wget http://central.maven.org/maven2/org/apache/httpcomponents/httpcore/4.4.4/httpcore-4.4.4.jar
+        wget http://central.maven.org/maven2/com/fasterxml/jackson/core/jackson-databind/2.6.7.1/jackson-databind-2.6.7.1.jar
+        wget http://central.maven.org/maven2/com/fasterxml/jackson/core/jackson-core/2.6.7/jackson-core-2.6.7.jar
+        wget http://central.maven.org/maven2/com/fasterxml/jackson/core/jackson-annotations/2.6.0/jackson-annotations-2.6.0.jar
+    popd
+    gpscp -r -u gpadmin -f /tmp/segment_hosts pxf-jars =:~/
+    rm -rf pxf-jars
+}
+
 function create_pxf_external_tables {
     psql -c "CREATE EXTERNAL TABLE pxf_lineitem_read (like lineitem) LOCATION ('pxf://tmp/lineitem_read/?PROFILE=HdfsTextSimple') FORMAT 'CSV' (DELIMITER '|')"
     psql -c "CREATE WRITABLE EXTERNAL TABLE pxf_lineitem_write (like lineitem) LOCATION ('pxf://tmp/lineitem_write/?PROFILE=HdfsTextSimple') FORMAT 'CSV' DISTRIBUTED BY (l_partkey)"
@@ -89,7 +106,7 @@ function write_data {
     local source
     dest=${2}
     source=${1}
-    psql -c "INSERT INTO ${dest} select * from ${source}"
+    psql -c "INSERT INTO ${dest} SELECT * FROM ${source}"
 }
 
 function validate_write_to_gpdb {
@@ -183,7 +200,7 @@ function run_pxf_benchmark {
 #    PXF READ BENCHMARK    #
 ############################
 EOF
-    time psql -c "select * from pxf_lineitem_read" > /dev/null
+    time psql -c "SELECT * FROM pxf_lineitem_read" > /dev/null
 
     cat << EOF
 
@@ -210,7 +227,7 @@ function run_gphdfs_benchmark {
 #  GPHDFS READ BENCHMARK   #
 ############################
 EOF
-    time psql -c "select * from gphdfs_lineitem_read" > /dev/null
+    time psql -c "SELECT * FROM gphdfs_lineitem_read" > /dev/null
 
     cat << EOF
 
@@ -236,6 +253,7 @@ function create_s3_extension_external_tables {
 
 function run_s3_extension_benchmark {
     create_s3_extension_external_tables
+    download_jar_dependencies
 
     cat << EOF
 
@@ -244,7 +262,29 @@ function run_s3_extension_benchmark {
 # S3 C Ext READ BENCHMARK  #
 ############################
 EOF
-    time psql -c "select * from lineitem_s3_c" > /dev/null
+    time psql -c "SELECT * FROM lineitem_s3_c" > /dev/null
+
+    # We need to update core-site.xml to point to the the S3 bucket
+    # and we need to provide AWS credentials
+
+    cat > /tmp/core-site-patch.xml <<-EOF
+    <property>
+      <name>fs.defaultFS</name>
+      <value>s3a://gpdb-ud-scratch</value>
+    </property>
+    <property>
+      <name>fs.s3a.access.key</name>
+      <value>${AWS_ACCESS_KEY_ID}</value>
+    </property>
+    <property>
+      <name>fs.s3a.secret.key</name>
+      <value>${AWS_SECRET_ACCESS_KEY}</value>
+    </property>
+EOF
+
+    gpscp -u gpadmin -f /tmp/segment_hosts /tmp/core-site-patch.xml =:~/tmp/
+    gpssh -u gpadmin -f /tmp/segment_hosts -v -s -e "sed -i 's/fs.defaultFS/fs.defaultFSOld/g' /etc/hadoop/conf/core-site.xml"
+    gpssh -u gpadmin -f /tmp/segment_hosts -v -s -e "sed -i -e '/<configuration>/r /tmp/core-site-patch.xml' /etc/hadoop/conf/core-site.xml"
 
     cat << EOF
 
@@ -254,7 +294,7 @@ EOF
 ############################
 EOF
 
-	time psql -c "select * from lineitem_s3_pxf" > /dev/null
+	time psql -c "SELECT * FROM lineitem_s3_pxf" > /dev/null
 }
 
 function main {
