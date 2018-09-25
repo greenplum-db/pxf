@@ -255,7 +255,7 @@ function create_s3_extension_external_tables {
     psql -c "CREATE WRITABLE EXTERNAL TABLE lineitem_s3_c_write (like lineitem)
         LOCATION('s3://s3.us-west-2.amazonaws.com/gpdb-ud-scratch/s3-profile-test/output/ config=/home/gpadmin/s3/s3.conf') FORMAT 'CSV'"
     psql -c "CREATE WRITABLE EXTERNAL TABLE lineitem_s3_pxf_write (LIKE lineitem)
-        LOCATION('pxf://s3-profile-test/output/?PROFILE=HdfsTextSimple') FORMAT 'CSV'"
+        LOCATION('pxf://s3-profile-test/output/?PROFILE=HdfsTextSimple&COMPRESSION_CODEC=org.apache.hadoop.io.compress.GzipCodec') FORMAT 'CSV'"
 }
 
 function assert_count_in_table {
@@ -311,6 +311,10 @@ EOF
     <property>
       <name>fs.s3a.secret.key</name>
       <value>${AWS_SECRET_ACCESS_KEY}</value>
+    </property>
+    <property>
+      <name>fs.s3a.fast.upload</name>
+      <value>true</value>
     </property>
 </configuration>
 EOF

@@ -162,7 +162,7 @@ resources:
       secret_access_key: {{tf-machine-secret-access-key}}
       region_name: {{aws-region}}
       bucket: {{tf-bucket-name}}
-      bucket_path: clusters-google-dataproc/
+      bucket_path: {{tf-bucket-path}}
 
 jobs:
 
@@ -248,7 +248,7 @@ jobs:
           AWS_ACCESS_KEY_ID: {{tf-machine-access-key-id}}
           AWS_SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
           AWS_DEFAULT_REGION: {{aws-region}}
-          BUCKET_PATH: clusters-google-dataproc/
+          BUCKET_PATH: {{tf-bucket-path}}
           BUCKET_NAME: {{tf-bucket-name}}
           PLATFORM: centos7
           CLOUD_PROVIDER: google
