@@ -9,6 +9,7 @@ GPHOME="/usr/local/greenplum-db-devel"
 CWDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 HADOOP_HOSTNAME="ccp-$(cat terraform_dataproc/name)-m"
 VALIDATION_QUERY="COUNT(*) AS Total, COUNT(DISTINCT l_orderkey) AS ORDERKEYS, SUM(l_partkey) AS PARTKEYSUM, COUNT(DISTINCT l_suppkey) AS SUPPKEYS, SUM(l_linenumber) AS LINENUMBERSUM"
+LINEITEM_COUNT="unset"
 source "${CWDIR}/pxf_common.bash"
 
 function create_database_and_schema {
@@ -201,7 +202,7 @@ function run_pxf_benchmark {
 #    PXF READ BENCHMARK    #
 ############################
 EOF
-    time psql -c "SELECT * FROM pxf_lineitem_read" > /dev/null
+    time psql -c "SELECT COUNT(*) FROM pxf_lineitem_read"
 
     cat << EOF
 
@@ -228,7 +229,7 @@ function run_gphdfs_benchmark {
 #  GPHDFS READ BENCHMARK   #
 ############################
 EOF
-    time psql -c "SELECT * FROM gphdfs_lineitem_read" > /dev/null
+    time psql -c "SELECT COUNT(*) FROM gphdfs_lineitem_read"
 
     cat << EOF
 
@@ -252,9 +253,21 @@ function create_s3_extension_external_tables {
         location('pxf://s3-profile-test/lineitem/10/?PROFILE=HdfsTextSimple') format 'CSV' (DELIMITER '|');"
 
     psql -c "CREATE WRITABLE EXTERNAL TABLE lineitem_s3_c_write (like lineitem)
-        LOCATION('s3://s3.us-west-2.amazonaws.com/gpdb-ud-scratch/s3-profile-test/lineitem/10/output/ config=/home/gpadmin/s3/s3.conf') FORMAT 'CSV'"
+        LOCATION('s3://s3.us-west-2.amazonaws.com/gpdb-ud-scratch/s3-profile-test/output/ config=/home/gpadmin/s3/s3.conf') FORMAT 'CSV'"
     psql -c "CREATE WRITABLE EXTERNAL TABLE lineitem_s3_pxf_write (LIKE lineitem)
-        LOCATION('pxf://s3-profile-test/lineitem/10/output/?PROFILE=HdfsTextSimple') FORMAT 'CSV'"
+        LOCATION('pxf://s3-profile-test/output/?PROFILE=HdfsTextSimple') FORMAT 'CSV'"
+}
+
+function assert_count_in_table {
+    local table_name="$1"
+    local expected_count="$2"
+
+    local num_rows=$(time psql -t -c "SELECT COUNT(*) FROM $table_name" | tr -d ' ')
+
+    if [ ${num_rows} != ${expected_count} ]; then
+        echo "Expected number of rows to be ${expected_count} but was ${num_rows}"
+        exit 1
+    fi
 }
 
 function run_s3_extension_benchmark {
@@ -268,7 +281,8 @@ function run_s3_extension_benchmark {
 # S3 C Ext READ BENCHMARK  #
 ############################
 EOF
-    time psql -c "SELECT * FROM lineitem_s3_c" > /dev/null
+
+    assert_count_in_table "lineitem_s3_c" "${LINEITEM_COUNT}"
 
     cat << EOF
 
@@ -313,8 +327,7 @@ EOF
 #  S3 PXF READ BENCHMARK   #
 ############################
 EOF
-
-	time psql -c "SELECT * FROM lineitem_s3_pxf" > /dev/null
+    assert_count_in_table "lineitem_s3_pxf" "${LINEITEM_COUNT}"
 
     cat << EOF
 
@@ -325,8 +338,8 @@ EOF
 EOF
     time psql -c "INSERT INTO lineitem_s3_pxf_write SELECT * FROM lineitem"
 
-	# Restore core-site
-	gpssh -u centos -f /tmp/segment_hosts -v -s -e "sudo cp /etc/hadoop/conf/core-site.xml /etc/hadoop/conf/core-site.xml.s3"
+    # Restore core-site
+    gpssh -u centos -f /tmp/segment_hosts -v -s -e "sudo cp /etc/hadoop/conf/core-site.xml /etc/hadoop/conf/core-site.xml.s3"
     gpssh -u centos -f /tmp/segment_hosts -v -s -e "sudo cp /etc/hadoop/conf/core-site.xml.back /etc/hadoop/conf/core-site.xml"
     gpssh -u gpadmin -f /tmp/segment_hosts -v -s -e 'source /usr/local/greenplum-db-devel/greenplum_path.sh && $GPHOME/pxf/bin/pxf restart'
 }
@@ -345,6 +358,7 @@ function main {
     echo "Validating loaded data..."
     validate_write_to_gpdb "lineitem_external" "lineitem"
     echo -e "Data loading and validation complete\n"
+    LINEITEM_COUNT=$(psql -t -c "SELECT COUNT(*) FROM lineitem" | tr -d ' ')
 
     run_s3_extension_benchmark
 

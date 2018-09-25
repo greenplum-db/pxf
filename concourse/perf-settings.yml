@@ -1,4 +1,5 @@
 tf-bucket-path: clusters-google/
+tf-cloud-provider: google
 
 enable-impersonation-multinode: true
 pxf-jvm-opts: "-Xmx512m -Xms512m"

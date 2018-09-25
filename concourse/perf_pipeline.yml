@@ -215,7 +215,11 @@ jobs:
             repository: toolsmiths/ccp
             tag: "7"
         run:
-          cmd: 'aws s3 rm s3://gpdb-ud-scratch/s3-profile-test/lineitem/10/output/*'
+          path: aws
+          args:
+          - s3
+          - rm
+          - s3://gpdb-ud-scratch/s3-profile-test/output/*
         params:
           AWS_ACCESS_KEY_ID: {{tf-machine-access-key-id}}
           AWS_SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
