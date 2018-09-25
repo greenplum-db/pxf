@@ -77,6 +77,7 @@ function download_jar_dependencies {
     popd
     gpscp -r -u gpadmin -f /tmp/segment_hosts pxf-jars =:~/
     rm -rf pxf-jars
+    gpssh -u gpadmin -f /tmp/segment_hosts -v -s -e 'source /usr/local/greenplum-db-devel/greenplum_path.sh && echo /home/gpadmin/pxf-jars/*.jar >> $GPHOME/pxf/conf/pxf-public.classpath && $GPHOME/pxf/bin/pxf restart'
 }
 
 function create_pxf_external_tables {
@@ -267,8 +268,11 @@ EOF
     # We need to update core-site.xml to point to the the S3 bucket
     # and we need to provide AWS credentials
 
-    cat > /tmp/core-site-patch.xml <<-EOF
-    <property>
+    cat > /tmp/core-site.xml <<-EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<configuration>
+<property>
       <name>fs.defaultFS</name>
       <value>s3a://gpdb-ud-scratch</value>
     </property>
@@ -280,11 +284,13 @@ EOF
       <name>fs.s3a.secret.key</name>
       <value>${AWS_SECRET_ACCESS_KEY}</value>
     </property>
+</configuration>
 EOF
 
-    gpscp -u gpadmin -f /tmp/segment_hosts /tmp/core-site-patch.xml =:~/tmp/
-    gpssh -u gpadmin -f /tmp/segment_hosts -v -s -e "sed -i 's/fs.defaultFS/fs.defaultFSOld/g' /etc/hadoop/conf/core-site.xml"
-    gpssh -u gpadmin -f /tmp/segment_hosts -v -s -e "sed -i -e '/<configuration>/r /tmp/core-site-patch.xml' /etc/hadoop/conf/core-site.xml"
+    # Make a backup of core-site
+    gpssh -u centos -f /tmp/segment_hosts -v -s -e "sudo cp /etc/hadoop/conf/core-site.xml /etc/hadoop/conf/core-site.xml.back"
+    gpscp -u centos -f /tmp/segment_hosts /tmp/core-site.xml =:/tmp/core-site-patch.xml
+    gpssh -u centos -f /tmp/segment_hosts -v -s -e "sudo cp /tmp/core-site-patch.xml /etc/hadoop/conf/core-site.xml"
 
     cat << EOF
 
@@ -295,6 +301,11 @@ EOF
 EOF
 
 	time psql -c "SELECT * FROM lineitem_s3_pxf" > /dev/null
+
+	# Restore core-site
+	gpssh -u centos -f /tmp/segment_hosts -v -s -e "sudo cp /etc/hadoop/conf/core-site.xml /etc/hadoop/conf/core-site.xml.s3"
+    gpssh -u centos -f /tmp/segment_hosts -v -s -e "sudo cp /etc/hadoop/conf/core-site.xml.back /etc/hadoop/conf/core-site.xml"
+    gpssh -u gpadmin -f /tmp/segment_hosts -v -s -e 'source /usr/local/greenplum-db-devel/greenplum_path.sh && $GPHOME/pxf/bin/pxf restart'
 }
 
 function main {
