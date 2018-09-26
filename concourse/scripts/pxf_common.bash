@@ -16,7 +16,7 @@ function run_regression_test() {
 	cd "\${1}/gpdb_src/gpAux"
 	source gpdemo/gpdemo-env.sh
 
-	cd "\${1}/gpdb_src/gpAux/extensions/pxf"
+	cd "\${1}/gpdb_src/gpcontrib/pxf"
 	make installcheck USE_PGXS=1
 
 	[ -s regression.diffs ] && cat regression.diffs && exit 1
@@ -115,7 +115,7 @@ function install_pxf_client() {
 		pushd gpdb_src > /dev/null
 		source ${GPHOME}/greenplum_path.sh
 		source /opt/gcc_env.sh
-		cd gpAux/extensions/pxf
+		cd gpcontrib/pxf
 		USE_PGXS=1 make install
 		popd > /dev/null
 	fi
