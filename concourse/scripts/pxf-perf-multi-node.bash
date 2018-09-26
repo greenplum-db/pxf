@@ -66,10 +66,14 @@ EOF
 function download_jar_dependencies {
     mkdir pxf-jars
     pushd pxf-jars
-        wget http://central.maven.org/maven2/com/amazonaws/aws-java-sdk-core/1.11.406/aws-java-sdk-core-1.11.406.jar
-        wget http://central.maven.org/maven2/com/amazonaws/aws-java-sdk-kms/1.11.406/aws-java-sdk-kms-1.11.406.jar
-        wget http://central.maven.org/maven2/com/amazonaws/aws-java-sdk-s3/1.11.406/aws-java-sdk-s3-1.11.406.jar
-        wget http://central.maven.org/maven2/org/apache/hadoop/hadoop-aws/2.8.2/hadoop-aws-2.8.2.jar
+#        wget http://central.maven.org/maven2/com/amazonaws/aws-java-sdk-core/1.11.406/aws-java-sdk-core-1.11.406.jar
+#        wget http://central.maven.org/maven2/com/amazonaws/aws-java-sdk-kms/1.11.406/aws-java-sdk-kms-1.11.406.jar
+#        wget http://central.maven.org/maven2/com/amazonaws/aws-java-sdk-s3/1.11.406/aws-java-sdk-s3-1.11.406.jar
+#        wget http://central.maven.org/maven2/org/apache/hadoop/hadoop-aws/2.8.2/hadoop-aws-2.8.2.jar
+        wget http://central.maven.org/maven2/com/amazonaws/aws-java-sdk-core/1.11.416/aws-java-sdk-core-1.11.416.jar
+        wget http://central.maven.org/maven2/com/amazonaws/aws-java-sdk-kms/1.11.416/aws-java-sdk-kms-1.11.416.jar
+        wget http://central.maven.org/maven2/com/amazonaws/aws-java-sdk-s3/1.11.416/aws-java-sdk-s3-1.11.416.jar
+        wget http://central.maven.org/maven2/org/apache/hadoop/hadoop-aws/2.8.5/hadoop-aws-2.8.5.jar
         wget http://central.maven.org/maven2/org/apache/httpcomponents/httpclient/4.5.2/httpclient-4.5.2.jar
         wget http://central.maven.org/maven2/org/apache/httpcomponents/httpcore/4.4.4/httpcore-4.4.4.jar
         wget http://central.maven.org/maven2/com/fasterxml/jackson/core/jackson-databind/2.6.7.1/jackson-databind-2.6.7.1.jar
