@@ -49,7 +49,6 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor implements
     private FSDataOutputStream fsdos;
     private FileSystem fs;
     private Path file;
-    private boolean isDFS;
     private static final Log LOG = LogFactory.getLog(LineBreakAccessor.class);
 
     /**
@@ -62,9 +61,6 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor implements
         super(input, new TextInputFormat());
         ((TextInputFormat) inputFormat).configure(jobConf);
 
-        // Check if the underlying configuration is for HDFS
-        String defaultFS = conf.get("fs.defaultFS");
-        isDFS = (defaultFS != null) && defaultFS.startsWith("hdfs://");
     }
 
     @Override

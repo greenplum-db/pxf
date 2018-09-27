@@ -477,12 +477,13 @@ public class HiveUtilities {
         String partitionKeys = serializePartitionKeys(partData);
         String delimiter = getDelimiterCode(partData.storageDesc).toString();
         String colTypes = partData.properties.getProperty("columns.types");
+        int skipHeader = Integer.parseInt(partData.properties.getProperty("skip.header.line.count", "0"));
 
         if (HiveInputFormatFragmenter.class.isAssignableFrom(fragmenterClass)) {
             assertFileType(inputFormatName, partData);
         }
 
-        hiveUserData = new HiveUserData(inputFormatName, serdeClassName, propertiesString, partitionKeys, filterInFragmenter, delimiter, colTypes);
+        hiveUserData = new HiveUserData(inputFormatName, serdeClassName, propertiesString, partitionKeys, filterInFragmenter, delimiter, colTypes, skipHeader);
 
         return hiveUserData.toString().getBytes();
     }
@@ -504,7 +505,7 @@ public class HiveUtilities {
                     + HiveUserData.getNumOfTokens() + " tokens, but got " + toks.length);
         }
 
-        HiveUserData hiveUserData = new HiveUserData(toks[0], toks[1], toks[2], toks[3], Boolean.valueOf(toks[4]), toks[5], toks[6]);
+        HiveUserData hiveUserData = new HiveUserData(toks[0], toks[1], toks[2], toks[3], Boolean.valueOf(toks[4]), toks[5], toks[6], Integer.parseInt(toks[7]));
 
         if (supportedSerdes.length > 0) {
             /* Make sure this serde is supported */

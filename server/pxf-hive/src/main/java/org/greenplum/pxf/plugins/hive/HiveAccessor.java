@@ -21,19 +21,18 @@ package org.greenplum.pxf.plugins.hive;
 
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.serde.serdeConstants;
+import org.apache.hadoop.mapred.*;
 import org.greenplum.pxf.api.BasicFilter;
 import org.greenplum.pxf.api.FilterParser;
 import org.greenplum.pxf.api.LogicalFilter;
+import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.InputData;
+import org.greenplum.pxf.plugins.hdfs.ChunkRecordReader;
 import org.greenplum.pxf.plugins.hdfs.HdfsSplittableDataAccessor;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.mapred.InputFormat;
-import org.apache.hadoop.mapred.InputSplit;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.Reporter;
 
 import java.io.IOException;
 import java.sql.Date;
@@ -56,6 +55,7 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
     private static final Log LOG = LogFactory.getLog(HiveAccessor.class);
     List<HivePartition> partitions;
     String HIVE_DEFAULT_PARTITION = "__HIVE_DEFAULT_PARTITION__";
+    int skipHeaderCount = 0;
 
     class HivePartition {
         public String name;
@@ -110,8 +110,26 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
      */
     @Override
     public boolean openForRead() throws Exception {
+        // Make sure lines aren't skipped outside of the first fragment
+        if (inputData.getFragmentIndex() != 0) {
+            skipHeaderCount = 0;
+        }
         return isOurDataInsideFilteredPartition() && super.openForRead();
     }
+
+    /**
+     * Fetches one record from the file. The record is returned as a Java object.
+     * We will skip skipHeaderCount # of lines within the first fragment.
+     */
+    @Override
+    public OneRow readNextObject() throws IOException {
+        while (skipHeaderCount > 0) {
+            super.readNextObject();
+            skipHeaderCount--;
+        }
+        return super.readNextObject();
+    }
+
 
     /**
      * Creates the RecordReader suitable for this given split.
@@ -135,6 +153,8 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
     private InputFormat<?, ?> createInputFormat(InputData input)
             throws Exception {
         HiveUserData hiveUserData = HiveUtilities.parseHiveUserData(input);
+        skipHeaderCount = hiveUserData.getSkipHeader();
+
         initPartitionFields(hiveUserData.getPartitionKeys());
         filterInFragmenter = hiveUserData.isFilterInFragmenter();
         return HiveDataFragmenter.makeInputFormat(

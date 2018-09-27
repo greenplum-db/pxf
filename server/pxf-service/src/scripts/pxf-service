@@ -37,6 +37,7 @@ fi
 pxf_user=${PXF_USER}
 instance_port=${PXF_PORT:-@pxfPortNum@}
 instance_name=pxf-service
+pxf_debug=${PXF_DEBUG:false}
 
 if [ -z ${PXF_HOME} ]; then
     # RPM based setup
@@ -224,6 +225,9 @@ function configureWebapp()
 function commandWebapp()
 {
     command=$1
+    if [[ ${pxf_debug} == true && ${command} == "start" ]]; then
+        command="jpda $command"
+    fi
     pushd ${instance_root} > /dev/null
     if [ ! -z ${pxf_user} ]; then
         # Run command as a pxf_user

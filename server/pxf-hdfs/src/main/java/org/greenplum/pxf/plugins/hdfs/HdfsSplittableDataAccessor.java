@@ -47,6 +47,7 @@ public abstract class HdfsSplittableDataAccessor extends Plugin implements
     protected ListIterator<InputSplit> iter = null;
     protected JobConf jobConf = null;
     protected Object key, data;
+    protected boolean isDFS;
 
     /**
      * Constructs an HdfsSplittableDataAccessor
@@ -64,6 +65,10 @@ public abstract class HdfsSplittableDataAccessor extends Plugin implements
 
         // 2. variable required for the splits iteration logic
         jobConf = new JobConf(conf, HdfsSplittableDataAccessor.class);
+
+        // Check if the underlying configuration is for HDFS
+        String defaultFS = conf.get("fs.defaultFS");
+        isDFS = (defaultFS != null) && defaultFS.startsWith("hdfs://");
     }
 
     /**
