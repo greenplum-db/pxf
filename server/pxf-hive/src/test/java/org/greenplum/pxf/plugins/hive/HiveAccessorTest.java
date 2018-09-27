@@ -28,9 +28,13 @@ public class HiveAccessorTest {
     RecordReader<Object, Object> reader;
 
     HiveAccessor accessor;
+    HiveUserData.Builder userDataBuilder;
 
     @Before
     public void setup() throws Exception {
+        userDataBuilder = new HiveUserData.Builder()
+                .withSerdeClassName("org.apache.hadoop.mapred.TextInputFormat")
+                .withPartitionKeys(HiveDataFragmenter.HIVE_NO_PART_TBL);
 
         PowerMockito.mockStatic(HiveUtilities.class);
         PowerMockito.mockStatic(HdfsUtilities.class);
@@ -44,7 +48,8 @@ public class HiveAccessorTest {
 
     @Test
     public void testSkipHeaderCountGreaterThanZero() throws Exception {
-        HiveUserData userData = new HiveUserData("org.apache.hadoop.mapred.TextInputFormat", "", null, HiveDataFragmenter.HIVE_NO_PART_TBL, false, "1", "", 2);
+        HiveUserData userData = userDataBuilder.withSkipHeader(2).build();
+
         PowerMockito.when(HiveUtilities.parseHiveUserData(any(InputData.class))).thenReturn(userData);
         when(inputData.hasFilter()).thenReturn(false);
 
@@ -58,7 +63,7 @@ public class HiveAccessorTest {
 
     @Test
     public void testSkipHeaderCountGreaterThanZeroFirstFragment() throws Exception {
-        HiveUserData userData = new HiveUserData("org.apache.hadoop.mapred.TextInputFormat", "", null, HiveDataFragmenter.HIVE_NO_PART_TBL, false, "1", "", 2);
+        HiveUserData userData = userDataBuilder.withSkipHeader(2).build();
         PowerMockito.when(HiveUtilities.parseHiveUserData(any(InputData.class))).thenReturn(userData);
         when(inputData.hasFilter()).thenReturn(false);
         when(inputData.getFragmentIndex()).thenReturn(0);
@@ -73,7 +78,7 @@ public class HiveAccessorTest {
 
     @Test
     public void testSkipHeaderCountGreaterThanZeroNotFirstFragment() throws Exception {
-        HiveUserData userData = new HiveUserData("org.apache.hadoop.mapred.TextInputFormat", "", null, HiveDataFragmenter.HIVE_NO_PART_TBL, false, "1", "", 2);
+        HiveUserData userData = userDataBuilder.withSkipHeader(2).build();
         PowerMockito.when(HiveUtilities.parseHiveUserData(any(InputData.class))).thenReturn(userData);
         when(inputData.hasFilter()).thenReturn(false);
         when(inputData.getFragmentIndex()).thenReturn(2);
@@ -88,7 +93,7 @@ public class HiveAccessorTest {
 
     @Test
     public void testSkipHeaderCountZeroFirstFragment() throws Exception {
-        HiveUserData userData = new HiveUserData("org.apache.hadoop.mapred.TextInputFormat", "", null, HiveDataFragmenter.HIVE_NO_PART_TBL, false, "1", "", 0);
+        HiveUserData userData = userDataBuilder.withSkipHeader(0).build();
         PowerMockito.when(HiveUtilities.parseHiveUserData(any(InputData.class))).thenReturn(userData);
         when(inputData.hasFilter()).thenReturn(false);
         when(inputData.getFragmentIndex()).thenReturn(0);

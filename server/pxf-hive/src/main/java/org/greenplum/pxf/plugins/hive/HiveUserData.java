@@ -147,4 +147,36 @@ public class HiveUserData {
                 + skipHeader;
     }
 
+    public static class Builder {
+        private String serdeClassName;
+        private String partitionKeys;
+        private int skipHeader;
+
+        public HiveUserData build() {
+            return new HiveUserData(
+                    null,
+                    serdeClassName,
+                    null,
+                    partitionKeys,
+                    false,
+                    null,
+                    null,
+                    skipHeader);
+        }
+
+        public Builder withSerdeClassName(String s) {
+            serdeClassName = s;
+            return this;
+        }
+
+        public Builder withPartitionKeys(String s) {
+            partitionKeys = s;
+            return this;
+        }
+
+        public Builder withSkipHeader(int n) {
+            skipHeader = n;
+            return this;
+        }
+    }
 }
