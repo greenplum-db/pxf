@@ -478,7 +478,7 @@ public class HiveTextTest extends HiveBaseTest {
         hive.createTableAndVerify(hiveTableWithSkipHeader);
         hive.insertData(hiveSmallDataTable, hiveTableWithSkipHeader);
 
-        createExternalTable("pxf_hive_table_with_skipheader", PXF_HIVE_SMALLDATA_COLS, hiveTableWithSkipHeader);
+        createExternalTable("pxf_hive_table_with_skipheader_text", PXF_HIVE_SMALLDATA_COLS, hiveTableWithSkipHeader);
 
         runTincTest("pxf.features.hive.text_skip_header_rows.runTest");
     }
