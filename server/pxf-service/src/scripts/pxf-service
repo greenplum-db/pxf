@@ -225,7 +225,7 @@ function configureWebapp()
 function commandWebapp()
 {
     command=$1
-    if [[ ${pxf_debug} == true && ${command} == "start" ]]; then
+    if [ "${pxf_debug}" == "true" ] && [ "${command}" == "start" ]; then
         command="jpda $command"
     fi
     pushd ${instance_root} > /dev/null

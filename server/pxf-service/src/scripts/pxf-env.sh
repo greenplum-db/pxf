@@ -65,4 +65,4 @@ export HADOOP_ROOT=${HADOOP_ROOT}
 export PXF_USER_IMPERSONATION=@pxfDefaultUserImpersonation@
 
 # Set to true to enable Remote debug via port 8000
-export PXF_DEBUG=${PXF_DEBUG:=false}
+export PXF_DEBUG=${PXF_DEBUG:-false}
