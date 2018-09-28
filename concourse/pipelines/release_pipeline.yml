@@ -1,0 +1,333 @@
+---
+ccp_destroy_anchor: &ccp_destroy
+  do:
+  - put: terraform_gpdb
+    resource: terraform
+    params:
+      action: destroy
+      env_name_file: terraform_gpdb/name
+      terraform_source: ccp_src/google/
+    get_params:
+      action: destroy
+
+resource_types:
+- name: terraform
+  type: docker-image
+  source:
+    repository: ljfranklin/terraform-resource
+
+resources:
+- name: ccp_src
+  type: git
+  source:
+    branch: {{ccp-git-branch}}
+    private_key: {{ccp-git-key}}
+    uri: {{ccp-git-remote}}
+
+- name: gpdb_src
+  type: git
+  source:
+    branch: {{gpdb-branch}}
+    uri: {{gpdb-git-remote}}
+
+- name: gpdb_pxf_trigger
+  type: git
+  source:
+    branch: {{gpdb-branch}}
+    uri: {{gpdb-git-remote}}
+    paths:
+    - gpAux/extensions/pxf
+    - gpcontrib/pxf
+
+- name: pxf_src
+  type: git
+  source:
+    branch: {{pxf-git-branch}}
+    private_key: {{pxf-git-key}}
+    uri: {{pxf-git-remote}}
+    tag_filter: .*
+
+- name: pxf_build_number
+  type: semver
+  source:
+    initial_version: 3.3.0
+    bucket: {{pxf-aws-bucket-name}}
+    key: pxf_artifacts/pxf_build_number
+    region_name: {{aws-region}}
+    access_key_id: {{bucket-access-key-id}}
+    secret_access_key: {{bucket-secret-access-key}}
+
+- name: gpdb-pxf-dev-centos6
+  type: docker-image
+  source:
+    repository: pivotaldata/gpdb-pxf-dev
+    tag: centos6
+
+- name: gpdb-pxf-dev-centos6-cdh-server
+  type: docker-image
+  source:
+    repository: pivotaldata/gpdb-pxf-dev
+    tag: centos6-cdh-server
+
+- name: gpdb-pxf-dev-centos6-hdp-server
+  type: docker-image
+  source:
+    repository: pivotaldata/gpdb-pxf-dev
+    tag: centos6-hdp-server
+
+- name: gpdb-pxf-dev-centos6-hdp-secure
+  type: docker-image
+  source:
+    repository: pivotaldata/gpdb-pxf-dev
+    tag: centos6-hdp-secure
+
+- name: ccp-7
+  type: docker-image
+  source:
+    repository: pivotaldata/ccp
+    tag: 7
+
+- name: bin_gpdb_centos6
+  type: s3
+  source:
+    access_key_id: {{bucket-access-key-id}}
+    bucket: {{gpdb_release_bucket}}
+    region_name: {{aws-region}}
+    secret_access_key: {{bucket-secret-access-key}}
+    versioned_file: bin_gpdb_centos6/bin_gpdb.tar.gz
+
+- name: pxf_tarball
+  type: s3
+  source:
+    access_key_id: {{bucket-access-key-id}}
+    bucket: {{pxf-aws-bucket-name}}
+    region_name: {{aws-region}}
+    secret_access_key: {{bucket-secret-access-key}}
+    versioned_file: pxf_artifacts/((folder-prefix))_((gpdb-branch))/latest/pxf.tar.gz
+
+- name: pxf_tarball_stable
+  type: s3
+  source:
+    access_key_id: {{bucket-access-key-id}}
+    bucket: {{pxf-aws-bucket-name}}
+    region_name: {{aws-region}}
+    secret_access_key: {{bucket-secret-access-key}}
+    versioned_file: pxf_artifacts/((folder-prefix))_((gpdb-branch))/stable/pxf.tar.gz
+
+- name: terraform
+  type: terraform
+  source:
+    env:
+      AWS_ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+      AWS_SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+      GOOGLE_CREDENTIALS: {{google-service-account-key}}
+    vars:
+      project_id: {{google-project-id}}
+    storage:
+      access_key_id: {{tf-machine-access-key-id}}
+      secret_access_key: {{tf-machine-secret-access-key}}
+      region_name: {{aws-region}}
+      bucket: {{tf-bucket-name}}
+      bucket_path: {{tf-bucket-path}}
+
+jobs:
+
+- name: compile_pxf
+  plan:
+  - aggregate:
+    - get: gpdb_src
+    - get: gpdb_pxf_trigger
+      trigger: true
+    - put: pxf_build_number
+      params: {pre: rc}
+    - get: pxf_src
+      trigger: true
+    - get: gpdb-pxf-dev-centos6
+  - task: compile_pxf
+    image: gpdb-pxf-dev-centos6
+    file: pxf_src/concourse/tasks/compile_pxf.yml
+  - put: pxf_tarball
+    params:
+      file: pxf_artifacts/pxf.tar.gz
+
+- name: test_pxf_hdp
+  plan:
+  - aggregate:
+    - get: gpdb_src
+      passed:
+      - compile_pxf
+    - get: bin_gpdb
+      resource: bin_gpdb_centos6
+    - get: pxf_src
+      passed:
+      - compile_pxf
+      trigger: true
+    - get: pxf_tarball
+      passed:
+      - compile_pxf
+      trigger: true
+    - get: gpdb-pxf-dev-centos6-hdp-server
+  - task: test_pxf
+    file: pxf_src/concourse/tasks/test_pxf.yml
+    image: gpdb-pxf-dev-centos6-hdp-server
+    params:
+      GROUP: gpdb,proxy
+      TEST_ENV: {{test-env}}
+      HADOOP_CLIENT: HDP
+      TARGET_OS: centos
+      TARGET_OS_VERSION: 6
+
+- name: test_pxf_hdp_secure
+  plan:
+  - aggregate:
+    - get: gpdb_src
+      passed:
+      - compile_pxf
+    - get: bin_gpdb
+      resource: bin_gpdb_centos6
+    - get: pxf_src
+      passed:
+      - compile_pxf
+      trigger: true
+    - get: pxf_tarball
+      passed:
+      - compile_pxf
+      trigger: true
+    - get: gpdb-pxf-dev-centos6-hdp-secure
+  - task: test_pxf_secure
+    file: pxf_src/concourse/tasks/test_pxf_secure.yml
+    image: gpdb-pxf-dev-centos6-hdp-secure
+    privileged: true
+    attempts: 2
+    params:
+      GROUP: gpdb,proxy
+      TEST_ENV: {{test-env}}
+
+- name: test_pxf_hdp_multinode_gpdb
+  plan:
+  - get: ccp_src
+  - get: gpdb_src
+    passed:
+    - compile_pxf
+  - get: gpdb_binary
+    resource: bin_gpdb_centos6
+  - get: pxf_src
+    passed:
+    - compile_pxf
+    trigger: true
+  - get: pxf_tarball
+    passed:
+    - compile_pxf
+    trigger: true
+  - get: ccp-7
+  - get: gpdb-pxf-dev-centos6-hdp-server
+
+  - put: terraform_gpdb
+    resource: terraform
+    params:
+      action: create
+      delete_on_failure: true
+      generate_random_name: true
+      terraform_source: ccp_src/google/
+      vars:
+        PLATFORM: centos7
+        number_of_nodes: {{number_of_gpdb_nodes}}
+        extra_nodes: 1
+        segments_per_host: 4
+        instance_type: n1-standard-4
+        ccp_reap_minutes: 120
+  - task: gen_gpdb_cluster
+    input_mapping:
+      terraform: terraform_gpdb
+    file: ccp_src/ci/tasks/gen_cluster.yml
+    image: ccp-7
+    params:
+      AWS_ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+      AWS_SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+      AWS_DEFAULT_REGION: {{aws-region}}
+      BUCKET_PATH: {{tf-bucket-path}}
+      BUCKET_NAME: {{tf-bucket-name}}
+      PLATFORM: centos7
+      CLOUD_PROVIDER: google
+  - aggregate:
+    - task: intialize_greenplum
+      file: ccp_src/ci/tasks/gpinitsystem.yml
+    - task: install_hadoop
+      file: pxf_src/concourse/tasks/install_hadoop.yml
+      image: gpdb-pxf-dev-centos6-hdp-server
+      params:
+        IMPERSONATION: {{enable-impersonation-multinode}}
+        PXF_JVM_OPTS: {{pxf-jvm-opts}}
+  - task: test_pxf_multinode
+    input_mapping:
+      bin_gpdb: gpdb_binary
+    on_success:
+      <<: *ccp_destroy
+    image: gpdb-pxf-dev-centos6-hdp-server
+    file: pxf_src/concourse/tasks/test_pxf_multinode.yml
+    params:
+      NO_OF_FILES: {{no_of_files}}
+
+- name: test_pxf_cdh
+  plan:
+  - aggregate:
+    - get: gpdb_src
+      passed:
+      - compile_pxf
+    - get: bin_gpdb
+      resource: bin_gpdb_centos6
+    - get: pxf_src
+      passed:
+      - compile_pxf
+      trigger: true
+    - get: pxf_tarball
+      passed:
+      - compile_pxf
+      trigger: true
+    - get: gpdb-pxf-dev-centos6-cdh-server
+  - task: test_pxf
+    file: pxf_src/concourse/tasks/test_pxf.yml
+    image: gpdb-pxf-dev-centos6-cdh-server
+    attempts: 2
+    params:
+      GROUP: gpdb,proxy
+      TEST_ENV: {{test-env}}
+      HADOOP_CLIENT: CDH
+
+- name: test_pxf_no_impersonation
+  plan:
+  - aggregate:
+    - get: gpdb_src
+      passed:
+      - compile_pxf
+    - get: bin_gpdb
+      resource: bin_gpdb_centos6
+    - get: pxf_src
+      passed:
+      - compile_pxf
+      trigger: true
+    - get: pxf_tarball
+      passed:
+      - compile_pxf
+      trigger: true
+    - get: gpdb-pxf-dev-centos6-hdp-server
+  - task: test_pxf
+    file: pxf_src/concourse/tasks/test_pxf.yml
+    image: gpdb-pxf-dev-centos6-hdp-server
+    params:
+      IMPERSONATION: false
+      TEST_ENV: {{test-env}}
+
+- name: promote_pxf_artifact
+  plan:
+  - get: pxf_tarball
+    passed:
+    - test_pxf_hdp
+    - test_pxf_cdh
+    - test_pxf_hdp_secure
+    - test_pxf_no_impersonation
+    - test_pxf_hdp_multinode_gpdb
+    trigger: true
+  - put: pxf_tarball_stable
+    params:
+      file: pxf_tarball/pxf.tar.gz
