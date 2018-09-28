@@ -852,28 +852,4 @@ public class HiveTest extends HiveBaseTest {
         runTincTest("pxf.features.hcatalog.aggregate_queries.runTest");
         runTincTest("pxf.features.hive.aggregate_queries.runTest");
     }
-
-    /**
-     * query for small data hive table with skip header count set
-     *
-     * @throws Exception if test fails to run
-     */
-    @Test(groups = { "features", "gpdb" })
-    public void hiveTableWithSkipHeader() throws Exception {
-        List<List<String>> tableProperties = new ArrayList<>();
-        List<String> tablePropertiesRow = new ArrayList<>();
-        tablePropertiesRow.add("skip.header.line.count");
-        tablePropertiesRow.add("3");
-        tableProperties.add(tablePropertiesRow);
-
-        HiveTable hiveTable = new HiveTable("hive_table_with_skipHeader", HIVE_SMALLDATA_COLS);
-        hiveTable.setTableProperties(tableProperties);
-        hive.createTableAndVerify(hiveTable);
-        hive.runQuery("INSERT INTO TABLE " + hiveTable.getName() +
-                " SELECT * FROM " + hiveSmallDataTable.getName());
-
-        createExternalTable(PXF_HIVE_SMALL_DATA_TABLE, PXF_HIVE_SMALLDATA_COLS, hiveSmallDataTable);
-
-        runTincTest("pxf.features.hive.text_skip_header_rows");
-    }
 }

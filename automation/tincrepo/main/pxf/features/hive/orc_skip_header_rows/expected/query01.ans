@@ -1,0 +1,13 @@
+-- @description query01 for PXF Hive ORC with header rows skipped
+
+SELECT * from pxf_hive_table_with_skipheader_orc ORDER BY t1;
+  t1   |  t2  | num1 | dub1 
+-------+------+------+------
+ row10 | s_15 |   10 |   15
+ row4  | s_9  |    4 |    9
+ row5  | s_10 |    5 |   10
+ row6  | s_11 |    6 |   11
+ row7  | s_12 |    7 |   12
+ row8  | s_13 |    8 |   13
+ row9  | s_14 |    9 |   14
+(7 rows)

@@ -1,9 +1,13 @@
 package org.greenplum.pxf.automation.features.hive;
 
+import com.google.common.collect.Lists;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
 import org.greenplum.pxf.automation.structures.tables.hive.HiveTable;
 import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
 import org.testng.annotations.Test;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class HiveOrcTest extends HiveBaseTest {
 
@@ -274,6 +278,28 @@ public class HiveOrcTest extends HiveBaseTest {
         runTincTest("pxf.features.hcatalog.aggregate_queries.runTest");
         runTincTest("pxf.features.hive.aggregate_queries.runTest");
         runTincTest("pxf.features.hive.aggregate_queries_multiple_fragments_per_file.runTest");
+    }
+
+    /**
+     * Query a small Hive table, skipping the first few rows with skip.header.line.count.
+     *
+     * @throws Exception if test fails to run
+     */
+    @Test(groups = { "features", "gpdb" })
+    public void hiveTableWithSkipHeader() throws Exception {
+
+        HiveTable hiveOrcSkipHeaderTable = new HiveTable("hive_table_with_skipheader_orc", HIVE_RC_COLS);
+        hiveOrcSkipHeaderTable.setStoredAs(ORC);
+        List<List<String>> tableProperties = new ArrayList<>();
+        tableProperties.add(Lists.newArrayList("skip.header.line.count", "3"));
+        hiveOrcSkipHeaderTable.setTableProperties(tableProperties);
+
+        hive.createTableAndVerify(hiveOrcSkipHeaderTable);
+        hive.insertData(hiveSmallDataTable, hiveOrcTable);
+
+        createExternalTable("pxf_hive_table_with_skipheader", PXF_HIVE_SMALLDATA_COLS, hiveOrcSkipHeaderTable);
+
+        runTincTest("pxf.features.hive.skip_header_rows.runTest");
     }
 
 }
