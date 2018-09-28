@@ -96,14 +96,14 @@ resources:
     secret_access_key: {{bucket-secret-access-key}}
     versioned_file: pxf_artifacts/((folder-prefix))_((gpdb-branch))/latest/pxf.tar.gz
 
-- name: pxf_tarball_stable
+- name: component_pxf
   type: s3
   source:
     access_key_id: {{bucket-access-key-id}}
-    bucket: {{pxf-aws-bucket-name}}
+    bucket: gpdb-stable-concourse-builds
     region_name: {{aws-region}}
     secret_access_key: {{bucket-secret-access-key}}
-    versioned_file: pxf_artifacts/((folder-prefix))_((gpdb-branch))/stable/pxf.tar.gz
+    regexp: components/pxf/pxf-(.*).tar.gz
 
 - name: terraform
   type: terraform
@@ -307,9 +307,10 @@ jobs:
       IMPERSONATION: false
       TEST_ENV: {{test-env}}
 
-- name: promote_pxf_artifact
+- name: build_release_candidate
   plan:
   - get: pxf_tarball
+  - get: pxf_src
     passed:
     - test_pxf_hdp
     - test_pxf_cdh
@@ -317,6 +318,26 @@ jobs:
     - test_pxf_no_impersonation
     - test_pxf_hdp_multinode_gpdb
     trigger: true
-  - put: pxf_tarball_stable
-    params:
-      file: pxf_tarball/pxf.tar.gz
+  - task: package
+    inputs:
+    - name: pxf_src
+    - name: pxf_tarball
+
+    outputs:
+    - name: pxf_artifacts
+
+    config:
+      platform: linux
+      run:
+        path: bash
+        args:
+        - -c
+        - |
+          pushd pxf_src
+          VERSION=`git describe --tags`
+          popd
+          tar -cvzf pxf_artifacts/pxf-${VERSION}.tar.gz pxf_tarball/pxf.tar.gz pxf_src/concourse/scripts/release/*
+    image: gpdb-pxf-dev-centos6-hdp-server
+  - put: component_pxf
+      params:
+        file: pxf_artifacts/pxf-*.tar.gz
