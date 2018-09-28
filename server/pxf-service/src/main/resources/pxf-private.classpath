@@ -22,10 +22,14 @@
 # PXF Configuration
 pxf/conf
 
-# this is temporary, TO REMOVE
-/etc/hadoop/conf
-/etc/hive/conf
-/etc/hbase/conf
+# Hadoop Configuration
+hadoop/etc/hadoop
+
+# Hive Configuration
+hive/conf
+
+# Hbase Configuration
+hbase/conf
 
 # PXF Libraries
 pxf/pxf-hbase-*[0-9].jar
