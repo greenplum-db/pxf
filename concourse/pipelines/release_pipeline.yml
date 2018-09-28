@@ -30,22 +30,13 @@ resources:
     branch: {{gpdb-branch}}
     uri: {{gpdb-git-remote}}
 
-- name: gpdb_pxf_trigger
-  type: git
-  source:
-    branch: {{gpdb-branch}}
-    uri: {{gpdb-git-remote}}
-    paths:
-    - gpAux/extensions/pxf
-    - gpcontrib/pxf
-
 - name: pxf_src
   type: git
   source:
     branch: {{pxf-git-branch}}
     private_key: {{pxf-git-key}}
     uri: {{pxf-git-remote}}
-    tag_filter: .*
+    tag_filter: 4.*
 
 - name: pxf_build_number
   type: semver
@@ -136,8 +127,6 @@ jobs:
   plan:
   - aggregate:
     - get: gpdb_src
-    - get: gpdb_pxf_trigger
-      trigger: true
     - put: pxf_build_number
       params: {pre: rc}
     - get: pxf_src
