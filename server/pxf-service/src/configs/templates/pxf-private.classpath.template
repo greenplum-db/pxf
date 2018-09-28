@@ -24,6 +24,11 @@
 # PXF Configuration
 PXF_HOME/conf
 
+# Hadoop, HIVE, Hbase configurations
+/etc/hadoop/conf
+/etc/hive/conf
+/etc/hbase/conf
+
 # PXF Libraries
 PXF_HOME/lib/pxf-hbase.jar
 PXF_HOME/lib/pxf-hdfs.jar
