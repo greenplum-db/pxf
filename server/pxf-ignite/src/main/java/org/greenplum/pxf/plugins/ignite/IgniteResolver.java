@@ -47,6 +47,9 @@ import com.google.gson.JsonArray;
 public class IgniteResolver extends IgnitePlugin implements ReadResolver, WriteResolver {
     /**
      * Class constructor
+     *
+     * @param input Input
+     * @throws Exception when there is an exception
      */
     public IgniteResolver(InputData input) throws Exception {
         super(input);
@@ -146,6 +149,9 @@ public class IgniteResolver extends IgnitePlugin implements ReadResolver, WriteR
 
     /**
      * Transforms a list of {@link OneField} from PXF into a {@link OneRow} with a string inside, containing a tuple from SQL INSERT query
+     *
+     * @param record List of fields
+     * @return row one row
      *
      * @throws UnsupportedOperationException if the type of some field is not supported
      */

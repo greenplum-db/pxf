@@ -28,7 +28,7 @@ import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.ReadVectorizedResolver;
 import org.greenplum.pxf.service.io.Writable;
-import org.greenplum.pxf.service.utilities.ProtocolData;
+import org.greenplum.pxf.api.utilities.ProtocolData;
 
 
 public class ReadVectorizedBridge extends ReadBridge {

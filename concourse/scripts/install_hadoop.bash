@@ -8,18 +8,6 @@ source "${CWDIR}/pxf_common.bash"
 GPHOME="/usr/local/greenplum-db-devel"
 SSH_OPTS="-i cluster_env_files/private_key.pem"
 
-function install_hadoop_client {
-
-    local segment=${1}
-    scp -r ${SSH_OPTS} hdp.repo centos@${segment}:~
-    ssh ${SSH_OPTS} centos@${segment} "
-        sudo yum install -y -d 1 java-1.8.0-openjdk-devel &&
-	    echo 'export JAVA_HOME=/usr/lib/jvm/jre' | sudo tee -a ~gpadmin/.bash_profile &&
-	    echo 'export JAVA_HOME=/usr/lib/jvm/jre' | sudo tee -a ~centos/.bash_profile &&
-	    sudo mv /home/centos/hdp.repo /etc/yum.repos.d &&
-	    sudo yum install -y -d 1 hadoop-client hive hbase"
-}
-
 function setup_pxf {
 
     local segment=${1}
@@ -76,9 +64,6 @@ function _main() {
     hadoop_ip=$( < cluster_env_files/etc_hostfile grep "edw0" | awk '{print $1}')
     install_hadoop_single_cluster ${hadoop_ip} &
 
-    for node in ${gpdb_nodes}; do
-        install_hadoop_client ${node} &
-    done
     wait
     for node in ${gpdb_nodes}; do
         setup_pxf ${node} ${hadoop_ip} &

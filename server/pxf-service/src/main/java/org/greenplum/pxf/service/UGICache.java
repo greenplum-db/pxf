@@ -75,6 +75,7 @@ public class UGICache {
      *
      * @param session The user from the session is impersonated by the proxy UGI.
      * @return the proxy UGI for the given session.
+     * @throws IOException when there is an IO issue
      */
     public UserGroupInformation getUserGroupInformation(SessionId session) throws IOException {
         Integer segmentId = session.getSegmentId();

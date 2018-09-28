@@ -33,7 +33,7 @@ import java.util.List;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OutputFormat;
 import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.service.utilities.ProtocolData;
+import org.greenplum.pxf.api.utilities.ProtocolData;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;

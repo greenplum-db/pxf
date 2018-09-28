@@ -125,17 +125,19 @@ public class JdbcPlugin extends Plugin {
      * @throws ClassNotFoundException if the JDBC driver was not found
      * @throws SQLException if a database access error occurs
      * @throws SQLTimeoutException if a connection problem occurs
+     *
+     * @return connection
      */
     public Connection getConnection() throws ClassNotFoundException, SQLException, SQLTimeoutException {
         Connection connection;
         if (LOG.isDebugEnabled()) {
             if (user != null) {
                 LOG.debug(String.format("Open JDBC connection: driver=%s, url=%s, user=%s, pass=%s, table=%s",
-                    jdbcDriver, dbUrl, user, pass, tableName));
+                        jdbcDriver, dbUrl, user, pass, tableName));
             }
             else {
                 LOG.debug(String.format("Open JDBC connection: driver=%s, url=%s, table=%s",
-                    jdbcDriver, dbUrl, tableName));
+                        jdbcDriver, dbUrl, tableName));
             }
         }
         Class.forName(jdbcDriver);
@@ -150,6 +152,8 @@ public class JdbcPlugin extends Plugin {
 
     /**
      * Close a JDBC connection
+     *
+     * @param connection connection to close
      */
     public static void closeConnection(Connection connection) {
         try {
@@ -168,6 +172,11 @@ public class JdbcPlugin extends Plugin {
     /**
      * Prepare a JDBC PreparedStatement
      *
+     * @param connection connection to use for creating the statement
+     * @param query query to execute
+     *
+     * @return PreparedStatement
+     *
      * @throws ClassNotFoundException if the JDBC driver was not found
      * @throws SQLException if a database access error occurs
      * @throws SQLTimeoutException if a connection problem occurs
@@ -184,6 +193,8 @@ public class JdbcPlugin extends Plugin {
 
     /**
      * Close a JDBC Statement (and the connection it is based on)
+     *
+     * @param statement statement to close
      */
     public static void closeStatement(Statement statement) {
         if (statement == null) {

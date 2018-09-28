@@ -46,7 +46,7 @@ import org.greenplum.pxf.service.ReadBridge;
 import org.greenplum.pxf.service.ReadSamplingBridge;
 import org.greenplum.pxf.service.ReadVectorizedBridge;
 import org.greenplum.pxf.service.io.Writable;
-import org.greenplum.pxf.service.utilities.ProtocolData;
+import org.greenplum.pxf.api.utilities.ProtocolData;
 
 /*
  * This class handles the subpath /<version>/Bridge/ of this

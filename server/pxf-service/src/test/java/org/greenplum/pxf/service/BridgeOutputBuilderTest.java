@@ -44,7 +44,7 @@ import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.service.io.BufferWritable;
 import org.greenplum.pxf.service.io.GPDBWritable;
 import org.greenplum.pxf.service.io.Writable;
-import org.greenplum.pxf.service.utilities.ProtocolData;
+import org.greenplum.pxf.api.utilities.ProtocolData;
 import org.junit.Test;
 
 public class BridgeOutputBuilderTest {

@@ -58,6 +58,9 @@ import org.apache.commons.logging.LogFactory;
 public class JdbcAccessor extends JdbcPlugin implements ReadAccessor, WriteAccessor {
     /**
      * Class constructor
+     *
+     * @param inputData Input data
+     * @throws UserDataException if there is a user data exception
      */
     public JdbcAccessor(InputData inputData) throws UserDataException {
         super(inputData);
@@ -67,6 +70,7 @@ public class JdbcAccessor extends JdbcPlugin implements ReadAccessor, WriteAcces
      * openForRead() implementation
      * Create query, open JDBC connection, execute query and store the result into resultSet
      *
+     * @return true if successful
      * @throws SQLException if a database access error occurs
      * @throws SQLTimeoutException if a problem with the connection occurs
      * @throws ParseException if th SQL statement provided in PXF InputData is incorrect
@@ -91,6 +95,7 @@ public class JdbcAccessor extends JdbcPlugin implements ReadAccessor, WriteAcces
      * readNextObject() implementation
      * Retreive the next tuple from resultSet and return it
      *
+     * @return row
      * @throws SQLException if a problem in resultSet occurs
      */
     @Override
@@ -113,6 +118,7 @@ public class JdbcAccessor extends JdbcPlugin implements ReadAccessor, WriteAcces
      * openForWrite() implementation
      * Create query template and open JDBC connection
      *
+     * @return true if successful
      * @throws SQLException if a database access error occurs
      * @throws SQLTimeoutException if a problem with the connection occurs
      * @throws ParseException if the SQL statement provided in PXF InputData is incorrect
@@ -173,6 +179,8 @@ public class JdbcAccessor extends JdbcPlugin implements ReadAccessor, WriteAcces
      *
      * In both cases, a {@link java.sql.PreparedStatement} is used
      *
+     * @param row one row
+     * @return true if successful
      * @throws SQLException if a database access error occurs
      * @throws IOException if the data provided by {@link JdbcResolver} is corrupted
      * @throws ClassNotFoundException if pooling is used and the JDBC driver was not found
@@ -204,7 +212,6 @@ public class JdbcAccessor extends JdbcPlugin implements ReadAccessor, WriteAcces
     /**
      * closeForWrite() implementation
      *
-     * @throws SQLException if a database access error occurs
      * @throws Exception if it happens in writerCallable.call() or due to runtime errors in thread pool
      */
     @Override

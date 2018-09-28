@@ -221,15 +221,6 @@ function start_hadoop_services() {
 	fi
 }
 
-function add_jdbc_jar_to_pxf_public_classpath() {
-	local singlecluster=${1}
-
-	# append the full path to PostgreSQL JDBC JAR file to pxf_public.classpath for JDBC tests
-	ls ${singlecluster}/jdbc/postgresql-jdbc*.jar >> ${PXF_HOME}/conf/pxf-public.classpath
-
-	cat ${PXF_HOME}/conf/pxf-public.classpath
-}
-
 function start_pxf_server() {
 	pushd ${PXF_HOME} > /dev/null
 

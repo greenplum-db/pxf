@@ -1,4 +1,4 @@
-package org.greenplum.pxf.service.utilities;
+package org.greenplum.pxf.api.utilities;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -39,13 +39,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.apache.hadoop.security.UserGroupInformation;
-
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ UserGroupInformation.class, ProfilesConf.class, SecureLogin.class })
+@PrepareForTest({ ProfilesConf.class })
 public class ProtocolDataTest {
     Map<String, String> parameters;
 
@@ -200,8 +198,7 @@ public class ProtocolDataTest {
     }
 
     @Test
-    public void nullUserThrowsWhenImpersonationEnabled() throws Exception {
-        when(SecureLogin.isUserImpersonationEnabled()).thenReturn(true);
+    public void nullUserThrowsException() throws Exception {
         parameters.remove("X-GP-USER");
         try {
             new ProtocolData(parameters);
@@ -210,13 +207,6 @@ public class ProtocolDataTest {
             assertEquals(e.getMessage(),
                     "Internal server error. Property \"USER\" has no value in current request");
         }
-    }
-
-    @Test
-    public void nullUserDoesNotThrowWhenImpersonationDisabled() throws Exception {
-        parameters.remove("X-GP-USER");
-        ProtocolData protocolData = new ProtocolData(parameters);
-        assertNull(protocolData.getUser());
     }
 
     @Test
@@ -438,10 +428,6 @@ public class ProtocolDataTest {
         parameters.put("X-GP-FRAGMENT-METADATA", "U29tZXRoaW5nIGluIHRoZSB3YXk=");
         parameters.put("X-GP-OPTIONS-I'M-STANDING-HERE", "outside-your-door");
         parameters.put("X-GP-USER", "alex");
-
-        PowerMockito.mockStatic(UserGroupInformation.class);
-        PowerMockito.mockStatic(SecureLogin.class);
-
     }
 
     /*

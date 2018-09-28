@@ -89,7 +89,6 @@ function _main() {
 	# Doing this before making GPDB cluster to use system python for yum install
 	setup_hadoop /singlecluster
 
-	add_jdbc_jar_to_pxf_public_classpath /singlecluster
 	create_gpdb_cluster
 	add_remote_user_access_for_gpdb "testuser"
 	start_pxf_server

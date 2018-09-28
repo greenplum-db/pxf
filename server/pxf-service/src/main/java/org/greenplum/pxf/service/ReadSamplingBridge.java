@@ -27,7 +27,7 @@ import org.apache.commons.logging.LogFactory;
 
 import org.greenplum.pxf.service.io.Writable;
 import org.greenplum.pxf.service.utilities.AnalyzeUtils;
-import org.greenplum.pxf.service.utilities.ProtocolData;
+import org.greenplum.pxf.api.utilities.ProtocolData;
 
 /**
  * ReadSamplingBridge wraps a ReadBridge, and returns only some of the output

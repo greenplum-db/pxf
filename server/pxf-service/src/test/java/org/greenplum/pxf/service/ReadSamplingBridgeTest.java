@@ -32,7 +32,7 @@ import java.util.BitSet;
 
 import org.greenplum.pxf.service.io.Writable;
 import org.greenplum.pxf.service.utilities.AnalyzeUtils;
-import org.greenplum.pxf.service.utilities.ProtocolData;
+import org.greenplum.pxf.api.utilities.ProtocolData;
 
 import org.junit.Before;
 import org.junit.Test;

@@ -31,6 +31,7 @@ public interface WriterCallable extends Callable<SQLException> {
     /**
      * Pass the next OneRow to this WriterCallable.
      *
+     * @param row row
      * @throws IllegalStateException if this WriterCallable must be call()ed before the next call to supply()
      */
     void supply(OneRow row) throws IllegalStateException;
@@ -38,16 +39,14 @@ public interface WriterCallable extends Callable<SQLException> {
     /**
      * Check whether this WriterCallable must be called
      *
-     * @return true if this WriterCallable must be call()ed before the next call to supply()
-     * @return false otherwise
+     * @return true if this WriterCallable must be call()ed before the next call to supply(), false otherwise
      */
     boolean isCallRequired();
 
     /**
      * Execute an INSERT query.
      *
-     * @return null or a SQLException that happened when executing the query
-     * @return null if the query was empty (nothing was there to execute)
+     * @return null or a SQLException that happened when executing the query or if the query was empty (nothing was there to execute)
      *
      * @throws Exception an exception that happened during execution, but that is not related to the execution of the query itself (for instance, it may originate from {@link java.sql.PreparedStatement} close() method)
      */

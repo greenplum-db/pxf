@@ -54,6 +54,9 @@ import com.google.gson.JsonArray;
 public class IgniteAccessor extends IgnitePlugin implements ReadAccessor, WriteAccessor {
     /**
      * Class constructor
+     * @param inputData Input
+     *
+     * @throws UserDataException if there is a user data exception
      */
     public IgniteAccessor(InputData inputData) throws UserDataException {
         super(inputData);

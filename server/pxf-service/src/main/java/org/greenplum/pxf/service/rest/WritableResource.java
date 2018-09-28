@@ -39,7 +39,7 @@ import org.apache.commons.logging.LogFactory;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.service.Bridge;
 import org.greenplum.pxf.service.WriteBridge;
-import org.greenplum.pxf.service.utilities.ProtocolData;
+import org.greenplum.pxf.api.utilities.ProtocolData;
 
 /*
  * Running this resource manually:

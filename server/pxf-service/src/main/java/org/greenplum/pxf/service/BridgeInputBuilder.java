@@ -25,7 +25,7 @@ import org.greenplum.pxf.api.OutputFormat;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.service.io.GPDBWritable;
 import org.greenplum.pxf.service.io.Text;
-import org.greenplum.pxf.service.utilities.ProtocolData;
+import org.greenplum.pxf.api.utilities.ProtocolData;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

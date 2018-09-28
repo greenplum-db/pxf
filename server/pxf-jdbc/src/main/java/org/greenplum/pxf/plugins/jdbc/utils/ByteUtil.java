@@ -31,6 +31,8 @@ public class ByteUtil {
 
     /**
      * Split a byte[] array into two arrays, each of which represents a value of type long
+     * @param bytes byte array
+     * @return result
      */
     public static byte[][] splitBytes(byte[] bytes) {
         final int N = 8;
@@ -46,6 +48,8 @@ public class ByteUtil {
 
     /**
      * Convert a value of type long to a byte[] array
+     * @param value long value
+     * @return result
      */
     public static byte[] getBytes(long value) {
         byte[] b = new byte[8];
@@ -62,6 +66,8 @@ public class ByteUtil {
 
     /**
      * Convert a byte[] array to a value of type long
+     * @param b byte array
+     * @return long result
      */
     public static long toLong(byte[] b) {
         return ((((long) b[7]) & 0xFF) +

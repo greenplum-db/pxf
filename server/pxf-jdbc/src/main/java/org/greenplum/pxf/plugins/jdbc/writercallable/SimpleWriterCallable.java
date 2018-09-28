@@ -82,9 +82,6 @@ class SimpleWriterCallable implements WriterCallable {
         return null;
     }
 
-    /**
-     * Construct a new simple writer
-     */
     SimpleWriterCallable(JdbcPlugin plugin, String query, PreparedStatement statement) {
         if ((plugin == null) || (query == null)) {
             throw new IllegalArgumentException("The provided JdbcPlugin or SQL query is null");

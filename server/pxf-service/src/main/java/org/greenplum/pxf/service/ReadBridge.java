@@ -27,7 +27,7 @@ import org.greenplum.pxf.api.utilities.InputData;
 import org.greenplum.pxf.api.utilities.Plugin;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.service.io.Writable;
-import org.greenplum.pxf.service.utilities.ProtocolData;
+import org.greenplum.pxf.api.utilities.ProtocolData;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 

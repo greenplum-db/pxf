@@ -37,6 +37,7 @@ import java.util.List;
 public class WhereSQLBuilder extends IgniteFilterBuilder {
     /**
      * Class constructor
+     * @param input Input
      */
     public WhereSQLBuilder(InputData input) {
         inputData = input;
@@ -45,6 +46,7 @@ public class WhereSQLBuilder extends IgniteFilterBuilder {
     /**
      * Build a WHERE statement using the InputData provided to constructor.
      *
+     * @return SQL string
      * @throws Exception if 'InputData' has filter, but its 'filterString' is incorrect
      */
     public String buildWhereSQL() throws Exception {

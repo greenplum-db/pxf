@@ -42,7 +42,7 @@ import org.greenplum.pxf.api.MetadataFetcher;
 import org.greenplum.pxf.service.MetadataFetcherFactory;
 import org.greenplum.pxf.service.MetadataResponse;
 import org.greenplum.pxf.service.MetadataResponseFormatter;
-import org.greenplum.pxf.service.utilities.ProtocolData;
+import org.greenplum.pxf.api.utilities.ProtocolData;
 
 /**
  * Class enhances the API of the WEBHDFS REST server. Returns the metadata of a

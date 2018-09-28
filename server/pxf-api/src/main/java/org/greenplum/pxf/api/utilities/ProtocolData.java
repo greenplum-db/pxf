@@ -1,4 +1,4 @@
-package org.greenplum.pxf.service.utilities;
+package org.greenplum.pxf.api.utilities;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -28,7 +28,6 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.security.UserGroupInformation;
 import org.greenplum.pxf.api.OutputFormat;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.EnumAggregationType;
@@ -363,16 +362,17 @@ public class ProtocolData extends InputData {
 
     private void parseSecurityProperties() {
         // obtain identity of the end-user -- mandatory only when impersonation is enabled
-        if (SecureLogin.isUserImpersonationEnabled()) {
-            this.user = getProperty("USER");
-        } else {
-            this.user = getOptionalProperty("USER");
-        }
+//        if (SecureLogin.isUserImpersonationEnabled()) {
+//            this.user = getProperty("USER");
+//        } else {
+//            this.user = getOptionalProperty("USER");
+//        }
+        this.user = getProperty("USER");
 
-        /* Kerberos token information */
-        if (UserGroupInformation.isSecurityEnabled()) {
-            this.token = getOptionalProperty("TOKEN");
-        }
+//        /* Kerberos token information */
+//        if (UserGroupInformation.isSecurityEnabled()) {
+//            this.token = getOptionalProperty("TOKEN");
+//        }
     }
 
     /**
@@ -419,7 +419,7 @@ public class ProtocolData extends InputData {
                 }
             } else {
                 /* This is a special case to handle aggregate queries not related to any specific column
-                * eg: count(*) queries. */
+                 * eg: count(*) queries. */
                 columnProjList.add(0);
             }
         }
@@ -450,14 +450,14 @@ public class ProtocolData extends InputData {
         Integer[] result = null;
         Integer typeModeCount = null;
         if (typeModeCountStr != null) {
-        try {
-            typeModeCount = Integer.parseInt(typeModeCountStr);
-            if (typeModeCount < 0)
-                throw new IllegalArgumentException("ATTR-TYPEMOD" + columnIndex + "-COUNT cann't be negative");
-            result = new Integer[typeModeCount];
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("ATTR-TYPEMOD" + columnIndex + "-COUNT must be a positive integer");
-        }
+            try {
+                typeModeCount = Integer.parseInt(typeModeCountStr);
+                if (typeModeCount < 0)
+                    throw new IllegalArgumentException("ATTR-TYPEMOD" + columnIndex + "-COUNT cann't be negative");
+                result = new Integer[typeModeCount];
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("ATTR-TYPEMOD" + columnIndex + "-COUNT must be a positive integer");
+            }
             for (int i = 0; i < typeModeCount; i++) {
                 try {
                     result[i] = Integer.parseInt(getProperty("ATTR-TYPEMOD" + columnIndex + "-" + i));

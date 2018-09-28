@@ -27,7 +27,7 @@ import org.greenplum.pxf.service.io.BufferWritable;
 import org.greenplum.pxf.service.io.GPDBWritable;
 import org.greenplum.pxf.service.io.Text;
 import org.greenplum.pxf.service.io.Writable;
-import org.greenplum.pxf.service.utilities.ProtocolData;
+import org.greenplum.pxf.api.utilities.ProtocolData;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.ObjectUtils;

@@ -22,6 +22,7 @@ package org.greenplum.pxf.service.utilities;
 
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.token.Token;
+import org.greenplum.pxf.api.utilities.ProtocolData;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

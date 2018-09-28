@@ -50,6 +50,9 @@ import org.apache.commons.logging.LogFactory;
 public class JdbcResolver extends JdbcPlugin implements ReadResolver, WriteResolver {
     /**
      * Class constructor
+     *
+     * @param input input
+     * @throws UserDataException if there is a user data exception
      */
     public JdbcResolver(InputData input) throws UserDataException {
         super(input);
@@ -57,6 +60,8 @@ public class JdbcResolver extends JdbcPlugin implements ReadResolver, WriteResol
 
     /**
      * getFields() implementation
+     *
+     * @param row one row
      *
      * @throws SQLException if the provided {@link OneRow} object is invalid
      */
@@ -118,13 +123,15 @@ public class JdbcResolver extends JdbcPlugin implements ReadResolver, WriteResol
 
     /**
      * setFields() implementation
+     * @param record  List of fields
      *
-     * @return OneRow with the data field containing a List<OneField>
+     * @return OneRow with the data field containing a List of fields
      * OneFields are not reordered before being passed to Accessor; at the
      * moment, there is no way to correct the order of the fields if it is not.
      * In practice, the 'record' provided is always ordered the right way.
      *
      * @throws UnsupportedOperationException if field of some type is not supported
+     * @throws ParseException if the record cannot be parsed
      */
     @Override
     public OneRow setFields(List<OneField> record) throws UnsupportedOperationException, ParseException {
@@ -132,9 +139,9 @@ public class JdbcResolver extends JdbcPlugin implements ReadResolver, WriteResol
         for (OneField oneField : record) {
             ColumnDescriptor column = columns.get(column_index);
             if (
-                LOG.isDebugEnabled() &&
-                DataType.get(column.columnTypeCode()) != DataType.get(oneField.type)
-            ) {
+                    LOG.isDebugEnabled() &&
+                            DataType.get(column.columnTypeCode()) != DataType.get(oneField.type)
+                    ) {
                 LOG.warn("The provided tuple of data may be disordered. Datatype of column with descriptor '" + column.toString() + "' must be '" + DataType.get(column.columnTypeCode()).toString() + "', but actual is '" + DataType.get(oneField.type).toString() + "'");
             }
 
@@ -159,9 +166,9 @@ public class JdbcResolver extends JdbcPlugin implements ReadResolver, WriteResol
             }
 
             if (
-                LOG.isDebugEnabled() &&
-                DataType.get(oneField.type) == DataType.BYTEA
-            ) {
+                    LOG.isDebugEnabled() &&
+                            DataType.get(oneField.type) == DataType.BYTEA
+                    ) {
                 LOG.debug("OneField content (conversion from BYTEA): '" + new String((byte[])oneField.val) + "'");
             }
 
@@ -233,6 +240,9 @@ public class JdbcResolver extends JdbcPlugin implements ReadResolver, WriteResol
 
     /**
      * Decode OneRow object and pass all its contents to a PreparedStatement
+     *
+     * @param row one row
+     * @param statement PreparedStatement
      *
      * @throws IOException if data in a OneRow is corrupted
      * @throws SQLException if the given statement is broken
@@ -352,14 +362,14 @@ public class JdbcResolver extends JdbcPlugin implements ReadResolver, WriteResol
     private static ThreadLocal<SimpleDateFormat[]> timestampSDFs = new ThreadLocal<SimpleDateFormat[]>() {
         @Override protected SimpleDateFormat[] initialValue() {
             SimpleDateFormat[] retRes = {
-                new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSSS"),
-                new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSS"),
-                new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSS"),
-                new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS"),
-                new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SS"),
-                new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S"),
-                new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"),
-                new SimpleDateFormat("yyyy-MM-dd")
+                    new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSSS"),
+                    new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSS"),
+                    new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSS"),
+                    new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS"),
+                    new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SS"),
+                    new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S"),
+                    new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"),
+                    new SimpleDateFormat("yyyy-MM-dd")
             };
             return retRes;
         }

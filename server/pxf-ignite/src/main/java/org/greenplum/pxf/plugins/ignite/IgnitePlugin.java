@@ -42,7 +42,7 @@ public class IgnitePlugin extends Plugin {
 
     /**
      * Class constructor. Parses and checks 'InputData'
-     * @param inputData
+     * @param inputData Input data
      * @throws UserDataException if the request parameter is malformed
      */
     public IgnitePlugin(InputData inputData) throws UserDataException {

@@ -196,6 +196,8 @@ public class JdbcPartitionFragmenter extends Fragmenter {
 
     /**
      * @throws UnsupportedOperationException ANALYZE for Jdbc plugin is not supported
+     *
+     * @return fragment stats
      */
     @Override
     public FragmentsStats getFragmentsStats() throws UnsupportedOperationException {

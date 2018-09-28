@@ -171,7 +171,6 @@ function doInit()
 		echo WARNING: instance already exists in ${instance_root}, nothing to do...
 		return 0
 	fi
-	determineHadoopDistro
 	generatePrivateClasspath || return 1
 	createInstance || return 1
 	deployWebapp || return 1
@@ -262,72 +261,10 @@ function createRunDir()
     return 0
 }
 
-function check_hadoop_install()
-{
-    local distro_type=${1}
-    case "${distro_type}" in
-        hdp|HDP)
-            if [ -d "/usr/hdp/current/hadoop-client/client" ]; then
-                DISTRO="hdp"
-                return 0;
-            fi
-            ;;
-        cdh|CDH)
-            if [ -d "/usr/lib/hadoop/client" ]; then
-                DISTRO="cdh"
-                return 0;
-            fi
-            ;;
-        tar|TAR)
-            if [ -n "${HADOOP_ROOT}" ] && [ -d "${HADOOP_ROOT}/hadoop/share/hadoop/common/lib" ]; then
-                DISTRO="tar"
-                return 0;
-            fi
-            ;;
-        custom|CUSTOM)
-            # use tarball template for custom distro, do not require HADOOP_ROOT to be set
-            DISTRO="tar"
-            return 0;
-            ;;
-        *)
-            fail "Unknown hadoop distribution type: HADOOP_DISTRO=${distro_type}"
-            ;;
-    esac
-    # the distro type was not found installed, return failure code
-    return 1
-}
-
-function determineHadoopDistro()
-{
-    DISTRO=""
-    # check if the distro is explicitly specified
-    if [ -z "${HADOOP_DISTRO}" ]; then
-        # if distro is not specified, try checking for HDP and then CDH
-        check_hadoop_install "hdp" || check_hadoop_install "cdh"
-    else
-        # check distro specified in the config file
-        check_hadoop_install "${HADOOP_DISTRO}"
-    fi
-
-    # if still not determined, check tarball-based install
-    if [ -z "${DISTRO}" ]; then
-        check_hadoop_install "tar"
-        # if still unknown, then error out
-        if [ -z "${DISTRO}" ]; then
-            fail "Can not determine Hadoop distribution, please install Hadoop clients."
-        fi
-    fi
-}
-
 function generatePrivateClasspath()
 {
-    # distro must have been determined by now, but double check
-    if [ -z "${DISTRO}" ]; then
-        fail "Hadoop distribution was not determined"
-    fi
-
     # verify that a template file for the distribution exists
-    local template_file="${PXF_HOME}/conf-templates/pxf-private-${DISTRO}.classpath.template"
+    local template_file="${PXF_HOME}/conf-templates/pxf-private.classpath.template"
     if [ ! -f "${template_file}" ]; then
         fail "Template file ${template_file} not found"
     fi
@@ -337,10 +274,6 @@ function generatePrivateClasspath()
     # create initial version of the file by replacing PXF_HOME token (applicable to all templates)
     sed -e "s|PXF_HOME|${PXF_HOME}|g" ${template_file} > ${PXF_HOME}/conf/pxf-private.classpath
 
-    # substitute HADOOP_ROOT value if defined
-    if [ -n "${HADOOP_ROOT}" ]; then
-        sed -i -e "s|HADOOP_ROOT|${HADOOP_ROOT}|g" ${PXF_HOME}/conf/pxf-private.classpath
-    fi
 }
 
 function printUsage()

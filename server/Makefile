@@ -49,49 +49,37 @@ ifneq "$(DATABASE)" ""
 endif
 
 help:
-	@echo 
-	@echo "help it is then"
+	@echo
 	@echo   "Possible targets"
-	@echo	"  - all (clean, build, unittest, jar, tar, rpm)"
-	@echo	"  -  -  HD=<hdp> - set classpath to match hadoop distribution. default will be apache hadoop compliant"
-	@echo	"  -  -  LICENSE=<license info> - add license info to created RPMs"
-	@echo	"  -  -  VENDOR=<vendor name> - add vendor name to created RPMs"
-	@echo	"  -  -  PLUGINS_EXCLUDE_RPM=plugin1, plugin2,... - do not build and RPM for given comma-separated list of plugins"
-	@echo	"  -  -  DATABASE=build pxf for specific database(GPDB is default, other databases are defined under gradle/profiles)"
-	@echo	"  - tomcat - builds tomcat rpm from downloaded tarball"
-	@echo	"  -  -  LICENSE and VENDOR parameters can be used as well"
+	@echo	"  - all (clean, compile, test, install, tar, doc)"
+	@echo	"  - clean - cleans the workspace of all produced artifacts"
+	@echo	"  - compile - compiles all PXF modules and builds their JAR files"
+	@echo	"  - test - runs unit tests for all PXF modules"
 	@echo	"  - install - setup PXF along with tomcat in the configured deployPath"
-	@echo	"  - bundle - bundle PXF along with tomcat into a single tarball"
+	@echo	"  - tar - bundle PXF along with tomcat into a single tarball"
 	@echo	"  - doc - creates aggregate javadoc under docs"
 
 all:
-	./gradlew clean release $(BUILD_PARAMS) $$(echo $$(for i in $$(echo ${PLUGINS_EXCLUDE_RPM} | sed 's/,/ /g'); do echo -x $$i:buildRpm ; done))
-	
-unittest:
+	./gradlew clean tar aggregateJavadoc $(BUILD_PARAMS)
+
+compile:
+	./gradlew compileJava
+
+test unittest:
 	./gradlew test
-	
-jar:
-	./gradlew jar $(BUILD_PARAMS)
-	
+
 tar:
 	./gradlew tar $(BUILD_PARAMS)
 
-rpm: tomcat
-	./gradlew rpm $(BUILD_PARAMS)
-	
 clean:
 	./gradlew clean
-	@rm -rf ./distributions/apache-tomcat*.rpm
 
 distclean maintainer-clean: clean
 
 doc:
-	./gradlew aggregateJavadoc 
+	./gradlew aggregateJavadoc
 
-.PHONY: tomcat
-tomcat:
-	./gradlew tomcatRpm $(BUILD_PARAMS)
-
+.PHONY: install
 install:
 	./gradlew install $(BUILD_PARAMS)
 	@if [ -d "$(PXF_HOME)/lib" ] ; then \
@@ -100,6 +88,3 @@ install:
 			ln -sf $$X `echo $$X | sed -e 's/-[a-zA-Z0-9.]*.jar/.jar/'`; \
 		done; \
 	fi
-
-bundle:
-	./gradlew bundle $(BUILD_PARAMS)

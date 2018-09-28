@@ -56,6 +56,8 @@ public class WriterCallableFactory {
 
     /**
      * Set {@link JdbcPlugin} to use.
+     *
+     * @param plugin
      * REQUIRED
      */
     public void setPlugin(JdbcPlugin plugin) {
@@ -64,6 +66,8 @@ public class WriterCallableFactory {
 
     /**
      * Set SQL query to use.
+     * @param query
+     *
      * REQUIRED
      */
     public void setQuery(String query) {
@@ -73,8 +77,7 @@ public class WriterCallableFactory {
     /**
      * Set batch size to use
      *
-     * @param batchSize > 1: Use batches of specified size
-     * @param batchSize < 1: Do not use batches
+     * @param batchSize If greater than 1, Use batches of specified size; If less than 1, do not use batches
      */
     public void setBatchSize(int batchSize) {
         this.batchSize = batchSize;
@@ -83,8 +86,8 @@ public class WriterCallableFactory {
     /**
      * Set statement to use.
      *
-     * @param statement = null: Create a new connection & a new statement each time {@link WriterCallable} is called
-     * @param statement not null: Use the given statement and do not close or reopen it
+     * @param statement If null, Create a new connection and a new statement each time {@link WriterCallable} is called;
+     *                  If not null, Use the given statement and do not close or reopen it
      */
     public void setStatement(PreparedStatement statement) {
         this.statement = statement;

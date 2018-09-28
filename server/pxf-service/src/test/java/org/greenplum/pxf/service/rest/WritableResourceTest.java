@@ -32,7 +32,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import org.greenplum.pxf.service.WriteBridge;
-import org.greenplum.pxf.service.utilities.ProtocolData;
+import org.greenplum.pxf.api.utilities.ProtocolData;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

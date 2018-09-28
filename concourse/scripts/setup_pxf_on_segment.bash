@@ -46,7 +46,6 @@ function _main() {
 	chown -R gpadmin:gpadmin ${GPHOME}/pxf
 
 	setup_hadoop_client ${1}
-	add_jdbc_jar_to_pxf_public_classpath
 	start_pxf_server
 }
 

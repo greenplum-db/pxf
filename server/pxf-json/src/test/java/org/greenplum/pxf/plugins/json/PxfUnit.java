@@ -46,16 +46,16 @@ import org.greenplum.pxf.api.WriteAccessor;
 import org.greenplum.pxf.api.WriteResolver;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.utilities.InputData;
-import org.greenplum.pxf.service.FragmentsResponse;
-import org.greenplum.pxf.service.FragmentsResponseFormatter;
-import org.greenplum.pxf.service.utilities.ProtocolData;
+import org.greenplum.pxf.api.utilities.FragmentsResponse;
+import org.greenplum.pxf.api.utilities.FragmentsResponseFormatter;
+import org.greenplum.pxf.api.utilities.ProtocolData;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Assert;
 
 /**
- * This abstract class contains a number of helpful utilities in developing a PXF extension for GPDB. Extend this class
+ * This abstract class contains a number of helpful utilities in developing a PXF extension for HAWQ. Extend this class
  * and use the various <code>assert</code> methods to check given input against known output.
  */
 public abstract class PxfUnit {
@@ -70,7 +70,7 @@ public abstract class PxfUnit {
 	/**
 	 * Uses the given input directory to run through the PXF unit testing framework. Uses the lines in the file for
 	 * output testing.
-	 * 
+	 *
 	 * @param input
 	 *            Input records
 	 * @param expectedOutput
@@ -97,7 +97,7 @@ public abstract class PxfUnit {
 	/**
 	 * Uses the given input directory to run through the PXF unit testing framework. Uses the lines in the given
 	 * parameter for output testing.
-	 * 
+	 *
 	 * @param input
 	 *            Input records
 	 * @param expectedOutput
@@ -123,7 +123,7 @@ public abstract class PxfUnit {
 	 * parameter for output testing.<br>
 	 * <br>
 	 * Ignores order of records.
-	 * 
+	 *
 	 * @param input
 	 *            Input records
 	 * @param expectedOutput
@@ -150,7 +150,7 @@ public abstract class PxfUnit {
 	 * output testing.<br>
 	 * <br>
 	 * Ignores order of records.
-	 * 
+	 *
 	 * @param input
 	 *            Input records
 	 * @param expectedOutput
@@ -174,7 +174,7 @@ public abstract class PxfUnit {
 
 	/**
 	 * Writes the output to the given output stream. Comma delimiter.
-	 * 
+	 *
 	 * @param input
 	 *            The input file
 	 * @param output
@@ -199,7 +199,7 @@ public abstract class PxfUnit {
 
 	/**
 	 * Get the class of the implementation of Fragmenter to be tested.
-	 * 
+	 *
 	 * @return The class
 	 */
 	public Class<? extends Fragmenter> getFragmenterClass() {
@@ -208,7 +208,7 @@ public abstract class PxfUnit {
 
 	/**
 	 * Get the class of the implementation of ReadAccessor to be tested.
-	 * 
+	 *
 	 * @return The class
 	 */
 	public Class<? extends ReadAccessor> getReadAccessorClass() {
@@ -217,7 +217,7 @@ public abstract class PxfUnit {
 
 	/**
 	 * Get the class of the implementation of WriteAccessor to be tested.
-	 * 
+	 *
 	 * @return The class
 	 */
 	public Class<? extends WriteAccessor> getWriteAccessorClass() {
@@ -226,7 +226,7 @@ public abstract class PxfUnit {
 
 	/**
 	 * Get the class of the implementation of Resolver to be tested.
-	 * 
+	 *
 	 * @return The class
 	 */
 	public Class<? extends ReadResolver> getReadResolverClass() {
@@ -235,7 +235,7 @@ public abstract class PxfUnit {
 
 	/**
 	 * Get the class of the implementation of WriteResolver to be tested.
-	 * 
+	 *
 	 * @return The class
 	 */
 	public Class<? extends WriteResolver> getWriteResolverClass() {
@@ -245,7 +245,7 @@ public abstract class PxfUnit {
 	/**
 	 * Get any extra parameters that are meant to be specified for the "pxf" protocol. Note that "X-GP-OPTIONS-" is prepended to
 	 * each parameter name.
-	 * 
+	 *
 	 * @return Any extra parameters or null if none.
 	 */
 	public List<Pair<String, String>> getExtraParams() {
@@ -254,7 +254,7 @@ public abstract class PxfUnit {
 
 	/**
 	 * Gets the column definition names and data types. Types are DataType objects
-	 * 
+	 *
 	 * @return A list of column definition name value pairs. Cannot be null.
 	 */
 	public abstract List<Pair<String, DataType>> getColumnDefinitions();
@@ -312,7 +312,7 @@ public abstract class PxfUnit {
 
 	/**
 	 * Set all necessary parameters for GPXF framework to function. Uses the given path as a single input split.
-	 * 
+	 *
 	 * @param input
 	 *            The input path, relative or absolute.
 	 * @throws Exception
@@ -335,6 +335,7 @@ public abstract class PxfUnit {
 
 		// 2.1.0 Properties
 		// HDMetaData parameters
+		paramsMap.put("X-GP-USER", "who");
 		paramsMap.put("X-GP-ALIGNMENT", "what");
 		paramsMap.put("X-GP-SEGMENT-ID", "1");
 		paramsMap.put("X-GP-HAS-FILTER", "0");
@@ -406,7 +407,7 @@ public abstract class PxfUnit {
 
 	/**
 	 * Compares the expected and actual output, printing out any errors.
-	 * 
+	 *
 	 * @param expectedOutput
 	 *            The expected output
 	 * @param actualOutput
@@ -457,7 +458,7 @@ public abstract class PxfUnit {
 
 	/**
 	 * Compares the expected and actual output, printing out any errors.
-	 * 
+	 *
 	 * @param expectedOutput
 	 *            The expected output
 	 * @param actualOutput
@@ -503,7 +504,7 @@ public abstract class PxfUnit {
 	/**
 	 * Opens the accessor and reads all output, giving it to the resolver to retrieve the list of fields. These fields
 	 * are then added to a string, delimited by commas, and returned in a list.
-	 * 
+	 *
 	 * @param accessor
 	 *            The accessor instance to use
 	 * @param resolver
@@ -539,9 +540,9 @@ public abstract class PxfUnit {
 
 	/**
 	 * Gets an instance of Fragmenter via reflection.
-	 * 
+	 *
 	 * Searches for a constructor that has a single parameter of some BaseMetaData type
-	 * 
+	 *
 	 * @return A Fragmenter instance
 	 * @throws Exception
 	 *             If something bad happens
@@ -570,9 +571,9 @@ public abstract class PxfUnit {
 
 	/**
 	 * Gets an instance of ReadAccessor via reflection.
-	 * 
+	 *
 	 * Searches for a constructor that has a single parameter of some InputData type
-	 * 
+	 *
 	 * @return An ReadAccessor instance
 	 * @throws Exception
 	 *             If something bad happens
@@ -601,9 +602,9 @@ public abstract class PxfUnit {
 
 	/**
 	 * Gets an instance of IFieldsResolver via reflection.
-	 * 
+	 *
 	 * Searches for a constructor that has a single parameter of some BaseMetaData type
-	 * 
+	 *
 	 * @return A IFieldsResolver instance
 	 * @throws Exception
 	 *             If something bad happens

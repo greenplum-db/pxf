@@ -140,6 +140,7 @@ public class IgnitePartitionFragmenter extends Fragmenter {
     /**
      * Class constructor
      *
+     * @param inputData Input data
      * @throws UserDataException if the request parameter is malformed
      */
     public IgnitePartitionFragmenter(InputData inputData) throws UserDataException {
@@ -224,7 +225,7 @@ public class IgnitePartitionFragmenter extends Fragmenter {
 
     /**
      * Returns statistics for the Ignite table. This is not implemented in the current version
-     * @throws UnsupportedOperationException
+     * @throws UnsupportedOperationException when operation is not supported
      */
     @Override
     public FragmentsStats getFragmentsStats() throws UnsupportedOperationException {

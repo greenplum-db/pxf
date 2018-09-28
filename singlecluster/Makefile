@@ -43,7 +43,7 @@ clean:
 $(TARGET): $(BUILDROOT) make_tarball
 # $(TARGET): $(BUILDROOT)
 
-$(BUILDROOT): copy_binfiles copy_jdbc create_versions_file extract_products \
+$(BUILDROOT): copy_binfiles create_versions_file extract_products \
 	 	 	 copy_templates copy_deps copy_docs
 	chmod -R +w $(BUILDROOT)
 
@@ -51,11 +51,6 @@ $(BUILDROOT): copy_binfiles copy_jdbc create_versions_file extract_products \
 copy_binfiles: $(BINFILES)
 	mkdir -p $(BUILDROOT)/bin
 	cp $^ $(BUILDROOT)/bin
-
-.PHONY: copy_jdbc
-copy_jdbc:
-	mkdir -p $(BUILDROOT)/jdbc
-	cp postgresql-jdbc*.jar $(BUILDROOT)/jdbc
 
 .PHONY: create_versions_file
 create_versions_file:

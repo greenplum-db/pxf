@@ -22,11 +22,11 @@ package org.greenplum.pxf.service.rest;
 import org.greenplum.pxf.api.Fragment;
 import org.greenplum.pxf.api.Fragmenter;
 import org.greenplum.pxf.api.FragmentsStats;
-import org.greenplum.pxf.service.FragmenterFactory;
-import org.greenplum.pxf.service.FragmentsResponse;
-import org.greenplum.pxf.service.FragmentsResponseFormatter;
+import org.greenplum.pxf.api.utilities.FragmenterFactory;
+import org.greenplum.pxf.api.utilities.FragmentsResponse;
+import org.greenplum.pxf.api.utilities.FragmentsResponseFormatter;
 import org.greenplum.pxf.service.utilities.AnalyzeUtils;
-import org.greenplum.pxf.service.utilities.ProtocolData;
+import org.greenplum.pxf.api.utilities.ProtocolData;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

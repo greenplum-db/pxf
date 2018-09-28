@@ -25,7 +25,7 @@ import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.OutputFormat;
 import org.greenplum.pxf.api.utilities.InputData;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
-import org.greenplum.pxf.service.utilities.ProtocolData;
+import org.greenplum.pxf.api.utilities.ProtocolData;
 
 import java.util.Collections;
 import java.util.List;
