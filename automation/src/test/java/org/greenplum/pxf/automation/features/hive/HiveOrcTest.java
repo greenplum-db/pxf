@@ -297,9 +297,9 @@ public class HiveOrcTest extends HiveBaseTest {
         hive.createTableAndVerify(hiveOrcSkipHeaderTable);
         hive.insertData(hiveSmallDataTable, hiveOrcTable);
 
-        createExternalTable("pxf_hive_table_with_skipheader", PXF_HIVE_SMALLDATA_COLS, hiveOrcSkipHeaderTable);
+        createExternalTable("pxf_hive_table_with_skipheader_orc", PXF_HIVE_SMALLDATA_COLS, hiveOrcSkipHeaderTable);
 
-        runTincTest("pxf.features.hive.skip_header_rows.runTest");
+        runTincTest("pxf.features.hive.orc_skip_header_rows.runTest");
     }
 
 }
