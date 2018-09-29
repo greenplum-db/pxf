@@ -5,7 +5,6 @@ set -exo pipefail
 CWDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source "${CWDIR}/pxf_common.bash"
 
-GPHOME="/usr/local/greenplum-db-devel"
 SSH_OPTS="-i cluster_env_files/private_key.pem"
 
 function install_hadoop_client {
@@ -25,10 +24,18 @@ function setup_pxf {
     local segment=${1}
     local hadoop_ip=${2}
     scp -r ${SSH_OPTS} pxf_tarball centos@${segment}:
-    scp ${SSH_OPTS} pxf_src/concourse/scripts/setup_pxf_on_segment.bash centos@${segment}:
     scp ${SSH_OPTS} cluster_env_files/etc_hostfile centos@${segment}:
+
     ssh ${SSH_OPTS} centos@${segment} "sudo bash -c \"\
-        cd /home/centos && IMPERSONATION=${IMPERSONATION} PXF_JVM_OPTS='${PXF_JVM_OPTS}' ./setup_pxf_on_segment.bash ${hadoop_ip}
+        tar -xzf pxf_tarball/pxf.tar.gz -C ${GPHOME} &&
+	    chown -R gpadmin:gpadmin ${GPHOME}/pxf &&
+	    sed -i -e \"s/\(0.0.0.0\|localhost\|127.0.0.1\)/${hadoop_ip}/g\" ${GPHOME}/pxf/conf/*-site.xml &&
+        sed -i -e 's/edw0/hadoop/' /etc/hosts &&
+	    if [ "${IMPERSONATION}" == \"false\" ]; then
+		    sed -i -e \"s|^export PXF_USER_IMPERSONATION=.*$|export PXF_USER_IMPERSONATION=false|g\" ${PXF_HOME}/conf/pxf-env.sh
+	    fi &&
+	    sed -i -e \"s|^export PXF_JVM_OPTS=.*$|export PXF_JVM_OPTS=\"${PXF_JVM_OPTS}\"|g\" ${PXF_HOME}/conf/pxf-env.sh &&
+    	su gpadmin -c \"source ~gpadmin/.bash_profile && ${PXF_HOME}/bin/pxf init && ${PXF_HOME}/bin/pxf start\"
         \""
 }
 
@@ -55,10 +62,11 @@ function update_pghba_and_restart_gpdb() {
     done
     scp ${SSH_OPTS} pg_hba.patch gpadmin@mdw:
 
-	ssh ${SSH_OPTS} gpadmin@mdw "cat pg_hba.patch >> /data/gpdata/master/gpseg-1/pg_hba.conf;\
-		cat /data/gpdata/master/gpseg-1/pg_hba.conf; \
-		source /usr/local/greenplum-db-devel/greenplum_path.sh; \
-		export MASTER_DATA_DIRECTORY=/data/gpdata/master/gpseg-1; \
+	ssh ${SSH_OPTS} gpadmin@mdw "
+	    cat pg_hba.patch >> /data/gpdata/master/gpseg-1/pg_hba.conf &&
+		cat /data/gpdata/master/gpseg-1/pg_hba.conf &&
+		source /usr/local/greenplum-db-devel/greenplum_path.sh &&
+		export MASTER_DATA_DIRECTORY=/data/gpdata/master/gpseg-1 &&
 		gpstop -u"
 }
 

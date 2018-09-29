@@ -54,7 +54,7 @@ public class ProfilesTest extends BaseFeature {
         pxfProfiles.restore();
         cluster.copyFileToNodes(pxfProfiles.getXmlFilePath(), cluster.getPxfConfLocation(),
                 false, false);
-        cluster.restart(PhdCluster.EnumClusterServices.pxf);
+        // cluster.restart(PhdCluster.EnumClusterServices.pxf);
         exTable.setUserParameters(null);
     }
 

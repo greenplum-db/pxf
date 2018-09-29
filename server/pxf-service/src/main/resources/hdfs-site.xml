@@ -52,4 +52,16 @@
 		<name>dfs.encryption.key.provider.uri</name>
 		<value>kms://http@0.0.0.0:16000/kms</value>
 	</property>
+    <property>
+        <name>hadoop.proxyuser.gpadmin.hosts</name>
+        <value>*</value>
+    </property>
+    <property>
+        <name>hadoop.proxyuser.gpadmin.groups</name>
+        <value>*</value>
+    </property>
+    <property>
+        <name>hadoop.security.authorization</name>
+        <value>true</value>
+    </property>
 </configuration>

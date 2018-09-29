@@ -16,7 +16,7 @@ function start_pxf_server() {
 	cat ${PXF_HOME}/conf/pxf-env.sh
 	echo "--------------------------------------------------------------"
 
-	#Check if some other process is listening on 5888
+	# Check if some other process is listening on 5888
 	netstat -tlpna | grep 5888 || true
 	su gpadmin -c "source ~gpadmin/.bash_profile && ./bin/pxf init && ./bin/pxf start"
 	popd > /dev/null
