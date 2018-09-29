@@ -139,6 +139,17 @@ subprojects { subProject ->
 
 project('pxf') {
     jar.enabled = false
+    dependencies {
+        bundleJars "com.fasterxml.jackson.core:jackson-core:2.6.7"
+        bundleJars "com.fasterxml.jackson.core:jackson-databind:2.6.7.1"
+        bundleJars "com.fasterxml.jackson.core:jackson-annotations:2.6.0"
+        bundleJars "org.apache.httpcomponents:httpclient:4.5.2"
+        bundleJars "org.apache.httpcomponents:httpcore:4.4.4"
+        bundleJars "org.apache.hadoop:hadoop-aws:2.8.5"
+        bundleJars "com.amazonaws:aws-java-sdk-core:$awsJavaSdk"
+        bundleJars "com.amazonaws:aws-java-sdk-kms:$awsJavaSdk"
+        bundleJars "com.amazonaws:aws-java-sdk-s3:$awsJavaSdk"
+    }
 }
 
 project('pxf-api') {
