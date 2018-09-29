@@ -38,21 +38,9 @@ function run_pxf_automation() {
 function setup_hadoop() {
 	local hdfsrepo=$1
 
-	case ${HADOOP_CLIENT} in
-		CDH|HDP)
-			cp ${hdfsrepo}/hadoop/etc/hadoop/{core,hdfs,mapred,yarn}-site.xml /etc/hadoop/conf
-			cp ${hdfsrepo}/hive/conf/hive-site.xml /etc/hive/conf
-			cp ${hdfsrepo}/hbase/conf/hbase-site.xml /etc/hbase/conf
-			;;
-		TAR)
-			# TAR-based setup, edit the properties in pxf-env.sh to specify HADOOP_ROOT value
-			sed -i -e "s|^[[:blank:]]*export HADOOP_ROOT=.*$|export HADOOP_ROOT=${hdfsrepo}|g" ${PXF_HOME}/conf/pxf-env.sh
-			;;
-		*)
-			echo "FATAL: Unknown HADOOP_CLIENT=${HADOOP_CLIENT} parameter value"
-			exit 1
-			;;
-	esac
+	cp ${hdfsrepo}/hadoop/etc/hadoop/{core,hdfs,mapred,yarn}-site.xml ${PXF_HOME}/conf
+	cp ${hdfsrepo}/hive/conf/hive-site.xml ${PXF_HOME}/conf
+	cp ${hdfsrepo}/hbase/conf/hbase-site.xml ${PXF_HOME}/conf
 
 	if [ -n "${GROUP}" ]; then
 		export SLAVES=1

@@ -202,6 +202,7 @@ jobs:
       TEST_ENV: {{test-env}}
 
 - name: test_pxf_hdp_multinode_gpdb
+  max_in_flight: 1
   plan:
   - get: ccp_src
   - get: gpdb_src
