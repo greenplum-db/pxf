@@ -26,10 +26,6 @@ function setup_pxf {
     local hadoop_ip=${2}
     scp -r ${SSH_OPTS} pxf_tarball centos@${segment}:
     scp ${SSH_OPTS} pxf_src/concourse/scripts/setup_pxf_on_segment.bash centos@${segment}:
-    scp ${SSH_OPTS} /singlecluster/hadoop/etc/hadoop/{core,hdfs,mapred,yarn}-site.xml centos@${segment}:
-    scp ${SSH_OPTS} /singlecluster/hive/conf/hive-site.xml centos@${segment}:
-    scp ${SSH_OPTS} /singlecluster/hbase/conf/hbase-site.xml centos@${segment}:
-    scp ${SSH_OPTS} /singlecluster/jdbc/postgresql-jdbc*.jar centos@${segment}:
     scp ${SSH_OPTS} cluster_env_files/etc_hostfile centos@${segment}:
     ssh ${SSH_OPTS} centos@${segment} "sudo bash -c \"\
         cd /home/centos && IMPERSONATION=${IMPERSONATION} PXF_JVM_OPTS='${PXF_JVM_OPTS}' ./setup_pxf_on_segment.bash ${hadoop_ip}

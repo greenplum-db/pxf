@@ -38,10 +38,6 @@ function run_pxf_automation() {
 function setup_hadoop() {
 	local hdfsrepo=$1
 
-	cp ${hdfsrepo}/hadoop/etc/hadoop/{core,hdfs,mapred,yarn}-site.xml ${PXF_HOME}/conf
-	cp ${hdfsrepo}/hive/conf/hive-site.xml ${PXF_HOME}/conf
-	cp ${hdfsrepo}/hbase/conf/hbase-site.xml ${PXF_HOME}/conf
-
 	if [ -n "${GROUP}" ]; then
 		export SLAVES=1
 	    setup_impersonation ${hdfsrepo}
