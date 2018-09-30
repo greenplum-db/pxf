@@ -7,18 +7,6 @@ source "${CWDIR}/pxf_common.bash"
 
 SSH_OPTS="-i cluster_env_files/private_key.pem"
 
-function install_hadoop_client {
-
-    local segment=${1}
-    scp -r ${SSH_OPTS} hdp.repo centos@${segment}:~
-    ssh ${SSH_OPTS} centos@${segment} "
-        sudo yum install -y -d 1 java-1.8.0-openjdk-devel &&
-	    echo 'export JAVA_HOME=/usr/lib/jvm/jre' | sudo tee -a ~gpadmin/.bash_profile &&
-	    echo 'export JAVA_HOME=/usr/lib/jvm/jre' | sudo tee -a ~centos/.bash_profile &&
-	    sudo mv /home/centos/hdp.repo /etc/yum.repos.d &&
-	    sudo yum install -y -d 1 hadoop-client hive hbase"
-}
-
 function setup_pxf {
 
     local segment=${1}
@@ -26,17 +14,21 @@ function setup_pxf {
     scp -r ${SSH_OPTS} pxf_tarball centos@${segment}:
     scp ${SSH_OPTS} cluster_env_files/etc_hostfile centos@${segment}:
 
-    ssh ${SSH_OPTS} centos@${segment} "sudo bash -c \"\
-        tar -xzf pxf_tarball/pxf.tar.gz -C ${GPHOME} &&
-	    chown -R gpadmin:gpadmin ${GPHOME}/pxf &&
-	    sed -i -e \"s/\(0.0.0.0\|localhost\|127.0.0.1\)/${hadoop_ip}/g\" ${GPHOME}/pxf/conf/*-site.xml &&
-        sed -i -e 's/edw0/hadoop/' /etc/hosts &&
-	    if [ "${IMPERSONATION}" == \"false\" ]; then
-		    sed -i -e \"s|^export PXF_USER_IMPERSONATION=.*$|export PXF_USER_IMPERSONATION=false|g\" ${PXF_HOME}/conf/pxf-env.sh
+    ssh ${SSH_OPTS} centos@${segment} "
+        sudo yum install -y -d 1 java-1.8.0-openjdk-devel &&
+	    echo 'export JAVA_HOME=/usr/lib/jvm/jre' | sudo tee -a ~gpadmin/.bash_profile &&
+	    echo 'export JAVA_HOME=/usr/lib/jvm/jre' | sudo tee -a ~centos/.bash_profile &&
+        sudo tar -xzf pxf_tarball/pxf.tar.gz -C ${GPHOME} &&
+	    sudo chown -R gpadmin:gpadmin ${GPHOME}/pxf &&
+	    sudo sed -i -e 's/\(0.0.0.0\|localhost\|127.0.0.1\)/${hadoop_ip}/g' ${GPHOME}/pxf/conf/*-site.xml &&
+        sudo sed -i -e 's/edw0/hadoop/' /etc/hosts &&
+	    if [ ${IMPERSONATION} == false ]; then
+		    sudo sed -i -e 's|^export PXF_USER_IMPERSONATION=.*$|export PXF_USER_IMPERSONATION=false|g' ${PXF_HOME}/conf/pxf-env.sh
 	    fi &&
-	    sed -i -e \"s|^export PXF_JVM_OPTS=.*$|export PXF_JVM_OPTS=\"${PXF_JVM_OPTS}\"|g\" ${PXF_HOME}/conf/pxf-env.sh &&
-    	su gpadmin -c \"source ~gpadmin/.bash_profile && ${PXF_HOME}/bin/pxf init && ${PXF_HOME}/bin/pxf start\"
-        \""
+	    sudo sed -i -e 's|^export PXF_JVM_OPTS=.*$|export PXF_JVM_OPTS=\"${PXF_JVM_OPTS}\"|g' ${PXF_HOME}/conf/pxf-env.sh
+        "
+        ssh ${SSH_OPTS} gpadmin@${segment} "
+        source ~gpadmin/.bash_profile && ${PXF_HOME}/bin/pxf init && ${PXF_HOME}/bin/pxf start"
 }
 
 function install_hadoop_single_cluster() {
@@ -72,18 +64,12 @@ function update_pghba_and_restart_gpdb() {
 
 function _main() {
 
-    setup_hdp_repo
 	cp -R cluster_env_files/.ssh/* /root/.ssh
     gpdb_nodes=$( < cluster_env_files/etc_hostfile grep -e "sdw\|mdw" | awk '{print $1}')
     gpdb_segments=$( < cluster_env_files/etc_hostfile grep -e "sdw" | awk '{print $1}')
 
     hadoop_ip=$( < cluster_env_files/etc_hostfile grep "edw0" | awk '{print $1}')
     install_hadoop_single_cluster ${hadoop_ip} &
-
-    for node in ${gpdb_nodes}; do
-        install_hadoop_client ${node} &
-    done
-    wait
     for node in ${gpdb_nodes}; do
         setup_pxf ${node} ${hadoop_ip} &
     done

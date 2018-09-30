@@ -299,7 +299,7 @@ public class ProfilesTest extends BaseFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "features" })
     public void duplicateProfileParametersCheck() throws Exception {
 
         exTable.setProfile(null);

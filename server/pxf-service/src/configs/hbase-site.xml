@@ -27,14 +27,6 @@
         <value>hdfs://0.0.0.0:8020/hbase</value>
     </property>
     <property>
-        <name>dfs.replication</name>
-        <value>3</value>
-    </property>
-    <property>
-        <name>dfs.support.append</name>
-        <value>true</value>
-    </property>
-    <property>
         <name>hbase.cluster.distributed</name>
         <value>true</value>
     </property>

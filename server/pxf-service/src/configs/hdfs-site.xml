@@ -18,40 +18,17 @@
 
 <configuration>
    <property>
-      <name>dfs.permissions</name>
-      <value>true</value>
+        <name>dfs.permissions.enabled</name>
+        <value>true</value>
    </property>
+    <property>
+       <name>dfs.block.access.token.enable</name>
+        <value>true</value>
+    </property>
     <property>
         <name>dfs.support.append</name>
         <value>true</value>
     </property>
-   <property>
-       <name>dfs.block.local-path-access.user</name>
-	   <value>${user.name}</value>
-   </property>
-    <property>
-        <name>dfs.replication</name>
-        <value>3</value>
-    </property>
-   <property>
-	   <name>dfs.datanode.socket.write.timeout</name> 
-	   <value>0</value>
-	   <description>
-		   used for sockets to and from datanodes. It is 8 minutes by default. Some users set this to 0, effectively disabling the write timeout.
-	   </description> 
-   </property>
-    <property>
-        <name>dfs.webhdfs.enabled</name>
-        <value>true</value>
-    </property>
-    <property>
-        <name>dfs.allow.truncate</name>
-        <value>true</value>
-    </property>
-	<property>
-		<name>dfs.encryption.key.provider.uri</name>
-		<value>kms://http@0.0.0.0:16000/kms</value>
-	</property>
     <property>
         <name>hadoop.proxyuser.gpadmin.hosts</name>
         <value>*</value>

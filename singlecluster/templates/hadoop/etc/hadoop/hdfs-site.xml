@@ -44,10 +44,6 @@
         <name>dfs.webhdfs.enabled</name>
         <value>true</value>
     </property>
-    <property>
-        <name>dfs.allow.truncate</name>
-        <value>true</value>
-    </property>
 	<property>
 		<name>dfs.encryption.key.provider.uri</name>
 		<value>kms://http@0.0.0.0:16000/kms</value>

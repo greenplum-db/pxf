@@ -35,31 +35,20 @@ export PXF_RUNDIR=@pxfRunDir@
 
 # Configured user
 if [ ! -z '@pxfDefaultUser@' ]; then
-    export PXF_USER=${PXF_USER:-@pxfDefaultUser@}
+    export PXF_USER=${PXF_USER:=@pxfDefaultUser@}
 fi
 
 # Port
-export PXF_PORT=${PXF_PORT:-@pxfPortNum@}
+export PXF_PORT=${PXF_PORT:=@pxfPortNum@}
 
 # Memory
-export PXF_JVM_OPTS="-Xmx2g -Xms1g"
+export PXF_JVM_OPTS=${PXF_JVM_OPTS:="-Xmx2g -Xms1g"}
 
-# Kerberos
-# Path to keytab file owned by pxf service with permissions 0400
+# Kerberos path to keytab file owned by pxf service with permissions 0400
 export PXF_KEYTAB="${PXF_HOME}/conf/pxf.service.keytab"
+
 # Kerberos principal pxf service should use. _HOST is replaced automatically with hostnames FQDN
 export PXF_PRINCIPAL="gpadmin/_HOST@EXAMPLE.COM"
-
-# Hadoop Distribution Type (optional), supported values:
-# <empty> - for auto discovery of HDP, CDH or tarball based client installation
-# HDP     - for HDP Hadoop client installation
-# CDH     - for CDH Hadoop client installation
-# CUSTOM  - for custom Hadoop client installation
-export HADOOP_DISTRO=${HADOOP_DISTRO}
-
-# Parent directory of Hadoop client installation (optional)
-# used in case of tarball-based installation when all clients are under a common parent directory
-export HADOOP_ROOT=${HADOOP_ROOT}
 
 # End-user identity impersonation, set to true to enable
 export PXF_USER_IMPERSONATION=@pxfDefaultUserImpersonation@

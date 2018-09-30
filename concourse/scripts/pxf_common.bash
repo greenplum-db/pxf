@@ -30,6 +30,7 @@ function run_regression_test() {
 	exit 0
 	EOF
 
+	chown -R gpadmin:gpadmin gpdb_src/${PXF_EXTENSIONS_DIR}
 	chown gpadmin:gpadmin /home/gpadmin/run_regression_test.sh
 	chmod a+x /home/gpadmin/run_regression_test.sh
 	su gpadmin -c "bash /home/gpadmin/run_regression_test.sh $(pwd)"
@@ -132,7 +133,7 @@ function install_pxf_server() {
 	export BUILD_NUMBER="${TARGET_OS}"
 	export JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8
 	pushd pxf_src/server
-	make install -s DATABASE=gpdb
+	make install DATABASE=gpdb
 	popd
 }
 

@@ -46,31 +46,18 @@ function setup_hadoop() {
 }
 
 function _main() {
-	# Reserve port 5888 for PXF service
-	echo "pxf             5888/tcp               # PXF Service" >> /etc/services
-
 	# Install GPDB
 	install_gpdb_binary
 	setup_gpadmin_user
 
-	# Install PXF Client (pxf.so file)
+	# Install PXF
 	install_pxf_client
-
-	# Install PXF Server
-	if [ -d pxf_tarball ]; then
-		# untar pxf server only if necessary
-		if [ -d ${PXF_HOME} ]; then
-			echo "Skipping pxf_tarball..."
-		else
-			tar -xzf pxf_tarball/pxf.tar.gz -C ${GPHOME}
-		fi
-	else
+	if [ ! -d pxf_tarball ]; then
 		install_pxf_server
 	fi
 	chown -R gpadmin:gpadmin ${PXF_HOME}
 
-	# Install Hadoop and Hadoop Client
-	# Doing this before making GPDB cluster to use system python for yum install
+	# Setup Hadoop before creating GPDB cluster to use system python for yum install
 	setup_hadoop /singlecluster
 
 	create_gpdb_cluster

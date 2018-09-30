@@ -59,12 +59,19 @@ EOF
 }
 
 function set_hostname() {
+	echo 'Setting host name'
 	sed "s/$HOSTNAME/${NODE} $HOSTNAME/g" /etc/hosts > /tmp/hosts
 	echo y | cp /tmp/hosts /etc/hosts
 }
 
 function secure_pxf() {
-	echo -e "export PXF_KEYTAB=\"/etc/security/keytabs/gpadmin-krb5.keytab\"\nexport PXF_PRINCIPAL=\"gpadmin/_HOST@${REALM}\"" >> /usr/local/greenplum-db-devel/pxf/conf/pxf-env.sh
+	hadoop_authentication="<property><name>hadoop.security.authentication</name><value>kerberos</value></property>"
+	hadoop_authorization="<property><name>hadoop.security.authorization</name><value>true</value></property>"
+	yarn_principal="<property><name>yarn.resourcemanager.principal</name><value>rm/_HOST@AMBARI.APACHE.ORG</value></property>"
+
+	echo -e "export PXF_KEYTAB=\"/etc/security/keytabs/gpadmin-krb5.keytab\"\nexport PXF_PRINCIPAL=\"gpadmin/_HOST@${REALM}\"" >> ${PXF_HOME}/conf/pxf-env.sh
+	sed -i -e "s|<configuration>|<configuration>\n${hadoop_authentication}\n${hadoop_authorization}|g" ${PXF_HOME}/conf/core-site.xml
+	sed -i -e "s|<configuration>|<configuration>\n${yarn_principal}|g" ${PXF_HOME}/conf/yarn-site.xml
 }
 
 function wait_for_hadoop_services() {
@@ -73,9 +80,7 @@ function wait_for_hadoop_services() {
 	local request_id=${1}
 
 	echo "Waiting for Hadoop services to start"
-
 	local status=IN_PROGRESS
-
 	while [ ${status} != COMPLETED ] && [ ${retries} -gt 0 ]; do
 		sleep ${sleep_time}
 		status=$(curl -s -u admin:admin ${AMBARI_PREFIX}/clusters/${CLUSTER_NAME}/requests/${request_id} | jq --raw-output '.Requests.request_status')
@@ -90,9 +95,7 @@ function wait_for_hadoop_services() {
 
 function start_hadoop_services() {
 	echo "Starting hadoop services"
-
 	local request_id=$(curl ${CURL_OPTS} -X PUT -d '{"ServiceInfo": {"state" : "STARTED"}}' ${AMBARI_PREFIX}/clusters/${CLUSTER_NAME}/services | jq '.Requests.id')
-
 	if [ -z "${request_id}" ]; then
 		echo -e "Unable to get request id... why did cluster start command not get caught by set -e or set -o pipefail?" >&2
 		exit 1
@@ -102,13 +105,11 @@ function start_hadoop_services() {
 }
 
 function start_hadoop_secure() {
-
 	echo 'Starting kerberos services'
 	service kadmin start
 	service krb5kdc start
 
 	echo 'Creating principal and keytab for gpadmin user'
-
 	/usr/sbin/kadmin.local -q "addprinc -randkey -pw changeme gpadmin/${NODE}@${REALM}"
 	/usr/sbin/kadmin.local -q "xst -norandkey -k /etc/security/keytabs/gpadmin-krb5.keytab gpadmin/${NODE}@${REALM}"
 	chown gpadmin:gpadmin /etc/security/keytabs/gpadmin-krb5.keytab
@@ -117,6 +118,7 @@ function start_hadoop_secure() {
 	ambari-agent start
 	ambari-server start
 	sleep 30 # wait until ambari's webserver is ready to process requests
+
 	# Start cluster
 	start_hadoop_services
 	# We run the start request twice, in case the first request failts
@@ -124,31 +126,20 @@ function start_hadoop_secure() {
 }
 
 function _main() {
-	# Reserve port 5888 for PXF service
-	echo "pxf             5888/tcp               # PXF Service" >> /etc/services
 
 	set_hostname
 	install_gpdb_binary
 	setup_gpadmin_user
-	# setup hadoop before making GPDB cluster
+
+	# setup hadoop before creating GPDB cluster
 	start_hadoop_secure
 	install_pxf_client
-
-	# untar pxf server only if necessary
-	if [ -d ${PXF_HOME} ]; then
-		echo "Skipping pxf_tarball..."
-	else
-		tar -xzf pxf_tarball/pxf.tar.gz -C ${GPHOME}
-		chown -R gpadmin:gpadmin ${PXF_HOME}
-	fi
-
 	secure_pxf
+
 	create_gpdb_cluster
 	add_remote_user_access_for_gpdb "testuser"
 	start_pxf_server
-	# Let's make sure that pxf_automation directories are writeable
-	chmod a+w pxf_src/automation
-	find pxf_src/automation/tinc* -type d -exec chmod a+w {} \;
+
 	time run_regression_test
 	if [ -n "${GROUP}" ]; then
 		time run_pxf_smoke_secure ${PWD}

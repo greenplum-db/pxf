@@ -178,6 +178,12 @@ project('pxf-service') {
     apply plugin: 'war'
     tasks.war {
         archiveName = 'pxf.war'
+        processResources {
+            filesMatching('**/pxf-*') {
+                details ->
+                    details.exclude()
+            }
+        }
     }
     dependencies {
         providedCompile(project(':pxf-api'))
@@ -277,6 +283,11 @@ project('pxf-ignite') {
     }
 }
 
+
+def buildNumber() {
+    System.getenv('BUILD_NUMBER') ?: System.getProperty('user.name')
+}
+
 wrapper {
     gradleVersion = '4.9'
 }
@@ -330,7 +341,7 @@ task assemble(type: Copy, dependsOn: [subprojects.jar, project(':pxf-service').w
 
     from("${tomcatTargetDir}/${tomcatName}") { into 'apache-tomcat' }
     from("pxf-service/src/main/resources") { into 'conf' }
-    from("pxf-service/src/configs/pxf-site.xml") { into 'conf' }
+    from("pxf-service/src/configs") { include '*-site.xml' into 'conf' }
     from("pxf-service/src/scripts/pxf-env.sh") {
         filter(ReplaceTokens,
                 tokens: ['pxfLogDir'     : databaseProperties.pxfLogDir,

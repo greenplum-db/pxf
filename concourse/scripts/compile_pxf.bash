@@ -11,7 +11,7 @@ _main() {
 	export PXF_HOME="${GPHOME}/pxf"
 	export JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8
 	pushd pxf_src/server
-		make install -s DATABASE=gpdb
+		make install DATABASE=gpdb
 	popd
 	# Create tarball for PXF
 	pushd ${GPHOME}
