@@ -41,7 +41,7 @@ resources:
 - name: pxf_build_number
   type: semver
   source:
-    initial_version: 3.3.0
+    initial_version: 4.0.0.0
     bucket: {{pxf-aws-bucket-name}}
     key: pxf_artifacts/pxf_build_number
     region_name: {{aws-region}}
@@ -336,8 +336,46 @@ jobs:
           pushd pxf_src
           VERSION=`git describe --tags`
           popd
-          tar -cvzf pxf_artifacts/pxf-${VERSION}.tar.gz pxf_tarball/pxf.tar.gz pxf_src/concourse/scripts/release/*
-    image: gpdb-pxf-dev-centos6-hdp-server
+          touch install_gpdb_component && chmod a+x install_gpdb_component
+          touch smoke_test_gpdb_component && chmod a+x smoke_test_gpdb_component
+          mv pxf_tarball/pxf.tar.gz .
+          tar -cvzf pxf_artifacts/pxf-${VERSION}.tar.gz pxf.tar.gz install_gpdb_component smoke_test_gpdb_component
+    image: gpdb-pxf-dev-centos6
+  - task: update_manifest
+    config:
+      inputs:
+      - name: gpdb_release
+      - name: pxf_src
+      outputs:
+      - name: gpdb_release_output
+      platform: linux
+      run:
+        path: bash
+        args:
+        - -c
+        - |
+          set -euxo pipefail
+          pushd pxf_src
+          VERSION=`git describe --tags`
+          popd
+          yum -y install jq
+          git clone --depth=1 gpdb_release gpdb_release_output
+          cd gpdb_release_output
+
+          if [ "$(cat a | jq '.platforms[].components[] | select(.name=="pxf")')" == "" ]; then
+            cat components/component_manifest.json \
+              | jq '.platforms[].components += [{\"name\":\"pxf\",\"version\":\"${VERSION}\",\"bucket\":\"gpdb-stable-concourse-builds\",\"path\":\"components/pxf\",\"filetype\":\"tar.gz\",\"artifact_version\":\"latest\"}]' \
+              > /tmp/component_manifest.json
+          else
+            cat components/component_manifest.json \
+              | jq "(.platforms[].components[] | select(.name==\"pxf\").version) = \"${VERSION}\"" \
+              > /tmp/component_manifest.json
+          fi
+          mv /tmp/component_manifest.json components/component_manifest.json
+
+          git config user.email "pxf_bot@example.com"
+          git config user.name "PXF_BOT"
+          git commit -am "Update PXF manifest to version ${VERSION}"
   - put: component_pxf
-      params:
-        file: pxf_artifacts/pxf-*.tar.gz
+    params:
+      file: pxf_artifacts/pxf-*.tar.gz

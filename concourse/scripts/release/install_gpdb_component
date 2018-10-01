@@ -1,2 +1,0 @@
-# TODO: Implement installing PXF
-# tar xzf gpdb_component_gpcopy.tar.gz -C $GPHOME/bin || exit 1
