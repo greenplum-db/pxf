@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 
 set -euxo pipefail
+
+yum -y install git
+
 pushd pxf_src
 VERSION=`git describe --tags`
 popd
-yum -y install jq
 git clone --depth=1 gpdb_release gpdb_release_output
 cd gpdb_release_output
 
