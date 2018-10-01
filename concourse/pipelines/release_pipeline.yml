@@ -105,6 +105,14 @@ resources:
     secret_access_key: {{bucket-secret-access-key}}
     regexp: components/pxf/pxf-(.*).tar.gz
 
+- name: gpdb_release
+  type: git
+  source:
+#    branch: {{gpdb-release-branch}}
+    branch: pxf
+    private_key: {{gpdb-release-remote-deploy-key}}
+    uri: {{gpdb-release-git-remote}}
+
 - name: terraform
   type: terraform
   source:
@@ -342,40 +350,11 @@ jobs:
           tar -cvzf pxf_artifacts/pxf-${VERSION}.tar.gz pxf.tar.gz install_gpdb_component smoke_test_gpdb_component
     image: gpdb-pxf-dev-centos6
   - task: update_manifest
-    config:
-      inputs:
-      - name: gpdb_release
-      - name: pxf_src
-      outputs:
-      - name: gpdb_release_output
-      platform: linux
-      run:
-        path: bash
-        args:
-        - -c
-        - |
-          set -euxo pipefail
-          pushd pxf_src
-          VERSION=`git describe --tags`
-          popd
-          yum -y install jq
-          git clone --depth=1 gpdb_release gpdb_release_output
-          cd gpdb_release_output
-
-          if [ "$(cat a | jq '.platforms[].components[] | select(.name=="pxf")')" == "" ]; then
-            cat components/component_manifest.json \
-              | jq '.platforms[].components += [{\"name\":\"pxf\",\"version\":\"${VERSION}\",\"bucket\":\"gpdb-stable-concourse-builds\",\"path\":\"components/pxf\",\"filetype\":\"tar.gz\",\"artifact_version\":\"latest\"}]' \
-              > /tmp/component_manifest.json
-          else
-            cat components/component_manifest.json \
-              | jq "(.platforms[].components[] | select(.name==\"pxf\").version) = \"${VERSION}\"" \
-              > /tmp/component_manifest.json
-          fi
-          mv /tmp/component_manifest.json components/component_manifest.json
-
-          git config user.email "pxf_bot@example.com"
-          git config user.name "PXF_BOT"
-          git commit -am "Update PXF manifest to version ${VERSION}"
+    file: pxf_src/concourse/tasks/release_update_manifest.yml
   - put: component_pxf
     params:
       file: pxf_artifacts/pxf-*.tar.gz
+  - put: gpdb_release
+    params:
+      repository: gpdb_release_output
+      rebase: true
