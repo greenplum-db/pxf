@@ -98,8 +98,7 @@ resources:
 - name: gpdb_release
   type: git
   source:
-#    branch: {{gpdb-release-branch}}
-    branch: pxf
+    branch: {{gpdb-release-branch}}
     private_key: {{gpdb-release-remote-deploy-key}}
     uri: {{gpdb-release-git-remote}}
 
@@ -305,7 +304,12 @@ jobs:
 
 - name: build_release_candidate
   plan:
+  - get: ccp-7
+  - get: gpdb-pxf-dev-centos6
   - get: pxf_tarball
+    passed:
+    - test_pxf_no_impersonation
+  - get: gpdb_release
   - get: pxf_src
     passed:
     - test_pxf_hdp
@@ -314,28 +318,16 @@ jobs:
     - test_pxf_no_impersonation
     - test_pxf_hdp_multinode_gpdb
     trigger: true
-  - task: package
-    inputs:
-    - name: pxf_src
-    - name: pxf_tarball
-
-    outputs:
-    - name: pxf_artifacts
-
+  - task: package_pxf_rc
     config:
+      inputs:
+      - name: pxf_src
+      - name: pxf_tarball
+      outputs:
+      - name: pxf_artifacts
       platform: linux
       run:
-        path: bash
-        args:
-        - -c
-        - |
-          pushd pxf_src
-          VERSION=`git describe --tags`
-          popd
-          touch install_gpdb_component && chmod a+x install_gpdb_component
-          touch smoke_test_gpdb_component && chmod a+x smoke_test_gpdb_component
-          mv pxf_tarball/pxf.tar.gz .
-          tar -cvzf pxf_artifacts/pxf-${VERSION}.tar.gz pxf.tar.gz install_gpdb_component smoke_test_gpdb_component
+        path: pxf_src/concourse/scripts/package_pxf_rc.bash
     image: gpdb-pxf-dev-centos6
   - task: update_manifest
     image: ccp-7
