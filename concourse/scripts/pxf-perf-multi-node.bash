@@ -8,20 +8,28 @@ export PGDATABASE=tpch
 GPHOME="/usr/local/greenplum-db-devel"
 CWDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 HADOOP_HOSTNAME="ccp-$(cat terraform_dataproc/name)-m"
-VALIDATION_QUERY="COUNT(*) AS Total, COUNT(DISTINCT l_orderkey) AS ORDERKEYS, SUM(l_partkey) AS PARTKEYSUM, COUNT(DISTINCT l_suppkey) AS SUPPKEYS, SUM(l_linenumber) AS LINENUMBERSUM"
+scale=$(($SCALE + 0))
+
+if [ ${scale} -gt 10 ]; then
+  VALIDATION_QUERY="SUM(l_partkey) AS PARTKEYSUM"
+else
+  VALIDATION_QUERY="COUNT(*) AS Total, COUNT(DISTINCT l_orderkey) AS ORDERKEYS, SUM(l_partkey) AS PARTKEYSUM, COUNT(DISTINCT l_suppkey) AS SUPPKEYS, SUM(l_linenumber) AS LINENUMBERSUM"
+fi
+
 LINEITEM_COUNT="unset"
 source "${CWDIR}/pxf_common.bash"
 
 function create_database_and_schema {
+    # Create DB
     psql -d postgres <<-EOF
     DROP DATABASE IF EXISTS tpch;
     CREATE DATABASE tpch;
     \c tpch;
     CREATE TABLE lineitem (
-        l_orderkey    INTEGER NOT NULL,
-        l_partkey     INTEGER NOT NULL,
-        l_suppkey     INTEGER NOT NULL,
-        l_linenumber  INTEGER NOT NULL,
+        l_orderkey    BIGINT NOT NULL,
+        l_partkey     BIGINT NOT NULL,
+        l_suppkey     BIGINT NOT NULL,
+        l_linenumber  BIGINT NOT NULL,
         l_quantity    DECIMAL(15,2) NOT NULL,
         l_extendedprice  DECIMAL(15,2) NOT NULL,
         l_discount    DECIMAL(15,2) NOT NULL,
@@ -36,12 +44,20 @@ function create_database_and_schema {
         l_comment VARCHAR(44) NOT NULL
     ) DISTRIBUTED BY (l_partkey);
 EOF
-    psql -c "CREATE EXTERNAL TABLE lineitem_external (like lineitem) LOCATION ('pxf://tmp/lineitem_read/?PROFILE=HdfsTextSimple') FORMAT 'CSV' (DELIMITER '|')"
-    psql -c "CREATE OR REPLACE FUNCTION write_to_s3() RETURNS integer AS '\$libdir/gps3ext.so', 's3_export' LANGUAGE C STABLE"
-    psql -c "CREATE OR REPLACE FUNCTION read_from_s3() RETURNS integer AS '\$libdir/gps3ext.so', 's3_import' LANGUAGE C STABLE"
-    psql -c "CREATE PROTOCOL s3 (writefunc = write_to_s3, readfunc = read_from_s3)"
 
-    cat > /tmp/s3.conf <<-EOF
+    # Prevent GPDB from erroring out with VMEM protection error
+    gpconfig -c gp_vmem_protect_limit -v '16384'
+    gpssh -u gpadmin -h mdw -v -s -e \
+        'source /usr/local/greenplum-db-devel/greenplum_path.sh && export MASTER_DATA_DIRECTORY=/data/gpdata/master/gpseg-1 && gpstop -u'
+    sleep 10
+
+    psql -c "CREATE EXTERNAL TABLE lineitem_external (like lineitem) LOCATION ('pxf://tmp/lineitem_read/?PROFILE=HdfsTextSimple') FORMAT 'CSV' (DELIMITER '|')"
+    if [ "${BENCHMARK_S3}" == "true" ]; then
+        psql -c "CREATE OR REPLACE FUNCTION write_to_s3() RETURNS integer AS '\$libdir/gps3ext.so', 's3_export' LANGUAGE C STABLE"
+        psql -c "CREATE OR REPLACE FUNCTION read_from_s3() RETURNS integer AS '\$libdir/gps3ext.so', 's3_import' LANGUAGE C STABLE"
+        psql -c "CREATE PROTOCOL s3 (writefunc = write_to_s3, readfunc = read_from_s3)"
+
+        cat > /tmp/s3.conf <<EOF
 [default]
 accessid = "${AWS_ACCESS_KEY_ID}"
 secret = "${AWS_SECRET_ACCESS_KEY}"
@@ -58,9 +74,10 @@ server_side_encryption = ""
 # gpcheckcloud config
 gpcheckcloud_newline = "\n"
 EOF
-    cat cluster_env_files/etc_hostfile | grep sdw | cut -d ' ' -f 2 > /tmp/segment_hosts
-    gpssh -u gpadmin -f /tmp/segment_hosts -v -s -e 'mkdir ~/s3/'
-    gpscp -u gpadmin -f /tmp/segment_hosts /tmp/s3.conf =:~/s3/s3.conf
+        cat cluster_env_files/etc_hostfile | grep sdw | cut -d ' ' -f 2 > /tmp/segment_hosts
+        gpssh -u gpadmin -f /tmp/segment_hosts -v -s -e 'mkdir ~/s3/'
+        gpscp -u gpadmin -f /tmp/segment_hosts /tmp/s3.conf =:~/s3/s3.conf
+    fi
 }
 
 function create_pxf_external_tables {
@@ -69,7 +86,7 @@ function create_pxf_external_tables {
 }
 
 function create_gphdfs_external_tables {
-    psql -c "CREATE EXTERNAL TABLE gphdfs_lineitem_read (like lineitem) LOCATION ('gphdfs://${HADOOP_HOSTNAME}:8020/tmp/lineitem_read_gphdfs/') FORMAT 'CSV' (DELIMITER '|')"
+    psql -c "CREATE EXTERNAL TABLE gphdfs_lineitem_read (like lineitem) LOCATION ('gphdfs://${HADOOP_HOSTNAME}:8020/tmp/lineitem_read/') FORMAT 'CSV' (DELIMITER '|')"
     psql -c "CREATE WRITABLE EXTERNAL TABLE gphdfs_lineitem_write (like lineitem) LOCATION ('gphdfs://${HADOOP_HOSTNAME}:8020/tmp/lineitem_write_gphdfs/') FORMAT 'CSV' DISTRIBUTED BY (l_partkey)"
 }
 
@@ -100,21 +117,22 @@ function validate_write_to_gpdb {
     local gpdb_values
     external=${1}
     internal=${2}
-    external_values=$(psql -t -c "SELECT ${VALIDATION_QUERY} FROM ${external}")
+
     gpdb_values=$(psql -t -c "SELECT ${VALIDATION_QUERY} FROM ${internal}")
-
-    cat << EOF
-
-Results from external query
-------------------------------
-EOF
-    echo ${external_values}
     cat << EOF
 
 Results from GPDB query
 ------------------------------
 EOF
     echo ${gpdb_values}
+
+    external_values=$(psql -t -c "SELECT ${VALIDATION_QUERY} FROM ${external}")
+    cat << EOF
+
+Results from external query
+------------------------------
+EOF
+    echo ${external_values}
 
     if [ "${external_values}" != "${gpdb_values}" ]; then
         echo ERROR! Unable to validate data written from external to GPDB
@@ -230,9 +248,9 @@ EOF
 
 function create_s3_extension_external_tables {
     psql -c "CREATE EXTERNAL TABLE lineitem_s3_c (like lineitem)
-        location('s3://s3.us-west-2.amazonaws.com/gpdb-ud-scratch/s3-profile-test/lineitem/10/ config=/home/gpadmin/s3/s3.conf') FORMAT 'CSV' (DELIMITER '|')"
+        location('s3://s3.us-west-2.amazonaws.com/gpdb-ud-scratch/s3-profile-test/lineitem/${SCALE}/ config=/home/gpadmin/s3/s3.conf') FORMAT 'CSV' (DELIMITER '|')"
     psql -c "CREATE EXTERNAL TABLE lineitem_s3_pxf (like lineitem)
-        location('pxf://s3-profile-test/lineitem/10/?PROFILE=HdfsTextSimple') format 'CSV' (DELIMITER '|');"
+        location('pxf://s3-profile-test/lineitem/${SCALE}/?PROFILE=HdfsTextSimple') format 'CSV' (DELIMITER '|');"
 
     psql -c "CREATE WRITABLE EXTERNAL TABLE lineitem_s3_c_write (like lineitem)
         LOCATION('s3://s3.us-west-2.amazonaws.com/gpdb-ud-scratch/s3-profile-test/output/ config=/home/gpadmin/s3/s3.conf') FORMAT 'CSV'"
@@ -349,7 +367,9 @@ function main {
     echo -e "Data loading and validation complete\n"
     LINEITEM_COUNT=$(psql -t -c "SELECT COUNT(*) FROM lineitem" | tr -d ' ')
 
-    run_s3_extension_benchmark
+    if [ "${BENCHMARK_S3}" == "true" ]; then
+        run_s3_extension_benchmark
+    fi
 
     if [ "${BENCHMARK_GPHDFS}" == "true" ]; then
         run_gphdfs_benchmark

@@ -1,0 +1,29 @@
+tf-bucket-path: clusters-google/
+tf-cloud-provider: google
+folder-prefix: perf
+perf-scale: 500
+
+enable-impersonation-multinode: true
+pxf-jvm-opts: "-Xmx512m -Xms512m"
+perf-ccp-reap-minutes: 1440
+
+perf-gpdb-number-of-nodes: 21
+perf-gpdb-segments-per-host: 8
+perf-gpdb-instance-type: n1-highmem-8
+
+perf-hadoop-number-of-nodes: 30
+perf-hadoop-initialization-script: gs://pxf-perf/scripts/update-site-core.sh
+perf-hadoop-initialization-script-timeout: 5400
+perf-hadoop-instance-type: n1-standard-2
+perf-hadoop-disk-size: 64
+
+perf-trigger-interval: 720h
+perf-trigger-start: 12:30 PM
+perf-trigger-stop: 12:40 PM
+
+perf-benchmark-s3: false
+perf-benchmark-gphdfs: true
+
+job-name: perf-multi-node-500G
+
+perf-gpdb-disk-size: 100

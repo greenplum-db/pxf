@@ -1,7 +1,7 @@
-gpdb-git-branch: master
 tf-bucket-path: clusters-google/
 tf-cloud-provider: google
 folder-prefix: perf
+perf-scale: 10
 
 enable-impersonation-multinode: true
 pxf-jvm-opts: "-Xmx512m -Xms512m"
@@ -10,11 +10,17 @@ perf-ccp-reap-minutes: 120
 perf-gpdb-number-of-nodes: 3
 perf-gpdb-segments-per-host: 4
 perf-gpdb-instance-type: n1-standard-4
+perf-gpdb-disk-size: 64
 
 perf-hadoop-number-of-nodes: 3
-perf-hadoop-initialization-script: gs://pxf-perf/scripts/load-lineitem-dataset.sh
+perf-hadoop-initialization-script: gs://pxf-perf/scripts/update-site-core.sh
+perf-hadoop-initialization-script-timeout: 1500
 perf-hadoop-instance-type: n1-standard-4
+perf-hadoop-disk-size: 64
 
 perf-trigger-interval: 24h
 perf-trigger-start: 12:30 PM
 perf-trigger-stop: 12:40 PM
+
+perf-benchmark-s3: true
+perf-benchmark-gphdfs: true

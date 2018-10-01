@@ -58,7 +58,9 @@ fly -t gpdb-prod set-pipeline \
     -p pxf_release
 ```
 
-# Deploy the performance pipeline
+# Deploy the performance pipelines
+
+10G Performance pipeline:
 
 ```
 fly -t ud set-pipeline \
@@ -73,6 +75,30 @@ fly -t ud set-pipeline \
 You can deploy a development version of the perf pipeline by substituting the name
 of your development branch into `pxf-git-branch=master`. Also, make sure to change
 the name of your development pipeline (i.e. `-p dev:<YOUR-PIPELINE>`).
+
+50G Performance pipeline:
+
+```
+fly -t ud set-pipeline -c ~/workspace/pxf/concourse/perf_pipeline.yml \
+    -l ~/workspace/continuous-integration/secrets/gpdb_common-ci-secrets.yml \
+    -l ~/workspace/continuous-integration/secrets/gpdb_master-ci-secrets.yml \
+    -l ~/workspace/continuous-integration/secrets/ccp_ci_secrets_ud.yml \
+    -l ~/workspace/pxf/concourse/perf-settings-50g.yml \
+    -v gpdb-branch=master -v icw_green_bucket=gpdb5-assert-concourse-builds \
+    -v pxf-git-branch=master -p pxf_perf-50g
+```
+
+500G Performance pipeline:
+
+```
+fly -t ud set-pipeline -c ~/workspace/pxf/concourse/perf_pipeline.yml \
+    -l ~/workspace/continuous-integration/secrets/gpdb_common-ci-secrets.yml \
+    -l ~/workspace/continuous-integration/secrets/gpdb_master-ci-secrets.yml \
+    -l ~/workspace/continuous-integration/secrets/ccp_ci_secrets_ud.yml \
+    -l ~/workspace/pxf/concourse/perf-settings-500g.yml \
+    -v gpdb-branch=master -v icw_green_bucket=gpdb5-assert-concourse-builds \
+    -v pxf-git-branch=master -p pxf_perf-500g
+```
 
 # Deploy development PXF pipelines
 Dev pipelines can be deployed with an optional feature name

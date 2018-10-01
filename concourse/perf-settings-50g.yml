@@ -1,0 +1,31 @@
+# 50G Perf Pipeline Settings
+tf-bucket-path: clusters-google/
+tf-cloud-provider: google
+folder-prefix: perf
+perf-scale: 50
+
+enable-impersonation-multinode: true
+pxf-jvm-opts: "-Xmx512m -Xms512m"
+perf-ccp-reap-minutes: 480
+
+perf-gpdb-number-of-nodes: 8
+perf-gpdb-segments-per-host: 4
+perf-gpdb-instance-type: n1-highmem-4
+
+perf-hadoop-number-of-nodes: 10
+perf-hadoop-initialization-script: gs://pxf-perf/scripts/update-site-core.sh
+perf-hadoop-initialization-script-timeout: 50
+perf-hadoop-instance-type: n1-standard-2
+perf-hadoop-disk-size: 64
+
+# 2 weeks
+perf-trigger-interval: 336h
+perf-trigger-start: 12:30 PM
+perf-trigger-stop: 12:40 PM
+
+perf-benchmark-s3: false
+perf-benchmark-gphdfs: true
+
+job-name: perf-multi-node-50G
+
+perf-gpdb-disk-size: 100

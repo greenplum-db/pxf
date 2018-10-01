@@ -1,0 +1,16 @@
+---
+platform: linux
+inputs:
+- name: ccp_src
+- name: pxf_src
+outputs:
+- name: ccp_custom_src
+run:
+  path: bash
+  args:
+  - -exc
+  - |
+    set -x
+    cp -R ccp_src/* ccp_custom_src/
+    yes | cp -rf pxf_src/concourse/scripts/gpdb/gpinitsystem_config ccp_custom_src/scripts/gpinitsystem_config
+    sed -i '/run_gpinitsystem_inspec/d' ccp_custom_src/scripts/gpinitsystem.sh

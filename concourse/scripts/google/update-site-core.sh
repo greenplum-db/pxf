@@ -1,8 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env bash
 ROLE=$(/usr/share/google/get_metadata_value attributes/dataproc-role)
 if [[ "${ROLE}" == 'Master' ]]; then
-  hadoop distcp gs://data-gpdb-ud-tpch/10/lineitem_data/*.tbl /tmp/lineitem_read/
-  hadoop fs -cp /tmp/lineitem_read /tmp/lineitem_read_gphdfs
+  echo "DO NOTHING"
 fi
 
 cat > /tmp/core-site-patch.xml <<-EOF
