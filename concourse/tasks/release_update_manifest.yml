@@ -1,10 +1,14 @@
 platform: linux
+
 image_resource:
   type: docker-image
+
 inputs:
 - name: gpdb_release
 - name: pxf_src
+
 outputs:
 - name: gpdb_release_output
+
 run:
   path: pxf_src/concourse/scripts/release_update_manifest.bash
