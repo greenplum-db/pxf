@@ -350,7 +350,7 @@ jobs:
           tar -cvzf pxf_artifacts/pxf-${VERSION}.tar.gz pxf.tar.gz install_gpdb_component smoke_test_gpdb_component
     image: gpdb-pxf-dev-centos6
   - task: update_manifest
-    image: gpdb-pxf-dev-centos6
+    image: ccp-7
     file: pxf_src/concourse/tasks/release_update_manifest.yml
   - put: component_pxf
     params:
