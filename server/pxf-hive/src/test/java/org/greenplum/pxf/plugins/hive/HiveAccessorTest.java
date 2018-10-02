@@ -8,6 +8,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.stubbing.OngoingStubbing;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
@@ -38,10 +39,12 @@ public class HiveAccessorTest {
         PowerMockito.mockStatic(HdfsUtilities.class);
 
         PowerMockito.mockStatic(HiveDataFragmenter.class);
-        PowerMockito.when(HiveDataFragmenter.makeInputFormat(any(String.class), any(JobConf.class))).thenReturn(inputFormat);
 
         when(inputFormat.getRecordReader(any(InputSplit.class), any(JobConf.class), any(Reporter.class))).thenReturn(reader);
         PowerMockito.when(inputData.getAccessor()).thenReturn(HiveORCAccessor.class.getName());
+
+        @SuppressWarnings("unchecked")
+        OngoingStubbing ongoingStubbing = when(HiveDataFragmenter.makeInputFormat(any(String.class), any(JobConf.class))).thenReturn(inputFormat);
     }
 
     @Test
