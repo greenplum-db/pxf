@@ -1,12 +1,12 @@
 package org.greenplum.pxf.automation.features.hive;
 
-import com.google.common.collect.Lists;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
 import org.greenplum.pxf.automation.structures.tables.hive.HiveTable;
 import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
 import org.testng.annotations.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class HiveOrcTest extends HiveBaseTest {
@@ -291,7 +291,7 @@ public class HiveOrcTest extends HiveBaseTest {
         HiveTable hiveOrcSkipHeaderTable = new HiveTable("hive_table_with_skipheader_orc", HIVE_RC_COLS);
         hiveOrcSkipHeaderTable.setStoredAs(ORC);
         List<List<String>> tableProperties = new ArrayList<>();
-        tableProperties.add(Lists.newArrayList("skip.header.line.count", "3"));
+        tableProperties.add(Arrays.asList("skip.header.line.count", "3"));
         hiveOrcSkipHeaderTable.setTableProperties(tableProperties);
 
         hive.createTableAndVerify(hiveOrcSkipHeaderTable);

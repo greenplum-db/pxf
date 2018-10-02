@@ -1,6 +1,5 @@
 package org.greenplum.pxf.automation.features.hive;
 
-import com.google.common.collect.Lists;
 import org.greenplum.pxf.automation.components.common.ShellSystemObject;
 import org.greenplum.pxf.automation.enums.EnumPxfDefaultProfiles;
 import org.greenplum.pxf.automation.structures.tables.hive.HiveExternalTable;
@@ -862,7 +861,7 @@ public class HiveTest extends HiveBaseTest {
     @Test(groups = { "features", "gpdb" })
     public void hiveTableWithSkipHeader() throws Exception {
         List<List<String>> tableProperties = new ArrayList<>();
-        tableProperties.add(Lists.newArrayList("skip.header.line.count", "3"));
+        tableProperties.add(Arrays.asList("skip.header.line.count", "3"));
 
         HiveTable hiveTableWithSkipHeader = new HiveTable("hive_table_with_skipHeader", HIVE_SMALLDATA_COLS);
         hiveTableWithSkipHeader.setTableProperties(tableProperties);

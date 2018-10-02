@@ -19,20 +19,22 @@ package org.greenplum.pxf.plugins.hive;
  * under the License.
  */
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.serde.serdeConstants;
-import org.apache.hadoop.mapred.*;
+import org.apache.hadoop.mapred.InputFormat;
+import org.apache.hadoop.mapred.InputSplit;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.Reporter;
 import org.greenplum.pxf.api.BasicFilter;
 import org.greenplum.pxf.api.FilterParser;
 import org.greenplum.pxf.api.LogicalFilter;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.InputData;
-import org.greenplum.pxf.plugins.hdfs.ChunkRecordReader;
 import org.greenplum.pxf.plugins.hdfs.HdfsSplittableDataAccessor;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.sql.Date;

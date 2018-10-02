@@ -1,7 +1,5 @@
 package org.greenplum.pxf.plugins.hive;
 
-import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.*;
 import org.greenplum.pxf.api.utilities.InputData;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
@@ -28,11 +26,11 @@ public class HiveAccessorTest {
     RecordReader<Object, Object> reader;
 
     HiveAccessor accessor;
-    HiveUserData.Builder userDataBuilder;
+    HiveUserDataBuilder userDataBuilder;
 
     @Before
     public void setup() throws Exception {
-        userDataBuilder = new HiveUserData.Builder()
+        userDataBuilder = new HiveUserDataBuilder()
                 .withSerdeClassName("org.apache.hadoop.mapred.TextInputFormat")
                 .withPartitionKeys(HiveDataFragmenter.HIVE_NO_PART_TBL);
 
@@ -118,5 +116,38 @@ public class HiveAccessorTest {
         accessor.readNextObject();
 
         verify(reader, times(1)).next(any(), any());
+    }
+}
+
+class HiveUserDataBuilder {
+    private String serdeClassName;
+    private String partitionKeys;
+    private int skipHeader;
+
+    public HiveUserData build() {
+        return new HiveUserData(
+                null,
+                serdeClassName,
+                null,
+                partitionKeys,
+                false,
+                null,
+                null,
+                skipHeader);
+    }
+
+    public HiveUserDataBuilder withSerdeClassName(String s) {
+        serdeClassName = s;
+        return this;
+    }
+
+    public HiveUserDataBuilder withPartitionKeys(String s) {
+        partitionKeys = s;
+        return this;
+    }
+
+    public HiveUserDataBuilder withSkipHeader(int n) {
+        skipHeader = n;
+        return this;
     }
 }
