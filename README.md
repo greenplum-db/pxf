@@ -89,7 +89,7 @@ If you don't wish to use docker, make sure you manually install JDK.
 ## Development With Docker
 NOTE: Since the docker container will house all Single cluster Hadoop, Greenplum and PXF, we recommend that you have atleast 4 cpus and 6GB memory allocated to Docker. These settings are available under docker preferences.
 
-The following command runs the docker container and sets up and switches to user gpadmin.
+The following commands run the docker container and set up and switch to user gpadmin.
 
 ```bash
 docker run --rm -it \
@@ -104,7 +104,10 @@ docker run --rm -it \
   -v ~/workspace/pxf:/home/gpadmin/workspace/pxf \
   -v ~/workspace/singlecluster-HDP:/home/gpadmin/workspace/singlecluster \
   pivotaldata/gpdb-dev:centos6 /bin/bash -c \
-  "/home/gpadmin/workspace/pxf/dev/set_up_gpadmin_user.bash && /sbin/service sshd start && su - gpadmin"
+  "/home/gpadmin/workspace/pxf/dev/set_up_gpadmin_user.bash && /sbin/service sshd start && /bin/bash"
+
+# in the container
+su - gpadmin
 ```
 
 ### Setup GPDB
