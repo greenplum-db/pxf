@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
-import org.greenplum.pxf.automation.utils.system.PGModeEnum;
-import org.greenplum.pxf.automation.utils.system.SystemUtils;
 
 /** Functionality Tests Base Class */
 public abstract class BaseFunctionality extends BaseTestParent {
@@ -42,7 +40,7 @@ public abstract class BaseFunctionality extends BaseTestParent {
     @Override
     protected void runTincTest(String tincTest) throws Exception {
         try {
-            if(SystemUtils.getPGMode() == PGModeEnum.GPDB && (tincTest.contains("hcatalog") )) {
+            if (tincTest.contains("hcatalog")) {
                 // These features/test cases are not supported. Do Nothing.
             } else {
                 super.runTincTest(tincTest);

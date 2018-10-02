@@ -144,7 +144,6 @@ pushd /pxf_src
 export HADOOP_ROOT=/singlecluster
 export PXF_HOME=/usr/local/greenplum-db-devel/pxf
 export GPHD_ROOT=/singlecluster
-export PG_MODE=GPDB
 export BUILD_PARAMS="-x test"
 export LANG=en_US.UTF-8
 export JAVA_HOME=/etc/alternatives/java_sdk
@@ -196,7 +195,6 @@ export PGPORT=15432
 
 ## Setup PXF Automation
 ```
-export PG_MODE=GPDB
 export PGPORT=5432
 export GPHD_ROOT=/singlecluster
 export PXF_HOME=/usr/local/greenplum-db-devel/pxf

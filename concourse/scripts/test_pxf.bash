@@ -20,8 +20,6 @@ function run_pxf_automation() {
 
 	source ${GPHOME}/greenplum_path.sh
 
-	# set variables needed by PXF Automation to run in GPDB mode
-	export PG_MODE=GPDB
 	export GPHD_ROOT=/singlecluster
 	export PXF_HOME=${PXF_HOME}
 	export PGPORT=15432

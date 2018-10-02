@@ -7,12 +7,9 @@ import org.greenplum.pxf.automation.structures.profiles.PxfProfileXml;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
 import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
 import org.greenplum.pxf.automation.utils.exception.ExceptionUtils;
-import org.greenplum.pxf.automation.utils.system.PGModeEnum;
-import org.greenplum.pxf.automation.utils.system.SystemUtils;
 import org.greenplum.pxf.automation.features.BaseFeature;
 import jsystem.framework.system.SystemManagerImpl;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
 import org.postgresql.util.PSQLException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -290,19 +287,8 @@ public class ProfilesTest extends BaseFeature {
             gpdb.createTableAndVerify(exTable);
             Assert.fail("Exception should have been thrown because of duplicate profile");
         } catch (PSQLException e) {
-            String address = exTable.getHost();
-            if (!StringUtils.isEmpty(exTable.getPort())) {
-                address += ":" + exTable.getPort();
-            }
-            if (SystemUtils.getPGMode() == PGModeEnum.HAWQ) {
-				address += "/";
-            }
-            else {
-				address = "";
-            }
             ExceptionUtils.validate(null, e,
-                    new PSQLException("ERROR: Invalid URI pxf://" + address +
-                            exTable.getPath() +
+                    new PSQLException("ERROR: Invalid URI pxf://" + exTable.getPath() +
                             "\\?Profile=HDFSTEXTSIMPLE&Profile=HdfsTextSimple: " +
                             "Duplicate option\\(s\\): PROFILE", null), true);
         }

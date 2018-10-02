@@ -78,7 +78,6 @@ function run_pxf_automation() {
 	source ${GPHOME}/greenplum_path.sh
 	export GPHOME=/usr/local/greenplum-db-devel
 	export PXF_HOME=\${GPHOME}/pxf
-	export PG_MODE=GPDB
 	export PGHOST=localhost
 	export PGPORT=5432
 

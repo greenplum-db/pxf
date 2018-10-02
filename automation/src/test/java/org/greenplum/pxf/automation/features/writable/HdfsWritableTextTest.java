@@ -8,8 +8,6 @@ import org.greenplum.pxf.automation.structures.tables.basic.Table;
 import org.greenplum.pxf.automation.structures.tables.pxf.WritableExternalTable;
 import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
 import org.greenplum.pxf.automation.utils.fileformats.FileFormatsUtils;
-import org.greenplum.pxf.automation.utils.system.PGModeEnum;
-import org.greenplum.pxf.automation.utils.system.SystemUtils;
 import org.greenplum.pxf.automation.utils.tables.ComparisonUtils;
 import org.apache.commons.lang.StringUtils;
 import org.junit.Assert;
@@ -92,8 +90,6 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
 
         insertData(dataTable, writableExTable, InsertionMethod.INSERT);
         verifyResult(hdfsWritePath + writableTableName, dataTable);
-        // check that analyze didn't change original stats for writable table.
-        analyzeAndVerify(writableExTable);
     }
 
     /**
@@ -109,8 +105,6 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
 
         insertData(dataTable, writableExTable, InsertionMethod.INSERT);
         verifyResult(hdfsWritePath + writableTableName, dataTable);
-        // check that analyze didn't change original stats for writable table.
-        analyzeAndVerify(writableExTable);
     }
 
     /**
@@ -420,7 +414,6 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
         gpdb.createTableAndVerify(readableExTable);
         gpdb.runAnalyticQuery("SELECT COUNT(*) FROM " + readableExTable.getName(),
                 String.valueOf(1000 * 15000));
-        analyzeAndVerify(writableExTable);
     }
 
     /**
@@ -447,7 +440,6 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
         gpdb.createTableAndVerify(readableExTable);
         gpdb.runAnalyticQuery("SELECT COUNT(*) FROM " + readableExTable.getName(),
                 String.valueOf(1000 * 15000));
-        analyzeAndVerify(writableExTable);
     }
 
     /**
@@ -478,7 +470,6 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
         gpdb.createTableAndVerify(readableExTable);
         gpdb.runAnalyticQuery("SELECT COUNT(*) FROM " + readableExTable.getName(),
                 String.valueOf(1000 * 15000));
-        analyzeAndVerify(writableExTable);
     }
 
     /**
@@ -595,28 +586,5 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
                 gpdb.runQuery("INSERT INTO " + table.getName() + " SELECT * FROM " + data.getName());
                 break;
         }
-    }
-
-    /**
-     * Perform analyze on given Table
-     *
-     * @param table to analyze
-     *
-     * @throws Exception if test fails to run
-     */
-    private void analyzeAndVerify(Table table) throws Exception {
-
-        if (SystemUtils.getPGMode() == PGModeEnum.GPDB) {
-            // skip for gpdb
-            return;
-        }
-        gpdb.analyze(table);
-        Table analyzeResults = new Table("results", null);
-        gpdb.queryResults(analyzeResults, "SELECT COUNT(*) FROM pg_class WHERE relname = '" +
-                table.getName() + "' AND relpages = 1 AND reltuples = 0");
-
-        Table sudoResults = new Table("sudoResults", null);
-        sudoResults.addRow(new String[] { "1" });
-        ComparisonUtils.compareTables(analyzeResults, sudoResults, null);
     }
 }

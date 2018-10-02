@@ -20,7 +20,6 @@ Set necessary Environment Vars##
 export GPHD_ROOT=<parent directory containing hadoop,hive,etc>
 export PGPORT=<gpdb port>
 export GPHOME=<your gphome>
-export PG_MODE=GPDB # Set PG_MODE to your database (GPDB/HAWQ). GPDB is the default
 export PXF_HOME=$GPHOME/pxf
 ```
 
@@ -218,5 +217,3 @@ In every "class" directory will be files according to the following format: <tim
 
 TestNg report will generated into target/surefire-reports 
 <img src="images/68125531.png" class="confluence-embedded-image confluence-content-image-border" width="1084" height="612" />
-
-## 

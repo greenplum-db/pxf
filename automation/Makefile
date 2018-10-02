@@ -15,16 +15,10 @@ ifneq "$(GROUP)" ""
     MAVEN_TEST_OPTS+= -Dgroups=$(GROUP)
 endif
 
-ifeq "$(PG_MODE)" "HAWQ"
-    MAVEN_TEST_OPTS+= -DPXF_LIB=$(GPHD_ROOT)/pxf
-else
-	# Default PG_MODE is GPDB
-	ifeq "$(PXF_HOME)" ""
-		PXF_HOME=$(GPHOME)/pxf
-	endif
-    MAVEN_TEST_OPTS+= -DPG_MODE=$(PG_MODE)
-    MAVEN_TEST_OPTS+= -DPXF_LIB=$(PXF_HOME)/lib
+ifeq "$(PXF_HOME)" ""
+	PXF_HOME=$(GPHOME)/pxf
 endif
+MAVEN_TEST_OPTS+= -DPXF_LIB=$(PXF_HOME)/lib
 
 ifneq "$(OFFLINE)" "true"
     MAVEN_TEST_OPTS+= -U

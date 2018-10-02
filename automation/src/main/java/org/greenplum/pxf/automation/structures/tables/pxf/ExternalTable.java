@@ -3,8 +3,6 @@ package org.greenplum.pxf.automation.structures.tables.pxf;
 import java.util.Arrays;
 
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
-import org.greenplum.pxf.automation.utils.system.PGModeEnum;
-import org.greenplum.pxf.automation.utils.system.SystemUtils;
 
 /**
  * Represent GPDB -> PXF external table.
@@ -42,8 +40,6 @@ public abstract class ExternalTable extends Table {
     private String segmentRejectLimitType = "ROWS";
 
     private String encoding;
-
-    private PGModeEnum pgMode = SystemUtils.getPGMode();
 
     public ExternalTable(String name, String[] fields, String path,
                          String format) {
@@ -85,20 +81,10 @@ public abstract class ExternalTable extends Table {
     public String getLocation() {
 
         StringBuilder sb = new StringBuilder("pxf://");
-
-        if (pgMode == PGModeEnum.HAWQ) {
-            String address = getHost();
-
-            if (getPort() != null) {
-                address += ":" + getPort();
-            }
-
-            sb.append(address + "/" );
-
-        }
         // GPDB mode does not use host:port in location URL
 
-        sb.append(getPath() + "?");
+        sb.append(getPath());
+        sb.append("?");
         sb.append(getLocationParameters());
 
         return sb.toString();
@@ -193,9 +179,6 @@ public abstract class ExternalTable extends Table {
 
         if (getErrorTable() != null) {
             createStatment += " LOG ERRORS";
-            if (pgMode == PGModeEnum.HAWQ) {
-                createStatment += " INTO " + getErrorTable();
-            }
         }
 
         if (getSegmentRejectLimit() > 0) {

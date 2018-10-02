@@ -5,8 +5,6 @@ import org.greenplum.pxf.automation.structures.tables.hive.HiveExternalTable;
 import org.greenplum.pxf.automation.structures.tables.hive.HiveTable;
 import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
 import org.greenplum.pxf.automation.utils.exception.ExceptionUtils;
-import org.greenplum.pxf.automation.utils.system.PGModeEnum;
-import org.greenplum.pxf.automation.utils.system.SystemUtils;
 import org.greenplum.pxf.automation.utils.tables.ComparisonUtils;
 import org.junit.Assert;
 import org.testng.annotations.Test;
@@ -181,9 +179,6 @@ public class HiveTextTest extends HiveBaseTest {
         try {
             gpdb.dropTable(exTable, false);
             gpdb.runQuery(createCmd);
-            if (SystemUtils.getPGMode() == PGModeEnum.HAWQ) {
-                Assert.fail("Query should throw a warning about non standard use of escape");
-            }
         } catch (Exception e) {
             ExceptionUtils.validate(null, e, new Exception(
                             "nonstandard use of escape in a string literal"), true,true);

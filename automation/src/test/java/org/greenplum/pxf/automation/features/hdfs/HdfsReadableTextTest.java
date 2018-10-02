@@ -9,8 +9,6 @@ import org.greenplum.pxf.automation.structures.tables.pxf.ErrorTable;
 import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
 import org.greenplum.pxf.automation.utils.fileformats.FileFormatsUtils;
 import org.greenplum.pxf.automation.utils.jsystem.report.ReportUtils;
-import org.greenplum.pxf.automation.utils.system.PGModeEnum;
-import org.greenplum.pxf.automation.utils.system.SystemUtils;
 import org.greenplum.pxf.automation.utils.tables.ComparisonUtils;
 import org.junit.Assert;
 import org.testng.annotations.Test;
@@ -458,12 +456,7 @@ public class HdfsReadableTextTest extends BaseFeature {
         Assert.assertTrue(gpdb.checkTableExists(exTable));
         ReportUtils.stopLevel(null);
 
-        if (SystemUtils.getPGMode() == PGModeEnum.HAWQ) {
-            runTincTest("pxf.features.hdfs.readable.text.error_table.runTest");
-        }
-        else {
-            runTincTest("pxf.features.hdfs.readable.text.error_table_gpdb.runTest");
-        }
+        runTincTest("pxf.features.hdfs.readable.text.error_table_gpdb.runTest");
         ReportUtils.startLevel(null, getClass(), "table with too many errors");
         exTable.setSegmentRejectLimit(3);
         gpdb.createTableAndVerify(exTable);
