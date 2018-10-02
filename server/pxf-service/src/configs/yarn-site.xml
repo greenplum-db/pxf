@@ -1,8 +1,7 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-        <property>
-            <name>yarn.resourcemanager.address</name>
-            <value>0.0.0.0:8032</value>
-        </property>
-
+    <property>
+        <name>yarn.resourcemanager.address</name>
+        <value>0.0.0.0:8032</value>
+    </property>
 </configuration>

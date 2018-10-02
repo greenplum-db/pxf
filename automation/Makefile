@@ -18,7 +18,7 @@ endif
 ifeq "$(PXF_HOME)" ""
 	PXF_HOME=$(GPHOME)/pxf
 endif
-MAVEN_TEST_OPTS+= -DPXF_LIB=$(PXF_HOME)/lib
+MAVEN_TEST_OPTS+= -DPXF_TMP_LIB=$(PXF_HOME)/tmp
 
 ifneq "$(OFFLINE)" "true"
     MAVEN_TEST_OPTS+= -U
@@ -34,11 +34,22 @@ MVN=mvn
 
 all: test
 
-test:
+symlink_pxf_jars:
+    @if [ -d "$(PXF_HOME)/lib" ]; then \
+        rm -rf $(PXF_HOME)/tmp && \
+        mkdir -p $(PXF_HOME)/tmp && \
+        cd $(PXF_HOME)/tmp && \
+        for X in $(PXF_HOME)/lib/pxf-*-[0-9]*.jar; do \
+            ln -sf $$X `echo \`basename $$X\` | sed -e 's/-[a-zA-Z0-9.]*.jar/.jar/'`; \
+        done; \
+    fi
+
+test: symlink_pxf_jars
 	$(MVN) $(MAVEN_TEST_OPTS) ${MAVEN_DEBUG_OPTS} test
 
 clean:
 	$(MVN) $(MAVEN_TEST_OPTS) clean
+	rm -rf $(PXF_HOME)/tmp
 
 clean-logs:
 	rm -rf automation_logs/*
@@ -47,7 +58,7 @@ clean-logs:
 	find tincrepo/main/pxf/. -type d -name "output" -exec rm -rf {} +
 	find tincrepo/main/pxf/. -type f -name "*segment_logs" -exec rm -rf {} +
 
-dev:
+dev: symlink_pxf_jars
 	$(MVN) $(MAVEN_TEST_OPTS) package -DskipTests=true
 
 list-tests:

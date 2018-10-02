@@ -284,10 +284,6 @@ project('pxf-ignite') {
 }
 
 
-def buildNumber() {
-    System.getenv('BUILD_NUMBER') ?: System.getProperty('user.name')
-}
-
 wrapper {
     gradleVersion = '4.9'
 }
