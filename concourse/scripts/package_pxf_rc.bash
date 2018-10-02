@@ -14,8 +14,10 @@ chmod a+x install_gpdb_component
 cat > smoke_test_gpdb_component <<EOF
 #!/bin/sh
 set -x
-\$GPHOME/pxf/bin/pxf start &&
-\$GPHOME/pxf/bin/pxf stop
+pwd
+ls
+bin/pxf start &&
+bin/pxf stop || exit 1
 EOF
 chmod a+x smoke_test_gpdb_component
 mv pxf_tarball/pxf.tar.gz .
