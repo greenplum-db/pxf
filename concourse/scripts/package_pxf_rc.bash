@@ -20,5 +20,5 @@ bin/pxf start &&
 bin/pxf stop || exit 1
 EOF
 chmod a+x smoke_test_gpdb_component
-mv pxf_tarball/pxf.tar.gz .
+cp pxf_tarball/pxf.tar.gz .
 tar -cvzf pxf_artifacts/pxf-${VERSION}.tar.gz pxf.tar.gz install_gpdb_component smoke_test_gpdb_component
