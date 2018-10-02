@@ -87,6 +87,7 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
          */
         super(input, null);
         inputFormat = createInputFormat(input);
+        settSkipHeader(input);
     }
 
     /**
@@ -95,8 +96,9 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
      * @param input contains the InputFormat class name and the partition fields
      * @param inputFormat Hive InputFormat
      */
-    public HiveAccessor(InputData input, InputFormat<?, ?> inputFormat) {
+    public HiveAccessor(InputData input, InputFormat<?, ?> inputFormat) throws Exception {
         super(input, inputFormat);
+        settSkipHeader(input);
     }
 
     /**
@@ -150,10 +152,18 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
      * on the user-data construct the partition fields and the InputFormat for
      * current split
      */
+
+    private void settSkipHeader(InputData input)
+            throws Exception {
+        HiveUserData hiveUserData = HiveUtilities.parseHiveUserData(input);
+        if(hiveUserData != null) {
+            skipHeaderCount = hiveUserData.getSkipHeader();
+        }
+    }
+
     private InputFormat<?, ?> createInputFormat(InputData input)
             throws Exception {
         HiveUserData hiveUserData = HiveUtilities.parseHiveUserData(input);
-        skipHeaderCount = hiveUserData.getSkipHeader();
 
         initPartitionFields(hiveUserData.getPartitionKeys());
         filterInFragmenter = hiveUserData.isFilterInFragmenter();
