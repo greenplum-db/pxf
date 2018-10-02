@@ -4,4 +4,8 @@
         <name>hbase.rootdir</name>
         <value>hdfs://0.0.0.0:8020/hbase</value>
     </property>
+    <property>
+        <name>hbase.zookeeper.quorum</name>
+        <value>127.0.0.1</value>
+    </property>
 </configuration>
