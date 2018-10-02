@@ -8,11 +8,11 @@
 MAVEN_TEST_OPTS+= -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn -B -e
 
 ifneq "$(TEST)" ""
-    MAVEN_TEST_OPTS+= -Dtest=$(TEST)
+	MAVEN_TEST_OPTS+= -Dtest=$(TEST)
 endif
 
 ifneq "$(GROUP)" ""
-    MAVEN_TEST_OPTS+= -Dgroups=$(GROUP)
+	MAVEN_TEST_OPTS+= -Dgroups=$(GROUP)
 endif
 
 ifeq "$(PXF_HOME)" ""
@@ -21,9 +21,9 @@ endif
 MAVEN_TEST_OPTS+= -DPXF_TMP_LIB=$(PXF_HOME)/tmp
 
 ifneq "$(OFFLINE)" "true"
-    MAVEN_TEST_OPTS+= -U
+	MAVEN_TEST_OPTS+= -U
 else
-    MAVEN_TEST_OPTS+= -o
+	MAVEN_TEST_OPTS+= -o
 endif
 
 #MAVEN_DEBUG_OPTS+= -Dmaven.surefire.debug
@@ -35,14 +35,14 @@ MVN=mvn
 all: test
 
 symlink_pxf_jars:
-    @if [ -d "$(PXF_HOME)/lib" ]; then \
-        rm -rf $(PXF_HOME)/tmp && \
-        mkdir -p $(PXF_HOME)/tmp && \
-        cd $(PXF_HOME)/tmp && \
-        for X in $(PXF_HOME)/lib/pxf-*-[0-9]*.jar; do \
-            ln -sf $$X `echo \`basename $$X\` | sed -e 's/-[a-zA-Z0-9.]*.jar/.jar/'`; \
-        done; \
-    fi
+	@if [ -d "$(PXF_HOME)/lib" ]; then \
+		rm -rf $(PXF_HOME)/tmp && \
+		mkdir -p $(PXF_HOME)/tmp && \
+		cd $(PXF_HOME)/tmp && \
+		for X in $(PXF_HOME)/lib/pxf-*-[0-9]*.jar; do \
+			ln -sf $$X `echo \`basename $$X\` | sed -e 's/-[a-zA-Z0-9.]*.jar/.jar/'`; \
+		done; \
+	fi
 
 test: symlink_pxf_jars
 	$(MVN) $(MAVEN_TEST_OPTS) ${MAVEN_DEBUG_OPTS} test
