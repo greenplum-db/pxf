@@ -361,18 +361,8 @@ public class ProtocolData extends InputData {
     }
 
     private void parseSecurityProperties() {
-        // obtain identity of the end-user -- mandatory only when impersonation is enabled
-//        if (SecureLogin.isUserImpersonationEnabled()) {
-//            this.user = getProperty("USER");
-//        } else {
-//            this.user = getOptionalProperty("USER");
-//        }
+        // obtain identity of the end-user
         this.user = getProperty("USER");
-
-//        /* Kerberos token information */
-//        if (UserGroupInformation.isSecurityEnabled()) {
-//            this.token = getOptionalProperty("TOKEN");
-//        }
     }
 
     /**

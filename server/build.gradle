@@ -348,21 +348,6 @@ task assemble(type: Copy, dependsOn: [subprojects.jar, project(':pxf-service').w
     }
     from("pxf-service/src/configs/tomcat") { into 'tomcat-templates' }
     from("pxf-service/src/configs/templates") { into 'conf-templates' }
-
-    /*
-    doLast {
-        println('-------------------------SHOULD CREATE SYMLINKS HERE-------------------------')
-        (subprojects - project('pxf') - project('pxf-service')).each { project ->
-            println("ln -s ${project.name}-${project.version}.jar build/stage/lib/${project.name}.jar")
-
-            exec {
-                executable "sh"
-                args "-c", "ln -s ${project.name}-${project.version}.jar build/stage/lib/${project.name}.jar"
-                //args "-c", "ls -al"
-            }
-        }
-    }
-    */
 }
 
 task tar(type: Tar, dependsOn: [assemble]) {
