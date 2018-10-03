@@ -39,6 +39,7 @@ function install_gpdb_binary() {
     service sshd start
     mkdir -p ${GPHOME}
     tar -xzf bin_gpdb/bin_gpdb.tar.gz -C ${GPHOME}
+    rm -rf "$GPHOME/pxf" # TODO: temporary hack while we are changing the versions of PXF jars
     if [ -d pxf_tarball ]; then
         tar -xzf pxf_tarball/pxf.tar.gz -C ${GPHOME}
     fi
