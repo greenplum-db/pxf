@@ -90,7 +90,7 @@ subprojects { subProject ->
             "-Xlint:fallthrough", "-Xlint:deprecation", "-Xlint:unchecked", "-Xlint:-options"
     ]
 
-    // Add LICENSE, DISCLAIMER and NOTICE to generated jar files.
+    // Add LICENSE and NOTICE to generated jar files.
     sourceSets {
         main {
             resources {
@@ -307,10 +307,6 @@ project('pxf') {
         link('/etc/pxf', "/etc/pxf-${project.version}")
         link('/opt/pxf', "/opt/pxf-${project.version}")
         link('/etc/init.d/pxf-service', "/opt/pxf/pxf-service")
-
-        from('../resources/META-INF/DISCLAIMER') {
-            into "/opt/pxf-${project.version}"
-        }
 
         from('../resources/META-INF/LICENSE') {
             into "/opt/pxf-${project.version}"
