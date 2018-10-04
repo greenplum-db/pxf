@@ -94,8 +94,12 @@ subprojects { subProject ->
     sourceSets {
         main {
             resources {
-                srcDir '../resources'
-                include '**/*'
+                srcDir '../../'
+                include 'NOTICE'
+            }
+            resources {
+                srcDir '../../'
+                include 'LICENSE'
             }
         }
     }
@@ -307,14 +311,6 @@ project('pxf') {
         link('/etc/pxf', "/etc/pxf-${project.version}")
         link('/opt/pxf', "/opt/pxf-${project.version}")
         link('/etc/init.d/pxf-service', "/opt/pxf/pxf-service")
-
-        from('../resources/META-INF/LICENSE') {
-            into "/opt/pxf-${project.version}"
-        }
-
-        from('../resources/META-INF/NOTICE') {
-            into "/opt/pxf-${project.version}"
-        }
     }
 }
 
