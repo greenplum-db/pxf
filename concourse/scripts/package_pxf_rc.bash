@@ -4,6 +4,7 @@ set -exo pipefail
 
 pushd pxf_src
 VERSION=`git describe --tags`
+
 popd
 
 cat > install_gpdb_component <<EOF

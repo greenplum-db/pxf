@@ -12,6 +12,7 @@ _main() {
 	export JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8
 	pushd pxf_src/server
 		make install
+		make version > ${PXF_HOME}/version
 	popd
 	# Create tarball for PXF
 	pushd ${GPHOME}

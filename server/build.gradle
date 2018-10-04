@@ -29,6 +29,7 @@ buildscript {
 
 plugins {
     id "de.undercouch.download" version "3.4.3"
+    id 'com.palantir.git-version' version "0.11.0"
 }
 
 repositories {
@@ -139,6 +140,7 @@ subprojects { subProject ->
 }
 
 project('pxf') {
+    version gitVersion()
     jar.enabled = false
     dependencies {
         // AWS S3 support jars
@@ -164,6 +166,7 @@ project('pxf') {
 }
 
 project('pxf-api') {
+    version gitVersion()
     dependencies {
         compile "commons-lang:commons-lang:2.6"
         compile "org.codehaus.jackson:jackson-mapper-asl:1.9.13"
@@ -186,6 +189,7 @@ task jar(type: Copy, dependsOn: [subprojects.build]) {
 }
 
 project('pxf-service') {
+    version gitVersion()
     apply plugin: 'war'
     tasks.war {
         archiveName = 'pxf.war'
@@ -219,6 +223,8 @@ project('pxf-service') {
 }
 
 project('pxf-hdfs') {
+    version gitVersion()
+
     dependencies {
         compile(project(':pxf-api'))
         compile "org.apache.avro:avro-mapred:1.7.4"
@@ -236,6 +242,8 @@ project('pxf-hdfs') {
 }
 
 project('pxf-hive') {
+    version gitVersion()
+
     dependencies {
         compile(project(':pxf-hdfs'))
         compile("org.apache.hive:hive-exec:$hiveVersion") {
@@ -254,6 +262,8 @@ project('pxf-hive') {
 }
 
 project('pxf-json') {
+    version gitVersion()
+
     dependencies {
       compile(project(':pxf-hdfs'))
       compile(project(':pxf-api'))
@@ -268,6 +278,8 @@ project('pxf-json') {
 }
 
 project('pxf-hbase') {
+    version gitVersion()
+
     dependencies {
         compile(project(':pxf-api'))
         compile "org.apache.hbase:hbase-client:$hbaseVersionJar"
@@ -282,6 +294,8 @@ project('pxf-hbase') {
 }
 
 project('pxf-jdbc') {
+    version gitVersion()
+
     dependencies {
         compile(project(':pxf-api'))
 
@@ -294,6 +308,8 @@ project('pxf-jdbc') {
 }
 
 project('pxf-ignite') {
+    version gitVersion()
+
     dependencies {
         compile(project(':pxf-api'))
         compile "com.google.code.gson:gson:2.8.2"
@@ -306,6 +322,13 @@ wrapper {
     gradleVersion = '4.9'
 }
 
+
+
+task version {
+    doLast {
+        println gitVersion()
+    }
+}
 
 // tomcat
 def tomcatName = "apache-tomcat-${tomcatVersion}"
