@@ -37,7 +37,7 @@ fi
 pxf_user=${PXF_USER}
 instance_port=${PXF_PORT:-@pxfPortNum@}
 instance_name=pxf-service
-pxf_debug=${PXF_DEBUG:false}
+pxf_debug=${PXF_DEBUG:-false}
 
 if [ -z ${PXF_HOME} ]; then
     # RPM based setup
