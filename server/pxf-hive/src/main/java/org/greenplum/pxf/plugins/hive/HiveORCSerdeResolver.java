@@ -37,7 +37,7 @@ import java.util.*;
  */
 public class HiveORCSerdeResolver extends HiveResolver {
     private static final Log LOG = LogFactory.getLog(HiveORCSerdeResolver.class);
-    private HiveUtilities.PXF_HIVE_SERDES serdeType;
+    private String serdeType;
     private String typesString;
 
     public HiveORCSerdeResolver(InputData input) throws Exception {
@@ -47,8 +47,8 @@ public class HiveORCSerdeResolver extends HiveResolver {
     /* read the data supplied by the fragmenter: inputformat name, serde name, partition keys */
     @Override
     void parseUserData(InputData input) throws Exception {
-        HiveUserData hiveUserData = HiveUtilities.parseHiveUserData(input, HiveUtilities.PXF_HIVE_SERDES.ORC_SERDE);
-        serdeType = HiveUtilities.PXF_HIVE_SERDES.getPxfHiveSerde(hiveUserData.getSerdeClassName());
+        HiveUserData hiveUserData = HiveUtilities.parseHiveUserData(input);
+        serdeType = hiveUserData.getSerdeClassName();
         partitionKeys = hiveUserData.getPartitionKeys();
         typesString = hiveUserData.getColTypes();
         collectionDelim = input.getUserProperty("COLLECTION_DELIM") == null ? COLLECTION_DELIM
@@ -95,7 +95,7 @@ public class HiveORCSerdeResolver extends HiveResolver {
         serdeProperties.put(serdeConstants.LIST_COLUMNS, columnNames.toString());
         serdeProperties.put(serdeConstants.LIST_COLUMN_TYPES, columnTypes.toString());
 
-        deserializer = HiveUtilities.createDeserializer(serdeType, HiveUtilities.PXF_HIVE_SERDES.ORC_SERDE);
+        deserializer = HiveUtilities.createDeserializer(serdeType);
         deserializer.initialize(new JobConf(new Configuration(), HiveORCSerdeResolver.class), serdeProperties);
     }
 

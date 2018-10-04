@@ -21,7 +21,6 @@ package org.greenplum.pxf.plugins.hive;
 
 
 import org.greenplum.pxf.api.utilities.InputData;
-import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.apache.hadoop.hive.ql.io.RCFileInputFormat;
 import org.apache.hadoop.hive.ql.io.RCFileRecordReader;
 import org.apache.hadoop.mapred.FileSplit;
@@ -45,9 +44,6 @@ public class HiveRCFileAccessor extends HiveAccessor {
      */
     public HiveRCFileAccessor(InputData input) throws Exception {
         super(input, new RCFileInputFormat());
-        HiveUserData hiveUserData = HiveUtilities.parseHiveUserData(input, HiveUtilities.PXF_HIVE_SERDES.COLUMNAR_SERDE, HiveUtilities.PXF_HIVE_SERDES.LAZY_BINARY_COLUMNAR_SERDE);
-        initPartitionFields(hiveUserData.getPartitionKeys());
-        filterInFragmenter = hiveUserData.isFilterInFragmenter();
     }
 
     @Override

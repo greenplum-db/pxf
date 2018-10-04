@@ -72,9 +72,6 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
      */
     public HiveORCAccessor(InputData input) throws Exception {
         super(input, new OrcInputFormat());
-        HiveUserData hiveUserData = HiveUtilities.parseHiveUserData(input, HiveUtilities.PXF_HIVE_SERDES.ORC_SERDE);
-        initPartitionFields(hiveUserData.getPartitionKeys());
-        filterInFragmenter = hiveUserData.isFilterInFragmenter();
         useStats = Utilities.useStats(this, inputData);
     }
 

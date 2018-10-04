@@ -406,26 +406,6 @@ public class HiveUtilitiesTest {
     }
 
     @Test
-    @SuppressWarnings("deprecation")
-    public void createDeserializer() throws Exception {
-        SerDe serde = HiveUtilities.createDeserializer(HiveUtilities.PXF_HIVE_SERDES.ORC_SERDE, HiveUtilities.PXF_HIVE_SERDES.ORC_SERDE);
-        assertTrue(serde instanceof OrcSerde);
-
-        serde = HiveUtilities.createDeserializer(HiveUtilities.PXF_HIVE_SERDES.LAZY_BINARY_COLUMNAR_SERDE, HiveUtilities.PXF_HIVE_SERDES.LAZY_BINARY_COLUMNAR_SERDE);
-        assertTrue(serde instanceof org.apache.hadoop.hive.serde2.columnar.LazyBinaryColumnarSerDe);
-
-        serde = HiveUtilities.createDeserializer(HiveUtilities.PXF_HIVE_SERDES.COLUMNAR_SERDE, HiveUtilities.PXF_HIVE_SERDES.COLUMNAR_SERDE);
-        assertTrue(serde instanceof org.apache.hadoop.hive.serde2.columnar.ColumnarSerDe);
-
-        try {
-            serde = HiveUtilities.createDeserializer(HiveUtilities.PXF_HIVE_SERDES.COLUMNAR_SERDE, HiveUtilities.PXF_HIVE_SERDES.ORC_SERDE);
-            fail("shouldn't be able to create deserializer with not allowed serde");
-        } catch (UnsupportedTypeException e) {
-            assertTrue(e.getMessage().equals("Unsupported Hive Serde: " + HiveUtilities.PXF_HIVE_SERDES.COLUMNAR_SERDE.name()));
-        }
-    }
-
-    @Test
     public void getDelimiterCode() {
 
         //Default delimiter code should be 44(comma)

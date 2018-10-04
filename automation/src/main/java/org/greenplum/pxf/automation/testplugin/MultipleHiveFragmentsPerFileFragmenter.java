@@ -27,7 +27,6 @@ import org.greenplum.pxf.plugins.hive.HiveUserData;
 import org.greenplum.pxf.plugins.hive.HiveDataFragmenter;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.greenplum.pxf.plugins.hive.utilities.ProfileFactory;
-import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities.PXF_HIVE_SERDES;
 
 
 /**

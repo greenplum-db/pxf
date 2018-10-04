@@ -40,7 +40,7 @@ import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.hive.serde.serdeConstants;
-import org.apache.hadoop.hive.serde2.*;
+import org.apache.hadoop.hive.serde2.AbstractSerDe;
 import org.apache.hadoop.hive.ql.io.orc.OrcFile;
 import org.apache.hadoop.hive.ql.io.orc.Reader;
 import org.greenplum.pxf.api.Metadata;
@@ -62,46 +62,6 @@ import org.greenplum.pxf.plugins.hive.HiveUserData;
  * and interacting with Hive.
  */
 public class HiveUtilities {
-
-    /** Defines the Hive serializers (serde classes) currently supported in pxf */
-    public enum PXF_HIVE_SERDES {
-        COLUMNAR_SERDE("org.apache.hadoop.hive.serde2.columnar.ColumnarSerDe"),
-        LAZY_BINARY_COLUMNAR_SERDE("org.apache.hadoop.hive.serde2.columnar.LazyBinaryColumnarSerDe"),
-        LAZY_SIMPLE_SERDE("org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe"),
-        ORC_SERDE("org.apache.hadoop.hive.ql.io.orc.OrcSerde");
-
-        private String serdeClassName;
-
-        PXF_HIVE_SERDES(String serdeClassName) {
-            this.serdeClassName = serdeClassName;
-        }
-
-        /**
-         * Method which looks up serde by serde class name.
-         *
-         * @param serdeClassName input serde name
-         * @param allowedSerdes all serdes which allowed in current context
-         * @return serde by given serde class name and list of allowed serdes
-         * @throws UnsupportedTypeException if unable to find serde by class name, or found serde which is not allowed in current context
-         */
-        public static PXF_HIVE_SERDES getPxfHiveSerde(String serdeClassName, PXF_HIVE_SERDES... allowedSerdes) {
-            for (PXF_HIVE_SERDES s : values()) {
-                if (s.getSerdeClassName().equals(serdeClassName)) {
-
-                    if (allowedSerdes.length > 0
-                            && !Arrays.asList(allowedSerdes).contains(s)) {
-                        throw new UnsupportedTypeException("Unsupported Hive Serde: " + serdeClassName);
-                    }
-                    return s;
-                }
-            }
-            throw new UnsupportedTypeException("Unable to find serde for class name: "+ serdeClassName);
-        }
-
-        public String getSerdeClassName() {
-            return serdeClassName;
-        }
-    }
 
     private static final Log LOG = LogFactory.getLog(HiveUtilities.class);
     private static final String WILDCARD = "*";
@@ -492,11 +452,10 @@ public class HiveUtilities {
      * The method parses raw user data into HiveUserData class
      *
      * @param input input data
-     * @param supportedSerdes list of allowed serdes in current context
      * @return instance of HiveUserData class
      * @throws UserDataException when incorrect number of tokens in Hive user data received
      */
-    public static HiveUserData parseHiveUserData(InputData input, PXF_HIVE_SERDES... supportedSerdes) throws UserDataException{
+    public static HiveUserData parseHiveUserData(InputData input) throws UserDataException{
         String userData = new String(input.getFragmentUserData());
         String[] toks = userData.split(HiveUserData.HIVE_UD_DELIM, HiveUserData.getNumOfTokens());
 
@@ -506,11 +465,6 @@ public class HiveUtilities {
         }
 
         HiveUserData hiveUserData = new HiveUserData(toks[0], toks[1], toks[2], toks[3], Boolean.valueOf(toks[4]), toks[5], toks[6], Integer.parseInt(toks[7]));
-
-        if (supportedSerdes.length > 0) {
-            /* Make sure this serde is supported */
-            PXF_HIVE_SERDES pxfHiveSerde = PXF_HIVE_SERDES.getPxfHiveSerde(hiveUserData.getSerdeClassName(), supportedSerdes);
-        }
 
         return hiveUserData;
     }
@@ -610,21 +564,12 @@ public class HiveUtilities {
     /**
      * Creates an instance of a given serde type
      *
-     * @param serdeType SerDe type
-     * @param allowedSerdes allowed serdes in current context
+     * @param serdeClassName the name of the serde class
      * @return instance of a given serde
-     * @throws UnsupportedTypeException if given serde is not allowed in current context
-     * @throws Exception if other error occurred during creation of SerDe instance
+     * @throws Exception if an error occurs during the creation of AbstractSerDe instance
      */
-    @SuppressWarnings("deprecation")
-    public static SerDe createDeserializer(PXF_HIVE_SERDES serdeType, PXF_HIVE_SERDES... allowedSerdes) throws Exception{
-        SerDe deserializer = null;
-        if (!Arrays.asList(allowedSerdes).contains(serdeType)) {
-            throw new UnsupportedTypeException("Unsupported Hive Serde: " + serdeType.name());
-        }
-
-        deserializer = (SerDe) Utilities.createAnyInstance(serdeType.getSerdeClassName());
-
+    public static AbstractSerDe createDeserializer(String serdeClassName) throws Exception {
+        AbstractSerDe deserializer = (AbstractSerDe) Utilities.createAnyInstance(serdeClassName);
         return deserializer;
     }
 

@@ -87,9 +87,7 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
          * calling the base constructor, otherwise it would have been:
          * super(input, createInputFormat(input))
          */
-        super(input, null);
-        inputFormat = createInputFormat(input);
-        settSkipHeader(input);
+        this(input, null);
     }
 
     /**
@@ -97,10 +95,20 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
      *
      * @param input contains the InputFormat class name and the partition fields
      * @param inputFormat Hive InputFormat
+     * @throws Exception if failed to create input format
      */
     public HiveAccessor(InputData input, InputFormat<?, ?> inputFormat) throws Exception {
         super(input, inputFormat);
-        settSkipHeader(input);
+        HiveUserData hiveUserData = HiveUtilities.parseHiveUserData(input);
+
+        if (inputFormat == null) {
+            this.inputFormat = HiveDataFragmenter.makeInputFormat(
+                    hiveUserData.getInputFormatName()/* inputFormat name */, jobConf);
+        }
+
+        initPartitionFields(hiveUserData.getPartitionKeys());
+        filterInFragmenter = hiveUserData.isFilterInFragmenter();
+        skipHeaderCount = hiveUserData.getSkipHeader();
     }
 
     /**
@@ -147,30 +155,6 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
     protected Object getReader(JobConf jobConf, InputSplit split)
             throws IOException {
         return inputFormat.getRecordReader(split, jobConf, Reporter.NULL);
-    }
-
-    /*
-     * Parses the user-data supplied by the HiveFragmenter from InputData. Based
-     * on the user-data construct the partition fields and the InputFormat for
-     * current split
-     */
-
-    private void settSkipHeader(InputData input)
-            throws Exception {
-        HiveUserData hiveUserData = HiveUtilities.parseHiveUserData(input);
-        if(hiveUserData != null) {
-            skipHeaderCount = hiveUserData.getSkipHeader();
-        }
-    }
-
-    private InputFormat<?, ?> createInputFormat(InputData input)
-            throws Exception {
-        HiveUserData hiveUserData = HiveUtilities.parseHiveUserData(input);
-
-        initPartitionFields(hiveUserData.getPartitionKeys());
-        filterInFragmenter = hiveUserData.isFilterInFragmenter();
-        return HiveDataFragmenter.makeInputFormat(
-                hiveUserData.getInputFormatName()/* inputFormat name */, jobConf);
     }
 
     /*

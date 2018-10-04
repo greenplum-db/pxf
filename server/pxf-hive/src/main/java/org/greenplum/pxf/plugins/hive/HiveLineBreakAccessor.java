@@ -41,9 +41,6 @@ public class HiveLineBreakAccessor extends HiveAccessor {
     public HiveLineBreakAccessor(InputData input) throws Exception {
         super(input, new TextInputFormat());
         ((TextInputFormat) inputFormat).configure(jobConf);
-        HiveUserData hiveUserData = HiveUtilities.parseHiveUserData(input);
-        initPartitionFields(hiveUserData.getPartitionKeys());
-        filterInFragmenter = hiveUserData.isFilterInFragmenter();
     }
 
     @Override

@@ -58,7 +58,7 @@ public class HiveColumnarSerdeResolver extends HiveResolver {
     private boolean firstColumn;
     private StringBuilder builder;
     private StringBuilder parts;
-    private HiveUtilities.PXF_HIVE_SERDES serdeType;
+    private String serdeType;
 
     public HiveColumnarSerdeResolver(InputData input) throws Exception {
         super(input);
@@ -67,10 +67,9 @@ public class HiveColumnarSerdeResolver extends HiveResolver {
     /* read the data supplied by the fragmenter: inputformat name, serde name, partition keys */
     @Override
     void parseUserData(InputData input) throws Exception {
-        HiveUserData hiveUserData = HiveUtilities.parseHiveUserData(input, HiveUtilities.PXF_HIVE_SERDES.COLUMNAR_SERDE, HiveUtilities.PXF_HIVE_SERDES.LAZY_BINARY_COLUMNAR_SERDE);
-        String serdeClassName = hiveUserData.getSerdeClassName();
+        HiveUserData hiveUserData = HiveUtilities.parseHiveUserData(input);
 
-        serdeType = HiveUtilities.PXF_HIVE_SERDES.getPxfHiveSerde(serdeClassName);
+        serdeType = hiveUserData.getSerdeClassName();
         parts = new StringBuilder();
         partitionKeys = hiveUserData.getPartitionKeys();
         parseDelimiterChar(input);
@@ -137,7 +136,7 @@ public class HiveColumnarSerdeResolver extends HiveResolver {
         serdeProperties.put(serdeConstants.LIST_COLUMNS, columnNames.toString());
         serdeProperties.put(serdeConstants.LIST_COLUMN_TYPES, columnTypes.toString());
 
-        deserializer = HiveUtilities.createDeserializer(serdeType, HiveUtilities.PXF_HIVE_SERDES.COLUMNAR_SERDE, HiveUtilities.PXF_HIVE_SERDES.LAZY_BINARY_COLUMNAR_SERDE);
+        deserializer = HiveUtilities.createDeserializer(serdeType);
         deserializer.initialize(new JobConf(new Configuration(), HiveColumnarSerdeResolver.class), serdeProperties);
     }
 

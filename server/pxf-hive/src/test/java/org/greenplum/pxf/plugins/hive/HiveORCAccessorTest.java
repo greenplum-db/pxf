@@ -28,7 +28,6 @@ import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.InputData;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
-import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities.PXF_HIVE_SERDES;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -40,8 +39,6 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import static org.apache.hadoop.hive.ql.io.sarg.SearchArgumentFactory.SARG_PUSHDOWN;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -69,7 +66,7 @@ public class HiveORCAccessorTest {
         PowerMockito.whenNew(JobConf.class).withAnyArguments().thenReturn(jobConf);
 
         PowerMockito.mockStatic(HiveUtilities.class);
-        PowerMockito.when(HiveUtilities.parseHiveUserData(any(InputData.class), any(PXF_HIVE_SERDES[].class))).thenReturn(new HiveUserData("", "", null, HiveDataFragmenter.HIVE_NO_PART_TBL, true, "1", "", 0));
+        PowerMockito.when(HiveUtilities.parseHiveUserData(any(InputData.class))).thenReturn(new HiveUserData("", "", null, HiveDataFragmenter.HIVE_NO_PART_TBL, true, "1", "", 0));
         PowerMockito.when(HiveUtilities.getOrcReader(any(InputData.class))).thenReturn(orcReader);
 
         PowerMockito.mockStatic(HdfsUtilities.class);
