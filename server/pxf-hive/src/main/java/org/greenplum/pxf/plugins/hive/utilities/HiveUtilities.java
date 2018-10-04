@@ -40,7 +40,7 @@ import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.hive.serde.serdeConstants;
-import org.apache.hadoop.hive.serde2.AbstractSerDe;
+import org.apache.hadoop.hive.serde2.*;
 import org.apache.hadoop.hive.ql.io.orc.OrcFile;
 import org.apache.hadoop.hive.ql.io.orc.Reader;
 import org.greenplum.pxf.api.Metadata;
@@ -566,10 +566,11 @@ public class HiveUtilities {
      *
      * @param serdeClassName the name of the serde class
      * @return instance of a given serde
-     * @throws Exception if an error occurs during the creation of AbstractSerDe instance
+     * @throws Exception if an error occurs during the creation of SerDe instance
      */
-    public static AbstractSerDe createDeserializer(String serdeClassName) throws Exception {
-        AbstractSerDe deserializer = (AbstractSerDe) Utilities.createAnyInstance(serdeClassName);
+    @SuppressWarnings("deprecation")
+    public static SerDe createDeserializer(String serdeClassName) throws Exception {
+        SerDe deserializer = (SerDe) Utilities.createAnyInstance(serdeClassName);
         return deserializer;
     }
 
