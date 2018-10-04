@@ -149,6 +149,9 @@ project('pxf') {
         bundleJars "com.amazonaws:aws-java-sdk-core:$awsJavaSdk"
         bundleJars "com.amazonaws:aws-java-sdk-kms:$awsJavaSdk"
         bundleJars "com.amazonaws:aws-java-sdk-s3:$awsJavaSdk"
+        bundleJars "org.apache.hadoop:hadoop-azure-datalake:3.0.0-alpha2"
+        bundleJars "com.microsoft.azure:azure-data-lake-store-sdk:2.0.11"
+        bundleJars "com.google.cloud.bigdataoss:gcs-connector:hadoop2-1.9.7"
     }
 }
 
