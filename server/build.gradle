@@ -317,6 +317,9 @@ project('pxf-ignite') {
     }
 }
 
+project('pxf-api') {
+    version gitVersion()
+}
 
 wrapper {
     gradleVersion = '4.9'

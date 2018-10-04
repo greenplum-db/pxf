@@ -40,6 +40,7 @@ function install_gpdb_binary() {
     mkdir -p ${GPHOME}
     tar -xzf bin_gpdb/bin_gpdb.tar.gz -C ${GPHOME}
     if [ -d pxf_tarball ]; then
+    	rm -rf "${GPHOME}/pxf"
         tar -xzf pxf_tarball/pxf.tar.gz -C ${GPHOME}
     fi
 	# Copy PSI package from system python to GPDB as automation test requires it
