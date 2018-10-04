@@ -6,6 +6,7 @@ inputs:
   - name: pxf_src
   - name: bin_gpdb
   - name: pxf_tarball
+    optional: true
 params:
   IMPERSONATION: true
   HADOOP_CLIENT: HDP
