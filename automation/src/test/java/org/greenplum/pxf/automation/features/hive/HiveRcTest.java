@@ -163,20 +163,6 @@ public class HiveRcTest extends HiveBaseTest {
     }
 
     /**
-     * Use RC connectors on hive text table and expect error
-     *
-     * @throws Exception if test fails to run
-     */
-    @Test(groups = { "features", "gpdb" })
-    public void hiveTextUsingRcConnectors() throws Exception {
-
-        createExternalTable(PXF_HIVE_TEXT_TABLE,
-                PXF_HIVE_SMALLDATA_COLS, hiveSmallDataTable, false);
-
-        runTincTest("pxf.features.hive.errors.rc_readText.runTest");
-    }
-
-    /**
      * use PXF RC connectors to get data from Hive RC table with mentioned ColumnarSerDe serde.
      *
      * @throws Exception if test fails to run
