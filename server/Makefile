@@ -73,6 +73,7 @@ tar:
 
 clean:
 	./gradlew clean
+	rm -rf build
 
 distclean maintainer-clean: clean
 

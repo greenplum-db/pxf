@@ -133,6 +133,7 @@ subprojects { subProject ->
             // providedCompile is a war plugin specific thing to exclude in war.
             // We have to exclude tomcat explicitly
             exclude 'tomcat-catalina-*'
+            exclude 'pxf-*'
         }
     }
 }
@@ -361,8 +362,8 @@ task tar(type: Tar, dependsOn: [assemble]) {
     from assemble.outputs.files
 }
 
-task install (type: Copy, dependsOn: [tar]) {
-    from tarTree(file("${buildDir}/dist/pxf.tar.gz"))
+task install (type: Copy, dependsOn: [assemble]) {
+    from assemble.outputs.files
     into System.properties['deployPath']
 }
 
