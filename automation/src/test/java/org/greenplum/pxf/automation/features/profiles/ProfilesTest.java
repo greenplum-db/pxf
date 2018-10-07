@@ -74,7 +74,7 @@ public class ProfilesTest extends BaseFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "sanity" })
+    @Test(groups = { "sanity" })
     protected void sanity() throws Exception {
 
         gpdb.createTableAndVerify(exTable);
@@ -87,7 +87,7 @@ public class ProfilesTest extends BaseFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = "features", enabled = false)
+    @Test(groups = "unused", enabled = false)
     public void defaultProfilesExists() throws Exception {
 
         // go over all profiles and verify required profiles exists
@@ -103,7 +103,7 @@ public class ProfilesTest extends BaseFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = "features")
+    @Test(groups = "unused")
     public void caseInsensetive() throws Exception {
 
         exTable.setProfile(EnumPxfDefaultProfiles.HdfsTextSimple.toString().toUpperCase());
@@ -116,7 +116,7 @@ public class ProfilesTest extends BaseFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "profile" })
     public void profileParameterNotAsFirstParameter() throws Exception {
 
         exTable.setProfile(null);
@@ -131,7 +131,7 @@ public class ProfilesTest extends BaseFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "profile" })
     public void missingProfile() throws Exception {
 
         // set not exists profile
@@ -145,7 +145,7 @@ public class ProfilesTest extends BaseFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "profile" })
     public void emptyProfile() throws Exception {
 
         // clean profiles list, add empty profile and write to file
@@ -166,7 +166,7 @@ public class ProfilesTest extends BaseFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "profile" })
     public void profileNameWithSpaces() throws Exception {
 
         // get "HdfsTextSimple" profile, edit name to be wrapped with spaces and write to file
@@ -186,7 +186,7 @@ public class ProfilesTest extends BaseFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "profile" })
     public void missingPlugin() throws Exception {
 
         // get "HdfsTextSimple" profile, remove fragmenter and write to file
@@ -207,7 +207,7 @@ public class ProfilesTest extends BaseFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "profile" })
     public void customProfile() throws Exception {
 
         // get "HdfsTextSimple" profile and change the name
@@ -232,7 +232,7 @@ public class ProfilesTest extends BaseFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "profile" })
     public void noProfile() throws Exception {
 
         exTable.setProfile(null);
@@ -253,7 +253,7 @@ public class ProfilesTest extends BaseFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "profile" })
     public void malformedXmlFile() throws Exception {
 
         File xmlProfileFile = new File(pxfProfiles.getXmlFilePath());
@@ -274,7 +274,7 @@ public class ProfilesTest extends BaseFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "profile" })
     public void duplicateProfile() throws Exception {
 
         exTable.setProfile(null);
@@ -299,7 +299,7 @@ public class ProfilesTest extends BaseFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "profile" })
     public void duplicateProfileParametersCheck() throws Exception {
 
         exTable.setProfile(null);
@@ -321,7 +321,7 @@ public class ProfilesTest extends BaseFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "profile" })
     public void additionalParameterWithProfile() throws Exception {
 
         exTable.setProfile(null);

@@ -77,12 +77,12 @@ function run_pxf_automation() {
 
 	source ${GPHOME}/greenplum_path.sh
 	export GPHOME=/usr/local/greenplum-db-devel
-	export PXF_HOME=\${GPHOME}/pxf
+	export PXF_HOME=${GPHOME}/pxf
 	export PGHOST=localhost
 	export PGPORT=5432
 
 	cd pxf_src/automation
-	make GROUP=gpdb
+	make GROUP=${GROUP}
 
 	exit 0
 	EOF
