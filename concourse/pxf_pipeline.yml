@@ -48,7 +48,7 @@ resources:
 - name: pxf_build_number
   type: semver
   source:
-    initial_version: 3.3.0
+    initial_version: 4.0.0
     bucket: {{pxf-aws-bucket-name}}
     key: pxf_artifacts/pxf_build_number
     region_name: {{aws-region}}
