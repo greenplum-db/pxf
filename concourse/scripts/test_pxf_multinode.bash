@@ -101,8 +101,11 @@ function _main() {
 
     open_ssh_tunnels
     configure_local_hdfs
-    run_multinode_smoke_test
+
+    # Run multinode smoke test in parallel with pxf automation
+    run_multinode_smoke_test &
     run_pxf_automation
+    wait
     close_ssh_tunnels
 }
 
