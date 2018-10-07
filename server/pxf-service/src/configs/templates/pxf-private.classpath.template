@@ -21,6 +21,12 @@
 # Adding resources should be done using pxf-public.classpath file.
 ##################################################################
 
+# Hadoop/Hive/HBase Configurations
+# Uncomment the lines below to use the configuration files that hadoop client is using
+# /etc/hadoop/conf
+# /etc/hive/conf
+# /etc/hbase/conf
+
 # PXF Configuration
 PXF_HOME/conf
 
