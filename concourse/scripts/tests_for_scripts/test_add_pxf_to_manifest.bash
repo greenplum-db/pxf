@@ -6,7 +6,7 @@ INPUT_FILE=/tmp/test-component-manifest.json
 OUTPUT_FILE=/tmp/test-component-manifest-output.json
 EXPECTED_OUTPUT_FILE=/tmp/test-component-manifest-expected.json
 
-source "$HERE/add_pxf_to_manifest.bash"
+source "$HERE/../add_pxf_to_manifest.bash"
 
 echo '### TEST: adding PXF to an empty component list'
 
