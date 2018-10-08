@@ -67,7 +67,7 @@ function _main() {
 
 	# Run Tests
 	if [ -n "${GROUP}" ]; then
-		time run_pxf_automation /singlecluster
+		time run_pxf_automation
 	fi
 }
 

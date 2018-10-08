@@ -28,8 +28,7 @@
 # export JAVA_HOME=/usr/java/jdk1.6.0/
 
 # Extra Java CLASSPATH elements.  Optional.
-export HBASE_CLASSPATH=\
-$(ls $PXF_HOME/lib/pxf-hbase-*.jar):\
+# export HBASE_CLASSPATH=
 
 # The maximum amount of heap to use, in MB. Default is 1000.
 # export HBASE_HEAPSIZE=1000

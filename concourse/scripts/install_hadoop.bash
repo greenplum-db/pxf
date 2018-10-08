@@ -34,19 +34,43 @@ function setup_pxf {
 function install_hadoop_single_cluster() {
 
     local hadoop_ip=${1}
+    ssh ${SSH_OPTS} centos@edw0 "sudo mkdir -p /root/.ssh && \
+        sudo cp /home/centos/.ssh/authorized_keys /root/.ssh && \
+        sudo sed -i 's/PermitRootLogin no/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+        sudo service sshd restart"
+
     tar -xzf pxf_tarball/pxf.tar.gz -C /tmp
     cp /tmp/pxf/lib/pxf-hbase-*.jar /singlecluster/hbase/lib
-    scp ${SSH_OPTS} cluster_env_files/etc_hostfile centos@edw0:
-    scp ${SSH_OPTS} -rq /singlecluster centos@edw0:
-    scp ${SSH_OPTS} pxf_src/concourse/scripts/pxf_common.bash centos@edw0:
-    scp ${SSH_OPTS} pxf_src/concourse/scripts/setup_hadoop_single_cluster.bash centos@edw0:
 
-    ssh ${SSH_OPTS} centos@edw0 "sudo bash -c \"\
-        cd /home/centos && IMPERSONATION=${IMPERSONATION} ./setup_hadoop_single_cluster.bash ${hadoop_ip}
-    \""
+    scp ${SSH_OPTS} cluster_env_files/etc_hostfile root@edw0:
+    scp ${SSH_OPTS} -rq /singlecluster root@edw0:/
+    scp ${SSH_OPTS} pxf_src/concourse/scripts/pxf_common.bash root@edw0:
+
+    ssh ${SSH_OPTS} root@edw0 "
+        source pxf_common.bash &&
+        export IMPERSONATION=${IMPERSONATION} &&
+        export GPHD_ROOT=/singlecluster &&
+        sed -i 's/edw0/hadoop/' /etc/hosts &&
+        sed -i -e 's/>tez/>mr/g' -e 's/localhost/${hadoop_ip}/g' \${GPHD_ROOT}/hive/conf/hive-site.xml &&
+        sed -i -e 's/0.0.0.0/${hadoop_ip}/g' \${GPHD_ROOT}/hadoop/etc/hadoop/core-site.xml &&
+        sed -i -e 's/0.0.0.0/${hadoop_ip}/g' \${GPHD_ROOT}/hadoop/etc/hadoop/hdfs-site.xml &&
+        sed -i -e 's/0.0.0.0/${hadoop_ip}/g' \${GPHD_ROOT}/hadoop/etc/hadoop/yarn-site.xml &&
+
+        yum install -y -d 1 java-1.8.0-openjdk-devel &&
+        echo 'export JAVA_HOME=/usr/lib/jvm/jre' >> ~/.bash_profile &&
+        export JAVA_HOME=/etc/alternatives/jre_1.8.0_openjdk &&
+        export HADOOP_ROOT=\${GPHD_ROOT} &&
+        export HBASE_ROOT=\${GPHD_ROOT}/hbase &&
+        export HIVE_ROOT=\${GPHD_ROOT}/hive &&
+        export ZOOKEEPER_ROOT=\${GPHD_ROOT}/zookeeper &&
+        export PATH=\$PATH:\${GPHD_ROOT}/bin:\${HADOOP_ROOT}/bin:\${HBASE_ROOT}/bin:\${HIVE_ROOT}/bin:\${ZOOKEEPER_ROOT}/bin &&
+
+        groupadd supergroup && usermod -a -G supergroup gpadmin &&
+        setup_impersonation \${GPHD_ROOT} &&
+        start_hadoop_services \${GPHD_ROOT}"
 }
 
-function update_pghba_and_restart_gpdb() {
+function update_pghba_conf() {
 
     local sdw_ips=("$@")
     for ip in ${sdw_ips}; do
@@ -56,10 +80,7 @@ function update_pghba_and_restart_gpdb() {
 
     ssh ${SSH_OPTS} gpadmin@mdw "
         cat pg_hba.patch >> /data/gpdata/master/gpseg-1/pg_hba.conf &&
-        cat /data/gpdata/master/gpseg-1/pg_hba.conf &&
-        source /usr/local/greenplum-db-devel/greenplum_path.sh &&
-        export MASTER_DATA_DIRECTORY=/data/gpdata/master/gpseg-1 &&
-        gpstop -u"
+        cat /data/gpdata/master/gpseg-1/pg_hba.conf"
 }
 
 function _main() {
@@ -76,7 +97,7 @@ function _main() {
     wait
 
     # widen access to mdw to all nodes in the cluster for JDBC test
-    update_pghba_and_restart_gpdb "${gpdb_segments[@]}"
+    update_pghba_conf "${gpdb_segments[@]}"
 }
 
 _main

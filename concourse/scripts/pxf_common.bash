@@ -129,7 +129,7 @@ function install_pxf_server() {
 	export BUILD_NUMBER="${TARGET_OS}"
 	export JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8
 	pushd pxf_src/server
-	make install DATABASE=gpdb
+	make install
 	popd
 }
 
@@ -181,6 +181,9 @@ EOF
     else
         echo "ERROR: Invalid or missing CI property value: IMPERSONATION=${IMPERSONATION}"
         exit 1
+    fi
+    if [ ! -f ${GPHD_ROOT}/hbase/lib/pxf-hbase-*.jar ]; then
+        cp ${PXF_HOME}/lib/pxf-hbase-*.jar ${GPHD_ROOT}/hbase/lib
     fi
 }
 

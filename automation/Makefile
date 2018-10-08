@@ -5,7 +5,7 @@
 # make TEST=<class>#<method> ===> run specific <method> from <class>.class
 # make OFFLINE=true ===> run using only cache
 
-MAVEN_TEST_OPTS+= -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn -B -e
+MAVEN_TEST_OPTS+= -B -e
 
 ifneq "$(TEST)" ""
 	MAVEN_TEST_OPTS+= -Dtest=$(TEST)

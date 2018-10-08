@@ -142,7 +142,7 @@ function _main() {
 
 	time run_regression_test
 	if [ -n "${GROUP}" ]; then
-		time run_pxf_smoke_secure ${PWD}
+		time run_pxf_smoke_secure
 	fi
 }
 
