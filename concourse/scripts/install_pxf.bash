@@ -68,7 +68,7 @@ function start_pxf_server() {
 }
 
 function setup_hadoop_client() {
-	cat > /etc/hadoop/conf/core-site.xml <<-EOF
+	cat > /etc/hadoop/conf/core-site.xml <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
 <configuration>
@@ -87,7 +87,7 @@ function setup_hadoop_client() {
 </configuration>
 EOF
 
-	cat > /etc/hadoop/conf/hdfs-site.xml <<-EOF
+	cat > /etc/hadoop/conf/hdfs-site.xml <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
 <configuration>
@@ -125,6 +125,9 @@ EOF
 	</property>
 </configuration>
 EOF
+    rm -rf \$PXF_HOME/conf/core-site.xml \$PXF_HOME/conf/hdfs-site.xml
+    cp /etc/hadoop/conf/core-site.xml \$PXF_HOME/conf/core-site.xml
+    cp /etc/hadoop/conf/hdfs-site.xml \$PXF_HOME/conf/hdfs-site.xml
 }
 
 function main() {
