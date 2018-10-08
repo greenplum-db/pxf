@@ -10,7 +10,7 @@ popd
 cat > install_gpdb_component <<EOF
 #!/bin/bash
 set -x
-tar xzf pxf.tar.gz -C \$GPHOME
+tar xvzf pxf.tar.gz -C \$GPHOME
 EOF
 cat > smoke_test_gpdb_component <<EOF
 #!/bin/bash

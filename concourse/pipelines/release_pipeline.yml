@@ -302,13 +302,18 @@ jobs:
       IMPERSONATION: false
       TEST_ENV: {{test-env}}
 
-- name: build_release_candidate
+- name: build_release_candidate_centos
   plan:
   - get: ccp-7
   - get: gpdb-pxf-dev-centos6
   - get: pxf_tarball
     passed:
+    - test_pxf_hdp
+    - test_pxf_cdh
+    - test_pxf_hdp_secure
     - test_pxf_no_impersonation
+    - test_pxf_hdp_multinode_gpdb
+    trigger: true
   - get: gpdb_release
   - get: pxf_src
     passed:
@@ -317,7 +322,6 @@ jobs:
     - test_pxf_hdp_secure
     - test_pxf_no_impersonation
     - test_pxf_hdp_multinode_gpdb
-    trigger: true
   - task: package_pxf_rc
     config:
       inputs:
