@@ -112,17 +112,15 @@ su - gpadmin
 
 ### Setup GPDB
 
-Configure, build and install GPDB. This will be needed only when you use the container for the first time with gpdb source.
+Configure, build and install GPDB. This will be needed only when you use the container for the first time with GPDB source.
 ```bash
-~/workspace/pxf/dev/build_and_install_gpdb.bash
+~/workspace/pxf/dev/build_gpdb.bash
+~/workspace/pxf/dev/install_gpdb.bash
 ```
 
-For subsequent minor changes to gpdb source you can simply do the following
+For subsequent minor changes to GPDB source you can simply do the following:
 ```bash
-pushd ~/workspace/gpdb
-make -j4 install
-popd
-
+~/workspace/pxf/dev/install_gpdb.bash
 ```
 
 Create Greenplum Cluster
