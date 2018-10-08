@@ -344,7 +344,7 @@ function main {
     echo -e "Data loading and validation complete\n"
     LINEITEM_COUNT=$(psql -t -c "SELECT COUNT(*) FROM lineitem" | tr -d ' ')
 
-    run_s3_extension_benchmark
+#    run_s3_extension_benchmark
 
     if [ "${BENCHMARK_GPHDFS}" == "true" ]; then
         run_gphdfs_benchmark
