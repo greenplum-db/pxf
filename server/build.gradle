@@ -155,8 +155,8 @@ project('pxf') {
         bundleJars "com.google.cloud.bigdataoss:gcs-connector:hadoop2-1.9.7"
         bundleJars "com.google.cloud.bigdataoss:gcsio:1.9.7"
         bundleJars "com.google.flogger:flogger:0.3.1"
+        bundleJars "com.google.flogger:flogger-system-backend:0.3.1"
         bundleJars "com.google.flogger:google-extensions:0.3.1"
-
     }
 }
 
