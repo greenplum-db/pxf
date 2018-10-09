@@ -134,6 +134,32 @@ jobs:
     params:
       file: pxf_artifacts/pxf.tar.gz
 
+- name: test_pxf_cdh
+  plan:
+  - aggregate:
+    - get: gpdb_src
+      passed:
+      - compile_pxf
+    - get: bin_gpdb
+      resource: bin_gpdb_centos6
+    - get: pxf_src
+      passed:
+      - compile_pxf
+      trigger: true
+    - get: pxf_tarball
+      passed:
+      - compile_pxf
+      trigger: true
+    - get: gpdb-pxf-dev-centos6-cdh-server
+  - task: test_pxf
+    file: pxf_src/concourse/tasks/test_pxf.yml
+    image: gpdb-pxf-dev-centos6-cdh-server
+    attempts: 2
+    params:
+      GROUP: gpdb,proxy,profile
+      TEST_ENV: {{test-env}}
+      HADOOP_CLIENT: CDH
+
 - name: test_pxf_hdp
   plan:
   - aggregate:
@@ -155,7 +181,7 @@ jobs:
     file: pxf_src/concourse/tasks/test_pxf.yml
     image: gpdb-pxf-dev-centos6-hdp-server
     params:
-      GROUP: gpdb,proxy
+      GROUP: gpdb,proxy,profile
       TEST_ENV: {{test-env}}
       HADOOP_CLIENT: HDP
       TARGET_OS: centos
@@ -205,7 +231,6 @@ jobs:
     trigger: true
   - get: ccp-7
   - get: gpdb-pxf-dev-centos6-hdp-server
-
   - put: terraform_gpdb
     resource: terraform
     params:
@@ -250,33 +275,8 @@ jobs:
     image: gpdb-pxf-dev-centos6-hdp-server
     file: pxf_src/concourse/tasks/test_pxf_multinode.yml
     params:
-      NO_OF_FILES: {{no_of_files}}
-
-- name: test_pxf_cdh
-  plan:
-  - aggregate:
-    - get: gpdb_src
-      passed:
-      - compile_pxf
-    - get: bin_gpdb
-      resource: bin_gpdb_centos6
-    - get: pxf_src
-      passed:
-      - compile_pxf
-      trigger: true
-    - get: pxf_tarball
-      passed:
-      - compile_pxf
-      trigger: true
-    - get: gpdb-pxf-dev-centos6-cdh-server
-  - task: test_pxf
-    file: pxf_src/concourse/tasks/test_pxf.yml
-    image: gpdb-pxf-dev-centos6-cdh-server
-    attempts: 2
-    params:
       GROUP: gpdb,proxy
-      TEST_ENV: {{test-env}}
-      HADOOP_CLIENT: CDH
+      NO_OF_FILES: {{no_of_files}}
 
 - name: test_pxf_no_impersonation
   plan:
