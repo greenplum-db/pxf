@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -o pipefail
+
 function add_pxf_to_manifest() {
     local version="$1"
     local manifest="$2"
@@ -45,6 +47,6 @@ function add_pxf_to_manifest() {
             | \$root + {"platforms": . }
 EOF
 
-    cat "$manifest" | jq -f "$filterfile"
+    cat "$manifest" | jq -f "$filterfile" || return 1
     rm -f "$filterfile" >/dev/null
 }

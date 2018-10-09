@@ -203,3 +203,23 @@ EOF
 add_pxf_to_manifest 1.2.3 "$INPUT_FILE" > "$OUTPUT_FILE"
 diff -u "$EXPECTED_OUTPUT_FILE" "$OUTPUT_FILE" || exit 1
 echo PASS
+
+echo '### TEST: failure returns an error code'
+
+cat > "$INPUT_FILE" <<EOF
+syntax error
+EOF
+
+if add_pxf_to_manifest 1.2.3 "$INPUT_FILE" > "$OUTPUT_FILE"; then
+	# command succeeded when it should not have; fail the test
+	exit 1
+fi
+echo PASS
+
+echo '### TEST: input file does not exist -> error'
+
+if add_pxf_to_manifest 1.2.3 nonexistent-file > "$OUTPUT_FILE"; then
+	# command succeeded when it should not have; fail the test
+	exit 1
+fi
+echo PASS

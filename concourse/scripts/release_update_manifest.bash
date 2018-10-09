@@ -4,21 +4,19 @@ set -euxo pipefail
 
 yum -y install git
 
+HERE=$(dirname $0)
+
+source "$HERE/add_pxf_to_manifest.bash"
+
 pushd pxf_src
 VERSION=`git describe --tags`
 popd
 git clone --depth=1 gpdb_release gpdb_release_output
 cd gpdb_release_output
 
-if [ "$(cat components/component_manifest.json | jq '.platforms[].components[] | select(.name=="pxf")')" == "" ]; then
-  cat components/component_manifest.json \
-	| jq ".platforms[].components += [{\"name\":\"pxf\",\"version\":\"${VERSION}\",\"bucket\":\"gpdb-stable-concourse-builds\",\"path\":\"components/pxf\",\"filetype\":\"tar.gz\",\"artifact_version\":\"latest\"}]" \
-	> /tmp/component_manifest.json
-else
-  cat components/component_manifest.json \
-    | jq "(.platforms[].components[] | select(.name==\"pxf\").version) = \"${VERSION}\"" \
-    > /tmp/component_manifest.json
-fi
+add_pxf_to_manifest "$VERSION" components/component_manifest.json \
+  > /tmp/component_manifest.json
+
 mv /tmp/component_manifest.json components/component_manifest.json
 
 git config user.email "pxf_bot@example.com"
