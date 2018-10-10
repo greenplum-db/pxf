@@ -46,17 +46,7 @@ fly -t ud set-pipeline -p pxf_pr \
 
 # Deploy the release pipeline
 
-```
-fly -t ud set-pipeline -c ./pipelines/release_pipeline.yml \
-    -l ~/workspace/continuous-integration/secrets/gpdb_common-ci-secrets.yml \
-    -l ~/workspace/continuous-integration/secrets/gpdb_5X_STABLE-ci-secrets.yml \
-    -v folder-prefix=prod/gpdb_branch \
-    -v test-env= \
-    -l pxf-multinode-params.yml \
-    -l ~/workspace/continuous-integration/secrets/ccp_ci_secrets_ud.yml \
-    -v gpdb-branch=5X_STABLE -v gpdb_release_bucket=gpdb5-release-builds \
-    -p pxf_5X_RELEASE
-```
+https://github.com/pivotal/gp-continuous-integration/blob/master/README.md#pxf_release
 
 # Deploy the performance pipeline
 
