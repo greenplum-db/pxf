@@ -71,10 +71,10 @@ resources:
   type: s3
   source:
     access_key_id: {{bucket-access-key-id}}
-    bucket: {{gpdb_release_bucket}}
     region_name: {{aws-region}}
     secret_access_key: {{bucket-secret-access-key}}
-    versioned_file: bin_gpdb_centos6/bin_gpdb.tar.gz
+    bucket: {{gpdb-stable-builds-bucket-name}}
+    versioned_file: release_candidates/bin_gpdb_centos6/gpdb5/bin_gpdb.tar.gz
 
 - name: pxf_tarball
   type: s3
