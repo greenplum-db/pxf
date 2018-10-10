@@ -68,6 +68,8 @@ jobs:
       status: success
       context: $BUILD_JOB_NAME
   plan:
+  - get: pxf_src
+    trigger: true
   - put: pxf_src
     params:
       path: pxf_src
@@ -75,8 +77,6 @@ jobs:
       context: $BUILD_JOB_NAME
   - aggregate:
     - get: gpdb_src
-    - get: pxf_src
-      trigger: true
     - get: gpdb-pxf-dev-centos6
   - task: compile_pxf
     image: gpdb-pxf-dev-centos6
@@ -96,6 +96,10 @@ jobs:
       status: success
       context: $BUILD_JOB_NAME
   plan:
+  - get: pxf_src
+    passed:
+    - compile_pxf
+    trigger: true
   - put: pxf_src
     params:
       path: pxf_src
@@ -105,10 +109,6 @@ jobs:
     - get: gpdb_src
       passed:
       - compile_pxf
-    - get: pxf_src
-      passed:
-      - compile_pxf
-      trigger: true
     - get: gpaddon_src
     - get: centos-gpdb-dev-6
     - get: gpdb-pxf-dev-centos6-hdp-server
