@@ -7,6 +7,7 @@ source "${CWDIR}/pxf_common.bash"
 
 export GPHOME=${GPHOME:-"/usr/local/greenplum-db-devel"}
 export PXF_HOME="${GPHOME}/pxf"
+export JAVA_HOME="${JAVA_HOME}"
 
 function run_pxf_automation() {
 	# Let's make sure that automation/singlecluster directories are writeable
@@ -26,6 +27,9 @@ function run_pxf_automation() {
 	export PXF_HOME=${PXF_HOME}
 	export PGPORT=15432
 
+	# JAVA_HOME for Centos and Ubuntu has different suffix in our Docker images
+	export JAVA_HOME=$(ls -d /usr/lib/jvm/java-1.8.0-openjdk* | head -1)
+
 	cd pxf_src/automation
 	make GROUP=${GROUP}
 
@@ -35,6 +39,10 @@ function run_pxf_automation() {
 	chown gpadmin:gpadmin /home/gpadmin/run_pxf_automation_test.sh
 	chmod a+x /home/gpadmin/run_pxf_automation_test.sh
 	su gpadmin -c "bash /home/gpadmin/run_pxf_automation_test.sh"
+}
+
+function setup_gpadmin_user() {
+  ./gpdb_src/concourse/scripts/setup_gpadmin_user.bash
 }
 
 function setup_hadoop() {

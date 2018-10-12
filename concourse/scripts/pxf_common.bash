@@ -2,6 +2,7 @@
 
 GPHOME="/usr/local/greenplum-db-devel"
 PXF_HOME="${GPHOME}/pxf"
+JAVA_HOME=$(ls -d /usr/lib/jvm/java-1.8.0-openjdk* | head -1)
 
 if [ -d gpdb_src/gpAux/extensions/pxf ]; then
 	PXF_EXTENSIONS_DIR=gpdb_src/gpAux/extensions/pxf
@@ -17,9 +18,10 @@ function set_env() {
 function run_regression_test() {
 	ln -s ${PWD}/gpdb_src /home/gpadmin/gpdb_src
 	cat > /home/gpadmin/run_regression_test.sh <<-EOF
-	source /opt/gcc_env.sh
+	source /opt/gcc_env.sh || true
 	source ${GPHOME}/greenplum_path.sh
 	source gpdb_src/gpAux/gpdemo/gpdemo-env.sh
+	export PATH=\$PATH:${GPHD_ROOT}/bin:${HADOOP_ROOT}/bin:${HBASE_ROOT}/bin:${HIVE_ROOT}/bin:${ZOOKEEPER_ROOT}/bin
 
 	cd "${PXF_EXTENSIONS_DIR}"
 	make installcheck USE_PGXS=1
@@ -36,16 +38,27 @@ function run_regression_test() {
 }
 
 function install_gpdb_binary() {
-    service sshd start
-    mkdir -p ${GPHOME}
-    tar -xzf bin_gpdb/bin_gpdb.tar.gz -C ${GPHOME}
+
+    if [ "${TARGET_OS}" == "centos" ]; then
+      service sshd start
+      mkdir -p ${GPHOME}
+      tar -xzf bin_gpdb/bin_gpdb.tar.gz -C ${GPHOME}
+      psi_dir=$(find /usr/lib64 -name psi | sort -r | head -1)
+    elif [ "${TARGET_OS}" == "ubuntu" ]; then
+      service ssh start
+      GPHOME="/usr/local/gpdb"
+      PXF_HOME="${GPHOME}/pxf"
+      mkdir -p ${GPHOME}
+      tar -xzf bin_gpdb/compiled_bits_ubuntu16.tar.gz -C ${GPHOME}
+      pip install psi
+      psi_dir=$(find /usr/local/lib -name psi | sort -r | head -1)
+    fi
+
     if [ -d pxf_tarball ]; then
-        rm -rf "${GPHOME}/pxf"
         tar -xzf pxf_tarball/pxf.tar.gz -C ${GPHOME}
     fi
 	# Copy PSI package from system python to GPDB as automation test requires it
     if [ ! -d ${GPHOME}/lib/python/psi ]; then
-        psi_dir=$(find /usr/lib64 -name psi | sort -r | head -1)
         cp -r ${psi_dir} ${GPHOME}/lib/python
     fi
 }
@@ -108,7 +121,7 @@ function setup_gpadmin_user() {
     echo -e "gpadmin soft core unlimited" >> /etc/security/limits.d/gpadmin-limits.conf
     echo -e "gpadmin soft nproc 131072" >> /etc/security/limits.d/gpadmin-limits.conf
     echo -e "gpadmin soft nofile 65536" >> /etc/security/limits.d/gpadmin-limits.conf
-    echo -e "export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk.x86_64" >> /home/gpadmin/.bashrc
+    echo -e "export JAVA_HOME=${JAVA_HOME}" >> /home/gpadmin/.bashrc
     if [ -d gpdb_src/gpAux/gpdemo ]; then
         chown -R gpadmin:gpadmin gpdb_src/gpAux/gpdemo
     fi
@@ -118,7 +131,7 @@ function install_pxf_client() {
 	# recompile pxf.so file for dev environments only
 	if [ "${TEST_ENV}" == "dev" ]; then
 		source ${GPHOME}/greenplum_path.sh
-		source /opt/gcc_env.sh
+		source /opt/gcc_env.sh || true
 
 		pushd ${PXF_EXTENSIONS_DIR} > /dev/null
 		USE_PGXS=1 make install
