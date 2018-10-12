@@ -34,6 +34,10 @@ RUN sed "s/$HOSTNAME/${AMBARI_HOST} $HOSTNAME/g" /etc/hosts > /tmp/hosts && \
 # Install KDC and secure the HDP cluster using kerberos
 RUN sed "s/$HOSTNAME/${AMBARI_HOST} $HOSTNAME/g" /etc/hosts > /tmp/hosts && \
 	echo y | cp /tmp/hosts /etc/hosts && \
+	echo "export CLUSTER_NAME=${CLUSTER_NAME}" >> ~/.bash_profile && \
+	echo "export REALM=${REALM}" >> ~/.bash_profile && \
+	echo "export CURL_OPTS=${CURL_OPTS}" >> ~/.bash_profile && \
+	echo "export AMBARI_PREFIX=${AMBARI_PREFIX}" >> ~/.bash_profile && \
 	ambari-agent start && \
     ambari-server start && \
     sudo yum -y install krb5-server krb5-workstation && yum clean all && \
