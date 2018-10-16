@@ -39,28 +39,25 @@ function run_regression_test() {
 
 function install_gpdb_binary() {
 
-    if [ "${TARGET_OS}" == "centos" ]; then
-      service sshd start
-      mkdir -p ${GPHOME}
-      tar -xzf bin_gpdb/bin_gpdb.tar.gz -C ${GPHOME}
-      psi_dir=$(find /usr/lib64 -name psi | sort -r | head -1)
-    elif [ "${TARGET_OS}" == "ubuntu" ]; then
-      service ssh start
-      GPHOME="/usr/local/gpdb"
-      PXF_HOME="${GPHOME}/pxf"
-      mkdir -p ${GPHOME}
-      tar -xzf bin_gpdb/compiled_bits_ubuntu16.tar.gz -C ${GPHOME}
-      pip install psi
-      psi_dir=$(find /usr/local/lib -name psi | sort -r | head -1)
+    if [ ! -d ${GPHOME}/bin/psql ]; then
+        mkdir -p ${GPHOME}
+        tar -xzf bin_gpdb/*.tar.gz -C ${GPHOME}
     fi
 
-    if [ -d pxf_tarball ]; then
-        tar -xzf pxf_tarball/pxf.tar.gz -C ${GPHOME}
+    if [ "${TARGET_OS}" == "centos" ]; then
+        service sshd start
+        psi_dir=$(find /usr/lib64 -name psi | sort -r | head -1)
+    elif [ "${TARGET_OS}" == "ubuntu" ]; then
+        service ssh start
+        pip install psi
+        psi_dir=$(find /usr/local/lib -name psi | sort -r | head -1)
     fi
-	# Copy PSI package from system python to GPDB as automation test requires it
+
+    # Copy PSI package from system python to GPDB as automation test requires it
     if [ ! -d ${GPHOME}/lib/python/psi ]; then
         cp -r ${psi_dir} ${GPHOME}/lib/python
     fi
+
 }
 
 function remote_access_to_gpdb() {
@@ -140,11 +137,18 @@ function install_pxf_client() {
 }
 
 function install_pxf_server() {
-	export BUILD_NUMBER="${TARGET_OS}"
-	export JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8
-	pushd pxf_src/server
-	make install
-	popd
+    if [ ! -d ${PXF_HOME} ]; then
+        if [ -d pxf_tarball ]; then
+            tar -xzf pxf_tarball/pxf.tar.gz -C ${GPHOME}
+        else
+            export BUILD_NUMBER="${TARGET_OS}"
+            export JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8
+            pushd pxf_src/server
+            make install
+            popd
+        fi
+        chown -R gpadmin:gpadmin ${PXF_HOME}
+    fi
 }
 
 function setup_impersonation() {

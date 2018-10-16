@@ -57,15 +57,14 @@ function setup_hadoop() {
 
 function _main() {
 	# Install GPDB
+
 	install_gpdb_binary
 	setup_gpadmin_user
 
 	# Install PXF
 	install_pxf_client
-	if [ ! -d pxf_tarball ]; then
-		install_pxf_server
-	fi
-	chown -R gpadmin:gpadmin ${PXF_HOME}
+	install_pxf_server
+
 
 	# Setup Hadoop before creating GPDB cluster to use system python for yum install
 	setup_hadoop /singlecluster

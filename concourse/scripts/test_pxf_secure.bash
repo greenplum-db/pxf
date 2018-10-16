@@ -135,6 +135,7 @@ function _main() {
 	# setup hadoop before creating GPDB cluster
 	start_hadoop_secure
 	install_pxf_client
+	install_pxf_server
 	secure_pxf
 
 	create_gpdb_cluster
