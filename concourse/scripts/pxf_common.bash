@@ -1,7 +1,13 @@
 #!/bin/bash -l
 
-GPHOME="/usr/local/greenplum-db-devel"
+if [ "${TARGET_OS}" == "centos" ]; then
+    GPHOME="/usr/local/greenplum-db-devel"
+elif [ "${TARGET_OS}" == "ubuntu" ]; then
+    GPHOME="/usr/local/gpdb"
+fi
+
 PXF_HOME="${GPHOME}/pxf"
+
 JAVA_HOME=$(ls -d /usr/lib/jvm/java-1.8.0-openjdk* | head -1)
 
 if [ -d gpdb_src/gpAux/extensions/pxf ]; then
