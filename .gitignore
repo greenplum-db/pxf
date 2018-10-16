@@ -3,3 +3,5 @@
 *.pyc
 *.log
 *.out
+server/*/out
+server/tmp
