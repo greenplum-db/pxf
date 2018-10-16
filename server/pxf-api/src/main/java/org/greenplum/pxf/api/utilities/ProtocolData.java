@@ -20,19 +20,15 @@ package org.greenplum.pxf.api.utilities;
  */
 
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.greenplum.pxf.api.OutputFormat;
-import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.api.utilities.EnumAggregationType;
-import org.greenplum.pxf.api.utilities.InputData;
-import org.greenplum.pxf.api.utilities.ProfilesConf;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Common configuration of all MetaData classes. Provides read-only access to
@@ -133,38 +129,6 @@ public class ProtocolData extends InputData {
         if (fragmentIndexStr != null) {
             this.setFragmentIndex(Integer.parseInt(fragmentIndexStr));
         }
-    }
-
-    /**
-     * Constructs an InputDataBuilder from a copy. Used to create from an
-     * extending class.
-     *
-     * @param copy the input data to copy
-     */
-    public ProtocolData(ProtocolData copy) {
-        this.requestParametersMap = copy.requestParametersMap;
-        this.segmentId = copy.segmentId;
-        this.totalSegments = copy.totalSegments;
-        this.outputFormat = copy.outputFormat;
-        this.host = copy.host;
-        this.port = copy.port;
-        this.fragmentMetadata = copy.fragmentMetadata;
-        this.userData = copy.userData;
-        this.tupleDescription = copy.tupleDescription;
-        this.recordkeyColumn = copy.recordkeyColumn;
-        this.filterStringValid = copy.filterStringValid;
-        this.filterString = copy.filterString;
-        this.dataSource = copy.dataSource;
-        this.accessor = copy.accessor;
-        this.resolver = copy.resolver;
-        this.fragmenter = copy.fragmenter;
-        this.threadSafe = copy.threadSafe;
-        this.remoteLogin = copy.remoteLogin;
-        this.remoteSecret = copy.remoteSecret;
-        this.token = copy.token;
-        this.user = copy.user;
-        this.statsMaxFragments = copy.statsMaxFragments;
-        this.statsSampleRatio = copy.statsSampleRatio;
     }
 
     /**

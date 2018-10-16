@@ -365,7 +365,7 @@ public abstract class PxfUnit {
 			}
 		}
 
-		LocalInputData fragmentInputData = new LocalInputData(paramsMap);
+		ProtocolData fragmentInputData = new ProtocolData(paramsMap);
 
 		List<Fragment> fragments = getFragmenter(fragmentInputData).getFragments();
 
@@ -392,7 +392,7 @@ public abstract class PxfUnit {
 			paramsMap.put("X-GP-DATA-DIR", sourceData);
 			paramsMap.put("X-GP-FRAGMENT-METADATA", fragNode.get("metadata").getTextValue());
 			paramsMap.put("X-GP-DATA-FRAGMENT", Integer.toString(i++));
-			inputs.add(new LocalInputData(paramsMap));
+			inputs.add(new ProtocolData(paramsMap));
 		}
 	}
 
@@ -643,22 +643,6 @@ public abstract class PxfUnit {
 		public Pair(FIRST f, SECOND s) {
 			this.first = f;
 			this.second = s;
-		}
-	}
-
-	/**
-	 * An extension of InputData for the local file system instead of HDFS. Leveraged by the PXFUnit framework. Do not
-	 * concern yourself with such a simple piece of code.
-	 */
-	public static class LocalInputData extends ProtocolData {
-
-		public LocalInputData(ProtocolData copy) {
-			super(copy);
-			super.setDataSource(super.getDataSource().substring(1));
-		}
-
-		public LocalInputData(Map<String, String> paramsMap) {
-			super(paramsMap);
 		}
 	}
 }

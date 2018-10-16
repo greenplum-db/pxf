@@ -94,34 +94,6 @@ public class InputData {
     }
 
     /**
-     * Constructs an InputData from a copy. Used to create from an extending
-     * class.
-     *
-     * @param copy the input data to copy
-     */
-    public InputData(InputData copy) {
-
-        this.requestParametersMap = copy.requestParametersMap;
-        this.segmentId = copy.segmentId;
-        this.totalSegments = copy.totalSegments;
-        this.fragmentMetadata = copy.fragmentMetadata;
-        this.userData = copy.userData;
-        this.tupleDescription = copy.tupleDescription;
-        this.recordkeyColumn = copy.recordkeyColumn;
-        this.filterStringValid = copy.filterStringValid;
-        this.filterString = copy.filterString;
-        this.dataSource = copy.dataSource;
-        this.profile = copy.profile;
-        this.accessor = copy.accessor;
-        this.resolver = copy.resolver;
-        this.fragmenter = copy.fragmenter;
-        this.metadata = copy.metadata;
-        this.remoteLogin = copy.remoteLogin;
-        this.remoteSecret = copy.remoteSecret;
-        this.threadSafe = copy.threadSafe;
-    }
-
-    /**
      * Returns a user defined property.
      *
      * @param userProp the lookup user property

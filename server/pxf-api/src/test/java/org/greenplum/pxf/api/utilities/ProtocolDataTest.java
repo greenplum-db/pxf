@@ -73,13 +73,6 @@ public class ProtocolDataTest {
     }
 
     @Test
-    public void ProtocolDataCopied() throws Exception {
-        ProtocolData protocolData = new ProtocolData(parameters);
-        ProtocolData copy = new ProtocolData(protocolData);
-        assertEquals(copy.getParametersMap(), protocolData.getParametersMap());
-    }
-
-    @Test
     public void profileWithDuplicateProperty() throws Exception {
         PowerMockito.mockStatic(ProfilesConf.class);
 
