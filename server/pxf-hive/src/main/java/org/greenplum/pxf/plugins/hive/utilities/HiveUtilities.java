@@ -8,9 +8,9 @@ package org.greenplum.pxf.plugins.hive.utilities;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -19,13 +19,6 @@ package org.greenplum.pxf.plugins.hive.utilities;
  * under the License.
  */
 
-
-import java.io.ByteArrayOutputStream;
-import java.util.Arrays;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.ListIterator;
-import java.util.Properties;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -39,23 +32,34 @@ import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
-import org.apache.hadoop.hive.serde.serdeConstants;
-import org.apache.hadoop.hive.serde2.*;
 import org.apache.hadoop.hive.ql.io.orc.OrcFile;
 import org.apache.hadoop.hive.ql.io.orc.Reader;
+import org.apache.hadoop.hive.serde.serdeConstants;
+import org.apache.hadoop.hive.serde2.*;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.greenplum.pxf.api.Metadata;
 import org.greenplum.pxf.api.Metadata.Field;
 import org.greenplum.pxf.api.UnsupportedTypeException;
 import org.greenplum.pxf.api.UserDataException;
+import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.utilities.EnumGpdbType;
 import org.greenplum.pxf.api.utilities.InputData;
 import org.greenplum.pxf.api.utilities.Utilities;
-import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.plugins.hive.HiveDataFragmenter;
 import org.greenplum.pxf.plugins.hive.HiveInputFormatFragmenter;
-import org.greenplum.pxf.plugins.hive.HiveTablePartition;
 import org.greenplum.pxf.plugins.hive.HiveInputFormatFragmenter.PXF_HIVE_INPUT_FORMATS;
+import org.greenplum.pxf.plugins.hive.HiveTablePartition;
 import org.greenplum.pxf.plugins.hive.HiveUserData;
+import org.greenplum.pxf.service.utilities.SecureLogin;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.security.PrivilegedExceptionAction;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Properties;
 
 /**
  * Class containing helper functions connecting
@@ -83,13 +87,21 @@ public class HiveUtilities {
      * @return initialized client
      */
     public static HiveMetaStoreClient initHiveClient() {
-        HiveMetaStoreClient client = null;
         try {
-            client = new HiveMetaStoreClient(new HiveConf());
-        } catch (MetaException cause) {
-            throw new RuntimeException("Failed connecting to Hive MetaStore service: " + cause.getMessage(), cause);
+            if (UserGroupInformation.isSecurityEnabled() && SecureLogin.isUserImpersonationEnabled()) {
+                return UserGroupInformation.getLoginUser().doAs(new PrivilegedExceptionAction<HiveMetaStoreClient>() {
+                    @Override
+                    public HiveMetaStoreClient run() throws Exception {
+                        return new HiveMetaStoreClient(new HiveConf());
+                    }
+                });
+            } else {
+                return new HiveMetaStoreClient(new HiveConf());
+            }
+
+        } catch (MetaException | InterruptedException | IOException e) {
+            throw new RuntimeException("Failed connecting to Hive MetaStore service: " + e.getMessage(), e);
         }
-        return client;
     }
 
     public static Table getHiveTable(HiveMetaStoreClient client, Metadata.Item itemName)
@@ -184,7 +196,7 @@ public class HiveUtilities {
         if (modifiers == null) {
             return true;
         }
-        for (String modifier: modifiers) {
+        for (String modifier : modifiers) {
             if (StringUtils.isBlank(modifier) || !StringUtils.isNumeric(modifier)) {
                 return false;
             }
@@ -203,7 +215,7 @@ public class HiveUtilities {
      */
     public static Metadata.Item extractTableFromName(String qualifiedName) {
         List<Metadata.Item> items = extractTablesFromPattern(null, qualifiedName);
-        if(items.isEmpty()) {
+        if (items.isEmpty()) {
             throw new IllegalArgumentException("No tables found");
         }
         return items.get(0);
@@ -215,7 +227,7 @@ public class HiveUtilities {
      * or when querying HCatalog table.
      * It can be either <code>table_name_pattern</code> or <code>db_name_pattern.table_name_pattern</code>.
      *
-     * @param client Hivemetastore client
+     * @param client  Hivemetastore client
      * @param pattern Hive table name or pattern
      * @return list of {@link Metadata.Item} objects holding the full table name
      */
@@ -231,7 +243,7 @@ public class HiveUtilities {
 
         String[] rawToks = pattern.split("[.]");
         ArrayList<String> toks = new ArrayList<String>();
-        for (String tok: rawToks) {
+        for (String tok : rawToks) {
             if (StringUtils.isBlank(tok)) {
                 continue;
             }
@@ -249,7 +261,7 @@ public class HiveUtilities {
         }
 
         return getTablesFromPattern(client, dbPattern, tablePattern);
-   }
+    }
 
     private static List<Metadata.Item> getTablesFromPattern(HiveMetaStoreClient client, String dbPattern, String tablePattern) {
 
@@ -257,7 +269,7 @@ public class HiveUtilities {
         List<Metadata.Item> itemList = new ArrayList<Metadata.Item>();
         List<String> tables = new ArrayList<String>();
 
-        if(client == null || (!dbPattern.contains(WILDCARD) && !tablePattern.contains(WILDCARD)) ) {
+        if (client == null || (!dbPattern.contains(WILDCARD) && !tablePattern.contains(WILDCARD))) {
             /* This case occurs when the call is invoked as part of the fragmenter api or when metadata is requested for a specific table name */
             itemList.add(new Metadata.Item(dbPattern, tablePattern));
             return itemList;
@@ -265,12 +277,12 @@ public class HiveUtilities {
 
         try {
             databases = client.getDatabases(dbPattern);
-            if(databases.isEmpty()) {
+            if (databases.isEmpty()) {
                 LOG.warn("No database found for the given pattern: " + dbPattern);
                 return null;
             }
-            for(String dbName: databases) {
-                for(String tableName: client.getTables(dbName, tablePattern)) {
+            for (String dbName : databases) {
+                for (String tableName : client.getTables(dbName, tablePattern)) {
                     itemList.add(new Metadata.Item(dbName, tableName));
                 }
             }
@@ -285,7 +297,7 @@ public class HiveUtilities {
     /**
      * Converts GPDB type to hive type.
      * @see EnumHiveToGpdbType For supported mappings
-     * @param type GPDB data type
+     * @param type      GPDB data type
      * @param modifiers Integer array of modifier info
      * @return Hive type
      * @throws UnsupportedTypeException if type is not supported
@@ -314,9 +326,9 @@ public class HiveUtilities {
      * Hive type - varchar(20), GPDB type varchar(15) - invalid.
      *
      *
-     * @param gpdbDataType GPDB data type
-     * @param gpdbTypeMods GPDB type modifiers
-     * @param hiveType full Hive type, i.e. decimal(10,2)
+     * @param gpdbDataType   GPDB data type
+     * @param gpdbTypeMods   GPDB type modifiers
+     * @param hiveType       full Hive type, i.e. decimal(10,2)
      * @param gpdbColumnName Hive column name
      * @throws UnsupportedTypeException if types are incompatible
      */
@@ -327,7 +339,7 @@ public class HiveUtilities {
 
         if (!expectedGpdbType.getDataType().equals(gpdbDataType)) {
             throw new UnsupportedTypeException("Invalid definition for column " + gpdbColumnName
-                                    +  ": expected GPDB type " + expectedGpdbType.getDataType() +
+                    + ": expected GPDB type " + expectedGpdbType.getDataType() +
                     ", actual GPDB type " + gpdbDataType);
         }
 
@@ -387,9 +399,9 @@ public class HiveUtilities {
     /* Turns the partition keys into a string */
     public static String serializePartitionKeys(HiveTablePartition partData) throws Exception {
         if (partData.partition == null) /*
-                                         * this is a simple hive table - there
-                                         * are no partitions
-                                         */{
+         * this is a simple hive table - there
+         * are no partitions
+         */ {
             return HiveDataFragmenter.HIVE_NO_PART_TBL;
         }
 
@@ -415,8 +427,8 @@ public class HiveUtilities {
      * The method which serializes fragment-related attributes, needed for reading and resolution to string
      *
      * @param fragmenterClassName fragmenter class name
-     * @param partData partition data
-     * @param filterInFragmenter whether filtering was done in fragmenter
+     * @param partData            partition data
+     * @param filterInFragmenter  whether filtering was done in fragmenter
      * @return serialized representation of fragment-related attributes
      * @throws Exception when error occurred during serialization
      */
@@ -455,7 +467,7 @@ public class HiveUtilities {
      * @return instance of HiveUserData class
      * @throws UserDataException when incorrect number of tokens in Hive user data received
      */
-    public static HiveUserData parseHiveUserData(InputData input) throws UserDataException{
+    public static HiveUserData parseHiveUserData(InputData input) throws UserDataException {
         String userData = new String(input.getFragmentUserData());
         String[] toks = userData.split(HiveUserData.HIVE_UD_DELIM, HiveUserData.getNumOfTokens());
 
@@ -513,7 +525,7 @@ public class HiveUtilities {
     public static boolean hasComplexTypes(Metadata metadata) {
         boolean hasComplexTypes = false;
         List<Field> fields = metadata.getFields();
-        for (Field field: fields) {
+        for (Field field : fields) {
             if (field.isComplexType()) {
                 hasComplexTypes = true;
                 break;
@@ -531,7 +543,7 @@ public class HiveUtilities {
      * SMALLINT, INT, BIGINT, BOOLEAN, FLOAT, DOUBLE, STRING, BINARY, TIMESTAMP,
      * DATE, DECIMAL, VARCHAR, CHAR.
      *
-     * @param tbl Hive table
+     * @param tbl      Hive table
      * @param metadata schema of given table
      */
     public static void getSchema(Table tbl, Metadata metadata) {

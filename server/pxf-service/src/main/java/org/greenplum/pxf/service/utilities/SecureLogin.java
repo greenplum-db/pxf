@@ -65,11 +65,6 @@ public class SecureLogin {
 
             LOG.info("Kerberos Security is enabled");
 
-            if (!isUserImpersonationEnabled) {
-                throw new RuntimeException("User Impersonation is required when Kerberos Security is enabled. " +
-                        "Set PXF_USER_IMPERSONATION=true in $PXF_HOME/conf/pxf-env.sh");
-            }
-
             String principal = System.getProperty(CONFIG_KEY_SERVICE_PRINCIPAL);
             String keytabFilename = System.getProperty(CONFIG_KEY_SERVICE_KEYTAB);
 
