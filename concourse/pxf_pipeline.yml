@@ -44,16 +44,6 @@ resources:
     branch: {{pxf-git-branch}}
     uri: {{pxf-git-remote}}
 
-- name: pxf_build_number
-  type: semver
-  source:
-    initial_version: 4.0.0
-    bucket: {{pxf-aws-bucket-name}}
-    key: pxf_artifacts/pxf_build_number
-    region_name: {{aws-region}}
-    access_key_id: {{bucket-access-key-id}}
-    secret_access_key: {{bucket-secret-access-key}}
-
 - name: gpdb-pxf-dev-centos6-cdh-server
   type: docker-image
   source:
@@ -129,8 +119,6 @@ jobs:
     - get: gpdb_src
     - get: gpdb_pxf_trigger
       trigger: true
-    - put: pxf_build_number
-      params: {pre: rc}
     - get: pxf_src
       trigger: true
     - get: gpdb-pxf-dev-centos6-hdp-server
