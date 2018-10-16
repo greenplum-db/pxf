@@ -226,3 +226,45 @@ $PXF_HOME/bin/pxf start
 no JDK set for Gradle. Just cancel and retry. It goes away the second time.
 - Restart IntelliJ
 - Check that it worked by running a test (Cmd+O)
+
+## To run a Kerberized Hadoop Cluster
+
+# Requirements
+
+- Download bin_gpdb (from any of the pipelines)
+- Download pxf_tarball (from any of the pipelines)
+
+These instructions allow you to run a Kerberized cluster
+
+```bash
+docker run --rm -it \
+  --privileged \
+  --hostname c6401.ambari.apache.org \
+  -p 5432:5432 \
+  -p 5888:5888 \
+  -p 8000:8000 \
+  -p 8080:8080 \
+  -p 8020:8020 \
+  -p 9090:9090 \
+  -p 50070:50070 \
+  -w /home/gpadmin/workspace \
+  -v ~/workspace/gpdb:/home/gpadmin/workspace/gpdb_src \
+  -v ~/workspace/pxf:/home/gpadmin/workspace/pxf_src \
+  -v ~/workspace/singlecluster-HDP:/home/gpadmin/workspace/singlecluster \
+  -v ~/Downloads/bin_gpdb:/home/gpadmin/workspace/bin_gpdb \
+  -v ~/Downloads/pxf_tarball:/home/gpadmin/workspace/pxf_tarball \
+  -e CLUSTER_NAME=hdp \
+  -e NODE=c6401.ambari.apache.org \
+  -e REALM=AMBARI.APACHE.ORG \
+  pivotaldata/gpdb-pxf-dev:centos6-hdp-secure /bin/bash
+
+# Inside the container run the following command:
+pxf_src/concourse/scripts/test_pxf_secure.bash
+
+echo "+----------------------------------------------+"
+echo "| Kerberos admin principal: admin/admin@${REALM} |"
+echo "| Kerberos admin password : admin              |"
+echo "+----------------------------------------------+"
+
+su - gpadmin
+```
