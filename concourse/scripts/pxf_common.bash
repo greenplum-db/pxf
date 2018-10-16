@@ -1,9 +1,9 @@
 #!/bin/bash -l
 
-if [ "${TARGET_OS}" == "centos" ]; then
-    GPHOME="/usr/local/greenplum-db-devel"
-elif [ "${TARGET_OS}" == "ubuntu" ]; then
+if [ "${TARGET_OS}" == "ubuntu" ]; then
     GPHOME="/usr/local/gpdb"
+else
+    GPHOME="/usr/local/greenplum-db-devel"
 fi
 
 PXF_HOME="${GPHOME}/pxf"

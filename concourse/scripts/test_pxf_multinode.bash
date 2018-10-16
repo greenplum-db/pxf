@@ -92,6 +92,8 @@ function _main() {
 
     install_gpdb_binary
     setup_gpadmin_user
+    install_pxf_server
+
     remote_access_to_gpdb
 
     open_ssh_tunnels

@@ -334,6 +334,8 @@ function main {
     remote_access_to_gpdb
     install_gpdb_binary
 
+    install_pxf_server
+
     source ${GPHOME}/greenplum_path.sh
     create_database_and_schema
 
