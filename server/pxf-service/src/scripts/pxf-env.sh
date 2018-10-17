@@ -51,7 +51,7 @@ export PXF_KEYTAB=${PXF_KEYTAB:="${PXF_HOME}/conf/pxf.service.keytab"}
 export PXF_PRINCIPAL=${PXF_PRINCIPAL:="gpadmin/_HOST@EXAMPLE.COM"}
 
 # End-user identity impersonation, set to true to enable
-export PXF_USER_IMPERSONATION=${PXF_USER_IMPERSONATION:=@pxfDefaultUserImpersonation@}
+export PXF_USER_IMPERSONATION=${PXF_USER_IMPERSONATION:=@pxfImpersonation@}
 
 # Set to true to enable Remote debug via port 8000
 export PXF_DEBUG=${PXF_DEBUG:=false}

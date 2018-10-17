@@ -32,22 +32,8 @@ plugins {
 }
 
 repositories {
-    mavenCentral()
-    mavenLocal()
-    jcenter {
-        url 'http://jcenter.bintray.com/'
-    }
-    maven {
-        url 'http://repository.jboss.org/nexus/content/groups/public'
-    }
+    jcenter()
 }
-
-// Get database property, use GPDB as a default database
-def database = System.getProperty("database", "gpdb");
-def databaseFileName = "gradle/profiles/" + database + ".properties";
-assert file(databaseFileName).exists()
-def databaseProperties = new Properties()
-file(databaseFileName).withInputStream { databaseProperties.load(it) }
 
 subprojects { subProject ->
     group = 'org.greenplum.pxf'
@@ -84,10 +70,7 @@ subprojects { subProject ->
     }
 
     repositories {
-        // mavenCentral without https:
-        maven { url 'http://repo1.maven.org/maven2' }
-        mavenLocal()
-        maven { url 'http://repo.hortonworks.com/content/repositories/releases/'}
+        jcenter()
     }
 
     dependencies {
@@ -356,8 +339,8 @@ task assemble(type: Copy, dependsOn: [subprojects.jar, project(':pxf-service').w
         rename('pxf-service', 'pxf')
         filter(ReplaceTokens,
                 tokens: [
-                        'pxfPortNum'    : databaseProperties.pxfPortNum,
-                        'pxfDefaultUser': (databaseProperties.pxfDefaultUser == null ? "" : databaseProperties.pxfDefaultUser)])
+                        'pxfPortNum'    : pxfPortNum,
+                        'pxfDefaultUser': pxfDefaultUser])
     }
 
     from("${tomcatTargetDir}/${tomcatName}") { into 'apache-tomcat' }
@@ -365,11 +348,11 @@ task assemble(type: Copy, dependsOn: [subprojects.jar, project(':pxf-service').w
     from("pxf-service/src/configs") { include '*-site.xml' into 'conf' }
     from("pxf-service/src/scripts/pxf-env.sh") {
         filter(ReplaceTokens,
-                tokens: ['pxfLogDir'     : databaseProperties.pxfLogDir,
-                         'pxfRunDir'     : databaseProperties.pxfRunDir,
-                         'pxfPortNum'    : databaseProperties.pxfPortNum,
-                         'pxfDefaultUser': (databaseProperties.pxfDefaultUser == null ? "" : databaseProperties.pxfDefaultUser),
-                         'pxfDefaultUserImpersonation': (databaseProperties.pxfDefaultUserImpersonation == null ? "" : databaseProperties.pxfDefaultUserImpersonation)]) into 'conf'
+                tokens: ['pxfLogDir'     : pxfLogDir,
+                         'pxfRunDir'     : pxfRunDir,
+                         'pxfPortNum'    : pxfPortNum,
+                         'pxfDefaultUser': pxfDefaultUser,
+                         'pxfImpersonation': pxfImpersonation]) into 'conf'
     }
     from("pxf-service/src/configs/tomcat") { into 'tomcat-templates' }
     from("pxf-service/src/configs/templates") { into 'conf-templates' }
