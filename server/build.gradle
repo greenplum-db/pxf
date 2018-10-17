@@ -234,8 +234,8 @@ project('pxf-hdfs') {
 
 project('pxf-hive') {
     dependencies {
+        compile(project(':pxf-api'))
         compile(project(':pxf-hdfs'))
-        compile(project(':pxf-service'))
         compile("org.apache.hive:hive-exec:$hiveVersion") {
             exclude module: 'calcite-core'
             exclude module: 'calcite-avatica'

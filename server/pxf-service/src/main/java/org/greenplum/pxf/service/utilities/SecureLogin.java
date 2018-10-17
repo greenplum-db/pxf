@@ -26,6 +26,7 @@ import org.apache.hadoop.security.UserGroupInformation;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.SecurityUtil;
+import org.greenplum.pxf.api.utilities.Utilities;
 
 /**
  * This class relies heavily on Hadoop API to
@@ -46,7 +47,6 @@ import org.apache.hadoop.security.SecurityUtil;
 public class SecureLogin {
     private static final Log LOG = LogFactory.getLog(SecureLogin.class);
 
-    private static final String PROPERTY_KEY_USER_IMPERSONATION = "pxf.service.user.impersonation.enabled";
     private static final String CONFIG_KEY_SERVICE_PRINCIPAL = "pxf.service.kerberos.principal";
     private static final String CONFIG_KEY_SERVICE_KEYTAB = "pxf.service.kerberos.keytab";
 
@@ -55,7 +55,7 @@ public class SecureLogin {
      */
     public static void login() {
         try {
-            boolean isUserImpersonationEnabled = isUserImpersonationEnabled();
+            boolean isUserImpersonationEnabled = Utilities.isUserImpersonationEnabled();
             LOG.info("User impersonation is " + (isUserImpersonationEnabled ? "enabled" : "disabled"));
 
             if (!UserGroupInformation.isSecurityEnabled()) {
@@ -91,14 +91,5 @@ public class SecureLogin {
             LOG.error("PXF service login failed: " + e.getMessage());
             throw new RuntimeException(e);
         }
-    }
-
-    /**
-     * Returns whether user impersonation has been configured as enabled.
-     *
-     * @return true if user impersonation is enabled, false otherwise
-     */
-    public static boolean isUserImpersonationEnabled() {
-        return StringUtils.equalsIgnoreCase(System.getProperty(PROPERTY_KEY_USER_IMPERSONATION, ""), "true");
     }
 }

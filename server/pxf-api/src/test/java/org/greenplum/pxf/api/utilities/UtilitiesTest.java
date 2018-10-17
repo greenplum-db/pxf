@@ -48,6 +48,9 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Class.class})
 public class UtilitiesTest {
+
+    private String PROPERTY_KEY_USER_IMPERSONATION = "pxf.service.user.impersonation.enabled";
+
     class StatsAccessorImpl implements StatsAccessor {
 
         @Override
@@ -248,5 +251,35 @@ public class UtilitiesTest {
         assertTrue(Utilities.useVectorization(metaData));
         when(metaData.getResolver()).thenReturn("org.greenplum.pxf.api.utilities.UtilitiesTest$ReadResolverImpl");
         assertFalse(Utilities.useVectorization(metaData));
+    }
+
+    @Test
+    public void testImpersonationPropertyAbsent() {
+        System.clearProperty(PROPERTY_KEY_USER_IMPERSONATION);
+        assertFalse(Utilities.isUserImpersonationEnabled());
+    }
+
+    @Test
+    public void testImpersonationPropertyEmpty() {
+        System.setProperty(PROPERTY_KEY_USER_IMPERSONATION, "");
+        assertFalse(Utilities.isUserImpersonationEnabled());
+    }
+
+    @Test
+    public void testImpersonationPropertyFalse() {
+        System.setProperty(PROPERTY_KEY_USER_IMPERSONATION, "foo");
+        assertFalse(Utilities.isUserImpersonationEnabled());
+    }
+
+    @Test
+    public void testImpersonationPropertyTRUE() {
+        System.setProperty(PROPERTY_KEY_USER_IMPERSONATION, "TRUE");
+        assertTrue(Utilities.isUserImpersonationEnabled());
+    }
+
+    @Test
+    public void testImpersonationPropertyTrue() {
+        System.setProperty(PROPERTY_KEY_USER_IMPERSONATION, "true");
+        assertTrue(Utilities.isUserImpersonationEnabled());
     }
 }

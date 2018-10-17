@@ -38,6 +38,8 @@ import java.lang.reflect.InvocationTargetException;
 public class Utilities {
     private static final Log LOG = LogFactory.getLog(Utilities.class);
 
+    private static final String PROPERTY_KEY_USER_IMPERSONATION = "pxf.service.user.impersonation.enabled";
+
     /**
      * Creates an object using the class name. The class name has to be a class
      * located in the webapp's CLASSPATH.
@@ -160,7 +162,7 @@ public class Utilities {
 
     /**
      * Parses input data and returns fragment metadata.
-     * 
+     *
      * @param inputData input data which has protocol information
      * @return fragment metadata
      * @throws IllegalArgumentException if fragment metadata information wasn't found in input data
@@ -222,7 +224,7 @@ public class Utilities {
 
     /**
      * Determines whether accessor should use statistics to optimize reading results
-     * 
+     *
      * @param accessor accessor instance
      * @param inputData input data which has protocol information
      * @return true if this accessor should use statistic information
@@ -248,5 +250,14 @@ public class Utilities {
             LOG.error("Unable to load resolver class: " + e.getMessage());
         }
         return isVectorizedResolver;
+    }
+
+    /**
+     * Returns whether user impersonation has been configured as enabled.
+     *
+     * @return true if user impersonation is enabled, false otherwise
+     */
+    public static boolean isUserImpersonationEnabled() {
+        return StringUtils.equalsIgnoreCase(System.getProperty(PROPERTY_KEY_USER_IMPERSONATION, ""), "true");
     }
 }

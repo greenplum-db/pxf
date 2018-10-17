@@ -50,7 +50,6 @@ import org.greenplum.pxf.plugins.hive.HiveInputFormatFragmenter;
 import org.greenplum.pxf.plugins.hive.HiveInputFormatFragmenter.PXF_HIVE_INPUT_FORMATS;
 import org.greenplum.pxf.plugins.hive.HiveTablePartition;
 import org.greenplum.pxf.plugins.hive.HiveUserData;
-import org.greenplum.pxf.service.utilities.SecureLogin;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -88,7 +87,7 @@ public class HiveUtilities {
      */
     public static HiveMetaStoreClient initHiveClient() {
         try {
-            if (UserGroupInformation.isSecurityEnabled() && SecureLogin.isUserImpersonationEnabled()) {
+            if (UserGroupInformation.isSecurityEnabled() && Utilities.isUserImpersonationEnabled()) {
                 return UserGroupInformation.getLoginUser().doAs(new PrivilegedExceptionAction<HiveMetaStoreClient>() {
                     @Override
                     public HiveMetaStoreClient run() throws Exception {
