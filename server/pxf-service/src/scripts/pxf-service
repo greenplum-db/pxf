@@ -35,7 +35,7 @@ else
 fi
 
 pxf_user=${PXF_USER}
-instance_port=${PXF_PORT:-@pxfPortNum@}
+instance_port=${PXF_PORT:-5888}
 instance_name=pxf-service
 pxf_debug=${PXF_DEBUG:-false}
 

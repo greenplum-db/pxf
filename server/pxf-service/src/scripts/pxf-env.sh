@@ -28,18 +28,13 @@ export LD_LIBRARY_PATH=/usr/lib/hadoop/lib/native:${LD_LIBRARY_PATH}
 export JAVA_HOME=${JAVA_HOME:=/usr/java/default}
 
 # Path to Log directory
-export PXF_LOGDIR=@pxfLogDir@
+export PXF_LOGDIR=${PXF_HOME}/logs
 
 # Path to Run directory
-export PXF_RUNDIR=@pxfRunDir@
-
-# Configured user
-if [ ! -z '@pxfDefaultUser@' ]; then
-    export PXF_USER=${PXF_USER:=@pxfDefaultUser@}
-fi
+export PXF_RUNDIR=${PXF_HOME}/run
 
 # Port
-export PXF_PORT=${PXF_PORT:=@pxfPortNum@}
+export PXF_PORT=${PXF_PORT:=5888}
 
 # Memory
 export PXF_JVM_OPTS=${PXF_JVM_OPTS:="-Xmx2g -Xms1g"}
@@ -51,7 +46,7 @@ export PXF_KEYTAB=${PXF_KEYTAB:="${PXF_HOME}/conf/pxf.service.keytab"}
 export PXF_PRINCIPAL=${PXF_PRINCIPAL:="gpadmin/_HOST@EXAMPLE.COM"}
 
 # End-user identity impersonation, set to true to enable
-export PXF_USER_IMPERSONATION=${PXF_USER_IMPERSONATION:=@pxfImpersonation@}
+export PXF_USER_IMPERSONATION=${PXF_USER_IMPERSONATION:=true}
 
 # Set to true to enable Remote debug via port 8000
 export PXF_DEBUG=${PXF_DEBUG:=false}
