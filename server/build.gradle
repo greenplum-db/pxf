@@ -19,6 +19,10 @@
 
 buildscript {
 
+    repositories {
+        jcenter()
+    }
+
     dependencies {
         classpath "com.netflix.nebula:gradle-ospackage-plugin:2.2.6"
         classpath 'com.netflix.nebula:gradle-aggregate-javadocs-plugin:2.2.+'
@@ -29,42 +33,69 @@ plugins {
     id "de.undercouch.download" version "3.4.3"
 }
 
-repositories {
-    jcenter()
+apply plugin: 'nebula-aggregate-javadocs'
+
+buildDir = '.'
+
+allprojects {
+    apply plugin: 'idea'
+    apply plugin: 'eclipse'
+
+    repositories {
+        jcenter()
+    }
+}
+
+idea {
+    project {
+        jdkName = "1.8"
+        languageLevel = "1.8"
+        vcs = "Git"
+    }
 }
 
 subprojects { subProject ->
-    group = 'org.greenplum.pxf'
     apply plugin: 'java'
-    apply plugin: 'idea'
-    apply plugin: 'eclipse'
     apply plugin: 'os-package'
     apply plugin: 'maven-publish'
 
-    compileJava.options*.compilerArgs = [
-            "-g", "-Xlint:varargs", "-Xlint:cast", "-Xlint:classfile", "-Xlint:dep-ann", "-Xlint:divzero", "-Xlint:empty",
-            "-Xlint:finally", "-Xlint:overrides", "-Xlint:path", "-Xlint:processing", "-Xlint:static", "-Xlint:try",
-            "-Xlint:fallthrough", "-Xlint:deprecation", "-Xlint:unchecked", "-Xlint:-options", "-Werror"
-    ]
+    group = 'org.greenplum.pxf'
 
-    compileTestJava.options*.compilerArgs = [
-            "-Xlint:varargs", "-Xlint:cast", "-Xlint:classfile", "-Xlint:dep-ann", "-Xlint:divzero", "-Xlint:empty",
-            "-Xlint:finally", "-Xlint:overrides", "-Xlint:path", "-Xlint:processing", "-Xlint:static", "-Xlint:try",
-            "-Xlint:fallthrough", "-Xlint:deprecation", "-Xlint:unchecked", "-Xlint:-options"
-    ]
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+
+    task removeIdeaOutDirectory(type: Delete) {
+        file("${projectDir}/out").deleteDir()
+    }
+
+    clean {
+        dependsOn(removeIdeaOutDirectory)
+    }
+
+    compileJava {
+        options.compilerArgs += [
+                "-g", "-Xlint:varargs", "-Xlint:cast",
+                "-Xlint:classfile", "-Xlint:dep-ann", "-Xlint:divzero",
+                "-Xlint:empty", "-Xlint:finally", "-Xlint:overrides",
+                "-Xlint:path", "-Xlint:processing", "-Xlint:static",
+                "-Xlint:try", "-Xlint:fallthrough", "-Xlint:deprecation",
+                "-Xlint:unchecked", "-Xlint:-options", "-Werror"]
+    }
+
+    compileTestJava {
+        options.compilerArgs += [
+                "-Xlint:varargs", "-Xlint:cast", "-Xlint:classfile",
+                "-Xlint:dep-ann", "-Xlint:divzero", "-Xlint:empty",
+                "-Xlint:finally", "-Xlint:overrides", "-Xlint:path",
+                "-Xlint:processing", "-Xlint:static", "-Xlint:try",
+                "-Xlint:fallthrough", "-Xlint:deprecation", "-Xlint:unchecked",
+                "-Xlint:-options"]
+    }
 
     // Add LICENSE and NOTICE to generated jar files.
-    sourceSets {
-        main {
-            resources {
-                srcDir '../../'
-                include 'NOTICE'
-            }
-            resources {
-                srcDir '../../'
-                include 'LICENSE'
-            }
-        }
+    jar {
+        from "../../NOTICE"
+        from "../../LICENSE"
     }
 
     repositories {
@@ -357,6 +388,3 @@ task install (type: Copy, dependsOn: [assemble]) {
     from assemble.outputs.files
     into System.properties['deployPath']
 }
-
-buildDir = '.'
-apply plugin: 'nebula-aggregate-javadocs'

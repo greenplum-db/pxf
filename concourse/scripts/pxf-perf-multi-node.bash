@@ -246,7 +246,7 @@ function assert_count_in_table {
 
     local num_rows=$(time psql -t -c "SELECT COUNT(*) FROM $table_name" | tr -d ' ')
 
-    if [ ${num_rows} != ${expected_count} ]; then
+    if [ "${num_rows}" != "${expected_count}" ]; then
         echo "Expected number of rows to be ${expected_count} but was ${num_rows}"
         exit 1
     fi
