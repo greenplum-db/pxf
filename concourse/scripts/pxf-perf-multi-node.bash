@@ -301,9 +301,10 @@ EOF
 EOF
 
     # Make a backup of core-site and update it with the S3 core-site
-    gpscp -u gpadmin -f /tmp/segment_hosts /tmp/core-site.xml =:/tmp/core-site-patch.xml
-    gpssh -u gpadmin -f /tmp/segment_hosts -v -s -e \
-      'source /usr/local/greenplum-db-devel/greenplum_path.sh && mv /etc/hadoop/conf/core-site.xml /etc/hadoop/conf/core-site.xml.back && cp /tmp/core-site-patch.xml /etc/hadoop/conf/core-site.xml && $GPHOME/pxf/bin/pxf restart'
+    gpscp -u centos -f /tmp/segment_hosts /tmp/core-site.xml =:/tmp/core-site-patch.xml
+    gpssh -u centos -f /tmp/segment_hosts -v -s -e \
+      'sudo mv /etc/hadoop/conf/core-site.xml /etc/hadoop/conf/core-site.xml.back && sudo cp /tmp/core-site-patch.xml /etc/hadoop/conf/core-site.xml'
+    gpssh -u gpadmin -f /tmp/segment_hosts -v -s -e \ 'source /usr/local/greenplum-db-devel/greenplum_path.sh && $GPHOME/pxf/bin/pxf restart'
 
     cat << EOF
 
@@ -324,8 +325,10 @@ EOF
     time psql -c "INSERT INTO lineitem_s3_pxf_write SELECT * FROM lineitem"
 
     # Restore core-site
+    gpssh -u centos -f /tmp/segment_hosts -v -s -e \
+      'sudo mv /etc/hadoop/conf/core-site.xml /etc/hadoop/conf/core-site.xml.s3 && sudo cp /etc/hadoop/conf/core-site.xml.back /etc/hadoop/conf/core-site.xml'
     gpssh -u gpadmin -f /tmp/segment_hosts -v -s -e \
-      'source /usr/local/greenplum-db-devel/greenplum_path.sh && mv /etc/hadoop/conf/core-site.xml /etc/hadoop/conf/core-site.xml.s3 && cp /etc/hadoop/conf/core-site.xml.back /etc/hadoop/conf/core-site.xml && $GPHOME/pxf/bin/pxf restart'
+      'source /usr/local/greenplum-db-devel/greenplum_path.sh && $GPHOME/pxf/bin/pxf restart'
 }
 
 function main {
