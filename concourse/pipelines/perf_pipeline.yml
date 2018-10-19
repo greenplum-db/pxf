@@ -92,7 +92,7 @@ resources:
 - name: gpdb_src
   type: git
   source:
-    branch: {{gpdb-git-branch}}
+    branch: master
     uri: {{gpdb-git-remote}}
 
 - name: pxf_src
