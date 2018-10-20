@@ -8,6 +8,7 @@ source "${CWDIR}/pxf_common.bash"
 export GPHOME=${GPHOME:-"/usr/local/greenplum-db-devel"}
 export PXF_HOME="${GPHOME}/pxf"
 export JAVA_HOME="${JAVA_HOME}"
+export JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8
 
 function run_pxf_automation() {
 	# Let's make sure that automation/singlecluster directories are writeable
@@ -57,14 +58,12 @@ function setup_hadoop() {
 
 function _main() {
 	# Install GPDB
-
 	install_gpdb_binary
 	setup_gpadmin_user
 
 	# Install PXF
 	install_pxf_client
 	install_pxf_server
-
 
 	# Setup Hadoop before creating GPDB cluster to use system python for yum install
 	setup_hadoop /singlecluster
