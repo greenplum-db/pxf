@@ -21,16 +21,25 @@
 # Adding resources should be done using pxf-public.classpath file.
 ##################################################################
 
-# Hadoop/Hive/HBase Configurations
+# Legacy Hadoop/Hive/HBase Configurations
 /etc/hadoop/conf
 /etc/hive/conf
 /etc/hbase/conf
 
-# PXF Configuration
+# Default Hadoop/Hive/HBase and custom server Configurations
+PXF_CONF/server/*
+
+# Customer specific profiles and property files
+PXF_CONF/conf/*
+
+# PXF Internal Configuration
 PXF_HOME/conf
 
-# PXF Libraries
+# Customer specific libraries
+PXF_CONF/lib/*.jar
+
+# PXF Default Plugin Libraries
 PXF_HOME/lib/pxf-*.jar
 
-# Shared Libraries
+# PXF Shared Libraries
 PXF_HOME/lib/shared/*.jar
