@@ -415,11 +415,16 @@ function printUpdateConfigUsage()
     >&2 echo "Usage: pxf update-config -f hostfile.txt"
 }
 
+function printStartAllUsage()
+{
+    >&2 echo "Usage: pxf start-all -f hostfile.txt"
+}
+
 function doUpdateConfig()
 {
     local hostfile
     local config_dir="$PXF_USER_HOME/conf"
-    export PXF_USER_HOME=/home/gpadmin/foobar/pxf # TODO: remove this
+#    export PXF_USER_HOME=/home/gpadmin/foobar/pxf # TODO: remove this
 
     shift # don't try to parse the update-config arg
     if [ "$#" -eq 0 ]; then
@@ -446,22 +451,67 @@ function doUpdateConfig()
         esac
     done
 
-    if [ "$#" -ne 0 ]; then
-        >&2 echo "Unrecognized arguments: $@"
-    fi
-
-    if [ -z "$hostfile" ]; then
-        >&2 echo "Invalid option: -f requires an argument"
+    if [ ! -e "$hostfile" ]; then
+        >&2 echo "Invalid option: $hostfile is not a file"
         return 1
     fi
+
+    if [ -z "${PXF_USER_HOME:-}" ]; then
+        >&2 echo 'ERROR: $PXF_USER_HOME is blank or not set'
+        return 1
+    fi
+
+    local tmpdir=$(mktemp -d --dry-run '/tmp/config.new.XXXXXX')
+    gpssh -f "$hostfile" mkdir -p "$tmpdir" &&
+    gpscp -f "$hostfile" -r "$config_dir" gpadmin@=:"$tmpdir" &&
+    gpssh -f "$hostfile" mv "$config_dir{,.old}" &&
+    gpssh -f "$hostfile" mv "$tmpdir" "$config_dir" &&
+    gpssh -f "$hostfile" rm -rf "$config_dir.old" "$tmpdir" &&
+    echo Successful
+}
+
+function doStartAll()
+{
+    local hostfile
+
+    shift # don't try to parse the start-all arg
+    if [ "$#" -eq 0 ]; then
+        >&2 echo 'start-all requires arguments'
+        printStartAllUsage
+        return 1
+    fi
+
+    while getopts ':f:' opt; do
+        case "${opt}" in
+            f )
+                hostfile="$2"
+                ;;
+            \? )
+                >&2 echo "Unrecognized option: -$OPTARG"
+                printStartAllUsage
+                return 1
+                ;;
+            : )
+                >&2 echo "Invalid option: -$OPTARG requires an argument"
+                printStartAllUsage
+                return 1
+                ;;
+        esac
+    done
 
     if [ ! -e "$hostfile" ]; then
         >&2 echo "Invalid option: $hostfile is not a file"
         return 1
     fi
 
-    gpssh -f "$hostfile" mktemp -d ''
-    gpscp -r "$PXF_USER_HOME/conf" gpadmin@=:"$PXF_USER_HOME/conf" -f "$hostfile"
+    if [ -z "${GPHOME:-}" ]; then
+        >&2 echo 'ERROR: $GPHOME is blank or not set'
+        return 1
+    fi
+
+
+    gpssh -f "$hostfile" "'$GPHOME'/pxf/bin/pxf start" &&
+    echo Successful
 }
 
 pxf_script_command=$1
@@ -496,6 +546,10 @@ case "${pxf_script_command}" in
 		;;
 	"update-config" )
 	    doUpdateConfig "$@"
+	    ;;
+	"start-all" )
+	    validateParameters
+	    doStartAll "$@"
 	    ;;
 	* )
 		printUsage
