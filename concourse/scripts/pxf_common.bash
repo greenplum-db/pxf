@@ -8,6 +8,9 @@ fi
 
 PXF_HOME="${GPHOME}/pxf"
 
+MDD_VALUE="/data/gpdata/master/gpseg-1"
+PXF_CONF_VALUE="${MDD_VALUE}/pxf"
+
 JAVA_HOME=$(ls -d /usr/lib/jvm/java-1.8.0-openjdk* | head -1)
 
 if [ -d gpdb_src/gpAux/extensions/pxf ]; then
@@ -81,8 +84,8 @@ function remote_access_to_gpdb() {
     cp cluster_env_files/public_key.openssh /home/gpadmin/.ssh/authorized_keys
     { ssh-keyscan localhost; ssh-keyscan 0.0.0.0; } >> /home/gpadmin/.ssh/known_hosts
     ssh ${SSH_OPTS} gpadmin@mdw "source ${GPHOME}/greenplum_path.sh && \
-      export MASTER_DATA_DIRECTORY=/data/gpdata/master/gpseg-1 && \
-      echo 'host all all 10.0.0.0/16 trust' >> /data/gpdata/master/gpseg-1/pg_hba.conf && \
+      export MASTER_DATA_DIRECTORY=${MDD_VALUE} && \
+      echo 'host all all 10.0.0.0/16 trust' >> ${MDD_VALUE}/pg_hba.conf && \
       psql -d template1 -c 'CREATE EXTENSION pxf;' && \
       psql -d template1 -c 'CREATE DATABASE gpadmin;' && \
       psql -d template1 -c 'CREATE ROLE root LOGIN;' && \
@@ -201,7 +204,7 @@ EOF
          rm proxy-config.xml
     elif [ "${IMPERSONATION}" == "false" ]; then
         echo 'Impersonation is disabled, updating pxf-env.sh property'
-        su gpadmin -c "sed -i -e 's|^[[:blank:]]*export PXF_USER_IMPERSONATION=.*$|export PXF_USER_IMPERSONATION=false|g' ${PXF_HOME}/conf/pxf-env.sh"
+        su gpadmin -c "echo 'export PXF_USER_IMPERSONATION=false' >> ${PXF_CONF_VALUE}/conf/pxf-env.sh"
     else
         echo "ERROR: Invalid or missing CI property value: IMPERSONATION=${IMPERSONATION}"
         exit 1
@@ -241,6 +244,6 @@ function start_pxf_server() {
 
 	echo 'Start PXF service'
 
-	su gpadmin -c "./bin/pxf init && ./bin/pxf start"
+	su gpadmin -c "PXF_CONF=${PXF_CONF_VALUE} && ./bin/pxf init && ./bin/pxf start"
 	popd > /dev/null
 }
