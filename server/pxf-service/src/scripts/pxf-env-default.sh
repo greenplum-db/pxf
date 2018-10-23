@@ -26,7 +26,7 @@ export PXF_CONF=${PXF_CONF:="/tmp"}
 # load user environment first, warn if the script is missing when not in init mode
 user_env_script=${PXF_CONF}/conf/pxf-env.sh
 if [ ! -f ${user_env_script} ]; then
-    if [ ! "${init_mode}" == "init" ]; then
+    if [ ! "${pxf_script_command}" == "init" ]; then
         echo "WARNING: failed to find ${user_env_script}, default parameters will be used"
     fi
 else

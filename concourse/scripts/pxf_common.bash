@@ -239,7 +239,7 @@ function init_and_configure_pxf_server() {
 	pushd ${PXF_HOME} > /dev/null
 
 	echo 'Initializing PXF service'
-	su gpadmin -c "PXF_CONF=${PXF_CONF_VALUE} && ./bin/pxf init"
+	su gpadmin -c "PXF_CONF=${PXF_CONF_VALUE} ./bin/pxf init"
 
 	# update impersonation value based on CI parameter
 	if [ ! "${IMPERSONATION}" == "true" ]; then

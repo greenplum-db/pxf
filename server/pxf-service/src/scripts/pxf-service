@@ -28,28 +28,41 @@ default_env_script=${PXF_HOME}/conf/pxf-env-default.sh
 
 curl=`which curl`
 
+function validate_user()
+{
+	# make sure current user is not root
+    if [ $EUID -eq 0 ]; then
+        fail "Cannot run as root user"
+    fi
+
+	export PXF_USER=${PXF_USER:=$( id -un )}
+	id ${PXF_USER}  &> /dev/null;
+	if [ "$?" -ne "0" ]; then
+		fail "User ${PXF_USER} doesn't exist. Please set valid user via PXF_USER variable"
+	fi
+}
+
 function update_pxf_conf()
 {
-    if [ "${PXF_CONF}" == "" ] && [ "${MASTER_DATA_DIRECTORY}" = "" ]; then
-        fail "neither PXF_CONF nor MASTER_DATA_DIRECTORY variables are set"
+	local pxf_user_home=$( getent passwd ${PXF_USER} | cut -d: -f6 )
+	if [ "x${PXF_CONF}" == "x" ]; then
+		if [ "x${pxf_user_home}" == "x" ]; then
+			fail "PXF_CONF is not set and user ${PXF_USER} home directory is not defined"
+		elif [ ! -d "${pxf_user_home}" ]; then
+			fail "PXF_CONF is not set and user ${PXF_USER} home directory ${pxf_user_home} does not exist"
+		fi
     fi
-    export PXF_CONF=${PXF_CONF:=${MASTER_DATA_DIRECTORY}/pxf}
+    export PXF_CONF=${PXF_CONF:=${pxf_user_home}/pxf}
     sed -i -e "s|{PXF_CONF:=.*}$|{PXF_CONF:=\"${PXF_CONF}\"}|g" ${default_env_script}
 }
 
 function get_environment()
 {
-    local init_mode=$1
-
-
-
     # load default environment
     if [ ! -f ${default_env_script} ]; then
-	    echo "ERROR: failed to find ${default_env_script}"
-	    exit 1
+	    fail "Failed to find ${default_env_script}"
     fi
     source ${default_env_script}
-
 
     tomcat_root=${PXF_HOME}/apache-tomcat
     tomcat_templates=${PXF_HOME}/templates/tomcat
@@ -316,48 +329,27 @@ function printUsage()
     echo $"Usage: $0 {start|stop|restart|init|status}"
 }
 
-function validateParameters()
+function validate_system()
 {
-
     # validate curl
     which curl &> /dev/null
-    if [ "$?" -ne "0" ]
-    then
-        echo "ERROR: curl is not installed, please install"
-        exit 1
+    if [ "$?" -ne "0" ]; then
+		fail "curl is not installed, please install"
     fi
 
     # validate unzip
     which unzip &> /dev/null
-    if [ "$?" -ne "0" ]
-    then
-        echo "ERROR: unzip is not installed, please install"
-        exit 1
+    if [ "$?" -ne "0" ]; then
+        fail "unzip is not installed, please install"
     fi
+}
 
-    # validate pxf user
-    if [ ! -z ${PXF_USER} ]; then
-        id ${PXF_USER}  &> /dev/null;
-        if [ "$?" -ne "0" ]
-        then
-            echo "ERROR: User ${PXF_USER} doesn't exist. Please set valid user via PXF_USER variable"
-            exit 1
-        fi
-    fi
-
-    # make sure current user is not root
-    if [ $EUID -eq 0 ]; then
-        echo "ERROR: Cannot run as root user"
-        exit 1
-    fi
-
+function validate_parameters()
+{
     # validate JAVA_HOME
     if [ ! -x ${JAVA_HOME}/bin/java ]; then
-        echo ERROR: \$JAVA_HOME is invalid
-        exit 1
+        fail "\$JAVA_HOME is invalid"
     fi
-
-    return 0
 }
 
 #
@@ -371,8 +363,7 @@ function doStart()
 {
 	instanceExists
 	if [ $? -ne 0 ]; then
-		echo ERROR: cant find PXF instance, maybe call init?
-		return 1
+		fail "can't find PXF instance, maybe call init?"
 	fi
 	configureWebapp || return 1
 	commandWebapp start || return 1
@@ -388,8 +379,7 @@ function doStop()
 {
     instanceExists
     if [ $? -ne 0 ]; then
-        echo "ERROR: can't find PXF instance, maybe call init?"
-        return 1
+        fail "can't find PXF instance, maybe call init?"
     fi
     commandWebapp stop || return 1
 }
@@ -399,35 +389,37 @@ function doStatus()
 	checkWebapp 1 || return 1
 }
 
-command=$1
+pxf_script_command=$1
+validate_user
+validate_system
 
-case "$command" in
+case "${pxf_script_command}" in
 	"init" )
 		update_pxf_conf
-		get_environment init
-		validateParameters
+		get_environment
+		validate_parameters
 		doInit
 		;;
 	"start" )
 		get_environment
-		validateParameters
+		validate_parameters
 		doStart
 		;;
 	"stop" )
 		get_environment
-		validateParameters
+		validate_parameters
 		doStop
 		;;
 	"restart" )
 		get_environment
-		validateParameters
+		validate_parameters
 		doStop
 		sleep 1s
 		doStart
 		;;
 	"status" )
 		get_environment
-		validateParameters
+		validate_parameters
 		doStatus
 		;;
 	* )
