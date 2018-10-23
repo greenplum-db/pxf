@@ -5,3 +5,4 @@
 *.out
 server/*/out
 server/tmp
+cli/go/pkg
