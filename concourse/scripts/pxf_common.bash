@@ -203,8 +203,7 @@ EOF
          sed -i -e '/<configuration>/r proxy-config.xml' ${GPHD_ROOT}/hadoop/etc/hadoop/core-site.xml ${GPHD_ROOT}/hbase/conf/hbase-site.xml
          rm proxy-config.xml
     elif [ "${IMPERSONATION}" == "false" ]; then
-        echo 'Impersonation is disabled, updating pxf-env.sh property'
-        su gpadmin -c "echo 'export PXF_USER_IMPERSONATION=false' >> ${PXF_CONF_VALUE}/conf/pxf-env.sh"
+        echo 'Impersonation is disabled, no proxy user setup performed.'
     else
         echo "ERROR: Invalid or missing CI property value: IMPERSONATION=${IMPERSONATION}"
         exit 1
@@ -236,14 +235,29 @@ function start_hadoop_services() {
 	fi
 }
 
+function init_and_configure_pxf_server() {
+	pushd ${PXF_HOME} > /dev/null
+
+	echo 'Initializing PXF service'
+	su gpadmin -c "PXF_CONF=${PXF_CONF_VALUE} && ./bin/pxf init"
+
+	# update impersonation value based on CI parameter
+	if [ ! "${IMPERSONATION}" == "true" ]; then
+		echo 'Impersonation is disabled, updating pxf-env.sh property'
+        su gpadmin -c "echo 'export PXF_USER_IMPERSONATION=false' >> ${PXF_CONF_VALUE}/conf/pxf-env.sh"
+	fi
+
+	popd > /dev/null
+}
+
 function start_pxf_server() {
 	pushd ${PXF_HOME} > /dev/null
 
 	#Check if some other process is listening on 5888
 	netstat -tlpna | grep 5888 || true
 
-	echo 'Start PXF service'
+	echo 'Starting PXF service'
+	su gpadmin -c "./bin/pxf start"
 
-	su gpadmin -c "PXF_CONF=${PXF_CONF_VALUE} && ./bin/pxf init && ./bin/pxf start"
 	popd > /dev/null
 }
