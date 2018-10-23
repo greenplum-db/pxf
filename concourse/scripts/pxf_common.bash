@@ -9,7 +9,7 @@ fi
 PXF_HOME="${GPHOME}/pxf"
 
 MDD_VALUE="/data/gpdata/master/gpseg-1"
-PXF_CONF_VALUE="${MDD_VALUE}/pxf"
+PXF_CONF_VALUE="/home/gpadmin/pxf"
 
 JAVA_HOME=$(ls -d /usr/lib/jvm/java-1.8.0-openjdk* | head -1)
 
