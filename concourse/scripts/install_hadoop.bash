@@ -14,21 +14,25 @@ function setup_pxf {
     scp -r ${SSH_OPTS} pxf_tarball centos@${segment}:
     scp ${SSH_OPTS} cluster_env_files/etc_hostfile centos@${segment}:
 
+	# install PXF as superuser
     ssh ${SSH_OPTS} centos@${segment} "
+        sudo sed -i -e 's/edw0/hadoop/' /etc/hosts &&
         sudo yum install -y -d 1 java-1.8.0-openjdk-devel &&
         echo 'export JAVA_HOME=/usr/lib/jvm/jre' | sudo tee -a ~gpadmin/.bash_profile &&
         echo 'export JAVA_HOME=/usr/lib/jvm/jre' | sudo tee -a ~centos/.bash_profile &&
         sudo tar -xzf pxf_tarball/pxf.tar.gz -C ${GPHOME} &&
-        sudo chown -R gpadmin:gpadmin ${GPHOME}/pxf &&
-        sudo sed -i -e 's/\(0.0.0.0\|localhost\|127.0.0.1\)/${hadoop_ip}/g' ${GPHOME}/pxf/conf/*-site.xml &&
-        sudo sed -i -e 's/edw0/hadoop/' /etc/hosts &&
+        sudo chown -R gpadmin:gpadmin ${GPHOME}/pxf"
+
+    # init, configure and start PXF as gpadmin
+    ssh ${SSH_OPTS} gpadmin@${segment} "
+        source ~gpadmin/.bash_profile &&
+        sed -i -e 's/\(0.0.0.0\|localhost\|127.0.0.1\)/${hadoop_ip}/g' ${PXF_CONF_DIR}/servers/default/*-site.xml &&
         if [ ${IMPERSONATION} == false ]; then
-            sudo sed -i -e 's|^export PXF_USER_IMPERSONATION=.*$|export PXF_USER_IMPERSONATION=false|g' ${PXF_HOME}/conf/pxf-env.sh
+            echo 'export PXF_USER_IMPERSONATION=false' >> ${PXF_CONF_DIR}/conf/pxf-env.sh
         fi &&
-        sudo sed -i -e 's|^export PXF_JVM_OPTS=.*$|export PXF_JVM_OPTS=\"${PXF_JVM_OPTS}\"|g' ${PXF_HOME}/conf/pxf-env.sh
-        "
-        ssh ${SSH_OPTS} gpadmin@${segment} "
-        source ~gpadmin/.bash_profile && ${PXF_HOME}/bin/pxf init && ${PXF_HOME}/bin/pxf start"
+        echo 'export PXF_JVM_OPTS=\"${PXF_JVM_OPTS}\"' >> ${PXF_CONF_DIR}/conf/pxf-env.sh &&
+        PXF_CONF=${PXF_CONF_DIR} ${PXF_HOME}/bin/pxf init &&
+        ${PXF_HOME}/bin/pxf start"
 }
 
 function install_hadoop_single_cluster() {

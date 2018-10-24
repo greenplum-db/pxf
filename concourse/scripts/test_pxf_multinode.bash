@@ -10,8 +10,8 @@ GPHD_ROOT="/singlecluster"
 
 function configure_local_hdfs() {
 
-    sed -i -e 's|hdfs://0.0.0.0:8020|hdfs://hadoop:8020|' ${PXF_HOME}/conf/core-site.xml ${PXF_HOME}/conf/hbase-site.xml
-    sed -i -e "s/>tez/>mr/g" ${PXF_HOME}/conf/hive-site.xml
+    sed -i -e 's|hdfs://0.0.0.0:8020|hdfs://hadoop:8020|' ${PXF_CONF_DIR}/servers/default/core-site.xml ${PXF_CONF_DIR}/servers/default/hbase-site.xml
+    sed -i -e "s/>tez/>mr/g" ${PXF_CONF_DIR}/servers/default/hive-site.xml
 }
 
 function run_multinode_smoke_test() {
@@ -93,6 +93,7 @@ function _main() {
     install_gpdb_binary
     setup_gpadmin_user
     install_pxf_server
+    init_and_configure_pxf_server
     remote_access_to_gpdb
 
     open_ssh_tunnels

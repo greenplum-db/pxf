@@ -9,7 +9,9 @@ fi
 PXF_HOME="${GPHOME}/pxf"
 
 MDD_VALUE="/data/gpdata/master/gpseg-1"
-PXF_CONF_VALUE="/home/gpadmin/pxf"
+
+# on purpose do not call this PXF_CONF so that it is not set during pxf operations
+PXF_CONF_DIR="/home/gpadmin/pxf"
 
 JAVA_HOME=$(ls -d /usr/lib/jvm/java-1.8.0-openjdk* | head -1)
 
@@ -239,12 +241,12 @@ function init_and_configure_pxf_server() {
 	pushd ${PXF_HOME} > /dev/null
 
 	echo 'Initializing PXF service'
-	su gpadmin -c "PXF_CONF=${PXF_CONF_VALUE} ./bin/pxf init"
+	su gpadmin -c "PXF_CONF=${PXF_CONF_DIR} ./bin/pxf init"
 
 	# update impersonation value based on CI parameter
 	if [ ! "${IMPERSONATION}" == "true" ]; then
 		echo 'Impersonation is disabled, updating pxf-env.sh property'
-        su gpadmin -c "echo 'export PXF_USER_IMPERSONATION=false' >> ${PXF_CONF_VALUE}/conf/pxf-env.sh"
+        su gpadmin -c "echo 'export PXF_USER_IMPERSONATION=false' >> ${PXF_CONF_DIR}/conf/pxf-env.sh"
 	fi
 
 	popd > /dev/null

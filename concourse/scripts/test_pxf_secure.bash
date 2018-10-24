@@ -70,9 +70,9 @@ function secure_pxf() {
 	hadoop_authorization="<property><name>hadoop.security.authorization</name><value>true</value></property>"
 	yarn_principal="<property><name>yarn.resourcemanager.principal</name><value>rm/_HOST@AMBARI.APACHE.ORG</value></property>"
 
-	echo -e "export PXF_KEYTAB=\"/etc/security/keytabs/gpadmin-krb5.keytab\"\nexport PXF_PRINCIPAL=\"gpadmin/_HOST@${REALM}\"" >> ${PXF_HOME}/conf/pxf-env.sh
-	sed -i -e "s|<configuration>|<configuration>\n${hadoop_authentication}\n${hadoop_authorization}|g" ${PXF_HOME}/conf/core-site.xml
-	sed -i -e "s|<configuration>|<configuration>\n${yarn_principal}|g" ${PXF_HOME}/conf/yarn-site.xml
+	echo -e "export PXF_KEYTAB=\"/etc/security/keytabs/gpadmin-krb5.keytab\"\nexport PXF_PRINCIPAL=\"gpadmin/_HOST@${REALM}\"" >> ${PXF_CONF_DIR}/conf/pxf-env.sh
+	sed -i -e "s|<configuration>|<configuration>\n${hadoop_authentication}\n${hadoop_authorization}|g" ${PXF_CONF_DIR}/servers/default/core-site.xml
+	sed -i -e "s|<configuration>|<configuration>\n${yarn_principal}|g" ${PXF_CONF_DIR}/servers/default/yarn-site.xml
 }
 
 function wait_for_hadoop_services() {
@@ -140,6 +140,7 @@ function _main() {
 
 	create_gpdb_cluster
 	add_remote_user_access_for_gpdb "testuser"
+	init_and_configure_pxf_server
 	start_pxf_server
 
 	time run_regression_test
