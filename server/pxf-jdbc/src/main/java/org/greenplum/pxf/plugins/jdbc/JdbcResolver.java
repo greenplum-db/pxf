@@ -169,7 +169,8 @@ public class JdbcResolver extends JdbcPlugin implements ReadResolver, WriteResol
                     LOG.isDebugEnabled() &&
                             DataType.get(oneField.type) == DataType.BYTEA
                     ) {
-                LOG.debug("OneField content (conversion from BYTEA): '" + new String((byte[])oneField.val) + "'");
+                String converted = (oneField.val != null) ? new String((byte[])oneField.val) : "null";
+                LOG.debug("OneField content (conversion from BYTEA): '" +  converted + "'");
             }
 
             // Convert TEXT columns into native data types
