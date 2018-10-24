@@ -367,6 +367,10 @@ task assemble(type: Copy, dependsOn: [subprojects.jar, project(':pxf-service').w
         fileMode 0755
         rename('pxf-service', 'pxf')
     }
+    from("pxf-cli/go/src/pxf-cluster/pxf-cluster") {
+        into 'bin'
+        fileMode 0755
+    }
 
     from("${tomcatTargetDir}/${tomcatName}") { into 'apache-tomcat' }
     from("pxf-service/src/main/resources/pxf-log4j.properties") { into 'templates/user/conf' }

@@ -20,6 +20,8 @@
 # pxf-service	start/stop/initialize/status the PXF instance
 #
 
+parent_script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
+
 # establish PXF_HOME and global vars used by all commands
 if [ -z ${PXF_HOME} ]; then
     export PXF_HOME="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
@@ -410,6 +412,12 @@ function doStatus()
 	checkWebapp 1 || return 1
 }
 
+function doCluster()
+{
+    shift # drop the 'cluster' arg
+    "$parent_script_dir/bin/pxf-cluster" "$@"
+}
+
 command=$1
 
 validate_user
@@ -433,6 +441,10 @@ case "${pxf_script_command}" in
 	"status" )
 		doStatus
 		;;
+	"cluster" )
+	    validateParameters
+	    doCluster "$@"
+	    ;;
 	* )
 		printUsage
 		exit 2

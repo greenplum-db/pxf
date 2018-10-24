@@ -5,4 +5,4 @@
 *.out
 server/*/out
 server/tmp
-cli/go/pkg
+server/pxf-cli/go/pkg
