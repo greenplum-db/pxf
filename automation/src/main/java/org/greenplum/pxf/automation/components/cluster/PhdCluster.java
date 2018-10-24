@@ -20,7 +20,7 @@ public abstract class PhdCluster extends ShellSystemObject {
 	// the sub directory inside the tempClusterFolderDirectory that leads to pxf-profiles
 	private String pathToPxfConfInGeneralConf = "";
 	// pxf classpath file name
-	private String pxfClasspathFile = "pxf-public.classpath";
+	private String pxfClasspathFile = "pxf-private.classpath";
 	// path to local fetched pxf conf directory
 	private String pathToLocalPxfConfDirectory = "";
 	// folder which the cluster admin is installed
