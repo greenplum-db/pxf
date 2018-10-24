@@ -1,4 +1,4 @@
-package main
+package test
 
 // ********************************************************
 // NOTE: This file contains no tests.
