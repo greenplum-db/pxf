@@ -34,25 +34,24 @@ function validate_user()
     if [ $EUID -eq 0 ]; then
         fail "Cannot run as root user"
     fi
-
-	export PXF_USER=${PXF_USER:=$( id -un )}
-	id ${PXF_USER}  &> /dev/null;
-	if [ "$?" -ne "0" ]; then
-		fail "User ${PXF_USER} doesn't exist. Please set valid user via PXF_USER variable"
-	fi
 }
 
 function update_pxf_conf()
 {
-	local pxf_user_home=$( getent passwd ${PXF_USER} | cut -d: -f6 )
-	if [ "x${PXF_CONF}" == "x" ]; then
-		if [ "x${pxf_user_home}" == "x" ]; then
-			fail "PXF_CONF is not set and user ${PXF_USER} home directory is not defined"
-		elif [ ! -d "${pxf_user_home}" ]; then
-			fail "PXF_CONF is not set and user ${PXF_USER} home directory ${pxf_user_home} does not exist"
-		fi
+    if [ -z "${PXF_CONF}" ]; then
+        # PXF_CONF was not specified during init command, will set it to default value
+        local current_user=$( id -un )
+        local pxf_user_home=$( getent passwd ${current_user} | cut -d: -f6 )
+        if [ -z "${pxf_user_home}" ]; then
+            fail "PXF_CONF is not set and user ${current_user} home directory is not defined"
+        elif [ ! -d "${pxf_user_home}" ]; then
+            fail "PXF_CONF is not set and user ${current_user} home directory ${pxf_user_home} does not exist"
+        else
+            export PXF_CONF="${pxf_user_home}/pxf"
+        fi
     fi
-    export PXF_CONF=${PXF_CONF:=${pxf_user_home}/pxf}
+
+    # update the value on PXF_CONF in the default env file
     sed -i -e "s|{PXF_CONF:=.*}$|{PXF_CONF:=\"${PXF_CONF}\"}|g" ${default_env_script}
 }
 
@@ -92,9 +91,6 @@ function createInstance()
 		return 1
 	fi
 
-    if [ ! -z ${PXF_USER} ]; then
-        chown -R ${PXF_USER} ${instance_root}
-    fi
     chmod 700 ${instance_root}/${instance_name}
 
     # copy configuration files into instance
@@ -102,6 +98,7 @@ function createInstance()
     cp ${tomcat_templates}/conf/catalina.properties ${instance_root}/${instance_name}/conf/.
     cp ${tomcat_templates}/conf/server.xml ${instance_root}/${instance_name}/conf/.
     cp ${tomcat_templates}/conf/web.xml ${instance_root}/${instance_name}/conf/.
+
     return 0
 }
 
@@ -151,7 +148,7 @@ function checkWebapp()
 {
 	waitForTomcat $1 || return 1
 
-	echo Checking if PXF webapp is up and running...
+	echo "Checking if PXF webapp is up and running..."
 	curlResponse=$(${curl} -s "http://localhost:${PXF_PORT}/pxf/v0")
 	expectedResponse="Wrong version v0, supported version is v[0-9]+"
 
@@ -160,7 +157,7 @@ function checkWebapp()
 		return 0
 	fi
 
-	echo ERROR: PXF webapp is inaccessible but tomcat is up. Check logs for more information
+	echo "ERROR: PXF webapp is inaccessible but tomcat is up. Check logs for more information"
 	return 1
 }
 
@@ -243,13 +240,10 @@ function commandWebapp()
         command="jpda $command"
     fi
     pushd ${instance_root} > /dev/null
-    if [ ! -z ${PXF_USER} ]; then
-        # Run command as a PXF_USER
-        su ${PXF_USER} -c "$instance_root/$instance_name/bin/catalina.sh $command"
-    else
-        # Run command as a current user
-        ${instance_root}/${instance_name}/bin/catalina.sh ${command}
-    fi
+
+    # Run command as a current user
+    ${instance_root}/${instance_name}/bin/catalina.sh ${command}
+
     if [ $? -ne 0 ]; then
         return 1
     fi
@@ -260,20 +254,16 @@ function createLogsDir()
 {
     # logs dir is likely outside PXF_HOME, setup only if it does not yet exist
     if [ ! -d "${PXF_LOGDIR}" ]; then
+        echo "Creating PXF logs directory ${PXF_LOGDIR} ..."
         mkdir -p ${PXF_LOGDIR}
-        if [ ! -z ${PXF_USER} ]; then
-            chown -R ${PXF_USER} ${PXF_LOGDIR}
-        fi
         chmod 700 ${PXF_LOGDIR}
     fi
 }
 
 function createRunDir()
 {
+	echo "Creating PXF runtime directory ${PXF_RUNDIR} ..."
     mkdir -p ${PXF_RUNDIR}
-    if [ ! -z ${PXF_USER} ]; then
-        chown -R ${PXF_USER} ${PXF_RUNDIR}
-    fi
     chmod 700 ${PXF_RUNDIR}
 }
 
@@ -308,16 +298,12 @@ function setup_conf_directory()
     local source=$2
 
     if [ ! -d "${target}" ]; then
-        if [ "x${source}" == "x" ]; then
-            echo "Creating directory ${target}"
+        if [ -z "${source}" ]; then
+            echo "Creating configuration directory ${target}"
             mkdir -p ${target}
         else
             echo "Copying configurations from ${source} to ${target}"
             cp -R ${source} $( dirname ${target} )
-        fi
-        if [ ! -z ${PXF_USER} ]; then
-            echo "Updating ownership of ${target} to ${PXF_USER}"
-            chown -R ${PXF_USER} ${target}
         fi
     else
         echo "Directory ${target} already exists, no update required"
@@ -333,13 +319,13 @@ function validate_system()
 {
     # validate curl
     which curl &> /dev/null
-    if [ "$?" -ne "0" ]; then
+    if [ $? -ne 0 ]; then
 		fail "curl is not installed, please install"
     fi
 
     # validate unzip
     which unzip &> /dev/null
-    if [ "$?" -ne "0" ]; then
+    if [ $? -ne 0 ]; then
         fail "unzip is not installed, please install"
     fi
 }
@@ -354,7 +340,7 @@ function validate_parameters()
 
 #
 # doStart handles start command
-# command is executed as the user $PXF_USER
+# command is executed as the current user
 #
 # after start, uses checkWebapp to verify the PXF webapp was loaded
 # successfully
@@ -372,7 +358,7 @@ function doStart()
 
 #
 # doStart handles stop command
-# command is executed as the user $PXF_USER
+# command is executed as the current user
 #
 #
 function doStop()
