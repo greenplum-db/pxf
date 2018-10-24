@@ -4,7 +4,7 @@
 depend:
 	@GOPATH=$(shell pwd)/../.. dep ensure -v
 
-build:
+build: depend
 	@GOPATH=$(shell pwd)/../.. go build
 
 test:

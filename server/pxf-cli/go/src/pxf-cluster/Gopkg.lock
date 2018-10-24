@@ -215,6 +215,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/greenplum-db/gp-common-go-libs/dbconn",
+    "github.com/greenplum-db/gp-common-go-libs/gplog",
     "github.com/onsi/ginkgo",
     "github.com/onsi/ginkgo/ginkgo",
     "github.com/onsi/gomega",
