@@ -14,6 +14,6 @@ var _ = Describe("generating a gpssh command", func() {
 
 		var cmd = gpssh.Command(hostnames, remoteCommand)
 
-		Expect(cmd).To(Equal(exec.Command("gpssh", "-f", "abc", "-f", "def", "-f", "ghi", "echo", "hello")))
+		Expect(cmd).To(Equal(exec.Command("gpssh", "-h", "abc", "-h", "def", "-h", "ghi", "echo", "hello")))
 	})
 })

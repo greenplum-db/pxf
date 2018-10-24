@@ -33,6 +33,10 @@ required = ["golang.org/x/tools/cmd/goimports", "github.com/onsi/ginkgo/ginkgo"]
   name = "github.com/onsi/gomega"
   version = "1.4.2"
 
+[[constraint]]
+  name = "github.com/greenplum-db/gp-common-go-libs"
+  branch = "master"
+
 [[override]]
   name = "gopkg.in/fsnotify.v1"
   source = "https://github.com/fsnotify/fsnotify.git"

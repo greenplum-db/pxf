@@ -2,6 +2,26 @@
 
 
 [[projects]]
+  digest = "1:705c40022f5c03bf96ffeb6477858d88565064485a513abcd0f11a0911546cb6"
+  name = "github.com/blang/semver"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "2ee87856327ba09384cabd113bc6b5d174e9ec0f"
+  version = "v3.5.1"
+
+[[projects]]
+  branch = "master"
+  digest = "1:34f793ebe579a9534755e739f0d34c2ff12cba6cf8c075ef451275712b770ba5"
+  name = "github.com/greenplum-db/gp-common-go-libs"
+  packages = [
+    "dbconn",
+    "gplog",
+    "operating",
+  ]
+  pruneopts = "UT"
+  revision = "459655a5c915e633b3a15987ae469ab64b3405a4"
+
+[[projects]]
   digest = "1:a1038ef593beb4771c8f0f9c26e8b00410acd800af5c6864651d9bf160ea1813"
   name = "github.com/hpcloud/tail"
   packages = [
@@ -14,6 +34,33 @@
   pruneopts = "UT"
   revision = "a30252cb686a21eb2d0b98132633053ec2f7f1e5"
   version = "v1.0.0"
+
+[[projects]]
+  digest = "1:0d1dda2d304932fb14e5052312b455c2b421fcff046c0967887c4da5b66c62e4"
+  name = "github.com/jackc/pgx"
+  packages = [
+    ".",
+    "chunkreader",
+    "internal/sanitize",
+    "pgio",
+    "pgproto3",
+    "pgtype",
+    "stdlib",
+  ]
+  pruneopts = "UT"
+  revision = "89f1e6ac7276b61d885db5e5aed6fcbedd1c7e31"
+  version = "v3.2.0"
+
+[[projects]]
+  digest = "1:6c41d4f998a03b6604227ccad36edaed6126c397e5d78709ef4814a1145a6757"
+  name = "github.com/jmoiron/sqlx"
+  packages = [
+    ".",
+    "reflectx",
+  ]
+  pruneopts = "UT"
+  revision = "d161d7a76b5661016ad0b085869f77fd410f3e6a"
+  version = "v1.2.0"
 
 [[projects]]
   digest = "1:f7fb60f95f94033cc62e69661949867b776dbcdc5c1f11ef5eded91ba2332f26"
@@ -71,12 +118,12 @@
   version = "v1.4.2"
 
 [[projects]]
-  digest = "1:274c8961a3d6fce702554d07d0e9396c576bb850d07ddf3ec2b597b87d6f3384"
-  name = "github.com/robteix/testmod"
+  digest = "1:40e195917a951a8bf867cd05de2a46aaf1806c50cf92eebf4c16f78cd196f747"
+  name = "github.com/pkg/errors"
   packages = ["."]
   pruneopts = "UT"
-  revision = "7f298576e69fcecd07f516971459b8db3cd34547"
-  version = "v2.0.0"
+  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
+  version = "v0.8.0"
 
 [[projects]]
   branch = "master"
@@ -167,10 +214,10 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/greenplum-db/gp-common-go-libs/dbconn",
     "github.com/onsi/ginkgo",
     "github.com/onsi/ginkgo/ginkgo",
     "github.com/onsi/gomega",
-    "github.com/robteix/testmod",
     "golang.org/x/tools/cmd/goimports",
   ]
   solver-name = "gps-cdcl"
