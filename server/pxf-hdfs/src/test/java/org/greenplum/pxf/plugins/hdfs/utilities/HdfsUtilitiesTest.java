@@ -151,7 +151,7 @@ public class HdfsUtilitiesTest {
     private void testIsThreadSafe(String testDescription, String path, String codecStr, CompressionCodec codec, boolean expectedResult) {
         prepareDataForIsThreadSafe(path, codecStr, codec);
 
-        boolean result = HdfsUtilities.isThreadSafe(path, codecStr);
+        boolean result = HdfsUtilities.isThreadSafe(new Configuration(), path, codecStr);
         assertTrue(testDescription, result == expectedResult);
     }
 
@@ -188,7 +188,7 @@ public class HdfsUtilitiesTest {
         Path path = new Path(pathName);
         when(factory.getCodec(path)).thenReturn(codec);
 
-        boolean result = HdfsUtilities.isSplittableCodec(path);
+        boolean result = HdfsUtilities.isSplittableCodec(conf, path);
         assertEquals(description, result, expected);
     }
 

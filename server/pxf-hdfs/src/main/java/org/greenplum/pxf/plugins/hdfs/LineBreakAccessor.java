@@ -81,7 +81,7 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor implements
         String compressCodec = inputData.getUserProperty("COMPRESSION_CODEC");
         CompressionCodec codec = null;
 
-        conf = new Configuration();
+        conf = ConfigurationCache.getInstance().getConfiguration(inputData.getServerName());
         fs = FileSystem.get(conf);
 
         // get compression codec

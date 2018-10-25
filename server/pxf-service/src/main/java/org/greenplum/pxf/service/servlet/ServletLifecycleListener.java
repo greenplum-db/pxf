@@ -26,8 +26,8 @@ import org.apache.commons.logging.LogFactory;
 import javax.servlet.ServletContextListener;
 import javax.servlet.ServletContextEvent;
 
+import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.service.utilities.Log4jConfigure;
-import org.greenplum.pxf.service.utilities.SecureLogin;
 
 /**
  * Listener on lifecycle events of our webapp
@@ -47,10 +47,8 @@ public class ServletLifecycleListener implements ServletContextListener {
 		// 1. Initialize log4j:
 		Log4jConfigure.configure(event);
 
-		LOG.info("webapp initialized");
-
-		// 2. Initiate secure login
-		SecureLogin.login();
+		LOG.info("Webapp Initialized");
+		LOG.info("User impersonation is " + (Utilities.isUserImpersonationEnabled() ? "enabled" : "disabled"));
 	}
 
 	/**

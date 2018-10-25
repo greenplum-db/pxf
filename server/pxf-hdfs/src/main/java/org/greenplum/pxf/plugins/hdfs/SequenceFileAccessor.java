@@ -81,7 +81,7 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor implements
         FileSystem fs;
         Path parent;
         String fileName = inputData.getDataSource();
-        conf = new Configuration();
+        conf = ConfigurationCache.getInstance().getConfiguration(inputData.getServerName());
 
         getCompressionCodec(inputData);
         fileName = updateFileExtension(fileName, codec);

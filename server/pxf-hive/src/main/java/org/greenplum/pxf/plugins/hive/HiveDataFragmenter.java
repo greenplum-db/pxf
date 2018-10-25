@@ -54,6 +54,7 @@ import org.greenplum.pxf.api.Metadata;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.InputData;
 import org.greenplum.pxf.api.utilities.ProfilesConf;
+import org.greenplum.pxf.plugins.hdfs.ConfigurationCache;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.greenplum.pxf.plugins.hive.utilities.ProfileFactory;
@@ -117,7 +118,8 @@ public class HiveDataFragmenter extends Fragmenter {
      */
     public HiveDataFragmenter(InputData inputData, Class<?> clazz) {
         super(inputData);
-        jobConf = new JobConf(new Configuration(), clazz);
+        Configuration configuration = ConfigurationCache.getInstance().getConfiguration(inputData.getServerName());
+        jobConf = new JobConf(configuration, clazz);
         client = HiveUtilities.initHiveClient();
         // canPushDownIntegral represents hive.metastore.integral.jdo.pushdown property in hive-site.xml
         canPushDownIntegral =

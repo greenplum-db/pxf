@@ -47,7 +47,7 @@ public class PxfInputFormat extends FileInputFormat {
      */
     @Override
     protected boolean isSplitable(FileSystem fs, Path filename) {
-        return HdfsUtilities.isSplittableCodec(filename);
+        return HdfsUtilities.isSplittableCodec(fs.getConf(), filename);
     }
 
 }

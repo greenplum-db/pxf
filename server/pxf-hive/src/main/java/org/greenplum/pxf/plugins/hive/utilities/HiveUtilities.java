@@ -45,6 +45,7 @@ import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.utilities.EnumGpdbType;
 import org.greenplum.pxf.api.utilities.InputData;
 import org.greenplum.pxf.api.utilities.Utilities;
+import org.greenplum.pxf.plugins.hdfs.ConfigurationCache;
 import org.greenplum.pxf.plugins.hive.HiveDataFragmenter;
 import org.greenplum.pxf.plugins.hive.HiveInputFormatFragmenter;
 import org.greenplum.pxf.plugins.hive.HiveInputFormatFragmenter.PXF_HIVE_INPUT_FORMATS;
@@ -593,7 +594,8 @@ public class HiveUtilities {
     public static Reader getOrcReader(InputData inputData) {
         try {
             Path path = new Path(inputData.getDataSource());
-            Reader reader = OrcFile.createReader(path.getFileSystem(new Configuration()), path);
+            Configuration configuration = ConfigurationCache.getInstance().getConfiguration(inputData.getServerName());
+            Reader reader = OrcFile.createReader(path.getFileSystem(configuration), path);
 
             return reader;
 

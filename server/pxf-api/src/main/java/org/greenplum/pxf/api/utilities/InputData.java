@@ -20,11 +20,12 @@ package org.greenplum.pxf.api.utilities;
  */
 
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.util.Map;
 import java.util.ArrayList;
+import java.util.Map;
 
 
 /**
@@ -57,6 +58,13 @@ public class InputData {
     protected int dataFragment; /* should be deprecated */
     private EnumAggregationType aggType;
     private int fragmentIndex;
+
+    /**
+     * The name of the server to access. For a multi-HCFS environment,
+     * this be the name of the configured server, which we will then use
+     * to build a path for the config files (i.e. $PATH_TO_CONFIG/$serverName/*.xml
+     */
+    String serverName;
 
     /**
      * When false the bridge has to run in synchronized mode. default value -
@@ -370,4 +378,19 @@ public class InputData {
         this.numAttrsProjected = numAttrsProjected;
     }
 
+    /**
+     * Returns the name of the server in a multi-HCFS setup
+     * @return the name of the server, or "default" if null
+     */
+    public String getServerName() {
+        return StringUtils.isBlank(serverName) ? "default" : serverName;
+    }
+
+    /**
+     * Sets the name of the server in a multi-HCFS setup
+     * @param serverName the name of the server
+     */
+    public void setServerName(String serverName) {
+        this.serverName = serverName;
+    }
 }

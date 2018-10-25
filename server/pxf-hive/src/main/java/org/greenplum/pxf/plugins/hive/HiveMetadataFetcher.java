@@ -41,6 +41,7 @@ import org.greenplum.pxf.api.OutputFormat;
 import org.greenplum.pxf.api.UnsupportedTypeException;
 import org.greenplum.pxf.api.utilities.InputData;
 import org.greenplum.pxf.api.utilities.ProfilesConf;
+import org.greenplum.pxf.plugins.hdfs.ConfigurationCache;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.greenplum.pxf.plugins.hive.utilities.ProfileFactory;
 
@@ -60,7 +61,7 @@ public class HiveMetadataFetcher extends MetadataFetcher {
 
         // init hive metastore client connection.
         client = HiveUtilities.initHiveClient();
-        jobConf = new JobConf(new Configuration());
+        jobConf = new JobConf(ConfigurationCache.getInstance().getConfiguration(inputData.getServerName()));
     }
 
     /**

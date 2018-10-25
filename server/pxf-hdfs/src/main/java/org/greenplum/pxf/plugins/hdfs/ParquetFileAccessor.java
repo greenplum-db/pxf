@@ -156,7 +156,7 @@ public class ParquetFileAccessor extends Plugin implements ReadAccessor {
 
     @Override
     public boolean openForRead() throws Exception {
-        Configuration conf = new Configuration();
+        Configuration conf = ConfigurationCache.getInstance().getConfiguration(inputData.getServerName());
         Path file = new Path(inputData.getDataSource());
         FileSplit fileSplit = HdfsUtilities.parseFileSplit(inputData);
         setSchema(HdfsUtilities.parseParquetUserData(inputData).getSchema());

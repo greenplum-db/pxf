@@ -62,8 +62,8 @@ public abstract class HdfsAtomicDataAccessor extends Plugin implements ReadAcces
         // 0. Hold the configuration data
         super(input);
 
-        // 1. Load Hadoop configuration defined in $HADOOP_HOME/conf/*.xml files
-        conf = new Configuration();
+        // 1. Load Hadoop configuration defined in $PXF_CONF/$serverName/*.xml files
+        conf = ConfigurationCache.getInstance().getConfiguration(input.getServerName());
 
         fileSplit = HdfsUtilities.parseFileSplit(inputData);
     }
@@ -126,7 +126,7 @@ public abstract class HdfsAtomicDataAccessor extends Plugin implements ReadAcces
 
     @Override
     public boolean isThreadSafe() {
-        return HdfsUtilities.isThreadSafe(inputData.getDataSource(),
+        return HdfsUtilities.isThreadSafe(conf, inputData.getDataSource(),
         								  inputData.getUserProperty("COMPRESSION_CODEC"));
     }
 }

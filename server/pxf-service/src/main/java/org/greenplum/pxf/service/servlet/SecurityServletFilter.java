@@ -19,18 +19,6 @@ package org.greenplum.pxf.service.servlet;
  * under the License.
  */
 
-import java.io.IOException;
-import java.lang.reflect.UndeclaredThrowableException;
-import java.security.PrivilegedExceptionAction;
-
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -38,8 +26,13 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.service.SessionId;
 import org.greenplum.pxf.service.UGICache;
-import org.greenplum.pxf.service.utilities.SecureLogin;
 import org.greenplum.pxf.service.utilities.SecuredHDFS;
+
+import javax.servlet.*;
+import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.lang.reflect.UndeclaredThrowableException;
+import java.security.PrivilegedExceptionAction;
 
 /**
  * Listener on lifecycle events of our webapp

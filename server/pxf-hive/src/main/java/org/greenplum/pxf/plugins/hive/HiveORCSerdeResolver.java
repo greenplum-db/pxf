@@ -27,6 +27,7 @@ import org.apache.hadoop.mapred.JobConf;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.InputData;
+import org.greenplum.pxf.plugins.hdfs.ConfigurationCache;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 
 import java.util.*;
@@ -96,7 +97,8 @@ public class HiveORCSerdeResolver extends HiveResolver {
         serdeProperties.put(serdeConstants.LIST_COLUMN_TYPES, columnTypes.toString());
 
         deserializer = HiveUtilities.createDeserializer(serdeType);
-        deserializer.initialize(new JobConf(new Configuration(), HiveORCSerdeResolver.class), serdeProperties);
+        Configuration configuration = ConfigurationCache.getInstance().getConfiguration(inputData.getServerName());
+        deserializer.initialize(new JobConf(configuration, HiveORCSerdeResolver.class), serdeProperties);
     }
 
     private void parseColTypes(String[] cols, String[] output) {

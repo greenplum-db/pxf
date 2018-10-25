@@ -41,11 +41,11 @@ import java.util.ListIterator;
  */
 public abstract class HdfsSplittableDataAccessor extends Plugin implements
         ReadAccessor {
-    protected Configuration conf = null;
+    protected Configuration conf;
     protected RecordReader<Object, Object> reader = null;
-    protected InputFormat<?, ?> inputFormat = null;
+    protected InputFormat<?, ?> inputFormat;
     protected ListIterator<InputSplit> iter = null;
-    protected JobConf jobConf = null;
+    protected JobConf jobConf;
     protected Object key, data;
     protected boolean isDFS;
 
@@ -60,8 +60,8 @@ public abstract class HdfsSplittableDataAccessor extends Plugin implements
         super(input);
         inputFormat = inFormat;
 
-        // 1. Load Hadoop configuration defined in $HADOOP_HOME/conf/*.xml files
-        conf = new Configuration();
+        // 1. Load Hadoop configuration defined in $PXF_CONF/$serverName/*.xml files
+        conf = ConfigurationCache.getInstance().getConfiguration(input.getServerName());
 
         // 2. variable required for the splits iteration logic
         jobConf = new JobConf(conf, HdfsSplittableDataAccessor.class);
@@ -164,7 +164,7 @@ public abstract class HdfsSplittableDataAccessor extends Plugin implements
 
     @Override
     public boolean isThreadSafe() {
-        return HdfsUtilities.isThreadSafe(inputData.getDataSource(),
+        return HdfsUtilities.isThreadSafe(conf, inputData.getDataSource(),
                 inputData.getUserProperty("COMPRESSION_CODEC"));
     }
 

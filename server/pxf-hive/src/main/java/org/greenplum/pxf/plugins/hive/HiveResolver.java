@@ -27,6 +27,7 @@ import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.InputData;
 import org.greenplum.pxf.api.utilities.Plugin;
 import org.greenplum.pxf.api.utilities.Utilities;
+import org.greenplum.pxf.plugins.hdfs.ConfigurationCache;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.apache.commons.lang.CharUtils;
@@ -98,7 +99,7 @@ public class HiveResolver extends Plugin implements ReadResolver {
     public HiveResolver(InputData input) throws Exception {
         super(input);
 
-        conf = new Configuration();
+        conf = ConfigurationCache.getInstance().getConfiguration(inputData.getServerName());
         hiveDefaultPartName = HiveConf.getVar(conf,
                 HiveConf.ConfVars.DEFAULTPARTITIONNAME);
         LOG.debug("Hive's default partition name is " + hiveDefaultPartName);

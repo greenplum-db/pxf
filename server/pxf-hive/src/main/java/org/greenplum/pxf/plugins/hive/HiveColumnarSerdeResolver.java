@@ -28,6 +28,7 @@ import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.InputData;
 import org.greenplum.pxf.api.utilities.Utilities;
+import org.greenplum.pxf.plugins.hdfs.ConfigurationCache;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.greenplum.pxf.api.utilities.ProtocolData;
 import org.apache.commons.logging.Log;
@@ -136,8 +137,10 @@ public class HiveColumnarSerdeResolver extends HiveResolver {
         serdeProperties.put(serdeConstants.LIST_COLUMNS, columnNames.toString());
         serdeProperties.put(serdeConstants.LIST_COLUMN_TYPES, columnTypes.toString());
 
+        Configuration configuration = ConfigurationCache.getInstance().getConfiguration(inputData.getServerName());
+
         deserializer = HiveUtilities.createDeserializer(serdeType);
-        deserializer.initialize(new JobConf(new Configuration(), HiveColumnarSerdeResolver.class), serdeProperties);
+        deserializer.initialize(new JobConf(configuration, HiveColumnarSerdeResolver.class), serdeProperties);
     }
 
     /**
