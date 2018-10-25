@@ -136,11 +136,11 @@ function _main() {
 	start_hadoop_secure
 	install_pxf_client
 	install_pxf_server
+	init_and_configure_pxf_server
 	secure_pxf
 
 	create_gpdb_cluster
 	add_remote_user_access_for_gpdb "testuser"
-	init_and_configure_pxf_server
 	start_pxf_server
 
 	time run_regression_test
