@@ -6,6 +6,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 GPHOME="/usr/local/greenplum-db-devel"
 MASTER_HOSTNAME=$( < cluster_env_files/etc_hostfile grep "mdw.*" | awk '{print $2}')
 HADOOP_HOSTNAME="ccp-$(cat terraform_dataproc/name)-m"
+PXF_CONF_DIR="/home/gpadmin/pxf"
 
 cat << EOF
   ############################
@@ -53,6 +54,9 @@ function start_pxf_server() {
 	#Check if some other process is listening on 5888
 	netstat -tlpna | grep 5888 || true
 
+	su gpadmin -c "PXF_CONF=${PXF_CONF_DIR} source ~gpadmin/.bash_profile && ./bin/pxf init"
+
+
 	if [ "${IMPERSONATION}" == "false" ]; then
 		echo 'Impersonation is disabled, updating pxf-env.sh property'
 		su gpadmin -c "sed -i -e 's|^[[:blank:]]*export PXF_USER_IMPERSONATION=.*$|export PXF_USER_IMPERSONATION=false|g' \${PXF_HOME}/conf/pxf-env.sh"
@@ -63,7 +67,7 @@ function start_pxf_server() {
 	echo "---------------------PXF environment -------------------------"
 	cat \${PXF_HOME}/conf/pxf-env.sh
 
-	su gpadmin -c "source ~gpadmin/.bash_profile && ./bin/pxf init && ./bin/pxf start"
+	su gpadmin -c "source ~gpadmin/.bash_profile && ./bin/pxf start"
 	popd > /dev/null
 }
 
