@@ -26,12 +26,12 @@ function setup_pxf {
     # init, configure and start PXF as gpadmin
     ssh ${SSH_OPTS} gpadmin@${segment} "
         source ~gpadmin/.bash_profile &&
+        PXF_CONF=${PXF_CONF_DIR} ${PXF_HOME}/bin/pxf init &&
         sed -i -e 's/\(0.0.0.0\|localhost\|127.0.0.1\)/${hadoop_ip}/g' ${PXF_CONF_DIR}/servers/default/*-site.xml &&
         if [ ${IMPERSONATION} == false ]; then
             echo 'export PXF_USER_IMPERSONATION=false' >> ${PXF_CONF_DIR}/conf/pxf-env.sh
         fi &&
         echo 'export PXF_JVM_OPTS=\"${PXF_JVM_OPTS}\"' >> ${PXF_CONF_DIR}/conf/pxf-env.sh &&
-        PXF_CONF=${PXF_CONF_DIR} ${PXF_HOME}/bin/pxf init &&
         ${PXF_HOME}/bin/pxf start"
 }
 
