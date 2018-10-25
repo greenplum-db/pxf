@@ -35,7 +35,7 @@ required = ["golang.org/x/tools/cmd/goimports", "github.com/onsi/ginkgo/ginkgo"]
 
 [[constraint]]
   name = "github.com/greenplum-db/gp-common-go-libs"
-  branch = "master"
+  revision = "459655a5c915e633b3a15987ae469ab64b3405a4"
 
 [[override]]
   name = "gopkg.in/fsnotify.v1"

@@ -9,6 +9,7 @@ type HostnameRow = struct {
 func GetSegmentHosts() []string {
 	connection := dbconn.NewDBConnFromEnvironment("postgres")
 	connection.MustConnect(1)
+	defer connection.Close()
 
 	outputRows := make([]HostnameRow, 0)
 
