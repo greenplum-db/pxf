@@ -73,3 +73,15 @@ var _ = Describe("MakeValidCliInputs", func() {
 		Expect(inputs).To(BeNil())
 	})
 })
+
+var _ = Describe("RemoteCommandToRunOnSegments", func() {
+	It("constructs a list of shell args from the input", func() {
+		inputs := &pxf.CliInputs{
+			Gphome: "/test/gphome",
+			Args: []string{"init"},
+		}
+		expected := []string{"/test/gphome/pxf/bin/pxf", "init"}
+
+		Expect(pxf.RemoteCommandToRunOnSegments(inputs)).To(Equal(expected))
+	})
+})

@@ -31,3 +31,7 @@ func MakeValidCliInputs(args []string) (*CliInputs, error) {
 	}
 	return nil, errors.New(usageMessage)
 }
+
+func RemoteCommandToRunOnSegments(inputs *CliInputs) []string {
+	return []string{inputs.Gphome + "/pxf/bin/pxf", inputs.Args[0]}
+}

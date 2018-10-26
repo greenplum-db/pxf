@@ -17,11 +17,11 @@ func main() {
 	inputs, err := pxf.MakeValidCliInputs(os.Args)
 	fatalOnError(err)
 
-	remoteCommand := remoteCommandToRunOnSegments(inputs)
-	hosts, err := greenplum.GetSegmentHosts()
+	segments, err := greenplum.GetSegmentHosts()
 	fatalOnError(err)
 
-	out, err := gpssh.Command(hosts, remoteCommand).CombinedOutput()
+	remoteCommand := pxf.RemoteCommandToRunOnSegments(inputs)
+	out, err := gpssh.Command(segments, remoteCommand).CombinedOutput()
 	fmt.Println(string(out))
 	fatalOnError(err)
 }
@@ -30,8 +30,4 @@ func fatalOnError(err error) {
 	if err != nil {
 		log.Fatalln(err)
 	}
-}
-
-func remoteCommandToRunOnSegments(inputs *pxf.CliInputs) []string {
-	return []string{inputs.Gphome + "/pxf/bin/pxf", inputs.Args[0]}
 }
