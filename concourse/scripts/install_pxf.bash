@@ -48,14 +48,11 @@ EOF
 	echo "export HADOOP_HOME=/usr/hdp/\${HADOOP_VER}" | sudo tee -a ~centos/.bash_profile
 }
 
-function start_pxf_server() {
+function setup_pxf_env() {
 	pushd \${PXF_HOME} > /dev/null
 
 	#Check if some other process is listening on 5888
 	netstat -tlpna | grep 5888 || true
-
-	su gpadmin -c "PXF_CONF=${PXF_CONF_DIR} source ~gpadmin/.bash_profile && ./bin/pxf init"
-
 
 	if [ "${IMPERSONATION}" == "false" ]; then
 		echo 'Impersonation is disabled, updating pxf-env.sh property'
@@ -67,7 +64,6 @@ function start_pxf_server() {
 	echo "---------------------PXF environment -------------------------"
 	cat \${PXF_HOME}/conf/pxf-env.sh
 
-	su gpadmin -c "source ~gpadmin/.bash_profile && ./bin/pxf start"
 	popd > /dev/null
 }
 
@@ -144,7 +140,7 @@ function main() {
 	install_java
 	install_hadoop_client
 	setup_hadoop_client
-	start_pxf_server
+	setup_pxf_env
 }
 
 main
@@ -164,7 +160,9 @@ function run_pxf_installer_script() {
 	export MASTER_DATA_DIRECTORY=/data/gpdata/master/gpseg-1/ && \
 	gpconfig -c gp_hadoop_home -v '/usr/hdp/2.6.5.0-292' && \
 	gpconfig -c gp_hadoop_target_version -v 'hdp' && gpstop -u && \
-	gpssh -f ~gpadmin/segment_host_list -v -u centos -s -e 'sudo /home/centos/install_pxf.sh'"
+	gpssh -f ~gpadmin/segment_host_list -v -u centos -s -e 'sudo /home/centos/install_pxf.sh' && \
+	\$GPHOME/pxf/bin/pxf cluster init && \
+	\$GPHOME/pxf/bin/pxf cluster start"
 }
 
 function _main() {
