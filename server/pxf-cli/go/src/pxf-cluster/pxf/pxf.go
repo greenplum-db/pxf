@@ -7,32 +7,27 @@ import (
 
 type CliInputs struct {
 	Gphome string
-	Args []string
+	Args   []string
 }
 
-func MakeValidCliInputs(args []string) (error, *CliInputs) {
+func MakeValidCliInputs(args []string) (*CliInputs, error) {
+	usageMessage := "usage: pxf cluster {start|stop|restart|init|status}"
 	gphome, isGphomeSet := os.LookupEnv("GPHOME")
 	if !isGphomeSet {
-		return errors.New("GPHOME is not set"), nil
+		return nil, errors.New("GPHOME is not set")
 	}
 	if gphome == "" {
-		return errors.New("GPHOME is blank"), nil
+		return nil, errors.New("GPHOME is blank")
 	}
 	if len(args) != 2 {
-		return errors.New("Usage: pxf cluster {start|stop|restart|init|status}"), nil
+		return nil, errors.New(usageMessage)
 	}
-
-	return nil, &CliInputs{
-		Gphome: os.Getenv("GPHOME"),
-		Args: args[1:],
+	switch args[1] {
+	case "init", "start", "stop", "restart", "status":
+		return &CliInputs{
+			Gphome: os.Getenv("GPHOME"),
+			Args:   args[1:],
+		}, nil
 	}
+	return nil, errors.New(usageMessage)
 }
-//
-//func CommandForSegments(getEnv func(string) string, args []string) (error, []string) {
-//	return nil, nil
-//}
-//
-//pxf.CliLocation(os.GetEnv)
-//pxf.GetArgs(os.Args)
-//
-//pxf.CommandForSegment(os.getEnv, os.Args) -> /usr/local/greenplum/pxf/bin/pxf init
