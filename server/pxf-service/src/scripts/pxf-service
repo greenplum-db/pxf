@@ -414,8 +414,8 @@ function doStatus()
 
 function doCluster()
 {
-    shift # drop the 'cluster' arg
-    "$parent_script_dir/bin/pxf-cluster" "$@"
+	shift # drop the 'cluster' arg
+	"$parent_script_dir/bin/pxf-cluster" "$@"
 }
 
 command=$1
@@ -442,9 +442,9 @@ case "${pxf_script_command}" in
 		doStatus
 		;;
 	"cluster" )
-	    validateParameters
-	    doCluster "$@"
-	    ;;
+		validateParameters
+		doCluster "$@"
+		;;
 	* )
 		printUsage
 		exit 2
