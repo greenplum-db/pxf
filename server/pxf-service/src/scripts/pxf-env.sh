@@ -20,7 +20,7 @@ PXF_CONF="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
 # export PXF_JVM_OPTS="-Xmx2g -Xms1g"
 
 # Kerberos path to keytab file owned by pxf service with permissions 0400
-# export PXF_KEYTAB="${PXF_CONF}/conf/pxf.service.keytab"
+# export PXF_KEYTAB="${PXF_CONF}/keytabs/pxf.service.keytab"
 
 # Kerberos principal pxf service should use. _HOST is replaced automatically with hostnames FQDN
 # export PXF_PRINCIPAL="gpadmin/_HOST@EXAMPLE.COM"
