@@ -8,9 +8,9 @@ package org.greenplum.pxf.plugins.hive;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -30,7 +30,7 @@ import org.greenplum.pxf.api.utilities.InputData;
 import org.greenplum.pxf.plugins.hdfs.ConfigurationCache;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 
-import java.util.*;
+import java.util.Properties;
 
 /**
  * Specialized HiveResolver for a Hive table stored as RC file.
@@ -86,7 +86,7 @@ public class HiveORCSerdeResolver extends HiveResolver {
             if (!columnType.equals(hiveColTypes[i])) {
                 columnType = hiveColTypes[i];
             }
-            if(i > 0) {
+            if (i > 0) {
                 columnNames.append(delim);
                 columnTypes.append(delim);
             }
