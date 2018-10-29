@@ -12,3 +12,8 @@ RUN cd /tmp/pxf_src/server && make tar && \
     chown -R 1000:1000 /home/gpadmin/.m2 && \
     ln -s /home/gpadmin/.gradle /root/.gradle && \
     rm -rf /tmp/pxf_src
+
+RUN yum install -y go && \
+    GOPATH=/home/gpadmin/go go get github.com/golang/dep/cmd/dep && \
+    GOPATH=/home/gpadmin/go go get github.com/onsi/ginkgo/ginkgo && \
+    echo >>/home/gpadmin/.bash_profile 'export PATH="$PATH:/home/gpadmin/go/bin"'
