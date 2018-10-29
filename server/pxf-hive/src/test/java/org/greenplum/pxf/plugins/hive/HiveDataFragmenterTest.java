@@ -310,7 +310,7 @@ public class HiveDataFragmenterTest {
     private void prepareConstruction() throws Exception {
         inputData = mock(InputData.class);
 
-        hadoopConfiguration = ConfigurationCache.getInstance().getConfiguration(inputData.getServerName());
+        hadoopConfiguration = ConfigurationCache.getConfiguration(inputData.getServerName());
 
         jobConf = mock(JobConf.class);
         PowerMockito.whenNew(JobConf.class).withArguments(hadoopConfiguration, HiveDataFragmenter.class).thenReturn(jobConf);

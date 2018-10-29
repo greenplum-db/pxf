@@ -594,7 +594,7 @@ public class HiveUtilities {
     public static Reader getOrcReader(InputData inputData) {
         try {
             Path path = new Path(inputData.getDataSource());
-            Configuration configuration = ConfigurationCache.getInstance().getConfiguration(inputData.getServerName());
+            Configuration configuration = ConfigurationCache.getConfiguration(inputData.getServerName());
             Reader reader = OrcFile.createReader(path.getFileSystem(configuration), path);
 
             return reader;

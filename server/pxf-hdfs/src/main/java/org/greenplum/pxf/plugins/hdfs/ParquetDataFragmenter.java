@@ -50,7 +50,7 @@ public class ParquetDataFragmenter extends Fragmenter {
 
     public ParquetDataFragmenter(InputData md) {
         super(md);
-        Configuration configuration = ConfigurationCache.getInstance().getConfiguration(inputData.getServerName());
+        Configuration configuration = ConfigurationCache.getConfiguration(inputData.getServerName());
         JobConf jobConf = new JobConf(configuration, ParquetDataFragmenter.class);
         try {
             job = Job.getInstance(jobConf);

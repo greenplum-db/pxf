@@ -60,7 +60,6 @@ public class HiveMetadataFetcher extends MetadataFetcher {
         super(md);
 
         Configuration configuration = ConfigurationCache
-                .getInstance()
                 .getConfiguration(inputData != null ? inputData.getServerName() : "default");
 
         // init hive metastore client connection.

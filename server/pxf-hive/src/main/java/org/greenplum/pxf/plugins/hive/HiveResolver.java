@@ -99,7 +99,7 @@ public class HiveResolver extends Plugin implements ReadResolver {
     public HiveResolver(InputData input) throws Exception {
         super(input);
 
-        conf = ConfigurationCache.getInstance().getConfiguration(inputData.getServerName());
+        conf = ConfigurationCache.getConfiguration(inputData.getServerName());
         hiveDefaultPartName = HiveConf.getVar(conf,
                 HiveConf.ConfVars.DEFAULTPARTITIONNAME);
         LOG.debug("Hive's default partition name is " + hiveDefaultPartName);

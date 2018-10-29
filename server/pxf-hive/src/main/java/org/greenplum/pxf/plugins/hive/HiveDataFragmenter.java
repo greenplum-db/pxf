@@ -118,7 +118,7 @@ public class HiveDataFragmenter extends Fragmenter {
      */
     public HiveDataFragmenter(InputData inputData, Class<?> clazz) {
         super(inputData);
-        Configuration configuration = ConfigurationCache.getInstance().getConfiguration(inputData.getServerName());
+        Configuration configuration = ConfigurationCache.getConfiguration(inputData.getServerName());
         jobConf = new JobConf(configuration, clazz);
         client = HiveUtilities.initHiveClient();
         // canPushDownIntegral represents hive.metastore.integral.jdo.pushdown property in hive-site.xml

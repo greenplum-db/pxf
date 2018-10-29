@@ -61,7 +61,7 @@ public abstract class HdfsSplittableDataAccessor extends Plugin implements
         inputFormat = inFormat;
 
         // 1. Load Hadoop configuration defined in $PXF_CONF/$serverName/*.xml files
-        conf = ConfigurationCache.getInstance().getConfiguration(input.getServerName());
+        conf = ConfigurationCache.getConfiguration(input.getServerName());
 
         // 2. variable required for the splits iteration logic
         jobConf = new JobConf(conf, HdfsSplittableDataAccessor.class);

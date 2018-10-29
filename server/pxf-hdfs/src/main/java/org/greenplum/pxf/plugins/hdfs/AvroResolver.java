@@ -80,7 +80,7 @@ public class AvroResolver extends Plugin implements ReadResolver {
         Schema schema;
 
         if (isAvroFile()) {
-            Configuration configuration = ConfigurationCache.getInstance().getConfiguration(inputData.getServerName());
+            Configuration configuration = ConfigurationCache.getConfiguration(inputData.getServerName());
             schema = HdfsUtilities.getAvroSchema(configuration, input.getDataSource());
         } else {
             InputStream externalSchema = openExternalSchema();

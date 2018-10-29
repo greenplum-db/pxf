@@ -65,12 +65,6 @@ public class SecurityServletFilter implements Filter {
     public void init(FilterConfig filterConfig) {
         config = filterConfig;
         proxyUGICache = new UGICache();
-
-        // In Kerberized environments, we need to make sure ConfigurationCache instantiates
-        // the configuration with the principal and keytab. This is done when creating a the
-        // default configuration class. We are temporarily calling ConfigurationCache below
-        // to force initialization of keytab+principal
-        ConfigurationCache.getInstance().getConfiguration("default");
     }
 
     /**
@@ -110,6 +104,12 @@ public class SecurityServletFilter implements Filter {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Retrieving proxy user for session: " + session);
             }
+
+            // In Kerberized environments, we need to make sure ConfigurationCache instantiates
+            // the configuration with the principal and keytab. This is done when creating a the
+            // default configuration class. We are temporarily calling ConfigurationCache below
+            // to force initialization of keytab+principal
+            ConfigurationCache.getConfiguration("default");
 
             // Refresh Kerberos token when security is enabled
             String tokenString = getHeaderValue(request, DELEGATION_TOKEN_HEADER, false);

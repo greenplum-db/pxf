@@ -56,13 +56,14 @@ public class ConfigurationCache {
      * @param serverName An alias name for the server
      * @return the configuration for the given serverName
      */
-    public Configuration getConfiguration(String serverName) {
+    public static Configuration getConfiguration(String serverName) {
+        ConfigurationCache instance = getInstance();
         boolean configCreated = false;
-        Configuration config = cache.get(serverName);
+        Configuration config = instance.cache.get(serverName);
 
         if (config == null) {
-            synchronized (cache) {
-                if ((config = cache.get(serverName)) == null) {
+            synchronized (instance.cache) {
+                if ((config = instance.cache.get(serverName)) == null) {
                     config = new Configuration();
                     // For multiple host support, we can add different
                     // resources given the name of the server (i.e.)
@@ -70,7 +71,7 @@ public class ConfigurationCache {
                     // We can create a configuration without loading
                     // defaults = new Configuration(loadDefaults=false);
 
-                    cache.put(serverName, config);
+                    instance.cache.put(serverName, config);
                     configCreated = true;
                 }
             }
@@ -85,7 +86,7 @@ public class ConfigurationCache {
             }
         }
 
-        return cache.get(serverName);
+        return instance.cache.get(serverName);
     }
 
     /**
@@ -93,7 +94,7 @@ public class ConfigurationCache {
      *
      * @param config the configuration
      */
-    private void secureConfigurationIfAvailable(Configuration config) throws IOException {
+    private static void secureConfigurationIfAvailable(Configuration config) throws IOException {
         if (UserGroupInformation.isSecurityEnabled()) {
             LOG.info("Kerberos Security is enabled");
 

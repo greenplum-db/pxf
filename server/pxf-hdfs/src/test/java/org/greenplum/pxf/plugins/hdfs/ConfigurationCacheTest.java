@@ -9,22 +9,22 @@ public class ConfigurationCacheTest {
 
     @Test
     public void returnsNewConfiguration() {
-        Configuration configuration = ConfigurationCache.getInstance().getConfiguration("default");
+        Configuration configuration = ConfigurationCache.getConfiguration("default");
         assertNotNull(configuration);
     }
 
     @Test
     public void returnSameConfigurationForSameServer() {
-        Configuration configuration1 = ConfigurationCache.getInstance().getConfiguration("default");
-        Configuration configuration2 = ConfigurationCache.getInstance().getConfiguration("default");
+        Configuration configuration1 = ConfigurationCache.getConfiguration("default");
+        Configuration configuration2 = ConfigurationCache.getConfiguration("default");
 
         assertEquals(configuration1, configuration2);
     }
 
     @Test
     public void differentConfigurationForDifferentServers() {
-        Configuration defaultConfiguration = ConfigurationCache.getInstance().getConfiguration("default");
-        Configuration server1Configuration = ConfigurationCache.getInstance().getConfiguration("server1");
+        Configuration defaultConfiguration = ConfigurationCache.getConfiguration("default");
+        Configuration server1Configuration = ConfigurationCache.getConfiguration("server1");
 
         assertNotEquals(defaultConfiguration, server1Configuration);
     }
