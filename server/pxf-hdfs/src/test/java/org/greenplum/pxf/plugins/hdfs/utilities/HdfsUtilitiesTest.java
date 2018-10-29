@@ -59,7 +59,6 @@ public class HdfsUtilitiesTest {
     @Before
     public void SetupCompressionFactory() {
         factory = mock(CompressionCodecFactory.class);
-        Whitebox.setInternalState(HdfsUtilities.class, factory);
         Log = mock(Log.class);
         Whitebox.setInternalState(HdfsUtilities.class, Log);
     }
@@ -188,7 +187,7 @@ public class HdfsUtilitiesTest {
         Path path = new Path(pathName);
         when(factory.getCodec(path)).thenReturn(codec);
 
-        boolean result = HdfsUtilities.isSplittableCodec(conf, path);
+        boolean result = HdfsUtilities.isSplittableCodec(factory, path);
         assertEquals(description, result, expected);
     }
 

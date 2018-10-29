@@ -32,6 +32,7 @@ import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.mapred.JobConf;
 
+import org.greenplum.pxf.plugins.hdfs.ConfigurationCache;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -309,8 +310,7 @@ public class HiveDataFragmenterTest {
     private void prepareConstruction() throws Exception {
         inputData = mock(InputData.class);
 
-        hadoopConfiguration = mock(Configuration.class);
-        PowerMockito.whenNew(Configuration.class).withNoArguments().thenReturn(hadoopConfiguration);
+        hadoopConfiguration = ConfigurationCache.getInstance().getConfiguration(inputData.getServerName());
 
         jobConf = mock(JobConf.class);
         PowerMockito.whenNew(JobConf.class).withArguments(hadoopConfiguration, HiveDataFragmenter.class).thenReturn(jobConf);

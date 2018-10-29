@@ -8,9 +8,9 @@ package org.greenplum.pxf.plugins.hive;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -59,9 +59,13 @@ public class HiveMetadataFetcher extends MetadataFetcher {
     public HiveMetadataFetcher(InputData md) {
         super(md);
 
+        Configuration configuration = ConfigurationCache
+                .getInstance()
+                .getConfiguration(inputData != null ? inputData.getServerName() : "default");
+
         // init hive metastore client connection.
         client = HiveUtilities.initHiveClient();
-        jobConf = new JobConf(ConfigurationCache.getInstance().getConfiguration(inputData.getServerName()));
+        jobConf = new JobConf(configuration);
     }
 
     /**
@@ -81,18 +85,18 @@ public class HiveMetadataFetcher extends MetadataFetcher {
         boolean ignoreErrors = false;
         List<Metadata.Item> tblsDesc = HiveUtilities.extractTablesFromPattern(client, pattern);
 
-        if(tblsDesc == null || tblsDesc.isEmpty()) {
+        if (tblsDesc == null || tblsDesc.isEmpty()) {
             LOG.warn("No tables found for the given pattern: " + pattern);
             return null;
         }
 
         List<Metadata> metadataList = new ArrayList<Metadata>();
 
-        if(tblsDesc.size() > 1) {
+        if (tblsDesc.size() > 1) {
             ignoreErrors = true;
         }
 
-        for(Metadata.Item tblDesc: tblsDesc) {
+        for (Metadata.Item tblDesc : tblsDesc) {
             try {
                 Metadata metadata = new Metadata(tblDesc);
                 Table tbl = HiveUtilities.getHiveTable(client, tblDesc);
@@ -108,7 +112,7 @@ public class HiveMetadataFetcher extends MetadataFetcher {
                     formats.add(outputFormat);
                 }
                 //If table has no partitions - get single format of table
-                if (tablePartitions.size() == 0 ) {
+                if (tablePartitions.size() == 0) {
                     String inputFormat = tbl.getSd().getInputFormat();
                     OutputFormat outputFormat = getOutputFormat(inputFormat, hasComplexTypes);
                     formats.add(outputFormat);
@@ -119,7 +123,7 @@ public class HiveMetadataFetcher extends MetadataFetcher {
                 outputParameters.put(DELIM_FIELD, delimiterCode.toString());
                 metadata.setOutputParameters(outputParameters);
             } catch (UnsupportedTypeException | UnsupportedOperationException e) {
-                if(ignoreErrors) {
+                if (ignoreErrors) {
                     LOG.warn("Metadata fetch for " + tblDesc.toString() + " failed. " + e.getMessage());
                     continue;
                 } else {
