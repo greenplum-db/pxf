@@ -1,4 +1,4 @@
-package org.greenplum.pxf.service.utilities;
+package org.greenplum.pxf.plugins.hdfs.utilities;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one

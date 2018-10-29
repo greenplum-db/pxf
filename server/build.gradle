@@ -207,14 +207,9 @@ project('pxf-service') {
     }
     dependencies {
         providedCompile(project(':pxf-api'))
-        providedCompile "org.apache.hadoop:hadoop-common:$hadoopVersion"
-        providedCompile "org.apache.htrace:htrace-core4:$htraceVersion"
-        providedCompile "org.apache.hadoop:hadoop-hdfs:$hadoopVersion"
-        providedCompile "org.apache.hadoop:hadoop-hdfs-client:$hadoopVersion"
+        providedCompile(project(':pxf-hdfs'))
         providedCompile "org.apache.tomcat:tomcat-catalina:$tomcatVersion"
 
-
-        bundleJars "org.apache.hadoop:hadoop-auth:$hadoopVersion"
         bundleJars "commons-cli:commons-cli:1.2"
         bundleJars "commons-io:commons-io:2.4"
         bundleJars "com.google.guava:guava:11.0.2"
@@ -231,16 +226,17 @@ project('pxf-hdfs') {
     dependencies {
         compile(project(':pxf-api'))
         compile "org.apache.avro:avro-mapred:1.7.4"
-        compile "org.apache.hadoop:hadoop-mapreduce-client-core:$hadoopVersion"
-        compile "org.apache.hadoop:hadoop-yarn-api:$hadoopVersion" // Kerberos dependency
-        compile "org.apache.hadoop:hadoop-common:$hadoopVersion"
+        compile "org.apache.parquet:parquet-hadoop-bundle:$parquetVersion"
         compile "org.apache.htrace:htrace-core4:$htraceVersion"
 
+        compile "org.apache.hadoop:hadoop-common:$hadoopVersion"
         compile "org.apache.hadoop:hadoop-hdfs:$hadoopVersion"
         compile "org.apache.hadoop:hadoop-hdfs-client:$hadoopVersion"
-        compile "org.apache.parquet:parquet-hadoop-bundle:$parquetVersion"
+        compile "org.apache.hadoop:hadoop-mapreduce-client-core:$hadoopVersion"
+        compile "org.apache.hadoop:hadoop-yarn-api:$hadoopVersion" // Kerberos dependency
 
         bundleJars "org.apache.avro:avro:1.7.4"
+        bundleJars "org.apache.hadoop:hadoop-auth:$hadoopVersion"
     }
 }
 

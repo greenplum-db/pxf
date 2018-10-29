@@ -11,6 +11,12 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Caches Hadoop Configuration. We create a configuration per
+ * server once and maintain it in an internal cache.
+ * <p>
+ * The cache is implemented as a Singleton.
+ */
 public class ConfigurationCache {
 
     private static final Log LOG = LogFactory.getLog(ConfigurationCache.class);
@@ -21,10 +27,16 @@ public class ConfigurationCache {
     private static ConfigurationCache INSTANCE;
     private final Map<String, Configuration> cache;
 
+    /**
+     * Prevent class instantiation
+     */
     private ConfigurationCache() {
         cache = new HashMap<>();
     }
 
+    /**
+     * Returns the instance of the singleton ConfigurationCache
+     */
     public static ConfigurationCache getInstance() {
         if (INSTANCE == null) {
             synchronized (ConfigurationCache.class) {
@@ -36,29 +48,39 @@ public class ConfigurationCache {
         return INSTANCE;
     }
 
+    /**
+     * Returns the configuration for the corresponding serverName.
+     * If the configuration does not exist, it will create a new one
+     * and cache it by serverName.
+     *
+     * @param serverName An alias name for the server
+     * @return the configuration for the given serverName
+     */
     public Configuration getConfiguration(String serverName) {
+        boolean configCreated = false;
+        Configuration config = cache.get(serverName);
 
-        if (!cache.containsKey(serverName)) {
+        if (config == null) {
             synchronized (cache) {
-                if (!cache.containsKey(serverName)) {
-                    Configuration config = new Configuration();
-
+                if ((config = cache.get(serverName)) == null) {
+                    config = new Configuration();
                     // For multiple host support, we can add different
                     // resources given the name of the server (i.e.)
                     // config.addResource("server1/core-site.xml");
                     // We can create a configuration without loading
                     // defaults = new Configuration(loadDefaults=false);
 
-                    if (StringUtils.equals("default", serverName)) {
-                        try {
-                            secureConfigurationIfAvailable(config);
-                        } catch (Exception e) {
-                            LOG.error("PXF Configuration Failed: " + e.getMessage());
-                            throw new RuntimeException(e);
-                        }
-                    }
-
                     cache.put(serverName, config);
+                    configCreated = true;
+                }
+            }
+
+            if (configCreated && StringUtils.equals("default", serverName)) {
+                try {
+                    secureConfigurationIfAvailable(config);
+                } catch (Exception e) {
+                    LOG.error("PXF Configuration Failed: " + e.getMessage());
+                    throw new RuntimeException(e);
                 }
             }
         }
@@ -66,6 +88,11 @@ public class ConfigurationCache {
         return cache.get(serverName);
     }
 
+    /**
+     * Adds the principal and keytab to the configuration if Kerberos is enabled.
+     *
+     * @param config the configuration
+     */
     private void secureConfigurationIfAvailable(Configuration config) throws IOException {
         if (UserGroupInformation.isSecurityEnabled()) {
             LOG.info("Kerberos Security is enabled");

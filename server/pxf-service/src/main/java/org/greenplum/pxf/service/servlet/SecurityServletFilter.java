@@ -24,9 +24,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.greenplum.pxf.api.utilities.Utilities;
+import org.greenplum.pxf.plugins.hdfs.ConfigurationCache;
+import org.greenplum.pxf.plugins.hdfs.utilities.SecuredHDFS;
 import org.greenplum.pxf.service.SessionId;
 import org.greenplum.pxf.service.UGICache;
-import org.greenplum.pxf.service.utilities.SecuredHDFS;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
@@ -59,6 +60,12 @@ public class SecurityServletFilter implements Filter {
     public void init(FilterConfig filterConfig) {
         config = filterConfig;
         proxyUGICache = new UGICache();
+
+        // In Kerberized environments, we need to make sure ConfigurationCache instantiates
+        // the configuration with the principal and keytab. This is done when creating a the
+        // default configuration class. We are temporarily calling ConfigurationCache below
+        // to force initialization of keytab+principal
+        ConfigurationCache.getInstance().getConfiguration("default");
     }
 
     /**
