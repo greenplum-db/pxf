@@ -61,8 +61,11 @@ all:
 compile:
 	./gradlew compileJava && make -C $(PXF_CLI_MAKEFILE_LOCATION)
 
-test unittest:
-	./gradlew test && make -C $(PXF_CLI_MAKEFILE_LOCATION) test
+test-cli:
+	make -C $(PXF_CLI_MAKEFILE_LOCATION) test
+
+test unittest: test-cli
+	./gradlew test
 
 tar:
 	./gradlew tar $(BUILD_PARAMS)

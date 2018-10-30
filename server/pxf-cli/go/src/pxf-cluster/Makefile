@@ -1,11 +1,13 @@
 .PHONY: depend build test
 .DEFAULT_GOAL := build
 
+GOPATH=$(shell pwd)/../..
+
 depend:
-	@GOPATH=$(shell pwd)/../.. dep ensure -v
+	@GOPATH=$(GOPATH) dep ensure -v
 
 build: depend
-	@GOPATH=$(shell pwd)/../.. go build
+	@GOPATH=$(GOPATH) go build
 
 test:
-	@GOPATH=$(shell pwd)/../.. ginkgo test
+	@GOPATH=$(GOPATH) ginkgo test

@@ -356,7 +356,7 @@ task tomcatGet << {
 }
 
 task buildCli(type: Exec) {
-    commandLine('make', '-C', 'pxf-cli/go/src/pxf-cluster', 'depend', 'test', 'build')
+    commandLine('make', '-C', 'pxf-cli/go/src/pxf-cluster', 'depend', 'build')
 }
 
 task assemble(type: Copy, dependsOn: [subprojects.jar, project(':pxf-service').war, subprojects.copyRuntimeDependencies, tomcatGet, buildCli])  {
