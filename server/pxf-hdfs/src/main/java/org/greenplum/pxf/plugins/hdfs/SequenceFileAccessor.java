@@ -98,7 +98,9 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor {
 
         Path parent = file.getParent();
         if (!fs.exists(parent)) {
-            fs.mkdirs(parent);
+            if (!fs.mkdirs(parent)) {
+                throw new IOException("Creation of dir '" + parent.toString() + "' failed");
+            }
             LOG.debug("Created new dir {}", parent);
         } else {
             LOG.debug("Directory {} already exists. Skip creating", parent);

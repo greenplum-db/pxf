@@ -95,6 +95,7 @@ public class SequenceFileAccessorTest {
 
         when(mockConfigurationFactory.initConfiguration("default", map)).thenReturn(mockConfiguration);
         when(file.getFileSystem(mockConfiguration)).thenReturn(fs);
+        when(fs.mkdirs(Mockito.any(Path.class))).thenReturn(true);
         when(requestContext.getDataSource()).thenReturn("deep.throat");
         when(requestContext.getSegmentId()).thenReturn(0);
 

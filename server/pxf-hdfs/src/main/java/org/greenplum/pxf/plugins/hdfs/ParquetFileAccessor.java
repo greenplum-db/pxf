@@ -198,7 +198,9 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
         }
         Path parent = file.getParent();
         if (!fs.exists(parent)) {
-            fs.mkdirs(parent);
+            if (!fs.mkdirs(parent)) {
+                throw new IOException("Creation of dir '" + parent.toString() + "' failed");
+            }
             LOG.debug("Created new dir {}", parent);
         }
 
