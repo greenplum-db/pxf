@@ -231,7 +231,7 @@ function configureWebapp()
     sed -i -e "s:secondaryClasspathFiles=\"[a-zA-Z0-9\/\;.-]*\":secondaryClasspathFiles=\"${PXF_HOME}\/conf\/pxf-public.classpath\":" ${context_file}
 
     web_file=${instance_root}/${instance_name}/webapps/pxf/WEB-INF/web.xml
-    sed -i -e "s:<param-value>.*pxf-log4j.properties<\/param-value>:<param-value>${PXF_CONFIG_DIR}\/conf\/pxf-log4j.properties<\/param-value>:" ${web_file}
+    sed -i -e "s:<param-value>.*pxf-log4j.properties<\/param-value>:<param-value>${PXF_CONF}\/conf\/pxf-log4j.properties<\/param-value>:" ${web_file}
 
     # set port
     catalinaProperties=${instance_root}/${instance_name}/conf/catalina.properties
