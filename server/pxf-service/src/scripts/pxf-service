@@ -442,7 +442,6 @@ case "${command}" in
 		doStatus
 		;;
 	"cluster" )
-		validateParameters
 		doCluster "$@"
 		;;
 	* )
