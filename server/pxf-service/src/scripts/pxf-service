@@ -423,7 +423,7 @@ command=$1
 validate_user
 validate_system
 
-case "${pxf_script_command}" in
+case "${command}" in
 	"init" )
 		doInit
 		;;
