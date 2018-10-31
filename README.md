@@ -40,6 +40,27 @@ cd ~/workspace
 git clone https://github.com/greenplum-db/pxf.git
 ```
 
+## Install Dependencies
+
+To build PXF, you must have:
+
+- JDK 1.8+
+- Go (1.9 or later)
+
+To install Go on CentOS, `sudo yum install go`.
+
+For other platforms, see the [Go downloads page](https://golang.org/dl/).
+
+Once you have installed Go, you will need the `dep` and `ginkgo` tools, which install Go dependencies and run Go tests,
+respectively. Assuming `go` is on your `PATH`, you can run:
+
+```
+go get github.com/golang/dep/cmd/dep
+go get github.com/onsi/ginkgo/ginkgo
+```
+
+to install them.
+
 ## How to Build
 PXF uses gradle for build and has a wrapper makefile for abstraction
 ```bash
@@ -52,14 +73,11 @@ make
 make unittest
 ```
 
-## Prerequisites
-In order to demonstrate end to end functionality you will need JDK, GPDB and Hadoop installed. 
-
-### JDK
-JDK version 1.8+ is recommended.
+## Demonstrating Hadoop Integration
+In order to demonstrate end to end functionality you will need GPDB and Hadoop installed.
 
 ### Hadoop
-We have all the related hadoop components(hdfs,hive,hbase,zookeeper,etc) mapped into simple artifact named singlecluster. 
+We have all the related hadoop components (hdfs, hive, hbase, zookeeper, etc) mapped into simple artifact named singlecluster.
 You can [download from here](http://storage.googleapis.com/pxf-public/singlecluster-HDP.tar.gz) and untar the `singlecluster-HDP.tar.gz` file, which contains everything needed to run Hadoop.
 
 ```bash
@@ -84,12 +102,12 @@ You'll end up with a directory structure like this:
 ```
 
 If you already have GPDB installed and running using the instructions shown in the [GPDB README](https://github.com/greenplum-db/gpdb), 
-you can ignore the ```Setup GPDB``` section below and simply follow the steps in  ```Setup Hadoop``` and ```Setup PXF```
+you can ignore the `Setup GPDB` section below and simply follow the steps in  `Setup Hadoop` and `Setup PXF`
 
-If you don't wish to use docker, make sure you manually install JDK.  
+If you don't wish to use docker, make sure you manually install JDK.
 
 ## Development With Docker
-NOTE: Since the docker container will house all Single cluster Hadoop, Greenplum and PXF, we recommend that you have atleast 4 cpus and 6GB memory allocated to Docker. These settings are available under docker preferences.
+NOTE: Since the docker container will house all Single cluster Hadoop, Greenplum and PXF, we recommend that you have at least 4 cpus and 6GB memory allocated to Docker. These settings are available under docker preferences.
 
 The following commands run the docker container and set up and switch to user gpadmin.
 
@@ -171,6 +189,7 @@ popd
 ```
 
 ### Setup PXF
+
 Install PXF Server
 ```bash
 # Install PXF

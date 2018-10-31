@@ -1,22 +1,9 @@
 # `pxf cluster` CLI
 
-## Getting Started (on CentOS 6)
+## Getting Started
 
-1. Install go
-   ```
-   yum install -y go
-   ```
-
-1. Add the go binaries path to the current path (you may want to add the following to your .bash_profile)
-   ```
-   export PATH="$PATH:/home/$(whoami)/go/bin"
-   ```
-
-1. Install the `dep` package manager and `ginkgo` test runner
-   ```
-   go get github.com/golang/dep/cmd/dep
-   go get github.com/onsi/ginkgo/ginkgo
-   ```
+1. Ensure you are set up for PXF development by following the README.md at the
+   root of this repository.
 
 1. Go to the pxf-cluster folder and install dependencies
    ```
