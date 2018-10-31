@@ -148,17 +148,14 @@ function install_pxf_client() {
 }
 
 function install_pxf_server() {
-    # Relies on the working directory being /tmp/build/<sha>/
     if [ ! -d ${PXF_HOME} ]; then
         if [ -d pxf_tarball ]; then
-            # during release pipeline, install from tarball
             tar -xzf pxf_tarball/pxf.tar.gz -C ${GPHOME}
         else
-            # dev pipeline: build from source
             export BUILD_NUMBER="${TARGET_OS}"
             export JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8
             pushd pxf_src/server
-            su - gpadmin -c "make -C '$(pwd)' install"
+            make install
             popd
         fi
         chown -R gpadmin:gpadmin ${PXF_HOME}
