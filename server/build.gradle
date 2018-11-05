@@ -264,13 +264,13 @@ project('pxf-hive') {
 
 project('pxf-json') {
     dependencies {
-      compile(project(':pxf-hdfs'))
-      compile(project(':pxf-api'))
-      testCompile 'pl.pragmatists:JUnitParams:1.0.2'
+        compile(project(':pxf-hdfs'))
+        compile(project(':pxf-api'))
+        testCompile 'pl.pragmatists:JUnitParams:1.0.2'
     }
 
-    task create_tweets_tgz(type: Exec){
-      commandLine 'tar', '-zcf', 'src/test/resources/tweets.tar.gz', '-C', 'src/test/resources', 'tweets-pp.json'
+    task create_tweets_tgz(type: Exec) {
+        commandLine 'tar', '-zcf', 'src/test/resources/tweets.tar.gz', '-C', 'src/test/resources', 'tweets-pp.json'
     }
 
     tasks['test'].dependsOn('create_tweets_tgz')
@@ -358,7 +358,7 @@ task buildCli(type: Exec) {
     commandLine('make', '-C', 'pxf-cli/go/src/pxf-cluster', 'depend', 'build')
 }
 
-task assemble(type: Copy, dependsOn: [subprojects.jar, project(':pxf-service').war, subprojects.copyRuntimeDependencies, tomcatGet, buildCli])  {
+task assemble(type: Copy, dependsOn: [subprojects.jar, project(':pxf-service').war, subprojects.copyRuntimeDependencies, tomcatGet, buildCli]) {
     into "build/stage"
     subprojects { project ->
         from("${project.name}/build/libs") { into 'lib' }
@@ -369,6 +369,9 @@ task assemble(type: Copy, dependsOn: [subprojects.jar, project(':pxf-service').w
         into 'bin'
         fileMode 0755
         rename('pxf-service', 'pxf')
+        filter {
+            String line -> line.replaceAll("GRADLE_PRINT_PXF_VERSION", "echo PXF version ${version}")
+        }
     }
     from("pxf-cli/go/src/pxf-cluster/pxf-cluster") {
         into 'bin'
@@ -394,7 +397,7 @@ task tar(type: Tar, dependsOn: [assemble]) {
     from assemble.outputs.files
 }
 
-task install (type: Copy, dependsOn: [assemble]) {
+task install(type: Copy, dependsOn: [assemble]) {
     from assemble.outputs.files
     into System.properties['deployPath']
 }

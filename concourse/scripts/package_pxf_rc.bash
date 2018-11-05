@@ -15,7 +15,7 @@ EOF
 cat > smoke_test_gpdb_component <<EOF
 #!/bin/bash
 set -x
-\$GPHOME/pxf/bin/pxf 2>&1 | grep "pxf {start|stop|restart|init|status}" || exit 1
+\$GPHOME/pxf/bin/pxf version 2>&1 | grep "PXF version ${VERSION}" || exit 1
 EOF
 chmod +x install_gpdb_component smoke_test_gpdb_component
 cp pxf_tarball/pxf.tar.gz .

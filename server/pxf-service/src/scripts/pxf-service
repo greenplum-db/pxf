@@ -335,7 +335,7 @@ function setup_conf_directory()
 
 function printUsage()
 {
-    echo $"Usage: $0 {start|stop|restart|init|status} [-y]"
+    echo $"Usage: $0 {start|stop|restart|init|status|version|cluster} [subcommands] [-y]"
 }
 
 function validate_system()
@@ -351,6 +351,50 @@ function validate_system()
     if [ $? -ne 0 ]; then
         fail "unzip is not installed, please install"
     fi
+}
+
+# doVersion handles the version command
+# the string below will be replaced with 'echo <correct-version>' during the build process
+doVersion() {
+	GRADLE_PRINT_PXF_VERSION
+	exit 0
+}
+
+# doHelp handles the help command
+doHelp() {
+	local normal=$(tput sgr0)
+	local bold=$(tput bold)
+	local tab=$(printf '\t')
+	printUsage
+	cat <<-EOF
+
+	${bold}start${normal}:
+	${tab}Start the local instance of pxf
+
+	${bold}stop${normal}:
+	${tab}Stop the local instance of pxf
+
+	${bold}restart${normal}:
+	${tab}Restart the local instance of pxf
+
+	${bold}init${normal}:
+	${tab}Initialize the local instance of pxf
+
+	${bold}status${normal}:
+	${tab}Query the status of the local instance of pxf
+
+	${bold}version${normal}:
+	${tab}Print the version of pxf
+
+	${bold}cluster {start|stop|restart|init|status}${normal}:
+	${tab}Issue a command for the entire cluster, takes a subcommand
+
+	${bold}Bypass ${bold}PXF_CONF${normal} verification during init${normal}:
+	${tab}When ${bold}PXF_CONF${normal} is not set, avoid confirmation of using \$HOME/pxf as ${bold}PXF_CONF${normal} with ${bold}-y${normal}
+	${tab}Note: ${bold}cluster init${normal} does not take this flag, ${bold}PXF_CONF${normal} must be set
+
+	EOF
+	exit 0
 }
 
 # doInit handles the init command
@@ -427,27 +471,33 @@ validate_user
 validate_system
 
 case "${pxf_script_command}" in
-	"init" )
-		if [ "$2" == "-y" ] || [ "$2" == "-Y" ]; then
+	'init' )
+		if [[ $2 == -y ]] || [[ $2 == -Y ]]; then
 			silent=true
 		fi
 		doInit
 		;;
-	"start" )
+	'start' )
 		doStart
 		;;
-	"stop" )
+	'stop' )
 		doStop
 		;;
-	"restart" )
+	'restart' )
 		doStop
 		sleep 1s
 		doStart
 		;;
-	"status" )
+	'status' )
 		doStatus
 		;;
-	"cluster" )
+	'help' )
+		doHelp
+		;;
+	'version' )
+		doVersion
+		;;
+	'cluster' )
 		doCluster "$@"
 		;;
 	* )

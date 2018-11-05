@@ -16,14 +16,53 @@ cat << EOF
   ############################
 EOF
 
-function create_pxf_installer_script() {
-cat > /tmp/install_pxf.sh <<-EOFF
+function create_pxf_installer_scripts() {
+cat > /tmp/configure_pxf.sh <<EOFF
 #!/bin/bash
 
 set -euxo pipefail
 
 GPHOME=/usr/local/greenplum-db-devel
 PXF_HOME="\${GPHOME}/pxf"
+PXF_CONF_DIR="/home/gpadmin/pxf"
+
+function setup_pxf_env() {
+	pushd \${PXF_HOME} > /dev/null
+
+	#Check if some other process is listening on 5888
+	netstat -tlpna | grep 5888 || true
+
+	if [ "${IMPERSONATION}" == "false" ]; then
+		echo 'Impersonation is disabled, updating pxf-env.sh property'
+		su gpadmin -c "sed -i -e 's|^[[:blank:]]*export PXF_USER_IMPERSONATION=.*$|export PXF_USER_IMPERSONATION=false|g' \${PXF_CONF_DIR}/conf/pxf-env.sh"
+	fi
+
+	su gpadmin -c "sed -i -e 's|^[[:blank:]]*export PXF_JVM_OPTS=.*$|export PXF_JVM_OPTS=\"${PXF_JVM_OPTS}\"|g' \${PXF_CONF_DIR}/conf/pxf-env.sh"
+
+	echo "---------------------PXF environment -------------------------"
+	cat \${PXF_CONF_DIR}/conf/pxf-env.sh
+
+	popd > /dev/null
+}
+
+function main() {
+	rm -rf \$PXF_CONF_DIR/servers/default/core-site.xml \$PXF_CONF_DIR/servers/default/hdfs-site.xml
+	cp /etc/hadoop/conf/core-site.xml /etc/hadoop/conf/hdfs-site.xml \$PXF_CONF_DIR/servers/default/
+	setup_pxf_env
+}
+
+main
+
+EOFF
+
+cat > /tmp/install_pxf_dependencies.sh <<EOFF
+#!/bin/bash
+
+set -euxo pipefail
+
+GPHOME=/usr/local/greenplum-db-devel
+PXF_HOME="\${GPHOME}/pxf"
+PXF_CONF_DIR="/home/gpadmin/pxf"
 export HADOOP_VER=2.6.5.0-292
 
 function install_java() {
@@ -46,25 +85,6 @@ EOF
 	echo "export HADOOP_VERSION=\${HADOOP_VER}" | sudo tee -a ~gpadmin/.bash_profile
 	echo "export HADOOP_HOME=/usr/hdp/\${HADOOP_VER}" | sudo tee -a ~gpadmin/.bash_profile
 	echo "export HADOOP_HOME=/usr/hdp/\${HADOOP_VER}" | sudo tee -a ~centos/.bash_profile
-}
-
-function setup_pxf_env() {
-	pushd \${PXF_HOME} > /dev/null
-
-	#Check if some other process is listening on 5888
-	netstat -tlpna | grep 5888 || true
-
-	if [ "${IMPERSONATION}" == "false" ]; then
-		echo 'Impersonation is disabled, updating pxf-env.sh property'
-		su gpadmin -c "sed -i -e 's|^[[:blank:]]*export PXF_USER_IMPERSONATION=.*$|export PXF_USER_IMPERSONATION=false|g' \${PXF_HOME}/conf/pxf-env.sh"
-	fi
-
-	su gpadmin -c "sed -i -e 's|^[[:blank:]]*export PXF_JVM_OPTS=.*$|export PXF_JVM_OPTS=${PXF_JVM_OPTS}|g' \${PXF_HOME}/conf/pxf-env.sh"
-
-	echo "---------------------PXF environment -------------------------"
-	cat \${PXF_HOME}/conf/pxf-env.sh
-
-	popd > /dev/null
 }
 
 function setup_hadoop_client() {
@@ -125,10 +145,25 @@ EOF
 	</property>
 </configuration>
 EOF
-    rm -rf \$PXF_HOME/conf/core-site.xml \$PXF_HOME/conf/hdfs-site.xml
-    cp /etc/hadoop/conf/core-site.xml \$PXF_HOME/conf/core-site.xml
-    cp /etc/hadoop/conf/hdfs-site.xml \$PXF_HOME/conf/hdfs-site.xml
 }
+
+function main() {
+	install_java
+	install_hadoop_client
+	setup_hadoop_client
+}
+
+main
+
+EOFF
+
+cat > /tmp/install_pxf.sh <<EOFF
+#!/bin/bash
+
+set -euxo pipefail
+
+GPHOME=/usr/local/greenplum-db-devel
+PXF_HOME="\${GPHOME}/pxf"
 
 function main() {
 	# Reserve port 5888 for PXF service
@@ -136,40 +171,36 @@ function main() {
 
 	tar -xzf pxf_tarball/pxf.tar.gz -C \${GPHOME}
 	chown -R gpadmin:gpadmin \${PXF_HOME}
-
-	install_java
-	install_hadoop_client
-	setup_hadoop_client
-	setup_pxf_env
 }
 
 main
 
 EOFF
-	chmod +x /tmp/install_pxf.sh
-	scp /tmp/install_pxf.sh "${MASTER_HOSTNAME}:~gpadmin/install_pxf.sh"
+
+	chmod +x /tmp/install_pxf_dependencies.sh /tmp/configure_pxf.sh /tmp/install_pxf.sh
+	scp /tmp/install_pxf_dependencies.sh /tmp/configure_pxf.sh /tmp/install_pxf.sh "${MASTER_HOSTNAME}:~gpadmin/"
 }
 
-function run_pxf_installer_script() {
+function run_pxf_installer_scripts() {
 	ssh "${MASTER_HOSTNAME}" "bash -c \"\
-	source /usr/local/greenplum-db-devel/greenplum_path.sh && \
-	gpscp -f ~gpadmin/segment_host_list -v -r ~gpadmin/pxf_tarball centos@=:/home/centos && \
-	gpscp -f ~gpadmin/segment_host_list -v ~gpadmin/install_pxf.sh centos@=:/home/centos
-	\""
-	ssh "${MASTER_HOSTNAME}" "source /usr/local/greenplum-db-devel/greenplum_path.sh && \
+	source ${GPHOME}/greenplum_path.sh && \
 	export MASTER_DATA_DIRECTORY=/data/gpdata/master/gpseg-1/ && \
 	gpconfig -c gp_hadoop_home -v '/usr/hdp/2.6.5.0-292' && \
 	gpconfig -c gp_hadoop_target_version -v 'hdp' && gpstop -u && \
-	gpssh -f ~gpadmin/segment_host_list -v -u centos -s -e 'sudo /home/centos/install_pxf.sh' && \
-	\$GPHOME/pxf/bin/pxf cluster init && \
-	\$GPHOME/pxf/bin/pxf cluster start"
+	gpscp -f ~gpadmin/hostfile_all -v -r ~gpadmin/pxf_tarball centos@=:/home/centos && \
+	gpscp -f ~gpadmin/hostfile_all -v ~gpadmin/{install_pxf_dependencies,configure_pxf,install_pxf}.sh centos@=:/home/centos && \
+	gpssh -f ~gpadmin/hostfile_init -v -u centos -s -e 'sudo /home/centos/install_pxf_dependencies.sh' && \
+	gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e 'sudo /home/centos/install_pxf.sh' && \
+	PXF_CONF=${PXF_CONF_DIR} ${GPHOME}/pxf/bin/pxf cluster init && \
+	gpssh -f ~gpadmin/hostfile_init -v -u centos -s -e 'sudo /home/centos/configure_pxf.sh' && \
+	${GPHOME}/pxf/bin/pxf cluster start \
+	\""
 }
 
 function _main() {
-	scp cluster_env_files/hostfile_init "${MASTER_HOSTNAME}:~gpadmin/segment_host_list"
-	scp -r pxf_tarball "${MASTER_HOSTNAME}:~gpadmin/"
-	create_pxf_installer_script
-	run_pxf_installer_script
+	scp -r pxf_tarball cluster_env_files/* "${MASTER_HOSTNAME}:~gpadmin/"
+	create_pxf_installer_scripts
+	run_pxf_installer_scripts
 }
 
 _main
