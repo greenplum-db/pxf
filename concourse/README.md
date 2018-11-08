@@ -1,7 +1,7 @@
 # Deploy pxf-docker-images pipeline
 ```
 fly -t ud set-pipeline \
-    -c ~/workspace/pxf/concourse/docker-images.yml \
+    -c ~/workspace/pxf/concourse/pipelines/docker-images.yml \
     -l ~/workspace/gp-continuous-integration/secrets/gpdb-release-secrets.dev.yml \
     -v pxf-git-remote=https://github.com/greenplum-db/pxf.git \
     -p gpdb_pxf_docker-images
@@ -11,10 +11,10 @@ fly -t ud set-pipeline \
 The following commands would create two PXF pipelines - one for **gpdb_master** and the other for **5X_STABLE**
 ```
 fly -t ud set-pipeline \
-    -c ~/workspace/pxf/concourse/pxf_pipeline.yml \
+    -c ~/workspace/pxf/concourse/pipelines/pxf_pipeline.yml \
     -l ~/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
     -l ~/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud.yml \
-    -l ~/workspace/pxf/concourse/pxf-multinode-params.yml \
+    -l ~/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
     -v folder-prefix=prod/gpdb_branch -v test-env= \
     -v gpdb-branch=master -v icw_green_bucket=gpdb5-assert-concourse-builds \
     -p pxf_master
@@ -22,10 +22,10 @@ fly -t ud set-pipeline \
 
 ```
 fly -t ud set-pipeline \
-    -c ~/workspace/pxf/concourse/pxf_pipeline.yml \
+    -c ~/workspace/pxf/concourse/pipelines/pxf_pipeline.yml \
     -l ~/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
     -l ~/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud.yml \
-    -l ~/workspace/pxf/concourse/pxf-multinode-params.yml \
+    -l ~/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
     -v folder-prefix=prod/gpdb_branch -v test-env= \
     -v gpdb-branch=5X_STABLE -v icw_green_bucket=gpdb5-stable-concourse-builds \
     -p pxf_5X_STABLE 
@@ -35,7 +35,7 @@ fly -t ud set-pipeline \
 
 ```
 fly -t ud set-pipeline \
-    -c ~/workspace/pxf/concourse/pxf_pr_pipeline.yml \
+    -c ~/workspace/pxf/concourse/pipelines/pxf_pr_pipeline.yml \
     -l ~/workspace/gp-continuous-integration/secrets/gpdb-release-secrets.dev.yml \
     -l ~/workspace/gp-continuous-integration/secrets/gpdb_master-ci-secrets.yml \
     -v folder-prefix=dev/pivotal-default -v test-env=dev -v gpdb-branch=master \
@@ -67,7 +67,7 @@ fly -t ud set-pipeline \
     -c ~/workspace/pxf/concourse/pipelines/perf_pipeline.yml \
     -l ~/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
     -l ~/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud.yml \
-    -l ~/workspace/pxf/concourse/perf-settings.yml \
+    -l ~/workspace/pxf/concourse/settings/perf-settings.yml \
     -v gpdb-branch=master -v icw_green_bucket=gpdb5-assert-concourse-builds \
     -v pxf-git-branch=master -p pxf_perf
 ```
@@ -79,10 +79,11 @@ the name of your development pipeline (i.e. `-p dev:<YOUR-PIPELINE>`).
 50G Performance pipeline:
 
 ```
-fly -t ud set-pipeline -c ~/workspace/pxf/concourse/pipelines/perf_pipeline.yml \
+fly -t ud set-pipeline \
+    -c ~/workspace/pxf/concourse/pipelines/perf_pipeline.yml \
     -l ~/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
     -l ~/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud.yml \
-    -l ~/workspace/pxf/concourse/perf-settings-50g.yml \
+    -l ~/workspace/pxf/concourse/settings/perf-settings-50g.yml \
     -v gpdb-branch=master -v icw_green_bucket=gpdb5-assert-concourse-builds \
     -v pxf-git-branch=master -p pxf_perf-50g
 ```
@@ -90,10 +91,11 @@ fly -t ud set-pipeline -c ~/workspace/pxf/concourse/pipelines/perf_pipeline.yml 
 500G Performance pipeline:
 
 ```
-fly -t ud set-pipeline -c ~/workspace/pxf/concourse/pipelines/perf_pipeline.yml \
+fly -t ud set-pipeline \
+    -c ~/workspace/pxf/concourse/pipelines/perf_pipeline.yml \
     -l ~/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
     -l ~/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud.yml \
-    -l ~/workspace/pxf/concourse/perf-settings-500g.yml \
+    -l ~/workspace/pxf/concourse/settings/perf-settings-500g.yml \
     -v gpdb-branch=master -v icw_green_bucket=gpdb5-assert-concourse-builds \
     -v pxf-git-branch=master -p pxf_perf-500g
 ```

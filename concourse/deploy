@@ -54,15 +54,14 @@ fi
 echo "Deploying ${PIPELINE_NAME} pipeline with custom values from ${YML_FILE} ..."
 
 cmd="fly -t ${TARGET} set-pipeline \
-    -c ~/workspace/pxf/concourse/pxf_pipeline.yml \
+    -c ~/workspace/pxf/concourse/pipelines/pxf_pipeline.yml \
     -l ~/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
     -l ~/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud.yml \
-    -l ~/workspace/pxf/concourse/pxf-multinode-params.yml \
+    -l ~/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
     -l ${YML_FILE} \
     -v folder-prefix=${PREFIX} -v test-env=${TEST_ENV} \
     -v gpdb-branch=${BRANCH} -v icw_green_bucket=${ICW_GREEN_BUCKET} \
     -p ${PIPELINE_NAME}"
-
 
 echo "${cmd}"
 
