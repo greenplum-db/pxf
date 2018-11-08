@@ -29,6 +29,7 @@ fi
 # dev pipeline
 if [[ "${DEPLOY_ENV}" == "dev" ]]; then
     CONFIG=${3:-${USER}}
+    FEATURE=${3:-""}
 
     if [ ! "${CONFIG}" == "${USER}" ]; then
         CONFIG="${USER}-${CONFIG}"
@@ -37,6 +38,9 @@ if [[ "${DEPLOY_ENV}" == "dev" ]]; then
     # Copy default.yml if config file does not exist
     if [ ! -f ./${YML_FILE} ]; then
         cp ./default.yml ./${YML_FILE}
+        if [ ! -z "${FEATURE}" ]; then
+            sed -i -e "s/pxf-git-branch: master/pxf-git-branch: ${FEATURE}/g" ./${YML_FILE}
+        fi
     fi
     TEST_ENV="dev"
     PREFIX="dev/${CONFIG}"
