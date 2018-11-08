@@ -24,7 +24,7 @@ public class ConfigurationCache {
     private static final String CONFIG_KEY_SERVICE_PRINCIPAL = "pxf.service.kerberos.principal";
     private static final String CONFIG_KEY_SERVICE_KEYTAB = "pxf.service.kerberos.keytab";
 
-    private static ConfigurationCache INSTANCE;
+    private static ConfigurationCache INSTANCE = new ConfigurationCache();
     private final Map<String, Configuration> cache;
 
     /**
@@ -32,20 +32,6 @@ public class ConfigurationCache {
      */
     private ConfigurationCache() {
         cache = new HashMap<>();
-    }
-
-    /**
-     * Returns the instance of the singleton ConfigurationCache
-     */
-    public static ConfigurationCache getInstance() {
-        if (INSTANCE == null) {
-            synchronized (ConfigurationCache.class) {
-                if (INSTANCE == null) {
-                    INSTANCE = new ConfigurationCache();
-                }
-            }
-        }
-        return INSTANCE;
     }
 
     /**
@@ -57,13 +43,12 @@ public class ConfigurationCache {
      * @return the configuration for the given serverName
      */
     public static Configuration getConfiguration(String serverName) {
-        ConfigurationCache instance = getInstance();
         boolean configCreated = false;
-        Configuration config = instance.cache.get(serverName);
+        Configuration config = INSTANCE.cache.get(serverName);
 
         if (config == null) {
-            synchronized (instance.cache) {
-                if ((config = instance.cache.get(serverName)) == null) {
+            synchronized (INSTANCE.cache) {
+                if ((config = INSTANCE.cache.get(serverName)) == null) {
                     config = new Configuration();
                     // For multiple host support, we can add different
                     // resources given the name of the server (i.e.)
@@ -71,7 +56,7 @@ public class ConfigurationCache {
                     // We can create a configuration without loading
                     // defaults = new Configuration(loadDefaults=false);
 
-                    instance.cache.put(serverName, config);
+                    INSTANCE.cache.put(serverName, config);
                     configCreated = true;
                 }
             }
@@ -86,7 +71,7 @@ public class ConfigurationCache {
             }
         }
 
-        return instance.cache.get(serverName);
+        return new Configuration(INSTANCE.cache.get(serverName));
     }
 
     /**

@@ -14,14 +14,6 @@ public class ConfigurationCacheTest {
     }
 
     @Test
-    public void returnSameConfigurationForSameServer() {
-        Configuration configuration1 = ConfigurationCache.getConfiguration("default");
-        Configuration configuration2 = ConfigurationCache.getConfiguration("default");
-
-        assertEquals(configuration1, configuration2);
-    }
-
-    @Test
     public void differentConfigurationForDifferentServers() {
         Configuration defaultConfiguration = ConfigurationCache.getConfiguration("default");
         Configuration server1Configuration = ConfigurationCache.getConfiguration("server1");

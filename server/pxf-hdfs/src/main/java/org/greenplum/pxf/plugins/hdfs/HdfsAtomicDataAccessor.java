@@ -49,9 +49,9 @@ import java.net.URI;
  * reading does not support splitting: a protocol-buffer file, regular file, ...
  */
 public abstract class HdfsAtomicDataAccessor extends Plugin implements ReadAccessor {
-    private Configuration conf = null;
-    protected InputStream inp = null;
-    private FileSplit fileSplit = null;
+    private Configuration conf;
+    protected InputStream inp;
+    private FileSplit fileSplit;
 
     /**
      * Constructs a HdfsAtomicDataAccessor object.
@@ -62,7 +62,7 @@ public abstract class HdfsAtomicDataAccessor extends Plugin implements ReadAcces
         // 0. Hold the configuration data
         super(input);
 
-        // 1. Load Hadoop configuration defined in $PXF_CONF/$serverName/*.xml files
+        // 1. Load Hadoop configuration defined in $PXF_CONF/servers/$serverName/*.xml files
         conf = ConfigurationCache.getConfiguration(input.getServerName());
 
         fileSplit = HdfsUtilities.parseFileSplit(inputData);

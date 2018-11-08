@@ -65,7 +65,6 @@ public class HiveDataFragmenterTest {
     public void construction() throws Exception {
         prepareConstruction();
         fragmenter = new HiveDataFragmenter(inputData);
-        PowerMockito.verifyNew(JobConf.class).withArguments(hadoopConfiguration, HiveDataFragmenter.class);
         PowerMockito.verifyNew(HiveMetaStoreClient.class).withArguments(hiveConfiguration);
     }
 

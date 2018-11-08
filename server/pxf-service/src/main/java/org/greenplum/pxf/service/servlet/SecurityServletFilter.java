@@ -23,6 +23,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.greenplum.pxf.api.utilities.InputData;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hdfs.ConfigurationCache;
 import org.greenplum.pxf.plugins.hdfs.utilities.SecuredHDFS;
@@ -109,7 +110,7 @@ public class SecurityServletFilter implements Filter {
             // the configuration with the principal and keytab. This is done when creating a the
             // default configuration class. We are temporarily calling ConfigurationCache below
             // to force initialization of keytab+principal
-            ConfigurationCache.getConfiguration("default");
+            ConfigurationCache.getConfiguration(InputData.DEFAULT_SERVER_NAME);
 
             // Refresh Kerberos token when security is enabled
             String tokenString = getHeaderValue(request, DELEGATION_TOKEN_HEADER, false);

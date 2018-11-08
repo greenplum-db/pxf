@@ -34,6 +34,8 @@ import java.util.Map;
  */
 public class InputData {
 
+    public static final String DEFAULT_SERVER_NAME = "default";
+
     public static final String DELIMITER_KEY = "DELIMITER";
     public static final String USER_PROP_PREFIX = "X-GP-OPTIONS-";
     public static final int INVALID_SPLIT_IDX = -1;
@@ -64,7 +66,7 @@ public class InputData {
      * this be the name of the configured server, which we will then use
      * to build a path for the config files (i.e. $PATH_TO_CONFIG/$serverName/*.xml
      */
-    String serverName;
+    private String serverName = DEFAULT_SERVER_NAME;
 
     /**
      * When false the bridge has to run in synchronized mode. default value -
@@ -380,17 +382,21 @@ public class InputData {
 
     /**
      * Returns the name of the server in a multi-HCFS setup
+     *
      * @return the name of the server, or "default" if null
      */
     public String getServerName() {
-        return StringUtils.isBlank(serverName) ? "default" : serverName;
+        return serverName;
     }
 
     /**
      * Sets the name of the server in a multi-HCFS setup
+     *
      * @param serverName the name of the server
      */
     public void setServerName(String serverName) {
-        this.serverName = serverName;
+        if (StringUtils.isNotBlank(serverName)) {
+            this.serverName = serverName;
+        }
     }
 }

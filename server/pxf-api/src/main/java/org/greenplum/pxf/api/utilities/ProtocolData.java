@@ -108,7 +108,7 @@ public class ProtocolData extends InputData {
         parseThreadSafe();
         parseRemoteCredentials();
 
-        serverName = getUserProperty("SERVER");
+        setServerName(getUserProperty("SERVER"));
 
         dataFragment = INVALID_SPLIT_IDX;
         parseDataFragment(getOptionalProperty("DATA-FRAGMENT"));

@@ -42,9 +42,9 @@ import java.util.ListIterator;
 public abstract class HdfsSplittableDataAccessor extends Plugin implements
         ReadAccessor {
     protected Configuration conf;
-    protected RecordReader<Object, Object> reader = null;
+    protected RecordReader<Object, Object> reader;
     protected InputFormat<?, ?> inputFormat;
-    protected ListIterator<InputSplit> iter = null;
+    protected ListIterator<InputSplit> iter;
     protected JobConf jobConf;
     protected Object key, data;
     protected boolean isDFS;
