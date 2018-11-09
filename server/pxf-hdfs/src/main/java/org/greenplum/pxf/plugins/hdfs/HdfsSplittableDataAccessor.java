@@ -20,13 +20,17 @@ package org.greenplum.pxf.plugins.hdfs;
  */
 
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.mapred.FileSplit;
+import org.apache.hadoop.mapred.InputFormat;
+import org.apache.hadoop.mapred.InputSplit;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.RecordReader;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.ReadAccessor;
 import org.greenplum.pxf.api.utilities.InputData;
 import org.greenplum.pxf.api.utilities.Plugin;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.mapred.*;
 
 import java.io.IOException;
 import java.util.LinkedList;
@@ -41,11 +45,11 @@ import java.util.ListIterator;
  */
 public abstract class HdfsSplittableDataAccessor extends Plugin implements
         ReadAccessor {
-    protected Configuration conf = null;
-    protected RecordReader<Object, Object> reader = null;
-    protected InputFormat<?, ?> inputFormat = null;
-    protected ListIterator<InputSplit> iter = null;
-    protected JobConf jobConf = null;
+    protected Configuration conf;
+    protected RecordReader<Object, Object> reader;
+    protected InputFormat<?, ?> inputFormat;
+    protected ListIterator<InputSplit> iter;
+    protected JobConf jobConf;
     protected Object key, data;
     protected boolean isDFS;
 
@@ -60,8 +64,8 @@ public abstract class HdfsSplittableDataAccessor extends Plugin implements
         super(input);
         inputFormat = inFormat;
 
-        // 1. Load Hadoop configuration defined in $HADOOP_HOME/conf/*.xml files
-        conf = new Configuration();
+        // 1. Load Hadoop configuration defined in $PXF_CONF/server/$serverName/*.xml files
+        conf = inputData.getConfiguration();
 
         // 2. variable required for the splits iteration logic
         jobConf = new JobConf(conf, HdfsSplittableDataAccessor.class);
@@ -164,7 +168,9 @@ public abstract class HdfsSplittableDataAccessor extends Plugin implements
 
     @Override
     public boolean isThreadSafe() {
-        return HdfsUtilities.isThreadSafe(inputData.getDataSource(),
+        return HdfsUtilities.isThreadSafe(
+                inputData.getConfiguration(),
+                inputData.getDataSource(),
                 inputData.getUserProperty("COMPRESSION_CODEC"));
     }
 

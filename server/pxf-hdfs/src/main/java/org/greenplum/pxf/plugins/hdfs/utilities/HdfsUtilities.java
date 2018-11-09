@@ -19,11 +19,6 @@ package org.greenplum.pxf.plugins.hdfs.utilities;
  * under the License.
  */
 
-import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.api.OneField;
-import org.greenplum.pxf.api.utilities.FragmentMetadata;
-import org.greenplum.pxf.api.utilities.InputData;
-import org.greenplum.pxf.api.utilities.Utilities;
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.generic.GenericDatumReader;
@@ -40,11 +35,18 @@ import org.apache.hadoop.io.compress.CompressionCodecFactory;
 import org.apache.hadoop.io.compress.SplittableCompressionCodec;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.util.ReflectionUtils;
-import org.greenplum.pxf.plugins.hdfs.ParquetUserData;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.MessageTypeParser;
+import org.greenplum.pxf.api.OneField;
+import org.greenplum.pxf.api.io.DataType;
+import org.greenplum.pxf.api.utilities.FragmentMetadata;
+import org.greenplum.pxf.api.utilities.InputData;
+import org.greenplum.pxf.api.utilities.Utilities;
+import org.greenplum.pxf.plugins.hdfs.ParquetUserData;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.util.List;
 
 /**
@@ -52,9 +54,6 @@ import java.util.List;
  */
 public class HdfsUtilities {
     private static final Log LOG = LogFactory.getLog(HdfsUtilities.class);
-    private static Configuration config = new Configuration();
-    private static CompressionCodecFactory factory = new CompressionCodecFactory(
-            config);
 
     /**
      * Hdfs data sources are absolute data paths. Method ensures that dataSource
@@ -102,9 +101,10 @@ public class HdfsUtilities {
      * @param path path of file to get codec for
      * @return matching codec class for the path. null if no codec is needed.
      */
-    private static Class<? extends CompressionCodec> getCodecClassByPath(String path) {
+    private static Class<? extends CompressionCodec> getCodecClassByPath(Configuration config, String path) {
 
         Class<? extends CompressionCodec> codecClass = null;
+        CompressionCodecFactory factory = new CompressionCodecFactory(config);
         CompressionCodec codec = factory.getCodec(new Path(path));
         if (codec != null) {
             codecClass = codec.getClass();
@@ -121,7 +121,7 @@ public class HdfsUtilities {
      * @param path path of the file to be read
      * @return if the codec needed for reading the specified path is splittable.
      */
-    public static boolean isSplittableCodec(Path path) {
+    public static boolean isSplittableCodec(CompressionCodecFactory factory, Path path) {
 
         final CompressionCodec codec = factory.getCodec(path);
         if (null == codec) {
@@ -134,14 +134,16 @@ public class HdfsUtilities {
     /**
      * Checks if requests should be handle in a single thread or not.
      *
+     * @param config the configuration parameters object
      * @param dataDir hdfs path to the data source
      * @param compCodec the fully qualified name of the compression codec
      * @return if the request can be run in multi-threaded mode.
      */
-    public static boolean isThreadSafe(String dataDir, String compCodec) {
+    public static boolean isThreadSafe(Configuration config, String dataDir, String compCodec) {
 
-        Class<? extends CompressionCodec> codecClass = (compCodec != null) ? HdfsUtilities.getCodecClass(
-                config, compCodec) : HdfsUtilities.getCodecClassByPath(dataDir);
+        Class<? extends CompressionCodec> codecClass = (compCodec != null) ?
+                HdfsUtilities.getCodecClass(config, compCodec) :
+                HdfsUtilities.getCodecClassByPath(config, dataDir);
         /* bzip2 codec is not thread safe */
         return (codecClass == null || !BZip2Codec.class.isAssignableFrom(codecClass));
     }

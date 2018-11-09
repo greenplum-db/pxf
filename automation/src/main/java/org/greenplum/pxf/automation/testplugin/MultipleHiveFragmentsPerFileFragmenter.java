@@ -49,7 +49,7 @@ public class MultipleHiveFragmentsPerFileFragmenter extends Fragmenter {
 
     public MultipleHiveFragmentsPerFileFragmenter(InputData metaData, Class<?> clazz) {
         super(metaData);
-        jobConf = new JobConf(new Configuration(), clazz);
+        jobConf = new JobConf(inputData.getConfiguration(), clazz);
         client = HiveUtilities.initHiveClient();
     }
 

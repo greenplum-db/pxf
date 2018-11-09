@@ -22,12 +22,6 @@ package org.greenplum.pxf.plugins.hdfs;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.FileSplit;
-import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.ReadAccessor;
-import org.greenplum.pxf.api.utilities.InputData;
-import org.greenplum.pxf.api.utilities.Plugin;
-import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
-
 import org.apache.parquet.column.page.PageReadStore;
 import org.apache.parquet.example.data.Group;
 import org.apache.parquet.example.data.simple.convert.GroupRecordConverter;
@@ -37,6 +31,11 @@ import org.apache.parquet.io.ColumnIOFactory;
 import org.apache.parquet.io.MessageColumnIO;
 import org.apache.parquet.io.RecordReader;
 import org.apache.parquet.schema.MessageType;
+import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.ReadAccessor;
+import org.greenplum.pxf.api.utilities.InputData;
+import org.greenplum.pxf.api.utilities.Plugin;
+import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -156,7 +155,7 @@ public class ParquetFileAccessor extends Plugin implements ReadAccessor {
 
     @Override
     public boolean openForRead() throws Exception {
-        Configuration conf = new Configuration();
+        Configuration conf = inputData.getConfiguration();
         Path file = new Path(inputData.getDataSource());
         FileSplit fileSplit = HdfsUtilities.parseFileSplit(inputData);
         setSchema(HdfsUtilities.parseParquetUserData(inputData).getSchema());

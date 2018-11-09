@@ -20,6 +20,14 @@ package org.greenplum.pxf.plugins.hdfs;
  */
 
 
+import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.io.BinaryDecoder;
+import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.DecoderFactory;
+import org.apache.hadoop.io.BytesWritable;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.ReadResolver;
@@ -29,16 +37,6 @@ import org.greenplum.pxf.api.utilities.Plugin;
 import org.greenplum.pxf.plugins.hdfs.utilities.DataSchemaException;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.RecordkeyAdapter;
-
-import org.apache.avro.Schema;
-import org.apache.avro.generic.GenericData;
-import org.apache.avro.generic.GenericDatumReader;
-import org.apache.avro.generic.GenericRecord;
-import org.apache.avro.io.BinaryDecoder;
-import org.apache.avro.io.DatumReader;
-import org.apache.avro.io.DecoderFactory;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.io.BytesWritable;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -80,7 +78,7 @@ public class AvroResolver extends Plugin implements ReadResolver {
         Schema schema;
 
         if (isAvroFile()) {
-            schema = HdfsUtilities.getAvroSchema(new Configuration(), input.getDataSource());
+            schema = HdfsUtilities.getAvroSchema(inputData.getConfiguration(), input.getDataSource());
         } else {
             InputStream externalSchema = openExternalSchema();
             try {

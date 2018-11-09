@@ -27,7 +27,9 @@ import org.greenplum.pxf.api.ReadAccessor;
 import org.greenplum.pxf.api.ReadVectorizedResolver;
 import org.greenplum.pxf.api.StatsAccessor;
 
+import java.io.File;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -39,6 +41,29 @@ public class Utilities {
     private static final Log LOG = LogFactory.getLog(Utilities.class);
 
     private static final String PROPERTY_KEY_USER_IMPERSONATION = "pxf.service.user.impersonation.enabled";
+
+    /**
+     * Validation for directory names that can be created
+     * for the server configuration directory.
+     *
+     * @param name
+     * @return true if valid, false otherwise
+     */
+    public static boolean isValidDirectoryName(String name) {
+        if (StringUtils.isBlank(name) ||
+                name.contains("/") ||
+                name.contains("\\") ||
+                name.startsWith(".") ||
+                name.contains(" ") ||
+                name.contains(";")) return false;
+        File file = new File(name);
+        try {
+            file.getCanonicalPath();
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
+    }
 
     /**
      * Creates an object using the class name. The class name has to be a class

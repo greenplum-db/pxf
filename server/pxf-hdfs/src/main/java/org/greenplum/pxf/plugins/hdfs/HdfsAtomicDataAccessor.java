@@ -20,15 +20,15 @@ package org.greenplum.pxf.plugins.hdfs;
  */
 
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapred.FileSplit;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.ReadAccessor;
 import org.greenplum.pxf.api.utilities.InputData;
 import org.greenplum.pxf.api.utilities.Plugin;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapred.FileSplit;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -63,7 +63,7 @@ public abstract class HdfsAtomicDataAccessor extends Plugin implements ReadAcces
         super(input);
 
         // 1. Load Hadoop configuration defined in $HADOOP_HOME/conf/*.xml files
-        conf = new Configuration();
+        conf = inputData.getConfiguration();
 
         fileSplit = HdfsUtilities.parseFileSplit(inputData);
     }
@@ -126,7 +126,9 @@ public abstract class HdfsAtomicDataAccessor extends Plugin implements ReadAcces
 
     @Override
     public boolean isThreadSafe() {
-        return HdfsUtilities.isThreadSafe(inputData.getDataSource(),
-        								  inputData.getUserProperty("COMPRESSION_CODEC"));
+        return HdfsUtilities.isThreadSafe(
+                inputData.getConfiguration(),
+                inputData.getDataSource(),
+                inputData.getUserProperty("COMPRESSION_CODEC"));
     }
 }

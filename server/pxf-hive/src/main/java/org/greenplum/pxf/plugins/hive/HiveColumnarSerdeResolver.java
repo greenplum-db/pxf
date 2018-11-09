@@ -137,7 +137,7 @@ public class HiveColumnarSerdeResolver extends HiveResolver {
         serdeProperties.put(serdeConstants.LIST_COLUMN_TYPES, columnTypes.toString());
 
         deserializer = HiveUtilities.createDeserializer(serdeType);
-        deserializer.initialize(new JobConf(new Configuration(), HiveColumnarSerdeResolver.class), serdeProperties);
+        deserializer.initialize(new JobConf(inputData.getConfiguration(), HiveColumnarSerdeResolver.class), serdeProperties);
     }
 
     /**

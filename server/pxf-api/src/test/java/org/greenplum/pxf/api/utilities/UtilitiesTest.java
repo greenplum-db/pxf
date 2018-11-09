@@ -111,6 +111,27 @@ public class UtilitiesTest {
     }
 
     @Test
+    public void invalidDirectoryName() {
+        assertFalse(Utilities.isValidDirectoryName(null));
+        assertFalse(Utilities.isValidDirectoryName("\0"));
+        assertFalse(Utilities.isValidDirectoryName("a/a"));
+        assertFalse(Utilities.isValidDirectoryName("."));
+        assertFalse(Utilities.isValidDirectoryName(".."));
+        assertFalse(Utilities.isValidDirectoryName("abc ac"));
+        assertFalse(Utilities.isValidDirectoryName("abc;ac"));
+        assertFalse(Utilities.isValidDirectoryName("\\"));
+    }
+
+    @Test
+    public void validDirectoryName() {
+        assertTrue(Utilities.isValidDirectoryName("pxf"));
+        assertTrue(Utilities.isValidDirectoryName("\uD83D\uDE0A"));
+    }
+
+
+
+
+    @Test
     public void byteArrayToOctalStringNull() throws Exception {
         StringBuilder sb = null;
         byte[] bytes = "nofink".getBytes();

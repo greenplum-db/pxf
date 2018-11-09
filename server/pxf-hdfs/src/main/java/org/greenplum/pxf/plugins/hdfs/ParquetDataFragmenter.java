@@ -52,7 +52,7 @@ public class ParquetDataFragmenter extends Fragmenter {
 
     public ParquetDataFragmenter(InputData md) {
         super(md);
-        JobConf jobConf = new JobConf(new Configuration(), ParquetDataFragmenter.class);
+        JobConf jobConf = new JobConf(inputData.getConfiguration(), ParquetDataFragmenter.class);
         try {
             job = Job.getInstance(jobConf);
         } catch (IOException e) {

@@ -320,5 +320,7 @@ public class HiveDataFragmenterTest {
 
         hiveClient = mock(HiveMetaStoreClient.class);
         PowerMockito.whenNew(HiveMetaStoreClient.class).withArguments(hiveConfiguration).thenReturn(hiveClient);
+
+        PowerMockito.when(inputData.getConfiguration()).thenReturn(hadoopConfiguration);
     }
 }

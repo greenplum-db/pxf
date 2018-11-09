@@ -96,7 +96,7 @@ public class HiveORCSerdeResolver extends HiveResolver {
         serdeProperties.put(serdeConstants.LIST_COLUMN_TYPES, columnTypes.toString());
 
         deserializer = HiveUtilities.createDeserializer(serdeType);
-        deserializer.initialize(new JobConf(new Configuration(), HiveORCSerdeResolver.class), serdeProperties);
+        deserializer.initialize(new JobConf(inputData.getConfiguration(), HiveORCSerdeResolver.class), serdeProperties);
     }
 
     private void parseColTypes(String[] cols, String[] output) {

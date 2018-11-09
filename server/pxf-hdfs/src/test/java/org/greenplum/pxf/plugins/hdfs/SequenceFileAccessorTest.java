@@ -94,9 +94,10 @@ public class SequenceFileAccessorTest {
     	PowerMockito.mockStatic(HdfsUtilities.class);
 		PowerMockito.whenNew(Path.class).withArguments(Mockito.anyString()).thenReturn(file);
 
+		when(inputData.getConfiguration()).thenReturn(new Configuration());
         when(file.getFileSystem(any(Configuration.class))).thenReturn(fs);
         when(inputData.getDataSource()).thenReturn("deep.throat");
-        when(inputData.getSegmentId()).thenReturn(0);             	
+        when(inputData.getSegmentId()).thenReturn(0);
         when(FileContext.getFileContext()).thenReturn(fc);
     }
 

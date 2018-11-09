@@ -20,23 +20,37 @@ package org.greenplum.pxf.api.utilities;
  */
 
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configuration;
 
-import java.util.Map;
+import java.io.File;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Map;
 
 
 /**
  * Common configuration available to all PXF plugins. Represents input data
- * coming from client applications, such as Gpdb or GPDB.
+ * coming from client applications, such as GPDB.
  */
 public class InputData {
+
+    public static final String DEFAULT_SERVER_NAME = "default";
+    public static final String PXF_CONF_PROPERTY = "pxf.conf";
 
     public static final String DELIMITER_KEY = "DELIMITER";
     public static final String USER_PROP_PREFIX = "X-GP-OPTIONS-";
     public static final int INVALID_SPLIT_IDX = -1;
     private static final Log LOG = LogFactory.getLog(InputData.class);
+    private static final String SERVER_CONFIG_DIR_PREFIX =
+            System.getProperty(PXF_CONF_PROPERTY) +
+                    File.pathSeparator +
+                    "servers" +
+                    File.pathSeparator;
 
     protected Map<String, String> requestParametersMap;
     protected ArrayList<ColumnDescriptor> tupleDescription;
@@ -57,6 +71,13 @@ public class InputData {
     protected int dataFragment; /* should be deprecated */
     private EnumAggregationType aggType;
     private int fragmentIndex;
+    protected String user;
+
+    /**
+     * The name of the server to access. The name will be used to build
+     * a path for the config files (i.e. $PXF_CONF/servers/$serverName/*.xml)
+     */
+    private String serverName = DEFAULT_SERVER_NAME;
 
     /**
      * When false the bridge has to run in synchronized mode. default value -
@@ -370,4 +391,81 @@ public class InputData {
         this.numAttrsProjected = numAttrsProjected;
     }
 
+    /**
+     * Returns the name of the server in a multi-server setup
+     *
+     * @return the name of the server
+     */
+    public String getServerName() {
+        return serverName;
+    }
+
+    /**
+     * Sets the name of the server in a multi-server setup.
+     * If the name is blank, it is defaulted to "default"
+     *
+     * @param serverName the name of the server
+     */
+    public void setServerName(String serverName) {
+        if (StringUtils.isNotBlank(serverName)) {
+            this.serverName = serverName;
+        }
+    }
+
+    /**
+     * Returns identity of the end-user making the request.
+     *
+     * @return userid
+     */
+    public String getUser() {
+        return user;
+    }
+
+    /**
+     * Returns a configuration object that applies server-specific configurations
+     */
+    public Configuration getConfiguration() {
+
+        // start with built-in Hadoop configuration that loads core-site.xml
+        Configuration configuration = new Configuration();
+
+        // add all other *-site.xml files from default cluster will be added as "default" resources
+        // by JobConf class or other Hadoop libraries on as-needed basis
+
+        if (DEFAULT_SERVER_NAME.equals(serverName)) {
+            return configuration;
+        }
+
+        // determine full path for server configuration directory
+        String directoryName = SERVER_CONFIG_DIR_PREFIX + serverName;
+        File serverDirectory = new File(directoryName);
+        if (!serverDirectory.exists()) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Directory " + directoryName + " does not exist");
+            }
+            return configuration;
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Using directory " + directoryName + " for server " + serverName + " configuration");
+        }
+        addSiteFilesAsResources(configuration, serverDirectory);
+
+        return configuration;
+    }
+
+    private void addSiteFilesAsResources(Configuration configuration, File directory) {
+        // add all *-site.xml files inside the server config directory as configuration resources
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(directory.toPath(), "*-site.xml")) {
+            for (Path path : stream) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("adding configuration resource from " + path.toUri().toURL());
+                }
+                configuration.addResource(path.toUri().toURL());
+            }
+        } catch (Exception e) {
+            LOG.error("Unable to read configuration for server " + serverName + " from " + directory.getAbsolutePath(), e);
+            throw new RuntimeException("Unable to read configuration for server " + serverName + " from " + directory.getAbsolutePath(), e);
+        }
+    }
 }

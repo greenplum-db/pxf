@@ -22,7 +22,6 @@ package org.greenplum.pxf.plugins.hdfs;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -81,7 +80,7 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor implements
         String compressCodec = inputData.getUserProperty("COMPRESSION_CODEC");
         CompressionCodec codec = null;
 
-        conf = new Configuration();
+        conf = inputData.getConfiguration();
         fs = FileSystem.get(conf);
 
         // get compression codec

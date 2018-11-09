@@ -28,6 +28,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -268,10 +269,14 @@ public class HiveMetadataFetcherTest {
     }
 
     private void prepareConstruction() throws Exception {
+        inputData = mock(InputData.class);
+
         hiveConfiguration = mock(HiveConf.class);
         PowerMockito.whenNew(HiveConf.class).withNoArguments().thenReturn(hiveConfiguration);
 
         hiveClient = mock(HiveMetaStoreClient.class);
         PowerMockito.whenNew(HiveMetaStoreClient.class).withArguments(hiveConfiguration).thenReturn(hiveClient);
+
+        PowerMockito.when(inputData.getConfiguration()).thenReturn(new Configuration());
     }
 }

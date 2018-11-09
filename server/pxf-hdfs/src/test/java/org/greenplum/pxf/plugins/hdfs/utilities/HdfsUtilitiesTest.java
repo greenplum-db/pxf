@@ -59,7 +59,6 @@ public class HdfsUtilitiesTest {
     @Before
     public void SetupCompressionFactory() {
         factory = mock(CompressionCodecFactory.class);
-        Whitebox.setInternalState(HdfsUtilities.class, factory);
         Log = mock(Log.class);
         Whitebox.setInternalState(HdfsUtilities.class, Log);
     }
@@ -151,8 +150,8 @@ public class HdfsUtilitiesTest {
     private void testIsThreadSafe(String testDescription, String path, String codecStr, CompressionCodec codec, boolean expectedResult) {
         prepareDataForIsThreadSafe(path, codecStr, codec);
 
-        boolean result = HdfsUtilities.isThreadSafe(path, codecStr);
-        assertTrue(testDescription, result == expectedResult);
+        boolean result = HdfsUtilities.isThreadSafe(conf, path, codecStr);
+        assertEquals(testDescription, expectedResult, result);
     }
 
     private void prepareDataForIsThreadSafe(String dataDir, String codecStr, CompressionCodec codec) {
@@ -188,7 +187,7 @@ public class HdfsUtilitiesTest {
         Path path = new Path(pathName);
         when(factory.getCodec(path)).thenReturn(codec);
 
-        boolean result = HdfsUtilities.isSplittableCodec(path);
+        boolean result = HdfsUtilities.isSplittableCodec(factory, path);
         assertEquals(description, result, expected);
     }
 

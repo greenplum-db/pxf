@@ -22,7 +22,12 @@ package org.greenplum.pxf.plugins.hdfs.utilities;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapred.*;
+import org.apache.hadoop.io.compress.CompressionCodecFactory;
+import org.apache.hadoop.mapred.FileInputFormat;
+import org.apache.hadoop.mapred.InputSplit;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.RecordReader;
+import org.apache.hadoop.mapred.Reporter;
 
 import java.io.IOException;
 
@@ -47,7 +52,7 @@ public class PxfInputFormat extends FileInputFormat {
      */
     @Override
     protected boolean isSplitable(FileSystem fs, Path filename) {
-        return HdfsUtilities.isSplittableCodec(filename);
+        return HdfsUtilities.isSplittableCodec(new CompressionCodecFactory(fs.getConf()), filename);
     }
 
 }

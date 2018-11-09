@@ -56,7 +56,7 @@ public class HdfsDataFragmenter extends Fragmenter {
     public HdfsDataFragmenter(InputData md) {
         super(md);
 
-        jobConf = new JobConf(new Configuration(), HdfsDataFragmenter.class);
+        jobConf = new JobConf(inputData.getConfiguration(), HdfsDataFragmenter.class);
     }
 
     /**

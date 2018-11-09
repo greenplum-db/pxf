@@ -60,7 +60,7 @@ public class HiveMetadataFetcher extends MetadataFetcher {
 
         // init hive metastore client connection.
         client = HiveUtilities.initHiveClient();
-        jobConf = new JobConf(new Configuration());
+        jobConf = new JobConf(inputData.getConfiguration());
     }
 
     /**

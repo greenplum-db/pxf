@@ -47,7 +47,6 @@ public class ProtocolData extends InputData {
     protected int port;
     protected String host;
     protected String token;
-    protected String user;
     // statistics parameters
     protected int statsMaxFragments;
     protected float statsSampleRatio;
@@ -101,12 +100,14 @@ public class ProtocolData extends InputData {
         metadata = getUserProperty("METADATA");
         dataSource = getProperty("DATA-DIR");
 
-        parseSecurityProperties();
+        user = getProperty("USER");
 
         parseFragmentMetadata();
         parseUserData();
         parseThreadSafe();
         parseRemoteCredentials();
+
+        setServerName(getUserProperty("SERVER"));
 
         dataFragment = INVALID_SPLIT_IDX;
         parseDataFragment(getOptionalProperty("DATA-FRAGMENT"));
@@ -143,7 +144,7 @@ public class ProtocolData extends InputData {
         setProfilePlugins();
         metadata = getUserProperty("METADATA");
 
-        parseSecurityProperties();
+        user = getProperty("USER");
     }
 
     /**
@@ -284,15 +285,6 @@ public class ProtocolData extends InputData {
     }
 
     /**
-     * Returns identity of the end-user making the request.
-     *
-     * @return userid
-     */
-    public String getUser() {
-        return user;
-    }
-
-    /**
      * Returns Kerberos token information.
      *
      * @return token
@@ -322,11 +314,6 @@ public class ProtocolData extends InputData {
      */
     public float getStatsSampleRatio() {
         return statsSampleRatio;
-    }
-
-    private void parseSecurityProperties() {
-        // obtain identity of the end-user
-        this.user = getProperty("USER");
     }
 
     /**

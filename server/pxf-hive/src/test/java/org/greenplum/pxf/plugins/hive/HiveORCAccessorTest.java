@@ -19,6 +19,7 @@ package org.greenplum.pxf.plugins.hive;
  * under the License.
  */
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.io.orc.OrcInputFormat;
 import org.apache.hadoop.hive.ql.io.orc.Reader;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
@@ -78,6 +79,7 @@ public class HiveORCAccessorTest {
         RecordReader recordReader = mock(RecordReader.class);
         PowerMockito.when(orcInputFormat.getRecordReader(any(InputSplit.class), any(JobConf.class), any(Reporter.class))).thenReturn(recordReader);
         PowerMockito.when(inputData.getAccessor()).thenReturn(HiveORCAccessor.class.getName());
+        PowerMockito.when(inputData.getConfiguration()).thenReturn(new Configuration());
 
         accessor = new HiveORCAccessor(inputData);
     }

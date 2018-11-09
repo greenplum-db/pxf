@@ -259,12 +259,12 @@ function create_s3_extension_external_tables {
     psql -c "CREATE EXTERNAL TABLE lineitem_s3_c (like lineitem)
         location('s3://s3.us-west-2.amazonaws.com/gpdb-ud-scratch/s3-profile-test/lineitem/${SCALE}/ config=/home/gpadmin/s3/s3.conf') FORMAT 'CSV' (DELIMITER '|')"
     psql -c "CREATE EXTERNAL TABLE lineitem_s3_pxf (like lineitem)
-        location('pxf://s3-profile-test/lineitem/${SCALE}/?PROFILE=HdfsTextSimple') format 'CSV' (DELIMITER '|');"
+        location('pxf://s3-profile-test/lineitem/${SCALE}/?PROFILE=HdfsTextSimple&SERVER=s3benchmark') format 'CSV' (DELIMITER '|');"
 
     psql -c "CREATE WRITABLE EXTERNAL TABLE lineitem_s3_c_write (like lineitem)
         LOCATION('s3://s3.us-west-2.amazonaws.com/gpdb-ud-scratch/s3-profile-test/output/ config=/home/gpadmin/s3/s3.conf') FORMAT 'CSV'"
     psql -c "CREATE WRITABLE EXTERNAL TABLE lineitem_s3_pxf_write (LIKE lineitem)
-        LOCATION('pxf://s3-profile-test/output/?PROFILE=HdfsTextSimple') FORMAT 'CSV'"
+        LOCATION('pxf://s3-profile-test/output/?PROFILE=HdfsTextSimple&SERVER=s3benchmark') FORMAT 'CSV'"
 }
 
 function assert_count_in_table {
