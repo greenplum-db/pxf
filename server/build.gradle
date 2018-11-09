@@ -57,7 +57,6 @@ idea {
 subprojects { subProject ->
     apply plugin: 'java'
     apply plugin: 'os-package'
-    apply plugin: 'maven-publish'
 
     group = 'org.greenplum.pxf'
 
@@ -330,28 +329,28 @@ task version {
 def tomcatName = "apache-tomcat-${tomcatVersion}"
 def tomcatTargetDir = "tomcat/build"
 
-task tomcatGet << {
+task tomcatGet {
+    doLast {
+        def tomcatTar = "${tomcatName}.tar.gz"
+        def tomcatUrl = "http://archive.apache.org/dist/tomcat/tomcat-7/v${tomcatVersion}/bin/${tomcatTar}"
 
-    def TarGzSuffix = ".tar.gz"
-    def tomcatTar = "${tomcatName}${TarGzSuffix}"
-    def tomcatUrl = "http://archive.apache.org/dist/tomcat/tomcat-7/v${tomcatVersion}/bin/${tomcatTar}"
+        if (file("${tomcatTargetDir}/${tomcatName}").exists()) {
+            println "${tomcatName} already exists, nothing to do"
+            return 0
+        }
 
-    if (file("${tomcatTargetDir}/${tomcatName}").exists()) {
-        println "${tomcatName} already exists, nothing to do"
-        return 0
-    }
-
-    println "About to download from ${tomcatUrl}..."
-    // download tar ball
-    download {
-        src tomcatUrl
-        dest "${tomcatTargetDir}/${tomcatTar}"
-    }
-    // extract tar ball
-    println "Extracting..."
-    copy {
-        from tarTree(resources.gzip("${tomcatTargetDir}/${tomcatTar}"))
-        into tomcatTargetDir
+        println "Downloading Tomcat from ${tomcatUrl}..."
+        // download tarball
+        download {
+            src tomcatUrl
+            dest "${tomcatTargetDir}/${tomcatTar}"
+        }
+        // extract tarball
+        println "Extracting Tomcat into ${tomcatTargetDir}..."
+        copy {
+            from tarTree(resources.gzip("${tomcatTargetDir}/${tomcatTar}"))
+            into tomcatTargetDir
+        }
     }
 }
 
