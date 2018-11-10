@@ -310,6 +310,7 @@ function generateUserConfigs()
     setup_conf_directory ${PXF_CONF}
     setup_conf_directory ${PXF_CONF}/conf ${PXF_HOME}/templates/user/conf
     setup_conf_directory ${PXF_CONF}/keytabs
+    setup_conf_directory ${PXF_CONF}/lib
     setup_conf_directory ${PXF_CONF}/logs
     setup_conf_directory ${PXF_CONF}/servers ${PXF_HOME}/templates/user/servers
 }
