@@ -10,8 +10,9 @@ GPHD_ROOT="/singlecluster"
 
 function configure_local_hdfs() {
 
-    sed -i -e 's|hdfs://0.0.0.0:8020|hdfs://hadoop:8020|' ${PXF_CONF_DIR}/servers/default/core-site.xml ${PXF_CONF_DIR}/servers/default/hbase-site.xml
-    sed -i -e "s/>tez/>mr/g" ${PXF_CONF_DIR}/servers/default/hive-site.xml
+    sed -i -e 's|hdfs://0.0.0.0:8020|hdfs://hadoop:8020|' \
+    ${GPHD_ROOT}/hadoop/etc/hadoop/core-site.xml ${GPHD_ROOT}/hbase/conf/hbase-site.xml
+    sed -i -e "s/>tez/>mr/g" ${GPHD_ROOT}/hive/conf/hive-site.xml
 }
 
 function run_multinode_smoke_test() {
