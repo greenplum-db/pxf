@@ -10,30 +10,29 @@ GPHD_ROOT="/singlecluster"
 
 function configure_local_hdfs() {
 
-    sed -i -e 's|hdfs://0.0.0.0:8020|hdfs://hadoop:8020|' \
-    ${GPHD_ROOT}/hadoop/etc/hadoop/core-site.xml ${GPHD_ROOT}/hbase/conf/hbase-site.xml
-    sed -i -e "s/>tez/>mr/g" ${GPHD_ROOT}/hive/conf/hive-site.xml
+	sed -i -e 's|hdfs://0.0.0.0:8020|hdfs://hadoop:8020|' ${PXF_CONF_DIR}/servers/default/core-site.xml ${PXF_CONF_DIR}/servers/default/hbase-site.xml
+	sed -i -e "s/>tez/>mr/g" ${PXF_CONF_DIR}/servers/default/hive-site.xml
 }
 
 function run_multinode_smoke_test() {
 
-    echo "Running multinode smoke test with ${NO_OF_FILES} files"
-    time ssh hadoop "export JAVA_HOME=/etc/alternatives/jre_1.8.0_openjdk
-    ${GPHD_ROOT}/bin/hdfs dfs -mkdir -p /tmp && mkdir -p /tmp/pxf_test && \
-    for i in \$(seq 1 ${NO_OF_FILES}); do \
-    cat > /tmp/pxf_test/test_\${i}.txt <<-EOF
+	echo "Running multinode smoke test with ${NO_OF_FILES} files"
+	time ssh hadoop "export JAVA_HOME=/etc/alternatives/jre_1.8.0_openjdk
+	${GPHD_ROOT}/bin/hdfs dfs -mkdir -p /tmp && mkdir -p /tmp/pxf_test && \
+	for i in \$(seq 1 ${NO_OF_FILES}); do \
+	cat > /tmp/pxf_test/test_\${i}.txt <<-EOF
 	1
 	2
 	3
 	EOF
-    done && \
-    ${GPHD_ROOT}/bin/hdfs dfs -copyFromLocal /tmp/pxf_test/ /tmp && \
-    ${GPHD_ROOT}/bin/hdfs dfs -chown -R gpadmin:gpadmin /tmp/pxf_test"
+	done && \
+	${GPHD_ROOT}/bin/hdfs dfs -copyFromLocal /tmp/pxf_test/ /tmp && \
+	${GPHD_ROOT}/bin/hdfs dfs -chown -R gpadmin:gpadmin /tmp/pxf_test"
 
-    echo "Found $(${GPHD_ROOT}/bin/hdfs dfs -ls /tmp/pxf_test | grep pxf_test | wc -l) items in /tmp/pxf_test"
-    expected_output=$((3 * ${NO_OF_FILES}))
+	echo "Found $(${GPHD_ROOT}/bin/hdfs dfs -ls /tmp/pxf_test | grep pxf_test | wc -l) items in /tmp/pxf_test"
+	expected_output=$((3 * ${NO_OF_FILES}))
 
-    time ssh ${SSH_OPTS} gpadmin@mdw "source ${GPHOME}/greenplum_path.sh
+	time ssh ${SSH_OPTS} gpadmin@mdw "source ${GPHOME}/greenplum_path.sh
 	psql -d template1 -c \"
 	CREATE EXTERNAL TABLE pxf_multifile_test (b TEXT) LOCATION ('pxf://tmp/pxf_test?PROFILE=HdfsTextSimple') FORMAT 'CSV';\"
 	num_rows=\$(psql -d template1 -t -c \"SELECT COUNT(*) FROM pxf_multifile_test;\" | head -1)
@@ -47,27 +46,27 @@ function run_multinode_smoke_test() {
 
 function open_ssh_tunnels() {
 
-    # https://stackoverflow.com/questions/2241063/bash-script-to-setup-a-temporary-ssh-tunnel
-    ssh-keyscan hadoop >> /root/.ssh/known_hosts
-    ssh -fNT -M -S /tmp/mdw5432 -L 5432:mdw:5432 gpadmin@mdw
-    ssh -fNT -M -S /tmp/hadoop2181 -L 2181:hadoop:2181 root@hadoop
-    ssh -S /tmp/mdw5432 -O check gpadmin@mdw
-    ssh -S /tmp/hadoop2181 -O check root@hadoop
+	# https://stackoverflow.com/questions/2241063/bash-script-to-setup-a-temporary-ssh-tunnel
+	ssh-keyscan hadoop >> /root/.ssh/known_hosts
+	ssh -fNT -M -S /tmp/mdw5432 -L 5432:mdw:5432 gpadmin@mdw
+	ssh -fNT -M -S /tmp/hadoop2181 -L 2181:hadoop:2181 root@hadoop
+	ssh -S /tmp/mdw5432 -O check gpadmin@mdw
+	ssh -S /tmp/hadoop2181 -O check root@hadoop
 }
 
 function close_ssh_tunnels() {
 
-    ssh -S /tmp/mdw5432 -O exit gpadmin@mdw
-    ssh -S /tmp/hadoop2181 -O exit root@hadoop
+	ssh -S /tmp/mdw5432 -O exit gpadmin@mdw
+	ssh -S /tmp/hadoop2181 -O exit root@hadoop
 }
 
 function run_pxf_automation() {
 
-    ${GPHD_ROOT}/bin/hdfs dfs -chown gpadmin:gpadmin /tmp
-    sed -i 's/sutFile=default.xml/sutFile=MultiNodesCluster.xml/g' pxf_src/automation/jsystem.properties
-    chown -R gpadmin:gpadmin /home/gpadmin pxf_src/automation
+	${GPHD_ROOT}/bin/hdfs dfs -chown gpadmin:gpadmin /tmp
+	sed -i 's/sutFile=default.xml/sutFile=MultiNodesCluster.xml/g' pxf_src/automation/jsystem.properties
+	chown -R gpadmin:gpadmin /home/gpadmin pxf_src/automation
 
-    cat > /home/gpadmin/run_pxf_automation_test.sh <<-EOF
+	cat > /home/gpadmin/run_pxf_automation_test.sh <<-EOF
 	set -exo pipefail
 
 	source ${GPHOME}/greenplum_path.sh
@@ -91,17 +90,23 @@ function run_pxf_automation() {
 
 function _main() {
 
-    install_gpdb_binary
-    setup_gpadmin_user
-    install_pxf_server
-    init_and_configure_pxf_server
-    remote_access_to_gpdb
+	install_gpdb_binary
+	setup_gpadmin_user
+	install_pxf_server
+	init_and_configure_pxf_server
+	remote_access_to_gpdb
 
-    open_ssh_tunnels
-    configure_local_hdfs
-    run_multinode_smoke_test
-    run_pxf_automation
-    close_ssh_tunnels
+	open_ssh_tunnels
+	configure_local_hdfs
+
+	if [ "${ACCEPTANCE}" == "true" ]; then
+		echo Acceptance test pipeline
+		exit 1
+	fi
+
+	run_multinode_smoke_test
+	run_pxf_automation
+	close_ssh_tunnels
 }
 
 _main

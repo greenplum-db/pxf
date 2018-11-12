@@ -1,73 +1,230 @@
-#!/usr/bin/env bash
+#!/usr/bin/env python
 
-if [ "$#" -lt "2" ]; then
-    echo "USAGE: deploy [ prod [master|5x] ] | [ dev [master|5x] [config] ]"
-    exit 1
-fi
+import argparse
+import datetime
+import os
+import os.path
+import sys
 
-DEPLOY_ENV=${1}
-# Only valid values for the first argument are dev and prod
-if ! [[ "${DEPLOY_ENV}" == "dev" || "${DEPLOY_ENV}" == "prod" ]]; then
-    echo "USAGE: deploy [ prod master|5x ] | [ dev master|5x [config] ]"
-    exit 1
-fi
-BRANCH_ALIAS=${2}
-# Only valid values for the second argument are master and 5x
-if ! [[ "${BRANCH_ALIAS}" == "master" || "${BRANCH_ALIAS}" == "5x" ]]; then
-    echo "USAGE: deploy [ prod master|5x ] | [ dev master|5x [config] ]"
-    exit 1
-fi
+from jinja2 import Environment, FileSystemLoader
+from shutil import copyfile
+from subprocess import call
 
-if [ "${BRANCH_ALIAS}" == "5x" ]; then
-    BRANCH="5X_STABLE"
-    ICW_GREEN_BUCKET="gpdb5-stable-concourse-builds"
-else
-    BRANCH="master"
-    ICW_GREEN_BUCKET="gpdb5-assert-concourse-builds"
-fi
+PIPELINES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'pipelines')
 
-# dev pipeline
-if [[ "${DEPLOY_ENV}" == "dev" ]]; then
-    CONFIG=${3:-${USER}}
-    FEATURE=${3:-""}
+TEMPLATE_ENVIRONMENT = Environment(
+    autoescape=False,
+    loader=FileSystemLoader(os.path.join(PIPELINES_DIR, 'templates')),
+    trim_blocks=True,
+    lstrip_blocks=True,
+    variable_start_string='[[',  # 'default {{ has conflict with pipeline syntax'
+    variable_end_string=']]',
+    extensions=['jinja2.ext.loopcontrols'])
 
-    if [ ! "${CONFIG}" == "${USER}" ]; then
-        CONFIG="${USER}-${CONFIG}"
-    fi
-    YML_FILE=".${CONFIG}.yml"
-    # Copy default.yml if config file does not exist
-    if [ ! -f ./${YML_FILE} ]; then
-        cp ./default.yml ./${YML_FILE}
-        if [ ! -z "${FEATURE}" ]; then
-            sed -i -e "s/pxf-git-branch: master/pxf-git-branch: ${FEATURE}/g" ./${YML_FILE}
-        fi
-    fi
-    TEST_ENV="dev"
-    PREFIX="dev/${CONFIG}"
-    PIPELINE_NAME="dev:pxf_${CONFIG}_${BRANCH_ALIAS}"
-    TARGET="ud"
 
-# prod pipeline
-else
-    YML_FILE="default.yml"
-    PREFIX="prod/gpdb_branch"
-    PIPELINE_NAME="pxf_${BRANCH}"
-    TARGET="ud"
-fi
+class PxfParser(argparse.ArgumentParser):
+    def error(self, message):
+        sys.stderr.write('error: %s\n' % message)
+        # self.print_help(sys.stderr)
+        sys.exit(2)
 
-echo "Deploying ${PIPELINE_NAME} pipeline with custom values from ${YML_FILE} ..."
 
-cmd="fly -t ${TARGET} set-pipeline \
-    -c ~/workspace/pxf/concourse/pipelines/pxf_pipeline.yml \
-    -l ~/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
-    -l ~/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud.yml \
-    -l ~/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
-    -l ${YML_FILE} \
-    -v folder-prefix=${PREFIX} -v test-env=${TEST_ENV} \
-    -v gpdb-branch=${BRANCH} -v icw_green_bucket=${ICW_GREEN_BUCKET} \
-    -p ${PIPELINE_NAME}"
+def render_template(template_filename, context):
+    """Render template"""
+    return TEMPLATE_ENVIRONMENT.get_template(template_filename).render(context)
 
-echo "${cmd}"
 
-# Execute cmd string (deploy pipeline)
-eval ${cmd}
+def create_pipeline():
+    context = {
+        'template_filename': ARGS.template_filename,
+        'generator_filename': os.path.basename(__file__),
+        'timestamp': datetime.datetime.now(),
+        'pipeline_type': ARGS.pipeline_type,
+        'compile_gpdb': ARGS.compile_gpdb,
+        'acceptance': ARGS.acceptance
+    }
+
+    pipeline_yml = render_template(ARGS.template_filename, context)
+
+    with open(ARGS.output_filepath, 'w') as output:
+        header = render_template('header.yml', context)
+        output.write(header)
+        output.write(pipeline_yml)
+
+    return True
+
+
+def how_to_use_generated_pipeline_message():
+    msg = '\n'
+    msg += '======================================================================\n'
+    msg += '  Generate Pipeline type: .. : %s\n' % ARGS.pipeline_type
+    msg += '  Pipeline file ............ : %s\n' % ARGS.output_filepath
+    msg += '  Template file ............ : %s\n' % ARGS.template_filename
+    msg += '======================================================================\n\n'
+
+    cmd = 'fly -t ' + ARGS.TARGET + ' set-pipeline \\\n'
+    cmd += '    -c ' + ARGS.output_filepath + ' \\\n'
+    cmd += '    -l ~/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \\\n'
+    cmd += '    -l ~/workspace/pxf/concourse/settings/pxf-multinode-params.yml \\\n'
+
+    if ARGS.pipeline_type == 'pxf':
+        cmd += '    -l ~/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud.yml \\\n'
+    elif ARGS.pipeline_type == 'release':
+        cmd += '    -l ~/workspace/gp-continuous-integration/secrets/gpdb_5X_STABLE-ci-secrets.yml \\\n'
+        cmd += '    -l ~/workspace/gp-continuous-integration/secrets/pxf-release.prod.yml \\\n'
+
+    cmd += '    -l ' + ARGS.YML_FILE + ' \\\n'
+    cmd += '    -v folder-prefix=' + ARGS.PREFIX + ' -v test-env=' + ARGS.TEST_ENV + ' \\\n'
+    cmd += '    -v gpdb-branch=' + ARGS.gpdb_branch + ' \\\n'
+    if ARGS.pipeline_type == 'pxf':
+        cmd += '    -v icw_green_bucket=' + ARGS.ICW_GREEN_BUCKET + ' \\\n'
+    if ARGS.compile_gpdb:
+        cmd += '    -v configure_flags=--enable-cassert -v gpaddon-git-branch=' + ARGS.gpdb_branch + '\\\n'
+    if ARGS.pipeline_name:
+        cmd += '    -p ' + ARGS.pipeline_name
+    else:
+        cmd += '    -p ' + ARGS.PIPELINE_NAME
+
+    msg += cmd
+
+    return msg, cmd.replace('\\\n', '').split()
+
+
+def build_parser(output_filename):
+    pxf_parser = PxfParser(
+        description='Generate Concourse Pipeline utility',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
+    pxf_parser.add_argument('deploy_env',
+                            action='store',
+                            choices=['prod', 'dev'],
+                            help='Deploy environment ("prod" or "dev")')
+
+    pxf_parser.add_argument('gpdb_branch',
+                            action='store',
+                            help='GPDB Branch ("master", "5x")')
+
+    pxf_parser.add_argument('-f', '--pxf_branch',
+                            action='store',
+                            dest='pxf_branch',
+                            default="master",
+                            help='PXF Branch')
+
+    pxf_parser.add_argument('-T', '--template',
+                            action='store',
+                            dest='template_filename',
+                            default="pxf-tpl.yml",
+                            help='Name of template to use, in templates/')
+
+    pxf_parser.add_argument('-o', '--output',
+                            action='store',
+                            dest='output_filepath',
+                            default=os.path.join(PIPELINES_DIR, output_filename),
+                            help='Output filepath')
+
+    pxf_parser.add_argument('-p', '--pipeline_type',
+                            action='store',
+                            dest='pipeline_type',
+                            choices=['pxf', 'release'],
+                            default='pxf',
+                            help='Pipeline type ("pxf" or "release")')
+
+    pxf_parser.add_argument('-c', '--compile_gpdb',
+                            action='store_true',
+                            dest='compile_gpdb',
+                            default=False,
+                            help='Adds a compile GPDB job to the pipeline')
+
+    pxf_parser.add_argument('-u', '--user',
+                            action='store',
+                            dest='user',
+                            default=os.getlogin(),
+                            help='Developer userid to use for pipeline file name.')
+
+    pxf_parser.add_argument('-n', '--pipeline_name',
+                            action='store',
+                            dest='pipeline_name',
+                            help='Name of pipeline to use.')
+
+    pxf_parser.add_argument('-a', '--acceptance',
+                            action='store_true',
+                            default=False,
+                            dest='acceptance',
+                            help='Create an acceptance pipeline.')
+    return pxf_parser
+
+
+if __name__ == "__main__":
+    default_output_filename = "pxf_pipeline-generated.yml"
+    PARSER = build_parser(default_output_filename)
+    ARGS = PARSER.parse_args()
+
+    if ARGS.gpdb_branch == 'master' and ARGS.pipeline_type == 'release' and ARGS.deploy_env == 'prod':
+        sys.stderr.write('error: Release master pipeline has not been deployed yet\n')
+        sys.exit(1)
+
+    if ARGS.gpdb_branch == '5x':
+        ARGS.gpdb_branch = '5X_STABLE'
+        ARGS.ICW_GREEN_BUCKET = 'gpdb5-stable-concourse-builds'
+    elif ARGS.gpdb_branch == 'master':
+        ARGS.ICW_GREEN_BUCKET = 'gpdb5-assert-concourse-builds'
+    elif not ARGS.compile_gpdb:
+        sys.stderr.write('error: Only master and 5x branches are supported for GPDB.'
+                         'Include --compile_gpdb flag if you intend to compile GPDB from a different branch.\n')
+        sys.exit(1)
+
+    if ARGS.pipeline_type == 'release' and os.path.basename(ARGS.output_filepath) == default_output_filename:
+        default_output_filename = 'release_pipeline-generated.yml'
+        ARGS.output_filepath = os.path.join(PIPELINES_DIR, default_output_filename)
+
+    if ARGS.deploy_env != 'prod' and os.path.basename(ARGS.output_filepath) == default_output_filename:
+        default_dev_output_filename = ARGS.pipeline_type + '_pipeline-dev-' + ARGS.user + '.yml'
+        ARGS.output_filepath = os.path.join(PIPELINES_DIR, default_dev_output_filename)
+
+    ARGS.DEFAULT_YML_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'default.yml')
+    ARGS.YML_FILE = ARGS.DEFAULT_YML_FILE
+
+    # dev pipeline
+    if ARGS.deploy_env == 'dev':
+        ARGS.CONFIG = ARGS.user
+        if ARGS.feature != 'master':
+            ARGS.CONFIG = ARGS.CONFIG + '-' + ARGS.feature
+        ARGS.YML_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.' + ARGS.CONFIG + '.yml')
+        ARGS.TEST_ENV = 'dev'
+        ARGS.PREFIX = 'dev/' + ARGS.CONFIG
+        ARGS.PIPELINE_NAME = 'dev:' + ARGS.pipeline_type + '_' + ARGS.CONFIG + '_' + ARGS.gpdb_branch
+
+        if not os.path.exists(ARGS.YML_FILE):
+            if ARGS.feature == 'master':
+                copyfile(ARGS.DEFAULT_YML_FILE, ARGS.YML_FILE)
+            else:
+                with open(ARGS.DEFAULT_YML_FILE, 'r') as f, open(ARGS.YML_FILE, 'w') as o:
+                    for line in f:
+                        if 'pxf-git-branch: master' in line:
+                            o.write('pxf-git-branch: ')
+                            o.write(ARGS.feature)
+                        else:
+                            o.write(line)
+
+    # prod pipeline
+    else:
+        ARGS.PREFIX = 'prod/gpdb_branch'
+        ARGS.PIPELINE_NAME = 'pxf_' + ARGS.gpdb_branch
+        ARGS.TEST_ENV = ''
+
+    if ARGS.pipeline_type == 'release' and ARGS.deploy_env == 'prod':
+        ARGS.TARGET = 'gpdb-prod'
+        ARGS.PIPELINE_NAME = 'pxf_release'
+    else:
+        ARGS.TARGET = 'ud'
+
+    pipeline_created = create_pipeline()
+
+    if pipeline_created:
+        msg, cmd_list = how_to_use_generated_pipeline_message()
+        print(msg)
+        # Expand all home directory paths (i.e. ~/workspace...)
+        cmd_list = [os.path.expanduser(p) if p[0] == '~' else p for p in cmd_list]
+        call(cmd_list)
+    else:
+        sys.exit(1)

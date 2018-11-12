@@ -1,4 +1,4 @@
----
+
 ccp_destroy_anchor: &ccp_destroy
   do:
   - put: terraform_gpdb
@@ -30,11 +30,23 @@ resources:
     branch: {{gpdb-branch}}
     uri: {{gpdb-git-remote}}
 
+{% if pipeline_type == "pxf" %}
+- name: gpdb_pxf_trigger
+  type: git
+  source:
+    branch: {{gpdb-branch}}
+    uri: {{gpdb-git-remote}}
+    paths:
+    - gpAux/extensions/pxf
+    - gpcontrib/pxf
+
+{% endif %}
 - name: pxf_src
   type: git
   source:
     branch: {{pxf-git-branch}}
     uri: {{pxf-git-remote}}
+{% if pipeline_type == "release" %}
     tag_filter: 4.*
 
 - name: gpdb-pxf-dev-centos6
@@ -42,6 +54,7 @@ resources:
   source:
     repository: pivotaldata/gpdb-pxf-dev
     tag: centos6
+{% endif %}
 
 - name: gpdb-pxf-dev-centos6-cdh-server
   type: docker-image
@@ -55,6 +68,14 @@ resources:
     repository: pivotaldata/gpdb-pxf-dev
     tag: centos6-hdp-server
 
+{% if pipeline_type == "pxf" %}
+- name: gpdb-pxf-dev-ubuntu16-hdp-server
+  type: docker-image
+  source:
+    repository: pivotaldata/gpdb-pxf-dev
+    tag: ubuntu16-hdp-server
+
+{% endif %}
 - name: gpdb-pxf-dev-centos6-hdp-secure
   type: docker-image
   source:
@@ -73,9 +94,29 @@ resources:
     access_key_id: {{bucket-access-key-id}}
     region_name: {{aws-region}}
     secret_access_key: {{bucket-secret-access-key}}
+{% if compile_gpdb %}
+    bucket: gpdb5-concourse-builds-dev
+    versioned_file: {{bin_gpdb_centos_versioned_file}}
+{% elif pipeline_type == "release" %}
     bucket: {{gpdb-stable-builds-bucket-name}}
     versioned_file: release_candidates/bin_gpdb_centos6/gpdb5/bin_gpdb.tar.gz
+{% elif pipeline_type == "pxf" %}
+    bucket: {{icw_green_bucket}}
+    versioned_file: bin_gpdb_centos6/gpdb_branch_((gpdb-branch))/icw_green/bin_gpdb.tar.gz
+{% endif %}
 
+{%  if pipeline_type == "pxf" %}
+- name: bin_gpdb_ubuntu16
+  type: s3
+  source:
+    access_key_id: {{bucket-access-key-id}}
+    # use the most recent compiled bits, for now, before updating icw_green
+    bucket: {{icw_green_bucket}}
+    region_name: {{aws-region}}
+    secret_access_key: {{bucket-secret-access-key}}
+    versioned_file: compiled_bits_ubuntu16/compiled_bits_ubuntu16.tar.gz
+
+{% endif %}
 - name: pxf_tarball
   type: s3
   source:
@@ -85,6 +126,18 @@ resources:
     secret_access_key: {{bucket-secret-access-key}}
     versioned_file: pxf_artifacts/((folder-prefix))_((gpdb-branch))/latest/pxf.tar.gz
 
+{% if acceptance %}
+#DO NOTHING
+{% elif pipeline_type == "pxf" %}
+- name: pxf_tarball_stable
+  type: s3
+  source:
+    access_key_id: {{bucket-access-key-id}}
+    bucket: {{pxf-aws-bucket-name}}
+    region_name: {{aws-region}}
+    secret_access_key: {{bucket-secret-access-key}}
+    versioned_file: pxf_artifacts/((folder-prefix))_((gpdb-branch))/stable/pxf.tar.gz
+{% elif pipeline_type == "release" %}
 - name: component_pxf
   type: s3
   source:
@@ -100,6 +153,7 @@ resources:
     branch: {{gpdb-release-branch}}
     private_key: {{gpdb-release-remote-deploy-key}}
     uri: {{gpdb-release-git-remote}}
+{% endif %}
 
 - name: terraform
   type: terraform
@@ -117,17 +171,76 @@ resources:
       bucket: {{tf-bucket-name}}
       bucket_path: {{tf-bucket-path}}
 
+{% if compile_gpdb %}
+- name: gpaddon_src
+  type: git
+  source:
+    branch: {{gpaddon-git-branch}}
+    private_key: {{gpaddon-git-key}}
+    uri: {{gpaddon-git-remote}}
+
+- name: centos-gpdb-dev-6
+  type: docker-image
+  source:
+    repository: pivotaldata/centos-gpdb-dev
+    tag: 6-gcc6.2-llvm3.7
+
+{% endif %}
 jobs:
 
+{% if compile_gpdb %}
+- name: compile_gpdb_centos6
+  plan:
+  - aggregate:
+    - get: gpdb_src
+    - get: gpaddon_src
+    - get: centos-gpdb-dev-6
+  - task: sync_tools
+    file: gpdb_src/concourse/tasks/sync_tools.yml
+    image: centos-gpdb-dev-6
+    params:
+      IVYREPO_HOST: {{ivyrepo_host}}
+      IVYREPO_REALM: {{ivyrepo_realm}}
+      IVYREPO_USER: {{ivyrepo_user}}
+      IVYREPO_PASSWD: {{ivyrepo_passwd}}
+      TARGET_OS: centos
+      TARGET_OS_VERSION: 6
+      TASK_OS: centos
+      TASK_OS_VERSION: 6
+  - task: compile_gpdb
+    file: gpdb_src/concourse/tasks/compile_gpdb.yml
+    image: centos-gpdb-dev-6
+    params:
+      CONFIGURE_FLAGS: {{configure_flags}}
+      TARGET_OS: centos
+      TARGET_OS_VERSION: 6
+      BLD_TARGETS: "clients loaders"
+  - put: bin_gpdb_centos6
+    params:
+      file: gpdb_artifacts/bin_gpdb.tar.gz
+
+{% endif %}
 - name: compile_pxf
   plan:
   - aggregate:
     - get: gpdb_src
+{% if pipeline_type == "pxf" %}
+    - get: gpdb_pxf_trigger
+      trigger: true
+{% endif %}
     - get: pxf_src
       trigger: true
+{% if pipeline_type == "pxf" %}
+    - get: gpdb-pxf-dev-centos6-hdp-server
+{% elif pipeline_type == "release" %}
     - get: gpdb-pxf-dev-centos6
+{% endif %}
   - task: compile_pxf
+{% if pipeline_type == "pxf" %}
+    image: gpdb-pxf-dev-centos6-hdp-server
+{% elif pipeline_type == "release" %}
     image: gpdb-pxf-dev-centos6
+{% endif %}
     file: pxf_src/concourse/tasks/compile_pxf.yml
   - put: pxf_tarball
     params:
@@ -139,8 +252,15 @@ jobs:
     - get: gpdb_src
       passed:
       - compile_pxf
+{% if compile_gpdb %}
+      - compile_gpdb_centos6
+{% endif %}
     - get: bin_gpdb
       resource: bin_gpdb_centos6
+{% if compile_gpdb %}
+      passed:
+        - compile_gpdb_centos6
+{% endif %}
     - get: pxf_src
       passed:
       - compile_pxf
@@ -160,15 +280,65 @@ jobs:
       TEST_OS: centos
       TARGET_OS: centos
       TARGET_OS_VERSION: 6
+{% if acceptance %}
+      ACCEPTANCE: true
+{% endif %}
 
+{% if pipeline_type == "pxf" %}
+- name: test_pxf_hdp_ubuntu16
+  plan:
+  - aggregate:
+    - get: gpdb_src
+      passed:
+      - compile_pxf
+{% if compile_gpdb %}
+      - compile_gpdb_centos6
+{% endif %}
+    - get: bin_gpdb
+      resource: bin_gpdb_ubuntu16
+{% if compile_gpdb %}
+      passed:
+      - compile_gpdb_centos6
+{% endif %}
+    - get: pxf_src
+      passed:
+      - compile_pxf
+      trigger: true
+    - get: pxf_tarball
+      passed:
+      - compile_pxf
+      trigger: true
+    - get: gpdb-pxf-dev-ubuntu16-hdp-server
+  - task: test_pxf
+    file: pxf_src/concourse/tasks/test_pxf.yml
+    image: gpdb-pxf-dev-ubuntu16-hdp-server
+    params:
+      GROUP: gpdb,proxy,profile
+      TEST_ENV: {{test-env}}
+      HADOOP_CLIENT: HDP
+      TEST_OS: ubuntu
+      TARGET_OS: ubuntu
+      TARGET_OS_VERSION: 16
+{% if acceptance %}
+      ACCEPTANCE: true
+{% endif %}
+
+{% endif %}
 - name: test_pxf_hdp_secure
   plan:
   - aggregate:
     - get: gpdb_src
       passed:
       - compile_pxf
+{% if compile_gpdb %}
+      - compile_gpdb_centos6
+{% endif %}
     - get: bin_gpdb
       resource: bin_gpdb_centos6
+{% if compile_gpdb %}
+      passed:
+      - compile_gpdb_centos6
+{% endif %}
     - get: pxf_src
       passed:
       - compile_pxf
@@ -188,6 +358,9 @@ jobs:
       TEST_ENV: {{test-env}}
       TEST_OS: centos
       TARGET_OS: centos
+{% if acceptance %}
+      ACCEPTANCE: true
+{% endif %}
 
 - name: test_pxf_hdp_multinode_gpdb
   max_in_flight: 2
@@ -196,8 +369,15 @@ jobs:
   - get: gpdb_src
     passed:
     - compile_pxf
+{% if compile_gpdb %}
+    - compile_gpdb_centos6
+{% endif %}
   - get: gpdb_binary
     resource: bin_gpdb_centos6
+{% if compile_gpdb %}
+    passed:
+    - compile_gpdb_centos6
+{% endif %}
   - get: pxf_src
     passed:
     - compile_pxf
@@ -244,6 +424,9 @@ jobs:
       params:
         IMPERSONATION: {{enable-impersonation-multinode}}
         PXF_JVM_OPTS: {{pxf-jvm-opts}}
+{% if pipeline_type == "pxf" %}
+        TARGET_OS: centos
+{% endif %}
   - task: test_pxf_multinode
     input_mapping:
       bin_gpdb: gpdb_binary
@@ -256,6 +439,9 @@ jobs:
       TEST_OS: centos
       TARGET_OS: centos
       NO_OF_FILES: {{no_of_files}}
+{% if acceptance %}
+      ACCEPTANCE: true
+{% endif %}
 
 - name: test_pxf_cdh_centos6
   plan:
@@ -263,8 +449,15 @@ jobs:
     - get: gpdb_src
       passed:
       - compile_pxf
+{% if compile_gpdb %}
+      - compile_gpdb_centos6
+{% endif %}
     - get: bin_gpdb
       resource: bin_gpdb_centos6
+{% if compile_gpdb %}
+      passed:
+      - compile_gpdb_centos6
+{% endif %}
     - get: pxf_src
       passed:
       - compile_pxf
@@ -284,6 +477,9 @@ jobs:
       TEST_OS: centos
       TARGET_OS: centos
       HADOOP_CLIENT: CDH
+{% if acceptance %}
+      ACCEPTANCE: true
+{% endif %}
 
 - name: test_pxf_no_impersonation
   plan:
@@ -291,8 +487,15 @@ jobs:
     - get: gpdb_src
       passed:
       - compile_pxf
+{% if compile_gpdb %}
+      - compile_gpdb_centos6
+{% endif %}
     - get: bin_gpdb
       resource: bin_gpdb_centos6
+{% if compile_gpdb %}
+      passed:
+      - compile_gpdb_centos6
+{% endif %}
     - get: pxf_src
       passed:
       - compile_pxf
@@ -310,7 +513,27 @@ jobs:
       TEST_ENV: {{test-env}}
       TEST_OS: centos
       TARGET_OS: centos
+{% if acceptance %}
+      ACCEPTANCE: true
+{% endif %}
 
+{% if acceptance %}
+#DO NOTHING
+{% elif pipeline_type == "pxf" %}
+- name: promote_pxf_artifact
+  plan:
+  - get: pxf_tarball
+    passed:
+    - test_pxf_hdp_centos6
+    - test_pxf_cdh_centos6
+    - test_pxf_hdp_secure
+    - test_pxf_no_impersonation
+    - test_pxf_hdp_multinode_gpdb
+    trigger: true
+  - put: pxf_tarball_stable
+    params:
+      file: pxf_tarball/pxf.tar.gz
+{% elif pipeline_type == "release" %}
 - name: build_release_candidate_centos
   plan:
   - get: ccp-7
@@ -352,3 +575,4 @@ jobs:
     params:
       repository: gpdb_release_output
       rebase: true
+{% endif %}

@@ -51,7 +51,7 @@ function setup_hadoop() {
 
 	if [ -n "${GROUP}" ]; then
 		export SLAVES=1
-	    setup_impersonation ${hdfsrepo}
+		setup_impersonation ${hdfsrepo}
 		start_hadoop_services ${hdfsrepo}
 	fi
 }
@@ -72,6 +72,11 @@ function _main() {
 	add_remote_user_access_for_gpdb "testuser"
 	init_and_configure_pxf_server
 	start_pxf_server
+
+	if [ "${ACCEPTANCE}" == "true" ]; then
+		echo Acceptance test pipeline
+		exit 1
+	fi
 
 	# Run Tests
 	if [ -n "${GROUP}" ]; then

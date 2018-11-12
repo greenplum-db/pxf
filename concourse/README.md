@@ -1,3 +1,14 @@
+# Concourse pipeline deployment
+To facilitate pipeline maintenance, a Python utility 'deploy`
+is used to generate the different pipelines for PXF master,
+PXF 5x and release pipelines. It also allows the generation
+of acceptance and custom pipelines for developers to use.
+
+The utility uses the [Jinja2](http://jinja.pocoo.org/) template
+engine for Python. This allows the generation of portions of the
+pipeline from common blocks of pipeline code. Logic (Python code) can
+be embedded to further manipulate the generated pipeline.
+
 # Deploy pxf-docker-images pipeline
 ```
 fly -t ud set-pipeline \
@@ -10,25 +21,11 @@ fly -t ud set-pipeline \
 # Deploy production PXF pipelines
 The following commands would create two PXF pipelines - one for **gpdb_master** and the other for **5X_STABLE**
 ```
-fly -t ud set-pipeline \
-    -c ~/workspace/pxf/concourse/pipelines/pxf_pipeline.yml \
-    -l ~/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
-    -l ~/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud.yml \
-    -l ~/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
-    -v folder-prefix=prod/gpdb_branch -v test-env= \
-    -v gpdb-branch=master -v icw_green_bucket=gpdb5-assert-concourse-builds \
-    -p pxf_master
+./deploy prod master
 ```
 
 ```
-fly -t ud set-pipeline \
-    -c ~/workspace/pxf/concourse/pipelines/pxf_pipeline.yml \
-    -l ~/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
-    -l ~/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud.yml \
-    -l ~/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
-    -v folder-prefix=prod/gpdb_branch -v test-env= \
-    -v gpdb-branch=5X_STABLE -v icw_green_bucket=gpdb5-stable-concourse-builds \
-    -p pxf_5X_STABLE 
+./deploy prod 5x
 ```
 
 # Deploy the pull-request pipeline
@@ -47,15 +44,7 @@ fly -t ud set-pipeline \
 
 https://github.com/pivotal/gp-continuous-integration/blob/master/README.md#pxf_release
 ```
-fly -t gpdb-prod set-pipeline \
-    -c ~/workspace/pxf/concourse/pipelines/release_pipeline.yml \
-    -l ~/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
-    -l ~/workspace/gp-continuous-integration/secrets/gpdb_5X_STABLE-ci-secrets.yml \
-    -l ~/workspace/pxf/concourse/pxf-multinode-params.yml \
-    -l ~/workspace/gp-continuous-integration/secrets/pxf-release.prod.yml \
-    -v test-env= -v gpdb-branch=5X_STABLE \
-    -v folder-prefix=prod/gpdb_branch \
-    -p pxf_release
+./deploy prod 5x -p release
 ```
 
 # Deploy the performance pipelines
@@ -100,6 +89,20 @@ fly -t ud set-pipeline \
     -v pxf-git-branch=master -p pxf_perf-500g
 ```
 
+# Deploy a PXF acceptance pipeline
+Acceptance pipelines can be deployed for feature testing purposes.
+```
+./deploy dev master -a -n acceptance
+```
+For 5x:
+```
+./deploy dev 5x -a -n acceptance
+```
+After acceptance, the pipeline can be cleaned up as follows:
+```
+fly -t ud dp -p acceptance
+```
+
 # Deploy development PXF pipelines
 Dev pipelines can be deployed with an optional feature name
 ```
@@ -107,14 +110,14 @@ Dev pipelines can be deployed with an optional feature name
 ```
 
 ```
-./deploy dev master feature-foo
+./deploy dev master -f feature-foo
 ```
 To deploy dev pipeline against gpdb 5X_STABLE branch, use:
 ```
 ./deploy dev 5x
 ```
 ```
-./deploy dev 5x feature-foo
+./deploy dev 5x -f feature-foo
 ```
 
 The master and 5X pipelines are exposed. Here are the commands to expose the pipelines, similar to the GPDB pipelines. The pipelines are currently located at https://ud.ci.gpdb.pivotal.io/

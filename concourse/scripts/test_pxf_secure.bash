@@ -144,6 +144,12 @@ function _main() {
 	start_pxf_server
 
 	time run_regression_test
+
+	if [ "${ACCEPTANCE}" == "true" ]; then
+		echo Acceptance test pipeline
+		exit 1
+	fi
+
 	if [ -n "${GROUP}" ]; then
 		time run_pxf_smoke_secure
 	fi
