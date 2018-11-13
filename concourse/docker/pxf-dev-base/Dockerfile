@@ -12,9 +12,11 @@ RUN cd /tmp && \
     cd - && \
     GOPATH=/root/go /usr/local/go/bin/go get github.com/golang/dep/cmd/dep && \
     GOPATH=/root/go /usr/local/go/bin/go get github.com/onsi/ginkgo/ginkgo && \
-    echo >>/etc/bashrc 'export PATH="/root/go/bin:/usr/local/go/bin:$PATH"'
+    echo >>/etc/bashrc 'export PATH="/root/go/bin:/usr/local/go/bin:$PATH"' && \
+    echo >>/etc/bashrc 'export GOPATH=/root/go'
 
-RUN cd /tmp/pxf_src/server && make tar && \
+RUN cd /tmp/pxf_src/server && \
+    GOPATH="/root/go" PATH="/root/go/bin:/usr/local/go/bin:$PATH" make tar && \
     CWD=$(pwd) && cd /tmp/pxf_src/automation && \
     PXF_HOME=/tmp/pxf_src/server/build/stage make dev && \
     mkdir -p /home/gpadmin && \
