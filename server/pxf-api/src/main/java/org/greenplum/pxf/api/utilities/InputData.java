@@ -48,9 +48,9 @@ public class InputData {
     private static final Log LOG = LogFactory.getLog(InputData.class);
     private static final String SERVER_CONFIG_DIR_PREFIX =
             System.getProperty(PXF_CONF_PROPERTY) +
-                    File.pathSeparator +
+                    File.separator +
                     "servers" +
-                    File.pathSeparator;
+                    File.separator;
 
     protected Map<String, String> requestParametersMap;
     protected ArrayList<ColumnDescriptor> tupleDescription;
