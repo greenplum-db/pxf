@@ -354,11 +354,7 @@ task tomcatGet {
     }
 }
 
-task buildCli(type: Exec) {
-    commandLine('make', '-C', 'pxf-cli/go/src/pxf-cluster', 'depend', 'build')
-}
-
-task assemble(type: Copy, dependsOn: [subprojects.jar, project(':pxf-service').war, subprojects.copyRuntimeDependencies, tomcatGet, buildCli]) {
+task assemble(type: Copy, dependsOn: [subprojects.jar, project(':pxf-service').war, subprojects.copyRuntimeDependencies, tomcatGet]) {
     into "build/stage"
     subprojects { project ->
         from("${project.name}/build/libs") { into 'lib' }
@@ -372,10 +368,6 @@ task assemble(type: Copy, dependsOn: [subprojects.jar, project(':pxf-service').w
         filter {
             String line -> line.replaceAll("GRADLE_PRINT_PXF_VERSION", "echo PXF version ${version}")
         }
-    }
-    from("pxf-cli/go/src/pxf-cluster/pxf-cluster") {
-        into 'bin'
-        fileMode 0755
     }
 
     from("${tomcatTargetDir}/${tomcatName}") { into 'apache-tomcat' }

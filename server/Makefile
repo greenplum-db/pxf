@@ -59,7 +59,10 @@ all:
 	./gradlew clean tar aggregateJavadoc $(BUILD_PARAMS)
 
 compile:
-	./gradlew compileJava && make -C $(PXF_CLI_MAKEFILE_LOCATION)
+	./gradlew compileJava
+
+compile-cli:
+	make -C $(PXF_CLI_MAKEFILE_LOCATION)
 
 test-cli:
 	make -C $(PXF_CLI_MAKEFILE_LOCATION) test

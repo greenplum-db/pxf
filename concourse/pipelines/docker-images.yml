@@ -183,7 +183,7 @@ resources:
     type: docker-image
     source:
       repository: pivotaldata/gpdb-pxf-dev
-      tag: ubuntu16
+      tag: ubuntu16.04
       username: {{docker-username}}
       password: {{docker-password}}
 
@@ -214,7 +214,7 @@ resources:
     type: docker-image
     source:
       repository: pivotaldata/gpdb-pxf-dev
-      tag: ubuntu16-cdh-server
+      tag: ubuntu16.04-cdh-server
       username: {{docker-username}}
       password: {{docker-password}}
 
@@ -222,7 +222,7 @@ resources:
     type: docker-image
     source:
       repository: pivotaldata/gpdb-pxf-dev
-      tag: ubuntu16-hdp-server
+      tag: ubuntu16.04-hdp-server
       username: {{docker-username}}
       password: {{docker-password}}
 
