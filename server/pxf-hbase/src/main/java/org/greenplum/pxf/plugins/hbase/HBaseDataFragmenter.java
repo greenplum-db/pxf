@@ -8,9 +8,9 @@ package org.greenplum.pxf.plugins.hbase;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -20,15 +20,24 @@ package org.greenplum.pxf.plugins.hbase;
  */
 
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HRegionInfo;
+import org.apache.hadoop.hbase.HRegionLocation;
+import org.apache.hadoop.hbase.ServerName;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.TableNotFoundException;
+import org.apache.hadoop.hbase.client.Admin;
+import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.ConnectionFactory;
+import org.apache.hadoop.hbase.client.HBaseAdmin;
+import org.apache.hadoop.hbase.client.RegionLocator;
+import org.greenplum.pxf.api.FileSystemFragmenter;
 import org.greenplum.pxf.api.Fragment;
 import org.greenplum.pxf.api.Fragmenter;
 import org.greenplum.pxf.api.FragmentsStats;
 import org.greenplum.pxf.api.utilities.InputData;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseLookupTable;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseUtilities;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.*;
-import org.apache.hadoop.hbase.client.*;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -46,7 +55,7 @@ import java.util.Map;
  * This class also puts HBase lookup table information for the given
  * table (if exists) in each fragment's user data field.
  */
-public class HBaseDataFragmenter extends Fragmenter {
+public class HBaseDataFragmenter extends Fragmenter implements FileSystemFragmenter {
 
     private static final Configuration hbaseConfiguration = HBaseUtilities.initHBaseConfiguration();
     private Admin hbaseAdmin;

@@ -71,6 +71,7 @@ function _main() {
 	create_gpdb_cluster
 	add_remote_user_access_for_gpdb "testuser"
 	init_and_configure_pxf_server
+	configure_pxf_default_server
 	start_pxf_server
 
 	if [ "${ACCEPTANCE}" == "true" ]; then

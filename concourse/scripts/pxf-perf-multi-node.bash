@@ -9,6 +9,8 @@ GPHOME="/usr/local/greenplum-db-devel"
 CWDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 HADOOP_HOSTNAME="ccp-$(cat terraform_dataproc/name)-m"
 scale=$(($SCALE + 0))
+PXF_CONF_DIR="/home/gpadmin/pxf"
+PXF_SERVER_DIR="${PXF_CONF_DIR}/servers/default/"
 
 if [ ${scale} -gt 10 ]; then
   VALIDATION_QUERY="SUM(l_partkey) AS PARTKEYSUM"
@@ -321,8 +323,7 @@ EOF
     # Make a backup of core-site and update it with the S3 core-site
     gpscp -u centos -f /tmp/segment_hosts /tmp/core-site.xml =:/tmp/core-site-patch.xml
     gpssh -u centos -f /tmp/segment_hosts -v -s -e \
-      'sudo mv /etc/hadoop/conf/core-site.xml /etc/hadoop/conf/core-site.xml.back && sudo cp /tmp/core-site-patch.xml /etc/hadoop/conf/core-site.xml'
-    gpssh -u gpadmin -f /tmp/segment_hosts -v -s -e \ 'source /usr/local/greenplum-db-devel/greenplum_path.sh && $GPHOME/pxf/bin/pxf restart'
+      "sudo mv $PXF_SERVER_DIR/core-site.xml $PXF_SERVER_DIR/core-site.xml.back && sudo cp /tmp/core-site-patch.xml $PXF_SERVER_DIR/core-site.xml"
 
     cat << EOF
 
@@ -344,9 +345,7 @@ EOF
 
     # Restore core-site
     gpssh -u centos -f /tmp/segment_hosts -v -s -e \
-      'sudo mv /etc/hadoop/conf/core-site.xml /etc/hadoop/conf/core-site.xml.s3 && sudo cp /etc/hadoop/conf/core-site.xml.back /etc/hadoop/conf/core-site.xml'
-    gpssh -u gpadmin -f /tmp/segment_hosts -v -s -e \
-      'source /usr/local/greenplum-db-devel/greenplum_path.sh && $GPHOME/pxf/bin/pxf restart'
+      "sudo mv $PXF_SERVER_DIR/core-site.xml $PXF_SERVER_DIR/core-site.xml.s3 && sudo cp $PXF_SERVER_DIR/core-site.xml.back $PXF_SERVER_DIR/core-site.xml"
 }
 
 function main {

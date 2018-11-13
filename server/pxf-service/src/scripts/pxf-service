@@ -33,6 +33,11 @@ instance_root=${PXF_HOME}
 instance_name=pxf-service
 
 curl=`which curl`
+SED_OPTS=(-i)
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    SED_OPTS+=("")
+fi
+SED_OPTS+=(-e)
 
 function validate_user()
 {
@@ -45,7 +50,7 @@ function validate_user()
 function confirm_with_user()
 {
 	echo "*****************************************************************************"
-	echo "* GP_EXTENSIONS_HOME or PXF_CONF variables are not defined, using defaults"
+	echo "* PXF_CONF variable is not defined, using default location"
 	echo "* Using ${PXF_CONF} for user configurations"
 	echo "* WARNING: using this directory is not recommended for production deployments"
 	echo "*****************************************************************************"
@@ -67,22 +72,17 @@ function update_pxf_conf()
 {
     if [ -z "${PXF_CONF}" ]; then
         # PXF_CONF was not specified during init command
-        # check if we can fall back on GP_EXTENSIONS_HOME
-        if [ ! -z "${GP_EXTENSIONS_HOME}" ]; then
-			export PXF_CONF="${GP_EXTENSIONS_HOME}/pxf"
-        else
-			# need to default to user's home directory and ask for confirmation, unless silent mode is used
-			local current_user=$( id -un )
-			local pxf_user_home="${HOME}"
-			if [ -z "${pxf_user_home}" ]; then
-				fail "PXF_CONF is not set and user ${current_user} home directory is not defined"
-			elif [ ! -d "${pxf_user_home}" ]; then
-				fail "PXF_CONF is not set and user ${current_user} home directory ${pxf_user_home} does not exist"
-			else
-				export PXF_CONF="${pxf_user_home}/pxf"
-				if [ "${silent}" == "false" ]; then
-					confirm_with_user
-				fi
+		# need to default to user's home directory and ask for confirmation, unless silent mode is used
+		local current_user=$( id -un )
+		local pxf_user_home="${HOME}"
+		if [ -z "${pxf_user_home}" ]; then
+			fail "PXF_CONF is not set and user ${current_user} home directory is not defined"
+		elif [ ! -d "${pxf_user_home}" ]; then
+			fail "PXF_CONF is not set and user ${current_user} home directory ${pxf_user_home} does not exist"
+		else
+			export PXF_CONF="${pxf_user_home}/pxf"
+			if [ "${silent}" == "false" ]; then
+				confirm_with_user
 			fi
 		fi
     fi
@@ -90,7 +90,7 @@ function update_pxf_conf()
 	echo "Using ${PXF_CONF} as a location for user-configurable files"
 
     # update the value on PXF_CONF in the default env file
-    sed -i -e "s|{PXF_CONF:=.*}$|{PXF_CONF:=\"${PXF_CONF}\"}|g" ${default_env_script}
+    sed "${SED_OPTS[@]}" "s|{PXF_CONF:=.*}$|{PXF_CONF:=\"${PXF_CONF}\"}|g" ${default_env_script}
 }
 
 function get_environment()
@@ -229,29 +229,29 @@ function configureWebapp()
     popd > /dev/null
 
     context_file=${instance_root}/${instance_name}/webapps/pxf/META-INF/context.xml
-    sed -i -e "s:classpathFiles=\"[a-zA-Z0-9\/\;.-]*\":classpathFiles=\"${PXF_HOME}\/conf\/pxf-private.classpath\":" ${context_file}
-    sed -i -e "s:secondaryClasspathFiles=\"[a-zA-Z0-9\/\;.-]*\":secondaryClasspathFiles=\"${PXF_HOME}\/conf\/pxf-public.classpath\":" ${context_file}
+    sed "${SED_OPTS[@]}" "s:classpathFiles=\"[a-zA-Z0-9\/\;.-]*\":classpathFiles=\"${PXF_HOME}\/conf\/pxf-private.classpath\":" ${context_file}
+    sed "${SED_OPTS[@]}" "s:secondaryClasspathFiles=\"[a-zA-Z0-9\/\;.-]*\":secondaryClasspathFiles=\"${PXF_HOME}\/conf\/pxf-public.classpath\":" ${context_file}
 
     web_file=${instance_root}/${instance_name}/webapps/pxf/WEB-INF/web.xml
-    sed -i -e "s:<param-value>.*pxf-log4j.properties<\/param-value>:<param-value>${PXF_CONF}\/conf\/pxf-log4j.properties<\/param-value>:" ${web_file}
+    sed "${SED_OPTS[@]}" "s:<param-value>.*pxf-log4j.properties<\/param-value>:<param-value>${PXF_CONF}\/conf\/pxf-log4j.properties<\/param-value>:" ${web_file}
 
     # set port
     catalinaProperties=${instance_root}/${instance_name}/conf/catalina.properties
-    sed -i -e "s|^[[:blank:]]*connector.http.port=.*$|connector.http.port=${PXF_PORT}|g" ${catalinaProperties}
+    sed "${SED_OPTS[@]}" "s|^[[:blank:]]*connector.http.port=.*$|connector.http.port=${PXF_PORT}|g" ${catalinaProperties}
 
     # set container configs
     catalinaEnv=${instance_root}/${instance_name}/bin/setenv.sh
-    sed -i -e "s|JVM_OPTS=.*$|JVM_OPTS=\"${PXF_JVM_OPTS}\"|g" ${catalinaEnv}
-    sed -i -e "s|-Dpxf.log.dir=[^[:space:]^\"]*|-Dpxf.log.dir=${PXF_LOGDIR} |g" ${catalinaEnv}
-    sed -i -e "s|-Dpxf.service.kerberos.keytab=[^[:space:]^\"]*|-Dpxf.service.kerberos.keytab=${PXF_KEYTAB} |g" ${catalinaEnv}
-    sed -i -e "s|-Dpxf.service.kerberos.principal=[^[:space:]^\"]*|-Dpxf.service.kerberos.principal=${PXF_PRINCIPAL} |g" ${catalinaEnv}
-    sed -i -e "s|^[[:blank:]]*PXF_USER_IMPERSONATION=.*$|PXF_USER_IMPERSONATION=\"${PXF_USER_IMPERSONATION}\"|g" ${catalinaEnv}
-    sed -i -e "s|^[[:blank:]]*CATALINA_PID=.*$|CATALINA_PID=${PXF_RUNDIR}/catalina.pid|g" ${catalinaEnv}
-    sed -i -e "s|^[[:blank:]]*CATALINA_OUT=.*$|CATALINA_OUT=${PXF_LOGDIR}/catalina.out|g" ${catalinaEnv}
+    sed "${SED_OPTS[@]}" "s|JVM_OPTS=.*$|JVM_OPTS=\"${PXF_JVM_OPTS}\"|g" ${catalinaEnv}
+    sed "${SED_OPTS[@]}" "s|-Dpxf.log.dir=[^[:space:]^\"]*|-Dpxf.log.dir=${PXF_LOGDIR} |g" ${catalinaEnv}
+    sed "${SED_OPTS[@]}" "s|-Dpxf.service.kerberos.keytab=[^[:space:]^\"]*|-Dpxf.service.kerberos.keytab=${PXF_KEYTAB} |g" ${catalinaEnv}
+    sed "${SED_OPTS[@]}" "s|-Dpxf.service.kerberos.principal=[^[:space:]^\"]*|-Dpxf.service.kerberos.principal=${PXF_PRINCIPAL} |g" ${catalinaEnv}
+    sed "${SED_OPTS[@]}" "s|^[[:blank:]]*PXF_USER_IMPERSONATION=.*$|PXF_USER_IMPERSONATION=\"${PXF_USER_IMPERSONATION}\"|g" ${catalinaEnv}
+    sed "${SED_OPTS[@]}" "s|^[[:blank:]]*CATALINA_PID=.*$|CATALINA_PID=${PXF_RUNDIR}/catalina.pid|g" ${catalinaEnv}
+    sed "${SED_OPTS[@]}" "s|^[[:blank:]]*CATALINA_OUT=.*$|CATALINA_OUT=${PXF_LOGDIR}/catalina.out|g" ${catalinaEnv}
 
     # set log directories
     catalinaLog=${instance_root}/$instance_name/conf/logging.properties
-    sed -i -e "s|juli.FileHandler.directory\s*=.*$|juli.FileHandler.directory = ${PXF_LOGDIR}|g" ${catalinaLog}
+    sed "${SED_OPTS[@]}" "s|juli.FileHandler.directory\s*=.*$|juli.FileHandler.directory = ${PXF_LOGDIR}|g" ${catalinaLog}
 }
 
 function commandWebapp()
@@ -300,8 +300,8 @@ function generatePrivateClasspath()
 
     # create initial version of the file by replacing PXF_HOME and PXF_CONF tokens
     cp ${template_file} ${PXF_HOME}/conf/pxf-private.classpath
-    sed -i -e "s|PXF_HOME|${PXF_HOME}|g" ${PXF_HOME}/conf/pxf-private.classpath
-    sed -i -e "s|PXF_CONF|${PXF_CONF}|g" ${PXF_HOME}/conf/pxf-private.classpath
+    sed "${SED_OPTS[@]}" "s|PXF_HOME|${PXF_HOME}|g" ${PXF_HOME}/conf/pxf-private.classpath
+    sed "${SED_OPTS[@]}" "s|PXF_CONF|${PXF_CONF}|g" ${PXF_HOME}/conf/pxf-private.classpath
 }
 
 function generateUserConfigs()
@@ -312,7 +312,8 @@ function generateUserConfigs()
     setup_conf_directory ${PXF_CONF}/keytabs
     setup_conf_directory ${PXF_CONF}/lib
     setup_conf_directory ${PXF_CONF}/logs
-    setup_conf_directory ${PXF_CONF}/servers ${PXF_HOME}/templates/user/servers
+    setup_conf_directory ${PXF_CONF}/servers/default
+    setup_conf_directory ${PXF_CONF}/templates ${PXF_HOME}/templates/user/templates
 }
 
 function setup_conf_directory()
@@ -420,14 +421,14 @@ function doInit()
 #
 function doStart()
 {
-	instanceExists
-	if [ $? -ne 0 ]; then
-		fail "can't find PXF instance, maybe call init?"
-	fi
-	get_environment
-	configureWebapp || return 1
-	commandWebapp start || return 1
-	checkWebapp 300 || return 1
+    instanceExists
+    if [ $? -ne 0 ]; then
+        fail "can't find PXF instance, maybe call init?"
+    fi
+    get_environment
+    configureWebapp || return 1
+    commandWebapp start || return 1
+    checkWebapp 300 || return 1
 }
 
 #
@@ -441,14 +442,14 @@ function doStop()
     if [ $? -ne 0 ]; then
         fail "can't find PXF instance, maybe call init?"
     fi
-	get_environment
+    get_environment
     commandWebapp stop || return 1
 }
 
 function doStatus()
 {
-	get_environment
-	checkWebapp 1 || return 1
+    get_environment
+    checkWebapp 1 || return 1
 }
 
 function doCluster()

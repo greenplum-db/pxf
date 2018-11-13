@@ -180,6 +180,7 @@ project('pxf-api') {
         compile "commons-configuration:commons-configuration:1.6"
         compile "commons-codec:commons-codec:1.4"
         compile "com.sun.jersey:jersey-core:1.9"
+        compile "org.apache.hadoop:hadoop-common:$hadoopVersion"
 
         bundleJars "org.codehaus.jackson:jackson-core-asl:1.9.13"
         bundleJars "asm:asm:3.2"
@@ -371,14 +372,9 @@ task assemble(type: Copy, dependsOn: [subprojects.jar, project(':pxf-service').w
     }
 
     from("${tomcatTargetDir}/${tomcatName}") { into 'apache-tomcat' }
-    from("pxf-service/src/main/resources/pxf-log4j.properties") { into 'templates/user/conf' }
-    from("pxf-service/src/main/resources/pxf-profiles.xml") { into 'templates/user/conf' }
     from("pxf-service/src/main/resources/pxf-profiles-default.xml") { into 'conf' }
     from("pxf-service/src/scripts/pxf-env-default.sh") { into 'conf' }
-    from("pxf-service/src/scripts/pxf-env.sh") { into 'templates/user/conf' }
-    from("pxf-service/src/configs/servers") { into 'templates/user/servers' }
-    from("pxf-service/src/configs/templates/pxf-private.classpath.template") { into 'templates/pxf' }
-    from("pxf-service/src/configs/tomcat") { into 'templates/tomcat' }
+    from("pxf-service/src/templates") { into 'templates' }
 }
 
 task tar(type: Tar, dependsOn: [assemble]) {

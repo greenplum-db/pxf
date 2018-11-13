@@ -66,22 +66,22 @@ function run_pxf_automation() {
 	sed -i 's/sutFile=default.xml/sutFile=MultiNodesCluster.xml/g' pxf_src/automation/jsystem.properties
 	chown -R gpadmin:gpadmin /home/gpadmin pxf_src/automation
 
-	cat > /home/gpadmin/run_pxf_automation_test.sh <<-EOF
-	set -exo pipefail
+    cat > /home/gpadmin/run_pxf_automation_test.sh <<EOF
+set -exo pipefail
 
-	source ${GPHOME}/greenplum_path.sh
+source ${GPHOME}/greenplum_path.sh
 
-	export PATH=\$PATH:${GPHD_ROOT}/bin:${HADOOP_ROOT}/bin:${HBASE_ROOT}/bin:${HIVE_ROOT}/bin:${ZOOKEEPER_ROOT}/bin
-	export GPHOME=/usr/local/greenplum-db-devel
-	export PXF_HOME=${GPHOME}/pxf
-	export PGHOST=localhost
-	export PGPORT=5432
+export PATH=\$PATH:${GPHD_ROOT}/bin:${HADOOP_ROOT}/bin:${HBASE_ROOT}/bin:${HIVE_ROOT}/bin:${ZOOKEEPER_ROOT}/bin
+export GPHOME=/usr/local/greenplum-db-devel
+export PXF_HOME=${GPHOME}/pxf
+export PGHOST=localhost
+export PGPORT=5432
 
-	cd pxf_src/automation
-	make GROUP=${GROUP}
+cd pxf_src/automation
+make GROUP=${GROUP}
 
-	exit 0
-	EOF
+exit 0
+EOF
 
 	chown gpadmin:gpadmin /home/gpadmin/run_pxf_automation_test.sh
 	chmod a+x /home/gpadmin/run_pxf_automation_test.sh

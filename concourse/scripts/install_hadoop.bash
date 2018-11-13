@@ -31,6 +31,7 @@ function configure_pxf {
 
     # configure PXF as gpadmin
     ssh ${SSH_OPTS} gpadmin@${segment} "
+        cp ${PXF_CONF_DIR}/templates/*-site.xml ${PXF_CONF_DIR}/servers/default/ &&
         sed -i -e 's/\(0.0.0.0\|localhost\|127.0.0.1\)/${hadoop_ip}/g' ${PXF_CONF_DIR}/servers/default/*-site.xml &&
         if [ ${IMPERSONATION} == false ]; then
             echo 'export PXF_USER_IMPERSONATION=false' >> ${PXF_CONF_DIR}/conf/pxf-env.sh

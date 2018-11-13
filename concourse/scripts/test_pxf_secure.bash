@@ -137,6 +137,7 @@ function _main() {
 	install_pxf_client
 	install_pxf_server
 	init_and_configure_pxf_server
+	configure_pxf_default_server
 	secure_pxf
 
 	create_gpdb_cluster

@@ -19,18 +19,12 @@ package org.greenplum.pxf.plugins.hive;
  * under the License.
  */
 
-import java.util.List;
-import java.util.Properties;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.Map;
-import java.util.HashMap;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.JavaUtils;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -45,6 +39,7 @@ import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.TextInputFormat;
 import org.greenplum.pxf.api.BasicFilter;
+import org.greenplum.pxf.api.FileSystemFragmenter;
 import org.greenplum.pxf.api.FilterParser;
 import org.greenplum.pxf.api.Fragment;
 import org.greenplum.pxf.api.Fragmenter;
@@ -57,7 +52,13 @@ import org.greenplum.pxf.api.utilities.ProfilesConf;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.greenplum.pxf.plugins.hive.utilities.ProfileFactory;
-import org.apache.hadoop.hive.conf.HiveConf;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Fragmenter class for HIVE tables. <br>
@@ -72,7 +73,7 @@ import org.apache.hadoop.hive.conf.HiveConf;
  * file_input_format_name_DELIM_serde_name_DELIM_serialization_properties</li>
  * </ol>
  */
-public class HiveDataFragmenter extends Fragmenter {
+public class HiveDataFragmenter extends Fragmenter implements FileSystemFragmenter {
     private static final Log LOG = LogFactory.getLog(HiveDataFragmenter.class);
     private static final short ALL_PARTS = -1;
 
