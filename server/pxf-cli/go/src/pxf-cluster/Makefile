@@ -11,3 +11,6 @@ build: depend
 
 test:
 	@GOPATH=$(GOPATH) ginkgo test
+
+clean :
+	rm -f pxf-cluster

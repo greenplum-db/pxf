@@ -64,16 +64,21 @@ compile:
 compile-cli:
 	make -C $(PXF_CLI_MAKEFILE_LOCATION)
 
-test-cli:
+test-cli: compile-cli
 	make -C $(PXF_CLI_MAKEFILE_LOCATION) test
 
-test unittest: test-cli
+clean-cli:
+	make -C $(PXF_CLI_MAKEFILE_LOCATION) clean
+
+test unittest:
 	./gradlew test
 
-tar:
+tar: compile-cli
+	mkdir -p build/stage/bin
+	cp $(PXF_CLI_MAKEFILE_LOCATION)/pxf-cluster build/stage/bin
 	./gradlew tar $(BUILD_PARAMS)
 
-clean:
+clean: clean-cli
 	./gradlew clean
 	rm -rf build
 
