@@ -24,7 +24,7 @@ parent_script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
 
 # establish PXF_HOME and global vars used by all commands
 if [ -z ${PXF_HOME} ]; then
-    export PXF_HOME="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
+    export PXF_HOME=${parent_script_dir}
 fi
 default_env_script=${PXF_HOME}/conf/pxf-env-default.sh
 tomcat_root=${PXF_HOME}/apache-tomcat
@@ -333,11 +333,6 @@ function setup_conf_directory()
     fi
 }
 
-function printUsage()
-{
-    echo $"Usage: $0 {start|stop|restart|init|status|version|cluster} [subcommands] [-y]"
-}
-
 function validate_system()
 {
     # validate curl
@@ -360,6 +355,17 @@ doVersion() {
 	exit 0
 }
 
+function printUsage()
+{
+    local normal=$(tput sgr0)
+    local bold=$(tput bold)
+    cat <<-EOF
+	${bold}usage${normal}:  pxf <command> [-y]
+	        pxf cluster <command>
+	        pxf {-h | --help}
+	EOF
+}
+
 # doHelp handles the help command
 doHelp() {
 	local normal=$(tput sgr0)
@@ -368,31 +374,18 @@ doHelp() {
 	printUsage
 	cat <<-EOF
 
-	${bold}start${normal}:
-	${tab}Start the local instance of pxf
+	${bold}List of commands${normal}:
+	  init      initialize the local PXF server instance
+	  start     start the local PXF server instance
+	  stop      stop the local PXF server instance
+	  restart   restart the local PXF server instance
+	  status    show the status of the local PXF server instance
+	  version   show the version of PXF server
+	  cluster   perform <command> on each segment host in the cluster
 
-	${bold}stop${normal}:
-	${tab}Stop the local instance of pxf
-
-	${bold}restart${normal}:
-	${tab}Restart the local instance of pxf
-
-	${bold}init${normal}:
-	${tab}Initialize the local instance of pxf
-
-	${bold}status${normal}:
-	${tab}Query the status of the local instance of pxf
-
-	${bold}version${normal}:
-	${tab}Print the version of pxf
-
-	${bold}cluster {start|stop|restart|init|status}${normal}:
-	${tab}Issue a command for the entire cluster, takes a subcommand
-
-	${bold}Bypass ${bold}PXF_CONF${normal} verification during init${normal}:
-	${tab}When ${bold}PXF_CONF${normal} is not set, avoid confirmation of using \$HOME/pxf as ${bold}PXF_CONF${normal} with ${bold}-y${normal}
-	${tab}Note: ${bold}cluster init${normal} does not take this flag, ${bold}PXF_CONF${normal} must be set
-
+	${bold}Options${normal}:
+	  -h, --help    show command help
+	  -y            answer yes, use default PXF_CONF=\$HOME/pxf user configuration directory
 	EOF
 	exit 0
 }
@@ -460,7 +453,7 @@ function doStatus()
 function doCluster()
 {
 	shift # drop the 'cluster' arg
-	"$parent_script_dir/bin/pxf-cluster" "$@"
+	GPHOME=${GPHOME:-"${PXF_HOME}/.."} "$parent_script_dir/bin/pxf-cluster" "$@"
 }
 
 pxf_script_command=$1
@@ -491,7 +484,7 @@ case "${pxf_script_command}" in
 	'status' )
 		doStatus
 		;;
-	'help' )
+	'help' | '-h' | '--help' )
 		doHelp
 		;;
 	'version' )
