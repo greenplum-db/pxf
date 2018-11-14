@@ -110,14 +110,14 @@ Dev pipelines can be deployed with an optional feature name
 ```
 
 ```
-./deploy dev master -f feature-foo
+./deploy dev master feature-foo
 ```
 To deploy dev pipeline against gpdb 5X_STABLE branch, use:
 ```
 ./deploy dev 5x
 ```
 ```
-./deploy dev 5x -f feature-foo
+./deploy dev 5x feature-foo
 ```
 
 The master and 5X pipelines are exposed. Here are the commands to expose the pipelines, similar to the GPDB pipelines. The pipelines are currently located at https://ud.ci.gpdb.pivotal.io/

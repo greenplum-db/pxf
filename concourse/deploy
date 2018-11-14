@@ -104,9 +104,9 @@ def build_parser(output_filename):
                             action='store',
                             help='GPDB Branch ("master", "5x")')
 
-    pxf_parser.add_argument('-f', '--pxf_branch',
+    pxf_parser.add_argument('feature',
+                            nargs="?",
                             action='store',
-                            dest='pxf_branch',
                             default="master",
                             help='PXF Branch')
 
