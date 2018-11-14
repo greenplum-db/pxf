@@ -72,22 +72,22 @@ function update_pxf_conf()
 {
     if [ -z "${PXF_CONF}" ]; then
         # PXF_CONF was not specified during init command
-		# need to default to user's home directory and ask for confirmation, unless silent mode is used
-		local current_user=$( id -un )
-		local pxf_user_home="${HOME}"
-		if [ -z "${pxf_user_home}" ]; then
-			fail "PXF_CONF is not set and user ${current_user} home directory is not defined"
-		elif [ ! -d "${pxf_user_home}" ]; then
-			fail "PXF_CONF is not set and user ${current_user} home directory ${pxf_user_home} does not exist"
-		else
-			export PXF_CONF="${pxf_user_home}/pxf"
-			if [ "${silent}" == "false" ]; then
-				confirm_with_user
-			fi
-		fi
+        # need to default to user's home directory and ask for confirmation, unless silent mode is used
+        local current_user=$( id -un )
+        local pxf_user_home="${HOME}"
+        if [ -z "${pxf_user_home}" ]; then
+            fail "PXF_CONF is not set and user ${current_user} home directory is not defined"
+        elif [ ! -d "${pxf_user_home}" ]; then
+            fail "PXF_CONF is not set and user ${current_user} home directory ${pxf_user_home} does not exist"
+        else
+            export PXF_CONF="${pxf_user_home}/pxf"
+            if [ "${silent}" == "false" ]; then
+                confirm_with_user
+            fi
+        fi
     fi
 
-	echo "Using ${PXF_CONF} as a location for user-configurable files"
+    echo "Using ${PXF_CONF} as a location for user-configurable files"
 
     # update the value on PXF_CONF in the default env file
     sed "${SED_OPTS[@]}" "s|{PXF_CONF:=.*}$|{PXF_CONF:=\"${PXF_CONF}\"}|g" ${default_env_script}
@@ -97,7 +97,7 @@ function get_environment()
 {
     # load default environment
     if [ ! -f ${default_env_script} ]; then
-	    fail "Failed to find ${default_env_script}"
+        fail "Failed to find ${default_env_script}"
     fi
     source ${default_env_script}
 
@@ -120,14 +120,14 @@ function fail()
 #
 function createInstance()
 {
-	mkdir -p ${instance_root}
-	mkdir -p ${instance_root}/${instance_name}
-	cp -r ${tomcat_root}/* ${instance_root}/${instance_name}/.
+    mkdir -p ${instance_root}
+    mkdir -p ${instance_root}/${instance_name}
+    cp -r ${tomcat_root}/* ${instance_root}/${instance_name}/.
 
-	if [ $? -gt 0 ]; then
-		echo "ERROR: instance creation failed"
-		return 1
-	fi
+    if [ $? -gt 0 ]; then
+        echo "ERROR: instance creation failed"
+        return 1
+    fi
 
     chmod 700 ${instance_root}/${instance_name}
 
@@ -146,10 +146,10 @@ function createInstance()
 #
 function deployWebapp()
 {
-	cp ${PXF_HOME}/lib/pxf.war ${instance_root}/${instance_name}/webapps/ || return 1
-	cp ${PXF_HOME}/lib/pxf-service-*[0-9].jar ${instance_root}/${instance_name}/lib/ || return 1
+    cp ${PXF_HOME}/lib/pxf.war ${instance_root}/${instance_name}/webapps/ || return 1
+    cp ${PXF_HOME}/lib/pxf-service-*[0-9].jar ${instance_root}/${instance_name}/lib/ || return 1
 
-	return 0
+    return 0
 }
 
 #
@@ -158,24 +158,24 @@ function deployWebapp()
 #
 function waitForTomcat()
 {
-	attempts=0
-	max_attempts=$1 # number of attempts to connect
-	sleep_time=1 # sleep 1 second between attempts
+    attempts=0
+    max_attempts=$1 # number of attempts to connect
+    sleep_time=1 # sleep 1 second between attempts
 
-	# wait until tomcat is up:
-	echo Checking if tomcat is up and running...
-	until [[ "`curl --silent --connect-timeout 1 -I http://localhost:${PXF_PORT} | grep 'Coyote'`" != "" ]];
-	do
-		let attempts=attempts+1
-		if [[ "$attempts" -eq "$max_attempts" ]]; then
-			echo ERROR: PXF is down - tomcat is not running
-			return 1
-		fi
-		echo "tomcat not responding, re-trying after ${sleep_time} second (attempt number ${attempts})"
-		sleep ${sleep_time}
-	done
+    # wait until tomcat is up:
+    echo Checking if tomcat is up and running...
+    until [[ "`curl --silent --connect-timeout 1 -I http://localhost:${PXF_PORT} | grep 'Coyote'`" != "" ]];
+    do
+        let attempts=attempts+1
+        if [[ "$attempts" -eq "$max_attempts" ]]; then
+            echo ERROR: PXF is down - tomcat is not running
+            return 1
+        fi
+        echo "tomcat not responding, re-trying after ${sleep_time} second (attempt number ${attempts})"
+        sleep ${sleep_time}
+    done
 
-	return 0
+    return 0
 }
 
 #
@@ -184,19 +184,19 @@ function waitForTomcat()
 #
 function checkWebapp()
 {
-	waitForTomcat $1 || return 1
+    waitForTomcat $1 || return 1
 
-	echo "Checking if PXF webapp is up and running..."
-	curlResponse=$(${curl} -s "http://localhost:${PXF_PORT}/pxf/v0")
-	expectedResponse="Wrong version v0, supported version is v[0-9]+"
+    echo "Checking if PXF webapp is up and running..."
+    curlResponse=$(${curl} -s "http://localhost:${PXF_PORT}/pxf/v0")
+    expectedResponse="Wrong version v0, supported version is v[0-9]+"
 
-	if [[ ${curlResponse} =~ $expectedResponse ]]; then
-		echo PXF webapp is listening on port ${PXF_PORT}
-		return 0
-	fi
+    if [[ ${curlResponse} =~ $expectedResponse ]]; then
+        echo PXF webapp is listening on port ${PXF_PORT}
+        return 0
+    fi
 
-	echo "ERROR: PXF webapp is inaccessible but tomcat is up. Check logs for more information"
-	return 1
+    echo "ERROR: PXF webapp is inaccessible but tomcat is up. Check logs for more information"
+    return 1
 }
 
 # instanceExists returns 0 when the instance exists
