@@ -212,7 +212,7 @@ function instanceExists()
 }
 
 #
-# configureWebapp patches the webapp with pxf and user overriden configs
+# configureWebapp patches the webapp with pxf and user overridden configs
 # applied only if PXF_HOME is defined
 #
 function configureWebapp()
@@ -225,7 +225,7 @@ function configureWebapp()
     rm -rf pxf
     mkdir pxf
     cd pxf
-    unzip -q ../pxf.war
+    jar -xf ../pxf.war
     popd > /dev/null
 
     context_file=${instance_root}/${instance_name}/webapps/pxf/META-INF/context.xml
@@ -344,12 +344,6 @@ function validate_system()
     which curl &> /dev/null
     if [ $? -ne 0 ]; then
 		fail "curl is not installed, please install"
-    fi
-
-    # validate unzip
-    which unzip &> /dev/null
-    if [ $? -ne 0 ]; then
-        fail "unzip is not installed, please install"
     fi
 }
 
