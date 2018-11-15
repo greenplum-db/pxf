@@ -60,10 +60,8 @@ function install_hadoop_single_cluster() {
         export IMPERSONATION=${IMPERSONATION} &&
         export GPHD_ROOT=${GPHD_ROOT} &&
         sed -i 's/edw0/hadoop/' /etc/hosts &&
-        sed -i -e 's/>tez/>mr/g' -e 's/localhost/${hadoop_ip}/g' ${GPHD_ROOT}/hive/conf/hive-site.xml &&
-        sed -i -e 's/0.0.0.0/${hadoop_ip}/g' ${GPHD_ROOT}/hadoop/etc/hadoop/core-site.xml &&
-        sed -i -e 's/0.0.0.0/${hadoop_ip}/g' ${GPHD_ROOT}/hadoop/etc/hadoop/hdfs-site.xml &&
-        sed -i -e 's/0.0.0.0/${hadoop_ip}/g' ${GPHD_ROOT}/hadoop/etc/hadoop/yarn-site.xml &&
+        sed -i -e 's/>tez/>mr/g' -e 's/localhost/${hadoop_ip}/g' \${GPHD_ROOT}/hive/conf/hive-site.xml &&
+        sed -i -e 's/0.0.0.0/${hadoop_ip}/g' \${GPHD_ROOT}/hadoop/etc/hadoop/{core,hdfs,yarn}-site.xml &&
 
         yum install -y -d 1 java-1.8.0-openjdk-devel &&
         echo 'export JAVA_HOME=/usr/lib/jvm/jre' >> ~/.bashrc &&
@@ -102,8 +100,7 @@ function install_pxf_and_hadoop() {
     # init all PXFs using cluster command
     # pxf init is required on master because automation script is expecting it
     ssh ${SSH_OPTS} gpadmin@mdw "source ${GPHOME}/greenplum_path.sh &&
-        PXF_CONF=${PXF_CONF_DIR} ${GPHOME}/pxf/bin/pxf cluster init &&
-        PXF_CONF=${PXF_CONF_DIR} ${GPHOME}/pxf/bin/pxf init"
+        PXF_CONF=${PXF_CONF_DIR} ${GPHOME}/pxf/bin/pxf cluster init"
     # configure pxf on all segment hosts
     for segment in ${gpdb_segments}; do
         configure_pxf ${segment} ${hadoop_ip} &

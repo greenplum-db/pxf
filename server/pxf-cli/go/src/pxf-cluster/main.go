@@ -32,12 +32,17 @@ func main() {
 	for _, config := range segConfigs {
 		hostNames = append(hostNames, config.Hostname)
 	}
+
+	hostList := cluster.ON_HOSTS
+	if inputs.Args[0] == "init" {
+		hostList = cluster.ON_HOSTS_AND_MASTER
+	}
 	globalCluster.GenerateAndExecuteCommand(
 		fmt.Sprintf("Executing %s on all hosts", inputs.Args[0]),
 		func(contentID int) string {
 		    return strings.Join(pxf.RemoteCommandToRunOnSegments(inputs), " ")
 	    },
-		cluster.ON_HOSTS_AND_MASTER)
+		hostList)
 }
 
 func fatalOnError(err error) {
