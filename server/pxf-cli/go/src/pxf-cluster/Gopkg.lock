@@ -10,10 +10,10 @@
   version = "v3.5.1"
 
 [[projects]]
-  branch = "master"
-  digest = "1:34f793ebe579a9534755e739f0d34c2ff12cba6cf8c075ef451275712b770ba5"
+  digest = "1:7582014b43a0749370ff19c1b2a2d777da5470336f49553c1c6934ecd97a3b59"
   name = "github.com/greenplum-db/gp-common-go-libs"
   packages = [
+    "cluster",
     "dbconn",
     "gplog",
     "operating",
@@ -214,6 +214,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/greenplum-db/gp-common-go-libs/cluster",
     "github.com/greenplum-db/gp-common-go-libs/dbconn",
     "github.com/greenplum-db/gp-common-go-libs/gplog",
     "github.com/onsi/ginkgo",
