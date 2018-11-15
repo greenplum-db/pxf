@@ -10,8 +10,9 @@ GPHD_ROOT="/singlecluster"
 
 function configure_local_hdfs() {
 
-	sed -i -e 's|hdfs://0.0.0.0:8020|hdfs://hadoop:8020|' ${PXF_CONF_DIR}/servers/default/core-site.xml ${PXF_CONF_DIR}/servers/default/hbase-site.xml
-	sed -i -e "s/>tez/>mr/g" ${PXF_CONF_DIR}/servers/default/hive-site.xml
+	sed -i -e 's|hdfs://0.0.0.0:8020|hdfs://hadoop:8020|' \
+	${GPHD_ROOT}/hadoop/etc/hadoop/core-site.xml ${GPHD_ROOT}/hbase/conf/hbase-site.xml
+	sed -i -e "s/>tez/>mr/g" ${GPHD_ROOT}/hive/conf/hive-site.xml
 }
 
 function run_multinode_smoke_test() {
@@ -55,7 +56,6 @@ function open_ssh_tunnels() {
 }
 
 function close_ssh_tunnels() {
-
 	ssh -S /tmp/mdw5432 -O exit gpadmin@mdw
 	ssh -S /tmp/hadoop2181 -O exit root@hadoop
 }
@@ -66,7 +66,7 @@ function run_pxf_automation() {
 	sed -i 's/sutFile=default.xml/sutFile=MultiNodesCluster.xml/g' pxf_src/automation/jsystem.properties
 	chown -R gpadmin:gpadmin /home/gpadmin pxf_src/automation
 
-    cat > /home/gpadmin/run_pxf_automation_test.sh <<EOF
+	cat > /home/gpadmin/run_pxf_automation_test.sh <<EOF
 set -exo pipefail
 
 source ${GPHOME}/greenplum_path.sh
