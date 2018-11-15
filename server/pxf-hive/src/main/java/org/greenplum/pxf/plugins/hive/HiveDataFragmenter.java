@@ -73,7 +73,8 @@ import java.util.TreeSet;
  * file_input_format_name_DELIM_serde_name_DELIM_serialization_properties</li>
  * </ol>
  */
-public class HiveDataFragmenter extends Fragmenter implements FileSystemFragmenter {
+@FileSystemFragmenter
+public class HiveDataFragmenter extends Fragmenter {
     private static final Log LOG = LogFactory.getLog(HiveDataFragmenter.class);
     private static final short ALL_PARTS = -1;
 

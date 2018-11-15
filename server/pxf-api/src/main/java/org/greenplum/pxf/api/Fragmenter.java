@@ -45,7 +45,7 @@ public abstract class Fragmenter extends Plugin {
         fragments = new LinkedList<>();
 
         // TODO: we will add a test for this case when it's simpler to mock Configuration
-        if (this instanceof FileSystemFragmenter &&
+        if (this.getClass().isAnnotationPresent(FileSystemFragmenter.class) &&
                 StringUtils.startsWith(new Configuration().get("fs.defaultFS"), "file:")) {
             throw new SecurityException("core-site.xml is missing or using unsupported file:// as default filesystem");
         }

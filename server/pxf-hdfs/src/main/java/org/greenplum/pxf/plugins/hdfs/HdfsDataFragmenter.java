@@ -44,7 +44,8 @@ import java.util.List;
  * the data into fragments and return a list of them along with a list of
  * host:port locations for each.
  */
-public class HdfsDataFragmenter extends Fragmenter implements FileSystemFragmenter {
+@FileSystemFragmenter
+public class HdfsDataFragmenter extends Fragmenter {
     private JobConf jobConf;
 
     /**

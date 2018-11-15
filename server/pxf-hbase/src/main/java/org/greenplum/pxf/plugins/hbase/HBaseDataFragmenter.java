@@ -55,7 +55,8 @@ import java.util.Map;
  * This class also puts HBase lookup table information for the given
  * table (if exists) in each fragment's user data field.
  */
-public class HBaseDataFragmenter extends Fragmenter implements FileSystemFragmenter {
+@FileSystemFragmenter
+public class HBaseDataFragmenter extends Fragmenter {
 
     private static final Configuration hbaseConfiguration = HBaseUtilities.initHBaseConfiguration();
     private Admin hbaseAdmin;

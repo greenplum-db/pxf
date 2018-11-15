@@ -46,7 +46,8 @@ import java.util.List;
  * Fragmenter for Parquet on HDFS.
  * Returns list of splits for a given HDFS path.
  */
-public class ParquetDataFragmenter extends Fragmenter implements FileSystemFragmenter {
+@FileSystemFragmenter
+public class ParquetDataFragmenter extends Fragmenter {
     private Job job;
 
     public ParquetDataFragmenter(InputData md) {
