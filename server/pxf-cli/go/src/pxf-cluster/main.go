@@ -7,8 +7,8 @@ import (
 	"github.com/greenplum-db/gp-common-go-libs/gplog"
 	"log"
 	"os"
-	"pxf-cluster/gpssh"
 	"pxf-cluster/pxf"
+	"strings"
 )
 
 func main() {
@@ -27,15 +27,17 @@ func main() {
 
 	segConfigs := cluster.MustGetSegmentConfiguration(connection)
 
-	remoteCommand := pxf.RemoteCommandToRunOnSegments(inputs)
-
+	globalCluster := cluster.NewCluster(segConfigs)
 	var hostNames []string
 	for _, config := range segConfigs {
 		hostNames = append(hostNames, config.Hostname)
 	}
-	out, err := gpssh.Command(hostNames, remoteCommand).CombinedOutput()
-	fmt.Println(string(out))
-	fatalOnError(err)
+	globalCluster.GenerateAndExecuteCommand(
+		fmt.Sprintf("Executing %s on all hosts", inputs.Args[0]),
+		func(contentID int) string {
+		    return strings.Join(pxf.RemoteCommandToRunOnSegments(inputs), " ")
+	    },
+		cluster.ON_HOSTS_AND_MASTER)
 }
 
 func fatalOnError(err error) {
