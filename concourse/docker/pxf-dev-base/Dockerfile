@@ -22,6 +22,6 @@ RUN cd /tmp/pxf_src/server && \
     mkdir -p /home/gpadmin && \
     mv /root/.m2 /home/gpadmin && \
     chown -R 1000:1000 /home/gpadmin && \
-    echo >>home/gpadmin/.bash_profile '[ -r /etc/bashrc ] && source /etc/bashrc' && \
+    chown -R 1000:1000 /opt/go && \
     ln -s /home/gpadmin/.gradle /root/.gradle && \
     rm -rf /tmp/pxf_src

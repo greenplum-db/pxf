@@ -32,4 +32,6 @@ export BUILD_PARAMS="-x test"
 export LANG=en_US.UTF-8
 export JAVA_HOME=/etc/alternatives/java_sdk
 export SLAVES=1
+export GOPATH=/opt/go
+export PATH=\${GOPATH}/bin:/usr/local/go/bin:\$PATH
 EOF
