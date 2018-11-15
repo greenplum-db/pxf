@@ -20,9 +20,7 @@ package org.greenplum.pxf.plugins.hdfs;
  */
 
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
@@ -32,9 +30,7 @@ import org.apache.parquet.hadoop.ParquetFileReader;
 import org.apache.parquet.hadoop.ParquetInputFormat;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
 import org.apache.parquet.schema.MessageType;
-import org.greenplum.pxf.api.FileSystemFragmenter;
 import org.greenplum.pxf.api.Fragment;
-import org.greenplum.pxf.api.Fragmenter;
 import org.greenplum.pxf.api.utilities.InputData;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 
@@ -46,24 +42,15 @@ import java.util.List;
  * Fragmenter for Parquet on HDFS.
  * Returns list of splits for a given HDFS path.
  */
-@FileSystemFragmenter
-public class ParquetDataFragmenter extends Fragmenter {
-    private Job job;
+public class ParquetDataFragmenter extends HdfsDataFragmenter {
 
     public ParquetDataFragmenter(InputData md) {
         super(md);
-        JobConf jobConf = new JobConf(inputData.getConfiguration(), ParquetDataFragmenter.class);
-        try {
-            job = Job.getInstance(jobConf);
-        } catch (IOException e) {
-            throw new RuntimeException("Unable to instantiate a job for reading fragments", e);
-        }
     }
-
 
     @Override
     public List<Fragment> getFragments() throws Exception {
-        String absoluteDataPath = HdfsUtilities.absoluteDataPath(inputData.getDataSource());
+        String absoluteDataPath = HdfsUtilities.getDataUri(inputData);
         List<InputSplit> splits = getSplits(new Path(absoluteDataPath));
 
         for (InputSplit split : splits) {
@@ -75,7 +62,7 @@ public class ParquetDataFragmenter extends Fragmenter {
             Path file = new Path(filepath);
 
             ParquetMetadata metadata = ParquetFileReader.readFooter(
-                    job.getConfiguration(), file, ParquetMetadataConverter.NO_FILTER);
+                    jobConf, file, ParquetMetadataConverter.NO_FILTER);
             MessageType schema = metadata.getFileMetaData().getSchema();
 
             byte[] fragmentMetadata = HdfsUtilities.prepareFragmentMetadata(fsp.getStart(), fsp.getLength(), fsp.getLocations());
@@ -86,25 +73,26 @@ public class ParquetDataFragmenter extends Fragmenter {
         return fragments;
     }
 
-        private List<InputSplit> getSplits (Path path) throws IOException {
-            ParquetInputFormat<Group> parquetInputFormat = new ParquetInputFormat<Group>();
-            ParquetInputFormat.setInputPaths(job, path);
-            List<InputSplit> splits = parquetInputFormat.getSplits(job);
-            ArrayList<InputSplit> result = new ArrayList<InputSplit>();
+    private List<InputSplit> getSplits(Path path) throws IOException {
+        Job job = Job.getInstance(jobConf);
+        ParquetInputFormat<Group> parquetInputFormat = new ParquetInputFormat<>();
+        ParquetInputFormat.setInputPaths(job, path);
+        List<InputSplit> splits = parquetInputFormat.getSplits(job);
+        ArrayList<InputSplit> result = new ArrayList<>();
 
-            if (splits != null) {
-                for (InputSplit split : splits) {
-                    try {
-                        if (split.getLength() > 0) {
-                            result.add(split);
-                        }
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException("Unable to read split's length", e);
+        if (splits != null) {
+            for (InputSplit split : splits) {
+                try {
+                    if (split.getLength() > 0) {
+                        result.add(split);
                     }
+                } catch (InterruptedException e) {
+                    throw new RuntimeException("Unable to read split's length", e);
                 }
             }
-
-            return result;
         }
+
+        return result;
+    }
 }
 

@@ -35,4 +35,19 @@ under the License.
             <outputFormat>org.greenplum.pxf.service.io.GPDBWritable</outputFormat>
         </plugins>
     </profile>
+    <profile>
+        <name>S3Text</name>
+        <description>This profile is suitable for using when reading delimited single line records from plain text files
+            on S3
+        </description>
+        <plugins>
+        </plugins>
+    </profile>
+    <profile>
+        <name>ADLParquet</name>
+        <description>This profile is suitable for using when reading parquet on Azure Data Lake
+        </description>
+        <plugins>
+        </plugins>
+    </profile>
 </profiles>

@@ -98,6 +98,7 @@ public class ProtocolData extends InputData {
 
         fragmenter = getUserProperty("FRAGMENTER");
         metadata = getUserProperty("METADATA");
+
         dataSource = getProperty("DATA-DIR");
 
         user = getProperty("USER");

@@ -202,4 +202,46 @@ under the License.
             <resolver>org.greenplum.pxf.plugins.ignite.IgniteResolver</resolver>
         </plugins>
     </profile>
+    <profile>
+        <name>S3Text</name>
+        <description>This profile is suitable for using when reading delimited single line records from plain text files
+            on S3
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.LineBreakAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
+        </plugins>
+    </profile>
+    <profile>
+        <name>S3Parquet</name>
+        <description>This profile is suitable for using when reading parquet on S3
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.ParquetDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.ParquetFileAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.ParquetResolver</resolver>
+        </plugins>
+    </profile>
+    <profile>
+        <name>ADLText</name>
+        <description>This profile is suitable for using when reading delimited single line records from plain text files
+            on Azure Data Lake
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.LineBreakAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
+        </plugins>
+    </profile>
+    <profile>
+        <name>ADLParquet</name>
+        <description>This profile is suitable for using when reading parquet on Azure Data Lake
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.ParquetDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.ParquetFileAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.ParquetResolver</resolver>
+        </plugins>
+    </profile>
 </profiles>

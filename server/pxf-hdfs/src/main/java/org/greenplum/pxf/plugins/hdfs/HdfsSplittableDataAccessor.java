@@ -8,9 +8,9 @@ package org.greenplum.pxf.plugins.hdfs;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -33,8 +33,11 @@ import org.greenplum.pxf.api.utilities.Plugin;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.ListIterator;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Accessor for accessing a splittable HDFS data sources. HDFS will divide the
@@ -51,7 +54,7 @@ public abstract class HdfsSplittableDataAccessor extends Plugin implements
     protected ListIterator<InputSplit> iter;
     protected JobConf jobConf;
     protected Object key, data;
-    protected boolean isDFS;
+    protected HdfsUtilities.HCFSType hcfsType;
 
     /**
      * Constructs an HdfsSplittableDataAccessor
@@ -64,15 +67,11 @@ public abstract class HdfsSplittableDataAccessor extends Plugin implements
         super(input);
         inputFormat = inFormat;
 
-        // 1. Load Hadoop configuration defined in $PXF_CONF/server/$serverName/*.xml files
-        conf = inputData.getConfiguration();
-
         // 2. variable required for the splits iteration logic
-        jobConf = new JobConf(conf, HdfsSplittableDataAccessor.class);
+        jobConf = new JobConf(inputData.getConfiguration(), HdfsSplittableDataAccessor.class);
 
         // Check if the underlying configuration is for HDFS
-        String defaultFS = conf.get("fs.defaultFS");
-        isDFS = (defaultFS != null) && defaultFS.startsWith("hdfs://");
+        hcfsType = HdfsUtilities.getHCFSType(input);
     }
 
     /**

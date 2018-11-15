@@ -8,9 +8,9 @@ package org.greenplum.pxf.api.utilities;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -31,6 +31,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.stream.Stream;
 
 
 /**
@@ -112,6 +113,17 @@ public class InputData {
      * Constructs an empty InputData
      */
     public InputData() {
+    }
+
+    /**
+     * Returns the stream of key-value pairs defined in the request parameters
+     *
+     * @returns stream of map entries
+     */
+    public Stream<Map.Entry<String, String>> getUserPropertiesStream() {
+        return requestParametersMap.entrySet().stream()
+                .filter(e -> e.getKey().toUpperCase().startsWith(USER_PROP_PREFIX) ||
+                        e.getKey().toLowerCase().startsWith(USER_PROP_PREFIX.toLowerCase()));
     }
 
     /**
@@ -432,24 +444,28 @@ public class InputData {
         // add all other *-site.xml files from default cluster will be added as "default" resources
         // by JobConf class or other Hadoop libraries on as-needed basis
 
-        if (DEFAULT_SERVER_NAME.equals(serverName)) {
-            return configuration;
-        }
 
-        // determine full path for server configuration directory
-        String directoryName = SERVER_CONFIG_DIR_PREFIX + serverName;
-        File serverDirectory = new File(directoryName);
-        if (!serverDirectory.exists()) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Directory " + directoryName + " does not exist");
+        if (!DEFAULT_SERVER_NAME.equals(serverName)) {
+            // determine full path for server configuration directory
+            String directoryName = SERVER_CONFIG_DIR_PREFIX + serverName;
+            File serverDirectory = new File(directoryName);
+            if (!serverDirectory.exists()) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Directory " + directoryName + " does not exist");
+                }
+                return configuration;
             }
-            return configuration;
+
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Using directory " + directoryName + " for server " + serverName + " configuration");
+            }
+            addSiteFilesAsResources(configuration, serverDirectory);
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Using directory " + directoryName + " for server " + serverName + " configuration");
-        }
-        addSiteFilesAsResources(configuration, serverDirectory);
+        // force properties to load by doing a get
+        getUserPropertiesStream()
+                .forEach(entry -> configuration.set(entry.getKey()
+                        .substring(InputData.USER_PROP_PREFIX.length()), entry.getValue()));
 
         return configuration;
     }

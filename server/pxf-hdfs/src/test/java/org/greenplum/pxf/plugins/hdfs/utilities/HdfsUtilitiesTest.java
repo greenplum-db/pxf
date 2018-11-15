@@ -8,9 +8,9 @@ package org.greenplum.pxf.plugins.hdfs.utilities;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,7 +18,6 @@ package org.greenplum.pxf.plugins.hdfs.utilities;
  * specific language governing permissions and limitations
  * under the License.
  */
-
 
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.utilities.InputData;
@@ -61,6 +60,32 @@ public class HdfsUtilitiesTest {
         factory = mock(CompressionCodecFactory.class);
         Log = mock(Log.class);
         Whitebox.setInternalState(HdfsUtilities.class, Log);
+    }
+
+    @Test
+    public void getDataPathForAnS3Profile() throws Exception {
+        InputData inputData = mock(InputData.class);
+        when(inputData.getConfiguration()).thenReturn(new Configuration());
+        when(inputData.getDataSource()).thenReturn("bucketname/filename");
+        when(inputData.getProfile()).thenReturn("S3Parquet");
+        assertEquals("s3a://bucketname/filename", HdfsUtilities.getDataUri(inputData));
+    }
+
+    @Test
+    public void getDataPathForAnAzureDataLakeProfile() throws Exception {
+        InputData inputData = mock(InputData.class);
+        when(inputData.getConfiguration()).thenReturn(new Configuration());
+        when(inputData.getDataSource()).thenReturn("mystore.azuredatalakestore.net/filename");
+        when(inputData.getProfile()).thenReturn("ADLText");
+        assertEquals("adl://mystore.azuredatalakestore.net/filename", HdfsUtilities.getDataUri(inputData));
+    }
+
+    @Test
+    public void getDataPathForSomeOtherProfile() throws Exception {
+        InputData inputData = mock(InputData.class);
+        when(inputData.getConfiguration()).thenReturn(new Configuration());
+        when(inputData.getDataSource()).thenReturn("foo/bar");
+        assertEquals("/foo/bar", HdfsUtilities.getDataUri(inputData));
     }
 
     @Test

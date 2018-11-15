@@ -285,4 +285,16 @@ public class Utilities {
     public static boolean isUserImpersonationEnabled() {
         return StringUtils.equalsIgnoreCase(System.getProperty(PROPERTY_KEY_USER_IMPERSONATION, ""), "true");
     }
+
+    /**
+     * Data sources are absolute data paths. Method ensures that dataSource
+     * begins with '/' unless the path includes the protocol as a prefix
+     *
+     * @param dataSource The path to a file or directory of interest.
+     *                   Retrieved from the client request.
+     * @return an absolute data path
+     */
+    public static String absoluteDataPath(String dataSource) {
+        return (dataSource.charAt(0) == '/') ? dataSource : "/" + dataSource;
+    }
 }

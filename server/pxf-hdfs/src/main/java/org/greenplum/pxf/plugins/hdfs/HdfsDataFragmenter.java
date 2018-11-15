@@ -46,7 +46,7 @@ import java.util.List;
  */
 @FileSystemFragmenter
 public class HdfsDataFragmenter extends Fragmenter {
-    private JobConf jobConf;
+    protected JobConf jobConf;
 
     /**
      * Constructs an HdfsDataFragmenter object.
@@ -55,7 +55,6 @@ public class HdfsDataFragmenter extends Fragmenter {
      */
     public HdfsDataFragmenter(InputData md) {
         super(md);
-
         jobConf = new JobConf(inputData.getConfiguration(), HdfsDataFragmenter.class);
     }
 
@@ -66,13 +65,13 @@ public class HdfsDataFragmenter extends Fragmenter {
      */
     @Override
     public List<Fragment> getFragments() throws Exception {
-        String absoluteDataPath = HdfsUtilities.absoluteDataPath(inputData.getDataSource());
-        List<InputSplit> splits = getSplits(new Path(absoluteDataPath));
+        Path path = new Path(HdfsUtilities.getDataUri(inputData));
+        List<InputSplit> splits = getSplits(path);
 
         for (InputSplit split : splits) {
             FileSplit fsp = (FileSplit) split;
 
-            String filepath = fsp.getPath().toUri().getPath();
+            String filepath = fsp.getPath().toString();
             String[] hosts = fsp.getLocations();
 
             /*
@@ -89,7 +88,7 @@ public class HdfsDataFragmenter extends Fragmenter {
 
     @Override
     public FragmentsStats getFragmentsStats() throws Exception {
-        String absoluteDataPath = HdfsUtilities.absoluteDataPath(inputData.getDataSource());
+        String absoluteDataPath = HdfsUtilities.getDataUri(inputData);
         ArrayList<InputSplit> splits = getSplits(new Path(absoluteDataPath));
 
         if (splits.isEmpty()) {

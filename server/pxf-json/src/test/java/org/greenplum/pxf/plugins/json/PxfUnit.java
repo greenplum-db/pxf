@@ -8,9 +8,9 @@ package org.greenplum.pxf.plugins.json;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -386,9 +386,6 @@ public abstract class PxfUnit {
 		while (iter.hasNext()) {
 			JsonNode fragNode = iter.next();
 			String sourceData = fragNode.get("sourceName").getTextValue();
-			if (!sourceData.startsWith("/")) {
-				sourceData = "/" + sourceData;
-			}
 			paramsMap.put("X-GP-DATA-DIR", sourceData);
 			paramsMap.put("X-GP-FRAGMENT-METADATA", fragNode.get("metadata").getTextValue());
 			paramsMap.put("X-GP-DATA-FRAGMENT", Integer.toString(i++));

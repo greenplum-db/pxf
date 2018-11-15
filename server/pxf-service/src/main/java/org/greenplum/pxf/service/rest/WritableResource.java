@@ -36,6 +36,7 @@ import javax.ws.rs.core.Response;
 import org.apache.catalina.connector.ClientAbortException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.hdfs.client.HdfsUtils;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.service.Bridge;
 import org.greenplum.pxf.service.WriteBridge;
