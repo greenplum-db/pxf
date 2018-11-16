@@ -373,8 +373,8 @@ doHelp() {
 	  init      initialize the local PXF server instance
 	  start     start the local PXF server instance
 	  stop      stop the local PXF server instance
-	  restart   restart the local PXF server instance
-	  status    show the status of the local PXF server instance
+	  restart   restart the local PXF server instance (not supported for cluster)
+	  status    show the status of the local PXF server instance (not supported for cluster)
 	  version   show the version of PXF server
 	  cluster   perform <command> on each segment host in the cluster
 

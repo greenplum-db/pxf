@@ -60,25 +60,25 @@ var _ = Describe("MakeValidCliInputs", func() {
 
 	It("Fails when args is nil", func() {
 		inputs, err := pxf.MakeValidCliInputs(nil)
-		Expect(err).To(Equal(errors.New("usage: pxf cluster {start|stop|restart|init|status}")))
+		Expect(err).To(Equal(errors.New("usage: pxf cluster {init|start|stop}")))
 		Expect(inputs).To(BeNil())
 	})
 
 	It("Fails when no arguments are passed", func() {
 		inputs, err := pxf.MakeValidCliInputs([]string{"pxf-cluster"})
-		Expect(err).To(Equal(errors.New("usage: pxf cluster {start|stop|restart|init|status}")))
+		Expect(err).To(Equal(errors.New("usage: pxf cluster {init|start|stop}")))
 		Expect(inputs).To(BeNil())
 	})
 
 	It("Fails when extra arguments are passed", func() {
 		inputs, err := pxf.MakeValidCliInputs([]string{"pxf-cluster", "init", "abc"})
-		Expect(err).To(Equal(errors.New("usage: pxf cluster {start|stop|restart|init|status}")))
+		Expect(err).To(Equal(errors.New("usage: pxf cluster {init|start|stop}")))
 		Expect(inputs).To(BeNil())
 	})
 
 	It("Fails when the subcommand is not valid", func() {
 		inputs, err := pxf.MakeValidCliInputs([]string{"pxf-cluster", "invalid"})
-		Expect(err).To(Equal(errors.New("usage: pxf cluster {start|stop|restart|init|status}")))
+		Expect(err).To(Equal(errors.New("usage: pxf cluster {init|start|stop}")))
 		Expect(inputs).To(BeNil())
 	})
 })

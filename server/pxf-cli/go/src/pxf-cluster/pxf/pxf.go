@@ -19,7 +19,7 @@ const (
 )
 
 func MakeValidCliInputs(args []string) (*CliInputs, error) {
-	usageMessage := "usage: pxf cluster {start|stop|restart|init|status}"
+	usageMessage := "usage: pxf cluster {init|start|stop}"
 	gphome, error := ValidateEnvVar(Gphome)
 	if error != nil {
 		return nil, error
@@ -28,7 +28,7 @@ func MakeValidCliInputs(args []string) (*CliInputs, error) {
 		return nil, errors.New(usageMessage)
 	}
 	switch args[1] {
-	case "start", "stop", "restart", "status":
+	case "start", "stop":
 		return &CliInputs{Gphome: gphome, PxfConf: "", Args: args[1:]}, nil
 	case "init":
 		pxfConf, error := ValidateEnvVar(PxfConf)
