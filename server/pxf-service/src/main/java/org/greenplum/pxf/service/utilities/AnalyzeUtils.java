@@ -26,7 +26,7 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.greenplum.pxf.api.Fragment;
+import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.utilities.ProtocolData;
 
 /**

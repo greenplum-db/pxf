@@ -8,9 +8,9 @@ package org.greenplum.pxf.plugins.hbase;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -21,10 +21,10 @@ package org.greenplum.pxf.plugins.hbase;
 
 
 import org.greenplum.pxf.api.*;
-import org.greenplum.pxf.api.*;
 import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.api.utilities.InputData;
-import org.greenplum.pxf.api.utilities.Plugin;
+import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.Resolver;
+import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseColumnDescriptor;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseTupleDescription;
 import org.apache.hadoop.hbase.Cell;
@@ -45,7 +45,7 @@ import java.util.List;
  *
  * Currently, the class assumes all HBase values are stored as String object Bytes encoded.
  */
-public class HBaseResolver extends Plugin implements ReadResolver {
+public class HBaseResolver extends BasePlugin implements Resolver {
     private HBaseTupleDescription tupleDescription;
 
     /**
@@ -54,7 +54,7 @@ public class HBaseResolver extends Plugin implements ReadResolver {
      * @param input query information, contains HBase table name and filter
      */
     public HBaseResolver(InputData input) {
-        super(input);
+        initialize(input);
         tupleDescription = new HBaseTupleDescription(input);
     }
 
@@ -88,6 +88,18 @@ public class HBaseResolver extends Plugin implements ReadResolver {
             fields.add(oneField);
         }
         return fields;
+    }
+
+    /**
+     * Constructs and sets the fields of a {@link OneRow}.
+     *
+     * @param record list of {@link OneField}
+     * @return the constructed {@link OneRow}
+     * @throws Exception if constructing a row from the fields failed
+     */
+    @Override
+    public OneRow setFields(List<OneField> record) throws Exception {
+        throw new UnsupportedOperationException();
     }
 
     /**

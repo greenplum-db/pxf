@@ -8,9 +8,9 @@ package org.greenplum.pxf.plugins.json;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -28,11 +28,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.ReadResolver;
+import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.api.utilities.InputData;
-import org.greenplum.pxf.api.utilities.Plugin;
+import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.BasePlugin;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -42,7 +42,7 @@ import org.codehaus.jackson.map.ObjectMapper;
  * decode this data into a JsonNode and walk the tree for each column. It supports normal value mapping via projections
  * and JSON array indexing.
  */
-public class JsonResolver extends Plugin implements ReadResolver {
+public class JsonResolver extends BasePlugin implements Resolver {
 
 	private static final Log LOG = LogFactory.getLog(JsonResolver.class);
 
@@ -56,8 +56,8 @@ public class JsonResolver extends Plugin implements ReadResolver {
 	private final List<OneField> emptyRow;
 
 	public JsonResolver(InputData inputData) throws Exception {
-		super(inputData);
-		oneFieldList = new ArrayList<OneField>();
+		initialize(inputData);
+		oneFieldList = new ArrayList<>();
 		mapper = new ObjectMapper(new JsonFactory());
 
 		// Precompute the column metadata. The metadata is used for mapping column names to json nodes.
@@ -110,6 +110,18 @@ public class JsonResolver extends Plugin implements ReadResolver {
 	}
 
 	/**
+	 * Constructs and sets the fields of a {@link OneRow}.
+	 *
+	 * @param record list of {@link OneField}
+	 * @return the constructed {@link OneRow}
+	 * @throws Exception if constructing a row from the fields failed
+	 */
+	@Override
+	public OneRow setFields(List<OneField> record) throws Exception {
+		throw new UnsupportedOperationException();
+	}
+
+	/**
 	 * @return Returns a row comprised of typed, empty fields. Used as a result of broken/malformed json records.
 	 */
 	private List<OneField> createEmptyRow() {
@@ -122,7 +134,7 @@ public class JsonResolver extends Plugin implements ReadResolver {
 
 	/**
 	 * Iterates down the root node to the child JSON node defined by the projs path.
-	 * 
+	 *
 	 * @param root
 	 *            node to to start the traversal from.
 	 * @param projs
@@ -142,7 +154,7 @@ public class JsonResolver extends Plugin implements ReadResolver {
 
 	/**
 	 * Iterates through the given JSON node to the proper index and adds the field of corresponding type
-	 * 
+	 *
 	 * @param type
 	 *            The {@link DataType} type
 	 * @param node
@@ -175,7 +187,7 @@ public class JsonResolver extends Plugin implements ReadResolver {
 
 	/**
 	 * Adds a field from a given JSON node value based on the {@link DataType} type.
-	 * 
+	 *
 	 * @param type
 	 *            The DataType type
 	 * @param val
@@ -226,7 +238,7 @@ public class JsonResolver extends Plugin implements ReadResolver {
 
 	/**
 	 * Adds a null field of the given type.
-	 * 
+	 *
 	 * @param type
 	 *            The {@link DataType} type
 	 */
@@ -236,7 +248,7 @@ public class JsonResolver extends Plugin implements ReadResolver {
 
 	/**
 	 * Converts the input line parameter into {@link JsonNode} instance.
-	 * 
+	 *
 	 * @param line
 	 *            JSON text
 	 * @return Returns a {@link JsonNode} that represents the input line or null for invalid json.

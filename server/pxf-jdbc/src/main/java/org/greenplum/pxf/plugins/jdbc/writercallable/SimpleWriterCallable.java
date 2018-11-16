@@ -21,7 +21,7 @@ package org.greenplum.pxf.plugins.jdbc.writercallable;
 
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.plugins.jdbc.JdbcResolver;
-import org.greenplum.pxf.plugins.jdbc.JdbcPlugin;
+import org.greenplum.pxf.plugins.jdbc.JdbcBasePlugin;
 
 import java.io.IOException;
 import java.sql.PreparedStatement;
@@ -74,7 +74,7 @@ class SimpleWriterCallable implements WriterCallable {
         finally {
             row = null;
             if (statementMustBeDeleted) {
-                JdbcPlugin.closeStatement(statement);
+                JdbcBasePlugin.closeStatement(statement);
                 statement = null;
             }
         }
@@ -82,9 +82,9 @@ class SimpleWriterCallable implements WriterCallable {
         return null;
     }
 
-    SimpleWriterCallable(JdbcPlugin plugin, String query, PreparedStatement statement) {
+    SimpleWriterCallable(JdbcBasePlugin plugin, String query, PreparedStatement statement) {
         if ((plugin == null) || (query == null)) {
-            throw new IllegalArgumentException("The provided JdbcPlugin or SQL query is null");
+            throw new IllegalArgumentException("The provided JdbcBasePlugin or SQL query is null");
         }
         this.plugin = plugin;
         this.query = query;
@@ -92,7 +92,7 @@ class SimpleWriterCallable implements WriterCallable {
         row = null;
     }
 
-    private final JdbcPlugin plugin;
+    private final JdbcBasePlugin plugin;
     private final String query;
     private PreparedStatement statement;
     private OneRow row;

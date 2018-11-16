@@ -31,7 +31,7 @@ import java.util.List;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.api.utilities.InputData;
+import org.greenplum.pxf.api.model.InputData;
 import org.junit.Test;
 
 public class StringPassResolverTest {

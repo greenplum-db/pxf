@@ -26,7 +26,7 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.greenplum.pxf.api.Metadata;
+import org.greenplum.pxf.api.model.Metadata;
 
 /**
  * Utility class for converting {@link Metadata} into a JSON format.

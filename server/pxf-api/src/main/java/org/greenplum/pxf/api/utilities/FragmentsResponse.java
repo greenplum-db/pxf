@@ -31,7 +31,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.codehaus.jackson.map.ObjectMapper;
 
-import org.greenplum.pxf.api.Fragment;
+import org.greenplum.pxf.api.model.Fragment;
 
 /**
  * Class for serializing fragments metadata in JSON format. The class implements

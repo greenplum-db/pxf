@@ -19,11 +19,11 @@ package org.greenplum.pxf.plugins.ignite;
  * under the License.
  */
 
-import org.greenplum.pxf.api.Fragment;
-import org.greenplum.pxf.api.Fragmenter;
-import org.greenplum.pxf.api.FragmentsStats;
+import org.greenplum.pxf.api.BaseFragmenter;
+import org.greenplum.pxf.api.model.FragmentStats;
+import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.UserDataException;
-import org.greenplum.pxf.api.utilities.InputData;
+import org.greenplum.pxf.api.model.InputData;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -42,7 +42,7 @@ import org.apache.commons.compress.utils.ByteUtils;
  *
  * This fragmenter works just like the one in PXF JDBC plugin
  */
-public class IgnitePartitionFragmenter extends Fragmenter {
+public class IgnitePartitionFragmenter extends BaseFragmenter {
     /**
      * Insert partition constraints into the prepared SQL query.
      *
@@ -228,7 +228,7 @@ public class IgnitePartitionFragmenter extends Fragmenter {
      * @throws UnsupportedOperationException when operation is not supported
      */
     @Override
-    public FragmentsStats getFragmentsStats() throws UnsupportedOperationException {
+    public FragmentStats getFragmentStats() throws UnsupportedOperationException {
         throw new UnsupportedOperationException("ANALYZE for Ignite plugin is not supported");
     }
 

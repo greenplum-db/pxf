@@ -37,8 +37,8 @@ import org.apache.catalina.connector.ClientAbortException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.greenplum.pxf.api.Metadata;
-import org.greenplum.pxf.api.MetadataFetcher;
+import org.greenplum.pxf.api.model.Metadata;
+import org.greenplum.pxf.api.model.MetadataFetcher;
 import org.greenplum.pxf.service.MetadataFetcherFactory;
 import org.greenplum.pxf.service.MetadataResponse;
 import org.greenplum.pxf.service.MetadataResponseFormatter;

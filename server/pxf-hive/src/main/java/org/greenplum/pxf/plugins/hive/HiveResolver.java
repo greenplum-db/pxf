@@ -21,11 +21,12 @@ package org.greenplum.pxf.plugins.hive;
 
 import org.apache.hadoop.io.BytesWritable;
 import org.greenplum.pxf.api.*;
-import org.greenplum.pxf.api.*;
 import org.greenplum.pxf.api.io.DataType;
+import org.greenplum.pxf.api.model.HDFSPlugin;
+import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.api.utilities.InputData;
-import org.greenplum.pxf.api.utilities.Plugin;
+import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
@@ -68,7 +69,7 @@ import java.util.Properties;
  * this bit of juggling has been necessary.
  */
 @SuppressWarnings("deprecation")
-public class HiveResolver extends Plugin implements ReadResolver {
+public class HiveResolver extends HivePlugin implements Resolver {
     private static final Log LOG = LogFactory.getLog(HiveResolver.class);
     protected static final String MAPKEY_DELIM = ":";
     protected static final String COLLECTION_DELIM = ",";
@@ -81,7 +82,6 @@ public class HiveResolver extends Plugin implements ReadResolver {
     String partitionKeys;
     protected char delimiter;
     String nullChar = "\\N";
-    private Configuration conf;
     private String hiveDefaultPartName;
     private int numberOfPartitions;
 
@@ -91,16 +91,14 @@ public class HiveResolver extends Plugin implements ReadResolver {
      * partition keys.
      *
      * @param input contains the Serde class name, the serde properties string
-     *            and the partition keys
+     *              and the partition keys
      * @throws Exception if user data was wrong or serde failed to be
-     *             instantiated
+     *                   instantiated
      */
     public HiveResolver(InputData input) throws Exception {
-        super(input);
+        initialize(input);
 
-        conf = inputData.getConfiguration();
-        hiveDefaultPartName = HiveConf.getVar(conf,
-                HiveConf.ConfVars.DEFAULTPARTITIONNAME);
+        hiveDefaultPartName = HiveConf.getVar(configuration, HiveConf.ConfVars.DEFAULTPARTITIONNAME);
         LOG.debug("Hive's default partition name is " + hiveDefaultPartName);
 
         parseUserData(input);
@@ -121,6 +119,18 @@ public class HiveResolver extends Plugin implements ReadResolver {
         record.addAll(partitionFields);
 
         return record;
+    }
+
+    /**
+     * Constructs and sets the fields of a {@link OneRow}.
+     *
+     * @param record list of {@link OneField}
+     * @return the constructed {@link OneRow}
+     * @throws Exception if constructing a row from the fields failed
+     */
+    @Override
+    public OneRow setFields(List<OneField> record) throws Exception {
+        throw new UnsupportedOperationException();
     }
 
     public List<OneField> getPartitionFields() {
@@ -155,13 +165,13 @@ public class HiveResolver extends Plugin implements ReadResolver {
         Class<?> c = Class.forName(serdeClassName, true, JavaUtils.getClassLoader());
         deserializer = (SerDe) c.newInstance();
         serdeProperties = new Properties();
-        if (propsString != null ) {
+        if (propsString != null) {
             ByteArrayInputStream inStream = new ByteArrayInputStream(propsString.getBytes());
             serdeProperties.load(inStream);
         } else {
             throw new IllegalArgumentException("propsString is mandatory to initialize serde.");
         }
-        deserializer.initialize(new JobConf(conf, HiveResolver.class), serdeProperties);
+        deserializer.initialize(new JobConf(configuration, HiveResolver.class), serdeProperties);
     }
 
     /*
@@ -330,7 +340,7 @@ public class HiveResolver extends Plugin implements ReadResolver {
      * Returns true if the partition value is Hive's default partition name
      * (defined in hive.exec.default.partition.name).
      *
-     * @param partitionType partition field type
+     * @param partitionType  partition field type
      * @param partitionValue partition value
      * @return true if the partition value is Hive's default partition
      */
@@ -363,7 +373,7 @@ public class HiveResolver extends Plugin implements ReadResolver {
                         record, toFlatten);
                 break;
             case LIST:
-                if(obj == null) {
+                if (obj == null) {
                     addOneFieldToRecord(record, DataType.TEXT, null);
                 } else {
                     List<OneField> listRecord = traverseList(obj,
@@ -373,7 +383,7 @@ public class HiveResolver extends Plugin implements ReadResolver {
                 }
                 break;
             case MAP:
-                if(obj == null) {
+                if (obj == null) {
                     addOneFieldToRecord(record, DataType.TEXT, null);
                 } else {
                     List<OneField> mapRecord = traverseMap(obj,
@@ -383,7 +393,7 @@ public class HiveResolver extends Plugin implements ReadResolver {
                 }
                 break;
             case STRUCT:
-                if(obj == null) {
+                if (obj == null) {
                     addOneFieldToRecord(record, DataType.TEXT, null);
                 } else {
                     List<OneField> structRecord = traverseStruct(obj,
@@ -393,7 +403,7 @@ public class HiveResolver extends Plugin implements ReadResolver {
                 }
                 break;
             case UNION:
-                if(obj == null) {
+                if (obj == null) {
                     addOneFieldToRecord(record, DataType.TEXT, null);
                 } else {
                     List<OneField> unionRecord = traverseUnion(obj,
@@ -437,8 +447,8 @@ public class HiveResolver extends Plugin implements ReadResolver {
     }
 
     protected List<OneField> traverseStruct(Object struct,
-                                          StructObjectInspector soi,
-                                          boolean toFlatten)
+                                            StructObjectInspector soi,
+                                            boolean toFlatten)
             throws BadRecordException, IOException {
         List<? extends StructField> fields = soi.getAllStructFieldRefs();
         List<Object> structFields = soi.getStructFieldsDataAsList(struct);
@@ -511,9 +521,9 @@ public class HiveResolver extends Plugin implements ReadResolver {
                 break;
             }
             case SHORT: {
-                if(o == null) {
+                if (o == null) {
                     val = null;
-                } else if( o.getClass().getSimpleName().equals("ByteWritable") ) {
+                } else if (o.getClass().getSimpleName().equals("ByteWritable")) {
                     val = new Short(((ByteWritable) o).get());
                 } else {
                     val = ((ShortObjectInspector) oi).get(o);
@@ -612,6 +622,7 @@ public class HiveResolver extends Plugin implements ReadResolver {
                                      DataType gpdbWritableType, Object val) {
         record.add(new OneField(gpdbWritableType.getOID(), val));
     }
+
     /*
      * Gets the delimiter character from the URL, verify and store it. Must be a
      * single ascii character (same restriction as Gpdb's). If a hex

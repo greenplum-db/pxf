@@ -8,9 +8,9 @@ package org.greenplum.pxf.service;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -21,9 +21,10 @@ package org.greenplum.pxf.service;
 
 
 import org.greenplum.pxf.api.*;
-import org.greenplum.pxf.api.*;
-import org.greenplum.pxf.api.utilities.InputData;
-import org.greenplum.pxf.api.utilities.Plugin;
+import org.greenplum.pxf.api.model.Accessor;
+import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.Resolver;
+import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.service.io.Writable;
 import org.greenplum.pxf.api.utilities.ProtocolData;
@@ -40,8 +41,8 @@ import java.util.List;
  */
 public class WriteBridge implements Bridge {
     private static final Log LOG = LogFactory.getLog(WriteBridge.class);
-    WriteAccessor fileAccessor = null;
-    WriteResolver fieldsResolver = null;
+    Accessor fileAccessor = null;
+    Resolver fieldsResolver = null;
     BridgeInputBuilder inputBuilder;
 
     /*
@@ -65,7 +66,7 @@ public class WriteBridge implements Bridge {
     }
 
     /*
-     * Read data from stream, convert it using WriteResolver into OneRow object, and
+     * Read data from stream, convert it using Resolver into OneRow object, and
      * pass to WriteAccessor to write into file.
      */
     @Override
@@ -98,12 +99,12 @@ public class WriteBridge implements Bridge {
         }
     }
 
-    private static WriteAccessor getFileAccessor(InputData inputData) throws Exception {
-        return (WriteAccessor) Utilities.createAnyInstance(InputData.class, inputData.getAccessor(), inputData);
+    private static Accessor getFileAccessor(InputData inputData) throws Exception {
+        return (Accessor) Utilities.createAnyInstance(InputData.class, inputData.getAccessor(), inputData);
     }
 
-    private static WriteResolver getFieldsResolver(InputData inputData) throws Exception {
-        return (WriteResolver) Utilities.createAnyInstance(InputData.class, inputData.getResolver(), inputData);
+    private static Resolver getFieldsResolver(InputData inputData) throws Exception {
+        return (Resolver) Utilities.createAnyInstance(InputData.class, inputData.getResolver(), inputData);
     }
 
     @Override
@@ -113,6 +114,6 @@ public class WriteBridge implements Bridge {
 
     @Override
     public boolean isThreadSafe() {
-        return ((Plugin) fileAccessor).isThreadSafe() && ((Plugin) fieldsResolver).isThreadSafe();
+        return ((BasePlugin) fileAccessor).isThreadSafe() && ((BasePlugin) fieldsResolver).isThreadSafe();
     }
 }

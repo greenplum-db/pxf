@@ -8,9 +8,9 @@ package org.greenplum.pxf.api.examples;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -19,12 +19,12 @@ package org.greenplum.pxf.api.examples;
  * under the License.
  */
 
-import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.ReadAccessor;
-import org.greenplum.pxf.api.utilities.InputData;
-import org.greenplum.pxf.api.utilities.Plugin;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.greenplum.pxf.api.model.Accessor;
+import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.BasePlugin;
 
 /**
  * Internal interface that would defined the access to a file on HDFS, but in
@@ -32,7 +32,7 @@ import org.apache.commons.logging.LogFactory;
  *
  * Demo implementation
  */
-public class DemoAccessor extends Plugin implements ReadAccessor {
+public class DemoAccessor extends BasePlugin implements Accessor {
 
     private static final Log LOG = LogFactory.getLog(DemoAccessor.class);
     private int rowNumber;
@@ -45,8 +45,9 @@ public class DemoAccessor extends Plugin implements ReadAccessor {
      * @param metaData the InputData
      */
     public DemoAccessor(InputData metaData) {
-        super(metaData);
+        initialize(metaData);
     }
+
     @Override
     public boolean openForRead() throws Exception {
         /* no-op, because this plugin doesn't read a file. */
@@ -94,5 +95,38 @@ public class DemoAccessor extends Plugin implements ReadAccessor {
     @Override
     public void closeForRead() throws Exception {
         /* Demo close doesn't do anything */
+    }
+
+    /**
+     * Opens the resource for write.
+     *
+     * @return true if the resource is successfully opened
+     * @throws Exception if opening the resource failed
+     */
+    @Override
+    public boolean openForWrite() throws Exception {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Writes the next object.
+     *
+     * @param onerow the object to be written
+     * @return true if the write succeeded
+     * @throws Exception writing to the resource failed
+     */
+    @Override
+    public boolean writeNextObject(OneRow onerow) throws Exception {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Closes the resource for write.
+     *
+     * @throws Exception if closing the resource failed
+     */
+    @Override
+    public void closeForWrite() throws Exception {
+        throw new UnsupportedOperationException();
     }
 }

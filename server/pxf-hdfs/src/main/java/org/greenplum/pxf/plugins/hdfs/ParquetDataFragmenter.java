@@ -30,8 +30,8 @@ import org.apache.parquet.hadoop.ParquetFileReader;
 import org.apache.parquet.hadoop.ParquetInputFormat;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
 import org.apache.parquet.schema.MessageType;
-import org.greenplum.pxf.api.Fragment;
-import org.greenplum.pxf.api.utilities.InputData;
+import org.greenplum.pxf.api.model.Fragment;
+import org.greenplum.pxf.api.model.InputData;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 
 import java.io.IOException;
@@ -39,7 +39,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Fragmenter for Parquet on HDFS.
+ * BaseFragmenter for Parquet on HDFS.
  * Returns list of splits for a given HDFS path.
  */
 public class ParquetDataFragmenter extends HdfsDataFragmenter {
@@ -50,7 +50,7 @@ public class ParquetDataFragmenter extends HdfsDataFragmenter {
 
     @Override
     public List<Fragment> getFragments() throws Exception {
-        String absoluteDataPath = HdfsUtilities.getDataUri(inputData);
+        String absoluteDataPath = HdfsUtilities.getDataUri(configuration, inputData);
         List<InputSplit> splits = getSplits(new Path(absoluteDataPath));
 
         for (InputSplit split : splits) {

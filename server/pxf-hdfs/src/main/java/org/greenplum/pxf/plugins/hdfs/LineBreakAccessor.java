@@ -31,9 +31,9 @@ import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.LineRecordReader;
 import org.apache.hadoop.mapred.TextInputFormat;
+import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.WriteAccessor;
-import org.greenplum.pxf.api.utilities.InputData;
+import org.greenplum.pxf.api.model.InputData;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 
 import java.io.DataOutputStream;
@@ -43,8 +43,7 @@ import java.net.URI;
 /**
  * A PXF Accessor for reading delimited plain text records.
  */
-public class LineBreakAccessor extends HdfsSplittableDataAccessor implements
-        WriteAccessor {
+public class LineBreakAccessor extends HdfsSplittableDataAccessor implements Accessor {
     private DataOutputStream dos;
     private FSDataOutputStream fsdos;
     private FileSystem fs;
@@ -78,16 +77,15 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor implements
     @Override
     public boolean openForWrite() throws Exception {
 
-        String fileName = HdfsUtilities.getDataUri(inputData);
+        String fileName = HdfsUtilities.getDataUri(configuration, inputData);
         String compressCodec = inputData.getUserProperty("COMPRESSION_CODEC");
         CompressionCodec codec = null;
 
-        conf = inputData.getConfiguration();
-        fs = FileSystem.get(URI.create(fileName), conf);
+        fs = FileSystem.get(URI.create(fileName), configuration);
 
         // get compression codec
         if (compressCodec != null) {
-            codec = HdfsUtilities.getCodec(conf, compressCodec);
+            codec = HdfsUtilities.getCodec(configuration, compressCodec);
             String extension = codec.getDefaultExtension();
             fileName += extension;
         }

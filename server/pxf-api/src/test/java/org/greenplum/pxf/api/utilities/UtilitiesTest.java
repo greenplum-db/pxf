@@ -33,12 +33,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.ObjectOutputStream;
 import java.util.List;
 
+import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.ReadAccessor;
-import org.greenplum.pxf.api.ReadResolver;
+import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.ReadVectorizedResolver;
 import org.greenplum.pxf.api.StatsAccessor;
+import org.greenplum.pxf.api.model.InputData;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.powermock.api.mockito.PowerMockito;
@@ -67,6 +68,39 @@ public class UtilitiesTest {
         public void closeForRead() throws Exception {
         }
 
+        /**
+         * Opens the resource for write.
+         *
+         * @return true if the resource is successfully opened
+         * @throws Exception if opening the resource failed
+         */
+        @Override
+        public boolean openForWrite() throws Exception {
+            return false;
+        }
+
+        /**
+         * Writes the next object.
+         *
+         * @param onerow the object to be written
+         * @return true if the write succeeded
+         * @throws Exception writing to the resource failed
+         */
+        @Override
+        public boolean writeNextObject(OneRow onerow) throws Exception {
+            return false;
+        }
+
+        /**
+         * Closes the resource for write.
+         *
+         * @throws Exception if closing the resource failed
+         */
+        @Override
+        public void closeForWrite() throws Exception {
+
+        }
+
         @Override
         public void retrieveStats() throws Exception {
         }
@@ -77,7 +111,7 @@ public class UtilitiesTest {
         }
     }
 
-    class NonStatsAccessorImpl implements ReadAccessor {
+    class NonStatsAccessorImpl implements Accessor {
 
         @Override
         public boolean openForRead() throws Exception {
@@ -92,6 +126,39 @@ public class UtilitiesTest {
         @Override
         public void closeForRead() throws Exception {
         }
+
+        /**
+         * Opens the resource for write.
+         *
+         * @return true if the resource is successfully opened
+         * @throws Exception if opening the resource failed
+         */
+        @Override
+        public boolean openForWrite() throws Exception {
+            return false;
+        }
+
+        /**
+         * Writes the next object.
+         *
+         * @param onerow the object to be written
+         * @return true if the write succeeded
+         * @throws Exception writing to the resource failed
+         */
+        @Override
+        public boolean writeNextObject(OneRow onerow) throws Exception {
+            return false;
+        }
+
+        /**
+         * Closes the resource for write.
+         *
+         * @throws Exception if closing the resource failed
+         */
+        @Override
+        public void closeForWrite() throws Exception {
+
+        }
     }
 
     class ReadVectorizedResolverImpl implements ReadVectorizedResolver {
@@ -102,12 +169,25 @@ public class UtilitiesTest {
         }
     }
 
-    class ReadResolverImpl implements ReadResolver {
+    class ReadResolverImpl implements Resolver {
 
         @Override
         public List<OneField> getFields(OneRow row) throws Exception {
             return null;
         }
+
+        /**
+         * Constructs and sets the fields of a {@link OneRow}.
+         *
+         * @param record list of {@link OneField}
+         * @return the constructed {@link OneRow}
+         * @throws Exception if constructing a row from the fields failed
+         */
+        @Override
+        public OneRow setFields(List<OneField> record) throws Exception {
+            return null;
+        }
+
     }
 
     @Test
@@ -248,11 +328,11 @@ public class UtilitiesTest {
     @Test
     public void useStats() {
         InputData metaData = mock(InputData.class);
-        ReadAccessor accessor = new StatsAccessorImpl();
+        Accessor accessor = new StatsAccessorImpl();
         when(metaData.getAggType()).thenReturn(EnumAggregationType.COUNT);
         when(metaData.getAccessor()).thenReturn("org.greenplum.pxf.api.utilities.UtilitiesTest$StatsAccessorImpl");
         assertTrue(Utilities.useStats(accessor, metaData));
-        ReadAccessor nonStatusAccessor = new NonStatsAccessorImpl();
+        Accessor nonStatusAccessor = new NonStatsAccessorImpl();
         assertFalse(Utilities.useStats(nonStatusAccessor, metaData));
 
         //Do not use stats when input data has filter

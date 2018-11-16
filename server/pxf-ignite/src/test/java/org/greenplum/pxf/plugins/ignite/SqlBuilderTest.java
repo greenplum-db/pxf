@@ -19,10 +19,9 @@ package org.greenplum.pxf.plugins.ignite;
  * under the License.
  */
 
-import org.greenplum.pxf.api.*;
-import org.greenplum.pxf.api.Fragment;
+import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.api.utilities.InputData;
+import org.greenplum.pxf.api.model.InputData;
 import org.greenplum.pxf.api.io.DataType;
 
 import java.util.ArrayList;

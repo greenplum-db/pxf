@@ -8,9 +8,9 @@ package org.greenplum.pxf.api.examples;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -21,10 +21,11 @@ package org.greenplum.pxf.api.examples;
 
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.ReadResolver;
-import org.greenplum.pxf.api.utilities.InputData;
-import org.greenplum.pxf.api.utilities.Plugin;
+import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.io.DataType;
+import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.BasePlugin;
+
 
 import java.util.LinkedList;
 import java.util.List;
@@ -34,14 +35,14 @@ import java.util.List;
  *
  * Demo implementation that returns record custom format
  */
-public class DemoResolver extends Plugin implements ReadResolver {
+public class DemoResolver extends BasePlugin implements Resolver {
     /**
      * Constructs the DemoResolver
      *
      * @param metaData the InputData
      */
     public DemoResolver(InputData metaData) {
-        super(metaData);
+        initialize(metaData);
     }
 
     /**
@@ -58,10 +59,22 @@ public class DemoResolver extends Plugin implements ReadResolver {
 
         /* break up the row into fields */
         String[] fields = ((String) data).split(",");
-        for(int colIndex=0; colIndex<fields.length; colIndex++) {
-            output.add(new OneField(DataType.VARCHAR.getOID(), fields[colIndex]));
+        for (String field : fields) {
+            output.add(new OneField(DataType.VARCHAR.getOID(), field));
         }
 
         return output;
+    }
+
+    /**
+     * Constructs and sets the fields of a {@link OneRow}.
+     *
+     * @param record list of {@link OneField}
+     * @return the constructed {@link OneRow}
+     * @throws Exception if constructing a row from the fields failed
+     */
+    @Override
+    public OneRow setFields(List<OneField> record) throws Exception {
+        throw new UnsupportedOperationException();
     }
 }

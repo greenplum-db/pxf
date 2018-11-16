@@ -37,13 +37,13 @@ import org.apache.hadoop.hive.ql.io.orc.Reader;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.hive.serde2.*;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.greenplum.pxf.api.Metadata;
-import org.greenplum.pxf.api.Metadata.Field;
+import org.greenplum.pxf.api.model.Metadata;
+import org.greenplum.pxf.api.model.Metadata.Field;
 import org.greenplum.pxf.api.UnsupportedTypeException;
 import org.greenplum.pxf.api.UserDataException;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.utilities.EnumGpdbType;
-import org.greenplum.pxf.api.utilities.InputData;
+import org.greenplum.pxf.api.model.InputData;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hive.HiveDataFragmenter;
 import org.greenplum.pxf.plugins.hive.HiveInputFormatFragmenter;
@@ -590,13 +590,10 @@ public class HiveUtilities {
      * @param inputData input data with given data source
      * @return ORC file reader
      */
-    public static Reader getOrcReader(InputData inputData) {
+    public static Reader getOrcReader(Configuration configuration, InputData inputData) {
         try {
             Path path = new Path(inputData.getDataSource());
-            Reader reader = OrcFile.createReader(path.getFileSystem(inputData.getConfiguration()), path);
-
-            return reader;
-
+            return OrcFile.createReader(path.getFileSystem(configuration), path);
         } catch (Exception e) {
             throw new RuntimeException("Exception while getting orc reader", e);
         }

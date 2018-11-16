@@ -8,9 +8,9 @@ package org.greenplum.pxf.plugins.hdfs;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -20,14 +20,13 @@ package org.greenplum.pxf.plugins.hdfs;
  */
 
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.FileSplit;
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.ReadAccessor;
-import org.greenplum.pxf.api.utilities.InputData;
-import org.greenplum.pxf.api.utilities.Plugin;
+import org.greenplum.pxf.api.model.Accessor;
+import org.greenplum.pxf.api.model.HDFSPlugin;
+import org.greenplum.pxf.api.model.InputData;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 
 import java.io.IOException;
@@ -48,10 +47,9 @@ import java.net.URI;
  * a specific file type should inherit from this class only if the file they are
  * reading does not support splitting: a protocol-buffer file, regular file, ...
  */
-public abstract class HdfsAtomicDataAccessor extends Plugin implements ReadAccessor {
-    private Configuration conf = null;
-    protected InputStream inp = null;
-    private FileSplit fileSplit = null;
+public abstract class HdfsAtomicDataAccessor extends HDFSPlugin implements Accessor {
+    protected InputStream inp;
+    private FileSplit fileSplit;
 
     /**
      * Constructs a HdfsAtomicDataAccessor object.
@@ -60,10 +58,7 @@ public abstract class HdfsAtomicDataAccessor extends Plugin implements ReadAcces
      */
     public HdfsAtomicDataAccessor(InputData input) {
         // 0. Hold the configuration data
-        super(input);
-
-        // 1. Load Hadoop configuration defined in $HADOOP_HOME/conf/*.xml files
-        conf = inputData.getConfiguration();
+        initialize(input);
 
         fileSplit = HdfsUtilities.parseFileSplit(inputData);
     }
@@ -82,7 +77,7 @@ public abstract class HdfsAtomicDataAccessor extends Plugin implements ReadAcces
         }
 
         // input data stream
-        FileSystem fs = FileSystem.get(URI.create(inputData.getDataSource()), conf); // FileSystem.get actually returns an FSDataInputStream
+        FileSystem fs = FileSystem.get(URI.create(inputData.getDataSource()), configuration); // FileSystem.get actually returns an FSDataInputStream
         inp = fs.open(new Path(inputData.getDataSource()));
 
         return (inp != null);
@@ -127,7 +122,7 @@ public abstract class HdfsAtomicDataAccessor extends Plugin implements ReadAcces
     @Override
     public boolean isThreadSafe() {
         return HdfsUtilities.isThreadSafe(
-                inputData.getConfiguration(),
+                configuration,
                 inputData.getDataSource(),
                 inputData.getUserProperty("COMPRESSION_CODEC"));
     }

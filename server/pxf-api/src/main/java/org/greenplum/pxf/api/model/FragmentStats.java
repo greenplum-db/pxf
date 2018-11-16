@@ -1,4 +1,4 @@
-package org.greenplum.pxf.api;
+package org.greenplum.pxf.api.model;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -26,9 +26,9 @@ import org.codehaus.jackson.map.ObjectMapper;
 import java.io.IOException;
 
 /**
- * FragmentsStats holds statistics for a given path.
+ * FragmentStats holds statistics for a given path.
  */
-public class FragmentsStats {
+public class FragmentStats {
 
     /**
      * Default fragment size. Assuming a fragment is equivalent to a block in
@@ -36,7 +36,7 @@ public class FragmentsStats {
      */
     public static final long DEFAULT_FRAGMENT_SIZE = 67108864L;
 
-    private static final Log LOG = LogFactory.getLog(FragmentsStats.class);
+    private static final Log LOG = LogFactory.getLog(FragmentStats.class);
 
     // number of fragments
     private long fragmentsNumber;
@@ -122,21 +122,21 @@ public class FragmentsStats {
     }
 
     /**
-     * Constructs an FragmentsStats.
+     * Constructs an FragmentStats.
      *
      * @param fragmentsNumber number of fragments
      * @param firstFragmentSize first fragment size (in bytes)
      * @param totalSize total size (in bytes)
      */
-    public FragmentsStats(long fragmentsNumber, long firstFragmentSize,
-                          long totalSize) {
+    public FragmentStats(long fragmentsNumber, long firstFragmentSize,
+                         long totalSize) {
         this.setFragmentsNumber(fragmentsNumber);
         this.setFirstFragmentSize(firstFragmentSize);
         this.setTotalSize(totalSize);
     }
 
     /**
-     * Given a {@link FragmentsStats}, serialize it in JSON to be used as the
+     * Given a {@link FragmentStats}, serialize it in JSON to be used as the
      * result string for GPDB. An example result is as follows:
      * <code>{"PXFFragmentsStats":{"fragmentsNumber":3,"firstFragmentSize":{"size"=67108864,"unit":"B"},"totalSize":{"size"=200000000,"unit"="B"}}}</code>
      *
@@ -144,7 +144,7 @@ public class FragmentsStats {
      * @return the result in json format
      * @throws IOException if converting to JSON format failed
      */
-    public static String dataToJSON(FragmentsStats stats) throws IOException {
+    public static String dataToJSON(FragmentStats stats) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         // mapper serializes all members of the class by default
         return "{\"PXFFragmentsStats\":" + mapper.writeValueAsString(stats)
@@ -160,7 +160,7 @@ public class FragmentsStats {
      *            *.csv, etc.)
      * @return the stringified data
      */
-    public static String dataToString(FragmentsStats stats, String datapath) {
+    public static String dataToString(FragmentStats stats, String datapath) {
         return "Statistics information for \"" + datapath + "\" "
                 + " Number of Fragments: " + stats.fragmentsNumber
                 + ", first Fragment size: " + stats.firstFragmentSize

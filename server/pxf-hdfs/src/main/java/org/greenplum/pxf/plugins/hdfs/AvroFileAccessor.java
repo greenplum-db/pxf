@@ -8,9 +8,9 @@ package org.greenplum.pxf.plugins.hdfs;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -21,7 +21,7 @@ package org.greenplum.pxf.plugins.hdfs;
 
 
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.utilities.InputData;
+import org.greenplum.pxf.api.model.InputData;
 
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
@@ -39,7 +39,7 @@ import static org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities.getAvroSche
  * A PXF Accessor for reading Avro File records
  */
 public class AvroFileAccessor extends HdfsSplittableDataAccessor {
-    private AvroWrapper<GenericRecord> avroWrapper = null;
+    private AvroWrapper<GenericRecord> avroWrapper;
 
     /**
      * Constructs a AvroFileAccessor that creates the job configuration and
@@ -55,7 +55,7 @@ public class AvroFileAccessor extends HdfsSplittableDataAccessor {
         // 2. Accessing the avro file through the "unsplittable" API just to get the schema.
         //    The splittable API (AvroInputFormat) which is the one we will be using to fetch
         //    the records, does not support getting the avro schema yet.
-        Schema schema = getAvroSchema(conf, inputData.getDataSource());
+        Schema schema = getAvroSchema(configuration, inputData.getDataSource());
 
         // 3. Pass the schema to the AvroInputFormat
         AvroJob.setInputSchema(jobConf, schema);
@@ -93,5 +93,38 @@ public class AvroFileAccessor extends HdfsSplittableDataAccessor {
         // in this call record variable was not set, so we return null and thus we are signaling end of
         // records sequence - in this case avroWrapper.datum() will be null
         return null;
+    }
+
+    /**
+     * Opens the resource for write.
+     *
+     * @return true if the resource is successfully opened
+     * @throws Exception if opening the resource failed
+     */
+    @Override
+    public boolean openForWrite() throws Exception {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Writes the next object.
+     *
+     * @param onerow the object to be written
+     * @return true if the write succeeded
+     * @throws Exception writing to the resource failed
+     */
+    @Override
+    public boolean writeNextObject(OneRow onerow) throws Exception {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Closes the resource for write.
+     *
+     * @throws Exception if closing the resource failed
+     */
+    @Override
+    public void closeForWrite() throws Exception {
+        throw new UnsupportedOperationException();
     }
 }

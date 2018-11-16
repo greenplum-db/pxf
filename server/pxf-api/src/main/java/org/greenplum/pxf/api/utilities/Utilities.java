@@ -23,9 +23,10 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.greenplum.pxf.api.ReadAccessor;
+import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.ReadVectorizedResolver;
 import org.greenplum.pxf.api.StatsAccessor;
+import org.greenplum.pxf.api.model.InputData;
 
 import java.io.File;
 import java.io.ByteArrayInputStream;
@@ -254,7 +255,7 @@ public class Utilities {
      * @param inputData input data which has protocol information
      * @return true if this accessor should use statistic information
      */
-    public static boolean useStats(ReadAccessor accessor, InputData inputData) {
+    public static boolean useStats(Accessor accessor, InputData inputData) {
         if (accessor instanceof StatsAccessor && useAggBridge(inputData)) {
                 return true;
         } else {

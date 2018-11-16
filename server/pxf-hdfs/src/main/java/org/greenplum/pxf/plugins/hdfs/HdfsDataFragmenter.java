@@ -20,16 +20,15 @@ package org.greenplum.pxf.plugins.hdfs;
  */
 
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
-import org.greenplum.pxf.api.FileSystemFragmenter;
-import org.greenplum.pxf.api.Fragment;
-import org.greenplum.pxf.api.Fragmenter;
-import org.greenplum.pxf.api.FragmentsStats;
-import org.greenplum.pxf.api.utilities.InputData;
+import org.greenplum.pxf.api.model.Fragment;
+import org.greenplum.pxf.api.model.FragmentStats;
+import org.greenplum.pxf.api.model.Fragmenter;
+import org.greenplum.pxf.api.model.HDFSPlugin;
+import org.greenplum.pxf.api.model.InputData;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.PxfInputFormat;
 
@@ -38,15 +37,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Fragmenter class for HDFS data resources.
+ * BaseFragmenter class for HDFS data resources.
  *
  * Given an HDFS data source (a file, directory, or wild card pattern) divide
  * the data into fragments and return a list of them along with a list of
  * host:port locations for each.
  */
-@FileSystemFragmenter
-public class HdfsDataFragmenter extends Fragmenter {
+public class HdfsDataFragmenter extends HDFSPlugin implements Fragmenter {
     protected JobConf jobConf;
+    protected List<Fragment> fragments;
 
     /**
      * Constructs an HdfsDataFragmenter object.
@@ -54,8 +53,9 @@ public class HdfsDataFragmenter extends Fragmenter {
      * @param md all input parameters coming from the client
      */
     public HdfsDataFragmenter(InputData md) {
-        super(md);
-        jobConf = new JobConf(inputData.getConfiguration(), HdfsDataFragmenter.class);
+        initialize(md);
+        jobConf = new JobConf(configuration, this.getClass());
+        fragments = new ArrayList<>();
     }
 
     /**
@@ -65,7 +65,7 @@ public class HdfsDataFragmenter extends Fragmenter {
      */
     @Override
     public List<Fragment> getFragments() throws Exception {
-        Path path = new Path(HdfsUtilities.getDataUri(inputData));
+        Path path = new Path(HdfsUtilities.getDataUri(configuration, inputData));
         List<InputSplit> splits = getSplits(path);
 
         for (InputSplit split : splits) {
@@ -87,19 +87,19 @@ public class HdfsDataFragmenter extends Fragmenter {
     }
 
     @Override
-    public FragmentsStats getFragmentsStats() throws Exception {
-        String absoluteDataPath = HdfsUtilities.getDataUri(inputData);
+    public FragmentStats getFragmentStats() throws Exception {
+        String absoluteDataPath = HdfsUtilities.getDataUri(configuration, inputData);
         ArrayList<InputSplit> splits = getSplits(new Path(absoluteDataPath));
 
         if (splits.isEmpty()) {
-            return new FragmentsStats(0, 0, 0);
+            return new FragmentStats(0, 0, 0);
         }
         long totalSize = 0;
         for (InputSplit split: splits) {
             totalSize += split.getLength();
         }
         InputSplit firstSplit = splits.get(0);
-        return new FragmentsStats(splits.size(), firstSplit.getLength(), totalSize);
+        return new FragmentStats(splits.size(), firstSplit.getLength(), totalSize);
     }
 
     private ArrayList<InputSplit> getSplits(Path path) throws IOException {

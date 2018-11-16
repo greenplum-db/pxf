@@ -18,6 +18,6 @@
  */
 
 /**
- * Provides PXF HDFS Plugin.
+ * Provides PXF HDFS BasePlugin.
  */
 package org.greenplum.pxf.plugins.hdfs;

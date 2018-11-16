@@ -23,7 +23,7 @@ import java.io.IOException;
 import org.apache.hadoop.mapred.*;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.api.utilities.InputData;
+import org.greenplum.pxf.api.model.InputData;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
@@ -51,7 +51,7 @@ public class HiveORCVectorizedAccessor extends HiveORCAccessor {
         Options options = new Options();
         addColumns(options);
         addFragments(options);
-        orcReader = HiveUtilities.getOrcReader(inputData);
+        orcReader = getOrcReader();
         vrr = orcReader.rowsOptions(options);
         return vrr.hasNext();
     }

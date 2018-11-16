@@ -26,7 +26,7 @@ import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentFactory;
 import org.apache.hadoop.mapred.*;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.api.utilities.InputData;
+import org.greenplum.pxf.api.model.InputData;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.junit.Before;
@@ -57,8 +57,8 @@ public class HiveORCAccessorTest {
     @Mock InputFormat inputFormat;
     @Mock ColumnDescriptor columnDesc;
     @Mock Reader orcReader;
-    JobConf jobConf;
-    HiveORCAccessor accessor;
+    private JobConf jobConf;
+    private HiveORCAccessor accessor;
 
     @Before
     @SuppressWarnings("unchecked")
@@ -68,7 +68,6 @@ public class HiveORCAccessorTest {
 
         PowerMockito.mockStatic(HiveUtilities.class);
         PowerMockito.when(HiveUtilities.parseHiveUserData(any(InputData.class))).thenReturn(new HiveUserData("", "", null, HiveDataFragmenter.HIVE_NO_PART_TBL, true, "1", "", 0));
-        PowerMockito.when(HiveUtilities.getOrcReader(any(InputData.class))).thenReturn(orcReader);
 
         PowerMockito.mockStatic(HdfsUtilities.class);
 
@@ -79,9 +78,9 @@ public class HiveORCAccessorTest {
         RecordReader recordReader = mock(RecordReader.class);
         PowerMockito.when(orcInputFormat.getRecordReader(any(InputSplit.class), any(JobConf.class), any(Reporter.class))).thenReturn(recordReader);
         PowerMockito.when(inputData.getAccessor()).thenReturn(HiveORCAccessor.class.getName());
-        PowerMockito.when(inputData.getConfiguration()).thenReturn(new Configuration());
 
         accessor = new HiveORCAccessor(inputData);
+        PowerMockito.when(accessor.getOrcReader()).thenReturn(orcReader);
     }
 
     @Test

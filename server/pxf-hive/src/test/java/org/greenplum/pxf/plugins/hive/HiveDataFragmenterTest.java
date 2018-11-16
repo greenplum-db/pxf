@@ -8,9 +8,9 @@ package org.greenplum.pxf.plugins.hive;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -21,7 +21,7 @@ package org.greenplum.pxf.plugins.hive;
 
 
 import org.greenplum.pxf.api.FilterParser;
-import org.greenplum.pxf.api.utilities.InputData;
+import org.greenplum.pxf.api.model.InputData;
 import org.greenplum.pxf.api.BasicFilter;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import static org.greenplum.pxf.api.FilterParser.Operation.*;
@@ -42,6 +42,7 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.core.classloader.annotations.SuppressStaticInitializationFor;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.powermock.reflect.Whitebox;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -49,7 +50,7 @@ import java.util.*;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({HiveDataFragmenter.class}) // Enables mocking 'new' calls
-@SuppressStaticInitializationFor({"org.apache.hadoop.mapred.JobConf", 
+@SuppressStaticInitializationFor({"org.apache.hadoop.mapred.JobConf",
                                   "org.apache.hadoop.hive.metastore.api.MetaException",
                                   "org.greenplum.pxf.plugins.hive.utilities.HiveUtilities"}) // Prevents static inits
 public class HiveDataFragmenterTest {
@@ -64,6 +65,7 @@ public class HiveDataFragmenterTest {
     public void construction() throws Exception {
         prepareConstruction();
         fragmenter = new HiveDataFragmenter(inputData);
+        Whitebox.setInternalState(fragmenter, "configuration", hadoopConfiguration);
         PowerMockito.verifyNew(JobConf.class).withArguments(hadoopConfiguration, HiveDataFragmenter.class);
         PowerMockito.verifyNew(HiveMetaStoreClient.class).withArguments(hiveConfiguration);
     }
@@ -320,7 +322,5 @@ public class HiveDataFragmenterTest {
 
         hiveClient = mock(HiveMetaStoreClient.class);
         PowerMockito.whenNew(HiveMetaStoreClient.class).withArguments(hiveConfiguration).thenReturn(hiveClient);
-
-        PowerMockito.when(inputData.getConfiguration()).thenReturn(hadoopConfiguration);
     }
 }

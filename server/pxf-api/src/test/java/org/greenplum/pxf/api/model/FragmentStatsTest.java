@@ -1,4 +1,4 @@
-package org.greenplum.pxf.api;
+package org.greenplum.pxf.api.model;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -24,10 +24,11 @@ import static org.junit.Assert.*;
 
 import java.io.IOException;
 
-import org.greenplum.pxf.api.FragmentsStats.SizeUnit;
+import org.greenplum.pxf.api.model.FragmentStats;
+import org.greenplum.pxf.api.model.FragmentStats.SizeUnit;
 import org.junit.Test;
 
-public class FragmentsStatsTest {
+public class FragmentStatsTest {
 
     @Test
     public void ctorSizeByte() {
@@ -65,25 +66,25 @@ public class FragmentsStatsTest {
 
     @Test
     public void dataToJSON() throws IOException {
-        FragmentsStats fragmentsStats = new FragmentsStats(25, 20000000, (long) Math.pow(5, 30));
-        String json = FragmentsStats.dataToJSON(fragmentsStats);
+        FragmentStats fragmentStats = new FragmentStats(25, 20000000, (long) Math.pow(5, 30));
+        String json = FragmentStats.dataToJSON(fragmentStats);
         String expectedJson = "{\"PXFFragmentsStats\":" +
-                "{\"fragmentsNumber\":" + fragmentsStats.getFragmentsNumber() +
+                "{\"fragmentsNumber\":" + fragmentStats.getFragmentsNumber() +
                 ",\"firstFragmentSize\":" +
-                "{\"size\":" + fragmentsStats.getFirstFragmentSize().getSize() +
-                ",\"unit\":\"" + fragmentsStats.getFirstFragmentSize().getUnit() + "\"}" +
+                "{\"size\":" + fragmentStats.getFirstFragmentSize().getSize() +
+                ",\"unit\":\"" + fragmentStats.getFirstFragmentSize().getUnit() + "\"}" +
                 ",\"totalSize\":" +
-                "{\"size\":" + fragmentsStats.getTotalSize().getSize() +
-                ",\"unit\":\"" + fragmentsStats.getTotalSize().getUnit() + "\"}" +
+                "{\"size\":" + fragmentStats.getTotalSize().getSize() +
+                ",\"unit\":\"" + fragmentStats.getTotalSize().getUnit() + "\"}" +
                 "}}";
         assertEquals(expectedJson, json);
     }
 
     @Test
     public void dataToString() {
-        FragmentsStats fragmentsStats = new FragmentsStats(25, 2000000000, (long) Math.pow(5, 30));
+        FragmentStats fragmentStats = new FragmentStats(25, 2000000000, (long) Math.pow(5, 30));
         String path = "la la la";
-        String str = FragmentsStats.dataToString(fragmentsStats, path);
+        String str = FragmentStats.dataToString(fragmentStats, path);
         String expected =  "Statistics information for \"" + path + "\" "
                 + " Number of Fragments: " + 25
                 + ", first Fragment size: " + 1953125 + "KB"
@@ -96,15 +97,15 @@ public class FragmentsStatsTest {
                               SizeUnit expectedFirstFragSizeUnit, long totalSize,
                               long expectedTotalSize,
                               SizeUnit expectedTotalSizeUnit) {
-        FragmentsStats fragmentsStats = new FragmentsStats(fragsNum,
+        FragmentStats fragmentStats = new FragmentStats(fragsNum,
                 firstFragSize, totalSize);
-        assertEquals(fragsNum, fragmentsStats.getFragmentsNumber());
+        assertEquals(fragsNum, fragmentStats.getFragmentsNumber());
         assertEquals(expectedFirstFragSize,
-                fragmentsStats.getFirstFragmentSize().size);
+                fragmentStats.getFirstFragmentSize().size);
         assertEquals(expectedFirstFragSizeUnit,
-                fragmentsStats.getFirstFragmentSize().unit);
-        assertEquals(expectedTotalSize, fragmentsStats.getTotalSize().size);
+                fragmentStats.getFirstFragmentSize().unit);
+        assertEquals(expectedTotalSize, fragmentStats.getTotalSize().size);
         assertEquals(expectedTotalSizeUnit,
-                fragmentsStats.getTotalSize().unit);
+                fragmentStats.getTotalSize().unit);
     }
 }

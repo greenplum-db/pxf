@@ -18,6 +18,6 @@
  */
 
 /**
- * Provides PXF Hive Plugin.
+ * Provides PXF Hive BasePlugin.
  */
 package org.greenplum.pxf.plugins.hive;

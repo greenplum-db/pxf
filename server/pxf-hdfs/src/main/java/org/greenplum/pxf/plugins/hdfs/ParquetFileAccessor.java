@@ -8,9 +8,9 @@ package org.greenplum.pxf.plugins.hdfs;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -19,7 +19,6 @@ package org.greenplum.pxf.plugins.hdfs;
  * under the License.
  */
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.parquet.column.page.PageReadStore;
@@ -32,9 +31,9 @@ import org.apache.parquet.io.MessageColumnIO;
 import org.apache.parquet.io.RecordReader;
 import org.apache.parquet.schema.MessageType;
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.ReadAccessor;
-import org.greenplum.pxf.api.utilities.InputData;
-import org.greenplum.pxf.api.utilities.Plugin;
+import org.greenplum.pxf.api.model.Accessor;
+import org.greenplum.pxf.api.model.HDFSPlugin;
+import org.greenplum.pxf.api.model.InputData;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 
 import java.io.IOException;
@@ -44,7 +43,7 @@ import java.util.Iterator;
  * Parquet file accessor.
  * Unit of operation is record.
  */
-public class ParquetFileAccessor extends Plugin implements ReadAccessor {
+public class ParquetFileAccessor extends HDFSPlugin implements Accessor {
 
     private ParquetFileReader reader;
     private MessageColumnIO columnIO;
@@ -128,16 +127,16 @@ public class ParquetFileAccessor extends Plugin implements ReadAccessor {
      * @param input the input data
      */
     public ParquetFileAccessor(InputData input) {
-        super(input);
+        initialize(input);
     }
 
     public MessageType getSchema() {
-      return schema;
+        return schema;
     }
 
     public void setSchema(MessageType schema) {
-      this.schema = schema;
-      columnIO = new ColumnIOFactory().getColumnIO(schema);
+        this.schema = schema;
+        columnIO = new ColumnIOFactory().getColumnIO(schema);
     }
 
     // Enable sub-classes of ParquetFileAccessor to set up recordIterator
@@ -145,22 +144,21 @@ public class ParquetFileAccessor extends Plugin implements ReadAccessor {
         recordIterator = new RecordIterator(reader);
     }
 
-    public void setReader (ParquetFileReader reader) {
-      this.reader = reader;
+    public void setReader(ParquetFileReader reader) {
+        this.reader = reader;
     }
 
     public boolean iteratorHasNext() {
-      return recordIterator.hasNext();
+        return recordIterator.hasNext();
     }
 
     @Override
     public boolean openForRead() throws Exception {
-        Configuration conf = inputData.getConfiguration();
         Path file = new Path(inputData.getDataSource());
         FileSplit fileSplit = HdfsUtilities.parseFileSplit(inputData);
         setSchema(HdfsUtilities.parseParquetUserData(inputData).getSchema());
         // Create reader for a given split, read a range in file
-        setReader(new ParquetFileReader(conf, file, ParquetMetadataConverter.range(
+        setReader(new ParquetFileReader(configuration, file, ParquetMetadataConverter.range(
                 fileSplit.getStart(), fileSplit.getStart() + fileSplit.getLength())));
         setRecordIterator();
         return recordIterator.hasNext();
@@ -183,5 +181,38 @@ public class ParquetFileAccessor extends Plugin implements ReadAccessor {
         if (reader != null) {
             reader.close();
         }
+    }
+
+    /**
+     * Opens the resource for write.
+     *
+     * @return true if the resource is successfully opened
+     * @throws Exception if opening the resource failed
+     */
+    @Override
+    public boolean openForWrite() throws Exception {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Writes the next object.
+     *
+     * @param onerow the object to be written
+     * @return true if the write succeeded
+     * @throws Exception writing to the resource failed
+     */
+    @Override
+    public boolean writeNextObject(OneRow onerow) throws Exception {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Closes the resource for write.
+     *
+     * @throws Exception if closing the resource failed
+     */
+    @Override
+    public void closeForWrite() throws Exception {
+        throw new UnsupportedOperationException();
     }
 }

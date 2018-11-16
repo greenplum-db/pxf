@@ -20,9 +20,7 @@ package org.greenplum.pxf.api.examples;
  */
 
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.WriteAccessor;
-import org.greenplum.pxf.api.utilities.InputData;
-import org.greenplum.pxf.api.utilities.Plugin;
+import org.greenplum.pxf.api.model.InputData;
 
 import java.io.BufferedOutputStream;
 import java.io.IOException;
@@ -37,7 +35,7 @@ import java.nio.file.Path;
  * Demo implementation.
  */
 
-public class DemoFileWritableAccessor extends Plugin implements WriteAccessor {
+public class DemoFileWritableAccessor extends DemoAccessor {
 
     private OutputStream out;
 

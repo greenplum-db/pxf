@@ -36,16 +36,15 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.greenplum.pxf.api.Fragment;
-import org.greenplum.pxf.api.Fragmenter;
+import org.greenplum.pxf.api.BaseFragmenter;
+import org.greenplum.pxf.api.model.Accessor;
+import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.ReadAccessor;
-import org.greenplum.pxf.api.ReadResolver;
-import org.greenplum.pxf.api.WriteAccessor;
-import org.greenplum.pxf.api.WriteResolver;
+import org.greenplum.pxf.api.model.Fragmenter;
+import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.api.utilities.InputData;
+import org.greenplum.pxf.api.model.InputData;
 import org.greenplum.pxf.api.utilities.FragmentsResponse;
 import org.greenplum.pxf.api.utilities.FragmentsResponseFormatter;
 import org.greenplum.pxf.api.utilities.ProtocolData;
@@ -109,8 +108,8 @@ public abstract class PxfUnit {
 		setup(input);
 		List<String> actualOutput = new ArrayList<String>();
 		for (InputData data : inputs) {
-			ReadAccessor accessor = getReadAccessor(data);
-			ReadResolver resolver = getReadResolver(data);
+			Accessor accessor = getReadAccessor(data);
+			Resolver resolver = getReadResolver(data);
 
 			actualOutput.addAll(getAllOutput(accessor, resolver));
 		}
@@ -163,8 +162,8 @@ public abstract class PxfUnit {
 
 		List<String> actualOutput = new ArrayList<String>();
 		for (InputData data : inputs) {
-			ReadAccessor accessor = getReadAccessor(data);
-			ReadResolver resolver = getReadResolver(data);
+			Accessor accessor = getReadAccessor(data);
+			Resolver resolver = getReadResolver(data);
 
 			actualOutput.addAll(getAllOutput(accessor, resolver));
 		}
@@ -186,8 +185,8 @@ public abstract class PxfUnit {
 		setup(input);
 
 		for (InputData data : inputs) {
-			ReadAccessor accessor = getReadAccessor(data);
-			ReadResolver resolver = getReadResolver(data);
+			Accessor accessor = getReadAccessor(data);
+			Resolver resolver = getReadResolver(data);
 
 			for (String line : getAllOutput(accessor, resolver)) {
 				output.write((line + "\n").getBytes());
@@ -198,7 +197,7 @@ public abstract class PxfUnit {
 	}
 
 	/**
-	 * Get the class of the implementation of Fragmenter to be tested.
+	 * Get the class of the implementation of BaseFragmenter to be tested.
 	 *
 	 * @return The class
 	 */
@@ -207,20 +206,11 @@ public abstract class PxfUnit {
 	}
 
 	/**
-	 * Get the class of the implementation of ReadAccessor to be tested.
+	 * Get the class of the implementation of Accessor to be tested.
 	 *
 	 * @return The class
 	 */
-	public Class<? extends ReadAccessor> getReadAccessorClass() {
-		return null;
-	}
-
-	/**
-	 * Get the class of the implementation of WriteAccessor to be tested.
-	 *
-	 * @return The class
-	 */
-	public Class<? extends WriteAccessor> getWriteAccessorClass() {
+	public Class<? extends Accessor> getAccessorClass() {
 		return null;
 	}
 
@@ -229,16 +219,7 @@ public abstract class PxfUnit {
 	 *
 	 * @return The class
 	 */
-	public Class<? extends ReadResolver> getReadResolverClass() {
-		return null;
-	}
-
-	/**
-	 * Get the class of the implementation of WriteResolver to be tested.
-	 *
-	 * @return The class
-	 */
-	public Class<? extends WriteResolver> getWriteResolverClass() {
+	public Class<? extends Resolver> getResolverClass() {
 		return null;
 	}
 
@@ -259,20 +240,20 @@ public abstract class PxfUnit {
 	 */
 	public abstract List<Pair<String, DataType>> getColumnDefinitions();
 
-	protected InputData getInputDataForWritableTable() {
-		return getInputDataForWritableTable(null);
-	}
+//	protected InputData getInputDataForWritableTable() {
+//		return getInputDataForWritableTable(null);
+//	}
 
 	protected InputData getInputDataForWritableTable(Path input) {
 
-		if (getWriteAccessorClass() == null) {
+		if (getAccessorClass() == null) {
 			throw new IllegalArgumentException(
-					"getWriteAccessorClass() must be overwritten to return a non-null object");
+					"getAccessorClass() must be overwritten to return a non-null object");
 		}
 
-		if (getWriteResolverClass() == null) {
+		if (getResolverClass() == null) {
 			throw new IllegalArgumentException(
-					"getWriteResolverClass() must be overwritten to return a non-null object");
+					"getResolverClass() must be overwritten to return a non-null object");
 		}
 
 		Map<String, String> paramsMap = new HashMap<String, String>();
@@ -298,8 +279,8 @@ public abstract class PxfUnit {
 			paramsMap.put("X-GP-ATTR-TYPECODE" + i, Integer.toString(params.get(i).second.getOID()));
 		}
 
-		paramsMap.put("X-GP-OPTIONS-ACCESSOR", getWriteAccessorClass().getName());
-		paramsMap.put("X-GP-OPTIONS-RESOLVER", getWriteResolverClass().getName());
+		paramsMap.put("X-GP-OPTIONS-ACCESSOR", getAccessorClass().getName());
+		paramsMap.put("X-GP-OPTIONS-RESOLVER", getResolverClass().getName());
 
 		if (getExtraParams() != null) {
 			for (Pair<String, String> param : getExtraParams()) {
@@ -323,12 +304,12 @@ public abstract class PxfUnit {
 			throw new IllegalArgumentException("getFragmenterClass() must be overwritten to return a non-null object");
 		}
 
-		if (getReadAccessorClass() == null) {
-			throw new IllegalArgumentException("getReadAccessorClass() must be overwritten to return a non-null object");
+		if (getAccessorClass() == null) {
+			throw new IllegalArgumentException("getAccessorClass() must be overwritten to return a non-null object");
 		}
 
-		if (getReadResolverClass() == null) {
-			throw new IllegalArgumentException("getReadResolverClass() must be overwritten to return a non-null object");
+		if (getResolverClass() == null) {
+			throw new IllegalArgumentException("getResolverClass() must be overwritten to return a non-null object");
 		}
 
 		Map<String, String> paramsMap = new HashMap<String, String>();
@@ -356,8 +337,8 @@ public abstract class PxfUnit {
 
 		// HDFSMetaData properties
 		paramsMap.put("X-GP-OPTIONS-FRAGMENTER", getFragmenterClass().getName());
-		paramsMap.put("X-GP-OPTIONS-ACCESSOR", getReadAccessorClass().getName());
-		paramsMap.put("X-GP-OPTIONS-RESOLVER", getReadResolverClass().getName());
+		paramsMap.put("X-GP-OPTIONS-ACCESSOR", getAccessorClass().getName());
+		paramsMap.put("X-GP-OPTIONS-RESOLVER", getResolverClass().getName());
 
 		if (getExtraParams() != null) {
 			for (Pair<String, String> param : getExtraParams()) {
@@ -412,45 +393,7 @@ public abstract class PxfUnit {
 	 * @return True if no errors, false otherwise.
 	 */
 	protected boolean compareOutput(List<String> expectedOutput, List<String> actualOutput) {
-
-		boolean error = false;
-		for (int i = 0; i < expectedOutput.size(); ++i) {
-			boolean match = false;
-			for (int j = 0; j < actualOutput.size(); ++j) {
-				if (expectedOutput.get(i).equals(actualOutput.get(j))) {
-					match = true;
-					if (i != j) {
-						LOG.error("Expected (" + expectedOutput.get(i) + ") matched (" + actualOutput.get(j)
-								+ ") but in wrong place.  " + j + " instead of " + i);
-						error = true;
-					}
-
-					break;
-				}
-			}
-
-			if (!match) {
-				LOG.error("Missing expected output: (" + expectedOutput.get(i) + ")");
-				error = true;
-			}
-		}
-
-		for (int i = 0; i < actualOutput.size(); ++i) {
-			boolean match = false;
-			for (int j = 0; j < expectedOutput.size(); ++j) {
-				if (actualOutput.get(i).equals(expectedOutput.get(j))) {
-					match = true;
-					break;
-				}
-			}
-
-			if (!match) {
-				LOG.error("Received unexpected output: (" + actualOutput.get(i) + ")");
-				error = true;
-			}
-		}
-
-		return error;
+	    return compareOutput(expectedOutput, actualOutput, false);
 	}
 
 	/**
@@ -463,40 +406,49 @@ public abstract class PxfUnit {
 	 * @return True if no errors, false otherwise.
 	 */
 	protected boolean compareUnorderedOutput(List<String> expectedOutput, List<String> actualOutput) {
-
-		boolean error = false;
-		for (int i = 0; i < expectedOutput.size(); ++i) {
-			boolean match = false;
-			for (int j = 0; j < actualOutput.size(); ++j) {
-				if (expectedOutput.get(i).equals(actualOutput.get(j))) {
-					match = true;
-					break;
-				}
-			}
-
-			if (!match) {
-				LOG.error("Missing expected output: (" + expectedOutput.get(i) + ")");
-				error = true;
-			}
-		}
-
-		for (int i = 0; i < actualOutput.size(); ++i) {
-			boolean match = false;
-			for (int j = 0; j < expectedOutput.size(); ++j) {
-				if (actualOutput.get(i).equals(expectedOutput.get(j))) {
-					match = true;
-					break;
-				}
-			}
-
-			if (!match) {
-				LOG.error("Received unexpected output: (" + actualOutput.get(i) + ")");
-				error = true;
-			}
-		}
-
-		return error;
+		return compareOutput(expectedOutput, actualOutput, true);
 	}
+
+	private boolean compareOutput(List<String> expectedOutput, List<String> actualOutput, boolean ignoreOrder) {
+        boolean error = false;
+        for (int i = 0; i < expectedOutput.size(); ++i) {
+            boolean match = false;
+            for (int j = 0; j < actualOutput.size(); ++j) {
+                if (expectedOutput.get(i).equals(actualOutput.get(j))) {
+                    match = true;
+                    if (!ignoreOrder && i != j) {
+                        LOG.error("Expected (" + expectedOutput.get(i) + ") matched (" + actualOutput.get(j)
+                                + ") but in wrong place.  " + j + " instead of " + i);
+                        error = true;
+                    }
+
+                    break;
+                }
+            }
+
+            if (!match) {
+                LOG.error("Missing expected output: (" + expectedOutput.get(i) + ")");
+                error = true;
+            }
+        }
+
+        for (String anActualOutput : actualOutput) {
+            boolean match = false;
+            for (String anExpectedOutput : expectedOutput) {
+                if (anActualOutput.equals(anExpectedOutput)) {
+                    match = true;
+                    break;
+                }
+            }
+
+            if (!match) {
+                LOG.error("Received unexpected output: (" + anActualOutput + ")");
+                error = true;
+            }
+        }
+
+        return error;
+    }
 
 	/**
 	 * Opens the accessor and reads all output, giving it to the resolver to retrieve the list of fields. These fields
@@ -509,7 +461,7 @@ public abstract class PxfUnit {
 	 * @return The list of output strings
 	 * @throws Exception
 	 */
-	protected List<String> getAllOutput(ReadAccessor accessor, ReadResolver resolver) throws Exception {
+	protected List<String> getAllOutput(Accessor accessor, Resolver resolver) throws Exception {
 
 		Assert.assertTrue("Accessor failed to open", accessor.openForRead());
 
@@ -536,11 +488,11 @@ public abstract class PxfUnit {
 	}
 
 	/**
-	 * Gets an instance of Fragmenter via reflection.
+	 * Gets an instance of BaseFragmenter via reflection.
 	 *
 	 * Searches for a constructor that has a single parameter of some BaseMetaData type
 	 *
-	 * @return A Fragmenter instance
+	 * @return A BaseFragmenter instance
 	 * @throws Exception
 	 *             If something bad happens
 	 */
@@ -567,23 +519,23 @@ public abstract class PxfUnit {
 	}
 
 	/**
-	 * Gets an instance of ReadAccessor via reflection.
+	 * Gets an instance of Accessor via reflection.
 	 *
 	 * Searches for a constructor that has a single parameter of some InputData type
 	 *
-	 * @return An ReadAccessor instance
+	 * @return An Accessor instance
 	 * @throws Exception
 	 *             If something bad happens
 	 */
-	protected ReadAccessor getReadAccessor(InputData data) throws Exception {
+	protected Accessor getReadAccessor(InputData data) throws Exception {
 
-		ReadAccessor accessor = null;
+		Accessor accessor = null;
 
-		for (Constructor<?> c : getReadAccessorClass().getConstructors()) {
+		for (Constructor<?> c : getAccessorClass().getConstructors()) {
 			if (c.getParameterTypes().length == 1) {
 				for (Class<?> clazz : c.getParameterTypes()) {
 					if (InputData.class.isAssignableFrom(clazz)) {
-						accessor = (ReadAccessor) c.newInstance(data);
+						accessor = (Accessor) c.newInstance(data);
 					}
 				}
 			}
@@ -606,17 +558,17 @@ public abstract class PxfUnit {
 	 * @throws Exception
 	 *             If something bad happens
 	 */
-	protected ReadResolver getReadResolver(InputData data) throws Exception {
+	protected Resolver getReadResolver(InputData data) throws Exception {
 
-		ReadResolver resolver = null;
+		Resolver resolver = null;
 
 		// search for a constructor that has a single parameter of a type of
 		// BaseMetaData to create the accessor instance
-		for (Constructor<?> c : getReadResolverClass().getConstructors()) {
+		for (Constructor<?> c : getResolverClass().getConstructors()) {
 			if (c.getParameterTypes().length == 1) {
 				for (Class<?> clazz : c.getParameterTypes()) {
 					if (InputData.class.isAssignableFrom(clazz)) {
-						resolver = (ReadResolver) c.newInstance(data);
+						resolver = (Resolver) c.newInstance(data);
 					}
 				}
 			}

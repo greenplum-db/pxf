@@ -20,14 +20,8 @@ package org.greenplum.pxf.plugins.hdfs;
  */
 
 
-import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.WriteAccessor;
-import org.greenplum.pxf.api.utilities.InputData;
-import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CreateFlag;
 import org.apache.hadoop.fs.FileContext;
 import org.apache.hadoop.fs.FileSystem;
@@ -37,7 +31,15 @@ import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.SequenceFile.CompressionType;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.compress.CompressionCodec;
-import org.apache.hadoop.mapred.*;
+import org.apache.hadoop.mapred.FileSplit;
+import org.apache.hadoop.mapred.InputSplit;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.SequenceFileInputFormat;
+import org.apache.hadoop.mapred.SequenceFileRecordReader;
+import org.greenplum.pxf.api.model.Accessor;
+import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 
 import java.io.IOException;
 import java.util.EnumSet;
@@ -45,10 +47,8 @@ import java.util.EnumSet;
 /**
  * A PXF Accessor for reading and writing Sequence File records
  */
-public class SequenceFileAccessor extends HdfsSplittableDataAccessor implements
-        WriteAccessor {
+public class SequenceFileAccessor extends HdfsSplittableDataAccessor implements Accessor {
 
-    private Configuration conf;
     private FileContext fc;
     private Path file;
     private CompressionCodec codec;
@@ -56,7 +56,7 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor implements
     private SequenceFile.Writer writer;
     private LongWritable defaultKey; // used when recordkey is not defined
 
-    private static final Log LOG = LogFactory.getLog(SequenceFileAccessor.class);;
+    private static final Log LOG = LogFactory.getLog(SequenceFileAccessor.class);
 
     /**
      * Constructs a SequenceFileAccessor.
@@ -81,14 +81,13 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor implements
         FileSystem fs;
         Path parent;
         String fileName = inputData.getDataSource();
-        conf = inputData.getConfiguration();
 
         getCompressionCodec(inputData);
         fileName = updateFileExtension(fileName, codec);
 
         // construct the output stream
         file = new Path(fileName);
-        fs = file.getFileSystem(conf);
+        fs = file.getFileSystem(configuration);
         fc = FileContext.getFileContext();
         defaultKey = new LongWritable(inputData.getSegmentId());
 
@@ -122,7 +121,7 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor implements
         compressionType = SequenceFile.CompressionType.NONE;
         codec = null;
         if (userCompressCodec != null) {
-            codec = HdfsUtilities.getCodec(conf, userCompressCodec);
+            codec = HdfsUtilities.getCodec(configuration, userCompressCodec);
 
             try {
                 compressionType = CompressionType.valueOf(parsedCompressType);
@@ -194,7 +193,7 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor implements
             Class<? extends Writable> keyClass = (key == null) ? LongWritable.class
                     : key.getClass();
             // create writer - do not allow overwriting existing file
-            writer = SequenceFile.createWriter(fc, conf, file, keyClass,
+            writer = SequenceFile.createWriter(fc, configuration, file, keyClass,
                     valueClass, compressionType, codec,
                     new SequenceFile.Metadata(), EnumSet.of(CreateFlag.CREATE));
         }

@@ -19,12 +19,12 @@ package org.greenplum.pxf.service;
  * under the License.
  */
 
+import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.BadRecordException;
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.ReadAccessor;
-import org.greenplum.pxf.api.ReadResolver;
-import org.greenplum.pxf.api.utilities.InputData;
-import org.greenplum.pxf.api.utilities.Plugin;
+import org.greenplum.pxf.api.model.Resolver;
+import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.service.io.Writable;
 import org.greenplum.pxf.api.utilities.ProtocolData;
@@ -45,8 +45,8 @@ import java.util.zip.ZipException;
  * record as invalid for GPDB.
  */
 public class ReadBridge implements Bridge {
-    ReadAccessor fileAccessor = null;
-    ReadResolver fieldsResolver = null;
+    Accessor fileAccessor = null;
+    Resolver fieldsResolver = null;
     BridgeOutputBuilder outputBuilder = null;
     LinkedList<Writable> outputQueue = null;
 
@@ -143,15 +143,15 @@ public class ReadBridge implements Bridge {
         }
     }
 
-    public static ReadAccessor getFileAccessor(InputData inputData)
+    public static Accessor getFileAccessor(InputData inputData)
             throws Exception {
-        return (ReadAccessor) Utilities.createAnyInstance(InputData.class,
+        return (Accessor) Utilities.createAnyInstance(InputData.class,
                 inputData.getAccessor(), inputData);
     }
 
-    public static ReadResolver getFieldsResolver(InputData inputData)
+    public static Resolver getFieldsResolver(InputData inputData)
             throws Exception {
-        return (ReadResolver) Utilities.createAnyInstance(InputData.class,
+        return (Resolver) Utilities.createAnyInstance(InputData.class,
                 inputData.getResolver(), inputData);
     }
 
@@ -180,8 +180,8 @@ public class ReadBridge implements Bridge {
 
     @Override
     public boolean isThreadSafe() {
-        boolean result = ((Plugin) fileAccessor).isThreadSafe()
-                && ((Plugin) fieldsResolver).isThreadSafe();
+        boolean result = ((BasePlugin) fileAccessor).isThreadSafe()
+                && ((BasePlugin) fieldsResolver).isThreadSafe();
         LOG.debug("Bridge is " + (result ? "" : "not ") + "thread safe");
         return result;
     }

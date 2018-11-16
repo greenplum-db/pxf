@@ -8,9 +8,9 @@ package org.greenplum.pxf.plugins.hbase;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -21,7 +21,7 @@ package org.greenplum.pxf.plugins.hbase;
 
 
 import org.greenplum.pxf.api.BadRecordException;
-import org.greenplum.pxf.api.utilities.InputData;
+import org.greenplum.pxf.api.model.InputData;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseTupleDescription;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -41,8 +41,8 @@ public class HBaseResolverTest {
     @Test
     /*
 	 * Test construction of HBaseResolver.
-	 * 
-	 * HBaseResolver is created and then HBaseTupleDescription 
+	 *
+	 * HBaseResolver is created and then HBaseTupleDescription
 	 * creation is verified
 	 */
     public void construction() throws Exception {
@@ -73,14 +73,14 @@ public class HBaseResolverTest {
 		 */
         result = resolver.convertToJavaObject(20, "bigint", null);
         assertNull(result);
-		
+
 		/*
 		 * Supported type, With value
 		 * Should successfully return a Java Object that holds original value
 		 */
         result = resolver.convertToJavaObject(20, "bigint", "1234".getBytes());
         assertEquals(((Long) result).longValue(), 1234L);
-		
+
 		/*
 		 * Supported type, Invalid value
 		 * Should throw a BadRecordException, with detailed explanation.
@@ -93,7 +93,7 @@ public class HBaseResolverTest {
         } catch (Exception e) {
             fail("Supported type, Invalid value expected to catch a BadRecordException, caught Exception");
         }
-		
+
 		/*
 		 * Unsupported type
 		 * Should throw an Exception, indicating the name of the unsupported type

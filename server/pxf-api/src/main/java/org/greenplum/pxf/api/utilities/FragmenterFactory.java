@@ -8,9 +8,9 @@ package org.greenplum.pxf.api.utilities;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -20,18 +20,17 @@ package org.greenplum.pxf.api.utilities;
  */
 
 
-import org.greenplum.pxf.api.Fragmenter;
-import org.greenplum.pxf.api.utilities.InputData;
-import org.greenplum.pxf.api.utilities.Utilities;
+import org.greenplum.pxf.api.BaseFragmenter;
+import org.greenplum.pxf.api.model.InputData;
 
 /**
- * Factory class for creation of {@link Fragmenter} objects. The actual {@link Fragmenter} object is "hidden" behind
- * an {@link Fragmenter} abstract class which is returned by the FragmenterFactory. 
+ * Factory class for creation of {@link BaseFragmenter} objects. The actual {@link BaseFragmenter} object is "hidden" behind
+ * an {@link BaseFragmenter} abstract class which is returned by the FragmenterFactory.
  */
 public class FragmenterFactory {
-    static public Fragmenter create(InputData inputData) throws Exception {
+    static public BaseFragmenter create(InputData inputData) throws Exception {
     	String fragmenterName = inputData.getFragmenter();
-    	
-        return (Fragmenter) Utilities.createAnyInstance(InputData.class, fragmenterName, inputData);
+
+        return (BaseFragmenter) Utilities.createAnyInstance(InputData.class, fragmenterName, inputData);
     }
 }

@@ -38,11 +38,10 @@ import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.MessageTypeParser;
-
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.io.DataType;
+import org.greenplum.pxf.api.model.InputData;
 import org.greenplum.pxf.api.utilities.FragmentMetadata;
-import org.greenplum.pxf.api.utilities.InputData;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hdfs.ParquetUserData;
 
@@ -82,14 +81,13 @@ public class HdfsUtilities {
      * Returns a fully resolved path include protocol
      *
      * @param input The input data parameters
-     *
      * @return an absolute data path
      */
-    public static String getDataUri(InputData input) {
+    public static String getDataUri(Configuration configuration, InputData input) {
         // TODO: Move profile specific URI logic into separate classes in the profile
         String dataUri;
-        Configuration conf = input.getConfiguration();
-        switch (getHCFSType(input)) {
+
+        switch (getHCFSType(configuration, input)) {
             case S3:
                 dataUri = PROTOCOL_S3 + (StringUtils.startsWith(input.getDataSource(), "/") ?
                         input.getDataSource().substring(1) : input.getDataSource());
@@ -98,9 +96,9 @@ public class HdfsUtilities {
                 dataUri = PROTOCOL_AZURE + input.getDataSource();
                 break;
             case HDFS:
-                dataUri = (!StringUtils.endsWith(conf.get(FS_DEFAULT_NAME_KEY), "/") ?
-                        conf.get(FS_DEFAULT_NAME_KEY) + "/" :
-                        conf.get(FS_DEFAULT_NAME_KEY)) + input.getDataSource();
+                dataUri = (!StringUtils.endsWith(configuration.get(FS_DEFAULT_NAME_KEY), "/") ?
+                        configuration.get(FS_DEFAULT_NAME_KEY) + "/" :
+                        configuration.get(FS_DEFAULT_NAME_KEY)) + input.getDataSource();
 
                 break;
             default:
@@ -117,8 +115,7 @@ public class HdfsUtilities {
      * @param input The input data parameters
      * @return an absolute data path
      */
-    public static HCFSType getHCFSType(InputData input) {
-        Configuration conf = input.getConfiguration();
+    public static HCFSType getHCFSType(Configuration conf, InputData input) {
         String profile = input.getProfile();
         String protocol = (profile != null) ? profile.toLowerCase() : conf.get(FS_DEFAULT_NAME_KEY);
 
@@ -199,8 +196,8 @@ public class HdfsUtilities {
     /**
      * Checks if requests should be handle in a single thread or not.
      *
-     * @param config the configuration parameters object
-     * @param dataDir hdfs path to the data source
+     * @param config    the configuration parameters object
+     * @param dataDir   hdfs path to the data source
      * @param compCodec the fully qualified name of the compression codec
      * @return if the request can be run in multi-threaded mode.
      */

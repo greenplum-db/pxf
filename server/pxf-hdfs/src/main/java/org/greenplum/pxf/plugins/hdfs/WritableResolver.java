@@ -8,9 +8,9 @@ package org.greenplum.pxf.plugins.hdfs;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -20,18 +20,20 @@ package org.greenplum.pxf.plugins.hdfs;
  */
 
 
-import org.greenplum.pxf.api.*;
-import org.greenplum.pxf.api.*;
-import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.api.utilities.InputData;
-import org.greenplum.pxf.api.utilities.Plugin;
-import org.greenplum.pxf.api.utilities.Utilities;
-import org.greenplum.pxf.plugins.hdfs.utilities.RecordkeyAdapter;
-import org.greenplum.pxf.plugins.hdfs.utilities.DataSchemaException;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.Writable;
+import org.greenplum.pxf.api.BadRecordException;
+import org.greenplum.pxf.api.OneField;
+import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.model.Resolver;
+import org.greenplum.pxf.api.UnsupportedTypeException;
+import org.greenplum.pxf.api.io.DataType;
+import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.BasePlugin;
+import org.greenplum.pxf.api.utilities.Utilities;
+import org.greenplum.pxf.plugins.hdfs.utilities.DataSchemaException;
+import org.greenplum.pxf.plugins.hdfs.utilities.RecordkeyAdapter;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -46,7 +48,7 @@ import java.util.List;
  * A field named 'recordkey' is treated as a key of the given row, and not as
  * part of the data schema. See {@link RecordkeyAdapter}.
  */
-public class WritableResolver extends Plugin implements ReadResolver, WriteResolver {
+public class WritableResolver extends BasePlugin implements Resolver {
     private static final int RECORDKEY_UNDEFINED = -1;
     private static final Log LOG = LogFactory.getLog(WritableResolver.class);
     private RecordkeyAdapter recordkeyAdapter = new RecordkeyAdapter();
@@ -64,7 +66,7 @@ public class WritableResolver extends Plugin implements ReadResolver, WriteResol
      *                   classpath or fails to instantiate
      */
     public WritableResolver(InputData input) throws Exception {
-        super(input);
+        initialize(input);
 
         String schemaName = inputData.getUserProperty("DATA-SCHEMA");
 

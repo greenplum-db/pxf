@@ -8,9 +8,9 @@ package org.greenplum.pxf.plugins.json;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -39,9 +39,9 @@ import org.greenplum.pxf.plugins.json.parser.PartitionedJsonParser;
 /**
  * Multi-line json object reader. JsonRecordReader uses a member name (set by the <b>IDENTIFIER</b> PXF parameter) to
  * determine the encapsulating object to extract and read.
- * 
+ *
  * JsonRecordReader supports compressed input files as well.
- * 
+ *
  * As a safe guard set the optional <b>MAXLENGTH</b> parameter to limit the max size of a record.
  */
 public class JsonRecordReader implements RecordReader<LongWritable, Text> {
@@ -62,7 +62,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
 
 	/**
 	 * Create new multi-line json object reader.
-	 * 
+	 *
 	 * @param conf
 	 *            Hadoop context
 	 * @param split
@@ -80,7 +80,7 @@ public class JsonRecordReader implements RecordReader<LongWritable, Text> {
 		compressionCodecs = new CompressionCodecFactory(conf);
 		final CompressionCodec codec = compressionCodecs.getCodec(file);
 
-		// open the file and seek to the start of the split
+		// openForWrite the file and seek to the start of the split
 		FileSystem fs = file.getFileSystem(conf);
 		FSDataInputStream fileIn = fs.open(split.getPath());
 		if (codec != null) {

@@ -18,6 +18,6 @@
  */
 
 /**
- * Provides PXF HBase Plugin.
+ * Provides PXF HBase BasePlugin.
  */
 package org.greenplum.pxf.plugins.hbase;

@@ -2,7 +2,7 @@ package org.greenplum.pxf.plugins.hive;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.*;
-import org.greenplum.pxf.api.utilities.InputData;
+import org.greenplum.pxf.api.model.InputData;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.junit.Before;
@@ -43,7 +43,6 @@ public class HiveAccessorTest {
 
         when(inputFormat.getRecordReader(any(InputSplit.class), any(JobConf.class), any(Reporter.class))).thenReturn(reader);
         PowerMockito.when(inputData.getAccessor()).thenReturn(HiveORCAccessor.class.getName());
-        PowerMockito.when(inputData.getConfiguration()).thenReturn(new Configuration());
 
         @SuppressWarnings("unchecked")
         OngoingStubbing ongoingStubbing = when(HiveDataFragmenter.makeInputFormat(any(String.class), any(JobConf.class))).thenReturn(inputFormat);

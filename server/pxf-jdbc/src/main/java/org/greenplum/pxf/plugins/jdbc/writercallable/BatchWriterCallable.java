@@ -20,8 +20,8 @@ package org.greenplum.pxf.plugins.jdbc.writercallable;
  */
 
 import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.plugins.jdbc.JdbcBasePlugin;
 import org.greenplum.pxf.plugins.jdbc.JdbcResolver;
-import org.greenplum.pxf.plugins.jdbc.JdbcPlugin;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -77,7 +77,7 @@ class BatchWriterCallable implements WriterCallable {
         finally {
             rows.clear();
             if (statementMustBeDeleted) {
-                JdbcPlugin.closeStatement(statement);
+                JdbcBasePlugin.closeStatement(statement);
                 statement = null;
             }
         }
@@ -88,9 +88,9 @@ class BatchWriterCallable implements WriterCallable {
     /**
      * Construct a new batch writer
      */
-    BatchWriterCallable(JdbcPlugin plugin, String query, PreparedStatement statement, int batchSize) {
+    BatchWriterCallable(JdbcBasePlugin plugin, String query, PreparedStatement statement, int batchSize) {
         if (plugin == null || query == null) {
-            throw new IllegalArgumentException("The provided JdbcPlugin or SQL query is null");
+            throw new IllegalArgumentException("The provided JdbcBasePlugin or SQL query is null");
         }
 
         this.plugin = plugin;
@@ -101,7 +101,7 @@ class BatchWriterCallable implements WriterCallable {
         rows = new LinkedList<>();
     }
 
-    private final JdbcPlugin plugin;
+    private final JdbcBasePlugin plugin;
     private final String query;
     private PreparedStatement statement;
     private List<OneRow> rows;

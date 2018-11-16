@@ -21,8 +21,8 @@ package org.greenplum.pxf.plugins.jdbc;
 
 import org.greenplum.pxf.api.UserDataException;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.api.utilities.InputData;
-import org.greenplum.pxf.api.utilities.Plugin;
+import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.BasePlugin;
 
 import java.util.ArrayList;
 import java.util.regex.Matcher;
@@ -42,7 +42,7 @@ import org.apache.commons.logging.LogFactory;
  *
  * Implemented subclasses: {@link JdbcAccessor}, {@link JdbcResolver}.
  */
-public class JdbcPlugin extends Plugin {
+public class JdbcBasePlugin extends BasePlugin {
     /**
      * Class constructor
      *
@@ -50,8 +50,8 @@ public class JdbcPlugin extends Plugin {
      *
      * @throws UserDataException if one of the required request parameters is not set
      */
-    public JdbcPlugin(InputData input) throws UserDataException {
-        super(input);
+    public JdbcBasePlugin(InputData input) throws UserDataException {
+        initialize(input);
 
         jdbcDriver = input.getUserProperty("JDBC_DRIVER");
         if (jdbcDriver == null) {
@@ -231,7 +231,7 @@ public class JdbcPlugin extends Plugin {
     protected ArrayList<ColumnDescriptor> columns = null;
 
 
-    private static final Log LOG = LogFactory.getLog(JdbcPlugin.class);
+    private static final Log LOG = LogFactory.getLog(JdbcBasePlugin.class);
 
     // At the moment, when writing into some table, the table name is concatenated with a special string that is necessary to write into HDFS. However, a raw table name is necessary in case of JDBC. This Pattern allows to extract the correct table name from the given InputData.dataSource
     private static final Pattern tableNamePattern = Pattern.compile("/(.*)/[0-9]*-[0-9]*_[0-9]*");

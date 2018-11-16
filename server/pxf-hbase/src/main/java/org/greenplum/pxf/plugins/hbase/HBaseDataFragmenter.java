@@ -31,11 +31,10 @@ import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.ConnectionFactory;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.RegionLocator;
-import org.greenplum.pxf.api.FileSystemFragmenter;
-import org.greenplum.pxf.api.Fragment;
-import org.greenplum.pxf.api.Fragmenter;
-import org.greenplum.pxf.api.FragmentsStats;
-import org.greenplum.pxf.api.utilities.InputData;
+import org.greenplum.pxf.api.BaseFragmenter;
+import org.greenplum.pxf.api.model.FragmentStats;
+import org.greenplum.pxf.api.model.Fragment;
+import org.greenplum.pxf.api.model.InputData;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseLookupTable;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseUtilities;
 
@@ -46,17 +45,16 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Fragmenter class for HBase data resources.
+ * BaseFragmenter class for HBase data resources.
  *
- * Extends the {@link Fragmenter} abstract class, with the purpose of transforming
+ * Extends the {@link BaseFragmenter} abstract class, with the purpose of transforming
  * an input data path (an HBase table name in this case) into a list of regions
  * that belong to this table.
  *
  * This class also puts HBase lookup table information for the given
  * table (if exists) in each fragment's user data field.
  */
-@FileSystemFragmenter
-public class HBaseDataFragmenter extends Fragmenter {
+public class HBaseDataFragmenter extends BaseFragmenter {
 
     private static final Configuration hbaseConfiguration = HBaseUtilities.initHBaseConfiguration();
     private Admin hbaseAdmin;
@@ -75,7 +73,7 @@ public class HBaseDataFragmenter extends Fragmenter {
      * Returns statistics for HBase table. Currently it's not implemented.
      */
     @Override
-    public FragmentsStats getFragmentsStats() throws Exception {
+    public FragmentStats getFragmentStats() throws Exception {
         throw new UnsupportedOperationException("ANALYZE for HBase plugin is not supported");
     }
 

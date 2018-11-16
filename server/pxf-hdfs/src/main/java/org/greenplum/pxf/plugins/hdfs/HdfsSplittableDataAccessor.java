@@ -20,24 +20,20 @@ package org.greenplum.pxf.plugins.hdfs;
  */
 
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.ReadAccessor;
-import org.greenplum.pxf.api.utilities.InputData;
-import org.greenplum.pxf.api.utilities.Plugin;
+import org.greenplum.pxf.api.model.Accessor;
+import org.greenplum.pxf.api.model.HDFSPlugin;
+import org.greenplum.pxf.api.model.InputData;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.ListIterator;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Accessor for accessing a splittable HDFS data sources. HDFS will divide the
@@ -46,12 +42,10 @@ import java.util.Set;
  *
  * Accessors that require such base functionality should extend this class.
  */
-public abstract class HdfsSplittableDataAccessor extends Plugin implements
-        ReadAccessor {
-    protected Configuration conf;
+public abstract class HdfsSplittableDataAccessor extends HDFSPlugin implements Accessor {
     protected RecordReader<Object, Object> reader;
     protected InputFormat<?, ?> inputFormat;
-    protected ListIterator<InputSplit> iter;
+    private ListIterator<InputSplit> iter;
     protected JobConf jobConf;
     protected Object key, data;
     protected HdfsUtilities.HCFSType hcfsType;
@@ -62,16 +56,15 @@ public abstract class HdfsSplittableDataAccessor extends Plugin implements
      * @param input all input parameters coming from the client request
      * @param inFormat the HDFS {@link InputFormat} the caller wants to use
      */
-    public HdfsSplittableDataAccessor(InputData input,
-                                      InputFormat<?, ?> inFormat) {
-        super(input);
+    public HdfsSplittableDataAccessor(InputData input, InputFormat<?, ?> inFormat) {
+        initialize(input);
         inputFormat = inFormat;
 
         // 2. variable required for the splits iteration logic
-        jobConf = new JobConf(inputData.getConfiguration(), HdfsSplittableDataAccessor.class);
+        jobConf = new JobConf(configuration, HdfsSplittableDataAccessor.class);
 
         // Check if the underlying configuration is for HDFS
-        hcfsType = HdfsUtilities.getHCFSType(input);
+        hcfsType = HdfsUtilities.getHCFSType(configuration, input);
     }
 
     /**
@@ -168,7 +161,7 @@ public abstract class HdfsSplittableDataAccessor extends Plugin implements
     @Override
     public boolean isThreadSafe() {
         return HdfsUtilities.isThreadSafe(
-                inputData.getConfiguration(),
+                configuration,
                 inputData.getDataSource(),
                 inputData.getUserProperty("COMPRESSION_CODEC"));
     }

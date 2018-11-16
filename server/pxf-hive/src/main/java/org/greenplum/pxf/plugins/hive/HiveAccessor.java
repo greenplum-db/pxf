@@ -22,6 +22,7 @@ package org.greenplum.pxf.plugins.hive;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
+import org.apache.hadoop.hive.ql.io.orc.Reader;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.InputSplit;
@@ -31,8 +32,8 @@ import org.greenplum.pxf.api.BasicFilter;
 import org.greenplum.pxf.api.FilterParser;
 import org.greenplum.pxf.api.LogicalFilter;
 import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.model.InputData;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.api.utilities.InputData;
 import org.greenplum.pxf.plugins.hdfs.HdfsSplittableDataAccessor;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 
@@ -55,9 +56,9 @@ import java.util.List;
  */
 public class HiveAccessor extends HdfsSplittableDataAccessor {
     private static final Log LOG = LogFactory.getLog(HiveAccessor.class);
-    List<HivePartition> partitions;
-    String HIVE_DEFAULT_PARTITION = "__HIVE_DEFAULT_PARTITION__";
-    int skipHeaderCount = 0;
+    private List<HivePartition> partitions;
+    private static final String HIVE_DEFAULT_PARTITION = "__HIVE_DEFAULT_PARTITION__";
+    private int skipHeaderCount;
 
     class HivePartition {
         public String name;
@@ -71,7 +72,7 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
         }
     }
 
-    protected Boolean filterInFragmenter = false;
+    protected Boolean filterInFragmenter;
 
     /**
      * Constructs a HiveAccessor and creates an InputFormat (derived from
@@ -93,7 +94,7 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
     /**
      * Constructs a HiveAccessor
      *
-     * @param input contains the InputFormat class name and the partition fields
+     * @param input       contains the InputFormat class name and the partition fields
      * @param inputFormat Hive InputFormat
      * @throws Exception if failed to create input format
      */
@@ -115,10 +116,10 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
      * Opens Hive data split for read. Enables Hive partition filtering. <br>
      *
      * @return true if there are no partitions or there is no partition filter
-     *         or partition filter is set and the file currently opened by the
-     *         accessor belongs to the partition.
+     * or partition filter is set and the file currently opened by the
+     * accessor belongs to the partition.
      * @throws Exception if filter could not be built, connection to Hive failed
-     *             or resource failed to open
+     *                   or resource failed to open
      */
     @Override
     public boolean openForRead() throws Exception {
@@ -142,12 +143,45 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
         return super.readNextObject();
     }
 
+    /**
+     * Opens the resource for write.
+     *
+     * @return true if the resource is successfully opened
+     * @throws Exception if opening the resource failed
+     */
+    @Override
+    public boolean openForWrite() throws Exception {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Writes the next object.
+     *
+     * @param onerow the object to be written
+     * @return true if the write succeeded
+     * @throws Exception writing to the resource failed
+     */
+    @Override
+    public boolean writeNextObject(OneRow onerow) throws Exception {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Closes the resource for write.
+     *
+     * @throws Exception if closing the resource failed
+     */
+    @Override
+    public void closeForWrite() throws Exception {
+        throw new UnsupportedOperationException();
+    }
+
 
     /**
      * Creates the RecordReader suitable for this given split.
      *
      * @param jobConf configuration data for the Hadoop framework
-     * @param split the split that was allocated for reading to this accessor
+     * @param split   the split that was allocated for reading to this accessor
      * @return record reader
      * @throws IOException if failed to create record reader
      */
@@ -247,10 +281,10 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
                 BasicFilter bFilter = (BasicFilter) filter;
                 boolean isFilterOperationEqual = (bFilter.getOperation() == FilterParser.Operation.HDOP_EQ);
                 if (!isFilterOperationEqual) /*
-                                      * in case this is not an "equality filter"
-                                      * we ignore it here - in partition
-                                      * filtering
-                                      */{
+                 * in case this is not an "equality filter"
+                 * we ignore it here - in partition
+                 * filtering
+                 */ {
                     return true;
                 }
 
@@ -262,10 +296,10 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
                 for (HivePartition partition : partitionFields) {
                     if (filterColumnName.equals(partition.name)) {
 
-                /*
-                 * the filter field matches a partition field, but the values do
-                 * not match
-                 */
+                        /*
+                         * the filter field matches a partition field, but the values do
+                         * not match
+                         */
                         boolean keepPartition = filterValue.equals(partition.val);
 
                         /*
@@ -273,17 +307,17 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
                          * the two operands as typed values
                          * If the partition value equals HIVE_DEFAULT_PARTITION just skip
                          */
-                        if (!keepPartition && !partition.val.equals(HIVE_DEFAULT_PARTITION)){
+                        if (!keepPartition && !partition.val.equals(HIVE_DEFAULT_PARTITION)) {
                             keepPartition = testFilterByType(filterValue, partition);
                         }
                         return keepPartition;
                     }
                 }
 
-        /*
-         * filter field did not match any partition field, so we ignore this
-         * filter and hence return true
-         */
+                /*
+                 * filter field did not match any partition field, so we ignore this
+                 * filter and hence return true
+                 */
             } else if (filter instanceof LogicalFilter) {
                 partitionAllowed = testForPartitionEquality(partitionFields, ((LogicalFilter) filter).getFilterList(), input);
             }
@@ -332,7 +366,7 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
             case serdeConstants.VARCHAR_TYPE_NAME:
             case serdeConstants.CHAR_TYPE_NAME:
             default:
-               result = false;
+                result = false;
         }
 
         return result;
@@ -375,5 +409,12 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
         String value = bFilter.getConstant() == null ? null : bFilter.getConstant().constant().toString();
         LOG.debug("isOperationEqual: " + isOperationEqual + " columnIndex: "
                 + columnIndex + " value: " + value);
+    }
+
+    /**
+     * @return ORC file reader
+     */
+    protected Reader getOrcReader() {
+        return HiveUtilities.getOrcReader(configuration, inputData);
     }
 }

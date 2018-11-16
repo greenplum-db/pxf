@@ -1,4 +1,4 @@
-package org.greenplum.pxf.api.utilities;
+package org.greenplum.pxf.api.model;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -23,16 +23,14 @@ package org.greenplum.pxf.api.utilities;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.conf.Configuration;
+import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.api.utilities.EnumAggregationType;
 
-import java.io.File;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import static org.greenplum.pxf.api.model.HDFSPlugin.DEFAULT_SERVER_NAME;
 
 /**
  * Common configuration available to all PXF plugins. Represents input data
@@ -40,18 +38,10 @@ import java.util.stream.Stream;
  */
 public class InputData {
 
-    public static final String DEFAULT_SERVER_NAME = "default";
-    public static final String PXF_CONF_PROPERTY = "pxf.conf";
-
     public static final String DELIMITER_KEY = "DELIMITER";
     public static final String USER_PROP_PREFIX = "X-GP-OPTIONS-";
     public static final int INVALID_SPLIT_IDX = -1;
     private static final Log LOG = LogFactory.getLog(InputData.class);
-    private static final String SERVER_CONFIG_DIR_PREFIX =
-            System.getProperty(PXF_CONF_PROPERTY) +
-                    File.separator +
-                    "servers" +
-                    File.separator;
 
     protected Map<String, String> requestParametersMap;
     protected ArrayList<ColumnDescriptor> tupleDescription;
@@ -101,7 +91,7 @@ public class InputData {
 
     /**
      * Number of attributes projected in query.
-     *
+     * <p>
      * Example:
      * SELECT col1, col2, col3... : number of attributes projected - 3
      * SELECT col1, col2, col3... WHERE col4=a : number of attributes projected - 4
@@ -296,10 +286,10 @@ public class InputData {
     }
 
     /**
-     * Returns the ClassName for the java class that was defined as Fragmenter
+     * Returns the ClassName for the java class that was defined as BaseFragmenter
      * or null if no fragmenter was defined.
      *
-     * @return class name for Fragmenter or null
+     * @return class name for BaseFragmenter or null
      */
     public String getFragmenter() {
         return fragmenter;
@@ -357,6 +347,7 @@ public class InputData {
 
     /**
      * Returns aggregate type, i.e - count, min, max, etc
+     *
      * @return aggregate type
      */
     public EnumAggregationType getAggType() {
@@ -365,6 +356,7 @@ public class InputData {
 
     /**
      * Sets aggregate type, one of @see EnumAggregationType value
+     *
      * @param aggType aggregate type
      */
     public void setAggType(EnumAggregationType aggType) {
@@ -373,6 +365,7 @@ public class InputData {
 
     /**
      * Returns index of a fragment in a file
+     *
      * @return index of a fragment
      */
     public int getFragmentIndex() {
@@ -381,6 +374,7 @@ public class InputData {
 
     /**
      * Sets index of a fragment in a file
+     *
      * @param fragmentIndex index of a fragment
      */
     public void setFragmentIndex(int fragmentIndex) {
@@ -389,6 +383,7 @@ public class InputData {
 
     /**
      * Returns number of attributes projected in a query
+     *
      * @return number of attributes projected
      */
     public int getNumAttrsProjected() {
@@ -397,6 +392,7 @@ public class InputData {
 
     /**
      * Sets number of attributes projected
+     *
      * @param numAttrsProjected number of attrivutes projected
      */
     public void setNumAttrsProjected(int numAttrsProjected) {
@@ -433,55 +429,4 @@ public class InputData {
         return user;
     }
 
-    /**
-     * Returns a configuration object that applies server-specific configurations
-     */
-    public Configuration getConfiguration() {
-
-        // start with built-in Hadoop configuration that loads core-site.xml
-        Configuration configuration = new Configuration();
-
-        // add all other *-site.xml files from default cluster will be added as "default" resources
-        // by JobConf class or other Hadoop libraries on as-needed basis
-
-
-        if (!DEFAULT_SERVER_NAME.equals(serverName)) {
-            // determine full path for server configuration directory
-            String directoryName = SERVER_CONFIG_DIR_PREFIX + serverName;
-            File serverDirectory = new File(directoryName);
-            if (!serverDirectory.exists()) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Directory " + directoryName + " does not exist");
-                }
-                return configuration;
-            }
-
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Using directory " + directoryName + " for server " + serverName + " configuration");
-            }
-            addSiteFilesAsResources(configuration, serverDirectory);
-        }
-
-        // force properties to load by doing a get
-        getUserPropertiesStream()
-                .forEach(entry -> configuration.set(entry.getKey()
-                        .substring(InputData.USER_PROP_PREFIX.length()), entry.getValue()));
-
-        return configuration;
-    }
-
-    private void addSiteFilesAsResources(Configuration configuration, File directory) {
-        // add all *-site.xml files inside the server config directory as configuration resources
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(directory.toPath(), "*-site.xml")) {
-            for (Path path : stream) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("adding configuration resource from " + path.toUri().toURL());
-                }
-                configuration.addResource(path.toUri().toURL());
-            }
-        } catch (Exception e) {
-            LOG.error("Unable to read configuration for server " + serverName + " from " + directory.getAbsolutePath(), e);
-            throw new RuntimeException("Unable to read configuration for server " + serverName + " from " + directory.getAbsolutePath(), e);
-        }
-    }
 }

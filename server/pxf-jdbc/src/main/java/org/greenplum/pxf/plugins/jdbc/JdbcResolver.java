@@ -19,17 +19,16 @@ package org.greenplum.pxf.plugins.jdbc;
  * under the License.
  */
 
-import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.api.utilities.InputData;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.ReadResolver;
+import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.UserDataException;
-import org.greenplum.pxf.api.WriteResolver;
+import org.greenplum.pxf.api.io.DataType;
+import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.api.model.InputData;
 
-import java.util.List;
-import java.util.LinkedList;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Date;
@@ -40,14 +39,13 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * JDBC tables resolver
  */
-public class JdbcResolver extends JdbcPlugin implements ReadResolver, WriteResolver {
+public class JdbcResolver extends JdbcBasePlugin implements Resolver {
     /**
      * Class constructor
      *

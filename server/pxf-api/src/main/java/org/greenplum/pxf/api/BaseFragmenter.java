@@ -20,10 +20,11 @@ package org.greenplum.pxf.api;
  */
 
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.conf.Configuration;
-import org.greenplum.pxf.api.utilities.InputData;
-import org.greenplum.pxf.api.utilities.Plugin;
+import org.greenplum.pxf.api.model.Fragment;
+import org.greenplum.pxf.api.model.FragmentStats;
+import org.greenplum.pxf.api.model.Fragmenter;
+import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.BasePlugin;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -32,23 +33,17 @@ import java.util.List;
  * Abstract class that defines the splitting of a data resource into fragments
  * that can be processed in parallel.
  */
-public abstract class Fragmenter extends Plugin {
+public class BaseFragmenter extends BasePlugin implements Fragmenter {
     protected List<Fragment> fragments;
 
     /**
-     * Constructs a Fragmenter.
+     * Constructs a BaseFragmenter.
      *
      * @param metaData the input data
      */
-    public Fragmenter(InputData metaData) {
-        super(metaData);
+    public BaseFragmenter(InputData metaData) {
+        initialize(metaData);
         fragments = new LinkedList<>();
-
-        // TODO: we will add a test for this case when it's simpler to mock Configuration
-        if (this.getClass().isAnnotationPresent(FileSystemFragmenter.class) &&
-                StringUtils.startsWith(new Configuration().get("fs.defaultFS"), "file:")) {
-            throw new SecurityException("core-site.xml is missing or using unsupported file:// as default filesystem");
-        }
     }
 
     /**
@@ -59,7 +54,10 @@ public abstract class Fragmenter extends Plugin {
      * @return list of data fragments
      * @throws Exception if fragment list could not be retrieved
      */
-    public abstract List<Fragment> getFragments() throws Exception;
+    @Override
+    public List<Fragment> getFragments() throws Exception {
+        return fragments;
+    }
 
     /**
      * Default implementation of statistics for fragments. The default is:
@@ -74,11 +72,13 @@ public abstract class Fragmenter extends Plugin {
      * @return default statistics
      * @throws Exception if statistics cannot be gathered
      */
-    public FragmentsStats getFragmentsStats() throws Exception {
-        List<Fragment> fragments = getFragments();
-        long fragmentsNumber = fragments.size();
-        return new FragmentsStats(fragmentsNumber,
-                FragmentsStats.DEFAULT_FRAGMENT_SIZE, fragmentsNumber
-                        * FragmentsStats.DEFAULT_FRAGMENT_SIZE);
+    @Override
+    public FragmentStats getFragmentStats() throws Exception {
+        throw new UnsupportedOperationException("Operation getFragmentStats is not supported");
+//        List<Fragment> fragments = getFragments();
+//        long fragmentsNumber = fragments.size();
+//        return new FragmentStats(fragmentsNumber,
+//                FragmentStats.DEFAULT_FRAGMENT_SIZE, fragmentsNumber
+//                        * FragmentStats.DEFAULT_FRAGMENT_SIZE);
     }
 }

@@ -8,9 +8,9 @@ package org.greenplum.pxf.plugins.hdfs;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -105,7 +105,7 @@ public class ChunkRecordReader implements
         compressionCodecs = new CompressionCodecFactory(job);
         codec = compressionCodecs.getCodec(file);
 
-        // open the file and seek to the start of the split
+        // openForWrite the file and seek to the start of the split
         final FileSystem fs = file.getFileSystem(job);
         fileIn = fs.open(file, ChunkReader.DEFAULT_BUFFER_SIZE);
         fileLength = getInputStream().getFileLength();

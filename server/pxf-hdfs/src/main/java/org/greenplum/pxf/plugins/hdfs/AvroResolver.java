@@ -8,9 +8,9 @@ package org.greenplum.pxf.plugins.hdfs;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -30,10 +30,10 @@ import org.apache.avro.io.DecoderFactory;
 import org.apache.hadoop.io.BytesWritable;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.ReadResolver;
 import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.api.utilities.InputData;
-import org.greenplum.pxf.api.utilities.Plugin;
+import org.greenplum.pxf.api.model.HDFSPlugin;
+import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.plugins.hdfs.utilities.DataSchemaException;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.RecordkeyAdapter;
@@ -49,7 +49,7 @@ import java.util.Map;
  * Class AvroResolver handles deserialization of records that were serialized
  * using the AVRO serialization framework.
  */
-public class AvroResolver extends Plugin implements ReadResolver {
+public class AvroResolver extends HDFSPlugin implements Resolver {
     private GenericRecord avroRecord = null;
     private DatumReader<GenericRecord> reader = null;
     // member kept to enable reuse, and thus avoid repeated allocation
@@ -73,12 +73,12 @@ public class AvroResolver extends Plugin implements ReadResolver {
      * @throws IOException if Avro schema could not be retrieved or parsed
      */
     public AvroResolver(InputData input) throws IOException {
-        super(input);
+        initialize(input);
 
         Schema schema;
 
         if (isAvroFile()) {
-            schema = HdfsUtilities.getAvroSchema(inputData.getConfiguration(), input.getDataSource());
+            schema = HdfsUtilities.getAvroSchema(configuration, input.getDataSource());
         } else {
             InputStream externalSchema = openExternalSchema();
             try {
@@ -128,6 +128,18 @@ public class AvroResolver extends Plugin implements ReadResolver {
         }
 
         return record;
+    }
+
+    /**
+     * Constructs and sets the fields of a {@link OneRow}.
+     *
+     * @param record list of {@link OneField}
+     * @return the constructed {@link OneRow}
+     * @throws Exception if constructing a row from the fields failed
+     */
+    @Override
+    public OneRow setFields(List<OneField> record) throws Exception {
+        throw new UnsupportedOperationException();
     }
 
     /**

@@ -8,9 +8,9 @@ package org.greenplum.pxf.plugins.json;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -19,23 +19,20 @@ package org.greenplum.pxf.plugins.json;
  * under the License.
  */
 
+import org.apache.hadoop.fs.Path;
+import org.greenplum.pxf.api.io.DataType;
+import org.greenplum.pxf.api.model.Accessor;
+import org.greenplum.pxf.api.model.Fragmenter;
+import org.greenplum.pxf.api.model.Resolver;
+import org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.hadoop.fs.Path;
-import org.greenplum.pxf.api.Fragmenter;
-import org.greenplum.pxf.api.ReadAccessor;
-import org.greenplum.pxf.api.ReadResolver;
-import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-
-// TODO: Restore JsonExtensionTest tests
-@Ignore
 public class JsonExtensionTest extends PxfUnit {
 
 	private static final String IDENTIFIER = JsonAccessor.IDENTIFIER_PARAM;
@@ -46,15 +43,15 @@ public class JsonExtensionTest extends PxfUnit {
 	@Before
 	public void before() {
 
-		columnDefs = new ArrayList<Pair<String, DataType>>();
+		columnDefs = new ArrayList<>();
 
-		columnDefs.add(new Pair<String, DataType>("created_at", DataType.TEXT));
-		columnDefs.add(new Pair<String, DataType>("id", DataType.BIGINT));
-		columnDefs.add(new Pair<String, DataType>("text", DataType.TEXT));
-		columnDefs.add(new Pair<String, DataType>("user.screen_name", DataType.TEXT));
-		columnDefs.add(new Pair<String, DataType>("entities.hashtags[0]", DataType.TEXT));
-		columnDefs.add(new Pair<String, DataType>("coordinates.coordinates[0]", DataType.FLOAT8));
-		columnDefs.add(new Pair<String, DataType>("coordinates.coordinates[1]", DataType.FLOAT8));
+		columnDefs.add(new Pair<>("created_at", DataType.TEXT));
+		columnDefs.add(new Pair<>("id", DataType.BIGINT));
+		columnDefs.add(new Pair<>("text", DataType.TEXT));
+		columnDefs.add(new Pair<>("user.screen_name", DataType.TEXT));
+		columnDefs.add(new Pair<>("entities.hashtags[0]", DataType.TEXT));
+		columnDefs.add(new Pair<>("coordinates.coordinates[0]", DataType.FLOAT8));
+		columnDefs.add(new Pair<>("coordinates.coordinates[1]", DataType.FLOAT8));
 
 		output.clear();
 		extraParams.clear();
@@ -112,16 +109,16 @@ public class JsonExtensionTest extends PxfUnit {
 
 		columnDefs.clear();
 
-		columnDefs.add(new Pair<String, DataType>("text", DataType.TEXT));
-		columnDefs.add(new Pair<String, DataType>("varcharType", DataType.VARCHAR));
-		columnDefs.add(new Pair<String, DataType>("bpcharType", DataType.BPCHAR));
-		columnDefs.add(new Pair<String, DataType>("smallintType", DataType.SMALLINT));
-		columnDefs.add(new Pair<String, DataType>("integerType", DataType.INTEGER));
-		columnDefs.add(new Pair<String, DataType>("realType", DataType.REAL));
-		columnDefs.add(new Pair<String, DataType>("float8Type", DataType.FLOAT8));
+		columnDefs.add(new Pair<>("text", DataType.TEXT));
+		columnDefs.add(new Pair<>("varcharType", DataType.VARCHAR));
+		columnDefs.add(new Pair<>("bpcharType", DataType.BPCHAR));
+		columnDefs.add(new Pair<>("smallintType", DataType.SMALLINT));
+		columnDefs.add(new Pair<>("integerType", DataType.INTEGER));
+		columnDefs.add(new Pair<>("realType", DataType.REAL));
+		columnDefs.add(new Pair<>("float8Type", DataType.FLOAT8));
 		// The DataType.BYTEA type is left out for further validation.
-		columnDefs.add(new Pair<String, DataType>("booleanType", DataType.BOOLEAN));
-		columnDefs.add(new Pair<String, DataType>("bintType", DataType.BIGINT));
+		columnDefs.add(new Pair<>("booleanType", DataType.BOOLEAN));
+		columnDefs.add(new Pair<>("bintType", DataType.BIGINT));
 
 		output.add(",varcharType,bpcharType,777,999,3.15,3.14,true,666");
 
@@ -206,7 +203,7 @@ public class JsonExtensionTest extends PxfUnit {
 	@Test
 	public void testWellFormedJson() throws Exception {
 
-		extraParams.add(new Pair<String, String>(IDENTIFIER, "created_at"));
+		extraParams.add(new Pair<>(IDENTIFIER, "created_at"));
 
 		output.add("Fri Jun 07 22:45:02 +0000 2013,343136547115253761,text1,SpreadButter,tweetCongress,,");
 		output.add("Fri Jun 07 22:45:02 +0000 2013,343136547123646465,text2,patronusdeadly,,,");
@@ -219,7 +216,7 @@ public class JsonExtensionTest extends PxfUnit {
 	@Test
 	public void testWellFormedJsonWithDelete() throws Exception {
 
-		extraParams.add(new Pair<String, String>(IDENTIFIER, "created_at"));
+		extraParams.add(new Pair<>(IDENTIFIER, "created_at"));
 
 		output.add("Fri Jun 07 22:45:02 +0000 2013,343136547115253761,text1,SpreadButter,tweetCongress,,");
 		output.add("Fri Jun 07 22:45:02 +0000 2013,343136547123646465,text2,patronusdeadly,,,");
@@ -256,12 +253,12 @@ public class JsonExtensionTest extends PxfUnit {
 	}
 
 	@Override
-	public Class<? extends ReadAccessor> getReadAccessorClass() {
+	public Class<? extends Accessor> getAccessorClass() {
 		return JsonAccessor.class;
 	}
 
 	@Override
-	public Class<? extends ReadResolver> getReadResolverClass() {
+	public Class<? extends Resolver> getResolverClass() {
 		return JsonResolver.class;
 	}
 

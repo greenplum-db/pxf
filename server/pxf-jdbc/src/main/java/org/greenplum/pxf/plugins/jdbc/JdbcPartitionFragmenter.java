@@ -19,11 +19,11 @@ package org.greenplum.pxf.plugins.jdbc;
  * under the License.
  */
 
-import org.greenplum.pxf.api.Fragment;
-import org.greenplum.pxf.api.Fragmenter;
-import org.greenplum.pxf.api.FragmentsStats;
+import org.greenplum.pxf.api.model.FragmentStats;
+import org.greenplum.pxf.api.model.Fragment;
+import org.greenplum.pxf.api.BaseFragmenter;
 import org.greenplum.pxf.api.UserDataException;
-import org.greenplum.pxf.api.utilities.InputData;
+import org.greenplum.pxf.api.model.InputData;
 import org.greenplum.pxf.plugins.jdbc.utils.ByteUtil;
 import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
 
@@ -40,7 +40,7 @@ import java.text.SimpleDateFormat;
  *
  * Splits the query to allow multiple simultaneous SELECTs
  */
-public class JdbcPartitionFragmenter extends Fragmenter {
+public class JdbcPartitionFragmenter extends BaseFragmenter {
     /**
      * Insert fragment constraints into the SQL query.
      *
@@ -200,7 +200,7 @@ public class JdbcPartitionFragmenter extends Fragmenter {
      * @return fragment stats
      */
     @Override
-    public FragmentsStats getFragmentsStats() throws UnsupportedOperationException {
+    public FragmentStats getFragmentStats() throws UnsupportedOperationException {
         throw new UnsupportedOperationException("ANALYZE for JDBC plugin is not supported");
     }
 

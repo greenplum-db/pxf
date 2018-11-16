@@ -20,7 +20,7 @@ package org.greenplum.pxf.plugins.hdfs.utilities;
  */
 
 import org.greenplum.pxf.api.OneField;
-import org.greenplum.pxf.api.utilities.InputData;
+import org.greenplum.pxf.api.model.InputData;
 import org.apache.commons.logging.Log;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -51,12 +51,13 @@ import static org.mockito.Mockito.when;
 @PrepareForTest({HdfsUtilities.class, ReflectionUtils.class})
 public class HdfsUtilitiesTest {
 
-    Configuration conf;
-    CompressionCodecFactory factory;
-    Log Log;
+    private Configuration conf;
+    private CompressionCodecFactory factory;
+    private Log Log;
 
     @Before
     public void SetupCompressionFactory() {
+        conf = PowerMockito.mock(Configuration.class);
         factory = mock(CompressionCodecFactory.class);
         Log = mock(Log.class);
         Whitebox.setInternalState(HdfsUtilities.class, Log);
@@ -65,27 +66,24 @@ public class HdfsUtilitiesTest {
     @Test
     public void getDataPathForAnS3Profile() throws Exception {
         InputData inputData = mock(InputData.class);
-        when(inputData.getConfiguration()).thenReturn(new Configuration());
         when(inputData.getDataSource()).thenReturn("bucketname/filename");
         when(inputData.getProfile()).thenReturn("S3Parquet");
-        assertEquals("s3a://bucketname/filename", HdfsUtilities.getDataUri(inputData));
+        assertEquals("s3a://bucketname/filename", HdfsUtilities.getDataUri(conf, inputData));
     }
 
     @Test
     public void getDataPathForAnAzureDataLakeProfile() throws Exception {
         InputData inputData = mock(InputData.class);
-        when(inputData.getConfiguration()).thenReturn(new Configuration());
         when(inputData.getDataSource()).thenReturn("mystore.azuredatalakestore.net/filename");
         when(inputData.getProfile()).thenReturn("ADLText");
-        assertEquals("adl://mystore.azuredatalakestore.net/filename", HdfsUtilities.getDataUri(inputData));
+        assertEquals("adl://mystore.azuredatalakestore.net/filename", HdfsUtilities.getDataUri(conf, inputData));
     }
 
     @Test
     public void getDataPathForSomeOtherProfile() throws Exception {
         InputData inputData = mock(InputData.class);
-        when(inputData.getConfiguration()).thenReturn(new Configuration());
         when(inputData.getDataSource()).thenReturn("foo/bar");
-        assertEquals("/foo/bar", HdfsUtilities.getDataUri(inputData));
+        assertEquals("/foo/bar", HdfsUtilities.getDataUri(conf, inputData));
     }
 
     @Test
@@ -181,7 +179,6 @@ public class HdfsUtilitiesTest {
 
     private void prepareDataForIsThreadSafe(String dataDir, String codecStr, CompressionCodec codec) {
         try {
-            conf = PowerMockito.mock(Configuration.class);
             PowerMockito.whenNew(Configuration.class).withNoArguments().thenReturn(conf);
         } catch (Exception e) {
             fail("new Configuration mocking failed");

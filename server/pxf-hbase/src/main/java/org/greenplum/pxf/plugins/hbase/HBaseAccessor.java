@@ -21,9 +21,9 @@ package org.greenplum.pxf.plugins.hbase;
 
 
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.ReadAccessor;
-import org.greenplum.pxf.api.utilities.InputData;
-import org.greenplum.pxf.api.utilities.Plugin;
+import org.greenplum.pxf.api.model.Accessor;
+import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseColumnDescriptor;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseTupleDescription;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseUtilities;
@@ -55,7 +55,7 @@ import java.io.ObjectInputStream;
  * The class supports filters using the {@link HBaseFilterBuilder}.
  * Regions can be filtered out according to input from {@link HBaseFilterBuilder}.
  */
-public class HBaseAccessor extends Plugin implements ReadAccessor {
+public class HBaseAccessor extends BasePlugin implements Accessor {
     private HBaseTupleDescription tupleDescription;
     private Connection connection;
     private Table table;
@@ -94,7 +94,7 @@ public class HBaseAccessor extends Plugin implements ReadAccessor {
      * @param input query information, contains HBase table name and filter
      */
     public HBaseAccessor(InputData input) {
-        super(input);
+        initialize(input);
 
         tupleDescription = new HBaseTupleDescription(input);
         split = null;
@@ -124,6 +124,39 @@ public class HBaseAccessor extends Plugin implements ReadAccessor {
     public void closeForRead() throws Exception {
         table.close();
         HBaseUtilities.closeConnection(null, connection);
+    }
+
+    /**
+     * Opens the resource for write.
+     *
+     * @return true if the resource is successfully opened
+     * @throws Exception if opening the resource failed
+     */
+    @Override
+    public boolean openForWrite() throws Exception {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Writes the next object.
+     *
+     * @param onerow the object to be written
+     * @return true if the write succeeded
+     * @throws Exception writing to the resource failed
+     */
+    @Override
+    public boolean writeNextObject(OneRow onerow) throws Exception {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Closes the resource for write.
+     *
+     * @throws Exception if closing the resource failed
+     */
+    @Override
+    public void closeForWrite() throws Exception {
+        throw new UnsupportedOperationException();
     }
 
     /**

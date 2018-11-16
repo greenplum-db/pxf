@@ -19,32 +19,28 @@ package org.greenplum.pxf.plugins.ignite;
  * under the License.
  */
 
-import org.greenplum.pxf.api.OneRow;
+import com.google.gson.JsonArray;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.greenplum.pxf.api.OneField;
+import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.api.utilities.InputData;
-import org.greenplum.pxf.api.ReadResolver;
-import org.greenplum.pxf.api.WriteResolver;
+import org.greenplum.pxf.api.model.InputData;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.codec.binary.Hex;
-
-import com.google.gson.JsonArray;
-
 /**
  * PXF-Ignite resolver class
  */
-public class IgniteResolver extends IgnitePlugin implements ReadResolver, WriteResolver {
+public class IgniteResolver extends IgniteBasePlugin implements Resolver {
     /**
      * Class constructor
      *

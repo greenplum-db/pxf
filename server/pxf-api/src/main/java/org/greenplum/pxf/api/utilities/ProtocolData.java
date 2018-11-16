@@ -25,6 +25,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.greenplum.pxf.api.OutputFormat;
+import org.greenplum.pxf.api.model.InputData;
 
 import java.util.ArrayList;
 import java.util.List;

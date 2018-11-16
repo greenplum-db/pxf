@@ -19,7 +19,7 @@ package org.greenplum.pxf.api.utilities;
  * under the License.
  */
 
-import org.greenplum.pxf.api.Fragment;
+import org.greenplum.pxf.api.model.Fragment;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 

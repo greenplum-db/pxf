@@ -22,15 +22,15 @@ package org.greenplum.pxf.plugins.ignite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.greenplum.pxf.api.UserDataException;
-import org.greenplum.pxf.api.utilities.InputData;
-import org.greenplum.pxf.api.utilities.Plugin;
+import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.BasePlugin;
 
 /**
  * PXF-Ignite base class.
  * This class manages the user-defined parameters provided in the query from PXF.
  * Implemented subclasses: {@link IgniteAccessor}, {@link IgniteResolver}.
  */
-public class IgnitePlugin extends Plugin {
+public class IgniteBasePlugin extends BasePlugin {
     // Ignite cache
     protected static final String igniteHostDefault = "127.0.0.1:8080";
     protected String igniteHost = null;
@@ -45,8 +45,8 @@ public class IgnitePlugin extends Plugin {
      * @param inputData Input data
      * @throws UserDataException if the request parameter is malformed
      */
-    public IgnitePlugin(InputData inputData) throws UserDataException {
-        super(inputData);
+    public IgniteBasePlugin(InputData inputData) throws UserDataException {
+        initialize(inputData);
         if (LOG.isDebugEnabled()) {
             LOG.debug("Constructor started");
         }
@@ -85,5 +85,5 @@ public class IgnitePlugin extends Plugin {
         return true;
     }
 
-    private static final Log LOG = LogFactory.getLog(IgnitePlugin.class);
+    private static final Log LOG = LogFactory.getLog(IgniteBasePlugin.class);
 }

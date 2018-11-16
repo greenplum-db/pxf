@@ -8,9 +8,9 @@ package org.greenplum.pxf.plugins.hive;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -29,17 +29,17 @@ import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.InputFormat;
-import org.greenplum.pxf.api.Metadata;
-import org.greenplum.pxf.api.MetadataFetcher;
+import org.greenplum.pxf.api.model.HDFSPlugin;
+import org.greenplum.pxf.api.model.Metadata;
+import org.greenplum.pxf.api.model.MetadataFetcher;
 import org.greenplum.pxf.api.OutputFormat;
 import org.greenplum.pxf.api.UnsupportedTypeException;
-import org.greenplum.pxf.api.utilities.InputData;
+import org.greenplum.pxf.api.model.InputData;
 import org.greenplum.pxf.api.utilities.ProfilesConf;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.greenplum.pxf.plugins.hive.utilities.ProfileFactory;
@@ -47,7 +47,7 @@ import org.greenplum.pxf.plugins.hive.utilities.ProfileFactory;
 /**
  * Class for connecting to Hive's MetaStore and getting schema of Hive tables.
  */
-public class HiveMetadataFetcher extends MetadataFetcher {
+public class HiveMetadataFetcher extends HDFSPlugin implements MetadataFetcher {
 
     private static final String DELIM_FIELD = InputData.DELIMITER_KEY;
 
@@ -56,11 +56,11 @@ public class HiveMetadataFetcher extends MetadataFetcher {
     private JobConf jobConf;
 
     public HiveMetadataFetcher(InputData md) {
-        super(md);
+        initialize(md);
 
         // init hive metastore client connection.
         client = HiveUtilities.initHiveClient();
-        jobConf = new JobConf(inputData.getConfiguration());
+        jobConf = new JobConf(configuration);
     }
 
     /**

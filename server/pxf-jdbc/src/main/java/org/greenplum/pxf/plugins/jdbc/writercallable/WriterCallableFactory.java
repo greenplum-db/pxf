@@ -20,7 +20,7 @@ package org.greenplum.pxf.plugins.jdbc.writercallable;
  */
 
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.plugins.jdbc.JdbcPlugin;
+import org.greenplum.pxf.plugins.jdbc.JdbcBasePlugin;
 
 import java.sql.PreparedStatement;
 
@@ -36,7 +36,7 @@ public class WriterCallableFactory {
      * By default, 'statement' is null
      */
     public WriterCallableFactory() {
-        batchSize = JdbcPlugin.DEFAULT_BATCH_SIZE;
+        batchSize = JdbcBasePlugin.DEFAULT_BATCH_SIZE;
         plugin = null;
         query = null;
         statement = null;
@@ -55,12 +55,12 @@ public class WriterCallableFactory {
     }
 
     /**
-     * Set {@link JdbcPlugin} to use.
+     * Set {@link JdbcBasePlugin} to use.
      *
      * @param plugin
      * REQUIRED
      */
-    public void setPlugin(JdbcPlugin plugin) {
+    public void setPlugin(JdbcBasePlugin plugin) {
         this.plugin = plugin;
     }
 
@@ -94,7 +94,7 @@ public class WriterCallableFactory {
     }
 
     private int batchSize;
-    private JdbcPlugin plugin;
+    private JdbcBasePlugin plugin;
     private String query;
     private PreparedStatement statement;
 }

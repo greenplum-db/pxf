@@ -1,4 +1,4 @@
-package org.greenplum.pxf.api;
+package org.greenplum.pxf.api.model;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -8,9 +8,9 @@ package org.greenplum.pxf.api;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -21,24 +21,11 @@ package org.greenplum.pxf.api;
 
 import java.util.List;
 
-import org.greenplum.pxf.api.utilities.InputData;
-import org.greenplum.pxf.api.utilities.Plugin;
-
 
 /**
- * Abstract class that defines getting metadata.
+ * Interface that defines getting metadata.
  */
-public abstract class MetadataFetcher extends Plugin {
-    protected List<Metadata> metadata;
-
-    /**
-     * Constructs a MetadataFetcher.
-     *
-     * @param metaData the input data
-     */
-    public MetadataFetcher(InputData metaData) {
-        super(metaData);
-    }
+public interface MetadataFetcher extends Plugin {
 
     /**
      * Gets a metadata of a given item
@@ -47,5 +34,5 @@ public abstract class MetadataFetcher extends Plugin {
      * @return metadata of all items corresponding to given pattern
      * @throws Exception if metadata information could not be retrieved
      */
-    public abstract List<Metadata> getMetadata(String pattern) throws Exception;
+    List<Metadata> getMetadata(String pattern) throws Exception;
 }

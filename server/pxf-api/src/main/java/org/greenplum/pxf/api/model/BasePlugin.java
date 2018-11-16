@@ -1,4 +1,4 @@
-package org.greenplum.pxf.api.utilities;
+package org.greenplum.pxf.api.model;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -8,9 +8,9 @@ package org.greenplum.pxf.api.utilities;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -20,29 +20,42 @@ package org.greenplum.pxf.api.utilities;
  */
 
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * Base class for all plugin types (Accessor, Resolver, Fragmenter, ...).
+ * Base class for all plugin types (Accessor, Resolver, BaseFragmenter, ...).
  * Manages the meta data.
  */
-public class Plugin {
+public class BasePlugin implements Plugin {
+
+    protected Logger LOG = LoggerFactory.getLogger(this.getClass());
     protected InputData inputData;
 
+    private boolean initialized = false;
+
     /**
-     * Constructs a plugin.
+     * Initialize the plugin for the incoming request
      *
-     * @param input the input data
+     * @param inputData data provided in the request
      */
-    public Plugin(InputData input) {
-        this.inputData = input;
+    @Override
+    public void initialize(InputData inputData) {
+        this.inputData = inputData;
+        this.initialized = true;
+    }
+
+    @Override
+    public boolean isThreadSafe() {
+        return true;
     }
 
     /**
-     * Checks if the plugin is thread safe or not, based on inputData.
+     * Determines if the plugin is initialized
      *
-     * @return true if plugin is thread safe
+     * @return true if initialized, false otherwise
      */
-    public boolean isThreadSafe() {
-        return true;
+    public final boolean isInitialized() {
+        return initialized;
     }
 }

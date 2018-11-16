@@ -49,7 +49,7 @@ import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.ReadVectorizedResolver;
 import org.greenplum.pxf.api.UnsupportedTypeException;
 import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.api.utilities.InputData;
+import org.greenplum.pxf.api.model.InputData;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.apache.hadoop.hive.serde2.io.DateWritable;
 import org.apache.hadoop.hive.serde2.objectinspector.*;
@@ -71,7 +71,7 @@ public class HiveORCVectorizedResolver extends HiveResolver implements ReadVecto
     public HiveORCVectorizedResolver(InputData input) throws Exception {
         super(input);
         try {
-            soi = (StructObjectInspector) HiveUtilities.getOrcReader(input).getObjectInspector();
+            soi = (StructObjectInspector) getOrcReader().getObjectInspector();
         } catch (Exception e) {
             LOG.error("Unable to create an object inspector.");
             throw e;
@@ -81,23 +81,21 @@ public class HiveORCVectorizedResolver extends HiveResolver implements ReadVecto
     @Override
     public List<List<OneField>> getFieldsForBatch(OneRow batch) {
 
-        Writable writableObject = null;
-        Object fieldValue = null;
         VectorizedRowBatch vectorizedBatch = (VectorizedRowBatch) batch.getData();
 
         /* Allocate empty result set */
         int columnsNumber = inputData.getColumns();
-        resolvedBatch = new ArrayList<List<OneField>>(vectorizedBatch.size);
+        resolvedBatch = new ArrayList<>(vectorizedBatch.size);
 
         /* Create empty template row */
         ArrayList<OneField> templateRow = new ArrayList<OneField>(columnsNumber);
-        ArrayList<OneField> currentRow = null;
+        ArrayList<OneField> currentRow;
         for (int j = 0; j < inputData.getColumns(); j++) {
             templateRow.add(null);
         }
         /* Replicate template row*/
         for (int i = 0; i < vectorizedBatch.size; i++) {
-            currentRow = new ArrayList<OneField>(templateRow);
+            currentRow = new ArrayList<>(templateRow);
             resolvedBatch.add(currentRow);
         }
 
@@ -126,8 +124,6 @@ public class HiveORCVectorizedResolver extends HiveResolver implements ReadVecto
      */
     private void resolvePrimitiveColumn(int columnIndex, ObjectInspector oi, VectorizedRowBatch vectorizedBatch) {
 
-        OneField field = null;
-        Writable writableObject = null;
         PrimitiveCategory poc = ((PrimitiveObjectInspector) oi).getPrimitiveCategory();
         populatePrimitiveColumn(poc, oi, vectorizedBatch, columnIndex);
     }
@@ -139,8 +135,8 @@ public class HiveORCVectorizedResolver extends HiveResolver implements ReadVecto
 
     private void populatePrimitiveColumn(PrimitiveCategory primitiveCategory, ObjectInspector oi, VectorizedRowBatch vectorizedBatch, int columnIndex) {
         ColumnVector columnVector = vectorizedBatch.cols[columnIndex];
-        Object fieldValue = null;
-        DataType fieldType = null;
+        Object fieldValue;
+        DataType fieldType;
 
         switch (primitiveCategory) {
             case BOOLEAN: {
