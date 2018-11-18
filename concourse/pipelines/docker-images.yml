@@ -5,10 +5,8 @@ groups:
 - name: build-docker-images
   jobs:
   - docker-gpdb-dev-centos6
-  - docker-gpdb-dev-centos6-gpadmin
   - docker-gpdb-dev-centos6-hdp-secure
   - docker-gpdb-dev-centos7
-  - docker-gpdb-dev-centos7-gpadmin
   - singlecluster_noarch_cdh
   - singlecluster_noarch_hdp
   - docker-gpdb-pxf-dev-centos6
@@ -104,21 +102,6 @@ resources:
       username: {{docker-username}}
       password: {{docker-password}}
 
-  - name: dockerfile-gpdb-dev-centos6-gpadmin
-    type: git
-    source:
-      branch: master
-      uri: https://github.com/greenplum-db/gpdb.git
-      paths: [src/tools/docker/centos6-gpadmin/Dockerfile]
-
-  - name: gpdb-dev-centos6-gpadmin-image
-    type: docker-image
-    source:
-      repository: pivotaldata/gpdb-dev
-      tag: centos6-gpadmin
-      username: {{docker-username}}
-      password: {{docker-password}}
-
   - name: gpdb-dev-centos6-hdp-secure-image
     type: docker-image
     source:
@@ -146,21 +129,6 @@ resources:
     source:
       repository: pivotaldata/gpdb-dev
       tag: centos7
-      username: {{docker-username}}
-      password: {{docker-password}}
-
-  - name: dockerfile-gpdb-dev-centos7-gpadmin
-    type: git
-    source:
-      branch: master
-      uri: https://github.com/greenplum-db/gpdb.git
-      paths: [src/tools/docker/centos7-gpadmin/Dockerfile]
-
-  - name: gpdb-dev-centos7-gpadmin-image
-    type: docker-image
-    source:
-      repository: pivotaldata/gpdb-dev
-      tag: centos7-gpadmin
       username: {{docker-username}}
       password: {{docker-password}}
 
@@ -240,19 +208,6 @@ jobs:
       params:
         build: dockerfile/src/tools/docker/centos6
 
-  - name: docker-gpdb-dev-centos6-gpadmin
-    plan:
-    - aggregate:
-      - get: dockerfile-gpdb-dev-centos6
-        passed: [docker-gpdb-dev-centos6]
-        trigger: true
-      - get: dockerfile
-        resource: dockerfile-gpdb-dev-centos6-gpadmin
-        trigger: true
-    - put: gpdb-dev-centos6-gpadmin-image
-      params:
-        build: dockerfile/src/tools/docker/centos6-gpadmin
-
   - name: docker-gpdb-dev-centos6-hdp-secure
     plan:
     - aggregate:
@@ -266,6 +221,8 @@ jobs:
     - put: gpdb-dev-centos6-hdp-secure-image
       params:
         build: pxf_src/concourse/docker/centos6-hdp-secure
+        build_args:
+          BASE_IMAGE: "gpdb-dev:centos6"
 
   - name: singlecluster_noarch_cdh
     plan:
@@ -423,16 +380,3 @@ jobs:
     - put: gpdb-dev-centos7-image
       params:
         build: dockerfile/src/tools/docker/centos7
-
-  - name: docker-gpdb-dev-centos7-gpadmin
-    plan:
-    - aggregate:
-      - get: dockerfile-gpdb-dev-centos7
-        passed: [docker-gpdb-dev-centos7]
-        trigger: true
-      - get: dockerfile
-        resource: dockerfile-gpdb-dev-centos7-gpadmin
-        trigger: true
-    - put: gpdb-dev-centos7-gpadmin-image
-      params:
-        build: dockerfile/src/tools/docker/centos7-gpadmin

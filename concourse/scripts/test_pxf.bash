@@ -42,14 +42,10 @@ function run_pxf_automation() {
 	su gpadmin -c "bash /home/gpadmin/run_pxf_automation_test.sh"
 }
 
-function setup_gpadmin_user() {
-  ./gpdb_src/concourse/scripts/setup_gpadmin_user.bash
-}
-
 function setup_hadoop() {
 	local hdfsrepo=$1
 
-	if [ -n "${GROUP}" ]; then
+	if [[ -n "${GROUP}" ]]; then
 		export SLAVES=1
 		setup_impersonation ${hdfsrepo}
 		start_hadoop_services ${hdfsrepo}
@@ -74,13 +70,13 @@ function _main() {
 	configure_pxf_default_server
 	start_pxf_server
 
-	if [ "${ACCEPTANCE}" == "true" ]; then
+	if [[ "${ACCEPTANCE}" == "true" ]]; then
 		echo Acceptance test pipeline
 		exit 1
 	fi
 
 	# Run Tests
-	if [ -n "${GROUP}" ]; then
+	if [[ -n "${GROUP}" ]]; then
 		time run_pxf_automation
 	fi
 }

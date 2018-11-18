@@ -1,4 +1,6 @@
-FROM pivotaldata/gpdb-dev:centos6
+ARG BASE_IMAGE=gpdb-dev:centos6
+
+FROM pivotaldata/${BASE_IMAGE}
 
 ARG TERM=xterm-256color
 ARG CLUSTER_NAME=hdp
