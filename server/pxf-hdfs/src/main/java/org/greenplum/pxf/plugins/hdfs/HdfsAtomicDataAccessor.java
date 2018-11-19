@@ -26,7 +26,7 @@ import org.apache.hadoop.mapred.FileSplit;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.HDFSPlugin;
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 
 import java.io.IOException;
@@ -56,11 +56,11 @@ public abstract class HdfsAtomicDataAccessor extends HDFSPlugin implements Acces
      *
      * @param input all input parameters coming from the client
      */
-    public HdfsAtomicDataAccessor(InputData input) {
+    public HdfsAtomicDataAccessor(RequestContext input) {
         // 0. Hold the configuration data
         initialize(input);
 
-        fileSplit = HdfsUtilities.parseFileSplit(inputData);
+        fileSplit = HdfsUtilities.parseFileSplit(requestContext);
     }
 
     /**
@@ -77,8 +77,8 @@ public abstract class HdfsAtomicDataAccessor extends HDFSPlugin implements Acces
         }
 
         // input data stream
-        FileSystem fs = FileSystem.get(URI.create(inputData.getDataSource()), configuration); // FileSystem.get actually returns an FSDataInputStream
-        inp = fs.open(new Path(inputData.getDataSource()));
+        FileSystem fs = FileSystem.get(URI.create(requestContext.getDataSource()), configuration); // FileSystem.get actually returns an FSDataInputStream
+        inp = fs.open(new Path(requestContext.getDataSource()));
 
         return (inp != null);
     }
@@ -123,7 +123,7 @@ public abstract class HdfsAtomicDataAccessor extends HDFSPlugin implements Acces
     public boolean isThreadSafe() {
         return HdfsUtilities.isThreadSafe(
                 configuration,
-                inputData.getDataSource(),
-                inputData.getUserProperty("COMPRESSION_CODEC"));
+                requestContext.getDataSource(),
+                requestContext.getUserProperty("COMPRESSION_CODEC"));
     }
 }

@@ -28,7 +28,7 @@ import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.UserDataException;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -51,12 +51,12 @@ import java.util.regex.Pattern;
 public class IgniteAccessor extends IgniteBasePlugin implements Accessor {
     /**
      * Class constructor
-     * @param inputData Input
+     * @param requestContext Input
      *
      * @throws UserDataException if there is a user data exception
      */
-    public IgniteAccessor(InputData inputData) throws UserDataException {
-        super(inputData);
+    public IgniteAccessor(RequestContext requestContext) throws UserDataException {
+        super(requestContext);
     }
 
     /**
@@ -71,7 +71,7 @@ public class IgniteAccessor extends IgniteBasePlugin implements Accessor {
         StringBuilder sb = new StringBuilder();
 
         // Insert a list of fields to be selected
-        ArrayList<ColumnDescriptor> columns = inputData.getTupleDescription();
+        ArrayList<ColumnDescriptor> columns = requestContext.getTupleDescription();
         if (columns == null) {
             throw new UserDataException("Tuple description must be present.");
         }
@@ -86,7 +86,7 @@ public class IgniteAccessor extends IgniteBasePlugin implements Accessor {
 
         // Insert the name of the table to select values from
         sb.append(" FROM ");
-        String tableName = inputData.getDataSource();
+        String tableName = requestContext.getDataSource();
         if (tableName == null) {
             throw new UserDataException("Table name must be set as DataSource.");
         }
@@ -95,8 +95,8 @@ public class IgniteAccessor extends IgniteBasePlugin implements Accessor {
         // Insert query constraints
         // Note: Filter constants may be passed to Ignite separately from the WHERE expression, primarily for the safety of the SQL queries. However, at the moment they are passed in the query.
         ArrayList<String> filterConstants = null;
-        if (inputData.hasFilter()) {
-            WhereSQLBuilder filterBuilder = new WhereSQLBuilder(inputData);
+        if (requestContext.hasFilter()) {
+            WhereSQLBuilder filterBuilder = new WhereSQLBuilder(requestContext);
             String whereSql = filterBuilder.buildWhereSQL();
 
             if (whereSql != null) {
@@ -105,7 +105,7 @@ public class IgniteAccessor extends IgniteBasePlugin implements Accessor {
         }
 
         // Insert partition constraints
-        IgnitePartitionFragmenter.buildFragmenterSql(inputData, sb);
+        IgnitePartitionFragmenter.buildFragmenterSql(requestContext, sb);
 
         // Format URL
         urlReadStart = buildQueryFldexe(sb.toString(), filterConstants);
@@ -197,17 +197,17 @@ public class IgniteAccessor extends IgniteBasePlugin implements Accessor {
     public boolean openForWrite() throws UserDataException {
         // This is a temporary solution. At the moment there is no other way (except for the usage of user-defined parameters) to get the correct name of Ignite table: GPDB inserts extra data into the address, as required by Hadoop.
         // Note that if no extra data is present, the 'definedSource' will be left unchanged
-        String definedSource = inputData.getDataSource();
+        String definedSource = requestContext.getDataSource();
         Matcher matcher = writeAddressPattern.matcher(definedSource);
         if (matcher.find()) {
-            inputData.setDataSource(matcher.group(1));
+            requestContext.setDataSource(matcher.group(1));
         }
 
         StringBuilder sb = new StringBuilder();
         sb.append("INSERT INTO ");
 
         // Insert the table name
-        String tableName = inputData.getDataSource();
+        String tableName = requestContext.getDataSource();
         if (tableName == null) {
             throw new UserDataException("Table name must be set as DataSource.");
         }
@@ -215,7 +215,7 @@ public class IgniteAccessor extends IgniteBasePlugin implements Accessor {
 
         // Insert the column names
         sb.append("(");
-        ArrayList<ColumnDescriptor> columns = inputData.getTupleDescription();
+        ArrayList<ColumnDescriptor> columns = requestContext.getTupleDescription();
         if (columns == null) {
             throw new UserDataException("Tuple description must be present.");
         }
@@ -283,7 +283,7 @@ public class IgniteAccessor extends IgniteBasePlugin implements Accessor {
 
     private static final Log LOG = LogFactory.getLog(IgniteAccessor.class);
 
-    // A pattern to cut extra parameters from 'InputData.dataSource' when write operation is performed. See {@link openForWrite()} for the details
+    // A pattern to cut extra parameters from 'RequestContext.dataSource' when write operation is performed. See {@link openForWrite()} for the details
     private static final Pattern writeAddressPattern = Pattern.compile("/(.*)/[0-9]*-[0-9]*_[0-9]*");
 
     // Prepared URLs to send to Ignite when reading data

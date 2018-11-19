@@ -27,7 +27,7 @@ import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 
 import java.net.URL;
 import java.util.HashMap;
@@ -130,7 +130,7 @@ public enum ProfilesConf {
         for (String plugin : plugins) {
             String pluginValue = profileSubset.getString(plugin);
             if (!StringUtils.isEmpty(StringUtils.trim(pluginValue))) {
-                pluginsMap.put(InputData.USER_PROP_PREFIX + plugin.toUpperCase(), pluginValue);
+                pluginsMap.put(RequestContext.USER_PROP_PREFIX + plugin.toUpperCase(), pluginValue);
             }
         }
         return pluginsMap;

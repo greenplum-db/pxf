@@ -24,7 +24,7 @@ import org.greenplum.pxf.api.BasicFilter;
 import org.greenplum.pxf.api.FilterParser;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -40,8 +40,8 @@ import java.text.ParseException;
  * Only HDOP_AND is supported for multiple filters
  */
 public class WhereSQLBuilder extends JdbcFilterBuilder {
-    public WhereSQLBuilder(InputData input) {
-        inputData = input;
+    public WhereSQLBuilder(RequestContext input) {
+        requestContext = input;
     }
 
     /**
@@ -54,7 +54,7 @@ public class WhereSQLBuilder extends JdbcFilterBuilder {
      * @throws ParseException if an error happens when parsing the constraints (provided to class constructor)
      */
     public void buildWhereSQL(String dbName, StringBuilder query) throws ParseException {
-        if (!inputData.hasFilter()) {
+        if (!requestContext.hasFilter()) {
             return;
         }
 
@@ -68,7 +68,7 @@ public class WhereSQLBuilder extends JdbcFilterBuilder {
             }
 
             // Get constraints and parse them
-            String filterString = inputData.getFilterString();
+            String filterString = requestContext.getFilterString();
             Object filterObj = getFilterObject(filterString);
             List<BasicFilter> filters = null;
             filters = convertBasicFilterList(filterObj, filters);
@@ -80,7 +80,7 @@ public class WhereSQLBuilder extends JdbcFilterBuilder {
 
                 // Insert constraint column name
                 BasicFilter filter = (BasicFilter) obj;
-                ColumnDescriptor column = inputData.getColumn(filter.getColumn().index());
+                ColumnDescriptor column = requestContext.getColumn(filter.getColumn().index());
                 prepared.append(column.columnName());
 
                 // Insert constraint operator
@@ -191,6 +191,6 @@ public class WhereSQLBuilder extends JdbcFilterBuilder {
 
     private static final Log LOG = LogFactory.getLog(WhereSQLBuilder.class);
 
-    // {@link InputData} from PXF
-    private InputData inputData;
+    // {@link RequestContext} from PXF
+    private RequestContext requestContext;
 }

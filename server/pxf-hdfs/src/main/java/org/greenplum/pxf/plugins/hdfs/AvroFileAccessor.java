@@ -21,7 +21,7 @@ package org.greenplum.pxf.plugins.hdfs;
 
 
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
@@ -48,14 +48,14 @@ public class AvroFileAccessor extends HdfsSplittableDataAccessor {
      * @param input all input parameters coming from the client
      * @throws Exception if getting the avro schema fails
      */
-    public AvroFileAccessor(InputData input) throws Exception {
+    public AvroFileAccessor(RequestContext input) throws Exception {
         // 1. Call the base class
         super(input, new AvroInputFormat<GenericRecord>());
 
         // 2. Accessing the avro file through the "unsplittable" API just to get the schema.
         //    The splittable API (AvroInputFormat) which is the one we will be using to fetch
         //    the records, does not support getting the avro schema yet.
-        Schema schema = getAvroSchema(configuration, inputData.getDataSource());
+        Schema schema = getAvroSchema(configuration, requestContext.getDataSource());
 
         // 3. Pass the schema to the AvroInputFormat
         AvroJob.setInputSchema(jobConf, schema);

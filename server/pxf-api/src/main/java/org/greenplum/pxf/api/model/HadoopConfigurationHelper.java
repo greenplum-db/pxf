@@ -26,7 +26,7 @@ public class HadoopConfigurationHelper {
     /**
      * Returns a configuration object that applies server-specific configurations
      */
-    public Configuration getConfiguration(InputData inputData) {
+    public Configuration getConfiguration(RequestContext requestContext) {
 
         // start with built-in Hadoop configuration that loads core-site.xml
         Configuration configuration = new Configuration();
@@ -34,7 +34,7 @@ public class HadoopConfigurationHelper {
         // add all other *-site.xml files from default cluster will be added as "default" resources
         // by JobConf class or other Hadoop libraries on as-needed basis
 
-        String serverName = inputData.getServerName();
+        String serverName = requestContext.getServerName();
         if (!DEFAULT_SERVER_NAME.equals(serverName)) {
             // determine full path for server configuration directory
             String directoryName = SERVER_CONFIG_DIR_PREFIX + serverName;
@@ -47,9 +47,9 @@ public class HadoopConfigurationHelper {
             addSiteFilesAsResources(configuration, serverDirectory, serverName);
         }
 
-        inputData.getUserPropertiesStream()
+        requestContext.getUserPropertiesStream()
                 .forEach(entry -> configuration.set(entry.getKey()
-                        .substring(InputData.USER_PROP_PREFIX.length()), entry.getValue()));
+                        .substring(RequestContext.USER_PROP_PREFIX.length()), entry.getValue()));
 
         return configuration;
     }

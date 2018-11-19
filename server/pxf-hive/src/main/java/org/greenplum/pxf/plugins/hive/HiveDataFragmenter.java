@@ -43,8 +43,8 @@ import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.FragmentStats;
 import org.greenplum.pxf.api.LogicalFilter;
 import org.greenplum.pxf.api.model.Metadata;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.api.model.InputData;
 import org.greenplum.pxf.api.utilities.ProfilesConf;
 import org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
@@ -102,20 +102,20 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
     /**
      * Constructs a HiveDataFragmenter object.
      *
-     * @param inputData all input parameters coming from the client
+     * @param requestContext all input parameters coming from the client
      */
-    public HiveDataFragmenter(InputData inputData) {
-        this(inputData, HiveDataFragmenter.class);
+    public HiveDataFragmenter(RequestContext requestContext) {
+        this(requestContext, HiveDataFragmenter.class);
     }
 
     /**
      * Constructs a HiveDataFragmenter object.
      *
-     * @param inputData all input parameters coming from the client
+     * @param requestContext all input parameters coming from the client
      * @param clazz     Class for JobConf
      */
-    public HiveDataFragmenter(InputData inputData, Class<?> clazz) {
-        super(inputData);
+    public HiveDataFragmenter(RequestContext requestContext, Class<?> clazz) {
+        super(requestContext);
         client = HiveUtilities.initHiveClient();
         // canPushDownIntegral represents hive.metastore.integral.jdo.pushdown property in hive-site.xml
         canPushDownIntegral =
@@ -124,7 +124,7 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
 
     @Override
     public List<Fragment> getFragments() throws Exception {
-        Metadata.Item tblDesc = HiveUtilities.extractTableFromName(inputData.getDataSource());
+        Metadata.Item tblDesc = HiveUtilities.extractTableFromName(requestContext.getDataSource());
 
         fetchTableMetaData(tblDesc);
 
@@ -173,7 +173,7 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
 
         // If query has filter and hive table has partitions, prepare the filter
         // string for hive metastore and retrieve only the matched partitions
-        if (inputData.hasFilter() && tbl.getPartitionKeysSize() > 0) {
+        if (requestContext.hasFilter() && tbl.getPartitionKeysSize() > 0) {
 
             // Save all hive partition names in a set for later filter match
             for (FieldSchema fs : tbl.getPartitionKeys()) {
@@ -286,7 +286,7 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
         InputFormat<?, ?> fformat = makeInputFormat(
                 tablePartition.storageDesc.getInputFormat(), jobConf);
         String profile = null;
-        String userProfile = inputData.getProfile();
+        String userProfile = requestContext.getProfile();
         if (userProfile != null) {
             // evaluate optimal profile based on file format if profile was explicitly specified in url
             // if user passed accessor+fragmenter+resolver - use them
@@ -296,7 +296,7 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
         if (profile != null) {
             fragmenterForProfile = ProfilesConf.getProfilePluginsMap(profile).get("X-GP-OPTIONS-FRAGMENTER");
         } else {
-            fragmenterForProfile = inputData.getFragmenter();
+            fragmenterForProfile = requestContext.getFragmenter();
         }
 
         FileInputFormat.setInputPaths(jobConf, new Path(
@@ -341,18 +341,18 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
     private String buildFilterStringForHive() throws Exception {
 
         StringBuilder filtersString = new StringBuilder();
-        String filterInput = inputData.getFilterString();
+        String filterInput = requestContext.getFilterString();
 
         if (LOG.isDebugEnabled()) {
 
-            for (ColumnDescriptor cd : inputData.getTupleDescription()) {
+            for (ColumnDescriptor cd : requestContext.getTupleDescription()) {
                 LOG.debug("ColumnDescriptor : " + cd);
             }
 
-            LOG.debug("Filter string input : " + inputData.getFilterString());
+            LOG.debug("Filter string input : " + requestContext.getFilterString());
         }
 
-        HiveFilterBuilder eval = new HiveFilterBuilder(inputData);
+        HiveFilterBuilder eval = new HiveFilterBuilder(requestContext);
         Object filter = eval.getFilterObject(filterInput);
 
         if (filter instanceof LogicalFilter) {
@@ -407,7 +407,7 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
         // Avoids NullPointerException in case of operations like HDOP_IS_NULL,
         // HDOP_IS_NOT_NULL where no constant value is passed as part of query
         String filterValue = bFilter.getConstant() != null ? bFilter.getConstant().constant().toString() : "";
-        ColumnDescriptor filterColumn = inputData.getColumn(filterColumnIndex);
+        ColumnDescriptor filterColumn = requestContext.getColumn(filterColumnIndex);
         String filterColumnName = filterColumn.columnName();
         FilterParser.Operation operation = ((BasicFilter) filter).getOperation();
         String colType = partitionkeyTypes.get(filterColumnName);
@@ -476,7 +476,7 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
      */
     @Override
     public FragmentStats getFragmentStats() throws Exception {
-        Metadata.Item tblDesc = HiveUtilities.extractTableFromName(inputData.getDataSource());
+        Metadata.Item tblDesc = HiveUtilities.extractTableFromName(requestContext.getDataSource());
         Table tbl = HiveUtilities.getHiveTable(client, tblDesc);
         Metadata metadata = new Metadata(tblDesc);
         HiveUtilities.getSchema(tbl, metadata);

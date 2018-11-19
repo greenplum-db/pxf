@@ -21,7 +21,7 @@ package org.greenplum.pxf.api.examples;
 
 import org.greenplum.pxf.api.BaseFragmenter;
 import org.greenplum.pxf.api.model.Fragment;
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 
 import java.util.List;
 
@@ -36,9 +36,9 @@ public class DemoFragmenter extends BaseFragmenter {
     /**
      * Constructs the DemoFragmenter
      *
-     * @param metaData the InputData
+     * @param metaData the RequestContext
      */
-    public DemoFragmenter(InputData metaData) {
+    public DemoFragmenter(RequestContext metaData) {
         super(metaData);
     }
 
@@ -51,9 +51,9 @@ public class DemoFragmenter extends BaseFragmenter {
     public List<Fragment> getFragments() throws Exception {
         String localhostname = java.net.InetAddress.getLocalHost().getHostName();
         String[] localHosts = new String[]{localhostname, localhostname};
-        fragments.add(new Fragment(inputData.getDataSource() + ".1", localHosts, "fragment1".getBytes()));
-        fragments.add(new Fragment(inputData.getDataSource() + ".2", localHosts, "fragment2".getBytes()));
-        fragments.add(new Fragment(inputData.getDataSource() + ".3", localHosts, "fragment3".getBytes()));
+        fragments.add(new Fragment(requestContext.getDataSource() + ".1", localHosts, "fragment1".getBytes()));
+        fragments.add(new Fragment(requestContext.getDataSource() + ".2", localHosts, "fragment2".getBytes()));
+        fragments.add(new Fragment(requestContext.getDataSource() + ".3", localHosts, "fragment3".getBytes()));
         return fragments;
     }
 

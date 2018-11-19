@@ -38,7 +38,7 @@ import org.apache.hadoop.mapred.SequenceFileInputFormat;
 import org.apache.hadoop.mapred.SequenceFileRecordReader;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 
 import java.io.IOException;
@@ -63,7 +63,7 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor implements 
      *
      * @param input all input parameters coming from the client request
      */
-    public SequenceFileAccessor(InputData input) {
+    public SequenceFileAccessor(RequestContext input) {
         super(input, new SequenceFileInputFormat<Writable, Writable>());
     }
 
@@ -80,16 +80,16 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor implements 
     public boolean openForWrite() throws Exception {
         FileSystem fs;
         Path parent;
-        String fileName = inputData.getDataSource();
+        String fileName = requestContext.getDataSource();
 
-        getCompressionCodec(inputData);
+        getCompressionCodec(requestContext);
         fileName = updateFileExtension(fileName, codec);
 
         // construct the output stream
         file = new Path(fileName);
         fs = file.getFileSystem(configuration);
         fc = FileContext.getFileContext();
-        defaultKey = new LongWritable(inputData.getSegmentId());
+        defaultKey = new LongWritable(requestContext.getSegmentId());
 
         if (fs.exists(file)) {
             throw new IOException("file " + file
@@ -110,12 +110,12 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor implements 
      * value RECORD). If there is no codec, compression type is ignored, and
      * NONE is used.
      *
-     * @param inputData - container where compression codec and type are held
+     * @param requestContext - container where compression codec and type are held
      */
-    private void getCompressionCodec(InputData inputData) {
+    private void getCompressionCodec(RequestContext requestContext) {
 
-        String userCompressCodec = inputData.getUserProperty("COMPRESSION_CODEC");
-        String userCompressType = inputData.getUserProperty("COMPRESSION_TYPE");
+        String userCompressCodec = requestContext.getUserProperty("COMPRESSION_CODEC");
+        String userCompressType = requestContext.getUserProperty("COMPRESSION_TYPE");
         String parsedCompressType = parseCompressionType(userCompressType);
 
         compressionType = SequenceFile.CompressionType.NONE;

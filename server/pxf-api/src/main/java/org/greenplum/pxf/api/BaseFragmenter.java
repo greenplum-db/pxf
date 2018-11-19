@@ -23,7 +23,7 @@ package org.greenplum.pxf.api;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.FragmentStats;
 import org.greenplum.pxf.api.model.Fragmenter;
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.BasePlugin;
 
 import java.util.LinkedList;
@@ -41,7 +41,7 @@ public class BaseFragmenter extends BasePlugin implements Fragmenter {
      *
      * @param metaData the input data
      */
-    public BaseFragmenter(InputData metaData) {
+    public BaseFragmenter(RequestContext metaData) {
         initialize(metaData);
         fragments = new LinkedList<>();
     }

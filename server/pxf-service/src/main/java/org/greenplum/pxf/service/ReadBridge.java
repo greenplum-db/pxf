@@ -22,8 +22,8 @@ package org.greenplum.pxf.service;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.BadRecordException;
 import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
-import org.greenplum.pxf.api.model.InputData;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.service.io.Writable;
@@ -143,16 +143,16 @@ public class ReadBridge implements Bridge {
         }
     }
 
-    public static Accessor getFileAccessor(InputData inputData)
+    public static Accessor getFileAccessor(RequestContext requestContext)
             throws Exception {
-        return (Accessor) Utilities.createAnyInstance(InputData.class,
-                inputData.getAccessor(), inputData);
+        return (Accessor) Utilities.createAnyInstance(RequestContext.class,
+                requestContext.getAccessor(), requestContext);
     }
 
-    public static Resolver getFieldsResolver(InputData inputData)
+    public static Resolver getFieldsResolver(RequestContext requestContext)
             throws Exception {
-        return (Resolver) Utilities.createAnyInstance(InputData.class,
-                inputData.getResolver(), inputData);
+        return (Resolver) Utilities.createAnyInstance(RequestContext.class,
+                requestContext.getResolver(), requestContext);
     }
 
     /*

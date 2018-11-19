@@ -31,7 +31,7 @@ import org.apache.parquet.hadoop.ParquetInputFormat;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
 import org.apache.parquet.schema.MessageType;
 import org.greenplum.pxf.api.model.Fragment;
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 
 import java.io.IOException;
@@ -44,13 +44,13 @@ import java.util.List;
  */
 public class ParquetDataFragmenter extends HdfsDataFragmenter {
 
-    public ParquetDataFragmenter(InputData md) {
+    public ParquetDataFragmenter(RequestContext md) {
         super(md);
     }
 
     @Override
     public List<Fragment> getFragments() throws Exception {
-        String absoluteDataPath = HdfsUtilities.getDataUri(configuration, inputData);
+        String absoluteDataPath = HdfsUtilities.getDataUri(configuration, requestContext);
         List<InputSplit> splits = getSplits(new Path(absoluteDataPath));
 
         for (InputSplit split : splits) {

@@ -23,7 +23,7 @@ package org.greenplum.pxf.plugins.hive;
 import org.greenplum.pxf.api.BasicFilter;
 import org.greenplum.pxf.api.FilterParser;
 import org.greenplum.pxf.api.LogicalFilter;
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -38,15 +38,15 @@ import java.util.List;
  * partition filtering.
  */
 public class HiveFilterBuilder implements FilterParser.FilterBuilder {
-    private InputData inputData;
+    private RequestContext requestContext;
 
     /**
      * Constructs a HiveFilterBuilder object.
      *
      * @param input input data containing filter string
      */
-    public HiveFilterBuilder(InputData input) {
-        inputData = input;
+    public HiveFilterBuilder(RequestContext input) {
+        requestContext = input;
     }
 
     /**

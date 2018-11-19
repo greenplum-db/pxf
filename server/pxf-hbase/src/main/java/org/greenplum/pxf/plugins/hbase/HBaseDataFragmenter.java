@@ -34,7 +34,7 @@ import org.apache.hadoop.hbase.client.RegionLocator;
 import org.greenplum.pxf.api.BaseFragmenter;
 import org.greenplum.pxf.api.model.FragmentStats;
 import org.greenplum.pxf.api.model.Fragment;
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseLookupTable;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseUtilities;
 
@@ -65,7 +65,7 @@ public class HBaseDataFragmenter extends BaseFragmenter {
      *
      * @param inConf input data such as which HBase table to scan
      */
-    public HBaseDataFragmenter(InputData inConf) {
+    public HBaseDataFragmenter(RequestContext inConf) {
         super(inConf);
     }
 
@@ -93,9 +93,9 @@ public class HBaseDataFragmenter extends BaseFragmenter {
         HBaseAdmin.checkHBaseAvailable(hbaseConfiguration);
         connection = ConnectionFactory.createConnection(hbaseConfiguration);
         hbaseAdmin = connection.getAdmin();
-        if (!HBaseUtilities.isTableAvailable(hbaseAdmin, inputData.getDataSource())) {
+        if (!HBaseUtilities.isTableAvailable(hbaseAdmin, requestContext.getDataSource())) {
             HBaseUtilities.closeConnection(hbaseAdmin, connection);
-            throw new TableNotFoundException(inputData.getDataSource());
+            throw new TableNotFoundException(requestContext.getDataSource());
         }
 
         byte[] userData = prepareUserData();
@@ -115,7 +115,7 @@ public class HBaseDataFragmenter extends BaseFragmenter {
      */
     private byte[] prepareUserData() throws Exception {
         HBaseLookupTable lookupTable = new HBaseLookupTable(hbaseConfiguration);
-        Map<String, byte[]> mappings = lookupTable.getMappings(inputData.getDataSource());
+        Map<String, byte[]> mappings = lookupTable.getMappings(requestContext.getDataSource());
         lookupTable.close();
 
         if (mappings != null) {
@@ -144,7 +144,7 @@ public class HBaseDataFragmenter extends BaseFragmenter {
     }
 
     private void addTableFragments(byte[] userData) throws IOException {
-        RegionLocator regionLocator = connection.getRegionLocator(TableName.valueOf(inputData.getDataSource()));
+        RegionLocator regionLocator = connection.getRegionLocator(TableName.valueOf(requestContext.getDataSource()));
         List <HRegionLocation> locations = regionLocator.getAllRegionLocations();
 
         for (HRegionLocation location : locations) {
@@ -160,7 +160,7 @@ public class HBaseDataFragmenter extends BaseFragmenter {
         String[] hosts = new String[] {serverInfo.getHostname()};
         HRegionInfo region = location.getRegionInfo();
         byte[] fragmentMetadata = prepareFragmentMetadata(region);
-        Fragment fragment = new Fragment(inputData.getDataSource(), hosts, fragmentMetadata, userData);
+        Fragment fragment = new Fragment(requestContext.getDataSource(), hosts, fragmentMetadata, userData);
         fragments.add(fragment);
     }
 

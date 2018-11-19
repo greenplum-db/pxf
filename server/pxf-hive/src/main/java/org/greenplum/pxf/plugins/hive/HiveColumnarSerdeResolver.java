@@ -25,8 +25,8 @@ import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.OutputFormat;
 import org.greenplum.pxf.api.UnsupportedTypeException;
 import org.greenplum.pxf.api.io.DataType;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.api.model.InputData;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.greenplum.pxf.api.utilities.ProtocolData;
@@ -59,13 +59,13 @@ public class HiveColumnarSerdeResolver extends HiveResolver {
     private StringBuilder parts;
     private String serdeType;
 
-    public HiveColumnarSerdeResolver(InputData input) throws Exception {
+    public HiveColumnarSerdeResolver(RequestContext input) throws Exception {
         super(input);
     }
 
     /* read the data supplied by the fragmenter: inputformat name, serde name, partition keys */
     @Override
-    void parseUserData(InputData input) throws Exception {
+    void parseUserData(RequestContext input) throws Exception {
         HiveUserData hiveUserData = HiveUtilities.parseHiveUserData(input);
 
         serdeType = hiveUserData.getSerdeClassName();
@@ -76,7 +76,7 @@ public class HiveColumnarSerdeResolver extends HiveResolver {
 
     @Override
     void initPartitionFields() {
-        if (((ProtocolData) inputData).outputFormat() == OutputFormat.TEXT) {
+        if (((ProtocolData) requestContext).outputFormat() == OutputFormat.TEXT) {
             initTextPartitionFields(parts);
         } else {
             super.initPartitionFields();
@@ -90,7 +90,7 @@ public class HiveColumnarSerdeResolver extends HiveResolver {
      */
     @Override
     public List<OneField> getFields(OneRow onerow) throws Exception {
-        if (((ProtocolData) inputData).outputFormat() == OutputFormat.TEXT) {
+        if (((ProtocolData) requestContext).outputFormat() == OutputFormat.TEXT) {
             firstColumn = true;
             builder = new StringBuilder();
             Object tuple = deserializer.deserialize((Writable) onerow.getData());
@@ -112,7 +112,7 @@ public class HiveColumnarSerdeResolver extends HiveResolver {
      */
     @SuppressWarnings("deprecation")
 	@Override
-    void initSerde(InputData input) throws Exception {
+    void initSerde(RequestContext input) throws Exception {
         Properties serdeProperties = new Properties();
         int numberOfDataColumns = input.getColumns() - getNumberOfPartitions();
 

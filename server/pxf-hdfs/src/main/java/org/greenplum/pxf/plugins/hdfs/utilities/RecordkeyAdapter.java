@@ -21,8 +21,8 @@ package org.greenplum.pxf.plugins.hdfs.utilities;
 
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.api.model.InputData;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.*;
@@ -79,7 +79,7 @@ public class RecordkeyAdapter {
      * @throws NoSuchFieldException when the given record type does not support
      *             recordkeys
      */
-    public int appendRecordkeyField(List<OneField> recFields, InputData input,
+    public int appendRecordkeyField(List<OneField> recFields, RequestContext input,
                                     OneRow onerow) throws NoSuchFieldException {
 
         /*

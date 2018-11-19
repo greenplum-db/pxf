@@ -22,7 +22,7 @@ package org.greenplum.pxf.plugins.hbase;
 
 import org.greenplum.pxf.api.*;
 import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseColumnDescriptor;
@@ -53,7 +53,7 @@ public class HBaseResolver extends BasePlugin implements Resolver {
      *
      * @param input query information, contains HBase table name and filter
      */
-    public HBaseResolver(InputData input) {
+    public HBaseResolver(RequestContext input) {
         initialize(input);
         tupleDescription = new HBaseTupleDescription(input);
     }

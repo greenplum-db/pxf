@@ -9,9 +9,9 @@ public interface Plugin {
     /**
      * Initialize the plugin for the incoming request
      *
-     * @param inputData data provided in the request
+     * @param requestContext data provided in the request
      */
-    void initialize(InputData inputData);
+    void initialize(RequestContext requestContext);
 
     /**
      * Checks if the plugin is thread safe

@@ -20,7 +20,7 @@ package org.greenplum.pxf.plugins.hive;
  */
 
 
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.apache.hadoop.mapred.*;
 
 import java.io.IOException;
@@ -37,7 +37,7 @@ public class HiveLineBreakAccessor extends HiveAccessor {
      * @param input input containing user data
      * @throws Exception if user data was wrong
      */
-    public HiveLineBreakAccessor(InputData input) throws Exception {
+    public HiveLineBreakAccessor(RequestContext input) throws Exception {
         super(input, new TextInputFormat());
         ((TextInputFormat) inputFormat).configure(jobConf);
     }

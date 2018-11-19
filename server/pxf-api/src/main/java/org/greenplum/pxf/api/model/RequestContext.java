@@ -36,45 +36,37 @@ import static org.greenplum.pxf.api.model.HDFSPlugin.DEFAULT_SERVER_NAME;
  * Common configuration available to all PXF plugins. Represents input data
  * coming from client applications, such as GPDB.
  */
-public class InputData {
+public class RequestContext {
 
     public static final String DELIMITER_KEY = "DELIMITER";
-    public static final String USER_PROP_PREFIX = "X-GP-OPTIONS-";
+    //public static final String USER_PROP_PREFIX = "X-GP-OPTIONS-";
     public static final int INVALID_SPLIT_IDX = -1;
-    private static final Log LOG = LogFactory.getLog(InputData.class);
 
-    protected Map<String, String> requestParametersMap;
-    protected ArrayList<ColumnDescriptor> tupleDescription;
-    protected int segmentId;
-    protected int totalSegments;
-    protected byte[] fragmentMetadata = null;
-    protected byte[] userData = null;
-    protected boolean filterStringValid;
-    protected String filterString;
-    protected String dataSource;
-    protected String profile;
-    protected String accessor;
-    protected String resolver;
-    protected String fragmenter;
-    protected String metadata;
-    protected String remoteLogin;
-    protected String remoteSecret;
-    protected int dataFragment; /* should be deprecated */
+    private static final Log LOG = LogFactory.getLog(RequestContext.class);
+
+    // ----- NAMED PROPERTIES -----
+    private String accessor;
     private EnumAggregationType aggType;
+    private int dataFragment; /* should be deprecated */
+    private String dataSource;
+    private String fragmenter;
     private int fragmentIndex;
-    protected String user;
+    private byte[] fragmentMetadata = null;
+    private String filterString;
+    private boolean filterStringValid;
+    private String metadata;
 
     /**
-     * The name of the server to access. The name will be used to build
-     * a path for the config files (i.e. $PXF_CONF/servers/$serverName/*.xml)
+     * Number of attributes projected in query.
+     * <p>
+     * Example:
+     * SELECT col1, col2, col3... : number of attributes projected - 3
+     * SELECT col1, col2, col3... WHERE col4=a : number of attributes projected - 4
+     * SELECT *... : number of attributes projected - 0
      */
-    private String serverName = DEFAULT_SERVER_NAME;
+    private int numAttrsProjected;
 
-    /**
-     * When false the bridge has to run in synchronized mode. default value -
-     * true.
-     */
-    protected boolean threadSafe;
+    private String profile;
 
     /**
      * The name of the recordkey column. It can appear in any location in the
@@ -89,22 +81,31 @@ public class InputData {
      */
     protected ColumnDescriptor recordkeyColumn;
 
+    private String remoteLogin;
+    private String remoteSecret;
+    private String resolver;
+    private int segmentId;
     /**
-     * Number of attributes projected in query.
-     * <p>
-     * Example:
-     * SELECT col1, col2, col3... : number of attributes projected - 3
-     * SELECT col1, col2, col3... WHERE col4=a : number of attributes projected - 4
-     * SELECT *... : number of attributes projected - 0
+     * The name of the server to access. The name will be used to build
+     * a path for the config files (i.e. $PXF_CONF/servers/$serverName/*.xml)
      */
-    protected int numAttrsProjected;
-
+    private String serverName = DEFAULT_SERVER_NAME;
+    private int totalSegments;
     /**
-     * Constructs an empty InputData
+     * When false the bridge has to run in synchronized mode. default value -
+     * true.
      */
-    public InputData() {
-    }
+    private boolean threadSafe;
 
+    private ArrayList<ColumnDescriptor> tupleDescription;
+    private String user;
+    private byte[] userData;
+
+    // ----- USER-DEFINED OPTIONS other than NAMED PROPERTIES -----
+    protected Map<String, String> options;
+
+
+    //TODO remove
     /**
      * Returns the stream of key-value pairs defined in the request parameters
      *
@@ -122,8 +123,111 @@ public class InputData {
      * @param userProp the lookup user property
      * @return property value as a String
      */
+    /*
     public String getUserProperty(String userProp) {
         return requestParametersMap.get(USER_PROP_PREFIX + userProp.toUpperCase());
+    }
+    */
+
+    public String getOption(String option) {
+        return options.get(option);
+    }
+
+    public String getOption(String option, String defaultValue) {
+        return options.getOrDefault(option, defaultValue);
+    }
+
+
+    public void setAccessor(String accessor) {
+        this.accessor = accessor;
+    }
+
+    public void setDataFragment(int dataFragment) {
+        this.dataFragment = dataFragment;
+    }
+
+    public void setFragmenter(String fragmenter) {
+        this.fragmenter = fragmenter;
+    }
+
+    public void setFilterString(String filterString) {
+        this.filterString = filterString;
+    }
+
+    public boolean isFilterStringValid() {
+        return filterStringValid;
+    }
+
+    public void setFilterStringValid(boolean filterStringValid) {
+        this.filterStringValid = filterStringValid;
+    }
+
+    public void setMetadata(String metadata) {
+        this.metadata = metadata;
+    }
+
+    public void setProfile(String profile) {
+        this.profile = profile;
+    }
+
+    public void setRecordkeyColumn(ColumnDescriptor recordkeyColumn) {
+        this.recordkeyColumn = recordkeyColumn;
+    }
+
+    public String getRemoteLogin() {
+        return remoteLogin;
+    }
+
+    public void setRemoteLogin(String remoteLogin) {
+        this.remoteLogin = remoteLogin;
+    }
+
+    public String getRemoteSecret() {
+        return remoteSecret;
+    }
+
+    public void setRemoteSecret(String remoteSecret) {
+        this.remoteSecret = remoteSecret;
+    }
+
+    public void setResolver(String resolver) {
+        this.resolver = resolver;
+    }
+
+    public void setSegmentId(int segmentId) {
+        this.segmentId = segmentId;
+    }
+
+    public void setTotalSegments(int totalSegments) {
+        this.totalSegments = totalSegments;
+    }
+
+    public void setThreadSafe(boolean threadSafe) {
+        this.threadSafe = threadSafe;
+    }
+
+    public void setTupleDescription(ArrayList<ColumnDescriptor> tupleDescription) {
+        this.tupleDescription = tupleDescription;
+    }
+
+    public void setUser(String user) {
+        this.user = user;
+    }
+
+    public byte[] getUserData() {
+        return userData;
+    }
+
+    public void setUserData(byte[] userData) {
+        this.userData = userData;
+    }
+
+    public Map<String, String> getOptions() {
+        return options;
+    }
+
+    public void setOptions(Map<String, String> options) {
+        this.options = options;
     }
 
     /**

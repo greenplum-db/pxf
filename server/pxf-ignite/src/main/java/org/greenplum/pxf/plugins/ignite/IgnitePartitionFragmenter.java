@@ -23,7 +23,7 @@ import org.greenplum.pxf.api.BaseFragmenter;
 import org.greenplum.pxf.api.model.FragmentStats;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.UserDataException;
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -46,22 +46,22 @@ public class IgnitePartitionFragmenter extends BaseFragmenter {
     /**
      * Insert partition constraints into the prepared SQL query.
      *
-     * @param inputData pre-validated PXF InputData
+     * @param requestContext pre-validated PXF RequestContext
      * @param sb the SQL query that is prepared for appending extra WHERE constraints.
      */
-    public static void buildFragmenterSql(InputData inputData, StringBuilder sb) {
+    public static void buildFragmenterSql(RequestContext requestContext, StringBuilder sb) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("buildFragmenterSql() called");
         }
 
-        if (inputData.getUserProperty("PARTITION_BY") == null) {
+        if (requestContext.getUserProperty("PARTITION_BY") == null) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("buildFragmenterSql(): Partition is not used");
             }
             return;
         }
 
-        byte[] meta = inputData.getFragmentMetadata();
+        byte[] meta = requestContext.getFragmentMetadata();
         if (meta == null) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("buildFragmenterSql(): Fragment metadata is null, no partition constraints added");
@@ -70,7 +70,7 @@ public class IgnitePartitionFragmenter extends BaseFragmenter {
         }
 
         // Note that these parameters have already been validated when constructing fragment.
-        String[] partitionBy = inputData.getUserProperty("PARTITION_BY").split(":");
+        String[] partitionBy = requestContext.getUserProperty("PARTITION_BY").split(":");
         String partitionColumn = partitionBy[0];
         PartitionType partitionType = PartitionType.typeOf(partitionBy[1]);
 
@@ -140,16 +140,16 @@ public class IgnitePartitionFragmenter extends BaseFragmenter {
     /**
      * Class constructor
      *
-     * @param inputData Input data
+     * @param requestContext Input data
      * @throws UserDataException if the request parameter is malformed
      */
-    public IgnitePartitionFragmenter(InputData inputData) throws UserDataException {
-        super(inputData);
+    public IgnitePartitionFragmenter(RequestContext requestContext) throws UserDataException {
+        super(requestContext);
         if (LOG.isDebugEnabled()) {
             LOG.debug("Constructor started");
         }
 
-        if (inputData.getUserProperty("PARTITION_BY") == null) {
+        if (requestContext.getUserProperty("PARTITION_BY") == null) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Constructor successful; partition was not used");
             }
@@ -157,7 +157,7 @@ public class IgnitePartitionFragmenter extends BaseFragmenter {
         }
 
         try {
-            partitionBy = inputData.getUserProperty("PARTITION_BY").split(":");
+            partitionBy = requestContext.getUserProperty("PARTITION_BY").split(":");
             partitionType = PartitionType.typeOf(partitionBy[1]);
         }
         catch (IllegalArgumentException | ArrayIndexOutOfBoundsException e1) {
@@ -166,7 +166,7 @@ public class IgnitePartitionFragmenter extends BaseFragmenter {
 
         // Parse and validate parameter-RANGE
         try {
-            String rangeStr = inputData.getUserProperty("RANGE");
+            String rangeStr = requestContext.getUserProperty("RANGE");
             if (rangeStr != null) {
                 range = rangeStr.split(":");
                 if (range.length == 1 && partitionType != PartitionType.ENUM) {
@@ -183,7 +183,7 @@ public class IgnitePartitionFragmenter extends BaseFragmenter {
 
         // Parse and validate parameter-INTERVAL
         try {
-            String intervalStr = inputData.getUserProperty("INTERVAL");
+            String intervalStr = requestContext.getUserProperty("INTERVAL");
             if (intervalStr != null) {
                 interval = intervalStr.split(":");
                 intervalNum = Integer.parseInt(interval[0]);
@@ -242,7 +242,7 @@ public class IgnitePartitionFragmenter extends BaseFragmenter {
     @Override
     public List<Fragment> getFragments() throws UnsupportedOperationException {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("getFragments() called; dataSource is '" + inputData.getDataSource() + "'");
+            LOG.debug("getFragments() called; dataSource is '" + requestContext.getDataSource() + "'");
         }
 
         byte[] fragmentMetadata = null;
@@ -252,7 +252,7 @@ public class IgnitePartitionFragmenter extends BaseFragmenter {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("getFragments() found no partition");
             }
-            Fragment fragment = new Fragment(inputData.getDataSource(), replicaHostAddressWrapped, fragmentMetadata, fragmentUserdata);
+            Fragment fragment = new Fragment(requestContext.getDataSource(), replicaHostAddressWrapped, fragmentMetadata, fragmentUserdata);
             fragments.add(fragment);
             if (LOG.isDebugEnabled()) {
                 LOG.debug("getFragments() successful");
@@ -287,7 +287,7 @@ public class IgnitePartitionFragmenter extends BaseFragmenter {
                     fragmentMetadata = new byte[16];
                     ByteUtils.toLittleEndian(fragmentMetadata, fragStart.getTimeInMillis(), 0, 8);
                     ByteUtils.toLittleEndian(fragmentMetadata, fragEnd.getTimeInMillis(), 8, 8);
-                    Fragment fragment = new Fragment(inputData.getDataSource(), replicaHostAddressWrapped, fragmentMetadata, fragmentUserdata);
+                    Fragment fragment = new Fragment(requestContext.getDataSource(), replicaHostAddressWrapped, fragmentMetadata, fragmentUserdata);
 
                     fragments.add(fragment);
 
@@ -314,7 +314,7 @@ public class IgnitePartitionFragmenter extends BaseFragmenter {
                     fragmentMetadata = new byte[8];
                     ByteUtils.toLittleEndian(fragmentMetadata, fragStart, 0, 4);
                     ByteUtils.toLittleEndian(fragmentMetadata, fragEnd, 4, 4);
-                    Fragment fragment = new Fragment(inputData.getDataSource(), replicaHostAddressWrapped, fragmentMetadata, fragmentUserdata);
+                    Fragment fragment = new Fragment(requestContext.getDataSource(), replicaHostAddressWrapped, fragmentMetadata, fragmentUserdata);
 
                     fragments.add(fragment);
 
@@ -329,7 +329,7 @@ public class IgnitePartitionFragmenter extends BaseFragmenter {
                 }
                 for (String frag : range) {
                     fragmentMetadata = frag.getBytes();
-                    Fragment fragment = new Fragment(inputData.getDataSource(), replicaHostAddressWrapped, fragmentMetadata, fragmentUserdata);
+                    Fragment fragment = new Fragment(requestContext.getDataSource(), replicaHostAddressWrapped, fragmentMetadata, fragmentUserdata);
                     fragments.add(fragment);
                 }
                 break;

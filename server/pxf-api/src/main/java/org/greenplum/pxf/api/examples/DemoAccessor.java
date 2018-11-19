@@ -23,7 +23,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.BasePlugin;
 
 /**
@@ -42,9 +42,9 @@ public class DemoAccessor extends BasePlugin implements Accessor {
     /**
      * Constructs a DemoAccessor
      *
-     * @param metaData the InputData
+     * @param metaData the RequestContext
      */
-    public DemoAccessor(InputData metaData) {
+    public DemoAccessor(RequestContext metaData) {
         initialize(metaData);
     }
 
@@ -66,9 +66,9 @@ public class DemoAccessor extends BasePlugin implements Accessor {
         /* check for EOF */
         if (fragmentNumber > 0)
             return null; /* signal EOF, close will be called */
-        int fragment = inputData.getDataFragment();
-        String fragmentMetadata = new String(inputData.getFragmentMetadata());
-        int colCount = inputData.getColumns();
+        int fragment = requestContext.getDataFragment();
+        String fragmentMetadata = new String(requestContext.getFragmentMetadata());
+        int colCount = requestContext.getColumns();
 
         /* generate row with (colCount) columns */
         StringBuilder colValue = new StringBuilder(fragmentMetadata + " row" + (rowNumber+1));

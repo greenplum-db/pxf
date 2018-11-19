@@ -22,7 +22,7 @@ package org.greenplum.pxf.service;
 
 import org.greenplum.pxf.api.*;
 import org.greenplum.pxf.api.model.Accessor;
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.utilities.Utilities;
@@ -51,7 +51,7 @@ public class WriteBridge implements Bridge {
     public WriteBridge(ProtocolData protocolData) throws Exception {
 
         inputBuilder = new BridgeInputBuilder(protocolData);
-        /* plugins accept InputData parameters */
+        /* plugins accept RequestContext parameters */
         fileAccessor = getFileAccessor(protocolData);
         fieldsResolver = getFieldsResolver(protocolData);
 
@@ -99,12 +99,12 @@ public class WriteBridge implements Bridge {
         }
     }
 
-    private static Accessor getFileAccessor(InputData inputData) throws Exception {
-        return (Accessor) Utilities.createAnyInstance(InputData.class, inputData.getAccessor(), inputData);
+    private static Accessor getFileAccessor(RequestContext requestContext) throws Exception {
+        return (Accessor) Utilities.createAnyInstance(RequestContext.class, requestContext.getAccessor(), requestContext);
     }
 
-    private static Resolver getFieldsResolver(InputData inputData) throws Exception {
-        return (Resolver) Utilities.createAnyInstance(InputData.class, inputData.getResolver(), inputData);
+    private static Resolver getFieldsResolver(RequestContext requestContext) throws Exception {
+        return (Resolver) Utilities.createAnyInstance(RequestContext.class, requestContext.getResolver(), requestContext);
     }
 
     @Override

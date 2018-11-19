@@ -22,7 +22,7 @@ package org.greenplum.pxf.plugins.ignite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.greenplum.pxf.api.UserDataException;
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.BasePlugin;
 
 /**
@@ -41,25 +41,25 @@ public class IgniteBasePlugin extends BasePlugin {
     protected String cacheName = null;
 
     /**
-     * Class constructor. Parses and checks 'InputData'
-     * @param inputData Input data
+     * Class constructor. Parses and checks 'RequestContext'
+     * @param requestContext Input data
      * @throws UserDataException if the request parameter is malformed
      */
-    public IgniteBasePlugin(InputData inputData) throws UserDataException {
-        initialize(inputData);
+    public IgniteBasePlugin(RequestContext requestContext) throws UserDataException {
+        initialize(requestContext);
         if (LOG.isDebugEnabled()) {
             LOG.debug("Constructor started");
         }
 
-        igniteHost = inputData.getUserProperty("IGNITE_HOST");
+        igniteHost = requestContext.getUserProperty("IGNITE_HOST");
         if (igniteHost == null) {
             igniteHost = igniteHostDefault;
         }
 
-        cacheName = inputData.getUserProperty("IGNITE_CACHE");
+        cacheName = requestContext.getUserProperty("IGNITE_CACHE");
         // If this value is null, Ignite will use the default cache
 
-        String bufferSize_str = inputData.getUserProperty("BUFFER_SIZE");
+        String bufferSize_str = requestContext.getUserProperty("BUFFER_SIZE");
         if (bufferSize_str != null) {
             try {
                 bufferSize = Integer.parseInt(bufferSize_str);

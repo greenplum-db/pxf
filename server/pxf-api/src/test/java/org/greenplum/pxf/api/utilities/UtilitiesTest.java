@@ -36,10 +36,10 @@ import java.util.List;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.ReadVectorizedResolver;
 import org.greenplum.pxf.api.StatsAccessor;
-import org.greenplum.pxf.api.model.InputData;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.powermock.api.mockito.PowerMockito;
@@ -247,14 +247,14 @@ public class UtilitiesTest {
     @Test
     public void createAnyInstanceOldPackageName() throws Exception {
 
-        InputData metaData = mock(InputData.class);
+        RequestContext metaData = mock(RequestContext.class);
         String className = "com.pivotal.pxf.Lucy";
         ClassNotFoundException exception = new ClassNotFoundException(className);
         PowerMockito.mockStatic(Class.class);
         when(Class.forName(className)).thenThrow(exception);
 
         try {
-            Utilities.createAnyInstance(InputData.class,
+            Utilities.createAnyInstance(RequestContext.class,
                     className, metaData);
             fail("creating an instance should fail because the class doesn't exist in classpath");
         } catch (Exception e) {
@@ -291,7 +291,7 @@ public class UtilitiesTest {
 
     @Test
     public void parseFragmentMetadata() throws Exception {
-        InputData metaData = mock(InputData.class);
+        RequestContext metaData = mock(RequestContext.class);
         ByteArrayOutputStream bas = new ByteArrayOutputStream();
         ObjectOutputStream os = new ObjectOutputStream(bas);
         os.writeLong(10);
@@ -308,7 +308,7 @@ public class UtilitiesTest {
 
     @Test
     public void useAggBridge() {
-        InputData metaData = mock(InputData.class);
+        RequestContext metaData = mock(RequestContext.class);
         when(metaData.getAccessor()).thenReturn(StatsAccessorImpl.class.getName());
         when(metaData.getAggType()).thenReturn(EnumAggregationType.COUNT);
         when(metaData.getAccessor()).thenReturn("org.greenplum.pxf.api.utilities.UtilitiesTest$StatsAccessorImpl");
@@ -327,7 +327,7 @@ public class UtilitiesTest {
 
     @Test
     public void useStats() {
-        InputData metaData = mock(InputData.class);
+        RequestContext metaData = mock(RequestContext.class);
         Accessor accessor = new StatsAccessorImpl();
         when(metaData.getAggType()).thenReturn(EnumAggregationType.COUNT);
         when(metaData.getAccessor()).thenReturn("org.greenplum.pxf.api.utilities.UtilitiesTest$StatsAccessorImpl");
@@ -347,7 +347,7 @@ public class UtilitiesTest {
 
     @Test
     public void useVectorization() {
-        InputData metaData = mock(InputData.class);
+        RequestContext metaData = mock(RequestContext.class);
         when(metaData.getResolver()).thenReturn("org.greenplum.pxf.api.utilities.UtilitiesTest$ReadVectorizedResolverImpl");
         assertTrue(Utilities.useVectorization(metaData));
         when(metaData.getResolver()).thenReturn("org.greenplum.pxf.api.utilities.UtilitiesTest$ReadResolverImpl");

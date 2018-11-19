@@ -42,15 +42,13 @@ import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
-import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.Text;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.ReadVectorizedResolver;
 import org.greenplum.pxf.api.UnsupportedTypeException;
 import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.api.model.InputData;
-import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.apache.hadoop.hive.serde2.io.DateWritable;
 import org.apache.hadoop.hive.serde2.objectinspector.*;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector.Category;
@@ -68,7 +66,7 @@ public class HiveORCVectorizedResolver extends HiveResolver implements ReadVecto
     private List<List<OneField>> resolvedBatch;
     private StructObjectInspector soi;
 
-    public HiveORCVectorizedResolver(InputData input) throws Exception {
+    public HiveORCVectorizedResolver(RequestContext input) throws Exception {
         super(input);
         try {
             soi = (StructObjectInspector) getOrcReader().getObjectInspector();
@@ -84,13 +82,13 @@ public class HiveORCVectorizedResolver extends HiveResolver implements ReadVecto
         VectorizedRowBatch vectorizedBatch = (VectorizedRowBatch) batch.getData();
 
         /* Allocate empty result set */
-        int columnsNumber = inputData.getColumns();
+        int columnsNumber = requestContext.getColumns();
         resolvedBatch = new ArrayList<>(vectorizedBatch.size);
 
         /* Create empty template row */
         ArrayList<OneField> templateRow = new ArrayList<OneField>(columnsNumber);
         ArrayList<OneField> currentRow;
-        for (int j = 0; j < inputData.getColumns(); j++) {
+        for (int j = 0; j < requestContext.getColumns(); j++) {
             templateRow.add(null);
         }
         /* Replicate template row*/

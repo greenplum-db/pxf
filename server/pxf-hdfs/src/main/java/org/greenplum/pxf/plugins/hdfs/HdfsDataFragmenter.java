@@ -24,11 +24,8 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
-import org.greenplum.pxf.api.model.Fragment;
-import org.greenplum.pxf.api.model.FragmentStats;
-import org.greenplum.pxf.api.model.Fragmenter;
-import org.greenplum.pxf.api.model.HDFSPlugin;
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.*;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.PxfInputFormat;
 
@@ -52,7 +49,7 @@ public class HdfsDataFragmenter extends HDFSPlugin implements Fragmenter {
      *
      * @param md all input parameters coming from the client
      */
-    public HdfsDataFragmenter(InputData md) {
+    public HdfsDataFragmenter(RequestContext md) {
         initialize(md);
         jobConf = new JobConf(configuration, this.getClass());
         fragments = new ArrayList<>();
@@ -65,7 +62,7 @@ public class HdfsDataFragmenter extends HDFSPlugin implements Fragmenter {
      */
     @Override
     public List<Fragment> getFragments() throws Exception {
-        Path path = new Path(HdfsUtilities.getDataUri(configuration, inputData));
+        Path path = new Path(HdfsUtilities.getDataUri(configuration, requestContext));
         List<InputSplit> splits = getSplits(path);
 
         for (InputSplit split : splits) {
@@ -88,7 +85,7 @@ public class HdfsDataFragmenter extends HDFSPlugin implements Fragmenter {
 
     @Override
     public FragmentStats getFragmentStats() throws Exception {
-        String absoluteDataPath = HdfsUtilities.getDataUri(configuration, inputData);
+        String absoluteDataPath = HdfsUtilities.getDataUri(configuration, requestContext);
         ArrayList<InputSplit> splits = getSplits(new Path(absoluteDataPath));
 
         if (splits.isEmpty()) {

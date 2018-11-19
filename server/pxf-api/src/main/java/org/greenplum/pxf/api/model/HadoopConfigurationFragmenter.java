@@ -10,11 +10,11 @@ public class HadoopConfigurationFragmenter extends BaseFragmenter {
     private HadoopConfigurationHelper configHelper = new HadoopConfigurationHelper();
 
     @Override
-    public void initialize(InputData inputData) {
-        super.initialize(inputData);
+    public void initialize(RequestContext requestContext) {
+        super.initialize(requestContext);
 
         // fetch configuration based on provided input data
-        configuration = configHelper.getConfiguration(inputData);
+        configuration = configHelper.getConfiguration(requestContext);
     }
 
 

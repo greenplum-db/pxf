@@ -33,7 +33,7 @@ import org.apache.parquet.schema.MessageType;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.HDFSPlugin;
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 
 import java.io.IOException;
@@ -126,7 +126,7 @@ public class ParquetFileAccessor extends HDFSPlugin implements Accessor {
      *
      * @param input the input data
      */
-    public ParquetFileAccessor(InputData input) {
+    public ParquetFileAccessor(RequestContext input) {
         initialize(input);
     }
 
@@ -154,9 +154,9 @@ public class ParquetFileAccessor extends HDFSPlugin implements Accessor {
 
     @Override
     public boolean openForRead() throws Exception {
-        Path file = new Path(inputData.getDataSource());
-        FileSplit fileSplit = HdfsUtilities.parseFileSplit(inputData);
-        setSchema(HdfsUtilities.parseParquetUserData(inputData).getSchema());
+        Path file = new Path(requestContext.getDataSource());
+        FileSplit fileSplit = HdfsUtilities.parseFileSplit(requestContext);
+        setSchema(HdfsUtilities.parseParquetUserData(requestContext).getSchema());
         // Create reader for a given split, read a range in file
         setReader(new ParquetFileReader(configuration, file, ParquetMetadataConverter.range(
                 fileSplit.getStart(), fileSplit.getStart() + fileSplit.getLength())));

@@ -29,7 +29,7 @@ import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.UnsupportedTypeException;
 import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.DataSchemaException;
@@ -65,10 +65,10 @@ public class WritableResolver extends BasePlugin implements Resolver {
      * @throws Exception if schema file is missing, cannot be found in
      *                   classpath or fails to instantiate
      */
-    public WritableResolver(InputData input) throws Exception {
+    public WritableResolver(RequestContext input) throws Exception {
         initialize(input);
 
-        String schemaName = inputData.getUserProperty("DATA-SCHEMA");
+        String schemaName = requestContext.getUserProperty("DATA-SCHEMA");
 
         /** Testing that the schema name was supplied by the user - schema is an optional property. */
         if (schemaName == null) {
@@ -82,9 +82,9 @@ public class WritableResolver extends BasePlugin implements Resolver {
 
         userObject = Utilities.createAnyInstance(schemaName);
         fields = userObject.getClass().getDeclaredFields();
-        recordkeyIndex = (inputData.getRecordkeyColumn() == null)
+        recordkeyIndex = (requestContext.getRecordkeyColumn() == null)
                 ? RECORDKEY_UNDEFINED
-                        : inputData.getRecordkeyColumn().columnIndex();
+                        : requestContext.getRecordkeyColumn().columnIndex();
 
         // fields details:
         if (LOG.isDebugEnabled()) {
@@ -113,7 +113,7 @@ public class WritableResolver extends BasePlugin implements Resolver {
         int currentIdx = 0;
         for (Field field : fields) {
             if (currentIdx == recordkeyIndex) {
-                currentIdx += recordkeyAdapter.appendRecordkeyField(record, inputData, onerow);
+                currentIdx += recordkeyAdapter.appendRecordkeyField(record, requestContext, onerow);
             }
 
             if (Modifier.isPrivate(field.getModifiers())) {

@@ -24,7 +24,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.mapred.JobConf;
 import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 
@@ -39,13 +39,13 @@ public class HiveORCSerdeResolver extends HiveResolver {
     private String serdeType;
     private String typesString;
 
-    public HiveORCSerdeResolver(InputData input) throws Exception {
+    public HiveORCSerdeResolver(RequestContext input) throws Exception {
         super(input);
     }
 
     /* read the data supplied by the fragmenter: inputformat name, serde name, partition keys */
     @Override
-    void parseUserData(InputData input) throws Exception {
+    void parseUserData(RequestContext input) throws Exception {
         HiveUserData hiveUserData = HiveUtilities.parseHiveUserData(input);
         serdeType = hiveUserData.getSerdeClassName();
         partitionKeys = hiveUserData.getPartitionKeys();
@@ -63,7 +63,7 @@ public class HiveORCSerdeResolver extends HiveResolver {
      */
     @SuppressWarnings("deprecation")
     @Override
-    void initSerde(InputData input) throws Exception {
+    void initSerde(RequestContext input) throws Exception {
         Properties serdeProperties = new Properties();
         int numberOfDataColumns = input.getColumns() - getNumberOfPartitions();
 

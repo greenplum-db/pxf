@@ -24,7 +24,7 @@ import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.BasePlugin;
 
 import java.util.LinkedList;
@@ -44,12 +44,12 @@ public class StringPassResolver extends BasePlugin implements Resolver {
     /**
      * Constructs a StringPassResolver.
      *
-     * @param inputData input all input parameters coming from the client request
+     * @param requestContext input all input parameters coming from the client request
      */
-    public StringPassResolver(InputData inputData) {
-        initialize(inputData);
+    public StringPassResolver(RequestContext requestContext) {
+        initialize(requestContext);
         oneRow = new OneRow();
-        this.inputData = inputData;
+        this.requestContext = requestContext;
     }
 
     /**

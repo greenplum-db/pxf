@@ -28,7 +28,7 @@ import org.apache.hadoop.mapred.RecordReader;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.HDFSPlugin;
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 
 import java.io.IOException;
@@ -56,7 +56,7 @@ public abstract class HdfsSplittableDataAccessor extends HDFSPlugin implements A
      * @param input all input parameters coming from the client request
      * @param inFormat the HDFS {@link InputFormat} the caller wants to use
      */
-    public HdfsSplittableDataAccessor(InputData input, InputFormat<?, ?> inFormat) {
+    public HdfsSplittableDataAccessor(RequestContext input, InputFormat<?, ?> inFormat) {
         initialize(input);
         inputFormat = inFormat;
 
@@ -76,7 +76,7 @@ public abstract class HdfsSplittableDataAccessor extends HDFSPlugin implements A
     @Override
     public boolean openForRead() throws Exception {
         LinkedList<InputSplit> requestSplits = new LinkedList<InputSplit>();
-        FileSplit fileSplit = HdfsUtilities.parseFileSplit(inputData);
+        FileSplit fileSplit = HdfsUtilities.parseFileSplit(requestContext);
         requestSplits.add(fileSplit);
 
         // Initialize record reader based on current split
@@ -162,8 +162,8 @@ public abstract class HdfsSplittableDataAccessor extends HDFSPlugin implements A
     public boolean isThreadSafe() {
         return HdfsUtilities.isThreadSafe(
                 configuration,
-                inputData.getDataSource(),
-                inputData.getUserProperty("COMPRESSION_CODEC"));
+                requestContext.getDataSource(),
+                requestContext.getUserProperty("COMPRESSION_CODEC"));
     }
 
 }

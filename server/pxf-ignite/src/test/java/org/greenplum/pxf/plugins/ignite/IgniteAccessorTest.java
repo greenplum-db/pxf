@@ -21,8 +21,8 @@ package org.greenplum.pxf.plugins.ignite;
 
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.io.DataType;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.api.model.InputData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,24 +50,24 @@ import static org.powermock.api.support.membermodification.MemberMatcher.method;
 public class IgniteAccessorTest {
     @Before
     public void prepareAccessorTest() throws Exception {
-        inputData = Mockito.mock(InputData.class);
+        requestContext = Mockito.mock(RequestContext.class);
 
-        Mockito.when(inputData.getDataSource()).thenReturn("TableTest");
+        Mockito.when(requestContext.getDataSource()).thenReturn("TableTest");
 
         columns.add(new ColumnDescriptor("id", DataType.INTEGER.getOID(), 0, "int4", null));
         columns.add(new ColumnDescriptor("name", DataType.TEXT.getOID(), 1, "text", null));
         columns.add(new ColumnDescriptor("birthday", DataType.DATE.getOID(), 2, "date", null));
         columns.add(new ColumnDescriptor("key", DataType.BYTEA.getOID(), 3, "bytea", null));
-        Mockito.when(inputData.getTupleDescription()).thenReturn(columns);
-        Mockito.when(inputData.getColumn(0)).thenReturn(columns.get(0));
-        Mockito.when(inputData.getColumn(1)).thenReturn(columns.get(1));
-        Mockito.when(inputData.getColumn(2)).thenReturn(columns.get(2));
-        Mockito.when(inputData.getColumn(3)).thenReturn(columns.get(3));
+        Mockito.when(requestContext.getTupleDescription()).thenReturn(columns);
+        Mockito.when(requestContext.getColumn(0)).thenReturn(columns.get(0));
+        Mockito.when(requestContext.getColumn(1)).thenReturn(columns.get(1));
+        Mockito.when(requestContext.getColumn(2)).thenReturn(columns.get(2));
+        Mockito.when(requestContext.getColumn(3)).thenReturn(columns.get(3));
     }
 
     @Test
     public void testReadAccess() throws Exception {
-        IgniteAccessor acc = PowerMockito.spy(new IgniteAccessor(inputData));
+        IgniteAccessor acc = PowerMockito.spy(new IgniteAccessor(requestContext));
 
         JsonObject correctAnswer = new JsonObject();
         JsonArray tempArray = new JsonArray();
@@ -99,7 +99,7 @@ public class IgniteAccessorTest {
 
     @Test
     public void testWriteAccess() throws Exception {
-        IgniteAccessor acc = PowerMockito.spy(new IgniteAccessor(inputData));
+        IgniteAccessor acc = PowerMockito.spy(new IgniteAccessor(requestContext));
 
         OneRow insert_row_1 = new OneRow("(1, 'abcd', '2001-01-01', '61626364')");
         OneRow insert_row_2 = new OneRow("(2, 'abcd', '2001-01-01', '61626364')");
@@ -126,5 +126,5 @@ public class IgniteAccessorTest {
     }
 
     private ArrayList<ColumnDescriptor> columns = new ArrayList<>();
-    private InputData inputData = null;
+    private RequestContext requestContext = null;
 }

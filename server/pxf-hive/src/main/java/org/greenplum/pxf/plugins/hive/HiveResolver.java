@@ -22,18 +22,15 @@ package org.greenplum.pxf.plugins.hive;
 import org.apache.hadoop.io.BytesWritable;
 import org.greenplum.pxf.api.*;
 import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.api.model.HDFSPlugin;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.api.model.InputData;
-import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.apache.commons.lang.CharUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.common.JavaUtils;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -95,7 +92,7 @@ public class HiveResolver extends HivePlugin implements Resolver {
      * @throws Exception if user data was wrong or serde failed to be
      *                   instantiated
      */
-    public HiveResolver(InputData input) throws Exception {
+    public HiveResolver(RequestContext input) throws Exception {
         initialize(input);
 
         hiveDefaultPartName = HiveConf.getVar(configuration, HiveConf.ConfVars.DEFAULTPARTITIONNAME);
@@ -142,7 +139,7 @@ public class HiveResolver extends HivePlugin implements Resolver {
     }
 
     /* Parses user data string (arrived from fragmenter). */
-    void parseUserData(InputData input) throws Exception {
+    void parseUserData(RequestContext input) throws Exception {
         HiveUserData hiveUserData = HiveUtilities.parseHiveUserData(input);
 
         serdeClassName = hiveUserData.getSerdeClassName();
@@ -159,7 +156,7 @@ public class HiveResolver extends HivePlugin implements Resolver {
      * Gets and init the deserializer for the records of this Hive data
      * fragment.
      */
-    void initSerde(InputData inputData) throws Exception {
+    void initSerde(RequestContext requestContext) throws Exception {
         Properties serdeProperties;
 
         Class<?> c = Class.forName(serdeClassName, true, JavaUtils.getClassLoader());
@@ -458,7 +455,7 @@ public class HiveResolver extends HivePlugin implements Resolver {
         }
         List<OneField> structRecord = new LinkedList<>();
         List<OneField> complexRecord = new LinkedList<>();
-        List<ColumnDescriptor> colData = inputData.getTupleDescription();
+        List<ColumnDescriptor> colData = requestContext.getTupleDescription();
         for (int i = 0; i < structFields.size(); i++) {
             if (toFlatten) {
                 complexRecord.add(new OneField(DataType.TEXT.getOID(), String.format(
@@ -628,9 +625,9 @@ public class HiveResolver extends HivePlugin implements Resolver {
      * single ascii character (same restriction as Gpdb's). If a hex
      * representation was passed, convert it to its char.
      */
-    void parseDelimiterChar(InputData input) {
+    void parseDelimiterChar(RequestContext input) {
 
-        String userDelim = input.getUserProperty(InputData.DELIMITER_KEY);
+        String userDelim = input.getUserProperty(RequestContext.DELIMITER_KEY);
 
         if (userDelim == null) {
             /* No DELIMITER in URL, try to get it from fragment's user data*/
@@ -638,10 +635,10 @@ public class HiveResolver extends HivePlugin implements Resolver {
             try {
                 hiveUserData = HiveUtilities.parseHiveUserData(input);
             } catch (UserDataException ude) {
-                throw new IllegalArgumentException("Couldn't parse user data to get " + InputData.DELIMITER_KEY);
+                throw new IllegalArgumentException("Couldn't parse user data to get " + RequestContext.DELIMITER_KEY);
             }
             if (hiveUserData.getDelimiter() == null) {
-                throw new IllegalArgumentException(InputData.DELIMITER_KEY + " is a required option");
+                throw new IllegalArgumentException(RequestContext.DELIMITER_KEY + " is a required option");
             }
             delimiter = (char) Integer.valueOf(hiveUserData.getDelimiter()).intValue();
         } else {

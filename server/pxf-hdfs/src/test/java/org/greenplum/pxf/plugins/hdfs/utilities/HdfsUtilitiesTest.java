@@ -20,7 +20,7 @@ package org.greenplum.pxf.plugins.hdfs.utilities;
  */
 
 import org.greenplum.pxf.api.OneField;
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.apache.commons.logging.Log;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -65,25 +65,25 @@ public class HdfsUtilitiesTest {
 
     @Test
     public void getDataPathForAnS3Profile() throws Exception {
-        InputData inputData = mock(InputData.class);
-        when(inputData.getDataSource()).thenReturn("bucketname/filename");
-        when(inputData.getProfile()).thenReturn("S3Parquet");
-        assertEquals("s3a://bucketname/filename", HdfsUtilities.getDataUri(conf, inputData));
+        RequestContext requestContext = mock(RequestContext.class);
+        when(requestContext.getDataSource()).thenReturn("bucketname/filename");
+        when(requestContext.getProfile()).thenReturn("S3Parquet");
+        assertEquals("s3a://bucketname/filename", HdfsUtilities.getDataUri(conf, requestContext));
     }
 
     @Test
     public void getDataPathForAnAzureDataLakeProfile() throws Exception {
-        InputData inputData = mock(InputData.class);
-        when(inputData.getDataSource()).thenReturn("mystore.azuredatalakestore.net/filename");
-        when(inputData.getProfile()).thenReturn("ADLText");
-        assertEquals("adl://mystore.azuredatalakestore.net/filename", HdfsUtilities.getDataUri(conf, inputData));
+        RequestContext requestContext = mock(RequestContext.class);
+        when(requestContext.getDataSource()).thenReturn("mystore.azuredatalakestore.net/filename");
+        when(requestContext.getProfile()).thenReturn("ADLText");
+        assertEquals("adl://mystore.azuredatalakestore.net/filename", HdfsUtilities.getDataUri(conf, requestContext));
     }
 
     @Test
     public void getDataPathForSomeOtherProfile() throws Exception {
-        InputData inputData = mock(InputData.class);
-        when(inputData.getDataSource()).thenReturn("foo/bar");
-        assertEquals("/foo/bar", HdfsUtilities.getDataUri(conf, inputData));
+        RequestContext requestContext = mock(RequestContext.class);
+        when(requestContext.getDataSource()).thenReturn("foo/bar");
+        assertEquals("/foo/bar", HdfsUtilities.getDataUri(conf, requestContext));
     }
 
     @Test
@@ -226,16 +226,16 @@ public class HdfsUtilitiesTest {
 
     @Test
     public void testParseFileSplit() throws Exception {
-        InputData inputData = mock(InputData.class);
-        when(inputData.getDataSource()).thenReturn("/abc/path/to/data/source");
+        RequestContext requestContext = mock(RequestContext.class);
+        when(requestContext.getDataSource()).thenReturn("/abc/path/to/data/source");
         ByteArrayOutputStream bas = new ByteArrayOutputStream();
         ObjectOutputStream os = new ObjectOutputStream(bas);
         os.writeLong(10);
         os.writeLong(100);
         os.writeObject(new String[] { "hostname" });
         os.close();
-        when(inputData.getFragmentMetadata()).thenReturn(bas.toByteArray());
-        FileSplit fileSplit = HdfsUtilities.parseFileSplit(inputData);
+        when(requestContext.getFragmentMetadata()).thenReturn(bas.toByteArray());
+        FileSplit fileSplit = HdfsUtilities.parseFileSplit(requestContext);
         assertEquals(fileSplit.getStart(), 10);
         assertEquals(fileSplit.getLength(), 100);
         assertEquals(fileSplit.getPath().toString(), "/abc/path/to/data/source");

@@ -36,15 +36,11 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.greenplum.pxf.api.BaseFragmenter;
-import org.greenplum.pxf.api.model.Accessor;
-import org.greenplum.pxf.api.model.Fragment;
+import org.greenplum.pxf.api.model.*;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.model.Fragmenter;
-import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.FragmentsResponse;
 import org.greenplum.pxf.api.utilities.FragmentsResponseFormatter;
 import org.greenplum.pxf.api.utilities.ProtocolData;
@@ -64,7 +60,7 @@ public abstract class PxfUnit {
 	private static JsonFactory factory = new JsonFactory();
 	private static ObjectMapper mapper = new ObjectMapper(factory);
 
-	protected static List<InputData> inputs = null;
+	protected static List<RequestContext> inputs = null;
 
 	/**
 	 * Uses the given input directory to run through the PXF unit testing framework. Uses the lines in the file for
@@ -107,7 +103,7 @@ public abstract class PxfUnit {
 
 		setup(input);
 		List<String> actualOutput = new ArrayList<String>();
-		for (InputData data : inputs) {
+		for (RequestContext data : inputs) {
 			Accessor accessor = getReadAccessor(data);
 			Resolver resolver = getReadResolver(data);
 
@@ -161,7 +157,7 @@ public abstract class PxfUnit {
 		setup(input);
 
 		List<String> actualOutput = new ArrayList<String>();
-		for (InputData data : inputs) {
+		for (RequestContext data : inputs) {
 			Accessor accessor = getReadAccessor(data);
 			Resolver resolver = getReadResolver(data);
 
@@ -184,7 +180,7 @@ public abstract class PxfUnit {
 
 		setup(input);
 
-		for (InputData data : inputs) {
+		for (RequestContext data : inputs) {
 			Accessor accessor = getReadAccessor(data);
 			Resolver resolver = getReadResolver(data);
 
@@ -240,11 +236,11 @@ public abstract class PxfUnit {
 	 */
 	public abstract List<Pair<String, DataType>> getColumnDefinitions();
 
-//	protected InputData getInputDataForWritableTable() {
+//	protected RequestContext getInputDataForWritableTable() {
 //		return getInputDataForWritableTable(null);
 //	}
 
-	protected InputData getInputDataForWritableTable(Path input) {
+	protected RequestContext getInputDataForWritableTable(Path input) {
 
 		if (getAccessorClass() == null) {
 			throw new IllegalArgumentException(
@@ -357,7 +353,7 @@ public abstract class PxfUnit {
 
 		String jsonOutput = baos.toString();
 
-		inputs = new ArrayList<InputData>();
+		inputs = new ArrayList<RequestContext>();
 
 		JsonNode node = decodeLineToJsonNode(jsonOutput);
 
@@ -496,14 +492,14 @@ public abstract class PxfUnit {
 	 * @throws Exception
 	 *             If something bad happens
 	 */
-	protected Fragmenter getFragmenter(InputData meta) throws Exception {
+	protected Fragmenter getFragmenter(RequestContext meta) throws Exception {
 
 		Fragmenter fragmenter = null;
 
 		for (Constructor<?> c : getFragmenterClass().getConstructors()) {
 			if (c.getParameterTypes().length == 1) {
 				for (Class<?> clazz : c.getParameterTypes()) {
-					if (InputData.class.isAssignableFrom(clazz)) {
+					if (RequestContext.class.isAssignableFrom(clazz)) {
 						fragmenter = (Fragmenter) c.newInstance(meta);
 					}
 				}
@@ -521,20 +517,20 @@ public abstract class PxfUnit {
 	/**
 	 * Gets an instance of Accessor via reflection.
 	 *
-	 * Searches for a constructor that has a single parameter of some InputData type
+	 * Searches for a constructor that has a single parameter of some RequestContext type
 	 *
 	 * @return An Accessor instance
 	 * @throws Exception
 	 *             If something bad happens
 	 */
-	protected Accessor getReadAccessor(InputData data) throws Exception {
+	protected Accessor getReadAccessor(RequestContext data) throws Exception {
 
 		Accessor accessor = null;
 
 		for (Constructor<?> c : getAccessorClass().getConstructors()) {
 			if (c.getParameterTypes().length == 1) {
 				for (Class<?> clazz : c.getParameterTypes()) {
-					if (InputData.class.isAssignableFrom(clazz)) {
+					if (RequestContext.class.isAssignableFrom(clazz)) {
 						accessor = (Accessor) c.newInstance(data);
 					}
 				}
@@ -558,7 +554,7 @@ public abstract class PxfUnit {
 	 * @throws Exception
 	 *             If something bad happens
 	 */
-	protected Resolver getReadResolver(InputData data) throws Exception {
+	protected Resolver getReadResolver(RequestContext data) throws Exception {
 
 		Resolver resolver = null;
 
@@ -567,7 +563,7 @@ public abstract class PxfUnit {
 		for (Constructor<?> c : getResolverClass().getConstructors()) {
 			if (c.getParameterTypes().length == 1) {
 				for (Class<?> clazz : c.getParameterTypes()) {
-					if (InputData.class.isAssignableFrom(clazz)) {
+					if (RequestContext.class.isAssignableFrom(clazz)) {
 						resolver = (Resolver) c.newInstance(data);
 					}
 				}

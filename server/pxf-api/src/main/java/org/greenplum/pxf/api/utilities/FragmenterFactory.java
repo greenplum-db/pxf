@@ -21,16 +21,16 @@ package org.greenplum.pxf.api.utilities;
 
 
 import org.greenplum.pxf.api.BaseFragmenter;
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 
 /**
  * Factory class for creation of {@link BaseFragmenter} objects. The actual {@link BaseFragmenter} object is "hidden" behind
  * an {@link BaseFragmenter} abstract class which is returned by the FragmenterFactory.
  */
 public class FragmenterFactory {
-    static public BaseFragmenter create(InputData inputData) throws Exception {
-    	String fragmenterName = inputData.getFragmenter();
+    static public BaseFragmenter create(RequestContext requestContext) throws Exception {
+    	String fragmenterName = requestContext.getFragmenter();
 
-        return (BaseFragmenter) Utilities.createAnyInstance(InputData.class, fragmenterName, inputData);
+        return (BaseFragmenter) Utilities.createAnyInstance(RequestContext.class, fragmenterName, requestContext);
     }
 }

@@ -42,8 +42,8 @@ import org.greenplum.pxf.api.model.Metadata.Field;
 import org.greenplum.pxf.api.UnsupportedTypeException;
 import org.greenplum.pxf.api.UserDataException;
 import org.greenplum.pxf.api.io.DataType;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.EnumGpdbType;
-import org.greenplum.pxf.api.model.InputData;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hive.HiveDataFragmenter;
 import org.greenplum.pxf.plugins.hive.HiveInputFormatFragmenter;
@@ -466,7 +466,7 @@ public class HiveUtilities {
      * @return instance of HiveUserData class
      * @throws UserDataException when incorrect number of tokens in Hive user data received
      */
-    public static HiveUserData parseHiveUserData(InputData input) throws UserDataException {
+    public static HiveUserData parseHiveUserData(RequestContext input) throws UserDataException {
         String userData = new String(input.getFragmentUserData());
         String[] toks = userData.split(HiveUserData.HIVE_UD_DELIM, HiveUserData.getNumOfTokens());
 
@@ -587,12 +587,12 @@ public class HiveUtilities {
 
     /**
      * Creates ORC file reader.
-     * @param inputData input data with given data source
+     * @param requestContext input data with given data source
      * @return ORC file reader
      */
-    public static Reader getOrcReader(Configuration configuration, InputData inputData) {
+    public static Reader getOrcReader(Configuration configuration, RequestContext requestContext) {
         try {
-            Path path = new Path(inputData.getDataSource());
+            Path path = new Path(requestContext.getDataSource());
             return OrcFile.createReader(path.getFileSystem(configuration), path);
         } catch (Exception e) {
             throw new RuntimeException("Exception while getting orc reader", e);

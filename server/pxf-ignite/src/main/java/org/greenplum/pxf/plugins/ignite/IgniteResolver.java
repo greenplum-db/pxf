@@ -26,10 +26,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.api.model.InputData;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -47,7 +47,7 @@ public class IgniteResolver extends IgniteBasePlugin implements Resolver {
      * @param input Input
      * @throws Exception when there is an exception
      */
-    public IgniteResolver(InputData input) throws Exception {
+    public IgniteResolver(RequestContext input) throws Exception {
         super(input);
         if (LOG.isDebugEnabled()) {
             LOG.debug("Constructor started");

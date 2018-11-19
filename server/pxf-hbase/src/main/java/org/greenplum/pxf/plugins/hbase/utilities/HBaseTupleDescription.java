@@ -20,8 +20,8 @@ package org.greenplum.pxf.plugins.hbase.utilities;
  */
 
 
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.api.model.InputData;
 
 import java.io.ByteArrayInputStream;
 import java.io.ObjectInputStream;
@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The class extends the tuple description provided by {@link InputData}
+ * The class extends the tuple description provided by {@link RequestContext}
  * for usage of {@link HBaseColumnDescriptor}.
  * <p>
  * This class also loads lookup table sent (optionally) by the
@@ -39,14 +39,14 @@ import java.util.Map;
 public class HBaseTupleDescription {
     private Map<String, byte[]> tableMapping;
     private List<HBaseColumnDescriptor> tupleDescription;
-    private InputData conf;
+    private RequestContext conf;
 
     /**
      * Constructs tuple description of the HBase table.
      *
      * @param conf data containing table tuple description
      */
-    public HBaseTupleDescription(InputData conf) {
+    public HBaseTupleDescription(RequestContext conf) {
         this.conf = conf;
         parseHBaseTupleDescription();
     }

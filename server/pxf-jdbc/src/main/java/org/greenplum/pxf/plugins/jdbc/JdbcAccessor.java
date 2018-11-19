@@ -25,7 +25,7 @@ import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.UserDataException;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.jdbc.writercallable.WriterCallable;
 import org.greenplum.pxf.plugins.jdbc.writercallable.WriterCallableFactory;
 
@@ -56,11 +56,11 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
     /**
      * Class constructor
      *
-     * @param inputData Input data
+     * @param requestContext Input data
      * @throws UserDataException if there is a user data exception
      */
-    public JdbcAccessor(InputData inputData) throws UserDataException {
-        super(inputData);
+    public JdbcAccessor(RequestContext requestContext) throws UserDataException {
+        super(requestContext);
     }
 
     /**
@@ -70,7 +70,7 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
      * @return true if successful
      * @throws SQLException if a database access error occurs
      * @throws SQLTimeoutException if a problem with the connection occurs
-     * @throws ParseException if th SQL statement provided in PXF InputData is incorrect
+     * @throws ParseException if th SQL statement provided in PXF RequestContext is incorrect
      * @throws ClassNotFoundException if the JDBC driver was not found
      */
     @Override
@@ -118,7 +118,7 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
      * @return true if successful
      * @throws SQLException if a database access error occurs
      * @throws SQLTimeoutException if a problem with the connection occurs
-     * @throws ParseException if the SQL statement provided in PXF InputData is incorrect
+     * @throws ParseException if the SQL statement provided in PXF RequestContext is incorrect
      * @throws ClassNotFoundException if the JDBC driver was not found
      */
     @Override
@@ -271,7 +271,7 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
      *
      * @return Complete SQL query
      *
-     * @throws ParseException if the constraints passed in InputData are incorrect
+     * @throws ParseException if the constraints passed in RequestContext are incorrect
      * @throws SQLException if the database metadata is invalid
      */
     private String buildSelectQuery(DatabaseMetaData databaseMetaData) throws ParseException, SQLException {
@@ -293,10 +293,10 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
         sb.append(" FROM ").append(tableName);
 
         // Insert regular WHERE constraints
-        (new WhereSQLBuilder(inputData)).buildWhereSQL(databaseMetaData.getDatabaseProductName(), sb);
+        (new WhereSQLBuilder(requestContext)).buildWhereSQL(databaseMetaData.getDatabaseProductName(), sb);
 
         // Insert partition constraints
-        JdbcPartitionFragmenter.buildFragmenterSql(inputData, databaseMetaData.getDatabaseProductName(), sb);
+        JdbcPartitionFragmenter.buildFragmenterSql(requestContext, databaseMetaData.getDatabaseProductName(), sb);
 
         return sb.toString();
     }

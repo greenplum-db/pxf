@@ -28,10 +28,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.api.model.InputData;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonNode;
@@ -55,15 +55,15 @@ public class JsonResolver extends BasePlugin implements Resolver {
 	 */
 	private final List<OneField> emptyRow;
 
-	public JsonResolver(InputData inputData) throws Exception {
-		initialize(inputData);
+	public JsonResolver(RequestContext requestContext) throws Exception {
+		initialize(requestContext);
 		oneFieldList = new ArrayList<>();
 		mapper = new ObjectMapper(new JsonFactory());
 
 		// Precompute the column metadata. The metadata is used for mapping column names to json nodes.
-		columnDescriptorCache = new ColumnDescriptorCache[inputData.getColumns()];
-		for (int i = 0; i < inputData.getColumns(); ++i) {
-			ColumnDescriptor cd = inputData.getColumn(i);
+		columnDescriptorCache = new ColumnDescriptorCache[requestContext.getColumns()];
+		for (int i = 0; i < requestContext.getColumns(); ++i) {
+			ColumnDescriptor cd = requestContext.getColumn(i);
 			columnDescriptorCache[i] = new ColumnDescriptorCache(cd);
 		}
 

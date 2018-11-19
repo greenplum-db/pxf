@@ -1,49 +1,40 @@
-package org.greenplum.pxf.api.utilities;
+package org.greenplum.pxf.service;
 
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
-
-
+import org.apache.commons.codec.CharEncoding;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.greenplum.pxf.api.OutputFormat;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.api.utilities.EnumAggregationType;
+import org.greenplum.pxf.api.utilities.ProfilesConf;
+import org.greenplum.pxf.api.utilities.ProtocolData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MultivaluedMap;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
- * Common configuration of all MetaData classes. Provides read-only access to
- * common parameters supplied using system properties.
+ * Parser for HTTP requests that contain data in HTTP headers.
  */
-public class ProtocolData extends RequestContext {
+public class HttpRequestParser implements RequestParser<HttpHeaders> {
 
     private static final String TRUE_LCASE = "true";
     private static final String FALSE_LCASE = "false";
     private static final String PROP_PREFIX = "X-GP-";
     public static final int INVALID_SPLIT_IDX = -1;
 
-    private static final Log LOG = LogFactory.getLog(ProtocolData.class);
+    private final Logger LOG = LoggerFactory.getLogger(HttpRequestParser.class);
 
+    //TODO pa
     protected OutputFormat outputFormat;
     protected int port;
     protected String host;
@@ -52,31 +43,35 @@ public class ProtocolData extends RequestContext {
     protected int statsMaxFragments;
     protected float statsSampleRatio;
 
-    /**
-     * Constructs a ProtocolData.
-     * Parses X-GP-* system configuration variables and
-     * X-GP-OPTIONS-* user configuration variables
-     * @param paramsMap contains all query-specific parameters from Gpdb
-     */
-    public ProtocolData(Map<String, String> paramsMap) {
+    @Override
+    public RequestContext parseRequest(String path, HttpHeaders request) {
 
-        requestParametersMap = paramsMap;
-        segmentId = getIntProperty("SEGMENT-ID");
-        totalSegments = getIntProperty("SEGMENT-COUNT");
-        filterStringValid = getBoolProperty("HAS-FILTER");
+        Map<String, String> params = convertToCaseInsensitiveMap(request.getRequestHeaders());
 
-        if (filterStringValid) {
-            filterString = getProperty("FILTER");
+        // TODO what if some data is sensitive (credentials) and should not be logged ?
+        LOG.debug("Parsed request parameters: " + params);
+
+        // build new instance of RequestContext and fill it with parsed values
+        RequestContext result = new RequestContext();
+
+        result.setAccessor();
+        result.setAggType();
+        result.setDataFragment();
+        result.setDataSource();
+
+
+        boolean isFilterPresent = getBoolProperty("HAS-FILTER");
+        if (isFilterPresent) {
+            result.setFilterString(getProperty("FILTER"));
         }
+        result.setFilterStringValid(isFilterPresent);
 
-        outputFormat = OutputFormat.valueOf(getProperty("FORMAT"));
-
-        host = getProperty("URL-HOST");
-        port = getIntProperty("URL-PORT");
-
-        tupleDescription = new ArrayList<ColumnDescriptor>();
-        recordkeyColumn = null;
-        parseTupleDescription();
+        result.setFragmenter();
+        result.setFragmentIndex();
+        result.setFragmentMetadata();
+        result.setFragmentUserData();
+        result.setMetadata();
+        result.setNumAttrsProjected();
 
         /*
          * accessor - will throw exception if outputFormat is
@@ -84,16 +79,49 @@ public class ProtocolData extends RequestContext {
          * resolver - will throw exception if outputFormat is
          * BINARY and the user did not supply resolver=... or profile=...
          */
-        profile = getUserProperty("PROFILE");
+        String profile = getUserProperty("PROFILE");
         if (profile != null) {
             setProfilePlugins();
         }
+        result.setProfile();
+
+        result.setRecordkeyColumn();
+        result.setRemoteLogin();
+        result.setRemoteSecret();
+        result.setResolver();
+        result.setSegmentId(getIntProperty("SEGMENT-ID"));
+        result.setServerName();
+        result.setThreadSafe();
+        result.setTotalSegments(getIntProperty("SEGMENT-COUNT"));
+        result.setTupleDescription();
+        result.setUser();
+        result.setUserData();
+
+        result.s
+
+        /**
+         * Constructs a ProtocolData.
+         * Parses X-GP-* system configuration variables and
+         * X-GP-OPTIONS-* user configuration variables
+         * @param paramsMap contains all query-specific parameters from Gpdb
+         */
+
+
+        outputFormat = OutputFormat.valueOf(getProperty("FORMAT"));
+        host = getProperty("URL-HOST");
+        port = getIntProperty("URL-PORT");
+
+        tupleDescription = new ArrayList<ColumnDescriptor>();
+        recordkeyColumn = null;
+        parseTupleDescription();
+
+
         accessor = getUserProperty("ACCESSOR");
-        if(accessor == null) {
+        if (accessor == null) {
             protocolViolation("ACCESSOR");
         }
         resolver = getUserProperty("RESOLVER");
-        if(resolver == null) {
+        if (resolver == null) {
             protocolViolation("RESOLVER");
         }
 
@@ -137,7 +165,7 @@ public class ProtocolData extends RequestContext {
     /**
      * Constructs a ProtocolData. Parses X-GP-* configuration variables.
      *
-     * @param paramsMap contains all query-specific parameters from Gpdb
+     * @param paramsMap     contains all query-specific parameters from Gpdb
      * @param profileString contains the profile name
      */
     public ProtocolData(Map<String, String> paramsMap, String profileString) {
@@ -162,7 +190,7 @@ public class ProtocolData extends RequestContext {
     /**
      * Verifies there are no duplicates between parameters declared in the table
      * definition and parameters defined in a profile.
-     *
+     * <p>
      * The parameters' names are case insensitive.
      */
     private void checkForDuplicates(Map<String, String> plugins,
@@ -195,7 +223,7 @@ public class ProtocolData extends RequestContext {
      *
      * @param property missing property name
      * @throws IllegalArgumentException throws an exception with the property
-     *             name in the error message
+     *                                  name in the error message
      */
     public void protocolViolation(String property) {
         String error = "Internal server error. Property \"" + property
@@ -230,7 +258,7 @@ public class ProtocolData extends RequestContext {
      * @return property value as a String
      */
     private String getOptionalProperty(String property) {
-        return requestParametersMap.get(PROP_PREFIX + property);
+        return params.get(PROP_PREFIX + property);
     }
 
     /**
@@ -239,7 +267,7 @@ public class ProtocolData extends RequestContext {
      * @param property the lookup property
      * @return property value as an int type
      * @throws NumberFormatException if the value is missing or can't be
-     *             represented by an Integer
+     *                               represented by an Integer
      */
     private int getIntProperty(String property) {
         return Integer.parseInt(getProperty(property));
@@ -252,7 +280,7 @@ public class ProtocolData extends RequestContext {
      * @param property the lookup property
      * @return property value as boolean
      * @throws NumberFormatException if the value is missing or can't be
-     *             represented by an Integer
+     *                               represented by an Integer
      */
     private boolean getBoolProperty(String property) {
         return getIntProperty(property) != 0;
@@ -319,6 +347,16 @@ public class ProtocolData extends RequestContext {
     }
 
     /**
+     * Returns a user defined property.
+     *
+     * @param userProp the lookup user property
+     * @return property value as a String
+     */
+    private String getUserProperty(String userProp) {
+        return requestParametersMap.get(USER_PROP_PREFIX + userProp.toUpperCase());
+    }
+
+    /**
      * Sets the thread safe parameter. Default value - true.
      */
     private void parseThreadSafe() {
@@ -351,13 +389,13 @@ public class ProtocolData extends RequestContext {
         /* Process column projection info */
         String columnProjStr = getOptionalProperty("ATTRS-PROJ");
         List<Integer> columnProjList = new ArrayList<Integer>();
-        if(columnProjStr != null) {
+        if (columnProjStr != null) {
             int columnProj = Integer.parseInt(columnProjStr);
             numAttrsProjected = columnProj;
-            if(columnProj > 0) {
+            if (columnProj > 0) {
                 String columnProjIndexStr = getProperty("ATTRS-PROJ-IDX");
                 String columnProjIdx[] = columnProjIndexStr.split(",");
-                for(int i = 0; i < columnProj; i++) {
+                for (int i = 0; i < columnProj; i++) {
                     columnProjList.add(Integer.valueOf(columnProjIdx[i]));
                 }
             } else {
@@ -374,7 +412,7 @@ public class ProtocolData extends RequestContext {
             String columnTypeName = getProperty("ATTR-TYPENAME" + i);
             Integer[] columnTypeMods = parseTypeMods(i);
             ColumnDescriptor column;
-            if(columnProjStr != null) {
+            if (columnProjStr != null) {
                 column = new ColumnDescriptor(columnName, columnTypeCode, i, columnTypeName, columnTypeMods, columnProjList.contains(Integer.valueOf(i)));
             } else {
                 /* For data formats that don't support column projection */
@@ -488,4 +526,42 @@ public class ProtocolData extends RequestContext {
                     "Missing parameter: STATS-SAMPLE-RATIO and STATS-MAX-FRAGMENTS must be set together");
         }
     }
+
+    /**
+     * Converts the request headers multivalued map to a case-insensitive
+     * regular map by taking only first values and storing them in a
+     * CASE_INSENSITIVE_ORDER TreeMap. All values are converted from ISO_8859_1
+     * (ISO-LATIN-1) to UTF_8.
+     *
+     * @param requestHeaders request headers multi map.
+     * @return a regular case-insensitive map.
+     */
+    public Map<String, String> convertToCaseInsensitiveMap(MultivaluedMap<String, String> requestHeaders) {
+        Map<String, String> result = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        for (Map.Entry<String, List<String>> entry : requestHeaders.entrySet()) {
+            String key = entry.getKey();
+            List<String> values = entry.getValue();
+            if (values != null) {
+                String value;
+                if(values.size() > 1) {
+                    value = StringUtils.join(values, ",");
+                } else {
+                    value = values.get(0);
+                }
+                if (value != null) {
+                    // converting to value UTF-8 encoding
+                    try {
+                        value = new String(value.getBytes(CharEncoding.ISO_8859_1), CharEncoding.UTF_8);
+                    } catch (UnsupportedEncodingException e) {
+                        // should not happen as both ISO and UTF-8 encodings should be supported
+                        throw new RuntimeException(e);
+                    }
+                    LOG.trace("key: %s value: %s", key, value);
+                    result.put(key, value.replace("\\\"", "\""));
+                }
+            }
+        }
+        return result;
+    }
+}
 }

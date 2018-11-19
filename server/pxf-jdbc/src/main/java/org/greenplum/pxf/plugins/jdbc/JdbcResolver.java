@@ -27,7 +27,7 @@ import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.UserDataException;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -52,7 +52,7 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
      * @param input input
      * @throws UserDataException if there is a user data exception
      */
-    public JdbcResolver(InputData input) throws UserDataException {
+    public JdbcResolver(RequestContext input) throws UserDataException {
         super(input);
     }
 

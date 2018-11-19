@@ -23,7 +23,7 @@ package org.greenplum.pxf.api;
 
 
 import org.greenplum.pxf.api.examples.DemoAccessor;
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -39,20 +39,21 @@ import static org.mockito.Mockito.when;
 
 public class DemoAccessorTest {
 
-    @Mock InputData inputData;
+    @Mock
+    RequestContext requestContext;
     DemoAccessor accessor;
 
     @Before
     public void setup() throws Exception {
-        accessor = new DemoAccessor(inputData);
+        accessor = new DemoAccessor(requestContext);
     }
 
     @Test
     public void testRowsWithSingleColumn() throws Exception {
 
-        when(inputData.getDataFragment()).thenReturn(0);
-        when(inputData.getFragmentMetadata()).thenReturn("fragment1".getBytes(), "fragment1".getBytes());
-        when(inputData.getColumns()).thenReturn(1);
+        when(requestContext.getDataFragment()).thenReturn(0);
+        when(requestContext.getFragmentMetadata()).thenReturn("fragment1".getBytes(), "fragment1".getBytes());
+        when(requestContext.getColumns()).thenReturn(1);
 
         int numRows = 2;
         for (int i = 0; i < numRows; i++) {
@@ -65,9 +66,9 @@ public class DemoAccessorTest {
     @Test
     public void testRowsWithMultipleColumns() throws Exception {
 
-        when(inputData.getDataFragment()).thenReturn(0);
-        when(inputData.getFragmentMetadata()).thenReturn("fragment1".getBytes(), "fragment1".getBytes());
-        when(inputData.getColumns()).thenReturn(3);
+        when(requestContext.getDataFragment()).thenReturn(0);
+        when(requestContext.getFragmentMetadata()).thenReturn("fragment1".getBytes(), "fragment1".getBytes());
+        when(requestContext.getColumns()).thenReturn(3);
 
         int numRows = 2;
         for (int i = 0; i < numRows; i++) {

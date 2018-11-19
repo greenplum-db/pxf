@@ -22,8 +22,8 @@ import org.greenplum.pxf.api.LogicalFilter;
 import org.greenplum.pxf.api.BasicFilter;
 import org.greenplum.pxf.api.FilterParser;
 import org.greenplum.pxf.api.io.DataType;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.api.model.InputData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,24 +39,24 @@ public class WhereSQLBuilder extends IgniteFilterBuilder {
      * Class constructor
      * @param input Input
      */
-    public WhereSQLBuilder(InputData input) {
-        inputData = input;
+    public WhereSQLBuilder(RequestContext input) {
+        requestContext = input;
     }
 
     /**
-     * Build a WHERE statement using the InputData provided to constructor.
+     * Build a WHERE statement using the RequestContext provided to constructor.
      *
      * @return SQL string
-     * @throws Exception if 'InputData' has filter, but its 'filterString' is incorrect
+     * @throws Exception if 'RequestContext' has filter, but its 'filterString' is incorrect
      */
     public String buildWhereSQL() throws Exception {
-        if (!inputData.hasFilter()) {
+        if (!requestContext.hasFilter()) {
             return null;
         }
 
         List<BasicFilter> filters = null;
         try {
-            String filterString = inputData.getFilterString();
+            String filterString = requestContext.getFilterString();
             Object filterObj = getFilterObject(filterString);
 
             filters = convertBasicFilterList(filterObj, filters);
@@ -69,7 +69,7 @@ public class WhereSQLBuilder extends IgniteFilterBuilder {
                 sb.append(andDivisor);
                 andDivisor = " AND ";
 
-                ColumnDescriptor column = inputData.getColumn(filter.getColumn().index());
+                ColumnDescriptor column = requestContext.getColumn(filter.getColumn().index());
                 //the column name of filter
                 sb.append(column.columnName());
 
@@ -134,11 +134,11 @@ public class WhereSQLBuilder extends IgniteFilterBuilder {
         }
     }
 
-    // PXF InputData
-    private InputData inputData;
+    // PXF RequestContext
+    private RequestContext requestContext;
 
     /**
-     * Parses PXF {@link InputData} 'FilterObject'
+     * Parses PXF {@link RequestContext} 'FilterObject'
      * Only 'HDOP_AND' is supported as a 'LogicalOperation' at the moment
      *
      * @param filter 'FilterObject' to parse

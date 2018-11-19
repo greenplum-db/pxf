@@ -32,7 +32,7 @@ import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.HDFSPlugin;
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.plugins.hdfs.utilities.DataSchemaException;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
@@ -72,7 +72,7 @@ public class AvroResolver extends HDFSPlugin implements Resolver {
      * @param input all input parameters coming from the client
      * @throws IOException if Avro schema could not be retrieved or parsed
      */
-    public AvroResolver(InputData input) throws IOException {
+    public AvroResolver(RequestContext input) throws IOException {
         initialize(input);
 
         Schema schema;
@@ -110,8 +110,8 @@ public class AvroResolver extends HDFSPlugin implements Resolver {
         avroRecord = makeAvroRecord(row.getData(), avroRecord);
         List<OneField> record = new LinkedList<OneField>();
 
-        int recordkeyIndex = (inputData.getRecordkeyColumn() == null) ? -1
-                : inputData.getRecordkeyColumn().columnIndex();
+        int recordkeyIndex = (requestContext.getRecordkeyColumn() == null) ? -1
+                : requestContext.getRecordkeyColumn().columnIndex();
         int currentIndex = 0;
 
         for (Schema.Field field : fields) {
@@ -120,7 +120,7 @@ public class AvroResolver extends HDFSPlugin implements Resolver {
              */
             if (currentIndex == recordkeyIndex) {
                 currentIndex += recordkeyAdapter.appendRecordkeyField(record,
-                        inputData, row);
+                        requestContext, row);
             }
 
             currentIndex += populateRecord(record,
@@ -150,7 +150,7 @@ public class AvroResolver extends HDFSPlugin implements Resolver {
      * @return whether the resource is an Avro file
      */
     boolean isAvroFile() {
-        return inputData.getAccessor().toLowerCase().contains("avro");
+        return requestContext.getAccessor().toLowerCase().contains("avro");
     }
 
     /**
@@ -402,7 +402,7 @@ public class AvroResolver extends HDFSPlugin implements Resolver {
      */
     InputStream openExternalSchema() {
 
-        String schemaName = inputData.getUserProperty("DATA-SCHEMA");
+        String schemaName = requestContext.getUserProperty("DATA-SCHEMA");
 
         /**
          * Testing that the schema name was supplied by the user - schema is an

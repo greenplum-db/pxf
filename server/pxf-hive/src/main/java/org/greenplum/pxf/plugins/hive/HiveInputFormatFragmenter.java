@@ -25,7 +25,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 
@@ -61,10 +61,10 @@ public class HiveInputFormatFragmenter extends HiveDataFragmenter {
     /**
      * Constructs a HiveInputFormatFragmenter.
      *
-     * @param inputData all input parameters coming from the client
+     * @param requestContext all input parameters coming from the client
      */
-    public HiveInputFormatFragmenter(InputData inputData) {
-        super(inputData, HiveInputFormatFragmenter.class);
+    public HiveInputFormatFragmenter(RequestContext requestContext) {
+        super(requestContext, HiveInputFormatFragmenter.class);
     }
 
     /*
@@ -75,7 +75,7 @@ public class HiveInputFormatFragmenter extends HiveDataFragmenter {
     @Override
     void verifySchema(Table tbl) throws Exception {
 
-        int columnsSize = inputData.getColumns();
+        int columnsSize = requestContext.getColumns();
         int hiveColumnsSize = tbl.getSd().getColsSize();
         int hivePartitionsSize = tbl.getPartitionKeysSize();
 
@@ -97,14 +97,14 @@ public class HiveInputFormatFragmenter extends HiveDataFragmenter {
         // check hive fields
         List<FieldSchema> hiveColumns = tbl.getSd().getCols();
         for (FieldSchema hiveCol : hiveColumns) {
-            ColumnDescriptor colDesc = inputData.getColumn(index++);
+            ColumnDescriptor colDesc = requestContext.getColumn(index++);
             DataType colType = DataType.get(colDesc.columnTypeCode());
             HiveUtilities.validateTypeCompatible(colType, colDesc.columnTypeModifiers(), hiveCol.getType(), colDesc.columnName());
         }
         // check partition fields
         List<FieldSchema> hivePartitions = tbl.getPartitionKeys();
         for (FieldSchema hivePart : hivePartitions) {
-            ColumnDescriptor colDesc = inputData.getColumn(index++);
+            ColumnDescriptor colDesc = requestContext.getColumn(index++);
             DataType colType = DataType.get(colDesc.columnTypeCode());
             HiveUtilities.validateTypeCompatible(colType, colDesc.columnTypeModifiers(), hivePart.getType(), colDesc.columnName());
         }

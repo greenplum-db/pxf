@@ -24,7 +24,7 @@ import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.UnsupportedTypeException;
 import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.BasePlugin;
 
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
@@ -49,9 +49,9 @@ public class ParquetResolver extends BasePlugin implements Resolver {
     /**
      * Constructs the ParquetResolver
      *
-     * @param metaData the InputData
+     * @param metaData the RequestContext
      */
-    public ParquetResolver(InputData metaData) {
+    public ParquetResolver(RequestContext metaData) {
         initialize(metaData);
     }
 
@@ -70,7 +70,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
     @Override
     public List<OneField> getFields(OneRow row) throws Exception {
         Object data = row.getData();
-        ParquetUserData parquetUserData = HdfsUtilities.parseParquetUserData(inputData);
+        ParquetUserData parquetUserData = HdfsUtilities.parseParquetUserData(requestContext);
         Group g = (Group) data;
         List<OneField> output = resolveRecord(parquetUserData, g);
 

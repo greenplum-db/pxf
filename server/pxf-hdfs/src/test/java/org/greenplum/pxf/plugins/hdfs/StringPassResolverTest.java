@@ -31,11 +31,11 @@ import java.util.List;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.junit.Test;
 
 public class StringPassResolverTest {
-    InputData mockInputData;
+    RequestContext mockRequestContext;
 
     @Test
     /*
@@ -89,8 +89,8 @@ public class StringPassResolverTest {
      * helpers functions
      */
     private StringPassResolver buildResolver() throws Exception {
-        mockInputData = mock(InputData.class);
-        return new StringPassResolver(mockInputData);
+        mockRequestContext = mock(RequestContext.class);
+        return new StringPassResolver(mockRequestContext);
     }
 
     private void verifyOneRow(OneRow oneRow, byte[] expected) {

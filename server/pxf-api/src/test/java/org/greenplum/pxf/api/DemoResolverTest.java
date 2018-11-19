@@ -23,7 +23,7 @@ package org.greenplum.pxf.api;
 import org.greenplum.pxf.api.examples.DemoAccessor;
 import org.greenplum.pxf.api.examples.DemoResolver;
 import org.greenplum.pxf.api.examples.DemoTextResolver;
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -45,7 +45,8 @@ public class DemoResolverTest {
 
     private static final String DATA = "value1,value2";
 
-    @Mock InputData inputData;
+    @Mock
+    RequestContext requestContext;
     DemoResolver customResolver;
     DemoTextResolver textResolver;
     OneRow row;
@@ -53,8 +54,8 @@ public class DemoResolverTest {
 
     @Before
     public void setup() throws Exception {
-        customResolver = new DemoResolver(inputData);
-        textResolver = new DemoTextResolver(inputData);
+        customResolver = new DemoResolver(requestContext);
+        textResolver = new DemoTextResolver(requestContext);
         row = new OneRow("0.0", DATA);
         field = new OneField(VARCHAR.getOID(), DATA.getBytes());
     }

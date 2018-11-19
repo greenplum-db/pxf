@@ -34,6 +34,7 @@ import org.apache.hadoop.io.compress.BZip2Codec;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.SequenceFileInputFormat;
 
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 import org.junit.After;
 import org.junit.Before;
@@ -48,8 +49,6 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import static org.mockito.Matchers.any;
 import static org.junit.Assert.*;
 
-import org.greenplum.pxf.api.model.InputData;
-
 import static org.mockito.Mockito.*;
 
 @RunWith(PowerMockRunner.class)
@@ -57,7 +56,7 @@ import static org.mockito.Mockito.*;
 @SuppressStaticInitializationFor({"org.apache.hadoop.mapred.JobConf","org.apache.hadoop.fs.FileContext"}) // Prevents static inits
 public class SequenceFileAccessorTest {
 
-    InputData inputData;
+    RequestContext requestContext;
     SequenceFileAccessor accessor;
     Map<String, String> parameters;
     ServletContext mockContext;
@@ -88,17 +87,17 @@ public class SequenceFileAccessorTest {
         file = mock(Path.class);
         fs = mock(FileSystem.class);
         fc = mock(FileContext.class);
-        inputData = mock(InputData.class);
+        requestContext = mock(RequestContext.class);
 
     	PowerMockito.mockStatic(FileContext.class);
     	PowerMockito.mockStatic(HdfsUtilities.class);
 		PowerMockito.whenNew(Path.class).withArguments(Mockito.anyString()).thenReturn(file);
 
 		// FIXME: below
-//		when(inputData.getConfiguration()).thenReturn(new Configuration());
+//		when(requestContext.getConfiguration()).thenReturn(new Configuration());
         when(file.getFileSystem(any(Configuration.class))).thenReturn(fs);
-        when(inputData.getDataSource()).thenReturn("deep.throat");
-        when(inputData.getSegmentId()).thenReturn(0);
+        when(requestContext.getDataSource()).thenReturn("deep.throat");
+        when(requestContext.getSegmentId()).thenReturn(0);
         when(FileContext.getFileContext()).thenReturn(fc);
     }
 
@@ -118,14 +117,14 @@ public class SequenceFileAccessorTest {
 
     private void constructAccessor() throws Exception {
 
-        accessor = new SequenceFileAccessor(inputData);
+        accessor = new SequenceFileAccessor(requestContext);
         accessor.openForWrite();
     }
 
     private void mockCompressionOptions(String codec, String type)
     {
-        when(inputData.getUserProperty("COMPRESSION_CODEC")).thenReturn(codec);
-        when(inputData.getUserProperty("COMPRESSION_TYPE")).thenReturn(type);
+        when(requestContext.getUserProperty("COMPRESSION_CODEC")).thenReturn(codec);
+        when(requestContext.getUserProperty("COMPRESSION_TYPE")).thenReturn(type);
     }
 
     @Test

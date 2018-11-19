@@ -20,10 +20,10 @@ package org.greenplum.pxf.api;
  */
 
 
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 
 /**
- * Thrown when Accessor/Resolver failes to parse {@link InputData#userData}.
+ * Thrown when Accessor/Resolver failes to parse {@link RequestContext#userData}.
  */
 public class UserDataException extends Exception {
 

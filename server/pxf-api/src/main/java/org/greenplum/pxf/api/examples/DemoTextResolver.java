@@ -22,7 +22,7 @@ package org.greenplum.pxf.api.examples;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -37,9 +37,9 @@ public class DemoTextResolver extends DemoResolver {
     /**
      * Constructs the DemoResolver
      *
-     * @param metaData the InputData
+     * @param metaData the RequestContext
      */
-    public DemoTextResolver(InputData metaData) {
+    public DemoTextResolver(RequestContext metaData) {
         super(metaData);
     }
 

@@ -21,7 +21,7 @@ package org.greenplum.pxf.plugins.hbase;
 
 
 import org.greenplum.pxf.api.BadRecordException;
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseTupleDescription;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,7 +35,7 @@ import static org.mockito.Mockito.mock;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({HBaseResolver.class})
 public class HBaseResolverTest {
-    InputData inputData;
+    RequestContext requestContext;
     HBaseTupleDescription tupleDesc;
 
     @Test
@@ -46,12 +46,12 @@ public class HBaseResolverTest {
 	 * creation is verified
 	 */
     public void construction() throws Exception {
-        inputData = mock(InputData.class);
+        requestContext = mock(RequestContext.class);
         tupleDesc = mock(HBaseTupleDescription.class);
-        PowerMockito.whenNew(HBaseTupleDescription.class).withArguments(inputData).thenReturn(tupleDesc);
+        PowerMockito.whenNew(HBaseTupleDescription.class).withArguments(requestContext).thenReturn(tupleDesc);
 
-        HBaseResolver resolver = new HBaseResolver(inputData);
-        PowerMockito.verifyNew(HBaseTupleDescription.class).withArguments(inputData);
+        HBaseResolver resolver = new HBaseResolver(requestContext);
+        PowerMockito.verifyNew(HBaseTupleDescription.class).withArguments(requestContext);
     }
 
     @Test
@@ -61,11 +61,11 @@ public class HBaseResolverTest {
     public void testConvertToJavaObject() throws Exception {
         Object result;
 
-        inputData = mock(InputData.class);
+        requestContext = mock(RequestContext.class);
         tupleDesc = mock(HBaseTupleDescription.class);
-        PowerMockito.whenNew(HBaseTupleDescription.class).withArguments(inputData).thenReturn(tupleDesc);
+        PowerMockito.whenNew(HBaseTupleDescription.class).withArguments(requestContext).thenReturn(tupleDesc);
 
-        HBaseResolver resolver = new HBaseResolver(inputData);
+        HBaseResolver resolver = new HBaseResolver(requestContext);
 
 		/*
 		 * Supported type, No value.

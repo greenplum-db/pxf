@@ -39,7 +39,7 @@ import org.greenplum.pxf.api.model.Metadata;
 import org.greenplum.pxf.api.model.MetadataFetcher;
 import org.greenplum.pxf.api.OutputFormat;
 import org.greenplum.pxf.api.UnsupportedTypeException;
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ProfilesConf;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.greenplum.pxf.plugins.hive.utilities.ProfileFactory;
@@ -49,13 +49,13 @@ import org.greenplum.pxf.plugins.hive.utilities.ProfileFactory;
  */
 public class HiveMetadataFetcher extends HDFSPlugin implements MetadataFetcher {
 
-    private static final String DELIM_FIELD = InputData.DELIMITER_KEY;
+    private static final String DELIM_FIELD = RequestContext.DELIMITER_KEY;
 
     private static final Log LOG = LogFactory.getLog(HiveMetadataFetcher.class);
     private HiveMetaStoreClient client;
     private JobConf jobConf;
 
-    public HiveMetadataFetcher(InputData md) {
+    public HiveMetadataFetcher(RequestContext md) {
         initialize(md);
 
         // init hive metastore client connection.

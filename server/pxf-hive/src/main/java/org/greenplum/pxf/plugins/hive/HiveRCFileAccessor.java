@@ -20,7 +20,7 @@ package org.greenplum.pxf.plugins.hive;
  */
 
 
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.apache.hadoop.hive.ql.io.RCFileInputFormat;
 import org.apache.hadoop.hive.ql.io.RCFileRecordReader;
 import org.apache.hadoop.mapred.FileSplit;
@@ -42,7 +42,7 @@ public class HiveRCFileAccessor extends HiveAccessor {
      * @param input input containing user data
      * @throws Exception if user data was wrong
      */
-    public HiveRCFileAccessor(InputData input) throws Exception {
+    public HiveRCFileAccessor(RequestContext input) throws Exception {
         super(input, new RCFileInputFormat());
     }
 

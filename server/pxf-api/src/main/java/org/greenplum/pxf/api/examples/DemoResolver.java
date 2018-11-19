@@ -23,7 +23,7 @@ import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.BasePlugin;
 
 
@@ -39,9 +39,9 @@ public class DemoResolver extends BasePlugin implements Resolver {
     /**
      * Constructs the DemoResolver
      *
-     * @param metaData the InputData
+     * @param metaData the RequestContext
      */
-    public DemoResolver(InputData metaData) {
+    public DemoResolver(RequestContext metaData) {
         initialize(metaData);
     }
 

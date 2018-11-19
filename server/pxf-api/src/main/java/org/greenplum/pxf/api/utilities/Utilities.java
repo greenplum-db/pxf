@@ -26,7 +26,7 @@ import org.apache.commons.logging.LogFactory;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.ReadVectorizedResolver;
 import org.greenplum.pxf.api.StatsAccessor;
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 
 import java.io.File;
 import java.io.ByteArrayInputStream;
@@ -80,7 +80,7 @@ public class Utilities {
      *             instantiated
      */
     public static Object createAnyInstance(Class<?> confClass,
-                                           String className, InputData metaData)
+                                           String className, RequestContext metaData)
             throws Exception {
 
         Class<?> cls = null;
@@ -189,13 +189,13 @@ public class Utilities {
     /**
      * Parses input data and returns fragment metadata.
      *
-     * @param inputData input data which has protocol information
+     * @param requestContext input data which has protocol information
      * @return fragment metadata
      * @throws IllegalArgumentException if fragment metadata information wasn't found in input data
      * @throws Exception when error occurred during metadata parsing
      */
-    public static FragmentMetadata parseFragmentMetadata(InputData inputData) throws Exception {
-        byte[] serializedLocation = inputData.getFragmentMetadata();
+    public static FragmentMetadata parseFragmentMetadata(RequestContext requestContext) throws Exception {
+        byte[] serializedLocation = requestContext.getFragmentMetadata();
         if (serializedLocation == null) {
             throw new IllegalArgumentException("Missing fragment location information");
         }
@@ -206,7 +206,7 @@ public class Utilities {
             if (LOG.isDebugEnabled()) {
                 StringBuilder sb = new StringBuilder();
                 sb.append("parsed file split: path ");
-                sb.append(inputData.getDataSource());
+                sb.append(requestContext.getDataSource());
                 sb.append(", start ");
                 sb.append(start);
                 sb.append(", end ");
@@ -226,25 +226,25 @@ public class Utilities {
     /**
      * Based on accessor information determines whether to use AggBridge
      *
-     * @param inputData input protocol data
+     * @param requestContext input protocol data
      * @return true if AggBridge is applicable for current context
      */
-    public static boolean useAggBridge(InputData inputData) {
+    public static boolean useAggBridge(RequestContext requestContext) {
         boolean isStatsAccessor = false;
         try {
-            if (inputData == null || inputData.getAccessor() == null) {
+            if (requestContext == null || requestContext.getAccessor() == null) {
                 throw new IllegalArgumentException("Missing accessor information");
             }
-            isStatsAccessor = ArrayUtils.contains(Class.forName(inputData.getAccessor()).getInterfaces(), StatsAccessor.class);
+            isStatsAccessor = ArrayUtils.contains(Class.forName(requestContext.getAccessor()).getInterfaces(), StatsAccessor.class);
         } catch (ClassNotFoundException e) {
             LOG.error("Unable to load accessor class: " + e.getMessage());
             return false;
         }
         /* Make sure filter is not present, aggregate operation supports optimization and accessor implements StatsAccessor interface */
-        return (inputData != null) && !inputData.hasFilter()
-                && (inputData.getAggType() != null)
-                && inputData.getAggType().isOptimizationSupported()
-                && inputData.getNumAttrsProjected() == 0
+        return (requestContext != null) && !requestContext.hasFilter()
+                && (requestContext.getAggType() != null)
+                && requestContext.getAggType().isOptimizationSupported()
+                && requestContext.getNumAttrsProjected() == 0
                 && isStatsAccessor;
     }
 
@@ -252,11 +252,11 @@ public class Utilities {
      * Determines whether accessor should use statistics to optimize reading results
      *
      * @param accessor accessor instance
-     * @param inputData input data which has protocol information
+     * @param requestContext input data which has protocol information
      * @return true if this accessor should use statistic information
      */
-    public static boolean useStats(Accessor accessor, InputData inputData) {
-        if (accessor instanceof StatsAccessor && useAggBridge(inputData)) {
+    public static boolean useStats(Accessor accessor, RequestContext requestContext) {
+        if (accessor instanceof StatsAccessor && useAggBridge(requestContext)) {
                 return true;
         } else {
             return false;
@@ -265,13 +265,13 @@ public class Utilities {
 
     /**
      * Determines whether use vectorization
-     * @param inputData input protocol data
+     * @param requestContext input protocol data
      * @return true if vectorization is applicable in a current context
      */
-    public static boolean useVectorization(InputData inputData) {
+    public static boolean useVectorization(RequestContext requestContext) {
         boolean isVectorizedResolver = false;
         try {
-            isVectorizedResolver = ArrayUtils.contains(Class.forName(inputData.getResolver()).getInterfaces(), ReadVectorizedResolver.class);
+            isVectorizedResolver = ArrayUtils.contains(Class.forName(requestContext.getResolver()).getInterfaces(), ReadVectorizedResolver.class);
         } catch (ClassNotFoundException e) {
             LOG.error("Unable to load resolver class: " + e.getMessage());
         }

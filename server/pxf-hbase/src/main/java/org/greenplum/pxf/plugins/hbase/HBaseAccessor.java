@@ -22,7 +22,7 @@ package org.greenplum.pxf.plugins.hbase;
 
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.Accessor;
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseColumnDescriptor;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseTupleDescription;
@@ -93,7 +93,7 @@ public class HBaseAccessor extends BasePlugin implements Accessor {
      *
      * @param input query information, contains HBase table name and filter
      */
-    public HBaseAccessor(InputData input) {
+    public HBaseAccessor(RequestContext input) {
         initialize(input);
 
         tupleDescription = new HBaseTupleDescription(input);
@@ -180,14 +180,14 @@ public class HBaseAccessor extends BasePlugin implements Accessor {
      */
     private void openTable() throws IOException {
         connection = ConnectionFactory.createConnection(HBaseConfiguration.create());
-        table = connection.getTable(TableName.valueOf(inputData.getDataSource()));
+        table = connection.getTable(TableName.valueOf(requestContext.getDataSource()));
     }
 
     /**
      * Creates a {@link SplitBoundary} of the table split
      * this accessor instance is assigned to scan.
      * The table split is constructed from the fragment metadata
-     * passed in {@link InputData#getFragmentMetadata()}.
+     * passed in {@link RequestContext#getFragmentMetadata()}.
      * <p>
      * The function verifies the split is within user supplied range.
      * <p>
@@ -196,7 +196,7 @@ public class HBaseAccessor extends BasePlugin implements Accessor {
      */
     private void addTableSplit() {
 
-        byte[] serializedMetadata = inputData.getFragmentMetadata();
+        byte[] serializedMetadata = requestContext.getFragmentMetadata();
         if (serializedMetadata == null) {
             throw new IllegalArgumentException("Missing fragment metadata information");
         }
@@ -289,12 +289,12 @@ public class HBaseAccessor extends BasePlugin implements Accessor {
      * Uses row key ranges to limit split count.
      */
     private void addFilters() throws Exception {
-        if (!inputData.hasFilter()) {
+        if (!requestContext.hasFilter()) {
             return;
         }
 
         HBaseFilterBuilder eval = new HBaseFilterBuilder(tupleDescription);
-        Filter filter = eval.getFilterObject(inputData.getFilterString());
+        Filter filter = eval.getFilterObject(requestContext.getFilterString());
         scanDetails.setFilter(filter);
 
         scanStartKey = eval.startKey();

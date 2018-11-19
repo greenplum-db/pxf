@@ -40,7 +40,7 @@ import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.MessageTypeParser;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.FragmentMetadata;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hdfs.ParquetUserData;
@@ -83,7 +83,7 @@ public class HdfsUtilities {
      * @param input The input data parameters
      * @return an absolute data path
      */
-    public static String getDataUri(Configuration configuration, InputData input) {
+    public static String getDataUri(Configuration configuration, RequestContext input) {
         // TODO: Move profile specific URI logic into separate classes in the profile
         String dataUri;
 
@@ -115,7 +115,7 @@ public class HdfsUtilities {
      * @param input The input data parameters
      * @return an absolute data path
      */
-    public static HCFSType getHCFSType(Configuration conf, InputData input) {
+    public static HCFSType getHCFSType(Configuration conf, RequestContext input) {
         String profile = input.getProfile();
         String protocol = (profile != null) ? profile.toLowerCase() : conf.get(FS_DEFAULT_NAME_KEY);
 
@@ -247,14 +247,14 @@ public class HdfsUtilities {
     /**
      * Parses fragment metadata and return matching {@link FileSplit}.
      *
-     * @param inputData request input data
+     * @param requestContext request input data
      * @return FileSplit with fragment metadata
      */
-    public static FileSplit parseFileSplit(InputData inputData) {
+    public static FileSplit parseFileSplit(RequestContext requestContext) {
         try {
-            FragmentMetadata fragmentMetadata = Utilities.parseFragmentMetadata(inputData);
+            FragmentMetadata fragmentMetadata = Utilities.parseFragmentMetadata(requestContext);
 
-            FileSplit fileSplit = new FileSplit(new Path(inputData.getDataSource()), fragmentMetadata.getStart(), fragmentMetadata.getEnd(), fragmentMetadata.getHosts());
+            FileSplit fileSplit = new FileSplit(new Path(requestContext.getDataSource()), fragmentMetadata.getStart(), fragmentMetadata.getEnd(), fragmentMetadata.getHosts());
 
             return fileSplit;
 
@@ -317,7 +317,7 @@ public class HdfsUtilities {
         return userData.toString().getBytes();
     }
 
-    public static ParquetUserData parseParquetUserData(InputData input) {
+    public static ParquetUserData parseParquetUserData(RequestContext input) {
         MessageType schema = MessageTypeParser.parseMessageType(new String(input.getFragmentUserData()));
         return new ParquetUserData(schema);
     }

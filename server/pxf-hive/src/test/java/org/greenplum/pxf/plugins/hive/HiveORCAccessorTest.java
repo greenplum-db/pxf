@@ -19,14 +19,13 @@ package org.greenplum.pxf.plugins.hive;
  * under the License.
  */
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.io.orc.OrcInputFormat;
 import org.apache.hadoop.hive.ql.io.orc.Reader;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentFactory;
 import org.apache.hadoop.mapred.*;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.api.model.InputData;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.junit.Before;
@@ -52,7 +51,8 @@ import static org.mockito.Mockito.when;
         "org.greenplum.pxf.plugins.hive.utilities.HiveUtilities"}) // Prevents static inits
 public class HiveORCAccessorTest {
 
-    @Mock InputData inputData;
+    @Mock
+    RequestContext requestContext;
     @Mock OrcInputFormat orcInputFormat;
     @Mock InputFormat inputFormat;
     @Mock ColumnDescriptor columnDesc;
@@ -67,7 +67,7 @@ public class HiveORCAccessorTest {
         PowerMockito.whenNew(JobConf.class).withAnyArguments().thenReturn(jobConf);
 
         PowerMockito.mockStatic(HiveUtilities.class);
-        PowerMockito.when(HiveUtilities.parseHiveUserData(any(InputData.class))).thenReturn(new HiveUserData("", "", null, HiveDataFragmenter.HIVE_NO_PART_TBL, true, "1", "", 0));
+        PowerMockito.when(HiveUtilities.parseHiveUserData(any(RequestContext.class))).thenReturn(new HiveUserData("", "", null, HiveDataFragmenter.HIVE_NO_PART_TBL, true, "1", "", 0));
 
         PowerMockito.mockStatic(HdfsUtilities.class);
 
@@ -77,19 +77,19 @@ public class HiveORCAccessorTest {
         PowerMockito.whenNew(OrcInputFormat.class).withNoArguments().thenReturn(orcInputFormat);
         RecordReader recordReader = mock(RecordReader.class);
         PowerMockito.when(orcInputFormat.getRecordReader(any(InputSplit.class), any(JobConf.class), any(Reporter.class))).thenReturn(recordReader);
-        PowerMockito.when(inputData.getAccessor()).thenReturn(HiveORCAccessor.class.getName());
+        PowerMockito.when(requestContext.getAccessor()).thenReturn(HiveORCAccessor.class.getName());
 
-        accessor = new HiveORCAccessor(inputData);
+        accessor = new HiveORCAccessor(requestContext);
         PowerMockito.when(accessor.getOrcReader()).thenReturn(orcReader);
     }
 
     @Test
     public void parseFilterWithISNULL() throws Exception {
 
-        when(inputData.hasFilter()).thenReturn(true);
-        when(inputData.getFilterString()).thenReturn("a1o8");
+        when(requestContext.hasFilter()).thenReturn(true);
+        when(requestContext.getFilterString()).thenReturn("a1o8");
         when(columnDesc.columnName()).thenReturn("FOO");
-        when(inputData.getColumn(1)).thenReturn(columnDesc);
+        when(requestContext.getColumn(1)).thenReturn(columnDesc);
 
         accessor.openForRead();
 
@@ -100,10 +100,10 @@ public class HiveORCAccessorTest {
     @Test
     public void parseFilterWithISNOTNULL() throws Exception {
 
-        when(inputData.hasFilter()).thenReturn(true);
-        when(inputData.getFilterString()).thenReturn("a1o9");
+        when(requestContext.hasFilter()).thenReturn(true);
+        when(requestContext.getFilterString()).thenReturn("a1o9");
         when(columnDesc.columnName()).thenReturn("FOO");
-        when(inputData.getColumn(1)).thenReturn(columnDesc);
+        when(requestContext.getColumn(1)).thenReturn(columnDesc);
 
         accessor.openForRead();
 
@@ -114,10 +114,10 @@ public class HiveORCAccessorTest {
     @Test
     public void parseFilterWithIn() throws Exception {
 
-        when(inputData.hasFilter()).thenReturn(true);
-        when(inputData.getFilterString()).thenReturn("a1m1007s1d1s1d2s1d3o10");
+        when(requestContext.hasFilter()).thenReturn(true);
+        when(requestContext.getFilterString()).thenReturn("a1m1007s1d1s1d2s1d3o10");
         when(columnDesc.columnName()).thenReturn("FOO");
-        when(inputData.getColumn(1)).thenReturn(columnDesc);
+        when(requestContext.getColumn(1)).thenReturn(columnDesc);
 
         accessor.openForRead();
 

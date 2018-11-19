@@ -20,8 +20,8 @@ package org.greenplum.pxf.plugins.ignite;
  */
 
 import org.greenplum.pxf.api.model.Fragment;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.api.model.InputData;
 import org.greenplum.pxf.api.io.DataType;
 
 import java.util.ArrayList;
@@ -42,21 +42,21 @@ public class SqlBuilderTest {
     @Test
     public void testIdFilter() throws Exception {
         prepareConstruction();
-        when(inputData.hasFilter()).thenReturn(true);
-        when(inputData.getFilterString()).thenReturn("a0c20s1d1o5");  // id=1
+        when(requestContext.hasFilter()).thenReturn(true);
+        when(requestContext.getFilterString()).thenReturn("a0c20s1d1o5");  // id=1
 
-        WhereSQLBuilder builder = new WhereSQLBuilder(inputData);
+        WhereSQLBuilder builder = new WhereSQLBuilder(requestContext);
         assertEquals("id=1", builder.buildWhereSQL());
     }
 
     @Test
     public void testDateAndAmtFilter() throws Exception {
         prepareConstruction();
-        when(inputData.hasFilter()).thenReturn(true);
+        when(requestContext.hasFilter()).thenReturn(true);
         // cdate>'2008-02-01' and cdate<'2008-12-01' and amt > 1200
-        when(inputData.getFilterString()).thenReturn("a1c25s10d2008-02-01o2a1c25s10d2008-12-01o1l0a2c20s4d1200o2l0");
+        when(requestContext.getFilterString()).thenReturn("a1c25s10d2008-02-01o2a1c25s10d2008-12-01o1l0a2c20s4d1200o2l0");
 
-        WhereSQLBuilder builder = new WhereSQLBuilder(inputData);
+        WhereSQLBuilder builder = new WhereSQLBuilder(requestContext);
         assertEquals("cdate>'2008-02-01' AND cdate<'2008-12-01' AND amt>1200"
                 , builder.buildWhereSQL());
     }
@@ -64,99 +64,99 @@ public class SqlBuilderTest {
     @Test
     public void testUnsupportedOperationFilter() throws Exception {
         prepareConstruction();
-        when(inputData.hasFilter()).thenReturn(true);
+        when(requestContext.hasFilter()).thenReturn(true);
         // grade like 'bad'
-        when(inputData.getFilterString()).thenReturn("a3c25s3dbado7");
+        when(requestContext.getFilterString()).thenReturn("a3c25s3dbado7");
 
-        WhereSQLBuilder builder = new WhereSQLBuilder(inputData);
+        WhereSQLBuilder builder = new WhereSQLBuilder(requestContext);
         assertEquals(null, builder.buildWhereSQL());
     }
 
     @Test
     public void testUnsupportedLogicalFilter() throws Exception {
         prepareConstruction();
-        when(inputData.hasFilter()).thenReturn(true);
+        when(requestContext.hasFilter()).thenReturn(true);
         // cdate>'2008-02-01' or amt < 1200
-        when(inputData.getFilterString()).thenReturn("a1c25s10d2008-02-01o2a2c20s4d1200o2l1");
+        when(requestContext.getFilterString()).thenReturn("a1c25s10d2008-02-01o2a2c20s4d1200o2l1");
 
-        WhereSQLBuilder builder = new WhereSQLBuilder(inputData);
+        WhereSQLBuilder builder = new WhereSQLBuilder(requestContext);
         assertEquals(null, builder.buildWhereSQL());
     }
 
     @Test
     public void testDatePartition() throws Exception {
         prepareConstruction();
-        when(inputData.hasFilter()).thenReturn(false);
-        when(inputData.getUserProperty("PARTITION_BY")).thenReturn("cdate:date");
-        when(inputData.getUserProperty("RANGE")).thenReturn("2008-01-01:2009-01-01");
-        when(inputData.getUserProperty("INTERVAL")).thenReturn("2:month");
-        IgnitePartitionFragmenter fragment = new IgnitePartitionFragmenter(inputData);
+        when(requestContext.hasFilter()).thenReturn(false);
+        when(requestContext.getUserProperty("PARTITION_BY")).thenReturn("cdate:date");
+        when(requestContext.getUserProperty("RANGE")).thenReturn("2008-01-01:2009-01-01");
+        when(requestContext.getUserProperty("INTERVAL")).thenReturn("2:month");
+        IgnitePartitionFragmenter fragment = new IgnitePartitionFragmenter(requestContext);
         List<Fragment> fragments = fragment.getFragments();
         assertEquals(6, fragments.size());
 
         // Partition 1: cdate>=2008-01-01 and cdate<2008-03-01
-        when(inputData.getFragmentMetadata()).thenReturn(fragments.get(0).getMetadata());
+        when(requestContext.getFragmentMetadata()).thenReturn(fragments.get(0).getMetadata());
         StringBuilder sb = new StringBuilder(ORIGINAL_SQL);
-        IgnitePartitionFragmenter.buildFragmenterSql(inputData, sb);
+        IgnitePartitionFragmenter.buildFragmenterSql(requestContext, sb);
         assertEquals(ORIGINAL_SQL + " WHERE cdate>='2008-01-01' AND cdate<'2008-03-01'", sb.toString());
     }
 
     @Test
     public void testFilterAndPartition() throws Exception {
         prepareConstruction();
-        when(inputData.hasFilter()).thenReturn(true);
-        when(inputData.getFilterString()).thenReturn("a0c20s1d5o2"); //id>5
-        when(inputData.getUserProperty("PARTITION_BY")).thenReturn("grade:enum");
-        when(inputData.getUserProperty("RANGE")).thenReturn("excellent:good:general:bad");
+        when(requestContext.hasFilter()).thenReturn(true);
+        when(requestContext.getFilterString()).thenReturn("a0c20s1d5o2"); //id>5
+        when(requestContext.getUserProperty("PARTITION_BY")).thenReturn("grade:enum");
+        when(requestContext.getUserProperty("RANGE")).thenReturn("excellent:good:general:bad");
 
-        WhereSQLBuilder builder = new WhereSQLBuilder(inputData);
+        WhereSQLBuilder builder = new WhereSQLBuilder(requestContext);
         String whereSql = builder.buildWhereSQL();
         assertEquals("id>5", whereSql);
 
-        IgnitePartitionFragmenter fragment = new IgnitePartitionFragmenter(inputData);
+        IgnitePartitionFragmenter fragment = new IgnitePartitionFragmenter(requestContext);
         List<Fragment> fragments = fragment.getFragments();
 
         // Partition 1: id>5 and grade='excellent'
-        when(inputData.getFragmentMetadata()).thenReturn(fragments.get(0).getMetadata());
+        when(requestContext.getFragmentMetadata()).thenReturn(fragments.get(0).getMetadata());
 
         String filterSql = ORIGINAL_SQL + " WHERE " + whereSql;
         StringBuilder sb = new StringBuilder(filterSql);
-        IgnitePartitionFragmenter.buildFragmenterSql(inputData, sb);
+        IgnitePartitionFragmenter.buildFragmenterSql(requestContext, sb);
         assertEquals(filterSql + " AND grade='excellent'", sb.toString());
     }
 
     @Test
     public void testNoPartition() throws Exception {
         prepareConstruction();
-        when(inputData.hasFilter()).thenReturn(false);
-        IgnitePartitionFragmenter fragment = new IgnitePartitionFragmenter(inputData);
+        when(requestContext.hasFilter()).thenReturn(false);
+        IgnitePartitionFragmenter fragment = new IgnitePartitionFragmenter(requestContext);
         List<Fragment> fragments = fragment.getFragments();
         assertEquals(1, fragments.size());
 
-        when(inputData.getFragmentMetadata()).thenReturn(fragments.get(0).getMetadata());
+        when(requestContext.getFragmentMetadata()).thenReturn(fragments.get(0).getMetadata());
 
         StringBuilder sb = new StringBuilder(ORIGINAL_SQL);
-        IgnitePartitionFragmenter.buildFragmenterSql(inputData, sb);
+        IgnitePartitionFragmenter.buildFragmenterSql(requestContext, sb);
         assertEquals(ORIGINAL_SQL, sb.toString());
     }
 
     private void prepareConstruction() throws Exception {
-        inputData = mock(InputData.class);
-        when(inputData.getDataSource()).thenReturn("sales");
+        requestContext = mock(RequestContext.class);
+        when(requestContext.getDataSource()).thenReturn("sales");
 
         ArrayList<ColumnDescriptor> columns = new ArrayList<>();
         columns.add(new ColumnDescriptor("id", DataType.INTEGER.getOID(), 0, "int4", null));
         columns.add(new ColumnDescriptor("cdate", DataType.DATE.getOID(), 1, "date", null));
         columns.add(new ColumnDescriptor("amt", DataType.FLOAT8.getOID(), 2, "float8", null));
         columns.add(new ColumnDescriptor("grade", DataType.TEXT.getOID(), 3, "text", null));
-        when(inputData.getTupleDescription()).thenReturn(columns);
-        when(inputData.getColumn(0)).thenReturn(columns.get(0));
-        when(inputData.getColumn(1)).thenReturn(columns.get(1));
-        when(inputData.getColumn(2)).thenReturn(columns.get(2));
-        when(inputData.getColumn(3)).thenReturn(columns.get(3));
+        when(requestContext.getTupleDescription()).thenReturn(columns);
+        when(requestContext.getColumn(0)).thenReturn(columns.get(0));
+        when(requestContext.getColumn(1)).thenReturn(columns.get(1));
+        when(requestContext.getColumn(2)).thenReturn(columns.get(2));
+        when(requestContext.getColumn(3)).thenReturn(columns.get(3));
     }
 
 
     private static final String ORIGINAL_SQL = "SELECT * FROM sales";
-    private InputData inputData;
+    private RequestContext requestContext;
 }

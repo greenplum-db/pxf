@@ -10,6 +10,6 @@ public class HivePlugin extends HDFSPlugin {
      * @return ORC file reader
      */
     protected Reader getOrcReader() {
-        return HiveUtilities.getOrcReader(configuration, inputData);
+        return HiveUtilities.getOrcReader(configuration, requestContext);
     }
 }

@@ -32,7 +32,7 @@ import org.greenplum.pxf.api.BasicFilter;
 import org.greenplum.pxf.api.FilterParser;
 import org.greenplum.pxf.api.LogicalFilter;
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.plugins.hdfs.HdfsSplittableDataAccessor;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
@@ -82,7 +82,7 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
      * @param input contains the InputFormat class name and the partition fields
      * @throws Exception if failed to create input format
      */
-    public HiveAccessor(InputData input) throws Exception {
+    public HiveAccessor(RequestContext input) throws Exception {
         /*
          * Unfortunately, Java does not allow us to call a function before
          * calling the base constructor, otherwise it would have been:
@@ -98,7 +98,7 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
      * @param inputFormat Hive InputFormat
      * @throws Exception if failed to create input format
      */
-    public HiveAccessor(InputData input, InputFormat<?, ?> inputFormat) throws Exception {
+    public HiveAccessor(RequestContext input, InputFormat<?, ?> inputFormat) throws Exception {
         super(input, inputFormat);
         HiveUserData hiveUserData = HiveUtilities.parseHiveUserData(input);
 
@@ -124,7 +124,7 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
     @Override
     public boolean openForRead() throws Exception {
         // Make sure lines aren't skipped outside of the first fragment
-        if (inputData.getFragmentIndex() != 0) {
+        if (requestContext.getFragmentIndex() != 0) {
             skipHeaderCount = 0;
         }
         return isOurDataInsideFilteredPartition() && super.openForRead();
@@ -212,7 +212,7 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
     }
 
     private boolean isOurDataInsideFilteredPartition() throws Exception {
-        if (!inputData.hasFilter()) {
+        if (!requestContext.hasFilter()) {
             return true;
         }
 
@@ -221,15 +221,15 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
             return true;
         }
 
-        String filterStr = inputData.getFilterString();
-        HiveFilterBuilder eval = new HiveFilterBuilder(inputData);
+        String filterStr = requestContext.getFilterString();
+        HiveFilterBuilder eval = new HiveFilterBuilder(requestContext);
         Object filter = eval.getFilterObject(filterStr);
 
         boolean returnData = isFiltered(partitions, filter);
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("segmentId: " + inputData.getSegmentId() + " "
-                    + inputData.getDataSource() + "--" + filterStr
+            LOG.debug("segmentId: " + requestContext.getSegmentId() + " "
+                    + requestContext.getDataSource() + "--" + filterStr
                     + " returnData: " + returnData);
             if (filter instanceof LogicalFilter) {
                 printLogicalFilter((LogicalFilter) filter);
@@ -251,14 +251,14 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
              * deny this data.
              */
             for (Object f : (List<?>) filter) {
-                if (!testOneFilter(partitionFields, f, inputData)) {
+                if (!testOneFilter(partitionFields, f, requestContext)) {
                     return false;
                 }
             }
             return true;
         }
 
-        return testOneFilter(partitionFields, filter, inputData);
+        return testOneFilter(partitionFields, filter, requestContext);
     }
 
     private boolean testForUnsupportedOperators(List<Object> filterList) {
@@ -274,7 +274,7 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
         return nonAndOp;
     }
 
-    private boolean testForPartitionEquality(List<HivePartition> partitionFields, List<Object> filterList, InputData input) {
+    private boolean testForPartitionEquality(List<HivePartition> partitionFields, List<Object> filterList, RequestContext input) {
         boolean partitionAllowed = true;
         for (Object filter : filterList) {
             if (filter instanceof BasicFilter) {
@@ -384,7 +384,7 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
      * valueA != valueOne, then we return false.
      */
     private boolean testOneFilter(List<HivePartition> partitionFields,
-                                  Object filter, InputData input) {
+                                  Object filter, RequestContext input) {
         // Let's look first at the filter and escape if there are any OR or NOT ops
         if (!testForUnsupportedOperators(Arrays.asList(filter)))
             return true;
@@ -415,6 +415,6 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
      * @return ORC file reader
      */
     protected Reader getOrcReader() {
-        return HiveUtilities.getOrcReader(configuration, inputData);
+        return HiveUtilities.getOrcReader(configuration, requestContext);
     }
 }

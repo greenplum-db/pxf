@@ -21,7 +21,7 @@ package org.greenplum.pxf.plugins.hdfs;
 
 
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 
 
 import java.io.BufferedReader;
@@ -41,7 +41,7 @@ public class QuotedLineBreakAccessor extends HdfsAtomicDataAccessor {
      *
      * @param input all input parameters coming from the client request
      */
-    public QuotedLineBreakAccessor(InputData input) {
+    public QuotedLineBreakAccessor(RequestContext input) {
         super(input);
     }
 

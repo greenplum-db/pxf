@@ -20,8 +20,8 @@ package org.greenplum.pxf.plugins.jdbc;
  */
 
 import org.greenplum.pxf.api.UserDataException;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.api.model.InputData;
 import org.greenplum.pxf.api.model.BasePlugin;
 
 import java.util.ArrayList;
@@ -46,11 +46,11 @@ public class JdbcBasePlugin extends BasePlugin {
     /**
      * Class constructor
      *
-     * @param input {@link InputData} provided by PXF
+     * @param input {@link RequestContext} provided by PXF
      *
      * @throws UserDataException if one of the required request parameters is not set
      */
-    public JdbcBasePlugin(InputData input) throws UserDataException {
+    public JdbcBasePlugin(RequestContext input) throws UserDataException {
         initialize(input);
 
         jdbcDriver = input.getUserProperty("JDBC_DRIVER");
@@ -75,11 +75,11 @@ public class JdbcBasePlugin extends BasePlugin {
         */
         Matcher matcher = tableNamePattern.matcher(tableName);
         if (matcher.matches()) {
-            inputData.setDataSource(matcher.group(1));
+            requestContext.setDataSource(matcher.group(1));
             tableName = input.getDataSource();
         }
 
-        columns = inputData.getTupleDescription();
+        columns = requestContext.getTupleDescription();
         if (columns == null) {
             throw new UserDataException("Tuple description must be provided");
         }
@@ -233,6 +233,6 @@ public class JdbcBasePlugin extends BasePlugin {
 
     private static final Log LOG = LogFactory.getLog(JdbcBasePlugin.class);
 
-    // At the moment, when writing into some table, the table name is concatenated with a special string that is necessary to write into HDFS. However, a raw table name is necessary in case of JDBC. This Pattern allows to extract the correct table name from the given InputData.dataSource
+    // At the moment, when writing into some table, the table name is concatenated with a special string that is necessary to write into HDFS. However, a raw table name is necessary in case of JDBC. This Pattern allows to extract the correct table name from the given RequestContext.dataSource
     private static final Pattern tableNamePattern = Pattern.compile("/(.*)/[0-9]*-[0-9]*_[0-9]*");
 }

@@ -28,7 +28,7 @@ import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.LineRecordReader;
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hdfs.HdfsSplittableDataAccessor;
 
 /**
@@ -57,17 +57,17 @@ public class JsonAccessor extends HdfsSplittableDataAccessor {
      */
     private int maxRecordLength = Integer.MAX_VALUE;
 
-    public JsonAccessor(InputData inputData) throws Exception {
+    public JsonAccessor(RequestContext requestContext) throws Exception {
         // Because HdfsSplittableDataAccessor doesn't use the InputFormat we set it to null.
-        super(inputData, null);
+        super(requestContext, null);
 
-        if (!isEmpty(inputData.getUserProperty(IDENTIFIER_PARAM))) {
+        if (!isEmpty(requestContext.getUserProperty(IDENTIFIER_PARAM))) {
 
-            identifier = inputData.getUserProperty(IDENTIFIER_PARAM);
+            identifier = requestContext.getUserProperty(IDENTIFIER_PARAM);
 
             // If the member identifier is set then check if a record max length is defined as well.
-            if (!isEmpty(inputData.getUserProperty(RECORD_MAX_LENGTH_PARAM))) {
-                maxRecordLength = Integer.valueOf(inputData.getUserProperty(RECORD_MAX_LENGTH_PARAM));
+            if (!isEmpty(requestContext.getUserProperty(RECORD_MAX_LENGTH_PARAM))) {
+                maxRecordLength = Integer.valueOf(requestContext.getUserProperty(RECORD_MAX_LENGTH_PARAM));
             }
         }
     }

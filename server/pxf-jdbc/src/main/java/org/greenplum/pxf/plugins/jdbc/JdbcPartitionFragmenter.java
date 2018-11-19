@@ -23,7 +23,7 @@ import org.greenplum.pxf.api.model.FragmentStats;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.BaseFragmenter;
 import org.greenplum.pxf.api.UserDataException;
-import org.greenplum.pxf.api.model.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.jdbc.utils.ByteUtil;
 import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
 
@@ -44,20 +44,20 @@ public class JdbcPartitionFragmenter extends BaseFragmenter {
     /**
      * Insert fragment constraints into the SQL query.
      *
-     * @param inputData InputData of the fragment
+     * @param requestContext RequestContext of the fragment
      * @param dbName Database name (affects the behaviour for DATE partitions)
      * @param query SQL query to insert constraints to. The query may may contain other WHERE statements
      */
-    public static void buildFragmenterSql(InputData inputData, String dbName, StringBuilder query) {
-        if (inputData.getUserProperty("PARTITION_BY") == null) {
+    public static void buildFragmenterSql(RequestContext requestContext, String dbName, StringBuilder query) {
+        if (requestContext.getUserProperty("PARTITION_BY") == null) {
             return;
         }
 
-        byte[] meta = inputData.getFragmentMetadata();
+        byte[] meta = requestContext.getFragmentMetadata();
         if (meta == null) {
             return;
         }
-        String[] partitionBy = inputData.getUserProperty("PARTITION_BY").split(":");
+        String[] partitionBy = requestContext.getUserProperty("PARTITION_BY").split(":");
         String partitionColumn = partitionBy[0];
         PartitionType partitionType = PartitionType.typeOf(partitionBy[1]);
         DbProduct dbProduct = DbProduct.getDbProduct(dbName);
@@ -102,19 +102,19 @@ public class JdbcPartitionFragmenter extends BaseFragmenter {
     /**
      * Class constructor.
      *
-     * @param inputData PXF InputData
+     * @param requestContext PXF RequestContext
      * @throws UserDataException if the request parameter is malformed
      */
-    public JdbcPartitionFragmenter(InputData inputData) throws UserDataException {
-        super(inputData);
-        if (inputData.getUserProperty("PARTITION_BY") == null) {
+    public JdbcPartitionFragmenter(RequestContext requestContext) throws UserDataException {
+        super(requestContext);
+        if (requestContext.getUserProperty("PARTITION_BY") == null) {
             return;
         }
 
         // PARTITION_BY
         try {
             partitionType = PartitionType.typeOf(
-                inputData.getUserProperty("PARTITION_BY").split(":")[1]
+                requestContext.getUserProperty("PARTITION_BY").split(":")[1]
             );
         }
         catch (IllegalArgumentException | ArrayIndexOutOfBoundsException ex) {
@@ -123,7 +123,7 @@ public class JdbcPartitionFragmenter extends BaseFragmenter {
 
         // RANGE
         try {
-            String rangeStr = inputData.getUserProperty("RANGE");
+            String rangeStr = requestContext.getUserProperty("RANGE");
             if (rangeStr != null) {
                 range = rangeStr.split(":");
                 if (range.length == 1 && partitionType != PartitionType.ENUM) {
@@ -164,7 +164,7 @@ public class JdbcPartitionFragmenter extends BaseFragmenter {
 
         // INTERVAL
         try {
-            String intervalStr = inputData.getUserProperty("INTERVAL");
+            String intervalStr = requestContext.getUserProperty("INTERVAL");
             if (intervalStr != null) {
                 String[] interval = intervalStr.split(":");
                 try {
@@ -213,7 +213,7 @@ public class JdbcPartitionFragmenter extends BaseFragmenter {
     public List<Fragment> getFragments() {
         if (partitionType == null) {
             // No partition case
-            Fragment fragment = new Fragment(inputData.getDataSource(), pxfHosts, null);
+            Fragment fragment = new Fragment(requestContext.getDataSource(), pxfHosts, null);
             fragments.add(fragment);
             return fragments;
         }
@@ -245,7 +245,7 @@ public class JdbcPartitionFragmenter extends BaseFragmenter {
                     byte[] fragmentMetadata = ByteUtil.mergeBytes(msStart, msEnd);
 
                     // Write fragment
-                    Fragment fragment = new Fragment(inputData.getDataSource(), pxfHosts, fragmentMetadata);
+                    Fragment fragment = new Fragment(requestContext.getDataSource(), pxfHosts, fragmentMetadata);
                     fragments.add(fragment);
 
                     // Prepare for the next fragment
@@ -269,7 +269,7 @@ public class JdbcPartitionFragmenter extends BaseFragmenter {
                     byte[] fragmentMetadata = ByteUtil.mergeBytes(bStart, bEnd);
 
                     // Write fragment
-                    Fragment fragment = new Fragment(inputData.getDataSource(), pxfHosts, fragmentMetadata);
+                    Fragment fragment = new Fragment(requestContext.getDataSource(), pxfHosts, fragmentMetadata);
                     fragments.add(fragment);
 
                     // Prepare for the next fragment
@@ -280,7 +280,7 @@ public class JdbcPartitionFragmenter extends BaseFragmenter {
             case ENUM: {
                 for (String frag : range) {
                     byte[] fragmentMetadata = frag.getBytes();
-                    Fragment fragment = new Fragment(inputData.getDataSource(), pxfHosts, fragmentMetadata);
+                    Fragment fragment = new Fragment(requestContext.getDataSource(), pxfHosts, fragmentMetadata);
                     fragments.add(fragment);
                 }
                 break;
