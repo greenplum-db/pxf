@@ -293,10 +293,10 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
         sb.append(" FROM ").append(tableName);
 
         // Insert regular WHERE constraints
-        (new WhereSQLBuilder(requestContext)).buildWhereSQL(databaseMetaData.getDatabaseProductName(), sb);
+        (new WhereSQLBuilder(context)).buildWhereSQL(databaseMetaData.getDatabaseProductName(), sb);
 
         // Insert partition constraints
-        JdbcPartitionFragmenter.buildFragmenterSql(requestContext, databaseMetaData.getDatabaseProductName(), sb);
+        JdbcPartitionFragmenter.buildFragmenterSql(context, databaseMetaData.getDatabaseProductName(), sb);
 
         return sb.toString();
     }

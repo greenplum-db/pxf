@@ -124,7 +124,7 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
     @Override
     public boolean openForRead() throws Exception {
         // Make sure lines aren't skipped outside of the first fragment
-        if (requestContext.getFragmentIndex() != 0) {
+        if (context.getFragmentIndex() != 0) {
             skipHeaderCount = 0;
         }
         return isOurDataInsideFilteredPartition() && super.openForRead();
@@ -212,7 +212,7 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
     }
 
     private boolean isOurDataInsideFilteredPartition() throws Exception {
-        if (!requestContext.hasFilter()) {
+        if (!context.hasFilter()) {
             return true;
         }
 
@@ -221,15 +221,15 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
             return true;
         }
 
-        String filterStr = requestContext.getFilterString();
-        HiveFilterBuilder eval = new HiveFilterBuilder(requestContext);
+        String filterStr = context.getFilterString();
+        HiveFilterBuilder eval = new HiveFilterBuilder(context);
         Object filter = eval.getFilterObject(filterStr);
 
         boolean returnData = isFiltered(partitions, filter);
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("segmentId: " + requestContext.getSegmentId() + " "
-                    + requestContext.getDataSource() + "--" + filterStr
+            LOG.debug("segmentId: " + context.getSegmentId() + " "
+                    + context.getDataSource() + "--" + filterStr
                     + " returnData: " + returnData);
             if (filter instanceof LogicalFilter) {
                 printLogicalFilter((LogicalFilter) filter);
@@ -251,14 +251,14 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
              * deny this data.
              */
             for (Object f : (List<?>) filter) {
-                if (!testOneFilter(partitionFields, f, requestContext)) {
+                if (!testOneFilter(partitionFields, f, context)) {
                     return false;
                 }
             }
             return true;
         }
 
-        return testOneFilter(partitionFields, filter, requestContext);
+        return testOneFilter(partitionFields, filter, context);
     }
 
     private boolean testForUnsupportedOperators(List<Object> filterList) {
@@ -415,6 +415,6 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
      * @return ORC file reader
      */
     protected Reader getOrcReader() {
-        return HiveUtilities.getOrcReader(configuration, requestContext);
+        return HiveUtilities.getOrcReader(configuration, context);
     }
 }

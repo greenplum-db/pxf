@@ -180,7 +180,7 @@ public class HBaseAccessor extends BasePlugin implements Accessor {
      */
     private void openTable() throws IOException {
         connection = ConnectionFactory.createConnection(HBaseConfiguration.create());
-        table = connection.getTable(TableName.valueOf(requestContext.getDataSource()));
+        table = connection.getTable(TableName.valueOf(context.getDataSource()));
     }
 
     /**
@@ -196,7 +196,7 @@ public class HBaseAccessor extends BasePlugin implements Accessor {
      */
     private void addTableSplit() {
 
-        byte[] serializedMetadata = requestContext.getFragmentMetadata();
+        byte[] serializedMetadata = context.getFragmentMetadata();
         if (serializedMetadata == null) {
             throw new IllegalArgumentException("Missing fragment metadata information");
         }
@@ -289,12 +289,12 @@ public class HBaseAccessor extends BasePlugin implements Accessor {
      * Uses row key ranges to limit split count.
      */
     private void addFilters() throws Exception {
-        if (!requestContext.hasFilter()) {
+        if (!context.hasFilter()) {
             return;
         }
 
         HBaseFilterBuilder eval = new HBaseFilterBuilder(tupleDescription);
-        Filter filter = eval.getFilterObject(requestContext.getFilterString());
+        Filter filter = eval.getFilterObject(context.getFilterString());
         scanDetails.setFilter(filter);
 
         scanStartKey = eval.startKey();

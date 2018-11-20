@@ -19,17 +19,17 @@ package org.greenplum.pxf.service.rest;
  * under the License.
  */
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.greenplum.pxf.api.BaseFragmenter;
-import org.greenplum.pxf.api.model.FragmentStats;
 import org.greenplum.pxf.api.model.Fragment;
+import org.greenplum.pxf.api.model.FragmentStats;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.FragmenterFactory;
 import org.greenplum.pxf.api.utilities.FragmentsResponse;
 import org.greenplum.pxf.api.utilities.FragmentsResponseFormatter;
+import org.greenplum.pxf.service.HttpRequestParser;
 import org.greenplum.pxf.service.utilities.AnalyzeUtils;
-import org.greenplum.pxf.api.utilities.ProtocolData;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import javax.servlet.ServletContext;
 import javax.ws.rs.GET;
@@ -40,9 +40,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
 import java.util.List;
-import java.util.Map;
 
 /**
  * Class enhances the API of the WEBHDFS REST server. Returns the data fragments
@@ -53,7 +51,7 @@ import java.util.Map;
  * name in tomcat.
  */
 @Path("/" + Version.PXF_PROTOCOL_VERSION + "/BaseFragmenter/")
-public class FragmenterResource extends RestResource {
+public class FragmenterResource {
     private static final Log LOG = LogFactory.getLog(FragmenterResource.class);
 
     /**
@@ -75,14 +73,14 @@ public class FragmenterResource extends RestResource {
                                  @QueryParam("path") final String path)
             throws Exception {
 
-        ProtocolData protData = getProtocolData(servletContext, headers, path);
+        RequestContext context = getProtocolData(servletContext, headers, path);
 
         /* Create a fragmenter instance with API level parameters */
-        final BaseFragmenter fragmenter = FragmenterFactory.create(protData);
+        final BaseFragmenter fragmenter = FragmenterFactory.create(context);
 
         List<Fragment> fragments = fragmenter.getFragments();
 
-        fragments = AnalyzeUtils.getSampleFragments(fragments, protData);
+        fragments = AnalyzeUtils.getSampleFragments(fragments, context);
 
         FragmentsResponse fragmentsResponse = FragmentsResponseFormatter.formatResponse(
                 fragments, path);
@@ -110,10 +108,10 @@ public class FragmenterResource extends RestResource {
                                       @QueryParam("path") final String path)
             throws Exception {
 
-        ProtocolData protData = getProtocolData(servletContext, headers, path);
+        RequestContext context = getProtocolData(servletContext, headers, path);
 
         /* Create a fragmenter instance with API level parameters */
-        final BaseFragmenter fragmenter = FragmenterFactory.create(protData);
+        final BaseFragmenter fragmenter = FragmenterFactory.create(context);
 
         FragmentStats fragmentStats = fragmenter.getFragmentStats();
         String response = FragmentStats.dataToJSON(fragmentStats);
@@ -124,13 +122,15 @@ public class FragmenterResource extends RestResource {
         return Response.ok(response, MediaType.APPLICATION_JSON_TYPE).build();
     }
 
-    private ProtocolData getProtocolData(final ServletContext servletContext,
+    private RequestContext getProtocolData(final ServletContext servletContext,
                                          final HttpHeaders headers,
                                          final String path) throws Exception {
 
         if (LOG.isDebugEnabled()) {
             StringBuilder startMsg = new StringBuilder(
                     "FRAGMENTER started for path \"" + path + "\"");
+            // FIXME: we are logging all headers, there could be security
+            // FIXME: issues if credentials are sent in the request
             for (String header : headers.getRequestHeaders().keySet()) {
                 startMsg.append(" Header: ").append(header).append(" Value: ").append(
                         headers.getRequestHeader(header));
@@ -138,15 +138,6 @@ public class FragmenterResource extends RestResource {
             LOG.debug(startMsg);
         }
 
-        /* Convert headers into a case-insensitive regular map */
-        Map<String, String> params = convertToCaseInsensitiveMap(headers.getRequestHeaders());
-
-        /* Store protocol level properties and verify */
-        ProtocolData protData = new ProtocolData(params);
-        if (protData.getFragmenter() == null) {
-            protData.protocolViolation("fragmenter");
-        }
-
-        return protData;
+        return new HttpRequestParser().parseRequest(headers);
     }
 }

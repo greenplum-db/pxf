@@ -39,13 +39,12 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.TextInputFormat;
 import org.greenplum.pxf.api.BasicFilter;
 import org.greenplum.pxf.api.FilterParser;
+import org.greenplum.pxf.api.LogicalFilter;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.FragmentStats;
-import org.greenplum.pxf.api.LogicalFilter;
 import org.greenplum.pxf.api.model.Metadata;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.api.utilities.ProfilesConf;
 import org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
@@ -124,7 +123,7 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
 
     @Override
     public List<Fragment> getFragments() throws Exception {
-        Metadata.Item tblDesc = HiveUtilities.extractTableFromName(requestContext.getDataSource());
+        Metadata.Item tblDesc = HiveUtilities.extractTableFromName(context.getDataSource());
 
         fetchTableMetaData(tblDesc);
 
@@ -173,7 +172,7 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
 
         // If query has filter and hive table has partitions, prepare the filter
         // string for hive metastore and retrieve only the matched partitions
-        if (requestContext.hasFilter() && tbl.getPartitionKeysSize() > 0) {
+        if (context.hasFilter() && tbl.getPartitionKeysSize() > 0) {
 
             // Save all hive partition names in a set for later filter match
             for (FieldSchema fs : tbl.getPartitionKeys()) {
@@ -286,7 +285,7 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
         InputFormat<?, ?> fformat = makeInputFormat(
                 tablePartition.storageDesc.getInputFormat(), jobConf);
         String profile = null;
-        String userProfile = requestContext.getProfile();
+        String userProfile = context.getProfile();
         if (userProfile != null) {
             // evaluate optimal profile based on file format if profile was explicitly specified in url
             // if user passed accessor+fragmenter+resolver - use them
@@ -294,9 +293,9 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
         }
         String fragmenterForProfile = null;
         if (profile != null) {
-            fragmenterForProfile = ProfilesConf.getProfilePluginsMap(profile).get("X-GP-OPTIONS-FRAGMENTER");
+            fragmenterForProfile = context.getPluginConf().getPlugins(profile).get("FRAGMENTER");
         } else {
-            fragmenterForProfile = requestContext.getFragmenter();
+            fragmenterForProfile = context.getFragmenter();
         }
 
         FileInputFormat.setInputPaths(jobConf, new Path(
@@ -341,18 +340,18 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
     private String buildFilterStringForHive() throws Exception {
 
         StringBuilder filtersString = new StringBuilder();
-        String filterInput = requestContext.getFilterString();
+        String filterInput = context.getFilterString();
 
         if (LOG.isDebugEnabled()) {
 
-            for (ColumnDescriptor cd : requestContext.getTupleDescription()) {
+            for (ColumnDescriptor cd : context.getTupleDescription()) {
                 LOG.debug("ColumnDescriptor : " + cd);
             }
 
-            LOG.debug("Filter string input : " + requestContext.getFilterString());
+            LOG.debug("Filter string input : " + context.getFilterString());
         }
 
-        HiveFilterBuilder eval = new HiveFilterBuilder(requestContext);
+        HiveFilterBuilder eval = new HiveFilterBuilder(context);
         Object filter = eval.getFilterObject(filterInput);
 
         if (filter instanceof LogicalFilter) {
@@ -407,7 +406,7 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
         // Avoids NullPointerException in case of operations like HDOP_IS_NULL,
         // HDOP_IS_NOT_NULL where no constant value is passed as part of query
         String filterValue = bFilter.getConstant() != null ? bFilter.getConstant().constant().toString() : "";
-        ColumnDescriptor filterColumn = requestContext.getColumn(filterColumnIndex);
+        ColumnDescriptor filterColumn = context.getColumn(filterColumnIndex);
         String filterColumnName = filterColumn.columnName();
         FilterParser.Operation operation = ((BasicFilter) filter).getOperation();
         String colType = partitionkeyTypes.get(filterColumnName);
@@ -476,7 +475,7 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
      */
     @Override
     public FragmentStats getFragmentStats() throws Exception {
-        Metadata.Item tblDesc = HiveUtilities.extractTableFromName(requestContext.getDataSource());
+        Metadata.Item tblDesc = HiveUtilities.extractTableFromName(context.getDataSource());
         Table tbl = HiveUtilities.getHiveTable(client, tblDesc);
         Metadata metadata = new Metadata(tblDesc);
         HiveUtilities.getSchema(tbl, metadata);

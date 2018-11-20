@@ -22,10 +22,9 @@ package org.greenplum.pxf.plugins.hive;
 
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.OutputFormat;
+import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
-import org.greenplum.pxf.api.utilities.ProtocolData;
 
 import java.util.Collections;
 import java.util.List;
@@ -39,8 +38,8 @@ import static org.greenplum.pxf.api.io.DataType.VARCHAR;
 public class HiveStringPassResolver extends HiveResolver {
     private StringBuilder parts;
 
-    public HiveStringPassResolver(RequestContext input) throws Exception {
-        super(input);
+    public HiveStringPassResolver(RequestContext context) throws Exception {
+        super(context);
     }
 
     @Override
@@ -52,21 +51,21 @@ public class HiveStringPassResolver extends HiveResolver {
         serdeClassName = hiveUserData.getSerdeClassName();
 
         /* Needed only for GPDBWritable format*/
-        if (((ProtocolData) requestContext).outputFormat() == OutputFormat.GPDBWritable) {
+        if (context.getOutputFormat() == OutputFormat.GPDBWritable) {
             propsString = hiveUserData.getPropertiesString();
         }
     }
 
     @Override
     void initSerde(RequestContext input) throws Exception {
-        if (((ProtocolData) requestContext).outputFormat() == OutputFormat.GPDBWritable) {
+        if (context.getOutputFormat() == OutputFormat.GPDBWritable) {
             super.initSerde(input);
         }
     }
 
     @Override
     void initPartitionFields() {
-        if (((ProtocolData) requestContext).outputFormat() == OutputFormat.TEXT) {
+        if (context.getOutputFormat() == OutputFormat.TEXT) {
             initTextPartitionFields(parts);
         } else {
             super.initPartitionFields();
@@ -80,7 +79,7 @@ public class HiveStringPassResolver extends HiveResolver {
      */
     @Override
     public List<OneField> getFields(OneRow onerow) throws Exception {
-        if (((ProtocolData) requestContext).outputFormat() == OutputFormat.TEXT) {
+        if (context.getOutputFormat() == OutputFormat.TEXT) {
             String line = (onerow.getData()).toString();
             /* We follow Hive convention. Partition fields are always added at the end of the record */
             return Collections.singletonList(new OneField(VARCHAR.getOID(), line + parts));

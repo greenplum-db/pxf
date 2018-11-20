@@ -55,7 +55,7 @@ public class AvroFileAccessor extends HdfsSplittableDataAccessor {
         // 2. Accessing the avro file through the "unsplittable" API just to get the schema.
         //    The splittable API (AvroInputFormat) which is the one we will be using to fetch
         //    the records, does not support getting the avro schema yet.
-        Schema schema = getAvroSchema(configuration, requestContext.getDataSource());
+        Schema schema = getAvroSchema(configuration, context.getDataSource());
 
         // 3. Pass the schema to the AvroInputFormat
         AvroJob.setInputSchema(jobConf, schema);

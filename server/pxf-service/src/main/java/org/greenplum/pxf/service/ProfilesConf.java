@@ -1,4 +1,4 @@
-package org.greenplum.pxf.api.utilities;
+package org.greenplum.pxf.service;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -27,7 +27,8 @@ import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.api.model.PluginConf;
+import org.greenplum.pxf.api.utilities.ProfileConfException;
 
 import java.net.URL;
 import java.util.HashMap;
@@ -35,13 +36,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import static org.greenplum.pxf.api.utilities.ProfileConfException.MessageFormat.*;
+import static org.greenplum.pxf.api.utilities.ProfileConfException.MessageFormat.NO_PROFILE_DEF;
+import static org.greenplum.pxf.api.utilities.ProfileConfException.MessageFormat.PROFILES_FILE_LOAD_ERR;
+import static org.greenplum.pxf.api.utilities.ProfileConfException.MessageFormat.PROFILES_FILE_NOT_FOUND;
 
 /**
  * This enum holds the profiles files: pxf-profiles.xml and pxf-profiles-default.xml.
  * It exposes a public static method getProfilePluginsMap(String plugin) which returns the requested profile plugins
  */
-public enum ProfilesConf {
+public enum ProfilesConf implements PluginConf {
     INSTANCE; // enum singleton
     // not necessary to declare LOG as static final, because this is a singleton
     private Log LOG = LogFactory.getLog(ProfilesConf.class);
@@ -78,6 +81,10 @@ public enum ProfilesConf {
             throw new ProfileConfException(NO_PROFILE_DEF, profile, EXTERNAL_PROFILES);
         }
         return pluginsMap;
+    }
+
+    public Map<String, String> getPlugins(String profile) {
+        return ProfilesConf.getProfilePluginsMap(profile);
     }
 
     private ClassLoader getClassLoader() {
@@ -130,7 +137,7 @@ public enum ProfilesConf {
         for (String plugin : plugins) {
             String pluginValue = profileSubset.getString(plugin);
             if (!StringUtils.isEmpty(StringUtils.trim(pluginValue))) {
-                pluginsMap.put(RequestContext.USER_PROP_PREFIX + plugin.toUpperCase(), pluginValue);
+                pluginsMap.put(plugin.toUpperCase(), pluginValue);
             }
         }
         return pluginsMap;

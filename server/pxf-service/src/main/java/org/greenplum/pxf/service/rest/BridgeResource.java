@@ -19,11 +19,19 @@ package org.greenplum.pxf.service.rest;
  * under the License.
  */
 
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.Map;
-import java.util.concurrent.locks.ReentrantLock;
+import org.apache.catalina.connector.ClientAbortException;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.api.utilities.Utilities;
+import org.greenplum.pxf.service.AggBridge;
+import org.greenplum.pxf.service.Bridge;
+import org.greenplum.pxf.service.HttpRequestParser;
+import org.greenplum.pxf.service.ReadBridge;
+import org.greenplum.pxf.service.ReadSamplingBridge;
+import org.greenplum.pxf.service.ReadVectorizedBridge;
+import org.greenplum.pxf.service.RequestParser;
+import org.greenplum.pxf.service.io.Writable;
 
 import javax.servlet.ServletContext;
 import javax.ws.rs.GET;
@@ -35,25 +43,17 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
-
-import org.apache.catalina.connector.ClientAbortException;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.greenplum.pxf.api.utilities.Utilities;
-import org.greenplum.pxf.service.AggBridge;
-import org.greenplum.pxf.service.Bridge;
-import org.greenplum.pxf.service.ReadBridge;
-import org.greenplum.pxf.service.ReadSamplingBridge;
-import org.greenplum.pxf.service.ReadVectorizedBridge;
-import org.greenplum.pxf.service.io.Writable;
-import org.greenplum.pxf.api.utilities.ProtocolData;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.concurrent.locks.ReentrantLock;
 
 /*
  * This class handles the subpath /<version>/Bridge/ of this
  * REST component
  */
 @Path("/" + Version.PXF_PROTOCOL_VERSION + "/Bridge/")
-public class BridgeResource extends RestResource {
+public class BridgeResource {
 
     private static final Log LOG = LogFactory.getLog(BridgeResource.class);
     /**
@@ -67,7 +67,14 @@ public class BridgeResource extends RestResource {
      */
     private static final ReentrantLock BRIDGE_LOCK = new ReentrantLock();
 
+    private RequestParser<HttpHeaders> parser;
+
     public BridgeResource() {
+        this(new HttpRequestParser());
+    }
+
+    BridgeResource(RequestParser<HttpHeaders> parser) {
+        this.parser = parser;
     }
 
     /**
@@ -89,39 +96,46 @@ public class BridgeResource extends RestResource {
     public Response read(@Context final ServletContext servletContext,
                          @Context HttpHeaders headers) throws Exception {
         // Convert headers into a regular map
-        Map<String, String> params = convertToCaseInsensitiveMap(headers.getRequestHeaders());
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("started with parameters: " + params);
-        }
+        //Map<String, String> params = convertToCaseInsensitiveMap(headers.getRequestHeaders());
+
+        RequestContext context = parser.parseRequest(headers);
+
+        //if (LOG.isDebugEnabled()) {
+        //    LOG.debug("started with parameters: " + params);
+        //}
 
         Bridge bridge;
-        ProtocolData protData = new ProtocolData(params);
-        float sampleRatio = protData.getStatsSampleRatio();
+        //ProtocolData protData = new ProtocolData(params);
+
+
+
+
+        float sampleRatio = context.getStatsSampleRatio();
         if (sampleRatio > 0) {
-            bridge = new ReadSamplingBridge(protData);
-        } else if (Utilities.useAggBridge(protData)) {
-            bridge = new AggBridge(protData);
-        } else if (Utilities.useVectorization(protData)) {
-            bridge = new ReadVectorizedBridge(protData);
+            bridge = new ReadSamplingBridge(context);
+        } else if (Utilities.useAggBridge(context)) {
+            bridge = new AggBridge(context);
+        } else if (Utilities.useVectorization(context)) {
+            bridge = new ReadVectorizedBridge(context);
         } else {
-            bridge = new ReadBridge(protData);
+            bridge = new ReadBridge(context);
         }
-        String dataDir = protData.getDataSource();
+        String dataDir = context.getDataSource();
         // THREAD-SAFE parameter has precedence
-        boolean isThreadSafe = protData.isThreadSafe() && bridge.isThreadSafe();
+        boolean isThreadSafe = context.isThreadSafe() && bridge.isThreadSafe();
         if (LOG.isDebugEnabled()) {
             LOG.debug("Request for " + dataDir + " will be handled " +
                     (isThreadSafe ? "without" : "with") + " synchronization");
         }
 
-        return readResponse(bridge, protData, isThreadSafe);
+        return readResponse(bridge, context, isThreadSafe);
     }
 
-    Response readResponse(final Bridge bridge, ProtocolData protData,
+    Response readResponse(final Bridge bridge, RequestContext context,
                           final boolean threadSafe) {
-        final int fragment = protData.getDataFragment();
-        final String dataDir = protData.getDataSource();
+        final int fragment = context.getDataFragment();
+        final String dataDir = context.getDataSource();
 
         // Creating an internal streaming class which will iterate
         // the records and put them on the output stream

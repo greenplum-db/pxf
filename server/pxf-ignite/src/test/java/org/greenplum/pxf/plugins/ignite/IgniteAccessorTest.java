@@ -33,21 +33,27 @@ import com.google.gson.JsonObject;
 import org.junit.Test;
 import org.junit.Before;
 import org.junit.runner.RunWith;
+
 import static org.junit.Assert.*;
 
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+
 import static org.mockito.Matchers.anyString;
 
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+
 import static org.powermock.api.support.membermodification.MemberMatcher.method;
 
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({IgniteAccessor.class})
 public class IgniteAccessorTest {
+    private ArrayList<ColumnDescriptor> columns = new ArrayList<>();
+    private RequestContext requestContext = null;
+
     @Before
     public void prepareAccessorTest() throws Exception {
         requestContext = Mockito.mock(RequestContext.class);
@@ -92,9 +98,9 @@ public class IgniteAccessorTest {
 
         List<String> allParams = captor.getAllValues();
 
-        assertEquals(allParams.get(0), "http://127.0.0.1:8080/ignite?cmd=qryfldexe&pageSize=0&qry=SELECT+id%2C+name%2C+birthday%2C+key+FROM+TableTest");
-        assertEquals(allParams.get(1), "http://127.0.0.1:8080/ignite?cmd=qryfetch&pageSize=128&qryId=1");
-        assertEquals(allParams.get(2), "http://127.0.0.1:8080/ignite?cmd=qrycls&qryId=1");
+        assertEquals("http://127.0.0.1:8080/ignite?cmd=qryfldexe&pageSize=0&qry=SELECT+id%2C+name%2C+birthday%2C+key+FROM+TableTest", allParams.get(0));
+        assertEquals("http://127.0.0.1:8080/ignite?cmd=qryfetch&pageSize=128&qryId=1", allParams.get(1));
+        assertEquals("http://127.0.0.1:8080/ignite?cmd=qrycls&qryId=1", allParams.get(2));
     }
 
     @Test
@@ -124,7 +130,4 @@ public class IgniteAccessorTest {
         assertEquals(allParams.get(2), "http://127.0.0.1:8080/ignite?cmd=qryfldexe&pageSize=0&qry=INSERT+INTO+TableTest%28id%2C+name%2C+birthday%2C+key%29+VALUES+%282%2C+%27abcd%27%2C+%272001-01-01%27%2C+%2761626364%27%29");
         assertEquals(allParams.get(3), "http://127.0.0.1:8080/ignite?cmd=qrycls&qryId=1");
     }
-
-    private ArrayList<ColumnDescriptor> columns = new ArrayList<>();
-    private RequestContext requestContext = null;
 }

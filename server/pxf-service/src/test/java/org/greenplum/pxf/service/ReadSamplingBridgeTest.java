@@ -8,9 +8,9 @@ package org.greenplum.pxf.service;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -30,9 +30,10 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.BitSet;
 
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.service.io.Writable;
 import org.greenplum.pxf.service.utilities.AnalyzeUtils;
-import org.greenplum.pxf.api.utilities.ProtocolData;
+
 
 import org.junit.Before;
 import org.junit.Test;
@@ -76,7 +77,7 @@ public class ReadSamplingBridgeTest {
 
     }
 
-    private ProtocolData mockProtData;
+    private RequestContext mockContext;
     private ReadBridge mockBridge;
     private ReadSamplingBridge readSamplingBridge;
     private int recordsLimit = 0;
@@ -88,9 +89,9 @@ public class ReadSamplingBridgeTest {
 
         samplingBitSet.set(0, 100);
         recordsLimit = 100;
-        when(mockProtData.getStatsSampleRatio()).thenReturn((float) 1.0);
+        when(mockContext.getStatsSampleRatio()).thenReturn((float) 1.0);
 
-        readSamplingBridge = new ReadSamplingBridge(mockProtData);
+        readSamplingBridge = new ReadSamplingBridge(mockContext);
 
         result = readSamplingBridge.getNext();
         assertEquals("0", result.toString());
@@ -110,9 +111,9 @@ public class ReadSamplingBridgeTest {
         // set 10 bits from 5 to 14.
         samplingBitSet.set(5, 15);
         recordsLimit = 100;
-        when(mockProtData.getStatsSampleRatio()).thenReturn((float) 0.1);
+        when(mockContext.getStatsSampleRatio()).thenReturn((float) 0.1);
 
-        readSamplingBridge = new ReadSamplingBridge(mockProtData);
+        readSamplingBridge = new ReadSamplingBridge(mockContext);
 
         for (int i = 0; i < 10; i++) {
             result = readSamplingBridge.getNext();
@@ -134,9 +135,9 @@ public class ReadSamplingBridgeTest {
             samplingBitSet.flip(i * 2);
         }
         recordsLimit = 100;
-        when(mockProtData.getStatsSampleRatio()).thenReturn((float) 0.9);
+        when(mockContext.getStatsSampleRatio()).thenReturn((float) 0.9);
 
-        readSamplingBridge = new ReadSamplingBridge(mockProtData);
+        readSamplingBridge = new ReadSamplingBridge(mockContext);
 
         for (int i = 0; i < 90; i++) {
             result = readSamplingBridge.getNext();
@@ -160,9 +161,9 @@ public class ReadSamplingBridgeTest {
         samplingBitSet.set(40, 80);
         samplingBitSet.set(90, 99);
         recordsLimit = 350;
-        when(mockProtData.getStatsSampleRatio()).thenReturn((float) 0.5);
+        when(mockContext.getStatsSampleRatio()).thenReturn((float) 0.5);
 
-        readSamplingBridge = new ReadSamplingBridge(mockProtData);
+        readSamplingBridge = new ReadSamplingBridge(mockContext);
 
         /*
          * expecting to have: 50 (out of first 100) 50 (out of second 100) 50
@@ -191,9 +192,9 @@ public class ReadSamplingBridgeTest {
         samplingBitSet.set(999);
         samplingBitSet.set(9999);
         recordsLimit = 100000;
-        when(mockProtData.getStatsSampleRatio()).thenReturn(ratio);
+        when(mockContext.getStatsSampleRatio()).thenReturn(ratio);
 
-        readSamplingBridge = new ReadSamplingBridge(mockProtData);
+        readSamplingBridge = new ReadSamplingBridge(mockContext);
 
         for (int i = 0; i < 30; i++) {
             result = readSamplingBridge.getNext();
@@ -216,7 +217,7 @@ public class ReadSamplingBridgeTest {
     @Before
     public void setUp() throws Exception {
 
-        mockProtData = mock(ProtocolData.class);
+        mockContext = mock(RequestContext.class);
 
         mockBridge = mock(ReadBridge.class);
         PowerMockito.whenNew(ReadBridge.class).withAnyArguments().thenReturn(

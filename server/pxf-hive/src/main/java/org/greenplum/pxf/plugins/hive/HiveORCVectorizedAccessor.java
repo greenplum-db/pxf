@@ -61,7 +61,7 @@ public class HiveORCVectorizedAccessor extends HiveORCAccessor {
      * @param options reader options to modify
      */
     private void addFragments(Options options) {
-        FileSplit fileSplit = HdfsUtilities.parseFileSplit(requestContext);
+        FileSplit fileSplit = HdfsUtilities.parseFileSplit(context);
         options.range(fileSplit.getStart(), fileSplit.getLength());
     }
 
@@ -87,8 +87,8 @@ public class HiveORCVectorizedAccessor extends HiveORCAccessor {
      * @throws Exception
      */
     private void addColumns(Options options) throws Exception {
-        boolean[] includeColumns = new boolean[requestContext.getColumns() + 1];
-        for (ColumnDescriptor col : requestContext.getTupleDescription()) {
+        boolean[] includeColumns = new boolean[context.getColumns() + 1];
+        for (ColumnDescriptor col : context.getTupleDescription()) {
             if (col.isProjected()) {
                 includeColumns[col.columnIndex() + 1] = true;
             }

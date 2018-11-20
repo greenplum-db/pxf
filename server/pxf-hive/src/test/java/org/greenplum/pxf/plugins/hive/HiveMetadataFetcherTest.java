@@ -27,6 +27,7 @@ import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
+import org.greenplum.pxf.api.model.PluginConf;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Metadata;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
@@ -41,7 +42,9 @@ import org.powermock.reflect.Whitebox;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -52,7 +55,7 @@ import static org.mockito.Mockito.when;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({HiveMetadataFetcher.class}) // Enables mocking 'new' calls
 @SuppressStaticInitializationFor({"org.apache.hadoop.hive.metastore.api.MetaException",
-"org.greenplum.pxf.plugins.hive.utilities.HiveUtilities"}) // Prevents static inits
+        "org.greenplum.pxf.plugins.hive.utilities.HiveUtilities"}) // Prevents static inits
 public class HiveMetadataFetcherTest {
     RequestContext requestContext;
     Log LOG;
@@ -62,21 +65,34 @@ public class HiveMetadataFetcherTest {
     List<Metadata> metadataList;
 
     @Before
-    public void SetupCompressionFactory() {
+    public void SetupCompressionFactory() throws Exception {
         LOG = mock(Log.class);
         Whitebox.setInternalState(HiveUtilities.class, LOG);
+
+        @SuppressWarnings("unchecked")
+        Map<String, String> mockProfileMap = mock(Map.class);
+        PluginConf mockPluginConf = mock(PluginConf.class);
+
+        requestContext = mock(RequestContext.class);
+        when(requestContext.getPluginConf()).thenReturn(mockPluginConf);
+        when(mockPluginConf.getPlugins("HiveText")).thenReturn(mockProfileMap);
+        when(mockProfileMap.get("OUTPUTFORMAT")).thenReturn("org.greenplum.pxf.service.io.Text");
+
+        hiveConfiguration = mock(HiveConf.class);
+        PowerMockito.whenNew(HiveConf.class).withNoArguments().thenReturn(hiveConfiguration);
+
+        hiveClient = mock(HiveMetaStoreClient.class);
+        PowerMockito.whenNew(HiveMetaStoreClient.class).withArguments(hiveConfiguration).thenReturn(hiveClient);
     }
 
     @Test
     public void construction() throws Exception {
-        prepareConstruction();
         fetcher = new HiveMetadataFetcher(requestContext);
         PowerMockito.verifyNew(HiveMetaStoreClient.class).withArguments(hiveConfiguration);
     }
 
     @Test
     public void constructorCantAccessMetaStore() throws Exception {
-        prepareConstruction();
         PowerMockito.whenNew(HiveMetaStoreClient.class).withArguments(hiveConfiguration).thenThrow(new MetaException("which way to albuquerque"));
 
         try {
@@ -89,7 +105,6 @@ public class HiveMetadataFetcherTest {
 
     @Test
     public void getTableMetadataInvalidTableName() throws Exception {
-        prepareConstruction();
         fetcher = new HiveMetadataFetcher(requestContext);
         String tableName = "t.r.o.u.b.l.e.m.a.k.e.r";
 
@@ -103,7 +118,6 @@ public class HiveMetadataFetcherTest {
 
     @Test
     public void getTableMetadataView() throws Exception {
-        prepareConstruction();
 
         fetcher = new HiveMetadataFetcher(requestContext);
         String tableName = "cause";
@@ -123,7 +137,6 @@ public class HiveMetadataFetcherTest {
 
     @Test
     public void getTableMetadata() throws Exception {
-        prepareConstruction();
 
         fetcher = new HiveMetadataFetcher(requestContext);
         String tableName = "cause";
@@ -160,7 +173,6 @@ public class HiveMetadataFetcherTest {
 
     @Test
     public void getTableMetadataWithMultipleTables() throws Exception {
-        prepareConstruction();
 
         fetcher = new HiveMetadataFetcher(requestContext);
 
@@ -182,9 +194,10 @@ public class HiveMetadataFetcherTest {
         sd.setInputFormat("org.apache.hadoop.mapred.TextInputFormat");
 
         // Mock hive tables returned from hive client
-        for(int index=1;index<=2;index++) {
+        for (int index = 1; index <= 2; index++) {
             String tableName = tablenamebase + index;
-            tableNames.add(tableName);;
+            tableNames.add(tableName);
+            ;
             Table hiveTable = new Table();
             hiveTable.setTableType("MANAGED_TABLE");
             hiveTable.setSd(sd);
@@ -200,9 +213,9 @@ public class HiveMetadataFetcherTest {
         metadataList = fetcher.getMetadata(pattern);
         assertEquals(2, metadataList.size());
 
-        for(int index=1;index<=2;index++) {
-            Metadata metadata = metadataList.get(index-1);
-            assertEquals(dbname + "." + tablenamebase+index, metadata.getItem().toString());
+        for (int index = 1; index <= 2; index++) {
+            Metadata metadata = metadataList.get(index - 1);
+            assertEquals(dbname + "." + tablenamebase + index, metadata.getItem().toString());
             List<Metadata.Field> resultFields = metadata.getFields();
             assertNotNull(resultFields);
             assertEquals(2, resultFields.size());
@@ -217,7 +230,6 @@ public class HiveMetadataFetcherTest {
 
     @Test
     public void getTableMetadataWithIncompatibleTables() throws Exception {
-        prepareConstruction();
 
         fetcher = new HiveMetadataFetcher(requestContext);
 
@@ -267,15 +279,5 @@ public class HiveMetadataFetcherTest {
         field = resultFields.get(1);
         assertEquals("field2", field.getName());
         assertEquals("int4", field.getType().getTypeName());
-    }
-
-    private void prepareConstruction() throws Exception {
-        requestContext = mock(RequestContext.class);
-
-        hiveConfiguration = mock(HiveConf.class);
-        PowerMockito.whenNew(HiveConf.class).withNoArguments().thenReturn(hiveConfiguration);
-
-        hiveClient = mock(HiveMetaStoreClient.class);
-        PowerMockito.whenNew(HiveMetaStoreClient.class).withArguments(hiveConfiguration).thenReturn(hiveClient);
     }
 }

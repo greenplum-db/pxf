@@ -22,7 +22,8 @@ package org.greenplum.pxf.service.utilities;
 
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.token.Token;
-import org.greenplum.pxf.api.utilities.ProtocolData;
+
+import org.greenplum.pxf.api.model.RequestContext;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -41,15 +42,26 @@ import static org.mockito.Mockito.*;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({UserGroupInformation.class})
 public class SecuredHDFSTest {
-    ProtocolData mockProtocolData;
+    RequestContext mockRequestContext;
     ServletContext mockContext;
+
+    /*
+     * setUp function called before each test
+     */
+    @Before
+    public void setUp() {
+        mockRequestContext = mock(RequestContext.class);
+        mockContext = mock(ServletContext.class);
+
+        PowerMockito.mockStatic(UserGroupInformation.class);
+    }
 
     @Test
     @SuppressWarnings("unchecked")
     public void nullToken() throws IOException {
         when(UserGroupInformation.isSecurityEnabled()).thenReturn(true);
         UserGroupInformation ugi = mock(UserGroupInformation.class);
-        when(mockProtocolData.getToken()).thenReturn(null);
+        when(mockRequestContext.getToken()).thenReturn(null);
         when(UserGroupInformation.getLoginUser()).thenReturn(ugi);
 
         SecuredHDFS.verifyToken(null, mockContext);
@@ -62,7 +74,7 @@ public class SecuredHDFSTest {
         when(UserGroupInformation.isSecurityEnabled()).thenReturn(true);
         UserGroupInformation ugi = mock(UserGroupInformation.class);
         when(UserGroupInformation.getLoginUser()).thenReturn(ugi);
-        when(mockProtocolData.getToken()).thenReturn("This is odd");
+        when(mockRequestContext.getToken()).thenReturn("This is odd");
 
         try {
             SecuredHDFS.verifyToken("This is odd", mockContext);
@@ -77,7 +89,7 @@ public class SecuredHDFSTest {
         when(UserGroupInformation.isSecurityEnabled()).thenReturn(true);
         UserGroupInformation ugi = mock(UserGroupInformation.class);
         when(UserGroupInformation.getLoginUser()).thenReturn(ugi);
-        when(mockProtocolData.getToken()).thenReturn("This is odd");
+        when(mockRequestContext.getToken()).thenReturn("This is odd");
 
         try {
             SecuredHDFS.verifyToken("This is odd", mockContext);
@@ -86,16 +98,5 @@ public class SecuredHDFSTest {
             verify(ugi).reloginFromKeytab();
             assertEquals("Failed to verify delegation token java.io.EOFException", e.getMessage());
         }
-    }
-
-    /*
-     * setUp function called before each test
-	 */
-    @Before
-    public void setUp() {
-        mockProtocolData = mock(ProtocolData.class);
-        mockContext = mock(ServletContext.class);
-
-        PowerMockito.mockStatic(UserGroupInformation.class);
     }
 }

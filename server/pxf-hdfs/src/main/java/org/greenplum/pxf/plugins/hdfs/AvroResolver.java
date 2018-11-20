@@ -31,7 +31,7 @@ import org.apache.hadoop.io.BytesWritable;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.api.model.HDFSPlugin;
+import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.plugins.hdfs.utilities.DataSchemaException;
@@ -49,7 +49,7 @@ import java.util.Map;
  * Class AvroResolver handles deserialization of records that were serialized
  * using the AVRO serialization framework.
  */
-public class AvroResolver extends HDFSPlugin implements Resolver {
+public class AvroResolver extends BasePlugin implements Resolver {
     private GenericRecord avroRecord = null;
     private DatumReader<GenericRecord> reader = null;
     // member kept to enable reuse, and thus avoid repeated allocation
@@ -91,12 +91,12 @@ public class AvroResolver extends HDFSPlugin implements Resolver {
         reader = new GenericDatumReader<>(schema);
         fields = schema.getFields();
 
-        collectionDelim = input.getUserProperty("COLLECTION_DELIM") == null ? COLLECTION_DELIM
-                : input.getUserProperty("COLLECTION_DELIM");
-        mapkeyDelim = input.getUserProperty("MAPKEY_DELIM") == null ? MAPKEY_DELIM
-                : input.getUserProperty("MAPKEY_DELIM");
-        recordkeyDelim = input.getUserProperty("RECORDKEY_DELIM") == null ? RECORDKEY_DELIM
-                : input.getUserProperty("RECORDKEY_DELIM");
+        collectionDelim = input.getOption("COLLECTION_DELIM") == null ? COLLECTION_DELIM
+                : input.getOption("COLLECTION_DELIM");
+        mapkeyDelim = input.getOption("MAPKEY_DELIM") == null ? MAPKEY_DELIM
+                : input.getOption("MAPKEY_DELIM");
+        recordkeyDelim = input.getOption("RECORDKEY_DELIM") == null ? RECORDKEY_DELIM
+                : input.getOption("RECORDKEY_DELIM");
     }
 
     /**
@@ -110,8 +110,8 @@ public class AvroResolver extends HDFSPlugin implements Resolver {
         avroRecord = makeAvroRecord(row.getData(), avroRecord);
         List<OneField> record = new LinkedList<OneField>();
 
-        int recordkeyIndex = (requestContext.getRecordkeyColumn() == null) ? -1
-                : requestContext.getRecordkeyColumn().columnIndex();
+        int recordkeyIndex = (context.getRecordkeyColumn() == null) ? -1
+                : context.getRecordkeyColumn().columnIndex();
         int currentIndex = 0;
 
         for (Schema.Field field : fields) {
@@ -120,7 +120,7 @@ public class AvroResolver extends HDFSPlugin implements Resolver {
              */
             if (currentIndex == recordkeyIndex) {
                 currentIndex += recordkeyAdapter.appendRecordkeyField(record,
-                        requestContext, row);
+                        context, row);
             }
 
             currentIndex += populateRecord(record,
@@ -150,7 +150,7 @@ public class AvroResolver extends HDFSPlugin implements Resolver {
      * @return whether the resource is an Avro file
      */
     boolean isAvroFile() {
-        return requestContext.getAccessor().toLowerCase().contains("avro");
+        return context.getAccessor().toLowerCase().contains("avro");
     }
 
     /**
@@ -402,7 +402,7 @@ public class AvroResolver extends HDFSPlugin implements Resolver {
      */
     InputStream openExternalSchema() {
 
-        String schemaName = requestContext.getUserProperty("DATA-SCHEMA");
+        String schemaName = context.getOption("DATA-SCHEMA");
 
         /**
          * Testing that the schema name was supplied by the user - schema is an

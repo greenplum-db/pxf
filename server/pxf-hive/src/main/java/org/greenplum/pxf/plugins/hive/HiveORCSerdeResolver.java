@@ -50,10 +50,10 @@ public class HiveORCSerdeResolver extends HiveResolver {
         serdeType = hiveUserData.getSerdeClassName();
         partitionKeys = hiveUserData.getPartitionKeys();
         typesString = hiveUserData.getColTypes();
-        collectionDelim = input.getUserProperty("COLLECTION_DELIM") == null ? COLLECTION_DELIM
-                : input.getUserProperty("COLLECTION_DELIM");
-        mapkeyDelim = input.getUserProperty("MAPKEY_DELIM") == null ? MAPKEY_DELIM
-                : input.getUserProperty("MAPKEY_DELIM");
+        collectionDelim = input.getOption("COLLECTION_DELIM") == null ? COLLECTION_DELIM
+                : input.getOption("COLLECTION_DELIM");
+        mapkeyDelim = input.getOption("MAPKEY_DELIM") == null ? MAPKEY_DELIM
+                : input.getOption("MAPKEY_DELIM");
     }
 
     /*

@@ -32,7 +32,7 @@ import org.apache.parquet.io.RecordReader;
 import org.apache.parquet.schema.MessageType;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.Accessor;
-import org.greenplum.pxf.api.model.HDFSPlugin;
+import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 
@@ -43,7 +43,7 @@ import java.util.Iterator;
  * Parquet file accessor.
  * Unit of operation is record.
  */
-public class ParquetFileAccessor extends HDFSPlugin implements Accessor {
+public class ParquetFileAccessor extends BasePlugin implements Accessor {
 
     private ParquetFileReader reader;
     private MessageColumnIO columnIO;
@@ -154,9 +154,9 @@ public class ParquetFileAccessor extends HDFSPlugin implements Accessor {
 
     @Override
     public boolean openForRead() throws Exception {
-        Path file = new Path(requestContext.getDataSource());
-        FileSplit fileSplit = HdfsUtilities.parseFileSplit(requestContext);
-        setSchema(HdfsUtilities.parseParquetUserData(requestContext).getSchema());
+        Path file = new Path(context.getDataSource());
+        FileSplit fileSplit = HdfsUtilities.parseFileSplit(context);
+        setSchema(HdfsUtilities.parseParquetUserData(context).getSchema());
         // Create reader for a given split, read a range in file
         setReader(new ParquetFileReader(configuration, file, ParquetMetadataConverter.range(
                 fileSplit.getStart(), fileSplit.getStart() + fileSplit.getLength())));

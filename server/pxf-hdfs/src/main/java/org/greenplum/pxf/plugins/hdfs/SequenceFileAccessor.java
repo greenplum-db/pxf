@@ -80,16 +80,16 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor implements 
     public boolean openForWrite() throws Exception {
         FileSystem fs;
         Path parent;
-        String fileName = requestContext.getDataSource();
+        String fileName = context.getDataSource();
 
-        getCompressionCodec(requestContext);
+        getCompressionCodec(context);
         fileName = updateFileExtension(fileName, codec);
 
         // construct the output stream
         file = new Path(fileName);
         fs = file.getFileSystem(configuration);
         fc = FileContext.getFileContext();
-        defaultKey = new LongWritable(requestContext.getSegmentId());
+        defaultKey = new LongWritable(context.getSegmentId());
 
         if (fs.exists(file)) {
             throw new IOException("file " + file
@@ -110,15 +110,15 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor implements 
      * value RECORD). If there is no codec, compression type is ignored, and
      * NONE is used.
      *
-     * @param requestContext - container where compression codec and type are held
+     * @param context - container where compression codec and type are held
      */
-    private void getCompressionCodec(RequestContext requestContext) {
+    private void getCompressionCodec(RequestContext context) {
 
-        String userCompressCodec = requestContext.getUserProperty("COMPRESSION_CODEC");
-        String userCompressType = requestContext.getUserProperty("COMPRESSION_TYPE");
+        String userCompressCodec = context.getOption("COMPRESSION_CODEC");
+        String userCompressType = context.getOption("COMPRESSION_TYPE");
         String parsedCompressType = parseCompressionType(userCompressType);
 
-        compressionType = SequenceFile.CompressionType.NONE;
+        compressionType = CompressionType.NONE;
         codec = null;
         if (userCompressCodec != null) {
             codec = HdfsUtilities.getCodec(configuration, userCompressCodec);

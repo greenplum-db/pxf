@@ -30,7 +30,8 @@ import java.util.List;
 
 import org.greenplum.pxf.api.model.Fragment;
 
-import org.greenplum.pxf.api.utilities.ProtocolData;
+
+import org.greenplum.pxf.api.model.RequestContext;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -104,19 +105,19 @@ public class AnalyzeUtilsTest {
     }
 
     private void runGetSampleFragmentsTest(int inputSize, int maxFragments, int expectedSize, int[] expectedIndexes) throws Exception {
-        ProtocolData mockProtocolData = mock(ProtocolData.class);
-        when(mockProtocolData.getStatsMaxFragments()).thenReturn(maxFragments);
+        RequestContext mockContext = mock(RequestContext.class);
+        when(mockContext.getStatsMaxFragments()).thenReturn(maxFragments);
 
-        List<Fragment> fragments = new ArrayList<Fragment>();
+        List<Fragment> fragments = new ArrayList<>();
 
         for (int i = 0; i < inputSize; i++) {
             fragments.add(prepareFragment(i));
         }
         assertEquals(inputSize, fragments.size());
 
-        List<Fragment> result = AnalyzeUtils.getSampleFragments(fragments, mockProtocolData);
+        List<Fragment> result = AnalyzeUtils.getSampleFragments(fragments, mockContext);
 
-        List<Fragment> expected = new ArrayList<Fragment>();
+        List<Fragment> expected = new ArrayList<>();
 
         for (int i: expectedIndexes) {
             expected.add(prepareFragment(i));

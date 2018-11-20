@@ -40,7 +40,7 @@ import java.util.List;
  * the data into fragments and return a list of them along with a list of
  * host:port locations for each.
  */
-public class HdfsDataFragmenter extends HDFSPlugin implements Fragmenter {
+public class HdfsDataFragmenter extends BasePlugin implements Fragmenter {
     protected JobConf jobConf;
     protected List<Fragment> fragments;
 
@@ -62,7 +62,7 @@ public class HdfsDataFragmenter extends HDFSPlugin implements Fragmenter {
      */
     @Override
     public List<Fragment> getFragments() throws Exception {
-        Path path = new Path(HdfsUtilities.getDataUri(configuration, requestContext));
+        Path path = new Path(HdfsUtilities.getDataUri(configuration, context));
         List<InputSplit> splits = getSplits(path);
 
         for (InputSplit split : splits) {
@@ -85,7 +85,7 @@ public class HdfsDataFragmenter extends HDFSPlugin implements Fragmenter {
 
     @Override
     public FragmentStats getFragmentStats() throws Exception {
-        String absoluteDataPath = HdfsUtilities.getDataUri(configuration, requestContext);
+        String absoluteDataPath = HdfsUtilities.getDataUri(configuration, context);
         ArrayList<InputSplit> splits = getSplits(new Path(absoluteDataPath));
 
         if (splits.isEmpty()) {

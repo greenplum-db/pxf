@@ -116,6 +116,8 @@ public class HdfsUtilities {
      * @return an absolute data path
      */
     public static HCFSType getHCFSType(Configuration conf, RequestContext input) {
+        // TODO: Move this logic somewhere else, we need to keep in mind we are trying to
+        // TODO: understand what "protocol" we are dealing with
         String profile = input.getProfile();
         String protocol = (profile != null) ? profile.toLowerCase() : conf.get(FS_DEFAULT_NAME_KEY);
 

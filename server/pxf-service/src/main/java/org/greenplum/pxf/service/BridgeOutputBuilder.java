@@ -19,20 +19,19 @@ package org.greenplum.pxf.service;
  * under the License.
  */
 
-import org.greenplum.pxf.api.BadRecordException;
-import org.greenplum.pxf.api.OneField;
-import org.greenplum.pxf.api.OutputFormat;
-import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.service.io.BufferWritable;
-import org.greenplum.pxf.service.io.GPDBWritable;
-import org.greenplum.pxf.service.io.Text;
-import org.greenplum.pxf.service.io.Writable;
-import org.greenplum.pxf.api.utilities.ProtocolData;
-
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.greenplum.pxf.api.BadRecordException;
+import org.greenplum.pxf.api.OneField;
+import org.greenplum.pxf.api.io.DataType;
+import org.greenplum.pxf.api.model.OutputFormat;
+import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.service.io.BufferWritable;
+import org.greenplum.pxf.service.io.GPDBWritable;
+import org.greenplum.pxf.service.io.Text;
+import org.greenplum.pxf.service.io.Writable;
 
 import java.lang.reflect.Array;
 import java.util.Arrays;
@@ -50,31 +49,29 @@ import static org.greenplum.pxf.api.io.DataType.TEXT;
  * record.
  */
 public class BridgeOutputBuilder {
-    private ProtocolData inputData;
+    private static final byte DELIM = 10; /* (byte)'\n'; */
+    private static final Log LOG = LogFactory.getLog(BridgeOutputBuilder.class);
+    private RequestContext context;
     private Writable output = null;
-    private LinkedList<Writable> outputList = null;
+    private LinkedList<Writable> outputList;
     private Writable partialLine = null;
     private GPDBWritable errorRecord = null;
     private int[] schema;
     private String[] colNames;
-    private boolean samplingEnabled = false;
+    private boolean samplingEnabled;
     private boolean isPartialLine = false;
-
-    private static final byte DELIM = 10; /* (byte)'\n'; */
-
-    private static final Log LOG = LogFactory.getLog(BridgeOutputBuilder.class);
 
     /**
      * Constructs a BridgeOutputBuilder.
      *
-     * @param input input data, like requested output format and schema
-     *            information
+     * @param context input data, like requested output format and schema
+     *                information
      */
-    public BridgeOutputBuilder(ProtocolData input) {
-        inputData = input;
-        outputList = new LinkedList<Writable>();
+    public BridgeOutputBuilder(RequestContext context) {
+        this.context = context;
+        outputList = new LinkedList<>();
         makeErrorRecord();
-        samplingEnabled = (inputData.getStatsSampleRatio() > 0);
+        samplingEnabled = (this.context.getStatsSampleRatio() > 0);
     }
 
     /**
@@ -89,9 +86,9 @@ public class BridgeOutputBuilder {
      * array. We find out only after fetching the first record.
      */
     void makeErrorRecord() {
-        int[] errSchema = { TEXT.getOID() };
+        int[] errSchema = {TEXT.getOID()};
 
-        if (inputData.outputFormat() != OutputFormat.GPDBWritable) {
+        if (context.getOutputFormat() != OutputFormat.GPDBWritable) {
             return;
         }
 
@@ -108,7 +105,7 @@ public class BridgeOutputBuilder {
      * @throws Exception if the output format is not binary
      */
     public Writable getErrorOutput(Exception ex) throws Exception {
-        if (inputData.outputFormat() == OutputFormat.GPDBWritable) {
+        if (context.getOutputFormat() == OutputFormat.GPDBWritable) {
             errorRecord.setString(0, ex.getMessage());
             return errorRecord;
         } else {
@@ -125,7 +122,7 @@ public class BridgeOutputBuilder {
      */
     public LinkedList<Writable> makeOutput(List<OneField> recFields)
             throws BadRecordException {
-        if (output == null && inputData.outputFormat() == OutputFormat.GPDBWritable) {
+        if (output == null && context.getOutputFormat() == OutputFormat.GPDBWritable) {
             makeGPDBWritableOutput();
         }
 
@@ -140,7 +137,7 @@ public class BridgeOutputBuilder {
         outputList.clear();
         if (recordsBatch != null) {
             for (List<OneField> record : recordsBatch) {
-                if (inputData.outputFormat() == OutputFormat.GPDBWritable) {
+                if (context.getOutputFormat() == OutputFormat.GPDBWritable) {
                     makeGPDBWritableOutput();
                 }
                 fillOutputRecord(record);
@@ -165,13 +162,13 @@ public class BridgeOutputBuilder {
      * @return empty GPDBWritable object with set columns
      */
     GPDBWritable makeGPDBWritableOutput() {
-        int num_actual_fields = inputData.getColumns();
+        int num_actual_fields = context.getColumns();
         schema = new int[num_actual_fields];
         colNames = new String[num_actual_fields];
 
         for (int i = 0; i < num_actual_fields; i++) {
-            schema[i] = inputData.getColumn(i).columnTypeCode();
-            colNames[i] = inputData.getColumn(i).columnName();
+            schema[i] = context.getColumn(i).columnTypeCode();
+            colNames[i] = context.getColumn(i).columnName();
         }
 
         output = new GPDBWritable(schema);
@@ -186,7 +183,7 @@ public class BridgeOutputBuilder {
      * @throws BadRecordException if building the output record failed
      */
     void fillOutputRecord(List<OneField> recFields) throws BadRecordException {
-        if (inputData.outputFormat() == OutputFormat.GPDBWritable) {
+        if (context.getOutputFormat() == OutputFormat.GPDBWritable) {
             fillGPDBWritable(recFields);
         } else {
             fillText(recFields);
@@ -205,7 +202,7 @@ public class BridgeOutputBuilder {
     void fillGPDBWritable(List<OneField> recFields) throws BadRecordException {
         int size = recFields.size();
         if (size == 0) { // size 0 means the resolver couldn't deserialize any
-                         // of the record fields
+            // of the record fields
             throw new BadRecordException("No fields in record");
         } else if (size != schema.length) {
             throw new BadRecordException("Record has " + size
@@ -245,7 +242,7 @@ public class BridgeOutputBuilder {
     /**
      * Tests if record field type and schema type correspond.
      *
-     * @param recType record type code
+     * @param recType    record type code
      * @param schemaType schema type code
      * @return whether record type and schema type match
      */
@@ -261,7 +258,7 @@ public class BridgeOutputBuilder {
      *
      * @param recFields record fields
      * @throws BadRecordException if text formatted record has more than one
-     *             field
+     *                            field
      */
     void fillText(List<OneField> recFields) throws BadRecordException {
         /*
@@ -291,7 +288,7 @@ public class BridgeOutputBuilder {
 
     /**
      * Breaks raw bytes into lines. Used only for sampling.
-     *
+     * <p>
      * When sampling a data source, we have to make sure that we deal with
      * actual rows (lines) and not bigger chunks of data such as used by
      * LineBreakAccessor for performance. The input byte array is broken into
@@ -343,9 +340,9 @@ public class BridgeOutputBuilder {
      * Fills one GPDBWritable field.
      *
      * @param oneField field
-     * @param colIdx column index
+     * @param colIdx   column index
      * @throws BadRecordException if field type is not supported or doesn't
-     *             match the schema
+     *                            match the schema
      */
     void fillOneGPDBWritableField(OneField oneField, int colIdx)
             throws BadRecordException {

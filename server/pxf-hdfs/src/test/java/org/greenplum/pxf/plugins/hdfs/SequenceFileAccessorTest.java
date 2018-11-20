@@ -94,7 +94,7 @@ public class SequenceFileAccessorTest {
 		PowerMockito.whenNew(Path.class).withArguments(Mockito.anyString()).thenReturn(file);
 
 		// FIXME: below
-//		when(requestContext.getConfiguration()).thenReturn(new Configuration());
+//		when(context.getConfiguration()).thenReturn(new Configuration());
         when(file.getFileSystem(any(Configuration.class))).thenReturn(fs);
         when(requestContext.getDataSource()).thenReturn("deep.throat");
         when(requestContext.getSegmentId()).thenReturn(0);
@@ -123,8 +123,8 @@ public class SequenceFileAccessorTest {
 
     private void mockCompressionOptions(String codec, String type)
     {
-        when(requestContext.getUserProperty("COMPRESSION_CODEC")).thenReturn(codec);
-        when(requestContext.getUserProperty("COMPRESSION_TYPE")).thenReturn(type);
+        when(requestContext.getOption("COMPRESSION_CODEC")).thenReturn(codec);
+        when(requestContext.getOption("COMPRESSION_TYPE")).thenReturn(type);
     }
 
     @Test

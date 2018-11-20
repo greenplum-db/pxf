@@ -20,6 +20,22 @@ package org.greenplum.pxf.plugins.hive;
  */
 
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
+import org.apache.hadoop.hive.metastore.api.Partition;
+import org.apache.hadoop.hive.metastore.api.Table;
+import org.apache.hadoop.mapred.InputFormat;
+import org.apache.hadoop.mapred.JobConf;
+import org.greenplum.pxf.api.UnsupportedTypeException;
+import org.greenplum.pxf.api.model.BasePlugin;
+import org.greenplum.pxf.api.model.Metadata;
+import org.greenplum.pxf.api.model.MetadataFetcher;
+import org.greenplum.pxf.api.model.OutputFormat;
+import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
+import org.greenplum.pxf.plugins.hive.utilities.ProfileFactory;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -27,27 +43,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
-import org.apache.hadoop.hive.metastore.api.Partition;
-import org.apache.hadoop.hive.metastore.api.Table;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.InputFormat;
-import org.greenplum.pxf.api.model.HDFSPlugin;
-import org.greenplum.pxf.api.model.Metadata;
-import org.greenplum.pxf.api.model.MetadataFetcher;
-import org.greenplum.pxf.api.OutputFormat;
-import org.greenplum.pxf.api.UnsupportedTypeException;
-import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.api.utilities.ProfilesConf;
-import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
-import org.greenplum.pxf.plugins.hive.utilities.ProfileFactory;
-
 /**
  * Class for connecting to Hive's MetaStore and getting schema of Hive tables.
  */
-public class HiveMetadataFetcher extends HDFSPlugin implements MetadataFetcher {
+public class HiveMetadataFetcher extends BasePlugin implements MetadataFetcher {
 
     private static final String DELIM_FIELD = RequestContext.DELIMITER_KEY;
 
@@ -131,12 +130,10 @@ public class HiveMetadataFetcher extends HDFSPlugin implements MetadataFetcher {
     }
 
     private OutputFormat getOutputFormat(String inputFormat, boolean hasComplexTypes) throws Exception {
-        OutputFormat outputFormat = null;
         InputFormat<?, ?> fformat = HiveDataFragmenter.makeInputFormat(inputFormat, jobConf);
         String profile = ProfileFactory.get(fformat, hasComplexTypes);
-        String outputFormatClassName = ProfilesConf.getProfilePluginsMap(profile).get("X-GP-OPTIONS-OUTPUTFORMAT");
-        outputFormat = OutputFormat.getOutputFormat(outputFormatClassName);
-        return outputFormat;
+        String outputFormatClassName = context.getPluginConf().getPlugins(profile).get("OUTPUTFORMAT");
+        return OutputFormat.getOutputFormat(outputFormatClassName);
     }
 
 }

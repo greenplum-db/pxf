@@ -19,17 +19,18 @@ package org.greenplum.pxf.api.utilities;
  * under the License.
  */
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.greenplum.pxf.api.model.Accessor;
+import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.api.ReadVectorizedResolver;
 import org.greenplum.pxf.api.StatsAccessor;
+import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.lang.reflect.Constructor;
@@ -39,9 +40,31 @@ import java.lang.reflect.InvocationTargetException;
  * Utilities class exposes helper method for PXF classes
  */
 public class Utilities {
-    private static final Log LOG = LogFactory.getLog(Utilities.class);
 
+    private static final Logger LOG = LoggerFactory.getLogger(Utilities.class);
     private static final String PROPERTY_KEY_USER_IMPERSONATION = "pxf.service.user.impersonation.enabled";
+
+    /**
+     * Returns a decoded base64 byte[], or throws an error if the base64 string is invalid
+     *
+     * @param encoded the base64 encoded string
+     * @param paramName the name of the parameter
+     * @return the decoded base64 string
+     */
+    public static byte[] parseBase64(String encoded, String paramName) {
+        if (encoded == null) {
+            return null;
+        }
+        if (!Base64.isArrayByteBase64(encoded.getBytes())) {
+            String message = String.format("%s must be Base64 encoded. (Bad value: %s)", paramName, encoded);
+            throw new IllegalArgumentException(message);
+        }
+        byte[] parsed = Base64.decodeBase64(encoded);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Decoded value: %s", new String(parsed));
+        }
+        return parsed;
+    }
 
     /**
      * Validation for directory names that can be created
@@ -83,7 +106,7 @@ public class Utilities {
                                            String className, RequestContext metaData)
             throws Exception {
 
-        Class<?> cls = null;
+        Class<?> cls;
         try {
             cls = Class.forName(className);
         } catch (ClassNotFoundException e) {

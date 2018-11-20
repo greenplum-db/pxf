@@ -25,7 +25,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.FileSplit;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.Accessor;
-import org.greenplum.pxf.api.model.HDFSPlugin;
+import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 
@@ -47,7 +47,7 @@ import java.net.URI;
  * a specific file type should inherit from this class only if the file they are
  * reading does not support splitting: a protocol-buffer file, regular file, ...
  */
-public abstract class HdfsAtomicDataAccessor extends HDFSPlugin implements Accessor {
+public abstract class HdfsAtomicDataAccessor extends BasePlugin implements Accessor {
     protected InputStream inp;
     private FileSplit fileSplit;
 
@@ -60,7 +60,7 @@ public abstract class HdfsAtomicDataAccessor extends HDFSPlugin implements Acces
         // 0. Hold the configuration data
         initialize(input);
 
-        fileSplit = HdfsUtilities.parseFileSplit(requestContext);
+        fileSplit = HdfsUtilities.parseFileSplit(context);
     }
 
     /**
@@ -77,8 +77,8 @@ public abstract class HdfsAtomicDataAccessor extends HDFSPlugin implements Acces
         }
 
         // input data stream
-        FileSystem fs = FileSystem.get(URI.create(requestContext.getDataSource()), configuration); // FileSystem.get actually returns an FSDataInputStream
-        inp = fs.open(new Path(requestContext.getDataSource()));
+        FileSystem fs = FileSystem.get(URI.create(context.getDataSource()), configuration); // FileSystem.get actually returns an FSDataInputStream
+        inp = fs.open(new Path(context.getDataSource()));
 
         return (inp != null);
     }
@@ -123,7 +123,7 @@ public abstract class HdfsAtomicDataAccessor extends HDFSPlugin implements Acces
     public boolean isThreadSafe() {
         return HdfsUtilities.isThreadSafe(
                 configuration,
-                requestContext.getDataSource(),
-                requestContext.getUserProperty("COMPRESSION_CODEC"));
+                context.getDataSource(),
+                context.getOption("COMPRESSION_CODEC"));
     }
 }

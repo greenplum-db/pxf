@@ -19,9 +19,15 @@ package org.greenplum.pxf.service.rest;
  * under the License.
  */
 
-import java.io.DataInputStream;
-import java.io.InputStream;
-import java.util.Map;
+import org.apache.catalina.connector.ClientAbortException;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.api.utilities.Utilities;
+import org.greenplum.pxf.service.Bridge;
+import org.greenplum.pxf.service.HttpRequestParser;
+import org.greenplum.pxf.service.RequestParser;
+import org.greenplum.pxf.service.WriteBridge;
 
 import javax.servlet.ServletContext;
 import javax.ws.rs.Consumes;
@@ -32,15 +38,9 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.DataInputStream;
+import java.io.InputStream;
 
-import org.apache.catalina.connector.ClientAbortException;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.hdfs.client.HdfsUtils;
-import org.greenplum.pxf.api.utilities.Utilities;
-import org.greenplum.pxf.service.Bridge;
-import org.greenplum.pxf.service.WriteBridge;
-import org.greenplum.pxf.api.utilities.ProtocolData;
 
 /*
  * Running this resource manually:
@@ -83,10 +83,17 @@ import org.greenplum.pxf.api.utilities.ProtocolData;
  * This class handles the subpath /&lt;version&gt;/Writable/ of this REST component
  */
 @Path("/" + Version.PXF_PROTOCOL_VERSION + "/Writable/")
-public class WritableResource extends RestResource{
+public class WritableResource {
     private static final Log LOG = LogFactory.getLog(WritableResource.class);
 
+    private RequestParser<HttpHeaders> parser;
+
     public WritableResource() {
+        this(new HttpRequestParser());
+    }
+
+    WritableResource(RequestParser<HttpHeaders> parser) {
+        this.parser = parser;
     }
 
     /**
@@ -110,17 +117,17 @@ public class WritableResource extends RestResource{
                            InputStream inputStream) throws Exception {
 
         /* Convert headers into a case-insensitive regular map */
-        Map<String, String> params = convertToCaseInsensitiveMap(headers.getRequestHeaders());
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("WritableResource started with parameters: " + params + " and write path: " + path);
-        }
+//        if (LOG.isDebugEnabled()) {
+//            FIXME: security issue by logging all params
+////            LOG.debug("WritableResource started with parameters: " + params + " and write path: " + path);
+//        }
 
-        ProtocolData protData = new ProtocolData(params);
-        protData.setDataSource(path);
-        Bridge bridge = new WriteBridge(protData);
+        RequestContext context = parser.parseRequest(headers);
+        context.setDataSource(path);
+        Bridge bridge = new WriteBridge(context);
 
         // THREAD-SAFE parameter has precedence
-        boolean isThreadSafe = protData.isThreadSafe() && bridge.isThreadSafe();
+        boolean isThreadSafe = context.isThreadSafe() && bridge.isThreadSafe();
         if (LOG.isDebugEnabled()) {
             LOG.debug("Request for " + path + " handled " +
                     (isThreadSafe ? "without" : "with") + " synchronization");

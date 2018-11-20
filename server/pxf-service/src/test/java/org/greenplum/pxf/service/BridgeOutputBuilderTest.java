@@ -8,9 +8,9 @@ package org.greenplum.pxf.service;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -20,12 +20,17 @@ package org.greenplum.pxf.service;
  */
 
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.greenplum.pxf.api.BadRecordException;
+import org.greenplum.pxf.api.OneField;
+import org.greenplum.pxf.api.io.DataType;
+import org.greenplum.pxf.api.model.OutputFormat;
+import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.api.utilities.Utilities;
+import org.greenplum.pxf.service.io.BufferWritable;
+import org.greenplum.pxf.service.io.GPDBWritable;
+import org.greenplum.pxf.service.io.Writable;
+import org.junit.Test;
 
 import java.io.DataOutput;
 import java.io.IOException;
@@ -33,103 +38,17 @@ import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
-import org.greenplum.pxf.api.BadRecordException;
-import org.greenplum.pxf.api.OneField;
-import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.service.io.BufferWritable;
-import org.greenplum.pxf.service.io.GPDBWritable;
-import org.greenplum.pxf.service.io.Writable;
-import org.greenplum.pxf.api.utilities.ProtocolData;
-import org.junit.Test;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class BridgeOutputBuilderTest {
-
-    /**
-     * Test class to check the data inside BufferWritable.
-     */
-    private class DataOutputToBytes implements DataOutput {
-
-        byte[] output;
-
-        public byte[] getOutput() {
-            return output;
-        }
-
-        @Override
-        public void write(int b) throws IOException {
-            throw new IOException("not implemented");
-        }
-
-        @Override
-        public void write(byte[] b) throws IOException {
-            output = b;
-        }
-
-        @Override
-        public void write(byte[] b, int off, int len) throws IOException {
-            throw new IOException("not implemented");
-        }
-
-        @Override
-        public void writeBoolean(boolean v) throws IOException {
-            throw new IOException("not implemented");
-        }
-
-        @Override
-        public void writeByte(int v) throws IOException {
-            throw new IOException("not implemented");
-        }
-
-        @Override
-        public void writeShort(int v) throws IOException {
-            throw new IOException("not implemented");
-        }
-
-        @Override
-        public void writeChar(int v) throws IOException {
-            throw new IOException("not implemented");
-        }
-
-        @Override
-        public void writeInt(int v) throws IOException {
-            throw new IOException("not implemented");
-        }
-
-        @Override
-        public void writeLong(long v) throws IOException {
-            throw new IOException("not implemented");
-        }
-
-        @Override
-        public void writeFloat(float v) throws IOException {
-            throw new IOException("not implemented");
-        }
-
-        @Override
-        public void writeDouble(double v) throws IOException {
-            throw new IOException("not implemented");
-        }
-
-        @Override
-        public void writeBytes(String s) throws IOException {
-            throw new IOException("not implemented");
-        }
-
-        @Override
-        public void writeChars(String s) throws IOException {
-            throw new IOException("not implemented");
-        }
-
-        @Override
-        public void writeUTF(String s) throws IOException {
-            throw new IOException("not implemented");
-        }
-    }
 
     private static final int UN_SUPPORTED_TYPE = -1;
     private GPDBWritable output = null;
@@ -137,24 +56,23 @@ public class BridgeOutputBuilderTest {
 
     @Test
     public void testFillGPDBWritable() throws Exception {
-        Map<String, String> parameters = new HashMap<String, String>();
-        parameters.put("X-GP-ATTRS", "13");
+        RequestContext context = new RequestContext();
 
-        addColumn(parameters, 0, DataType.INTEGER, "col0");
-        addColumn(parameters, 1, DataType.FLOAT8, "col1");
-        addColumn(parameters, 2, DataType.REAL, "col2");
-        addColumn(parameters, 3, DataType.BIGINT, "col3");
-        addColumn(parameters, 4, DataType.SMALLINT, "col4");
-        addColumn(parameters, 5, DataType.BOOLEAN, "col5");
-        addColumn(parameters, 6, DataType.BYTEA, "col6");
-        addColumn(parameters, 7, DataType.VARCHAR, "col7");
-        addColumn(parameters, 8, DataType.BPCHAR, "col8");
-        addColumn(parameters, 9, DataType.TEXT, "col9");
-        addColumn(parameters, 10, DataType.NUMERIC, "col10");
-        addColumn(parameters, 11, DataType.TIMESTAMP, "col11");
-        addColumn(parameters, 12, DataType.DATE, "col12");
+        addColumn(context, 0, DataType.INTEGER, "col0");
+        addColumn(context, 1, DataType.FLOAT8, "col1");
+        addColumn(context, 2, DataType.REAL, "col2");
+        addColumn(context, 3, DataType.BIGINT, "col3");
+        addColumn(context, 4, DataType.SMALLINT, "col4");
+        addColumn(context, 5, DataType.BOOLEAN, "col5");
+        addColumn(context, 6, DataType.BYTEA, "col6");
+        addColumn(context, 7, DataType.VARCHAR, "col7");
+        addColumn(context, 8, DataType.BPCHAR, "col8");
+        addColumn(context, 9, DataType.TEXT, "col9");
+        addColumn(context, 10, DataType.NUMERIC, "col10");
+        addColumn(context, 11, DataType.TIMESTAMP, "col11");
+        addColumn(context, 12, DataType.DATE, "col12");
 
-        BridgeOutputBuilder builder = makeBuilder(parameters);
+        BridgeOutputBuilder builder = makeBuilder(context);
         output = builder.makeGPDBWritableOutput();
 
         List<OneField> recFields = Arrays.asList(
@@ -164,7 +82,7 @@ public class BridgeOutputBuilderTest {
                         DataType.BIGINT.getOID(), (long) 0), new OneField(
                         DataType.SMALLINT.getOID(), (short) 0), new OneField(
                         DataType.BOOLEAN.getOID(), true), new OneField(
-                        DataType.BYTEA.getOID(), new byte[] { 0 }),
+                        DataType.BYTEA.getOID(), new byte[]{0}),
                 new OneField(DataType.VARCHAR.getOID(), "value"), new OneField(
                         DataType.BPCHAR.getOID(), "value"), new OneField(
                         DataType.TEXT.getOID(), "value"), new OneField(
@@ -179,7 +97,7 @@ public class BridgeOutputBuilderTest {
         assertEquals(output.getLong(3), Long.valueOf(0));
         assertEquals(output.getShort(4), Short.valueOf((short) 0));
         assertEquals(output.getBoolean(5), true);
-        assertArrayEquals(output.getBytes(6), new byte[] { 0 });
+        assertArrayEquals(output.getBytes(6), new byte[]{0});
         assertEquals(output.getString(7), "value\0");
         assertEquals(output.getString(8), "value\0");
         assertEquals(output.getString(9), "value\0");
@@ -191,14 +109,12 @@ public class BridgeOutputBuilderTest {
 
     @Test
     public void testFillOneGPDBWritableField() throws Exception {
-        Map<String, String> parameters = new HashMap<String, String>();
-        parameters.put("X-GP-ATTRS", "1");
-        addColumn(parameters, 0, DataType.INTEGER, "col0");
-        BridgeOutputBuilder builder = makeBuilder(parameters);
+        RequestContext context = new RequestContext();
+        addColumn(context, 0, DataType.INTEGER, "col0");
+        BridgeOutputBuilder builder = makeBuilder(context);
         output = builder.makeGPDBWritableOutput();
 
-        OneField unSupportedField = new OneField(UN_SUPPORTED_TYPE, new Byte(
-                (byte) 0));
+        OneField unSupportedField = new OneField(UN_SUPPORTED_TYPE, (byte) 0);
         try {
             builder.fillOneGPDBWritableField(unSupportedField, 0);
             fail("Unsupported data type should throw exception");
@@ -210,15 +126,14 @@ public class BridgeOutputBuilderTest {
 
     @Test
     public void testRecordSmallerThanSchema() throws Exception {
-        Map<String, String> parameters = new HashMap<String, String>();
-        parameters.put("X-GP-ATTRS", "4");
+        RequestContext context = new RequestContext();
 
-        addColumn(parameters, 0, DataType.INTEGER, "col0");
-        addColumn(parameters, 1, DataType.INTEGER, "col1");
-        addColumn(parameters, 2, DataType.INTEGER, "col2");
-        addColumn(parameters, 3, DataType.INTEGER, "col3");
+        addColumn(context, 0, DataType.INTEGER, "col0");
+        addColumn(context, 1, DataType.INTEGER, "col1");
+        addColumn(context, 2, DataType.INTEGER, "col2");
+        addColumn(context, 3, DataType.INTEGER, "col3");
 
-        BridgeOutputBuilder builder = makeBuilder(parameters);
+        BridgeOutputBuilder builder = makeBuilder(context);
         output = builder.makeGPDBWritableOutput();
 
         /* all four fields */
@@ -248,16 +163,15 @@ public class BridgeOutputBuilderTest {
     }
 
     @Test
-    public void testRecordBiggerThanSchema() throws Exception {
-        Map<String, String> parameters = new HashMap<String, String>();
-        parameters.put("X-GP-ATTRS", "4");
+    public void testRecordBiggerThanSchema() {
+        RequestContext context = new RequestContext();
 
-        addColumn(parameters, 0, DataType.INTEGER, "col0");
-        addColumn(parameters, 1, DataType.INTEGER, "col1");
-        addColumn(parameters, 2, DataType.INTEGER, "col2");
-        addColumn(parameters, 3, DataType.INTEGER, "col3");
+        addColumn(context, 0, DataType.INTEGER, "col0");
+        addColumn(context, 1, DataType.INTEGER, "col1");
+        addColumn(context, 2, DataType.INTEGER, "col2");
+        addColumn(context, 3, DataType.INTEGER, "col3");
 
-        BridgeOutputBuilder builder = makeBuilder(parameters);
+        BridgeOutputBuilder builder = makeBuilder(context);
         output = builder.makeGPDBWritableOutput();
 
         /* five fields instead of four */
@@ -277,16 +191,15 @@ public class BridgeOutputBuilderTest {
     }
 
     @Test
-    public void testFieldTypeMismatch() throws Exception {
-        Map<String, String> parameters = new HashMap<String, String>();
-        parameters.put("X-GP-ATTRS", "4");
+    public void testFieldTypeMismatch() {
+        RequestContext context = new RequestContext();
 
-        addColumn(parameters, 0, DataType.INTEGER, "col0");
-        addColumn(parameters, 1, DataType.INTEGER, "col1");
-        addColumn(parameters, 2, DataType.INTEGER, "col2");
-        addColumn(parameters, 3, DataType.INTEGER, "col3");
+        addColumn(context, 0, DataType.INTEGER, "col0");
+        addColumn(context, 1, DataType.INTEGER, "col1");
+        addColumn(context, 2, DataType.INTEGER, "col2");
+        addColumn(context, 3, DataType.INTEGER, "col3");
 
-        BridgeOutputBuilder builder = makeBuilder(parameters);
+        BridgeOutputBuilder builder = makeBuilder(context);
         output = builder.makeGPDBWritableOutput();
 
         /* last field is REAL while schema requires INT */
@@ -307,27 +220,26 @@ public class BridgeOutputBuilderTest {
     @Test
     public void convertTextDataToLines() throws Exception {
 
-        String data = "Que sara sara\n" + "Whatever will be will be\n"
+        String data = "Que será será\n" + "Whatever will be will be\n"
                 + "We are going\n" + "to Wembeley!\n";
         byte[] dataBytes = data.getBytes();
-        String[] dataLines = new String[] {
-                "Que sara sara\n",
+        String[] dataLines = new String[]{
+                "Que será será\n",
                 "Whatever will be will be\n",
                 "We are going\n",
-                "to Wembeley!\n" };
+                "to Wembeley!\n"};
 
         OneField field = new OneField(DataType.BYTEA.getOID(), dataBytes);
-        List<OneField> fields = new ArrayList<OneField>();
+        List<OneField> fields = new ArrayList<>();
         fields.add(field);
 
-        Map<String, String> parameters = new HashMap<String, String>();
-        parameters.put("X-GP-ATTRS", "1");
-        addColumn(parameters, 0, DataType.TEXT, "col0");
+        RequestContext context = new RequestContext();
+        addColumn(context, 0, DataType.TEXT, "col0");
         // activate sampling code
-        parameters.put("X-GP-OPTIONS-STATS-MAX-FRAGMENTS", "100");
-        parameters.put("X-GP-OPTIONS-STATS-SAMPLE-RATIO", "1.00");
+        context.setStatsMaxFragments(100);
+        context.setStatsSampleRatio(1f);
 
-        BridgeOutputBuilder builder = makeBuilder(parameters);
+        BridgeOutputBuilder builder = makeBuilder(context);
         LinkedList<Writable> outputQueue = builder.makeOutput(fields);
 
         assertEquals(4, outputQueue.size());
@@ -345,17 +257,16 @@ public class BridgeOutputBuilderTest {
         String data = "oh well\n" + "what the hell";
 
         OneField field = new OneField(DataType.BYTEA.getOID(), data.getBytes());
-        List<OneField> fields = new ArrayList<OneField>();
+        List<OneField> fields = new ArrayList<>();
         fields.add(field);
 
-        Map<String, String> parameters = new HashMap<String, String>();
-        parameters.put("X-GP-ATTRS", "1");
-        addColumn(parameters, 0, DataType.TEXT, "col0");
+        RequestContext context = new RequestContext();
+        addColumn(context, 0, DataType.TEXT, "col0");
         // activate sampling code
-        parameters.put("X-GP-OPTIONS-STATS-MAX-FRAGMENTS", "100");
-        parameters.put("X-GP-OPTIONS-STATS-SAMPLE-RATIO", "1.00");
+        context.setStatsMaxFragments(100);
+        context.setStatsSampleRatio(1f);
 
-        BridgeOutputBuilder builder = makeBuilder(parameters);
+        BridgeOutputBuilder builder = makeBuilder(context);
         LinkedList<Writable> outputQueue = builder.makeOutput(fields);
 
         assertEquals(1, outputQueue.size());
@@ -446,33 +357,110 @@ public class BridgeOutputBuilderTest {
         assertArrayEquals(expected.getBytes(), dos.getOutput());
     }
 
-    private void addColumn(Map<String, String> parameters, int idx,
+    private void addColumn(RequestContext context, int idx,
                            DataType dataType, String name) {
-        parameters.put("X-GP-ATTR-NAME" + idx, name);
-        parameters.put("X-GP-ATTR-TYPECODE" + idx,
-                Integer.toString(dataType.getOID()));
-        parameters.put("X-GP-ATTR-TYPENAME" + idx, dataType.toString());
+        ColumnDescriptor column = new ColumnDescriptor(name, dataType.getOID(), idx, dataType.toString(), null);
+        context.getTupleDescription().add(column);
     }
 
-    private BridgeOutputBuilder makeBuilder(Map<String, String> parameters)
-            throws Exception {
+    private BridgeOutputBuilder makeBuilder(RequestContext context) {
+        System.setProperty("greenplum.alignment", "8");
 
-        parameters.put("X-GP-ALIGNMENT", "8");
-        parameters.put("X-GP-SEGMENT-ID", "-44");
-        parameters.put("X-GP-SEGMENT-COUNT", "2");
-        parameters.put("X-GP-HAS-FILTER", "0");
-        parameters.put("X-GP-FORMAT", "TEXT");
-        parameters.put("X-GP-URL-HOST", "my://bags");
-        parameters.put("X-GP-URL-PORT", "-8020");
-        parameters.put("X-GP-OPTIONS-ACCESSOR", "are");
-        parameters.put("X-GP-OPTIONS-RESOLVER", "packed");
-        parameters.put("X-GP-DATA-DIR", "i'm/ready/to/go");
-        parameters.put("X-GP-FRAGMENT-METADATA", "U29tZXRoaW5nIGluIHRoZSB3YXk=");
-        parameters.put("X-GP-OPTIONS-I'M-STANDING-HERE", "outside-your-door");
-        parameters.put("X-GP-USER", "alex");
+        context.setSegmentId(-44);
+        context.setTotalSegments(2);
+        context.setFilterStringValid(false);
+        context.setOutputFormat(OutputFormat.TEXT);
+        context.setHost("my://bags");
+        context.setPort(-8020);
+        context.setAccessor("are");
+        context.setResolver("packed");
+        context.setUser("alex");
+        context.addOption("I'M-STANDING-HERE", "outside-your-door");
+        context.setDataSource("i'm/ready/to/go");
+        context.setFragmentMetadata(Utilities.parseBase64("U29tZXRoaW5nIGluIHRoZSB3YXk=", "Fragment metadata information"));
 
-        ProtocolData protocolData = new ProtocolData(parameters);
-        BridgeOutputBuilder builder = new BridgeOutputBuilder(protocolData);
-        return builder;
+        return new BridgeOutputBuilder(context);
+    }
+
+    /**
+     * Test class to check the data inside BufferWritable.
+     */
+    private class DataOutputToBytes implements DataOutput {
+
+        byte[] output;
+
+        byte[] getOutput() {
+            return output;
+        }
+
+        @Override
+        public void write(int b) throws IOException {
+            throw new IOException("not implemented");
+        }
+
+        @Override
+        public void write(byte[] b) {
+            output = b;
+        }
+
+        @Override
+        public void write(byte[] b, int off, int len) throws IOException {
+            throw new IOException("not implemented");
+        }
+
+        @Override
+        public void writeBoolean(boolean v) throws IOException {
+            throw new IOException("not implemented");
+        }
+
+        @Override
+        public void writeByte(int v) throws IOException {
+            throw new IOException("not implemented");
+        }
+
+        @Override
+        public void writeShort(int v) throws IOException {
+            throw new IOException("not implemented");
+        }
+
+        @Override
+        public void writeChar(int v) throws IOException {
+            throw new IOException("not implemented");
+        }
+
+        @Override
+        public void writeInt(int v) throws IOException {
+            throw new IOException("not implemented");
+        }
+
+        @Override
+        public void writeLong(long v) throws IOException {
+            throw new IOException("not implemented");
+        }
+
+        @Override
+        public void writeFloat(float v) throws IOException {
+            throw new IOException("not implemented");
+        }
+
+        @Override
+        public void writeDouble(double v) throws IOException {
+            throw new IOException("not implemented");
+        }
+
+        @Override
+        public void writeBytes(String s) throws IOException {
+            throw new IOException("not implemented");
+        }
+
+        @Override
+        public void writeChars(String s) throws IOException {
+            throw new IOException("not implemented");
+        }
+
+        @Override
+        public void writeUTF(String s) throws IOException {
+            throw new IOException("not implemented");
+        }
     }
 }

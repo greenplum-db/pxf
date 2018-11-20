@@ -24,11 +24,11 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.UserDataException;
-import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -71,7 +71,7 @@ public class IgniteAccessor extends IgniteBasePlugin implements Accessor {
         StringBuilder sb = new StringBuilder();
 
         // Insert a list of fields to be selected
-        ArrayList<ColumnDescriptor> columns = requestContext.getTupleDescription();
+        List<ColumnDescriptor> columns = context.getTupleDescription();
         if (columns == null) {
             throw new UserDataException("Tuple description must be present.");
         }
@@ -86,7 +86,7 @@ public class IgniteAccessor extends IgniteBasePlugin implements Accessor {
 
         // Insert the name of the table to select values from
         sb.append(" FROM ");
-        String tableName = requestContext.getDataSource();
+        String tableName = context.getDataSource();
         if (tableName == null) {
             throw new UserDataException("Table name must be set as DataSource.");
         }
@@ -95,8 +95,8 @@ public class IgniteAccessor extends IgniteBasePlugin implements Accessor {
         // Insert query constraints
         // Note: Filter constants may be passed to Ignite separately from the WHERE expression, primarily for the safety of the SQL queries. However, at the moment they are passed in the query.
         ArrayList<String> filterConstants = null;
-        if (requestContext.hasFilter()) {
-            WhereSQLBuilder filterBuilder = new WhereSQLBuilder(requestContext);
+        if (context.hasFilter()) {
+            WhereSQLBuilder filterBuilder = new WhereSQLBuilder(context);
             String whereSql = filterBuilder.buildWhereSQL();
 
             if (whereSql != null) {
@@ -105,7 +105,7 @@ public class IgniteAccessor extends IgniteBasePlugin implements Accessor {
         }
 
         // Insert partition constraints
-        IgnitePartitionFragmenter.buildFragmenterSql(requestContext, sb);
+        IgnitePartitionFragmenter.buildFragmenterSql(context, sb);
 
         // Format URL
         urlReadStart = buildQueryFldexe(sb.toString(), filterConstants);
@@ -197,17 +197,17 @@ public class IgniteAccessor extends IgniteBasePlugin implements Accessor {
     public boolean openForWrite() throws UserDataException {
         // This is a temporary solution. At the moment there is no other way (except for the usage of user-defined parameters) to get the correct name of Ignite table: GPDB inserts extra data into the address, as required by Hadoop.
         // Note that if no extra data is present, the 'definedSource' will be left unchanged
-        String definedSource = requestContext.getDataSource();
+        String definedSource = context.getDataSource();
         Matcher matcher = writeAddressPattern.matcher(definedSource);
         if (matcher.find()) {
-            requestContext.setDataSource(matcher.group(1));
+            context.setDataSource(matcher.group(1));
         }
 
         StringBuilder sb = new StringBuilder();
         sb.append("INSERT INTO ");
 
         // Insert the table name
-        String tableName = requestContext.getDataSource();
+        String tableName = context.getDataSource();
         if (tableName == null) {
             throw new UserDataException("Table name must be set as DataSource.");
         }
@@ -215,7 +215,7 @@ public class IgniteAccessor extends IgniteBasePlugin implements Accessor {
 
         // Insert the column names
         sb.append("(");
-        ArrayList<ColumnDescriptor> columns = requestContext.getTupleDescription();
+        List<ColumnDescriptor> columns = context.getTupleDescription();
         if (columns == null) {
             throw new UserDataException("Tuple description must be present.");
         }
@@ -310,7 +310,7 @@ public class IgniteAccessor extends IgniteBasePlugin implements Accessor {
      *
      * @return Prepared HTTP query. The query will be properly encoded with {@link java.net.URLEncoder}
      *
-     * @throws UnsupportedEncodingException from {@link java.net.URLEncoder.encode()}
+     * @throws UnsupportedEncodingException from {@link java.net.URLEncoder#encode(String, String)}
      */
     private String buildQueryFldexe(String querySql, List<String> filterConstants) throws UnsupportedEncodingException {
         StringBuilder sb = new StringBuilder();
@@ -477,7 +477,7 @@ public class IgniteAccessor extends IgniteBasePlugin implements Accessor {
      *
      * Note that
      *
-     * The {@link sendRestRequest()} is used to handle network operations, thus all its exceptions may be thrown. They are:
+     * The {@link #sendRestRequest(String)} is used to handle network operations, thus all its exceptions may be thrown. They are:
      * @throws ProtocolException if Ignite reports error in it's JSON response
      * @throws MalformedURLException if URL is malformed
      * @throws IOException in case of connection failure

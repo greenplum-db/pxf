@@ -19,15 +19,14 @@ package org.greenplum.pxf.service;
  * under the License.
  */
 
-import java.io.DataInputStream;
-import java.util.BitSet;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.service.io.Writable;
 import org.greenplum.pxf.service.utilities.AnalyzeUtils;
-import org.greenplum.pxf.api.utilities.ProtocolData;
+
+import java.io.DataInputStream;
+import java.util.BitSet;
 
 /**
  * ReadSamplingBridge wraps a ReadBridge, and returns only some of the output
@@ -56,13 +55,13 @@ public class ReadSamplingBridge implements Bridge {
     /**
      * C'tor - set the implementation of the bridge.
      *
-     * @param protData input containing sampling ratio
+     * @param context input containing sampling ratio
      * @throws Exception if the sampling ratio is wrong
      */
-    public ReadSamplingBridge(ProtocolData protData) throws Exception {
-        bridge = new ReadBridge(protData);
+    public ReadSamplingBridge(RequestContext context) throws Exception {
+        bridge = new ReadBridge(context);
 
-        this.sampleRatio = protData.getStatsSampleRatio();
+        this.sampleRatio = context.getStatsSampleRatio();
         if (sampleRatio < 0.0001 || sampleRatio > 1.0) {
             throw new IllegalArgumentException(
                     "sampling ratio must be a value between 0.0001 and 1.0. "

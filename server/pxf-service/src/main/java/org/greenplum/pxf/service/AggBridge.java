@@ -19,15 +19,15 @@
 
 package org.greenplum.pxf.service;
 
-import java.util.LinkedList;
-
-import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.StatsAccessor;
-import org.greenplum.pxf.service.io.Writable;
-import org.greenplum.pxf.api.utilities.ProtocolData;
+import org.apache.commons.collections.map.LRUMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.commons.collections.map.LRUMap;
+import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.StatsAccessor;
+import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.service.io.Writable;
+
+import java.util.LinkedList;
 
 /**
  * Bridge class optimized for aggregate queries.
@@ -38,8 +38,8 @@ public class AggBridge extends ReadBridge implements Bridge {
     /* Avoid resolving rows with the same key twice */
     private LRUMap outputCache;
 
-    public AggBridge(ProtocolData protData) throws Exception {
-        super(protData);
+    public AggBridge(RequestContext context) throws Exception {
+        super(context);
     }
 
     @Override

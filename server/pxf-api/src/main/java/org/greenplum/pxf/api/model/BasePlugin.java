@@ -19,11 +19,9 @@ package org.greenplum.pxf.api.model;
  * under the License.
  */
 
-
-
+import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.hadoop.conf.Configuration;
 
 import java.io.File;
 import java.nio.file.DirectoryStream;
@@ -43,7 +41,7 @@ public class BasePlugin implements Plugin {
 
     protected Logger LOG = LoggerFactory.getLogger(this.getClass());
     protected Configuration configuration;
-    protected RequestContext requestContext;
+    protected RequestContext context;
 
     private boolean initialized = false;
 
@@ -54,7 +52,7 @@ public class BasePlugin implements Plugin {
      */
     @Override
     public void initialize(RequestContext requestContext) {
-        this.requestContext = requestContext;
+        this.context = requestContext;
         initConfiguration();
 
         this.initialized = true;
@@ -74,8 +72,6 @@ public class BasePlugin implements Plugin {
         return initialized;
     }
 
-
-
     /**
      * Initializes a configuration object that applies server-specific configurations
      */
@@ -88,23 +84,22 @@ public class BasePlugin implements Plugin {
         // by JobConf class or other Hadoop libraries on as-needed basis
 
 
-        if (!DEFAULT_SERVER_NAME.equals(requestContext.getServerName())) {
+        if (!DEFAULT_SERVER_NAME.equals(context.getServerName())) {
             // determine full path for server configuration directory
-            String directoryName = SERVER_CONFIG_DIR_PREFIX + requestContext.getServerName();
+            String directoryName = SERVER_CONFIG_DIR_PREFIX + context.getServerName();
             File serverDirectory = new File(directoryName);
             if (!serverDirectory.exists()) {
                 LOG.debug("Directory %s does not exist", directoryName);
                 return;
             }
 
-            LOG.debug("Using directory " + directoryName + " for server " + requestContext.getServerName() + " configuration");
+            LOG.debug("Using directory " + directoryName + " for server " + context.getServerName() + " configuration");
 
             addSiteFilesAsResources(configuration, serverDirectory);
         }
 
-        requestContext.getUserPropertiesStream()
-                .forEach(entry -> configuration.set(entry.getKey()
-                        .substring(RequestContext.USER_PROP_PREFIX.length()), entry.getValue()));
+        //TODO: do we need whitelisting of properties
+        context.getOptions().forEach(configuration::set);
     }
 
     private void addSiteFilesAsResources(Configuration configuration, File directory) {
@@ -117,7 +112,7 @@ public class BasePlugin implements Plugin {
                 configuration.addResource(path.toUri().toURL());
             }
         } catch (Exception e) {
-            throw new RuntimeException("Unable to read configuration for server " + requestContext.getServerName() + " from " + directory.getAbsolutePath(), e);
+            throw new RuntimeException("Unable to read configuration for server " + context.getServerName() + " from " + directory.getAbsolutePath(), e);
         }
     }
 }

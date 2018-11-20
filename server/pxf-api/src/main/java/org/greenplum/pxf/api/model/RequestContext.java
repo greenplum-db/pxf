@@ -21,16 +21,16 @@ package org.greenplum.pxf.api.model;
 
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.EnumAggregationType;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
+import java.util.TreeMap;
 
-import static org.greenplum.pxf.api.model.HDFSPlugin.DEFAULT_SERVER_NAME;
 
 /**
  * Common configuration available to all PXF plugins. Represents input data
@@ -39,15 +39,12 @@ import static org.greenplum.pxf.api.model.HDFSPlugin.DEFAULT_SERVER_NAME;
 public class RequestContext {
 
     public static final String DELIMITER_KEY = "DELIMITER";
-    //public static final String USER_PROP_PREFIX = "X-GP-OPTIONS-";
-    public static final int INVALID_SPLIT_IDX = -1;
-
-    private static final Log LOG = LogFactory.getLog(RequestContext.class);
+//    private static final Logger LOG = LoggerFactory.getLogger(RequestContext.class);
 
     // ----- NAMED PROPERTIES -----
     private String accessor;
     private EnumAggregationType aggType;
-    private int dataFragment; /* should be deprecated */
+    private int dataFragment = -1; /* should be deprecated */
     private String dataSource;
     private String fragmenter;
     private int fragmentIndex;
@@ -55,6 +52,14 @@ public class RequestContext {
     private String filterString;
     private boolean filterStringValid;
     private String metadata;
+
+    private OutputFormat outputFormat;
+    private int port;
+    private String host;
+    private String token;
+    private int statsMaxFragments = 0;
+    private float statsSampleRatio = 0;
+
 
     /**
      * Number of attributes projected in query.
@@ -79,7 +84,7 @@ public class RequestContext {
      * will be null. This field will always be the first field in the tuple
      * returned.
      */
-    protected ColumnDescriptor recordkeyColumn;
+    private ColumnDescriptor recordkeyColumn;
 
     private String remoteLogin;
     private String remoteSecret;
@@ -89,69 +94,63 @@ public class RequestContext {
      * The name of the server to access. The name will be used to build
      * a path for the config files (i.e. $PXF_CONF/servers/$serverName/*.xml)
      */
-    private String serverName = DEFAULT_SERVER_NAME;
+    private String serverName = "default";
     private int totalSegments;
     /**
      * When false the bridge has to run in synchronized mode. default value -
      * true.
      */
-    private boolean threadSafe;
+    private boolean threadSafe = true;
 
-    private ArrayList<ColumnDescriptor> tupleDescription;
+    private List<ColumnDescriptor> tupleDescription = new ArrayList<>();
     private String user;
     private byte[] userData;
 
     // ----- USER-DEFINED OPTIONS other than NAMED PROPERTIES -----
-    protected Map<String, String> options;
+    private Map<String, String> options = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+    private PluginConf pluginConf;
 
 
     //TODO remove
-    /**
-     * Returns the stream of key-value pairs defined in the request parameters
-     *
-     * @returns stream of map entries
-     */
-    public Stream<Map.Entry<String, String>> getUserPropertiesStream() {
-        return requestParametersMap.entrySet().stream()
-                .filter(e -> e.getKey().toUpperCase().startsWith(USER_PROP_PREFIX) ||
-                        e.getKey().toLowerCase().startsWith(USER_PROP_PREFIX.toLowerCase()));
-    }
 
-    /**
-     * Returns a user defined property.
-     *
-     * @param userProp the lookup user property
-     * @return property value as a String
-     */
-    /*
-    public String getUserProperty(String userProp) {
-        return requestParametersMap.get(USER_PROP_PREFIX + userProp.toUpperCase());
-    }
-    */
+//    /**
+//     * Returns the stream of key-value pairs defined in the request parameters
+//     *
+//     * @returns stream of map entries
+//     */
+//    public Stream<Map.Entry<String, String>> getUserPropertiesStream() {
+//        return requestParametersMap.entrySet().stream()
+//                .filter(e -> e.getKey().toUpperCase().startsWith(USER_PROP_PREFIX) ||
+//                        e.getKey().toLowerCase().startsWith(USER_PROP_PREFIX.toLowerCase()));
+//    }
 
-    public String getOption(String option) {
-        return options.get(option);
-    }
+//    /**
+//     * Returns a user defined property.
+//     *
+//     * @param userProp the lookup user property
+//     * @return property value as a String
+//     */
+//    /*
+//    public String getOption(String userProp) {
+//        return requestParametersMap.get(USER_PROP_PREFIX + userProp.toUpperCase());
+//    }
+//    */
+
 
     public String getOption(String option, String defaultValue) {
         return options.getOrDefault(option, defaultValue);
     }
 
-
-    public void setAccessor(String accessor) {
-        this.accessor = accessor;
+    public String getOption(String option) {
+        return options.get(option);
     }
 
-    public void setDataFragment(int dataFragment) {
-        this.dataFragment = dataFragment;
+    public void addOption(String key, String value) {
+        options.put(key, value);
     }
 
-    public void setFragmenter(String fragmenter) {
-        this.fragmenter = fragmenter;
-    }
-
-    public void setFilterString(String filterString) {
-        this.filterString = filterString;
+    public Map<String, String> getOptions() {
+        return Collections.unmodifiableMap(options);
     }
 
     public boolean isFilterStringValid() {
@@ -160,18 +159,6 @@ public class RequestContext {
 
     public void setFilterStringValid(boolean filterStringValid) {
         this.filterStringValid = filterStringValid;
-    }
-
-    public void setMetadata(String metadata) {
-        this.metadata = metadata;
-    }
-
-    public void setProfile(String profile) {
-        this.profile = profile;
-    }
-
-    public void setRecordkeyColumn(ColumnDescriptor recordkeyColumn) {
-        this.recordkeyColumn = recordkeyColumn;
     }
 
     public String getRemoteLogin() {
@@ -190,53 +177,12 @@ public class RequestContext {
         this.remoteSecret = remoteSecret;
     }
 
-    public void setResolver(String resolver) {
-        this.resolver = resolver;
-    }
-
-    public void setSegmentId(int segmentId) {
-        this.segmentId = segmentId;
-    }
-
-    public void setTotalSegments(int totalSegments) {
-        this.totalSegments = totalSegments;
-    }
-
-    public void setThreadSafe(boolean threadSafe) {
-        this.threadSafe = threadSafe;
-    }
-
-    public void setTupleDescription(ArrayList<ColumnDescriptor> tupleDescription) {
-        this.tupleDescription = tupleDescription;
-    }
-
-    public void setUser(String user) {
-        this.user = user;
-    }
-
     public byte[] getUserData() {
         return userData;
     }
 
     public void setUserData(byte[] userData) {
         this.userData = userData;
-    }
-
-    public Map<String, String> getOptions() {
-        return options;
-    }
-
-    public void setOptions(Map<String, String> options) {
-        this.options = options;
-    }
-
-    /**
-     * Sets the byte serialization of a fragment meta data.
-     *
-     * @param location start, len, and location of the fragment
-     */
-    public void setFragmentMetadata(byte[] location) {
-        this.fragmentMetadata = location;
     }
 
     /**
@@ -246,6 +192,15 @@ public class RequestContext {
      */
     public byte[] getFragmentMetadata() {
         return fragmentMetadata;
+    }
+
+    /**
+     * Sets the byte serialization of a fragment meta data.
+     *
+     * @param location start, len, and location of the fragment
+     */
+    public void setFragmentMetadata(byte[] location) {
+        this.fragmentMetadata = location;
     }
 
     /**
@@ -277,6 +232,10 @@ public class RequestContext {
         return totalSegments;
     }
 
+    public void setTotalSegments(int totalSegments) {
+        this.totalSegments = totalSegments;
+    }
+
     /**
      * Returns the current segment ID in GPDB.
      *
@@ -284,6 +243,10 @@ public class RequestContext {
      */
     public int getSegmentId() {
         return segmentId;
+    }
+
+    public void setSegmentId(int segmentId) {
+        this.segmentId = segmentId;
     }
 
     /**
@@ -304,13 +267,21 @@ public class RequestContext {
         return filterString;
     }
 
+    public void setFilterString(String filterString) {
+        this.filterString = filterString;
+    }
+
     /**
      * Returns tuple description.
      *
      * @return tuple description
      */
-    public ArrayList<ColumnDescriptor> getTupleDescription() {
+    public List<ColumnDescriptor> getTupleDescription() {
         return tupleDescription;
+    }
+
+    public void setTupleDescription(List<ColumnDescriptor> tupleDescription) {
+        this.tupleDescription = tupleDescription;
     }
 
     /**
@@ -343,6 +314,10 @@ public class RequestContext {
         return recordkeyColumn;
     }
 
+    public void setRecordkeyColumn(ColumnDescriptor recordkeyColumn) {
+        this.recordkeyColumn = recordkeyColumn;
+    }
+
     /**
      * Returns the data source of the required resource (i.e a file path or a
      * table name).
@@ -371,6 +346,10 @@ public class RequestContext {
         return profile;
     }
 
+    public void setProfile(String profile) {
+        this.profile = profile;
+    }
+
     /**
      * Returns the ClassName for the java class that was defined as Accessor.
      *
@@ -380,6 +359,10 @@ public class RequestContext {
         return accessor;
     }
 
+    public void setAccessor(String accessor) {
+        this.accessor = accessor;
+    }
+
     /**
      * Returns the ClassName for the java class that was defined as Resolver.
      *
@@ -387,6 +370,10 @@ public class RequestContext {
      */
     public String getResolver() {
         return resolver;
+    }
+
+    public void setResolver(String resolver) {
+        this.resolver = resolver;
     }
 
     /**
@@ -399,6 +386,10 @@ public class RequestContext {
         return fragmenter;
     }
 
+    public void setFragmenter(String fragmenter) {
+        this.fragmenter = fragmenter;
+    }
+
     /**
      * Returns the ClassName for the java class that was defined as Metadata
      * or null if no metadata was defined.
@@ -407,6 +398,10 @@ public class RequestContext {
      */
     public String getMetadata() {
         return metadata;
+    }
+
+    public void setMetadata(String metadata) {
+        this.metadata = metadata;
     }
 
     /**
@@ -439,6 +434,10 @@ public class RequestContext {
         return threadSafe;
     }
 
+    public void setThreadSafe(boolean threadSafe) {
+        this.threadSafe = threadSafe;
+    }
+
     /**
      * Returns a data fragment index. plan to deprecate it in favor of using
      * getFragmentMetadata().
@@ -447,6 +446,10 @@ public class RequestContext {
      */
     public int getDataFragment() {
         return dataFragment;
+    }
+
+    public void setDataFragment(int dataFragment) {
+        this.dataFragment = dataFragment;
     }
 
     /**
@@ -533,4 +536,145 @@ public class RequestContext {
         return user;
     }
 
+    public void setUser(String user) {
+        this.user = user;
+    }
+
+    /**
+     * Returns the server port providing the service.
+     *
+     * @return server port
+     */
+    public int getPort() {
+        return port;
+    }
+
+    /**
+     * @param port sets the port
+     */
+    public void setPort(int port) {
+        this.port = port;
+    }
+
+    /**
+     * Returns the current output format, either {@link OutputFormat#TEXT} or
+     * {@link OutputFormat#GPDBWritable}.
+     *
+     * @return output format
+     */
+    public OutputFormat getOutputFormat() {
+        return outputFormat;
+    }
+
+    public void setOutputFormat(OutputFormat outputFormat) {
+        this.outputFormat = outputFormat;
+    }
+
+    /**
+     * Returns the server name providing the service.
+     *
+     * @return server name
+     */
+    public String getHost() {
+        return host;
+    }
+
+    public void setHost(String host) {
+        this.host = host;
+    }
+
+    /**
+     * Returns Kerberos token information.
+     *
+     * @return token
+     */
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
+
+
+    /**
+     * Statistics parameter. Returns the max number of fragments to return for
+     * ANALYZE sampling. The value is set in GPDB side using the GUC
+     * pxf_stats_max_fragments.
+     *
+     * @return max number of fragments to be processed by analyze
+     */
+    public int getStatsMaxFragments() {
+        return statsMaxFragments;
+    }
+
+    public void setStatsMaxFragments(int statsMaxFragments) {
+        this.statsMaxFragments = statsMaxFragments;
+        if (statsMaxFragments <= 0) {
+            throw new IllegalArgumentException(String
+                    .format("Wrong value '%d'. STATS-MAX-FRAGMENTS must be a positive integer",
+                            statsMaxFragments));
+        }
+    }
+
+    /**
+     * Statistics parameter. Returns a number between 0.0001 and 1.0,
+     * representing the sampling ratio on each fragment for ANALYZE sampling.
+     * The value is set in GPDB side based on ANALYZE computations and the
+     * number of sampled fragments.
+     *
+     * @return sampling ratio
+     */
+    public float getStatsSampleRatio() {
+        return statsSampleRatio;
+    }
+
+    public void setStatsSampleRatio(float statsSampleRatio) {
+        this.statsSampleRatio = statsSampleRatio;
+        if (statsSampleRatio < 0.0001 || statsSampleRatio > 1.0) {
+            throw new IllegalArgumentException(
+                    "Wrong value '"
+                            + statsSampleRatio
+                            + "'. "
+                            + "STATS-SAMPLE-RATIO must be a value between 0.0001 and 1.0");
+        }
+    }
+
+    public void validate() {
+        if ((statsSampleRatio > 0) != (statsMaxFragments > 0)) {
+            fail("Missing parameter: STATS-SAMPLE-RATIO and STATS-MAX-FRAGMENTS must be set together");
+        }
+
+        // accessor and resolver are user properties, might be missing if profile is not set
+        ensureNotNull("ACCESSOR", accessor);
+        ensureNotNull("RESOLVER", resolver);
+
+        //TODO: -this comment was in ProtocolData but no logic ? needs research
+        /*
+         * accessor - will throw exception if outputFormat is
+         * BINARY and the user did not supply accessor=... or profile=...
+         * resolver - will throw exception if outputFormat is
+         * BINARY and the user did not supply resolver=... or profile=...
+         */
+
+    }
+
+    private void ensureNotNull(String property, Object value) {
+        if (value == null) {
+            fail("Property %s has no value in the current request", property);
+        }
+    }
+
+    private void fail(String message, Object... args) {
+        String errorMessage = String.format(message, args);
+        throw new IllegalArgumentException(errorMessage);
+    }
+
+    public PluginConf getPluginConf() {
+        return pluginConf;
+    }
+
+    public void setPluginConf(PluginConf pluginConf) {
+        this.pluginConf = pluginConf;
+    }
 }

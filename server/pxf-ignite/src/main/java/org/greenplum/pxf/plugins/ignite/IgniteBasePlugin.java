@@ -51,15 +51,15 @@ public class IgniteBasePlugin extends BasePlugin {
             LOG.debug("Constructor started");
         }
 
-        igniteHost = requestContext.getUserProperty("IGNITE_HOST");
+        igniteHost = requestContext.getOption("IGNITE_HOST");
         if (igniteHost == null) {
             igniteHost = igniteHostDefault;
         }
 
-        cacheName = requestContext.getUserProperty("IGNITE_CACHE");
+        cacheName = requestContext.getOption("IGNITE_CACHE");
         // If this value is null, Ignite will use the default cache
 
-        String bufferSize_str = requestContext.getUserProperty("BUFFER_SIZE");
+        String bufferSize_str = requestContext.getOption("BUFFER_SIZE");
         if (bufferSize_str != null) {
             try {
                 bufferSize = Integer.parseInt(bufferSize_str);

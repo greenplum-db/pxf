@@ -35,22 +35,22 @@ import static org.mockito.Mockito.when;
 
 
 public class JdbcPartitionFragmenterTest {
-    RequestContext requestContext;
+    RequestContext context;
 
     @Before
     public void setUp() throws Exception {
         prepareConstruction();
-        when(requestContext.getDataSource()).thenReturn("sales");
+        when(context.getDataSource()).thenReturn("sales");
     }
 
     @Test
     public void testPartionByDateOfMonth() throws Exception {
 
-        when(requestContext.getUserProperty("PARTITION_BY")).thenReturn("cdate:date");
-        when(requestContext.getUserProperty("RANGE")).thenReturn("2008-01-01:2009-01-01");
-        when(requestContext.getUserProperty("INTERVAL")).thenReturn("1:month");
+        when(context.getOption("PARTITION_BY")).thenReturn("cdate:date");
+        when(context.getOption("RANGE")).thenReturn("2008-01-01:2009-01-01");
+        when(context.getOption("INTERVAL")).thenReturn("1:month");
 
-        JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter(requestContext);
+        JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter(context);
         List<Fragment> fragments = fragment.getFragments();
         assertEquals(12, fragments.size());
 
@@ -71,8 +71,8 @@ public class JdbcPartitionFragmenterTest {
         assertDateEquals(fragEnd, 2009, 1, 1);
 
         //when end_date > start_date
-        when(requestContext.getUserProperty("RANGE")).thenReturn("2008-01-01:2001-01-01");
-        fragment = new JdbcPartitionFragmenter(requestContext);
+        when(context.getOption("RANGE")).thenReturn("2008-01-01:2001-01-01");
+        fragment = new JdbcPartitionFragmenter(context);
         fragments = fragment.getFragments();
         assertEquals(0, fragments.size());
     }
@@ -80,11 +80,11 @@ public class JdbcPartitionFragmenterTest {
     @Test
     public void testPartionByDateOfYear() throws Exception {
 
-        when(requestContext.getUserProperty("PARTITION_BY")).thenReturn("cdate:date");
-        when(requestContext.getUserProperty("RANGE")).thenReturn("2008-01-01:2011-01-01");
-        when(requestContext.getUserProperty("INTERVAL")).thenReturn("1:year");
+        when(context.getOption("PARTITION_BY")).thenReturn("cdate:date");
+        when(context.getOption("RANGE")).thenReturn("2008-01-01:2011-01-01");
+        when(context.getOption("INTERVAL")).thenReturn("1:year");
 
-        JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter(requestContext);
+        JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter(context);
         List<Fragment> fragments = fragment.getFragments();
         assertEquals(3, fragments.size());
     }
@@ -92,11 +92,11 @@ public class JdbcPartitionFragmenterTest {
     @Test
     public void testPartionByInt() throws Exception {
 
-        when(requestContext.getUserProperty("PARTITION_BY")).thenReturn("year:int");
-        when(requestContext.getUserProperty("RANGE")).thenReturn("2001:2012");
-        when(requestContext.getUserProperty("INTERVAL")).thenReturn("2");
+        when(context.getOption("PARTITION_BY")).thenReturn("year:int");
+        when(context.getOption("RANGE")).thenReturn("2001:2012");
+        when(context.getOption("INTERVAL")).thenReturn("2");
 
-        JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter(requestContext);
+        JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter(context);
         List<Fragment> fragments = fragment.getFragments();
         assertEquals(6, fragments.size());
 
@@ -117,18 +117,18 @@ public class JdbcPartitionFragmenterTest {
         assertEquals(2012, fragEnd);
 
         //when end > start
-        when(requestContext.getUserProperty("RANGE")).thenReturn("2013:2012");
-        fragment = new JdbcPartitionFragmenter(requestContext);
+        when(context.getOption("RANGE")).thenReturn("2013:2012");
+        fragment = new JdbcPartitionFragmenter(context);
         assertEquals(0, fragment.getFragments().size());
     }
 
     @Test
     public void testPartionByEnum() throws Exception {
 
-        when(requestContext.getUserProperty("PARTITION_BY")).thenReturn("level:enum");
-        when(requestContext.getUserProperty("RANGE")).thenReturn("excellent:good:general:bad");
+        when(context.getOption("PARTITION_BY")).thenReturn("level:enum");
+        when(context.getOption("RANGE")).thenReturn("excellent:good:general:bad");
 
-        JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter(requestContext);
+        JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter(context);
         List<Fragment> fragments = fragment.getFragments();
         assertEquals(4, fragments.size());
 
@@ -144,72 +144,72 @@ public class JdbcPartitionFragmenterTest {
     @Test(expected = UserDataException.class)
     public void testInValidPartitiontype() throws Exception {
 
-        when(requestContext.getUserProperty("PARTITION_BY")).thenReturn("level:float");
-        when(requestContext.getUserProperty("RANGE")).thenReturn("100:200");
+        when(context.getOption("PARTITION_BY")).thenReturn("level:float");
+        when(context.getOption("RANGE")).thenReturn("100:200");
 
-        new JdbcPartitionFragmenter(requestContext);
+        new JdbcPartitionFragmenter(context);
     }
 
     @Test(expected = UserDataException.class)
     public void testInValidParameterFormat() throws Exception {
 
         //PARTITION_BY must be comma-delimited string
-        when(requestContext.getUserProperty("PARTITION_BY")).thenReturn("level-enum");
-        when(requestContext.getUserProperty("RANGE")).thenReturn("100:200");
+        when(context.getOption("PARTITION_BY")).thenReturn("level-enum");
+        when(context.getOption("RANGE")).thenReturn("100:200");
 
-        new JdbcPartitionFragmenter(requestContext);
+        new JdbcPartitionFragmenter(context);
     }
 
     @Test(expected = UserDataException.class)
     public void testInValidDateFormat() throws Exception {
 
         //date string must be yyyy-MM-dd
-        when(requestContext.getUserProperty("PARTITION_BY")).thenReturn("cdate:date");
-        when(requestContext.getUserProperty("RANGE")).thenReturn("2008/01/01:2009-01-01");
-        when(requestContext.getUserProperty("INTERVAL")).thenReturn("1:month");
+        when(context.getOption("PARTITION_BY")).thenReturn("cdate:date");
+        when(context.getOption("RANGE")).thenReturn("2008/01/01:2009-01-01");
+        when(context.getOption("INTERVAL")).thenReturn("1:month");
 
-        new JdbcPartitionFragmenter(requestContext).getFragments();
+        new JdbcPartitionFragmenter(context).getFragments();
     }
 
     @Test(expected = UserDataException.class)
     public void testInValidParameterValue() throws Exception {
 
         //INTERVAL must be greater than 0
-        when(requestContext.getUserProperty("PARTITION_BY")).thenReturn("cdate:date");
-        when(requestContext.getUserProperty("RANGE")).thenReturn("2008-01-01:2009-01-01");
-        when(requestContext.getUserProperty("INTERVAL")).thenReturn("-1:month");
+        when(context.getOption("PARTITION_BY")).thenReturn("cdate:date");
+        when(context.getOption("RANGE")).thenReturn("2008-01-01:2009-01-01");
+        when(context.getOption("INTERVAL")).thenReturn("-1:month");
 
-        new JdbcPartitionFragmenter(requestContext);
+        new JdbcPartitionFragmenter(context);
     }
 
     @Test(expected = UserDataException.class)
-    public void testInValidIntervaltype() throws Exception {
+    public void testInValidIntervalType() throws Exception {
 
-        when(requestContext.getUserProperty("PARTITION_BY")).thenReturn("cdate:date");
-        when(requestContext.getUserProperty("RANGE")).thenReturn("2008-01-01:2011-01-01");
-        when(requestContext.getUserProperty("INTERVAL")).thenReturn("6:hour");
+        when(context.getOption("PARTITION_BY")).thenReturn("cdate:date");
+        when(context.getOption("RANGE")).thenReturn("2008-01-01:2011-01-01");
+        when(context.getOption("INTERVAL")).thenReturn("6:hour");
 
-        new JdbcPartitionFragmenter(requestContext).getFragments();
+        new JdbcPartitionFragmenter(context).getFragments();
     }
 
     @Test(expected = UserDataException.class)
     public void testIntervaltypeMissing() throws Exception {
 
-        when(requestContext.getUserProperty("PARTITION_BY")).thenReturn("cdate:date");
-        when(requestContext.getUserProperty("RANGE")).thenReturn("2008-01-01:2011-01-01");
-        when(requestContext.getUserProperty("INTERVAL")).thenReturn("6");
+        when(context.getOption("PARTITION_BY")).thenReturn("cdate:date");
+        when(context.getOption("RANGE")).thenReturn("2008-01-01:2011-01-01");
+        when(context.getOption("INTERVAL")).thenReturn("6");
 
-        new JdbcPartitionFragmenter(requestContext).getFragments();
+        new JdbcPartitionFragmenter(context).getFragments();
     }
 
     @Test
-    public void testIntervaltypeMissingValid() throws Exception {
+    public void testIntervalTypeMissingValid() throws Exception {
 
-        when(requestContext.getUserProperty("PARTITION_BY")).thenReturn("year:int");
-        when(requestContext.getUserProperty("RANGE")).thenReturn("2001:2012");
-        when(requestContext.getUserProperty("INTERVAL")).thenReturn("1");
+        when(context.getOption("PARTITION_BY")).thenReturn("year:int");
+        when(context.getOption("RANGE")).thenReturn("2001:2012");
+        when(context.getOption("INTERVAL")).thenReturn("1");
 
-        JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter(requestContext);
+        JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter(context);
         List<Fragment> fragments = fragment.getFragments();
         assertEquals(11, fragments.size());
     }
@@ -217,39 +217,39 @@ public class JdbcPartitionFragmenterTest {
     @Test
     public void testIntervalMissingEnum() throws Exception {
 
-        when(requestContext.getUserProperty("PARTITION_BY")).thenReturn("level:enum");
-        when(requestContext.getUserProperty("RANGE")).thenReturn("100:200:300");
+        when(context.getOption("PARTITION_BY")).thenReturn("level:enum");
+        when(context.getOption("RANGE")).thenReturn("100:200:300");
 
-        JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter(requestContext);
+        JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter(context);
         List<Fragment> fragments = fragment.getFragments();
         assertEquals(3, fragments.size());
     }
 
     @Test(expected = UserDataException.class)
     public void testRangeMissingEndValue() throws Exception {
-        when(requestContext.getUserProperty("PARTITION_BY")).thenReturn("cdate:date");
-        when(requestContext.getUserProperty("RANGE")).thenReturn("2008-01-01");
-        when(requestContext.getUserProperty("INTERVAL")).thenReturn("1:year");
+        when(context.getOption("PARTITION_BY")).thenReturn("cdate:date");
+        when(context.getOption("RANGE")).thenReturn("2008-01-01");
+        when(context.getOption("INTERVAL")).thenReturn("1:year");
 
-        new JdbcPartitionFragmenter(requestContext).getFragments();
+        new JdbcPartitionFragmenter(context).getFragments();
     }
 
     @Test(expected = UserDataException.class)
     public void testRangeMissing() throws Exception {
 
-        when(requestContext.getUserProperty("PARTITION_BY")).thenReturn("year:int");
-        when(requestContext.getUserProperty("INTERVAL")).thenReturn("1");
+        when(context.getOption("PARTITION_BY")).thenReturn("year:int");
+        when(context.getOption("INTERVAL")).thenReturn("1");
 
-        new JdbcPartitionFragmenter(requestContext).getFragments();
+        new JdbcPartitionFragmenter(context).getFragments();
     }
 
     @Test
     public void testRangeSingleValueEnum() throws Exception {
 
-        when(requestContext.getUserProperty("PARTITION_BY")).thenReturn("level:enum");
-        when(requestContext.getUserProperty("RANGE")).thenReturn("100");
+        when(context.getOption("PARTITION_BY")).thenReturn("level:enum");
+        when(context.getOption("RANGE")).thenReturn("100");
 
-        JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter(requestContext);
+        JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter(context);
         List<Fragment> fragments = fragment.getFragments();
         assertEquals(1, fragments.size());
     }
@@ -257,7 +257,7 @@ public class JdbcPartitionFragmenterTest {
     @Test
     public void testNoPartition() throws Exception {
 
-        JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter(requestContext);
+        JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter(context);
         List<Fragment> fragments = fragment.getFragments();
         assertEquals(1, fragments.size());
     }
@@ -271,6 +271,6 @@ public class JdbcPartitionFragmenterTest {
     }
 
     private void prepareConstruction() throws Exception {
-        requestContext = mock(RequestContext.class);
+        context = mock(RequestContext.class);
     }
 }

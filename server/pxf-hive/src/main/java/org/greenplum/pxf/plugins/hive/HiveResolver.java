@@ -146,10 +146,10 @@ public class HiveResolver extends HivePlugin implements Resolver {
         propsString = hiveUserData.getPropertiesString();
         partitionKeys = hiveUserData.getPartitionKeys();
 
-        collectionDelim = input.getUserProperty("COLLECTION_DELIM") == null ? COLLECTION_DELIM
-                : input.getUserProperty("COLLECTION_DELIM");
-        mapkeyDelim = input.getUserProperty("MAPKEY_DELIM") == null ? MAPKEY_DELIM
-                : input.getUserProperty("MAPKEY_DELIM");
+        collectionDelim = input.getOption("COLLECTION_DELIM") == null ? COLLECTION_DELIM
+                : input.getOption("COLLECTION_DELIM");
+        mapkeyDelim = input.getOption("MAPKEY_DELIM") == null ? MAPKEY_DELIM
+                : input.getOption("MAPKEY_DELIM");
     }
 
     /*
@@ -455,7 +455,7 @@ public class HiveResolver extends HivePlugin implements Resolver {
         }
         List<OneField> structRecord = new LinkedList<>();
         List<OneField> complexRecord = new LinkedList<>();
-        List<ColumnDescriptor> colData = requestContext.getTupleDescription();
+        List<ColumnDescriptor> colData = context.getTupleDescription();
         for (int i = 0; i < structFields.size(); i++) {
             if (toFlatten) {
                 complexRecord.add(new OneField(DataType.TEXT.getOID(), String.format(
@@ -627,7 +627,7 @@ public class HiveResolver extends HivePlugin implements Resolver {
      */
     void parseDelimiterChar(RequestContext input) {
 
-        String userDelim = input.getUserProperty(RequestContext.DELIMITER_KEY);
+        String userDelim = input.getOption(RequestContext.DELIMITER_KEY);
 
         if (userDelim == null) {
             /* No DELIMITER in URL, try to get it from fragment's user data*/

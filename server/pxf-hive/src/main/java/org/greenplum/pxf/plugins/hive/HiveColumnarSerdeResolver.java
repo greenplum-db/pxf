@@ -19,17 +19,6 @@ package org.greenplum.pxf.plugins.hive;
  * under the License.
  */
 
-import org.greenplum.pxf.api.BadRecordException;
-import org.greenplum.pxf.api.OneField;
-import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.OutputFormat;
-import org.greenplum.pxf.api.UnsupportedTypeException;
-import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.api.utilities.Utilities;
-import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
-import org.greenplum.pxf.api.utilities.ProtocolData;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.serde.serdeConstants;
@@ -40,6 +29,16 @@ import org.apache.hadoop.hive.serde2.objectinspector.StructObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.*;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapred.JobConf;
+import org.greenplum.pxf.api.BadRecordException;
+import org.greenplum.pxf.api.OneField;
+import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.UnsupportedTypeException;
+import org.greenplum.pxf.api.io.DataType;
+import org.greenplum.pxf.api.model.OutputFormat;
+import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.api.utilities.Utilities;
+import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -76,7 +75,7 @@ public class HiveColumnarSerdeResolver extends HiveResolver {
 
     @Override
     void initPartitionFields() {
-        if (((ProtocolData) requestContext).outputFormat() == OutputFormat.TEXT) {
+        if (context.getOutputFormat() == OutputFormat.TEXT) {
             initTextPartitionFields(parts);
         } else {
             super.initPartitionFields();
@@ -90,7 +89,7 @@ public class HiveColumnarSerdeResolver extends HiveResolver {
      */
     @Override
     public List<OneField> getFields(OneRow onerow) throws Exception {
-        if (((ProtocolData) requestContext).outputFormat() == OutputFormat.TEXT) {
+        if (context.getOutputFormat() == OutputFormat.TEXT) {
             firstColumn = true;
             builder = new StringBuilder();
             Object tuple = deserializer.deserialize((Writable) onerow.getData());

@@ -19,19 +19,22 @@ package org.greenplum.pxf.service;
  * under the License.
  */
 
-import org.greenplum.pxf.api.model.Accessor;
-import org.greenplum.pxf.api.BadRecordException;
-import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.api.model.Resolver;
-import org.greenplum.pxf.api.model.BasePlugin;
-import org.greenplum.pxf.api.utilities.Utilities;
-import org.greenplum.pxf.service.io.Writable;
-import org.greenplum.pxf.api.utilities.ProtocolData;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.greenplum.pxf.api.BadRecordException;
+import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.model.Accessor;
+import org.greenplum.pxf.api.model.Plugin;
+import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.api.model.Resolver;
+import org.greenplum.pxf.api.utilities.Utilities;
+import org.greenplum.pxf.service.io.Writable;
 
-import java.io.*;
+import java.io.CharConversionException;
+import java.io.DataInputStream;
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.UTFDataFormatException;
 import java.nio.charset.CharacterCodingException;
 import java.util.LinkedList;
 import java.util.zip.ZipException;
@@ -45,24 +48,24 @@ import java.util.zip.ZipException;
  * record as invalid for GPDB.
  */
 public class ReadBridge implements Bridge {
-    Accessor fileAccessor = null;
-    Resolver fieldsResolver = null;
-    BridgeOutputBuilder outputBuilder = null;
-    LinkedList<Writable> outputQueue = null;
+    final Accessor fileAccessor;
+    final Resolver fieldsResolver;
+    final BridgeOutputBuilder outputBuilder;
+    LinkedList<Writable> outputQueue;
 
     private static final Log LOG = LogFactory.getLog(ReadBridge.class);
 
     /**
      * C'tor - set the implementation of the bridge.
      *
-     * @param protData input containing accessor and resolver names
+     * @param context input containing accessor and resolver names
      * @throws Exception if accessor or resolver can't be instantiated
      */
-    public ReadBridge(ProtocolData protData) throws Exception {
-        outputBuilder = new BridgeOutputBuilder(protData);
-        outputQueue = new LinkedList<Writable>();
-        fileAccessor = getFileAccessor(protData);
-        fieldsResolver = getFieldsResolver(protData);
+    public ReadBridge(RequestContext context) throws Exception {
+        outputBuilder = new BridgeOutputBuilder(context);
+        outputQueue = new LinkedList<>();
+        fileAccessor = getFileAccessor(context);
+        fieldsResolver = getFieldsResolver(context);
     }
 
     /**
@@ -180,8 +183,8 @@ public class ReadBridge implements Bridge {
 
     @Override
     public boolean isThreadSafe() {
-        boolean result = ((BasePlugin) fileAccessor).isThreadSafe()
-                && ((BasePlugin) fieldsResolver).isThreadSafe();
+        boolean result = ((Plugin) fileAccessor).isThreadSafe()
+                && ((Plugin) fieldsResolver).isThreadSafe();
         LOG.debug("Bridge is " + (result ? "" : "not ") + "thread safe");
         return result;
     }

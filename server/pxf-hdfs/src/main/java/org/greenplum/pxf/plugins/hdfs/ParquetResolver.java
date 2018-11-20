@@ -70,7 +70,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
     @Override
     public List<OneField> getFields(OneRow row) throws Exception {
         Object data = row.getData();
-        ParquetUserData parquetUserData = HdfsUtilities.parseParquetUserData(requestContext);
+        ParquetUserData parquetUserData = HdfsUtilities.parseParquetUserData(context);
         Group g = (Group) data;
         List<OneField> output = resolveRecord(parquetUserData, g);
 

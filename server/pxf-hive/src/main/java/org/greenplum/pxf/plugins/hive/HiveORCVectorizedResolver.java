@@ -82,13 +82,13 @@ public class HiveORCVectorizedResolver extends HiveResolver implements ReadVecto
         VectorizedRowBatch vectorizedBatch = (VectorizedRowBatch) batch.getData();
 
         /* Allocate empty result set */
-        int columnsNumber = requestContext.getColumns();
+        int columnsNumber = context.getColumns();
         resolvedBatch = new ArrayList<>(vectorizedBatch.size);
 
         /* Create empty template row */
         ArrayList<OneField> templateRow = new ArrayList<OneField>(columnsNumber);
         ArrayList<OneField> currentRow;
-        for (int j = 0; j < requestContext.getColumns(); j++) {
+        for (int j = 0; j < context.getColumns(); j++) {
             templateRow.add(null);
         }
         /* Replicate template row*/

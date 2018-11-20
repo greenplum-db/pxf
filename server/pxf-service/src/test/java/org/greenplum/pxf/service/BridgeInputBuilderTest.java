@@ -31,9 +31,10 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.greenplum.pxf.api.OneField;
-import org.greenplum.pxf.api.OutputFormat;
+import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.api.utilities.ProtocolData;
+
+import org.greenplum.pxf.api.model.RequestContext;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -42,7 +43,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
 public class BridgeInputBuilderTest {
-    ProtocolData mockProtocolData;
+    RequestContext mockContext;
     BridgeInputBuilder inputBuilder;
     DataInputStream inputStream;
 
@@ -136,11 +137,11 @@ public class BridgeInputBuilderTest {
     }
 
     private void prepareInput(byte[] data) throws Exception {
-        mockProtocolData = mock(ProtocolData.class);
-        PowerMockito.when(mockProtocolData.outputFormat()).thenReturn(
+        mockContext = mock(RequestContext.class);
+        PowerMockito.when(mockContext.getOutputFormat()).thenReturn(
                 OutputFormat.TEXT);
         inputBuilder = new BridgeInputBuilder(
-                mockProtocolData);
+                mockContext);
         inputStream = new DataInputStream(
                 new ByteArrayInputStream(data));
     }

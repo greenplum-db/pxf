@@ -93,9 +93,9 @@ public class HBaseDataFragmenter extends BaseFragmenter {
         HBaseAdmin.checkHBaseAvailable(hbaseConfiguration);
         connection = ConnectionFactory.createConnection(hbaseConfiguration);
         hbaseAdmin = connection.getAdmin();
-        if (!HBaseUtilities.isTableAvailable(hbaseAdmin, requestContext.getDataSource())) {
+        if (!HBaseUtilities.isTableAvailable(hbaseAdmin, context.getDataSource())) {
             HBaseUtilities.closeConnection(hbaseAdmin, connection);
-            throw new TableNotFoundException(requestContext.getDataSource());
+            throw new TableNotFoundException(context.getDataSource());
         }
 
         byte[] userData = prepareUserData();
@@ -115,7 +115,7 @@ public class HBaseDataFragmenter extends BaseFragmenter {
      */
     private byte[] prepareUserData() throws Exception {
         HBaseLookupTable lookupTable = new HBaseLookupTable(hbaseConfiguration);
-        Map<String, byte[]> mappings = lookupTable.getMappings(requestContext.getDataSource());
+        Map<String, byte[]> mappings = lookupTable.getMappings(context.getDataSource());
         lookupTable.close();
 
         if (mappings != null) {
@@ -144,7 +144,7 @@ public class HBaseDataFragmenter extends BaseFragmenter {
     }
 
     private void addTableFragments(byte[] userData) throws IOException {
-        RegionLocator regionLocator = connection.getRegionLocator(TableName.valueOf(requestContext.getDataSource()));
+        RegionLocator regionLocator = connection.getRegionLocator(TableName.valueOf(context.getDataSource()));
         List <HRegionLocation> locations = regionLocator.getAllRegionLocations();
 
         for (HRegionLocation location : locations) {
@@ -160,7 +160,7 @@ public class HBaseDataFragmenter extends BaseFragmenter {
         String[] hosts = new String[] {serverInfo.getHostname()};
         HRegionInfo region = location.getRegionInfo();
         byte[] fragmentMetadata = prepareFragmentMetadata(region);
-        Fragment fragment = new Fragment(requestContext.getDataSource(), hosts, fragmentMetadata, userData);
+        Fragment fragment = new Fragment(context.getDataSource(), hosts, fragmentMetadata, userData);
         fragments.add(fragment);
     }
 

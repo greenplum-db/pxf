@@ -1,4 +1,3 @@
-
 package org.greenplum.pxf.service.rest;
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -8,9 +7,9 @@ package org.greenplum.pxf.service.rest;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,21 +17,12 @@ package org.greenplum.pxf.service.rest;
  * specific language governing permissions and limitations
  * under the License.
  */
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
-import java.io.InputStream;
-import java.util.Map;
-import java.util.TreeMap;
-
-import javax.servlet.ServletContext;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-
+import com.sun.jersey.core.util.MultivaluedMapImpl;
+import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.service.HttpRequestParser;
+import org.greenplum.pxf.service.RequestParser;
 import org.greenplum.pxf.service.WriteBridge;
-import org.greenplum.pxf.api.utilities.ProtocolData;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -41,28 +31,60 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import com.sun.jersey.core.util.MultivaluedMapImpl;
+import javax.servlet.ServletContext;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import java.io.InputStream;
+import java.util.Map;
+import java.util.TreeMap;
+
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ WritableResource.class })
+@PrepareForTest({WritableResource.class})
 public class WritableResourceTest {
 
-    WritableResource writableResource;
-    ServletContext servletContext;
-    HttpHeaders headers;
-    InputStream inputStream;
-    MultivaluedMap<String, String> headersMap;
-    Map<String, String> params;
-    ProtocolData protData;
-    WriteBridge bridge;
+    private HttpRequestParser mockParser;
+    private WritableResource writableResource;
+    private ServletContext servletContext;
+    private HttpHeaders headers;
+    private InputStream inputStream;
+    private MultivaluedMap<String, String> headersMap;
+    private Map<String, String> params;
+    private RequestContext context;
+    private WriteBridge bridge;
+
+    @Before
+    public void before() throws Exception {
+        mockParser = mock(HttpRequestParser.class);
+        writableResource = new WritableResource(mockParser);
+
+        // mock input
+        servletContext = mock(ServletContext.class);
+        headers = mock(HttpHeaders.class);
+        inputStream = mock(InputStream.class);
+        // mock internal functions to do nothing
+        headersMap = new MultivaluedMapImpl();
+        when(headers.getRequestHeaders()).thenReturn(headersMap);
+        params = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+
+        context = mock(RequestContext.class);
+        bridge = mock(WriteBridge.class);
+        PowerMockito.whenNew(WriteBridge.class).withArguments(context).thenReturn(bridge);
+        when(context.isThreadSafe()).thenReturn(true);
+        when(bridge.isThreadSafe()).thenReturn(true);
+        when(mockParser.parseRequest(headers)).thenReturn(context);
+    }
 
     @Test
     public void streamPathWithSpecialChars() throws Exception {
         // test path with special characters
         String path = "I'mso<bad>!";
 
-        Response result = writableResource.stream(servletContext, headers,
-                path, inputStream);
+        Response result = writableResource.stream(servletContext, headers, path, inputStream);
 
         assertEquals(Response.Status.OK,
                 Response.Status.fromStatusCode(result.getStatus()));
@@ -81,30 +103,5 @@ public class WritableResourceTest {
         assertEquals(Response.Status.OK,
                 Response.Status.fromStatusCode(result.getStatus()));
         assertEquals("wrote 0 bulks to " + path, result.getEntity().toString());
-    }
-
-    @Before
-    public void before() throws Exception {
-        writableResource = mock(WritableResource.class,
-                Mockito.CALLS_REAL_METHODS);
-
-        // mock input
-        servletContext = mock(ServletContext.class);
-        headers = mock(HttpHeaders.class);
-        inputStream = mock(InputStream.class);
-        // mock internal functions to do nothing
-        headersMap = new MultivaluedMapImpl();
-        when(headers.getRequestHeaders()).thenReturn(headersMap);
-        params = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-        when(writableResource.convertToCaseInsensitiveMap(headersMap)).thenReturn(
-                params);
-        protData = mock(ProtocolData.class);
-        PowerMockito.whenNew(ProtocolData.class).withArguments(params).thenReturn(
-                protData);
-        bridge = mock(WriteBridge.class);
-        PowerMockito.whenNew(WriteBridge.class).withArguments(protData).thenReturn(
-                bridge);
-        when(protData.isThreadSafe()).thenReturn(true);
-        when(bridge.isThreadSafe()).thenReturn(true);
     }
 }

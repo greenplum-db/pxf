@@ -8,9 +8,9 @@ package org.greenplum.pxf.service;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -20,15 +20,14 @@ package org.greenplum.pxf.service;
  */
 
 
-import org.greenplum.pxf.api.OneField;
-import org.greenplum.pxf.api.OutputFormat;
-import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.service.io.GPDBWritable;
-import org.greenplum.pxf.service.io.Text;
-import org.greenplum.pxf.api.utilities.ProtocolData;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.greenplum.pxf.api.OneField;
+import org.greenplum.pxf.api.io.DataType;
+import org.greenplum.pxf.api.model.OutputFormat;
+import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.service.io.GPDBWritable;
+import org.greenplum.pxf.service.io.Text;
 
 import java.io.DataInput;
 import java.util.Collections;
@@ -36,15 +35,15 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class BridgeInputBuilder {
-    private ProtocolData protocolData;
+    private RequestContext protocolData;
     private static final Log LOG = LogFactory.getLog(BridgeInputBuilder.class);
 
-    public BridgeInputBuilder(ProtocolData protocolData) throws Exception {
+    public BridgeInputBuilder(RequestContext protocolData) throws Exception {
         this.protocolData = protocolData;
     }
 
     public List<OneField> makeInput(DataInput inputStream) throws Exception {
-        if (protocolData.outputFormat() == OutputFormat.TEXT) {
+        if (protocolData.getOutputFormat() == OutputFormat.TEXT) {
             Text txt = new Text();
             txt.readFields(inputStream);
             return Collections.singletonList(new OneField(DataType.BYTEA.getOID(), txt.getBytes()));
@@ -60,7 +59,7 @@ public class BridgeInputBuilder {
 
         GPDBWritableMapper mapper = new GPDBWritableMapper(gpdbWritable);
         int[] colTypes = gpdbWritable.getColType();
-        List<OneField> record = new LinkedList<OneField>();
+        List<OneField> record = new LinkedList<>();
         for (int i = 0; i < colTypes.length; i++) {
             mapper.setDataType(colTypes[i]);
             record.add(new OneField(colTypes[i], mapper.getData(i)));

@@ -8,9 +8,9 @@ package org.greenplum.pxf.api.utilities;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -22,16 +22,16 @@ package org.greenplum.pxf.api.utilities;
 
 /**
  * ColumnDescriptor describes one column in gpdb database.
- * Currently it means a name, a type id (HAWQ/GPDB OID), a type name and column index.
+ * Currently it means a name, a type id (GPDB OID), a type name and column index.
  */
 public class ColumnDescriptor {
 
-    int dbColumnTypeCode;
-    String dbColumnName;
-    String dbColumnTypeName;
-    int dbColumnIndex;
-    Integer[] dbColumnTypeModifiers;
-    boolean isProjected;
+    private int dbColumnTypeCode;
+    private String dbColumnName;
+    private String dbColumnTypeName;
+    private int dbColumnIndex;
+    private Integer[] dbColumnTypeModifiers;
+    private boolean isProjected;
 
     /**
      * Reserved word for a table record key.

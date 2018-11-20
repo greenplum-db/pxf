@@ -19,15 +19,15 @@ package org.greenplum.pxf.service.utilities;
  * under the License.
  */
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.greenplum.pxf.api.model.Fragment;
+import org.greenplum.pxf.api.model.RequestContext;
+
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import org.greenplum.pxf.api.model.Fragment;
-import org.greenplum.pxf.api.utilities.ProtocolData;
 
 /**
  * Helper class to get statistics for ANALYZE.
@@ -42,14 +42,14 @@ public class AnalyzeUtils {
      * to achieve good sampling.
      *
      * @param fragments fragments list
-     * @param protData container for parameters, including sampling data.
+     * @param context container for parameters, including sampling data.
      * @return a list of fragments no bigger than pxf_max_fragments parameter.
      */
     static public List<Fragment> getSampleFragments(List<Fragment> fragments,
-                                                    ProtocolData protData) {
+                                                    RequestContext context) {
 
         int listSize = fragments.size();
-        int maxSize = protData.getStatsMaxFragments();
+        int maxSize = context.getStatsMaxFragments();
         List<Fragment> samplingList = new ArrayList<Fragment>();
         BitSet bitSet;
 

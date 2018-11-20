@@ -1,4 +1,4 @@
-package org.greenplum.pxf.api.utilities;
+package org.greenplum.pxf.service;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -21,6 +21,7 @@ package org.greenplum.pxf.api.utilities;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.greenplum.pxf.api.utilities.ProfileConfException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -38,7 +39,9 @@ import java.util.Map;
 
 import static org.greenplum.pxf.api.utilities.ProfileConfException.MessageFormat.NO_PROFILE_DEF;
 import static org.greenplum.pxf.api.utilities.ProfileConfException.MessageFormat.PROFILES_FILE_NOT_FOUND;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -51,17 +54,16 @@ import static org.mockito.Mockito.when;
         ProfilesConf.class,
         Log.class,
         LogFactory.class,
-        ClassLoader.class })
+        ClassLoader.class})
 public class ProfilesConfTest {
     static ClassLoader classLoader;
     static Log LOG;
+    @Rule
+    public TemporaryFolder testFolder = new TemporaryFolder();
     String mandatoryFileName = "mandatory.xml";
     String optionalFileName = "optional.xml";
     File mandatoryFile;
     File optionalFile;
-
-    @Rule
-    public TemporaryFolder testFolder = new TemporaryFolder();
 
     @Before
     public void setUp() throws Exception {
@@ -97,15 +99,13 @@ class ProfilesConfTestDefinedProfile extends ProfilesConfTest {
 
         Map<String, String> hbaseProfile = ProfilesConf.getProfilePluginsMap("HBase");
         assertEquals(2, hbaseProfile.keySet().size());
-        assertEquals(hbaseProfile.get("X-GP-OPTIONS-PLUGIN1"), "X");
-        assertEquals(hbaseProfile.get("X-GP-OPTIONS-PLUGIN2"), "XX");
+        assertEquals("X", hbaseProfile.get("PLUGIN1"));
+        assertEquals("XX", hbaseProfile.get("PLUGIN2"));
 
-        Map<String, String> hiveProfile = ProfilesConf.getProfilePluginsMap("hIVe");// case
-                                                                                    // insensitive
-                                                                                    // profile
-                                                                                    // name
+        // case insensitive profile name
+        Map<String, String> hiveProfile = ProfilesConf.getProfilePluginsMap("hIVe");
         assertEquals(1, hiveProfile.keySet().size());
-        assertEquals(hiveProfile.get("X-GP-OPTIONS-PLUGIN1"), "Y");
+        assertEquals(hiveProfile.get("PLUGIN1"), "Y");
 
         Mockito.verify(LOG).info("PXF profiles loaded: [HBase, Hive]");
     }
@@ -170,8 +170,8 @@ class ProfilesConfTestOverrideProfile extends ProfilesConfTest {
                 optionalFile.toURI().toURL());
         Map profile = ProfilesConf.getProfilePluginsMap("HBase");
         assertEquals(2, profile.keySet().size());
-        assertEquals(profile.get("X-GP-OPTIONS-PLUGIN1"), "Y");
-        assertEquals(profile.get("X-GP-OPTIONS-PLUGIN2"), "YY");
+        assertEquals(profile.get("PLUGIN1"), "Y");
+        assertEquals(profile.get("PLUGIN2"), "YY");
     }
 }
 
@@ -242,7 +242,7 @@ class ProfilesConfTestMissingOptionalProfileFile extends ProfilesConfTest {
                 mandatoryFile.toURI().toURL());
         when(classLoader.getResource("pxf-profiles.xml")).thenReturn(null);
         Map<String, String> hbaseProfile = ProfilesConf.getProfilePluginsMap("HBase");
-        assertEquals("Y", hbaseProfile.get("X-GP-OPTIONS-PLUGIN1"));
+        assertEquals("Y", hbaseProfile.get("PLUGIN1"));
         Mockito.verify(LOG).warn("pxf-profiles.xml not found in the classpath");
     }
 }

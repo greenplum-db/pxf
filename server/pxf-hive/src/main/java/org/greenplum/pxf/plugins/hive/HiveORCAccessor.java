@@ -71,7 +71,7 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
      */
     public HiveORCAccessor(RequestContext input) throws Exception {
         super(input, new OrcInputFormat());
-        useStats = Utilities.useStats(this, requestContext);
+        useStats = Utilities.useStats(this, context);
     }
 
     @Override
@@ -97,7 +97,7 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
 
         List<Integer> colIds = new ArrayList<Integer>();
         List<String> colNames = new ArrayList<String>();
-        for(ColumnDescriptor col: requestContext.getTupleDescription()) {
+        for(ColumnDescriptor col: context.getTupleDescription()) {
             if(col.isProjected()) {
                 colIds.add(col.columnIndex());
                 colNames.add(col.columnName());
@@ -114,13 +114,13 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
      * JobConf object
      */
     private void addFilters() throws Exception {
-        if (!requestContext.hasFilter()) {
+        if (!context.hasFilter()) {
             return;
         }
 
         /* Predicate pushdown configuration */
-        String filterStr = requestContext.getFilterString();
-        HiveFilterBuilder eval = new HiveFilterBuilder(requestContext);
+        String filterStr = context.getFilterString();
+        HiveFilterBuilder eval = new HiveFilterBuilder(context);
         Object filter = eval.getFilterObject(filterStr);
         SearchArgument.Builder filterBuilder = SearchArgumentFactory.newBuilder();
 
@@ -179,7 +179,7 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
         int filterColumnIndex = filter.getColumn().index();
         // filter value might be null for unary operations
         Object filterValue = filter.getConstant() == null ? null : filter.getConstant().constant();
-        ColumnDescriptor filterColumn = requestContext.getColumn(filterColumnIndex);
+        ColumnDescriptor filterColumn = context.getColumn(filterColumnIndex);
         String filterColumnName = filterColumn.columnName();
 
         /* Need to convert java.sql.Date to Hive's DateWritable Format */
@@ -241,7 +241,7 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
          * it's enough to return count for a first split in file.
          * In case file has multiple splits - we don't want to duplicate counts.
          */
-        if (requestContext.getFragmentIndex() == 0) {
+        if (context.getFragmentIndex() == 0) {
             this.count = this.orcReader.getNumberOfRows();
             rowToEmitCount = readNextObject();
         }
@@ -258,9 +258,9 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
             throw new IllegalStateException("retrieveStats() should be called before calling emitAggObject()");
         }
         OneRow row = null;
-        if (requestContext.getAggType() == null)
+        if (context.getAggType() == null)
             throw new UnsupportedOperationException("Aggregate opration is required");
-        switch (requestContext.getAggType()) {
+        switch (context.getAggType()) {
             case COUNT:
                 if (objectsEmitted < count) {
                     objectsEmitted++;

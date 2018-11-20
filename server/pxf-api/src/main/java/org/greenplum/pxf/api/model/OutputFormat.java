@@ -1,4 +1,4 @@
-package org.greenplum.pxf.api;
+package org.greenplum.pxf.api.model;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -8,9 +8,9 @@ package org.greenplum.pxf.api;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -19,6 +19,8 @@ package org.greenplum.pxf.api;
  * under the License.
  */
 
+
+import org.greenplum.pxf.api.UnsupportedTypeException;
 
 /**
  * PXF supported output formats, enum which contains serializations classes
@@ -44,7 +46,7 @@ public enum OutputFormat {
 
     /**
      * Looks up output format for given class name if it exists.
-     * 
+     *
      * @param className class name implementing certain output format
      * @throws UnsupportedTypeException if output format with given class wasn't found
      * @return an output format with given class name

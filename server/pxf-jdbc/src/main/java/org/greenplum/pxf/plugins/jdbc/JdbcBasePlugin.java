@@ -19,23 +19,22 @@ package org.greenplum.pxf.plugins.jdbc;
  * under the License.
  */
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.greenplum.pxf.api.UserDataException;
+import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.api.model.BasePlugin;
 
-import java.util.ArrayList;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.SQLTimeoutException;
 import java.sql.Statement;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * JDBC tables plugin (base class)
@@ -53,12 +52,12 @@ public class JdbcBasePlugin extends BasePlugin {
     public JdbcBasePlugin(RequestContext input) throws UserDataException {
         initialize(input);
 
-        jdbcDriver = input.getUserProperty("JDBC_DRIVER");
+        jdbcDriver = input.getOption("JDBC_DRIVER");
         if (jdbcDriver == null) {
             throw new UserDataException("JDBC_DRIVER is a required parameter");
         }
 
-        dbUrl = input.getUserProperty("DB_URL");
+        dbUrl = input.getOption("DB_URL");
         if (dbUrl == null) {
             throw new UserDataException("DB_URL is a required parameter");
         }
@@ -75,23 +74,23 @@ public class JdbcBasePlugin extends BasePlugin {
         */
         Matcher matcher = tableNamePattern.matcher(tableName);
         if (matcher.matches()) {
-            requestContext.setDataSource(matcher.group(1));
+            context.setDataSource(matcher.group(1));
             tableName = input.getDataSource();
         }
 
-        columns = requestContext.getTupleDescription();
+        columns = context.getTupleDescription();
         if (columns == null) {
             throw new UserDataException("Tuple description must be provided");
         }
 
         // This parameter is not required. The default value is null
-        user = input.getUserProperty("USER");
+        user = input.getOption("USER");
         if (user != null) {
-            pass = input.getUserProperty("PASS");
+            pass = input.getOption("PASS");
         }
 
         // This parameter is not required. The default value is 0
-        String batchSizeRaw = input.getUserProperty("BATCH_SIZE");
+        String batchSizeRaw = input.getOption("BATCH_SIZE");
         if (batchSizeRaw != null) {
             try {
                 batchSize = Integer.parseInt(batchSizeRaw);
@@ -108,7 +107,7 @@ public class JdbcBasePlugin extends BasePlugin {
         }
 
         // This parameter is not required. The default value is 1
-        String poolSizeRaw = input.getUserProperty("POOL_SIZE");
+        String poolSizeRaw = input.getOption("POOL_SIZE");
         if (poolSizeRaw != null) {
             try {
                 poolSize = Integer.parseInt(poolSizeRaw);
@@ -228,7 +227,7 @@ public class JdbcBasePlugin extends BasePlugin {
     protected int poolSize = 1;
 
     // Columns description
-    protected ArrayList<ColumnDescriptor> columns = null;
+    protected List<ColumnDescriptor> columns = null;
 
 
     private static final Log LOG = LogFactory.getLog(JdbcBasePlugin.class);

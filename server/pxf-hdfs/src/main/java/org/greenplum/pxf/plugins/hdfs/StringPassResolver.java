@@ -49,7 +49,7 @@ public class StringPassResolver extends BasePlugin implements Resolver {
     public StringPassResolver(RequestContext requestContext) {
         initialize(requestContext);
         oneRow = new OneRow();
-        this.requestContext = requestContext;
+        this.context = requestContext;
     }
 
     /**

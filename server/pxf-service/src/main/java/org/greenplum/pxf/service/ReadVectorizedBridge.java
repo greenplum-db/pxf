@@ -19,24 +19,25 @@ package org.greenplum.pxf.service;
  * under the License.
  */
 
-import java.io.IOException;
-import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.greenplum.pxf.api.BadRecordException;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.ReadVectorizedResolver;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.service.io.Writable;
-import org.greenplum.pxf.api.utilities.ProtocolData;
+
+import java.io.IOException;
+import java.util.List;
 
 
 public class ReadVectorizedBridge extends ReadBridge {
 
     private static final Log LOG = LogFactory.getLog(ReadVectorizedBridge.class);
 
-    public ReadVectorizedBridge(ProtocolData protData) throws Exception {
-        super(protData);
+    public ReadVectorizedBridge(RequestContext context) throws Exception {
+        super(context);
     }
 
     @Override

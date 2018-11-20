@@ -26,11 +26,11 @@ import org.apache.hadoop.io.Writable;
 import org.greenplum.pxf.api.BadRecordException;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.UnsupportedTypeException;
 import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.BasePlugin;
+import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.DataSchemaException;
 import org.greenplum.pxf.plugins.hdfs.utilities.RecordkeyAdapter;
@@ -54,8 +54,8 @@ public class WritableResolver extends BasePlugin implements Resolver {
     private RecordkeyAdapter recordkeyAdapter = new RecordkeyAdapter();
     private int recordkeyIndex;
     // reflection fields
-    private Object userObject = null;
-    private Field[] fields = null;
+    private Object userObject;
+    private Field[] fields;
 
 
     /**
@@ -68,7 +68,7 @@ public class WritableResolver extends BasePlugin implements Resolver {
     public WritableResolver(RequestContext input) throws Exception {
         initialize(input);
 
-        String schemaName = requestContext.getUserProperty("DATA-SCHEMA");
+        String schemaName = context.getOption("DATA-SCHEMA");
 
         /** Testing that the schema name was supplied by the user - schema is an optional property. */
         if (schemaName == null) {
@@ -82,9 +82,9 @@ public class WritableResolver extends BasePlugin implements Resolver {
 
         userObject = Utilities.createAnyInstance(schemaName);
         fields = userObject.getClass().getDeclaredFields();
-        recordkeyIndex = (requestContext.getRecordkeyColumn() == null)
+        recordkeyIndex = (context.getRecordkeyColumn() == null)
                 ? RECORDKEY_UNDEFINED
-                        : requestContext.getRecordkeyColumn().columnIndex();
+                        : context.getRecordkeyColumn().columnIndex();
 
         // fields details:
         if (LOG.isDebugEnabled()) {
@@ -113,7 +113,7 @@ public class WritableResolver extends BasePlugin implements Resolver {
         int currentIdx = 0;
         for (Field field : fields) {
             if (currentIdx == recordkeyIndex) {
-                currentIdx += recordkeyAdapter.appendRecordkeyField(record, requestContext, onerow);
+                currentIdx += recordkeyAdapter.appendRecordkeyField(record, context, onerow);
             }
 
             if (Modifier.isPrivate(field.getModifiers())) {

@@ -20,16 +20,17 @@ package org.greenplum.pxf.service;
  */
 
 
-import org.greenplum.pxf.api.*;
-import org.greenplum.pxf.api.model.Accessor;
-import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.api.model.Resolver;
-import org.greenplum.pxf.api.model.BasePlugin;
-import org.greenplum.pxf.api.utilities.Utilities;
-import org.greenplum.pxf.service.io.Writable;
-import org.greenplum.pxf.api.utilities.ProtocolData;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.greenplum.pxf.api.BadRecordException;
+import org.greenplum.pxf.api.OneField;
+import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.model.Accessor;
+import org.greenplum.pxf.api.model.Plugin;
+import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.api.model.Resolver;
+import org.greenplum.pxf.api.utilities.Utilities;
+import org.greenplum.pxf.service.io.Writable;
 
 import java.io.DataInputStream;
 import java.util.List;
@@ -41,19 +42,19 @@ import java.util.List;
  */
 public class WriteBridge implements Bridge {
     private static final Log LOG = LogFactory.getLog(WriteBridge.class);
-    Accessor fileAccessor = null;
-    Resolver fieldsResolver = null;
-    BridgeInputBuilder inputBuilder;
+    private final Accessor fileAccessor;
+    private final Resolver fieldsResolver;
+    private final BridgeInputBuilder inputBuilder;
 
     /*
      * C'tor - set the implementation of the bridge
      */
-    public WriteBridge(ProtocolData protocolData) throws Exception {
+    public WriteBridge(RequestContext context) throws Exception {
 
-        inputBuilder = new BridgeInputBuilder(protocolData);
+        inputBuilder = new BridgeInputBuilder(context);
         /* plugins accept RequestContext parameters */
-        fileAccessor = getFileAccessor(protocolData);
-        fieldsResolver = getFieldsResolver(protocolData);
+        fileAccessor = getFileAccessor(context);
+        fieldsResolver = getFieldsResolver(context);
 
     }
 
@@ -99,12 +100,12 @@ public class WriteBridge implements Bridge {
         }
     }
 
-    private static Accessor getFileAccessor(RequestContext requestContext) throws Exception {
-        return (Accessor) Utilities.createAnyInstance(RequestContext.class, requestContext.getAccessor(), requestContext);
+    private static Accessor getFileAccessor(RequestContext context) throws Exception {
+        return (Accessor) Utilities.createAnyInstance(RequestContext.class, context.getAccessor(), context);
     }
 
-    private static Resolver getFieldsResolver(RequestContext requestContext) throws Exception {
-        return (Resolver) Utilities.createAnyInstance(RequestContext.class, requestContext.getResolver(), requestContext);
+    private static Resolver getFieldsResolver(RequestContext context) throws Exception {
+        return (Resolver) Utilities.createAnyInstance(RequestContext.class, context.getResolver(), context);
     }
 
     @Override
@@ -114,6 +115,6 @@ public class WriteBridge implements Bridge {
 
     @Override
     public boolean isThreadSafe() {
-        return ((BasePlugin) fileAccessor).isThreadSafe() && ((BasePlugin) fieldsResolver).isThreadSafe();
+        return ((Plugin) fileAccessor).isThreadSafe() && ((Plugin) fieldsResolver).isThreadSafe();
     }
 }

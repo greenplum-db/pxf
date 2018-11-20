@@ -66,9 +66,9 @@ public class DemoAccessor extends BasePlugin implements Accessor {
         /* check for EOF */
         if (fragmentNumber > 0)
             return null; /* signal EOF, close will be called */
-        int fragment = requestContext.getDataFragment();
-        String fragmentMetadata = new String(requestContext.getFragmentMetadata());
-        int colCount = requestContext.getColumns();
+        int fragment = context.getDataFragment();
+        String fragmentMetadata = new String(context.getFragmentMetadata());
+        int colCount = context.getColumns();
 
         /* generate row with (colCount) columns */
         StringBuilder colValue = new StringBuilder(fragmentMetadata + " row" + (rowNumber+1));

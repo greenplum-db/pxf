@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.greenplum.pxf.api.OutputFormat;
 import org.greenplum.pxf.api.utilities.EnumGpdbType;
 import org.apache.commons.lang.StringUtils;
 
