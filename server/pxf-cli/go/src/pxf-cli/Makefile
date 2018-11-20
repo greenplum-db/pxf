@@ -12,7 +12,7 @@ build: depend
 	@GOPATH=$(GOPATH) go build -ldflags $(BACKUP_VERSION_STR)
 
 test:
-	@GOPATH=$(GOPATH) ginkgo test
+	@GOPATH=$(GOPATH) ginkgo pxf cmd
 
 clean :
-	rm -f pxf-cluster
+	rm -f pxf-cli
