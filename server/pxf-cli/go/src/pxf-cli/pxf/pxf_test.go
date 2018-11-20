@@ -9,7 +9,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("MakeValidCliInputs", func() {
+var _ = Describe("RemoteCommandToRunOnSegments", func() {
 	var oldGphome string
 	var isGphomeSet bool
 
@@ -27,45 +27,37 @@ var _ = Describe("MakeValidCliInputs", func() {
 		}
 	})
 
-	It("Is successful when GPHOME is set and non-Init command is called", func() {
-		inputs, err := pxf.MakeValidCliInputs(pxf.Start)
+	It("constructs a list of shell args from the input", func() {
+		command, err := pxf.RemoteCommandToRunOnSegments(pxf.Init)
 		Expect(err).To(BeNil())
-		Expect(inputs).To(Equal(&pxf.CliInputs{
-			Gphome:  "/test/gphome",
-			Cmd:     pxf.Start,
-		}))
+		expected := "PXF_CONF=/test/gphome/pxf_conf /test/gphome/pxf/bin/pxf init"
+		Expect(command).To(Equal(expected))
+	})
+
+	It("Is successful when GPHOME is set and start command is called", func() {
+		command, err := pxf.RemoteCommandToRunOnSegments(pxf.Start)
+		Expect(err).To(BeNil())
+		Expect(command).To(Equal("/test/gphome/pxf/bin/pxf start"))
 	})
 
 	It("Init fails when PXF_CONF is not set", func() {
 		os.Unsetenv("PXF_CONF")
-		inputs, err := pxf.MakeValidCliInputs(pxf.Init)
-		Expect(err).To(Equal(errors.New("PXF_CONF must be set.")))
-		Expect(inputs).To(BeNil())
+		command, err := pxf.RemoteCommandToRunOnSegments(pxf.Init)
+		Expect(command).To(Equal(""))
+		Expect(err).To(Equal(errors.New("PXF_CONF must be set")))
 	})
 
 	It("Fails when GPHOME is not set", func() {
 		os.Unsetenv("GPHOME")
-		inputs, err := pxf.MakeValidCliInputs(pxf.Start)
-		Expect(err).To(Equal(errors.New("GPHOME must be set.")))
-		Expect(inputs).To(BeNil())
+		command, err := pxf.RemoteCommandToRunOnSegments(pxf.Init)
+		Expect(command).To(Equal(""))
+		Expect(err).To(Equal(errors.New("GPHOME must be set")))
 	})
 
 	It("Fails when GPHOME is blank", func() {
 		os.Setenv("GPHOME", "")
-		inputs, err := pxf.MakeValidCliInputs(pxf.Stop)
-		Expect(err).To(Equal(errors.New("GPHOME cannot be blank.")))
-		Expect(inputs).To(BeNil())
-	})
-})
-
-var _ = Describe("RemoteCommandToRunOnSegments", func() {
-	It("constructs a list of shell args from the input", func() {
-		inputs := &pxf.CliInputs{
-			Gphome: "/test/gphome",
-			Cmd:     pxf.Init,
-		}
-		expected := "/test/gphome/pxf/bin/pxf init"
-
-		Expect(pxf.RemoteCommandToRunOnSegments(inputs)).To(Equal(expected))
+		command, err := pxf.RemoteCommandToRunOnSegments(pxf.Init)
+		Expect(command).To(Equal(""))
+		Expect(err).To(Equal(errors.New("GPHOME cannot be blank")))
 	})
 })

@@ -9,7 +9,6 @@ import (
 
 	"github.com/greenplum-db/gp-common-go-libs/cluster"
 	"github.com/greenplum-db/gp-common-go-libs/dbconn"
-	"github.com/greenplum-db/gp-common-go-libs/gplog"
 	"github.com/spf13/cobra"
 )
 
@@ -64,10 +63,8 @@ func init() {
 }
 
 func RunCluster(command pxf.Command) {
-	// InitializeLogging must be called before we attempt to log with gplog.
-	gplog.InitializeLogging("pxf_cli", "")
 
-	inputs, err := pxf.MakeValidCliInputs(command)
+	remoteCommand, err := pxf.RemoteCommandToRunOnSegments(command)
 	fatalOnError(err)
 
 	connection := dbconn.NewDBConnFromEnvironment("postgres")
@@ -85,19 +82,19 @@ func RunCluster(command pxf.Command) {
 	remoteOut := globalCluster.GenerateAndExecuteCommand(
 		fmt.Sprintf("Executing command '%s' on all hosts", command),
 		func(contentID int) string {
-			return pxf.RemoteCommandToRunOnSegments(inputs)
+			return remoteCommand
 		},
 		hostList)
 	response := ""
 	errCount := 0
 	numHosts := len(remoteOut.Stderrs)
-	for index, error := range remoteOut.Stderrs {
+	for index, err := range remoteOut.Stderrs {
 		host := globalCluster.Segments[index].Hostname
-		if len(error) > 0 {
-			if command == pxf.Stop && strings.Contains(error, catalinaError) {
+		if len(err) > 0 {
+			if command == pxf.Stop && strings.Contains(err, catalinaError) {
 				continue
 			}
-			response += fmt.Sprintf("%s ==> %s\n", host, error)
+			response += fmt.Sprintf("%s ==> %s\n", host, err)
 			errCount++
 			continue
 		}

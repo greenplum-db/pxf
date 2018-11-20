@@ -448,7 +448,7 @@ function doStatus()
 function doCluster()
 {
 	shift # drop the 'cluster' arg
-	GPHOME=${GPHOME:-"${PXF_HOME}/.."} "$parent_script_dir/bin/pxf-cluster" "$@"
+	GPHOME=${GPHOME:-"${PXF_HOME}/.."} "$parent_script_dir/bin/pxf-cli" "$@"
 }
 
 pxf_script_command=$1

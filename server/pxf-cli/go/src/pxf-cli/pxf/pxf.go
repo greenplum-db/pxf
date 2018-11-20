@@ -26,14 +26,14 @@ const (
 	Stop  Command = "stop"
 )
 
-func MakeValidCliInputs(cmd Command) (*CliInputs, error) {
-	gphome, error := ValidateEnvVar(Gphome)
+func makeValidCliInputs(cmd Command) (*CliInputs, error) {
+	gphome, error := validateEnvVar(Gphome)
 	if error != nil {
 		return nil, error
 	}
 	pxfConf := ""
 	if cmd == Init {
-		pxfConf, error = ValidateEnvVar(PxfConf)
+		pxfConf, error = validateEnvVar(PxfConf)
 		if error != nil {
 			return nil, error
 		}
@@ -41,22 +41,26 @@ func MakeValidCliInputs(cmd Command) (*CliInputs, error) {
 	return &CliInputs{Cmd: cmd, Gphome: gphome, PxfConf: pxfConf}, nil
 }
 
-func ValidateEnvVar(envVar EnvVar) (string, error) {
+func validateEnvVar(envVar EnvVar) (string, error) {
 	envVarValue, isEnvVarSet := os.LookupEnv(string(envVar))
 	if !isEnvVarSet {
-		return "", errors.New(string(envVar) + " must be set.")
+		return "", errors.New(string(envVar) + " must be set")
 	}
 	if envVarValue == "" {
-		return "", errors.New(string(envVar) + " cannot be blank.")
+		return "", errors.New(string(envVar) + " cannot be blank")
 	}
 	return envVarValue, nil
 }
 
-func RemoteCommandToRunOnSegments(inputs *CliInputs) string {
+func RemoteCommandToRunOnSegments(cmd Command) (string, error) {
+	inputs, err := makeValidCliInputs(cmd)
+	if err != nil {
+		return "", err
+	}
 	pxfCommand := ""
 	if inputs.PxfConf != "" {
 		pxfCommand += "PXF_CONF=" + inputs.PxfConf + " "
 	}
 	pxfCommand += inputs.Gphome + "/pxf/bin/pxf" + " " + string(inputs.Cmd)
-	return pxfCommand
+	return pxfCommand, nil
 }

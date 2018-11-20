@@ -1,18 +1,21 @@
 .PHONY: depend build test
 .DEFAULT_GOAL := build
 
-GOPATH=$(shell pwd)/../..
+export GOPATH := $(shell cd ../.. && pwd)
+TARGET := $(shell echo $${PWD\#\#*/})
 GIT_VERSION := $(shell git describe --tags | perl -pe 's/(.*)-([0-9]*)-(g[0-9a-f]*)/\1+dev.\2.\3/')
-BACKUP_VERSION_STR="-X pxf-cli/cmd.version=$(GIT_VERSION)"
+BACKUP_VERSION_STR="-X $(TARGET)/cmd.version=$(GIT_VERSION)"
+LDFLAGS=-ldflags $(BACKUP_VERSION_STR)
 
 depend:
-	@GOPATH=$(GOPATH) dep ensure -v
+	@dep ensure -v
 
 build: depend
-	@GOPATH=$(GOPATH) go build -ldflags $(BACKUP_VERSION_STR)
+	go build -v $(LDFLAGS)
+	go install $(LDFLAGS)
 
-test:
-	@GOPATH=$(GOPATH) ginkgo pxf cmd
+test: build
+	ginkgo pxf cmd end_to_end
 
 clean :
-	rm -f pxf-cli
+	go clean -i

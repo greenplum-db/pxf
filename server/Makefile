@@ -17,7 +17,7 @@
 #
 # protect the default target for this file from the targets in Makefile.global
 
-PXF_CLI_MAKEFILE_LOCATION = pxf-cli/go/src/pxf-cluster
+PXF_CLI_MAKEFILE_LOCATION = pxf-cli/go/src/pxf-cli
 
 default: all
 
@@ -72,11 +72,11 @@ clean-cli:
 
 assemble-cli: compile-cli
 	mkdir -p build/stage/bin
-	cp $(PXF_CLI_MAKEFILE_LOCATION)/pxf-cluster build/stage/bin
+	cp pxf-cli/go/bin/pxf-cli build/stage/bin
 
 install-cli: compile-cli
 	mkdir -p $(PXF_HOME)/bin
-	cp $(PXF_CLI_MAKEFILE_LOCATION)/pxf-cluster $(PXF_HOME)/bin
+	cp pxf-cli/go/bin/pxf-cli $(PXF_HOME)/bin
 
 test unittest: test-cli
 	./gradlew test
