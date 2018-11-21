@@ -1,12 +1,12 @@
 package cmd_test
 
-import (
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+//import (
+	//. "github.com/onsi/ginkgo"
+	//. "github.com/onsi/gomega"
+//
+	//. "pxf-cli/cmd"
+//)
 
-	. "pxf-cli/cmd"
-)
+//var _ = Describe("Cluster", func() {
 
-var _ = Describe("Cluster", func() {
-
-})
+//})

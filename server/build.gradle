@@ -362,15 +362,6 @@ task assemble(type: Copy, dependsOn: [subprojects.jar, project(':pxf-service').w
         from("${project.name}/build/libs-shared") { into 'lib/shared' }
     }
 
-    from("pxf-service/src/scripts/pxf-service") {
-        into 'bin'
-        fileMode 0755
-        rename('pxf-service', 'pxf')
-        filter {
-            String line -> line.replaceAll("GRADLE_PRINT_PXF_VERSION", "echo PXF version ${version}")
-        }
-    }
-
     from("${tomcatTargetDir}/${tomcatName}") { into 'apache-tomcat' }
     from("pxf-service/src/main/resources/pxf-profiles-default.xml") { into 'conf' }
     from("pxf-service/src/scripts/pxf-env-default.sh") { into 'conf' }

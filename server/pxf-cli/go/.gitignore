@@ -1,3 +1,9 @@
-pkg.dep.sources
-src/*/vendor/
-src/*/pxf-cluster
+# Ignore everything under go/
+*
+# but allow recursion into subtrees
+!*/
+# then allow everything in pxf-cli
+!src/pxf-cli/**
+# reignore some stuff
+.idea
+vendor/

@@ -17,7 +17,7 @@
 #
 # protect the default target for this file from the targets in Makefile.global
 
-PXF_CLI_MAKEFILE_LOCATION = pxf-cli/go/src/pxf-cli
+PXF_CLI_MAKEFILE_LOCATION := pxf-cli/go/src/pxf-cli
 
 default: all
 
@@ -55,34 +55,32 @@ help:
 	@echo	"  - tar - bundle PXF along with tomcat into a single tarball"
 	@echo	"  - doc - creates aggregate javadoc under docs"
 
-all:
+all: test-cli assemble-cli install-cli
 	./gradlew clean tar aggregateJavadoc $(BUILD_PARAMS)
 
 compile:
 	./gradlew compileJava
 
-compile-cli:
-	make -C $(PXF_CLI_MAKEFILE_LOCATION)
+build-cli:
+	make -C ${PXF_CLI_MAKEFILE_LOCATION}
 
-test-cli: compile-cli
-	make -C $(PXF_CLI_MAKEFILE_LOCATION) test
+test-cli:
+	make -C ${PXF_CLI_MAKEFILE_LOCATION} test
 
 clean-cli:
-	make -C $(PXF_CLI_MAKEFILE_LOCATION) clean
+	make -C ${PXF_CLI_MAKEFILE_LOCATION} clean
 
-assemble-cli: compile-cli
-	mkdir -p build/stage/bin
-	cp pxf-cli/go/bin/pxf-cli build/stage/bin
+assemble-cli:
+	make -C ${PXF_CLI_MAKEFILE_LOCATION} tar
 
-install-cli: compile-cli
-	mkdir -p $(PXF_HOME)/bin
-	cp pxf-cli/go/bin/pxf-cli $(PXF_HOME)/bin
+install-cli:
+	make -C ${PXF_CLI_MAKEFILE_LOCATION} install
 
 test unittest: test-cli
 	./gradlew test
 
 tar: assemble-cli
-	./gradlew tar $(BUILD_PARAMS)
+	./gradlew tar ${BUILD_PARAMS}
 
 clean: clean-cli
 	./gradlew clean
@@ -95,7 +93,7 @@ doc:
 
 .PHONY: install
 install: install-cli
-	./gradlew install $(BUILD_PARAMS)
+	./gradlew install ${BUILD_PARAMS}
 
 .PHONY: version
 version:
