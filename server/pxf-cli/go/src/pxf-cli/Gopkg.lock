@@ -11,13 +11,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:7582014b43a0749370ff19c1b2a2d777da5470336f49553c1c6934ecd97a3b59"
+  digest = "1:2b5b5da16f42c52add8cafc7342cc3e9b2cb24f6a1610bfca362ef9ade67112d"
   name = "github.com/greenplum-db/gp-common-go-libs"
   packages = [
     "cluster",
     "dbconn",
     "gplog",
     "operating",
+    "testhelper",
   ]
   pruneopts = "UT"
   revision = "459655a5c915e633b3a15987ae469ab64b3405a4"
@@ -99,11 +100,12 @@
   version = "v1.6.0"
 
 [[projects]]
-  digest = "1:ab54eea8d482272009e9e4af07d4d9b5236c27b4d8c54a3f2c99d163be883eca"
+  digest = "1:ab262c675f7977f723570e7095f4c6ce878208c616762a17e01a37e8490bec98"
   name = "github.com/onsi/gomega"
   packages = [
     ".",
     "format",
+    "gbytes",
     "internal/assertion",
     "internal/asyncassertion",
     "internal/oraclematcher",
@@ -190,6 +192,14 @@
   version = "v0.3.0"
 
 [[projects]]
+  digest = "1:04aea75705cb453e24bf8c1506a24a5a9036537dbc61ddf71d20900d6c7c3ab9"
+  name = "gopkg.in/DATA-DOG/go-sqlmock.v1"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "d76b18b42f285b792bf985118980ce9eacea9d10"
+  version = "v1.3.0"
+
+[[projects]]
   digest = "1:abeb38ade3f32a92943e5be54f55ed6d6e3b6602761d74b4aab4c9dd45c18abd"
   name = "gopkg.in/fsnotify.v1"
   packages = ["."]
@@ -207,12 +217,12 @@
   revision = "dd632973f1e7218eb1089048e0798ec9ae7dceb8"
 
 [[projects]]
-  digest = "1:342378ac4dcb378a5448dd723f0784ae519383532f5e70ade24132c4c8693202"
+  branch = "v2"
+  digest = "1:4d2e5a73dc1500038e504a8d78b986630e3626dc027bc030ba5c75da257cdb96"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
   pruneopts = "UT"
-  revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
-  version = "v2.2.1"
+  revision = "51d6538a90f86fe93ac480b35f37b2be17fef232"
 
 [solve-meta]
   analyzer-name = "dep"
@@ -221,8 +231,11 @@
     "github.com/greenplum-db/gp-common-go-libs/cluster",
     "github.com/greenplum-db/gp-common-go-libs/dbconn",
     "github.com/greenplum-db/gp-common-go-libs/gplog",
+    "github.com/greenplum-db/gp-common-go-libs/operating",
+    "github.com/greenplum-db/gp-common-go-libs/testhelper",
     "github.com/onsi/ginkgo",
     "github.com/onsi/gomega",
+    "github.com/onsi/gomega/gbytes",
     "github.com/spf13/cobra",
   ]
   solver-name = "gps-cdcl"

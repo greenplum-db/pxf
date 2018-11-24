@@ -56,5 +56,4 @@ var _ = Describe("pxf-cli", func() {
 		output := runCli(pxfCliPath, "cluster", "init1")
 		Expect(output).To(ContainSubstring(fmt.Sprintf("perform <command> on each segment host in the cluster")))
 	})
-
 })

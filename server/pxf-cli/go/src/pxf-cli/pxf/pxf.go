@@ -26,6 +26,20 @@ const (
 	Stop  Command = "stop"
 )
 
+var (
+	SuccessMessage = map[Command]string{
+		Init:  "PXF initialized successfully on %d out of %d nodes\n",
+		Start: "PXF started successfully on %d out of %d nodes\n",
+		Stop:  "PXF stopped successfully on %d out of %d nodes\n",
+	}
+
+	ErrorMessage = map[Command]string{
+		Init:  "PXF failed to initialize on %d out of %d nodes\n",
+		Start: "PXF failed to start on %d out of %d nodes\n",
+		Stop:  "PXF failed to stop on %d out of %d nodes\n",
+	}
+)
+
 func makeValidCliInputs(cmd Command) (*CliInputs, error) {
 	gphome, error := validateEnvVar(Gphome)
 	if error != nil {
