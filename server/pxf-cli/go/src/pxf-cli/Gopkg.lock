@@ -236,6 +236,7 @@
     "github.com/onsi/ginkgo",
     "github.com/onsi/gomega",
     "github.com/onsi/gomega/gbytes",
+    "github.com/pkg/errors",
     "github.com/spf13/cobra",
   ]
   solver-name = "gps-cdcl"

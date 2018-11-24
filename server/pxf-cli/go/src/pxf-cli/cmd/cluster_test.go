@@ -2,12 +2,10 @@ package cmd_test
 
 import (
 	"github.com/greenplum-db/gp-common-go-libs/cluster"
-	"github.com/greenplum-db/gp-common-go-libs/operating"
-	"github.com/greenplum-db/gp-common-go-libs/testhelper"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
-	"os/user"
+	"github.com/pkg/errors"
 	"pxf-cli/cmd"
 	"pxf-cli/pxf"
 )
@@ -28,25 +26,18 @@ var _ = Describe("GetHostlist", func() {
 })
 
 var _ = Describe("GenerateOutput", func() {
-	var (
-		clusterOutput *cluster.RemoteOutput
-		testStdout    *gbytes.Buffer
-		testStderr    *gbytes.Buffer
-	)
+	var clusterOutput *cluster.RemoteOutput
 
 	BeforeEach(func() {
-		_, _, testStdout, testStderr, _ = testhelper.SetupTestEnvironment()
-		operating.System.CurrentUser = func() (*user.User, error) { return &user.User{Username: "testUser", HomeDir: "testDir"}, nil }
-		operating.System.Hostname = func() (string, error) { return "testHost", nil }
 		configMaster := cluster.SegConfig{ContentID: -1, Hostname: "mdw", DataDir: "/data/gpseg-1"}
 		configSegOne := cluster.SegConfig{ContentID: 0, Hostname: "sdw1", DataDir: "/data/gpseg0"}
 		configSegTwo := cluster.SegConfig{ContentID: 1, Hostname: "sdw2", DataDir: "/data/gpseg1"}
-		testCluster := cluster.NewCluster([]cluster.SegConfig{configMaster, configSegOne, configSegTwo})
-		cmd.SetCluster(testCluster)
+		cmd.SetCluster(cluster.NewCluster([]cluster.SegConfig{configMaster, configSegOne, configSegTwo}))
 		clusterOutput = &cluster.RemoteOutput{
 			NumErrors: 0,
-			Stderrs:   map[int]string{0: "", 1: "", 2: ""},
-			Stdouts:   map[int]string{0: "everything fine", 1: "everything fine", 2: "everything fine"},
+			Stderrs:   map[int]string{-1: "", 0: "", 1: ""},
+			Stdouts:   map[int]string{-1: "everything fine", 0: "everything fine", 1: "everything fine"},
+			Errors:    map[int]error{-1: nil, 0: nil, 1: nil},
 		}
 	})
 
@@ -75,6 +66,7 @@ var _ = Describe("GenerateOutput", func() {
 					NumErrors: 1,
 					Stderrs:   map[int]string{-1: "", 0: "", 1: "an error happened on sdw2"},
 					Stdouts:   map[int]string{-1: "everything fine", 0: "everything fine", 1: "something wrong"},
+					Errors:    map[int]error{-1: nil, 0: nil, 1: errors.New("some error")},
 				}
 				expectedError = "sdw2 ==> an error happened on sdw2"
 			})
@@ -96,17 +88,49 @@ var _ = Describe("GenerateOutput", func() {
 				Expect(testStderr).Should(gbytes.Say(expectedError))
 			})
 		})
-		Context("When we see the Catalina error on stop", func() {
-			It("Reports all nodes stopped successfully", func() {
-				catalinaStdout := "The stop command failed. Attempting to signal the process to stop through OS signal.\nTomcat stopped.\n"
-				catalinaStderr := "Nov 24, 2018 5:25:59 PM org.apache.catalina.startup.Catalina stopServer\nSEVERE: No shutdown port configured. Shut down server through OS signal. Server not shut down.\n"
+		Context("When we see messages in Stderr, but NumErrors is 0", func() {
+			It("Reports all nodes were successful", func() {
 				clusterOutput = &cluster.RemoteOutput{
 					NumErrors: 0,
-					Stderrs:   map[int]string{0: catalinaStderr, 1: catalinaStderr},
-					Stdouts:   map[int]string{0: catalinaStdout, 1: catalinaStdout},
+					Stderrs:   map[int]string{-1: "typical stderr", 0: "typical stderr", 1: "typical stderr"},
+					Stdouts:   map[int]string{-1: "typical stdout", 0: "typical stdout", 1: "typical stdout"},
+					Errors:    map[int]error{-1: nil, 0: nil, 1: nil},
 				}
 				cmd.GenerateOutput(pxf.Stop, clusterOutput)
-				Expect(testStdout).To(gbytes.Say("PXF stopped successfully on 2 out of 2 nodes"))
+				Expect(testStdout).To(gbytes.Say("PXF stopped successfully on 3 out of 3 nodes"))
+			})
+		})
+
+		Context("When a command fails, and output is multiline", func() {
+			It("Truncates the output to two lines", func() {
+				stderr := `stderr line one
+stderr line two
+stderr line three`
+				clusterOutput = &cluster.RemoteOutput{
+					NumErrors: 1,
+					Stderrs:   map[int]string{-1: "", 0: "", 1: stderr},
+					Stdouts:   map[int]string{-1: "everything fine", 0: "everything fine", 1: "everything not fine"},
+					Errors:    map[int]error{-1: nil, 0: nil, 1: errors.New("some error")},
+				}
+				expectedError := `sdw2 ==> stderr line one
+stderr line two...`
+				cmd.GenerateOutput(pxf.Stop, clusterOutput)
+				Expect(testStdout).Should(gbytes.Say("PXF failed to stop on 1 out of 3 nodes"))
+				Expect(testStderr).Should(gbytes.Say(expectedError))
+			})
+		})
+		Context("When NumErrors is non-zero, but Stderr is empty", func() {
+			It("Reports Stdout in error message", func() {
+				clusterOutput = &cluster.RemoteOutput{
+					NumErrors: 1,
+					Stderrs:   map[int]string{-1: "", 0: "", 1: ""},
+					Stdouts:   map[int]string{-1: "everything fine", 0: "everything fine", 1: "something wrong on sdw2\nstderr line2\nstderr line3"},
+					Errors:    map[int]error{-1: nil, 0: nil, 1: errors.New("some error")},
+				}
+				expectedError := "sdw2 ==> something wrong on sdw2\nstderr line2..."
+				cmd.GenerateOutput(pxf.Stop, clusterOutput)
+				Expect(testStdout).Should(gbytes.Say("PXF failed to stop on 1 out of 3 nodes"))
+				Expect(testStderr).Should(gbytes.Say(expectedError))
 			})
 		})
 	})

@@ -14,17 +14,12 @@ func TestEndToEnd(t *testing.T) {
 	RunSpecs(t, "EndToEnd Suite")
 }
 
-func RunCommand(cmd *exec.Cmd) []byte {
-	output, _ := cmd.CombinedOutput()
-	return output
-}
-
 /* This function is a helper function to execute pxf-cli and return a session
  * to allow checking its output.
  */
 func runCli(commandStr string, args ...string) string {
 	command := exec.Command(commandStr, args...)
-	output := RunCommand(command)
+	output, _ := command.CombinedOutput()
 	return fmt.Sprintf("%s", output)
 }
 

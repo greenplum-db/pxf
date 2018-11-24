@@ -7,8 +7,8 @@ import (
 
 var (
 	connectionPool *dbconn.DBConn
-	globalCluster *cluster.Cluster
-	segConfigs []cluster.SegConfig
+	globalCluster  *cluster.Cluster
+	segConfigs     []cluster.SegConfig
 )
 
 func SetConnection(conn *dbconn.DBConn) {

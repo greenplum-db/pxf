@@ -11,8 +11,6 @@ import (
 	"strings"
 )
 
-const catalinaError = "SEVERE: No shutdown port configured"
-
 var (
 	clusterCmd = &cobra.Command{
 		Use:   "cluster",
@@ -63,25 +61,33 @@ func GetHostlist(command pxf.Command) int {
 }
 
 func GenerateOutput(command pxf.Command, remoteOut *cluster.RemoteOutput) error {
-	response := ""
-	errCount := 0
 	numHosts := len(remoteOut.Stderrs)
-	for index, err := range remoteOut.Stderrs {
-		host := globalCluster.Segments[index].Hostname
-		if len(err) > 0 {
-			if command == pxf.Stop && strings.Contains(err, catalinaError) {
-				continue
-			}
-			response += fmt.Sprintf("%s ==> %s\n", host, err)
-			errCount++
-			continue
-		}
-	}
-	if errCount == 0 {
-		gplog.Info(pxf.SuccessMessage[command], numHosts-errCount, numHosts)
+	numErrors := remoteOut.NumErrors
+	if numErrors == 0 {
+		gplog.Info(pxf.SuccessMessage[command], numHosts-numErrors, numHosts)
 		return nil
 	}
-	gplog.Info("ERROR: "+pxf.ErrorMessage[command], errCount, numHosts)
+	response := ""
+	for index, stderr := range remoteOut.Stderrs {
+		if remoteOut.Errors[index] == nil {
+			continue
+		}
+		host := globalCluster.Segments[index].Hostname
+		errorMessage := stderr
+		if len(errorMessage) == 0 {
+			errorMessage = remoteOut.Stdouts[index]
+		}
+		lines := strings.Split(errorMessage, "\n")
+		errorMessage = lines[0]
+		if len(lines) > 1 {
+			errorMessage += "\n" + lines[1]
+		}
+		if len(lines) > 2 {
+			errorMessage += "..."
+		}
+		response += fmt.Sprintf("%s ==> %s\n", host, errorMessage)
+	}
+	gplog.Info("ERROR: "+pxf.ErrorMessage[command], numErrors, numHosts)
 	gplog.Error("%s", response)
 	return errors.New(response)
 }
