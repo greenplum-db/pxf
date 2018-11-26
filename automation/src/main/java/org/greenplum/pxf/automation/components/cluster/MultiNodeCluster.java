@@ -5,6 +5,7 @@ import java.net.Inet4Address;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import jsystem.framework.report.Reporter;
 
@@ -113,6 +114,11 @@ public class MultiNodeCluster extends PhdCluster {
         switch (service) {
         case hive:
             nodesListByService = getNode(MasterNode.class, service);
+            break;
+        case pxf:
+            nodesListByService = getNode(service).stream()
+                    .filter(n -> n instanceof SlaveNode)
+                    .collect(Collectors.toList());
             break;
         default:
             nodesListByService = getNode(service);
