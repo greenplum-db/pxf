@@ -21,7 +21,6 @@ RUN cd /tmp/pxf_src/server && \
     PXF_HOME=/tmp/pxf_src/server/build/stage make dev && \
     mkdir -p /home/gpadmin && \
     mv /root/.m2 /home/gpadmin && \
-    chown -R 1000:1000 /home/gpadmin && \
-    chown -R 1000:1000 /opt/go && \
     ln -s /root/.gradle /home/gpadmin/.gradle && \
+    chown -R 1000:1000 /home/gpadmin && \
     rm -rf /tmp/pxf_src
