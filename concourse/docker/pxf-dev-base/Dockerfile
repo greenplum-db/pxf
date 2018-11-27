@@ -12,8 +12,8 @@ RUN cd /tmp && \
     cd - && \
     GOPATH=/opt/go /usr/local/go/bin/go get github.com/golang/dep/cmd/dep && \
     GOPATH=/opt/go /usr/local/go/bin/go get github.com/onsi/ginkgo/ginkgo && \
-    echo >>/etc/bashrc 'export GOPATH=/opt/go' && \
-    echo >>/etc/bashrc 'export PATH=${GOPATH}/bin:/usr/local/go/bin:$PATH'
+    echo >> /etc/bashrc 'export GOPATH=/opt/go' && \
+    echo >> /etc/bashrc 'export PATH=${GOPATH}/bin:/usr/local/go/bin:$PATH'
 
 RUN cd /tmp/pxf_src/server && \
     GOPATH=/opt/go PATH=/opt/go/bin:/usr/local/go/bin:$PATH make tar && \
@@ -21,6 +21,8 @@ RUN cd /tmp/pxf_src/server && \
     PXF_HOME=/tmp/pxf_src/server/build/stage make dev && \
     mkdir -p /home/gpadmin && \
     mv /root/.m2 /home/gpadmin && \
-    ln -s /root/.gradle /home/gpadmin/.gradle && \
-    chown -R 1000:1000 /home/gpadmin && \
+    mv /root/.gradle /home/gpadmin && \
+    ln -s /home/gpadmin/.gradle /root/.gradle && \
+    ln -s /home/gpadmin/.m2 /root/.m2 && \
+    chown -R gpadmin:gpadmin /home/gpadmin && \
     rm -rf /tmp/pxf_src

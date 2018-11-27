@@ -1,18 +1,6 @@
 #!/bin/bash
 
-groupadd -g 1000 gpadmin && useradd -u 1000 -g 1000 gpadmin
-echo "gpadmin  ALL=(ALL)       NOPASSWD: ALL" > /etc/sudoers.d/gpadmin
-groupadd supergroup && usermod -a -G supergroup gpadmin
-chown gpadmin:gpadmin /home/gpadmin
-
-# set up ssh
-mkdir /home/gpadmin/.ssh
-ssh-keygen -t rsa -N "" -f /home/gpadmin/.ssh/id_rsa
-cat /home/gpadmin/.ssh/id_rsa.pub >> /home/gpadmin/.ssh/authorized_keys
-echo -e "password\npassword" | passwd gpadmin 2> /dev/null
-{ ssh-keyscan localhost; ssh-keyscan 0.0.0.0; } >> /home/gpadmin/.ssh/known_hosts
-chown -R gpadmin:gpadmin /home/gpadmin/.ssh
-
+mkdir -p /usr/local/greenplum-db-devel
 chown -R gpadmin:gpadmin /usr/local/greenplum-db-devel
 
 # TODO: check if gpadmin-limits.conf already exists and bail out if it does
