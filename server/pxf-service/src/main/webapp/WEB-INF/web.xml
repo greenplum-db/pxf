@@ -77,6 +77,6 @@ under the License.
          pxf-log4j.properties inside the webapp. -->
     <context-param>
         <param-name>log4jConfigLocation</param-name>
-        <param-value>/etc/pxf/conf/pxf-log4j.properties</param-value>
+        <param-value>${pxf.conf}/conf/pxf-log4j.properties</param-value>
     </context-param>
 </web-app>

@@ -134,6 +134,7 @@ function createInstance()
     # copy configuration files into instance
     cp ${tomcat_templates}/bin/setenv.sh ${instance_root}/${instance_name}/bin/setenv.sh
     cp ${tomcat_templates}/conf/catalina.properties ${instance_root}/${instance_name}/conf/.
+    cp ${tomcat_templates}/conf/logging.properties ${instance_root}/${instance_name}/conf/.
     cp ${tomcat_templates}/conf/server.xml ${instance_root}/${instance_name}/conf/.
     cp ${tomcat_templates}/conf/web.xml ${instance_root}/${instance_name}/conf/.
 
@@ -209,49 +210,6 @@ function instanceExists()
 
 	${instance_root}/${instance_name}/bin/catalina.sh version > /dev/null 2>&1
 	return $?
-}
-
-#
-# configureWebapp patches the webapp with pxf and user overridden configs
-# applied only if PXF_HOME is defined
-#
-function configureWebapp()
-{
-    if [ -z ${PXF_HOME} ]; then
-        # webapp doesn't require patch
-        return 0
-    fi
-    pushd ${instance_root}/${instance_name}/webapps > /dev/null || return 1
-    rm -rf pxf
-    mkdir pxf
-    cd pxf
-    jar -xf ../pxf.war
-    popd > /dev/null
-
-    context_file=${instance_root}/${instance_name}/webapps/pxf/META-INF/context.xml
-    sed "${SED_OPTS[@]}" "s:classpathFiles=\"[a-zA-Z0-9\/\;.-]*\":classpathFiles=\"${PXF_HOME}\/conf\/pxf-private.classpath\":" ${context_file}
-    sed "${SED_OPTS[@]}" "s:secondaryClasspathFiles=\"[a-zA-Z0-9\/\;.-]*\":secondaryClasspathFiles=\"${PXF_HOME}\/conf\/pxf-public.classpath\":" ${context_file}
-
-    web_file=${instance_root}/${instance_name}/webapps/pxf/WEB-INF/web.xml
-    sed "${SED_OPTS[@]}" "s:<param-value>.*pxf-log4j.properties<\/param-value>:<param-value>${PXF_CONF}\/conf\/pxf-log4j.properties<\/param-value>:" ${web_file}
-
-    # set port
-    catalinaProperties=${instance_root}/${instance_name}/conf/catalina.properties
-    sed "${SED_OPTS[@]}" "s|^[[:blank:]]*connector.http.port=.*$|connector.http.port=${PXF_PORT}|g" ${catalinaProperties}
-
-    # set container configs
-    catalinaEnv=${instance_root}/${instance_name}/bin/setenv.sh
-    sed "${SED_OPTS[@]}" "s|JVM_OPTS=.*$|JVM_OPTS=\"${PXF_JVM_OPTS}\"|g" ${catalinaEnv}
-    sed "${SED_OPTS[@]}" "s|-Dpxf.log.dir=[^[:space:]^\"]*|-Dpxf.log.dir=${PXF_LOGDIR} |g" ${catalinaEnv}
-    sed "${SED_OPTS[@]}" "s|-Dpxf.service.kerberos.keytab=[^[:space:]^\"]*|-Dpxf.service.kerberos.keytab=${PXF_KEYTAB} |g" ${catalinaEnv}
-    sed "${SED_OPTS[@]}" "s|-Dpxf.service.kerberos.principal=[^[:space:]^\"]*|-Dpxf.service.kerberos.principal=${PXF_PRINCIPAL} |g" ${catalinaEnv}
-    sed "${SED_OPTS[@]}" "s|^[[:blank:]]*PXF_USER_IMPERSONATION=.*$|PXF_USER_IMPERSONATION=\"${PXF_USER_IMPERSONATION}\"|g" ${catalinaEnv}
-    sed "${SED_OPTS[@]}" "s|^[[:blank:]]*CATALINA_PID=.*$|CATALINA_PID=${PXF_RUNDIR}/catalina.pid|g" ${catalinaEnv}
-    sed "${SED_OPTS[@]}" "s|^[[:blank:]]*CATALINA_OUT=.*$|CATALINA_OUT=${PXF_LOGDIR}/catalina.out|g" ${catalinaEnv}
-
-    # set log directories
-    catalinaLog=${instance_root}/$instance_name/conf/logging.properties
-    sed "${SED_OPTS[@]}" "s|juli.FileHandler.directory\s*=.*$|juli.FileHandler.directory = ${PXF_LOGDIR}|g" ${catalinaLog}
 }
 
 function commandWebapp()
@@ -412,7 +370,6 @@ function doStart()
         fail "can't find PXF instance, maybe call init?"
     fi
     get_environment
-    configureWebapp || return 1
     commandWebapp start || return 1
     checkWebapp 300 || return 1
 }
