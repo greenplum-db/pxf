@@ -90,7 +90,9 @@ public class StringPassResolverTest {
      */
     private StringPassResolver buildResolver() throws Exception {
         mockRequestContext = mock(RequestContext.class);
-        return new StringPassResolver(mockRequestContext);
+        StringPassResolver resolver = new StringPassResolver();
+        resolver.initialize(mockRequestContext);
+        return resolver;
     }
 
     private void verifyOneRow(OneRow oneRow, byte[] expected) {

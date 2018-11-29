@@ -38,12 +38,9 @@ public class HiveRCFileAccessor extends HiveAccessor {
 
     /**
      * Constructs a HiveRCFileAccessor.
-     *
-     * @param input input containing user data
-     * @throws Exception if user data was wrong
      */
-    public HiveRCFileAccessor(RequestContext input) throws Exception {
-        super(input, new RCFileInputFormat());
+    public HiveRCFileAccessor() {
+        super(new RCFileInputFormat());
     }
 
     @Override

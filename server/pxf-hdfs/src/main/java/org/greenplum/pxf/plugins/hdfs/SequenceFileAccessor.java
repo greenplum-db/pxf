@@ -47,7 +47,7 @@ import java.util.EnumSet;
 /**
  * A PXF Accessor for reading and writing Sequence File records
  */
-public class SequenceFileAccessor extends HdfsSplittableDataAccessor implements Accessor {
+public class SequenceFileAccessor extends HdfsSplittableDataAccessor {
 
     private FileContext fc;
     private Path file;
@@ -56,15 +56,11 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor implements 
     private SequenceFile.Writer writer;
     private LongWritable defaultKey; // used when recordkey is not defined
 
-    private static final Log LOG = LogFactory.getLog(SequenceFileAccessor.class);
-
     /**
      * Constructs a SequenceFileAccessor.
-     *
-     * @param input all input parameters coming from the client request
      */
-    public SequenceFileAccessor(RequestContext input) {
-        super(input, new SequenceFileInputFormat<Writable, Writable>());
+    public SequenceFileAccessor() {
+        super(new SequenceFileInputFormat<Writable, Writable>());
     }
 
     /**
@@ -98,7 +94,7 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor implements 
         parent = file.getParent();
         if (!fs.exists(parent)) {
             fs.mkdirs(parent);
-            LOG.debug("Created new dir " + parent);
+            LOG.debug("Created new dir %s", parent);
         }
 
         writer = null;
@@ -135,9 +131,8 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor implements 
                         "Compression type must be defined");
             }
 
-            LOG.debug("Compression ON: " + "compression codec: "
-                    + userCompressCodec + ", compression type: "
-                    + compressionType);
+            LOG.debug("Compression ON: compression codec: %s, compression type: %s",
+                    userCompressCodec, compressionType);
         }
     }
 
@@ -177,7 +172,7 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor implements 
         if (codec != null) {
             fileName += codec.getDefaultExtension();
         }
-        LOG.debug("File name for write: " + fileName);
+        LOG.debug("File name for write: %s", fileName);
         return fileName;
     }
 
@@ -201,7 +196,7 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor implements 
         try {
             writer.append((key == null) ? defaultKey : key, value);
         } catch (IOException e) {
-            LOG.error("Failed to write data to file: " + e.getMessage());
+            LOG.error("Failed to write data to file: %s", e.getMessage());
             return false;
         }
 

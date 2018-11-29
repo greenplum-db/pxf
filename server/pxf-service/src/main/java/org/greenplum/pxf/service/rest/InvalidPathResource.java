@@ -170,7 +170,7 @@ public class InvalidPathResource {
      */
     private String getRetiredPathMsg(String endpoint) {
         if("Analyzer".equals(endpoint)) {
-            return endpoint + " API is retired. Please use /BaseFragmenter/getFragmentsStats instead";
+            return endpoint + " API is retired. Please use /Fragmenter/getFragmentsStats instead";
         } else {
             return endpoint + " API is retired";
         }

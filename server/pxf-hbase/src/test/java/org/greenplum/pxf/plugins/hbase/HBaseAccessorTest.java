@@ -78,7 +78,8 @@ public class HBaseAccessorTest {
     @Test
     public void construction() throws Exception {
         prepareConstruction();
-        HBaseAccessor accessor = new HBaseAccessor(requestContext);
+        HBaseAccessor accessor = new HBaseAccessor();
+        accessor.initialize(requestContext);
         PowerMockito.verifyNew(HBaseTupleDescription.class).withArguments(requestContext);
     }
 
@@ -99,7 +100,9 @@ public class HBaseAccessorTest {
 
         when(requestContext.getFragmentMetadata()).thenReturn(null);
 
-        accessor = new HBaseAccessor(requestContext);
+        accessor = new HBaseAccessor();
+        accessor.initialize(requestContext);
+
         try {
             accessor.openForRead();
             fail("should throw no metadata exception");

@@ -57,16 +57,14 @@ public class WritableResolver extends BasePlugin implements Resolver {
     private Object userObject;
     private Field[] fields;
 
-
     /**
-     * Constructs a WritableResolver.
+     * Initialize the plugin for the incoming request
      *
-     * @param input all input parameters coming from the client
-     * @throws Exception if schema file is missing, cannot be found in
-     *                   classpath or fails to instantiate
+     * @param requestContext data provided in the request
      */
-    public WritableResolver(RequestContext input) throws Exception {
-        initialize(input);
+    @Override
+    public void initialize(RequestContext requestContext) {
+        super.initialize(requestContext);
 
         String schemaName = context.getOption("DATA-SCHEMA");
 
@@ -80,11 +78,15 @@ public class WritableResolver extends BasePlugin implements Resolver {
             throw new DataSchemaException(DataSchemaException.MessageFmt.SCHEMA_NOT_ON_CLASSPATH, schemaName);
         }
 
-        userObject = Utilities.createAnyInstance(schemaName);
+        try {
+            userObject = Utilities.createAnyInstance(schemaName);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create an instance of " + schemaName, e);
+        }
         fields = userObject.getClass().getDeclaredFields();
         recordkeyIndex = (context.getRecordkeyColumn() == null)
                 ? RECORDKEY_UNDEFINED
-                        : context.getRecordkeyColumn().columnIndex();
+                : context.getRecordkeyColumn().columnIndex();
 
         // fields details:
         if (LOG.isDebugEnabled()) {

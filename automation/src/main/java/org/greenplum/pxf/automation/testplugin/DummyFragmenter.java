@@ -1,10 +1,10 @@
 package org.greenplum.pxf.automation.testplugin;
 
-import org.greenplum.pxf.api.Fragment;
-import org.greenplum.pxf.api.Fragmenter;
-import org.greenplum.pxf.api.FragmentsStats;
-import org.greenplum.pxf.api.utilities.InputData;
+import org.greenplum.pxf.api.model.BaseFragmenter;
+import org.greenplum.pxf.api.model.Fragment;
+import org.greenplum.pxf.api.model.FragmentStats;
 
+import java.net.InetAddress;
 import java.util.List;
 
 /*
@@ -14,10 +14,7 @@ import java.util.List;
  * Used to get fragments of data that could be read in parallel from the different segments.
  * Dummy implementation, for documentation
  */
-public class DummyFragmenter extends Fragmenter {
-    public DummyFragmenter(InputData metaData) {
-        super(metaData);
-    }
+public class DummyFragmenter extends BaseFragmenter {
 
     /*
      * path is a data source URI that can appear as a file name, a directory name  or a wildcard
@@ -25,22 +22,22 @@ public class DummyFragmenter extends Fragmenter {
      */
     @Override
     public List<Fragment> getFragments() throws Exception {
-        String localhostname = java.net.InetAddress.getLocalHost().getHostName();
+        String localhostname = InetAddress.getLocalHost().getHostName();
         String[] localHosts = new String[]{localhostname, localhostname};
-        fragments.add(new Fragment(inputData.getDataSource() + ".1" /* source name */,
+        fragments.add(new Fragment(context.getDataSource() + ".1" /* source name */,
                 localHosts /* available hosts list */,
                 "fragment1".getBytes()));
-        fragments.add(new Fragment(inputData.getDataSource() + ".2" /* source name */,
+        fragments.add(new Fragment(context.getDataSource() + ".2" /* source name */,
                 localHosts /* available hosts list */,
                 "fragment2".getBytes()));
-        fragments.add(new Fragment(inputData.getDataSource() + ".3" /* source name */,
+        fragments.add(new Fragment(context.getDataSource() + ".3" /* source name */,
                 localHosts /* available hosts list */,
                 "fragment3".getBytes()));
         return fragments;
     }
 
     @Override
-    public FragmentsStats getFragmentsStats() throws Exception {
-        return new FragmentsStats(3, 10000000, 100000000L);
+    public FragmentStats getFragmentStats() throws Exception {
+        return new FragmentStats(3, 10000000, 100000000L);
     }
 }

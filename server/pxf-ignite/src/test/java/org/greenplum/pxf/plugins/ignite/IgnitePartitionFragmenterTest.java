@@ -49,7 +49,8 @@ public class IgnitePartitionFragmenterTest {
         when(context.getOption("RANGE")).thenReturn("2008-01-01:2009-01-01");
         when(context.getOption("INTERVAL")).thenReturn("1:month");
 
-        IgnitePartitionFragmenter fragment = new IgnitePartitionFragmenter(context);
+        IgnitePartitionFragmenter fragment = new IgnitePartitionFragmenter();
+        fragment.initialize(context);
         List<Fragment> fragments = fragment.getFragments();
         assertEquals(12, fragments.size());
 
@@ -69,7 +70,8 @@ public class IgnitePartitionFragmenterTest {
 
         // End date > Start date
         when(context.getOption("RANGE")).thenReturn("2008-01-01:2001-01-01");
-        fragment = new IgnitePartitionFragmenter(context);
+        fragment = new IgnitePartitionFragmenter();
+        fragment.initialize(context);
         fragments = fragment.getFragments();
         assertEquals(0, fragments.size());
     }
@@ -80,7 +82,8 @@ public class IgnitePartitionFragmenterTest {
         when(context.getOption("RANGE")).thenReturn("2008-01-01:2011-01-01");
         when(context.getOption("INTERVAL")).thenReturn("1:year");
 
-        IgnitePartitionFragmenter fragment = new IgnitePartitionFragmenter(context);
+        IgnitePartitionFragmenter fragment = new IgnitePartitionFragmenter();
+        fragment.initialize(context);
         List<Fragment> fragments = fragment.getFragments();
         assertEquals(3, fragments.size());
     }
@@ -91,7 +94,8 @@ public class IgnitePartitionFragmenterTest {
         when(context.getOption("RANGE")).thenReturn("2001:2012");
         when(context.getOption("INTERVAL")).thenReturn("2");
 
-        IgnitePartitionFragmenter fragment = new IgnitePartitionFragmenter(context);
+        IgnitePartitionFragmenter fragment = new IgnitePartitionFragmenter();
+        fragment.initialize(context);
         List<Fragment> fragments = fragment.getFragments();
         assertEquals(6, fragments.size());
 
@@ -111,7 +115,8 @@ public class IgnitePartitionFragmenterTest {
 
         // End > Start
         when(context.getOption("RANGE")).thenReturn("2013:2012");
-        fragment = new IgnitePartitionFragmenter(context);
+        fragment = new IgnitePartitionFragmenter();
+        fragment.initialize(context);
         assertEquals(0, fragment.getFragments().size());
     }
 
@@ -120,7 +125,8 @@ public class IgnitePartitionFragmenterTest {
         when(context.getOption("PARTITION_BY")).thenReturn("level:enum");
         when(context.getOption("RANGE")).thenReturn("excellent:good:general:bad");
 
-        IgnitePartitionFragmenter fragment = new IgnitePartitionFragmenter(context);
+        IgnitePartitionFragmenter fragment = new IgnitePartitionFragmenter();
+        fragment.initialize(context);
         List<Fragment> fragments = fragment.getFragments();
         assertEquals(4, fragments.size());
 
@@ -133,59 +139,59 @@ public class IgnitePartitionFragmenterTest {
         assertEquals("bad", new String(fragMeta));
     }
 
-    @Test(expected = UserDataException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testInvalidPartitiontype() throws Exception {
         when(context.getOption("PARTITION_BY")).thenReturn("level:float");
         when(context.getOption("RANGE")).thenReturn("100:200");
 
-        new IgnitePartitionFragmenter(context);
+        new IgnitePartitionFragmenter().initialize(context);
     }
 
-    @Test(expected = UserDataException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testInvalidParameterFormat() throws Exception {
         //PARTITION_BY must be comma-delimited string
         when(context.getOption("PARTITION_BY")).thenReturn("level-enum");
         when(context.getOption("RANGE")).thenReturn("100:200");
 
-        new IgnitePartitionFragmenter(context);
+        new IgnitePartitionFragmenter().initialize(context);
     }
 
-    @Test(expected = UserDataException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testInvalidDateFormat() throws Exception {
         //date string must be yyyy-MM-dd
         when(context.getOption("PARTITION_BY")).thenReturn("cdate:date");
         when(context.getOption("RANGE")).thenReturn("2008/01/01:2009-01-01");
         when(context.getOption("INTERVAL")).thenReturn("1:month");
 
-        new IgnitePartitionFragmenter(context).getFragments();
+        new IgnitePartitionFragmenter().initialize(context);
     }
 
-    @Test(expected = UserDataException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testInvalidParameterValue() throws Exception {
         //INTERVAL must be greater than 0
         when(context.getOption("PARTITION_BY")).thenReturn("cdate:date");
         when(context.getOption("RANGE")).thenReturn("2008-01-01:2009-01-01");
         when(context.getOption("INTERVAL")).thenReturn("-1:month");
 
-        new IgnitePartitionFragmenter(context);
+        new IgnitePartitionFragmenter().initialize(context);
     }
 
-    @Test(expected = UserDataException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testInvalidIntervalType() throws Exception {
         when(context.getOption("PARTITION_BY")).thenReturn("cdate:date");
         when(context.getOption("RANGE")).thenReturn("2008-01-01:2011-01-01");
         when(context.getOption("INTERVAL")).thenReturn("6:hour");
 
-        new IgnitePartitionFragmenter(context).getFragments();
+        new IgnitePartitionFragmenter().initialize(context);
     }
 
-    @Test(expected = UserDataException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testIntervalTypeMissing() throws Exception {
         when(context.getOption("PARTITION_BY")).thenReturn("cdate:date");
         when(context.getOption("RANGE")).thenReturn("2008-01-01:2011-01-01");
         when(context.getOption("INTERVAL")).thenReturn("6");
 
-        new IgnitePartitionFragmenter(context).getFragments();
+        new IgnitePartitionFragmenter().initialize(context);
     }
 
     @Test
@@ -194,7 +200,8 @@ public class IgnitePartitionFragmenterTest {
         when(context.getOption("RANGE")).thenReturn("2001:2012");
         when(context.getOption("INTERVAL")).thenReturn("1");
 
-        IgnitePartitionFragmenter fragment = new IgnitePartitionFragmenter(context);
+        IgnitePartitionFragmenter fragment = new IgnitePartitionFragmenter();
+        fragment.initialize(context);
         List<Fragment> fragments = fragment.getFragments();
         assertEquals(11, fragments.size());
     }
@@ -204,26 +211,31 @@ public class IgnitePartitionFragmenterTest {
         when(context.getOption("PARTITION_BY")).thenReturn("level:enum");
         when(context.getOption("RANGE")).thenReturn("100:200:300");
 
-        IgnitePartitionFragmenter fragment = new IgnitePartitionFragmenter(context);
+        IgnitePartitionFragmenter fragment = new IgnitePartitionFragmenter();
+        fragment.initialize(context);
         List<Fragment> fragments = fragment.getFragments();
         assertEquals(3, fragments.size());
     }
 
-    @Test(expected = UserDataException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testRangeMissingEndValue() throws Exception {
         when(context.getOption("PARTITION_BY")).thenReturn("cdate:date");
         when(context.getOption("RANGE")).thenReturn("2008-01-01");
         when(context.getOption("INTERVAL")).thenReturn("1:year");
 
-        new IgnitePartitionFragmenter(context).getFragments();
+        IgnitePartitionFragmenter fragment = new IgnitePartitionFragmenter();
+        fragment.initialize(context);
+        fragment.getFragments();
     }
 
-    @Test(expected = UserDataException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testRangeMissing() throws Exception {
         when(context.getOption("PARTITION_BY")).thenReturn("year:int");
         when(context.getOption("INTERVAL")).thenReturn("1");
 
-        new IgnitePartitionFragmenter(context).getFragments();
+        IgnitePartitionFragmenter fragment = new IgnitePartitionFragmenter();
+        fragment.initialize(context);
+        fragment.getFragments();
     }
 
     @Test
@@ -231,14 +243,16 @@ public class IgnitePartitionFragmenterTest {
         when(context.getOption("PARTITION_BY")).thenReturn("level:enum");
         when(context.getOption("RANGE")).thenReturn("100");
 
-        IgnitePartitionFragmenter fragment = new IgnitePartitionFragmenter(context);
+        IgnitePartitionFragmenter fragment = new IgnitePartitionFragmenter();
+        fragment.initialize(context);
         List<Fragment> fragments = fragment.getFragments();
         assertEquals(1, fragments.size());
     }
 
     @Test
     public void testNoPartition() throws Exception {
-        IgnitePartitionFragmenter fragment = new IgnitePartitionFragmenter(context);
+        IgnitePartitionFragmenter fragment = new IgnitePartitionFragmenter();
+        fragment.initialize(context);
         List<Fragment> fragments = fragment.getFragments();
         assertEquals(1, fragments.size());
     }

@@ -3,18 +3,16 @@ package org.greenplum.pxf.automation.testplugin;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.ReadAccessor;
-import org.greenplum.pxf.api.utilities.InputData;
-import org.greenplum.pxf.api.utilities.Plugin;
+import org.greenplum.pxf.api.model.Accessor;
+import org.greenplum.pxf.api.model.BasePlugin;
 
 /**
  * Test class for regression tests.
  * The only thing this class does is to throw an exception
  * containing the received filter from GPDB (HAS-FILTER & FILTER).
  */
-public class FilterPrinterAccessor extends Plugin implements ReadAccessor
+public class FilterPrinterAccessor extends BasePlugin implements Accessor
 {
     static private Log Log = LogFactory.getLog(FilterPrinterAccessor.class);
 
@@ -27,15 +25,11 @@ public class FilterPrinterAccessor extends Plugin implements ReadAccessor
         }
     }
 
-    public FilterPrinterAccessor(InputData input) {
-        super(input);
-    }
-
     @Override
     public boolean openForRead() throws Exception {
 
-        String filter = inputData.hasFilter() ?
-                inputData.getFilterString() : "No filter";
+        String filter = context.hasFilter() ?
+                context.getFilterString() : "No filter";
 
         throw new FilterPrinterException(filter);
     }
@@ -48,5 +42,20 @@ public class FilterPrinterAccessor extends Plugin implements ReadAccessor
     @Override
     public OneRow readNextObject() {
         throw new UnsupportedOperationException("readNextObject is not implemented");
+    }
+
+    @Override
+    public boolean openForWrite() throws Exception {
+        throw new UnsupportedOperationException("openForWrite is not implemented");
+    }
+
+    @Override
+    public boolean writeNextObject(OneRow oneRow) throws Exception {
+        throw new UnsupportedOperationException("writeNextObject is not implemented");
+    }
+
+    @Override
+    public void closeForWrite() throws Exception {
+        throw new UnsupportedOperationException("closeForWrite is not implemented");
     }
 }

@@ -36,15 +36,6 @@ import java.io.InputStreamReader;
 public class QuotedLineBreakAccessor extends HdfsAtomicDataAccessor {
     private BufferedReader reader;
 
-    /**
-     * Constructs a QuotedLineBreakAccessor.
-     *
-     * @param input all input parameters coming from the client request
-     */
-    public QuotedLineBreakAccessor(RequestContext input) {
-        super(input);
-    }
-
     @Override
     public boolean openForRead() throws Exception {
         if (!super.openForRead()) {

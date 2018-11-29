@@ -28,6 +28,7 @@ public class HttpRequestParser implements RequestParser<HttpHeaders> {
     private static final String FALSE_LCASE = "false";
 
     private static final Logger LOG = LoggerFactory.getLogger(HttpRequestParser.class);
+    private static final HttpRequestParser instance = new HttpRequestParser();
 
     private PluginConf pluginConf;
 
@@ -37,6 +38,10 @@ public class HttpRequestParser implements RequestParser<HttpHeaders> {
 
     HttpRequestParser(PluginConf pluginConf) {
         this.pluginConf = pluginConf;
+    }
+
+    public static HttpRequestParser getInstance() {
+        return instance;
     }
 
     /**

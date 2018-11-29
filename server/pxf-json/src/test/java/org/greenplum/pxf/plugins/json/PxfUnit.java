@@ -180,7 +180,7 @@ public abstract class PxfUnit {
     }
 
     /**
-     * Get the class of the implementation of BaseFragmenter to be tested.
+     * Get the class of the implementation of Fragmenter to be tested.
      *
      * @return The class
      */
@@ -485,15 +485,20 @@ public abstract class PxfUnit {
     }
 
     /**
-     * Gets an instance of BaseFragmenter via reflection.
+     * Gets an instance of Fragmenter via reflection.
      * <p>
      * Searches for a constructor that has a single parameter of some BaseMetaData type
      *
-     * @return A BaseFragmenter instance
+     * @return A Fragmenter instance
      * @throws Exception If something bad happens
      */
     protected Fragmenter getFragmenter(RequestContext meta) throws Exception {
 
+        Constructor<?> c = getFragmenterClass().getConstructor();
+        Fragmenter fragmenter = (Fragmenter) c.newInstance();
+        fragmenter.initialize(meta);
+
+        /*
         Fragmenter fragmenter = null;
 
         for (Constructor<?> c : getFragmenterClass().getConstructors()) {
@@ -509,7 +514,7 @@ public abstract class PxfUnit {
         if (fragmenter == null) {
             throw new InvalidParameterException("Unable to find Fragmenter constructor with a BaseMetaData parameter");
         }
-
+*/
         return fragmenter;
 
     }
@@ -524,7 +529,11 @@ public abstract class PxfUnit {
      */
     protected Accessor getReadAccessor(RequestContext data) throws Exception {
 
-        Accessor accessor = null;
+        Constructor<?> c = getAccessorClass().getConstructor();
+        Accessor accessor = (Accessor) c.newInstance();
+        accessor.initialize(data);
+
+        /*
 
         for (Constructor<?> c : getAccessorClass().getConstructors()) {
             if (c.getParameterTypes().length == 1) {
@@ -539,6 +548,7 @@ public abstract class PxfUnit {
         if (accessor == null) {
             throw new InvalidParameterException("Unable to find Accessor constructor with a BaseMetaData parameter");
         }
+        */
 
         return accessor;
 
@@ -554,7 +564,11 @@ public abstract class PxfUnit {
      */
     protected Resolver getReadResolver(RequestContext data) throws Exception {
 
-        Resolver resolver = null;
+        Constructor<?> c = getResolverClass().getConstructor();
+        Resolver resolver = (Resolver) c.newInstance();
+        resolver.initialize(data);
+
+        /*
 
         // search for a constructor that has a single parameter of a type of
         // BaseMetaData to create the accessor instance
@@ -571,6 +585,7 @@ public abstract class PxfUnit {
         if (resolver == null) {
             throw new InvalidParameterException("Unable to find Resolver constructor with a BaseMetaData parameter");
         }
+        */
 
         return resolver;
     }

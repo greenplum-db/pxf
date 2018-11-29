@@ -1,4 +1,4 @@
-package org.greenplum.pxf.service;
+package org.greenplum.pxf.api.utilities;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -8,9 +8,9 @@ package org.greenplum.pxf.service;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -20,23 +20,26 @@ package org.greenplum.pxf.service;
  */
 
 
-import org.greenplum.pxf.service.io.Writable;
-
-import java.io.DataInputStream;
+import org.greenplum.pxf.api.model.Accessor;
+import org.greenplum.pxf.api.model.RequestContext;
 
 /**
- * Bridge interface - defines the interface of the Bridge classes. Any Bridge
- * class acts as an iterator over Hadoop stored data, and should implement
- * getNext (for reading) or setNext (for writing) for handling accessed data.
+ * Factory class for creation of {@link Accessor} objects.
  */
-public interface Bridge {
-    boolean beginIteration() throws Exception;
+public class AccessorFactory extends BasePluginFactory<Accessor> {
 
-    Writable getNext() throws Exception;
+    private static final AccessorFactory instance = new AccessorFactory();
 
-    boolean setNext(DataInputStream inputStream) throws Exception;
+    /**
+     * Returns a singleton instance of the factory.
+     * @return a singleton instance of the factory.
+     */
+    public static AccessorFactory getInstance() {
+        return instance;
+    }
 
-    boolean isThreadSafe();
-
-    void endIteration() throws Exception;
+    @Override
+    protected String getPluginClassName(RequestContext requestContext) {
+        return requestContext.getAccessor();
+    }
 }

@@ -34,25 +34,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * BaseFragmenter class for HDFS data resources.
+ * Fragmenter class for HDFS data resources.
  *
  * Given an HDFS data source (a file, directory, or wild card pattern) divide
  * the data into fragments and return a list of them along with a list of
  * host:port locations for each.
  */
-public class HdfsDataFragmenter extends BasePlugin implements Fragmenter {
-    protected JobConf jobConf;
-    protected List<Fragment> fragments;
+public class HdfsDataFragmenter extends BaseFragmenter {
 
-    /**
-     * Constructs an HdfsDataFragmenter object.
-     *
-     * @param md all input parameters coming from the client
-     */
-    public HdfsDataFragmenter(RequestContext md) {
-        initialize(md);
+    protected JobConf jobConf;
+
+    @Override
+    public void initialize(RequestContext requestContext) {
+        super.initialize(requestContext);
         jobConf = new JobConf(configuration, this.getClass());
-        fragments = new ArrayList<>();
     }
 
     /**

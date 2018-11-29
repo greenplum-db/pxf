@@ -41,10 +41,6 @@ public class HiveORCVectorizedAccessor extends HiveORCAccessor {
     private int batchIndex;
     private VectorizedRowBatch batch;
 
-    public HiveORCVectorizedAccessor(RequestContext input) throws Exception {
-        super(input);
-    }
-
     @Override
     public boolean openForRead() throws Exception {
         Options options = new Options();

@@ -19,11 +19,8 @@ package org.greenplum.pxf.plugins.ignite;
  * under the License.
  */
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.greenplum.pxf.api.UserDataException;
-import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.BasePlugin;
+import org.greenplum.pxf.api.model.RequestContext;
 
 /**
  * PXF-Ignite base class.
@@ -40,17 +37,12 @@ public class IgniteBasePlugin extends BasePlugin {
     // Ignite cache name
     protected String cacheName = null;
 
-    /**
-     * Class constructor. Parses and checks 'RequestContext'
-     * @param requestContext Input data
-     * @throws UserDataException if the request parameter is malformed
-     */
-    public IgniteBasePlugin(RequestContext requestContext) throws UserDataException {
-        initialize(requestContext);
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Constructor started");
-        }
 
+    @Override
+    public void initialize(RequestContext requestContext) {
+        super.initialize(requestContext);
+
+        LOG.debug("Initializer started");
         igniteHost = requestContext.getOption("IGNITE_HOST");
         if (igniteHost == null) {
             igniteHost = igniteHostDefault;
@@ -66,24 +58,20 @@ public class IgniteBasePlugin extends BasePlugin {
                 // Zero value is allowed for INSERT queries
                 if (bufferSize < 0) {
                     bufferSize = bufferSizeDefault;
-                    LOG.warn("Buffer size is incorrect; set to the default value (" + bufferSizeDefault + ")");
+                    LOG.warn("Buffer size is incorrect; set to the default value (%d)", bufferSizeDefault);
                 }
             }
             catch (NumberFormatException e) {
                 bufferSize = bufferSizeDefault;
-                LOG.warn("Buffer size is incorrect; set to the default value (" + bufferSizeDefault + ")");
+                LOG.warn("Buffer size is incorrect; set to the default value (%d)", bufferSizeDefault);
             }
         }
         // else: bufferSize is already set to bufferSizeDefault
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Constructor successful");
-        }
+        LOG.debug("Initializer successful");
     }
 
     public boolean isThreadSafe() {
         return true;
     }
-
-    private static final Log LOG = LogFactory.getLog(IgniteBasePlugin.class);
 }

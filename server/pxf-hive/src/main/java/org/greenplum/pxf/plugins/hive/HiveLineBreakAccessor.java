@@ -33,12 +33,14 @@ public class HiveLineBreakAccessor extends HiveAccessor {
 
     /**
      * Constructs a HiveLineBreakAccessor.
-     *
-     * @param input input containing user data
-     * @throws Exception if user data was wrong
      */
-    public HiveLineBreakAccessor(RequestContext input) throws Exception {
-        super(input, new TextInputFormat());
+    public HiveLineBreakAccessor() {
+        super(new TextInputFormat());
+    }
+
+    @Override
+    public void initialize(RequestContext requestContext) {
+        super.initialize(requestContext);
         ((TextInputFormat) inputFormat).configure(jobConf);
     }
 

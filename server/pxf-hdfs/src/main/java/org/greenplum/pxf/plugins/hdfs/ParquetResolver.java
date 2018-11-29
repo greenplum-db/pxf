@@ -47,15 +47,6 @@ public class ParquetResolver extends BasePlugin implements Resolver {
     public static final long MILLIS_IN_DAY = 24 * 3600 * 1000;
 
     /**
-     * Constructs the ParquetResolver
-     *
-     * @param metaData the RequestContext
-     */
-    public ParquetResolver(RequestContext metaData) {
-        initialize(metaData);
-    }
-
-    /**
      * {@inheritDoc}
      * @param schema the MessageType instance, which is obtained from the Parquet file footer
      */

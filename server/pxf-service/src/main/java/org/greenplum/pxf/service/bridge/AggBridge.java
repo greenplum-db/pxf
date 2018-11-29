@@ -17,14 +17,14 @@
  * under the License.
  */
 
-package org.greenplum.pxf.service;
+package org.greenplum.pxf.service.bridge;
 
 import org.apache.commons.collections.map.LRUMap;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.StatsAccessor;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.api.utilities.AccessorFactory;
+import org.greenplum.pxf.api.utilities.ResolverFactory;
 import org.greenplum.pxf.service.io.Writable;
 
 import java.util.LinkedList;
@@ -34,20 +34,24 @@ import java.util.LinkedList;
  *
  */
 public class AggBridge extends ReadBridge implements Bridge {
-    private static final Log LOG = LogFactory.getLog(AggBridge.class);
+
     /* Avoid resolving rows with the same key twice */
     private LRUMap outputCache;
 
     public AggBridge(RequestContext context) throws Exception {
-        super(context);
+        this(context, AccessorFactory.getInstance(), ResolverFactory.getInstance());
+    }
+
+    AggBridge(RequestContext context, AccessorFactory accessorFactory, ResolverFactory resolverFactory) throws Exception {
+        super(context, accessorFactory, resolverFactory);
     }
 
     @Override
     public boolean beginIteration() throws Exception {
         /* Initialize LRU cache with 100 items*/
         outputCache = new LRUMap();
-        boolean openForReadStatus = super.fileAccessor.openForRead();
-        ((StatsAccessor) fileAccessor).retrieveStats();
+        boolean openForReadStatus = accessor.openForRead();
+        ((StatsAccessor) accessor).retrieveStats();
         return openForReadStatus;
     }
 
@@ -64,13 +68,13 @@ public class AggBridge extends ReadBridge implements Bridge {
 
         try {
             while (outputQueue.isEmpty()) {
-                onerow = ((StatsAccessor) fileAccessor).emitAggObject();
+                onerow = ((StatsAccessor) accessor).emitAggObject();
                 if (onerow == null) {
                     break;
                 }
                 cachedOutput = (LinkedList<Writable>) outputCache.get(onerow.getKey());
                 if (cachedOutput == null) {
-                    cachedOutput = outputBuilder.makeOutput(fieldsResolver.getFields(onerow));
+                    cachedOutput = outputBuilder.makeOutput(resolver.getFields(onerow));
                     outputCache.put(onerow.getKey(), cachedOutput);
                 }
                 outputQueue.addAll(cachedOutput);
@@ -80,11 +84,9 @@ public class AggBridge extends ReadBridge implements Bridge {
                 }
             }
         } catch (Exception ex) {
-            LOG.error("Error occurred when reading next object from aggregate bridge:" + ex.getMessage());
+            LOG.error("Error occurred when reading next object from aggregate bridge: ", ex.getMessage());
             throw ex;
         }
-
         return output;
     }
-
 }

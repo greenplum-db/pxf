@@ -29,7 +29,9 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 
 @RunWith(PowerMockRunner.class)
@@ -50,7 +52,9 @@ public class HBaseResolverTest {
         tupleDesc = mock(HBaseTupleDescription.class);
         PowerMockito.whenNew(HBaseTupleDescription.class).withArguments(requestContext).thenReturn(tupleDesc);
 
-        HBaseResolver resolver = new HBaseResolver(requestContext);
+        HBaseResolver resolver = new HBaseResolver();
+        resolver.initialize(requestContext);
+
         PowerMockito.verifyNew(HBaseTupleDescription.class).withArguments(requestContext);
     }
 
@@ -65,9 +69,10 @@ public class HBaseResolverTest {
         tupleDesc = mock(HBaseTupleDescription.class);
         PowerMockito.whenNew(HBaseTupleDescription.class).withArguments(requestContext).thenReturn(tupleDesc);
 
-        HBaseResolver resolver = new HBaseResolver(requestContext);
+        HBaseResolver resolver = new HBaseResolver();
+        resolver.initialize(requestContext);
 
-		/*
+        /*
 		 * Supported type, No value.
 		 * Should successfully return Null.
 		 */

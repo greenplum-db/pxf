@@ -63,40 +63,45 @@ public class AvroResolver extends BasePlugin implements Resolver {
     private String mapkeyDelim;
     private String recordkeyDelim;
 
-    /**
-     * Constructs an AvroResolver. Initializes Avro data structure: the Avro
+    /*
+     * Initializes an AvroResolver. Initializes Avro data structure: the Avro
      * record - fields information and the Avro record reader. All Avro data is
      * build from the Avro schema, which is based on the *.avsc file that was
      * passed by the user
      *
-     * @param input all input parameters coming from the client
-     * @throws IOException if Avro schema could not be retrieved or parsed
+     * throws RuntimeException if Avro schema could not be retrieved or parsed
      */
-    public AvroResolver(RequestContext input) throws IOException {
-        initialize(input);
+
+    @Override
+    public void initialize(RequestContext requestContext) {
+        super.initialize(requestContext);
 
         Schema schema;
 
-        if (isAvroFile()) {
-            schema = HdfsUtilities.getAvroSchema(configuration, input.getDataSource());
-        } else {
-            InputStream externalSchema = openExternalSchema();
-            try {
-                schema = (new Schema.Parser()).parse(externalSchema);
-            } finally {
-                externalSchema.close();
+        try {
+            if (isAvroFile()) {
+                schema = HdfsUtilities.getAvroSchema(configuration, context.getDataSource());
+            } else {
+                InputStream externalSchema = openExternalSchema();
+                try {
+                    schema = (new Schema.Parser()).parse(externalSchema);
+                } finally {
+                    externalSchema.close();
+                }
             }
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to initialize AvroResolver", e);
         }
 
         reader = new GenericDatumReader<>(schema);
         fields = schema.getFields();
 
-        collectionDelim = input.getOption("COLLECTION_DELIM") == null ? COLLECTION_DELIM
-                : input.getOption("COLLECTION_DELIM");
-        mapkeyDelim = input.getOption("MAPKEY_DELIM") == null ? MAPKEY_DELIM
-                : input.getOption("MAPKEY_DELIM");
-        recordkeyDelim = input.getOption("RECORDKEY_DELIM") == null ? RECORDKEY_DELIM
-                : input.getOption("RECORDKEY_DELIM");
+        collectionDelim = context.getOption("COLLECTION_DELIM") == null ? COLLECTION_DELIM
+                : context.getOption("COLLECTION_DELIM");
+        mapkeyDelim = context.getOption("MAPKEY_DELIM") == null ? MAPKEY_DELIM
+                : context.getOption("MAPKEY_DELIM");
+        recordkeyDelim = context.getOption("RECORDKEY_DELIM") == null ? RECORDKEY_DELIM
+                : context.getOption("RECORDKEY_DELIM");
     }
 
     /**

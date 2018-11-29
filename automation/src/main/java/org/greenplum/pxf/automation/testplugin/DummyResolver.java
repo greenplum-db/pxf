@@ -2,10 +2,8 @@ package org.greenplum.pxf.automation.testplugin;
 
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.ReadResolver;
-import org.greenplum.pxf.api.WriteResolver;
-import org.greenplum.pxf.api.utilities.InputData;
-import org.greenplum.pxf.api.utilities.Plugin;
+import org.greenplum.pxf.api.model.BasePlugin;
+import org.greenplum.pxf.api.model.Resolver;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -20,18 +18,13 @@ import static org.greenplum.pxf.api.io.DataType.VARCHAR;
  * must inherit this abstract class
  * Dummy implementation, for documentation
  */
-public class DummyResolver extends Plugin implements ReadResolver, WriteResolver {
+public class DummyResolver extends BasePlugin implements Resolver {
     private int rowNumber;
 
-    public DummyResolver(InputData metaData) {
-        super(metaData);
-        rowNumber = 0;
-    }
-
     @Override
-    public List<OneField> getFields(OneRow row) throws Exception {
+    public List<OneField> getFields(OneRow row) {
         /* break up the row into fields */
-        List<OneField> output = new LinkedList<OneField>();
+        List<OneField> output = new LinkedList<>();
         String[] fields = ((String) row.getData()).split(",");
 
         output.add(new OneField(INTEGER.getOID() /* type */, Integer.parseInt(fields[0]) /* value */));
@@ -42,7 +35,7 @@ public class DummyResolver extends Plugin implements ReadResolver, WriteResolver
     }
 
     @Override
-    public OneRow setFields(List<OneField> record) throws Exception {
+    public OneRow setFields(List<OneField> record) {
         /* should read inputStream row by row */
         return rowNumber > 5
                 ? null

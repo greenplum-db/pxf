@@ -58,7 +58,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 /**
- * BaseFragmenter class for HIVE tables. <br>
+ * Fragmenter class for HIVE tables. <br>
  * Given a Hive table and its partitions divide the data into fragments (here a
  * data fragment is actually a HDFS file block) and return a list of them. Each
  * data fragment will contain the following information:
@@ -86,7 +86,6 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
     static final String HIVE_API_NE = " != ";
     static final String HIVE_API_DQUOTE = "\"";
 
-    private JobConf jobConf;
     private HiveMetaStoreClient client;
 
     protected boolean filterInFragmenter = false;
@@ -98,23 +97,9 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
     private Map<String, String> partitionkeyTypes = new HashMap<>();
     private boolean canPushDownIntegral;
 
-    /**
-     * Constructs a HiveDataFragmenter object.
-     *
-     * @param requestContext all input parameters coming from the client
-     */
-    public HiveDataFragmenter(RequestContext requestContext) {
-        this(requestContext, HiveDataFragmenter.class);
-    }
-
-    /**
-     * Constructs a HiveDataFragmenter object.
-     *
-     * @param requestContext all input parameters coming from the client
-     * @param clazz     Class for JobConf
-     */
-    public HiveDataFragmenter(RequestContext requestContext, Class<?> clazz) {
-        super(requestContext);
+    @Override
+    public void initialize(RequestContext requestContext) {
+        super.initialize(requestContext);
         client = HiveUtilities.initHiveClient();
         // canPushDownIntegral represents hive.metastore.integral.jdo.pushdown property in hive-site.xml
         canPushDownIntegral =

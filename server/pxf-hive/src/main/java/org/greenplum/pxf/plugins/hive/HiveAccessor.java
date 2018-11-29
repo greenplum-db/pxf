@@ -75,36 +75,45 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
     protected Boolean filterInFragmenter;
 
     /**
-     * Constructs a HiveAccessor and creates an InputFormat (derived from
-     * {@link org.apache.hadoop.mapred.InputFormat}) and the Hive partition
-     * fields
-     *
-     * @param input contains the InputFormat class name and the partition fields
-     * @throws Exception if failed to create input format
+     * Constructs a HiveAccessor
      */
-    public HiveAccessor(RequestContext input) throws Exception {
+    public HiveAccessor() {
         /*
          * Unfortunately, Java does not allow us to call a function before
          * calling the base constructor, otherwise it would have been:
          * super(input, createInputFormat(input))
          */
-        this(input, null);
+        this(null);
     }
 
     /**
-     * Constructs a HiveAccessor
-     *
-     * @param input       contains the InputFormat class name and the partition fields
-     * @param inputFormat Hive InputFormat
-     * @throws Exception if failed to create input format
+     * Creates an instance of HiveAccessor using specified input format
+     * @param inputFormat input format
      */
-    public HiveAccessor(RequestContext input, InputFormat<?, ?> inputFormat) throws Exception {
-        super(input, inputFormat);
-        HiveUserData hiveUserData = HiveUtilities.parseHiveUserData(input);
+    HiveAccessor(InputFormat<?, ?> inputFormat) {
+        super(inputFormat);
+    }
 
-        if (inputFormat == null) {
-            this.inputFormat = HiveDataFragmenter.makeInputFormat(
-                    hiveUserData.getInputFormatName()/* inputFormat name */, jobConf);
+    /**
+     * Initializes a HiveAccessor and creates an InputFormat (derived from
+     * {@link org.apache.hadoop.mapred.InputFormat}) and the Hive partition
+     * fields
+     *
+     * @param requestContext request context
+     * @throws RuntimeException if failed to create input format
+     */
+    @Override
+    public void initialize(RequestContext requestContext) {
+        super.initialize(requestContext);
+        HiveUserData hiveUserData;
+        try {
+            hiveUserData = HiveUtilities.parseHiveUserData(context);
+            if (inputFormat == null) {
+                this.inputFormat = HiveDataFragmenter.makeInputFormat(
+                        hiveUserData.getInputFormatName(), jobConf);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to initialize HiveAccessor", e);
         }
 
         initPartitionFields(hiveUserData.getPartitionKeys());

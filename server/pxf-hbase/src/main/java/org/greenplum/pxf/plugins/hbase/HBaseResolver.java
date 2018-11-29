@@ -48,14 +48,10 @@ import java.util.List;
 public class HBaseResolver extends BasePlugin implements Resolver {
     private HBaseTupleDescription tupleDescription;
 
-    /**
-     * Constructs a resolver and initializes the table's tuple description.
-     *
-     * @param input query information, contains HBase table name and filter
-     */
-    public HBaseResolver(RequestContext input) {
-        initialize(input);
-        tupleDescription = new HBaseTupleDescription(input);
+    @Override
+    public void initialize(RequestContext requestContext) {
+        super.initialize(requestContext);
+        tupleDescription = new HBaseTupleDescription(context);
     }
 
     /**

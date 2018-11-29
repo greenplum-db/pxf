@@ -247,58 +247,35 @@ public class Utilities {
     }
 
     /**
-     * Based on accessor information determines whether to use AggBridge
+     * Determines whether components can use aggregate optimized implementations.
      *
      * @param requestContext input protocol data
-     * @return true if AggBridge is applicable for current context
+     * @return true if aggregate optimizations can be applicable to the current context
      */
-    public static boolean useAggBridge(RequestContext requestContext) {
-        boolean isStatsAccessor = false;
-        try {
-            if (requestContext == null || requestContext.getAccessor() == null) {
-                throw new IllegalArgumentException("Missing accessor information");
-            }
-            isStatsAccessor = ArrayUtils.contains(Class.forName(requestContext.getAccessor()).getInterfaces(), StatsAccessor.class);
-        } catch (ClassNotFoundException e) {
-            LOG.error("Unable to load accessor class: " + e.getMessage());
-            return false;
-        }
+    public static boolean aggregateOptimizationsSupported(RequestContext requestContext) {
+        boolean isStatsAccessor = implementsInterface(requestContext.getAccessor(), StatsAccessor.class);
         /* Make sure filter is not present, aggregate operation supports optimization and accessor implements StatsAccessor interface */
-        return (requestContext != null) && !requestContext.hasFilter()
+        return (isStatsAccessor
+                && !requestContext.hasFilter()
                 && (requestContext.getAggType() != null)
                 && requestContext.getAggType().isOptimizationSupported()
-                && requestContext.getNumAttrsProjected() == 0
-                && isStatsAccessor;
+                && requestContext.getNumAttrsProjected() == 0);
     }
 
     /**
-     * Determines whether accessor should use statistics to optimize reading results
-     *
-     * @param accessor accessor instance
-     * @param requestContext input data which has protocol information
-     * @return true if this accessor should use statistic information
+     * Determines whether a class with a given name implements a specific interface.
+     * @param className name of the class
+     * @param iface class of the interface
+     * @return true if the class implements the interface, false otherwise
      */
-    public static boolean useStats(Accessor accessor, RequestContext requestContext) {
-        if (accessor instanceof StatsAccessor && useAggBridge(requestContext)) {
-                return true;
-        } else {
-            return false;
-        }
-    }
-
-    /**
-     * Determines whether use vectorization
-     * @param requestContext input protocol data
-     * @return true if vectorization is applicable in a current context
-     */
-    public static boolean useVectorization(RequestContext requestContext) {
-        boolean isVectorizedResolver = false;
+    public static boolean implementsInterface(String className, Class<?> iface) {
+        boolean result = false;
         try {
-            isVectorizedResolver = ArrayUtils.contains(Class.forName(requestContext.getResolver()).getInterfaces(), ReadVectorizedResolver.class);
+            result = iface.isAssignableFrom(Class.forName(className));
         } catch (ClassNotFoundException e) {
-            LOG.error("Unable to load resolver class: " + e.getMessage());
+            LOG.error("Unable to load class: %s", e.getMessage());
         }
-        return isVectorizedResolver;
+        return result;
     }
 
     /**

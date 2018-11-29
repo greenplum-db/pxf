@@ -19,16 +19,15 @@ package org.greenplum.pxf.service.rest;
  * under the License.
  */
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.greenplum.pxf.api.BaseFragmenter;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.FragmentStats;
+import org.greenplum.pxf.api.model.Fragmenter;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.FragmenterFactory;
 import org.greenplum.pxf.api.utilities.FragmentsResponse;
 import org.greenplum.pxf.api.utilities.FragmentsResponseFormatter;
 import org.greenplum.pxf.service.HttpRequestParser;
+import org.greenplum.pxf.service.RequestParser;
 import org.greenplum.pxf.service.utilities.AnalyzeUtils;
 
 import javax.servlet.ServletContext;
@@ -46,17 +45,27 @@ import java.util.List;
  * Class enhances the API of the WEBHDFS REST server. Returns the data fragments
  * that a data resource is made of, enabling parallel processing of the data
  * resource. Example for querying API FRAGMENTER from a web client
- * {@code curl -i "http://localhost:51200/pxf/{version}/BaseFragmenter/getFragments?path=/dir1/dir2/*txt"}
+ * {@code curl -i "http://localhost:51200/pxf/{version}/Fragmenter/getFragments?path=/dir1/dir2/*txt"}
  * <code>/pxf/</code> is made part of the path when there is a webapp by that
  * name in tomcat.
  */
-@Path("/" + Version.PXF_PROTOCOL_VERSION + "/BaseFragmenter/")
-public class FragmenterResource {
-    private static final Log LOG = LogFactory.getLog(FragmenterResource.class);
+@Path("/" + Version.PXF_PROTOCOL_VERSION + "/Fragmenter/")
+public class FragmenterResource extends BaseResource {
+
+    private FragmenterFactory fragmenterFactory;
+
+    public FragmenterResource() {
+        this(HttpRequestParser.getInstance(), FragmenterFactory.getInstance());
+    }
+
+    FragmenterResource(RequestParser<HttpHeaders> parser, FragmenterFactory fragmenterFactory) {
+        super(parser);
+        this.fragmenterFactory = fragmenterFactory;
+    }
 
     /**
      * The function is called when
-     * {@code http://nn:port/pxf/{version}/BaseFragmenter/getFragments?path=...} is used.
+     * {@code http://nn:port/pxf/{version}/Fragmenter/getFragments?path=...} is used.
      *
      * @param servletContext Servlet context contains attributes required by
      *            SecuredHDFS
@@ -73,24 +82,23 @@ public class FragmenterResource {
                                  @QueryParam("path") final String path)
             throws Exception {
 
-        RequestContext context = getProtocolData(servletContext, headers, path);
+        LOG.debug("FRAGMENTER started for path \"%s\"", path);
+
+        RequestContext context = parseRequest(headers);
 
         /* Create a fragmenter instance with API level parameters */
-        final BaseFragmenter fragmenter = FragmenterFactory.create(context);
+        final Fragmenter fragmenter = fragmenterFactory.getPlugin(context);
 
         List<Fragment> fragments = fragmenter.getFragments();
-
         fragments = AnalyzeUtils.getSampleFragments(fragments, context);
-
-        FragmentsResponse fragmentsResponse = FragmentsResponseFormatter.formatResponse(
-                fragments, path);
+        FragmentsResponse fragmentsResponse = FragmentsResponseFormatter.formatResponse(fragments, path);
 
         return Response.ok(fragmentsResponse, MediaType.APPLICATION_JSON_TYPE).build();
     }
 
     /**
      * The function is called when
-     * {@code http://nn:port/pxf/{version}/BaseFragmenter/getFragmentsStats?path=...} is
+     * {@code http://nn:port/pxf/{version}/Fragmenter/getFragmentsStats?path=...} is
      * used.
      *
      * @param servletContext Servlet context contains attributes required by
@@ -108,10 +116,10 @@ public class FragmenterResource {
                                       @QueryParam("path") final String path)
             throws Exception {
 
-        RequestContext context = getProtocolData(servletContext, headers, path);
+        RequestContext context = parseRequest(headers);
 
         /* Create a fragmenter instance with API level parameters */
-        final BaseFragmenter fragmenter = FragmenterFactory.create(context);
+        final Fragmenter fragmenter = fragmenterFactory.getPlugin(context);
 
         FragmentStats fragmentStats = fragmenter.getFragmentStats();
         String response = FragmentStats.dataToJSON(fragmentStats);
@@ -122,22 +130,4 @@ public class FragmenterResource {
         return Response.ok(response, MediaType.APPLICATION_JSON_TYPE).build();
     }
 
-    private RequestContext getProtocolData(final ServletContext servletContext,
-                                         final HttpHeaders headers,
-                                         final String path) throws Exception {
-
-        if (LOG.isDebugEnabled()) {
-            StringBuilder startMsg = new StringBuilder(
-                    "FRAGMENTER started for path \"" + path + "\"");
-            // FIXME: we are logging all headers, there could be security
-            // FIXME: issues if credentials are sent in the request
-            for (String header : headers.getRequestHeaders().keySet()) {
-                startMsg.append(" Header: ").append(header).append(" Value: ").append(
-                        headers.getRequestHeader(header));
-            }
-            LOG.debug(startMsg);
-        }
-
-        return new HttpRequestParser().parseRequest(headers);
-    }
 }

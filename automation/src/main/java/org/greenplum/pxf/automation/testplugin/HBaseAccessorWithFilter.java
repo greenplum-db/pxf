@@ -1,20 +1,6 @@
 package org.greenplum.pxf.automation.testplugin;
 
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.greenplum.pxf.api.ReadAccessor;
-import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.utilities.InputData;
-import org.greenplum.pxf.api.utilities.Plugin;
-import org.greenplum.pxf.plugins.hbase.HBaseFilterBuilder;
-import org.greenplum.pxf.plugins.hbase.utilities.HBaseColumnDescriptor;
-import org.greenplum.pxf.plugins.hbase.utilities.HBaseTupleDescription;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hbase.HBaseConfiguration;
@@ -25,6 +11,19 @@ import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.model.Accessor;
+import org.greenplum.pxf.api.model.BasePlugin;
+import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.plugins.hbase.HBaseFilterBuilder;
+import org.greenplum.pxf.plugins.hbase.utilities.HBaseColumnDescriptor;
+import org.greenplum.pxf.plugins.hbase.utilities.HBaseTupleDescription;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Test class for regression tests.
@@ -32,9 +31,9 @@ import org.apache.hadoop.hbase.util.Bytes;
  * that the filter is read from a user defined parameter TEST-HBASE-FILTER
  * instead of from GPDB.
  */
-public class HBaseAccessorWithFilter extends Plugin implements ReadAccessor {
+public class HBaseAccessorWithFilter extends BasePlugin implements Accessor {
 	static private Log Log = LogFactory.getLog(HBaseAccessorWithFilter.class);
-	
+
 	private HBaseTupleDescription tupleDescription;
 	private HTable table;
 	private List<SplitBoundary> splits;
@@ -66,9 +65,9 @@ public class HBaseAccessorWithFilter extends Plugin implements ReadAccessor {
 		}
 	}
 
-	public HBaseAccessorWithFilter(InputData input) {
-		super(input);
-		
+	public HBaseAccessorWithFilter(RequestContext input) {
+		initialize(input);
+
 		tupleDescription = new HBaseTupleDescription(input);
 		splits = new ArrayList<SplitBoundary>();
 		currentRegionIndex = 0;
@@ -93,6 +92,39 @@ public class HBaseAccessorWithFilter extends Plugin implements ReadAccessor {
 		table.close();
 	}
 
+	/**
+	 * Opens the resource for write.
+	 *
+	 * @return true if the resource is successfully opened
+	 * @throws Exception if opening the resource failed
+	 */
+	@Override
+	public boolean openForWrite() throws Exception {
+		return false;
+	}
+
+	/**
+	 * Writes the next object.
+	 *
+	 * @param onerow the object to be written
+	 * @return true if the write succeeded
+	 * @throws Exception writing to the resource failed
+	 */
+	@Override
+	public boolean writeNextObject(OneRow onerow) throws Exception {
+		return false;
+	}
+
+	/**
+	 * Closes the resource for write.
+	 *
+	 * @throws Exception if closing the resource failed
+	 */
+	@Override
+	public void closeForWrite() throws Exception {
+
+	}
+
 	@Override
 	public OneRow readNextObject() throws IOException {
 		Result result;
@@ -110,7 +142,7 @@ public class HBaseAccessorWithFilter extends Plugin implements ReadAccessor {
 	}
 
 	private void openTable() throws IOException	{
-		table = new HTable(HBaseConfiguration.create(), inputData.getDataSource().getBytes());
+		table = new HTable(HBaseConfiguration.create(), context.getDataSource().getBytes());
 	}
 
 	/*
@@ -123,8 +155,8 @@ public class HBaseAccessorWithFilter extends Plugin implements ReadAccessor {
 	 * This assumption is made through HBase's code as well
 	 */
 	private void selectTableSplits() {
-	
-		byte[] serializedMetadata = inputData.getFragmentMetadata();
+
+		byte[] serializedMetadata = context.getFragmentMetadata();
 		if (serializedMetadata == null) {
 			throw new IllegalArgumentException("Missing fragment metadata information");
 		}
@@ -209,12 +241,13 @@ public class HBaseAccessorWithFilter extends Plugin implements ReadAccessor {
 	 * Scan object
 	 *
 	 * use row key ranges to limit split count
-	 * 
+	 *
 	 * ignores filter from gpdb, use user defined filter
 	 */
 	private void addFilters() throws Exception {
-		
-		String filterStr = inputData.getUserProperty("TEST-HBASE-FILTER");
+
+		// TODO whitelist option
+		String filterStr = context.getOption("TEST-HBASE-FILTER");
 		Log.debug("user defined filter: " + filterStr);
 		if ((filterStr == null) || filterStr.isEmpty() || "null".equals(filterStr))
 			return;

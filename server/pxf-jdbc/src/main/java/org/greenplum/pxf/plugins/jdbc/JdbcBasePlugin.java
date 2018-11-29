@@ -21,7 +21,6 @@ package org.greenplum.pxf.plugins.jdbc;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.greenplum.pxf.api.UserDataException;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
@@ -42,29 +41,24 @@ import java.util.regex.Pattern;
  * Implemented subclasses: {@link JdbcAccessor}, {@link JdbcResolver}.
  */
 public class JdbcBasePlugin extends BasePlugin {
-    /**
-     * Class constructor
-     *
-     * @param input {@link RequestContext} provided by PXF
-     *
-     * @throws UserDataException if one of the required request parameters is not set
-     */
-    public JdbcBasePlugin(RequestContext input) throws UserDataException {
-        initialize(input);
 
-        jdbcDriver = input.getOption("JDBC_DRIVER");
+    @Override
+    public void initialize(RequestContext context) {
+        super.initialize(context);
+
+        jdbcDriver = context.getOption("JDBC_DRIVER");
         if (jdbcDriver == null) {
-            throw new UserDataException("JDBC_DRIVER is a required parameter");
+            throw new IllegalArgumentException("JDBC_DRIVER is a required parameter");
         }
 
-        dbUrl = input.getOption("DB_URL");
+        dbUrl = context.getOption("DB_URL");
         if (dbUrl == null) {
-            throw new UserDataException("DB_URL is a required parameter");
+            throw new IllegalArgumentException("DB_URL is a required parameter");
         }
 
-        tableName = input.getDataSource();
+        tableName = context.getDataSource();
         if (tableName == null) {
-            throw new UserDataException("Data source must be provided");
+            throw new IllegalArgumentException("Data source must be provided");
         }
         /*
         At the moment, when writing into some table, the table name is
@@ -75,22 +69,22 @@ public class JdbcBasePlugin extends BasePlugin {
         Matcher matcher = tableNamePattern.matcher(tableName);
         if (matcher.matches()) {
             context.setDataSource(matcher.group(1));
-            tableName = input.getDataSource();
+            tableName = context.getDataSource();
         }
 
         columns = context.getTupleDescription();
         if (columns == null) {
-            throw new UserDataException("Tuple description must be provided");
+            throw new IllegalArgumentException("Tuple description must be provided");
         }
 
         // This parameter is not required. The default value is null
-        user = input.getOption("USER");
+        user = context.getOption("USER");
         if (user != null) {
-            pass = input.getOption("PASS");
+            pass = context.getOption("PASS");
         }
 
         // This parameter is not required. The default value is 0
-        String batchSizeRaw = input.getOption("BATCH_SIZE");
+        String batchSizeRaw = context.getOption("BATCH_SIZE");
         if (batchSizeRaw != null) {
             try {
                 batchSize = Integer.parseInt(batchSizeRaw);
@@ -102,18 +96,18 @@ public class JdbcBasePlugin extends BasePlugin {
                 batchSizeIsSetByUser = true;
             }
             catch (NumberFormatException e) {
-                throw new UserDataException("BATCH_SIZE is incorrect: must be a non-negative integer");
+                throw new IllegalArgumentException("BATCH_SIZE is incorrect: must be a non-negative integer");
             }
         }
 
         // This parameter is not required. The default value is 1
-        String poolSizeRaw = input.getOption("POOL_SIZE");
+        String poolSizeRaw = context.getOption("POOL_SIZE");
         if (poolSizeRaw != null) {
             try {
                 poolSize = Integer.parseInt(poolSizeRaw);
             }
             catch (NumberFormatException e) {
-                throw new UserDataException("POOL_SIZE is incorrect: must be an integer");
+                throw new IllegalArgumentException("POOL_SIZE is incorrect: must be an integer");
             }
         }
     }

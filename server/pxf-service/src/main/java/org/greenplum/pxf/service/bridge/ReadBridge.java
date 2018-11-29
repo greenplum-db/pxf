@@ -1,4 +1,4 @@
-package org.greenplum.pxf.service;
+package org.greenplum.pxf.service.bridge;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -19,15 +19,12 @@ package org.greenplum.pxf.service;
  * under the License.
  */
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.greenplum.pxf.api.BadRecordException;
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.model.Accessor;
-import org.greenplum.pxf.api.model.Plugin;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.api.model.Resolver;
-import org.greenplum.pxf.api.utilities.Utilities;
+import org.greenplum.pxf.api.utilities.AccessorFactory;
+import org.greenplum.pxf.api.utilities.ResolverFactory;
+import org.greenplum.pxf.service.BridgeOutputBuilder;
 import org.greenplum.pxf.service.io.Writable;
 
 import java.io.CharConversionException;
@@ -42,18 +39,15 @@ import java.util.zip.ZipException;
 /**
  * ReadBridge class creates appropriate accessor and resolver. It will then
  * create the correct output conversion class (e.g. Text or GPDBWritable) and
- * get records from accessor, let resolver deserialize them and reserialize them
- * using the output conversion class. <br>
+ * get records from accessor, let resolver deserialize them and serialize them
+ * again using the output conversion class. <br>
  * The class handles BadRecordException and other exception type and marks the
  * record as invalid for GPDB.
  */
-public class ReadBridge implements Bridge {
-    final Accessor fileAccessor;
-    final Resolver fieldsResolver;
-    final BridgeOutputBuilder outputBuilder;
-    LinkedList<Writable> outputQueue;
+public class ReadBridge extends BaseBridge {
 
-    private static final Log LOG = LogFactory.getLog(ReadBridge.class);
+    final BridgeOutputBuilder outputBuilder;
+    protected LinkedList<Writable> outputQueue = new LinkedList<>();
 
     /**
      * C'tor - set the implementation of the bridge.
@@ -62,22 +56,24 @@ public class ReadBridge implements Bridge {
      * @throws Exception if accessor or resolver can't be instantiated
      */
     public ReadBridge(RequestContext context) throws Exception {
+        this(context, AccessorFactory.getInstance(), ResolverFactory.getInstance());
+    }
+
+    ReadBridge(RequestContext context, AccessorFactory accessorFactory, ResolverFactory resolverFactory) throws Exception {
+        super(context, accessorFactory, resolverFactory);
         outputBuilder = new BridgeOutputBuilder(context);
-        outputQueue = new LinkedList<>();
-        fileAccessor = getFileAccessor(context);
-        fieldsResolver = getFieldsResolver(context);
     }
 
     /**
-     * Accesses the underlying HDFS file.
+     * Accesses the underlying data source.
      */
     @Override
     public boolean beginIteration() throws Exception {
-        return fileAccessor.openForRead();
+        return accessor.openForRead();
     }
 
     /**
-     * Fetches next object from file and turn it into a record that the GPDB
+     * Fetches next object from the data source and turns it into a record that the GPDB
      * backend can process.
      */
     @Override
@@ -91,20 +87,18 @@ public class ReadBridge implements Bridge {
 
         try {
             while (outputQueue.isEmpty()) {
-                onerow = fileAccessor.readNextObject();
+                onerow = accessor.readNextObject();
                 if (onerow == null) {
                     output = outputBuilder.getPartialLine();
                     if (output != null) {
                         LOG.warn("A partial record in the end of the fragment");
                     }
-                    // if there is a partial line, return it now, otherwise it
-                    // will return null
+                    // if there is a partial line, return it now, otherwise it will return null
                     return output;
                 }
 
-                // we checked before that outputQueue is empty, so we can
-                // override it.
-                outputQueue = outputBuilder.makeOutput(fieldsResolver.getFields(onerow));
+                // we checked before that outputQueue is empty, so we can override it.
+                outputQueue = outputBuilder.makeOutput(resolver.getFields(onerow));
                 if (!outputQueue.isEmpty()) {
                     output = outputQueue.pop();
                     break;
@@ -139,23 +133,11 @@ public class ReadBridge implements Bridge {
      */
     public void endIteration() throws Exception {
         try {
-            fileAccessor.closeForRead();
+            accessor.closeForRead();
         } catch (Exception e) {
-            LOG.error("Failed to close bridge resources: " + e.getMessage());
+            LOG.error("Failed to close bridge resources: %s", e.getMessage());
             throw e;
         }
-    }
-
-    public static Accessor getFileAccessor(RequestContext requestContext)
-            throws Exception {
-        return (Accessor) Utilities.createAnyInstance(RequestContext.class,
-                requestContext.getAccessor(), requestContext);
-    }
-
-    public static Resolver getFieldsResolver(RequestContext requestContext)
-            throws Exception {
-        return (Resolver) Utilities.createAnyInstance(RequestContext.class,
-                requestContext.getResolver(), requestContext);
     }
 
     /*
@@ -181,11 +163,4 @@ public class ReadBridge implements Bridge {
         throw new UnsupportedOperationException("setNext is not implemented");
     }
 
-    @Override
-    public boolean isThreadSafe() {
-        boolean result = ((Plugin) fileAccessor).isThreadSafe()
-                && ((Plugin) fieldsResolver).isThreadSafe();
-        LOG.debug("Bridge is " + (result ? "" : "not ") + "thread safe");
-        return result;
-    }
 }

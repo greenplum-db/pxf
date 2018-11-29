@@ -117,7 +117,8 @@ public class SequenceFileAccessorTest {
 
     private void constructAccessor() throws Exception {
 
-        accessor = new SequenceFileAccessor(requestContext);
+        accessor = new SequenceFileAccessor();
+        accessor.initialize(requestContext);
         accessor.openForWrite();
     }
 

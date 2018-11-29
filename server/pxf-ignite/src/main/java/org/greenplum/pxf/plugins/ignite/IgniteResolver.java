@@ -40,23 +40,11 @@ import java.util.List;
  * PXF-Ignite resolver class
  */
 public class IgniteResolver extends IgniteBasePlugin implements Resolver {
-    /**
-     * Class constructor
-     *
-     * @param input Input
-     * @throws Exception when there is an exception
-     */
-    public IgniteResolver(RequestContext input) throws Exception {
-        super(input);
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Constructor started");
-        }
 
-        columns = input.getTupleDescription();
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Constructor successful");
-        }
+    @Override
+    public void initialize(RequestContext requestContext) {
+        super.initialize(requestContext);
+        columns = requestContext.getTupleDescription();
     }
 
     /**

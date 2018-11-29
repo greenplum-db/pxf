@@ -19,11 +19,13 @@ package org.greenplum.pxf.plugins.ignite;
  * under the License.
  */
 
-import org.greenplum.pxf.api.BaseFragmenter;
-import org.greenplum.pxf.api.model.FragmentStats;
+import org.apache.commons.compress.utils.ByteUtils;
+import org.greenplum.pxf.api.model.BaseFragmenter;
 import org.greenplum.pxf.api.model.Fragment;
-import org.greenplum.pxf.api.UserDataException;
+import org.greenplum.pxf.api.model.FragmentStats;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -33,16 +35,14 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.compress.utils.ByteUtils;
-
 /**
  * PXF-Ignite fragmenter class
  *
  * This fragmenter works just like the one in PXF JDBC plugin
  */
 public class IgnitePartitionFragmenter extends BaseFragmenter {
+
+    private static final Logger LOG = LoggerFactory.getLogger(IgnitePartitionFragmenter.class);
     /**
      * Insert partition constraints into the prepared SQL query.
      *
@@ -137,22 +137,13 @@ public class IgnitePartitionFragmenter extends BaseFragmenter {
         }
     }
 
-    /**
-     * Class constructor
-     *
-     * @param requestContext Input data
-     * @throws UserDataException if the request parameter is malformed
-     */
-    public IgnitePartitionFragmenter(RequestContext requestContext) throws UserDataException {
-        super(requestContext);
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Constructor started");
-        }
+    @Override
+    public void initialize(RequestContext requestContext) {
+        super.initialize(requestContext);
+        LOG.debug("Initializer started");
 
         if (requestContext.getOption("PARTITION_BY") == null) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Constructor successful; partition was not used");
-            }
+            LOG.debug("Initializer successful; partition was not used");
             return;
         }
 
@@ -161,48 +152,39 @@ public class IgnitePartitionFragmenter extends BaseFragmenter {
             partitionType = PartitionType.typeOf(partitionBy[1]);
         }
         catch (IllegalArgumentException | ArrayIndexOutOfBoundsException e1) {
-            throw new UserDataException("The parameter 'PARTITION_BY' is invalid. The pattern is 'column_name:DATE|INT|ENUM'");
+            throw new IllegalArgumentException("The parameter 'PARTITION_BY' is invalid. The pattern is 'column_name:DATE|INT|ENUM'");
         }
 
         // Parse and validate parameter-RANGE
-        try {
-            String rangeStr = requestContext.getOption("RANGE");
-            if (rangeStr != null) {
-                range = rangeStr.split(":");
-                if (range.length == 1 && partitionType != PartitionType.ENUM) {
-                    throw new UserDataException("The parameter 'RANGE' does not specify '[:end_value]'");
-                }
-            }
-            else {
-                throw new UserDataException("The parameter 'RANGE' must be specified along with 'PARTITION_BY'");
+
+        String rangeStr = requestContext.getOption("RANGE");
+        if (rangeStr != null) {
+            range = rangeStr.split(":");
+            if (range.length == 1 && partitionType != PartitionType.ENUM) {
+                throw new IllegalArgumentException("The parameter 'RANGE' does not specify '[:end_value]'");
             }
         }
-        catch (IllegalArgumentException e) {
-            throw new UserDataException("The parameter 'RANGE' is invalid, the pattern is 'start_value[:end_value]'");
+        else {
+            throw new IllegalArgumentException("The parameter 'RANGE' must be specified along with 'PARTITION_BY'");
         }
 
         // Parse and validate parameter-INTERVAL
-        try {
-            String intervalStr = requestContext.getOption("INTERVAL");
-            if (intervalStr != null) {
-                interval = intervalStr.split(":");
-                intervalNum = Integer.parseInt(interval[0]);
-                if (interval.length > 1) {
-                    intervalType = IntervalType.typeOf(interval[1]);
-                }
-                if (interval.length == 1 && partitionType == PartitionType.DATE) {
-                    throw new UserDataException("The parameter 'INTERVAL' does not specify unit [:year|month|day]");
-                }
+        String intervalStr = requestContext.getOption("INTERVAL");
+        if (intervalStr != null) {
+            interval = intervalStr.split(":");
+            intervalNum = Integer.parseInt(interval[0]);
+            if (interval.length > 1) {
+                intervalType = IntervalType.typeOf(interval[1]);
             }
-            else if (partitionType != PartitionType.ENUM) {
-                throw new UserDataException("The parameter 'INTERVAL' must be specified along with 'PARTITION_BY'");
-            }
-            if (intervalNum < 1) {
-                throw new UserDataException("The parameter 'INTERVAL' must be at least 1. The actual is '" + intervalNum + "'");
+            if (interval.length == 1 && partitionType == PartitionType.DATE) {
+                throw new IllegalArgumentException("The parameter 'INTERVAL' does not specify unit [:year|month|day]");
             }
         }
-        catch (IllegalArgumentException e) {
-            throw new UserDataException("The parameter 'INTERVAL' invalid. The pattern is 'interval_num[:interval_unit]'");
+        else if (partitionType != PartitionType.ENUM) {
+            throw new IllegalArgumentException("The parameter 'INTERVAL' must be specified along with 'PARTITION_BY'");
+        }
+        if (intervalNum < 1) {
+            throw new IllegalArgumentException("The parameter 'INTERVAL' must be at least 1. The actual is '" + intervalNum + "'");
         }
 
         // Parse date partition
@@ -215,12 +197,10 @@ public class IgnitePartitionFragmenter extends BaseFragmenter {
                 rangeEnd.setTime(df.parse(range[1]));
             }
         } catch (ParseException e) {
-            throw new UserDataException("The parameter 'RANGE' has invalid date format. Expected format is 'yyyy-MM-dd'");
+            throw new IllegalArgumentException("The parameter 'RANGE' has invalid date format. Expected format is 'yyyy-MM-dd'");
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Constructor successful; some partition used");
-        }
+        LOG.debug("Initializer successful; some partition used");
     }
 
     /**
@@ -370,8 +350,6 @@ public class IgnitePartitionFragmenter extends BaseFragmenter {
             return valueOf(str.toUpperCase());
         }
     }
-
-    private static final Log LOG = LogFactory.getLog(IgnitePartitionFragmenter.class);
 
     /**
      * The replica holder. This is an address of a *PXF* host that processes fragments.

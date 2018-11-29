@@ -1,6 +1,10 @@
 package org.greenplum.pxf.plugins.hive;
 
-import org.apache.hadoop.mapred.*;
+import org.apache.hadoop.mapred.InputFormat;
+import org.apache.hadoop.mapred.InputSplit;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.RecordReader;
+import org.apache.hadoop.mapred.Reporter;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
@@ -13,7 +17,10 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({HiveAccessor.class, HiveUtilities.class, HdfsUtilities.class, HiveDataFragmenter.class})
@@ -53,8 +60,8 @@ public class HiveAccessorTest {
         PowerMockito.when(HiveUtilities.parseHiveUserData(requestContext)).thenReturn(userData);
         when(requestContext.hasFilter()).thenReturn(false);
 
-        accessor = new HiveAccessor(requestContext);
-
+        accessor = new HiveAccessor();
+        accessor.initialize(requestContext);
         accessor.openForRead();
         accessor.readNextObject();
 
@@ -68,8 +75,8 @@ public class HiveAccessorTest {
         when(requestContext.hasFilter()).thenReturn(false);
         when(requestContext.getFragmentIndex()).thenReturn(0);
 
-        accessor = new HiveAccessor(requestContext);
-
+        accessor = new HiveAccessor();
+        accessor.initialize(requestContext);
         accessor.openForRead();
         accessor.readNextObject();
 
@@ -83,8 +90,8 @@ public class HiveAccessorTest {
         when(requestContext.hasFilter()).thenReturn(false);
         when(requestContext.getFragmentIndex()).thenReturn(2);
 
-        accessor = new HiveAccessor(requestContext);
-
+        accessor = new HiveAccessor();
+        accessor.initialize(requestContext);
         accessor.openForRead();
         accessor.readNextObject();
 
@@ -98,8 +105,8 @@ public class HiveAccessorTest {
         when(requestContext.hasFilter()).thenReturn(false);
         when(requestContext.getFragmentIndex()).thenReturn(0);
 
-        accessor = new HiveAccessor(requestContext);
-
+        accessor = new HiveAccessor();
+        accessor.initialize(requestContext);
         accessor.openForRead();
         accessor.readNextObject();
 
@@ -113,8 +120,8 @@ public class HiveAccessorTest {
         when(requestContext.hasFilter()).thenReturn(false);
         when(requestContext.getFragmentIndex()).thenReturn(0);
 
-        accessor = new HiveAccessor(requestContext);
-
+        accessor = new HiveAccessor();
+        accessor.initialize(requestContext);
         accessor.openForRead();
         accessor.readNextObject();
 

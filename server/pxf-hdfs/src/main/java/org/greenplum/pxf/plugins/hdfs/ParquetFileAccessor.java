@@ -121,15 +121,6 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
         }
     }
 
-    /**
-     * Constructs a plugin.
-     *
-     * @param input the input data
-     */
-    public ParquetFileAccessor(RequestContext input) {
-        initialize(input);
-    }
-
     public MessageType getSchema() {
         return schema;
     }

@@ -26,7 +26,6 @@ import org.greenplum.pxf.api.utilities.EnumAggregationType;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -377,10 +376,10 @@ public class RequestContext {
     }
 
     /**
-     * Returns the ClassName for the java class that was defined as BaseFragmenter
+     * Returns the ClassName for the java class that was defined as Fragmenter
      * or null if no fragmenter was defined.
      *
-     * @return class name for BaseFragmenter or null
+     * @return class name for Fragmenter or null
      */
     public String getFragmenter() {
         return fragmenter;

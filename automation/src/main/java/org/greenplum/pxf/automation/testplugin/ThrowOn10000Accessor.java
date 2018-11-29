@@ -1,18 +1,17 @@
 package org.greenplum.pxf.automation.testplugin;
 
-import java.io.IOException;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.utilities.InputData;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hdfs.LineBreakAccessor;
+
+import java.io.IOException;
 
 /**
  * Test accessor, based on LineBreakAccessor.
  * This accessor throws a runtime exception after reading 10000 records.
- * Used to test an error that occurs after the first packet 
+ * Used to test an error that occurs after the first packet
  * of the response is already sent (GPSQL-2272).
  */
 public class ThrowOn10000Accessor extends LineBreakAccessor {
@@ -25,7 +24,7 @@ public class ThrowOn10000Accessor extends LineBreakAccessor {
      *
      * @param input all input parameters coming from the client request
      */
-    public ThrowOn10000Accessor(InputData input) {
+    public ThrowOn10000Accessor(RequestContext input) {
         super(input);
 
         rowCount = 0;

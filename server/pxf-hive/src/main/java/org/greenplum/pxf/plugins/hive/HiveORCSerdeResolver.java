@@ -39,10 +39,6 @@ public class HiveORCSerdeResolver extends HiveResolver {
     private String serdeType;
     private String typesString;
 
-    public HiveORCSerdeResolver(RequestContext input) throws Exception {
-        super(input);
-    }
-
     /* read the data supplied by the fragmenter: inputformat name, serde name, partition keys */
     @Override
     void parseUserData(RequestContext input) throws Exception {

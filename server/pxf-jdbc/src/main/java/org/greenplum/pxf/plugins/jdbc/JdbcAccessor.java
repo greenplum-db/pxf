@@ -21,11 +21,9 @@ package org.greenplum.pxf.plugins.jdbc;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.UserDataException;
+import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.jdbc.writercallable.WriterCallable;
 import org.greenplum.pxf.plugins.jdbc.writercallable.WriterCallableFactory;
 
@@ -53,15 +51,6 @@ import java.util.concurrent.Future;
  * built-in JDBC batches of arbitrary size
  */
 public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
-    /**
-     * Class constructor
-     *
-     * @param requestContext Input data
-     * @throws UserDataException if there is a user data exception
-     */
-    public JdbcAccessor(RequestContext requestContext) throws UserDataException {
-        super(requestContext);
-    }
 
     /**
      * openForRead() implementation

@@ -38,10 +38,6 @@ import static org.greenplum.pxf.api.io.DataType.VARCHAR;
 public class HiveStringPassResolver extends HiveResolver {
     private StringBuilder parts;
 
-    public HiveStringPassResolver(RequestContext context) throws Exception {
-        super(context);
-    }
-
     @Override
     void parseUserData(RequestContext input) throws Exception {
         HiveUserData hiveUserData = HiveUtilities.parseHiveUserData(input);

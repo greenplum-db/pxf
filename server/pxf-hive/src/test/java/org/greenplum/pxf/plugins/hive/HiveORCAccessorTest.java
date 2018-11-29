@@ -79,7 +79,8 @@ public class HiveORCAccessorTest {
         PowerMockito.when(orcInputFormat.getRecordReader(any(InputSplit.class), any(JobConf.class), any(Reporter.class))).thenReturn(recordReader);
         PowerMockito.when(requestContext.getAccessor()).thenReturn(HiveORCAccessor.class.getName());
 
-        accessor = new HiveORCAccessor(requestContext);
+        accessor = new HiveORCAccessor();
+        accessor.initialize(requestContext);
         PowerMockito.when(accessor.getOrcReader()).thenReturn(orcReader);
     }
 

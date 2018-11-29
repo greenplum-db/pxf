@@ -22,7 +22,7 @@ package org.greenplum.pxf.api;
 import java.util.List;
 
 /**
- * 
+ *
  * Interface that defines deserialization batch of records at once.
  *
  */
@@ -30,10 +30,10 @@ public interface ReadVectorizedResolver {
 
     /**
      * Returns resolved list of tuples
-     * 
+     *
      * @param batch unresolved batch
      * @return list of tuples
      */
-    public List<List<OneField>> getFieldsForBatch(OneRow batch);
+    List<List<OneField>> getFieldsForBatch(OneRow batch);
 
 }

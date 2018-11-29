@@ -20,6 +20,7 @@ package org.greenplum.pxf.plugins.hive;
  */
 
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.ql.io.orc.OrcInputFormat;
@@ -31,10 +32,9 @@ import org.greenplum.pxf.api.BasicFilter;
 import org.greenplum.pxf.api.LogicalFilter;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.StatsAccessor;
-import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.Utilities;
-import org.apache.commons.lang.StringUtils;
 
 import java.sql.Date;
 import java.util.ArrayList;
@@ -65,13 +65,15 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
 
     /**
      * Constructs a HiveORCFileAccessor.
-     *
-     * @param input input containing user data
-     * @throws Exception if user data was wrong
      */
-    public HiveORCAccessor(RequestContext input) throws Exception {
-        super(input, new OrcInputFormat());
-        useStats = Utilities.useStats(this, context);
+    public HiveORCAccessor() {
+        super(new OrcInputFormat());
+    }
+
+    @Override
+    public void initialize(RequestContext requestContext) {
+        super.initialize(requestContext);
+        useStats = Utilities.aggregateOptimizationsSupported(context);
     }
 
     @Override

@@ -73,8 +73,8 @@ public class IgniteAccessorTest {
 
     @Test
     public void testReadAccess() throws Exception {
-        IgniteAccessor acc = PowerMockito.spy(new IgniteAccessor(requestContext));
-
+        IgniteAccessor acc = PowerMockito.spy(new IgniteAccessor());
+        acc.initialize(requestContext);
         JsonObject correctAnswer = new JsonObject();
         JsonArray tempArray = new JsonArray();
         JsonArray tempArray2 = new JsonArray();
@@ -105,7 +105,8 @@ public class IgniteAccessorTest {
 
     @Test
     public void testWriteAccess() throws Exception {
-        IgniteAccessor acc = PowerMockito.spy(new IgniteAccessor(requestContext));
+        IgniteAccessor acc = PowerMockito.spy(new IgniteAccessor());
+        acc.initialize(requestContext);
 
         OneRow insert_row_1 = new OneRow("(1, 'abcd', '2001-01-01', '61626364')");
         OneRow insert_row_2 = new OneRow("(2, 'abcd', '2001-01-01', '61626364')");

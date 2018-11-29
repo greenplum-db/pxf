@@ -53,10 +53,11 @@ public class JsonResolver extends BasePlugin implements Resolver {
 	/**
 	 * Row with empty fields. Returned in case of broken or malformed json records.
 	 */
-	private final List<OneField> emptyRow;
+	private List<OneField> emptyRow;
 
-	public JsonResolver(RequestContext requestContext) throws Exception {
-		initialize(requestContext);
+	@Override
+	public void initialize(RequestContext requestContext) {
+		super.initialize(requestContext);
 		oneFieldList = new ArrayList<>();
 		mapper = new ObjectMapper(new JsonFactory());
 

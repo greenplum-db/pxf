@@ -49,17 +49,12 @@ import java.net.URI;
  */
 public abstract class HdfsAtomicDataAccessor extends BasePlugin implements Accessor {
     protected InputStream inp;
+
     private FileSplit fileSplit;
 
-    /**
-     * Constructs a HdfsAtomicDataAccessor object.
-     *
-     * @param input all input parameters coming from the client
-     */
-    public HdfsAtomicDataAccessor(RequestContext input) {
-        // 0. Hold the configuration data
-        initialize(input);
-
+    @Override
+    public void initialize(RequestContext requestContext) {
+        super.initialize(requestContext);
         fileSplit = HdfsUtilities.parseFileSplit(context);
     }
 

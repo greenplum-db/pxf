@@ -25,7 +25,7 @@ import org.greenplum.pxf.api.OneRow;
 /**
  * Interface that defines access to the source data store (e.g, a file on HDFS, a region of an HBase table, etc).
  */
-public interface Accessor {
+public interface Accessor extends Plugin {
     /**
      * Opens the resource for reading.
      *

@@ -31,7 +31,7 @@ import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.ConnectionFactory;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.RegionLocator;
-import org.greenplum.pxf.api.BaseFragmenter;
+import org.greenplum.pxf.api.model.BaseFragmenter;
 import org.greenplum.pxf.api.model.FragmentStats;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.RequestContext;
@@ -45,7 +45,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * BaseFragmenter class for HBase data resources.
+ * Fragmenter class for HBase data resources.
  *
  * Extends the {@link BaseFragmenter} abstract class, with the purpose of transforming
  * an input data path (an HBase table name in this case) into a list of regions
@@ -56,18 +56,10 @@ import java.util.Map;
  */
 public class HBaseDataFragmenter extends BaseFragmenter {
 
+    // TODO revisit how to bootstrap HBase configuration
     private static final Configuration hbaseConfiguration = HBaseUtilities.initHBaseConfiguration();
     private Admin hbaseAdmin;
     private Connection connection;
-
-    /**
-     * Constructor for HBaseDataFragmenter.
-     *
-     * @param inConf input data such as which HBase table to scan
-     */
-    public HBaseDataFragmenter(RequestContext inConf) {
-        super(inConf);
-    }
 
     /**
      * Returns statistics for HBase table. Currently it's not implemented.

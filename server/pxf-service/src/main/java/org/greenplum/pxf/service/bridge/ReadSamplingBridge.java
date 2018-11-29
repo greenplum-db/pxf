@@ -1,4 +1,4 @@
-package org.greenplum.pxf.service;
+package org.greenplum.pxf.service.bridge;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -19,13 +19,12 @@ package org.greenplum.pxf.service;
  * under the License.
  */
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.api.utilities.AccessorFactory;
+import org.greenplum.pxf.api.utilities.ResolverFactory;
 import org.greenplum.pxf.service.io.Writable;
 import org.greenplum.pxf.service.utilities.AnalyzeUtils;
 
-import java.io.DataInputStream;
 import java.util.BitSet;
 
 /**
@@ -40,17 +39,11 @@ import java.util.BitSet;
  * set. This map is matched against each read record, discarding ones with a 0
  * bit and continuing until a 1 bit record is read.
  */
-public class ReadSamplingBridge implements Bridge {
+public class ReadSamplingBridge extends ReadBridge {
 
-    ReadBridge bridge;
-
-    float sampleRatio;
-    BitSet sampleBitSet;
-    int bitSetSize;
-    int sampleSize;
-    int curIndex;
-
-    private static final Log LOG = LogFactory.getLog(ReadSamplingBridge.class);
+    private BitSet sampleBitSet;
+    private int bitSetSize;
+    private int curIndex;
 
     /**
      * C'tor - set the implementation of the bridge.
@@ -59,33 +52,26 @@ public class ReadSamplingBridge implements Bridge {
      * @throws Exception if the sampling ratio is wrong
      */
     public ReadSamplingBridge(RequestContext context) throws Exception {
-        bridge = new ReadBridge(context);
+        this(context, AccessorFactory.getInstance(), ResolverFactory.getInstance());
+    }
 
-        this.sampleRatio = context.getStatsSampleRatio();
-        if (sampleRatio < 0.0001 || sampleRatio > 1.0) {
-            throw new IllegalArgumentException(
-                    "sampling ratio must be a value between 0.0001 and 1.0. "
-                            + "(value = " + sampleRatio + ")");
-        }
-
-        calculateBitSetSize();
-
-        this.sampleBitSet = AnalyzeUtils.generateSamplingBitSet(bitSetSize,
-                sampleSize);
+    ReadSamplingBridge(RequestContext context, AccessorFactory accessorFactory, ResolverFactory resolverFactory) throws Exception {
+        super(context, accessorFactory, resolverFactory);
+        calculateBitSet(context.getStatsSampleRatio());
         this.curIndex = 0;
     }
 
-    private void calculateBitSetSize() {
-
-        sampleSize = (int) (sampleRatio * 10000);
+    private void calculateBitSet(float sampleRatio) {
+        int sampleSize = (int) (sampleRatio * 10000);
         bitSetSize = 10000;
 
         while ((bitSetSize > 100) && (sampleSize % 10 == 0)) {
             bitSetSize /= 10;
             sampleSize /= 10;
         }
-        LOG.debug("bit set size = " + bitSetSize + " sample size = "
-                + sampleSize);
+        LOG.debug("bit set size = %d sample size = %d", bitSetSize, sampleSize);
+
+        sampleBitSet = AnalyzeUtils.generateSamplingBitSet(bitSetSize, sampleSize);
     }
 
     /**
@@ -93,7 +79,7 @@ public class ReadSamplingBridge implements Bridge {
      */
     @Override
     public Writable getNext() throws Exception {
-        Writable output = bridge.getNext();
+        Writable output = super.getNext();
 
         // sample - if bit is false, advance to the next object
         while (!sampleBitSet.get(curIndex)) {
@@ -102,7 +88,7 @@ public class ReadSamplingBridge implements Bridge {
                 break;
             }
             incIndex();
-            output = bridge.getNext();
+            output = super.getNext();
         }
 
         incIndex();
@@ -111,25 +97,5 @@ public class ReadSamplingBridge implements Bridge {
 
     private void incIndex() {
         curIndex = (++curIndex) % bitSetSize;
-    }
-
-    @Override
-    public boolean beginIteration() throws Exception {
-        return bridge.beginIteration();
-    }
-
-    @Override
-    public boolean setNext(DataInputStream inputStream) throws Exception {
-        return bridge.setNext(inputStream);
-    }
-
-    @Override
-    public void endIteration() throws Exception {
-        bridge.endIteration();
-    }
-
-    @Override
-    public boolean isThreadSafe() {
-        return bridge.isThreadSafe();
     }
 }

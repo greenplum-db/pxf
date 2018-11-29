@@ -68,34 +68,16 @@ public class UtilitiesTest {
         public void closeForRead() throws Exception {
         }
 
-        /**
-         * Opens the resource for write.
-         *
-         * @return true if the resource is successfully opened
-         * @throws Exception if opening the resource failed
-         */
         @Override
         public boolean openForWrite() throws Exception {
             return false;
         }
 
-        /**
-         * Writes the next object.
-         *
-         * @param onerow the object to be written
-         * @return true if the write succeeded
-         * @throws Exception writing to the resource failed
-         */
         @Override
         public boolean writeNextObject(OneRow onerow) throws Exception {
             return false;
         }
 
-        /**
-         * Closes the resource for write.
-         *
-         * @throws Exception if closing the resource failed
-         */
         @Override
         public void closeForWrite() throws Exception {
 
@@ -108,6 +90,15 @@ public class UtilitiesTest {
         @Override
         public OneRow emitAggObject() {
             return null;
+        }
+
+        @Override
+        public void initialize(RequestContext requestContext) {
+        }
+
+        @Override
+        public boolean isThreadSafe() {
+            return false;
         }
     }
 
@@ -127,37 +118,27 @@ public class UtilitiesTest {
         public void closeForRead() throws Exception {
         }
 
-        /**
-         * Opens the resource for write.
-         *
-         * @return true if the resource is successfully opened
-         * @throws Exception if opening the resource failed
-         */
         @Override
         public boolean openForWrite() throws Exception {
             return false;
         }
 
-        /**
-         * Writes the next object.
-         *
-         * @param onerow the object to be written
-         * @return true if the write succeeded
-         * @throws Exception writing to the resource failed
-         */
         @Override
         public boolean writeNextObject(OneRow onerow) throws Exception {
             return false;
         }
 
-        /**
-         * Closes the resource for write.
-         *
-         * @throws Exception if closing the resource failed
-         */
         @Override
         public void closeForWrite() throws Exception {
+        }
 
+        @Override
+        public void initialize(RequestContext requestContext) {
+        }
+
+        @Override
+        public boolean isThreadSafe() {
+            return false;
         }
     }
 
@@ -176,18 +157,19 @@ public class UtilitiesTest {
             return null;
         }
 
-        /**
-         * Constructs and sets the fields of a {@link OneRow}.
-         *
-         * @param record list of {@link OneField}
-         * @return the constructed {@link OneRow}
-         * @throws Exception if constructing a row from the fields failed
-         */
         @Override
         public OneRow setFields(List<OneField> record) throws Exception {
             return null;
         }
 
+        @Override
+        public void initialize(RequestContext requestContext) {
+        }
+
+        @Override
+        public boolean isThreadSafe() {
+            return false;
+        }
     }
 
     @Test
@@ -207,9 +189,6 @@ public class UtilitiesTest {
         assertTrue(Utilities.isValidDirectoryName("pxf"));
         assertTrue(Utilities.isValidDirectoryName("\uD83D\uDE0A"));
     }
-
-
-
 
     @Test
     public void byteArrayToOctalStringNull() throws Exception {
@@ -312,39 +291,48 @@ public class UtilitiesTest {
         when(metaData.getAccessor()).thenReturn(StatsAccessorImpl.class.getName());
         when(metaData.getAggType()).thenReturn(EnumAggregationType.COUNT);
         when(metaData.getAccessor()).thenReturn("org.greenplum.pxf.api.utilities.UtilitiesTest$StatsAccessorImpl");
-        assertTrue(Utilities.useAggBridge(metaData));
+        assertTrue(Utilities.aggregateOptimizationsSupported(metaData));
 
         when(metaData.getAccessor()).thenReturn(UtilitiesTest.class.getName());
         when(metaData.getAggType()).thenReturn(EnumAggregationType.COUNT);
-        assertFalse(Utilities.useAggBridge(metaData));
+        assertFalse(Utilities.aggregateOptimizationsSupported(metaData));
 
         //Do not use AggBridge when input data has filter
         when(metaData.getAccessor()).thenReturn(StatsAccessorImpl.class.getName());
         when(metaData.getAggType()).thenReturn(EnumAggregationType.COUNT);
         when(metaData.hasFilter()).thenReturn(true);
-        assertFalse(Utilities.useAggBridge(metaData));
+        assertFalse(Utilities.aggregateOptimizationsSupported(metaData));
     }
 
     @Test
     public void useStats() {
-        RequestContext metaData = mock(RequestContext.class);
-        Accessor accessor = new StatsAccessorImpl();
-        when(metaData.getAggType()).thenReturn(EnumAggregationType.COUNT);
-        when(metaData.getAccessor()).thenReturn("org.greenplum.pxf.api.utilities.UtilitiesTest$StatsAccessorImpl");
-        assertTrue(Utilities.useStats(accessor, metaData));
-        Accessor nonStatusAccessor = new NonStatsAccessorImpl();
-        assertFalse(Utilities.useStats(nonStatusAccessor, metaData));
+        RequestContext mockCtxSupporting = mock(RequestContext.class);
+        when(mockCtxSupporting.getAggType()).thenReturn(EnumAggregationType.COUNT);
+        when(mockCtxSupporting.getAccessor()).thenReturn("org.greenplum.pxf.api.utilities.UtilitiesTest$StatsAccessorImpl");
+        assertTrue(Utilities.aggregateOptimizationsSupported(mockCtxSupporting));
+
+        RequestContext mockCtxNonSupporting = mock(RequestContext.class);
+        when(mockCtxNonSupporting.getAggType()).thenReturn(EnumAggregationType.COUNT);
+        when(mockCtxNonSupporting.getAccessor()).thenReturn("org.greenplum.pxf.api.utilities.UtilitiesTest$NonStatsAccessorImpl");
+        assertFalse(Utilities.aggregateOptimizationsSupported(mockCtxNonSupporting));
 
         //Do not use stats when input data has filter
-        when(metaData.hasFilter()).thenReturn(true);
-        assertFalse(Utilities.useStats(accessor, metaData));
+        RequestContext mockCtxFilter = mock(RequestContext.class);
+        when(mockCtxFilter.getAggType()).thenReturn(EnumAggregationType.COUNT);
+        when(mockCtxFilter.getAccessor()).thenReturn("org.greenplum.pxf.api.utilities.UtilitiesTest$StatsAccessorImpl");
+        when(mockCtxFilter.hasFilter()).thenReturn(true);
+        assertFalse(Utilities.aggregateOptimizationsSupported(mockCtxFilter));
 
         //Do not use stats when more than one column is projected
-        when(metaData.hasFilter()).thenReturn(false);
-        when(metaData.getNumAttrsProjected()).thenReturn(1);
-        assertFalse(Utilities.useStats(accessor, metaData));
+        RequestContext mockCtxProjection = mock(RequestContext.class);
+        when(mockCtxProjection.getAggType()).thenReturn(EnumAggregationType.COUNT);
+        when(mockCtxProjection.getAccessor()).thenReturn("org.greenplum.pxf.api.utilities.UtilitiesTest$StatsAccessorImpl");
+        when(mockCtxProjection.hasFilter()).thenReturn(false);
+        when(mockCtxProjection.getNumAttrsProjected()).thenReturn(1);
+        assertFalse(Utilities.aggregateOptimizationsSupported(mockCtxProjection));
     }
 
+    /* TODO move to the proper class
     @Test
     public void useVectorization() {
         RequestContext metaData = mock(RequestContext.class);
@@ -353,6 +341,7 @@ public class UtilitiesTest {
         when(metaData.getResolver()).thenReturn("org.greenplum.pxf.api.utilities.UtilitiesTest$ReadResolverImpl");
         assertFalse(Utilities.useVectorization(metaData));
     }
+    */
 
     @Test
     public void testImpersonationPropertyAbsent() {

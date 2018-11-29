@@ -24,10 +24,12 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.Utilities;
-import org.greenplum.pxf.service.Bridge;
+import org.greenplum.pxf.service.bridge.Bridge;
 import org.greenplum.pxf.service.HttpRequestParser;
 import org.greenplum.pxf.service.RequestParser;
-import org.greenplum.pxf.service.WriteBridge;
+import org.greenplum.pxf.service.bridge.BridgeFactory;
+import org.greenplum.pxf.service.bridge.SimpleBridgeFactory;
+import org.greenplum.pxf.service.bridge.WriteBridge;
 
 import javax.servlet.ServletContext;
 import javax.ws.rs.Consumes;
@@ -83,17 +85,25 @@ import java.io.InputStream;
  * This class handles the subpath /&lt;version&gt;/Writable/ of this REST component
  */
 @Path("/" + Version.PXF_PROTOCOL_VERSION + "/Writable/")
-public class WritableResource {
-    private static final Log LOG = LogFactory.getLog(WritableResource.class);
+public class WritableResource extends BaseResource {
 
-    private RequestParser<HttpHeaders> parser;
+    private BridgeFactory bridgeFactory;
 
+    /**
+     * Creates an instance of the resource with the default singletons of RequestParser and BridgeFactory.
+     */
     public WritableResource() {
-        this(new HttpRequestParser());
+        this(HttpRequestParser.getInstance(), SimpleBridgeFactory.getInstance());
     }
 
-    WritableResource(RequestParser<HttpHeaders> parser) {
-        this.parser = parser;
+    /**
+     * Creates an instance of the resource with provided instances of RequestParser and BridgeFactory.
+     * @param parser request parser
+     * @param bridgeFactory bridge factory
+     */
+    WritableResource(RequestParser<HttpHeaders> parser, BridgeFactory bridgeFactory) {
+        super(parser);
+        this.bridgeFactory = bridgeFactory;
     }
 
     /**
@@ -116,38 +126,31 @@ public class WritableResource {
                            @QueryParam("path") String path,
                            InputStream inputStream) throws Exception {
 
-        /* Convert headers into a case-insensitive regular map */
-//        if (LOG.isDebugEnabled()) {
-//            FIXME: security issue by logging all params
-////            LOG.debug("WritableResource started with parameters: " + params + " and write path: " + path);
-//        }
-
-        RequestContext context = parser.parseRequest(headers);
+        RequestContext context = parseRequest(headers);
         context.setDataSource(path);
-        Bridge bridge = new WriteBridge(context);
+        Bridge bridge = bridgeFactory.getWriteBridge(context);
 
         // THREAD-SAFE parameter has precedence
         boolean isThreadSafe = context.isThreadSafe() && bridge.isThreadSafe();
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Request for " + path + " handled " +
-                    (isThreadSafe ? "without" : "with") + " synchronization");
-        }
+        LOG.debug("Request for %s will be handled %s synchronization", context.getDataSource(), (isThreadSafe ? "without" : "with"));
 
         return isThreadSafe ?
                 writeResponse(bridge, path, inputStream) :
                 synchronizedWriteResponse(bridge, path, inputStream);
     }
 
-    private static synchronized Response synchronizedWriteResponse(Bridge bridge,
-                                                                   String path,
-                                                                   InputStream inputStream)
+    private Response synchronizedWriteResponse(Bridge bridge, String path, InputStream inputStream)
             throws Exception {
-        return writeResponse(bridge, path, inputStream);
+
+        // non tread-safe access will be synchronized on the class level
+        Response result;
+        synchronized (WritableResource.class) {
+            result = writeResponse(bridge, path, inputStream);
+        }
+        return result;
     }
 
-    private static Response writeResponse(Bridge bridge,
-                                          String path,
-                                          InputStream inputStream)
+    private Response writeResponse(Bridge bridge, String path, InputStream inputStream)
             throws Exception {
         // Open the output file
         bridge.beginIteration();

@@ -58,15 +58,6 @@ public class HiveInputFormatFragmenter extends HiveDataFragmenter {
         ORC_FILE_INPUT_FORMAT
     }
 
-    /**
-     * Constructs a HiveInputFormatFragmenter.
-     *
-     * @param requestContext all input parameters coming from the client
-     */
-    public HiveInputFormatFragmenter(RequestContext requestContext) {
-        super(requestContext, HiveInputFormatFragmenter.class);
-    }
-
     /*
      * Checks that hive fields and partitions match the GPDB schema. Throws an
      * exception if: - the number of fields (+ partitions) do not match the GPDB

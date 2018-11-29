@@ -39,14 +39,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * BaseFragmenter for Parquet on HDFS.
+ * Fragmenter for Parquet on HDFS.
  * Returns list of splits for a given HDFS path.
  */
 public class ParquetDataFragmenter extends HdfsDataFragmenter {
-
-    public ParquetDataFragmenter(RequestContext md) {
-        super(md);
-    }
 
     @Override
     public List<Fragment> getFragments() throws Exception {

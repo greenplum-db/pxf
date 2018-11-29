@@ -49,15 +49,6 @@ import java.util.regex.Pattern;
  * PXF-Ignite accessor class
  */
 public class IgniteAccessor extends IgniteBasePlugin implements Accessor {
-    /**
-     * Class constructor
-     * @param requestContext Input
-     *
-     * @throws UserDataException if there is a user data exception
-     */
-    public IgniteAccessor(RequestContext requestContext) throws UserDataException {
-        super(requestContext);
-    }
 
     /**
      * openForRead() implementation

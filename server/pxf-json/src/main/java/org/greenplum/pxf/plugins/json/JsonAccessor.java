@@ -57,9 +57,14 @@ public class JsonAccessor extends HdfsSplittableDataAccessor {
      */
     private int maxRecordLength = Integer.MAX_VALUE;
 
-    public JsonAccessor(RequestContext context) throws Exception {
+    public JsonAccessor() {
         // Because HdfsSplittableDataAccessor doesn't use the InputFormat we set it to null.
-        super(context, null);
+        super(null);
+    }
+
+    @Override
+    public void initialize(RequestContext requestContext) {
+        super.initialize(requestContext);
 
         if (!isEmpty(context.getOption(IDENTIFIER_PARAM))) {
 

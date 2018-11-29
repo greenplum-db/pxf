@@ -90,7 +90,8 @@ public class SqlBuilderTest {
         when(context.getOption("PARTITION_BY")).thenReturn("cdate:date");
         when(context.getOption("RANGE")).thenReturn("2008-01-01:2009-01-01");
         when(context.getOption("INTERVAL")).thenReturn("2:month");
-        IgnitePartitionFragmenter fragment = new IgnitePartitionFragmenter(context);
+        IgnitePartitionFragmenter fragment = new IgnitePartitionFragmenter();
+        fragment.initialize(context);
         List<Fragment> fragments = fragment.getFragments();
         assertEquals(6, fragments.size());
 
@@ -113,7 +114,8 @@ public class SqlBuilderTest {
         String whereSql = builder.buildWhereSQL();
         assertEquals("id>5", whereSql);
 
-        IgnitePartitionFragmenter fragment = new IgnitePartitionFragmenter(context);
+        IgnitePartitionFragmenter fragment = new IgnitePartitionFragmenter();
+        fragment.initialize(context);
         List<Fragment> fragments = fragment.getFragments();
 
         // Partition 1: id>5 and grade='excellent'
@@ -129,7 +131,8 @@ public class SqlBuilderTest {
     public void testNoPartition() throws Exception {
         prepareConstruction();
         when(context.hasFilter()).thenReturn(false);
-        IgnitePartitionFragmenter fragment = new IgnitePartitionFragmenter(context);
+        IgnitePartitionFragmenter fragment = new IgnitePartitionFragmenter();
+        fragment.initialize(context);
         List<Fragment> fragments = fragment.getFragments();
         assertEquals(1, fragments.size());
 

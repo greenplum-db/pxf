@@ -1,5 +1,6 @@
 package org.greenplum.pxf.automation.utils.curl;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -12,7 +13,9 @@ public class CurlUtils {
     private String command;
 
     public CurlUtils(String host, String port, String path) {
-        formCommand(host, port, path, defaultRequest, null, null);
+        Map<String, String> headers = new HashMap<>();
+        headers.put("X-GP-USER", "hacker");
+        formCommand(host, port, path, defaultRequest, headers, null);
     }
     public CurlUtils(String host, String port, String path, String requestType, Map<String, String> headers, List<String> params) {
         formCommand(host, port, path, requestType, headers, params);

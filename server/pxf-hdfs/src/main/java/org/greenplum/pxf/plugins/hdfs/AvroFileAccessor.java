@@ -42,25 +42,35 @@ public class AvroFileAccessor extends HdfsSplittableDataAccessor {
     private AvroWrapper<GenericRecord> avroWrapper;
 
     /**
-     * Constructs a AvroFileAccessor that creates the job configuration and
-     * accesses the avro file to fetch the avro schema
-     *
-     * @param input all input parameters coming from the client
-     * @throws Exception if getting the avro schema fails
+     * Constructs a new instance of the AvroFileAccessor
      */
-    public AvroFileAccessor(RequestContext input) throws Exception {
-        // 1. Call the base class
-        super(input, new AvroInputFormat<GenericRecord>());
+    public AvroFileAccessor() {
+        super(new AvroInputFormat<GenericRecord>());
+    }
 
-        // 2. Accessing the avro file through the "unsplittable" API just to get the schema.
+    /*
+     * Initializes a AvroFileAccessor that creates the job configuration and
+     * accesses the avro file to fetch the avro schema
+     */
+
+    @Override
+    public void initialize(RequestContext requestContext) {
+        super.initialize(requestContext);
+
+        // 1. Accessing the avro file through the "unsplittable" API just to get the schema.
         //    The splittable API (AvroInputFormat) which is the one we will be using to fetch
         //    the records, does not support getting the avro schema yet.
-        Schema schema = getAvroSchema(configuration, context.getDataSource());
+        Schema schema;
+        try {
+            schema = getAvroSchema(configuration, context.getDataSource());
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to obtain Avro schema for " + context.getDataSource(), e);
+        }
 
-        // 3. Pass the schema to the AvroInputFormat
+        // 2. Pass the schema to the AvroInputFormat
         AvroJob.setInputSchema(jobConf, schema);
 
-        // 4. The avroWrapper required for the iteration
+        // 3. The avroWrapper required for the iteration
         avroWrapper = new AvroWrapper<GenericRecord>();
     }
 

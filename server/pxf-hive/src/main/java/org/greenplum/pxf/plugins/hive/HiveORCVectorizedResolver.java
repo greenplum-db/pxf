@@ -66,13 +66,14 @@ public class HiveORCVectorizedResolver extends HiveResolver implements ReadVecto
     private List<List<OneField>> resolvedBatch;
     private StructObjectInspector soi;
 
-    public HiveORCVectorizedResolver(RequestContext input) throws Exception {
-        super(input);
+    @Override
+    public void initialize(RequestContext requestContext) {
+        super.initialize(requestContext);
         try {
             soi = (StructObjectInspector) getOrcReader().getObjectInspector();
         } catch (Exception e) {
-            LOG.error("Unable to create an object inspector.");
-            throw e;
+            LOG.error("Failed to create an object inspector.");
+            throw new RuntimeException("Failed to initialize HiveORCVectorizedResolver", e);
         }
     }
 

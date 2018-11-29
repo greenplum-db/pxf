@@ -1,12 +1,10 @@
 package org.greenplum.pxf.automation.testplugin;
 
-import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.ReadAccessor;
-import org.greenplum.pxf.api.WriteAccessor;
-import org.greenplum.pxf.api.utilities.InputData;
-import org.greenplum.pxf.api.utilities.Plugin;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.model.Accessor;
+import org.greenplum.pxf.api.model.BasePlugin;
 
 /*
  * Internal interface that defines the access to a file on HDFS.  All classes
@@ -14,14 +12,10 @@ import org.apache.commons.logging.LogFactory;
  * must respect this interface
  * Dummy implementation, for documentation
  */
-public class DummyAccessor extends Plugin implements ReadAccessor, WriteAccessor {
+public class DummyAccessor extends BasePlugin implements Accessor {
     private static final Log LOG = LogFactory.getLog(DummyAccessor.class);
     private int rowNumber;
     private int fragmentNumber;
-
-    public DummyAccessor(InputData metaData) {
-        super(metaData);
-    }
 
     @Override
     public boolean openForRead() throws Exception {
@@ -37,8 +31,8 @@ public class DummyAccessor extends Plugin implements ReadAccessor, WriteAccessor
             return null; /* signal EOF, close will be called */
         }
 
-        int fragment = inputData.getDataFragment();
-        String fragmentMetadata = new String(inputData.getFragmentMetadata());
+        int fragment = context.getDataFragment();
+        String fragmentMetadata = new String(context.getFragmentMetadata());
         /* generate row */
         OneRow row = new OneRow(fragment + "." + rowNumber, /* key */
                 rowNumber + "," + fragmentMetadata + "," + fragment /* value */);
@@ -47,7 +41,7 @@ public class DummyAccessor extends Plugin implements ReadAccessor, WriteAccessor
         if (rowNumber == 2) {
             rowNumber = 0;
             fragmentNumber += 1;
-        } 
+        }
         /* return data */
         return row;
     }

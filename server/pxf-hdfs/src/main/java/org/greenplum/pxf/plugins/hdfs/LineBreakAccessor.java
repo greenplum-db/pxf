@@ -43,23 +43,23 @@ import java.net.URI;
 /**
  * A PXF Accessor for reading delimited plain text records.
  */
-public class LineBreakAccessor extends HdfsSplittableDataAccessor implements Accessor {
+public class LineBreakAccessor extends HdfsSplittableDataAccessor {
     private DataOutputStream dos;
     private FSDataOutputStream fsdos;
     private FileSystem fs;
     private Path file;
-    private static final Log LOG = LogFactory.getLog(LineBreakAccessor.class);
 
     /**
-     * Constructs a LineReaderAccessor.
-     *
-     * @param input all input parameters coming from the client request
+     * Constructs a LineBreakAccessor.
      */
-    public LineBreakAccessor(RequestContext input) {
+    public LineBreakAccessor() {
+        super(new TextInputFormat());
+    }
 
-        super(input, new TextInputFormat());
+    @Override
+    public void initialize(RequestContext requestContext) {
+        super.initialize(requestContext);
         ((TextInputFormat) inputFormat).configure(jobConf);
-
     }
 
     @Override
@@ -99,9 +99,7 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor implements Acc
         Path parent = file.getParent();
         if (!fs.exists(parent)) {
             fs.mkdirs(parent);
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Created new dir " + parent.toString());
-            }
+            LOG.debug("Created new dir %s", parent.toString());
         }
 
         // create output stream - do not allow overwriting existing file
@@ -140,7 +138,7 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor implements Acc
     @Override
     public void closeForWrite() throws Exception {
         if ((dos != null) && (fsdos != null)) {
-            LOG.debug("Closing writing stream for path " + file);
+            LOG.debug("Closing writing stream for path %s", file);
             dos.flush();
             /*
              * From release 0.21.0 sync() is deprecated in favor of hflush(),

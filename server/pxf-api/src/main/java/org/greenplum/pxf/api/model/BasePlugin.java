@@ -29,7 +29,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
- * Base class for all plugin types (Accessor, Resolver, BaseFragmenter, ...).
+ * Base class for all plugin types (Accessor, Resolver, Fragmenter, ...).
  * Manages the meta data.
  */
 public class BasePlugin implements Plugin {

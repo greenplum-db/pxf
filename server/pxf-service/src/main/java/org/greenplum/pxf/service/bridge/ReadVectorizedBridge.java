@@ -1,4 +1,4 @@
-package org.greenplum.pxf.service;
+package org.greenplum.pxf.service.bridge;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -19,13 +19,13 @@ package org.greenplum.pxf.service;
  * under the License.
  */
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.greenplum.pxf.api.BadRecordException;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.ReadVectorizedResolver;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.api.utilities.AccessorFactory;
+import org.greenplum.pxf.api.utilities.ResolverFactory;
 import org.greenplum.pxf.service.io.Writable;
 
 import java.io.IOException;
@@ -34,10 +34,12 @@ import java.util.List;
 
 public class ReadVectorizedBridge extends ReadBridge {
 
-    private static final Log LOG = LogFactory.getLog(ReadVectorizedBridge.class);
-
     public ReadVectorizedBridge(RequestContext context) throws Exception {
-        super(context);
+        this(context, AccessorFactory.getInstance(), ResolverFactory.getInstance());
+    }
+
+    ReadVectorizedBridge(RequestContext context, AccessorFactory accessorFactory, ResolverFactory resolverFactory) throws Exception {
+        super(context, accessorFactory, resolverFactory);
     }
 
     @Override
@@ -51,7 +53,7 @@ public class ReadVectorizedBridge extends ReadBridge {
 
         try {
             while (outputQueue.isEmpty()) {
-                batch = fileAccessor.readNextObject();
+                batch = accessor.readNextObject();
                 if (batch == null) {
                     output = outputBuilder.getPartialLine();
                     if (output != null) {
@@ -64,7 +66,7 @@ public class ReadVectorizedBridge extends ReadBridge {
 
                 // we checked before that outputQueue is empty, so we can
                 // override it.
-                List<List<OneField>> resolvedBatch = ((ReadVectorizedResolver) fieldsResolver).getFieldsForBatch(batch);
+                List<List<OneField>> resolvedBatch = ((ReadVectorizedResolver) resolver).getFieldsForBatch(batch);
                 outputQueue = outputBuilder.makeVectorizedOutput(resolvedBatch);
                 if (!outputQueue.isEmpty()) {
                     output = outputQueue.pop();
@@ -93,11 +95,6 @@ public class ReadVectorizedBridge extends ReadBridge {
         }
 
         return output;
-    }
-
-    @Override
-    public void endIteration() throws Exception {
-        fileAccessor.closeForRead();
     }
 
 }

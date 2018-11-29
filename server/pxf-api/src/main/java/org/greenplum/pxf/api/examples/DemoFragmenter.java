@@ -19,9 +19,8 @@ package org.greenplum.pxf.api.examples;
  * under the License.
  */
 
-import org.greenplum.pxf.api.BaseFragmenter;
+import org.greenplum.pxf.api.model.BaseFragmenter;
 import org.greenplum.pxf.api.model.Fragment;
-import org.greenplum.pxf.api.model.RequestContext;
 
 import java.util.List;
 
@@ -33,14 +32,6 @@ import java.util.List;
  */
 
 public class DemoFragmenter extends BaseFragmenter {
-    /**
-     * Constructs the DemoFragmenter
-     *
-     * @param metaData the RequestContext
-     */
-    public DemoFragmenter(RequestContext metaData) {
-        super(metaData);
-    }
 
     /**
      * Provide metadata for each data partition of the given datasource
@@ -56,5 +47,4 @@ public class DemoFragmenter extends BaseFragmenter {
         fragments.add(new Fragment(context.getDataSource() + ".3", localHosts, "fragment3".getBytes()));
         return fragments;
     }
-
 }

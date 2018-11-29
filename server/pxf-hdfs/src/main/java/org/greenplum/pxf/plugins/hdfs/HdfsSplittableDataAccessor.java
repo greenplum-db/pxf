@@ -45,26 +45,29 @@ import java.util.ListIterator;
 public abstract class HdfsSplittableDataAccessor extends BasePlugin implements Accessor {
     protected RecordReader<Object, Object> reader;
     protected InputFormat<?, ?> inputFormat;
-    private ListIterator<InputSplit> iter;
     protected JobConf jobConf;
     protected Object key, data;
     protected HdfsUtilities.HCFSType hcfsType;
 
+    private ListIterator<InputSplit> iter;
+
     /**
      * Constructs an HdfsSplittableDataAccessor
-     *
-     * @param input all input parameters coming from the client request
      * @param inFormat the HDFS {@link InputFormat} the caller wants to use
      */
-    public HdfsSplittableDataAccessor(RequestContext input, InputFormat<?, ?> inFormat) {
-        initialize(input);
+    protected HdfsSplittableDataAccessor(InputFormat<?, ?> inFormat) {
         inputFormat = inFormat;
+    }
 
-        // 2. variable required for the splits iteration logic
+    @Override
+    public void initialize(RequestContext requestContext) {
+        super.initialize(requestContext);
+
+        // variable required for the splits iteration logic
         jobConf = new JobConf(configuration, HdfsSplittableDataAccessor.class);
 
         // Check if the underlying configuration is for HDFS
-        hcfsType = HdfsUtilities.getHCFSType(configuration, input);
+        hcfsType = HdfsUtilities.getHCFSType(configuration, requestContext);
     }
 
     /**

@@ -64,7 +64,8 @@ public class HiveDataFragmenterTest {
     @Test
     public void construction() throws Exception {
         prepareConstruction();
-        fragmenter = new HiveDataFragmenter(requestContext);
+        fragmenter = new HiveDataFragmenter();
+        fragmenter.initialize(requestContext);
         Whitebox.setInternalState(fragmenter, "configuration", hadoopConfiguration);
         PowerMockito.verifyNew(JobConf.class).withArguments(hadoopConfiguration, HiveDataFragmenter.class);
         PowerMockito.verifyNew(HiveMetaStoreClient.class).withArguments(hiveConfiguration);
@@ -76,7 +77,8 @@ public class HiveDataFragmenterTest {
         PowerMockito.whenNew(HiveMetaStoreClient.class).withArguments(hiveConfiguration).thenThrow(new MetaException("which way to albuquerque"));
 
         try {
-            fragmenter = new HiveDataFragmenter(requestContext);
+            fragmenter = new HiveDataFragmenter();
+            fragmenter.initialize(requestContext);
             fail("Expected a RuntimeException");
         } catch (RuntimeException ex) {
             assertEquals(ex.getMessage(), "Failed connecting to Hive MetaStore service: which way to albuquerque");
@@ -86,7 +88,8 @@ public class HiveDataFragmenterTest {
     @Test
     public void invalidTableName() throws Exception {
         prepareConstruction();
-        fragmenter = new HiveDataFragmenter(requestContext);
+        fragmenter = new HiveDataFragmenter();
+        fragmenter.initialize(requestContext);
 
         when(requestContext.getDataSource()).thenReturn("t.r.o.u.b.l.e.m.a.k.e.r");
 
@@ -101,7 +104,8 @@ public class HiveDataFragmenterTest {
     @Test
     public void testBuildSingleFilter() throws Exception {
         prepareConstruction();
-        fragmenter = new HiveDataFragmenter(requestContext);
+        fragmenter = new HiveDataFragmenter();
+        fragmenter.initialize(requestContext);
         ColumnDescriptor columnDescriptor =
                 new ColumnDescriptor("textColumn", 25, 3, "text", null,true);
         String filterColumnName=columnDescriptor.columnName();
@@ -150,7 +154,8 @@ public class HiveDataFragmenterTest {
     @Test
     public void testIntegralPushdown() throws Exception {
         prepareConstruction();
-        fragmenter = new HiveDataFragmenter(requestContext);
+        fragmenter = new HiveDataFragmenter();
+        fragmenter.initialize(requestContext);
         // Mock private field partitionkeyTypes
         Field partitionkeyTypes = PowerMockito.field(HiveDataFragmenter.class, "partitionkeyTypes");
         // Mock private method buildSingleFilter

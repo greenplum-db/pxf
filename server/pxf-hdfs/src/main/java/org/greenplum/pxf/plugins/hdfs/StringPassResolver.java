@@ -39,18 +39,7 @@ import static org.greenplum.pxf.api.io.DataType.VARCHAR;
  */
 public class StringPassResolver extends BasePlugin implements Resolver {
     // for write
-    private OneRow oneRow;
-
-    /**
-     * Constructs a StringPassResolver.
-     *
-     * @param requestContext input all input parameters coming from the client request
-     */
-    public StringPassResolver(RequestContext requestContext) {
-        initialize(requestContext);
-        oneRow = new OneRow();
-        this.context = requestContext;
-    }
+    private OneRow oneRow = new OneRow();
 
     /**
      * Returns a list of the fields of one record.
