@@ -38,11 +38,11 @@ public class AggBridge extends ReadBridge implements Bridge {
     /* Avoid resolving rows with the same key twice */
     private LRUMap outputCache;
 
-    public AggBridge(RequestContext context) throws Exception {
+    public AggBridge(RequestContext context) {
         this(context, AccessorFactory.getInstance(), ResolverFactory.getInstance());
     }
 
-    AggBridge(RequestContext context, AccessorFactory accessorFactory, ResolverFactory resolverFactory) throws Exception {
+    AggBridge(RequestContext context, AccessorFactory accessorFactory, ResolverFactory resolverFactory) {
         super(context, accessorFactory, resolverFactory);
     }
 

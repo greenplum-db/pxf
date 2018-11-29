@@ -34,11 +34,11 @@ import java.util.List;
 
 public class ReadVectorizedBridge extends ReadBridge {
 
-    public ReadVectorizedBridge(RequestContext context) throws Exception {
+    public ReadVectorizedBridge(RequestContext context) {
         this(context, AccessorFactory.getInstance(), ResolverFactory.getInstance());
     }
 
-    ReadVectorizedBridge(RequestContext context, AccessorFactory accessorFactory, ResolverFactory resolverFactory) throws Exception {
+    ReadVectorizedBridge(RequestContext context, AccessorFactory accessorFactory, ResolverFactory resolverFactory) {
         super(context, accessorFactory, resolverFactory);
     }
 

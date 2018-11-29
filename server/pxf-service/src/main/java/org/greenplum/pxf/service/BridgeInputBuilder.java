@@ -38,7 +38,7 @@ public class BridgeInputBuilder {
     private RequestContext protocolData;
     private static final Log LOG = LogFactory.getLog(BridgeInputBuilder.class);
 
-    public BridgeInputBuilder(RequestContext protocolData) throws Exception {
+    public BridgeInputBuilder(RequestContext protocolData) {
         this.protocolData = protocolData;
     }
 

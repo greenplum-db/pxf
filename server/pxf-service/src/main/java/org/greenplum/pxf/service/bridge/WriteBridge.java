@@ -44,12 +44,12 @@ public class WriteBridge extends BaseBridge {
     /*
      * C'tor - set the implementation of the bridge
      */
-    public WriteBridge(RequestContext context) throws Exception {
+    public WriteBridge(RequestContext context) {
         super(context);
         inputBuilder = new BridgeInputBuilder(context);
     }
 
-    WriteBridge(RequestContext context, AccessorFactory accessorFactory, ResolverFactory resolverFactory) throws Exception {
+    WriteBridge(RequestContext context, AccessorFactory accessorFactory, ResolverFactory resolverFactory) {
         super(context, accessorFactory, resolverFactory);
         inputBuilder = new BridgeInputBuilder(context);
     }

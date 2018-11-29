@@ -49,13 +49,12 @@ public class ReadSamplingBridge extends ReadBridge {
      * C'tor - set the implementation of the bridge.
      *
      * @param context input containing sampling ratio
-     * @throws Exception if the sampling ratio is wrong
      */
-    public ReadSamplingBridge(RequestContext context) throws Exception {
+    public ReadSamplingBridge(RequestContext context) {
         this(context, AccessorFactory.getInstance(), ResolverFactory.getInstance());
     }
 
-    ReadSamplingBridge(RequestContext context, AccessorFactory accessorFactory, ResolverFactory resolverFactory) throws Exception {
+    ReadSamplingBridge(RequestContext context, AccessorFactory accessorFactory, ResolverFactory resolverFactory) {
         super(context, accessorFactory, resolverFactory);
         calculateBitSet(context.getStatsSampleRatio());
         this.curIndex = 0;

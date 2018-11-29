@@ -53,13 +53,12 @@ public class ReadBridge extends BaseBridge {
      * C'tor - set the implementation of the bridge.
      *
      * @param context input containing accessor and resolver names
-     * @throws Exception if accessor or resolver can't be instantiated
      */
-    public ReadBridge(RequestContext context) throws Exception {
+    public ReadBridge(RequestContext context) {
         this(context, AccessorFactory.getInstance(), ResolverFactory.getInstance());
     }
 
-    ReadBridge(RequestContext context, AccessorFactory accessorFactory, ResolverFactory resolverFactory) throws Exception {
+    ReadBridge(RequestContext context, AccessorFactory accessorFactory, ResolverFactory resolverFactory) {
         super(context, accessorFactory, resolverFactory);
         outputBuilder = new BridgeOutputBuilder(context);
     }
