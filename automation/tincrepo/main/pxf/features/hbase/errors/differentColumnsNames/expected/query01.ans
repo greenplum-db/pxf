@@ -20,5 +20,5 @@
 --
 -- end_matchsubs
 SELECT * from pxf_hbase_different_columns_names ORDER BY recordkey;
-ERROR:  remote component error (500) from 'SOME_IP:SOME_PORT':  type  Exception report   message   java.lang.Exception: java.lang.IllegalArgumentException: Illegal HBase column name q2, missing :DESCRIPTION
+ERROR:  remote component error (500) from 'SOME_IP:SOME_PORT':  type  Exception report   message   Illegal HBase column name q2, missing :DESCRIPTION
 DETAIL:  External table pxf_hbase_different_columns_names
