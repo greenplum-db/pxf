@@ -251,6 +251,7 @@ project('pxf-hive') {
         compile("org.apache.hive:hive-exec:$hiveVersion") {
             exclude module: 'calcite-core'
             exclude module: 'calcite-avatica'
+            exclude module: 'guava'
         }
         bundleJars "org.apache.hive:hive-metastore:$hiveVersion"
         bundleJars "org.apache.hive:hive-serde:$hiveVersion"
