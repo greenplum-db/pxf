@@ -20,7 +20,7 @@ package org.greenplum.pxf.plugins.hbase;
  */
 
 
-import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HRegionInfo;
 import org.apache.hadoop.hbase.HRegionLocation;
 import org.apache.hadoop.hbase.ServerName;
@@ -32,8 +32,8 @@ import org.apache.hadoop.hbase.client.ConnectionFactory;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.RegionLocator;
 import org.greenplum.pxf.api.model.BaseFragmenter;
-import org.greenplum.pxf.api.model.FragmentStats;
 import org.greenplum.pxf.api.model.Fragment;
+import org.greenplum.pxf.api.model.FragmentStats;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseLookupTable;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseUtilities;
@@ -56,10 +56,14 @@ import java.util.Map;
  */
 public class HBaseDataFragmenter extends BaseFragmenter {
 
-    // TODO revisit how to bootstrap HBase configuration
-    private static final Configuration hbaseConfiguration = HBaseUtilities.initHBaseConfiguration();
-    private Admin hbaseAdmin;
     private Connection connection;
+
+    @Override
+    public void initialize(RequestContext requestContext) {
+        super.initialize(requestContext);
+        configuration = HBaseConfiguration.create(configuration);
+        configuration.set("hbase.client.retries.number", "3");
+    }
 
     /**
      * Returns statistics for HBase table. Currently it's not implemented.
@@ -82,9 +86,9 @@ public class HBaseDataFragmenter extends BaseFragmenter {
     public List<Fragment> getFragments() throws Exception {
 
         // check that Zookeeper and HBase master are available
-        HBaseAdmin.checkHBaseAvailable(hbaseConfiguration);
-        connection = ConnectionFactory.createConnection(hbaseConfiguration);
-        hbaseAdmin = connection.getAdmin();
+        HBaseAdmin.checkHBaseAvailable(configuration);
+        connection = ConnectionFactory.createConnection(configuration);
+        Admin hbaseAdmin = connection.getAdmin();
         if (!HBaseUtilities.isTableAvailable(hbaseAdmin, context.getDataSource())) {
             HBaseUtilities.closeConnection(hbaseAdmin, connection);
             throw new TableNotFoundException(context.getDataSource());
@@ -106,7 +110,7 @@ public class HBaseDataFragmenter extends BaseFragmenter {
      * or serialization fails
      */
     private byte[] prepareUserData() throws Exception {
-        HBaseLookupTable lookupTable = new HBaseLookupTable(hbaseConfiguration);
+        HBaseLookupTable lookupTable = new HBaseLookupTable(configuration);
         Map<String, byte[]> mappings = lookupTable.getMappings(context.getDataSource());
         lookupTable.close();
 

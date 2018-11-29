@@ -20,17 +20,6 @@ public class ThrowOn10000Accessor extends LineBreakAccessor {
     private int rowCount;
 
     /**
-     * Constructs a ThrowOn1000Accessor
-     *
-     * @param input all input parameters coming from the client request
-     */
-    public ThrowOn10000Accessor(RequestContext input) {
-        super(input);
-
-        rowCount = 0;
-    }
-
-    /**
      * Reads next record using LineBreakAccessor.readNextObject().
      * Throws a runtime exception upon reading the 10000 record.
      *

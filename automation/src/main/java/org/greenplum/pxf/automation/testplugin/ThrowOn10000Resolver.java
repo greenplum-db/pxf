@@ -20,17 +20,6 @@ public class ThrowOn10000Resolver extends StringPassResolver {
 	private int rowCount;
 
     /**
-     * Constructs a StringPassResolver
-     *
-     * @param inputData input all input parameters coming from the client request
-     */
-    public ThrowOn10000Resolver(RequestContext inputData) {
-    	super(inputData);
-
-        rowCount = 0;
-    }
-
-    /**
      * Resolves next row using StringPassResolver.getFields().
      * Throws a runtime exception upon reading the 10000 record.
      *

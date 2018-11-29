@@ -9,8 +9,9 @@ public class HiveDataFragmenterWithFilter extends HiveDataFragmenter {
 
     private static final Log LOG = LogFactory.getLog(HiveDataFragmenterWithFilter.class);
 
-    public HiveDataFragmenterWithFilter(RequestContext requestContext) {
-        super(requestContext);
+    @Override
+    public void initialize(RequestContext requestContext) {
+        super.initialize(requestContext);
         addFilters();  // Set the test hive filter (overwrite gpdb filter)
     }
 

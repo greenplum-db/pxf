@@ -9,19 +9,10 @@ public class HiveInputFormatFragmenterWithFilter extends HiveInputFormatFragment
 
     private static final Log LOG = LogFactory.getLog(HiveInputFormatFragmenterWithFilter.class);
 
-    public HiveInputFormatFragmenterWithFilter(RequestContext requestContext) {
-        super(requestContext);
+    @Override
+    public void initialize(RequestContext requestContext) {
+        super.initialize(requestContext);
         addFilters();  // Set the test hive filter (overwrite gpdb filter)
-    }
-
-    /**
-     * Constructs a HiveInputFormatFragmenterWithFilter object
-     *
-     * @param requestContext all input parameters coming from the client
-     * @param clazz     Class for JobConf
-     */
-    public HiveInputFormatFragmenterWithFilter(RequestContext requestContext, Class<?> clazz) {
-        super(requestContext);
     }
 
     /*
