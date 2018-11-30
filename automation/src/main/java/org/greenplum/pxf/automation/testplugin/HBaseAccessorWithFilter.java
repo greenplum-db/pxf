@@ -65,10 +65,10 @@ public class HBaseAccessorWithFilter extends BasePlugin implements Accessor {
 		}
 	}
 
-	public HBaseAccessorWithFilter(RequestContext input) {
-		initialize(input);
-
-		tupleDescription = new HBaseTupleDescription(input);
+	@Override
+	public void initialize(RequestContext requestContext) {
+		super.initialize(requestContext);
+		tupleDescription = new HBaseTupleDescription(requestContext);
 		splits = new ArrayList<SplitBoundary>();
 		currentRegionIndex = 0;
 		scanStartKey = HConstants.EMPTY_START_ROW;

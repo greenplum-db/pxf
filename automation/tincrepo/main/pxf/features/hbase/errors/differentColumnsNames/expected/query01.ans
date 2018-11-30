@@ -1,7 +1,7 @@
 -- @description query01 for PXF HBase different columns name case
 
 -- start_matchsubs
---                                                                                               
+--
 -- # create a match/subs
 --
 -- m/(ERROR|WARNING):.*remote component error.*\(\d+\).*from.*'\d+\.\d+\.\d+\.\d+:\d+'.*/

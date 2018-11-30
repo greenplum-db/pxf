@@ -1,7 +1,7 @@
 -- @description query01 for PXF Profiles feature checking missing Fragmenter in profile Error.
 
 -- start_matchsubs
---                                                                                               
+--
 -- # create a match/subs
 --
 -- m/(ERROR|WARNING):.*remote component error.*\(\d+\).*from.*'\d+\.\d+\.\d+\.\d+:\d+'.*/
@@ -15,7 +15,7 @@
 -- m/file:.*;/
 -- s/file:.*; lineNumber: \d+; columnNumber: \d+;/SOME_ERROR_LOCATION/g
 --
--- m/Exception report.*(IllegalArgumentException).*/
+-- m/Exception report.*(Could not determine plugin class name).*/
 -- s/report.*/SOME_EXCEPTION/
 --
 -- m/DETAIL/

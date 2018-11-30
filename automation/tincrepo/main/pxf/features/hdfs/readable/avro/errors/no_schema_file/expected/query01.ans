@@ -1,7 +1,7 @@
 -- @description query01 for PXF HDFS Readable Avro with missing schema file test cases
 
 -- start_matchsubs
---                                                                                               
+--
 -- # create a match/subs
 --
 -- m/(ERROR|WARNING):.*remote component error.*\(\d+\).*from.*'\d+\.\d+\.\d+\.\d+:\d+'.*/
@@ -20,5 +20,5 @@
 --
 -- end_matchsubs
 SELECT * from avro_in_seq_no_schema;
-ERROR:  remote component error (500) from 'SOME_IP:SOME_PORT':  type  Exception report   message   java.lang.Exception: org.greenplum.pxf.plugins.hdfs.utilities.DataSchemaException: schema resource &quot;i_do_not_exist&quot; is not located on the classpath    description   DESCRIPTION
+ERROR:  remote component error (500) from 'SOME_IP:SOME_PORT':  type  Exception report   message   Failed to initialize AvroResolver: schema resource &quot;i_do_not_exist&quot; is not located on the classpath    description   DESCRIPTION
 DETAIL:  External table avro_in_seq_no_schema

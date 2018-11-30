@@ -90,7 +90,7 @@ public class AvroResolver extends BasePlugin implements Resolver {
                 }
             }
         } catch (Exception e) {
-            throw new RuntimeException("Failed to initialize AvroResolver", e);
+            throw new RuntimeException("Failed to initialize AvroResolver: " + e.getMessage(), e);
         }
 
         reader = new GenericDatumReader<>(schema);
