@@ -22,7 +22,6 @@ package org.greenplum.pxf.api.examples;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.api.model.RequestContext;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -33,15 +32,6 @@ import java.util.List;
  * Demo implementation of resolver that returns text format
  */
 public class DemoTextResolver extends DemoResolver {
-
-    /**
-     * Constructs the DemoResolver
-     *
-     * @param metaData the RequestContext
-     */
-    public DemoTextResolver(RequestContext metaData) {
-        super(metaData);
-    }
 
     /**
      * Read the next record

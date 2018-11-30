@@ -19,11 +19,8 @@ package org.greenplum.pxf.api.examples;
  * under the License.
  */
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.BasePlugin;
 
 /**
@@ -34,19 +31,9 @@ import org.greenplum.pxf.api.model.BasePlugin;
  */
 public class DemoAccessor extends BasePlugin implements Accessor {
 
-    private static final Log LOG = LogFactory.getLog(DemoAccessor.class);
     private int rowNumber;
     private int fragmentNumber;
     private static int NUM_ROWS = 2;
-
-    /**
-     * Constructs a DemoAccessor
-     *
-     * @param metaData the RequestContext
-     */
-    public DemoAccessor(RequestContext metaData) {
-        initialize(metaData);
-    }
 
     @Override
     public boolean openForRead() throws Exception {

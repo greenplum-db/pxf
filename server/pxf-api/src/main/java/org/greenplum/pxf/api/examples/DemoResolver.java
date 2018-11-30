@@ -21,11 +21,9 @@ package org.greenplum.pxf.api.examples;
 
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.BasePlugin;
-
+import org.greenplum.pxf.api.model.Resolver;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -36,14 +34,6 @@ import java.util.List;
  * Demo implementation that returns record custom format
  */
 public class DemoResolver extends BasePlugin implements Resolver {
-    /**
-     * Constructs the DemoResolver
-     *
-     * @param metaData the RequestContext
-     */
-    public DemoResolver(RequestContext metaData) {
-        initialize(metaData);
-    }
 
     /**
      * Read the next record

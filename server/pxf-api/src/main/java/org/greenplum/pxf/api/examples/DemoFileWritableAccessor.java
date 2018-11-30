@@ -20,7 +20,6 @@ package org.greenplum.pxf.api.examples;
  */
 
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.model.RequestContext;
 
 import java.io.BufferedOutputStream;
 import java.io.IOException;
@@ -38,15 +37,6 @@ import java.nio.file.Path;
 public class DemoFileWritableAccessor extends DemoAccessor {
 
     private OutputStream out;
-
-    /**
-     * Constructs a DemoFileWritableAccessor.
-     *
-     * @param input all input parameters coming from the client request
-     */
-    public DemoFileWritableAccessor(RequestContext input) {
-        super(input);
-    }
 
     /**
      * Opens the resource for write.
