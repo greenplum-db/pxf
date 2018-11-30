@@ -21,9 +21,6 @@
 # Adding resources should be done using pxf-public.classpath file.
 ##################################################################
 
-# Default Hadoop/Hive/HBase and custom server Configurations
-PXF_CONF/servers/default
-
 # Customer specific profiles and property files
 PXF_CONF/conf
 

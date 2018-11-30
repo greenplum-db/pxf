@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.net.URL;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -34,7 +35,6 @@ import java.nio.file.Path;
  */
 public class BasePlugin implements Plugin {
 
-    private static final String DEFAULT_SERVER_NAME = "default";
     private static final String PXF_CONF_PROPERTY = "pxf.conf";
     private static final String SERVER_CONFIG_DIR_PREFIX =
             System.getProperty(PXF_CONF_PROPERTY) + File.separator + "servers" + File.separator;
@@ -80,39 +80,32 @@ public class BasePlugin implements Plugin {
         // start with built-in Hadoop configuration that loads core-site.xml
         configuration = new Configuration();
 
-        // add all other *-site.xml files from default cluster will be added as "default" resources
-        // by JobConf class or other Hadoop libraries on as-needed basis
-
-
-        if (!DEFAULT_SERVER_NAME.equals(context.getServerName())) {
-            // determine full path for server configuration directory
-            String directoryName = SERVER_CONFIG_DIR_PREFIX + context.getServerName();
-            File serverDirectory = new File(directoryName);
-            if (!serverDirectory.exists()) {
-                LOG.debug("Directory %s does not exist", directoryName);
-                return;
-            }
-
-            LOG.debug("Using directory " + directoryName + " for server " + context.getServerName() + " configuration");
-
-            addSiteFilesAsResources(configuration, serverDirectory);
+        // add all site files as URL resources to the configuration, no resources will be added from the classpath
+        String serverName = context.getServerName();
+        String serverDirectoryName = SERVER_CONFIG_DIR_PREFIX + serverName;
+        File serverDirectory = new File(serverDirectoryName);
+        if (!serverDirectory.exists() || !serverDirectory.isDirectory() || !serverDirectory.canRead()) {
+            LOG.warn("Directory %s does not exist, no configuration resources are added for server %s", serverDirectoryName, serverName);
+        } else {
+            LOG.debug("Using directory %s for server %s configuration", serverDirectoryName, serverName);
+            addSiteFilesAsResources(configuration, serverName, serverDirectory);
         }
 
         //TODO: do we need whitelisting of properties
         context.getOptions().forEach(configuration::set);
     }
 
-    private void addSiteFilesAsResources(Configuration configuration, File directory) {
+    private void addSiteFilesAsResources(Configuration configuration, String serverName, File directory) {
         // add all *-site.xml files inside the server config directory as configuration resources
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(directory.toPath(), "*-site.xml")) {
             for (Path path : stream) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("adding configuration resource from " + path.toUri().toURL());
-                }
-                configuration.addResource(path.toUri().toURL());
+                URL resourceURL = path.toUri().toURL();
+                LOG.debug("adding configuration resource from %s", resourceURL);
+                configuration.addResource(resourceURL);
             }
         } catch (Exception e) {
-            throw new RuntimeException("Unable to read configuration for server " + context.getServerName() + " from " + directory.getAbsolutePath(), e);
+            throw new RuntimeException(String.format("Unable to read configuration for server %s from %s",
+                            serverName, directory.getAbsolutePath()), e);
         }
     }
 }
