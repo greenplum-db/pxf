@@ -99,7 +99,7 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor {
         Path parent = file.getParent();
         if (!fs.exists(parent)) {
             fs.mkdirs(parent);
-            LOG.debug("Created new dir {}", parent.toString());
+            LOG.debug("Created new dir {}", parent);
         }
 
         // create output stream - do not allow overwriting existing file

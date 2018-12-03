@@ -39,6 +39,7 @@ import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.EnumSet;
 
 /**
@@ -72,23 +73,23 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor {
     @Override
     public boolean openForWrite() throws Exception {
         FileSystem fs;
-        Path parent;
         String fileName = context.getDataSource();
-
         getCompressionCodec(context);
         fileName = updateFileExtension(fileName, codec);
 
+        fs = FileSystem.get(URI.create(fileName), configuration);
+
         // construct the output stream
         file = new Path(fileName);
-        fs = file.getFileSystem(configuration);
         fc = FileContext.getFileContext();
         defaultKey = new LongWritable(context.getSegmentId());
 
         if (fs.exists(file)) {
-            throw new IOException("file " + file
+            throw new IOException("file " + file.toString()
                     + " already exists, can't write data");
         }
-        parent = file.getParent();
+
+        Path parent = file.getParent();
         if (!fs.exists(parent)) {
             fs.mkdirs(parent);
             LOG.debug("Created new dir {}", parent);
