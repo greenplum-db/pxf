@@ -132,7 +132,7 @@ public class WritableResource extends BaseResource {
 
         // THREAD-SAFE parameter has precedence
         boolean isThreadSafe = context.isThreadSafe() && bridge.isThreadSafe();
-        LOG.debug("Request for %s will be handled %s synchronization", context.getDataSource(), (isThreadSafe ? "without" : "with"));
+        LOG.debug("Request for {} will be handled {} synchronization", context.getDataSource(), (isThreadSafe ? "without" : "with"));
 
         return isThreadSafe ?
                 writeResponse(bridge, path, inputStream) :

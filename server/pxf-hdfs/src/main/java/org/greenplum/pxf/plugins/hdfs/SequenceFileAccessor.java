@@ -20,8 +20,6 @@ package org.greenplum.pxf.plugins.hdfs;
  */
 
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.CreateFlag;
 import org.apache.hadoop.fs.FileContext;
 import org.apache.hadoop.fs.FileSystem;
@@ -36,7 +34,6 @@ import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.SequenceFileInputFormat;
 import org.apache.hadoop.mapred.SequenceFileRecordReader;
-import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
@@ -69,7 +66,7 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor {
     @Override
     protected Object getReader(JobConf jobConf, InputSplit split)
             throws IOException {
-        return new SequenceFileRecordReader<Object, Object>(jobConf, (FileSplit) split);
+        return new SequenceFileRecordReader<>(jobConf, (FileSplit) split);
     }
 
     @Override
@@ -94,7 +91,7 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor {
         parent = file.getParent();
         if (!fs.exists(parent)) {
             fs.mkdirs(parent);
-            LOG.debug("Created new dir %s", parent);
+            LOG.debug("Created new dir {}", parent);
         }
 
         writer = null;
@@ -131,7 +128,7 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor {
                         "Compression type must be defined");
             }
 
-            LOG.debug("Compression ON: compression codec: %s, compression type: %s",
+            LOG.debug("Compression ON: compression codec: {}, compression type: {}",
                     userCompressCodec, compressionType);
         }
     }
@@ -172,7 +169,7 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor {
         if (codec != null) {
             fileName += codec.getDefaultExtension();
         }
-        LOG.debug("File name for write: %s", fileName);
+        LOG.debug("File name for write: {}", fileName);
         return fileName;
     }
 
@@ -196,7 +193,7 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor {
         try {
             writer.append((key == null) ? defaultKey : key, value);
         } catch (IOException e) {
-            LOG.error("Failed to write data to file: %s", e.getMessage());
+            LOG.error("Failed to write data to file: {}", e.getMessage());
             return false;
         }
 

@@ -99,7 +99,7 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor {
         Path parent = file.getParent();
         if (!fs.exists(parent)) {
             fs.mkdirs(parent);
-            LOG.debug("Created new dir %s", parent.toString());
+            LOG.debug("Created new dir {}", parent.toString());
         }
 
         // create output stream - do not allow overwriting existing file
@@ -138,7 +138,7 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor {
     @Override
     public void closeForWrite() throws Exception {
         if ((dos != null) && (fsdos != null)) {
-            LOG.debug("Closing writing stream for path %s", file);
+            LOG.debug("Closing writing stream for path {}", file);
             dos.flush();
             /*
              * From release 0.21.0 sync() is deprecated in favor of hflush(),

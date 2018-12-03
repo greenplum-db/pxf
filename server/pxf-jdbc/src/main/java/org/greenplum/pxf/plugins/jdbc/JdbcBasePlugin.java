@@ -19,11 +19,11 @@ package org.greenplum.pxf.plugins.jdbc;
  * under the License.
  */
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -123,15 +123,12 @@ public class JdbcBasePlugin extends BasePlugin {
      */
     public Connection getConnection() throws ClassNotFoundException, SQLException, SQLTimeoutException {
         Connection connection;
-        if (LOG.isDebugEnabled()) {
-            if (user != null) {
-                LOG.debug(String.format("Open JDBC connection: driver=%s, url=%s, user=%s, pass=%s, table=%s",
-                        jdbcDriver, dbUrl, user, pass, tableName));
-            }
-            else {
-                LOG.debug(String.format("Open JDBC connection: driver=%s, url=%s, table=%s",
-                        jdbcDriver, dbUrl, tableName));
-            }
+        if (user != null) {
+            LOG.debug("Open JDBC connection: driver={}, url={}, user={}, pass={}, table={}",
+                    jdbcDriver, dbUrl, user, pass, tableName);
+        } else {
+            LOG.debug("Open JDBC connection: driver={}, url={}, table={}",
+                    jdbcDriver, dbUrl, tableName);
         }
         Class.forName(jdbcDriver);
         if (user != null) {
@@ -224,7 +221,7 @@ public class JdbcBasePlugin extends BasePlugin {
     protected List<ColumnDescriptor> columns = null;
 
 
-    private static final Log LOG = LogFactory.getLog(JdbcBasePlugin.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JdbcBasePlugin.class);
 
     // At the moment, when writing into some table, the table name is concatenated with a special string that is necessary to write into HDFS. However, a raw table name is necessary in case of JDBC. This Pattern allows to extract the correct table name from the given RequestContext.dataSource
     private static final Pattern tableNamePattern = Pattern.compile("/(.*)/[0-9]*-[0-9]*_[0-9]*");

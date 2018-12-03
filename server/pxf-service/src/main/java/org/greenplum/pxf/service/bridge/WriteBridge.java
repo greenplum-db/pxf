@@ -88,7 +88,7 @@ public class WriteBridge extends BaseBridge {
         try {
             accessor.closeForWrite();
         } catch (Exception e) {
-            LOG.error("Failed to close bridge resources: %s", e.getMessage());
+            LOG.error("Failed to close bridge resources: {}", e.getMessage());
             throw e;
         }
     }

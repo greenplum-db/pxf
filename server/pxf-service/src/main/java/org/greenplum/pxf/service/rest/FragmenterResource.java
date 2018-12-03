@@ -82,7 +82,7 @@ public class FragmenterResource extends BaseResource {
                                  @QueryParam("path") final String path)
             throws Exception {
 
-        LOG.debug("FRAGMENTER started for path \"%s\"", path);
+        LOG.debug("FRAGMENTER started for path \"{}\"", path);
 
         RequestContext context = parseRequest(headers);
 

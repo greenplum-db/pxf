@@ -85,9 +85,9 @@ public class BasePlugin implements Plugin {
         String serverDirectoryName = SERVER_CONFIG_DIR_PREFIX + serverName;
         File serverDirectory = new File(serverDirectoryName);
         if (!serverDirectory.exists() || !serverDirectory.isDirectory() || !serverDirectory.canRead()) {
-            LOG.warn("Directory %s does not exist, no configuration resources are added for server %s", serverDirectoryName, serverName);
+            LOG.warn("Directory {} does not exist, no configuration resources are added for server {}", serverDirectoryName, serverName);
         } else {
-            LOG.debug("Using directory %s for server %s configuration", serverDirectoryName, serverName);
+            LOG.debug("Using directory {} for server {} configuration", serverDirectoryName, serverName);
             addSiteFilesAsResources(configuration, serverName, serverDirectory);
         }
 
@@ -100,7 +100,7 @@ public class BasePlugin implements Plugin {
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(directory.toPath(), "*-site.xml")) {
             for (Path path : stream) {
                 URL resourceURL = path.toUri().toURL();
-                LOG.debug("adding configuration resource from %s", resourceURL);
+                LOG.debug("adding configuration resource from {}", resourceURL);
                 configuration.addResource(resourceURL);
             }
         } catch (Exception e) {

@@ -101,7 +101,7 @@ public class BridgeResource extends BaseResource {
 
         // THREAD-SAFE parameter has precedence
         boolean isThreadSafe = context.isThreadSafe() && bridge.isThreadSafe();
-        LOG.debug("Request for %s will be handled %s synchronization", context.getDataSource(), (isThreadSafe ? "without" : "with"));
+        LOG.debug("Request for {} will be handled {} synchronization", context.getDataSource(), (isThreadSafe ? "without" : "with"));
 
         return readResponse(bridge, context, isThreadSafe);
     }
@@ -135,12 +135,12 @@ public class BridgeResource extends BaseResource {
                     Writable record;
                     DataOutputStream dos = new DataOutputStream(out);
 
-                    LOG.debug("Starting streaming fragment %s of resource %s", fragment, dataDir);
+                    LOG.debug("Starting streaming fragment {} of resource {}", fragment, dataDir);
                     while ((record = bridge.getNext()) != null) {
                         record.write(dos);
                         ++recordCount;
                     }
-                    LOG.debug("Finished streaming fragment %s of resource %s, %d records.", fragment, dataDir, recordCount);
+                    LOG.debug("Finished streaming fragment {} of resource {}, {} records.", fragment, dataDir, recordCount);
                 } catch (ClientAbortException e) {
                     // Occurs whenever client (GPDB) decides the end the connection
                     LOG.error("Remote connection closed by GPDB", e);
@@ -148,7 +148,7 @@ public class BridgeResource extends BaseResource {
                     LOG.error("Exception thrown when streaming", e);
                     throw new IOException(e.getMessage());
                 } finally {
-                    LOG.debug("Stopped streaming fragment %s of resource %s, %d records.", fragment, dataDir, recordCount);
+                    LOG.debug("Stopped streaming fragment {} of resource {}, {} records.", fragment, dataDir, recordCount);
                     try {
                         bridge.endIteration();
                     } catch (Exception e) {
@@ -170,9 +170,9 @@ public class BridgeResource extends BaseResource {
      * @param path path for the request, used for logging.
      */
     private void lock(String path) {
-        LOG.trace("Locking BridgeResource for %s", path);
+        LOG.trace("Locking BridgeResource for {}", path);
         BRIDGE_LOCK.lock();
-        LOG.trace("Locked BridgeResource for %s", path);
+        LOG.trace("Locked BridgeResource for {}", path);
     }
 
     /**
@@ -181,8 +181,8 @@ public class BridgeResource extends BaseResource {
      * @param path path for the request, used for logging.
      */
     private void unlock(String path) {
-        LOG.trace("Unlocking BridgeResource for %s", path);
+        LOG.trace("Unlocking BridgeResource for {}", path);
         BRIDGE_LOCK.unlock();
-        LOG.trace("Unlocked BridgeResource for %s", path);
+        LOG.trace("Unlocked BridgeResource for {}", path);
     }
 }

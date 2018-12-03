@@ -255,6 +255,8 @@ project('pxf-service') {
         bundleJars "log4j:log4j:1.2.17"
         bundleJars "com.google.protobuf:protobuf-java:2.5.0"
         bundleJars "org.slf4j:slf4j-api:1.7.10"
+        bundleJars "org.slf4j:slf4j-log4j12:1.7.10"
+
     }
 }
 

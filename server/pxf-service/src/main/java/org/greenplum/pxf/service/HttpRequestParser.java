@@ -157,7 +157,7 @@ public class HttpRequestParser implements RequestParser<HttpHeaders> {
                 context.addOption(k, params.removeUserProperty(k));
             } else {
                 // log warning for all left-over system properties
-                LOG.warn("Unknown property %s", key);
+                LOG.warn("Unknown property {}", key);
             }
         }
 
@@ -182,7 +182,7 @@ public class HttpRequestParser implements RequestParser<HttpHeaders> {
             return;
         }
 
-        LOG.debug("Adding plugins for profile %s", profile);
+        LOG.debug("Adding plugins for profile {}", profile);
 
         // get Profile's plugins from the configuration file
         Map<String, String> pluginsMap = pluginConf.getPlugins(profile);
@@ -312,7 +312,7 @@ public class HttpRequestParser implements RequestParser<HttpHeaders> {
                 // Converting to value UTF-8 encoding
                 String key = entry.getKey();
                 value = new String(value.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
-                LOG.trace("Key: %s Value: %s", key, value);
+                LOG.trace("Key: {} Value: {}", key, value);
                 put(key, value.replace("\\\"", "\""));
             }
         }

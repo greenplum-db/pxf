@@ -43,7 +43,7 @@ public abstract class BaseBridge implements Bridge {
     @Override
     public boolean isThreadSafe() {
         boolean result = accessor.isThreadSafe() && resolver.isThreadSafe();
-        LOG.debug("Bridge is " + (result ? "" : "not ") + "thread safe");
+        LOG.debug("Bridge is {}thread safe", (result ? "" : "not "));
         return result;
     }
 }

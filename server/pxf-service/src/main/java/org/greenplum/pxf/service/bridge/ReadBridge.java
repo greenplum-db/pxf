@@ -134,7 +134,7 @@ public class ReadBridge extends BaseBridge {
         try {
             accessor.closeForRead();
         } catch (Exception e) {
-            LOG.error("Failed to close bridge resources: %s", e.getMessage());
+            LOG.error("Failed to close bridge resources: {}", e.getMessage());
             throw e;
         }
     }

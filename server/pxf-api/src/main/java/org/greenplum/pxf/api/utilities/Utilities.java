@@ -22,9 +22,7 @@ package org.greenplum.pxf.api.utilities;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
-import org.greenplum.pxf.api.ReadVectorizedResolver;
 import org.greenplum.pxf.api.StatsAccessor;
-import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,7 +59,7 @@ public class Utilities {
         }
         byte[] parsed = Base64.decodeBase64(encoded);
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Decoded value: %s", new String(parsed));
+            LOG.debug("Decoded value: {}", new String(parsed));
         }
         return parsed;
     }
@@ -273,7 +271,7 @@ public class Utilities {
         try {
             result = iface.isAssignableFrom(Class.forName(className));
         } catch (ClassNotFoundException e) {
-            LOG.error("Unable to load class: %s", e.getMessage());
+            LOG.error("Unable to load class: {}", e.getMessage());
         }
         return result;
     }
