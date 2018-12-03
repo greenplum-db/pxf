@@ -61,12 +61,28 @@ public class HiveDataFragmenterTest {
     HiveMetaStoreClient hiveClient;
     HiveDataFragmenter fragmenter;
 
+    private void prepareConstruction() throws Exception {
+        requestContext = mock(RequestContext.class);
+
+        hadoopConfiguration = mock(Configuration.class);
+        PowerMockito.whenNew(Configuration.class).withNoArguments().thenReturn(hadoopConfiguration);
+
+        jobConf = mock(JobConf.class);
+        PowerMockito.whenNew(JobConf.class).withArguments(hadoopConfiguration, HiveDataFragmenter.class).thenReturn(jobConf);
+
+        hiveConfiguration = mock(HiveConf.class);
+        PowerMockito.whenNew(HiveConf.class).withArguments(hadoopConfiguration, HiveConf.class).thenReturn(hiveConfiguration);
+
+        hiveClient = mock(HiveMetaStoreClient.class);
+        PowerMockito.whenNew(HiveMetaStoreClient.class).withArguments(hiveConfiguration).thenReturn(hiveClient);
+    }
+
     @Test
     public void construction() throws Exception {
         prepareConstruction();
         fragmenter = new HiveDataFragmenter();
         fragmenter.initialize(requestContext);
-        Whitebox.setInternalState(fragmenter, "configuration", hadoopConfiguration);
+
         PowerMockito.verifyNew(JobConf.class).withArguments(hadoopConfiguration, HiveDataFragmenter.class);
         PowerMockito.verifyNew(HiveMetaStoreClient.class).withArguments(hiveConfiguration);
     }
@@ -311,21 +327,5 @@ public class HiveDataFragmenterTest {
                 assertFalse(result);
                 break;
         }
-    }
-
-    private void prepareConstruction() throws Exception {
-        requestContext = mock(RequestContext.class);
-
-        hadoopConfiguration = mock(Configuration.class);
-        PowerMockito.whenNew(Configuration.class).withNoArguments().thenReturn(hadoopConfiguration);
-
-        jobConf = mock(JobConf.class);
-        PowerMockito.whenNew(JobConf.class).withArguments(hadoopConfiguration, HiveDataFragmenter.class).thenReturn(jobConf);
-
-        hiveConfiguration = mock(HiveConf.class);
-        PowerMockito.whenNew(HiveConf.class).withNoArguments().thenReturn(hiveConfiguration);
-
-        hiveClient = mock(HiveMetaStoreClient.class);
-        PowerMockito.whenNew(HiveMetaStoreClient.class).withArguments(hiveConfiguration).thenReturn(hiveClient);
     }
 }

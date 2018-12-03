@@ -21,15 +21,17 @@ package org.greenplum.pxf.plugins.hive;
 
 
 import org.apache.commons.logging.Log;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
+import org.apache.hadoop.mapred.JobConf;
+import org.greenplum.pxf.api.model.Metadata;
 import org.greenplum.pxf.api.model.PluginConf;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.api.model.Metadata;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,7 +44,6 @@ import org.powermock.reflect.Whitebox;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -57,15 +58,15 @@ import static org.mockito.Mockito.when;
 @SuppressStaticInitializationFor({"org.apache.hadoop.hive.metastore.api.MetaException",
         "org.greenplum.pxf.plugins.hive.utilities.HiveUtilities"}) // Prevents static inits
 public class HiveMetadataFetcherTest {
-    RequestContext requestContext;
-    Log LOG;
-    HiveConf hiveConfiguration;
-    HiveMetaStoreClient hiveClient;
-    HiveMetadataFetcher fetcher;
-    List<Metadata> metadataList;
+    private RequestContext requestContext;
+    private Log LOG;
+    private HiveConf hiveConfiguration;
+    private HiveMetaStoreClient hiveClient;
+    private HiveMetadataFetcher fetcher;
+    private List<Metadata> metadataList;
 
     @Before
-    public void SetupCompressionFactory() throws Exception {
+    public void setupCompressionFactory() throws Exception {
         LOG = mock(Log.class);
         Whitebox.setInternalState(HiveUtilities.class, LOG);
 
@@ -78,8 +79,14 @@ public class HiveMetadataFetcherTest {
         when(mockPluginConf.getPlugins("HiveText")).thenReturn(mockProfileMap);
         when(mockProfileMap.get("OUTPUTFORMAT")).thenReturn("org.greenplum.pxf.service.io.Text");
 
+        Configuration hadoopConfiguration = mock(Configuration.class);
+        PowerMockito.whenNew(Configuration.class).withNoArguments().thenReturn(hadoopConfiguration);
+
+        JobConf jobConf = mock(JobConf.class);
+        PowerMockito.whenNew(JobConf.class).withArguments(hadoopConfiguration).thenReturn(jobConf);
+
         hiveConfiguration = mock(HiveConf.class);
-        PowerMockito.whenNew(HiveConf.class).withNoArguments().thenReturn(hiveConfiguration);
+        PowerMockito.whenNew(HiveConf.class).withArguments(hadoopConfiguration, HiveConf.class).thenReturn(hiveConfiguration);
 
         hiveClient = mock(HiveMetaStoreClient.class);
         PowerMockito.whenNew(HiveMetaStoreClient.class).withArguments(hiveConfiguration).thenReturn(hiveClient);

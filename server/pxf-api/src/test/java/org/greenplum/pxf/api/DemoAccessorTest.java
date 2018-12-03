@@ -20,8 +20,6 @@ package org.greenplum.pxf.api;
  */
 
 
-
-
 import org.greenplum.pxf.api.examples.DemoAccessor;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.junit.Before;
@@ -31,7 +29,8 @@ import org.mockito.Mock;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
@@ -44,8 +43,9 @@ public class DemoAccessorTest {
     DemoAccessor accessor;
 
     @Before
-    public void setup() throws Exception {
-        accessor = new DemoAccessor(requestContext);
+    public void setup() {
+        accessor = new DemoAccessor();
+        accessor.initialize(requestContext);
     }
 
     @Test

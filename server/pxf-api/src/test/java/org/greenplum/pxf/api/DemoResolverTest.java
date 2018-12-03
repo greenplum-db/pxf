@@ -54,8 +54,12 @@ public class DemoResolverTest {
 
     @Before
     public void setup() throws Exception {
-        customResolver = new DemoResolver(requestContext);
-        textResolver = new DemoTextResolver(requestContext);
+        customResolver = new DemoResolver();
+        textResolver = new DemoTextResolver();
+
+        customResolver.initialize(requestContext);
+        textResolver.initialize(requestContext);
+
         row = new OneRow("0.0", DATA);
         field = new OneField(VARCHAR.getOID(), DATA.getBytes());
     }

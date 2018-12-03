@@ -78,13 +78,13 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
     public static final String HIVE_PARTITIONS_DELIM = "!HPAD!";
     public static final String HIVE_NO_PART_TBL = "!HNPT!";
 
-    static final String HIVE_API_EQ = " = ";
-    static final String HIVE_API_LT = " < ";
-    static final String HIVE_API_GT = " > ";
-    static final String HIVE_API_LTE = " <= ";
-    static final String HIVE_API_GTE = " >= ";
-    static final String HIVE_API_NE = " != ";
-    static final String HIVE_API_DQUOTE = "\"";
+    private static final String HIVE_API_EQ = " = ";
+    private static final String HIVE_API_LT = " < ";
+    private static final String HIVE_API_GT = " > ";
+    private static final String HIVE_API_LTE = " <= ";
+    private static final String HIVE_API_GTE = " >= ";
+    private static final String HIVE_API_NE = " != ";
+    private static final String HIVE_API_DQUOTE = "\"";
 
     private HiveMetaStoreClient client;
 
@@ -102,8 +102,9 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
         super.initialize(requestContext);
         client = HiveUtilities.initHiveClient(configuration);
         // canPushDownIntegral represents hive.metastore.integral.jdo.pushdown property in hive-site.xml
-        canPushDownIntegral =
-                HiveConf.getBoolVar(new HiveConf(), HiveConf.ConfVars.METASTORE_INTEGER_JDO_PUSHDOWN);
+        canPushDownIntegral = HiveConf.getBoolVar(
+                new HiveConf(configuration, HiveConf.class),
+                HiveConf.ConfVars.METASTORE_INTEGER_JDO_PUSHDOWN);
     }
 
     @Override

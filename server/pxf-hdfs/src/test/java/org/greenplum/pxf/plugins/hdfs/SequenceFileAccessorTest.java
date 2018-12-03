@@ -93,8 +93,6 @@ public class SequenceFileAccessorTest {
     	PowerMockito.mockStatic(HdfsUtilities.class);
 		PowerMockito.whenNew(Path.class).withArguments(Mockito.anyString()).thenReturn(file);
 
-		// FIXME: below
-//		when(context.getConfiguration()).thenReturn(new Configuration());
         when(file.getFileSystem(any(Configuration.class))).thenReturn(fs);
         when(requestContext.getDataSource()).thenReturn("deep.throat");
         when(requestContext.getSegmentId()).thenReturn(0);
@@ -134,7 +132,7 @@ public class SequenceFileAccessorTest {
     	mockCompressionOptions(null, null);
         constructAccessor();
         assertEquals(SequenceFile.CompressionType.NONE, accessor.getCompressionType());
-        assertEquals(null, accessor.getCodec());
+        assertNull(accessor.getCodec());
     }
 
 	@Test
