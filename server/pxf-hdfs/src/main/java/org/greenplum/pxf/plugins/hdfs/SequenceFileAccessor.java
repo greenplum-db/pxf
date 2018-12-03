@@ -72,8 +72,10 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor {
 
     @Override
     public boolean openForWrite() throws Exception {
+        LOG.debug("openForWrite");
         FileSystem fs;
         String fileName = context.getDataSource();
+        LOG.debug("Filename for write without updated file extension: {}", fileName);
         getCompressionCodec(context);
         fileName = updateFileExtension(fileName, codec);
 
@@ -93,6 +95,8 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor {
         if (!fs.exists(parent)) {
             fs.mkdirs(parent);
             LOG.debug("Created new dir {}", parent);
+        } else {
+            LOG.debug("Directory {} already exists. Skip creating", parent);
         }
 
         writer = null;
