@@ -85,19 +85,15 @@ public class HiveUtilities {
      *
      * @return initialized client
      */
-    public static HiveMetaStoreClient initHiveClient() {
+    public static HiveMetaStoreClient initHiveClient(Configuration configuration) {
         try {
             if (UserGroupInformation.isSecurityEnabled() && Utilities.isUserImpersonationEnabled()) {
-                return UserGroupInformation.getLoginUser().doAs(new PrivilegedExceptionAction<HiveMetaStoreClient>() {
-                    @Override
-                    public HiveMetaStoreClient run() throws Exception {
-                        return new HiveMetaStoreClient(new HiveConf());
-                    }
-                });
+                return UserGroupInformation.getLoginUser().
+                        doAs((PrivilegedExceptionAction<HiveMetaStoreClient>) () ->
+                                new HiveMetaStoreClient(new HiveConf(configuration, HiveConf.class)));
             } else {
-                return new HiveMetaStoreClient(new HiveConf());
+                return new HiveMetaStoreClient(new HiveConf(configuration, HiveConf.class));
             }
-
         } catch (MetaException | InterruptedException | IOException e) {
             throw new RuntimeException("Failed connecting to Hive MetaStore service: " + e.getMessage(), e);
         }
@@ -462,12 +458,12 @@ public class HiveUtilities {
     /**
      * The method parses raw user data into HiveUserData class
      *
-     * @param input input data
+     * @param context input data
      * @return instance of HiveUserData class
      * @throws UserDataException when incorrect number of tokens in Hive user data received
      */
-    public static HiveUserData parseHiveUserData(RequestContext input) throws UserDataException {
-        String userData = new String(input.getFragmentUserData());
+    public static HiveUserData parseHiveUserData(RequestContext context) throws UserDataException {
+        String userData = new String(context.getFragmentUserData());
         String[] toks = userData.split(HiveUserData.HIVE_UD_DELIM, HiveUserData.getNumOfTokens());
 
         if (toks.length != (HiveUserData.getNumOfTokens())) {

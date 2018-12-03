@@ -180,7 +180,7 @@ public class HBaseAccessor extends BasePlugin implements Accessor {
      * Load hbase table object using ConnectionFactory
      */
     private void openTable() throws IOException {
-        connection = ConnectionFactory.createConnection(HBaseConfiguration.create());
+        connection = ConnectionFactory.createConnection(HBaseConfiguration.create(configuration));
         table = connection.getTable(TableName.valueOf(context.getDataSource()));
     }
 

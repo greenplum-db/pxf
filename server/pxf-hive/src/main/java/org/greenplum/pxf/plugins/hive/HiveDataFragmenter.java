@@ -100,7 +100,7 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
     @Override
     public void initialize(RequestContext requestContext) {
         super.initialize(requestContext);
-        client = HiveUtilities.initHiveClient();
+        client = HiveUtilities.initHiveClient(configuration);
         // canPushDownIntegral represents hive.metastore.integral.jdo.pushdown property in hive-site.xml
         canPushDownIntegral =
                 HiveConf.getBoolVar(new HiveConf(), HiveConf.ConfVars.METASTORE_INTEGER_JDO_PUSHDOWN);
