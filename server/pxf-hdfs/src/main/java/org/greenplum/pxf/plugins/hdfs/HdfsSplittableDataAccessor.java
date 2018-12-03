@@ -78,7 +78,7 @@ public abstract class HdfsSplittableDataAccessor extends BasePlugin implements A
      */
     @Override
     public boolean openForRead() throws Exception {
-        LinkedList<InputSplit> requestSplits = new LinkedList<InputSplit>();
+        LinkedList<InputSplit> requestSplits = new LinkedList<>();
         FileSplit fileSplit = HdfsUtilities.parseFileSplit(context);
         requestSplits.add(fileSplit);
 

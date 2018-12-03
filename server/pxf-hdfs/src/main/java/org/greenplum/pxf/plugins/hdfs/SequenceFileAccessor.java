@@ -65,8 +65,7 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor {
      * Overrides virtual method to create specialized record reader
      */
     @Override
-    protected Object getReader(JobConf jobConf, InputSplit split)
-            throws IOException {
+    protected Object getReader(JobConf jobConf, InputSplit split) throws IOException {
         return new SequenceFileRecordReader<>(jobConf, (FileSplit) split);
     }
 
@@ -74,7 +73,8 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor {
     public boolean openForWrite() throws Exception {
         LOG.debug("openForWrite");
         FileSystem fs;
-        String fileName = context.getDataSource();
+//        String fileName = context.getDataSource();
+        String fileName = HdfsUtilities.getDataUri(configuration, context);
         LOG.debug("Filename for write without updated file extension: {}", fileName);
         getCompressionCodec(context);
         fileName = updateFileExtension(fileName, codec);
