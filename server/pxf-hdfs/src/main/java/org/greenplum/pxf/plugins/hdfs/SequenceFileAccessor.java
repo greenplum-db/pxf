@@ -83,7 +83,7 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor {
 
         // construct the output stream
         file = new Path(fileName);
-        fc = FileContext.getFileContext();
+        fc = FileContext.getFileContext(configuration);
         defaultKey = new LongWritable(context.getSegmentId());
 
         if (fs.exists(file)) {
