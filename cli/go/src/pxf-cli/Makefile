@@ -2,12 +2,13 @@
 .DEFAULT_GOAL := build
 
 TARGET := $(shell echo $${PWD\#\#*/})
-PXF_SERVER_DIR := $(shell cd ../../../.. && pwd)
+PXF_ROOT_DIR := $(shell cd ../../../.. && pwd)
+PXF_SERVER_DIR := ${PXF_ROOT_DIR}/server
 PXF_STAGING_DIR := ${PXF_SERVER_DIR}/build/stage/bin
 PXF_SERVICE_SCRIPTS := ${PXF_SERVER_DIR}/pxf-service/src/scripts
 PXF_VERSION := $(shell grep version= ${PXF_SERVER_DIR}/gradle.properties | cut -d= -f2)
 LDFLAGS := -ldflags "-X ${TARGET}/cmd.version=${PXF_VERSION}"
-GOPATH := ${PXF_SERVER_DIR}/pxf-cli/go
+GOPATH := ${PXF_ROOT_DIR}/cli/go
 
 help:
 	@echo

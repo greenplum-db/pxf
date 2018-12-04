@@ -17,8 +17,6 @@
 #
 # protect the default target for this file from the targets in Makefile.global
 
-PXF_CLI_MAKEFILE_LOCATION := pxf-cli/go/src/pxf-cli
-
 default: all
 
 ifneq "$(PXF_HOME)" ""
@@ -55,34 +53,19 @@ help:
 	@echo	"  - tar - bundle PXF along with tomcat into a single tarball"
 	@echo	"  - doc - creates aggregate javadoc under docs"
 
-all: test-cli assemble-cli install-cli
+all:
 	./gradlew clean tar aggregateJavadoc $(BUILD_PARAMS)
 
 compile:
 	./gradlew compileJava
 
-build-cli:
-	make -C ${PXF_CLI_MAKEFILE_LOCATION}
-
-test-cli:
-	make -C ${PXF_CLI_MAKEFILE_LOCATION} test
-
-clean-cli:
-	make -C ${PXF_CLI_MAKEFILE_LOCATION} clean
-
-assemble-cli:
-	make -C ${PXF_CLI_MAKEFILE_LOCATION} tar
-
-install-cli:
-	make -C ${PXF_CLI_MAKEFILE_LOCATION} install
-
-test unittest: test-cli
+test unittest:
 	./gradlew test
 
-tar: assemble-cli
+tar:
 	./gradlew tar ${BUILD_PARAMS}
 
-clean: clean-cli
+clean:
 	./gradlew clean
 	rm -rf build
 
@@ -92,7 +75,7 @@ doc:
 	./gradlew aggregateJavadoc
 
 .PHONY: install
-install: install-cli
+install:
 	./gradlew install ${BUILD_PARAMS}
 
 .PHONY: version
