@@ -53,7 +53,7 @@ public class SecureLogin {
     private static final String CONFIG_KEY_SERVICE_PRINCIPAL = "pxf.service.kerberos.principal";
     private static final String CONFIG_KEY_SERVICE_KEYTAB = "pxf.service.kerberos.keytab";
     private static final String PXF_CONF_PROPERTY = "pxf.conf";
-    private static final String DEFAULT_SERVER_CONFIG_DIR_PREFIX =
+    private static final String DEFAULT_SERVER_CONFIG_DIR =
             System.getProperty(PXF_CONF_PROPERTY) + File.separator +
                     "servers" + File.separator +
                     "default";
@@ -75,9 +75,19 @@ public class SecureLogin {
             boolean isUserImpersonationEnabled = Utilities.isUserImpersonationEnabled();
             LOG.info("User impersonation is " + (isUserImpersonationEnabled ? "enabled" : "disabled"));
 
+            Configuration configuration = configurationFactory.initConfiguration("default", null);
+            UserGroupInformation.setConfiguration(configuration);
+
             if (!UserGroupInformation.isSecurityEnabled()) {
                 LOG.info("Kerberos Security is not enabled");
                 return;
+            }
+
+            File serverDirectory = new File(DEFAULT_SERVER_CONFIG_DIR);
+            if (!serverDirectory.exists() || !serverDirectory.isDirectory() || !serverDirectory.canRead()) {
+                throw new RuntimeException(String.format(
+                        "Directory %s does not exist, unable to create configuration for default server.",
+                        DEFAULT_SERVER_CONFIG_DIR));
             }
 
             LOG.info("Kerberos Security is enabled");
@@ -93,22 +103,12 @@ public class SecureLogin {
                 throw new RuntimeException("Kerberos Security requires a valid keytab file name.");
             }
 
-            String serverDirectoryName = DEFAULT_SERVER_CONFIG_DIR_PREFIX;
-            File serverDirectory = new File(serverDirectoryName);
-            if (!serverDirectory.exists() || !serverDirectory.isDirectory() || !serverDirectory.canRead()) {
-                throw new RuntimeException(String.format(
-                        "Directory %s does not exist, unable to create configuration for default server.",
-                        serverDirectoryName));
-            }
-
-            Configuration configuration = configurationFactory.initConfiguration("default", null);
             configuration.set(CONFIG_KEY_SERVICE_PRINCIPAL, principal);
             configuration.set(CONFIG_KEY_SERVICE_KEYTAB, keytabFilename);
 
             LOG.debug("Kerberos principal: {}", configuration.get(CONFIG_KEY_SERVICE_PRINCIPAL));
             LOG.debug("Kerberos keytab: {}", configuration.get(CONFIG_KEY_SERVICE_KEYTAB));
 
-            UserGroupInformation.setConfiguration(configuration);
             SecurityUtil.login(configuration, CONFIG_KEY_SERVICE_KEYTAB, CONFIG_KEY_SERVICE_PRINCIPAL);
 
         } catch (Exception e) {
