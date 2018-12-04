@@ -19,12 +19,13 @@
 
 default: all
 
-ifneq "$(PXF_HOME)" ""
-    BUILD_PARAMS+= -DdeployPath="$(PXF_HOME)"
-else ifneq "$(GPHOME)" ""
-    PXF_HOME= "$(GPHOME)/pxf"
-    BUILD_PARAMS+= -DdeployPath="$(PXF_HOME)"
+ifeq "$(PXF_HOME)" ""
+    ifneq "$(GPHOME)" ""
+        PXF_HOME= "$(GPHOME)/pxf"
+    endif
 endif
+
+BUILD_PARAMS+= -DdeployPath="$(PXF_HOME)"
 
 ifneq "$(LICENSE)" ""
     BUILD_PARAMS+= -Plicense="$(LICENSE)"

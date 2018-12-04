@@ -11,10 +11,7 @@ _main() {
 	export PXF_HOME="${GPHOME}/pxf"
 	export JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8
 	export PATH="$PATH:$(cd ~; pwd)/go/bin"
-	pushd pxf_src/server
-		make install
-		make version > ${PXF_HOME}/version
-	popd
+	make -C pxf_src install
 	# Create tarball for PXF
 	pushd ${GPHOME}
 		tar -czf ${PXF_ARTIFACTS_DIR}/pxf.tar.gz pxf
