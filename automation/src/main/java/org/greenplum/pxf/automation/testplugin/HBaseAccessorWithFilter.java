@@ -69,7 +69,7 @@ public class HBaseAccessorWithFilter extends BasePlugin implements Accessor {
 	public void initialize(RequestContext requestContext) {
 		super.initialize(requestContext);
 		tupleDescription = new HBaseTupleDescription(requestContext);
-		splits = new ArrayList<SplitBoundary>();
+		splits = new ArrayList<>();
 		currentRegionIndex = 0;
 		scanStartKey = HConstants.EMPTY_START_ROW;
 		scanEndKey = HConstants.EMPTY_END_ROW;
@@ -142,7 +142,7 @@ public class HBaseAccessorWithFilter extends BasePlugin implements Accessor {
 	}
 
 	private void openTable() throws IOException	{
-		table = new HTable(HBaseConfiguration.create(), context.getDataSource().getBytes());
+		table = new HTable(HBaseConfiguration.create(configuration), context.getDataSource().getBytes());
 	}
 
 	/*

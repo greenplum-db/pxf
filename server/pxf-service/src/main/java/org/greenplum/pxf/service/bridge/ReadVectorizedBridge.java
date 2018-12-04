@@ -27,7 +27,7 @@ import org.greenplum.pxf.api.utilities.AccessorFactory;
 import org.greenplum.pxf.api.utilities.ResolverFactory;
 import org.greenplum.pxf.service.io.Writable;
 
-import java.util.LinkedList;
+import java.util.Deque;
 import java.util.List;
 
 
@@ -42,7 +42,7 @@ public class ReadVectorizedBridge extends ReadBridge {
     }
 
     @Override
-    protected LinkedList<Writable> makeOutput(OneRow oneRow) throws Exception {
+    protected Deque<Writable> makeOutput(OneRow oneRow) throws Exception {
         List<List<OneField>> resolvedBatch = ((ReadVectorizedResolver) resolver).
                 getFieldsForBatch(oneRow);
         return outputBuilder.makeVectorizedOutput(resolvedBatch);

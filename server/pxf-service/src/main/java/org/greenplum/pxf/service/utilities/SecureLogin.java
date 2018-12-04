@@ -52,11 +52,6 @@ public class SecureLogin {
 
     private static final String CONFIG_KEY_SERVICE_PRINCIPAL = "pxf.service.kerberos.principal";
     private static final String CONFIG_KEY_SERVICE_KEYTAB = "pxf.service.kerberos.keytab";
-    private static final String PXF_CONF_PROPERTY = "pxf.conf";
-    private static final String DEFAULT_SERVER_CONFIG_DIR =
-            System.getProperty(PXF_CONF_PROPERTY) + File.separator +
-                    "servers" + File.separator +
-                    "default";
     private final ConfigurationFactory configurationFactory;
 
     public SecureLogin() {
@@ -83,11 +78,12 @@ public class SecureLogin {
                 return;
             }
 
-            File serverDirectory = new File(DEFAULT_SERVER_CONFIG_DIR);
+            File serverDirectory = new File(ConfigurationFactory.DEFAULT_SERVER_CONFIG_DIR);
             if (!serverDirectory.exists() || !serverDirectory.isDirectory() || !serverDirectory.canRead()) {
+                // Fail to start PXF webapp if default directory does not exist.
                 throw new RuntimeException(String.format(
                         "Directory %s does not exist, unable to create configuration for default server.",
-                        DEFAULT_SERVER_CONFIG_DIR));
+                        ConfigurationFactory.DEFAULT_SERVER_CONFIG_DIR));
             }
 
             LOG.info("Kerberos Security is enabled");

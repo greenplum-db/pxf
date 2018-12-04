@@ -8,9 +8,9 @@ package org.greenplum.pxf.plugins.hdfs;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -42,17 +42,17 @@ import static org.mockito.Mockito.*;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ChunkReader.class})
 public class ChunkReaderTest {
-	
+
 	ChunkReader reader;
 	/* Mocking the stream class that accesses the actual data */
 	DFSInputStream mockStream;
 
     /*
-     * setUp function called before each test.
+     * setup function called before each test.
 	 */
     @Before
     public void setUp() throws Exception {
-		mockStream = mock(DFSInputStream.class); 	
+		mockStream = mock(DFSInputStream.class);
     }
 
     /*
@@ -62,7 +62,7 @@ public class ChunkReaderTest {
     public void readEmptyFile() throws Exception {
 		reader = new ChunkReader(mockStream);
 		when( mockStream.read( (byte [])Mockito.anyObject()) ).thenReturn(0);
-		
+
 		Writable out = new ChunkWritable();
 		int maxBytesToConsume = 1024*1024;
 		assertEquals(0, reader.readLine(out, maxBytesToConsume));
@@ -78,13 +78,13 @@ public class ChunkReaderTest {
 			@Override
 			public java.lang.Number answer(InvocationOnMock invocation) throws Throwable {
 				byte[] buf = (byte[]) invocation.getArguments()[0];
-				
+
 				byte [] source = "OneLine\nTwoLine\n".getBytes();
 				System.arraycopy(source, 0, buf, 0, source.length);
 				return new java.lang.Byte(buf[0]);
 			}
 		});
-		
+
 		ChunkWritable out = new ChunkWritable();
 		int maxBytesToConsume = 1024*1024;
 		// read first line
@@ -96,7 +96,7 @@ public class ChunkReaderTest {
 		assertEquals("TwoLine\n".length(), reader.readLine(out, maxBytesToConsume) );
 		assertEquals("TwoLine\n", new String(out.box) );
     }
-	
+
 	/*
 	 * Read one line
 	 */
@@ -107,21 +107,21 @@ public class ChunkReaderTest {
 			@Override
 			public java.lang.Number answer(InvocationOnMock invocation) throws Throwable {
 				byte[] buf = (byte[]) invocation.getArguments()[0];
-				
+
 				byte [] source = "OneLine\nTwoLine\n".getBytes();
 				System.arraycopy(source, 0, buf, 0, source.length);
 				return new java.lang.Integer(source.length);
 			}
 		});
-		
+
 		ChunkWritable out = new ChunkWritable();
 		int maxBytesToConsume = 10; /* make readChunk return after reading the first "chunk": OneLine\nTwoLine\n */
 		// read chunk
 		assertEquals("OneLine\nTwoLine\n".length()
 					 , reader.readChunk(out, maxBytesToConsume) );
 		assertEquals("OneLine\nTwoLine\n", new String(out.box) );
-    }	
-	
+    }
+
 }
 
 

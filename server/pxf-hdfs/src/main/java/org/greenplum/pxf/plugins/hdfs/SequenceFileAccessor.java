@@ -73,7 +73,6 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor {
     public boolean openForWrite() throws Exception {
         LOG.debug("openForWrite");
         FileSystem fs;
-//        String fileName = context.getDataSource();
         String fileName = HdfsUtilities.getDataUri(configuration, context);
         LOG.debug("Filename for write without updated file extension: {}", fileName);
         getCompressionCodec(context);

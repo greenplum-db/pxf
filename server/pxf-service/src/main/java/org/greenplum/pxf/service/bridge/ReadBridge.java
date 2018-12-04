@@ -33,6 +33,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.UTFDataFormatException;
 import java.nio.charset.CharacterCodingException;
+import java.util.Deque;
 import java.util.LinkedList;
 import java.util.zip.ZipException;
 
@@ -47,7 +48,7 @@ import java.util.zip.ZipException;
 public class ReadBridge extends BaseBridge {
 
     final BridgeOutputBuilder outputBuilder;
-    protected LinkedList<Writable> outputQueue = new LinkedList<>();
+    Deque<Writable> outputQueue = new LinkedList<>();
 
     /**
      * C'tor - set the implementation of the bridge.
@@ -71,7 +72,7 @@ public class ReadBridge extends BaseBridge {
         return accessor.openForRead();
     }
 
-    protected LinkedList<Writable> makeOutput(OneRow oneRow) throws Exception {
+    protected Deque<Writable> makeOutput(OneRow oneRow) throws Exception {
         return outputBuilder.makeOutput(resolver.getFields(oneRow));
     }
 

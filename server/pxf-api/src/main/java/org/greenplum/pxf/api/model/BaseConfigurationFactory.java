@@ -12,9 +12,7 @@ import java.nio.file.Path;
 import java.util.Map;
 
 public class BaseConfigurationFactory implements ConfigurationFactory {
-    private static final String PXF_CONF_PROPERTY = "pxf.conf";
-    private static final String SERVER_CONFIG_DIR_PREFIX =
-            System.getProperty(PXF_CONF_PROPERTY) + File.separator + "servers" + File.separator;
+
     private static final BaseConfigurationFactory instance = new BaseConfigurationFactory();
     protected Logger LOG = LoggerFactory.getLogger(this.getClass());
 
