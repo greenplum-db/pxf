@@ -23,27 +23,25 @@ import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.net.URL;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-
 /**
  * Base class for all plugin types (Accessor, Resolver, Fragmenter, ...).
  * Manages the meta data.
  */
 public class BasePlugin implements Plugin {
 
-    private static final String PXF_CONF_PROPERTY = "pxf.conf";
-    private static final String SERVER_CONFIG_DIR_PREFIX =
-            System.getProperty(PXF_CONF_PROPERTY) + File.separator + "servers" + File.separator;
-
+    private final ConfigurationFactory configurationFactory;
     protected Logger LOG = LoggerFactory.getLogger(this.getClass());
     protected Configuration configuration;
     protected RequestContext context;
-
     private boolean initialized = false;
+
+    public BasePlugin() {
+        this(BaseConfigurationFactory.getInstance());
+    }
+
+    BasePlugin(ConfigurationFactory configurationFactory) {
+        this.configurationFactory = configurationFactory;
+    }
 
     /**
      * Initialize the plugin for the incoming request
@@ -53,11 +51,16 @@ public class BasePlugin implements Plugin {
     @Override
     public void initialize(RequestContext requestContext) {
         this.context = requestContext;
-        initConfiguration();
-
+        this.configuration = configurationFactory.
+                initConfiguration(context.getServerName(), context.getOptions());
         this.initialized = true;
     }
 
+    /**
+     * Checks if the plugin is thread safe
+     *
+     * @return true if plugin is thread safe, false otherwise
+     */
     @Override
     public boolean isThreadSafe() {
         return true;
@@ -70,42 +73,5 @@ public class BasePlugin implements Plugin {
      */
     public final boolean isInitialized() {
         return initialized;
-    }
-
-    /**
-     * Initializes a configuration object that applies server-specific configurations
-     */
-    private void initConfiguration() {
-
-        // start with built-in Hadoop configuration that loads core-site.xml
-        configuration = new Configuration();
-
-        // add all site files as URL resources to the configuration, no resources will be added from the classpath
-        String serverName = context.getServerName();
-        String serverDirectoryName = SERVER_CONFIG_DIR_PREFIX + serverName;
-        File serverDirectory = new File(serverDirectoryName);
-        if (!serverDirectory.exists() || !serverDirectory.isDirectory() || !serverDirectory.canRead()) {
-            LOG.warn("Directory {} does not exist, no configuration resources are added for server {}", serverDirectoryName, serverName);
-        } else {
-            LOG.debug("Using directory {} for server {} configuration", serverDirectoryName, serverName);
-            addSiteFilesAsResources(configuration, serverName, serverDirectory);
-        }
-
-        //TODO: do we need whitelisting of properties
-        context.getOptions().forEach(configuration::set);
-    }
-
-    private void addSiteFilesAsResources(Configuration configuration, String serverName, File directory) {
-        // add all *-site.xml files inside the server config directory as configuration resources
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(directory.toPath(), "*-site.xml")) {
-            for (Path path : stream) {
-                URL resourceURL = path.toUri().toURL();
-                LOG.debug("adding configuration resource from {}", resourceURL);
-                configuration.addResource(resourceURL);
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(String.format("Unable to read configuration for server %s from %s",
-                            serverName, directory.getAbsolutePath()), e);
-        }
     }
 }

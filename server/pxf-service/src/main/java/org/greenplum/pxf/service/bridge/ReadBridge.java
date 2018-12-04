@@ -71,6 +71,10 @@ public class ReadBridge extends BaseBridge {
         return accessor.openForRead();
     }
 
+    protected LinkedList<Writable> makeOutput(OneRow oneRow) throws Exception {
+        return outputBuilder.makeOutput(resolver.getFields(oneRow));
+    }
+
     /**
      * Fetches next object from the data source and turns it into a record that the GPDB
      * backend can process.
@@ -92,12 +96,13 @@ public class ReadBridge extends BaseBridge {
                     if (output != null) {
                         LOG.warn("A partial record in the end of the fragment");
                     }
-                    // if there is a partial line, return it now, otherwise it will return null
+                    // if there is a partial line, return it now, otherwise it
+                    // will return null
                     return output;
                 }
 
                 // we checked before that outputQueue is empty, so we can override it.
-                outputQueue = outputBuilder.makeOutput(resolver.getFields(onerow));
+                outputQueue = makeOutput(onerow);
                 if (!outputQueue.isEmpty()) {
                     output = outputQueue.pop();
                     break;

@@ -50,7 +50,7 @@ public class ServletLifecycleListener implements ServletContextListener {
 		LOG.info("webapp initialized");
 
 		// 2. Initiate secure login
-		SecureLogin.login();
+		new SecureLogin().login();
 	}
 
 	/**

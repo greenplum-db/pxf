@@ -19,7 +19,6 @@ package org.greenplum.pxf.service.bridge;
  * under the License.
  */
 
-import org.greenplum.pxf.api.BadRecordException;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.ReadVectorizedResolver;
@@ -28,7 +27,7 @@ import org.greenplum.pxf.api.utilities.AccessorFactory;
 import org.greenplum.pxf.api.utilities.ResolverFactory;
 import org.greenplum.pxf.service.io.Writable;
 
-import java.io.IOException;
+import java.util.LinkedList;
 import java.util.List;
 
 
@@ -43,58 +42,9 @@ public class ReadVectorizedBridge extends ReadBridge {
     }
 
     @Override
-    public Writable getNext() throws Exception {
-        Writable output = null;
-        OneRow batch = null;
-
-        if (!outputQueue.isEmpty()) {
-            return outputQueue.pop();
-        }
-
-        try {
-            while (outputQueue.isEmpty()) {
-                batch = accessor.readNextObject();
-                if (batch == null) {
-                    output = outputBuilder.getPartialLine();
-                    if (output != null) {
-                        LOG.warn("A partial record in the end of the fragment");
-                    }
-                    // if there is a partial line, return it now, otherwise it
-                    // will return null
-                    return output;
-                }
-
-                // we checked before that outputQueue is empty, so we can
-                // override it.
-                List<List<OneField>> resolvedBatch = ((ReadVectorizedResolver) resolver).getFieldsForBatch(batch);
-                outputQueue = outputBuilder.makeVectorizedOutput(resolvedBatch);
-                if (!outputQueue.isEmpty()) {
-                    output = outputQueue.pop();
-                    break;
-                }
-            }
-        } catch (IOException ex) {
-            if (!isDataException(ex)) {
-                throw ex;
-            }
-            output = outputBuilder.getErrorOutput(ex);
-        } catch (BadRecordException ex) {
-            String row_info = "null";
-            if (batch != null) {
-                row_info = batch.toString();
-            }
-            if (ex.getCause() != null) {
-                LOG.debug("BadRecordException " + ex.getCause().toString()
-                        + ": " + row_info);
-            } else {
-                LOG.debug(ex.toString() + ": " + row_info);
-            }
-            output = outputBuilder.getErrorOutput(ex);
-        } catch (Exception ex) {
-            throw ex;
-        }
-
-        return output;
+    protected LinkedList<Writable> makeOutput(OneRow oneRow) throws Exception {
+        List<List<OneField>> resolvedBatch = ((ReadVectorizedResolver) resolver).
+                getFieldsForBatch(oneRow);
+        return outputBuilder.makeVectorizedOutput(resolvedBatch);
     }
-
 }
