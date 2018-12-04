@@ -108,6 +108,7 @@ public class SecureLogin {
             LOG.debug("Kerberos principal: {}", configuration.get(CONFIG_KEY_SERVICE_PRINCIPAL));
             LOG.debug("Kerberos keytab: {}", configuration.get(CONFIG_KEY_SERVICE_KEYTAB));
 
+            UserGroupInformation.setConfiguration(configuration);
             SecurityUtil.login(configuration, CONFIG_KEY_SERVICE_KEYTAB, CONFIG_KEY_SERVICE_PRINCIPAL);
 
         } catch (Exception e) {
