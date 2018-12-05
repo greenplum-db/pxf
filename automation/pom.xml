@@ -15,13 +15,8 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<java.version>1.8</java.version>
-<!--
         <gphd.home>${GPHD_ROOT}</gphd.home>
         <pxf.lib>${PXF_TMP_LIB}</pxf.lib>
--->
-		<gphd.home>/Users/pivotal/workspace/singlecluster-HDP</gphd.home>
-		<pxf.lib>/tmp/pxf/tmp</pxf.lib>
-
 		<hdp.hadoop.version>2.7.1</hdp.hadoop.version>
 		<hdp.hbase.version>1.1.2</hdp.hbase.version>
 		<hdp.hive.version>1.1.0</hdp.hive.version>
