@@ -40,6 +40,8 @@ import org.apache.hadoop.mapred.TextInputFormat;
 import org.greenplum.pxf.api.BasicFilter;
 import org.greenplum.pxf.api.FilterParser;
 import org.greenplum.pxf.api.LogicalFilter;
+import org.greenplum.pxf.api.model.BaseConfigurationFactory;
+import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.FragmentStats;
 import org.greenplum.pxf.api.model.Metadata;
@@ -96,6 +98,14 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
             String.CASE_INSENSITIVE_ORDER);
     private Map<String, String> partitionkeyTypes = new HashMap<>();
     private boolean canPushDownIntegral;
+
+    public HiveDataFragmenter() {
+        this(BaseConfigurationFactory.getInstance());
+    }
+
+    HiveDataFragmenter(ConfigurationFactory configurationFactory) {
+        this.configurationFactory = configurationFactory;
+    }
 
     @Override
     public void initialize(RequestContext requestContext) {

@@ -29,6 +29,7 @@ import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.mapred.JobConf;
+import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.model.Metadata;
 import org.greenplum.pxf.api.model.PluginConf;
 import org.greenplum.pxf.api.model.RequestContext;
@@ -64,6 +65,7 @@ public class HiveMetadataFetcherTest {
     private HiveMetaStoreClient hiveClient;
     private HiveMetadataFetcher fetcher;
     private List<Metadata> metadataList;
+    private ConfigurationFactory mockConfigurationFactory;
 
     @Before
     public void setupCompressionFactory() throws Exception {
@@ -90,11 +92,16 @@ public class HiveMetadataFetcherTest {
 
         hiveClient = mock(HiveMetaStoreClient.class);
         PowerMockito.whenNew(HiveMetaStoreClient.class).withArguments(hiveConfiguration).thenReturn(hiveClient);
+
+        when(requestContext.getServerName()).thenReturn("default");
+        when(requestContext.getOptions()).thenReturn(null);
+        mockConfigurationFactory = mock(ConfigurationFactory.class);
+        when(mockConfigurationFactory.initConfiguration("default", null)).thenReturn(hadoopConfiguration);
     }
 
     @Test
     public void construction() throws Exception {
-        fetcher = new HiveMetadataFetcher(requestContext);
+        fetcher = new HiveMetadataFetcher(requestContext, mockConfigurationFactory);
         PowerMockito.verifyNew(HiveMetaStoreClient.class).withArguments(hiveConfiguration);
     }
 
@@ -103,7 +110,7 @@ public class HiveMetadataFetcherTest {
         PowerMockito.whenNew(HiveMetaStoreClient.class).withArguments(hiveConfiguration).thenThrow(new MetaException("which way to albuquerque"));
 
         try {
-            fetcher = new HiveMetadataFetcher(requestContext);
+            fetcher = new HiveMetadataFetcher(requestContext, mockConfigurationFactory);
             fail("Expected a RuntimeException");
         } catch (RuntimeException ex) {
             assertEquals("Failed connecting to Hive MetaStore service: which way to albuquerque", ex.getMessage());
@@ -112,7 +119,7 @@ public class HiveMetadataFetcherTest {
 
     @Test
     public void getTableMetadataInvalidTableName() throws Exception {
-        fetcher = new HiveMetadataFetcher(requestContext);
+        fetcher = new HiveMetadataFetcher(requestContext, mockConfigurationFactory);
         String tableName = "t.r.o.u.b.l.e.m.a.k.e.r";
 
         try {
@@ -126,7 +133,7 @@ public class HiveMetadataFetcherTest {
     @Test
     public void getTableMetadataView() throws Exception {
 
-        fetcher = new HiveMetadataFetcher(requestContext);
+        fetcher = new HiveMetadataFetcher(requestContext, mockConfigurationFactory);
         String tableName = "cause";
 
         // mock hive table returned from hive client
@@ -145,7 +152,7 @@ public class HiveMetadataFetcherTest {
     @Test
     public void getTableMetadata() throws Exception {
 
-        fetcher = new HiveMetadataFetcher(requestContext);
+        fetcher = new HiveMetadataFetcher(requestContext, mockConfigurationFactory);
         String tableName = "cause";
 
         // mock hive table returned from hive client
@@ -181,7 +188,7 @@ public class HiveMetadataFetcherTest {
     @Test
     public void getTableMetadataWithMultipleTables() throws Exception {
 
-        fetcher = new HiveMetadataFetcher(requestContext);
+        fetcher = new HiveMetadataFetcher(requestContext, mockConfigurationFactory);
 
         String tablepattern = "*";
         String dbpattern = "*";
@@ -238,7 +245,7 @@ public class HiveMetadataFetcherTest {
     @Test
     public void getTableMetadataWithIncompatibleTables() throws Exception {
 
-        fetcher = new HiveMetadataFetcher(requestContext);
+        fetcher = new HiveMetadataFetcher(requestContext, mockConfigurationFactory);
 
         String tablepattern = "*";
         String dbpattern = "*";

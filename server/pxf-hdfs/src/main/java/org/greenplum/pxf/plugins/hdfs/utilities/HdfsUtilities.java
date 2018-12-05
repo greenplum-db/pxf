@@ -80,29 +80,29 @@ public class HdfsUtilities {
     /**
      * Returns a fully resolved path include protocol
      *
-     * @param input The input data parameters
+     * @param context The input data parameters
      * @return an absolute data path
      */
-    public static String getDataUri(Configuration configuration, RequestContext input) {
+    public static String getDataUri(Configuration configuration, RequestContext context) {
         // TODO: Move profile specific URI logic into separate classes in the profile
         String dataUri;
 
-        switch (getHCFSType(configuration, input)) {
+        switch (getHCFSType(configuration, context)) {
             case S3:
-                dataUri = PROTOCOL_S3 + (StringUtils.startsWith(input.getDataSource(), "/") ?
-                        input.getDataSource().substring(1) : input.getDataSource());
+                dataUri = PROTOCOL_S3 + (StringUtils.startsWith(context.getDataSource(), "/") ?
+                        context.getDataSource().substring(1) : context.getDataSource());
                 break;
             case ADLS:
-                dataUri = PROTOCOL_AZURE + input.getDataSource();
+                dataUri = PROTOCOL_AZURE + context.getDataSource();
                 break;
             case HDFS:
                 dataUri = (!StringUtils.endsWith(configuration.get(FS_DEFAULT_NAME_KEY), "/") ?
                         configuration.get(FS_DEFAULT_NAME_KEY) + "/" :
-                        configuration.get(FS_DEFAULT_NAME_KEY)) + input.getDataSource();
+                        configuration.get(FS_DEFAULT_NAME_KEY)) + context.getDataSource();
 
                 break;
             default:
-                dataUri = Utilities.absoluteDataPath(input.getDataSource());
+                dataUri = Utilities.absoluteDataPath(context.getDataSource());
                 break;
         }
         return dataUri;

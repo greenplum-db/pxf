@@ -35,6 +35,8 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.SequenceFileInputFormat;
 import org.apache.hadoop.mapred.SequenceFileRecordReader;
 import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.model.BaseConfigurationFactory;
+import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 
@@ -58,7 +60,12 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor {
      * Constructs a SequenceFileAccessor.
      */
     public SequenceFileAccessor() {
+        this(BaseConfigurationFactory.getInstance());
+    }
+
+    SequenceFileAccessor(ConfigurationFactory configurationFactory) {
         super(new SequenceFileInputFormat<Writable, Writable>());
+        this.configurationFactory = configurationFactory;
     }
 
     /**
@@ -72,16 +79,15 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor {
     @Override
     public boolean openForWrite() throws Exception {
         LOG.debug("openForWrite");
-        FileSystem fs;
-        String fileName = HdfsUtilities.getDataUri(configuration, context);
-        LOG.debug("Filename for write without updated file extension: {}", fileName);
+        String filename = HdfsUtilities.getDataUri(configuration, context);
+        LOG.debug("Filename for write without updated file extension: {}", filename);
         getCompressionCodec(context);
-        fileName = updateFileExtension(fileName, codec);
+        filename = updateFileExtension(filename, codec);
 
-        fs = FileSystem.get(URI.create(fileName), configuration);
 
         // construct the output stream
-        file = new Path(fileName);
+        file = new Path(filename);
+        FileSystem fs = file.getFileSystem(configuration);
         fc = FileContext.getFileContext(configuration);
         defaultKey = new LongWritable(context.getSegmentId());
 

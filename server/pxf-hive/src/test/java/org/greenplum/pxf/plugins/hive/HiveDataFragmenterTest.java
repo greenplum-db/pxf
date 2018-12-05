@@ -21,9 +21,11 @@ package org.greenplum.pxf.plugins.hive;
 
 
 import org.greenplum.pxf.api.FilterParser;
+import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.BasicFilter;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+
 import static org.greenplum.pxf.api.FilterParser.Operation.*;
 
 import org.apache.hadoop.conf.Configuration;
@@ -51,8 +53,8 @@ import java.util.*;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({HiveDataFragmenter.class}) // Enables mocking 'new' calls
 @SuppressStaticInitializationFor({"org.apache.hadoop.mapred.JobConf",
-                                  "org.apache.hadoop.hive.metastore.api.MetaException",
-                                  "org.greenplum.pxf.plugins.hive.utilities.HiveUtilities"}) // Prevents static inits
+        "org.apache.hadoop.hive.metastore.api.MetaException",
+        "org.greenplum.pxf.plugins.hive.utilities.HiveUtilities"}) // Prevents static inits
 public class HiveDataFragmenterTest {
     RequestContext requestContext;
     Configuration hadoopConfiguration;
@@ -60,12 +62,13 @@ public class HiveDataFragmenterTest {
     HiveConf hiveConfiguration;
     HiveMetaStoreClient hiveClient;
     HiveDataFragmenter fragmenter;
+    private ConfigurationFactory configurationFactory;
+
 
     private void prepareConstruction() throws Exception {
+        configurationFactory = mock(ConfigurationFactory.class);
         requestContext = mock(RequestContext.class);
-
         hadoopConfiguration = mock(Configuration.class);
-        PowerMockito.whenNew(Configuration.class).withNoArguments().thenReturn(hadoopConfiguration);
 
         jobConf = mock(JobConf.class);
         PowerMockito.whenNew(JobConf.class).withArguments(hadoopConfiguration, HiveDataFragmenter.class).thenReturn(jobConf);
@@ -75,12 +78,19 @@ public class HiveDataFragmenterTest {
 
         hiveClient = mock(HiveMetaStoreClient.class);
         PowerMockito.whenNew(HiveMetaStoreClient.class).withArguments(hiveConfiguration).thenReturn(hiveClient);
+
+        Map<String, String> map = new HashMap<>();
+
+        when(requestContext.getServerName()).thenReturn("default");
+        when(requestContext.getOptions()).thenReturn(map);
+        when(configurationFactory.initConfiguration("default", map)).
+                thenReturn(hadoopConfiguration);
     }
 
     @Test
     public void construction() throws Exception {
         prepareConstruction();
-        fragmenter = new HiveDataFragmenter();
+        fragmenter = new HiveDataFragmenter(configurationFactory);
         fragmenter.initialize(requestContext);
 
         PowerMockito.verifyNew(JobConf.class).withArguments(hadoopConfiguration, HiveDataFragmenter.class);
@@ -93,7 +103,7 @@ public class HiveDataFragmenterTest {
         PowerMockito.whenNew(HiveMetaStoreClient.class).withArguments(hiveConfiguration).thenThrow(new MetaException("which way to albuquerque"));
 
         try {
-            fragmenter = new HiveDataFragmenter();
+            fragmenter = new HiveDataFragmenter(configurationFactory);
             fragmenter.initialize(requestContext);
             fail("Expected a RuntimeException");
         } catch (RuntimeException ex) {
@@ -104,7 +114,7 @@ public class HiveDataFragmenterTest {
     @Test
     public void invalidTableName() throws Exception {
         prepareConstruction();
-        fragmenter = new HiveDataFragmenter();
+        fragmenter = new HiveDataFragmenter(configurationFactory);
         fragmenter.initialize(requestContext);
 
         when(requestContext.getDataSource()).thenReturn("t.r.o.u.b.l.e.m.a.k.e.r");
@@ -120,11 +130,11 @@ public class HiveDataFragmenterTest {
     @Test
     public void testBuildSingleFilter() throws Exception {
         prepareConstruction();
-        fragmenter = new HiveDataFragmenter();
+        fragmenter = new HiveDataFragmenter(configurationFactory);
         fragmenter.initialize(requestContext);
         ColumnDescriptor columnDescriptor =
-                new ColumnDescriptor("textColumn", 25, 3, "text", null,true);
-        String filterColumnName=columnDescriptor.columnName();
+                new ColumnDescriptor("textColumn", 25, 3, "text", null, true);
+        String filterColumnName = columnDescriptor.columnName();
         int filterColumnIndex = columnDescriptor.columnIndex();
         HiveFilterBuilder builder = new HiveFilterBuilder(null);
         when(requestContext.getColumn(filterColumnIndex)).thenReturn(columnDescriptor);
@@ -132,15 +142,15 @@ public class HiveDataFragmenterTest {
         // Mock private field partitionkeyTypes
         Field partitionkeyTypes = PowerMockito.field(HiveDataFragmenter.class, "partitionkeyTypes");
         Map<String, String> localpartitionkeyTypes = new HashMap<>();
-        localpartitionkeyTypes.put(filterColumnName,"string");
-        partitionkeyTypes.set(fragmenter,localpartitionkeyTypes);
+        localpartitionkeyTypes.put(filterColumnName, "string");
+        partitionkeyTypes.set(fragmenter, localpartitionkeyTypes);
 
         //Mock private field setPartitions
         Field setPartitions = PowerMockito.field(HiveDataFragmenter.class, "setPartitions");
         Set<String> localSetPartitions = new TreeSet<String>(
                 String.CASE_INSENSITIVE_ORDER);
         localSetPartitions.add(filterColumnName);
-        setPartitions.set(fragmenter,localSetPartitions);
+        setPartitions.set(fragmenter, localSetPartitions);
 
         Map<FilterParser.Operation, String> filterStrings = new HashMap<>();
         /*
@@ -161,27 +171,27 @@ public class HiveDataFragmenterTest {
         filterStrings.put(HDOP_LT, "a3c25s10d2016-01-03o1");
         filterStrings.put(HDOP_LIKE, "a3c25s10d2016-01-0%o7");
 
-        for (FilterParser.Operation operation : filterStrings.keySet()){
+        for (FilterParser.Operation operation : filterStrings.keySet()) {
             BasicFilter bFilter = (BasicFilter) builder.getFilterObject(filterStrings.get(operation));
-            checkFilters(fragmenter,bFilter, operation);
+            checkFilters(fragmenter, bFilter, operation);
         }
     }
 
     @Test
     public void testIntegralPushdown() throws Exception {
         prepareConstruction();
-        fragmenter = new HiveDataFragmenter();
+        fragmenter = new HiveDataFragmenter(configurationFactory);
         fragmenter.initialize(requestContext);
         // Mock private field partitionkeyTypes
         Field partitionkeyTypes = PowerMockito.field(HiveDataFragmenter.class, "partitionkeyTypes");
         // Mock private method buildSingleFilter
         Method method = PowerMockito.method(HiveDataFragmenter.class, "buildSingleFilter",
-                new Class[]{Object.class,StringBuilder.class,String.class});
+                new Class[]{Object.class, StringBuilder.class, String.class});
         //Mock private field setPartitions
         Field setPartitions = PowerMockito.field(HiveDataFragmenter.class, "setPartitions");
         //Mock private field canPushDownIntegral
         Field canPushDownIntegral = PowerMockito.field(HiveDataFragmenter.class, "canPushDownIntegral");
-        canPushDownIntegral.set(fragmenter,true);
+        canPushDownIntegral.set(fragmenter, true);
 
         ColumnDescriptor dateColumnDescriptor =
                 new ColumnDescriptor("dateColumn", 1082, 1, "date", null, true);
@@ -201,127 +211,127 @@ public class HiveDataFragmenterTest {
         columnDescriptors.add(bigIntColumnDescriptor);
         columnDescriptors.add(smallIntColumnDescriptor);
 
-        for (ColumnDescriptor cd : columnDescriptors){
+        for (ColumnDescriptor cd : columnDescriptors) {
 
-            checkPushDownFilter(fragmenter, cd, method, partitionkeyTypes,setPartitions);
+            checkPushDownFilter(fragmenter, cd, method, partitionkeyTypes, setPartitions);
         }
     }
 
     private void checkPushDownFilter(HiveDataFragmenter fragmenter, ColumnDescriptor columnDescriptor, Method method,
-                                     Field partitionkeyTypes, Field setPartitions) throws Exception{
-        String filterColumnName=columnDescriptor.columnName();
+                                     Field partitionkeyTypes, Field setPartitions) throws Exception {
+        String filterColumnName = columnDescriptor.columnName();
         int filterColumnIndex = columnDescriptor.columnIndex();
         String typeName = columnDescriptor.columnTypeName();
         int typeCode = columnDescriptor.columnTypeCode();
         String data = "2016-08-11";
-        String dataIntegralDataTypes= "126";
-        String filterString = "a"+filterColumnIndex+"c"+typeCode+"s"+data.length()+"d"+data+"o";
+        String dataIntegralDataTypes = "126";
+        String filterString = "a" + filterColumnIndex + "c" + typeCode + "s" + data.length() + "d" + data + "o";
         String filterIntegralDataTypes =
-                "a"+filterColumnIndex+"c"+typeCode+"s"+dataIntegralDataTypes.length()+"d"+dataIntegralDataTypes+"o";
-        int notEquals=6;
-        int equals=5;
-        int greaterEquals=4;
+                "a" + filterColumnIndex + "c" + typeCode + "s" + dataIntegralDataTypes.length() + "d" + dataIntegralDataTypes + "o";
+        int notEquals = 6;
+        int equals = 5;
+        int greaterEquals = 4;
 
         when(requestContext.getColumn(filterColumnIndex)).thenReturn(columnDescriptor);
         //Set partition Key type
         Map<String, String> localpartitionkeyTypes = new HashMap<>();
-        localpartitionkeyTypes.put(filterColumnName,typeName);
-        partitionkeyTypes.set(fragmenter,localpartitionkeyTypes);
+        localpartitionkeyTypes.put(filterColumnName, typeName);
+        partitionkeyTypes.set(fragmenter, localpartitionkeyTypes);
         // Set column as partition
         Set<String> localSetPartitions = new TreeSet<String>(
                 String.CASE_INSENSITIVE_ORDER);
         localSetPartitions.add(filterColumnName);
-        setPartitions.set(fragmenter,localSetPartitions);
+        setPartitions.set(fragmenter, localSetPartitions);
 
-        switch(typeName){
+        switch (typeName) {
 
             case "date":
-                assertFalse(isColumnStringOrIntegral(method, filterString+notEquals));
-                assertFalse(isColumnStringOrIntegral(method, filterString+equals));
-                assertFalse(isColumnStringOrIntegral(method, filterString+greaterEquals));
+                assertFalse(isColumnStringOrIntegral(method, filterString + notEquals));
+                assertFalse(isColumnStringOrIntegral(method, filterString + equals));
+                assertFalse(isColumnStringOrIntegral(method, filterString + greaterEquals));
                 break;
             case "string":
-                assertTrue(isColumnStringOrIntegral(method, filterString+notEquals));
-                assertTrue(isColumnStringOrIntegral(method, filterString+equals));
-                assertTrue(isColumnStringOrIntegral(method, filterString+greaterEquals));
+                assertTrue(isColumnStringOrIntegral(method, filterString + notEquals));
+                assertTrue(isColumnStringOrIntegral(method, filterString + equals));
+                assertTrue(isColumnStringOrIntegral(method, filterString + greaterEquals));
                 break;
             case "int":
-                assertTrue(isColumnStringOrIntegral(method, filterIntegralDataTypes+notEquals));
-                assertTrue(isColumnStringOrIntegral(method, filterIntegralDataTypes+equals));
-                assertFalse(isColumnStringOrIntegral(method, filterIntegralDataTypes+greaterEquals));
+                assertTrue(isColumnStringOrIntegral(method, filterIntegralDataTypes + notEquals));
+                assertTrue(isColumnStringOrIntegral(method, filterIntegralDataTypes + equals));
+                assertFalse(isColumnStringOrIntegral(method, filterIntegralDataTypes + greaterEquals));
                 break;
             case "bigint":
-                assertTrue(isColumnStringOrIntegral(method, filterIntegralDataTypes+notEquals));
-                assertTrue(isColumnStringOrIntegral(method, filterIntegralDataTypes+equals));
-                assertFalse(isColumnStringOrIntegral(method, filterIntegralDataTypes+greaterEquals));
+                assertTrue(isColumnStringOrIntegral(method, filterIntegralDataTypes + notEquals));
+                assertTrue(isColumnStringOrIntegral(method, filterIntegralDataTypes + equals));
+                assertFalse(isColumnStringOrIntegral(method, filterIntegralDataTypes + greaterEquals));
                 break;
             case "smallint":
-                assertTrue(isColumnStringOrIntegral(method, filterIntegralDataTypes+notEquals));
-                assertTrue(isColumnStringOrIntegral(method, filterIntegralDataTypes+equals));
-                assertFalse(isColumnStringOrIntegral(method, filterIntegralDataTypes+greaterEquals));
+                assertTrue(isColumnStringOrIntegral(method, filterIntegralDataTypes + notEquals));
+                assertTrue(isColumnStringOrIntegral(method, filterIntegralDataTypes + equals));
+                assertFalse(isColumnStringOrIntegral(method, filterIntegralDataTypes + greaterEquals));
                 break;
         }
     }
 
-    private boolean isColumnStringOrIntegral(Method method, String filterString) throws Exception{
+    private boolean isColumnStringOrIntegral(Method method, String filterString) throws Exception {
         BasicFilter bFilter;
-        String prefix="";
+        String prefix = "";
         StringBuilder localFilterString = new StringBuilder();
         boolean result;
         HiveFilterBuilder builder = new HiveFilterBuilder(null);
 
         bFilter = (BasicFilter) builder.getFilterObject(filterString);
-        result = (Boolean)method.invoke(fragmenter, new Object[]{bFilter,localFilterString,prefix});
+        result = (Boolean) method.invoke(fragmenter, new Object[]{bFilter, localFilterString, prefix});
         return result;
     }
 
     private void checkFilters(HiveDataFragmenter fragmenter, BasicFilter bFilter, FilterParser.Operation operation)
-            throws Exception{
+            throws Exception {
 
-        String prefix="";
+        String prefix = "";
         StringBuilder localFilterString = new StringBuilder();
         String expectedResult;
 
         // Mock private method buildSingleFilter
         Method method = PowerMockito.method(HiveDataFragmenter.class, "buildSingleFilter",
-                new Class[]{Object.class,StringBuilder.class,String.class});
-        boolean result = (Boolean)method.invoke(fragmenter, new Object[]{bFilter,localFilterString,prefix});
+                new Class[]{Object.class, StringBuilder.class, String.class});
+        boolean result = (Boolean) method.invoke(fragmenter, new Object[]{bFilter, localFilterString, prefix});
 
-        switch (operation){
+        switch (operation) {
             case HDOP_NE:
                 expectedResult = "textColumn != \"2016-01-03\"";
                 assertTrue(result);
-                assertEquals(expectedResult,localFilterString.toString());
+                assertEquals(expectedResult, localFilterString.toString());
                 break;
             case HDOP_EQ:
                 expectedResult = "textColumn = \"2016-01-03\"";
                 assertTrue(result);
-                assertEquals(expectedResult,localFilterString.toString());
+                assertEquals(expectedResult, localFilterString.toString());
                 break;
             case HDOP_GE:
                 expectedResult = "textColumn >= \"2016-01-03\"";
                 assertTrue(result);
-                assertEquals(expectedResult,localFilterString.toString());
+                assertEquals(expectedResult, localFilterString.toString());
                 break;
             case HDOP_LE:
                 expectedResult = "textColumn <= \"2016-01-03\"";
                 assertTrue(result);
-                assertEquals(expectedResult,localFilterString.toString());
+                assertEquals(expectedResult, localFilterString.toString());
                 break;
             case HDOP_GT:
                 expectedResult = "textColumn > \"2016-01-03\"";
                 assertTrue(result);
-                assertEquals(expectedResult,localFilterString.toString());
+                assertEquals(expectedResult, localFilterString.toString());
                 break;
             case HDOP_LT:
                 expectedResult = "textColumn < \"2016-01-03\"";
                 assertTrue(result);
-                assertEquals(expectedResult,localFilterString.toString());
+                assertEquals(expectedResult, localFilterString.toString());
                 break;
             case HDOP_LIKE:
                 expectedResult = "";
                 assertFalse(result);
-                assertEquals(expectedResult,localFilterString.toString());
+                assertEquals(expectedResult, localFilterString.toString());
                 break;
             default:
                 assertFalse(result);

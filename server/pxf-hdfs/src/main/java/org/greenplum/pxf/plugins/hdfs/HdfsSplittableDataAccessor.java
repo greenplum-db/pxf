@@ -20,14 +20,19 @@ package org.greenplum.pxf.plugins.hdfs;
  */
 
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
+import org.apache.hadoop.util.ReflectionUtils;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.Accessor;
+import org.greenplum.pxf.api.model.BaseConfigurationFactory;
 import org.greenplum.pxf.api.model.BasePlugin;
+import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 
@@ -39,7 +44,7 @@ import java.util.ListIterator;
  * Accessor for accessing a splittable HDFS data sources. HDFS will divide the
  * file into splits based on an internal decision (by default, the block size is
  * also the split size).
- *
+ * <p>
  * Accessors that require such base functionality should extend this class.
  */
 public abstract class HdfsSplittableDataAccessor extends BasePlugin implements Accessor {
@@ -53,6 +58,7 @@ public abstract class HdfsSplittableDataAccessor extends BasePlugin implements A
 
     /**
      * Constructs an HdfsSplittableDataAccessor
+     *
      * @param inFormat the HDFS {@link InputFormat} the caller wants to use
      */
     protected HdfsSplittableDataAccessor(InputFormat<?, ?> inFormat) {
@@ -109,7 +115,7 @@ public abstract class HdfsSplittableDataAccessor extends BasePlugin implements A
      * @throws IOException if record reader could not be created
      */
     @SuppressWarnings(value = "unchecked")
-    protected boolean getNextSplit() throws IOException  {
+    protected boolean getNextSplit() throws IOException {
         if (!iter.hasNext()) {
             return false;
         }
@@ -168,5 +174,4 @@ public abstract class HdfsSplittableDataAccessor extends BasePlugin implements A
                 context.getDataSource(),
                 context.getOption("COMPRESSION_CODEC"));
     }
-
 }

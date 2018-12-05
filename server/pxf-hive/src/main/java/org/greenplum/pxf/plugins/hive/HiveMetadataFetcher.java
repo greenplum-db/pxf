@@ -28,7 +28,9 @@ import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.JobConf;
 import org.greenplum.pxf.api.UnsupportedTypeException;
+import org.greenplum.pxf.api.model.BaseConfigurationFactory;
 import org.greenplum.pxf.api.model.BasePlugin;
+import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.model.Metadata;
 import org.greenplum.pxf.api.model.MetadataFetcher;
 import org.greenplum.pxf.api.model.OutputFormat;
@@ -54,8 +56,13 @@ public class HiveMetadataFetcher extends BasePlugin implements MetadataFetcher {
     private HiveMetaStoreClient client;
     private JobConf jobConf;
 
-    public HiveMetadataFetcher(RequestContext md) {
-        initialize(md);
+    public HiveMetadataFetcher(RequestContext context) {
+        this(context, BaseConfigurationFactory.getInstance());
+    }
+
+    HiveMetadataFetcher(RequestContext context, ConfigurationFactory configurationFactory) {
+        this.configurationFactory = configurationFactory;
+        initialize(context);
 
         // init hive metastore client connection.
         client = HiveUtilities.initHiveClient(configuration);

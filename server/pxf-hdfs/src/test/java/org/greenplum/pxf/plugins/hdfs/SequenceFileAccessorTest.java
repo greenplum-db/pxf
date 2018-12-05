@@ -26,6 +26,8 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.compress.BZip2Codec;
+import org.apache.hadoop.mapred.JobConf;
+import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 import org.junit.After;
@@ -39,11 +41,12 @@ import org.powermock.core.classloader.annotations.SuppressStaticInitializationFo
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -55,6 +58,7 @@ public class SequenceFileAccessorTest {
 
     private RequestContext requestContext;
     private SequenceFileAccessor accessor;
+    private ConfigurationFactory mockConfigurationFactory;
 
     /*
      * setup function called before each test.
@@ -68,47 +72,45 @@ public class SequenceFileAccessorTest {
     @Before
     public void setup() throws Exception {
 
-        Configuration hdfsConfiguration = mock(Configuration.class);
+        mockConfigurationFactory = mock(ConfigurationFactory.class);
+        Configuration mockConfiguration = mock(Configuration.class);
         Path file = mock(Path.class);
         FileSystem fs = mock(FileSystem.class);
         FileContext fc = mock(FileContext.class);
+
         requestContext = mock(RequestContext.class);
+        JobConf jobConf = mock(JobConf.class);
+        PowerMockito.whenNew(JobConf.class).withArguments(mockConfiguration, HdfsSplittableDataAccessor.class).thenReturn(jobConf);
 
         PowerMockito.mockStatic(FileContext.class);
         PowerMockito.mockStatic(HdfsUtilities.class);
         PowerMockito.mockStatic(FileSystem.class);
+        PowerMockito.mockStatic(URI.class);
         PowerMockito.whenNew(Path.class).withArguments(Mockito.anyString()).thenReturn(file);
 
-        when(FileSystem.get(any(URI.class), any(Configuration.class))).thenReturn(fs);
+        Map<String, String> map = new HashMap<>();
 
-//        when(file.getFileSystem(any(Configuration.class))).thenReturn(fs);
+        when(requestContext.getServerName()).thenReturn("default");
+        when(requestContext.getOptions()).thenReturn(map);
+
+        when(mockConfigurationFactory.initConfiguration("default", map)).thenReturn(mockConfiguration);
+        when(file.getFileSystem(mockConfiguration)).thenReturn(fs);
         when(requestContext.getDataSource()).thenReturn("deep.throat");
         when(requestContext.getSegmentId()).thenReturn(0);
-        when(FileContext.getFileContext(hdfsConfiguration)).thenReturn(fc);
-    }
 
-    /*
-     * After each test is done, close the accessor if it was created
-     */
-    @After
-    public void tearDown() throws Exception {
-
-        if (accessor == null) {
-            return;
-        }
-
-        accessor.closeForWrite();
-        accessor = null;
+        when(FileContext.getFileContext(mockConfiguration)).thenReturn(fc);
+        when(HdfsUtilities.getDataUri(mockConfiguration, requestContext)).thenReturn("/");
     }
 
     private void constructAccessor() throws Exception {
 
-        accessor = new SequenceFileAccessor();
+        accessor = new SequenceFileAccessor(mockConfigurationFactory);
         accessor.initialize(requestContext);
         accessor.openForWrite();
     }
 
     private void mockCompressionOptions(String codec, String type) {
+
         when(requestContext.getOption("COMPRESSION_CODEC")).thenReturn(codec);
         when(requestContext.getOption("COMPRESSION_TYPE")).thenReturn(type);
     }
@@ -193,5 +195,19 @@ public class SequenceFileAccessorTest {
             assertEquals("Illegal compression type 'NONE'. For disabling compression remove COMPRESSION_CODEC parameter.", e.getMessage());
         }
 
+    }
+
+    /*
+     * After each test is done, close the accessor if it was created
+     */
+    @After
+    public void tearDown() throws Exception {
+
+        if (accessor == null) {
+            return;
+        }
+
+        accessor.closeForWrite();
+        accessor = null;
     }
 }

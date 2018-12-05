@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
  */
 public class BasePlugin implements Plugin {
 
-    private final ConfigurationFactory configurationFactory;
+    protected ConfigurationFactory configurationFactory;
     protected Logger LOG = LoggerFactory.getLogger(this.getClass());
     protected Configuration configuration;
     protected RequestContext context;
