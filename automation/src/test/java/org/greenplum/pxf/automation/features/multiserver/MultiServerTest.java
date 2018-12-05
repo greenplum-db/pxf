@@ -1,12 +1,17 @@
-package org.greenplum.pxf.automation.smoke;
+package org.greenplum.pxf.automation.features.multiserver;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.greenplum.pxf.automation.components.hdfs.Hdfs;
+import org.greenplum.pxf.automation.datapreparer.CustomTextPreparer;
+import org.greenplum.pxf.automation.features.BaseFeature;
+import org.greenplum.pxf.automation.smoke.BaseSmoke;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
 import org.greenplum.pxf.automation.structures.tables.pxf.ExternalTable;
+import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
 import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
+import org.greenplum.pxf.automation.utils.fileformats.FileFormatsUtils;
 import org.testng.annotations.Test;
 
 import java.net.URI;
@@ -15,10 +20,18 @@ import java.net.URI;
  * MultiServerTest verifies that multiple servers
  * can be accessed via PXF.
  */
-public class MultiServerTest extends BaseSmoke {
+public class MultiServerTest extends BaseFeature {
 
-    private static final String PROTOCOL_S3 = "s3a://";
-    private static final String PROTOCOL_AZURE = "adl://";
+    static final String PROTOCOL_S3 = "s3a://";
+    static final String PROTOCOL_AZURE = "adl://";
+
+    static final String[] PXF_MULTISERVER_COLS = {
+            "name text",
+            "num integer",
+            "dub double precision",
+            "longNum bigint",
+            "bool boolean"
+    };
 
     Hdfs hdfsServer;
     Hdfs s3Server;
@@ -30,11 +43,13 @@ public class MultiServerTest extends BaseSmoke {
     String hdfsPath;
     String s3Path;
 
+    /**
+     * Prepare all server configurations and components
+     */
     @Override
     public void beforeClass() throws Exception {
-
         String hdfsWorkingDirectory = hdfs.getWorkingDirectory();
-        defaultPath = hdfs.getWorkingDirectory() + "/" + fileName;
+        defaultPath = hdfsWorkingDirectory + "/" + fileName;
 
         // Initialize server objects
         Configuration config1 = new Configuration();
@@ -52,8 +67,26 @@ public class MultiServerTest extends BaseSmoke {
     }
 
     @Override
+    protected void afterClass() throws Exception {
+        super.afterClass();
+    }
+
+    /**
+     * Before every method determine default hdfs data Path, default data, and
+     * default external table structure. Each case change it according to it
+     * needs.
+     *
+     * @throws Exception
+     */
+    @Override
+    protected void beforeMethod() throws Exception {
+        super.beforeMethod();
+        prepareData();
+        createTables();
+    }
+
     protected void prepareData() throws Exception {
-        // Create Data and write it to HDFS
+        // Prepare data in table
         Table dataTable = getSmallData();
 
         hdfs.writeTableToFile(defaultPath, dataTable, ",");
@@ -65,55 +98,32 @@ public class MultiServerTest extends BaseSmoke {
         s3Server.writeTableToFile(s3Path, dataTable, ",");
     }
 
-    @Override
     protected void createTables() throws Exception {
         // Create GPDB external table directed to the HDFS file
         exTable =
-                TableFactory.getPxfReadableTextTable("pxf_smoke_small_data", new String[]{
-                        "name text",
-                        "num integer",
-                        "dub double precision",
-                        "longNum bigint",
-                        "bool boolean"
-                }, defaultPath, ",");
-        exTable.setHost(pxfHost);
-        exTable.setPort(pxfPort);
+                TableFactory.getPxfReadableTextTable(
+                        "pxf_multiserver_default", PXF_MULTISERVER_COLS, defaultPath, ",");
         gpdb.createTableAndVerify(exTable);
 
         // Create GPDB external table directed to hdfsServer
         hdfsTable =
-                TableFactory.getPxfReadableTextTable("pxf_smoke_server1", new String[]{
-                        "name text",
-                        "num integer",
-                        "dub double precision",
-                        "longNum bigint",
-                        "bool boolean"
-                }, hdfsPath, ",");
+                TableFactory.getPxfReadableTextTable(
+                        "pxf_multiserver_1", PXF_MULTISERVER_COLS, hdfsPath, ",");
         hdfsTable.setUserParameters(new String[]{"server=1"});
         gpdb.createTableAndVerify(hdfsTable);
 
         // Create GPDB external table directed to s3Server
         s3Table =
-                TableFactory.getPxfReadableTextTable("pxf_smoke_server2", new String[]{
-                        "name text",
-                        "num integer",
-                        "dub double precision",
-                        "longNum bigint",
-                        "bool boolean"
-                }, s3Path, ",");
+                TableFactory.getPxfReadableTextTable(
+                        "pxf_multiserver_2", PXF_MULTISERVER_COLS, s3Path, ",");
         s3Table.setUserParameters(new String[]{"server=2"});
         s3Table.setProfile("S3Text");
         gpdb.createTableAndVerify(s3Table);
     }
 
-    @Override
-    protected void queryResults() throws Exception {
-        runTincTest("pxf.smoke.multi_server.runTest");
-    }
-
-    @Test(groups = {"smoke", "gpdb"})
-    public void test() throws Exception {
-        runTest();
+    @Test(groups = {"features", "gpdb"})
+    public void testTwoServers() throws Exception {
+        runTincTest("pxf.features.multi_server.runTest");
     }
 
 }

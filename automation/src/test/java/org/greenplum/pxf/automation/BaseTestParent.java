@@ -64,6 +64,7 @@ public abstract class BaseTestParent {
         try {
 
             cluster = (PhdCluster) SystemManagerImpl.getInstance().getSystemObject("cluster");
+
             // Initialize HDFS system object
             hdfs = (Hdfs) SystemManagerImpl.getInstance().getSystemObject("hdfs");
 

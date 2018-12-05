@@ -1,5 +1,5 @@
 -- @description query01 for PXF test for multiple servers
-SELECT *  FROM pxf_smoke_server1 UNION ALL SELECT * FROM pxf_smoke_server2 ORDER BY name;
+SELECT *  FROM pxf_multiserver_1 UNION ALL SELECT * FROM pxf_multiserver_2 ORDER BY name;
   name   | num | dub |    longnum     | bool
 ---------+-----+-----+----------------+------
  row_1   |   1 |   1 |   100000000000 | f

@@ -12,16 +12,17 @@ public abstract class BaseFunctionality extends BaseTestParent {
     protected String fileName = "data.txt";
 
     /**
-     * Create Data Table with small data of with following fields: int, String, double, long and
-     * boolean.
+     * Create Data Table with small data
+     * with numRows number of rows
+     * following fields: int, String, double, long and boolean
      *
      * @return Table
      * @throws IOException
      */
-    protected Table getSmallData() throws IOException {
+    protected Table getSmallData(int numRows) throws IOException {
         List<List<String>> data = new ArrayList<List<String>>();
 
-        for (int i = 1; i <= 100; i++) {
+        for (int i = 1; i <= numRows; i++) {
             List<String> row = new ArrayList<String>();
             row.add("row_" + i);
             row.add(String.valueOf(i));
@@ -35,6 +36,10 @@ public abstract class BaseFunctionality extends BaseTestParent {
         dataTable.setData(data);
 
         return dataTable;
+    }
+
+    protected Table getSmallData() throws IOException {
+        return getSmallData(100);
     }
 
     @Override

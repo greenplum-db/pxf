@@ -26,7 +26,7 @@ else
 	MAVEN_TEST_OPTS+= -o
 endif
 
-#MAVEN_DEBUG_OPTS+= -Dmaven.surefire.debug
+MAVEN_DEBUG_OPTS+= -Dmaven.surefire.debug
 
 MVN=mvn
 
