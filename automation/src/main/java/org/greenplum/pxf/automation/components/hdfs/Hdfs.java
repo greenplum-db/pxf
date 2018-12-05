@@ -145,11 +145,17 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
         bufferSize = Integer.valueOf(config.get("io.file.buffer.size"));
     }
 
+    private Path getDatapath(String path) {
+        if(path.matches("^[a-zA-Z].*://.*$"))
+            return new Path(path);
+        else
+            return new Path("/" + path);
+    }
+
     @Override
     public ArrayList<String> list(String path) throws Exception {
         ReportUtils.startLevel(report, getClass(), "List From " + path);
-        RemoteIterator<LocatedFileStatus> list = fs.listFiles(new Path("/"
-                + path), true);
+        RemoteIterator<LocatedFileStatus> list = fs.listFiles(getDatapath(path), true);
         ArrayList<String> filesList = new ArrayList<String>();
         while (list.hasNext()) {
             filesList.add(list.next().getPath().toString());
@@ -168,7 +174,7 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
             throws Exception {
         ReportUtils.startLevel(report, getClass(), "Change owner to user "
                 + userName + ", group " + groupName + " for path " + path);
-        fs.setOwner(new Path(path), userName, groupName);
+        fs.setOwner(getDatapath(path), userName, groupName);
         ReportUtils.stopLevel(report);
     }
 
@@ -176,7 +182,7 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
             throws Exception {
         ReportUtils.startLevel(report, getClass(), "Change mode to "
                 + mode + " for path " + path);
-        fs.setPermission(new Path(path), new FsPermission(mode));
+        fs.setPermission(getDatapath(path), new FsPermission(mode));
         ReportUtils.stopLevel(report);
     }
 
@@ -184,7 +190,7 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
     public void copyFromLocal(String srcPath, String destPath) throws Exception {
         ReportUtils.startLevel(report, getClass(), "Copy From " + srcPath
                 + " to " + destPath);
-        fs.copyFromLocalFile(new Path(srcPath), new Path("/" + destPath));
+        fs.copyFromLocalFile(getDatapath(srcPath), getDatapath(destPath));
         ReportUtils.stopLevel(report);
     }
 
@@ -192,28 +198,28 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
     public void copyToLocal(String srcPath, String destPath) throws Exception {
         ReportUtils.startLevel(report, getClass(), "Copy to " + srcPath
                 + " from " + destPath);
-        fs.copyToLocalFile(new Path(srcPath), new Path(destPath));
+        fs.copyToLocalFile(getDatapath(srcPath), getDatapath(destPath));
         ReportUtils.stopLevel(report);
     }
 
     @Override
     public void createDirectory(String path) throws Exception {
         ReportUtils.startLevel(report, getClass(), "Create Directory " + path);
-        fs.mkdirs(new Path("/" + path));
+        fs.mkdirs(getDatapath(path));
         ReportUtils.stopLevel(report);
     }
 
     @Override
     public void removeDirectory(String path) throws Exception {
         ReportUtils.startLevel(report, getClass(), "Remove Directory " + path);
-        fs.delete(new Path("/" + path), true);
+        fs.delete(getDatapath(path), true);
         ReportUtils.stopLevel(report);
     }
 
     @Override
     public String getFileContent(String path) throws Exception {
         ReportUtils.startLevel(report, getClass(), "Get file content");
-        FSDataInputStream fsdis = fs.open(new Path("/" + path));
+        FSDataInputStream fsdis = fs.open(getDatapath(path));
         StringWriter writer = new StringWriter();
         IOUtils.copy(fsdis, writer, "UTF-8");
         ReportUtils.report(report, getClass(), writer.toString());
@@ -229,7 +235,7 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
                         + writableData[0].getClass().getName() + " array to "
                         + pathToFile);
         IntWritable key = new IntWritable();
-        Path path = new Path("/" + pathToFile);
+        Path path = getDatapath(pathToFile);
         Writer.Option optPath = SequenceFile.Writer.file(path);
         Writer.Option optKey = SequenceFile.Writer.keyClass(key.getClass());
         Writer.Option optVal = SequenceFile.Writer.valueClass(writableData[0].getClass());
@@ -247,7 +253,7 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
                                         IAvroSchema[] data) throws Exception {
         IntWritable key = new IntWritable();
         BytesWritable val = new BytesWritable();
-        Path path = new Path("/" + pathToFile);
+        Path path = getDatapath(pathToFile);
 
         Writer.Option optPath = SequenceFile.Writer.file(path);
         Writer.Option optKey = SequenceFile.Writer.keyClass(key.getClass());
@@ -269,7 +275,7 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
     public void writeAvroFile(String pathToFile, String schemaName,
                               String codecName, IAvroSchema[] data)
             throws Exception {
-        Path path = new Path("/" + pathToFile);
+        Path path = getDatapath(pathToFile);
         OutputStream outStream = fs.create(path, true, bufferSize,
                 replicationSize, blockSize);
         Schema schema = new Schema.Parser().parse(new FileInputStream(
@@ -309,7 +315,7 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
             args.add(codecName);
         }
 
-        FSDataOutputStream out = fs.create(new Path("/" + pathToFile), true,
+        FSDataOutputStream out = fs.create(getDatapath(pathToFile), true,
                 bufferSize, replicationSize, blockSize);
         PrintStream printStream = new PrintStream(out);
 
@@ -325,7 +331,7 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
     public void writeProtocolBufferFile(String filePath,
                                         com.google.protobuf.GeneratedMessage data)
             throws Exception {
-        Path path = new Path("/" + filePath);
+        Path path = getDatapath(filePath);
         OutputStream out_stream = fs.create(path, true, bufferSize,
                 replicationSize, blockSize);
         data.writeTo(out_stream);
@@ -368,7 +374,7 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
                         + pathToFile
                         + ((encoding != null) ? " encoding: " + encoding : ""));
 
-        FSDataOutputStream out = fs.create(new Path("/" + pathToFile), true,
+        FSDataOutputStream out = fs.create(getDatapath(pathToFile), true,
                 bufferSize, replicationSize, blockSize);
         writeTableToStream(out, dataTable, delimiter, encoding);
         ReportUtils.stopLevel(report);
@@ -385,7 +391,7 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
                         + ((encoding != null) ? " encoding: " + encoding : ""));
 
 
-        FSDataOutputStream out = fs.append(new Path("/" + pathToFile));
+        FSDataOutputStream out = fs.append(getDatapath(pathToFile));
         out.writeBytes("\n"); // Need to start on a new line
         writeTableToStream(out, dataTable, delimiter, encoding);
         ReportUtils.stopLevel(report);
