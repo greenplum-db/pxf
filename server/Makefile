@@ -21,22 +21,6 @@ default: all
 
 BUILD_PARAMS+= -DdeployPath="$(PXF_HOME)"
 
-ifneq "$(LICENSE)" ""
-    BUILD_PARAMS+= -Plicense="$(LICENSE)"
-endif
-
-ifneq "$(VENDOR)" ""
-    BUILD_PARAMS+= -Pvendor="$(VENDOR)"
-endif
-
-ifneq "$(PXF_VERSION)" ""
-    BUILD_PARAMS+= -Pversion="$(PXF_VERSION)"
-endif
-
-ifneq "$(DATABASE)" ""
-    BUILD_PARAMS+= -Ddatabase="$(DATABASE)"
-endif
-
 help:
 	@echo
 	@echo   "Possible targets"

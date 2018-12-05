@@ -322,7 +322,7 @@ wrapper {
 
 task version {
     doLast {
-        println project.version
+        println ${version}
     }
 }
 
@@ -367,7 +367,7 @@ task assemble(type: Copy, dependsOn: [subprojects.jar, project(':pxf-service').w
     from("pxf-service/src/scripts/pxf-env-default.sh") { into 'conf' }
     from("pxf-service/src/templates") { into 'templates' }
     doLast {
-        new File("${buildDir}/build/stage/version").text = "$project.version\n"
+        new File("${buildDir}/build/stage/version").text = "${version}\n"
     }
 }
 

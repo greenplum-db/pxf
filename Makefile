@@ -1,12 +1,10 @@
-PXF_VERSION := $(shell grep '^version=' ./server/gradle.properties | cut -d "=" -f2)
-
 ifeq "$(PXF_HOME)" ""
     ifneq "$(GPHOME)" ""
         PXF_HOME= "$(GPHOME)/pxf"
     endif
 endif
 
-export PXF_HOME PXF_VERSION
+export PXF_HOME
 
 default: all
 

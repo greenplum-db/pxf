@@ -56,6 +56,9 @@ export PXF_RUNDIR=${PXF_HOME}/run
 # Port
 export PXF_PORT=${PXF_PORT:=5888}
 
+# Shutdown Port
+export PXF_SHUTDOWN_PORT=${PXF_SHUTDOWN_PORT:=5889}
+
 # Memory
 export PXF_JVM_OPTS=${PXF_JVM_OPTS:="-Xmx2g -Xms1g"}
 
