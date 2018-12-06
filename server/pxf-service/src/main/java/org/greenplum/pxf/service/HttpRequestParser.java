@@ -155,9 +155,9 @@ public class HttpRequestParser implements RequestParser<HttpHeaders> {
                 // Add all left-over user properties as options
                 String k = key.toLowerCase().replace(RequestMap.USER_PROP_PREFIX_LOWERCASE, "");
                 context.addOption(k, params.removeUserProperty(k));
-            } else {
-                // log warning for all left-over system properties
-                LOG.warn("Unknown property {}", key);
+            } else if (StringUtils.startsWithIgnoreCase(key, RequestMap.PROP_PREFIX)) {
+                // log debug for all left-over system properties
+                LOG.debug("Unused property {}", key);
             }
         }
 

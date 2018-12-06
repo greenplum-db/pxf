@@ -632,12 +632,7 @@ public class HiveResolver extends HivePlugin implements Resolver {
 
         if (userDelim == null) {
             /* No DELIMITER in URL, try to get it from fragment's user data*/
-            HiveUserData hiveUserData = null;
-            try {
-                hiveUserData = HiveUtilities.parseHiveUserData(input);
-            } catch (UserDataException ude) {
-                throw new IllegalArgumentException("Couldn't parse user data to get " + RequestContext.DELIMITER_KEY);
-            }
+            HiveUserData hiveUserData = HiveUtilities.parseHiveUserData(input);
             if (hiveUserData.getDelimiter() == null) {
                 throw new IllegalArgumentException(RequestContext.DELIMITER_KEY + " is a required option");
             }

@@ -19,19 +19,16 @@ package org.greenplum.pxf.plugins.ignite;
  * under the License.
  */
 
+import org.apache.commons.compress.utils.ByteUtils;
 import org.greenplum.pxf.api.model.Fragment;
-import org.greenplum.pxf.api.UserDataException;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.util.Calendar;
 import java.util.List;
 
-import org.apache.commons.compress.utils.ByteUtils;
-
-import org.junit.Before;
-import org.junit.Test;
-import static org.junit.Assert.*;
-
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 

@@ -37,11 +37,10 @@ import org.apache.hadoop.hive.ql.io.orc.Reader;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.hive.serde2.*;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.greenplum.pxf.api.UnsupportedTypeException;
+import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.Metadata;
 import org.greenplum.pxf.api.model.Metadata.Field;
-import org.greenplum.pxf.api.UnsupportedTypeException;
-import org.greenplum.pxf.api.UserDataException;
-import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.EnumGpdbType;
 import org.greenplum.pxf.api.utilities.Utilities;
@@ -460,14 +459,14 @@ public class HiveUtilities {
      *
      * @param context input data
      * @return instance of HiveUserData class
-     * @throws UserDataException when incorrect number of tokens in Hive user data received
+     * @throws IllegalArgumentException when incorrect number of tokens in Hive user data received
      */
-    public static HiveUserData parseHiveUserData(RequestContext context) throws UserDataException {
+    public static HiveUserData parseHiveUserData(RequestContext context) throws IllegalArgumentException {
         String userData = new String(context.getFragmentUserData());
         String[] toks = userData.split(HiveUserData.HIVE_UD_DELIM, HiveUserData.getNumOfTokens());
 
         if (toks.length != (HiveUserData.getNumOfTokens())) {
-            throw new UserDataException("HiveInputFormatFragmenter expected "
+            throw new IllegalArgumentException("HiveInputFormatFragmenter expected "
                     + HiveUserData.getNumOfTokens() + " tokens, but got " + toks.length);
         }
 
