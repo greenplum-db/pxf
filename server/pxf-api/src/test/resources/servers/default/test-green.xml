@@ -1,0 +1,6 @@
+<configuration>
+    <property>
+        <name>test.green</name>
+        <value>green</value>
+    </property>
+</configuration>

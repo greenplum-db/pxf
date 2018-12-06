@@ -318,14 +318,6 @@ public class HttpRequestParserTest {
     }
 
     @Test
-    public void noStatsParams() {
-        RequestContext context = new HttpRequestParser().parseRequest(mockRequestHeaders);
-
-        assertEquals(0, context.getStatsMaxFragments());
-        assertEquals(0, context.getStatsSampleRatio(), 0.1);
-    }
-
-    @Test
     public void statsParams() {
         parameters.putSingle("X-GP-OPTIONS-STATS-MAX-FRAGMENTS", "10101");
         parameters.putSingle("X-GP-OPTIONS-STATS-SAMPLE-RATIO", "0.039");
@@ -337,65 +329,7 @@ public class HttpRequestParserTest {
     }
 
     @Test
-    public void statsMissingParams() {
-        parameters.putSingle("X-GP-OPTIONS-STATS-MAX-FRAGMENTS", "13");
-        try {
-            new HttpRequestParser().parseRequest(mockRequestHeaders);
-            fail("missing X-GP-OPTIONS-STATS-SAMPLE-RATIO parameter");
-        } catch (IllegalArgumentException e) {
-            assertEquals(
-                    e.getMessage(),
-                    "Missing parameter: STATS-SAMPLE-RATIO and STATS-MAX-FRAGMENTS must be set together");
-        }
-
-        parameters.remove("X-GP-OPTIONS-STATS-MAX-FRAGMENTS");
-        parameters.putSingle("X-GP-OPTIONS-STATS-SAMPLE-RATIO", "1");
-        try {
-            new HttpRequestParser().parseRequest(mockRequestHeaders);
-            fail("missing X-GP-OPTIONS-STATS-MAX-FRAGMENTS parameter");
-        } catch (IllegalArgumentException e) {
-            assertEquals(
-                    e.getMessage(),
-                    "Missing parameter: STATS-SAMPLE-RATIO and STATS-MAX-FRAGMENTS must be set together");
-        }
-    }
-
-    @Test
-    public void statsSampleRatioNegative() {
-        parameters.putSingle("X-GP-OPTIONS-STATS-SAMPLE-RATIO", "101");
-
-        try {
-            new HttpRequestParser().parseRequest(mockRequestHeaders);
-            fail("wrong X-GP-OPTIONS-STATS-SAMPLE-RATIO value");
-        } catch (IllegalArgumentException e) {
-            assertEquals(
-                    e.getMessage(),
-                    "Wrong value '101.0'. "
-                            + "STATS-SAMPLE-RATIO must be a value between 0.0001 and 1.0");
-        }
-
-        parameters.putSingle("X-GP-OPTIONS-STATS-SAMPLE-RATIO", "0");
-        try {
-            new HttpRequestParser().parseRequest(mockRequestHeaders);
-            fail("wrong X-GP-OPTIONS-STATS-SAMPLE-RATIO value");
-        } catch (IllegalArgumentException e) {
-            assertEquals(
-                    e.getMessage(),
-                    "Wrong value '0.0'. "
-                            + "STATS-SAMPLE-RATIO must be a value between 0.0001 and 1.0");
-        }
-
-        parameters.putSingle("X-GP-OPTIONS-STATS-SAMPLE-RATIO", "0.00005");
-        try {
-            new HttpRequestParser().parseRequest(mockRequestHeaders);
-            fail("wrong X-GP-OPTIONS-STATS-SAMPLE-RATIO value");
-        } catch (IllegalArgumentException e) {
-            assertEquals(
-                    e.getMessage(),
-                    "Wrong value '5.0E-5'. "
-                            + "STATS-SAMPLE-RATIO must be a value between 0.0001 and 1.0");
-        }
-
+    public void testInvalidStatsSampleRatioValue() {
         parameters.putSingle("X-GP-OPTIONS-STATS-SAMPLE-RATIO", "a");
         try {
             new HttpRequestParser().parseRequest(mockRequestHeaders);
@@ -406,7 +340,7 @@ public class HttpRequestParserTest {
     }
 
     @Test
-    public void statsMaxFragmentsNegative() {
+    public void testInvalidStatsMaxFragmentsValue() {
         parameters.putSingle("X-GP-OPTIONS-STATS-MAX-FRAGMENTS", "10.101");
 
         try {
@@ -414,16 +348,6 @@ public class HttpRequestParserTest {
             fail("wrong X-GP-OPTIONS-STATS-MAX-FRAGMENTS value");
         } catch (NumberFormatException e) {
             assertEquals(e.getMessage(), "For input string: \"10.101\"");
-        }
-
-        parameters.putSingle("X-GP-OPTIONS-STATS-MAX-FRAGMENTS", "0");
-
-        try {
-            new HttpRequestParser().parseRequest(mockRequestHeaders);
-            fail("wrong X-GP-OPTIONS-STATS-MAX-FRAGMENTS value");
-        } catch (IllegalArgumentException e) {
-            assertEquals(e.getMessage(), "Wrong value '0'. "
-                    + "STATS-MAX-FRAGMENTS must be a positive integer");
         }
     }
 

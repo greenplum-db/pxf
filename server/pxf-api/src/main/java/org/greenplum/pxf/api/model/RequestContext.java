@@ -23,6 +23,7 @@ package org.greenplum.pxf.api.model;
 import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.EnumAggregationType;
+import org.greenplum.pxf.api.utilities.Utilities;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -38,7 +39,6 @@ import java.util.TreeMap;
 public class RequestContext {
 
     public static final String DELIMITER_KEY = "DELIMITER";
-//    private static final Logger LOG = LoggerFactory.getLogger(RequestContext.class);
 
     // ----- NAMED PROPERTIES -----
     private String accessor;
@@ -96,8 +96,7 @@ public class RequestContext {
     private String serverName = "default";
     private int totalSegments;
     /**
-     * When false the bridge has to run in synchronized mode. default value -
-     * true.
+     * When false the bridge has to run in synchronized mode. default value is true.
      */
     private boolean threadSafe = true;
 
@@ -108,33 +107,6 @@ public class RequestContext {
     // ----- USER-DEFINED OPTIONS other than NAMED PROPERTIES -----
     private Map<String, String> options = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
     private PluginConf pluginConf;
-
-
-    //TODO remove
-
-//    /**
-//     * Returns the stream of key-value pairs defined in the request parameters
-//     *
-//     * @returns stream of map entries
-//     */
-//    public Stream<Map.Entry<String, String>> getUserPropertiesStream() {
-//        return requestParametersMap.entrySet().stream()
-//                .filter(e -> e.getKey().toUpperCase().startsWith(USER_PROP_PREFIX) ||
-//                        e.getKey().toLowerCase().startsWith(USER_PROP_PREFIX.toLowerCase()));
-//    }
-
-//    /**
-//     * Returns a user defined property.
-//     *
-//     * @param userProp the lookup user property
-//     * @return property value as a String
-//     */
-//    /*
-//    public String getOption(String userProp) {
-//        return requestParametersMap.get(USER_PROP_PREFIX + userProp.toUpperCase());
-//    }
-//    */
-
 
     public String getOption(String option, String defaultValue) {
         return options.getOrDefault(option, defaultValue);
@@ -522,7 +494,12 @@ public class RequestContext {
      */
     public void setServerName(String serverName) {
         if (StringUtils.isNotBlank(serverName)) {
-            this.serverName = serverName;
+
+            if (!Utilities.isValidDirectoryName(serverName)) {
+                throw new IllegalArgumentException(String.format("Invalid server name '%s'", serverName));
+            }
+
+            this.serverName = serverName.toLowerCase();
         }
     }
 
@@ -647,15 +624,6 @@ public class RequestContext {
         // accessor and resolver are user properties, might be missing if profile is not set
         ensureNotNull("ACCESSOR", accessor);
         ensureNotNull("RESOLVER", resolver);
-
-        //TODO: -this comment was in ProtocolData but no logic ? needs research
-        /*
-         * accessor - will throw exception if outputFormat is
-         * BINARY and the user did not supply accessor=... or profile=...
-         * resolver - will throw exception if outputFormat is
-         * BINARY and the user did not supply resolver=... or profile=...
-         */
-
     }
 
     private void ensureNotNull(String property, Object value) {

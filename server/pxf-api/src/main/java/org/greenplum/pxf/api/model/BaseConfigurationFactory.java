@@ -1,5 +1,6 @@
 package org.greenplum.pxf.api.model;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +15,16 @@ import java.util.Map;
 public class BaseConfigurationFactory implements ConfigurationFactory {
 
     private static final BaseConfigurationFactory instance = new BaseConfigurationFactory();
-    protected Logger LOG = LoggerFactory.getLogger(this.getClass());
+    protected final Logger LOG = LoggerFactory.getLogger(this.getClass());
+    private final File serversConfigDirectory;
+
+    public BaseConfigurationFactory() {
+        this(SERVERS_CONFIG_DIR);
+    }
+
+    BaseConfigurationFactory(File serversConfigDirectory) {
+        this.serversConfigDirectory = serversConfigDirectory;
+    }
 
     /**
      * Returns the static instance for this factory
@@ -33,14 +43,22 @@ public class BaseConfigurationFactory implements ConfigurationFactory {
         // start with built-in Hadoop configuration that loads core-site.xml
         Configuration configuration = new Configuration();
 
-        // add all site files as URL resources to the configuration, no resources will be added from the classpath
-        String serverDirectoryName = SERVER_CONFIG_DIR_PREFIX + serverName;
-        File serverDirectory = new File(serverDirectoryName);
-        if (!serverDirectory.exists() || !serverDirectory.isDirectory() || !serverDirectory.canRead()) {
+        File[] serverDirectories = serversConfigDirectory
+                .listFiles(f -> f.isDirectory() &&
+                        f.canRead() &&
+                        StringUtils.equalsIgnoreCase(serverName, f.getName()));
+
+        String serverDirectoryName = serversConfigDirectory + serverName;
+
+        if (serverDirectories == null || serverDirectories.length == 0) {
             LOG.warn("Directory {} does not exist, no configuration resources are added for server {}", serverDirectoryName, serverName);
+        } else if (serverDirectories.length > 1) {
+            throw new IllegalStateException(String.format(
+                    "Multiple directories found for server %s. Server directories are expected to be case-insensitive.", serverName));
         } else {
+            // add all site files as URL resources to the configuration, no resources will be added from the classpath
             LOG.debug("Using directory {} for server {} configuration", serverDirectoryName, serverName);
-            addSiteFilesAsResources(configuration, serverName, serverDirectory);
+            addSiteFilesAsResources(configuration, serverName, serverDirectories[0]);
         }
 
         //TODO: do we need whitelisting of properties

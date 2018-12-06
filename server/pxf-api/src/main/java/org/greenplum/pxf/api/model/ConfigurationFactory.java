@@ -8,9 +8,9 @@ import java.util.Map;
 public interface ConfigurationFactory {
 
     String PXF_CONF_PROPERTY = "pxf.conf";
-    String SERVER_CONFIG_DIR_PREFIX =
-            System.getProperty(PXF_CONF_PROPERTY) + File.separator + "servers" + File.separator;
-    String DEFAULT_SERVER_CONFIG_DIR = SERVER_CONFIG_DIR_PREFIX + "default";
+    File SERVERS_CONFIG_DIR = new File(
+            System.getProperty(PXF_CONF_PROPERTY) + File.separator + "servers");
+    String DEFAULT_SERVER_CONFIG_DIR = SERVERS_CONFIG_DIR + "default";
 
     /**
      * Initializes a configuration object that applies server-specific configurations

@@ -41,6 +41,7 @@ public class Utilities {
 
     private static final Logger LOG = LoggerFactory.getLogger(Utilities.class);
     private static final String PROPERTY_KEY_USER_IMPERSONATION = "pxf.service.user.impersonation.enabled";
+    private static final char[] PROHIBITED_CHARS = new char[]{'/', '\\', '.', ' ', ',', ';'};
 
     /**
      * Returns a decoded base64 byte[], or throws an error if the base64 string is invalid
@@ -72,12 +73,9 @@ public class Utilities {
      * @return true if valid, false otherwise
      */
     public static boolean isValidDirectoryName(String name) {
-        if (StringUtils.isBlank(name) ||
-                name.contains("/") ||
-                name.contains("\\") ||
-                name.startsWith(".") ||
-                name.contains(" ") ||
-                name.contains(";")) return false;
+        if (StringUtils.isBlank(name) || StringUtils.containsAny(name, PROHIBITED_CHARS)) {
+            return false;
+        }
         File file = new File(name);
         try {
             file.getCanonicalPath();
