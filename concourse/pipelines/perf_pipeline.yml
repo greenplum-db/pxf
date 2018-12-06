@@ -319,8 +319,13 @@ jobs:
     file: pxf_src/concourse/tasks/pxf-perf-multi-node.yml
     params:
       SCALE: {{perf-scale}}
+      BENCHMARK_ADL: {{perf-benchmark-adl}}
       BENCHMARK_S3: {{perf-benchmark-s3}}
       BENCHMARK_GPHDFS: {{perf-benchmark-gphdfs}}
+      ADL_ACCOUNT: {{adl-account}}
+      ADL_CLIENT_ID: {{adl-client-id}}
+      ADL_CREDENTIAL: {{adl-credential}}
+      ADL_REFRESH_URL: {{adl-refresh-url}}
       AWS_ACCESS_KEY_ID: {{tf-machine-access-key-id}}
       AWS_SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
       AWS_DEFAULT_REGION: {{aws-region}}

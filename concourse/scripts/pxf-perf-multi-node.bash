@@ -10,7 +10,7 @@ CWDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 HADOOP_HOSTNAME="ccp-$(cat terraform_dataproc/name)-m"
 scale=$(($SCALE + 0))
 PXF_CONF_DIR="/home/gpadmin/pxf"
-PXF_SERVER_DIR="${PXF_CONF_DIR}/servers/default/"
+PXF_SERVER_DIR="${PXF_CONF_DIR}/servers/default"
 
 if [ ${scale} -gt 10 ]; then
   VALIDATION_QUERY="SUM(l_partkey) AS PARTKEYSUM"
@@ -248,6 +248,13 @@ EOF
     gphdfs_validate_write_to_external
 }
 
+function create_adl_external_tables() {
+    psql -c "CREATE EXTERNAL TABLE lineitem_adl_read (like lineitem)
+        location('pxf://adl-profile-test/lineitem/${SCALE}/?PROFILE=HdfsTextSimple') format 'CSV' (DELIMITER '|');"
+    psql -c "CREATE WRITABLE EXTERNAL TABLE lineitem_adl_write (LIKE lineitem)
+        LOCATION('pxf://adl-profile-test/output/?PROFILE=HdfsTextSimple') FORMAT 'CSV'"
+}
+
 function create_s3_extension_external_tables {
     psql -c "CREATE EXTERNAL TABLE lineitem_s3_c (like lineitem)
         location('s3://s3.us-west-2.amazonaws.com/gpdb-ud-scratch/s3-profile-test/lineitem/${SCALE}/ config=/home/gpadmin/s3/s3.conf') FORMAT 'CSV' (DELIMITER '|')"
@@ -266,10 +273,68 @@ function assert_count_in_table {
 
     local num_rows=$(time psql -t -c "SELECT COUNT(*) FROM $table_name" | tr -d ' ')
 
-    if [ "${num_rows}" != "${expected_count}" ]; then
+    if [[ ${num_rows} != ${expected_count} ]]; then
         echo "Expected number of rows to be ${expected_count} but was ${num_rows}"
         exit 1
     fi
+}
+
+function run_adl_benchmark() {
+    create_adl_external_tables
+
+    cat > /tmp/core-site.xml <<-EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<configuration>
+    <property>
+		 <name>fs.defaultFS</name>
+		 <value>adl://${ADL_ACCOUNT}.azuredatalakestore.net</value>
+	</property>
+	<property>
+		 <name>dfs.adls.oauth2.access.token.provider.type</name>
+		 <value>ClientCredential</value>
+	</property>
+	<property>
+	   <name>dfs.adls.oauth2.refresh.url</name>
+	   <value>${ADL_REFRESH_URL}</value>
+	</property>
+	<property>
+	   <name>dfs.adls.oauth2.client.id</name>
+	   <value>${ADL_CLIENT_ID}</value>
+	</property>
+	<property>
+	   <name>dfs.adls.oauth2.credential</name>
+	   <value>${ADL_CREDENTIAL}</value>
+	</property>
+</configuration>
+EOF
+
+    # Make a backup of core-site and update it with the S3 core-site
+    gpscp -u centos -f /tmp/segment_hosts /tmp/core-site.xml =:/tmp/core-site-patch.xml
+    gpssh -u centos -f /tmp/segment_hosts -v -s -e \
+      "sudo mv $PXF_SERVER_DIR/core-site.xml $PXF_SERVER_DIR/core-site.xml.back && sudo cp /tmp/core-site-patch.xml $PXF_SERVER_DIR/core-site.xml"
+
+    cat << EOF
+
+
+############################
+#  ADL PXF READ BENCHMARK  #
+############################
+EOF
+    assert_count_in_table "lineitem_adl_read" "${LINEITEM_COUNT}"
+
+    cat << EOF
+
+
+############################
+#  ADL PXF WRITE BENCHMARK #
+############################
+EOF
+    time psql -c "INSERT INTO lineitem_adl_write SELECT * FROM lineitem"
+
+    # Restore core-site
+    gpssh -u centos -f /tmp/segment_hosts -v -s -e \
+      "sudo mv $PXF_SERVER_DIR/core-site.xml $PXF_SERVER_DIR/core-site.xml.adl && sudo cp $PXF_SERVER_DIR/core-site.xml.back $PXF_SERVER_DIR/core-site.xml"
 }
 
 function run_s3_extension_benchmark {
@@ -364,6 +429,10 @@ function main {
     validate_write_to_gpdb "lineitem_external" "lineitem"
     echo -e "Data loading and validation complete\n"
     LINEITEM_COUNT=$(psql -t -c "SELECT COUNT(*) FROM lineitem" | tr -d ' ')
+
+    if [[ ${BENCHMARK_ADL} == true ]]; then
+        run_adl_benchmark
+    fi
 
     if [ "${BENCHMARK_S3}" == "true" ]; then
         run_s3_extension_benchmark
