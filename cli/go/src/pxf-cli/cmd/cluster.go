@@ -43,6 +43,15 @@ var (
 			clusterRun(pxf.Stop)
 		},
 	}
+
+	syncCmd = &cobra.Command{
+		Use:   "sync",
+		Short: "Sync configs on the local PXF server instance",
+		Run: func(cmd *cobra.Command, args []string) {
+			doSetup()
+			clusterRun(pxf.Sync)
+		},
+	}
 )
 
 func init() {
@@ -50,6 +59,7 @@ func init() {
 	clusterCmd.AddCommand(initCmd)
 	clusterCmd.AddCommand(startCmd)
 	clusterCmd.AddCommand(stopCmd)
+	clusterCmd.AddCommand(syncCmd)
 }
 
 func GetHostlist(command pxf.Command) int {

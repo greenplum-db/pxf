@@ -23,7 +23,7 @@
 parent_script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
 
 # establish PXF_HOME and global vars used by all commands
-if [ -z ${PXF_HOME} ]; then
+if [[ -z ${PXF_HOME} ]]; then
     export PXF_HOME=${parent_script_dir}
 fi
 default_env_script=${PXF_HOME}/conf/pxf-env-default.sh
@@ -42,7 +42,7 @@ SED_OPTS+=(-e)
 function validate_user()
 {
 	# make sure current user is not root
-    if [ $EUID -eq 0 ]; then
+    if [[ $EUID -eq 0 ]]; then
         fail "Cannot run as root user"
     fi
 }
@@ -70,18 +70,18 @@ function confirm_with_user()
 
 function update_pxf_conf()
 {
-    if [ -z "${PXF_CONF}" ]; then
+    if [[ -z "${PXF_CONF}" ]]; then
         # PXF_CONF was not specified during init command
         # need to default to user's home directory and ask for confirmation, unless silent mode is used
         local current_user=$( id -un )
         local pxf_user_home="${HOME}"
-        if [ -z "${pxf_user_home}" ]; then
+        if [[ -z "${pxf_user_home}" ]]; then
             fail "PXF_CONF is not set and user ${current_user} home directory is not defined"
-        elif [ ! -d "${pxf_user_home}" ]; then
+        elif [[ ! -d "${pxf_user_home}" ]]; then
             fail "PXF_CONF is not set and user ${current_user} home directory ${pxf_user_home} does not exist"
         else
             export PXF_CONF="${pxf_user_home}/pxf"
-            if [ "${silent}" == "false" ]; then
+            if [[ "${silent}" == "false" ]]; then
                 confirm_with_user
             fi
         fi
@@ -96,13 +96,13 @@ function update_pxf_conf()
 function get_environment()
 {
     # load default environment
-    if [ ! -f ${default_env_script} ]; then
+    if [[ ! -f ${default_env_script} ]]; then
         fail "Failed to find ${default_env_script}"
     fi
     source ${default_env_script}
 
     # validate JAVA_HOME
-    if [ ! -x ${JAVA_HOME}/bin/java ]; then
+    if [[ ! -x ${JAVA_HOME}/bin/java ]]; then
         fail "\$JAVA_HOME is invalid"
     fi
 }
@@ -124,7 +124,7 @@ function createInstance()
     mkdir -p ${instance_root}/${instance_name}
     cp -r ${tomcat_root}/* ${instance_root}/${instance_name}/.
 
-    if [ $? -gt 0 ]; then
+    if [[ $? -gt 0 ]]; then
         echo "ERROR: instance creation failed"
         return 1
     fi
@@ -204,7 +204,7 @@ function checkWebapp()
 # non zero otherwise
 function instanceExists()
 {
-	if [ ! -d "$instance_root/$instance_name" ]; then
+	if [[ ! -d "$instance_root/$instance_name" ]]; then
 		return 1
 	fi
 
@@ -215,7 +215,7 @@ function instanceExists()
 function commandWebapp()
 {
     command=$1
-    if [ "${PXF_DEBUG}" == "true" ] && [ "${command}" == "start" ]; then
+    if [[ "${PXF_DEBUG}" == "true" ]] && [[ "${command}" == "start" ]]; then
         command="jpda $command"
     fi
     pushd ${instance_root} > /dev/null
@@ -223,7 +223,7 @@ function commandWebapp()
     # Run command as a current user
     ${instance_root}/${instance_name}/bin/catalina.sh ${command}
 
-    if [ $? -ne 0 ]; then
+    if [[ $? -ne 0 ]]; then
         return 1
     fi
     popd > /dev/null
@@ -232,7 +232,7 @@ function commandWebapp()
 function createLogsDir()
 {
     # logs dir is likely outside PXF_HOME, setup only if it does not yet exist
-    if [ ! -d "${PXF_LOGDIR}" ]; then
+    if [[ ! -d "${PXF_LOGDIR}" ]]; then
         echo "Creating PXF logs directory ${PXF_LOGDIR} ..."
         mkdir -p ${PXF_LOGDIR}
         chmod 700 ${PXF_LOGDIR}
@@ -250,7 +250,7 @@ function generatePrivateClasspath()
 {
     # verify that a template file for the distribution exists
     local template_file="${PXF_HOME}/templates/pxf/pxf-private.classpath.template"
-    if [ ! -f "${template_file}" ]; then
+    if [[ ! -f "${template_file}" ]]; then
         fail "Template file ${template_file} not found"
     fi
 
@@ -279,8 +279,8 @@ function setup_conf_directory()
     local target=$1
     local source=$2
 
-    if [ ! -d "${target}" ]; then
-        if [ -z "${source}" ]; then
+    if [[ ! -d "${target}" ]]; then
+        if [[ -z "${source}" ]]; then
             echo "Creating configuration directory ${target} ..."
             mkdir -p ${target}
         else
@@ -296,7 +296,7 @@ function validate_system()
 {
     # validate curl
     which curl &> /dev/null
-    if [ $? -ne 0 ]; then
+    if [[ $? -ne 0 ]]; then
 		fail "curl is not installed, please install"
     fi
 }
@@ -329,6 +329,8 @@ doHelp() {
 	  version   show the version of PXF server
 	  cluster   perform <command> on each segment host in the cluster
 
+	  sync <hostname>    sync PXF_CONF/{conf,lib,servers} directories
+
 	${bold}Options${normal}:
 	  -h, --help    show command help
 	  -y            answer yes, use default PXF_CONF=\$HOME/pxf user configuration directory
@@ -340,7 +342,7 @@ doHelp() {
 function doInit()
 {
 	instanceExists
-	if [ $? -eq 0 ]; then
+	if [[ $? -eq 0 ]]; then
 		echo ERROR: instance already exists in ${instance_root}, nothing to do...
 		return 0
 	fi
@@ -353,7 +355,6 @@ function doInit()
 	deployWebapp || return 1
 	createLogsDir || return 1
 	createRunDir  || return 1
-
 }
 
 #
@@ -366,7 +367,7 @@ function doInit()
 function doStart()
 {
     instanceExists
-    if [ $? -ne 0 ]; then
+    if [[ $? -ne 0 ]]; then
         fail "can't find PXF instance, maybe call init?"
     fi
     get_environment
@@ -382,7 +383,7 @@ function doStart()
 function doStop()
 {
     instanceExists
-    if [ $? -ne 0 ]; then
+    if [[ $? -ne 0 ]]; then
         fail "can't find PXF instance, maybe call init?"
     fi
     get_environment
@@ -393,6 +394,21 @@ function doStatus()
 {
     get_environment
     checkWebapp 1 || return 1
+}
+
+function doSync()
+{
+    local source_host=$2
+	if [[ ${source_host} == "" ]]; then
+        fail "PXF config source host must be set to use this option"
+	fi
+    instanceExists
+    if [[ $? -ne 0 ]]; then
+        fail "can't find PXF instance, maybe call init?"
+    fi
+    get_environment
+    SSH_OPTS="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error"
+    rsync -avz -e "${SSH_OPTS}" ${source_host}:${PXF_CONF}/{conf,lib,servers} ${PXF_CONF}
 }
 
 function doCluster()
@@ -427,6 +443,9 @@ case "${pxf_script_command}" in
 		;;
 	'status' )
 		doStatus
+		;;
+	'sync' )
+		doSync "$@"
 		;;
 	'help' | '-h' | '--help' )
 		doHelp
