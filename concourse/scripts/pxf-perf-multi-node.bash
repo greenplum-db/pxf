@@ -349,7 +349,6 @@ EOF
 }
 
 function main {
-    setup_gpadmin_user
     setup_sshd
     remote_access_to_gpdb
     install_gpdb_binary

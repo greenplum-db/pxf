@@ -39,9 +39,6 @@ function setup_pxf_env() {
 
 	su gpadmin -c "sed -i -e 's|^[[:blank:]]*export PXF_JVM_OPTS=.*$|export PXF_JVM_OPTS=\"${PXF_JVM_OPTS}\"|g' \${PXF_CONF_DIR}/conf/pxf-env.sh"
 
-	echo "---------------------PXF environment -------------------------"
-	cat \${PXF_CONF_DIR}/conf/pxf-env.sh
-
 	popd > /dev/null
 }
 
@@ -67,8 +64,8 @@ export HADOOP_VER=2.6.5.0-292
 
 function install_java() {
 	yum install -y -d 1 java-1.8.0-openjdk-devel
-	echo 'export JAVA_HOME=/usr/lib/jvm/jre' | sudo tee -a ~gpadmin/.bash_profile
-	echo 'export JAVA_HOME=/usr/lib/jvm/jre' | sudo tee -a ~centos/.bash_profile
+	echo 'export JAVA_HOME=/usr/lib/jvm/jre' | sudo tee -a ~gpadmin/.bashrc
+	echo 'export JAVA_HOME=/usr/lib/jvm/jre' | sudo tee -a ~centos/.bashrc
 }
 
 function install_hadoop_client() {
@@ -189,7 +186,7 @@ function run_pxf_installer_scripts() {
 	gpconfig -c gp_hadoop_target_version -v 'hdp' && gpstop -u && \
 	gpscp -f ~gpadmin/hostfile_all -v -r ~gpadmin/pxf_tarball centos@=:/home/centos && \
 	gpscp -f ~gpadmin/hostfile_all -v ~gpadmin/{install_pxf_dependencies,configure_pxf,install_pxf}.sh centos@=:/home/centos && \
-	gpssh -f ~gpadmin/hostfile_init -v -u centos -s -e 'sudo /home/centos/install_pxf_dependencies.sh' && \
+	gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e 'sudo /home/centos/install_pxf_dependencies.sh' && \
 	gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e 'sudo /home/centos/install_pxf.sh' && \
 	PXF_CONF=${PXF_CONF_DIR} ${GPHOME}/pxf/bin/pxf cluster init && \
 	gpssh -f ~gpadmin/hostfile_init -v -u centos -s -e 'sudo /home/centos/configure_pxf.sh' && \
