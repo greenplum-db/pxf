@@ -21,7 +21,7 @@ perf-trigger-interval: 720h
 perf-trigger-start: 12:30 PM
 perf-trigger-stop: 12:40 PM
 
-perf-benchmark-adl: true
+perf-benchmark-adl: false
 perf-benchmark-s3: false
 perf-benchmark-gphdfs: true
 

@@ -150,17 +150,17 @@ project('pxf') {
     jar.enabled = false
     dependencies {
         // AWS S3 support jars
-        bundleJars "com.fasterxml.jackson.core:jackson-core:2.6.7"
-        bundleJars "com.fasterxml.jackson.core:jackson-databind:2.6.7.1"
-        bundleJars "com.fasterxml.jackson.core:jackson-annotations:2.6.0"
+        bundleJars "com.fasterxml.jackson.core:jackson-core:$jackson2Version"
+        bundleJars "com.fasterxml.jackson.core:jackson-databind:$jackson2Version"
+        bundleJars "com.fasterxml.jackson.core:jackson-annotations:$jackson2Version"
         bundleJars "org.apache.httpcomponents:httpclient:4.5.2"
         bundleJars "org.apache.httpcomponents:httpcore:4.4.4"
-        bundleJars "org.apache.hadoop:hadoop-aws:2.8.5"
+        bundleJars "org.apache.hadoop:hadoop-aws:$hadoopVersion"
         bundleJars "com.amazonaws:aws-java-sdk-core:$awsJavaSdk"
         bundleJars "com.amazonaws:aws-java-sdk-kms:$awsJavaSdk"
         bundleJars "com.amazonaws:aws-java-sdk-s3:$awsJavaSdk"
         // Azure Datalake jars
-        bundleJars "org.apache.hadoop:hadoop-azure-datalake:2.8.5"
+        bundleJars "org.apache.hadoop:hadoop-azure-datalake:$hadoopVersion"
         bundleJars "com.microsoft.azure:azure-data-lake-store-sdk:2.2.3"
 //        // GCS jars and dependencies
 ////        bundleJars "com.google.cloud.bigdataoss:gcs-connector:hadoop2-1.9.7"
