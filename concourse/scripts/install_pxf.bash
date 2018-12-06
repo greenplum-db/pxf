@@ -181,6 +181,7 @@ EOFF
 function run_pxf_installer_scripts() {
 	ssh "${MASTER_HOSTNAME}" "bash -c \"\
 	source ${GPHOME}/greenplum_path.sh && \
+	export JAVA_HOME=/usr/lib/jvm/jre && \
 	export MASTER_DATA_DIRECTORY=/data/gpdata/master/gpseg-1/ && \
 	gpconfig -c gp_hadoop_home -v '/usr/hdp/2.6.5.0-292' && \
 	gpconfig -c gp_hadoop_target_version -v 'hdp' && gpstop -u && \
