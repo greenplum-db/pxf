@@ -19,6 +19,7 @@ import org.greenplum.pxf.automation.components.gpdb.Gpdb;
 import org.greenplum.pxf.automation.components.hdfs.Hdfs;
 import org.greenplum.pxf.automation.components.tinc.Tinc;
 import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
+import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
@@ -66,7 +67,7 @@ public abstract class BaseTestParent {
             cluster = (PhdCluster) SystemManagerImpl.getInstance().getSystemObject("cluster");
 
             // Initialize HDFS system object
-            hdfs = (Hdfs) SystemManagerImpl.getInstance().getSystemObject("hdfs");
+            hdfs = (Hdfs) SystemManagerImpl.getInstance().getSystemObject(ProtocolUtils.getProtocol().value());
 
             trySecureLogin();
 

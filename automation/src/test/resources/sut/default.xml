@@ -18,6 +18,14 @@
 		<workingDirectory>tmp/pxf_automation_data</workingDirectory>
 	</hdfs>
 
+	<s3>
+		<class>org.greenplum.pxf.automation.components.hdfs.Hdfs</class>
+		<host>localhost</host>
+		<port>8020</port>
+		<workingDirectory>s3server</workingDirectory>
+		<hadoopRoot>/home/gpadmin/pxf/servers/s3</hadoopRoot>
+	</s3>
+
 	<hbase>
 		<class>org.greenplum.pxf.automation.components.hbase.HBase</class>
 		<host>localhost</host>

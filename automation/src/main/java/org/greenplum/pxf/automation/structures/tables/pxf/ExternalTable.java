@@ -3,6 +3,8 @@ package org.greenplum.pxf.automation.structures.tables.pxf;
 import java.util.Arrays;
 
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
+import org.greenplum.pxf.automation.utils.system.ProtocolEnum;
+import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
 
 /**
  * Represent GPDB -> PXF external table.
@@ -46,6 +48,9 @@ public abstract class ExternalTable extends Table {
         super(name, fields);
         this.path = path;
         this.format = format;
+        if(ProtocolUtils.getProtocol() != ProtocolEnum.HDFS) {
+            this.setUserParameters(new String[]{"server=" + ProtocolUtils.getProtocol().value()});
+        }
     }
 
     @Override

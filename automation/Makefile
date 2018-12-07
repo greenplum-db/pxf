@@ -26,7 +26,10 @@ else
 	MAVEN_TEST_OPTS+= -o
 endif
 
-# MAVEN_DEBUG_OPTS+= -Dmaven.surefire.debug
+# To use a different protocol say s3
+#MAVEN_TEST_OPTS+= -DPROTOCOL=s3
+
+#MAVEN_DEBUG_OPTS+= -Dmaven.surefire.debug
 
 MVN=mvn
 

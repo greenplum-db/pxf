@@ -39,6 +39,8 @@ import org.greenplum.pxf.automation.components.common.BaseSystemObject;
 import org.greenplum.pxf.automation.fileformats.IAvroSchema;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
 import org.greenplum.pxf.automation.utils.jsystem.report.ReportUtils;
+import org.greenplum.pxf.automation.utils.system.ProtocolEnum;
+import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
 
 /**
  * Represents HDFS, holds HdfsFunctionality interface as a member, the
@@ -95,10 +97,13 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
 
         // if hadoop root exists in the SUT file, load configuration from it
         if (StringUtils.isNotEmpty(hadoopRoot)) {
-            config.addResource(new Path(getHadoopRoot() + "/conf/core-site.xml"));
-            config.addResource(new Path(getHadoopRoot() + "/conf/hdfs-site.xml"));
-            config.addResource(new Path(getHadoopRoot()
-                    + "/conf/mapred-site.xml"));
+            if (ProtocolUtils.getProtocol() == ProtocolEnum.HDFS) {
+                config.addResource(new Path(getHadoopRoot() + "/conf/core-site.xml"));
+                config.addResource(new Path(getHadoopRoot() + "/conf/hdfs-site.xml"));
+                config.addResource(new Path(getHadoopRoot() + "/conf/mapred-site.xml"));
+            } else {
+                config.addResource(new Path(getHadoopRoot() + "/core-site.xml"));
+            }
         } else {
             if (StringUtils.isNotEmpty(haNameservice)) {
                 if (StringUtils.isEmpty(hostStandby)) {
