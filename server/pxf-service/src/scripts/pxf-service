@@ -398,7 +398,7 @@ function doStatus()
 
 function doSync()
 {
-    local source_host=$2
+    local source_host=$1
 	if [[ ${source_host} == "" ]]; then
         fail "PXF config source host must be set to use this option"
 	fi
@@ -445,7 +445,7 @@ case "${pxf_script_command}" in
 		doStatus
 		;;
 	'sync' )
-		doSync "$@"
+		doSync $2
 		;;
 	'help' | '-h' | '--help' )
 		doHelp

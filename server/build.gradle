@@ -91,6 +91,10 @@ subprojects { subProject ->
                 "-Xlint:-options"]
     }
 
+    tasks.withType(JavaCompile) {
+        options.encoding = "UTF-8"
+    }
+
     // Add LICENSE and NOTICE to generated jar files.
     jar {
         from "../../NOTICE"
@@ -297,10 +301,6 @@ project('pxf-jdbc') {
         compile(project(':pxf-api'))
 
         bundleJars "postgresql:postgresql:8.4-702.jdbc4"
-    }
-
-    tasks.withType(JavaCompile) {
-        options.encoding = "UTF-8"
     }
 }
 

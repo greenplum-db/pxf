@@ -99,7 +99,7 @@ function _main() {
 	open_ssh_tunnels
 	configure_local_hdfs
 
-	if [ "${ACCEPTANCE}" == "true" ]; then
+	if [[ "${ACCEPTANCE}" == "true" ]]; then
 		echo Acceptance test pipeline
 		exit 1
 	fi

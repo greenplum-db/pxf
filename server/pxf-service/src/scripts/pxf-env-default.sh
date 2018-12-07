@@ -25,13 +25,13 @@ export PXF_CONF=${PXF_CONF:="NOT_INITIALIZED"}
 #############################################################################
 
 # load user environment first, warn if the script is missing when not in init mode
-if [ "${pxf_script_command}" != "init" ]; then
-	if [ "${PXF_CONF}" == "NOT_INITIALIZED" ]; then
+if [[ "${pxf_script_command}" != "init" ]]; then
+	if [[ "${PXF_CONF}" == "NOT_INITIALIZED" ]]; then
 		echo "ERROR: PXF is not initialized, call pxf init command"
 		exit 1
 	fi
 	user_env_script=${PXF_CONF}/conf/pxf-env.sh
-	if [ ! -f ${user_env_script} ]; then
+	if [[ ! -f ${user_env_script} ]]; then
 	    echo "WARNING: failed to find ${user_env_script}, default parameters will be used"
 	else
 		source ${user_env_script}

@@ -57,6 +57,11 @@ var _ = Describe("GenerateOutput", func() {
 				cmd.GenerateOutput(pxf.Stop, clusterOutput)
 				Expect(testStdout).To(gbytes.Say("PXF stopped successfully on 3 out of 3 nodes"))
 			})
+
+			It("Reports all nodes synced successfully", func() {
+				cmd.GenerateOutput(pxf.Sync, clusterOutput)
+				Expect(testStdout).To(gbytes.Say("PXF configs synced successfully on 3 out of 3 nodes"))
+			})
 		})
 
 		Context("When some nodes fail", func() {
@@ -85,6 +90,12 @@ var _ = Describe("GenerateOutput", func() {
 			It("Reports the number of nodes that failed to stop", func() {
 				cmd.GenerateOutput(pxf.Stop, clusterOutput)
 				Expect(testStdout).Should(gbytes.Say("PXF failed to stop on 1 out of 3 nodes"))
+				Expect(testStderr).Should(gbytes.Say(expectedError))
+			})
+
+			It("Reports the number of nodes that failed to sync", func() {
+				cmd.GenerateOutput(pxf.Sync, clusterOutput)
+				Expect(testStdout).Should(gbytes.Say("PXF configs failed to sync on 1 out of 3 nodes"))
 				Expect(testStderr).Should(gbytes.Say(expectedError))
 			})
 		})

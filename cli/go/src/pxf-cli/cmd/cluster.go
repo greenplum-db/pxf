@@ -46,12 +46,14 @@ var (
 
 	syncCmd = &cobra.Command{
 		Use:   "sync",
-		Short: "Sync configs on the local PXF server instance",
+		Short: "Sync PXF configs from master to all segment hosts",
 		Run: func(cmd *cobra.Command, args []string) {
 			doSetup()
 			clusterRun(pxf.Sync)
 		},
 	}
+
+	masterHostname string
 )
 
 func init() {
@@ -106,6 +108,11 @@ func doSetup() {
 	connectionPool = dbconn.NewDBConnFromEnvironment("postgres")
 	connectionPool.MustConnect(1)
 	segConfigs = cluster.MustGetSegmentConfiguration(connectionPool)
+	for _, seg := range segConfigs {
+		if seg.ContentID == -1 && seg.DbID == 1 {
+			masterHostname = seg.Hostname
+		}
+	}
 	globalCluster = cluster.NewCluster(segConfigs)
 }
 
@@ -115,6 +122,9 @@ func clusterRun(command pxf.Command) error {
 	if err != nil {
 		gplog.Error(fmt.Sprintf("Error: %s", err))
 		return err
+	}
+	if command == pxf.Sync {
+		remoteCommand += " " + masterHostname
 	}
 
 	remoteOut := globalCluster.GenerateAndExecuteCommand(

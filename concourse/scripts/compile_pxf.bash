@@ -9,7 +9,6 @@ _main() {
 	export TERM=xterm
 	export BUILD_NUMBER="${TARGET_OS}"
 	export PXF_HOME="${GPHOME}/pxf"
-	export JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8
 	export PATH="$PATH:$(cd ~; pwd)/go/bin"
 	make -C pxf_src test install
 	# Create tarball for PXF
