@@ -8,9 +8,9 @@ package org.greenplum.pxf.api.utilities;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -27,10 +27,11 @@ package org.greenplum.pxf.api.utilities;
  * {@link ProfileConfException.MessageFormat#NO_PROFILE_DEF} when a profile entry or attribute is missing.
  */
 public class ProfileConfException extends RuntimeException {
-    public static enum MessageFormat {
+    public enum MessageFormat {
         PROFILES_FILE_NOT_FOUND("%s was not found on the CLASSPATH"),
         PROFILES_FILE_LOAD_ERR("Profiles configuration %s could not be loaded: %s"),
-        NO_PROFILE_DEF("%s is not defined in %s");
+        NO_PROFILE_DEF("%s is not defined in %s"),
+        NO_PLUGINS_IN_PROFILE_DEF("Profile %s does not define any plugins in %s");
 
         String format;
 

@@ -27,7 +27,9 @@ import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.greenplum.pxf.api.model.BaseProfile;
 import org.greenplum.pxf.api.model.PluginConf;
+import org.greenplum.pxf.api.model.Profile;
 import org.greenplum.pxf.api.utilities.ProfileConfException;
 
 import java.net.URL;
@@ -36,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import static org.greenplum.pxf.api.utilities.ProfileConfException.MessageFormat.NO_PLUGINS_IN_PROFILE_DEF;
 import static org.greenplum.pxf.api.utilities.ProfileConfException.MessageFormat.NO_PROFILE_DEF;
 import static org.greenplum.pxf.api.utilities.ProfileConfException.MessageFormat.PROFILES_FILE_LOAD_ERR;
 import static org.greenplum.pxf.api.utilities.ProfileConfException.MessageFormat.PROFILES_FILE_NOT_FOUND;
@@ -46,18 +49,18 @@ import static org.greenplum.pxf.api.utilities.ProfileConfException.MessageFormat
  */
 public enum ProfilesConf implements PluginConf {
     INSTANCE; // enum singleton
-    // not necessary to declare LOG as static final, because this is a singleton
-    private Log LOG = LogFactory.getLog(ProfilesConf.class);
-    private Map<String, Map<String, String>> profilesMap;
     private final static String EXTERNAL_PROFILES = "pxf-profiles.xml";
     private final static String INTERNAL_PROFILES = "pxf-profiles-default.xml";
+    // not necessary to declare LOG as static final, because this is a singleton
+    private Log LOG = LogFactory.getLog(ProfilesConf.class);
+    private Map<String, Profile> profilesMap;
 
     /**
      * Constructs the ProfilesConf enum singleton instance.
      * <p/>
      * External profiles take precedence over the internal ones and override them.
      */
-    private ProfilesConf() {
+    ProfilesConf() {
         profilesMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         loadConf(INTERNAL_PROFILES, true);
         loadConf(EXTERNAL_PROFILES, false);
@@ -72,19 +75,33 @@ public enum ProfilesConf implements PluginConf {
      * In case pxf-profiles.xml is not on the classpath, or it doesn't contains the requested profile,
      * Fallback to pxf-profiles-default.xml occurs (@see useProfilesDefaults(String msgFormat))
      *
-     * @param profile The requested profile
+     * @param profileName The requested profile
      * @return Plugins map of the requested profile
      */
-    public static Map<String, String> getProfilePluginsMap(String profile) {
-        Map<String, String> pluginsMap = INSTANCE.profilesMap.get(profile);
+    public static Map<String, String> getProfilePluginsMap(String profileName) {
+        Profile profile = INSTANCE.profilesMap.get(profileName);
+        if (profile == null) {
+            throw new ProfileConfException(NO_PROFILE_DEF, profileName, EXTERNAL_PROFILES);
+        }
+        Map<String, String> pluginsMap = profile.getPlugins();
         if (pluginsMap == null) {
-            throw new ProfileConfException(NO_PROFILE_DEF, profile, EXTERNAL_PROFILES);
+            throw new ProfileConfException(NO_PLUGINS_IN_PROFILE_DEF, profileName, EXTERNAL_PROFILES);
         }
         return pluginsMap;
     }
 
-    public Map<String, String> getPlugins(String profile) {
-        return ProfilesConf.getProfilePluginsMap(profile);
+    @Override
+    public Map<String, String> getPlugins(String key) {
+        return ProfilesConf.getProfilePluginsMap(key);
+    }
+
+    @Override
+    public String getProtocol(String key) {
+        Profile profile = INSTANCE.profilesMap.get(key);
+        if (profile == null) {
+            throw new ProfileConfException(NO_PROFILE_DEF, key, EXTERNAL_PROFILES);
+        }
+        return profile.getProtocol();
     }
 
     private ClassLoader getClassLoader() {
@@ -117,22 +134,24 @@ public enum ProfilesConf implements PluginConf {
             LOG.warn("Profile file: " + conf.getFileName() + " is empty");
             return;
         }
-        Map<String, Map<String, String>> profileMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        Map<String, Profile> profileMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         for (int profileIdx = 0; profileIdx < profileNames.length; profileIdx++) {
             String profileName = profileNames[profileIdx];
             if (profileMap.containsKey(profileName)) {
                 LOG.warn("Duplicate profile definition found in " + conf.getFileName() + " for: " + profileName);
                 continue;
             }
+            String protocol = conf.getString("profile(" + profileIdx + ").protocol", null);
             Configuration profileSubset = conf.subset("profile(" + profileIdx + ").plugins");
-            profileMap.put(profileName, getProfilePluginMap(profileSubset));
+            Profile profile = new BaseProfile(profileName, protocol, getProfilePluginMap(profileSubset));
+            profileMap.put(profileName, profile);
         }
         profilesMap.putAll(profileMap);
     }
 
     private Map<String, String> getProfilePluginMap(Configuration profileSubset) {
         @SuppressWarnings("unchecked") //IteratorUtils doesn't yet support generics.
-        List<String> plugins = IteratorUtils.toList(profileSubset.getKeys());
+                List<String> plugins = IteratorUtils.toList(profileSubset.getKeys());
         Map<String, String> pluginsMap = new HashMap<>();
         for (String plugin : plugins) {
             String pluginValue = profileSubset.getString(plugin);

@@ -20,19 +20,14 @@ package org.greenplum.pxf.plugins.hdfs;
  */
 
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
-import org.apache.hadoop.util.ReflectionUtils;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.Accessor;
-import org.greenplum.pxf.api.model.BaseConfigurationFactory;
 import org.greenplum.pxf.api.model.BasePlugin;
-import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 
@@ -52,7 +47,7 @@ public abstract class HdfsSplittableDataAccessor extends BasePlugin implements A
     protected InputFormat<?, ?> inputFormat;
     protected JobConf jobConf;
     protected Object key, data;
-    protected HdfsUtilities.HCFSType hcfsType;
+    protected HcfsType hcfsType;
 
     private ListIterator<InputSplit> iter;
 
@@ -73,7 +68,7 @@ public abstract class HdfsSplittableDataAccessor extends BasePlugin implements A
         jobConf = new JobConf(configuration, HdfsSplittableDataAccessor.class);
 
         // Check if the underlying configuration is for HDFS
-        hcfsType = HdfsUtilities.getHCFSType(configuration, requestContext);
+        hcfsType = HcfsType.getHcfsType(configuration, requestContext);
     }
 
     /**

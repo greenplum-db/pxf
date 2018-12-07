@@ -71,6 +71,7 @@ public class RequestContext {
     private int numAttrsProjected;
 
     private String profile;
+    private String protocol;
 
     /**
      * The name of the recordkey column. It can appear in any location in the
@@ -643,5 +644,13 @@ public class RequestContext {
 
     public void setPluginConf(PluginConf pluginConf) {
         this.pluginConf = pluginConf;
+    }
+
+    public String getProtocol() {
+        return protocol;
+    }
+
+    public void setProtocol(String protocol) {
+        this.protocol = protocol;
     }
 }

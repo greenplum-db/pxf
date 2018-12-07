@@ -111,6 +111,8 @@ public class HttpRequestParser implements RequestParser<HttpHeaders> {
         context.setOutputFormat(OutputFormat.valueOf(params.removeProperty("FORMAT")));
         context.setPort(params.removeIntProperty("URL-PORT"));
 
+        context.setProtocol(params.removeUserProperty("PROTOCOL"));
+
         //context.setRecordkeyColumn(..) is taken care of by parseTupleDescription()
         context.setRemoteLogin(params.removeOptionalProperty("REMOTE-USER"));
         context.setRemoteSecret(params.removeOptionalProperty("REMOTE-PASS"));
@@ -201,6 +203,8 @@ public class HttpRequestParser implements RequestParser<HttpHeaders> {
         // since there are guaranteed to be no duplications at this point,
         // add properties defined by profiles to the request map as if they were specified by the user
         pluginsMap.forEach((k, v) -> params.put(RequestMap.USER_PROP_PREFIX + k, v));
+
+        params.put(RequestMap.USER_PROP_PREFIX + "protocol", pluginConf.getProtocol(profile));
     }
 
     private boolean parseBooleanValue(String threadSafeStr) {
