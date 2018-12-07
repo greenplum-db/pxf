@@ -252,7 +252,7 @@ function create_adl_external_tables() {
     psql -c "CREATE EXTERNAL TABLE lineitem_adl_read (like lineitem)
         location('pxf://adl-profile-test/lineitem/${SCALE}/?PROFILE=HdfsTextSimple') format 'CSV' (DELIMITER '|');"
     psql -c "CREATE WRITABLE EXTERNAL TABLE lineitem_adl_write (LIKE lineitem)
-        LOCATION('pxf://adl-profile-test/output/?PROFILE=HdfsTextSimple') FORMAT 'CSV'"
+        LOCATION('pxf://adl-profile-test/output/${SCALE}/?PROFILE=HdfsTextSimple') FORMAT 'CSV'"
 }
 
 function create_s3_extension_external_tables {
