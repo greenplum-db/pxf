@@ -46,7 +46,7 @@ public class ParquetDataFragmenter extends HdfsDataFragmenter {
 
     @Override
     public List<Fragment> getFragments() throws Exception {
-        String absoluteDataPath = HdfsUtilities.getDataUri(configuration, context);
+        String absoluteDataPath = hcfsType.getDataUri(configuration, context);
         List<InputSplit> splits = getSplits(new Path(absoluteDataPath));
 
         for (InputSplit split : splits) {

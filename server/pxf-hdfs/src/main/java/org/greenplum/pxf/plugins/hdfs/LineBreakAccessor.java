@@ -20,8 +20,6 @@ package org.greenplum.pxf.plugins.hdfs;
  */
 
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -31,7 +29,6 @@ import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.LineRecordReader;
 import org.apache.hadoop.mapred.TextInputFormat;
-import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
@@ -66,7 +63,7 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor {
     protected Object getReader(JobConf jobConf, InputSplit split)
             throws IOException {
 
-        return (hcfsType == HdfsUtilities.HCFSType.HDFS) ?
+        return (hcfsType == HcfsType.HDFS) ?
                 new ChunkRecordReader(jobConf, (FileSplit) split) :
                 new LineRecordReader(jobConf, (FileSplit) split);
     }

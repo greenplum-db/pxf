@@ -85,6 +85,8 @@ public class HiveDataFragmenterTest {
         when(requestContext.getOptions()).thenReturn(map);
         when(configurationFactory.initConfiguration("default", map)).
                 thenReturn(hadoopConfiguration);
+
+        when(hadoopConfiguration.get("fs.defaultFS", "file:///")).thenReturn("hdfs:///");
     }
 
     @Test

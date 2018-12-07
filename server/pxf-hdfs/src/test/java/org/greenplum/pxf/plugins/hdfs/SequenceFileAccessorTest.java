@@ -98,8 +98,8 @@ public class SequenceFileAccessorTest {
         when(requestContext.getDataSource()).thenReturn("deep.throat");
         when(requestContext.getSegmentId()).thenReturn(0);
 
+        when(mockConfiguration.get("fs.defaultFS", "file:///")).thenReturn("hdfs:///");
         when(FileContext.getFileContext(mockConfiguration)).thenReturn(fc);
-        when(HdfsUtilities.getDataUri(mockConfiguration, requestContext)).thenReturn("/");
     }
 
     private void constructAccessor() throws Exception {

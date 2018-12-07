@@ -64,29 +64,6 @@ public class HdfsUtilitiesTest {
     }
 
     @Test
-    public void getDataPathForAnS3Profile() throws Exception {
-        RequestContext requestContext = mock(RequestContext.class);
-        when(requestContext.getDataSource()).thenReturn("bucketname/filename");
-        when(requestContext.getProfile()).thenReturn("S3Parquet");
-        assertEquals("s3a://bucketname/filename", HdfsUtilities.getDataUri(conf, requestContext));
-    }
-
-    @Test
-    public void getDataPathForAnAzureDataLakeProfile() throws Exception {
-        RequestContext requestContext = mock(RequestContext.class);
-        when(requestContext.getDataSource()).thenReturn("mystore.azuredatalakestore.net/filename");
-        when(requestContext.getProfile()).thenReturn("ADLText");
-        assertEquals("adl://mystore.azuredatalakestore.net/filename", HdfsUtilities.getDataUri(conf, requestContext));
-    }
-
-    @Test
-    public void getDataPathForSomeOtherProfile() throws Exception {
-        RequestContext requestContext = mock(RequestContext.class);
-        when(requestContext.getDataSource()).thenReturn("foo/bar");
-        assertEquals("/foo/bar", HdfsUtilities.getDataUri(conf, requestContext));
-    }
-
-    @Test
     public void getCodecNoName() {
 
         Configuration conf = new Configuration();

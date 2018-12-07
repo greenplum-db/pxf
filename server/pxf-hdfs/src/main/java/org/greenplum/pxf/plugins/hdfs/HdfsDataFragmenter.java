@@ -43,11 +43,15 @@ import java.util.List;
 public class HdfsDataFragmenter extends BaseFragmenter {
 
     protected JobConf jobConf;
+    protected HcfsType hcfsType;
 
     @Override
     public void initialize(RequestContext requestContext) {
         super.initialize(requestContext);
         jobConf = new JobConf(configuration, this.getClass());
+
+        // Check if the underlying configuration is for HDFS
+        hcfsType = HcfsType.getHcfsType(configuration, requestContext);
     }
 
     /**
@@ -57,7 +61,7 @@ public class HdfsDataFragmenter extends BaseFragmenter {
      */
     @Override
     public List<Fragment> getFragments() throws Exception {
-        Path path = new Path(HdfsUtilities.getDataUri(configuration, context));
+        Path path = new Path(hcfsType.getDataUri(configuration, context));
         List<InputSplit> splits = getSplits(path);
 
         for (InputSplit split : splits) {
@@ -80,7 +84,7 @@ public class HdfsDataFragmenter extends BaseFragmenter {
 
     @Override
     public FragmentStats getFragmentStats() throws Exception {
-        String absoluteDataPath = HdfsUtilities.getDataUri(configuration, context);
+        String absoluteDataPath = hcfsType.getDataUri(configuration, context);
         ArrayList<InputSplit> splits = getSplits(new Path(absoluteDataPath));
 
         if (splits.isEmpty()) {

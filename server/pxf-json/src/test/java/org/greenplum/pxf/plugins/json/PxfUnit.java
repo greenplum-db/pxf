@@ -338,6 +338,7 @@ public abstract class PxfUnit {
             context.setDataSource(sourceData);
             context.setFragmentMetadata(Utilities.parseBase64(fragNode.get("metadata").getTextValue(), "Fragment metadata information"));
             context.setDataFragment(i++);
+            context.setProtocol("localfile");
             inputs.add(context);
         }
     }
@@ -356,6 +357,7 @@ public abstract class PxfUnit {
         context.setHost("localhost");
         context.setPort(50070);
         context.setDataSource(input.toString());
+        context.setProtocol("localfile");
 
         List<Pair<String, DataType>> params = getColumnDefinitions();
         for (int i = 0; i < params.size(); ++i) {
