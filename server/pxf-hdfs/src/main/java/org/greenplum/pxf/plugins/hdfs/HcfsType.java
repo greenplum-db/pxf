@@ -69,31 +69,11 @@ public enum HcfsType {
         this.prefix = (prefix == null ? name().toLowerCase() : prefix) + "://";
     }
 
-    /**
-     * Returns a fully resolved path include protocol
-     *
-     * @param context The input data parameters
-     * @return an absolute data path
-     */
-    public String getDataUri(Configuration configuration, RequestContext context) {
-        URI defaultFS = FileSystem.getDefaultUri(configuration);
-
-        if (FILE_SCHEME.equals(defaultFS.getScheme())) {
-            // if the defaultFS is file://, but enum is not FILE, use enum prefix only
-            return prefix + StringUtils.removeStart(context.getDataSource(), "/");
-        } else {
-            // if the defaultFS is not file://, use it, instead of enum prefix and append user's path
-            return StringUtils.removeEnd(defaultFS.toString(), "/") + "/" + StringUtils.removeStart(context.getDataSource(), "/");
-        }
-    }
-
-    public static HcfsType fromString(String text) {
-        for (HcfsType type : HcfsType.values()) {
-            if (type.name().equals(text)) {
-                return type;
-            }
-        }
-        return HcfsType.CUSTOM;
+    public static HcfsType fromString(String s) {
+        return Arrays.stream(HcfsType.values())
+                .filter(v -> v.name().equals(s))
+                .findFirst()
+                .orElse(HcfsType.CUSTOM);
     }
 
     /**
@@ -125,5 +105,23 @@ public enum HcfsType {
 
         // now we have scheme, resolve to enum
         return HcfsType.fromString(scheme.toUpperCase());
+    }
+
+    /**
+     * Returns a fully resolved path include protocol
+     *
+     * @param context The input data parameters
+     * @return an absolute data path
+     */
+    public String getDataUri(Configuration configuration, RequestContext context) {
+        URI defaultFS = FileSystem.getDefaultUri(configuration);
+
+        if (FILE_SCHEME.equals(defaultFS.getScheme())) {
+            // if the defaultFS is file://, but enum is not FILE, use enum prefix only
+            return prefix + StringUtils.removeStart(context.getDataSource(), "/");
+        } else {
+            // if the defaultFS is not file://, use it, instead of enum prefix and append user's path
+            return StringUtils.removeEnd(defaultFS.toString(), "/") + "/" + StringUtils.removeStart(context.getDataSource(), "/");
+        }
     }
 }
