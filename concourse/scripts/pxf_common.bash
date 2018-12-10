@@ -1,6 +1,6 @@
 #!/bin/bash -l
 
-if [[ "${TARGET_OS}" == "ubuntu" ]]; then
+if [[ ${TARGET_OS} == "ubuntu" ]]; then
 	GPHOME="/usr/local/gpdb"
 else
 	GPHOME="/usr/local/greenplum-db-devel"
@@ -55,10 +55,10 @@ function install_gpdb_binary() {
 		tar -xzf bin_gpdb/*.tar.gz -C ${GPHOME}
 	fi
 
-	if [[ "${TARGET_OS}" == "centos" ]]; then
+	if [[ ${TARGET_OS} == "centos" ]]; then
 		service sshd start
 		psi_dir=$(find /usr/lib64 -name psi | sort -r | head -1)
-	elif [[ "${TARGET_OS}" == "ubuntu" ]]; then
+	elif [[ ${TARGET_OS} == "ubuntu" ]]; then
 		service ssh start
 		pip install psi
 		psi_dir=$(find /usr/local/lib -name psi | sort -r | head -1)
@@ -116,7 +116,7 @@ function add_remote_user_access_for_gpdb() {
 
 function setup_gpadmin_user() {
 
-    if [[ "${TARGET_OS}" == "ubuntu" ]]; then
+    if [[ ${TARGET_OS} == "ubuntu" ]]; then
         ./gpdb_src/concourse/scripts/setup_gpadmin_user.bash
     else
         # Don't create gpadmin user if already exists
@@ -145,7 +145,7 @@ function setup_gpadmin_user() {
 
 function install_pxf_client() {
 	# recompile pxf.so file for dev environments only
-	if [[ "${TEST_ENV}" == "dev" ]]; then
+	if [[ ${TEST_ENV} == "dev" ]]; then
 		source ${GPHOME}/greenplum_path.sh
 		source /opt/gcc_env.sh || true
 
@@ -174,7 +174,7 @@ function setup_impersonation() {
 	local GPHD_ROOT=${1}
 
 	# enable impersonation by gpadmin user
-	if [[ "${IMPERSONATION}" == "true" ]]; then
+	if [[ ${IMPERSONATION} == "true" ]]; then
 		echo 'Impersonation is enabled, adding support for gpadmin proxy user'
 		cat > proxy-config.xml <<EOF
 		<property>
@@ -212,14 +212,14 @@ function setup_impersonation() {
 EOF
 		sed -i -e '/<configuration>/r proxy-config.xml' ${GPHD_ROOT}/hadoop/etc/hadoop/core-site.xml ${GPHD_ROOT}/hbase/conf/hbase-site.xml
 		rm proxy-config.xml
-	elif [[ "${IMPERSONATION}" == "false" ]]; then
+	elif [[ ${IMPERSONATION} == "false" ]]; then
 		echo "Impersonation is disabled, no proxy user setup performed."
 	else
 		echo "ERROR: Invalid or missing CI property value: IMPERSONATION=${IMPERSONATION}"
 		exit 1
 	fi
     pxf_hbase_jar=$(find ${GPHD_ROOT}/hbase/lib -name pxf-hbase-*.jar | wc -l)
-	if [[ "$pxf_hbase_jar" == "0" ]]; then
+	if (( ${pxf_hbase_jar} == 0 )); then
 		cp ${PXF_HOME}/lib/pxf-hbase-*.jar ${GPHD_ROOT}/hbase/lib
 	fi
 }
@@ -240,7 +240,7 @@ function start_hadoop_services() {
 	jps
 
 	# grant gpadmin user admin privilege for feature tests to be able to run on secured cluster
-	if [[ "${IMPERSONATION}" == "true" ]]; then
+	if [[ ${IMPERSONATION} == "true" ]]; then
 		echo 'Granting gpadmin user admin privileges for HBase'
 		echo "grant 'gpadmin', 'RWXCA'" | hbase shell
 	fi
@@ -253,7 +253,7 @@ function init_and_configure_pxf_server() {
 	su gpadmin -c "PXF_CONF=${PXF_CONF_DIR} ./bin/pxf init"
 
 	# update impersonation value based on CI parameter
-	if [[ ! "${IMPERSONATION}" == "true" ]]; then
+	if [[ ! ${IMPERSONATION} == "true" ]]; then
 		echo 'Impersonation is disabled, updating pxf-env.sh property'
 		su gpadmin -c "echo 'export PXF_USER_IMPERSONATION=false' >> ${PXF_CONF_DIR}/conf/pxf-env.sh"
 	fi

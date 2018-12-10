@@ -37,7 +37,7 @@ function run_multinode_smoke_test() {
 	psql -d template1 -c \"
 	CREATE EXTERNAL TABLE pxf_multifile_test (b TEXT) LOCATION ('pxf://tmp/pxf_test?PROFILE=HdfsTextSimple') FORMAT 'CSV';\"
 	num_rows=\$(psql -d template1 -t -c \"SELECT COUNT(*) FROM pxf_multifile_test;\" | head -1)
-	if [ \${num_rows} == ${expected_output} ] ; then
+	if [[ \${num_rows} == ${expected_output} ]] ; then
 		echo \"Received expected output\"
 	else
 		echo \"Error. Expected output ${expected_output} does not match actual \${num_rows}\"
@@ -99,7 +99,7 @@ function _main() {
 	open_ssh_tunnels
 	configure_local_hdfs
 
-	if [[ "${ACCEPTANCE}" == "true" ]]; then
+	if [[ ${ACCEPTANCE} == "true" ]]; then
 		echo Acceptance test pipeline
 		exit 1
 	fi

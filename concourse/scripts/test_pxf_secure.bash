@@ -31,7 +31,7 @@ function run_pxf_smoke_secure() {
 	wrote_rows=\$(hdfs dfs -cat /tmp/test_output/* | wc -l)
 	echo "Wrote \${wrote_rows} records to external HDFS"
 
-	if [ \${num_rows} != \${wrote_rows} ]; then
+	if [[ \${num_rows} != \${wrote_rows} ]]; then
 		echo 'The number of read/writteng rows does not match'
 		exit 1
 	fi
@@ -82,13 +82,13 @@ function wait_for_hadoop_services() {
 
 	echo "Waiting for Hadoop services to start"
 	local status=IN_PROGRESS
-	while [ ${status} != COMPLETED ] && [ ${retries} -gt 0 ]; do
+	while [[ ${status} != COMPLETED && ${retries} -gt 0 ]]; do
 		sleep ${sleep_time}
 		status=$(curl -s -u admin:admin ${AMBARI_PREFIX}/clusters/${CLUSTER_NAME}/requests/${request_id} | jq --raw-output '.Requests.request_status')
 		retries=$((retries-1))
 	done
 
-	if [ ${status} != COMPLETED ]; then
+	if [[ ${status} != COMPLETED ]]; then
 		echo "Unable to start hadoop services"
 		exit 1
 	fi
@@ -97,7 +97,7 @@ function wait_for_hadoop_services() {
 function start_hadoop_services() {
 	echo "Starting hadoop services"
 	local request_id=$(curl ${CURL_OPTS} -X PUT -d '{"ServiceInfo": {"state" : "STARTED"}}' ${AMBARI_PREFIX}/clusters/${CLUSTER_NAME}/services | jq '.Requests.id')
-	if [ -z "${request_id}" ]; then
+	if [[ -z ${request_id} ]]; then
 		echo -e "Unable to get request id... why did cluster start command not get caught by set -e or set -o pipefail?" >&2
 		exit 1
 	fi
@@ -146,12 +146,12 @@ function _main() {
 
 	time run_regression_test
 
-	if [ "${ACCEPTANCE}" == "true" ]; then
+	if [[ ${ACCEPTANCE} == "true" ]]; then
 		echo Acceptance test pipeline
 		exit 1
 	fi
 
-	if [ -n "${GROUP}" ]; then
+	if [[ -n ${GROUP} ]]; then
 		time run_pxf_smoke_secure
 	fi
 }

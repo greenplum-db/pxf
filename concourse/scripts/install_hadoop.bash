@@ -25,20 +25,6 @@ function setup_pxf {
         sudo chown -R gpadmin:gpadmin ${GPHOME}/pxf"
 }
 
-function configure_pxf {
-
-    local hadoop_ip=${1}
-
-    # configure PXF as gpadmin
-    ssh ${SSH_OPTS} gpadmin@mdw "
-        cp ${PXF_CONF_DIR}/templates/*-site.xml ${PXF_CONF_DIR}/servers/default/ &&
-        sed -i -e 's/\(0.0.0.0\|localhost\|127.0.0.1\)/${hadoop_ip}/g' ${PXF_CONF_DIR}/servers/default/*-site.xml &&
-        if [ ${IMPERSONATION} == false ]; then
-            echo 'export PXF_USER_IMPERSONATION=false' >> ${PXF_CONF_DIR}/conf/pxf-env.sh
-        fi &&
-        echo 'export PXF_JVM_OPTS=\"${PXF_JVM_OPTS}\"' >> ${PXF_CONF_DIR}/conf/pxf-env.sh"
-}
-
 function install_hadoop_single_cluster() {
 
     local hadoop_ip=${1}

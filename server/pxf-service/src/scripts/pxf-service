@@ -34,7 +34,7 @@ instance_name=pxf-service
 
 curl=`which curl`
 SED_OPTS=(-i)
-if [[ "$OSTYPE" == "darwin"* ]]; then
+if [[ $OSTYPE == "darwin"* ]]; then
     SED_OPTS+=("")
 fi
 SED_OPTS+=(-e)
@@ -42,7 +42,7 @@ SED_OPTS+=(-e)
 function validate_user()
 {
 	# make sure current user is not root
-    if [[ $EUID -eq 0 ]]; then
+    if (( $EUID == 0 )); then
         fail "Cannot run as root user"
     fi
 }
@@ -70,18 +70,18 @@ function confirm_with_user()
 
 function update_pxf_conf()
 {
-    if [[ -z "${PXF_CONF}" ]]; then
+    if [[ -z ${PXF_CONF} ]]; then
         # PXF_CONF was not specified during init command
         # need to default to user's home directory and ask for confirmation, unless silent mode is used
         local current_user=$( id -un )
         local pxf_user_home="${HOME}"
-        if [[ -z "${pxf_user_home}" ]]; then
+        if [[ -z ${pxf_user_home} ]]; then
             fail "PXF_CONF is not set and user ${current_user} home directory is not defined"
-        elif [[ ! -d "${pxf_user_home}" ]]; then
+        elif [[ ! -d ${pxf_user_home} ]]; then
             fail "PXF_CONF is not set and user ${current_user} home directory ${pxf_user_home} does not exist"
         else
             export PXF_CONF="${pxf_user_home}/pxf"
-            if [[ "${silent}" == "false" ]]; then
+            if [[ ${silent} == "false" ]]; then
                 confirm_with_user
             fi
         fi
@@ -124,7 +124,7 @@ function createInstance()
     mkdir -p ${instance_root}/${instance_name}
     cp -r ${tomcat_root}/* ${instance_root}/${instance_name}/.
 
-    if [[ $? -gt 0 ]]; then
+    if (( $? != 0 )); then
         echo "ERROR: instance creation failed"
         return 1
     fi
@@ -165,10 +165,9 @@ function waitForTomcat()
 
     # wait until tomcat is up:
     echo Checking if tomcat is up and running...
-    until [[ "`curl --silent --connect-timeout 1 -I http://localhost:${PXF_PORT} | grep 'Coyote'`" != "" ]];
+    until curl --silent --connect-timeout 1 -I http://localhost:${PXF_PORT} | grep 'Coyote'
     do
-        let attempts=attempts+1
-        if [[ "$attempts" -eq "$max_attempts" ]]; then
+        if (( ++attempts == max_attempts )); then
             echo ERROR: PXF is down - tomcat is not running
             return 1
         fi
@@ -204,7 +203,7 @@ function checkWebapp()
 # non zero otherwise
 function instanceExists()
 {
-	if [[ ! -d "$instance_root/$instance_name" ]]; then
+	if [[ ! -d ${instance_root}/${instance_name} ]]; then
 		return 1
 	fi
 
@@ -215,7 +214,7 @@ function instanceExists()
 function commandWebapp()
 {
     command=$1
-    if [[ "${PXF_DEBUG}" == "true" ]] && [[ "${command}" == "start" ]]; then
+    if [[ ${PXF_DEBUG} == "true" && ${command} == "start" ]]; then
         command="jpda $command"
     fi
     pushd ${instance_root} > /dev/null
@@ -223,7 +222,7 @@ function commandWebapp()
     # Run command as a current user
     ${instance_root}/${instance_name}/bin/catalina.sh ${command}
 
-    if [[ $? -ne 0 ]]; then
+    if (( $? != 0 )); then
         return 1
     fi
     popd > /dev/null
@@ -232,7 +231,7 @@ function commandWebapp()
 function createLogsDir()
 {
     # logs dir is likely outside PXF_HOME, setup only if it does not yet exist
-    if [[ ! -d "${PXF_LOGDIR}" ]]; then
+    if [[ ! -d ${PXF_LOGDIR} ]]; then
         echo "Creating PXF logs directory ${PXF_LOGDIR} ..."
         mkdir -p ${PXF_LOGDIR}
         chmod 700 ${PXF_LOGDIR}
@@ -250,7 +249,7 @@ function generatePrivateClasspath()
 {
     # verify that a template file for the distribution exists
     local template_file="${PXF_HOME}/templates/pxf/pxf-private.classpath.template"
-    if [[ ! -f "${template_file}" ]]; then
+    if [[ ! -f ${template_file} ]]; then
         fail "Template file ${template_file} not found"
     fi
 
@@ -279,8 +278,8 @@ function setup_conf_directory()
     local target=$1
     local source=$2
 
-    if [[ ! -d "${target}" ]]; then
-        if [[ -z "${source}" ]]; then
+    if [[ ! -d ${target} ]]; then
+        if [[ -z ${source} ]]; then
             echo "Creating configuration directory ${target} ..."
             mkdir -p ${target}
         else
@@ -296,7 +295,7 @@ function validate_system()
 {
     # validate curl
     which curl &> /dev/null
-    if [[ $? -ne 0 ]]; then
+    if (( $? != 0 )); then
 		fail "curl is not installed, please install"
     fi
 }
@@ -342,7 +341,7 @@ doHelp() {
 function doInit()
 {
 	instanceExists
-	if [[ $? -eq 0 ]]; then
+    if (( $? == 0 )); then
 		echo ERROR: instance already exists in ${instance_root}, nothing to do...
 		return 0
 	fi
@@ -367,8 +366,8 @@ function doInit()
 function doStart()
 {
     instanceExists
-    if [[ $? -ne 0 ]]; then
-        fail "can't find PXF instance, maybe call init?"
+    if (( $? != 0 )); then
+        fail "Can't find PXF instance, maybe call init?"
     fi
     get_environment
     commandWebapp start || return 1
@@ -383,8 +382,8 @@ function doStart()
 function doStop()
 {
     instanceExists
-    if [[ $? -ne 0 ]]; then
-        fail "can't find PXF instance, maybe call init?"
+    if (( $? != 0 )); then
+        fail "Can't find PXF instance, maybe call init?"
     fi
     get_environment
     commandWebapp stop || return 1
@@ -399,12 +398,12 @@ function doStatus()
 function doSync()
 {
     local source_host=$1
-	if [[ ${source_host} == "" ]]; then
+	if [[ -z ${source_host} ]]; then
         fail "PXF config source host must be set to use this option"
 	fi
     instanceExists
-    if [[ $? -ne 0 ]]; then
-        fail "can't find PXF instance, maybe call init?"
+    if (( $? != 0 )); then
+        fail "Can't find PXF instance, maybe call init?"
     fi
     get_environment
     SSH_OPTS="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error"
@@ -425,7 +424,7 @@ validate_system
 
 case "${pxf_script_command}" in
 	'init' )
-		if [[ $2 == -y ]] || [[ $2 == -Y ]]; then
+		if [[ $2 == -y || $2 == -Y ]]; then
 			silent=true
 		fi
 		doInit
