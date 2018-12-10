@@ -143,10 +143,20 @@ public enum ProfilesConf implements PluginConf {
             }
             String protocol = conf.getString("profile(" + profileIdx + ").protocol", null);
             Configuration profileSubset = conf.subset("profile(" + profileIdx + ").plugins");
-            Profile profile = new BaseProfile(profileName, protocol, getProfilePluginMap(profileSubset));
+            Configuration whitelistSubset = conf.subset("profile(" + profileIdx + ").whitelist.entry");
+            Profile profile = new BaseProfile(
+                    profileName,
+                    protocol,
+                    getProfilePluginMap(profileSubset),
+                    getWhitelistMap(whitelistSubset)
+            );
             profileMap.put(profileName, profile);
         }
         profilesMap.putAll(profileMap);
+    }
+
+    private Map<String, String> getWhitelistMap(Configuration whitelistSubset) {
+        return null;
     }
 
     private Map<String, String> getProfilePluginMap(Configuration profileSubset) {

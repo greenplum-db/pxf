@@ -27,7 +27,8 @@ under the License.
 <profiles>
     <profile>
         <name>HBase</name>
-        <description>This profile is suitable for using when connecting to an HBase data store engine</description>
+        <description>This profile is suitable for using when connecting to an HBase data store engine
+        </description>
         <plugins>
             <fragmenter>org.greenplum.pxf.plugins.hbase.HBaseDataFragmenter</fragmenter>
             <accessor>org.greenplum.pxf.plugins.hbase.HBaseAccessor</accessor>
@@ -37,9 +38,9 @@ under the License.
     <profile>
         <name>Hive</name>
         <description>
-            This profile is suitable for using when connecting to Hive.
-            Supports GPDBWritable output format, as specified in FORMAT header parameter.
-            It auto-detects actual file storage format and uses an optimized profile (HiveRC, HiveText, HiveORC) if applicable.
+            This profile is suitable for using when connecting to Hive. Supports GPDBWritable output
+            format, as specified in FORMAT header parameter. It auto-detects actual file storage
+            format and uses an optimized profile (HiveRC, HiveText, HiveORC) if applicable.
         </description>
         <plugins>
             <fragmenter>org.greenplum.pxf.plugins.hive.HiveDataFragmenter</fragmenter>
@@ -51,12 +52,11 @@ under the License.
     </profile>
     <profile>
         <name>HiveRC</name>
-        <description>This profile is suitable only for Hive tables stored in RC files
-            and serialized with either the ColumnarSerDe or the LazyBinaryColumnarSerDe.
-            It is much faster than the general purpose Hive profile.
-            DELIMITER parameter is mandatory.
-            Supports both GPDBWritable and TEXT output formats, as specified in FORMAT header parameter.
-            Primary optimized for TEXT output format.
+        <description>This profile is suitable only for Hive tables stored in RC files and serialized
+            with either the ColumnarSerDe or the LazyBinaryColumnarSerDe. It is much faster than the
+            general purpose Hive profile. DELIMITER parameter is mandatory. Supports both
+            GPDBWritable and TEXT output formats, as specified in FORMAT header parameter. Primary
+            optimized for TEXT output format.
         </description>
         <plugins>
             <fragmenter>org.greenplum.pxf.plugins.hive.HiveInputFormatFragmenter</fragmenter>
@@ -68,10 +68,9 @@ under the License.
     </profile>
     <profile>
         <name>HiveText</name>
-        <description>This profile is suitable only for Hive tables stored as Text files.
-            It is much faster than the general purpose Hive profile.
-            DELIMITER parameter is mandatory.
-            Supports both GPDBWritable and TEXT output formats, as specified in FORMAT header parameter.
+        <description>This profile is suitable only for Hive tables stored as Text files. It is much
+            faster than the general purpose Hive profile. DELIMITER parameter is mandatory. Supports
+            both GPDBWritable and TEXT output formats, as specified in FORMAT header parameter.
             Primary optimized for TEXT output format.
         </description>
         <plugins>
@@ -84,10 +83,10 @@ under the License.
     </profile>
     <profile>
         <name>HiveORC</name>
-        <description>This profile is suitable only for Hive tables stored in ORC files
-            and serialized with either the ColumnarSerDe or the LazyBinaryColumnarSerDe.
-            It is much faster than the general purpose Hive profile.
-            Supports GPDBWritable output format, as specified in FORMAT header parameter.
+        <description>This profile is suitable only for Hive tables stored in ORC files and
+            serialized with either the ColumnarSerDe or the LazyBinaryColumnarSerDe. It is much
+            faster than the general purpose Hive profile. Supports GPDBWritable output format, as
+            specified in FORMAT header parameter.
         </description>
         <plugins>
             <fragmenter>org.greenplum.pxf.plugins.hive.HiveInputFormatFragmenter</fragmenter>
@@ -112,8 +111,8 @@ under the License.
     </profile>
     <profile>
         <name>HdfsTextSimple</name>
-        <description>This profile is suitable for using when reading delimited single line records from plain text files
-            on HDFS
+        <description>This profile is suitable for using when reading delimited single line records
+            from plain text files on HDFS.
         </description>
         <plugins>
             <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
@@ -123,8 +122,9 @@ under the License.
     </profile>
     <profile>
         <name>HdfsTextMulti</name>
-        <description>This profile is suitable for using when reading delimited single or multi line records (with quoted
-            linefeeds) from plain text files on HDFS. It is not splittable (non parallel) and slower than HdfsTextSimple.
+        <description>This profile is suitable for using when reading delimited single or multi line
+            records (with quoted linefeeds) from plain text files on HDFS. It is not splittable (non
+            parallel) and slower than HdfsTextSimple.
         </description>
         <plugins>
             <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
@@ -134,7 +134,9 @@ under the License.
     </profile>
     <profile>
         <name>Avro</name>
-        <description>This profile is suitable for using when reading Avro files (i.e fileName.avro)</description>
+        <description>This profile is suitable for using when reading Avro files (i.e
+            fileName.avro)
+        </description>
         <plugins>
             <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
             <accessor>org.greenplum.pxf.plugins.hdfs.AvroFileAccessor</accessor>
@@ -166,8 +168,8 @@ under the License.
         <description>
             Access JSON data either as:
             * one JSON record per line (default)
-            * or multiline JSON records with an IDENTIFIER parameter indicating a member name
-              used to determine the encapsulating json object to return
+            * or multiline JSON records with an IDENTIFIER parameter indicating a member name used
+            to determine the encapsulating json object to return
         </description>
         <plugins>
             <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
@@ -204,14 +206,25 @@ under the License.
     </profile>
     <profile>
         <name>S3Text</name>
-        <description>This profile is suitable for using when reading delimited single line records from plain text files
-            on S3
+        <description>This profile is suitable for using when reading delimited single line records
+            from plain text files on S3
         </description>
         <plugins>
             <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
             <accessor>org.greenplum.pxf.plugins.hdfs.LineBreakAccessor</accessor>
             <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
         </plugins>
+        <protocol>s3a</protocol>
+        <whitelist>
+            <entry>
+                <from>accesskey</from>
+                <to>fs.s3a.access.key</to>
+            </entry>
+            <entry>
+                <from>secretkey</from>
+                <to>fs.s3a.secret.key</to>
+            </entry>
+        </whitelist>
     </profile>
     <profile>
         <name>S3Parquet</name>
@@ -222,17 +235,29 @@ under the License.
             <accessor>org.greenplum.pxf.plugins.hdfs.ParquetFileAccessor</accessor>
             <resolver>org.greenplum.pxf.plugins.hdfs.ParquetResolver</resolver>
         </plugins>
+        <protocol>s3a</protocol>
+        <whitelist>
+            <entry>
+                <from>accesskey</from>
+                <to>fs.s3a.access.key</to>
+            </entry>
+            <entry>
+                <from>secretkey</from>
+                <to>fs.s3a.secret.key</to>
+            </entry>
+        </whitelist>
     </profile>
     <profile>
         <name>ADLText</name>
-        <description>This profile is suitable for using when reading delimited single line records from plain text files
-            on Azure Data Lake
+        <description>This profile is suitable for using when reading delimited single line records
+            from plain text files on Azure Data Lake
         </description>
         <plugins>
             <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
             <accessor>org.greenplum.pxf.plugins.hdfs.LineBreakAccessor</accessor>
             <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
         </plugins>
+        <protocol>adl</protocol>
     </profile>
     <profile>
         <name>ADLParquet</name>
@@ -243,5 +268,6 @@ under the License.
             <accessor>org.greenplum.pxf.plugins.hdfs.ParquetFileAccessor</accessor>
             <resolver>org.greenplum.pxf.plugins.hdfs.ParquetResolver</resolver>
         </plugins>
+        <protocol>adl</protocol>
     </profile>
 </profiles>
