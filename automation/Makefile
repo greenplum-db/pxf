@@ -26,8 +26,9 @@ else
 	MAVEN_TEST_OPTS+= -o
 endif
 
-# To use a different protocol say s3
-#MAVEN_TEST_OPTS+= -DPROTOCOL=s3
+ifneq "$(PROTOCOL)" ""
+MAVEN_TEST_OPTS+= -DPROTOCOL=$(PROTOCOL)
+endif
 
 #MAVEN_DEBUG_OPTS+= -Dmaven.surefire.debug
 
