@@ -150,9 +150,9 @@ project('pxf') {
     jar.enabled = false
     dependencies {
         // AWS S3 support jars
-        bundleJars "com.fasterxml.jackson.core:jackson-core:$jackson2Version"
-        bundleJars "com.fasterxml.jackson.core:jackson-databind:$jackson2Version"
-        bundleJars "com.fasterxml.jackson.core:jackson-annotations:$jackson2Version"
+        bundleJars "com.fasterxml.jackson.core:jackson-core:2.6.7"
+        bundleJars "com.fasterxml.jackson.core:jackson-databind:2.6.7.1"
+        bundleJars "com.fasterxml.jackson.core:jackson-annotations:2.6.0"
         bundleJars "org.apache.httpcomponents:httpclient:4.5.2"
         bundleJars "org.apache.httpcomponents:httpcore:4.4.4"
         bundleJars "org.apache.hadoop:hadoop-aws:$hadoopVersion"
