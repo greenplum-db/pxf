@@ -54,14 +54,14 @@ public class MultiServerTest extends BaseFeature {
         // Initialize server objects
         Configuration config1 = new Configuration();
         hdfsPath = hdfsWorkingDirectory + "/hdfsserver/" + fileName;
-        config1.addResource(new Path("/home/gpadmin/pxf/servers/1/core-site.xml"));
+        config1.addResource(new Path("/home/gpadmin/pxf/servers/hdfsserver/core-site.xml"));
         FileSystem fs1 = FileSystem.get(URI.create(hdfsPath), config1);
         hdfsServer = new Hdfs(fs1, config1, true);
 
         String s3Bucket = "gpdb-ud-scratch";
         s3Path = s3Bucket + "/s3Server/" + fileName;
         Configuration config2 = new Configuration();
-        config2.addResource(new Path("/home/gpadmin/pxf/servers/2/core-site.xml"));
+        config2.addResource(new Path("/home/gpadmin/pxf/servers/s3server/core-site.xml"));
         FileSystem fs2 = FileSystem.get(URI.create(PROTOCOL_S3 + s3Path), config2);
         s3Server = new Hdfs(fs2, config2, true);
     }

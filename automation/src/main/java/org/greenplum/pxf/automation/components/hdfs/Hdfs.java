@@ -179,7 +179,7 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
             throws Exception {
         ReportUtils.startLevel(report, getClass(), "Change owner to user "
                 + userName + ", group " + groupName + " for path " + path);
-        fs.setOwner(getDatapath(path), userName, groupName);
+        fs.setOwner(new Path(path), userName, groupName);
         ReportUtils.stopLevel(report);
     }
 
@@ -187,7 +187,7 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
             throws Exception {
         ReportUtils.startLevel(report, getClass(), "Change mode to "
                 + mode + " for path " + path);
-        fs.setPermission(getDatapath(path), new FsPermission(mode));
+        fs.setPermission(new Path(path), new FsPermission(mode));
         ReportUtils.stopLevel(report);
     }
 
@@ -195,7 +195,7 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
     public void copyFromLocal(String srcPath, String destPath) throws Exception {
         ReportUtils.startLevel(report, getClass(), "Copy From " + srcPath
                 + " to " + destPath);
-        fs.copyFromLocalFile(getDatapath(srcPath), getDatapath(destPath));
+        fs.copyFromLocalFile(new Path(srcPath), getDatapath(destPath));
         ReportUtils.stopLevel(report);
     }
 
@@ -203,7 +203,7 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
     public void copyToLocal(String srcPath, String destPath) throws Exception {
         ReportUtils.startLevel(report, getClass(), "Copy to " + srcPath
                 + " from " + destPath);
-        fs.copyToLocalFile(getDatapath(srcPath), getDatapath(destPath));
+        fs.copyToLocalFile(new Path(srcPath), new Path(destPath));
         ReportUtils.stopLevel(report);
     }
 
