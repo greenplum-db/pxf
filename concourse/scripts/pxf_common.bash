@@ -161,7 +161,6 @@ function install_pxf_server() {
 			tar -xzf pxf_tarball/pxf.tar.gz -C ${GPHOME}
 		else
 			export BUILD_NUMBER="${TARGET_OS}"
-			export JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8
 			pushd pxf_src
 			make install
 			popd
