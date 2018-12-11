@@ -3,12 +3,13 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"pxf-cli/pxf"
+	"strings"
+
 	"github.com/greenplum-db/gp-common-go-libs/cluster"
 	"github.com/greenplum-db/gp-common-go-libs/dbconn"
 	"github.com/greenplum-db/gp-common-go-libs/gplog"
 	"github.com/spf13/cobra"
-	"pxf-cli/pxf"
-	"strings"
 )
 
 var (
@@ -109,7 +110,7 @@ func doSetup() {
 	connectionPool.MustConnect(1)
 	segConfigs = cluster.MustGetSegmentConfiguration(connectionPool)
 	for _, seg := range segConfigs {
-		if seg.ContentID == -1 && seg.DbID == 1 {
+		if seg.ContentID == -1 {
 			masterHostname = seg.Hostname
 		}
 	}
@@ -127,8 +128,10 @@ func clusterRun(command pxf.Command) error {
 		remoteCommand += " " + masterHostname
 	}
 
+	cmdMsg := fmt.Sprintf("Executing command '%s' on all hosts", string(command))
+	gplog.Info(cmdMsg)
 	remoteOut := globalCluster.GenerateAndExecuteCommand(
-		fmt.Sprintf("Executing command '%s' on all hosts", string(command)),
+		cmdMsg,
 		func(contentID int) string {
 			return remoteCommand
 		},
