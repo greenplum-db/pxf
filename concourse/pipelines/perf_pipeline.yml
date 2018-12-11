@@ -321,6 +321,7 @@ jobs:
       SCALE: {{perf-scale}}
       BENCHMARK_ADL: {{perf-benchmark-adl}}
       BENCHMARK_S3: {{perf-benchmark-s3}}
+      BENCHMARK_GCS: {{perf-benchmark-gcs}}
       BENCHMARK_GPHDFS: {{perf-benchmark-gphdfs}}
       BENCHMARK_WASB: {{perf-benchmark-wasb}}
       ADL_ACCOUNT: {{adl-account}}
@@ -330,6 +331,7 @@ jobs:
       AWS_ACCESS_KEY_ID: {{tf-machine-access-key-id}}
       AWS_SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
       AWS_DEFAULT_REGION: {{aws-region}}
+      GOOGLE_CREDENTIALS: {{data-gpdb-ud-google-json-key}}
       WASB_ACCOUNT_NAME: {{wasb-account-name}}
       WASB_ACCOUNT_KEY: {{wasb-account-key}}
       TARGET_OS: centos

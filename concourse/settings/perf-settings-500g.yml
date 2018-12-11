@@ -23,6 +23,7 @@ perf-trigger-stop: 12:40 PM
 
 perf-benchmark-adl: false
 perf-benchmark-s3: false
+perf-benchmark-gcs: false
 perf-benchmark-gphdfs: false
 perf-benchmark-wasb: false
 
