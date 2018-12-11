@@ -25,13 +25,13 @@ import org.apache.commons.codec.CharEncoding;
 import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.PluginConf;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.api.utilities.ProfileConfException;
+import org.greenplum.pxf.service.profile.ProfileConfException;
+import org.greenplum.pxf.service.profile.ProfilesConf;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
@@ -44,7 +44,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.greenplum.pxf.api.utilities.ProfileConfException.MessageFormat.NO_PROFILE_DEF;
+import static org.greenplum.pxf.service.profile.ProfileConfException.MessageFormat.NO_PROFILE_DEF;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

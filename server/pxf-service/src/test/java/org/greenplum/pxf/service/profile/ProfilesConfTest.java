@@ -1,4 +1,4 @@
-package org.greenplum.pxf.service;
+package org.greenplum.pxf.service.profile;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -19,7 +19,6 @@ package org.greenplum.pxf.service;
  * under the License.
  */
 
-import org.greenplum.pxf.api.utilities.ProfileConfException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -64,11 +63,11 @@ public class ProfilesConfTest {
 
     @Test
     public void testUndefinedProfileWhenGettingProtocol() {
-        expectedException.expect(ProfileConfException.class);
-        expectedException.expectMessage("UndefinedProfile is not defined in profile/undefinedProfile/pxf-profiles.xml");
+//        expectedException.expect(ProfileConfException.class);
+//        expectedException.expectMessage("UndefinedProfile is not defined in profile/undefinedProfile/pxf-profiles.xml");
 
         ProfilesConf profilesConf = getProfilesConf("undefinedProfile");
-        profilesConf.getProtocol("UndefinedProfile");
+        assertNull(profilesConf.getProtocol("UndefinedProfile"));
     }
 
     @Test
@@ -116,7 +115,7 @@ public class ProfilesConfTest {
     @Test
     public void missingMandatoryProfileFile() {
         expectedException.expect(ProfileConfException.class);
-        expectedException.expectMessage("profile/missingMandatoryProfileFile/pxf-profiles-default.xml was not found on the CLASSPATH");
+        expectedException.expectMessage("profile/missingMandatoryProfileFile/pxf-profiles-default.xml was not found in the CLASSPATH");
 
         ProfilesConf profilesConf = getProfilesConf("missingMandatoryProfileFile");
         profilesConf.getPlugins("HBase");
@@ -129,28 +128,6 @@ public class ProfilesConfTest {
         Map<String, String> hbaseProfile = profilesConf.getPlugins("HBase");
         assertEquals("Y", hbaseProfile.get("FRAGMENTER"));
     }
-
-//       <profile>
-//        <name>missing-mappings</name>
-//    </profile>
-//    <profile>
-//        <name>empty-mappings</name>
-//        <optionMappings>
-//        </optionMappings>
-//    </profile>
-//    <profile>
-//        <name>one-mapping</name>
-//        <optionMappings>
-//            <mapping option="option1" property="property1"/>
-//        </optionMappings>
-//    </profile>
-//    <profile>
-//        <name>two-mappings</name>
-//        <optionMappings>
-//            <mapping option="option1" property="prop1"/>
-//            <mapping option="option2" property="prop2"/>
-//        </optionMappings>
-//    </profile>
 
     @Test
     public void testOptionMappingsMissingMapping() {

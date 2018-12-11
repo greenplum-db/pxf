@@ -20,13 +20,13 @@ package org.greenplum.pxf.api.model;
  */
 
 
+import org.apache.commons.lang.StringUtils;
+import org.greenplum.pxf.api.utilities.EnumGpdbType;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.greenplum.pxf.api.utilities.EnumGpdbType;
-import org.apache.commons.lang.StringUtils;
 
 /**
  * Metadata holds an item's metadata information.

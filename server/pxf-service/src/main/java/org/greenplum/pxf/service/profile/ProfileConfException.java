@@ -1,4 +1,4 @@
-package org.greenplum.pxf.api.utilities;
+package org.greenplum.pxf.service.profile;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -19,7 +19,6 @@ package org.greenplum.pxf.api.utilities;
  * under the License.
  */
 
-
 /**
  * Thrown when there is a configuration problem with pxf profiles definitions.
  * {@link ProfileConfException.MessageFormat#PROFILES_FILE_NOT_FOUND} when pxf-profiles.xml is missing from the CLASSPATH.
@@ -27,8 +26,25 @@ package org.greenplum.pxf.api.utilities;
  * {@link ProfileConfException.MessageFormat#NO_PROFILE_DEF} when a profile entry or attribute is missing.
  */
 public class ProfileConfException extends RuntimeException {
+    private MessageFormat msgFormat;
+
+    /**
+     * Constructs a ProfileConfException.
+     *
+     * @param msgFormat the message format
+     * @param msgArgs   the message arguments
+     */
+    ProfileConfException(MessageFormat msgFormat, String... msgArgs) {
+        super(String.format(msgFormat.getFormat(), (Object[]) msgArgs));
+        this.msgFormat = msgFormat;
+    }
+
+    public MessageFormat getMsgFormat() {
+        return msgFormat;
+    }
+
     public enum MessageFormat {
-        PROFILES_FILE_NOT_FOUND("%s was not found on the CLASSPATH"),
+        PROFILES_FILE_NOT_FOUND("%s was not found in the CLASSPATH"),
         PROFILES_FILE_LOAD_ERR("Profiles configuration %s could not be loaded: %s"),
         NO_PROFILE_DEF("%s is not defined in %s"),
         NO_PLUGINS_IN_PROFILE_DEF("Profile %s does not define any plugins in %s");
@@ -42,22 +58,5 @@ public class ProfileConfException extends RuntimeException {
         public String getFormat() {
             return format;
         }
-    }
-
-    private MessageFormat msgFormat;
-
-    /**
-     * Constructs a ProfileConfException.
-     *
-     * @param msgFormat the message format
-     * @param msgArgs the message arguments
-     */
-    public ProfileConfException(MessageFormat msgFormat, String... msgArgs) {
-        super(String.format(msgFormat.getFormat(), (Object[]) msgArgs));
-        this.msgFormat = msgFormat;
-    }
-
-    public MessageFormat getMsgFormat() {
-        return msgFormat;
     }
 }

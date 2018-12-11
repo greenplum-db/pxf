@@ -2,7 +2,7 @@
     <profile>
         <name>Hive</name>
         <plugins>
-            <plugin1>Y</plugin1>
+            <accessor>Y</accessor>
         </plugins>
     </profile>
 </profiles>

@@ -1,13 +1,13 @@
 package org.greenplum.pxf.service;
 
 import org.apache.commons.lang.StringUtils;
-import org.greenplum.pxf.api.model.BaseProfile;
 import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.PluginConf;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.EnumAggregationType;
 import org.greenplum.pxf.api.utilities.Utilities;
+import org.greenplum.pxf.service.profile.ProfilesConf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -105,17 +105,11 @@ public class HttpRequestParser implements RequestParser<HttpHeaders> {
 
         String encodedFragmentMetadata = params.removeOptionalProperty("FRAGMENT-METADATA");
         context.setFragmentMetadata(Utilities.parseBase64(encodedFragmentMetadata, "Fragment metadata information"));
-//        context.setFragmentUserData();
-
         context.setHost(params.removeProperty("URL-HOST"));
         context.setMetadata(params.removeUserProperty("METADATA"));
-        // context.setNumAttrsProjected(..) is taken care of by parseTupleDescription()
         context.setOutputFormat(OutputFormat.valueOf(params.removeProperty("FORMAT")));
         context.setPort(params.removeIntProperty("URL-PORT"));
-
         context.setProtocol(params.removeUserProperty("PROTOCOL"));
-
-        //context.setRecordkeyColumn(..) is taken care of by parseTupleDescription()
         context.setRemoteLogin(params.removeOptionalProperty("REMOTE-USER"));
         context.setRemoteSecret(params.removeOptionalProperty("REMOTE-PASS"));
         context.setResolver(params.removeUserProperty("RESOLVER"));
@@ -151,20 +145,47 @@ public class HttpRequestParser implements RequestParser<HttpHeaders> {
         // Store alignment for global use as a system property
         System.setProperty("greenplum.alignment", params.removeProperty("ALIGNMENT"));
 
+        Map<String, String> optionMappings = null;
+
+        // prepare addition configuration properties if profile was specified
+        if (StringUtils.isNotBlank(profile)) {
+            optionMappings = pluginConf.getOptionMappings(profile);
+        }
+
+        if (optionMappings == null) {
+            // Create an empty map for convenience
+            optionMappings = new HashMap<>();
+        }
+
+        Map<String, String> additionalConfigProps = new HashMap<>();
+
         // Iterate over the remaining properties
         // we clone the keyset to prevent concurrent modification exceptions
         List<String> keySet = new ArrayList<>(params.keySet());
         for (String key : keySet) {
             if (StringUtils.startsWithIgnoreCase(key, RequestMap.USER_PROP_PREFIX)) {
                 // Add all left-over user properties as options
-                String k = key.toLowerCase().replace(RequestMap.USER_PROP_PREFIX_LOWERCASE, "");
-                context.addOption(k, params.removeUserProperty(k));
+                String optionName = key.toLowerCase().replace(RequestMap.USER_PROP_PREFIX_LOWERCASE, "");
+                String propertyName = optionMappings.get(optionName);
+
+                if (propertyName != null) {
+                    String optionValue = context.getOption(optionName);
+                    // if option has been provided by the user in the request, set the value
+                    // of the corresponding configuration property
+                    if (optionValue != null) {
+                        additionalConfigProps.put(propertyName, optionValue);
+                        // do not log property value as it might contain sensitive information
+                        LOG.debug("Adding additional property {} to configuration with value provided by user option {}", propertyName, optionName);
+                    }
+                }
+                context.addOption(optionName, params.removeUserProperty(optionName));
             } else if (StringUtils.startsWithIgnoreCase(key, RequestMap.PROP_PREFIX)) {
                 // log debug for all left-over system properties
                 LOG.debug("Unused property {}", key);
             }
         }
 
+        context.setAdditionalConfigProps(additionalConfigProps);
         context.setPluginConf(pluginConf);
 
         // prepare addition configuration properties if profile was specified
