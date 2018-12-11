@@ -33,7 +33,7 @@ public class HttpRequestParser implements RequestParser<HttpHeaders> {
     private PluginConf pluginConf;
 
     public HttpRequestParser() {
-        this(ProfilesConf.INSTANCE);
+        this(ProfilesConf.getInstance());
     }
 
     HttpRequestParser(PluginConf pluginConf) {

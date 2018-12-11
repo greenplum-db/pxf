@@ -34,5 +34,9 @@ under the License.
             <metadata>org.greenplum.pxf.plugins.hive.HiveMetadataFetcher</metadata>
             <outputFormat>org.greenplum.pxf.service.io.GPDBWritable</outputFormat>
         </plugins>
+        <protocol>hive</protocol>
+        <optionMappings>
+            <mapping option="foo" property="bar"/>
+        </optionMappings>
     </profile>
 </profiles>

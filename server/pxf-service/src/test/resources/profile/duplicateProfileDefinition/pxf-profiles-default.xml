@@ -1,0 +1,15 @@
+<profiles>
+    <profile>
+        <name>HBase</name>
+        <plugins>
+            <plugin1>Y</plugin1>
+            <plugin1>YY</plugin1>
+        </plugins>
+    </profile>
+    <profile>
+        <name>HBase</name>
+        <plugins>
+            <plugin1>Y</plugin1>
+        </plugins>
+    </profile>
+</profiles>

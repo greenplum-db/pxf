@@ -1,0 +1,9 @@
+<profiles>
+    <profile>
+        <name>foo</name>
+        <protocol>bar</protocol>
+    </profile>
+    <profile>
+        <name>bar</name>
+    </profile>
+</profiles>

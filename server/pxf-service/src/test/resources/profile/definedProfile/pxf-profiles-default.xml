@@ -1,0 +1,9 @@
+<profiles>
+    <profile>
+        <name>HBase</name>
+        <plugins>
+            <outputFormat>X</outputFormat>
+            <metadata>XX</metadata>
+        </plugins>
+    </profile>
+</profiles>

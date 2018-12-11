@@ -1,0 +1,8 @@
+<profiles>
+    <profile>
+        <name>HBase</name>
+        <plugins>
+            <plugin1>X</plugin1>
+        </plugins>
+    </profile>
+</profiles>

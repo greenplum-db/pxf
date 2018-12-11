@@ -215,16 +215,10 @@ under the License.
             <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
         </plugins>
         <protocol>s3a</protocol>
-        <whitelist>
-            <entry>
-                <from>accesskey</from>
-                <to>fs.s3a.access.key</to>
-            </entry>
-            <entry>
-                <from>secretkey</from>
-                <to>fs.s3a.secret.key</to>
-            </entry>
-        </whitelist>
+        <optionMappings>
+            <mapping option="accesskey" property="fs.s3a.access.key"/>
+            <mapping option="secretkey" property="fs.s3a.secret.key"/>
+        </optionMappings>
     </profile>
     <profile>
         <name>S3Parquet</name>
@@ -236,16 +230,10 @@ under the License.
             <resolver>org.greenplum.pxf.plugins.hdfs.ParquetResolver</resolver>
         </plugins>
         <protocol>s3a</protocol>
-        <whitelist>
-            <entry>
-                <from>accesskey</from>
-                <to>fs.s3a.access.key</to>
-            </entry>
-            <entry>
-                <from>secretkey</from>
-                <to>fs.s3a.secret.key</to>
-            </entry>
-        </whitelist>
+        <optionMappings>
+            <mapping option="accesskey" property="fs.s3a.access.key"/>
+            <mapping option="secretkey" property="fs.s3a.secret.key"/>
+        </optionMappings>
     </profile>
     <profile>
         <name>ADLText</name>

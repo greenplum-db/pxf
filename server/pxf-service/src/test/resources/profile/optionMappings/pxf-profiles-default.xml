@@ -1,0 +1,23 @@
+<profiles>
+    <profile>
+        <name>missing-mappings</name>
+    </profile>
+    <profile>
+        <name>empty-mappings</name>
+        <optionMappings>
+        </optionMappings>
+    </profile>
+    <profile>
+        <name>one-mapping</name>
+        <optionMappings>
+            <mapping option="option1" property="property1"/>
+        </optionMappings>
+    </profile>
+    <profile>
+        <name>two-mappings</name>
+        <optionMappings>
+            <mapping option="option1" property="prop1"/>
+            <mapping option="option2" property="prop2"/>
+        </optionMappings>
+    </profile>
+</profiles>

@@ -10,6 +10,6 @@ public interface Profile {
 
     String getProtocol();
 
-    Map<String, String> getWhitelistMap();
+    Map<String, String> getOptionMappings();
 
 }

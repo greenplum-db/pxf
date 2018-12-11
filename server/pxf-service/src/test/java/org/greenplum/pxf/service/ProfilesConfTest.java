@@ -19,230 +19,175 @@ package org.greenplum.pxf.service;
  * under the License.
  */
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.greenplum.pxf.api.utilities.ProfileConfException;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import org.junit.runner.RunWith;
-import org.mockito.Mockito;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.junit.rules.ExpectedException;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.util.Map;
 
-import static org.greenplum.pxf.api.utilities.ProfileConfException.MessageFormat.NO_PROFILE_DEF;
-import static org.greenplum.pxf.api.utilities.ProfileConfException.MessageFormat.PROFILES_FILE_NOT_FOUND;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /**
  * Base test class for all ProfilesConf tests. Each test case is encapsulated
  * inside its own inner class to force reloading of ProfilesConf enum singleton
  */
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({
-        ProfilesConf.class,
-        Log.class,
-        LogFactory.class,
-        ClassLoader.class})
 public class ProfilesConfTest {
-    static ClassLoader classLoader;
-    static Log LOG;
+
     @Rule
-    public TemporaryFolder testFolder = new TemporaryFolder();
-    String mandatoryFileName = "mandatory.xml";
-    String optionalFileName = "optional.xml";
-    File mandatoryFile;
-    File optionalFile;
+    public ExpectedException expectedException = ExpectedException.none();
 
-    @Before
-    public void setUp() throws Exception {
-        mandatoryFile = testFolder.newFile(mandatoryFileName);
-        optionalFile = testFolder.newFile(optionalFileName);
-        PowerMockito.mockStatic(LogFactory.class);
-        LOG = mock(Log.class);
-        when(LogFactory.getLog(ProfilesConf.class)).thenReturn(LOG);
-        classLoader = mock(ClassLoader.class);
-        PowerMockito.stub(
-                PowerMockito.method(ProfilesConf.class, "getClassLoader")).toReturn(
-                classLoader);
-    }
-
-    void writeFile(File file, String content) throws IOException {
-        Files.write(file.toPath(), content.getBytes());
-    }
-}
-
-class ProfilesConfTestDefinedProfile extends ProfilesConfTest {
     @Test
-    public void definedProfile() throws Exception {
-        writeFile(
-                mandatoryFile,
-                "<profiles><profile><name>HBase</name><plugins><plugin1>X</plugin1><plugin2>XX</plugin2></plugins></profile></profiles>");
-        writeFile(
-                optionalFile,
-                "<profiles><profile><name>Hive</name><plugins><plugin1>Y</plugin1></plugins></profile></profiles>");
-        when(classLoader.getResource("pxf-profiles-default.xml")).thenReturn(
-                mandatoryFile.toURI().toURL());
-        when(classLoader.getResource("pxf-profiles.xml")).thenReturn(
-                optionalFile.toURI().toURL());
-
-        Map<String, String> hbaseProfile = ProfilesConf.getProfilePluginsMap("HBase");
+    public void definedProfile() {
+        ProfilesConf profilesConf = getProfilesConf("definedProfile");
+        Map<String, String> hbaseProfile = profilesConf.getPlugins("HBase");
         assertEquals(2, hbaseProfile.keySet().size());
-        assertEquals("X", hbaseProfile.get("PLUGIN1"));
-        assertEquals("XX", hbaseProfile.get("PLUGIN2"));
+        assertEquals("X", hbaseProfile.get("OUTPUTFORMAT"));
+        assertEquals("XX", hbaseProfile.get("METADATA"));
 
         // case insensitive profile name
-        Map<String, String> hiveProfile = ProfilesConf.getProfilePluginsMap("hIVe");
+        Map<String, String> hiveProfile = profilesConf.getPlugins("hIVe");
         assertEquals(1, hiveProfile.keySet().size());
-        assertEquals(hiveProfile.get("PLUGIN1"), "Y");
-
-        Mockito.verify(LOG).info("PXF profiles loaded: [HBase, Hive]");
+        assertEquals("Y", hiveProfile.get("OUTPUTFORMAT"));
     }
-}
 
-class ProfilesConfTestUndefinedProfile extends ProfilesConfTest {
     @Test
-    public void undefinedProfile() throws Exception {
-        writeFile(
-                mandatoryFile,
-                "<profiles><profile><name>HBase</name><plugins><plugin1>X</plugin1></plugins></profile></profiles>");
-        writeFile(
-                optionalFile,
-                "<profiles><profile><name>Hive</name><plugins><plugin1>Y</plugin1></plugins></profile></profiles>");
-        when(classLoader.getResource("pxf-profiles-default.xml")).thenReturn(
-                mandatoryFile.toURI().toURL());
-        when(classLoader.getResource("pxf-profiles.xml")).thenReturn(
-                optionalFile.toURI().toURL());
-        try {
-            ProfilesConf.getProfilePluginsMap("UndefinedProfile");
-            fail("undefined profile should have thrown exception");
-        } catch (ProfileConfException pce) {
-            assertEquals(pce.getMessage(), String.format(
-                    NO_PROFILE_DEF.getFormat(), "UndefinedProfile",
-                    "pxf-profiles.xml"));
-        }
+    public void undefinedProfile() {
+        expectedException.expect(ProfileConfException.class);
+        expectedException.expectMessage("UndefinedProfile is not defined in profile/undefinedProfile/pxf-profiles.xml");
+
+        ProfilesConf profilesConf = getProfilesConf("undefinedProfile");
+        profilesConf.getPlugins("UndefinedProfile");
     }
-}
 
-class ProfilesConfTestDuplicateProfileDefinition extends ProfilesConfTest {
     @Test
-    public void duplicateProfileDefinition() throws Exception {
-        writeFile(
-                mandatoryFile,
-                "<profiles><profile><name>HBase</name><plugins><plugin1>Y</plugin1><plugin1>YY</plugin1></plugins></profile><profile><name>HBase</name><plugins><plugin1>Y</plugin1></plugins></profile></profiles>");
-        writeFile(
-                optionalFile,
-                "<profiles><profile><name>Hive</name><plugins><plugin1>Y</plugin1></plugins></profile></profiles>");
-        when(classLoader.getResource("pxf-profiles-default.xml")).thenReturn(
-                mandatoryFile.toURI().toURL());
-        when(classLoader.getResource("pxf-profiles.xml")).thenReturn(
-                optionalFile.toURI().toURL());
-        ProfilesConf.getProfilePluginsMap("HBase");
-        Mockito.verify(LOG).warn(
-                "Duplicate profile definition found in " + mandatoryFileName
-                        + " for: HBase");
+    public void testUndefinedProfileWhenGettingProtocol() {
+        expectedException.expect(ProfileConfException.class);
+        expectedException.expectMessage("UndefinedProfile is not defined in profile/undefinedProfile/pxf-profiles.xml");
+
+        ProfilesConf profilesConf = getProfilesConf("undefinedProfile");
+        profilesConf.getProtocol("UndefinedProfile");
     }
-}
 
-class ProfilesConfTestOverrideProfile extends ProfilesConfTest {
     @Test
-    public void overrideProfile() throws Exception {
-        writeFile(
-                mandatoryFile,
-                "<profiles><profile><name>HBase</name><plugins><plugin1>X</plugin1></plugins></profile></profiles>");
-        writeFile(
-                optionalFile,
-                "<profiles><profile><name>HBase</name><plugins><plugin1>Y</plugin1><plugin2>YY</plugin2></plugins></profile></profiles>");
-        when(classLoader.getResource("pxf-profiles-default.xml")).thenReturn(
-                mandatoryFile.toURI().toURL());
-        when(classLoader.getResource("pxf-profiles.xml")).thenReturn(
-                optionalFile.toURI().toURL());
-        Map profile = ProfilesConf.getProfilePluginsMap("HBase");
+    public void testGetProtocol() {
+        ProfilesConf profilesConf = getProfilesConf("testGetProtocol");
+        assertEquals("bar", profilesConf.getProtocol("foo"));
+    }
+
+    @Test
+    public void testGetMissingProtocol() {
+        ProfilesConf profilesConf = getProfilesConf("testGetProtocol");
+        assertNull(profilesConf.getProtocol("bar"));
+    }
+
+    @Test
+    public void duplicateProfileDefinition() {
+        ProfilesConf profilesConf = getProfilesConf("duplicateProfileDefinition");
+        profilesConf.getPlugins("HBase");
+    }
+
+    @Test
+    public void overrideProfile() {
+        ProfilesConf profilesConf = getProfilesConf("overrideProfile");
+        Map profile = profilesConf.getPlugins("HBase");
         assertEquals(2, profile.keySet().size());
-        assertEquals(profile.get("PLUGIN1"), "Y");
-        assertEquals(profile.get("PLUGIN2"), "YY");
+        assertEquals("Y", profile.get("ACCESSOR"));
+        assertEquals("YY", profile.get("RESOLVER"));
     }
-}
 
-class ProfilesConfTestEmptyProfileFile extends ProfilesConfTest {
     @Test
-    public void emptyProfileFile() throws Exception {
-        writeFile(mandatoryFile, "<profiles/>");
-        writeFile(
-                optionalFile,
-                "<profiles><profile><name>HBase</name><plugins><plugin1>Y</plugin1></plugins></profile></profiles>");
-        when(classLoader.getResource("pxf-profiles-default.xml")).thenReturn(
-                mandatoryFile.toURI().toURL());
-        when(classLoader.getResource("pxf-profiles.xml")).thenReturn(
-                optionalFile.toURI().toURL());
-        ProfilesConf.getProfilePluginsMap("HBase");
-        Mockito.verify(LOG).warn(
-                "Profile file: " + mandatoryFileName + " is empty");
+    public void emptyProfileFile() {
+        ProfilesConf profilesConf = getProfilesConf("emptyProfileFile");
+        profilesConf.getPlugins("HBase");
     }
-}
 
-class ProfilesConfTestMalformedProfileFile extends ProfilesConfTest {
     @Test
-    public void malformedProfileFile() throws Exception {
-        writeFile(mandatoryFile, "I'm a malford x.m.l@#$#<%");
-        writeFile(
-                optionalFile,
-                "<profiles><profile><name>HBase</name><plugins><plugin1>Y</plugin1></plugins></profile></profiles>");
-        when(classLoader.getResource("pxf-profiles-default.xml")).thenReturn(
-                mandatoryFile.toURI().toURL());
-        when(classLoader.getResource("pxf-profiles.xml")).thenReturn(
-                optionalFile.toURI().toURL());
-        try {
-            ProfilesConf.getProfilePluginsMap("HBase");
-            fail("malformed profile file should have thrown exception");
-        } catch (ExceptionInInitializerError pce) {
-            assertTrue(pce.getCause().getMessage().contains(
-                    mandatoryFileName
-                            + " could not be loaded: org.xml.sax.SAXParseException"));
-        }
-    }
-}
+    public void malformedProfileFile() {
+        expectedException.expect(ProfileConfException.class);
+        expectedException.expectMessage("pxf-profiles-default.xml could not be loaded: org.xml.sax.SAXParseException");
 
-class ProfilesConfTestMissingMandatoryProfileFile extends ProfilesConfTest {
-    @Test
-    public void missingMandatoryProfileFile() throws Exception {
-        when(classLoader.getResource("pxf-profiles-default.xml")).thenReturn(
-                null);
-        try {
-            ProfilesConf.getProfilePluginsMap("HBase");
-            fail("missing mandatory profile file should have thrown exception");
-        } catch (ExceptionInInitializerError pce) {
-            Mockito.verify(LOG).warn(
-                    "pxf-profiles-default.xml not found in the classpath");
-            assertEquals(pce.getCause().getMessage(), String.format(
-                    PROFILES_FILE_NOT_FOUND.getFormat(),
-                    "pxf-profiles-default.xml"));
-        }
+        ProfilesConf profilesConf = getProfilesConf("malformedProfileFile");
+        profilesConf.getPlugins("HBase");
     }
-}
 
-class ProfilesConfTestMissingOptionalProfileFile extends ProfilesConfTest {
     @Test
-    public void missingOptionalProfileFile() throws Exception {
-        writeFile(
-                mandatoryFile,
-                "<profiles><profile><name>HBase</name><plugins><plugin1>Y</plugin1></plugins></profile></profiles>");
-        when(classLoader.getResource("pxf-profiles-default.xml")).thenReturn(
-                mandatoryFile.toURI().toURL());
-        when(classLoader.getResource("pxf-profiles.xml")).thenReturn(null);
-        Map<String, String> hbaseProfile = ProfilesConf.getProfilePluginsMap("HBase");
-        assertEquals("Y", hbaseProfile.get("PLUGIN1"));
-        Mockito.verify(LOG).warn("pxf-profiles.xml not found in the classpath");
+    public void missingMandatoryProfileFile() {
+        expectedException.expect(ProfileConfException.class);
+        expectedException.expectMessage("profile/missingMandatoryProfileFile/pxf-profiles-default.xml was not found on the CLASSPATH");
+
+        ProfilesConf profilesConf = getProfilesConf("missingMandatoryProfileFile");
+        profilesConf.getPlugins("HBase");
     }
+
+    @Test
+    public void missingOptionalProfileFile() {
+        ProfilesConf profilesConf = getProfilesConf("missingOptionalProfileFile");
+
+        Map<String, String> hbaseProfile = profilesConf.getPlugins("HBase");
+        assertEquals("Y", hbaseProfile.get("FRAGMENTER"));
+    }
+
+//       <profile>
+//        <name>missing-mappings</name>
+//    </profile>
+//    <profile>
+//        <name>empty-mappings</name>
+//        <optionMappings>
+//        </optionMappings>
+//    </profile>
+//    <profile>
+//        <name>one-mapping</name>
+//        <optionMappings>
+//            <mapping option="option1" property="property1"/>
+//        </optionMappings>
+//    </profile>
+//    <profile>
+//        <name>two-mappings</name>
+//        <optionMappings>
+//            <mapping option="option1" property="prop1"/>
+//            <mapping option="option2" property="prop2"/>
+//        </optionMappings>
+//    </profile>
+
+    @Test
+    public void testOptionMappingsMissingMapping() {
+        ProfilesConf profilesConf = getProfilesConf("optionMappings");
+        Map<String, String> map = profilesConf.getOptionMappings("missing-mappings");
+        assertTrue(map.isEmpty());
+    }
+
+    @Test
+    public void testOptionMappingsEmptyMapping() {
+        ProfilesConf profilesConf = getProfilesConf("optionMappings");
+        Map<String, String> map = profilesConf.getOptionMappings("empty-mappings");
+        assertTrue(map.isEmpty());
+    }
+
+    @Test
+    public void testOptionMappingsOneMapping() {
+        ProfilesConf profilesConf = getProfilesConf("optionMappings");
+        Map<String, String> map = profilesConf.getOptionMappings("one-mapping");
+
+        assertEquals(1, map.size());
+        assertEquals("property1", map.get("option1"));
+    }
+
+    @Test
+    public void testOptionMappingsTwoMappings() {
+        ProfilesConf profilesConf = getProfilesConf("optionMappings");
+        Map<String, String> map = profilesConf.getOptionMappings("two-mappings");
+
+        assertEquals(2, map.size());
+        assertEquals("prop1", map.get("option1"));
+        assertEquals("prop2", map.get("option2"));
+    }
+
+    private ProfilesConf getProfilesConf(String testCase) {
+        return new ProfilesConf(String.format("profile/%s/pxf-profiles-default.xml", testCase),
+                String.format("profile/%s/pxf-profiles.xml", testCase));
+    }
+
 }

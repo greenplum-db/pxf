@@ -1,0 +1,9 @@
+<profiles>
+    <profile>
+        <name>HBase</name>
+        <plugins>
+            <accessor>Y</accessor>
+            <resolver>YY</resolver>
+        </plugins>
+    </profile>
+</profiles>
