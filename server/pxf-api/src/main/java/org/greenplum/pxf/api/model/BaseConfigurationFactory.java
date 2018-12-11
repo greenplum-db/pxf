@@ -35,11 +35,8 @@ public class BaseConfigurationFactory implements ConfigurationFactory {
         return instance;
     }
 
-    /**
-     * Initializes a configuration object that applies server-specific configurations
-     */
     @Override
-    public Configuration initConfiguration(String serverName, Map<String, String> options) {
+    public Configuration initConfiguration(String serverName, Map<String, String> additionalProperties) {
         // start with built-in Hadoop configuration that loads core-site.xml
         Configuration configuration = new Configuration();
 
@@ -61,9 +58,9 @@ public class BaseConfigurationFactory implements ConfigurationFactory {
             addSiteFilesAsResources(configuration, serverName, serverDirectories[0]);
         }
 
-        //TODO: do we need whitelisting of properties
-        if (options != null) {
-            options.forEach(configuration::set);
+        // add additional properties, if provided
+        if (additionalProperties != null) {
+            additionalProperties.forEach(configuration::set);
         }
 
         return configuration;

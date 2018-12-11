@@ -105,9 +105,12 @@ public class RequestContext {
     private String user;
     private byte[] userData;
 
+    // ----- Additional Configuration Properties to be added to configuration for the request
+    private Map<String, String> additionalConfigProps;
     // ----- USER-DEFINED OPTIONS other than NAMED PROPERTIES -----
     private Map<String, String> options = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
     private PluginConf pluginConf;
+
 
     public String getOption(String option, String defaultValue) {
         return options.getOrDefault(option, defaultValue);
@@ -652,5 +655,13 @@ public class RequestContext {
 
     public void setProtocol(String protocol) {
         this.protocol = protocol;
+    }
+
+    public Map<String, String> getAdditionalConfigProps() {
+        return additionalConfigProps;
+    }
+
+    public void setAdditionalConfigProps(Map<String, String> additionalConfigProps) {
+        this.additionalConfigProps = additionalConfigProps;
     }
 }

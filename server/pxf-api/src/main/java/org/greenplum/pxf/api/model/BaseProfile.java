@@ -4,41 +4,44 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
 @XmlRootElement(name = "profile")
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.PROPERTY)
 public class BaseProfile implements Profile {
 
-    @XmlElement(name = "name", required = true)
     private String name;
-
-    @XmlElement(name = "protocol")
-    private String protocol;
-
-    @XmlElement(name = "plugins")
     private Plugins plugins;
-
-    @XmlElement(name = "optionMappings")
-    private List<Mapping> mappings;
-
-    private Map<String, String> optionMappings = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+    private String protocol;
+    private List<Mapping> mappingList;
+    private Map<String, String> optionMappingTable = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
     @Override
     public String getName() {
         return name;
     }
 
-    public void setName(String name) {
+    @XmlElement(name = "name", required = true)
+    private void setName(String name) {
         this.name = name;
     }
 
     @Override
-    public Map<String, String> getPlugins() {
+    public Map<String, String> getPluginTable() {
         return plugins.toMap();
+    }
+
+    private Plugins getPlugins() {
+        return plugins;
+    }
+
+    @XmlElement(name = "plugins")
+    private void setPlugins(Plugins plugins) {
+        this.plugins = plugins;
     }
 
     @Override
@@ -46,20 +49,30 @@ public class BaseProfile implements Profile {
         return protocol;
     }
 
-    public void setProtocol(String protocol) {
+    @XmlElement(name = "protocol")
+    private void setProtocol(String protocol) {
         this.protocol = protocol;
     }
 
     @Override
-    public Map<String, String> getOptionMappings() {
-        // TODO: proper caching / synchronization
-        Map<String, String> result = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-        if (mappings != null) {
-            for (Mapping mapping : mappings) {
-                result.put(mapping.option, mapping.property);
+    public Map<String, String> getOptionMappingTable() {
+        return optionMappingTable;
+    }
+
+    public List<Mapping> getOptionMappings() {
+        return mappingList;
+    }
+
+    @XmlElementWrapper(name = "optionMappings")
+    @XmlElement(name = "mapping")
+    public void setOptionMappings(List<Mapping> mappingList) {
+        this.mappingList = mappingList;
+
+        if (mappingList != null) {
+            for (Mapping mapping : mappingList) {
+                optionMappingTable.put(mapping.option, mapping.property);
             }
         }
-        return result;
     }
 
     @XmlRootElement(name = "plugins")
@@ -128,19 +141,29 @@ public class BaseProfile implements Profile {
         }
     }
 
-
-    @XmlAccessorType(XmlAccessType.FIELD)
+    @XmlRootElement(name = "mapping")
+    @XmlAccessorType(XmlAccessType.PROPERTY)
     private static class Mapping {
+
+        private String option;
+        private String property;
+
+        public String getOption() {
+            return option;
+        }
+
         @XmlAttribute(name = "option")
-        String option;
+        public void setOption(String option) {
+            this.option = option;
+        }
+
+        public String getProperty() {
+            return property;
+        }
 
         @XmlAttribute(name = "property")
-        String property;
-
-        public Mapping() {
-            // for debugging
-            int b = 1+3;
-            int a =b;
+        public void setProperty(String property) {
+            this.property = property;
         }
     }
 

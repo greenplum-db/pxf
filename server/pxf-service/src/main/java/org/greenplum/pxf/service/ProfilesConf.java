@@ -20,12 +20,6 @@ package org.greenplum.pxf.service;
  */
 
 
-import org.apache.commons.collections.IteratorUtils;
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.XMLConfiguration;
-import org.apache.commons.lang.StringUtils;
-import org.greenplum.pxf.api.model.BaseProfile;
 import org.greenplum.pxf.api.model.PluginConf;
 import org.greenplum.pxf.api.model.Profile;
 import org.greenplum.pxf.api.model.Profiles;
@@ -37,9 +31,6 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -89,7 +80,7 @@ public class ProfilesConf implements PluginConf {
 
     @Override
     public Map<String, String> getOptionMappings(String key) {
-        return getProfile(key).getOptionMappings();
+        return getProfile(key).getOptionMappingTable();
     }
 
     /**
@@ -103,7 +94,7 @@ public class ProfilesConf implements PluginConf {
     @Override
     public Map<String, String> getPlugins(String key) {
         Profile profile = getProfile(key);
-        Map<String, String> pluginsMap = profile.getPlugins();
+        Map<String, String> pluginsMap = profile.getPluginTable();
         if (pluginsMap == null) {
             throw new ProfileConfException(NO_PLUGINS_IN_PROFILE_DEF, key, externalProfilesFilename);
         }
@@ -166,49 +157,5 @@ public class ProfilesConf implements PluginConf {
         } catch (JAXBException e) {
             throw new ProfileConfException(PROFILES_FILE_LOAD_ERR, url.getFile(), String.valueOf(e.getCause()));
         }
-    }
-
-//    private void loadMap(XMLConfiguration conf) {
-//        String[] profileNames = conf.getStringArray("profile.name");
-//
-//
-//        for (int profileIdx = 0; profileIdx < profileNames.length; profileIdx++) {
-//            String profileName = profileNames[profileIdx];
-
-//            String protocol = conf.getString("profile(" + profileIdx + ").protocol", null);
-//            Configuration profileSubset = conf.subset("profile(" + profileIdx + ").plugins");
-//            Configuration optionMappingsSubset = conf.subset("profile(" + profileIdx + ").optionMappings.mapping");
-////            Profile profile = new BaseProfile(
-////                    profileName,
-////                    protocol,
-////                    parseProfilePluginMap(profileSubset),
-////                    parseOptionMappings(optionMappingsSubset, "profile(" + profileIdx + ").optionMappings.mapping")
-////            );
-////
-//        }
-//
-//    }
-
-    private Map<String, String> parseOptionMappings(Configuration optionMappingsSubset, String base) {
-        Map<String, String> result = new HashMap<>();
-        for (Iterator it = optionMappingsSubset.getKeys(); it.hasNext(); ) {
-            String key = (String) it.next();
-            String value = (String) optionMappingsSubset.getProperty(key);
-            result.put(key, value);
-        }
-        return result;
-    }
-
-    private Map<String, String> parseProfilePluginMap(Configuration profileSubset) {
-        @SuppressWarnings("unchecked") //IteratorUtils doesn't yet support generics.
-                List<String> plugins = IteratorUtils.toList(profileSubset.getKeys());
-        Map<String, String> pluginsMap = new HashMap<>();
-        for (String plugin : plugins) {
-            String pluginValue = profileSubset.getString(plugin);
-            if (!StringUtils.isEmpty(StringUtils.trim(pluginValue))) {
-                pluginsMap.put(plugin.toUpperCase(), pluginValue);
-            }
-        }
-        return pluginsMap;
     }
 }

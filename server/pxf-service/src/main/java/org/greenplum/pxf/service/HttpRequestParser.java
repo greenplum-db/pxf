@@ -1,6 +1,7 @@
 package org.greenplum.pxf.service;
 
 import org.apache.commons.lang.StringUtils;
+import org.greenplum.pxf.api.model.BaseProfile;
 import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.PluginConf;
 import org.greenplum.pxf.api.model.RequestContext;
@@ -14,6 +15,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -164,6 +166,29 @@ public class HttpRequestParser implements RequestParser<HttpHeaders> {
         }
 
         context.setPluginConf(pluginConf);
+
+        // prepare addition configuration properties if profile was specified
+        if (StringUtils.isNotBlank(profile)) {
+            Map<String, String> optionsMapping = pluginConf.getOptionMappings(profile);
+            if (optionsMapping != null) {
+                Map<String, String> additionalConfigProps = new HashMap<>();
+                // iterating over mapping entries, as most are empty or have only a few elements
+                for (Map.Entry<String, String> mappingEntry : optionsMapping.entrySet()) {
+                    String optionName = mappingEntry.getKey();
+                    String optionValue = context.getOption(optionName);
+                    // if option has been provided by the user in the request, set the value
+                    // of the corresponding configuration property
+                    if (optionValue != null) {
+                        String propertyName = mappingEntry.getValue();
+                        additionalConfigProps.put(propertyName, optionValue);
+                        // do not log property value as it might contain sensitive information
+                        LOG.debug("Adding additional property {} to configuration with value provided by user option {}", propertyName, optionName);
+                    }
+                }
+                context.setAdditionalConfigProps(additionalConfigProps);
+            }
+        }
+
         // Validate that the result has all required fields,
         // and values are in valid ranges
         context.validate();

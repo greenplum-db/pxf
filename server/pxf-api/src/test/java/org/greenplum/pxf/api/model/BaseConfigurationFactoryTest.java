@@ -25,14 +25,14 @@ public class BaseConfigurationFactoryTest {
     public ExpectedException thrown = ExpectedException.none();
 
     private BaseConfigurationFactory factory;
-    private Map<String, String> options;
+    private Map<String, String> additionalProperties;
     private File mockServersDirectory;
     private File serversDirectory;
 
     @Before
     public void setup() throws URISyntaxException {
         mockServersDirectory = mock(File.class);
-        options = new HashMap<>();
+        additionalProperties = new HashMap<>();
         serversDirectory = new File(this.getClass().getClassLoader().getResource("servers").toURI());
         factory = new BaseConfigurationFactory(serversDirectory);
     }
@@ -77,9 +77,9 @@ public class BaseConfigurationFactoryTest {
 
     @Test
     public void testConfigurationsLoadedAndOptionsAdded() {
-        options.put("test.newOption", "newOption");
-        options.put("test.red", "purple");
-        Configuration configuration = factory.initConfiguration("default", options);
+        additionalProperties.put("test.newOption", "newOption");
+        additionalProperties.put("test.red", "purple");
+        Configuration configuration = factory.initConfiguration("default", additionalProperties);
 
         assertEquals("blue", configuration.get("test.blue"));
         assertEquals("purple", configuration.get("test.red"));
@@ -91,9 +91,9 @@ public class BaseConfigurationFactoryTest {
 
     @Test
     public void testConfigurationsNotLoadedForUnknownServer() {
-        options.put("test.newOption", "newOption");
-        options.put("test.red", "purple");
-        Configuration configuration = factory.initConfiguration("unknown", options);
+        additionalProperties.put("test.newOption", "newOption");
+        additionalProperties.put("test.red", "purple");
+        Configuration configuration = factory.initConfiguration("unknown", additionalProperties);
 
         assertNull(configuration.get("test.blue"));
         assertEquals("purple", configuration.get("test.red"));
