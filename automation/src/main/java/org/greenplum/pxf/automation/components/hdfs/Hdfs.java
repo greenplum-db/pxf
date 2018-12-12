@@ -105,6 +105,7 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
             } else {
                 // For s3 protocol the file should be s3-site.xml
                 config.addResource(new Path(getHadoopRoot() + "/" + protocol.value() + "-site.xml"));
+                config.addResource(new Path(getHadoopRoot() + "/mapred-site.xml"));
             }
         } else {
             if (StringUtils.isNotEmpty(haNameservice)) {

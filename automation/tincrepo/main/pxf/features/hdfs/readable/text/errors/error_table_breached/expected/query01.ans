@@ -11,8 +11,8 @@
 -- m/CONTEXT:\s*Last error was/
 -- s/CONTEXT:\s*Last error was/GP_IGNORE:/
 --
--- m/pxf:\/\/(.*)\/pxf_automation_data/
--- s/pxf:\/\/.*\/pxf_automation_data/pxf:\/\/pxf_automation_data/
+-- m/pxf:\/\/(.*),/
+-- s/pxf:\/\/.*,/pxf:\/\/location,/
 --
 -- end_matchsubs
 

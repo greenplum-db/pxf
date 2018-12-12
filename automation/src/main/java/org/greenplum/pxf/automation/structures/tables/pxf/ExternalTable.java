@@ -2,6 +2,7 @@ package org.greenplum.pxf.automation.structures.tables.pxf;
 
 import java.util.Arrays;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
 import org.greenplum.pxf.automation.utils.system.ProtocolEnum;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
@@ -33,6 +34,8 @@ public abstract class ExternalTable extends Table {
 
     private String[] userParameters;
 
+    private String server;
+
     private String profile;
 
     private String errorTable;
@@ -48,8 +51,8 @@ public abstract class ExternalTable extends Table {
         super(name, fields);
         this.path = path;
         this.format = format;
-        if(ProtocolUtils.getProtocol() != ProtocolEnum.HDFS) {
-            this.setUserParameters(new String[]{"server=" + ProtocolUtils.getProtocol().value()});
+        if (ProtocolUtils.getProtocol() != ProtocolEnum.HDFS) {
+            this.setServer("server=" + ProtocolUtils.getProtocol().value());
         }
     }
 
@@ -124,11 +127,17 @@ public abstract class ExternalTable extends Table {
             appendParamter(sb, "DATA-SCHEMA=" + getDataSchema());
         }
 
-        if (getUserParameters() != null) {
+        String[] params = getUserParameters();
 
-            for (int i = 0; i < getUserParameters().length; i++) {
-                appendParamter(sb, getUserParameters()[i]);
+        if (params != null) {
+
+            for (int i = 0; i < params.length; i++) {
+                appendParamter(sb, params[i]);
             }
+        }
+
+        if (getServer() != null) {
+            appendParamter(sb, getServer());
         }
 
         return sb.toString();
@@ -138,7 +147,7 @@ public abstract class ExternalTable extends Table {
      * Appends location parameters to {@link StringBuilder}, append '&' between
      * parameters
      *
-     * @param sBuilder {@link StringBuilder} to collect parameters
+     * @param sBuilder  {@link StringBuilder} to collect parameters
      * @param parameter to add to {@link StringBuilder}
      */
     protected void appendParamter(StringBuilder sBuilder, String parameter) {
@@ -336,7 +345,15 @@ public abstract class ExternalTable extends Table {
         }
     }
 
-    public String[] getUserParameters() {
+    private String[] getUserParameters() {
         return userParameters;
+    }
+
+    private void setServer(String server) {
+        this.server = server;
+    }
+
+    public String getServer() {
+        return server;
     }
 }

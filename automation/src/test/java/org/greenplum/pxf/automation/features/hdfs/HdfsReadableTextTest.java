@@ -322,7 +322,7 @@ public class HdfsReadableTextTest extends BaseFeature {
      *
      * @throws Exception
      */
-    @Test(groups = { "features", "gpdb", "hcfs" })
+    @Test(groups = { "features", "gpdb" })//, "hcfs" })
     public void differentEncoding() throws Exception {
         // define and create external table
         exTable.setFields(new String[] { "num1 int", "word text" });

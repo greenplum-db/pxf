@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <property>
+        <name>fs.s3a.access.key</name>
+        <value>YOUR_AWS_ACCESS_KEY_ID</value>
+    </property>
+    <property>
+        <name>fs.s3a.secret.key</name>
+        <value>YOUR_AWS_SECRET_ACCESS_KEY</value>
+    </property>
+    <property>
+        <name>fs.s3a.fast.upload</name>
+        <value>true</value>
+    </property>
+</configuration>

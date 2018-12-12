@@ -1,10 +1,10 @@
 -- @description query01 for PXF HDFS Readable error table
 
 -- start_matchsubs
---                                                                                               
+--
 -- # create a match/subs
--- m/pxf:\/\/(.*)\/pxf_automation_data/
--- s/pxf:\/\/.*\/pxf_automation_data/pxf:\/\/pxf_automation_data/
+-- m/pxf:\/\/(.*)\|/
+-- s/pxf:\/\/.*\|/pxf:\/\/location |/
 --
 -- end_matchsubs
 
