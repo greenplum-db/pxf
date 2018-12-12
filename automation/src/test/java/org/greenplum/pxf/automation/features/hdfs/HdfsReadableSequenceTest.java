@@ -114,7 +114,7 @@ public class HdfsReadableSequenceTest extends BaseFeature {
      *
      * @throws Exception
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "features", "gpdb", "hcfs" })
     public void readSequenceFile() throws Exception {
 
         exTable.setFields(customWritableFields);

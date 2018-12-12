@@ -61,8 +61,12 @@ function _main() {
 	install_pxf_client
 	install_pxf_server
 
-	# Setup Hadoop before creating GPDB cluster to use system python for yum install
-	setup_hadoop /singlecluster
+	if [[ ${PROTOCOL} == "s3" ]]; then
+		echo Using S3 protocol
+	else
+		# Setup Hadoop before creating GPDB cluster to use system python for yum install
+		setup_hadoop /singlecluster
+	fi
 
 	create_gpdb_cluster
 	add_remote_user_access_for_gpdb "testuser"

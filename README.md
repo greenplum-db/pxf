@@ -131,6 +131,7 @@ docker run --rm -it \
   -v ~/workspace/gpdb:/home/gpadmin/workspace/gpdb \
   -v ~/workspace/pxf:/home/gpadmin/workspace/pxf \
   -v ~/workspace/singlecluster-HDP:/home/gpadmin/workspace/singlecluster \
+  -v ~/workspace/gp-continuous-integration:/home/gpadmin/workspace/gp-continuous-integration \
   pivotaldata/gpdb-pxf-dev:centos6 /bin/bash -c \
   "/home/gpadmin/workspace/pxf/dev/set_up_gpadmin_user.bash && /sbin/service sshd start && su - gpadmin"
 ```
@@ -221,11 +222,17 @@ All tests use a database named `pxfautomation`.
 ```bash
 pushd ~/workspace/pxf/automation
 
+# Initialize default server configs using template
+cp ~/pxf/templates/*.xml ~/pxf/servers/default
+
 # Run specific tests. Example: Hdfs Smoke Test
 make TEST=HdfsSmokeTest
 
 # Run all tests. This will be time consuming.
 make GROUP=gpdb
+
+# If you wish to run test(s) against a different storage protocol set the following variable (for eg: s3) 
+export PROTOCOL=s3
 popd
 ```
 

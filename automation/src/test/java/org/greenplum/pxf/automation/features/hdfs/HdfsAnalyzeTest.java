@@ -652,7 +652,7 @@ public class HdfsAnalyzeTest extends BaseFeature {
      *
      * @throws Exception if test failed to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "features", "gpdb", "hcfs" })
     public void statsMaxFragmentsParameter() throws Exception {
 
         String csvPath1 = hdfs.getWorkingDirectory()
@@ -699,7 +699,7 @@ public class HdfsAnalyzeTest extends BaseFeature {
      *
      * @throws Exception if test failed to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "features", "gpdb", "hcfs" })
     public void statsSampleRatioParameter() throws Exception {
 
         String csvPath = hdfs.getWorkingDirectory()

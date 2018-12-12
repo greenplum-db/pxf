@@ -26,6 +26,14 @@
 		<hadoopRoot>/home/gpadmin/pxf/servers/s3</hadoopRoot>
 	</s3>
 
+	<adl>
+		<class>org.greenplum.pxf.automation.components.hdfs.Hdfs</class>
+		<host>localhost</host>
+		<port>8020</port>
+		<workingDirectory>adlserver</workingDirectory>
+		<hadoopRoot>/home/gpadmin/pxf/servers/adl</hadoopRoot>
+	</adl>
+
 	<hbase>
 		<class>org.greenplum.pxf.automation.components.hbase.HBase</class>
 		<host>localhost</host>

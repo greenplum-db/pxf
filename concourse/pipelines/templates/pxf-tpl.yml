@@ -476,6 +476,48 @@ jobs:
       ACCEPTANCE: true
 {% endif %}
 
+- name: test_pxf_s3
+  plan:
+  - aggregate:
+    - get: gpdb_src
+      passed:
+      - compile_pxf
+{% if compile_gpdb %}
+      - compile_gpdb_centos6
+{% endif %}
+    - get: bin_gpdb
+      resource: bin_gpdb_centos6
+{% if compile_gpdb %}
+      passed:
+      - compile_gpdb_centos6
+{% endif %}
+    - get: pxf_src
+      passed:
+      - compile_pxf
+      trigger: true
+    - get: pxf_tarball
+      passed:
+      - compile_pxf
+      trigger: true
+    - get: gpdb-pxf-dev-centos6-cdh-server
+  - task: test_pxf
+    file: pxf_src/concourse/tasks/test_pxf.yml
+    image: gpdb-pxf-dev-centos6-cdh-server
+    attempts: 2
+    params:
+      AWS_ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+      AWS_SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+      AWS_DEFAULT_REGION: {{aws-region}}
+      GROUP: smoke, hcfs
+      IMPERSONATION: false
+      PROTOCOL: s3
+      TEST_ENV: {{test-env}}
+      TEST_OS: centos
+      TARGET_OS: centos
+{% if acceptance %}
+      ACCEPTANCE: true
+{% endif %}
+
 - name: test_pxf_no_impersonation
   plan:
   - aggregate:
@@ -520,6 +562,7 @@ jobs:
     passed:
     - test_pxf_hdp_centos6
     - test_pxf_cdh_centos6
+    - test_pxf_s3
     - test_pxf_hdp_secure
     - test_pxf_no_impersonation
     - test_pxf_hdp_multinode_gpdb
@@ -536,6 +579,7 @@ jobs:
     passed:
     - test_pxf_hdp_centos6
     - test_pxf_cdh_centos6
+    - test_pxf_s3
     - test_pxf_hdp_secure
     - test_pxf_no_impersonation
     - test_pxf_hdp_multinode_gpdb
@@ -545,6 +589,7 @@ jobs:
     passed:
     - test_pxf_hdp_centos6
     - test_pxf_cdh_centos6
+    - test_pxf_s3
     - test_pxf_hdp_secure
     - test_pxf_no_impersonation
     - test_pxf_hdp_multinode_gpdb

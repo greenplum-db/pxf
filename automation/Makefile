@@ -27,7 +27,8 @@ else
 endif
 
 ifneq "$(PROTOCOL)" ""
-MAVEN_TEST_OPTS+= -DPROTOCOL=$(PROTOCOL)
+	MAVEN_TEST_OPTS+= -DPROTOCOL=$(PROTOCOL)
+	PROTOCOL_HOME=~/pxf/servers/$(PROTOCOL)
 endif
 
 #MAVEN_DEBUG_OPTS+= -Dmaven.surefire.debug
@@ -48,7 +49,7 @@ symlink_pxf_jars:
 		done; \
 	fi
 
-test: symlink_pxf_jars
+test: symlink_pxf_jars sync_cloud_configs
 	$(MVN) $(MAVEN_TEST_OPTS) ${MAVEN_DEBUG_OPTS} test
 
 clean:
@@ -64,6 +65,20 @@ clean-logs:
 
 dev: symlink_pxf_jars
 	$(MVN) $(MAVEN_TEST_OPTS) package -DskipTests=true
+
+sync_cloud_configs:
+ifneq "$(PROTOCOL)" ""
+	@mkdir -p $(PROTOCOL_HOME)
+	@if [[ ! -f $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml ]]; then \
+		cp $(PXF_HOME)/templates/user/templates/$(PROTOCOL)-site.xml $(PROTOCOL_HOME)/; \
+		if [[ $(PROTOCOL) == s3 ]]; then \
+			sed -i "s|</configuration>|<property><name>fs.defaultFS</name><value>s3a://gpdb-ud-scratch</value></property></configuration>|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
+			sed -i "s|YOUR_AWS_ACCESS_KEY_ID|$(AWS_ACCESS_KEY_ID)|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
+			sed -i "s|YOUR_AWS_SECRET_ACCESS_KEY|$(AWS_SECRET_ACCESS_KEY)|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
+		fi; \
+		echo "Created $(PROTOCOL) server configuration"; \
+	fi
+endif
 
 list-tests:
 ifneq ("$(TEST)", "")

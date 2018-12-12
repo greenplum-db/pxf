@@ -27,7 +27,7 @@ public class ParquetReadableTest extends BaseFeature {
     }
 
 
-    @Test(groups = {"features", "gpdb"})
+    @Test(groups = {"features", "gpdb", "hcfs"})
     public void parquetSupportedPrimitives() throws Exception {
 
         exTable = new ReadableExternalTable("pxf_parquet_primitive_types",

@@ -67,7 +67,7 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
 
     }
 
-    public Hdfs(FileSystem fileSystem, Configuration conf, boolean silentReport) throws Exception{
+    public Hdfs(FileSystem fileSystem, Configuration conf, boolean silentReport) throws Exception {
         super(silentReport);
         ReportUtils.startLevel(report, getClass(), "Init");
         fs = fileSystem;
@@ -97,12 +97,14 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
 
         // if hadoop root exists in the SUT file, load configuration from it
         if (StringUtils.isNotEmpty(hadoopRoot)) {
-            if (ProtocolUtils.getProtocol() == ProtocolEnum.HDFS) {
+            ProtocolEnum protocol = ProtocolUtils.getProtocol();
+            if (protocol == ProtocolEnum.HDFS) {
                 config.addResource(new Path(getHadoopRoot() + "/conf/core-site.xml"));
                 config.addResource(new Path(getHadoopRoot() + "/conf/hdfs-site.xml"));
                 config.addResource(new Path(getHadoopRoot() + "/conf/mapred-site.xml"));
             } else {
-                config.addResource(new Path(getHadoopRoot() + "/core-site.xml"));
+                // For s3 protocol the file should be s3-site.xml
+                config.addResource(new Path(getHadoopRoot() + "/" + protocol.value() + "-site.xml"));
             }
         } else {
             if (StringUtils.isNotEmpty(haNameservice)) {
@@ -151,7 +153,7 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
     }
 
     private Path getDatapath(String path) {
-        if(path.matches("^[a-zA-Z].*://.*$"))
+        if (path.matches("^[a-zA-Z].*://.*$"))
             return new Path(path);
         else
             return new Path("/" + path);
@@ -402,7 +404,7 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
         ReportUtils.stopLevel(report);
     }
 
-    private void writeTableToStream(FSDataOutputStream stream, Table dataTable, String delimiter, Charset encoding) throws Exception{
+    private void writeTableToStream(FSDataOutputStream stream, Table dataTable, String delimiter, Charset encoding) throws Exception {
         BufferedWriter bufferedWriter = new BufferedWriter(
                 new OutputStreamWriter(stream, encoding));
         List<List<String>> data = dataTable.getData();
