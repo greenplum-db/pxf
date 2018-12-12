@@ -8,6 +8,7 @@ source "${CWDIR}/pxf_common.bash"
 export GPHOME=${GPHOME:-"/usr/local/greenplum-db-devel"}
 export PXF_HOME="${GPHOME}/pxf"
 export JAVA_HOME="${JAVA_HOME}"
+export JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8
 
 function run_pxf_automation() {
 	# Let's make sure that automation/singlecluster directories are writeable
