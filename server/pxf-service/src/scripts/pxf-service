@@ -406,8 +406,7 @@ function doSync()
         fail "Can't find PXF instance, maybe call init?"
     fi
     get_environment
-    SSH_OPTS="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=error"
-    rsync -avz -e "${SSH_OPTS}" ${source_host}:${PXF_CONF}/{conf,lib,servers} ${PXF_CONF}
+    rsync -az -e "ssh -o StrictHostKeyChecking=no" ${source_host}:${PXF_CONF}/{conf,lib,servers} ${PXF_CONF}
 }
 
 function doCluster()
