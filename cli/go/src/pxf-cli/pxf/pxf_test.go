@@ -2,6 +2,7 @@ package pxf_test
 
 import (
 	"errors"
+	"github.com/greenplum-db/gp-common-go-libs/operating"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"os"
@@ -10,8 +11,8 @@ import (
 
 var _ = Describe("RemoteCommandToRunOnSegments", func() {
 	BeforeEach(func() {
-		os.Setenv("GPHOME", "/test/gphome")
-		os.Setenv("PXF_CONF", "/test/gphome/pxf_conf")
+		_ = os.Setenv("GPHOME", "/test/gphome")
+		_ = os.Setenv("PXF_CONF", "/test/gphome/pxf_conf")
 	})
 
 	It("Is successful when GPHOME and PXF_CONF are set and init is called", func() {
@@ -31,25 +32,28 @@ var _ = Describe("RemoteCommandToRunOnSegments", func() {
 	})
 
 	It("Fails to init when PXF_CONF is not set", func() {
-		os.Unsetenv("PXF_CONF")
+		_ = os.Unsetenv("PXF_CONF")
 		command, err := pxf.RemoteCommandToRunOnSegments(pxf.Init)
 		Expect(command).To(Equal(""))
 		Expect(err).To(Equal(errors.New("PXF_CONF must be set")))
 	})
 
 	It("Fails to init when PXF_CONF is blank", func() {
-		os.Setenv("PXF_CONF", "")
+		_ = os.Setenv("PXF_CONF", "")
 		command, err := pxf.RemoteCommandToRunOnSegments(pxf.Init)
 		Expect(command).To(Equal(""))
 		Expect(err).To(Equal(errors.New("PXF_CONF cannot be blank")))
 	})
 
-	It("Fails to init, start, or stop when GPHOME is not set", func() {
-		os.Unsetenv("GPHOME")
+	It("Fails to init, start, sync, or stop when GPHOME is not set", func() {
+		_ = os.Unsetenv("GPHOME")
 		command, err := pxf.RemoteCommandToRunOnSegments(pxf.Init)
 		Expect(command).To(Equal(""))
 		Expect(err).To(Equal(errors.New("GPHOME must be set")))
 		command, err = pxf.RemoteCommandToRunOnSegments(pxf.Start)
+		Expect(command).To(Equal(""))
+		Expect(err).To(Equal(errors.New("GPHOME must be set")))
+		command, err = pxf.RemoteCommandToRunOnSegments(pxf.Sync)
 		Expect(command).To(Equal(""))
 		Expect(err).To(Equal(errors.New("GPHOME must be set")))
 		command, err = pxf.RemoteCommandToRunOnSegments(pxf.Stop)
@@ -57,16 +61,28 @@ var _ = Describe("RemoteCommandToRunOnSegments", func() {
 		Expect(err).To(Equal(errors.New("GPHOME must be set")))
 	})
 
-	It("Fails to init, start, or stop when GPHOME is blank", func() {
-		os.Setenv("GPHOME", "")
+	It("Fails to init, start, sync, or stop when GPHOME is blank", func() {
+		_ = os.Setenv("GPHOME", "")
 		command, err := pxf.RemoteCommandToRunOnSegments(pxf.Init)
 		Expect(command).To(Equal(""))
 		Expect(err).To(Equal(errors.New("GPHOME cannot be blank")))
 		command, err = pxf.RemoteCommandToRunOnSegments(pxf.Start)
 		Expect(command).To(Equal(""))
 		Expect(err).To(Equal(errors.New("GPHOME cannot be blank")))
+		command, err = pxf.RemoteCommandToRunOnSegments(pxf.Sync)
+		Expect(command).To(Equal(""))
+		Expect(err).To(Equal(errors.New("GPHOME cannot be blank")))
 		command, err = pxf.RemoteCommandToRunOnSegments(pxf.Stop)
 		Expect(command).To(Equal(""))
 		Expect(err).To(Equal(errors.New("GPHOME cannot be blank")))
+	})
+
+	It("Appends the master hostname when syncing", func() {
+		operating.System.Hostname = func() (string, error) {
+			return "fake-host", nil
+		}
+		command, err := pxf.RemoteCommandToRunOnSegments(pxf.Sync)
+		Expect(err).To(BeNil())
+		Expect(command).To(Equal("/test/gphome/pxf/bin/pxf sync fake-host"))
 	})
 })

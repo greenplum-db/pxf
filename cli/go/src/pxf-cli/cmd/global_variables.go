@@ -22,3 +22,7 @@ func SetCluster(cluster *cluster.Cluster) {
 func SetSegConfigs(sCs []cluster.SegConfig) {
 	segConfigs = sCs
 }
+
+func SetHostList(hostList map[string]int) {
+	segHostList = hostList
+}
