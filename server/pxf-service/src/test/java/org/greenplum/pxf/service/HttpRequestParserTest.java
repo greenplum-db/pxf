@@ -25,15 +25,15 @@ import org.apache.commons.codec.CharEncoding;
 import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.PluginConf;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.service.profile.ProfileConfException;
-import org.greenplum.pxf.service.profile.ProfilesConf;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
@@ -43,34 +43,28 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
-import static org.greenplum.pxf.service.profile.ProfileConfException.MessageFormat.NO_PROFILE_DEF;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({ProfilesConf.class})
+@RunWith(MockitoJUnitRunner.class)
 public class HttpRequestParserTest {
 
-    private MultivaluedMap<String, String> multivaluedMap;
     private MultivaluedMap<String, String> parameters;
-    private HttpHeaders mockRequestHeaders;
+    private HttpRequestParser parser;
+    @Mock private HttpHeaders mockRequestHeaders;
+    @Mock private PluginConf mockPluginConf;
 
-    /*
-     * setUp function called before each test
-     */
+    @Rule public ExpectedException thrown = ExpectedException.none();
+
     @Before
     public void setUp() {
         parameters = new MultivaluedMapImpl();
-        multivaluedMap = new MultivaluedMapImpl();
-        mockRequestHeaders = mock(HttpHeaders.class);
-
         parameters.putSingle("X-GP-ALIGNMENT", "all");
         parameters.putSingle("X-GP-SEGMENT-ID", "-44");
         parameters.putSingle("X-GP-SEGMENT-COUNT", "2");
@@ -88,11 +82,10 @@ public class HttpRequestParserTest {
         parameters.putSingle("X-GP-OPTIONS-SERVER", "custom_server");
 
         when(mockRequestHeaders.getRequestHeaders()).thenReturn(parameters);
+
+        parser = new HttpRequestParser(mockPluginConf);
     }
 
-    /*
-     * tearDown function called after each test
-     */
     @After
     public void tearDown() {
         // Cleanup the system property RequestContext sets
@@ -105,6 +98,7 @@ public class HttpRequestParserTest {
         String value = "\\\"The king";
         String replacedValue = "\"The king";
 
+        MultivaluedMap<String, String> multivaluedMap = new MultivaluedMapImpl();
         for (String key : multiCaseKeys) {
             multivaluedMap.put(key, Collections.singletonList(value));
         }
@@ -134,6 +128,7 @@ public class HttpRequestParserTest {
         };
         String value = new String(bytes, CharEncoding.ISO_8859_1);
 
+        MultivaluedMap<String, String> multivaluedMap = new MultivaluedMapImpl();
         multivaluedMap.put("one", Collections.singletonList(value));
 
         Map<String, String> caseInsensitiveMap = new HttpRequestParser.RequestMap(multivaluedMap);
@@ -145,8 +140,8 @@ public class HttpRequestParserTest {
     }
 
     @Test
-    public void protocolDataCreated() {
-        RequestContext context = new HttpRequestParser().parseRequest(mockRequestHeaders);
+    public void contextCreated() {
+        RequestContext context = parser.parseRequest(mockRequestHeaders);
 
         assertEquals(System.getProperty("greenplum.alignment"), "all");
         assertEquals(context.getTotalSegments(), 2);
@@ -164,146 +159,147 @@ public class HttpRequestParserTest {
         assertEquals(context.getDataSource(), "i'm/ready/to/go");
         assertEquals(context.getOption("i'm-standing-here"), "outside-your-door");
         assertEquals(context.getUser(), "alex");
-//        assertEquals(context.getParametersMap(), parameters);
         assertNull(context.getLogin());
         assertNull(context.getSecret());
         assertEquals(context.getServerName(), "custom_server");
+        // since no profile was defined, these below are null or empty
+        assertNull(context.getProfile());
+        assertNull(context.getProtocol());
+        assertTrue(context.getAdditionalConfigProps().isEmpty());
     }
 
     @Test
     public void profileWithDuplicateProperty() {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("Profile 'test-profile' already defines: [when YOU get WHAT you WANT, wHEn you trY yOUR bESt]");
 
-        PluginConf pluginConf = mock(PluginConf.class);
-        Map<String, String> mockedProfiles = new HashMap<>();
+        Map<String, String> mockedPlugins = new HashMap<>();
         // What we read from the XML Plugins file
-        mockedProfiles.put("wHEn you trY yOUR bESt", "but you dont succeed");
-        mockedProfiles.put("when YOU get WHAT you WANT",
+        mockedPlugins.put("wHEn you trY yOUR bESt", "but you dont succeed");
+        mockedPlugins.put("when YOU get WHAT you WANT",
                 "but not what you need");
-        mockedProfiles.put("when you feel so tired", "but you cant sleep");
+        mockedPlugins.put("when you feel so tired", "but you cant sleep");
 
-        when(pluginConf.getPlugins("a profile")).thenReturn(mockedProfiles);
+        when(mockPluginConf.getPlugins("test-profile")).thenReturn(mockedPlugins);
 
         // Parameters that are coming from the request
-        parameters.putSingle("x-gp-options-profile", "a profile");
+        parameters.putSingle("x-gp-options-profile", "test-profile");
         parameters.putSingle("x-gp-options-when you try your best", "and you do succeed");
         parameters.putSingle("x-gp-options-WHEN you GET what YOU want", "and what you need");
 
-        try {
-            new HttpRequestParser(pluginConf).parseRequest(mockRequestHeaders);
-            fail("Duplicate property should throw IllegalArgumentException");
-        } catch (IllegalArgumentException iae) {
-            assertEquals(
-                    "Profile 'a profile' already defines: [when YOU get WHAT you WANT, wHEn you trY yOUR bESt]",
-                    iae.getMessage());
-        }
+        parser.parseRequest(mockRequestHeaders);
     }
 
     @Test
-    public void definedProfile() {
-        parameters.putSingle("X-GP-OPTIONS-PROFILE", "HIVE");
+    public void pluginsDefinedByProfileOnly() {
+        Map<String, String> mockedPlugins = new HashMap<>();
+        mockedPlugins.put("fragmenter", "test-fragmenter");
+        mockedPlugins.put("accessor", "test-accessor");
+        mockedPlugins.put("resolver", "test-resolver");
+        when(mockPluginConf.getPlugins("test-profile")).thenReturn(mockedPlugins);
+
+        // add profile and remove plugin parameters
+        parameters.putSingle("X-GP-OPTIONS-PROFILE", "test-profile");
         parameters.remove("X-GP-OPTIONS-ACCESSOR");
         parameters.remove("X-GP-OPTIONS-RESOLVER");
-        RequestContext protocolData = new HttpRequestParser().parseRequest(mockRequestHeaders);
-        assertEquals(protocolData.getFragmenter(), "org.greenplum.pxf.plugins.hive.HiveDataFragmenter");
-        assertEquals(protocolData.getAccessor(), "org.greenplum.pxf.plugins.hive.HiveAccessor");
-        assertEquals(protocolData.getResolver(), "org.greenplum.pxf.plugins.hive.HiveResolver");
+        RequestContext context = parser.parseRequest(mockRequestHeaders);
+        assertEquals(context.getFragmenter(), "test-fragmenter");
+        assertEquals(context.getAccessor(), "test-accessor");
+        assertEquals(context.getResolver(), "test-resolver");
     }
 
     @Test
-    public void undefinedProfile() {
-        parameters.putSingle("X-GP-OPTIONS-PROFILE", "THIS_PROFILE_NEVER_EXISTED!");
-        try {
-            new HttpRequestParser().parseRequest(mockRequestHeaders);
-            fail("Undefined profile should throw ProfileConfException");
-        } catch (ProfileConfException pce) {
-            assertEquals(pce.getMsgFormat(), NO_PROFILE_DEF);
-        }
+    public void pluginsRedefinedByProfileFails() {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("Profile 'test-profile' already defines: [resolver, accessor]");
+
+        Map<String, String> mockedPlugins = new HashMap<>();
+        mockedPlugins.put("fragmenter", "test-fragmenter");
+        mockedPlugins.put("accessor", "test-accessor");
+        mockedPlugins.put("resolver", "test-resolver");
+        when(mockPluginConf.getPlugins("test-profile")).thenReturn(mockedPlugins);
+
+        // add profile in addition to plugins
+        parameters.putSingle("X-GP-OPTIONS-PROFILE", "test-profile");
+        parser.parseRequest(mockRequestHeaders);
     }
 
     @Test
     public void undefinedServer() {
         parameters.remove("X-GP-OPTIONS-SERVER");
-        RequestContext protocolData = new HttpRequestParser().parseRequest(mockRequestHeaders);
-        assertEquals("default", protocolData.getServerName());
+        RequestContext context = parser.parseRequest(mockRequestHeaders);
+        assertEquals("default", context.getServerName());
     }
 
     @Test
     public void threadSafeTrue() {
         parameters.putSingle("X-GP-OPTIONS-THREAD-SAFE", "TRUE");
-        RequestContext protocolData = new HttpRequestParser().parseRequest(mockRequestHeaders);
-        assertTrue(protocolData.isThreadSafe());
+        RequestContext context = parser.parseRequest(mockRequestHeaders);
+        assertTrue(context.isThreadSafe());
 
         parameters.putSingle("X-GP-OPTIONS-THREAD-SAFE", "true");
-        protocolData = new HttpRequestParser().parseRequest(mockRequestHeaders);
-        assertTrue(protocolData.isThreadSafe());
+        context = new HttpRequestParser().parseRequest(mockRequestHeaders);
+        assertTrue(context.isThreadSafe());
     }
 
     @Test
     public void threadSafeFalse() {
         parameters.putSingle("X-GP-OPTIONS-THREAD-SAFE", "False");
-        RequestContext protocolData = new HttpRequestParser().parseRequest(mockRequestHeaders);
-        assertFalse(protocolData.isThreadSafe());
+        RequestContext context = new HttpRequestParser().parseRequest(mockRequestHeaders);
+        assertFalse(context.isThreadSafe());
 
         parameters.putSingle("X-GP-OPTIONS-THREAD-SAFE", "falSE");
-        protocolData = new HttpRequestParser().parseRequest(mockRequestHeaders);
-        assertFalse(protocolData.isThreadSafe());
+        context = new HttpRequestParser().parseRequest(mockRequestHeaders);
+        assertFalse(context.isThreadSafe());
     }
 
     @Test
     public void threadSafeMaybe() {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("Illegal boolean value 'maybe'. Usage: [TRUE|FALSE]");
+
         parameters.putSingle("X-GP-OPTIONS-THREAD-SAFE", "maybe");
-        try {
-            new HttpRequestParser().parseRequest(mockRequestHeaders);
-            fail("illegal THREAD-SAFE value should throw IllegalArgumentException");
-        } catch (IllegalArgumentException e) {
-            assertEquals(e.getMessage(),
-                    "Illegal boolean value 'maybe'. Usage: [TRUE|FALSE]");
-        }
+        parser.parseRequest(mockRequestHeaders);
     }
 
     @Test
     public void threadSafeDefault() {
         parameters.remove("X-GP-OPTIONS-THREAD-SAFE");
-        RequestContext protocolData = new HttpRequestParser().parseRequest(mockRequestHeaders);
-        assertTrue(protocolData.isThreadSafe());
+        RequestContext context = parser.parseRequest(mockRequestHeaders);
+        assertTrue(context.isThreadSafe());
     }
 
     @Test
     public void getFragmentMetadata() {
-        RequestContext protocolData = new HttpRequestParser().parseRequest(mockRequestHeaders);
-        byte[] location = protocolData.getFragmentMetadata();
-        assertEquals(new String(location), "Something in the way");
+        RequestContext context = parser.parseRequest(mockRequestHeaders);
+        byte[] location = context.getFragmentMetadata();
+        assertEquals("Something in the way", new String(location));
     }
 
     @Test
     public void getFragmentMetadataNull() {
         parameters.remove("X-GP-FRAGMENT-METADATA");
-        RequestContext requestContext = new HttpRequestParser().parseRequest(mockRequestHeaders);
+        RequestContext requestContext = parser.parseRequest(mockRequestHeaders);
         assertNull(requestContext.getFragmentMetadata());
     }
 
     @Test
     public void getFragmentMetadataNotBase64() {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("Fragment metadata information must be Base64 encoded. (Bad value: so b@d)");
+
         String badValue = "so b@d";
         parameters.putSingle("X-GP-FRAGMENT-METADATA", badValue);
-        try {
-            new HttpRequestParser().parseRequest(mockRequestHeaders);
-            fail("should fail with bad fragment metadata");
-        } catch (Exception e) {
-            assertEquals("Fragment metadata information must be Base64 encoded."
-                    + " (Bad value: " + badValue + ")", e.getMessage());
-        }
+        parser.parseRequest(mockRequestHeaders);
     }
 
     @Test
     public void nullUserThrowsException() {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("Property USER has no value in the current request");
+
         parameters.remove("X-GP-USER");
-        try {
-            new HttpRequestParser().parseRequest(mockRequestHeaders);
-            fail("null X-GP-USER should throw exception");
-        } catch (IllegalArgumentException e) {
-            assertEquals("Property USER has no value in the current request", e.getMessage());
-        }
+        parser.parseRequest(mockRequestHeaders);
     }
 
     @Test
@@ -312,9 +308,9 @@ public class HttpRequestParserTest {
         parameters.putSingle("X-GP-HAS-FILTER", "1");
         String isoString = new String("UTF8_計算機用語_00000000".getBytes(StandardCharsets.UTF_8), StandardCharsets.ISO_8859_1);
         parameters.putSingle("X-GP-FILTER", isoString);
-        RequestContext protocolData = new HttpRequestParser().parseRequest(mockRequestHeaders);
-        assertTrue(protocolData.hasFilter());
-        assertEquals("UTF8_計算機用語_00000000", protocolData.getFilterString());
+        RequestContext context = parser.parseRequest(mockRequestHeaders);
+        assertTrue(context.hasFilter());
+        assertEquals("UTF8_計算機用語_00000000", context.getFilterString());
     }
 
     @Test
@@ -322,7 +318,7 @@ public class HttpRequestParserTest {
         parameters.putSingle("X-GP-OPTIONS-STATS-MAX-FRAGMENTS", "10101");
         parameters.putSingle("X-GP-OPTIONS-STATS-SAMPLE-RATIO", "0.039");
 
-        RequestContext context = new HttpRequestParser().parseRequest(mockRequestHeaders);
+        RequestContext context = parser.parseRequest(mockRequestHeaders);
 
         assertEquals(10101, context.getStatsMaxFragments());
         assertEquals(0.039, context.getStatsSampleRatio(), 0.01);
@@ -330,25 +326,20 @@ public class HttpRequestParserTest {
 
     @Test
     public void testInvalidStatsSampleRatioValue() {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("For input string: \"a\"");
+
         parameters.putSingle("X-GP-OPTIONS-STATS-SAMPLE-RATIO", "a");
-        try {
-            new HttpRequestParser().parseRequest(mockRequestHeaders);
-            fail("wrong X-GP-OPTIONS-STATS-SAMPLE-RATIO value");
-        } catch (NumberFormatException e) {
-            assertEquals(e.getMessage(), "For input string: \"a\"");
-        }
+        parser.parseRequest(mockRequestHeaders);
     }
 
     @Test
     public void testInvalidStatsMaxFragmentsValue() {
-        parameters.putSingle("X-GP-OPTIONS-STATS-MAX-FRAGMENTS", "10.101");
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("For input string: \"10.101\"");
 
-        try {
-            new HttpRequestParser().parseRequest(mockRequestHeaders);
-            fail("wrong X-GP-OPTIONS-STATS-MAX-FRAGMENTS value");
-        } catch (NumberFormatException e) {
-            assertEquals(e.getMessage(), "For input string: \"10.101\"");
-        }
+        parameters.putSingle("X-GP-OPTIONS-STATS-MAX-FRAGMENTS", "10.101");
+        parser.parseRequest(mockRequestHeaders);
     }
 
     @Test
@@ -368,56 +359,112 @@ public class HttpRequestParserTest {
         parameters.putSingle("X-GP-ATTR-TYPEMOD1-0", "10");
         parameters.putSingle("X-GP-ATTR-TYPEMOD1-1", "2");
 
-        RequestContext protocolData = new HttpRequestParser().parseRequest(mockRequestHeaders);
+        RequestContext context = parser.parseRequest(mockRequestHeaders);
 
-        assertArrayEquals(protocolData.getColumn(0).columnTypeModifiers(), new Integer[]{5});
-        assertArrayEquals(protocolData.getColumn(1).columnTypeModifiers(), new Integer[]{10, 2});
+        assertArrayEquals(new Integer[]{5}, context.getColumn(0).columnTypeModifiers());
+        assertArrayEquals(new Integer[]{10, 2}, context.getColumn(1).columnTypeModifiers());
     }
 
     @Test
-    public void typeModsNegative() {
+    public void typeModCountNonIntegerFails() {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("ATTR-TYPEMOD0-COUNT must be an integer");
 
         parameters.putSingle("X-GP-ATTRS", "1");
         parameters.putSingle("X-GP-ATTR-NAME0", "vc1");
         parameters.putSingle("X-GP-ATTR-TYPECODE0", "1043");
         parameters.putSingle("X-GP-ATTR-TYPENAME0", "varchar");
         parameters.putSingle("X-GP-ATTR-TYPEMOD0-COUNT", "X");
+        parameters.putSingle("X-GP-ATTR-TYPEMOD0-0", "42");
+
+        parser.parseRequest(mockRequestHeaders);
+    }
+
+    @Test
+    public void typeModCountNegativeIntegerFails() {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("ATTR-TYPEMOD0-COUNT must be a positive integer");
+
+        parameters.putSingle("X-GP-ATTRS", "1");
+        parameters.putSingle("X-GP-ATTR-NAME0", "vc1");
+        parameters.putSingle("X-GP-ATTR-TYPECODE0", "1043");
+        parameters.putSingle("X-GP-ATTR-TYPENAME0", "varchar");
+        parameters.putSingle("X-GP-ATTR-TYPEMOD0-COUNT", "-1");
+        parameters.putSingle("X-GP-ATTR-TYPEMOD0-0", "42");
+
+        parser.parseRequest(mockRequestHeaders);
+    }
+
+    @Test
+    public void typeModNonIntegerFails() {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("ATTR-TYPEMOD0-0 must be an integer");
+
+        parameters.putSingle("X-GP-ATTRS", "1");
+        parameters.putSingle("X-GP-ATTR-NAME0", "vc1");
+        parameters.putSingle("X-GP-ATTR-TYPECODE0", "1043");
+        parameters.putSingle("X-GP-ATTR-TYPENAME0", "varchar");
+        parameters.putSingle("X-GP-ATTR-TYPEMOD0-COUNT", "1");
         parameters.putSingle("X-GP-ATTR-TYPEMOD0-0", "Y");
 
+        parser.parseRequest(mockRequestHeaders);
+    }
 
-        try {
-            new HttpRequestParser().parseRequest(mockRequestHeaders);
-            fail("should throw IllegalArgumentException when bad value received for X-GP-ATTR-TYPEMOD0-COUNT");
-        } catch (IllegalArgumentException iae) {
-            assertEquals("ATTR-TYPEMOD0-COUNT must be an integer", iae.getMessage());
-        }
+    @Test
+    public void providedTypeModsLessThanTypeModCountFails() {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("Property ATTR-TYPEMOD0-1 has no value in the current request");
 
-        parameters.putSingle("X-GP-ATTR-TYPEMOD0-COUNT", "-1");
-
-        try {
-            new HttpRequestParser().parseRequest(mockRequestHeaders);
-            fail("should throw IllegalArgumentException when negative value received for X-GP-ATTR-TYPEMOD0-COUNT");
-        } catch (IllegalArgumentException iae) {
-            assertEquals("ATTR-TYPEMOD0-COUNT must be a positive integer", iae.getMessage());
-        }
-
-        parameters.putSingle("X-GP-ATTR-TYPEMOD0-COUNT", "1");
-
-        try {
-            new HttpRequestParser().parseRequest(mockRequestHeaders);
-            fail("should throw IllegalArgumentException when bad value received for X-GP-ATTR-TYPEMOD0-0");
-        } catch (IllegalArgumentException iae) {
-            assertEquals("ATTR-TYPEMOD0-0 must be an integer", iae.getMessage());
-        }
-
+        parameters.putSingle("X-GP-ATTRS", "1");
+        parameters.putSingle("X-GP-ATTR-NAME0", "vc1");
+        parameters.putSingle("X-GP-ATTR-TYPECODE0", "1043");
+        parameters.putSingle("X-GP-ATTR-TYPENAME0", "varchar");
         parameters.putSingle("X-GP-ATTR-TYPEMOD0-COUNT", "2");
         parameters.putSingle("X-GP-ATTR-TYPEMOD0-0", "42");
 
-        try {
-            new HttpRequestParser().parseRequest(mockRequestHeaders);
-            fail("should throw IllegalArgumentException number of actual type modifiers is less than X-GP-ATTR-TYPEMODX-COUNT");
-        } catch (IllegalArgumentException iae) {
-            assertEquals("Property ATTR-TYPEMOD0-1 has no value in the current request", iae.getMessage());
-        }
+        parser.parseRequest(mockRequestHeaders);
     }
+
+    @Test
+    public void protocolIsSetWhenProfileIsSpecified() {
+        parameters.putSingle("X-GP-OPTIONS-PROFILE", "test-profile");
+        when(mockPluginConf.getProtocol("test-profile")).thenReturn("test-protocol");
+
+        RequestContext context = parser.parseRequest(mockRequestHeaders);
+
+        assertEquals("test-protocol", context.getProtocol());
+
+    }
+
+    @Test
+    public void whitelistedOptionsAreAddedAsProperties() {
+        parameters.putSingle("X-GP-OPTIONS-PROFILE", "test-profile");
+        parameters.putSingle("X-GP-OPTIONS-CONFIGPROP1", "config-prop-value1");
+        parameters.putSingle("X-GP-OPTIONS-CONFIGPROP3", "config-prop-value3");
+        parameters.putSingle("X-GP-OPTIONS-CONFIGPROP4", null);
+        parameters.putSingle("X-GP-OPTIONS-CONFIGPROP5", "config-prop-value5");
+
+        Map<String, String> mappings = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        mappings.put("configprop1", "cfg.prop1"); // normal
+        mappings.put("configprop2", "cfg.prop2"); // missing in request
+        mappings.put("configprop3", "cfg.prop3"); // normal
+        mappings.put("configprop4", "cfg.prop4"); // null value in request
+        mappings.put("configprop5", "");          // empty mapping
+        when(mockPluginConf.getOptionMappings("test-profile")).thenReturn(mappings);
+
+        RequestContext context = parser.parseRequest(mockRequestHeaders);
+
+        // mappings has 5 props, but only 4 are provided in the request and one has empty mapping
+        assertEquals(3, context.getAdditionalConfigProps().size());
+        assertEquals("config-prop-value1", context.getAdditionalConfigProps().get("cfg.prop1"));
+        assertEquals("config-prop-value3", context.getAdditionalConfigProps().get("cfg.prop3"));
+        assertEquals("", context.getAdditionalConfigProps().get("cfg.prop4"));
+
+        // ensure the options are still set as well
+        assertEquals("config-prop-value1", context.getOption("configprop1"));
+        assertEquals("config-prop-value3", context.getOption("configprop3"));
+        assertEquals("", context.getOption("configprop4"));
+        assertEquals("config-prop-value5", context.getOption("configprop5"));
+    }
+
 }

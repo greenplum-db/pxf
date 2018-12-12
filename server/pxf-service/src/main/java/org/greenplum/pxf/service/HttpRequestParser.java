@@ -15,6 +15,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -152,66 +153,45 @@ public class HttpRequestParser implements RequestParser<HttpHeaders> {
             optionMappings = pluginConf.getOptionMappings(profile);
         }
 
+        // use empty map for convenience instead of null
         if (optionMappings == null) {
-            // Create an empty map for convenience
-            optionMappings = new HashMap<>();
+            optionMappings = Collections.emptyMap();
         }
 
         Map<String, String> additionalConfigProps = new HashMap<>();
 
         // Iterate over the remaining properties
         // we clone the keyset to prevent concurrent modification exceptions
-        List<String> keySet = new ArrayList<>(params.keySet());
-        for (String key : keySet) {
-            if (StringUtils.startsWithIgnoreCase(key, RequestMap.USER_PROP_PREFIX)) {
+        List<String> paramNames = new ArrayList<>(params.keySet());
+        for (String param : paramNames) {
+            if (StringUtils.startsWithIgnoreCase(param, RequestMap.USER_PROP_PREFIX)) {
                 // Add all left-over user properties as options
-                String optionName = key.toLowerCase().replace(RequestMap.USER_PROP_PREFIX_LOWERCASE, "");
-                String propertyName = optionMappings.get(optionName);
+                String optionName = param.toLowerCase().replace(RequestMap.USER_PROP_PREFIX_LOWERCASE, "");
+                String optionValue = params.removeUserProperty(optionName);
+                context.addOption(optionName, optionValue);
+                LOG.debug("Added option {} to request context", optionName);
 
-                if (propertyName != null) {
-                    String optionValue = context.getOption(optionName);
+                // lookup if the option should also be applied as a config property
+                String propertyName = optionMappings.get(optionName);
+                if (StringUtils.isNotBlank(propertyName)) {
                     // if option has been provided by the user in the request, set the value
                     // of the corresponding configuration property
                     if (optionValue != null) {
                         additionalConfigProps.put(propertyName, optionValue);
                         // do not log property value as it might contain sensitive information
-                        LOG.debug("Adding additional property {} to configuration with value provided by user option {}", propertyName, optionName);
+                        LOG.debug("Added extra config property {} from option {}", propertyName, optionName);
                     }
                 }
-                context.addOption(optionName, params.removeUserProperty(optionName));
-            } else if (StringUtils.startsWithIgnoreCase(key, RequestMap.PROP_PREFIX)) {
+            } else if (StringUtils.startsWithIgnoreCase(param, RequestMap.PROP_PREFIX)) {
                 // log debug for all left-over system properties
-                LOG.debug("Unused property {}", key);
+                LOG.debug("Unused property {}", param);
             }
         }
 
         context.setAdditionalConfigProps(additionalConfigProps);
         context.setPluginConf(pluginConf);
 
-        // prepare addition configuration properties if profile was specified
-        if (StringUtils.isNotBlank(profile)) {
-            Map<String, String> optionsMapping = pluginConf.getOptionMappings(profile);
-            if (optionsMapping != null) {
-                Map<String, String> additionalConfigProps = new HashMap<>();
-                // iterating over mapping entries, as most are empty or have only a few elements
-                for (Map.Entry<String, String> mappingEntry : optionsMapping.entrySet()) {
-                    String optionName = mappingEntry.getKey();
-                    String optionValue = context.getOption(optionName);
-                    // if option has been provided by the user in the request, set the value
-                    // of the corresponding configuration property
-                    if (optionValue != null) {
-                        String propertyName = mappingEntry.getValue();
-                        additionalConfigProps.put(propertyName, optionValue);
-                        // do not log property value as it might contain sensitive information
-                        LOG.debug("Adding additional property {} to configuration with value provided by user option {}", propertyName, optionName);
-                    }
-                }
-                context.setAdditionalConfigProps(additionalConfigProps);
-            }
-        }
-
-        // Validate that the result has all required fields,
-        // and values are in valid ranges
+        // validate that the result has all required fields, and values are in valid ranges
         context.validate();
 
         return context;
