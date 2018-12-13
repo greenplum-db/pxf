@@ -30,7 +30,7 @@
 		<class>org.greenplum.pxf.automation.components.hdfs.Hdfs</class>
 		<host>localhost</host>
 		<port>8020</port>
-		<workingDirectory>adlserver</workingDirectory>
+		<workingDirectory>tmp/pxf_automation_data</workingDirectory>
 		<hadoopRoot>/home/gpadmin/pxf/servers/adl</hadoopRoot>
 	</adl>
 

@@ -103,7 +103,7 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
                 config.addResource(new Path(getHadoopRoot() + "/conf/hdfs-site.xml"));
                 config.addResource(new Path(getHadoopRoot() + "/conf/mapred-site.xml"));
             } else {
-                // For s3 protocol the file should be s3-site.xml
+                // (i.e) For s3 protocol the file should be s3-site.xml
                 config.addResource(new Path(getHadoopRoot() + "/" + protocol.value() + "-site.xml"));
                 config.addResource(new Path(getHadoopRoot() + "/mapred-site.xml"));
             }

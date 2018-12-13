@@ -1,324 +1,353 @@
 <project
-	xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
+        xmlns="http://maven.apache.org/POM/4.0.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
 
-	<groupId>org.greenplum.pxf.automation</groupId>
-	<artifactId>pxf-automation</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<packaging>jar</packaging>
+    <groupId>org.greenplum.pxf.automation</groupId>
+    <artifactId>pxf-automation</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <packaging>jar</packaging>
 
-	<name>pxf-automation</name>
-	<url>http://maven.apache.org</url>
+    <name>pxf-automation</name>
+    <url>http://maven.apache.org</url>
 
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<java.version>1.8</java.version>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <java.version>1.8</java.version>
         <gphd.home>${GPHD_ROOT}</gphd.home>
         <pxf.lib>${PXF_TMP_LIB}</pxf.lib>
-		<hdp.hadoop.version>2.8.5</hdp.hadoop.version>
-		<hdp.hbase.version>1.1.2</hdp.hbase.version>
-		<hdp.hive.version>1.2.1</hdp.hive.version>
-		<snappy.java.version>1.1.1.7</snappy.java.version>
-		<powermock.version>1.6.4</powermock.version>
-	</properties>
+        <hdp.hadoop.version>2.8.5</hdp.hadoop.version>
+        <hdp.hbase.version>1.1.2</hdp.hbase.version>
+        <hdp.hive.version>1.2.1</hdp.hive.version>
+        <snappy.java.version>1.1.1.7</snappy.java.version>
+        <powermock.version>1.6.4</powermock.version>
+    </properties>
 
-	<repositories>
-		<repository>
-			<id>spring-plugins</id>
-			<name>spring-plugins</name>
-			<url>http://repo.spring.io/plugins-release/</url>
-		</repository>
-	</repositories>
+    <repositories>
+        <repository>
+            <id>spring-plugins</id>
+            <name>spring-plugins</name>
+            <url>http://repo.spring.io/plugins-release/</url>
+        </repository>
+    </repositories>
 
-	<build>
-		<plugins>
-			<plugin>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.1</version>
-				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
-				</configuration>
-			</plugin>
-			<plugin>
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.1</version>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+            <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.15</version>
                 <executions>
-	                <execution>
-	                    <id>default-test</id>
-	                    <phase>test</phase>
-	                    <goals>
-	                        <goal>test</goal>
-	                    </goals>
-	                </execution>
+                    <execution>
+                        <id>default-test</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                    </execution>
                 </executions>
             </plugin>
-		</plugins>
+        </plugins>
 
-		<resources>
-			<resource>
-				<directory>src/test/resources</directory>
-				<includes>
-					<include>**/*.*</include>
-				</includes>
-			</resource>
-		</resources>
-	</build>
-	<dependencies>
-		<dependency>
-			<groupId>org.greenplum</groupId>
-			<artifactId>pxf-api</artifactId>
-			<scope>system</scope>
-			<systemPath>${pxf.lib}/pxf-api.jar</systemPath>
-			<version>LATEST</version>
-		</dependency>
+        <resources>
+            <resource>
+                <directory>src/test/resources</directory>
+                <includes>
+                    <include>**/*.*</include>
+                </includes>
+            </resource>
+        </resources>
+    </build>
+    <dependencies>
+        <dependency>
+            <groupId>org.greenplum</groupId>
+            <artifactId>pxf-api</artifactId>
+            <scope>system</scope>
+            <systemPath>${pxf.lib}/pxf-api.jar</systemPath>
+            <version>LATEST</version>
+        </dependency>
 
-		<dependency>
-			<groupId>org.greenplum</groupId>
-			<artifactId>pxf-hbase</artifactId>
-			<scope>system</scope>
-			<systemPath>${pxf.lib}/pxf-hbase.jar</systemPath>
-			<version>LATEST</version>
-		</dependency>
+        <dependency>
+            <groupId>org.greenplum</groupId>
+            <artifactId>pxf-hbase</artifactId>
+            <scope>system</scope>
+            <systemPath>${pxf.lib}/pxf-hbase.jar</systemPath>
+            <version>LATEST</version>
+        </dependency>
 
-		<dependency>
-			<groupId>org.greenplum</groupId>
-			<artifactId>pxf-hdfs</artifactId>
-			<scope>system</scope>
-			<systemPath>${pxf.lib}/pxf-hdfs.jar</systemPath>
-			<version>LATEST</version>
-		</dependency>
+        <dependency>
+            <groupId>org.greenplum</groupId>
+            <artifactId>pxf-hdfs</artifactId>
+            <scope>system</scope>
+            <systemPath>${pxf.lib}/pxf-hdfs.jar</systemPath>
+            <version>LATEST</version>
+        </dependency>
 
-		<dependency>
-			<groupId>org.greenplum</groupId>
-			<artifactId>pxf-hive</artifactId>
-			<scope>system</scope>
-			<systemPath>${pxf.lib}/pxf-hive.jar</systemPath>
-			<version>LATEST</version>
-		</dependency>
-		<dependency>
-			<groupId>org.xerial.snappy</groupId>
-			<artifactId>snappy-java</artifactId>
-			<version>1.1.1.7</version>
-		</dependency>
-		<dependency>
+        <dependency>
+            <groupId>org.greenplum</groupId>
+            <artifactId>pxf-hive</artifactId>
+            <scope>system</scope>
+            <systemPath>${pxf.lib}/pxf-hive.jar</systemPath>
+            <version>LATEST</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.xerial.snappy</groupId>
+            <artifactId>snappy-java</artifactId>
+            <version>1.1.1.7</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
             <version>4.4</version>
         </dependency>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.11</version>
-		</dependency>
 
-		<dependency>
-			<groupId>org.powermock</groupId>
-			<artifactId>powermock-module-testng</artifactId>
-			<version>${powermock.version}</version>
-			<scope>test</scope>
-		</dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.11</version>
+        </dependency>
 
-		<dependency>
-			<groupId>org.powermock</groupId>
-			<artifactId>powermock-api-mockito</artifactId>
-			<version>${powermock.version}</version>
-			<scope>test</scope>
-		</dependency>
+        <dependency>
+            <groupId>org.powermock</groupId>
+            <artifactId>powermock-module-testng</artifactId>
+            <version>${powermock.version}</version>
+            <scope>test</scope>
+        </dependency>
 
-		<dependency>
-			<groupId>org.testng</groupId>
-			<artifactId>testng</artifactId>
-			<version>6.8.7</version>
-		</dependency>
+        <dependency>
+            <groupId>org.powermock</groupId>
+            <artifactId>powermock-api-mockito</artifactId>
+            <version>${powermock.version}</version>
+            <scope>test</scope>
+        </dependency>
 
-		<dependency>
-			<groupId>org.jsystemtest</groupId>
-			<artifactId>jsystemCore</artifactId>
-			<version>6.0.01</version>
-		</dependency>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>6.8.7</version>
+        </dependency>
 
-		<dependency>
-			<groupId>org.jsystemtest.systemobjects</groupId>
-			<artifactId>cli</artifactId>
-			<version>6.0.01</version>
-		</dependency>
+        <dependency>
+            <groupId>org.jsystemtest</groupId>
+            <artifactId>jsystemCore</artifactId>
+            <version>6.0.01</version>
+        </dependency>
 
-		<dependency>
-			<groupId>org.mockito</groupId>
-			<artifactId>mockito-core</artifactId>
-			<version>1.10.19</version>
-		</dependency>
+        <dependency>
+            <groupId>org.jsystemtest.systemobjects</groupId>
+            <artifactId>cli</artifactId>
+            <version>6.0.01</version>
+        </dependency>
 
-		<dependency>
-			<groupId>ch.ethz.ganymed</groupId>
-			<artifactId>ganymed-ssh2</artifactId>
-			<version>261</version>
-		</dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>1.10.19</version>
+        </dependency>
 
-		<dependency>
-			<groupId>postgresql</groupId>
-			<artifactId>postgresql</artifactId>
-			<version>8.4-701.jdbc4</version>
-		</dependency>
+        <dependency>
+            <groupId>ch.ethz.ganymed</groupId>
+            <artifactId>ganymed-ssh2</artifactId>
+            <version>261</version>
+        </dependency>
 
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring</artifactId>
-			<version>2.5.6</version>
-		</dependency>
+        <dependency>
+            <groupId>postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>8.4-701.jdbc4</version>
+        </dependency>
 
-		<dependency>
-			<groupId>net.sf.opencsv</groupId>
-			<artifactId>opencsv</artifactId>
-			<version>2.3</version>
-		</dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring</artifactId>
+            <version>2.5.6</version>
+        </dependency>
 
-		<dependency>
-			<groupId>ant</groupId>
-			<artifactId>ant-junit</artifactId>
-			<version>1.6.5</version>
-		</dependency>
+        <dependency>
+            <groupId>net.sf.opencsv</groupId>
+            <artifactId>opencsv</artifactId>
+            <version>2.3</version>
+        </dependency>
 
-		<dependency>
-			<groupId>org.apache.ant</groupId>
-			<artifactId>ant</artifactId>
-			<version>1.9.3</version>
-		</dependency>
+        <dependency>
+            <groupId>ant</groupId>
+            <artifactId>ant-junit</artifactId>
+            <version>1.6.5</version>
+        </dependency>
 
-		<dependency>
-			<groupId>xalan</groupId>
-			<artifactId>xalan</artifactId>
-			<version>2.7.1</version>
-		</dependency>
+        <dependency>
+            <groupId>org.apache.ant</groupId>
+            <artifactId>ant</artifactId>
+            <version>1.9.3</version>
+        </dependency>
 
-		<dependency>
-			<groupId>org.jsoup</groupId>
-			<artifactId>jsoup</artifactId>
-			<version>1.7.3</version>
-		</dependency>
-		<!-- HADOOP Dependencies -->
+        <dependency>
+            <groupId>xalan</groupId>
+            <artifactId>xalan</artifactId>
+            <version>2.7.1</version>
+        </dependency>
 
-		<dependency>
-			<groupId>org.apache.hadoop</groupId>
-			<artifactId>hadoop-common</artifactId>
-			<version>${hdp.hadoop.version}</version>
-		</dependency><dependency>
-			<groupId>org.apache.hadoop</groupId>
-			<artifactId>hadoop-aws</artifactId>
-			<version>${hdp.hadoop.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.hadoop</groupId>
-			<artifactId>hadoop-auth</artifactId>
-			<version>${hdp.hadoop.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.hadoop</groupId>
-			<artifactId>hadoop-mapreduce-client-core</artifactId>
-			<version>${hdp.hadoop.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.hadoop</groupId>
-			<artifactId>hadoop-annotations</artifactId>
-			<version>${hdp.hadoop.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.hadoop</groupId>
-			<artifactId>hadoop-hdfs</artifactId>
-			<version>${hdp.hadoop.version}</version>
-		</dependency>
+        <dependency>
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
+            <version>1.7.3</version>
+        </dependency>
 
-		<dependency>
-			<groupId>org.apache.avro</groupId>
-			<artifactId>avro-tools</artifactId>
-			<version>1.7.7</version>
-		</dependency>
+        <!-- Azure Dependencies -->
+        <dependency>
+            <groupId>com.microsoft.azure</groupId>
+            <artifactId>azure-data-lake-store-sdk</artifactId>
+            <version>2.2.3</version>
+        </dependency>
 
-		<dependency>
-			<groupId>org.apache.hbase</groupId>
-			<artifactId>hbase-common</artifactId>
-			<version>${hdp.hbase.version}</version>
-		</dependency>
+        <!-- HADOOP Dependencies -->
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
+            <version>${hdp.hadoop.version}</version>
+        </dependency>
 
-		<dependency>
-			<groupId>org.apache.hbase</groupId>
-			<artifactId>hbase-protocol</artifactId>
-			<version>${hdp.hbase.version}</version>
-		</dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-aws</artifactId>
+            <version>${hdp.hadoop.version}</version>
+        </dependency>
 
-		<dependency>
-			<groupId>org.apache.hbase</groupId>
-			<artifactId>hbase-client</artifactId>
-			<version>${hdp.hbase.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.hbase</groupId>
-			<artifactId>hbase-thrift</artifactId>
-			<version>${hdp.hbase.version}</version>
-		</dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-azure-datalake</artifactId>
+            <version>${hdp.hadoop.version}</version>
+        </dependency>
 
-		<dependency>
-			<groupId>org.apache.hbase</groupId>
-			<artifactId>hbase-server</artifactId>
-			<version>${hdp.hbase.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.hive</groupId>
-			<artifactId>hive-exec</artifactId>
-			<version>${hdp.hive.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>org.apache.calcite</groupId>
-					<artifactId>calcite-core</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.apache.calcite</groupId>
-					<artifactId>calcite-avatica</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.hive</groupId>
-			<artifactId>hive-service</artifactId>
-			<version>${hdp.hive.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>org.apache.calcite</groupId>
-					<artifactId>calcite-core</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.apache.calcite</groupId>
-					<artifactId>calcite-avatica</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.hive</groupId>
-			<artifactId>hive-metastore</artifactId>
-			<version>${hdp.hive.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.hive</groupId>
-			<artifactId>hive-common</artifactId>
-			<version>${hdp.hive.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.hive</groupId>
-			<artifactId>hive-serde</artifactId>
-			<version>${hdp.hive.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.hive</groupId>
-			<artifactId>hive-jdbc</artifactId>
-			<version>${hdp.hive.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.mockito</groupId>
-			<artifactId>mockito-all</artifactId>
-			<version>1.9.5</version>
-		</dependency>
-	</dependencies>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-auth</artifactId>
+            <version>${hdp.hadoop.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-mapreduce-client-core</artifactId>
+            <version>${hdp.hadoop.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-annotations</artifactId>
+            <version>${hdp.hadoop.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-hdfs</artifactId>
+            <version>${hdp.hadoop.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.avro</groupId>
+            <artifactId>avro-tools</artifactId>
+            <version>1.7.7</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-common</artifactId>
+            <version>${hdp.hbase.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-protocol</artifactId>
+            <version>${hdp.hbase.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-client</artifactId>
+            <version>${hdp.hbase.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-thrift</artifactId>
+            <version>${hdp.hbase.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-server</artifactId>
+            <version>${hdp.hbase.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hive</groupId>
+            <artifactId>hive-exec</artifactId>
+            <version>${hdp.hive.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.calcite</groupId>
+                    <artifactId>calcite-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.calcite</groupId>
+                    <artifactId>calcite-avatica</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hive</groupId>
+            <artifactId>hive-service</artifactId>
+            <version>${hdp.hive.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.calcite</groupId>
+                    <artifactId>calcite-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.calcite</groupId>
+                    <artifactId>calcite-avatica</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hive</groupId>
+            <artifactId>hive-metastore</artifactId>
+            <version>${hdp.hive.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hive</groupId>
+            <artifactId>hive-common</artifactId>
+            <version>${hdp.hive.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hive</groupId>
+            <artifactId>hive-serde</artifactId>
+            <version>${hdp.hive.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hive</groupId>
+            <artifactId>hive-jdbc</artifactId>
+            <version>${hdp.hive.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>1.9.5</version>
+        </dependency>
+    </dependencies>
 </project>

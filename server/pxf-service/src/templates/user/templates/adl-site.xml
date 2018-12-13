@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <property>
+        <name>dfs.adls.oauth2.access.token.provider.type</name>
+        <value>ClientCredential</value>
+    </property>
+    <property>
+        <name>dfs.adls.oauth2.refresh.url</name>
+        <value>YOUR_ADL_REFRESH_URL</value>
+    </property>
+    <property>
+        <name>dfs.adls.oauth2.client.id</name>
+        <value>YOUR_ADL_CLIENT_ID</value>
+    </property>
+    <property>
+        <name>dfs.adls.oauth2.credential</name>
+        <value>YOUR_ADL_CREDENTIAL</value>
+    </property>
+</configuration>

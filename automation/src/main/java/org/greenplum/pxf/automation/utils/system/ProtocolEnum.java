@@ -6,7 +6,7 @@ package org.greenplum.pxf.automation.utils.system;
 public enum ProtocolEnum {
     HDFS("hdfs"),
     S3("s3"),
-    ADLS("adl");
+    ADL("adl");
     private String value;
 
     ProtocolEnum(String value) {

@@ -73,7 +73,7 @@ ifneq "$(PROTOCOL)" ""
 		cp $(PXF_HOME)/templates/user/templates/$(PROTOCOL)-site.xml $(PROTOCOL_HOME)/; \
 		cp $(PXF_HOME)/templates/user/templates/mapred-site.xml $(PROTOCOL_HOME)/; \
 		if [[ $(PROTOCOL) == s3 ]]; then \
-			if [[ -z "$(AWS_ACCESS_KEY_ID)" ]] || [[ -z "$(AWS_SECRET_ACCESS_KEY)" ]]; then \
+			if [[ -z $(AWS_ACCESS_KEY_ID) ]] || [[ -z $(AWS_SECRET_ACCESS_KEY) ]]; then \
 				echo "AWS Keys (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY) not set"; \
 				rm -rf $(PROTOCOL_HOME); \
 				exit 1; \
@@ -81,6 +81,17 @@ ifneq "$(PROTOCOL)" ""
 			sed -i "s|</configuration>|<property><name>fs.defaultFS</name><value>s3a://gpdb-ud-scratch</value></property></configuration>|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
 			sed -i "s|YOUR_AWS_ACCESS_KEY_ID|$(AWS_ACCESS_KEY_ID)|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
 			sed -i "s|YOUR_AWS_SECRET_ACCESS_KEY|$(AWS_SECRET_ACCESS_KEY)|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
+		fi; \
+		if [[ $(PROTOCOL) == adl ]]; then \
+			if [[ -z $(ADL_ACCOUNT) ]] || [[ -z $(ADL_REFRESH_URL) ]] || [[ -z $(ADL_CLIENT_ID) ]] || [[ -z $(ADL_CREDENTIAL) ]]; then \
+				echo "ADL Keys (ADL_ACCOUNT, ADL_CLIENT_ID, ADL_CREDENTIAL, ADL_REFRESH_URL) not set"; \
+				rm -rf $(PROTOCOL_HOME); \
+				exit 1; \
+			fi; \
+			sed -i "s|</configuration>|<property><name>fs.defaultFS</name><value>adl://$(ADL_ACCOUNT).azuredatalakestore.net</value></property></configuration>|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
+			sed -i "s|YOUR_ADL_REFRESH_URL|$(ADL_REFRESH_URL)|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
+			sed -i "s|YOUR_ADL_CLIENT_ID|$(ADL_CLIENT_ID)|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
+			sed -i "s|YOUR_ADL_CREDENTIAL|$(ADL_CREDENTIAL)|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
 		fi; \
 		echo "Created $(PROTOCOL) server configuration"; \
 	fi

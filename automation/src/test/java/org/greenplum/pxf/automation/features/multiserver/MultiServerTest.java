@@ -4,14 +4,10 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.greenplum.pxf.automation.components.hdfs.Hdfs;
-import org.greenplum.pxf.automation.datapreparer.CustomTextPreparer;
 import org.greenplum.pxf.automation.features.BaseFeature;
-import org.greenplum.pxf.automation.smoke.BaseSmoke;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
 import org.greenplum.pxf.automation.structures.tables.pxf.ExternalTable;
-import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
 import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
-import org.greenplum.pxf.automation.utils.fileformats.FileFormatsUtils;
 import org.testng.annotations.Test;
 
 import java.net.URI;
