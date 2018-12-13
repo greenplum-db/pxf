@@ -5,6 +5,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.util.Map;
+
 import static org.junit.Assert.assertEquals;
 
 
@@ -17,7 +19,7 @@ public class RequestContextTest {
 
     @Before
     public void before() {
-         context = new RequestContext();
+        context = new RequestContext();
     }
 
     @Test
@@ -131,5 +133,18 @@ public class RequestContextTest {
     public void testServerNameIsLowerCased() {
         context.setServerName("DUMMY");
         assertEquals("dummy", context.getServerName());
+    }
+
+    @Test
+    public void testReturnDefaultOptionValue() {
+        assertEquals("bar", context.getOption("foo", "bar"));
+    }
+
+    @Test
+    public void testReturnsUnmodifiableOptionsMap() {
+        thrown.expect(UnsupportedOperationException.class);
+
+        Map<String, String> unmodifiableMap = context.getOptions();
+        unmodifiableMap.put("foo", "bar");
     }
 }

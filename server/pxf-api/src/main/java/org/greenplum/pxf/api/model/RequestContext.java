@@ -576,7 +576,6 @@ public class RequestContext {
         this.token = token;
     }
 
-
     /**
      * Statistics parameter. Returns the max number of fragments to return for
      * ANALYZE sampling. The value is set in GPDB side using the GUC
