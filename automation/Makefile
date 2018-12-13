@@ -69,10 +69,15 @@ dev: symlink_pxf_jars
 sync_cloud_configs:
 ifneq "$(PROTOCOL)" ""
 	@mkdir -p $(PROTOCOL_HOME)
-	@if [[ ! -f $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml ]]; then \
+	@if [[ ! -f "$(PROTOCOL_HOME)/$(PROTOCOL)-site.xml" ]]; then \
 		cp $(PXF_HOME)/templates/user/templates/$(PROTOCOL)-site.xml $(PROTOCOL_HOME)/; \
 		cp $(PXF_HOME)/templates/user/templates/mapred-site.xml $(PROTOCOL_HOME)/; \
 		if [[ $(PROTOCOL) == s3 ]]; then \
+			if [[ -z "$(AWS_ACCESS_KEY_ID)" ]] || [[ -z "$(AWS_SECRET_ACCESS_KEY)" ]]; then \
+				echo "AWS Keys (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY) not set"; \
+				rm -rf $(PROTOCOL_HOME); \
+				exit 1; \
+			fi; \
 			sed -i "s|</configuration>|<property><name>fs.defaultFS</name><value>s3a://gpdb-ud-scratch</value></property></configuration>|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
 			sed -i "s|YOUR_AWS_ACCESS_KEY_ID|$(AWS_ACCESS_KEY_ID)|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
 			sed -i "s|YOUR_AWS_SECRET_ACCESS_KEY|$(AWS_SECRET_ACCESS_KEY)|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
