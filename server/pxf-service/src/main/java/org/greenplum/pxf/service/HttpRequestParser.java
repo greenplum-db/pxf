@@ -64,10 +64,9 @@ public class HttpRequestParser implements RequestParser<HttpHeaders> {
 
         RequestMap params = new RequestMap(request.getRequestHeaders());
 
-        // TODO what if some data is sensitive (credentials) and should not be logged ?
         if (LOG.isDebugEnabled()) {
             // Logging only keys to prevent sensitive data to be logged
-            LOG.debug("Parsed request parameters: " + params.keySet());
+            LOG.debug("Parsing request parameters: " + params.keySet());
         }
 
         // build new instance of RequestContext and fill it with parsed values
