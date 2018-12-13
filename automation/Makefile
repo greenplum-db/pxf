@@ -31,7 +31,15 @@ ifneq "$(PROTOCOL)" ""
 	PROTOCOL_HOME=~/pxf/servers/$(PROTOCOL)
 endif
 
-#MAVEN_DEBUG_OPTS+= -Dmaven.surefire.debug
+ifneq "$(AWS_ACCESS_KEY_ID)" ""
+	MAVEN_TEST_OPTS+= -DAWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID)
+endif
+
+ifneq "$(AWS_SECRET_ACCESS_KEY)" ""
+	MAVEN_TEST_OPTS+= -DAWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY)
+endif
+
+MAVEN_DEBUG_OPTS+= -Dmaven.surefire.debug
 
 MVN=mvn
 

@@ -349,7 +349,7 @@ public abstract class ExternalTable extends Table {
         return userParameters;
     }
 
-    private void setServer(String server) {
+    public void setServer(String server) {
         this.server = server;
     }
 

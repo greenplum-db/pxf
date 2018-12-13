@@ -5,7 +5,10 @@ package org.greenplum.pxf.automation.utils.system;
  */
 public class ProtocolUtils {
 
+    public final static String AWS_ACCESS_KEY_ID = "AWS_ACCESS_KEY_ID";
+    public final static String AWS_SECRET_ACCESS_KEY = "AWS_SECRET_ACCESS_KEY";
     public static final String PROTOCOL_KEY = "PROTOCOL";
+
     public static ProtocolEnum getProtocol() {
 
         ProtocolEnum result;
@@ -17,4 +20,14 @@ public class ProtocolUtils {
 
         return result;
     }
+
+    public static String getSecret() {
+        return System.getProperty(AWS_SECRET_ACCESS_KEY);
+    }
+
+    public static String getAccess() {
+        return System.getProperty(AWS_ACCESS_KEY_ID);
+    }
+
+
 }
