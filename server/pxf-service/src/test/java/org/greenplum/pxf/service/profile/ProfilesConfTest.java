@@ -26,6 +26,7 @@ import org.junit.rules.ExpectedException;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -157,6 +158,16 @@ public class ProfilesConfTest {
         assertEquals(2, map.size());
         assertEquals("prop1", map.get("option1"));
         assertEquals("prop2", map.get("option2"));
+    }
+
+    @Test
+    public void testProfileWithSpacesInName() {
+        ProfilesConf profilesConf = getProfilesConf("profileWithSpacesInName");
+
+        Map<String, String> map = profilesConf.getPlugins("HBase");
+        assertNotNull(map);
+        assertEquals(1, map.size());
+        assertEquals("Y", map.get("accessor"));
     }
 
     private ProfilesConf getProfilesConf(String testCase) {
