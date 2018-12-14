@@ -1,5 +1,7 @@
 package org.greenplum.pxf.service.profile;
 
+import org.apache.commons.lang.StringUtils;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -37,7 +39,7 @@ public class Profile {
      * @return the name of the profile
      */
     String getName() {
-        return name;
+        return StringUtils.trim(name);
     }
 
     /**

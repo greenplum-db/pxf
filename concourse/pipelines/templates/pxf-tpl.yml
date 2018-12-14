@@ -315,6 +315,9 @@ jobs:
     file: pxf_src/concourse/tasks/test_pxf.yml
     image: gpdb-pxf-dev-ubuntu16-hdp-server
     params:
+      AWS_ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+      AWS_SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+      AWS_DEFAULT_REGION: {{aws-region}}
       GROUP: gpdb,proxy,profile
       TEST_ENV: {{test-env}}
       HADOOP_CLIENT: HDP
@@ -356,6 +359,9 @@ jobs:
     privileged: true
     attempts: 2
     params:
+      AWS_ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+      AWS_SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+      AWS_DEFAULT_REGION: {{aws-region}}
       GROUP: gpdb,proxy
       TEST_ENV: {{test-env}}
       TARGET_OS: centos
@@ -436,6 +442,9 @@ jobs:
     image: gpdb-pxf-dev-centos6-hdp-server
     file: pxf_src/concourse/tasks/test_pxf_multinode.yml
     params:
+      AWS_ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+      AWS_SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+      AWS_DEFAULT_REGION: {{aws-region}}
       GROUP: gpdb,proxy
       TARGET_OS: centos
 {% if acceptance %}
@@ -471,6 +480,9 @@ jobs:
     image: gpdb-pxf-dev-centos6-cdh-server
     attempts: 2
     params:
+      AWS_ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+      AWS_SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+      AWS_DEFAULT_REGION: {{aws-region}}
       GROUP: gpdb,proxy,profile
       TEST_ENV: {{test-env}}
       TARGET_OS: centos

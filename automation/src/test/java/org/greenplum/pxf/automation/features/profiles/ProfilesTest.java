@@ -162,26 +162,6 @@ public class ProfilesTest extends BaseFeature {
     }
 
     /**
-     * profile name in XML with spaces, should work
-     *
-     * @throws Exception if test fails to run
-     */
-    @Test(groups = { "profile" })
-    public void profileNameWithSpaces() throws Exception {
-
-        // get "HdfsTextSimple" profile, edit name to be wrapped with spaces and write to file
-        Profile hdfsTextSimpleProfile = pxfProfiles.getProfile(EnumPxfDefaultProfiles.HdfsTextSimple.toString());
-        hdfsTextSimpleProfile.setName("     " + EnumPxfDefaultProfiles.HdfsTextSimple.toString() + "     ");
-        pxfProfiles.writeProfilesListToFile();
-        cluster.copyFileToNodes(pxfProfiles.getXmlFilePath(), cluster.getPxfConfLocation());
-        cluster.restart(PhdCluster.EnumClusterServices.pxf);
-
-        exTable.setProfile(EnumPxfDefaultProfiles.HdfsTextSimple.toString());
-        gpdb.createTableAndVerify(exTable);
-        runVerificationTinc();
-    }
-
-    /**
      * missing fragmenter to profile should throw Error
      *
      * @throws Exception if test fails to run

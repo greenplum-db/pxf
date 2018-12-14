@@ -15,7 +15,7 @@
 -- m/file:.*;/
 -- s/file:.*; lineNumber: \d+; columnNumber: \d+;/SOME_ERROR_LOCATION/g
 --
--- m/Exception report.*(IllegalArgumentException).*/
+-- m/Exception report.*/
 -- s/report.*/SOME_EXCEPTION/
 --
 -- m/DETAIL/
