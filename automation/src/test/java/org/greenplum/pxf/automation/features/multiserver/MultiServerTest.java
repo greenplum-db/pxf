@@ -104,7 +104,7 @@ public class MultiServerTest extends BaseFeature {
         // Create GPDB external table directed to s3Server
         s3Table =
                 TableFactory.getPxfReadableTextTable(
-                        "pxf_multiserver_s3", PXF_MULTISERVER_COLS, s3Path, ",");
+                        "pxf_multiserver_s3", PXF_MULTISERVER_COLS, s3Bucket + s3Path, ",");
         s3Table.setServer("server=s3");
         s3Table.setUserParameters(new String[]{"accesskey=" + ProtocolUtils.getAccess(), "secretkey=" + ProtocolUtils.getSecret()});
         s3Table.setProfile("S3Text");
