@@ -22,7 +22,7 @@
 		<class>org.greenplum.pxf.automation.components.hdfs.Hdfs</class>
 		<host>localhost</host>
 		<port>8020</port>
-		<workingDirectory>s3server</workingDirectory>
+		<workingDirectory>tmp/pxf_automation_data/__UUID__</workingDirectory>
 		<hadoopRoot>/home/gpadmin/pxf/servers/s3</hadoopRoot>
 	</s3>
 
@@ -30,7 +30,7 @@
 		<class>org.greenplum.pxf.automation.components.hdfs.Hdfs</class>
 		<host>localhost</host>
 		<port>8020</port>
-		<workingDirectory>tmp/pxf_automation_data</workingDirectory>
+		<workingDirectory>tmp/pxf_automation_data/__UUID__</workingDirectory>
 		<hadoopRoot>/home/gpadmin/pxf/servers/adl</hadoopRoot>
 	</adl>
 

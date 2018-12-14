@@ -11,6 +11,7 @@ import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
 import org.testng.annotations.Test;
 
 import java.net.URI;
+import java.util.UUID;
 
 /**
  * MultiServerTest verifies that multiple servers
@@ -35,6 +36,8 @@ public class MultiServerTest extends BaseFeature {
     private String defaultPath;
     private String s3Path;
 
+    private final static String s3Bucket = "gpdb-ud-scratch";
+
     /**
      * Prepare all server configurations and components
      */
@@ -44,13 +47,13 @@ public class MultiServerTest extends BaseFeature {
         defaultPath = hdfsWorkingDirectory + "/" + fileName;
 
         // Initialize server objects
-        String s3Bucket = "gpdb-ud-scratch";
-        s3Path = s3Bucket + "/s3Server/multiServerTest/" + fileName;
+        s3Path = "/tmp/pxf_automation_data/multi_server_test/" +
+                UUID.randomUUID().toString() + "/" + fileName;
         Configuration s3Configuration = new Configuration();
         s3Configuration.set("fs.s3a.access.key", ProtocolUtils.getAccess());
         s3Configuration.set("fs.s3a.secret.key", ProtocolUtils.getSecret());
 
-        FileSystem fs2 = FileSystem.get(URI.create(PROTOCOL_S3 + s3Path), s3Configuration);
+        FileSystem fs2 = FileSystem.get(URI.create(PROTOCOL_S3 + s3Bucket + s3Path), s3Configuration);
         s3Server = new Hdfs(fs2, s3Configuration, true);
     }
 
@@ -73,6 +76,13 @@ public class MultiServerTest extends BaseFeature {
         createTables();
     }
 
+    @Override
+    protected void afterMethod() throws Exception {
+        super.afterMethod();
+
+        s3Server.removeDirectory(PROTOCOL_S3 + s3Bucket + s3Path);
+    }
+
     protected void prepareData() throws Exception {
         // Prepare data in table
         Table dataTable = getSmallData();
@@ -81,7 +91,7 @@ public class MultiServerTest extends BaseFeature {
         hdfs.writeTableToFile(defaultPath, dataTable, ",");
 
         // Create Data for s3Server
-        s3Server.writeTableToFile(PROTOCOL_S3 + s3Path, dataTable, ",");
+        s3Server.writeTableToFile(PROTOCOL_S3 + s3Bucket + s3Path, dataTable, ",");
     }
 
     protected void createTables() throws Exception {

@@ -12,6 +12,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import org.apache.avro.Schema;
 import org.apache.avro.file.CodecFactory;
@@ -459,6 +460,10 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
 
     public void setWorkingDirectory(String workingDirectory) {
         this.workingDirectory = workingDirectory;
+
+        if (workingDirectory != null) {
+            this.workingDirectory = workingDirectory.replace("__UUID__", UUID.randomUUID().toString());
+        }
     }
 
     public String getPort() {
