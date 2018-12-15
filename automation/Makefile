@@ -101,6 +101,17 @@ ifneq "$(PROTOCOL)" ""
 			sed -i "s|YOUR_ADL_CLIENT_ID|$(ADL_CLIENT_ID)|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
 			sed -i "s|YOUR_ADL_CREDENTIAL|$(ADL_CREDENTIAL)|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
 		fi; \
+		if [[ $(PROTOCOL) == gs ]]; then \
+			if [[ -z "$(GOOGLE_CREDENTIALS)" ]]; then \
+				echo "GS Keys (GOOGLE_CREDENTIALS) not set"; \
+				exit 1; \
+			fi; \
+			cat << EOF > /tmp/gsc-ci-service-account.key.json \
+$(GOOGLE_CREDENTIALS) \
+EOF \
+			sed -i "s|YOUR_GOOGLE_STORAGE_KEYFILE|/tmp/gsc-ci-service-account.key.json|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
+			sed -i "s|{YOUR_GOOGLE_STORAGE_BUCKET}|data-gpdb-ud-tpch|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
+		fi; \
 		echo "Created $(PROTOCOL) server configuration"; \
 	fi
 endif

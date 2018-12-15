@@ -574,6 +574,45 @@ jobs:
       ACCEPTANCE: true
 {% endif %}
 
+- name: test_pxf_gs
+  plan:
+  - aggregate:
+    - get: gpdb_src
+      passed:
+      - compile_pxf
+{% if compile_gpdb %}
+      - compile_gpdb_centos6
+{% endif %}
+    - get: bin_gpdb
+      resource: bin_gpdb_centos6
+{% if compile_gpdb %}
+      passed:
+      - compile_gpdb_centos6
+{% endif %}
+    - get: pxf_src
+      passed:
+      - compile_pxf
+      trigger: true
+    - get: pxf_tarball
+      passed:
+      - compile_pxf
+      trigger: true
+    - get: gpdb-pxf-dev-centos6-cdh-server
+  - task: test_pxf
+    file: pxf_src/concourse/tasks/test_pxf.yml
+    image: gpdb-pxf-dev-centos6-cdh-server
+    params:
+      GOOGLE_CREDENTIALS: {{data-gpdb-ud-google-json-key}}
+      GROUP: hcfs
+      IMPERSONATION: false
+      PROTOCOL: gs
+      TEST_ENV: {{test-env}}
+      TEST_OS: centos
+      TARGET_OS: centos
+{% if acceptance %}
+      ACCEPTANCE: true
+{% endif %}
+
 - name: test_pxf_no_impersonation
   plan:
   - aggregate:
@@ -619,6 +658,7 @@ jobs:
     - test_pxf_hdp_centos6
     - test_pxf_cdh_centos6
     - test_pxf_adl
+    - test_pxf_gs
     - test_pxf_s3
     - test_pxf_hdp_secure
     - test_pxf_no_impersonation
@@ -637,6 +677,7 @@ jobs:
     - test_pxf_hdp_centos6
     - test_pxf_cdh_centos6
     - test_pxf_adl
+    - test_pxf_gs
     - test_pxf_s3
     - test_pxf_hdp_secure
     - test_pxf_no_impersonation
@@ -648,6 +689,7 @@ jobs:
     - test_pxf_hdp_centos6
     - test_pxf_cdh_centos6
     - test_pxf_adl
+    - test_pxf_gs
     - test_pxf_s3
     - test_pxf_hdp_secure
     - test_pxf_no_impersonation
