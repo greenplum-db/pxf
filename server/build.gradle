@@ -18,54 +18,29 @@
  */
 
 plugins {
-    id "de.undercouch.download" version "3.4.3"
+    id 'de.undercouch.download' version '3.4.3'
 }
 
 wrapper {
     gradleVersion = '4.10.3'
 }
 
-buildDir = '.'
-
 allprojects {
+    apply plugin: 'java'
     apply plugin: 'idea'
-    apply plugin: 'eclipse'
 
     repositories {
         jcenter()
     }
-}
-
-idea {
-    project {
-        jdkName = "1.8"
-        languageLevel = "1.8"
-    }
-}
-
-subprojects { subProject ->
-    apply plugin: 'java'
 
     group = 'org.greenplum.pxf'
     sourceCompatibility = 1.8
-    targetCompatibility = 1.8
-
-    task removeIdeaOutDirectory(type: Delete) {
-        file("${projectDir}/out").deleteDir()
-    }
-
-    clean {
-        dependsOn(removeIdeaOutDirectory)
-    }
 
     compileJava {
         options.compilerArgs += [
-                "-g", "-Xlint:varargs", "-Xlint:cast",
-                "-Xlint:classfile", "-Xlint:dep-ann", "-Xlint:divzero",
-                "-Xlint:empty", "-Xlint:finally", "-Xlint:overrides",
-                "-Xlint:path", "-Xlint:processing", "-Xlint:static",
-                "-Xlint:try", "-Xlint:fallthrough", "-Xlint:deprecation",
-                "-Xlint:unchecked", "-Xlint:-options", "-Werror"]
+            "-g", "-Xlint:varargs", "-Xlint:cast", "-Xlint:classfile", "-Xlint:dep-ann", "-Xlint:divzero",
+            "-Xlint:empty", "-Xlint:finally", "-Xlint:overrides", "-Xlint:path", "-Xlint:processing", "-Xlint:static",
+            "-Xlint:try", "-Xlint:fallthrough", "-Xlint:deprecation", "-Xlint:unchecked", "-Xlint:-options", "-Werror"]
     }
 
     javadoc {
@@ -84,7 +59,7 @@ subprojects { subProject ->
     }
 
     dependencies {
-        testCompile "junit:junit:$junitVersion"
+        testCompile "junit:junit:${junitVersion}"
         testCompile "org.powermock:powermock-core:1.5.1"
         testCompile "org.powermock:powermock-module-junit4:1.5.1"
         testCompile "org.powermock:powermock-api-mockito:1.5.1"
@@ -101,7 +76,7 @@ subprojects { subProject ->
             force "org.apache.avro:avro:1.7.4"
             force "org.apache.zookeeper:zookeeper:3.4.6"
             force "org.codehaus.jackson:jackson-mapper-asl:1.9.13"
-            force "junit:junit:$junitVersion"
+            force "junit:junit:${junitVersion}"
             force "com.google.guava:guava:11.0.2" // because this version ships with HDP-2.5.3
             force "com.google.code.gson:gson:2.8.2" // because HDP ships with an older version, but Ignite expects 2.8.2
         }
@@ -190,7 +165,6 @@ project('pxf-hdfs') {
         compile "org.apache.hadoop:hadoop-yarn-api:${hadoopVersion}" // Kerberos dependency
         compile "org.apache.hadoop:hadoop-common:${hadoopVersion}"
         compile "org.apache.htrace:htrace-core4:${htraceVersion}"
-
         compile "org.apache.hadoop:hadoop-hdfs:${hadoopVersion}"
         compile "org.apache.hadoop:hadoop-hdfs-client:${hadoopVersion}"
         compile "org.apache.parquet:parquet-hadoop-bundle:${parquetVersion}"
@@ -313,7 +287,7 @@ task tomcatGet {
     }
 }
 
-task assemble(type: Copy, dependsOn: [subprojects.jar, project(':pxf-service').war, subprojects.copyRuntimeDependencies, tomcatGet]) {
+task bundle(type: Copy, dependsOn: [subprojects.jar, project(':pxf-service').war, subprojects.copyRuntimeDependencies, tomcatGet]) {
     into "build/stage"
     subprojects { project ->
         from("${project.name}/build/libs") { into 'lib' }
@@ -325,28 +299,21 @@ task assemble(type: Copy, dependsOn: [subprojects.jar, project(':pxf-service').w
     from("pxf-service/src/scripts/pxf-env-default.sh") { into 'conf' }
     from("pxf-service/src/templates") { into 'templates' }
     doLast {
-        new File("${buildDir}/build/stage/version").text = "${version}\n"
+        new File("${buildDir}/stage/version").text = "${version}\n"
     }
 }
 
-task install(type: Copy, dependsOn: [assemble]) {
-    from assemble.outputs.files
+task install(type: Copy, dependsOn: [bundle]) {
+    from bundle.outputs.files
     into System.getProperty('deployPath')
 }
 
-task jar(type: Copy, dependsOn: [subprojects.build]) {
-    into 'build'
-    subprojects { subProject ->
-        from("${project.name}/build/libs") { into 'libs' }
-    }
-}
-
-task tar(type: Tar, dependsOn: [assemble]) {
+task tar(type: Tar, dependsOn: [bundle]) {
     baseName = "${project.name}"
     compression = Compression.GZIP
     extension = 'tar.gz'
     destinationDir = file("${buildDir}/dist")
-    from assemble.outputs.files
+    from bundle.outputs.files
 }
 
 task version {
