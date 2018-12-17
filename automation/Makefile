@@ -106,7 +106,7 @@ ifneq "$(PROTOCOL)" ""
 				echo "GS Keys (GOOGLE_CREDENTIALS) not set"; \
 				exit 1; \
 			fi; \
-			echo "$(GOOGLE_CREDENTIALS)" >> /tmp/gsc-ci-service-account.key.json; \
+			echo $(GOOGLE_CREDENTIALS) >> /tmp/gsc-ci-service-account.key.json; \
 			sed -i "s|YOUR_GOOGLE_STORAGE_KEYFILE|/tmp/gsc-ci-service-account.key.json|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
 			sed -i "s|{YOUR_GOOGLE_STORAGE_BUCKET}|data-gpdb-ud-tpch|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
 		fi; \

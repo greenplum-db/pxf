@@ -7,7 +7,7 @@ public enum ProtocolEnum {
     HDFS("hdfs"),
     S3("s3"),
     ADL("adl"),
-    GS("GS");
+    GS("gs");
     private String value;
 
     ProtocolEnum(String value) {
