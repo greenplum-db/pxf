@@ -204,8 +204,21 @@ under the License.
             <resolver>org.greenplum.pxf.plugins.ignite.IgniteResolver</resolver>
         </plugins>
     </profile>
+
     <profile>
-        <name>S3Text</name>
+        <name>hdfs:text</name>
+        <description>This profile is suitable for using when reading delimited single line records
+            from plain text files on HDFS.
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.LineBreakAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
+        </plugins>
+    </profile>
+
+    <profile>
+        <name>s3:text</name>
         <description>This profile is suitable for using when reading delimited single line records
             from plain text files on S3
         </description>
@@ -220,10 +233,45 @@ under the License.
             <mapping option="secretkey" property="fs.s3a.secret.key"/>
         </optionMappings>
     </profile>
+
     <profile>
-        <name>S3Parquet</name>
-        <description>This profile is suitable for using when reading parquet on S3
+        <name>adl:text</name>
+        <description>This profile is suitable for using when reading delimited single line records
+            from plain text files on Azure Data Lake
         </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.LineBreakAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
+        </plugins>
+        <protocol>adl</protocol>
+    </profile>
+
+    <profile>
+        <name>gs:text</name>
+        <description>This profile is suitable for using when reading delimited single line records
+            from plain text files on Azure Data Lake
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.LineBreakAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
+        </plugins>
+        <protocol>gs</protocol>
+    </profile>
+    <!-- PARQUET PROFILES -->
+    <profile>
+        <name>hdfs:parquet</name>
+        <description>A profile for reading and writing Parquet data from HDFS</description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.ParquetDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.ParquetFileAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.ParquetResolver</resolver>
+        </plugins>
+    </profile>
+    <profile>
+        <name>s3:parquet</name>
+        <description>A profile for reading and writing Parquet data from HDFS</description>
         <plugins>
             <fragmenter>org.greenplum.pxf.plugins.hdfs.ParquetDataFragmenter</fragmenter>
             <accessor>org.greenplum.pxf.plugins.hdfs.ParquetFileAccessor</accessor>
@@ -236,21 +284,8 @@ under the License.
         </optionMappings>
     </profile>
     <profile>
-        <name>ADLText</name>
-        <description>This profile is suitable for using when reading delimited single line records
-            from plain text files on Azure Data Lake
-        </description>
-        <plugins>
-            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
-            <accessor>org.greenplum.pxf.plugins.hdfs.LineBreakAccessor</accessor>
-            <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
-        </plugins>
-        <protocol>adl</protocol>
-    </profile>
-    <profile>
-        <name>ADLParquet</name>
-        <description>This profile is suitable for using when reading parquet on Azure Data Lake
-        </description>
+        <name>adl:parquet</name>
+        <description>A profile for reading and writing Parquet data from HDFS</description>
         <plugins>
             <fragmenter>org.greenplum.pxf.plugins.hdfs.ParquetDataFragmenter</fragmenter>
             <accessor>org.greenplum.pxf.plugins.hdfs.ParquetFileAccessor</accessor>
@@ -258,4 +293,53 @@ under the License.
         </plugins>
         <protocol>adl</protocol>
     </profile>
+    <profile>
+        <name>gs:parquet</name>
+        <description>A profile for reading and writing Parquet data from HDFS</description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.ParquetDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.ParquetFileAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.ParquetResolver</resolver>
+        </plugins>
+        <protocol>gs</protocol>
+    </profile>
+
+    <!--<profile>-->
+        <!--<name>S3Parquet</name>-->
+        <!--<description>This profile is suitable for using when reading parquet on S3-->
+        <!--</description>-->
+        <!--<plugins>-->
+            <!--<fragmenter>org.greenplum.pxf.plugins.hdfs.ParquetDataFragmenter</fragmenter>-->
+            <!--<accessor>org.greenplum.pxf.plugins.hdfs.ParquetFileAccessor</accessor>-->
+            <!--<resolver>org.greenplum.pxf.plugins.hdfs.ParquetResolver</resolver>-->
+        <!--</plugins>-->
+        <!--<protocol>s3a</protocol>-->
+        <!--<optionMappings>-->
+            <!--<mapping option="accesskey" property="fs.s3a.access.key"/>-->
+            <!--<mapping option="secretkey" property="fs.s3a.secret.key"/>-->
+        <!--</optionMappings>-->
+    <!--</profile>-->
+    <!--<profile>-->
+        <!--<name>ADLText</name>-->
+        <!--<description>This profile is suitable for using when reading delimited single line records-->
+            <!--from plain text files on Azure Data Lake-->
+        <!--</description>-->
+        <!--<plugins>-->
+            <!--<fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>-->
+            <!--<accessor>org.greenplum.pxf.plugins.hdfs.LineBreakAccessor</accessor>-->
+            <!--<resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>-->
+        <!--</plugins>-->
+        <!--<protocol>adl</protocol>-->
+    <!--</profile>-->
+    <!--<profile>-->
+        <!--<name>ADLParquet</name>-->
+        <!--<description>This profile is suitable for using when reading parquet on Azure Data Lake-->
+        <!--</description>-->
+        <!--<plugins>-->
+            <!--<fragmenter>org.greenplum.pxf.plugins.hdfs.ParquetDataFragmenter</fragmenter>-->
+            <!--<accessor>org.greenplum.pxf.plugins.hdfs.ParquetFileAccessor</accessor>-->
+            <!--<resolver>org.greenplum.pxf.plugins.hdfs.ParquetResolver</resolver>-->
+        <!--</plugins>-->
+        <!--<protocol>adl</protocol>-->
+    <!--</profile>-->
 </profiles>

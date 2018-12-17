@@ -233,7 +233,7 @@ public abstract class ExternalTable extends Table {
     }
 
     public void setProfile(String profile) {
-        this.profile = profile;
+        this.profile = ProtocolUtils.getProtocol().value() + ":" + profile;
     }
 
     public String getErrorTable() {

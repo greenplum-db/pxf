@@ -3,6 +3,7 @@ package org.greenplum.pxf.automation.features.hdfs;
 import org.greenplum.pxf.automation.features.BaseFeature;
 
 import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
+import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
 import org.testng.annotations.Test;
 
 public class ParquetReadableTest extends BaseFeature {
