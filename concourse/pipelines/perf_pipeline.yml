@@ -322,6 +322,7 @@ jobs:
       BENCHMARK_ADL: {{perf-benchmark-adl}}
       BENCHMARK_S3: {{perf-benchmark-s3}}
       BENCHMARK_GPHDFS: {{perf-benchmark-gphdfs}}
+      BENCHMARK_WASB: {{perf-benchmark-wasb}}
       ADL_ACCOUNT: {{adl-account}}
       ADL_CLIENT_ID: {{adl-client-id}}
       ADL_CREDENTIAL: {{adl-credential}}

@@ -253,22 +253,29 @@ function sync_configuration() {
 }
 
 function create_adl_external_tables() {
-    psql -c "CREATE EXTERNAL TABLE lineitem_adl_read (like lineitem)
-        location('pxf://adl-profile-test/lineitem/${SCALE}/?PROFILE=adl:text&server=adlbenchmark') format 'CSV' (DELIMITER '|');"
+    psql -c "CREATE EXTERNAL TABLE lineitem_adl_read (LIKE lineitem)
+        LOCATION('pxf://${ADL_ACCOUNT}.azuredatalakestore.net/adl-profile-test/lineitem/${SCALE}/?PROFILE=adl:text&server=adlbenchmark') FORMAT 'CSV' (DELIMITER '|');"
     psql -c "CREATE WRITABLE EXTERNAL TABLE lineitem_adl_write (LIKE lineitem)
-        LOCATION('pxf://adl-profile-test/output/${SCALE}/?PROFILE=adl:text&server=adlbenchmark') FORMAT 'CSV'"
+        LOCATION('pxf://${ADL_ACCOUNT}.azuredatalakestore.net/adl-profile-test/output/${SCALE}/?PROFILE=adl:text&server=adlbenchmark') FORMAT 'CSV'"
 }
 
 function create_s3_extension_external_tables {
-    psql -c "CREATE EXTERNAL TABLE lineitem_s3_c (like lineitem)
-        location('s3://s3.us-west-2.amazonaws.com/gpdb-ud-scratch/s3-profile-test/lineitem/${SCALE}/ config=/home/gpadmin/s3/s3.conf') FORMAT 'CSV' (DELIMITER '|')"
-    psql -c "CREATE EXTERNAL TABLE lineitem_s3_pxf (like lineitem)
-        location('pxf://s3-profile-test/lineitem/${SCALE}/?PROFILE=s3:text&SERVER=s3benchmark') format 'CSV' (DELIMITER '|');"
+    psql -c "CREATE EXTERNAL TABLE lineitem_s3_c (LIKE lineitem)
+        LOCATION('s3://s3.us-west-2.amazonaws.com/gpdb-ud-scratch/s3-profile-test/lineitem/${SCALE}/ config=/home/gpadmin/s3/s3.conf') FORMAT 'CSV' (DELIMITER '|')"
+    psql -c "CREATE EXTERNAL TABLE lineitem_s3_pxf (LIKE lineitem)
+        LOCATION('pxf://gpdb-ud-scratch/s3-profile-test/lineitem/${SCALE}/?PROFILE=s3:text&SERVER=s3benchmark') format 'CSV' (DELIMITER '|');"
 
     psql -c "CREATE WRITABLE EXTERNAL TABLE lineitem_s3_c_write (like lineitem)
         LOCATION('s3://s3.us-west-2.amazonaws.com/gpdb-ud-scratch/s3-profile-test/output/ config=/home/gpadmin/s3/s3.conf') FORMAT 'CSV'"
     psql -c "CREATE WRITABLE EXTERNAL TABLE lineitem_s3_pxf_write (LIKE lineitem)
-        LOCATION('pxf://s3-profile-test/output/${SCALE}/?PROFILE=s3:text&SERVER=s3benchmark') FORMAT 'CSV'"
+        LOCATION('pxf://gpdb-ud-scratch/s3-profile-test/output/${SCALE}/?PROFILE=s3:text&SERVER=s3benchmark') FORMAT 'CSV'"
+}
+
+function create_wasb_external_tables() {
+    psql -c "CREATE EXTERNAL TABLE lineitem_wasb_read (LIKE lineitem)
+        LOCATION('pxf://wasb-profile-test/lineitem/${SCALE}/?PROFILE=hdfs:text&server=wasbbenchmark') FORMAT 'CSV' (DELIMITER '|');"
+    psql -c "CREATE WRITABLE EXTERNAL TABLE lineitem_wasb_write (LIKE lineitem)
+        LOCATION('pxf://wasb-profile-test/output/${SCALE}/?PROFILE=hdfs:text&server=wasbbenchmark') FORMAT 'CSV'"
 }
 
 function assert_count_in_table {
@@ -283,6 +290,54 @@ function assert_count_in_table {
     fi
 }
 
+function run_wasb_benchmark() {
+    create_wasb_external_tables
+
+    cat > /tmp/wasb-site.xml <<-EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<configuration>
+	<property>
+		<name>fs.defaultFS</name>
+		<value>wasbs://<containername>@<accountname>.blob.core.windows.net</value>
+	</property>
+	<property>
+		<name>dfs.adls.oauth2.access.token.provider.type</name>
+		<value>ClientCredential</value>
+	</property>
+	<property>
+		<name>fs.azure.account.key.pxfdev.blob.core.windows.net</name>
+		<value>{ACCOUNTKEY}</value>
+	</property>
+</configuration>
+EOF
+
+    WASB_SERVER_DIR="${PXF_SERVER_DIR}/wasbbenchmark"
+
+    # Create the WASB Benchmark server and copy core-site.xml
+    gpssh -u gpadmin -h mdw -v -s -e "mkdir -p $WASB_SERVER_DIR"
+    gpscp -u gpadmin -h mdw /tmp/wasb-site.xml =:${WASB_SERVER_DIR}/wasb-site.xml
+    sync_configuration
+
+    cat << EOF
+
+
+#########################################
+# AZURE BLOB STORAGE PXF READ BENCHMARK #
+#########################################
+EOF
+    assert_count_in_table "lineitem_wasb_read" "${LINEITEM_COUNT}"
+
+    cat << EOF
+
+
+##########################################
+# AZURE BLOB STORAGE PXF WRITE BENCHMARK #
+##########################################
+EOF
+    time psql -c "INSERT INTO lineitem_wasb_write SELECT * FROM lineitem"
+}
+
 function run_adl_benchmark() {
     create_adl_external_tables
 
@@ -290,10 +345,6 @@ function run_adl_benchmark() {
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
 <configuration>
-	<property>
-		<name>fs.defaultFS</name>
-		<value>adl://${ADL_ACCOUNT}.azuredatalakestore.net</value>
-	</property>
 	<property>
 		<name>dfs.adls.oauth2.access.token.provider.type</name>
 		<value>ClientCredential</value>
@@ -319,8 +370,6 @@ EOF
     gpssh -u gpadmin -h mdw -v -s -e "mkdir -p $ADL_SERVER_DIR"
     gpscp -u gpadmin -h mdw /tmp/adl-site.xml =:${ADL_SERVER_DIR}/adl-site.xml
     sync_configuration
-#    gpssh -u centos -f /tmp/segment_hosts -v -s -e \
-#      "sudo mkdir -p $ADL_SERVER_DIR && sudo mv /tmp/adl-site.xml $ADL_SERVER_DIR/adl-site.xml"
 
     cat << EOF
 
@@ -351,7 +400,6 @@ function run_s3_extension_benchmark {
 # S3 C Ext READ BENCHMARK  #
 ############################
 EOF
-
     assert_count_in_table "lineitem_s3_c" "${LINEITEM_COUNT}"
 
     cat << EOF
@@ -370,10 +418,6 @@ EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
 <configuration>
-	<property>
-		<name>fs.defaultFS</name>
-		<value>s3a://gpdb-ud-scratch</value>
-	</property>
 	<property>
 		<name>fs.s3a.access.key</name>
 		<value>${AWS_ACCESS_KEY_ID}</value>
@@ -399,8 +443,6 @@ EOF
     gpssh -u gpadmin -h mdw -v -s -e "mkdir -p $S3_SERVER_DIR"
     gpscp -u gpadmin -h mdw /tmp/s3-site.xml =:${S3_SERVER_DIR}/s3-site.xml
     sync_configuration
-#    gpssh -u centos -f /tmp/segment_hosts -v -s -e \
-#      "sudo mkdir -p ${S3_SERVER_DIR} && sudo mv /tmp/s3-site.xml ${S3_SERVER_DIR}/s3-site.xml"
 
     cat << EOF
 
@@ -442,11 +484,16 @@ function main {
         run_adl_benchmark
     fi
 
-    if [ "${BENCHMARK_S3}" == "true" ]; then
+    if [[ ${BENCHMARK_WASB} == true ]]; then
+    	# Azure Blob Storage Benchmark
+        run_wasb_benchmark
+    fi
+
+    if [[ ${BENCHMARK_S3} == true ]]; then
         run_s3_extension_benchmark
     fi
 
-    if [ "${BENCHMARK_GPHDFS}" == "true" ]; then
+    if [[ ${BENCHMARK_GPHDFS} == true ]]; then
         run_gphdfs_benchmark
     fi
     run_pxf_benchmark
