@@ -32,7 +32,7 @@ import reporters.CustomAutomationReport;
  * PXF Automation tests Base class, using {@link CustomAutomationLogger} testNG listener for custom
  * logging
  */
-@Listeners({ CustomAutomationLogger.class, CustomAutomationReport.class })
+@Listeners({CustomAutomationLogger.class, CustomAutomationReport.class})
 public abstract class BaseTestParent {
     // Objects used in the tests
     protected PhdCluster cluster;
@@ -144,7 +144,9 @@ public abstract class BaseTestParent {
         }
         // Remove hdfs workingDirectory
         try {
-            hdfs.removeDirectory(hdfs.getWorkingDirectory());
+            if (hdfs != null) {
+                hdfs.removeDirectory(hdfs.getWorkingDirectory());
+            }
         } catch (Exception e) {
             e.printStackTrace(System.err);
         }
@@ -253,7 +255,7 @@ public abstract class BaseTestParent {
         Method[] methods = getClass().getDeclaredMethods();
         // array of not allowed in test class annotations
         @SuppressWarnings("rawtypes")
-        Class[] notAllowedAnnotations = new Class[] { BeforeMethod.class, AfterMethod.class, BeforeClass.class, AfterClass.class };
+        Class[] notAllowedAnnotations = new Class[]{BeforeMethod.class, AfterMethod.class, BeforeClass.class, AfterClass.class};
         // go over test class methods
         for (Method method : methods) {
             // check if not allowed annotations appear in current method

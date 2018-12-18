@@ -79,7 +79,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb", "hcfs" })
+    @Test(groups = { "features", "gpdb" })
     public void textFormatInsertNoProfile() throws Exception {
 
         writableExTable.setProfile(null);
