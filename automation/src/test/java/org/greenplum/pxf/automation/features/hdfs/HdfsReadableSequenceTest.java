@@ -6,6 +6,7 @@ import org.greenplum.pxf.automation.components.cluster.PhdCluster;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
 import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
 import org.greenplum.pxf.automation.utils.fileformats.FileFormatsUtils;
+import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -104,7 +105,7 @@ public class HdfsReadableSequenceTest extends BaseFeature {
                 "custom");
         exTable.setHost(pxfHost);
         exTable.setPort(pxfPort);
-        exTable.setProfile("SequenceWritable");
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":SequenceFile");
         exTable.setFormatter("pxfwritable_import");
     }
 

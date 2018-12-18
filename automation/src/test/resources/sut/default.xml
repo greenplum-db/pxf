@@ -16,30 +16,30 @@
         <host>localhost</host>
         <port>8020</port>
         <workingDirectory>tmp/pxf_automation_data</workingDirectory>
+        <scheme>hdfs</scheme>
     </hdfs>
 
     <s3>
         <class>org.greenplum.pxf.automation.components.hdfs.Hdfs</class>
-        <host>localhost</host>
-        <port>8020</port>
-        <workingDirectory>tmp/pxf_automation_data/__UUID__</workingDirectory>
+        <workingDirectory>gpdb-ud-scratch/tmp/pxf_automation_data/__UUID__</workingDirectory>
         <hadoopRoot>/home/gpadmin/pxf/servers/s3</hadoopRoot>
+        <scheme>s3a</scheme>
     </s3>
 
     <adl>
         <class>org.greenplum.pxf.automation.components.hdfs.Hdfs</class>
-        <host>localhost</host>
-        <port>8020</port>
-        <workingDirectory>tmp/pxf_automation_data/__UUID__</workingDirectory>
+        <workingDirectory>$(ADL_ACCOUNT).azuredatalakestore.net/tmp/pxf_automation_data/__UUID__</workingDirectory>
         <hadoopRoot>/home/gpadmin/pxf/servers/adl</hadoopRoot>
+        <scheme>adl</scheme>
     </adl>
 
     <gs>
         <class>org.greenplum.pxf.automation.components.hdfs.Hdfs</class>
         <host>localhost</host>
         <port>8020</port>
-        <workingDirectory>tmp/pxf_automation_data/__UUID__</workingDirectory>
+        <workingDirectory>data-gpdb-ud-tpch/tmp/pxf_automation_data/__UUID__</workingDirectory>
         <hadoopRoot>/home/gpadmin/pxf/servers/gs</hadoopRoot>
+        <scheme>gs</scheme>
     </gs>
 
     <hbase>

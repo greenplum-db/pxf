@@ -1,11 +1,10 @@
 package org.greenplum.pxf.automation.structures.tables.pxf;
 
-import java.util.Arrays;
-
-import org.apache.commons.lang.ArrayUtils;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
 import org.greenplum.pxf.automation.utils.system.ProtocolEnum;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
+
+import java.util.Arrays;
 
 /**
  * Represent GPDB -> PXF external table.
@@ -233,7 +232,7 @@ public abstract class ExternalTable extends Table {
     }
 
     public void setProfile(String profile) {
-        this.profile = ProtocolUtils.getProtocol().value() + ":" + profile;
+        this.profile = profile;
     }
 
     public String getErrorTable() {

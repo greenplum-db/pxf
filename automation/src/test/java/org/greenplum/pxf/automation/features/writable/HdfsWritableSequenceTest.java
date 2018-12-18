@@ -126,7 +126,7 @@ public class HdfsWritableSequenceTest extends BaseWritableFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "features", "gpdb", "hcfs" })
     @Ignore("flaky ssh connection")
     public void writeAndRead() throws Exception {
 
@@ -172,11 +172,11 @@ public class HdfsWritableSequenceTest extends BaseWritableFeature {
     }
 
     /**
-     * Test circle type converted to text and back
+     * Test circle type converted to text and baHdfsWritableSequenceTest.writeAndRead...FAILEDck
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "features", "gpdb", "hcfs" })
     public void circleType() throws Exception {
 
         String[] fields = { "a1 INTEGER", "c1 CIRCLE" };
@@ -207,7 +207,7 @@ public class HdfsWritableSequenceTest extends BaseWritableFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "features", "gpdb", "hcfs" })
     public void negativeCharType() throws Exception {
 
         String[] fields = { "a1 INTEGER", "c1 CHAR" };
@@ -237,7 +237,7 @@ public class HdfsWritableSequenceTest extends BaseWritableFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "features", "gpdb", "hcfs" })
     public void negativeCompressionTypeNone() throws Exception {
 
         String[] fields = { "a1 INTEGER", "c1 CHAR" };
@@ -271,7 +271,7 @@ public class HdfsWritableSequenceTest extends BaseWritableFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "features", "gpdb", "hcfs" })
     public void recordkeyTextType() throws Exception {
 
         String[] fields = new String[customWritableFields.length + 1];
@@ -306,7 +306,7 @@ public class HdfsWritableSequenceTest extends BaseWritableFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "features", "gpdb", "hcfs" })
     public void recordkeyIntType() throws Exception {
 
         // Skip this test for tests that are running against a remote cluster

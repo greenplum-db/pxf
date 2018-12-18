@@ -64,6 +64,8 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
     private String workingDirectory;
     private String haNameservice;
 
+    private String scheme;
+
     public Hdfs() {
 
     }
@@ -92,10 +94,6 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
         ReportUtils.startLevel(report, getClass(), "Init");
         config = new Configuration();
 
-        if (StringUtils.isEmpty(host)) {
-            throw new Exception("host in hdfs component not configured in SUT");
-        }
-
         // if hadoop root exists in the SUT file, load configuration from it
         if (StringUtils.isNotEmpty(hadoopRoot)) {
             ProtocolEnum protocol = ProtocolUtils.getProtocol();
@@ -107,8 +105,14 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
                 // (i.e) For s3 protocol the file should be s3-site.xml
                 config.addResource(new Path(getHadoopRoot() + "/" + protocol.value() + "-site.xml"));
                 config.addResource(new Path(getHadoopRoot() + "/mapred-site.xml"));
+                config.set("fs.defaultFS", getScheme() + "://" + getWorkingDirectory());
             }
         } else {
+
+            if (StringUtils.isEmpty(host)) {
+                throw new Exception("host in hdfs component not configured in SUT");
+            }
+
             if (StringUtils.isNotEmpty(haNameservice)) {
                 if (StringUtils.isEmpty(hostStandby)) {
                     throw new Exception(
@@ -157,8 +161,13 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
     private Path getDatapath(String path) {
         if (path.matches("^[a-zA-Z].*://.*$"))
             return new Path(path);
-        else
-            return new Path("/" + path);
+        else {
+            if(ProtocolUtils.getProtocol() != ProtocolEnum.HDFS) {
+                return new Path(getScheme() + "://" + path);
+            } else {
+                return new Path("/" + path);
+            }
+        }
     }
 
     @Override
@@ -488,5 +497,13 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
 
     public void setHaNameservice(String haNameservice) {
         this.haNameservice = haNameservice;
+    }
+
+    public String getScheme() {
+        return scheme;
+    }
+
+    public void setScheme(String scheme) {
+        this.scheme = scheme;
     }
 }

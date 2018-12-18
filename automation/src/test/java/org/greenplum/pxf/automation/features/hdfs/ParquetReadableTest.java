@@ -22,12 +22,6 @@ public class ParquetReadableTest extends BaseFeature {
         hdfs.copyFromLocal(resourcePath + parquetPrimitiveTypes, hdfsPath + parquetPrimitiveTypes);
     }
 
-    @Override
-    public void afterClass() throws Exception {
-        hdfs.removeDirectory(hdfsPath);
-    }
-
-
     @Test(groups = {"features", "gpdb", "hcfs"})
     public void parquetSupportedPrimitives() throws Exception {
 
@@ -52,7 +46,7 @@ public class ParquetReadableTest extends BaseFeature {
         exTable.setHost(pxfHost);
         exTable.setPort(pxfPort);
         exTable.setFormatter("pxfwritable_import");
-        exTable.setProfile("Parquet");
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":parquet");
 
         gpdb.createTableAndVerify(exTable);
         runTincTest("pxf.features.hdfs.readable.parquet.primitive_types.runTest");

@@ -142,6 +142,12 @@ public abstract class BaseTestParent {
             // anyways revert System.out to original stream
             CustomAutomationLogger.revertStdoutStream();
         }
+        // Remove hdfs workingDirectory
+        try {
+            hdfs.removeDirectory(hdfs.getWorkingDirectory());
+        } catch (Exception e) {
+            e.printStackTrace(System.err);
+        }
     }
 
     /**

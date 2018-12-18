@@ -63,7 +63,12 @@ function _main() {
 
 	if [[ ${PROTOCOL} == "s3" ]]; then
 		echo Using S3 protocol
-	else
+	elif [[ ${PROTOCOL} == "gs" ]]; then
+		echo Using GS protocol
+		cat << EOF > /tmp/gsc-ci-service-account.key.json
+${GOOGLE_CREDENTIALS}
+EOF
+	elif [[ -z "${PROTOCOL}" ]]; then
 		# Setup Hadoop before creating GPDB cluster to use system python for yum install
 		setup_hadoop /singlecluster
 	fi

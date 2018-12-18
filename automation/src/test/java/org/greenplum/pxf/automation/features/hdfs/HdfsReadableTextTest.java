@@ -9,6 +9,7 @@ import org.greenplum.pxf.automation.structures.tables.pxf.ErrorTable;
 import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
 import org.greenplum.pxf.automation.utils.fileformats.FileFormatsUtils;
 import org.greenplum.pxf.automation.utils.jsystem.report.ReportUtils;
+import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
 import org.greenplum.pxf.automation.utils.tables.ComparisonUtils;
 import org.junit.Assert;
 import org.testng.annotations.Test;
@@ -77,7 +78,7 @@ public class HdfsReadableTextTest extends BaseFeature {
         FileFormatsUtils.prepareData(new CustomTextPreparer(), 100, dataTable);
         // default definition of external table
         exTable = new ReadableExternalTable("pxf_hdfs_small_data",
-                new String[] {
+                new String[]{
                         "s1 text",
                         "s2 text",
                         "s3 text",
@@ -99,7 +100,7 @@ public class HdfsReadableTextTest extends BaseFeature {
                         "n14 int",
                         "n15 int",
                         "n16 int",
-                        "n17 int" }, hdfsFilePath, "TEXT");
+                        "n17 int"}, hdfsFilePath, "TEXT");
 
         exTable.setHost(pxfHost);
         exTable.setPort(pxfPort);
@@ -111,7 +112,7 @@ public class HdfsReadableTextTest extends BaseFeature {
      *
      * @throws Exception
      */
-    @Test(groups = { "features", "sanity", "gpdb", "hcfs" })
+    @Test(groups = {"features", "sanity", "gpdb"})
     public void readDelimitedTextUsingTextFormat() throws Exception {
         // set plugins and delimiter
         exTable.setFragmenter("org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter");
@@ -131,7 +132,7 @@ public class HdfsReadableTextTest extends BaseFeature {
      *
      * @throws Exception
      */
-    @Test(groups = { "features", "gpdb", "hcfs" })
+    @Test(groups = {"features", "gpdb"})
     public void readCsvUsingCsvFormat() throws Exception {
         // set plugins and format
         exTable.setFragmenter("org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter");
@@ -155,10 +156,10 @@ public class HdfsReadableTextTest extends BaseFeature {
      *
      * @throws Exception
      */
-    @Test(groups = { "features", "gpdb", "hcfs" })
+    @Test(groups = {"features", "gpdb", "hcfs"})
     public void readCsvUsingProfile() throws Exception {
         // set profile and format
-        exTable.setProfile(EnumPxfDefaultProfiles.HdfsTextSimple.toString());
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":text");
         exTable.setFormat("CSV");
         // create external table
         gpdb.createTableAndVerify(exTable);
@@ -177,7 +178,7 @@ public class HdfsReadableTextTest extends BaseFeature {
      *
      * @throws Exception
      */
-    @Test(groups = { "features", "gpdb", "hcfs" })
+    @Test(groups = {"features", "gpdb"})
     public void readMultiBlockedMultiLinedCsv() throws Exception {
         // prepare local CSV file
         dataTable = new Table("dataTable", null);
@@ -190,10 +191,10 @@ public class HdfsReadableTextTest extends BaseFeature {
         // copy local file to HDFS
         hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
         // define and create external table
-        exTable = new ReadableExternalTable("pxf_multi_csv", new String[] {
+        exTable = new ReadableExternalTable("pxf_multi_csv", new String[]{
                 "num1 int",
                 "word text",
-                "num2 int" }, hdfsFilePath, "CSV");
+                "num2 int"}, hdfsFilePath, "CSV");
         exTable.setFragmenter("org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter");
         exTable.setAccessor("org.greenplum.pxf.plugins.hdfs.QuotedLineBreakAccessor");
         exTable.setResolver("org.greenplum.pxf.plugins.hdfs.StringPassResolver");
@@ -210,7 +211,7 @@ public class HdfsReadableTextTest extends BaseFeature {
      *
      * @throws Exception
      */
-    @Test(groups = { "features", "gpdb", "hcfs" })
+    @Test(groups = {"features", "gpdb", "hcfs"})
     public void readMultiBlockedMultiLinedCsvUsingProfile() throws Exception {
         // prepare local CSV file
         dataTable = new Table("dataTable", null);
@@ -223,11 +224,11 @@ public class HdfsReadableTextTest extends BaseFeature {
         // copy local file to HDFS
         hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
         // define and create external table
-        exTable = new ReadableExternalTable("pxf_multi_csv", new String[] {
+        exTable = new ReadableExternalTable("pxf_multi_csv", new String[]{
                 "num1 int",
                 "word text",
-                "num2 int" }, hdfsFilePath, "CSV");
-        exTable.setProfile(EnumPxfDefaultProfiles.HdfsTextMulti.toString());
+                "num2 int"}, hdfsFilePath, "CSV");
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":text:multi");
         exTable.setHost(pxfHost);
         exTable.setPort(pxfPort);
         gpdb.createTableAndVerify(exTable);
@@ -241,7 +242,7 @@ public class HdfsReadableTextTest extends BaseFeature {
      *
      * @throws Exception
      */
-    @Test(groups = { "features", "gpdb", "hcfs" })
+    @Test(groups = {"features", "gpdb", "hcfs"})
     public void wildcardLocation() throws Exception {
         // define HDFS data directory
         String wildcardHdfsPath = hdfs.getWorkingDirectory() + "/wild/";
@@ -249,9 +250,7 @@ public class HdfsReadableTextTest extends BaseFeature {
         hdfs.writeTableToFile(wildcardHdfsPath + "/data1.txt", dataTable, ",");
         hdfs.writeTableToFile(wildcardHdfsPath + "/data2.txt", dataTable, ",");
         // define and create external table
-        exTable.setFragmenter("org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter");
-        exTable.setAccessor("org.greenplum.pxf.plugins.hdfs.LineBreakAccessor");
-        exTable.setResolver("org.greenplum.pxf.plugins.hdfs.StringPassResolver");
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":text");
         exTable.setDelimiter(",");
         exTable.setPath(wildcardHdfsPath + "/*.txt");
         gpdb.createTableAndVerify(exTable);
@@ -272,7 +271,7 @@ public class HdfsReadableTextTest extends BaseFeature {
      *
      * @throws Exception
      */
-    @Test(groups = { "features", "gpdb", "hcfs" })
+    @Test(groups = {"features", "gpdb", "hcfs"})
     public void recursiveHdfsDirectories() throws Exception {
         // define base HDFS directory
         String baseDirectory = hdfs.getWorkingDirectory() + "/base/";
@@ -287,9 +286,7 @@ public class HdfsReadableTextTest extends BaseFeature {
         hdfs.writeTableToFile(baseDirectory + "A/B/A/B/C/A/data_file4",
                 dataTable, ",");
         // define and create external table
-        exTable.setFragmenter("org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter");
-        exTable.setAccessor("org.greenplum.pxf.plugins.hdfs.LineBreakAccessor");
-        exTable.setResolver("org.greenplum.pxf.plugins.hdfs.StringPassResolver");
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":text");
         exTable.setDelimiter(",");
         exTable.setPath(baseDirectory);
         gpdb.createTableAndVerify(exTable);
@@ -302,12 +299,10 @@ public class HdfsReadableTextTest extends BaseFeature {
      *
      * @throws Exception
      */
-    @Test(groups = { "features", "gpdb", "hcfs" })
+    @Test(groups = {"features", "gpdb", "hcfs"})
     public void emptyTextFile() throws Exception {
         // define and create external table
-        exTable.setFragmenter("org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter");
-        exTable.setAccessor("org.greenplum.pxf.plugins.hdfs.LineBreakAccessor");
-        exTable.setResolver("org.greenplum.pxf.plugins.hdfs.StringPassResolver");
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":text");
         exTable.setDelimiter(",");
         gpdb.createTableAndVerify(exTable);
         // write empty data to HDFS
@@ -322,10 +317,10 @@ public class HdfsReadableTextTest extends BaseFeature {
      *
      * @throws Exception
      */
-    @Test(groups = { "features", "gpdb" })//, "hcfs" })
+    @Test(groups = {"features", "gpdb"})//, "hcfs" })
     public void differentEncoding() throws Exception {
         // define and create external table
-        exTable.setFields(new String[] { "num1 int", "word text" });
+        exTable.setFields(new String[]{"num1 int", "word text"});
         exTable.setFragmenter("org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter");
         exTable.setAccessor("org.greenplum.pxf.plugins.hdfs.LineBreakAccessor");
         exTable.setResolver("org.greenplum.pxf.plugins.hdfs.StringPassResolver");
@@ -334,11 +329,11 @@ public class HdfsReadableTextTest extends BaseFeature {
         gpdb.createTableAndVerify(exTable);
         // prepare data and write to HDFS
         dataTable = new Table("data", null);
-        dataTable.addRow(new String[] { "4", "tá sé seo le tástáil dea-" });
-        dataTable.addRow(new String[] { "3", "règles d'automation" });
-        dataTable.addRow(new String[] {
+        dataTable.addRow(new String[]{"4", "tá sé seo le tástáil dea-"});
+        dataTable.addRow(new String[]{"3", "règles d'automation"});
+        dataTable.addRow(new String[]{
                 "5",
-                "minden amire szüksége van a szeretet" });
+                "minden amire szüksége van a szeretet"});
         hdfs.writeTableToFile(hdfsFilePath, dataTable, ",",
                 StandardCharsets.ISO_8859_1);
         // verify results
@@ -373,7 +368,7 @@ public class HdfsReadableTextTest extends BaseFeature {
                         + exTable.getName() + "'");
         // prepare expected default results and verify
         Table expectedAnalyzeResults = new Table("expectedAnalyzeResults", null);
-        expectedAnalyzeResults.addRow(new String[] { "1000000" });
+        expectedAnalyzeResults.addRow(new String[]{"1000000"});
         ComparisonUtils.compareTables(analyzeResults, expectedAnalyzeResults,
                 null);
         // set pxf_enable_stat_collection=true
@@ -388,7 +383,7 @@ public class HdfsReadableTextTest extends BaseFeature {
                         + exTable.getName() + "'");
         // prepare expected default results and verify
         expectedAnalyzeResults.initDataStructures();
-        expectedAnalyzeResults.addRow(new String[] { "100" });
+        expectedAnalyzeResults.addRow(new String[]{"100"});
         ComparisonUtils.compareTables(analyzeResults, expectedAnalyzeResults,
                 null);
     }
@@ -399,7 +394,7 @@ public class HdfsReadableTextTest extends BaseFeature {
      * <number_of_errors>}. When reading data from external table, errors in
      * formatting are stored in an error table until the limit of allowed errors
      * is reached.
-     *
+     * <p>
      * The test covers a case when the number of errors is lower than limit and
      * a case when the errors breach the limit. It also tests the cleanup of
      * segwork and metadata information in the filename parameter (the pxf URI)
@@ -407,27 +402,27 @@ public class HdfsReadableTextTest extends BaseFeature {
      *
      * @throws Exception
      */
-    @Test(groups = { "features", "gpdb", "hcfs" })
+    @Test(groups = {"features", "gpdb", "hcfs"})
     public void errorTable() throws Exception {
 
-        String[] fields = new String[] { "num int", "words text" };
+        String[] fields = new String[]{"num int", "words text"};
 
         Table dataTable = new Table("dataTable", null);
 
-        dataTable.addRow(new String[] { "All Together Now", "The Beatles" });
-        dataTable.addRow(new String[] { "1", "one" });
-        dataTable.addRow(new String[] { "2", "two" });
-        dataTable.addRow(new String[] { "3", "three" });
-        dataTable.addRow(new String[] { "4", "four" });
-        dataTable.addRow(new String[] { "can", "I" });
-        dataTable.addRow(new String[] { "have", "a" });
-        dataTable.addRow(new String[] { "little", "more" });
-        dataTable.addRow(new String[] { "5", "five" });
-        dataTable.addRow(new String[] { "6", "six" });
-        dataTable.addRow(new String[] { "7", "seven" });
-        dataTable.addRow(new String[] { "8", "eight" });
-        dataTable.addRow(new String[] { "9", "nine" });
-        dataTable.addRow(new String[] { "10", "ten - I love you!" });
+        dataTable.addRow(new String[]{"All Together Now", "The Beatles"});
+        dataTable.addRow(new String[]{"1", "one"});
+        dataTable.addRow(new String[]{"2", "two"});
+        dataTable.addRow(new String[]{"3", "three"});
+        dataTable.addRow(new String[]{"4", "four"});
+        dataTable.addRow(new String[]{"can", "I"});
+        dataTable.addRow(new String[]{"have", "a"});
+        dataTable.addRow(new String[]{"little", "more"});
+        dataTable.addRow(new String[]{"5", "five"});
+        dataTable.addRow(new String[]{"6", "six"});
+        dataTable.addRow(new String[]{"7", "seven"});
+        dataTable.addRow(new String[]{"8", "eight"});
+        dataTable.addRow(new String[]{"9", "nine"});
+        dataTable.addRow(new String[]{"10", "ten - I love you!"});
 
         hdfs.writeTableToFile(hdfsFilePath, dataTable, ",");
 
@@ -440,7 +435,7 @@ public class HdfsReadableTextTest extends BaseFeature {
 
         exTable.setName("err_table_test");
         exTable.setFields(fields);
-        exTable.setProfile(EnumPxfDefaultProfiles.HdfsTextSimple.toString());
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":text");
         exTable.setDelimiter(",");
         exTable.setErrorTable(errorTable.getName());
         exTable.setSegmentRejectLimit(10);
@@ -468,16 +463,16 @@ public class HdfsReadableTextTest extends BaseFeature {
 
     /**
      * Verify use of LIMIT
-     *
+     * <p>
      * TODO The test doesn't verify whether Gpdb got all tuples or just the
      * LIMIT. We should test LIMIT cancels the query once it gets LIMIT tuples.
      */
-    @Test(groups = { "features", "gpdb", "hcfs" })
+    @Test(groups = {"features", "gpdb", "hcfs"})
     public void limit() throws Exception {
 
         Table dataTable = new Table("dataTable", null);
         Table limitTable = new Table("limitTable", null);
-        String[] line = new String[] { "Same shirt", "different day" };
+        String[] line = new String[]{"Same shirt", "different day"};
         for (int i = 0; i < 1000; i++) {
             limitTable.addRow(line);
         }
@@ -487,10 +482,10 @@ public class HdfsReadableTextTest extends BaseFeature {
 
         hdfs.writeTableToFile(hdfsFilePath, dataTable, ",");
 
-        String[] fields = new String[] { "s1 text", "s2 text" };
+        String[] fields = new String[]{"s1 text", "s2 text"};
         exTable.setFields(fields);
         exTable.setName("text_limit");
-        exTable.setProfile(EnumPxfDefaultProfiles.HdfsTextSimple.toString());
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":text");
         exTable.setDelimiter(",");
 
         gpdb.createTableAndVerify(exTable);
@@ -502,21 +497,21 @@ public class HdfsReadableTextTest extends BaseFeature {
      * Verify query fails when conversion to int (for example) fails (without an
      * error table) and a proper error message is printed
      */
-    @Test(groups = { "features", "gpdb", "hcfs" })
+    @Test(groups = {"features", "gpdb", "hcfs"})
     public void negativeBadTextData() throws Exception {
 
         Table dataTable = new Table("dataTable", null);
         for (int i = 0; i < 50; i++) {
-            dataTable.addRow(new String[] { "" + i, Integer.toHexString(i) });
+            dataTable.addRow(new String[]{"" + i, Integer.toHexString(i)});
         }
-        dataTable.addRow(new String[] { "joker", "ha" });
+        dataTable.addRow(new String[]{"joker", "ha"});
 
         hdfs.writeTableToFile(hdfsFilePath, dataTable, ",");
 
-        String[] fields = new String[] { "num int", "string text" };
+        String[] fields = new String[]{"num int", "string text"};
         exTable.setName("bad_text");
         exTable.setFields(fields);
-        exTable.setProfile(EnumPxfDefaultProfiles.HdfsTextSimple.toString());
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":text");
         exTable.setDelimiter(",");
 
         gpdb.createTableAndVerify(exTable);
@@ -528,24 +523,24 @@ public class HdfsReadableTextTest extends BaseFeature {
      * Verify we detect errors in the read bridge if they occur after the first
      * HTTP packet was sent. TcServer (2.9.7) detects error and doesn't add the
      * end chunk. PXF on the client side should detect and throw an error.
-     *
+     * <p>
      * The test is done by running a query over a file with >10000 records,
      * using ThrowOn10000Accessor which throw an exception on the 10000th
      * record.
-     *
+     * <p>
      * see GPSQL-2272
      */
-    @Test(groups = { "features", "gpdb", "hcfs" })
+    @Test(groups = {"features", "gpdb"})
     public void errorInTheMiddleOfStream() throws Exception {
 
         Table dataTable = new Table("dataTable", null);
         for (int i = 0; i < 10005; i++) {
-            dataTable.addRow(new String[] { "" + i, Integer.toHexString(i) });
+            dataTable.addRow(new String[]{"" + i, Integer.toHexString(i)});
         }
 
         hdfs.writeTableToFile(hdfsFilePath, dataTable, ",");
 
-        String[] fields = new String[] { "num int", "string text" };
+        String[] fields = new String[]{"num int", "string text"};
 
         exTable.setName("error_on_10000");
         exTable.setFields(fields);

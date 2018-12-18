@@ -12,6 +12,7 @@ import org.greenplum.pxf.automation.structures.tables.hive.HiveTable;
 import org.greenplum.pxf.automation.structures.tables.pxf.ExternalTable;
 import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
 import org.greenplum.pxf.automation.structures.tables.pxf.WritableExternalTable;
+import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
 
 /**
  * Factory class for preparing different kind of Tables setting.
@@ -182,7 +183,7 @@ public abstract class TableFactory {
                                                                 String delimiter) {
         ReadableExternalTable exTable = new ReadableExternalTable(name, fields,
                 path, "Text");
-        exTable.setProfile("HdfsTextSimple");
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":text");
         exTable.setDelimiter(delimiter);
         return exTable;
     }
@@ -204,7 +205,7 @@ public abstract class TableFactory {
                                                                 String delimiter) {
         WritableExternalTable exTable = new WritableExternalTable(name, fields,
                 path, "Text");
-        exTable.setProfile("HdfsTextSimple");
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":text");
         exTable.setDelimiter(delimiter);
         return exTable;
     }
@@ -225,7 +226,7 @@ public abstract class TableFactory {
                                                                 String delimiter) {
         WritableExternalTable exTable = new WritableExternalTable(name, fields,
                 path, "Text");
-        exTable.setProfile("HdfsTextSimple");
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":text");
         exTable.setDelimiter(delimiter);
         exTable.setCompressionCodec("org.apache.hadoop.io.compress.GzipCodec");
         return exTable;
@@ -247,7 +248,7 @@ public abstract class TableFactory {
                                                                  String delimiter) {
         WritableExternalTable exTable = new WritableExternalTable(name, fields,
                 path, "Text");
-        exTable.setProfile("HdfsTextSimple");
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":text");
         exTable.setDelimiter(delimiter);
         exTable.setCompressionCodec("org.apache.hadoop.io.compress.BZip2Codec");
         return exTable;
@@ -273,7 +274,7 @@ public abstract class TableFactory {
         ReadableExternalTable exTable = new ReadableExternalTable(name, fields,
                 path, "CUSTOM");
 
-        exTable.setProfile("SequenceWritable");
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":SequenceFile");
         exTable.setDataSchema(schema);
         exTable.setFormatter("pxfwritable_import");
 
@@ -300,7 +301,7 @@ public abstract class TableFactory {
         WritableExternalTable exTable = new WritableExternalTable(name, fields,
                 path, "CUSTOM");
 
-        exTable.setProfile("SequenceWritable");
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":SequenceFile");
         exTable.setDataSchema(schema);
         exTable.setFormatter("pxfwritable_export");
 
@@ -316,17 +317,17 @@ public abstract class TableFactory {
      * @return {@link HiveTable} with "row" format and comma Delimiter.
      */
     public static HiveTable getHiveByRowCommaTable(String name, String schema, String[] fields) {
-    	
+
     	HiveTable table;
-    	
+
     	if (schema != null)
     		table = new HiveTable(name, schema, fields);
     	else
     		table = new HiveTable(name, fields);
-    	
+
     	table.setFormat("ROW");
     	table.setDelimiterFieldsBy(",");
-    	
+
     	return table;
     }
 
@@ -342,7 +343,7 @@ public abstract class TableFactory {
     	HiveTable table = getHiveByRowCommaTable(name, null, fields);
         return table;
     }
-    
+
 
     /**
      * Generates Hive External Table using row format and comma delimiter

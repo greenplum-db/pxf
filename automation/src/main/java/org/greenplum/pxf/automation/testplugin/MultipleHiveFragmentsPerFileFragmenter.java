@@ -109,7 +109,7 @@ public class MultipleHiveFragmentsPerFileFragmenter extends BaseFragmenter {
         for (InputSplit split : splits) {
             FileSplit fsp = (FileSplit) split;
             String[] hosts = fsp.getLocations();
-            String filepath = fsp.getPath().toUri().getPath();
+            String filepath = fsp.getPath().toString();
             return filepath;
         }
         throw new RuntimeException("Unable to get file path for table.");

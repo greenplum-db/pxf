@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
     <property>
-        <name>fs.defaultFS</name>
-        <value>gs://{YOUR_GOOGLE_STORAGE_BUCKET}</value>
-    </property>
-    <property>
         <name>google.cloud.auth.service.account.enable</name>
         <value>true</value>
     </property>
