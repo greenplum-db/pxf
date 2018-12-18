@@ -97,7 +97,12 @@ public enum HcfsType {
 
         if (FILE_SCHEME.equals(defaultFS.getScheme())) {
             // if the defaultFS is file://, but enum is not FILE, use enum prefix only
-            return prefix + context.getDataSource();
+            String dataSource = context.getDataSource();
+            if (this != HcfsType.FILE && this != HcfsType.LOCALFILE) {
+                dataSource = StringUtils.removeStart(dataSource, "/");
+            }
+            return prefix + dataSource;
+
         } else {
             // if the defaultFS is not file://, use it, instead of enum prefix and append user's path
             return StringUtils.removeEnd(defaultFS.toString(), "/") + "/" + StringUtils.removeStart(context.getDataSource(), "/");

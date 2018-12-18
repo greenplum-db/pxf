@@ -42,7 +42,7 @@ public class HcfsTypeTest {
 
         HcfsType type = HcfsType.getHcfsType(configuration, context);
         assertEquals(HcfsType.S3, type);
-        assertEquals("s3:///foo/bar.txt", type.getDataUri(configuration, context));
+        assertEquals("s3://foo/bar.txt", type.getDataUri(configuration, context));
     }
 
     @Test
@@ -70,7 +70,7 @@ public class HcfsTypeTest {
 
         HcfsType type = HcfsType.getHcfsType(configuration, context);
         assertEquals(HcfsType.CUSTOM, type);
-        assertEquals("xyz:///foo/bar.txt", type.getDataUri(configuration, context));
+        assertEquals("xyz://foo/bar.txt", type.getDataUri(configuration, context));
     }
 
     @Test
