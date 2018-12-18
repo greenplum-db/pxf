@@ -85,7 +85,7 @@ function install_pxf_and_hadoop() {
     # init all PXFs using cluster command, configure PXF on master, sync configs and start pxf
     ssh ${SSH_OPTS} gpadmin@mdw "source ${GPHOME}/greenplum_path.sh &&
         PXF_CONF=${PXF_CONF_DIR} ${GPHOME}/pxf/bin/pxf cluster init &&
-        cp ${PXF_CONF_DIR}/templates/*-site.xml ${PXF_CONF_DIR}/servers/default/ &&
+        cp ${PXF_CONF_DIR}/templates/{hdfs,mapred,yarn,core,hbase,hive}-site.xml ${PXF_CONF_DIR}/servers/default/ &&
         sed -i -e 's/\(0.0.0.0\|localhost\|127.0.0.1\)/${hadoop_ip}/g' ${PXF_CONF_DIR}/servers/default/*-site.xml &&
         if [ ${IMPERSONATION} == false ]; then
             echo 'export PXF_USER_IMPERSONATION=false' >> ${PXF_CONF_DIR}/conf/pxf-env.sh
