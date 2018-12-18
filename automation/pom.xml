@@ -209,6 +209,13 @@
             <artifactId>gcs-connector</artifactId>
             <version>1.9.0-hadoop2</version>
             <classifier>shaded</classifier>
+            <!--The block below excludes all transitive dependencies for the gcs-connector jar-->
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- Azure Dependencies -->
