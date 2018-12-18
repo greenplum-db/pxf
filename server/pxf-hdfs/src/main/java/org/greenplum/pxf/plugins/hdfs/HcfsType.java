@@ -23,7 +23,7 @@ public enum HcfsType {
     HDFS,
     LOCALFILE("file") {
         @Override
-        public String normalizedDataSource(String dataSource) {
+        public String normalizeDataSource(String dataSource) {
             return dataSource;
         }
     },
@@ -37,7 +37,7 @@ public enum HcfsType {
         }
 
         @Override
-        public String normalizedDataSource(String dataSource) {
+        public String normalizeDataSource(String dataSource) {
             return dataSource;
         }
     };
@@ -108,7 +108,7 @@ public enum HcfsType {
      * @param dataSource The path to the data source
      * @return the normalized path to the data source
      */
-    public String normalizedDataSource(String dataSource) {
+    public String normalizeDataSource(String dataSource) {
         return StringUtils.removeStart(dataSource, "/");
     }
 
@@ -117,7 +117,7 @@ public enum HcfsType {
 
         if (FILE_SCHEME.equals(defaultFS.getScheme())) {
             // if the defaultFS is file://, but enum is not FILE, use enum prefix only
-            return prefix + normalizedDataSource(context.getDataSource());
+            return prefix + normalizeDataSource(context.getDataSource());
 
         } else {
             // if the defaultFS is not file://, use it, instead of enum prefix and append user's path
