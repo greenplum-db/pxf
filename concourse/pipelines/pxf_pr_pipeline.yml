@@ -39,11 +39,11 @@ resources:
     repository: pivotaldata/gpdb-pxf-dev
     tag: centos6-hdp-server
 
-- name: centos-gpdb-dev-6
+- name: centos-gpdb-build-6
   type: docker-image
   source:
-    repository: pivotaldata/centos-gpdb-dev
-    tag: '6-gcc6.2-llvm3.7'
+    repository: pivotaldata/centos6-build
+    tag: gpdb6-latest
 
 - name: gpaddon_src
   type: git
@@ -110,13 +110,13 @@ jobs:
       passed:
       - compile_pxf
     - get: gpaddon_src
-    - get: centos-gpdb-dev-6
+    - get: centos-gpdb-build-6
     - get: gpdb-pxf-dev-centos6-hdp-server
 
   # Build the open-source GPDB code
   - task: sync_tools
     file: gpdb_src/concourse/tasks/sync_tools.yml
-    image: centos-gpdb-dev-6
+    image: centos-gpdb-build-6
     params:
       IVYREPO_HOST: {{ivyrepo_host}}
       IVYREPO_REALM: {{ivyrepo_realm}}
@@ -128,7 +128,7 @@ jobs:
       TASK_OS_VERSION: 6
   - task: compile_gpdb
     file: gpdb_src/concourse/tasks/compile_gpdb.yml
-    image: centos-gpdb-dev-6
+    image: centos-gpdb-build-6
     params:
       TARGET_OS: centos
       TARGET_OS_VERSION: 6
