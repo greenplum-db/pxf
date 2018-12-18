@@ -21,7 +21,12 @@ public enum HcfsType {
     },
     GS,
     HDFS,
-    LOCALFILE("file"),
+    LOCALFILE("file") {
+        @Override
+        public String normalizedDataSource(String dataSource) {
+            return dataSource;
+        }
+    },
     S3,
     S3A,
     S3N,
@@ -29,6 +34,11 @@ public enum HcfsType {
         @Override
         public String getDataUri(Configuration configuration, RequestContext context) {
             throw new IllegalStateException("core-site.xml is missing or using unsupported file:// as default filesystem");
+        }
+
+        @Override
+        public String normalizedDataSource(String dataSource) {
+            return dataSource;
         }
     };
 
@@ -92,16 +102,22 @@ public enum HcfsType {
         return getDataUriForPrefix(configuration, context, this.prefix);
     }
 
+    /**
+     * Returns the normalized data source for the given protocol
+     *
+     * @param dataSource The path to the data source
+     * @return the normalized path to the data source
+     */
+    public String normalizedDataSource(String dataSource) {
+        return StringUtils.removeStart(dataSource, "/");
+    }
+
     protected String getDataUriForPrefix(Configuration configuration, RequestContext context, String prefix) {
         URI defaultFS = FileSystem.getDefaultUri(configuration);
 
         if (FILE_SCHEME.equals(defaultFS.getScheme())) {
             // if the defaultFS is file://, but enum is not FILE, use enum prefix only
-            String dataSource = context.getDataSource();
-            if (this != HcfsType.FILE && this != HcfsType.LOCALFILE) {
-                dataSource = StringUtils.removeStart(dataSource, "/");
-            }
-            return prefix + dataSource;
+            return prefix + normalizedDataSource(context.getDataSource());
 
         } else {
             // if the defaultFS is not file://, use it, instead of enum prefix and append user's path
