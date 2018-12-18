@@ -28,7 +28,7 @@
 
     <adl>
         <class>org.greenplum.pxf.automation.components.hdfs.Hdfs</class>
-        <workingDirectory>$(ADL_ACCOUNT).azuredatalakestore.net/tmp/pxf_automation_data/__UUID__</workingDirectory>
+        <workingDirectory>pxfdev.azuredatalakestore.net/tmp/pxf_automation_data/__UUID__</workingDirectory>
         <hadoopRoot>/home/gpadmin/pxf/servers/adl</hadoopRoot>
         <scheme>adl</scheme>
     </adl>

@@ -107,7 +107,7 @@ public class MultiServerTest extends BaseFeature {
                         "pxf_multiserver_s3", PXF_MULTISERVER_COLS, s3Bucket + s3Path, ",");
         s3Table.setServer("server=s3");
         s3Table.setUserParameters(new String[]{"accesskey=" + ProtocolUtils.getAccess(), "secretkey=" + ProtocolUtils.getSecret()});
-        s3Table.setProfile("S3Text");
+        s3Table.setProfile("s3:text");
         gpdb.createTableAndVerify(s3Table);
     }
 
