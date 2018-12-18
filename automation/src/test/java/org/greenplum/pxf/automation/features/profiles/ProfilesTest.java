@@ -288,7 +288,7 @@ public class ProfilesTest extends BaseFeature {
             Assert.fail("Exception should have been thrown because of duplicate profile");
         } catch (PSQLException e) {
             ExceptionUtils.validate(null, e,
-                    new PSQLException("ERROR: Invalid URI pxf://" + exTable.getPath() +
+                    new PSQLException("ERROR: .?nvalid URI pxf://" + exTable.getPath() +
                             "\\?Profile=HDFSTEXTSIMPLE&Profile=HdfsTextSimple: " +
                             "Duplicate option\\(s\\): PROFILE", null), true);
         }

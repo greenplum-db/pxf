@@ -332,8 +332,8 @@ public class HdfsWritableSequenceTest extends BaseWritableFeature {
 
         String copyCmd = "COPY " + writableExTable.getName() + " FROM '" + path.getAbsolutePath() +
                 "'" + "SEGMENT REJECT LIMIT 5 ROWS;";
-        String noticeMsg = "Found 1 data formatting errors (1 or more input rows). Rejected related input data.";
-        gpdb.runQueryWithExpectedWarning(copyCmd, noticeMsg, false);
+        String noticeMsg = ".?ound 1 data formatting errors \\(1 or more input rows\\).? .?ejected related input data.*";
+        gpdb.runQueryWithExpectedWarning(copyCmd, noticeMsg, true);
 
         readableExTable.setName("readable_recordkey_int");
         readableExTable.setPath(hdfsDir);
