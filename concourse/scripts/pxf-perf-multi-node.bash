@@ -10,7 +10,7 @@ CWDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 HADOOP_HOSTNAME="ccp-$(cat terraform_dataproc/name)-m"
 scale=$(($SCALE + 0))
 PXF_CONF_DIR="/home/gpadmin/pxf"
-PXF_SERVER_DIR="${PXF_CONF_DIR}/servers/default"
+PXF_SERVER_DIR="${PXF_CONF_DIR}/servers"
 
 if [ ${scale} -gt 10 ]; then
   VALIDATION_QUERY="SUM(l_partkey) AS PARTKEYSUM"
@@ -50,7 +50,7 @@ EOF
     # Prevent GPDB from erroring out with VMEM protection error
     gpconfig -c gp_vmem_protect_limit -v '16384'
     gpssh -u gpadmin -h mdw -v -s -e \
-        'source /usr/local/greenplum-db-devel/greenplum_path.sh && export MASTER_DATA_DIRECTORY=/data/gpdata/master/gpseg-1 && gpstop -u'
+        'source ${GPHOME}/greenplum_path.sh && export MASTER_DATA_DIRECTORY=/data/gpdata/master/gpseg-1 && gpstop -u'
     sleep 10
 
     psql -c "CREATE EXTERNAL TABLE lineitem_external (like lineitem) LOCATION ('pxf://tmp/lineitem_read/?PROFILE=HdfsTextSimple') FORMAT 'CSV' (DELIMITER '|')"
@@ -248,11 +248,15 @@ EOF
     gphdfs_validate_write_to_external
 }
 
+function sync_configuration() {
+    gpssh -u gpadmin -h mdw -v -s -e "source ${GPHOME}/greenplum_path.sh && ${GPHOME}/pxf/bin/pxf cluster sync"
+}
+
 function create_adl_external_tables() {
     psql -c "CREATE EXTERNAL TABLE lineitem_adl_read (like lineitem)
-        location('pxf://adl-profile-test/lineitem/${SCALE}/?PROFILE=HdfsTextSimple') format 'CSV' (DELIMITER '|');"
+        location('pxf://adl-profile-test/lineitem/${SCALE}/?PROFILE=adl:text&server=adlbenchmark') format 'CSV' (DELIMITER '|');"
     psql -c "CREATE WRITABLE EXTERNAL TABLE lineitem_adl_write (LIKE lineitem)
-        LOCATION('pxf://adl-profile-test/output/${SCALE}/?PROFILE=HdfsTextSimple') FORMAT 'CSV'"
+        LOCATION('pxf://adl-profile-test/output/${SCALE}/?PROFILE=adl:text&server=adlbenchmark') FORMAT 'CSV'"
 }
 
 function create_s3_extension_external_tables {
@@ -264,7 +268,7 @@ function create_s3_extension_external_tables {
     psql -c "CREATE WRITABLE EXTERNAL TABLE lineitem_s3_c_write (like lineitem)
         LOCATION('s3://s3.us-west-2.amazonaws.com/gpdb-ud-scratch/s3-profile-test/output/ config=/home/gpadmin/s3/s3.conf') FORMAT 'CSV'"
     psql -c "CREATE WRITABLE EXTERNAL TABLE lineitem_s3_pxf_write (LIKE lineitem)
-        LOCATION('pxf://s3-profile-test/output/?PROFILE=s3:text&SERVER=s3benchmark') FORMAT 'CSV'"
+        LOCATION('pxf://s3-profile-test/output/${SCALE}/?PROFILE=s3:text&SERVER=s3benchmark') FORMAT 'CSV'"
 }
 
 function assert_count_in_table {
@@ -282,37 +286,41 @@ function assert_count_in_table {
 function run_adl_benchmark() {
     create_adl_external_tables
 
-    cat > /tmp/core-site.xml <<-EOF
+    cat > /tmp/adl-site.xml <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
 <configuration>
-    <property>
-		 <name>fs.defaultFS</name>
-		 <value>adl://${ADL_ACCOUNT}.azuredatalakestore.net</value>
+	<property>
+		<name>fs.defaultFS</name>
+		<value>adl://${ADL_ACCOUNT}.azuredatalakestore.net</value>
 	</property>
 	<property>
-		 <name>dfs.adls.oauth2.access.token.provider.type</name>
-		 <value>ClientCredential</value>
+		<name>dfs.adls.oauth2.access.token.provider.type</name>
+		<value>ClientCredential</value>
 	</property>
 	<property>
-	   <name>dfs.adls.oauth2.refresh.url</name>
-	   <value>${ADL_REFRESH_URL}</value>
+		<name>dfs.adls.oauth2.refresh.url</name>
+		<value>${ADL_REFRESH_URL}</value>
 	</property>
 	<property>
-	   <name>dfs.adls.oauth2.client.id</name>
-	   <value>${ADL_CLIENT_ID}</value>
+		<name>dfs.adls.oauth2.client.id</name>
+		<value>${ADL_CLIENT_ID}</value>
 	</property>
 	<property>
-	   <name>dfs.adls.oauth2.credential</name>
-	   <value>${ADL_CREDENTIAL}</value>
+		<name>dfs.adls.oauth2.credential</name>
+		<value>${ADL_CREDENTIAL}</value>
 	</property>
 </configuration>
 EOF
 
-    # Make a backup of core-site and update it with the S3 core-site
-    gpscp -u centos -f /tmp/segment_hosts /tmp/core-site.xml =:/tmp/core-site-patch.xml
-    gpssh -u centos -f /tmp/segment_hosts -v -s -e \
-      "sudo mv $PXF_SERVER_DIR/core-site.xml $PXF_SERVER_DIR/core-site.xml.back && sudo cp /tmp/core-site-patch.xml $PXF_SERVER_DIR/core-site.xml"
+    ADL_SERVER_DIR="${PXF_SERVER_DIR}/adlbenchmark"
+
+    # Create the ADL Benchmark server and copy core-site.xml
+    gpssh -u gpadmin -h mdw -v -s -e "sudo mkdir -p $ADL_SERVER_DIR"
+    gpscp -u gpadmin -h mdw /tmp/adl-site.xml =:${ADL_SERVER_DIR}/adl-site.xml
+    sync_configuration
+#    gpssh -u centos -f /tmp/segment_hosts -v -s -e \
+#      "sudo mkdir -p $ADL_SERVER_DIR && sudo mv /tmp/adl-site.xml $ADL_SERVER_DIR/adl-site.xml"
 
     cat << EOF
 
@@ -331,10 +339,6 @@ EOF
 ############################
 EOF
     time psql -c "INSERT INTO lineitem_adl_write SELECT * FROM lineitem"
-
-    # Restore core-site
-    gpssh -u centos -f /tmp/segment_hosts -v -s -e \
-      "sudo mv $PXF_SERVER_DIR/core-site.xml $PXF_SERVER_DIR/core-site.xml.adl && sudo cp $PXF_SERVER_DIR/core-site.xml.back $PXF_SERVER_DIR/core-site.xml"
 }
 
 function run_s3_extension_benchmark {
@@ -362,33 +366,37 @@ EOF
     # We need to update core-site.xml to point to the the S3 bucket
     # and we need to provide AWS credentials
 
-    cat > /tmp/core-site.xml <<-EOF
+    cat > /tmp/s3-site.xml <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
 <configuration>
-<property>
-      <name>fs.defaultFS</name>
-      <value>s3a://gpdb-ud-scratch</value>
-    </property>
-    <property>
-      <name>fs.s3a.access.key</name>
-      <value>${AWS_ACCESS_KEY_ID}</value>
-    </property>
-    <property>
-      <name>fs.s3a.secret.key</name>
-      <value>${AWS_SECRET_ACCESS_KEY}</value>
-    </property>
-    <property>
-      <name>fs.s3a.fast.upload</name>
-      <value>true</value>
-    </property>
+	<property>
+		<name>fs.defaultFS</name>
+		<value>s3a://gpdb-ud-scratch</value>
+	</property>
+	<property>
+		<name>fs.s3a.access.key</name>
+		<value>${AWS_ACCESS_KEY_ID}</value>
+	</property>
+	<property>
+		<name>fs.s3a.secret.key</name>
+		<value>${AWS_SECRET_ACCESS_KEY}</value>
+	</property>
+	<property>
+		<name>fs.s3a.fast.upload</name>
+		<value>true</value>
+	</property>
 </configuration>
 EOF
 
+    S3_SERVER_DIR="${PXF_SERVER_DIR}/s3benchmark"
+
     # Make a backup of core-site and update it with the S3 core-site
-    gpscp -u centos -f /tmp/segment_hosts /tmp/core-site.xml =:/tmp/core-site-patch.xml
-    gpssh -u centos -f /tmp/segment_hosts -v -s -e \
-      "sudo mv $PXF_SERVER_DIR/core-site.xml $PXF_SERVER_DIR/core-site.xml.back && sudo cp /tmp/core-site-patch.xml $PXF_SERVER_DIR/core-site.xml"
+    gpssh -u gpadmin -h mdw -v -s -e "sudo mkdir -p $S3_SERVER_DIR"
+    gpscp -u gpadmin -h mdw /tmp/s3-site.xml =:${S3_SERVER_DIR}/s3-site.xml
+    sync_configuration
+#    gpssh -u centos -f /tmp/segment_hosts -v -s -e \
+#      "sudo mkdir -p ${S3_SERVER_DIR} && sudo mv /tmp/s3-site.xml ${S3_SERVER_DIR}/s3-site.xml"
 
     cat << EOF
 
@@ -407,10 +415,6 @@ EOF
 ############################
 EOF
     time psql -c "INSERT INTO lineitem_s3_pxf_write SELECT * FROM lineitem"
-
-    # Restore core-site
-    gpssh -u centos -f /tmp/segment_hosts -v -s -e \
-      "sudo mv $PXF_SERVER_DIR/core-site.xml $PXF_SERVER_DIR/core-site.xml.s3 && sudo cp $PXF_SERVER_DIR/core-site.xml.back $PXF_SERVER_DIR/core-site.xml"
 }
 
 function main {
