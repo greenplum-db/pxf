@@ -127,11 +127,10 @@ public class HcfsTypeTest {
     @Test
     public void testErrorsWhenProfileAndDefaultFSDoNotMatch() {
         thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("the profile's protocol (s3a) does not match the server configuration (hdfs)");
+        thrown.expectMessage("profile protocol (s3a) is not compatible with server filesystem (hdfs)");
 
         context.setProtocol("s3a");
         configuration.set("fs.defaultFS", "hdfs://0.0.0.0:8020");
-        HcfsType type = HcfsType.getHcfsType(configuration, context);
-        type.getDataUri(configuration, context);
+        HcfsType.getHcfsType(configuration, context);
     }
 }

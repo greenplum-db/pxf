@@ -76,21 +76,30 @@ public enum HcfsType {
 
     private static String getScheme(Configuration configuration, RequestContext context) {
         // if defaultFs is defined and not file://, it takes precedence over protocol
-        String protocolFromContext = context.getProtocol();
+        String schemeFromContext = context.getProtocol();
         URI defaultFS = FileSystem.getDefaultUri(configuration);
-        String scheme = defaultFS.getScheme();
-        if (StringUtils.isBlank(scheme)) {
+        String defaultFSScheme = defaultFS.getScheme();
+        if (StringUtils.isBlank(defaultFSScheme)) {
             throw new IllegalStateException(String.format("No scheme for property %s=%s", FS_DEFAULT_NAME_KEY, defaultFS));
         }
 
         // protocol from RequestContext will take precedence over defaultFS
-        if (StringUtils.isNotBlank(protocolFromContext)) {
-            scheme = protocolFromContext; // use the value from context
+        if (StringUtils.isNotBlank(schemeFromContext)) {
+            checkForConfigurationMismatch(defaultFSScheme, schemeFromContext);
+            return schemeFromContext;
         }
 
-        checkForConfigurationMismatch(defaultFS, scheme);
+        return defaultFSScheme;
+    }
 
-        return scheme;
+    private static void checkForConfigurationMismatch(String defaultFSScheme, String schemeFromContext) {
+        // do not allow protocol mismatch, unless defaultFs has file:// scheme
+        if (!FILE_SCHEME.equals(defaultFSScheme) &&
+                !StringUtils.equalsIgnoreCase(defaultFSScheme, schemeFromContext)) {
+            throw new IllegalArgumentException(
+                    String.format("profile protocol (%s) is not compatible with server filesystem (%s)",
+                            schemeFromContext, defaultFSScheme));
+        }
     }
 
     /**
@@ -122,16 +131,6 @@ public enum HcfsType {
         } else {
             // if the defaultFS is not file://, use it, instead of enum prefix and append user's path
             return StringUtils.removeEnd(defaultFS.toString(), "/") + "/" + StringUtils.removeStart(context.getDataSource(), "/");
-        }
-    }
-
-    private static void checkForConfigurationMismatch(URI defaultFS, String scheme) {
-        if (!FILE_SCHEME.equals(defaultFS.getScheme()) &&
-                !StringUtils.equalsIgnoreCase(defaultFS.getScheme(), scheme)) {
-            throw new IllegalArgumentException(
-                    String.format("the profile's protocol (%s) does not match the server configuration (%s)",
-                            scheme,
-                            defaultFS.getScheme()));
         }
     }
 }
