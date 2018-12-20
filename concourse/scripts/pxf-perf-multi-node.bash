@@ -316,7 +316,7 @@ EOF
     ADL_SERVER_DIR="${PXF_SERVER_DIR}/adlbenchmark"
 
     # Create the ADL Benchmark server and copy core-site.xml
-    gpssh -u gpadmin -h mdw -v -s -e "sudo mkdir -p $ADL_SERVER_DIR"
+    gpssh -u gpadmin -h mdw -v -s -e "mkdir -p $ADL_SERVER_DIR"
     gpscp -u gpadmin -h mdw /tmp/adl-site.xml =:${ADL_SERVER_DIR}/adl-site.xml
     sync_configuration
 #    gpssh -u centos -f /tmp/segment_hosts -v -s -e \
@@ -392,7 +392,7 @@ EOF
     S3_SERVER_DIR="${PXF_SERVER_DIR}/s3benchmark"
 
     # Make a backup of core-site and update it with the S3 core-site
-    gpssh -u gpadmin -h mdw -v -s -e "sudo mkdir -p $S3_SERVER_DIR"
+    gpssh -u gpadmin -h mdw -v -s -e "mkdir -p $S3_SERVER_DIR"
     gpscp -u gpadmin -h mdw /tmp/s3-site.xml =:${S3_SERVER_DIR}/s3-site.xml
     sync_configuration
 #    gpssh -u centos -f /tmp/segment_hosts -v -s -e \
