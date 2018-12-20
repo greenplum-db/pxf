@@ -81,14 +81,15 @@ public enum HcfsType {
         String scheme = defaultFS.getScheme();
         if (StringUtils.isBlank(scheme)) {
             throw new IllegalStateException(String.format("No scheme for property %s=%s", FS_DEFAULT_NAME_KEY, defaultFS));
-        } else if (FILE_SCHEME.equals(scheme)) {
-            // default FS of file:// is likely defaulted, see if context protocol can be used
-            if (StringUtils.isNotBlank(protocolFromContext)) {
-                scheme = protocolFromContext; // use the value from context
-            }
-        } // else {
-        // defaultFS is explicitly set to smth which is not file://, it will take precedence over context protocol
-        // }
+        }
+
+        // protocol from RequestContext will take precedence over defaultFS
+        if (StringUtils.isNotBlank(protocolFromContext)) {
+            scheme = protocolFromContext; // use the value from context
+        }
+
+        checkForConfigurationMismatch(defaultFS, scheme);
+
         return scheme;
     }
 
@@ -118,10 +119,19 @@ public enum HcfsType {
         if (FILE_SCHEME.equals(defaultFS.getScheme())) {
             // if the defaultFS is file://, but enum is not FILE, use enum prefix only
             return prefix + normalizeDataSource(context.getDataSource());
-
         } else {
             // if the defaultFS is not file://, use it, instead of enum prefix and append user's path
             return StringUtils.removeEnd(defaultFS.toString(), "/") + "/" + StringUtils.removeStart(context.getDataSource(), "/");
+        }
+    }
+
+    private static void checkForConfigurationMismatch(URI defaultFS, String scheme) {
+        if (!FILE_SCHEME.equals(defaultFS.getScheme()) &&
+                !StringUtils.equalsIgnoreCase(defaultFS.getScheme(), scheme)) {
+            throw new IllegalArgumentException(
+                    String.format("the profile's protocol (%s) does not match the server configuration (%s)",
+                            scheme,
+                            defaultFS.getScheme()));
         }
     }
 }

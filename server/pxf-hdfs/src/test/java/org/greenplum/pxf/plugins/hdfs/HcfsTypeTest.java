@@ -24,18 +24,6 @@ public class HcfsTypeTest {
     }
 
     @Test
-    public void testNonFileDefaultFSTakesPrecedenceOverProtocol() {
-        // Test that defaultFs takes precedence over protocol (when it's not file)
-        configuration.set("fs.defaultFS", "hdfs://0.0.0.0:8020");
-        context.setProtocol(S3_PROTOCOL);
-
-        HcfsType type = HcfsType.getHcfsType(configuration, context);
-
-        assertEquals(HcfsType.HDFS, type);
-        assertEquals("hdfs://0.0.0.0:8020/foo/bar.txt", type.getDataUri(configuration, context));
-    }
-
-    @Test
     public void testProtocolTakesPrecedenceOverFileDefaultFs() {
         // Test that we can specify protocol when configuration defaults are loaded
         context.setProtocol(S3_PROTOCOL);
@@ -134,5 +122,16 @@ public class HcfsTypeTest {
         HcfsType type = HcfsType.getHcfsType(configuration, context);
         assertEquals(HcfsType.LOCALFILE, type);
         assertEquals("file:///foo/bar.txt", type.getDataUri(configuration, context));
+    }
+
+    @Test
+    public void testErrorsWhenProfileAndDefaultFSDoNotMatch() {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("the profile's protocol (s3a) does not match the server configuration (hdfs)");
+
+        context.setProtocol("s3a");
+        configuration.set("fs.defaultFS", "hdfs://0.0.0.0:8020");
+        HcfsType type = HcfsType.getHcfsType(configuration, context);
+        type.getDataUri(configuration, context);
     }
 }
