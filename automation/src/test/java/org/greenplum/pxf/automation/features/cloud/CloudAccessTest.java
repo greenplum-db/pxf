@@ -2,6 +2,7 @@ package org.greenplum.pxf.automation.features.cloud;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.greenplum.pxf.automation.components.cluster.PhdCluster;
 import org.greenplum.pxf.automation.components.hdfs.Hdfs;
 import org.greenplum.pxf.automation.features.BaseFeature;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
@@ -55,6 +56,7 @@ public class CloudAccessTest extends BaseFeature {
     protected void beforeMethod() throws Exception {
         super.beforeMethod();
         prepareData();
+        cluster.restart(PhdCluster.EnumClusterServices.pxf);
     }
 
     @Override
