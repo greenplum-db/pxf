@@ -20,7 +20,10 @@
 -- m/pxf:\/\/(.*)\/pxf_automation_data/
 -- s/pxf:\/\/.*PROFILE/pxf:\/\/pxf_automation_data?PROFILE/
 --
+-- m/CONTEXT:.*line.*/
+-- s/line \d* of //g
+--
 -- end_matchsubs
 SELECT *  FROM cloudaccess_server_no_credentials_invalid_config;
 ERROR:  remote component error (500) from 'SOME_IP:SOME_PORT':  type  Exception SOME_EXCEPTION
-DETAIL:  External table cloudaccess_server_no_credentials_invalid_config, line 1 of file pxf://pxf_automation_data?PROFILE=s3:text&server=s3-invalid
+DETAIL:  External table cloudaccess_server_no_credentials_invalid_config, file pxf://pxf_automation_data?PROFILE=s3:text&server=s3-invalid

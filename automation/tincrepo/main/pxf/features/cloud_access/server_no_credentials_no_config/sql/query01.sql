@@ -20,6 +20,9 @@
 -- m/pxf:\/\/(.*)\/pxf_automation_data/
 -- s/pxf:\/\/.*PROFILE/pxf:\/\/pxf_automation_data?PROFILE/
 --
+-- m/CONTEXT:.*line.*/
+-- s/line \d* of //g
+--
 -- end_matchsubs
 
 SELECT *  FROM cloudaccess_server_no_credentials_no_config;
