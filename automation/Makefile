@@ -31,12 +31,12 @@ ifneq "$(PROTOCOL)" ""
 	PROTOCOL_HOME=~/pxf/servers/$(PROTOCOL)
 endif
 
-ifneq "$(AWS_ACCESS_KEY_ID)" ""
-	MAVEN_TEST_OPTS+= -DAWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID)
+ifneq "$(ACCESS_KEY_ID)" ""
+	MAVEN_TEST_OPTS+= -DAWS_ACCESS_KEY_ID=$(ACCESS_KEY_ID)
 endif
 
-ifneq "$(AWS_SECRET_ACCESS_KEY)" ""
-	MAVEN_TEST_OPTS+= -DAWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY)
+ifneq "$(SECRET_ACCESS_KEY)" ""
+	MAVEN_TEST_OPTS+= -DAWS_SECRET_ACCESS_KEY=$(SECRET_ACCESS_KEY)
 endif
 
 ifeq "$(PXF_TEST_DEBUG)" "true"
@@ -85,13 +85,13 @@ ifneq "$(PROTOCOL)" ""
 		if [[ $(PROTOCOL) == s3 ]]; then \
 		    mkdir -p $(PROTOCOL_HOME)-invalid; \
 		    cp $(PXF_HOME)/templates/user/templates/$(PROTOCOL)-site.xml $(PROTOCOL_HOME)-invalid/; \
-			if [[ -z "$(AWS_ACCESS_KEY_ID)" ]] || [[ -z "$(AWS_SECRET_ACCESS_KEY)" ]]; then \
-				echo "AWS Keys (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY) not set"; \
+			if [[ -z "$(ACCESS_KEY_ID)" ]] || [[ -z "$(SECRET_ACCESS_KEY)" ]]; then \
+				echo "AWS Keys (ACCESS_KEY_ID, SECRET_ACCESS_KEY) not set"; \
 				rm -rf $(PROTOCOL_HOME); \
 				exit 1; \
 			fi; \
-			sed -i "s|YOUR_AWS_ACCESS_KEY_ID|$(AWS_ACCESS_KEY_ID)|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
-			sed -i "s|YOUR_AWS_SECRET_ACCESS_KEY|$(AWS_SECRET_ACCESS_KEY)|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
+			sed -i "s|YOUR_AWS_ACCESS_KEY_ID|$(ACCESS_KEY_ID)|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
+			sed -i "s|YOUR_AWS_SECRET_ACCESS_KEY|$(SECRET_ACCESS_KEY)|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
 		fi; \
 		if [[ $(PROTOCOL) == adl ]]; then \
 			if [[ -z "$(ADL_ACCOUNT)" ]] || [[ -z "$(ADL_REFRESH_URL)" ]] || [[ -z "$(ADL_CLIENT_ID)" ]] || [[ -z "$(ADL_CREDENTIAL)" ]]; then \
