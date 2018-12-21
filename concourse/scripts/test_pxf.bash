@@ -76,7 +76,9 @@ EOF
 	create_gpdb_cluster
 	add_remote_user_access_for_gpdb "testuser"
 	init_and_configure_pxf_server
-	configure_pxf_default_server
+	if [[ -z "${PROTOCOL}" ]]; then
+		configure_pxf_default_server
+	fi
 	start_pxf_server
 
 	if [[ ${ACCEPTANCE} == "true" ]]; then

@@ -83,6 +83,8 @@ ifneq "$(PROTOCOL)" ""
 		cp $(PXF_HOME)/templates/user/templates/$(PROTOCOL)-site.xml $(PROTOCOL_HOME)/; \
 		cp $(PXF_HOME)/templates/user/templates/mapred-site.xml $(PROTOCOL_HOME)/; \
 		if [[ $(PROTOCOL) == s3 ]]; then \
+		    mkdir -p $(PROTOCOL_HOME)-invalid; \
+		    cp $(PXF_HOME)/templates/user/templates/$(PROTOCOL)-site.xml $(PROTOCOL_HOME)-invalid/; \
 			if [[ -z "$(AWS_ACCESS_KEY_ID)" ]] || [[ -z "$(AWS_SECRET_ACCESS_KEY)" ]]; then \
 				echo "AWS Keys (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY) not set"; \
 				rm -rf $(PROTOCOL_HOME); \

@@ -522,7 +522,7 @@ jobs:
       AWS_ACCESS_KEY_ID: {{tf-machine-access-key-id}}
       AWS_SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
       AWS_DEFAULT_REGION: {{aws-region}}
-      GROUP: hcfs
+      GROUP: hcfs,s3
       IMPERSONATION: false
       PROTOCOL: s3
       TEST_ENV: {{test-env}}
