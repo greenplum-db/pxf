@@ -11,6 +11,9 @@ import org.testng.annotations.Test;
 
 import java.net.URI;
 
+/**
+ * Functional CloudAccess Test
+ */
 public class CloudAccessTest extends BaseFeature {
 
     private static final String PROTOCOL_S3 = "s3a://";
@@ -100,8 +103,7 @@ public class CloudAccessTest extends BaseFeature {
 
     private void runTestScenario(String name, String server, boolean creds) throws Exception {
         String tableName = "cloudaccess_" + name;
-        exTable =
-                TableFactory.getPxfReadableTextTable(tableName, PXF_MULTISERVER_COLS, s3Path, ",");
+        exTable = TableFactory.getPxfReadableTextTable(tableName, PXF_MULTISERVER_COLS, s3Path, ",");
         exTable.setProfile(ProtocolUtils.getProtocol().value() + ":text");
         String serverParam = (server == null) ? null : "server=" + server;
         exTable.setServer(serverParam);
