@@ -149,16 +149,13 @@ public class HdfsUtilities {
             throws IOException {
 
         return prepareFragmentMetadata(fsp.getStart(), fsp.getLength(), fsp.getLocations());
-
     }
 
     public static byte[] prepareFragmentMetadata(long start, long length, String[] locations)
             throws IOException {
 
         ByteArrayOutputStream byteArrayStream = writeBaseFragmentInfo(start, length, locations);
-
         return byteArrayStream.toByteArray();
-
     }
 
     private static ByteArrayOutputStream writeBaseFragmentInfo(long start, long length, String[] locations) throws IOException {
@@ -227,7 +224,7 @@ public class HdfsUtilities {
             return "";
         for (OneField complex : complexRecord) {
             if (complex.type == DataType.BYTEA.getOID()) {
-                /** Serialize byte array as string */
+                /* Serialize byte array as string */
                 buff.append(delim);
                 Utilities.byteArrayToOctalString((byte[]) complex.val, buff);
             } else {
