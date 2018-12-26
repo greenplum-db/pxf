@@ -19,34 +19,30 @@ package org.greenplum.pxf.plugins.hdfs;
  * under the License.
  */
 
-import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.mapred.FileSplit;
-import org.apache.hadoop.mapred.JobConf;
 import org.apache.parquet.column.ParquetProperties.WriterVersion;
 import org.apache.parquet.column.page.PageReadStore;
 import org.apache.parquet.example.data.Group;
 import org.apache.parquet.example.data.simple.convert.GroupRecordConverter;
 import org.apache.parquet.format.converter.ParquetMetadataConverter;
-import org.apache.parquet.hadoop.ParquetFileReader;
-import org.apache.parquet.hadoop.ParquetFileWriter;
-import org.apache.parquet.hadoop.ParquetWriter;
 import org.apache.parquet.hadoop.example.GroupWriteSupport;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
-import org.apache.parquet.hadoop.metadata.ParquetMetadata;
+import org.apache.parquet.hadoop.ParquetFileReader;
+import org.apache.parquet.hadoop.ParquetWriter;
 import org.apache.parquet.io.ColumnIOFactory;
 import org.apache.parquet.io.MessageColumnIO;
 import org.apache.parquet.io.RecordReader;
 import org.apache.parquet.schema.MessageType;
+import org.apache.parquet.schema.MessageTypeParser;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.URI;
 
@@ -59,14 +55,8 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
     private ParquetFileReader fileReader;
     private MessageColumnIO columnIO;
     private MessageType schema;
-    private DataOutputStream dos;
-    private FSDataOutputStream fsdos;
-    private ParquetFileWriter writer;
-    private JobConf jobConf;
     private HcfsType hcfsType;
-    private Path file;
-    private ParquetWriter<Group> dataFileWriter;
-    private PageReadStore currentRowGroup;
+    private ParquetWriter<Group> parquetWriter;
     private RecordReader<Group> recordReader;
     private long rowsInRowGroup;
 
@@ -80,27 +70,29 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
     public void initialize(RequestContext requestContext) {
         super.initialize(requestContext);
 
-        // variable required for the splits iteration logic
-        jobConf = new JobConf(configuration,  ParquetFileAccessor.class);
-
         // Check if the underlying configuration is for HDFS
         hcfsType = HcfsType.getHcfsType(configuration, requestContext);
     }
 
     @Override
-    public boolean openForRead() throws Exception {
+    public boolean openForRead() throws IOException {
         Path file = new Path(context.getDataSource());
         FileSplit fileSplit = HdfsUtilities.parseFileSplit(context);
         // Create reader for a given split, read a range in file
-        ParquetMetadata readFooter = ParquetFileReader.readFooter(configuration, file, ParquetMetadataConverter.NO_FILTER);
-        schema = readFooter.getFileMetaData().getSchema();
-        columnIO = new ColumnIOFactory().getColumnIO(schema);
         fileReader = new ParquetFileReader(configuration, file, ParquetMetadataConverter.range(
                 fileSplit.getStart(), fileSplit.getStart() + fileSplit.getLength()));
-        currentRowGroup = fileReader.readNextRowGroup();
+        schema = MessageTypeParser.parseMessageType(new String(context.getFragmentUserData()));
+        columnIO = new ColumnIOFactory().getColumnIO(schema);
+        return readNextRowGroup();
+    }
+
+    private boolean readNextRowGroup() throws IOException {
+        PageReadStore currentRowGroup = fileReader.readNextRowGroup();
+        if (currentRowGroup == null)
+            return false;
         recordReader = columnIO.getRecordReader(currentRowGroup, new GroupRecordConverter(schema));
         rowsInRowGroup = currentRowGroup.getRowCount();
-        return currentRowGroup != null;
+        return true;
     }
 
     /**
@@ -108,16 +100,9 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
      */
     @Override
     public OneRow readNextObject() throws IOException {
-        Group g = recordReader.read();
-        if (g == null) {
-            currentRowGroup = fileReader.readNextRowGroup();
-            if (currentRowGroup == null)
-                return null;
-            rowsInRowGroup = currentRowGroup.getRowCount();
-            recordReader = columnIO.getRecordReader(currentRowGroup, new GroupRecordConverter(schema));
-            g = recordReader.read();
-        }
-        return new OneRow(null, g);
+        if (rowsInRowGroup-- == 0 && !readNextRowGroup())
+            return null;
+        return new OneRow(null, recordReader.read());
     }
 
     @Override
@@ -138,17 +123,31 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
 
         String fileName = hcfsType.getDataUri(configuration, context);
         String compressCodec = context.getOption("COMPRESSION_CODEC");
-        CompressionCodec codec = null;
+        CompressionCodecName codecName = DEFAULT_COMPRESSION_CODEC_NAME;
+        CompressionCodec codec;
 
         // get compression codec
         if (compressCodec != null) {
             codec = HdfsUtilities.getCodec(configuration, compressCodec);
             String extension = codec.getDefaultExtension();
             fileName += extension;
+            switch (compressCodec) {
+                case "lzo":
+                    codecName = CompressionCodecName.LZO;
+                    break;
+                case "snappy":
+                    codecName = CompressionCodecName.SNAPPY;
+                    break;
+                case "gz":
+                    codecName = CompressionCodecName.GZIP;
+                    break;
+                default:
+                    throw new IOException("compression method not support, codec:" + compressCodec);
+            }
         }
 
         FileSystem fs = FileSystem.get(URI.create(fileName), configuration);
-        file = new Path(fileName);
+        Path file = new Path(fileName);
         if (fs.exists(file)) {
             throw new IOException("File " + file.toString() + " already exists, can't write data");
         }
@@ -158,13 +157,11 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
             LOG.debug("Created new dir {}", parent);
         }
 
-        // create output stream - do not allow overwriting existing file
-        fsdos = fs.create(file, false);
-        dos = (codec != null) ? new DataOutputStream(codec.createOutputStream(fsdos)) : fsdos;
-
-        ParquetWriter<Group> writer = new ParquetWriter<>(file, new GroupWriteSupport(),
-                DEFAULT_COMPRESSION_CODEC_NAME, DEFAULT_ROWGROUP_SIZE, DEFAULT_PAGE_SIZE, DEFAULT_DICTIONARY_PAGE_SIZE,
+        //noinspection deprecation
+        parquetWriter = new ParquetWriter<>(file, new GroupWriteSupport(), codecName,
+                DEFAULT_ROWGROUP_SIZE, DEFAULT_PAGE_SIZE, DEFAULT_DICTIONARY_PAGE_SIZE,
                 false, false, DEFAULT_PARQUET_VERSION, configuration);
+
         return true;
     }
 
@@ -177,7 +174,8 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
      */
     @Override
     public boolean writeNextObject(OneRow onerow) throws Exception {
-        throw new UnsupportedOperationException();
+        parquetWriter.write((Group) onerow.getData());
+        return true;
     }
 
     /**
@@ -187,11 +185,8 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
      */
     @Override
     public void closeForWrite() throws Exception {
-        if (dos != null && fsdos != null) {
-            LOG.debug("Closing writing stream for path {}", file);
-            dos.flush();
-            fsdos.hsync();
-            dos.close();
+        if (parquetWriter != null) {
+            parquetWriter.close();
         }
     }
 }

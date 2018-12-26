@@ -26,13 +26,13 @@ import org.apache.hadoop.io.Writable;
 import org.greenplum.pxf.api.BadRecordException;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.UnsupportedTypeException;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.DataSchemaException;
+import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.RecordkeyAdapter;
 
 import java.lang.reflect.Array;
@@ -68,12 +68,12 @@ public class WritableResolver extends BasePlugin implements Resolver {
 
         String schemaName = context.getOption("DATA-SCHEMA");
 
-        /** Testing that the schema name was supplied by the user - schema is an optional property. */
+        /* Testing that the schema name was supplied by the user - schema is an optional property. */
         if (schemaName == null) {
             throw new DataSchemaException(DataSchemaException.MessageFmt.SCHEMA_NOT_INDICATED, this.getClass().getName());
         }
 
-        /** Testing that the schema resource exists. */
+        /* Testing that the schema resource exists. */
         if (!isSchemaOnClasspath(schemaName)) {
             throw new DataSchemaException(DataSchemaException.MessageFmt.SCHEMA_NOT_ON_CLASSPATH, schemaName);
         }
@@ -110,7 +110,7 @@ public class WritableResolver extends BasePlugin implements Resolver {
     @Override
     public List<OneField> getFields(OneRow onerow) throws Exception {
         userObject = onerow.getData();
-        List<OneField> record = new LinkedList<OneField>();
+        List<OneField> record = new LinkedList<>();
 
         int currentIdx = 0;
         for (Field field : fields) {
@@ -128,7 +128,7 @@ public class WritableResolver extends BasePlugin implements Resolver {
         return record;
     }
 
-    int setArrayField(List<OneField> record, int dataType, Field reflectedField) throws IllegalAccessException {
+    private int setArrayField(List<OneField> record, int dataType, Field reflectedField) throws IllegalAccessException {
         Object array = reflectedField.get(userObject);
         int length = Array.getLength(array);
         for (int j = 0; j < length; j++) {
@@ -137,42 +137,11 @@ public class WritableResolver extends BasePlugin implements Resolver {
         return length;
     }
 
-    /*
-     * Given a java Object type, convert it to the corresponding output field
-     * type.
-     */
-    private DataType convertJavaToGPDBType(String type) {
-        if ("boolean".equals(type) || "[Z".equals(type)) {
-            return DataType.BOOLEAN;
-        }
-        if ("int".equals(type) || "[I".equals(type)) {
-            return DataType.INTEGER;
-        }
-        if ("double".equals(type) || "[D".equals(type)) {
-            return DataType.FLOAT8;
-        }
-        if ("java.lang.String".equals(type) || "[Ljava.lang.String;".equals(type)) {
-            return DataType.TEXT;
-        }
-        if ("float".equals(type) || "[F".equals(type)) {
-            return DataType.REAL;
-        }
-        if ("long".equals(type) || "[J".equals(type)) {
-            return DataType.BIGINT;
-        }
-        if ("[B".equals(type)) {
-            return DataType.BYTEA;
-        }
-        if ("short".equals(type) || "[S".equals(type)) {
-            return DataType.SMALLINT;
-        }
-        throw new UnsupportedTypeException("Type " + type + " is not supported by GPDBWritable");
-    }
 
-    int populateRecord(List<OneField> record, Field field) throws BadRecordException {
+    private int populateRecord(List<OneField> record, Field field) throws BadRecordException {
         String javaType = field.getType().getName();
         try {
-            DataType dataType = convertJavaToGPDBType(javaType);
+            DataType dataType = HdfsUtilities.convertJavaToGPDBType(javaType);
             if (isArray(javaType)) {
                 return setArrayField(record, dataType.getOID(), field);
             }
@@ -206,7 +175,6 @@ public class WritableResolver extends BasePlugin implements Resolver {
             }
 
             String javaType = field.getType().getName();
-            convertJavaToGPDBType(javaType);
             if (isArray(javaType)) {
                 Object value = field.get(userObject);
                 int length = Array.getLength(value);

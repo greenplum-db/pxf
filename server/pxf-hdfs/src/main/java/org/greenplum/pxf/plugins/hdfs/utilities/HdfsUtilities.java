@@ -25,7 +25,6 @@ import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.mapred.FsInput;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -36,14 +35,12 @@ import org.apache.hadoop.io.compress.CompressionCodecFactory;
 import org.apache.hadoop.io.compress.SplittableCompressionCodec;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.util.ReflectionUtils;
-import org.apache.parquet.schema.MessageType;
-import org.apache.parquet.schema.MessageTypeParser;
 import org.greenplum.pxf.api.OneField;
+import org.greenplum.pxf.api.UnsupportedTypeException;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.FragmentMetadata;
 import org.greenplum.pxf.api.utilities.Utilities;
-import org.greenplum.pxf.plugins.hdfs.ParquetUserData;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -109,7 +106,7 @@ public class HdfsUtilities {
      * @param path path of the file to be read
      * @return if the codec needed for reading the specified path is splittable.
      */
-    public static boolean isSplittableCodec(CompressionCodecFactory factory, Path path) {
+    static boolean isSplittableCodec(CompressionCodecFactory factory, Path path) {
 
         final CompressionCodec codec = factory.getCodec(path);
         if (null == codec) {
@@ -158,6 +155,37 @@ public class HdfsUtilities {
         return byteArrayStream.toByteArray();
     }
 
+    /**
+     * Given a java Object type, convert it to the corresponding output field type.
+     */
+    public static DataType convertJavaToGPDBType(String type) {
+        if ("boolean".equals(type) || "[Z".equals(type)) {
+            return DataType.BOOLEAN;
+        }
+        if ("int".equals(type) || "[I".equals(type)) {
+            return DataType.INTEGER;
+        }
+        if ("double".equals(type) || "[D".equals(type)) {
+            return DataType.FLOAT8;
+        }
+        if ("java.lang.String".equals(type) || "[Ljava.lang.String;".equals(type)) {
+            return DataType.TEXT;
+        }
+        if ("float".equals(type) || "[F".equals(type)) {
+            return DataType.REAL;
+        }
+        if ("long".equals(type) || "[J".equals(type)) {
+            return DataType.BIGINT;
+        }
+        if ("[B".equals(type)) {
+            return DataType.BYTEA;
+        }
+        if ("short".equals(type) || "[S".equals(type)) {
+            return DataType.SMALLINT;
+        }
+        throw new UnsupportedTypeException("Type " + type + " is not supported by GPDBWritable");
+    }
+
     private static ByteArrayOutputStream writeBaseFragmentInfo(long start, long length, String[] locations) throws IOException {
         ByteArrayOutputStream byteArrayStream = new ByteArrayOutputStream();
         ObjectOutputStream objectStream = new ObjectOutputStream(byteArrayStream);
@@ -176,14 +204,11 @@ public class HdfsUtilities {
     public static FileSplit parseFileSplit(RequestContext requestContext) {
         try {
             FragmentMetadata fragmentMetadata = Utilities.parseFragmentMetadata(requestContext);
-
-            FileSplit fileSplit = new FileSplit(new Path(requestContext.getDataSource()), fragmentMetadata.getStart(), fragmentMetadata.getEnd(), fragmentMetadata.getHosts());
-
-            return fileSplit;
-
-        } catch (Exception e) {
-            throw new RuntimeException(
-                    "Exception while reading expected fragment metadata", e);
+            return new FileSplit(new Path(requestContext.getDataSource()),
+                    fragmentMetadata.getStart(), fragmentMetadata.getEnd(), fragmentMetadata.getHosts());
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Exception while reading expected fragment metadata", e);
         }
     }
 
@@ -224,7 +249,7 @@ public class HdfsUtilities {
             return "";
         for (OneField complex : complexRecord) {
             if (complex.type == DataType.BYTEA.getOID()) {
-                /* Serialize byte array as string */
+                // Serialize byte array as string
                 buff.append(delim);
                 Utilities.byteArrayToOctalString((byte[]) complex.val, buff);
             } else {
@@ -233,16 +258,6 @@ public class HdfsUtilities {
             delim = delimiter;
         }
         return buff.toString();
-    }
-
-    public static byte[] makeParquetUserData(MessageType schema) throws IOException {
-        ParquetUserData userData = new ParquetUserData(schema);
-        return userData.toString().getBytes();
-    }
-
-    public static ParquetUserData parseParquetUserData(RequestContext input) {
-        MessageType schema = MessageTypeParser.parseMessageType(new String(input.getFragmentUserData()));
-        return new ParquetUserData(schema);
     }
 
 }

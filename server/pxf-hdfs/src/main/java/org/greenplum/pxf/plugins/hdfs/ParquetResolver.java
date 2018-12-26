@@ -19,52 +19,59 @@ package org.greenplum.pxf.plugins.hdfs;
  * under the License.
  */
 
+import org.apache.parquet.example.data.Group;
+import org.apache.parquet.example.data.simple.SimpleGroupFactory;
+import org.apache.parquet.io.api.Binary;
+import org.apache.parquet.schema.*;
+import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.UnsupportedTypeException;
 import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.BasePlugin;
+import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.api.model.Resolver;
+import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 
-import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
-import org.apache.parquet.example.data.Group;
-import org.apache.parquet.schema.MessageType;
-import org.apache.parquet.schema.OriginalType;
-import org.apache.parquet.schema.PrimitiveType;
-import org.apache.parquet.schema.Type;
-
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
 public class ParquetResolver extends BasePlugin implements Resolver {
 
-    public static final int JULIAN_EPOCH_OFFSET_DAYS = 2440588;
-    public static final long MILLIS_IN_DAY = 24 * 3600 * 1000;
+    private static final int JULIAN_EPOCH_OFFSET_DAYS = 2440588;
+    private static final long MILLIS_IN_DAY = 24 * 3600 * 1000;
 
-    /**
-     * {@inheritDoc}
-     * @param schema the MessageType instance, which is obtained from the Parquet file footer
-     */
-    public List<OneField> getFields(OneRow row, MessageType schema) throws Exception
-    {
-      ParquetUserData parquetUserData = new ParquetUserData(schema);
-      Group g = (Group) row.getData();
-      List<OneField> output = resolveRecord(parquetUserData, g);
-      return output;
+    private MessageType schema;
+    private SimpleGroupFactory groupFactory;
+
+    @Override
+    public void initialize(RequestContext requestContext) {
+        super.initialize(requestContext);
+
+        schema = context.getFragmentUserData() == null ?
+                autoGenSchema(requestContext.getTupleDescription()) :
+                MessageTypeParser.parseMessageType(new String(context.getFragmentUserData()));
+        groupFactory = new SimpleGroupFactory(schema);
     }
 
     @Override
-    public List<OneField> getFields(OneRow row) throws Exception {
-        Object data = row.getData();
-        ParquetUserData parquetUserData = HdfsUtilities.parseParquetUserData(context);
-        Group g = (Group) data;
-        List<OneField> output = resolveRecord(parquetUserData, g);
+    public List<OneField> getFields(OneRow row) {
+        Group group = (Group) row.getData();
+        List<OneField> output = new LinkedList<>();
 
+        for (int i = 0; i < schema.getFieldCount(); i++) {
+            if (schema.getType(i).isPrimitive()) {
+                output.add(resolvePrimitive(i, group, schema.getType(i)));
+            } else {
+                throw new UnsupportedTypeException("Only primitive types are supported.");
+            }
+        }
         return output;
     }
 
@@ -73,27 +80,115 @@ public class ParquetResolver extends BasePlugin implements Resolver {
      *
      * @param record list of {@link OneField}
      * @return the constructed {@link OneRow}
-     * @throws Exception if constructing a row from the fields failed
+     * @throws IOException if constructing a row from the fields failed
      */
     @Override
-    public OneRow setFields(List<OneField> record) throws Exception {
-        throw new UnsupportedOperationException();
-    }
-
-    private List<OneField> resolveRecord(ParquetUserData userData, Group g) {
-        List<OneField> output = new LinkedList<OneField>();
-
-        for (int i = 0; i < userData.getSchema().getFieldCount(); i++) {
-            if (userData.getSchema().getType(i).isPrimitive()) {
-                output.add(resolvePrimitive(i, g, userData.getSchema().getType(i)));
-            } else {
-                throw new UnsupportedTypeException("Only primitive types are supported.");
-            }
+    public OneRow setFields(List<OneField> record) throws IOException {
+        Group group = groupFactory.newGroup();
+        for (int i = 0; i < record.size(); i++) {
+            resolveType(i, record.get(i), group);
         }
-        return output;
+        return new OneRow(null, group);
     }
 
-    private OneField resolvePrimitive(Integer columnIndex, Group g, Type type) {
+    /**
+     * generate schema automatically
+     */
+    private MessageType autoGenSchema(List<ColumnDescriptor> columns) {
+
+        List<Type> fields = new ArrayList<>();
+        for (ColumnDescriptor column: columns) {
+            String columnName = column.columnName();
+            int columnTypeCode = column.columnTypeCode();
+
+            PrimitiveTypeName typeName;
+            OriginalType origType = null;
+            switch (DataType.get(columnTypeCode)) {
+                case BOOLEAN:
+                    typeName = PrimitiveTypeName.BOOLEAN;
+                    break;
+                case BYTEA:
+                    typeName = PrimitiveTypeName.BINARY;
+                    break;
+                case BIGINT:
+                    typeName = PrimitiveTypeName.INT64;
+                    break;
+                case SMALLINT:
+                    origType = OriginalType.INT_16;
+                    typeName = PrimitiveTypeName.INT32;
+                    break;
+                case INTEGER:
+                    typeName = PrimitiveTypeName.INT32;
+                    break;
+                case REAL:
+                    typeName = PrimitiveTypeName.FLOAT;
+                    break;
+                case FLOAT8:
+                    typeName = PrimitiveTypeName.DOUBLE;
+                    break;
+                case NUMERIC:
+                    origType = OriginalType.DECIMAL;
+                    typeName = PrimitiveTypeName.BINARY;
+                    break;
+                case VARCHAR:
+                case BPCHAR:
+                case DATE:
+                case TIME:
+                case TIMESTAMP:
+                case TEXT:
+                    origType = OriginalType.UTF8;
+                    typeName = PrimitiveTypeName.BINARY;
+                    break;
+                default:
+                    throw new UnsupportedTypeException("Type " + columnTypeCode + "is not supported");
+            }
+            fields.add(new PrimitiveType(Type.Repetition.OPTIONAL, typeName, columnName, origType));
+        }
+
+        return new MessageType("schema", fields);
+    }
+
+    @SuppressWarnings( "deprecation" )
+    private void resolveType(int index, OneField field, Group group) throws IOException {
+        switch (DataType.get(field.type)) {
+            case DATE:
+            case TIME:
+            case TIMESTAMP:
+                group.add(index, (String)field.val);
+                break;
+            case BPCHAR:
+            case VARCHAR:
+            case TEXT:
+                group.add(index, (String)field.val);
+                break;
+            case BYTEA:
+                group.add(index, Binary.fromByteArray((byte [])field.val));
+                break;
+            case REAL:
+                group.add(index, (Float)field.val);
+                break;
+            case NUMERIC:
+            case BIGINT:
+                group.add(index, (Long)field.val);
+                break;
+            case BOOLEAN:
+                group.add(index, (Boolean)field.val);
+                break;
+            case FLOAT8:
+                group.add(index, (Double)field.val);
+                break;
+            case INTEGER:
+                group.add(index, (Integer)field.val);
+                break;
+            case SMALLINT:
+                group.add(index, (Short)field.val);
+                break;
+            default:
+                throw new IOException("Not supported type, typeId = " + field.type);
+        }
+   }
+
+   private OneField resolvePrimitive(Integer columnIndex, Group g, Type type) {
         OneField field = new OneField();
         OriginalType originalType = type.getOriginalType();
         PrimitiveType primitiveType = type.asPrimitiveType();
@@ -142,9 +237,8 @@ public class ParquetResolver extends BasePlugin implements Resolver {
             }
             case INT96: {
                 field.type = DataType.TIMESTAMP.getOID();
-                Timestamp ts = g.getFieldRepetitionCount(columnIndex) == 0 ?
+                field.val = g.getFieldRepetitionCount(columnIndex) == 0 ?
                         null : bytesToTimestamp(g.getInt96(columnIndex, 0).getBytes());
-                field.val = ts;
                 break;
             }
             case FLOAT: {
@@ -157,8 +251,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                 field.type = DataType.NUMERIC.getOID();
                 if (g.getFieldRepetitionCount(columnIndex) > 0) {
                     int scale = type.asPrimitiveType().getDecimalMetadata().getScale();
-                    BigDecimal bd = new BigDecimal(new BigInteger(g.getBinary(columnIndex, 0).getBytes()), scale);
-                    field.val = bd;
+                    field.val = new BigDecimal(new BigInteger(g.getBinary(columnIndex, 0).getBytes()), scale);
                 }
                 break;
             }
@@ -195,8 +288,6 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                 bytes[8]
         })).getInt();
         long unixTimeMs = (julianDays - JULIAN_EPOCH_OFFSET_DAYS) * MILLIS_IN_DAY + numberOfDays / 1000000;
-        Timestamp ts = new Timestamp(unixTimeMs);
-        return ts;
-
+        return new Timestamp(unixTimeMs);
     }
 }

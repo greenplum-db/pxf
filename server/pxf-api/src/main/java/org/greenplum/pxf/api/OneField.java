@@ -46,6 +46,6 @@ public class OneField {
 
     @Override
     public String toString() {
-        return val.toString();
+        return val == null ? null : val.toString();
     }
 }

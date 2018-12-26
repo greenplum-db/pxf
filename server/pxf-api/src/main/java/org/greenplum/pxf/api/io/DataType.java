@@ -93,6 +93,11 @@ public enum DataType {
                 : type;
     }
 
+    public static boolean isArrayType(int OID) {
+        DataType type = lookup.get(OID);
+        return type != null && type.typeElem != null;
+    }
+
     public int getOID() {
         return OID;
     }
