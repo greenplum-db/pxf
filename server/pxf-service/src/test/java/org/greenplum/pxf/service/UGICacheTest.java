@@ -21,6 +21,7 @@ package org.greenplum.pxf.service;
 
 import com.google.common.base.Ticker;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.greenplum.pxf.api.model.SessionId;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;

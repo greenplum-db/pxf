@@ -24,8 +24,12 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
-import org.greenplum.pxf.api.model.*;
+import org.greenplum.pxf.api.model.BaseFragmenter;
+import org.greenplum.pxf.api.model.Fragment;
+import org.greenplum.pxf.api.model.FragmentStats;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.api.model.SessionId;
+import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.PxfInputFormat;
 
@@ -35,7 +39,7 @@ import java.util.List;
 
 /**
  * Fragmenter class for HDFS data resources.
- *
+ * <p>
  * Given an HDFS data source (a file, directory, or wild card pattern) divide
  * the data into fragments and return a list of them along with a list of
  * host:port locations for each.
@@ -49,12 +53,19 @@ public class HdfsDataFragmenter extends BaseFragmenter {
     public void initialize(RequestContext context) {
         super.initialize(context);
 
-        String sessionId = context.getUser() + ":" + context.getTransactionId() + ":" + context.getSegmentId();
-        configuration.set("pxf.session.id", sessionId);
-        jobConf = new JobConf(configuration, this.getClass());
-
         // Check if the underlying configuration is for HDFS
         hcfsType = HcfsType.getHcfsType(configuration, context);
+
+        // If user impersonation is disabled and
+        // cloud filesystem is used we add the
+        // pxf.session.id to the Configuration object
+        if (!Utilities.isUserImpersonationEnabled() && hcfsType.isCloud()) {
+            SessionId sessionId =
+                    new SessionId(context.getSegmentId(), context.getTransactionId(), context.getUser());
+            configuration.set("pxf.session.id", sessionId.getSessionId());
+        }
+
+        jobConf = new JobConf(configuration, this.getClass());
     }
 
     /**
@@ -94,7 +105,7 @@ public class HdfsDataFragmenter extends BaseFragmenter {
             return new FragmentStats(0, 0, 0);
         }
         long totalSize = 0;
-        for (InputSplit split: splits) {
+        for (InputSplit split : splits) {
             totalSize += split.getLength();
         }
         InputSplit firstSplit = splits.get(0);

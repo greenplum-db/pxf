@@ -1,4 +1,4 @@
-package org.greenplum.pxf.service;
+package org.greenplum.pxf.api.model;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -79,6 +79,15 @@ public class SessionId {
 
         SessionId that = (SessionId) obj;
         return this.sessionId.equals(that.sessionId);
+    }
+
+    /**
+     * Returns the sessionId for this object
+     *
+     * @return the sessionId for this object
+     */
+    public String getSessionId() {
+        return sessionId;
     }
 
     /**

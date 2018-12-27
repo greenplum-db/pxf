@@ -19,6 +19,12 @@ package org.greenplum.pxf.service;
  * under the License.
  */
 
+import com.google.common.base.Ticker;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.security.UserGroupInformation;
+import org.greenplum.pxf.api.model.SessionId;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,11 +33,6 @@ import java.util.concurrent.DelayQueue;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import com.google.common.base.Ticker;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.security.UserGroupInformation;
 
 /**
  * Stores UserGroupInformation instances for each active session. The UGIs are cleaned up if they
