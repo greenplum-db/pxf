@@ -30,6 +30,7 @@ allprojects {
     apply plugin: 'idea'
 
     repositories {
+        mavenLocal()
         jcenter()
     }
 
@@ -102,6 +103,13 @@ allprojects {
     }
 }
 
+idea {
+    module {
+        downloadJavadoc = true
+        downloadSources = true
+    }
+}
+
 project('pxf') {
     jar.enabled = false
     dependencies {
@@ -163,7 +171,9 @@ project('pxf-hdfs') {
         compile "org.apache.htrace:htrace-core4:${htraceVersion}"
         compile "org.apache.hadoop:hadoop-hdfs:${hadoopVersion}"
         compile "org.apache.hadoop:hadoop-hdfs-client:${hadoopVersion}"
-        compile "org.apache.parquet:parquet-hadoop-bundle:${parquetVersion}"
+        compile "org.apache.parquet:parquet-hadoop:${parquetVersion}"
+        compile "org.apache.parquet:parquet-common:${parquetVersion}"
+        compile "org.apache.parquet:parquet-column:${parquetVersion}"
 
         bundleJars "org.apache.avro:avro:1.7.4"
     }

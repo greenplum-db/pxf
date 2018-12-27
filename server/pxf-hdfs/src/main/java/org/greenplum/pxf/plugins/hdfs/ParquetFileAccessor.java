@@ -26,6 +26,7 @@ import org.apache.hadoop.mapred.FileSplit;
 import org.apache.parquet.column.ParquetProperties.WriterVersion;
 import org.apache.parquet.column.page.PageReadStore;
 import org.apache.parquet.example.data.Group;
+import org.apache.parquet.example.data.simple.SimpleGroupFactory;
 import org.apache.parquet.example.data.simple.convert.GroupRecordConverter;
 import org.apache.parquet.format.converter.ParquetMetadataConverter;
 import org.apache.parquet.hadoop.example.GroupWriteSupport;
@@ -35,16 +36,25 @@ import org.apache.parquet.hadoop.ParquetWriter;
 import org.apache.parquet.io.ColumnIOFactory;
 import org.apache.parquet.io.MessageColumnIO;
 import org.apache.parquet.io.RecordReader;
+import org.apache.parquet.schema.DecimalMetadata;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.MessageTypeParser;
+import org.apache.parquet.schema.OriginalType;
+import org.apache.parquet.schema.PrimitiveType;
+import org.apache.parquet.schema.Type;
 import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.UnsupportedTypeException;
+import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Parquet file accessor.
@@ -54,7 +64,6 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
 
     private ParquetFileReader fileReader;
     private MessageColumnIO columnIO;
-    private MessageType schema;
     private HcfsType hcfsType;
     private ParquetWriter<Group> parquetWriter;
     private RecordReader<Group> recordReader;
@@ -66,12 +75,19 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
     private static final WriterVersion DEFAULT_PARQUET_VERSION = WriterVersion.PARQUET_1_0;
     private static final CompressionCodecName DEFAULT_COMPRESSION_CODEC_NAME = CompressionCodecName.UNCOMPRESSED;
 
+    MessageType schema;
+    SimpleGroupFactory groupFactory;
+
     @Override
     public void initialize(RequestContext requestContext) {
         super.initialize(requestContext);
 
         // Check if the underlying configuration is for HDFS
         hcfsType = HcfsType.getHcfsType(configuration, requestContext);
+        schema = context.getFragmentUserData() == null ?
+                autoGenerateParquetSchema(requestContext.getTupleDescription()) :
+                MessageTypeParser.parseMessageType(new String(context.getFragmentUserData()));
+        groupFactory = new SimpleGroupFactory(schema);
     }
 
     @Override
@@ -81,7 +97,6 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
         // Create reader for a given split, read a range in file
         fileReader = new ParquetFileReader(configuration, file, ParquetMetadataConverter.range(
                 fileSplit.getStart(), fileSplit.getStart() + fileSplit.getLength()));
-        schema = MessageTypeParser.parseMessageType(new String(context.getFragmentUserData()));
         columnIO = new ColumnIOFactory().getColumnIO(schema);
         return readNextRowGroup();
     }
@@ -157,6 +172,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
             LOG.debug("Created new dir {}", parent);
         }
 
+        GroupWriteSupport.setSchema(schema, configuration);
         //noinspection deprecation
         parquetWriter = new ParquetWriter<>(file, new GroupWriteSupport(), codecName,
                 DEFAULT_ROWGROUP_SIZE, DEFAULT_PAGE_SIZE, DEFAULT_DICTIONARY_PAGE_SIZE,
@@ -189,4 +205,71 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
             parquetWriter.close();
         }
     }
+
+
+
+    /**
+     * generate schema automatically
+     */
+    public static MessageType autoGenerateParquetSchema(List<ColumnDescriptor> columns) {
+
+        List<Type> fields = new ArrayList<>();
+        for (ColumnDescriptor column: columns) {
+            String columnName = column.columnName();
+            int columnTypeCode = column.columnTypeCode();
+
+            PrimitiveType.PrimitiveTypeName typeName;
+            OriginalType origType = null;
+            DecimalMetadata dmt = null;
+            int length = 0;
+            switch (DataType.get(columnTypeCode)) {
+                case BOOLEAN:
+                    typeName = PrimitiveType.PrimitiveTypeName.BOOLEAN;
+                    break;
+                case BYTEA:
+                    typeName = PrimitiveType.PrimitiveTypeName.BINARY;
+                    break;
+                case BIGINT:
+                    typeName = PrimitiveType.PrimitiveTypeName.INT64;
+                    break;
+                case SMALLINT:
+                    origType = OriginalType.INT_16;
+                    typeName = PrimitiveType.PrimitiveTypeName.INT32;
+                    break;
+                case INTEGER:
+                    typeName = PrimitiveType.PrimitiveTypeName.INT32;
+                    break;
+                case REAL:
+                    typeName = PrimitiveType.PrimitiveTypeName.FLOAT;
+                    break;
+                case FLOAT8:
+                    typeName = PrimitiveType.PrimitiveTypeName.DOUBLE;
+                    break;
+                case NUMERIC:
+                    origType = OriginalType.DECIMAL;
+                    typeName = PrimitiveType.PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY;
+                    length = 16;
+                    dmt = new DecimalMetadata(38, 18);
+                    break;
+                case TIMESTAMP:
+                    typeName = PrimitiveType.PrimitiveTypeName.INT96;
+                    break;
+                case DATE:
+                case TIME:
+                case VARCHAR:
+                case BPCHAR:
+                case TEXT:
+                    origType = OriginalType.UTF8;
+                    typeName = PrimitiveType.PrimitiveTypeName.BINARY;
+                    break;
+                default:
+                    throw new UnsupportedTypeException("Type " + columnTypeCode + "is not supported");
+            }
+            fields.add(new PrimitiveType(Type.Repetition.OPTIONAL,
+                    typeName, length, columnName, origType, dmt, null));
+        }
+
+        return new MessageType("hive_schema", fields);
+    }
+
 }

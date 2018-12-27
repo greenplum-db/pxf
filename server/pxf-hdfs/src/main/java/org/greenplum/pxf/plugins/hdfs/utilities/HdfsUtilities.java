@@ -36,7 +36,6 @@ import org.apache.hadoop.io.compress.SplittableCompressionCodec;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.greenplum.pxf.api.OneField;
-import org.greenplum.pxf.api.UnsupportedTypeException;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.FragmentMetadata;
@@ -155,36 +154,6 @@ public class HdfsUtilities {
         return byteArrayStream.toByteArray();
     }
 
-    /**
-     * Given a java Object type, convert it to the corresponding output field type.
-     */
-    public static DataType convertJavaToGPDBType(String type) {
-        if ("boolean".equals(type) || "[Z".equals(type)) {
-            return DataType.BOOLEAN;
-        }
-        if ("int".equals(type) || "[I".equals(type)) {
-            return DataType.INTEGER;
-        }
-        if ("double".equals(type) || "[D".equals(type)) {
-            return DataType.FLOAT8;
-        }
-        if ("java.lang.String".equals(type) || "[Ljava.lang.String;".equals(type)) {
-            return DataType.TEXT;
-        }
-        if ("float".equals(type) || "[F".equals(type)) {
-            return DataType.REAL;
-        }
-        if ("long".equals(type) || "[J".equals(type)) {
-            return DataType.BIGINT;
-        }
-        if ("[B".equals(type)) {
-            return DataType.BYTEA;
-        }
-        if ("short".equals(type) || "[S".equals(type)) {
-            return DataType.SMALLINT;
-        }
-        throw new UnsupportedTypeException("Type " + type + " is not supported by GPDBWritable");
-    }
 
     private static ByteArrayOutputStream writeBaseFragmentInfo(long start, long length, String[] locations) throws IOException {
         ByteArrayOutputStream byteArrayStream = new ByteArrayOutputStream();

@@ -26,13 +26,13 @@ import org.apache.hadoop.io.Writable;
 import org.greenplum.pxf.api.BadRecordException;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.UnsupportedTypeException;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.DataSchemaException;
-import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.RecordkeyAdapter;
 
 import java.lang.reflect.Array;
@@ -137,11 +137,42 @@ public class WritableResolver extends BasePlugin implements Resolver {
         return length;
     }
 
+    /*
+     * Given a java Object type, convert it to the corresponding output field
+     * type.
+     */
+    private DataType convertJavaToGPDBType(String type) {
+        if ("boolean".equals(type) || "[Z".equals(type)) {
+            return DataType.BOOLEAN;
+        }
+        if ("int".equals(type) || "[I".equals(type)) {
+            return DataType.INTEGER;
+        }
+        if ("double".equals(type) || "[D".equals(type)) {
+            return DataType.FLOAT8;
+        }
+        if ("java.lang.String".equals(type) || "[Ljava.lang.String;".equals(type)) {
+            return DataType.TEXT;
+        }
+        if ("float".equals(type) || "[F".equals(type)) {
+            return DataType.REAL;
+        }
+        if ("long".equals(type) || "[J".equals(type)) {
+            return DataType.BIGINT;
+        }
+        if ("[B".equals(type)) {
+            return DataType.BYTEA;
+        }
+        if ("short".equals(type) || "[S".equals(type)) {
+            return DataType.SMALLINT;
+        }
+        throw new UnsupportedTypeException("Type " + type + " is not supported by GPDBWritable");
+    }
 
     private int populateRecord(List<OneField> record, Field field) throws BadRecordException {
         String javaType = field.getType().getName();
         try {
-            DataType dataType = HdfsUtilities.convertJavaToGPDBType(javaType);
+            DataType dataType = convertJavaToGPDBType(javaType);
             if (isArray(javaType)) {
                 return setArrayField(record, dataType.getOID(), field);
             }
@@ -175,6 +206,7 @@ public class WritableResolver extends BasePlugin implements Resolver {
             }
 
             String javaType = field.getType().getName();
+            convertJavaToGPDBType(javaType);
             if (isArray(javaType)) {
                 Object value = field.get(userObject);
                 int length = Array.getLength(value);

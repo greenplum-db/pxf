@@ -20,44 +20,48 @@ package org.greenplum.pxf.plugins.hdfs;
  */
 
 import org.apache.parquet.example.data.Group;
-import org.apache.parquet.example.data.simple.SimpleGroupFactory;
+import org.apache.parquet.example.data.simple.NanoTime;
 import org.apache.parquet.io.api.Binary;
-import org.apache.parquet.schema.*;
-import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName;
+import org.apache.parquet.schema.OriginalType;
+import org.apache.parquet.schema.PrimitiveType;
+import org.apache.parquet.schema.Type;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.UnsupportedTypeException;
 import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
-import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.sql.Timestamp;
-import java.util.ArrayList;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
-public class ParquetResolver extends BasePlugin implements Resolver {
+public class ParquetResolver extends ParquetFileAccessor implements Resolver {
 
     private static final int JULIAN_EPOCH_OFFSET_DAYS = 2440588;
     private static final long MILLIS_IN_DAY = 24 * 3600 * 1000;
+    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-    private MessageType schema;
-    private SimpleGroupFactory groupFactory;
+    private static Date epoch;
+    static {
+        try {
+            epoch =  dateFormat.parse("1970-01-01 00:00:00");
+        }
+        catch (ParseException pe) {
+            throw new RuntimeException(pe.getMessage());
+        }
+    }
 
     @Override
     public void initialize(RequestContext requestContext) {
         super.initialize(requestContext);
-
-        schema = context.getFragmentUserData() == null ?
-                autoGenSchema(requestContext.getTupleDescription()) :
-                MessageTypeParser.parseMessageType(new String(context.getFragmentUserData()));
-        groupFactory = new SimpleGroupFactory(schema);
     }
 
     @Override
@@ -86,105 +90,67 @@ public class ParquetResolver extends BasePlugin implements Resolver {
     public OneRow setFields(List<OneField> record) throws IOException {
         Group group = groupFactory.newGroup();
         for (int i = 0; i < record.size(); i++) {
-            resolveType(i, record.get(i), group);
+            fillGroup(i, record.get(i), group, schema.getType(i));
         }
         return new OneRow(null, group);
     }
 
-    /**
-     * generate schema automatically
-     */
-    private MessageType autoGenSchema(List<ColumnDescriptor> columns) {
-
-        List<Type> fields = new ArrayList<>();
-        for (ColumnDescriptor column: columns) {
-            String columnName = column.columnName();
-            int columnTypeCode = column.columnTypeCode();
-
-            PrimitiveTypeName typeName;
-            OriginalType origType = null;
-            switch (DataType.get(columnTypeCode)) {
-                case BOOLEAN:
-                    typeName = PrimitiveTypeName.BOOLEAN;
-                    break;
-                case BYTEA:
-                    typeName = PrimitiveTypeName.BINARY;
-                    break;
-                case BIGINT:
-                    typeName = PrimitiveTypeName.INT64;
-                    break;
-                case SMALLINT:
-                    origType = OriginalType.INT_16;
-                    typeName = PrimitiveTypeName.INT32;
-                    break;
-                case INTEGER:
-                    typeName = PrimitiveTypeName.INT32;
-                    break;
-                case REAL:
-                    typeName = PrimitiveTypeName.FLOAT;
-                    break;
-                case FLOAT8:
-                    typeName = PrimitiveTypeName.DOUBLE;
-                    break;
-                case NUMERIC:
-                    origType = OriginalType.DECIMAL;
-                    typeName = PrimitiveTypeName.BINARY;
-                    break;
-                case VARCHAR:
-                case BPCHAR:
-                case DATE:
-                case TIME:
-                case TIMESTAMP:
-                case TEXT:
-                    origType = OriginalType.UTF8;
-                    typeName = PrimitiveTypeName.BINARY;
-                    break;
-                default:
-                    throw new UnsupportedTypeException("Type " + columnTypeCode + "is not supported");
-            }
-            fields.add(new PrimitiveType(Type.Repetition.OPTIONAL, typeName, columnName, origType));
-        }
-
-        return new MessageType("schema", fields);
-    }
-
-    @SuppressWarnings( "deprecation" )
-    private void resolveType(int index, OneField field, Group group) throws IOException {
-        switch (DataType.get(field.type)) {
-            case DATE:
-            case TIME:
-            case TIMESTAMP:
-                group.add(index, (String)field.val);
+    @SuppressWarnings("deprecation")
+    private void fillGroup(int index, OneField field, Group group, Type type) throws IOException {
+        if (field.val == null)
+            return;
+        switch (type.asPrimitiveType().getPrimitiveTypeName()) {
+            case BINARY:
+                if (type.getOriginalType() == OriginalType.UTF8)
+                    group.add(index, (String) field.val);
+                else
+                    group.add(index, Binary.fromByteArray((byte[]) field.val));
                 break;
-            case BPCHAR:
-            case VARCHAR:
-            case TEXT:
-                group.add(index, (String)field.val);
+            case INT32:
+                if (type.getOriginalType() == OriginalType.INT_16)
+                    group.add(index, (Short) field.val);
+                else
+                    group.add(index, (Integer) field.val);
                 break;
-            case BYTEA:
-                group.add(index, Binary.fromByteArray((byte [])field.val));
+            case INT64:
+                group.add(index, (Long) field.val);
                 break;
-            case REAL:
-                group.add(index, (Float)field.val);
+            case DOUBLE:
+                group.add(index, (Double) field.val);
                 break;
-            case NUMERIC:
-            case BIGINT:
-                group.add(index, (Long)field.val);
+            case FLOAT:
+                group.add(index, (Float) field.val);
+                break;
+            case FIXED_LEN_BYTE_ARRAY:
+                BigDecimal value = new BigDecimal((String) field.val);
+                byte fillByte = (byte) (value.signum() < 0 ? 0xFF : 0x00);
+                byte[] unscaled = value.unscaledValue().toByteArray();
+                byte[] bytes = new byte[16];
+                int offset = bytes.length - unscaled.length;
+                for (int i = 0; i < bytes.length; i += 1) {
+                    if (i < offset) {
+                        bytes[i] = fillByte;
+                    } else {
+                        bytes[i] = unscaled[i - offset];
+                    }
+                }
+                group.add(index, Binary.fromByteArray(bytes));
+                break;
+            case INT96:
+                try {
+                    Date date = dateFormat.parse((String) field.val);
+                    long diff = date.getTime() - epoch.getTime();
+                    group.add(index, getBinary(diff));
+                }
+                catch (ParseException e) {
+                    throw new IOException("Unable to parse timestamp " + field.val);
+                }
                 break;
             case BOOLEAN:
-                group.add(index, (Boolean)field.val);
-                break;
-            case FLOAT8:
-                group.add(index, (Double)field.val);
-                break;
-            case INTEGER:
-                group.add(index, (Integer)field.val);
-                break;
-            case SMALLINT:
-                group.add(index, (Short)field.val);
+                group.add(index, (Boolean) field.val);
                 break;
             default:
-                throw new IOException("Not supported type, typeId = " + field.type);
+                throw new IOException("Not supported type " + type.asPrimitiveType().getPrimitiveTypeName());
         }
    }
 
@@ -270,8 +236,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
     }
 
     private Timestamp bytesToTimestamp(byte[] bytes) {
-
-        long numberOfDays = ByteBuffer.wrap(new byte[]{
+        long timeOfDayNanos = ByteBuffer.wrap(new byte[]{
                 bytes[7],
                 bytes[6],
                 bytes[5],
@@ -287,7 +252,14 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                 bytes[9],
                 bytes[8]
         })).getInt();
-        long unixTimeMs = (julianDays - JULIAN_EPOCH_OFFSET_DAYS) * MILLIS_IN_DAY + numberOfDays / 1000000;
+        long unixTimeMs = (julianDays - JULIAN_EPOCH_OFFSET_DAYS) * MILLIS_IN_DAY + timeOfDayNanos / 1000000;
         return new Timestamp(unixTimeMs);
+    }
+
+    private Binary getBinary(long timeMillis) {
+        long daysSinceEpoch = timeMillis / MILLIS_IN_DAY;
+        int julianDays = JULIAN_EPOCH_OFFSET_DAYS + (int)daysSinceEpoch;
+        long timeOfDayNanos = (timeMillis % MILLIS_IN_DAY) * 1000000;
+        return new NanoTime(julianDays, timeOfDayNanos).toBinary();
     }
 }
