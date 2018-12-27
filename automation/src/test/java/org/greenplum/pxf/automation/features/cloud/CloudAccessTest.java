@@ -45,12 +45,6 @@ public class CloudAccessTest extends BaseFeature {
         s3Server = new Hdfs(fs2, s3Configuration, true);
     }
 
-    @Override
-    protected void afterClass() throws Exception {
-        super.afterClass();
-        cluster.restart(PhdCluster.EnumClusterServices.pxf);
-    }
-
     /**
      * Before every method determine default hdfs data Path, default data, and
      * default external table structure. Each case change it according to it
@@ -62,7 +56,6 @@ public class CloudAccessTest extends BaseFeature {
     protected void beforeMethod() throws Exception {
         super.beforeMethod();
         prepareData();
-        cluster.restart(PhdCluster.EnumClusterServices.pxf);
     }
 
     @Override

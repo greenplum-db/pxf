@@ -80,6 +80,7 @@ public class HttpRequestParserTest {
         parameters.putSingle("X-GP-OPTIONS-I'M-STANDING-HERE", "outside-your-door");
         parameters.putSingle("X-GP-USER", "alex");
         parameters.putSingle("X-GP-OPTIONS-SERVER", "custom_server");
+        parameters.putSingle("X-GP-XID", "transaction:id");
 
         when(mockRequestHeaders.getRequestHeaders()).thenReturn(parameters);
 

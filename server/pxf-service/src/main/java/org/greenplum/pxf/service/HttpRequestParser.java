@@ -132,6 +132,7 @@ public class HttpRequestParser implements RequestParser<HttpHeaders> {
         }
 
         context.setTotalSegments(params.removeIntProperty("SEGMENT-COUNT"));
+        context.setTransactionId(params.removeProperty("XID"));
 
         // parse tuple description
         parseTupleDescription(params, context);

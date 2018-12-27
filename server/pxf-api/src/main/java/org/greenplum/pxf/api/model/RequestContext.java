@@ -91,6 +91,7 @@ public class RequestContext {
     private String remoteSecret;
     private String resolver;
     private int segmentId;
+    private String transactionId;
     /**
      * The name of the server to access. The name will be used to build
      * a path for the config files (i.e. $PXF_CONF/servers/$serverName/*.xml)
@@ -663,5 +664,13 @@ public class RequestContext {
 
     public void setAdditionalConfigProps(Map<String, String> additionalConfigProps) {
         this.additionalConfigProps = additionalConfigProps;
+    }
+
+    public String getTransactionId() {
+        return transactionId;
+    }
+
+    public void setTransactionId(String transactionId) {
+        this.transactionId = transactionId;
     }
 }

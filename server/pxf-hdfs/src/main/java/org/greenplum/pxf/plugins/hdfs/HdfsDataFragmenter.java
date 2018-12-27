@@ -46,12 +46,15 @@ public class HdfsDataFragmenter extends BaseFragmenter {
     protected HcfsType hcfsType;
 
     @Override
-    public void initialize(RequestContext requestContext) {
-        super.initialize(requestContext);
+    public void initialize(RequestContext context) {
+        super.initialize(context);
+
+        String sessionId = context.getUser() + ":" + context.getTransactionId() + ":" + context.getSegmentId();
+        configuration.set("pxf.session.id", sessionId);
         jobConf = new JobConf(configuration, this.getClass());
 
         // Check if the underlying configuration is for HDFS
-        hcfsType = HcfsType.getHcfsType(configuration, requestContext);
+        hcfsType = HcfsType.getHcfsType(configuration, context);
     }
 
     /**

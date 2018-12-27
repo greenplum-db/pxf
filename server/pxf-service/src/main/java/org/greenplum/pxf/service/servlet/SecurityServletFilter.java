@@ -20,13 +20,13 @@ package org.greenplum.pxf.service.servlet;
  */
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.service.SessionId;
 import org.greenplum.pxf.service.UGICache;
 import org.greenplum.pxf.service.utilities.SecuredHDFS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -44,7 +44,7 @@ import java.security.PrivilegedExceptionAction;
  */
 public class SecurityServletFilter implements Filter {
 
-    private static final Log LOG = LogFactory.getLog(SecurityServletFilter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SecurityServletFilter.class);
     private static final String USER_HEADER = "X-GP-USER";
     private static final String SEGMENT_ID_HEADER = "X-GP-SEGMENT-ID";
     private static final String TRANSACTION_ID_HEADER = "X-GP-XID";
@@ -52,8 +52,8 @@ public class SecurityServletFilter implements Filter {
     private static final String DELEGATION_TOKEN_HEADER = "X-GP-TOKEN";
     private static final String MISSING_HEADER_ERROR = "Header %s is missing in the request";
     private static final String EMPTY_HEADER_ERROR = "Header %s is empty in the request";
-    private FilterConfig config;
     UGICache proxyUGICache;
+    private FilterConfig config;
 
     /**
      * Initializes the filter.
@@ -79,16 +79,13 @@ public class SecurityServletFilter implements Filter {
     public void doFilter(final ServletRequest request, final ServletResponse response, final FilterChain chain)
             throws IOException, ServletException {
 
-        boolean isUserImpersonation;
         String impersonationHeaderValue = getHeaderValue(request, "X-GP-OPTIONS-IMPERSONATION", false);
-        if (StringUtils.isBlank(impersonationHeaderValue)) {
-            isUserImpersonation = Utilities.isUserImpersonationEnabled();
-        } else {
-            isUserImpersonation = StringUtils.equals("true", impersonationHeaderValue);
-        }
+        boolean isUserImpersonation = StringUtils.isNotBlank(impersonationHeaderValue) ?
+                "true".equals(impersonationHeaderValue) :
+                Utilities.isUserImpersonationEnabled();
 
         if (isUserImpersonation) {
-            LOG.info("User Impersonation is enabled");
+            LOG.debug("User Impersonation is enabled");
             // retrieve user header and make sure header is present and is not empty
             final String gpdbUser = getHeaderValue(request, USER_HEADER, true);
             final String transactionId = getHeaderValue(request, TRANSACTION_ID_HEADER, true);
@@ -98,20 +95,13 @@ public class SecurityServletFilter implements Filter {
             SessionId session = new SessionId(segmentId, transactionId, gpdbUser);
 
             // Prepare privileged action to run on behalf of proxy user
-            PrivilegedExceptionAction<Boolean> action = new PrivilegedExceptionAction<Boolean>() {
-                @Override
-                public Boolean run() throws IOException, ServletException {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Performing request chain call for proxy user = " + gpdbUser);
-                    }
-                    chain.doFilter(request, response);
-                    return true;
-                }
+            PrivilegedExceptionAction<Boolean> action = () -> {
+                LOG.debug("Performing request chain call for proxy user = {}", gpdbUser);
+                chain.doFilter(request, response);
+                return true;
             };
 
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Retrieving proxy user for session: " + session);
-            }
+            LOG.debug("Retrieving proxy user for session: {}", session);
 
             // Refresh Kerberos token when security is enabled
             String tokenString = getHeaderValue(request, DELEGATION_TOKEN_HEADER, false);
@@ -131,14 +121,12 @@ public class SecurityServletFilter implements Filter {
                 throw new ServletException(ie);
             } finally {
                 // Optimization to cleanup the cache if it is the last fragment
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Releasing proxy user for session: " + session +
-                            (lastCallForSegment ? " Last fragment call." : ""));
-                }
+                LOG.debug("Releasing proxy user for session: {}. {}",
+                        session, lastCallForSegment ? " Last fragment call" : "");
                 try {
                     proxyUGICache.release(session, lastCallForSegment);
                 } catch (Throwable t) {
-                    LOG.error("Error releasing UGICache for session: " + session, t);
+                    LOG.error("Error releasing UGICache for session: {}", session, t);
                 }
             }
         } else {
