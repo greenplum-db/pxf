@@ -1,4 +1,5 @@
 /**
+ *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -178,7 +179,6 @@ public abstract class FileSystem extends Configured implements Closeable {
      * @param conf the configuration to use
      */
     public static FileSystem get(Configuration conf) throws IOException {
-        LOG.debug("Getting filesystem here");
         return get(getDefaultUri(conf), conf);
     }
 
@@ -2753,7 +2753,6 @@ public abstract class FileSystem extends Configured implements Closeable {
             SERVICE_FILE_SYSTEMS = new HashMap<String, Class<? extends FileSystem>>();
 
     private static void loadFileSystems() {
-        LOG.debug("Loading filesystems");
         synchronized (FileSystem.class) {
             if (!FILE_SYSTEMS_LOADED) {
                 ServiceLoader<FileSystem> serviceLoader = ServiceLoader.load(FileSystem.class);

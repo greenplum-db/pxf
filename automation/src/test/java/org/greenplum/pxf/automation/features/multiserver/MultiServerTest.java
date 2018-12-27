@@ -28,15 +28,10 @@ public class MultiServerTest extends BaseFeature {
             "longNum bigint",
             "bool boolean"
     };
-
     private Hdfs s3Server;
-
     private ExternalTable s3Table;
-
-    private String defaultPath;
     private String s3Path;
-
-    private final static String s3Bucket = "gpdb-ud-scratch";
+    private String defaultPath;
 
     /**
      * Prepare all server configurations and components
@@ -47,13 +42,13 @@ public class MultiServerTest extends BaseFeature {
         defaultPath = hdfsWorkingDirectory + "/" + fileName;
 
         // Initialize server objects
-        s3Path = "/tmp/pxf_automation_data/multi_server_test/" +
-                UUID.randomUUID().toString() + "/" + fileName;
+        s3Path = "gpdb-ud-scratch/tmp/pxf_automation_data/multi_server_test/" +
+                UUID.randomUUID().toString() + "/";
         Configuration s3Configuration = new Configuration();
         s3Configuration.set("fs.s3a.access.key", ProtocolUtils.getAccess());
         s3Configuration.set("fs.s3a.secret.key", ProtocolUtils.getSecret());
 
-        FileSystem fs2 = FileSystem.get(URI.create(PROTOCOL_S3 + s3Bucket + s3Path), s3Configuration);
+        FileSystem fs2 = FileSystem.get(URI.create(PROTOCOL_S3 + s3Path + fileName), s3Configuration);
         s3Server = new Hdfs(fs2, s3Configuration, true);
     }
 
@@ -75,7 +70,7 @@ public class MultiServerTest extends BaseFeature {
     protected void afterMethod() throws Exception {
         super.afterMethod();
 
-        s3Server.removeDirectory(PROTOCOL_S3 + s3Bucket + s3Path);
+        s3Server.removeDirectory(PROTOCOL_S3 + s3Path);
     }
 
     protected void prepareData() throws Exception {
@@ -86,7 +81,7 @@ public class MultiServerTest extends BaseFeature {
         hdfs.writeTableToFile(defaultPath, dataTable, ",");
 
         // Create Data for s3Server
-        s3Server.writeTableToFile(PROTOCOL_S3 + s3Bucket + s3Path, dataTable, ",");
+        s3Server.writeTableToFile(PROTOCOL_S3 + s3Path + fileName, dataTable, ",");
     }
 
     protected void createTables() throws Exception {
@@ -99,7 +94,7 @@ public class MultiServerTest extends BaseFeature {
         // Create GPDB external table directed to s3Server
         s3Table =
                 TableFactory.getPxfReadableTextTable(
-                        "pxf_multiserver_s3", PXF_MULTISERVER_COLS, s3Bucket + s3Path, ",");
+                        "pxf_multiserver_s3", PXF_MULTISERVER_COLS, s3Path + fileName, ",");
         s3Table.setServer("server=s3");
         s3Table.setUserParameters(new String[]{"accesskey=" + ProtocolUtils.getAccess(), "secretkey=" + ProtocolUtils.getSecret()});
         s3Table.setProfile("s3:text");
