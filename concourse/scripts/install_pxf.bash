@@ -37,7 +37,10 @@ function setup_pxf_env() {
 		su gpadmin -c "sed -i -e 's|^[[:blank:]]*export PXF_USER_IMPERSONATION=.*$|export PXF_USER_IMPERSONATION=false|g' \${PXF_CONF_DIR}/conf/pxf-env.sh"
 	fi
 
-	su gpadmin -c "sed -i -e 's|^[[:blank:]]*export PXF_JVM_OPTS=.*$|export PXF_JVM_OPTS=\"${PXF_JVM_OPTS}\"|g' \${PXF_CONF_DIR}/conf/pxf-env.sh"
+
+	if [[ ! -z "${PXF_JVM_OPTS}" ]]; then
+		echo 'export PXF_JVM_OPTS="${PXF_JVM_OPTS}"' >> \${PXF_CONF_DIR}/conf/pxf-env.sh
+	fi
 
 	popd > /dev/null
 }
@@ -190,7 +193,7 @@ function run_pxf_installer_scripts() {
 	gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e 'sudo /home/centos/install_pxf_dependencies.sh' && \
 	gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e 'sudo /home/centos/install_pxf.sh' && \
 	PXF_CONF=${PXF_CONF_DIR} ${GPHOME}/pxf/bin/pxf cluster init && \
-	gpssh -f ~gpadmin/hostfile_init -v -u centos -s -e 'sudo /home/centos/configure_pxf.sh' && \
+	gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e 'sudo /home/centos/configure_pxf.sh' && \
 	${GPHOME}/pxf/bin/pxf cluster start \
 	\""
 }

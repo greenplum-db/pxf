@@ -4,8 +4,8 @@ folder-prefix: perf
 perf-scale: 500
 
 enable-impersonation-multinode: true
-pxf-jvm-opts: "-Xmx512m -Xms512m"
-perf-ccp-reap-minutes: 1440
+pxf-jvm-opts: "-Xmx2g -Xms4g"
+perf-ccp-reap-minutes: 480
 
 perf-gpdb-number-of-nodes: 21
 perf-gpdb-segments-per-host: 8
@@ -23,7 +23,7 @@ perf-trigger-stop: 12:40 PM
 
 perf-benchmark-adl: false
 perf-benchmark-s3: false
-perf-benchmark-gphdfs: true
+perf-benchmark-gphdfs: false
 
 job-name: perf-multi-node-500G
 
