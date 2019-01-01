@@ -30,7 +30,6 @@ allprojects {
     apply plugin: 'idea'
 
     repositories {
-        mavenLocal()
         jcenter()
     }
 
@@ -171,9 +170,12 @@ project('pxf-hdfs') {
         compile "org.apache.htrace:htrace-core4:${htraceVersion}"
         compile "org.apache.hadoop:hadoop-hdfs:${hadoopVersion}"
         compile "org.apache.hadoop:hadoop-hdfs-client:${hadoopVersion}"
-        compile "org.apache.parquet:parquet-hadoop:${parquetVersion}"
-        compile "org.apache.parquet:parquet-common:${parquetVersion}"
+        compile "org.apache.parquet:parquet-format:2.4.0"
         compile "org.apache.parquet:parquet-column:${parquetVersion}"
+        compile "org.apache.parquet:parquet-common:${parquetVersion}"
+        compile "org.apache.parquet:parquet-encoding:${parquetVersion}"
+        compile "org.apache.parquet:parquet-generator:${parquetVersion}"
+        compile "org.apache.parquet:parquet-hadoop:${parquetVersion}"
 
         bundleJars "org.apache.avro:avro:1.7.4"
     }
@@ -250,7 +252,6 @@ project('pxf-service') {
         providedCompile "org.apache.hadoop:hadoop-hdfs-client:${hadoopVersion}"
         providedCompile "org.apache.tomcat:tomcat-catalina:$tomcatVersion"
 
-
         bundleJars "org.apache.hadoop:hadoop-auth:${hadoopVersion}"
         bundleJars "commons-cli:commons-cli:1.2"
         bundleJars "commons-io:commons-io:2.4"
@@ -262,7 +263,6 @@ project('pxf-service') {
         bundleJars "com.google.protobuf:protobuf-java:2.5.0"
         bundleJars "org.slf4j:slf4j-api:1.7.10"
         bundleJars "org.slf4j:slf4j-log4j12:1.7.10"
-
     }
 }
 

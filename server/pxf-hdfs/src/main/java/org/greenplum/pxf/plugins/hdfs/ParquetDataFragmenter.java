@@ -53,7 +53,8 @@ public class ParquetDataFragmenter extends HdfsDataFragmenter {
 
             String[] hosts = fsp.getLocations();
             Path path = new Path(fsp.getPath().toUri());
-            ParquetMetadata metadata = ParquetFileReader.readFooter(jobConf, path, ParquetMetadataConverter.NO_FILTER);
+            ParquetMetadata metadata = ParquetFileReader.readFooter(
+                    jobConf, path, ParquetMetadataConverter.NO_FILTER);
             MessageType schema = metadata.getFileMetaData().getSchema();
 
             byte[] fragmentMetadata = HdfsUtilities.prepareFragmentMetadata(fsp.getStart(), fsp.getLength(), hosts);

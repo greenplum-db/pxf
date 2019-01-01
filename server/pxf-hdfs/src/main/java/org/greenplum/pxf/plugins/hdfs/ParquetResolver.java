@@ -237,21 +237,8 @@ public class ParquetResolver extends ParquetFileAccessor implements Resolver {
 
     private Timestamp bytesToTimestamp(byte[] bytes) {
         long timeOfDayNanos = ByteBuffer.wrap(new byte[]{
-                bytes[7],
-                bytes[6],
-                bytes[5],
-                bytes[4],
-                bytes[3],
-                bytes[2],
-                bytes[1],
-                bytes[0]
-        }).getLong();
-
-        int julianDays = (ByteBuffer.wrap(new byte[]{bytes[11],
-                bytes[10],
-                bytes[9],
-                bytes[8]
-        })).getInt();
+                bytes[7], bytes[6], bytes[5], bytes[4], bytes[3], bytes[2], bytes[1], bytes[0]}).getLong();
+        int julianDays = (ByteBuffer.wrap(new byte[]{bytes[11], bytes[10], bytes[9], bytes[8]})).getInt();
         long unixTimeMs = (julianDays - JULIAN_EPOCH_OFFSET_DAYS) * MILLIS_IN_DAY + timeOfDayNanos / 1000000;
         return new Timestamp(unixTimeMs);
     }

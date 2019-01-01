@@ -85,13 +85,20 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
         // Check if the underlying configuration is for HDFS
         hcfsType = HcfsType.getHcfsType(configuration, requestContext);
         schema = context.getFragmentUserData() == null ?
-                autoGenerateParquetSchema(requestContext.getTupleDescription()) :
+                generateParquetSchema(requestContext.getTupleDescription()) :
                 MessageTypeParser.parseMessageType(new String(context.getFragmentUserData()));
+        LOG.debug("Schema fields = {}", schema.getFields());
         groupFactory = new SimpleGroupFactory(schema);
     }
 
+    /**
+     * Opens the resource for read.
+     *
+     * @throws IOException if opening the resource failed
+     */
     @Override
     public boolean openForRead() throws IOException {
+
         Path file = new Path(context.getDataSource());
         FileSplit fileSplit = HdfsUtilities.parseFileSplit(context);
         // Create reader for a given split, read a range in file
@@ -101,17 +108,11 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
         return readNextRowGroup();
     }
 
-    private boolean readNextRowGroup() throws IOException {
-        PageReadStore currentRowGroup = fileReader.readNextRowGroup();
-        if (currentRowGroup == null)
-            return false;
-        recordReader = columnIO.getRecordReader(currentRowGroup, new GroupRecordConverter(schema));
-        rowsInRowGroup = currentRowGroup.getRowCount();
-        return true;
-    }
-
     /**
+     * Reads the next record.
+     *
      * @return one record or null when split is already exhausted
+     * @throws IOException if unable to read
      */
     @Override
     public OneRow readNextObject() throws IOException {
@@ -120,8 +121,13 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
         return new OneRow(null, recordReader.read());
     }
 
+    /**
+     * Closes the resource for read.
+     *
+     * @throws IOException if closing the resource failed
+     */
     @Override
-    public void closeForRead() throws Exception {
+    public void closeForRead() throws IOException {
         if (fileReader != null) {
             fileReader.close();
         }
@@ -131,12 +137,13 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
      * Opens the resource for write.
      *
      * @return true if the resource is successfully opened
-     * @throws Exception if opening the resource failed
+     * @throws IOException if opening the resource failed
      */
     @Override
-    public boolean openForWrite() throws Exception {
+    public boolean openForWrite() throws IOException {
 
         String fileName = hcfsType.getDataUri(configuration, context);
+        LOG.debug("Creating file {}", fileName);
         String compressCodec = context.getOption("COMPRESSION_CODEC");
         CompressionCodecName codecName = DEFAULT_COMPRESSION_CODEC_NAME;
         CompressionCodec codec;
@@ -190,6 +197,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
      */
     @Override
     public boolean writeNextObject(OneRow onerow) throws Exception {
+
         parquetWriter.write((Group) onerow.getData());
         return true;
     }
@@ -201,18 +209,28 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
      */
     @Override
     public void closeForWrite() throws Exception {
+
         if (parquetWriter != null) {
             parquetWriter.close();
         }
     }
 
+    private boolean readNextRowGroup() throws IOException {
 
+        PageReadStore currentRowGroup = fileReader.readNextRowGroup();
+        if (currentRowGroup == null)
+            return false;
+        recordReader = columnIO.getRecordReader(currentRowGroup, new GroupRecordConverter(schema));
+        rowsInRowGroup = currentRowGroup.getRowCount();
+        return true;
+    }
 
     /**
-     * generate schema automatically
+     * Generate parquet schema using column descriptors
      */
-    public static MessageType autoGenerateParquetSchema(List<ColumnDescriptor> columns) {
+    private MessageType generateParquetSchema(List<ColumnDescriptor> columns) {
 
+        LOG.debug("Generating parquet schema for write using {}", columns);
         List<Type> fields = new ArrayList<>();
         for (ColumnDescriptor column: columns) {
             String columnName = column.columnName();
