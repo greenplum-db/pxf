@@ -48,6 +48,7 @@ function setup_pxf_env() {
 function main() {
 	rm -rf \$PXF_CONF_DIR/servers/default/core-site.xml \$PXF_CONF_DIR/servers/default/hdfs-site.xml
 	cp /etc/hadoop/conf/core-site.xml /etc/hadoop/conf/hdfs-site.xml \$PXF_CONF_DIR/servers/default/
+	chown -R gpadmin:gpadmin \$PXF_CONF_DIR/servers/default
 	setup_pxf_env
 }
 

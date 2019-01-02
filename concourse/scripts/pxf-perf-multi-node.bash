@@ -496,6 +496,7 @@ function main {
     if [[ ${BENCHMARK_GPHDFS} == true ]]; then
         run_gphdfs_benchmark
     fi
+
     run_pxf_benchmark
 }
 
