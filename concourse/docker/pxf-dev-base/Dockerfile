@@ -4,9 +4,9 @@ FROM pivotaldata/${BASE_IMAGE}
 
 # install Go utilities
 RUN cd /tmp && \
-    wget -q https://dl.google.com/go/go1.11.1.linux-amd64.tar.gz && \
-    tar -C /usr/local -xzf go1.11.1.linux-amd64.tar.gz && \
-    rm -f go1.11.1.linux-amd64.tar.gz && \
+    wget -q https://dl.google.com/go/go1.11.4.linux-amd64.tar.gz && \
+    tar -C /usr/local -xzf go1.11.4.linux-amd64.tar.gz && \
+    rm -f go1.11.4.linux-amd64.tar.gz && \
     cd - && \
     GOPATH=/opt/go /usr/local/go/bin/go get github.com/golang/dep/cmd/dep && \
     GOPATH=/opt/go /usr/local/go/bin/go get github.com/onsi/ginkgo/ginkgo && \
@@ -19,10 +19,9 @@ RUN cd /tmp/pxf_src && \
     export BUILD_PARAMS='-Dorg.gradle.daemon=false' && \
     GOPATH=/opt/go PATH=/opt/go/bin:/usr/local/go/bin:$PATH make tar && \
     cd automation && PXF_HOME=/tmp/pxf_src/server/build/stage make dev && \
-    mkdir -p /home/gpadmin && \
     mv /root/.m2 /home/gpadmin && \
     mv /root/.gradle /home/gpadmin && \
     ln -s /home/gpadmin/.gradle /root/.gradle && \
     ln -s /home/gpadmin/.m2 /root/.m2 && \
-    chown -R 1000:1000 /home/gpadmin && \
+    chown -R gpadmin:gpadmin /home/gpadmin && \
     rm -rf /tmp/pxf_src

@@ -116,23 +116,19 @@ function add_remote_user_access_for_gpdb() {
 
 function setup_gpadmin_user() {
 
-    if [[ ${TARGET_OS} == "ubuntu" ]]; then
-        ./gpdb_src/concourse/scripts/setup_gpadmin_user.bash
-    else
-        # Don't create gpadmin user if already exists
-        gpadmin_exists=$(getent passwd gpadmin || true | wc -l)
-        if [[ ${gpadmin_exists} == 0 ]]; then
-            groupadd -g 1000 gpadmin && useradd -u 1000 -g 1000 -M gpadmin
-            echo "gpadmin  ALL=(ALL)       NOPASSWD: ALL" > /etc/sudoers.d/gpadmin
-            groupadd supergroup && usermod -a -G supergroup gpadmin
-            mkdir -p /home/gpadmin/.ssh
-            ssh-keygen -t rsa -N "" -f /home/gpadmin/.ssh/id_rsa
-            cat /home/gpadmin/.ssh/id_rsa.pub >> /home/gpadmin/.ssh/authorized_keys
-            chmod 0600 /home/gpadmin/.ssh/authorized_keys
-            { ssh-keyscan localhost; ssh-keyscan 0.0.0.0; } >> /home/gpadmin/.ssh/known_hosts
-            chown -R gpadmin:gpadmin ${GPHOME} /home/gpadmin
-            echo -e "password\npassword" | passwd gpadmin 2> /dev/null
-        fi
+    # Don't create gpadmin user if already exists
+    gpadmin_exists=$(getent passwd gpadmin || true | wc -l)
+    if [[ ${gpadmin_exists} == 0 ]]; then
+        groupadd -g 1000 gpadmin && useradd -u 1000 -g 1000 -M gpadmin
+        echo "gpadmin  ALL=(ALL)       NOPASSWD: ALL" > /etc/sudoers.d/gpadmin
+        groupadd supergroup && usermod -a -G supergroup gpadmin
+        mkdir -p /home/gpadmin/.ssh
+        ssh-keygen -t rsa -N "" -f /home/gpadmin/.ssh/id_rsa
+        cat /home/gpadmin/.ssh/id_rsa.pub >> /home/gpadmin/.ssh/authorized_keys
+        chmod 0600 /home/gpadmin/.ssh/authorized_keys
+        { ssh-keyscan localhost; ssh-keyscan 0.0.0.0; } >> /home/gpadmin/.ssh/known_hosts
+        chown -R gpadmin:gpadmin ${GPHOME} /home/gpadmin
+        echo -e "password\npassword" | passwd gpadmin 2> /dev/null
     fi
 	echo -e "gpadmin soft core unlimited" >> /etc/security/limits.d/gpadmin-limits.conf
 	echo -e "gpadmin soft nproc 131072" >> /etc/security/limits.d/gpadmin-limits.conf
