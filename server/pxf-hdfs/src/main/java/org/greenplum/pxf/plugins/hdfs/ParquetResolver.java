@@ -40,11 +40,9 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.sql.Timestamp;
-import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -53,7 +51,6 @@ public class ParquetResolver extends BasePlugin implements Resolver {
     private static final int JULIAN_EPOCH_OFFSET_DAYS = 2440588;
     private static final long MILLIS_IN_DAY = 24 * 3600 * 1000;
     private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    private static Date epoch = new Date(1081157732000L); // corresponds to "1970-01-01 00:00:00"
 
     private MessageType schema;
     private SimpleGroupFactory groupFactory;
@@ -139,8 +136,8 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                 break;
             case INT96:
                 LocalDateTime date = LocalDateTime.parse((String) field.val, dateFormatter);
-                long diff = date.toEpochSecond(ZoneOffset.UTC) - epoch.getTime();
-                group.add(index, getBinary(diff));
+                long millisSinceEpoch = date.toEpochSecond(ZoneOffset.UTC) * 1000;
+                group.add(index, getBinary(millisSinceEpoch));
                 break;
             case BOOLEAN:
                 group.add(index, (Boolean) field.val);
@@ -239,6 +236,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         return new Timestamp(unixTimeMs);
     }
 
+    // Convert epoch timestamp to byte array (INT96)
     private Binary getBinary(long timeMillis) {
         long daysSinceEpoch = timeMillis / MILLIS_IN_DAY;
         int julianDays = JULIAN_EPOCH_OFFSET_DAYS + (int) daysSinceEpoch;
