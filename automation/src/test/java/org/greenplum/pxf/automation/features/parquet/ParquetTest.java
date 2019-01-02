@@ -43,7 +43,7 @@ public class ParquetTest extends BaseFeature {
     @Test(groups = {"features", "gpdb", "hcfs"})
     public void parquetReadPrimitives() throws Exception {
 
-        exTable = new ReadableExternalTable( pxfParquetTable,
+        exTable = new ReadableExternalTable(pxfParquetTable,
                 parquet_table_columns, hdfsPath + parquetPrimitiveTypes, "custom");
         exTable.setHost(pxfHost);
         exTable.setPort(pxfPort);
@@ -65,7 +65,8 @@ public class ParquetTest extends BaseFeature {
         exTable.setProfile(ProtocolUtils.getProtocol().value() + ":parquet");
 
         gpdb.createTableAndVerify(exTable);
-        gpdb.runQuery("INSERT INTO " + exTable.getName() + " SELECT * FROM " + pxfParquetTable);
+        gpdb.runQuery("INSERT INTO " + exTable.getName() + " SELECT t1, t2, num1, dub1, dec1, " +
+                "tm, r, bg, b, tn, sml, vc1, c1, bin FROM " + pxfParquetTable);
 
         exTable = new ReadableExternalTable("pxf_parquet_read_primitives",
                 parquet_table_columns, hdfsPath + parquetWritePrimitives, "custom");

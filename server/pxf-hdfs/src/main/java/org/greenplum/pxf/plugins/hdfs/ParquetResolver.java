@@ -95,7 +95,6 @@ public class ParquetResolver extends ParquetFileAccessor implements Resolver {
         return new OneRow(null, group);
     }
 
-    @SuppressWarnings("deprecation")
     private void fillGroup(int index, OneField field, Group group, Type type) throws IOException {
         if (field.val == null)
             return;
@@ -104,7 +103,7 @@ public class ParquetResolver extends ParquetFileAccessor implements Resolver {
                 if (type.getOriginalType() == OriginalType.UTF8)
                     group.add(index, (String) field.val);
                 else
-                    group.add(index, Binary.fromByteArray((byte[]) field.val));
+                    group.add(index, Binary.fromReusedByteArray((byte[]) field.val));
                 break;
             case INT32:
                 if (type.getOriginalType() == OriginalType.INT_16)
@@ -134,7 +133,7 @@ public class ParquetResolver extends ParquetFileAccessor implements Resolver {
                         bytes[i] = unscaled[i - offset];
                     }
                 }
-                group.add(index, Binary.fromByteArray(bytes));
+                group.add(index, Binary.fromReusedByteArray(bytes));
                 break;
             case INT96:
                 try {
@@ -152,9 +151,9 @@ public class ParquetResolver extends ParquetFileAccessor implements Resolver {
             default:
                 throw new IOException("Not supported type " + type.asPrimitiveType().getPrimitiveTypeName());
         }
-   }
+    }
 
-   private OneField resolvePrimitive(Integer columnIndex, Group g, Type type) {
+    private OneField resolvePrimitive(Integer columnIndex, Group g, Type type) {
         OneField field = new OneField();
         OriginalType originalType = type.getOriginalType();
         PrimitiveType primitiveType = type.asPrimitiveType();

@@ -128,7 +128,7 @@ public abstract class BaseTestParent {
      */
     @AfterClass(alwaysRun = true)
     public final void clean() throws Exception {
-        if (true) {
+        if (ProtocolUtils.getPxfTestDebug().equals("true")) {
             return;
         }
         // redirect "clean" logs to log file
