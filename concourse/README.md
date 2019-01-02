@@ -14,7 +14,6 @@ be embedded to further manipulate the generated pipeline.
 fly -t ud set-pipeline \
     -c ~/workspace/pxf/concourse/pipelines/docker-images.yml \
     -l ~/workspace/gp-continuous-integration/secrets/gpdb-release-secrets.dev.yml \
-    -v pxf-git-remote=https://github.com/greenplum-db/pxf.git \
     -p gpdb_pxf_docker-images
 ```
 
