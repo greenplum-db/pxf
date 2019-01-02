@@ -293,21 +293,21 @@ function assert_count_in_table {
 function run_wasb_benchmark() {
     create_wasb_external_tables
 
-    cat > /tmp/wasb-site.xml <<-EOF
+    cat > /tmp/wasb-site.xml <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
 <configuration>
 	<property>
 		<name>fs.defaultFS</name>
-		<value>wasbs://<containername>@<accountname>.blob.core.windows.net</value>
+		<value>wasbs://pxf-container@${WASB_ACCOUNT_NAME}.blob.core.windows.net</value>
 	</property>
 	<property>
 		<name>dfs.adls.oauth2.access.token.provider.type</name>
 		<value>ClientCredential</value>
 	</property>
 	<property>
-		<name>fs.azure.account.key.pxfdev.blob.core.windows.net</name>
-		<value>{ACCOUNTKEY}</value>
+		<name>fs.azure.account.key.${WASB_ACCOUNT_NAME}.blob.core.windows.net</name>
+		<value>${WASB_ACCOUNT_KEY}</value>
 	</property>
 </configuration>
 EOF
