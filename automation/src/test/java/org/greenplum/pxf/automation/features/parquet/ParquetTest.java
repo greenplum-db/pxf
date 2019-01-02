@@ -40,6 +40,7 @@ public class ParquetTest extends BaseFeature {
         hdfs.copyFromLocal(resourcePath + parquetPrimitiveTypes, hdfsPath + parquetPrimitiveTypes);
     }
 
+
     @Test(groups = {"features", "gpdb", "hcfs"})
     public void parquetReadPrimitives() throws Exception {
 
@@ -51,6 +52,11 @@ public class ParquetTest extends BaseFeature {
         exTable.setProfile(ProtocolUtils.getProtocol().value() + ":parquet");
 
         gpdb.createTableAndVerify(exTable);
+        gpdb.runQuery("CREATE OR REPLACE VIEW parquet_view AS SELECT t1, t2, num1, dub1, dec1, " +
+                "CAST (((CAST(tm AS TIMESTAMP WITH TIME ZONE) AT TIME ZONE 'PDT') AT TIME ZONE " +
+                "current_setting('TIMEZONE')) AS TIMESTAMP WITHOUT TIME ZONE) as tm, " +
+                "r, bg, b, tn, sml, vc1, c1, bin FROM " + pxfParquetTable);
+
         runTincTest("pxf.features.parquet.primitive_types.runTest");
     }
 
@@ -75,6 +81,11 @@ public class ParquetTest extends BaseFeature {
         exTable.setFormatter("pxfwritable_import");
         exTable.setProfile(ProtocolUtils.getProtocol().value() + ":parquet");
         gpdb.createTableAndVerify(exTable);
-        runTincTest("pxf.features.parquet.writable.runTest");
+        gpdb.runQuery("CREATE OR REPLACE VIEW parquet_view AS SELECT t1, t2, num1, dub1, dec1, " +
+                "CAST (((CAST(tm AS TIMESTAMP WITH TIME ZONE) AT TIME ZONE 'PDT') AT TIME ZONE " +
+                "current_setting('TIMEZONE')) AS TIMESTAMP WITHOUT TIME ZONE) as tm, " +
+                "r, bg, b, tn, sml, vc1, c1, bin FROM pxf_parquet_read_primitives");
+
+        runTincTest("pxf.features.parquet.primitive_types.runTest");
     }
 }

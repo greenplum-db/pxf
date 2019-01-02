@@ -362,7 +362,7 @@ public class DbSystemObject extends BaseSystemObject implements IDbFunctionality
 	public void createTableAndVerify(Table table) throws Exception {
 		ReportUtils.startLevel(report, getClass(), "Create and Verify Table: " + table.getFullName());
 		try {
-			dropTable(table, false);
+			dropTable(table, true);
 			createTable(table);
 		} catch (Exception e) {
 			ReportUtils.stopLevel(report);
