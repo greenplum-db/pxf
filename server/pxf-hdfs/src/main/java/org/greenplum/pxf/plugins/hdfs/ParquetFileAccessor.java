@@ -26,13 +26,12 @@ import org.apache.hadoop.mapred.FileSplit;
 import org.apache.parquet.column.ParquetProperties.WriterVersion;
 import org.apache.parquet.column.page.PageReadStore;
 import org.apache.parquet.example.data.Group;
-import org.apache.parquet.example.data.simple.SimpleGroupFactory;
 import org.apache.parquet.example.data.simple.convert.GroupRecordConverter;
 import org.apache.parquet.format.converter.ParquetMetadataConverter;
-import org.apache.parquet.hadoop.example.GroupWriteSupport;
-import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 import org.apache.parquet.hadoop.ParquetFileReader;
 import org.apache.parquet.hadoop.ParquetWriter;
+import org.apache.parquet.hadoop.example.GroupWriteSupport;
+import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 import org.apache.parquet.io.ColumnIOFactory;
 import org.apache.parquet.io.MessageColumnIO;
 import org.apache.parquet.io.RecordReader;
@@ -75,8 +74,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
     private static final WriterVersion DEFAULT_PARQUET_VERSION = WriterVersion.PARQUET_1_0;
     private static final CompressionCodecName DEFAULT_COMPRESSION_CODEC_NAME = CompressionCodecName.UNCOMPRESSED;
 
-    MessageType schema;
-    SimpleGroupFactory groupFactory;
+    private MessageType schema;
 
     @Override
     public void initialize(RequestContext requestContext) {
@@ -88,7 +86,10 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
                 generateParquetSchema(requestContext.getTupleDescription()) :
                 MessageTypeParser.parseMessageType(new String(context.getFragmentUserData()));
         LOG.debug("Schema fields = {}", schema.getFields());
-        groupFactory = new SimpleGroupFactory(schema);
+
+        // We get the parquet schema and set it to the metadata in the request context
+        // to avoid computing the schema again in the Resolver
+        context.setMetadata(schema);
     }
 
     /**
@@ -143,7 +144,6 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
     public boolean openForWrite() throws IOException {
 
         String fileName = hcfsType.getDataUri(configuration, context);
-        LOG.debug("Creating file {}", fileName);
         String compressCodec = context.getOption("COMPRESSION_CODEC");
         CompressionCodecName codecName = DEFAULT_COMPRESSION_CODEC_NAME;
         CompressionCodec codec;
@@ -168,6 +168,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
             }
         }
 
+        LOG.debug("Creating file {}", fileName);
         FileSystem fs = FileSystem.get(URI.create(fileName), configuration);
         Path file = new Path(fileName);
         if (fs.exists(file)) {

@@ -21,7 +21,9 @@ package org.greenplum.pxf.plugins.hdfs;
 
 import org.apache.parquet.example.data.Group;
 import org.apache.parquet.example.data.simple.NanoTime;
+import org.apache.parquet.example.data.simple.SimpleGroupFactory;
 import org.apache.parquet.io.api.Binary;
+import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.OriginalType;
 import org.apache.parquet.schema.PrimitiveType;
 import org.apache.parquet.schema.Type;
@@ -29,6 +31,7 @@ import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.UnsupportedTypeException;
 import org.greenplum.pxf.api.io.DataType;
+import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
 
@@ -38,30 +41,29 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.sql.Timestamp;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
-public class ParquetResolver extends ParquetFileAccessor implements Resolver {
+public class ParquetResolver extends BasePlugin implements Resolver {
 
     private static final int JULIAN_EPOCH_OFFSET_DAYS = 2440588;
     private static final long MILLIS_IN_DAY = 24 * 3600 * 1000;
-    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static Date epoch = new Date(1081157732000L); // corresponds to "1970-01-01 00:00:00"
 
-    private static Date epoch;
-    static {
-        try {
-            epoch =  dateFormat.parse("1970-01-01 00:00:00");
-        }
-        catch (ParseException pe) {
-            throw new RuntimeException(pe.getMessage());
-        }
-    }
+    private MessageType schema;
+    private SimpleGroupFactory groupFactory;
 
     @Override
     public void initialize(RequestContext requestContext) {
         super.initialize(requestContext);
+
+        schema = (MessageType) requestContext.getMetadata();
+        groupFactory = new SimpleGroupFactory(schema);
     }
 
     @Override
@@ -136,14 +138,9 @@ public class ParquetResolver extends ParquetFileAccessor implements Resolver {
                 group.add(index, Binary.fromReusedByteArray(bytes));
                 break;
             case INT96:
-                try {
-                    Date date = dateFormat.parse((String) field.val);
-                    long diff = date.getTime() - epoch.getTime();
-                    group.add(index, getBinary(diff));
-                }
-                catch (ParseException e) {
-                    throw new IOException("Unable to parse timestamp " + field.val);
-                }
+                LocalDateTime date = LocalDateTime.parse((String) field.val, dateFormatter);
+                long diff = date.toEpochSecond(ZoneOffset.UTC) - epoch.getTime();
+                group.add(index, getBinary(diff));
                 break;
             case BOOLEAN:
                 group.add(index, (Boolean) field.val);
@@ -244,7 +241,7 @@ public class ParquetResolver extends ParquetFileAccessor implements Resolver {
 
     private Binary getBinary(long timeMillis) {
         long daysSinceEpoch = timeMillis / MILLIS_IN_DAY;
-        int julianDays = JULIAN_EPOCH_OFFSET_DAYS + (int)daysSinceEpoch;
+        int julianDays = JULIAN_EPOCH_OFFSET_DAYS + (int) daysSinceEpoch;
         long timeOfDayNanos = (timeMillis % MILLIS_IN_DAY) * 1000000;
         return new NanoTime(julianDays, timeOfDayNanos).toBinary();
     }

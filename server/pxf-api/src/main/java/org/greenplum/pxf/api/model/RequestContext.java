@@ -50,7 +50,8 @@ public class RequestContext {
     private byte[] fragmentMetadata = null;
     private String filterString;
     private boolean filterStringValid;
-    private String metadata;
+    // Profile-centric metadata
+    private Object metadata;
 
     private OutputFormat outputFormat;
     private int port;
@@ -371,11 +372,11 @@ public class RequestContext {
      *
      * @return class name for METADATA or null
      */
-    public String getMetadata() {
+    public Object getMetadata() {
         return metadata;
     }
 
-    public void setMetadata(String metadata) {
+    public void setMetadata(Object metadata) {
         this.metadata = metadata;
     }
 

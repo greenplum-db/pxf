@@ -31,6 +31,6 @@ import org.greenplum.pxf.api.utilities.Utilities;
  */
 public class MetadataFetcherFactory {
     public static MetadataFetcher create(RequestContext requestContext) throws Exception {
-        return (MetadataFetcher) Utilities.createAnyInstance(RequestContext.class, requestContext.getMetadata(), requestContext);
+        return (MetadataFetcher) Utilities.createAnyInstance(RequestContext.class, (String) requestContext.getMetadata(), requestContext);
     }
 }
