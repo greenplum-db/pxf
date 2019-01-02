@@ -19,6 +19,7 @@ else
 fi
 
 LINEITEM_COUNT="unset"
+LINEITEM_VAL_RESULTS="unset"
 source "${CWDIR}/pxf_common.bash"
 
 function create_database_and_schema {
@@ -145,24 +146,23 @@ EOF
 function gphdfs_validate_write_to_external {
     psql -c "CREATE EXTERNAL TABLE gphdfs_lineitem_read_after_write (like lineitem) LOCATION ('gphdfs://${HADOOP_HOSTNAME}:8020/tmp/lineitem_write_gphdfs/') FORMAT 'CSV'"
     local external_values
-    local gpdb_values
-    external_values=$(psql -t -c "SELECT ${VALIDATION_QUERY} FROM gphdfs_lineitem_read_after_write")
-    gpdb_values=$(psql -t -c "SELECT ${VALIDATION_QUERY} FROM lineitem")
 
+    cat << EOF
+
+Results from GPDB query
+------------------------------
+EOF
+    echo ${LINEITEM_VAL_RESULTS}
+
+    external_values=$(psql -t -c "SELECT ${VALIDATION_QUERY} FROM gphdfs_lineitem_read_after_write")
     cat << EOF
 
 Results from external query
 ------------------------------
 EOF
     echo ${external_values}
-    cat << EOF
 
-Results from GPDB query
-------------------------------
-EOF
-    echo ${gpdb_values}
-
-    if [ "${external_values}" != "${gpdb_values}" ]; then
+    if [[ "${external_values}" != "${LINEITEM_VAL_RESULTS}" ]]; then
         echo ERROR! Unable to validate data written from GPDB to external
         exit 1
     fi
@@ -171,24 +171,23 @@ EOF
 function pxf_validate_write_to_external {
     psql -c "CREATE EXTERNAL TABLE pxf_lineitem_read_after_write (like lineitem) LOCATION ('pxf://tmp/lineitem_write/?PROFILE=HdfsTextSimple') FORMAT 'CSV'"
     local external_values
-    local gpdb_values
-    external_values=$(psql -t -c "SELECT ${VALIDATION_QUERY} FROM pxf_lineitem_read_after_write")
-    gpdb_values=$(psql -t -c "SELECT ${VALIDATION_QUERY} FROM lineitem")
 
+    cat << EOF
+
+Results from GPDB query
+------------------------------
+EOF
+    echo ${LINEITEM_VAL_RESULTS}
+
+    external_values=$(psql -t -c "SELECT ${VALIDATION_QUERY} FROM pxf_lineitem_read_after_write")
     cat << EOF
 
 Results from external query
 ------------------------------
 EOF
     echo ${external_values}
-    cat << EOF
 
-Results from GPDB query
-------------------------------
-EOF
-    echo ${gpdb_values}
-
-    if [ "${external_values}" != "${gpdb_values}" ]; then
+    if [[ "${external_values}" != "${LINEITEM_VAL_RESULTS}" ]]; then
         echo ERROR! Unable to validate data written from GPDB to external
         exit 1
     fi
@@ -479,6 +478,7 @@ function main {
     validate_write_to_gpdb "lineitem_external" "lineitem"
     echo -e "Data loading and validation complete\n"
     LINEITEM_COUNT=$(psql -t -c "SELECT COUNT(*) FROM lineitem" | tr -d ' ')
+    LINEITEM_VAL_RESULTS=$(psql -t -c "SELECT ${VALIDATION_QUERY} FROM lineitem")
 
     if [[ ${BENCHMARK_ADL} == true ]]; then
         run_adl_benchmark
