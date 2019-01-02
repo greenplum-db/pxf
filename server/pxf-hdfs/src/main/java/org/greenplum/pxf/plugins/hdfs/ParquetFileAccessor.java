@@ -83,8 +83,8 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
         // Check if the underlying configuration is for HDFS
         hcfsType = HcfsType.getHcfsType(configuration, requestContext);
         schema = context.getFragmentUserData() == null ?
-                generateParquetSchema(requestContext.getTupleDescription()) :
-                MessageTypeParser.parseMessageType(new String(context.getFragmentUserData()));
+                generateParquetSchema(requestContext.getTupleDescription()) : // write-flow
+                MessageTypeParser.parseMessageType(new String(context.getFragmentUserData())); // read-flow
         LOG.debug("Schema fields = {}", schema.getFields());
 
         // We get the parquet schema and set it to the metadata in the request context
