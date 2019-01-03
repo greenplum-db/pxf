@@ -258,13 +258,11 @@ function create_adl_external_tables() {
         LOCATION('pxf://${ADL_ACCOUNT}.azuredatalakestore.net/adl-profile-test/output/${SCALE}/?PROFILE=adl:text&server=adlbenchmark') FORMAT 'CSV'"
 }
 
-function create_gcs_extension_external_tables() {
+function create_gcs_external_tables() {
     psql -c "CREATE EXTERNAL TABLE lineitem_gcs_read (LIKE lineitem)
-        LOCATION('pxf://${SCALE}/lineitem_data/?PROFILE=HdfsTextSimple')
-        FORMAT 'CSV' (DELIMITER '|');"
+        LOCATION('pxf://data-gpdb-ud-tpch/${SCALE}/lineitem_data/?PROFILE=gs:text&SERVER=gsbenchmark') FORMAT 'CSV' (DELIMITER '|');"
     psql -c "CREATE WRITABLE EXTERNAL TABLE lineitem_gcs_write (LIKE lineitem)
-        LOCATION('pxf://output/${SCALE}/?PROFILE=HdfsTextSimple')
-        FORMAT 'CSV';"
+        LOCATION('pxf://data-gpdb-ud-tpch/output/${SCALE}/?PROFILE=gs:text&SERVER=gsbenchmark') FORMAT 'CSV';"
 }
 
 function create_s3_extension_external_tables {
@@ -394,57 +392,57 @@ EOF
     time psql -c "INSERT INTO lineitem_adl_write SELECT * FROM lineitem"
 }
 
-function run_gcs_extension_benchmark() {
-    create_gcs_extension_external_tables
-     cat << EOF > /tmp/gsc-ci-service-account.key.json
+function run_gcs_benchmark() {
+    create_gcs_external_tables
+
+    cat << EOF > /tmp/gsc-ci-service-account.key.json
 ${GOOGLE_CREDENTIALS}
 EOF
-     gpscp -u gpadmin -f /tmp/segment_hosts /tmp/gsc-ci-service-account.key.json =:/tmp/gsc-ci-service-account.key.json
-     cat > /tmp/core-site.xml <<-EOF
+
+    GS_SERVER_DIR="${PXF_SERVER_DIR}/gsbenchmark"
+
+    cat > /tmp/gs-site.xml <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
 <configuration>
-<property>
-      <name>fs.defaultFS</name>
-      <value>gs://data-gpdb-ud-tpch</value>
-    </property>
-    <property>
-      <name>google.cloud.auth.service.account.enable</name>
-      <value>true</value>
-    </property>
-    <property>
-      <name>google.cloud.auth.service.account.json.keyfile</name>
-      <value>/tmp/gsc-ci-service-account.key.json</value>
-    </property>
-    <property>
-        <name>fs.gs.impl</name>
-        <value>com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem</value>
-    </property>
-    <property>
-        <name>fs.AbstractFileSystem.gs.impl</name>
-        <value>com.google.cloud.hadoop.fs.gcs.GoogleHadoopFS</value>
-    </property>
+	<property>
+		<name>google.cloud.auth.service.account.enable</name>
+		<value>true</value>
+	</property>
+	<property>
+		<name>google.cloud.auth.service.account.json.keyfile</name>
+		<value>${GS_SERVER_DIR}/gsc-ci-service-account.key.json</value>
+	</property>
+	<property>
+		<name>fs.gs.impl</name>
+		<value>com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem</value>
+	</property>
+	<property>
+		<name>fs.AbstractFileSystem.gs.impl</name>
+		<value>com.google.cloud.hadoop.fs.gcs.GoogleHadoopFS</value>
+	</property>
 </configuration>
 EOF
-     # Make a backup of core-site and update it with the S3 core-site
-    gpscp -u centos -f /tmp/segment_hosts /tmp/core-site.xml =:/tmp/core-site-patch.xml
-    gpssh -u centos -f /tmp/segment_hosts -v -s -e \
-      "sudo mv $PXF_SERVER_DIR/core-site.xml $PXF_SERVER_DIR/core-site.xml.back && sudo cp /tmp/core-site-patch.xml $PXF_SERVER_DIR/core-site.xml"
-     cat << EOF
+
+    # Create the Google Cloud Storage Benchmark server and copy core-site.xml
+    gpssh -u gpadmin -h mdw -v -s -e "mkdir -p $GS_SERVER_DIR"
+    gpscp -u gpadmin -h mdw /tmp/gs-site.xml =:${GS_SERVER_DIR}/
+    gpscp -u gpadmin -h mdw /tmp/gsc-ci-service-account.key.json =:${GS_SERVER_DIR}/
+    sync_configuration
+
+    cat << EOF
  ###########################################
 # GOOGLE CLOUD STORAGE PXF READ BENCHMARK #
 ###########################################
 EOF
     assert_count_in_table "lineitem_gcs_read" "${LINEITEM_COUNT}"
-     cat << EOF
+
+    cat << EOF
  ############################################
 # GOOGLE CLOUD STORAGE PXF WRITE BENCHMARK #
 ############################################
 EOF
     time psql -c "INSERT INTO lineitem_gcs_write SELECT * FROM lineitem"
-     # Restore core-site
-    gpssh -u centos -f /tmp/segment_hosts -v -s -e \
-      "sudo mv $PXF_SERVER_DIR/core-site.xml $PXF_SERVER_DIR/core-site.xml.gcs && sudo cp $PXF_SERVER_DIR/core-site.xml.back $PXF_SERVER_DIR/core-site.xml"
 }
 
 function run_s3_extension_benchmark {
@@ -548,7 +546,7 @@ function main {
     fi
 
     if [[ ${BENCHMARK_GCS} == true ]]; then
-        run_gcs_extension_benchmark
+        run_gcs_benchmark
     fi
 
     if [[ ${BENCHMARK_S3} == true ]]; then
