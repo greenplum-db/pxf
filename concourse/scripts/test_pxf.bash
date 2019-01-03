@@ -63,6 +63,11 @@ function _main() {
 
 	if [[ ${PROTOCOL} == "s3" ]]; then
 		echo Using S3 protocol
+	elif [[ ${PROTOCOL} == "minio" ]]; then
+	    echo Using Minio with S3 protocol
+	    setup_minio /singlecluster
+	    # force switch protocol to s3, since minio has otherwise the same setup as s3
+	    export PROTOCOL="s3"
 	elif [[ ${PROTOCOL} == "gs" ]]; then
 		echo Using GS protocol
 		cat << EOF > /tmp/gsc-ci-service-account.key.json

@@ -17,6 +17,30 @@ resource_types:
     repository: ljfranklin/terraform-resource
 
 resources:
+
+- name: dockerfile-gpdb-pxf-dev-minio
+  type: git
+  source:
+    branch: {{pxf-git-branch}}
+    uri: {{pxf-git-remote}}
+    paths: [concourse/docker/pxf-dev-minio]
+
+- name: gpdb-pxf-dev-centos6-hdp-server-image
+  type: docker-image
+  source:
+    repository: pivotaldata/gpdb-pxf-dev
+    tag: centos6-hdp-server
+    username: {{docker-username}}
+    password: {{docker-password}}
+
+- name: gpdb-pxf-dev-centos6-hdp-server-minio-image
+  type: docker-image
+  source:
+    repository: pivotaldata/gpdb-pxf-dev
+    tag: centos6-hdp-server-minio
+    username: {{docker-username}}
+    password: {{docker-password}}
+
 - name: ccp_src
   type: git
   source:
@@ -187,6 +211,19 @@ resources:
 
 {% endif %}
 jobs:
+
+- name: docker-gpdb-pxf-dev-centos6-hdp-server-minio
+  plan:
+  - aggregate:
+    - get: pxf_src
+    - get: dockerfile-gpdb-pxf-dev-minio
+      trigger: true
+  - put: gpdb-pxf-dev-centos6-hdp-server-minio-image
+    params:
+      build: .
+      dockerfile: pxf_src/concourse/docker/pxf-dev-minio/Dockerfile
+      build_args:
+        BASE_IMAGE: "gpdb-pxf-dev:centos6-hdp-server"
 
 {% if compile_gpdb %}
 - name: compile_gpdb_centos6
@@ -604,6 +641,47 @@ jobs:
       GROUP: hcfs,s3
       IMPERSONATION: true
       PROTOCOL: s3
+      TEST_ENV: {{test-env}}
+      TEST_OS: centos
+      TARGET_OS: centos
+{% if acceptance %}
+      ACCEPTANCE: true
+{% endif %}
+
+- name: test_pxf_minio
+  plan:
+  - aggregate:
+    - get: gpdb_src
+      passed:
+      - compile_pxf
+{% if compile_gpdb %}
+      - compile_gpdb_centos6
+{% endif %}
+    - get: bin_gpdb
+      resource: bin_gpdb_centos6
+{% if compile_gpdb %}
+      passed:
+      - compile_gpdb_centos6
+{% endif %}
+    - get: pxf_src
+      passed:
+      - compile_pxf
+      trigger: true
+    - get: pxf_tarball
+      passed:
+      - compile_pxf
+      trigger: true
+    - get: gpdb-pxf-dev-centos6-hdp-server-minio
+  - task: test_pxf
+    file: pxf_src/concourse/tasks/test_pxf.yml
+    image: gpdb-pxf-dev-centos6-hdp-server-minio
+    params:
+      AWS_ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+      AWS_SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+      AWS_DEFAULT_REGION: {{aws-region}}
+      GROUP: hcfs
+      IMPERSONATION: false
+      PROTOCOL: minio
       TEST_ENV: {{test-env}}
       TEST_OS: centos
       TARGET_OS: centos
