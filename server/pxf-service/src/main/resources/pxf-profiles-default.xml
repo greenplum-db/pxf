@@ -633,18 +633,6 @@ under the License.
         <protocol>wasbs</protocol>
     </profile>
     <profile>
-        <name>wasbs:avro</name>
-        <description>This profile is suitable for using when reading Avro files (i.e
-            fileName.avro)
-        </description>
-        <plugins>
-            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
-            <accessor>org.greenplum.pxf.plugins.hdfs.AvroFileAccessor</accessor>
-            <resolver>org.greenplum.pxf.plugins.hdfs.AvroResolver</resolver>
-        </plugins>
-        <protocol>wasbs</protocol>
-    </profile>
-    <profile>
         <name>wasbs:json</name>
         <description>
             Access JSON data either as:
