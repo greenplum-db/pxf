@@ -272,9 +272,9 @@ function create_s3_extension_external_tables {
 
 function create_wasb_external_tables() {
     psql -c "CREATE EXTERNAL TABLE lineitem_wasb_read (LIKE lineitem)
-        LOCATION('pxf://wasb-profile-test/lineitem/${SCALE}/?PROFILE=hdfs:text&server=wasbbenchmark') FORMAT 'CSV' (DELIMITER '|');"
+        LOCATION('pxf://pxf-container@${WASB_ACCOUNT_NAME}.blob.core.windows.net/wasb-profile-test/lineitem/${SCALE}/?PROFILE=wasbs:text&server=wasbbenchmark') FORMAT 'CSV' (DELIMITER '|');"
     psql -c "CREATE WRITABLE EXTERNAL TABLE lineitem_wasb_write (LIKE lineitem)
-        LOCATION('pxf://wasb-profile-test/output/${SCALE}/?PROFILE=hdfs:text&server=wasbbenchmark') FORMAT 'CSV'"
+        LOCATION('pxf://pxf-container@${WASB_ACCOUNT_NAME}.blob.core.windows.net/wasb-profile-test/output/${SCALE}/?PROFILE=wasbs:text&server=wasbbenchmark') FORMAT 'CSV'"
 }
 
 function assert_count_in_table {
@@ -296,10 +296,6 @@ function run_wasb_benchmark() {
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
 <configuration>
-	<property>
-		<name>fs.defaultFS</name>
-		<value>wasbs://pxf-container@${WASB_ACCOUNT_NAME}.blob.core.windows.net</value>
-	</property>
 	<property>
 		<name>dfs.adls.oauth2.access.token.provider.type</name>
 		<value>ClientCredential</value>

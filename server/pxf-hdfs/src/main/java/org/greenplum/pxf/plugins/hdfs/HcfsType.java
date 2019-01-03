@@ -19,6 +19,17 @@ public enum HcfsType {
             return getDataUriForPrefix(configuration, context, contextProtocol);
         }
     },
+    FILE {
+        @Override
+        public String getDataUri(Configuration configuration, RequestContext context) {
+            throw new IllegalStateException("core-site.xml is missing or using unsupported file:// as default filesystem");
+        }
+
+        @Override
+        public String normalizeDataSource(String dataSource) {
+            return dataSource;
+        }
+    },
     GS,
     HDFS,
     LOCALFILE("file") {
@@ -30,17 +41,9 @@ public enum HcfsType {
     S3,
     S3A,
     S3N,
-    FILE {
-        @Override
-        public String getDataUri(Configuration configuration, RequestContext context) {
-            throw new IllegalStateException("core-site.xml is missing or using unsupported file:// as default filesystem");
-        }
-
-        @Override
-        public String normalizeDataSource(String dataSource) {
-            return dataSource;
-        }
-    };
+    // We prefer WASBS over WASB for Azure Blob Storage,
+    // as it uses SSL for communication to Azure servers
+    WASBS;
 
     private static final String FILE_SCHEME = "file";
     private String prefix;

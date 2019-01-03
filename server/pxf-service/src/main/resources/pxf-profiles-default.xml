@@ -582,4 +582,106 @@ under the License.
         </plugins>
         <protocol>gs</protocol>
     </profile>
+
+    <!-- WASBS - Azure Blob Storage -->
+    <profile>
+        <name>wasbs:text</name>
+        <description>This profile is suitable for using when reading delimited single line records
+            from plain text files on Azure Blob Storage
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.LineBreakAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
+        </plugins>
+        <protocol>wasbs</protocol>
+    </profile>
+    <profile>
+        <name>wasbs:text:multi</name>
+        <description>This profile is suitable for using when reading delimited single or multi line
+            records (with quoted linefeeds) from plain text files on Azure Blob Storage. It is not
+            splittable (non parallel) and slower than HdfsTextSimple.
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.QuotedLineBreakAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
+        </plugins>
+        <protocol>wasbs</protocol>
+    </profile>
+    <profile>
+        <name>wasbs:parquet</name>
+        <description>A profile for reading and writing Parquet data from Azure Blob Storage
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.ParquetDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.ParquetFileAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.ParquetResolver</resolver>
+        </plugins>
+        <protocol>wasbs</protocol>
+    </profile>
+    <profile>
+        <name>wasbs:avro</name>
+        <description>This profile is suitable for using when reading Avro files (i.e
+            fileName.avro)
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.AvroFileAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.AvroResolver</resolver>
+        </plugins>
+        <protocol>wasbs</protocol>
+    </profile>
+    <profile>
+        <name>wasbs:avro</name>
+        <description>This profile is suitable for using when reading Avro files (i.e
+            fileName.avro)
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.AvroFileAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.AvroResolver</resolver>
+        </plugins>
+        <protocol>wasbs</protocol>
+    </profile>
+    <profile>
+        <name>wasbs:json</name>
+        <description>
+            Access JSON data either as:
+            * one JSON record per line (default)
+            * or multiline JSON records with an IDENTIFIER parameter indicating a member name used
+            to determine the encapsulating json object to return
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.json.JsonAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.json.JsonResolver</resolver>
+        </plugins>
+        <protocol>wasbs</protocol>
+    </profile>
+    <profile>
+        <name>wasbs:AvroSequenceFile</name>
+        <description>
+            Read an Avro format stored in sequence file, with separated schema file from Azure Blob
+            Storage
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.SequenceFileAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.AvroResolver</resolver>
+        </plugins>
+        <protocol>wasbs</protocol>
+    </profile>
+    <profile>
+        <name>wasbs:SequenceFile</name>
+        <description>
+            Profile for accessing Sequence files serialized with a custom Writable class
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.SequenceFileAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.WritableResolver</resolver>
+        </plugins>
+        <protocol>wasbs</protocol>
+    </profile>
 </profiles>
