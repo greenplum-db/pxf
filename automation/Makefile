@@ -110,6 +110,16 @@ ifneq "$(PROTOCOL)" ""
 			sed -i "s|YOUR_GOOGLE_STORAGE_KEYFILE|/tmp/gsc-ci-service-account.key.json|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
 		fi; \
 		echo "Created $(PROTOCOL) server configuration"; \
+		if [[ $(PROTOCOL) == wasbs ]]; then \
+			if [[ -z "$(WASB_ACCOUNT_NAME)" ]] || [[ -z "$(WASB_ACCOUNT_KEY)" ]]; then \
+				echo "Azure Blob Storage Keys (WASB_ACCOUNT_NAME, WASB_ACCOUNT_KEY) not set"; \
+				rm -rf $(PROTOCOL_HOME); \
+				exit 1; \
+			fi; \
+			sed -i "s|YOUR_AZURE_BLOB_STORAGE_ACCOUNT_NAME|$(WASB_ACCOUNT_NAME)|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
+			sed -i "s|YOUR_AZURE_BLOB_STORAGE_ACCOUNT_KEY|$(WASB_ACCOUNT_KEY)|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
+		fi; \
+		echo "Created $(PROTOCOL) server configuration"; \
 	fi
 endif
 
