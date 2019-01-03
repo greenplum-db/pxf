@@ -68,6 +68,8 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
     private RecordReader<Group> recordReader;
     private long rowsInRowGroup;
 
+    private static final int DECIMAL_SCALE = 18;
+    private static final int DECIMAL_PRECISION = 38;
     private static final int DEFAULT_PAGE_SIZE = 1024 * 1024;
     private static final int DEFAULT_ROWGROUP_SIZE = 8 * 1024 * 1024;
     private static final int DEFAULT_DICTIONARY_PAGE_SIZE = 512 * 1024;
@@ -120,6 +122,16 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
         if (rowsInRowGroup-- == 0 && !readNextRowGroup())
             return null;
         return new OneRow(null, recordReader.read());
+    }
+
+    private boolean readNextRowGroup() throws IOException {
+
+        PageReadStore currentRowGroup = fileReader.readNextRowGroup();
+        if (currentRowGroup == null)
+            return false;
+        recordReader = columnIO.getRecordReader(currentRowGroup, new GroupRecordConverter(schema));
+        rowsInRowGroup = currentRowGroup.getRowCount();
+        return true;
     }
 
     /**
@@ -216,16 +228,6 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
         }
     }
 
-    private boolean readNextRowGroup() throws IOException {
-
-        PageReadStore currentRowGroup = fileReader.readNextRowGroup();
-        if (currentRowGroup == null)
-            return false;
-        recordReader = columnIO.getRecordReader(currentRowGroup, new GroupRecordConverter(schema));
-        rowsInRowGroup = currentRowGroup.getRowCount();
-        return true;
-    }
-
     /**
      * Generate parquet schema using column descriptors
      */
@@ -267,8 +269,8 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
                 case NUMERIC:
                     origType = OriginalType.DECIMAL;
                     typeName = PrimitiveType.PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY;
-                    length = 16;
-                    dmt = new DecimalMetadata(38, 18);
+                    length = 16; //per parquet specs
+                    dmt = new DecimalMetadata(DECIMAL_PRECISION, DECIMAL_SCALE);
                     break;
                 case TIMESTAMP:
                     typeName = PrimitiveType.PrimitiveTypeName.INT96;

@@ -229,6 +229,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         return field;
     }
 
+    // Convert parquet byte array to java timestamp
     private Timestamp bytesToTimestamp(byte[] bytes) {
         long timeOfDayNanos = ByteBuffer.wrap(new byte[]{
                 bytes[7], bytes[6], bytes[5], bytes[4], bytes[3], bytes[2], bytes[1], bytes[0]}).getLong();
@@ -238,6 +239,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
     }
 
     // Convert epoch timestamp to byte array (INT96)
+    // Inverse of the function above
     private Binary getBinary(long timeMillis) {
         long daysSinceEpoch = timeMillis / MILLIS_IN_DAY;
         int julianDays = JULIAN_EPOCH_OFFSET_DAYS + (int) daysSinceEpoch;
