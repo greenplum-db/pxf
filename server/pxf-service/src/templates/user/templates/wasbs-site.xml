@@ -8,4 +8,8 @@
         <name>fs.azure.account.key.YOUR_AZURE_BLOB_STORAGE_ACCOUNT_NAME.blob.core.windows.net</name>
         <value>YOUR_AZURE_BLOB_STORAGE_ACCOUNT_KEY</value>
     </property>
+    <property>
+        <name>fs.AbstractFileSystem.wasbs.impl</name>
+        <value>org.apache.hadoop.fs.azure.Wasbs</value>
+    </property>
 </configuration>
