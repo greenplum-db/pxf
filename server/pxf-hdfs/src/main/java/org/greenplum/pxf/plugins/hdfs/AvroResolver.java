@@ -50,15 +50,15 @@ import java.util.Map;
  * using the AVRO serialization framework.
  */
 public class AvroResolver extends BasePlugin implements Resolver {
+    private static final String MAPKEY_DELIM = ":";
+    private static final String RECORDKEY_DELIM = ":";
+    private static final String COLLECTION_DELIM = ",";
     private GenericRecord avroRecord = null;
     private DatumReader<GenericRecord> reader = null;
     // member kept to enable reuse, and thus avoid repeated allocation
     private BinaryDecoder decoder = null;
     private List<Schema.Field> fields = null;
     private RecordkeyAdapter recordkeyAdapter = new RecordkeyAdapter();
-    private static final String MAPKEY_DELIM = ":";
-    private static final String RECORDKEY_DELIM = ":";
-    private static final String COLLECTION_DELIM = ",";
     private String collectionDelim;
     private String mapkeyDelim;
     private String recordkeyDelim;
@@ -80,13 +80,10 @@ public class AvroResolver extends BasePlugin implements Resolver {
 
         try {
             if (isAvroFile()) {
-                schema = HdfsUtilities.getAvroSchema(configuration, context.getDataSource());
+                schema = (Schema) requestContext.getMetadata();
             } else {
-                InputStream externalSchema = openExternalSchema();
-                try {
+                try (InputStream externalSchema = openExternalSchema()) {
                     schema = (new Schema.Parser()).parse(externalSchema);
-                } finally {
-                    externalSchema.close();
                 }
             }
         } catch (Exception e) {
@@ -113,7 +110,7 @@ public class AvroResolver extends BasePlugin implements Resolver {
     @Override
     public List<OneField> getFields(OneRow row) throws Exception {
         avroRecord = makeAvroRecord(row.getData(), avroRecord);
-        List<OneField> record = new LinkedList<OneField>();
+        List<OneField> record = new LinkedList<>();
 
         int recordkeyIndex = (context.getRecordkeyColumn() == null) ? -1
                 : context.getRecordkeyColumn().columnIndex();
@@ -169,7 +166,7 @@ public class AvroResolver extends BasePlugin implements Resolver {
      * the AVRO API. Then (for both cases) in the remaining functions we build a
      * {@code List<OneField>} record from the Avro record.
      *
-     * @param obj object holding an Avro record
+     * @param obj         object holding an Avro record
      * @param reuseRecord Avro record to be reused to create new record from obj
      * @return Avro record
      * @throws IOException if creating the Avro record from byte array failed
@@ -190,8 +187,8 @@ public class AvroResolver extends BasePlugin implements Resolver {
      * into the output {@code List<OneField>} record. An Avro field can be a
      * primitive type or an array type.
      *
-     * @param record list of fields to be populated
-     * @param fieldValue field value
+     * @param record      list of fields to be populated
+     * @param fieldValue  field value
      * @param fieldSchema field schema
      * @return the number of populated fields
      */
@@ -204,7 +201,7 @@ public class AvroResolver extends BasePlugin implements Resolver {
 
         switch (fieldType) {
             case ARRAY:
-                if(fieldValue == null) {
+                if (fieldValue == null) {
                     return addOneFieldToRecord(record, DataType.TEXT, fieldValue);
                 }
                 List<OneField> listRecord = new LinkedList<>();
@@ -213,7 +210,7 @@ public class AvroResolver extends BasePlugin implements Resolver {
                         HdfsUtilities.toString(listRecord, collectionDelim)));
                 break;
             case MAP:
-                if(fieldValue == null) {
+                if (fieldValue == null) {
                     return addOneFieldToRecord(record, DataType.TEXT, fieldValue);
                 }
                 List<OneField> mapRecord = new LinkedList<>();
@@ -222,7 +219,7 @@ public class AvroResolver extends BasePlugin implements Resolver {
                         HdfsUtilities.toString(mapRecord, collectionDelim)));
                 break;
             case RECORD:
-                if(fieldValue == null) {
+                if (fieldValue == null) {
                     return addOneFieldToRecord(record, DataType.TEXT, fieldValue);
                 }
                 List<OneField> recRecord = new LinkedList<>();
@@ -290,8 +287,8 @@ public class AvroResolver extends BasePlugin implements Resolver {
      * create an object of type OneField and insert it into the output
      * {@code List<OneField>} record.
      *
-     * @param record list of fields to be populated
-     * @param value field value
+     * @param record    list of fields to be populated
+     * @param value     field value
      * @param recSchema record schema
      * @return number of populated fields
      */
@@ -318,13 +315,13 @@ public class AvroResolver extends BasePlugin implements Resolver {
      * value For each entry, the field name and value are added to a local
      * record we create an object of type OneField and insert it into the output
      * {@code List<OneField>} record.
-     *
+     * <p>
      * Unchecked warning is suppressed to enable us to cast fieldValue to a Map.
      * (since the value schema has been identified to me of type map)
      *
-     * @param record list of fields to be populated
+     * @param record     list of fields to be populated
      * @param fieldValue field value
-     * @param mapSchema map schema
+     * @param mapSchema  map schema
      * @return number of populated fields
      */
     @SuppressWarnings("unchecked")
@@ -347,8 +344,8 @@ public class AvroResolver extends BasePlugin implements Resolver {
      * element, and for each element in the Avro array, we recursively invoke
      * the population of {@code List<OneField>} record.
      *
-     * @param record list of fields to be populated
-     * @param fieldValue field value
+     * @param record      list of fields to be populated
+     * @param fieldValue  field value
      * @param arraySchema array schema
      * @return number of populated fields
      */
@@ -369,9 +366,9 @@ public class AvroResolver extends BasePlugin implements Resolver {
      * record so we transfer them to standard types in order to enable their
      * insertion in the GPDBWritable instance.
      *
-     * @param record list of fields to be populated
+     * @param record           list of fields to be populated
      * @param gpdbWritableType field type
-     * @param val field value
+     * @param val              field value
      * @return 1 (number of populated fields)
      */
     int addOneFieldToRecord(List<OneField> record, DataType gpdbWritableType,

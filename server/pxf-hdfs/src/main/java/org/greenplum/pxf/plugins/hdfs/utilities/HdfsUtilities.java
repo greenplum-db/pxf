@@ -19,12 +19,6 @@ package org.greenplum.pxf.plugins.hdfs.utilities;
  * under the License.
  */
 
-import org.apache.avro.Schema;
-import org.apache.avro.file.DataFileReader;
-import org.apache.avro.generic.GenericDatumReader;
-import org.apache.avro.generic.GenericRecord;
-import org.apache.avro.io.DatumReader;
-import org.apache.avro.mapred.FsInput;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -179,27 +173,6 @@ public class HdfsUtilities {
         catch (Exception e) {
             throw new RuntimeException("Exception while reading expected fragment metadata", e);
         }
-    }
-
-    /**
-     * Accessing the Avro file through the "unsplittable" API just to get the
-     * schema. The splittable API (AvroInputFormat) which is the one we will be
-     * using to fetch the records, does not support getting the Avro schema yet.
-     *
-     * @param conf       Hadoop configuration
-     * @param dataSource Avro file (i.e fileName.avro) path
-     * @return the Avro schema
-     * @throws IOException if I/O error occurred while accessing Avro schema file
-     */
-    public static Schema getAvroSchema(Configuration conf, String dataSource)
-            throws IOException {
-        FsInput inStream = new FsInput(new Path(dataSource), conf);
-        DatumReader<GenericRecord> dummyReader = new GenericDatumReader<>();
-        DataFileReader<GenericRecord> dummyFileReader = new DataFileReader<>(
-                inStream, dummyReader);
-        Schema schema = dummyFileReader.getSchema();
-        dummyFileReader.close();
-        return schema;
     }
 
     /**

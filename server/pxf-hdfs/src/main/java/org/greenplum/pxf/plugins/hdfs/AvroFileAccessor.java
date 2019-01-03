@@ -20,20 +20,26 @@ package org.greenplum.pxf.plugins.hdfs;
  */
 
 
-import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.model.RequestContext;
-
 import org.apache.avro.Schema;
+import org.apache.avro.file.DataFileReader;
+import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericRecord;
-import org.apache.avro.mapred.*;
+import org.apache.avro.io.DatumReader;
+import org.apache.avro.mapred.AvroInputFormat;
+import org.apache.avro.mapred.AvroJob;
+import org.apache.avro.mapred.AvroRecordReader;
+import org.apache.avro.mapred.AvroWrapper;
+import org.apache.avro.mapred.FsInput;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
+import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.model.RequestContext;
 
 import java.io.IOException;
-
-import static org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities.getAvroSchema;
 
 /**
  * A PXF Accessor for reading Avro File records
@@ -71,7 +77,10 @@ public class AvroFileAccessor extends HdfsSplittableDataAccessor {
         AvroJob.setInputSchema(jobConf, schema);
 
         // 3. The avroWrapper required for the iteration
-        avroWrapper = new AvroWrapper<GenericRecord>();
+        avroWrapper = new AvroWrapper<>();
+
+        // 4. Add schema to RequestContext's metadata to avoid computing it again in the resolver
+        requestContext.setMetadata(schema);
     }
 
     @Override
@@ -136,5 +145,26 @@ public class AvroFileAccessor extends HdfsSplittableDataAccessor {
     @Override
     public void closeForWrite() throws Exception {
         throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Accessing the Avro file through the "unsplittable" API just to get the
+     * schema. The splittable API (AvroInputFormat) which is the one we will be
+     * using to fetch the records, does not support getting the Avro schema yet.
+     *
+     * @param conf       Hadoop configuration
+     * @param dataSource Avro file (i.e fileName.avro) path
+     * @return the Avro schema
+     * @throws IOException if I/O error occurred while accessing Avro schema file
+     */
+    Schema getAvroSchema(Configuration conf, String dataSource)
+            throws IOException {
+        FsInput inStream = new FsInput(new Path(dataSource), conf);
+        DatumReader<GenericRecord> dummyReader = new GenericDatumReader<>();
+        DataFileReader<GenericRecord> dummyFileReader = new DataFileReader<>(
+                inStream, dummyReader);
+        Schema schema = dummyFileReader.getSchema();
+        dummyFileReader.close();
+        return schema;
     }
 }
