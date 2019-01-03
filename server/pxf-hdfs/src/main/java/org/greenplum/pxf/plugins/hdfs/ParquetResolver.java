@@ -49,6 +49,7 @@ import java.util.List;
 public class ParquetResolver extends BasePlugin implements Resolver {
 
     private static final int JULIAN_EPOCH_OFFSET_DAYS = 2440588;
+    private static final int SECOND_IN_MILLIS = 1000;
     private static final long MILLIS_IN_DAY = 24 * 3600 * 1000;
     private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -136,7 +137,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                 break;
             case INT96:
                 LocalDateTime date = LocalDateTime.parse((String) field.val, dateFormatter);
-                long millisSinceEpoch = date.toEpochSecond(ZoneOffset.UTC) * 1000;
+                long millisSinceEpoch = date.toEpochSecond(ZoneOffset.UTC) * SECOND_IN_MILLIS;
                 group.add(index, getBinary(millisSinceEpoch));
                 break;
             case BOOLEAN:
