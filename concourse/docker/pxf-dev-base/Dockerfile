@@ -13,6 +13,15 @@ RUN cd /tmp && \
     echo >> /etc/bashrc 'export GOPATH=/opt/go' && \
     echo >> /etc/bashrc 'export PATH=${GOPATH}/bin:/usr/local/go/bin:$PATH'
 
+# add minio software
+RUN useradd -s /sbin/nologin -d /opt/minio minio && \
+    mkdir -p /opt/minio/bin && \
+    chmod a+rx /opt/minio && \
+    mkdir /opt/minio/data && \
+    wget https://dl.minio.io/server/minio/release/linux-amd64/minio -O /opt/minio/bin/minio && \
+    chmod +x /opt/minio/bin/minio && \
+    chown -R minio:minio /opt/minio
+
 ADD pxf_src /tmp/pxf_src
 
 RUN cd /tmp/pxf_src && \
