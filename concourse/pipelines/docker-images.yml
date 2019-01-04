@@ -14,6 +14,7 @@ groups:
   - docker-gpdb-pxf-dev-ubuntu16
   - docker-gpdb-pxf-dev-centos6-cdh-server
   - docker-gpdb-pxf-dev-centos6-hdp-server
+  - docker-gpdb-pxf-dev-centos6-hdp-server-minio
   - docker-gpdb-pxf-dev-ubuntu16-cdh-server
   - docker-gpdb-pxf-dev-ubuntu16-hdp-server
 
@@ -155,6 +156,13 @@ resources:
       uri: https://github.com/greenplum-db/pxf.git
       paths: [concourse/docker/pxf-dev-base]
 
+  - name: dockerfile-gpdb-pxf-dev-minio
+    type: git
+    source:
+      branch: {{pxf-git-branch}}
+      uri: {{pxf-git-remote}}
+      paths: [concourse/docker/pxf-dev-minio]
+
   - name: gpdb-pxf-dev-centos6-image
     type: docker-image
     source:
@@ -207,6 +215,14 @@ resources:
     source:
       repository: pivotaldata/gpdb-pxf-dev
       tag: ubuntu16-hdp-server
+      username: {{docker-username}}
+      password: {{docker-password}}
+
+  - name: gpdb-pxf-dev-centos6-hdp-server-minio-image
+    type: docker-image
+    source:
+      repository: pivotaldata/gpdb-pxf-dev
+      tag: centos6-hdp-server-minio
       username: {{docker-username}}
       password: {{docker-password}}
 
@@ -359,6 +375,25 @@ jobs:
         dockerfile: pxf_src/concourse/docker/pxf-dev-server/Dockerfile
         build_args:
           BASE_IMAGE: "gpdb-pxf-dev:centos6"
+
+  - name: docker-gpdb-pxf-dev-centos6-hdp-server-minio
+    plan:
+    - aggregate:
+      - get: pxf_src
+      - get: dockerfile-gpdb-pxf-dev-base
+        passed: [docker-gpdb-pxf-dev-centos6-hdp-server]
+        trigger: true
+      - get: dockerfile-gpdb-pxf-dev-server
+        passed: [docker-gpdb-pxf-dev-centos6-hdp-server]
+        trigger: true
+      - get: dockerfile-gpdb-pxf-dev-minio
+        trigger: true
+    - put: gpdb-pxf-dev-centos6-hdp-server-minio-image
+      params:
+        build: .
+        dockerfile: pxf_src/concourse/docker/pxf-dev-minio/Dockerfile
+        build_args:
+          BASE_IMAGE: "gpdb-pxf-dev:centos6-hdp-server"
 
   - name: docker-gpdb-pxf-dev-ubuntu16-cdh-server
     plan:
