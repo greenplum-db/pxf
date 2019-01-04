@@ -37,7 +37,6 @@ function setup_pxf_env() {
 		su gpadmin -c "sed -i -e 's|^[[:blank:]]*export PXF_USER_IMPERSONATION=.*$|export PXF_USER_IMPERSONATION=false|g' \${PXF_CONF_DIR}/conf/pxf-env.sh"
 	fi
 
-
 	if [[ ! -z "${PXF_JVM_OPTS}" ]]; then
 		echo 'export PXF_JVM_OPTS="${PXF_JVM_OPTS}"' >> \${PXF_CONF_DIR}/conf/pxf-env.sh
 	fi
