@@ -413,14 +413,6 @@ EOF
 		<name>google.cloud.auth.service.account.json.keyfile</name>
 		<value>${GS_SERVER_DIR}/gsc-ci-service-account.key.json</value>
 	</property>
-	<property>
-		<name>fs.gs.impl</name>
-		<value>com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem</value>
-	</property>
-	<property>
-		<name>fs.AbstractFileSystem.gs.impl</name>
-		<value>com.google.cloud.hadoop.fs.gcs.GoogleHadoopFS</value>
-	</property>
 </configuration>
 EOF
 
