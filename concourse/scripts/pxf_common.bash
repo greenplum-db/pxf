@@ -299,38 +299,38 @@ function setup_minio() {
     /opt/minio/bin/minio server /opt/minio/data &
     sleep 3
     local accessKey=$(jq -r .credential.accessKey /opt/minio/data/.minio.sys/config/config.json)
-    local secretKey=$(jq -r .credential.accessKey /opt/minio/data/.minio.sys/config/config.json)
+    local secretKey=$(jq -r .credential.secretKey /opt/minio/data/.minio.sys/config/config.json)
     echo "Minio accessKey=${accessKey} secretKey=${secretKey}"
 
     # export credentials as environment variables
     export AWS_ACCESS_KEY_ID=${accessKey}
     export AWS_SECRET_ACCESS_KEY=${secretKey}
 
-    if [[ -f ${GPHD_ROOT}/hadoop/etc/hadoop/core-site.xml ]]; then
-        echo 'Adding Minio configuration to core-site.xml'
-        cat >/tmp/minio.xml <<EOF
-<property>
-    <name>fs.s3a.endpoint</name>
-    <description>AWS S3 endpoint to connect to.</description>
-    <value>http://localhost:9000</value>
-</property>
-<property>
-    <name>fs.s3a.access.key</name>
-    <description>AWS access key ID.</description>
-    <value>${accessKey}</value>
-</property>
-<property>
-    <name>fs.s3a.secret.key</name>
-    <description>AWS secret key.</description>
-    <value>${secretKey}</value>
-</property>
-<property>
-    <name>fs.s3a.path.style.access</name>
-    <value>true</value>
-    <description>Enable S3 path style access.</description>
-</property>
-EOF
-        sed -i -e '/<configuration>/r /tmp/minio.xml' ${GPHD_ROOT}/hadoop/etc/hadoop/core-site.xml
-        rm /tmp/minio.xml
-    fi
+#    if [[ -f ${GPHD_ROOT}/hadoop/etc/hadoop/core-site.xml ]]; then
+#        echo 'Adding Minio configuration to core-site.xml'
+#        cat >/tmp/minio.xml <<EOF
+#<property>
+#    <name>fs.s3a.endpoint</name>
+#    <description>AWS S3 endpoint to connect to.</description>
+#    <value>http://localhost:9000</value>
+#</property>
+#<property>
+#    <name>fs.s3a.access.key</name>
+#    <description>AWS access key ID.</description>
+#    <value>${accessKey}</value>
+#</property>
+#<property>
+#    <name>fs.s3a.secret.key</name>
+#    <description>AWS secret key.</description>
+#    <value>${secretKey}</value>
+#</property>
+#<property>
+#    <name>fs.s3a.path.style.access</name>
+#    <value>true</value>
+#    <description>Enable S3 path style access.</description>
+#</property>
+#EOF
+#        sed -i -e '/<configuration>/r /tmp/minio.xml' ${GPHD_ROOT}/hadoop/etc/hadoop/core-site.xml
+#        rm /tmp/minio.xml
+#    fi
 }

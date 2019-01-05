@@ -26,6 +26,11 @@ else
 	MAVEN_TEST_OPTS+= -o
 endif
 
+ifeq "$(PROTOCOL)" "minio"
+	MINIO=true
+	PROTOCOL=s3
+endif
+
 ifneq "$(PROTOCOL)" ""
 	MAVEN_TEST_OPTS+= -DPROTOCOL=$(PROTOCOL)
 	PROTOCOL_HOME=~/pxf/servers/$(PROTOCOL)
@@ -83,6 +88,10 @@ ifneq "$(PROTOCOL)" ""
 		cp $(PXF_HOME)/templates/user/templates/$(PROTOCOL)-site.xml $(PROTOCOL_HOME)/; \
 		cp $(PXF_HOME)/templates/user/templates/mapred-site.xml $(PROTOCOL_HOME)/; \
 		if [[ $(PROTOCOL) == s3 ]]; then \
+			if [[ $(MINIO) == true ]]; then \
+        		cp $(PXF_HOME)/templates/user/templates/minio-site.xml $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
+        		sed -i "s|YOUR_MINIO_URL|http://localhost:9000|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
+        	fi; \
 		    mkdir -p $(PROTOCOL_HOME)-invalid; \
 		    cp $(PXF_HOME)/templates/user/templates/$(PROTOCOL)-site.xml $(PROTOCOL_HOME)-invalid/; \
 			if [[ -z "$(ACCESS_KEY_ID)" ]] || [[ -z "$(SECRET_ACCESS_KEY)" ]]; then \
