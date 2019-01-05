@@ -640,9 +640,6 @@ jobs:
     file: pxf_src/concourse/tasks/test_pxf.yml
     image: gpdb-pxf-dev-centos6-hdp-server
     params:
-      AWS_ACCESS_KEY_ID: {{tf-machine-access-key-id}}
-      AWS_SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
-      AWS_DEFAULT_REGION: {{aws-region}}
       GROUP: hcfs
       IMPERSONATION: false
       PROTOCOL: minio

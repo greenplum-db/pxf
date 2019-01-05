@@ -295,12 +295,17 @@ function start_pxf_server() {
 function setup_minio() {
     local GPHD_ROOT=${1}
 
-    echo 'Setting up Minio ...'
+    echo 'Starting Minio ...'
+    /opt/minio/bin/minio server /opt/minio/data &
+    sleep 3
     local accessKey=$(jq -r .credential.accessKey /opt/minio/data/.minio.sys/config/config.json)
     local secretKey=$(jq -r .credential.accessKey /opt/minio/data/.minio.sys/config/config.json)
     echo "Minio accessKey=${accessKey} secretKey=${secretKey}"
-    echo 'Starting Minio'
-    /opt/minio/bin/minio server /opt/minio/data &
+
+    # export credentials as environment variables
+    export AWS_ACCESS_KEY_ID=${accessKey}
+    export AWS_SECRET_ACCESS_KEY=${secretKey}
+
     if [[ -f ${GPHD_ROOT}/hadoop/etc/hadoop/core-site.xml ]]; then
         echo 'Adding Minio configuration to core-site.xml'
         cat >/tmp/minio.xml <<EOF
