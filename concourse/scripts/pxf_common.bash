@@ -293,19 +293,15 @@ function start_pxf_server() {
 }
 
 function setup_minio() {
-    local GPHD_ROOT=${1}
-
     echo 'Starting Minio ...'
     /opt/minio/bin/minio server /opt/minio/data &
     sleep 3
+
     local accessKey=$(jq -r .credential.accessKey /opt/minio/data/.minio.sys/config/config.json)
     local secretKey=$(jq -r .credential.secretKey /opt/minio/data/.minio.sys/config/config.json)
     echo "Minio accessKey=${accessKey} secretKey=${secretKey}"
 
-    # export credentials as environment variables
+    # export minio credentials as AWS environment variables
     export AWS_ACCESS_KEY_ID=${accessKey}
     export AWS_SECRET_ACCESS_KEY=${secretKey}
-    export PROTOCOL=${PROTOCOL}
-    echo "Protocol=${PROTOCOL}"
-
 }
