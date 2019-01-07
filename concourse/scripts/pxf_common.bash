@@ -293,6 +293,8 @@ function start_pxf_server() {
 }
 
 function setup_minio() {
+    echo 'Adding test bucket gpdb-ud-scratch to Minio ...'
+    mkdir -p /opt/minio/data/gpdb-ud-scratch
     echo 'Starting Minio ...'
     /opt/minio/bin/minio server /opt/minio/data &
     sleep 3
