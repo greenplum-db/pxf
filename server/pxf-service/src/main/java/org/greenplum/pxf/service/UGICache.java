@@ -73,11 +73,13 @@ public class UGICache {
      * proxy UGI. In either case this method increments the reference count of the UGI. This method
      * also destroys expired, unreferenced UGIs for the same segmentId as the given session.
      *
-     * @param session The user from the session is impersonated by the proxy UGI.
+     * @param session     The user from the session is impersonated by the proxy UGI.
+     * @param isProxyUser true if the {@link UserGroupInformation} is a proxy user
      * @return the proxy UGI for the given session.
      * @throws IOException when there is an IO issue
      */
-    public UserGroupInformation getUserGroupInformation(SessionId session) throws IOException {
+    @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
+    public UserGroupInformation getUserGroupInformation(SessionId session, boolean isProxyUser) throws IOException {
         Integer segmentId = session.getSegmentId();
         String user = session.getUser();
         DelayQueue<Entry> delayQueue = getExpirationQueue(segmentId);
@@ -89,7 +91,13 @@ public class UGICache {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug(session + " Creating proxy user = " + user);
                 }
-                entry = new Entry(ticker, ugiProvider.createProxyUGI(user), session);
+                UserGroupInformation ugi;
+                if (isProxyUser) {
+                    ugi = ugiProvider.createProxyUGI(user);
+                } else {
+                    ugi = ugiProvider.createRemoteUser(user);
+                }
+                entry = new Entry(ticker, ugi, session);
                 delayQueue.offer(entry);
                 cache.put(session, entry);
             }

@@ -34,35 +34,13 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 
 public class UGICacheMultiThreadTest {
-    private FakeUgiProvider provider = null;
     private static final int numberOfSegments = 3;
     private static final int numberOfUsers = 3;
     private static final int numberOfTxns = 3;
+    private FakeUgiProvider provider = null;
     private SessionId[] sessions = new SessionId[numberOfSegments * numberOfUsers * numberOfTxns];
     private UGICache cache = null;
     private UGICacheTest.FakeTicker fakeTicker;
-
-    class FakeUgiProvider extends UGIProvider {
-        Set<UserGroupInformation> ugis = new ConcurrentSet<>();
-
-        @Override
-        UserGroupInformation createProxyUGI(String effectiveUser) {
-            UserGroupInformation ugi = mock(UserGroupInformation.class);
-            ugis.add(ugi);
-            return ugi;
-        }
-
-        @Override
-        void destroy(UserGroupInformation ugi) {
-            if (!ugis.remove(ugi)) {
-                throw new IllegalStateException("Tried to destroy UGI that does not exist");
-            }
-        }
-
-        int countUgisInUse() {
-            return ugis.size();
-        }
-    }
 
     @Before
     public void setUp() {
@@ -89,29 +67,26 @@ public class UGICacheMultiThreadTest {
         Thread[] threads = new Thread[threadCount];
 
         for (int i = 0; i < threads.length; i++) {
-            threads[i] = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        for (int i = 0; i < 100; i++) {
-                            for (SessionId session : sessions) {
-                                cache.getUserGroupInformation(session);
-                            }
-                            Thread.sleep(0, rnd.nextInt(1000));
-                            for (SessionId session : sessions) {
-                                cache.release(session, false);
-                            }
-                        }
-
+            threads[i] = new Thread(() -> {
+                try {
+                    for (int i1 = 0; i1 < 100; i1++) {
                         for (SessionId session : sessions) {
-                            cache.getUserGroupInformation(session);
-                            cache.release(session, true);
+                            cache.getUserGroupInformation(session, true);
                         }
-
-                        finishedCount.incrementAndGet();
-                    } catch (IOException | InterruptedException e) {
-                        e.printStackTrace();
+                        Thread.sleep(0, rnd.nextInt(1000));
+                        for (SessionId session : sessions) {
+                            cache.release(session, false);
+                        }
                     }
+
+                    for (SessionId session : sessions) {
+                        cache.getUserGroupInformation(session, true);
+                        cache.release(session, true);
+                    }
+
+                    finishedCount.incrementAndGet();
+                } catch (IOException | InterruptedException e) {
+                    e.printStackTrace();
                 }
             });
             threads[i].start();
@@ -127,5 +102,27 @@ public class UGICacheMultiThreadTest {
         // should be 0
         assertEquals(0, cache.size());
         assertEquals(0, cache.allQueuesSize());
+    }
+
+    class FakeUgiProvider extends UGIProvider {
+        Set<UserGroupInformation> ugis = new ConcurrentSet<>();
+
+        @Override
+        UserGroupInformation createProxyUGI(String effectiveUser) {
+            UserGroupInformation ugi = mock(UserGroupInformation.class);
+            ugis.add(ugi);
+            return ugi;
+        }
+
+        @Override
+        void destroy(UserGroupInformation ugi) {
+            if (!ugis.remove(ugi)) {
+                throw new IllegalStateException("Tried to destroy UGI that does not exist");
+            }
+        }
+
+        int countUgisInUse() {
+            return ugis.size();
+        }
     }
 }

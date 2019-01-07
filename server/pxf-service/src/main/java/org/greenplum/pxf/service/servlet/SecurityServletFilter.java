@@ -21,6 +21,7 @@ package org.greenplum.pxf.service.servlet;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.service.SessionId;
 import org.greenplum.pxf.service.UGICache;
 import org.greenplum.pxf.service.utilities.SecuredHDFS;
@@ -51,7 +52,7 @@ public class SecurityServletFilter implements Filter {
     private static final String DELEGATION_TOKEN_HEADER = "X-GP-TOKEN";
     private static final String MISSING_HEADER_ERROR = "Header %s is missing in the request";
     private static final String EMPTY_HEADER_ERROR = "Header %s is empty in the request";
-    UGICache proxyUGICache;
+    UGICache ugiCache;
     private FilterConfig config;
 
     /**
@@ -62,7 +63,7 @@ public class SecurityServletFilter implements Filter {
     @Override
     public void init(FilterConfig filterConfig) {
         config = filterConfig;
-        proxyUGICache = new UGICache();
+        ugiCache = new UGICache();
     }
 
     /**
@@ -78,13 +79,22 @@ public class SecurityServletFilter implements Filter {
     public void doFilter(final ServletRequest request, final ServletResponse response, final FilterChain chain)
             throws IOException, ServletException {
 
+        String impersonationHeaderValue = getHeaderValue(request, "X-GP-OPTIONS-IMPERSONATION", false);
+        boolean isUserImpersonation = StringUtils.isNotBlank(impersonationHeaderValue) ?
+                "true".equals(impersonationHeaderValue) :
+                Utilities.isUserImpersonationEnabled();
+
         // retrieve user header and make sure header is present and is not empty
         final String gpdbUser = getHeaderValue(request, USER_HEADER, true);
         final String transactionId = getHeaderValue(request, TRANSACTION_ID_HEADER, true);
         final Integer segmentId = getHeaderValueInt(request, SEGMENT_ID_HEADER, true);
         final boolean lastCallForSegment = getHeaderValueBoolean(request, LAST_FRAGMENT_HEADER, false);
 
-        SessionId session = new SessionId(segmentId, transactionId, gpdbUser);
+        SessionId session = new SessionId(
+                segmentId,
+                transactionId,
+                (isUserImpersonation ? gpdbUser : UserGroupInformation.getLoginUser().getUserName())
+                );
 
         // Prepare privileged action to run on behalf of proxy user
         PrivilegedExceptionAction<Boolean> action = () -> {
@@ -103,11 +113,11 @@ public class SecurityServletFilter implements Filter {
         try {
             LOG.debug("Retrieving proxy user for session: {}", session);
             // Retrieve proxy user UGI from the UGI of the logged in user
-            UserGroupInformation proxyUserGroupInformation = proxyUGICache
-                    .getUserGroupInformation(session);
+            UserGroupInformation userGroupInformation = ugiCache
+                    .getUserGroupInformation(session, isUserImpersonation);
 
             // Execute the servlet chain as that user
-            proxyUserGroupInformation.doAs(action);
+            userGroupInformation.doAs(action);
         } catch (UndeclaredThrowableException ute) {
             // unwrap the real exception thrown by the action
             throw new ServletException(ute.getCause());
@@ -118,7 +128,7 @@ public class SecurityServletFilter implements Filter {
             LOG.debug("Releasing proxy user for session: {}. {}",
                     session, lastCallForSegment ? " Last fragment call" : "");
             try {
-                proxyUGICache.release(session, lastCallForSegment);
+                ugiCache.release(session, lastCallForSegment);
             } catch (Throwable t) {
                 LOG.error("Error releasing UGICache for session: {}", session, t);
             }

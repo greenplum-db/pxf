@@ -84,13 +84,16 @@ public class SecurityServletFilterTest {
 
         SecurityServletFilter securityServletFilter = new SecurityServletFilter();
         securityServletFilter.init(mock(FilterConfig.class));
-        securityServletFilter.proxyUGICache = mock(UGICache.class);
+        securityServletFilter.ugiCache = mock(UGICache.class);
 
-        when(securityServletFilter.proxyUGICache.getUserGroupInformation(any(SessionId.class))).thenReturn(mock(UserGroupInformation.class));
+        SessionId sessionId = new SessionId(1, "0", "gpadmin");
+
+        when(securityServletFilter.ugiCache.getUserGroupInformation(sessionId, true))
+                .thenReturn(mock(UserGroupInformation.class));
 
         securityServletFilter.doFilter(servletRequest, mock(ServletResponse.class), mock(FilterChain.class));
 
-        verify(securityServletFilter.proxyUGICache).release(any(SessionId.class), eq(false));
+        verify(securityServletFilter.ugiCache).release(any(SessionId.class), eq(false));
     }
 
     @Test
@@ -106,12 +109,15 @@ public class SecurityServletFilterTest {
 
         SecurityServletFilter securityServletFilter = new SecurityServletFilter();
         securityServletFilter.init(mock(FilterConfig.class));
-        securityServletFilter.proxyUGICache = mock(UGICache.class);
+        securityServletFilter.ugiCache = mock(UGICache.class);
 
-        when(securityServletFilter.proxyUGICache.getUserGroupInformation(any(SessionId.class))).thenReturn(mock(UserGroupInformation.class));
+        SessionId sessionId = new SessionId(1, "0", "gpadmin");
+
+        when(securityServletFilter.ugiCache.getUserGroupInformation(sessionId, true))
+                .thenReturn(mock(UserGroupInformation.class));
 
         securityServletFilter.doFilter(servletRequest, mock(ServletResponse.class), mock(FilterChain.class));
 
-        verify(securityServletFilter.proxyUGICache).release(any(SessionId.class), eq(true));
+        verify(securityServletFilter.ugiCache).release(any(SessionId.class), eq(true));
     }
 }
