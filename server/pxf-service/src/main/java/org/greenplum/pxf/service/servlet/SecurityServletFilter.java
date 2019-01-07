@@ -84,6 +84,10 @@ public class SecurityServletFilter implements Filter {
                 "true".equals(impersonationHeaderValue) :
                 Utilities.isUserImpersonationEnabled();
 
+        if (isUserImpersonation) {
+            LOG.debug("User impersonation is enabled");
+        }
+
         // retrieve user header and make sure header is present and is not empty
         final String gpdbUser = getHeaderValue(request, USER_HEADER, true);
         final String transactionId = getHeaderValue(request, TRANSACTION_ID_HEADER, true);
@@ -102,12 +106,9 @@ public class SecurityServletFilter implements Filter {
             return true;
         };
 
-//        if (UserGroupInformation.isSecurityEnabled()) {
-//            LOG.debug("Kerberos is enabled");
         // Refresh Kerberos token when security is enabled
         String tokenString = getHeaderValue(request, DELEGATION_TOKEN_HEADER, false);
         SecuredHDFS.verifyToken(tokenString, config.getServletContext());
-//        }
 
         try {
             LOG.debug("Retrieving proxy user for session: {}", session);

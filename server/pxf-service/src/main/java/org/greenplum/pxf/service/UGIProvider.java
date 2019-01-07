@@ -49,7 +49,12 @@ class UGIProvider {
      * @param user the name of the remote user
      * @return a remote {@link UserGroupInformation}.
      */
-    UserGroupInformation createRemoteUser(String user) {
+    UserGroupInformation createRemoteUser(String user) throws IOException {
+        if (UserGroupInformation.isSecurityEnabled()) {
+            UserGroupInformation proxyUGI = createProxyUGI(user);
+            proxyUGI.setAuthenticationMethod(UserGroupInformation.AuthenticationMethod.KERBEROS);
+            return proxyUGI;
+        }
         return UserGroupInformation.createRemoteUser(user);
     }
 
