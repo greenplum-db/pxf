@@ -82,15 +82,6 @@ public class SessionId {
     }
 
     /**
-     * Returns the sessionId for this object
-     *
-     * @return the sessionId for this object
-     */
-    public String getSessionId() {
-        return sessionId;
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override
