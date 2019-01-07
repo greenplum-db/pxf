@@ -20,7 +20,7 @@ package org.greenplum.pxf.service.servlet;
  */
 
 import org.apache.hadoop.security.UserGroupInformation;
-import org.greenplum.pxf.api.model.SessionId;
+import org.greenplum.pxf.service.SessionId;
 import org.greenplum.pxf.service.UGICache;
 import org.junit.Before;
 import org.junit.Rule;

@@ -28,8 +28,6 @@ import org.greenplum.pxf.api.model.BaseFragmenter;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.FragmentStats;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.api.model.SessionId;
-import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.PxfInputFormat;
 
@@ -55,15 +53,6 @@ public class HdfsDataFragmenter extends BaseFragmenter {
 
         // Check if the underlying configuration is for HDFS
         hcfsType = HcfsType.getHcfsType(configuration, context);
-
-        // If user impersonation is disabled and
-        // cloud filesystem is used we add the
-        // pxf.session.id to the Configuration object
-        if (!Utilities.isUserImpersonationEnabled() && hcfsType.isCloud()) {
-            SessionId sessionId =
-                    new SessionId(context.getSegmentId(), context.getTransactionId(), context.getUser());
-            configuration.set("pxf.session.id", sessionId.getSessionId());
-        }
 
         jobConf = new JobConf(configuration, this.getClass());
     }

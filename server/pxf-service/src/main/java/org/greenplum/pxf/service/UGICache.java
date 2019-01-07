@@ -23,7 +23,6 @@ import com.google.common.base.Ticker;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.greenplum.pxf.api.model.SessionId;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -43,14 +42,14 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class UGICache {
 
+    static final int NANOS_PER_MILLIS = 1000000;
+    static final long UGI_CACHE_EXPIRY = 15 * 60 * 1000L; // 15 Minutes
     private static final Log LOG = LogFactory.getLog(UGICache.class);
     private final Map<SessionId, Entry> cache = new ConcurrentHashMap<>();
     // There is a separate DelayQueue for each segment (also being used for locking)
     private final Map<Integer, DelayQueue<Entry>> expirationQueueMap = new HashMap<>();
     private final UGIProvider ugiProvider;
     private final Ticker ticker;
-    static final int NANOS_PER_MILLIS = 1000000;
-    static final long UGI_CACHE_EXPIRY = 15 * 60 * 1000L; // 15 Minutes
 
     /**
      * Create a UGICache with the given {@link Ticker} and {@link UGIProvider}. Intended for use by
@@ -107,6 +106,7 @@ public class UGICache {
      * @param cleanImmediatelyIfNoRefs if true, destroys the UGI for the given session (only if it
      *                                 is now unreferenced).
      */
+    @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
     public void release(SessionId session, boolean cleanImmediatelyIfNoRefs) {
 
         Entry entry = cache.get(session);
@@ -157,6 +157,7 @@ public class UGICache {
      * @param session
      * @return determine whether the session is in the internal cache
      */
+    @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
     boolean contains(SessionId session) {
         DelayQueue<Entry> expirationQueue = getExpirationQueue(session.getSegmentId());
         synchronized (expirationQueue) {
@@ -247,11 +248,11 @@ public class UGICache {
      */
     private static class Entry implements Delayed {
 
-        private volatile long startTime;
         private final SessionId session;
         private final UserGroupInformation proxyUGI;
         private final AtomicInteger referenceCount = new AtomicInteger();
         private final Ticker ticker;
+        private volatile long startTime;
 
         /**
          * Creates a new UGICache Entry.

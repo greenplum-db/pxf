@@ -21,7 +21,6 @@ package org.greenplum.pxf.service;
 
 import io.netty.util.internal.ConcurrentSet;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.greenplum.pxf.api.model.SessionId;
 import org.junit.Before;
 import org.junit.Test;
 
