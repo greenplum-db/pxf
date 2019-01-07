@@ -20,9 +20,9 @@ package org.greenplum.pxf.service;
  */
 
 import com.google.common.base.Ticker;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -44,7 +44,7 @@ public class UGICache {
 
     static final int NANOS_PER_MILLIS = 1000000;
     static final long UGI_CACHE_EXPIRY = 15 * 60 * 1000L; // 15 Minutes
-    private static final Log LOG = LogFactory.getLog(UGICache.class);
+    private static final Logger LOG = LoggerFactory.getLogger(UGICache.class);
     private final Map<SessionId, Entry> cache = new ConcurrentHashMap<>();
     // There is a separate DelayQueue for each segment (also being used for locking)
     private final Map<Integer, DelayQueue<Entry>> expirationQueueMap = new HashMap<>();
@@ -88,13 +88,13 @@ public class UGICache {
             cleanup(delayQueue);
             Entry entry = cache.get(session);
             if (entry == null) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug(session + " Creating proxy user = " + user);
-                }
+
                 UserGroupInformation ugi;
                 if (isProxyUser) {
+                    LOG.debug("{} Creating proxy user = {}", session, user);
                     ugi = ugiProvider.createProxyUGI(user);
                 } else {
+                    LOG.debug("{} Creating remote user = {}", session, user);
                     ugi = ugiProvider.createRemoteUser(user);
                 }
                 entry = new Entry(ticker, ugi, session);
@@ -210,17 +210,12 @@ public class UGICache {
             } else {
                 // The UGI object is still being used by another thread
                 String fsMsg = "FileSystem for proxy user = " + expiredUGI.getSession().getUser();
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug(expiredUGI.getSession().toString() + " Skipping close of " + fsMsg);
-                }
+                LOG.debug("{} Skipping close of {}", expiredUGI.getSession().toString(), fsMsg);
                 // Place it back in the queue if still in use and was not closed
                 expiredUGI.resetTime();
                 expirationQueue.offer(expiredUGI);
             }
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Delay Queue Size for segment " +
-                        expiredUGI.getSession().getSegmentId() + " = " + expirationQueue.size());
-            }
+            LOG.debug("Delay Queue Size for segment {} = {}", expiredUGI.getSession().getSegmentId(), expirationQueue.size());
         }
     }
 
@@ -235,10 +230,7 @@ public class UGICache {
         SessionId session = expiredUGI.getSession();
         String fsMsg = "FileSystem for proxy user = " + session.getUser();
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug(session.toString() + " Closing " + fsMsg +
-                    " (Cache Size = " + cache.size() + ")");
-        }
+        LOG.debug("{} Closing {} (Cache Size = {})", session.toString(), fsMsg, cache.size());
 
         try {
             // Remove it from cache, as cache now has an

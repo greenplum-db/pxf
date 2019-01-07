@@ -93,8 +93,7 @@ public class SecurityServletFilter implements Filter {
         SessionId session = new SessionId(
                 segmentId,
                 transactionId,
-                (isUserImpersonation ? gpdbUser : UserGroupInformation.getLoginUser().getUserName())
-                );
+                (isUserImpersonation ? gpdbUser : UserGroupInformation.getLoginUser().getUserName()));
 
         // Prepare privileged action to run on behalf of proxy user
         PrivilegedExceptionAction<Boolean> action = () -> {
@@ -103,12 +102,12 @@ public class SecurityServletFilter implements Filter {
             return true;
         };
 
-        if (UserGroupInformation.isSecurityEnabled()) {
-            LOG.debug("Kerberos is enabled");
-            // Refresh Kerberos token when security is enabled
-            String tokenString = getHeaderValue(request, DELEGATION_TOKEN_HEADER, false);
-            SecuredHDFS.verifyToken(tokenString, config.getServletContext());
-        }
+//        if (UserGroupInformation.isSecurityEnabled()) {
+//            LOG.debug("Kerberos is enabled");
+        // Refresh Kerberos token when security is enabled
+        String tokenString = getHeaderValue(request, DELEGATION_TOKEN_HEADER, false);
+        SecuredHDFS.verifyToken(tokenString, config.getServletContext());
+//        }
 
         try {
             LOG.debug("Retrieving proxy user for session: {}", session);

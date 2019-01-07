@@ -62,7 +62,7 @@ public class SecuredHDFS {
                  */
                 UserGroupInformation.getLoginUser().reloginFromKeytab();
                 if (tokenString != null) {
-                    Token<DelegationTokenIdentifier> token = new Token<DelegationTokenIdentifier>();
+                    Token<DelegationTokenIdentifier> token = new Token<>();
                     token.decodeFromUrlString(tokenString);
 
                     verifyToken(token.getIdentifier(), token.getPassword(),
