@@ -260,8 +260,6 @@ function init_and_configure_pxf_server() {
 function configure_pxf_s3_server() {
 	mkdir -p ${PXF_CONF_DIR}/servers/s3
 	cp ${PXF_CONF_DIR}/templates/s3-site.xml ${PXF_CONF_DIR}/servers/s3/s3-site.xml
-	echo $AWS_ACCESS_KEY_ID
-	echo $ACCESS_KEY_ID
 	sed -i "s|YOUR_AWS_ACCESS_KEY_ID|${ACCESS_KEY_ID}|" ${PXF_CONF_DIR}/servers/s3/s3-site.xml
 	sed -i "s|YOUR_AWS_SECRET_ACCESS_KEY|${SECRET_ACCESS_KEY}|" ${PXF_CONF_DIR}/servers/s3/s3-site.xml
 
