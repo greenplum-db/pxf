@@ -469,6 +469,8 @@ jobs:
       file: pxf_src/concourse/tasks/install_hadoop.yml
       image: gpdb-pxf-dev-centos6-hdp-server
       params:
+        ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+        SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
         IMPERSONATION: {{enable-impersonation-multinode}}
         PXF_JVM_OPTS: {{pxf-jvm-opts}}
 {% if pipeline_type == "pxf" %}
