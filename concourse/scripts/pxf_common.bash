@@ -259,12 +259,12 @@ function init_and_configure_pxf_server() {
 
 function configure_pxf_s3_server() {
 	mkdir -p ${PXF_CONF_DIR}/servers/s3
-	cp ${PXF_CONF_DIR}/templates/user/templates/s3-site.xml ${PXF_CONF_DIR}/servers/s3/s3-site.xml
+	cp ${PXF_CONF_DIR}/templates/s3-site.xml ${PXF_CONF_DIR}/servers/s3/s3-site.xml
 	sed -i "s|YOUR_AWS_ACCESS_KEY_ID|${AWS_ACCESS_KEY_ID}|" ${PXF_CONF_DIR}/servers/s3/s3-site.xml
 	sed -i "s|YOUR_AWS_SECRET_ACCESS_KEY|${AWS_SECRET_ACCESS_KEY}|" ${PXF_CONF_DIR}/servers/s3/s3-site.xml
 
 	mkdir -p ${PXF_CONF_DIR}/servers/s3-invalid
-	cp ${PXF_CONF_DIR}/templates/user/templates/s3-site.xml ${PXF_CONF_DIR}/servers/s3-invalid/s3-site.xml
+	cp ${PXF_CONF_DIR}/templates/s3-site.xml ${PXF_CONF_DIR}/servers/s3-invalid/s3-site.xml
 }
 
 function configure_pxf_default_server() {
