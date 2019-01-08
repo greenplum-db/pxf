@@ -78,6 +78,7 @@ EOF
 	init_and_configure_pxf_server
 	if [[ -z "${PROTOCOL}" ]]; then
 		configure_pxf_default_server
+		configure_pxf_s3_server
 	fi
 	start_pxf_server
 
