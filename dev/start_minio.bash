@@ -10,9 +10,7 @@ echo "Minio credentials: accessKey=${MINIO_ACCESS_KEY} secretKey=${MINIO_SECRET_
 echo 'Starting Minio ...'
 sudo /opt/minio/bin/minio server /opt/minio/data &
 
-# export minio credentials as AWS environment variables
-export AWS_ACCESS_KEY_ID=${MINIO_ACCESS_KEY}
-export AWS_SECRET_ACCESS_KEY=${MINIO_SECRET_KEY}
-
-# set protocol as minio for automation testing
+# set variables used by automation
 export PROTOCOL=minio
+export ACCESS_KEY_ID=${MINIO_ACCESS_KEY}
+export SECRET_ACCESS_KEY=${MINIO_SECRET_KEY}

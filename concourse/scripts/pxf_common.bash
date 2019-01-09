@@ -303,7 +303,7 @@ function setup_minio() {
     echo 'Starting Minio ...'
     /opt/minio/bin/minio server /opt/minio/data &
 
-    # export minio credentials as AWS environment variables
-    export AWS_ACCESS_KEY_ID=${MINIO_ACCESS_KEY}
-    export AWS_SECRET_ACCESS_KEY=${MINIO_SECRET_KEY}
+    # export minio credentials as access environment variables
+    export ACCESS_KEY_ID=${MINIO_ACCESS_KEY}
+    export SECRET_ACCESS_KEY=${MINIO_SECRET_KEY}
 }
