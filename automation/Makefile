@@ -92,8 +92,8 @@ ifneq "$(PROTOCOL)" ""
 				cp $(PXF_HOME)/templates/user/templates/minio-site.xml $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
 				sed -i "s|YOUR_MINIO_URL|http://localhost:9000|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
 			fi; \
-		    mkdir -p $(PROTOCOL_HOME)-invalid; \
-		    cp $(PXF_HOME)/templates/user/templates/$(PROTOCOL)-site.xml $(PROTOCOL_HOME)-invalid/; \
+			mkdir -p $(PROTOCOL_HOME)-invalid; \
+			cp $(PXF_HOME)/templates/user/templates/$(PROTOCOL)-site.xml $(PROTOCOL_HOME)-invalid/; \
 			if [[ -z "$(ACCESS_KEY_ID)" ]] || [[ -z "$(SECRET_ACCESS_KEY)" ]]; then \
 				echo "AWS Keys (ACCESS_KEY_ID, SECRET_ACCESS_KEY) not set"; \
 				rm -rf $(PROTOCOL_HOME); \

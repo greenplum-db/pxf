@@ -777,6 +777,7 @@ jobs:
     - test_pxf_cdh_centos6
     - test_pxf_adl
     - test_pxf_gs
+    - test_pxf_minio
     - test_pxf_s3_no_impersonation
     - test_pxf_s3_with_impersonation
     - test_pxf_hdp_secure_with_impersonation
@@ -798,6 +799,7 @@ jobs:
     - test_pxf_cdh_centos6
     - test_pxf_adl
     - test_pxf_gs
+    - test_pxf_minio
     - test_pxf_s3_no_impersonation
     - test_pxf_s3_with_impersonation
     - test_pxf_hdp_secure_with_impersonation
@@ -812,6 +814,7 @@ jobs:
     - test_pxf_cdh_centos6
     - test_pxf_adl
     - test_pxf_gs
+    - test_pxf_minio
     - test_pxf_s3_no_impersonation
     - test_pxf_s3_with_impersonation
     - test_pxf_hdp_secure_with_impersonation
