@@ -125,6 +125,7 @@ docker run --rm -it \
   -p 8000:8000 \
   -p 5005:5005 \
   -p 8020:8020 \
+  -p 9000:9000 \
   -p 9090:9090 \
   -p 50070:50070 \
   -w /home/gpadmin/workspace \
@@ -183,6 +184,14 @@ pushd ~/workspace/singlecluster/bin
 ./start-hbase.sh
 popd
 ```
+### Setup Minio (optional)
+Minio is an S3-API compatible local storage solution. The development docker image comes with Minio software pre-installed. To start the Minio server, run the following script:
+```bash
+~/workspace/pxf/dev/start_minio.bash
+```
+After the server starts, you can access Minio UI at `http://localhost:9000` from the host OS. Use `admin` for the access key and `password` for the secret key when connecting to your local Minio instance.
+
+The script also sets `PROTOCOL=minio` so that the automation framework will use the local Minio server when running S3 automation tests.
 
 ### Setup PXF
 
