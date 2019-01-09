@@ -187,11 +187,11 @@ popd
 ### Setup Minio (optional)
 Minio is an S3-API compatible local storage solution. The development docker image comes with Minio software pre-installed. To start the Minio server, run the following script:
 ```bash
-~/workspace/pxf/dev/start_minio.bash
+source ~/workspace/pxf/dev/start_minio.bash
 ```
 After the server starts, you can access Minio UI at `http://localhost:9000` from the host OS. Use `admin` for the access key and `password` for the secret key when connecting to your local Minio instance.
 
-The script also sets `PROTOCOL=minio` so that the automation framework will use the local Minio server when running S3 automation tests.
+The script also sets `PROTOCOL=minio` so that the automation framework will use the local Minio server when running S3 automation tests. If later you would like to run Hadoop HDFS tests, unset this variable with `unset PROTOCOL` command.
 
 ### Setup PXF
 
