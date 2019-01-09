@@ -32,6 +32,24 @@
         </repository>
     </repositories>
 
+    <profiles>
+        <profile>
+            <id>mapr</id>
+            <dependencies>
+
+
+                <dependency>
+                    <groupId>org.greenplum</groupId>
+                    <artifactId>pxf-mapr</artifactId>
+                    <scope>system</scope>
+                    <systemPath>${pxf.lib}/pxf-mapr.jar</systemPath>
+                    <version>LATEST</version>
+                    <optional>true</optional>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
+
     <build>
         <plugins>
             <plugin>
@@ -97,15 +115,6 @@
             <scope>system</scope>
             <systemPath>${pxf.lib}/pxf-hive.jar</systemPath>
             <version>LATEST</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.greenplum</groupId>
-            <artifactId>pxf-mapr</artifactId>
-            <scope>system</scope>
-            <systemPath>${pxf.lib}/pxf-mapr.jar</systemPath>
-            <version>LATEST</version>
-            <optional>true</optional>
         </dependency>
 
         <dependency>
