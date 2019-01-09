@@ -230,7 +230,10 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
     @Override
     public void removeDirectory(String path) throws Exception {
         ReportUtils.startLevel(report, getClass(), "Remove Directory " + path);
-        fs.delete(getDatapath(path), true);
+        Path dataPath = getDatapath(path);
+        if (fs.exists(dataPath)) {
+            fs.delete(dataPath, true);
+        }
         ReportUtils.stopLevel(report);
     }
 
@@ -324,7 +327,7 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
                 + ", json data file " + jsonFileName + ")");
 
         Tool tool = new DataFileWriteTool();
-        List<String> args = new ArrayList<String>();
+        List<String> args = new ArrayList<>();
         args.add("--schema-file");
         args.add(schemaName);
         args.add(jsonFileName);

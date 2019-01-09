@@ -48,7 +48,8 @@ public class HdfsReadableAvroTest extends BaseFeature {
         hdfsPath = hdfs.getWorkingDirectory() + "/avro/";
 
         // location of schema and data files
-        resourcePath = localDataResourcesFolder + "/avro/";
+        String absolutePath = getClass().getClassLoader().getResource("data").getPath();
+        resourcePath = absolutePath + "/avro/";
 
         // create and copy data to hdfs
         prepareData();
@@ -74,24 +75,24 @@ public class HdfsReadableAvroTest extends BaseFeature {
 
         // Create Avro files from schema and json files
         hdfs.writeAvroFileFromJson(hdfsPath + avroSimpleFileName + SUFFIX_AVRO,
-                resourcePath + avroSimpleFileName + SUFFIX_AVSC,
-                resourcePath + avroSimpleFileName + SUFFIX_JSON, null);
+                "file://" + resourcePath + avroSimpleFileName + SUFFIX_AVSC,
+                "file://" + resourcePath + avroSimpleFileName + SUFFIX_JSON, null);
 
         hdfs.writeAvroFileFromJson(hdfsPath + avroTypesFileName + SUFFIX_AVRO,
-                resourcePath + avroTypesFileName + SUFFIX_AVSC,
-                resourcePath + avroTypesFileName + SUFFIX_JSON, null);
+                "file://" + resourcePath + avroTypesFileName + SUFFIX_AVSC,
+                "file://" + resourcePath + avroTypesFileName + SUFFIX_JSON, null);
 
         hdfs.writeAvroFileFromJson(hdfsPath + avroArrayFileName + SUFFIX_AVRO,
-                resourcePath + avroArrayFileName + SUFFIX_AVSC,
-                resourcePath + avroArrayFileName + SUFFIX_JSON, null);
+                "file://" + resourcePath + avroArrayFileName + SUFFIX_AVSC,
+                "file://" + resourcePath + avroArrayFileName + SUFFIX_JSON, null);
 
         hdfs.writeAvroFileFromJson(hdfsPath + avroComplexFileName + SUFFIX_AVRO,
-                resourcePath + avroComplexFileName + SUFFIX_AVSC,
-                resourcePath + avroComplexFileName + SUFFIX_JSON, null);
+                "file://" + resourcePath + avroComplexFileName + SUFFIX_AVSC,
+                "file://" + resourcePath + avroComplexFileName + SUFFIX_JSON, null);
 
         hdfs.writeAvroFileFromJson(hdfsPath + avroComplexNullFileName + SUFFIX_AVRO,
-                resourcePath + avroComplexNullFileName + SUFFIX_AVSC,
-                resourcePath + avroComplexNullFileName + SUFFIX_JSON, null);
+                "file://" + resourcePath + avroComplexNullFileName + SUFFIX_AVSC,
+                "file://" + resourcePath + avroComplexNullFileName + SUFFIX_JSON, null);
 
         String schemaName1 = resourcePath + avroInSequenceArraysSchemaFile;
         Table dataTable1 = new Table("dataTable1", null);

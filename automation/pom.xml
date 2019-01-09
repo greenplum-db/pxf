@@ -100,6 +100,15 @@
         </dependency>
 
         <dependency>
+            <groupId>org.greenplum</groupId>
+            <artifactId>pxf-mapr</artifactId>
+            <scope>system</scope>
+            <systemPath>${pxf.lib}/pxf-mapr.jar</systemPath>
+            <version>LATEST</version>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
             <groupId>org.xerial.snappy</groupId>
             <artifactId>snappy-java</artifactId>
             <version>1.1.1.7</version>
@@ -267,7 +276,6 @@
             <artifactId>azure-storage</artifactId>
             <version>2.2.0</version>
         </dependency>
-
 
         <!-- HADOOP Dependencies -->
         <dependency>

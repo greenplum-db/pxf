@@ -13,4 +13,4 @@ RUN apt-get update && apt-get install sudo && \
     chmod 0600 /home/gpadmin/.ssh/authorized_keys && \
     echo gpadmin:password | /usr/sbin/chpasswd && \
     { ssh-keyscan localhost; ssh-keyscan 0.0.0.0; } >> /home/gpadmin/.ssh/known_hosts && \
-    chown -R gpadmin:gpadmin /home/gpadmin/.ssh
+    chown -R gpadmin:gpadmin /home/gpadmin
