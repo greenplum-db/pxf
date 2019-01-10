@@ -13,5 +13,6 @@ params:
   GROUP: smoke
   TARGET_OS: centos
   TARGET_OS_VERSION: 6
+  TEST_ENV:
 run:
   path: pxf_src/concourse/scripts/test_pxf.bash

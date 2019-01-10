@@ -12,6 +12,7 @@ groups:
       - test_pxf_cdh_centos6
       - test_pxf_hdp_ubuntu16
       - test_pxf_hdp_multinode_gpdb
+      - test_pxf_mapr_centos6
       - test_pxf_adl
       - test_pxf_gs
       - test_pxf_minio
@@ -29,13 +30,16 @@ groups:
 
   - name: hadoop
     jobs:
-      - test_pxf_hdp_centos6
+      - compile_pxf
       - test_pxf_cdh_centos6
+      - test_pxf_hdp_centos6
       - test_pxf_hdp_ubuntu16
       - test_pxf_hdp_multinode_gpdb
+      - test_pxf_mapr_centos6
 
   - name: cloud
     jobs:
+      - compile_pxf
       - test_pxf_adl
       - test_pxf_gs
       - test_pxf_minio
@@ -44,11 +48,13 @@ groups:
 
   - name: secure
     jobs:
+      - compile_pxf
       - test_pxf_hdp_secure_with_impersonation
       - test_pxf_hdp_secure_no_impersonation
 
   - name: no_impersonation
     jobs:
+      - compile_pxf
       - test_pxf_no_impersonation
       - test_pxf_s3_no_impersonation
       - test_pxf_hdp_secure_no_impersonation

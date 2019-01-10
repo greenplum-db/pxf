@@ -58,7 +58,7 @@ function setup_hadoop() {
 }
 
 function _main() {
-	if [[ ${HADOOP_CLIENT} == "MAPR" ]]; then
+	if [[ ${HADOOP_CLIENT} == MAPR ]]; then
 		# start mapr services before installing GPDB
 		/root/init-script
 	fi
@@ -81,7 +81,7 @@ function _main() {
 		cat << EOF > /tmp/gsc-ci-service-account.key.json
 ${GOOGLE_CREDENTIALS}
 EOF
-	elif [[ ${HADOOP_CLIENT} == "MAPR" ]]; then
+	elif [[ ${HADOOP_CLIENT} == MAPR ]]; then
 		echo Using MAPR
 		# Copy mapr specific jars to $PXF_CONF_DIR/lib
 		mkdir -p ${PXF_CONF_DIR}/lib ${PXF_CONF_DIR}/servers/default
@@ -91,8 +91,6 @@ EOF
 		cp ${HADOOP_COMMON}/hadoop-common-2.7.0-mapr-1707.jar ${PXF_CONF_DIR}/lib/
 		# Copy *-site.xml files
 		cp /opt/mapr/hadoop/hadoop-2.7.0/etc/hadoop/*-site.xml ${PXF_CONF_DIR}/servers/default/
-		# Copy mapred-site.xml for recursive hdfs directories test
-		cp ${PXF_CONF_DIR}/templates/mapred-site.xml ${PXF_CONF_DIR}/servers/default/recursive-site.xml
 		chown -R gpadmin:gpadmin ${PXF_CONF_DIR}
 		# Set mapr port to 7222 in default.xml (sut)
 		pushd pxf_src/automation
@@ -102,10 +100,15 @@ EOF
 		# Setup Hadoop before creating GPDB cluster to use system python for yum install
 		setup_hadoop ${GPHD_ROOT}
 	fi
+
 	create_gpdb_cluster
 	add_remote_user_access_for_gpdb "testuser"
 	init_and_configure_pxf_server
-	if [[ -z "${PROTOCOL}" ]]; then
+
+	if [[ ${HADOOP_CLIENT} == MAPR ]]; then
+		# Copy mapred-site.xml for recursive hdfs directories test
+		cp ${PXF_CONF_DIR}/templates/mapred-site.xml ${PXF_CONF_DIR}/servers/default/recursive-site.xml
+	elif [[ -z "${PROTOCOL}" ]]; then
 		configure_pxf_default_server
 		configure_pxf_s3_server
 	fi
