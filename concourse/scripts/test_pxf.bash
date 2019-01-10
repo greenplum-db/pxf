@@ -71,6 +71,29 @@ function _main() {
 		cat << EOF > /tmp/gsc-ci-service-account.key.json
 ${GOOGLE_CREDENTIALS}
 EOF
+	elif [[ ${HADOOP_CLIENT} == "MAPR" ]]; then
+		echo Using MAPR
+		# start mapr services
+		sudo /root/init-script
+		# Copy mapr specific jars to $PXF_CONF/lib
+		cp /opt/mapr/hadoop/hadoop-2.7.0/share/hadoop/common/lib/maprfs-5.2.2-mapr.jar ${PXF_CONF_DIR}/lib/
+		cp /opt/mapr/hadoop/hadoop-2.7.0/share/hadoop/common/lib/hadoop-auth-2.7.0-mapr-1707.jar ${PXF_CONF_DIR}/lib/
+		cp /opt/mapr/hadoop/hadoop-2.7.0/share/hadoop/common/hadoop-common-2.7.0-mapr-1707.jar ${PXF_CONF_DIR}/lib/
+		# Create fat jar for automation
+		mkdir -p /tmp/fatjar
+		pushd /tmp/fatjar
+		    jar -xf ${PXF_CONF_DIR}/lib/maprfs-5.2.2-mapr.jar
+		    jar -xf ${PXF_CONF_DIR}/lib/hadoop-auth-2.7.0-mapr-1707.jar
+		    jar -xf ${PXF_CONF_DIR}/lib/hadoop-common-2.7.0-mapr-1707.jar
+		    jar -cf pxf-extras.jar *
+		    cp pxf-extras.jar
+		popd
+		# Copy *-site.xml files
+		cp /opt/mapr/hadoop/hadoop-2.7.0/etc/hadoop/*-site.xml ${PXF_CONF}/servers/default/
+		# Set mapr port to 7222 in default.xml (sut)
+		pushd pxf_src/automation
+			sed -i 's|<port>8020</port>|<port>7222</port>|' src/test/resources/sut/default.xml
+		popd
 	elif [[ -z "${PROTOCOL}" ]]; then
 		# Setup Hadoop before creating GPDB cluster to use system python for yum install
 		setup_hadoop /singlecluster

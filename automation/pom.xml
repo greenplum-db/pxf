@@ -35,17 +35,20 @@
     <profiles>
         <profile>
             <id>mapr</id>
-            <dependencies>
+            <dependencyManagement>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.greenplum</groupId>
+                        <artifactId>pxf-extras</artifactId>
+                        <scope>system</scope>
+                        <systemPath>${pxf.lib}/pxf-extras.jar</systemPath>
+                        <version>LATEST</version>
+                        <optional>true</optional>
+                    </dependency>
+                </dependencies>
+            </dependencyManagement>
+            <dependencies >
 
-
-                <dependency>
-                    <groupId>org.greenplum</groupId>
-                    <artifactId>pxf-mapr</artifactId>
-                    <scope>system</scope>
-                    <systemPath>${pxf.lib}/pxf-mapr.jar</systemPath>
-                    <version>LATEST</version>
-                    <optional>true</optional>
-                </dependency>
             </dependencies>
         </profile>
     </profiles>
