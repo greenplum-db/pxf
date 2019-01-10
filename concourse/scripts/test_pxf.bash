@@ -9,6 +9,11 @@ export GPHOME=${GPHOME:-"/usr/local/greenplum-db-devel"}
 export PXF_HOME="${GPHOME}/pxf"
 export JAVA_HOME="${JAVA_HOME}"
 export JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8
+if [[ ${HADOOP_CLIENT} == "MAPR" ]]; then
+	export GPHD_ROOT=/opt/mapr
+else
+	export GPHD_ROOT=/singlecluster
+fi
 
 function run_pxf_automation() {
 	# Let's make sure that automation/singlecluster directories are writeable
@@ -24,7 +29,7 @@ function run_pxf_automation() {
 	source ${GPHOME}/greenplum_path.sh
 
 	export PATH=\$PATH:${GPHD_ROOT}/bin:${HADOOP_ROOT}/bin:${HBASE_ROOT}/bin:${HIVE_ROOT}/bin:${ZOOKEEPER_ROOT}/bin
-	export GPHD_ROOT=/singlecluster
+	export GPHD_ROOT=${GPHD_ROOT}
 	export PXF_HOME=${PXF_HOME}
 	export PGPORT=15432
 
@@ -35,7 +40,7 @@ function run_pxf_automation() {
 	make GROUP=${GROUP}
 
 	exit 0
-	EOF
+EOF
 
 	chown gpadmin:gpadmin /home/gpadmin/run_pxf_automation_test.sh
 	chmod a+x /home/gpadmin/run_pxf_automation_test.sh
@@ -53,6 +58,11 @@ function setup_hadoop() {
 }
 
 function _main() {
+	if [[ ${HADOOP_CLIENT} == "MAPR" ]]; then
+		# start mapr services before installing GPDB
+		/root/init-script
+	fi
+
 	# Install GPDB
 	install_gpdb_binary
 	setup_gpadmin_user
@@ -73,8 +83,6 @@ ${GOOGLE_CREDENTIALS}
 EOF
 	elif [[ ${HADOOP_CLIENT} == "MAPR" ]]; then
 		echo Using MAPR
-		# start mapr services
-		/root/init-script
 		# Copy mapr specific jars to $PXF_CONF_DIR/lib
 		mkdir -p ${PXF_CONF_DIR}/lib ${PXF_CONF_DIR}/servers/default
 		HADOOP_COMMON=/opt/mapr/hadoop/hadoop-2.7.0/share/hadoop/common
@@ -83,6 +91,8 @@ EOF
 		cp ${HADOOP_COMMON}/hadoop-common-2.7.0-mapr-1707.jar ${PXF_CONF_DIR}/lib/
 		# Copy *-site.xml files
 		cp /opt/mapr/hadoop/hadoop-2.7.0/etc/hadoop/*-site.xml ${PXF_CONF_DIR}/servers/default/
+		# Copy mapred-site.xml for recursive hdfs directories test
+		cp ${PXF_CONF_DIR}/templates/mapred-site.xml ${PXF_CONF_DIR}/servers/default/recursive-site.xml
 		chown -R gpadmin:gpadmin ${PXF_CONF_DIR}
 		# Set mapr port to 7222 in default.xml (sut)
 		pushd pxf_src/automation
@@ -90,7 +100,7 @@ EOF
 		popd
 	elif [[ -z "${PROTOCOL}" ]]; then
 		# Setup Hadoop before creating GPDB cluster to use system python for yum install
-		setup_hadoop /singlecluster
+		setup_hadoop ${GPHD_ROOT}
 	fi
 	create_gpdb_cluster
 	add_remote_user_access_for_gpdb "testuser"
