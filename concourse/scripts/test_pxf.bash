@@ -81,7 +81,7 @@ function _main() {
 		cat << EOF > /tmp/gsc-ci-service-account.key.json
 ${GOOGLE_CREDENTIALS}
 EOF
-	elif [[ -z "${PROTOCOL}" ]] && [[ ${HADOOP_CLIENT} -ne MAPR ]]; then
+	elif [[ -z "${PROTOCOL}" ]] && [[ ! ${HADOOP_CLIENT} == MAPR ]]; then
 		# Setup Hadoop before creating GPDB cluster to use system python for yum install
 		setup_hadoop ${GPHD_ROOT}
 	fi
@@ -115,7 +115,7 @@ EOF
 	mkdir -p /tmp/fatjar ${PXF_HOME}/tmp/
 	pushd /tmp/fatjar
 		find ${PXF_CONF_DIR}/lib/ -name *.jar -exec jar -xf {} \;
-		jar -cf pxf-extras-1.0.0.jar *
+		jar -cf pxf-extras-1.0.0.jar .
 		cp pxf-extras-1.0.0.jar ${PXF_HOME}/lib/
 		chown -R gpadmin:gpadmin ${PXF_HOME}/lib/pxf-extras-1.0.0.jar
 	popd
