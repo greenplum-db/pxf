@@ -114,11 +114,7 @@ EOF
 	# Create fat jar for automation
 	mkdir -p /tmp/fatjar ${PXF_HOME}/tmp/
 	pushd /tmp/fatjar
-		if [[ ! -z "$(ls -A ${PXF_CONF_DIR}/lib/*.jar)" ]]; then
-			for filename in ${PXF_CONF_DIR}/lib/*.jar; do
-				jar -xf ${filename}
-			done
-		fi
+		find ${PXF_CONF_DIR}/lib/ -name *.jar -exec jar -xf {} \;
 		jar -cf pxf-extras-1.0.0.jar *
 		cp pxf-extras-1.0.0.jar ${PXF_HOME}/lib/
 		chown -R gpadmin:gpadmin ${PXF_HOME}/lib/pxf-extras-1.0.0.jar
