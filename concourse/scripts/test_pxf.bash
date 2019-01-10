@@ -12,7 +12,7 @@ export JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8
 
 function run_pxf_automation() {
 	# Let's make sure that automation/singlecluster directories are writeable
-	chmod a+w pxf_src/automation /singlecluster
+	chmod a+w pxf_src/automation /singlecluster || true
 	find pxf_src/automation/tinc* -type d -exec chmod a+w {} \;
 
 	ln -s ${PWD}/pxf_src /home/gpadmin/pxf_src
@@ -68,29 +68,29 @@ function _main() {
 		setup_minio
 	elif [[ ${PROTOCOL} == "gs" ]]; then
 		echo Using GS protocol
-		cat << EOF > /tmp/gsc-ci-service-account.key.json
-${GOOGLE_CREDENTIALS}
-EOF
+		echo ${GOOGLE_CREDENTIALS} > /tmp/gsc-ci-service-account.key.json
 	elif [[ ${HADOOP_CLIENT} == "MAPR" ]]; then
 		echo Using MAPR
 		# start mapr services
-		sudo /root/init-script
-		# Copy mapr specific jars to $PXF_CONF/lib
-		mkdir -p ${PXF_CONF_DIR}/lib
-		cp /opt/mapr/hadoop/hadoop-2.7.0/share/hadoop/common/lib/maprfs-5.2.2-mapr.jar ${PXF_CONF_DIR}/lib/
-		cp /opt/mapr/hadoop/hadoop-2.7.0/share/hadoop/common/lib/hadoop-auth-2.7.0-mapr-1707.jar ${PXF_CONF_DIR}/lib/
-		cp /opt/mapr/hadoop/hadoop-2.7.0/share/hadoop/common/hadoop-common-2.7.0-mapr-1707.jar ${PXF_CONF_DIR}/lib/
+		/root/init-script
+		# Copy mapr specific jars to $PXF_CONF_DIR/lib
+		mkdir -p ${PXF_CONF_DIR}/lib ${PXF_CONF_DIR}/servers/default
+		HADOOP_COMMON=/opt/mapr/hadoop/hadoop-2.7.0/share/hadoop/common
+		cp ${HADOOP_COMMON}/lib/maprfs-5.2.2-mapr.jar ${PXF_CONF_DIR}/lib/
+		cp ${HADOOP_COMMON}/lib/hadoop-auth-2.7.0-mapr-1707.jar ${PXF_CONF_DIR}/lib/
+		cp ${HADOOP_COMMON}/hadoop-common-2.7.0-mapr-1707.jar ${PXF_CONF_DIR}/lib/
 		# Create fat jar for automation
-		mkdir -p /tmp/fatjar
+		mkdir -p /tmp/fatjar ${PXF_HOME}/tmp/
 		pushd /tmp/fatjar
 		    jar -xf ${PXF_CONF_DIR}/lib/maprfs-5.2.2-mapr.jar
 		    jar -xf ${PXF_CONF_DIR}/lib/hadoop-auth-2.7.0-mapr-1707.jar
 		    jar -xf ${PXF_CONF_DIR}/lib/hadoop-common-2.7.0-mapr-1707.jar
 		    jar -cf pxf-extras.jar *
-		    cp pxf-extras.jar
+		    cp pxf-extras.jar ${PXF_HOME}/tmp/
 		popd
 		# Copy *-site.xml files
-		cp /opt/mapr/hadoop/hadoop-2.7.0/etc/hadoop/*-site.xml ${PXF_CONF}/servers/default/
+		cp /opt/mapr/hadoop/hadoop-2.7.0/etc/hadoop/*-site.xml ${PXF_CONF_DIR}/servers/default/
+		chown -R gpadmin:gpadmin ${PXF_HOME}/tmp/ ${PXF_CONF_DIR}
 		# Set mapr port to 7222 in default.xml (sut)
 		pushd pxf_src/automation
 			sed -i 's|<port>8020</port>|<port>7222</port>|' src/test/resources/sut/default.xml
