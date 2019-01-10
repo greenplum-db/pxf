@@ -68,7 +68,9 @@ function _main() {
 		setup_minio
 	elif [[ ${PROTOCOL} == "gs" ]]; then
 		echo Using GS protocol
-		echo ${GOOGLE_CREDENTIALS} > /tmp/gsc-ci-service-account.key.json
+		cat << EOF > /tmp/gsc-ci-service-account.key.json
+${GOOGLE_CREDENTIALS}
+EOF
 	elif [[ ${HADOOP_CLIENT} == "MAPR" ]]; then
 		echo Using MAPR
 		# start mapr services
@@ -79,15 +81,6 @@ function _main() {
 		cp ${HADOOP_COMMON}/lib/maprfs-5.2.2-mapr.jar ${PXF_CONF_DIR}/lib/
 		cp ${HADOOP_COMMON}/lib/hadoop-auth-2.7.0-mapr-1707.jar ${PXF_CONF_DIR}/lib/
 		cp ${HADOOP_COMMON}/hadoop-common-2.7.0-mapr-1707.jar ${PXF_CONF_DIR}/lib/
-		# Create fat jar for automation
-		mkdir -p /tmp/fatjar ${PXF_HOME}/tmp/
-		pushd /tmp/fatjar
-		    jar -xf ${PXF_CONF_DIR}/lib/maprfs-5.2.2-mapr.jar
-		    jar -xf ${PXF_CONF_DIR}/lib/hadoop-auth-2.7.0-mapr-1707.jar
-		    jar -xf ${PXF_CONF_DIR}/lib/hadoop-common-2.7.0-mapr-1707.jar
-		    jar -cf pxf-extras.jar *
-		    cp pxf-extras.jar ${PXF_HOME}/tmp/
-		popd
 		# Copy *-site.xml files
 		cp /opt/mapr/hadoop/hadoop-2.7.0/etc/hadoop/*-site.xml ${PXF_CONF_DIR}/servers/default/
 		chown -R gpadmin:gpadmin ${PXF_HOME}/tmp/ ${PXF_CONF_DIR}
@@ -99,6 +92,16 @@ function _main() {
 		# Setup Hadoop before creating GPDB cluster to use system python for yum install
 		setup_hadoop /singlecluster
 	fi
+
+	# Create fat jar for automation
+	mkdir -p /tmp/fatjar ${PXF_HOME}/tmp/
+	pushd /tmp/fatjar
+		for filename in ${PXF_CONF_DIR}/lib/*.jar; do
+			jar -xf filename
+		done
+		jar -cf pxf-extras-1.0.0.jar *
+		cp pxf-extras-1.0.0.jar ${PXF_HOME}/tmp/
+	popd
 
 	create_gpdb_cluster
 	add_remote_user_access_for_gpdb "testuser"
