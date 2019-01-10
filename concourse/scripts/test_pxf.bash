@@ -83,7 +83,7 @@ EOF
 		cp ${HADOOP_COMMON}/hadoop-common-2.7.0-mapr-1707.jar ${PXF_CONF_DIR}/lib/
 		# Copy *-site.xml files
 		cp /opt/mapr/hadoop/hadoop-2.7.0/etc/hadoop/*-site.xml ${PXF_CONF_DIR}/servers/default/
-		chown -R gpadmin:gpadmin ${PXF_HOME}/tmp/ ${PXF_CONF_DIR}
+		chown -R gpadmin:gpadmin ${PXF_CONF_DIR}
 		# Set mapr port to 7222 in default.xml (sut)
 		pushd pxf_src/automation
 			sed -i 's|<port>8020</port>|<port>7222</port>|' src/test/resources/sut/default.xml
@@ -92,17 +92,6 @@ EOF
 		# Setup Hadoop before creating GPDB cluster to use system python for yum install
 		setup_hadoop /singlecluster
 	fi
-
-	# Create fat jar for automation
-	mkdir -p /tmp/fatjar ${PXF_HOME}/tmp/
-	pushd /tmp/fatjar
-		for filename in ${PXF_CONF_DIR}/lib/*.jar; do
-			jar -xf filename
-		done
-		jar -cf pxf-extras-1.0.0.jar *
-		cp pxf-extras-1.0.0.jar ${PXF_HOME}/tmp/
-	popd
-
 	create_gpdb_cluster
 	add_remote_user_access_for_gpdb "testuser"
 	init_and_configure_pxf_server
@@ -111,6 +100,17 @@ EOF
 		configure_pxf_s3_server
 	fi
 	start_pxf_server
+
+	# Create fat jar for automation
+	mkdir -p /tmp/fatjar ${PXF_HOME}/tmp/
+	pushd /tmp/fatjar
+		for filename in ${PXF_CONF_DIR}/lib/*.jar; do
+			jar -xf ${filename}
+		done
+		jar -cf pxf-extras-1.0.0.jar *
+		cp pxf-extras-1.0.0.jar ${PXF_HOME}/lib/
+		chown -R gpadmin:gpadmin ${PXF_HOME}/lib/pxf-extras-1.0.0.jar
+	popd
 
 	if [[ ${ACCEPTANCE} == "true" ]]; then
 		echo Acceptance test pipeline

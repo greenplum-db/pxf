@@ -55,7 +55,8 @@ MVN=mvn
 all: test
 
 symlink_pxf_jars:
-	@if [ -d $(PXF_HOME)/lib && ! -f $(PXF_HOME)/tmp/pxf-api.jar ]; then \
+	@if [ -d "$(PXF_HOME)/lib" ]; then \
+		rm -rf $(PXF_HOME)/tmp && \
 		mkdir -p $(PXF_HOME)/tmp && \
 		cd $(PXF_HOME)/tmp && \
 		for X in $(PXF_HOME)/lib/pxf-*-[0-9]*.jar; do \
