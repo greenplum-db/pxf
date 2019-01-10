@@ -81,22 +81,7 @@ function _main() {
 		cat << EOF > /tmp/gsc-ci-service-account.key.json
 ${GOOGLE_CREDENTIALS}
 EOF
-	elif [[ ${HADOOP_CLIENT} == MAPR ]]; then
-		echo Using MAPR
-		# Copy mapr specific jars to $PXF_CONF_DIR/lib
-		mkdir -p ${PXF_CONF_DIR}/lib ${PXF_CONF_DIR}/servers/default
-		HADOOP_COMMON=/opt/mapr/hadoop/hadoop-2.7.0/share/hadoop/common
-		cp ${HADOOP_COMMON}/lib/maprfs-5.2.2-mapr.jar ${PXF_CONF_DIR}/lib/
-		cp ${HADOOP_COMMON}/lib/hadoop-auth-2.7.0-mapr-1707.jar ${PXF_CONF_DIR}/lib/
-		cp ${HADOOP_COMMON}/hadoop-common-2.7.0-mapr-1707.jar ${PXF_CONF_DIR}/lib/
-		# Copy *-site.xml files
-		cp /opt/mapr/hadoop/hadoop-2.7.0/etc/hadoop/*-site.xml ${PXF_CONF_DIR}/servers/default/
-		chown -R gpadmin:gpadmin ${PXF_CONF_DIR}
-		# Set mapr port to 7222 in default.xml (sut)
-		pushd pxf_src/automation
-			sed -i 's|<port>8020</port>|<port>7222</port>|' src/test/resources/sut/default.xml
-		popd
-	elif [[ -z "${PROTOCOL}" ]]; then
+	elif [[ -z "${PROTOCOL}" ]] && [[ ${HADOOP_CLIENT} -ne MAPR ]]; then
 		# Setup Hadoop before creating GPDB cluster to use system python for yum install
 		setup_hadoop ${GPHD_ROOT}
 	fi
@@ -106,8 +91,20 @@ EOF
 	init_and_configure_pxf_server
 
 	if [[ ${HADOOP_CLIENT} == MAPR ]]; then
+		# Copy mapr specific jars to $PXF_CONF_DIR/lib
+		HADOOP_COMMON=/opt/mapr/hadoop/hadoop-2.7.0/share/hadoop/common
+		cp ${HADOOP_COMMON}/lib/maprfs-5.2.2-mapr.jar ${PXF_CONF_DIR}/lib/
+		cp ${HADOOP_COMMON}/lib/hadoop-auth-2.7.0-mapr-1707.jar ${PXF_CONF_DIR}/lib/
+		cp ${HADOOP_COMMON}/hadoop-common-2.7.0-mapr-1707.jar ${PXF_CONF_DIR}/lib/
+		# Copy *-site.xml files
+		cp /opt/mapr/hadoop/hadoop-2.7.0/etc/hadoop/*-site.xml ${PXF_CONF_DIR}/servers/default/
 		# Copy mapred-site.xml for recursive hdfs directories test
+		# We need to do this step after PXF Server init
 		cp ${PXF_CONF_DIR}/templates/mapred-site.xml ${PXF_CONF_DIR}/servers/default/recursive-site.xml
+		# Set mapr port to 7222 in default.xml (sut)
+		pushd pxf_src/automation
+			sed -i 's|<port>8020</port>|<port>7222</port>|' src/test/resources/sut/default.xml
+		popd
 	elif [[ -z "${PROTOCOL}" ]]; then
 		configure_pxf_default_server
 		configure_pxf_s3_server
@@ -117,9 +114,11 @@ EOF
 	# Create fat jar for automation
 	mkdir -p /tmp/fatjar ${PXF_HOME}/tmp/
 	pushd /tmp/fatjar
-		for filename in ${PXF_CONF_DIR}/lib/*.jar; do
-			jar -xf ${filename}
-		done
+		if [[ ! -z "$(ls -A ${PXF_CONF_DIR}/lib/*.jar)" ]]; then
+			for filename in ${PXF_CONF_DIR}/lib/*.jar; do
+				jar -xf ${filename}
+			done
+		fi
 		jar -cf pxf-extras-1.0.0.jar *
 		cp pxf-extras-1.0.0.jar ${PXF_HOME}/lib/
 		chown -R gpadmin:gpadmin ${PXF_HOME}/lib/pxf-extras-1.0.0.jar
