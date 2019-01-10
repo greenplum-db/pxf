@@ -76,6 +76,7 @@ EOF
 		# start mapr services
 		sudo /root/init-script
 		# Copy mapr specific jars to $PXF_CONF/lib
+		mkdir -p ${PXF_CONF_DIR}/lib
 		cp /opt/mapr/hadoop/hadoop-2.7.0/share/hadoop/common/lib/maprfs-5.2.2-mapr.jar ${PXF_CONF_DIR}/lib/
 		cp /opt/mapr/hadoop/hadoop-2.7.0/share/hadoop/common/lib/hadoop-auth-2.7.0-mapr-1707.jar ${PXF_CONF_DIR}/lib/
 		cp /opt/mapr/hadoop/hadoop-2.7.0/share/hadoop/common/hadoop-common-2.7.0-mapr-1707.jar ${PXF_CONF_DIR}/lib/

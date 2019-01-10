@@ -380,6 +380,7 @@ jobs:
       trigger: true
     - get: gpdb-pxf-dev-centos6-mapr-image
   - task: test_pxf
+    privileged: true
     file: pxf_src/concourse/tasks/test_pxf.yml
     image: gpdb-pxf-dev-centos6-mapr-image
     params:
@@ -879,6 +880,8 @@ jobs:
     passed:
     - test_pxf_hdp_centos6
     - test_pxf_cdh_centos6
+    - test_pxf_mapr_centos6
+    - test_pxf_hdp_ubuntu16
     - test_pxf_adl
     - test_pxf_gs
     - test_pxf_minio
@@ -901,6 +904,7 @@ jobs:
     passed:
     - test_pxf_hdp_centos6
     - test_pxf_cdh_centos6
+    - test_pxf_mapr_centos6
     - test_pxf_hdp_ubuntu16
     - test_pxf_adl
     - test_pxf_gs
