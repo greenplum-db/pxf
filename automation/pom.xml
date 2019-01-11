@@ -99,6 +99,8 @@
             <version>LATEST</version>
         </dependency>
 
+        <!-- Introduced for MapR dependencies that need to be classloaded
+             before hadoop-common and hadoop-auth. -->
         <dependency>
             <groupId>org.greenplum</groupId>
             <artifactId>pxf-extras</artifactId>
