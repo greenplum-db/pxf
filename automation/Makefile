@@ -62,9 +62,7 @@ symlink_pxf_jars:
 		for X in $(PXF_HOME)/lib/pxf-*-[0-9]*.jar; do \
 			ln -sf $$X `echo \`basename $$X\` | sed -e 's/-[a-zA-Z0-9.]*.jar/.jar/'`; \
 		done; \
-		if [ ! -f "$(PXF_HOME)/tmp/pxf-extras.jar" ]; then \
-			touch $(PXF_HOME)/tmp/pxf-extras.jar; \
-		fi \
+		touch $(PXF_HOME)/tmp/pxf-extras.jar; \
 	fi
 
 test: symlink_pxf_jars sync_cloud_configs
