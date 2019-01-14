@@ -181,6 +181,8 @@ project('pxf-hdfs') {
         compile "org.apache.parquet:parquet-hadoop:${parquetVersion}"
 
         bundleJars "org.apache.avro:avro:1.7.7"
+        // Dependency in hadoop 2.9.2
+        bundleJars "com.fasterxml.woodstox:woodstox-core:5.0.3"
     }
 }
 
