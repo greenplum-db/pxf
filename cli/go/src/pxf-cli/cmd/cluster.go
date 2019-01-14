@@ -54,8 +54,7 @@ var (
 		Use:   "sync",
 		Short: "Sync PXF configs from master to all segment hosts",
 		Run: func(cmd *cobra.Command, args []string) {
-			doSetup()
-			err := clusterRun(pxf.Sync)
+			err := doBatchedSetupAndClusterRun(5, pxf.Sync)
 			exitWithReturnCode(err)
 		},
 	}
@@ -154,6 +153,48 @@ func doSetup() {
 		gplog.Error(err.Error())
 		os.Exit(1)
 	}
+}
+
+func doBatchedSetupAndClusterRun(batchSize int, cmd pxf.Command) error {
+	connectionPool = dbconn.NewDBConnFromEnvironment("postgres")
+	err := connectionPool.Connect(1)
+	if err != nil {
+		gplog.Error(fmt.Sprintf("ERROR: Could not connect to GPDB.\n%s\n"+
+			"Please make sure that your Greenplum database is running and you are on the master node.", err.Error()))
+		os.Exit(1)
+	}
+	segConfigs := cluster.MustGetSegmentConfiguration(connectionPool)
+	batchOfSegs := make([]cluster.SegConfig, 0)
+	uniqueHostSegConfigs := make(map[string]cluster.SegConfig, 0)
+	for _, segConfig := range segConfigs {
+		if segConfig.ContentID == -1 {
+			continue
+		}
+		uniqueHostSegConfigs[segConfig.Hostname] = segConfig
+	}
+	i := 0
+	if len(uniqueHostSegConfigs) > batchSize {
+		gplog.Info("Running your command in batches")
+	}
+	var listOfSegs strings.Builder
+	for _, segConfig := range uniqueHostSegConfigs {
+		batchOfSegs = append(batchOfSegs, segConfig)
+		listOfSegs.WriteString(segConfig.Hostname + ", ")
+		if len(batchOfSegs) == batchSize || i == len(uniqueHostSegConfigs)-1 {
+			globalCluster = cluster.NewCluster(batchOfSegs)
+			segHostList, err = GenerateHostList(globalCluster)
+			if err != nil {
+				gplog.Error(err.Error())
+				os.Exit(1)
+			}
+			gplog.Info(fmt.Sprintf("Running on [%s]", strings.TrimSuffix(listOfSegs.String(), ", ")))
+			err = clusterRun(cmd)
+			batchOfSegs = make([]cluster.SegConfig, 0)
+			listOfSegs.Reset()
+		}
+		i++
+	}
+	return err
 }
 
 func clusterRun(command pxf.Command) error {
