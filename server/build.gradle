@@ -129,7 +129,7 @@ project('pxf') {
         bundleJars "org.apache.hadoop:hadoop-azure-datalake:${hadoopVersion}"
         bundleJars "com.microsoft.azure:azure-data-lake-store-sdk:2.2.3"
         // GCS jars and dependencies
-        bundleJars "com.google.cloud.bigdataoss:gcs-connector:1.9.0-hadoop2:shaded"
+        bundleJars "com.google.cloud.bigdataoss:gcs-connector:1.9.2-hadoop2:shaded"
     }
 }
 
