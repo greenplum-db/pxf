@@ -48,6 +48,7 @@ public class ParquetDataFragmenter extends HdfsDataFragmenter {
         String absoluteDataPath = hcfsType.getDataUri(configuration, context);
         List<InputSplit> splits = getSplits(new Path(absoluteDataPath));
 
+        LOG.info("Total number of fragments = {}", splits.size());
         for (InputSplit split : splits) {
             FileSplit fsp = (FileSplit) split;
 

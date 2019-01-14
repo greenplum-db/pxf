@@ -67,14 +67,15 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
     private static final int DEFAULT_ROWGROUP_SIZE = 8 * 1024 * 1024;
     private static final int DEFAULT_DICTIONARY_PAGE_SIZE = 512 * 1024;
     private static final WriterVersion DEFAULT_PARQUET_VERSION = WriterVersion.PARQUET_1_0;
-    private static final CompressionCodecName DEFAULT_COMPRESSION_CODEC_NAME = CompressionCodecName.UNCOMPRESSED;
+    private static final CompressionCodecName DEFAULT_COMPRESSION_CODEC_NAME = CompressionCodecName.SNAPPY;
+
+    private MessageType schema;
     private ParquetFileReader fileReader;
     private MessageColumnIO columnIO;
     private HcfsType hcfsType;
     private ParquetWriter<Group> parquetWriter;
     private RecordReader<Group> recordReader;
     private long rowsInRowGroup;
-    private MessageType schema;
     private long rowGroupsReadCount;
 
     @Override
