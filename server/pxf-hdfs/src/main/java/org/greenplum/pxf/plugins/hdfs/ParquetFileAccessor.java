@@ -21,7 +21,6 @@ package org.greenplum.pxf.plugins.hdfs;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.parquet.column.ParquetProperties.WriterVersion;
 import org.apache.parquet.column.page.PageReadStore;
@@ -177,23 +176,11 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
         // get compression codec
         if (compressCodec != null) {
             codec = HdfsUtilities.getCodec(configuration, compressCodec);
-            String extension = codec.getDefaultExtension();
-            fileName += extension;
-            switch (compressCodec) {
-                case "lzo":
-                    codecName = CompressionCodecName.LZO;
-                    break;
-                case "snappy":
-                    codecName = CompressionCodecName.SNAPPY;
-                    break;
-                case "gz":
-                    codecName = CompressionCodecName.GZIP;
-                    break;
-                default:
-                    throw new IOException("compression method not support, codec:" + compressCodec);
-            }
+            codecName = CompressionCodecName.fromParquet(codec);
         }
 
+        String extension = codecName.getExtension();
+        fileName += extension;
         LOG.debug("Creating file {}", fileName);
         FileSystem fs = FileSystem.get(URI.create(fileName), configuration);
         Path file = new Path(fileName);
