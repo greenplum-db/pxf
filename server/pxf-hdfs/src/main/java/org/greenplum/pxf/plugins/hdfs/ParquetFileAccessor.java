@@ -66,7 +66,6 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
     private static final int DEFAULT_ROWGROUP_SIZE = 8 * 1024 * 1024;
     private static final int DEFAULT_DICTIONARY_PAGE_SIZE = 512 * 1024;
     private static final WriterVersion DEFAULT_PARQUET_VERSION = WriterVersion.PARQUET_1_0;
-    private static final CompressionCodecName DEFAULT_COMPRESSION_CODEC_NAME = CompressionCodecName.SNAPPY;
 
     private MessageType schema;
     private ParquetFileReader fileReader;
@@ -147,7 +146,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
     }
 
     private CompressionCodecName getCodec(String name) {
-        CompressionCodecName codecName = DEFAULT_COMPRESSION_CODEC_NAME;
+        CompressionCodecName codecName = CompressionCodecName.SNAPPY;
         if (name != null) {
             try {
                 codecName = CompressionCodecName.fromConf(name);
@@ -177,7 +176,9 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
 
     /**
      * Opens the resource for write.
-     *
+     * Uses compression codec based on user input which
+     * defaults to Snappy
+     * 
      * @return true if the resource is successfully opened
      * @throws IOException if opening the resource failed
      */
