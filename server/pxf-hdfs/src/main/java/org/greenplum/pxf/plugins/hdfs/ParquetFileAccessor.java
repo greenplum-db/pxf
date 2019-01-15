@@ -146,6 +146,22 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
         return count;
     }
 
+    private CompressionCodecName getCodec(String name) {
+        CompressionCodecName codecName = DEFAULT_COMPRESSION_CODEC_NAME;
+        if (name != null) {
+            try {
+                codecName = CompressionCodecName.fromConf(name);
+            } catch(IllegalArgumentException ie) {
+                try {
+                    codecName = CompressionCodecName.fromCompressionCodec(Class.forName(name));
+                } catch(ClassNotFoundException ce) {
+                    throw new IllegalArgumentException(String.format("Invalid codec: %s ", name));
+                }
+            }
+        }
+        return codecName;
+    }
+
     /**
      * Closes the resource for read.
      *
@@ -170,18 +186,10 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
 
         String fileName = hcfsType.getDataUri(configuration, context);
         String compressCodec = context.getOption("COMPRESSION_CODEC");
-        CompressionCodecName codecName = DEFAULT_COMPRESSION_CODEC_NAME;
-        CompressionCodec codec;
-
-        // get compression codec
-        if (compressCodec != null) {
-            codec = HdfsUtilities.getCodec(configuration, compressCodec);
-            codecName = CompressionCodecName.fromParquet(codec);
-        }
-
-        String extension = codecName.getExtension();
-        fileName += extension;
+        CompressionCodecName codecName = getCodec(compressCodec);
+        fileName += codecName.getExtension() + ".parquet";
         LOG.debug("Creating file {}", fileName);
+
         FileSystem fs = FileSystem.get(URI.create(fileName), configuration);
         Path file = new Path(fileName);
         if (fs.exists(file)) {
