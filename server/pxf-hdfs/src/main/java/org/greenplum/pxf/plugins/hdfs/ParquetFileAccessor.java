@@ -178,7 +178,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
      * Opens the resource for write.
      * Uses compression codec based on user input which
      * defaults to Snappy
-     * 
+     *
      * @return true if the resource is successfully opened
      * @throws IOException if opening the resource failed
      */
