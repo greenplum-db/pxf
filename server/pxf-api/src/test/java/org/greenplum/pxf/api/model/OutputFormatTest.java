@@ -22,18 +22,18 @@ public class OutputFormatTest {
 
     @Test
     public void testGetTextOutputFormat() {
-        OutputFormat format = OutputFormat.getOutputFormat("org.greenplum.pxf.service.io.Text");
+        OutputFormat format = OutputFormat.getOutputFormat("org.greenplum.pxf.api.io.Text");
         assertEquals(OutputFormat.TEXT, format);
         assertEquals("TEXT", format.name());
-        assertEquals("org.greenplum.pxf.service.io.Text", format.getClassName());
+        assertEquals("org.greenplum.pxf.api.io.Text", format.getClassName());
     }
 
     @Test
     public void testGetGPDBWritableOutputFormat() {
-        OutputFormat format = OutputFormat.getOutputFormat("org.greenplum.pxf.service.io.GPDBWritable");
+        OutputFormat format = OutputFormat.getOutputFormat("org.greenplum.pxf.api.io.GPDBWritable");
         assertEquals(OutputFormat.GPDBWritable, format);
         assertEquals("GPDBWritable", format.name());
-        assertEquals("org.greenplum.pxf.service.io.GPDBWritable", format.getClassName());
+        assertEquals("org.greenplum.pxf.api.io.GPDBWritable", format.getClassName());
     }
 
 }

@@ -20,6 +20,7 @@ package org.greenplum.pxf.api.model;
  */
 
 import org.apache.hadoop.conf.Configuration;
+import org.greenplum.pxf.api.io.GPDBWritable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,6 +55,21 @@ public class BasePlugin implements Plugin {
         this.configuration = configurationFactory.
                 initConfiguration(context.getServerName(), context.getAdditionalConfigProps());
         this.initialized = true;
+    }
+
+    /**
+     * Creates the GPDBWritable object. The object is created one time and is
+     * refilled from recFields for each record sent
+     *
+     * @return empty GPDBWritable object with set columns
+     */
+    GPDBWritable makeGPDBWritableOutput() {
+        int num_actual_fields = context.getColumns();
+        int[] schema = new int[num_actual_fields];
+        for (int i = 0; i < num_actual_fields; i++) {
+            schema[i] = context.getColumn(i).columnTypeCode();
+        }
+        return new GPDBWritable(schema);
     }
 
     /**

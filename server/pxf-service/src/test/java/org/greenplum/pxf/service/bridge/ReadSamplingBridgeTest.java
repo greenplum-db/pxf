@@ -33,7 +33,7 @@ import java.util.BitSet;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.AccessorFactory;
 import org.greenplum.pxf.api.utilities.ResolverFactory;
-import org.greenplum.pxf.service.io.Writable;
+import org.greenplum.pxf.api.io.Writable;
 import org.greenplum.pxf.service.utilities.AnalyzeUtils;
 
 

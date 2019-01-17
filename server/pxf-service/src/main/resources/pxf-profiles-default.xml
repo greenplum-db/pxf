@@ -48,7 +48,7 @@ under the License.
             <accessor>org.greenplum.pxf.plugins.hive.HiveAccessor</accessor>
             <resolver>org.greenplum.pxf.plugins.hive.HiveResolver</resolver>
             <metadata>org.greenplum.pxf.plugins.hive.HiveMetadataFetcher</metadata>
-            <outputFormat>org.greenplum.pxf.service.io.GPDBWritable</outputFormat>
+            <outputFormat>org.greenplum.pxf.api.io.GPDBWritable</outputFormat>
         </plugins>
     </profile>
     <profile>
@@ -64,7 +64,7 @@ under the License.
             <accessor>org.greenplum.pxf.plugins.hive.HiveRCFileAccessor</accessor>
             <resolver>org.greenplum.pxf.plugins.hive.HiveColumnarSerdeResolver</resolver>
             <metadata>org.greenplum.pxf.plugins.hive.HiveMetadataFetcher</metadata>
-            <outputFormat>org.greenplum.pxf.service.io.Text</outputFormat>
+            <outputFormat>org.greenplum.pxf.api.io.Text</outputFormat>
         </plugins>
     </profile>
     <profile>
@@ -79,7 +79,7 @@ under the License.
             <accessor>org.greenplum.pxf.plugins.hive.HiveLineBreakAccessor</accessor>
             <resolver>org.greenplum.pxf.plugins.hive.HiveStringPassResolver</resolver>
             <metadata>org.greenplum.pxf.plugins.hive.HiveMetadataFetcher</metadata>
-            <outputFormat>org.greenplum.pxf.service.io.Text</outputFormat>
+            <outputFormat>org.greenplum.pxf.api.io.Text</outputFormat>
         </plugins>
     </profile>
     <profile>
@@ -94,7 +94,7 @@ under the License.
             <accessor>org.greenplum.pxf.plugins.hive.HiveORCAccessor</accessor>
             <resolver>org.greenplum.pxf.plugins.hive.HiveORCSerdeResolver</resolver>
             <metadata>org.greenplum.pxf.plugins.hive.HiveMetadataFetcher</metadata>
-            <outputFormat>org.greenplum.pxf.service.io.GPDBWritable</outputFormat>
+            <outputFormat>org.greenplum.pxf.api.io.GPDBWritable</outputFormat>
         </plugins>
     </profile>
     <profile>
@@ -107,7 +107,7 @@ under the License.
             <accessor>org.greenplum.pxf.plugins.hive.HiveORCVectorizedAccessor</accessor>
             <resolver>org.greenplum.pxf.plugins.hive.HiveORCVectorizedResolver</resolver>
             <metadata>org.greenplum.pxf.plugins.hive.HiveMetadataFetcher</metadata>
-            <outputFormat>org.greenplum.pxf.service.io.GPDBWritable</outputFormat>
+            <outputFormat>org.greenplum.pxf.api.io.GPDBWritable</outputFormat>
         </plugins>
     </profile>
     <profile>

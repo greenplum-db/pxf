@@ -1,4 +1,4 @@
-package org.greenplum.pxf.service.io;
+package org.greenplum.pxf.api.io;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -20,7 +20,6 @@ package org.greenplum.pxf.service.io;
  */
 
 
-import org.greenplum.pxf.api.io.DataType;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 

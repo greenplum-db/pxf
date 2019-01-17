@@ -27,9 +27,9 @@ import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.Utilities;
-import org.greenplum.pxf.service.io.BufferWritable;
-import org.greenplum.pxf.service.io.GPDBWritable;
-import org.greenplum.pxf.service.io.Writable;
+import org.greenplum.pxf.api.io.BufferWritable;
+import org.greenplum.pxf.api.io.GPDBWritable;
+import org.greenplum.pxf.api.io.Writable;
 import org.junit.Test;
 
 import java.io.DataOutput;

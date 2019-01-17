@@ -21,11 +21,11 @@ package org.greenplum.pxf.service.bridge;
 
 import org.greenplum.pxf.api.BadRecordException;
 import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.io.Writable;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.AccessorFactory;
 import org.greenplum.pxf.api.utilities.ResolverFactory;
 import org.greenplum.pxf.service.BridgeOutputBuilder;
-import org.greenplum.pxf.service.io.Writable;
 
 import java.io.CharConversionException;
 import java.io.DataInputStream;

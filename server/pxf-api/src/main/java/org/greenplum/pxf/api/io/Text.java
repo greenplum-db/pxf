@@ -1,4 +1,4 @@
-package org.greenplum.pxf.service.io;
+package org.greenplum.pxf.api.io;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one

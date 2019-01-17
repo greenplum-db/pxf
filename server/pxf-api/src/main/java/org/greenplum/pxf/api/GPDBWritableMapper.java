@@ -1,4 +1,4 @@
-package org.greenplum.pxf.service;
+package org.greenplum.pxf.api;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -20,9 +20,8 @@ package org.greenplum.pxf.service;
  */
 
 
-import org.greenplum.pxf.api.UnsupportedTypeException;
 import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.service.io.GPDBWritable;
+import org.greenplum.pxf.api.io.GPDBWritable;
 
 /*
  * Class for mapping GPDBWritable get functions to java types.
@@ -77,7 +76,7 @@ public class GPDBWritableMapper {
     }
 
     private interface DataGetter {
-        abstract Object getData(int colIdx) throws GPDBWritable.TypeMismatchException;
+        Object getData(int colIdx) throws GPDBWritable.TypeMismatchException;
     }
 
     private class BooleanDataGetter implements DataGetter {

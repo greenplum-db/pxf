@@ -32,7 +32,7 @@ under the License.
             <accessor>org.greenplum.pxf.plugins.hive.HiveAccessor</accessor>
             <resolver>org.greenplum.pxf.plugins.hive.HiveResolver</resolver>
             <metadata>org.greenplum.pxf.plugins.hive.HiveMetadataFetcher</metadata>
-            <outputFormat>org.greenplum.pxf.service.io.GPDBWritable</outputFormat>
+            <outputFormat>org.greenplum.pxf.api.io.GPDBWritable</outputFormat>
         </plugins>
     </profile>
     <profile>
