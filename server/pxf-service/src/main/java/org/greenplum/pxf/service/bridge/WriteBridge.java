@@ -23,6 +23,7 @@ package org.greenplum.pxf.service.bridge;
 import org.greenplum.pxf.api.BadRecordException;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.io.GPDBWritable;
 import org.greenplum.pxf.api.io.Writable;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.AccessorFactory;
@@ -44,7 +45,7 @@ public class WriteBridge extends BaseBridge {
     /*
      * C'tor - set the implementation of the bridge
      */
-    public WriteBridge(RequestContext context) {
+    WriteBridge(RequestContext context) {
         super(context);
         inputBuilder = new BridgeInputBuilder(context);
     }
@@ -66,12 +67,19 @@ public class WriteBridge extends BaseBridge {
     @Override
     public boolean setNext(DataInputStream inputStream) throws Exception {
 
-        List<OneField> record = inputBuilder.makeInput(inputStream);
-        if (record == null) {
-            return false;
+        OneRow onerow = null;
+        if (resolver.supportsWritable()) {
+            GPDBWritable gpdbWritable = inputBuilder.makeGBDBWritable(inputStream);
+            if (gpdbWritable != null) {
+                onerow = resolver.setWritable(gpdbWritable);
+            }
         }
-
-        OneRow onerow = resolver.setFields(record);
+        else {
+            List<OneField> record = inputBuilder.makeInput(inputStream);
+            if (record != null) {
+                onerow = resolver.setFields(record);
+            }
+        }
         if (onerow == null) {
             return false;
         }

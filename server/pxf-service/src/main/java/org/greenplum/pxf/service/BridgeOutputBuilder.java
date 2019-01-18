@@ -127,9 +127,14 @@ public class BridgeOutputBuilder {
         }
 
         outputList.clear();
-
         fillOutputRecord(recFields);
+        return outputList;
+    }
 
+    public LinkedList<Writable> makeOutput(Writable writable) {
+
+        outputList.clear();
+        outputList.add(writable);
         return outputList;
     }
 

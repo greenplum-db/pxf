@@ -22,6 +22,7 @@ package org.greenplum.pxf.api.model;
 
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.io.Writable;
 
 import java.util.List;
 
@@ -33,6 +34,7 @@ import java.util.List;
  * This interface is implemented by all serialization methods (e.g, Writable, Avro, ...).
  */
 public interface Resolver extends Plugin {
+
     /**
      * Gets the {@link OneField} list of one row.
      *
@@ -41,6 +43,32 @@ public interface Resolver extends Plugin {
      * @throws Exception if decomposing the row into fields failed
      */
     List<OneField> getFields(OneRow row) throws Exception;
+
+    /**
+     * Gets the {@link Writable} of one row.
+     *
+     * @param row the row to get the writable from
+     * @return the {@link Writable} of one row.
+     * @throws Exception if decomposing the row into writable failed
+     */
+    default Writable getWritable(OneRow row) throws Exception {
+        return null;
+    }
+
+    default boolean supportsWritable() {
+        return false;
+    }
+
+    /**
+     * Constructs and sets the fields of a {@link OneRow}.
+     *
+     * @param writable of {@link Writable}
+     * @return the constructed {@link OneRow}
+     * @throws Exception if constructing a row from the writable failed
+     */
+    default OneRow setWritable(Writable writable) throws Exception {
+        return null;
+    }
 
     /**
      * Constructs and sets the fields of a {@link OneRow}.

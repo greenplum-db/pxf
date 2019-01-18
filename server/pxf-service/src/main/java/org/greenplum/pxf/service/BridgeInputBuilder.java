@@ -43,6 +43,16 @@ public class BridgeInputBuilder {
         this.protocolData = protocolData;
     }
 
+    public GPDBWritable makeGBDBWritable(DataInput inputStream) throws Exception {
+        GPDBWritable gpdbWritable = new GPDBWritable();
+        gpdbWritable.readFields(inputStream);
+        if (gpdbWritable.isEmpty()) {
+            LOG.debug("Reached end of stream");
+            return null;
+        }
+        return gpdbWritable;
+    }
+
     public List<OneField> makeInput(DataInput inputStream) throws Exception {
         if (protocolData.getOutputFormat() == OutputFormat.TEXT) {
             Text txt = new Text();
@@ -50,13 +60,9 @@ public class BridgeInputBuilder {
             return Collections.singletonList(new OneField(DataType.BYTEA.getOID(), txt.getBytes()));
         }
 
-        GPDBWritable gpdbWritable = new GPDBWritable();
-        gpdbWritable.readFields(inputStream);
-
-        if (gpdbWritable.isEmpty()) {
-            LOG.debug("Reached end of stream");
+        GPDBWritable gpdbWritable = makeGBDBWritable(inputStream);
+        if (gpdbWritable == null)
             return null;
-        }
 
         GPDBWritableMapper mapper = new GPDBWritableMapper(gpdbWritable);
         int[] colTypes = gpdbWritable.getColType();

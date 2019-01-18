@@ -45,7 +45,7 @@ import java.util.List;
 public class HdfsDataFragmenter extends BaseFragmenter {
 
     protected JobConf jobConf;
-    protected HcfsType hcfsType;
+    private HcfsType hcfsType;
 
     @Override
     public void initialize(RequestContext context) {
@@ -67,6 +67,7 @@ public class HdfsDataFragmenter extends BaseFragmenter {
         Path path = new Path(hcfsType.getDataUri(configuration, context));
         List<InputSplit> splits = getSplits(path);
 
+        LOG.debug("Total number of fragments = {}", splits.size());
         for (InputSplit split : splits) {
             FileSplit fsp = (FileSplit) split;
 
@@ -105,7 +106,7 @@ public class HdfsDataFragmenter extends BaseFragmenter {
         PxfInputFormat fformat = new PxfInputFormat();
         PxfInputFormat.setInputPaths(jobConf, path);
         InputSplit[] splits = fformat.getSplits(jobConf, 1);
-        ArrayList<InputSplit> result = new ArrayList<InputSplit>();
+        ArrayList<InputSplit> result = new ArrayList<>();
 
         /*
          * HD-2547: If the file is empty, an empty split is returned: no

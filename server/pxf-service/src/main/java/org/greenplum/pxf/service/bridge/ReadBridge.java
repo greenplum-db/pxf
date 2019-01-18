@@ -55,7 +55,7 @@ public class ReadBridge extends BaseBridge {
      *
      * @param context input containing accessor and resolver names
      */
-    public ReadBridge(RequestContext context) {
+    ReadBridge(RequestContext context) {
         this(context, AccessorFactory.getInstance(), ResolverFactory.getInstance());
     }
 
@@ -73,7 +73,9 @@ public class ReadBridge extends BaseBridge {
     }
 
     protected Deque<Writable> makeOutput(OneRow oneRow) throws Exception {
-        return outputBuilder.makeOutput(resolver.getFields(oneRow));
+        return resolver.supportsWritable() ?
+                outputBuilder.makeOutput(resolver.getWritable(oneRow)) :
+                outputBuilder.makeOutput(resolver.getFields(oneRow));
     }
 
     /**
@@ -82,7 +84,7 @@ public class ReadBridge extends BaseBridge {
      */
     @Override
     public Writable getNext() throws Exception {
-        Writable output = null;
+        Writable output;
         OneRow onerow = null;
 
         if (!outputQueue.isEmpty()) {
@@ -90,7 +92,7 @@ public class ReadBridge extends BaseBridge {
         }
 
         try {
-            while (outputQueue.isEmpty()) {
+            while (true) {
                 onerow = accessor.readNextObject();
                 if (onerow == null) {
                     output = outputBuilder.getPartialLine();
@@ -126,8 +128,6 @@ public class ReadBridge extends BaseBridge {
                 LOG.debug(ex.toString() + ": " + row_info);
             }
             output = outputBuilder.getErrorOutput(ex);
-        } catch (Exception ex) {
-            throw ex;
         }
 
         return output;
@@ -156,7 +156,7 @@ public class ReadBridge extends BaseBridge {
      * analyzing the exception type, and when we discover that the actual
      * problem was a data problem, we return the errorOutput GPDBWritable.
      */
-    protected boolean isDataException(IOException ex) {
+    private boolean isDataException(IOException ex) {
         return (ex instanceof EOFException
                 || ex instanceof CharacterCodingException
                 || ex instanceof CharConversionException
