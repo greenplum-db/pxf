@@ -477,6 +477,14 @@ EOF
 		<name>fs.s3a.fast.upload</name>
 		<value>true</value>
 	</property>
+	<property>
+		<name>fs.s3a.fast.upload.buffer</name>
+		<value>bytebuffer</value>
+	</property>
+	<property>
+		<name>fs.s3a.multipart.size</name>
+		<value>32M</value>
+	</property>
 </configuration>
 EOF
 
