@@ -17,10 +17,6 @@
  * under the License.
  */
 
-plugins {
-    id 'de.undercouch.download' version '3.4.3'
-}
-
 wrapper {
     gradleVersion = '4.10.3'
 }
@@ -269,43 +265,14 @@ project('pxf-service') {
     }
 }
 
-//tomcat
-def tomcatName = "apache-tomcat-" + "${tomcatVersion}"
-def tomcatTargetDir = "tomcat/build"
-
-task tomcatGet {
-    doLast {
-        def tomcatTar = "${tomcatName}" + ".tar.gz"
-        def tomcatUrl = "http://archive.apache.org/dist/tomcat/tomcat-7/v" + "${tomcatVersion}/bin/${tomcatTar}"
-
-        if (file("${tomcatTargetDir}/${tomcatName}").exists()) {
-            println "${tomcatName} already exists, nothing to do"
-            return 0
-        }
-
-        println "Downloading Tomcat from ${tomcatUrl}..."
-        // download tarball
-        download {
-            src tomcatUrl
-            dest "${tomcatTargetDir}/${tomcatTar}"
-        }
-        // extract tarball
-        println "Extracting Tomcat into ${tomcatTargetDir}..."
-        copy {
-            from tarTree(resources.gzip("${tomcatTargetDir}/${tomcatTar}"))
-            into tomcatTargetDir
-        }
-    }
-}
-
-task bundle(type: Copy, dependsOn: [subprojects.jar, project(':pxf-service').war, subprojects.copyRuntimeDependencies, tomcatGet]) {
+task bundle(type: Copy, dependsOn: [subprojects.jar, project(':pxf-service').war, subprojects.copyRuntimeDependencies]) {
     into "build/stage"
     subprojects { project ->
         from("${project.name}/build/libs") { into 'lib' }
         from("${project.name}/build/libs-shared") { into 'lib/shared' }
     }
 
-    from("${tomcatTargetDir}/${tomcatName}") { into 'apache-tomcat' }
+    from("tomcat/build/apache-tomcat") { into 'apache-tomcat' }
     from("pxf-service/src/main/resources/pxf-profiles-default.xml") { into 'conf' }
     from("pxf-service/src/scripts/pxf-env-default.sh") { into 'conf' }
     from("pxf-service/src/templates") { into 'templates' }
