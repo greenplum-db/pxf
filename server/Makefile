@@ -37,7 +37,7 @@ help:
 	@echo	"  - doc - creates aggregate javadoc under docs"
 
 all:
-	./gradlew clean tomcat tar $(BUILD_PARAMS)
+	./gradlew clean tar $(BUILD_PARAMS)
 
 compile:
 	./gradlew compileJava
@@ -45,7 +45,7 @@ compile:
 test unittest:
 	./gradlew test
 
-tar:
+tar: tomcat
 	./gradlew tar ${BUILD_PARAMS}
 
 clean:
@@ -61,7 +61,7 @@ doc:
 tomcat:
 	@if [[ -f "${TOMCAT_DIR}/${TOMCAT_TAR}" ]]; then \
 		echo "${TOMCAT_TAR} already exists, nothing to do"; \
-    else \
+	else \
 		echo "Downloading Tomcat from ${TOMCAT_URL}..."; \
 		mkdir -p ${TOMCAT_DIR}; \
 		wget -q ${TOMCAT_URL} -P ${TOMCAT_DIR}; \
