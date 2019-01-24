@@ -75,7 +75,7 @@ tomcat:
 	fi
 
 .PHONY: install
-install:
+install: tomcat
 	@if [[ "$(PXF_HOME)" == "" ]]; then \
 		echo "ERROR: PXF_HOME is not set correctly"; exit 2; \
 	fi
