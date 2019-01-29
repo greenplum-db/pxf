@@ -19,8 +19,6 @@ package org.greenplum.pxf.plugins.hdfs.utilities;
  * under the License.
  */
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.compress.BZip2Codec;
@@ -34,6 +32,8 @@ import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.FragmentMetadata;
 import org.greenplum.pxf.api.utilities.Utilities;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -44,20 +44,18 @@ import java.util.List;
  * HdfsUtilities class exposes helper methods for PXF classes.
  */
 public class HdfsUtilities {
-    private static final Log LOG = LogFactory.getLog(HdfsUtilities.class);
+
+    private static Logger LOG = LoggerFactory.getLogger(HdfsUtilities.class);
 
     /*
      * Helper routine to get a compression codec class
      */
-    private static Class<? extends CompressionCodec> getCodecClass(Configuration conf,
-                                                                   String name) {
+    private static Class<? extends CompressionCodec> getCodecClass(Configuration conf, String name) {
         Class<? extends CompressionCodec> codecClass;
         try {
-            codecClass = conf.getClassByName(name).asSubclass(
-                    CompressionCodec.class);
+            codecClass = conf.getClassByName(name).asSubclass(CompressionCodec.class);
         } catch (ClassNotFoundException e) {
-            throw new IllegalArgumentException("Compression codec " + name
-                    + " was not found.", e);
+            throw new IllegalArgumentException("Compression codec " + name + " was not found.", e);
         }
         return codecClass;
     }
@@ -87,8 +85,8 @@ public class HdfsUtilities {
         if (codec != null) {
             codecClass = codec.getClass();
         }
-        LOG.debug((codecClass == null ? "No codec" : "Codec " + codecClass)
-                + " was found for file " + path);
+        String msg = (codecClass == null ? "No codec" : "Codec " + codecClass);
+        LOG.debug("{} was found for file {}", msg, path);
         return codecClass;
     }
 

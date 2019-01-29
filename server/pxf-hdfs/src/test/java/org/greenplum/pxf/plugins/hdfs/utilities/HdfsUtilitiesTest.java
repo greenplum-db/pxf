@@ -19,14 +19,17 @@ package org.greenplum.pxf.plugins.hdfs.utilities;
  * under the License.
  */
 
-import org.greenplum.pxf.api.OneField;
-import org.greenplum.pxf.api.model.RequestContext;
-import org.apache.commons.logging.Log;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.compress.*;
+import org.apache.hadoop.io.compress.BZip2Codec;
+import org.apache.hadoop.io.compress.CompressionCodec;
+import org.apache.hadoop.io.compress.CompressionCodecFactory;
+import org.apache.hadoop.io.compress.DefaultCodec;
+import org.apache.hadoop.io.compress.GzipCodec;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.util.ReflectionUtils;
+import org.greenplum.pxf.api.OneField;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,6 +38,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.core.classloader.annotations.SuppressStaticInitializationFor;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.reflect.Whitebox;
+import org.slf4j.Logger;
 
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectOutputStream;
@@ -42,7 +46,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -53,14 +60,13 @@ public class HdfsUtilitiesTest {
 
     private Configuration conf;
     private CompressionCodecFactory factory;
-    private Log Log;
 
     @Before
     public void SetupCompressionFactory() {
         conf = PowerMockito.mock(Configuration.class);
         factory = mock(CompressionCodecFactory.class);
-        Log = mock(Log.class);
-        Whitebox.setInternalState(HdfsUtilities.class, Log);
+        Logger LOG = mock(Logger.class);
+        Whitebox.setInternalState(HdfsUtilities.class, LOG);
     }
 
     @Test
@@ -147,7 +153,8 @@ public class HdfsUtilitiesTest {
                 false);
     }
 
-    private void testIsThreadSafe(String testDescription, String path, String codecStr, CompressionCodec codec, boolean expectedResult) {
+    private void testIsThreadSafe(String testDescription, String path, String codecStr,
+                                  CompressionCodec codec, boolean expectedResult) {
         prepareDataForIsThreadSafe(path, codecStr, codec);
 
         boolean result = HdfsUtilities.isThreadSafe(conf, path, codecStr);
@@ -195,10 +202,8 @@ public class HdfsUtilitiesTest {
         List<OneField> oneFields = Arrays.asList(new OneField(1, "uno"), new OneField(2, "dos"), new OneField(3, "tres"));
 
         assertEquals("uno!dos!tres", HdfsUtilities.toString(oneFields, "!"));
-
         assertEquals("uno", HdfsUtilities.toString(Collections.singletonList(oneFields.get(0)), "!"));
-
-        assertEquals("", HdfsUtilities.toString(Collections.<OneField>emptyList(), "!"));
+        assertEquals("", HdfsUtilities.toString(Collections.emptyList(), "!"));
     }
 
     @Test
@@ -211,6 +216,7 @@ public class HdfsUtilitiesTest {
         os.writeLong(100);
         os.writeObject(new String[] { "hostname" });
         os.close();
+
         when(requestContext.getFragmentMetadata()).thenReturn(bas.toByteArray());
         FileSplit fileSplit = HdfsUtilities.parseFileSplit(requestContext);
         assertEquals(fileSplit.getStart(), 10);
