@@ -32,7 +32,6 @@ import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.UnsupportedTypeException;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.BasePlugin;
-import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
 
 import java.io.IOException;
@@ -58,16 +57,18 @@ public class ParquetResolver extends BasePlugin implements Resolver {
 
     @Override
     public List<OneField> getFields(OneRow row) {
-        Group group = (Group) row.getData();
-        MessageType schema = (MessageType) row.getKey();
-        List<OneField> output = new LinkedList<>();
-
-        for (int i = 0; i < schema.getFieldCount(); i++) {
-            if (schema.getType(i).isPrimitive()) {
-                output.add(resolvePrimitive(i, group, schema.getType(i)));
-            } else {
-                throw new UnsupportedTypeException("Only primitive types are supported.");
+        if (schema == null) {
+            schema = (MessageType)context.getMetadata();
+            for (int i = 0; i < schema.getFieldCount(); i++) {
+                if (!schema.getType(i).isPrimitive()) {
+                    throw new UnsupportedTypeException("Only primitive types are supported.");
+                }
             }
+        }
+        Group group = (Group) row.getData();
+        List<OneField> output = new LinkedList<>();
+        for (int i = 0; i < schema.getFieldCount(); i++) {
+            output.add(resolvePrimitive(i, group, schema.getType(i)));
         }
         return output;
     }
@@ -124,11 +125,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                 byte[] bytes = new byte[16];
                 int offset = bytes.length - unscaled.length;
                 for (int i = 0; i < bytes.length; i += 1) {
-                    if (i < offset) {
-                        bytes[i] = fillByte;
-                    } else {
-                        bytes[i] = unscaled[i - offset];
-                    }
+                    bytes[i] =  (i < offset) ? fillByte : unscaled[i - offset];
                 }
                 group.add(index, Binary.fromReusedByteArray(bytes));
                 break;

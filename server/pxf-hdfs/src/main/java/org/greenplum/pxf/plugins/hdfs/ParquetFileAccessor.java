@@ -40,6 +40,7 @@ import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.MessageTypeParser;
 import org.apache.parquet.schema.OriginalType;
 import org.apache.parquet.schema.PrimitiveType;
+import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName;
 import org.apache.parquet.schema.Type;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.UnsupportedTypeException;
@@ -99,11 +100,14 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
         // Create reader for a given split, read a range in file
         fileReader = new ParquetFileReader(configuration, file, ParquetMetadataConverter.range(
                 fileSplit.getStart(), fileSplit.getStart() + fileSplit.getLength()));
-        LOG.debug("Reading file {} with {} records in {} rowgroups",
-                file.getName(), fileReader.getRecordCount(), fileReader.getRowGroups().size());
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Reading file {} with {} records in {} rowgroups",
+                    file.getName(), fileReader.getRecordCount(), fileReader.getRowGroups().size());
+        }
         ParquetMetadata metadata = fileReader.getFooter();
         schema = metadata.getFileMetaData().getSchema();
         columnIO = new ColumnIOFactory().getColumnIO(schema);
+        context.setMetadata(schema);
         return true;
     }
 
@@ -119,7 +123,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
         if (rowsRead == rowsInRowGroup && !readNextRowGroup())
             return null;
         rowsRead++;
-        return new OneRow(schema, recordReader.read());
+        return new OneRow(null, recordReader.read());
     }
 
     private boolean readNextRowGroup() throws IOException {
@@ -186,7 +190,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
         String compressCodec = context.getOption("COMPRESSION_CODEC");
         codecName = getCodec(compressCodec);
 
-        // read schema file, if given
+        // Read schema file, if given
         String schemaFile = context.getOption("SCHEMA");
         schema = (schemaFile != null) ? readSchemaFile(schemaFile) :
                 generateParquetSchema(context.getTupleDescription());
@@ -211,6 +215,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
 
         parquetWriter.write((Group) onerow.getData());
         rowsWritten++;
+        // Check for the output file size every 1000 rows
         if (rowsWritten % 1000 == 0 && parquetWriter.getDataSize() > DEFAULT_FILE_SIZE) {
             parquetWriter.close();
             totalRowsWritten += rowsWritten;
@@ -271,10 +276,10 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
             FileSystem schemaFs = parquetSchemaPath.getFileSystem(configuration);
             BufferedReader reader = new BufferedReader(new InputStreamReader(schemaFs.open(parquetSchemaPath)));
 
-            String tmpString;
+            String line;
             StringBuilder sb = new StringBuilder();
-            while ((tmpString = reader.readLine()) != null) {
-                sb.append(tmpString);
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
             }
             reader.close();
             return MessageTypeParser.parseMessageType(sb.toString());
@@ -295,41 +300,41 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
             String columnName = column.columnName();
             int columnTypeCode = column.columnTypeCode();
 
-            PrimitiveType.PrimitiveTypeName typeName;
+            PrimitiveTypeName typeName;
             OriginalType origType = null;
             DecimalMetadata dmt = null;
             int length = 0;
             switch (DataType.get(columnTypeCode)) {
                 case BOOLEAN:
-                    typeName = PrimitiveType.PrimitiveTypeName.BOOLEAN;
+                    typeName = PrimitiveTypeName.BOOLEAN;
                     break;
                 case BYTEA:
-                    typeName = PrimitiveType.PrimitiveTypeName.BINARY;
+                    typeName = PrimitiveTypeName.BINARY;
                     break;
                 case BIGINT:
-                    typeName = PrimitiveType.PrimitiveTypeName.INT64;
+                    typeName = PrimitiveTypeName.INT64;
                     break;
                 case SMALLINT:
                     origType = OriginalType.INT_16;
-                    typeName = PrimitiveType.PrimitiveTypeName.INT32;
+                    typeName = PrimitiveTypeName.INT32;
                     break;
                 case INTEGER:
-                    typeName = PrimitiveType.PrimitiveTypeName.INT32;
+                    typeName = PrimitiveTypeName.INT32;
                     break;
                 case REAL:
-                    typeName = PrimitiveType.PrimitiveTypeName.FLOAT;
+                    typeName = PrimitiveTypeName.FLOAT;
                     break;
                 case FLOAT8:
-                    typeName = PrimitiveType.PrimitiveTypeName.DOUBLE;
+                    typeName = PrimitiveTypeName.DOUBLE;
                     break;
                 case NUMERIC:
                     origType = OriginalType.DECIMAL;
-                    typeName = PrimitiveType.PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY;
+                    typeName = PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY;
                     length = 16; //per parquet specs
                     dmt = new DecimalMetadata(DECIMAL_PRECISION, DECIMAL_SCALE);
                     break;
                 case TIMESTAMP:
-                    typeName = PrimitiveType.PrimitiveTypeName.INT96;
+                    typeName = PrimitiveTypeName.INT96;
                     break;
                 case DATE:
                 case TIME:
@@ -337,7 +342,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
                 case BPCHAR:
                 case TEXT:
                     origType = OriginalType.UTF8;
-                    typeName = PrimitiveType.PrimitiveTypeName.BINARY;
+                    typeName = PrimitiveTypeName.BINARY;
                     break;
                 default:
                     throw new UnsupportedTypeException("Type " + columnTypeCode + "is not supported");
