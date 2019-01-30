@@ -20,6 +20,7 @@ package org.greenplum.pxf.plugins.hdfs.utilities;
  */
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.compress.BZip2Codec;
 import org.apache.hadoop.io.compress.CompressionCodec;
@@ -171,6 +172,22 @@ public class HdfsUtilities {
         catch (Exception e) {
             throw new RuntimeException("Exception while reading expected fragment metadata", e);
         }
+    }
+
+    public static Path createFile(String fileName, FileSystem fs) throws IOException {
+        Path file = new Path(fileName);
+        if (fs.exists(file)) {
+            throw new IOException("file " + file.toString() + " already exists, can't write data");
+        }
+
+        Path parent = file.getParent();
+        if (!fs.exists(parent)) {
+            if (!fs.mkdirs(parent)) {
+                throw new IOException("Creation of dir '" + parent.toString() + "' failed");
+            }
+            LOG.debug("Created new dir {}", parent);
+        }
+        return file;
     }
 
     /**

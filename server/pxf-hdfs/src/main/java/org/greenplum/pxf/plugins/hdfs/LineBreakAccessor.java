@@ -87,20 +87,7 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor {
             fileName += extension;
         }
 
-        file = new Path(fileName);
-        if (fs.exists(file)) {
-            throw new IOException("file " + file.toString()
-                    + " already exists, can't write data");
-        }
-
-        Path parent = file.getParent();
-        if (!fs.exists(parent)) {
-            if (!fs.mkdirs(parent)) {
-                throw new IOException("Creation of dir '" + parent.toString() + "' failed");
-            }
-            LOG.debug("Created new dir {}", parent);
-        }
-
+        file = HdfsUtilities.createFile(fileName, fs);
         // create output stream - do not allow overwriting existing file
         createOutputStream(file, codec);
 

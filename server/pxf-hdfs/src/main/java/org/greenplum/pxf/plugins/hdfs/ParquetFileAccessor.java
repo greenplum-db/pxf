@@ -247,17 +247,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
         fileName += codecName.getExtension() + ".parquet";
         LOG.debug("Creating file {}", fileName);
         FileSystem fs = FileSystem.get(URI.create(fileName), configuration);
-        file = new Path(fileName);
-        if (fs.exists(file)) {
-            throw new IOException("File " + file.toString() + " already exists, can't write data");
-        }
-        Path parent = file.getParent();
-        if (!fs.exists(parent)) {
-            if (!fs.mkdirs(parent)) {
-                throw new IOException("Creation of dir '" + parent.toString() + "' failed");
-            }
-            LOG.debug("Created new dir {}", parent);
-        }
+        file = HdfsUtilities.createFile(fileName, fs);
 
         GroupWriteSupport.setSchema(schema, configuration);
         //noinspection deprecation
