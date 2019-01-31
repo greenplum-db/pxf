@@ -19,6 +19,7 @@ package org.greenplum.pxf.plugins.hdfs;
  * under the License.
  */
 
+import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.FileSplit;
@@ -27,6 +28,7 @@ import org.apache.parquet.column.page.PageReadStore;
 import org.apache.parquet.example.data.Group;
 import org.apache.parquet.example.data.simple.convert.GroupRecordConverter;
 import org.apache.parquet.format.converter.ParquetMetadataConverter;
+import org.apache.parquet.format.converter.ParquetMetadataConverter.MetadataFilter;
 import org.apache.parquet.hadoop.ParquetFileReader;
 import org.apache.parquet.hadoop.ParquetWriter;
 import org.apache.parquet.hadoop.example.GroupWriteSupport;
@@ -50,9 +52,8 @@ import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
@@ -77,6 +78,9 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
     private CompressionCodecName codecName;
     private ParquetWriter<Group> parquetWriter;
     private RecordReader<Group> recordReader;
+    private GroupRecordConverter groupRecordConverter;
+    private GroupWriteSupport groupWriteSupport;
+    private FileSystem fs;
     private Path file;
     private String filePrefix;
     private int fileIndex;
@@ -98,15 +102,22 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
         file = new Path(context.getDataSource());
         FileSplit fileSplit = HdfsUtilities.parseFileSplit(context);
         // Create reader for a given split, read a range in file
-        fileReader = new ParquetFileReader(configuration, file, ParquetMetadataConverter.range(
-                fileSplit.getStart(), fileSplit.getStart() + fileSplit.getLength()));
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Reading file {} with {} records in {} rowgroups",
-                    file.getName(), fileReader.getRecordCount(), fileReader.getRowGroups().size());
+        MetadataFilter filter = ParquetMetadataConverter.range(
+                fileSplit.getStart(), fileSplit.getStart() + fileSplit.getLength());
+        fileReader = new ParquetFileReader(configuration, file, filter);
+        try {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Reading file {} with {} records in {} rowgroups",
+                        file.getName(), fileReader.getRecordCount(), fileReader.getRowGroups().size());
+            }
+            ParquetMetadata metadata = fileReader.getFooter();
+            schema = metadata.getFileMetaData().getSchema();
+            columnIO = new ColumnIOFactory().getColumnIO(schema);
+            groupRecordConverter = new GroupRecordConverter(schema);
+        } catch (Exception e) {
+            fileReader.close();
+            throw new IOException(e);
         }
-        ParquetMetadata metadata = fileReader.getFooter();
-        schema = metadata.getFileMetaData().getSchema();
-        columnIO = new ColumnIOFactory().getColumnIO(schema);
         context.setMetadata(schema);
         return true;
     }
@@ -122,8 +133,9 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
 
         if (rowsRead == rowsInRowGroup && !readNextRowGroup())
             return null;
+        Group group = recordReader.read();
         rowsRead++;
-        return new OneRow(null, recordReader.read());
+        return new OneRow(null, group);
     }
 
     private boolean readNextRowGroup() throws IOException {
@@ -136,8 +148,9 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
 
         rowGroupsReadCount++;
         totalRowsRead += rowsRead;
+        // Reset rows read
         rowsRead = 0;
-        recordReader = columnIO.getRecordReader(currentRowGroup, new GroupRecordConverter(schema));
+        recordReader = columnIO.getRecordReader(currentRowGroup, groupRecordConverter);
         rowsInRowGroup = currentRowGroup.getRowCount();
         LOG.debug("Reading {} rows (rowgroup {})", rowsInRowGroup, rowGroupsReadCount);
         return true;
@@ -195,6 +208,8 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
         schema = (schemaFile != null) ? readSchemaFile(schemaFile) :
                 generateParquetSchema(context.getTupleDescription());
         LOG.debug("Schema fields = {}", schema.getFields());
+        GroupWriteSupport.setSchema(schema, configuration);
+        groupWriteSupport = new GroupWriteSupport();
 
         // We get the parquet schema and set it to the metadata in the request context
         // to avoid computing the schema again in the Resolver
@@ -219,6 +234,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
         if (rowsWritten % 1000 == 0 && parquetWriter.getDataSize() > DEFAULT_FILE_SIZE) {
             parquetWriter.close();
             totalRowsWritten += rowsWritten;
+            // Reset rows written
             rowsWritten = 0;
             fileIndex++;
             createParquetWriter();
@@ -238,6 +254,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
             parquetWriter.close();
             totalRowsWritten += rowsWritten;
         }
+        fs.close();
         LOG.debug("Wrote a TOTAL of {} rows", totalRowsWritten);
     }
 
@@ -246,12 +263,12 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
         String fileName = filePrefix + "." + fileIndex;
         fileName += codecName.getExtension() + ".parquet";
         LOG.debug("Creating file {}", fileName);
-        FileSystem fs = FileSystem.get(URI.create(fileName), configuration);
-        file = HdfsUtilities.createFile(fileName, fs);
+        file = new Path(fileName);
+        fs = FileSystem.get(URI.create(fileName), configuration);
+        HdfsUtilities.validateFile(file, fs);
 
-        GroupWriteSupport.setSchema(schema, configuration);
         //noinspection deprecation
-        parquetWriter = new ParquetWriter<>(file, new GroupWriteSupport(), codecName,
+        parquetWriter = new ParquetWriter<>(file, groupWriteSupport, codecName,
                 DEFAULT_ROWGROUP_SIZE, DEFAULT_PAGE_SIZE, DEFAULT_DICTIONARY_PAGE_SIZE,
                 true, false, DEFAULT_PARQUET_VERSION, configuration);
     }
@@ -261,18 +278,9 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
      */
     private MessageType readSchemaFile(String schemaFile) {
 
-        try {
-            Path parquetSchemaPath = new Path(schemaFile);
-            FileSystem schemaFs = parquetSchemaPath.getFileSystem(configuration);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(schemaFs.open(parquetSchemaPath)));
-
-            String line;
-            StringBuilder sb = new StringBuilder();
-            while ((line = reader.readLine()) != null) {
-                sb.append(line);
-            }
-            reader.close();
-            return MessageTypeParser.parseMessageType(sb.toString());
+        try ( FileSystem schemaFs = FileSystem.get(configuration);
+              InputStream inputStream = schemaFs.open(new Path(schemaFile))) {
+            return MessageTypeParser.parseMessageType(IOUtils.toString(inputStream));
         }
         catch (IOException ioe) {
             throw new RuntimeException(ioe);

@@ -86,8 +86,10 @@ public class HdfsUtilities {
         if (codec != null) {
             codecClass = codec.getClass();
         }
-        String msg = (codecClass == null ? "No codec" : "Codec " + codecClass);
-        LOG.debug("{} was found for file {}", msg, path);
+        if (LOG.isDebugEnabled()) {
+            String msg = (codecClass == null ? "No codec" : "Codec " + codecClass);
+            LOG.debug("{} was found for file {}", msg, path);
+        }
         return codecClass;
     }
 
@@ -140,7 +142,7 @@ public class HdfsUtilities {
         return prepareFragmentMetadata(fsp.getStart(), fsp.getLength(), fsp.getLocations());
     }
 
-    public static byte[] prepareFragmentMetadata(long start, long length, String[] locations)
+    private static byte[] prepareFragmentMetadata(long start, long length, String[] locations)
             throws IOException {
 
         ByteArrayOutputStream byteArrayStream = writeBaseFragmentInfo(start, length, locations);
@@ -174,12 +176,19 @@ public class HdfsUtilities {
         }
     }
 
-    public static Path createFile(String fileName, FileSystem fs) throws IOException {
-        Path file = new Path(fileName);
-        if (fs.exists(file)) {
-            throw new IOException("file " + file.toString() + " already exists, can't write data");
-        }
+    /**
+     * Validates that the destination file does not exist and creates parent directory, if missing.
+     *
+     * @param file File handle
+     * @param fs   Filesystem object
+     * @throws IOException if I/O errors occur during validation
+     */
+    public static void validateFile(Path file, FileSystem fs)
+            throws IOException {
 
+        if (fs.exists(file)) {
+            throw new IOException("File " + file.toString() + " already exists, can't write data");
+        }
         Path parent = file.getParent();
         if (!fs.exists(parent)) {
             if (!fs.mkdirs(parent)) {
@@ -187,7 +196,6 @@ public class HdfsUtilities {
             }
             LOG.debug("Created new dir {}", parent);
         }
-        return file;
     }
 
     /**

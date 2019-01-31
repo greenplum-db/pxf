@@ -57,14 +57,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
 
     @Override
     public List<OneField> getFields(OneRow row) {
-        if (schema == null) {
-            schema = (MessageType)context.getMetadata();
-            for (int i = 0; i < schema.getFieldCount(); i++) {
-                if (!schema.getType(i).isPrimitive()) {
-                    throw new UnsupportedTypeException("Only primitive types are supported.");
-                }
-            }
-        }
+        validateSchema();
         Group group = (Group) row.getData();
         List<OneField> output = new LinkedList<>();
         for (int i = 0; i < schema.getFieldCount(); i++) {
@@ -82,10 +75,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
      */
     @Override
     public OneRow setFields(List<OneField> record) throws IOException {
-        if (groupFactory == null) {
-            schema = (MessageType)context.getMetadata();
-            groupFactory = new SimpleGroupFactory(schema);
-        }
+        validateSchema();
         Group group = groupFactory.newGroup();
         for (int i = 0; i < record.size(); i++) {
             fillGroup(i, record.get(i), group, schema.getType(i));
@@ -139,6 +129,21 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                 break;
             default:
                 throw new IOException("Not supported type " + type.asPrimitiveType().getPrimitiveTypeName());
+        }
+    }
+
+    // Set schema from context if null
+    private void validateSchema() {
+        if (schema == null) {
+            schema = (MessageType)context.getMetadata();
+            if (schema == null)
+                throw new RuntimeException("No schema detected in request context");
+            for (int i = 0; i < schema.getFieldCount(); i++) {
+                if (!schema.getType(i).isPrimitive()) {
+                    throw new UnsupportedTypeException("Only primitive types are supported.");
+                }
+            }
+            groupFactory = new SimpleGroupFactory(schema);
         }
     }
 
