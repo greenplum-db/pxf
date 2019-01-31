@@ -106,14 +106,15 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
                 fileSplit.getStart(), fileSplit.getStart() + fileSplit.getLength());
         fileReader = new ParquetFileReader(configuration, file, filter);
         try {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Reading file {} with {} records in {} rowgroups",
-                        file.getName(), fileReader.getRecordCount(), fileReader.getRowGroups().size());
-            }
             ParquetMetadata metadata = fileReader.getFooter();
             schema = metadata.getFileMetaData().getSchema();
             columnIO = new ColumnIOFactory().getColumnIO(schema);
             groupRecordConverter = new GroupRecordConverter(schema);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Reading file {} with {} records in {} rowgroups",
+                        file.getName(), fileReader.getRecordCount(),
+                        fileReader.getRowGroups().size());
+            }
         } catch (Exception e) {
             fileReader.close();
             throw new IOException(e);
@@ -152,6 +153,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
         rowsRead = 0;
         recordReader = columnIO.getRecordReader(currentRowGroup, groupRecordConverter);
         rowsInRowGroup = currentRowGroup.getRowCount();
+
         LOG.debug("Reading {} rows (rowgroup {})", rowsInRowGroup, rowGroupsReadCount);
         return true;
     }
@@ -161,10 +163,10 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
         if (name != null) {
             try {
                 codecName = CompressionCodecName.fromConf(name);
-            } catch(IllegalArgumentException ie) {
+            } catch (IllegalArgumentException ie) {
                 try {
                     codecName = CompressionCodecName.fromCompressionCodec(Class.forName(name));
-                } catch(ClassNotFoundException ce) {
+                } catch (ClassNotFoundException ce) {
                     throw new IllegalArgumentException(String.format("Invalid codec: %s ", name));
                 }
             }
@@ -254,7 +256,6 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
             parquetWriter.close();
             totalRowsWritten += rowsWritten;
         }
-        fs.close();
         LOG.debug("Wrote a TOTAL of {} rows", totalRowsWritten);
     }
 
@@ -276,14 +277,12 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
     /**
      * Generate parquet schema using schema file
      */
-    private MessageType readSchemaFile(String schemaFile) {
+    private MessageType readSchemaFile(String schemaFile)
+            throws IOException {
 
-        try ( FileSystem schemaFs = FileSystem.get(configuration);
-              InputStream inputStream = schemaFs.open(new Path(schemaFile))) {
+        LOG.debug("Using parquet schema from given schema file {}", schemaFile);
+        try (InputStream inputStream = fs.open(new Path(schemaFile))) {
             return MessageTypeParser.parseMessageType(IOUtils.toString(inputStream));
-        }
-        catch (IOException ioe) {
-            throw new RuntimeException(ioe);
         }
     }
 
