@@ -137,6 +137,5 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor {
             fsdos.hsync();
             dos.close();
         }
-        fs.close();
     }
 }
