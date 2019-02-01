@@ -133,6 +133,8 @@ public class ParquetResolver extends BasePlugin implements Resolver {
     }
 
     // Set schema from context if null
+    // TODO: Fix the bridge interface so the schema is set before get/setFields is called
+    //       Then validateSchema can be done during initialize phase
     private void validateSchema() {
         if (schema == null) {
             schema = (MessageType)context.getMetadata();
