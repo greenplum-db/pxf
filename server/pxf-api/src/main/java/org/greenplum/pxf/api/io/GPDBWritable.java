@@ -23,8 +23,12 @@ package org.greenplum.pxf.api.io;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.io.*;
-import java.util.Arrays;
+import java.io.ByteArrayInputStream;
+import java.io.DataInput;
+import java.io.DataInputStream;
+import java.io.DataOutput;
+import java.io.EOFException;
+import java.io.IOException;
 
 
 /**
@@ -91,11 +95,11 @@ public class GPDBWritable implements Writable {
     /*
      * Local variables
      */
-    protected int[] colType;
-    protected Object[] colValue;
-    protected int alignmentOfEightBytes = 8;
-    protected byte errorFlag = 0;
-    protected int pktlen = EOF;
+    private int[] colType;
+    private Object[] colValue;
+    private int alignmentOfEightBytes = 8;
+    private byte errorFlag = 0;
+    private int pktlen = EOF;
 
     public int[] getColType() {
         return colType;
@@ -106,7 +110,7 @@ public class GPDBWritable implements Writable {
      * set/get value mismatch.
      */
     public class TypeMismatchException extends IOException {
-        public TypeMismatchException(String msg) {
+        TypeMismatchException(String msg) {
             super(msg);
         }
     }
@@ -332,7 +336,7 @@ public class GPDBWritable implements Writable {
         int[] padLength = new int[numCol];
         byte[] padbytes = new byte[8];
 
-        /**
+        /*
          * Compute the total payload and header length
          * header = total length (4 byte), Version (2 byte), Error (1 byte), #col (2 byte)
          * col type array = #col * 1 byte
@@ -526,10 +530,6 @@ public class GPDBWritable implements Writable {
     }
 
     /**
-     * Getter/Setter methods to get/set the column value
-     */
-
-    /**
      * Sets the column value of the record.
      *
      * @param colIdx the column index
@@ -578,11 +578,7 @@ public class GPDBWritable implements Writable {
     public void setString(int colIdx, String val)
             throws TypeMismatchException {
         checkType(DataType.TEXT, colIdx, true);
-        if (val != null) {
-            colValue[colIdx] = val + "\0";
-        } else {
-            colValue[colIdx] = val;
-        }
+        colValue[colIdx] = (val != null) ? val + "\0": null;
     }
 
     /**
@@ -634,6 +630,16 @@ public class GPDBWritable implements Writable {
     public void setShort(int colIdx, Short val)
             throws TypeMismatchException {
         checkType(DataType.SMALLINT, colIdx, true);
+        colValue[colIdx] = val;
+    }
+
+    /**
+     * Sets the column value of the record.
+     *
+     * @param colIdx the column index
+     * @param val    the value
+     */
+    public void setObject(int colIdx, Object val) {
         colValue[colIdx] = val;
     }
 
@@ -742,6 +748,16 @@ public class GPDBWritable implements Writable {
     }
 
     /**
+     * Gets the column value of the record.
+     *
+     * @param colIdx the column index
+     * @return column value
+     */
+    public Object getObject(int colIdx) {
+        return colValue[colIdx];
+    }
+
+    /**
      * Sets the error field.
      *
      * @param errorVal the error value
@@ -817,7 +833,7 @@ public class GPDBWritable implements Writable {
      * @param type the type OID that we want to check
      */
     private boolean isTextForm(int type) {
-        return !Arrays.asList(DataType.BIGINT, DataType.BOOLEAN, DataType.BYTEA, DataType.FLOAT8, DataType.INTEGER, DataType.REAL, DataType.SMALLINT).contains(DataType.get(type));
+        return DataType.isTextForm(type);
     }
 
     /**

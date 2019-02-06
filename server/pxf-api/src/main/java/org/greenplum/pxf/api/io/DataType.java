@@ -59,9 +59,7 @@ public enum DataType {
     UNSUPPORTED_TYPE(-1);
 
     private static final Map<Integer, DataType> lookup = new HashMap<>();
-
     static {
-
         INT2ARRAY.typeElem = SMALLINT;
         INT4ARRAY.typeElem = INTEGER;
         INT8ARRAY.typeElem = BIGINT;
@@ -71,6 +69,17 @@ public enum DataType {
         for (DataType dt : EnumSet.allOf(DataType.class)) {
             lookup.put(dt.getOID(), dt);
         }
+    }
+
+    private static final Map<Integer, Integer> notText = new HashMap<>();
+    static {
+        notText.put(BIGINT.OID, 1);
+        notText.put(BOOLEAN.OID, 1);
+        notText.put(BYTEA.OID, 1);
+        notText.put(FLOAT8.OID, 1);
+        notText.put(INTEGER.OID, 1);
+        notText.put(REAL.OID, 1);
+        notText.put(SMALLINT.OID, 1);
     }
 
     private final int OID;
@@ -88,14 +97,16 @@ public enum DataType {
      */
     public static DataType get(int OID) {
         DataType type = lookup.get(OID);
-        return type == null
-                ? UNSUPPORTED_TYPE
-                : type;
+        return type == null ? UNSUPPORTED_TYPE : type;
     }
 
     public static boolean isArrayType(int OID) {
         DataType type = lookup.get(OID);
         return type != null && type.typeElem != null;
+    }
+
+    public static boolean isTextForm(int OID) {
+        return notText.get(OID) == null;
     }
 
     public int getOID() {
