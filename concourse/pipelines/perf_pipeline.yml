@@ -92,7 +92,7 @@ resources:
 - name: gpdb_src
   type: git
   source:
-    branch: master
+    branch: {{gpdb-branch}}
     uri: {{gpdb-git-remote}}
 
 - name: pxf_src
@@ -277,6 +277,8 @@ jobs:
           input_mapping:
             ccp_src: ccp_custom_src
           file: ccp_src/ci/tasks/gpinitsystem.yml
+          on_failure:
+            <<: *ccp_destroy
         - task: setup_pxf
           input_mapping:
             terraform: terraform_gpdb
@@ -293,6 +295,8 @@ jobs:
             CLOUD_PROVIDER: google
             IMPERSONATION: {{enable-impersonation-multinode}}
             PXF_JVM_OPTS: {{pxf-jvm-opts}}
+          on_failure:
+            <<: *ccp_destroy
 
       - task: load_data
         config:

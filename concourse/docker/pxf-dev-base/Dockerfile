@@ -3,10 +3,7 @@ ARG BASE_IMAGE=gpdb-dev:centos6
 FROM pivotaldata/${BASE_IMAGE}
 
 # install Go utilities
-RUN yum update -y && \
-    yum install -y time && \
-    yum clean all && \
-    cd /tmp && \
+RUN cd /tmp && \
     wget -q https://dl.google.com/go/go1.11.5.linux-amd64.tar.gz && \
     tar -C /usr/local -xzf go1.11.5.linux-amd64.tar.gz && \
     rm -f go1.11.5.linux-amd64.tar.gz && \

@@ -76,10 +76,10 @@ def how_to_use_generated_pipeline_message():
     cmd += '    -l ' + ARGS.YML_FILE + ' \\\n'
     cmd += '    -v folder-prefix=' + ARGS.PREFIX + ' -v test-env=' + ARGS.TEST_ENV + ' \\\n'
     cmd += '    -v gpdb-branch=' + ARGS.gpdb_branch + ' \\\n'
-    if ARGS.pipeline_type == 'pxf':
+    if ARGS.pipeline_type == 'pxf' and not ARGS.compile_gpdb:
         cmd += '    -v icw_green_bucket=' + ARGS.ICW_GREEN_BUCKET + ' \\\n'
     if ARGS.compile_gpdb:
-        cmd += '    -v configure_flags=--enable-cassert -v gpaddon-git-branch=' + ARGS.gpdb_branch + '\\\n'
+        cmd += '    -v configure_flags=--enable-cassert -v gpaddon-git-branch=master\\\n'
     if ARGS.pipeline_name:
         cmd += '    -p ' + ARGS.pipeline_name
     else:

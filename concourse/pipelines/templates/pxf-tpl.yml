@@ -31,6 +31,9 @@ groups:
   - name: hadoop
     jobs:
       - compile_pxf
+{% if compile_gpdb %}
+      - compile_gpdb_centos6
+{% endif %}
       - test_pxf_cdh_centos6
       - test_pxf_hdp_centos6
       - test_pxf_hdp_ubuntu16
@@ -40,6 +43,9 @@ groups:
   - name: cloud
     jobs:
       - compile_pxf
+{% if compile_gpdb %}
+      - compile_gpdb_centos6
+{% endif %}
       - test_pxf_adl
       - test_pxf_gs
       - test_pxf_minio
@@ -49,12 +55,18 @@ groups:
   - name: secure
     jobs:
       - compile_pxf
+{% if compile_gpdb %}
+      - compile_gpdb_centos6
+{% endif %}
       - test_pxf_hdp_secure_with_impersonation
       - test_pxf_hdp_secure_no_impersonation
 
   - name: no_impersonation
     jobs:
       - compile_pxf
+{% if compile_gpdb %}
+      - compile_gpdb_centos6
+{% endif %}
       - test_pxf_adl
       - test_pxf_gs
       - test_pxf_minio
@@ -84,6 +96,13 @@ resource_types:
   type: docker-image
   source:
     repository: ljfranklin/terraform-resource
+{% if compile_gpdb %}
+
+- name: gcs
+  type: docker-image
+  source:
+    repository: frodenas/gcs-resource
+{% endif %}
 
 ## ======================================================================
 ## RESOURCES
@@ -254,11 +273,32 @@ resources:
     private_key: {{gpaddon-git-key}}
     uri: {{gpaddon-git-remote}}
 
-- name: centos-gpdb-dev-6
+- name: gpdb6-centos6-build
   type: docker-image
   source:
-    repository: pivotaldata/centos-gpdb-dev
-    tag: 6-gcc6.2-llvm3.7
+    repository: pivotaldata/gpdb6-centos6-build
+    tag: latest
+
+- name: libquicklz-centos6
+  type: gcs
+  source:
+    bucket: ((pivotal-gp-internal-artifacts-gcs-bucket))
+    json_key: ((gcs-key))
+    regexp: centos6/libquicklz-(\d.*)\.el6\.x86_64\.rpm
+
+- name: libquicklz-devel-centos6
+  type: gcs
+  source:
+    bucket: ((pivotal-gp-internal-artifacts-gcs-bucket))
+    json_key: ((gcs-key))
+    regexp: centos6/libquicklz-devel-(\d.*)\.el6\.x86_64\.rpm
+
+- name: python-centos6
+  type: gcs
+  source:
+    bucket: gp-internal-artifacts
+    json_key: ((gcs-key))
+    versioned_file: centos6/python-2.7.12.tar.gz
 
 {% endif %}
 ## ======================================================================
@@ -272,10 +312,16 @@ jobs:
   - aggregate:
     - get: gpdb_src
     - get: gpaddon_src
-    - get: centos-gpdb-dev-6
+    - get: gpdb6-centos6-build
+    - get: libquicklz-installer
+      resource: libquicklz-centos6
+    - get: libquicklz-devel-installer
+      resource: libquicklz-devel-centos6
+    - get: python-tarball
+      resource: python-centos6
   - task: sync_tools
     file: gpdb_src/concourse/tasks/sync_tools.yml
-    image: centos-gpdb-dev-6
+    image: gpdb6-centos6-build
     params:
       IVYREPO_HOST: {{ivyrepo_host}}
       IVYREPO_REALM: {{ivyrepo_realm}}
@@ -287,7 +333,7 @@ jobs:
       TASK_OS_VERSION: 6
   - task: compile_gpdb
     file: gpdb_src/concourse/tasks/compile_gpdb.yml
-    image: centos-gpdb-dev-6
+    image: gpdb6-centos6-build
     params:
       CONFIGURE_FLAGS: {{configure_flags}}
       TARGET_OS: centos
@@ -407,15 +453,8 @@ jobs:
     - get: gpdb_src
       passed:
       - compile_pxf
-{% if compile_gpdb %}
-      - compile_gpdb_centos6
-{% endif %}
     - get: bin_gpdb
       resource: bin_gpdb_ubuntu16
-{% if compile_gpdb %}
-      passed:
-      - compile_gpdb_centos6
-{% endif %}
     - get: pxf_src
       passed:
       - compile_pxf
@@ -579,6 +618,8 @@ jobs:
   - aggregate:
     - task: intialize_greenplum
       file: ccp_src/ci/tasks/gpinitsystem.yml
+      on_failure:
+        <<: *ccp_destroy
     - task: install_hadoop
       file: pxf_src/concourse/tasks/install_hadoop.yml
       image: gpdb-pxf-dev-centos6-hdp-server
@@ -590,6 +631,8 @@ jobs:
 {% if pipeline_type == "pxf" %}
         TARGET_OS: centos
 {% endif %}
+      on_failure:
+        <<: *ccp_destroy
   - task: test_pxf_multinode
     input_mapping:
       bin_gpdb: gpdb_binary
