@@ -111,7 +111,7 @@ public class HiveTextTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "hive" })
     public void mismatchedTypes() throws Exception {
 
         // Hive column is SMALLINT, expected GPDB type is SMALLINT(int2), but actual is INTEGER(int4)
@@ -167,7 +167,7 @@ public class HiveTextTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "hive" })
     public void hiveTextTable() throws Exception {
 
         exTable = TableFactory.getPxfHiveTextReadableTable(HIVE_TEXT_TABLE,
@@ -196,7 +196,7 @@ public class HiveTextTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "hive" })
     public void severalTextPartitions() throws Exception {
 
         createExternalTable(PXF_HIVE_HETEROGEN_TABLE,
@@ -216,7 +216,7 @@ public class HiveTextTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "hive" })
     public void severalTextPartitionsNoPartitonColumInGpdb() throws Exception {
 
         hiveTable = new HiveExternalTable(HIVE_REG_HETEROGEN_TABLE, HIVE_RC_COLS);
@@ -247,7 +247,7 @@ public class HiveTextTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "hive" })
     public void partitionFilterPushDown() throws Exception {
 
         hiveTable = new HiveExternalTable(HIVE_REG_HETEROGEN_TABLE, HIVE_RC_COLS);
@@ -362,7 +362,7 @@ public class HiveTextTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "hive" })
     public void filterNonePartitions() throws Exception {
 
         // Create PXF Table using Hive profile
@@ -386,7 +386,7 @@ public class HiveTextTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "hive" })
     public void filterBetweenPartitions() throws Exception {
 
         // Create PXF Table using Hive profile
@@ -409,7 +409,7 @@ public class HiveTextTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "hcatalog", "gpdb" })
+    @Test(groups = { "hive", "hcatalog" })
     public void hiveTextTableCustomDelimiter() throws Exception {
 
         //hive text table with custom delimiter
@@ -429,7 +429,7 @@ public class HiveTextTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "hcatalog", "gpdb" })
+    @Test(groups = { "hive", "hcatalog" })
     public void hiveTextTableOptimizedProfile() throws Exception {
 
         runTincTest("pxf.features.hcatalog.heterogeneous_table_three_text_partitions.runTest");
@@ -440,7 +440,7 @@ public class HiveTextTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb", "hcatalog" })
+    @Test(groups = { "hive", "hcatalog" })
     public void aggregateQueries() throws Exception {
 
         //hive text table with nulls
@@ -462,7 +462,7 @@ public class HiveTextTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "hive" })
     public void hiveTableWithSkipHeader() throws Exception {
         List<List<String>> tableProperties = new ArrayList<>();
         tableProperties.add(Arrays.asList("skip.header.line.count", "3"));

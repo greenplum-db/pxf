@@ -94,7 +94,7 @@ public class HiveProxySmokeTest extends BaseSmoke {
         runTincTest("pxf.proxy.hive_small_data.runTest");
     }
 
-    @Test(groups = { "proxy" })
+    @Test(groups = { "proxy", "hive" })
     public void test() throws Exception {
         runTest();
     }

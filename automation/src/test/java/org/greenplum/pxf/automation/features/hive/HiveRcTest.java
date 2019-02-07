@@ -111,7 +111,7 @@ public class HiveRcTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "hive" })
     public void supportedTypesRc() throws Exception {
 
         createExternalTable(GPDB_HIVE_TYPES_TABLE,
@@ -127,7 +127,7 @@ public class HiveRcTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "hive" })
     public void binaryData() throws Exception {
 
         // create "hiveBinaryRc" Hive RC table
@@ -151,7 +151,7 @@ public class HiveRcTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "hive" })
     public void mismatchedTypes() throws Exception {
 
         String[] mismatchedFields = PXF_HIVE_TYPES_LIMITED_COLS.clone();
@@ -167,7 +167,7 @@ public class HiveRcTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "hive" })
     public void hiveRcTable() throws Exception {
 
         createExternalTable(PXF_HIVE_SMALL_DATA_TABLE,
@@ -181,7 +181,7 @@ public class HiveRcTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "hive" })
     public void hiveRcTableDefaultSerde() throws Exception {
 
         createExternalTable(PXF_HIVE_SMALL_DATA_TABLE,
@@ -196,7 +196,7 @@ public class HiveRcTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "hive" })
     public void severalRcPartitions() throws Exception {
 
         hiveTable = new HiveExternalTable(HIVE_REG_HETEROGEN_TABLE, HIVE_RC_COLS);
@@ -220,7 +220,7 @@ public class HiveRcTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "hive" })
     public void severalPartitionsDefaultSerde() throws Exception {
 
         hiveTable = new HiveExternalTable(HIVE_REG_HETEROGEN_TABLE, HIVE_RC_COLS);
@@ -243,7 +243,7 @@ public class HiveRcTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "hive" })
     public void severalRcPartitionsNoPartitionColumn() throws Exception {
 
         hiveTable = new HiveExternalTable(HIVE_REG_HETEROGEN_TABLE, HIVE_RC_COLS);
@@ -268,7 +268,7 @@ public class HiveRcTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(enabled = false, groups = { "features", "gpdb" })
+    @Test(enabled = false, groups = { "hive" })
     public void filterBetweenPartitionsInFragmenter() throws Exception {
 
         gpdb.runQuery("SET optimizer = on");
@@ -282,7 +282,7 @@ public class HiveRcTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "hive" })
     public void filterBetweenPartitionsInAccessor() throws Exception {
 
         gpdb.runQuery("SET optimizer = off");
@@ -322,7 +322,7 @@ public class HiveRcTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "hive" })
     public void filterNoPartitions() throws Exception {
 
         createHiveExternalTable(HIVE_REG_HETEROGEN_TABLE);
@@ -340,7 +340,7 @@ public class HiveRcTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "hive" })
     public void partitionFilterPushDown() throws Exception {
 
         createHiveExternalTable(HIVE_REG_HETEROGEN_TABLE);
@@ -449,7 +449,7 @@ public class HiveRcTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "hive" })
     public void partitionFilterPushDownWithDefaultSerde() throws Exception {
 
         hiveTable = new HiveExternalTable(HIVE_REG_HETEROGEN_TABLE, HIVE_RC_COLS);
@@ -491,7 +491,7 @@ public class HiveRcTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb", "hcatalog" })
+    @Test(groups = { "hive", "hcatalog" })
     public void aggregateQueries() throws Exception {
 
         prepareTypesData();

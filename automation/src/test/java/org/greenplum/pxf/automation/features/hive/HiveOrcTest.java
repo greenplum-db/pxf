@@ -104,7 +104,7 @@ public class HiveOrcTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "hcatalog", "gpdb" })
+    @Test(groups = { "hive", "hcatalog" })
     public void sanity() throws Exception {
 
         createExternalTable(PXF_HIVE_SMALL_DATA_TABLE + "_orc",
@@ -119,7 +119,7 @@ public class HiveOrcTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "hive" })
     public void hiveLongBinaryType() throws Exception {
 
         prepareBinaryData();
@@ -134,7 +134,7 @@ public class HiveOrcTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb", "hcatalog" })
+    @Test(groups = { "hive", "hcatalog" })
     public void storeAsOrc() throws Exception {
 
         createExternalTable(PXF_HIVE_SMALL_DATA_TABLE,
@@ -149,7 +149,7 @@ public class HiveOrcTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb", "hcatalog" })
+    @Test(groups = { "hive", "hcatalog" })
     public void storeAsOrcAllTypes() throws Exception {
 
         runTincTest("pxf.features.hive.orc_primitive_types.runTest");
@@ -162,7 +162,7 @@ public class HiveOrcTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "hive" })
     public void queryWithNotPushedDownOperators() throws Exception {
 
         runTincTest("pxf.features.hive.orc_operators_no_ppd.runTest");
@@ -173,7 +173,7 @@ public class HiveOrcTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb", "hcatalog" })
+    @Test(groups = { "hive", "hcatalog" })
     public void storeAsOrcSnappy() throws Exception {
 
         prepareOrcSnappyData();
@@ -189,7 +189,7 @@ public class HiveOrcTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb", "hcatalog" })
+    @Test(groups = { "hive", "hcatalog" })
     public void storeAsOrcZlib() throws Exception {
 
         prepareOrcZlibData();
@@ -224,7 +224,7 @@ public class HiveOrcTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "hive" })
     public void hivePartitionedTable() throws Exception {
 
         preparePartitionedData();
@@ -243,7 +243,7 @@ public class HiveOrcTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "hive" })
     public void hiveCollectionTypes() throws Exception {
 
         prepareHiveCollection();
@@ -285,7 +285,7 @@ public class HiveOrcTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb" })
+    @Test(groups = { "hive" })
     public void hiveTableWithSkipHeader() throws Exception {
 
         HiveTable hiveOrcSkipHeaderTable = new HiveTable("hive_table_with_skipheader_orc", HIVE_RC_COLS);
