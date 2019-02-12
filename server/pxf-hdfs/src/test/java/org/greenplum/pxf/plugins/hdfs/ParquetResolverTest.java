@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 import static org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName;
@@ -267,30 +268,13 @@ public class ParquetResolverTest {
         context.setMetadata(schema);
         resolver.initialize(context);
 
+        /*
+        Corresponding DB column types  are:
+        TEXT,TEXT,INTEGER, DOUBLE PRECISION,NUMERIC,TIMESTAMP,REAL,BIGINT,BOOLEAN,SMALLINT,SMALLINT,VARCHAR(5),CHAR(3),BYTEA
+         */
+
         Group group = new SimpleGroup(schema);
 
-        /*
-                    "t1    TEXT",
-            "t2    TEXT",
-            "num1  INTEGER",
-            "dub1  DOUBLE PRECISION",
-            "dec1  NUMERIC",
-            "tm    TIMESTAMP",
-            "r     REAL",
-            "bg    BIGINT",
-            "b     BOOLEAN",
-            "tn    SMALLINT",
-            "sml   SMALLINT",
-            "vc1   VARCHAR(5)",
-            "c1    CHAR(3)",
-            "bin   BYTEA"
-    };
-
-SELECT t1, t2, num1, dub1, dec1, tm, r, bg, b, tn, sml, vc1, c1, bin FROM parquet_view ORDER BY t1;
-          t1          |  t2  | num1 | dub1 |             dec1             |         tm          |  r   |    bg    | b | tn | sml  |  vc1  | c1  | bin
-----------------------+------+------+------+------------------------------+---------------------+------+----------+---+----+------+-------+-----+-----
- row1                 | s_6  |    1 |    6 |         1.234560000000000000 | 2013-07-13 21:00:05 |  7.7 | 23456789 | f |  1 |   10 | abcd  | abc | 1
-         */
         group.add(0, "row1-1");
         group.add(0, "row1-2");
 
@@ -303,7 +287,7 @@ SELECT t1, t2, num1, dub1, dec1, tm, r, bg, b, tn, sml, vc1, c1, bin FROM parque
         group.add(3, 6.0d);
         group.add(3, -16.34d);
 
-        BigDecimal value = new BigDecimal((String) "12345678.9012345987654321");
+        BigDecimal value = new BigDecimal("12345678.9012345987654321"); // place of dot doesn't matter
         byte fillByte = (byte) (value.signum() < 0 ? 0xFF : 0x00);
         byte[] unscaled = value.unscaledValue().toByteArray();
         byte[] bytes = new byte[16];
@@ -316,25 +300,52 @@ SELECT t1, t2, num1, dub1, dec1, tm, r, bg, b, tn, sml, vc1, c1, bin FROM parque
         group.add(5, ParquetTypeConverter.getBinary(1549317584246L));
         group.add(5, ParquetTypeConverter.getBinary(-123456789L));
 
+        group.add(6, 7.7f);
+        group.add(6, -12345.35354646f);
+
+        group.add(7, 23456789l);
+        group.add(7, -123456789012345l);
+
+        group.add(8, true);
+        group.add(8, false);
+
+        group.add(9, (short) 1);
+        group.add(9, (short) -3);
+
+        group.add(10, (short) 269);
+        group.add(10, (short) -313);
+
+        group.add(11, Binary.fromString("Hello"));
+        group.add(11, Binary.fromString("World"));
+
+        group.add(12, Binary.fromString("foo"));
+        group.add(12, Binary.fromString("bar"));
+
+        byte[] byteArray1 = new byte[]{(byte) 49, (byte) 50, (byte) 51};
+        group.add(13, Binary.fromReusedByteArray(byteArray1, 0, 3));
+        byte[] byteArray2 = new byte[]{(byte) 52, (byte) 53, (byte) 54};
+        group.add(13, Binary.fromReusedByteArray(byteArray2, 0, 3));
+
         List<Group> groups = new ArrayList<>();
         groups.add(group);
         List<OneField> fields = assertRow(groups, 0, 14);
-        //s1 : "row1" : TEXT
+
         assertField(fields, 0, "[\"row1-1\",\"row1-2\"]", DataType.TEXT);
         assertField(fields, 1, "[]", DataType.TEXT);
         assertField(fields, 2, "[1,2,3]", DataType.TEXT);
         assertField(fields, 3, "[6.0,-16.34]", DataType.TEXT);
         assertField(fields, 4, "[123456.789012345987654321]", DataType.TEXT); // scale fixed to 18 in schema
-        //assertField(fields, 5, "[1549317584246,-123456789]", DataType.TEXT);
-//        assertField(fields, 6, 7.7f, DataType.REAL);
-//        assertField(fields, 7, 23456789l, DataType.BIGINT);
-//        assertField(fields, 8, false, DataType.BOOLEAN);
-//        assertField(fields, 9, (short) 1, DataType.SMALLINT);
-//        assertField(fields, 10, (short) 10, DataType.SMALLINT);
-//        assertField(fields, 11, "abcd", DataType.TEXT);
-//        assertField(fields, 12, "abc", DataType.TEXT);
-//        assertField(fields, 13, new byte[]{(byte) 49}, DataType.BYTEA); // 49 is the ascii code for '1'
-
+        assertField(fields, 5, "[1549317584246,-123456789]", DataType.TEXT);
+        assertField(fields, 6, "[7.7,-12345.354]", DataType.TEXT); // rounded to the precision of 8
+        assertField(fields, 7, "[23456789,-123456789012345]", DataType.TEXT);
+        assertField(fields, 8, "[true,false]", DataType.TEXT);
+        assertField(fields, 9, "[1,-3]", DataType.TEXT);
+        assertField(fields, 10, "[269,-313]", DataType.TEXT);
+        assertField(fields, 11, "[\"Hello\",\"World\"]", DataType.TEXT);
+        assertField(fields, 12, "[\"foo\",\"bar\"]", DataType.TEXT); // 3 chars only
+        Base64.Encoder encoder = Base64.getEncoder(); // byte arrays are Base64 encoded into strings
+        String expectedByteArrays = "[\"" + encoder.encodeToString(byteArray1) + "\",\"" + encoder.encodeToString(byteArray2) + "\"]";
+        assertField(fields, 13, expectedByteArrays, DataType.TEXT);
     }
 
     @Test

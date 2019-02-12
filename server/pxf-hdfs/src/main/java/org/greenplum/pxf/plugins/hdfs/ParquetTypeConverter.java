@@ -127,10 +127,7 @@ public enum ParquetTypeConverter {
         @Override
         public void addValueToJsonArray(Group group, int columnIndex, int repeatIndex, Type type, ArrayNode jsonNode) {
             Timestamp timestamp = (Timestamp) getValue(group, columnIndex, repeatIndex, type);
-            long seconds = timestamp.getTime() / 1000;
-            int micros = timestamp.getNanos() / 1000;
-            double timeInMicros = seconds + micros / 1000000d;
-            jsonNode.add(timeInMicros); // microsecond precision
+            jsonNode.add(timestamp.getTime());
         }
     },
 
