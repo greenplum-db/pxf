@@ -1,7 +1,6 @@
 package org.greenplum.pxf.service;
 
 import org.apache.commons.lang.StringUtils;
-import org.greenplum.pxf.api.FilterParser;
 import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.PluginConf;
 import org.greenplum.pxf.api.model.RequestContext;
@@ -93,8 +92,14 @@ public class HttpRequestParser implements RequestParser<HttpHeaders> {
 
         context.setDataSource(params.removeProperty("DATA-DIR"));
 
-        // result.setFilterString(); taken care by parseFilterAndProjectionInformationAndTupleDescription()
-        // result.setFilterStringValid(); taken care by parseFilterAndProjectionInformationAndTupleDescription()
+        String filterString = params.removeOptionalProperty("FILTER");
+        String hasFilter = params.removeProperty("HAS-FILTER");
+        if (filterString != null) {
+            context.setFilterString(filterString);
+            context.setFilterStringValid(true);
+        } else if ("1".equals(hasFilter)) {
+            LOG.info("Original query has filter, but it was not propagated to PXF");
+        }
 
         context.setFragmenter(params.removeUserProperty("FRAGMENTER"));
 
@@ -135,8 +140,7 @@ public class HttpRequestParser implements RequestParser<HttpHeaders> {
         context.setTransactionId(params.removeProperty("XID"));
 
         // parse tuple description
-        parseFilterAndProjectionInformationAndTupleDescription(params, context);
-        // result.setTupleDescription(); taken care by parseFilterAndProjectionInformationAndTupleDescription()
+        parseTupleDescription(params, context);
 
         context.setUser(params.removeProperty("USER"));
 
@@ -249,14 +253,8 @@ public class HttpRequestParser implements RequestParser<HttpHeaders> {
      * Sets the tuple description for the record
      * Attribute Projection information is optional
      */
-    private void parseFilterAndProjectionInformationAndTupleDescription(RequestMap params, RequestContext context) {
+    private void parseTupleDescription(RequestMap params, RequestContext context) {
         Set<Integer> attrsProjected = new HashSet<>();
-
-        String filterString = params.removeOptionalProperty("FILTER");
-        if (filterString != null) {
-            context.setFilterString(filterString);
-            context.setFilterStringValid(true);
-        }
 
         /* Process column projection info */
         String columnProjStr = params.removeOptionalProperty("ATTRS-PROJ");

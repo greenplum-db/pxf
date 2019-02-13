@@ -68,6 +68,7 @@ public class HttpRequestParserTest {
         parameters.putSingle("X-GP-ALIGNMENT", "all");
         parameters.putSingle("X-GP-SEGMENT-ID", "-44");
         parameters.putSingle("X-GP-SEGMENT-COUNT", "2");
+        parameters.putSingle("X-GP-HAS-FILTER", "0");
         parameters.putSingle("X-GP-FORMAT", "TEXT");
         parameters.putSingle("X-GP-URL-HOST", "my://bags");
         parameters.putSingle("X-GP-URL-PORT", "-8020");
@@ -304,6 +305,8 @@ public class HttpRequestParserTest {
 
     @Test
     public void filterUtf8() {
+        parameters.remove("X-GP-HAS-FILTER");
+        parameters.putSingle("X-GP-HAS-FILTER", "1");
         String isoString = new String("UTF8_計算機用語_00000000".getBytes(StandardCharsets.UTF_8), StandardCharsets.ISO_8859_1);
         parameters.putSingle("X-GP-FILTER", isoString);
         RequestContext context = parser.parseRequest(mockRequestHeaders);
