@@ -17,6 +17,13 @@
  * under the License.
  */
 
+plugins {
+  id "com.github.hierynomus.license-report" version"0.15.0"
+}
+
+downloadLicenses {
+    dependencyConfiguration = 'bundleJars'
+}
 wrapper {
     gradleVersion = '4.10.3'
 }
@@ -31,6 +38,9 @@ allprojects {
 
     group = 'org.greenplum.pxf'
     sourceCompatibility = 1.8
+
+    task allDeps(type: DependencyReportTask) {}
+    task allDepInsight(type: DependencyInsightReportTask) {}
 
     compileJava {
         options.compilerArgs += [
