@@ -20,7 +20,7 @@ package org.greenplum.pxf.plugins.jdbc.utils;
  */
 
 /**
- * Implements methods for the Oracle Database.
+ * Implements methods for Oracle Database.
  */
 public class OracleProduct extends DbProduct {
     @Override

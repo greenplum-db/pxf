@@ -19,11 +19,10 @@ package org.greenplum.pxf.plugins.jdbc;
  * under the License.
  */
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
 import org.greenplum.pxf.plugins.jdbc.writercallable.WriterCallable;
 import org.greenplum.pxf.plugins.jdbc.writercallable.WriterCallableFactory;
 
@@ -42,6 +41,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * JDBC tables accessor
  *
@@ -51,7 +53,6 @@ import java.util.concurrent.Future;
  * built-in JDBC batches of arbitrary size
  */
 public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
-
     /**
      * openForRead() implementation
      * Create query, open JDBC connection, execute query and store the result into resultSet
@@ -118,7 +119,7 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
 
         Connection connection = super.getConnection();
 
-        queryWrite = buildInsertQuery();
+        queryWrite = buildInsertQuery(connection.getMetaData());
         statementWrite = super.getPreparedStatement(connection, queryWrite);
 
         // Process batchSize
@@ -258,6 +259,8 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
     /**
      * Build SELECT query (with "WHERE" and partition constraints)
      *
+     * @param databaseMetaData
+     *
      * @return Complete SQL query
      *
      * @throws ParseException if the constraints passed in RequestContext are incorrect
@@ -267,7 +270,11 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
         if (databaseMetaData == null) {
             throw new IllegalArgumentException("The provided databaseMetaData is null");
         }
+        final String QUOTE = databaseMetaData.getIdentifierQuoteString();
+        DbProduct dbProduct = DbProduct.getDbProduct(databaseMetaData.getDatabaseProductName());
+
         StringBuilder sb = new StringBuilder();
+
         sb.append("SELECT ");
 
         // Insert columns' names
@@ -275,17 +282,22 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
         for (ColumnDescriptor column : columns) {
             sb.append(columnDivisor);
             columnDivisor = ", ";
-            sb.append(column.columnName());
+            sb.append(
+                quoteColumns ?
+                QUOTE + column.columnName() + QUOTE
+                : column.columnName()
+            );
         }
 
-        // Insert the table name
-        sb.append(" FROM ").append(tableName);
+        // Insert table name
+        sb.append(" FROM ");
+        sb.append(tableName);
 
         // Insert regular WHERE constraints
-        (new WhereSQLBuilder(context)).buildWhereSQL(databaseMetaData.getDatabaseProductName(), sb);
+        (new WhereSQLBuilder(context, quoteColumns ? QUOTE : null)).buildWhereSQL(dbProduct, sb);
 
         // Insert partition constraints
-        JdbcPartitionFragmenter.buildFragmenterSql(context, databaseMetaData.getDatabaseProductName(), sb);
+        JdbcPartitionFragmenter.buildFragmenterSql(context, dbProduct, sb);
 
         return sb.toString();
     }
@@ -293,14 +305,21 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
     /**
      * Build INSERT query template (field values are replaced by placeholders '?')
      *
+     * @param databaseMetaData
+     *
      * @return SQL query with placeholders instead of actual values
+     *
+     * @throws SQLException if database metadata is invalid
      */
-    private String buildInsertQuery() {
+    private String buildInsertQuery(DatabaseMetaData databaseMetaData) throws SQLException {
+        if (databaseMetaData == null) {
+            throw new IllegalArgumentException("The provided databaseMetaData is null");
+        }
+        final String QUOTE = databaseMetaData.getIdentifierQuoteString();
+
         StringBuilder sb = new StringBuilder();
 
         sb.append("INSERT INTO ");
-
-        // Insert the table name
         sb.append(tableName);
 
         // Insert columns' names
@@ -309,7 +328,11 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
         for (ColumnDescriptor column : columns) {
             sb.append(fieldDivisor);
             fieldDivisor = ", ";
-            sb.append(column.columnName());
+            sb.append(
+                quoteColumns ?
+                QUOTE + column.columnName() + QUOTE
+                : column.columnName()
+            );
         }
         sb.append(")");
 

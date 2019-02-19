@@ -40,8 +40,9 @@ import java.text.ParseException;
  * Only HDOP_AND is supported for multiple filters
  */
 public class WhereSQLBuilder extends JdbcFilterBuilder {
-    public WhereSQLBuilder(RequestContext input) {
+    public WhereSQLBuilder(RequestContext input, String quoteMark) {
         requestContext = input;
+        QUOTE = quoteMark != null ? quoteMark : "";
     }
 
     /**
@@ -53,7 +54,7 @@ public class WhereSQLBuilder extends JdbcFilterBuilder {
      *
      * @throws ParseException if an error happens when parsing the constraints (provided to class constructor)
      */
-    public void buildWhereSQL(String dbName, StringBuilder query) throws ParseException {
+    public void buildWhereSQL(DbProduct dbProduct, StringBuilder query) throws ParseException {
         if (!requestContext.hasFilter()) {
             return;
         }
@@ -81,7 +82,7 @@ public class WhereSQLBuilder extends JdbcFilterBuilder {
                 // Insert constraint column name
                 BasicFilter filter = (BasicFilter) obj;
                 ColumnDescriptor column = requestContext.getColumn(filter.getColumn().index());
-                prepared.append(column.columnName());
+                prepared.append(QUOTE + column.columnName() + QUOTE);
 
                 // Insert constraint operator
                 FilterParser.Operation op = filter.getOperation();
@@ -118,7 +119,6 @@ public class WhereSQLBuilder extends JdbcFilterBuilder {
                 }
 
                 // Insert constraint constant
-                DbProduct dbProduct = DbProduct.getDbProduct(dbName);
                 Object val = filter.getConstant().constant();
                 switch (DataType.get(column.columnTypeCode())) {
                     case SMALLINT:
@@ -193,4 +193,7 @@ public class WhereSQLBuilder extends JdbcFilterBuilder {
 
     // {@link RequestContext} from PXF
     private RequestContext requestContext;
+
+    // Quote string to surround column names with
+    private final String QUOTE;
 }

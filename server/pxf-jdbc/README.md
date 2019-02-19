@@ -82,11 +82,16 @@ The **`<plugin_parameters>`** are **optional**:
 &RANGE=<start_value>:<end_value>
 [&INTERVAL=<value>[:<unit>]]
 ]
+[
+&QUOTE_COLUMNS=<any_value>
+]
 ```
 
 The meaning of `BATCH_SIZE` is given in section [batching of INSERT queries](#Batching).
 
-The meaning of `POOL_SIZE` is given in section [using thread pool for INSERT queries](#Thread_pool)
+The meaning of `POOL_SIZE` is given in section [using thread pool for INSERT queries](#Thread_pool).
+
+`QUOTE_COLUMNS` parameter makes PXF surround all column names with a quotation string defined by JDBC driver. Use this option when these names require special treatment (e.g. they contain both upper- and lowercase letters and the external database is case-sensitive).
 
 The meaning of other parameters is given in section [partitioning](#Partitioning).
 

@@ -8,9 +8,9 @@ package org.greenplum.pxf.plugins.jdbc;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -65,7 +65,7 @@ public class JdbcFilterBuilderTest {
 
     @Test
     public void parseFilterWithLogicalOperation() throws Exception {
-        WhereSQLBuilder builder = new WhereSQLBuilder(null);
+        WhereSQLBuilder builder = new WhereSQLBuilder(null, null);
         LogicalFilter filter = (LogicalFilter) builder.getFilterObject("a1c25s5dfirsto5a2c20s1d2o2l0");
         assertEquals(LogicalOperation.HDOP_AND, filter.getOperator());
         assertEquals(2, filter.getFilterList().size());
@@ -73,7 +73,7 @@ public class JdbcFilterBuilderTest {
 
     @Test
     public void parseNestedExpressionWithLogicalOperation() throws Exception {
-        WhereSQLBuilder builder = new WhereSQLBuilder(null);
+        WhereSQLBuilder builder = new WhereSQLBuilder(null, null);
         LogicalFilter filter = (LogicalFilter) builder.getFilterObject("a1c25s5dfirsto5a2c20s1d2o2l0a1c20s1d1o1l1");
         assertEquals(LogicalOperation.HDOP_OR, filter.getOperator());
         assertEquals(LogicalOperation.HDOP_AND, ((LogicalFilter) filter.getFilterList().get(0)).getOperator());
@@ -82,7 +82,7 @@ public class JdbcFilterBuilderTest {
 
     @Test
     public void parseISNULLExpression() throws Exception {
-        WhereSQLBuilder builder = new WhereSQLBuilder(null);
+        WhereSQLBuilder builder = new WhereSQLBuilder(null, null);
         BasicFilter filter = (BasicFilter) builder.getFilterObject("a1o8");
         assertEquals(FilterParser.Operation.HDOP_IS_NULL, filter.getOperation());
         assertEquals(1, filter.getColumn().index());
@@ -91,7 +91,7 @@ public class JdbcFilterBuilderTest {
 
     @Test
     public void parseISNOTNULLExpression() throws Exception {
-        WhereSQLBuilder builder = new WhereSQLBuilder(null);
+        WhereSQLBuilder builder = new WhereSQLBuilder(null, null);
         BasicFilter filter = (BasicFilter) builder.getFilterObject("a1o9");
         assertEquals(FilterParser.Operation.HDOP_IS_NOT_NULL, filter.getOperation());
         assertEquals(1, filter.getColumn().index());

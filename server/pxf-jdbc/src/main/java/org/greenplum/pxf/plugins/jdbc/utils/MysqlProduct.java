@@ -20,16 +20,11 @@ package org.greenplum.pxf.plugins.jdbc.utils;
  */
 
 /**
- * Implements methods for the MySQL Database.
+ * Implements methods for MySQL.
  */
-public class MysqlProduct extends DbProduct {
+public class MysqlProduct extends PostgresProduct {
     @Override
     public String wrapDate(Object val){
         return "DATE('" + val + "')";
-    }
-
-    @Override
-    public String wrapTimestamp(Object val) {
-        return "'" + val + "'";
     }
 }

@@ -77,6 +77,9 @@ public class JdbcBasePlugin extends BasePlugin {
             throw new IllegalArgumentException("Tuple description must be provided");
         }
 
+        // This parameter is not required. The default value is false
+        quoteColumns = (context.getOption("QUOTE_COLUMNS") != null);
+
         // This parameter is not required. The default value is null
         user = context.getOption("USER");
         if (user != null) {
@@ -220,6 +223,8 @@ public class JdbcBasePlugin extends BasePlugin {
     // Columns description
     protected List<ColumnDescriptor> columns = null;
 
+    // Whether to quote column names
+    protected boolean quoteColumns = false;
 
     private static final Logger LOG = LoggerFactory.getLogger(JdbcBasePlugin.class);
 

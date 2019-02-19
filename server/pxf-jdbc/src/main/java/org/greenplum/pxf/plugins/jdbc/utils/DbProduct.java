@@ -19,11 +19,19 @@ package org.greenplum.pxf.plugins.jdbc.utils;
  * under the License.
  */
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
- * A tool class to process data types that must have different form in different databases.
- * Such processing is required to create correct constraints (WHERE statements).
+ * A tool class to change PXF behaviour for some external databases.
+ *
+ * To implement a new DbProduct:
+ * 1. Create a class inheriting from this one and implement logic there;
+ * 2. Add new class constructor to getDbProduct() function.
  */
 public abstract class DbProduct {
+    private static final Log LOG = LogFactory.getLog(DbProduct.class);
+
     /**
      * Get an instance of some class - the database product
      *
@@ -31,20 +39,23 @@ public abstract class DbProduct {
      * @return a DbProduct of the required class
      */
     public static DbProduct getDbProduct(String dbName) {
-        if (dbName.toUpperCase().contains("MYSQL"))
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Database product name is '" + dbName + "'");
+        }
+        if (dbName.toUpperCase().contains("POSTGRES"))
+            return new PostgresProduct();
+        else if (dbName.toUpperCase().contains("MYSQL"))
             return new MysqlProduct();
         else if (dbName.toUpperCase().contains("ORACLE"))
             return new OracleProduct();
-        else if (dbName.toUpperCase().contains("POSTGRES"))
-            return new PostgresProduct();
         else if (dbName.toUpperCase().contains("MICROSOFT"))
             return new MicrosoftProduct();
         else
-            return new CommonProduct();
+            return new PostgresProduct();
     }
 
     /**
-     * Wraps a given date value the way required by a target database
+     * Wraps a given date value the way required by target database
      *
      * @param val {@link java.sql.Date} object to wrap
      * @return a string with a properly wrapped date object
@@ -52,25 +63,10 @@ public abstract class DbProduct {
     public abstract String wrapDate(Object val);
 
     /**
-     * Wraps a given timestamp value the way required by a target database
+     * Wraps a given timestamp value the way required by target database
      *
      * @param val {@link java.sql.Timestamp} object to wrap
      * @return a string with a properly wrapped timestamp object
      */
     public abstract String wrapTimestamp(Object val);
-}
-
-/**
- * Common product. Used when no other products are avalibale
- */
-class CommonProduct extends DbProduct {
-    @Override
-    public String wrapDate(Object val) {
-        return "date'" + val + "'";
-    }
-
-    @Override
-    public String wrapTimestamp(Object val) {
-        return "'" + val + "'";
-    }
 }

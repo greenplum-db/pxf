@@ -20,16 +20,11 @@ package org.greenplum.pxf.plugins.jdbc.utils;
  */
 
 /**
- * Implements methods for the Microsoft SQL server database
+ * Implements methods for Microsoft SQL server.
  */
-public class MicrosoftProduct extends DbProduct {
+public class MicrosoftProduct extends PostgresProduct {
     @Override
     public String wrapDate(Object val){
-        return "'" + val + "'";
-    }
-
-    @Override
-    public String wrapTimestamp(Object val) {
         return "'" + val + "'";
     }
 }

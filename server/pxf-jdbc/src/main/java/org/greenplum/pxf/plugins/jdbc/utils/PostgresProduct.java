@@ -20,7 +20,8 @@ package org.greenplum.pxf.plugins.jdbc.utils;
  */
 
 /**
- * Implements methods for the PostgreSQL.
+ * Implements methods for PostgreSQL.
+ * Is also used when no other product is available.
  */
 public class PostgresProduct extends DbProduct {
     @Override
