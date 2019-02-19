@@ -24,6 +24,7 @@ import org.apache.commons.logging.LogFactory;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.plugins.jdbc.utils.SimpleSQLQueryExecutor;
 import org.greenplum.pxf.plugins.jdbc.writercallable.WriterCallable;
 import org.greenplum.pxf.plugins.jdbc.writercallable.WriterCallableFactory;
 
@@ -69,6 +70,9 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
         }
 
         Connection connection = super.getConnection();
+        if (preQuerySql != null) {
+            SimpleSQLQueryExecutor.execute(connection, preQuerySql, stopIfPreQueryFails);
+        }
 
         queryRead = buildSelectQuery(connection.getMetaData());
         statementRead = connection.createStatement();
@@ -117,6 +121,9 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
         }
 
         Connection connection = super.getConnection();
+        if (preQuerySql != null) {
+            SimpleSQLQueryExecutor.execute(connection, preQuerySql, stopIfPreQueryFails);
+        }
 
         queryWrite = buildInsertQuery();
         statementWrite = super.getPreparedStatement(connection, queryWrite);

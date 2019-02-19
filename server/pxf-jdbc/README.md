@@ -82,11 +82,16 @@ The **`<plugin_parameters>`** are **optional**:
 &RANGE=<start_value>:<end_value>
 [&INTERVAL=<value>[:<unit>]]
 ]
+[
+&PRE_SQL=<string>[&STOP_IF_PRE_FAILS=<any_value>]
+]
 ```
 
 The meaning of `BATCH_SIZE` is given in section [batching of INSERT queries](#Batching).
 
-The meaning of `POOL_SIZE` is given in section [using thread pool for INSERT queries](#Thread_pool)
+The meaning of `POOL_SIZE` is given in section [using thread pool for INSERT queries](#Thread-pool).
+
+The meaning of `PRE_SQL` and `STOP_IF_PRE_FAILS` is given in section [Query-preceding SQL command](#query-preceding-sql-command).
 
 The meaning of other parameters is given in section [partitioning](#Partitioning).
 
@@ -138,9 +143,24 @@ To enable thread pool, create an external table with the paramete `POOL_SIZE` se
 By default (`POOL_SIZE` is absent), thread pool is not used.
 
 
+## Query-preceding SQL command
+
+Before executing `SELECT` or `INSERT` query in external database, PXF JDBC plugin can execute extra arbitrary SQL command. This can be useful, for example, when query requires some options to be `SET` before execution.
+
+To do that, pass an SQL command as an ordinary string (including `;` if necessary) in parameter `PRE_SQL`.
+
+By default, if `PRE_SQL` command fails, PXF JDBC plugin still tries to execute "main" `SELECT` or `INSERT` query. A warning with failure details will be added to PXF logs.
+
+To prevent the plugin from executing "main" `SELECT` or `INSERT` query when query-preceding command fails, set parameter `STOP_IF_PRE_FAILS` to any value.
+
+Any results of `PRE_SQL` are ignored (`ResultSet` will not be even created).
+
+
 ## Partitioning
 
 PXF JDBC plugin supports simultaneous read access to an external table from multiple PXF segments. This feature is called partitioning.
+
+Note that `PRE_SQL` command will be executed once by *every* PXF segment right after it establishes a connection to external database. In other words, when partitioning is used, `PRE_SQL` will be executed more than once.
 
 
 ### Syntax
@@ -252,3 +272,16 @@ Finally, a query to a GPDB external table is made:
 SELECT * FROM myclass;
 SELECT id, name FROM myclass WHERE id = 2;
 ```
+
+
+### External table with `PRE_SQL`
+Example `EXTERNAL TABLE` definition:
+```
+CREATE EXTERNAL TABLE ext_table(k INT, val INT)
+LOCATION ('pxf://PUBLIC.T2?PROFILE=JDBC&JDBC_DRIVER=org.company.JdbcDriver&DB_URL=jdbc:company://1.2.3.4:12345&PRE_SQL=INSERT INTO T2 VALUES ((SELECT MAX(K) + 1 FROM T2), 1);&STOP_IF_PRE_FAILS=1')
+FORMAT 'CUSTOM' (formatter='pxfwritable_import');
+```
+
+When `SELECT` from this external table is called, PXF executes `INSERT INTO T2 VALUES ((SELECT MAX(K) + 1 FROM T2), 1);` and a new row is inserted into table `T2` in external database.
+
+Note this example **does not work** if partitioning is used and there is `UNIQUE` constraint on column `k` in external database. Instead, some PXF segments will fail or may behave in different fashion, depending on transaction isolation level in external database.
