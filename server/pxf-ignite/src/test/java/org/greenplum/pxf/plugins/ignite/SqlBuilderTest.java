@@ -45,8 +45,18 @@ public class SqlBuilderTest {
         when(context.hasFilter()).thenReturn(true);
         when(context.getFilterString()).thenReturn("a0c20s1d1o5");  // id=1
 
-        WhereSQLBuilder builder = new WhereSQLBuilder(context);
+        WhereSQLBuilder builder = new WhereSQLBuilder(context, null);
         assertEquals("id=1", builder.buildWhereSQL());
+    }
+
+    @Test
+    public void testIdFilterQuoted() throws Exception {
+        prepareConstruction();
+        when(context.hasFilter()).thenReturn(true);
+        when(context.getFilterString()).thenReturn("a0c20s1d1o5");  // id=1
+
+        WhereSQLBuilder builder = new WhereSQLBuilder(context, "\"");
+        assertEquals("\"id\"=1", builder.buildWhereSQL());
     }
 
     @Test
@@ -56,7 +66,7 @@ public class SqlBuilderTest {
         // cdate>'2008-02-01' and cdate<'2008-12-01' and amt > 1200
         when(context.getFilterString()).thenReturn("a1c25s10d2008-02-01o2a1c25s10d2008-12-01o1l0a2c20s4d1200o2l0");
 
-        WhereSQLBuilder builder = new WhereSQLBuilder(context);
+        WhereSQLBuilder builder = new WhereSQLBuilder(context, null);
         assertEquals("cdate>'2008-02-01' AND cdate<'2008-12-01' AND amt>1200"
                 , builder.buildWhereSQL());
     }
@@ -68,7 +78,7 @@ public class SqlBuilderTest {
         // grade like 'bad'
         when(context.getFilterString()).thenReturn("a3c25s3dbado7");
 
-        WhereSQLBuilder builder = new WhereSQLBuilder(context);
+        WhereSQLBuilder builder = new WhereSQLBuilder(context, null);
         assertEquals(null, builder.buildWhereSQL());
     }
 
@@ -79,7 +89,7 @@ public class SqlBuilderTest {
         // cdate>'2008-02-01' or amt < 1200
         when(context.getFilterString()).thenReturn("a1c25s10d2008-02-01o2a2c20s4d1200o2l1");
 
-        WhereSQLBuilder builder = new WhereSQLBuilder(context);
+        WhereSQLBuilder builder = new WhereSQLBuilder(context, null);
         assertEquals(null, builder.buildWhereSQL());
     }
 
@@ -110,7 +120,7 @@ public class SqlBuilderTest {
         when(context.getOption("PARTITION_BY")).thenReturn("grade:enum");
         when(context.getOption("RANGE")).thenReturn("excellent:good:general:bad");
 
-        WhereSQLBuilder builder = new WhereSQLBuilder(context);
+        WhereSQLBuilder builder = new WhereSQLBuilder(context, null);
         String whereSql = builder.buildWhereSQL();
         assertEquals("id>5", whereSql);
 

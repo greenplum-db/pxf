@@ -37,10 +37,13 @@ import java.util.List;
 public class WhereSQLBuilder extends IgniteFilterBuilder {
     /**
      * Class constructor
-     * @param input Input
+     *
+     * @param input
+     * @param quoteMark quote string to use. `null` is allowed
      */
-    public WhereSQLBuilder(RequestContext input) {
+    public WhereSQLBuilder(RequestContext input, String quoteMark) {
         requestContext = input;
+        QUOTE = quoteMark != null ? quoteMark : new String("");
     }
 
     /**
@@ -68,12 +71,9 @@ public class WhereSQLBuilder extends IgniteFilterBuilder {
 
                 sb.append(andDivisor);
                 andDivisor = " AND ";
-
                 ColumnDescriptor column = requestContext.getColumn(filter.getColumn().index());
-                //the column name of filter
-                sb.append(column.columnName());
+                sb.append(QUOTE + column.columnName() + QUOTE);
 
-                //the operation of filter
                 FilterParser.Operation op = filter.getOperation();
                 switch (op) {
                     case HDOP_LT:
@@ -125,19 +125,6 @@ public class WhereSQLBuilder extends IgniteFilterBuilder {
 
 
     /**
-     * Unsupported filter exception class.
-     * Thrown when the filter string passed to constructor cannot be parsed
-     */
-    private static class UnsupportedFilterException extends Exception {
-        UnsupportedFilterException(String message) {
-            super(message);
-        }
-    }
-
-    // PXF RequestContext
-    private RequestContext requestContext;
-
-    /**
      * Parses PXF {@link RequestContext} 'FilterObject'
      * Only 'HDOP_AND' is supported as a 'LogicalOperation' at the moment
      *
@@ -167,4 +154,20 @@ public class WhereSQLBuilder extends IgniteFilterBuilder {
 
         return returnList;
     }
+
+    /**
+     * Unsupported filter exception class.
+     * Thrown when the filter string passed to constructor cannot be parsed
+     */
+    private static class UnsupportedFilterException extends Exception {
+        UnsupportedFilterException(String message) {
+            super(message);
+        }
+    }
+
+    // PXF RequestContext
+    private RequestContext requestContext;
+
+    // Quotation mark (provided by IgniteAccessor)
+    private final String QUOTE;
 }

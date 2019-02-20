@@ -20,8 +20,6 @@ package org.greenplum.pxf.plugins.ignite;
  */
 
 import com.google.gson.JsonArray;
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.greenplum.pxf.api.OneField;
@@ -31,6 +29,9 @@ import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 
+import java.math.BigDecimal;
+import java.sql.Date;
+import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.LinkedList;
@@ -55,7 +56,7 @@ public class IgniteResolver extends IgniteBasePlugin implements Resolver {
      */
     @Override
     public List<OneField> getFields(OneRow row) throws ParseException, UnsupportedOperationException {
-        JsonArray result = JsonArray.class.cast(row.getData());
+        List<?> result = List.class.cast(row.getData());
         LinkedList<OneField> fields = new LinkedList<OneField>();
 
         if (result.size() != columns.size()) {
@@ -66,61 +67,33 @@ public class IgniteResolver extends IgniteBasePlugin implements Resolver {
             Object value = null;
             OneField oneField = new OneField(columns.get(i).columnTypeCode(), null);
 
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Parsing oneField #" + i + " of type '" + DataType.get(oneField.type).toString() + "'");
+            }
+
             // Handle null values
-            if (result.get(i).isJsonNull()) {
+            if (result.get(i) == null) {
                 fields.add(oneField);
                 continue;
             }
             switch (DataType.get(oneField.type)) {
                 case INTEGER:
-                    value = result.get(i).getAsInt();
-                    break;
                 case FLOAT8:
-                    value = result.get(i).getAsDouble();
-                    break;
                 case REAL:
-                    value = result.get(i).getAsFloat();
-                    break;
                 case BIGINT:
-                    value = result.get(i).getAsLong();
-                    break;
                 case SMALLINT:
-                    value = result.get(i).getAsShort();
-                    break;
                 case BOOLEAN:
-                    value = result.get(i).getAsBoolean();
-                    break;
                 case VARCHAR:
                 case BPCHAR:
                 case TEXT:
                 case NUMERIC:
-                    value = result.get(i).getAsString();
-                    break;
                 case BYTEA:
-                    value = Base64.decodeBase64(result.get(i).getAsString());
-                    break;
                 case TIMESTAMP:
-                    boolean isConversionSuccessful = false;
-                    for (SimpleDateFormat sdf : getTimestampSDFs.get()) {
-                        try {
-                            value = sdf.parse(result.get(i).getAsString());
-                            isConversionSuccessful = true;
-                            break;
-                        }
-                        catch (ParseException e) {
-                            // pass
-                        }
-                    }
-                    if (!isConversionSuccessful) {
-                        throw new ParseException(result.get(i).getAsString(), 0);
-                    }
-                    break;
                 case DATE:
-                    value = getDateSDF.parse(result.get(i).getAsString());
+                    value = result.get(i);
                     break;
                 default:
-                    throw new UnsupportedOperationException("Field type not supported: " + DataType.get(oneField.type).toString()
-                            + ", Column: " + columns.get(i).columnName());
+                    throw new UnsupportedOperationException("Field type '" + DataType.get(oneField.type).toString() + "' (column '" + columns.get(i).columnName() + "') is not supported");
             }
 
             oneField.val = value;
@@ -131,79 +104,134 @@ public class IgniteResolver extends IgniteBasePlugin implements Resolver {
     }
 
     /**
-     * Transforms a list of {@link OneField} from PXF into a {@link OneRow} with a string inside, containing a tuple from SQL INSERT query
-     *
-     * @param record List of fields
-     * @return row one row
+     * Transforms a list of {@link OneField} from PXF into a {@link OneRow} with an Object[] inside
      *
      * @throws UnsupportedOperationException if the type of some field is not supported
      */
     @Override
-    public OneRow setFields(List<OneField> record) throws UnsupportedOperationException {
-        StringBuilder sb = new StringBuilder();
-        String fieldDivisor = "";
+    public OneRow setFields(List<OneField> record) throws UnsupportedOperationException, ParseException {
+        Object[] queryArgs = new Object[record.size()];
 
-        sb.append("(");
+        int column_index = 0;
         for (OneField oneField : record) {
-            sb.append(fieldDivisor);
-            fieldDivisor = ", ";
+            ColumnDescriptor column = columns.get(column_index);
+            if (
+                LOG.isDebugEnabled() &&
+                DataType.get(column.columnTypeCode()) != DataType.get(oneField.type)
+            ) {
+                LOG.warn("The provided tuple of data may be disordered. Datatype of column with descriptor '" + column.toString() + "' must be '" + DataType.get(column.columnTypeCode()).toString() + "', but actual is '" + DataType.get(oneField.type).toString() + "'");
+            }
+
+            // Check that data type is supported
             switch (DataType.get(oneField.type)) {
                 case BOOLEAN:
                 case INTEGER:
                 case FLOAT8:
                 case REAL:
                 case BIGINT:
-                case NUMERIC:
                 case SMALLINT:
-                    sb.append(String.valueOf(oneField.val));
-                    break;
+                case NUMERIC:
                 case VARCHAR:
                 case BPCHAR:
                 case TEXT:
-                    sb.append("'" + String.valueOf(oneField.val) + "'");
-                    break;
                 case BYTEA:
-                    sb.append("'" + Hex.encodeHexString((byte[])(oneField.val)) + "'");
-                    break;
                 case TIMESTAMP:
-                    sb.append(setTimestampSDF.get().format(oneField.val));
-                    break;
                 case DATE:
-                    sb.append(setDateSDF.format(oneField.val));
                     break;
                 default:
-                    throw new UnsupportedOperationException("Field type not supported: " + DataType.get(oneField.type).toString());
+                    throw new UnsupportedOperationException("Field type '" + DataType.get(oneField.type).toString() + "' (column '" + column.toString() + "') is not supported");
             }
+
+            // Convert TEXT columns into native data types
+            if ((DataType.get(oneField.type) == DataType.TEXT) && (DataType.get(column.columnTypeCode()) != DataType.TEXT)) {
+                oneField.type = column.columnTypeCode();
+                if (oneField.val != null) {
+                    String rawVal = (String)oneField.val;
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("OneField content (conversion from TEXT): '" + rawVal + "'");
+                    }
+                    switch (DataType.get(column.columnTypeCode())) {
+                        case VARCHAR:
+                        case BPCHAR:
+                        case TEXT:
+                        case BYTEA:
+                            break;
+                        case BOOLEAN:
+                            oneField.val = (Object)Boolean.parseBoolean(rawVal);
+                            break;
+                        case INTEGER:
+                            oneField.val = (Object)Integer.parseInt(rawVal);
+                            break;
+                        case FLOAT8:
+                            oneField.val = (Object)Double.parseDouble(rawVal);
+                            break;
+                        case REAL:
+                            oneField.val = (Object)Float.parseFloat(rawVal);
+                            break;
+                        case BIGINT:
+                            oneField.val = (Object)Long.parseLong(rawVal);
+                            break;
+                        case SMALLINT:
+                            oneField.val = (Object)Short.parseShort(rawVal);
+                            break;
+                        case NUMERIC:
+                            oneField.val = (Object)new BigDecimal(rawVal);
+                            break;
+                        case TIMESTAMP:
+                            boolean isConversionSuccessful = false;
+                            for (SimpleDateFormat sdf : timestampSDFs.get()) {
+                                try {
+                                    java.util.Date parsedTimestamp = sdf.parse(rawVal);
+                                    oneField.val = (Object)new Timestamp(parsedTimestamp.getTime());
+                                    isConversionSuccessful = true;
+                                    break;
+                                }
+                                catch (ParseException e) {
+                                    // pass
+                                }
+                            }
+                            if (!isConversionSuccessful) {
+                                throw new ParseException(rawVal, 0);
+                            }
+                            break;
+                        case DATE:
+                            oneField.val = (Object)new Date(dateSDF.get().parse(rawVal).getTime());
+                            break;
+                        default:
+                            throw new UnsupportedOperationException("Conversion from TEXT for fields of type '" + DataType.get(oneField.type).toString() + "' (column '" + column.toString() + "') is not supported");
+                    }
+                }
+            }
+
+            queryArgs[column_index] = oneField.val;
+            column_index += 1;
         }
-        sb.append(")");
-        return new OneRow(sb.toString());
+
+        return new OneRow(queryArgs);
     }
 
     private static final Log LOG = LogFactory.getLog(IgniteResolver.class);
 
-    private static final SimpleDateFormat getDateSDF = new SimpleDateFormat("yyyy-MM-dd");
-    private static final SimpleDateFormat setDateSDF = new SimpleDateFormat("'yyyy-MM-dd'");
-
-    // SimpleDateFormats to parse Ignite TIMESTAMP format
-    private static ThreadLocal<SimpleDateFormat[]> getTimestampSDFs = new ThreadLocal<SimpleDateFormat[]>() {
-        @Override protected SimpleDateFormat[] initialValue() {
-            SimpleDateFormat[] retRes = {
-                new SimpleDateFormat("MMM d, yyyy hh:mm:ss.SSSSSS a"),
-                new SimpleDateFormat("MMM d, yyyy hh:mm:ss.SSSSS a"),
-                new SimpleDateFormat("MMM d, yyyy hh:mm:ss.SSSS a"),
-                new SimpleDateFormat("MMM d, yyyy hh:mm:ss.SSS a"),
-                new SimpleDateFormat("MMM d, yyyy hh:mm:ss.SS a"),
-                new SimpleDateFormat("MMM d, yyyy hh:mm:ss.S a"),
-                new SimpleDateFormat("MMM d, yyyy hh:mm:ss a")
-            };
-            return retRes;
+    // SimpleDateFormat to parse TEXT into DATE
+    private static ThreadLocal<SimpleDateFormat> dateSDF = new ThreadLocal<SimpleDateFormat>() {
+        @Override protected SimpleDateFormat initialValue() {
+            return new SimpleDateFormat("yyyy-MM-dd");
         }
     };
-
-    // SimpleDateFormat to properly encode TIMESTAMP for INSERT queries
-    private static ThreadLocal<SimpleDateFormat> setTimestampSDF = new ThreadLocal<SimpleDateFormat>() {
-        @Override protected SimpleDateFormat initialValue() {
-            return new SimpleDateFormat("'yyyy-MM-dd hh:mm:ss.SSSSSS'");
+    // SimpleDateFormat to parse TEXT into TIMESTAMP (with microseconds)
+    private static ThreadLocal<SimpleDateFormat[]> timestampSDFs = new ThreadLocal<SimpleDateFormat[]>() {
+        @Override protected SimpleDateFormat[] initialValue() {
+            SimpleDateFormat[] retRes = {
+                new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSSS"),
+                new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSS"),
+                new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSS"),
+                new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS"),
+                new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SS"),
+                new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S"),
+                new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"),
+                new SimpleDateFormat("yyyy-MM-dd")
+            };
+            return retRes;
         }
     };
 

@@ -1,15 +1,13 @@
 # Accessing Ignite database using PXF
 
-The PXF Ignite plug-in enables to access the [Apache Ignite database](https://ignite.apache.org/) (both read and write operations are supported) via REST API.
+The PXF Ignite plugin provides access to [Apache Ignite database](https://ignite.apache.org/) (both `SELECT` and `INSERT` are supported) via Ignite thin connector for Java.
 
 
 ## Prerequisites
 
-Check the following before using the plug-in:
-
-* The Ignite plug-in is installed on all PXF nodes;
-
-* The Apache Ignite client is installed and running at the `IGNITE_HOST` (`localhost` by default; this can be changed, see syntax below), and it accepts http queries from the PXF (note that *enabling Ignite REST API does not require changes in Ignite configuration*; see the instruction on how to do that at https://apacheignite.readme.io/docs/rest-api#section-getting-started).
+Check the following before using the plugin:
+* Ignite plugin is installed on all PXF nodes;
+* The Apache Ignite client is installed and running.
 
 
 ## Syntax
@@ -18,45 +16,54 @@ Check the following before using the plug-in:
 CREATE [READABLE | WRITABLE] EXTERNAL TABLE <table_name> (
     <column_name> <data_type>[, <column_name> <data_type>, ...] | LIKE <other_table>
 )
-LOCATION ('pxf://<ignite_table_name>?PROFILE=Ignite[&<extra-parameter>&<extra-parameter>&...]')
+LOCATION ('pxf://<ignite_table_name>?PROFILE=Ignite[&<extra-parameter>[&<extra-parameter>[&...]]]')
 FORMAT 'CUSTOM' (formatter='pxfwritable_import');
 ```
+
 where each `<extra-parameter>` is one of the following:
-* `IGNITE_HOST=<ignite_host_address_with_port>`. The location of Ignite client node. If not given, `127.0.0.1:8080` is used by default;
-* `IGNITE_CACHE=<ignite_cache_name>`. The name of Ignite cache to use. If not given, this parameter is not included in queries from PXF to Ignite, thus Ignite default values will be used (at the moment, this is `Default` cache). This option is **case-sensitive**;
-* `BUFFER_SIZE=<unsigned_int>`. The number of tuples send to (from) Ignite per a response. The same number of tuples is stored in in-plug-in cache. The values `0` and `1` are equal (cache is not used, each tuple is passed in its own query to Ignite). If not given, `128` is used by default;
+
+* `IGNITE_HOST=<ignite_host_address_with_port>`. The location of Ignite client node;
+
+* `IGNITE_HOSTS=<ignite_host_addresses_with_ports_separated_by_','>`. Locations of multiple Ignite client nodes; the one to be used is chosen randomly during query execution by Ignite thin client. If that host is unavailable, Ignite will try all other provided ones silently. If both `IGNITE_HOSTS` and `IGNITE_HOST` parameters are present, the latter is ignored. If neither of these parameters are present, `127.0.0.1:10800` is used instead;
+
+* `USER=<string>`. Ignite user name;
+
+* `PASSWORD=<string>`. Ignite user password;
+
+* `BUFFER_SIZE=<unsigned_int>`. The number of tuples send to (from) Ignite per a response. The same number of tuples is stored in local (PXF) cache;
+
 * `PARTITION_BY=<column>:<column_type>`. See below;
+
 * `RANGE=<start_value>:<end_value>`. See below;
-* `INTERVAL=<value>[:<unit>]`. See below.
+
+* `INTERVAL=<value>[:<unit>]`. See below;
+
+* `IGNITE_CACHE=<ignite_cache_name>`. The name of Ignite cache to use. If not given, this option is not included in queries from PXF to Ignite, a default value set by Ignite is used instead;
+
+* `QUOTE_COLUMNS=<any_value>`. If this option is present, make PXF surround all column names with double quotes. By default, all column names are passed to Ignite without double quotes;
+
+* `IGNITE_LAZY=<any_value>`. If this option is present, perform lazy SELECTs (tell Ignite not to store data on server PXF is connected to and instead send it to PXF as soon as possible after PXF request). This may increase query execution time, but prevents crashes of Ignite server when it lacks memory to store all requested data;
+
+* `IGNITE_TCP_NODELAY=<any_value>`. If this option is present, make Ignite send TCP packets immediately when they are emitted. Otherwise, Ignite will form large TCP packets from small ones;
+
+* `IGNITE_REPLICATED_ONLY=<any_value>`. If this option is present, tell Ignite the given query is over "replicated" tables. This is a hint for potentially more effective execution.
 
 
-## Write access
+## SELECT queries
 
-PXF Ignite plugin supports `INSERT` queries. However, due to the usage of REST API, this function has a technical limit: URL can not be longer than approx. 2000 characters. This makes the `INSERT` of very long tuples of data impossible.
+The PXF Ignite plugin allows to perform SELECT queries to external tables.
 
-Due to this limitation, the recommended value of `BUFFER_SIZE` for `INSERT` queries is `1`. Note that this slightly decreases the perfomance.
-
-
-## Partitioning
-### Introduction
-
-PXF Ignite plugin supports simultaneous **read** access to the Apache Ignite database from multiple PXF segments. *Partitioning* should be used in order to perform such operation.
-
-This feature is optional. If partitioning is not used, all the data will be retrieved by a single PXF segment.
+To perform SELECT queries, create an `EXTERNAL READABLE TABLE` or just `EXTERNAL TABLE` with `FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import')` in PXF.
 
 
-### Mechanism
+### Partitioning
 
-Partitioning in PXF Ignite plug-in works just like in PXF JDBC plug-in.
-
-If partitioning is activated (a valid set of the required parameters is present in the `EXTERNAL TABLE` description; see syntax below), the SELECT query is split into a set of small queries, each of which is called a *fragment*. All the fragments are processed by separate PXF instances simultaneously. If there are more fragments than PXF instances, some instances will process more than one fragment; if only one PXF instance is available, it will process all the fragments.
-
-Extra constraints (`WHERE` expressions) are automatically added to each fragment to guarantee that every tuple of data is retrieved from the Apache Ignite database exactly once.
+PXF Ignite plugin supports simultaneous read access to Ignite database from multiple PXF segments. This feature is called partitioning. If it is not used, all data is retrieved by a single PXF segment.
 
 
-### Syntax
+#### Syntax
 
-To use partitions, add a set of `<ignite-parameter>`s:
+To use partitions, add a set of `<extra-parameter>`s:
 ```
 &PARTITION_BY=<column>:<column_type>&RANGE=<start_value>:<end_value>[&INTERVAL=<value>[:<unit>]]
 ```
@@ -77,3 +84,50 @@ Example partitions:
 * `&PARTITION_BY=id:int&RANGE=42:142&INTERVAL=2`
 * `&PARTITION_BY=createdate:date&RANGE=2008-01-01:2010-01-01&INTERVAL=1:month`
 * `&PARTITION_BY=grade:enum&RANGE=excellent:good:general:bad`
+
+
+#### Mechanism
+
+When partitioning is activated, SELECT query is split into a set of small queries, each of which is called a *fragment*. All fragments are processed by separate PXF instances simultaneously. If there are more fragments than PXF instances, some instances will process more than one fragment; if only one PXF instance is available, it will process all fragments.
+
+Extra query constraints (`WHERE` expressions) are automatically added to each fragment to guarantee that every tuple of data is retrieved from Ignite exactly once.
+
+
+## INSERT queries
+
+PXF Ignite plugin allows to perform INSERT queries to external tables. Note that **the plugin does not guarantee consistency for INSERT queries**. Use a staging table in Ignite to deal with this.
+
+To perform INSERT queries, create an `EXTERNAL WRITABLE TABLE` with `FORMAT 'CUSTOM' (FORMATTER='pxfwritable_export')` in PXF.
+
+
+## Examples
+
+### A simple `EXTERNAL TABLE`
+```
+DROP EXTERNAL TABLE IF EXISTS ext_ignite;
+
+CREATE EXTERNAL TABLE ext_ignite(k INT, val INT)
+LOCATION ('pxf://PUBLIC.T2?PROFILE=Ignite&IGNITE_HOST=1.2.3.4:10800')
+FORMAT 'CUSTOM' (formatter='pxfwritable_import');
+```
+```
+SELECT * FROM ext_ignite;
+ k | val
+---+-----
+ 1 |   1
+(1 row)
+```
+
+
+### A simple `WRITABLE EXTERNAL TABLE`
+```
+DROP EXTERNAL TABLE IF EXISTS ext_ignite_w;
+
+CREATE WRITABLE EXTERNAL TABLE ext_ignite_w(k INT, val INT)
+LOCATION ('pxf://PUBLIC.T2?PROFILE=Ignite&IGNITE_HOSTS=1.2.3.4:10800,4.3.2.1:10800')
+FORMAT 'CUSTOM' (formatter='pxfwritable_export');
+```
+```
+INSERT INTO ext_ignite_w(k, val) VALUES (1, 100);
+INSERT 0 1
+```

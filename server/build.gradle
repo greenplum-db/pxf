@@ -78,7 +78,6 @@ allprojects {
             force "org.codehaus.jackson:jackson-mapper-asl:1.9.13"
             force "junit:junit:${junitVersion}"
             force "com.google.guava:guava:11.0.2" // because this version ships with HDP-2.5.3
-            force "com.google.code.gson:gson:2.8.2" // because HDP ships with an older version, but Ignite expects 2.8.2
         }
     }
 
@@ -207,8 +206,8 @@ project('pxf-hive') {
 project('pxf-ignite') {
     dependencies {
         compile(project(':pxf-api'))
-        compile "com.google.code.gson:gson:2.8.2"
         compile "org.apache.commons:commons-compress:1.16.1"
+        compile "org.apache.ignite:ignite-core:2.6.0"
     }
 }
 

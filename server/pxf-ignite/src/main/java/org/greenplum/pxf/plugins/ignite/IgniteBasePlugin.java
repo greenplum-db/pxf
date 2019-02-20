@@ -28,50 +28,74 @@ import org.greenplum.pxf.api.model.RequestContext;
  * Implemented subclasses: {@link IgniteAccessor}, {@link IgniteResolver}.
  */
 public class IgniteBasePlugin extends BasePlugin {
-    // Ignite cache
-    protected static final String igniteHostDefault = "127.0.0.1:8080";
-    protected String igniteHost = null;
-    // PXF buffer for Ignite data. '0' is allowed for INSERT queries
-    protected static final int bufferSizeDefault = 128;
-    protected int bufferSize = bufferSizeDefault;
-    // Ignite cache name
-    protected String cacheName = null;
-
-
     @Override
     public void initialize(RequestContext requestContext) {
         super.initialize(requestContext);
 
-        LOG.debug("Initializer started");
-        igniteHost = requestContext.getOption("IGNITE_HOST");
-        if (igniteHost == null) {
-            igniteHost = igniteHostDefault;
+        String hostParameter = requestContext.getOption("IGNITE_HOST");
+        String hostsParameter = requestContext.getOption("IGNITE_HOSTS");
+        if (hostsParameter != null) {
+            hosts = hostsParameter;
+        }
+        else if (hostParameter != null) {
+            hosts = hostParameter;
+        }
+        else {
+            hosts = "127.0.0.1:10800";
         }
 
-        cacheName = requestContext.getOption("IGNITE_CACHE");
-        // If this value is null, Ignite will use the default cache
+        // This parameter is not required. The default value is null
+        igniteCache = requestContext.getOption("IGNITE_CACHE");
 
-        String bufferSize_str = requestContext.getOption("BUFFER_SIZE");
-        if (bufferSize_str != null) {
-            try {
-                bufferSize = Integer.parseInt(bufferSize_str);
-                // Zero value is allowed for INSERT queries
-                if (bufferSize < 0) {
-                    bufferSize = bufferSizeDefault;
-                    LOG.warn("Buffer size is incorrect; set to the default value (%d)", bufferSizeDefault);
-                }
-            }
-            catch (NumberFormatException e) {
-                bufferSize = bufferSizeDefault;
-                LOG.warn("Buffer size is incorrect; set to the default value (%d)", bufferSizeDefault);
+        // This parameter is not required. The default value is null
+        user = requestContext.getOption("USER");
+        if (user != null) {
+            // This parameter is not required. The default value is null
+            password = requestContext.getOption("PASSWORD");
+        }
+
+        // This parameter is not required. The default value is 0
+        String bufferSizeParameter = requestContext.getOption("BUFFER_SIZE");
+        if (bufferSizeParameter != null) {
+            bufferSize = Integer.parseInt(bufferSizeParameter);
+            if (bufferSize <= 0) {
+                throw new NumberFormatException("BUFFER_SIZE must be a positive integer");
             }
         }
-        // else: bufferSize is already set to bufferSizeDefault
 
-        LOG.debug("Initializer successful");
+        // This parameter is not required. The default value is false
+        quoteColumns = (context.getOption("QUOTE_COLUMNS") != null);
+
+        // This parameter is not required. The default value is false
+        lazy = (requestContext.getOption("IGNITE_LAZY") != null);
+
+        // This parameter is not required. The default value is false
+        tcpNodelay = (requestContext.getOption("IGNITE_TCP_NODELAY") != null);
+
+        // This parameter is not required. The default value is false
+        replicatedOnly = (requestContext.getOption("IGNITE_REPLICATED_ONLY") != null);
     }
 
+    @Override
     public boolean isThreadSafe() {
         return true;
     }
+
+    // Connection parameters
+    protected String hosts = null;
+    protected String igniteCache = null;
+    protected String user = null;
+    protected String password = null;
+
+    // ReceiveBufferSize or SendBufferSize (depends on type of query)
+    protected int bufferSize = 0;
+
+    // Whether to quote column names
+    protected boolean quoteColumns = false;
+    protected static final String QUOTE = "\"";
+
+    // Ignite perfomance options
+    protected boolean lazy = false;
+    protected boolean tcpNodelay = false;
+    protected boolean replicatedOnly = false;
 }
