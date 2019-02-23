@@ -82,6 +82,7 @@ public class FragmenterResource extends BaseResource {
                                  @QueryParam("path") final String path)
             throws Exception {
 
+        long startTime = System.nanoTime();
         LOG.debug("FRAGMENTER started for path \"{}\"", path);
 
         RequestContext context = parseRequest(headers);
@@ -92,6 +93,11 @@ public class FragmenterResource extends BaseResource {
         List<Fragment> fragments = fragmenter.getFragments();
         fragments = AnalyzeUtils.getSampleFragments(fragments, context);
         FragmentsResponse fragmentsResponse = FragmentsResponseFormatter.formatResponse(fragments, path);
+
+        long elapsedNanos = System.nanoTime() - startTime;
+        LOG.info("{} returns {} fragments for path {} in {} ns [profile {} filter is{} available]",
+                fragmenter.getClass().getSimpleName(), fragments.size(), path, elapsedNanos,
+                context.getProfile(), context.hasFilter() ? "" : " not");
 
         return Response.ok(fragmentsResponse, MediaType.APPLICATION_JSON_TYPE).build();
     }
