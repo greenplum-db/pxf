@@ -11,8 +11,7 @@ import org.greenplum.pxf.api.model.BasePlugin;
  * The returned data has 4 columns delimited with DELIMITER property value.
  * First column - text, second column - int (counter), third column - bool, fourth column - text.
  */
-public class UserDataVerifyAccessor extends BasePlugin implements Accessor
-{
+public class ColumnProjectionVerifyAccessor extends BasePlugin implements Accessor {
     private String userData;
     private String userDelimiter;
 
@@ -38,13 +37,58 @@ public class UserDataVerifyAccessor extends BasePlugin implements Accessor
         }
 
         // Generate tuple with user data value as last column.
-        String data = firstColumn + userDelimiter + counter + userDelimiter +  (counter % 2 == 0) + userDelimiter +  userData;
+        String data = getData();
         String key = Integer.toString(counter);
 
         counter++;
         firstColumn++;
 
         return new OneRow(key, data);
+    }
+
+    private String getData() {
+        StringBuilder sb = new StringBuilder();
+
+        if (context.getTupleDescription().get(0).isProjected()) {
+            sb.append(firstColumn);
+        } else {
+            // Specifies the string that represents a NULL value.
+            // The default is \N (backslash-N) in TEXT mode, and
+            // an empty value with no quotations in CSV mode.
+            sb.append("\\N");
+        }
+        sb.append(userDelimiter);
+
+        if (context.getTupleDescription().get(1).isProjected()) {
+            sb.append(counter);
+        } else {
+            // Specifies the string that represents a NULL value.
+            // The default is \N (backslash-N) in TEXT mode, and
+            // an empty value with no quotations in CSV mode.
+            sb.append("\\N");
+        }
+        sb.append(userDelimiter);
+
+        if (context.getTupleDescription().get(2).isProjected()) {
+            sb.append(counter % 2 == 0);
+        } else {
+            // Specifies the string that represents a NULL value.
+            // The default is \N (backslash-N) in TEXT mode, and
+            // an empty value with no quotations in CSV mode.
+            sb.append("\\N");
+        }
+        sb.append(userDelimiter);
+
+        if (context.getTupleDescription().get(3).isProjected()) {
+            sb.append(userData);
+        } else {
+            // Specifies the string that represents a NULL value.
+            // The default is \N (backslash-N) in TEXT mode, and
+            // an empty value with no quotations in CSV mode.
+            sb.append("\\N");
+        }
+
+        return sb.toString();
     }
 
     @Override
