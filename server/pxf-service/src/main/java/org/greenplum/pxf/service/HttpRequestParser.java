@@ -95,7 +95,6 @@ public class HttpRequestParser implements RequestParser<HttpHeaders> {
         String hasFilter = params.removeProperty("HAS-FILTER");
         if (filterString != null) {
             context.setFilterString(filterString);
-            context.setFilterStringValid(true);
         } else if ("1".equals(hasFilter)) {
             LOG.info("Original query has filter, but it was not propagated to PXF");
         }

@@ -368,7 +368,6 @@ public class BridgeOutputBuilderTest {
 
         context.setSegmentId(-44);
         context.setTotalSegments(2);
-        context.setFilterStringValid(false);
         context.setOutputFormat(OutputFormat.TEXT);
         context.setHost("my://bags");
         context.setPort(-8020);

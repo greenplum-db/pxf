@@ -49,7 +49,6 @@ public class RequestContext {
     private int fragmentIndex;
     private byte[] fragmentMetadata = null;
     private String filterString;
-    private boolean filterStringValid;
     // Profile-centric metadata
     private Object metadata;
 
@@ -128,14 +127,6 @@ public class RequestContext {
 
     public Map<String, String> getOptions() {
         return Collections.unmodifiableMap(options);
-    }
-
-    public boolean isFilterStringValid() {
-        return filterStringValid;
-    }
-
-    public void setFilterStringValid(boolean filterStringValid) {
-        this.filterStringValid = filterStringValid;
     }
 
     public String getRemoteLogin() {
@@ -232,7 +223,7 @@ public class RequestContext {
      * @return whether there is a filter string
      */
     public boolean hasFilter() {
-        return filterStringValid;
+        return filterString != null;
     }
 
     /**

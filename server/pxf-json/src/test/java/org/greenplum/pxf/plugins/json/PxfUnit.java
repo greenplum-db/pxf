@@ -350,7 +350,6 @@ public abstract class PxfUnit {
         context.setUser("who");
         System.setProperty("greenplum.alignment", "what");
         context.setSegmentId(1);
-        context.setFilterStringValid(false);
         context.setTotalSegments(1);
         context.setOutputFormat(OutputFormat.GPDBWritable);
         context.setHost("localhost");
