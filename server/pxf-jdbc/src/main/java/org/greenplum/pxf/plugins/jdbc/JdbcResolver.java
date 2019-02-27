@@ -57,7 +57,7 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
         ResultSet result = (ResultSet) row.getData();
         LinkedList<OneField> fields = new LinkedList<>();
 
-        for (ColumnDescriptor column : columns) {
+        for (ColumnDescriptor column : tableColumns) {
             String colName = column.columnName();
             Object value = null;
 
@@ -124,7 +124,7 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
     public OneRow setFields(List<OneField> record) throws UnsupportedOperationException, ParseException {
         int column_index = 0;
         for (OneField oneField : record) {
-            ColumnDescriptor column = columns.get(column_index);
+            ColumnDescriptor column = tableColumns.get(column_index);
             if (
                     LOG.isDebugEnabled() &&
                             DataType.get(column.columnTypeCode()) != DataType.get(oneField.type)

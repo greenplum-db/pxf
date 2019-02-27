@@ -139,12 +139,6 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
         }
 
         // Process poolSize
-        if (poolSize < 1) {
-            poolSize = Runtime.getRuntime().availableProcessors();
-            LOG.info(
-                "The POOL_SIZE is set to the number of CPUs available (" + Integer.toString(poolSize) + ")"
-            );
-        }
         if (poolSize > 1) {
             executorServiceWrite = Executors.newFixedThreadPool(poolSize);
             poolTasks = new LinkedList<>();
@@ -279,7 +273,7 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
 
         // Insert columns' names
         String columnDivisor = "";
-        for (ColumnDescriptor column : columns) {
+        for (ColumnDescriptor column : tableColumns) {
             sb.append(columnDivisor);
             columnDivisor = ", ";
             sb.append(column.columnName());
@@ -292,7 +286,7 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
         (new WhereSQLBuilder(context)).buildWhereSQL(databaseMetaData.getDatabaseProductName(), sb);
 
         // Insert partition constraints
-        JdbcPartitionFragmenter.buildFragmenterSql(context, databaseMetaData.getDatabaseProductName(), sb);
+        JdbcPartitionFragmenter.buildFragmenterSql(context, configuration, databaseMetaData.getDatabaseProductName(), sb);
 
         return sb.toString();
     }
@@ -313,7 +307,7 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
         // Insert columns' names
         sb.append("(");
         String fieldDivisor = "";
-        for (ColumnDescriptor column : columns) {
+        for (ColumnDescriptor column : tableColumns) {
             sb.append(fieldDivisor);
             fieldDivisor = ", ";
             sb.append(column.columnName());
@@ -325,7 +319,7 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
         // Insert values placeholders
         sb.append("(");
         fieldDivisor = "";
-        for (int i = 0; i < columns.size(); i++) {
+        for (int i = 0; i < tableColumns.size(); i++) {
             sb.append(fieldDivisor);
             fieldDivisor = ", ";
             sb.append("?");

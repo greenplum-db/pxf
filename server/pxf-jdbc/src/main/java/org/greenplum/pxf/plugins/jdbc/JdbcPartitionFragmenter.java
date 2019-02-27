@@ -26,6 +26,8 @@ import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.jdbc.utils.ByteUtil;
 import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
 
+import org.apache.hadoop.conf.Configuration;
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.text.ParseException;
@@ -47,16 +49,17 @@ public class JdbcPartitionFragmenter extends BaseFragmenter {
      * @param dbName Database name (affects the behaviour for DATE partitions)
      * @param query SQL query to insert constraints to. The query may may contain other WHERE statements
      */
-    public static void buildFragmenterSql(RequestContext context, String dbName, StringBuilder query) {
-        if (context.getOption("PARTITION_BY") == null) {
-            return;
-        }
-
+    public static void buildFragmenterSql(RequestContext context, Configuration configuration, String dbName, StringBuilder query) {
         byte[] meta = context.getFragmentMetadata();
         if (meta == null) {
             return;
         }
-        String[] partitionBy = context.getOption("PARTITION_BY").split(":");
+
+        String partitionByRaw = JdbcPluginSettings.partitionBy.loadFromContextOrConfiguration(context, configuration);
+        if (partitionByRaw == null) {
+            return;
+        }
+        String[] partitionBy = partitionByRaw.split(":");
         String partitionColumn = partitionBy[0];
         PartitionType partitionType = PartitionType.typeOf(partitionBy[1]);
         DbProduct dbProduct = DbProduct.getDbProduct(dbName);
@@ -102,31 +105,31 @@ public class JdbcPartitionFragmenter extends BaseFragmenter {
     public void initialize(RequestContext context) {
         super.initialize(context);
 
-        if (context.getOption("PARTITION_BY") == null) {
+        String partitionByRaw = JdbcPluginSettings.partitionBy.loadFromContextOrConfiguration(context, configuration);
+        if (partitionByRaw == null) {
             return;
         }
 
         // PARTITION_BY
+
         try {
-            partitionType = PartitionType.typeOf(
-                context.getOption("PARTITION_BY").split(":")[1]
-            );
+            partitionType = PartitionType.typeOf(partitionByRaw.split(":")[1]);
         }
         catch (IllegalArgumentException | ArrayIndexOutOfBoundsException ex) {
-            throw new IllegalArgumentException("The parameter 'PARTITION_BY' is invalid. The pattern is '<column_name>:date|int|enum'");
+            throw new IllegalArgumentException(JdbcPluginSettings.partitionBy + " is invalid. The pattern is '<column_name>:date|int|enum'");
         }
 
         // RANGE
 
-        String rangeStr = context.getOption("RANGE");
-        if (rangeStr != null) {
-            range = rangeStr.split(":");
+        String rangeRaw = JdbcPluginSettings.partitionRange.loadFromContextOrConfiguration(context, configuration);
+        if (rangeRaw != null) {
+            range = rangeRaw.split(":");
             if (range.length == 1 && partitionType != PartitionType.ENUM) {
-                throw new IllegalArgumentException("The parameter 'RANGE' must specify ':<end_value>' for this PARTITION_TYPE");
+                throw new IllegalArgumentException(JdbcPluginSettings.partitionRange + " must specify ':<end_value>' for partition of type " + partitionType);
             }
         }
         else {
-            throw new IllegalArgumentException("The parameter 'RANGE' must be specified along with 'PARTITION_BY'");
+            throw new IllegalArgumentException(JdbcPluginSettings.partitionRange + " must be specified along with " + JdbcPluginSettings.partitionBy);
         }
 
         if (partitionType == PartitionType.DATE) {
@@ -139,7 +142,7 @@ public class JdbcPartitionFragmenter extends BaseFragmenter {
                 rangeDateEnd.setTime(df.parse(range[1]));
             }
             catch (ParseException e) {
-                throw new IllegalArgumentException("The parameter 'RANGE' has invalid date format. The correct format is 'yyyy-MM-dd'");
+                throw new IllegalArgumentException(JdbcPluginSettings.partitionRange + " has invalid date format. The correct format is 'yyyy-MM-dd'");
             }
         }
         else if (partitionType == PartitionType.INT) {
@@ -149,23 +152,23 @@ public class JdbcPartitionFragmenter extends BaseFragmenter {
                 rangeIntEnd = Long.parseLong(range[1]);
             }
             catch (NumberFormatException e) {
-                throw new IllegalArgumentException("The parameter 'RANGE' is invalid. Both range boundaries must be integers");
+                throw new IllegalArgumentException(JdbcPluginSettings.partitionRange + " is invalid. Both boundaries must be integers");
             }
         }
 
         // INTERVAL
 
-        String intervalStr = context.getOption("INTERVAL");
+        String intervalStr = JdbcPluginSettings.partitionInterval.loadFromContextOrConfiguration(context, configuration);
         if (intervalStr != null) {
             String[] interval = intervalStr.split(":");
             try {
                 intervalNum = Long.parseLong(interval[0]);
                 if (intervalNum < 1) {
-                    throw new IllegalArgumentException("The '<interval_num>' in parameter 'INTERVAL' must be at least 1, but actual is " + intervalNum);
+                    throw new IllegalArgumentException("'<interval_num>' in " + JdbcPluginSettings.partitionInterval + " must be at least 1, but actual is " + intervalNum);
                 }
             }
             catch (NumberFormatException ex) {
-                throw new IllegalArgumentException("The '<interval_num>' in parameter 'INTERVAL' must be an integer");
+                throw new IllegalArgumentException("'<interval_num>' in " + JdbcPluginSettings.partitionInterval + " must be an integer");
             }
 
             // Intervals of type DATE
@@ -173,11 +176,11 @@ public class JdbcPartitionFragmenter extends BaseFragmenter {
                 intervalType = IntervalType.typeOf(interval[1]);
             }
             if (interval.length == 1 && partitionType == PartitionType.DATE) {
-                throw new IllegalArgumentException("The parameter 'INTERVAL' must specify unit (':year|month|day') for the PARTITION_TYPE = 'DATE'");
+                throw new IllegalArgumentException(JdbcPluginSettings.partitionInterval + " must specify unit (':year|month|day') for partition of type " + partitionType);
             }
         }
         else if (partitionType != PartitionType.ENUM) {
-            throw new IllegalArgumentException("The parameter 'INTERVAL' must be specified along with 'PARTITION_BY' for this PARTITION_TYPE");
+            throw new IllegalArgumentException(JdbcPluginSettings.partitionInterval + " must be specified along with " + JdbcPluginSettings.partitionBy + " for partition of type " + partitionType);
         }
     }
 

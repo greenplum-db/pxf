@@ -41,81 +41,11 @@ import java.util.regex.Pattern;
  * Implemented subclasses: {@link JdbcAccessor}, {@link JdbcResolver}.
  */
 public class JdbcBasePlugin extends BasePlugin {
-
     @Override
     public void initialize(RequestContext context) {
         super.initialize(context);
-
-        jdbcDriver = context.getOption("JDBC_DRIVER");
-        if (jdbcDriver == null) {
-            throw new IllegalArgumentException("JDBC_DRIVER is a required parameter");
-        }
-
-        dbUrl = context.getOption("DB_URL");
-        if (dbUrl == null) {
-            throw new IllegalArgumentException("DB_URL is a required parameter");
-        }
-
-        tableName = context.getDataSource();
-        if (tableName == null) {
-            throw new IllegalArgumentException("Data source must be provided");
-        }
-        /*
-        At the moment, when writing into some table, the table name is
-        concatenated with a special string that is necessary to write into HDFS.
-        However, a raw table name is necessary in case of JDBC.
-        The correct table name is extracted here.
-        */
-        Matcher matcher = tableNamePattern.matcher(tableName);
-        if (matcher.matches()) {
-            context.setDataSource(matcher.group(1));
-            tableName = context.getDataSource();
-        }
-
-        columns = context.getTupleDescription();
-        if (columns == null) {
-            throw new IllegalArgumentException("Tuple description must be provided");
-        }
-
-        // This parameter is not required. The default value is null
-        user = context.getOption("USER");
-        if (user != null) {
-            pass = context.getOption("PASS");
-        }
-
-        // This parameter is not required. The default value is 0
-        String batchSizeRaw = context.getOption("BATCH_SIZE");
-        if (batchSizeRaw != null) {
-            try {
-                batchSize = Integer.parseInt(batchSizeRaw);
-                if (batchSize < 1) {
-                    throw new NumberFormatException();
-                } else if (batchSize == 0) {
-                    batchSize = 1;
-                }
-                batchSizeIsSetByUser = true;
-            }
-            catch (NumberFormatException e) {
-                throw new IllegalArgumentException("BATCH_SIZE is incorrect: must be a non-negative integer");
-            }
-        }
-
-        // This parameter is not required. The default value is 1
-        String poolSizeRaw = context.getOption("POOL_SIZE");
-        if (poolSizeRaw != null) {
-            try {
-                poolSize = Integer.parseInt(poolSizeRaw);
-            }
-            catch (NumberFormatException e) {
-                throw new IllegalArgumentException("POOL_SIZE is incorrect: must be an integer");
-            }
-        }
-
-        // This parameter is not required. The default value is null
-        preQuerySql = context.getOption("PRE_SQL");
-        if (preQuerySql != null) {
-            stopIfPreQueryFails = (context.getOption("STOP_IF_PRE_FAILS") != null);
-        }
+        loadPluginSettings();
+        validatePluginSettings();
     }
 
     /**
@@ -129,19 +59,19 @@ public class JdbcBasePlugin extends BasePlugin {
      */
     public Connection getConnection() throws ClassNotFoundException, SQLException, SQLTimeoutException {
         Connection connection;
-        if (user != null) {
+        if (jdbcUser != null) {
             LOG.debug("Open JDBC connection: driver={}, url={}, user={}, pass={}, table={}",
-                    jdbcDriver, dbUrl, user, pass, tableName);
+                    jdbcDriver, jdbcUrl, jdbcUser, jdbcPassword, tableName);
         } else {
             LOG.debug("Open JDBC connection: driver={}, url={}, table={}",
-                    jdbcDriver, dbUrl, tableName);
+                    jdbcDriver, jdbcUrl, tableName);
         }
         Class.forName(jdbcDriver);
-        if (user != null) {
-            connection = DriverManager.getConnection(dbUrl, user, pass);
+        if (jdbcUser != null) {
+            connection = DriverManager.getConnection(jdbcUrl, jdbcUser, jdbcPassword);
         }
         else {
-            connection = DriverManager.getConnection(dbUrl);
+            connection = DriverManager.getConnection(jdbcUrl);
         }
         return connection;
     }
@@ -207,13 +137,110 @@ public class JdbcBasePlugin extends BasePlugin {
         closeConnection(connection);
     }
 
+    /**
+     * Load plugin settings from configuration and context.
+     * 'this.context' and 'this.configuration' are used as sources.
+     *
+     * This method also parses non-string arguments.
+     */
+    private void loadPluginSettings() throws IllegalArgumentException {
+        jdbcDriver = JdbcPluginSettings.jdbcDriver.loadFromContextOrConfiguration(context, configuration);
+        jdbcUrl = JdbcPluginSettings.jdbcUrl.loadFromContextOrConfiguration(context, configuration);
+
+        tableName = context.getDataSource();
+        tableColumns = context.getTupleDescription();
+
+        // Both user and password must be loaded from one source
+        jdbcUser = JdbcPluginSettings.jdbcUser.loadFromContext(context);
+        if (jdbcUser != null) {
+            jdbcPassword = JdbcPluginSettings.jdbcPassword.loadFromContext(context);
+        }
+        else {
+            jdbcUser = JdbcPluginSettings.jdbcUser.loadFromConfiguration(configuration);
+            jdbcPassword = jdbcUser != null ? JdbcPluginSettings.jdbcPassword.loadFromConfiguration(configuration) : null;
+        }
+
+        String batchSizeRaw = JdbcPluginSettings.batchSize.loadFromContextOrConfiguration(context, configuration);
+        if (batchSizeRaw != null) {
+            try {
+                batchSize = Integer.parseInt(batchSizeRaw);
+                batchSizeIsSetByUser = true;
+            }
+            catch (NumberFormatException e) {
+                throw new IllegalArgumentException(JdbcPluginSettings.batchSize + " is incorrect: must be an integer");
+            }
+        }
+
+        String poolSizeRaw = JdbcPluginSettings.poolSize.loadFromContextOrConfiguration(context, configuration);
+        if (poolSizeRaw != null) {
+            try {
+                poolSize = Integer.parseInt(poolSizeRaw);
+            }
+            catch (NumberFormatException e) {
+                throw new IllegalArgumentException(JdbcPluginSettings.poolSize + " is incorrect: must be an integer");
+            }
+        }
+
+        preQuerySql = JdbcPluginSettings.preQuerySql.loadFromContextOrConfiguration(context, configuration);
+        stopIfPreQueryFails = JdbcPluginSettings.stopIfPreQueryFails.loadFromContextOrConfiguration(context, configuration) != null;
+    }
+
+    /**
+     * Check that:
+     *  * All required plugin settings are set
+     *  * All non-string settings have correct values
+     *
+     * This method may change values of some settings
+     */
+    private void validatePluginSettings() {
+        if (jdbcDriver == null) {
+            throw new IllegalArgumentException(JdbcPluginSettings.jdbcDriver + " must be provided");
+        }
+
+        if (jdbcUrl == null) {
+            throw new IllegalArgumentException(JdbcPluginSettings.jdbcUrl + " must be provided");
+        }
+
+        if (tableName == null) {
+            throw new IllegalArgumentException("Table name must be provided");
+        }
+
+        if (tableColumns == null) {
+            throw new IllegalArgumentException("Tuple description must be provided");
+        }
+
+        if (batchSize < 0) {
+            throw new IllegalArgumentException(JdbcPluginSettings.batchSize + " must be a non-negative integer");
+        }
+        else if (batchSize == 0) {
+            batchSize = 1;
+        }
+
+        /*
+        At the moment, when writing into some table, table name is
+        concatenated with a special string that is necessary to write into HDFS.
+        However, raw table name is required by JDBC drivers. It is extracted here
+        */
+        Matcher matcher = tableNamePattern.matcher(tableName);
+        if (matcher.matches()) {
+            tableName = matcher.group(1);
+        }
+
+        if (poolSize < 1) {
+            poolSize = Runtime.getRuntime().availableProcessors();
+            LOG.info(JdbcPluginSettings.poolSize + " is set to number of CPUs available (" + Integer.toString(poolSize) + ")");
+        }
+    }
+
     // JDBC parameters
     protected String jdbcDriver = null;
-    protected String dbUrl = null;
-    protected String user = null;
-    protected String pass = null;
+    protected String jdbcUrl = null;
+    protected String jdbcUser = null;
+    protected String jdbcPassword = null;
 
+    // Table and column identifiers
     protected String tableName = null;
+    protected List<ColumnDescriptor> tableColumns = null;
 
     // Pre-SQL
     protected String preQuerySql = null;
@@ -225,14 +252,11 @@ public class JdbcBasePlugin extends BasePlugin {
     protected int batchSize = DEFAULT_BATCH_SIZE;
     protected boolean batchSizeIsSetByUser = false;
 
+    // Thread pool size
     protected int poolSize = 1;
-
-    // Columns description
-    protected List<ColumnDescriptor> columns = null;
-
 
     private static final Logger LOG = LoggerFactory.getLogger(JdbcBasePlugin.class);
 
-    // At the moment, when writing into some table, the table name is concatenated with a special string that is necessary to write into HDFS. However, a raw table name is necessary in case of JDBC. This Pattern allows to extract the correct table name from the given RequestContext.dataSource
+    // At the moment, when writing into some table, table name is concatenated with a special string that is necessary to write into HDFS. However, raw table name is required by JDBC drivers. This Pattern is used to extract it
     private static final Pattern tableNamePattern = Pattern.compile("/(.*)/[0-9]*-[0-9]*_[0-9]*");
 }

@@ -123,7 +123,7 @@ public class SqlBuilderTest {
         // Partition: cdate >= 2008-01-01 and cdate < 2008-03-01
         when(context.getFragmentMetadata()).thenReturn(fragments.get(0).getMetadata());
         StringBuilder sb = new StringBuilder(ORIGINAL_SQL);
-        JdbcPartitionFragmenter.buildFragmenterSql(context, DB_PRODUCT, sb);
+        JdbcPartitionFragmenter.buildFragmenterSql(context, null, DB_PRODUCT, sb);
         assertEquals(ORIGINAL_SQL + " WHERE cdate >= DATE('2008-01-01') AND cdate < DATE('2008-03-01')", sb.toString());
     }
 
@@ -147,7 +147,7 @@ public class SqlBuilderTest {
         // Partition: id > 5 and grade = 'excellent'
         when(context.getFragmentMetadata()).thenReturn(fragments.get(0).getMetadata());
 
-        JdbcPartitionFragmenter.buildFragmenterSql(context, DB_PRODUCT, sb);
+        JdbcPartitionFragmenter.buildFragmenterSql(context, null, DB_PRODUCT, sb);
         assertEquals(ORIGINAL_SQL + " WHERE id > 5 AND grade = 'excellent'", sb.toString());
     }
 
@@ -163,7 +163,7 @@ public class SqlBuilderTest {
         when(context.getFragmentMetadata()).thenReturn(fragments.get(0).getMetadata());
 
         StringBuilder sb = new StringBuilder(ORIGINAL_SQL);
-        JdbcPartitionFragmenter.buildFragmenterSql(context, DB_PRODUCT, sb);
+        JdbcPartitionFragmenter.buildFragmenterSql(context, null, DB_PRODUCT, sb);
         assertEquals(ORIGINAL_SQL, sb.toString());
     }
 
