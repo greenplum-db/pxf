@@ -19,17 +19,15 @@ package org.greenplum.pxf.plugins.jdbc;
  * under the License.
  */
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.io.DataType;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -40,20 +38,9 @@ import static org.mockito.Mockito.when;
  * and the {@link WhereSQLBuilder#buildWhereSQL} method.
  */
 public class SqlBuilderTest {
-    private static final Log LOG = LogFactory.getLog(SqlBuilderTest.class);
     static final String DB_PRODUCT = "mysql";
     static final String ORIGINAL_SQL = "select * from sales";
     RequestContext context;
-
-    @Before
-    public void setup() throws Exception {
-        LOG.info("SqlBuilderTest.setup()");
-    }
-
-    @After
-    public void cleanup() throws Exception {
-        LOG.info("SqlBuilderTest.cleanup()");
-    }
 
     @Test
     public void testIdFilter() throws Exception {

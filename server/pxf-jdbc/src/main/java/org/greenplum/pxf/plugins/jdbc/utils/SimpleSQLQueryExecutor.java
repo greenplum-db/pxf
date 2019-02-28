@@ -23,8 +23,8 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A simple SQL queries executor class. Processes exceptions inside according to given parameters.
@@ -65,5 +65,5 @@ public class SimpleSQLQueryExecutor {
         }
     }
 
-    private static final Log LOG = LogFactory.getLog(SimpleSQLQueryExecutor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SimpleSQLQueryExecutor.class);
 }

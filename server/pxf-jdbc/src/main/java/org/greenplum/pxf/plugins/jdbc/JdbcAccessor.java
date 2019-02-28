@@ -19,8 +19,6 @@ package org.greenplum.pxf.plugins.jdbc;
  * under the License.
  */
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
@@ -42,6 +40,9 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * JDBC tables accessor
@@ -343,5 +344,5 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
     private List<Future<SQLException> > poolTasks = null;
 
     // Static variables
-    private static final Log LOG = LogFactory.getLog(JdbcAccessor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JdbcAccessor.class);
 }
