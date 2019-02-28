@@ -32,14 +32,14 @@ public enum JdbcPluginSettings {
     jdbcDriver("JDBC_DRIVER", "jdbc.driver"),
     jdbcUrl("DB_URL", "jdbc.url"),
     jdbcUser("USER", "jdbc.user"),
-    jdbcPassword("PASS", "jdbc.pass"),
+    jdbcPassword("PASS", "jdbc.password"),
     preQuerySql(null, "jdbc.pre_query.sql"),
     stopIfPreQueryFails("STOP_IF_PRE_FAILS", "jdbc.pre_query.stop_if_fails"),
-    batchSize("BATCH_SIZE", "jdbc.batch_size"),
-    poolSize("POOL_SIZE", "jdbc.pool_size"),
-    partitionBy("PARTITION_BY", "jdbc.partition.by"),
-    partitionRange("RANGE", "jdbc.partition.range"),
-    partitionInterval("INTERVAL", "jdbc.partition.interval");
+    batchSize("BATCH_SIZE", "jdbc.batch.size"),
+    poolSize("POOL_SIZE", "jdbc.pool.size"),
+    partitionBy("PARTITION_BY", null),
+    partitionRange("RANGE", null),
+    partitionInterval("INTERVAL", null);
 
     private final String contextName;
     private final String configurationName;
@@ -96,7 +96,7 @@ public enum JdbcPluginSettings {
     public String toString() {
         return "{" +
             (contextName == null ? "" : (contextName + " (option)")) +
-            (contextName != null && configurationName != null ? " | " : "") +
+            (contextName == null || configurationName == null ? "" : " | ") +
             (configurationName == null ? "" : (configurationName + " (configuration parameter)"))
             + "}";
     }
