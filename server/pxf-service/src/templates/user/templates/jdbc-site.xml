@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <property>
+        <name>jdbc.driver</name>
+        <value>org.postgresql.Driver</value>
+    </property>
+    <property>
+        <name>jdbc.url</name>
+        <value>jdbc:postgresql://localhost/postgres</value>
+    </property>
+    <property>
+        <name>jdbc.user</name>
+        <value>postgres</value>
+    </property>
+</configuration>
