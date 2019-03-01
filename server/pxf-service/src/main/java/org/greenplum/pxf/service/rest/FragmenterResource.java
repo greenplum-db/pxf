@@ -94,10 +94,11 @@ public class FragmenterResource extends BaseResource {
         fragments = AnalyzeUtils.getSampleFragments(fragments, context);
         FragmentsResponse fragmentsResponse = FragmentsResponseFormatter.formatResponse(fragments, path);
 
-        long elapsedNanos = System.nanoTime() - startTime;
-        LOG.info("{} returns {} fragments for path {} in {} ns [profile {} filter is{} available]",
-                fragmenter.getClass().getSimpleName(), fragments.size(), path, elapsedNanos,
-                context.getProfile(), context.hasFilter() ? "" : " not");
+        long elapsedMillis = (System.nanoTime() - startTime) / 1000000;
+        int numberOfFragments = fragments.size();
+        LOG.info("{} returns {} fragment{} for path {} in {} ms [profile {} filter is{} available]",
+                fragmenter.getClass().getSimpleName(), numberOfFragments, numberOfFragments == 1 ? "" : "s",
+                path, elapsedMillis, context.getProfile(), context.hasFilter() ? "" : " not");
 
         return Response.ok(fragmentsResponse, MediaType.APPLICATION_JSON_TYPE).build();
     }
