@@ -102,13 +102,13 @@ public class SecureLogin {
             configuration.set(CONFIG_KEY_SERVICE_PRINCIPAL, principal);
             configuration.set(CONFIG_KEY_SERVICE_KEYTAB, keytabFilename);
 
-            LOG.debug("Kerberos principal: {}", configuration.get(CONFIG_KEY_SERVICE_PRINCIPAL));
-            LOG.debug("Kerberos keytab: {}", configuration.get(CONFIG_KEY_SERVICE_KEYTAB));
+            LOG.info("Kerberos principal: {}", configuration.get(CONFIG_KEY_SERVICE_PRINCIPAL));
+            LOG.info("Kerberos keytab: {}", configuration.get(CONFIG_KEY_SERVICE_KEYTAB));
 
             SecurityUtil.login(configuration, CONFIG_KEY_SERVICE_KEYTAB, CONFIG_KEY_SERVICE_PRINCIPAL);
 
         } catch (Exception e) {
-            LOG.error("PXF service login failed: " + e.getMessage());
+            LOG.error("PXF service login failed: {}", e.getMessage());
             throw new RuntimeException(e);
         }
     }

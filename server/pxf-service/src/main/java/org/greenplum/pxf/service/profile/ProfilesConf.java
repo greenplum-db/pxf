@@ -152,6 +152,7 @@ public class ProfilesConf implements PluginConf {
                 protocolMap.put(profileName, profile.getProtocol());
                 configOptionsMap.put(profileName, getOptionMappingsForProfile(profile));
             }
+            LOG.info("Processed {} profiles from file {}", processedProfiles.size(), fileName);
 
         } catch (JAXBException e) {
             throw new ProfileConfException(PROFILES_FILE_LOAD_ERR, url.getFile(), String.valueOf(e.getCause()));

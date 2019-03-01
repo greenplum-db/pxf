@@ -38,6 +38,7 @@ public class BaseConfigurationFactory implements ConfigurationFactory {
     @Override
     public Configuration initConfiguration(String serverName, Map<String, String> additionalProperties) {
         // start with built-in Hadoop configuration that loads core-site.xml
+        LOG.debug("Initializing configuration for server {}", serverName);
         Configuration configuration = new Configuration();
 
         File[] serverDirectories = serversConfigDirectory
@@ -60,6 +61,7 @@ public class BaseConfigurationFactory implements ConfigurationFactory {
 
         // add additional properties, if provided
         if (additionalProperties != null) {
+            LOG.debug("Adding {} additional properties to configuration for server {}", additionalProperties.size(), serverName);
             additionalProperties.forEach(configuration::set);
         }
 
@@ -71,7 +73,7 @@ public class BaseConfigurationFactory implements ConfigurationFactory {
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(directory.toPath(), "*-site.xml")) {
             for (Path path : stream) {
                 URL resourceURL = path.toUri().toURL();
-                LOG.debug("adding configuration resource from {}", resourceURL);
+                LOG.debug("Adding configuration resource for server {} from {}", serverName, resourceURL);
                 configuration.addResource(resourceURL);
             }
         } catch (Exception e) {
