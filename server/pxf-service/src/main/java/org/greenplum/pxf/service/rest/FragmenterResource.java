@@ -83,7 +83,7 @@ public class FragmenterResource extends BaseResource {
                                  @QueryParam("path") final String path)
             throws Exception {
 
-        long startTime = System.nanoTime();
+        long startTime = System.currentTimeMillis();
         LOG.debug("FRAGMENTER started for path \"{}\"", path);
 
         RequestContext context = parseRequest(headers);
@@ -97,7 +97,7 @@ public class FragmenterResource extends BaseResource {
 
         int numberOfFragments = fragments.size();
         SessionId session = new SessionId(context.getSegmentId(), context.getTransactionId(), context.getUser());
-        long elapsedMillis = (System.nanoTime() - startTime) / 1000000;
+        long elapsedMillis = System.currentTimeMillis() - startTime;
         LOG.info("{} returns {} fragment{} for path {} in {} ms for {} [profile {} filter is{} available]",
                 fragmenter.getClass().getSimpleName(), numberOfFragments, numberOfFragments == 1 ? "" : "s",
                 path, elapsedMillis, session, context.getProfile(), context.hasFilter() ? "" : " not");
