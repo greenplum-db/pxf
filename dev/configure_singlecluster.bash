@@ -158,8 +158,13 @@ EOF
 		<value>thrift://localhost:9083</value>
 	</property>
 	<property>
-		<name>hive.server2.enable.doAs</name>
+		<name>hive.server2.enable.impersonation</name>
 		<value>true</value>
+		<description>Set this property to enable impersonation in Hive Server 2</description>
+	</property>
+	<property>
+		<name>hive.server2.enable.doAs</name>
+		<value>false</value>
 		<description>Set this property to enable impersonation in Hive Server 2</description>
 	</property>
 	<property>
