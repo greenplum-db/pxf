@@ -166,7 +166,7 @@ function _main() {
 	# widen access to mdw to all nodes in the cluster for JDBC test
 	update_pghba_conf "${gpdb_segments[@]}"
 
-	setup_pxf_on_cluster ${gpdb_nodes} ${hadoop_ip}
+	setup_pxf_on_cluster
 
 	run_pxf_automation
 	close_ssh_tunnels
