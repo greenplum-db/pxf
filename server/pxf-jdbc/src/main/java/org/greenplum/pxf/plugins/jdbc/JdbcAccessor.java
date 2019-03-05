@@ -21,14 +21,11 @@ package org.greenplum.pxf.plugins.jdbc;
 
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.Accessor;
-import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
 import org.greenplum.pxf.plugins.jdbc.writercallable.WriterCallable;
 import org.greenplum.pxf.plugins.jdbc.writercallable.WriterCallableFactory;
 
 import java.io.IOException;
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -71,7 +68,8 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
 
         Connection connection = super.getConnection();
 
-        queryRead = buildSelectQuery(connection.getMetaData());
+        queryRead = new SQLQueryBuilder(context, connection.getMetaData()).buildSelectQuery();
+
         statementRead = connection.createStatement();
         resultSetRead = statementRead.executeQuery(queryRead);
 
@@ -119,7 +117,8 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
 
         Connection connection = super.getConnection();
 
-        queryWrite = buildInsertQuery(connection.getMetaData());
+        queryWrite = new SQLQueryBuilder(context, connection.getMetaData()).buildInsertQuery();
+
         statementWrite = super.getPreparedStatement(connection, queryWrite);
 
         // Process batchSize
@@ -253,102 +252,6 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
         finally {
             JdbcBasePlugin.closeStatement(statementWrite);
         }
-    }
-
-
-    /**
-     * Build SELECT query (with "WHERE" and partition constraints)
-     *
-     * @param databaseMetaData
-     *
-     * @return Complete SQL query
-     *
-     * @throws ParseException if the constraints passed in RequestContext are incorrect
-     * @throws SQLException if the database metadata is invalid
-     */
-    private String buildSelectQuery(DatabaseMetaData databaseMetaData) throws ParseException, SQLException {
-        if (databaseMetaData == null) {
-            throw new IllegalArgumentException("The provided databaseMetaData is null");
-        }
-        final String QUOTE = databaseMetaData.getIdentifierQuoteString();
-        DbProduct dbProduct = DbProduct.getDbProduct(databaseMetaData.getDatabaseProductName());
-
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("SELECT ");
-
-        // Insert columns' names
-        String columnDivisor = "";
-        for (ColumnDescriptor column : columns) {
-            sb.append(columnDivisor);
-            columnDivisor = ", ";
-            sb.append(
-                quoteColumns ?
-                QUOTE + column.columnName() + QUOTE
-                : column.columnName()
-            );
-        }
-
-        // Insert table name
-        sb.append(" FROM ");
-        sb.append(tableName);
-
-        // Insert regular WHERE constraints
-        (new WhereSQLBuilder(context, quoteColumns ? QUOTE : null)).buildWhereSQL(dbProduct, sb);
-
-        // Insert partition constraints
-        JdbcPartitionFragmenter.buildFragmenterSql(context, dbProduct, sb);
-
-        return sb.toString();
-    }
-
-    /**
-     * Build INSERT query template (field values are replaced by placeholders '?')
-     *
-     * @param databaseMetaData
-     *
-     * @return SQL query with placeholders instead of actual values
-     *
-     * @throws SQLException if database metadata is invalid
-     */
-    private String buildInsertQuery(DatabaseMetaData databaseMetaData) throws SQLException {
-        if (databaseMetaData == null) {
-            throw new IllegalArgumentException("The provided databaseMetaData is null");
-        }
-        final String QUOTE = databaseMetaData.getIdentifierQuoteString();
-
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("INSERT INTO ");
-        sb.append(tableName);
-
-        // Insert columns' names
-        sb.append("(");
-        String fieldDivisor = "";
-        for (ColumnDescriptor column : columns) {
-            sb.append(fieldDivisor);
-            fieldDivisor = ", ";
-            sb.append(
-                quoteColumns ?
-                QUOTE + column.columnName() + QUOTE
-                : column.columnName()
-            );
-        }
-        sb.append(")");
-
-        sb.append(" VALUES ");
-
-        // Insert values placeholders
-        sb.append("(");
-        fieldDivisor = "";
-        for (int i = 0; i < columns.size(); i++) {
-            sb.append(fieldDivisor);
-            fieldDivisor = ", ";
-            sb.append("?");
-        }
-        sb.append(")");
-
-        return sb.toString();
     }
 
     // Read variables

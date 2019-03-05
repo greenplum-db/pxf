@@ -44,10 +44,11 @@ public class JdbcPartitionFragmenter extends BaseFragmenter {
      * Insert fragment constraints into the SQL query.
      *
      * @param context RequestContext of the fragment
-     * @param dbName Database name (affects the behaviour for DATE partitions)
+     * @param dbProduct Database product (affects the behaviour for DATE partitions)
+     * @param quoteString String to use as quote for column identifiers
      * @param query SQL query to insert constraints to. The query may may contain other WHERE statements
      */
-    public static void buildFragmenterSql(RequestContext context, DbProduct dbProduct, StringBuilder query) {
+    public static void buildFragmenterSql(RequestContext context, DbProduct dbProduct, String quoteString, StringBuilder query) {
         if (context.getOption("PARTITION_BY") == null) {
             return;
         }
@@ -57,7 +58,7 @@ public class JdbcPartitionFragmenter extends BaseFragmenter {
             return;
         }
         String[] partitionBy = context.getOption("PARTITION_BY").split(":");
-        String partitionColumn = partitionBy[0];
+        String partitionColumn = quoteString + partitionBy[0] + quoteString;
         PartitionType partitionType = PartitionType.typeOf(partitionBy[1]);
 
         if (!query.toString().contains("WHERE")) {

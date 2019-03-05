@@ -23,42 +23,31 @@ import org.greenplum.pxf.api.BasicFilter;
 import org.greenplum.pxf.api.FilterParser;
 import org.greenplum.pxf.api.LogicalFilter;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.text.ParseException;
 
 /**
- * A filter builder. Uses a single {@link BasicFilter} or a {@link List} of {@link BasicFilter} objects.
+ * A filter parser. Converts filterString into List<BasicFilter>.
  *
- * The subclass {@link WhereSQLBuilder} will use the result to generate WHERE statement.
+ * This class extends {@link FilterParser.FilterBuilder} and implements its
+ * public methods. These should not be used, though.
  */
-public class JdbcFilterBuilder implements FilterParser.FilterBuilder {
+public class JdbcFilterParser implements FilterParser.FilterBuilder {
     /**
-     * Translates a filterString into a {@link BasicFilter} or a
-     * list of such filters.
+     * Parse filter string and return List<BasicFilter>
      *
-     * @param filterString the string representation of the filter
-     * @return a {@link BasicFilter} or a {@link List} of {@link BasicFilter}.
-     * @throws ParseException if parsing the filter failed or filter is not a basic filter or list of basic filters
+     * @param filterString
+     *
+     * @return List of 'BasicFilter' objects
+     *
+     * @throws UnsupportedOperationException if filter string contains filter that is not supported by PXF-JDBC
+     * @throws ParseException if filter string is invalid
      */
-    public Object getFilterObject(String filterString) throws ParseException {
-        try {
-            FilterParser parser = new FilterParser(this);
-            Object result = parser.parse(filterString.getBytes(FilterParser.DEFAULT_CHARSET));
-
-            if (
-                !(result instanceof LogicalFilter) &&
-                !(result instanceof BasicFilter) &&
-                !(result instanceof List)
-            ) {
-                throw new Exception("'" + filterString + "' could not be resolved to a filter");
-            }
-            return result;
-        }
-        catch (Exception e) {
-            throw new ParseException(e.getMessage(), 0);
-        }
+    public static List<BasicFilter> parseFilters(String filterString) throws UnsupportedOperationException, ParseException {
+        return convertBasicFilterList(getFilterObject(filterString), null);
     }
 
     @Override
@@ -106,38 +95,6 @@ public class JdbcFilterBuilder implements FilterParser.FilterBuilder {
         return new BasicFilter(opId, column, constant);
     }
 
-    /**
-     * Handles AND of already calculated expressions.
-     *
-     * Four cases here:
-     * <ol>
-     * <li>both are simple filters</li>
-     * <li>left is a FilterList and right is a filter</li>
-     * <li>left is a filter and right is a FilterList</li>
-     * <li>both are FilterLists</li>
-     * </ol>
-     * Currently, 1, 2 can occur, since no parenthesis are used
-     *
-     * @param left left hand filter
-     * @param right right hand filter
-     * @return list of filters constructing the filter tree
-     */
-    private List<BasicFilter> handleCompoundOperations(List<BasicFilter> left,
-                                                       BasicFilter right) {
-        left.add(right);
-        return left;
-    }
-
-    private List<BasicFilter> handleCompoundOperations(BasicFilter left,
-                                                       BasicFilter right) {
-        List<BasicFilter> result = new LinkedList<>();
-
-        result.add(left);
-        result.add(right);
-
-        return result;
-    }
-
     private Object handleLogicalOperation(FilterParser.LogicalOperation operator, Object leftOperand, Object rightOperand) {
         List<Object> result = new LinkedList<>();
 
@@ -148,5 +105,61 @@ public class JdbcFilterBuilder implements FilterParser.FilterBuilder {
 
     private Object handleLogicalOperation(FilterParser.LogicalOperation operator, Object filter) {
         return new LogicalFilter(operator, Arrays.asList(filter));
+    }
+
+    /**
+     * Translates a filterString into a {@link BasicFilter} or a
+     * list of such filters.
+     *
+     * @param filterString the string representation of the filter
+     * @return a {@link BasicFilter} or a {@link List} of {@link BasicFilter}.
+     * @throws ParseException if parsing the filter failed or filter is not a basic filter or list of basic filters
+     */
+    private static Object getFilterObject(String filterString) throws ParseException {
+        try {
+            FilterParser parser = new FilterParser(new JdbcFilterParser());
+            Object result = parser.parse(filterString.getBytes(FilterParser.DEFAULT_CHARSET));
+
+            if (
+                !(result instanceof LogicalFilter) &&
+                !(result instanceof BasicFilter) &&
+                !(result instanceof List)
+            ) {
+                throw new Exception("'" + filterString + "' could not be resolved to a filter");
+            }
+            return result;
+        }
+        catch (Exception e) {
+            throw new ParseException(e.getMessage(), 0);
+        }
+    }
+
+    /**
+     * Convert filter object into a list of {@link BasicFilter}
+     *
+     * @param filter Filter object
+     * @param returnList A list of {@link BasicFilter} to append filters to. Must be null if the function is not called recursively
+     *
+     * @return list of filters
+     */
+    private static List<BasicFilter> convertBasicFilterList(Object filter, List<BasicFilter> returnList) throws UnsupportedOperationException {
+        if (returnList == null) {
+            returnList = new ArrayList<>();
+        }
+
+        if (filter instanceof BasicFilter) {
+            returnList.add((BasicFilter) filter);
+            return returnList;
+        }
+
+        LogicalFilter lfilter = (LogicalFilter) filter;
+        if (lfilter.getOperator() != FilterParser.LogicalOperation.HDOP_AND) {
+            throw new UnsupportedOperationException("Logical operation '" + lfilter.getOperator() + "' is not supported");
+        }
+        for (Object f : lfilter.getFilterList()) {
+            returnList = convertBasicFilterList(f, returnList);
+        }
+
+        return returnList;
     }
 }
