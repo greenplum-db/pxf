@@ -253,6 +253,7 @@ resources:
     secret_access_key: {{bucket-secret-access-key}}
     versioned_file: pxf_artifacts/((folder-prefix))_((gpdb-branch))/stable/pxf.tar.gz
 {% elif pipeline_type == "release" %}
+{% if gpdb_branch == "5X_STABLE" %}
 - name: component_pxf
   type: s3
   source:
@@ -261,6 +262,14 @@ resources:
     region_name: {{aws-region}}
     secret_access_key: {{bucket-secret-access-key}}
     regexp: components/pxf/pxf-(.*).tar.gz
+{% else %}
+- name: component_pxf
+  type: gcs
+  source:
+    bucket: ((gcs-bucket))
+    json_key: ((concourse-gcs-resources-service-account-key))
+    regexp: pxf/published/gpdb6/pxf-(.*).tar.gz
+{% endif %}
 
 - name: gpdb_release
   type: git
