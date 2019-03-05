@@ -19,8 +19,8 @@ package org.greenplum.pxf.plugins.jdbc.utils;
  * under the License.
  */
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A tool class to change PXF behaviour for some external databases.
@@ -30,7 +30,7 @@ import org.apache.commons.logging.LogFactory;
  * 2. Add new class constructor to getDbProduct() function.
  */
 public abstract class DbProduct {
-    private static final Log LOG = LogFactory.getLog(DbProduct.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DbProduct.class);
 
     /**
      * Get an instance of some class - the database product

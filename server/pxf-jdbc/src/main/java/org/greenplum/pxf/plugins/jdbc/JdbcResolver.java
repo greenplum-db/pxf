@@ -19,8 +19,6 @@ package org.greenplum.pxf.plugins.jdbc;
  * under the License.
  */
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.io.DataType;
@@ -39,6 +37,9 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.LinkedList;
 import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * JDBC tables resolver
@@ -338,7 +339,7 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
         }
     }
 
-    private static final Log LOG = LogFactory.getLog(JdbcResolver.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JdbcResolver.class);
 
     // SimpleDateFormat to parse TEXT into DATE
     private static ThreadLocal<SimpleDateFormat> dateSDF = new ThreadLocal<SimpleDateFormat>() {

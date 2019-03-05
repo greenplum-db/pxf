@@ -26,12 +26,12 @@ import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.model.RequestContext;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.text.ParseException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A WHERE queries builder
@@ -189,7 +189,7 @@ public class WhereSQLBuilder extends JdbcFilterBuilder {
         }
     }
 
-    private static final Log LOG = LogFactory.getLog(WhereSQLBuilder.class);
+    private static final Logger LOG = LoggerFactory.getLogger(WhereSQLBuilder.class);
 
     // {@link RequestContext} from PXF
     private RequestContext requestContext;
