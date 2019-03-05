@@ -675,7 +675,6 @@ jobs:
         ACCESS_KEY_ID: {{tf-machine-access-key-id}}
         SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
         IMPERSONATION: {{enable-impersonation-multinode}}
-        PXF_JVM_OPTS: {{pxf-jvm-opts}}
 {% if pipeline_type == "pxf" %}
         TARGET_OS: centos
 {% endif %}
@@ -689,7 +688,9 @@ jobs:
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
       SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+      IMPERSONATION: {{enable-impersonation-multinode}}
       GROUP: gpdb,proxy
+      PXF_JVM_OPTS: {{pxf-jvm-opts}}
       TARGET_OS: centos
 {% if acceptance %}
       ACCEPTANCE: true
