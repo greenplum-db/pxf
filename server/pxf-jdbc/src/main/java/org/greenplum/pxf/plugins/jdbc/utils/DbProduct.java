@@ -23,36 +23,56 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A tool class to change PXF behaviour for some external databases.
- *
- * To implement a new DbProduct:
- * 1. Create a class inheriting from this one and implement logic there;
- * 2. Add new class constructor to getDbProduct() function.
+ * A tool class to change PXF-JDBC plugin behaviour for certain external databases
  */
-public abstract class DbProduct {
-    private static final Logger LOG = LoggerFactory.getLogger(DbProduct.class);
-
-    /**
-     * Get an instance of some class - the database product
-     *
-     * @param dbName A full name of the database
-     * @return a DbProduct of the required class
-     */
-    public static DbProduct getDbProduct(String dbName) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Database product name is '" + dbName + "'");
+public enum DbProduct {
+    MICROSOFT {
+        @Override
+        public String wrapDate(Object val){
+            return "'" + val + "'";
         }
-        if (dbName.toUpperCase().contains("POSTGRES"))
-            return new PostgresProduct();
-        else if (dbName.toUpperCase().contains("MYSQL"))
-            return new MysqlProduct();
-        else if (dbName.toUpperCase().contains("ORACLE"))
-            return new OracleProduct();
-        else if (dbName.toUpperCase().contains("MICROSOFT"))
-            return new MicrosoftProduct();
-        else
-            return new PostgresProduct();
-    }
+
+        @Override
+        public String wrapTimestamp(Object val) {
+            return "'" + val + "'";
+        }
+    },
+
+    MYSQL {
+        @Override
+        public String wrapDate(Object val){
+            return "DATE('" + val + "')";
+        }
+
+        @Override
+        public String wrapTimestamp(Object val) {
+            return "'" + val + "'";
+        }
+    },
+
+    ORACLE {
+        @Override
+        public String wrapDate(Object val) {
+            return "to_date('" + val + "', 'YYYY-MM-DD')";
+        }
+
+        @Override
+        public String wrapTimestamp(Object val) {
+            return "to_timestamp('" + val + "', 'YYYY-MM-DD HH:MI:SS.FF')";
+        }
+    },
+
+    POSTGRES {
+        @Override
+        public String wrapDate(Object val) {
+            return "date'" + val + "'";
+        }
+
+        @Override
+        public String wrapTimestamp(Object val) {
+            return "'" + val + "'";
+        }
+    };
 
     /**
      * Wraps a given date value the way required by target database
@@ -69,4 +89,27 @@ public abstract class DbProduct {
      * @return a string with a properly wrapped timestamp object
      */
     public abstract String wrapTimestamp(Object val);
+
+    /**
+     * Get DbProduct for database by database name
+     *
+     * @param dbName database name
+     * @return a DbProduct of the required class
+     */
+    public static DbProduct getDbProduct(String dbName) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Database product name is '" + dbName + "'");
+        }
+
+        if (dbName.toUpperCase().contains("MICROSOFT"))
+            return DbProduct.MICROSOFT;
+        else if (dbName.toUpperCase().contains("MYSQL"))
+            return DbProduct.MYSQL;
+        else if (dbName.toUpperCase().contains("ORACLE"))
+            return DbProduct.ORACLE;
+        else
+            return DbProduct.POSTGRES;
+    }
+
+    private static final Logger LOG = LoggerFactory.getLogger(DbProduct.class);
 }

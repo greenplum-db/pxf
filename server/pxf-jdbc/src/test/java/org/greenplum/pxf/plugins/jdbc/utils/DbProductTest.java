@@ -26,7 +26,6 @@ import java.text.SimpleDateFormat;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class DbProductTest {
     private static final Date[] DATES = new Date[1];
@@ -50,7 +49,7 @@ public class DbProductTest {
 
     @Test
     public void testUnknownProductIsPostgresProduct() {
-        assertTrue(DbProduct.getDbProduct(DB_NAME_UNKNOWN) instanceof PostgresProduct);
+        assertEquals(DbProduct.POSTGRES, DbProduct.getDbProduct(DB_NAME_UNKNOWN));
     }
 
     /**
