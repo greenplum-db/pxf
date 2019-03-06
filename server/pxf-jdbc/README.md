@@ -351,3 +351,17 @@ When `SELECT` from this external table is called, PXF executes `INSERT INTO T2 V
 Note this example **does not work** if [partitioning](#partitioning) is used and there is `UNIQUE` constraint on column `K` in external database. Instead, some PXF segments fail or may behave in different fashion, depending on transaction isolation level in external database.
 
 PXF can execute different or no query on each segment. Every segment uses its own configuration file, thus if it does not have `jdbc.pre_query.sql` set, no query is executed by this segment.
+
+The following `jdbc-site.xml`
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <property>
+        <name>jdbc.pre_query.sql</name>
+        <value>SET some_variable = some_state;</value>
+    </property>
+</configuration>
+```
+makes PXF segments `SET` a variable in external database before execution of "main" `SELECT` or `INSERT` query.
+
+Query-preceding SQL command is executed in one session with "main" query. If `some_variable` changes (or loads) the state of an external database and the results of "main" query depend on that state, these results can be altered by query-preceding SQL command.
