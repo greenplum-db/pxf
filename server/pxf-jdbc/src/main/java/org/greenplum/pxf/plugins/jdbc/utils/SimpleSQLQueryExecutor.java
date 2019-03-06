@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 /**
  * A simple SQL queries executor class. Processes exceptions inside according to given parameters.
  *
- * Used by {@link org.greenplum.pxf.plugins.jdbc.JdbcAccessor} to execute PRE_SQL statements
+ * Used by {@link org.greenplum.pxf.plugins.jdbc.JdbcAccessor} to execute query-preceding SQL commands
  */
 public class SimpleSQLQueryExecutor {
     /**

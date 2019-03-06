@@ -226,7 +226,7 @@ SELECT id, name FROM myclass WHERE id = 2;
 ### Partitioning
 PXF JDBC plugin supports simultaneous access to external database from multiple PXF segments for SELECT queries. This feature is called partitioning.
 
-Note that [query-preceding SQL command](#query-preceding-sql-command-1) is executed by *every* PXF segment if such command is set in configuration file of the segment. In other words, when partitioning is used, query-preceding SQL command may be executed more than once.
+Note that [query-preceding SQL command](#query-preceding-sql-command-1) is executed by *every* PXF segment if such command is set in its configuration file. In other words, when partitioning is used, query-preceding SQL command may be executed more than once. Different configuration files can be used by each segment to execute different or no query.
 
 
 #### Syntax
@@ -318,23 +318,36 @@ By default (`POOL_SIZE` is absent), thread pool is not used.
 ## Query-preceding SQL command
 Before executing `SELECT` or `INSERT` query in external database, PXF JDBC plugin can execute extra arbitrary SQL command. This can be useful, for example, when query requires some external database configuration variables to be `SET` before execution.
 
-To do that, pass an SQL command as an ordinary string (including `;` if necessary) in parameter `PRE_SQL`.
+To do that, pass an SQL command as an ordinary string (including `;` if necessary) in setting [query-preceding SQL command](#query-preceding-sql-command).
 
-By default, if `PRE_SQL` command fails, PXF JDBC plugin still tries to execute "main" `SELECT` or `INSERT` query. A warning with failure details is added to PXF logs.
+By default, if query-preceding command fails, PXF JDBC plugin still tries to execute "main" `SELECT` or `INSERT` query. A warning with failure details is added to PXF logs.
 
-To prevent the plugin from executing "main" `SELECT` or `INSERT` query when query-preceding command fails, set parameter `STOP_IF_PRE_FAILS` to any value.
+To prevent the plugin from executing "main" `SELECT` or `INSERT` query when query-preceding command fails, set [setting `STOP_IF_PRE_FAILS`](#prevent-query-execution-if-preceding-sql-command-fails).
 
-Any results of `PRE_SQL` are ignored (`ResultSet` will not be even created).
+Any results of query-preceding command are ignored (`ResultSet` will not be even created).
 
 
 ### Example
-Example `EXTERNAL TABLE` definition:
+Consider the following example `EXTERNAL TABLE` definition:
 ```
 CREATE EXTERNAL TABLE ext_table(k INT, val INT)
-LOCATION ('pxf://PUBLIC.T2?PROFILE=JDBC&JDBC_DRIVER=org.company.JdbcDriver&DB_URL=jdbc:company://1.2.3.4:12345&PRE_SQL=INSERT INTO T2 VALUES ((SELECT MAX(K) + 1 FROM T2), 1);&STOP_IF_PRE_FAILS=1')
+LOCATION ('pxf://PUBLIC.T2?PROFILE=JDBC&JDBC_DRIVER=org.example.JdbcDriver&DB_URL=jdbc:example://1.2.3.4:12345&STOP_IF_PRE_FAILS=1')
 FORMAT 'CUSTOM' (formatter='pxfwritable_import');
+```
+
+and `jdbc-site.xml` on each PXF segment:
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <property>
+        <name>jdbc.pre_query.sql</name>
+        <value>INSERT INTO T2 VALUES ((SELECT MAX(K) + 1 FROM T2), 1);</value>
+    </property>
+</configuration>
 ```
 
 When `SELECT` from this external table is called, PXF executes `INSERT INTO T2 VALUES ((SELECT MAX(K) + 1 FROM T2), 1);` and a new row is inserted into table `T2` in external database.
 
-Note this example **does not work** if partitioning is used and there is `UNIQUE` constraint on column `k` in external database. Instead, some PXF segments will fail or may behave in different fashion, depending on transaction isolation level in external database.
+Note this example **does not work** if [partitioning](#partitioning) is used and there is `UNIQUE` constraint on column `K` in external database. Instead, some PXF segments fail or may behave in different fashion, depending on transaction isolation level in external database.
+
+PXF can execute different or no query on each segment. Every segment uses its own configuration file, thus if it does not have `jdbc.pre_query.sql` set, no query is executed by this segment.
