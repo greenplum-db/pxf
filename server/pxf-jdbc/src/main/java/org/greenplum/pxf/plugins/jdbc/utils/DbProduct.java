@@ -31,22 +31,12 @@ public enum DbProduct {
         public String wrapDate(Object val){
             return "'" + val + "'";
         }
-
-        @Override
-        public String wrapTimestamp(Object val) {
-            return "'" + val + "'";
-        }
     },
 
     MYSQL {
         @Override
         public String wrapDate(Object val){
             return "DATE('" + val + "')";
-        }
-
-        @Override
-        public String wrapTimestamp(Object val) {
-            return "'" + val + "'";
         }
     },
 
@@ -67,11 +57,6 @@ public enum DbProduct {
         public String wrapDate(Object val) {
             return "date'" + val + "'";
         }
-
-        @Override
-        public String wrapTimestamp(Object val) {
-            return "'" + val + "'";
-        }
     };
 
     /**
@@ -88,7 +73,9 @@ public enum DbProduct {
      * @param val {@link java.sql.Timestamp} object to wrap
      * @return a string with a properly wrapped timestamp object
      */
-    public abstract String wrapTimestamp(Object val);
+    public String wrapTimestamp(Object val) {
+        return "'" + val + "'";
+    }
 
     /**
      * Get DbProduct for database by database name
@@ -101,14 +88,21 @@ public enum DbProduct {
             LOG.debug("Database product name is '" + dbName + "'");
         }
 
-        if (dbName.toUpperCase().contains("MICROSOFT"))
-            return DbProduct.MICROSOFT;
-        else if (dbName.toUpperCase().contains("MYSQL"))
-            return DbProduct.MYSQL;
-        else if (dbName.toUpperCase().contains("ORACLE"))
-            return DbProduct.ORACLE;
+        dbName = dbName.toUpperCase();
+        DbProduct result;
+        if (dbName.contains("MICROSOFT"))
+            result = DbProduct.MICROSOFT;
+        else if (dbName.contains("MYSQL"))
+            result = DbProduct.MYSQL;
+        else if (dbName.contains("ORACLE"))
+            result = DbProduct.ORACLE;
         else
-            return DbProduct.POSTGRES;
+            result = DbProduct.POSTGRES;
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("DbProduct '" + result + "' is used");
+        }
+        return result;
     }
 
     private static final Logger LOG = LoggerFactory.getLogger(DbProduct.class);
