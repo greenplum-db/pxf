@@ -82,11 +82,16 @@ The **`<plugin_parameters>`** are **optional**:
 &RANGE=<start_value>:<end_value>
 [&INTERVAL=<value>[:<unit>]]
 ]
+[
+&QUOTE_COLUMNS=<boolean>
+]
 ```
 
 The meaning of `BATCH_SIZE` is given in section [batching of INSERT queries](#Batching).
 
 The meaning of `POOL_SIZE` is given in section [using thread pool for INSERT queries](#Thread_pool).
+
+`QUOTE_COLUMNS` controls whether PXF should quote column names when constructing SQL query to the external database. Set this parameter to `true` (case-insensitive) to force PXF to quote all column names; set to any other value to prevent PXF from quoting column names. By default (`QUOTE_COLUMNS` not present), PXF automatically checks whether some column name should be quoted, and if so, it quotes all column names in the query.
 
 The meaning of other parameters is given in section [partitioning](#Partitioning).
 

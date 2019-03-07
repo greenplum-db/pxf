@@ -110,6 +110,12 @@ public class JdbcBasePlugin extends BasePlugin {
                 throw new IllegalArgumentException("POOL_SIZE is incorrect: must be an integer");
             }
         }
+
+        // This parameter is not required. The default value is null
+        String quoteColumnsRaw = context.getOption("QUOTE_COLUMNS");
+        if (quoteColumnsRaw != null) {
+            quoteColumns = Boolean.parseBoolean(quoteColumnsRaw);
+        }
     }
 
     /**
@@ -215,7 +221,11 @@ public class JdbcBasePlugin extends BasePlugin {
     protected int batchSize = DEFAULT_BATCH_SIZE;
     protected boolean batchSizeIsSetByUser = false;
 
+    // Thread pool size
     protected int poolSize = 1;
+
+    // Quote columns setting set by user (three values are possible)
+    protected Boolean quoteColumns = null;
 
     // Columns description
     protected List<ColumnDescriptor> columns = null;

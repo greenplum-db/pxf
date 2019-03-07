@@ -64,6 +64,7 @@ public class SQLQueryBuilderTest {
         when(context.getFilterString()).thenReturn("a0c20s1d1o5");
 
         SQLQueryBuilder builder = new SQLQueryBuilder(context, databaseMetaData);
+        builder.autoSetQuoteString();
         String query = builder.buildSelectQuery();
         assertEquals(SQL + " WHERE id = 1", query);
     }
@@ -75,6 +76,7 @@ public class SQLQueryBuilderTest {
         when(context.getFilterString()).thenReturn("a1c25s10d2008-02-01o2a1c25s10d2008-12-01o1l0a2c20s4d1200o2l0");
 
         SQLQueryBuilder builder = new SQLQueryBuilder(context, databaseMetaData);
+        builder.autoSetQuoteString();
         String query = builder.buildSelectQuery();
         assertEquals(SQL + " WHERE cdate > DATE('2008-02-01') AND cdate < DATE('2008-12-01') AND amt > 1200", query);
     }
@@ -86,6 +88,7 @@ public class SQLQueryBuilderTest {
         when(context.getFilterString()).thenReturn("a3c25s3dbado10");
 
         SQLQueryBuilder builder = new SQLQueryBuilder(context, databaseMetaData);
+        builder.autoSetQuoteString();
         String query = builder.buildSelectQuery();
         assertEquals(SQL, query);
     }
@@ -97,6 +100,7 @@ public class SQLQueryBuilderTest {
         when(context.getFilterString()).thenReturn("a1c25s10d2008-02-01o2a2c20s4d1200o2l1");
 
         SQLQueryBuilder builder = new SQLQueryBuilder(context, databaseMetaData);
+        builder.autoSetQuoteString();
         String query = builder.buildSelectQuery();
         assertEquals(SQL, query);
     }
@@ -116,6 +120,7 @@ public class SQLQueryBuilderTest {
         when(context.getFragmentMetadata()).thenReturn(fragments.get(0).getMetadata());
 
         SQLQueryBuilder builder = new SQLQueryBuilder(context, databaseMetaData);
+        builder.autoSetQuoteString();
         String query = builder.buildSelectQuery();
         assertEquals(SQL + " WHERE cdate >= DATE('2008-01-01') AND cdate < DATE('2008-03-01')", query);
     }
@@ -135,6 +140,7 @@ public class SQLQueryBuilderTest {
         when(context.getFragmentMetadata()).thenReturn(fragments.get(0).getMetadata());
 
         SQLQueryBuilder builder = new SQLQueryBuilder(context, databaseMetaData);
+        builder.autoSetQuoteString();
         String query = builder.buildSelectQuery();
         assertEquals(SQL + " WHERE id > 5 AND grade = 'excellent'", query);
     }
@@ -150,6 +156,7 @@ public class SQLQueryBuilderTest {
         when(context.getFragmentMetadata()).thenReturn(fragments.get(0).getMetadata());
 
         SQLQueryBuilder builder = new SQLQueryBuilder(context, databaseMetaData);
+        builder.autoSetQuoteString();
         String query = builder.buildSelectQuery();
         assertEquals(SQL, query);
     }
@@ -176,6 +183,7 @@ public class SQLQueryBuilderTest {
         String localSQL = "SELECT \"id\", \"cDate\" FROM sales";
 
         SQLQueryBuilder builder = new SQLQueryBuilder(localContext, localDatabaseMetaData);
+        builder.autoSetQuoteString();
         String query = builder.buildSelectQuery();
         assertEquals(localSQL, query);
     }
@@ -204,6 +212,7 @@ public class SQLQueryBuilderTest {
         String localSQL = "SELECT \"id\", \"cDate\" FROM sales WHERE \"id\" > 5";
 
         SQLQueryBuilder builder = new SQLQueryBuilder(localContext, localDatabaseMetaData);
+        builder.autoSetQuoteString();
         String query = builder.buildSelectQuery();
         assertEquals(localSQL, query);
     }
@@ -242,6 +251,7 @@ public class SQLQueryBuilderTest {
         String localSQL = "SELECT \"id\", \"cDate\" FROM sales WHERE \"id\" > 5 AND \"cDate\" >= DATE('2008-01-01') AND \"cDate\" < DATE('2008-03-01')";
 
         SQLQueryBuilder builder = new SQLQueryBuilder(localContext, localDatabaseMetaData);
+        builder.autoSetQuoteString();
         String query = builder.buildSelectQuery();
         assertEquals(localSQL, query);
     }
@@ -268,8 +278,21 @@ public class SQLQueryBuilderTest {
         String localSQL = "SELECT \"id\", \"c date\" FROM sales";
 
         SQLQueryBuilder builder = new SQLQueryBuilder(localContext, localDatabaseMetaData);
+        builder.autoSetQuoteString();
         String query = builder.buildSelectQuery();
         assertEquals(localSQL, query);
+    }
+
+    @Test
+    public void testIdFilterForceQuote() throws Exception {
+        when(context.hasFilter()).thenReturn(true);
+        // id = 1
+        when(context.getFilterString()).thenReturn("a0c20s1d1o5");
+
+        SQLQueryBuilder builder = new SQLQueryBuilder(context, databaseMetaData);
+        builder.forceSetQuoteString();
+        String query = builder.buildSelectQuery();
+        assertEquals("SELECT \"id\", \"cdate\", \"amt\", \"grade\" FROM sales WHERE \"id\" = 1", query);
     }
 
     private RequestContext context;

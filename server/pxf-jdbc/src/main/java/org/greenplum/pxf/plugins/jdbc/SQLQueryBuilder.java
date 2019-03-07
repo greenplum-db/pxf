@@ -62,7 +62,7 @@ public class SQLQueryBuilder {
         columns = context.getTupleDescription();
         tableName = context.getDataSource();
 
-        fillQuoteString();
+        quoteString = "";
     }
 
     /**
@@ -140,13 +140,13 @@ public class SQLQueryBuilder {
     }
 
     /**
-     * Fill 'quoteString' with an appropriate, non-null string to quote column names with
+     * Check whether column names must be quoted and set quoteString if so.
      *
-     * @param databaseMetaData
+     * Quote string is set to value provided by {@link DatabaseMetaData}.
      *
-     * @throws SQLException if some method of databaseMetaData fails
+     * @throws SQLException if some method of {@link DatabaseMetaData} fails
      */
-    private void fillQuoteString() throws SQLException {
+    public void autoSetQuoteString() throws SQLException {
         // Prepare a pattern of characters that may be not quoted
         String extraNameCharacters = databaseMetaData.getExtraNameCharacters();
         if (LOG.isDebugEnabled()) {
@@ -183,13 +183,21 @@ public class SQLQueryBuilder {
             (mixedCaseNamePresent && !databaseMetaData.supportsMixedCaseIdentifiers())
         ) {
             quoteString = databaseMetaData.getIdentifierQuoteString();
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Quotation auto-enabled; quote string set to '" + quoteString + "'");
+            }
         }
-        else {
-            quoteString = "";
-        }
+    }
 
+    /**
+     * Set quoteString to value provided by {@link DatabaseMetaData}.
+     *
+     * @throws SQLException if some method of {@link DatabaseMetaData} fails
+     */
+    public void forceSetQuoteString() throws SQLException {
+        quoteString = databaseMetaData.getIdentifierQuoteString();
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Quote string set to '" + quoteString + "'");
+            LOG.debug("Quotation force-enabled; quote string set to '" + quoteString + "'");
         }
     }
 

@@ -68,7 +68,15 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
 
         Connection connection = super.getConnection();
 
-        queryRead = new SQLQueryBuilder(context, connection.getMetaData()).buildSelectQuery();
+        // Build SQL query
+        SQLQueryBuilder sqlQueryBuilder = new SQLQueryBuilder(context, connection.getMetaData());
+        if (quoteColumns == null) {
+            sqlQueryBuilder.autoSetQuoteString();
+        }
+        else if (quoteColumns) {
+            sqlQueryBuilder.forceSetQuoteString();
+        }
+        queryRead = sqlQueryBuilder.buildSelectQuery();
 
         statementRead = connection.createStatement();
         resultSetRead = statementRead.executeQuery(queryRead);
@@ -117,7 +125,15 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
 
         Connection connection = super.getConnection();
 
-        queryWrite = new SQLQueryBuilder(context, connection.getMetaData()).buildInsertQuery();
+        // Build SQL query
+        SQLQueryBuilder sqlQueryBuilder = new SQLQueryBuilder(context, connection.getMetaData());
+        if (quoteColumns == null) {
+            sqlQueryBuilder.autoSetQuoteString();
+        }
+        else if (quoteColumns) {
+            sqlQueryBuilder.forceSetQuoteString();
+        }
+        queryWrite = sqlQueryBuilder.buildInsertQuery();
 
         statementWrite = super.getPreparedStatement(connection, queryWrite);
 
