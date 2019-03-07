@@ -103,7 +103,7 @@ function get_environment()
 
     # validate JAVA_HOME
     if [[ ! -x ${JAVA_HOME}/bin/java ]]; then
-        fail "\$JAVA_HOME is invalid"
+        fail "\$JAVA_HOME=$JAVA_HOME is invalid. Set \$JAVA_HOME in ~/.bashrc or ${default_env_script} on all Greenplum hosts."
     fi
 }
 
@@ -344,7 +344,7 @@ function doInit()
 	instanceExists
     if (( $? == 0 )); then
 		echo Instance already exists. Cleanup ${instance_root}/pxf-service if you wish to re-initialize.
-		return 0
+		return 1
 	fi
 
 	update_pxf_conf
