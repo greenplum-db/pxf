@@ -85,7 +85,11 @@ public class SQLQueryBuilder {
         for (ColumnDescriptor column : columns) {
             sb.append(columnDivisor);
             columnDivisor = ", ";
-            sb.append(quoteString + column.columnName() + quoteString);
+            if (column.isProjected()) {
+                sb.append(quoteString + column.columnName() + quoteString);
+            } else {
+                sb.append("null");
+            }
         }
 
         // Insert table name
