@@ -31,15 +31,20 @@ public class JdbcTest extends BaseFeature {
         "vc1 varchar(5)",
         "c1 char(3)",
         "bin bytea" };
+    private static final String[] COLUMNS_TABLE_FIELDS = new String[] {
+        "t text",
+        "\"num 1\" int",
+        "\"n@m2\" int" };
     private ExternalTable pxfJdbcSingleFragment;
     private ExternalTable pxfJdbcMultipleFragmentsByInt;
     private ExternalTable pxfJdbcMultipleFragmentsByDate;
     private ExternalTable pxfJdbcMultipleFragmentsByEnum;
     private ExternalTable pxfJdbcWritable;
+    private ExternalTable pxfJdbcColumns;
 
-
-    final String gpdbTypesDataFileName = "gpdb_types.txt";
-    private Table gpdbNativeTable, gpdbWritableTargetTable;
+    private static final String gpdbTypesDataFileName = "gpdb_types.txt";
+    private static final String gpdbColumnsDataFileName = "gpdb_columns.txt";
+    private Table gpdbNativeTableTypes, gpdbNativeTableColumns, gpdbWritableTargetTable;
 
     @Override
     protected void beforeClass() throws Exception {
@@ -53,13 +58,15 @@ public class JdbcTest extends BaseFeature {
         prepareMultipleFragmentsByDate();
         prepareMultipleFragmentsByEnum();
         prepareWritable();
+        prepareColumns();
     }
 
     private void prepareTypesData() throws Exception {
-        gpdbNativeTable = new Table("gpdb_types", TYPES_TABLE_FIELDS);
-        gpdbNativeTable.setDistributionFields(new String[] { "t1" });
-        gpdb.createTableAndVerify(gpdbNativeTable);
-        gpdb.copyFromFile(gpdbNativeTable, new File(localDataResourcesFolder
+        // create a table prepared for partitioning
+        gpdbNativeTableTypes = new Table("gpdb_types", TYPES_TABLE_FIELDS);
+        gpdbNativeTableTypes.setDistributionFields(new String[] { "t1" });
+        gpdb.createTableAndVerify(gpdbNativeTableTypes);
+        gpdb.copyFromFile(gpdbNativeTableTypes, new File(localDataResourcesFolder
                 + "/gpdb/" + gpdbTypesDataFileName), "E'\\t'", "E'\\\\N'", true);
 
         // create a table to be filled by the writable test case
@@ -67,13 +74,19 @@ public class JdbcTest extends BaseFeature {
         gpdbWritableTargetTable.setDistributionFields(new String[] { "t1" });
         gpdb.createTableAndVerify(gpdbWritableTargetTable);
 
+        // create a table with special column names
+        gpdbNativeTableColumns = new Table("gpdb_columns", COLUMNS_TABLE_FIELDS);
+        gpdbNativeTableColumns.setDistributionFields(new String[] { "t" });
+        gpdb.createTableAndVerify(gpdbNativeTableColumns);
+        gpdb.copyFromFile(gpdbNativeTableColumns, new File(localDataResourcesFolder
+                + "/gpdb/" + gpdbColumnsDataFileName), "E'\\t'", "E'\\\\N'", true);
     }
 
     private void prepareSingleFragment() throws Exception {
         pxfJdbcSingleFragment = TableFactory.getPxfJdbcReadableTable(
                 "pxf_jdbc_single_fragment",
                 TYPES_TABLE_FIELDS,
-                gpdbNativeTable.getName(),
+                gpdbNativeTableTypes.getName(),
                 POSTGRES_DRIVER_CLASS,
                 GPDB_PXF_AUTOMATION_DB_JDBC + gpdb.getMasterHost() + ":" + gpdb.getPort() + "/pxfautomation",
                 gpdb.getUserName());
@@ -87,7 +100,7 @@ public class JdbcTest extends BaseFeature {
                 .getPxfJdbcReadablePartitionedTable(
                 "pxf_jdbc_multiple_fragments_by_enum",
                 TYPES_TABLE_FIELDS,
-                gpdbNativeTable.getName(),
+                gpdbNativeTableTypes.getName(),
                 POSTGRES_DRIVER_CLASS,
                 GPDB_PXF_AUTOMATION_DB_JDBC + gpdb.getMasterHost() + ":" + gpdb.getPort() + "/pxfautomation",
                 13,
@@ -95,8 +108,8 @@ public class JdbcTest extends BaseFeature {
                 "1",
                 gpdb.getUserName(),
                 EnumPartitionType.ENUM);
-        pxfJdbcSingleFragment.setHost(pxfHost);
-        pxfJdbcSingleFragment.setPort(pxfPort);
+        pxfJdbcMultipleFragmentsByEnum.setHost(pxfHost);
+        pxfJdbcMultipleFragmentsByEnum.setPort(pxfPort);
         gpdb.createTableAndVerify(pxfJdbcMultipleFragmentsByEnum);
     }
 
@@ -105,7 +118,7 @@ public class JdbcTest extends BaseFeature {
                 .getPxfJdbcReadablePartitionedTable(
                 "pxf_jdbc_multiple_fragments_by_int",
                 TYPES_TABLE_FIELDS,
-                gpdbNativeTable.getName(),
+                gpdbNativeTableTypes.getName(),
                 POSTGRES_DRIVER_CLASS,
                 GPDB_PXF_AUTOMATION_DB_JDBC + gpdb.getMasterHost() + ":" + gpdb.getPort() + "/pxfautomation",
                 2,
@@ -113,8 +126,8 @@ public class JdbcTest extends BaseFeature {
                 "1",
                 gpdb.getUserName(),
                 EnumPartitionType.INT);
-        pxfJdbcSingleFragment.setHost(pxfHost);
-        pxfJdbcSingleFragment.setPort(pxfPort);
+        pxfJdbcMultipleFragmentsByInt.setHost(pxfHost);
+        pxfJdbcMultipleFragmentsByInt.setPort(pxfPort);
         gpdb.createTableAndVerify(pxfJdbcMultipleFragmentsByInt);
     }
 
@@ -123,7 +136,7 @@ public class JdbcTest extends BaseFeature {
                 .getPxfJdbcReadablePartitionedTable(
                 "pxf_jdbc_multiple_fragments_by_date",
                 TYPES_TABLE_FIELDS,
-                gpdbNativeTable.getName(),
+                gpdbNativeTableTypes.getName(),
                 POSTGRES_DRIVER_CLASS,
                 GPDB_PXF_AUTOMATION_DB_JDBC + gpdb.getMasterHost() + ":" + gpdb.getPort() + "/pxfautomation",
                 11,
@@ -131,8 +144,8 @@ public class JdbcTest extends BaseFeature {
                 "1:DAY",
                 gpdb.getUserName(),
                 EnumPartitionType.DATE);
-        pxfJdbcSingleFragment.setHost(pxfHost);
-        pxfJdbcSingleFragment.setPort(pxfPort);
+        pxfJdbcMultipleFragmentsByDate.setHost(pxfHost);
+        pxfJdbcMultipleFragmentsByDate.setPort(pxfPort);
         gpdb.createTableAndVerify(pxfJdbcMultipleFragmentsByDate);
     }
 
@@ -140,13 +153,26 @@ public class JdbcTest extends BaseFeature {
         pxfJdbcWritable = TableFactory.getPxfJdbcWritableTable(
                 "pxf_jdbc_writable",
                 TYPES_TABLE_FIELDS,
-                gpdbNativeTable.getName() + "_target",
+                gpdbNativeTableTypes.getName() + "_target",
                 POSTGRES_DRIVER_CLASS,
                 GPDB_PXF_AUTOMATION_DB_JDBC + gpdb.getMasterHost() + ":" + gpdb.getPort() + "/pxfautomation",
                 gpdb.getUserName());
-        pxfJdbcSingleFragment.setHost(pxfHost);
-        pxfJdbcSingleFragment.setPort(pxfPort);
+        pxfJdbcWritable.setHost(pxfHost);
+        pxfJdbcWritable.setPort(pxfPort);
         gpdb.createTableAndVerify(pxfJdbcWritable);
+    }
+
+    private void prepareColumns() throws Exception {
+        pxfJdbcColumns = TableFactory.getPxfJdbcReadableTable(
+                "pxf_jdbc_columns",
+                COLUMNS_TABLE_FIELDS,
+                gpdbNativeTableColumns.getName(),
+                POSTGRES_DRIVER_CLASS,
+                GPDB_PXF_AUTOMATION_DB_JDBC + gpdb.getMasterHost() + ":" + gpdb.getPort() + "/pxfautomation",
+                gpdb.getUserName());
+        pxfJdbcColumns.setHost(pxfHost);
+        pxfJdbcColumns.setPort(pxfPort);
+        gpdb.createTableAndVerify(pxfJdbcColumns);
     }
 
     @Test(groups = {"features", "gpdb"})
@@ -162,5 +188,10 @@ public class JdbcTest extends BaseFeature {
     @Test(groups = {"features", "gpdb"})
     public void jdbcWritableTable() throws Exception {
         runTincTest("pxf.features.jdbc.writable.runTest");
+    }
+
+    @Test(groups = {"features", "gpdb"})
+    public void jdbcColumns() throws Exception {
+        runTincTest("pxf.features.jdbc.columns.runTest");
     }
 }
