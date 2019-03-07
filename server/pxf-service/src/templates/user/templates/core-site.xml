@@ -4,4 +4,30 @@
         <name>fs.defaultFS</name>
         <value>hdfs://0.0.0.0:8020</value>
     </property>
+
+
+    <!--
+
+    The following properties are optional and can be
+    used depending on your Hadoop configuration:
+
+
+
+    dfs.client.use.datanode.hostname: By default HDFS
+    clients connect to DataNodes using the IP address
+    provided by the NameNode. Depending on the network
+    configuration this IP address may be unreachable by
+    the clients. The fix is letting clients perform
+    their own DNS resolution of the DataNode hostname.
+    The following setting enables this behavior.
+    <property>
+        <name>dfs.client.use.datanode.hostname</name>
+        <value>true</value>
+        <description>Whether clients should use datanode hostnames when
+            connecting to datanodes.
+        </description>
+    </property>
+
+    -->
+
 </configuration>
