@@ -104,7 +104,7 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
                                     column));
             }
 
-            oneField.val = value;
+            oneField.val = result.wasNull() ? null : value;
             fields.add(oneField);
         }
         return fields;
