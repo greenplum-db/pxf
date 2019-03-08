@@ -87,6 +87,10 @@ function setup_hadoop() {
 }
 
 function _main() {
+	# kill the sshd background process when this script exits. Otherwise, the
+	# concourse build will run forever.
+	trap "pkill sshd" EXIT
+
 	if [[ ${PROTOCOL} == "s3" ]]; then
 		echo Using S3 protocol
 	elif [[ ${PROTOCOL} == "minio" ]]; then
