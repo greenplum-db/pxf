@@ -23,6 +23,8 @@ import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.plugins.jdbc.writercallable.WriterCallable;
 import org.greenplum.pxf.plugins.jdbc.writercallable.WriterCallableFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -37,9 +39,6 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * JDBC tables accessor
@@ -77,6 +76,7 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
             sqlQueryBuilder.forceSetQuoteString();
         }
         queryRead = sqlQueryBuilder.buildSelectQuery();
+        LOG.trace("Select query: {}", queryRead);
 
         statementRead = connection.createStatement();
         resultSetRead = statementRead.executeQuery(queryRead);
@@ -134,6 +134,7 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
             sqlQueryBuilder.forceSetQuoteString();
         }
         queryWrite = sqlQueryBuilder.buildInsertQuery();
+        LOG.trace("Insert query: {}", queryWrite);
 
         statementWrite = super.getPreparedStatement(connection, queryWrite);
 
