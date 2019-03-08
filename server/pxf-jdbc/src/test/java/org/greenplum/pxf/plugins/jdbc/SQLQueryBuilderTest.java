@@ -19,17 +19,17 @@ package org.greenplum.pxf.plugins.jdbc;
  * under the License.
  */
 
+import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.api.io.DataType;
-
-import java.util.List;
-import java.sql.DatabaseMetaData;
-import java.util.ArrayList;
-
 import org.junit.Before;
 import org.junit.Test;
+
+import java.sql.DatabaseMetaData;
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -37,18 +37,15 @@ import static org.mockito.Mockito.when;
 public class SQLQueryBuilderTest {
     @Before
     public void setup() throws Exception {
-        context = mock(RequestContext.class);
-        when(context.getDataSource()).thenReturn("sales");
+        context = new RequestContext();
+        context.setDataSource("sales");
         List<ColumnDescriptor> columns = new ArrayList<>();
         columns.add(new ColumnDescriptor("id", DataType.INTEGER.getOID(), 0, "int4", null));
         columns.add(new ColumnDescriptor("cdate", DataType.DATE.getOID(), 1, "date", null));
         columns.add(new ColumnDescriptor("amt", DataType.FLOAT8.getOID(), 2, "float8", null));
         columns.add(new ColumnDescriptor("grade", DataType.TEXT.getOID(), 3, "text", null));
-        when(context.getTupleDescription()).thenReturn(columns);
-        when(context.getColumn(0)).thenReturn(columns.get(0));
-        when(context.getColumn(1)).thenReturn(columns.get(1));
-        when(context.getColumn(2)).thenReturn(columns.get(2));
-        when(context.getColumn(3)).thenReturn(columns.get(3));
+
+        context.setTupleDescription(columns);
 
         databaseMetaData = mock(DatabaseMetaData.class);
         when(databaseMetaData.supportsMixedCaseIdentifiers()).thenReturn(true);
@@ -59,9 +56,8 @@ public class SQLQueryBuilderTest {
 
     @Test
     public void testIdFilter() throws Exception {
-        when(context.hasFilter()).thenReturn(true);
         // id = 1
-        when(context.getFilterString()).thenReturn("a0c20s1d1o5");
+        context.setFilterString("a0c20s1d1o5");
 
         SQLQueryBuilder builder = new SQLQueryBuilder(context, databaseMetaData);
         builder.autoSetQuoteString();
@@ -71,9 +67,8 @@ public class SQLQueryBuilderTest {
 
     @Test
     public void testDateAndAmtFilter() throws Exception {
-        when(context.hasFilter()).thenReturn(true);
         // cdate > '2008-02-01' and cdate < '2008-12-01' and amt > 1200
-        when(context.getFilterString()).thenReturn("a1c25s10d2008-02-01o2a1c25s10d2008-12-01o1l0a2c20s4d1200o2l0");
+        context.setFilterString("a1c25s10d2008-02-01o2a1c25s10d2008-12-01o1l0a2c20s4d1200o2l0");
 
         SQLQueryBuilder builder = new SQLQueryBuilder(context, databaseMetaData);
         builder.autoSetQuoteString();
@@ -83,9 +78,8 @@ public class SQLQueryBuilderTest {
 
     @Test
     public void testUnsupportedOperationFilter() throws Exception {
-        when(context.hasFilter()).thenReturn(true);
         // IN 'bad'
-        when(context.getFilterString()).thenReturn("a3c25s3dbado10");
+        context.setFilterString("a3c25s3dbado10");
 
         SQLQueryBuilder builder = new SQLQueryBuilder(context, databaseMetaData);
         builder.autoSetQuoteString();
@@ -95,9 +89,8 @@ public class SQLQueryBuilderTest {
 
     @Test
     public void testUnsupportedLogicalFilter() throws Exception {
-        when(context.hasFilter()).thenReturn(true);
         // cdate > '2008-02-01' or amt < 1200
-        when(context.getFilterString()).thenReturn("a1c25s10d2008-02-01o2a2c20s4d1200o2l1");
+        context.setFilterString("a1c25s10d2008-02-01o2a2c20s4d1200o2l1");
 
         SQLQueryBuilder builder = new SQLQueryBuilder(context, databaseMetaData);
         builder.autoSetQuoteString();
@@ -107,17 +100,16 @@ public class SQLQueryBuilderTest {
 
     @Test
     public void testDatePartition() throws Exception {
-        when(context.hasFilter()).thenReturn(false);
+        context.addOption("PARTITION_BY", "cdate:date");
+        context.addOption("RANGE", "2008-01-01:2009-01-01");
+        context.addOption("INTERVAL", "2:month");
 
-        when(context.getOption("PARTITION_BY")).thenReturn("cdate:date");
-        when(context.getOption("RANGE")).thenReturn("2008-01-01:2009-01-01");
-        when(context.getOption("INTERVAL")).thenReturn("2:month");
         JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
         fragment.initialize(context);
         List<Fragment> fragments = fragment.getFragments();
         assertEquals(6, fragments.size());
         // Partition: cdate >= 2008-01-01 and cdate < 2008-03-01
-        when(context.getFragmentMetadata()).thenReturn(fragments.get(0).getMetadata());
+        context.setFragmentMetadata(fragments.get(0).getMetadata());
 
         SQLQueryBuilder builder = new SQLQueryBuilder(context, databaseMetaData);
         builder.autoSetQuoteString();
@@ -127,17 +119,16 @@ public class SQLQueryBuilderTest {
 
     @Test
     public void testFilterAndPartition() throws Exception {
-        when(context.hasFilter()).thenReturn(true);
         // id > 5
-        when(context.getFilterString()).thenReturn("a0c20s1d5o2");
+        context.setFilterString("a0c20s1d5o2");
+        context.addOption("PARTITION_BY", "grade:enum");
+        context.addOption("RANGE", "excellent:good:general:bad");
 
-        when(context.getOption("PARTITION_BY")).thenReturn("grade:enum");
-        when(context.getOption("RANGE")).thenReturn("excellent:good:general:bad");
         JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
         fragment.initialize(context);
         List<Fragment> fragments = fragment.getFragments();
         // Fragment 0: grade = 'excellent'
-        when(context.getFragmentMetadata()).thenReturn(fragments.get(0).getMetadata());
+        context.setFragmentMetadata(fragments.get(0).getMetadata());
 
         SQLQueryBuilder builder = new SQLQueryBuilder(context, databaseMetaData);
         builder.autoSetQuoteString();
@@ -147,13 +138,11 @@ public class SQLQueryBuilderTest {
 
     @Test
     public void testNoPartition() throws Exception {
-        when(context.hasFilter()).thenReturn(false);
-
         JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
         fragment.initialize(context);
         List<Fragment> fragments = fragment.getFragments();
         assertEquals(1, fragments.size());
-        when(context.getFragmentMetadata()).thenReturn(fragments.get(0).getMetadata());
+        context.setFragmentMetadata(fragments.get(0).getMetadata());
 
         SQLQueryBuilder builder = new SQLQueryBuilder(context, databaseMetaData);
         builder.autoSetQuoteString();
@@ -285,14 +274,25 @@ public class SQLQueryBuilderTest {
 
     @Test
     public void testIdFilterForceQuote() throws Exception {
-        when(context.hasFilter()).thenReturn(true);
         // id = 1
-        when(context.getFilterString()).thenReturn("a0c20s1d1o5");
+        context.setFilterString("a0c20s1d1o5");
 
         SQLQueryBuilder builder = new SQLQueryBuilder(context, databaseMetaData);
         builder.forceSetQuoteString();
         String query = builder.buildSelectQuery();
         assertEquals("SELECT \"id\", \"cdate\", \"amt\", \"grade\" FROM sales WHERE \"id\" = 1", query);
+    }
+
+    @Test
+    public void testColumnProjection() throws Exception {
+        // id = 1
+        context.setFilterString("a0c20s1d1o5");
+        context.getTupleDescription().get(1).setProjected(false);
+        context.getTupleDescription().get(3).setProjected(false);
+
+        SQLQueryBuilder builder = new SQLQueryBuilder(context, databaseMetaData);
+        String query = builder.buildSelectQuery();
+        assertEquals("SELECT id, amt FROM sales WHERE id = 1", query);
     }
 
     private RequestContext context;

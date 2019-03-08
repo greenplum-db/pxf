@@ -31,6 +31,7 @@ import java.util.regex.Pattern;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.text.ParseException;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,25 +77,15 @@ public class SQLQueryBuilder {
     public String buildSelectQuery() throws ParseException, SQLException {
         DbProduct dbProduct = DbProduct.getDbProduct(databaseMetaData.getDatabaseProductName());
 
-        StringBuilder sb = new StringBuilder();
+        String columnsQuery = this.columns.stream()
+                .filter(ColumnDescriptor::isProjected)
+                .map(c -> quoteString + c.columnName() + quoteString)
+                .collect(Collectors.joining(", "));
 
-        sb.append("SELECT ");
-
-        // Insert columns' names
-        String columnDivisor = "";
-        for (ColumnDescriptor column : columns) {
-            sb.append(columnDivisor);
-            columnDivisor = ", ";
-            if (column.isProjected()) {
-                sb.append(quoteString).append(column.columnName()).append(quoteString);
-            } else {
-                sb.append("null");
-            }
-        }
-
-        // Insert table name
-        sb.append(" FROM ");
-        sb.append(tableName);
+        StringBuilder sb = new StringBuilder("SELECT ")
+                .append(columnsQuery)
+                .append(" FROM ")
+                .append(tableName);
 
         // Insert regular WHERE constraints
         buildWhereSQL(dbProduct, sb);
@@ -209,7 +200,7 @@ public class SQLQueryBuilder {
      * Insert WHERE constraints into a given query.
      * Note that if filter is not supported, query is left unchanged.
      *
-     * @param dbName Database name (affects the behaviour for DATE constraints)
+     * @param dbProduct Database name (affects the behaviour for DATE constraints)
      * @param query SQL query to insert constraints to. The query may may contain other WHERE statements
      *
      * @throws ParseException if filter string is invalid

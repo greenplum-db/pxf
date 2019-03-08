@@ -57,45 +57,52 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
         LinkedList<OneField> fields = new LinkedList<>();
 
         for (ColumnDescriptor column : columns) {
-            int colIndex = column.columnIndex() + 1;
+            String colName = column.columnName();
             Object value;
 
             OneField oneField = new OneField();
             oneField.type = column.columnTypeCode();
 
+            fields.add(oneField);
+
+            /*
+             * Non-projected columns get null values
+             */
+            if (!column.isProjected()) continue;
+
             switch (DataType.get(oneField.type)) {
                 case INTEGER:
-                    value = result.getInt(colIndex);
+                    value = result.getInt(colName);
                     break;
                 case FLOAT8:
-                    value = result.getDouble(colIndex);
+                    value = result.getDouble(colName);
                     break;
                 case REAL:
-                    value = result.getFloat(colIndex);
+                    value = result.getFloat(colName);
                     break;
                 case BIGINT:
-                    value = result.getLong(colIndex);
+                    value = result.getLong(colName);
                     break;
                 case SMALLINT:
-                    value = result.getShort(colIndex);
+                    value = result.getShort(colName);
                     break;
                 case BOOLEAN:
-                    value = result.getBoolean(colIndex);
+                    value = result.getBoolean(colName);
                     break;
                 case BYTEA:
-                    value = result.getBytes(colIndex);
+                    value = result.getBytes(colName);
                     break;
                 case VARCHAR:
                 case BPCHAR:
                 case TEXT:
                 case NUMERIC:
-                    value = result.getString(colIndex);
+                    value = result.getString(colName);
                     break;
                 case DATE:
-                    value = result.getDate(colIndex);
+                    value = result.getDate(colName);
                     break;
                 case TIMESTAMP:
-                    value = result.getTimestamp(colIndex);
+                    value = result.getTimestamp(colName);
                     break;
                 default:
                     throw new UnsupportedOperationException(
@@ -105,7 +112,6 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
             }
 
             oneField.val = result.wasNull() ? null : value;
-            fields.add(oneField);
         }
         return fields;
     }
