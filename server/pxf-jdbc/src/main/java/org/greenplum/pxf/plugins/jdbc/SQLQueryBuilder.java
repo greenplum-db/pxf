@@ -86,7 +86,7 @@ public class SQLQueryBuilder {
             sb.append(columnDivisor);
             columnDivisor = ", ";
             if (column.isProjected()) {
-                sb.append(quoteString + column.columnName() + quoteString);
+                sb.append(quoteString).append(column.columnName()).append(quoteString);
             } else {
                 sb.append("null");
             }

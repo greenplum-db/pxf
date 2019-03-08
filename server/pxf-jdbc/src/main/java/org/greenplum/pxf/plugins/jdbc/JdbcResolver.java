@@ -59,48 +59,51 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
         LinkedList<OneField> fields = new LinkedList<>();
 
         for (ColumnDescriptor column : columns) {
-            String colName = column.columnName();
-            Object value = null;
+            int colIndex = column.columnIndex() + 1;
+            Object value;
 
             OneField oneField = new OneField();
             oneField.type = column.columnTypeCode();
 
             switch (DataType.get(oneField.type)) {
                 case INTEGER:
-                    value = result.getInt(colName);
+                    value = result.getInt(colIndex);
                     break;
                 case FLOAT8:
-                    value = result.getDouble(colName);
+                    value = result.getDouble(colIndex);
                     break;
                 case REAL:
-                    value = result.getFloat(colName);
+                    value = result.getFloat(colIndex);
                     break;
                 case BIGINT:
-                    value = result.getLong(colName);
+                    value = result.getLong(colIndex);
                     break;
                 case SMALLINT:
-                    value = result.getShort(colName);
+                    value = result.getShort(colIndex);
                     break;
                 case BOOLEAN:
-                    value = result.getBoolean(colName);
+                    value = result.getBoolean(colIndex);
                     break;
                 case BYTEA:
-                    value = result.getBytes(colName);
+                    value = result.getBytes(colIndex);
                     break;
                 case VARCHAR:
                 case BPCHAR:
                 case TEXT:
                 case NUMERIC:
-                    value = result.getString(colName);
+                    value = result.getString(colIndex);
                     break;
                 case DATE:
-                    value = result.getDate(colName);
+                    value = result.getDate(colIndex);
                     break;
                 case TIMESTAMP:
-                    value = result.getTimestamp(colName);
+                    value = result.getTimestamp(colIndex);
                     break;
                 default:
-                    throw new UnsupportedOperationException("Field type '" + DataType.get(oneField.type).toString() + "' (column '" + column.toString() + "') is not supported");
+                    throw new UnsupportedOperationException(
+                            String.format("Field type '%s' (column '%s') is not supported",
+                                    DataType.get(oneField.type),
+                                    column));
             }
 
             oneField.val = value;
