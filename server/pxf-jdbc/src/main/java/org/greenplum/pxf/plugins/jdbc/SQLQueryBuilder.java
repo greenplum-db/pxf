@@ -124,7 +124,7 @@ public class SQLQueryBuilder {
         for (ColumnDescriptor column : columns) {
             sb.append(fieldDivisor);
             fieldDivisor = ", ";
-            sb.append(quoteString + column.columnName() + quoteString);
+            sb.append(quoteString).append(column.columnName()).append(quoteString);
         }
         sb.append(")");
 
