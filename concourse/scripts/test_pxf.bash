@@ -86,6 +86,15 @@ function setup_hadoop() {
 	fi
 }
 
+function allow_ping_to_run_as_non_root() {
+	if [ -f /etc/redhat-release ] && [[ "$(cat /etc/redhat-release)" =~ 'CentOS Linux release 7' ]]; then
+		# On CentOS 7, the setuid bit is not set on /bin/ping (as it is in CentOS
+		# 6), so we need to add these capabilities to let non-root users use it. The
+		# capabilities/setuid are needed because ping uses raw sockets.
+		setcap cap_net_admin,cap_net_raw+p /bin/ping
+	fi
+}
+
 function _main() {
 	# kill the sshd background process when this script exits. Otherwise, the
 	# concourse build will run forever.
@@ -105,6 +114,9 @@ EOF
 		# start mapr services before installing GPDB
 		/root/init-script
 	fi
+
+  # Ping is called by gpinitsystem, which must be run by gpadmin
+	allow_ping_to_run_as_non_root
 
 	# Install GPDB
 	install_gpdb_binary
