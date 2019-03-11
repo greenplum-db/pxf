@@ -80,7 +80,7 @@ function write_sub_header() {
 function read_and_validate_table_count() {
     local table_name="$1"
     local expected_count="$2"
-    local num_rows=$(time psql -t -c "SELECT COUNT(*) FROM $table_name" | tr -d ' ')
+    local num_rows=$(time psql -t -c "SELECT COUNT(l_linenumber) FROM $table_name" | tr -d ' ')
 
     if [[ ${num_rows} != ${expected_count} ]]; then
         echo "Expected number of rows in table ${table_name} to be ${expected_count} but was ${num_rows}"
