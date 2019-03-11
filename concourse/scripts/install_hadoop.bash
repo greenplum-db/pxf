@@ -17,7 +17,7 @@ function install_hadoop_single_cluster() {
     ssh ${SSH_OPTS} centos@edw0 "sudo mkdir -p /root/.ssh &&
         sudo cp /home/centos/.ssh/authorized_keys /root/.ssh &&
         sudo sed -i 's/PermitRootLogin no/PermitRootLogin yes/' /etc/ssh/sshd_config &&
-        sudo cat /var/run/sshd.pid | xargs kill -9 &&
+        sudo cat /var/run/sshd.pid | xargs kill -9 ;
         { sudo /usr/sbin/sshd -D & }"
 
     tar -xzf pxf_tarball/pxf.tar.gz -C /tmp
