@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
     <property>
-        <name>dfs.adls.oauth2.access.token.provider.type</name>
+        <name>fs.adl.oauth2.access.token.provider.type</name>
         <value>ClientCredential</value>
     </property>
     <property>
