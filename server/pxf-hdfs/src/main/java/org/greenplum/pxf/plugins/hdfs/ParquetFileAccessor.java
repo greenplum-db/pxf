@@ -72,7 +72,6 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
     private static final int DEFAULT_DICTIONARY_PAGE_SIZE = 512 * 1024;
     private static final WriterVersion DEFAULT_PARQUET_VERSION = WriterVersion.PARQUET_1_0;
 
-    private MessageType schema;
     private ParquetFileReader fileReader;
     private MessageColumnIO columnIO;
     private CompressionCodecName codecName;
@@ -98,6 +97,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
      */
     @Override
     public boolean openForRead() throws IOException {
+        MessageType schema, readSchema;
 
         file = new Path(context.getDataSource());
         FileSplit fileSplit = HdfsUtilities.parseFileSplit(context);
@@ -108,13 +108,13 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
         try {
             ParquetMetadata metadata = fileReader.getFooter();
             schema = metadata.getFileMetaData().getSchema();
-            columnIO = new ColumnIOFactory().getColumnIO(schema);
-            groupRecordConverter = new GroupRecordConverter(schema);
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Reading file {} with {} records in {} rowgroups",
-                        file.getName(), fileReader.getRecordCount(),
-                        fileReader.getRowGroups().size());
-            }
+            readSchema = context.getNumAttrsProjected() > 0 ? buildReadSchema(schema) : schema;
+
+            columnIO = new ColumnIOFactory().getColumnIO(readSchema, schema);
+            groupRecordConverter = new GroupRecordConverter(readSchema);
+            LOG.debug("Reading file {} with {} records in {} rowgroups",
+                    file.getName(), fileReader.getRecordCount(),
+                    fileReader.getRowGroups().size());
         } catch (Exception e) {
             fileReader.close();
             throw new IOException(e);
@@ -207,7 +207,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
 
         // Read schema file, if given
         String schemaFile = context.getOption("SCHEMA");
-        schema = (schemaFile != null) ? readSchemaFile(schemaFile) :
+        MessageType schema = (schemaFile != null) ? readSchemaFile(schemaFile) :
                 generateParquetSchema(context.getTupleDescription());
         LOG.debug("Schema fields = {}", schema.getFields());
         GroupWriteSupport.setSchema(schema, configuration);
@@ -257,6 +257,22 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
             totalRowsWritten += rowsWritten;
         }
         LOG.debug("Wrote a TOTAL of {} rows", totalRowsWritten);
+    }
+
+    /**
+     * Generates a read schema when there is column projection
+     *
+     * @param originalSchema the original read schema
+     */
+    private MessageType buildReadSchema(MessageType originalSchema) {
+        List<Type> originalFields = originalSchema.getFields();
+        List<Type> projectedFields = new ArrayList<>();
+        for (int i = 0; i < context.getTupleDescription().size(); i++) {
+            if (context.getTupleDescription().get(i).isProjected()) {
+                projectedFields.add(originalFields.get(i));
+            }
+        }
+        return new MessageType(originalSchema.getName(), projectedFields);
     }
 
     private void createParquetWriter() throws IOException {

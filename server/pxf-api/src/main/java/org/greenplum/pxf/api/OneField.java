@@ -20,8 +20,6 @@ package org.greenplum.pxf.api;
  */
 
 
-import org.greenplum.pxf.api.io.DataType;
-
 /**
  * Defines a one field in a deserialized record.
  */

@@ -58,11 +58,21 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         Group group = (Group) row.getData();
         List<OneField> output = new LinkedList<>();
 
-        for (int columnIndex = 0; columnIndex < schema.getFieldCount(); columnIndex++) {
-
+        for (int columnIndex = 0, projectedColumnIndex = 0; columnIndex < schema.getFieldCount(); columnIndex++) {
             Type type = schema.getType(columnIndex);
+
+            if (!context.getTupleDescription().get(columnIndex).isProjected()) {
+                ParquetTypeConverter converter = ParquetTypeConverter.from(type.asPrimitiveType());
+                OneField oneField = new OneField();
+                oneField.type = converter.getDataType(type).getOID();
+                oneField.val = null;
+                output.add(oneField);
+                continue;
+            }
+
             if (schema.getType(columnIndex).isPrimitive()) {
-                output.add(resolvePrimitive(group, columnIndex, type, 0));
+                output.add(resolvePrimitive(group, projectedColumnIndex, type, 0));
+                projectedColumnIndex++;
             } else {
                 throw new UnsupportedOperationException("Parquet complex type support is not yet available.");
             }
