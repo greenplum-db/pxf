@@ -51,7 +51,6 @@ import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
-import org.mortbay.log.Log;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -116,7 +115,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
 
             columnIO = new ColumnIOFactory().getColumnIO(readSchema, schema);
             groupRecordConverter = new GroupRecordConverter(readSchema);
-            if (Log.isDebugEnabled()) {
+            if (LOG.isDebugEnabled()) {
                 LOG.debug("Reading file {} with {} records in {} rowgroups",
                         file.getName(), fileReader.getRecordCount(),
                         fileReader.getRowGroups().size());
@@ -286,7 +285,14 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
 
         List<Type> projectedFields = context.getTupleDescription().stream()
                 .filter(ColumnDescriptor::isProjected)
-                .map(c -> originalFields.get(c.columnName()))
+                .map(c -> {
+                    Type t = originalFields.get(c.columnName());
+
+                    if (t == null) {
+                        throw new IllegalArgumentException(String.format("Column %s is missing from parquet schema", c.columnName()));
+                    }
+                    return t;
+                })
                 .collect(Collectors.toList());
         return new MessageType(originalSchema.getName(), projectedFields);
     }
