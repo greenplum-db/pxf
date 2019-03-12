@@ -20,7 +20,6 @@ package org.greenplum.pxf.plugins.jdbc;
  */
 
 import org.greenplum.pxf.api.BasicFilter;
-import org.greenplum.pxf.api.FilterParser;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.model.RequestContext;
@@ -32,6 +31,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.hadoop.conf.Configuration;
 
@@ -66,9 +66,9 @@ public class SQLQueryBuilder {
         }
         databaseMetaData = metaData;
 
-        columns = context.getTupleDescription();
-        tableName = context.getDataSource();
-
+        tableName = requestContext.getDataSource();
+        columns = requestContext.getTupleDescription();
+        dbProduct = DbProduct.getDbProduct(databaseMetaData.getDatabaseProductName());
         quoteString = "";
     }
 
@@ -81,9 +81,7 @@ public class SQLQueryBuilder {
      * @throws SQLException if some call of DatabaseMetaData method fails
      */
     public String buildSelectQuery() throws ParseException, SQLException {
-        DbProduct dbProduct = DbProduct.getDbProduct(databaseMetaData.getDatabaseProductName());
-
-        String columnsQuery = this.columns.stream()
+        String columnsQuery = columns.stream()
                 .filter(ColumnDescriptor::isProjected)
                 .map(c -> quoteString + c.columnName() + quoteString)
                 .collect(Collectors.joining(", "));
@@ -94,10 +92,18 @@ public class SQLQueryBuilder {
                 .append(tableName);
 
         // Insert regular WHERE constraints
-        buildWhereSQL(dbProduct, sb);
+        buildWhereSQL(sb);
 
         // Insert partition constraints
-        JdbcPartitionFragmenter.buildFragmenterSql(requestContext, requestConfiguration, dbProduct, quoteString, sb);
+        JdbcPartitionFragmenter.buildFragmenterSql(
+            requestContext, requestConfiguration,
+            dbProduct, quoteString,
+            sb
+        );
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug(sb.toString());
+        }
 
         return sb.toString();
     }
@@ -110,32 +116,23 @@ public class SQLQueryBuilder {
      * @throws SQLException if some call of DatabaseMetaData method fails
      */
     public String buildInsertQuery() throws SQLException {
-        StringBuilder sb = new StringBuilder();
+        String columnsQuery = columns.stream()
+                .map(c -> quoteString + c.columnName() + quoteString)
+                .collect(Collectors.joining(", "));
 
-        sb.append("INSERT INTO ");
-        sb.append(tableName);
+        String placeholdersQuery = Stream.generate(() -> "?").limit(columns.size())
+                .collect(Collectors.joining(", "));
 
-        // Insert columns' names
-        sb.append("(");
-        String fieldDivisor = "";
-        for (ColumnDescriptor column : columns) {
-            sb.append(fieldDivisor);
-            fieldDivisor = ", ";
-            sb.append(quoteString).append(column.columnName()).append(quoteString);
+        StringBuilder sb = new StringBuilder("INSERT")
+                .append(" INTO ")
+                .append(tableName)
+                .append("(").append(columnsQuery).append(")")
+                .append(" VALUES ")
+                .append("(").append(placeholdersQuery).append(")");
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug(sb.toString());
         }
-        sb.append(")");
-
-        sb.append(" VALUES ");
-
-        // Insert values placeholders
-        sb.append("(");
-        fieldDivisor = "";
-        for (int i = 0; i < columns.size(); i++) {
-            sb.append(fieldDivisor);
-            fieldDivisor = ", ";
-            sb.append("?");
-        }
-        sb.append(")");
 
         return sb.toString();
     }
@@ -206,114 +203,137 @@ public class SQLQueryBuilder {
      * Insert WHERE constraints into a given query.
      * Note that if filter is not supported, query is left unchanged.
      *
-     * @param dbProduct Database name (affects the behaviour for DATE constraints)
      * @param query SQL query to insert constraints to. The query may may contain other WHERE statements
      *
      * @throws ParseException if filter string is invalid
      */
-    private void buildWhereSQL(DbProduct dbProduct, StringBuilder query) throws ParseException {
+    private void buildWhereSQL(StringBuilder query) throws ParseException {
         if (!requestContext.hasFilter()) {
             return;
         }
 
         try {
-            StringBuilder prepared = new StringBuilder();
-            if (!query.toString().contains("WHERE")) {
-                prepared.append(" WHERE ");
-            }
-            else {
-                prepared.append(" AND ");
-            }
-
-            // Get constraints
-            List<BasicFilter> filters = JdbcFilterParser.parseFilters(requestContext.getFilterString());
-
-            String andDivisor = "";
-            for (Object obj : filters) {
-                prepared.append(andDivisor);
-                andDivisor = " AND ";
-
-                // Insert constraint column name
-                BasicFilter filter = (BasicFilter) obj;
-                ColumnDescriptor column = requestContext.getColumn(filter.getColumn().index());
-                prepared.append(quoteString + column.columnName() + quoteString);
-
-                // Insert constraint operator
-                FilterParser.Operation op = filter.getOperation();
-                switch (op) {
-                    case HDOP_LT:
-                        prepared.append(" < ");
-                        break;
-                    case HDOP_GT:
-                        prepared.append(" > ");
-                        break;
-                    case HDOP_LE:
-                        prepared.append(" <= ");
-                        break;
-                    case HDOP_GE:
-                        prepared.append(" >= ");
-                        break;
-                    case HDOP_EQ:
-                        prepared.append(" = ");
-                        break;
-                    case HDOP_LIKE:
-                        prepared.append(" LIKE ");
-                        break;
-                    case HDOP_NE:
-                        prepared.append(" <> ");
-                        break;
-                    case HDOP_IS_NULL:
-                        prepared.append(" IS NULL");
-                        continue;
-                    case HDOP_IS_NOT_NULL:
-                        prepared.append(" IS NOT NULL");
-                        continue;
-                    default:
-                        throw new UnsupportedOperationException("Unsupported Filter operation: " + op);
-                }
-
-                // Insert constraint constant
-                Object val = filter.getConstant().constant();
-                switch (DataType.get(column.columnTypeCode())) {
-                    case SMALLINT:
-                    case INTEGER:
-                    case BIGINT:
-                    case FLOAT8:
-                    case REAL:
-                    case BOOLEAN:
-                        prepared.append(val.toString());
-                        break;
-                    case TEXT:
-                        prepared.append("'").append(val.toString()).append("'");
-                        break;
-                    case DATE:
-                        // Date field has different format in different databases
-                        prepared.append(dbProduct.wrapDate(val));
-                        break;
-                    case TIMESTAMP:
-                        // Timestamp field has different format in different databases
-                        prepared.append(dbProduct.wrapTimestamp(val));
-                        break;
-                    default:
-                        throw new UnsupportedOperationException("Unsupported column type for filtering: " + column.columnTypeCode());
-                }
-            }
+            String whereSQL = JdbcFilterParser.parseFilters(requestContext.getFilterString()).stream()
+                    .map(f -> resolveConstraint(f))
+                    .collect(Collectors.joining(" AND "));
 
             // No exceptions were thrown, change the provided query
-            query.append(prepared);
+            if (!query.toString().toUpperCase().contains("WHERE")) {
+                query.append(" WHERE ").append(whereSQL);
+            }
+            else {
+                query.append(" AND ").append(whereSQL);
+            }
         }
         catch (UnsupportedOperationException e) {
-            LOG.debug("WHERE clause is omitted: " + e.toString());
+            LOG.debug(String.format(
+                "WHERE clause is omitted: %s",
+                e.toString()
+            ));
             // Silence the exception and do not insert constraints
         }
+    }
+
+    /**
+     * Resolve constraint into a constraint string
+     *
+     * @param filter {@link BasicFilter}
+     *
+     * @throws UnsupportedOperationException if filter is not supported
+     */
+    private String resolveConstraint(BasicFilter filter) throws UnsupportedOperationException {
+        ColumnDescriptor column = requestContext.getColumn(filter.getColumn().index());
+
+        StringBuilder result = new StringBuilder()
+                .append(quoteString)
+                .append(column.columnName())
+                .append(quoteString);
+
+        // Insert constraint operator
+        switch (filter.getOperation()) {
+            case HDOP_LT:
+                result.append(" < ");
+                break;
+            case HDOP_GT:
+                result.append(" > ");
+                break;
+            case HDOP_LE:
+                result.append(" <= ");
+                break;
+            case HDOP_GE:
+                result.append(" >= ");
+                break;
+            case HDOP_EQ:
+                result.append(" = ");
+                break;
+            case HDOP_LIKE:
+                result.append(" LIKE ");
+                break;
+            case HDOP_NE:
+                result.append(" <> ");
+                break;
+            case HDOP_IS_NULL:
+                result.append(" IS NULL");
+                return result.toString();
+            case HDOP_IS_NOT_NULL:
+                result.append(" IS NOT NULL");
+                return result.toString();
+            default:
+                throw new UnsupportedOperationException(String.format(
+                    "Unsupported constraint operator %s in column %s",
+                    filter.getOperation().toString(),
+                    column
+                ));
+        }
+
+        // Insert constraint constant
+        Object val = filter.getConstant().constant();
+        if (val == null) {
+            // NULL should be checked with 'IS [NOT] NULL'.
+            throw new UnsupportedOperationException(String.format(
+                "NULL constraint constant in column %s",
+                column
+            ));
+        }
+        switch (DataType.get(column.columnTypeCode())) {
+            case SMALLINT:
+            case INTEGER:
+            case BIGINT:
+            case FLOAT8:
+            case REAL:
+            case BOOLEAN:
+                result.append(val.toString());
+                break;
+            case TEXT:
+                result.append("'").append(val.toString()).append("'");
+                break;
+            case DATE:
+                // Date field has different format in different databases
+                result.append(dbProduct.wrapDate(val));
+                break;
+            case TIMESTAMP:
+                // Timestamp field has different format in different databases
+                result.append(dbProduct.wrapTimestamp(val));
+                break;
+            default:
+                throw new UnsupportedOperationException(String.format(
+                    "Unsupported constraint type %s in column %s",
+                    DataType.get(column.columnTypeCode()).toString(),
+                    column
+                ));
+        }
+
+        return result.toString();
     }
 
     private RequestContext requestContext;
     private Configuration requestConfiguration;
     private DatabaseMetaData databaseMetaData;
-    private String quoteString;
-    private List<ColumnDescriptor> columns;
+
     private String tableName;
+    private List<ColumnDescriptor> columns;
+    private DbProduct dbProduct;
+    private String quoteString;
 
     private static final Logger LOG = LoggerFactory.getLogger(SQLQueryBuilder.class);
 }

@@ -65,7 +65,7 @@ public class JdbcPartitionFragmenter extends BaseFragmenter {
         String partitionColumn = quoteString + partitionBy[0] + quoteString;
         PartitionType partitionType = PartitionType.typeOf(partitionBy[1]);
 
-        if (!query.toString().contains("WHERE")) {
+        if (!query.toString().toUpperCase().contains("WHERE")) {
             query.append(" WHERE ");
         }
         else {
