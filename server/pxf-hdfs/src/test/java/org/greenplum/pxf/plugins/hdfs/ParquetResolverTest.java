@@ -246,8 +246,6 @@ public class ParquetResolverTest {
     @Test
     public void testGetFields_Primitive_With_Projection() throws IOException {
         schema = getParquetSchemaForPrimitiveTypes(Type.Repetition.OPTIONAL, true);
-        // schema has changed, set metadata again
-        context.setMetadata(schema);
         context.setTupleDescription(getColumnDescriptorsFromSchema(schema));
 
         // set odd columns to be not projected, their values will become null
@@ -255,10 +253,14 @@ public class ParquetResolverTest {
             context.getTupleDescription().get(i).setProjected(i % 2 == 0);
         }
 
+        MessageType readSchema = buildReadSchema(schema);
+        // schema has changed, set metadata again
+        context.setMetadata(readSchema);
+
         resolver.initialize(context);
 
         // use readSchema to read only specific columns from parquet file into Group
-        List<Group> groups = readParquetFile("primitive_types.parquet", 25, buildReadSchema(schema));
+        List<Group> groups = readParquetFile("primitive_types.parquet", 25, readSchema);
         assertEquals(25, groups.size());
 
         List<OneField> fields = assertRow(groups, 0, 14);
@@ -506,7 +508,10 @@ public class ParquetResolverTest {
     private List<ColumnDescriptor> getColumnDescriptorsFromSchema(MessageType schema) {
         return schema.getFields()
                 .stream()
-                .map(f -> new ColumnDescriptor(f.getName(), -1, 1, "", new Integer[]{}))
+                .map(f -> {
+                    ParquetTypeConverter converter = ParquetTypeConverter.from(f.asPrimitiveType());
+                    return new ColumnDescriptor(f.getName(), converter.getDataType(f).getOID(), 1, "", new Integer[]{});
+                })
                 .collect(Collectors.toList());
     }
 
