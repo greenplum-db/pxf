@@ -35,8 +35,6 @@
 
     <gs>
         <class>org.greenplum.pxf.automation.components.hdfs.Hdfs</class>
-        <host>localhost</host>
-        <port>8020</port>
         <workingDirectory>data-gpdb-ud-tpch/tmp/pxf_automation_data/__UUID__</workingDirectory>
         <hadoopRoot>/home/gpadmin/pxf/servers/gs</hadoopRoot>
         <scheme>gs</scheme>
@@ -44,8 +42,6 @@
 
     <wasbs>
         <class>org.greenplum.pxf.automation.components.hdfs.Hdfs</class>
-        <host>localhost</host>
-        <port>8020</port>
         <workingDirectory>pxf-container@pxfdev.blob.core.windows.net/tmp/pxf_automation_data/__UUID__</workingDirectory>
         <hadoopRoot>/home/gpadmin/pxf/servers/wasbs</hadoopRoot>
         <scheme>wasbs</scheme>

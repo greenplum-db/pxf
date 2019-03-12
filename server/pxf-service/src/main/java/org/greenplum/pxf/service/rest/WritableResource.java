@@ -56,7 +56,6 @@ import java.io.InputStream;
   	--header "X-GP-ALIGNMENT: 4" \
  	--header "X-GP-SEGMENT-ID: 0" \
  	--header "X-GP-SEGMENT-COUNT: 3" \
- 	--header "X-GP-HAS-FILTER: 0" \
  	--header "X-GP-FORMAT: TEXT" \
  	--header "X-GP-URI: pxf://localhost:51200/data/curl/?Accessor=TextFileWAccessor&Resolver=TextWResolver" \
  	--header "X-GP-URL-HOST: localhost" \

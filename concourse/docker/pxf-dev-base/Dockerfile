@@ -4,9 +4,9 @@ FROM pivotaldata/${BASE_IMAGE}
 
 # install Go utilities
 RUN cd /tmp && \
-    wget -q https://dl.google.com/go/go1.11.4.linux-amd64.tar.gz && \
-    tar -C /usr/local -xzf go1.11.4.linux-amd64.tar.gz && \
-    rm -f go1.11.4.linux-amd64.tar.gz && \
+    wget -q https://dl.google.com/go/go1.11.5.linux-amd64.tar.gz && \
+    tar -C /usr/local -xzf go1.11.5.linux-amd64.tar.gz && \
+    rm -f go1.11.5.linux-amd64.tar.gz && \
     cd - && \
     GOPATH=/opt/go /usr/local/go/bin/go get github.com/golang/dep/cmd/dep && \
     GOPATH=/opt/go /usr/local/go/bin/go get github.com/onsi/ginkgo/ginkgo && \
@@ -18,7 +18,7 @@ RUN useradd -s /sbin/nologin -d /opt/minio minio && \
     mkdir -p /opt/minio/bin && \
     chmod a+rx /opt/minio && \
     mkdir /opt/minio/data && \
-    wget https://dl.minio.io/server/minio/release/linux-amd64/minio -O /opt/minio/bin/minio && \
+    wget -q https://dl.minio.io/server/minio/release/linux-amd64/minio -O /opt/minio/bin/minio && \
     chmod +x /opt/minio/bin/minio && \
     chown -R minio:minio /opt/minio
 

@@ -14,16 +14,14 @@ be embedded to further manipulate the generated pipeline.
 fly -t ud set-pipeline \
     -c ~/workspace/pxf/concourse/pipelines/docker-images.yml \
     -l ~/workspace/gp-continuous-integration/secrets/gpdb-release-secrets.dev.yml \
-    -p gpdb_pxf_docker-images
+    -v pxf-git-branch=master -p gpdb_pxf_docker-images
 ```
 
 # Deploy production PXF pipelines
 The following commands would create two PXF pipelines - one for **gpdb_master** and the other for **5X_STABLE**
 ```
+pushd ~/workspace/gp-continuous-integration && git pull && popd
 ./deploy prod master
-```
-
-```
 ./deploy prod 5x
 ```
 
@@ -33,10 +31,9 @@ The following commands would create two PXF pipelines - one for **gpdb_master** 
 fly -t ud set-pipeline \
     -c ~/workspace/pxf/concourse/pipelines/pxf_pr_pipeline.yml \
     -l ~/workspace/gp-continuous-integration/secrets/gpdb-release-secrets.dev.yml \
-    -l ~/workspace/gp-continuous-integration/secrets/gpdb_master-ci-secrets.yml \
-    -v folder-prefix=dev/pivotal-default -v test-env=dev -v gpdb-branch=master \
-    -v icw_green_bucket=gpdb5-assert-concourse-builds \
-    -p pxf_pr
+    -l ~/workspace/gp-continuous-integration/secrets/gpdb_5X_STABLE-ci-secrets.yml \
+    -v folder-prefix=dev/pivotal-default -v test-env=dev -v gpdb-git-branch=5X_STABLE \
+    -v icw_green_bucket=gpdb5-assert-concourse-builds -p pxf_pr
 ```
 
 # Deploy the release pipeline
@@ -44,6 +41,7 @@ fly -t ud set-pipeline \
 https://github.com/pivotal/gp-continuous-integration/blob/master/README.md#pxf_release
 ```
 ./deploy prod 5x -p release
+./deploy prod master -p release
 ```
 
 # Deploy the performance pipelines
@@ -56,7 +54,7 @@ fly -t ud set-pipeline \
     -l ~/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
     -l ~/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud.yml \
     -l ~/workspace/pxf/concourse/settings/perf-settings-10g.yml \
-    -v gpdb-branch=master -v icw_green_bucket=gpdb5-assert-concourse-builds \
+    -v gpdb-branch=5X_STABLE -v icw_green_bucket=gpdb5-stable-concourse-builds \
     -v pxf-git-branch=master -p pxf_perf-10g
 ```
 
@@ -72,7 +70,7 @@ fly -t ud set-pipeline \
     -l ~/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
     -l ~/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud.yml \
     -l ~/workspace/pxf/concourse/settings/perf-settings-50g.yml \
-    -v gpdb-branch=master -v icw_green_bucket=gpdb5-assert-concourse-builds \
+    -v gpdb-branch=5X_STABLE -v icw_green_bucket=gpdb5-stable-concourse-builds \
     -v pxf-git-branch=master -p pxf_perf-50g
 ```
 
@@ -84,7 +82,7 @@ fly -t ud set-pipeline \
     -l ~/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
     -l ~/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud.yml \
     -l ~/workspace/pxf/concourse/settings/perf-settings-500g.yml \
-    -v gpdb-branch=master -v icw_green_bucket=gpdb5-assert-concourse-builds \
+    -v gpdb-branch=5X_STABLE -v icw_green_bucket=gpdb5-stable-concourse-builds \
     -v pxf-git-branch=master -p pxf_perf-500g
 ```
 

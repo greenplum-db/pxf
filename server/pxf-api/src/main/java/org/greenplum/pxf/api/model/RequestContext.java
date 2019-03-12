@@ -49,7 +49,6 @@ public class RequestContext {
     private int fragmentIndex;
     private byte[] fragmentMetadata = null;
     private String filterString;
-    private boolean filterStringValid;
     // Profile-centric metadata
     private Object metadata;
 
@@ -128,14 +127,6 @@ public class RequestContext {
 
     public Map<String, String> getOptions() {
         return Collections.unmodifiableMap(options);
-    }
-
-    public boolean isFilterStringValid() {
-        return filterStringValid;
-    }
-
-    public void setFilterStringValid(boolean filterStringValid) {
-        this.filterStringValid = filterStringValid;
     }
 
     public String getRemoteLogin() {
@@ -232,7 +223,7 @@ public class RequestContext {
      * @return whether there is a filter string
      */
     public boolean hasFilter() {
-        return filterStringValid;
+        return filterString != null;
     }
 
     /**
@@ -382,7 +373,7 @@ public class RequestContext {
     }
 
     /**
-     * Returns the contents of pxf_remote_service_login set in Gpdb. Should the
+     * Returns the contents of pxf_remote_service_login set in GPDB. Should the
      * user set it to an empty string this function will return null.
      *
      * @return remote login details if set, null otherwise
@@ -392,7 +383,7 @@ public class RequestContext {
     }
 
     /**
-     * Returns the contents of pxf_remote_service_secret set in Gpdb. Should the
+     * Returns the contents of pxf_remote_service_secret set in GPDB. Should the
      * user set it to an empty string this function will return null.
      *
      * @return remote password if set, null otherwise
@@ -477,7 +468,7 @@ public class RequestContext {
     /**
      * Sets number of attributes projected
      *
-     * @param numAttrsProjected number of attrivutes projected
+     * @param numAttrsProjected number of attributes projected
      */
     public void setNumAttrsProjected(int numAttrsProjected) {
         this.numAttrsProjected = numAttrsProjected;

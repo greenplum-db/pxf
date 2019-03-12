@@ -66,7 +66,7 @@ PXF_CONF_DIR="/home/gpadmin/pxf"
 export HADOOP_VER=2.6.5.0-292
 
 function install_java() {
-	yum install -y -d 1 java-1.8.0-openjdk-devel
+	yum install -y -d 1 java-1.8.0-openjdk-devel java-1.8.0-openjdk-devel-debug
 	echo 'export JAVA_HOME=/usr/lib/jvm/jre' | sudo tee -a ~gpadmin/.bashrc
 	echo 'export JAVA_HOME=/usr/lib/jvm/jre' | sudo tee -a ~centos/.bashrc
 }
@@ -81,7 +81,7 @@ gpgkey=http://public-repo-1.hortonworks.com/HDP/centos7/2.x/updates/2.6.5.0/RPM-
 enabled=1
 priority=1
 EOF
-	yum install -y -d 1 hadoop-client hive hbase
+	yum install -y -d 1 hadoop-client
 	echo "export HADOOP_VERSION=\${HADOOP_VER}" | sudo tee -a ~gpadmin/.bash_profile
 	echo "export HADOOP_HOME=/usr/hdp/\${HADOOP_VER}" | sudo tee -a ~gpadmin/.bash_profile
 	echo "export HADOOP_HOME=/usr/hdp/\${HADOOP_VER}" | sudo tee -a ~centos/.bash_profile

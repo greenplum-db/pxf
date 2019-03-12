@@ -26,7 +26,7 @@ import org.greenplum.pxf.service.bridge.BridgeFactory;
 import org.greenplum.pxf.service.bridge.SimpleBridgeFactory;
 import org.greenplum.pxf.service.HttpRequestParser;
 import org.greenplum.pxf.service.RequestParser;
-import org.greenplum.pxf.service.io.Writable;
+import org.greenplum.pxf.api.io.Writable;
 
 import javax.servlet.ServletContext;
 import javax.ws.rs.GET;

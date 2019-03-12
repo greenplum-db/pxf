@@ -30,7 +30,6 @@ public class HiveDataFragmenterWithFilter extends HiveDataFragmenter {
         context.setFilterString(filterStr);
         LOG.debug("User defined filter: " + context.getFilterString());
 
-        context.setFilterStringValid(true);
         LOG.debug("User defined filter: " + context.hasFilter());
     }
 }

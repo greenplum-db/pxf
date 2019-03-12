@@ -118,7 +118,7 @@ function start_hadoop_secure() {
 	echo 'Start ambari services'
 	ambari-agent start
 	ambari-server start
-	sleep 30 # wait until ambari's webserver is ready to process requests
+	sleep 45 # wait until ambari's webserver is ready to process requests
 
 	# Start cluster
 	start_hadoop_services

@@ -1,8 +1,10 @@
 ifeq "$(PXF_HOME)" ""
     ifneq "$(GPHOME)" ""
-        PXF_HOME= "$(GPHOME)/pxf"
+        PXF_HOME = "$(GPHOME)/pxf"
     endif
 endif
+
+SHELL := /bin/bash
 
 export PXF_HOME
 
@@ -25,6 +27,9 @@ clean:
 test:
 	make -C cli/go/src/pxf-cli test
 	make -C server test
+
+it:
+	make -C automation TEST=$(TEST)
 
 install:
 	make -C cli/go/src/pxf-cli install

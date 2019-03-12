@@ -33,6 +33,7 @@ public enum JdbcPluginSettings {
     jdbcUrl("DB_URL", "jdbc.url"),
     jdbcUser("USER", "jdbc.user"),
     jdbcPassword("PASS", "jdbc.password"),
+    quoteColumns("QUOTE_COLUMNS", "jdbc.quote_columns"),
     preQuerySql(null, "jdbc.pre_query.sql"),
     stopIfPreQueryFails("STOP_IF_PRE_FAILS", "jdbc.pre_query.stop_if_fails"),
     batchSize("BATCH_SIZE", "jdbc.batch.size"),

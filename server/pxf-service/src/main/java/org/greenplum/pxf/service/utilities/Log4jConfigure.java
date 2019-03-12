@@ -19,18 +19,18 @@ package org.greenplum.pxf.service.utilities;
  * under the License.
  */
 
-import java.io.File;
+
+import org.apache.log4j.PropertyConfigurator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.log4j.PropertyConfigurator;
+import java.io.File;
 
 public class Log4jConfigure {
 
-    private static final Log LOG = LogFactory.getLog(Log4jConfigure.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Log4jConfigure.class);
 
     /**
      * Initializes log4j logging for the webapp.
@@ -61,6 +61,6 @@ public class Log4jConfigure {
                     + defaultLog4jLocation;
         }
         PropertyConfigurator.configure(log4jConfigLocation);
-        LOG.info("log4jConfigLocation = " + log4jConfigLocation);
+        LOG.info("Initialized logging: log4jConfigLocation = {}", log4jConfigLocation);
     }
 }

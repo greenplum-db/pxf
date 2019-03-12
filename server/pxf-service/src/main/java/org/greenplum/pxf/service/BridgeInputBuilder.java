@@ -22,12 +22,13 @@ package org.greenplum.pxf.service;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.greenplum.pxf.api.GPDBWritableMapper;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.io.DataType;
+import org.greenplum.pxf.api.io.GPDBWritable;
+import org.greenplum.pxf.api.io.Text;
 import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.service.io.GPDBWritable;
-import org.greenplum.pxf.service.io.Text;
 
 import java.io.DataInput;
 import java.util.Collections;

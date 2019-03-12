@@ -1,0 +1,16 @@
+message hive_schema {
+  optional binary s1 (UTF8);
+  optional binary s2 (UTF8);
+  optional int32 n1;
+  optional double d1;
+  optional fixed_len_byte_array(16) dc1 (DECIMAL(38,18));
+  optional int96 tm;
+  optional float f;
+  optional int64 bg;
+  optional boolean b;
+  optional int32 tn (INT_8);
+  optional int32 sml (INT_16);
+  optional binary vc1 (UTF8);
+  optional binary c1 (UTF8);
+  optional binary bin;
+}

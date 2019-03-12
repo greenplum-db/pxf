@@ -20,6 +20,10 @@
 default: all
 
 BUILD_PARAMS+= -DdeployPath="$(PXF_HOME)"
+TOMCAT_VERSION="7.0.62"
+TOMCAT_DIR="tomcat/build"
+TOMCAT_TAR="apache-tomcat-${TOMCAT_VERSION}.tar.gz"
+TOMCAT_URL="http://archive.apache.org/dist/tomcat/tomcat-7/v${TOMCAT_VERSION}/bin/${TOMCAT_TAR}"
 
 help:
 	@echo
@@ -33,7 +37,7 @@ help:
 	@echo	"  - doc - creates aggregate javadoc under docs"
 
 all:
-	./gradlew clean tar aggregateJavadoc $(BUILD_PARAMS)
+	./gradlew clean tar $(BUILD_PARAMS)
 
 compile:
 	./gradlew compileJava
@@ -41,7 +45,7 @@ compile:
 test unittest:
 	./gradlew test
 
-tar:
+tar: tomcat
 	./gradlew tar ${BUILD_PARAMS}
 
 clean:
@@ -53,8 +57,25 @@ distclean maintainer-clean: clean
 doc:
 	./gradlew aggregateJavadoc
 
+.PHONY: tomcat
+tomcat:
+	@if [[ -f "${TOMCAT_DIR}/${TOMCAT_TAR}" ]]; then \
+		echo "${TOMCAT_TAR} already exists, nothing to do"; \
+	else \
+		echo "Downloading Tomcat from ${TOMCAT_URL}..."; \
+		mkdir -p ${TOMCAT_DIR}; \
+		wget -q ${TOMCAT_URL} -P ${TOMCAT_DIR}; \
+	fi
+	@if [[ ! -d "${TOMCAT_DIR}/apache-tomcat" ]]; then \
+		mkdir -p ${TOMCAT_DIR}/apache-tomcat; \
+		echo "Extracting Tomcat into ${TOMCAT_DIR}..."; \
+		pushd ${TOMCAT_DIR} > /dev/null; \
+		tar -xzf ${TOMCAT_TAR} -C apache-tomcat --strip-components 1; \
+		popd > /dev/null; \
+	fi
+
 .PHONY: install
-install:
+install: tomcat
 	@if [[ "$(PXF_HOME)" == "" ]]; then \
 		echo "ERROR: PXF_HOME is not set correctly"; exit 2; \
 	fi

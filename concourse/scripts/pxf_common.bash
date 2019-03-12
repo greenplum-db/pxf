@@ -1,13 +1,7 @@
 #!/bin/bash -l
 
-if [[ ${TARGET_OS} == "ubuntu" ]]; then
-	GPHOME="/usr/local/gpdb"
-else
-	GPHOME="/usr/local/greenplum-db-devel"
-fi
-
+GPHOME="/usr/local/greenplum-db-devel"
 PXF_HOME="${GPHOME}/pxf"
-
 MDD_VALUE="/data/gpdata/master/gpseg-1"
 
 # on purpose do not call this PXF_CONF so that it is not set during pxf operations
@@ -59,6 +53,13 @@ function install_gpdb_binary() {
 		service sshd start
 		psi_dir=$(find /usr/lib64 -name psi | sort -r | head -1)
 	elif [[ ${TARGET_OS} == "ubuntu" ]]; then
+        # Adjust GPHOME if the binary expects it to be /usr/local/gpdb
+        gphome=$(grep "^GPHOME=" /usr/local/greenplum-db-devel/greenplum_path.sh | cut -d"=" -f2)
+        if [[ ${gphome} == "/usr/local/gpdb" ]]; then
+            mv /usr/local/greenplum-db-devel /usr/local/gpdb
+            GPHOME="/usr/local/gpdb"
+            PXF_HOME="${GPHOME}/pxf"
+        fi
 		service ssh start
 		pip install psi
 		psi_dir=$(find /usr/local/lib -name psi | sort -r | head -1)
@@ -162,8 +163,8 @@ function install_pxf_server() {
 			make install
 			popd
 		fi
-		chown -R gpadmin:gpadmin ${PXF_HOME}
 	fi
+	chown -R gpadmin:gpadmin ${PXF_HOME}
 }
 
 function setup_impersonation() {

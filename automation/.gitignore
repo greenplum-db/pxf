@@ -1,5 +1,6 @@
 .testdir.tmp
 jsystem.properties.bu
+jsystem.properties
 runnerState.properties
 log/
 target/

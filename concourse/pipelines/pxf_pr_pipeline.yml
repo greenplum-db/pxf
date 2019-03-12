@@ -42,8 +42,8 @@ resources:
 - name: centos-gpdb-build-6
   type: docker-image
   source:
-    repository: pivotaldata/centos6-build
-    tag: gpdb6-latest
+    repository: pivotaldata/centos-gpdb-dev
+    tag: '6-gcc6.2-llvm3.7'
 
 - name: gpaddon_src
   type: git

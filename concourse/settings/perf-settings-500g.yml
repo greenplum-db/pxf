@@ -23,10 +23,12 @@ perf-trigger-interval: 720h
 perf-trigger-start: 11:00 PM
 perf-trigger-stop: 11:10 PM
 
+perf-benchmark-concurrency: 1
+perf-benchmark-hadoop: true
 perf-benchmark-adl: false
 perf-benchmark-s3: true
+perf-benchmark-s3-extension: true
 perf-benchmark-gcs: false
 perf-benchmark-gphdfs: false
 perf-benchmark-wasb: false
-
-job-name: perf-multi-node-500G
+perf-sleep-before-destroy: 10

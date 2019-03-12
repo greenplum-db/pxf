@@ -1,29 +1,34 @@
+# 10G Perf Pipeline Settings
 tf-bucket-path: clusters-google/
 tf-cloud-provider: google
 folder-prefix: perf
-perf-scale: 5
+perf-scale: 10
 
 enable-impersonation-multinode: true
 pxf-jvm-opts: "-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/heap_dump -Xmx2g -Xms1g"
 perf-ccp-reap-minutes: 120
 
-perf-gpdb-number-of-nodes: 3
+perf-gpdb-number-of-nodes: 4
 perf-gpdb-segments-per-host: 4
-perf-gpdb-instance-type: n1-standard-4
-perf-gpdb-disk-size: 64
+perf-gpdb-instance-type: n1-standard-8
+perf-gpdb-disk-size: 256
 
-perf-hadoop-number-of-nodes: 3
+perf-hadoop-number-of-nodes: 4
 perf-hadoop-initialization-script: gs://pxf-perf/scripts/update-site-core.sh
-perf-hadoop-initialization-script-timeout: 1500
+perf-hadoop-initialization-script-timeout: 500
 perf-hadoop-instance-type: n1-standard-4
-perf-hadoop-disk-size: 64
+perf-hadoop-disk-size: 256
 
 perf-trigger-interval: 24h
 perf-trigger-start: 12:30 PM
 perf-trigger-stop: 12:40 PM
 
+perf-benchmark-concurrency: 10
+perf-benchmark-hadoop: true
 perf-benchmark-adl: false
 perf-benchmark-s3: true
+perf-benchmark-s3-extension: true
 perf-benchmark-gcs: false
 perf-benchmark-gphdfs: false
 perf-benchmark-wasb: false
+perf-sleep-before-destroy: 10

@@ -28,6 +28,7 @@ import org.greenplum.pxf.api.utilities.FragmentsResponse;
 import org.greenplum.pxf.api.utilities.FragmentsResponseFormatter;
 import org.greenplum.pxf.service.HttpRequestParser;
 import org.greenplum.pxf.service.RequestParser;
+import org.greenplum.pxf.service.SessionId;
 import org.greenplum.pxf.service.utilities.AnalyzeUtils;
 
 import javax.servlet.ServletContext;
@@ -82,6 +83,7 @@ public class FragmenterResource extends BaseResource {
                                  @QueryParam("path") final String path)
             throws Exception {
 
+        long startTime = System.currentTimeMillis();
         LOG.debug("FRAGMENTER started for path \"{}\"", path);
 
         RequestContext context = parseRequest(headers);
@@ -92,6 +94,13 @@ public class FragmenterResource extends BaseResource {
         List<Fragment> fragments = fragmenter.getFragments();
         fragments = AnalyzeUtils.getSampleFragments(fragments, context);
         FragmentsResponse fragmentsResponse = FragmentsResponseFormatter.formatResponse(fragments, path);
+
+        int numberOfFragments = fragments.size();
+        SessionId session = new SessionId(context.getSegmentId(), context.getTransactionId(), context.getUser());
+        long elapsedMillis = System.currentTimeMillis() - startTime;
+        LOG.info("{} returns {} fragment{} for path {} in {} ms for {} [profile {} filter is{} available]",
+                fragmenter.getClass().getSimpleName(), numberOfFragments, numberOfFragments == 1 ? "" : "s",
+                path, elapsedMillis, session, context.getProfile(), context.hasFilter() ? "" : " not");
 
         return Response.ok(fragmentsResponse, MediaType.APPLICATION_JSON_TYPE).build();
     }

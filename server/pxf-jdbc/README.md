@@ -113,6 +113,19 @@ Password to use to connect to external database.
 Password is not required (it is possible to set [JDBC user](#jdbc-user) without setting JDBC password).
 
 
+#### Quote columns
+Whether PXF should quote column names when constructing SQL query to the external database.
+
+* **Option**: `QUOTE_COLUMNS`
+* **Configuration parameter**: `jdbc.quote_columns`
+* **Value**:
+    * not set &mdash; quote column names automatically
+    * `true` &mdash; quote all column names
+    * `false` &mdash; do not quote column names
+
+When this setting is not set, PXF automatically checks whether some column name should be quoted, and if so, it quotes all column names in the query.
+
+
 #### Partition by
 *Can be set only in `LOCATION` clause of external table DDL*
 

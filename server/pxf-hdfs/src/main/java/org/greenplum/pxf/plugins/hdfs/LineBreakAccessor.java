@@ -72,13 +72,11 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor {
      * Opens file for write.
      */
     @Override
-    public boolean openForWrite() throws Exception {
+    public boolean openForWrite() throws IOException {
 
         String fileName = hcfsType.getDataUri(configuration, context);
         String compressCodec = context.getOption("COMPRESSION_CODEC");
         CompressionCodec codec = null;
-
-        fs = FileSystem.get(URI.create(fileName), configuration);
 
         // get compression codec
         if (compressCodec != null) {
@@ -88,16 +86,8 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor {
         }
 
         file = new Path(fileName);
-        if (fs.exists(file)) {
-            throw new IOException("file " + file.toString()
-                    + " already exists, can't write data");
-        }
-
-        Path parent = file.getParent();
-        if (!fs.exists(parent)) {
-            fs.mkdirs(parent);
-            LOG.debug("Created new dir {}", parent);
-        }
+        fs = FileSystem.get(URI.create(fileName), configuration);
+        HdfsUtilities.validateFile(file, fs);
 
         // create output stream - do not allow overwriting existing file
         createOutputStream(file, codec);
@@ -124,7 +114,7 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor {
      * Writes row into stream.
      */
     @Override
-    public boolean writeNextObject(OneRow onerow) throws Exception {
+    public boolean writeNextObject(OneRow onerow) throws IOException {
         dos.write((byte[]) onerow.getData());
         return true;
     }
@@ -133,7 +123,7 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor {
      * Closes the output stream after done writing.
      */
     @Override
-    public void closeForWrite() throws Exception {
+    public void closeForWrite() throws IOException {
         if ((dos != null) && (fsdos != null)) {
             LOG.debug("Closing writing stream for path {}", file);
             dos.flush();

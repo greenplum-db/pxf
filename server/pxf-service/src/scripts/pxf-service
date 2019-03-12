@@ -103,7 +103,7 @@ function get_environment()
 
     # validate JAVA_HOME
     if [[ ! -x ${JAVA_HOME}/bin/java ]]; then
-        fail "\$JAVA_HOME is invalid"
+        fail "\$JAVA_HOME=$JAVA_HOME is invalid. Set \$JAVA_HOME in ~/.bashrc or ${default_env_script} on all Greenplum hosts."
     fi
 }
 
@@ -164,6 +164,7 @@ function waitForTomcat()
     sleep_time=1 # sleep 1 second between attempts
 
     # wait until tomcat is up:
+    sleep 2
     echo Checking if tomcat is up and running...
     until curl --silent --connect-timeout 1 -I http://localhost:${PXF_PORT} | grep 'Coyote'
     do
@@ -342,8 +343,8 @@ function doInit()
 {
 	instanceExists
     if (( $? == 0 )); then
-		echo ERROR: instance already exists in ${instance_root}, nothing to do...
-		return 0
+		echo Instance already exists. Cleanup ${instance_root}/pxf-service if you wish to re-initialize.
+		return 1
 	fi
 
 	update_pxf_conf

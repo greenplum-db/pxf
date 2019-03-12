@@ -32,7 +32,7 @@ public class FilterPushDownTest extends BaseFeature {
     }
 
     /**
-     * Check PXF receive the expected filter string from gpdb/gpdb.
+     * Check PXF receive the expected filter string from GPDB.
      * Column delimiter is ",".
      *
      * @throws Exception

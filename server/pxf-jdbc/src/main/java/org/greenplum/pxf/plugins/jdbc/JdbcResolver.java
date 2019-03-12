@@ -50,7 +50,6 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
      * getFields() implementation
      *
      * @param row one row
-     *
      * @throws SQLException if the provided {@link OneRow} object is invalid
      */
     @Override
@@ -60,10 +59,17 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
 
         for (ColumnDescriptor column : tableColumns) {
             String colName = column.columnName();
-            Object value = null;
+            Object value;
 
             OneField oneField = new OneField();
             oneField.type = column.columnTypeCode();
+
+            fields.add(oneField);
+
+            /*
+             * Non-projected columns get null values
+             */
+            if (!column.isProjected()) continue;
 
             switch (DataType.get(oneField.type)) {
                 case INTEGER:
@@ -100,37 +106,38 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
                     value = result.getTimestamp(colName);
                     break;
                 default:
-                    throw new UnsupportedOperationException("Field type '" + DataType.get(oneField.type).toString() + "' (column '" + column.toString() + "') is not supported");
+                    throw new UnsupportedOperationException(
+                            String.format("Field type '%s' (column '%s') is not supported",
+                                    DataType.get(oneField.type),
+                                    column));
             }
 
-            oneField.val = value;
-            fields.add(oneField);
+            oneField.val = result.wasNull() ? null : value;
         }
         return fields;
     }
 
     /**
      * setFields() implementation
-     * @param record  List of fields
      *
+     * @param record List of fields
      * @return OneRow with the data field containing a List of fields
      * OneFields are not reordered before being passed to Accessor; at the
      * moment, there is no way to correct the order of the fields if it is not.
      * In practice, the 'record' provided is always ordered the right way.
-     *
      * @throws UnsupportedOperationException if field of some type is not supported
-     * @throws ParseException if the record cannot be parsed
+     * @throws ParseException                if the record cannot be parsed
      */
     @Override
     public OneRow setFields(List<OneField> record) throws UnsupportedOperationException, ParseException {
         int column_index = 0;
         for (OneField oneField : record) {
-            ColumnDescriptor column = tableColumns.get(column_index);
-            if (
-                    LOG.isDebugEnabled() &&
-                            DataType.get(column.columnTypeCode()) != DataType.get(oneField.type)
-                    ) {
-                LOG.warn("The provided tuple of data may be disordered. Datatype of column with descriptor '" + column.toString() + "' must be '" + DataType.get(column.columnTypeCode()).toString() + "', but actual is '" + DataType.get(oneField.type).toString() + "'");
+            ColumnDescriptor column = columns.get(column_index);
+            if (LOG.isWarnEnabled() && DataType.get(column.columnTypeCode()) != DataType.get(oneField.type)) {
+                LOG.warn("The provided tuple of data may be disordered. Datatype of column with descriptor '{}' must be '{}', but actual is '{}'",
+                        column,
+                        DataType.get(column.columnTypeCode()),
+                        DataType.get(oneField.type));
             }
 
             // Check that data type is supported
@@ -150,25 +157,25 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
                 case DATE:
                     break;
                 default:
-                    throw new UnsupportedOperationException("Field type '" + DataType.get(oneField.type).toString() + "' (column '" + column.toString() + "') is not supported");
+                    throw new UnsupportedOperationException(
+                            String.format("Field type '%s' (column '%s') is not supported",
+                                    DataType.get(oneField.type),
+                                    column));
             }
 
-            if (
-                    LOG.isDebugEnabled() &&
-                            DataType.get(oneField.type) == DataType.BYTEA
-                    ) {
-                String converted = (oneField.val != null) ? new String((byte[])oneField.val) : "null";
-                LOG.debug("OneField content (conversion from BYTEA): '" +  converted + "'");
+            if (LOG.isDebugEnabled() &&
+                    DataType.get(oneField.type) == DataType.BYTEA) {
+                String converted = (oneField.val != null) ? new String((byte[]) oneField.val) : "null";
+                LOG.debug("OneField content (conversion from BYTEA): '{}'", converted);
             }
 
             // Convert TEXT columns into native data types
             if ((DataType.get(oneField.type) == DataType.TEXT) && (DataType.get(column.columnTypeCode()) != DataType.TEXT)) {
                 oneField.type = column.columnTypeCode();
                 if (oneField.val != null) {
-                    String rawVal = (String)oneField.val;
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("OneField content (conversion from TEXT): '" + rawVal + "'");
-                    }
+                    String rawVal = (String) oneField.val;
+
+                    LOG.debug("OneField content (conversion from TEXT): '{}'", rawVal);
                     switch (DataType.get(column.columnTypeCode())) {
                         case VARCHAR:
                         case BPCHAR:
@@ -176,36 +183,35 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
                         case BYTEA:
                             break;
                         case BOOLEAN:
-                            oneField.val = (Object)Boolean.parseBoolean(rawVal);
+                            oneField.val = Boolean.parseBoolean(rawVal);
                             break;
                         case INTEGER:
-                            oneField.val = (Object)Integer.parseInt(rawVal);
+                            oneField.val = Integer.parseInt(rawVal);
                             break;
                         case FLOAT8:
-                            oneField.val = (Object)Double.parseDouble(rawVal);
+                            oneField.val = Double.parseDouble(rawVal);
                             break;
                         case REAL:
-                            oneField.val = (Object)Float.parseFloat(rawVal);
+                            oneField.val = Float.parseFloat(rawVal);
                             break;
                         case BIGINT:
-                            oneField.val = (Object)Long.parseLong(rawVal);
+                            oneField.val = Long.parseLong(rawVal);
                             break;
                         case SMALLINT:
-                            oneField.val = (Object)Short.parseShort(rawVal);
+                            oneField.val = Short.parseShort(rawVal);
                             break;
                         case NUMERIC:
-                            oneField.val = (Object)new BigDecimal(rawVal);
+                            oneField.val = new BigDecimal(rawVal);
                             break;
                         case TIMESTAMP:
                             boolean isConversionSuccessful = false;
                             for (SimpleDateFormat sdf : timestampSDFs.get()) {
                                 try {
                                     java.util.Date parsedTimestamp = sdf.parse(rawVal);
-                                    oneField.val = (Object)new Timestamp(parsedTimestamp.getTime());
+                                    oneField.val = new Timestamp(parsedTimestamp.getTime());
                                     isConversionSuccessful = true;
                                     break;
-                                }
-                                catch (ParseException e) {
+                                } catch (ParseException e) {
                                     // pass
                                 }
                             }
@@ -214,89 +220,84 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
                             }
                             break;
                         case DATE:
-                            oneField.val = (Object)new Date(dateSDF.get().parse(rawVal).getTime());
+                            oneField.val = new Date(dateSDF.get().parse(rawVal).getTime());
                             break;
                         default:
-                            throw new UnsupportedOperationException("Field type '" + DataType.get(oneField.type).toString() + "' (column '" + column.toString() + "') is not supported");
+                            throw new UnsupportedOperationException(
+                                    String.format("Field type '%s' (column '%s') is not supported",
+                                            DataType.get(oneField.type),
+                                            column));
                     }
                 }
             }
 
             column_index += 1;
         }
-        return new OneRow(new LinkedList<OneField>(record));
+        return new OneRow(new LinkedList<>(record));
     }
 
     /**
      * Decode OneRow object and pass all its contents to a PreparedStatement
      *
-     * @param row one row
+     * @param row       one row
      * @param statement PreparedStatement
-     *
-     * @throws IOException if data in a OneRow is corrupted
+     * @throws IOException  if data in a OneRow is corrupted
      * @throws SQLException if the given statement is broken
      */
     @SuppressWarnings("unchecked")
     public static void decodeOneRowToPreparedStatement(OneRow row, PreparedStatement statement) throws IOException, SQLException {
         // This is safe: OneRow comes from JdbcResolver
-        List<OneField> tuple = (List<OneField>)row.getData();
+        List<OneField> tuple = (List<OneField>) row.getData();
         for (int i = 1; i <= tuple.size(); i++) {
             OneField field = tuple.get(i - 1);
             switch (DataType.get(field.type)) {
                 case INTEGER:
                     if (field.val == null) {
                         statement.setNull(i, Types.INTEGER);
-                    }
-                    else {
-                        statement.setInt(i, (int)field.val);
+                    } else {
+                        statement.setInt(i, (int) field.val);
                     }
                     break;
                 case BIGINT:
                     if (field.val == null) {
                         statement.setNull(i, Types.INTEGER);
-                    }
-                    else {
-                        statement.setLong(i, (long)field.val);
+                    } else {
+                        statement.setLong(i, (long) field.val);
                     }
                     break;
                 case SMALLINT:
                     if (field.val == null) {
                         statement.setNull(i, Types.INTEGER);
-                    }
-                    else {
-                        statement.setShort(i, (short)field.val);
+                    } else {
+                        statement.setShort(i, (short) field.val);
                     }
                     break;
                 case REAL:
                     if (field.val == null) {
                         statement.setNull(i, Types.FLOAT);
-                    }
-                    else {
-                        statement.setFloat(i, (float)field.val);
+                    } else {
+                        statement.setFloat(i, (float) field.val);
                     }
                     break;
                 case FLOAT8:
                     if (field.val == null) {
                         statement.setNull(i, Types.DOUBLE);
-                    }
-                    else {
-                        statement.setDouble(i, (double)field.val);
+                    } else {
+                        statement.setDouble(i, (double) field.val);
                     }
                     break;
                 case BOOLEAN:
                     if (field.val == null) {
                         statement.setNull(i, Types.BOOLEAN);
-                    }
-                    else {
-                        statement.setBoolean(i, (boolean)field.val);
+                    } else {
+                        statement.setBoolean(i, (boolean) field.val);
                     }
                     break;
                 case NUMERIC:
                     if (field.val == null) {
                         statement.setNull(i, Types.NUMERIC);
-                    }
-                    else {
-                        statement.setBigDecimal(i, (BigDecimal)field.val);
+                    } else {
+                        statement.setBigDecimal(i, (BigDecimal) field.val);
                     }
                     break;
                 case VARCHAR:
@@ -304,33 +305,29 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
                 case TEXT:
                     if (field.val == null) {
                         statement.setNull(i, Types.VARCHAR);
-                    }
-                    else {
-                        statement.setString(i, (String)field.val);
+                    } else {
+                        statement.setString(i, (String) field.val);
                     }
                     break;
                 case BYTEA:
                     if (field.val == null) {
                         statement.setNull(i, Types.BINARY);
-                    }
-                    else {
-                        statement.setBytes(i, (byte[])field.val);
+                    } else {
+                        statement.setBytes(i, (byte[]) field.val);
                     }
                     break;
                 case TIMESTAMP:
                     if (field.val == null) {
                         statement.setNull(i, Types.TIMESTAMP);
-                    }
-                    else {
-                        statement.setTimestamp(i, (Timestamp)field.val);
+                    } else {
+                        statement.setTimestamp(i, (Timestamp) field.val);
                     }
                     break;
                 case DATE:
                     if (field.val == null) {
                         statement.setNull(i, Types.DATE);
-                    }
-                    else {
-                        statement.setDate(i, (Date)field.val);
+                    } else {
+                        statement.setDate(i, (Date) field.val);
                     }
                     break;
                 default:
@@ -342,25 +339,16 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
     private static final Logger LOG = LoggerFactory.getLogger(JdbcResolver.class);
 
     // SimpleDateFormat to parse TEXT into DATE
-    private static ThreadLocal<SimpleDateFormat> dateSDF = new ThreadLocal<SimpleDateFormat>() {
-        @Override protected SimpleDateFormat initialValue() {
-            return new SimpleDateFormat("yyyy-MM-dd");
-        }
-    };
+    private static ThreadLocal<SimpleDateFormat> dateSDF = ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd"));
     // SimpleDateFormat to parse TEXT into TIMESTAMP (with microseconds)
-    private static ThreadLocal<SimpleDateFormat[]> timestampSDFs = new ThreadLocal<SimpleDateFormat[]>() {
-        @Override protected SimpleDateFormat[] initialValue() {
-            SimpleDateFormat[] retRes = {
-                    new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSSS"),
-                    new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSS"),
-                    new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSS"),
-                    new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS"),
-                    new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SS"),
-                    new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S"),
-                    new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"),
-                    new SimpleDateFormat("yyyy-MM-dd")
-            };
-            return retRes;
-        }
-    };
+    private static ThreadLocal<SimpleDateFormat[]> timestampSDFs = ThreadLocal.withInitial(() -> new SimpleDateFormat[]{
+            new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSSS"),
+            new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSS"),
+            new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSS"),
+            new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS"),
+            new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SS"),
+            new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S"),
+            new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"),
+            new SimpleDateFormat("yyyy-MM-dd")
+    });
 }

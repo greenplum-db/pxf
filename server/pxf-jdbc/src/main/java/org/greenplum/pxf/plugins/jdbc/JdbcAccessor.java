@@ -21,14 +21,12 @@ package org.greenplum.pxf.plugins.jdbc;
 
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.Accessor;
-import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.plugins.jdbc.utils.SimpleSQLQueryExecutor;
 import org.greenplum.pxf.plugins.jdbc.writercallable.WriterCallable;
 import org.greenplum.pxf.plugins.jdbc.writercallable.WriterCallableFactory;
 
 import java.io.IOException;
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -53,7 +51,6 @@ import org.slf4j.LoggerFactory;
  * built-in JDBC batches of arbitrary size
  */
 public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
-
     /**
      * openForRead() implementation
      * Create query, open JDBC connection, execute query and store the result into resultSet
@@ -75,7 +72,17 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
             SimpleSQLQueryExecutor.execute(connection, preQuerySql, stopIfPreQueryFails);
         }
 
-        queryRead = buildSelectQuery(connection.getMetaData());
+        // Build SQL query
+        SQLQueryBuilder sqlQueryBuilder = new SQLQueryBuilder(context, configuration, connection.getMetaData());
+        if (quoteColumns == null) {
+            sqlQueryBuilder.autoSetQuoteString();
+        }
+        else if (quoteColumns) {
+            sqlQueryBuilder.forceSetQuoteString();
+        }
+        queryRead = sqlQueryBuilder.buildSelectQuery();
+        LOG.trace("Select query: {}", queryRead);
+
         statementRead = connection.createStatement();
         resultSetRead = statementRead.executeQuery(queryRead);
 
@@ -126,7 +133,17 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
             SimpleSQLQueryExecutor.execute(connection, preQuerySql, stopIfPreQueryFails);
         }
 
-        queryWrite = buildInsertQuery();
+        // Build SQL query
+        SQLQueryBuilder sqlQueryBuilder = new SQLQueryBuilder(context, configuration, connection.getMetaData());
+        if (quoteColumns == null) {
+            sqlQueryBuilder.autoSetQuoteString();
+        }
+        else if (quoteColumns) {
+            sqlQueryBuilder.forceSetQuoteString();
+        }
+        queryWrite = sqlQueryBuilder.buildInsertQuery();
+        LOG.trace("Insert query: {}", queryWrite);
+
         statementWrite = super.getPreparedStatement(connection, queryWrite);
 
         // Process batchSize
@@ -254,80 +271,6 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
         finally {
             JdbcBasePlugin.closeStatement(statementWrite);
         }
-    }
-
-
-    /**
-     * Build SELECT query (with "WHERE" and partition constraints)
-     *
-     * @return Complete SQL query
-     *
-     * @throws ParseException if the constraints passed in RequestContext are incorrect
-     * @throws SQLException if the database metadata is invalid
-     */
-    private String buildSelectQuery(DatabaseMetaData databaseMetaData) throws ParseException, SQLException {
-        if (databaseMetaData == null) {
-            throw new IllegalArgumentException("The provided databaseMetaData is null");
-        }
-        StringBuilder sb = new StringBuilder();
-        sb.append("SELECT ");
-
-        // Insert columns' names
-        String columnDivisor = "";
-        for (ColumnDescriptor column : tableColumns) {
-            sb.append(columnDivisor);
-            columnDivisor = ", ";
-            sb.append(column.columnName());
-        }
-
-        // Insert the table name
-        sb.append(" FROM ").append(tableName);
-
-        // Insert regular WHERE constraints
-        (new WhereSQLBuilder(context)).buildWhereSQL(databaseMetaData.getDatabaseProductName(), sb);
-
-        // Insert partition constraints
-        JdbcPartitionFragmenter.buildFragmenterSql(context, configuration, databaseMetaData.getDatabaseProductName(), sb);
-
-        return sb.toString();
-    }
-
-    /**
-     * Build INSERT query template (field values are replaced by placeholders '?')
-     *
-     * @return SQL query with placeholders instead of actual values
-     */
-    private String buildInsertQuery() {
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("INSERT INTO ");
-
-        // Insert the table name
-        sb.append(tableName);
-
-        // Insert columns' names
-        sb.append("(");
-        String fieldDivisor = "";
-        for (ColumnDescriptor column : tableColumns) {
-            sb.append(fieldDivisor);
-            fieldDivisor = ", ";
-            sb.append(column.columnName());
-        }
-        sb.append(")");
-
-        sb.append(" VALUES ");
-
-        // Insert values placeholders
-        sb.append("(");
-        fieldDivisor = "";
-        for (int i = 0; i < tableColumns.size(); i++) {
-            sb.append(fieldDivisor);
-            fieldDivisor = ", ";
-            sb.append("?");
-        }
-        sb.append(")");
-
-        return sb.toString();
     }
 
     // Read variables

@@ -8,6 +8,8 @@ inputs:
   - name: pxf_tarball
 params:
   GROUP: feature
+  IMPERSONATION: true
+  PXF_JVM_OPTS:
   TARGET_OS: centos
   TARGET_OS_VERSION: 6
 run:

@@ -9,7 +9,7 @@ import java.util.List;
 
 /**
  * Test class for regression tests.
- * The only thing this class does is to take received filter string from GPDB (HAS-FILTER & FILTER).
+ * The only thing this class does is to take received filter string from GPDB (FILTER).
  * And return it in UserData back to gpdb for later validation in Resolver/Accessor
  */
 public class FilterVerifyFragmenter extends BaseFragmenter

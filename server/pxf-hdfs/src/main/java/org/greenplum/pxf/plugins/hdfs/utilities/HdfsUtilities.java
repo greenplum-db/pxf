@@ -19,9 +19,8 @@ package org.greenplum.pxf.plugins.hdfs.utilities;
  * under the License.
  */
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.compress.BZip2Codec;
 import org.apache.hadoop.io.compress.CompressionCodec;
@@ -34,6 +33,8 @@ import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.FragmentMetadata;
 import org.greenplum.pxf.api.utilities.Utilities;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -44,20 +45,18 @@ import java.util.List;
  * HdfsUtilities class exposes helper methods for PXF classes.
  */
 public class HdfsUtilities {
-    private static final Log LOG = LogFactory.getLog(HdfsUtilities.class);
+
+    private static Logger LOG = LoggerFactory.getLogger(HdfsUtilities.class);
 
     /*
      * Helper routine to get a compression codec class
      */
-    private static Class<? extends CompressionCodec> getCodecClass(Configuration conf,
-                                                                   String name) {
+    private static Class<? extends CompressionCodec> getCodecClass(Configuration conf, String name) {
         Class<? extends CompressionCodec> codecClass;
         try {
-            codecClass = conf.getClassByName(name).asSubclass(
-                    CompressionCodec.class);
+            codecClass = conf.getClassByName(name).asSubclass(CompressionCodec.class);
         } catch (ClassNotFoundException e) {
-            throw new IllegalArgumentException("Compression codec " + name
-                    + " was not found.", e);
+            throw new IllegalArgumentException("Compression codec " + name + " was not found.", e);
         }
         return codecClass;
     }
@@ -87,8 +86,10 @@ public class HdfsUtilities {
         if (codec != null) {
             codecClass = codec.getClass();
         }
-        LOG.debug((codecClass == null ? "No codec" : "Codec " + codecClass)
-                + " was found for file " + path);
+        if (LOG.isDebugEnabled()) {
+            String msg = (codecClass == null ? "No codec" : "Codec " + codecClass);
+            LOG.debug("{} was found for file {}", msg, path);
+        }
         return codecClass;
     }
 
@@ -141,7 +142,7 @@ public class HdfsUtilities {
         return prepareFragmentMetadata(fsp.getStart(), fsp.getLength(), fsp.getLocations());
     }
 
-    public static byte[] prepareFragmentMetadata(long start, long length, String[] locations)
+    private static byte[] prepareFragmentMetadata(long start, long length, String[] locations)
             throws IOException {
 
         ByteArrayOutputStream byteArrayStream = writeBaseFragmentInfo(start, length, locations);
@@ -172,6 +173,28 @@ public class HdfsUtilities {
         }
         catch (Exception e) {
             throw new RuntimeException("Exception while reading expected fragment metadata", e);
+        }
+    }
+
+    /**
+     * Validates that the destination file does not exist and creates parent directory, if missing.
+     *
+     * @param file File handle
+     * @param fs   Filesystem object
+     * @throws IOException if I/O errors occur during validation
+     */
+    public static void validateFile(Path file, FileSystem fs)
+            throws IOException {
+
+        if (fs.exists(file)) {
+            throw new IOException("File " + file.toString() + " already exists, can't write data");
+        }
+        Path parent = file.getParent();
+        if (!fs.exists(parent)) {
+            if (!fs.mkdirs(parent)) {
+                throw new IOException("Creation of dir '" + parent.toString() + "' failed");
+            }
+            LOG.debug("Created new dir {}", parent);
         }
     }
 

@@ -41,14 +41,15 @@ def create_pipeline():
         'timestamp': datetime.datetime.now(),
         'pipeline_type': ARGS.pipeline_type,
         'compile_gpdb': ARGS.compile_gpdb,
-        'acceptance': ARGS.acceptance
+        'acceptance': ARGS.acceptance,
+        'gpdb_branch': ARGS.gpdb_branch
     }
 
     pipeline_yml = render_template(ARGS.template_filename, context)
 
     with open(ARGS.output_filepath, 'w') as output:
         header = render_template('header.yml', context)
-        output.write(header)
+        output.write(header + '\n')
         output.write(pipeline_yml)
 
     return True
@@ -61,6 +62,7 @@ def how_to_use_generated_pipeline_message():
     msg += '  Pipeline file ............ : %s\n' % ARGS.output_filepath
     msg += '  Template file ............ : %s\n' % ARGS.template_filename
     msg += '======================================================================\n\n'
+    # msg += '  Arguments     ............ : %s\n' % ARGS
 
     cmd = 'fly -t ' + ARGS.TARGET + ' set-pipeline \\\n'
     cmd += '    -c ' + ARGS.output_filepath + ' \\\n'
@@ -70,16 +72,19 @@ def how_to_use_generated_pipeline_message():
     if ARGS.pipeline_type == 'pxf':
         cmd += '    -l ~/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud.yml \\\n'
     elif ARGS.pipeline_type == 'release':
-        cmd += '    -l ~/workspace/gp-continuous-integration/secrets/gpdb_5X_STABLE-ci-secrets.yml \\\n'
         cmd += '    -l ~/workspace/gp-continuous-integration/secrets/pxf-release.prod.yml \\\n'
+        if ARGS.gpdb_branch == 'master':
+            cmd += '    -l ~/workspace/gp-continuous-integration/secrets/gpdb-6X_STABLE-release-secrets.prod.yml \\\n'
 
     cmd += '    -l ' + ARGS.YML_FILE + ' \\\n'
     cmd += '    -v folder-prefix=' + ARGS.PREFIX + ' -v test-env=' + ARGS.TEST_ENV + ' \\\n'
     cmd += '    -v gpdb-branch=' + ARGS.gpdb_branch + ' \\\n'
-    if ARGS.pipeline_type == 'pxf':
+    if ARGS.pipeline_type == 'pxf' and not ARGS.compile_gpdb:
         cmd += '    -v icw_green_bucket=' + ARGS.ICW_GREEN_BUCKET + ' \\\n'
+        if ARGS.gpdb_branch == 'master':
+            cmd += '    -v gcs-bucket-intermediates=pivotal-gpdb-concourse-resources-intermediates-prod \\\n'
     if ARGS.compile_gpdb:
-        cmd += '    -v configure_flags=--enable-cassert -v gpaddon-git-branch=' + ARGS.gpdb_branch + '\\\n'
+        cmd += '    -v configure_flags=--enable-cassert -v gpaddon-git-branch=master \\\n'
     if ARGS.pipeline_name:
         cmd += '    -p ' + ARGS.pipeline_name
     else:
@@ -159,10 +164,6 @@ if __name__ == "__main__":
     PARSER = build_parser(default_output_filename)
     ARGS = PARSER.parse_args()
 
-    if ARGS.gpdb_branch == 'master' and ARGS.pipeline_type == 'release' and ARGS.deploy_env == 'prod':
-        sys.stderr.write('error: Release master pipeline has not been deployed yet\n')
-        sys.exit(1)
-
     if ARGS.gpdb_branch == '5x':
         ARGS.gpdb_branch = '5X_STABLE'
         ARGS.ICW_GREEN_BUCKET = 'gpdb5-stable-concourse-builds'
@@ -214,7 +215,10 @@ if __name__ == "__main__":
 
     if ARGS.pipeline_type == 'release' and ARGS.deploy_env == 'prod':
         ARGS.TARGET = 'gpdb-prod'
-        ARGS.PIPELINE_NAME = 'pxf_release'
+        if ARGS.gpdb_branch == 'master':
+            ARGS.PIPELINE_NAME = 'pxf_release_master'
+        else:
+            ARGS.PIPELINE_NAME = 'pxf_release_5x'
     else:
         ARGS.TARGET = 'ud'
 

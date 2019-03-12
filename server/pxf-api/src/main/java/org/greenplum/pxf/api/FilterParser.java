@@ -8,9 +8,9 @@ package org.greenplum.pxf.api;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -116,7 +116,7 @@ public class FilterParser {
          * @return the built filter
          * @throws Exception if building the filter failed
          */
-        public Object build(Operation operation, Object left, Object right) throws Exception;
+        Object build(Operation operation, Object left, Object right) throws Exception;
 
         /**
          * Builds the filter for an operation with one operand
@@ -126,7 +126,7 @@ public class FilterParser {
          * @return the built filter
          * @throws Exception if building the filter failed
          */
-        public Object build(Operation operation, Object operand) throws Exception;
+        Object build(Operation operation, Object operand) throws Exception;
 
         /**
          * Builds the filter for a logical operation and two operands
@@ -137,7 +137,7 @@ public class FilterParser {
          * @return the built filter
          * @throws Exception if building the filter failed
          */
-        public Object build(LogicalOperation operation, Object left, Object right) throws Exception;
+        Object build(LogicalOperation operation, Object left, Object right) throws Exception;
 
         /**
          * Builds the filter for a logical operation and one operand
@@ -147,7 +147,7 @@ public class FilterParser {
          * @return the built filter
          * @throws Exception if building the filter failed
          */
-        public Object build(LogicalOperation operation, Object filter) throws Exception;
+        Object build(LogicalOperation operation, Object filter) throws Exception;
     }
 
     /** Represents a column index. */
@@ -192,7 +192,7 @@ public class FilterParser {
      * @param eval the filter builder
      */
     public FilterParser(FilterBuilder eval) {
-        operandsStack = new Stack<Object>();
+        operandsStack = new Stack<>();
         filterBuilder = eval;
     }
 

@@ -15,6 +15,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -90,11 +91,13 @@ public class HttpRequestParser implements RequestParser<HttpHeaders> {
 
         context.setDataSource(params.removeProperty("DATA-DIR"));
 
-        boolean isFilterPresent = params.removeBoolProperty("HAS-FILTER");
-        if (isFilterPresent) {
-            context.setFilterString(params.removeProperty("FILTER"));
+        String filterString = params.removeOptionalProperty("FILTER");
+        String hasFilter = params.removeProperty("HAS-FILTER");
+        if (filterString != null) {
+            context.setFilterString(filterString);
+        } else if ("1".equals(hasFilter)) {
+            LOG.info("Original query has filter, but it was not propagated to PXF");
         }
-        context.setFilterStringValid(isFilterPresent);
 
         context.setFragmenter(params.removeUserProperty("FRAGMENTER"));
 
@@ -136,7 +139,6 @@ public class HttpRequestParser implements RequestParser<HttpHeaders> {
 
         // parse tuple description
         parseTupleDescription(params, context);
-        // result.setTupleDescription(); taken care by parseTupleDescription()
 
         context.setUser(params.removeProperty("USER"));
 
@@ -250,38 +252,41 @@ public class HttpRequestParser implements RequestParser<HttpHeaders> {
      * Attribute Projection information is optional
      */
     private void parseTupleDescription(RequestMap params, RequestContext context) {
+        int columns = params.removeIntProperty("ATTRS");
+        BitSet attrsProjected = new BitSet(columns + 1);
+
         /* Process column projection info */
         String columnProjStr = params.removeOptionalProperty("ATTRS-PROJ");
-        List<Integer> columnProjList = new ArrayList<>();
         if (columnProjStr != null) {
-            int columnProj = Integer.parseInt(columnProjStr);
-            context.setNumAttrsProjected(columnProj);
-            if (columnProj > 0) {
-                String columnProjIndexStr = params.removeProperty("ATTRS-PROJ-IDX");
-                String columnProjIdx[] = columnProjIndexStr.split(",");
-                for (int i = 0; i < columnProj; i++) {
-                    columnProjList.add(Integer.valueOf(columnProjIdx[i]));
+            int numberOfProjectedColumns = Integer.parseInt(columnProjStr);
+            context.setNumAttrsProjected(numberOfProjectedColumns);
+            if (numberOfProjectedColumns > 0) {
+                String[] projectionIndices = params.removeProperty("ATTRS-PROJ-IDX").split(",");
+                for (String s : projectionIndices) {
+                    attrsProjected.set(Integer.valueOf(s));
                 }
             } else {
                 /* This is a special case to handle aggregate queries not related to any specific column
                  * eg: count(*) queries. */
-                columnProjList.add(0);
+                attrsProjected.set(0);
             }
         }
 
-        int columns = params.removeIntProperty("ATTRS");
-        for (int i = 0; i < columns; i++) {
-            String columnName = params.removeProperty("ATTR-NAME" + i);
-            int columnTypeCode = params.removeIntProperty("ATTR-TYPECODE" + i);
-            String columnTypeName = params.removeProperty("ATTR-TYPENAME" + i);
-            Integer[] columnTypeMods = parseTypeMods(params, i);
-            ColumnDescriptor column;
-            if (columnProjStr != null) {
-                column = new ColumnDescriptor(columnName, columnTypeCode, i, columnTypeName, columnTypeMods, columnProjList.contains(i));
-            } else {
-                /* For data formats that don't support column projection */
-                column = new ColumnDescriptor(columnName, columnTypeCode, i, columnTypeName, columnTypeMods);
-            }
+
+        for (int attrNumber = 0; attrNumber < columns; attrNumber++) {
+            String columnName = params.removeProperty("ATTR-NAME" + attrNumber);
+            int columnOID = params.removeIntProperty("ATTR-TYPECODE" + attrNumber);
+            String columnTypeName = params.removeProperty("ATTR-TYPENAME" + attrNumber);
+            Integer[] columnTypeMods = parseTypeMods(params, attrNumber);
+            // Project the column if columnProjStr is null
+            boolean isProjected = columnProjStr == null || attrsProjected.get(attrNumber);
+            ColumnDescriptor column = new ColumnDescriptor(
+                    columnName,
+                    columnOID,
+                    attrNumber,
+                    columnTypeName,
+                    columnTypeMods,
+                    isProjected);
             context.getTupleDescription().add(column);
 
             if (columnName.equalsIgnoreCase(ColumnDescriptor.RECORD_KEY_NAME)) {

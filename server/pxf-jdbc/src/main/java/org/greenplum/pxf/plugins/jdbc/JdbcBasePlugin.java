@@ -161,6 +161,11 @@ public class JdbcBasePlugin extends BasePlugin {
             jdbcPassword = jdbcUser != null ? JdbcPluginSettings.jdbcPassword.loadFromConfiguration(configuration) : null;
         }
 
+        String quoteColumnsRaw = JdbcPluginSettings.quoteColumns.loadFromContextOrConfiguration(context, configuration);
+        if (quoteColumnsRaw != null) {
+            quoteColumns = Boolean.parseBoolean(quoteColumnsRaw);
+        }
+
         String batchSizeRaw = JdbcPluginSettings.batchSize.loadFromContextOrConfiguration(context, configuration);
         if (batchSizeRaw != null) {
             try {
@@ -255,6 +260,12 @@ public class JdbcBasePlugin extends BasePlugin {
 
     // Thread pool size
     protected int poolSize = 1;
+
+    // Quote columns setting set by user (three values are possible)
+    protected Boolean quoteColumns = null;
+
+    // Columns description
+    protected List<ColumnDescriptor> columns = null;
 
     private static final Logger LOG = LoggerFactory.getLogger(JdbcBasePlugin.class);
 

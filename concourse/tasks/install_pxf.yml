@@ -14,7 +14,15 @@ inputs:
 - name: terraform_dataproc
 
 params:
+  AWS_SECRET_ACCESS_KEY:
+  AWS_ACCESS_KEY_ID:
+  AWS_DEFAULT_REGION:
+  BUCKET_NAME:
+  BUCKET_PATH:
+  CLOUD_PROVIDER:
   IMPERSONATION: true
+  PLATFORM:
+  PXF_JVM_OPTS:
 
 run:
   path: sh

@@ -16,7 +16,6 @@ BUILDROOT = $(TARGET:%.tar.gz=%)
 BINROOT = $(ROOT)/bin
 TARSROOT = $(ROOT)/tars
 TEMPLATESROOT = $(ROOT)/templates
-DOCSROOT = $(ROOT)/docs
 
 VERSIONSFILE = $(BUILDROOT)/versions.txt
 
@@ -43,8 +42,7 @@ clean:
 $(TARGET): $(BUILDROOT) make_tarball
 # $(TARGET): $(BUILDROOT)
 
-$(BUILDROOT): copy_binfiles create_versions_file extract_products \
-	 	 	 copy_templates copy_deps copy_docs
+$(BUILDROOT): copy_binfiles create_versions_file extract_products copy_templates copy_deps
 	chmod -R +w $(BUILDROOT)
 
 .PHONY: copy_binfiles
@@ -108,10 +106,6 @@ copy_templates: $(TEMPLATES)
 	cp -r $(TEMPLATESROOT)/conf $(BUILDROOT)
 
 	-find $(BUILDROOT) -iname "*~" | xargs rm -f
-
-.PHONY: copy_docs
-copy_docs: $(DOCSROOT)/README.txt
-	cp $^ $(BUILDROOT)
 
 .PHONY: copy_deps
 copy_deps:

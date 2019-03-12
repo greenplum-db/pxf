@@ -28,6 +28,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
     private final String SUFFIX_AVRO = ".avro";
     private final String SUFFIX_AVSC = ".avsc";
     private final String SUFFIX_JSON = ".json";
+    private final String FILE_SCHEME = "file://";
 
     String avroSimpleFileName = "simple";
     String avroTypesFileName = "supported_primitive_types";
@@ -48,7 +49,8 @@ public class HdfsReadableAvroTest extends BaseFeature {
         hdfsPath = hdfs.getWorkingDirectory() + "/avro/";
 
         // location of schema and data files
-        resourcePath = localDataResourcesFolder + "/avro/";
+        String absolutePath = getClass().getClassLoader().getResource("data").getPath();
+        resourcePath = absolutePath + "/avro/";
 
         // create and copy data to hdfs
         prepareData();
@@ -72,26 +74,32 @@ public class HdfsReadableAvroTest extends BaseFeature {
 
     private void prepareData() throws Exception {
 
+        // FILE_SCHEME is required here for MapR tests. MapR requires their
+        // own hadoop-common libraries which implement FileSystem. In MapR
+        // automation test, the FileSystem returns a MapRFS object for
+        // relative paths instead of a LocalFS, which was causing issues
+        // during data preparation.
+
         // Create Avro files from schema and json files
         hdfs.writeAvroFileFromJson(hdfsPath + avroSimpleFileName + SUFFIX_AVRO,
-                resourcePath + avroSimpleFileName + SUFFIX_AVSC,
-                resourcePath + avroSimpleFileName + SUFFIX_JSON, null);
+                FILE_SCHEME + resourcePath + avroSimpleFileName + SUFFIX_AVSC,
+                FILE_SCHEME + resourcePath + avroSimpleFileName + SUFFIX_JSON, null);
 
         hdfs.writeAvroFileFromJson(hdfsPath + avroTypesFileName + SUFFIX_AVRO,
-                resourcePath + avroTypesFileName + SUFFIX_AVSC,
-                resourcePath + avroTypesFileName + SUFFIX_JSON, null);
+                FILE_SCHEME + resourcePath + avroTypesFileName + SUFFIX_AVSC,
+                FILE_SCHEME + resourcePath + avroTypesFileName + SUFFIX_JSON, null);
 
         hdfs.writeAvroFileFromJson(hdfsPath + avroArrayFileName + SUFFIX_AVRO,
-                resourcePath + avroArrayFileName + SUFFIX_AVSC,
-                resourcePath + avroArrayFileName + SUFFIX_JSON, null);
+                FILE_SCHEME + resourcePath + avroArrayFileName + SUFFIX_AVSC,
+                FILE_SCHEME + resourcePath + avroArrayFileName + SUFFIX_JSON, null);
 
         hdfs.writeAvroFileFromJson(hdfsPath + avroComplexFileName + SUFFIX_AVRO,
-                resourcePath + avroComplexFileName + SUFFIX_AVSC,
-                resourcePath + avroComplexFileName + SUFFIX_JSON, null);
+                FILE_SCHEME + resourcePath + avroComplexFileName + SUFFIX_AVSC,
+                FILE_SCHEME + resourcePath + avroComplexFileName + SUFFIX_JSON, null);
 
         hdfs.writeAvroFileFromJson(hdfsPath + avroComplexNullFileName + SUFFIX_AVRO,
-                resourcePath + avroComplexNullFileName + SUFFIX_AVSC,
-                resourcePath + avroComplexNullFileName + SUFFIX_JSON, null);
+                FILE_SCHEME + resourcePath + avroComplexNullFileName + SUFFIX_AVSC,
+                FILE_SCHEME + resourcePath + avroComplexNullFileName + SUFFIX_JSON, null);
 
         String schemaName1 = resourcePath + avroInSequenceArraysSchemaFile;
         Table dataTable1 = new Table("dataTable1", null);

@@ -22,10 +22,10 @@ package org.greenplum.pxf.service.bridge;
 import org.apache.commons.collections.map.LRUMap;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.StatsAccessor;
+import org.greenplum.pxf.api.io.Writable;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.AccessorFactory;
 import org.greenplum.pxf.api.utilities.ResolverFactory;
-import org.greenplum.pxf.service.io.Writable;
 
 import java.util.LinkedList;
 

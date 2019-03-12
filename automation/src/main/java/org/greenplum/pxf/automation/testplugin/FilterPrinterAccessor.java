@@ -10,7 +10,7 @@ import org.greenplum.pxf.api.model.BasePlugin;
 /**
  * Test class for regression tests.
  * The only thing this class does is to throw an exception
- * containing the received filter from GPDB (HAS-FILTER & FILTER).
+ * containing the received filter from GPDB (FILTER).
  */
 public class FilterPrinterAccessor extends BasePlugin implements Accessor
 {

@@ -13,7 +13,7 @@ Build
 
 -	make HADOOP_DISTRO=[CDH|HDP] HADOOP_VERSION=[CDH version|HDP version]
 -	if you do "make", HDP is the default tarball to generate
--	E.g. make HADOOP_DISTRO=CDH HADOOP_VERSION=5.10.2
+-	E.g. make HADOOP_DISTRO=CDH HADOOP_VERSION=5.12.2
 -   E.g. make HADOOP_DISTRO=HDP HADOOP_VERSION=2.5.3.0
 
 Initialization

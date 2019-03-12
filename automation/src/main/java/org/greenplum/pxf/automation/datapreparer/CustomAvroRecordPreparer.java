@@ -55,8 +55,8 @@ public class CustomAvroRecordPreparer implements IAvroSchema {
         FileInputStream fis = new FileInputStream(schema_name);
         schema = new Schema.Parser().parse(fis);
         datum = new GenericData.Record(schema);
-        writer = new GenericDatumWriter<GenericRecord>(schema);
-        reader = new GenericDatumReader<GenericRecord>(schema);
+        writer = new GenericDatumWriter<>(schema);
+        reader = new GenericDatumReader<>(schema);
         fct_en = EncoderFactory.get();
         fis.close();
     }

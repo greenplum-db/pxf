@@ -125,7 +125,7 @@ public class DbSystemObject extends BaseSystemObject implements IDbFunctionality
 
 	@Override
 	public void dropTable(Table table, boolean cascade) throws Exception {
-		runQueryWithExpectedWarning(table.constructDropStmt(cascade), "table \"" + table.getName() + "\" does not exist, skipping", true, true);
+		runQuery(table.constructDropStmt(cascade), true, false);
 	}
 
 	@Override

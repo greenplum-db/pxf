@@ -79,7 +79,7 @@ public class HiveMetadataFetcherTest {
         requestContext = mock(RequestContext.class);
         when(requestContext.getPluginConf()).thenReturn(mockPluginConf);
         when(mockPluginConf.getPlugins("HiveText")).thenReturn(mockProfileMap);
-        when(mockProfileMap.get("OUTPUTFORMAT")).thenReturn("org.greenplum.pxf.service.io.Text");
+        when(mockProfileMap.get("OUTPUTFORMAT")).thenReturn("org.greenplum.pxf.api.io.Text");
 
         Configuration hadoopConfiguration = mock(Configuration.class);
         PowerMockito.whenNew(Configuration.class).withNoArguments().thenReturn(hadoopConfiguration);

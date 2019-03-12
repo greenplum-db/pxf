@@ -8,6 +8,5 @@ inputs:
 params:
   IMPERSONATION: true
   TARGET_OS: centos
-  PXF_JVM_OPTS:
 run:
   path: pxf_src/concourse/scripts/install_hadoop.bash

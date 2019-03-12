@@ -20,7 +20,7 @@ package org.greenplum.pxf.service.bridge;
  */
 
 
-import org.greenplum.pxf.service.io.Writable;
+import org.greenplum.pxf.api.io.Writable;
 
 import java.io.DataInputStream;
 

@@ -1,0 +1,12 @@
+-- start_ignore
+-- end_ignore
+-- @description query01 for JDBC query with int by partitioning
+SELECT t2, tm, sqrt(sml), c1 FROM pxf_jdbc_multiple_fragments_by_int ORDER BY t1;
+  t2  |         tm          |       sqrt       | c1
+------+---------------------+------------------+-----
+ s_6  | 2013-07-13 21:00:00 | 3.16227766016838 | USD
+ s_7  | 2013-07-13 21:00:00 | 4.47213595499958 | USD
+ s_8  | 2013-07-15 21:00:00 | 17.3205080756888 | USD
+ s_9  | 2013-07-16 21:00:00 |               20 | USD
+ s_10 | 2013-07-17 21:00:00 | 22.3606797749979 | USD
+(5 rows)

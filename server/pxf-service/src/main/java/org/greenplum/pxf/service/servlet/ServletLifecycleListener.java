@@ -20,21 +20,20 @@ package org.greenplum.pxf.service.servlet;
  */
 
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import javax.servlet.ServletContextListener;
-import javax.servlet.ServletContextEvent;
-
 import org.greenplum.pxf.service.utilities.Log4jConfigure;
 import org.greenplum.pxf.service.utilities.SecureLogin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
 
 /**
  * Listener on lifecycle events of our webapp
  */
 public class ServletLifecycleListener implements ServletContextListener {
 
-    private static final Log LOG = LogFactory.getLog(ServletContextListener.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ServletContextListener.class);
 
 	/**
 	 * Called after the webapp has been initialized.
@@ -47,7 +46,7 @@ public class ServletLifecycleListener implements ServletContextListener {
 		// 1. Initialize log4j:
 		Log4jConfigure.configure(event);
 
-		LOG.info("webapp initialized");
+		LOG.info("PXF server webapp initialized");
 
 		// 2. Initiate secure login
 		new SecureLogin().login();
@@ -58,6 +57,6 @@ public class ServletLifecycleListener implements ServletContextListener {
 	 */
 	@Override
 	public void contextDestroyed(ServletContextEvent event) {
-		LOG.info("webapp about to go down");
+		LOG.info("PXF server webapp is about to go down");
 	}
 }

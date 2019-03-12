@@ -132,6 +132,9 @@ public class SecurityServletFilter implements Filter {
             } catch (Throwable t) {
                 LOG.error("Error releasing UGICache for session: {}", session, t);
             }
+            if (lastCallForSegment) {
+                LOG.info("Finished processing {}", session);
+            }
         }
     }
 

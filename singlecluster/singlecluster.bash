@@ -5,7 +5,8 @@ set -exo pipefail
 _main() {
   singlecluster=$(pwd)/pxf_src/singlecluster
   HADOOP_DISTRO_LOWER=$(echo ${2} | tr A-Z a-z)
-  mv ${HADOOP_DISTRO_LOWER}_tars_tarball/*.tar.gz ${singlecluster}/tars/
+  mkdir -p ${singlecluster}/tars
+  mv ${HADOOP_DISTRO_LOWER}_tars_tarball/*.tar.gz ${singlecluster}/tars
   mv tomcat/*.tar.gz ${singlecluster}/tars/
   mv jdbc/*.jar ${singlecluster}
   pushd ${singlecluster}

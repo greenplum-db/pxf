@@ -1,6 +1,6 @@
-set -x
 #!/usr/bin/env bash
 
+set -x
 #fetches official CDH tarball
 
 server='http://archive.cloudera.com'
@@ -15,7 +15,7 @@ tarballs=(
 )
 distro='cdh'
 version='5.12.2'
-major_version=$(echo $version| cut -c1)
+major_version=$(echo ${version}| cut -c1)
 destination_dir=CDH-${version}
 
 rm -r ${destination_dir}
@@ -24,11 +24,11 @@ mkdir -p ${destination_dir}
 
 for tarball in ${tarballs[@]}
 do
-  url=$server/$distro$major_version/$distro/$major_version/$tarball
-  echo Latest artifact: $tarball | tee -a $log_file
-  echo Downloading: $url | tee -a $log_file
-  wget $url
-  if [ $? -ne 0 ]; then
+  url=${server}/${distro}${major_version}/${distro}/${major_version}/${tarball}
+  echo Latest artifact: ${tarball} | tee -a ${log_file}
+  echo Downloading: ${url} | tee -a ${log_file}
+  wget ${url}
+  if [[ $? -ne 0 ]]; then
 	  echo download failed
 	  exit 1
   fi

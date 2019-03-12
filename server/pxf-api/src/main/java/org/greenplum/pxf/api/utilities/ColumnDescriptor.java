@@ -50,17 +50,16 @@ public class ColumnDescriptor {
      * @param isProj does the column need to be projected
      */
     public ColumnDescriptor(String name, int typecode, int index, String typename, Integer[] typemods, boolean isProj) {
-        this(name, typecode, index, typename, typemods);
-        isProjected = isProj;
-    }
-
-    public ColumnDescriptor(String name, int typecode, int index, String typename, Integer[] typemods) {
         dbColumnTypeCode = typecode;
         dbColumnTypeName = typename;
         dbColumnName = name;
         dbColumnIndex = index;
         dbColumnTypeModifiers = typemods;
-        isProjected = true;
+        isProjected = isProj;
+    }
+
+    public ColumnDescriptor(String name, int typecode, int index, String typename, Integer[] typemods) {
+        this(name, typecode, index, typename, typemods, true);
     }
 
     /**
