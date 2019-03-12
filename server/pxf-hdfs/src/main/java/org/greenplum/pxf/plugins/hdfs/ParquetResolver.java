@@ -68,8 +68,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
             if (!columnDescriptor.isProjected()) {
                 oneField = new OneField(columnDescriptor.columnTypeCode(), null);
             } else if (schema.getType(columnIndex).isPrimitive()) {
-                Type type = schema.getType(columnIndex);
-                oneField = resolvePrimitive(group, columnIndex, type, 0);
+                oneField = resolvePrimitive(group, columnIndex, schema.getType(columnIndex), 0);
                 columnIndex++;
             } else {
                 throw new UnsupportedOperationException("Parquet complex type support is not yet available.");
