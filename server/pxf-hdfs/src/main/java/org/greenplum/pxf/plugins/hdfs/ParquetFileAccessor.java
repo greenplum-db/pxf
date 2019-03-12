@@ -124,7 +124,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
             fileReader.close();
             throw new IOException(e);
         }
-        context.setMetadata(schema);
+        context.setMetadata(readSchema);
         return true;
     }
 

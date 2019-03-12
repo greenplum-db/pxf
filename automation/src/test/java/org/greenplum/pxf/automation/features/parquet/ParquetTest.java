@@ -25,8 +25,8 @@ public class ParquetTest extends BaseFeature {
             "bg    BIGINT",
             "b     BOOLEAN",
             "tn    SMALLINT",
-            "sml   SMALLINT",
             "vc1   VARCHAR(5)",
+            "sml   SMALLINT",
             "c1    CHAR(3)",
             "bin   BYTEA"
     };
