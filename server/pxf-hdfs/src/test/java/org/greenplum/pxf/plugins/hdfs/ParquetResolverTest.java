@@ -484,12 +484,12 @@ public class ParquetResolverTest {
         return new MessageType("hive_schema", fields);
     }
 
+    @SuppressWarnings("deprecation")
     private List<Group> readParquetFile(String file, long expectedSize, MessageType schema) throws IOException {
         List<Group> result = new ArrayList<>();
         String parquetFile = Objects.requireNonNull(getClass().getClassLoader().getResource("parquet/" + file)).getPath();
         Path path = new Path(parquetFile);
 
-        //noinspection deprecation
         ParquetFileReader fileReader = new ParquetFileReader(new Configuration(), path, ParquetMetadataConverter.NO_FILTER);
         PageReadStore rowGroup;
         while ((rowGroup = fileReader.readNextRowGroup()) != null) {
