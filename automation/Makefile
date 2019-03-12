@@ -20,10 +20,10 @@ ifeq "$(PXF_HOME)" ""
 endif
 MAVEN_TEST_OPTS+= -DPXF_TMP_LIB=$(PXF_HOME)/tmp
 
-ifneq "$(OFFLINE)" "false"
-	MAVEN_TEST_OPTS+= -o
-else
+ifneq "$(OFFLINE)" "true"
 	MAVEN_TEST_OPTS+= -U
+else
+	MAVEN_TEST_OPTS+= -o
 endif
 
 ifeq "$(PROTOCOL)" "minio"
