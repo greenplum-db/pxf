@@ -58,7 +58,7 @@ function writable_external_table_parquet_query() {
 ###########################################
 
 function setup_sshd() {
-    /usr/sbin/sshd -D &
+    service sshd start
     passwd -u root
 
     if [[ -d cluster_env_files ]]; then

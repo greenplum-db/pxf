@@ -50,7 +50,10 @@ function install_gpdb_binary() {
 	fi
 
 	if [[ ${TARGET_OS} == "centos" ]]; then
-		/usr/sbin/sshd -D &
+		# We can't use service sshd restart as service is not installed on CentOS 7.
+		# Also, we got "Operation not permitted" errors even running service in a
+		# privileged container.
+		/usr/sbin/sshd &
 		psi_dir=$(find /usr/lib64 -name psi | sort -r | head -1)
 	elif [[ ${TARGET_OS} == "ubuntu" ]]; then
         # Adjust GPHOME if the binary expects it to be /usr/local/gpdb

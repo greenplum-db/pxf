@@ -10,15 +10,10 @@ GPHD_ROOT="/singlecluster"
 
 function install_hadoop_single_cluster() {
     local hadoop_ip=${1}
-    # We can't use service sshd restart as service is not installed on CentOS 7.
-    # Also, we got "Operation not permitted" errors even running service in a
-    # privileged container.
-    # So we have to kill and start the sshd process directly.
     ssh ${SSH_OPTS} centos@edw0 "sudo mkdir -p /root/.ssh &&
         sudo cp /home/centos/.ssh/authorized_keys /root/.ssh &&
         sudo sed -i 's/PermitRootLogin no/PermitRootLogin yes/' /etc/ssh/sshd_config &&
-        sudo cat /var/run/sshd.pid | xargs kill -9 ;
-        { sudo /usr/sbin/sshd -D & }"
+        sudo service sshd restart"
 
     tar -xzf pxf_tarball/pxf.tar.gz -C /tmp
     cp /tmp/pxf/lib/pxf-hbase-*.jar /singlecluster/hbase/lib
