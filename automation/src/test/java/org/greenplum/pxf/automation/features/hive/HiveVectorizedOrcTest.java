@@ -61,7 +61,7 @@ public class HiveVectorizedOrcTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "hive", "gpdb", "hcatalog" })
+    @Test(groups = { "hive", "hcatalog", "features", "gpdb" })
     public void storeAsOrcAllTypes() throws Exception {
 
         exTable = TableFactory.getPxfHiveOrcReadableTable(PXF_HIVE_SMALL_DATA_TABLE,
