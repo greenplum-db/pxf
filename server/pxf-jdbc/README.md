@@ -239,8 +239,6 @@ SELECT id, name FROM myclass WHERE id = 2;
 ### Partitioning
 PXF JDBC plugin supports simultaneous access to external database from multiple PXF segments for SELECT queries. This feature is called partitioning.
 
-Note that [query-preceding SQL command](#query-preceding-sql-command-1) is executed by *every* PXF segment if such command is set in its configuration file. In other words, when partitioning is used, query-preceding SQL command may be executed more than once. Different configuration files can be used by each segment to execute different or no query.
-
 
 #### Syntax
 Three settings control partitioning feature:
@@ -265,9 +263,17 @@ Example combinations of options to enable partitioning:
 
 
 #### Mechanism
-If partitioning is enabled, the SELECT query is split into a set of small queries, each of which is called a *fragment*. All the fragments are processed by separate PXF instances simultaneously. If there are more fragments than PXF instances, some instances will process more than one fragment; if only one PXF instance is available, it will process all the fragments.
+If partitioning is enabled, a SELECT query is split into a set of small queries, each of which is called a *fragment*. All fragments are processed by separate PXF instances simultaneously. If there are more fragments than PXF instances, some instances will process more than one fragment; if only one PXF instance is available, it will process all fragments.
 
 Extra query constraints (`WHERE` expressions) are automatically added to each fragment to guarantee that every tuple of data is retrieved from the external database exactly once.
+
+Fragments are distributed randomly among PXF instances.
+
+[Query-preceding SQL command](#query-preceding-sql-command-1) is executed once for *every* fragment. However, the command itself is taken from configuration file of the PXF instance that processes given fragment. Commands may differ (or be absent) in different configuration files. Thus, exact number of times query-preceding SQL command is executed depends on two factors:
+* Number of fragments
+* Structures of configuration files of PXF instances
+
+If all configuration files set the same command, it will be executed as many times as there are fragments.
 
 
 #### Example
@@ -361,9 +367,11 @@ and `jdbc-site.xml` on each PXF segment:
 
 When `SELECT` from this external table is called, PXF executes `INSERT INTO T2 VALUES ((SELECT MAX(K) + 1 FROM T2), 1);` and a new row is inserted into table `T2` in external database.
 
-Note this example **does not work** if [partitioning](#partitioning) is used and there is `UNIQUE` constraint on column `K` in external database. Instead, some PXF segments fail or may behave in different fashion, depending on transaction isolation level in external database.
+Note this example **does not work** if [partitioning](#partitioning) is used and there is a `UNIQUE` constraint on column `K` in external database:
+1. Query-preceding SQL command will be executed (once) for each fragment;
+2. This will lead to failure or unusual behaviour of most PXF segments (those that process 2nd, 3rd, ... fragments), depending on transaction isolation level in external database.
 
-PXF can execute different or no query on each segment. Every segment uses its own configuration file, thus if it does not have `jdbc.pre_query.sql` set, no query is executed by this segment.
+Each PXF instance can execute its own `jdbc.pre_query.sql` (but it will be common for all fragments this instance processes). Every PXF instance uses its own configuration file, thus if it does not have `jdbc.pre_query.sql` set, this instance does not execute query-preceding SQL command.
 
 The following `jdbc-site.xml`
 ```
@@ -377,4 +385,4 @@ The following `jdbc-site.xml`
 ```
 makes PXF segments `SET` a variable in external database before execution of "main" `SELECT` or `INSERT` query.
 
-Query-preceding SQL command is executed in one session with "main" query. If `some_variable` changes (or loads) the state of an external database and the results of "main" query depend on that state, these results can be altered by query-preceding SQL command.
+Query-preceding SQL command is executed in one session with "main" query (a new session is created for each fragment). If `some_variable` changes (or loads) the state of an external database and the results of "main" query depend on that state, they will be altered by query-preceding SQL command.
