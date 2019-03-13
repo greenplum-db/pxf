@@ -14,7 +14,7 @@ public class ParquetTest extends BaseFeature {
     private final String pxfParquetTable = "pxf_parquet_primitive_types";
     private final String parquetWritePrimitives = "parquet_write_primitives";
     private final String parquetPrimitiveTypes = "parquet_primitive_types";
-    private final String[] parquet_table_columns = new String[] {
+    private final String[] parquet_table_columns = new String[]{
             "s1    TEXT",
             "s2    TEXT",
             "n1    INTEGER",
@@ -28,6 +28,17 @@ public class ParquetTest extends BaseFeature {
             "vc1   VARCHAR(5)",
             "sml   SMALLINT",
             "c1    CHAR(3)",
+            "bin   BYTEA"
+    };
+
+    private final String pxfParquetSubsetTable = "pxf_parquet_subset";
+    private final String[] parquet_table_columns_subset = new String[]{
+            "s1    TEXT",
+            "n1    INTEGER",
+            "d1    DOUBLE PRECISION",
+            "f     REAL",
+            "b     BOOLEAN",
+            "vc1   VARCHAR(5)",
             "bin   BYTEA"
     };
 
@@ -58,6 +69,20 @@ public class ParquetTest extends BaseFeature {
                 "f, bg, b, tn, sml, vc1, c1, bin FROM " + pxfParquetTable);
 
         runTincTest("pxf.features.parquet.primitive_types.runTest");
+    }
+
+    @Test(groups = {"features", "gpdb", "hcfs"})
+    public void parquetReadSubset() throws Exception {
+        exTable = new ReadableExternalTable(pxfParquetSubsetTable,
+                parquet_table_columns_subset, hdfsPath + parquetPrimitiveTypes, "custom");
+        exTable.setHost(pxfHost);
+        exTable.setPort(pxfPort);
+        exTable.setFormatter("pxfwritable_import");
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":parquet");
+
+        gpdb.createTableAndVerify(exTable);
+
+        runTincTest("pxf.features.parquet.read_subset.runTest");
     }
 
     @Test(groups = {"features", "gpdb", "hcfs"})

@@ -1,0 +1,64 @@
+-- start_ignore
+-- end_ignore
+-- @description query01 for Parquet with Greenplum table as a subset of the parquet file
+SELECT * FROM pxf_parquet_subset ORDER BY s1;
+          s1          | n1 | d1 |  f   | b |  vc1  | bin
+----------------------+----+----+------+---+-------+-----
+ row1                 |  1 |  6 |  7.7 | f | abcd  | 1
+ row10                | 10 | 15 |  7.7 | t | abcde | 0
+ row11                | 11 | 37 |  7.7 | f | abcde | 1
+ row12_text_null      | 11 | 37 |  7.7 | f | abcde | 1
+ row13_int_null       |    | 37 |  7.7 | f | abcde | 1
+ row14_double_null    | 11 |    |  7.7 | f | abcde | 1
+ row15_decimal_null   | 12 | 38 |  7.7 | f | abcde | 1
+ row16_timestamp_null | 11 | 37 |  7.7 | f | abcde | 1
+ row17_real_null      | 11 | 37 |      | f | abcde | 1
+ row18_bigint_null    | 11 | 37 |  7.7 | f | abcde | 1
+ row19_bool_null      | 11 | 37 |  7.7 |   | abcde | 1
+ row2                 |  2 |  7 |  8.7 | t | abcde | 2
+ row20_tinyint_null   | 11 | 37 |  7.7 | f | abcde | 1
+ row21_smallint_null  | 11 | 37 |  7.7 | f | abcde | 1
+ row22_date_null      | 11 | 37 |  7.7 | f | abcde | 1
+ row23_varchar_null   | 11 | 37 |  7.7 | f |       | 1
+ row24_char_null      | 11 | 37 |  7.7 | f | abcde | 1
+ row25_binary_null    | 11 | 37 |  7.7 | f | abcde |
+ row3                 |  3 |  8 |  9.7 | f | abcde | 3
+ row4                 |  4 |  9 | 10.7 | t | abcde | 4
+ row5                 |  5 | 10 | 11.7 | f | abcde | 5
+ row6                 |  6 | 11 | 12.7 | t | abcde | 6
+ row7                 |  7 | 12 |  7.7 | f | abcde | 7
+ row8                 |  8 | 13 |  7.7 | t | abcde | 8
+ row9                 |  9 | 14 |  7.7 | f | abcde | 9
+(25 rows)
+
+-- s1, d1, vc1 are projected columns
+SELECT d1, vc1 FROM pxf_parquet_subset ORDER BY s1;
+ d1 |  vc1
+----+-------
+  6 | abcd
+ 15 | abcde
+ 37 | abcde
+ 37 | abcde
+ 37 | abcde
+    | abcde
+ 38 | abcde
+ 37 | abcde
+ 37 | abcde
+ 37 | abcde
+ 37 | abcde
+  7 | abcde
+ 37 | abcde
+ 37 | abcde
+ 37 | abcde
+ 37 |
+ 37 | abcde
+ 37 | abcde
+  8 | abcde
+  9 | abcde
+ 10 | abcde
+ 11 | abcde
+ 12 | abcde
+ 13 | abcde
+ 14 | abcde
+(25 rows)
+
