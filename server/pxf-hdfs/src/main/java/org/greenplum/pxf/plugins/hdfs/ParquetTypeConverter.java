@@ -8,11 +8,15 @@ import org.apache.parquet.schema.OriginalType;
 import org.apache.parquet.schema.PrimitiveType;
 import org.apache.parquet.schema.Type;
 import org.greenplum.pxf.api.io.DataType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.sql.Timestamp;
+import java.util.Base64;
 
 /**
  * Converter for Parquet types and values into PXF data types and values.
@@ -193,25 +197,40 @@ public enum ParquetTypeConverter {
     public abstract Object getValue(Group group, int columnIndex, int repeatIndex, Type type);
     public abstract void addValueToJsonArray(Group group, int columnIndex, int repeatIndex, Type type, ArrayNode jsonNode);
 
-
     // Convert parquet byte array to java timestamp
     public static Timestamp bytesToTimestamp(byte[] bytes) {
-        long timeOfDayNanos = ByteBuffer.wrap(new byte[]{
-                bytes[7], bytes[6], bytes[5], bytes[4], bytes[3], bytes[2], bytes[1], bytes[0]}).getLong();
-        int julianDays = (ByteBuffer.wrap(new byte[]{bytes[11], bytes[10], bytes[9], bytes[8]})).getInt();
-        long unixTimeMs = (julianDays - JULIAN_EPOCH_OFFSET_DAYS) * MILLIS_IN_DAY + timeOfDayNanos / 1000000;
-        return new Timestamp(unixTimeMs);
+        ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
+        byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+        long timeOfDayNanos = byteBuffer.getLong();
+        long julianDay = byteBuffer.getInt();
+        long unixTimeMs = (julianDay - JULIAN_EPOCH_OFFSET_DAYS) * MILLIS_IN_DAY + timeOfDayNanos / 1000000;
+
+        Timestamp timestamp = new Timestamp(unixTimeMs);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Converted bytes: {} to date: {} from: julianDays {}, timeOfDayNanos {}, unixTimeMs {}",
+                    Base64.getEncoder().encodeToString(bytes),
+                    timestamp, julianDay, timeOfDayNanos, unixTimeMs);
+        }
+        return timestamp;
     }
 
     // Convert epoch timestamp to byte array (INT96)
     // Inverse of the function above
     public static Binary getBinary(long timeMillis) {
         long daysSinceEpoch = timeMillis / MILLIS_IN_DAY;
-        int julianDays = JULIAN_EPOCH_OFFSET_DAYS + (int) daysSinceEpoch;
+        int julianDays = (int) (JULIAN_EPOCH_OFFSET_DAYS + daysSinceEpoch);
         long timeOfDayNanos = (timeMillis % MILLIS_IN_DAY) * 1000000;
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Converted millis: {} to julianDays {}, timeOfDayNanos {}",
+                    timeMillis, julianDays, timeOfDayNanos);
+        }
+
         return new NanoTime(julianDays, timeOfDayNanos).toBinary();
     }
 
-    private static final int JULIAN_EPOCH_OFFSET_DAYS = 2440588;
+    private static final long JULIAN_EPOCH_OFFSET_DAYS = 2440588L;
     private static final long MILLIS_IN_DAY = 24 * 3600 * 1000;
+
+    private static final Logger LOG = LoggerFactory.getLogger(ParquetTypeConverter.class);
 }

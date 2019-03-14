@@ -464,7 +464,7 @@ public abstract class PxfUnit {
 
         List<String> output = new ArrayList<String>();
 
-        OneRow row = null;
+        OneRow row;
         while ((row = accessor.readNextObject()) != null) {
 
             StringBuilder bldr = new StringBuilder();

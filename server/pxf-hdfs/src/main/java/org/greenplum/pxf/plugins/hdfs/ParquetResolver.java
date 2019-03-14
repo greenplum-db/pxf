@@ -37,7 +37,8 @@ import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedList;
 import java.util.List;
@@ -132,8 +133,11 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                 group.add(index, Binary.fromReusedByteArray(bytes));
                 break;
             case INT96:
+                // We receive a timestamp from GPDB in the server timezone
+                // We convert it to an instant of the current server timezone
                 LocalDateTime date = LocalDateTime.parse((String) field.val, dateFormatter);
-                long millisSinceEpoch = date.toEpochSecond(ZoneOffset.UTC) * SECOND_IN_MILLIS;
+                ZonedDateTime zdt = ZonedDateTime.of(date, ZoneId.systemDefault());
+                long millisSinceEpoch = zdt.toEpochSecond() * SECOND_IN_MILLIS;
                 group.add(index, ParquetTypeConverter.getBinary(millisSinceEpoch));
                 break;
             case BOOLEAN:

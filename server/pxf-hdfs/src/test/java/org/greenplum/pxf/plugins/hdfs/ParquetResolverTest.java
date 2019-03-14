@@ -33,7 +33,10 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -95,13 +98,18 @@ public class ParquetResolverTest {
         // schema has changed, set metadata again
         context.setMetadata(schema);
         resolver.initialize(context);
+
+        Instant timestamp = Instant.parse("2013-07-14T04:00:05Z"); // UTC
+        ZonedDateTime localTime = timestamp.atZone(ZoneId.systemDefault());
+        String localTimestampString = localTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")); // should be "2013-07-13 21:00:05" in PST
+
         List<OneField> fields = new ArrayList<>();
         fields.add(new OneField(DataType.TEXT.getOID(), "row1"));
         fields.add(new OneField(DataType.TEXT.getOID(), "s_6"));
         fields.add(new OneField(DataType.INTEGER.getOID(), 1));
         fields.add(new OneField(DataType.FLOAT8.getOID(), 6.0d));
         fields.add(new OneField(DataType.NUMERIC.getOID(), "1.234560000000000000"));
-        fields.add(new OneField(DataType.TIMESTAMP.getOID(), "2013-07-13 21:00:05"));
+        fields.add(new OneField(DataType.TIMESTAMP.getOID(), localTimestampString));
         fields.add(new OneField(DataType.REAL.getOID(), 7.7f));
         fields.add(new OneField(DataType.BIGINT.getOID(), 23456789L));
         fields.add(new OneField(DataType.BOOLEAN.getOID(), false));
@@ -126,8 +134,8 @@ public class ParquetResolverTest {
                 DecimalUtils.binaryToDecimal(group.getBinary(4, 0), 19, 18));
 
         NanoTime nanoTime = NanoTime.fromBinary(group.getInt96(5, 0));
-        assertEquals(2456487, nanoTime.getJulianDay()); // 13 Jul 2013 in Julian days
-        assertEquals((21 * 60 * 60 + 5L) * 1000 * 1000 * 1000, nanoTime.getTimeOfDayNanos()); // 21:00:05 time
+        assertEquals(2456488, nanoTime.getJulianDay()); // 14 Jul 2013 in Julian days
+        assertEquals((4 * 60 * 60 + 5L) * 1000 * 1000 * 1000, nanoTime.getTimeOfDayNanos()); // 04:00:05 time
         assertEquals(7.7f, group.getFloat(6, 0), 0f);
         assertEquals(23456789L, group.getLong(7, 0));
         assertFalse(group.getBoolean(8, 0));
