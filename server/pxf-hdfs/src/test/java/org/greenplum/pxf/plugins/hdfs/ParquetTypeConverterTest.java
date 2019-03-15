@@ -42,4 +42,13 @@ public class ParquetTypeConverterTest {
         ParquetTypeConverter.getBinaryFromTimestamp(timestamp);
     }
 
+    @Test
+    public void testBinaryWithNanos() {
+        String expected = "2019-03-14 20:52:48.123456";
+        byte[] source = new byte[]{0, 106, 9, 53, -76, 12, 0, 0, -66, -125, 37, 0}; // represents 2019-03-14 20:52:48.1234567
+        String timestamp = ParquetTypeConverter.bytesToTimestamp(source); // nanos get dropped
+
+        assertEquals(expected, timestamp);
+    }
+
 }
