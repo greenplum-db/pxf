@@ -209,7 +209,7 @@ public enum ParquetTypeConverter {
     private static final long MICROS_IN_DAY = 24 * 3600 * 1000 * 1000L;
     private static final long NANOS_IN_MICROS = 1000;
     private static final String DATE_FORMATTER_BASE_PATTERN = "yyyy-MM-dd HH:mm:ss";
-    private static final DateTimeFormatter DATE_FORMATTER =
+    static final DateTimeFormatter DATE_FORMATTER =
             new DateTimeFormatterBuilder().appendPattern(DATE_FORMATTER_BASE_PATTERN)
                     // Parsing nanos in strict mode, the number of parsed digits must be between 0 and 6 (millisecond support)
                     .appendFraction(ChronoField.NANO_OF_SECOND, 0, 6, true).toFormatter();

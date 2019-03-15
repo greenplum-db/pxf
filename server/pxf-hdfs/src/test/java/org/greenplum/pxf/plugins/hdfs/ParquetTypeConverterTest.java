@@ -5,6 +5,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -44,10 +47,12 @@ public class ParquetTypeConverterTest {
 
     @Test
     public void testBinaryWithNanos() {
-        String expected = "2019-03-14 20:52:48.123456";
+        Instant instant = Instant.parse("2019-03-15T03:52:48.123456Z"); // UTC
+        ZonedDateTime localTime = instant.atZone(ZoneId.systemDefault());
+        String expected = localTime.format(ParquetTypeConverter.DATE_FORMATTER); // should be "2019-03-14 20:52:48.123456" in PST
+
         byte[] source = new byte[]{0, 106, 9, 53, -76, 12, 0, 0, -66, -125, 37, 0}; // represents 2019-03-14 20:52:48.1234567
         String timestamp = ParquetTypeConverter.bytesToTimestamp(source); // nanos get dropped
-
         assertEquals(expected, timestamp);
     }
 
