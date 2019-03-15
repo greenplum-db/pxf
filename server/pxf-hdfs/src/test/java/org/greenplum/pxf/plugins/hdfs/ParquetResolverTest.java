@@ -422,7 +422,7 @@ public class ParquetResolverTest {
         assertField(fields, 2, "[1,2,3]", DataType.TEXT);
         assertField(fields, 3, "[6.0,-16.34]", DataType.TEXT);
         assertField(fields, 4, "[123456.789012345987654321]", DataType.TEXT); // scale fixed to 18 in schema
-        assertField(fields, 5, "[\"2019-03-14 14:10:28\",\"1969-12-30 05:42:23.211\"]", DataType.TEXT);
+        assertField(fields, 5, "[\"2019-03-14 14:10:28\",\"1969-12-30 05:42:23.211211\"]", DataType.TEXT);
         assertField(fields, 6, "[7.7,-12345.354]", DataType.TEXT); // rounded to the precision of 8
         assertField(fields, 7, "[23456789,-123456789012345]", DataType.TEXT);
         assertField(fields, 8, "[true,false]", DataType.TEXT);
