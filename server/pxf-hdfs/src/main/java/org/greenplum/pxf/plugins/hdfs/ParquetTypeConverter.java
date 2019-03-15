@@ -15,7 +15,6 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -23,7 +22,6 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
-import java.time.temporal.JulianFields;
 import java.util.Base64;
 
 /**
@@ -205,10 +203,11 @@ public enum ParquetTypeConverter {
     public abstract Object getValue(Group group, int columnIndex, int repeatIndex, Type type);
     public abstract void addValueToJsonArray(Group group, int columnIndex, int repeatIndex, Type type, ArrayNode jsonNode);
 
-    private static final int SECOND_IN_MILLIS = 1000;
+    private static final int SECOND_IN_MICROS = 1000 * 1000;
     private static final long JULIAN_EPOCH_OFFSET_DAYS = 2440588L;
     private static final long MILLIS_IN_DAY = 24 * 3600 * 1000;
-    private static final long NANOS_IN_MILLIS= 1000L*1000L;
+    private static final long MICROS_IN_DAY = 24 * 3600 * 1000 * 1000L;
+    private static final long NANOS_IN_MICROS = 1000;
     private static final String DATE_FORMATTER_BASE_PATTERN = "yyyy-MM-dd HH:mm:ss";
     private static final DateTimeFormatter DATE_FORMATTER =
             new DateTimeFormatterBuilder().appendPattern(DATE_FORMATTER_BASE_PATTERN)
@@ -237,35 +236,18 @@ public enum ParquetTypeConverter {
     }
 
     /**
-     * Converts a timestamp string to a INT96 byte array
+     * Converts a timestamp string to a INT96 byte array.
+     * Supports microseconds for timestamps
      */
     public static Binary getBinaryFromTimestamp(String timestampString) {
         // We receive a timestamp string from GPDB in the server timezone
         // We convert it to an instant of the current server timezone
         LocalDateTime date = LocalDateTime.parse(timestampString, DATE_FORMATTER);
         ZonedDateTime zdt = ZonedDateTime.of(date, ZoneId.systemDefault());
-//        zdt = zdt.withZoneSameInstant(ZoneId.of("UTC"));
-
-
-//        // GPDB supports microsecond precision at best
-//        long epochSeconds = zdt.toEpochSecond();
-//        long micros = zdt.getNano() / 1000;
-//
-//        long timeMillis = (zdt.toEpochSecond() * SECOND_IN_MILLIS) + zdt.getNano() / NANOS_IN_MILLIS;
-//
-//
-//        //long daysSinceEpoch = timeMillis / MILLIS_IN_DAY;
-//        long daysSinceEpoch = timeMillis / MILLIS_IN_DAY;
-////        int julianDays = (int) (JULIAN_EPOCH_OFFSET_DAYS + daysSinceEpoch);
-////        long timeOfDayNanos = (timeMillis % MILLIS_IN_DAY) * NANOS_IN_MILLIS;
-
-
-        int julianDays = (int) JulianFields.JULIAN_DAY.getFrom(zdt);
-        long timeOfDayNanos = zdt.getNano();
-
-//        LOG.debug("Converted timestamp: {} to milliseconds {}", timestampString, timeMillis);
-//        LOG.debug("Converted milliseconds: {} to julianDays {}, timeOfDayNanos {}",
-//                timeMillis, julianDays, timeOfDayNanos);
+        long timeMicros = (zdt.toEpochSecond() * SECOND_IN_MICROS) + zdt.getNano() / NANOS_IN_MICROS;
+        long daysSinceEpoch = timeMicros / MICROS_IN_DAY;
+        int julianDays = (int) (JULIAN_EPOCH_OFFSET_DAYS + daysSinceEpoch);
+        long timeOfDayNanos = (timeMicros % MICROS_IN_DAY) * NANOS_IN_MICROS;
         LOG.debug("Converted timestamp: {} to julianDays: {}, timeOfDayNanos: {}", timestampString, julianDays, timeOfDayNanos);
         return new NanoTime(julianDays, timeOfDayNanos).toBinary();
     }
