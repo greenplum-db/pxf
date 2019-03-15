@@ -212,7 +212,7 @@ public class ParquetResolverTest {
         assertField(fields, 2, 1, DataType.INTEGER);
         assertField(fields, 3, 6.0d, DataType.FLOAT8);
         assertField(fields, 4, BigDecimal.valueOf(1234560000000000000L, 18), DataType.NUMERIC);
-        assertField(fields, 5, java.sql.Timestamp.from(ZonedDateTime.parse("2013-07-13T21:00:05-07:00").toInstant()), DataType.TIMESTAMP);
+        assertField(fields, 5, "2013-07-13 21:00:05", DataType.TIMESTAMP);
         assertField(fields, 6, 7.7f, DataType.REAL);
         assertField(fields, 7, 23456789L, DataType.BIGINT);
         assertField(fields, 8, false, DataType.BOOLEAN);
@@ -384,8 +384,8 @@ public class ParquetResolverTest {
         }
         group.add(4, Binary.fromReusedByteArray(bytes));
 
-        group.add(5, ParquetTypeConverter.getBinary(1549317584246L));
-        group.add(5, ParquetTypeConverter.getBinary(-123456789L));
+        group.add(5, ParquetTypeConverter.getBinaryFromTimestamp("2019-03-14 14:10:28"));
+        group.add(5, ParquetTypeConverter.getBinaryFromTimestamp("1969-12-30 05:42:23.211211"));
 
         group.add(6, 7.7f);
         group.add(6, -12345.35354646f);
@@ -422,7 +422,7 @@ public class ParquetResolverTest {
         assertField(fields, 2, "[1,2,3]", DataType.TEXT);
         assertField(fields, 3, "[6.0,-16.34]", DataType.TEXT);
         assertField(fields, 4, "[123456.789012345987654321]", DataType.TEXT); // scale fixed to 18 in schema
-        assertField(fields, 5, "[1549317584246,-123456789]", DataType.TEXT);
+        assertField(fields, 5, "[\"2019-03-14 14:10:28\",\"1969-12-30 05:42:23.211\"]", DataType.TEXT);
         assertField(fields, 6, "[7.7,-12345.354]", DataType.TEXT); // rounded to the precision of 8
         assertField(fields, 7, "[23456789,-123456789012345]", DataType.TEXT);
         assertField(fields, 8, "[true,false]", DataType.TEXT);

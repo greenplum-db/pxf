@@ -36,19 +36,12 @@ import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.LinkedList;
 import java.util.List;
 
 import static org.apache.parquet.schema.Type.Repetition.REPEATED;
 
 public class ParquetResolver extends BasePlugin implements Resolver {
-
-    private static final int SECOND_IN_MILLIS = 1000;
-    private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private MessageType schema;
     private SimpleGroupFactory groupFactory;
@@ -63,7 +56,6 @@ public class ParquetResolver extends BasePlugin implements Resolver {
 
         // schema is the readSchema, if there is column projection
         // the schema will be a subset of tuple descriptions
-
         for (ColumnDescriptor columnDescriptor : context.getTupleDescription()) {
             OneField oneField;
             if (!columnDescriptor.isProjected()) {
@@ -133,12 +125,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                 group.add(index, Binary.fromReusedByteArray(bytes));
                 break;
             case INT96:
-                // We receive a timestamp from GPDB in the server timezone
-                // We convert it to an instant of the current server timezone
-                LocalDateTime date = LocalDateTime.parse((String) field.val, dateFormatter);
-                ZonedDateTime zdt = ZonedDateTime.of(date, ZoneId.systemDefault());
-                long millisSinceEpoch = zdt.toEpochSecond() * SECOND_IN_MILLIS;
-                group.add(index, ParquetTypeConverter.getBinary(millisSinceEpoch));
+                group.add(index, ParquetTypeConverter.getBinaryFromTimestamp((String) field.val));
                 break;
             case BOOLEAN:
                 group.add(index, (Boolean) field.val);
