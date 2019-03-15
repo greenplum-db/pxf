@@ -205,6 +205,10 @@ public class ParquetResolverTest {
         List<Group> groups = readParquetFile("primitive_types.parquet", 25, schema);
         assertEquals(25, groups.size());
 
+        Instant timestamp = Instant.parse("2013-07-14T04:00:05Z"); // UTC
+        ZonedDateTime localTime = timestamp.atZone(ZoneId.systemDefault());
+        String localTimestampString = localTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")); // should be "2013-07-13 21:00:05" in PST
+
         List<OneField> fields = assertRow(groups, 0, 14);
         //s1 : "row1" : TEXT
         assertField(fields, 0, "row1", DataType.TEXT);
@@ -212,7 +216,7 @@ public class ParquetResolverTest {
         assertField(fields, 2, 1, DataType.INTEGER);
         assertField(fields, 3, 6.0d, DataType.FLOAT8);
         assertField(fields, 4, BigDecimal.valueOf(1234560000000000000L, 18), DataType.NUMERIC);
-        assertField(fields, 5, "2013-07-13 21:00:05", DataType.TIMESTAMP);
+        assertField(fields, 5, localTimestampString, DataType.TIMESTAMP);
         assertField(fields, 6, 7.7f, DataType.REAL);
         assertField(fields, 7, 23456789L, DataType.BIGINT);
         assertField(fields, 8, false, DataType.BOOLEAN);
@@ -465,7 +469,6 @@ public class ParquetResolverTest {
         } else {
             assertEquals(value, fields.get(index).val);
         }
-
     }
 
     private MessageType getParquetSchemaForPrimitiveTypes(Type.Repetition repetition, boolean readCase) {
