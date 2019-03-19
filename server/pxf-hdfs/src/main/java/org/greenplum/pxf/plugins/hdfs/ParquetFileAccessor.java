@@ -82,7 +82,6 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
     private RecordReader<Group> recordReader;
     private GroupRecordConverter groupRecordConverter;
     private GroupWriteSupport groupWriteSupport;
-    private WriterVersion parquetVersion;
     private FileSystem fs;
     private Path file;
     private String filePrefix;
@@ -176,6 +175,11 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
         return codecName;
     }
 
+    private int getOption(String optionName, int defaultValue) {
+        String optionStr = context.getOption(optionName);
+        return optionStr != null ? Integer.parseInt(optionStr) : defaultValue;
+    }
+
     /**
      * Closes the resource for read.
      *
@@ -208,15 +212,11 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
         codecName = getCodec(compressCodec);
 
         // Options for parquet write
-        String pageSizeStr = context.getOption("PAGE_SIZE");
-        pageSize = pageSizeStr != null ? Integer.parseInt(pageSizeStr) : DEFAULT_PAGE_SIZE;
-        String rowgroupSizeStr = context.getOption("ROWGROUP_SIZE");
-        rowgroupSize = rowgroupSizeStr != null ? Integer.parseInt(rowgroupSizeStr) : DEFAULT_ROWGROUP_SIZE;
-        String dictSizeStr = context.getOption("DICTIONARY_PAGE_SIZE");
-        dictionarySize = dictSizeStr != null ? Integer.parseInt(dictSizeStr) : DEFAULT_DICTIONARY_PAGE_SIZE;
-        String parquetVerStr = context.getOption("PARQUET_VERSION");
-        parquetVersion = parquetVerStr != null ? WriterVersion.fromString(parquetVerStr) : DEFAULT_PARQUET_VERSION;
-
+        pageSize = getOption("PAGE_SIZE", DEFAULT_PAGE_SIZE);
+        rowgroupSize = getOption("ROWGROUP_SIZE", DEFAULT_ROWGROUP_SIZE);
+        dictionarySize = getOption("DICTIONARY_PAGE_SIZE", DEFAULT_DICTIONARY_PAGE_SIZE);
+        LOG.debug("Parquet options: PAGE_SIZE = {}, ROWGROUP_SIZE = {}, DICTIONARY_PAGE_SIZE = {}",
+                pageSize, rowgroupSize, dictionarySize);
 
         // Read schema file, if given
         String schemaFile = context.getOption("SCHEMA");
@@ -317,7 +317,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
         //noinspection deprecation
         parquetWriter = new ParquetWriter<>(file, groupWriteSupport, codecName,
                 rowgroupSize, pageSize, dictionarySize,
-                true, false, parquetVersion, configuration);
+                true, false, DEFAULT_PARQUET_VERSION, configuration);
     }
 
     /**
