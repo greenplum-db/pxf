@@ -31,6 +31,10 @@ public class JdbcTest extends BaseFeature {
             "vc1 varchar(5)",
             "c1 char(3)",
             "bin bytea"};
+    private static final String[] TYPES_TABLE_FIELDS_SMALL = new String[]{
+            "t1    text",
+            "t2    text",
+            "num1  int"};
     private static final String[] COLUMNS_TABLE_FIELDS = new String[]{
             "t text",
             "\"num 1\" int",
@@ -48,6 +52,8 @@ public class JdbcTest extends BaseFeature {
     private ExternalTable pxfJdbcMultipleFragmentsByDate;
     private ExternalTable pxfJdbcMultipleFragmentsByEnum;
     private ExternalTable pxfJdbcWritable;
+    private ExternalTable pxfJdbcWritableNoBatch;
+    private ExternalTable pxfJdbcWritablePool;
     private ExternalTable pxfJdbcColumns;
     private ExternalTable pxfJdbcColumnProjectionSubset;
     private ExternalTable pxfJdbcColumnProjectionSuperset;
@@ -55,6 +61,7 @@ public class JdbcTest extends BaseFeature {
     private static final String gpdbTypesDataFileName = "gpdb_types.txt";
     private static final String gpdbColumnsDataFileName = "gpdb_columns.txt";
     private Table gpdbNativeTableTypes, gpdbNativeTableColumns, gpdbWritableTargetTable;
+    private Table gpdbWritableTargetTableNoBatch, gpdbWritableTargetTablePool;
 
     @Override
     protected void beforeClass() throws Exception {
@@ -85,6 +92,16 @@ public class JdbcTest extends BaseFeature {
         gpdbWritableTargetTable = new Table("gpdb_types_target", TYPES_TABLE_FIELDS);
         gpdbWritableTargetTable.setDistributionFields(new String[]{"t1"});
         gpdb.createTableAndVerify(gpdbWritableTargetTable);
+
+        // create a table to be filled by the writable test case with no batch
+        gpdbWritableTargetTableNoBatch = new Table("gpdb_types_nobatch_target", TYPES_TABLE_FIELDS_SMALL);
+        gpdbWritableTargetTableNoBatch.setDistributionFields(new String[]{"t1"});
+        gpdb.createTableAndVerify(gpdbWritableTargetTableNoBatch);
+
+        // create a table to be filled by the writable test case with pool size > 1
+        gpdbWritableTargetTablePool = new Table("gpdb_types_pool_target", TYPES_TABLE_FIELDS_SMALL);
+        gpdbWritableTargetTablePool.setDistributionFields(new String[]{"t1"});
+        gpdb.createTableAndVerify(gpdbWritableTargetTablePool);
 
         // create a table with special column names
         gpdbNativeTableColumns = new Table("gpdb_columns", COLUMNS_TABLE_FIELDS);
@@ -165,13 +182,35 @@ public class JdbcTest extends BaseFeature {
         pxfJdbcWritable = TableFactory.getPxfJdbcWritableTable(
                 "pxf_jdbc_writable",
                 TYPES_TABLE_FIELDS,
-                gpdbNativeTableTypes.getName() + "_target",
+                gpdbWritableTargetTable.getName(),
                 POSTGRES_DRIVER_CLASS,
                 GPDB_PXF_AUTOMATION_DB_JDBC + gpdb.getMasterHost() + ":" + gpdb.getPort() + "/pxfautomation",
-                gpdb.getUserName());
+                gpdb.getUserName(), null);
         pxfJdbcWritable.setHost(pxfHost);
         pxfJdbcWritable.setPort(pxfPort);
         gpdb.createTableAndVerify(pxfJdbcWritable);
+
+        pxfJdbcWritableNoBatch = TableFactory.getPxfJdbcWritableTable(
+                "pxf_jdbc_writable_nobatch",
+                TYPES_TABLE_FIELDS_SMALL,
+                gpdbWritableTargetTableNoBatch.getName(),
+                POSTGRES_DRIVER_CLASS,
+                GPDB_PXF_AUTOMATION_DB_JDBC + gpdb.getMasterHost() + ":" + gpdb.getPort() + "/pxfautomation",
+                gpdb.getUserName(), "BATCH_SIZE=1");
+        pxfJdbcWritable.setHost(pxfHost);
+        pxfJdbcWritable.setPort(pxfPort);
+        gpdb.createTableAndVerify(pxfJdbcWritableNoBatch);
+
+        pxfJdbcWritablePool = TableFactory.getPxfJdbcWritableTable(
+                "pxf_jdbc_writable_pool",
+                TYPES_TABLE_FIELDS_SMALL,
+                gpdbWritableTargetTablePool.getName(),
+                POSTGRES_DRIVER_CLASS,
+                GPDB_PXF_AUTOMATION_DB_JDBC + gpdb.getMasterHost() + ":" + gpdb.getPort() + "/pxfautomation",
+                gpdb.getUserName(), "POOL_SIZE=2");
+        pxfJdbcWritable.setHost(pxfHost);
+        pxfJdbcWritable.setPort(pxfPort);
+        gpdb.createTableAndVerify(pxfJdbcWritablePool);
     }
 
     private void prepareColumns() throws Exception {
@@ -229,6 +268,16 @@ public class JdbcTest extends BaseFeature {
     }
 
     @Test(groups = {"features", "gpdb"})
+    public void jdbcWritableTableNoBatch() throws Exception {
+        runTincTest("pxf.features.jdbc.writable_nobatch.runTest");
+    }
+
+    @Test(groups = {"features", "gpdb"})
+    public void jdbcWritableTablePool() throws Exception {
+        runTincTest("pxf.features.jdbc.writable_pool.runTest");
+    }
+
+    @Test(groups = {"features", "gpdb"})
     public void jdbcColumns() throws Exception {
         runTincTest("pxf.features.jdbc.columns.runTest");
     }
@@ -237,4 +286,6 @@ public class JdbcTest extends BaseFeature {
     public void jdbcColumnProjection() throws Exception {
         runTincTest("pxf.features.jdbc.column_projection.runTest");
     }
+
+
 }

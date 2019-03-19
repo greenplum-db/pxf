@@ -408,7 +408,7 @@ public abstract class TableFactory {
      */
     public static ExternalTable getPxfJdbcWritableTable(String tableName,
             String[] fields, String dataSourcePath, String driver,
-            String dbUrl, String user) {
+            String dbUrl, String user, String customParameters) {
 
         ExternalTable exTable = new WritableExternalTable(tableName, fields, dataSourcePath, "CUSTOM");
         List<String> userParameters = new ArrayList<String>();
@@ -417,6 +417,9 @@ public abstract class TableFactory {
 
         if (user != null) {
             userParameters.add("USER=" + user);
+        }
+        if (customParameters != null) {
+            userParameters.add(customParameters);
         }
         exTable.setUserParameters(userParameters.toArray(new String[userParameters.size()]));
         exTable.setProfile("Jdbc");

@@ -23,6 +23,7 @@ import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.plugins.jdbc.JdbcBasePlugin;
 import org.greenplum.pxf.plugins.jdbc.JdbcResolver;
 
+import java.sql.BatchUpdateException;
 import java.util.LinkedList;
 import java.util.List;
 import java.io.IOException;
@@ -70,6 +71,10 @@ class BatchWriterCallable implements WriterCallable {
 
         try {
             statement.executeBatch();
+        }
+        catch (BatchUpdateException bue) {
+            SQLException cause = bue.getNextException();
+            return cause != null ? cause : bue;
         }
         catch (SQLException e) {
             return e;

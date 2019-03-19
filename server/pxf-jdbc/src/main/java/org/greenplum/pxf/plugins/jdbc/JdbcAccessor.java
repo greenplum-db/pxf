@@ -202,10 +202,12 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
                 // Pooling is used. Create new writerCallable
                 poolTasks.add(executorServiceWrite.submit(writerCallable));
                 writerCallable = writerCallableFactory.get();
-            }
-            else {
-                // Pooling is not used
-                writerCallable.call();
+            } else {
+                // Pooling is not used, call directly and process potential error
+                SQLException e = writerCallable.call();
+                if (e != null) {
+                    throw e;
+                }
             }
         }
 
@@ -264,7 +266,10 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
             }
 
             // Send data that is left
-            writerCallable.call();
+            SQLException e = writerCallable.call();
+            if (e != null) {
+                throw e;
+            }
         }
         finally {
             JdbcBasePlugin.closeStatement(statementWrite);
