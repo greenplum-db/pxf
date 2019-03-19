@@ -1,6 +1,10 @@
 -- start_ignore
 -- end_ignore
--- @description query01 for JDBC writable query
+-- @description query for JDBC writable query
+ALTER TABLE gpdb_types_target ADD CONSTRAINT gpdb_types_target_t1_key UNIQUE (t1);
+NOTICE:  ALTER TABLE / ADD UNIQUE will create implicit index "gpdb_types_target_t1_key" for table "gpdb_types_target"
+ALTER TABLE
+
 INSERT INTO pxf_jdbc_writable SELECT * FROM gpdb_types;
 INSERT 0 25
 SELECT * FROM gpdb_types_target ORDER BY t1;
@@ -33,3 +37,33 @@ SELECT * FROM gpdb_types_target ORDER BY t1;
  row9                 | s_14 |    9 |   14 |        23457.1 | 2013-07-21 21:00:00 |  7.7 | 23456789 | f |  9 |  900 | 2015-03-13 | abcde | UAH | 9
 (25 rows)
 
+-- start_matchsubs
+--
+-- # create a match/subs
+--
+-- m/(ERROR|WARNING):.*remote component error.*\(\d+\).*from.*'\d+\.\d+\.\d+\.\d+:\d+'.*/
+-- s/'\d+\.\d+\.\d+\.\d+:\d+'/'SOME_IP:SOME_PORT'/
+-- m/(ERROR|WARNING):.*remote component error.*\(\d+\).*from.*'(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])):\d+'.*/
+-- s/'(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])):\d+'/'SOME_IP:SOME_PORT'/
+--
+-- m/\/gpdb\/v\d+\//
+-- s/v\d+/SOME_VERSION/
+--
+-- m/file:.*;/
+-- s/file:.*; lineNumber: \d+; columnNumber: \d+;/SOME_ERROR_LOCATION/g
+--
+-- m/Exception report.*/
+-- s/report.*/SOME_EXCEPTION/
+--
+-- m/DETAIL/
+-- s/DETAIL/CONTEXT/
+--
+-- m/pxf:\/\/(.*)\/pxf_automation_data/
+-- s/pxf:\/\/.*\/pxf_automation_data/pxf:\/\/pxf_automation_data/
+--
+-- m/CONTEXT:.*line.*/
+-- s/line \d* of //g
+--
+-- end_matchsubs
+INSERT INTO pxf_jdbc_writable SELECT * FROM gpdb_types;
+ERROR: duplicate key value violates unique constraint &quot;gpdb_types_target_t1_key&quot;
