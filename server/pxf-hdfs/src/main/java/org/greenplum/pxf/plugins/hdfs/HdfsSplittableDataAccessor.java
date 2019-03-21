@@ -94,9 +94,9 @@ public abstract class HdfsSplittableDataAccessor extends BasePlugin implements A
      * return a LineRecordReader.
      *
      * @param jobConf the hadoop jobconf to use for the selected InputFormat
-     * @param split the input split to be read by the accessor
+     * @param split   the input split to be read by the accessor
      * @return a recordreader to be used for reading the data records of the
-     *         split
+     * split
      * @throws IOException if recordreader could not be created
      */
     abstract protected Object getReader(JobConf jobConf, InputSplit split)

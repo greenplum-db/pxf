@@ -73,16 +73,14 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor {
      */
     @Override
     public boolean openForWrite() throws IOException {
-
-        String fileName = hcfsType.getDataUri(configuration, context);
+        String fileName = hcfsType.getUriForWrite(configuration, context);
         String compressCodec = context.getOption("COMPRESSION_CODEC");
-        CompressionCodec codec = null;
-
         // get compression codec
-        if (compressCodec != null) {
-            codec = HdfsUtilities.getCodec(configuration, compressCodec);
-            String extension = codec.getDefaultExtension();
-            fileName += extension;
+        CompressionCodec codec = compressCodec != null ?
+                HdfsUtilities.getCodec(configuration, compressCodec) : null;
+        if (codec != null) {
+            // append codec extension to the filename
+            fileName += codec.getDefaultExtension();
         }
 
         file = new Path(fileName);
@@ -91,7 +89,6 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor {
 
         // create output stream - do not allow overwriting existing file
         createOutputStream(file, codec);
-
         return true;
     }
 

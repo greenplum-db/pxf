@@ -41,7 +41,6 @@ import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 
 import java.io.IOException;
-import java.net.URI;
 import java.util.EnumSet;
 
 /**
@@ -79,11 +78,12 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor {
     @Override
     public boolean openForWrite() throws Exception {
         LOG.debug("openForWrite");
-        String filename = hcfsType.getDataUri(configuration, context);
-        LOG.debug("Filename for write without updated file extension: {}", filename);
+        String filename = hcfsType.getUriForWrite(configuration, context);
         getCompressionCodec(context);
-        filename = updateFileExtension(filename, codec);
-
+        if (codec != null) {
+            // append extension to the filename
+            filename += codec.getDefaultExtension();
+        }
 
         // construct the output stream
         file = new Path(filename);
@@ -132,14 +132,8 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor {
                 compressionType = CompressionType.valueOf(parsedCompressType);
             } catch (IllegalArgumentException e) {
                 throw new IllegalArgumentException(
-                        "Illegal value for compression type " + "'"
-                                + parsedCompressType + "'");
+                        String.format("Illegal value for compression type '%s'", parsedCompressType));
             }
-            if (compressionType == null) {
-                throw new IllegalArgumentException(
-                        "Compression type must be defined");
-            }
-
             LOG.debug("Compression ON: compression codec: {}, compression type: {}",
                     userCompressCodec, compressionType);
         }
@@ -171,18 +165,6 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor {
         }
 
         return compressType.toUpperCase();
-    }
-
-    /*
-     * Returns fileName with the codec's file extension appended
-     */
-    private String updateFileExtension(String fileName, CompressionCodec codec) {
-
-        if (codec != null) {
-            fileName += codec.getDefaultExtension();
-        }
-        LOG.debug("File name for write: {}", fileName);
-        return fileName;
     }
 
     @Override

@@ -4,6 +4,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.util.Arrays;
@@ -44,6 +46,8 @@ public enum HcfsType {
     // We prefer WASBS over WASB for Azure Blob Storage,
     // as it uses SSL for communication to Azure servers
     WASBS;
+
+    protected static final Logger LOG = LoggerFactory.getLogger(HcfsType.class.getName());
 
     private static final String FILE_SCHEME = "file";
     private String prefix;
@@ -103,6 +107,21 @@ public enum HcfsType {
                     String.format("profile protocol (%s) is not compatible with server filesystem (%s)",
                             schemeFromContext, defaultFSScheme));
         }
+    }
+
+    /**
+     * Returns a fully resolved URI including the protocol for write
+     *
+     * @return an absolute data path for write
+     */
+    public String getUriForWrite(Configuration configuration, RequestContext context) {
+        String fileName = StringUtils.removeEnd(getDataUri(configuration, context), "/") +
+                "/" +
+                context.getTransactionId() +
+                "_" +
+                context.getSegmentId();
+        LOG.debug("File name for write: {}", fileName);
+        return fileName;
     }
 
     /**

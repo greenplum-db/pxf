@@ -46,7 +46,8 @@ public class DemoFileWritableAccessor extends DemoAccessor {
      */
     @Override
     public boolean openForWrite() throws Exception {
-        String fileName = context.getDataSource();
+        String fileName = String.format("/%s/%s_%d",
+                context.getDataSource(), context.getTransactionId(), context.getSegmentId());
 
         Path file = FileSystems.getDefault().getPath(fileName);
         if (Files.exists(file)) {
