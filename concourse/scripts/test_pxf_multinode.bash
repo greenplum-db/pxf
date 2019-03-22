@@ -104,6 +104,12 @@ function setup_pxf_on_cluster() {
         sed -i \"s|YOUR_AWS_ACCESS_KEY_ID|${ACCESS_KEY_ID}|\" ${PXF_CONF_DIR}/servers/s3/s3-site.xml &&
         sed -i \"s|YOUR_AWS_SECRET_ACCESS_KEY|${SECRET_ACCESS_KEY}|\" ${PXF_CONF_DIR}/servers/s3/s3-site.xml &&
         sed -i -e 's/\(0.0.0.0\|localhost\|127.0.0.1\)/${hadoop_ip}/g' ${PXF_CONF_DIR}/servers/default/*-site.xml &&
+        mkdir -p ${PXF_CONF_DIR}/servers/database &&
+        cp ${PXF_CONF_DIR}/templates/jdbc-site.xml ${PXF_CONF_DIR}/servers/database/ &&
+        sed -i \"s|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.postgresql.Driver|\" ${PXF_CONF_DIR}/servers/database/jdbc-site.xml &&
+        sed -i \"s|YOUR_DATABASE_JDBC_URL|jdbc:postgresql://mdw:5432/pxfautomation|\" ${PXF_CONF_DIR}/servers/database/jdbc-site.xml &&
+        sed -i \"s|YOUR_DATABASE_JDBC_USER|gpadmin|\" ${PXF_CONF_DIR}/servers/database/jdbc-site.xml &&
+        sed -i \"s|YOUR_DATABASE_JDBC_PASSWORD||\" ${PXF_CONF_DIR}/servers/database/jdbc-site.xml &&
         if [ ${IMPERSONATION} == false ]; then
             echo 'export PXF_USER_IMPERSONATION=false' >> ${PXF_CONF_DIR}/conf/pxf-env.sh
         fi &&
