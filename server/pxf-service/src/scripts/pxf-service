@@ -271,13 +271,14 @@ function generateUserConfigs()
     setup_conf_directory ${PXF_CONF}/lib
     setup_conf_directory ${PXF_CONF}/logs
     setup_conf_directory ${PXF_CONF}/servers/default
-    setup_conf_directory ${PXF_CONF}/templates ${PXF_HOME}/templates/user/templates
+    setup_conf_directory ${PXF_CONF}/templates ${PXF_HOME}/templates/user/templates override
 }
 
 function setup_conf_directory()
 {
     local target=$1
     local source=$2
+    local override=$3
 
     if [[ ! -d ${target} ]]; then
         if [[ -z ${source} ]]; then
@@ -287,6 +288,9 @@ function setup_conf_directory()
             echo "Copying configurations from ${source} to ${target} ..."
             cp -R ${source} $( dirname ${target} )
         fi
+    elif [[ ! -z ${source} && ! -z ${override} ]]; then
+        echo "Updating configurations from ${source} to ${target} ..."
+        cp -R ${source} $( dirname ${target} )
     else
         echo "Directory ${target} already exists, no update required"
     fi
