@@ -226,6 +226,12 @@ public class JdbcBasePlugin extends BasePlugin {
         closeConnection(connection);
     }
 
+    /**
+     * Asserts whether a given parameter has non-empty value, throws IllegalArgumentException otherwise
+     * @param value value to check
+     * @param paramName parameter name
+     * @param optionName name of the option for a given parameter
+     */
     private void assertMandatoryParameter(String value, String paramName, String optionName) {
         if (StringUtils.isBlank(value)) {
             throw new IllegalArgumentException(String.format(
@@ -234,6 +240,11 @@ public class JdbcBasePlugin extends BasePlugin {
         }
     }
 
+    /**
+     * Masks all password characters with asterisks, used for logging password values
+     * @param password password to mask
+     * @return masked value consisting of asterisks
+     */
     private String maskPassword(String password) {
         return password == null ? "" : StringUtils.repeat("*", password.length());
     }

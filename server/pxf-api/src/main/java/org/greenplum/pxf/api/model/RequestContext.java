@@ -112,15 +112,36 @@ public class RequestContext {
     private Map<String, String> options = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
     private PluginConf pluginConf;
 
-
+    /**
+     * Returns a String value of the given option or a default value if the option was not provided
+     * @param option name of the option
+     * @param defaultValue default value
+     * @return string value of the option or default value if the option was not provided
+     */
     public String getOption(String option, String defaultValue) {
         return options.getOrDefault(option, defaultValue);
     }
 
+    /**
+     * Returns an integer value of the given option or a default value if the option was not provided.
+     * Will throw an IllegalArgumentException if the option value can not be represented as an integer
+     * @param option name of the option
+     * @param defaultValue default value
+     * @return integer value of the option or default value if the option was not provided
+     */
     public int getOption(String option, int defaultValue) {
         return getOption(option, defaultValue, false);
     }
 
+    /**
+     * Returns an integer value of the given option or a default value if the option was not provided.
+     * Will throw an IllegalArgumentException if the option value can not be represented as an integer or
+     * if the integer is negative but only natural integer was expected.
+     * @param option name of the option
+     * @param defaultValue default value
+     * @param naturalOnly true if the integer is expected to be non-negative (natural), false otherwise
+     * @return integer value of the option or default value if the option was not provided
+     */
     public int getOption(String option, int defaultValue, boolean naturalOnly) {
         int result = defaultValue;
         String value = options.get(option);
@@ -140,14 +161,28 @@ public class RequestContext {
         return result;
     }
 
+    /**
+     * Returns a string value of the given option or null if the option was not provided.
+     * @param option name of the option
+     * @return string value of the given option or null if the option was not provided.
+     */
     public String getOption(String option) {
         return options.get(option);
     }
 
-    public void addOption(String key, String value) {
-        options.put(key, value);
+    /**
+     * Adds an option with the given name and value to the set of options.
+     * @param name name of the option
+     * @param value value of the option
+     */
+    public void addOption(String name, String value) {
+        options.put(name, value);
     }
 
+    /**
+     * Returns unmodifiable map of options.
+     * @return map of options, with keys as option names and values as option values
+     */
     public Map<String, String> getOptions() {
         return Collections.unmodifiableMap(options);
     }
