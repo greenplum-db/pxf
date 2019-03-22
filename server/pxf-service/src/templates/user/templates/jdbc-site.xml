@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <property>
+        <name>jdbc.driver</name>
+        <value>YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME</value>
+        <description>Class name of the JDBC driver (e.g. org.postgresql.Driver)</description>
+    </property>
+    <property>
+        <name>jdbc.url</name>
+        <value>YOUR_DATABASE_JDBC_URL</value>
+        <description>The URL that the JDBC driver can use to connect to the database (e.g. jdbc:postgresql://localhost/postgres)</description>
+    </property>
+    <property>
+        <name>jdbc.user</name>
+        <value>YOUR_DATABASE_JDBC_USER</value>
+        <description>User name for connecting to the database (e.g. postgres)</description>
+    </property>
+    <property>
+        <name>jdbc.password</name>
+        <value>YOUR_DATABASE_JDBC_PASSWORD</value>
+        <description>Password for connecting to the database (e.g. postgres)</description>
+    </property>
+</configuration>
