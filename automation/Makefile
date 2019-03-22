@@ -92,7 +92,7 @@ dev: symlink_pxf_jars
 
 sync_jdbc_config:
 	@mkdir -p $(PXF_CONF_SERVERS)/database
-	@if [[ ! -f "$(PXF_CONF_SERVERS)/database/jdbc-site.xml" ]]; then \
+	@if [ ! -f "$(PXF_CONF_SERVERS)/database/jdbc-site.xml" ]; then \
 		cp $(PXF_HOME)/templates/user/templates/jdbc-site.xml $(PXF_CONF_SERVERS)/database/; \
 		sed -i "s|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.postgresql.Driver|" $(PXF_CONF_SERVERS)/database/jdbc-site.xml; \
 		sed -i "s|YOUR_DATABASE_JDBC_URL|jdbc:postgresql://$(JDBC_HOST):$(JDBC_PORT)/pxfautomation|" $(PXF_CONF_SERVERS)/database/jdbc-site.xml; \
