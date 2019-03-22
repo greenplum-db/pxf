@@ -161,13 +161,7 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
         }
 
         // Setup WriterCallableFactory
-        writerCallableFactory = new WriterCallableFactory();
-        writerCallableFactory.setPlugin(this);
-        writerCallableFactory.setQuery(queryWrite);
-        writerCallableFactory.setBatchSize(batchSize);
-        if (poolSize == 1) {
-            writerCallableFactory.setStatement(statementWrite);
-        }
+        writerCallableFactory = new WriterCallableFactory(this, queryWrite, statementWrite, batchSize, poolSize);
 
         writerCallable = writerCallableFactory.get();
 

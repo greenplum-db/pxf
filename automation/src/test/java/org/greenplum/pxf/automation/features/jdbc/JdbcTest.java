@@ -51,6 +51,7 @@ public class JdbcTest extends BaseFeature {
     private ExternalTable pxfJdbcMultipleFragmentsByInt;
     private ExternalTable pxfJdbcMultipleFragmentsByDate;
     private ExternalTable pxfJdbcMultipleFragmentsByEnum;
+    private ExternalTable pxfJdbcReadServerConfigAll; // all server-based props coming from there, not DDL
     private ExternalTable pxfJdbcWritable;
     private ExternalTable pxfJdbcWritableNoBatch;
     private ExternalTable pxfJdbcWritablePool;
@@ -74,6 +75,7 @@ public class JdbcTest extends BaseFeature {
         prepareMultipleFragmentsByInt();
         prepareMultipleFragmentsByDate();
         prepareMultipleFragmentsByEnum();
+        prepareServerBasedMultipleFragmentsByInt();
         prepareWritable();
         prepareColumns();
         prepareColumnProjectionSubsetInDifferentOrder();
@@ -136,7 +138,8 @@ public class JdbcTest extends BaseFeature {
                         "USD:UAH",
                         "1",
                         gpdb.getUserName(),
-                        EnumPartitionType.ENUM);
+                        EnumPartitionType.ENUM,
+                        null);
         pxfJdbcMultipleFragmentsByEnum.setHost(pxfHost);
         pxfJdbcMultipleFragmentsByEnum.setPort(pxfPort);
         gpdb.createTableAndVerify(pxfJdbcMultipleFragmentsByEnum);
@@ -154,7 +157,8 @@ public class JdbcTest extends BaseFeature {
                         "1:6",
                         "1",
                         gpdb.getUserName(),
-                        EnumPartitionType.INT);
+                        EnumPartitionType.INT,
+                        null);
         pxfJdbcMultipleFragmentsByInt.setHost(pxfHost);
         pxfJdbcMultipleFragmentsByInt.setPort(pxfPort);
         gpdb.createTableAndVerify(pxfJdbcMultipleFragmentsByInt);
@@ -172,10 +176,30 @@ public class JdbcTest extends BaseFeature {
                         "2015-03-06:2015-03-20",
                         "1:DAY",
                         gpdb.getUserName(),
-                        EnumPartitionType.DATE);
+                        EnumPartitionType.DATE,
+                        null);
         pxfJdbcMultipleFragmentsByDate.setHost(pxfHost);
         pxfJdbcMultipleFragmentsByDate.setPort(pxfPort);
         gpdb.createTableAndVerify(pxfJdbcMultipleFragmentsByDate);
+    }
+
+    private void prepareServerBasedMultipleFragmentsByInt() throws Exception {
+        pxfJdbcReadServerConfigAll = TableFactory
+                .getPxfJdbcReadablePartitionedTable(
+                        "pxf_jdbc_read_server_config_all",
+                        TYPES_TABLE_FIELDS,
+                        gpdbNativeTableTypes.getName(),
+                        null,
+                        null,
+                        2,
+                        "1:6",
+                        "1",
+                        null,
+                        EnumPartitionType.INT,
+                        "database");
+        pxfJdbcReadServerConfigAll.setHost(pxfHost);
+        pxfJdbcReadServerConfigAll.setPort(pxfPort);
+        gpdb.createTableAndVerify(pxfJdbcReadServerConfigAll);
     }
 
     private void prepareWritable() throws Exception {
@@ -260,6 +284,11 @@ public class JdbcTest extends BaseFeature {
     @Test(groups = {"features", "gpdb"})
     public void multipleFragmentsTables() throws Exception {
         runTincTest("pxf.features.jdbc.multiple_fragments.runTest");
+    }
+
+    @Test(groups = {"features", "gpdb"})
+    public void readServerConfig() throws Exception {
+        runTincTest("pxf.features.jdbc.server_config.runTest");
     }
 
     @Test(groups = {"features", "gpdb"})

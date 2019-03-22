@@ -141,6 +141,43 @@ public class RequestContextTest {
     }
 
     @Test
+    public void testReturnDefaultIntOptionValue() {
+        assertEquals(77, context.getOption("foo", 77));
+    }
+
+    @Test
+    public void testReturnDefaultNaturalIntOptionValue() {
+        assertEquals(77, context.getOption("foo", 77, true));
+    }
+
+    @Test
+    public void testFailsOnInvalidIntegerOptionWhenRequestedInteger() {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("Property foo has incorrect value junk : must be an integer");
+
+        context.addOption("foo", "junk");
+        context.getOption("foo", 77);
+    }
+
+    @Test
+    public void testFailsOnInvalidIntegerOptionWhenRequestedNaturalInteger() {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("Property foo has incorrect value junk : must be a non-negative integer");
+
+        context.addOption("foo", "junk");
+        context.getOption("foo", 77, true);
+    }
+
+    @Test
+    public void testFailsOnInvalidNaturalIntegerOptionWhenRequestedNaturalInteger() {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("Property foo has incorrect value -5 : must be a non-negative integer");
+
+        context.addOption("foo", "-5");
+        context.getOption("foo", 77, true);
+    }
+
+    @Test
     public void testReturnsUnmodifiableOptionsMap() {
         thrown.expect(UnsupportedOperationException.class);
 

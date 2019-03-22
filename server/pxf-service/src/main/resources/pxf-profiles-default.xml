@@ -186,6 +186,12 @@ under the License.
             <accessor>org.greenplum.pxf.plugins.jdbc.JdbcAccessor</accessor>
             <resolver>org.greenplum.pxf.plugins.jdbc.JdbcResolver</resolver>
         </plugins>
+        <optionMappings>
+            <mapping option="jdbc_driver" property="jdbc.driver"/>
+            <mapping option="db_url" property="jdbc.url"/>
+            <mapping option="user" property="jdbc.user"/>
+            <mapping option="pass" property="jdbc.password"/>
+        </optionMappings>
     </profile>
     <profile>
         <name>Parquet</name>

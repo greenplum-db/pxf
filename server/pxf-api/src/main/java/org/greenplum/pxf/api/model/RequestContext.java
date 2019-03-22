@@ -117,6 +117,29 @@ public class RequestContext {
         return options.getOrDefault(option, defaultValue);
     }
 
+    public int getOption(String option, int defaultValue) {
+        return getOption(option, defaultValue, false);
+    }
+
+    public int getOption(String option, int defaultValue, boolean naturalOnly) {
+        int result = defaultValue;
+        String value = options.get(option);
+        if (value != null) {
+            try {
+                result = Integer.parseInt(value);
+            }
+            catch (NumberFormatException e) {
+                throw new IllegalArgumentException(String.format(
+                        "Property %s has incorrect value %s : must be a%s integer", option, value, naturalOnly ? " non-negative" : "n"), e);
+            }
+            if (naturalOnly && result < 0) {
+                throw new IllegalArgumentException(String.format(
+                        "Property %s has incorrect value %s : must be a non-negative integer", option, value));
+            }
+        }
+        return result;
+    }
+
     public String getOption(String option) {
         return options.get(option);
     }

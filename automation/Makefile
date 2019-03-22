@@ -44,6 +44,14 @@ ifneq "$(SECRET_ACCESS_KEY)" ""
 	MAVEN_TEST_OPTS+= -DAWS_SECRET_ACCESS_KEY=$(SECRET_ACCESS_KEY)
 endif
 
+ifeq "$(JDBC_HOST)" ""
+	JDBC_HOST=localhost
+endif
+ifeq "$(JDBC_PORT)" ""
+	JDBC_PORT=15432
+endif
+PXF_CONF_SERVERS=~/pxf/servers
+
 ifeq "$(PXF_TEST_DEBUG)" "true"
 	MAVEN_DEBUG_OPTS+= -DPXF_TEST_DEBUG=$(PXF_TEST_DEBUG)
 	# Uncomment below line to remote debug pxf automation test
@@ -67,7 +75,7 @@ symlink_pxf_jars:
 		touch $(PXF_HOME)/tmp/pxf-extras.jar; \
 	fi
 
-test: clean-logs symlink_pxf_jars sync_cloud_configs
+test: clean-logs symlink_pxf_jars sync_cloud_configs sync_jdbc_config
 	$(MVN) $(MAVEN_TEST_OPTS) ${MAVEN_DEBUG_OPTS} test
 
 clean: clean-logs
@@ -81,6 +89,16 @@ clean-logs:
 
 dev: symlink_pxf_jars
 	$(MVN) $(MAVEN_TEST_OPTS) package -DskipTests=true
+
+sync_jdbc_config:
+	@mkdir -p $(PXF_CONF_SERVERS)/database
+	@if [[ ! -f "$(PXF_CONF_SERVERS)/database/jdbc-site.xml" ]]; then \
+		cp $(PXF_HOME)/templates/user/templates/jdbc-site.xml $(PXF_CONF_SERVERS)/database/; \
+		sed -i "s|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.postgresql.Driver|" $(PXF_CONF_SERVERS)/database/jdbc-site.xml; \
+		sed -i "s|YOUR_DATABASE_JDBC_URL|jdbc:postgresql://$(JDBC_HOST):$(JDBC_PORT)/pxfautomation|" $(PXF_CONF_SERVERS)/database/jdbc-site.xml; \
+		sed -i "s|YOUR_DATABASE_JDBC_USER||" $(PXF_CONF_SERVERS)/database/jdbc-site.xml; \
+		sed -i "s|YOUR_DATABASE_JDBC_PASSWORD||" $(PXF_CONF_SERVERS)/database/jdbc-site.xml; \
+	fi
 
 sync_cloud_configs:
 ifneq "$(PROTOCOL)" ""

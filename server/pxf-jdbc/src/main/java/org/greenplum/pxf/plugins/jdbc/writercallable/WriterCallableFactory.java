@@ -28,18 +28,24 @@ import java.sql.PreparedStatement;
  * An object that processes INSERT operation on {@link OneRow} objects
  */
 public class WriterCallableFactory {
+
+    private int batchSize;
+    private JdbcBasePlugin plugin;
+    private String query;
+    private PreparedStatement statement;
+
     /**
-     * Create a new {@link WriterCallable} factory.
+     * Create a new instance of the factory.
      *
-     * Note that 'setPlugin' and 'setQuery' must be called before construction of a {@link WriterCallable}.
-     *
-     * By default, 'statement' is null
      */
-    public WriterCallableFactory() {
-        batchSize = JdbcBasePlugin.DEFAULT_BATCH_SIZE;
-        plugin = null;
-        query = null;
-        statement = null;
+    public WriterCallableFactory(JdbcBasePlugin plugin, String query, PreparedStatement statement, int batchSize, int poolSize) {
+        this.plugin = plugin;
+        this.query = query;
+        this.batchSize = batchSize;
+
+        if (poolSize == 1) {
+            this.statement = statement;
+        }
     }
 
     /**
@@ -48,53 +54,11 @@ public class WriterCallableFactory {
      * @return an implementation of WriterCallable, chosen based on parameters that were set for this factory
      */
     public WriterCallable get() {
+
         if (batchSize > 1) {
             return new BatchWriterCallable(plugin, query, statement, batchSize);
         }
         return new SimpleWriterCallable(plugin, query, statement);
     }
 
-    /**
-     * Set {@link JdbcBasePlugin} to use.
-     *
-     * @param plugin
-     * REQUIRED
-     */
-    public void setPlugin(JdbcBasePlugin plugin) {
-        this.plugin = plugin;
-    }
-
-    /**
-     * Set SQL query to use.
-     * @param query
-     *
-     * REQUIRED
-     */
-    public void setQuery(String query) {
-        this.query = query;
-    }
-
-    /**
-     * Set batch size to use
-     *
-     * @param batchSize If greater than 1, Use batches of specified size; If less than 1, do not use batches
-     */
-    public void setBatchSize(int batchSize) {
-        this.batchSize = batchSize;
-    }
-
-    /**
-     * Set statement to use.
-     *
-     * @param statement If null, Create a new connection and a new statement each time {@link WriterCallable} is called;
-     *                  If not null, Use the given statement and do not close or reopen it
-     */
-    public void setStatement(PreparedStatement statement) {
-        this.statement = statement;
-    }
-
-    private int batchSize;
-    private JdbcBasePlugin plugin;
-    private String query;
-    private PreparedStatement statement;
 }

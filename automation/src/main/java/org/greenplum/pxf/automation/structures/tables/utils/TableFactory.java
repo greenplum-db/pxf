@@ -367,12 +367,17 @@ public abstract class TableFactory {
                                                          String[] fields, String dataSourcePath, String driver,
                                                          String dbUrl, boolean isPartitioned,
                                                          Integer partitionByColumnIndex, String rangeExpression,
-                                                         String interval, String user, EnumPartitionType partitionType) {
+                                                         String interval, String user, EnumPartitionType partitionType,
+                                                         String server) {
         ExternalTable exTable = new ReadableExternalTable(tableName, fields,
                 dataSourcePath, "CUSTOM");
         List<String> userParameters = new ArrayList<String>();
-        userParameters.add("JDBC_DRIVER=" + driver);
-        userParameters.add("DB_URL=" + dbUrl);
+        if (driver != null) {
+            userParameters.add("JDBC_DRIVER=" + driver);
+        }
+        if (dbUrl != null) {
+            userParameters.add("DB_URL=" + dbUrl);
+        }
         if (isPartitioned) {
             if (fields.length <= partitionByColumnIndex) {
                 throw new IllegalArgumentException(
@@ -387,6 +392,9 @@ public abstract class TableFactory {
 
         if (user != null) {
             userParameters.add("USER=" + user);
+        }
+        if (server != null) {
+            userParameters.add("SERVER=" + server);
         }
         exTable.setUserParameters(userParameters.toArray(new String[userParameters.size()]));
         exTable.setProfile("Jdbc");
@@ -412,9 +420,12 @@ public abstract class TableFactory {
 
         ExternalTable exTable = new WritableExternalTable(tableName, fields, dataSourcePath, "CUSTOM");
         List<String> userParameters = new ArrayList<String>();
-        userParameters.add("JDBC_DRIVER=" + driver);
-        userParameters.add("DB_URL=" + dbUrl);
-
+        if (driver != null) {
+            userParameters.add("JDBC_DRIVER=" + driver);
+        }
+        if (dbUrl != null) {
+            userParameters.add("DB_URL=" + dbUrl);
+        }
         if (user != null) {
             userParameters.add("USER=" + user);
         }
@@ -449,11 +460,11 @@ public abstract class TableFactory {
             String tableName,
             String[] fields, String dataSourcePath, String driver,
             String dbUrl, Integer partitionByColumnIndex,
-            String rangeExpression, String interval, String user, EnumPartitionType partitionType) {
+            String rangeExpression, String interval, String user, EnumPartitionType partitionType, String server) {
 
         return getPxfJdbcReadableTable(tableName, fields, dataSourcePath, driver,
             dbUrl, true, partitionByColumnIndex, rangeExpression,
-            interval, user, partitionType);
+            interval, user, partitionType, server);
     }
 
     /**
@@ -472,7 +483,7 @@ public abstract class TableFactory {
             String[] fields, String dataSourcePath, String driver, String dbUrl, String user) {
 
         return getPxfJdbcReadableTable(tableName, fields, dataSourcePath, driver,
-            dbUrl, false, null, null, null, user, null);
+            dbUrl, false, null, null, null, user, null, null);
 
     }
 }

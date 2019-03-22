@@ -19,12 +19,14 @@ package org.greenplum.pxf.plugins.jdbc;
  * under the License.
  */
 
+import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -42,20 +44,65 @@ import java.util.regex.Pattern;
  */
 public class JdbcBasePlugin extends BasePlugin {
 
+    /*
+        At the moment, when writing into some table, the table name is concatenated with a special string
+        that is necessary to write into HDFS. However, a raw table name is necessary in case of JDBC.
+        This Pattern allows to extract the correct table name from the given RequestContext.dataSource
+     */
+    private static final Pattern tableNamePattern = Pattern.compile("/(.*)/[0-9]*-[0-9]*_[0-9]*");
+
+    // '100' is a recommended value: https://docs.oracle.com/cd/E11882_01/java.112/e16548/oraperf.htm#JJDBC28754
+    private static final int DEFAULT_BATCH_SIZE = 100;
+    private static final int DEFAULT_POOL_SIZE = 1;
+
+    // configuration parameter names
+    private static final String JDBC_DRIVER_PROPERTY_NAME = "jdbc.driver";
+    private static final String JDBC_URL_PROPERTY_NAME = "jdbc.url";
+    private static final String JDBC_USER_PROPERTY_NAME = "jdbc.user";
+    private static final String JDBC_PASSWORD_PROPERTY_NAME = "jdbc.password";
+
+    // DDL option names
+    private static final String JDBC_DRIVER_OPTION_NAME = "JDBC_DRIVER";
+    private static final String JDBC_URL_OPTION_NAME = "DB_URL";
+
+    // JDBC parameters from config file or specified in DDL
+    private String jdbcDriver, jdbcUrl, jdbcUser, jdbcPassword;
+
+    protected String tableName = null;
+
+    // After argument parsing, this value is guaranteed to be >= 1
+    protected int batchSize = DEFAULT_BATCH_SIZE;
+    protected boolean batchSizeIsSetByUser = false;
+
+    // Thread pool size
+    protected int poolSize = DEFAULT_POOL_SIZE;
+
+    // Quote columns setting set by user (three values are possible)
+    protected Boolean quoteColumns = null;
+
+    // Columns description
+    protected List<ColumnDescriptor> columns = null;
+
+    private static final Logger LOG = LoggerFactory.getLogger(JdbcBasePlugin.class);
+
     @Override
     public void initialize(RequestContext context) {
         super.initialize(context);
 
-        jdbcDriver = context.getOption("JDBC_DRIVER");
-        if (jdbcDriver == null) {
-            throw new IllegalArgumentException("JDBC_DRIVER is a required parameter");
+        // process configuration based params that could be auto-overwritten by user options
+        jdbcDriver = configuration.get(JDBC_DRIVER_PROPERTY_NAME);
+        assertMandatoryParameter(jdbcDriver, JDBC_DRIVER_PROPERTY_NAME, JDBC_DRIVER_OPTION_NAME);
+
+        jdbcUrl = configuration.get(JDBC_URL_PROPERTY_NAME);
+        assertMandatoryParameter(jdbcUrl, JDBC_URL_PROPERTY_NAME, JDBC_URL_OPTION_NAME);
+
+        // authentication information is not required
+        jdbcUser = configuration.get(JDBC_USER_PROPERTY_NAME);
+        if (jdbcUser != null) {
+            jdbcPassword = configuration.get(JDBC_PASSWORD_PROPERTY_NAME);
         }
 
-        dbUrl = context.getOption("DB_URL");
-        if (dbUrl == null) {
-            throw new IllegalArgumentException("DB_URL is a required parameter");
-        }
-
+        // process additional options
         tableName = context.getDataSource();
         if (tableName == null) {
             throw new IllegalArgumentException("Data source must be provided");
@@ -63,8 +110,7 @@ public class JdbcBasePlugin extends BasePlugin {
         /*
         At the moment, when writing into some table, the table name is
         concatenated with a special string that is necessary to write into HDFS.
-        However, a raw table name is necessary in case of JDBC.
-        The correct table name is extracted here.
+        However, a raw table name is necessary in case of JDBC. The correct table name is extracted here.
         */
         Matcher matcher = tableNamePattern.matcher(tableName);
         if (matcher.matches()) {
@@ -73,43 +119,16 @@ public class JdbcBasePlugin extends BasePlugin {
         }
 
         columns = context.getTupleDescription();
-        if (columns == null) {
-            throw new IllegalArgumentException("Tuple description must be provided");
-        }
 
-        // This parameter is not required. The default value is null
-        user = context.getOption("USER");
-        if (user != null) {
-            pass = context.getOption("PASS");
-        }
-
-        // This parameter is not required. The default value is 0
-        String batchSizeRaw = context.getOption("BATCH_SIZE");
-        if (batchSizeRaw != null) {
-            try {
-                batchSize = Integer.parseInt(batchSizeRaw);
-                if (batchSize < 1) {
-                    throw new NumberFormatException();
-                } else if (batchSize == 0) {
-                    batchSize = 1;
-                }
-                batchSizeIsSetByUser = true;
-            }
-            catch (NumberFormatException e) {
-                throw new IllegalArgumentException("BATCH_SIZE is incorrect: must be a non-negative integer");
-            }
+        // This parameter is not required. The default value is 100
+        batchSizeIsSetByUser = context.getOption("BATCH_SIZE") != null ? true : false;
+        batchSize = context.getOption("BATCH_SIZE", DEFAULT_BATCH_SIZE, true);
+        if (batchSize == 0) {
+            batchSize = 1; // if user set to 0, it is the same as batchsize of 1
         }
 
         // This parameter is not required. The default value is 1
-        String poolSizeRaw = context.getOption("POOL_SIZE");
-        if (poolSizeRaw != null) {
-            try {
-                poolSize = Integer.parseInt(poolSizeRaw);
-            }
-            catch (NumberFormatException e) {
-                throw new IllegalArgumentException("POOL_SIZE is incorrect: must be an integer");
-            }
-        }
+        poolSize = context.getOption("POOL_SIZE", DEFAULT_POOL_SIZE);
 
         // This parameter is not required. The default value is null
         String quoteColumnsRaw = context.getOption("QUOTE_COLUMNS");
@@ -129,19 +148,19 @@ public class JdbcBasePlugin extends BasePlugin {
      */
     public Connection getConnection() throws ClassNotFoundException, SQLException, SQLTimeoutException {
         Connection connection;
-        if (user != null) {
+        if (jdbcUser != null) {
             LOG.debug("Open JDBC connection: driver={}, url={}, user={}, pass={}, table={}",
-                    jdbcDriver, dbUrl, user, pass, tableName);
+                    jdbcDriver, jdbcUrl, jdbcUser, maskPassword(jdbcPassword), tableName);
         } else {
             LOG.debug("Open JDBC connection: driver={}, url={}, table={}",
-                    jdbcDriver, dbUrl, tableName);
+                    jdbcDriver, jdbcUrl, tableName);
         }
         Class.forName(jdbcDriver);
-        if (user != null) {
-            connection = DriverManager.getConnection(dbUrl, user, pass);
+        if (jdbcUser != null) {
+            connection = DriverManager.getConnection(jdbcUrl, jdbcUser, jdbcPassword);
         }
         else {
-            connection = DriverManager.getConnection(dbUrl);
+            connection = DriverManager.getConnection(jdbcUrl);
         }
         return connection;
     }
@@ -207,31 +226,15 @@ public class JdbcBasePlugin extends BasePlugin {
         closeConnection(connection);
     }
 
-    // JDBC parameters
-    protected String jdbcDriver = null;
-    protected String dbUrl = null;
-    protected String user = null;
-    protected String pass = null;
+    private void assertMandatoryParameter(String value, String paramName, String optionName) {
+        if (StringUtils.isBlank(value)) {
+            throw new IllegalArgumentException(String.format(
+                    "Required parameter %s is missing or empty in jdbc-site.xml and option %s is not specified in table definition.", paramName, optionName)
+            );
+        }
+    }
 
-    protected String tableName = null;
-
-    // '100' is a recommended value: https://docs.oracle.com/cd/E11882_01/java.112/e16548/oraperf.htm#JJDBC28754
-    public static final int DEFAULT_BATCH_SIZE = 100;
-    // After argument parsing, this value is guaranteed to be >= 1
-    protected int batchSize = DEFAULT_BATCH_SIZE;
-    protected boolean batchSizeIsSetByUser = false;
-
-    // Thread pool size
-    protected int poolSize = 1;
-
-    // Quote columns setting set by user (three values are possible)
-    protected Boolean quoteColumns = null;
-
-    // Columns description
-    protected List<ColumnDescriptor> columns = null;
-
-    private static final Logger LOG = LoggerFactory.getLogger(JdbcBasePlugin.class);
-
-    // At the moment, when writing into some table, the table name is concatenated with a special string that is necessary to write into HDFS. However, a raw table name is necessary in case of JDBC. This Pattern allows to extract the correct table name from the given RequestContext.dataSource
-    private static final Pattern tableNamePattern = Pattern.compile("/(.*)/[0-9]*-[0-9]*_[0-9]*");
+    private String maskPassword(String password) {
+        return password == null ? "" : StringUtils.repeat("*", password.length());
+    }
 }
