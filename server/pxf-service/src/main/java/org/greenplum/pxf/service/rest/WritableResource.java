@@ -126,7 +126,6 @@ public class WritableResource extends BaseResource {
                            InputStream inputStream) throws Exception {
 
         RequestContext context = parseRequest(headers);
-        context.setDataSource(path);
         Bridge bridge = bridgeFactory.getWriteBridge(context);
 
         // THREAD-SAFE parameter has precedence
