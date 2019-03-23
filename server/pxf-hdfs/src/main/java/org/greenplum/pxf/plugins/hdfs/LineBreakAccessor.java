@@ -78,10 +78,6 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor {
         // get compression codec
         CompressionCodec codec = compressCodec != null ?
                 HdfsUtilities.getCodec(configuration, compressCodec) : null;
-        if (codec != null) {
-            // append codec extension to the filename
-            fileName += codec.getDefaultExtension();
-        }
 
         file = new Path(fileName);
         fs = FileSystem.get(URI.create(fileName), configuration);

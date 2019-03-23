@@ -155,4 +155,17 @@ public class HcfsTypeTest {
         HcfsType type = HcfsType.getHcfsType(configuration, context);
         assertEquals("xyz://abc/foo/bar/XID-XYZ-123456_3", type.getUriForWrite(configuration, context));
     }
+
+    @Test
+    public void testUriForWriteWithCodec() {
+        configuration.set("fs.defaultFS", "xyz://abc/");
+        context.setDataSource("foo/bar/");
+        context.setTransactionId("XID-XYZ-123456");
+        context.setSegmentId(2);
+        context.addOption("COMPRESSION_CODEC", "org.apache.hadoop.io.compress.GzipCodec");
+
+        HcfsType type = HcfsType.getHcfsType(configuration, context);
+        assertEquals("xyz://abc/foo/bar/XID-XYZ-123456_2.gz",
+                type.getUriForWrite(configuration, context));
+    }
 }

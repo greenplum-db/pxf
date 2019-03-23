@@ -80,10 +80,6 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor {
         LOG.debug("openForWrite");
         String filename = hcfsType.getUriForWrite(configuration, context);
         getCompressionCodec(context);
-        if (codec != null) {
-            // append extension to the filename
-            filename += codec.getDefaultExtension();
-        }
 
         // construct the output stream
         file = new Path(filename);

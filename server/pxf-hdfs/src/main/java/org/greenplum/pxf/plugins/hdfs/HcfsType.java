@@ -3,7 +3,9 @@ package org.greenplum.pxf.plugins.hdfs;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.io.compress.CompressionCodec;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +49,7 @@ public enum HcfsType {
     // as it uses SSL for communication to Azure servers
     WASBS;
 
-    protected static final Logger LOG = LoggerFactory.getLogger(HcfsType.class.getName());
+    protected Logger LOG = LoggerFactory.getLogger(this.getClass());
 
     private static final String FILE_SCHEME = "file";
     private String prefix;
@@ -120,6 +122,15 @@ public enum HcfsType {
                 context.getTransactionId() +
                 "_" +
                 context.getSegmentId();
+
+        String compressCodec = context.getOption("COMPRESSION_CODEC");
+        if (compressCodec != null) {
+            // get compression codec
+            CompressionCodec codec = HdfsUtilities.getCodec(configuration, compressCodec);
+            // append codec extension to the filename
+            fileName += codec.getDefaultExtension();
+        }
+
         LOG.debug("File name for write: {}", fileName);
         return fileName;
     }
