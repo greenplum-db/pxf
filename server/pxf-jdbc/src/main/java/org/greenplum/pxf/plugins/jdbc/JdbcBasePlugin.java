@@ -26,7 +26,6 @@ import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -34,8 +33,6 @@ import java.sql.SQLException;
 import java.sql.SQLTimeoutException;
 import java.sql.Statement;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * JDBC tables plugin (base class)
@@ -43,13 +40,6 @@ import java.util.regex.Pattern;
  * Implemented subclasses: {@link JdbcAccessor}, {@link JdbcResolver}.
  */
 public class JdbcBasePlugin extends BasePlugin {
-
-    /*
-        At the moment, when writing into some table, the table name is concatenated with a special string
-        that is necessary to write into HDFS. However, a raw table name is necessary in case of JDBC.
-        This Pattern allows to extract the correct table name from the given RequestContext.dataSource
-     */
-    private static final Pattern tableNamePattern = Pattern.compile("/(.*)/[0-9]*-[0-9]*_[0-9]*");
 
     // '100' is a recommended value: https://docs.oracle.com/cd/E11882_01/java.112/e16548/oraperf.htm#JJDBC28754
     private static final int DEFAULT_BATCH_SIZE = 100;
@@ -107,21 +97,13 @@ public class JdbcBasePlugin extends BasePlugin {
         if (tableName == null) {
             throw new IllegalArgumentException("Data source must be provided");
         }
-        /*
-        At the moment, when writing into some table, the table name is
-        concatenated with a special string that is necessary to write into HDFS.
-        However, a raw table name is necessary in case of JDBC. The correct table name is extracted here.
-        */
-        Matcher matcher = tableNamePattern.matcher(tableName);
-        if (matcher.matches()) {
-            context.setDataSource(matcher.group(1));
-            tableName = context.getDataSource();
-        }
+
+        tableName = context.getDataSource();
 
         columns = context.getTupleDescription();
 
         // This parameter is not required. The default value is 100
-        batchSizeIsSetByUser = context.getOption("BATCH_SIZE") != null ? true : false;
+        batchSizeIsSetByUser = context.getOption("BATCH_SIZE") != null;
         batchSize = context.getOption("BATCH_SIZE", DEFAULT_BATCH_SIZE, true);
         if (batchSize == 0) {
             batchSize = 1; // if user set to 0, it is the same as batchsize of 1
