@@ -42,6 +42,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.core.classloader.annotations.SuppressStaticInitializationFor;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.powermock.reflect.Whitebox;
+import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -60,7 +61,7 @@ import static org.mockito.Mockito.when;
         "org.greenplum.pxf.plugins.hive.utilities.HiveUtilities"}) // Prevents static inits
 public class HiveMetadataFetcherTest {
     private RequestContext requestContext;
-    private Log LOG;
+    private Logger LOG;
     private HiveConf hiveConfiguration;
     private HiveMetaStoreClient hiveClient;
     private HiveMetadataFetcher fetcher;
@@ -69,7 +70,7 @@ public class HiveMetadataFetcherTest {
 
     @Before
     public void setupCompressionFactory() throws Exception {
-        LOG = mock(Log.class);
+        LOG = mock(Logger.class);
         Whitebox.setInternalState(HiveUtilities.class, LOG);
 
         @SuppressWarnings("unchecked")
