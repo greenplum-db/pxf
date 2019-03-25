@@ -52,6 +52,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -80,6 +82,27 @@ public class HiveUtilities {
     private static final int DEFAULT_DELIMITER_CODE = 44;
 
     /**
+     * Initializes HiveConf configuration object form request configuration. Since hive-site.xml
+     * is not available on classpath due to multi-server support, it is added explicitly based
+     * on location for a given PXF configuration server
+     * @param configuration request configuration
+     * @return instance of HiveConf object
+     */
+    public static HiveConf getHiveConf(Configuration configuration) {
+        // prepare hiveConf object and explicitly add this request's hive-site.xml file to it
+        HiveConf hiveConf = new HiveConf(configuration, HiveConf.class);
+        String hiveSiteUrl = configuration.get("pxf.hive.configuration.path");
+        if (hiveSiteUrl != null) {
+            try {
+                hiveConf.addResource(new URL(hiveSiteUrl));
+            } catch (MalformedURLException e) {
+                throw new RuntimeException(
+                        String.format("Failed to add %s to hive configuration", hiveSiteUrl), e);
+            }
+        }
+        return hiveConf;
+    }
+    /**
      * Initializes the HiveMetaStoreClient
      * Uses classpath configuration files to locate the MetaStore
      *
@@ -89,6 +112,7 @@ public class HiveUtilities {
         try {
             if (UserGroupInformation.isSecurityEnabled()) {
                 LOG.debug("initialize HiveMetaStoreClient as login user '{}'", UserGroupInformation.getLoginUser().getUserName());
+                // wrap in doAs for Kerberos to propagate kerberos tokens from login Subject
                 return UserGroupInformation.getLoginUser().
                         doAs((PrivilegedExceptionAction<HiveMetaStoreClient>) () ->
                                 new HiveMetaStoreClient(hiveConf));
