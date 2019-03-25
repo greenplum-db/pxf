@@ -22,6 +22,7 @@ package org.greenplum.pxf.plugins.hive;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.Table;
@@ -64,8 +65,10 @@ public class HiveMetadataFetcher extends BasePlugin implements MetadataFetcher {
         this.configurationFactory = configurationFactory;
         initialize(context);
 
+        HiveConf hiveConf = new HiveConf(configuration, HiveConf.class);
+
         // init hive metastore client connection.
-        client = HiveUtilities.initHiveClient(configuration);
+        client = HiveUtilities.initHiveClient(hiveConf);
         jobConf = new JobConf(configuration);
     }
 

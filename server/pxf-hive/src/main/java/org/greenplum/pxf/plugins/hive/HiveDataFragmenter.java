@@ -19,8 +19,6 @@ package org.greenplum.pxf.plugins.hive;
  * under the License.
  */
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.JavaUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -51,7 +49,11 @@ import org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.greenplum.pxf.plugins.hive.utilities.ProfileFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -73,7 +75,7 @@ import java.util.TreeSet;
  * </ol>
  */
 public class HiveDataFragmenter extends HdfsDataFragmenter {
-    private static final Log LOG = LogFactory.getLog(HiveDataFragmenter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(HiveDataFragmenter.class);
     private static final short ALL_PARTS = -1;
 
     public static final String HIVE_1_PART_DELIM = "!H1PD!";
@@ -110,11 +112,20 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
     @Override
     public void initialize(RequestContext requestContext) {
         super.initialize(requestContext);
-        client = HiveUtilities.initHiveClient(configuration);
+
+        HiveConf hiveConf = new HiveConf(configuration, HiveConf.class);
+        String hiveSiteUrl = configuration.get("pxf.hive.configuration.path");
+        if (hiveSiteUrl != null) {
+            try {
+                hiveConf.addResource(new URL(hiveSiteUrl));
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            }
+        }
+
+        client = HiveUtilities.initHiveClient(hiveConf);
         // canPushDownIntegral represents hive.metastore.integral.jdo.pushdown property in hive-site.xml
-        canPushDownIntegral = HiveConf.getBoolVar(
-                new HiveConf(configuration, HiveConf.class),
-                HiveConf.ConfVars.METASTORE_INTEGER_JDO_PUSHDOWN);
+        canPushDownIntegral = HiveConf.getBoolVar(hiveConf, HiveConf.ConfVars.METASTORE_INTEGER_JDO_PUSHDOWN);
     }
 
     @Override

@@ -21,8 +21,6 @@ package org.greenplum.pxf.plugins.hive.utilities;
 
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -49,6 +47,8 @@ import org.greenplum.pxf.plugins.hive.HiveInputFormatFragmenter;
 import org.greenplum.pxf.plugins.hive.HiveInputFormatFragmenter.PXF_HIVE_INPUT_FORMATS;
 import org.greenplum.pxf.plugins.hive.HiveTablePartition;
 import org.greenplum.pxf.plugins.hive.HiveUserData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -59,13 +59,14 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Properties;
 
+
 /**
  * Class containing helper functions connecting
  * and interacting with Hive.
  */
 public class HiveUtilities {
 
-    private static final Log LOG = LogFactory.getLog(HiveUtilities.class);
+    private static final Logger LOG = LoggerFactory.getLogger(HiveUtilities.class);
     private static final String WILDCARD = "*";
 
     /**
@@ -84,14 +85,15 @@ public class HiveUtilities {
      *
      * @return initialized client
      */
-    public static HiveMetaStoreClient initHiveClient(Configuration configuration) {
+    public static HiveMetaStoreClient initHiveClient(HiveConf hiveConf) {
         try {
-            if (UserGroupInformation.isSecurityEnabled() && Utilities.isUserImpersonationEnabled()) {
+            if (UserGroupInformation.isSecurityEnabled()) {
+                LOG.debug("initialize HiveMetaStoreClient as login user '{}'", UserGroupInformation.getLoginUser().getUserName());
                 return UserGroupInformation.getLoginUser().
                         doAs((PrivilegedExceptionAction<HiveMetaStoreClient>) () ->
-                                new HiveMetaStoreClient(new HiveConf(configuration, HiveConf.class)));
+                                new HiveMetaStoreClient(hiveConf));
             } else {
-                return new HiveMetaStoreClient(new HiveConf(configuration, HiveConf.class));
+                return new HiveMetaStoreClient(hiveConf);
             }
         } catch (MetaException | InterruptedException | IOException e) {
             throw new RuntimeException("Failed connecting to Hive MetaStore service: " + e.getMessage(), e);
