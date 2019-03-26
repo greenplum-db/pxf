@@ -112,8 +112,13 @@ public enum HcfsType {
     }
 
     /**
-     * Returns a fully resolved URI including the protocol for write
+     * Returns a unique fully resolved URI including the protocol for write.
+     * The filename is generated with the transaction and segment IDs resulting
+     * in <TRANSACTION-ID>_<SEGMENT-ID>. If a COMPRESSION_CODEC is provided, the
+     * default codec extension will be appended to the name of the file.
      *
+     * @param configuration The hadoop configurations
+     * @param context       The input data parameters
      * @return an absolute data path for write
      */
     public String getUriForWrite(Configuration configuration, RequestContext context) {
