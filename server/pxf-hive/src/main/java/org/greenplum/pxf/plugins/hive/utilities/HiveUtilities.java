@@ -82,7 +82,7 @@ public class HiveUtilities {
     private static final int DEFAULT_DELIMITER_CODE = 44;
 
     /**
-     * Initializes HiveConf configuration object form request configuration. Since hive-site.xml
+     * Initializes HiveConf configuration object from request configuration. Since hive-site.xml
      * is not available on classpath due to multi-server support, it is added explicitly based
      * on location for a given PXF configuration server
      * @param configuration request configuration
