@@ -42,7 +42,7 @@ def create_pipeline():
         'pipeline_type': ARGS.pipeline_type,
         'compile_gpdb': ARGS.compile_gpdb,
         'acceptance': ARGS.acceptance,
-        'gpdb_branch': ARGS.gpdb_branch
+        'gpdb_branch': ARGS.actual_gpdb_branch
     }
 
     pipeline_yml = render_template(ARGS.template_filename, context)
@@ -56,13 +56,12 @@ def create_pipeline():
 
 
 def how_to_use_generated_pipeline_message():
-    msg = '\n'
-    msg += '======================================================================\n'
-    msg += '  Generate Pipeline type: .. : %s\n' % ARGS.pipeline_type
-    msg += '  Pipeline file ............ : %s\n' % ARGS.output_filepath
-    msg += '  Template file ............ : %s\n' % ARGS.template_filename
-    msg += '======================================================================\n\n'
-    # msg += '  Arguments     ............ : %s\n' % ARGS
+    m = '\n'
+    m += '======================================================================\n'
+    m += '  Generate Pipeline type: .. : %s\n' % ARGS.pipeline_type
+    m += '  Pipeline file ............ : %s\n' % ARGS.output_filepath
+    m += '  Template file ............ : %s\n' % ARGS.template_filename
+    m += '======================================================================\n\n'
 
     cmd = 'fly -t ' + ARGS.TARGET + ' set-pipeline \\\n'
     cmd += '    -c ' + ARGS.output_filepath + ' \\\n'
@@ -76,25 +75,26 @@ def how_to_use_generated_pipeline_message():
         if ARGS.gpdb_branch == '5X_STABLE':
             cmd += '    -l ~/workspace/gp-continuous-integration/secrets/pxf-release-5x.prod.yml \\\n'
         else:
+            # 6x and master share the same secrets at the moment
             cmd += '    -l ~/workspace/gp-continuous-integration/secrets/gpdb-6X_STABLE-release-secrets.prod.yml \\\n'
             cmd += '    -l ~/workspace/gp-continuous-integration/secrets/pxf-release-6x.prod.yml \\\n'
 
     cmd += '    -v folder-prefix=' + ARGS.PREFIX + ' -v test-env=' + ARGS.TEST_ENV + ' \\\n'
-    cmd += '    -v gpdb-branch=' + ARGS.gpdb_branch + ' \\\n'
     if ARGS.pipeline_type == 'pxf' and not ARGS.compile_gpdb:
         cmd += '    -v icw_green_bucket=' + ARGS.ICW_GREEN_BUCKET + ' \\\n'
         if ARGS.gpdb_branch == 'master':
             cmd += '    -v gcs-bucket-intermediates=pivotal-gpdb-concourse-resources-intermediates-prod \\\n'
     if ARGS.compile_gpdb:
         cmd += '    -v configure_flags=--enable-cassert -v gpaddon-git-branch=master \\\n'
+    cmd += '    -v gpdb-branch=' + ARGS.actual_gpdb_branch
     if ARGS.pipeline_name:
         cmd += '    -p ' + ARGS.pipeline_name
     else:
         cmd += '    -p ' + ARGS.PIPELINE_NAME
 
-    msg += cmd
+    m += cmd
 
-    return msg, cmd.replace('\\\n', '').split()
+    return m, cmd.replace('\\\n', '').split()
 
 
 def build_parser(output_filename):
@@ -109,13 +109,20 @@ def build_parser(output_filename):
 
     pxf_parser.add_argument('gpdb_branch',
                             action='store',
-                            help='GPDB Branch ("master", "5x")')
+                            choices=['master', '5x', '6x'],
+                            help='GPDB-compatible version ("master", "5x", "6x")')
 
     pxf_parser.add_argument('feature',
                             nargs="?",
                             action='store',
                             default="master",
                             help='PXF Branch')
+
+    # When you compile your own GPDB branch
+    pxf_parser.add_argument('-b', '--branch',
+                            action='store',
+                            dest='actual_gpdb_branch',
+                            help='GPDB branch')
 
     pxf_parser.add_argument('-T', '--template',
                             action='store',
@@ -169,12 +176,18 @@ if __name__ == "__main__":
     if ARGS.gpdb_branch == '5x':
         ARGS.gpdb_branch = '5X_STABLE'
         ARGS.ICW_GREEN_BUCKET = 'gpdb5-stable-concourse-builds'
+    elif ARGS.gpdb_branch == '6x':
+        ARGS.gpdb_branch = '6X_STABLE'
+        ARGS.ICW_GREEN_BUCKET = 'gpdb5-assert-concourse-builds'
     elif ARGS.gpdb_branch == 'master':
         ARGS.ICW_GREEN_BUCKET = 'gpdb5-assert-concourse-builds'
-    elif not ARGS.compile_gpdb:
-        sys.stderr.write('error: Only master and 5x branches are supported for GPDB.'
+    else:
+        sys.stderr.write('error: Only master, 6x and 5x branches are supported for GPDB.'
                          'Include --compile_gpdb flag if you intend to compile GPDB from a different branch.\n')
         sys.exit(1)
+
+    if not ARGS.actual_gpdb_branch:
+        ARGS.actual_gpdb_branch = ARGS.gpdb_branch
 
     if ARGS.pipeline_type == 'release' and os.path.basename(ARGS.output_filepath) == default_output_filename:
         default_output_filename = 'release_pipeline-generated.yml'
@@ -206,6 +219,9 @@ if __name__ == "__main__":
                         if 'pxf-git-branch: master' in line:
                             o.write('pxf-git-branch: ')
                             o.write(ARGS.feature)
+                        elif 'gpdb-git-branch: master' in line:
+                            o.write('gpdb-git-branch: ')
+                            o.write(ARGS.actual_gpdb_branch)
                         else:
                             o.write(line)
 
@@ -219,7 +235,9 @@ if __name__ == "__main__":
         ARGS.TARGET = 'gpdb-prod'
         if ARGS.gpdb_branch == 'master':
             ARGS.PIPELINE_NAME = 'pxf_release_master'
-        else:
+        elif ARGS.gpdb_branch == '6X_STABLE':
+            ARGS.PIPELINE_NAME = 'pxf_release_6x'
+        elif ARGS.gpdb_branch == '5X_STABLE':
             ARGS.PIPELINE_NAME = 'pxf_release_5x'
     else:
         ARGS.TARGET = 'ud'

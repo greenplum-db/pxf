@@ -18,10 +18,11 @@ fly -t ud set-pipeline \
 ```
 
 # Deploy production PXF pipelines
-The following commands would create two PXF pipelines - one for **gpdb_master** and the other for **5X_STABLE**
+The following commands would create three PXF pipelines - **gpdb_master**, **6X_STABLE** and **5X_STABLE**
 ```
 pushd ~/workspace/gp-continuous-integration && git pull && popd
 ./deploy prod master
+./deploy prod 6x
 ./deploy prod 5x
 ```
 
@@ -41,7 +42,7 @@ fly -t ud set-pipeline \
 https://github.com/pivotal/gp-continuous-integration/blob/master/README.md#pxf_release
 ```
 ./deploy prod 5x -p release
-./deploy prod master -p release
+./deploy prod 6x -p release
 ```
 
 # Deploy the performance pipelines
