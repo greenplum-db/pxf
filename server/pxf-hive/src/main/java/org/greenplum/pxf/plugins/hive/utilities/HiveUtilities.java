@@ -111,7 +111,8 @@ public class HiveUtilities {
      *
      * @return initialized client
      */
-    public static HiveMetaStoreClient initHiveClient(HiveConf hiveConf) {
+    public static HiveMetaStoreClient initHiveClient(Configuration configuration) {
+        HiveConf hiveConf = HiveUtilities.getHiveConf(configuration);
         try {
             if (UserGroupInformation.isSecurityEnabled()) {
                 LOG.debug("initialize HiveMetaStoreClient as login user '{}'", UserGroupInformation.getLoginUser().getUserName());
