@@ -76,9 +76,10 @@ public class BaseConfigurationFactory implements ConfigurationFactory {
                 LOG.debug("Adding configuration resource for server {} from {}", serverName, resourceURL);
                 configuration.addResource(resourceURL);
 
-                if ("hive-site.xml".equals(path.getFileName().toString())) {
-                    configuration.set("pxf.hive.configuration.path", resourceURL.toString());
-                }
+                // store the path to the resource in the configuration in case plugins need to access the files again
+                String fileName = path.getFileName().toString();
+
+                configuration.set(String.format("%s.%s", PXF_CONFIG_RESOURCE_PATH_PROPERTY, fileName), resourceURL.toString());
             }
         } catch (Exception e) {
             throw new RuntimeException(String.format("Unable to read configuration for server %s from %s",

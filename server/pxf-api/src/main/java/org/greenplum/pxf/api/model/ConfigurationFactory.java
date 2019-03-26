@@ -11,6 +11,7 @@ public interface ConfigurationFactory {
     File SERVERS_CONFIG_DIR = new File(
             System.getProperty(PXF_CONF_PROPERTY) + File.separator + "servers");
     String DEFAULT_SERVER_CONFIG_DIR = SERVERS_CONFIG_DIR + File.separator + "default";
+    String PXF_CONFIG_RESOURCE_PATH_PROPERTY = "pxf.config.resource.path";
 
     /**
      * Initializes a configuration object that applies server-specific configurations and

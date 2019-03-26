@@ -61,6 +61,8 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Properties;
 
+import static org.greenplum.pxf.api.model.ConfigurationFactory.PXF_CONFIG_RESOURCE_PATH_PROPERTY;
+
 
 /**
  * Class containing helper functions connecting
@@ -91,7 +93,8 @@ public class HiveUtilities {
     public static HiveConf getHiveConf(Configuration configuration) {
         // prepare hiveConf object and explicitly add this request's hive-site.xml file to it
         HiveConf hiveConf = new HiveConf(configuration, HiveConf.class);
-        String hiveSiteUrl = configuration.get("pxf.hive.configuration.path");
+
+        String hiveSiteUrl = configuration.get(String.format("%s.%s", PXF_CONFIG_RESOURCE_PATH_PROPERTY, "hive-site.xml"));
         if (hiveSiteUrl != null) {
             try {
                 hiveConf.addResource(new URL(hiveSiteUrl));
