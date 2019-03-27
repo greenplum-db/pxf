@@ -22,6 +22,7 @@ The following commands would create two PXF pipelines - one for **gpdb_master** 
 ```
 pushd ~/workspace/gp-continuous-integration && git pull && popd
 ./deploy prod master
+./deploy prod 6x
 ./deploy prod 5x
 ```
 
@@ -31,10 +32,7 @@ pushd ~/workspace/gp-continuous-integration && git pull && popd
 fly -t ud set-pipeline \
     -c ~/workspace/pxf/concourse/pipelines/pxf_pr_pipeline.yml \
     -l ~/workspace/gp-continuous-integration/secrets/gpdb-release-secrets.dev.yml \
-    -l ~/workspace/gp-continuous-integration/secrets/gpdb_master-ci-secrets.dev.yml \
-    -l ~/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
-    -v folder-prefix=dev/pivotal-default -v test-env=dev -v gpdb-git-branch=master \
-    -v icw_green_bucket=gpdb5-assert-concourse-builds -p pxf_pr
+    -p pxf_pr
 ```
 
 # Deploy the release pipeline
