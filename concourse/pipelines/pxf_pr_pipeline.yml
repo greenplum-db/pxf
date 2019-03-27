@@ -44,40 +44,6 @@ resources:
     repository: pivotaldata/gpdb-pxf-dev
     tag: centos6-hdp-server
 
-- name: gpdb6-centos6-build
-  type: docker-image
-  source:
-    repository: pivotaldata/gpdb6-centos6-build
-    tag: latest
-
-- name: libquicklz-centos6
-  type: gcs
-  source:
-    bucket: ((pivotal-gp-internal-artifacts-gcs-bucket))
-    json_key: ((gcs-key))
-    regexp: centos6/libquicklz-(\d.*)\.el6\.x86_64\.rpm
-
-- name: libquicklz-devel-centos6
-  type: gcs
-  source:
-    bucket: ((pivotal-gp-internal-artifacts-gcs-bucket))
-    json_key: ((gcs-key))
-    regexp: centos6/libquicklz-devel-(\d.*)\.el6\.x86_64\.rpm
-
-- name: libsigar-centos6
-  type: gcs
-  source:
-    bucket: ((pivotal-gp-internal-artifacts-gcs-bucket))
-    json_key: ((gcs-key))
-    regexp: centos6/sigar-rhel6_x86_64-(.*)\.targz
-
-- name: python-centos6
-  type: gcs
-  source:
-    bucket: gp-internal-artifacts
-    json_key: ((gcs-key))
-    versioned_file: centos6/python-2.7.12.tar.gz
-
 jobs:
 
 - name: compile_pxf
@@ -135,49 +101,14 @@ jobs:
     - get: gpdb_src
       passed:
       - compile_pxf
-    - get: gpdb6-centos6-build
-    - get: libquicklz-installer
-      resource: libquicklz-centos6
-    - get: libquicklz-devel-installer
-      resource: libquicklz-devel-centos6
-    - get: libsigar-installer
-      resource: libsigar-centos6
-    - get: python-tarball
-      resource: python-centos6
     - get: gpdb-pxf-dev-centos6-hdp-server
-
-  - task: sync_tools
-    file: gpdb_src/concourse/tasks/sync_tools.yml
-    image: gpdb6-centos6-build
-    params:
-      TARGET_OS: centos
-      TARGET_OS_VERSION: 6
-
-  - task: compile_gpdb
-    file: gpdb_src/concourse/tasks/compile_gpdb.yml
-    image: gpdb6-centos6-build
-    params:
-      CONFIGURE_FLAGS: {{configure_flags}}
-      TARGET_OS: centos
-      TARGET_OS_VERSION: 6
-    on_failure:
-      put: pxf_src
-      params:
-        path: pxf_src
-        status: failure
-        context: $BUILD_JOB_NAME
-    timeout: 30m
-
   - task: test_pxf
     image: gpdb-pxf-dev-centos6-hdp-server
-    input_mapping:
-      bin_gpdb: gpdb_artifacts
     config:
       platform: linux
       inputs:
       - name: gpdb_src
       - name: pxf_src
-      - name: bin_gpdb
       params:
         IMPERSONATION: true
         TARGET_OS: centos
