@@ -202,15 +202,6 @@ under the License.
             <resolver>org.greenplum.pxf.plugins.hdfs.ParquetResolver</resolver>
         </plugins>
     </profile>
-    <profile>
-        <name>Apache Ignite</name>
-        <description>A profile to read and write data from/to Apache Ignite database</description>
-        <plugins>
-            <fragmenter>org.greenplum.pxf.plugins.ignite.IgnitePartitionFragmenter</fragmenter>
-            <accessor>org.greenplum.pxf.plugins.ignite.IgniteAccessor</accessor>
-            <resolver>org.greenplum.pxf.plugins.ignite.IgniteResolver</resolver>
-        </plugins>
-    </profile>
     <!-- TEXT PROFILES -->
     <profile>
         <name>hdfs:text</name>
