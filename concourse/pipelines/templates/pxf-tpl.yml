@@ -24,7 +24,7 @@ groups:
       - test_pxf_minio
       - test_pxf_hdp_secure_no_impersonation
       - build_release_candidate_centos
-{% elif pipeline_type == "pxf" %}
+{% elif pipeline_type == "pxf" and not acceptance %}
       - promote_pxf_artifact
 {% endif %}
 
