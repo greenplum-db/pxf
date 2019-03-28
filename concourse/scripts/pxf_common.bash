@@ -42,28 +42,11 @@ function run_regression_test() {
 	su gpadmin -c "bash /home/gpadmin/run_regression_test.sh $(pwd)"
 }
 
-function build_install_gpdb() {
-    pushd gpdb_src
-        CC=$(which gcc) CXX=$(which g++) ./configure \
-        --with-perl \
-        --with-python \
-        --with-libxml \
-        --with-zstd \
-        --disable-orca \
-        --disable-gpfdist \
-        --prefix=${GPHOME}
-        make -j4 -s
-        make -s install
-    popd
-
-}
 function install_gpdb_binary() {
 
-	if [[ -d bin_gpdb ]]; then
+	if [[ ! -d ${GPHOME}/bin/psql ]]; then
 		mkdir -p ${GPHOME}
 		tar -xzf bin_gpdb/*.tar.gz -C ${GPHOME}
-	else
-	    build_install_gpdb
 	fi
 
 	if [[ ${TARGET_OS} == "centos" ]]; then

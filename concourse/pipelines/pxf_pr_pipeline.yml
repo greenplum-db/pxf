@@ -1,6 +1,11 @@
 ---
 resource_types:
 
+- name: terraform
+  type: docker-image
+  source:
+    repository: ljfranklin/terraform-resource
+
 - name: pull-request
   type: docker-image
   source:
@@ -11,14 +16,16 @@ resources:
 - name: gpdb_src
   type: git
   source:
-    branch: master
-    uri: https://github.com/greenplum-db/gpdb.git
+    branch: {{gpdb-git-branch}}
+    uri: {{gpdb-git-remote}}
 
 - name: pxf_src
   type: pull-request
   source:
     repo: greenplum-db/pxf
     access_token: {{pxf-bot-access-token}}
+    private_key: {{pxf-git-key}}
+    uri: {{pxf-git-remote}}
 
 - name: gpdb-pxf-dev-centos6
   type: docker-image
@@ -31,6 +38,19 @@ resources:
   source:
     repository: pivotaldata/gpdb-pxf-dev
     tag: centos6-hdp-server
+
+- name: centos-gpdb-build-6
+  type: docker-image
+  source:
+    repository: pivotaldata/centos-gpdb-dev
+    tag: '6-gcc6.2-llvm3.7'
+
+- name: gpaddon_src
+  type: git
+  source:
+    branch: {{gpaddon-git-branch}}
+    private_key: {{gpaddon-git-key}}
+    uri: {{gpaddon-git-remote}}
 
 jobs:
 
@@ -89,14 +109,48 @@ jobs:
     - get: gpdb_src
       passed:
       - compile_pxf
+    - get: gpaddon_src
+    - get: centos-gpdb-build-6
     - get: gpdb-pxf-dev-centos6-hdp-server
+
+  # Build the open-source GPDB code
+  - task: sync_tools
+    file: gpdb_src/concourse/tasks/sync_tools.yml
+    image: centos-gpdb-build-6
+    params:
+      IVYREPO_HOST: {{ivyrepo_host}}
+      IVYREPO_REALM: {{ivyrepo_realm}}
+      IVYREPO_USER: {{ivyrepo_user}}
+      IVYREPO_PASSWD: {{ivyrepo_passwd}}
+      TARGET_OS: centos
+      TARGET_OS_VERSION: 6
+      TASK_OS: centos
+      TASK_OS_VERSION: 6
+  - task: compile_gpdb
+    file: gpdb_src/concourse/tasks/compile_gpdb.yml
+    image: centos-gpdb-build-6
+    params:
+      TARGET_OS: centos
+      TARGET_OS_VERSION: 6
+      CONFIGURE_FLAGS: {{configure_flags}}
+    on_failure:
+      put: pxf_src
+      params:
+        path: pxf_src
+        status: failure
+        context: $BUILD_JOB_NAME
+    timeout: 30m
+
   - task: test_pxf
     image: gpdb-pxf-dev-centos6-hdp-server
+    input_mapping:
+      bin_gpdb: gpdb_artifacts
     config:
       platform: linux
       inputs:
       - name: gpdb_src
       - name: pxf_src
+      - name: bin_gpdb
       params:
         IMPERSONATION: true
         TARGET_OS: centos
@@ -105,4 +159,5 @@ jobs:
         GROUP: smoke,proxy
       run:
         path: pxf_src/concourse/scripts/test_pxf.bash
+
     timeout: 2h

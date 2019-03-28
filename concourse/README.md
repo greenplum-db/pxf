@@ -39,7 +39,9 @@ fly -t ud expose-pipeline -p pxf_5X_STABLE
 fly -t ud set-pipeline \
     -c ~/workspace/pxf/concourse/pipelines/pxf_pr_pipeline.yml \
     -l ~/workspace/gp-continuous-integration/secrets/gpdb-release-secrets.dev.yml \
-    -p pxf_pr
+    -l ~/workspace/gp-continuous-integration/secrets/gpdb_5X_STABLE-ci-secrets.yml \
+    -v folder-prefix=dev/pivotal-default -v test-env=dev -v gpdb-git-branch=5X_STABLE \
+    -v icw_green_bucket=gpdb5-assert-concourse-builds -p pxf_pr
 ```
 
 # Deploy the release pipeline
