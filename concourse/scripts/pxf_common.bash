@@ -49,7 +49,6 @@ function build_install_gpdb() {
         --with-python \
         --with-libxml \
         --with-zstd \
-        --enable-mapreduce \
         --disable-orca \
         --disable-gpfdist \
         --prefix=${GPHOME}
