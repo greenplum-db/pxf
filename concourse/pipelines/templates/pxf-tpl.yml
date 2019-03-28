@@ -104,7 +104,7 @@ resource_types:
   type: docker-image
   source:
     repository: ljfranklin/terraform-resource
-{% if gpdb_branch == 'master' %}
+{% if gpdb_branch != '5X_STABLE' %}
 
 - name: gcs
   type: docker-image
@@ -205,10 +205,10 @@ resources:
     versioned_file: {{bin_gpdb_centos_versioned_file}}
 {% elif pipeline_type == "release" %}
     bucket: {{gpdb-stable-builds-bucket-name}}
-{% if gpdb_branch == 'master' %}
-    versioned_file: release_candidates/bin_gpdb_centos6/gpdb6/debug/bin_gpdb.tar.gz
-{% else %}
+{% if gpdb_branch == '5X_STABLE' %}
     versioned_file: release_candidates/bin_gpdb_centos6/gpdb5/bin_gpdb.tar.gz
+{% else %}
+    versioned_file: release_candidates/bin_gpdb_centos6/gpdb6/debug/bin_gpdb.tar.gz
 {% endif %}
 {% elif pipeline_type == "pxf" %}
     bucket: {{icw_green_bucket}}
@@ -216,13 +216,7 @@ resources:
 {% endif %}
 
 - name: bin_gpdb_ubuntu16
-{% if gpdb_branch == 'master' %}
-  type: gcs
-  source:
-    bucket: ((gcs-bucket-intermediates))
-    json_key: ((concourse-gcs-resources-service-account-key))
-    versioned_file: gpdb_master/compiled_bits_ubuntu16/compiled_bits_ubuntu16.tar.gz
-{% else %}
+{% if gpdb_branch == '5X_STABLE' %}
   type: s3
   source:
     access_key_id: {{bucket-access-key-id}}
@@ -230,6 +224,12 @@ resources:
     region_name: {{aws-region}}
     secret_access_key: {{bucket-secret-access-key}}
     versioned_file: bin_gpdb_ubuntu16/bin_gpdb.tar.gz
+{% else %}
+  type: gcs
+  source:
+    bucket: ((gcs-bucket-intermediates))
+    json_key: ((concourse-gcs-resources-service-account-key))
+    versioned_file: gpdb_master/compiled_bits_ubuntu16/compiled_bits_ubuntu16.tar.gz
 {% endif %}
 
 - name: pxf_tarball
@@ -296,19 +296,21 @@ resources:
       bucket_path: {{tf-bucket-path}}
 
 {% if compile_gpdb %}
+{% if gpdb_branch == '5X_STABLE' %}
 - name: gpaddon_src
   type: git
   source:
-{% if gpdb_branch == 'master' %}
-    branch: master
-{% else %}
     branch: 5X_STABLE
-{% endif %}
     private_key: {{gpaddon-git-key}}
     uri: {{gpaddon-git-remote}}
 
-{% if gpdb_branch == 'master' %}
-- name: gpdb6-centos6-build
+- name: gpdb-centos6-build
+  type: docker-image
+  source:
+    repository: pivotaldata/centos-gpdb-dev
+    tag: 6-gcc6.2-llvm3.7
+{% else %}
+- name: gpdb-centos6-build
   type: docker-image
   source:
     repository: pivotaldata/gpdb6-centos6-build
@@ -341,12 +343,7 @@ resources:
     bucket: gp-internal-artifacts
     json_key: ((gcs-key))
     versioned_file: centos6/python-2.7.12.tar.gz
-{% else %}
-- name: centos-gpdb-dev-6
-  type: docker-image
-  source:
-    repository: pivotaldata/centos-gpdb-dev
-    tag: 6-gcc6.2-llvm3.7
+
 {% endif %}
 
 {% endif %}
@@ -360,9 +357,10 @@ jobs:
   plan:
   - aggregate:
     - get: gpdb_src
+    - get: gpdb-centos6-build
+{% if gpdb_branch == '5X_STABLE' %}
     - get: gpaddon_src
-  {% if gpdb_branch == 'master' %}
-    - get: gpdb6-centos6-build
+{% else %}
     - get: libquicklz-installer
       resource: libquicklz-centos6
     - get: libquicklz-devel-installer
@@ -371,32 +369,24 @@ jobs:
       resource: libsigar-centos6
     - get: python-tarball
       resource: python-centos6
-{% else %}
-    - get: centos-gpdb-dev-6
 {% endif %}
   - task: sync_tools
     file: gpdb_src/concourse/tasks/sync_tools.yml
-{% if gpdb_branch == 'master' %}
-    image: gpdb6-centos6-build
-{% else %}
-    image: centos-gpdb-dev-6
-{% endif %}
+    image: gpdb-centos6-build
     params:
+{% if gpdb_branch == '5X_STABLE' %}
       IVYREPO_HOST: {{ivyrepo_host}}
       IVYREPO_REALM: {{ivyrepo_realm}}
       IVYREPO_USER: {{ivyrepo_user}}
       IVYREPO_PASSWD: {{ivyrepo_passwd}}
+{% endif %}
       TARGET_OS: centos
       TARGET_OS_VERSION: 6
       TASK_OS: centos
       TASK_OS_VERSION: 6
   - task: compile_gpdb
     file: gpdb_src/concourse/tasks/compile_gpdb.yml
-{% if gpdb_branch == 'master' %}
-    image: gpdb6-centos6-build
-{% else %}
-    image: centos-gpdb-dev-6
-{% endif %}
+    image: gpdb-centos6-build
     params:
       CONFIGURE_FLAGS: {{configure_flags}}
       TARGET_OS: centos
