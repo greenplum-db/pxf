@@ -5,6 +5,7 @@
 # make TEST=<class>#<method> ===> run specific <method> from <class>.class
 # make OFFLINE=true ===> run using only cache
 
+UNAME_S := $(shell uname -s)
 MAVEN_TEST_OPTS+= -B -e
 
 ifneq "$(TEST)" ""
@@ -52,6 +53,11 @@ ifeq "$(JDBC_PORT)" ""
 endif
 PXF_CONF_SERVERS=~/pxf/servers
 
+SED_OPTS=-i
+ifeq ($(UNAME_S),Darwin)
+    SED_OPTS+= '""'
+endif
+
 ifeq "$(PXF_TEST_DEBUG)" "true"
 	MAVEN_DEBUG_OPTS+= -DPXF_TEST_DEBUG=$(PXF_TEST_DEBUG)
 	# Uncomment below line to remote debug pxf automation test
@@ -92,12 +98,12 @@ dev: symlink_pxf_jars
 
 sync_jdbc_config:
 	@mkdir -p $(PXF_CONF_SERVERS)/database
-	@if [ ! -f "$(PXF_CONF_SERVERS)/database/jdbc-site.xml" ]; then \
+	@if [[ ! -f "$(PXF_CONF_SERVERS)/database/jdbc-site.xml" ]]; then \
 		cp $(PXF_HOME)/templates/user/templates/jdbc-site.xml $(PXF_CONF_SERVERS)/database/; \
-		sed -i "s|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.postgresql.Driver|" $(PXF_CONF_SERVERS)/database/jdbc-site.xml; \
-		sed -i "s|YOUR_DATABASE_JDBC_URL|jdbc:postgresql://$(JDBC_HOST):$(JDBC_PORT)/pxfautomation|" $(PXF_CONF_SERVERS)/database/jdbc-site.xml; \
-		sed -i "s|YOUR_DATABASE_JDBC_USER||" $(PXF_CONF_SERVERS)/database/jdbc-site.xml; \
-		sed -i "s|YOUR_DATABASE_JDBC_PASSWORD||" $(PXF_CONF_SERVERS)/database/jdbc-site.xml; \
+		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.postgresql.Driver|" $(PXF_CONF_SERVERS)/database/jdbc-site.xml; \
+		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_URL|jdbc:postgresql://$(JDBC_HOST):$(JDBC_PORT)/pxfautomation|" $(PXF_CONF_SERVERS)/database/jdbc-site.xml; \
+		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_USER||" $(PXF_CONF_SERVERS)/database/jdbc-site.xml; \
+		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_PASSWORD||" $(PXF_CONF_SERVERS)/database/jdbc-site.xml; \
 	fi
 
 sync_cloud_configs:
@@ -109,7 +115,7 @@ ifneq "$(PROTOCOL)" ""
 		if [[ $(PROTOCOL) == s3 ]]; then \
 			if [[ "$(MINIO)" == "true" ]]; then \
 				cp $(PXF_HOME)/templates/user/templates/minio-site.xml $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
-				sed -i "s|YOUR_MINIO_URL|http://localhost:9000|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
+				sed $(SED_OPTS) "s|YOUR_MINIO_URL|http://localhost:9000|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
 			fi; \
 			mkdir -p $(PROTOCOL_HOME)-invalid; \
 			cp $(PXF_HOME)/templates/user/templates/$(PROTOCOL)-site.xml $(PROTOCOL_HOME)-invalid/; \
@@ -118,8 +124,8 @@ ifneq "$(PROTOCOL)" ""
 				rm -rf $(PROTOCOL_HOME); \
 				exit 1; \
 			fi; \
-			sed -i "s|YOUR_AWS_ACCESS_KEY_ID|$(ACCESS_KEY_ID)|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
-			sed -i "s|YOUR_AWS_SECRET_ACCESS_KEY|$(SECRET_ACCESS_KEY)|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
+			sed $(SED_OPTS) "s|YOUR_AWS_ACCESS_KEY_ID|$(ACCESS_KEY_ID)|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
+			sed $(SED_OPTS) "s|YOUR_AWS_SECRET_ACCESS_KEY|$(SECRET_ACCESS_KEY)|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
 		fi; \
 		if [[ $(PROTOCOL) == adl ]]; then \
 			if [[ -z "$(ADL_ACCOUNT)" ]] || [[ -z "$(ADL_REFRESH_URL)" ]] || [[ -z "$(ADL_CLIENT_ID)" ]] || [[ -z "$(ADL_CREDENTIAL)" ]]; then \
@@ -127,9 +133,9 @@ ifneq "$(PROTOCOL)" ""
 				rm -rf $(PROTOCOL_HOME); \
 				exit 1; \
 			fi; \
-			sed -i "s|YOUR_ADL_REFRESH_URL|$(ADL_REFRESH_URL)|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
-			sed -i "s|YOUR_ADL_CLIENT_ID|$(ADL_CLIENT_ID)|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
-			sed -i "s|YOUR_ADL_CREDENTIAL|$(ADL_CREDENTIAL)|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
+			sed $(SED_OPTS) "s|YOUR_ADL_REFRESH_URL|$(ADL_REFRESH_URL)|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
+			sed $(SED_OPTS) "s|YOUR_ADL_CLIENT_ID|$(ADL_CLIENT_ID)|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
+			sed $(SED_OPTS) "s|YOUR_ADL_CREDENTIAL|$(ADL_CREDENTIAL)|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
 		fi; \
 		if [[ $(PROTOCOL) == gs ]]; then \
 			if [[ ! -f /tmp/gsc-ci-service-account.key.json ]]; then \
@@ -137,7 +143,7 @@ ifneq "$(PROTOCOL)" ""
 				rm -rf $(PROTOCOL_HOME); \
 				exit 1; \
 			fi; \
-			sed -i "s|YOUR_GOOGLE_STORAGE_KEYFILE|/tmp/gsc-ci-service-account.key.json|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
+			sed $(SED_OPTS) "s|YOUR_GOOGLE_STORAGE_KEYFILE|/tmp/gsc-ci-service-account.key.json|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
 		fi; \
 		echo "Created $(PROTOCOL) server configuration"; \
 		if [[ $(PROTOCOL) == wasbs ]]; then \
@@ -146,8 +152,8 @@ ifneq "$(PROTOCOL)" ""
 				rm -rf $(PROTOCOL_HOME); \
 				exit 1; \
 			fi; \
-			sed -i "s|YOUR_AZURE_BLOB_STORAGE_ACCOUNT_NAME|$(WASB_ACCOUNT_NAME)|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
-			sed -i "s|YOUR_AZURE_BLOB_STORAGE_ACCOUNT_KEY|$(WASB_ACCOUNT_KEY)|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
+			sed $(SED_OPTS) "s|YOUR_AZURE_BLOB_STORAGE_ACCOUNT_NAME|$(WASB_ACCOUNT_NAME)|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
+			sed $(SED_OPTS) "s|YOUR_AZURE_BLOB_STORAGE_ACCOUNT_KEY|$(WASB_ACCOUNT_KEY)|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
 		fi; \
 		echo "Created $(PROTOCOL) server configuration"; \
 	fi
