@@ -133,7 +133,6 @@ function createInstance()
 
     # copy configuration files into instance
     cp ${tomcat_templates}/bin/setenv.sh ${instance_root}/${instance_name}/bin/setenv.sh
-    cp ${tomcat_templates}/conf/catalina.properties ${instance_root}/${instance_name}/conf/.
     cp ${tomcat_templates}/conf/logging.properties ${instance_root}/${instance_name}/conf/.
     cp ${tomcat_templates}/conf/server.xml ${instance_root}/${instance_name}/conf/.
     cp ${tomcat_templates}/conf/web.xml ${instance_root}/${instance_name}/conf/.
