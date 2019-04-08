@@ -24,7 +24,7 @@
 #### Bug Fixes:
 
 - [#126](https://github.com/greenplum-db/pxf/pull/126) PXF Port Fix. Fixes issue in PXF when setting
-  PXF_PORT and then starting PXF.
+  PXF_PORT and then starting PXF. Fixes issue [#93](https://github.com/greenplum-db/pxf/issues/93)
 
 ---
 
