@@ -23,8 +23,15 @@
     <!-- Uncomment to set session-level variables for queries to external database
     <property>
         <name>jdbc.env</name>
-        <value>YOUR_VAR_1=YOUR_VALUE_1, YOUR_VAR_2=YOUR_VALUE_2</value>
+        <value>YOUR_VAR_1=YOUR_VALUE_1,YOUR_VAR_2=YOUR_VALUE_2</value>
         <description>Session-level variables to set in external database before query execution</description>
+    </property>
+    -->
+    <!-- Uncomment to set JDBC connection information
+    <property>
+        <name>jdbc.info</name>
+        <value>YOUR_VAR_1=YOUR_VALUE_1,YOUR_VAR_2=YOUR_VALUE_2</value>
+        <description>JDBC connection information</description>
     </property>
     -->
 </configuration>

@@ -79,7 +79,7 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
         LOG.trace("Select query: {}", queryRead);
 
         // Build env query
-        String queryEnv = sqlQueryBuilder.buildEnvQuery(envs);
+        String queryEnv = sqlQueryBuilder.buildEnvQuery(sessionConfiguration);
 
         // Execute queries
         statementRead = connection.createStatement();
@@ -145,7 +145,7 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
         LOG.trace("Insert query: {}", queryWrite);
 
         // Build and execute env query
-        String queryEnv = sqlQueryBuilder.buildEnvQuery(envs);
+        String queryEnv = sqlQueryBuilder.buildEnvQuery(sessionConfiguration);
         if (queryEnv != null) {
             LOG.trace("Env query: {}", queryEnv);
             try (Statement envStatement = connection.createStatement()) {
