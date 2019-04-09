@@ -19,22 +19,23 @@ package org.greenplum.pxf.plugins.jdbc;
  * under the License.
  */
 
+import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.api.BasicFilter;
 import org.greenplum.pxf.api.FilterParser;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Properties;
 import java.util.regex.Pattern;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.stream.Collectors;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * SQL query builder.
@@ -60,6 +61,7 @@ public class SQLQueryBuilder {
         }
         databaseMetaData = metaData;
 
+        dbProduct = DbProduct.getDbProduct(databaseMetaData.getDatabaseProductName());
         columns = context.getTupleDescription();
         tableName = context.getDataSource();
 
@@ -75,8 +77,6 @@ public class SQLQueryBuilder {
      * @throws SQLException if some call of DatabaseMetaData method fails
      */
     public String buildSelectQuery() throws ParseException, SQLException {
-        DbProduct dbProduct = DbProduct.getDbProduct(databaseMetaData.getDatabaseProductName());
-
         String columnsQuery = this.columns.stream()
                 .filter(ColumnDescriptor::isProjected)
                 .map(c -> quoteString + c.columnName() + quoteString)
@@ -88,7 +88,7 @@ public class SQLQueryBuilder {
                 .append(tableName);
 
         // Insert regular WHERE constraints
-        buildWhereSQL(dbProduct, sb);
+        buildWhereSQL(sb);
 
         // Insert partition constraints
         JdbcPartitionFragmenter.buildFragmenterSql(requestContext, dbProduct, quoteString, sb);
@@ -100,10 +100,8 @@ public class SQLQueryBuilder {
      * Build INSERT query template (field values are replaced by placeholders '?')
      *
      * @return SQL query with placeholders instead of actual values
-     *
-     * @throws SQLException if some call of DatabaseMetaData method fails
      */
-    public String buildInsertQuery() throws SQLException {
+    public String buildInsertQuery() {
         StringBuilder sb = new StringBuilder();
 
         sb.append("INSERT INTO ");
@@ -132,6 +130,25 @@ public class SQLQueryBuilder {
         sb.append(")");
 
         return sb.toString();
+    }
+
+    /**
+     * Build query to set session-level variables in external database.
+     *
+     * @param envs {@link Properties} object from {@link JdbcBasePlugin}
+     *
+     * @return Complete SQL query
+     * @return null if {@link DbProduct} disallows env queries
+     *
+     * @throws SQLException
+     */
+    public String buildEnvQuery(Properties envs) throws SQLException {
+        String result = envs.entrySet().stream()
+                .map(dbProduct::buildEnvQuery)
+                .filter(StringUtils::isNotEmpty)
+                .collect(Collectors.joining(" "));
+
+        return StringUtils.isNotBlank(result) ? result : null;
     }
 
     /**
@@ -200,12 +217,11 @@ public class SQLQueryBuilder {
      * Insert WHERE constraints into a given query.
      * Note that if filter is not supported, query is left unchanged.
      *
-     * @param dbProduct Database name (affects the behaviour for DATE constraints)
      * @param query SQL query to insert constraints to. The query may may contain other WHERE statements
      *
      * @throws ParseException if filter string is invalid
      */
-    private void buildWhereSQL(DbProduct dbProduct, StringBuilder query) throws ParseException {
+    private void buildWhereSQL(StringBuilder query) throws ParseException {
         if (!requestContext.hasFilter()) {
             return;
         }
@@ -304,6 +320,7 @@ public class SQLQueryBuilder {
 
     private RequestContext requestContext;
     private DatabaseMetaData databaseMetaData;
+    private DbProduct dbProduct;
     private String quoteString;
     private List<ColumnDescriptor> columns;
     private String tableName;

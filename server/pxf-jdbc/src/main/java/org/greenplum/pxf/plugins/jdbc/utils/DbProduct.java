@@ -22,6 +22,8 @@ package org.greenplum.pxf.plugins.jdbc.utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Map.Entry;
+
 /**
  * A tool class to change PXF-JDBC plugin behaviour for certain external databases
  */
@@ -30,6 +32,11 @@ public enum DbProduct {
         @Override
         public String wrapDate(Object val){
             return "'" + val + "'";
+        }
+
+        @Override
+        public String buildEnvQuery(Entry<Object, Object> env) {
+            return String.format("SET %s %s;", env.getKey(), env.getValue());
         }
     },
 
@@ -49,6 +56,11 @@ public enum DbProduct {
         @Override
         public String wrapTimestamp(Object val) {
             return "to_timestamp('" + val + "', 'YYYY-MM-DD HH:MI:SS.FF')";
+        }
+
+        @Override
+        public String buildEnvQuery(Entry<Object, Object> env) {
+            return String.format("ALTER SESSION SET %s = %s;", env.getKey(), env.getValue());
         }
     },
 
@@ -75,6 +87,17 @@ public enum DbProduct {
      */
     public String wrapTimestamp(Object val) {
         return "'" + val + "'";
+    }
+
+    /**
+     * Produces an env set query for target database
+     *
+     * @param env {@link Map.Entry<Object, Object>} key-value pair to set
+     * @return a string with SET query terminated with a semicolon
+     * @return null if SET query is not allowed
+     */
+    public String buildEnvQuery(Entry<Object, Object> env) {
+        return String.format("SET %s = %s;", env.getKey(), env.getValue());
     }
 
     /**

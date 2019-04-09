@@ -29,8 +29,10 @@ import org.junit.Test;
 import java.sql.DatabaseMetaData;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -293,6 +295,36 @@ public class SQLQueryBuilderTest {
         SQLQueryBuilder builder = new SQLQueryBuilder(context, databaseMetaData);
         String query = builder.buildSelectQuery();
         assertEquals("SELECT id, amt FROM sales WHERE id = 1", query);
+    }
+
+    @Test
+    public void testBuildEnvQuerySingleProperty() throws Exception {
+        Properties envs = new Properties();
+        envs.setProperty("key", "value");
+
+        SQLQueryBuilder builder = new SQLQueryBuilder(context, databaseMetaData);
+        String query = builder.buildEnvQuery(envs);
+        assertEquals("SET key = value;", query);
+    }
+
+    @Test
+    public void testBuildEnvQueryMultipleProperties() throws Exception {
+        Properties envs = new Properties();
+        envs.setProperty("key1", "value1");
+        envs.setProperty("key2", "value2");
+
+        SQLQueryBuilder builder = new SQLQueryBuilder(context, databaseMetaData);
+        String query = builder.buildEnvQuery(envs);
+        assertEquals("SET key2 = value2; SET key1 = value1;", query);
+    }
+
+    @Test
+    public void testBuildEnvQueryNoProperties() throws Exception {
+        Properties envs = new Properties();
+
+        SQLQueryBuilder builder = new SQLQueryBuilder(context, databaseMetaData);
+        String query = builder.buildEnvQuery(envs);
+        assertNull(query);
     }
 
     private RequestContext context;

@@ -66,9 +66,9 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
         }
 
         Connection connection = super.getConnection();
-
-        // Build SQL query
         SQLQueryBuilder sqlQueryBuilder = new SQLQueryBuilder(context, connection.getMetaData());
+
+        // Build SELECT query
         if (quoteColumns == null) {
             sqlQueryBuilder.autoSetQuoteString();
         }
@@ -78,7 +78,15 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
         queryRead = sqlQueryBuilder.buildSelectQuery();
         LOG.trace("Select query: {}", queryRead);
 
+        // Build env query
+        String queryEnv = sqlQueryBuilder.buildEnvQuery(envs);
+
+        // Execute queries
         statementRead = connection.createStatement();
+        if (queryEnv != null) {
+            LOG.trace("Env query: {}", queryEnv);
+            statementRead.execute(queryEnv);
+        }
         resultSetRead = statementRead.executeQuery(queryRead);
 
         return true;
@@ -124,9 +132,9 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
         }
 
         Connection connection = super.getConnection();
-
-        // Build SQL query
         SQLQueryBuilder sqlQueryBuilder = new SQLQueryBuilder(context, connection.getMetaData());
+
+        // Build INSERT query
         if (quoteColumns == null) {
             sqlQueryBuilder.autoSetQuoteString();
         }
@@ -135,6 +143,15 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
         }
         queryWrite = sqlQueryBuilder.buildInsertQuery();
         LOG.trace("Insert query: {}", queryWrite);
+
+        // Build and execute env query
+        String queryEnv = sqlQueryBuilder.buildEnvQuery(envs);
+        if (queryEnv != null) {
+            LOG.trace("Env query: {}", queryEnv);
+            try (Statement envStatement = connection.createStatement()) {
+                envStatement.execute(queryEnv);
+            }
+        }
 
         statementWrite = super.getPreparedStatement(connection, queryWrite);
 

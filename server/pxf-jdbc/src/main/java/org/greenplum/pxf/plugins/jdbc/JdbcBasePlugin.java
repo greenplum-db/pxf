@@ -33,6 +33,7 @@ import java.sql.SQLException;
 import java.sql.SQLTimeoutException;
 import java.sql.Statement;
 import java.util.List;
+import java.util.Properties;
 
 /**
  * JDBC tables plugin (base class)
@@ -50,6 +51,7 @@ public class JdbcBasePlugin extends BasePlugin {
     private static final String JDBC_URL_PROPERTY_NAME = "jdbc.url";
     private static final String JDBC_USER_PROPERTY_NAME = "jdbc.user";
     private static final String JDBC_PASSWORD_PROPERTY_NAME = "jdbc.password";
+    private static final String JDBC_ENV_PROPERTY_NAME = "jdbc.env";
 
     // DDL option names
     private static final String JDBC_DRIVER_OPTION_NAME = "JDBC_DRIVER";
@@ -69,6 +71,9 @@ public class JdbcBasePlugin extends BasePlugin {
 
     // Quote columns setting set by user (three values are possible)
     protected Boolean quoteColumns = null;
+
+    // Envs (environment variables) to be set before query execution
+    protected Properties envs = new Properties();
 
     // Columns description
     protected List<ColumnDescriptor> columns = null;
@@ -116,6 +121,20 @@ public class JdbcBasePlugin extends BasePlugin {
         String quoteColumnsRaw = context.getOption("QUOTE_COLUMNS");
         if (quoteColumnsRaw != null) {
             quoteColumns = Boolean.parseBoolean(quoteColumnsRaw);
+        }
+
+        // This parameter is not required. The default value is empty map
+        String[] envsRaw = configuration.getTrimmedStrings(JDBC_ENV_PROPERTY_NAME);
+        for (String env : envsRaw) {
+            String[] envSplit = env.split("=", 2);
+            if (envSplit.length != 2) {
+                throw new IllegalArgumentException(String.format(
+                    "%s contains key-value pair '%s' that has invalid format. The correct format is 'key=value'",
+                    JDBC_ENV_PROPERTY_NAME,
+                    env
+                ));
+            }
+            envs.setProperty(envSplit[0], envSplit[1]);
         }
     }
 
