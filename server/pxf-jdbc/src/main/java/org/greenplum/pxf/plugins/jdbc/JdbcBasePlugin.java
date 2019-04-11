@@ -23,7 +23,6 @@ import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.plugins.jdbc.utils.PropertiesParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +33,7 @@ import java.sql.SQLException;
 import java.sql.SQLTimeoutException;
 import java.sql.Statement;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
@@ -53,8 +53,8 @@ public class JdbcBasePlugin extends BasePlugin {
     private static final String JDBC_URL_PROPERTY_NAME = "jdbc.url";
     private static final String JDBC_USER_PROPERTY_NAME = "jdbc.user";
     private static final String JDBC_PASSWORD_PROPERTY_NAME = "jdbc.password";
-    private static final String JDBC_ENV_PROPERTY_NAME = "jdbc.env";
-    private static final String JDBC_INFO_PROPERTY_NAME = "jdbc.info";
+    private static final String JDBC_SESSCONF_PROPERTY_PREFIX = "jdbc.session.property.";
+    private static final String JDBC_CONNCONF_PROPERTY_PREFIX = "jdbc.connection.property.";
 
     // DDL option names
     private static final String JDBC_DRIVER_OPTION_NAME = "JDBC_DRIVER";
@@ -79,7 +79,7 @@ public class JdbcBasePlugin extends BasePlugin {
     protected Properties sessionConfiguration = new Properties();
 
     // Properties object to pass to JDBC Driver when connection is created
-    protected Properties info = new Properties();
+    protected Properties connectionConfiguration = new Properties();
 
     // Columns description
     protected List<ColumnDescriptor> columns = null;
@@ -100,7 +100,7 @@ public class JdbcBasePlugin extends BasePlugin {
         // authentication information is not required
         String userRaw = configuration.get(JDBC_USER_PROPERTY_NAME);
         if (userRaw != null) {
-            info.setProperty("user", userRaw);
+            connectionConfiguration.setProperty("user", userRaw);
             jdbcPassword = retrievePassword();
         }
 
@@ -131,22 +131,18 @@ public class JdbcBasePlugin extends BasePlugin {
         }
 
         // This parameter is not required. The default value is empty map
-        String sessionConfigurationRaw = configuration.get(JDBC_ENV_PROPERTY_NAME);
-        if (sessionConfigurationRaw != null) {
-            sessionConfiguration.putAll(PropertiesParser.parse(sessionConfigurationRaw));
-            LOG.debug(String.format(
-                "Session configuration: %s",
-                sessionConfiguration.entrySet().stream()
-                        .map(entry -> "'" + entry.getKey().toString() + "'='" + entry.getValue() + "'")
-                        .collect(Collectors.joining(", "))
-            ));
-        }
+        Map<String, String> sessionConfigurationRaw = configuration.getPropsWithPrefix(JDBC_SESSCONF_PROPERTY_PREFIX);
+        sessionConfiguration.putAll(sessionConfigurationRaw);
+        LOG.debug("Session configuration: {}",
+            sessionConfiguration.entrySet().stream()
+                    .map(entry -> "'" + entry.getKey().toString() + "'='" + entry.getValue() + "'")
+                    .collect(Collectors.joining(", "))
+        );
 
         // This parameter is not required. The default value is empty map
-        String infoRaw = configuration.get(JDBC_INFO_PROPERTY_NAME);
-        if (infoRaw != null) {
-            info.putAll(PropertiesParser.parse(infoRaw));
-        }
+        Map<String, String> connectionConfigurationRaw = configuration.getPropsWithPrefix(JDBC_CONNCONF_PROPERTY_PREFIX);
+        connectionConfiguration.putAll(connectionConfigurationRaw);
+        // We do not output connection configuration here; this will be done later, when connection is created
     }
 
     /**
@@ -159,30 +155,27 @@ public class JdbcBasePlugin extends BasePlugin {
      */
     public Connection getConnection() throws ClassNotFoundException, SQLException {
         if (LOG.isDebugEnabled()) {
-            LOG.debug(String.format(
-                "New JDBC connection. Driver: '%s'; URL: '%s'",
-                jdbcDriver, jdbcUrl
-            ));
-            LOG.debug(String.format(
-                "JDBC connection info: %s",
-                info.entrySet().stream()
+            LOG.debug("New JDBC connection. URL: '{}'; Driver: '{}'; Table: '{}'",
+                jdbcUrl, jdbcDriver, tableName
+            );
+            LOG.debug("JDBC connection properties: {}",
+                connectionConfiguration.entrySet().stream()
                         .map(entry -> "'" + entry.getKey().toString() + "'='" + entry.getValue() + "'")
                         .collect(Collectors.joining(", "))
-            ));
+            );
             if (jdbcPassword != null) {
-                LOG.debug(String.format(
-                    "JDBC connection has password set: '%s'",
+                LOG.debug("JDBC connection has password set: '{}'",
                     maskPassword(jdbcPassword)
-                ));
+                );
             }
         }
 
         if (jdbcPassword != null) {
-            info.setProperty("password", jdbcPassword);
+            connectionConfiguration.setProperty("password", jdbcPassword);
         }
 
         Class.forName(jdbcDriver);
-        return DriverManager.getConnection(jdbcUrl, info);
+        return DriverManager.getConnection(jdbcUrl, connectionConfiguration);
     }
 
     /**
