@@ -3,5 +3,11 @@
     <property>
         <name>hive.metastore.uris</name>
         <value>thrift://localhost:9083</value>
+        <description>URI for client to contact metastore server</description>
+    </property>
+    <property>
+        <name>hive.metastore.integral.jdo.pushdown</name>
+        <value>true</value>
+        <description> Allow query pushdown for integral partition columns in metastore.  This improves metastore perf for integral columns, especially if there's a large number of partitions</description>
     </property>
 </configuration>

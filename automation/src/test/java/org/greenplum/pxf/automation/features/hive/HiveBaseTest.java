@@ -87,6 +87,11 @@ public class HiveBaseTest extends BaseFeature {
             "num1  INT",
             "d1    DOUBLE"
     };
+    // Hive Table columns for Predicate pushdown test on partitioned hive table
+    static final String[] HIVE_SMALLDATA_PPD_COLS = {
+            "s1    STRING",
+            "d1    DOUBLE",
+    };
     static final String[] PXF_HIVE_SMALLDATA_COLS = {
             "t1    TEXT",
             "t2    TEXT",
@@ -107,6 +112,13 @@ public class HiveBaseTest extends BaseFeature {
             "dub1  DOUBLE PRECISION",
             "fmt   TEXT",
             "prt   TEXT"
+    };
+    // PXF Table columns for Predicate pushdown test on partitioned hive table
+    static final String[] PXF_HIVE_SMALLDATA_PPD_COLS = {
+            "s1    TEXT",
+            "d1    DOUBLE PRECISION",
+            "s2    TEXT",
+            "n1  INTEGER"
     };
     static final String[] PXF_HIVE_COLLECTION_COLS = {
             "t1    TEXT",
@@ -134,6 +146,11 @@ public class HiveBaseTest extends BaseFeature {
             "fmt   STRING",
             "prt   STRING"
     };
+    // Hive table partition columns for Predicate pushdown test
+    static final String[] HIVE_PARTITION_PPD_COLS = {
+            "s2     STRING",
+            "n1   INT"
+    };
 
     static final String HIVE_TYPES_DATA_FILE_NAME = "hive_types.txt";
     static final String HIVE_COLLECTIONS_FILE_NAME = "hive_collections.txt";
@@ -153,11 +170,13 @@ public class HiveBaseTest extends BaseFeature {
     static final String HIVE_PARQUET_TABLE = "hive_parquet_table";
     static final String HIVE_SEQUENCE_TABLE = "hive_sequence_table";
     static final String HIVE_PARTITIONED_TABLE = "hive_partitioned_table";
+    static final String HIVE_PARTITIONED_PPD_TABLE = "hive_partitioned_ppd_table";
     static final String HIVE_REG_HETEROGEN_TABLE = "reg_heterogen";
     static final String PXF_HIVE_SMALL_DATA_TABLE = "pxf_hive_small_data";
     static final String PXF_HIVE_COLLECTIONS_TABLE = "pxf_hive_collections";
     static final String PXF_HIVE_BINARY_TABLE = "pxf_hive_binary";
     static final String PXF_HIVE_PARTITIONED_TABLE = "pxf_hive_partitioned_table";
+    static final String PXF_HIVE_PARTITIONED_PPD_TABLE = "pxf_hive_partitioned_ppd_table";
     static final String PXF_HIVE_TEXT_TABLE = "pxf_hive_text";
     static final String PXF_HIVE_ORC_TABLE = "pxf_hive_orc_types";
     static final String PXF_HIVE_ORC_ZLIB_TABLE = "pxf_hive_orc_zlib";

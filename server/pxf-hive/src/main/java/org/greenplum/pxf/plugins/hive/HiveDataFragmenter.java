@@ -19,6 +19,7 @@ package org.greenplum.pxf.plugins.hive;
  * under the License.
  */
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.JavaUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -28,23 +29,18 @@ import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
-import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.TextInputFormat;
-import org.greenplum.pxf.api.BasicFilter;
-import org.greenplum.pxf.api.FilterParser;
-import org.greenplum.pxf.api.LogicalFilter;
 import org.greenplum.pxf.api.model.BaseConfigurationFactory;
 import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.FragmentStats;
 import org.greenplum.pxf.api.model.Metadata;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
@@ -52,8 +48,6 @@ import org.greenplum.pxf.plugins.hive.utilities.ProfileFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -82,15 +76,8 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
     public static final String HIVE_PARTITIONS_DELIM = "!HPAD!";
     public static final String HIVE_NO_PART_TBL = "!HNPT!";
 
-    private static final String HIVE_API_EQ = " = ";
-    private static final String HIVE_API_LT = " < ";
-    private static final String HIVE_API_GT = " > ";
-    private static final String HIVE_API_LTE = " <= ";
-    private static final String HIVE_API_GTE = " >= ";
-    private static final String HIVE_API_NE = " != ";
-    private static final String HIVE_API_DQUOTE = "\"";
-
     private HiveMetaStoreClient client;
+    private HiveFilterBuilder filterBuilder;
 
     protected boolean filterInFragmenter = false;
 
@@ -99,14 +86,14 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
     private Set<String> setPartitions = new TreeSet<String>(
             String.CASE_INSENSITIVE_ORDER);
     private Map<String, String> partitionkeyTypes = new HashMap<>();
-    private boolean canPushDownIntegral;
 
     public HiveDataFragmenter() {
-        this(BaseConfigurationFactory.getInstance());
+        this(BaseConfigurationFactory.getInstance(), new HiveFilterBuilder());
     }
 
-    HiveDataFragmenter(ConfigurationFactory configurationFactory) {
+    HiveDataFragmenter(ConfigurationFactory configurationFactory, HiveFilterBuilder filterBuilder) {
         this.configurationFactory = configurationFactory;
+        this.filterBuilder = filterBuilder;
     }
 
     @Override
@@ -115,8 +102,9 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
 
         client = HiveUtilities.initHiveClient(configuration);
         // canPushDownIntegral represents hive.metastore.integral.jdo.pushdown property in hive-site.xml
-        canPushDownIntegral = configuration.getBoolean(HiveConf.ConfVars.METASTORE_INTEGER_JDO_PUSHDOWN.varname,
-                false);
+        filterBuilder.setColumnDescriptors(requestContext.getTupleDescription());
+        filterBuilder.setCanPushdownIntegral(configuration.getBoolean(HiveConf.ConfVars.METASTORE_INTEGER_JDO_PUSHDOWN.varname,
+                false));
     }
 
     @Override
@@ -178,14 +166,14 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
                 partitionkeyTypes.put(fs.getName(), fs.getType());
             }
 
-            LOG.debug("setPartitions :" + setPartitions);
+            LOG.debug("setPartitions: {}", setPartitions);
 
-            // Generate filter string for retrieve match pxf filter/hive
-            // partition name
-            filterStringForHive = buildFilterStringForHive();
+            // Generate filter string for retrieve match pxf filter/hive partition name
+            filterBuilder.setPartitionKeys(partitionkeyTypes);
+            filterStringForHive = filterBuilder.buildFilterStringForHive(context.getFilterString());
         }
 
-        if (!filterStringForHive.isEmpty()) {
+        if (StringUtils.isNotBlank(filterStringForHive)) {
 
             LOG.debug("Filter String for Hive partition retrieval : "
                     + filterStringForHive);
@@ -319,155 +307,6 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
         }
     }
 
-    /*
-     * Build filter string for HiveMetaStoreClient.listPartitionsByFilter API
-     * method.
-     *
-     * The filter string parameter for
-     * HiveMetaStoreClient.listPartitionsByFilter will be created from the
-     * incoming getFragments filter string parameter. It will be in a format of:
-     * [PARTITON1 NAME] = \"[PARTITON1 VALUE]\" AND [PARTITON2 NAME] =
-     * \"[PARTITON2 VALUE]\" ... Filtering can be done only on string partition
-     * keys and AND operators.
-     *
-     * For Example for query: SELECT * FROM TABLE1 WHERE part1 = 'AAAA' AND
-     * part2 = '1111' For HIVE HiveMetaStoreClient.listPartitionsByFilter, the
-     * incoming GPDB filter string will be mapped into :
-     * "part1 = \"AAAA\" and part2 = \"1111\""
-     */
-    private String buildFilterStringForHive() throws Exception {
-
-        StringBuilder filtersString = new StringBuilder();
-        String filterInput = context.getFilterString();
-
-        if (LOG.isDebugEnabled()) {
-
-            for (ColumnDescriptor cd : context.getTupleDescription()) {
-                LOG.debug("ColumnDescriptor : " + cd);
-            }
-
-            LOG.debug("Filter string input : " + context.getFilterString());
-        }
-
-        HiveFilterBuilder eval = new HiveFilterBuilder(context);
-        Object filter = eval.getFilterObject(filterInput);
-
-        if (filter instanceof LogicalFilter) {
-            buildCompoundFilter((LogicalFilter) filter, filtersString);
-        } else {
-            buildSingleFilter(filter, filtersString, "");
-        }
-
-        return filtersString.toString();
-    }
-
-    private void buildCompoundFilter(LogicalFilter filter, StringBuilder filterString) throws Exception {
-        String prefix;
-        switch (filter.getOperator()) {
-            case HDOP_AND:
-                prefix = " and ";
-                break;
-            case HDOP_OR:
-                prefix = " or ";
-                break;
-            case HDOP_NOT:
-                prefix = " not ";
-                break;
-            default:
-                prefix = "";
-        }
-
-        for (Object f : filter.getFilterList()) {
-            if (f instanceof LogicalFilter) {
-                buildCompoundFilter((LogicalFilter) f, filterString);
-            } else {
-                buildSingleFilter(f, filterString, prefix);
-            }
-        }
-    }
-
-    /*
-     * Build filter string for a single filter and append to the filters string.
-     * Filter string shell be added if filter name match hive partition name
-     * Single filter will be in a format of: [PARTITON NAME] = \"[PARTITON
-     * VALUE]\"
-     */
-    private boolean buildSingleFilter(Object filter,
-                                      StringBuilder filtersString, String prefix)
-            throws Exception {
-
-        // Let's look first at the filter
-        BasicFilter bFilter = (BasicFilter) filter;
-
-        // Extract column name and value
-        int filterColumnIndex = bFilter.getColumn().index();
-        // Avoids NullPointerException in case of operations like HDOP_IS_NULL,
-        // HDOP_IS_NOT_NULL where no constant value is passed as part of query
-        String filterValue = bFilter.getConstant() != null ? bFilter.getConstant().constant().toString() : "";
-        ColumnDescriptor filterColumn = context.getColumn(filterColumnIndex);
-        String filterColumnName = filterColumn.columnName();
-        FilterParser.Operation operation = ((BasicFilter) filter).getOperation();
-        String colType = partitionkeyTypes.get(filterColumnName);
-        boolean isIntegralSupported =
-                canPushDownIntegral &&
-                        (operation == FilterParser.Operation.HDOP_EQ || operation == FilterParser.Operation.HDOP_NE);
-        // In case this filter is not a partition, we ignore this filter (no add
-        // to filter list)
-        if (!setPartitions.contains(filterColumnName)) {
-            LOG.debug("Filter name is not a partition , ignore this filter for hive: "
-                    + filter);
-            return false;
-        }
-
-        /*
-         * HAWQ-1527 - Filtering only supported for partition columns of type string or
-         * intgeral datatype. Integral datatypes include - TINYINT, SMALLINT, INT, BIGINT.
-         * Note that with integral data types only equals("=") and not equals("!=") operators
-         * are supported. There are no operator restrictions with String.
-         */
-        if (!colType.equalsIgnoreCase(serdeConstants.STRING_TYPE_NAME)
-                && (!isIntegralSupported || !serdeConstants.IntegralTypes.contains(colType))) {
-            LOG.debug("Column type is neither string nor an integral data type, ignore this filter for hive: "
-                    + filter);
-            return false;
-        }
-
-        if (filtersString.length() != 0)
-            filtersString.append(prefix);
-        filtersString.append(filterColumnName);
-
-        switch (operation) {
-            case HDOP_EQ:
-                filtersString.append(HIVE_API_EQ);
-                break;
-            case HDOP_LT:
-                filtersString.append(HIVE_API_LT);
-                break;
-            case HDOP_GT:
-                filtersString.append(HIVE_API_GT);
-                break;
-            case HDOP_LE:
-                filtersString.append(HIVE_API_LTE);
-                break;
-            case HDOP_GE:
-                filtersString.append(HIVE_API_GTE);
-                break;
-            case HDOP_NE:
-                filtersString.append(HIVE_API_NE);
-                break;
-            default:
-                // Set filter string to blank in case of unimplemented operations
-                filtersString.setLength(0);
-                return false;
-        }
-
-        filtersString.append(HIVE_API_DQUOTE);
-        filtersString.append(filterValue);
-        filtersString.append(HIVE_API_DQUOTE);
-
-        return true;
-    }
-
     /**
      * Returns statistics for Hive table. Currently it's not implemented.
      */
@@ -483,4 +322,5 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
         long firstFragmentSize = totalSize / split_count;
         return new FragmentStats(split_count, firstFragmentSize, totalSize);
     }
+
 }

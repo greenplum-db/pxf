@@ -225,13 +225,8 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
             return true;
         }
 
-        if (filterInFragmenter) {
-            LOG.debug("filtering was done in fragmenter");
-            return true;
-        }
-
         String filterStr = context.getFilterString();
-        HiveFilterBuilder eval = new HiveFilterBuilder(context);
+        HiveFilterBuilder eval = new HiveFilterBuilder();
         Object filter = eval.getFilterObject(filterStr);
 
         boolean returnData = isFiltered(partitions, filter);

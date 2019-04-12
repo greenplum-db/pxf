@@ -122,7 +122,7 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
 
         /* Predicate pushdown configuration */
         String filterStr = context.getFilterString();
-        HiveFilterBuilder eval = new HiveFilterBuilder(context);
+        HiveFilterBuilder eval = new HiveFilterBuilder();
         Object filter = eval.getFilterObject(filterStr);
         SearchArgument.Builder filterBuilder = SearchArgumentFactory.newBuilder();
 

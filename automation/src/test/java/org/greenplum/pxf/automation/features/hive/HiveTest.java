@@ -333,6 +333,58 @@ public class HiveTest extends HiveBaseTest {
     }
 
     /**
+     * Test predicate pushdown(ppd) functionality on Hive table partitioned by string and integer columns
+     *
+     * @throws Exception if test fails to run
+     */
+    @Test(groups = { "hive", "features", "gpdb" })
+    public void hivePartitionedPPDTable() throws Exception {
+
+        HiveExternalTable hivePartitionedPPDTable = TableFactory.getHiveByRowCommaExternalTable(HIVE_PARTITIONED_PPD_TABLE, HIVE_SMALLDATA_PPD_COLS);
+        hivePartitionedPPDTable.setPartitionedBy(HIVE_PARTITION_PPD_COLS);
+        hive.createTableAndVerify(hivePartitionedPPDTable);
+
+        hive.runQuery("SET hive.exec.dynamic.partition = true");
+        hive.runQuery("SET hive.exec.dynamic.partition.mode = nonstrict");
+        hive.insertDataToPartition(hiveSmallDataTable, hivePartitionedPPDTable,
+                new String[] { "s2, n1" }, new String[] { "s1", "d1", "s2", "n1" });
+
+        // Create PXF Table using Hive profile
+        createExternalTable(PXF_HIVE_PARTITIONED_PPD_TABLE,
+                PXF_HIVE_SMALLDATA_PPD_COLS, hivePartitionedPPDTable);
+
+        runTincTest("pxf.features.hive.hive_partitioned_ppd_table.runTest");
+    }
+
+    /**
+     * Test predicate pushdown(ppd) functionality on partitioned Hive table with custom filter
+     *
+     * @throws Exception if test fails to run
+     */
+    @Test(groups = { "hive", "features", "gpdb" })
+    public void hivePartitionedPPDTableCustomFilters() throws Exception {
+
+        HiveExternalTable hivePartitionedPPDTable = TableFactory.getHiveByRowCommaExternalTable(HIVE_PARTITIONED_PPD_TABLE, HIVE_SMALLDATA_PPD_COLS);
+        hivePartitionedPPDTable.setPartitionedBy(HIVE_PARTITION_PPD_COLS);
+        hive.createTableAndVerify(hivePartitionedPPDTable);
+
+        hive.runQuery("SET hive.exec.dynamic.partition = true");
+        hive.runQuery("SET hive.exec.dynamic.partition.mode = nonstrict");
+        hive.insertDataToPartition(hiveSmallDataTable, hivePartitionedPPDTable,
+                new String[]{"s2, n1"}, new String[]{"s1", "d1", "s2", "n1"});
+
+        // Create GPDB table without using profiles
+        exTable = TableFactory.getPxfHiveReadableTable(PXF_HIVE_PARTITIONED_PPD_TABLE + "_customfilters",
+                PXF_HIVE_SMALLDATA_PPD_COLS, hivePartitionedPPDTable, false);
+
+        String filterString = "a0c25s4drow1o7a3c23s3d999o1l0a2c25s4ds_14o5l0";
+        exTable.setUserParameters(hiveTestFilter(filterString));
+        exTable.setFragmenter(TEST_PACKAGE + "HiveDataFragmenterWithFilter");
+        createTable(exTable);
+        runTincTest("pxf.features.hive.hive_partitioned_ppd_table_customfilters.runTest");
+    }
+
+    /**
      * check default analyze results for pxf external table is as required
      * (pages=1000 tuples=1000000)
      *

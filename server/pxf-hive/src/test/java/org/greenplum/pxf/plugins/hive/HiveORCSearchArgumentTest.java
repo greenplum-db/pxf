@@ -37,7 +37,7 @@ public class HiveORCSearchArgumentTest {
 
         /* Predicate pushdown configuration */
         String filterStr = "a2c23s1d1o2a3c23s1d3o3l0a4c23s1d5o1l1";
-        HiveFilterBuilder eval = new HiveFilterBuilder(null);
+        HiveFilterBuilder eval = new HiveFilterBuilder();
         Object filter = eval.getFilterObject(filterStr);
 
         SearchArgument.Builder filterBuilder = SearchArgumentFactory.newBuilder();
@@ -49,7 +49,7 @@ public class HiveORCSearchArgumentTest {
     @Test
     public void buildIn() throws Exception {
         String filterStr = "a0m1009s4drow1s4drow2o10a1m1009s3ds_6s3ds_7o10l0";
-        HiveFilterBuilder eval = new HiveFilterBuilder(null);
+        HiveFilterBuilder eval = new HiveFilterBuilder();
         Object filter = eval.getFilterObject(filterStr);
 
         SearchArgument.Builder filterBuilder = SearchArgumentFactory.newBuilder();

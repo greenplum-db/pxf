@@ -20,14 +20,18 @@ package org.greenplum.pxf.plugins.hive;
  */
 
 
+import org.apache.hadoop.hive.serde.serdeConstants;
 import org.greenplum.pxf.api.BasicFilter;
 import org.greenplum.pxf.api.FilterParser;
 import org.greenplum.pxf.api.LogicalFilter;
-import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Uses the filter parser code to build a filter object, either simple - a
@@ -38,16 +42,20 @@ import java.util.List;
  * partition filtering.
  */
 public class HiveFilterBuilder implements FilterParser.FilterBuilder {
-    private RequestContext requestContext;
 
-    /**
-     * Constructs a HiveFilterBuilder object.
-     *
-     * @param input input data containing filter string
-     */
-    public HiveFilterBuilder(RequestContext input) {
-        requestContext = input;
-    }
+    private static final Logger LOG = LoggerFactory.getLogger(HiveFilterBuilder.class);
+
+    private List<ColumnDescriptor> columnDescriptors;
+    private boolean canPushdownIntegral;
+    private Map<String, String> partitionKeys;
+
+    private static final String HIVE_API_EQ = " = ";
+    private static final String HIVE_API_LT = " < ";
+    private static final String HIVE_API_GT = " > ";
+    private static final String HIVE_API_LTE = " <= ";
+    private static final String HIVE_API_GTE = " >= ";
+    private static final String HIVE_API_NE = " != ";
+    private static final String HIVE_API_DQUOTE = "\"";
 
     /**
      * Translates a filterString into a {@link BasicFilter} or a
@@ -107,6 +115,177 @@ public class HiveFilterBuilder implements FilterParser.FilterBuilder {
     }
 
     /*
+     * Build filter string for HiveMetaStoreClient.listPartitionsByFilter API
+     * method.
+     *
+     * The filter string parameter for
+     * HiveMetaStoreClient.listPartitionsByFilter will be created from the
+     * incoming getFragments filter string parameter. It will be in a format of:
+     * [PARTITON1 NAME] = \"[PARTITON1 VALUE]\" AND [PARTITON2 NAME] =
+     * \"[PARTITON2 VALUE]\" ... Filtering can be done only on string partition
+     * keys. Integral partition keys are supported only if its enabled in Hive and PXF.
+     *
+     * For Example for query: SELECT * FROM TABLE1 WHERE part1 = 'AAAA' AND
+     * part2 = '1111' For HIVE HiveMetaStoreClient.listPartitionsByFilter, the
+     * incoming GPDB filter string will be mapped into :
+     * "part1 = \"AAAA\" and part2 = \"1111\""
+     *
+     * Say P is a conforming predicate based on partition column and supported comparison operator
+     * NP is a non conforming predicate based on either a non-partition column or an unsupported operator.
+     * The following rule will be used during filter processing
+     * P <op> P -> P <op> P (op can be any logical operator)
+     * P AND NP -> P
+     * P OR NP -> null
+     * NP <op> NP -> null
+     */
+    public String buildFilterStringForHive(String filterInput) throws Exception {
+
+        String filterString;
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Filter string input : " + filterInput);
+        }
+
+        HiveFilterBuilder eval = new HiveFilterBuilder();
+        Object filter = eval.getFilterObject(filterInput);
+
+        if (filter instanceof LogicalFilter) {
+            filterString = buildCompoundFilter((LogicalFilter) filter);
+        } else {
+            filterString = buildSingleFilter(filter, null);
+        }
+
+        return filterString;
+    }
+
+    private String buildCompoundFilter(LogicalFilter filter) throws Exception {
+        String logicalOperator;
+        switch (filter.getOperator()) {
+            case HDOP_AND:
+                logicalOperator = " and ";
+                break;
+            case HDOP_OR:
+                logicalOperator = " or ";
+                break;
+            case HDOP_NOT:
+                logicalOperator = " not ";
+                break;
+            default:
+                logicalOperator = "";
+        }
+
+        StringBuilder filterString = new StringBuilder();
+        String serializedFilter;
+        for (Object f : filter.getFilterList()) {
+            if (f instanceof LogicalFilter) {
+                serializedFilter = buildCompoundFilter((LogicalFilter) f);
+            } else {
+                serializedFilter = buildSingleFilter(f, filter.getOperator());
+            }
+            if (serializedFilter != null) {
+                if (filterString.length() > 0) {
+                    filterString.append(logicalOperator);
+                }
+                filterString.append(serializedFilter);
+            } else if(filter.getOperator() == FilterParser.LogicalOperation.HDOP_OR) {
+                // Case when one of the predicates is non-compliant and with OR operator
+                // P OR NP -> null
+                return null;
+            }
+        }
+
+        if(filterString.length() > 0) {
+            return String.format("(%s)", filterString.toString());
+        } else {
+            return null;
+        }
+    }
+
+    private boolean isFilterCompatible(String filterColumnName, FilterParser.Operation operation, FilterParser.LogicalOperation logicalOperation) {
+
+        String colType = partitionKeys.get(filterColumnName);
+        boolean isPartitionColumn = colType != null;
+
+        boolean isIntegralSupported =
+                canPushdownIntegral &&
+                        (operation == FilterParser.Operation.HDOP_EQ || operation == FilterParser.Operation.HDOP_NE);
+
+        boolean canPushDown = isPartitionColumn && (
+                colType.equalsIgnoreCase(serdeConstants.STRING_TYPE_NAME) ||
+                        isIntegralSupported && serdeConstants.IntegralTypes.contains(colType)
+        );
+
+        if (!canPushDown) {
+            if (logicalOperation != null && logicalOperation == FilterParser.LogicalOperation.HDOP_OR) {
+                return false;
+            } else { // AND and NOT logical operators
+                LOG.trace("Filter is on a non-partition column or on a partition column that is not supported for pushdown, ignore this filter for column: {}", filterColumnName);
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /*
+     * Build filter string for a single filter and append to the filters string.
+     * Filter string shell be added if filter name match hive partition name
+     * Single filter will be in a format of: [PARTITON NAME] = \"[PARTITON
+     * VALUE]\"
+     */
+    private String buildSingleFilter(Object filter, FilterParser.LogicalOperation logicalOperation) {
+
+        // Let's look first at the filter
+        BasicFilter bFilter = (BasicFilter) filter;
+
+        // Extract column name and value
+        int filterColumnIndex = bFilter.getColumn().index();
+        // Avoids NullPointerException in case of operations like HDOP_IS_NULL,
+        // HDOP_IS_NOT_NULL where no constant value is passed as part of query
+        String filterValue = bFilter.getConstant() != null ? bFilter.getConstant().constant().toString() : "";
+        ColumnDescriptor filterColumn = columnDescriptors.get(filterColumnIndex);
+        String filterColumnName = filterColumn.columnName();
+        FilterParser.Operation operation = ((BasicFilter) filter).getOperation();
+
+        // if filter is determined to be not being able to be pushed down, but not violating logical correctness,
+        // we just skip it and return null
+        if (!isFilterCompatible(filterColumnName, operation, logicalOperation)) {
+            return null;
+        }
+
+        StringBuilder result = new StringBuilder(filterColumnName);
+        switch (operation) {
+            case HDOP_EQ:
+                result.append(HIVE_API_EQ);
+                break;
+            case HDOP_LT:
+                result.append(HIVE_API_LT);
+                break;
+            case HDOP_GT:
+                result.append(HIVE_API_GT);
+                break;
+            case HDOP_LE:
+                result.append(HIVE_API_LTE);
+                break;
+            case HDOP_GE:
+                result.append(HIVE_API_GTE);
+                break;
+            case HDOP_NE:
+                result.append(HIVE_API_NE);
+                break;
+            default:
+                // Set filter string to blank in case of unimplemented operations
+                result.setLength(0);
+                return null;
+        }
+
+        result.append(HIVE_API_DQUOTE);
+        result.append(filterValue);
+        result.append(HIVE_API_DQUOTE);
+
+        return result.toString();
+    }
+
+    /*
      * Handles simple column-operator-constant expressions Creates a special
      * filter in the case the column is the row key column
      */
@@ -160,5 +339,17 @@ public class HiveFilterBuilder implements FilterParser.FilterBuilder {
 
     private Object handleLogicalOperation(FilterParser.LogicalOperation operator, Object filter) {
         return new LogicalFilter(operator, Arrays.asList(filter));
+    }
+
+    public void setColumnDescriptors(List<ColumnDescriptor> columnDescriptors) {
+        this.columnDescriptors = columnDescriptors;
+    }
+
+    public void setCanPushdownIntegral(boolean canPushdownIntegral) {
+        this.canPushdownIntegral = canPushdownIntegral;
+    }
+
+    public void setPartitionKeys(Map <String, String> partitionKeys) {
+        this.partitionKeys = partitionKeys;
     }
 }
