@@ -19,10 +19,6 @@ package org.greenplum.pxf.service.rest;
  * under the License.
  */
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.FragmentStats;
 import org.greenplum.pxf.api.model.Fragmenter;
@@ -33,9 +29,6 @@ import org.greenplum.pxf.api.utilities.FragmentsResponseFormatter;
 import org.greenplum.pxf.service.HttpRequestParser;
 import org.greenplum.pxf.service.RequestParser;
 import org.greenplum.pxf.service.SessionId;
-import org.greenplum.pxf.service.utilities.AnalyzeUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletContext;
 import javax.ws.rs.GET;
@@ -48,7 +41,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Class enhances the API of the WEBHDFS REST server. Returns the data fragments
@@ -62,19 +54,6 @@ import java.util.concurrent.TimeUnit;
 public class FragmenterResource extends BaseResource {
 
     private FragmenterFactory fragmenterFactory;
-    private static final Cache<String, List<Fragment>> fragmentCache = CacheBuilder.newBuilder()
-            .expireAfterAccess(10, TimeUnit.SECONDS)
-            .removalListener(new RemovalListener<String, List<Fragment>>() {
-
-                private final Logger LOG = LoggerFactory.getLogger(this.getClass());
-
-                @Override
-                public void onRemoval(RemovalNotification<String, List<Fragment>> notification) {
-                    LOG.debug("Remove fragmentCache entry for transactionId {}",
-                            notification.getKey());
-                }
-            })
-            .build();
 
     public FragmenterResource() {
         this(HttpRequestParser.getInstance(), FragmenterFactory.getInstance());
@@ -84,7 +63,9 @@ public class FragmenterResource extends BaseResource {
         super(parser);
         this.fragmenterFactory = fragmenterFactory;
         if (LOG.isDebugEnabled()) {
-            LOG.debug("fragmentCache size={}, stats={}", fragmentCache.size(), fragmentCache.stats().toString());
+            LOG.debug("fragmentCache size={}, stats={}",
+                    fragmenterFactory.getFragmenterCache().size(),
+                    fragmenterFactory.getFragmenterCache().stats().toString());
         }
     }
 
@@ -114,16 +95,18 @@ public class FragmenterResource extends BaseResource {
         /* Create a fragmenter instance with API level parameters */
         final Fragmenter fragmenter = fragmenterFactory.getPlugin(context);
 
-        List<Fragment> fragments = fragmentCache.get(context.getTransactionId(),
-                new Callable<List<Fragment>>() {
+        String fragmenterCacheKey = getFragmenterCacheKey(context);
+
+        // Unfortunately, we can't support lambdas here because our asm version is too old
+        List<Fragment> fragments = fragmenterFactory.getFragmenterCache()
+                .get(fragmenterCacheKey, new Callable<List<Fragment>>() {
                     @Override
                     public List<Fragment> call() throws Exception {
                         LOG.debug("Caching fragments for transactionId={} from segmentId={}",
                                 context.getTransactionId(), context.getSegmentId());
-                        return AnalyzeUtils.getSampleFragments(fragmenter.getFragments(), context);
+                        return fragmenter.getFragments();
                     }
                 });
-
         FragmentsResponse fragmentsResponse = FragmentsResponseFormatter.formatResponse(fragments, path);
 
         int numberOfFragments = fragments.size();
@@ -168,6 +151,10 @@ public class FragmenterResource extends BaseResource {
         }
 
         return Response.ok(response, MediaType.APPLICATION_JSON_TYPE).build();
+    }
+
+    private String getFragmenterCacheKey(RequestContext context) {
+        return context.getTransactionId();
     }
 
 }

@@ -40,7 +40,7 @@ public class UGICacheMultiThreadTest {
     private FakeUgiProvider provider = null;
     private SessionId[] sessions = new SessionId[numberOfSegments * numberOfUsers * numberOfTxns];
     private UGICache cache = null;
-    private UGICacheTest.FakeTicker fakeTicker;
+    private FakeTicker fakeTicker;
 
     @Before
     public void setUp() {
@@ -54,7 +54,7 @@ public class UGICacheMultiThreadTest {
                 }
             }
         }
-        fakeTicker = new UGICacheTest.FakeTicker();
+        fakeTicker = new FakeTicker();
         cache = new UGICache(provider, fakeTicker);
     }
 

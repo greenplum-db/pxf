@@ -385,6 +385,23 @@ public class HiveTest extends HiveBaseTest {
     }
 
     /**
+     * PXF on Hive table partitioned to text, rc and sequence data.
+     * Test union all
+     *
+     * @throws Exception if test fails to run
+     */
+    @Test(groups = {"hive", "features", "gpdb"})
+    public void hivePartitionedTableUnionAll() throws Exception {
+
+        preparePartitionedData();
+        // Create PXF Table using Hive profile
+        createExternalTable(PXF_HIVE_PARTITIONED_TABLE,
+                PXF_HIVE_SMALLDATA_FMT_COLS, hivePartitionedTable);
+
+        runTincTest("pxf.features.hive.hive_partitioned_table_union_all.runTest");
+    }
+
+    /**
      * check default analyze results for pxf external table is as required
      * (pages=1000 tuples=1000000)
      *

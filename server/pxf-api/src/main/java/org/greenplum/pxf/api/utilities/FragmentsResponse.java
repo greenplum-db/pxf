@@ -1,6 +1,6 @@
 package org.greenplum.pxf.api.utilities;
 
-        /*
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -85,5 +85,12 @@ public class FragmentsResponse implements StreamingOutput {
         }
 
         dos.write("]}".getBytes());
+    }
+
+    /**
+     * @return the list of fragments for the response
+     */
+    public List<Fragment> getFragments() {
+        return fragments;
     }
 }
