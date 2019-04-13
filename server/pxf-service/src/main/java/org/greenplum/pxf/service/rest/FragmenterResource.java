@@ -19,6 +19,7 @@ package org.greenplum.pxf.service.rest;
  * under the License.
  */
 
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.FragmentStats;
 import org.greenplum.pxf.api.model.Fragmenter;
@@ -86,7 +87,7 @@ public class FragmenterResource extends BaseResource {
     public Response getFragments(@Context final ServletContext servletContext,
                                  @Context final HttpHeaders headers,
                                  @QueryParam("path") final String path)
-            throws Exception {
+            throws Throwable {
 
         long startTime = System.currentTimeMillis();
         LOG.debug("FRAGMENTER started for path \"{}\"", path);
@@ -97,15 +98,23 @@ public class FragmenterResource extends BaseResource {
         final String fragmenterCacheKey = getFragmenterCacheKey(context);
 
         // We can't support lambdas here because asm version is too old
-        List<Fragment> fragments = fragmenterFactory.getFragmenterCache()
-                .get(fragmenterCacheKey, new Callable<List<Fragment>>() {
-                    @Override
-                    public List<Fragment> call() throws Exception {
-                        LOG.debug("Caching fragments for transactionId={} from segmentId={} with key={}",
-                                context.getTransactionId(), context.getSegmentId(), fragmenterCacheKey);
-                        return fragmenter.getFragments();
-                    }
-                });
+        List<Fragment> fragments;
+        try {
+            fragments = fragmenterFactory.getFragmenterCache()
+                    .get(fragmenterCacheKey, new Callable<List<Fragment>>() {
+                        @Override
+                        public List<Fragment> call() throws Exception {
+                            LOG.debug("Caching fragments for transactionId={} from segmentId={} with key={}",
+                                    context.getTransactionId(), context.getSegmentId(), fragmenterCacheKey);
+                            return fragmenter.getFragments();
+                        }
+                    });
+        } catch (UncheckedExecutionException e) {
+            if (e.getCause() != null)
+                throw e.getCause();
+            throw e;
+        }
+
 
         FragmentsResponse fragmentsResponse = FragmentsResponseFormatter.formatResponse(fragments, path);
 
