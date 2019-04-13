@@ -30,6 +30,7 @@ import org.greenplum.pxf.api.utilities.FragmentsResponseFormatter;
 import org.greenplum.pxf.service.HttpRequestParser;
 import org.greenplum.pxf.service.RequestParser;
 import org.greenplum.pxf.service.SessionId;
+import org.greenplum.pxf.service.utilities.AnalyzeUtils;
 
 import javax.servlet.ServletContext;
 import javax.ws.rs.GET;
@@ -106,7 +107,7 @@ public class FragmenterResource extends BaseResource {
                         public List<Fragment> call() throws Exception {
                             LOG.debug("Caching fragments for transactionId={} from segmentId={} with key={}",
                                     context.getTransactionId(), context.getSegmentId(), fragmenterCacheKey);
-                            return fragmenter.getFragments();
+                            return AnalyzeUtils.getSampleFragments(fragmenter.getFragments(), context);
                         }
                     });
         } catch (UncheckedExecutionException e) {
