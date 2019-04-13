@@ -1,10 +1,10 @@
 -- @description query01 for PXF Hive partitioned table cases using union all queries
 
-SELECT * FROM pxf_hive_partitioned_table WHERE fmt = 'avro'
+SELECT DISTINCT t1 FROM pxf_hive_partitioned_table WHERE fmt = 'avro'
 UNION ALL
-SELECT * FROM pxf_hive_partitioned_table WHERE fmt = 'rc'
+SELECT DISTINCT t1 FROM pxf_hive_partitioned_table WHERE fmt = 'rc'
 UNION ALL
-SELECT * FROM pxf_hive_partitioned_table WHERE fmt = 'txt'
+SELECT DISTINCT t1 FROM pxf_hive_partitioned_table WHERE fmt = 'txt'
 UNION ALL
-SELECT * FROM pxf_hive_partitioned_table WHERE fmt = 'seq'
-ORDER BY t1;
+SELECT DISTINCT t1 FROM pxf_hive_partitioned_table WHERE fmt = 'seq'
+ORDER BY fmt, t1;

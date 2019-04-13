@@ -1,12 +1,14 @@
--- @description query01 for PXF Hive partitioned table cases
-
-SELECT * FROM pxf_hive_partitioned_table WHERE fmt = 'avro' ORDER BY t1
+-- start_ignore
+-- end_ignore
+-- @description query01 for PXF Hive partitioned table cases using union all queries
+SELECT * FROM pxf_hive_partitioned_table WHERE fmt = 'avro'
 UNION ALL
-SELECT * FROM pxf_hive_partitioned_table WHERE fmt = 'rc' ORDER BY t1
+SELECT * FROM pxf_hive_partitioned_table WHERE fmt = 'rc'
 UNION ALL
-SELECT * FROM pxf_hive_partitioned_table WHERE fmt = 'txt' ORDER BY t1
+SELECT * FROM pxf_hive_partitioned_table WHERE fmt = 'txt'
 UNION ALL
-SELECT * FROM pxf_hive_partitioned_table WHERE fmt = 'seq' ORDER BY t1;
+SELECT * FROM pxf_hive_partitioned_table WHERE fmt = 'seq'
+ORDER BY fmt, t1;
   t1   |  t2  | num1 | dub1 | fmt
 -------+------+------+------+------
  row1  | s_6  |    1 |    6 | avro
@@ -29,16 +31,6 @@ SELECT * FROM pxf_hive_partitioned_table WHERE fmt = 'seq' ORDER BY t1;
  row7  | s_12 |    7 |   12 | rc
  row8  | s_13 |    8 |   13 | rc
  row9  | s_14 |    9 |   14 | rc
- row1  | s_6  |    1 |    6 | txt
- row10 | s_15 |   10 |   15 | txt
- row2  | s_7  |    2 |    7 | txt
- row3  | s_8  |    3 |    8 | txt
- row4  | s_9  |    4 |    9 | txt
- row5  | s_10 |    5 |   10 | txt
- row6  | s_11 |    6 |   11 | txt
- row7  | s_12 |    7 |   12 | txt
- row8  | s_13 |    8 |   13 | txt
- row9  | s_14 |    9 |   14 | txt
  row1  | s_6  |    1 |    6 | seq
  row10 | s_15 |   10 |   15 | seq
  row2  | s_7  |    2 |    7 | seq
@@ -49,4 +41,15 @@ SELECT * FROM pxf_hive_partitioned_table WHERE fmt = 'seq' ORDER BY t1;
  row7  | s_12 |    7 |   12 | seq
  row8  | s_13 |    8 |   13 | seq
  row9  | s_14 |    9 |   14 | seq
-(50 rows)
+ row1  | s_6  |    1 |    6 | txt
+ row10 | s_15 |   10 |   15 | txt
+ row2  | s_7  |    2 |    7 | txt
+ row3  | s_8  |    3 |    8 | txt
+ row4  | s_9  |    4 |    9 | txt
+ row5  | s_10 |    5 |   10 | txt
+ row6  | s_11 |    6 |   11 | txt
+ row7  | s_12 |    7 |   12 | txt
+ row8  | s_13 |    8 |   13 | txt
+ row9  | s_14 |    9 |   14 | txt
+(40 rows)
+

@@ -94,19 +94,19 @@ public class FragmenterResource extends BaseResource {
         RequestContext context = parseRequest(headers);
         /* Create a fragmenter instance with API level parameters */
         final Fragmenter fragmenter = fragmenterFactory.getPlugin(context);
+        final String fragmenterCacheKey = getFragmenterCacheKey(context);
 
-        String fragmenterCacheKey = getFragmenterCacheKey(context);
-
-        // Unfortunately, we can't support lambdas here because our asm version is too old
+        // We can't support lambdas here because asm version is too old
         List<Fragment> fragments = fragmenterFactory.getFragmenterCache()
                 .get(fragmenterCacheKey, new Callable<List<Fragment>>() {
                     @Override
                     public List<Fragment> call() throws Exception {
-                        LOG.debug("Caching fragments for transactionId={} from segmentId={}",
-                                context.getTransactionId(), context.getSegmentId());
+                        LOG.debug("Caching fragments for transactionId={} from segmentId={} with key={}",
+                                context.getTransactionId(), context.getSegmentId(), fragmenterCacheKey);
                         return fragmenter.getFragments();
                     }
                 });
+
         FragmentsResponse fragmentsResponse = FragmentsResponseFormatter.formatResponse(fragments, path);
 
         int numberOfFragments = fragments.size();
@@ -154,7 +154,10 @@ public class FragmenterResource extends BaseResource {
     }
 
     private String getFragmenterCacheKey(RequestContext context) {
-        return context.getTransactionId();
+        return String.format("%s:%s:%s",
+                context.getTransactionId(),
+                context.getDataSource(),
+                context.getFilterString());
     }
 
 }
