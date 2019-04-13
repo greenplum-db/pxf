@@ -58,7 +58,7 @@ public class FragmenterResourceTest {
     }
 
     @Test
-    public void getFragmentsResponseFromEmptyCache() throws Exception {
+    public void getFragmentsResponseFromEmptyCache() throws Throwable {
         RequestContext context = new RequestContext();
         context.setTransactionId("XID-XYZ-123456");
         context.setSegmentId(0);
@@ -72,7 +72,7 @@ public class FragmenterResourceTest {
     }
 
     @Test
-    public void testFragmenterCallIsNotCachedForDifferentContexts() throws Exception {
+    public void testFragmenterCallIsNotCachedForDifferentContexts() throws Throwable {
         List<Fragment> fragmentList1 = new ArrayList<>();
         List<Fragment> fragmentList2 = new ArrayList<>();
 
@@ -112,7 +112,7 @@ public class FragmenterResourceTest {
     }
 
     @Test
-    public void getSameFragmenterCallTwiceUsesCache() throws Exception {
+    public void getSameFragmenterCallTwiceUsesCache() throws Throwable {
         List<Fragment> fragmentList = new ArrayList<>();
 
         RequestContext context1 = new RequestContext();
@@ -149,7 +149,7 @@ public class FragmenterResourceTest {
     }
 
     @Test
-    public void testFragmenterCallExpiresAfterTimeout() throws Exception {
+    public void testFragmenterCallExpiresAfterTimeout() throws Throwable {
         List<Fragment> fragmentList1 = new ArrayList<>();
         List<Fragment> fragmentList2 = new ArrayList<>();
 
@@ -189,7 +189,7 @@ public class FragmenterResourceTest {
     }
 
     @Test
-    public void testMultiThreadedAccessToFragments() throws Exception {
+    public void testMultiThreadedAccessToFragments() throws Throwable {
 //        int threadCount = 100;
 //        Thread[] threads = new Thread[threadCount];
 //
