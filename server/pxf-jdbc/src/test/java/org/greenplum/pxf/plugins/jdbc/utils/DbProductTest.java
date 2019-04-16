@@ -23,9 +23,6 @@ import java.sql.Date;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Iterator;
-import java.util.Map.Entry;
-import java.util.Properties;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -33,7 +30,6 @@ import static org.junit.Assert.assertEquals;
 public class DbProductTest {
     private static final Date[] DATES = new Date[1];
     private static final Timestamp[] TIMESTAMPS = new Timestamp[1];
-    private static final Properties ENVS = new Properties();
     static {
         try {
             DATES[0] = new Date(
@@ -42,7 +38,6 @@ public class DbProductTest {
             TIMESTAMPS[0] = new Timestamp(
                 new SimpleDateFormat("yyyy-MM-dd").parse("2001-01-01 00:00:00").getTime()
             );
-            ENVS.setProperty("key", "value");
         }
         catch (ParseException e) {
             DATES[0] = null;
@@ -85,24 +80,6 @@ public class DbProductTest {
         }
     }
 
-    /**
-     * This test also applies to Postgres database
-     */
-    @Test
-    public void testUnknownBuildEnvQuery() {
-        final Properties expected = new Properties();
-        expected.setProperty("key", "SET key = value;");
-
-        DbProduct dbProduct = DbProduct.getDbProduct(DB_NAME_UNKNOWN);
-
-        Iterator<Entry<Object,Object>> it = ENVS.entrySet().iterator();
-
-        for (int i = 0; i < ENVS.size(); i++) {
-            Entry<Object, Object> entry = it.next();
-            assertEquals(expected.getProperty((String)entry.getKey()), dbProduct.buildEnvQuery(entry));
-        }
-    }
-
 
     private static final String DB_NAME_ORACLE = "ORACLE";
 
@@ -128,21 +105,6 @@ public class DbProductTest {
         }
     }
 
-    @Test
-    public void testOracleBuildEnvQuery() {
-        final Properties expected = new Properties();
-        expected.setProperty("key", "ALTER SESSION SET key = value;");
-
-        DbProduct dbProduct = DbProduct.getDbProduct(DB_NAME_ORACLE);
-
-        Iterator<Entry<Object,Object>> it = ENVS.entrySet().iterator();
-
-        for (int i = 0; i < ENVS.size(); i++) {
-            Entry<Object, Object> entry = it.next();
-            assertEquals(expected.getProperty((String)entry.getKey()), dbProduct.buildEnvQuery(entry));
-        }
-    }
-
 
     private static final String DB_NAME_MICROSOFT = "MICROSOFT";
 
@@ -154,21 +116,6 @@ public class DbProductTest {
 
         for (int i = 0; i < DATES.length; i++) {
             assertEquals(expected[i], dbProduct.wrapDate(DATES[i]));
-        }
-    }
-
-    @Test
-    public void testMicrosoftBuildEnvQuery() {
-        final Properties expected = new Properties();
-        expected.setProperty("key", "SET key value;");
-
-        DbProduct dbProduct = DbProduct.getDbProduct(DB_NAME_MICROSOFT);
-
-        Iterator<Entry<Object,Object>> it = ENVS.entrySet().iterator();
-
-        for (int i = 0; i < ENVS.size(); i++) {
-            Entry<Object, Object> entry = it.next();
-            assertEquals(expected.getProperty((String)entry.getKey()), dbProduct.buildEnvQuery(entry));
         }
     }
 

@@ -19,7 +19,6 @@ package org.greenplum.pxf.plugins.jdbc;
  * under the License.
  */
 
-import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.api.BasicFilter;
 import org.greenplum.pxf.api.FilterParser;
 import org.greenplum.pxf.api.io.DataType;
@@ -30,7 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.Properties;
 import java.util.regex.Pattern;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
@@ -130,25 +128,6 @@ public class SQLQueryBuilder {
         sb.append(")");
 
         return sb.toString();
-    }
-
-    /**
-     * Build query to set session-level variables in external database.
-     *
-     * @param envs {@link Properties} object from {@link JdbcBasePlugin}
-     *
-     * @return Complete SQL query
-     * @return null if {@link DbProduct} disallows env queries
-     *
-     * @throws SQLException
-     */
-    public String buildEnvQuery(Properties envs) throws SQLException {
-        String result = envs.entrySet().stream()
-                .map(dbProduct::buildEnvQuery)
-                .filter(StringUtils::isNotEmpty)
-                .collect(Collectors.joining(" "));
-
-        return StringUtils.isNotBlank(result) ? result : null;
     }
 
     /**

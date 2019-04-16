@@ -186,7 +186,7 @@ Session-level variables to set in external database before SELECT or INSERT quer
 
 Connection properties (`java.util.Properties`) passed to JDBC driver when opening a connection to external database. See [Java documentation](https://docs.oracle.com/javase/8/docs/api/java/sql/DriverManager.html#getConnection-java.lang.String-java.util.Properties-) for the meaning of this object. See external database documentation for information on supported key-value pairs.
 
-* **Configuration parameter**: `jdbc.connection.property.<name>`, where `<name>` is the name of a session-level variable
+* **Configuration parameter**: `jdbc.connection.property.<name>`, where `<name>` is the name of a connection property (key of a key-value pair)
 * **Value**: String
 
 
@@ -367,7 +367,7 @@ LOCATION ('pxf://PUBLIC.T2?PROFILE=JDBC&SERVER=EXAMPLE')
 FORMAT 'CUSTOM' (formatter='pxfwritable_import');
 ```
 
-and `example-site.xml` on every PXF segment:
+and `$PXF_CONF/servers/EXAMPLE/jdbc-site.xml` on every PXF segment:
 ```
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
@@ -380,10 +380,14 @@ and `example-site.xml` on every PXF segment:
         <value>jdbc:example://1.2.3.4:12345</value>
     </property>
     <property>
-        <name>jdbc.env</name>
-        <value>key1=value1, key2=value2</value>
+        <name>jdbc.session.property.key1</name>
+        <value>value1</value>
+    </property>
+    <property>
+        <name>jdbc.session.property.key2</name>
+        <value>value2</value>
     </property>
 </configuration>
 ```
 
-When `SELECT` from this external table is called, PXF executes `SET key1 = value1; SET key2 = value2;`, and after that (in the same session) `SELECT k, val FROM PUBLIC.T2`. PostgreSQL syntax is used as `Example` is a database unknown to PXF. The query is executed once as partitioning is not set (one fragment is generated).
+When `SELECT` from this external table is called, PXF executes `SET key1 = value1`, `SET key2 = value2` and `SELECT k, val FROM PUBLIC.T2` (all in the same session). PostgreSQL syntax is used because `Example` is a database unknown to PXF. All queries are executed once as partitioning is not set (one fragment is generated).

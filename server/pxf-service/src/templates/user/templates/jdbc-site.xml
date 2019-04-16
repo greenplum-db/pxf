@@ -20,18 +20,28 @@
         <value>YOUR_DATABASE_JDBC_PASSWORD</value>
         <description>Password for connecting to the database (e.g. postgres)</description>
     </property>
-    <!-- Uncomment to set session-level variables for queries to external database
+    <!-- Uncomment to set session-level variable for queries to external database
     <property>
-        <name>jdbc.env</name>
-        <value>YOUR_VAR_1=YOUR_VALUE_1,YOUR_VAR_2=YOUR_VALUE_2</value>
-        <description>Session-level variables to set in external database before query execution</description>
+        <name>jdbc.session.property.some_property_1</name>
+        <value>some_value_1</value>
+        <description>Session-level variable to set in external database before query execution</description>
+    </property>
+    <property>
+        <name>jdbc.session.property.some_property_2</name>
+        <value>some_value_2</value>
+        <description>Session-level variable to set in external database before query execution</description>
     </property>
     -->
-    <!-- Uncomment to set JDBC connection information
+    <!-- Uncomment to set JDBC connection properties
     <property>
-        <name>jdbc.info</name>
-        <value>YOUR_VAR_1=YOUR_VALUE_1,YOUR_VAR_2=YOUR_VALUE_2</value>
-        <description>JDBC connection information</description>
+        <name>jdbc.connection.property.some_property_1</name>
+        <value>some_value_1</value>
+        <description>JDBC connection property</description>
+    </property>
+    <property>
+        <name>jdbc.connection.property.some_property_2</name>
+        <value>some_value_2</value>
+        <description>JDBC connection property</description>
     </property>
     -->
 </configuration>

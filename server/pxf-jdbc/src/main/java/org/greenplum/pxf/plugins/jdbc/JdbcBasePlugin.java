@@ -23,6 +23,7 @@ import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +31,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.SQLTimeoutException;
 import java.sql.Statement;
 import java.util.List;
 import java.util.Map;
@@ -53,15 +53,17 @@ public class JdbcBasePlugin extends BasePlugin {
     private static final String JDBC_URL_PROPERTY_NAME = "jdbc.url";
     private static final String JDBC_USER_PROPERTY_NAME = "jdbc.user";
     private static final String JDBC_PASSWORD_PROPERTY_NAME = "jdbc.password";
-    private static final String JDBC_SESSCONF_PROPERTY_PREFIX = "jdbc.session.property.";
-    private static final String JDBC_CONNCONF_PROPERTY_PREFIX = "jdbc.connection.property.";
+    private static final String JDBC_SESSION_PROPERTY_PREFIX = "jdbc.session.property.";
+    private static final String JDBC_CONNECTION_PROPERTY_PREFIX = "jdbc.connection.property.";
 
     // DDL option names
     private static final String JDBC_DRIVER_OPTION_NAME = "JDBC_DRIVER";
     private static final String JDBC_URL_OPTION_NAME = "DB_URL";
 
+    private static final String FORBIDDEN_SESSION_PROPERTY_CHARACTERS = ";\n\b\0";
+
     // JDBC parameters from config file or specified in DDL
-    private String jdbcDriver, jdbcUrl, jdbcPassword;
+    private String jdbcUrl;
 
     protected String tableName = null;
 
@@ -90,111 +92,124 @@ public class JdbcBasePlugin extends BasePlugin {
     public void initialize(RequestContext context) {
         super.initialize(context);
 
-        // process configuration based params that could be auto-overwritten by user options
-        jdbcDriver = configuration.get(JDBC_DRIVER_PROPERTY_NAME);
+        // Required parameter. Can be auto-overwritten by user options
+        String jdbcDriver = configuration.get(JDBC_DRIVER_PROPERTY_NAME);
         assertMandatoryParameter(jdbcDriver, JDBC_DRIVER_PROPERTY_NAME, JDBC_DRIVER_OPTION_NAME);
+        try {
+            LOG.debug("JDBC driver: '{}'", jdbcDriver);
+            Class.forName(jdbcDriver);
+        }
+        catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
 
+        // Required parameter. Can be auto-overwritten by user options
         jdbcUrl = configuration.get(JDBC_URL_PROPERTY_NAME);
         assertMandatoryParameter(jdbcUrl, JDBC_URL_PROPERTY_NAME, JDBC_URL_OPTION_NAME);
 
-        // authentication information is not required
-        String userRaw = configuration.get(JDBC_USER_PROPERTY_NAME);
-        if (userRaw != null) {
-            connectionConfiguration.setProperty("user", userRaw);
-            jdbcPassword = retrievePassword();
-        }
-
-        // process additional options
+        // Required metadata
         tableName = context.getDataSource();
         if (tableName == null) {
             throw new IllegalArgumentException("Data source must be provided");
         }
 
-        tableName = context.getDataSource();
-
+        // Required metadata
         columns = context.getTupleDescription();
 
-        // This parameter is not required. The default value is 100
+        // Optional parameter. The default value is 100
         batchSizeIsSetByUser = context.getOption("BATCH_SIZE") != null;
         batchSize = context.getOption("BATCH_SIZE", DEFAULT_BATCH_SIZE, true);
         if (batchSize == 0) {
             batchSize = 1; // if user set to 0, it is the same as batchsize of 1
         }
 
-        // This parameter is not required. The default value is 1
+        // Optional parameter. The default value is 1
         poolSize = context.getOption("POOL_SIZE", DEFAULT_POOL_SIZE);
 
-        // This parameter is not required. The default value is null
+        // Optional parameter. The default value is null
         String quoteColumnsRaw = context.getOption("QUOTE_COLUMNS");
         if (quoteColumnsRaw != null) {
             quoteColumns = Boolean.parseBoolean(quoteColumnsRaw);
         }
 
-        // This parameter is not required. The default value is empty map
-        Map<String, String> sessionConfigurationRaw = configuration.getPropsWithPrefix(JDBC_SESSCONF_PROPERTY_PREFIX);
-        sessionConfiguration.putAll(sessionConfigurationRaw);
-        LOG.debug("Session configuration: {}",
-            sessionConfiguration.entrySet().stream()
-                    .map(entry -> "'" + entry.getKey().toString() + "'='" + entry.getValue() + "'")
-                    .collect(Collectors.joining(", "))
-        );
+        // Optional parameter. The default value is empty map
+        sessionConfiguration.putAll(configuration.getPropsWithPrefix(JDBC_SESSION_PROPERTY_PREFIX));
+        // Check forbidden symbols
+        // Note: PreparedStatement tnables us to skip this check: its values are distinct from its SQL code
+        // However, SET queries cannot be executed this way. This is why we do this check
+        if (sessionConfiguration.entrySet().stream()
+                .anyMatch(
+                    entry ->
+                        StringUtils.containsAny(
+                            String.class.cast(entry.getKey()), FORBIDDEN_SESSION_PROPERTY_CHARACTERS
+                        ) ||
+                        StringUtils.containsAny(
+                            String.class.cast(entry.getValue()), FORBIDDEN_SESSION_PROPERTY_CHARACTERS
+                        )
+                )
+        ) {
+            throw new IllegalArgumentException("Some session configuration parameter contains forbidden characters");
+        }
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Session configuration: {}",
+                sessionConfiguration.entrySet().stream()
+                        .map(entry -> "'" + entry.getKey().toString() + "'='" + entry.getValue() + "'")
+                        .collect(Collectors.joining(", "))
+            );
+        }
 
-        // This parameter is not required. The default value is empty map
-        Map<String, String> connectionConfigurationRaw = configuration.getPropsWithPrefix(JDBC_CONNCONF_PROPERTY_PREFIX);
-        connectionConfiguration.putAll(connectionConfigurationRaw);
-        // We do not output connection configuration here; this will be done later, when connection is created
+        // Optional parameter. The default value is empty map
+        connectionConfiguration.putAll(configuration.getPropsWithPrefix(JDBC_CONNECTION_PROPERTY_PREFIX));
+
+        // Optional parameter. By default, corresponding connectionConfiguration property is not set
+        String jdbcUser = configuration.get(JDBC_USER_PROPERTY_NAME);
+        if (jdbcUser != null) {
+            connectionConfiguration.setProperty("user", jdbcUser);
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Connection configuration: {}",
+                connectionConfiguration.entrySet().stream()
+                        .map(entry -> "'" + entry.getKey().toString() + "'='" + entry.getValue() + "'")
+                        .collect(Collectors.joining(", "))
+            );
+        }
+
+        // This must be the last parameter parsed, as we output connectionConfiguration earlier
+        // Optional parameter. By default, corresponding connectionConfiguration property is not set
+        if (jdbcUser != null) {
+            String jdbcPassword = configuration.get(JDBC_PASSWORD_PROPERTY_NAME);
+            if (jdbcPassword != null) {
+                LOG.debug("Connection password: {}", maskPassword(jdbcPassword));
+                connectionConfiguration.setProperty("password", jdbcPassword);
+            }
+        }
     }
 
     /**
      * Open a new JDBC connection
      *
-     * @throws ClassNotFoundException if the JDBC driver was not found
      * @throws SQLException if a database access or connection error occurs
      *
-     * @return connection
+     * @return {@link Connection}
      */
-    public Connection getConnection() throws ClassNotFoundException, SQLException {
+    public Connection getConnection() throws SQLException {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("New JDBC connection. URL: '{}'; Driver: '{}'; Table: '{}'",
-                jdbcUrl, jdbcDriver, tableName
+            LOG.debug("New JDBC connection. URL: '{}'; Table: '{}'",
+                jdbcUrl, tableName
             );
-            LOG.debug("JDBC connection properties: {}",
-                connectionConfiguration.entrySet().stream()
-                        .map(entry -> "'" + entry.getKey().toString() + "'='" + entry.getValue() + "'")
-                        .collect(Collectors.joining(", "))
-            );
-            if (jdbcPassword != null) {
-                LOG.debug("JDBC connection has password set: '{}'",
-                    maskPassword(jdbcPassword)
-                );
-            }
         }
 
-        if (jdbcPassword != null) {
-            connectionConfiguration.setProperty("password", jdbcPassword);
-        }
-
-        Class.forName(jdbcDriver);
-        return DriverManager.getConnection(jdbcUrl, connectionConfiguration);
-    }
-
-    /**
-     * Close a JDBC connection
-     *
-     * @param connection connection to close
-     */
-    public static void closeConnection(Connection connection) {
+        Connection connection = DriverManager.getConnection(jdbcUrl, connectionConfiguration);
         try {
-            if ((connection != null) && (!connection.isClosed())) {
-                if ((connection.getMetaData().supportsTransactions()) && (!connection.getAutoCommit())) {
-                    connection.commit();
-                }
-                connection.close();
-            }
+            prepareConnection(connection);
         }
         catch (SQLException e) {
-            LOG.error("JDBC connection close error", e);
+            closeConnection(connection);
+            throw e;
         }
+
+        return connection;
     }
 
     /**
@@ -205,38 +220,107 @@ public class JdbcBasePlugin extends BasePlugin {
      *
      * @return PreparedStatement
      *
-     * @throws ClassNotFoundException if the JDBC driver was not found
      * @throws SQLException if a database access error occurs
-     * @throws SQLTimeoutException if a connection problem occurs
      */
-    public PreparedStatement getPreparedStatement(Connection connection, String query) throws SQLException, SQLTimeoutException, ClassNotFoundException {
+    public PreparedStatement getPreparedStatement(Connection connection, String query) throws SQLException {
         if ((connection == null) || (query == null)) {
             throw new IllegalArgumentException("The provided query or connection is null");
-        }
-        if (connection.getMetaData().supportsTransactions()) {
-            connection.setAutoCommit(false);
         }
         return connection.prepareStatement(query);
     }
 
     /**
-     * Close a JDBC Statement (and the connection it is based on)
+     * Close a JDBC statement and underlying {@link Connection}
      *
      * @param statement statement to close
+     *
+     * @throws SQLException
      */
-    public static void closeStatement(Statement statement) {
+    public static void closeStatementAndConnection(Statement statement) throws SQLException {
         if (statement == null) {
             return;
         }
+
+        SQLException exception = null;
         Connection connection = null;
+
         try {
-            if (!statement.isClosed()) {
-                connection = statement.getConnection();
-                statement.close();
+            connection = statement.getConnection();
+        }
+        catch (SQLException e) {
+            LOG.error("Exception when retrieving Connection from Statement", e);
+            exception = e;
+        }
+
+        try {
+            statement.close();
+        }
+        catch (SQLException e) {
+            LOG.error("Exception when closing Statement", e);
+            exception = e;
+        }
+
+        try {
+            closeConnection(connection);
+        }
+        catch (SQLException e) {
+            LOG.error("Exception when closing Connection", e);
+            exception = e;
+        }
+
+        if (exception != null) {
+            throw exception;
+        }
+    }
+
+    /**
+     * Close a JDBC connection
+     *
+     * @param connection connection to close
+     *
+     * @throws SQLException
+     */
+    private static void closeConnection(Connection connection) throws SQLException {
+        if (connection == null) {
+            return;
+        }
+        if (!connection.isClosed()) {
+            if ((connection.getMetaData().supportsTransactions()) && (!connection.getAutoCommit())) {
+                connection.commit();
+            }
+            connection.close();
+        }
+    }
+
+    /**
+     * Prepare JDBC connection by setting session-level variables in external database
+     *
+     * @param connection {@link Connection} to prepare
+     */
+    private void prepareConnection(Connection connection) throws SQLException {
+        if (connection == null) {
+            throw new IllegalArgumentException("The provided connection is null");
+        }
+
+        // Disable autocommit
+        if (connection.getMetaData().supportsTransactions()) {
+            connection.setAutoCommit(false);
+        }
+
+        // Prepare session (process sessionConfiguration)
+        if (!sessionConfiguration.isEmpty()) {
+            DbProduct dbProduct = DbProduct.getDbProduct(connection.getMetaData().getDatabaseProductName());
+
+            try (Statement statement = connection.createStatement()) {
+                for (Map.Entry<Object,Object> e : sessionConfiguration.entrySet()) {
+                    statement.execute(
+                        dbProduct.buildSessionQuery(
+                            String.class.cast(e.getKey()), String.class.cast(e.getValue())
+                        )
+                    );
+                }
             }
         }
-        catch (Exception e) {}
-        closeConnection(connection);
     }
 
     /**
@@ -245,7 +329,7 @@ public class JdbcBasePlugin extends BasePlugin {
      * @param paramName parameter name
      * @param optionName name of the option for a given parameter
      */
-    private static void assertMandatoryParameter(String value, String paramName, String optionName) {
+    private void assertMandatoryParameter(String value, String paramName, String optionName) {
         if (StringUtils.isBlank(value)) {
             throw new IllegalArgumentException(String.format(
                     "Required parameter %s is missing or empty in jdbc-site.xml and option %s is not specified in table definition.", paramName, optionName)
@@ -258,14 +342,7 @@ public class JdbcBasePlugin extends BasePlugin {
      * @param password password to mask
      * @return masked value consisting of asterisks
      */
-    private static String maskPassword(String password) {
+    private String maskPassword(String password) {
         return password == null ? "" : StringUtils.repeat("*", password.length());
-    }
-
-    /**
-     * Retrieve password from data available to this plugin
-     */
-    private String retrievePassword() {
-        return configuration.get(JDBC_PASSWORD_PROPERTY_NAME);
     }
 }

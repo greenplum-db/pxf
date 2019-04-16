@@ -82,7 +82,7 @@ class BatchWriterCallable implements WriterCallable {
         finally {
             rows.clear();
             if (statementMustBeDeleted) {
-                JdbcBasePlugin.closeStatement(statement);
+                JdbcBasePlugin.closeStatementAndConnection(statement);
                 statement = null;
             }
         }

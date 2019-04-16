@@ -74,7 +74,7 @@ class SimpleWriterCallable implements WriterCallable {
         finally {
             row = null;
             if (statementMustBeDeleted) {
-                JdbcBasePlugin.closeStatement(statement);
+                JdbcBasePlugin.closeStatementAndConnection(statement);
                 statement = null;
             }
         }

@@ -22,8 +22,6 @@ package org.greenplum.pxf.plugins.jdbc.utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map.Entry;
-
 /**
  * A tool class to change PXF-JDBC plugin behaviour for certain external databases
  */
@@ -35,8 +33,8 @@ public enum DbProduct {
         }
 
         @Override
-        public String buildEnvQuery(Entry<Object, Object> env) {
-            return String.format("SET %s %s;", env.getKey(), env.getValue());
+        public String buildSessionQuery(String key, String value) {
+            return String.format("SET %s %s", key, value);
         }
     },
 
@@ -59,8 +57,8 @@ public enum DbProduct {
         }
 
         @Override
-        public String buildEnvQuery(Entry<Object, Object> env) {
-            return String.format("ALTER SESSION SET %s = %s;", env.getKey(), env.getValue());
+        public String buildSessionQuery(String key, String value) {
+            return String.format("ALTER SESSION SET %s = %s", key, value);
         }
     },
 
@@ -90,14 +88,15 @@ public enum DbProduct {
     }
 
     /**
-     * Produces an env set query for target database
+     * Build a query to set session-level variables for target database
      *
-     * @param env {@link Map.Entry<Object, Object>} key-value pair to set
-     * @return a string with SET query terminated with a semicolon
-     * @return null if SET query is not allowed
+     * @param key variable name (key)
+     * @param value variable value
+     *
+     * @return a string with template SET query
      */
-    public String buildEnvQuery(Entry<Object, Object> env) {
-        return String.format("SET %s = %s;", env.getKey(), env.getValue());
+    public String buildSessionQuery(String key, String value) {
+        return String.format("SET %s = %s", key, value);
     }
 
     /**

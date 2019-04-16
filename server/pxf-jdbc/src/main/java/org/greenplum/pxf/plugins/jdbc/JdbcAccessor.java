@@ -78,15 +78,8 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
         queryRead = sqlQueryBuilder.buildSelectQuery();
         LOG.trace("Select query: {}", queryRead);
 
-        // Build env query
-        String queryEnv = sqlQueryBuilder.buildEnvQuery(sessionConfiguration);
-
         // Execute queries
         statementRead = connection.createStatement();
-        if (queryEnv != null) {
-            LOG.trace("Env query: {}", queryEnv);
-            statementRead.execute(queryEnv);
-        }
         resultSetRead = statementRead.executeQuery(queryRead);
 
         return true;
@@ -111,8 +104,8 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
      * closeForRead() implementation
      */
     @Override
-    public void closeForRead() {
-        JdbcBasePlugin.closeStatement(statementRead);
+    public void closeForRead() throws SQLException {
+        JdbcBasePlugin.closeStatementAndConnection(statementRead);
     }
 
     /**
@@ -143,15 +136,6 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
         }
         queryWrite = sqlQueryBuilder.buildInsertQuery();
         LOG.trace("Insert query: {}", queryWrite);
-
-        // Build and execute env query
-        String queryEnv = sqlQueryBuilder.buildEnvQuery(sessionConfiguration);
-        if (queryEnv != null) {
-            LOG.trace("Env query: {}", queryEnv);
-            try (Statement envStatement = connection.createStatement()) {
-                envStatement.execute(queryEnv);
-            }
-        }
 
         statementWrite = super.getPreparedStatement(connection, queryWrite);
 
@@ -283,7 +267,7 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
             }
         }
         finally {
-            JdbcBasePlugin.closeStatement(statementWrite);
+            JdbcBasePlugin.closeStatementAndConnection(statementWrite);
         }
     }
 
