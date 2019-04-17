@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -190,25 +191,52 @@ public class FragmenterResourceTest {
 
     @Test
     public void testMultiThreadedAccessToFragments() throws Throwable {
-//        int threadCount = 100;
-//        Thread[] threads = new Thread[threadCount];
-//
-//
-//        for (int i = 0; i < threads.length; i++) {
-//            threads[i] = new Thread(() -> {
-//
-//                try {
-//                    Response response1 = new FragmenterResource(parser, fragmenterFactory)
-//                            .getFragments(servletContext, headersFromRequest1, "/foo/bar");
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                }
-//            });
-//            threads[i].start();
-//        }
-//
-//        for (Thread thread : threads) {
-//            thread.join();
-//        }
+        final AtomicInteger finishedCount = new AtomicInteger();
+
+        int threadCount = 100;
+        Thread[] threads = new Thread[threadCount];
+        final Fragmenter fragmenter = mock(Fragmenter.class);
+
+        for (int i = 0; i < threads.length; i++) {
+            int index = i;
+            threads[i] = new Thread(() -> {
+
+                RequestParser requestParser = mock(RequestParser.class);
+                HttpHeaders httpHeaders = mock(HttpHeaders.class);
+                FragmenterFactory factory = mock(FragmenterFactory.class);
+
+                final RequestContext context = new RequestContext();
+                context.setTransactionId("XID-MULTI_THREADED-123456");
+                context.setSegmentId(index % 10);
+
+                when(factory.getFragmenterCache()).thenReturn(fragmentCache);
+                when(requestParser.parseRequest(httpHeaders)).thenReturn(context);
+                when(factory.getPlugin(context)).thenReturn(fragmenter);
+
+                try {
+                    new FragmenterResource(requestParser, factory)
+                            .getFragments(servletContext, httpHeaders, "/foo/bar/" + index);
+
+                    finishedCount.incrementAndGet();
+                } catch (Throwable e) {
+                    e.printStackTrace();
+                }
+            });
+            threads[i].start();
+        }
+
+        for (Thread thread : threads) {
+            thread.join();
+        }
+
+        verify(fragmenter, times(1)).getFragments();
+        assertEquals(threadCount, finishedCount.intValue());
+        fakeTicker.advanceTime(1000 * 1000);
+
+        // From the CacheBuilder documentation:
+        // Expired entries may be counted in {@link Cache#size}, but will never be visible to read or
+        // write operations. Expired entries are cleaned up as part of the routine maintenance described
+        // in the class javadoc
+        assertTrue( fragmentCache.size() <= 1);
     }
 }
