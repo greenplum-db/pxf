@@ -32,6 +32,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -78,7 +79,7 @@ public class JdbcBasePlugin extends BasePlugin {
     protected Boolean quoteColumns = null;
 
     // Environment variables to SET before query execution
-    protected Properties sessionConfiguration = new Properties();
+    protected Map<String, String> sessionConfiguration = new HashMap<String, String>();
 
     // Properties object to pass to JDBC Driver when connection is created
     protected Properties connectionConfiguration = new Properties();
@@ -141,10 +142,10 @@ public class JdbcBasePlugin extends BasePlugin {
                 .anyMatch(
                     entry ->
                         StringUtils.containsAny(
-                            String.class.cast(entry.getKey()), FORBIDDEN_SESSION_PROPERTY_CHARACTERS
+                            entry.getKey(), FORBIDDEN_SESSION_PROPERTY_CHARACTERS
                         ) ||
                         StringUtils.containsAny(
-                            String.class.cast(entry.getValue()), FORBIDDEN_SESSION_PROPERTY_CHARACTERS
+                            entry.getValue(), FORBIDDEN_SESSION_PROPERTY_CHARACTERS
                         )
                 )
         ) {
@@ -316,11 +317,9 @@ public class JdbcBasePlugin extends BasePlugin {
             DbProduct dbProduct = DbProduct.getDbProduct(connection.getMetaData().getDatabaseProductName());
 
             try (Statement statement = connection.createStatement()) {
-                for (Map.Entry<Object,Object> e : sessionConfiguration.entrySet()) {
+                for (Map.Entry<String, String> e : sessionConfiguration.entrySet()) {
                     statement.execute(
-                        dbProduct.buildSessionQuery(
-                            String.class.cast(e.getKey()), String.class.cast(e.getValue())
-                        )
+                        dbProduct.buildSessionQuery(e.getKey(), e.getValue())
                     );
                 }
             }

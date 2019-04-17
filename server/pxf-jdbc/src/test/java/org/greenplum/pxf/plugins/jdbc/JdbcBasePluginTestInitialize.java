@@ -25,7 +25,9 @@ import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.model.BaseConfigurationFactory;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import org.apache.hadoop.conf.Configuration;
@@ -287,7 +289,8 @@ public class JdbcBasePluginTestInitialize {
     }
 
     @Test
-    public void testSessionConfiguration2() throws Exception {
+    @SuppressWarnings("unchecked")
+    public void testSessionConfiguration() throws Exception {
         // Configuration
         Configuration configuration = makeConfiguration();
         configuration.set(CONFIG_SESSION_KEY_PREFIX + CONFIG_PROPERTIES_KEYS[0], "v1");
@@ -302,10 +305,10 @@ public class JdbcBasePluginTestInitialize {
         plugin.initialize(context);
 
         // Checks
-        Properties expected = new Properties();
-        expected.setProperty(CONFIG_PROPERTIES_KEYS[0], "v1");
-        expected.setProperty(CONFIG_PROPERTIES_KEYS[1], "v2");
-        assertEquals(expected.entrySet(), ((Properties)getInternalState(plugin, "sessionConfiguration")).entrySet());
+        Map<String, String> expected = new HashMap<String, String>();
+        expected.put(CONFIG_PROPERTIES_KEYS[0], "v1");
+        expected.put(CONFIG_PROPERTIES_KEYS[1], "v2");
+        assertEquals(expected.entrySet(), ((Map<String, String>)getInternalState(plugin, "sessionConfiguration")).entrySet());
     }
 
     @Test(expected = IllegalArgumentException.class)
