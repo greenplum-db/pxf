@@ -63,7 +63,7 @@ public class JdbcBasePlugin extends BasePlugin {
     private static final String FORBIDDEN_SESSION_PROPERTY_CHARACTERS = ";\n\b\0";
 
     // JDBC parameters from config file or specified in DDL
-    private String jdbcUrl;
+    private String jdbcUrl = null;
 
     protected String tableName = null;
 
@@ -153,7 +153,7 @@ public class JdbcBasePlugin extends BasePlugin {
         if (LOG.isDebugEnabled()) {
             LOG.debug("Session configuration: {}",
                 sessionConfiguration.entrySet().stream()
-                        .map(entry -> "'" + entry.getKey().toString() + "'='" + entry.getValue() + "'")
+                        .map(entry -> "'" + entry.getKey() + "'='" + entry.getValue() + "'")
                         .collect(Collectors.joining(", "))
             );
         }
@@ -170,7 +170,7 @@ public class JdbcBasePlugin extends BasePlugin {
         if (LOG.isDebugEnabled()) {
             LOG.debug("Connection configuration: {}",
                 connectionConfiguration.entrySet().stream()
-                        .map(entry -> "'" + entry.getKey().toString() + "'='" + entry.getValue() + "'")
+                        .map(entry -> "'" + entry.getKey() + "'='" + entry.getValue() + "'")
                         .collect(Collectors.joining(", "))
             );
         }
@@ -194,11 +194,9 @@ public class JdbcBasePlugin extends BasePlugin {
      * @return {@link Connection}
      */
     public Connection getConnection() throws SQLException {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("New JDBC connection. URL: '{}'; Table: '{}'",
-                jdbcUrl, tableName
-            );
-        }
+        LOG.debug("New JDBC connection. URL: '{}'; Table: '{}'",
+            jdbcUrl, tableName
+        );
 
         Connection connection = DriverManager.getConnection(jdbcUrl, connectionConfiguration);
         try {
