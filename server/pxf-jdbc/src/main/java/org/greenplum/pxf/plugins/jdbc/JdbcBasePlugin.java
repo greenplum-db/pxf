@@ -284,10 +284,16 @@ public class JdbcBasePlugin extends BasePlugin {
         if (connection == null) {
             return;
         }
-        if (!connection.isClosed()) {
-            if ((connection.getMetaData().supportsTransactions()) && (!connection.getAutoCommit())) {
+        try {
+            if (
+                !connection.isClosed() &&
+                connection.getMetaData().supportsTransactions() &&
+                !connection.getAutoCommit()
+            ) {
                 connection.commit();
             }
+        }
+        finally {
             connection.close();
         }
     }
