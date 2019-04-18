@@ -27,6 +27,7 @@ import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.FragmenterFactory;
 import org.greenplum.pxf.api.utilities.FragmentsResponse;
 import org.greenplum.pxf.api.utilities.FragmentsResponseFormatter;
+import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.service.HttpRequestParser;
 import org.greenplum.pxf.service.RequestParser;
 import org.greenplum.pxf.service.SessionId;
@@ -98,24 +99,29 @@ public class FragmenterResource extends BaseResource {
         final Fragmenter fragmenter = fragmenterFactory.getPlugin(context);
         final String fragmenterCacheKey = getFragmenterCacheKey(context);
 
-        // We can't support lambdas here because asm version is too old
         List<Fragment> fragments;
-        try {
-            fragments = fragmenterFactory.getFragmenterCache()
-                    .get(fragmenterCacheKey, new Callable<List<Fragment>>() {
-                        @Override
-                        public List<Fragment> call() throws Exception {
-                            LOG.debug("Caching fragments for transactionId={} from segmentId={} with key={}",
-                                    context.getTransactionId(), context.getSegmentId(), fragmenterCacheKey);
-                            return AnalyzeUtils.getSampleFragments(fragmenter.getFragments(), context);
-                        }
-                    });
-        } catch (UncheckedExecutionException e) {
-            if (e.getCause() != null)
-                throw e.getCause();
-            throw e;
-        }
 
+        if (Utilities.isFragmenterCacheEnabled()) {
+            try {
+                // We can't support lambdas here because asm version doesn't support it
+                fragments = fragmenterFactory.getFragmenterCache()
+                        .get(fragmenterCacheKey, new Callable<List<Fragment>>() {
+                            @Override
+                            public List<Fragment> call() throws Exception {
+                                LOG.debug("Caching fragments for transactionId={} from segmentId={} with key={}",
+                                        context.getTransactionId(), context.getSegmentId(), fragmenterCacheKey);
+                                return AnalyzeUtils.getSampleFragments(fragmenter.getFragments(), context);
+                            }
+                        });
+            } catch (UncheckedExecutionException e) {
+                if (e.getCause() != null)
+                    throw e.getCause();
+                throw e;
+            }
+        } else {
+            LOG.debug("Fragmenter cache is disabled");
+            fragments = AnalyzeUtils.getSampleFragments(fragmenter.getFragments(), context);
+        }
 
         FragmentsResponse fragmentsResponse = FragmentsResponseFormatter.formatResponse(fragments, path);
 

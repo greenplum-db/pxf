@@ -27,3 +27,6 @@ PXF_CONF="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
 
 # End-user identity impersonation, set to true to enable
 # export PXF_USER_IMPERSONATION=true
+
+# Fragmenter cache, set to false to disable
+# export PXF_FRAGMENTER_CACHE=${PXF_FRAGMENTER_CACHE:=true}

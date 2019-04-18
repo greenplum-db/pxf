@@ -41,6 +41,7 @@ public class Utilities {
 
     private static final Logger LOG = LoggerFactory.getLogger(Utilities.class);
     private static final String PROPERTY_KEY_USER_IMPERSONATION = "pxf.service.user.impersonation.enabled";
+    private static final String PROPERTY_KEY_FRAGMENTER_CACHE = "pxf.service.fragmenter.cache.enabled";
     private static final char[] PROHIBITED_CHARS = new char[]{'/', '\\', '.', ' ', ',', ';'};
 
     /**
@@ -281,6 +282,16 @@ public class Utilities {
      */
     public static boolean isUserImpersonationEnabled() {
         return StringUtils.equalsIgnoreCase(System.getProperty(PROPERTY_KEY_USER_IMPERSONATION, ""), "true");
+    }
+
+    /**
+     * Returns whether fragmenter cache has been configured as enabled.
+     * Defaults to true.
+     *
+     * @return true if fragmenter cache is enabled, false otherwise
+     */
+    public static boolean isFragmenterCacheEnabled() {
+        return !StringUtils.equalsIgnoreCase(System.getProperty(PROPERTY_KEY_FRAGMENTER_CACHE, "true"), "false");
     }
 
     /**
