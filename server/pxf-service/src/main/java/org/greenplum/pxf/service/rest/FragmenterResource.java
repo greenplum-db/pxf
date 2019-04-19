@@ -44,6 +44,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Class enhances the API of the WEBHDFS REST server. Returns the data fragments
@@ -113,7 +114,7 @@ public class FragmenterResource extends BaseResource {
                                 return AnalyzeUtils.getSampleFragments(fragmenter.getFragments(), context);
                             }
                         });
-            } catch (UncheckedExecutionException e) {
+            } catch (UncheckedExecutionException | ExecutionException e) {
                 if (e.getCause() != null)
                     throw e.getCause();
                 throw e;
