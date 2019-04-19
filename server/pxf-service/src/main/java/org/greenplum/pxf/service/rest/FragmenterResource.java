@@ -72,7 +72,7 @@ public class FragmenterResource extends BaseResource {
         super(parser);
         this.fragmenterFactory = fragmenterFactory;
         this.fragmenterCacheFactory = fragmenterCacheFactory;
-        if (LOG.isDebugEnabled()) {
+        if (LOG.isDebugEnabled() && Utilities.isFragmenterCacheEnabled()) {
             LOG.debug("fragmentCache size={}, stats={}",
                     fragmenterCacheFactory.getCache().size(),
                     fragmenterCacheFactory.getCache().stats().toString());
