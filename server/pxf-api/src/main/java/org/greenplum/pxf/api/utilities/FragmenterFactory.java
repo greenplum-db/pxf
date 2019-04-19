@@ -20,18 +20,8 @@ package org.greenplum.pxf.api.utilities;
  */
 
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
-import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.Fragmenter;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Factory class for creation of {@link Fragmenter} objects.
@@ -39,19 +29,6 @@ import java.util.concurrent.TimeUnit;
 public class FragmenterFactory extends BasePluginFactory<Fragmenter> {
 
     private static final FragmenterFactory instance = new FragmenterFactory();
-
-    private final Cache<String, List<Fragment>> fragmentCache = CacheBuilder.newBuilder()
-            .expireAfterAccess(10, TimeUnit.SECONDS)
-            .removalListener(new RemovalListener<String, List<Fragment>>() {
-                private final Logger LOG = LoggerFactory.getLogger(this.getClass());
-
-                @Override
-                public void onRemoval(RemovalNotification<String, List<Fragment>> notification) {
-                    LOG.debug("Remove fragmentCache entry for transactionId {}",
-                            notification.getKey());
-                }
-            })
-            .build();
 
     /**
      * Returns a singleton instance of the factory.
@@ -65,6 +42,4 @@ public class FragmenterFactory extends BasePluginFactory<Fragmenter> {
     protected String getPluginClassName(RequestContext requestContext) {
         return requestContext.getFragmenter();
     }
-
-    public Cache<String, List<Fragment>> getFragmenterCache() { return instance.fragmentCache; }
 }

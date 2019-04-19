@@ -24,6 +24,7 @@ import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.FragmentStats;
 import org.greenplum.pxf.api.model.Fragmenter;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.api.utilities.FragmenterCacheFactory;
 import org.greenplum.pxf.api.utilities.FragmenterFactory;
 import org.greenplum.pxf.api.utilities.FragmentsResponse;
 import org.greenplum.pxf.api.utilities.FragmentsResponseFormatter;
@@ -59,17 +60,22 @@ public class FragmenterResource extends BaseResource {
 
     private FragmenterFactory fragmenterFactory;
 
+    private FragmenterCacheFactory fragmenterCacheFactory;
+
     public FragmenterResource() {
-        this(HttpRequestParser.getInstance(), FragmenterFactory.getInstance());
+        this(HttpRequestParser.getInstance(), FragmenterFactory.getInstance(), FragmenterCacheFactory.getInstance());
     }
 
-    FragmenterResource(RequestParser<HttpHeaders> parser, FragmenterFactory fragmenterFactory) {
+    FragmenterResource(RequestParser<HttpHeaders> parser,
+                       FragmenterFactory fragmenterFactory,
+                       FragmenterCacheFactory fragmenterCacheFactory) {
         super(parser);
         this.fragmenterFactory = fragmenterFactory;
+        this.fragmenterCacheFactory = fragmenterCacheFactory;
         if (LOG.isDebugEnabled()) {
             LOG.debug("fragmentCache size={}, stats={}",
-                    fragmenterFactory.getFragmenterCache().size(),
-                    fragmenterFactory.getFragmenterCache().stats().toString());
+                    fragmenterCacheFactory.getCache().size(),
+                    fragmenterCacheFactory.getCache().stats().toString());
         }
     }
 
@@ -105,7 +111,7 @@ public class FragmenterResource extends BaseResource {
         if (Utilities.isFragmenterCacheEnabled()) {
             try {
                 // We can't support lambdas here because asm version doesn't support it
-                fragments = fragmenterFactory.getFragmenterCache()
+                fragments = fragmenterCacheFactory.getCache()
                         .get(fragmenterCacheKey, new Callable<List<Fragment>>() {
                             @Override
                             public List<Fragment> call() throws Exception {
