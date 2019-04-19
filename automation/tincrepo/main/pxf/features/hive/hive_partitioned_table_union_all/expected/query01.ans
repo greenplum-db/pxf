@@ -1,55 +1,55 @@
 -- start_ignore
 -- end_ignore
 -- @description query01 for PXF Hive partitioned table cases using union all queries
-SELECT * FROM pxf_hive_partitioned_table WHERE fmt = 'avro'
+SELECT DISTINCT t1, fmt FROM pxf_hive_partitioned_table WHERE fmt = 'avro'
 UNION ALL
-SELECT * FROM pxf_hive_partitioned_table WHERE fmt = 'rc'
+SELECT DISTINCT t1, fmt FROM pxf_hive_partitioned_table WHERE fmt = 'rc'
 UNION ALL
-SELECT * FROM pxf_hive_partitioned_table WHERE fmt = 'txt'
+SELECT DISTINCT t1, fmt FROM pxf_hive_partitioned_table WHERE fmt = 'txt'
 UNION ALL
-SELECT * FROM pxf_hive_partitioned_table WHERE fmt = 'seq'
+SELECT DISTINCT t1, fmt FROM pxf_hive_partitioned_table WHERE fmt = 'seq'
 ORDER BY fmt, t1;
-  t1   |  t2  | num1 | dub1 | fmt
--------+------+------+------+------
- row1  | s_6  |    1 |    6 | avro
- row10 | s_15 |   10 |   15 | avro
- row2  | s_7  |    2 |    7 | avro
- row3  | s_8  |    3 |    8 | avro
- row4  | s_9  |    4 |    9 | avro
- row5  | s_10 |    5 |   10 | avro
- row6  | s_11 |    6 |   11 | avro
- row7  | s_12 |    7 |   12 | avro
- row8  | s_13 |    8 |   13 | avro
- row9  | s_14 |    9 |   14 | avro
- row1  | s_6  |    1 |    6 | rc
- row10 | s_15 |   10 |   15 | rc
- row2  | s_7  |    2 |    7 | rc
- row3  | s_8  |    3 |    8 | rc
- row4  | s_9  |    4 |    9 | rc
- row5  | s_10 |    5 |   10 | rc
- row6  | s_11 |    6 |   11 | rc
- row7  | s_12 |    7 |   12 | rc
- row8  | s_13 |    8 |   13 | rc
- row9  | s_14 |    9 |   14 | rc
- row1  | s_6  |    1 |    6 | seq
- row10 | s_15 |   10 |   15 | seq
- row2  | s_7  |    2 |    7 | seq
- row3  | s_8  |    3 |    8 | seq
- row4  | s_9  |    4 |    9 | seq
- row5  | s_10 |    5 |   10 | seq
- row6  | s_11 |    6 |   11 | seq
- row7  | s_12 |    7 |   12 | seq
- row8  | s_13 |    8 |   13 | seq
- row9  | s_14 |    9 |   14 | seq
- row1  | s_6  |    1 |    6 | txt
- row10 | s_15 |   10 |   15 | txt
- row2  | s_7  |    2 |    7 | txt
- row3  | s_8  |    3 |    8 | txt
- row4  | s_9  |    4 |    9 | txt
- row5  | s_10 |    5 |   10 | txt
- row6  | s_11 |    6 |   11 | txt
- row7  | s_12 |    7 |   12 | txt
- row8  | s_13 |    8 |   13 | txt
- row9  | s_14 |    9 |   14 | txt
+  t1   | fmt
+-------+------
+ row1  | avro
+ row10 | avro
+ row2  | avro
+ row3  | avro
+ row4  | avro
+ row5  | avro
+ row6  | avro
+ row7  | avro
+ row8  | avro
+ row9  | avro
+ row1  | rc
+ row10 | rc
+ row2  | rc
+ row3  | rc
+ row4  | rc
+ row5  | rc
+ row6  | rc
+ row7  | rc
+ row8  | rc
+ row9  | rc
+ row1  | seq
+ row10 | seq
+ row2  | seq
+ row3  | seq
+ row4  | seq
+ row5  | seq
+ row6  | seq
+ row7  | seq
+ row8  | seq
+ row9  | seq
+ row1  | txt
+ row10 | txt
+ row2  | txt
+ row3  | txt
+ row4  | txt
+ row5  | txt
+ row6  | txt
+ row7  | txt
+ row8  | txt
+ row9  | txt
 (40 rows)
 
