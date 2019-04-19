@@ -366,13 +366,13 @@ public class UtilitiesTest {
     @Test
     public void testFragmenterCachePropertyFALSE() {
         System.setProperty(PROPERTY_KEY_FRAGMENTER_CACHE, "FALSE");
-        assertFalse(Utilities.isUserImpersonationEnabled());
+        assertFalse(Utilities.isFragmenterCacheEnabled());
     }
 
     @Test
     public void testFragmenterCachePropertyFalse() {
         System.setProperty(PROPERTY_KEY_FRAGMENTER_CACHE, "false");
-        assertFalse(Utilities.isUserImpersonationEnabled());
+        assertFalse(Utilities.isFragmenterCacheEnabled());
     }
 
     @Test
