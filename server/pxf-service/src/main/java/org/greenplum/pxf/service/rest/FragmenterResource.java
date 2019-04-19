@@ -115,6 +115,7 @@ public class FragmenterResource extends BaseResource {
                             }
                         });
             } catch (UncheckedExecutionException | ExecutionException e) {
+                // Unwrap the error
                 if (e.getCause() != null)
                     throw e.getCause();
                 throw e;
