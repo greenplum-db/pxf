@@ -29,4 +29,4 @@ PXF_CONF="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
 # export PXF_USER_IMPERSONATION=true
 
 # Fragmenter cache, set to false to disable
-# export PXF_FRAGMENTER_CACHE=${PXF_FRAGMENTER_CACHE:=true}
+# export PXF_FRAGMENTER_CACHE=true

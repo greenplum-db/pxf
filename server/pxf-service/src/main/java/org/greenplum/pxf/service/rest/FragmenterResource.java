@@ -102,8 +102,6 @@ public class FragmenterResource extends BaseResource {
         LOG.debug("FRAGMENTER started for path \"{}\"", path);
 
         RequestContext context = parseRequest(headers);
-        /* Create a fragmenter instance with API level parameters */
-        final Fragmenter fragmenter = fragmenterFactory.getPlugin(context);
         final String fragmenterCacheKey = getFragmenterCacheKey(context);
 
         List<Fragment> fragments;
@@ -117,7 +115,7 @@ public class FragmenterResource extends BaseResource {
                             public List<Fragment> call() throws Exception {
                                 LOG.debug("Caching fragments for transactionId={} from segmentId={} with key={}",
                                         context.getTransactionId(), context.getSegmentId(), fragmenterCacheKey);
-                                return AnalyzeUtils.getSampleFragments(fragmenter.getFragments(), context);
+                                return getFragmentsFromContext(context);
                             }
                         });
             } catch (UncheckedExecutionException | ExecutionException e) {
@@ -128,7 +126,7 @@ public class FragmenterResource extends BaseResource {
             }
         } else {
             LOG.debug("Fragmenter cache is disabled");
-            fragments = AnalyzeUtils.getSampleFragments(fragmenter.getFragments(), context);
+            fragments = getFragmentsFromContext(context);
         }
 
         FragmentsResponse fragmentsResponse = FragmentsResponseFormatter.formatResponse(fragments, path);
@@ -137,7 +135,7 @@ public class FragmenterResource extends BaseResource {
         SessionId session = new SessionId(context.getSegmentId(), context.getTransactionId(), context.getUser());
         long elapsedMillis = System.currentTimeMillis() - startTime;
         LOG.info("{} returns {} fragment{} for path {} in {} ms for {} [profile {} filter is{} available]",
-                fragmenter.getClass().getSimpleName(), numberOfFragments, numberOfFragments == 1 ? "" : "s",
+                context.getFragmenter(), numberOfFragments, numberOfFragments == 1 ? "" : "s",
                 path, elapsedMillis, session, context.getProfile(), context.hasFilter() ? "" : " not");
 
         return Response.ok(fragmentsResponse, MediaType.APPLICATION_JSON_TYPE).build();
@@ -175,6 +173,12 @@ public class FragmenterResource extends BaseResource {
         }
 
         return Response.ok(response, MediaType.APPLICATION_JSON_TYPE).build();
+    }
+
+    private List<Fragment> getFragmentsFromContext(RequestContext context) throws Exception {
+        /* Create a fragmenter instance with API level parameters */
+        final Fragmenter fragmenter = fragmenterFactory.getPlugin(context);
+        return AnalyzeUtils.getSampleFragments(fragmenter.getFragments(), context);
     }
 
     private String getFragmenterCacheKey(RequestContext context) {

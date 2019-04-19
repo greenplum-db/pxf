@@ -72,7 +72,7 @@ export PXF_PRINCIPAL=${PXF_PRINCIPAL:="gpadmin/_HOST@EXAMPLE.COM"}
 export PXF_USER_IMPERSONATION=${PXF_USER_IMPERSONATION:=true}
 
 # Set to true to enable Remote debug via port 8000
-export PXF_DEBUG=${PXF_DEBUG:=false}
+export PXF_DEBUG=${PXF_DEBUG:-false}
 
 # Fragmenter cache, set to false to disable
-export PXF_FRAGMENTER_CACHE=${PXF_FRAGMENTER_CACHE:=true}
+export PXF_FRAGMENTER_CACHE=${PXF_FRAGMENTER_CACHE:-true}

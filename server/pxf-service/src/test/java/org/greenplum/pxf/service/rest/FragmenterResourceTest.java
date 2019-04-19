@@ -8,6 +8,7 @@ import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.FragmenterCacheFactory;
 import org.greenplum.pxf.api.utilities.FragmenterFactory;
 import org.greenplum.pxf.api.utilities.FragmentsResponse;
+import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.service.FakeTicker;
 import org.greenplum.pxf.service.RequestParser;
 import org.junit.Before;
@@ -26,9 +27,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 public class FragmenterResourceTest {
@@ -79,7 +80,7 @@ public class FragmenterResourceTest {
 
         new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory)
                 .getFragments(servletContext, headersFromRequest1, "/foo/bar");
-        verify(fragmenter1).getFragments();
+        verify(fragmenter1, times(1)).getFragments();
     }
 
     @Test
@@ -155,7 +156,6 @@ public class FragmenterResourceTest {
         when(parser.parseRequest(headersFromRequest1)).thenReturn(context1);
         when(parser.parseRequest(headersFromRequest2)).thenReturn(context2);
         when(fragmenterFactory.getPlugin(context1)).thenReturn(fragmenter1);
-        when(fragmenterFactory.getPlugin(context2)).thenReturn(fragmenter2);
 
         when(fragmenter1.getFragments()).thenReturn(fragmentList);
 
@@ -165,7 +165,8 @@ public class FragmenterResourceTest {
                 .getFragments(servletContext, headersFromRequest2, "/foo/bar");
 
         verify(fragmenter1, times(1)).getFragments();
-        verifyZeroInteractions(fragmenter2);
+        verify(fragmenterFactory, never()).getPlugin(context2);
+
         assertNotNull(response1);
         assertNotNull(response2);
         assertNotNull(response1.getEntity());
@@ -263,13 +264,22 @@ public class FragmenterResourceTest {
 
         verify(fragmenter, times(1)).getFragments();
         assertEquals(threadCount, finishedCount.intValue());
-        fakeTicker.advanceTime(1000 * 1000);
 
         // From the CacheBuilder documentation:
         // Expired entries may be counted in {@link Cache#size}, but will never be visible to read or
         // write operations. Expired entries are cleaned up as part of the routine maintenance described
         // in the class javadoc
-        assertTrue(fragmentCache.size() <= 1);
+        assertEquals(1,fragmentCache.size());
+        // advance time one second force a cache clean up.
+        // Cache retains the entry
+        fakeTicker.advanceTime(1 * 1000);
+        fragmentCache.cleanUp();
+        assertEquals(1,fragmentCache.size());
+        // advance 10 seconds and force a clean up
+        // cache should be clean now
+        fakeTicker.advanceTime(10 * 1000);
+        fragmentCache.cleanUp();
+        assertEquals(0,fragmentCache.size());
     }
 
     @SuppressWarnings("unchecked")
@@ -304,5 +314,22 @@ public class FragmenterResourceTest {
 
         assertSame(fragmentList1, ((FragmentsResponse) response1.getEntity()).getFragments());
         assertSame(fragmentList2, ((FragmentsResponse) response2.getEntity()).getFragments());
+
+        if (Utilities.isFragmenterCacheEnabled()) {
+            assertEquals(2, fragmentCache.size());
+            // advance time one second force a cache clean up.
+            // Cache retains the entry
+            fakeTicker.advanceTime(1 * 1000);
+            fragmentCache.cleanUp();
+            assertEquals(2,fragmentCache.size());
+            // advance 10 seconds and force a clean up
+            // cache should be clean now
+            fakeTicker.advanceTime(10 * 1000);
+            fragmentCache.cleanUp();
+            assertEquals(0,fragmentCache.size());
+        } else {
+            // Cache should be empty when fragmenter cache is disabled
+            assertEquals(0, fragmentCache.size());
+        }
     }
 }
