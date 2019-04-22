@@ -101,7 +101,7 @@ public class FragmenterResource extends BaseResource {
         long startTime = System.currentTimeMillis();
         LOG.debug("FRAGMENTER started for path \"{}\"", path);
 
-        RequestContext context = parseRequest(headers);
+        final RequestContext context = parseRequest(headers);
         final String fragmenterCacheKey = getFragmenterCacheKey(context);
 
         List<Fragment> fragments;
@@ -115,7 +115,7 @@ public class FragmenterResource extends BaseResource {
                             public List<Fragment> call() throws Exception {
                                 LOG.debug("Caching fragments for transactionId={} from segmentId={} with key={}",
                                         context.getTransactionId(), context.getSegmentId(), fragmenterCacheKey);
-                                return getFragmentsFromContext(context);
+                                return getFragments(context);
                             }
                         });
             } catch (UncheckedExecutionException | ExecutionException e) {
@@ -126,7 +126,7 @@ public class FragmenterResource extends BaseResource {
             }
         } else {
             LOG.debug("Fragmenter cache is disabled");
-            fragments = getFragmentsFromContext(context);
+            fragments = getFragments(context);
         }
 
         FragmentsResponse fragmentsResponse = FragmentsResponseFormatter.formatResponse(fragments, path);
@@ -175,12 +175,23 @@ public class FragmenterResource extends BaseResource {
         return Response.ok(response, MediaType.APPLICATION_JSON_TYPE).build();
     }
 
-    private List<Fragment> getFragmentsFromContext(RequestContext context) throws Exception {
+    private List<Fragment> getFragments(RequestContext context) throws Exception {
         /* Create a fragmenter instance with API level parameters */
-        final Fragmenter fragmenter = fragmenterFactory.getPlugin(context);
-        return AnalyzeUtils.getSampleFragments(fragmenter.getFragments(), context);
+        return AnalyzeUtils.getSampleFragments(fragmenterFactory.getPlugin(context).getFragments(), context);
     }
 
+    /**
+     * Returns a key for the fragmenter cache. TransactionID is not sufficient to key
+     * the cache. For the case where we have multiple slices (i.e select a, b from c
+     * where a = 'part1' union all select a, b from c where a = 'part2'), the list of
+     * fragments for each slice in the query will be different, but the transactionID
+     * will be the same. For that reason we must include the datasource and the filter
+     * string as part of the fragmenter cache.
+     *
+     *
+     * @param context the request context
+     * @return the key for the fragmenter cache
+     */
     private String getFragmenterCacheKey(RequestContext context) {
         return String.format("%s:%s:%s",
                 context.getTransactionId(),

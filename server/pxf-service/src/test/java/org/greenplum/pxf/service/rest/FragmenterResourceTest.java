@@ -13,6 +13,9 @@ import org.greenplum.pxf.service.FakeTicker;
 import org.greenplum.pxf.service.RequestParser;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.HttpHeaders;
@@ -32,16 +35,17 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@RunWith(MockitoJUnitRunner.class)
 public class FragmenterResourceTest {
 
-    private RequestParser parser;
-    private FragmenterFactory fragmenterFactory;
-    private FragmenterCacheFactory fragmenterCacheFactory;
-    private ServletContext servletContext;
-    private HttpHeaders headersFromRequest1;
-    private HttpHeaders headersFromRequest2;
-    private Fragmenter fragmenter1;
-    private Fragmenter fragmenter2;
+    @Mock private RequestParser parser;
+    @Mock private FragmenterFactory fragmenterFactory;
+    @Mock private FragmenterCacheFactory fragmenterCacheFactory;
+    @Mock private ServletContext servletContext;
+    @Mock private HttpHeaders headersFromRequest1;
+    @Mock private HttpHeaders headersFromRequest2;
+    @Mock private Fragmenter fragmenter1;
+    @Mock private Fragmenter fragmenter2;
     private Cache<String, List<Fragment>> fragmentCache;
     private FakeTicker fakeTicker;
 
@@ -49,15 +53,6 @@ public class FragmenterResourceTest {
 
     @Before
     public void setup() {
-        parser = mock(RequestParser.class);
-        fragmenterFactory = mock(FragmenterFactory.class);
-        fragmenterCacheFactory = mock(FragmenterCacheFactory.class);
-        servletContext = mock(ServletContext.class);
-        headersFromRequest1 = mock(HttpHeaders.class);
-        headersFromRequest2 = mock(HttpHeaders.class);
-        fragmenter1 = mock(Fragmenter.class);
-        fragmenter2 = mock(Fragmenter.class);
-
         fakeTicker = new FakeTicker();
         fragmentCache = CacheBuilder.newBuilder()
                 .expireAfterAccess(10, TimeUnit.SECONDS)
