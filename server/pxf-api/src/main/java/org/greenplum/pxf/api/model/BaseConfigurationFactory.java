@@ -47,8 +47,8 @@ public class BaseConfigurationFactory implements ConfigurationFactory {
                         StringUtils.equalsIgnoreCase(serverName, f.getName()));
 
         if (serverDirectories == null || serverDirectories.length == 0) {
-            LOG.warn("Directory {} does not exist or cannot be read by PXF, no configuration resources are added for server {}",
-                serversConfigDirectory + File.separator + serverName,
+            LOG.warn("Directory {}{}{} does not exist or cannot be read by PXF, no configuration resources are added for server {}",
+                serversConfigDirectory, File.separator, serverName,
                 serverName
             );
         } else if (serverDirectories.length > 1) {
