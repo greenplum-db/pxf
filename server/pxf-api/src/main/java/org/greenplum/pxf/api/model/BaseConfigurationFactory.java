@@ -46,16 +46,20 @@ public class BaseConfigurationFactory implements ConfigurationFactory {
                         f.canRead() &&
                         StringUtils.equalsIgnoreCase(serverName, f.getName()));
 
-        String serverDirectoryName = serversConfigDirectory + serverName;
-
         if (serverDirectories == null || serverDirectories.length == 0) {
-            LOG.warn("Directory {} does not exist, no configuration resources are added for server {}", serverDirectoryName, serverName);
+            LOG.warn("Directory {} does not exist or cannot be read by PXF, no configuration resources are added for server {}",
+                serversConfigDirectory + File.separator + serverName,
+                serverName
+            );
         } else if (serverDirectories.length > 1) {
             throw new IllegalStateException(String.format(
-                    "Multiple directories found for server %s. Server directories are expected to be case-insensitive.", serverName));
+                    "Multiple directories found for server %s. Server directories are expected to be case-insensitive.", serverName
+            ));
         } else {
             // add all site files as URL resources to the configuration, no resources will be added from the classpath
-            LOG.debug("Using directory {} for server {} configuration", serverDirectoryName, serverName);
+            LOG.debug("Using directory {} for server {} configuration",
+                serverDirectories[0], serverName
+            );
             addSiteFilesAsResources(configuration, serverName, serverDirectories[0]);
         }
 
