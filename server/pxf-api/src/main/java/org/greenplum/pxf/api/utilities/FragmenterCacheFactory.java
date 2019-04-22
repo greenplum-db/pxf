@@ -25,7 +25,10 @@ public class FragmenterCacheFactory {
     private final Cache<String, List<Fragment>> fragmenterCache = CacheBuilder.newBuilder()
             .expireAfterAccess(10, TimeUnit.SECONDS)
             .removalListener((RemovalListener<String, List<Fragment>>) notification ->
-                    LOG.debug("Remove fragmenterCache entry for transactionId {}", notification.getKey()))
+                    LOG.debug("Removed fragmenterCache entry for transactionId {} with {} fragments with cause {}",
+                            notification.getKey(),
+                            (notification.getValue() != null ? notification.getValue().size() : 0),
+                            notification.getCause().toString()))
             .build();
 
     /**
