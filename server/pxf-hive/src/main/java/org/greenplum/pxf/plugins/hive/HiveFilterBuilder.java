@@ -143,11 +143,10 @@ public class HiveFilterBuilder implements FilterParser.FilterBuilder {
         String filterString;
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Filter string input : " + filterInput);
+            LOG.debug("Filter string input: {}", filterInput);
         }
 
-        HiveFilterBuilder eval = new HiveFilterBuilder();
-        Object filter = eval.getFilterObject(filterInput);
+        Object filter = new HiveFilterBuilder().getFilterObject(filterInput);
 
         if (filter instanceof LogicalFilter) {
             filterString = buildCompoundFilter((LogicalFilter) filter);
@@ -187,14 +186,14 @@ public class HiveFilterBuilder implements FilterParser.FilterBuilder {
                     filterString.append(logicalOperator);
                 }
                 filterString.append(serializedFilter);
-            } else if(filter.getOperator() == FilterParser.LogicalOperation.HDOP_OR) {
+            } else if (filter.getOperator() == FilterParser.LogicalOperation.HDOP_OR) {
                 // Case when one of the predicates is non-compliant and with OR operator
                 // P OR NP -> null
                 return null;
             }
         }
 
-        if(filterString.length() > 0) {
+        if (filterString.length() > 0) {
             return String.format("(%s)", filterString.toString());
         } else {
             return null;
