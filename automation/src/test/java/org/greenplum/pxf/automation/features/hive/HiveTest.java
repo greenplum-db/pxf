@@ -364,6 +364,8 @@ public class HiveTest extends HiveBaseTest {
     @Test(groups = { "hive", "features", "gpdb" })
     public void hivePartitionedPPDTableCustomFilters() throws Exception {
 
+        // Hive talbe with partition columns s2, n1.
+        // 10 partition with one row in each partition
         HiveExternalTable hivePartitionedPPDTable = TableFactory.getHiveByRowCommaExternalTable(HIVE_PARTITIONED_PPD_TABLE, HIVE_SMALLDATA_PPD_COLS);
         hivePartitionedPPDTable.setPartitionedBy(HIVE_PARTITION_PPD_COLS);
         hive.createTableAndVerify(hivePartitionedPPDTable);
@@ -372,11 +374,12 @@ public class HiveTest extends HiveBaseTest {
         hive.runQuery("SET hive.exec.dynamic.partition.mode = nonstrict");
         hive.insertDataToPartition(hiveSmallDataTable, hivePartitionedPPDTable,
                 new String[]{"s2, n1"}, new String[]{"s1", "d1", "s2", "n1"});
-
-        // Create GPDB table without using profiles
+        
         String extTableName = PXF_HIVE_PARTITIONED_PPD_TABLE + "_customfilter";
         String filterString;
 
+        // Filter with NP1 AND NP2 AND P3 -> P3
+        // Test for (s1 LIKE 'row1') AND (n1 < 999) AND (s2 = 's_14) return one partitions
         exTable = TableFactory.getPxfHiveReadableTable(extTableName,
                 PXF_HIVE_SMALLDATA_PPD_COLS, hivePartitionedPPDTable, false);
         filterString = "a0c25s4drow1o7a3c23s3d999o1l0a2c25s4ds_14o5l0";
@@ -385,14 +388,16 @@ public class HiveTest extends HiveBaseTest {
         exTable.setFragmenter(TEST_PACKAGE + "HiveDataFragmenterWithFilter");
         createTable(exTable);
 
-        // Filter with P1 AND (NOT P2 OR NOT P3)
+        // Filter with P1 AND (NOT P2 OR NOT P3) -> P1
+        // (s2 = 's_9') AND (NOT(s2 = 's_7') OR NOT(n1 = 4)) should return one partition
         filterString = "a2c25s3ds_7o5a3c23s1d4o5l2a2c25s3ds_9o5l2l1l0";
         exTable.setName(extTableName + "_2");
         exTable.setUserParameters(hiveTestFilter(filterString));
         exTable.setFragmenter(TEST_PACKAGE + "HiveDataFragmenterWithFilter");
         createTable(exTable);
 
-        // Filter with P1 OR (NOT P2 OR NOT P3)
+        // Filter with P1 OR (NOT P2 OR NOT P3) -> null
+        // (s2 = 's_9') OR (NOT(s2 = 's_7') OR NOT(n1 = 4)) should return all partitions
         filterString = "a2c25s3ds_7o5a3c23s1d4o5l2a2c25s3ds_9o5l2l1l1";
         exTable.setName(extTableName + "_3");
         exTable.setUserParameters(hiveTestFilter(filterString));
@@ -400,6 +405,7 @@ public class HiveTest extends HiveBaseTest {
         createTable(exTable);
 
         // Test for != operators
+        // (s2 != 's_14') should return 9 rows
         filterString = "a2c25s4ds_14o6";
         exTable.setName(extTableName + "_4");
         exTable.setUserParameters(hiveTestFilter(filterString));
