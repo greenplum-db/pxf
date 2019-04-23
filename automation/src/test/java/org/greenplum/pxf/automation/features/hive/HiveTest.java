@@ -374,13 +374,23 @@ public class HiveTest extends HiveBaseTest {
                 new String[]{"s2, n1"}, new String[]{"s1", "d1", "s2", "n1"});
 
         // Create GPDB table without using profiles
-        exTable = TableFactory.getPxfHiveReadableTable(PXF_HIVE_PARTITIONED_PPD_TABLE + "_customfilters",
-                PXF_HIVE_SMALLDATA_PPD_COLS, hivePartitionedPPDTable, false);
+        String extTableName = PXF_HIVE_PARTITIONED_PPD_TABLE + "_customfilter";
+        String filterString;
 
-        String filterString = "a0c25s4drow1o7a3c23s3d999o1l0a2c25s4ds_14o5l0";
+        exTable = TableFactory.getPxfHiveReadableTable(extTableName,
+                PXF_HIVE_SMALLDATA_PPD_COLS, hivePartitionedPPDTable, false);
+        exTable.setName(extTableName + "_1");
+        filterString = "a0c25s4drow1o7a3c23s3d999o1l0a2c25s4ds_14o5l0";
         exTable.setUserParameters(hiveTestFilter(filterString));
         exTable.setFragmenter(TEST_PACKAGE + "HiveDataFragmenterWithFilter");
         createTable(exTable);
+
+        filterString = "a1c701s1d9o4a3c23s1d4o5l2a2c25s3ds_9o5l2l1l0";
+        exTable.setName(extTableName + "_2");
+        exTable.setUserParameters(hiveTestFilter(filterString));
+        exTable.setFragmenter(TEST_PACKAGE + "HiveDataFragmenterWithFilter");
+        createTable(exTable);
+
         runTincTest("pxf.features.hive.hive_partitioned_ppd_table_customfilters.runTest");
     }
 
