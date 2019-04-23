@@ -54,7 +54,7 @@ public class HiveFilterBuilder implements FilterParser.FilterBuilder {
     private static final String HIVE_API_GT = " > ";
     private static final String HIVE_API_LTE = " <= ";
     private static final String HIVE_API_GTE = " >= ";
-    private static final String HIVE_API_NE = " != ";
+    private static final String HIVE_API_NE = " <> ";
     private static final String HIVE_API_DQUOTE = "\"";
 
     /**
@@ -161,10 +161,10 @@ public class HiveFilterBuilder implements FilterParser.FilterBuilder {
         String logicalOperator;
         switch (filter.getOperator()) {
             case HDOP_AND:
-                logicalOperator = " and ";
+                logicalOperator = " AND ";
                 break;
             case HDOP_OR:
-                logicalOperator = " or ";
+                logicalOperator = " OR ";
                 break;
             default:
                 logicalOperator = "";

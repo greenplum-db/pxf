@@ -379,8 +379,8 @@ public class HiveTest extends HiveBaseTest {
 
         exTable = TableFactory.getPxfHiveReadableTable(extTableName,
                 PXF_HIVE_SMALLDATA_PPD_COLS, hivePartitionedPPDTable, false);
-        exTable.setName(extTableName + "_1");
         filterString = "a0c25s4drow1o7a3c23s3d999o1l0a2c25s4ds_14o5l0";
+        exTable.setName(extTableName + "_1");
         exTable.setUserParameters(hiveTestFilter(filterString));
         exTable.setFragmenter(TEST_PACKAGE + "HiveDataFragmenterWithFilter");
         createTable(exTable);
@@ -395,6 +395,13 @@ public class HiveTest extends HiveBaseTest {
         // Filter with P1 OR (NOT P2 OR NOT P3)
         filterString = "a2c25s3ds_7o5a3c23s1d4o5l2a2c25s3ds_9o5l2l1l1";
         exTable.setName(extTableName + "_3");
+        exTable.setUserParameters(hiveTestFilter(filterString));
+        exTable.setFragmenter(TEST_PACKAGE + "HiveDataFragmenterWithFilter");
+        createTable(exTable);
+
+        // Test for != operators
+        filterString = "a2c25s4ds_14o6";
+        exTable.setName(extTableName + "_4");
         exTable.setUserParameters(hiveTestFilter(filterString));
         exTable.setFragmenter(TEST_PACKAGE + "HiveDataFragmenterWithFilter");
         createTable(exTable);

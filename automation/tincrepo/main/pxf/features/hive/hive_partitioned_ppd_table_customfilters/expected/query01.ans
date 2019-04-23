@@ -28,3 +28,17 @@ SELECT * FROM pxf_hive_partitioned_ppd_table_customfilter_3 ORDER BY n1, s2;
  row10 | 15 | s_15 | 10
 (10 rows)
 
+SELECT * FROM pxf_hive_partitioned_ppd_table_customfilter_4 ORDER BY n1, s2;
+  s1   | d1 |  s2  | n1
+-------+----+------+----
+ row1  |  6 | s_6  |  1
+ row2  |  7 | s_7  |  2
+ row3  |  8 | s_8  |  3
+ row4  |  9 | s_9  |  4
+ row5  | 10 | s_10 |  5
+ row6  | 11 | s_11 |  6
+ row7  | 12 | s_12 |  7
+ row8  | 13 | s_13 |  8
+ row10 | 15 | s_15 | 10
+(9 rows)
+
