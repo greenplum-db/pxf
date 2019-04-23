@@ -374,7 +374,7 @@ public class HiveTest extends HiveBaseTest {
         hive.runQuery("SET hive.exec.dynamic.partition.mode = nonstrict");
         hive.insertDataToPartition(hiveSmallDataTable, hivePartitionedPPDTable,
                 new String[]{"s2, n1"}, new String[]{"s1", "d1", "s2", "n1"});
-        
+
         String extTableName = PXF_HIVE_PARTITIONED_PPD_TABLE + "_customfilter";
         String filterString;
 

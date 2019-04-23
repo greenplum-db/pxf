@@ -167,7 +167,8 @@ public class HiveFilterBuilder implements FilterParser.FilterBuilder {
                 logicalOperator = " OR ";
                 break;
             default:
-                logicalOperator = "";
+                // NOT not supported
+                return null;
         }
 
         StringBuilder filterString = new StringBuilder();
@@ -179,17 +180,11 @@ public class HiveFilterBuilder implements FilterParser.FilterBuilder {
                 serializedFilter = buildSingleFilter(f, filter.getOperator());
             }
             if (serializedFilter != null) {
-                if (filter.getOperator() == FilterParser.LogicalOperation.HDOP_NOT) {
-                    return null;
-                } else {
-                    // We only append the operator if there is something on the
-                    // filterString
-                    if (filterString.length() > 0) {
-                        filterString.append(logicalOperator);
-                    }
-                    filterString.append(serializedFilter);
+                // We only append the operator if there is something on the filterString
+                if (filterString.length() > 0) {
+                    filterString.append(logicalOperator);
                 }
-
+                filterString.append(serializedFilter);
             } else if (filter.getOperator() == FilterParser.LogicalOperation.HDOP_OR) {
                 // Case when one of the predicates is non-compliant and with OR operator
                 // P OR NP -> null
@@ -197,11 +192,8 @@ public class HiveFilterBuilder implements FilterParser.FilterBuilder {
             }
         }
 
-        if (filterString.length() > 0) {
-            return String.format("(%s)", filterString.toString());
-        } else {
-            return null;
-        }
+        return (filterString.length() > 0) ?
+                String.format("(%s)", filterString.toString()) : null;
     }
 
     private boolean isFilterCompatible(String filterColumnName, FilterParser.Operation operation, FilterParser.LogicalOperation logicalOperation) {
