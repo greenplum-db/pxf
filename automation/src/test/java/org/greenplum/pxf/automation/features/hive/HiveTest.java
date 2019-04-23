@@ -385,8 +385,16 @@ public class HiveTest extends HiveBaseTest {
         exTable.setFragmenter(TEST_PACKAGE + "HiveDataFragmenterWithFilter");
         createTable(exTable);
 
-        filterString = "a1c701s1d9o4a3c23s1d4o5l2a2c25s3ds_9o5l2l1l0";
+        // Filter with P1 AND (NOT P2 OR NOT P3)
+        filterString = "a2c25s3ds_7o5a3c23s1d4o5l2a2c25s3ds_9o5l2l1l0";
         exTable.setName(extTableName + "_2");
+        exTable.setUserParameters(hiveTestFilter(filterString));
+        exTable.setFragmenter(TEST_PACKAGE + "HiveDataFragmenterWithFilter");
+        createTable(exTable);
+
+        // Filter with P1 OR (NOT P2 OR NOT P3)
+        filterString = "a2c25s3ds_7o5a3c23s1d4o5l2a2c25s3ds_9o5l2l1l1";
+        exTable.setName(extTableName + "_3");
         exTable.setUserParameters(hiveTestFilter(filterString));
         exTable.setFragmenter(TEST_PACKAGE + "HiveDataFragmenterWithFilter");
         createTable(exTable);

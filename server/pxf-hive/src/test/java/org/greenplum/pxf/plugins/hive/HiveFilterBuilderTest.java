@@ -65,8 +65,8 @@ public class HiveFilterBuilderTest {
         builder.setCanPushdownIntegral(true);
         builder.setPartitionKeys(getPartitionKeyTypes());
 
-        //assertEquals("(stringColumn >= \"9.0\" and ((NOT(bigIntColumn = \"4\")) or (NOT(intColumn = \"s_9\"))))", builder.buildFilterStringForHive("a1c701s1d9o4a3c23s1d4o5l2a2c25s3ds_9o5l2l1l0"));
-        assertEquals("(stringColumn >= \"9.0\" and (not bigIntColumn = \"4\" or not intColumn = \"s_9\"))", builder.buildFilterStringForHive("a1c701s1d9o4a3c23s1d4o5l2a2c25s3ds_9o5l2l1l0"));
+        assertNull(builder.buildFilterStringForHive("a3c23s1d4o5l2a2c25s3ds_9o5l2l1"));
+        assertEquals("(stringColumn >= \"9.0\")", builder.buildFilterStringForHive("a1c701s1d9o4a3c23s1d4o5l2a2c25s3ds_9o5l2l1l0"));
     }
 
     @Test
