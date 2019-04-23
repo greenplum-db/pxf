@@ -167,7 +167,7 @@ public class HiveFilterBuilder implements FilterParser.FilterBuilder {
                 logicalOperator = " or ";
                 break;
             case HDOP_NOT:
-                logicalOperator = " not ";
+                logicalOperator = "not ";
                 break;
             default:
                 logicalOperator = "";
@@ -184,9 +184,8 @@ public class HiveFilterBuilder implements FilterParser.FilterBuilder {
             if (serializedFilter != null) {
                 if (filter.getOperator() == FilterParser.LogicalOperation.HDOP_NOT) {
                     filterString
-                            .append("NOT(")
-                            .append(serializedFilter)
-                            .append(")");
+                            .append(logicalOperator)
+                            .append(serializedFilter);
                 } else {
                     // We only append the operator if there is something on the
                     // filterString
@@ -204,6 +203,9 @@ public class HiveFilterBuilder implements FilterParser.FilterBuilder {
         }
 
         if (filterString.length() > 0) {
+            if (filter.getOperator() == FilterParser.LogicalOperation.HDOP_NOT) {
+                return filterString.toString();
+            }
             return String.format("(%s)", filterString.toString());
         } else {
             return null;
