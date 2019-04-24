@@ -55,7 +55,7 @@ public class FragmentsResponseFormatter {
         }
 
         /* HD-2550: convert host names to IPs */
-        convertHostsToIPs(fragments);
+//        convertHostsToIPs(fragments);
 
         updateFragmentIndex(fragments);
 

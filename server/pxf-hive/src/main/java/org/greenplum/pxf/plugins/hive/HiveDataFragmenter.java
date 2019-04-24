@@ -300,7 +300,7 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
             String[] hosts = fsp.getLocations();
             String filepath = fsp.getPath().toString();
 
-            byte[] locationInfo = HdfsUtilities.prepareFragmentMetadata(fsp);
+            byte[] locationInfo = HdfsUtilities.prepareFragmentMetadata(fsp, null);
             Fragment fragment = new Fragment(filepath, hosts, locationInfo,
                     HiveUtilities.makeUserData(fragmenterForProfile, tablePartition, filterInFragmenter), profile);
             fragments.add(fragment);

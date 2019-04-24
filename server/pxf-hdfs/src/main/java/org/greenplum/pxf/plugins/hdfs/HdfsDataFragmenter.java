@@ -65,18 +65,19 @@ public class HdfsDataFragmenter extends BaseFragmenter {
     public List<Fragment> getFragments() throws Exception {
         Path path = new Path(hcfsType.getDataUri(configuration, context));
         List<InputSplit> splits = getSplits(path);
+        String[] hosts = {"foo"};
 
         LOG.debug("Total number of fragments = {}", splits.size());
         for (InputSplit split : splits) {
             FileSplit fsp = (FileSplit) split;
             String filepath = fsp.getPath().toString();
-            String[] hosts = fsp.getLocations();
+//            String[] hosts = fsp.getLocations();
 
             /*
              * metadata information includes: file split's start, length and
              * hosts (locations).
              */
-            byte[] fragmentMetadata = HdfsUtilities.prepareFragmentMetadata(fsp);
+            byte[] fragmentMetadata = HdfsUtilities.prepareFragmentMetadata(fsp, hosts);
             Fragment fragment = new Fragment(filepath, hosts, fragmentMetadata);
             fragments.add(fragment);
         }

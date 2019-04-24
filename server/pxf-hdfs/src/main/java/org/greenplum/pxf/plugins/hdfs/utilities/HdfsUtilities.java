@@ -136,10 +136,10 @@ public class HdfsUtilities {
      * @throws IOException if I/O errors occur while writing to the underlying
      *                     stream
      */
-    public static byte[] prepareFragmentMetadata(FileSplit fsp)
+    public static byte[] prepareFragmentMetadata(FileSplit fsp, String[] hosts)
             throws IOException {
 
-        return prepareFragmentMetadata(fsp.getStart(), fsp.getLength(), fsp.getLocations());
+        return prepareFragmentMetadata(fsp.getStart(), fsp.getLength(), hosts);
     }
 
     private static byte[] prepareFragmentMetadata(long start, long length, String[] locations)

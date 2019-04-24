@@ -12,6 +12,8 @@ import java.net.URI;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities.prepareFragmentMetadata;
+
 /**
  * Fragmenter class for file resources. This fragmenter
  * adds support for profiles that require files without
@@ -65,6 +67,7 @@ public class HdfsFileFragmenter extends BaseFragmenter {
         while (fileStatusListIterator.hasNext()) {
             LocatedFileStatus fileStatus = fileStatusListIterator.next();
             String sourceName = fileStatus.getPath().toUri().toString();
+            //prepareFragmentMetadata(fsp.getStart(), fsp.getLength(), fsp.getLocations())
             Fragment fragment = new Fragment(sourceName, hosts, null);
             fragments.add(fragment);
         }
