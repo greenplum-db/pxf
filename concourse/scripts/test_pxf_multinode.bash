@@ -110,6 +110,13 @@ function setup_pxf_on_cluster() {
         sed -i \"s|YOUR_DATABASE_JDBC_URL|jdbc:postgresql://mdw:5432/pxfautomation|\" ${PXF_CONF_DIR}/servers/database/jdbc-site.xml &&
         sed -i \"s|YOUR_DATABASE_JDBC_USER|gpadmin|\" ${PXF_CONF_DIR}/servers/database/jdbc-site.xml &&
         sed -i \"s|YOUR_DATABASE_JDBC_PASSWORD||\" ${PXF_CONF_DIR}/servers/database/jdbc-site.xml &&
+        mkdir -p ${PXF_CONF_DIR}/servers/db-session-params &&
+        cp ${PXF_CONF_DIR}/templates/jdbc-site.xml ${PXF_CONF_DIR}/servers/db-session-params/ &&
+        sed -i \"s|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.postgresql.Driver|\" ${PXF_CONF_DIR}/servers/db-session-params/jdbc-site.xml &&
+        sed -i \"s|YOUR_DATABASE_JDBC_URL|jdbc:postgresql://mdw:5432/pxfautomation|\" ${PXF_CONF_DIR}/servers/db-session-params/jdbc-site.xml &&
+        sed -i \"s|YOUR_DATABASE_JDBC_USER||\" ${PXF_CONF_DIR}/servers/db-session-params/jdbc-site.xml &&
+        sed -i \"s|YOUR_DATABASE_JDBC_PASSWORD||\" ${PXF_CONF_DIR}/servers/db-session-params/jdbc-site.xml &&
+        sed -i \"s|</configuration>|<property><name>jdbc.session.property.client_min_messages</name><value>debug1</value></property></configuration>|\" ${PXF_CONF_DIR}/servers/db-session-params/jdbc-site.xml &&
         if [ ${IMPERSONATION} == false ]; then
             echo 'export PXF_USER_IMPERSONATION=false' >> ${PXF_CONF_DIR}/conf/pxf-env.sh
         fi &&
