@@ -31,6 +31,9 @@ public class JdbcTest extends BaseFeature {
             "vc1 varchar(5)",
             "c1 char(3)",
             "bin bytea"};
+    private static final String[] PGSETTINGS_VIEW_FIELDS = new String[]{
+            "name    text",
+            "setting text"};
     private static final String[] TYPES_TABLE_FIELDS_SMALL = new String[]{
             "t1    text",
             "t2    text",
@@ -52,6 +55,7 @@ public class JdbcTest extends BaseFeature {
     private ExternalTable pxfJdbcMultipleFragmentsByDate;
     private ExternalTable pxfJdbcMultipleFragmentsByEnum;
     private ExternalTable pxfJdbcReadServerConfigAll; // all server-based props coming from there, not DDL
+    private ExternalTable pxfJdbcReadViewNoParams, pxfJdbcReadViewSessionParams;
     private ExternalTable pxfJdbcWritable;
     private ExternalTable pxfJdbcWritableNoBatch;
     private ExternalTable pxfJdbcWritablePool;
@@ -76,6 +80,7 @@ public class JdbcTest extends BaseFeature {
         prepareMultipleFragmentsByDate();
         prepareMultipleFragmentsByEnum();
         prepareServerBasedMultipleFragmentsByInt();
+        prepareViewBasedForTestingSessionParams();
         prepareWritable();
         prepareColumns();
         prepareColumnProjectionSubsetInDifferentOrder();
@@ -202,6 +207,26 @@ public class JdbcTest extends BaseFeature {
         gpdb.createTableAndVerify(pxfJdbcReadServerConfigAll);
     }
 
+    private void prepareViewBasedForTestingSessionParams() throws Exception {
+        pxfJdbcReadViewNoParams = TableFactory.getPxfJdbcReadableTable(
+                "pxf_jdbc_read_view_no_params",
+                PGSETTINGS_VIEW_FIELDS,
+                "pg_settings",
+                "database");
+        pxfJdbcReadViewNoParams.setHost(pxfHost);
+        pxfJdbcReadViewNoParams.setPort(pxfPort);
+        gpdb.createTableAndVerify(pxfJdbcReadViewNoParams);
+
+        pxfJdbcReadViewSessionParams = TableFactory.getPxfJdbcReadableTable(
+                "pxf_jdbc_read_view_session_params",
+                PGSETTINGS_VIEW_FIELDS,
+                "pg_settings",
+                "db-session-params");
+        pxfJdbcReadViewSessionParams.setHost(pxfHost);
+        pxfJdbcReadViewSessionParams.setPort(pxfPort);
+        gpdb.createTableAndVerify(pxfJdbcReadViewSessionParams);
+    }
+
     private void prepareWritable() throws Exception {
         pxfJdbcWritable = TableFactory.getPxfJdbcWritableTable(
                 "pxf_jdbc_writable",
@@ -289,6 +314,11 @@ public class JdbcTest extends BaseFeature {
     @Test(groups = {"features", "gpdb"})
     public void readServerConfig() throws Exception {
         runTincTest("pxf.features.jdbc.server_config.runTest");
+    }
+
+    @Test(groups = {"features", "gpdb"})
+    public void readViewSessionParams() throws Exception {
+        runTincTest("pxf.features.jdbc.session_params.runTest");
     }
 
     @Test(groups = {"features", "gpdb"})

@@ -486,4 +486,18 @@ public abstract class TableFactory {
             dbUrl, false, null, null, null, user, null, null);
 
     }
+
+    /**
+     * Generates an External Readable Table using JDBC profile.
+     *
+     * @param tableName name of the external table which will be generated
+     * @param fields fields of the external table
+     * @param dataSourcePath path to the data object i.e. schema_name.table_name
+     * @param server name of configuration server
+     * @return External Readable Table
+     */
+    public static ExternalTable getPxfJdbcReadableTable(String tableName, String[] fields, String dataSourcePath, String server) {
+        return getPxfJdbcReadableTable(tableName, fields, dataSourcePath, null,
+                null, false, null, null, null, null, null, server);
+    }
 }

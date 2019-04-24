@@ -106,6 +106,16 @@ sync_jdbc_config:
 		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_PASSWORD||" $(PXF_CONF_SERVERS)/database/jdbc-site.xml; \
 	fi
 
+	@mkdir -p $(PXF_CONF_SERVERS)/db-session-params
+	@if [ ! -f "$(PXF_CONF_SERVERS)/db-session-params/jdbc-site.xml" ]; then \
+		cp $(PXF_HOME)/templates/user/templates/jdbc-site.xml $(PXF_CONF_SERVERS)/db-session-params/; \
+		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.postgresql.Driver|" $(PXF_CONF_SERVERS)/db-session-params/jdbc-site.xml; \
+		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_URL|jdbc:postgresql://$(JDBC_HOST):$(JDBC_PORT)/pxfautomation|" $(PXF_CONF_SERVERS)/db-session-params/jdbc-site.xml; \
+		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_USER||" $(PXF_CONF_SERVERS)/db-session-params/jdbc-site.xml; \
+		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_PASSWORD||" $(PXF_CONF_SERVERS)/db-session-params/jdbc-site.xml; \
+		sed $(SED_OPTS) "s|</configuration>|<property><name>jdbc.session.property.client_min_messages</name><value>debug1</value></property></configuration>|"  $(PXF_CONF_SERVERS)/db-session-params/jdbc-site.xml; \
+	fi
+
 sync_cloud_configs:
 ifneq "$(PROTOCOL)" ""
 	@mkdir -p $(PROTOCOL_HOME)
