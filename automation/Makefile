@@ -114,6 +114,7 @@ sync_jdbc_config:
 		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_USER||" $(PXF_CONF_SERVERS)/db-session-params/jdbc-site.xml; \
 		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_PASSWORD||" $(PXF_CONF_SERVERS)/db-session-params/jdbc-site.xml; \
 		sed $(SED_OPTS) "s|</configuration>|<property><name>jdbc.session.property.client_min_messages</name><value>debug1</value></property></configuration>|"  $(PXF_CONF_SERVERS)/db-session-params/jdbc-site.xml; \
+		sed $(SED_OPTS) "s|</configuration>|<property><name>jdbc.session.property.default_statistics_target</name><value>123</value></property></configuration>|"  $(PXF_CONF_SERVERS)/db-session-params/jdbc-site.xml; \
 	fi
 
 sync_cloud_configs:

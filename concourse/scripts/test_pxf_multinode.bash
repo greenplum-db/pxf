@@ -117,6 +117,7 @@ function setup_pxf_on_cluster() {
         sed -i \"s|YOUR_DATABASE_JDBC_USER||\" ${PXF_CONF_DIR}/servers/db-session-params/jdbc-site.xml &&
         sed -i \"s|YOUR_DATABASE_JDBC_PASSWORD||\" ${PXF_CONF_DIR}/servers/db-session-params/jdbc-site.xml &&
         sed -i \"s|</configuration>|<property><name>jdbc.session.property.client_min_messages</name><value>debug1</value></property></configuration>|\" ${PXF_CONF_DIR}/servers/db-session-params/jdbc-site.xml &&
+        sed -i \"s|</configuration>|<property><name>jdbc.session.property.default_statistics_target</name><value>123</value></property></configuration>|\" ${PXF_CONF_DIR}/servers/db-session-params/jdbc-site.xml &&
         if [ ${IMPERSONATION} == false ]; then
             echo 'export PXF_USER_IMPERSONATION=false' >> ${PXF_CONF_DIR}/conf/pxf-env.sh
         fi &&
