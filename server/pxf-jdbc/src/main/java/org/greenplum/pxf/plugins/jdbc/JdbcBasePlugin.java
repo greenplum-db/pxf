@@ -227,9 +227,12 @@ public class JdbcBasePlugin extends BasePlugin {
      * @throws SQLException if a database access or connection error occurs
      */
     public Connection getConnection() throws SQLException {
-        LOG.debug("New JDBC connection. URL: '{}'; Table: '{}'", jdbcUrl, tableName);
+        LOG.debug("Requesting a new JDBC connection. URL={} table={} txid:seg={}:{}", jdbcUrl, tableName, context.getTransactionId(), context.getSegmentId());
 
         Connection connection = DriverManager.getConnection(jdbcUrl, connectionConfiguration);
+
+        LOG.debug("Obtained a JDBC connection {} for URL={} table={} txid:seg={}:{}", connection, jdbcUrl, tableName, context.getTransactionId(), context.getSegmentId());
+
         try {
             prepareConnection(connection);
         } catch (SQLException e) {
@@ -263,6 +266,7 @@ public class JdbcBasePlugin extends BasePlugin {
      */
     public static void closeStatementAndConnection(Statement statement) throws SQLException {
         if (statement == null) {
+            LOG.warn("Call to close statement and connection is ignored as statement provided was null");
             return;
         }
 
@@ -277,6 +281,7 @@ public class JdbcBasePlugin extends BasePlugin {
         }
 
         try {
+            LOG.debug("Closing statement for connection {}", connection);
             statement.close();
         } catch (SQLException e) {
             LOG.error("Exception when closing Statement", e);
@@ -286,7 +291,7 @@ public class JdbcBasePlugin extends BasePlugin {
         try {
             closeConnection(connection);
         } catch (SQLException e) {
-            LOG.error("Exception when closing Connection", e);
+            LOG.error(String.format("Exception when closing connection %s", connection), e);
             exception = e;
         }
 
@@ -303,22 +308,24 @@ public class JdbcBasePlugin extends BasePlugin {
      */
     private static void closeConnection(Connection connection) throws SQLException {
         if (connection == null) {
+            LOG.warn("Call to close connection is ignored as connection provided was null");
             return;
         }
         try {
-            if (
-                    !connection.isClosed() &&
-                            connection.getMetaData().supportsTransactions() &&
-                            !connection.getAutoCommit()
-            ) {
+            if (!connection.isClosed() &&
+                connection.getMetaData().supportsTransactions() &&
+                !connection.getAutoCommit()) {
+
+                LOG.debug("Committing transaction (as part of connection.close()) on connection {}", connection);
                 connection.commit();
             }
         } finally {
             try {
+                LOG.debug("Closing connection {}", connection);
                 connection.close();
             } catch (Exception e) {
                 // ignore
-                LOG.warn("Failed to close JDBC connection, ignoring the error.", e);
+                LOG.warn(String.format("Failed to close JDBC connection %s, ignoring the error.", connection), e);
             }
         }
     }
@@ -339,7 +346,7 @@ public class JdbcBasePlugin extends BasePlugin {
         if (transactionIsolation != TransactionIsolation.NOT_PROVIDED) {
             // user wants to set isolation level explicitly
             if (metadata.supportsTransactionIsolationLevel(transactionIsolation.getLevel())) {
-                LOG.debug("Setting transaction isolation level to {}", transactionIsolation.toString());
+                LOG.debug("Setting transaction isolation level to {} on connection {}", transactionIsolation.toString(), connection);
                 connection.setTransactionIsolation(transactionIsolation.getLevel());
             } else {
                 throw new RuntimeException(
@@ -350,6 +357,7 @@ public class JdbcBasePlugin extends BasePlugin {
 
         // Disable autocommit
         if (metadata.supportsTransactions()) {
+            LOG.debug("Setting autoCommit to false on connection {}", connection);
             connection.setAutoCommit(false);
         }
 
@@ -359,7 +367,9 @@ public class JdbcBasePlugin extends BasePlugin {
 
             try (Statement statement = connection.createStatement()) {
                 for (Map.Entry<String, String> e : sessionConfiguration.entrySet()) {
-                    statement.execute(dbProduct.buildSessionQuery(e.getKey(), e.getValue()));
+                    String sessionQuery = dbProduct.buildSessionQuery(e.getKey(), e.getValue());
+                    LOG.debug("Executing statement {} on connection {}", sessionQuery, connection);
+                    statement.execute(sessionQuery);
                 }
             }
         }

@@ -105,7 +105,7 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
      */
     @Override
     public void closeForRead() throws SQLException {
-        JdbcBasePlugin.closeStatementAndConnection(statementRead);
+        closeStatementAndConnection(statementRead);
     }
 
     /**
@@ -265,9 +265,8 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
             if (e != null) {
                 throw e;
             }
-        }
-        finally {
-            JdbcBasePlugin.closeStatementAndConnection(statementWrite);
+        } finally {
+            closeStatementAndConnection(statementWrite);
         }
     }
 
