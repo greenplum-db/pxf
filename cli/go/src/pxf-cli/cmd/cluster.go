@@ -80,12 +80,27 @@ var (
 			exitWithReturnCode(err)
 		},
 	}
+
+	statusCmd = &cobra.Command{
+		Use:   "status",
+		Short: "Get status of PXF servers on the segment hosts",
+		Run: func(cmd *cobra.Command, args []string) {
+			command := &pxf.StatusCommand
+			clusterData, err := doSetup(command)
+			if err == nil {
+				err = clusterRun(command, clusterData)
+			}
+
+			exitWithReturnCode(err)
+		},
+	}
 )
 
 func init() {
 	rootCmd.AddCommand(clusterCmd)
 	clusterCmd.AddCommand(initCmd)
 	clusterCmd.AddCommand(startCmd)
+	clusterCmd.AddCommand(statusCmd)
 	clusterCmd.AddCommand(stopCmd)
 	clusterCmd.AddCommand(syncCmd)
 }

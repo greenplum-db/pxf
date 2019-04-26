@@ -59,6 +59,11 @@ var _ = Describe("GenerateStatusReport()", func() {
 		_ = cmd.GenerateStatusReport(&pxf.SyncCommand, clusterData)
 		Expect(testStdout).Should(gbytes.Say("Syncing PXF configuration files to 2 hosts..."))
 	})
+
+	It("reports the number of hosts that are getting status checked", func() {
+		_ = cmd.GenerateStatusReport(&pxf.StatusCommand, clusterData)
+		Expect(testStdout).Should(gbytes.Say("Checking status of PXF servers on 2 hosts..."))
+	})
 })
 
 var _ = Describe("GenerateOutput()", func() {
@@ -90,6 +95,11 @@ var _ = Describe("GenerateOutput()", func() {
 			_ = cmd.GenerateOutput(&pxf.SyncCommand, clusterData)
 			Expect(testStdout).To(gbytes.Say("PXF configs synced successfully on 3 out of 3 hosts"))
 		})
+
+		It("reports all hosts running", func() {
+			_ = cmd.GenerateOutput(&pxf.StatusCommand, clusterData)
+			Expect(testStdout).To(gbytes.Say("PXF is running on 3 out of 3 hosts"))
+		})
 	})
 
 	Context("when some hosts fail", func() {
@@ -117,14 +127,18 @@ var _ = Describe("GenerateOutput()", func() {
 			_ = cmd.GenerateOutput(&pxf.StopCommand, clusterData)
 			Expect(testStdout).Should(gbytes.Say("PXF failed to stop on 1 out of 3 hosts"))
 			Expect(testStderr).Should(gbytes.Say("sdw2 ==> an error happened on sdw2"))
-
 		})
 
 		It("reports the number of hosts that failed to sync", func() {
 			_ = cmd.GenerateOutput(&pxf.SyncCommand, clusterData)
 			Expect(testStdout).Should(gbytes.Say("PXF configs failed to sync on 1 out of 3 hosts"))
 			Expect(testStderr).Should(gbytes.Say("sdw2 ==> an error happened on sdw2"))
+		})
 
+		It("reports the number of hosts that aren't running", func() {
+			_ = cmd.GenerateOutput(&pxf.StatusCommand, clusterData)
+			Expect(testStdout).Should(gbytes.Say("PXF is not running on 1 out of 3 hosts"))
+			Expect(testStderr).Should(gbytes.Say("sdw2 ==> an error happened on sdw2"))
 		})
 	})
 

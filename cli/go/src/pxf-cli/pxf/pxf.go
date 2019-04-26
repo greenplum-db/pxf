@@ -76,10 +76,11 @@ func (c *Command) GetFunctionToExecute() (func(string) string, error) {
 type CommandName string
 
 const (
-	Init  = "init"
-	Start = "start"
-	Stop  = "stop"
-	Sync  = "sync"
+	Init     = "init"
+	Start    = "start"
+	Stop     = "stop"
+	Sync     = "sync"
+	Statuses = "status"
 )
 
 var (
@@ -122,6 +123,16 @@ var (
 		},
 		envVars:    []EnvVar{PxfConf},
 		whereToRun: cluster.ON_MASTER_TO_HOSTS,
+	}
+	StatusCommand = Command{
+		commandName: Statuses,
+		messages: map[MessageType]string{
+			Success: "PXF is running on %d out of %d hosts\n",
+			Status:  "Checking status of PXF servers on %d hosts...\n",
+			Error:   "PXF is not running on %d out of %d hosts\n",
+		},
+		envVars:    []EnvVar{Gphome},
+		whereToRun: cluster.ON_HOSTS,
 	}
 )
 
