@@ -20,6 +20,7 @@ package org.greenplum.pxf.plugins.hdfs;
  */
 
 
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.InputSplit;
@@ -50,6 +51,7 @@ public abstract class HdfsSplittableDataAccessor extends BasePlugin implements A
     protected HcfsType hcfsType;
 
     private ListIterator<InputSplit> iter;
+    private static int MAX_FILE_TUPLE_SIZE = 1024*1024*1024;
 
     /**
      * Constructs an HdfsSplittableDataAccessor
@@ -80,7 +82,13 @@ public abstract class HdfsSplittableDataAccessor extends BasePlugin implements A
     @Override
     public boolean openForRead() throws Exception {
         LinkedList<InputSplit> requestSplits = new LinkedList<>();
-        FileSplit fileSplit = HdfsUtilities.parseFileSplit(context);
+        FileSplit fileSplit;
+        if("true".equalsIgnoreCase(context.getOption("FILE_TUPLE"))) {
+            fileSplit = new FileSplit(new Path(context.getDataSource()),
+                    0, MAX_FILE_TUPLE_SIZE, new String[]{"localhost"});
+        } else {
+            fileSplit = HdfsUtilities.parseFileSplit(context);
+        }
         requestSplits.add(fileSplit);
 
         // Initialize record reader based on current split

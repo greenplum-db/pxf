@@ -287,7 +287,7 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
         FileInputFormat.setInputPaths(jobConf, new Path(
                 tablePartition.storageDesc.getLocation()));
 
-        InputSplit[] splits = null;
+        InputSplit[] splits;
         try {
             splits = fformat.getSplits(jobConf, 1);
         } catch (org.apache.hadoop.mapred.InvalidInputException e) {

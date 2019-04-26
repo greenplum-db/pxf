@@ -272,16 +272,18 @@ public class BridgeOutputBuilder {
         OneField fld = recFields.get(0);
         int type = fld.type;
         Object val = fld.val;
-        if (DataType.get(type) == DataType.BYTEA) {// from LineBreakAccessor
+        if (DataType.get(type) == DataType.BYTEA) { // from LineBreakAccessor based on ChunkReader
             if (samplingEnabled) {
                 convertTextDataToLines((byte[]) val);
             } else {
                 output = new BufferWritable((byte[]) val);
                 outputList.add(output); // TODO break output into lines
             }
+//        } else if ("true".equalsIgnoreCase(context.getOption("FILE_TUPLE"))) { // file projected as tuple
+//            output = new Text((String) val);
+//            outputList.add(output);
         } else { // from QuotedLineBreakAccessor
-            String textRec = (String) val;
-            output = new Text(textRec + "\n");
+            output = new Text((String) val + "\n");
             outputList.add(output);
         }
     }

@@ -20,7 +20,10 @@ package org.greenplum.pxf.plugins.hdfs;
  */
 
 
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
@@ -32,6 +35,7 @@ import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.PxfInputFormat;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -63,24 +67,56 @@ public class HdfsDataFragmenter extends BaseFragmenter {
      */
     @Override
     public List<Fragment> getFragments() throws Exception {
-        Path path = new Path(hcfsType.getDataUri(configuration, context));
-        List<InputSplit> splits = getSplits(path);
+        String filename = hcfsType.getDataUri(configuration, context);
+        if("true".equalsIgnoreCase(context.getOption("FILE_TUPLE")))
+            getFragmentsByFile(filename);
+        else
+            getFragmentsBySplit(filename);
 
-        LOG.debug("Total number of fragments = {}", splits.size());
+        return fragments;
+    }
+
+    /**
+     * Each fragment is a split
+     */
+    private void getFragmentsBySplit(String filename) throws Exception {
+        List<InputSplit> splits = getSplits(new Path(filename));
+
         for (InputSplit split : splits) {
             FileSplit fsp = (FileSplit) split;
             String filepath = fsp.getPath().toString();
-
             /*
              * metadata information includes: file split's start, length and
              * hosts (locations).
              */
-            byte[] fragmentMetadata = HdfsUtilities.prepareFragmentMetadata(fsp, null);
-            Fragment fragment = new Fragment(filepath, null, fragmentMetadata);
+            byte[] fragmentMetadata = HdfsUtilities.prepareFragmentMetadata(fsp);
+            Fragment fragment = new Fragment(filepath, fsp.getLocations(), fragmentMetadata);
             fragments.add(fragment);
         }
+        LOG.debug("Total number of fragments = {}", splits.size());
+    }
 
-        return fragments;
+    /**
+     * Each fragment is a file
+     */
+    private void getFragmentsByFile(String filename) throws Exception {
+        /*
+         * For S3, the hosts is always localhost on the API call.
+         * No need to calculate it, we can just hardcode it.
+         */
+        String[] hosts = {"localhost"};
+
+        FileSystem fs = FileSystem.get(URI.create(filename), configuration);
+        RemoteIterator<LocatedFileStatus> fileStatusListIterator =
+                fs.listFiles(new Path(filename), false);
+
+        while (fileStatusListIterator.hasNext()) {
+            LocatedFileStatus fileStatus = fileStatusListIterator.next();
+            String sourceName = fileStatus.getPath().toUri().toString();
+            Fragment fragment = new Fragment(sourceName, hosts, null);
+            fragments.add(fragment);
+        }
+        LOG.debug("Total number of fragments = {}", fragments.size());
     }
 
     @Override
