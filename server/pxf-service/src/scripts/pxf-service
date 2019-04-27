@@ -418,7 +418,7 @@ function doCluster()
 {
     pxf_cluster_command=$2
     get_environment
-    GPHOME=${GPHOME:-"${PXF_HOME}/.."} "$parent_script_dir/bin/pxf-cli" "$@"
+    GPHOME=${GPHOME:-"${PXF_HOME}/.."} "${parent_script_dir}/bin/pxf-cli" "$@"
 }
 
 pxf_script_command=$1
@@ -456,7 +456,7 @@ case "${pxf_script_command}" in
         doHelp
         ;;
     'version' | '--version' | '-v' )
-        doCluster --version
+        "${parent_script_dir}/bin/pxf-cli" --version
         ;;
     'cluster' )
         doCluster "$@"
