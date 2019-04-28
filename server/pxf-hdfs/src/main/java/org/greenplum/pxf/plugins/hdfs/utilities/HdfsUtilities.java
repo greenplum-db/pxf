@@ -166,14 +166,9 @@ public class HdfsUtilities {
      * @return FileSplit with fragment metadata
      */
     public static FileSplit parseFileSplit(RequestContext requestContext) {
-        try {
-            FragmentMetadata fragmentMetadata = Utilities.parseFragmentMetadata(requestContext);
-            return new FileSplit(new Path(requestContext.getDataSource()),
-                    fragmentMetadata.getStart(), fragmentMetadata.getEnd(), fragmentMetadata.getHosts());
-        }
-        catch (Exception e) {
-            throw new RuntimeException("Exception while reading expected fragment metadata", e);
-        }
+        FragmentMetadata metadata = Utilities.parseFragmentMetadata(requestContext);
+        return new FileSplit(new Path(requestContext.getDataSource()),
+                metadata.getStart(), metadata.getEnd(), metadata.getHosts());
     }
 
     /**

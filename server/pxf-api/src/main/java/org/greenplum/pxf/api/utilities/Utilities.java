@@ -214,32 +214,25 @@ public class Utilities {
      * @throws IllegalArgumentException if fragment metadata information wasn't found in input data
      * @throws Exception when error occurred during metadata parsing
      */
-    public static FragmentMetadata parseFragmentMetadata(RequestContext requestContext) throws Exception {
-        byte[] serializedLocation = requestContext.getFragmentMetadata();
-        if (serializedLocation == null) {
+    public static FragmentMetadata parseFragmentMetadata(RequestContext requestContext) {
+        if (requestContext.getFragmentMetadata() == null) {
             throw new IllegalArgumentException("Missing fragment location information");
         }
-        try (ObjectInputStream objectStream = new ObjectInputStream(new ByteArrayInputStream(serializedLocation))) {
+        try (ObjectInputStream objectStream =
+                     new ObjectInputStream(new ByteArrayInputStream(requestContext.getFragmentMetadata()))) {
             long start = objectStream.readLong();
             long end = objectStream.readLong();
             String[] hosts = (String[]) objectStream.readObject();
             if (LOG.isDebugEnabled()) {
-                StringBuilder sb = new StringBuilder();
-                sb.append("parsed file split: path ");
-                sb.append(requestContext.getDataSource());
-                sb.append(", start ");
-                sb.append(start);
-                sb.append(", end ");
-                sb.append(end);
-                sb.append(", hosts ");
-                sb.append(ArrayUtils.toString(hosts));
-                LOG.debug(sb.toString());
+                LOG.debug("Parsed split: path={} start={} end={} hosts={}",
+                        requestContext.getDataSource(),
+                        start,
+                        end,
+                        ArrayUtils.toString(hosts));
             }
-            FragmentMetadata fragmentMetadata = new FragmentMetadata(start, end, hosts);
-            return fragmentMetadata;
-        } catch (Exception e) {
-            LOG.error("Unable to parse fragment metadata");
-            throw e;
+            return new FragmentMetadata(start, end, hosts);
+        } catch (IOException | ClassNotFoundException e) {
+            throw new RuntimeException("Exception while reading expected fragment metadata", e);
         }
     }
 

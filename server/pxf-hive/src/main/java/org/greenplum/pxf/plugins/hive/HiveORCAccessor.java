@@ -50,11 +50,11 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
 
     private static final Log LOG = LogFactory.getLog(HiveORCAccessor.class);
 
-    private final String READ_COLUMN_IDS_CONF_STR = "hive.io.file.readcolumn.ids";
-    private final String READ_ALL_COLUMNS = "hive.io.file.read.all.columns";
-    private final String READ_COLUMN_NAMES_CONF_STR = "hive.io.file.readcolumn.names";
-    private final String SARG_PUSHDOWN = "sarg.pushdown";
-    protected Reader orcReader;
+    private static final String READ_COLUMN_IDS_CONF_STR = "hive.io.file.readcolumn.ids";
+    private static final String READ_ALL_COLUMNS = "hive.io.file.read.all.columns";
+    private static final String READ_COLUMN_NAMES_CONF_STR = "hive.io.file.readcolumn.names";
+    private static final String SARG_PUSHDOWN = "sarg.pushdown";
+    Reader orcReader;
 
     private boolean useStats;
     private long count;
@@ -66,7 +66,7 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
     /**
      * Constructs a HiveORCFileAccessor.
      */
-    public HiveORCAccessor() {
+    HiveORCAccessor() {
         super(new OrcInputFormat());
     }
 
@@ -95,10 +95,10 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
      * Adds the table tuple description to JobConf ojbect
      * so only these columns will be returned.
      */
-    private void addColumns() throws Exception {
+    private void addColumns() {
 
-        List<Integer> colIds = new ArrayList<Integer>();
-        List<String> colNames = new ArrayList<String>();
+        List<Integer> colIds = new ArrayList<>();
+        List<String> colNames = new ArrayList<>();
         for(ColumnDescriptor col: context.getTupleDescription()) {
             if(col.isProjected()) {
                 colIds.add(col.columnIndex());
@@ -261,7 +261,7 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
         }
         OneRow row = null;
         if (context.getAggType() == null)
-            throw new UnsupportedOperationException("Aggregate opration is required");
+            throw new UnsupportedOperationException("Aggregate operation is required");
         switch (context.getAggType()) {
             case COUNT:
                 if (objectsEmitted < count) {
