@@ -90,6 +90,8 @@ public class HttpRequestParser implements RequestParser<HttpHeaders> {
         }
 
         context.setDataSource(params.removeProperty("DATA-DIR"));
+        context.setFileBlob(StringUtils.equalsIgnoreCase("true",
+                params.removeUserProperty("BLOB")));
 
         String filterString = params.removeOptionalProperty("FILTER");
         String hasFilter = params.removeProperty("HAS-FILTER");
