@@ -59,7 +59,7 @@ public class QuotedLineBreakAccessor extends HdfsAtomicDataAccessor {
             return null;
         }
 
-        return new OneRow(null, next_line);
+        return new OneRow(null, next_line + "\n");
     }
 
     /**

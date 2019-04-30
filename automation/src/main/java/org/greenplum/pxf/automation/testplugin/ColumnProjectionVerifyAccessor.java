@@ -88,6 +88,7 @@ public class ColumnProjectionVerifyAccessor extends BasePlugin implements Access
             sb.append("\\N");
         }
 
+        sb.append("\n");
         return sb.toString();
     }
 

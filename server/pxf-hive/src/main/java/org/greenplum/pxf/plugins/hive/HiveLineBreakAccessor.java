@@ -20,8 +20,14 @@ package org.greenplum.pxf.plugins.hive;
  */
 
 
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapred.FileSplit;
+import org.apache.hadoop.mapred.InputSplit;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.LineRecordReader;
+import org.apache.hadoop.mapred.TextInputFormat;
+import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.apache.hadoop.mapred.*;
 
 import java.io.IOException;
 
@@ -42,6 +48,20 @@ public class HiveLineBreakAccessor extends HiveAccessor {
     public void initialize(RequestContext requestContext) {
         super.initialize(requestContext);
         ((TextInputFormat) inputFormat).configure(jobConf);
+    }
+
+    @Override
+    public OneRow readNextObject() throws IOException {
+        OneRow oneRow = super.readNextObject();
+
+        if (oneRow == null)
+            return null;
+
+        if (oneRow.getData() instanceof Text) {
+            oneRow.setData(oneRow.getData().toString() + "\n");
+        }
+
+        return oneRow;
     }
 
     @Override

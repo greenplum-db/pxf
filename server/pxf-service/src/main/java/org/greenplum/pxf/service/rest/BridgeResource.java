@@ -20,13 +20,14 @@ package org.greenplum.pxf.service.rest;
  */
 
 import org.apache.catalina.connector.ClientAbortException;
+import org.greenplum.pxf.api.io.Text;
+import org.greenplum.pxf.api.io.Writable;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.service.HttpRequestParser;
+import org.greenplum.pxf.service.RequestParser;
 import org.greenplum.pxf.service.bridge.Bridge;
 import org.greenplum.pxf.service.bridge.BridgeFactory;
 import org.greenplum.pxf.service.bridge.SimpleBridgeFactory;
-import org.greenplum.pxf.service.HttpRequestParser;
-import org.greenplum.pxf.service.RequestParser;
-import org.greenplum.pxf.api.io.Writable;
 
 import javax.servlet.ServletContext;
 import javax.ws.rs.GET;

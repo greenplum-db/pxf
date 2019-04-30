@@ -59,8 +59,8 @@ public class AggBridge extends ReadBridge implements Bridge {
     @SuppressWarnings("unchecked")
     public Writable getNext() throws Exception {
         Writable output = null;
-        LinkedList<Writable> cachedOutput = null;
-        OneRow onerow = null;
+        LinkedList<Writable> cachedOutput;
+        OneRow onerow;
 
         if (!outputQueue.isEmpty()) {
             return outputQueue.pop();

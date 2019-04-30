@@ -281,7 +281,7 @@ public class BridgeOutputBuilder {
             }
         } else { // from QuotedLineBreakAccessor
             String textRec = (String) val;
-            output = new Text(textRec + "\n");
+            output = new Text(textRec);
             outputList.add(output);
         }
     }
