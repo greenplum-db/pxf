@@ -1,4 +1,4 @@
-# Debugging
+# Profiling
 
 ### Visual VM Debugging
 
