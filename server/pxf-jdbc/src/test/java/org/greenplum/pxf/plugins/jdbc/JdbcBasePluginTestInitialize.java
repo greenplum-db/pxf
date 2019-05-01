@@ -61,7 +61,6 @@ public class JdbcBasePluginTestInitialize {
         COLUMNS.add(new ColumnDescriptor("c2", DataType.VARCHAR.getOID(), 2, null, null, true));
     }
 
-    private static final String OPTION_WRITE_SIZE = "BATCH_SIZE";
     private static final String OPTION_POOL_SIZE = "POOL_SIZE";
     private static final String OPTION_QUOTE_COLUMNS = "QUOTE_COLUMNS";
     private static final String CONFIG_SESSION_KEY_PREFIX = "jdbc.session.property.";
@@ -124,21 +123,20 @@ public class JdbcBasePluginTestInitialize {
         assertEquals(getInternalState(plugin, "DEFAULT_WRITE_SIZE"), getInternalState(plugin, "writeSize"));
         assertEquals(getInternalState(plugin, "DEFAULT_POOL_SIZE"), getInternalState(plugin, "poolSize"));
         assertNull(getInternalState(plugin, "quoteColumns"));
+        assertEquals(getInternalState(plugin, "DEFAULT_FETCH_SIZE"), getInternalState(plugin, "fetchSize"));
+        assertEquals(getInternalState(plugin, "DEFAULT_QUERY_TIMEOUT"), getInternalState(plugin, "queryTimeout"));
     }
 
     @Test
     public void testWriteSize0() throws Exception {
         // Configuration
         Configuration configuration = makeConfiguration();
-
-        // Context
-        RequestContext context = makeContext();
-        context.addOption(OPTION_WRITE_SIZE, "0");
+        configuration.set("jdbc.statement.writeSize", "0");
 
         // Initialize plugin
         prepareBaseConfigurationFactory(configuration);
         JdbcBasePlugin plugin = new JdbcBasePlugin();
-        plugin.initialize(context);
+        plugin.initialize(makeContext());
 
         // Checks
         assertEquals(1, getInternalState(plugin, "writeSize"));
@@ -149,15 +147,12 @@ public class JdbcBasePluginTestInitialize {
     public void testWriteSize1() throws Exception {
         // Configuration
         Configuration configuration = makeConfiguration();
-
-        // Context
-        RequestContext context = makeContext();
-        context.addOption(OPTION_WRITE_SIZE, "1");
+        configuration.set("jdbc.statement.writeSize", "1");
 
         // Initialize plugin
         prepareBaseConfigurationFactory(configuration);
         JdbcBasePlugin plugin = new JdbcBasePlugin();
-        plugin.initialize(context);
+        plugin.initialize(makeContext());
 
         // Checks
         assertEquals(1, getInternalState(plugin, "writeSize"));
@@ -168,34 +163,31 @@ public class JdbcBasePluginTestInitialize {
     public void testWriteSize2() throws Exception {
         // Configuration
         Configuration configuration = makeConfiguration();
-
-        // Context
-        RequestContext context = makeContext();
-        context.addOption(OPTION_WRITE_SIZE, "2");
+        configuration.set("jdbc.statement.writeSize", "2");
 
         // Initialize plugin
         prepareBaseConfigurationFactory(configuration);
         JdbcBasePlugin plugin = new JdbcBasePlugin();
-        plugin.initialize(context);
+        plugin.initialize(makeContext());
 
         // Checks
         assertEquals(2, getInternalState(plugin, "writeSize"));
         assertTrue((boolean)getInternalState(plugin, "writeSizeIsSetByUser"));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testWriteSizeNegative() throws Exception {
         // Configuration
         Configuration configuration = makeConfiguration();
-
-        // Context
-        RequestContext context = makeContext();
-        context.addOption(OPTION_WRITE_SIZE, "-1");
+        configuration.set("jdbc.statement.writeSize", "-1");
 
         // Initialize plugin
         prepareBaseConfigurationFactory(configuration);
         JdbcBasePlugin plugin = new JdbcBasePlugin();
-        plugin.initialize(context);
+        plugin.initialize(makeContext());
+
+        // Checks
+        assertEquals(1, getInternalState(plugin, "writeSize"));
     }
 
     @Test
@@ -232,6 +224,36 @@ public class JdbcBasePluginTestInitialize {
 
         // Checks
         assertEquals(-1, getInternalState(plugin, "poolSize"));
+    }
+
+    @Test
+    public void testFetchSize() throws Exception {
+        // Configuration
+        Configuration configuration = makeConfiguration();
+        configuration.set("jdbc.statement.fetchSize", "4");
+
+        // Initialize plugin
+        prepareBaseConfigurationFactory(configuration);
+        JdbcBasePlugin plugin = new JdbcBasePlugin();
+        plugin.initialize(makeContext());
+
+        // Checks
+        assertEquals(4, getInternalState(plugin, "fetchSize"));
+    }
+
+    @Test
+    public void testQueryTimeout() throws Exception {
+        // Configuration
+        Configuration configuration = makeConfiguration();
+        configuration.set("jdbc.statement.queryTimeout", "200");
+
+        // Initialize plugin
+        prepareBaseConfigurationFactory(configuration);
+        JdbcBasePlugin plugin = new JdbcBasePlugin();
+        plugin.initialize(makeContext());
+
+        // Checks
+        assertEquals(200, getInternalState(plugin, "queryTimeout"));
     }
 
     @Test

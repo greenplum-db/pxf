@@ -191,6 +191,8 @@ under the License.
             <mapping option="db_url" property="jdbc.url"/>
             <mapping option="user" property="jdbc.user"/>
             <mapping option="pass" property="jdbc.password"/>
+            <mapping option="batch_size" property="jdbc.statement.writeSize"/>
+            <mapping option="fetch_size" property="jdbc.statement.fetchSize"/>
         </optionMappings>
     </profile>
     <profile>

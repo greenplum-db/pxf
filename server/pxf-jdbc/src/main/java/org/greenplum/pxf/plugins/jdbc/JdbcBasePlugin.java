@@ -160,21 +160,18 @@ public class JdbcBasePlugin extends BasePlugin {
         columns = context.getTupleDescription();
 
         // Optional parameters
+        writeSizeIsSetByUser = configuration.get(JDBC_STATEMENT_WRITE_SIZE) != null;
+        writeSize = configuration.getInt(JDBC_STATEMENT_WRITE_SIZE, DEFAULT_WRITE_SIZE);
 
-        writeSizeIsSetByUser = context.getOption("BATCH_SIZE") != null;
-        writeSize = context.getOption("BATCH_SIZE",
-                configuration.getInt(JDBC_STATEMENT_WRITE_SIZE, DEFAULT_WRITE_SIZE), true);
-        if (writeSize == 0) {
+        if (writeSize <= 0) {
             writeSize = 1; // if user set to 0, it is the same as writeSize of 1
         }
 
-        fetchSize = context.getOption("FETCH_SIZE",
-                configuration.getInt(JDBC_STATEMENT_FETCH_SIZE, DEFAULT_FETCH_SIZE), true);
+        fetchSize = configuration.getInt(JDBC_STATEMENT_FETCH_SIZE, DEFAULT_FETCH_SIZE);
 
         poolSize = context.getOption("POOL_SIZE", DEFAULT_POOL_SIZE);
 
-        queryTimeout = context.getOption("QUERY_TIMEOUT",
-                configuration.getInt(JDBC_STATEMENT_QUERY_TIMEOUT, DEFAULT_QUERY_TIMEOUT), true);
+        queryTimeout = configuration.getInt(JDBC_STATEMENT_QUERY_TIMEOUT, DEFAULT_QUERY_TIMEOUT);
 
         // Optional parameter. The default value is null
         String quoteColumnsRaw = context.getOption("QUOTE_COLUMNS");

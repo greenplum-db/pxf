@@ -24,16 +24,16 @@
     <!-- Statement level properties -->
     <!--
     <property>
-        <name>jdbc.statement.fetchSize</name>
-        <value>1000</value>
-        <description>Number of rows that should be fetched from the statement each time. Default is 1000</description>
+        <name>jdbc.statement.writeSize</name>
+        <value>100</value>
+        <description>Number of rows that should be batched prior to writing. Default is 100</description>
     </property>
     -->
     <!--
     <property>
-        <name>jdbc.statement.writeSize</name>
-        <value>100</value>
-        <description>Number of rows that should be batched prior to writing. Default is 100</description>
+        <name>jdbc.statement.fetchSize</name>
+        <value>1000</value>
+        <description>Number of rows that should be fetched at a time during read. Default is 1000</description>
     </property>
     -->
 
