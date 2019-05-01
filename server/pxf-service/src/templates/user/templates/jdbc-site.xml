@@ -20,36 +20,63 @@
         <value>YOUR_DATABASE_JDBC_PASSWORD</value>
         <description>Password for connecting to the database (e.g. postgres)</description>
     </property>
-    <!-- Uncomment to set transaction isolation level
-        Set to one of: READ_UNCOMMITTED, READ_COMMITTED, REPEATABLE_READ, or SERIALIZABLE
+
+    <!-- Statement level properties -->
+    <!--
+    <property>
+        <name>jdbc.statement.fetchSize</name>
+        <value>1000</value>
+        <description>Number of rows that should be fetched from the statement each time. Default is 1000</description>
+    </property>
+    -->
+    <!--
+    <property>
+        <name>jdbc.statement.writeSize</name>
+        <value>100</value>
+        <description>Number of rows that should be batched prior to writing. Default is 100</description>
+    </property>
+    -->
+
+    <!-- Transaction isolation level
+         {READ_UNCOMMITTED | READ_COMMITTED | REPEATABLE_READ | SERIALIZABLE} -->
+    <!--
     <property>
         <name>jdbc.connection.transactionIsolation</name>
         <value>YOUR_CHOSEN_TRANSACTION_ISOLATION_FROM_ABOVE</value>
-        <description>JDBC connection transaction isolation level. Make sure your database supports the level you define here.</description>
+        <description>JDBC connection transaction isolation level. Make sure your database supports the level you define here</description>
     </property>
     -->
-    <!-- Uncomment to set session-level variable for queries to external database
+
+    <!-- Session-level properties -->
+    <!--
     <property>
         <name>jdbc.session.property.some_property_1</name>
         <value>some_value_1</value>
         <description>Session-level variable to set in external database before query execution</description>
     </property>
+    -->
+    <!--
     <property>
         <name>jdbc.session.property.some_property_2</name>
         <value>some_value_2</value>
         <description>Session-level variable to set in external database before query execution</description>
     </property>
     -->
-    <!-- Uncomment to set JDBC connection properties
+
+    <!-- Connection properties -->
+    <!--
     <property>
         <name>jdbc.connection.property.some_property_1</name>
         <value>some_value_1</value>
         <description>JDBC connection property</description>
     </property>
+    -->
+    <!--
     <property>
         <name>jdbc.connection.property.some_property_2</name>
         <value>some_value_2</value>
         <description>JDBC connection property</description>
     </property>
     -->
+
 </configuration>

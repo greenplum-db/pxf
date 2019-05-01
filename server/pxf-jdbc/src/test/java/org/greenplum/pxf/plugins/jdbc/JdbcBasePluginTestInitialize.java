@@ -61,7 +61,7 @@ public class JdbcBasePluginTestInitialize {
         COLUMNS.add(new ColumnDescriptor("c2", DataType.VARCHAR.getOID(), 2, null, null, true));
     }
 
-    private static final String OPTION_BATCH_SIZE = "BATCH_SIZE";
+    private static final String OPTION_WRITE_SIZE = "BATCH_SIZE";
     private static final String OPTION_POOL_SIZE = "POOL_SIZE";
     private static final String OPTION_QUOTE_COLUMNS = "QUOTE_COLUMNS";
     private static final String CONFIG_SESSION_KEY_PREFIX = "jdbc.session.property.";
@@ -121,19 +121,19 @@ public class JdbcBasePluginTestInitialize {
         assertEquals(JDBC_URL, getInternalState(plugin, "jdbcUrl"));
         assertEquals(COLUMNS, getInternalState(plugin, "columns"));
 
-        assertEquals(getInternalState(plugin, "DEFAULT_BATCH_SIZE"), getInternalState(plugin, "batchSize"));
+        assertEquals(getInternalState(plugin, "DEFAULT_WRITE_SIZE"), getInternalState(plugin, "writeSize"));
         assertEquals(getInternalState(plugin, "DEFAULT_POOL_SIZE"), getInternalState(plugin, "poolSize"));
         assertNull(getInternalState(plugin, "quoteColumns"));
     }
 
     @Test
-    public void testBatchSize0() throws Exception {
+    public void testWriteSize0() throws Exception {
         // Configuration
         Configuration configuration = makeConfiguration();
 
         // Context
         RequestContext context = makeContext();
-        context.addOption(OPTION_BATCH_SIZE, "0");
+        context.addOption(OPTION_WRITE_SIZE, "0");
 
         // Initialize plugin
         prepareBaseConfigurationFactory(configuration);
@@ -141,18 +141,18 @@ public class JdbcBasePluginTestInitialize {
         plugin.initialize(context);
 
         // Checks
-        assertEquals(1, getInternalState(plugin, "batchSize"));
-        assertTrue((boolean)getInternalState(plugin, "batchSizeIsSetByUser"));
+        assertEquals(1, getInternalState(plugin, "writeSize"));
+        assertTrue((boolean)getInternalState(plugin, "writeSizeIsSetByUser"));
     }
 
     @Test
-    public void testBatchSize1() throws Exception {
+    public void testWriteSize1() throws Exception {
         // Configuration
         Configuration configuration = makeConfiguration();
 
         // Context
         RequestContext context = makeContext();
-        context.addOption(OPTION_BATCH_SIZE, "1");
+        context.addOption(OPTION_WRITE_SIZE, "1");
 
         // Initialize plugin
         prepareBaseConfigurationFactory(configuration);
@@ -160,18 +160,18 @@ public class JdbcBasePluginTestInitialize {
         plugin.initialize(context);
 
         // Checks
-        assertEquals(1, getInternalState(plugin, "batchSize"));
-        assertTrue((boolean)getInternalState(plugin, "batchSizeIsSetByUser"));
+        assertEquals(1, getInternalState(plugin, "writeSize"));
+        assertTrue((boolean)getInternalState(plugin, "writeSizeIsSetByUser"));
     }
 
     @Test
-    public void testBatchSize2() throws Exception {
+    public void testWriteSize2() throws Exception {
         // Configuration
         Configuration configuration = makeConfiguration();
 
         // Context
         RequestContext context = makeContext();
-        context.addOption(OPTION_BATCH_SIZE, "2");
+        context.addOption(OPTION_WRITE_SIZE, "2");
 
         // Initialize plugin
         prepareBaseConfigurationFactory(configuration);
@@ -179,18 +179,18 @@ public class JdbcBasePluginTestInitialize {
         plugin.initialize(context);
 
         // Checks
-        assertEquals(2, getInternalState(plugin, "batchSize"));
-        assertTrue((boolean)getInternalState(plugin, "batchSizeIsSetByUser"));
+        assertEquals(2, getInternalState(plugin, "writeSize"));
+        assertTrue((boolean)getInternalState(plugin, "writeSizeIsSetByUser"));
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testBatchSizeNegative() throws Exception {
+    public void testWriteSizeNegative() throws Exception {
         // Configuration
         Configuration configuration = makeConfiguration();
 
         // Context
         RequestContext context = makeContext();
-        context.addOption(OPTION_BATCH_SIZE, "-1");
+        context.addOption(OPTION_WRITE_SIZE, "-1");
 
         // Initialize plugin
         prepareBaseConfigurationFactory(configuration);

@@ -80,6 +80,8 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
 
         // Execute queries
         statementRead = connection.createStatement();
+        statementRead.setFetchSize(fetchSize);
+        statementRead.setQueryTimeout(queryTimeout);
         resultSetRead = statementRead.executeQuery(queryRead);
 
         return true;
@@ -139,13 +141,13 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
 
         statementWrite = super.getPreparedStatement(connection, queryWrite);
 
-        // Process batchSize
+        // Process writeSize
         if (!connection.getMetaData().supportsBatchUpdates()) {
-            if ((batchSizeIsSetByUser) && (batchSize > 1)) {
+            if ((writeSizeIsSetByUser) && (writeSize > 1)) {
                 throw new SQLException("The external database does not support batch updates");
             }
             else {
-                batchSize = 1;
+                writeSize = 1;
             }
         }
 
@@ -162,7 +164,7 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
         }
 
         // Setup WriterCallableFactory
-        writerCallableFactory = new WriterCallableFactory(this, queryWrite, statementWrite, batchSize, poolSize);
+        writerCallableFactory = new WriterCallableFactory(this, queryWrite, statementWrite, writeSize, poolSize);
 
         writerCallable = writerCallableFactory.get();
 
@@ -172,7 +174,7 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
 	/**
      * writeNextObject() implementation
      *
-     * If batchSize is not 0 or 1, add a tuple to the batch of statementWrite
+     * If writeSize is not 0 or 1, add a tuple to the batch of statementWrite
      * Otherwise, execute an INSERT query immediately
      *
      * In both cases, a {@link java.sql.PreparedStatement} is used
