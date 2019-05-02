@@ -85,6 +85,7 @@ public class JdbcTest extends BaseFeature {
         prepareColumns();
         prepareColumnProjectionSubsetInDifferentOrder();
         prepareColumnProjectionSuperset();
+        prepareFetchSizeZero();
     }
 
     private void prepareTypesData() throws Exception {
@@ -301,6 +302,19 @@ public class JdbcTest extends BaseFeature {
         gpdb.createTableAndVerify(pxfJdbcColumnProjectionSuperset);
     }
 
+    private void prepareFetchSizeZero() throws Exception {
+        pxfJdbcSingleFragment = TableFactory.getPxfJdbcReadableTable(
+                "pxf_jdbc_readable_nobatch",
+                TYPES_TABLE_FIELDS,
+                gpdbNativeTableTypes.getName(),
+                POSTGRES_DRIVER_CLASS,
+                GPDB_PXF_AUTOMATION_DB_JDBC + gpdb.getMasterHost() + ":" + gpdb.getPort() + "/pxfautomation",
+                gpdb.getUserName(), "FETCH_SIZE=0");
+        pxfJdbcSingleFragment.setHost(pxfHost);
+        pxfJdbcSingleFragment.setPort(pxfPort);
+        gpdb.createTableAndVerify(pxfJdbcSingleFragment);
+    }
+
     @Test(groups = {"features", "gpdb"})
     public void singleFragmentTable() throws Exception {
         runTincTest("pxf.features.jdbc.single_fragment.runTest");
@@ -346,5 +360,9 @@ public class JdbcTest extends BaseFeature {
         runTincTest("pxf.features.jdbc.column_projection.runTest");
     }
 
+    @Test(groups = {"features", "gpdb"})
+    public void jdbcReadableTableNoBatch() throws Exception {
+        runTincTest("pxf.features.jdbc.readable_nobatch.runTest");
+    }
 
 }
