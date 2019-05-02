@@ -140,6 +140,7 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
         LOG.trace("Insert query: {}", queryWrite);
 
         statementWrite = super.getPreparedStatement(connection, queryWrite);
+        statementWrite.setQueryTimeout(queryTimeout);
 
         // Process writeSize
         if (!connection.getMetaData().supportsBatchUpdates()) {
