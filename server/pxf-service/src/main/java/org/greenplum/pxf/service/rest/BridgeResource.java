@@ -138,19 +138,9 @@ public class BridgeResource extends BaseResource {
 
                     LOG.debug("Starting streaming fragment {} of resource {}", fragment, dataDir);
 
-                    if (context.isFileBlob()) {
-                        // wraps record in quotes
-                        new Text("\"").write(dos);
-                    }
-
                     while ((record = bridge.getNext()) != null) {
                         record.write(dos);
                         ++recordCount;
-                    }
-
-                    if (context.isFileBlob()) {
-                        // wraps record in quotes and adds new line
-                        new Text("\"\n").write(dos);
                     }
 
                     LOG.debug("Finished streaming fragment {} of resource {}, {} records.", fragment, dataDir, recordCount);

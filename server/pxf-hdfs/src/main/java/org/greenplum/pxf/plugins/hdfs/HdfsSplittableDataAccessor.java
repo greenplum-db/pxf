@@ -20,6 +20,8 @@ package org.greenplum.pxf.plugins.hdfs;
  */
 
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.InputSplit;
@@ -47,7 +49,9 @@ public abstract class HdfsSplittableDataAccessor extends BasePlugin implements A
     protected InputFormat<?, ?> inputFormat;
     protected JobConf jobConf;
     protected Object key, data;
-    protected HcfsType hcfsType;
+    protected boolean isFileBlob;
+    private boolean firstLine, lastLine;
+    HcfsType hcfsType;
 
     private ListIterator<InputSplit> iter;
 
@@ -64,6 +68,9 @@ public abstract class HdfsSplittableDataAccessor extends BasePlugin implements A
     public void initialize(RequestContext requestContext) {
         super.initialize(requestContext);
 
+        // true if the files are read as a single blob, false otherwise
+        isFileBlob = StringUtils.equalsIgnoreCase("true", context.getOption("BLOB"));
+
         // variable required for the splits iteration logic
         jobConf = new JobConf(configuration, HdfsSplittableDataAccessor.class);
 
@@ -79,6 +86,7 @@ public abstract class HdfsSplittableDataAccessor extends BasePlugin implements A
      */
     @Override
     public boolean openForRead() throws Exception {
+        firstLine = true;
         LinkedList<InputSplit> requestSplits = new LinkedList<>();
         FileSplit fileSplit = HdfsUtilities.parseFileSplit(context);
         requestSplits.add(fileSplit);
@@ -128,19 +136,32 @@ public abstract class HdfsSplittableDataAccessor extends BasePlugin implements A
      */
     @Override
     public OneRow readNextObject() throws IOException {
+        if (isFileBlob && firstLine) {
+            firstLine = false;
+            return new OneRow(null, "\"");
+        }
+
+        if (isFileBlob && lastLine) {
+            // return null after the last line
+            return null;
+        }
+
         // if there is one more record in the current split
         if (!reader.next(key, data)) {
+
             // the current split is exhausted. try to move to the next split
-            if (getNextSplit()) {
-                // read the first record of the new split
-                if (!reader.next(key, data)) {
-                    // make sure we return nulls
-                    return null;
-                }
-            } else {
-                // make sure we return nulls
-                return null;
+            boolean hasMoreSplits = getNextSplit();
+
+            if (!hasMoreSplits ||
+                    !reader.next(key, data)) { // read the first record of the new split
+                lastLine = true;
+                // for file blobs return a quote, otherwise return null
+                return isFileBlob ? new OneRow(null, "\"") : null;
             }
+        }
+
+        if (isFileBlob && data instanceof Text) {
+            data = new Text(data.toString().replaceAll("\"", "\"\""));
         }
 
         /*

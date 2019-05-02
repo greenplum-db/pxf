@@ -282,10 +282,6 @@ public class BridgeOutputBuilder {
         } else { // from QuotedLineBreakAccessor
             String textRec = (String) val;
 
-            if (context.isFileBlob()) {
-                textRec = textRec.replaceAll("\"", "\"\"");
-            }
-
             output = new Text(textRec + "\n");
             outputList.add(output);
         }

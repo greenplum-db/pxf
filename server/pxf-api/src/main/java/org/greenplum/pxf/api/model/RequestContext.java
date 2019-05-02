@@ -112,8 +112,6 @@ public class RequestContext {
     private Map<String, String> options = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
     private PluginConf pluginConf;
 
-    private boolean fileBlob = false;
-
     /**
      * Returns a String value of the given option or a default value if the option was not provided
      * @param option name of the option
@@ -670,21 +668,6 @@ public class RequestContext {
                             + "'. "
                             + "STATS-SAMPLE-RATIO must be a value between 0.0001 and 1.0");
         }
-    }
-
-    /**
-     * @return true if the external resource is read as a blob of data, false otherwise
-     */
-    public boolean isFileBlob() {
-        return fileBlob;
-    }
-
-    /**
-     * Set true to read the external resource as a blob of data, false otherwise
-     * @param fileBlob the boolean
-     */
-    public void setFileBlob(boolean fileBlob) {
-        this.fileBlob = fileBlob;
     }
 
     public void validate() {

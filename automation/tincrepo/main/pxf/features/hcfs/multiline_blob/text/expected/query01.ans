@@ -5,75 +5,32 @@
 -- @description query01 tests that a multiline text file returns as a single multiline record in GPDB
 --
 select * from multiline_blob_text;
-                                                                 text_blob
---------------------------------------------------------------------------------------------------------------------------------------------
- {                                                                                                                                         +
-   "root":[                                                                                                                                +
-     {                                                                                                                                     +
-       "record":{                                                                                                                          +
-         "created_at":"Fri Jun 07 22:45:02 +0000 2013",                                                                                    +
-         "id":343136547115253761,                                                                                                          +
-         "id_str":"343136547115253761",                                                                                                    +
-         "text":"text1",                                                                                                                   +
-         "source":"<a href=\"http:\/\/twitter.com\/download\/iphone\" rel=\"nofollow\">Twitter for iPhone<\/a>",                           +
-         "user":{                                                                                                                          +
-           "id":26643566,                                                                                                                  +
-           "name":"SpreadButter",                                                                                                          +
-           "screen_name":"SpreadButter",                                                                                                   +
-           "location":"Austin, Texas"                                                                                                      +
-         },                                                                                                                                +
-         "entities":{                                                                                                                      +
-           "hashtags":[                                                                                                                    +
-             "tweetCongress",                                                                                                              +
-             "IRS"                                                                                                                         +
-           ]                                                                                                                               +
-         }                                                                                                                                 +
-       }                                                                                                                                   +
-     },                                                                                                                                    +
-     {                                                                                                                                     +
-       "record":{                                                                                                                          +
-         "created_at":"Fri Jun 07 22:45:02 +0000 2013",                                                                                    +
-         "id":343136547123646465,                                                                                                          +
-         "id_str":"343136547123646465",                                                                                                    +
-         "text":"text2",                                                                                                                   +
-         "source":"\u003ca href=\"http:\/\/twitter.com\/download\/android\" rel=\"nofollow\"\u003eTwitter for Android\u003c\/a\u003e",     +
-         "user":{                                                                                                                          +
-           "id":102904200,                                                                                                                 +
-           "id_str":"102904200",                                                                                                           +
-           "name":"Ardianto",                                                                                                              +
-           "screen_name":"patronusdeadly",                                                                                                 +
-           "location":"Bekasi-Surabaya"                                                                                                    +
-         },                                                                                                                                +
-         "entities":{                                                                                                                      +
-           "hashtags":[                                                                                                                    +
-                                                                                                                                           +
-           ]                                                                                                                               +
-         }                                                                                                                                 +
-       }                                                                                                                                   +
-     },                                                                                                                                    +
-     {                                                                                                                                     +
-       "record":{                                                                                                                          +
-         "created_at":"Fri Jun 07 22:45:02 +0000 2013",                                                                                    +
-         "id":343136547136233472,                                                                                                          +
-         "id_str":"343136547136233472",                                                                                                    +
-         "text":"text3",                                                                                                                   +
-         "source":"\u003ca href=\"http:\/\/www.nosecrets-empregos.com.br\/homologa\" rel=\"nofollow\"\u003eVagas NoSecrets\u003c\/a\u003e",+
-         "user":{                                                                                                                          +
-           "id":287819058,                                                                                                                 +
-           "id_str":"287819058",                                                                                                           +
-           "name":"No Secrets Empregos",                                                                                                   +
-           "screen_name":"NoSecrets_Vagas",                                                                                                +
-           "location":""                                                                                                                   +
-         },                                                                                                                                +
-         "entities":{                                                                                                                      +
-           "hashtags":[                                                                                                                    +
-                                                                                                                                           +
-           ]                                                                                                                               +
-         }                                                                                                                                 +
-       }                                                                                                                                   +
-     }                                                                                                                                     +
-   ]                                                                                                                                       +
- }                                                                                                                                         +
-
+                          text_blob                           
+--------------------------------------------------------------
+ Lorem ipsum dolor sit amet, consectetur adipiscing elit,    +
+ sed do eiusmod tempor incididunt ut labore et dolore magna  +
+ aliqua. Ut enim ad minim veniam, quis nostrud exercitation  +
+ ullamco laboris nisi ut aliquip ex ea commodo consequat.    +
+ Duis aute irure dolor in reprehenderit in voluptate velit   +
+ esse cillum dolore eu fugiat nulla pariatur. Excepteur sint +
+ occaecat cupidatat non proident, sunt in culpa qui officia  +
+ deserunt mollit anim id est laborum.                        +
+                                                             +
+ Sed ut perspiciatis unde omnis iste natus error sit         +
+ voluptatem accusantium doloremque laudantium, totam rem     +
+ aperiam, eaque ipsa quae ab illo inventore veritatis et     +
+ quasi architecto beatae vitae dicta sunt explicabo. Nemo    +
+ enim ipsam voluptatem quia voluptas sit aspernatur aut odit +
+ aut fugit, sed quia consequuntur magni dolores eos qui      +
+ ratione voluptatem sequi nesciunt. Neque porro quisquam est,+
+ qui dolorem ipsum quia dolor sit amet, consectetur,         +
+ adipisci velit, sed quia non numquam eius modi tempora      +
+ incidunt ut labore et dolore magnam aliquam quaerat         +
+ voluptatem. Ut enim ad minima veniam, quis nostrum          +
+ exercitationem ullam corporis suscipit laboriosam, nisi ut  +
+ aliquid ex ea commodi consequatur? Quis autem vel eum iure  +
+ reprehenderit qui in ea voluptate velit esse quam nihil     +
+ molestiae consequatur, vel illum qui dolorem eum fugiat quo +
+ voluptas nulla pariatur?
 (1 row)
 
