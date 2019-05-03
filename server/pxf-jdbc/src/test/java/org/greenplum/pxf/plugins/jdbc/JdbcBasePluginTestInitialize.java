@@ -120,7 +120,7 @@ public class JdbcBasePluginTestInitialize {
         assertEquals(JDBC_URL, getInternalState(plugin, "jdbcUrl"));
         assertEquals(COLUMNS, getInternalState(plugin, "columns"));
 
-        assertEquals(getInternalState(plugin, "DEFAULT_WRITE_SIZE"), getInternalState(plugin, "writeSize"));
+        assertEquals(getInternalState(plugin, "DEFAULT_BATCH_SIZE"), getInternalState(plugin, "batchSize"));
         assertEquals(getInternalState(plugin, "DEFAULT_POOL_SIZE"), getInternalState(plugin, "poolSize"));
         assertNull(getInternalState(plugin, "quoteColumns"));
         assertEquals(getInternalState(plugin, "DEFAULT_FETCH_SIZE"), getInternalState(plugin, "fetchSize"));
@@ -128,10 +128,10 @@ public class JdbcBasePluginTestInitialize {
     }
 
     @Test
-    public void testWriteSize0() throws Exception {
+    public void testBatchSize0() throws Exception {
         // Configuration
         Configuration configuration = makeConfiguration();
-        configuration.set("jdbc.statement.writeSize", "0");
+        configuration.set("jdbc.statement.batchSize", "0");
 
         // Initialize plugin
         prepareBaseConfigurationFactory(configuration);
@@ -139,15 +139,15 @@ public class JdbcBasePluginTestInitialize {
         plugin.initialize(makeContext());
 
         // Checks
-        assertEquals(1, getInternalState(plugin, "writeSize"));
-        assertTrue((boolean)getInternalState(plugin, "writeSizeIsSetByUser"));
+        assertEquals(1, getInternalState(plugin, "batchSize"));
+        assertTrue((boolean)getInternalState(plugin, "batchSizeIsSetByUser"));
     }
 
     @Test
-    public void testWriteSize1() throws Exception {
+    public void testBatchSize1() throws Exception {
         // Configuration
         Configuration configuration = makeConfiguration();
-        configuration.set("jdbc.statement.writeSize", "1");
+        configuration.set("jdbc.statement.batchSize", "1");
 
         // Initialize plugin
         prepareBaseConfigurationFactory(configuration);
@@ -155,15 +155,15 @@ public class JdbcBasePluginTestInitialize {
         plugin.initialize(makeContext());
 
         // Checks
-        assertEquals(1, getInternalState(plugin, "writeSize"));
-        assertTrue((boolean)getInternalState(plugin, "writeSizeIsSetByUser"));
+        assertEquals(1, getInternalState(plugin, "batchSize"));
+        assertTrue((boolean)getInternalState(plugin, "batchSizeIsSetByUser"));
     }
 
     @Test
-    public void testWriteSize2() throws Exception {
+    public void testBatchSize2() throws Exception {
         // Configuration
         Configuration configuration = makeConfiguration();
-        configuration.set("jdbc.statement.writeSize", "2");
+        configuration.set("jdbc.statement.batchSize", "2");
 
         // Initialize plugin
         prepareBaseConfigurationFactory(configuration);
@@ -171,15 +171,15 @@ public class JdbcBasePluginTestInitialize {
         plugin.initialize(makeContext());
 
         // Checks
-        assertEquals(2, getInternalState(plugin, "writeSize"));
-        assertTrue((boolean)getInternalState(plugin, "writeSizeIsSetByUser"));
+        assertEquals(2, getInternalState(plugin, "batchSize"));
+        assertTrue((boolean)getInternalState(plugin, "batchSizeIsSetByUser"));
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testWriteSizeNegative() throws Exception {
+    public void testBatchSizeNegative() throws Exception {
         // Configuration
         Configuration configuration = makeConfiguration();
-        configuration.set("jdbc.statement.writeSize", "-1");
+        configuration.set("jdbc.statement.batchSize", "-1");
 
         // Initialize plugin
         prepareBaseConfigurationFactory(configuration);

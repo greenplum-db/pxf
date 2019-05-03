@@ -154,12 +154,21 @@ This setting is described in section [partitioning](#Partitioning).
 * **Value**: String in format `<value>[:<unit>]`
 
 
+#### Fetch size
+Size of batch to be used for SELECT queries (defaults to 1000).
+
+* **Option**: `FETCH_SIZE`
+* **Configuration parameter**: `jdbc.statement.fetchSize`
+* **Value**: Integer >= 0
+
+
 #### Batch size
 *Can be set only in `LOCATION` clause of external table DDL*
 
 Size of batch to be used for INSERT queries. This setting is described in section [batching](#batching).
 
 * **Option**: `BATCH_SIZE`
+* **Configuration parameter**: `jdbc.statement.batchSize`
 * **Value**: Integer >= 0
 
 
@@ -319,6 +328,8 @@ Batching is enabled by default, and the default batch size is `100` (this is a [
 * `integer > 1`. Use batch of given size.
 
 Batching must be supported by the JDBC driver of an external database. If the driver does not support batching, behaviour depends on the `BATCH_SIZE` parameter:
+Set the value in `jdbc.statement.batchSize` in `$PXF_CONF/servers/EXAMPLE/jdbc-site.xml` on every PXF segment. Alternative, can be set in the DDL location.
+
 * `BATCH_SIZE` is not present; `BATCH_SIZE` is `0` or `1`. PXF will try to execute INSERT query without batching;
 * `BATCH_SIZE` is an `integer > 1`. INSERT query will fail with an appropriate error message.
 

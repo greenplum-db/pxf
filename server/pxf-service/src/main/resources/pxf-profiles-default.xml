@@ -156,6 +156,17 @@ under the License.
         </plugins>
     </profile>
     <profile>
+        <name>SequenceText</name>
+        <description>
+            Profile for accessing Sequence files serialized with a custom Writable class
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.SequenceFileAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
+        </plugins>
+    </profile>
+    <profile>
         <name>GemFireXD</name>
         <description>This profile is suitable for using when connecting to GemFireXD</description>
         <plugins>
@@ -191,7 +202,7 @@ under the License.
             <mapping option="db_url" property="jdbc.url"/>
             <mapping option="user" property="jdbc.user"/>
             <mapping option="pass" property="jdbc.password"/>
-            <mapping option="batch_size" property="jdbc.statement.writeSize"/>
+            <mapping option="batch_size" property="jdbc.statement.batchSize"/>
             <mapping option="fetch_size" property="jdbc.statement.fetchSize"/>
             <mapping option="query_timeout" property="jdbc.statement.queryTimeout"/>
         </optionMappings>

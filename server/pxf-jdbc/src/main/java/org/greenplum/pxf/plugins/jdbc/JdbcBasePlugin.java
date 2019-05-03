@@ -47,7 +47,7 @@ import java.util.stream.Collectors;
 public class JdbcBasePlugin extends BasePlugin {
 
     // '100' is a recommended value: https://docs.oracle.com/cd/E11882_01/java.112/e16548/oraperf.htm#JJDBC28754
-    private static final int DEFAULT_WRITE_SIZE = 100;
+    private static final int DEFAULT_BATCH_SIZE = 100;
     private static final int DEFAULT_FETCH_SIZE = 1000;
     private static final int DEFAULT_POOL_SIZE = 1;
     private static final int DEFAULT_QUERY_TIMEOUT = 0;
@@ -64,7 +64,7 @@ public class JdbcBasePlugin extends BasePlugin {
     private static final String JDBC_CONNECTION_TRANSACTION_ISOLATION = "jdbc.connection.transactionIsolation";
 
     // statement properties
-    private static final String JDBC_STATEMENT_WRITE_SIZE_PROPERTY_NAME = "jdbc.statement.writeSize";
+    private static final String JDBC_STATEMENT_BATCH_SIZE_PROPERTY_NAME = "jdbc.statement.batchSize";
     private static final String JDBC_STATEMENT_FETCH_SIZE_PROPERTY_NAME = "jdbc.statement.fetchSize";
     private static final String JDBC_STATEMENT_QUERY_TIMEOUT_PROPERTY_NAME = "jdbc.statement.queryTimeout";
 
@@ -103,8 +103,8 @@ public class JdbcBasePlugin extends BasePlugin {
     protected String tableName;
 
     // Write batch size
-    protected int writeSize;
-    protected boolean writeSizeIsSetByUser = false;
+    protected int batchSize;
+    protected boolean batchSizeIsSetByUser = false;
 
     // Read batch size
     protected int fetchSize;
@@ -112,7 +112,7 @@ public class JdbcBasePlugin extends BasePlugin {
     // Thread pool size
     protected int poolSize;
 
-    // Query timeout
+    // Query timeout.
     protected int queryTimeout;
 
     // Quote columns setting set by user (three values are possible)
@@ -160,14 +160,14 @@ public class JdbcBasePlugin extends BasePlugin {
         columns = context.getTupleDescription();
 
         // Optional parameters
-        writeSizeIsSetByUser = configuration.get(JDBC_STATEMENT_WRITE_SIZE_PROPERTY_NAME) != null;
-        writeSize = configuration.getInt(JDBC_STATEMENT_WRITE_SIZE_PROPERTY_NAME, DEFAULT_WRITE_SIZE);
+        batchSizeIsSetByUser = configuration.get(JDBC_STATEMENT_BATCH_SIZE_PROPERTY_NAME) != null;
+        batchSize = configuration.getInt(JDBC_STATEMENT_BATCH_SIZE_PROPERTY_NAME, DEFAULT_BATCH_SIZE);
 
-        if (writeSize == 0) {
-            writeSize = 1; // if user set to 0, it is the same as writeSize of 1
-        } else if(writeSize < 0) {
+        if (batchSize == 0) {
+            batchSize = 1; // if user set to 0, it is the same as batchSize of 1
+        } else if(batchSize < 0) {
             throw new IllegalArgumentException(String.format(
-                    "Property %s has incorrect value %s : must be a non-negative integer", JDBC_STATEMENT_WRITE_SIZE_PROPERTY_NAME, writeSize));
+                    "Property %s has incorrect value %s : must be a non-negative integer", JDBC_STATEMENT_BATCH_SIZE_PROPERTY_NAME, batchSize));
         }
 
         fetchSize = configuration.getInt(JDBC_STATEMENT_FETCH_SIZE_PROPERTY_NAME, DEFAULT_FETCH_SIZE);
