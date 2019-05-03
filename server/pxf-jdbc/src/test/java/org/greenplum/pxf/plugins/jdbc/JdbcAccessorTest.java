@@ -1,6 +1,5 @@
 package org.greenplum.pxf.plugins.jdbc;
 
-import org.greenplum.pxf.api.model.BaseConfigurationFactory;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.junit.Before;
 import org.junit.Rule;
@@ -8,7 +7,6 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.ArgumentMatcher;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
@@ -51,6 +49,7 @@ public class JdbcAccessorTest {
         DatabaseMetaData mockMetaData = mock(DatabaseMetaData.class);
         Connection mockConnection = mock(Connection.class);
         mockStatement = mock(Statement.class);
+        mockResultSet = mock(ResultSet.class);
 
         when(DriverManager.getConnection(anyString(), anyObject())).thenReturn(mockConnection);
         when(mockConnection.getMetaData()).thenReturn(mockMetaData);
@@ -108,7 +107,14 @@ public class JdbcAccessorTest {
 
         accessor.initialize(context);
         accessor.openForRead();
-        assertEquals("John", queryPassed.getValue());
+
+        StringBuilder b = new StringBuilder()
+        .append("SELECT  FROM (SELECT dept.name, count(), max(emp.salary)\n")
+        .append("FROM dept JOIN emp\n")
+        .append("ON dept.id = emp.dept_id\n")
+        .append("GROUP BY dept.name) AS source");
+
+        assertEquals(b.toString(), queryPassed.getValue());
 
     }
 
