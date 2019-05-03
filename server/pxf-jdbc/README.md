@@ -200,12 +200,12 @@ Connection properties (`java.util.Properties`) passed to JDBC driver when openin
 
 
 ## SELECT queries
-PXF JDBC plugin allows to perform SELECT queries to external tables.
+PXF JDBC plugin allows to perform SELECT queries to external tables. An external table can refer to a table in a remote database or to a file that contains a pre-defined complex query to execute against a remote database.
 
 To perform SELECT queries, create an `EXTERNAL READABLE TABLE` or just an `EXTERNAL TABLE` with `FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import')` in PXF.
 
 
-### `EXTERNAL READABLE TABLE` example
+### `EXTERNAL READABLE TABLE` using remote table name - example
 The following example shows how to access a MySQL table via PXF JDBC plugin.
 
 Suppose MySQL instance is available at `192.168.200.6:3306`. A table in MySQL is created:
@@ -235,7 +235,7 @@ CREATE EXTERNAL TABLE myclass(
     degree float8
 )
 LOCATION (
-    'pxf://localhost:51200/demodb.myclass?PROFILE=JDBC&JDBC_DRIVER=com.mysql.jdbc.Driver&DB_URL=jdbc:mysql://192.168.200.6:3306/demodb&USER=root&PASS=root'
+    'pxf://demodb.myclass?PROFILE=JDBC&JDBC_DRIVER=com.mysql.jdbc.Driver&DB_URL=jdbc:mysql://192.168.200.6:3306/demodb&USER=root&PASS=root'
 )
 FORMAT 'CUSTOM' (
     FORMATTER='pxfwritable_import'
@@ -246,6 +246,67 @@ Finally, a query to a GPDB external table is made:
 ```
 SELECT * FROM myclass;
 SELECT id, name FROM myclass WHERE id = 2;
+```
+
+### `EXTERNAL READABLE TABLE` using pre-defined query - example
+The following example shows how to execute an aggregation query in MySQL and return results via PXF JDBC plugin.
+
+Suppose MySQL instance is available at `192.168.200.6:3306`. The following tables are created in MySQL:
+```
+use demodb;
+create table dept(
+    id int(4) not null primary key,
+    name varchar(20) not null
+);
+
+create table emp(
+    dept_id int(4) not null,
+    name varchar(20) not null,
+    salary int(8)
+);
+```
+
+Then some data is inserted into MySQL tables:
+```
+insert into dept values(1, 'sales');
+insert into dept values(2, 'finance');
+insert into dept values(3, 'it');
+
+insert into emp values(1, 'alice', 11000);
+insert into emp values(2, 'bob', 10000);
+insert into emp values(3, 'charlie', 10500);
+```
+
+Then a complex aggregation query is created and placed in a file, say `report.sql`. The file needs to be placed in the server configuration directory under `$PXF_CONF/servers/`. So, let's assume we have created a `mydb` server configuration directory, then this file will be `$PXF_CONF/servers/mydb/report.sql`. Jdbc driver name and connection parameters should be configured in `$PXF_CONF/servers/mydb/jdbc-site.xml` for this server.
+```
+SELECT dept.name, count(), max(emp.salary)
+FROM demodb.dept JOIN demodb.emp
+ON dept.id = emp.dept_id 
+GROUP BY dept.name;
+```
+This query returns a name of the department, count of employees, and the maximal salary in each department.  
+
+The MySQL JDBC driver files (JAR) are copied to `$PXF_CONF/lib` on all hosts with PXF. After this, all PXF segments are restarted.
+
+Then a table in GPDB is created with the schema corresponding to the results returned by the aggregation query. It is important that the table column names and types correspond to those returned by the aggregation query.
+```
+CREATE EXTERNAL TABLE dept_report (
+    name text,
+    count int,
+    max int
+)
+LOCATION (
+    'pxf://query:report?PROFILE=JDBC&SERVER=mydb'
+)
+FORMAT 'CUSTOM' (
+    FORMATTER='pxfwritable_import'
+);
+```
+
+Finally, a query to a GPDB external table is made:
+```
+SELECT * FROM dept_report;
+SELECT name, count FROM dept_report WHERE max > 10000;
 ```
 
 
