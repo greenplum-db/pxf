@@ -50,6 +50,11 @@ public class JdbcTest extends BaseFeature {
             "\"does_not_exist_on_source\" text",
             "\"num 1\" int",
             "\"n@m2\" int"};
+    private static final String[] NAMED_QUERY_FIELDS = new String[]{
+            "name  text",
+            "count int",
+            "max  int"};
+
     private ExternalTable pxfJdbcSingleFragment;
     private ExternalTable pxfJdbcMultipleFragmentsByInt;
     private ExternalTable pxfJdbcMultipleFragmentsByDate;
@@ -62,11 +67,13 @@ public class JdbcTest extends BaseFeature {
     private ExternalTable pxfJdbcColumns;
     private ExternalTable pxfJdbcColumnProjectionSubset;
     private ExternalTable pxfJdbcColumnProjectionSuperset;
+    private ExternalTable pxfJdbcNamedQuery;
 
     private static final String gpdbTypesDataFileName = "gpdb_types.txt";
     private static final String gpdbColumnsDataFileName = "gpdb_columns.txt";
     private Table gpdbNativeTableTypes, gpdbNativeTableColumns, gpdbWritableTargetTable;
     private Table gpdbWritableTargetTableNoBatch, gpdbWritableTargetTablePool;
+    private Table gpdbDeptTable, gpdbEmpTable;
 
     @Override
     protected void beforeClass() throws Exception {
@@ -86,6 +93,7 @@ public class JdbcTest extends BaseFeature {
         prepareColumnProjectionSubsetInDifferentOrder();
         prepareColumnProjectionSuperset();
         prepareFetchSizeZero();
+        prepareNamedQuery();
     }
 
     private void prepareTypesData() throws Exception {
@@ -117,6 +125,37 @@ public class JdbcTest extends BaseFeature {
         gpdb.createTableAndVerify(gpdbNativeTableColumns);
         gpdb.copyFromFile(gpdbNativeTableColumns, new File(localDataResourcesFolder
                 + "/gpdb/" + gpdbColumnsDataFileName), "E'\\t'", "E'\\\\N'", true);
+
+        // create emp and dept tables for named query test
+        String[] deptTableFields = new String[]{"name text", "id int"};
+        gpdbDeptTable = new Table("gpdb_dept", deptTableFields);
+        gpdbDeptTable.setDistributionFields(new String[]{"name"});
+        gpdb.createTableAndVerify(gpdbDeptTable);
+        String[][] deptRows = new String[][] {
+                { "sales", "1"},
+                { "finance", "2"},
+                { "it", "3"}};
+        Table dataTable = new Table("data", deptTableFields);
+        dataTable.addRows(deptRows);
+        gpdb.insertData(dataTable, gpdbDeptTable);
+
+        String[] empTableFields = new String[]{"name text", "dept_id int", "salary int"};
+        gpdbEmpTable = new Table("gpdb_emp", empTableFields);
+        gpdbEmpTable.setDistributionFields(new String[]{"name"});
+        gpdb.createTableAndVerify(gpdbEmpTable);
+        final String[][] empRows = new String[][] {
+                { "alice", "1", "115" },
+                { "bob", "1", "120" },
+                { "charli", "1", "93" },
+                { "daniel", "2", "87" },
+                { "emma", "2", "100" },
+                { "frank", "2", "103" },
+                { "george", "2", "90" },
+                { "henry", "3", "96" },
+                { "ivanka", "3", "70" }};
+        dataTable = new Table("data", empTableFields);
+        dataTable.addRows(empRows);
+        gpdb.insertData(dataTable, gpdbEmpTable);
     }
 
     private void prepareSingleFragment() throws Exception {
@@ -315,6 +354,17 @@ public class JdbcTest extends BaseFeature {
         gpdb.createTableAndVerify(pxfJdbcSingleFragment);
     }
 
+    private void prepareNamedQuery() throws Exception {
+        pxfJdbcNamedQuery = TableFactory.getPxfJdbcReadableTable(
+                "pxf_jdbc_read_named_query",
+                NAMED_QUERY_FIELDS,
+                "query:report",
+                "database");
+        pxfJdbcNamedQuery.setHost(pxfHost);
+        pxfJdbcNamedQuery.setPort(pxfPort);
+        gpdb.createTableAndVerify(pxfJdbcNamedQuery);
+    }
+
     @Test(groups = {"features", "gpdb"})
     public void singleFragmentTable() throws Exception {
         runTincTest("pxf.features.jdbc.single_fragment.runTest");
@@ -363,6 +413,11 @@ public class JdbcTest extends BaseFeature {
     @Test(groups = {"features", "gpdb"})
     public void jdbcReadableTableNoBatch() throws Exception {
         runTincTest("pxf.features.jdbc.readable_nobatch.runTest");
+    }
+
+    @Test(groups = {"features", "gpdb"})
+    public void jdbcNamedQuery() throws Exception {
+        runTincTest("pxf.features.jdbc.named_query.runTest");
     }
 
 }

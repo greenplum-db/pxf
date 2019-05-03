@@ -19,13 +19,17 @@ package org.greenplum.pxf.plugins.jdbc;
  * under the License.
  */
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.Accessor;
+import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.plugins.jdbc.writercallable.WriterCallable;
 import org.greenplum.pxf.plugins.jdbc.writercallable.WriterCallableFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -49,6 +53,22 @@ import java.util.concurrent.Future;
  * built-in JDBC batches of arbitrary size
  */
 public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
+
+    private static final Logger LOG = LoggerFactory.getLogger(JdbcAccessor.class);
+
+    // Read variables
+    private String queryRead = null;
+    private Statement statementRead = null;
+    private ResultSet resultSetRead = null;
+
+    // Write variables
+    private String queryWrite = null;
+    private PreparedStatement statementWrite = null;
+    private WriterCallableFactory writerCallableFactory = null;
+    private WriterCallable writerCallable = null;
+    private ExecutorService executorServiceWrite = null;
+    private List<Future<SQLException> > poolTasks = null;
+
     /**
      * openForRead() implementation
      * Create query, open JDBC connection, execute query and store the result into resultSet
@@ -66,7 +86,7 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
         }
 
         Connection connection = super.getConnection();
-        SQLQueryBuilder sqlQueryBuilder = new SQLQueryBuilder(context, connection.getMetaData());
+        SQLQueryBuilder sqlQueryBuilder = new SQLQueryBuilder(context, connection.getMetaData(), getQueryText());
 
         // Build SELECT query
         if (quoteColumns == null) {
@@ -122,6 +142,10 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
      */
     @Override
     public boolean openForWrite() throws SQLException, SQLTimeoutException, ParseException, ClassNotFoundException {
+        if (queryName != null) {
+            throw new IllegalArgumentException("specifying query name in data path is not supported for JDBC writable external tables");
+        }
+
         if (statementWrite != null && !statementWrite.isClosed()) {
             throw new SQLException("The connection to an external database is already open.");
         }
@@ -273,19 +297,34 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
         }
     }
 
-    // Read variables
-    private String queryRead = null;
-    private Statement statementRead = null;
-    private ResultSet resultSetRead = null;
 
-    // Write variables
-    private String queryWrite = null;
-    private PreparedStatement statementWrite = null;
-    private WriterCallableFactory writerCallableFactory = null;
-    private WriterCallable writerCallable = null;
-    private ExecutorService executorServiceWrite = null;
-    private List<Future<SQLException> > poolTasks = null;
+    /**
+     * Gets the text of the query by reading the file from the server configuration directory. The name of the file
+     * es expected to be the same as the name of the query provided by the user and have extension ".sql"
+     *
+     * @return text of the query
+     */
+    private String getQueryText() {
+        if (StringUtils.isBlank(queryName)) {
+            return null;
+        }
+        // read the contents of the file holding the text of the query with a given name
+        String serverDirectory = configuration.get(ConfigurationFactory.PXF_CONFIG_SERVER_DIRECTORY_PROPERTY);
+        if (StringUtils.isBlank(serverDirectory)) {
+            throw new IllegalStateException("No server configuration directory found for server " + context.getServerName());
+        }
 
-    // Static variables
-    private static final Logger LOG = LoggerFactory.getLogger(JdbcAccessor.class);
+        String queryText;
+        try {
+            File queryFile = new File(serverDirectory, queryName + ".sql");
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Reading text of query={} from {}", queryName, queryFile.getCanonicalPath());
+            }
+            queryText = FileUtils.readFileToString(queryFile);
+        } catch (IOException e) {
+            throw new RuntimeException(String.format("Failed to read text of query %s : %s", queryName, e.getMessage()), e);
+        }
+        return queryText;
+    }
+
 }

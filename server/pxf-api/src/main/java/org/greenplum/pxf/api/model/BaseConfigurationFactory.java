@@ -48,19 +48,15 @@ public class BaseConfigurationFactory implements ConfigurationFactory {
 
         if (serverDirectories == null || serverDirectories.length == 0) {
             LOG.warn("Directory {}{}{} does not exist or cannot be read by PXF, no configuration resources are added for server {}",
-                serversConfigDirectory, File.separator, serverName,
-                serverName
-            );
+                serversConfigDirectory, File.separator, serverName, serverName);
         } else if (serverDirectories.length > 1) {
             throw new IllegalStateException(String.format(
                     "Multiple directories found for server %s. Server directories are expected to be case-insensitive.", serverName
             ));
         } else {
             // add all site files as URL resources to the configuration, no resources will be added from the classpath
-            LOG.debug("Using directory {} for server {} configuration",
-                serverDirectories[0], serverName
-            );
-            addSiteFilesAsResources(configuration, serverName, serverDirectories[0]);
+            LOG.debug("Using directory {} for server {} configuration", serverDirectories[0], serverName);
+            processServerResources(configuration, serverName, serverDirectories[0]);
         }
 
         // add additional properties, if provided
@@ -72,7 +68,7 @@ public class BaseConfigurationFactory implements ConfigurationFactory {
         return configuration;
     }
 
-    private void addSiteFilesAsResources(Configuration configuration, String serverName, File directory) {
+    private void processServerResources(Configuration configuration, String serverName, File directory) {
         // add all *-site.xml files inside the server config directory as configuration resources
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(directory.toPath(), "*-site.xml")) {
             for (Path path : stream) {
@@ -82,9 +78,11 @@ public class BaseConfigurationFactory implements ConfigurationFactory {
 
                 // store the path to the resource in the configuration in case plugins need to access the files again
                 String fileName = path.getFileName().toString();
-
                 configuration.set(String.format("%s.%s", PXF_CONFIG_RESOURCE_PATH_PROPERTY, fileName), resourceURL.toString());
             }
+            // add the server directory itself as configuration property in case plugins need to access non-site-xml files
+            configuration.set(PXF_CONFIG_SERVER_DIRECTORY_PROPERTY, directory.getCanonicalPath());
+
         } catch (Exception e) {
             throw new RuntimeException(String.format("Unable to read configuration for server %s from %s",
                     serverName, directory.getAbsolutePath()), e);

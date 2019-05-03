@@ -31,7 +31,9 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.apache.hadoop.conf.Configuration;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertEquals;
@@ -51,6 +53,10 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @PrepareForTest({BaseConfigurationFactory.class, Class.class})
 @RunWith(PowerMockRunner.class)
 public class JdbcBasePluginTestInitialize {
+
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
+
     private static final String DATA_SOURCE = "t";
     private static final String JDBC_DRIVER = "java.lang.Object";  // we cannot mock Class.forName()
     private static final String JDBC_URL = "jdbc:postgresql://localhost/postgres";
@@ -75,6 +81,16 @@ public class JdbcBasePluginTestInitialize {
     private RequestContext makeContext() {
         RequestContext context = new RequestContext();
         context.setDataSource(DATA_SOURCE);
+        context.setTupleDescription(COLUMNS);
+        return context;
+    }
+
+    /**
+     * Create and prepare {@link RequestContext}
+     */
+    private RequestContext makeContextWithDataSource(String datasource) {
+        RequestContext context = new RequestContext();
+        context.setDataSource(datasource);
         context.setTupleDescription(COLUMNS);
         return context;
     }
@@ -429,4 +445,35 @@ public class JdbcBasePluginTestInitialize {
         Properties expected = new Properties();
         assertEquals(expected.entrySet(), ((Properties)getInternalState(plugin, "connectionConfiguration")).entrySet());
     }
+
+    @Test
+    public void testDatasourceIsTable() throws Exception {
+        prepareBaseConfigurationFactory(makeConfiguration());
+        JdbcBasePlugin plugin = new JdbcBasePlugin();
+        plugin.initialize(makeContextWithDataSource("foo"));
+
+        assertEquals("foo", getInternalState(plugin, "tableName"));
+        assertNull(getInternalState(plugin, "queryName"));
+    }
+
+    @Test
+    public void testDatasourceIsQuery() throws Exception {
+        prepareBaseConfigurationFactory(makeConfiguration());
+        JdbcBasePlugin plugin = new JdbcBasePlugin();
+        plugin.initialize(makeContextWithDataSource("query:foo"));
+
+        assertEquals("foo", getInternalState(plugin, "queryName"));
+        assertNull(getInternalState(plugin, "tableName"));
+    }
+
+    @Test
+    public void testInitializationFailsWhenDatasourceIsEmptyQuery() throws Exception {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("Query name is not provided in data source [query:]");
+
+        prepareBaseConfigurationFactory(makeConfiguration());
+        JdbcBasePlugin plugin = new JdbcBasePlugin();
+        plugin.initialize(makeContextWithDataSource("query:"));
+    }
+
 }

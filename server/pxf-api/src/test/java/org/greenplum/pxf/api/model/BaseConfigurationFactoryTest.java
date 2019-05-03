@@ -8,12 +8,14 @@ import org.junit.rules.ExpectedException;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
 import static org.greenplum.pxf.api.model.ConfigurationFactory.PXF_CONFIG_RESOURCE_PATH_PROPERTY;
+import static org.greenplum.pxf.api.model.ConfigurationFactory.PXF_CONFIG_SERVER_DIRECTORY_PROPERTY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
@@ -108,13 +110,20 @@ public class BaseConfigurationFactoryTest {
     @Test
     public void testConfigurationSetsResourcePath() throws MalformedURLException {
         Configuration configuration = factory.initConfiguration("default", additionalProperties);
-
         File defaultServerDirectory = new File(serversDirectory, "default");
 
         assertEquals(new File(defaultServerDirectory, "test-blue-site.xml").toPath().toUri().toURL().toString(),
                 configuration.get(String.format("%s.%s", PXF_CONFIG_RESOURCE_PATH_PROPERTY, "test-blue-site.xml")));
         assertEquals(new File(defaultServerDirectory, "test-red-site.xml").toPath().toUri().toURL().toString(),
                 configuration.get(String.format("%s.%s", PXF_CONFIG_RESOURCE_PATH_PROPERTY, "test-red-site.xml")));
+    }
+
+    @Test
+    public void testConfigurationSetsServerDirectoryPath() throws IOException {
+        Configuration configuration = factory.initConfiguration("default", additionalProperties);
+        File defaultServerDirectory = new File(serversDirectory, "default");
+
+        assertEquals(defaultServerDirectory.getCanonicalPath(), configuration.get(PXF_CONFIG_SERVER_DIRECTORY_PROPERTY));
     }
 
 }

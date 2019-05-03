@@ -73,6 +73,9 @@ public class JdbcBasePlugin extends BasePlugin {
     private static final String JDBC_URL_OPTION_NAME = "DB_URL";
 
     private static final String FORBIDDEN_SESSION_PROPERTY_CHARACTERS = ";\n\b\0";
+    private static final String QUERY_NAME_PREFIX = "query:";
+    private static final int QUERY_NAME_PREFIX_LENGTH = QUERY_NAME_PREFIX.length();
+
 
     private enum TransactionIsolation {
         READ_UNCOMMITTED(1),
@@ -130,6 +133,9 @@ public class JdbcBasePlugin extends BasePlugin {
     // Columns description
     protected List<ColumnDescriptor> columns = null;
 
+    // Name of query to execute for read flow (optional)
+    protected String queryName;
+
     private static final Logger LOG = LoggerFactory.getLogger(JdbcBasePlugin.class);
 
     @Override
@@ -151,9 +157,21 @@ public class JdbcBasePlugin extends BasePlugin {
         assertMandatoryParameter(jdbcUrl, JDBC_URL_PROPERTY_NAME, JDBC_URL_OPTION_NAME);
 
         // Required metadata
-        tableName = context.getDataSource();
-        if (tableName == null) {
+        String dataSource = context.getDataSource();
+        if (StringUtils.isBlank(dataSource)) {
             throw new IllegalArgumentException("Data source must be provided");
+        }
+
+        // Determine if the datasource is a table name or a query name
+        if (dataSource.startsWith(QUERY_NAME_PREFIX)) {
+            queryName = dataSource.substring(QUERY_NAME_PREFIX_LENGTH);
+            if (StringUtils.isBlank(queryName)) {
+                throw new IllegalArgumentException(String.format("Query name is not provided in data source [%s]", dataSource));
+            }
+            LOG.debug("Query name is {}", queryName);
+        } else {
+            tableName = dataSource;
+            LOG.debug("Table name is {}", tableName);
         }
 
         // Required metadata
@@ -228,7 +246,6 @@ public class JdbcBasePlugin extends BasePlugin {
                             .collect(Collectors.joining(", "))
             );
         }
-
 
         // This must be the last parameter parsed, as we output connectionConfiguration earlier
         // Optional parameter. By default, corresponding connectionConfiguration property is not set

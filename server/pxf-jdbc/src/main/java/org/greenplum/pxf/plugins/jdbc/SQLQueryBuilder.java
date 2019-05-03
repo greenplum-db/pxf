@@ -41,6 +41,16 @@ import java.util.stream.Collectors;
  * Uses {@link JdbcFilterParser} to get array of filters
  */
 public class SQLQueryBuilder {
+
+    private static final Logger LOG = LoggerFactory.getLogger(SQLQueryBuilder.class);
+
+    private RequestContext requestContext;
+    private DatabaseMetaData databaseMetaData;
+    private DbProduct dbProduct;
+    private String quoteString;
+    private List<ColumnDescriptor> columns;
+    private String source;
+
     /**
      * Construct a new SQLQueryBuilder
      *
@@ -50,6 +60,19 @@ public class SQLQueryBuilder {
      * @throws SQLException if some call of DatabaseMetaData method fails
      */
     public SQLQueryBuilder(RequestContext context, DatabaseMetaData metaData) throws SQLException {
+        this(context, metaData, null);
+    }
+
+    /**
+     * Construct a new SQLQueryBuilder
+     *
+     * @param context {@link RequestContext}
+     * @param metaData {@link DatabaseMetaData}
+     * @param internalQuery query to run and get results from, instead of using a table name
+     *
+     * @throws SQLException if some call of DatabaseMetaData method fails
+     */
+    public SQLQueryBuilder(RequestContext context, DatabaseMetaData metaData, String internalQuery) throws SQLException {
         if (context == null) {
             throw new IllegalArgumentException("Provided RequestContext is null");
         }
@@ -61,10 +84,18 @@ public class SQLQueryBuilder {
 
         dbProduct = DbProduct.getDbProduct(databaseMetaData.getDatabaseProductName());
         columns = context.getTupleDescription();
-        tableName = context.getDataSource();
+
+        // pick the source as either requested table name or a wrapped internal query
+        if (internalQuery == null) {
+            source = context.getDataSource();
+        } else {
+            // TODO does this work for all DBs ?
+            source = String.format("(%s) AS source", internalQuery);
+        }
 
         quoteString = "";
     }
+
 
     /**
      * Build SELECT query (with "WHERE" and partition constraints).
@@ -83,7 +114,7 @@ public class SQLQueryBuilder {
         StringBuilder sb = new StringBuilder("SELECT ")
                 .append(columnsQuery)
                 .append(" FROM ")
-                .append(tableName);
+                .append(source);
 
         // Insert regular WHERE constraints
         buildWhereSQL(sb);
@@ -103,7 +134,7 @@ public class SQLQueryBuilder {
         StringBuilder sb = new StringBuilder();
 
         sb.append("INSERT INTO ");
-        sb.append(tableName);
+        sb.append(source);
 
         // Insert columns' names
         sb.append("(");
@@ -140,9 +171,8 @@ public class SQLQueryBuilder {
     public void autoSetQuoteString() throws SQLException {
         // Prepare a pattern of characters that may be not quoted
         String extraNameCharacters = databaseMetaData.getExtraNameCharacters();
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Extra name characters supported by external database: '" + extraNameCharacters + "'");
-        }
+        LOG.debug("Extra name characters supported by external database: {}", extraNameCharacters);
+
         extraNameCharacters = extraNameCharacters.replace("-", "\\-");
         Pattern normalCharactersPattern = Pattern.compile("[" + "\\w" + extraNameCharacters + "]+");
 
@@ -206,13 +236,7 @@ public class SQLQueryBuilder {
         }
 
         try {
-            StringBuilder prepared = new StringBuilder();
-            if (!query.toString().contains("WHERE")) {
-                prepared.append(" WHERE ");
-            }
-            else {
-                prepared.append(" AND ");
-            }
+            StringBuilder prepared = new StringBuilder(" WHERE ");
 
             // Get constraints
             List<BasicFilter> filters = JdbcFilterParser.parseFilters(requestContext.getFilterString());
@@ -296,13 +320,4 @@ public class SQLQueryBuilder {
             // Silence the exception and do not insert constraints
         }
     }
-
-    private RequestContext requestContext;
-    private DatabaseMetaData databaseMetaData;
-    private DbProduct dbProduct;
-    private String quoteString;
-    private List<ColumnDescriptor> columns;
-    private String tableName;
-
-    private static final Logger LOG = LoggerFactory.getLogger(SQLQueryBuilder.class);
 }

@@ -105,6 +105,7 @@ sync_jdbc_config:
 		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_USER||" $(PXF_CONF_SERVERS)/database/jdbc-site.xml; \
 		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_PASSWORD||" $(PXF_CONF_SERVERS)/database/jdbc-site.xml; \
 	fi
+	@cp src/test/resources/report.sql $(PXF_CONF_SERVERS)/database
 
 	@mkdir -p $(PXF_CONF_SERVERS)/db-session-params
 	@if [ ! -f "$(PXF_CONF_SERVERS)/db-session-params/jdbc-site.xml" ]; then \
