@@ -175,7 +175,7 @@ public class JdbcBasePluginTestInitialize {
         assertTrue((boolean)getInternalState(plugin, "writeSizeIsSetByUser"));
     }
 
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     public void testWriteSizeNegative() throws Exception {
         // Configuration
         Configuration configuration = makeConfiguration();
@@ -185,9 +185,6 @@ public class JdbcBasePluginTestInitialize {
         prepareBaseConfigurationFactory(configuration);
         JdbcBasePlugin plugin = new JdbcBasePlugin();
         plugin.initialize(makeContext());
-
-        // Checks
-        assertEquals(1, getInternalState(plugin, "writeSize"));
     }
 
     @Test

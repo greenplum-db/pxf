@@ -193,6 +193,7 @@ under the License.
             <mapping option="pass" property="jdbc.password"/>
             <mapping option="batch_size" property="jdbc.statement.writeSize"/>
             <mapping option="fetch_size" property="jdbc.statement.fetchSize"/>
+            <mapping option="query_timeout" property="jdbc.statement.queryTimeout"/>
         </optionMappings>
     </profile>
     <profile>

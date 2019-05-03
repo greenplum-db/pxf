@@ -64,9 +64,9 @@ public class JdbcBasePlugin extends BasePlugin {
     private static final String JDBC_CONNECTION_TRANSACTION_ISOLATION = "jdbc.connection.transactionIsolation";
 
     // statement properties
-    private static final String JDBC_STATEMENT_WRITE_SIZE = "jdbc.statement.writeSize";
-    private static final String JDBC_STATEMENT_FETCH_SIZE = "jdbc.statement.fetchSize";
-    private static final String JDBC_STATEMENT_QUERY_TIMEOUT = "jdbc.statement.queryTimeout";
+    private static final String JDBC_STATEMENT_WRITE_SIZE_PROPERTY_NAME = "jdbc.statement.writeSize";
+    private static final String JDBC_STATEMENT_FETCH_SIZE_PROPERTY_NAME = "jdbc.statement.fetchSize";
+    private static final String JDBC_STATEMENT_QUERY_TIMEOUT_PROPERTY_NAME = "jdbc.statement.queryTimeout";
 
     // DDL option names
     private static final String JDBC_DRIVER_OPTION_NAME = "JDBC_DRIVER";
@@ -160,18 +160,21 @@ public class JdbcBasePlugin extends BasePlugin {
         columns = context.getTupleDescription();
 
         // Optional parameters
-        writeSizeIsSetByUser = configuration.get(JDBC_STATEMENT_WRITE_SIZE) != null;
-        writeSize = configuration.getInt(JDBC_STATEMENT_WRITE_SIZE, DEFAULT_WRITE_SIZE);
+        writeSizeIsSetByUser = configuration.get(JDBC_STATEMENT_WRITE_SIZE_PROPERTY_NAME) != null;
+        writeSize = configuration.getInt(JDBC_STATEMENT_WRITE_SIZE_PROPERTY_NAME, DEFAULT_WRITE_SIZE);
 
-        if (writeSize <= 0) {
+        if (writeSize == 0) {
             writeSize = 1; // if user set to 0, it is the same as writeSize of 1
+        } else if(writeSize < 0) {
+            throw new IllegalArgumentException(String.format(
+                    "Property %s has incorrect value %s : must be a non-negative integer", JDBC_STATEMENT_WRITE_SIZE_PROPERTY_NAME, writeSize));
         }
 
-        fetchSize = configuration.getInt(JDBC_STATEMENT_FETCH_SIZE, DEFAULT_FETCH_SIZE);
+        fetchSize = configuration.getInt(JDBC_STATEMENT_FETCH_SIZE_PROPERTY_NAME, DEFAULT_FETCH_SIZE);
 
         poolSize = context.getOption("POOL_SIZE", DEFAULT_POOL_SIZE);
 
-        queryTimeout = configuration.getInt(JDBC_STATEMENT_QUERY_TIMEOUT, DEFAULT_QUERY_TIMEOUT);
+        queryTimeout = configuration.getInt(JDBC_STATEMENT_QUERY_TIMEOUT_PROPERTY_NAME, DEFAULT_QUERY_TIMEOUT);
 
         // Optional parameter. The default value is null
         String quoteColumnsRaw = context.getOption("QUOTE_COLUMNS");
