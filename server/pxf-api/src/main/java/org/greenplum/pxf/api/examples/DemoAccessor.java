@@ -62,6 +62,7 @@ public class DemoAccessor extends BasePlugin implements Accessor {
         for(int colIndex=1; colIndex<colCount; colIndex++) {
             colValue.append(",").append("value" + colIndex);
         }
+        colValue.append("\n");
         OneRow row = new OneRow(fragment + "." + rowNumber, colValue.toString());
 
         /* advance */
