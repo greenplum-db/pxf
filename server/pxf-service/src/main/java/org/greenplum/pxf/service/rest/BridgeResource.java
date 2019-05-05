@@ -137,12 +137,10 @@ public class BridgeResource extends BaseResource {
                     DataOutputStream dos = new DataOutputStream(out);
 
                     LOG.debug("Starting streaming fragment {} of resource {}", fragment, dataDir);
-
                     while ((record = bridge.getNext()) != null) {
                         record.write(dos);
                         ++recordCount;
                     }
-
                     LOG.debug("Finished streaming fragment {} of resource {}, {} records.", fragment, dataDir, recordCount);
                 } catch (ClientAbortException e) {
                     // Occurs whenever client (GPDB) decides the end the connection

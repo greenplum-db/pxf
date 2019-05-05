@@ -6,12 +6,13 @@ import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
 import org.testng.annotations.Test;
 
 /**
- * Functional Multiline Blob Test
+ * Functional File as Row Test
  */
-public class MultilineBlobTest extends BaseFeature {
+public class FileAsRowTest extends BaseFeature {
 
     private String hdfsBasePath;
     private static final String emptyTextFile = "empty";
+    private static final String twoLineTextFile = "twoline";
     private static final String singleLineTextFile = "singleline";
     private static final String multiLineTextFile = "multiline";
     private static final String multiLineJsonFile = "tweets-pp.json";
@@ -21,7 +22,7 @@ public class MultilineBlobTest extends BaseFeature {
     @Override
     protected void beforeClass() throws Exception {
         super.beforeClass();
-        hdfsBasePath = hdfs.getWorkingDirectory() + "/blob/";
+        hdfsBasePath = hdfs.getWorkingDirectory() + "/file_as_row/";
         prepareData();
     }
 
@@ -39,6 +40,8 @@ public class MultilineBlobTest extends BaseFeature {
                 hdfsBasePath + emptyTextFile);
         hdfs.copyFromLocal(localDataResourcesFolder + "/text/" + singleLineTextFile,
                 hdfsBasePath + singleLineTextFile);
+        hdfs.copyFromLocal(localDataResourcesFolder + "/text/" + twoLineTextFile,
+                hdfsBasePath + twoLineTextFile);
         hdfs.copyFromLocal(localDataResourcesFolder + "/text/" + multiLineTextFile,
                 hdfsBasePath + multiLineTextFile);
     }
@@ -48,25 +51,31 @@ public class MultilineBlobTest extends BaseFeature {
     }
 
     @Test(groups = {"gpdb", "hcfs"})
-    public void testEmptyTextBlob() throws Exception {
+    public void testEmptyFile() throws Exception {
         runTestScenario("empty_text", PXF_MULTILINE_COLS,
                 hdfsBasePath + emptyTextFile);
     }
 
     @Test(groups = {"gpdb", "hcfs"})
-    public void testSingleLineTextBlob() throws Exception {
+    public void testSingleLineFile() throws Exception {
         runTestScenario("singleline_text", PXF_MULTILINE_COLS,
                 hdfsBasePath + singleLineTextFile);
     }
 
     @Test(groups = {"gpdb", "hcfs"})
-    public void testMultilineTextBlob() throws Exception {
+    public void testTwoLineFile() throws Exception {
+        runTestScenario("twoline_text", PXF_MULTILINE_COLS,
+                hdfsBasePath + twoLineTextFile);
+    }
+
+    @Test(groups = {"gpdb", "hcfs"})
+    public void testMultilineFile() throws Exception {
         runTestScenario("text", PXF_MULTILINE_COLS,
                 hdfsBasePath + multiLineTextFile);
     }
 
     @Test(groups = {"gpdb", "hcfs"})
-    public void testMultilineJsonBlob() throws Exception {
+    public void testMultilineJsonFile() throws Exception {
         runTestScenario("json", new String[]{
                 "json_blob json"
         }, hdfsBasePath + multiLineJsonFile);
@@ -77,7 +86,7 @@ public class MultilineBlobTest extends BaseFeature {
         String tableName = "multiline_blob_" + name;
         exTable = new ReadableExternalTable(tableName, fields, hdfsPath, "CSV");
         exTable.setProfile(ProtocolUtils.getProtocol().value() + ":text");
-        exTable.setUserParameters(new String[]{"BLOB=true"});
+        exTable.setUserParameters(new String[]{"FILE_AS_ROW=true"});
         gpdb.createTableAndVerify(exTable);
 
         runTincTest("pxf.features.hcfs.multiline_blob." + name + ".runTest");

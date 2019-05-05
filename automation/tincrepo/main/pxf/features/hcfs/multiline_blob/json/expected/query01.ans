@@ -73,7 +73,7 @@ select * from multiline_blob_json;
        }                                                                                                                                   +
      }                                                                                                                                     +
    ]                                                                                                                                       +
- }                                                                                                                                         +
+ }
 (1 row)
 
 -- Query JSON using JSON functions

@@ -22,13 +22,13 @@ package org.greenplum.pxf.plugins.hdfs;
 
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.Resolver;
 
 import java.util.LinkedList;
 import java.util.List;
 
+import static org.greenplum.pxf.api.io.DataType.BYTEA;
 import static org.greenplum.pxf.api.io.DataType.VARCHAR;
 
 /**
@@ -58,7 +58,7 @@ public class StringPassResolver extends BasePlugin implements Resolver {
         List<OneField> record = new LinkedList<>();
         Object data = onerow.getData();
         if (data instanceof ChunkWritable) {
-            record.add(new OneField(DataType.BYTEA.getOID(), ((ChunkWritable) data).box));
+            record.add(new OneField(BYTEA.getOID(), ((ChunkWritable) data).box));
         } else {
             record.add(new OneField(VARCHAR.getOID(), data.toString()));
         }
