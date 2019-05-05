@@ -164,18 +164,11 @@ public abstract class HdfsSplittableDataAccessor extends BasePlugin implements A
             }
         }
 
-        if (data instanceof Text) {
-            if (fileAsRow) {
-                // When fileAsRow is true, we need to return a quoted
-                // string, and we need to escape quotes for a valid
-                // multiline CSV to be interpreted by GPDB
-                escapeCSV((Text) data);
-            }
-
-            if (!fileAsRow || reader.getProgress() != 1.0F) {
-                // Add a new line to the end of the row
-                ((Text) data).set(data.toString() + "\n");
-            }
+        if (fileAsRow && data instanceof Text) {
+            // When fileAsRow is true, we need to return a quoted
+            // string, and we need to escape quotes for a valid
+            // multiline CSV to be interpreted by GPDB
+            escapeCSV((Text) data);
         }
 
         /*

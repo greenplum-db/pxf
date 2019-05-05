@@ -71,6 +71,24 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor {
                 new LineRecordReader(jobConf, (FileSplit) split);
     }
 
+    @Override
+    public OneRow readNextObject() throws IOException {
+        OneRow oneRow = super.readNextObject();
+
+        if (oneRow == null)
+            return null;
+
+        if (oneRow.getData() instanceof Text) {
+
+            if (!fileAsRow || reader.getProgress() != 1.0F) {
+                // Add a new line to the end of the row
+                oneRow.setData(oneRow.getData().toString() + "\n");
+            }
+        }
+
+        return oneRow;
+    }
+
     /**
      * Opens file for write.
      */
