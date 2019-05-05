@@ -8,6 +8,7 @@
 select * from multiline_blob_twoline_text;
             text_blob
 ----------------------------------
- there are two lines in this file
+ there are two lines in this file+
+
 (1 row)
 
