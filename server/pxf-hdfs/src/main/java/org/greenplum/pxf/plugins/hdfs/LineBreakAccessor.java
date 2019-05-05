@@ -80,9 +80,7 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor {
 
         if (oneRow.getData() instanceof Text) {
 
-            if (fileAsRow && reader.getProgress() == 1.0F) {
-                // do nothing
-            } else {
+            if (!fileAsRow || reader.getProgress() != 1.0F) {
                 oneRow.setData(oneRow.getData().toString() + "\n");
             }
         }
