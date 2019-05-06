@@ -3,4 +3,4 @@
 -- @description query01 tests that an empty text file is returned
 --
 
-select * from multiline_blob_empty_text;
+select * from file_as_row_empty_text;

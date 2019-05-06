@@ -3,4 +3,6 @@
 -- @description query01 tests that a multiline text file returns as a single multiline record in GPDB
 --
 
-select * from multiline_blob_text;
+-- Display on for output consistency between GPDB 5 and 6
+\x on
+select * from file_as_row_text;

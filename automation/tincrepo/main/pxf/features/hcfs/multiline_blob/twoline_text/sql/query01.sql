@@ -4,4 +4,6 @@
 -- record in GPDB
 --
 
-select * from multiline_blob_twoline_text;
+-- Display on for output consistency between GPDB 5 and 6
+\x on
+select * from file_as_row_twoline_text;

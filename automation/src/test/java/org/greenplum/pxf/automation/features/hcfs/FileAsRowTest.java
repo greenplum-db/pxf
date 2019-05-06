@@ -83,7 +83,7 @@ public class FileAsRowTest extends BaseFeature {
 
     private void runTestScenario(String name, String[] fields,
                                  String hdfsPath) throws Exception {
-        String tableName = "multiline_blob_" + name;
+        String tableName = "file_as_row_" + name;
         exTable = new ReadableExternalTable(tableName, fields, hdfsPath, "CSV");
         exTable.setProfile(ProtocolUtils.getProtocol().value() + ":text");
         exTable.setUserParameters(new String[]{"FILE_AS_ROW=true"});

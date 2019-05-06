@@ -4,4 +4,4 @@
 -- record in GPDB
 --
 
-select * from multiline_blob_singleline_text;
+select * from file_as_row_singleline_text;
