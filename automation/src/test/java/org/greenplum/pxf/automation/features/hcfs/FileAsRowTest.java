@@ -89,6 +89,6 @@ public class FileAsRowTest extends BaseFeature {
         exTable.setUserParameters(new String[]{"FILE_AS_ROW=true"});
         gpdb.createTableAndVerify(exTable);
 
-        runTincTest("pxf.features.hcfs.multiline_blob." + name + ".runTest");
+        runTincTest("pxf.features.hcfs.file_as_row." + name + ".runTest");
     }
 }
