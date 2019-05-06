@@ -24,10 +24,11 @@ import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.RequestContext;
 
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.LinkedList;
+import java.util.Queue;
 
 /**
  * A (atomic) PXF Accessor for reading \n delimited files with quoted
@@ -36,8 +37,9 @@ import java.io.InputStreamReader;
  */
 public class QuotedLineBreakAccessor extends HdfsAtomicDataAccessor {
     private BufferedReader reader;
-    protected boolean fileAsRow;
+    private boolean fileAsRow;
     private boolean firstLine, lastLine;
+    private Queue<String> lineQueue;
 
     @Override
     public void initialize(RequestContext requestContext) {
@@ -66,27 +68,49 @@ public class QuotedLineBreakAccessor extends HdfsAtomicDataAccessor {
             return null;
         }
 
-        String next_line = reader.readLine();
+        String next_line = readLine();
         if (next_line == null) /* EOF */ {
             return null;
         }
 
         if (fileAsRow) {
+            // Wrap text around quotes, and escape single quotes
+            next_line = (firstLine ? "\"" : "") +
+                    next_line.replace("\"", "\"\"") +
+                    (lastLine ? "\"" : "");
 
-            if (firstLine) {
-                firstLine = false;
-                return new OneRow(null, "\"" + next_line + "\n");
-            }
-
-            if (lastLine) {
-                // return null after the last line
-                return null;
-            }
-
-            next_line = next_line.replace("\"", "\"\"");
+            firstLine = false;
         }
 
         return new OneRow(null, next_line);
+    }
+
+    /**
+     * Read one line ahead, to determine when the last line occurs
+     *
+     * @return the next line
+     */
+    private String readLine() throws IOException {
+        String line;
+        if (lineQueue == null) {
+            lineQueue = new LinkedList<>();
+            line = reader.readLine();
+
+            if (line == null) {
+                lastLine = true;
+                return null;
+            }
+
+            lineQueue.offer(line);
+        }
+
+        line = reader.readLine();
+        if (line != null) {
+            lineQueue.offer(line);
+        } else {
+            lastLine = true;
+        }
+        return lineQueue.poll();
     }
 
     /**
