@@ -11,10 +11,9 @@ select * from file_as_row_json;
 -- Query JSON using JSON functions
 
 select
-       record->'record'->'created_at' as created_at,
-       record->'record'->'text' as text,
-       record->'record'->'user'->'name' as username,
-       record->'record'->'user'->'screen_name' as screen_name,
-       record->'record'->'user'->'location' as user_location
-from file_as_row_json,
-     json_array_elements(json_blob->'root') record;
+       json_array_elements(json_blob->'root')->'record'->'created_at' as created_at,
+       json_array_elements(json_blob->'root')->'record'->'text' as text,
+       json_array_elements(json_blob->'root')->'record'->'user'->'name' as username,
+       json_array_elements(json_blob->'root')->'record'->'user'->'screen_name' as screen_name,
+       json_array_elements(json_blob->'root')->'record'->'user'->'location' as user_location
+from file_as_row_json;
