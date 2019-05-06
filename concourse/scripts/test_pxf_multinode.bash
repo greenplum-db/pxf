@@ -89,6 +89,8 @@ function setup_pxf_on_segment {
 }
 
 function setup_pxf_on_cluster() {
+    # drop named query file for JDBC test to gpadmin's home on mdw
+    scp ${SSH_OPTS} pxf_src/automation/src/test/resources/report.sql gpadmin@mdw:
     # untar pxf on all nodes in the cluster
     for node in ${gpdb_nodes}; do
         setup_pxf_on_segment ${node} &
@@ -110,6 +112,7 @@ function setup_pxf_on_cluster() {
         sed -i \"s|YOUR_DATABASE_JDBC_URL|jdbc:postgresql://mdw:5432/pxfautomation|\" ${PXF_CONF_DIR}/servers/database/jdbc-site.xml &&
         sed -i \"s|YOUR_DATABASE_JDBC_USER|gpadmin|\" ${PXF_CONF_DIR}/servers/database/jdbc-site.xml &&
         sed -i \"s|YOUR_DATABASE_JDBC_PASSWORD||\" ${PXF_CONF_DIR}/servers/database/jdbc-site.xml &&
+        cp ~gpadmin/report.sql ${PXF_CONF_DIR}/servers/database/ &&
         mkdir -p ${PXF_CONF_DIR}/servers/db-session-params &&
         cp ${PXF_CONF_DIR}/templates/jdbc-site.xml ${PXF_CONF_DIR}/servers/db-session-params/ &&
         sed -i \"s|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.postgresql.Driver|\" ${PXF_CONF_DIR}/servers/db-session-params/jdbc-site.xml &&
