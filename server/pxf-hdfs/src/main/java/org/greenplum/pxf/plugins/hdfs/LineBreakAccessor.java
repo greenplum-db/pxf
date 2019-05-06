@@ -23,7 +23,6 @@ package org.greenplum.pxf.plugins.hdfs;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputSplit;
@@ -64,29 +63,9 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor {
     protected Object getReader(JobConf jobConf, InputSplit split)
             throws IOException {
 
-        // When fileAsRow is true we want to read line by line
-        // using LineRecordReader
-        return (!fileAsRow && hcfsType == HcfsType.HDFS) ?
+        return (hcfsType == HcfsType.HDFS) ?
                 new ChunkRecordReader(jobConf, (FileSplit) split) :
                 new LineRecordReader(jobConf, (FileSplit) split);
-    }
-
-    @Override
-    public OneRow readNextObject() throws IOException {
-        OneRow oneRow = super.readNextObject();
-
-        if (oneRow == null)
-            return null;
-
-        if (oneRow.getData() instanceof Text) {
-
-            if (!fileAsRow || reader.getProgress() != 1.0F) {
-                // Add a new line to the end of the row
-                oneRow.setData(oneRow.getData().toString() + "\n");
-            }
-        }
-
-        return oneRow;
     }
 
     /**

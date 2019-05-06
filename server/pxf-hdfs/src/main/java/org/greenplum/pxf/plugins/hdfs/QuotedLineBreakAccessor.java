@@ -20,6 +20,7 @@ package org.greenplum.pxf.plugins.hdfs;
  */
 
 
+import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.RequestContext;
 
@@ -35,18 +36,29 @@ import java.io.InputStreamReader;
  */
 public class QuotedLineBreakAccessor extends HdfsAtomicDataAccessor {
     private BufferedReader reader;
+    protected boolean fileAsRow;
+    private boolean firstLine, lastLine;
+
+    @Override
+    public void initialize(RequestContext requestContext) {
+        super.initialize(requestContext);
+
+        // true if the files are read as a single blob, false otherwise
+        fileAsRow = StringUtils.equalsIgnoreCase("true", context.getOption("FILE_AS_ROW"));
+    }
 
     @Override
     public boolean openForRead() throws Exception {
         if (!super.openForRead()) {
             return false;
         }
+        firstLine = true;
         reader = new BufferedReader(new InputStreamReader(inp));
         return true;
     }
 
     /**
-     * Fetches one record (maybe partial) from the  file. The record is returned as a Java object.
+     * Fetches one record (maybe partial) from the file. The record is returned as a Java object.
      */
     @Override
     public OneRow readNextObject() throws IOException {
@@ -59,7 +71,22 @@ public class QuotedLineBreakAccessor extends HdfsAtomicDataAccessor {
             return null;
         }
 
-        return new OneRow(null, next_line + "\n");
+        if (fileAsRow) {
+
+            if (firstLine) {
+                firstLine = false;
+                return new OneRow(null, "\"" + next_line + "\n");
+            }
+
+            if (lastLine) {
+                // return null after the last line
+                return null;
+            }
+
+            next_line = next_line.replace("\"", "\"\"");
+        }
+
+        return new OneRow(null, next_line);
     }
 
     /**

@@ -85,7 +85,7 @@ public class FileAsRowTest extends BaseFeature {
                                  String hdfsPath) throws Exception {
         String tableName = "file_as_row_" + name;
         exTable = new ReadableExternalTable(tableName, fields, hdfsPath, "CSV");
-        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":text");
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":text:multi");
         exTable.setUserParameters(new String[]{"FILE_AS_ROW=true"});
         gpdb.createTableAndVerify(exTable);
 

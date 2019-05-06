@@ -38,7 +38,7 @@ public class UserDataVerifyAccessor extends BasePlugin implements Accessor
         }
 
         // Generate tuple with user data value as last column.
-        String data = firstColumn + userDelimiter + counter + userDelimiter +  (counter % 2 == 0) + userDelimiter + userData + "\n";
+        String data = firstColumn + userDelimiter + counter + userDelimiter +  (counter % 2 == 0) + userDelimiter +  userData;
         String key = Integer.toString(counter);
 
         counter++;

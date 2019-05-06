@@ -93,8 +93,7 @@ public class HiveColumnarSerdeResolver extends HiveResolver {
 
             traverseTuple(tuple, oi);
             /* We follow Hive convention. Partition fields are always added at the end of the record */
-            builder.append(parts)
-                    .append("\n");
+            builder.append(parts);
             return Collections.singletonList(new OneField(VARCHAR.getOID(), builder.toString()));
         } else {
             return super.getFields(onerow);

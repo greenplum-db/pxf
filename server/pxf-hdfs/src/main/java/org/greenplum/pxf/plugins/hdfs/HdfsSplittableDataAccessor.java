@@ -50,8 +50,6 @@ public abstract class HdfsSplittableDataAccessor extends BasePlugin implements A
     protected InputFormat<?, ?> inputFormat;
     protected JobConf jobConf;
     protected Object key, data;
-    protected boolean fileAsRow;
-    private boolean firstLine, lastLine;
     HcfsType hcfsType;
 
     private ListIterator<InputSplit> iter;
@@ -69,9 +67,6 @@ public abstract class HdfsSplittableDataAccessor extends BasePlugin implements A
     public void initialize(RequestContext requestContext) {
         super.initialize(requestContext);
 
-        // true if the files are read as a single blob, false otherwise
-        fileAsRow = StringUtils.equalsIgnoreCase("true", context.getOption("FILE_AS_ROW"));
-
         // variable required for the splits iteration logic
         jobConf = new JobConf(configuration, HdfsSplittableDataAccessor.class);
 
@@ -87,7 +82,6 @@ public abstract class HdfsSplittableDataAccessor extends BasePlugin implements A
      */
     @Override
     public boolean openForRead() throws Exception {
-        firstLine = true;
         LinkedList<InputSplit> requestSplits = new LinkedList<>();
         FileSplit fileSplit = HdfsUtilities.parseFileSplit(context);
         requestSplits.add(fileSplit);
@@ -138,19 +132,6 @@ public abstract class HdfsSplittableDataAccessor extends BasePlugin implements A
     @Override
     public OneRow readNextObject() throws IOException {
 
-        if (fileAsRow) {
-
-            if (firstLine) {
-                firstLine = false;
-                return new OneRow(null, "\"");
-            }
-
-            if (lastLine) {
-                // return null after the last line
-                return null;
-            }
-        }
-
         // if there is one more record in the current split
         if (!reader.next(key, data)) {
 
@@ -159,17 +140,8 @@ public abstract class HdfsSplittableDataAccessor extends BasePlugin implements A
 
             if (!hasMoreSplits ||
                     !reader.next(key, data)) { // read the first record of the new split
-                lastLine = true;
-                // for file blobs return a quote, otherwise return null
-                return fileAsRow ? new OneRow(null, "\"\n") : null;
+                return null;
             }
-        }
-
-        if (fileAsRow && data instanceof Text) {
-            // When fileAsRow is true, we need to return a quoted
-            // string, and we need to escape quotes for a valid
-            // multiline CSV to be interpreted by GPDB
-            ((Text)data).set(StringEscapeUtils.escapeCsv(data.toString()));
         }
 
         /*

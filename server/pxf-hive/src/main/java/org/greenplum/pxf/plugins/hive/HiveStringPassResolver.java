@@ -77,14 +77,8 @@ public class HiveStringPassResolver extends HiveResolver {
     public List<OneField> getFields(OneRow onerow) throws Exception {
         if (context.getOutputFormat() == OutputFormat.TEXT) {
             String line = (onerow.getData()).toString();
-
-            // remove any line breaks
-            line = line.endsWith("\n") ?
-                    line.substring(0, line.length() - 1) : line;
-
             /* We follow Hive convention. Partition fields are always added at the end of the record */
-            return Collections.singletonList(new OneField(VARCHAR.getOID(),
-                    line + parts + "\n"));
+            return Collections.singletonList(new OneField(VARCHAR.getOID(), line + parts));
         } else {
             return super.getFields(onerow);
         }
