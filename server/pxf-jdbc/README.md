@@ -279,7 +279,7 @@ insert into emp values(3, 'charlie', 10500);
 
 Then a complex aggregation query is created and placed in a file, say `report.sql`. The file needs to be placed in the server configuration directory under `$PXF_CONF/servers/`. So, let's assume we have created a `mydb` server configuration directory, then this file will be `$PXF_CONF/servers/mydb/report.sql`. Jdbc driver name and connection parameters should be configured in `$PXF_CONF/servers/mydb/jdbc-site.xml` for this server.
 ```
-SELECT dept.name, count(), max(emp.salary)
+SELECT dept.name AS name, count(*) AS count, max(emp.salary) AS max
 FROM demodb.dept JOIN demodb.emp
 ON dept.id = emp.dept_id 
 GROUP BY dept.name;

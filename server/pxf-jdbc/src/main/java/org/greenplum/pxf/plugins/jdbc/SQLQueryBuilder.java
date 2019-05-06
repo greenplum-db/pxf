@@ -89,8 +89,7 @@ public class SQLQueryBuilder {
         if (internalQuery == null) {
             source = context.getDataSource();
         } else {
-            // TODO does this work for all DBs ?
-            source = String.format("(%s) AS source", internalQuery);
+            source = String.format("(%s) userquery", internalQuery);
         }
 
         quoteString = "";

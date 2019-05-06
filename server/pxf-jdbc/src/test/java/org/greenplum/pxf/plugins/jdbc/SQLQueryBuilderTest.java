@@ -308,7 +308,7 @@ public class SQLQueryBuilderTest {
     public void testSimpleNamedQuery() throws Exception {
         SQLQueryBuilder builder = new SQLQueryBuilder(context, mockMetaData, NAMED_QUERY);
         String query = builder.buildSelectQuery();
-        assertEquals("SELECT id, cdate, amt, grade FROM (SELECT a, b FROM c WHERE d = 'foo') AS source", query);
+        assertEquals("SELECT id, cdate, amt, grade FROM (SELECT a, b FROM c WHERE d = 'foo') userquery", query);
     }
 
     @Test
@@ -319,7 +319,7 @@ public class SQLQueryBuilderTest {
         SQLQueryBuilder builder = new SQLQueryBuilder(context, mockMetaData, NAMED_QUERY);
         builder.forceSetQuoteString();
         String query = builder.buildSelectQuery();
-        assertEquals("SELECT \"id\", \"cdate\", \"amt\", \"grade\" FROM (SELECT a, b FROM c WHERE d = 'foo') AS source WHERE \"id\" = 1", query);
+        assertEquals("SELECT \"id\", \"cdate\", \"amt\", \"grade\" FROM (SELECT a, b FROM c WHERE d = 'foo') userquery WHERE \"id\" = 1", query);
     }
 
     @Test
@@ -331,7 +331,7 @@ public class SQLQueryBuilderTest {
 
         SQLQueryBuilder builder = new SQLQueryBuilder(context, mockMetaData, NAMED_QUERY);
         String query = builder.buildSelectQuery();
-        assertEquals("SELECT id, amt FROM (SELECT a, b FROM c WHERE d = 'foo') AS source WHERE id = 1", query);
+        assertEquals("SELECT id, amt FROM (SELECT a, b FROM c WHERE d = 'foo') userquery WHERE id = 1", query);
     }
 
     @Test
@@ -350,7 +350,7 @@ public class SQLQueryBuilderTest {
         SQLQueryBuilder builder = new SQLQueryBuilder(context, mockMetaData, NAMED_QUERY);
         builder.autoSetQuoteString();
         String query = builder.buildSelectQuery();
-        assertEquals("SELECT id, cdate, amt, grade FROM (SELECT a, b FROM c WHERE d = 'foo') AS source WHERE id > 5 AND grade = 'excellent'", query);
+        assertEquals("SELECT id, cdate, amt, grade FROM (SELECT a, b FROM c WHERE d = 'foo') userquery WHERE id > 5 AND grade = 'excellent'", query);
     }
 
 

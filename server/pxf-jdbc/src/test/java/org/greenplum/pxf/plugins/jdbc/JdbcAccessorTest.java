@@ -112,7 +112,7 @@ public class JdbcAccessorTest {
         .append("SELECT  FROM (SELECT dept.name, count(), max(emp.salary)\n")
         .append("FROM dept JOIN emp\n")
         .append("ON dept.id = emp.dept_id\n")
-        .append("GROUP BY dept.name) AS source");
+        .append("GROUP BY dept.name) userquery");
 
         assertEquals(b.toString(), queryPassed.getValue());
 
