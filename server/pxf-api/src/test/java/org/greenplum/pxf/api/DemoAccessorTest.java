@@ -58,7 +58,7 @@ public class DemoAccessorTest {
         int numRows = 2;
         for (int i = 0; i < numRows; i++) {
             OneRow row = accessor.readNextObject();
-            assertEquals(String.format("OneRow:0.%d->fragment1 row%d\n", i,
+            assertEquals(String.format("OneRow:0.%d->fragment1 row%d", i,
                     i + 1), row.toString());
         }
         assertNull(accessor.readNextObject());
@@ -75,7 +75,7 @@ public class DemoAccessorTest {
         for (int i = 0; i < numRows; i++) {
             OneRow row = accessor.readNextObject();
             assertEquals(String.format("OneRow:0.%d->fragment1 row%d,value1," +
-                    "value2\n", i, i+1), row.toString());
+                    "value2", i, i+1), row.toString());
         }
         assertNull(accessor.readNextObject());
     }
