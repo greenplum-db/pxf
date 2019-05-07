@@ -33,3 +33,18 @@ SELECT max(max) FROM pxf_jdbc_read_named_query;
 -----
  120
 (1 row)
+
+SELECT * FROM pxf_jdbc_read_named_query_partitioned ORDER BY name;
+  name   | count | max
+---------+-------+-----
+ finance |     4 | 103
+ it      |     2 |  96
+ sales   |     3 | 120
+(3 rows)
+
+SELECT name, count FROM pxf_jdbc_read_named_query_partitioned WHERE count > 2 ORDER BY name;
+  name   | count
+---------+-------
+ finance |     4
+ sales   |     3
+(2 rows)

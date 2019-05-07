@@ -13,3 +13,6 @@ SELECT name, count FROM pxf_jdbc_read_named_query WHERE max > 100 ORDER BY name;
 
 SELECT max(max) FROM pxf_jdbc_read_named_query;
 
+SELECT * FROM pxf_jdbc_read_named_query_partitioned ORDER BY name;
+
+SELECT name, count FROM pxf_jdbc_read_named_query_partitioned WHERE count > 2 ORDER BY name;

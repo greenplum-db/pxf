@@ -37,7 +37,7 @@ CREATE [ READABLE | WRITABLE ] EXTERNAL TABLE <table_name> (
     { <column_name> <data_type> [, ...] | LIKE <other_table> }
 )
 LOCATION (
-    'pxf://<full_external_table_name>?<pxf_parameters>[&SERVER=<server_name>]<jdbc_settings>'
+    'pxf://{<full_external_table_name> | query:<query_file_without_extension>}?<pxf_parameters>[&SERVER=<server_name>]<jdbc_settings>'
 )
 FORMAT 'CUSTOM' (FORMATTER={'pxfwritable_import' | 'pxfwritable_export'})
 ```

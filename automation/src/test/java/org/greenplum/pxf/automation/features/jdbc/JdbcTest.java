@@ -363,6 +363,22 @@ public class JdbcTest extends BaseFeature {
         pxfJdbcNamedQuery.setHost(pxfHost);
         pxfJdbcNamedQuery.setPort(pxfPort);
         gpdb.createTableAndVerify(pxfJdbcNamedQuery);
+
+        pxfJdbcNamedQuery = TableFactory.getPxfJdbcReadablePartitionedTable(
+                "pxf_jdbc_read_named_query_partitioned",
+                NAMED_QUERY_FIELDS,
+                "query:report",
+                null,
+                null,
+                1,
+                "1:5",
+                "1",
+                null,
+                EnumPartitionType.INT,
+                "database");
+        pxfJdbcNamedQuery.setHost(pxfHost);
+        pxfJdbcNamedQuery.setPort(pxfPort);
+        gpdb.createTableAndVerify(pxfJdbcNamedQuery);
     }
 
     @Test(groups = {"features", "gpdb"})
