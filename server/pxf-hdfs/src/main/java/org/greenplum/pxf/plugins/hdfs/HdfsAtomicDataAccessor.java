@@ -71,8 +71,10 @@ public abstract class HdfsAtomicDataAccessor extends BasePlugin implements Acces
             return false;
         }
 
-        // input data stream
-        FileSystem fs = FileSystem.get(URI.create(context.getDataSource()), configuration); // FileSystem.get actually returns an FSDataInputStream
+        URI uri = URI.create(context.getDataSource());
+        // input data stream, FileSystem.get actually
+        // returns an FSDataInputStream
+        FileSystem fs = FileSystem.get(uri, configuration);
         inp = fs.open(new Path(context.getDataSource()));
 
         return (inp != null);
@@ -111,7 +113,7 @@ public abstract class HdfsAtomicDataAccessor extends BasePlugin implements Acces
      * fragment will read the (whole) file.
      */
     private boolean isWorkingSegment() {
-        return (fileSplit.getStart() == 0);
+        return (fileSplit.getStart() == 0L);
     }
 
     @Override

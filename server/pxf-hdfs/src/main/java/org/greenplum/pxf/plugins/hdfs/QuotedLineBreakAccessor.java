@@ -36,10 +36,14 @@ import java.util.Queue;
  * multi-line records, that are read from a single source (non-parallel).
  */
 public class QuotedLineBreakAccessor extends HdfsAtomicDataAccessor {
-    private BufferedReader reader;
     private boolean fileAsRow;
     private boolean firstLine, lastLine;
-    private Queue<String> lineQueue;
+
+    BufferedReader reader;
+    Queue<String> lineQueue;
+
+    private static final String CSV_QUOTE = "\"";
+    private static final String CSV_ESCAPED_QUOTE = "\"\"";
 
     @Override
     public void initialize(RequestContext requestContext) {
@@ -75,9 +79,9 @@ public class QuotedLineBreakAccessor extends HdfsAtomicDataAccessor {
 
         if (fileAsRow) {
             // Wrap text around quotes, and escape single quotes
-            next_line = (firstLine ? "\"" : "") +
-                    next_line.replace("\"", "\"\"") +
-                    (lastLine ? "\"" : "");
+            next_line = (firstLine ? CSV_QUOTE : StringUtils.EMPTY) +
+                    next_line.replace(CSV_QUOTE, CSV_ESCAPED_QUOTE) +
+                    (lastLine ? CSV_QUOTE : StringUtils.EMPTY);
 
             firstLine = false;
         }
@@ -90,10 +94,9 @@ public class QuotedLineBreakAccessor extends HdfsAtomicDataAccessor {
      *
      * @return the next line
      */
-    private String readLine() throws IOException {
+    String readLine() throws IOException {
         String line;
         if (lineQueue == null) {
-            lineQueue = new LinkedList<>();
             line = reader.readLine();
 
             if (line == null) {
@@ -101,6 +104,7 @@ public class QuotedLineBreakAccessor extends HdfsAtomicDataAccessor {
                 return null;
             }
 
+            lineQueue = new LinkedList<>();
             lineQueue.offer(line);
         }
 
