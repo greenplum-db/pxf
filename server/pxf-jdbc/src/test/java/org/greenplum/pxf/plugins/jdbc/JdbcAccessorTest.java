@@ -98,6 +98,17 @@ public class JdbcAccessorTest {
     }
 
     @Test
+    public void testReadFromQueryFailsWhenQueryFileIsEmpty() throws Exception {
+        expectedException.expect(RuntimeException.class);
+        expectedException.expectMessage("Query text file is empty for query emptyquery");
+        String serversDirectory = new File(this.getClass().getClassLoader().getResource("servers").toURI()).getCanonicalPath();
+        context.getAdditionalConfigProps().put("pxf.config.server.directory", serversDirectory + File.separator + "test-server");
+        context.setDataSource("query:emptyquery");
+        accessor.initialize(context);
+        accessor.openForRead();
+    }
+
+    @Test
     public void testReadFromQuery() throws Exception {
         String serversDirectory = new File(this.getClass().getClassLoader().getResource("servers").toURI()).getCanonicalPath();
         context.getAdditionalConfigProps().put("pxf.config.server.directory", serversDirectory + File.separator + "test-server");

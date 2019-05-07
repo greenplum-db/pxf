@@ -300,7 +300,7 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
 
     /**
      * Gets the text of the query by reading the file from the server configuration directory. The name of the file
-     * es expected to be the same as the name of the query provided by the user and have extension ".sql"
+     * is expected to be the same as the name of the query provided by the user and have extension ".sql"
      *
      * @return text of the query
      */
@@ -323,6 +323,9 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
             queryText = FileUtils.readFileToString(queryFile);
         } catch (IOException e) {
             throw new RuntimeException(String.format("Failed to read text of query %s : %s", queryName, e.getMessage()), e);
+        }
+        if (StringUtils.isBlank(queryText)) {
+            throw new RuntimeException(String.format("Query text file is empty for query %s", queryName));
         }
         return queryText;
     }
