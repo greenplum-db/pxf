@@ -1,7 +1,7 @@
 from mpp.models import SQLTestCase
 from mpp.models import SQLConcurrencyTestCase
 
-class PxfEmptyTextBlob(SQLConcurrencyTestCase):
+class PxfEmptyText(SQLConcurrencyTestCase):
     """
     @db_name pxfautomation
     @concurrency 1
