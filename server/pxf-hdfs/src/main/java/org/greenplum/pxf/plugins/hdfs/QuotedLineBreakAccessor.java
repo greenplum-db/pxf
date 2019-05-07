@@ -51,6 +51,13 @@ public class QuotedLineBreakAccessor extends HdfsAtomicDataAccessor {
 
         // true if the files are read as a single row, false otherwise
         fileAsRow = StringUtils.equalsIgnoreCase("true", context.getOption("FILE_AS_ROW"));
+
+        if (fileAsRow && context.getTupleDescription().size() != 1) {
+            throw new IllegalArgumentException(String.format("the FILE_AS_ROW " +
+                    "property only supports tables with a single column in " +
+                    "the table definition. %d columns were provided",
+                    context.getTupleDescription().size()));
+        }
     }
 
     @Override
@@ -95,6 +102,11 @@ public class QuotedLineBreakAccessor extends HdfsAtomicDataAccessor {
      * @return the next line
      */
     String readLine() throws IOException {
+        if (!fileAsRow) {
+            // simply readLine when fileAsRow feature is not enabled
+            return reader.readLine();
+        }
+
         String line;
         if (lineQueue == null) {
             line = reader.readLine();

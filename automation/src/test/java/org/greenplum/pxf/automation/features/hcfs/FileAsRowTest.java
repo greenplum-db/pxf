@@ -3,6 +3,8 @@ package org.greenplum.pxf.automation.features.hcfs;
 import org.greenplum.pxf.automation.features.BaseFeature;
 import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 /**
@@ -19,20 +21,10 @@ public class FileAsRowTest extends BaseFeature {
 
     private static final String[] PXF_MULTILINE_COLS = {"text_blob text"};
 
-    @Override
-    protected void beforeClass() throws Exception {
-        super.beforeClass();
-        hdfsBasePath = hdfs.getWorkingDirectory() + "/file_as_row/";
-        prepareData();
-    }
-
-    @Override
-    protected void afterClass() throws Exception {
-        super.afterClass();
-        cleanupData();
-    }
-
+    @BeforeClass
     protected void prepareData() throws Exception {
+        hdfsBasePath = hdfs.getWorkingDirectory() + "/file_as_row/";
+
         // copy files to hdfs
         hdfs.copyFromLocal(localDataResourcesFolder + "/json/" + multiLineJsonFile,
                 hdfsBasePath + multiLineJsonFile);
@@ -46,6 +38,7 @@ public class FileAsRowTest extends BaseFeature {
                 hdfsBasePath + multiLineTextFile);
     }
 
+    @AfterClass
     protected void cleanupData() throws Exception {
         hdfs.removeDirectory(hdfsBasePath);
     }

@@ -133,8 +133,8 @@ public abstract class HdfsSplittableDataAccessor extends BasePlugin implements A
             // the current split is exhausted. try to move to the next split
             boolean hasMoreSplits = getNextSplit();
 
-            if (!hasMoreSplits ||
-                    !reader.next(key, data)) { // read the first record of the new split
+            // if there are more splits read the first record of the new split
+            if (!hasMoreSplits || !reader.next(key, data)) {
                 return null;
             }
         }
