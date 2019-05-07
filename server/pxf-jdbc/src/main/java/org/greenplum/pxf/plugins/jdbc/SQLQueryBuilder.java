@@ -24,10 +24,13 @@ import org.greenplum.pxf.api.FilterParser;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.plugins.jdbc.utils.ByteUtil;
 import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.sql.DatabaseMetaData;
@@ -43,6 +46,7 @@ import java.util.stream.Collectors;
 public class SQLQueryBuilder {
 
     private static final Logger LOG = LoggerFactory.getLogger(SQLQueryBuilder.class);
+    private static final String SUBQUERY_ALIAS_SUFFIX = ") pxfsubquery"; // do not use AS, Oracle does not like it
 
     private RequestContext requestContext;
     private DatabaseMetaData databaseMetaData;
@@ -50,6 +54,7 @@ public class SQLQueryBuilder {
     private String quoteString;
     private List<ColumnDescriptor> columns;
     private String source;
+    private boolean subQueryUsed = false;
 
     /**
      * Construct a new SQLQueryBuilder
@@ -68,11 +73,11 @@ public class SQLQueryBuilder {
      *
      * @param context {@link RequestContext}
      * @param metaData {@link DatabaseMetaData}
-     * @param internalQuery query to run and get results from, instead of using a table name
+     * @param subQuery query to run and get results from, instead of using a table name
      *
      * @throws SQLException if some call of DatabaseMetaData method fails
      */
-    public SQLQueryBuilder(RequestContext context, DatabaseMetaData metaData, String internalQuery) throws SQLException {
+    public SQLQueryBuilder(RequestContext context, DatabaseMetaData metaData, String subQuery) throws SQLException {
         if (context == null) {
             throw new IllegalArgumentException("Provided RequestContext is null");
         }
@@ -85,11 +90,12 @@ public class SQLQueryBuilder {
         dbProduct = DbProduct.getDbProduct(databaseMetaData.getDatabaseProductName());
         columns = context.getTupleDescription();
 
-        // pick the source as either requested table name or a wrapped internal query
-        if (internalQuery == null) {
+        // pick the source as either requested table name or a wrapped subquery with an alias
+        if (subQuery == null) {
             source = context.getDataSource();
         } else {
-            source = String.format("(%s) userquery", internalQuery);
+            source = String.format("(%s%s", subQuery, SUBQUERY_ALIAS_SUFFIX);
+            subQueryUsed = true;
         }
 
         quoteString = "";
@@ -119,7 +125,7 @@ public class SQLQueryBuilder {
         buildWhereSQL(sb);
 
         // Insert partition constraints
-        JdbcPartitionFragmenter.buildFragmenterSql(requestContext, dbProduct, quoteString, sb);
+        buildFragmenterSql(requestContext, dbProduct, quoteString, sb);
 
         return sb.toString();
     }
@@ -317,6 +323,70 @@ public class SQLQueryBuilder {
         catch (UnsupportedOperationException e) {
             LOG.debug("WHERE clause is omitted: " + e.toString());
             // Silence the exception and do not insert constraints
+        }
+    }
+
+    /**
+     * Insert fragment constraints into the SQL query.
+     *
+     * @param context RequestContext of the fragment
+     * @param dbProduct Database product (affects the behaviour for DATE partitions)
+     * @param quoteString String to use as quote for column identifiers
+     * @param query SQL query to insert constraints to. The query may may contain other WHERE statements
+     */
+    public void buildFragmenterSql(RequestContext context, DbProduct dbProduct, String quoteString, StringBuilder query) {
+        if (context.getOption("PARTITION_BY") == null) {
+            return;
+        }
+
+        byte[] meta = context.getFragmentMetadata();
+        if (meta == null) {
+            return;
+        }
+        String[] partitionBy = context.getOption("PARTITION_BY").split(":");
+        String partitionColumn = quoteString + partitionBy[0] + quoteString;
+        PartitionType partitionType = PartitionType.typeOf(partitionBy[1]);
+
+        // determine if we need to add WHERE statement if not a single WHERE is in the query
+        // or subquery is used and there are no WHERE statements after subquery alias
+        int startIndexToSearchForWHERE = 0;
+        if (subQueryUsed) {
+            startIndexToSearchForWHERE = query.indexOf(SUBQUERY_ALIAS_SUFFIX);
+        }
+        if (query.indexOf("WHERE", startIndexToSearchForWHERE) < 0) {
+            query.append(" WHERE ");
+        }
+        else {
+            query.append(" AND ");
+        }
+
+        switch (partitionType) {
+            case DATE: {
+                byte[][] newb = ByteUtil.splitBytes(meta);
+                Date fragStart = new Date(ByteUtil.toLong(newb[0]));
+                Date fragEnd = new Date(ByteUtil.toLong(newb[1]));
+
+                SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+                query.append(partitionColumn).append(" >= ").append(dbProduct.wrapDate(df.format(fragStart)));
+                query.append(" AND ");
+                query.append(partitionColumn).append(" < ").append(dbProduct.wrapDate(df.format(fragEnd)));
+
+                break;
+            }
+            case INT: {
+                byte[][] newb = ByteUtil.splitBytes(meta);
+                long fragStart = ByteUtil.toLong(newb[0]);
+                long fragEnd = ByteUtil.toLong(newb[1]);
+
+                query.append(partitionColumn).append(" >= ").append(fragStart);
+                query.append(" AND ");
+                query.append(partitionColumn).append(" < ").append(fragEnd);
+                break;
+            }
+            case ENUM: {
+                query.append(partitionColumn).append(" = '").append(new String(meta)).append("'");
+                break;
+            }
         }
     }
 }

@@ -41,7 +41,8 @@ import static org.mockito.Mockito.when;
 public class SQLQueryBuilderTest {
 
     private static final String SQL = "SELECT id, cdate, amt, grade FROM sales";
-    public static final String NAMED_QUERY = "SELECT a, b FROM c WHERE d = 'foo'";
+    public static final String NAMED_QUERY = "SELECT a, b FROM c";
+    public static final String NAMED_QUERY_WHERE = "SELECT a, b FROM c WHERE d = 'foo'";
 
     private RequestContext context;
 
@@ -306,9 +307,9 @@ public class SQLQueryBuilderTest {
     /* -------------- NAMED QUERY TESTS --------------- */
     @Test
     public void testSimpleNamedQuery() throws Exception {
-        SQLQueryBuilder builder = new SQLQueryBuilder(context, mockMetaData, NAMED_QUERY);
+        SQLQueryBuilder builder = new SQLQueryBuilder(context, mockMetaData, NAMED_QUERY_WHERE);
         String query = builder.buildSelectQuery();
-        assertEquals("SELECT id, cdate, amt, grade FROM (SELECT a, b FROM c WHERE d = 'foo') userquery", query);
+        assertEquals("SELECT id, cdate, amt, grade FROM (SELECT a, b FROM c WHERE d = 'foo') pxfsubquery", query);
     }
 
     @Test
@@ -316,10 +317,10 @@ public class SQLQueryBuilderTest {
         // id = 1
         context.setFilterString("a0c20s1d1o5");
 
-        SQLQueryBuilder builder = new SQLQueryBuilder(context, mockMetaData, NAMED_QUERY);
+        SQLQueryBuilder builder = new SQLQueryBuilder(context, mockMetaData, NAMED_QUERY_WHERE);
         builder.forceSetQuoteString();
         String query = builder.buildSelectQuery();
-        assertEquals("SELECT \"id\", \"cdate\", \"amt\", \"grade\" FROM (SELECT a, b FROM c WHERE d = 'foo') userquery WHERE \"id\" = 1", query);
+        assertEquals("SELECT \"id\", \"cdate\", \"amt\", \"grade\" FROM (SELECT a, b FROM c WHERE d = 'foo') pxfsubquery WHERE \"id\" = 1", query);
     }
 
     @Test
@@ -329,13 +330,49 @@ public class SQLQueryBuilderTest {
         context.getTupleDescription().get(1).setProjected(false);
         context.getTupleDescription().get(3).setProjected(false);
 
-        SQLQueryBuilder builder = new SQLQueryBuilder(context, mockMetaData, NAMED_QUERY);
+        SQLQueryBuilder builder = new SQLQueryBuilder(context, mockMetaData, NAMED_QUERY_WHERE);
         String query = builder.buildSelectQuery();
-        assertEquals("SELECT id, amt FROM (SELECT a, b FROM c WHERE d = 'foo') userquery WHERE id = 1", query);
+        assertEquals("SELECT id, amt FROM (SELECT a, b FROM c WHERE d = 'foo') pxfsubquery WHERE id = 1", query);
     }
 
     @Test
-    public void testNamedQueryFilterAndPartition() throws Exception {
+    public void testNamedQueryWithWhereWithFilterWithPartition() throws Exception {
+        // id > 5
+        context.setFilterString("a0c20s1d5o2");
+        context.addOption("PARTITION_BY", "grade:enum");
+        context.addOption("RANGE", "excellent:good:general:bad");
+
+        JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
+        fragment.initialize(context);
+        List<Fragment> fragments = fragment.getFragments();
+        // Fragment 0: grade = 'excellent'
+        context.setFragmentMetadata(fragments.get(0).getMetadata());
+
+        SQLQueryBuilder builder = new SQLQueryBuilder(context, mockMetaData, NAMED_QUERY_WHERE);
+        builder.autoSetQuoteString();
+        String query = builder.buildSelectQuery();
+        assertEquals("SELECT id, cdate, amt, grade FROM (SELECT a, b FROM c WHERE d = 'foo') pxfsubquery WHERE id > 5 AND grade = 'excellent'", query);
+    }
+
+    @Test
+    public void testNamedQueryWithWhereWithoutFilterWithPartition() throws Exception {
+        context.addOption("PARTITION_BY", "grade:enum");
+        context.addOption("RANGE", "excellent:good:general:bad");
+
+        JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
+        fragment.initialize(context);
+        List<Fragment> fragments = fragment.getFragments();
+        // Fragment 0: grade = 'excellent'
+        context.setFragmentMetadata(fragments.get(0).getMetadata());
+
+        SQLQueryBuilder builder = new SQLQueryBuilder(context, mockMetaData, NAMED_QUERY_WHERE);
+        builder.autoSetQuoteString();
+        String query = builder.buildSelectQuery();
+        assertEquals("SELECT id, cdate, amt, grade FROM (SELECT a, b FROM c WHERE d = 'foo') pxfsubquery WHERE grade = 'excellent'", query);
+    }
+
+    @Test
+    public void testNamedQueryWithoutWhereWithFilterWithPartition() throws Exception {
         // id > 5
         context.setFilterString("a0c20s1d5o2");
         context.addOption("PARTITION_BY", "grade:enum");
@@ -350,8 +387,24 @@ public class SQLQueryBuilderTest {
         SQLQueryBuilder builder = new SQLQueryBuilder(context, mockMetaData, NAMED_QUERY);
         builder.autoSetQuoteString();
         String query = builder.buildSelectQuery();
-        assertEquals("SELECT id, cdate, amt, grade FROM (SELECT a, b FROM c WHERE d = 'foo') userquery WHERE id > 5 AND grade = 'excellent'", query);
+        assertEquals("SELECT id, cdate, amt, grade FROM (SELECT a, b FROM c) pxfsubquery WHERE id > 5 AND grade = 'excellent'", query);
     }
 
+    @Test
+    public void testNamedQueryWithoutWhereWithoutFilterWithPartition() throws Exception {
+        context.addOption("PARTITION_BY", "grade:enum");
+        context.addOption("RANGE", "excellent:good:general:bad");
+
+        JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
+        fragment.initialize(context);
+        List<Fragment> fragments = fragment.getFragments();
+        // Fragment 0: grade = 'excellent'
+        context.setFragmentMetadata(fragments.get(0).getMetadata());
+
+        SQLQueryBuilder builder = new SQLQueryBuilder(context, mockMetaData, NAMED_QUERY);
+        builder.autoSetQuoteString();
+        String query = builder.buildSelectQuery();
+        assertEquals("SELECT id, cdate, amt, grade FROM (SELECT a, b FROM c) pxfsubquery WHERE grade = 'excellent'", query);
+    }
 
 }

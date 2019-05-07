@@ -40,63 +40,34 @@ import java.util.List;
  * Splits the query to allow multiple simultaneous SELECTs
  */
 public class JdbcPartitionFragmenter extends BaseFragmenter {
-    /**
-     * Insert fragment constraints into the SQL query.
-     *
-     * @param context RequestContext of the fragment
-     * @param dbProduct Database product (affects the behaviour for DATE partitions)
-     * @param quoteString String to use as quote for column identifiers
-     * @param query SQL query to insert constraints to. The query may may contain other WHERE statements
-     */
-    public static void buildFragmenterSql(RequestContext context, DbProduct dbProduct, String quoteString, StringBuilder query) {
-        if (context.getOption("PARTITION_BY") == null) {
-            return;
+
+    // A PXF engine to use as a host for fragments
+    private static final String[] pxfHosts;
+
+    static {
+        String[] localhost = {"localhost"};
+        try {
+            localhost[0] = InetAddress.getLocalHost().getHostAddress();
         }
-
-        byte[] meta = context.getFragmentMetadata();
-        if (meta == null) {
-            return;
+        catch (UnknownHostException ex) {
+            // It is always possible to get 'localhost' address
         }
-        String[] partitionBy = context.getOption("PARTITION_BY").split(":");
-        String partitionColumn = quoteString + partitionBy[0] + quoteString;
-        PartitionType partitionType = PartitionType.typeOf(partitionBy[1]);
-
-        if (!query.toString().contains("WHERE")) {
-            query.append(" WHERE ");
-        }
-        else {
-            query.append(" AND ");
-        }
-
-        switch (partitionType) {
-            case DATE: {
-                byte[][] newb = ByteUtil.splitBytes(meta);
-                Date fragStart = new Date(ByteUtil.toLong(newb[0]));
-                Date fragEnd = new Date(ByteUtil.toLong(newb[1]));
-
-                SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-                query.append(partitionColumn).append(" >= ").append(dbProduct.wrapDate(df.format(fragStart)));
-                query.append(" AND ");
-                query.append(partitionColumn).append(" < ").append(dbProduct.wrapDate(df.format(fragEnd)));
-
-                break;
-            }
-            case INT: {
-                byte[][] newb = ByteUtil.splitBytes(meta);
-                long fragStart = ByteUtil.toLong(newb[0]);
-                long fragEnd = ByteUtil.toLong(newb[1]);
-
-                query.append(partitionColumn).append(" >= ").append(fragStart);
-                query.append(" AND ");
-                query.append(partitionColumn).append(" < ").append(fragEnd);
-                break;
-            }
-            case ENUM: {
-                query.append(partitionColumn).append(" = '").append(new String(meta)).append("'");
-                break;
-            }
-        }
+        pxfHosts = localhost;
     }
+
+    // Partition parameters (filled by class constructor)
+    private String[] range = null;
+    private PartitionType partitionType;
+    private long intervalNum;
+
+    // Partition parameters for INT partitions (filled by class constructor)
+    private long rangeIntStart;
+    private long rangeIntEnd;
+
+    // Partition parameters for DATE partitions (filled by class constructor)
+    private IntervalType intervalType;
+    private Calendar rangeDateStart;
+    private Calendar rangeDateEnd;
 
     @Override
     public void initialize(RequestContext context) {
@@ -275,52 +246,5 @@ public class JdbcPartitionFragmenter extends BaseFragmenter {
         }
 
         return fragments;
-    }
-
-    // Partition parameters (filled by class constructor)
-    private String[] range = null;
-    private PartitionType partitionType = null;
-    private long intervalNum;
-
-    // Partition parameters for INT partitions (filled by class constructor)
-    private long rangeIntStart;
-    private long rangeIntEnd;
-
-    // Partition parameters for DATE partitions (filled by class constructor)
-    private IntervalType intervalType;
-    private Calendar rangeDateStart;
-    private Calendar rangeDateEnd;
-
-    private static enum PartitionType {
-        DATE,
-        INT,
-        ENUM;
-
-        public static PartitionType typeOf(String str) {
-            return valueOf(str.toUpperCase());
-        }
-    }
-
-    private static enum IntervalType {
-        DAY,
-        MONTH,
-        YEAR;
-
-        public static IntervalType typeOf(String str) {
-            return valueOf(str.toUpperCase());
-        }
-    }
-
-    // A PXF engine to use as a host for fragments
-    private static final String[] pxfHosts;
-    static {
-        String[] localhost = {"localhost"};
-        try {
-            localhost[0] = InetAddress.getLocalHost().getHostAddress();
-        }
-        catch (UnknownHostException ex) {
-            // It is always possible to get 'localhost' address
-        }
-        pxfHosts = localhost;
     }
 }
