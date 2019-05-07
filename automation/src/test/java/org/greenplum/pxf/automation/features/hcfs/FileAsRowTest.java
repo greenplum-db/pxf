@@ -36,6 +36,13 @@ public class FileAsRowTest extends BaseFeature {
                 hdfsBasePath + twoLineTextFile);
         hdfs.copyFromLocal(localDataResourcesFolder + "/text/" + multiLineTextFile,
                 hdfsBasePath + multiLineTextFile);
+
+        hdfs.copyFromLocal(localDataResourcesFolder + "/text/" + multiLineTextFile,
+                hdfsBasePath + "foo/" + multiLineTextFile);
+        hdfs.copyFromLocal(localDataResourcesFolder + "/text/" + singleLineTextFile,
+                hdfsBasePath + "foo/" + singleLineTextFile);
+        hdfs.copyFromLocal(localDataResourcesFolder + "/text/" + twoLineTextFile,
+                hdfsBasePath + "foo/" + twoLineTextFile);
     }
 
     @AfterClass
@@ -72,6 +79,12 @@ public class FileAsRowTest extends BaseFeature {
         runTestScenario("json", new String[]{
                 "json_blob json"
         }, hdfsBasePath + multiLineJsonFile);
+    }
+
+    @Test(groups = {"gpdb", "hcfs"})
+    public void testMultilineWithDirectory() throws Exception {
+        runTestScenario("multi_files", PXF_MULTILINE_COLS,
+                hdfsBasePath + "foo/");
     }
 
     private void runTestScenario(String name, String[] fields,
