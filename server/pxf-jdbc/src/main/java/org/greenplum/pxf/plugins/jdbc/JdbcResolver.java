@@ -24,8 +24,6 @@ import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -37,14 +35,15 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * JDBC tables resolver
  */
 public class JdbcResolver extends JdbcBasePlugin implements Resolver {
-
     /**
      * getFields() implementation
      *
@@ -130,109 +129,81 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
     @Override
     public OneRow setFields(List<OneField> record) throws UnsupportedOperationException, ParseException {
         int column_index = 0;
+
         for (OneField oneField : record) {
-            ColumnDescriptor column = columns.get(column_index);
-            if (LOG.isWarnEnabled() && DataType.get(column.columnTypeCode()) != DataType.get(oneField.type)) {
-                LOG.warn("The provided tuple of data may be disordered. Datatype of column with descriptor '{}' must be '{}', but actual is '{}'",
-                        column,
-                        DataType.get(column.columnTypeCode()),
-                        DataType.get(oneField.type));
-            }
+            ColumnDescriptor column = columns.get(column_index++);
 
-            // Check that data type is supported
-            switch (DataType.get(oneField.type)) {
-                case BOOLEAN:
-                case INTEGER:
-                case FLOAT8:
-                case REAL:
-                case BIGINT:
-                case SMALLINT:
-                case NUMERIC:
-                case VARCHAR:
-                case BPCHAR:
-                case TEXT:
-                case BYTEA:
-                case TIMESTAMP:
-                case DATE:
-                    break;
-                default:
-                    throw new UnsupportedOperationException(
-                            String.format("Field type '%s' (column '%s') is not supported",
-                                    DataType.get(oneField.type),
-                                    column));
-            }
+            DataType oneFieldType = DataType.get(oneField.type);
+            DataType columnType = DataType.get(column.columnTypeCode());
 
-            if (LOG.isDebugEnabled() &&
-                    DataType.get(oneField.type) == DataType.BYTEA) {
-                String converted = (oneField.val != null) ? new String((byte[]) oneField.val) : "null";
-                LOG.debug("OneField content (conversion from BYTEA): '{}'", converted);
+            if (!DATATYPES_SUPPORTED.contains(oneFieldType)) {
+                throw new UnsupportedOperationException(
+                        String.format("Field type '%s' (column '%s') is not supported",
+                                oneFieldType, column));
             }
 
             // Convert TEXT columns into native data types
-            if ((DataType.get(oneField.type) == DataType.TEXT) && (DataType.get(column.columnTypeCode()) != DataType.TEXT)) {
-                oneField.type = column.columnTypeCode();
-                if (oneField.val != null) {
-                    String rawVal = (String) oneField.val;
+            if ((oneFieldType == DataType.TEXT) && (columnType != DataType.TEXT)) {
+                oneField.type = columnType.getOID();
 
-                    LOG.debug("OneField content (conversion from TEXT): '{}'", rawVal);
-                    switch (DataType.get(column.columnTypeCode())) {
-                        case VARCHAR:
-                        case BPCHAR:
-                        case TEXT:
-                        case BYTEA:
-                            break;
-                        case BOOLEAN:
-                            oneField.val = Boolean.parseBoolean(rawVal);
-                            break;
-                        case INTEGER:
-                            oneField.val = Integer.parseInt(rawVal);
-                            break;
-                        case FLOAT8:
-                            oneField.val = Double.parseDouble(rawVal);
-                            break;
-                        case REAL:
-                            oneField.val = Float.parseFloat(rawVal);
-                            break;
-                        case BIGINT:
-                            oneField.val = Long.parseLong(rawVal);
-                            break;
-                        case SMALLINT:
-                            oneField.val = Short.parseShort(rawVal);
-                            break;
-                        case NUMERIC:
-                            oneField.val = new BigDecimal(rawVal);
-                            break;
-                        case TIMESTAMP:
-                            boolean isConversionSuccessful = false;
-                            for (SimpleDateFormat sdf : timestampSDFs.get()) {
-                                try {
-                                    java.util.Date parsedTimestamp = sdf.parse(rawVal);
-                                    oneField.val = new Timestamp(parsedTimestamp.getTime());
-                                    isConversionSuccessful = true;
-                                    break;
-                                } catch (ParseException e) {
-                                    // pass
-                                }
-                            }
-                            if (!isConversionSuccessful) {
-                                throw new ParseException(rawVal, 0);
-                            }
-                            break;
-                        case DATE:
-                            oneField.val = new Date(dateSDF.get().parse(rawVal).getTime());
-                            break;
-                        default:
-                            throw new UnsupportedOperationException(
-                                    String.format("Field type '%s' (column '%s') is not supported",
-                                            DataType.get(oneField.type),
-                                            column));
-                    }
+                if (oneField.val == null) {
+                    continue;
+                }
+
+                String rawVal = (String) oneField.val;
+                switch (columnType) {
+                    case VARCHAR:
+                    case BPCHAR:
+                    case TEXT:
+                    case BYTEA:
+                        break;
+                    case BOOLEAN:
+                        oneField.val = Boolean.parseBoolean(rawVal);
+                        break;
+                    case INTEGER:
+                        oneField.val = Integer.parseInt(rawVal);
+                        break;
+                    case FLOAT8:
+                        oneField.val = Double.parseDouble(rawVal);
+                        break;
+                    case REAL:
+                        oneField.val = Float.parseFloat(rawVal);
+                        break;
+                    case BIGINT:
+                        oneField.val = Long.parseLong(rawVal);
+                        break;
+                    case SMALLINT:
+                        oneField.val = Short.parseShort(rawVal);
+                        break;
+                    case NUMERIC:
+                        oneField.val = new BigDecimal(rawVal);
+                        break;
+                    case TIMESTAMP:
+                        java.util.Date parseResult;
+                        switch (rawVal.length()) {
+                            case PATTERN_LENGTH_dateSDF:
+                                parseResult = dateSDF.parse(rawVal);
+                                break;
+                            case PATTERN_LENGTH_timestampSDF:
+                                parseResult = timestampSDF.parse(rawVal);
+                                break;
+                            default:
+                                parseResult = timestampWithSecondFractionSDF.parse(rawVal);
+                        }
+                        oneField.val = new Timestamp(parseResult.getTime());
+                        break;
+                    case DATE:
+                        oneField.val = new Date(dateSDF.parse(rawVal).getTime());
+                        break;
+                    default:
+                        throw new UnsupportedOperationException(
+                                String.format("Field type '%s' (column '%s') is not supported",
+                                        oneFieldType, column));
                 }
             }
-
-            column_index += 1;
         }
-        return new OneRow(new LinkedList<>(record));
+
+        return new OneRow(record);
     }
 
     /**
@@ -335,19 +306,27 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
         }
     }
 
-    private static final Logger LOG = LoggerFactory.getLogger(JdbcResolver.class);
+    private static final Set<DataType> DATATYPES_SUPPORTED = EnumSet.of(
+            DataType.VARCHAR,
+            DataType.BPCHAR,
+            DataType.TEXT,
+            DataType.BYTEA,
+            DataType.BOOLEAN,
+            DataType.INTEGER,
+            DataType.FLOAT8,
+            DataType.REAL,
+            DataType.BIGINT,
+            DataType.SMALLINT,
+            DataType.NUMERIC,
+            DataType.TIMESTAMP,
+            DataType.DATE
+    );
 
-    // SimpleDateFormat to parse TEXT into DATE
-    private static ThreadLocal<SimpleDateFormat> dateSDF = ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd"));
-    // SimpleDateFormat to parse TEXT into TIMESTAMP (with microseconds)
-    private static ThreadLocal<SimpleDateFormat[]> timestampSDFs = ThreadLocal.withInitial(() -> new SimpleDateFormat[]{
-            new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSSS"),
-            new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSS"),
-            new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSS"),
-            new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS"),
-            new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SS"),
-            new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S"),
-            new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"),
-            new SimpleDateFormat("yyyy-MM-dd")
-    });
+    // SimpleDateFormat objects to parse TEXT into DATE
+    private final SimpleDateFormat dateSDF = new SimpleDateFormat("yyyy-MM-dd");
+    private static final int PATTERN_LENGTH_dateSDF = 10;
+    private final SimpleDateFormat timestampSDF = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private static final int PATTERN_LENGTH_timestampSDF = 19;
+    private final SimpleDateFormat timestampWithSecondFractionSDF = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
+    // No length here; this is a pattern of variable length
 }
