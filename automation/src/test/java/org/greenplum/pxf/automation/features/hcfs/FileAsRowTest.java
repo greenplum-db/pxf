@@ -4,7 +4,6 @@ import org.greenplum.pxf.automation.features.BaseFeature;
 import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
 import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 /**
@@ -12,7 +11,6 @@ import org.testng.annotations.Test;
  */
 public class FileAsRowTest extends BaseFeature {
 
-    private String hdfsBasePath;
     private static final String emptyTextFile = "empty";
     private static final String twoLineTextFile = "twoline";
     private static final String singleLineTextFile = "singleline";
@@ -21,74 +19,85 @@ public class FileAsRowTest extends BaseFeature {
 
     private static final String[] PXF_MULTILINE_COLS = {"text_blob text"};
 
-    @BeforeClass
-    protected void prepareData() throws Exception {
-        hdfsBasePath = hdfs.getWorkingDirectory() + "/file_as_row/";
-
-        // copy files to hdfs
-        hdfs.copyFromLocal(localDataResourcesFolder + "/json/" + multiLineJsonFile,
-                hdfsBasePath + multiLineJsonFile);
-        hdfs.copyFromLocal(localDataResourcesFolder + "/text/" + emptyTextFile,
-                hdfsBasePath + emptyTextFile);
-        hdfs.copyFromLocal(localDataResourcesFolder + "/text/" + singleLineTextFile,
-                hdfsBasePath + singleLineTextFile);
-        hdfs.copyFromLocal(localDataResourcesFolder + "/text/" + twoLineTextFile,
-                hdfsBasePath + twoLineTextFile);
-        hdfs.copyFromLocal(localDataResourcesFolder + "/text/" + multiLineTextFile,
-                hdfsBasePath + multiLineTextFile);
-
-        hdfs.copyFromLocal(localDataResourcesFolder + "/text/" + multiLineTextFile,
-                hdfsBasePath + "foo/" + multiLineTextFile);
-        hdfs.copyFromLocal(localDataResourcesFolder + "/text/" + singleLineTextFile,
-                hdfsBasePath + "foo/" + singleLineTextFile);
-        hdfs.copyFromLocal(localDataResourcesFolder + "/text/" + twoLineTextFile,
-                hdfsBasePath + "foo/" + twoLineTextFile);
-    }
-
     @AfterClass
     protected void cleanupData() throws Exception {
-        hdfs.removeDirectory(hdfsBasePath);
+//        hdfs.removeDirectory(hdfs.getWorkingDirectory() + "/file_as_row/");
     }
 
     @Test(groups = {"gpdb", "hcfs"})
     public void testEmptyFile() throws Exception {
+        String hdfsBasePath = hdfs.getWorkingDirectory() + "/file_as_row/";
+        String[] srcPaths = {
+                localDataResourcesFolder + "/text/" + emptyTextFile};
         runTestScenario("empty_text", PXF_MULTILINE_COLS,
-                hdfsBasePath + emptyTextFile);
+                hdfsBasePath + emptyTextFile, srcPaths);
     }
 
     @Test(groups = {"gpdb", "hcfs"})
     public void testSingleLineFile() throws Exception {
+        String hdfsBasePath = hdfs.getWorkingDirectory() + "/file_as_row/";
+        String[] srcPaths = {
+                localDataResourcesFolder + "/text/" + singleLineTextFile};
         runTestScenario("singleline_text", PXF_MULTILINE_COLS,
-                hdfsBasePath + singleLineTextFile);
+                hdfsBasePath + singleLineTextFile, srcPaths);
     }
 
     @Test(groups = {"gpdb", "hcfs"})
     public void testTwoLineFile() throws Exception {
+        String hdfsBasePath = hdfs.getWorkingDirectory() + "/file_as_row/";
+        String[] srcPaths = {
+                localDataResourcesFolder + "/text/" + twoLineTextFile};
         runTestScenario("twoline_text", PXF_MULTILINE_COLS,
-                hdfsBasePath + twoLineTextFile);
+                hdfsBasePath + twoLineTextFile, srcPaths);
     }
 
     @Test(groups = {"gpdb", "hcfs"})
     public void testMultilineFile() throws Exception {
+        String hdfsBasePath = hdfs.getWorkingDirectory() + "/file_as_row/";
+        String[] srcPaths = {
+                localDataResourcesFolder + "/text/" + multiLineTextFile};
         runTestScenario("text", PXF_MULTILINE_COLS,
-                hdfsBasePath + multiLineTextFile);
+                hdfsBasePath + multiLineTextFile, srcPaths);
     }
 
     @Test(groups = {"gpdb", "hcfs"})
     public void testMultilineJsonFile() throws Exception {
+        String hdfsBasePath = hdfs.getWorkingDirectory() + "/file_as_row/";
+        String[] srcPaths = {
+                localDataResourcesFolder + "/json/" + multiLineJsonFile};
+
         runTestScenario("json", new String[]{
                 "json_blob json"
-        }, hdfsBasePath + multiLineJsonFile);
+        }, hdfsBasePath + multiLineJsonFile, srcPaths);
     }
 
     @Test(groups = {"gpdb", "hcfs"})
     public void testMultilineWithDirectory() throws Exception {
+        String hdfsBasePath = hdfs.getWorkingDirectory() + "/file_as_row/";
+        String[] srcPaths = {
+                localDataResourcesFolder + "/text/" + multiLineTextFile,
+                localDataResourcesFolder + "/text/" + singleLineTextFile,
+                localDataResourcesFolder + "/text/" + twoLineTextFile};
+
         runTestScenario("multi_files", PXF_MULTILINE_COLS,
-                hdfsBasePath + "foo/");
+                hdfsBasePath + "foo/", srcPaths);
     }
 
     private void runTestScenario(String name, String[] fields,
-                                 String hdfsPath) throws Exception {
+                                 String hdfsPath, String[] srcPaths) throws Exception {
+
+        if (srcPaths != null) {
+            for (String srcPath : srcPaths) {
+                if (hdfsPath.endsWith("/")) {
+                    String path = hdfsPath +
+                            srcPath.substring(srcPath.lastIndexOf("/"));
+                    hdfs.copyFromLocal(srcPath, path);
+                } else {
+                    hdfs.copyFromLocal(srcPath, hdfsPath);
+                }
+            }
+        }
+
         String tableName = "file_as_row_" + name;
         exTable = new ReadableExternalTable(tableName, fields, hdfsPath, "CSV");
         exTable.setProfile(ProtocolUtils.getProtocol().value() + ":text:multi");
