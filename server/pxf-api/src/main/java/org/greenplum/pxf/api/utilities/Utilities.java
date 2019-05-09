@@ -43,6 +43,67 @@ public class Utilities {
     private static final String PROPERTY_KEY_USER_IMPERSONATION = "pxf.service.user.impersonation.enabled";
     private static final String PROPERTY_KEY_FRAGMENTER_CACHE = "pxf.service.fragmenter.cache.enabled";
     private static final char[] PROHIBITED_CHARS = new char[]{'/', '\\', '.', ' ', ',', ';'};
+    private static final char CSV_QUOTE = '"';
+
+    /**
+     * Escapes CSV quotes (") to form a valid CSV string
+     *
+     * @param s                the input string
+     * @param prependQuoteChar true to prepend quotes (") to s, false otherwise
+     * @param appendQuoteChar  true to append quotes (") to s, false otherwise
+     * @return an escaped CSV string
+     */
+    public static String toCsvText(String s,
+                                   boolean prependQuoteChar,
+                                   boolean appendQuoteChar) {
+        return toCsvText(s, CSV_QUOTE, prependQuoteChar, appendQuoteChar);
+    }
+
+    /**
+     * Escapes the provided quote char to form a valid CSV string
+     *
+     * @param s                the input string
+     * @param quoteChar        the quote char
+     * @param prependQuoteChar true to prepend the quote char to s, false
+     *                         otherwise
+     * @param appendQuoteChar  true to append the quote char to s, false
+     *                         otherwise
+     * @return an escaped CSV string
+     */
+    public static String toCsvText(String s,
+                                   char quoteChar,
+                                   boolean prependQuoteChar,
+                                   boolean appendQuoteChar) {
+        if (s == null) return null;
+
+        final int length = s.length();
+        int i, quotes = 0, pos = 0, total = length;
+
+        // count all the quotes
+        for (i = 0; i < length; i++) {
+            if (s.charAt(i) == quoteChar) quotes++;
+        }
+
+        if (prependQuoteChar) total += 1;
+        if (appendQuoteChar) total += 1;
+        total += quotes;
+
+        if (length == total) return s;
+
+        char[] chars = new char[total];
+
+        if (prependQuoteChar) chars[pos++] = quoteChar;
+
+        for (i = 0; i < length; i++) {
+            if (quotes > 0 && s.charAt(i) == quoteChar)
+                chars[pos++] = quoteChar; // escape quote char
+            chars[pos++] = s.charAt(i);
+        }
+
+        if (appendQuoteChar) chars[pos] = quoteChar;
+
+        return new String(chars);
+    }
 
     /**
      * Returns a decoded base64 byte[], or throws an error if the base64 string is invalid
