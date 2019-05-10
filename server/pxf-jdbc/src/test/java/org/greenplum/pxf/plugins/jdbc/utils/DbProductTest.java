@@ -96,7 +96,7 @@ public class DbProductTest {
 
     @Test
     public void testOracleTimestamps() {
-        final String[] expected = {"to_timestamp('2001-01-01 00:00:00.0', 'YYYY-MM-DD HH:MI:SS.FF')"};
+        final String[] expected = {"to_timestamp('2001-01-01 00:00:00.0', 'YYYY-MM-DD HH24:MI:SS.FF')"};
 
         DbProduct dbProduct = DbProduct.getDbProduct(DB_NAME_ORACLE);
 
