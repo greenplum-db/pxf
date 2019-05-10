@@ -53,7 +53,7 @@ public enum DbProduct {
 
         @Override
         public String wrapTimestamp(Object val) {
-            return "to_timestamp('" + val + "', 'YYYY-MM-DD HH:MI:SS.FF')";
+            return "to_timestamp('" + val + "', 'YYYY-MM-DD HH24:MI:SS.FF')";
         }
 
         @Override
