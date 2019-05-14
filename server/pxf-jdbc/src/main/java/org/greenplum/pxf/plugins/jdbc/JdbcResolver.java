@@ -24,6 +24,8 @@ import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -49,6 +51,33 @@ import java.util.Set;
  * JDBC tables resolver
  */
 public class JdbcResolver extends JdbcBasePlugin implements Resolver {
+    private static final Set<DataType> DATATYPES_SUPPORTED = EnumSet.of(
+            DataType.VARCHAR,
+            DataType.BPCHAR,
+            DataType.TEXT,
+            DataType.BYTEA,
+            DataType.BOOLEAN,
+            DataType.INTEGER,
+            DataType.FLOAT8,
+            DataType.REAL,
+            DataType.BIGINT,
+            DataType.SMALLINT,
+            DataType.NUMERIC,
+            DataType.TIMESTAMP,
+            DataType.DATE
+    );
+
+    /// DateTimeFormatter to parse timestamp
+    private static final DateTimeFormatter TIMESTAMP_FORMATTER =
+            new DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd HH:mm:ss")
+                    // Parsing nanos in strict mode, the number of parsed digits must be between 0 and 6 (millisecond support)
+                    .appendFraction(ChronoField.NANO_OF_SECOND, 0, 6, true).toFormatter();
+
+    /// SimpleDateFormat to parse date
+    private final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+
+    private static final Logger LOG = LoggerFactory.getLogger(JdbcResolver.class);
+
     /**
      * getFields() implementation
      *
@@ -133,10 +162,10 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
      */
     @Override
     public OneRow setFields(List<OneField> record) throws UnsupportedOperationException, ParseException {
-        int column_index = 0;
+        int columnIndex = 0;
 
         for (OneField oneField : record) {
-            ColumnDescriptor column = columns.get(column_index++);
+            ColumnDescriptor column = columns.get(columnIndex++);
 
             DataType oneFieldType = DataType.get(oneField.type);
             DataType columnType = DataType.get(column.columnTypeCode());
@@ -145,6 +174,11 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
                 throw new UnsupportedOperationException(
                         String.format("Field type '%s' (column '%s') is not supported",
                                 oneFieldType, column));
+            }
+
+            if (LOG.isDebugEnabled() && DataType.get(oneField.type) == DataType.BYTEA) {
+                String converted = (oneField.val != null) ? new String((byte[]) oneField.val) : "null";
+                LOG.debug("OneField content (conversion from BYTEA): '{}'", converted);
             }
 
             // Convert TEXT columns into native data types
@@ -187,7 +221,7 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
                         oneField.val = new Timestamp(LocalDateTime.parse(rawVal, TIMESTAMP_FORMATTER).toInstant(ZoneOffset.UTC).toEpochMilli());
                         break;
                     case DATE:
-                        oneField.val = new Date(dateSDF.parse(rawVal).getTime());
+                        oneField.val = new Date(DATE_FORMAT.parse(rawVal).getTime());
                         break;
                     default:
                         throw new UnsupportedOperationException(
@@ -299,28 +333,4 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
             }
         }
     }
-
-    private static final Set<DataType> DATATYPES_SUPPORTED = EnumSet.of(
-            DataType.VARCHAR,
-            DataType.BPCHAR,
-            DataType.TEXT,
-            DataType.BYTEA,
-            DataType.BOOLEAN,
-            DataType.INTEGER,
-            DataType.FLOAT8,
-            DataType.REAL,
-            DataType.BIGINT,
-            DataType.SMALLINT,
-            DataType.NUMERIC,
-            DataType.TIMESTAMP,
-            DataType.DATE
-    );
-
-    private static final DateTimeFormatter TIMESTAMP_FORMATTER =
-            new DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd HH:mm:ss")
-                    // Parsing nanos in strict mode, the number of parsed digits must be between 0 and 6 (millisecond support)
-                    .appendFraction(ChronoField.NANO_OF_SECOND, 0, 6, true).toFormatter();
-
-    // SimpleDateFormat objects to parse TEXT into DATE
-    private final SimpleDateFormat dateSDF = new SimpleDateFormat("yyyy-MM-dd");
 }
