@@ -35,6 +35,11 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.ChronoField;
 import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -179,18 +184,7 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
                         oneField.val = new BigDecimal(rawVal);
                         break;
                     case TIMESTAMP:
-                        java.util.Date parseResult;
-                        switch (rawVal.length()) {
-                            case PATTERN_LENGTH_dateSDF:
-                                parseResult = dateSDF.parse(rawVal);
-                                break;
-                            case PATTERN_LENGTH_timestampSDF:
-                                parseResult = timestampSDF.parse(rawVal);
-                                break;
-                            default:
-                                parseResult = timestampWithSecondFractionSDF.parse(rawVal);
-                        }
-                        oneField.val = new Timestamp(parseResult.getTime());
+                        oneField.val = new Timestamp(LocalDateTime.parse(rawVal, TIMESTAMP_FORMATTER).toInstant(ZoneOffset.UTC).toEpochMilli());
                         break;
                     case DATE:
                         oneField.val = new Date(dateSDF.parse(rawVal).getTime());
@@ -322,11 +316,11 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
             DataType.DATE
     );
 
+    private static final DateTimeFormatter TIMESTAMP_FORMATTER =
+            new DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd HH:mm:ss")
+                    // Parsing nanos in strict mode, the number of parsed digits must be between 0 and 6 (millisecond support)
+                    .appendFraction(ChronoField.NANO_OF_SECOND, 0, 6, true).toFormatter();
+
     // SimpleDateFormat objects to parse TEXT into DATE
     private final SimpleDateFormat dateSDF = new SimpleDateFormat("yyyy-MM-dd");
-    private static final int PATTERN_LENGTH_dateSDF = 10;
-    private final SimpleDateFormat timestampSDF = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-    private static final int PATTERN_LENGTH_timestampSDF = 19;
-    private final SimpleDateFormat timestampWithSecondFractionSDF = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S");
-    // No length here; this is a pattern of variable length
 }
