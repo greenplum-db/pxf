@@ -176,9 +176,21 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
                                 oneFieldType, column));
             }
 
-            if (LOG.isDebugEnabled() && DataType.get(oneField.type) == DataType.BYTEA) {
-                String converted = (oneField.val != null) ? new String((byte[]) oneField.val) : "null";
-                LOG.debug("OneField content (conversion from BYTEA): '{}'", converted);
+            if (LOG.isDebugEnabled()) {
+                if (oneField.val == null) {
+                    LOG.debug("Column {} OneField: type {}, content null", columnIndex, oneFieldType);
+                }
+                else {
+                    String converted;
+                    switch(oneFieldType) {
+                        case BYTEA:
+                            converted = (oneField.val != null) ? new String((byte[]) oneField.val) : "null";
+                            break;
+                        default:
+                            converted = (oneField.val != null) ? oneField.val.toString() : "null";
+                    }
+                    LOG.debug("Column {} OneField: type {}, content '{}'", columnIndex, oneFieldType, converted);
+                }
             }
 
             // Convert TEXT columns into native data types
