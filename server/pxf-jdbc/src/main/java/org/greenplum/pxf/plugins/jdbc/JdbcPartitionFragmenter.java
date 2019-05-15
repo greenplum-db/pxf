@@ -57,6 +57,8 @@ public class JdbcPartitionFragmenter extends BaseFragmenter {
 
     // Partition parameters (filled by class constructor)
     private String[] range = null;
+    private boolean rangeLeftInfinite = false;
+    private boolean rangeRightInfinite = false;
     private PartitionType partitionType;
     private long intervalNum;
 
@@ -91,9 +93,34 @@ public class JdbcPartitionFragmenter extends BaseFragmenter {
 
         String rangeStr = context.getOption("RANGE");
         if (rangeStr != null) {
-            range = rangeStr.split(":");
-            if (range.length == 1 && partitionType != PartitionType.ENUM) {
-                throw new IllegalArgumentException("The parameter 'RANGE' must specify ':<end_value>' for this PARTITION_TYPE");
+            if (partitionType == PartitionType.ENUM) {
+                range = rangeStr.split(":");
+            }
+            else {
+                range = rangeStr.split(":", 4);
+                if (range.length == 1) {
+                    throw new IllegalArgumentException("The parameter 'RANGE' must specify ':<end_value>' for this PARTITION_BY type");
+                }
+                if (range.length == 2) {
+                    // This is normal partition, do nothing. If syntax is incorrect, it causes NumberFormatException later
+                }
+                else if (range.length == 3) {
+                    if (range[0].isEmpty()) {
+                        rangeLeftInfinite = true;
+                        range = new String[] {range[1], range[2]};
+                    }
+                    else if (range[2].isEmpty()) {
+                        rangeRightInfinite = true;
+                        range = new String[] {range[0], range[1]};
+                    }
+                    else {
+                        throw new IllegalArgumentException("The parameter 'RANGE' has incorrect syntax. To define non-enclosed partition, put ':' before the left limit value or after the right limit value");
+                    }
+                }
+                else {  // range.length == 4
+                    rangeLeftInfinite = rangeRightInfinite = true;
+                    range = new String[] {range[1], range[2]};
+                }
             }
         }
         else {
@@ -178,8 +205,11 @@ public class JdbcPartitionFragmenter extends BaseFragmenter {
 
         switch (partitionType) {
             case DATE: {
-                Calendar fragStart = rangeDateStart;
+                if (rangeLeftInfinite) {
+                    fragments.add(createFragment(Long.MAX_VALUE, rangeDateStart.getTimeInMillis()));
+                }
 
+                Calendar fragStart = rangeDateStart;
                 while (fragStart.before(rangeDateEnd)) {
                     // Calculate a new fragment
                     Calendar fragEnd = (Calendar)fragStart.clone();
@@ -194,26 +224,28 @@ public class JdbcPartitionFragmenter extends BaseFragmenter {
                             fragEnd.add(Calendar.YEAR, (int)intervalNum);
                             break;
                     }
-                    if (fragEnd.after(rangeDateEnd))
+                    if (fragEnd.after(rangeDateEnd)) {
                         fragEnd = (Calendar)rangeDateEnd.clone();
+                    }
 
-                    // Convert to byte[]
-                    byte[] msStart = ByteUtil.getBytes(fragStart.getTimeInMillis());
-                    byte[] msEnd = ByteUtil.getBytes(fragEnd.getTimeInMillis());
-                    byte[] fragmentMetadata = ByteUtil.mergeBytes(msStart, msEnd);
-
-                    // Write fragment
-                    Fragment fragment = new Fragment(context.getDataSource(), pxfHosts, fragmentMetadata);
-                    fragments.add(fragment);
+                    // Add the fragment to the list
+                    fragments.add(createFragment(fragStart.getTimeInMillis(), fragEnd.getTimeInMillis()));
 
                     // Prepare for the next fragment
                     fragStart = fragEnd;
                 }
+
+                if (rangeRightInfinite) {
+                    fragments.add(createFragment(rangeDateEnd.getTimeInMillis(), Long.MIN_VALUE));
+                }
                 break;
             }
             case INT: {
-                long fragStart = rangeIntStart;
+                if (rangeLeftInfinite) {
+                    fragments.add(createFragment(Long.MAX_VALUE, rangeIntStart));
+                }
 
+                long fragStart = rangeIntStart;
                 while (fragStart < rangeIntEnd) {
                     // Calculate a new fragment
                     long fragEnd = fragStart + intervalNum;
@@ -221,30 +253,46 @@ public class JdbcPartitionFragmenter extends BaseFragmenter {
                         fragEnd = rangeIntEnd;
                     }
 
-                    // Convert to byte[]
-                    byte[] bStart = ByteUtil.getBytes(fragStart);
-                    byte[] bEnd = ByteUtil.getBytes(fragEnd);
-                    byte[] fragmentMetadata = ByteUtil.mergeBytes(bStart, bEnd);
-
-                    // Write fragment
-                    Fragment fragment = new Fragment(context.getDataSource(), pxfHosts, fragmentMetadata);
-                    fragments.add(fragment);
+                    // Add the fragment to the list
+                    fragments.add(createFragment(fragStart, fragEnd));
 
                     // Prepare for the next fragment
                     fragStart = fragEnd;
+                }
+
+                if (rangeRightInfinite) {
+                    fragments.add(createFragment(rangeIntEnd, Long.MIN_VALUE));
                 }
                 break;
             }
             case ENUM: {
                 for (String frag : range) {
-                    byte[] fragmentMetadata = frag.getBytes();
-                    Fragment fragment = new Fragment(context.getDataSource(), pxfHosts, fragmentMetadata);
-                    fragments.add(fragment);
+                    fragments.add(createFragment(frag.getBytes()));
                 }
                 break;
             }
         }
 
         return fragments;
+    }
+
+    /**
+     * Create {@link Fragment} from byte array.
+     * @param fragmentMetadata
+     * @return {@link Fragment}
+     */
+    private Fragment createFragment(byte[] fragmentMetadata) {
+        return new Fragment(context.getDataSource(), pxfHosts, fragmentMetadata);
+    }
+
+    /**
+     * Create {@link Fragment} from two long values.
+     * Incapsulates {@link ByteUtil} calls.
+     * @param start
+     * @param end
+     * @return {@link Fragment}
+     */
+    private Fragment createFragment(long start, long end) {
+        return createFragment(ByteUtil.mergeBytes(ByteUtil.getBytes(start), ByteUtil.getBytes(end)));
     }
 }

@@ -29,11 +29,11 @@ import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.sql.DatabaseMetaData;
+import java.sql.Date;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.stream.Collectors;
@@ -47,6 +47,40 @@ public class SQLQueryBuilder {
 
     private static final Logger LOG = LoggerFactory.getLogger(SQLQueryBuilder.class);
     private static final String SUBQUERY_ALIAS_SUFFIX = ") pxfsubquery"; // do not use AS, Oracle does not like it
+
+    private static EnumSet<PartitionType> PARTITIONS_WITH_INFINITE_RANGE_SUPPORT = EnumSet.of(
+        PartitionType.INT,
+        PartitionType.DATE
+    );
+
+    /**
+     * A simple representation of one {@link org.greenplum.pxf.api.model.Fragment} limit
+     */
+    private class FragmentLimit {
+        public long value;
+        public boolean active;
+
+        private final PartitionType partitionType;
+
+        public FragmentLimit(long value, PartitionType partitionType, boolean active) {
+            this.value = value;
+            this.active = active;
+            this.partitionType = partitionType;
+        }
+
+        public FragmentLimit(long value, PartitionType partitionType) {
+            this(value, partitionType, true);
+        }
+
+        public String toString() {
+            if (partitionType == PartitionType.DATE) {
+                return dbProduct.wrapDate(new Date(value));
+            }
+            else {  // partitionType == PartitionType.INT
+                return Long.toString(value);
+            }
+        }
+    };
 
     private RequestContext requestContext;
     private DatabaseMetaData databaseMetaData;
@@ -360,33 +394,37 @@ public class SQLQueryBuilder {
             query.append(" AND ");
         }
 
-        switch (partitionType) {
-            case DATE: {
-                byte[][] newb = ByteUtil.splitBytes(meta);
-                Date fragStart = new Date(ByteUtil.toLong(newb[0]));
-                Date fragEnd = new Date(ByteUtil.toLong(newb[1]));
+        // Process partitions with possible infinite range
+        if (PARTITIONS_WITH_INFINITE_RANGE_SUPPORT.contains(partitionType)) {
+            byte[][] fragmentLimitsByte = ByteUtil.splitBytes(meta);
+            FragmentLimit[] fragmentLimits = {
+                new FragmentLimit(ByteUtil.toLong(fragmentLimitsByte[0]), partitionType),
+                new FragmentLimit(ByteUtil.toLong(fragmentLimitsByte[1]), partitionType)
+            };
 
-                SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-                query.append(partitionColumn).append(" >= ").append(dbProduct.wrapDate(df.format(fragStart)));
-                query.append(" AND ");
-                query.append(partitionColumn).append(" < ").append(dbProduct.wrapDate(df.format(fragEnd)));
+            // Deactivate border limits if requried
+            if (fragmentLimits[0].value == Long.MAX_VALUE) {
+                fragmentLimits[0].active = false;
+            }
+            else if (fragmentLimits[1].value == Long.MIN_VALUE) {
+                fragmentLimits[1].active = false;
+            }
 
-                break;
-            }
-            case INT: {
-                byte[][] newb = ByteUtil.splitBytes(meta);
-                long fragStart = ByteUtil.toLong(newb[0]);
-                long fragEnd = ByteUtil.toLong(newb[1]);
+            // Add partitions
+            if (fragmentLimits[0].active) {
+                query.append(partitionColumn).append(" >= ").append(fragmentLimits[0]);
 
-                query.append(partitionColumn).append(" >= ").append(fragStart);
-                query.append(" AND ");
-                query.append(partitionColumn).append(" < ").append(fragEnd);
-                break;
+                if (fragmentLimits[1].active) {  // && fragmentLimits[0].active
+                    query.append(" AND ");
+                }
             }
-            case ENUM: {
-                query.append(partitionColumn).append(" = '").append(new String(meta)).append("'");
-                break;
+            if (fragmentLimits[1].active) {
+                query.append(partitionColumn).append(" < ").append(fragmentLimits[1]);
             }
+        }
+        else {
+            // At the moment, only ENUM partitions do not support infinite range
+            query.append(partitionColumn).append(" = '").append(new String(meta)).append("'");
         }
     }
 }
