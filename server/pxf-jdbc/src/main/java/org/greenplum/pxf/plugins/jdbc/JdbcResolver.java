@@ -36,12 +36,6 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
-import java.time.temporal.ChronoField;
 import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -66,15 +60,6 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
             DataType.TIMESTAMP,
             DataType.DATE
     );
-
-    /// DateTimeFormatter to parse timestamp
-    private static final DateTimeFormatter TIMESTAMP_FORMATTER =
-            new DateTimeFormatterBuilder().appendPattern("yyyy-MM-dd HH:mm:ss")
-                    // Parsing nanos in strict mode, the number of parsed digits must be between 0 and 6 (millisecond support)
-                    .appendFraction(ChronoField.NANO_OF_SECOND, 0, 6, true).toFormatter();
-
-    /// SimpleDateFormat to parse date
-    private final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
     private static final Logger LOG = LoggerFactory.getLogger(JdbcResolver.class);
 
@@ -177,20 +162,18 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
             }
 
             if (LOG.isDebugEnabled()) {
+                String valDebug;
                 if (oneField.val == null) {
-                    LOG.debug("Column {} OneField: type {}, content null", columnIndex, oneFieldType);
+                    valDebug = "null";
+                }
+                else if (oneFieldType == DataType.BYTEA) {
+                    valDebug = String.format("'{}'", new String((byte[]) oneField.val));
                 }
                 else {
-                    String converted;
-                    switch(oneFieldType) {
-                        case BYTEA:
-                            converted = (oneField.val != null) ? new String((byte[]) oneField.val) : "null";
-                            break;
-                        default:
-                            converted = (oneField.val != null) ? oneField.val.toString() : "null";
-                    }
-                    LOG.debug("Column {} OneField: type {}, content '{}'", columnIndex, oneFieldType, converted);
+                    valDebug = String.format("'{}'", oneField.val.toString());
                 }
+
+                LOG.debug("Column {} OneField: type {}, content {}", columnIndex, oneFieldType, valDebug);
             }
 
             // Convert TEXT columns into native data types
@@ -230,10 +213,10 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
                         oneField.val = new BigDecimal(rawVal);
                         break;
                     case TIMESTAMP:
-                        oneField.val = new Timestamp(LocalDateTime.parse(rawVal, TIMESTAMP_FORMATTER).toInstant(ZoneOffset.UTC).toEpochMilli());
+                        oneField.val = Timestamp.valueOf(rawVal);
                         break;
                     case DATE:
-                        oneField.val = new Date(DATE_FORMAT.parse(rawVal).getTime());
+                        oneField.val = Date.valueOf(rawVal);
                         break;
                     default:
                         throw new UnsupportedOperationException(
