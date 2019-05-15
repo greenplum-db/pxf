@@ -226,6 +226,8 @@ project('pxf-jdbc') {
         compile(project(':pxf-api'))
 
         bundleJars "postgresql:postgresql:8.4-702.jdbc4"
+        bundleJars "org.apache.hive:hive-jdbc:${hiveVersion}"
+        bundleJars "org.apache.hive:hive-service:${hiveVersion}"
     }
 }
 

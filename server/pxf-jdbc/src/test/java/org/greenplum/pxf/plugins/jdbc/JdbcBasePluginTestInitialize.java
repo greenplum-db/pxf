@@ -140,7 +140,7 @@ public class JdbcBasePluginTestInitialize {
         assertEquals(getInternalState(plugin, "DEFAULT_POOL_SIZE"), getInternalState(plugin, "poolSize"));
         assertNull(getInternalState(plugin, "quoteColumns"));
         assertEquals(getInternalState(plugin, "DEFAULT_FETCH_SIZE"), getInternalState(plugin, "fetchSize"));
-        assertEquals(getInternalState(plugin, "DEFAULT_QUERY_TIMEOUT"), getInternalState(plugin, "queryTimeout"));
+        assertNull(getInternalState(plugin, "queryTimeout"));
     }
 
     @Test
@@ -267,6 +267,36 @@ public class JdbcBasePluginTestInitialize {
 
         // Checks
         assertEquals(200, getInternalState(plugin, "queryTimeout"));
+    }
+
+    @Test
+    public void testInvalidStringQueryTimeout() throws Exception {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("Property jdbc.statement.queryTimeout has incorrect value foo : must be a non-negative integer");
+
+        // Configuration
+        Configuration configuration = makeConfiguration();
+        configuration.set("jdbc.statement.queryTimeout", "foo");
+
+        // Initialize plugin
+        prepareBaseConfigurationFactory(configuration);
+        JdbcBasePlugin plugin = new JdbcBasePlugin();
+        plugin.initialize(makeContext());
+    }
+
+    @Test
+    public void testInvalidNegativeQueryTimeout() throws Exception {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("Property jdbc.statement.queryTimeout has incorrect value -1 : must be a non-negative integer");
+
+        // Configuration
+        Configuration configuration = makeConfiguration();
+        configuration.set("jdbc.statement.queryTimeout", "-1");
+
+        // Initialize plugin
+        prepareBaseConfigurationFactory(configuration);
+        JdbcBasePlugin plugin = new JdbcBasePlugin();
+        plugin.initialize(makeContext());
     }
 
     @Test

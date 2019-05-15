@@ -50,7 +50,6 @@ public class JdbcBasePlugin extends BasePlugin {
     private static final int DEFAULT_BATCH_SIZE = 100;
     private static final int DEFAULT_FETCH_SIZE = 1000;
     private static final int DEFAULT_POOL_SIZE = 1;
-    private static final int DEFAULT_QUERY_TIMEOUT = 0;
 
     // configuration parameter names
     private static final String JDBC_DRIVER_PROPERTY_NAME = "jdbc.driver";
@@ -116,7 +115,7 @@ public class JdbcBasePlugin extends BasePlugin {
     protected int poolSize;
 
     // Query timeout.
-    protected int queryTimeout;
+    protected Integer queryTimeout;
 
     // Quote columns setting set by user (three values are possible)
     protected Boolean quoteColumns = null;
@@ -192,7 +191,16 @@ public class JdbcBasePlugin extends BasePlugin {
 
         poolSize = context.getOption("POOL_SIZE", DEFAULT_POOL_SIZE);
 
-        queryTimeout = configuration.getInt(JDBC_STATEMENT_QUERY_TIMEOUT_PROPERTY_NAME, DEFAULT_QUERY_TIMEOUT);
+        String queryTimeoutString = configuration.get(JDBC_STATEMENT_QUERY_TIMEOUT_PROPERTY_NAME);
+        if (StringUtils.isNotBlank(queryTimeoutString)) {
+            try {
+                queryTimeout = Integer.parseUnsignedInt(queryTimeoutString);
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException(String.format(
+                        "Property %s has incorrect value %s : must be a non-negative integer",
+                        JDBC_STATEMENT_QUERY_TIMEOUT_PROPERTY_NAME, queryTimeoutString), e);
+            }
+        }
 
         // Optional parameter. The default value is null
         String quoteColumnsRaw = context.getOption("QUOTE_COLUMNS");
