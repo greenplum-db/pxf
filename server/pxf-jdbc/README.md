@@ -281,10 +281,10 @@ Then a complex aggregation query is created and placed in a file, say `report.sq
 ```
 SELECT dept.name AS name, count(*) AS count, max(emp.salary) AS max
 FROM demodb.dept JOIN demodb.emp
-ON dept.id = emp.dept_id 
+ON dept.id = emp.dept_id
 GROUP BY dept.name;
 ```
-This query returns a name of the department, count of employees, and the maximal salary in each department.  
+This query returns a name of the department, count of employees, and the maximal salary in each department.
 
 The MySQL JDBC driver files (JAR) are copied to `$PXF_CONF/lib` on all hosts with PXF. After this, all PXF segments are restarted.
 
@@ -313,9 +313,11 @@ SELECT name, count FROM dept_report WHERE max > 10000;
 ### Partitioning
 PXF JDBC plugin supports simultaneous access to external database from multiple PXF segments for SELECT queries. This feature is called partitioning.
 
+When partitioning is enabled, a SELECT query is split into a set of multiple queries according to the settings in external table DDL (see description below). Each smaller query is called a fragmen. Every fragment is processed independently.
+
 
 #### Syntax
-Three settings control partitioning feature:
+Three settings control the feature:
 
 * **[Partition By](#partition-by)** enables partitioning and indicates which column to use as a partition column. Only one column can be used as the partition column. This setting must be in format `<column>:<column_type>`, where:
     * `<column>` is name of the partition column;
@@ -323,25 +325,37 @@ Three settings control partitioning feature:
 
 * **[Partition Range](#partition-range)** indicates the range of data to be queried. It must be in special format, depending on a type of partition:
     * If the partition type is `ENUM`, format is `<value>:<value>[:<value>[...]]`. Each `<value>` forms its own fragment;
-    * If the partition type is `INT`, format is `<start_value>:<end_value>`. PXF considers values to form a finite left-closed range (`... >= start_value AND ... < end_value`);
-    * If the partition type is `DATE`, format is `<start_date>:<end_date>`, and each date must be in format `yyyy-MM-dd`. PXF considers dates to form a finite left-closed range (`... >= start_date AND ... < end_value`);
+    * If the partition type is `INT`, format is `<start_value>:<end_value>`. PXF considers values to form a finite left-closed interval (`... >= start_value AND ... < end_value`);
+    * If the partition type is `DATE`, format is `<start_value>:<end_value>`, and each date must be in format `yyyy-MM-dd`. PXF considers dates to form a finite left-closed interval (`... >= start_value AND ... < end_value`);
 
 * **[Partition interval](#partition-interval)** is required only for `INT` and `DATE` partitions. It is ignored if `<column_type>` is `ENUM`. This setting must be in format `<value>[:<unit>]`, where:
-    * `<value>` is the size of each fragment (the last fragment may be of smaller size);
+    * `<value>` is the size of each fragment (the size of last fragment will be decreased by PXF automatically if necessary);
     * `<unit>` is **required** if partition type is `DATE`. `year`, `month` and `day` are supported values.
 
+##### `INT` and `DATE` partitions
+In `INT` and `DATE` partitions, every fragment queries data from a finite left-closed interval (intervals are formed according to [Partition interval](#partition-interval) and [Partition Range](#partition-range) settings).
+
+For these partition types, **infinite** left-bounded (`end_value < ...`) and right-bounded (`... < start_value`) **intervals** can also be used:
+* For infinite left-bounded intervals, set a colon before [Partition Range](#partition-range) value (format is `:<start_value>:<end_value>`; compare to normal one `<start_value>:<end_value>`);
+* For infinite right-bounded intervals, set a colon after [Partition Range](#partition-range) value (format is `<start_value>:<end_value>:`; compare to normal one `<start_value>:<end_value>`);
+* Infinite left-bounded and right-bounded intervals can also be used together.
+
+##### Example
 Example combinations of options to enable partitioning:
 * `&PARTITION_BY=id:int&RANGE=42:142&INTERVAL=2`
+* `&PARTITION_BY=id:int&RANGE=:42:142:&INTERVAL=2`
 * `&PARTITION_BY=createdate:date&RANGE=2008-01-01:2010-01-01&INTERVAL=1:month`
 * `&PARTITION_BY=grade:enum&RANGE=excellent:good:general:bad`
 
 
 #### Mechanism
-If partitioning is enabled, a SELECT query is split into a set of small queries, each of which is called a *fragment*. All fragments are processed by separate PXF instances simultaneously. If there are more fragments than PXF instances, some instances will process more than one fragment; if only one PXF instance is available, it will process all fragments.
-
 Extra query constraints (`WHERE` expressions) are automatically added to each fragment to guarantee that every tuple of data is retrieved from the external database exactly once.
 
-Fragments are distributed randomly among PXF instances.
+Fragments are processed by separate PXF instances simultaneously (using multiple threads). If there are more fragments than PXF instances, some instances will process more than one fragment; if only one PXF instance is available, it will process all fragments.
+
+Round-robin scheduling is used to distribute fragments among *GPDB segments*. The first segment (which acquires the first fragment) is chosen pseudo-randomly (the seed is GPDB query transaction identifier). The distribution of fragments does not change dynamically (i.e. if one PXF instance has finished processing of fragments assigned to it, it will not "steal" fragments from other PXF instances).
+
+Infinite left-bounded and right-bounded intervals form exactly one extra fragment (each bounded range independently).
 
 [Query-preceding SQL command](#query-preceding-sql-command-1) is executed once for *every* fragment. However, the command itself is taken from configuration file of the PXF instance that processes given fragment. Commands may differ (or be absent) in different configuration files. Thus, exact number of times query-preceding SQL command is executed depends on two factors:
 * Number of fragments

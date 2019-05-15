@@ -24,14 +24,12 @@ import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.FragmentStats;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.jdbc.utils.ByteUtil;
-import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -57,10 +55,16 @@ public class JdbcPartitionFragmenter extends BaseFragmenter {
 
     // Partition parameters (filled by class constructor)
     private String[] range = null;
-    private boolean rangeLeftInfinite = false;
-    private boolean rangeRightInfinite = false;
     private PartitionType partitionType;
     private long intervalNum;
+
+    // If set to true, one of these variables indicate that partition range is infinite
+    // and an extra Fragment (or two) should be added to list of fragments.
+    // The added fragment must contain "invalid" range specification (start > end).
+    // Long.MAX_VALUE or Long.MIN_VALUE MUST be used for such ranges. These values
+    // are checked later by SQLQueryBuilder.
+    private boolean rangeLeftInfinite = false;
+    private boolean rangeRightInfinite = false;
 
     // Partition parameters for INT partitions (filled by class constructor)
     private long rangeIntStart;
