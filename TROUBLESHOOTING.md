@@ -22,21 +22,12 @@ If `$PXF_OOM_DUMP_PATH` is not a directory, a single Java heap dump file will be
 
 * Note: `live` will force a full garbage collection before dump
 
-## S3
+### Collect JVM Statistics from PXF
 
-### Issues with credentials
+The following command will collect Java Virtual Machine Statistics every 60
+seconds.
 
-You may see an error originating at listObjects when AWS credentials are not synced correctly across the PXF cluster.
-You may see the following error message:
-
-
-    ERROR: remote component error (500) from '127.0.0.1:5888':  type  Exception report   message   javax.servlet.ServletException: org.apache.hadoop.fs.s3a.AWSClientIOException: listObjects() on s3a://bucket/path:
-    com.amazonaws.SdkClientException: Failed to sanitize XML document destined for handler class com.amazonaws.services.s3.model.transform.XmlResponsesSaxParser$ListBucketHandler: Failed to sanitize XML document destined for handler class com.amazonaws.services.s3.model.transform.XmlResponsesSaxParser$ListBucketHandler
-    description   The server encountered an internal error that prevented it from fulfilling this request.
-
-To resolve this issue, you will need to sync your pxf cluster and try again the query.
-
-    gpadmin@mdw$ pxf cluster sync
+     jstat -gcutil $(pgrep -f tomcat) 60000 > /tmp/jstat_pxf_1min.out &
 
 ## Dataproc
 
