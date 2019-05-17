@@ -1,2 +1,2 @@
 -- @description query01 for JDBC Hive query without partitioning
-SELECT * FROM pxf_jdbc_hive_small_data ORDER BY n1;
+SELECT * FROM pxf_jdbc_hive_types_table ORDER BY s1;
