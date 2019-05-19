@@ -26,7 +26,7 @@ public class HdfsFileFragmenter extends BaseFragmenter {
      * Keeps track of the number of getFragments calls made
      * during the lifetime of the application
      */
-    private static AtomicLong fragmenterAccessCount = new AtomicLong(0L);
+    static AtomicLong fragmenterAccessCount = new AtomicLong(0L);
 
     @Override
     public void initialize(RequestContext context) {
@@ -52,10 +52,7 @@ public class HdfsFileFragmenter extends BaseFragmenter {
 
         String fileName = hcfsType.getDataUri(configuration, context);
         Path path = new Path(fileName);
-        /*
-         * For S3, the hosts is always localhost on the API call.
-         * No need to calculate it, we can just hardcode it.
-         */
+        // The hostname is not used anymore, so we hardcode it to localhost
         String[] hosts = {"localhost"};
 
         FileSystem fs = FileSystem.get(URI.create(fileName), configuration);

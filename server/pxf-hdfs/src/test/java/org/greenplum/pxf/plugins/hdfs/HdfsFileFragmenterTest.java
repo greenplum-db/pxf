@@ -17,7 +17,7 @@ import static org.junit.Assert.assertNotNull;
 public class HdfsFileFragmenterTest {
 
     @Test
-    public void testFragmeneterReturnsListOfFiles() throws Exception {
+    public void testFragmenterReturnsListOfFiles() throws Exception {
         String path = this.getClass().getClassLoader().getResource("csv/").getPath();
 
         RequestContext context = new RequestContext();
@@ -30,6 +30,7 @@ public class HdfsFileFragmenterTest {
         List<Fragment> fragmentList = fragmenter.getFragments();
         assertNotNull(fragmentList);
         assertEquals(4, fragmentList.size());
+        assertEquals(1, HdfsFileFragmenter.fragmenterAccessCount.intValue());
     }
 
 }
