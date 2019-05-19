@@ -18,7 +18,8 @@
  */
 
 plugins {
-  id "com.github.hierynomus.license-report" version"0.15.0"
+    id "com.github.hierynomus.license-report" version "0.15.0"
+    id 'jacoco'
 }
 
 downloadLicenses {
@@ -29,7 +30,12 @@ wrapper {
     gradleVersion = '4.10.3'
 }
 
+def javaProjects = allprojects.findAll {
+    it.name.startsWith("pxf-")
+}
+
 allprojects {
+    apply plugin: 'jacoco'
     apply plugin: 'java'
     apply plugin: 'idea'
 
@@ -307,5 +313,27 @@ task tar(type: Tar, dependsOn: [bundle]) {
 task version {
     doLast {
         println ${version}
+    }
+}
+
+/**********************************
+ * Coverage Tasks
+ **********************************/
+
+task codeCoverageReport(type: JacocoReport, group: "Coverage reports") {
+    executionData fileTree(project.rootDir.absolutePath).include("**/build/jacoco/*.exec")
+
+    dependsOn javaProjects*.test
+
+    javaProjects.each {
+        sourceSets it.sourceSets.main
+    }
+
+    reports {
+        xml.enabled = true
+        xml.destination new File("${buildDir}/reports/jacoco/report.xml")
+        html.enabled = true
+        html.destination new File("${buildDir}/reports/jacoco/html")
+        csv.enabled = false
     }
 }
