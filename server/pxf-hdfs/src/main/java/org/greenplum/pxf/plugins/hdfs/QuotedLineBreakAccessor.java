@@ -21,13 +21,19 @@ package org.greenplum.pxf.plugins.hdfs;
 
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.model.Accessor;
+import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.Utilities;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URI;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -36,9 +42,10 @@ import java.util.Queue;
  * field delimiter, line delimiter, and quotes. This accessor supports
  * multi-line records, that are read from a single source (non-parallel).
  */
-public class QuotedLineBreakAccessor extends HdfsAtomicDataAccessor {
+public class QuotedLineBreakAccessor extends BasePlugin implements Accessor {
     private boolean fileAsRow;
     private boolean firstLine, lastLine;
+    private InputStream inputStream;
 
     BufferedReader reader;
     Queue<String> lineQueue;
@@ -60,11 +67,18 @@ public class QuotedLineBreakAccessor extends HdfsAtomicDataAccessor {
 
     @Override
     public boolean openForRead() throws Exception {
-        if (!super.openForRead()) {
+        URI uri = URI.create(context.getDataSource());
+        // input data stream, FileSystem.get actually
+        // returns an FSDataInputStream
+        FileSystem fs = FileSystem.get(uri, configuration);
+        inputStream = fs.open(new Path(context.getDataSource()));
+
+        if (inputStream == null) {
             return false;
         }
+
         firstLine = true;
-        reader = new BufferedReader(new InputStreamReader(inp));
+        reader = new BufferedReader(new InputStreamReader(inputStream));
         return true;
     }
 
@@ -73,23 +87,25 @@ public class QuotedLineBreakAccessor extends HdfsAtomicDataAccessor {
      */
     @Override
     public OneRow readNextObject() throws IOException {
-        if (super.readNextObject() == null) /* check if working segment */ {
-            return null;
-        }
-
-        String next_line = readLine();
-        if (next_line == null) /* EOF */ {
+        String nextLine = readLine();
+        if (nextLine == null) /* EOF */ {
             return null;
         }
 
         if (fileAsRow) {
             // Wrap text around quotes, and escape single quotes
-            next_line = Utilities.toCsvText(next_line, firstLine, lastLine);
-
+            nextLine = Utilities.toCsvText(nextLine, firstLine, lastLine);
             firstLine = false;
         }
 
-        return new OneRow(null, next_line);
+        return new OneRow(null, nextLine);
+    }
+
+    @Override
+    public void closeForRead() throws Exception {
+        if (inputStream != null) {
+            inputStream.close();
+        }
     }
 
     /**

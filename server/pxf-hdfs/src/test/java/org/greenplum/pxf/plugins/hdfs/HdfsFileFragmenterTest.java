@@ -11,8 +11,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 /**
- * @author Francisco Guerrero (me@frankgh.com)
- * @since 1.0 (5/19/19 7:41 AM)
+ * Test the HdfsFileFragmenter
  */
 public class HdfsFileFragmenterTest {
 
@@ -32,5 +31,4 @@ public class HdfsFileFragmenterTest {
         assertEquals(4, fragmentList.size());
         assertEquals(1, HdfsFileFragmenter.fragmenterAccessCount.intValue());
     }
-
 }
