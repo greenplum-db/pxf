@@ -128,7 +128,7 @@ under the License.
             parallel) and slower than HdfsTextSimple.
         </description>
         <plugins>
-            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsFileFragmenter</fragmenter>
             <accessor>org.greenplum.pxf.plugins.hdfs.QuotedLineBreakAccessor</accessor>
             <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
         </plugins>
@@ -235,7 +235,7 @@ under the License.
             parallel) and slower than HdfsTextSimple.
         </description>
         <plugins>
-            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsFileFragmenter</fragmenter>
             <accessor>org.greenplum.pxf.plugins.hdfs.QuotedLineBreakAccessor</accessor>
             <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
         </plugins>
@@ -264,7 +264,7 @@ under the License.
             parallel) and slower than HdfsTextSimple.
         </description>
         <plugins>
-            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsFileFragmenter</fragmenter>
             <accessor>org.greenplum.pxf.plugins.hdfs.QuotedLineBreakAccessor</accessor>
             <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
         </plugins>
@@ -294,7 +294,7 @@ under the License.
             parallel) and slower than HdfsTextSimple.
         </description>
         <plugins>
-            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsFileFragmenter</fragmenter>
             <accessor>org.greenplum.pxf.plugins.hdfs.QuotedLineBreakAccessor</accessor>
             <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
         </plugins>
@@ -319,7 +319,7 @@ under the License.
             parallel) and slower than HdfsTextSimple.
         </description>
         <plugins>
-            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsFileFragmenter</fragmenter>
             <accessor>org.greenplum.pxf.plugins.hdfs.QuotedLineBreakAccessor</accessor>
             <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
         </plugins>
@@ -614,7 +614,7 @@ under the License.
             splittable (non parallel) and slower than HdfsTextSimple.
         </description>
         <plugins>
-            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsFileFragmenter</fragmenter>
             <accessor>org.greenplum.pxf.plugins.hdfs.QuotedLineBreakAccessor</accessor>
             <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
         </plugins>
