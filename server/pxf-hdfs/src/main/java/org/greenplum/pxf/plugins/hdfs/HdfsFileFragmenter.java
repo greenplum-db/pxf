@@ -57,8 +57,7 @@ public class HdfsFileFragmenter extends BaseFragmenter {
         // The hostname is not used anymore, so we hardcode it to localhost
         String[] hosts = {"localhost"};
         byte[] dummyMetadata = HdfsUtilities
-                .writeBaseFragmentInfo(0, Integer.MAX_VALUE, hosts)
-                .toByteArray();
+                .prepareFragmentMetadata(0, Integer.MAX_VALUE, hosts);
 
         FileSystem fs = FileSystem.get(URI.create(fileName), configuration);
         RemoteIterator<LocatedFileStatus> fileStatusListIterator =

@@ -150,7 +150,7 @@ public class HdfsUtilities {
     }
 
 
-    public static ByteArrayOutputStream writeBaseFragmentInfo(long start, long length, String[] locations) throws IOException {
+    private static ByteArrayOutputStream writeBaseFragmentInfo(long start, long length, String[] locations) throws IOException {
         ByteArrayOutputStream byteArrayStream = new ByteArrayOutputStream();
         ObjectOutputStream objectStream = new ObjectOutputStream(byteArrayStream);
         objectStream.writeLong(start);
