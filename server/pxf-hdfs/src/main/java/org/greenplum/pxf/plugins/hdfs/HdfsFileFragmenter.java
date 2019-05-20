@@ -39,7 +39,7 @@ public class HdfsFileFragmenter extends BaseFragmenter {
     public List<Fragment> getFragments() throws Exception {
         String fileName = hcfsType.getDataUri(configuration, context);
         Path path = new Path(fileName);
-        // The hostname is not used anymore, so we hardcode it to localhost
+        // The hostname is no longer used, hardcoding it to localhost
         String[] hosts = {"localhost"};
         byte[] dummyMetadata = HdfsUtilities
                 .prepareFragmentMetadata(0, Integer.MAX_VALUE, hosts);
