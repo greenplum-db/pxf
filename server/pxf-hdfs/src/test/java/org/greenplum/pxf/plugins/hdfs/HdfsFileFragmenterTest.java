@@ -29,6 +29,5 @@ public class HdfsFileFragmenterTest {
         List<Fragment> fragmentList = fragmenter.getFragments();
         assertNotNull(fragmentList);
         assertEquals(4, fragmentList.size());
-        assertEquals(1, HdfsFileFragmenter.fragmenterAccessCount.intValue());
     }
 }
