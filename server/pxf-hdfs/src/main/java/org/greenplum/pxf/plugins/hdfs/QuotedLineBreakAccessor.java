@@ -21,19 +21,13 @@ package org.greenplum.pxf.plugins.hdfs;
 
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.model.Accessor;
-import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.Utilities;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URI;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -42,10 +36,9 @@ import java.util.Queue;
  * field delimiter, line delimiter, and quotes. This accessor supports
  * multi-line records, that are read from a single source (non-parallel).
  */
-public class QuotedLineBreakAccessor extends BasePlugin implements Accessor {
+public class QuotedLineBreakAccessor extends HdfsAtomicDataAccessor {
     private boolean fileAsRow;
     private boolean firstLine, lastLine;
-    private InputStream inputStream;
 
     BufferedReader reader;
     Queue<String> lineQueue;
@@ -67,16 +60,9 @@ public class QuotedLineBreakAccessor extends BasePlugin implements Accessor {
 
     @Override
     public boolean openForRead() throws Exception {
-        URI uri = URI.create(context.getDataSource());
-        // input data stream, FileSystem.get actually
-        // returns an FSDataInputStream
-        FileSystem fs = FileSystem.get(uri, configuration);
-        inputStream = fs.open(new Path(context.getDataSource()));
-
-        if (inputStream == null) {
+        if (!super.openForRead()) {
             return false;
         }
-
         firstLine = true;
         reader = new BufferedReader(new InputStreamReader(inputStream));
         return true;
@@ -87,6 +73,10 @@ public class QuotedLineBreakAccessor extends BasePlugin implements Accessor {
      */
     @Override
     public OneRow readNextObject() throws IOException {
+        if (super.readNextObject() == null) /* check if working segment */ {
+            return null;
+        }
+
         String nextLine = readLine();
         if (nextLine == null) /* EOF */ {
             return null;
@@ -99,13 +89,6 @@ public class QuotedLineBreakAccessor extends BasePlugin implements Accessor {
         }
 
         return new OneRow(null, nextLine);
-    }
-
-    @Override
-    public void closeForRead() throws Exception {
-        if (inputStream != null) {
-            inputStream.close();
-        }
     }
 
     /**

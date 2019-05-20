@@ -142,7 +142,7 @@ public class HdfsUtilities {
         return prepareFragmentMetadata(fsp.getStart(), fsp.getLength(), fsp.getLocations());
     }
 
-    private static byte[] prepareFragmentMetadata(long start, long length, String[] locations)
+    public static byte[] prepareFragmentMetadata(long start, long length, String[] locations)
             throws IOException {
 
         ByteArrayOutputStream byteArrayStream = writeBaseFragmentInfo(start, length, locations);
@@ -150,7 +150,7 @@ public class HdfsUtilities {
     }
 
 
-    private static ByteArrayOutputStream writeBaseFragmentInfo(long start, long length, String[] locations) throws IOException {
+    public static ByteArrayOutputStream writeBaseFragmentInfo(long start, long length, String[] locations) throws IOException {
         ByteArrayOutputStream byteArrayStream = new ByteArrayOutputStream();
         ObjectOutputStream objectStream = new ObjectOutputStream(byteArrayStream);
         objectStream.writeLong(start);

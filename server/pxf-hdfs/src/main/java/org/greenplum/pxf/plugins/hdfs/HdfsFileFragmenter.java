@@ -7,6 +7,8 @@ import org.apache.hadoop.fs.RemoteIterator;
 import org.greenplum.pxf.api.model.BaseFragmenter;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.api.utilities.FragmentMetadata;
+import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 
 import java.net.URI;
 import java.util.List;
@@ -54,6 +56,9 @@ public class HdfsFileFragmenter extends BaseFragmenter {
         Path path = new Path(fileName);
         // The hostname is not used anymore, so we hardcode it to localhost
         String[] hosts = {"localhost"};
+        byte[] dummyMetadata = HdfsUtilities
+                .writeBaseFragmentInfo(0, Integer.MAX_VALUE, hosts)
+                .toByteArray();
 
         FileSystem fs = FileSystem.get(URI.create(fileName), configuration);
         RemoteIterator<LocatedFileStatus> fileStatusListIterator =
@@ -62,7 +67,7 @@ public class HdfsFileFragmenter extends BaseFragmenter {
         while (fileStatusListIterator.hasNext()) {
             LocatedFileStatus fileStatus = fileStatusListIterator.next();
             String sourceName = fileStatus.getPath().toUri().toString();
-            Fragment fragment = new Fragment(sourceName, hosts, null);
+            Fragment fragment = new Fragment(sourceName, hosts, dummyMetadata);
             fragments.add(fragment);
         }
         LOG.debug("Total number of fragments = {}", fragments.size());

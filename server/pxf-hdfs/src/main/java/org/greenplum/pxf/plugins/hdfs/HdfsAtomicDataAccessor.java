@@ -48,8 +48,7 @@ import java.net.URI;
  * reading does not support splitting: a protocol-buffer file, regular file, ...
  */
 public abstract class HdfsAtomicDataAccessor extends BasePlugin implements Accessor {
-    protected InputStream inp;
-
+    InputStream inputStream;
     private FileSplit fileSplit;
 
     @Override
@@ -75,9 +74,9 @@ public abstract class HdfsAtomicDataAccessor extends BasePlugin implements Acces
         // input data stream, FileSystem.get actually
         // returns an FSDataInputStream
         FileSystem fs = FileSystem.get(uri, configuration);
-        inp = fs.open(new Path(context.getDataSource()));
+        inputStream = fs.open(new Path(context.getDataSource()));
 
-        return (inp != null);
+        return (inputStream != null);
     }
 
     /**
@@ -103,8 +102,8 @@ public abstract class HdfsAtomicDataAccessor extends BasePlugin implements Acces
             return;
         }
 
-        if (inp != null) {
-            inp.close();
+        if (inputStream != null) {
+            inputStream.close();
         }
     }
 
