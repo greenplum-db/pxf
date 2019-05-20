@@ -51,6 +51,14 @@ endif
 ifeq "$(JDBC_PORT)" ""
 	JDBC_PORT=15432
 endif
+
+ifeq "$(HIVE_SERVER_HOST)" ""
+	HIVE_SERVER_HOST=localhost
+endif
+ifeq "$(HIVE_SERVER_PORT)" ""
+	HIVE_SERVER_PORT=10000
+endif
+
 PXF_CONF_SERVERS=~/pxf/servers
 
 SED_OPTS=-i
@@ -119,6 +127,16 @@ sync_jdbc_config:
 		sed $(SED_OPTS) "s|</configuration>|<property><name>jdbc.session.property.client_min_messages</name><value>debug1</value></property></configuration>|"  $(PXF_CONF_SERVERS)/db-session-params/jdbc-site.xml; \
 		sed $(SED_OPTS) "s|</configuration>|<property><name>jdbc.session.property.default_statistics_target</name><value>123</value></property></configuration>|"  $(PXF_CONF_SERVERS)/db-session-params/jdbc-site.xml; \
 	fi
+
+	@mkdir -p $(PXF_CONF_SERVERS)/db-hive
+	@if [ ! -f "$(PXF_CONF_SERVERS)/db-hive/jdbc-site.xml" ]; then \
+		cp $(PXF_HOME)/templates/user/templates/jdbc-site.xml $(PXF_CONF_SERVERS)/db-hive/; \
+		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.apache.hive.jdbc.HiveDriver|" $(PXF_CONF_SERVERS)/db-hive/jdbc-site.xml; \
+		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_URL|jdbc:hive2://$(HIVE_SERVER_HOST):$(HIVE_SERVER_PORT)/default|" $(PXF_CONF_SERVERS)/db-hive/jdbc-site.xml; \
+		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_USER||" $(PXF_CONF_SERVERS)/db-hive/jdbc-site.xml; \
+		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_PASSWORD||" $(PXF_CONF_SERVERS)/db-hive/jdbc-site.xml; \
+	fi
+	@cp src/test/resources/hive-report.sql $(PXF_CONF_SERVERS)/db-hive
 
 sync_cloud_configs:
 ifneq "$(PROTOCOL)" ""

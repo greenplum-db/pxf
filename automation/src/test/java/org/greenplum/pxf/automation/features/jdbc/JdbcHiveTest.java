@@ -14,6 +14,7 @@ public class JdbcHiveTest extends BaseFeature {
     private static final String HIVE_JDBC_URL_PREFIX = "jdbc:hive2://";
 
     private static final String GPDB_TYPES_TABLE_NAME = "pxf_jdbc_hive_types_table";
+    private static final String GPDB_QUERY_TABLE_NAME = "pxf_jdbc_hive_types_server_table";
     private static final String HIVE_TYPES_TABLE_NAME = "jdbc_hive_types_table";
     private static final String HIVE_TYPES_FILE_NAME = "hive_types_no_binary.txt";
 
@@ -33,6 +34,11 @@ public class JdbcHiveTest extends BaseFeature {
             "vc1   VARCHAR(5)",
             "c1    CHAR(3)"
     };
+    private static final String[] GPDB_QUERY_FIELDS = {
+            "n1    INTEGER",
+            "c     INTEGER",
+            "s     INTEGER"
+    };
     static final String[] HIVE_TYPES_TABLE_FIELDS = {
             "s1    STRING",
             "s2    STRING",
@@ -51,7 +57,7 @@ public class JdbcHiveTest extends BaseFeature {
     };
 
     private Hive hive;
-    private ExternalTable pxfJdbcHiveTypesTable;
+    private ExternalTable pxfJdbcHiveTypesTable, pxfJdbcHiveTypesServerTable;
 
     @Override
     public void beforeClass() throws Exception {
@@ -87,6 +93,12 @@ public class JdbcHiveTest extends BaseFeature {
         pxfJdbcHiveTypesTable.setHost(pxfHost);
         pxfJdbcHiveTypesTable.setPort(pxfPort);
         gpdb.createTableAndVerify(pxfJdbcHiveTypesTable);
+
+        pxfJdbcHiveTypesServerTable = TableFactory.getPxfJdbcReadableTable(
+                GPDB_QUERY_TABLE_NAME, GPDB_QUERY_FIELDS, "query:hive-report", "db-hive");
+        pxfJdbcHiveTypesServerTable.setHost(pxfHost);
+        pxfJdbcHiveTypesServerTable.setPort(pxfPort);
+        gpdb.createTableAndVerify(pxfJdbcHiveTypesServerTable);
     }
 
     @Test(groups = {"features", "gpdb"})
