@@ -7,12 +7,10 @@ import org.apache.hadoop.fs.RemoteIterator;
 import org.greenplum.pxf.api.model.BaseFragmenter;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.api.utilities.FragmentMetadata;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 
 import java.net.URI;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Fragmenter class for file resources. This fragmenter
@@ -23,12 +21,6 @@ import java.util.concurrent.atomic.AtomicLong;
 public class HdfsFileFragmenter extends BaseFragmenter {
 
     private HcfsType hcfsType;
-
-    /*
-     * Keeps track of the number of getFragments calls made
-     * during the lifetime of the application
-     */
-    static AtomicLong fragmenterAccessCount = new AtomicLong(0L);
 
     @Override
     public void initialize(RequestContext context) {
@@ -45,13 +37,6 @@ public class HdfsFileFragmenter extends BaseFragmenter {
      */
     @Override
     public List<Fragment> getFragments() throws Exception {
-        long fragmenterAccessCountCurrent = fragmenterAccessCount.incrementAndGet();
-
-        if (fragmenterAccessCountCurrent % 100 == 0) {
-            LOG.debug("HdfsFileFragmenter has been invoked {} times during the lifetime of this application",
-                    fragmenterAccessCountCurrent);
-        }
-
         String fileName = hcfsType.getDataUri(configuration, context);
         Path path = new Path(fileName);
         // The hostname is not used anymore, so we hardcode it to localhost
