@@ -91,6 +91,7 @@ function setup_pxf_on_segment {
 function setup_pxf_on_cluster() {
     # drop named query file for JDBC test to gpadmin's home on mdw
     scp ${SSH_OPTS} pxf_src/automation/src/test/resources/report.sql gpadmin@mdw:
+    scp ${SSH_OPTS} pxf_src/automation/src/test/resources/hive-report.sql gpadmin@mdw:
     # untar pxf on all nodes in the cluster
     for node in ${gpdb_nodes}; do
         setup_pxf_on_segment ${node} &
@@ -127,6 +128,7 @@ function setup_pxf_on_cluster() {
         sed -i \"s|YOUR_DATABASE_JDBC_URL|jdbc:hive2://edw0:10000/default|\" ${PXF_CONF_DIR}/servers/db-hive/jdbc-site.xml &&
         sed -i \"s|YOUR_DATABASE_JDBC_USER||\" ${PXF_CONF_DIR}/servers/db-hive/jdbc-site.xml &&
         sed -i \"s|YOUR_DATABASE_JDBC_PASSWORD||\" ${PXF_CONF_DIR}/servers/db-hive/jdbc-site.xml &&
+        cp ~gpadmin/hive-report.sql ${PXF_CONF_DIR}/servers/db-hive/ &&
         if [ ${IMPERSONATION} == false ]; then
             echo 'export PXF_USER_IMPERSONATION=false' >> ${PXF_CONF_DIR}/conf/pxf-env.sh
         fi &&
