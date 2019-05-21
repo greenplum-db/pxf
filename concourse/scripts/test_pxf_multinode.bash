@@ -125,7 +125,7 @@ function setup_pxf_on_cluster() {
         mkdir -p ${PXF_CONF_DIR}/servers/db-hive &&
         cp ${PXF_CONF_DIR}/templates/jdbc-site.xml ${PXF_CONF_DIR}/servers/db-hive/ &&
         sed -i \"s|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.apache.hive.jdbc.HiveDriver|\" ${PXF_CONF_DIR}/servers/db-hive/jdbc-site.xml &&
-        sed -i \"s|YOUR_DATABASE_JDBC_URL|jdbc:hive2://edw0:10000/default|\" ${PXF_CONF_DIR}/servers/db-hive/jdbc-site.xml &&
+        sed -i \"s|YOUR_DATABASE_JDBC_URL|jdbc:hive2://hadoop:10000/default|\" ${PXF_CONF_DIR}/servers/db-hive/jdbc-site.xml &&
         sed -i \"s|YOUR_DATABASE_JDBC_USER||\" ${PXF_CONF_DIR}/servers/db-hive/jdbc-site.xml &&
         sed -i \"s|YOUR_DATABASE_JDBC_PASSWORD||\" ${PXF_CONF_DIR}/servers/db-hive/jdbc-site.xml &&
         cp ~gpadmin/hive-report.sql ${PXF_CONF_DIR}/servers/db-hive/ &&
