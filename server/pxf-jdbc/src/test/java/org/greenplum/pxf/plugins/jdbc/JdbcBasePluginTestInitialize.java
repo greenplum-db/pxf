@@ -436,6 +436,93 @@ public class JdbcBasePluginTestInitialize {
     }
 
     @Test
+    public void testUserWithImpersonation() throws Exception {
+        // Configuration
+        Configuration configuration = makeConfiguration();
+        configuration.set("pxf.impersonation.jdbc", "true");
+
+        // Context
+        RequestContext context = makeContext();
+        context.setUser("proxy");
+
+        // Initialize plugin
+        prepareBaseConfigurationFactory(configuration);
+        JdbcBasePlugin plugin = new JdbcBasePlugin();
+        plugin.initialize(context);
+
+        // Checks
+        Properties expected = new Properties();
+        expected.setProperty("user", "proxy");
+        assertEquals(expected.entrySet(), ((Properties)getInternalState(plugin, "connectionConfiguration")).entrySet());
+    }
+
+    @Test
+    public void testUserWithImpersonationOverwrite() throws Exception {
+        // Configuration
+        Configuration configuration = makeConfiguration();
+        configuration.set(CONFIG_USER, "user");
+        configuration.set("pxf.impersonation.jdbc", "true");
+
+        // Context
+        RequestContext context = makeContext();
+        context.setUser("proxy");
+
+        // Initialize plugin
+        prepareBaseConfigurationFactory(configuration);
+        JdbcBasePlugin plugin = new JdbcBasePlugin();
+        plugin.initialize(context);
+
+        // Checks
+        Properties expected = new Properties();
+        expected.setProperty("user", "proxy");
+        assertEquals(expected.entrySet(), ((Properties)getInternalState(plugin, "connectionConfiguration")).entrySet());
+    }
+
+    @Test
+    public void testUserWithoutImpersonationNoOverwrite() throws Exception {
+        // Configuration
+        Configuration configuration = makeConfiguration();
+        configuration.set(CONFIG_USER, "user");
+        configuration.set("pxf.impersonation.jdbc", "false");
+
+        // Context
+        RequestContext context = makeContext();
+        context.setUser("proxy");
+
+        // Initialize plugin
+        prepareBaseConfigurationFactory(configuration);
+        JdbcBasePlugin plugin = new JdbcBasePlugin();
+        plugin.initialize(context);
+
+        // Checks
+        Properties expected = new Properties();
+        expected.setProperty("user", "user");
+        assertEquals(expected.entrySet(), ((Properties)getInternalState(plugin, "connectionConfiguration")).entrySet());
+    }
+
+    @Test
+    public void testUserDefaultImpersonationNoOverwrite() throws Exception {
+        // Configuration
+        Configuration configuration = makeConfiguration();
+        configuration.set(CONFIG_USER, "user");
+
+        // Context
+        RequestContext context = makeContext();
+        context.setUser("proxy");
+
+        // Initialize plugin
+        prepareBaseConfigurationFactory(configuration);
+        JdbcBasePlugin plugin = new JdbcBasePlugin();
+        plugin.initialize(context);
+
+        // Checks
+        Properties expected = new Properties();
+        expected.setProperty("user", "user");
+        assertEquals(expected.entrySet(), ((Properties)getInternalState(plugin, "connectionConfiguration")).entrySet());
+    }
+
+
+    @Test
     public void testUserPassword() throws Exception {
         // Configuration
         Configuration configuration = makeConfiguration();

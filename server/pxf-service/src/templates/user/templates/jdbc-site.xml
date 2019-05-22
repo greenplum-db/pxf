@@ -79,4 +79,12 @@
     </property>
     -->
 
+    <!--
+    <property>
+        <name>pxf.impersonation.jdbc</name>
+        <value>true</value>
+        <description>Impersonate Greenplum user when connecting to the remote database</description>
+    </property>
+    -->
+
 </configuration>
