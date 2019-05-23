@@ -463,3 +463,55 @@ and `$PXF_CONF/servers/EXAMPLE/jdbc-site.xml` on every PXF segment:
 ```
 
 When `SELECT` from this external table is called, PXF executes `SET key1 = value1`, `SET key2 = value2` and `SELECT k, val FROM PUBLIC.T2` (all in the same session). PostgreSQL syntax is used because `Example` is a database unknown to PXF. All queries are executed once as partitioning is not set (one fragment is generated).
+
+## Using JDBC plugin to connect to Hive
+You can use the PXF JDBC connector to retrieve data from Hive. You can also use the "named query" feature to submit a custom SQL query to Hive and retrieve results using PXF JDBC connector.
+
+While you can specify most of the properties in the EXTERNAL TABLE DDL, the instructions below assume you would use server-based configuration.
+Follow these steps to enable connectivity to Hive:
+1. Define a new PXF configuration server in `$PXF_CONF/servers/` directory
+2. Copy template from `$PXF_CONF/templates/jdbc-site.xml` to your server directory
+3. Edit the file and provide Hive JDBC driver and URL
+    ```angular2html
+    <property>
+        <name>jdbc.driver</name>
+        <value>org.apache.hive.jdbc.HiveDriver</value>
+    </property>
+    <property>
+        <name>jdbc.url</name>
+        <value>jdbc:hive2://<hiveserver2host>:10000/default</value>
+    </property>
+    ```
+4. Configure `user` and additional properties according to HiveServer2 settings in `hive-site.xml` file.
+
+    - if `hive.server2.authentication = NOSASL`, then no authentication will be performed by HiveServer2 and you must add the following property in `jdbc-site.xml`:
+        ```angular2html
+        <property>
+            <name>jdbc.connection.property.auth</name>
+            <value>noSasl</value>
+        </property>
+        ```
+        Alternatively, you can add `;auth=noSasl` to the JDBC URL.
+
+    - if Hive is configured with `hive.server2.authentication = NONE` (or is not specified), you should set the value for the `jdbc.user` property.
+
+        a. if Hive is configured with `hive.server2.enable.doAs = TRUE` (default), Hive will run Hadoop operations on behalf of the user connecting to Hive. You have an option to either:
+
+            1) specify the user value that has read permission on all Hive data being accessed, e.g. to connect to Hive and run all request as user `gpadmin`, specify the following property:
+            ```
+            <property>
+                <name>jdbc.user</name>
+                <value>gpadmin</value>
+            </property>
+            ```
+            2) enable PXF JDBC impersonation so that PXF will automatically use Greenplum's user name to connect to Hive:
+            ```
+            <property>
+                <name>pxf.impersonation.jdbc</name>
+                <value>true</value>
+            </property>
+            ```
+            If you enable impersonation, do not explicitly specify user name as a property or as a part of the URL.
+
+        b. if Hive is configured with `hive.server2.enable.doAs = FALSE`, Hive will run Hadoop operations as the user who runs HiveServer2 process, usually user `hive`. Yo do not need to specify `jdbc.user` property as its value will be ignored.
+
