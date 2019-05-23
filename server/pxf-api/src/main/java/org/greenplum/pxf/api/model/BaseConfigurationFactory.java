@@ -10,6 +10,7 @@ import java.net.URL;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 
 public class BaseConfigurationFactory implements ConfigurationFactory {
@@ -36,7 +37,7 @@ public class BaseConfigurationFactory implements ConfigurationFactory {
     }
 
     @Override
-    public Configuration initConfiguration(String serverName, Map<String, String> additionalProperties) {
+    public Configuration initConfiguration(String serverName, String userName, Map<String, String> additionalProperties) {
         // start with built-in Hadoop configuration that loads core-site.xml
         LOG.debug("Initializing configuration for server {}", serverName);
         Configuration configuration = new Configuration();
@@ -56,7 +57,7 @@ public class BaseConfigurationFactory implements ConfigurationFactory {
         } else {
             // add all site files as URL resources to the configuration, no resources will be added from the classpath
             LOG.debug("Using directory {} for server {} configuration", serverDirectories[0], serverName);
-            processServerResources(configuration, serverName, serverDirectories[0]);
+            processServerResources(configuration, serverName, userName, serverDirectories[0]);
         }
 
         // add additional properties, if provided
@@ -68,18 +69,18 @@ public class BaseConfigurationFactory implements ConfigurationFactory {
         return configuration;
     }
 
-    private void processServerResources(Configuration configuration, String serverName, File directory) {
+    private void processServerResources(Configuration configuration, String serverName, String userName, File directory) {
         // add all *-site.xml files inside the server config directory as configuration resources
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(directory.toPath(), "*-site.xml")) {
             for (Path path : stream) {
-                URL resourceURL = path.toUri().toURL();
-                LOG.debug("Adding configuration resource for server {} from {}", serverName, resourceURL);
-                configuration.addResource(resourceURL);
-
-                // store the path to the resource in the configuration in case plugins need to access the files again
-                String fileName = path.getFileName().toString();
-                configuration.set(String.format("%s.%s", PXF_CONFIG_RESOURCE_PATH_PROPERTY, fileName), resourceURL.toString());
+                addResource(configuration, path, serverName);
             }
+            // add user config file as configuration resource
+            Path path = Paths.get(String.format("%s/%s-user.xml", directory.toPath(), userName));
+            if(Files.exists(path)) {
+                addResource(configuration, path, serverName);
+            }
+
             // add the server directory itself as configuration property in case plugins need to access non-site-xml files
             configuration.set(PXF_CONFIG_SERVER_DIRECTORY_PROPERTY, directory.getCanonicalPath());
 
@@ -87,5 +88,15 @@ public class BaseConfigurationFactory implements ConfigurationFactory {
             throw new RuntimeException(String.format("Unable to read configuration for server %s from %s",
                     serverName, directory.getAbsolutePath()), e);
         }
+    }
+
+    private void addResource(Configuration configuration, Path path, String serverName) throws Exception {
+        URL resourceURL = path.toUri().toURL();
+        LOG.debug("Adding configuration resource for server {} from {}", serverName, resourceURL);
+        configuration.addResource(resourceURL);
+
+        // store the path to the resource in the configuration in case plugins need to access the files again
+        String fileName = path.getFileName().toString();
+        configuration.set(String.format("%s.%s", PXF_CONFIG_RESOURCE_PATH_PROPERTY, fileName), resourceURL.toString());
     }
 }

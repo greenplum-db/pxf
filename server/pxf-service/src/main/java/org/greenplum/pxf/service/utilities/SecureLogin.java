@@ -70,7 +70,7 @@ public class SecureLogin {
             boolean isUserImpersonationEnabled = Utilities.isUserImpersonationEnabled();
             LOG.info("User impersonation is {}", (isUserImpersonationEnabled ? "enabled" : "disabled"));
 
-            Configuration configuration = configurationFactory.initConfiguration("default", null);
+            Configuration configuration = configurationFactory.initConfiguration("default", "dummy", null);
             UserGroupInformation.setConfiguration(configuration);
 
             if (!UserGroupInformation.isSecurityEnabled()) {

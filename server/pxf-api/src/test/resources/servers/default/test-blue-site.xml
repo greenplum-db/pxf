@@ -3,4 +3,8 @@
         <name>test.blue</name>
         <value>blue</value>
     </property>
+    <property>
+        <name>test.blue.key</name>
+        <value>bluevaluefromblue</value>
+    </property>
 </configuration>

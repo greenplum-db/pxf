@@ -19,8 +19,9 @@ public interface ConfigurationFactory {
      * adds additional properties on top of it, if specified.
      *
      * @param serverName name of the server
+     * @param userName name of the user
      * @param additionalProperties additional properties to be added to the configuration
      * @return configuration object
      */
-    Configuration initConfiguration(String serverName, Map<String, String> additionalProperties);
+    Configuration initConfiguration(String serverName, String userName, Map<String, String> additionalProperties);
 }

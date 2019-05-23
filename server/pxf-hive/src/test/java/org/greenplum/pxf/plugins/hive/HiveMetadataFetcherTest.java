@@ -94,9 +94,10 @@ public class HiveMetadataFetcherTest {
         PowerMockito.whenNew(HiveMetaStoreClient.class).withArguments(hiveConfiguration).thenReturn(hiveClient);
 
         when(requestContext.getServerName()).thenReturn("default");
+        when(requestContext.getUser()).thenReturn("dummy");
         when(requestContext.getAdditionalConfigProps()).thenReturn(null);
         mockConfigurationFactory = mock(ConfigurationFactory.class);
-        when(mockConfigurationFactory.initConfiguration("default", null)).thenReturn(hadoopConfiguration);
+        when(mockConfigurationFactory.initConfiguration("default", "dummy", null)).thenReturn(hadoopConfiguration);
     }
 
     @Test

@@ -76,8 +76,9 @@ public class HiveDataFragmenterTest {
         Map<String, String> map = new HashMap<>();
 
         when(requestContext.getServerName()).thenReturn("default");
+        when(requestContext.getUser()).thenReturn("dummy");
         when(requestContext.getOptions()).thenReturn(map);
-        when(configurationFactory.initConfiguration("default", map)).
+        when(configurationFactory.initConfiguration("default", "dummy", map)).
                 thenReturn(hadoopConfiguration);
 
         when(hadoopConfiguration.get("fs.defaultFS", "file:///")).thenReturn("hdfs:///");

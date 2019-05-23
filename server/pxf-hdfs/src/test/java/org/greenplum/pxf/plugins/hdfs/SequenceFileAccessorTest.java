@@ -91,9 +91,10 @@ public class SequenceFileAccessorTest {
         Map<String, String> map = new HashMap<>();
 
         when(requestContext.getServerName()).thenReturn("default");
+        when(requestContext.getUser()).thenReturn("dummy");
         when(requestContext.getOptions()).thenReturn(map);
 
-        when(mockConfigurationFactory.initConfiguration("default", map)).thenReturn(mockConfiguration);
+        when(mockConfigurationFactory.initConfiguration("default", "dummy", map)).thenReturn(mockConfiguration);
         when(file.getFileSystem(mockConfiguration)).thenReturn(fs);
         when(fs.mkdirs(Mockito.any(Path.class))).thenReturn(true);
         when(requestContext.getDataSource()).thenReturn("deep.throat");
