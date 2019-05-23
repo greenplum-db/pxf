@@ -1,0 +1,14 @@
+<configuration>
+    <property>
+        <name>test.blue.key</name>
+        <value>bluevaluefromuser</value>
+    </property>
+    <property>
+        <name>test.red.key</name>
+        <value>redvaluefromuser</value>
+    </property>
+    <property>
+        <name>test.user.key</name>
+        <value>uservalue</value>
+    </property>
+</configuration>
