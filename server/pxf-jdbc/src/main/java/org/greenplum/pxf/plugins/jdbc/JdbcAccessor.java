@@ -168,11 +168,6 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
 
         statementWrite = super.getPreparedStatement(connection, queryWrite);
 
-        if (queryTimeout != null) {
-            LOG.debug("Setting query timeout to {} seconds", queryTimeout);
-            statementWrite.setQueryTimeout(queryTimeout);
-        }
-
         // Process batchSize
         if (!connection.getMetaData().supportsBatchUpdates()) {
             if ((batchSizeIsSetByUser) && (batchSize > 1)) {

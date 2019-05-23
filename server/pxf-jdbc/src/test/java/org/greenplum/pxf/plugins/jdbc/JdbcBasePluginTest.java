@@ -32,6 +32,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
@@ -406,5 +407,58 @@ public class JdbcBasePluginTest {
         JdbcBasePlugin plugin = new JdbcBasePlugin();
         plugin.initialize(context);
         plugin.getConnection();
+    }
+
+    @Test
+    public void testGetPreparedStatementSetsQueryTimeoutIfSpecified() throws SQLException {
+        PowerMockito.mockStatic(DriverManager.class);
+
+        RequestContext context = new RequestContext();
+        context.setDataSource("test-table");
+        Map<String, String> additionalProps = new HashMap<>();
+        additionalProps.put("jdbc.driver", "org.greenplum.pxf.plugins.jdbc.FakeJdbcDriver");
+        additionalProps.put("jdbc.url", "test-url");
+        additionalProps.put("jdbc.statement.queryTimeout", "173");
+        context.setAdditionalConfigProps(additionalProps);
+
+        Connection mockConnection = mock(Connection.class);
+        DatabaseMetaData fakeMetaData = mock(DatabaseMetaData.class);
+        when(mockConnection.getMetaData()).thenReturn(fakeMetaData);
+        when(DriverManager.getConnection(anyString(), anyObject())).thenReturn(mockConnection);
+
+        PreparedStatement mockStatement = mock(PreparedStatement.class);
+        when(mockConnection.prepareStatement(anyString())).thenReturn(mockStatement);
+
+        JdbcBasePlugin plugin = new JdbcBasePlugin();
+        plugin.initialize(context);
+        plugin.getPreparedStatement(mockConnection, "foo");
+
+        verify(mockStatement).setQueryTimeout(173);
+    }
+
+    @Test
+    public void testGetPreparedStatementDoesNotSetQueryTimeoutIfNotSpecified() throws SQLException {
+        PowerMockito.mockStatic(DriverManager.class);
+
+        RequestContext context = new RequestContext();
+        context.setDataSource("test-table");
+        Map<String, String> additionalProps = new HashMap<>();
+        additionalProps.put("jdbc.driver", "org.greenplum.pxf.plugins.jdbc.FakeJdbcDriver");
+        additionalProps.put("jdbc.url", "test-url");
+        context.setAdditionalConfigProps(additionalProps);
+
+        Connection mockConnection = mock(Connection.class);
+        DatabaseMetaData fakeMetaData = mock(DatabaseMetaData.class);
+        when(mockConnection.getMetaData()).thenReturn(fakeMetaData);
+        when(DriverManager.getConnection(anyString(), anyObject())).thenReturn(mockConnection);
+
+        PreparedStatement mockStatement = mock(PreparedStatement.class);
+        when(mockConnection.prepareStatement(anyString())).thenReturn(mockStatement);
+
+        JdbcBasePlugin plugin = new JdbcBasePlugin();
+        plugin.initialize(context);
+        plugin.getPreparedStatement(mockConnection, "foo");
+
+        verify(mockStatement, never()).setQueryTimeout(173);
     }
 }

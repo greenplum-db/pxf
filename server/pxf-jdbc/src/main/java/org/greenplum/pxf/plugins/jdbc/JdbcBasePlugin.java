@@ -250,7 +250,6 @@ public class JdbcBasePlugin extends BasePlugin {
             jdbcUser = context.getUser();
         }
         if (jdbcUser != null) {
-            LOG.debug("Setting JDBC user to {}", jdbcUser);
             connectionConfiguration.setProperty("user", jdbcUser);
         }
 
@@ -308,7 +307,12 @@ public class JdbcBasePlugin extends BasePlugin {
         if ((connection == null) || (query == null)) {
             throw new IllegalArgumentException("The provided query or connection is null");
         }
-        return connection.prepareStatement(query);
+        PreparedStatement statement = connection.prepareStatement(query);
+        if (queryTimeout != null) {
+            LOG.debug("Setting query timeout to {} seconds", queryTimeout);
+            statement.setQueryTimeout(queryTimeout);
+        }
+        return statement;
     }
 
     /**
