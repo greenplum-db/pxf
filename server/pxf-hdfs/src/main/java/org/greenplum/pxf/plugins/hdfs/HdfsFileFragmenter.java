@@ -4,9 +4,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
-import org.greenplum.pxf.api.model.BaseFragmenter;
 import org.greenplum.pxf.api.model.Fragment;
-import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 
 import java.net.URI;
@@ -18,17 +16,7 @@ import java.util.List;
  * splits. The list of fragments will be the list of files
  * at the storage layer.
  */
-public class HdfsFileFragmenter extends BaseFragmenter {
-
-    private HcfsType hcfsType;
-
-    @Override
-    public void initialize(RequestContext context) {
-        super.initialize(context);
-
-        // Check if the underlying configuration is for HDFS
-        hcfsType = HcfsType.getHcfsType(configuration, context);
-    }
+public class HdfsFileFragmenter extends HdfsDataFragmenter {
 
     /**
      * Gets the fragments for a data source URI that can appear as a file name,
@@ -42,7 +30,7 @@ public class HdfsFileFragmenter extends BaseFragmenter {
         // The hostname is no longer used, hardcoding it to localhost
         String[] hosts = {"localhost"};
         byte[] dummyMetadata = HdfsUtilities
-                .prepareFragmentMetadata(0, Integer.MAX_VALUE, hosts);
+                .prepareFragmentMetadata(0, 0, hosts);
 
         FileSystem fs = FileSystem.get(URI.create(fileName), configuration);
         RemoteIterator<LocatedFileStatus> fileStatusListIterator =
