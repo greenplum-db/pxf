@@ -207,7 +207,7 @@ resources:
     source:
       branch: master
       uri: https://github.com/greenplum-db/gpdb.git
-      paths: [src/tools/docker/ubuntu16/Dockerfile]
+      paths: [src/tools/docker/ubuntu/Dockerfile]
 
   - name: gpdb-dev-ubuntu16-image
     type: docker-image
