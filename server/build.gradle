@@ -68,9 +68,12 @@ allprojects {
     dependencies {
         testCompile "junit:junit:${junitVersion}"
         testCompile "org.powermock:powermock-core:1.5.6"
-        testCompile "org.powermock:powermock-module-junit4:1.5.6"
+        testCompile ("org.powermock:powermock-module-junit4:1.5.6") {
+            exclude group: 'org.javassist', module: 'javassist'
+        }
         testCompile "org.powermock:powermock-api-mockito:1.5.6"
         testCompile "org.mockito:mockito-core:1.9.5"
+        testCompile "org.javassist:javassist:3.22.0-GA"
     }
 
     configurations.all {

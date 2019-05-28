@@ -102,9 +102,9 @@ public class BaseConfigurationFactoryTest {
         // Should return null because the file name does not end in -site.xml
         assertNull(configuration.get("test.green"));
 
-        assertEquals("bluevaluechanged", configuration.get("test.blue.key"));
+        assertEquals("bluevaluefromuser", configuration.get("test.blue.key"));
         assertEquals("redvaluefromuser", configuration.get("test.red.key"));
-        assertEquals("uservaluechanged", configuration.get("test.user.key"));
+        assertEquals("uservalue", configuration.get("test.user.key"));
 
     }
 
