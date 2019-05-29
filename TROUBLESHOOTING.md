@@ -52,3 +52,14 @@ dataproc to use the datanode hostnames instead. We need to set a property in hdf
               connecting to datanodes.
           </description>
       </property>
+
+### Dataproc with Kerberos
+
+A kerberized dataproc cluster might start with permission checking turned off.
+This means that any user will be able to access any file in the HDFS cluster.
+To enable permission checking modify hdfs-site.xml
+
+      <property>
+          <name>dfs.permissions.enabled</name>
+          <value>true</value>
+      </property>
