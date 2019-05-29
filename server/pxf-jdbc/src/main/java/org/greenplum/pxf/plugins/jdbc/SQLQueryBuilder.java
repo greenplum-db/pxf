@@ -1,5 +1,7 @@
 package org.greenplum.pxf.plugins.jdbc;
 
+import org.apache.commons.lang.SerializationUtils;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -24,16 +26,14 @@ import org.greenplum.pxf.api.FilterParser;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.plugins.jdbc.utils.ByteUtil;
 import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
+import org.greenplum.pxf.plugins.jdbc.partitioning.JdbcFragmentMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.EnumSet;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.sql.DatabaseMetaData;
-import java.sql.Date;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.stream.Collectors;
@@ -47,40 +47,6 @@ public class SQLQueryBuilder {
 
     private static final Logger LOG = LoggerFactory.getLogger(SQLQueryBuilder.class);
     private static final String SUBQUERY_ALIAS_SUFFIX = ") pxfsubquery"; // do not use AS, Oracle does not like it
-
-    private static EnumSet<PartitionType> PARTITIONS_WITH_INFINITE_RANGE_SUPPORT = EnumSet.of(
-        PartitionType.INT,
-        PartitionType.DATE
-    );
-
-    /**
-     * A simple representation of one {@link org.greenplum.pxf.api.model.Fragment} limit
-     */
-    private class FragmentLimit {
-        public long value;
-        public boolean active;
-
-        private final PartitionType partitionType;
-
-        public FragmentLimit(long value, PartitionType partitionType, boolean active) {
-            this.value = value;
-            this.active = active;
-            this.partitionType = partitionType;
-        }
-
-        public FragmentLimit(long value, PartitionType partitionType) {
-            this(value, partitionType, true);
-        }
-
-        public String toString() {
-            if (partitionType == PartitionType.DATE) {
-                return dbProduct.wrapDate(new Date(value));
-            }
-            else {  // partitionType == PartitionType.INT
-                return Long.toString(value);
-            }
-        }
-    };
 
     private RequestContext requestContext;
     private DatabaseMetaData databaseMetaData;
@@ -377,9 +343,6 @@ public class SQLQueryBuilder {
         if (meta == null) {
             return;
         }
-        String[] partitionBy = context.getOption("PARTITION_BY").split(":");
-        String partitionColumn = quoteString + partitionBy[0] + quoteString;
-        PartitionType partitionType = PartitionType.typeOf(partitionBy[1]);
 
         // determine if we need to add WHERE statement if not a single WHERE is in the query
         // or subquery is used and there are no WHERE statements after subquery alias
@@ -394,37 +357,9 @@ public class SQLQueryBuilder {
             query.append(" AND ");
         }
 
-        // Process partitions with possible infinite range
-        if (PARTITIONS_WITH_INFINITE_RANGE_SUPPORT.contains(partitionType)) {
-            byte[][] fragmentLimitsByte = ByteUtil.splitBytes(meta);
-            FragmentLimit[] fragmentLimits = {
-                new FragmentLimit(ByteUtil.toLong(fragmentLimitsByte[0]), partitionType),
-                new FragmentLimit(ByteUtil.toLong(fragmentLimitsByte[1]), partitionType)
-            };
+        JdbcFragmentMetadata fragmentMetadata = JdbcFragmentMetadata.class.cast(SerializationUtils.deserialize(meta));
+        String fragmentSql = fragmentMetadata.toSqlConstraint(quoteString, dbProduct);
 
-            // Deactivate border limits if requried
-            if (fragmentLimits[0].value == Long.MAX_VALUE) {
-                fragmentLimits[0].active = false;
-            }
-            else if (fragmentLimits[1].value == Long.MIN_VALUE) {
-                fragmentLimits[1].active = false;
-            }
-
-            // Add partitions
-            if (fragmentLimits[0].active) {
-                query.append(partitionColumn).append(" >= ").append(fragmentLimits[0]);
-
-                if (fragmentLimits[1].active) {  // && fragmentLimits[0].active
-                    query.append(" AND ");
-                }
-            }
-            if (fragmentLimits[1].active) {
-                query.append(partitionColumn).append(" < ").append(fragmentLimits[1]);
-            }
-        }
-        else {
-            // At the moment, only ENUM partitions do not support infinite range
-            query.append(partitionColumn).append(" = '").append(new String(meta)).append("'");
-        }
+        query.append(fragmentSql);
     }
 }

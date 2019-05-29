@@ -1,7 +1,8 @@
 package org.greenplum.pxf.plugins.jdbc;
 
+import org.apache.commons.lang.SerializationUtils;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.plugins.jdbc.utils.ByteUtil;
+import org.greenplum.pxf.plugins.jdbc.partitioning.IntPartition;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -143,7 +144,7 @@ public class JdbcAccessorTest {
         context.addOption("PARTITION_BY", "count:int");
         context.addOption("RANGE", "1:10");
         context.addOption("INTERVAL", "1");
-        context.setFragmentMetadata(ByteUtil.mergeBytes(ByteUtil.getBytes(1), ByteUtil.getBytes(2)));
+        context.setFragmentMetadata(SerializationUtils.serialize(new IntPartition("count", 1L, 1L)));
         ArgumentCaptor<String> queryPassed = ArgumentCaptor.forClass(String.class);
         when(mockStatement.executeQuery(queryPassed.capture())).thenReturn(mockResultSet);
 
@@ -154,7 +155,7 @@ public class JdbcAccessorTest {
                 .append("SELECT  FROM (SELECT dept.name, count(), max(emp.salary)\n")
                 .append("FROM dept JOIN emp\n")
                 .append("ON dept.id = emp.dept_id\n")
-                .append("GROUP BY dept.name) pxfsubquery WHERE count >= 1 AND count < 2");
+                .append("GROUP BY dept.name) pxfsubquery WHERE count = 1");
 
         assertEquals(b.toString(), queryPassed.getValue());
 
@@ -168,7 +169,7 @@ public class JdbcAccessorTest {
         context.addOption("PARTITION_BY", "count:int");
         context.addOption("RANGE", "1:10");
         context.addOption("INTERVAL", "1");
-        context.setFragmentMetadata(ByteUtil.mergeBytes(ByteUtil.getBytes(1), ByteUtil.getBytes(2)));
+        context.setFragmentMetadata(SerializationUtils.serialize(new IntPartition("count", 1L, 1L)));
         ArgumentCaptor<String> queryPassed = ArgumentCaptor.forClass(String.class);
         when(mockStatement.executeQuery(queryPassed.capture())).thenReturn(mockResultSet);
 
@@ -180,10 +181,37 @@ public class JdbcAccessorTest {
                 .append("FROM dept JOIN emp\n")
                 .append("ON dept.id = emp.dept_id\n")
                 .append("WHERE dept.id < 10\n")
-                .append("GROUP BY dept.name) pxfsubquery WHERE count >= 1 AND count < 2");
+                .append("GROUP BY dept.name) pxfsubquery WHERE count = 1");
 
         assertEquals(b.toString(), queryPassed.getValue());
 
     }
 
+    @Test
+    public void testGetFragmentsAndReadFromQueryWithPartitions() throws Exception {
+        String serversDirectory = new File(this.getClass().getClassLoader().getResource("servers").toURI()).getCanonicalPath();
+        context.getAdditionalConfigProps().put("pxf.config.server.directory", serversDirectory + File.separator + "test-server");
+        context.setDataSource("query:testquery");
+        context.addOption("PARTITION_BY", "count:int");
+        context.addOption("RANGE", "1:10");
+        context.addOption("INTERVAL", "1");
+
+        JdbcPartitionFragmenter fragmenter = new JdbcPartitionFragmenter();
+        fragmenter.initialize(context);
+        context.setFragmentMetadata(fragmenter.getFragments().get(1).getMetadata());
+
+        ArgumentCaptor<String> queryPassed = ArgumentCaptor.forClass(String.class);
+        when(mockStatement.executeQuery(queryPassed.capture())).thenReturn(mockResultSet);
+
+        accessor.initialize(context);
+        accessor.openForRead();
+
+        StringBuilder b = new StringBuilder()
+                .append("SELECT  FROM (SELECT dept.name, count(), max(emp.salary)\n")
+                .append("FROM dept JOIN emp\n")
+                .append("ON dept.id = emp.dept_id\n")
+                .append("GROUP BY dept.name) pxfsubquery WHERE count = 1");
+        assertEquals(b.toString(), queryPassed.getValue());
+
+    }
 }

@@ -1,5 +1,7 @@
 package org.greenplum.pxf.plugins.jdbc;
 
+import org.apache.commons.lang.SerializationUtils;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -21,7 +23,10 @@ package org.greenplum.pxf.plugins.jdbc;
 
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.plugins.jdbc.utils.ByteUtil;
+import org.greenplum.pxf.plugins.jdbc.partitioning.DatePartition;
+import org.greenplum.pxf.plugins.jdbc.partitioning.EnumPartition;
+import org.greenplum.pxf.plugins.jdbc.partitioning.IntPartition;
+import org.greenplum.pxf.plugins.jdbc.partitioning.JdbcFragmentMetadata;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -66,58 +71,50 @@ public class JdbcPartitionFragmenterTest {
         fragment.initialize(context);
         List<Fragment> fragments = fragment.getFragments();
 
-        assertEquals(10, fragments.size());
-        assertFragmentRangeEquals(fragments.get(0), Date.valueOf("2008-01-01"), Date.valueOf("2008-01-02"));
-        assertFragmentRangeEquals(fragments.get(5), Date.valueOf("2008-01-06"), Date.valueOf("2008-01-07"));
-        assertFragmentRangeEquals(fragments.get(9), Date.valueOf("2008-01-10"), Date.valueOf("2008-01-11"));
+        assertEquals(12, fragments.size());
+        assertFragmentRangeEquals(fragments.get(0), null, Date.valueOf("2008-01-01"));
+        assertFragmentRangeEquals(fragments.get(1), Date.valueOf("2008-01-01"), Date.valueOf("2008-01-02"));
+        assertFragmentRangeEquals(fragments.get(5), Date.valueOf("2008-01-05"), Date.valueOf("2008-01-06"));
+        assertFragmentRangeEquals(fragments.get(10), Date.valueOf("2008-01-10"), Date.valueOf("2008-01-11"));
+        assertFragmentRangeEquals(fragments.get(11), Date.valueOf("2008-01-11"), null);
     }
 
     @Test
     public void testPartionByDateIntervalMonth() throws Exception {
 
         when(context.getOption("PARTITION_BY")).thenReturn("cdate:date");
-        when(context.getOption("RANGE")).thenReturn("2008-01-01:2009-01-01");
+        when(context.getOption("RANGE")).thenReturn("2008-01-01:2008-12-31");
         when(context.getOption("INTERVAL")).thenReturn("1:month");
 
         JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
         fragment.initialize(context);
         List<Fragment> fragments = fragment.getFragments();
 
-        assertEquals(12, fragments.size());
-        assertFragmentRangeEquals(fragments.get(0), Date.valueOf("2008-01-01"), Date.valueOf("2008-02-01"));
-        assertFragmentRangeEquals(fragments.get(5), Date.valueOf("2008-06-01"), Date.valueOf("2008-07-01"));
-        assertFragmentRangeEquals(fragments.get(11), Date.valueOf("2008-12-01"), Date.valueOf("2009-01-01"));
-    }
-
-    @Test
-    public void testPartitionByDateIntervalMonthRangeSwapped() throws Exception {
-
-        when(context.getOption("PARTITION_BY")).thenReturn("cdate:date");
-        when(context.getOption("RANGE")).thenReturn("2008-01-01:2001-01-01");
-        when(context.getOption("INTERVAL")).thenReturn("1:month");
-
-        JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
-        fragment.initialize(context);
-        List<Fragment> fragments = fragment.getFragments();
-
-        assertEquals(0, fragments.size());
+        assertEquals(14, fragments.size());
+        assertFragmentRangeEquals(fragments.get(0), null, Date.valueOf("2008-01-01"));
+        assertFragmentRangeEquals(fragments.get(1), Date.valueOf("2008-01-01"), Date.valueOf("2008-02-01"));
+        assertFragmentRangeEquals(fragments.get(6), Date.valueOf("2008-06-01"), Date.valueOf("2008-07-01"));
+        assertFragmentRangeEquals(fragments.get(12), Date.valueOf("2008-12-01"), Date.valueOf("2008-12-31"));
+        assertFragmentRangeEquals(fragments.get(13), Date.valueOf("2008-12-31"), null);
     }
 
     @Test
     public void testPartionByDateIntervalYear() throws Exception {
 
         when(context.getOption("PARTITION_BY")).thenReturn("cdate:date");
-        when(context.getOption("RANGE")).thenReturn("2008-02-03:2018-02-03");
+        when(context.getOption("RANGE")).thenReturn("2008-02-03:2018-02-02");
         when(context.getOption("INTERVAL")).thenReturn("1:year");
 
         JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
         fragment.initialize(context);
         List<Fragment> fragments = fragment.getFragments();
 
-        assertEquals(10, fragments.size());
-        assertFragmentRangeEquals(fragments.get(0), Date.valueOf("2008-02-03"), Date.valueOf("2009-02-03"));
-        assertFragmentRangeEquals(fragments.get(5), Date.valueOf("2013-02-03"), Date.valueOf("2014-02-03"));
-        assertFragmentRangeEquals(fragments.get(9), Date.valueOf("2017-02-03"), Date.valueOf("2018-02-03"));
+        assertEquals(12, fragments.size());
+        assertFragmentRangeEquals(fragments.get(0), null, Date.valueOf("2008-02-03"));
+        assertFragmentRangeEquals(fragments.get(1), Date.valueOf("2008-02-03"), Date.valueOf("2009-02-03"));
+        assertFragmentRangeEquals(fragments.get(6), Date.valueOf("2013-02-03"), Date.valueOf("2014-02-03"));
+        assertFragmentRangeEquals(fragments.get(10), Date.valueOf("2017-02-03"), Date.valueOf("2018-02-02"));
+        assertFragmentRangeEquals(fragments.get(11), Date.valueOf("2018-02-02"), null);
     }
 
     @Test
@@ -131,61 +128,11 @@ public class JdbcPartitionFragmenterTest {
         fragment.initialize(context);
         List<Fragment> fragments = fragment.getFragments();
 
-        assertEquals(2, fragments.size());
-        assertFragmentRangeEquals(fragments.get(0), Date.valueOf("2008-02-03"), Date.valueOf("2009-02-03"));
-        assertFragmentRangeEquals(fragments.get(1), Date.valueOf("2009-02-03"), Date.valueOf("2010-01-15"));
-    }
-
-    @Test
-    public void testPartionByDateIntervalYearRangeInfiniteLeft() throws Exception {
-
-        when(context.getOption("PARTITION_BY")).thenReturn("cdate:date");
-        when(context.getOption("RANGE")).thenReturn(":2000-01-01:2010-01-01");
-        when(context.getOption("INTERVAL")).thenReturn("5:year");
-
-        JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
-        fragment.initialize(context);
-        List<Fragment> fragments = fragment.getFragments();
-
-        assertEquals(3, fragments.size());
-        assertFragmentRangeEquals(fragments.get(0), Long.MAX_VALUE, Date.valueOf("2000-01-01").getTime());
-        assertFragmentRangeEquals(fragments.get(1), Date.valueOf("2000-01-01"), Date.valueOf("2005-01-01"));
-        assertFragmentRangeEquals(fragments.get(2), Date.valueOf("2005-01-01"), Date.valueOf("2010-01-01"));
-    }
-
-    @Test
-    public void testPartionByDateIntervalYearRangeInfiniteRight() throws Exception {
-
-        when(context.getOption("PARTITION_BY")).thenReturn("cdate:date");
-        when(context.getOption("RANGE")).thenReturn("2000-01-01:2010-01-01:");
-        when(context.getOption("INTERVAL")).thenReturn("5:year");
-
-        JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
-        fragment.initialize(context);
-        List<Fragment> fragments = fragment.getFragments();
-
-        assertEquals(3, fragments.size());
-        assertFragmentRangeEquals(fragments.get(0), Date.valueOf("2000-01-01"), Date.valueOf("2005-01-01"));
-        assertFragmentRangeEquals(fragments.get(1), Date.valueOf("2005-01-01"), Date.valueOf("2010-01-01"));
-        assertFragmentRangeEquals(fragments.get(2), Date.valueOf("2010-01-01").getTime(), Long.MIN_VALUE);
-    }
-
-    @Test
-    public void testPartionByDateIntervalYearRangeInfiniteBoth() throws Exception {
-
-        when(context.getOption("PARTITION_BY")).thenReturn("cdate:date");
-        when(context.getOption("RANGE")).thenReturn(":2000-01-01:2010-01-01:");
-        when(context.getOption("INTERVAL")).thenReturn("5:year");
-
-        JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
-        fragment.initialize(context);
-        List<Fragment> fragments = fragment.getFragments();
-
         assertEquals(4, fragments.size());
-        assertFragmentRangeEquals(fragments.get(0), Long.MAX_VALUE, Date.valueOf("2000-01-01").getTime());
-        assertFragmentRangeEquals(fragments.get(1), Date.valueOf("2000-01-01"), Date.valueOf("2005-01-01"));
-        assertFragmentRangeEquals(fragments.get(2), Date.valueOf("2005-01-01"), Date.valueOf("2010-01-01"));
-        assertFragmentRangeEquals(fragments.get(3), Date.valueOf("2010-01-01").getTime(), Long.MIN_VALUE);
+        assertFragmentRangeEquals(fragments.get(0), null, Date.valueOf("2008-02-03"));
+        assertFragmentRangeEquals(fragments.get(1), Date.valueOf("2008-02-03"), Date.valueOf("2009-02-03"));
+        assertFragmentRangeEquals(fragments.get(2), Date.valueOf("2009-02-03"), Date.valueOf("2010-01-15"));
+        assertFragmentRangeEquals(fragments.get(3), Date.valueOf("2010-01-15"), null);
     }
 
     // INT
@@ -201,24 +148,12 @@ public class JdbcPartitionFragmenterTest {
         fragment.initialize(context);
         List<Fragment> fragments = fragment.getFragments();
 
-        assertEquals(6, fragments.size());
-        assertFragmentRangeEquals(fragments.get(0), 2001, 2003);
-        assertFragmentRangeEquals(fragments.get(3), 2007, 2009);
-        assertFragmentRangeEquals(fragments.get(5), 2011, 2012);
-    }
-
-    @Test
-    public void testPartitionByIntRangeSwapped() throws Exception {
-
-        when(context.getOption("PARTITION_BY")).thenReturn("year:int");
-        when(context.getOption("RANGE")).thenReturn("2013:2012");
-        when(context.getOption("INTERVAL")).thenReturn("2");
-
-        JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
-        fragment.initialize(context);
-        List<Fragment> fragments = fragment.getFragments();
-
-        assertEquals(0, fragments.size());
+        assertEquals(8, fragments.size());
+        assertFragmentRangeEquals(fragments.get(0), null, 2001L);
+        assertFragmentRangeEquals(fragments.get(1), 2001L, 2002L);
+        assertFragmentRangeEquals(fragments.get(3), 2005L, 2006L);
+        assertFragmentRangeEquals(fragments.get(6), 2011L, 2012L);
+        assertFragmentRangeEquals(fragments.get(7), 2012L, null);
     }
 
     @Test
@@ -232,61 +167,11 @@ public class JdbcPartitionFragmenterTest {
         fragment.initialize(context);
         List<Fragment> fragments = fragment.getFragments();
 
-        assertEquals(2, fragments.size());
-        assertFragmentRangeEquals(fragments.get(0), 2001, 2008);
-        assertFragmentRangeEquals(fragments.get(1), 2008, 2012);
-    }
-
-    @Test
-    public void testPartionByIntRangeInfiniteLeft() throws Exception {
-
-        when(context.getOption("PARTITION_BY")).thenReturn("year:int");
-        when(context.getOption("RANGE")).thenReturn(":2000:2010");
-        when(context.getOption("INTERVAL")).thenReturn("5");
-
-        JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
-        fragment.initialize(context);
-        List<Fragment> fragments = fragment.getFragments();
-
-        assertEquals(3, fragments.size());
-        assertFragmentRangeEquals(fragments.get(0), Long.MAX_VALUE, 2000);
-        assertFragmentRangeEquals(fragments.get(1), 2000, 2005);
-        assertFragmentRangeEquals(fragments.get(2), 2005, 2010);
-    }
-
-    @Test
-    public void testPartionByIntRangeInfiniteRight() throws Exception {
-
-        when(context.getOption("PARTITION_BY")).thenReturn("year:int");
-        when(context.getOption("RANGE")).thenReturn("2000:2010:");
-        when(context.getOption("INTERVAL")).thenReturn("5");
-
-        JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
-        fragment.initialize(context);
-        List<Fragment> fragments = fragment.getFragments();
-
-        assertEquals(3, fragments.size());
-        assertFragmentRangeEquals(fragments.get(0), 2000, 2005);
-        assertFragmentRangeEquals(fragments.get(1), 2005, 2010);
-        assertFragmentRangeEquals(fragments.get(2), 2010, Long.MIN_VALUE);
-    }
-
-    @Test
-    public void testPartionByIntRangeInfiniteBoth() throws Exception {
-
-        when(context.getOption("PARTITION_BY")).thenReturn("year:int");
-        when(context.getOption("RANGE")).thenReturn(":2000:2010:");
-        when(context.getOption("INTERVAL")).thenReturn("5");
-
-        JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
-        fragment.initialize(context);
-        List<Fragment> fragments = fragment.getFragments();
-
         assertEquals(4, fragments.size());
-        assertFragmentRangeEquals(fragments.get(0), Long.MAX_VALUE, 2000);
-        assertFragmentRangeEquals(fragments.get(1), 2000, 2005);
-        assertFragmentRangeEquals(fragments.get(2), 2005, 2010);
-        assertFragmentRangeEquals(fragments.get(3), 2010, Long.MIN_VALUE);
+        assertFragmentRangeEquals(fragments.get(0), null, 2001L);
+        assertFragmentRangeEquals(fragments.get(1), 2001L, 2007L);
+        assertFragmentRangeEquals(fragments.get(2), 2008L, 2012L);
+        assertFragmentRangeEquals(fragments.get(3), 2012L, null);
     }
 
     // ENUM
@@ -302,8 +187,8 @@ public class JdbcPartitionFragmenterTest {
         List<Fragment> fragments = fragment.getFragments();
 
         assertEquals(4, fragments.size());
-        assertEquals("excellent", new String(fragments.get(0).getMetadata()));
-        assertEquals("bad", new String(fragments.get(3).getMetadata()));
+        assertFragmentRangeEquals(fragments.get(0), "excellent");
+        assertFragmentRangeEquals(fragments.get(3), "bad");
     }
 
     @Test
@@ -410,31 +295,69 @@ public class JdbcPartitionFragmenterTest {
         fragment.getFragments();
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testRangeDateSwappedInvalid() throws Exception {
+
+        when(context.getOption("PARTITION_BY")).thenReturn("cdate:date");
+        when(context.getOption("RANGE")).thenReturn("2008-01-01:2001-01-01");
+        when(context.getOption("INTERVAL")).thenReturn("1:month");
+
+        JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
+        fragment.initialize(context);
+        fragment.getFragments();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testRangeIntSwappedInvalid() throws Exception {
+
+        when(context.getOption("PARTITION_BY")).thenReturn("year:int");
+        when(context.getOption("RANGE")).thenReturn("2013:2012");
+        when(context.getOption("INTERVAL")).thenReturn("2");
+
+        JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
+        fragment.initialize(context);
+        fragment.getFragments();
+    }
+
     /**
      * Assert fragment metadata and given range match.
      * @param fragment
-     * @param rangeStart
-     * @param rangeEnd
+     * @param rangeStart (null is allowed)
+     * @param rangeEnd (null is allowed)
      */
-    private void assertFragmentRangeEquals(Fragment fragment, long rangeStart, long rangeEnd) {
-        byte[][] splitMetadata = ByteUtil.splitBytes(fragment.getMetadata());
-        long[] actual = {ByteUtil.toLong(splitMetadata[0]), ByteUtil.toLong(splitMetadata[1])};
+    private void assertFragmentRangeEquals(Fragment fragment, Long rangeStart, Long rangeEnd) {
+        JdbcFragmentMetadata fragmentMetadata = JdbcFragmentMetadata.class.cast(SerializationUtils.deserialize(fragment.getMetadata()));
+        IntPartition intPartition = IntPartition.class.cast(fragmentMetadata);
 
-        assertEquals(rangeStart, actual[0]);
-        assertEquals(rangeEnd, actual[1]);
+        Long[] boundaries = intPartition.getBoundaries();
+        assertEquals(rangeStart, boundaries[0]);
+        assertEquals(rangeEnd, boundaries[1]);
     }
 
     /**
      * Assert fragment metadata and given range of dates match.
      * @param fragment
-     * @param rangeStart
-     * @param rangeEnd
+     * @param rangeStart (null is allowed)
+     * @param rangeEnd (null is allowed)
      */
     private void assertFragmentRangeEquals(Fragment fragment, Date rangeStart, Date rangeEnd) {
-        byte[][] splitMetadata = ByteUtil.splitBytes(fragment.getMetadata());
-        long[] actual = {ByteUtil.toLong(splitMetadata[0]), ByteUtil.toLong(splitMetadata[1])};
+        JdbcFragmentMetadata fragmentMetadata = JdbcFragmentMetadata.class.cast(SerializationUtils.deserialize(fragment.getMetadata()));
+        DatePartition datePartition = DatePartition.class.cast(fragmentMetadata);
 
-        assertEquals(rangeStart, new Date(actual[0]));
-        assertEquals(rangeEnd, new Date(actual[1]));
+        Date[] boundaries = datePartition.getBoundaries();
+        assertEquals(rangeStart, boundaries[0]);
+        assertEquals(rangeEnd, boundaries[1]);
+    }
+
+    /**
+     * Assert fragment metadata and given enum (string) match
+     * @param fragment
+     * @param enumValue
+     */
+    private void assertFragmentRangeEquals(Fragment fragment, String enumValue) {
+        JdbcFragmentMetadata fragmentMetadata = JdbcFragmentMetadata.class.cast(SerializationUtils.deserialize(fragment.getMetadata()));
+        EnumPartition enumPartition = EnumPartition.class.cast(fragmentMetadata);
+
+        assertEquals(enumValue, enumPartition.getValue());
     }
 }

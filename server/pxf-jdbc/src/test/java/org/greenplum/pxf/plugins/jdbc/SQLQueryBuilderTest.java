@@ -114,15 +114,15 @@ public class SQLQueryBuilderTest {
     @Test
     public void testDatePartition() throws Exception {
         context.addOption("PARTITION_BY", "cdate:date");
-        context.addOption("RANGE", "2008-01-01:2009-01-01");
+        context.addOption("RANGE", "2008-01-01:2008-12-01");
         context.addOption("INTERVAL", "2:month");
 
         JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
         fragment.initialize(context);
         List<Fragment> fragments = fragment.getFragments();
-        assertEquals(6, fragments.size());
+        assertEquals(8, fragments.size());
         // Partition: cdate >= 2008-01-01 and cdate < 2008-03-01
-        context.setFragmentMetadata(fragments.get(0).getMetadata());
+        context.setFragmentMetadata(fragments.get(1).getMetadata());
 
         SQLQueryBuilder builder = new SQLQueryBuilder(context, mockMetaData);
         builder.autoSetQuoteString();
@@ -243,9 +243,9 @@ public class SQLQueryBuilderTest {
         JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
         fragment.initialize(mockContext);
         List<Fragment> fragments = fragment.getFragments();
-        assertEquals(6, fragments.size());
+        assertEquals(8, fragments.size());
         // Partition: cdate >= 2008-01-01 and cdate < 2008-03-01
-        when(mockContext.getFragmentMetadata()).thenReturn(fragments.get(0).getMetadata());
+        when(mockContext.getFragmentMetadata()).thenReturn(fragments.get(1).getMetadata());
 
         String localSQL = "SELECT \"id\", \"cDate\" FROM sales WHERE \"id\" > 5 AND \"cDate\" >= DATE('2008-01-01') AND \"cDate\" < DATE('2008-03-01')";
 

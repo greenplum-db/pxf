@@ -19,11 +19,15 @@ package org.greenplum.pxf.plugins.jdbc;
  * under the License.
  */
 
+import org.apache.commons.lang.SerializationUtils;
 import org.greenplum.pxf.api.model.BaseFragmenter;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.FragmentStats;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.plugins.jdbc.utils.ByteUtil;
+import org.greenplum.pxf.plugins.jdbc.partitioning.DatePartition;
+import org.greenplum.pxf.plugins.jdbc.partitioning.EnumPartition;
+import org.greenplum.pxf.plugins.jdbc.partitioning.IntPartition;
+import org.greenplum.pxf.plugins.jdbc.partitioning.PartitionType;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -56,15 +60,8 @@ public class JdbcPartitionFragmenter extends BaseFragmenter {
     // Partition parameters (filled by class constructor)
     private String[] range = null;
     private PartitionType partitionType;
+    private String partitionColumn;
     private long intervalNum;
-
-    // If set to true, one of these variables indicate that partition range is infinite
-    // and an extra Fragment (or two) should be added to list of fragments.
-    // The added fragment must contain "invalid" range specification (start > end).
-    // Long.MAX_VALUE or Long.MIN_VALUE MUST be used for such ranges. These values
-    // are checked later by SQLQueryBuilder.
-    private boolean rangeLeftInfinite = false;
-    private boolean rangeRightInfinite = false;
 
     // Partition parameters for INT partitions (filled by class constructor)
     private long rangeIntStart;
@@ -85,9 +82,9 @@ public class JdbcPartitionFragmenter extends BaseFragmenter {
 
         // PARTITION_BY
         try {
-            partitionType = PartitionType.typeOf(
-                context.getOption("PARTITION_BY").split(":")[1]
-            );
+            String partitionBy[] = context.getOption("PARTITION_BY").split(":");
+            partitionColumn = partitionBy[0];
+            partitionType = PartitionType.typeOf(partitionBy[1]);
         }
         catch (IllegalArgumentException | ArrayIndexOutOfBoundsException ex) {
             throw new IllegalArgumentException("The parameter 'PARTITION_BY' is invalid. The pattern is '<column_name>:date|int|enum'");
@@ -101,29 +98,9 @@ public class JdbcPartitionFragmenter extends BaseFragmenter {
                 range = rangeStr.split(":");
             }
             else {
-                range = rangeStr.split(":", 4);
-                if (range.length == 1) {
+                range = rangeStr.split(":", 2);
+                if (range.length != 2) {
                     throw new IllegalArgumentException("The parameter 'RANGE' must specify ':<end_value>' for this PARTITION_BY type");
-                }
-                if (range.length == 2) {
-                    // This is normal partition, do nothing. If syntax is incorrect, it causes NumberFormatException later
-                }
-                else if (range.length == 3) {
-                    if (range[0].isEmpty()) {
-                        rangeLeftInfinite = true;
-                        range = new String[] {range[1], range[2]};
-                    }
-                    else if (range[2].isEmpty()) {
-                        rangeRightInfinite = true;
-                        range = new String[] {range[0], range[1]};
-                    }
-                    else {
-                        throw new IllegalArgumentException("The parameter 'RANGE' has incorrect syntax. To define non-enclosed partition, put ':' before the left limit value or after the right limit value");
-                    }
-                }
-                else {  // range.length == 4
-                    rangeLeftInfinite = rangeRightInfinite = true;
-                    range = new String[] {range[1], range[2]};
                 }
             }
         }
@@ -143,6 +120,11 @@ public class JdbcPartitionFragmenter extends BaseFragmenter {
             catch (ParseException e) {
                 throw new IllegalArgumentException("The parameter 'RANGE' has invalid date format. The correct format is 'yyyy-MM-dd'");
             }
+            if (rangeDateEnd.before(rangeDateStart)) {
+                throw new IllegalArgumentException(String.format(
+                    "The parameter 'RANGE' is invalid. The <end_value> '%s' must be bigger than the <start_value> '%s'", rangeDateStart, rangeDateEnd
+                ));
+            }
         }
         else if (partitionType == PartitionType.INT) {
             // Parse INT partition type values
@@ -153,6 +135,11 @@ public class JdbcPartitionFragmenter extends BaseFragmenter {
             catch (NumberFormatException e) {
                 throw new IllegalArgumentException("The parameter 'RANGE' is invalid. Both range boundaries must be integers");
             }
+            if (rangeIntEnd < rangeIntStart) {
+                throw new IllegalArgumentException(String.format(
+                    "The parameter 'RANGE' is invalid. The <end_value> '%s' must be bigger than the <start_value> '%s'", rangeIntEnd, rangeIntStart
+                ));
+            }
         }
 
         // INTERVAL
@@ -162,20 +149,21 @@ public class JdbcPartitionFragmenter extends BaseFragmenter {
             String[] interval = intervalStr.split(":");
             try {
                 intervalNum = Long.parseLong(interval[0]);
-                if (intervalNum < 1) {
-                    throw new IllegalArgumentException("The '<interval_num>' in parameter 'INTERVAL' must be at least 1, but actual is " + intervalNum);
-                }
             }
             catch (NumberFormatException ex) {
                 throw new IllegalArgumentException("The '<interval_num>' in parameter 'INTERVAL' must be an integer");
             }
+            if (intervalNum < 1) {
+                throw new IllegalArgumentException("The '<interval_num>' in parameter 'INTERVAL' must be at least 1, but actual is " + intervalNum);
+            }
+
 
             // Intervals of type DATE
-            if (interval.length > 1) {
+            if (partitionType == PartitionType.DATE) {
+                if (interval.length != 2) {
+                    throw new IllegalArgumentException("The parameter 'INTERVAL' must specify unit (':year|month|day') for the PARTITION_TYPE = 'DATE'");
+                }
                 intervalType = IntervalType.typeOf(interval[1]);
-            }
-            if (interval.length == 1 && partitionType == PartitionType.DATE) {
-                throw new IllegalArgumentException("The parameter 'INTERVAL' must specify unit (':year|month|day') for the PARTITION_TYPE = 'DATE'");
             }
         }
         else if (partitionType != PartitionType.ENUM) {
@@ -194,7 +182,8 @@ public class JdbcPartitionFragmenter extends BaseFragmenter {
     }
 
     /**
-     * getFragments() implementation
+     * getFragments() implementation.
+     * Note that all partition parameters must be verified before calling this procedure.
      *
      * @return a list of fragments to be passed to PXF segments
      */
@@ -209,12 +198,13 @@ public class JdbcPartitionFragmenter extends BaseFragmenter {
 
         switch (partitionType) {
             case DATE: {
-                if (rangeLeftInfinite) {
-                    fragments.add(createFragment(Long.MAX_VALUE, rangeDateStart.getTimeInMillis()));
-                }
+                // Right-bounded interval
+                fragments.add(createFragment(SerializationUtils.serialize(
+                    new DatePartition(partitionColumn, null, rangeDateStart)
+                )));
 
                 Calendar fragStart = rangeDateStart;
-                while (fragStart.before(rangeDateEnd)) {
+                do {
                     // Calculate a new fragment
                     Calendar fragEnd = (Calendar)fragStart.clone();
                     switch (intervalType) {
@@ -227,51 +217,69 @@ public class JdbcPartitionFragmenter extends BaseFragmenter {
                         case YEAR:
                             fragEnd.add(Calendar.YEAR, (int)intervalNum);
                             break;
-                    }
-                    if (fragEnd.after(rangeDateEnd)) {
-                        fragEnd = (Calendar)rangeDateEnd.clone();
+                        default:
+                            throw new RuntimeException("Unknown INTERVAL type");
                     }
 
-                    // Add the fragment to the list
-                    fragments.add(createFragment(fragStart.getTimeInMillis(), fragEnd.getTimeInMillis()));
+                    if (fragEnd.compareTo(rangeDateEnd) >= 0) {
+                        // This is the last fragment, include the right boundary
+                        fragEnd = (Calendar)rangeDateEnd.clone();
+                        fragments.add(createFragment(SerializationUtils.serialize(
+                            new DatePartition(partitionColumn, fragStart, fragEnd, true)
+                        )));
+                    }
+                    else {
+                        fragments.add(createFragment(SerializationUtils.serialize(
+                            new DatePartition(partitionColumn, fragStart, fragEnd)
+                        )));
+                    }
 
                     // Prepare for the next fragment
                     fragStart = fragEnd;
                 }
+                while (fragStart.before(rangeDateEnd));
 
-                if (rangeRightInfinite) {
-                    fragments.add(createFragment(rangeDateEnd.getTimeInMillis(), Long.MIN_VALUE));
-                }
+                // Left-bounded interval
+                fragments.add(createFragment(SerializationUtils.serialize(
+                    new DatePartition(partitionColumn, rangeDateEnd, null)
+                )));
                 break;
             }
             case INT: {
-                if (rangeLeftInfinite) {
-                    fragments.add(createFragment(Long.MAX_VALUE, rangeIntStart));
-                }
+                // Right-bounded interval
+                fragments.add(createFragment(SerializationUtils.serialize(
+                    new IntPartition(partitionColumn, null, rangeIntStart)
+                )));
 
                 long fragStart = rangeIntStart;
-                while (fragStart < rangeIntEnd) {
+                while (fragStart <= rangeIntEnd) {
                     // Calculate a new fragment
-                    long fragEnd = fragStart + intervalNum;
+                    long fragStartNext = fragStart + intervalNum;
+                    long fragEnd = fragStartNext - 1;
                     if (fragEnd > rangeIntEnd) {
                         fragEnd = rangeIntEnd;
                     }
 
                     // Add the fragment to the list
-                    fragments.add(createFragment(fragStart, fragEnd));
+                    fragments.add(createFragment(SerializationUtils.serialize(
+                        new IntPartition(partitionColumn, fragStart, fragEnd)
+                    )));
 
                     // Prepare for the next fragment
-                    fragStart = fragEnd;
+                    fragStart = fragStartNext;
                 }
 
-                if (rangeRightInfinite) {
-                    fragments.add(createFragment(rangeIntEnd, Long.MIN_VALUE));
-                }
+                // Left-bounded interval
+                fragments.add(createFragment(SerializationUtils.serialize(
+                    new IntPartition(partitionColumn, rangeIntEnd, null)
+                )));
                 break;
             }
             case ENUM: {
-                for (String frag : range) {
-                    fragments.add(createFragment(frag.getBytes()));
+                for (String enumValue : range) {
+                    fragments.add(createFragment(SerializationUtils.serialize(
+                        new EnumPartition(partitionColumn, enumValue)
+                    )));
                 }
                 break;
             }
@@ -287,16 +295,5 @@ public class JdbcPartitionFragmenter extends BaseFragmenter {
      */
     private Fragment createFragment(byte[] fragmentMetadata) {
         return new Fragment(context.getDataSource(), pxfHosts, fragmentMetadata);
-    }
-
-    /**
-     * Create {@link Fragment} from two long values.
-     * Incapsulates {@link ByteUtil} calls.
-     * @param start
-     * @param end
-     * @return {@link Fragment}
-     */
-    private Fragment createFragment(long start, long end) {
-        return createFragment(ByteUtil.mergeBytes(ByteUtil.getBytes(start), ByteUtil.getBytes(end)));
     }
 }
