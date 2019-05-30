@@ -170,9 +170,9 @@ project('pxf-hdfs') {
     dependencies {
         compile(project(':pxf-api'))
         compile "org.apache.avro:avro-mapred:1.7.7"
-        compile "com.fasterxml.jackson.core:jackson-databind:2.9.8"
-        compile "com.fasterxml.jackson.core:jackson-core:2.9.8"
-        compile "com.fasterxml.jackson.core:jackson-annotations:2.9.8"
+        compile "com.fasterxml.jackson.core:jackson-databind:2.9.9"
+        compile "com.fasterxml.jackson.core:jackson-core:2.9.9"
+        compile "com.fasterxml.jackson.core:jackson-annotations:2.9.9"
         compile "org.apache.hadoop:hadoop-mapreduce-client-core:${hadoopVersion}"
         compile "org.apache.hadoop:hadoop-yarn-api:${hadoopVersion}" // Kerberos dependency
         compile "org.apache.hadoop:hadoop-yarn-client:${hadoopVersion}" // Kerberos dependency
