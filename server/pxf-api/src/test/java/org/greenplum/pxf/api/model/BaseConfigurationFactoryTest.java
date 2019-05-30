@@ -54,7 +54,7 @@ public class BaseConfigurationFactoryTest {
         factory = new BaseConfigurationFactory(mockServersDirectory);
         when(mockServersDirectory.listFiles(any(FileFilter.class))).thenReturn(new File[]{new File("a"), new File("b")});
 
-        factory.initConfiguration("dummy","dummy", null);
+        factory.initConfiguration("dummy", "dummy", null);
     }
 
     @Test
