@@ -104,6 +104,8 @@ sync_jdbc_config:
 		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_URL|jdbc:postgresql://$(JDBC_HOST):$(JDBC_PORT)/pxfautomation|" $(PXF_CONF_SERVERS)/database/jdbc-site.xml; \
 		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_USER||" $(PXF_CONF_SERVERS)/database/jdbc-site.xml; \
 		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_PASSWORD||" $(PXF_CONF_SERVERS)/database/jdbc-site.xml; \
+		cp $(PXF_CONF_SERVERS)/database/jdbc-site.xml $(PXF_CONF_SERVERS)/database/testuser-user.xml; \
+		sed $(SED_OPTS) "s|pxfautomation|template1|" $(PXF_CONF_SERVERS)/database/testuser-user.xml; \
 	fi
 	@cp src/test/resources/report.sql $(PXF_CONF_SERVERS)/database
 
@@ -111,7 +113,7 @@ sync_jdbc_config:
 	@if [ ! -f "$(PXF_CONF_SERVERS)/db-session-params/jdbc-site.xml" ]; then \
 		cp $(PXF_HOME)/templates/user/templates/jdbc-site.xml $(PXF_CONF_SERVERS)/db-session-params/; \
 		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.postgresql.Driver|" $(PXF_CONF_SERVERS)/db-session-params/jdbc-site.xml; \
-		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_URL|jdbc:postgresql://$(JDBC_HOST):$(JDBC_PORT)/pxfautomation|" $(PXF_CONF_SERVERS)/db-session-params/jdbc-site.xml; \
+		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_URL|jdbc:postgresql://$(JDBC_HOST):$(JDBC:q_PORT)/pxfautomation|" $(PXF_CONF_SERVERS)/db-session-params/jdbc-site.xml; \
 		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_USER||" $(PXF_CONF_SERVERS)/db-session-params/jdbc-site.xml; \
 		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_PASSWORD||" $(PXF_CONF_SERVERS)/db-session-params/jdbc-site.xml; \
 		sed $(SED_OPTS) "s|</configuration>|<property><name>jdbc.session.property.client_min_messages</name><value>debug1</value></property></configuration>|"  $(PXF_CONF_SERVERS)/db-session-params/jdbc-site.xml; \

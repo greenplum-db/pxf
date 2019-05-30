@@ -499,14 +499,15 @@ public abstract class TableFactory {
      * @param driver full class name of the JDBC driver
      * @param dbUrl JDBC url
      * @param user databases user name
+     * @param customParameters additional user parameters
      * @param
      * @return External Readable Table
      */
     public static ExternalTable getPxfJdbcReadableTable(String tableName,
-            String[] fields, String dataSourcePath, String driver, String dbUrl, String user, String customParamters) {
+            String[] fields, String dataSourcePath, String driver, String dbUrl, String user, String customParameters) {
 
         return getPxfJdbcReadableTable(tableName, fields, dataSourcePath, driver,
-                dbUrl, false, null, null, null, user, null, null, customParamters);
+                dbUrl, false, null, null, null, user, null, null, customParameters);
     }
 
     /**
@@ -521,5 +522,20 @@ public abstract class TableFactory {
     public static ExternalTable getPxfJdbcReadableTable(String tableName, String[] fields, String dataSourcePath, String server) {
         return getPxfJdbcReadableTable(tableName, fields, dataSourcePath, null,
                 null, false, null, null, null, null, null, server, null);
+    }
+
+    /**
+     * Generates an External Readable Table using JDBC profile.
+     *
+     * @param tableName name of the external table which will be generated
+     * @param fields fields of the external table
+     * @param dataSourcePath path to the data object i.e. schema_name.table_name
+     * @param dbUrl JDBC url
+     * @param server name of configuration server
+     * @return External Readable Table
+     */
+    public static ExternalTable getPxfJdbcReadableTable(String tableName, String[] fields, String dataSourcePath, String dbUrl, String server) {
+        return getPxfJdbcReadableTable(tableName, fields, dataSourcePath, null,
+                dbUrl, false, null, null, null, null, null, server, null);
     }
 }
