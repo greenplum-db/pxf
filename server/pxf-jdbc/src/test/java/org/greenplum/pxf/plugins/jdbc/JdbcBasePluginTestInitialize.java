@@ -62,7 +62,7 @@ public class JdbcBasePluginTestInitialize {
     private static final String JDBC_URL = "jdbc:postgresql://localhost/postgres";
     private static final List<ColumnDescriptor> COLUMNS;
     static {
-        COLUMNS = new ArrayList<ColumnDescriptor>();
+        COLUMNS = new ArrayList<>();
         COLUMNS.add(new ColumnDescriptor("c1", DataType.INTEGER.getOID(), 1, null, null, true));
         COLUMNS.add(new ColumnDescriptor("c2", DataType.VARCHAR.getOID(), 2, null, null, true));
     }

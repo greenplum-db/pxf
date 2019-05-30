@@ -80,7 +80,7 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
      * @throws ClassNotFoundException if the JDBC driver was not found
      */
     @Override
-    public boolean openForRead() throws SQLException, SQLTimeoutException, ParseException, ClassNotFoundException {
+    public boolean openForRead() throws SQLException, SQLTimeoutException, ParseException {
         if (statementRead != null && !statementRead.isClosed()) {
             return true;
         }

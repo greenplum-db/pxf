@@ -479,10 +479,10 @@ Follow these steps to enable connectivity to Hive:
     </property>
     <property>
         <name>jdbc.url</name>
-        <value>jdbc:hive2://<hiveserver2host>:10000/default</value>
+        <value>jdbc:hive2://<hiveserver2_host>:<hiveserver2_port>/<database></value>
     </property>
     ```
-4. Configure `user` and additional properties according to HiveServer2 settings in `hive-site.xml` file.
+4. For Hive without Kerberos configure `user` and additional properties according to HiveServer2 settings in `hive-site.xml` file.
 
     - if `hive.server2.authentication = NOSASL`, then no authentication will be performed by HiveServer2 and you must add the following property in `jdbc-site.xml`:
         ```angular2html
@@ -515,3 +515,48 @@ Follow these steps to enable connectivity to Hive:
 
         b. if Hive is configured with `hive.server2.enable.doAs = FALSE`, Hive will run Hadoop operations as the user who runs HiveServer2 process, usually user `hive`. Yo do not need to specify `jdbc.user` property as its value will be ignored.
 
+5. For Hive with Kerberos (`hive.server2.authentication = KERBEROS` in `hive-site.xml`:
+
+    - Configure SASL QoP URL parameter to match the setting in `hive-site.xml`, for example, if in `hive-site.xml` contains
+        ```$xslt
+        <property>
+            <name>hive.server2.thrift.sasl.qop</name>
+            <value>auth-conf</value>
+        </property>
+        ```
+        then make sure the JDBC URL has `saslQop=auth-conf` fragment. This must be done in the URL and cannot be specified using connection properties.
+    - Make sure there is `core-site.xml` file in `$PXF_CONF/servers/default` and it has Kerberos authentication turned on:
+        ```$xslt
+        <property>
+            <name>hadoop.security.authentication</name>
+            <value>kerberos</value>
+        </property>
+        ```
+        This is required even if JDBC configuration server is different from `default` since PXF determines whether Kerberos is enabled by checking `core-site.xml` in the `default` server.
+
+    - Make sure the PXF Kerberos principal is created in KDC and the keytab file named `pxf.service.keytab` is located on all PXF nodes in `$PXF_CONF/keytabs`
+
+    - Make sure to include HiveServer2 principal name in the JDBC URL, e.g:
+        ```$xslt
+        jdbc:hive2://hs2server:10000/default;principal=hive/hs2server@REALM;saslQop=auth-conf
+        ```
+
+    - if Hive is configured with `hive.server2.enable.doAs = TRUE` (default), Hive will run Hadoop operations on behalf of the user connecting to Hive. You have an option to either:
+
+        1) do not specify any additional properties, all Hadoop access will be with the identity provided by the PXF Kerberos principal (usually `gpadmin`)
+
+        2) specify the user that has read permission on all Hive data being accessed, e.g. to connect to Hive and run all request as user `integration`, specify the following property in the URL:
+            `hive.server2.proxy.user=integration` :
+            ```$xslt
+            jdbc:hive2://hs2server:10000/default;principal=hive/hs2server@REALM;saslQop=auth-conf;hive.server2.proxy.user=integration
+            ```
+        3) enable PXF JDBC impersonation in `jdbc-site.xml` so that PXF will automatically use Greenplum's user name to connect to Hive:
+            ```
+            <property>
+                <name>pxf.impersonation.jdbc</name>
+                <value>true</value>
+            </property>
+            ```
+            If you enable impersonation, do not explicitly specify `hive.server2.proxy.user` property in the URL.
+
+    - if Hive is configured with `hive.server2.enable.doAs = FALSE`, Hive will run Hadoop operations with the identity provided by the PXF Kerberos principal (usually `gpadmin`)

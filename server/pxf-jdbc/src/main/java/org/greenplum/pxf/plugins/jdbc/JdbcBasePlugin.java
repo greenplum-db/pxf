@@ -19,24 +19,20 @@ package org.greenplum.pxf.plugins.jdbc;
  * under the License.
  */
 
+import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
+import org.greenplum.pxf.plugins.jdbc.utils.HiveJdbcUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.security.PrivilegedExceptionAction;
+import java.sql.*;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -75,6 +71,8 @@ public class JdbcBasePlugin extends BasePlugin {
     private static final String QUERY_NAME_PREFIX = "query:";
     private static final int QUERY_NAME_PREFIX_LENGTH = QUERY_NAME_PREFIX.length();
     private static final String PXF_IMPERSONATION_JDBC_PROPERTY_NAME = "pxf.impersonation.jdbc";
+
+    private static final String HIVE_URL_PREFIX = "jdbc:hive2://";
 
 
     private enum TransactionIsolation {
@@ -183,7 +181,7 @@ public class JdbcBasePlugin extends BasePlugin {
 
         if (batchSize == 0) {
             batchSize = 1; // if user set to 0, it is the same as batchSize of 1
-        } else if(batchSize < 0) {
+        } else if (batchSize < 0) {
             throw new IllegalArgumentException(String.format(
                     "Property %s has incorrect value %s : must be a non-negative integer", JDBC_STATEMENT_BATCH_SIZE_PROPERTY_NAME, batchSize));
         }
@@ -247,7 +245,14 @@ public class JdbcBasePlugin extends BasePlugin {
         boolean impersonationEnabledForServer = Boolean.parseBoolean(configuration.get(PXF_IMPERSONATION_JDBC_PROPERTY_NAME));
         LOG.debug("JDBC impersonation is {}enabled for server {}", impersonationEnabledForServer ? "" : "not ", context.getServerName());
         if (impersonationEnabledForServer) {
-            jdbcUser = context.getUser();
+            if (UserGroupInformation.isSecurityEnabled() && StringUtils.startsWith(jdbcUrl, HIVE_URL_PREFIX)) {
+                // secure impersonation for Hive JDBC driver requires setting URL fragment that cannot be overwritten by properties
+                String updatedJdbcUrl = HiveJdbcUtils.updateImpersonationPropertyInHiveJdbcUrl(jdbcUrl, context.getUser());
+                LOG.debug("Replaced JDBC URL {} with {}", jdbcUrl, updatedJdbcUrl);
+                jdbcUrl = updatedJdbcUrl;
+            } else {
+                jdbcUser = context.getUser();
+            }
         }
         if (jdbcUser != null) {
             connectionConfiguration.setProperty("user", jdbcUser);
@@ -272,6 +277,7 @@ public class JdbcBasePlugin extends BasePlugin {
         }
     }
 
+
     /**
      * Open a new JDBC connection
      *
@@ -281,15 +287,19 @@ public class JdbcBasePlugin extends BasePlugin {
     public Connection getConnection() throws SQLException {
         LOG.debug("Requesting a new JDBC connection. URL={} table={} txid:seg={}:{}", jdbcUrl, tableName, context.getTransactionId(), context.getSegmentId());
 
-        Connection connection = DriverManager.getConnection(jdbcUrl, connectionConfiguration);
-
-        LOG.debug("Obtained a JDBC connection {} for URL={} table={} txid:seg={}:{}", connection, jdbcUrl, tableName, context.getTransactionId(), context.getSegmentId());
-
+        Connection connection = null;
         try {
+            connection = getConnectionInternal();
+            LOG.debug("Obtained a JDBC connection {} for URL={} table={} txid:seg={}:{}", connection, jdbcUrl, tableName, context.getTransactionId(), context.getSegmentId());
+
             prepareConnection(connection);
-        } catch (SQLException e) {
+        } catch (Exception e) {
             closeConnection(connection);
-            throw e;
+            if (e instanceof SQLException) {
+                throw (SQLException) e;
+            } else {
+                throw new SQLException(e.getMessage(), e);
+            }
         }
 
         return connection;
@@ -358,6 +368,25 @@ public class JdbcBasePlugin extends BasePlugin {
     }
 
     /**
+     * For a Kerberized Hive JDBC connection, it creates a connection as the loginUser.
+     * Otherwise, it returns a new connection.
+     *
+     * @return for a Kerberized Hive JDBC connection, returns a new connection as the loginUser.
+     * Otherwise, it returns a new connection.
+     * @throws Exception
+     */
+    private Connection getConnectionInternal() throws Exception {
+        if (UserGroupInformation.isSecurityEnabled() && StringUtils.startsWith(jdbcUrl, HIVE_URL_PREFIX)) {
+            return UserGroupInformation.getLoginUser().
+                    doAs((PrivilegedExceptionAction<Connection>) () ->
+                            DriverManager.getConnection(jdbcUrl, connectionConfiguration));
+
+        } else {
+            return DriverManager.getConnection(jdbcUrl, connectionConfiguration);
+        }
+    }
+
+    /**
      * Close a JDBC connection
      *
      * @param connection connection to close
@@ -370,8 +399,8 @@ public class JdbcBasePlugin extends BasePlugin {
         }
         try {
             if (!connection.isClosed() &&
-                connection.getMetaData().supportsTransactions() &&
-                !connection.getAutoCommit()) {
+                    connection.getMetaData().supportsTransactions() &&
+                    !connection.getAutoCommit()) {
 
                 LOG.debug("Committing transaction (as part of connection.close()) on connection {}", connection);
                 connection.commit();
@@ -398,7 +427,7 @@ public class JdbcBasePlugin extends BasePlugin {
         }
 
         DatabaseMetaData metadata = connection.getMetaData();
-        
+
         // Handle optional connection transaction isolation level
         if (transactionIsolation != TransactionIsolation.NOT_PROVIDED) {
             // user wants to set isolation level explicitly
