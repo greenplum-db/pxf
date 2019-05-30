@@ -28,6 +28,11 @@ The following command will collect Java Virtual Machine Statistics every 60
 seconds.
 
      jstat -gcutil $(pgrep -f tomcat) 60000 > /tmp/jstat_pxf_1min.out &
+     
+### Restrict PXF Threads
+
+Alternatively you can reduce the maximum number of concurrent requests PXF can handle by setting `PXF_THREADS` in `${PXF_CONF}/conf/pxf-env.sh`.
+This would result in reduced number of PXF worker threads and if there are more incoming requests than PXF threads the request would error out as opposed to overloading the PXF JVM's memory.
 
 ## Dataproc
 
