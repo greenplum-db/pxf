@@ -11,7 +11,6 @@ GRANT ALL ON TABLE pxf_jdbc_readable_overrideddl TO PUBLIC;
 GRANT
 \set OLD_GP_USER :USER
 DROP ROLE IF EXISTS testuser;
-psql:/home/gpadmin/workspace/pxf/automation/tincrepo/main/pxf/features/multi_user/output/query02.sql:15: NOTICE:  role "testuser" does not exist, skipping
 DROP ROLE
 CREATE ROLE testuser LOGIN RESOURCE QUEUE pg_default;
 CREATE ROLE
