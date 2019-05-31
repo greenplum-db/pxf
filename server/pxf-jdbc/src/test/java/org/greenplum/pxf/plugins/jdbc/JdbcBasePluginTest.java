@@ -337,8 +337,10 @@ public class JdbcBasePluginTest {
 
     @Test
     public void testTransactionIsolationSetByUserToUnsupportedValue() throws SQLException {
-        PowerMockito.mockStatic(DriverManager.class);
+        thrown.expect(RuntimeException.class);
+        thrown.expectMessage("Transaction isolation level READ_UNCOMMITTED is not supported");
 
+        PowerMockito.mockStatic(DriverManager.class);
         RequestContext context = new RequestContext();
         context.setDataSource("test-table");
         Map<String, String> additionalProps = new HashMap<>();
@@ -356,8 +358,6 @@ public class JdbcBasePluginTest {
 
         JdbcBasePlugin plugin = new JdbcBasePlugin();
 
-        thrown.expect(RuntimeException.class);
-        thrown.expectMessage("Transaction isolation level READ_UNCOMMITTED is not supported");
         plugin.initialize(context);
         plugin.getConnection();
     }

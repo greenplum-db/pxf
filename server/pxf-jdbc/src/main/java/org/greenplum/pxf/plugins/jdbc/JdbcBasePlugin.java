@@ -297,6 +297,8 @@ public class JdbcBasePlugin extends BasePlugin {
             closeConnection(connection);
             if (e instanceof SQLException) {
                 throw (SQLException) e;
+            } else if (e instanceof RuntimeException) {
+                throw (RuntimeException) e;
             } else {
                 throw new SQLException(e.getMessage(), e);
             }

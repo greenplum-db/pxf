@@ -7,6 +7,13 @@ import static org.junit.Assert.*;
 public class HiveJdbcUtilsTest {
 
     @Test
+    public void testURLWithoutProperties() throws Exception {
+        String url = "jdbc:hive2://server:10000/default";
+        assertEquals("jdbc:hive2://server:10000/default;hive.server2.proxy.user=foo",
+                HiveJdbcUtils.updateImpersonationPropertyInHiveJdbcUrl(url, "foo"));
+    }
+
+    @Test
     public void testURLWithoutImpersonationProperty() throws Exception {
         String url = "jdbc:hive2://server:10000/default;foo=bar;saslQop=auth-conf";
         assertEquals("jdbc:hive2://server:10000/default;foo=bar;saslQop=auth-conf;hive.server2.proxy.user=foo",
@@ -91,9 +98,23 @@ public class HiveJdbcUtilsTest {
     }
 
     @Test
-    public void testSpecialCase() throws Exception {
+    public void testURLWithSimilarPropertyName() throws Exception {
         String url = "jdbc:hive2://server:10000/default;non-hive.server2.proxy.user=bar";
         assertEquals("jdbc:hive2://server:10000/default;non-hive.server2.proxy.user=bar;hive.server2.proxy.user=foo",
+                HiveJdbcUtils.updateImpersonationPropertyInHiveJdbcUrl(url, "foo"));
+    }
+
+    @Test
+    public void testImpersonationPropertyAfterQuestionMark() throws Exception {
+        String url = "jdbc:hive2://server:10000/default?questionMarkProperty=questionMarkValue;hive.server2.proxy.user=bar";
+        assertEquals("jdbc:hive2://server:10000/default;hive.server2.proxy.user=foo?questionMarkProperty=questionMarkValue;hive.server2.proxy.user=bar",
+                HiveJdbcUtils.updateImpersonationPropertyInHiveJdbcUrl(url, "foo"));
+    }
+
+    @Test
+    public void testImpersonationPropertyAfterHash() throws Exception {
+        String url = "jdbc:hive2://server:10000/default#questionMarkProperty=questionMarkValue;hive.server2.proxy.user=bar";
+        assertEquals("jdbc:hive2://server:10000/default;hive.server2.proxy.user=foo#questionMarkProperty=questionMarkValue;hive.server2.proxy.user=bar",
                 HiveJdbcUtils.updateImpersonationPropertyInHiveJdbcUrl(url, "foo"));
     }
 }
