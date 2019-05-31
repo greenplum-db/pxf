@@ -63,7 +63,7 @@ export PXF_SHUTDOWN_PORT=${PXF_SHUTDOWN_PORT:=5889}
 export PXF_JVM_OPTS=${PXF_JVM_OPTS:="-Xmx2g -Xms1g"}
 
 # Threads
-export PXF_THREADS=${PXF_THREADS:=300}
+export PXF_MAX_THREADS=${PXF_MAX_THREADS:=200}
 
 # Kerberos path to keytab file owned by pxf service with permissions 0400
 export PXF_KEYTAB=${PXF_KEYTAB:="${PXF_CONF}/keytabs/pxf.service.keytab"}
