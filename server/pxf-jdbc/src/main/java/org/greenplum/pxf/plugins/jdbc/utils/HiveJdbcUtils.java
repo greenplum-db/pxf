@@ -23,31 +23,27 @@ public class HiveJdbcUtils {
      * @return updated url
      */
     public static String updateImpersonationPropertyInHiveJdbcUrl(String url, String user) {
-        int start = 0;
         String suffix, prefix = null;
-        Set<Character> terminators = TERMINATORS_TWO_CHARS;
+        int terminatorIndex = findTerminatorIndex(url, 0, TERMINATORS_TWO_CHARS);
 
         // impersonation property might already be in the URL
         int impersonationPropertyIndex = url.indexOf(HIVE_URL_IMPERSONATION_PROPERTY);
-        if (impersonationPropertyIndex > -1) {
+        if (impersonationPropertyIndex > -1 && (terminatorIndex == -1 || impersonationPropertyIndex < terminatorIndex)) {
             // unlikely to happen, unless users are trying to hack the system and provide this property in the DDL
             prefix = url.substring(0, impersonationPropertyIndex);
 
             // find where the token terminates (by ; ? # or EOL, whatever comes first)
-            terminators = TERMINATORS_THREE_CHARS;
-            start = impersonationPropertyIndex + HIVE_URL_IMPERSONATION_PROPERTY.length();
+            terminatorIndex = findTerminatorIndex(url, impersonationPropertyIndex + HIVE_URL_IMPERSONATION_PROPERTY.length(), TERMINATORS_THREE_CHARS);
         }
 
-        int suffixNdx = findTerminatorIndex(url, start, terminators);
-        suffix = suffixNdx < 0 ? "" : url.substring(suffixNdx);
+        suffix = terminatorIndex < 0 ? "" : url.substring(terminatorIndex);
 
         if (prefix == null) {
             // when the HIVE_URL_IMPERSONATION_PROPERTY is not present
-            prefix = suffixNdx < 0 ? url : url.substring(0, suffixNdx);
+            prefix = terminatorIndex < 0 ? url : url.substring(0, terminatorIndex);
         }
 
-        prefix = StringUtils.removeEnd(prefix, ";");
-        return String.format("%s%s=%s%s", prefix, HIVE_URL_IMPERSONATION_PROPERTY, user, suffix);
+        return String.format("%s%s=%s%s", StringUtils.removeEnd(prefix, ";"), HIVE_URL_IMPERSONATION_PROPERTY, user, suffix);
     }
 
     private static int findTerminatorIndex(String s, int start, Set<Character> terminators) {
