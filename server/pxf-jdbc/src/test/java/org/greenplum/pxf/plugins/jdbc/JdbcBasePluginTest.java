@@ -337,7 +337,7 @@ public class JdbcBasePluginTest {
 
     @Test
     public void testTransactionIsolationSetByUserToUnsupportedValue() throws SQLException {
-        thrown.expect(RuntimeException.class);
+        thrown.expect(SQLException.class);
         thrown.expectMessage("Transaction isolation level READ_UNCOMMITTED is not supported");
 
         PowerMockito.mockStatic(DriverManager.class);
@@ -459,6 +459,6 @@ public class JdbcBasePluginTest {
         plugin.initialize(context);
         plugin.getPreparedStatement(mockConnection, "foo");
 
-        verify(mockStatement, never()).setQueryTimeout(173);
+        verify(mockStatement, never()).setQueryTimeout(anyInt());
     }
 }

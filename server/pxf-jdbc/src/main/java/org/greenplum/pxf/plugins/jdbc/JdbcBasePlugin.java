@@ -242,7 +242,7 @@ public class JdbcBasePlugin extends BasePlugin {
 
         // Set optional user parameter, taking into account impersonation setting for the server.
         String jdbcUser = configuration.get(JDBC_USER_PROPERTY_NAME);
-        boolean impersonationEnabledForServer = Boolean.parseBoolean(configuration.get(PXF_IMPERSONATION_JDBC_PROPERTY_NAME));
+        boolean impersonationEnabledForServer = configuration.getBoolean(PXF_IMPERSONATION_JDBC_PROPERTY_NAME, false);
         LOG.debug("JDBC impersonation is {}enabled for server {}", impersonationEnabledForServer ? "" : "not ", context.getServerName());
         if (impersonationEnabledForServer) {
             if (UserGroupInformation.isSecurityEnabled() && StringUtils.startsWith(jdbcUrl, HIVE_URL_PREFIX)) {
@@ -297,8 +297,6 @@ public class JdbcBasePlugin extends BasePlugin {
             closeConnection(connection);
             if (e instanceof SQLException) {
                 throw (SQLException) e;
-            } else if (e instanceof RuntimeException) {
-                throw (RuntimeException) e;
             } else {
                 throw new SQLException(e.getMessage(), e);
             }
