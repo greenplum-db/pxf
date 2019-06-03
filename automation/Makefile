@@ -63,7 +63,7 @@ PXF_CONF_SERVERS=~/pxf/servers
 
 SED_OPTS=-i
 ifeq ($(UNAME_S),Darwin)
-    SED_OPTS+= '""'
+    SED_OPTS+= ""
 endif
 
 ifeq "$(PXF_TEST_DEBUG)" "true"

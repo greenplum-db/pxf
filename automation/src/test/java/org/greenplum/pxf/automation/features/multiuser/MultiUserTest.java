@@ -1,6 +1,5 @@
 package org.greenplum.pxf.automation.features.multiuser;
 
-import listeners.CustomAutomationLogger;
 import org.greenplum.pxf.automation.components.gpdb.Gpdb;
 import org.greenplum.pxf.automation.features.BaseFeature;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
@@ -8,12 +7,10 @@ import org.greenplum.pxf.automation.structures.tables.pxf.ExternalTable;
 import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
 import org.testng.annotations.Test;
 
-
 import java.io.File;
 
-public class MultiUserTest extends BaseFeature{
+public class MultiUserTest extends BaseFeature {
 
-    private static final String POSTGRES_DRIVER_CLASS = "org.postgresql.Driver";
     private static final String GPDB_PXF_AUTOMATION_DB_JDBC = "jdbc:postgresql://";
     private static final String[] TYPES_TABLE_FIELDS = new String[]{
             "t1    text",
@@ -30,12 +27,12 @@ public class MultiUserTest extends BaseFeature{
             "dt date",
             "vc1 varchar(5)",
             "c1 char(3)",
-            "bin bytea"};
+            "bin bytea"
+    };
     private static final String gpdbTypesDataFileName = "gpdb_types.txt";
     private static final String gpdbTypesExDataFileName = "gpdb_types_ex.txt";
-    private Table gpdbNativeTable, gpdbWritableTargetTable;
-    private ExternalTable pxfJdbcWritable, pxfJdbcReadable, pxfJdbcReadableOverrideDDL;
-    private Gpdb gpdbTest;
+    private Table gpdbNativeTable;
+    private ExternalTable pxfJdbcReadable, pxfJdbcReadableOverrideDDL;
 
     @Override
     protected void beforeClass() throws Exception {
