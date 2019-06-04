@@ -313,7 +313,9 @@ SELECT name, count FROM dept_report WHERE max > 10000;
 ### Partitioning
 PXF JDBC plugin supports simultaneous access to external database from multiple PXF segments for SELECT queries. This feature is called partitioning.
 
-When partitioning is enabled, a SELECT query is split into a set of multiple queries according to the settings in external table DDL (see description below). Each smaller query is called a fragmen. Every fragment is processed independently.
+When partitioning is enabled, a SELECT query is split into a set of multiple queries according to the settings in external table DDL (see description below). Each smaller query is called a fragment. Every fragment is processed independently.
+
+Partitioning over columns of type `ENUM` (see below) affects the output of the EXTERNAL TABLE.
 
 
 #### Syntax
@@ -323,27 +325,34 @@ Three settings control the feature:
     * `<column>` is name of the partition column;
     * `<column_type>` is data type of the partition column (hereinafter referred to as "partition type"). Currently, **supported types** are `INT`, `DATE` and `ENUM`.
 
-* **[Partition Range](#partition-range)** indicates the range of data to be queried. It must be in special format, depending on a type of partition:
+* **[Partition Range](#partition-range)** indicates the range of data to form partitions on. It must be in special format, depending on a type of partition:
     * If the partition type is `ENUM`, format is `<value>:<value>[:<value>[...]]`. Each `<value>` forms its own fragment;
-    * If the partition type is `INT`, format is `<start_value>:<end_value>`. PXF considers values to form a finite left-closed interval (`... >= start_value AND ... < end_value`);
-    * If the partition type is `DATE`, format is `<start_value>:<end_value>`, and each date must be in format `yyyy-MM-dd`. PXF considers dates to form a finite left-closed interval (`... >= start_value AND ... < end_value`);
+    * If the partition type is `INT`, format is `<start_value>:<end_value>`. PXF considers values to form a closed interval (`... >= start_value AND ... <= end_value`);
+    * If the partition type is `DATE`, format is `<start_value>:<end_value>` and each date must be in format `yyyy-MM-dd`. PXF considers dates to form a closed interval (`... >= start_value AND ... <= end_value`);
 
 * **[Partition interval](#partition-interval)** is required only for `INT` and `DATE` partitions. It is ignored if `<column_type>` is `ENUM`. This setting must be in format `<value>[:<unit>]`, where:
     * `<value>` is the size of each fragment (the size of last fragment will be decreased by PXF automatically if necessary);
     * `<unit>` is **required** if partition type is `DATE`. `year`, `month` and `day` are supported values.
 
-##### `INT` and `DATE` partitions
-In `INT` and `DATE` partitions, every fragment queries data from a finite left-closed interval (intervals are formed according to [Partition interval](#partition-interval) and [Partition Range](#partition-range) settings).
 
-For these partition types, **infinite** left-bounded (`end_value < ...`) and right-bounded (`... < start_value`) **intervals** can also be used:
-* For infinite left-bounded intervals, set a colon before [Partition Range](#partition-range) value (format is `:<start_value>:<end_value>`; compare to normal one `<start_value>:<end_value>`);
-* For infinite right-bounded intervals, set a colon after [Partition Range](#partition-range) value (format is `<start_value>:<end_value>:`; compare to normal one `<start_value>:<end_value>`);
-* Infinite left-bounded and right-bounded intervals can also be used together.
+##### `INT` and `DATE` partitions
+In `INT` and `DATE` partitions, every fragment queries data from either closed or bounded interval (intervals are formed according to [Partition interval](#partition-interval) and [Partition Range](#partition-range) settings).
+
+`LOCATION` clause containing `PARTITION_BY=id:int&RANGE=1:5&INTERVAL=2` will make PXF produce 5 fragments to cover all data (real operations between column values and constants are displayed):
+1. `< 1`
+2. `>= 1 AND <= 2`
+3. `>= 3 AND <= 4`
+4. `= 5`
+5. `> 5`
+
+
+##### `ENUM` partitions
+`ENUM` partitions affect the output of the plugin: only rows with one of the `ENUM`s provided are selected.
+
 
 ##### Example
 Example combinations of options to enable partitioning:
 * `&PARTITION_BY=id:int&RANGE=42:142&INTERVAL=2`
-* `&PARTITION_BY=id:int&RANGE=:42:142:&INTERVAL=2`
 * `&PARTITION_BY=createdate:date&RANGE=2008-01-01:2010-01-01&INTERVAL=1:month`
 * `&PARTITION_BY=grade:enum&RANGE=excellent:good:general:bad`
 
