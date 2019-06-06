@@ -136,6 +136,43 @@ public class JdbcAccessorTest {
     }
 
     @Test
+    public void testReadFromQueryEndingInSemicolon() throws Exception {
+        String serversDirectory = new File(this.getClass().getClassLoader().getResource("servers").toURI()).getCanonicalPath();
+        context.getAdditionalConfigProps().put("pxf.config.server.directory", serversDirectory + File.separator + "test-server");
+        context.setDataSource("query:testquerywithsemicolon");
+        ArgumentCaptor<String> queryPassed = ArgumentCaptor.forClass(String.class);
+        when(mockStatement.executeQuery(queryPassed.capture())).thenReturn(mockResultSet);
+
+        accessor.initialize(context);
+        accessor.openForRead();
+
+        String expected = "SELECT  FROM (SELECT dept.name, count(), max(emp.salary)\n" +
+                "FROM dept JOIN emp\n" +
+                "ON dept.id = emp.dept_id\n" +
+                "GROUP BY dept.name) pxfsubquery";
+        assertEquals(expected, queryPassed.getValue());
+    }
+
+    @Test
+    public void testReadFromQueryWithValidSemicolon() throws Exception {
+        String serversDirectory = new File(this.getClass().getClassLoader().getResource("servers").toURI()).getCanonicalPath();
+        context.getAdditionalConfigProps().put("pxf.config.server.directory", serversDirectory + File.separator + "test-server");
+        context.setDataSource("query:testquerywithvalidsemicolon");
+        ArgumentCaptor<String> queryPassed = ArgumentCaptor.forClass(String.class);
+        when(mockStatement.executeQuery(queryPassed.capture())).thenReturn(mockResultSet);
+
+        accessor.initialize(context);
+        accessor.openForRead();
+
+        String expected = "SELECT  FROM (SELECT dept.name, count(), max(emp.salary)\n" +
+                "FROM dept JOIN emp\n" +
+                "ON dept.id = emp.dept_id\n" +
+                "WHERE dept.name LIKE '%;%'\n" +
+                "GROUP BY dept.name) pxfsubquery";
+        assertEquals(expected, queryPassed.getValue());
+    }
+
+    @Test
     public void testReadFromQueryWithPartitions() throws Exception {
         String serversDirectory = new File(this.getClass().getClassLoader().getResource("servers").toURI()).getCanonicalPath();
         context.getAdditionalConfigProps().put("pxf.config.server.directory", serversDirectory + File.separator + "test-server");
