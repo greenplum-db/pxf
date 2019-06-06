@@ -86,7 +86,6 @@ public class FragmenterResource extends BaseResource {
      * @param servletContext Servlet context contains attributes required by
      *            SecuredHDFS
      * @param headers Holds HTTP headers from request
-     * @param path Holds URI path option used in this request
      * @return response object with JSON serialized fragments metadata
      * @throws Exception if getting fragments info failed
      */
@@ -94,15 +93,15 @@ public class FragmenterResource extends BaseResource {
     @Path("getFragments")
     @Produces("application/json")
     public Response getFragments(@Context final ServletContext servletContext,
-                                 @Context final HttpHeaders headers,
-                                 @QueryParam("path") final String path)
+                                 @Context final HttpHeaders headers)
             throws Throwable {
 
         long startTime = System.currentTimeMillis();
-        LOG.debug("FRAGMENTER started for path \"{}\"", path);
-
         final RequestContext context = parseRequest(headers);
+        final String path = context.getDataSource();
         final String fragmenterCacheKey = getFragmenterCacheKey(context);
+
+        LOG.debug("FRAGMENTER started for path \"{}\"", path);
 
         List<Fragment> fragments;
 
