@@ -19,12 +19,12 @@ package org.greenplum.pxf.plugins.jdbc;
  * under the License.
  */
 
-import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.plugins.jdbc.utils.ConnectionManager;
 import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
 import org.greenplum.pxf.plugins.jdbc.utils.HiveJdbcUtils;
 import org.slf4j.Logger;
@@ -41,6 +41,8 @@ import java.util.stream.Collectors;
  * Implemented subclasses: {@link JdbcAccessor}, {@link JdbcResolver}.
  */
 public class JdbcBasePlugin extends BasePlugin {
+
+    private static final Logger LOG = LoggerFactory.getLogger(JdbcBasePlugin.class);
 
     // '100' is a recommended value: https://docs.oracle.com/cd/E11882_01/java.112/e16548/oraperf.htm#JJDBC28754
     private static final int DEFAULT_BATCH_SIZE = 100;
@@ -63,6 +65,10 @@ public class JdbcBasePlugin extends BasePlugin {
     private static final String JDBC_STATEMENT_FETCH_SIZE_PROPERTY_NAME = "jdbc.statement.fetchSize";
     private static final String JDBC_STATEMENT_QUERY_TIMEOUT_PROPERTY_NAME = "jdbc.statement.queryTimeout";
 
+    // connection pool properties
+    private static final String JDBC_CONNECTION_POOL_ENABLED_PROPERTY_NAME = "jdbc.pool.enabled";
+    private static final String JDBC_CONNECTION_POOL_PROPERTY_PREFIX = "jdbc.pool.property.";
+
     // DDL option names
     private static final String JDBC_DRIVER_OPTION_NAME = "JDBC_DRIVER";
     private static final String JDBC_URL_OPTION_NAME = "DB_URL";
@@ -73,6 +79,7 @@ public class JdbcBasePlugin extends BasePlugin {
     private static final String PXF_IMPERSONATION_JDBC_PROPERTY_NAME = "pxf.impersonation.jdbc";
 
     private static final String HIVE_URL_PREFIX = "jdbc:hive2://";
+    private static final String DATASOURCE_PROPERTY_PREFIX = "datasource.";
 
 
     private enum TransactionIsolation {
@@ -134,7 +141,27 @@ public class JdbcBasePlugin extends BasePlugin {
     // Name of query to execute for read flow (optional)
     protected String queryName;
 
-    private static final Logger LOG = LoggerFactory.getLogger(JdbcBasePlugin.class);
+    // connection pool fields
+    private boolean isConnectionPoolUsed;
+    private Properties poolConfiguration;
+
+    private ConnectionManager connectionManager;
+
+
+    /**
+     * Creates a new instance with default (singleton) instance of ConnectionManager.
+     */
+    public JdbcBasePlugin() {
+        this(ConnectionManager.getInstance());
+    }
+
+    /**
+     * Creates a new instance with the given ConnectionManager.
+     * @param connectionManager connection manager instance
+     */
+    JdbcBasePlugin(ConnectionManager connectionManager) {
+        this.connectionManager = connectionManager;
+    }
 
     @Override
     public void initialize(RequestContext context) {
@@ -210,7 +237,7 @@ public class JdbcBasePlugin extends BasePlugin {
         // Optional parameter. The default value is empty map
         sessionConfiguration.putAll(configuration.getPropsWithPrefix(JDBC_SESSION_PROPERTY_PREFIX));
         // Check forbidden symbols
-        // Note: PreparedStatement tnables us to skip this check: its values are distinct from its SQL code
+        // Note: PreparedStatement enables us to skip this check: its values are distinct from its SQL code
         // However, SET queries cannot be executed this way. This is why we do this check
         if (sessionConfiguration.entrySet().stream()
                 .anyMatch(
@@ -271,9 +298,18 @@ public class JdbcBasePlugin extends BasePlugin {
         if (jdbcUser != null) {
             String jdbcPassword = configuration.get(JDBC_PASSWORD_PROPERTY_NAME);
             if (jdbcPassword != null) {
-                LOG.debug("Connection password: {}", maskPassword(jdbcPassword));
+                LOG.debug("Connection password: {}", ConnectionManager.maskPassword(jdbcPassword));
                 connectionConfiguration.setProperty("password", jdbcPassword);
             }
+        }
+
+        // connection pool is optional
+        isConnectionPoolUsed = configuration.getBoolean(JDBC_CONNECTION_POOL_ENABLED_PROPERTY_NAME, false);
+        LOG.debug("Connection pool is {}enabled", isConnectionPoolUsed ? "" : "not ");
+        if (isConnectionPoolUsed) {
+            // collect connection pool properties, prefix connection properties with "datasource." for Hikari
+            poolConfiguration = new Properties();
+            poolConfiguration.putAll(configuration.getPropsWithPrefix(JDBC_CONNECTION_POOL_PROPERTY_PREFIX));
         }
     }
 
@@ -379,10 +415,12 @@ public class JdbcBasePlugin extends BasePlugin {
         if (UserGroupInformation.isSecurityEnabled() && StringUtils.startsWith(jdbcUrl, HIVE_URL_PREFIX)) {
             return UserGroupInformation.getLoginUser().
                     doAs((PrivilegedExceptionAction<Connection>) () ->
-                            DriverManager.getConnection(jdbcUrl, connectionConfiguration));
+                            connectionManager.getConnection(context.getServerName(), jdbcUrl, connectionConfiguration, isConnectionPoolUsed, poolConfiguration));
+                            //DriverManager.getConnection(jdbcUrl, connectionConfiguration));
 
         } else {
-            return DriverManager.getConnection(jdbcUrl, connectionConfiguration);
+            return connectionManager.getConnection(context.getServerName(), jdbcUrl, connectionConfiguration, isConnectionPoolUsed, poolConfiguration);
+            //return DriverManager.getConnection(jdbcUrl, connectionConfiguration);
         }
     }
 
@@ -476,13 +514,5 @@ public class JdbcBasePlugin extends BasePlugin {
         }
     }
 
-    /**
-     * Masks all password characters with asterisks, used for logging password values
-     *
-     * @param password password to mask
-     * @return masked value consisting of asterisks
-     */
-    private String maskPassword(String password) {
-        return password == null ? "" : StringUtils.repeat("*", password.length());
-    }
+
 }

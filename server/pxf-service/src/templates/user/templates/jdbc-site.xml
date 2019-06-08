@@ -79,6 +79,28 @@
     </property>
     -->
 
+    <property>
+        <name>jdbc.pool.enabled</name>
+        <value>true</value>
+        <description>use default JDBC connection pool</description>
+    </property>
+
+    <!-- Connection Pool properties -->
+    <!--
+    <property>
+        <name>jdbc.pool.property.some_property_1</name>
+        <value>some_value_1</value>
+        <description>JDBC connection pool property</description>
+    </property>
+    -->
+    <!--
+    <property>
+        <name>jdbc.pool.property.some_property_2</name>
+        <value>some_value_2</value>
+        <description>JDBC connection pool property</description>
+    </property>
+    -->
+
     <!--
     <property>
         <name>pxf.impersonation.jdbc</name>

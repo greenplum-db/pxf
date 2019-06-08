@@ -224,7 +224,7 @@ project('pxf-hive') {
 project('pxf-jdbc') {
     dependencies {
         compile(project(':pxf-api'))
-
+        compile("com.zaxxer:HikariCP:3.3.1")
         bundleJars "org.postgresql:postgresql:42.2.5"
         bundleJars "org.apache.hive:hive-jdbc:1.1.0"     // 1.2.2 breaks on CDH-5.x
         bundleJars "org.apache.hive:hive-service:1.1.0"  // 1.2.2 breaks on CDH-5.x
