@@ -220,7 +220,18 @@ under the License.
     <profile>
         <name>hdfs:text</name>
         <description>This profile is suitable for using when reading delimited single line records
-            from plain text files on HDFS.
+            from plain text, tab-delimited, files on HDFS.
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.LineBreakAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
+        </plugins>
+    </profile>
+    <profile>
+        <name>hdfs:csv</name>
+        <description>This profile is suitable for using when reading delimited single line records
+            from plain text CSV files on HDFS.
         </description>
         <plugins>
             <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
@@ -244,7 +255,23 @@ under the License.
     <profile>
         <name>s3:text</name>
         <description>This profile is suitable for using when reading delimited single line records
-            from plain text files on S3
+            from plain text, tab-delimited, files on S3
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.LineBreakAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
+        </plugins>
+        <protocol>s3a</protocol>
+        <optionMappings>
+            <mapping option="accesskey" property="fs.s3a.access.key"/>
+            <mapping option="secretkey" property="fs.s3a.secret.key"/>
+        </optionMappings>
+    </profile>
+    <profile>
+        <name>s3:csv</name>
+        <description>This profile is suitable for using when reading delimited single line records
+            from plain text CSV files on S3
         </description>
         <plugins>
             <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
@@ -278,7 +305,19 @@ under the License.
     <profile>
         <name>adl:text</name>
         <description>This profile is suitable for using when reading delimited single line records
-            from plain text files on Azure Data Lake
+            from plain text, tab-delimited, files on Azure Data Lake
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.LineBreakAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
+        </plugins>
+        <protocol>adl</protocol>
+    </profile>
+    <profile>
+        <name>adl:csv</name>
+        <description>This profile is suitable for using when reading delimited single line records
+            from plain text CSV files on Azure Data Lake
         </description>
         <plugins>
             <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
@@ -303,7 +342,19 @@ under the License.
     <profile>
         <name>gs:text</name>
         <description>This profile is suitable for using when reading delimited single line records
-            from plain text files on Azure Data Lake
+            from plain text, tab-delimited, files on Azure Data Lake
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.LineBreakAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
+        </plugins>
+        <protocol>gs</protocol>
+    </profile>
+    <profile>
+        <name>gs:csv</name>
+        <description>This profile is suitable for using when reading delimited single line records
+            from plain text CSV files on Azure Data Lake
         </description>
         <plugins>
             <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
@@ -598,7 +649,19 @@ under the License.
     <profile>
         <name>wasbs:text</name>
         <description>This profile is suitable for using when reading delimited single line records
-            from plain text files on Azure Blob Storage
+            from plain text, tab-delimited, files on Azure Blob Storage
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.LineBreakAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
+        </plugins>
+        <protocol>wasbs</protocol>
+    </profile>
+    <profile>
+        <name>wasbs:csv</name>
+        <description>This profile is suitable for using when reading delimited single line records
+            from plain text CSV files on Azure Blob Storage
         </description>
         <plugins>
             <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
