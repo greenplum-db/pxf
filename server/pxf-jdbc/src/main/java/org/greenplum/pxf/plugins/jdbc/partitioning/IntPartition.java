@@ -37,14 +37,12 @@ public class IntPartition implements JdbcFragmentMetadata, Serializable {
      */
     private IntPartition(String column, Long[] boundaries) {
         assert column != null;
-        assert boundaries.length <= 2;
-        assert boundaries.length == 2 ?
-            (boundaries[0] != null || boundaries[1] != null) :
-            (boundaries[0] != null);
+        assert boundaries.length == 2;
+        assert boundaries[0] != null || boundaries[1] != null;
 
         this.column = column;
 
-        if (boundaries.length == 2 && boundaries[0] == boundaries[1]) {
+        if (boundaries[0] != null && boundaries[1] != null && boundaries[0].equals(boundaries[1])) {
             // Use equality instead of two comparation constraints
             boundaries = new Long[]{boundaries[0]};
         }
@@ -73,6 +71,8 @@ public class IntPartition implements JdbcFragmentMetadata, Serializable {
 
     @Override
     public String toSqlConstraint(String quoteString, DbProduct dbProduct) {
+        assert quoteString != null;
+
         StringBuilder sb = new StringBuilder();
 
         String columnQuoted = quoteString + column + quoteString;

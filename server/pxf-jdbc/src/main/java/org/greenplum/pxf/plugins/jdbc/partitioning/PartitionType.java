@@ -24,7 +24,8 @@ import java.io.Serializable;
 public enum PartitionType implements Serializable {
     DATE,
     INT,
-    ENUM;
+    ENUM,
+    NULL;
 
     public static PartitionType typeOf(String str) {
         return valueOf(str.toUpperCase());

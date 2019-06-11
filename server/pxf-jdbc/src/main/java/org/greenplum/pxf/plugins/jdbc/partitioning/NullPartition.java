@@ -23,43 +23,31 @@ import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
 import org.greenplum.pxf.plugins.jdbc.partitioning.PartitionType;
 
 import java.io.Serializable;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-public class EnumPartition implements JdbcFragmentMetadata, Serializable {
+public class NullPartition implements JdbcFragmentMetadata, Serializable {
     private static final long serialVersionUID = 1L;
 
     private final String column;
-    private final String value;
-    private final String[] excluded;
+    private final boolean isNull;
 
     /**
-     * Construct an EnumPartition with given column and constraint
+     * Construct a NullPartition with given column and constraint type
      * @param column
-     * @param value
+     * @param isNull true if IS NULL must be used
      */
-    public EnumPartition(String column, String value) {
+    public NullPartition(String column, boolean isNull) {
         assert column != null;
-        assert value != null;
 
         this.column = column;
-        this.value = value;
-        excluded = null;
+        this.isNull = isNull;
     }
 
     /**
-     * Construct an EnumPartition with given column and a special (exclusion) constraint.
-     * The partition created by this constructor contains all values that differ from the given ones.
+     * Construct a NullPartition with given column and IS NULL constraint
      * @param column
-     * @param excluded array of values this partition must NOT include
      */
-    public EnumPartition(String column, String[] excluded) {
-        assert column != null;
-        assert excluded != null && excluded.length > 0;
-
-        this.column = column;
-        value = null;
-        this.excluded = excluded;
+    public NullPartition(String column) {
+        this(column, true);
     }
 
     @Override
@@ -69,37 +57,27 @@ public class EnumPartition implements JdbcFragmentMetadata, Serializable {
 
     @Override
     public PartitionType getType() {
-        return PartitionType.ENUM;
+        return PartitionType.NULL;
     }
 
     @Override
     public String toSqlConstraint(String quoteString, DbProduct dbProduct) {
         assert quoteString != null;
-        assert (value != null && excluded == null) || (value == null && excluded != null);
 
         StringBuilder sb = new StringBuilder();
 
         String columnQuoted = quoteString + column + quoteString;
 
-        if (excluded == null) {
-            sb.append(columnQuoted).append(" = '").append(value).append("'");
-        }
-        else {
-            // We use multiple inequality as this is the widest supported method to perform this operation
-            sb.append(Stream.of(excluded)
-                .map(excludedValue -> columnQuoted + " <> '" + excludedValue + "'")
-                .collect(Collectors.joining(" AND "))
-            );
-        }
+        sb.append(
+            columnQuoted
+        ).append(
+            isNull ? " IS NULL" : " IS NOT NULL"
+        );
 
         return sb.toString();
     }
 
-    public String getValue() {
-        return value;
-    }
-
-    public String[] getExcluded() {
-        return excluded;
+    public boolean isNull() {
+        return isNull;
     }
 }

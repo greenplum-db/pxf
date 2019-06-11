@@ -42,14 +42,12 @@ public class DatePartition implements JdbcFragmentMetadata, Serializable {
     private DatePartition(String column, Calendar[] boundaries, boolean isRightClosed) {
         // API checks
         assert column != null;
-        assert boundaries.length <= 2;
-        assert boundaries.length == 2 ?
-            (boundaries[0] != null || boundaries[1] != null) :
-            (boundaries[0] != null);
+        assert boundaries.length == 2;
+        assert boundaries[0] != null || boundaries[1] != null;
 
         this.column = column;
 
-        if (boundaries.length == 2 && boundaries[0] == boundaries[1]) {
+        if (boundaries[0] != null && boundaries[1] != null && boundaries[0].equals(boundaries[1])) {
             // Use equality instead of two comparation constraints
             boundaries = new Calendar[]{boundaries[0]};
             isRightClosed = true;
@@ -96,6 +94,9 @@ public class DatePartition implements JdbcFragmentMetadata, Serializable {
 
     @Override
     public String toSqlConstraint(String quoteString, DbProduct dbProduct) {
+        assert quoteString != null;
+        assert dbProduct != null;
+
         StringBuilder sb = new StringBuilder();
 
         String columnQuoted = quoteString + column + quoteString;

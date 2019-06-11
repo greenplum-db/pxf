@@ -27,6 +27,7 @@ import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.jdbc.partitioning.DatePartition;
 import org.greenplum.pxf.plugins.jdbc.partitioning.EnumPartition;
 import org.greenplum.pxf.plugins.jdbc.partitioning.IntPartition;
+import org.greenplum.pxf.plugins.jdbc.partitioning.NullPartition;
 import org.greenplum.pxf.plugins.jdbc.partitioning.PartitionType;
 
 import java.net.InetAddress;
@@ -100,7 +101,7 @@ public class JdbcPartitionFragmenter extends BaseFragmenter {
             else {
                 range = rangeStr.split(":", 2);
                 if (range.length != 2) {
-                    throw new IllegalArgumentException("The parameter 'RANGE' must specify ':<end_value>' for this PARTITION_BY type");
+                    throw new IllegalArgumentException("The parameter 'RANGE' has incorrect format. The correct format for this 'PARTITION_BY' type is '<start_value>:<end_value>'");
                 }
             }
         }
@@ -281,9 +282,27 @@ public class JdbcPartitionFragmenter extends BaseFragmenter {
                         new EnumPartition(partitionColumn, enumValue)
                     )));
                 }
+
+                // "excluded" values
+                fragments.add(createFragment(SerializationUtils.serialize(
+                    new EnumPartition(partitionColumn, range)
+                )));
+
+                break;
+            }
+            case NULL: {
+                // NOT NULL values
+                fragments.add(createFragment(SerializationUtils.serialize(
+                    new NullPartition(partitionColumn, false)
+                )));
                 break;
             }
         }
+
+        // NULL values
+        fragments.add(createFragment(SerializationUtils.serialize(
+            new NullPartition(partitionColumn)
+        )));
 
         return fragments;
     }
