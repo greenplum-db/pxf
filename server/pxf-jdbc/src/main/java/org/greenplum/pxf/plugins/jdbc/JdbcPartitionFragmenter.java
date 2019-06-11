@@ -35,6 +35,7 @@ import java.net.UnknownHostException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.EnumSet;
 import java.util.List;
 
 /**
@@ -43,10 +44,8 @@ import java.util.List;
  * Splits the query to allow multiple simultaneous SELECTs
  */
 public class JdbcPartitionFragmenter extends BaseFragmenter {
-
     // A PXF engine to use as a host for fragments
     private static final String[] pxfHosts;
-
     static {
         String[] localhost = {"localhost"};
         try {
@@ -57,6 +56,17 @@ public class JdbcPartitionFragmenter extends BaseFragmenter {
         }
         pxfHosts = localhost;
     }
+
+    private static final EnumSet<PartitionType> PARTITION_TYPES_REQUIRING_RANGE = EnumSet.of(
+        PartitionType.DATE,
+        PartitionType.INT,
+        PartitionType.ENUM
+    );
+
+    private static final EnumSet<PartitionType> PARTITION_TYPES_REQUIRING_INTERVAL = EnumSet.of(
+        PartitionType.DATE,
+        PartitionType.INT
+    );
 
     // Partition parameters (filled by class constructor)
     private String[] range = null;
@@ -82,71 +92,83 @@ public class JdbcPartitionFragmenter extends BaseFragmenter {
         }
 
         // PARTITION_BY
+
         try {
             String partitionBy[] = context.getOption("PARTITION_BY").split(":");
             partitionColumn = partitionBy[0];
             partitionType = PartitionType.typeOf(partitionBy[1]);
         }
         catch (IllegalArgumentException | ArrayIndexOutOfBoundsException ex) {
-            throw new IllegalArgumentException("The parameter 'PARTITION_BY' is invalid. The pattern is '<column_name>:date|int|enum'");
+            throw new IllegalArgumentException("The parameter 'PARTITION_BY' is invalid. The pattern is '<column_name>:date|int|enum|null'");
         }
 
         // RANGE
 
-        String rangeStr = context.getOption("RANGE");
-        if (rangeStr != null) {
+        if (PARTITION_TYPES_REQUIRING_RANGE.contains(partitionType)) {
+            String rangeStr = context.getOption("RANGE");
+            if (rangeStr == null) {
+                throw new IllegalArgumentException(String.format(
+                    "The parameter 'RANGE' must be specified for partition of type '%s'",
+                    partitionType
+                ));
+            }
+
             if (partitionType == PartitionType.ENUM) {
                 range = rangeStr.split(":");
             }
-            else {
+            else if (partitionType == PartitionType.DATE || partitionType == PartitionType.INT) {
                 range = rangeStr.split(":", 2);
                 if (range.length != 2) {
                     throw new IllegalArgumentException("The parameter 'RANGE' has incorrect format. The correct format for this 'PARTITION_BY' type is '<start_value>:<end_value>'");
                 }
-            }
-        }
-        else {
-            throw new IllegalArgumentException("The parameter 'RANGE' must be specified along with 'PARTITION_BY'");
-        }
 
-        if (partitionType == PartitionType.DATE) {
-            // Parse DATE partition type values
-            try {
-                SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-                rangeDateStart = Calendar.getInstance();
-                rangeDateStart.setTime(df.parse(range[0]));
-                rangeDateEnd = Calendar.getInstance();
-                rangeDateEnd.setTime(df.parse(range[1]));
-            }
-            catch (ParseException e) {
-                throw new IllegalArgumentException("The parameter 'RANGE' has invalid date format. The correct format is 'yyyy-MM-dd'");
-            }
-            if (rangeDateEnd.before(rangeDateStart)) {
-                throw new IllegalArgumentException(String.format(
-                    "The parameter 'RANGE' is invalid. The <end_value> '%s' must be bigger than the <start_value> '%s'", rangeDateStart, rangeDateEnd
-                ));
-            }
-        }
-        else if (partitionType == PartitionType.INT) {
-            // Parse INT partition type values
-            try {
-                rangeIntStart = Long.parseLong(range[0]);
-                rangeIntEnd = Long.parseLong(range[1]);
-            }
-            catch (NumberFormatException e) {
-                throw new IllegalArgumentException("The parameter 'RANGE' is invalid. Both range boundaries must be integers");
-            }
-            if (rangeIntEnd < rangeIntStart) {
-                throw new IllegalArgumentException(String.format(
-                    "The parameter 'RANGE' is invalid. The <end_value> '%s' must be bigger than the <start_value> '%s'", rangeIntEnd, rangeIntStart
-                ));
+                // Range of type DATE
+                if (partitionType == PartitionType.DATE) {
+                    try {
+                        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+                        rangeDateStart = Calendar.getInstance();
+                        rangeDateStart.setTime(df.parse(range[0]));
+                        rangeDateEnd = Calendar.getInstance();
+                        rangeDateEnd.setTime(df.parse(range[1]));
+                    }
+                    catch (ParseException e) {
+                        throw new IllegalArgumentException("The parameter 'RANGE' has invalid date format. The correct format is 'yyyy-MM-dd'");
+                    }
+                    if (rangeDateEnd.before(rangeDateStart)) {
+                        throw new IllegalArgumentException(String.format(
+                            "The parameter 'RANGE' is invalid. The <end_value> '%s' must be bigger than the <start_value> '%s'", rangeDateStart, rangeDateEnd
+                        ));
+                    }
+                }
+                // Range of type INT
+                else { // if partitionType == PartitionType.INT
+                    try {
+                        rangeIntStart = Long.parseLong(range[0]);
+                        rangeIntEnd = Long.parseLong(range[1]);
+                    }
+                    catch (NumberFormatException e) {
+                        throw new IllegalArgumentException("The parameter 'RANGE' is invalid. Both range boundaries must be integers");
+                    }
+                    if (rangeIntEnd < rangeIntStart) {
+                        throw new IllegalArgumentException(String.format(
+                            "The parameter 'RANGE' is invalid. The <end_value> '%s' must be bigger than the <start_value> '%s'", rangeIntEnd, rangeIntStart
+                        ));
+                    }
+                }
             }
         }
 
         // INTERVAL
 
-        String intervalStr = context.getOption("INTERVAL");
-        if (intervalStr != null) {
+        if (PARTITION_TYPES_REQUIRING_INTERVAL.contains(partitionType)) {
+            String intervalStr = context.getOption("INTERVAL");
+            if (intervalStr == null) {
+                throw new IllegalArgumentException(String.format(
+                    "The parameter 'INTERVAL' must be specified for partition of type '%s'",
+                    partitionType
+                ));
+            }
+
             String[] interval = intervalStr.split(":");
             try {
                 intervalNum = Long.parseLong(interval[0]);
@@ -158,17 +180,13 @@ public class JdbcPartitionFragmenter extends BaseFragmenter {
                 throw new IllegalArgumentException("The '<interval_num>' in parameter 'INTERVAL' must be at least 1, but actual is " + intervalNum);
             }
 
-
-            // Intervals of type DATE
+            // Intervals of type DATE also require interval type
             if (partitionType == PartitionType.DATE) {
                 if (interval.length != 2) {
                     throw new IllegalArgumentException("The parameter 'INTERVAL' must specify unit (':year|month|day') for the PARTITION_TYPE = 'DATE'");
                 }
                 intervalType = IntervalType.typeOf(interval[1]);
             }
-        }
-        else if (partitionType != PartitionType.ENUM) {
-            throw new IllegalArgumentException("The parameter 'INTERVAL' must be specified along with 'PARTITION_BY' for this PARTITION_TYPE");
         }
     }
 
