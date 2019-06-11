@@ -120,14 +120,46 @@ public class SQLQueryBuilderTest {
         JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
         fragment.initialize(context);
         List<Fragment> fragments = fragment.getFragments();
-        assertEquals(8, fragments.size());
-        // Partition: cdate >= 2008-01-01 and cdate < 2008-03-01
-        context.setFragmentMetadata(fragments.get(1).getMetadata());
+        assertEquals(9, fragments.size());
 
-        SQLQueryBuilder builder = new SQLQueryBuilder(context, mockMetaData);
+        SQLQueryBuilder builder;
+        String query;
+
+        context.setFragmentMetadata(fragments.get(0).getMetadata());
+        builder = new SQLQueryBuilder(context, mockMetaData);
         builder.autoSetQuoteString();
-        String query = builder.buildSelectQuery();
+        query = builder.buildSelectQuery();
+        assertEquals(SQL + " WHERE cdate < DATE('2008-01-01')", query);
+
+        context.setFragmentMetadata(fragments.get(1).getMetadata());
+        builder = new SQLQueryBuilder(context, mockMetaData);
+        builder.autoSetQuoteString();
+        query = builder.buildSelectQuery();
         assertEquals(SQL + " WHERE cdate >= DATE('2008-01-01') AND cdate < DATE('2008-03-01')", query);
+
+        context.setFragmentMetadata(fragments.get(2).getMetadata());
+        builder = new SQLQueryBuilder(context, mockMetaData);
+        builder.autoSetQuoteString();
+        query = builder.buildSelectQuery();
+        assertEquals(SQL + " WHERE cdate >= DATE('2008-03-01') AND cdate < DATE('2008-05-01')", query);
+
+        context.setFragmentMetadata(fragments.get(6).getMetadata());
+        builder = new SQLQueryBuilder(context, mockMetaData);
+        builder.autoSetQuoteString();
+        query = builder.buildSelectQuery();
+        assertEquals(SQL + " WHERE cdate >= DATE('2008-11-01') AND cdate <= DATE('2008-12-01')", query);
+
+        context.setFragmentMetadata(fragments.get(7).getMetadata());
+        builder = new SQLQueryBuilder(context, mockMetaData);
+        builder.autoSetQuoteString();
+        query = builder.buildSelectQuery();
+        assertEquals(SQL + " WHERE cdate > DATE('2008-12-01')", query);
+
+        context.setFragmentMetadata(fragments.get(8).getMetadata());
+        builder = new SQLQueryBuilder(context, mockMetaData);
+        builder.autoSetQuoteString();
+        query = builder.buildSelectQuery();
+        assertEquals(SQL + " WHERE cdate IS NULL", query);
     }
 
     @Test
@@ -243,7 +275,7 @@ public class SQLQueryBuilderTest {
         JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
         fragment.initialize(mockContext);
         List<Fragment> fragments = fragment.getFragments();
-        assertEquals(8, fragments.size());
+        assertEquals(9, fragments.size());
         // Partition: cdate >= 2008-01-01 and cdate < 2008-03-01
         when(mockContext.getFragmentMetadata()).thenReturn(fragments.get(1).getMetadata());
 

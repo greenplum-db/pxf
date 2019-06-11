@@ -1,7 +1,5 @@
 package org.greenplum.pxf.plugins.jdbc;
 
-import org.apache.commons.lang.SerializationUtils;
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -21,19 +19,23 @@ import org.apache.commons.lang.SerializationUtils;
  * under the License.
  */
 
+import org.apache.commons.lang.SerializationUtils;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.jdbc.partitioning.DatePartition;
 import org.greenplum.pxf.plugins.jdbc.partitioning.EnumPartition;
 import org.greenplum.pxf.plugins.jdbc.partitioning.IntPartition;
 import org.greenplum.pxf.plugins.jdbc.partitioning.JdbcFragmentMetadata;
+import org.greenplum.pxf.plugins.jdbc.partitioning.NullPartition;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.sql.Date;
 import java.util.List;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -71,12 +73,13 @@ public class JdbcPartitionFragmenterTest {
         fragment.initialize(context);
         List<Fragment> fragments = fragment.getFragments();
 
-        assertEquals(12, fragments.size());
+        assertEquals(13, fragments.size());
         assertFragmentRangeEquals(fragments.get(0), null, Date.valueOf("2008-01-01"));
         assertFragmentRangeEquals(fragments.get(1), Date.valueOf("2008-01-01"), Date.valueOf("2008-01-02"));
         assertFragmentRangeEquals(fragments.get(5), Date.valueOf("2008-01-05"), Date.valueOf("2008-01-06"));
         assertFragmentRangeEquals(fragments.get(10), Date.valueOf("2008-01-10"), Date.valueOf("2008-01-11"));
         assertFragmentRangeEquals(fragments.get(11), Date.valueOf("2008-01-11"), null);
+        assertFragmentNullEquals(fragments.get(12), true);
     }
 
     @Test
@@ -90,12 +93,13 @@ public class JdbcPartitionFragmenterTest {
         fragment.initialize(context);
         List<Fragment> fragments = fragment.getFragments();
 
-        assertEquals(14, fragments.size());
+        assertEquals(15, fragments.size());
         assertFragmentRangeEquals(fragments.get(0), null, Date.valueOf("2008-01-01"));
         assertFragmentRangeEquals(fragments.get(1), Date.valueOf("2008-01-01"), Date.valueOf("2008-02-01"));
         assertFragmentRangeEquals(fragments.get(6), Date.valueOf("2008-06-01"), Date.valueOf("2008-07-01"));
         assertFragmentRangeEquals(fragments.get(12), Date.valueOf("2008-12-01"), Date.valueOf("2008-12-31"));
         assertFragmentRangeEquals(fragments.get(13), Date.valueOf("2008-12-31"), null);
+        assertFragmentNullEquals(fragments.get(14), true);
     }
 
     @Test
@@ -109,12 +113,13 @@ public class JdbcPartitionFragmenterTest {
         fragment.initialize(context);
         List<Fragment> fragments = fragment.getFragments();
 
-        assertEquals(12, fragments.size());
+        assertEquals(13, fragments.size());
         assertFragmentRangeEquals(fragments.get(0), null, Date.valueOf("2008-02-03"));
         assertFragmentRangeEquals(fragments.get(1), Date.valueOf("2008-02-03"), Date.valueOf("2009-02-03"));
         assertFragmentRangeEquals(fragments.get(6), Date.valueOf("2013-02-03"), Date.valueOf("2014-02-03"));
         assertFragmentRangeEquals(fragments.get(10), Date.valueOf("2017-02-03"), Date.valueOf("2018-02-02"));
         assertFragmentRangeEquals(fragments.get(11), Date.valueOf("2018-02-02"), null);
+        assertFragmentNullEquals(fragments.get(12), true);
     }
 
     @Test
@@ -128,11 +133,12 @@ public class JdbcPartitionFragmenterTest {
         fragment.initialize(context);
         List<Fragment> fragments = fragment.getFragments();
 
-        assertEquals(4, fragments.size());
+        assertEquals(5, fragments.size());
         assertFragmentRangeEquals(fragments.get(0), null, Date.valueOf("2008-02-03"));
         assertFragmentRangeEquals(fragments.get(1), Date.valueOf("2008-02-03"), Date.valueOf("2009-02-03"));
         assertFragmentRangeEquals(fragments.get(2), Date.valueOf("2009-02-03"), Date.valueOf("2010-01-15"));
         assertFragmentRangeEquals(fragments.get(3), Date.valueOf("2010-01-15"), null);
+        assertFragmentNullEquals(fragments.get(4), true);
     }
 
     // INT
@@ -148,12 +154,13 @@ public class JdbcPartitionFragmenterTest {
         fragment.initialize(context);
         List<Fragment> fragments = fragment.getFragments();
 
-        assertEquals(8, fragments.size());
+        assertEquals(9, fragments.size());
         assertFragmentRangeEquals(fragments.get(0), null, 2001L);
         assertFragmentRangeEquals(fragments.get(1), 2001L, 2002L);
         assertFragmentRangeEquals(fragments.get(3), 2005L, 2006L);
         assertFragmentRangeEquals(fragments.get(6), 2011L, 2012L);
         assertFragmentRangeEquals(fragments.get(7), 2012L, null);
+        assertFragmentNullEquals(fragments.get(8), true);
     }
 
     @Test
@@ -167,11 +174,12 @@ public class JdbcPartitionFragmenterTest {
         fragment.initialize(context);
         List<Fragment> fragments = fragment.getFragments();
 
-        assertEquals(4, fragments.size());
+        assertEquals(5, fragments.size());
         assertFragmentRangeEquals(fragments.get(0), null, 2001L);
         assertFragmentRangeEquals(fragments.get(1), 2001L, 2007L);
         assertFragmentRangeEquals(fragments.get(2), 2008L, 2012L);
         assertFragmentRangeEquals(fragments.get(3), 2012L, null);
+        assertFragmentNullEquals(fragments.get(4), true);
     }
 
     // ENUM
@@ -186,9 +194,12 @@ public class JdbcPartitionFragmenterTest {
         fragment.initialize(context);
         List<Fragment> fragments = fragment.getFragments();
 
-        assertEquals(4, fragments.size());
-        assertFragmentRangeEquals(fragments.get(0), "excellent");
-        assertFragmentRangeEquals(fragments.get(3), "bad");
+        assertEquals(6, fragments.size());
+        assertFragmentEnumEquals(fragments.get(0), "excellent");
+        assertFragmentEnumEquals(fragments.get(1), "good");
+        assertFragmentEnumEquals(fragments.get(3), "bad");
+        assertFragmentEnumEquals(fragments.get(4), new String[]{"excellent", "good", "general", "bad"});
+        assertFragmentNullEquals(fragments.get(5), true);
     }
 
     @Test
@@ -201,7 +212,10 @@ public class JdbcPartitionFragmenterTest {
         fragment.initialize(context);
         List<Fragment> fragments = fragment.getFragments();
 
-        assertEquals(1, fragments.size());
+        assertEquals(3, fragments.size());
+        assertFragmentEnumEquals(fragments.get(0), "100");
+        assertFragmentEnumEquals(fragments.get(1), new String[]{"100"});
+        assertFragmentNullEquals(fragments.get(2), true);
     }
 
     // Invalid cases
@@ -354,10 +368,31 @@ public class JdbcPartitionFragmenterTest {
      * @param fragment
      * @param enumValue
      */
-    private void assertFragmentRangeEquals(Fragment fragment, String enumValue) {
+    private void assertFragmentEnumEquals(Fragment fragment, String enumValue) {
         JdbcFragmentMetadata fragmentMetadata = JdbcFragmentMetadata.class.cast(SerializationUtils.deserialize(fragment.getMetadata()));
         EnumPartition enumPartition = EnumPartition.class.cast(fragmentMetadata);
 
         assertEquals(enumValue, enumPartition.getValue());
+        assertNull(enumPartition.getExcluded());
+    }
+
+    private void assertFragmentEnumEquals(Fragment fragment, String[] excludedValues) {
+        JdbcFragmentMetadata fragmentMetadata = JdbcFragmentMetadata.class.cast(SerializationUtils.deserialize(fragment.getMetadata()));
+        EnumPartition enumPartition = EnumPartition.class.cast(fragmentMetadata);
+
+        assertNull(enumPartition.getValue());
+        assertArrayEquals(excludedValues, enumPartition.getExcluded());
+    }
+
+    /**
+     * Assert fragment metadata is a partition of type NULL and its NULL constraint type matches the given one
+     * @param fragment
+     * @param isNull
+     */
+    private void assertFragmentNullEquals(Fragment fragment, boolean isNull) {
+        JdbcFragmentMetadata fragmentMetadata = JdbcFragmentMetadata.class.cast(SerializationUtils.deserialize(fragment.getMetadata()));
+        NullPartition nullPartition = NullPartition.class.cast(fragmentMetadata);
+
+        assertEquals(isNull, nullPartition.isNull());
     }
 }
