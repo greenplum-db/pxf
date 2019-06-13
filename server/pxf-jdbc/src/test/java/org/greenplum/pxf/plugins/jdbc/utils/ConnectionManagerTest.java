@@ -140,3 +140,4 @@ public class ConnectionManagerTest {
         verify(mockDriver, times(1)).connect("test-url", calledWith);
     }
 }
+
