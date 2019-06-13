@@ -11,7 +11,7 @@ public class PoolDescriptor {
     private static final String USER_PROPERTY_NAME = "user";
     private static final String PASSWORD_PROPERTY_NAME = "password";
     private static final Set<String> PROHIBITED_PROPERTIES =
-            Sets.newHashSet("username", "password", "datasource.user", "datasource.password", "dataSourceClassName", "jdbcUrl");
+            Sets.newHashSet("username", "password", "dataSource.user", "dataSource.password", "dataSourceClassName", "jdbcUrl");
 
     private String server;
     private String jdbcUrl;
@@ -67,7 +67,8 @@ public class PoolDescriptor {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         PoolDescriptor that = (PoolDescriptor) o;
-        return Objects.equals(jdbcUrl, that.jdbcUrl) &&
+        return Objects.equals(server, that.server) &&
+                Objects.equals(jdbcUrl, that.jdbcUrl) &&
                 Objects.equals(user, that.user) &&
                 Objects.equals(password, that.password) &&
                 Objects.equals(connectionConfig, that.connectionConfig) &&
@@ -76,7 +77,7 @@ public class PoolDescriptor {
 
     @Override
     public int hashCode() {
-        return Objects.hash(jdbcUrl, user, password, connectionConfig, poolConfig);
+        return Objects.hash(server, jdbcUrl, user, password, connectionConfig, poolConfig);
     }
 
 

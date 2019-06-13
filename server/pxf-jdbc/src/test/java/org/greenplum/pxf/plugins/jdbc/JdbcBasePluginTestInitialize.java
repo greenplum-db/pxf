@@ -39,6 +39,7 @@ import org.junit.runner.RunWith;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import org.mockito.Mockito;
@@ -593,4 +594,48 @@ public class JdbcBasePluginTestInitialize {
         plugin.initialize(makeContextWithDataSource("query:"));
     }
 
+    @Test
+    public void testConnectionPoolNotEnabledPropertyNotDefined() throws Exception {
+        Configuration configuration = makeConfiguration();
+        prepareBaseConfigurationFactory(configuration);
+
+        JdbcBasePlugin plugin = new JdbcBasePlugin();
+        plugin.initialize(makeContext());
+
+        assertNull(getInternalState(plugin, "poolConfiguration"));
+    }
+
+    @Test
+    public void testConnectionPoolNotEnabledPropertyDefined() throws Exception {
+        Configuration configuration = makeConfiguration();
+        configuration.set("jdbc.pool.enabled", "false");
+        prepareBaseConfigurationFactory(configuration);
+
+        JdbcBasePlugin plugin = new JdbcBasePlugin();
+        plugin.initialize(makeContext());
+
+        assertNull(getInternalState(plugin, "poolConfiguration"));
+    }
+
+    @Test
+    public void testConnectionPoolEnabledPropertyDefined() throws Exception {
+        Configuration configuration = makeConfiguration();
+        configuration.set("jdbc.pool.enabled", "true");
+        configuration.set("jdbc.pool.property.foo", "include-foo");
+        configuration.set("jdbc.pool.property.bar", "include-bar");
+        configuration.set("jdbc.whatever", "exclude-whatever");
+        prepareBaseConfigurationFactory(configuration);
+
+        JdbcBasePlugin plugin = new JdbcBasePlugin();
+        plugin.initialize(makeContext());
+
+        Properties poolProps = (Properties) getInternalState(plugin, "poolConfiguration");
+        assertNotNull(poolProps);
+        assertEquals(2, poolProps.size());
+
+        Properties expectedProps = new Properties();
+        expectedProps.setProperty("foo", "include-foo");
+        expectedProps.setProperty("bar", "include-bar");
+        assertEquals(expectedProps, poolProps);
+    }
 }

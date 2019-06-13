@@ -24,6 +24,7 @@ import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.ConfigurationFactory;
+import org.greenplum.pxf.plugins.jdbc.utils.ConnectionManager;
 import org.greenplum.pxf.plugins.jdbc.writercallable.WriterCallable;
 import org.greenplum.pxf.plugins.jdbc.writercallable.WriterCallableFactory;
 import org.slf4j.Logger;
@@ -68,6 +69,21 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
     private WriterCallable writerCallable = null;
     private ExecutorService executorServiceWrite = null;
     private List<Future<SQLException> > poolTasks = null;
+
+    /**
+     * Creates a new instance of accessor with default connection manager.
+     */
+    public JdbcAccessor() {
+        super();
+    }
+
+    /**
+     * Creates a new instance of accessor with provided connection manager.
+     * @param connectionManager connection manager
+     */
+    JdbcAccessor(ConnectionManager connectionManager) {
+        super(connectionManager);
+    }
 
     /**
      * openForRead() implementation

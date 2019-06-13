@@ -416,11 +416,9 @@ public class JdbcBasePlugin extends BasePlugin {
             return UserGroupInformation.getLoginUser().
                     doAs((PrivilegedExceptionAction<Connection>) () ->
                             connectionManager.getConnection(context.getServerName(), jdbcUrl, connectionConfiguration, isConnectionPoolUsed, poolConfiguration));
-                            //DriverManager.getConnection(jdbcUrl, connectionConfiguration));
 
         } else {
             return connectionManager.getConnection(context.getServerName(), jdbcUrl, connectionConfiguration, isConnectionPoolUsed, poolConfiguration);
-            //return DriverManager.getConnection(jdbcUrl, connectionConfiguration);
         }
     }
 
