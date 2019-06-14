@@ -422,8 +422,24 @@ For other databases, PostgreSQL syntax is used.
 
 To use this feature, pass key-value pairs in [external database session configuration setting](#external-database-session-configuration).
 
+## JDBC Connection Pooling
+The JDBC connector will be using connection pooling implemented by HikariCP (https://github.com/brettwooldridge/HikariCP). To disable the connection pool, edit the value for the property in your server's `jdbc-site.xml` file:
+```asp
+    <property>
+        <name>jdbc.pool.enabled</name>
+        <value>false</value>
+        <description>Use connection pool for JDBC</description>
+    </property>
+```
+You can set other properties specific to HikariCP by specifying them in `jdbc-site.xml` file with `jdbc.pool.property.` prefix. The default `jdbc-site.xml` template comes with the connection pool enabled and pre-defined settings for `maximumPoolSize`, `connectionTimeout`, `idleTimeout`, `minimumIdle` properties.
 
-### Partitioning and external database sessions
+Any property that you specify with `jdbc.connection.property.` prefix will also be used by HikariCP when requesting connections from the `DriverManager`.
+
+Using connection pool feature will ensure you will not exceed the connection limit to the target database for a given server configuration. 
+
+You should tune your server configuration not to exceed the maximum number of connections allowed by the target database. To come up with the optimal value for `maximumPoolSize` parameter, take the overall number of connection allowed by the external database and divide it first by the number of Greenplum hosts and then by the number of Greenplum segments per host. For example, if your Greenplum cluster has 16 nodes with 4 segments each and your target database allows 200 concurrent connections, set `maximumPoolSize` to 200 / 16 / 4 = 3.
+
+## Partitioning and external database sessions
 When [partitioning](#partitioning) is used, each fragment requires its own external database session.
 
 This implies `SET` queries are executed multiple times (once for each external database session).
