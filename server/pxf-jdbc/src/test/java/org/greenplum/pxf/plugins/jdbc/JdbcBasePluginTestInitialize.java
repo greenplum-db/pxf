@@ -595,14 +595,20 @@ public class JdbcBasePluginTestInitialize {
     }
 
     @Test
-    public void testConnectionPoolNotEnabledPropertyNotDefined() throws Exception {
+    public void testConnectionPoolEnabledPropertyNotDefined() throws Exception {
         Configuration configuration = makeConfiguration();
         prepareBaseConfigurationFactory(configuration);
 
         JdbcBasePlugin plugin = new JdbcBasePlugin();
         plugin.initialize(makeContext());
 
-        assertNull(getInternalState(plugin, "poolConfiguration"));
+        Properties poolConfiguration = (Properties) getInternalState(plugin, "poolConfiguration");
+        assertNotNull(poolConfiguration);
+        assertEquals(4, poolConfiguration.size());
+        assertEquals("5", poolConfiguration.getProperty("maximumPoolSize"));
+        assertEquals("30000", poolConfiguration.getProperty("connectionTimeout"));
+        assertEquals("30000", poolConfiguration.getProperty("idleTimeout"));
+        assertEquals("0", poolConfiguration.getProperty("minimumIdle"));
     }
 
     @Test
@@ -631,9 +637,13 @@ public class JdbcBasePluginTestInitialize {
 
         Properties poolProps = (Properties) getInternalState(plugin, "poolConfiguration");
         assertNotNull(poolProps);
-        assertEquals(2, poolProps.size());
+        assertEquals(6, poolProps.size());
 
         Properties expectedProps = new Properties();
+        expectedProps.setProperty("maximumPoolSize", "5");
+        expectedProps.setProperty("connectionTimeout", "30000");
+        expectedProps.setProperty("idleTimeout", "30000");
+        expectedProps.setProperty("minimumIdle", "0");
         expectedProps.setProperty("foo", "include-foo");
         expectedProps.setProperty("bar", "include-bar");
         assertEquals(expectedProps, poolProps);

@@ -79,8 +79,7 @@ public class JdbcBasePlugin extends BasePlugin {
     private static final String PXF_IMPERSONATION_JDBC_PROPERTY_NAME = "pxf.impersonation.jdbc";
 
     private static final String HIVE_URL_PREFIX = "jdbc:hive2://";
-    private static final String DATASOURCE_PROPERTY_PREFIX = "datasource.";
-
+    private static final String HIVE_DEFAULT_DRIVER_CLASS = "org.apache.hive.jdbc.HiveDriver";
 
     private enum TransactionIsolation {
         READ_UNCOMMITTED(1),
@@ -303,16 +302,26 @@ public class JdbcBasePlugin extends BasePlugin {
             }
         }
 
-        // connection pool is optional
-        isConnectionPoolUsed = configuration.getBoolean(JDBC_CONNECTION_POOL_ENABLED_PROPERTY_NAME, false);
+        // connection pool is optional, enabled by default
+        isConnectionPoolUsed = configuration.getBoolean(JDBC_CONNECTION_POOL_ENABLED_PROPERTY_NAME, true);
         LOG.debug("Connection pool is {}enabled", isConnectionPoolUsed ? "" : "not ");
         if (isConnectionPoolUsed) {
-            // collect connection pool properties, prefix connection properties with "datasource." for Hikari
             poolConfiguration = new Properties();
+            // for PXF upgrades where jdbc-site template has not been updated, make sure there're sensible defaults
+            poolConfiguration.setProperty("maximumPoolSize", "5");
+            poolConfiguration.setProperty("connectionTimeout", "30000");
+            poolConfiguration.setProperty("idleTimeout", "30000");
+            poolConfiguration.setProperty("minimumIdle", "0");
+            // apply values read from the template
             poolConfiguration.putAll(configuration.getPropsWithPrefix(JDBC_CONNECTION_POOL_PROPERTY_PREFIX));
+
+            // packaged Hive JDBC Driver does not support connection.isValid() method, so we need to force set
+            // connectionTestQuery parameter in this case, unless already set by the user
+            if (jdbcUrl.startsWith(HIVE_URL_PREFIX) && HIVE_DEFAULT_DRIVER_CLASS.equals(jdbcDriver) && poolConfiguration.getProperty("connectionTestQuery") == null) {
+                poolConfiguration.setProperty("connectionTestQuery", "SELECT 1");
+            }
         }
     }
-
 
     /**
      * Open a new JDBC connection

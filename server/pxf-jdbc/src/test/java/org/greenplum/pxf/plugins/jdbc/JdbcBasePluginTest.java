@@ -63,12 +63,19 @@ public class JdbcBasePluginTest {
     private SQLException exception = new SQLException("some error");
     private RequestContext context;
     private Map<String, String> additionalProps;
+    private Properties poolProps;
 
     @Before public void before() {
         context = new RequestContext();
         context.setDataSource("test-table");
         additionalProps = new HashMap<>();
         context.setAdditionalConfigProps(additionalProps);
+
+        poolProps = new Properties();
+        poolProps.setProperty("maximumPoolSize", "5");
+        poolProps.setProperty("connectionTimeout", "30000");
+        poolProps.setProperty("idleTimeout", "30000");
+        poolProps.setProperty("minimumIdle", "0");
     }
 
     @Test
@@ -356,6 +363,7 @@ public class JdbcBasePluginTest {
         context.setServerName("test-server");
         additionalProps.put("jdbc.driver", "org.greenplum.pxf.plugins.jdbc.FakeJdbcDriver");
         additionalProps.put("jdbc.url", "test-url");
+        additionalProps.put("jdbc.pool.enabled", "false");
 
         when(mockConnectionManager.getConnection(anyString(), anyString(), anyObject(), anyBoolean(), anyObject())).thenReturn(mockConnection);
         when(mockConnection.getMetaData()).thenReturn(mockMetaData);
@@ -376,6 +384,7 @@ public class JdbcBasePluginTest {
         additionalProps.put("jdbc.url", "test-url");
         additionalProps.put("jdbc.connection.property.foo", "foo-val");
         additionalProps.put("jdbc.connection.property.bar", "bar-val");
+        additionalProps.put("jdbc.pool.enabled", "false");
 
         when(mockConnectionManager.getConnection(anyString(), anyString(), anyObject(), anyBoolean(), anyObject())).thenReturn(mockConnection);
         when(mockConnection.getMetaData()).thenReturn(mockMetaData);
@@ -400,7 +409,7 @@ public class JdbcBasePluginTest {
         additionalProps.put("jdbc.url", "test-url");
         additionalProps.put("jdbc.connection.property.foo", "foo-val");
         additionalProps.put("jdbc.connection.property.bar", "bar-val");
-        additionalProps.put("jdbc.pool.enabled", "true");
+        // pool is enabled by default
 
         when(mockConnectionManager.getConnection(anyString(), anyString(), anyObject(), anyBoolean(), anyObject())).thenReturn(mockConnection);
         when(mockConnection.getMetaData()).thenReturn(mockMetaData);
@@ -415,7 +424,7 @@ public class JdbcBasePluginTest {
         connProps.setProperty("foo", "foo-val");
         connProps.setProperty("bar", "bar-val");
 
-        verify(mockConnectionManager).getConnection("test-server", "test-url", connProps, true, new Properties());
+        verify(mockConnectionManager).getConnection("test-server", "test-url", connProps, true, poolProps);
     }
 
     @Test
@@ -428,6 +437,7 @@ public class JdbcBasePluginTest {
         additionalProps.put("jdbc.pool.enabled", "true");
         additionalProps.put("jdbc.pool.property.abc", "abc-val");
         additionalProps.put("jdbc.pool.property.xyz", "xyz-val");
+        additionalProps.put("jdbc.pool.property.maximumPoolSize", "99"); // overwrite default
 
         when(mockConnectionManager.getConnection(anyString(), anyString(), anyObject(), anyBoolean(), anyObject())).thenReturn(mockConnection);
         when(mockConnection.getMetaData()).thenReturn(mockMetaData);
@@ -442,9 +452,9 @@ public class JdbcBasePluginTest {
         connProps.setProperty("foo", "foo-val");
         connProps.setProperty("bar", "bar-val");
 
-        Properties poolProps = new Properties();
         poolProps.setProperty("abc", "abc-val");
         poolProps.setProperty("xyz", "xyz-val");
+        poolProps.setProperty("maximumPoolSize", "99");
 
         verify(mockConnectionManager).getConnection("test-server", "test-url", connProps, true, poolProps);
     }
@@ -472,10 +482,6 @@ public class JdbcBasePluginTest {
         Properties connProps = new Properties();
         connProps.setProperty("foo", "foo-val");
         connProps.setProperty("bar", "bar-val");
-
-        Properties poolProps = new Properties();
-        poolProps.setProperty("abc", "abc-val");
-        poolProps.setProperty("xyz", "xyz-val");
 
         verify(mockConnectionManager).getConnection("test-server", "test-url", connProps, false, null);
     }

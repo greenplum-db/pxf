@@ -3,7 +3,10 @@ package org.greenplum.pxf.plugins.jdbc.utils;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalListeners;
 import com.google.common.util.concurrent.UncheckedExecutionException;
+import com.google.common.util.concurrent.Uninterruptibles;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.apache.commons.lang.StringUtils;
@@ -15,6 +18,9 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class ConnectionManager {
 
@@ -24,8 +30,35 @@ public class ConnectionManager {
      * Singleton instance of the ConnectionManager
      */
     private static final ConnectionManager instance = new ConnectionManager();
+    private static long CLEANUP_TIMEOUT = TimeUnit.HOURS.toMillis(24);
 
-    private LoadingCache<PoolDescriptor, DataSource> dataSources = CacheBuilder.newBuilder().build(CacheLoader.from(key -> createDataSource(key)));
+    private static Executor datasourceClosingExecutor = Executors.newCachedThreadPool();
+
+    private LoadingCache<PoolDescriptor, DataSource> dataSources = CacheBuilder.newBuilder()
+            .expireAfterAccess(6, TimeUnit.HOURS)
+            .removalListener(RemovalListeners.asynchronous((RemovalListener<PoolDescriptor, DataSource>)notification ->
+                {
+                    HikariDataSource hds = (HikariDataSource) notification.getValue();
+                    LOG.debug("Processing cache removal of pool {} for server {} and user {} with cause {}",
+                            hds.getPoolName(),
+                            notification.getKey().getServer(),
+                            notification.getKey().getUser(),
+                            notification.getCause().toString());
+                    // if connection pool has been removed from the cache while active query is executing
+                    // wait until all connections finish execution and become idle, but no longer that CLEANUP_TIMEOUT
+                    long startTime = System.currentTimeMillis();
+                    while (hds.getHikariPoolMXBean().getActiveConnections() > 0) {
+                        if ((System.currentTimeMillis() - startTime) > CLEANUP_TIMEOUT) {
+                            LOG.warn("Pool {} has active connections for too long, destroying it", hds.getPoolName());
+                            break;
+                        }
+                        Uninterruptibles.sleepUninterruptibly(5, TimeUnit.MINUTES);
+                    }
+                    LOG.debug("Destroying the pool {}", hds.getPoolName());
+                    hds.close();
+                }
+            , datasourceClosingExecutor))
+            .build(CacheLoader.from(key -> createDataSource(key)));
 
     /**
      * @return a singleton instance of the connection manager.

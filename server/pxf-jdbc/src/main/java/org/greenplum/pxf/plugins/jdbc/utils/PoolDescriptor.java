@@ -10,6 +10,9 @@ public class PoolDescriptor {
 
     private static final String USER_PROPERTY_NAME = "user";
     private static final String PASSWORD_PROPERTY_NAME = "password";
+
+    // have users define connection properties in jdbc-site.xml with jdbc. prefix
+    // prohibit redefining these properties at the pool level
     private static final Set<String> PROHIBITED_PROPERTIES =
             Sets.newHashSet("username", "password", "dataSource.user", "dataSource.password", "dataSourceClassName", "jdbcUrl");
 
