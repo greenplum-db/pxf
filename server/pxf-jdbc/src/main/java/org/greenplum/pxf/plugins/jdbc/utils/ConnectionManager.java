@@ -32,33 +32,37 @@ public class ConnectionManager {
     private static final ConnectionManager instance = new ConnectionManager();
     private static long CLEANUP_TIMEOUT = TimeUnit.HOURS.toMillis(24);
 
-    private static Executor datasourceClosingExecutor = Executors.newCachedThreadPool();
+    private Executor datasourceClosingExecutor;
+    private LoadingCache<PoolDescriptor, DataSource> dataSources;
 
-    private LoadingCache<PoolDescriptor, DataSource> dataSources = CacheBuilder.newBuilder()
-            .expireAfterAccess(6, TimeUnit.HOURS)
-            .removalListener(RemovalListeners.asynchronous((RemovalListener<PoolDescriptor, DataSource>)notification ->
-                {
-                    HikariDataSource hds = (HikariDataSource) notification.getValue();
-                    LOG.debug("Processing cache removal of pool {} for server {} and user {} with cause {}",
-                            hds.getPoolName(),
-                            notification.getKey().getServer(),
-                            notification.getKey().getUser(),
-                            notification.getCause().toString());
-                    // if connection pool has been removed from the cache while active query is executing
-                    // wait until all connections finish execution and become idle, but no longer that CLEANUP_TIMEOUT
-                    long startTime = System.currentTimeMillis();
-                    while (hds.getHikariPoolMXBean().getActiveConnections() > 0) {
-                        if ((System.currentTimeMillis() - startTime) > CLEANUP_TIMEOUT) {
-                            LOG.warn("Pool {} has active connections for too long, destroying it", hds.getPoolName());
-                            break;
+    private ConnectionManager() {
+        this.datasourceClosingExecutor = Executors.newCachedThreadPool();
+        this.dataSources = CacheBuilder.newBuilder()
+                .expireAfterAccess(6, TimeUnit.HOURS)
+                .removalListener(RemovalListeners.asynchronous((RemovalListener<PoolDescriptor, DataSource>) notification ->
+                        {
+                            HikariDataSource hds = (HikariDataSource) notification.getValue();
+                            LOG.debug("Processing cache removal of pool {} for server {} and user {} with cause {}",
+                                    hds.getPoolName(),
+                                    notification.getKey().getServer(),
+                                    notification.getKey().getUser(),
+                                    notification.getCause().toString());
+                            // if connection pool has been removed from the cache while active query is executing
+                            // wait until all connections finish execution and become idle, but no longer that CLEANUP_TIMEOUT
+                            long startTime = System.currentTimeMillis();
+                            while (hds.getHikariPoolMXBean().getActiveConnections() > 0) {
+                                if ((System.currentTimeMillis() - startTime) > CLEANUP_TIMEOUT) {
+                                    LOG.warn("Pool {} has active connections for too long, destroying it", hds.getPoolName());
+                                    break;
+                                }
+                                Uninterruptibles.sleepUninterruptibly(5, TimeUnit.MINUTES);
+                            }
+                            LOG.debug("Destroying the pool {}", hds.getPoolName());
+                            hds.close();
                         }
-                        Uninterruptibles.sleepUninterruptibly(5, TimeUnit.MINUTES);
-                    }
-                    LOG.debug("Destroying the pool {}", hds.getPoolName());
-                    hds.close();
-                }
-            , datasourceClosingExecutor))
-            .build(CacheLoader.from(key -> createDataSource(key)));
+                        , datasourceClosingExecutor))
+                .build(CacheLoader.from(key -> createDataSource(key)));
+    }
 
     /**
      * @return a singleton instance of the connection manager.
