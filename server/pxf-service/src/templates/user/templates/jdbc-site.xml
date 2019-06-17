@@ -40,12 +40,12 @@
     <property>
         <name>jdbc.pool.property.connectionTimeout</name>
         <value>30000</value>
-        <description>The maximum number of ms to wait for a connection from the pool</description>
+        <description>The maximum time (in milliseconds) to wait for a connection from the pool</description>
     </property>
     <property>
         <name>jdbc.pool.property.idleTimeout</name>
         <value>30000</value>
-        <description>The maximum time (in ms) that a connection will sit idle in the pool</description>
+        <description>The maximum time (in milliseconds) that a connection will sit idle in the pool</description>
     </property>
     <property>
         <name>jdbc.pool.property.minimumIdle</name>
