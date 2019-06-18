@@ -96,6 +96,7 @@ public class FragmenterResource extends BaseResource {
                                  @Context final HttpHeaders headers)
             throws Throwable {
 
+        LOG.debug("Received FRAGMENTER call");
         long startTime = System.currentTimeMillis();
         final RequestContext context = parseRequest(headers);
         final String path = context.getDataSource();
