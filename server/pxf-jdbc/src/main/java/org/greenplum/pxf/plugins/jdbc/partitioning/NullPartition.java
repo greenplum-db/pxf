@@ -20,30 +20,32 @@ package org.greenplum.pxf.plugins.jdbc.partitioning;
  */
 
 import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
-import org.greenplum.pxf.plugins.jdbc.partitioning.PartitionType;
 
-import java.io.Serializable;
+/**
+ * A special type of partition: contains IS NULL or IS NOT NULL constraint.
+ *
+ * As it cannot be constructed (requested) by user, it has no type() method.
+ *
+ * Currently, only {@link NullPartition#NullPartition(String)} is used to construct this class.
+ * In other words, IS NOT NULL is never used (but is supported).
+ */
+class NullPartition extends BasePartition implements JdbcFragmentMetadata {
+    private static final long serialVersionUID = 0L;
 
-public class NullPartition implements JdbcFragmentMetadata, Serializable {
-    private static final long serialVersionUID = 1L;
-
-    private final String column;
     private final boolean isNull;
 
     /**
-     * Construct a NullPartition with given column and constraint type
+     * Construct a NullPartition with the given column and constraint
      * @param column
      * @param isNull true if IS NULL must be used
      */
     public NullPartition(String column, boolean isNull) {
-        assert column != null;
-
-        this.column = column;
+        super(column);
         this.isNull = isNull;
     }
 
     /**
-     * Construct a NullPartition with given column and IS NULL constraint
+     * Construct a NullPartition with the given column and IS NULL constraint
      * @param column
      */
     public NullPartition(String column) {
@@ -51,18 +53,10 @@ public class NullPartition implements JdbcFragmentMetadata, Serializable {
     }
 
     @Override
-    public String getColumn() {
-        return column;
-    }
-
-    @Override
-    public PartitionType getType() {
-        return PartitionType.NULL;
-    }
-
-    @Override
     public String toSqlConstraint(String quoteString, DbProduct dbProduct) {
-        assert quoteString != null;
+        if (quoteString == null) {
+            throw new RuntimeException("Quote string cannot be null");
+        }
 
         StringBuilder sb = new StringBuilder();
 
@@ -77,6 +71,9 @@ public class NullPartition implements JdbcFragmentMetadata, Serializable {
         return sb.toString();
     }
 
+    /**
+     * Getter
+     */
     public boolean isNull() {
         return isNull;
     }

@@ -1,5 +1,7 @@
 package org.greenplum.pxf.plugins.jdbc.partitioning;
 
+import java.io.Serializable;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -22,25 +24,15 @@ package org.greenplum.pxf.plugins.jdbc.partitioning;
 import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
 
 /**
- * A class to store and transform partition constraints for JDBC partitioning feature.
+ * Storage of partition constraints for JDBC partitioning feature
  */
-public interface JdbcFragmentMetadata {
+public interface JdbcFragmentMetadata extends Serializable {
     /**
-     * Translate these fragment metadata to a SQL constraint
+     * Form a SQL constraint from the metadata of this fragment.
      *
-     * @param quoteString string to use to quote partition column
-     * @param dbProduct {@link DbProduct} to wrap constraint values
-     * @return pure SQL constraint (without WHERE)
+     * @param quoteString a string to quote partition column
+     * @param dbProduct a {@link DbProduct} to wrap constraint values
+     * @return a pure SQL constraint (without WHERE)
      */
     public String toSqlConstraint(String quoteString, DbProduct dbProduct);
-
-    /**
-     * @return partition column name of these fragment metadata
-     */
-	public String getColumn();
-
-    /**
-     * @return partition type of these fragment metadata
-     */
-	public PartitionType getType();
 }

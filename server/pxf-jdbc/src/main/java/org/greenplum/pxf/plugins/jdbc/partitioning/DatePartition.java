@@ -20,56 +20,152 @@ package org.greenplum.pxf.plugins.jdbc.partitioning;
  */
 
 import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
-import org.greenplum.pxf.plugins.jdbc.partitioning.PartitionType;
+import org.greenplum.pxf.plugins.jdbc.IntervalType;
+import org.greenplum.pxf.plugins.jdbc.partitioning.Partition;
 
-import java.io.Serializable;
 import java.sql.Date;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.stream.Stream;
 
-public class DatePartition implements JdbcFragmentMetadata, Serializable {
-    private static final long serialVersionUID = 1L;
+class DatePartition extends BasePartition implements JdbcFragmentMetadata {
+    private static final long serialVersionUID = 0L;
 
-    private final String column;
     private final Date[] boundaries;
-    private final boolean isRightClosed;
 
     /**
-     * Construct a DatePartition with given column, boundaries and right-closedness
-     * @param column
-     * @param boundaries
-     * @param isRightClosed
+     * @return a type of {@link Partition} which is the caller of {@link DatePartition#generate} function.
+     * Currently, only used for exception messages.
      */
-    private DatePartition(String column, Calendar[] boundaries, boolean isRightClosed) {
-        // API checks
-        assert column != null;
-        assert boundaries.length == 2;
-        assert boundaries[0] != null || boundaries[1] != null;
-
-        this.column = column;
-
-        if (boundaries[0] != null && boundaries[1] != null && boundaries[0].equals(boundaries[1])) {
-            // Use equality instead of two comparation constraints
-            boundaries = new Calendar[]{boundaries[0]};
-            isRightClosed = true;
-        }
-        this.boundaries = new Date[boundaries.length];
-        for (int i = 0; i < boundaries.length; i++) {
-            this.boundaries[i] = boundaries[i] == null ? null : new Date(boundaries[i].getTimeInMillis());
-        }
-
-        this.isRightClosed = isRightClosed;
+    public static Partition type() {
+        return Partition.DATE;
     }
 
     /**
-     * Construct a DatePartition covering a range of values from 'start' to 'end'.
-     * 'start' is always included in the partition (partition is always left-closed)
+     * Generate an array of {@link IntPartition}s using the provided column name, RANGE and INTERVAL string values
      * @param column
-     * @param start null for right-bounded interval
-     * @param end null for left-bounded interval
-     * @param includeEnd true if this partition must be right-closed
+     * @param range
+     * @param interval
+     * @return an array of properly initialized {@link IntPartition} objects
      */
-    public DatePartition(String column, Calendar start, Calendar end, boolean includeEnd) {
-        this(column, new Calendar[]{start, end}, includeEnd);
+    public static List<DatePartition> generate(String column, String range, String interval) {
+        // Check input
+        if (column == null) {
+            throw new RuntimeException("The column name must be provided");
+        }
+        if (range == null) {
+            throw new IllegalArgumentException(String.format(
+                "The parameter 'RANGE' must be specified for partition of type '%s'", type()
+            ));
+        }
+        if (interval == null) {
+            throw new IllegalArgumentException(String.format(
+                "The parameter 'INTERVAL' must be specified for partition of type '%s'", type()
+            ));
+        }
+
+        // Parse RANGE
+        Calendar rangeStart;
+        Calendar rangeEnd;
+        {
+            String[] rangeBoundaries = range.split(":", 2);
+            if (rangeBoundaries.length != 2) {
+                throw new IllegalArgumentException(String.format(
+                    "The parameter 'RANGE' has incorrect format. The correct format for partition of type '%s' is '<start_value>:<end_value>'", type()
+                ));
+            }
+
+            try {
+                SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+                rangeStart = Calendar.getInstance();
+                rangeStart.setTime(df.parse(rangeBoundaries[0]));
+                rangeEnd = Calendar.getInstance();
+                rangeEnd.setTime(df.parse(rangeBoundaries[1]));
+            }
+            catch (ParseException e) {
+                throw new IllegalArgumentException(String.format(
+                    "The parameter 'RANGE' has invalid date format. The correct format for partition of type '%s' is 'yyyy-MM-dd'", type()
+                ));
+            }
+
+            if (rangeEnd.before(rangeStart)) {
+                throw new IllegalArgumentException(String.format(
+                    "The parameter 'RANGE' is invalid. The <end_value> '%s' must be bigger than the <start_value> '%s'", rangeStart, rangeEnd
+                ));
+            }
+        }
+
+        // Parse INTERVAL
+        int intervalNum;
+        IntervalType intervalType;
+        {
+            String[] intervalSplit = interval.split(":");
+            if (intervalSplit.length != 2) {
+                throw new IllegalArgumentException(String.format(
+                    "The parameter 'INTERVAL' has invalid format. The correct format for partition of type '%s' is '<interval_num>:{year|month|day}'", type()
+                ));
+            }
+
+            try {
+                intervalNum = Integer.parseInt(intervalSplit[0]);
+            }
+            catch (NumberFormatException ex) {
+                throw new IllegalArgumentException(String.format(
+                    "The '<interval_num>' in parameter 'INTERVAL' must be an integer for partition of type '%s'", type()
+                ));
+            }
+            if (intervalNum < 1) {
+                throw new IllegalArgumentException("The '<interval_num>' in parameter 'INTERVAL' must be at least 1, but actual is " + intervalNum);
+            }
+
+            intervalType = IntervalType.typeOf(intervalSplit[1]);
+        }
+
+        // Generate partitions
+        List<DatePartition> partitions = new LinkedList<>();
+        {
+            partitions.add(new DatePartition(column, null, rangeStart));
+
+            boolean isLeftBoundedPartitionAdded = false;
+            Calendar fragStart = rangeStart;
+            do {
+                // Calculate a new fragment
+                Calendar fragEnd = (Calendar)fragStart.clone();
+                switch (intervalType) {
+                    case DAY:
+                        fragEnd.add(Calendar.DAY_OF_MONTH, intervalNum);
+                        break;
+                    case MONTH:
+                        fragEnd.add(Calendar.MONTH, intervalNum);
+                        break;
+                    case YEAR:
+                        fragEnd.add(Calendar.YEAR, intervalNum);
+                        break;
+                    default:
+                        throw new RuntimeException("Unknown INTERVAL type");
+                }
+
+                if (fragEnd.compareTo(rangeEnd) <= 0) {
+                    partitions.add(new DatePartition(column, fragStart, fragEnd));
+                }
+                else {  // fragEnd.compareTo(rangeEnd) > 0
+                    partitions.add(new DatePartition(column, fragStart, null));
+                    isLeftBoundedPartitionAdded = true;
+                }
+
+                fragStart = fragEnd;
+            }
+            while (fragStart.before(rangeEnd));
+
+            if (!isLeftBoundedPartitionAdded) {
+                partitions.add(new DatePartition(column, rangeEnd, null));
+            }
+        }
+
+        return partitions;
     }
 
     /**
@@ -79,55 +175,42 @@ public class DatePartition implements JdbcFragmentMetadata, Serializable {
      * @param end null for left-bounded interval
      */
     public DatePartition(String column, Calendar start, Calendar end) {
-        this(column, start, end, false);
-    }
+        super(column);
+        if (start == null && end == null) {
+            throw new RuntimeException("Both boundaries cannot be null");
+        }
+        if (start != null && start.equals(end)) {
+            throw new RuntimeException(String.format(
+                "Boundaries cannot be equal for partition of type '%s'", type()
+            ));
+        }
 
-    @Override
-    public String getColumn() {
-        return column;
-    }
-
-    @Override
-    public PartitionType getType() {
-        return PartitionType.DATE;
+        this.boundaries = new Date[]{
+            start == null ? null : new Date(start.getTimeInMillis()),
+            end == null ? null : new Date(end.getTimeInMillis())
+        };
     }
 
     @Override
     public String toSqlConstraint(String quoteString, DbProduct dbProduct) {
-        assert quoteString != null;
-        assert dbProduct != null;
-
-        StringBuilder sb = new StringBuilder();
-
-        String columnQuoted = quoteString + column + quoteString;
-
-        if (boundaries.length == 1) {
-            sb.append(columnQuoted).append(" = ").append(dbProduct.wrapDate(boundaries[0]));
+        if (quoteString == null) {
+            throw new RuntimeException("Quote string cannot be null");
         }
-        else {
-            if (boundaries[0] == null) {
-                sb.append(columnQuoted).append(" < ").append(dbProduct.wrapDate(boundaries[1]));
-            }
-            else if (boundaries[1] == null) {
-                sb.append(columnQuoted).append(" > ").append(dbProduct.wrapDate(boundaries[0]));
-            }
-            else {
-                sb.append(columnQuoted).append(" >= ").append(dbProduct.wrapDate(boundaries[0]));
-                sb.append(" AND ");
-                sb.append(columnQuoted);
-                if (isRightClosed) {
-                    sb.append(" <= ");
-                }
-                else {
-                    sb.append(" < ");
-                }
-                sb.append(dbProduct.wrapDate(boundaries[1]));
-            }
+        if (dbProduct == null) {
+            throw new RuntimeException(String.format(
+                "DbProduct cannot be null for partitions of type '%s'", type()
+            ));
         }
-
-        return sb.toString();
+        return RangePartitionsFormatter.generateRangeConstraint(
+            quoteString + column + quoteString,
+            (String[])Stream.of(boundaries).map(b -> b == null ? null : dbProduct.wrapDate(b)).toArray(),
+            new boolean[]{true, false}
+        );
     }
 
+    /**
+     * Getter
+     */
     public Date[] getBoundaries() {
         return boundaries;
     }

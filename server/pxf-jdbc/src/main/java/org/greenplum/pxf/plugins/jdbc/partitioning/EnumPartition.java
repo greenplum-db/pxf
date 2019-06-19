@@ -20,18 +20,60 @@ package org.greenplum.pxf.plugins.jdbc.partitioning;
  */
 
 import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
-import org.greenplum.pxf.plugins.jdbc.partitioning.PartitionType;
 
-import java.io.Serializable;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class EnumPartition implements JdbcFragmentMetadata, Serializable {
-    private static final long serialVersionUID = 1L;
+class EnumPartition extends BasePartition implements JdbcFragmentMetadata {
+    private static final long serialVersionUID = 0L;
 
-    private final String column;
     private final String value;
     private final String[] excluded;
+
+    /**
+     * @return a type of {@link Partition} which is the caller of {@link DatePartition#generate} function.
+     * Currently, only used for exception messages.
+     */
+    public static Partition type() {
+        return Partition.ENUM;
+    }
+
+    /**
+     * Generate an array of {@link EnumPartition}s using the provided column name, RANGE and INTERVAL string values
+     * @param column
+     * @param range
+     * @param interval
+     * @return an array of properly initialized {@link EnumPartition} objects
+     */
+    public static List<EnumPartition> generate(String column, String range, String interval) {
+        // Check input
+        if (column == null) {
+            throw new RuntimeException("The column name must be provided");
+        }
+        if (range == null) {
+            throw new IllegalArgumentException(String.format(
+                "The parameter 'RANGE' must be specified for partition of type '%s'", type()
+            ));
+        }
+
+        // Parse RANGE
+        String[] rangeValues = range.split(":");
+
+        // Generate partitions
+        List<EnumPartition> partitions = new LinkedList<>();
+        {
+            for (String rangeValue : rangeValues) {
+                partitions.add(new EnumPartition(column, rangeValue));
+            }
+
+            // "excluded" values
+            partitions.add(new EnumPartition(column, rangeValues));
+        }
+
+        return partitions;
+    }
 
     /**
      * Construct an EnumPartition with given column and constraint
@@ -39,10 +81,11 @@ public class EnumPartition implements JdbcFragmentMetadata, Serializable {
      * @param value
      */
     public EnumPartition(String column, String value) {
-        assert column != null;
-        assert value != null;
+        super(column);
+        if (value == null) {
+            throw new RuntimeException("Value cannot be null");
+        }
 
-        this.column = column;
         this.value = value;
         excluded = null;
     }
@@ -54,28 +97,20 @@ public class EnumPartition implements JdbcFragmentMetadata, Serializable {
      * @param excluded array of values this partition must NOT include
      */
     public EnumPartition(String column, String[] excluded) {
-        assert column != null;
-        assert excluded != null && excluded.length > 0;
+        super(column);
+        if (excluded == null) {
+            throw new RuntimeException("Excluded values cannot be null");
+        }
 
-        this.column = column;
         value = null;
         this.excluded = excluded;
     }
 
     @Override
-    public String getColumn() {
-        return column;
-    }
-
-    @Override
-    public PartitionType getType() {
-        return PartitionType.ENUM;
-    }
-
-    @Override
     public String toSqlConstraint(String quoteString, DbProduct dbProduct) {
-        assert quoteString != null;
-        assert (value != null && excluded == null) || (value == null && excluded != null);
+        if (quoteString == null) {
+            throw new RuntimeException("Quote string cannot be null");
+        }
 
         StringBuilder sb = new StringBuilder();
 
@@ -85,7 +120,7 @@ public class EnumPartition implements JdbcFragmentMetadata, Serializable {
             sb.append(columnQuoted).append(" = '").append(value).append("'");
         }
         else {
-            // We use multiple inequality as this is the widest supported method to perform this operation
+            // We use inequality operator as it is the widest supported method
             sb.append(Stream.of(excluded)
                 .map(excludedValue -> columnQuoted + " <> '" + excludedValue + "'")
                 .collect(Collectors.joining(" AND "))
@@ -95,10 +130,16 @@ public class EnumPartition implements JdbcFragmentMetadata, Serializable {
         return sb.toString();
     }
 
+    /**
+     * Getter
+     */
     public String getValue() {
         return value;
     }
 
+    /**
+     * Getter
+     */
     public String[] getExcluded() {
         return excluded;
     }
