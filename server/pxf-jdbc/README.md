@@ -361,11 +361,18 @@ Example combinations of options to enable partitioning:
 #### Mechanism
 Extra query constraints (`WHERE` expressions) are automatically added to each fragment to guarantee that every tuple of data is retrieved from the external database exactly once.
 
-Fragments are processed by separate PXF instances simultaneously (using multiple threads). If there are more fragments than PXF instances, some instances will process more than one fragment; if only one PXF instance is available, it will process all fragments.
+Each PXF instance processes the fragments independently from any other PXF instance.
 
-Round-robin scheduling is used to distribute fragments among *GPDB segments*. The first segment (which acquires the first fragment) is chosen pseudo-randomly (the seed is GPDB query transaction identifier). The distribution of fragments does not change dynamically (i.e. if one PXF instance has finished processing of fragments assigned to it, it will not "steal" fragments from other PXF instances).
+Round-robin scheduling is used to distribute fragments among *GPDB segments*. The first segment (which acquires the first fragment) is chosen pseudo-randomly (the seed is GPDB query transaction identifier). The distribution of fragments does not change during fragment processing (i.e. if one PXF instance has finished processing of fragments assigned to it, it will not process fragments assigned to other PXF instances).
 
-Infinite left-bounded and right-bounded intervals form exactly one extra fragment (each bounded range independently).
+As fragments are distributed among GPDB segments (not PXF instances), in case the number of fragments is less or equal to the number of GPDB segments on one host, all fragments may be assigned to a single PXF instance.
+
+In addition to the fragments generated according to the partitioning settings, up to three fragments are generated implicitly:
+* In case of **all partitions**, a fragment with `IS NULL` constraint is generated.
+* In case of **`INT`** and **`DATE`** partitions, two fragments are generated, with constraints covering:
+    * Left-bounded interval (` < range_start_value`);
+    * Right-bounded interval (` > range_end_value`).
+* In case of **`ENUM`** partitions, this is a fragment covering all values *except* for the those that are provided in [partition range](#partition-range) setting.
 
 [Query-preceding SQL command](#query-preceding-sql-command-1) is executed once for *every* fragment. However, the command itself is taken from configuration file of the PXF instance that processes given fragment. Commands may differ (or be absent) in different configuration files. Thus, exact number of times query-preceding SQL command is executed depends on two factors:
 * Number of fragments
