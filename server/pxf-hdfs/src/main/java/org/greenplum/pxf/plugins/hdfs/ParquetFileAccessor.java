@@ -367,6 +367,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
                     dmt = new DecimalMetadata(DECIMAL_PRECISION, DECIMAL_SCALE);
                     break;
                 case TIMESTAMP:
+                case TIMESTAMP_WITH_TIME_ZONE:
                     typeName = PrimitiveTypeName.INT96;
                     break;
                 case DATE:
@@ -380,8 +381,14 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
                 default:
                     throw new UnsupportedTypeException("Type " + columnTypeCode + "is not supported");
             }
-            fields.add(new PrimitiveType(Type.Repetition.OPTIONAL,
-                    typeName, length, columnName, origType, dmt, null));
+            fields.add(new PrimitiveType(
+                    Type.Repetition.OPTIONAL,
+                    typeName,
+                    length,
+                    columnName,
+                    origType,
+                    dmt,
+                    null));
         }
 
         return new MessageType("hive_schema", fields);

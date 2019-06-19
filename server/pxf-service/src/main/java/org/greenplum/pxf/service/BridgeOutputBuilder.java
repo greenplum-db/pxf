@@ -257,9 +257,15 @@ public class BridgeOutputBuilder {
      * @return whether data type is string type
      */
     boolean isStringType(DataType type) {
-        return Arrays.asList(DataType.VARCHAR, DataType.BPCHAR, DataType.TEXT,
-                DataType.NUMERIC, DataType.TIMESTAMP, DataType.DATE).contains(
-                type);
+        return Arrays.asList(
+                DataType.VARCHAR,
+                DataType.BPCHAR,
+                DataType.TEXT,
+                DataType.NUMERIC,
+                DataType.TIMESTAMP,
+                DataType.TIMESTAMP_WITH_TIME_ZONE,
+                DataType.DATE)
+                .contains(type);
     }
 
     /**
