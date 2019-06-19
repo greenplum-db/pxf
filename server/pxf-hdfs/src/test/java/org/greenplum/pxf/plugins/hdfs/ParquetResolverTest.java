@@ -34,6 +34,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -57,6 +58,7 @@ public class ParquetResolverTest {
     private ParquetResolver resolver;
     private RequestContext context;
     private MessageType schema;
+    private String localTimestampString;
 
     @Before
     public void setup() {
@@ -64,6 +66,12 @@ public class ParquetResolverTest {
         context = new RequestContext();
         schema = new MessageType("test");
         context.setMetadata(schema);
+
+        // for test cases that test conversions against server's time zone
+        Instant timestamp = Instant.parse("2013-07-14T04:00:05Z"); // UTC
+        ZonedDateTime localTime = timestamp.atZone(ZoneId.systemDefault());
+        localTimestampString = localTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")); // should be "2013-07-13 21:00:05" in PST
+
     }
 
     @Test
@@ -117,6 +125,8 @@ public class ParquetResolverTest {
         fields.add(new OneField(DataType.TEXT.getOID(), "abcd"));
         fields.add(new OneField(DataType.TEXT.getOID(), "abc"));
         fields.add(new OneField(DataType.BYTEA.getOID(), new byte[]{(byte) 49}));
+        fields.add(new OneField(DataType.TIMESTAMP_WITH_TIME_ZONE.getOID(), "2013-07-13 21:00:05-07"));
+        fields.add(new OneField(DataType.TIMESTAMP_WITH_TIME_ZONE.getOID(), "2013-07-14 16:45:05+12:45"));
         OneRow row = resolver.setFields(fields);
         assertNotNull(row);
         Object data = row.getData();
@@ -144,8 +154,16 @@ public class ParquetResolverTest {
         assertEquals("abc", group.getString(12, 0));
         assertArrayEquals(new byte[]{(byte) 49}, group.getBinary(13, 0).getBytes());
 
+        nanoTime = NanoTime.fromBinary(group.getInt96(14, 0));
+        assertEquals(2456488, nanoTime.getJulianDay()); // 14 Jul 2013 in Julian days
+        assertEquals((4 * 60 * 60 + 5L) * 1000 * 1000 * 1000, nanoTime.getTimeOfDayNanos()); // 04:00:05 time
+
+        nanoTime = NanoTime.fromBinary(group.getInt96(15, 0));
+        assertEquals(2456488, nanoTime.getJulianDay()); // 14 Jul 2013 in Julian days
+        assertEquals((4 * 60 * 60 + 5L) * 1000 * 1000 * 1000, nanoTime.getTimeOfDayNanos()); // 04:00:05 time
+
         // assert value repetition count
-        for (int i = 0; i < 14; i++) {
+        for (int i = 0; i < 16; i++) {
             assertEquals(1, group.getFieldRepetitionCount(i));
         }
     }
@@ -171,6 +189,10 @@ public class ParquetResolverTest {
         fields.add(new OneField(DataType.TEXT.getOID(), null));
         fields.add(new OneField(DataType.TEXT.getOID(), null));
         fields.add(new OneField(DataType.BYTEA.getOID(), null));
+        fields.add(new OneField(DataType.TIMESTAMP_WITH_TIME_ZONE.getOID(), null));
+        fields.add(new OneField(DataType.TIMESTAMP_WITH_TIME_ZONE.getOID(), null));
+
+
         OneRow row = resolver.setFields(fields);
         assertNotNull(row);
         Object data = row.getData();
@@ -178,7 +200,7 @@ public class ParquetResolverTest {
         assertTrue(data instanceof Group);
         Group group = (Group) data;
         // assert value repetition count
-        for (int i = 0; i < 14; i++) {
+        for (int i = 0; i < 16; i++) {
             assertEquals(0, group.getFieldRepetitionCount(i));
         }
     }
@@ -204,11 +226,7 @@ public class ParquetResolverTest {
         List<Group> groups = readParquetFile("primitive_types.parquet", 25, schema);
         assertEquals(25, groups.size());
 
-        Instant timestamp = Instant.parse("2013-07-14T04:00:05Z"); // UTC
-        ZonedDateTime localTime = timestamp.atZone(ZoneId.systemDefault());
-        String localTimestampString = localTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")); // should be "2013-07-13 21:00:05" in PST
-
-        List<OneField> fields = assertRow(groups, 0, 14);
+        List<OneField> fields = assertRow(groups, 0, 16);
         //s1 : "row1" : TEXT
         assertField(fields, 0, "row1", DataType.TEXT);
         assertField(fields, 1, "s_6", DataType.TEXT);
@@ -224,33 +242,37 @@ public class ParquetResolverTest {
         assertField(fields, 11, "abcd", DataType.TEXT);
         assertField(fields, 12, "abc", DataType.TEXT);
         assertField(fields, 13, new byte[]{(byte) 49}, DataType.BYTEA); // 49 is the ascii code for '1'
+        // Parquet only stores the Timestamp (timezone information was lost)
+        assertField(fields, 14, localTimestampString, DataType.TIMESTAMP);
+        // Parquet only stores the Timestamp (timezone information was lost)
+        assertField(fields, 15, localTimestampString, DataType.TIMESTAMP);
 
         // test nulls
-        fields = assertRow(groups, 11, 14);
+        fields = assertRow(groups, 11, 16);
         assertField(fields, 1, null, DataType.TEXT);
-        fields = assertRow(groups, 12, 14);
+        fields = assertRow(groups, 12, 16);
         assertField(fields, 2, null, DataType.INTEGER);
-        fields = assertRow(groups, 13, 14);
+        fields = assertRow(groups, 13, 16);
         assertField(fields, 3, null, DataType.FLOAT8);
-        fields = assertRow(groups, 14, 14);
+        fields = assertRow(groups, 14, 16);
         assertField(fields, 4, null, DataType.NUMERIC);
-        fields = assertRow(groups, 15, 14);
+        fields = assertRow(groups, 15, 16);
         assertField(fields, 5, null, DataType.TIMESTAMP);
-        fields = assertRow(groups, 16, 14);
+        fields = assertRow(groups, 16, 16);
         assertField(fields, 6, null, DataType.REAL);
-        fields = assertRow(groups, 17, 14);
+        fields = assertRow(groups, 17, 16);
         assertField(fields, 7, null, DataType.BIGINT);
-        fields = assertRow(groups, 18, 14);
+        fields = assertRow(groups, 18, 16);
         assertField(fields, 8, null, DataType.BOOLEAN);
-        fields = assertRow(groups, 19, 14);
+        fields = assertRow(groups, 19, 16);
         assertField(fields, 9, null, DataType.SMALLINT);
-        fields = assertRow(groups, 20, 14);
+        fields = assertRow(groups, 20, 16);
         assertField(fields, 10, null, DataType.SMALLINT);
-        fields = assertRow(groups, 22, 14);
+        fields = assertRow(groups, 22, 16);
         assertField(fields, 11, null, DataType.TEXT);
-        fields = assertRow(groups, 23, 14);
+        fields = assertRow(groups, 23, 16);
         assertField(fields, 12, null, DataType.TEXT);
-        fields = assertRow(groups, 24, 14);
+        fields = assertRow(groups, 24, 16);
         assertField(fields, 13, null, DataType.BYTEA);
     }
 
@@ -274,7 +296,7 @@ public class ParquetResolverTest {
         List<Group> groups = readParquetFile("primitive_types.parquet", 25, readSchema);
         assertEquals(25, groups.size());
 
-        List<OneField> fields = assertRow(groups, 0, 14);
+        List<OneField> fields = assertRow(groups, 0, 16);
         //s1 : "row1" : TEXT
         assertField(fields, 0, "row1", DataType.TEXT);
         assertField(fields, 1, null, DataType.TEXT);
@@ -290,33 +312,37 @@ public class ParquetResolverTest {
         assertField(fields, 11, null, DataType.TEXT);
         assertField(fields, 12, "abc", DataType.TEXT);
         assertField(fields, 13, null, DataType.BYTEA); // 49 is the ascii code for '1'
+        // Parquet only stores the Timestamp (timezone information was lost)
+        assertField(fields, 14, localTimestampString, DataType.TIMESTAMP);
+        // Parquet only stores the Timestamp (timezone information was lost)
+        assertField(fields, 15, null, DataType.TIMESTAMP);
 
         // test nulls
-        fields = assertRow(groups, 11, 14);
+        fields = assertRow(groups, 11, 16);
         assertField(fields, 1, null, DataType.TEXT);
-        fields = assertRow(groups, 12, 14);
+        fields = assertRow(groups, 12, 16);
         assertField(fields, 2, null, DataType.INTEGER);
-        fields = assertRow(groups, 13, 14);
+        fields = assertRow(groups, 13, 16);
         assertField(fields, 3, null, DataType.FLOAT8);
-        fields = assertRow(groups, 14, 14);
+        fields = assertRow(groups, 14, 16);
         assertField(fields, 4, null, DataType.NUMERIC);
-        fields = assertRow(groups, 15, 14);
+        fields = assertRow(groups, 15, 16);
         assertField(fields, 5, null, DataType.TIMESTAMP);
-        fields = assertRow(groups, 16, 14);
+        fields = assertRow(groups, 16, 16);
         assertField(fields, 6, null, DataType.REAL);
-        fields = assertRow(groups, 17, 14);
+        fields = assertRow(groups, 17, 16);
         assertField(fields, 7, null, DataType.BIGINT);
-        fields = assertRow(groups, 18, 14);
+        fields = assertRow(groups, 18, 16);
         assertField(fields, 8, null, DataType.BOOLEAN);
-        fields = assertRow(groups, 19, 14);
+        fields = assertRow(groups, 19, 16);
         assertField(fields, 9, null, DataType.SMALLINT);
-        fields = assertRow(groups, 20, 14);
+        fields = assertRow(groups, 20, 16);
         assertField(fields, 10, null, DataType.SMALLINT);
-        fields = assertRow(groups, 22, 14);
+        fields = assertRow(groups, 22, 16);
         assertField(fields, 11, null, DataType.TEXT);
-        fields = assertRow(groups, 23, 14);
+        fields = assertRow(groups, 23, 16);
         assertField(fields, 12, null, DataType.TEXT);
-        fields = assertRow(groups, 24, 14);
+        fields = assertRow(groups, 24, 16);
         assertField(fields, 13, null, DataType.BYTEA);
     }
 
@@ -416,9 +442,20 @@ public class ParquetResolverTest {
         byte[] byteArray2 = new byte[]{(byte) 52, (byte) 53, (byte) 54};
         group.add(13, Binary.fromReusedByteArray(byteArray2, 0, 3));
 
+        group.add(14, ParquetTypeConverter.getBinaryFromTimestampWithTimeZone("2019-03-14 14:10:28+07"));
+        OffsetDateTime offsetDateTime1 = OffsetDateTime.parse("2019-03-14T14:10:28+07:00");
+        ZonedDateTime localDateTime1 = offsetDateTime1.atZoneSameInstant(ZoneId.systemDefault());
+        String localDateTimeString1 = localDateTime1.format(DateTimeFormatter.ofPattern("[yyyy-MM-dd HH:mm:ss]"));
+
+        group.add(15, ParquetTypeConverter.getBinaryFromTimestampWithTimeZone("2019-03-14 14:10:28-07:30"));
+        OffsetDateTime offsetDateTime2 = OffsetDateTime.parse("2019-03-14T14:10:28-07:30");
+        ZonedDateTime localDateTime2 = offsetDateTime2.atZoneSameInstant(ZoneId.systemDefault());
+        String localDateTimeString2 = localDateTime2.format(DateTimeFormatter.ofPattern("[yyyy-MM-dd HH:mm:ss]"));
+
+
         List<Group> groups = new ArrayList<>();
         groups.add(group);
-        List<OneField> fields = assertRow(groups, 0, 14);
+        List<OneField> fields = assertRow(groups, 0, 16);
 
         assertField(fields, 0, "[\"row1-1\",\"row1-2\"]", DataType.TEXT);
         assertField(fields, 1, "[]", DataType.TEXT);
@@ -436,6 +473,8 @@ public class ParquetResolverTest {
         Base64.Encoder encoder = Base64.getEncoder(); // byte arrays are Base64 encoded into strings
         String expectedByteArrays = "[\"" + encoder.encodeToString(byteArray1) + "\",\"" + encoder.encodeToString(byteArray2) + "\"]";
         assertField(fields, 13, expectedByteArrays, DataType.TEXT);
+        assertField(fields, 14, "[\"" + localDateTimeString1 + "\"]", DataType.TEXT);
+        assertField(fields, 15, "[\"" + localDateTimeString2 + "\"]", DataType.TEXT);
     }
 
     @Test
@@ -490,6 +529,9 @@ public class ParquetResolverTest {
         fields.add(new PrimitiveType(repetition, PrimitiveTypeName.BINARY, "vc1", OriginalType.UTF8));
         fields.add(new PrimitiveType(repetition, PrimitiveTypeName.BINARY, "c1", OriginalType.UTF8));
         fields.add(new PrimitiveType(repetition, PrimitiveTypeName.BINARY, "bin", null));
+
+        fields.add(new PrimitiveType(repetition, PrimitiveTypeName.INT96, "tmtz", null));
+        fields.add(new PrimitiveType(repetition, PrimitiveTypeName.INT96, "tmtz2", null));
 
         return new MessageType("hive_schema", fields);
     }

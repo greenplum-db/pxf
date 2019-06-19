@@ -18,6 +18,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Base64;
@@ -199,6 +200,8 @@ public enum ParquetTypeConverter {
         return valueOf(primitiveType.getPrimitiveTypeName().name());
     }
 
+
+
     // ********** PUBLIC INTERFACE **********
     public abstract DataType getDataType(Type type);
 
@@ -213,7 +216,7 @@ public enum ParquetTypeConverter {
     private static final long NANOS_IN_MICROS = 1000;
     private static final Logger LOG = LoggerFactory.getLogger(ParquetTypeConverter.class);
 
-    // Convert parquet byte array to java timestamp
+    // Convert parquet byte array to java timestamp IN LOCAL SERVER'S TIME ZONE
     public static String bytesToTimestamp(byte[] bytes) {
         ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
         byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
@@ -242,6 +245,23 @@ public enum ParquetTypeConverter {
         // We convert it to an instant of the current server timezone
         LocalDateTime date = LocalDateTime.parse(timestampString, GreenplumDateTime.DATETIME_FORMATTER);
         ZonedDateTime zdt = ZonedDateTime.of(date, ZoneId.systemDefault());
+        return getBinaryFromZonedDateTime(timestampString, zdt);
+    }
+
+    /**
+     * Converts a "timestamp with time zone" string to a INT96 byte array.
+     * Supports microseconds for timestamps
+     * @param timestampWithTimeZoneString
+     * @return Binary format of the timestamp with time zone string
+     */
+    public static Binary getBinaryFromTimestampWithTimeZone(String timestampWithTimeZoneString) {
+        OffsetDateTime date = OffsetDateTime.parse(timestampWithTimeZoneString, GreenplumDateTime.DATETIME_WITH_TIMEZONE_FORMATTER);
+        ZonedDateTime zdt = date.toZonedDateTime();
+        return getBinaryFromZonedDateTime(timestampWithTimeZoneString, zdt);
+    }
+
+    // Helper method that takes a ZonedDateTime object and return it as nano time in binary form (UTC)
+    private static Binary getBinaryFromZonedDateTime(String timestampString, ZonedDateTime zdt) {
         long timeMicros = (zdt.toEpochSecond() * SECOND_IN_MICROS) + zdt.getNano() / NANOS_IN_MICROS;
         long daysSinceEpoch = timeMicros / MICROS_IN_DAY;
         int julianDays = (int) (JULIAN_EPOCH_OFFSET_DAYS + daysSinceEpoch);

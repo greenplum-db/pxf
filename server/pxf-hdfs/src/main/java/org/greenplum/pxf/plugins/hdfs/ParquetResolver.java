@@ -38,6 +38,8 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.apache.parquet.schema.Type.Repetition.REPEATED;
 
@@ -46,6 +48,8 @@ public class ParquetResolver extends BasePlugin implements Resolver {
     private MessageType schema;
     private SimpleGroupFactory groupFactory;
     private ObjectMapper mapper = new ObjectMapper();
+
+    private static final Pattern pattern = Pattern.compile("[\\+-]\\d{2}(:\\d{2})?$");
 
     @Override
     public List<OneField> getFields(OneRow row) {
@@ -124,8 +128,15 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                 }
                 group.add(index, Binary.fromReusedByteArray(bytes));
                 break;
-            case INT96:
-                group.add(index, ParquetTypeConverter.getBinaryFromTimestamp((String) field.val));
+            case INT96:  // SQL standard timestamp string value with or without time zone literals: https://www.postgresql.org/docs/9.4/datatype-datetime.html
+                String timestamp = (String) field.val;
+                if (pattern.matcher(timestamp).find()) {
+                    // Note: this conversion convert type "timestamp with time zone" will lose timezone information
+                    // while preserving the correct value. (as Parquet doesn't support timestamp with time zone.
+                    group.add(index, ParquetTypeConverter.getBinaryFromTimestampWithTimeZone(timestamp));
+                } else {
+                    group.add(index, ParquetTypeConverter.getBinaryFromTimestamp(timestamp));
+                }
                 break;
             case BOOLEAN:
                 group.add(index, (Boolean) field.val);

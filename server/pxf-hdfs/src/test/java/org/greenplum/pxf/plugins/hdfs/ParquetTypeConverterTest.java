@@ -7,8 +7,11 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -55,6 +58,56 @@ public class ParquetTypeConverterTest {
         byte[] source = new byte[]{0, 106, 9, 53, -76, 12, 0, 0, -66, -125, 37, 0}; // represents 2019-03-14 20:52:48.1234567
         String timestamp = ParquetTypeConverter.bytesToTimestamp(source); // nanos get dropped
         assertEquals(expected, timestamp);
+    }
+
+    @Test
+    public void testTimestampWithTimezoneStringConversionRoundTrip() {
+        String expectedTimestampInUTC = "2016-06-22 02:06:25";
+        String expectedTimestampInSystemTimeZone = convertUTCToCurrentSystemTimeZone(expectedTimestampInUTC, GreenplumDateTime.DATETIME_FORMATTER);
+
+        // Conversion roundtrip for test input (timestamp)
+        String timestamp = "2016-06-21 22:06:25-04";
+        Binary binary = ParquetTypeConverter.getBinaryFromTimestampWithTimeZone(timestamp);
+        String convertedTimestamp = ParquetTypeConverter.bytesToTimestamp(binary.getBytes());
+
+        assertEquals(expectedTimestampInSystemTimeZone, convertedTimestamp);
+    }
+
+    @Test
+    public void testTimestampWithTimezoneWithMicrosecondsStringConversionRoundTrip() {
+        String expectedTimestampInUTC = "2019-07-11 01:54:53.523485";
+        String expectedTimestampInSystemTimeZone = convertUTCToCurrentSystemTimeZone(expectedTimestampInUTC, GreenplumDateTime.DATETIME_FORMATTER);
+
+        // Conversion roundtrip for test input (timestamp)
+        String timestamp = "2019-07-10 21:54:53.523485-04";
+        Binary binary = ParquetTypeConverter.getBinaryFromTimestampWithTimeZone(timestamp);
+        String convertedTimestamp = ParquetTypeConverter.bytesToTimestamp(binary.getBytes());
+
+        assertEquals(expectedTimestampInSystemTimeZone, convertedTimestamp);
+    }
+
+    @Test
+    public void testTimestampWithTimezoneWithMicrosecondsStringConversionRoundTrip1() {
+        String expectedTimestampInUTC = "2019-07-10 18:54:47.354795";
+        String expectedTimestampInSystemTimeZone = convertUTCToCurrentSystemTimeZone(expectedTimestampInUTC, GreenplumDateTime.DATETIME_FORMATTER);
+
+        // Conversion roundtrip for test input (timestamp)
+        String timestamp = "2019-07-11 07:39:47.354795+12:45";
+        Binary binary = ParquetTypeConverter.getBinaryFromTimestampWithTimeZone(timestamp);
+        String convertedTimestamp = ParquetTypeConverter.bytesToTimestamp(binary.getBytes());
+
+        assertEquals(expectedTimestampInSystemTimeZone, convertedTimestamp);
+    }
+
+    // Helper function
+    private String convertUTCToCurrentSystemTimeZone(String expectedUTC, DateTimeFormatter formatter) {
+        // convert expectedUTC string to ZonedDateTime d
+        LocalDateTime date = LocalDateTime.parse(expectedUTC, formatter);
+        ZonedDateTime zdt = ZonedDateTime.of(date, ZoneOffset.UTC);
+        // convert d to Current Zone ID
+        ZonedDateTime systemZdt = zdt.withZoneSameInstant(ZoneId.systemDefault());
+        // convert date to string representation
+        return systemZdt.format(GreenplumDateTime.DATETIME_FORMATTER);
     }
 
 }

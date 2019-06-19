@@ -190,7 +190,7 @@ public class ConnectionManagerTest {
         manager.cleanCache();
 
         // wait for at least 3 iteration of sleeping
-        Uninterruptibles.sleepUninterruptibly(500, TimeUnit.MILLISECONDS);
+        Uninterruptibles.sleepUninterruptibly(2500, TimeUnit.MILLISECONDS);
 
         verify(mockMBean, times(3)).getActiveConnections();
         verify(mockDataSource, times(1)).close(); // verify datasource is closed when evicted
