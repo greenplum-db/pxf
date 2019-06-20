@@ -189,8 +189,8 @@ public class ConnectionManagerTest {
         ticker.advanceTime(ConnectionManager.POOL_EXPIRATION_TIMEOUT_HOURS + 1, TimeUnit.HOURS);
         manager.cleanCache();
 
-        // wait for at least 3 iteration of sleeping (3 * 50ms = 150ms)
-        Uninterruptibles.sleepUninterruptibly(150, TimeUnit.MILLISECONDS);
+        // wait for at least 3 iteration of sleeping
+        Uninterruptibles.sleepUninterruptibly(500, TimeUnit.MILLISECONDS);
 
         verify(mockMBean, times(3)).getActiveConnections();
         verify(mockDataSource, times(1)).close(); // verify datasource is closed when evicted
