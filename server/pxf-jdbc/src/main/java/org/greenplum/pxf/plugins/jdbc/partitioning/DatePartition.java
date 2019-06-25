@@ -201,9 +201,10 @@ class DatePartition extends BasePartition implements JdbcFragmentMetadata {
                 "DbProduct cannot be null for partitions of type '%s'", type()
             ));
         }
+
         return RangePartitionsFormatter.generateRangeConstraint(
             quoteString + column + quoteString,
-            (String[])Stream.of(boundaries).map(b -> b == null ? null : dbProduct.wrapDate(b)).toArray(),
+            Stream.of(boundaries).map(b -> b == null ? null : dbProduct.wrapDate(b)).toArray(String[]::new),
             new boolean[]{true, false}
         );
     }

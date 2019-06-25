@@ -61,7 +61,7 @@ public class IntPartitionTestGenerate {
         assertFragmentRangeEquals(parts.get(2), 2008L, null);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testRangeIntSwappedInvalid() throws Exception {
         thrown.expect(IllegalArgumentException.class);
 

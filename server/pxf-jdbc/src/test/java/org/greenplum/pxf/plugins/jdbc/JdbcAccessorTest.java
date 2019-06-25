@@ -2,7 +2,8 @@ package org.greenplum.pxf.plugins.jdbc;
 
 import org.apache.commons.lang.SerializationUtils;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.plugins.jdbc.partitioning.IntPartition;
+import org.greenplum.pxf.plugins.jdbc.partitioning.Partition;
+import org.greenplum.pxf.plugins.jdbc.utils.ConnectionManager;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -39,8 +40,11 @@ public class JdbcAccessorTest {
     private JdbcAccessor accessor;
     private RequestContext context;
 
-    private Statement mockStatement;
-    private ResultSet mockResultSet;
+    @Mock private ConnectionManager mockConnectionManager;
+    @Mock private DatabaseMetaData mockMetaData;
+    @Mock private Connection mockConnection;
+    @Mock private Statement mockStatement;
+    @Mock private ResultSet mockResultSet;
 
     @Before
     public void setup() throws SQLException {
@@ -144,7 +148,7 @@ public class JdbcAccessorTest {
         context.addOption("PARTITION_BY", "count:int");
         context.addOption("RANGE", "1:10");
         context.addOption("INTERVAL", "1");
-        context.setFragmentMetadata(SerializationUtils.serialize(new IntPartition("count", 1L, 1L)));
+        context.setFragmentMetadata(SerializationUtils.serialize(Partition.INT.fragments("count", "1:10", "1").get(1)));
         ArgumentCaptor<String> queryPassed = ArgumentCaptor.forClass(String.class);
         when(mockStatement.executeQuery(queryPassed.capture())).thenReturn(mockResultSet);
 
@@ -169,7 +173,7 @@ public class JdbcAccessorTest {
         context.addOption("PARTITION_BY", "count:int");
         context.addOption("RANGE", "1:10");
         context.addOption("INTERVAL", "1");
-        context.setFragmentMetadata(SerializationUtils.serialize(new IntPartition("count", 1L, 1L)));
+        context.setFragmentMetadata(SerializationUtils.serialize(Partition.INT.fragments("count", "1:10", "1").get(1)));
         ArgumentCaptor<String> queryPassed = ArgumentCaptor.forClass(String.class);
         when(mockStatement.executeQuery(queryPassed.capture())).thenReturn(mockResultSet);
 

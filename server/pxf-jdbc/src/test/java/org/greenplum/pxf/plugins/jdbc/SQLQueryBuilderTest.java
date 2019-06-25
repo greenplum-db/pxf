@@ -120,7 +120,7 @@ public class SQLQueryBuilderTest {
         JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
         fragment.initialize(context);
         List<Fragment> fragments = fragment.getFragments();
-        assertEquals(9, fragments.size());
+        assertEquals(8, fragments.size());
 
         SQLQueryBuilder builder;
         String query;
@@ -147,15 +147,9 @@ public class SQLQueryBuilderTest {
         builder = new SQLQueryBuilder(context, mockMetaData);
         builder.autoSetQuoteString();
         query = builder.buildSelectQuery();
-        assertEquals(SQL + " WHERE cdate >= DATE('2008-11-01') AND cdate <= DATE('2008-12-01')", query);
+        assertEquals(SQL + " WHERE cdate >= DATE('2008-11-01')", query);
 
         context.setFragmentMetadata(fragments.get(7).getMetadata());
-        builder = new SQLQueryBuilder(context, mockMetaData);
-        builder.autoSetQuoteString();
-        query = builder.buildSelectQuery();
-        assertEquals(SQL + " WHERE cdate > DATE('2008-12-01')", query);
-
-        context.setFragmentMetadata(fragments.get(8).getMetadata());
         builder = new SQLQueryBuilder(context, mockMetaData);
         builder.autoSetQuoteString();
         query = builder.buildSelectQuery();

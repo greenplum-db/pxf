@@ -59,7 +59,7 @@ public class EnumPartitionTestGenerate {
 
     private void assertEnumPartitionEquals(EnumPartition partition, String value) {
         assertEquals(value, partition.getValue());
-        assertNull(partition.getValue());
+        assertNull(partition.getExcluded());
     }
 
     private void assertEnumPartitionEquals(EnumPartition partition, String[] excludedValues) {

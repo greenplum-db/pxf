@@ -57,12 +57,12 @@ public class DatePartitionTestGenerate {
 
         List<DatePartition> parts = DatePartition.generate(COLUMN, RANGE, INTERVAL);
 
-        assertEquals(14, parts.size());
+        assertEquals(13, parts.size());
         assertDatePartitionEquals(parts.get(0), null, Date.valueOf("2008-01-01"));
         assertDatePartitionEquals(parts.get(1), Date.valueOf("2008-01-01"), Date.valueOf("2008-02-01"));
         assertDatePartitionEquals(parts.get(6), Date.valueOf("2008-06-01"), Date.valueOf("2008-07-01"));
-        assertDatePartitionEquals(parts.get(12), Date.valueOf("2008-12-01"), Date.valueOf("2008-12-31"));
-        assertDatePartitionEquals(parts.get(13), Date.valueOf("2008-12-31"), null);
+        assertDatePartitionEquals(parts.get(11), Date.valueOf("2008-11-01"), Date.valueOf("2008-12-01"));
+        assertDatePartitionEquals(parts.get(12), Date.valueOf("2008-12-01"), null);
     }
 
     @Test
@@ -73,12 +73,12 @@ public class DatePartitionTestGenerate {
 
         List<DatePartition> parts = DatePartition.generate(COLUMN, RANGE, INTERVAL);
 
-        assertEquals(12, parts.size());
+        assertEquals(11, parts.size());
         assertDatePartitionEquals(parts.get(0), null, Date.valueOf("2008-02-03"));
         assertDatePartitionEquals(parts.get(1), Date.valueOf("2008-02-03"), Date.valueOf("2009-02-03"));
         assertDatePartitionEquals(parts.get(6), Date.valueOf("2013-02-03"), Date.valueOf("2014-02-03"));
-        assertDatePartitionEquals(parts.get(10), Date.valueOf("2017-02-03"), Date.valueOf("2018-02-03"));
-        assertDatePartitionEquals(parts.get(11), Date.valueOf("2018-02-02"), null);
+        assertDatePartitionEquals(parts.get(9), Date.valueOf("2016-02-03"), Date.valueOf("2017-02-03"));
+        assertDatePartitionEquals(parts.get(10), Date.valueOf("2017-02-03"), null);
     }
 
     @Test

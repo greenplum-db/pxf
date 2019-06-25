@@ -65,7 +65,7 @@ public class NullPartitionTest {
         new NullPartition(null);
     }
 
-    @Test(expected = AssertionError.class)
+    @Test
     public void testInvalidNullQuoteString() throws Exception {
         NullPartition partition = new NullPartition(COL_RAW);
 

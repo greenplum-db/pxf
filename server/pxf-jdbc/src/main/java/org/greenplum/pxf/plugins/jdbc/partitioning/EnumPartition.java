@@ -101,6 +101,9 @@ class EnumPartition extends BasePartition implements JdbcFragmentMetadata {
         if (excluded == null) {
             throw new RuntimeException("Excluded values cannot be null");
         }
+        if (excluded.length == 0) {
+            throw new RuntimeException("Array of excluded values cannot be of zero length");
+        }
 
         value = null;
         this.excluded = excluded;

@@ -49,7 +49,7 @@ public class IntPartitionTest {
 
     @Test
     public void testRightBounded() throws Exception {
-        IntPartition partition = new IntPartition(COL_RAW, null, 0L);
+        IntPartition partition = new IntPartition(COL_RAW, null, 0L, true);
         String constraint = partition.toSqlConstraint(QUOTE, dbProduct);
 
         assertEquals(
@@ -60,11 +60,33 @@ public class IntPartitionTest {
 
     @Test
     public void testLeftBounded() throws Exception {
-        IntPartition partition = new IntPartition(COL_RAW, 0L, null);
+        IntPartition partition = new IntPartition(COL_RAW, 0L, null, true);
         String constraint = partition.toSqlConstraint(QUOTE, dbProduct);
 
         assertEquals(
             COL + " > 0",
+            constraint
+        );
+    }
+
+    @Test
+    public void testRightBoundedInclusive() throws Exception {
+        IntPartition partition = new IntPartition(COL_RAW, null, 0L);
+        String constraint = partition.toSqlConstraint(QUOTE, dbProduct);
+
+        assertEquals(
+            COL + " <= 0",
+            constraint
+        );
+    }
+
+    @Test
+    public void testLeftBoundedInclusive() throws Exception {
+        IntPartition partition = new IntPartition(COL_RAW, 0L, null);
+        String constraint = partition.toSqlConstraint(QUOTE, dbProduct);
+
+        assertEquals(
+            COL + " >= 0",
             constraint
         );
     }
