@@ -321,33 +321,41 @@ Three settings control the feature:
 
 * **[Partition By](#partition-by)** enables partitioning and indicates which column to use as a partition column (the column to which constraints are applied). Only one column can be a partition column. This setting must have format `<column>:<column_type>`, where:
     * `<column>` is the name of the partition column;
-    * `<column_type>` is the data type of the partition column (hereinafter referred to as "partition type"). **Supported types** are `INT`, `DATE`, `ENUM` and `NULL`.
+    * `<column_type>` is the data type of the partition column (hereinafter referred to as "partition type"). **Supported types** are `INT`, `DATE` and `ENUM`.
         * `INT` and `DATE` partitions are for columns of the same types. These partitions are range-based (see below).
         * `ENUM` is a partition for text columns. This is a value-based partition (see below).
-        * `NULL` is a special partition. It separates the whole dataset using two partitions with constraints `IS NULL` and `IS NOT NULL`.
 
 * **[Partition Range](#partition-range)** indicates the range of data to form partitions on. It must be in special format, depending on partition type:
     * `INT`. Format is `<start_value>:<end_value>`. PXF considers values to form a closed interval (`... >= start_value AND ... <= end_value`);
     * `DATE`. Format is `<start_value>:<end_value>` and each date must be in format `yyyy-MM-dd`. PXF considers values to form a closed interval (`... >= start_value AND ... <= end_value`);
-    * `ENUM`. Format is `<value>:<value>[:<value>[...]]`. Each `<value>` forms its own partition;
-    * `NULL`. The setting is ignored.
+    * `ENUM`. Format is `<value>:<value>[:<value>[...]]`. Each `<value>` forms its own partition.
 
 * **[Partition Interval](#partition-interval)** indicates the size of each partition, except for the last one (its size may be smaller than the provided, depending on the Partition Range setting). This setting is processed differently for different partition types:
     * `INT`. Format is `<value>`;
     * `DATE`. Format is `<value>:<unit>`, where `<unit>` is `year`, `month` or `day`;
-    * `ENUM`, `NULL`. The setting is ignored.
+    * `ENUM`. The setting is ignored.
 
 
 ##### `INT` and `DATE` partitions
 In `INT` and `DATE` partitions, every fragment queries data from either closed or bounded interval (intervals are formed according to [Partition interval](#partition-interval) and [Partition Range](#partition-range) settings).
 
-For example, `LOCATION` clause containing `PARTITION_BY=id:int&RANGE=1:5&INTERVAL=2` makes PXF produce 6 fragments, covering the whole range of data. Their constraints are as follows (column name is omitted for simplicity):
+For example, a `LOCATION` clause containing `PARTITION_BY=id:int&RANGE=1:5&INTERVAL=2` makes PXF produce five fragments, covering the whole range of data. Their constraints are as follows (column name is omitted for simplicity):
 1. `< 1`
 2. `>= 1 AND <= 2`
 3. `>= 3 AND <= 4`
-4. `= 5`
-5. `> 5`
-6. `IS NULL`
+4. `>= 5`
+5. `IS NULL`
+
+
+##### `ENUM` partitions
+`ENUM` partitions are value-based: every value of its [Range](#partition-range) forms its own partition.
+
+For example, a `LOCATION` clause containing `PARTITION_BY=col:enum&RANGE=a:b:c` makes PXF produce five fragments, covering the whole range of data. Their constraints are as follows:
+1. `col = 'a'`
+2. `col = 'b'`
+3. `col = 'c'`
+4. `col <> 'a' AND col <> 'b' AND col <> 'c'`
+5. `col IS NULL`
 
 
 ##### Example
@@ -365,14 +373,12 @@ Each PXF instance processes the fragments independently from any other PXF insta
 
 Round-robin scheduling is used to distribute fragments among *GPDB segments*. The first segment (which acquires the first fragment) is chosen pseudo-randomly (the seed is GPDB query transaction identifier). The distribution of fragments does not change during fragment processing (i.e. if one PXF instance has finished processing of fragments assigned to it, it will not process fragments assigned to other PXF instances).
 
-As fragments are distributed among GPDB segments (not PXF instances), in case the number of fragments is less or equal to the number of GPDB segments on one host, all fragments may be assigned to a single PXF instance.
+As fragments are distributed among GPDB segments (not PXF instances), in case the amount of fragments is less or equal to the number of GPDB segments on one host, all fragments may be assigned to a single PXF instance.
 
 In addition to the fragments generated according to the partitioning settings, up to three fragments are generated implicitly:
 * In case of **all partitions**, a fragment with `IS NULL` constraint is generated.
-* In case of **`INT`** and **`DATE`** partitions, two fragments are generated, with constraints covering:
-    * Left-bounded interval (` < range_start_value`);
-    * Right-bounded interval (` > range_end_value`).
-* In case of **`ENUM`** partitions, this is a fragment covering all values *except* for the those that are provided in [partition range](#partition-range) setting.
+* In case of **`INT`** and **`DATE`** partitions, up to two fragments are generated, with constraints covering left-bounded interval (` < range_start_value`) and right-bounded interval (` > range_end_value`). The latter is "merged" with normal constraints (becoming ` >= some_value_in_range`) if the range of the last fragment is smaller than the requested interval.
+* In case of **`ENUM`** partitions, a fragment covering all values *except* for the those that are provided in [partition range](#partition-range) setting is generated.
 
 [Query-preceding SQL command](#query-preceding-sql-command-1) is executed once for *every* fragment. However, the command itself is taken from configuration file of the PXF instance that processes given fragment. Commands may differ (or be absent) in different configuration files. Thus, exact number of times query-preceding SQL command is executed depends on two factors:
 * Number of fragments
