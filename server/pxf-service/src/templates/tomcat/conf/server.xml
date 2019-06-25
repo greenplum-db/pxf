@@ -33,8 +33,8 @@ under the License.
                   type="org.apache.catalina.UserDatabase"/>
     </GlobalNamingResources>
     <Service name="Catalina">
-        <Executor maxThreads="300"
-                  minSpareThreads="50"
+        <Executor maxThreads="${executor.threads.max}"
+                  minSpareThreads="25"
                   name="tomcatThreadPool"
                   namePrefix="tomcat-http--"/>
         <Engine defaultHost="localhost"

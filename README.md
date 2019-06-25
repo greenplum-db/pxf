@@ -47,7 +47,7 @@ ln -s ~/<git_repos_root> ~/workspace
 
 To build PXF, you must have:
 
-- JDK 1.8+
+- JDK 1.8 (6/7/2019: can't go above 1.8 or it won't work)
 - Go (1.9 or later)
 
 To install Go on CentOS, `sudo yum install go`.

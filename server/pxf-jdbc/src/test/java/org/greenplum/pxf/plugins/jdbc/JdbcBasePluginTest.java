@@ -20,290 +20,240 @@ package org.greenplum.pxf.plugins.jdbc;
  */
 
 import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.plugins.jdbc.utils.ConnectionManager;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.mockito.runners.MockitoJUnitRunner;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
-import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Mockito.anyInt;
 import static org.mockito.Mockito.anyObject;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({DriverManager.class, JdbcBasePlugin.class})
+@RunWith(MockitoJUnitRunner.class)
 public class JdbcBasePluginTest {
+
+    @Rule public ExpectedException thrown = ExpectedException.none();
+
+    @Mock private ConnectionManager mockConnectionManager;
+    @Mock private DatabaseMetaData mockMetaData;
+    @Mock private Connection mockConnection;
+    @Mock private PreparedStatement mockStatement;
+
+    private SQLException exception = new SQLException("some error");
+    private RequestContext context;
+    private Map<String, String> additionalProps;
+    private Properties poolProps;
+
+    @Before public void before() {
+        context = new RequestContext();
+        context.setDataSource("test-table");
+        additionalProps = new HashMap<>();
+        context.setAdditionalConfigProps(additionalProps);
+
+        poolProps = new Properties();
+        poolProps.setProperty("maximumPoolSize", "5");
+        poolProps.setProperty("connectionTimeout", "30000");
+        poolProps.setProperty("idleTimeout", "30000");
+        poolProps.setProperty("minimumIdle", "0");
+    }
+
     @Test
     public void testCloseConnectionWithCommit() throws Exception {
-        DatabaseMetaData databaseMetaData = mock(DatabaseMetaData.class);
-        when(databaseMetaData.supportsTransactions()).thenReturn(true);
+        when(mockMetaData.supportsTransactions()).thenReturn(true);
+        when(mockConnection.getMetaData()).thenReturn(mockMetaData);
+        when(mockConnection.isClosed()).thenReturn(false);
+        when(mockConnection.getAutoCommit()).thenReturn(false);
+        Mockito.doNothing().when(mockConnection).commit();
+        Mockito.doNothing().when(mockConnection).close();
+        when(mockStatement.getConnection()).thenReturn(mockConnection);
+        Mockito.doNothing().when(mockStatement).close();
 
-        Connection connection = mock(Connection.class);
-        when(connection.getMetaData()).thenReturn(databaseMetaData);
-        when(connection.isClosed()).thenReturn(false);
-        when(connection.getAutoCommit()).thenReturn(false);
-        Mockito.doNothing().when(connection).commit();
-        Mockito.doNothing().when(connection).close();
+        JdbcBasePlugin.closeStatementAndConnection(mockStatement);
 
-        Statement statement = mock(Statement.class);
-        when(statement.getConnection()).thenReturn(connection);
-        Mockito.doNothing().when(statement).close();
-
-        // Test method
-        JdbcBasePlugin.closeStatementAndConnection(statement);
-
-        // Check
-        Mockito.verify(statement, times(1)).close();
-        Mockito.verify(connection, times(1)).close();
-
-        Mockito.verify(connection, times(1)).commit();
+        verify(mockStatement, times(1)).close();
+        verify(mockConnection, times(1)).close();
+        verify(mockConnection, times(1)).commit();
     }
 
     @Test
     public void testCloseConnectionWithoutCommit() throws Exception {
-        DatabaseMetaData databaseMetaData = mock(DatabaseMetaData.class);
-        when(databaseMetaData.supportsTransactions()).thenReturn(true);
+        when(mockMetaData.supportsTransactions()).thenReturn(true);
+        when(mockConnection.getMetaData()).thenReturn(mockMetaData);
+        when(mockConnection.isClosed()).thenReturn(false);
+        when(mockConnection.getAutoCommit()).thenReturn(true);
+        Mockito.doNothing().when(mockConnection).close();
+        when(mockStatement.getConnection()).thenReturn(mockConnection);
+        Mockito.doNothing().when(mockStatement).close();
 
-        Connection connection = mock(Connection.class);
-        when(connection.getMetaData()).thenReturn(databaseMetaData);
-        when(connection.isClosed()).thenReturn(false);
-        when(connection.getAutoCommit()).thenReturn(true);
-        Mockito.doNothing().when(connection).close();
+        JdbcBasePlugin.closeStatementAndConnection(mockStatement);
 
-        Statement statement = mock(Statement.class);
-        when(statement.getConnection()).thenReturn(connection);
-        Mockito.doNothing().when(statement).close();
-
-        // Test method
-        JdbcBasePlugin.closeStatementAndConnection(statement);
-
-        // Check
-        Mockito.verify(statement, times(1)).close();
-        Mockito.verify(connection, times(1)).close();
+        verify(mockStatement, times(1)).close();
+        verify(mockConnection, times(1)).close();
     }
 
     @Test
     public void testCloseConnectionWithoutTransactions() throws Exception {
-        DatabaseMetaData databaseMetaData = mock(DatabaseMetaData.class);
-        when(databaseMetaData.supportsTransactions()).thenReturn(false);
+        when(mockMetaData.supportsTransactions()).thenReturn(false);
+        when(mockConnection.getMetaData()).thenReturn(mockMetaData);
+        when(mockConnection.isClosed()).thenReturn(false);
+        when(mockConnection.getAutoCommit()).thenReturn(true);
+        Mockito.doNothing().when(mockConnection).close();
+        when(mockStatement.getConnection()).thenReturn(mockConnection);
+        Mockito.doNothing().when(mockStatement).close();
 
-        Connection connection = mock(Connection.class);
-        when(connection.getMetaData()).thenReturn(databaseMetaData);
-        when(connection.isClosed()).thenReturn(false);
-        when(connection.getAutoCommit()).thenReturn(true);
-        Mockito.doNothing().when(connection).close();
+        JdbcBasePlugin.closeStatementAndConnection(mockStatement);
 
-        Statement statement = mock(Statement.class);
-        when(statement.getConnection()).thenReturn(connection);
-        Mockito.doNothing().when(statement).close();
-
-        // Test method
-        JdbcBasePlugin.closeStatementAndConnection(statement);
-
-        // Check
-        Mockito.verify(statement, times(1)).close();
-        Mockito.verify(connection, times(1)).close();
+        verify(mockStatement, times(1)).close();
+        verify(mockConnection, times(1)).close();
     }
 
     @Test
     public void testCloseConnectionClosed() throws Exception {
-        DatabaseMetaData databaseMetaData = mock(DatabaseMetaData.class);
-        when(databaseMetaData.supportsTransactions()).thenReturn(false);
+        when(mockMetaData.supportsTransactions()).thenReturn(false);
+        when(mockConnection.getMetaData()).thenReturn(mockMetaData);
+        when(mockConnection.isClosed()).thenReturn(true);
+        when(mockConnection.getAutoCommit()).thenReturn(true);
+        Mockito.doNothing().when(mockConnection).close();
+        when(mockStatement.getConnection()).thenReturn(mockConnection);
+        Mockito.doNothing().when(mockStatement).close();
 
-        Connection connection = mock(Connection.class);
-        when(connection.getMetaData()).thenReturn(databaseMetaData);
-        when(connection.isClosed()).thenReturn(true);
-        when(connection.getAutoCommit()).thenReturn(true);
-        Mockito.doNothing().when(connection).close();
+        JdbcBasePlugin.closeStatementAndConnection(mockStatement);
 
-        Statement statement = mock(Statement.class);
-        when(statement.getConnection()).thenReturn(connection);
-        Mockito.doNothing().when(statement).close();
-
-        // Test method
-        JdbcBasePlugin.closeStatementAndConnection(statement);
-
-        // Check
-        Mockito.verify(statement, times(1)).close();
+        verify(mockStatement, times(1)).close();
     }
 
     @Test
     public void testCloseConnectionWithExceptionDatabaseMetaData() throws Exception {
-        SQLException exception = new SQLException("SQLException");
+        when(mockStatement.getConnection()).thenReturn(mockConnection);
+        Mockito.doNothing().when(mockStatement).close();
+        when(mockConnection.isClosed()).thenReturn(false);
+        when(mockConnection.getAutoCommit()).thenReturn(false);
+        Mockito.doNothing().when(mockConnection).commit();
+        Mockito.doNothing().when(mockConnection).close();
+        when(mockConnection.getMetaData()).thenReturn(mockMetaData);
+        doThrow(exception).when(mockMetaData).supportsTransactions();
 
-        DatabaseMetaData databaseMetaData = mock(DatabaseMetaData.class);
-        Mockito.doThrow(exception).when(databaseMetaData).supportsTransactions();
-
-        Connection connection = mock(Connection.class);
-        when(connection.getMetaData()).thenReturn(databaseMetaData);
-        when(connection.isClosed()).thenReturn(false);
-        when(connection.getAutoCommit()).thenReturn(false);
-        Mockito.doNothing().when(connection).commit();
-        Mockito.doNothing().when(connection).close();
-
-        Statement statement = mock(Statement.class);
-        when(statement.getConnection()).thenReturn(connection);
-        Mockito.doNothing().when(statement).close();
-
-        // Test method and check
         try {
-            JdbcBasePlugin.closeStatementAndConnection(statement);
+            JdbcBasePlugin.closeStatementAndConnection(mockStatement);
             fail("SQLException must have been thrown");
         } catch (Exception e) {
             assertSame(exception, e);
         }
 
-        Mockito.verify(statement, times(1)).close();
-        Mockito.verify(connection, times(1)).close();
+        verify(mockStatement, times(1)).close();
+        verify(mockConnection, times(1)).close();
     }
 
     @Test
     public void testCloseConnectionWithExceptionConnectionOnCommit() throws Exception {
-        SQLException exception = new SQLException("SQLException");
+        when(mockStatement.getConnection()).thenReturn(mockConnection);
+        Mockito.doNothing().when(mockStatement).close();
+        when(mockConnection.getMetaData()).thenReturn(mockMetaData);
+        when(mockMetaData.supportsTransactions()).thenReturn(true);
+        when(mockConnection.isClosed()).thenReturn(false);
+        when(mockConnection.getAutoCommit()).thenReturn(false);
+        doThrow(exception).when(mockConnection).commit();
+        Mockito.doNothing().when(mockConnection).close();
 
-        DatabaseMetaData databaseMetaData = mock(DatabaseMetaData.class);
-        when(databaseMetaData.supportsTransactions()).thenReturn(true);
-
-        Connection connection = mock(Connection.class);
-        when(connection.getMetaData()).thenReturn(databaseMetaData);
-        when(connection.isClosed()).thenReturn(false);
-        when(connection.getAutoCommit()).thenReturn(false);
-        Mockito.doThrow(exception).when(connection).commit();
-        Mockito.doNothing().when(connection).close();
-
-        Statement statement = mock(Statement.class);
-        when(statement.getConnection()).thenReturn(connection);
-        Mockito.doNothing().when(statement).close();
-
-        // Test method and check
         try {
-            JdbcBasePlugin.closeStatementAndConnection(statement);
+            JdbcBasePlugin.closeStatementAndConnection(mockStatement);
             fail("SQLException must have been thrown");
         } catch (Exception e) {
             assertSame(exception, e);
         }
 
-        Mockito.verify(statement, times(1)).close();
-        Mockito.verify(connection, times(1)).close();
+        verify(mockStatement, times(1)).close();
+        verify(mockConnection, times(1)).close();
     }
 
     @Test
     public void testCloseConnectionWithExceptionConnectionOnClose() throws Exception {
-        SQLException exception = new SQLException("SQLException");
+        when(mockStatement.getConnection()).thenReturn(mockConnection);
+        Mockito.doNothing().when(mockStatement).close();
+        when(mockConnection.getMetaData()).thenReturn(mockMetaData);
+        when(mockMetaData.supportsTransactions()).thenReturn(false);
+        when(mockConnection.isClosed()).thenReturn(false);
+        when(mockConnection.getAutoCommit()).thenReturn(false);
+        Mockito.doNothing().when(mockConnection).commit();
+        doThrow(exception).when(mockConnection).close();
 
-        DatabaseMetaData databaseMetaData = mock(DatabaseMetaData.class);
-        when(databaseMetaData.supportsTransactions()).thenReturn(false);
+        JdbcBasePlugin.closeStatementAndConnection(mockStatement);
 
-        Connection connection = mock(Connection.class);
-        when(connection.getMetaData()).thenReturn(databaseMetaData);
-        when(connection.isClosed()).thenReturn(false);
-        when(connection.getAutoCommit()).thenReturn(false);
-        Mockito.doNothing().when(connection).commit();
-        Mockito.doThrow(exception).when(connection).close();
-
-        Statement statement = mock(Statement.class);
-        when(statement.getConnection()).thenReturn(connection);
-        Mockito.doNothing().when(statement).close();
-
-        JdbcBasePlugin.closeStatementAndConnection(statement);
-
-        Mockito.verify(statement, times(1)).close();
+        verify(mockStatement, times(1)).close();
     }
 
     @Test
     public void testCloseConnectionWithExceptionStatementOnClose() throws Exception {
-        SQLException exception = new SQLException("SQLException");
+        when(mockStatement.getConnection()).thenReturn(mockConnection);
+        when(mockConnection.getMetaData()).thenReturn(mockMetaData);
+        when(mockMetaData.supportsTransactions()).thenReturn(false);
+        when(mockConnection.isClosed()).thenReturn(false);
+        when(mockConnection.getAutoCommit()).thenReturn(false);
+        Mockito.doNothing().when(mockConnection).commit();
+        Mockito.doNothing().when(mockConnection).close();
+        doThrow(exception).when(mockStatement).close();
 
-        DatabaseMetaData databaseMetaData = mock(DatabaseMetaData.class);
-        when(databaseMetaData.supportsTransactions()).thenReturn(false);
-
-        Connection connection = mock(Connection.class);
-        when(connection.getMetaData()).thenReturn(databaseMetaData);
-        when(connection.isClosed()).thenReturn(false);
-        when(connection.getAutoCommit()).thenReturn(false);
-        Mockito.doNothing().when(connection).commit();
-        Mockito.doNothing().when(connection).close();
-
-        Statement statement = mock(Statement.class);
-        when(statement.getConnection()).thenReturn(connection);
-        Mockito.doThrow(exception).when(statement).close();
-
-        // Test method and check
         try {
-            JdbcBasePlugin.closeStatementAndConnection(statement);
+            JdbcBasePlugin.closeStatementAndConnection(mockStatement);
             fail("SQLException must have been thrown");
         } catch (Exception e) {
             assertSame(exception, e);
         }
 
-        Mockito.verify(connection, times(1)).close();
+        verify(mockConnection, times(1)).close();
     }
 
     @Test
     public void testCloseConnectionWithExceptionStatementOnGetConnection() throws Exception {
-        SQLException exception = new SQLException("SQLException");
+        when(mockConnection.getMetaData()).thenReturn(mockMetaData);
+        when(mockMetaData.supportsTransactions()).thenReturn(false);
+        when(mockConnection.isClosed()).thenReturn(false);
+        when(mockConnection.getAutoCommit()).thenReturn(false);
+        Mockito.doNothing().when(mockConnection).commit();
+        Mockito.doNothing().when(mockConnection).close();
+        doThrow(exception).when(mockStatement).getConnection();
+        Mockito.doNothing().when(mockStatement).close();
 
-        DatabaseMetaData databaseMetaData = mock(DatabaseMetaData.class);
-        when(databaseMetaData.supportsTransactions()).thenReturn(false);
-
-        Connection connection = mock(Connection.class);
-        when(connection.getMetaData()).thenReturn(databaseMetaData);
-        when(connection.isClosed()).thenReturn(false);
-        when(connection.getAutoCommit()).thenReturn(false);
-        Mockito.doNothing().when(connection).commit();
-        Mockito.doNothing().when(connection).close();
-
-        Statement statement = mock(Statement.class);
-        Mockito.doThrow(exception).when(statement).getConnection();
-        Mockito.doNothing().when(statement).close();
-
-        // Test method and check
         try {
-            JdbcBasePlugin.closeStatementAndConnection(statement);
+            JdbcBasePlugin.closeStatementAndConnection(mockStatement);
             fail("SQLException must have been thrown");
         } catch (Exception e) {
             assertSame(exception, e);
         }
 
-        Mockito.verify(statement, times(1)).close();
+        verify(mockStatement, times(1)).close();
     }
 
     @Test
     public void testTransactionIsolationNotSetByUser() throws SQLException {
-        PowerMockito.mockStatic(DriverManager.class);
-
-        RequestContext context = new RequestContext();
-        context.setDataSource("test-table");
-        Map<String, String> additionalProps = new HashMap<>();
         additionalProps.put("jdbc.driver", "org.greenplum.pxf.plugins.jdbc.FakeJdbcDriver");
         additionalProps.put("jdbc.url", "test-url");
-        context.setAdditionalConfigProps(additionalProps);
 
-        Connection mockConnection = mock(Connection.class);
-        DatabaseMetaData fakeMetaData = mock(DatabaseMetaData.class);
-        when(mockConnection.getMetaData()).thenReturn(fakeMetaData);
-        when(DriverManager.getConnection(anyString(), anyObject())).thenReturn(mockConnection);
+        when(mockConnectionManager.getConnection(anyString(), anyString(), anyObject(), anyBoolean(), anyObject())).thenReturn(mockConnection);
+        when(mockConnection.getMetaData()).thenReturn(mockMetaData);
 
-        JdbcBasePlugin plugin = new JdbcBasePlugin();
+        JdbcBasePlugin plugin = new JdbcBasePlugin(mockConnectionManager);
         plugin.initialize(context);
         Connection conn = plugin.getConnection();
 
@@ -312,75 +262,49 @@ public class JdbcBasePluginTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testTransactionIsolationSetByUserToInvalidValue() throws SQLException {
-        PowerMockito.mockStatic(DriverManager.class);
-
-        RequestContext context = new RequestContext();
-        context.setDataSource("test-table");
-        Map<String, String> additionalProps = new HashMap<>();
         additionalProps.put("jdbc.driver", "org.greenplum.pxf.plugins.jdbc.FakeJdbcDriver");
         additionalProps.put("jdbc.url", "test-url");
         additionalProps.put("jdbc.connection.transactionIsolation", "foobarValue");
-        context.setAdditionalConfigProps(additionalProps);
 
-        Connection mockConnection = mock(Connection.class);
-        DatabaseMetaData fakeMetaData = mock(DatabaseMetaData.class);
-        when(mockConnection.getMetaData()).thenReturn(fakeMetaData);
-        when(DriverManager.getConnection(anyString(), anyObject())).thenReturn(mockConnection);
+        when(mockConnectionManager.getConnection(anyString(), anyString(), anyObject(), anyBoolean(), anyObject())).thenReturn(mockConnection);
+        when(mockConnection.getMetaData()).thenReturn(mockMetaData);
 
-        JdbcBasePlugin plugin = new JdbcBasePlugin();
+        JdbcBasePlugin plugin = new JdbcBasePlugin(mockConnectionManager);
         plugin.initialize(context);
     }
 
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
 
     @Test
     public void testTransactionIsolationSetByUserToUnsupportedValue() throws SQLException {
-        PowerMockito.mockStatic(DriverManager.class);
+        thrown.expect(SQLException.class);
+        thrown.expectMessage("Transaction isolation level READ_UNCOMMITTED is not supported");
 
-        RequestContext context = new RequestContext();
-        context.setDataSource("test-table");
-        Map<String, String> additionalProps = new HashMap<>();
         additionalProps.put("jdbc.driver", "org.greenplum.pxf.plugins.jdbc.FakeJdbcDriver");
         additionalProps.put("jdbc.url", "test-url");
         additionalProps.put("jdbc.connection.transactionIsolation", "READ_UNCOMMITTED");
-        context.setAdditionalConfigProps(additionalProps);
 
-        Connection mockConnection = mock(Connection.class);
-        DatabaseMetaData fakeMetaData = mock(DatabaseMetaData.class);
+        when(mockConnectionManager.getConnection(anyString(), anyString(), anyObject(), anyBoolean(), anyObject())).thenReturn(mockConnection);
+        when(mockConnection.getMetaData()).thenReturn(mockMetaData);
         // READ_UNCOMMITTED is level 1
-        when(fakeMetaData.supportsTransactionIsolationLevel(1)).thenReturn(false);
-        when(mockConnection.getMetaData()).thenReturn(fakeMetaData);
-        when(DriverManager.getConnection(anyString(), anyObject())).thenReturn(mockConnection);
+        when(mockMetaData.supportsTransactionIsolationLevel(1)).thenReturn(false);
 
-        JdbcBasePlugin plugin = new JdbcBasePlugin();
-
-        thrown.expect(RuntimeException.class);
-        thrown.expectMessage("Transaction isolation level READ_UNCOMMITTED is not supported");
+        JdbcBasePlugin plugin = new JdbcBasePlugin(mockConnectionManager);
         plugin.initialize(context);
         plugin.getConnection();
     }
 
     @Test
     public void testTransactionIsolationSetByUserToValidValue() throws SQLException {
-        PowerMockito.mockStatic(DriverManager.class);
-
-        RequestContext context = new RequestContext();
-        context.setDataSource("test-table");
-        Map<String, String> additionalProps = new HashMap<>();
         additionalProps.put("jdbc.driver", "org.greenplum.pxf.plugins.jdbc.FakeJdbcDriver");
         additionalProps.put("jdbc.url", "test-url");
         additionalProps.put("jdbc.connection.transactionIsolation", "READ_COMMITTED");
-        context.setAdditionalConfigProps(additionalProps);
 
-        Connection mockConnection = mock(Connection.class);
-        DatabaseMetaData fakeMetaData = mock(DatabaseMetaData.class);
+        when(mockConnectionManager.getConnection(anyString(), anyString(), anyObject(), anyBoolean(), anyObject())).thenReturn(mockConnection);
+        when(mockConnection.getMetaData()).thenReturn(mockMetaData);
         // READ_COMMITTED is level 2
-        when(fakeMetaData.supportsTransactionIsolationLevel(2)).thenReturn(true);
-        when(mockConnection.getMetaData()).thenReturn(fakeMetaData);
-        when(DriverManager.getConnection(anyString(), anyObject())).thenReturn(mockConnection);
+        when(mockMetaData.supportsTransactionIsolationLevel(2)).thenReturn(true);
 
-        JdbcBasePlugin plugin = new JdbcBasePlugin();
+        JdbcBasePlugin plugin = new JdbcBasePlugin(mockConnectionManager);
         plugin.initialize(context);
         Connection conn = plugin.getConnection();
 
@@ -390,21 +314,175 @@ public class JdbcBasePluginTest {
 
     @Test(expected = SQLException.class)
     public void testTransactionIsolationSetByUserFailedToGetMetadata() throws SQLException {
-        PowerMockito.mockStatic(DriverManager.class);
-
-        RequestContext context = new RequestContext();
-        context.setDataSource("test-table");
-        Map<String, String> additionalProps = new HashMap<>();
         additionalProps.put("jdbc.driver", "org.greenplum.pxf.plugins.jdbc.FakeJdbcDriver");
         additionalProps.put("jdbc.url", "test-url");
-        context.setAdditionalConfigProps(additionalProps);
 
-        Connection mockConnection = mock(Connection.class);
+        when(mockConnectionManager.getConnection(anyString(), anyString(), anyObject(), anyBoolean(), anyObject())).thenReturn(mockConnection);
         doThrow(new SQLException("")).when(mockConnection).getMetaData();
-        when(DriverManager.getConnection(anyString(), anyObject())).thenReturn(mockConnection);
 
-        JdbcBasePlugin plugin = new JdbcBasePlugin();
+        JdbcBasePlugin plugin = new JdbcBasePlugin(mockConnectionManager);
         plugin.initialize(context);
         plugin.getConnection();
+    }
+
+    @Test
+    public void testGetPreparedStatementSetsQueryTimeoutIfSpecified() throws SQLException {
+        additionalProps.put("jdbc.driver", "org.greenplum.pxf.plugins.jdbc.FakeJdbcDriver");
+        additionalProps.put("jdbc.url", "test-url");
+        additionalProps.put("jdbc.statement.queryTimeout", "173");
+
+        when(mockConnectionManager.getConnection(anyString(), anyString(), anyObject(), anyBoolean(), anyObject())).thenReturn(mockConnection);
+        when(mockConnection.getMetaData()).thenReturn(mockMetaData);
+        when(mockConnection.prepareStatement(anyString())).thenReturn(mockStatement);
+
+        JdbcBasePlugin plugin = new JdbcBasePlugin(mockConnectionManager);
+        plugin.initialize(context);
+        plugin.getPreparedStatement(mockConnection, "foo");
+
+        verify(mockStatement).setQueryTimeout(173);
+    }
+
+    @Test
+    public void testGetPreparedStatementDoesNotSetQueryTimeoutIfNotSpecified() throws SQLException {
+        additionalProps.put("jdbc.driver", "org.greenplum.pxf.plugins.jdbc.FakeJdbcDriver");
+        additionalProps.put("jdbc.url", "test-url");
+
+        when(mockConnectionManager.getConnection(anyString(), anyString(), anyObject(), anyBoolean(), anyObject())).thenReturn(mockConnection);
+        when(mockConnection.getMetaData()).thenReturn(mockMetaData);
+        when(mockConnection.prepareStatement(anyString())).thenReturn(mockStatement);
+
+        JdbcBasePlugin plugin = new JdbcBasePlugin(mockConnectionManager);
+        plugin.initialize(context);
+        plugin.getPreparedStatement(mockConnection, "foo");
+
+        verify(mockStatement, never()).setQueryTimeout(anyInt());
+    }
+
+    @Test
+    public void testGetConnectionNoConnPropsPoolDisabled() throws SQLException {
+        context.setServerName("test-server");
+        additionalProps.put("jdbc.driver", "org.greenplum.pxf.plugins.jdbc.FakeJdbcDriver");
+        additionalProps.put("jdbc.url", "test-url");
+        additionalProps.put("jdbc.pool.enabled", "false");
+
+        when(mockConnectionManager.getConnection(anyString(), anyString(), anyObject(), anyBoolean(), anyObject())).thenReturn(mockConnection);
+        when(mockConnection.getMetaData()).thenReturn(mockMetaData);
+
+        JdbcBasePlugin plugin = new JdbcBasePlugin(mockConnectionManager);
+        plugin.initialize(context);
+        Connection conn = plugin.getConnection();
+
+        assertSame(mockConnection, conn);
+
+        verify(mockConnectionManager).getConnection("test-server", "test-url", new Properties(), false, null);
+    }
+
+    @Test
+    public void testGetConnectionConnPropsPoolDisabled() throws SQLException {
+        context.setServerName("test-server");
+        additionalProps.put("jdbc.driver", "org.greenplum.pxf.plugins.jdbc.FakeJdbcDriver");
+        additionalProps.put("jdbc.url", "test-url");
+        additionalProps.put("jdbc.connection.property.foo", "foo-val");
+        additionalProps.put("jdbc.connection.property.bar", "bar-val");
+        additionalProps.put("jdbc.pool.enabled", "false");
+
+        when(mockConnectionManager.getConnection(anyString(), anyString(), anyObject(), anyBoolean(), anyObject())).thenReturn(mockConnection);
+        when(mockConnection.getMetaData()).thenReturn(mockMetaData);
+
+        JdbcBasePlugin plugin = new JdbcBasePlugin(mockConnectionManager);
+        plugin.initialize(context);
+        Connection conn = plugin.getConnection();
+
+        assertSame(mockConnection, conn);
+
+        Properties connProps = new Properties();
+        connProps.setProperty("foo", "foo-val");
+        connProps.setProperty("bar", "bar-val");
+
+        verify(mockConnectionManager).getConnection("test-server", "test-url", connProps, false, null);
+    }
+
+    @Test
+    public void testGetConnectionConnPropsPoolEnabledNoPoolProps() throws SQLException {
+        context.setServerName("test-server");
+        additionalProps.put("jdbc.driver", "org.greenplum.pxf.plugins.jdbc.FakeJdbcDriver");
+        additionalProps.put("jdbc.url", "test-url");
+        additionalProps.put("jdbc.connection.property.foo", "foo-val");
+        additionalProps.put("jdbc.connection.property.bar", "bar-val");
+        // pool is enabled by default
+
+        when(mockConnectionManager.getConnection(anyString(), anyString(), anyObject(), anyBoolean(), anyObject())).thenReturn(mockConnection);
+        when(mockConnection.getMetaData()).thenReturn(mockMetaData);
+
+        JdbcBasePlugin plugin = new JdbcBasePlugin(mockConnectionManager);
+        plugin.initialize(context);
+        Connection conn = plugin.getConnection();
+
+        assertSame(mockConnection, conn);
+
+        Properties connProps = new Properties();
+        connProps.setProperty("foo", "foo-val");
+        connProps.setProperty("bar", "bar-val");
+
+        verify(mockConnectionManager).getConnection("test-server", "test-url", connProps, true, poolProps);
+    }
+
+    @Test
+    public void testGetConnectionConnPropsPoolEnabledPoolProps() throws SQLException {
+        context.setServerName("test-server");
+        additionalProps.put("jdbc.driver", "org.greenplum.pxf.plugins.jdbc.FakeJdbcDriver");
+        additionalProps.put("jdbc.url", "test-url");
+        additionalProps.put("jdbc.connection.property.foo", "foo-val");
+        additionalProps.put("jdbc.connection.property.bar", "bar-val");
+        additionalProps.put("jdbc.pool.enabled", "true");
+        additionalProps.put("jdbc.pool.property.abc", "abc-val");
+        additionalProps.put("jdbc.pool.property.xyz", "xyz-val");
+        additionalProps.put("jdbc.pool.property.maximumPoolSize", "99"); // overwrite default
+
+        when(mockConnectionManager.getConnection(anyString(), anyString(), anyObject(), anyBoolean(), anyObject())).thenReturn(mockConnection);
+        when(mockConnection.getMetaData()).thenReturn(mockMetaData);
+
+        JdbcBasePlugin plugin = new JdbcBasePlugin(mockConnectionManager);
+        plugin.initialize(context);
+        Connection conn = plugin.getConnection();
+
+        assertSame(mockConnection, conn);
+
+        Properties connProps = new Properties();
+        connProps.setProperty("foo", "foo-val");
+        connProps.setProperty("bar", "bar-val");
+
+        poolProps.setProperty("abc", "abc-val");
+        poolProps.setProperty("xyz", "xyz-val");
+        poolProps.setProperty("maximumPoolSize", "99");
+
+        verify(mockConnectionManager).getConnection("test-server", "test-url", connProps, true, poolProps);
+    }
+
+    @Test
+    public void testGetConnectionConnPropsPoolDisabledPoolProps() throws SQLException {
+        context.setServerName("test-server");
+        additionalProps.put("jdbc.driver", "org.greenplum.pxf.plugins.jdbc.FakeJdbcDriver");
+        additionalProps.put("jdbc.url", "test-url");
+        additionalProps.put("jdbc.connection.property.foo", "foo-val");
+        additionalProps.put("jdbc.connection.property.bar", "bar-val");
+        additionalProps.put("jdbc.pool.enabled", "false");
+        additionalProps.put("jdbc.pool.property.abc", "abc-val");
+        additionalProps.put("jdbc.pool.property.xyz", "xyz-val");
+
+        when(mockConnectionManager.getConnection(anyString(), anyString(), anyObject(), anyBoolean(), anyObject())).thenReturn(mockConnection);
+        when(mockConnection.getMetaData()).thenReturn(mockMetaData);
+
+        JdbcBasePlugin plugin = new JdbcBasePlugin(mockConnectionManager);
+        plugin.initialize(context);
+        Connection conn = plugin.getConnection();
+
+        assertSame(mockConnection, conn);
+
+        Properties connProps = new Properties();
+        connProps.setProperty("foo", "foo-val");
+        connProps.setProperty("bar", "bar-val");
+
+        verify(mockConnectionManager).getConnection("test-server", "test-url", connProps, false, null);
     }
 }

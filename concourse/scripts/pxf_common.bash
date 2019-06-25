@@ -3,6 +3,7 @@
 GPHOME="/usr/local/greenplum-db-devel"
 PXF_HOME="${GPHOME}/pxf"
 MDD_VALUE="/data/gpdata/master/gpseg-1"
+PXF_COMMON_SRC_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
 # on purpose do not call this PXF_CONF so that it is not set during pxf operations
 PXF_CONF_DIR="/home/gpadmin/pxf"
@@ -57,37 +58,39 @@ function build_install_gpdb() {
     popd
 
 }
-function install_gpdb_binary() {
 
+function install_gpdb_binary() {
 	if [[ -d bin_gpdb ]]; then
 		mkdir -p ${GPHOME}
 		tar -xzf bin_gpdb/*.tar.gz -C ${GPHOME}
 	else
-	    build_install_gpdb
+		build_install_gpdb
 	fi
 
+	local gphome python_dir python_version=2.7 export_pythonpath='export PYTHONPATH=$PYTHONPATH'
 	if [[ ${TARGET_OS} == "centos" ]]; then
 		# We can't use service sshd restart as service is not installed on CentOS 7.
 		/usr/sbin/sshd &
-		psi_dir=$(find /usr/lib64 -name psi | sort -r | head -1)
+		# CentOS 6 uses python 2.6
+		if grep 'CentOS release 6' /etc/centos-release; then
+			python_version=2.6
+		fi
+		python_dir=python${python_version}/site-packages
+		export_pythonpath+=:/usr/lib/${python_dir}:/usr/lib64/$python_dir
 	elif [[ ${TARGET_OS} == "ubuntu" ]]; then
-        # Adjust GPHOME if the binary expects it to be /usr/local/gpdb
-        gphome=$(grep "^GPHOME=" /usr/local/greenplum-db-devel/greenplum_path.sh | cut -d"=" -f2)
-        if [[ ${gphome} == "/usr/local/gpdb" ]]; then
-            mv /usr/local/greenplum-db-devel /usr/local/gpdb
-            GPHOME="/usr/local/gpdb"
-            PXF_HOME="${GPHOME}/pxf"
-        fi
+		# Adjust GPHOME if the binary expects it to be /usr/local/gpdb
+		gphome=$(grep ^GPHOME= /usr/local/greenplum-db-devel/greenplum_path.sh | cut -d= -f2)
+		if [[ $gphome == /usr/local/gpdb ]]; then
+			mv /usr/local/greenplum-db-devel /usr/local/gpdb
+			GPHOME=/usr/local/gpdb
+			PXF_HOME=${GPHOME}/pxf
+		fi
 		service ssh start
-		pip install psi
-		psi_dir=$(find /usr/local/lib -name psi | sort -r | head -1)
+		python_dir=python${python_version}/dist-packages
+		export_pythonpath+=:/usr/local/lib/$python_dir
 	fi
 
-	# Copy PSI package from system python to GPDB as automation test requires it
-	if [[ ! -d ${GPHOME}/lib/python/psi ]]; then
-		cp -r ${psi_dir} ${GPHOME}/lib/python
-	fi
-
+	echo "$export_pythonpath" >> "${PXF_COMMON_SRC_DIR}/../../automation/tinc/main/tinc_env.sh"
 }
 
 function remote_access_to_gpdb() {

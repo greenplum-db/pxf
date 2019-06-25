@@ -45,7 +45,7 @@ import java.util.List;
 public class HdfsDataFragmenter extends BaseFragmenter {
 
     protected JobConf jobConf;
-    private HcfsType hcfsType;
+    protected HcfsType hcfsType;
 
     @Override
     public void initialize(RequestContext context) {

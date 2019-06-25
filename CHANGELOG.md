@@ -1,5 +1,44 @@
 # Changelog
 
+## 5.6.0 (06/19/2019)
+
+#### Bug Fixes:
+
+- [#182](https://github.com/greenplum-db/pxf/pull/182) Run a named query that ends with semicolon
+
+#### Enhancements:
+
+- [#188](https://github.com/greenplum-db/pxf/pull/188) Support for FDW
+- [#186](https://github.com/greenplum-db/pxf/pull/186) Enable JDBC Connection Pooling
+- [#183](https://github.com/greenplum-db/pxf/pull/183) Upgrade postgres driver to version 42.2.5
+
+---
+
+## 5.5.1 (06/03/2019)
+
+#### Bug Fixes:
+
+- [#180](https://github.com/greenplum-db/pxf/pull/180) Upgrade the Postgres JDBC Driver version
+
+---
+
+## 5.5.0 (05/31/2019)
+
+#### Bug Fixes:
+
+- [#176](https://github.com/greenplum-db/pxf/pull/176) Upgrade jackson 2 version from 2.9.8 -> 2.9.9
+
+#### Enhancements:
+
+- [#171](https://github.com/greenplum-db/pxf/pull/171) Enable JDBC connection to Hive and JDBC-specific user impersonation per server
+- [#178](https://github.com/greenplum-db/pxf/pull/178) Make pxf threads configurable
+- [#172](https://github.com/greenplum-db/pxf/pull/172) Support user-specific configuration in server
+- [#169](https://github.com/greenplum-db/pxf/pull/169) HdfsFileFragmenter
+- [#162](https://github.com/greenplum-db/pxf/pull/162) Kill JVM/Tomcat on OutOfMemoryError
+- [#160](https://github.com/greenplum-db/pxf/pull/160) JDBC: Optimize resolver for INSERT queries
+
+---
+
 ## 5.4.0 (05/13/2019)
 
 #### Bug Fixes:

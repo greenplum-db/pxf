@@ -19,6 +19,9 @@ PXF_CONF="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
 # Memory
 # export PXF_JVM_OPTS="-Xmx2g -Xms1g"
 
+# Threads
+# export PXF_MAX_THREADS="200"
+
 # Kerberos path to keytab file owned by pxf service with permissions 0400
 # export PXF_KEYTAB="${PXF_CONF}/keytabs/pxf.service.keytab"
 

@@ -24,6 +24,7 @@ import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.ConfigurationFactory;
+import org.greenplum.pxf.plugins.jdbc.utils.ConnectionManager;
 import org.greenplum.pxf.plugins.jdbc.writercallable.WriterCallable;
 import org.greenplum.pxf.plugins.jdbc.writercallable.WriterCallableFactory;
 import org.slf4j.Logger;
@@ -70,6 +71,21 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
     private List<Future<SQLException> > poolTasks = null;
 
     /**
+     * Creates a new instance of accessor with default connection manager.
+     */
+    public JdbcAccessor() {
+        super();
+    }
+
+    /**
+     * Creates a new instance of accessor with provided connection manager.
+     * @param connectionManager connection manager
+     */
+    JdbcAccessor(ConnectionManager connectionManager) {
+        super(connectionManager);
+    }
+
+    /**
      * openForRead() implementation
      * Create query, open JDBC connection, execute query and store the result into resultSet
      *
@@ -80,7 +96,7 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
      * @throws ClassNotFoundException if the JDBC driver was not found
      */
     @Override
-    public boolean openForRead() throws SQLException, SQLTimeoutException, ParseException, ClassNotFoundException {
+    public boolean openForRead() throws SQLException, SQLTimeoutException, ParseException {
         if (statementRead != null && !statementRead.isClosed()) {
             return true;
         }
@@ -101,7 +117,11 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
         // Execute queries
         statementRead = connection.createStatement();
         statementRead.setFetchSize(fetchSize);
-        statementRead.setQueryTimeout(queryTimeout);
+
+        if (queryTimeout != null) {
+            LOG.debug("Setting query timeout to {} seconds", queryTimeout);
+            statementRead.setQueryTimeout(queryTimeout);
+        }
         resultSetRead = statementRead.executeQuery(queryRead);
 
         return true;
@@ -156,15 +176,13 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
         // Build INSERT query
         if (quoteColumns == null) {
             sqlQueryBuilder.autoSetQuoteString();
-        }
-        else if (quoteColumns) {
+        } else if (quoteColumns) {
             sqlQueryBuilder.forceSetQuoteString();
         }
         queryWrite = sqlQueryBuilder.buildInsertQuery();
         LOG.trace("Insert query: {}", queryWrite);
 
         statementWrite = super.getPreparedStatement(connection, queryWrite);
-        statementWrite.setQueryTimeout(queryTimeout);
 
         // Process batchSize
         if (!connection.getMetaData().supportsBatchUpdates()) {
@@ -327,6 +345,11 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
         if (StringUtils.isBlank(queryText)) {
             throw new RuntimeException(String.format("Query text file is empty for query %s", queryName));
         }
+
+        // Remove one or more semicolons followed by optional blank space
+        // happening at the end of the query
+        queryText = queryText.replaceFirst("(;+\\s*)+$", "");
+
         return queryText;
     }
 

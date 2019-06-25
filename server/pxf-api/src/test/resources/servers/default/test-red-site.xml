@@ -3,4 +3,8 @@
         <name>test.red</name>
         <value>red</value>
     </property>
+    <property>
+        <name>test.red.key</name>
+        <value>redvaluefromred</value>
+    </property>
 </configuration>

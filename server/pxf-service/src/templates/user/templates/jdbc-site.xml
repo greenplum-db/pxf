@@ -21,6 +21,38 @@
         <description>Password for connecting to the database (e.g. postgres)</description>
     </property>
 
+    <!-- Connection Pool properties -->
+    <!-- You can use properties described here: https://github.com/brettwooldridge/HikariCP
+         except for the following ones: dataSourceClassName, jdbcUrl, username, password,
+         dataSource.user, dataSource.password
+    -->
+    <property>
+        <name>jdbc.pool.enabled</name>
+        <value>true</value>
+        <description>Use connection pool for JDBC</description>
+    </property>
+
+    <property>
+        <name>jdbc.pool.property.maximumPoolSize</name>
+        <value>5</value>
+        <description>The maximum number of actual connections to the database backend</description>
+    </property>
+    <property>
+        <name>jdbc.pool.property.connectionTimeout</name>
+        <value>30000</value>
+        <description>The maximum time (in milliseconds) to wait for a connection from the pool</description>
+    </property>
+    <property>
+        <name>jdbc.pool.property.idleTimeout</name>
+        <value>30000</value>
+        <description>The maximum time (in milliseconds) that a connection will sit idle in the pool</description>
+    </property>
+    <property>
+        <name>jdbc.pool.property.minimumIdle</name>
+        <value>0</value>
+        <description>The minimum number of idle connections to maintain in the pool</description>
+    </property>
+
     <!-- Statement level properties -->
     <!--
     <property>
@@ -76,6 +108,14 @@
         <name>jdbc.connection.property.some_property_2</name>
         <value>some_value_2</value>
         <description>JDBC connection property</description>
+    </property>
+    -->
+
+    <!--
+    <property>
+        <name>pxf.impersonation.jdbc</name>
+        <value>true</value>
+        <description>Impersonate Greenplum user when connecting to the remote database</description>
     </property>
     -->
 

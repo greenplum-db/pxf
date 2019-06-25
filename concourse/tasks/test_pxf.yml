@@ -8,11 +8,14 @@ inputs:
   - name: pxf_tarball
     optional: true
 params:
-  IMPERSONATION: true
-  HADOOP_CLIENT: HDP
+  ACCESS_KEY_ID:
   GROUP: smoke
+  HADOOP_CLIENT: HDP
+  IMPERSONATION: true
+  SECRET_ACCESS_KEY:
   TARGET_OS: centos
   TARGET_OS_VERSION:
   TEST_ENV:
+  TEST_OS:
 run:
   path: pxf_src/concourse/scripts/test_pxf.bash

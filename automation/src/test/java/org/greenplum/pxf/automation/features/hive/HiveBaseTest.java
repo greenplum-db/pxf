@@ -118,7 +118,7 @@ public class HiveBaseTest extends BaseFeature {
             "s1    TEXT",
             "d1    DOUBLE PRECISION",
             "s2    TEXT",
-            "n1  INTEGER"
+            "n1    INTEGER"
     };
     static final String[] PXF_HIVE_COLLECTION_COLS = {
             "t1    TEXT",
@@ -148,8 +148,8 @@ public class HiveBaseTest extends BaseFeature {
     };
     // Hive table partition columns for Predicate pushdown test
     static final String[] HIVE_PARTITION_PPD_COLS = {
-            "s2     STRING",
-            "n1   INT"
+            "s2    STRING",
+            "n1    INT"
     };
 
     static final String HIVE_TYPES_DATA_FILE_NAME = "hive_types.txt";

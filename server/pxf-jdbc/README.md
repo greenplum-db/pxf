@@ -459,8 +459,26 @@ For other databases, PostgreSQL syntax is used.
 
 To use this feature, pass key-value pairs in [external database session configuration setting](#external-database-session-configuration).
 
+## JDBC Connection Pooling
+The JDBC connector will be using connection pooling implemented by HikariCP (https://github.com/brettwooldridge/HikariCP). To disable the connection pool, edit the value for the property in your server's `jdbc-site.xml` file:
+```xml
+    <property>
+        <name>jdbc.pool.enabled</name>
+        <value>false</value>
+        <description>Use connection pool for JDBC</description>
+    </property>
+```
+You can set other properties specific to HikariCP by specifying them in `jdbc-site.xml` file with `jdbc.pool.property.` prefix. The default `jdbc-site.xml` template comes with the connection pool enabled and pre-defined settings for `maximumPoolSize`, `connectionTimeout`, `idleTimeout`, `minimumIdle` properties.
 
-### Partitioning and external database sessions
+Any property that you specify with `jdbc.connection.property.` prefix will also be used by HikariCP when requesting connections from the `DriverManager`.
+
+Using connection pool feature will ensure you will not exceed the connection limit to the target database for a given server configuration. However, be mindful, that connection pool is established per configuration server based on combination of values for `jdbc.url`, `jdbc.user`, `jdbc.password`, set of connection properties and set of pool properties. If you use user impersonation feature you will end up using a separate connection pool per each user.
+
+You should tune your server configuration not to exceed the maximum number of connections allowed by the target database. To come up with the maximum value for `maximumPoolSize` parameter, take the overall number of connection allowed by the external database and divide it by the number of Greenplum hosts. For example, if your Greenplum cluster has 16 nodes and your target database allows 160 concurrent connections, set `maximumPoolSize` to no more than 160 / 16 = 10. That will be the maximum value to ensure each PXF JVM can get a fair share of JDBC connections.
+
+However, in practice, you might want to set this number to a lower value, since the number of concurrent connections per JDBC query will depend on the number of partitions for the query. If the query is not using any partitions, then only 1 JDBC connection on 1 PXF JVM will be used to run the query. If, for example, the query will be using 12 partitions (e.g. 1 per month of a year), then 12 JDBC connections will be used concurrently across all the Greenplum segment hosts and PXF JVMs. Ideally, these connections would be distributed among PXF JVMs, but it is not guaranteed by the system.
+
+## Partitioning and external database sessions
 When [partitioning](#partitioning) is used, each fragment requires its own external database session.
 
 This implies `SET` queries are executed multiple times (once for each external database session).
@@ -500,3 +518,100 @@ and `$PXF_CONF/servers/EXAMPLE/jdbc-site.xml` on every PXF segment:
 ```
 
 When `SELECT` from this external table is called, PXF executes `SET key1 = value1`, `SET key2 = value2` and `SELECT k, val FROM PUBLIC.T2` (all in the same session). PostgreSQL syntax is used because `Example` is a database unknown to PXF. All queries are executed once as partitioning is not set (one fragment is generated).
+
+## Using JDBC plugin to connect to Hive
+You can use the PXF JDBC connector to retrieve data from Hive. You can also use the "named query" feature to submit a custom SQL query to Hive and retrieve results using PXF JDBC connector.
+
+While you can specify most of the properties in the EXTERNAL TABLE DDL, the instructions below assume you would use server-based configuration.
+Follow these steps to enable connectivity to Hive:
+1. Define a new PXF configuration server in `$PXF_CONF/servers/` directory
+2. Copy template from `$PXF_CONF/templates/jdbc-site.xml` to your server directory
+3. Edit the file and provide Hive JDBC driver and URL
+    ```angular2html
+    <property>
+        <name>jdbc.driver</name>
+        <value>org.apache.hive.jdbc.HiveDriver</value>
+    </property>
+    <property>
+        <name>jdbc.url</name>
+        <value>jdbc:hive2://<hiveserver2_host>:<hiveserver2_port>/<database></value>
+    </property>
+    ```
+4. For Hive without Kerberos configure `user` and additional properties according to HiveServer2 settings in `hive-site.xml` file.
+
+    - if `hive.server2.authentication = NOSASL`, then no authentication will be performed by HiveServer2 and you must add the following property in `jdbc-site.xml`:
+        ```angular2html
+        <property>
+            <name>jdbc.connection.property.auth</name>
+            <value>noSasl</value>
+        </property>
+        ```
+        Alternatively, you can add `;auth=noSasl` to the JDBC URL.
+
+    - if Hive is configured with `hive.server2.authentication = NONE` (or is not specified), you should set the value for the `jdbc.user` property.
+
+        a. if Hive is configured with `hive.server2.enable.doAs = TRUE` (default), Hive will run Hadoop operations on behalf of the user connecting to Hive. You have an option to either:
+
+            1) specify the user value that has read permission on all Hive data being accessed, e.g. to connect to Hive and run all request as user `gpadmin`, specify the following property:
+            ```
+            <property>
+                <name>jdbc.user</name>
+                <value>gpadmin</value>
+            </property>
+            ```
+            2) enable PXF JDBC impersonation so that PXF will automatically use Greenplum's user name to connect to Hive:
+            ```
+            <property>
+                <name>pxf.impersonation.jdbc</name>
+                <value>true</value>
+            </property>
+            ```
+            If you enable impersonation, do not explicitly specify user name as a property or as a part of the URL.
+
+        b. if Hive is configured with `hive.server2.enable.doAs = FALSE`, Hive will run Hadoop operations as the user who runs HiveServer2 process, usually user `hive`. Yo do not need to specify `jdbc.user` property as its value will be ignored.
+
+5. For Hive with Kerberos (`hive.server2.authentication = KERBEROS` in `hive-site.xml`:
+
+    - Configure SASL QoP URL parameter to match the setting in `hive-site.xml`, for example, if in `hive-site.xml` contains
+        ```$xslt
+        <property>
+            <name>hive.server2.thrift.sasl.qop</name>
+            <value>auth-conf</value>
+        </property>
+        ```
+        then make sure the JDBC URL has `saslQop=auth-conf` fragment. This must be done in the URL and cannot be specified using connection properties.
+    - Make sure there is `core-site.xml` file in `$PXF_CONF/servers/default` and it has Kerberos authentication turned on:
+        ```$xslt
+        <property>
+            <name>hadoop.security.authentication</name>
+            <value>kerberos</value>
+        </property>
+        ```
+        This is required even if JDBC configuration server is different from `default` since PXF determines whether Kerberos is enabled by checking `core-site.xml` in the `default` server.
+
+    - Make sure the PXF Kerberos principal is created in KDC and the keytab file named `pxf.service.keytab` is located on all PXF nodes in `$PXF_CONF/keytabs`
+
+    - Make sure to include HiveServer2 principal name in the JDBC URL, e.g:
+        ```$xslt
+        jdbc:hive2://hs2server:10000/default;principal=hive/hs2server@REALM;saslQop=auth-conf
+        ```
+
+    - if Hive is configured with `hive.server2.enable.doAs = TRUE` (default), Hive will run Hadoop operations on behalf of the user connecting to Hive. You have an option to either:
+
+        1) do not specify any additional properties, all Hadoop access will be with the identity provided by the PXF Kerberos principal (usually `gpadmin`)
+
+        2) specify the user that has read permission on all Hive data being accessed, e.g. to connect to Hive and run all request as user `integration`, specify the following property in the URL:
+            `hive.server2.proxy.user=integration` :
+            ```$xslt
+            jdbc:hive2://hs2server:10000/default;principal=hive/hs2server@REALM;saslQop=auth-conf;hive.server2.proxy.user=integration
+            ```
+        3) enable PXF JDBC impersonation in `jdbc-site.xml` so that PXF will automatically use Greenplum's user name to connect to Hive:
+            ```
+            <property>
+                <name>pxf.impersonation.jdbc</name>
+                <value>true</value>
+            </property>
+            ```
+            If you enable impersonation, do not explicitly specify `hive.server2.proxy.user` property in the URL.
+
+    - if Hive is configured with `hive.server2.enable.doAs = FALSE`, Hive will run Hadoop operations with the identity provided by the PXF Kerberos principal (usually `gpadmin`)

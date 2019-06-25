@@ -24,14 +24,27 @@ RUN useradd -s /sbin/nologin -d /opt/minio minio && \
 
 ADD pxf_src /tmp/pxf_src
 
-RUN cd /tmp/pxf_src && \
-    export BUILD_PARAMS='-Dorg.gradle.daemon=false' && \
-    GOPATH=/opt/go PATH=/opt/go/bin:/usr/local/go/bin:$PATH make tar && \
+RUN ["/bin/bash", "-c", "export BUILD_PARAMS=-Dorg.gradle.daemon=false && \
+    GOPATH=/opt/go PATH=/opt/go/bin:/usr/local/go/bin:$PATH make -C /tmp/pxf_src tar && \
     PXF_HOME=/tmp/pxf_src/server/build/stage make -C /tmp/pxf_src/automation dev && \
-    mkdir -p /home/gpadmin/.tomcat && \
-    mv /tmp/pxf_src/server/tomcat/build/apache-tomcat-*.tar.gz /home/gpadmin/.tomcat && \
-    mv /tmp/pxf_src/cli/go/pkg/dep/sources /home/gpadmin/.go-dep-cached-sources && \
-    mv /root/.gradle /root/.m2 /home/gpadmin && \
-    ln -s /home/gpadmin/.tomcat /home/gpadmin/.go-dep-cached-sources /home/gpadmin/.m2 /home/gpadmin/.gradle /root && \
-    chown -R gpadmin:gpadmin /home/gpadmin && \
-    rm -rf /tmp/pxf_src
+    mkdir -p ~gpadmin/.tomcat && \
+    mv /tmp/pxf_src/server/tomcat/build/apache-tomcat-*.tar.gz ~gpadmin/.tomcat && \
+    mv /tmp/pxf_src/cli/go/pkg/dep/sources ~gpadmin/.go-dep-cached-sources && \
+    mv /root/.{gradle,m2} ~gpadmin && \
+    ln -s ~gpadmin/.{tomcat,go-dep-cached-sources,m2,gradle} ~root && \
+    chown -R gpadmin:gpadmin ~gpadmin && \
+    rm -rf /tmp/pxf_src && \
+    if grep 'CentOS release 6' /etc/centos-release; then \
+      yum install -y python-paramiko && yum clean all; \
+    else \
+      pip install psi paramiko --no-cache-dir; \
+    fi && \
+    if grep 'VERSION=.*18.04.*LTS.*Bionic Beaver.*$' /etc/os-release; then \
+      PERL_VERSION=perl-5.22.1 && \
+      wget http://www.cpan.org/src/5.0/${PERL_VERSION}.tar.gz && \
+      tar -xzf ${PERL_VERSION}.tar.gz && \
+      pushd $PERL_VERSION && \
+        ./Configure -des -Dprefix=/usr && \
+        make && make install && \
+      popd && rm -rf ${PERL_VERSION}*; \
+    fi"]

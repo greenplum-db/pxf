@@ -10,14 +10,12 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 
 import java.io.File;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -25,13 +23,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({DriverManager.class, JdbcAccessor.class})
+@RunWith(MockitoJUnitRunner.class)
 public class JdbcAccessorTest {
 
     @Rule
@@ -48,7 +45,8 @@ public class JdbcAccessorTest {
 
     @Before
     public void setup() throws SQLException {
-        accessor = new JdbcAccessor();
+
+        accessor = new JdbcAccessor(mockConnectionManager);
         context = new RequestContext();
         context.setDataSource("test-table");
         Map<String, String> additionalProps = new HashMap<>();
@@ -56,13 +54,7 @@ public class JdbcAccessorTest {
         additionalProps.put("jdbc.url", "test-url");
         context.setAdditionalConfigProps(additionalProps);
 
-        PowerMockito.mockStatic(DriverManager.class);
-        DatabaseMetaData mockMetaData = mock(DatabaseMetaData.class);
-        Connection mockConnection = mock(Connection.class);
-        mockStatement = mock(Statement.class);
-        mockResultSet = mock(ResultSet.class);
-
-        when(DriverManager.getConnection(anyString(), anyObject())).thenReturn(mockConnection);
+        when(mockConnectionManager.getConnection(anyString(), anyString(), anyObject(), anyBoolean(), anyObject())).thenReturn(mockConnection);
         when(mockConnection.getMetaData()).thenReturn(mockMetaData);
         when(mockConnection.createStatement()).thenReturn(mockStatement);
         when(mockMetaData.getDatabaseProductName()).thenReturn("Greenplum");
@@ -138,6 +130,43 @@ public class JdbcAccessorTest {
 
         assertEquals(b.toString(), queryPassed.getValue());
 
+    }
+
+    @Test
+    public void testReadFromQueryEndingInSemicolon() throws Exception {
+        String serversDirectory = new File(this.getClass().getClassLoader().getResource("servers").toURI()).getCanonicalPath();
+        context.getAdditionalConfigProps().put("pxf.config.server.directory", serversDirectory + File.separator + "test-server");
+        context.setDataSource("query:testquerywithsemicolon");
+        ArgumentCaptor<String> queryPassed = ArgumentCaptor.forClass(String.class);
+        when(mockStatement.executeQuery(queryPassed.capture())).thenReturn(mockResultSet);
+
+        accessor.initialize(context);
+        accessor.openForRead();
+
+        String expected = "SELECT  FROM (SELECT dept.name, count(), max(emp.salary)\n" +
+                "FROM dept JOIN emp\n" +
+                "ON dept.id = emp.dept_id\n" +
+                "GROUP BY dept.name) pxfsubquery";
+        assertEquals(expected, queryPassed.getValue());
+    }
+
+    @Test
+    public void testReadFromQueryWithValidSemicolon() throws Exception {
+        String serversDirectory = new File(this.getClass().getClassLoader().getResource("servers").toURI()).getCanonicalPath();
+        context.getAdditionalConfigProps().put("pxf.config.server.directory", serversDirectory + File.separator + "test-server");
+        context.setDataSource("query:testquerywithvalidsemicolon");
+        ArgumentCaptor<String> queryPassed = ArgumentCaptor.forClass(String.class);
+        when(mockStatement.executeQuery(queryPassed.capture())).thenReturn(mockResultSet);
+
+        accessor.initialize(context);
+        accessor.openForRead();
+
+        String expected = "SELECT  FROM (SELECT dept.name, count(), max(emp.salary)\n" +
+                "FROM dept JOIN emp\n" +
+                "ON dept.id = emp.dept_id\n" +
+                "WHERE dept.name LIKE '%;%'\n" +
+                "GROUP BY dept.name) pxfsubquery";
+        assertEquals(expected, queryPassed.getValue());
     }
 
     @Test

@@ -25,7 +25,7 @@ help:
 all: test tar install
 
 depend:
-	@if [[ -d $(HOME)/.go-dep-cached-sources && ! -d ${GO_DEP_CACHE}/sources ]]; then \
+	@if [ -d $(HOME)/.go-dep-cached-sources ] && [ ! -d ${GO_DEP_CACHE}/sources ]; then \
 		mkdir -p ${GO_DEP_CACHE}; \
 		ln -s $(HOME)/.go-dep-cached-sources ${GO_DEP_CACHE}/sources; \
 	fi
@@ -41,7 +41,7 @@ tar: build
 	cp ${GOPATH}/bin/pxf-cli ${PXF_STAGING_DIR}
 
 install: build
-	@if [[ "$(PXF_HOME)" == "" ]]; then \
+	@if [ -z "$(PXF_HOME)" ]; then \
 		echo "ERROR: PXF_HOME is not set correctly"; exit 2; \
 	fi
 	mkdir -p ${PXF_HOME}/bin

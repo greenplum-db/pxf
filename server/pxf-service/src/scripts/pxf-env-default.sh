@@ -21,20 +21,20 @@ PARENT_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
 #############################################################################
 # The PXF_CONF property is updated by pxf init script, do not edit manually #
 #############################################################################
-export PXF_CONF=${PXF_CONF:="NOT_INITIALIZED"}
+export PXF_CONF=${PXF_CONF:=NOT_INITIALIZED}
 #############################################################################
 
 # load user environment first, warn if the script is missing when not in init mode
 if [[ $pxf_script_command != init && $pxf_cluster_command != init ]]; then
-	if [[ ${PXF_CONF} == "NOT_INITIALIZED" ]]; then
-		echo "ERROR: PXF is not initialized, call pxf init command"
+	if [[ $PXF_CONF == NOT_INITIALIZED ]]; then
+		echo 'ERROR: PXF is not initialized, call pxf init command'
 		exit 1
 	fi
 	user_env_script=${PXF_CONF}/conf/pxf-env.sh
-	if [[ ! -f ${user_env_script} ]]; then
+	if [[ ! -f $user_env_script ]]; then
 	    echo "WARNING: failed to find ${user_env_script}, default parameters will be used"
 	else
-		source ${user_env_script}
+		source "$user_env_script"
 	fi
 fi
 
@@ -60,13 +60,16 @@ export PXF_PORT=${PXF_PORT:=5888}
 export PXF_SHUTDOWN_PORT=${PXF_SHUTDOWN_PORT:=5889}
 
 # Memory
-export PXF_JVM_OPTS=${PXF_JVM_OPTS:="-Xmx2g -Xms1g"}
+export PXF_JVM_OPTS=${PXF_JVM_OPTS:='-Xmx2g -Xms1g'}
+
+# Threads
+export PXF_MAX_THREADS=${PXF_MAX_THREADS:=200}
 
 # Kerberos path to keytab file owned by pxf service with permissions 0400
 export PXF_KEYTAB=${PXF_KEYTAB:="${PXF_CONF}/keytabs/pxf.service.keytab"}
 
 # Kerberos principal pxf service should use. _HOST is replaced automatically with hostnames FQDN
-export PXF_PRINCIPAL=${PXF_PRINCIPAL:="gpadmin/_HOST@EXAMPLE.COM"}
+export PXF_PRINCIPAL=${PXF_PRINCIPAL:='gpadmin/_HOST@EXAMPLE.COM'}
 
 # End-user identity impersonation, set to true to enable
 export PXF_USER_IMPERSONATION=${PXF_USER_IMPERSONATION:=true}

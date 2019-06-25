@@ -52,7 +52,7 @@ public class BasePlugin implements Plugin {
     public void initialize(RequestContext requestContext) {
         this.context = requestContext;
         this.configuration = configurationFactory.
-                initConfiguration(context.getServerName(), context.getAdditionalConfigProps());
+                initConfiguration(context.getServerName(), context.getUser(), context.getAdditionalConfigProps());
         this.initialized = true;
     }
 

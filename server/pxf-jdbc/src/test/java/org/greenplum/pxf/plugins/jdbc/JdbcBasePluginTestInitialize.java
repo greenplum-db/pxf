@@ -39,6 +39,7 @@ import org.junit.runner.RunWith;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import org.mockito.Mockito;
@@ -62,7 +63,7 @@ public class JdbcBasePluginTestInitialize {
     private static final String JDBC_URL = "jdbc:postgresql://localhost/postgres";
     private static final List<ColumnDescriptor> COLUMNS;
     static {
-        COLUMNS = new ArrayList<ColumnDescriptor>();
+        COLUMNS = new ArrayList<>();
         COLUMNS.add(new ColumnDescriptor("c1", DataType.INTEGER.getOID(), 1, null, null, true));
         COLUMNS.add(new ColumnDescriptor("c2", DataType.VARCHAR.getOID(), 2, null, null, true));
     }
@@ -112,7 +113,7 @@ public class JdbcBasePluginTestInitialize {
      */
     private void prepareBaseConfigurationFactory(Configuration configuration) throws Exception {
         BaseConfigurationFactory configurationFactory = mock(BaseConfigurationFactory.class);
-        Mockito.when(configurationFactory.initConfiguration(Mockito.anyString(), Mockito.any())).thenReturn(configuration);
+        Mockito.when(configurationFactory.initConfiguration(Mockito.anyString(), Mockito.anyString(), Mockito.any())).thenReturn(configuration);
         PowerMockito.mockStatic(BaseConfigurationFactory.class);
         PowerMockito.when(BaseConfigurationFactory.getInstance()).thenReturn(configurationFactory);
     }
@@ -140,7 +141,7 @@ public class JdbcBasePluginTestInitialize {
         assertEquals(getInternalState(plugin, "DEFAULT_POOL_SIZE"), getInternalState(plugin, "poolSize"));
         assertNull(getInternalState(plugin, "quoteColumns"));
         assertEquals(getInternalState(plugin, "DEFAULT_FETCH_SIZE"), getInternalState(plugin, "fetchSize"));
-        assertEquals(getInternalState(plugin, "DEFAULT_QUERY_TIMEOUT"), getInternalState(plugin, "queryTimeout"));
+        assertNull(getInternalState(plugin, "queryTimeout"));
     }
 
     @Test
@@ -267,6 +268,36 @@ public class JdbcBasePluginTestInitialize {
 
         // Checks
         assertEquals(200, getInternalState(plugin, "queryTimeout"));
+    }
+
+    @Test
+    public void testInvalidStringQueryTimeout() throws Exception {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("Property jdbc.statement.queryTimeout has incorrect value foo : must be a non-negative integer");
+
+        // Configuration
+        Configuration configuration = makeConfiguration();
+        configuration.set("jdbc.statement.queryTimeout", "foo");
+
+        // Initialize plugin
+        prepareBaseConfigurationFactory(configuration);
+        JdbcBasePlugin plugin = new JdbcBasePlugin();
+        plugin.initialize(makeContext());
+    }
+
+    @Test
+    public void testInvalidNegativeQueryTimeout() throws Exception {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("Property jdbc.statement.queryTimeout has incorrect value -1 : must be a non-negative integer");
+
+        // Configuration
+        Configuration configuration = makeConfiguration();
+        configuration.set("jdbc.statement.queryTimeout", "-1");
+
+        // Initialize plugin
+        prepareBaseConfigurationFactory(configuration);
+        JdbcBasePlugin plugin = new JdbcBasePlugin();
+        plugin.initialize(makeContext());
     }
 
     @Test
@@ -406,6 +437,93 @@ public class JdbcBasePluginTestInitialize {
     }
 
     @Test
+    public void testUserWithImpersonation() throws Exception {
+        // Configuration
+        Configuration configuration = makeConfiguration();
+        configuration.set("pxf.impersonation.jdbc", "true");
+
+        // Context
+        RequestContext context = makeContext();
+        context.setUser("proxy");
+
+        // Initialize plugin
+        prepareBaseConfigurationFactory(configuration);
+        JdbcBasePlugin plugin = new JdbcBasePlugin();
+        plugin.initialize(context);
+
+        // Checks
+        Properties expected = new Properties();
+        expected.setProperty("user", "proxy");
+        assertEquals(expected.entrySet(), ((Properties)getInternalState(plugin, "connectionConfiguration")).entrySet());
+    }
+
+    @Test
+    public void testUserWithImpersonationOverwrite() throws Exception {
+        // Configuration
+        Configuration configuration = makeConfiguration();
+        configuration.set(CONFIG_USER, "user");
+        configuration.set("pxf.impersonation.jdbc", "true");
+
+        // Context
+        RequestContext context = makeContext();
+        context.setUser("proxy");
+
+        // Initialize plugin
+        prepareBaseConfigurationFactory(configuration);
+        JdbcBasePlugin plugin = new JdbcBasePlugin();
+        plugin.initialize(context);
+
+        // Checks
+        Properties expected = new Properties();
+        expected.setProperty("user", "proxy");
+        assertEquals(expected.entrySet(), ((Properties)getInternalState(plugin, "connectionConfiguration")).entrySet());
+    }
+
+    @Test
+    public void testUserWithoutImpersonationNoOverwrite() throws Exception {
+        // Configuration
+        Configuration configuration = makeConfiguration();
+        configuration.set(CONFIG_USER, "user");
+        configuration.set("pxf.impersonation.jdbc", "false");
+
+        // Context
+        RequestContext context = makeContext();
+        context.setUser("proxy");
+
+        // Initialize plugin
+        prepareBaseConfigurationFactory(configuration);
+        JdbcBasePlugin plugin = new JdbcBasePlugin();
+        plugin.initialize(context);
+
+        // Checks
+        Properties expected = new Properties();
+        expected.setProperty("user", "user");
+        assertEquals(expected.entrySet(), ((Properties)getInternalState(plugin, "connectionConfiguration")).entrySet());
+    }
+
+    @Test
+    public void testUserDefaultImpersonationNoOverwrite() throws Exception {
+        // Configuration
+        Configuration configuration = makeConfiguration();
+        configuration.set(CONFIG_USER, "user");
+
+        // Context
+        RequestContext context = makeContext();
+        context.setUser("proxy");
+
+        // Initialize plugin
+        prepareBaseConfigurationFactory(configuration);
+        JdbcBasePlugin plugin = new JdbcBasePlugin();
+        plugin.initialize(context);
+
+        // Checks
+        Properties expected = new Properties();
+        expected.setProperty("user", "user");
+        assertEquals(expected.entrySet(), ((Properties)getInternalState(plugin, "connectionConfiguration")).entrySet());
+    }
+
+
+    @Test
     public void testUserPassword() throws Exception {
         // Configuration
         Configuration configuration = makeConfiguration();
@@ -476,4 +594,58 @@ public class JdbcBasePluginTestInitialize {
         plugin.initialize(makeContextWithDataSource("query:"));
     }
 
+    @Test
+    public void testConnectionPoolEnabledPropertyNotDefined() throws Exception {
+        Configuration configuration = makeConfiguration();
+        prepareBaseConfigurationFactory(configuration);
+
+        JdbcBasePlugin plugin = new JdbcBasePlugin();
+        plugin.initialize(makeContext());
+
+        Properties poolConfiguration = (Properties) getInternalState(plugin, "poolConfiguration");
+        assertNotNull(poolConfiguration);
+        assertEquals(4, poolConfiguration.size());
+        assertEquals("5", poolConfiguration.getProperty("maximumPoolSize"));
+        assertEquals("30000", poolConfiguration.getProperty("connectionTimeout"));
+        assertEquals("30000", poolConfiguration.getProperty("idleTimeout"));
+        assertEquals("0", poolConfiguration.getProperty("minimumIdle"));
+    }
+
+    @Test
+    public void testConnectionPoolNotEnabledPropertyDefined() throws Exception {
+        Configuration configuration = makeConfiguration();
+        configuration.set("jdbc.pool.enabled", "false");
+        prepareBaseConfigurationFactory(configuration);
+
+        JdbcBasePlugin plugin = new JdbcBasePlugin();
+        plugin.initialize(makeContext());
+
+        assertNull(getInternalState(plugin, "poolConfiguration"));
+    }
+
+    @Test
+    public void testConnectionPoolEnabledPropertyDefined() throws Exception {
+        Configuration configuration = makeConfiguration();
+        configuration.set("jdbc.pool.enabled", "true");
+        configuration.set("jdbc.pool.property.foo", "include-foo");
+        configuration.set("jdbc.pool.property.bar", "include-bar");
+        configuration.set("jdbc.whatever", "exclude-whatever");
+        prepareBaseConfigurationFactory(configuration);
+
+        JdbcBasePlugin plugin = new JdbcBasePlugin();
+        plugin.initialize(makeContext());
+
+        Properties poolProps = (Properties) getInternalState(plugin, "poolConfiguration");
+        assertNotNull(poolProps);
+        assertEquals(6, poolProps.size());
+
+        Properties expectedProps = new Properties();
+        expectedProps.setProperty("maximumPoolSize", "5");
+        expectedProps.setProperty("connectionTimeout", "30000");
+        expectedProps.setProperty("idleTimeout", "30000");
+        expectedProps.setProperty("minimumIdle", "0");
+        expectedProps.setProperty("foo", "include-foo");
+        expectedProps.setProperty("bar", "include-bar");
+        assertEquals(expectedProps, poolProps);
+    }
 }

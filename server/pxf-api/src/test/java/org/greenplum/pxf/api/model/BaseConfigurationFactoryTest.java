@@ -54,36 +54,46 @@ public class BaseConfigurationFactoryTest {
         factory = new BaseConfigurationFactory(mockServersDirectory);
         when(mockServersDirectory.listFiles(any(FileFilter.class))).thenReturn(new File[]{new File("a"), new File("b")});
 
-        factory.initConfiguration("dummy", null);
+        factory.initConfiguration("dummy", "dummy", null);
     }
 
     @Test
     public void testConfigurationsLoadedFromMultipleFilesForDefaultServer() {
-        Configuration configuration = factory.initConfiguration("default", null);
+        Configuration configuration = factory.initConfiguration("default", "dummy", null);
 
         assertEquals("blue", configuration.get("test.blue"));
         assertEquals("red", configuration.get("test.red"));
 
         // Should return null because the file name does not end in -site.xml
         assertNull(configuration.get("test.green"));
+
+        assertEquals("bluevaluefromuser", configuration.get("test.blue.key"));
+        assertEquals("redvaluefromuser", configuration.get("test.red.key"));
+        assertEquals("uservalue", configuration.get("test.user.key"));
     }
 
     @Test
     public void testConfigurationsLoadedForCaseInsensitiveServerName() {
-        Configuration configuration = factory.initConfiguration("DeFAulT", null);
+        Configuration configuration = factory.initConfiguration("DeFAulT", "dummy", null);
 
         assertEquals("blue", configuration.get("test.blue"));
         assertEquals("red", configuration.get("test.red"));
 
         // Should return null because the file name does not end in -site.xml
         assertNull(configuration.get("test.green"));
+
+        assertEquals("bluevaluefromuser", configuration.get("test.blue.key"));
+        assertEquals("redvaluefromuser", configuration.get("test.red.key"));
+        assertEquals("uservalue", configuration.get("test.user.key"));
     }
 
     @Test
     public void testConfigurationsLoadedAndOptionsAdded() {
         additionalProperties.put("test.newOption", "newOption");
         additionalProperties.put("test.red", "purple");
-        Configuration configuration = factory.initConfiguration("default", additionalProperties);
+        additionalProperties.put("test.blue.key", "bluevaluechanged");
+        additionalProperties.put("test.user.key", "uservaluechanged");
+        Configuration configuration = factory.initConfiguration("default", "dummy", additionalProperties);
 
         assertEquals("blue", configuration.get("test.blue"));
         assertEquals("purple", configuration.get("test.red"));
@@ -91,15 +101,23 @@ public class BaseConfigurationFactoryTest {
 
         // Should return null because the file name does not end in -site.xml
         assertNull(configuration.get("test.green"));
+
+        assertEquals("bluevaluefromuser", configuration.get("test.blue.key"));
+        assertEquals("redvaluefromuser", configuration.get("test.red.key"));
+        assertEquals("uservalue", configuration.get("test.user.key"));
+
     }
 
     @Test
     public void testConfigurationsNotLoadedForUnknownServer() {
         additionalProperties.put("test.newOption", "newOption");
         additionalProperties.put("test.red", "purple");
-        Configuration configuration = factory.initConfiguration("unknown", additionalProperties);
+        Configuration configuration = factory.initConfiguration("unknown", "dummy", additionalProperties);
 
         assertNull(configuration.get("test.blue"));
+        assertNull(configuration.get("test.blue.key"));
+        assertNull(configuration.get("test.red.key"));
+        assertNull(configuration.get("test.user.key"));
         assertEquals("purple", configuration.get("test.red"));
         assertEquals("newOption", configuration.get("test.newOption"));
 
@@ -109,18 +127,20 @@ public class BaseConfigurationFactoryTest {
 
     @Test
     public void testConfigurationSetsResourcePath() throws MalformedURLException {
-        Configuration configuration = factory.initConfiguration("default", additionalProperties);
+        Configuration configuration = factory.initConfiguration("default", "dummy", additionalProperties);
         File defaultServerDirectory = new File(serversDirectory, "default");
 
         assertEquals(new File(defaultServerDirectory, "test-blue-site.xml").toPath().toUri().toURL().toString(),
                 configuration.get(String.format("%s.%s", PXF_CONFIG_RESOURCE_PATH_PROPERTY, "test-blue-site.xml")));
         assertEquals(new File(defaultServerDirectory, "test-red-site.xml").toPath().toUri().toURL().toString(),
                 configuration.get(String.format("%s.%s", PXF_CONFIG_RESOURCE_PATH_PROPERTY, "test-red-site.xml")));
+        assertEquals(new File(defaultServerDirectory, "dummy-user.xml").toPath().toUri().toURL().toString(),
+                configuration.get(String.format("%s.%s", PXF_CONFIG_RESOURCE_PATH_PROPERTY, "dummy-user.xml")));
     }
 
     @Test
     public void testConfigurationSetsServerDirectoryPath() throws IOException {
-        Configuration configuration = factory.initConfiguration("default", additionalProperties);
+        Configuration configuration = factory.initConfiguration("default", "dummy", additionalProperties);
         File defaultServerDirectory = new File(serversDirectory, "default");
 
         assertEquals(defaultServerDirectory.getCanonicalPath(), configuration.get(PXF_CONFIG_SERVER_DIRECTORY_PROPERTY));

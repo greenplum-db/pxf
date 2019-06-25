@@ -11,6 +11,8 @@ groups:
       - test_pxf_cdh_centos6
 {% if gpdb_type == "5X_STABLE" %}
       - test_pxf_hdp_ubuntu16
+{% else %}
+      - test_pxf_hdp_ubuntu18
 {% endif %}
       - test_pxf_hdp_multinode_gpdb
       - test_pxf_s3_no_impersonation
@@ -39,6 +41,8 @@ groups:
       - test_pxf_cdh_centos6
 {% if gpdb_type == "5X_STABLE" %}
       - test_pxf_hdp_ubuntu16
+{% else %}
+      - test_pxf_hdp_ubuntu18
 {% endif %}
       - test_pxf_hdp_multinode_gpdb
 {% if pipeline_type == "release" %}
@@ -108,6 +112,7 @@ resource_types:
   type: docker-image
   source:
     repository: ljfranklin/terraform-resource
+    tag: 0.11.14
 {% if gpdb_branch != '5X_STABLE' %}
 
 - name: gcs
@@ -186,6 +191,12 @@ resources:
   source:
     repository: pivotaldata/gpdb-pxf-dev
     tag: ubuntu16-hdp-server
+{% else %}
+- name: gpdb-pxf-dev-ubuntu18-hdp-server
+  type: docker-image
+  source:
+    repository: pivotaldata/gpdb-pxf-dev
+    tag: ubuntu18-hdp-server
 {% endif %}
 
 - name: gpdb-pxf-dev-centos6-hdp-secure
@@ -237,6 +248,17 @@ resources:
     bucket: ((gcs-bucket-intermediates))
     json_key: ((concourse-gcs-resources-service-account-key))
     versioned_file: gpdb_master/compiled_bits_ubuntu16/compiled_bits_ubuntu16.tar.gz
+{% endif %}
+{% else %}
+- name: bin_gpdb_ubuntu18
+  type: gcs
+  source:
+    bucket: ((gcs-bucket-resources-prod))
+    json_key: ((concourse-gcs-resources-service-account-key))
+{% if gpdb_branch == '6X_STABLE' %}
+    regexp: server/published/gpdb6/server-rc-(.*)-ubuntu18.04_x86_64.tar.gz
+{% else %}
+    regexp: server/published/master/server-rc-(.*)-ubuntu18.04_x86_64.tar.gz
 {% endif %}
 {% endif %}
 
@@ -502,7 +524,7 @@ jobs:
 {% endif %}
 {% endif %}
 
-  {% if gpdb_type == "5X_STABLE" %}
+{% if gpdb_type == "5X_STABLE" %}
 - name: test_pxf_hdp_ubuntu16
   plan:
   - aggregate:
@@ -532,6 +554,39 @@ jobs:
       TEST_OS: ubuntu
       TARGET_OS: ubuntu
       TARGET_OS_VERSION: 16
+{% if acceptance %}
+      ACCEPTANCE: true
+{% endif %}
+{% else %}
+- name: test_pxf_hdp_ubuntu18
+  plan:
+  - aggregate:
+    - get: gpdb_src
+      passed:
+      - compile_pxf
+    - get: bin_gpdb
+      resource: bin_gpdb_ubuntu18
+    - get: pxf_src
+      passed:
+      - compile_pxf
+      trigger: true
+    - get: pxf_tarball
+      passed:
+      - compile_pxf
+      trigger: true
+    - get: gpdb-pxf-dev-ubuntu18-hdp-server
+  - task: test_pxf
+    file: pxf_src/concourse/tasks/test_pxf.yml
+    image: gpdb-pxf-dev-ubuntu18-hdp-server
+    params:
+      ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+      SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+      GROUP: gpdb,proxy,profile
+      TEST_ENV: {{test-env}}
+      HADOOP_CLIENT: HDP
+      TEST_OS: ubuntu
+      TARGET_OS: ubuntu
+      TARGET_OS_VERSION: 18
 {% if acceptance %}
       ACCEPTANCE: true
 {% endif %}
@@ -990,6 +1045,8 @@ jobs:
     - test_pxf_cdh_centos6
 {% if gpdb_type == "5X_STABLE" %}
     - test_pxf_hdp_ubuntu16
+{% else %}
+    - test_pxf_hdp_ubuntu18
 {% endif %}
     - test_pxf_s3_no_impersonation
     - test_pxf_s3_with_impersonation
@@ -1012,6 +1069,8 @@ jobs:
     #- test_pxf_mapr_centos6
 {% if gpdb_type == "5X_STABLE" %}
     - test_pxf_hdp_ubuntu16
+{% else %}
+    - test_pxf_hdp_ubuntu18
 {% endif %}
     - test_pxf_adl
     - test_pxf_gs
@@ -1030,6 +1089,8 @@ jobs:
     - test_pxf_cdh_centos6
 {% if gpdb_type == "5X_STABLE" %}
     - test_pxf_hdp_ubuntu16
+{% else %}
+    - test_pxf_hdp_ubuntu18
 {% endif %}
     #- test_pxf_mapr_centos6
     - test_pxf_adl

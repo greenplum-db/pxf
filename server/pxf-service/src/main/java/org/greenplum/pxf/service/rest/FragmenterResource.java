@@ -51,7 +51,7 @@ import java.util.concurrent.ExecutionException;
  * Class enhances the API of the WEBHDFS REST server. Returns the data fragments
  * that a data resource is made of, enabling parallel processing of the data
  * resource. Example for querying API FRAGMENTER from a web client
- * {@code curl -i "http://localhost:51200/pxf/{version}/Fragmenter/getFragments?path=/dir1/dir2/*txt"}
+ * {@code curl -i "http://localhost:51200/pxf/{version}/Fragmenter/getFragments"}
  * <code>/pxf/</code> is made part of the path when there is a webapp by that
  * name in tomcat.
  */
@@ -81,12 +81,11 @@ public class FragmenterResource extends BaseResource {
 
     /**
      * The function is called when
-     * {@code http://nn:port/pxf/{version}/Fragmenter/getFragments?path=...} is used.
+     * {@code http://host:port/pxf/{version}/Fragmenter/getFragments} is used.
      *
      * @param servletContext Servlet context contains attributes required by
      *            SecuredHDFS
      * @param headers Holds HTTP headers from request
-     * @param path Holds URI path option used in this request
      * @return response object with JSON serialized fragments metadata
      * @throws Exception if getting fragments info failed
      */
@@ -94,15 +93,16 @@ public class FragmenterResource extends BaseResource {
     @Path("getFragments")
     @Produces("application/json")
     public Response getFragments(@Context final ServletContext servletContext,
-                                 @Context final HttpHeaders headers,
-                                 @QueryParam("path") final String path)
+                                 @Context final HttpHeaders headers)
             throws Throwable {
 
+        LOG.debug("Received FRAGMENTER call");
         long startTime = System.currentTimeMillis();
-        LOG.debug("FRAGMENTER started for path \"{}\"", path);
-
         final RequestContext context = parseRequest(headers);
+        final String path = context.getDataSource();
         final String fragmenterCacheKey = getFragmenterCacheKey(context);
+
+        LOG.debug("FRAGMENTER started for path \"{}\"", path);
 
         List<Fragment> fragments;
 

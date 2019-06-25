@@ -1,5 +1,6 @@
 package org.greenplum.pxf.api.model;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
@@ -10,6 +11,7 @@ import java.net.URL;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 
 public class BaseConfigurationFactory implements ConfigurationFactory {
@@ -36,7 +38,7 @@ public class BaseConfigurationFactory implements ConfigurationFactory {
     }
 
     @Override
-    public Configuration initConfiguration(String serverName, Map<String, String> additionalProperties) {
+    public Configuration initConfiguration(String serverName, String userName, Map<String, String> additionalProperties) {
         // start with built-in Hadoop configuration that loads core-site.xml
         LOG.debug("Initializing configuration for server {}", serverName);
         Configuration configuration = new Configuration();
@@ -46,7 +48,7 @@ public class BaseConfigurationFactory implements ConfigurationFactory {
                         f.canRead() &&
                         StringUtils.equalsIgnoreCase(serverName, f.getName()));
 
-        if (serverDirectories == null || serverDirectories.length == 0) {
+        if (ArrayUtils.isEmpty(serverDirectories)) {
             LOG.warn("Directory {}{}{} does not exist or cannot be read by PXF, no configuration resources are added for server {}",
                 serversConfigDirectory, File.separator, serverName, serverName);
         } else if (serverDirectories.length > 1) {
@@ -65,6 +67,11 @@ public class BaseConfigurationFactory implements ConfigurationFactory {
             additionalProperties.forEach(configuration::set);
         }
 
+        // add user configuration
+        if(!ArrayUtils.isEmpty(serverDirectories)) {
+            processUserResource(configuration, serverName, userName, serverDirectories[0]);
+        }
+
         return configuration;
     }
 
@@ -75,10 +82,8 @@ public class BaseConfigurationFactory implements ConfigurationFactory {
                 URL resourceURL = path.toUri().toURL();
                 LOG.debug("Adding configuration resource for server {} from {}", serverName, resourceURL);
                 configuration.addResource(resourceURL);
-
                 // store the path to the resource in the configuration in case plugins need to access the files again
-                String fileName = path.getFileName().toString();
-                configuration.set(String.format("%s.%s", PXF_CONFIG_RESOURCE_PATH_PROPERTY, fileName), resourceURL.toString());
+                configuration.set(String.format("%s.%s", PXF_CONFIG_RESOURCE_PATH_PROPERTY, path.getFileName().toString()), resourceURL.toString());
             }
             // add the server directory itself as configuration property in case plugins need to access non-site-xml files
             configuration.set(PXF_CONFIG_SERVER_DIRECTORY_PROPERTY, directory.getCanonicalPath());
@@ -86,6 +91,24 @@ public class BaseConfigurationFactory implements ConfigurationFactory {
         } catch (Exception e) {
             throw new RuntimeException(String.format("Unable to read configuration for server %s from %s",
                     serverName, directory.getAbsolutePath()), e);
+        }
+    }
+
+    private void processUserResource(Configuration configuration, String serverName, String userName, File directory) {
+        // add user config file as configuration resource
+        try {
+            Path path = Paths.get(String.format("%s/%s-user.xml", directory.toPath(), userName));
+            if (Files.exists(path)) {
+                Configuration userConfiguration = new Configuration(false);
+                URL resourceURL = path.toUri().toURL();
+                userConfiguration.addResource(resourceURL);
+                LOG.debug("Adding user properties for server {} from {}", serverName, resourceURL);
+                userConfiguration.forEach(entry -> configuration.set(entry.getKey(), entry.getValue()));
+                configuration.set(String.format("%s.%s", PXF_CONFIG_RESOURCE_PATH_PROPERTY, path.getFileName().toString()), resourceURL.toString());
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(String.format("Unable to read user configuration for user % using server %s from %s",
+                    userName, serverName, directory.getAbsolutePath()), e);
         }
     }
 }

@@ -91,6 +91,7 @@ function setup_pxf_on_segment {
 function setup_pxf_on_cluster() {
     # drop named query file for JDBC test to gpadmin's home on mdw
     scp ${SSH_OPTS} pxf_src/automation/src/test/resources/report.sql gpadmin@mdw:
+    scp ${SSH_OPTS} pxf_src/automation/src/test/resources/hive-report.sql gpadmin@mdw:
     # untar pxf on all nodes in the cluster
     for node in ${gpdb_nodes}; do
         setup_pxf_on_segment ${node} &
@@ -113,6 +114,8 @@ function setup_pxf_on_cluster() {
         sed -i \"s|YOUR_DATABASE_JDBC_USER|gpadmin|\" ${PXF_CONF_DIR}/servers/database/jdbc-site.xml &&
         sed -i \"s|YOUR_DATABASE_JDBC_PASSWORD||\" ${PXF_CONF_DIR}/servers/database/jdbc-site.xml &&
         cp ~gpadmin/report.sql ${PXF_CONF_DIR}/servers/database/ &&
+        cp ${PXF_CONF_DIR}/servers/database/jdbc-site.xml ${PXF_CONF_DIR}/servers/database/testuser-user.xml &&
+        sed -i \"s|pxfautomation|template1|\" ${PXF_CONF_DIR}/servers/database/testuser-user.xml &&
         mkdir -p ${PXF_CONF_DIR}/servers/db-session-params &&
         cp ${PXF_CONF_DIR}/templates/jdbc-site.xml ${PXF_CONF_DIR}/servers/db-session-params/ &&
         sed -i \"s|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.postgresql.Driver|\" ${PXF_CONF_DIR}/servers/db-session-params/jdbc-site.xml &&
@@ -121,6 +124,13 @@ function setup_pxf_on_cluster() {
         sed -i \"s|YOUR_DATABASE_JDBC_PASSWORD||\" ${PXF_CONF_DIR}/servers/db-session-params/jdbc-site.xml &&
         sed -i \"s|</configuration>|<property><name>jdbc.session.property.client_min_messages</name><value>debug1</value></property></configuration>|\" ${PXF_CONF_DIR}/servers/db-session-params/jdbc-site.xml &&
         sed -i \"s|</configuration>|<property><name>jdbc.session.property.default_statistics_target</name><value>123</value></property></configuration>|\" ${PXF_CONF_DIR}/servers/db-session-params/jdbc-site.xml &&
+        mkdir -p ${PXF_CONF_DIR}/servers/db-hive &&
+        cp ${PXF_CONF_DIR}/templates/jdbc-site.xml ${PXF_CONF_DIR}/servers/db-hive/ &&
+        sed -i \"s|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.apache.hive.jdbc.HiveDriver|\" ${PXF_CONF_DIR}/servers/db-hive/jdbc-site.xml &&
+        sed -i \"s|YOUR_DATABASE_JDBC_URL|jdbc:hive2://hadoop:10000/default|\" ${PXF_CONF_DIR}/servers/db-hive/jdbc-site.xml &&
+        sed -i \"s|YOUR_DATABASE_JDBC_USER||\" ${PXF_CONF_DIR}/servers/db-hive/jdbc-site.xml &&
+        sed -i \"s|YOUR_DATABASE_JDBC_PASSWORD||\" ${PXF_CONF_DIR}/servers/db-hive/jdbc-site.xml &&
+        cp ~gpadmin/hive-report.sql ${PXF_CONF_DIR}/servers/db-hive/ &&
         if [ ${IMPERSONATION} == false ]; then
             echo 'export PXF_USER_IMPERSONATION=false' >> ${PXF_CONF_DIR}/conf/pxf-env.sh
         fi &&

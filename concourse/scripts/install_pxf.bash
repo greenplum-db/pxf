@@ -4,7 +4,7 @@ set -euxo pipefail
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 GPHOME="/usr/local/greenplum-db-devel"
-MASTER_HOSTNAME=$( < cluster_env_files/etc_hostfile grep "mdw.*" | awk '{print $2}')
+MASTER_HOSTNAME=$(grep -E '\bmdw.*' cluster_env_files/etc_hostfile | awk '{print $2}')
 HADOOP_HOSTNAME="ccp-$(cat terraform_dataproc/name)-m"
 PXF_CONF_DIR="/home/gpadmin/pxf"
 

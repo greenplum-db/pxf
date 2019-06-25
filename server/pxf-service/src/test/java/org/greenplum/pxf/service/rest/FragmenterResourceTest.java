@@ -74,7 +74,7 @@ public class FragmenterResourceTest {
         when(fragmenterFactory.getPlugin(context)).thenReturn(fragmenter1);
 
         new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory)
-                .getFragments(servletContext, headersFromRequest1, "/foo/bar");
+                .getFragments(servletContext, headersFromRequest1);
         verify(fragmenter1, times(1)).getFragments();
     }
 
@@ -155,9 +155,9 @@ public class FragmenterResourceTest {
         when(fragmenter1.getFragments()).thenReturn(fragmentList);
 
         Response response1 = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory)
-                .getFragments(servletContext, headersFromRequest1, "/foo/bar");
+                .getFragments(servletContext, headersFromRequest1);
         Response response2 = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory)
-                .getFragments(servletContext, headersFromRequest2, "/foo/bar");
+                .getFragments(servletContext, headersFromRequest2);
 
         verify(fragmenter1, times(1)).getFragments();
         verify(fragmenterFactory, never()).getPlugin(context2);
@@ -196,10 +196,10 @@ public class FragmenterResourceTest {
         when(fragmenter2.getFragments()).thenReturn(fragmentList2);
 
         Response response1 = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory)
-                .getFragments(servletContext, headersFromRequest1, "/foo/bar");
+                .getFragments(servletContext, headersFromRequest1);
         fakeTicker.advanceTime(11 * 1000);
         Response response2 = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory)
-                .getFragments(servletContext, headersFromRequest2, "/foo/bar");
+                .getFragments(servletContext, headersFromRequest2);
 
         verify(fragmenter1, times(1)).getFragments();
         verify(fragmenter2, times(1)).getFragments();
@@ -243,7 +243,7 @@ public class FragmenterResourceTest {
 
                 try {
                     new FragmenterResource(requestParser, factory, cacheFactory)
-                            .getFragments(servletContext, httpHeaders, "/foo/bar/" + index);
+                            .getFragments(servletContext, httpHeaders);
 
                     finishedCount.incrementAndGet();
                 } catch (Throwable e) {
@@ -293,9 +293,9 @@ public class FragmenterResourceTest {
         when(fragmenter2.getFragments()).thenReturn(fragmentList2);
 
         Response response1 = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory)
-                .getFragments(servletContext, headersFromRequest1, "/foo/bar");
+                .getFragments(servletContext, headersFromRequest1);
         Response response2 = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory)
-                .getFragments(servletContext, headersFromRequest2, "/bar/foo");
+                .getFragments(servletContext, headersFromRequest2);
 
         verify(fragmenter1, times(1)).getFragments();
         verify(fragmenter2, times(1)).getFragments();

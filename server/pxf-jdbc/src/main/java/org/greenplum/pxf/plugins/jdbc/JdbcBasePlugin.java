@@ -20,23 +20,19 @@ package org.greenplum.pxf.plugins.jdbc;
  */
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.plugins.jdbc.utils.ConnectionManager;
 import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
+import org.greenplum.pxf.plugins.jdbc.utils.HiveJdbcUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.security.PrivilegedExceptionAction;
+import java.sql.*;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -46,11 +42,12 @@ import java.util.stream.Collectors;
  */
 public class JdbcBasePlugin extends BasePlugin {
 
+    private static final Logger LOG = LoggerFactory.getLogger(JdbcBasePlugin.class);
+
     // '100' is a recommended value: https://docs.oracle.com/cd/E11882_01/java.112/e16548/oraperf.htm#JJDBC28754
     private static final int DEFAULT_BATCH_SIZE = 100;
     private static final int DEFAULT_FETCH_SIZE = 1000;
     private static final int DEFAULT_POOL_SIZE = 1;
-    private static final int DEFAULT_QUERY_TIMEOUT = 0;
 
     // configuration parameter names
     private static final String JDBC_DRIVER_PROPERTY_NAME = "jdbc.driver";
@@ -68,6 +65,10 @@ public class JdbcBasePlugin extends BasePlugin {
     private static final String JDBC_STATEMENT_FETCH_SIZE_PROPERTY_NAME = "jdbc.statement.fetchSize";
     private static final String JDBC_STATEMENT_QUERY_TIMEOUT_PROPERTY_NAME = "jdbc.statement.queryTimeout";
 
+    // connection pool properties
+    private static final String JDBC_CONNECTION_POOL_ENABLED_PROPERTY_NAME = "jdbc.pool.enabled";
+    private static final String JDBC_CONNECTION_POOL_PROPERTY_PREFIX = "jdbc.pool.property.";
+
     // DDL option names
     private static final String JDBC_DRIVER_OPTION_NAME = "JDBC_DRIVER";
     private static final String JDBC_URL_OPTION_NAME = "DB_URL";
@@ -75,7 +76,10 @@ public class JdbcBasePlugin extends BasePlugin {
     private static final String FORBIDDEN_SESSION_PROPERTY_CHARACTERS = ";\n\b\0";
     private static final String QUERY_NAME_PREFIX = "query:";
     private static final int QUERY_NAME_PREFIX_LENGTH = QUERY_NAME_PREFIX.length();
+    private static final String PXF_IMPERSONATION_JDBC_PROPERTY_NAME = "pxf.impersonation.jdbc";
 
+    private static final String HIVE_URL_PREFIX = "jdbc:hive2://";
+    private static final String HIVE_DEFAULT_DRIVER_CLASS = "org.apache.hive.jdbc.HiveDriver";
 
     private enum TransactionIsolation {
         READ_UNCOMMITTED(1),
@@ -116,7 +120,7 @@ public class JdbcBasePlugin extends BasePlugin {
     protected int poolSize;
 
     // Query timeout.
-    protected int queryTimeout;
+    protected Integer queryTimeout;
 
     // Quote columns setting set by user (three values are possible)
     protected Boolean quoteColumns = null;
@@ -136,7 +140,27 @@ public class JdbcBasePlugin extends BasePlugin {
     // Name of query to execute for read flow (optional)
     protected String queryName;
 
-    private static final Logger LOG = LoggerFactory.getLogger(JdbcBasePlugin.class);
+    // connection pool fields
+    private boolean isConnectionPoolUsed;
+    private Properties poolConfiguration;
+
+    private ConnectionManager connectionManager;
+
+
+    /**
+     * Creates a new instance with default (singleton) instance of ConnectionManager.
+     */
+    public JdbcBasePlugin() {
+        this(ConnectionManager.getInstance());
+    }
+
+    /**
+     * Creates a new instance with the given ConnectionManager.
+     * @param connectionManager connection manager instance
+     */
+    JdbcBasePlugin(ConnectionManager connectionManager) {
+        this.connectionManager = connectionManager;
+    }
 
     @Override
     public void initialize(RequestContext context) {
@@ -183,7 +207,7 @@ public class JdbcBasePlugin extends BasePlugin {
 
         if (batchSize == 0) {
             batchSize = 1; // if user set to 0, it is the same as batchSize of 1
-        } else if(batchSize < 0) {
+        } else if (batchSize < 0) {
             throw new IllegalArgumentException(String.format(
                     "Property %s has incorrect value %s : must be a non-negative integer", JDBC_STATEMENT_BATCH_SIZE_PROPERTY_NAME, batchSize));
         }
@@ -192,7 +216,16 @@ public class JdbcBasePlugin extends BasePlugin {
 
         poolSize = context.getOption("POOL_SIZE", DEFAULT_POOL_SIZE);
 
-        queryTimeout = configuration.getInt(JDBC_STATEMENT_QUERY_TIMEOUT_PROPERTY_NAME, DEFAULT_QUERY_TIMEOUT);
+        String queryTimeoutString = configuration.get(JDBC_STATEMENT_QUERY_TIMEOUT_PROPERTY_NAME);
+        if (StringUtils.isNotBlank(queryTimeoutString)) {
+            try {
+                queryTimeout = Integer.parseUnsignedInt(queryTimeoutString);
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException(String.format(
+                        "Property %s has incorrect value %s : must be a non-negative integer",
+                        JDBC_STATEMENT_QUERY_TIMEOUT_PROPERTY_NAME, queryTimeoutString), e);
+            }
+        }
 
         // Optional parameter. The default value is null
         String quoteColumnsRaw = context.getOption("QUOTE_COLUMNS");
@@ -203,7 +236,7 @@ public class JdbcBasePlugin extends BasePlugin {
         // Optional parameter. The default value is empty map
         sessionConfiguration.putAll(configuration.getPropsWithPrefix(JDBC_SESSION_PROPERTY_PREFIX));
         // Check forbidden symbols
-        // Note: PreparedStatement tnables us to skip this check: its values are distinct from its SQL code
+        // Note: PreparedStatement enables us to skip this check: its values are distinct from its SQL code
         // However, SET queries cannot be executed this way. This is why we do this check
         if (sessionConfiguration.entrySet().stream()
                 .anyMatch(
@@ -233,8 +266,20 @@ public class JdbcBasePlugin extends BasePlugin {
         String transactionIsolationString = configuration.get(JDBC_CONNECTION_TRANSACTION_ISOLATION, "NOT_PROVIDED");
         transactionIsolation = TransactionIsolation.typeOf(transactionIsolationString);
 
-        // Optional parameter. By default, corresponding connectionConfiguration property is not set
+        // Set optional user parameter, taking into account impersonation setting for the server.
         String jdbcUser = configuration.get(JDBC_USER_PROPERTY_NAME);
+        boolean impersonationEnabledForServer = configuration.getBoolean(PXF_IMPERSONATION_JDBC_PROPERTY_NAME, false);
+        LOG.debug("JDBC impersonation is {}enabled for server {}", impersonationEnabledForServer ? "" : "not ", context.getServerName());
+        if (impersonationEnabledForServer) {
+            if (UserGroupInformation.isSecurityEnabled() && StringUtils.startsWith(jdbcUrl, HIVE_URL_PREFIX)) {
+                // secure impersonation for Hive JDBC driver requires setting URL fragment that cannot be overwritten by properties
+                String updatedJdbcUrl = HiveJdbcUtils.updateImpersonationPropertyInHiveJdbcUrl(jdbcUrl, context.getUser());
+                LOG.debug("Replaced JDBC URL {} with {}", jdbcUrl, updatedJdbcUrl);
+                jdbcUrl = updatedJdbcUrl;
+            } else {
+                jdbcUser = context.getUser();
+            }
+        }
         if (jdbcUser != null) {
             connectionConfiguration.setProperty("user", jdbcUser);
         }
@@ -252,8 +297,28 @@ public class JdbcBasePlugin extends BasePlugin {
         if (jdbcUser != null) {
             String jdbcPassword = configuration.get(JDBC_PASSWORD_PROPERTY_NAME);
             if (jdbcPassword != null) {
-                LOG.debug("Connection password: {}", maskPassword(jdbcPassword));
+                LOG.debug("Connection password: {}", ConnectionManager.maskPassword(jdbcPassword));
                 connectionConfiguration.setProperty("password", jdbcPassword);
+            }
+        }
+
+        // connection pool is optional, enabled by default
+        isConnectionPoolUsed = configuration.getBoolean(JDBC_CONNECTION_POOL_ENABLED_PROPERTY_NAME, true);
+        LOG.debug("Connection pool is {}enabled", isConnectionPoolUsed ? "" : "not ");
+        if (isConnectionPoolUsed) {
+            poolConfiguration = new Properties();
+            // for PXF upgrades where jdbc-site template has not been updated, make sure there're sensible defaults
+            poolConfiguration.setProperty("maximumPoolSize", "5");
+            poolConfiguration.setProperty("connectionTimeout", "30000");
+            poolConfiguration.setProperty("idleTimeout", "30000");
+            poolConfiguration.setProperty("minimumIdle", "0");
+            // apply values read from the template
+            poolConfiguration.putAll(configuration.getPropsWithPrefix(JDBC_CONNECTION_POOL_PROPERTY_PREFIX));
+
+            // packaged Hive JDBC Driver does not support connection.isValid() method, so we need to force set
+            // connectionTestQuery parameter in this case, unless already set by the user
+            if (jdbcUrl.startsWith(HIVE_URL_PREFIX) && HIVE_DEFAULT_DRIVER_CLASS.equals(jdbcDriver) && poolConfiguration.getProperty("connectionTestQuery") == null) {
+                poolConfiguration.setProperty("connectionTestQuery", "SELECT 1");
             }
         }
     }
@@ -267,15 +332,19 @@ public class JdbcBasePlugin extends BasePlugin {
     public Connection getConnection() throws SQLException {
         LOG.debug("Requesting a new JDBC connection. URL={} table={} txid:seg={}:{}", jdbcUrl, tableName, context.getTransactionId(), context.getSegmentId());
 
-        Connection connection = DriverManager.getConnection(jdbcUrl, connectionConfiguration);
-
-        LOG.debug("Obtained a JDBC connection {} for URL={} table={} txid:seg={}:{}", connection, jdbcUrl, tableName, context.getTransactionId(), context.getSegmentId());
-
+        Connection connection = null;
         try {
+            connection = getConnectionInternal();
+            LOG.debug("Obtained a JDBC connection {} for URL={} table={} txid:seg={}:{}", connection, jdbcUrl, tableName, context.getTransactionId(), context.getSegmentId());
+
             prepareConnection(connection);
-        } catch (SQLException e) {
+        } catch (Exception e) {
             closeConnection(connection);
-            throw e;
+            if (e instanceof SQLException) {
+                throw (SQLException) e;
+            } else {
+                throw new SQLException(e.getMessage(), e);
+            }
         }
 
         return connection;
@@ -293,7 +362,12 @@ public class JdbcBasePlugin extends BasePlugin {
         if ((connection == null) || (query == null)) {
             throw new IllegalArgumentException("The provided query or connection is null");
         }
-        return connection.prepareStatement(query);
+        PreparedStatement statement = connection.prepareStatement(query);
+        if (queryTimeout != null) {
+            LOG.debug("Setting query timeout to {} seconds", queryTimeout);
+            statement.setQueryTimeout(queryTimeout);
+        }
+        return statement;
     }
 
     /**
@@ -339,6 +413,25 @@ public class JdbcBasePlugin extends BasePlugin {
     }
 
     /**
+     * For a Kerberized Hive JDBC connection, it creates a connection as the loginUser.
+     * Otherwise, it returns a new connection.
+     *
+     * @return for a Kerberized Hive JDBC connection, returns a new connection as the loginUser.
+     * Otherwise, it returns a new connection.
+     * @throws Exception
+     */
+    private Connection getConnectionInternal() throws Exception {
+        if (UserGroupInformation.isSecurityEnabled() && StringUtils.startsWith(jdbcUrl, HIVE_URL_PREFIX)) {
+            return UserGroupInformation.getLoginUser().
+                    doAs((PrivilegedExceptionAction<Connection>) () ->
+                            connectionManager.getConnection(context.getServerName(), jdbcUrl, connectionConfiguration, isConnectionPoolUsed, poolConfiguration));
+
+        } else {
+            return connectionManager.getConnection(context.getServerName(), jdbcUrl, connectionConfiguration, isConnectionPoolUsed, poolConfiguration);
+        }
+    }
+
+    /**
      * Close a JDBC connection
      *
      * @param connection connection to close
@@ -351,8 +444,8 @@ public class JdbcBasePlugin extends BasePlugin {
         }
         try {
             if (!connection.isClosed() &&
-                connection.getMetaData().supportsTransactions() &&
-                !connection.getAutoCommit()) {
+                    connection.getMetaData().supportsTransactions() &&
+                    !connection.getAutoCommit()) {
 
                 LOG.debug("Committing transaction (as part of connection.close()) on connection {}", connection);
                 connection.commit();
@@ -379,7 +472,7 @@ public class JdbcBasePlugin extends BasePlugin {
         }
 
         DatabaseMetaData metadata = connection.getMetaData();
-        
+
         // Handle optional connection transaction isolation level
         if (transactionIsolation != TransactionIsolation.NOT_PROVIDED) {
             // user wants to set isolation level explicitly
@@ -428,13 +521,5 @@ public class JdbcBasePlugin extends BasePlugin {
         }
     }
 
-    /**
-     * Masks all password characters with asterisks, used for logging password values
-     *
-     * @param password password to mask
-     * @return masked value consisting of asterisks
-     */
-    private String maskPassword(String password) {
-        return password == null ? "" : StringUtils.repeat("*", password.length());
-    }
+
 }

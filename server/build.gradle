@@ -68,9 +68,12 @@ allprojects {
     dependencies {
         testCompile "junit:junit:${junitVersion}"
         testCompile "org.powermock:powermock-core:1.5.6"
-        testCompile "org.powermock:powermock-module-junit4:1.5.6"
+        testCompile ("org.powermock:powermock-module-junit4:1.5.6") {
+            exclude group: 'org.javassist', module: 'javassist'
+        }
         testCompile "org.powermock:powermock-api-mockito:1.5.6"
         testCompile "org.mockito:mockito-core:1.9.5"
+        testCompile "org.javassist:javassist:3.22.0-GA"
     }
 
     configurations.all {
@@ -170,9 +173,9 @@ project('pxf-hdfs') {
     dependencies {
         compile(project(':pxf-api'))
         compile "org.apache.avro:avro-mapred:1.7.7"
-        compile "com.fasterxml.jackson.core:jackson-databind:2.9.8"
-        compile "com.fasterxml.jackson.core:jackson-core:2.9.8"
-        compile "com.fasterxml.jackson.core:jackson-annotations:2.9.8"
+        compile "com.fasterxml.jackson.core:jackson-databind:2.9.9"
+        compile "com.fasterxml.jackson.core:jackson-core:2.9.9"
+        compile "com.fasterxml.jackson.core:jackson-annotations:2.9.9"
         compile "org.apache.hadoop:hadoop-mapreduce-client-core:${hadoopVersion}"
         compile "org.apache.hadoop:hadoop-yarn-api:${hadoopVersion}" // Kerberos dependency
         compile "org.apache.hadoop:hadoop-yarn-client:${hadoopVersion}" // Kerberos dependency
@@ -221,8 +224,10 @@ project('pxf-hive') {
 project('pxf-jdbc') {
     dependencies {
         compile(project(':pxf-api'))
-
-        bundleJars "postgresql:postgresql:8.4-702.jdbc4"
+        compile("com.zaxxer:HikariCP:3.3.1")
+        bundleJars "org.postgresql:postgresql:42.2.5"
+        bundleJars "org.apache.hive:hive-jdbc:1.1.0"     // 1.2.2 breaks on CDH-5.x
+        bundleJars "org.apache.hive:hive-service:1.1.0"  // 1.2.2 breaks on CDH-5.x
     }
 }
 

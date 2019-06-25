@@ -64,7 +64,7 @@ public class QuotedLineBreakAccessor extends HdfsAtomicDataAccessor {
             return false;
         }
         firstLine = true;
-        reader = new BufferedReader(new InputStreamReader(inp));
+        reader = new BufferedReader(new InputStreamReader(inputStream));
         return true;
     }
 
@@ -77,19 +77,18 @@ public class QuotedLineBreakAccessor extends HdfsAtomicDataAccessor {
             return null;
         }
 
-        String next_line = readLine();
-        if (next_line == null) /* EOF */ {
+        String nextLine = readLine();
+        if (nextLine == null) /* EOF */ {
             return null;
         }
 
         if (fileAsRow) {
             // Wrap text around quotes, and escape single quotes
-            next_line = Utilities.toCsvText(next_line, firstLine, lastLine);
-
+            nextLine = Utilities.toCsvText(nextLine, firstLine, lastLine);
             firstLine = false;
         }
 
-        return new OneRow(null, next_line);
+        return new OneRow(null, nextLine);
     }
 
     /**
