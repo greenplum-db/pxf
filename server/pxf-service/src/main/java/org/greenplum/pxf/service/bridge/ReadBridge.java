@@ -126,8 +126,6 @@ public class ReadBridge extends BaseBridge {
                 LOG.debug(ex.toString() + ": " + row_info);
             }
             output = outputBuilder.getErrorOutput(ex);
-        } catch (Exception ex) {
-            throw ex;
         }
 
         return output;

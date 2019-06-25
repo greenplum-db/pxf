@@ -19,23 +19,23 @@ package org.greenplum.pxf.plugins.json;
  * under the License.
  */
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.codehaus.jackson.JsonFactory;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.greenplum.pxf.api.OneField;
+import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.io.DataType;
+import org.greenplum.pxf.api.model.BasePlugin;
+import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.api.model.Resolver;
+import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.greenplum.pxf.api.OneField;
-import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.api.model.Resolver;
-import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.api.model.BasePlugin;
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
 
 /**
  * This JSON resolver for PXF will decode a given object from the {@link JsonAccessor} into a row for GPDB. It will
@@ -80,6 +80,7 @@ public class JsonResolver extends BasePlugin implements Resolver {
 		JsonNode root = decodeLineToJsonNode(jsonRecordAsText);
 
 		if (root == null) {
+			// TODO: error out here as well
 			LOG.warn("Return empty-fields row due to invalid JSON: " + jsonRecordAsText);
 			return emptyRow;
 		}
@@ -136,18 +137,16 @@ public class JsonResolver extends BasePlugin implements Resolver {
 	/**
 	 * Iterates down the root node to the child JSON node defined by the projs path.
 	 *
-	 * @param root
-	 *            node to to start the traversal from.
-	 * @param projs
-	 *            defines the path from the root to the desired child node.
+	 * @param root  node to to start the traversal from.
+	 * @param projs defines the path from the root to the desired child node.
 	 * @return Returns the child node defined by the root and projs path.
 	 */
 	private JsonNode getChildJsonNode(JsonNode root, String[] projs) {
 
 		// Iterate through all the tokens to the desired JSON node
 		JsonNode node = root;
-		for (int j = 0; j < projs.length; ++j) {
-			node = node.path(projs[j]);
+		for (String proj : projs) {
+			node = node.path(proj);
 		}
 
 		return node;
@@ -156,19 +155,16 @@ public class JsonResolver extends BasePlugin implements Resolver {
 	/**
 	 * Iterates through the given JSON node to the proper index and adds the field of corresponding type
 	 *
-	 * @param type
-	 *            The {@link DataType} type
-	 * @param node
-	 *            The JSON array node
-	 * @param index
-	 *            The array index to iterate to
+	 * @param type  The {@link DataType} type
+	 * @param node  The JSON array node
+	 * @param index The array index to iterate to
 	 * @throws IOException
 	 */
 	private void addFieldFromJsonArray(DataType type, JsonNode node, int index) throws IOException {
 
 		int count = 0;
 		boolean added = false;
-		for (Iterator<JsonNode> arrayNodes = node.getElements(); arrayNodes.hasNext();) {
+		for (Iterator<JsonNode> arrayNodes = node.getElements(); arrayNodes.hasNext(); ) {
 			JsonNode arrayNode = arrayNodes.next();
 
 			if (count == index) {
@@ -189,10 +185,8 @@ public class JsonResolver extends BasePlugin implements Resolver {
 	/**
 	 * Adds a field from a given JSON node value based on the {@link DataType} type.
 	 *
-	 * @param type
-	 *            The DataType type
-	 * @param val
-	 *            The JSON node to extract the value.
+	 * @param type The DataType type
+	 * @param val  The JSON node to extract the value.
 	 * @throws IOException
 	 */
 	private void addFieldFromJsonNode(DataType type, JsonNode val) throws IOException {
@@ -203,34 +197,41 @@ public class JsonResolver extends BasePlugin implements Resolver {
 			oneField.val = null;
 		} else {
 			switch (type) {
-			case BIGINT:
-				oneField.val = val.asLong();
-				break;
-			case BOOLEAN:
-				oneField.val = val.asBoolean();
-				break;
-			case BYTEA:
-				oneField.val = val.asText().getBytes();
-				break;
-			case FLOAT8:
-				oneField.val = val.asDouble();
-				break;
-			case REAL:
-				oneField.val = (float)val.asDouble();
-				break;
-			case INTEGER:
-				oneField.val = val.asInt();
-				break;
-			case SMALLINT:
-				oneField.val = (short)val.asInt();
-				break;
-			case BPCHAR:
-			case TEXT:
-			case VARCHAR:
-				oneField.val = val.asText();
-				break;
-			default:
-				throw new IOException("Unsupported type " + type);
+				case BIGINT:
+					oneField.val = val.asLong();
+					validateNumber(val, oneField);
+					break;
+				case BOOLEAN:
+					oneField.val = val.asBoolean();
+					validateBoolean(val.asText(), oneField);
+					break;
+				case BYTEA:
+					oneField.val = val.asText().getBytes();
+					validateNumber(val, oneField);
+					break;
+				case FLOAT8:
+					oneField.val = val.asDouble();
+					validateNumber(val, oneField);
+					break;
+				case REAL:
+					oneField.val = (float) val.asDouble();
+					validateNumber(val, oneField);
+					break;
+				case INTEGER:
+					oneField.val = val.asInt();
+					validateNumber(val, oneField);
+					break;
+				case SMALLINT:
+					oneField.val = (short) val.asInt();
+					validateNumber(val, oneField);
+					break;
+				case BPCHAR:
+				case TEXT:
+				case VARCHAR:
+					oneField.val = val.asText();
+					break;
+				default:
+					throw new IOException("Unsupported type " + type);
 			}
 		}
 
@@ -238,10 +239,45 @@ public class JsonResolver extends BasePlugin implements Resolver {
 	}
 
 	/**
+	 * Determines whether or not a JsonNode contains a valid numeric type.
+	 * When val is not a valid numeric type, the default is always returned
+	 * when calling val.asLong(). If not a numeric type, set as a TEXT type.
+	 *
+	 * @param val
+	 * @param oneField
+	 */
+	private static void validateNumber(JsonNode val, OneField oneField) {
+		// to validate if val is of numeric type:
+		// if val is not a number, 0 will be returned by val.asLong()
+		// we need to check with another default to be sure that val is not a valid 0 value
+		if (val.asLong() == 0 && val.asLong(1) == 1) {
+			oneField.val = val.asText();
+			oneField.type = DataType.TEXT.getOID();
+		}
+	}
+
+	/**
+	 * Determines whether or not a String is a valid Boolean, if not,
+	 * set the oneField to TEXT type.
+	 *
+	 * Unfortunately asBoolean() implementation from TextNode class doesn't
+	 * work correctly when given "false", but that's fixed in later releases.
+	 *
+	 * @param value
+	 * @param oneField
+	 */
+	private static void validateBoolean(String value, OneField oneField) {
+		if ("true".equals(value.trim()) || "false".equals(value.trim())) {
+			return;
+		}
+		oneField.val = value;
+		oneField.type = DataType.TEXT.getOID();
+	}
+
+	/**
 	 * Adds a null field of the given type.
 	 *
-	 * @param type
-	 *            The {@link DataType} type
+	 * @param type The {@link DataType} type
 	 */
 	private void addNullField(DataType type) {
 		oneFieldList.add(new OneField(type.getOID(), null));
@@ -250,8 +286,7 @@ public class JsonResolver extends BasePlugin implements Resolver {
 	/**
 	 * Converts the input line parameter into {@link JsonNode} instance.
 	 *
-	 * @param line
-	 *            JSON text
+	 * @param line JSON text
 	 * @return Returns a {@link JsonNode} that represents the input line or null for invalid json.
 	 */
 	private JsonNode decodeLineToJsonNode(String line) {
