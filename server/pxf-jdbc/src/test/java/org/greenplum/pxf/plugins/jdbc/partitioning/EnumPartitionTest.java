@@ -20,11 +20,16 @@ package org.greenplum.pxf.plugins.jdbc.partitioning;
  */
 
 import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import static org.junit.Assert.assertEquals;
 
 public class EnumPartitionTest {
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
+
     private DbProduct dbProduct = null;
 
     private final String COL_RAW = "col";
@@ -75,33 +80,45 @@ public class EnumPartitionTest {
         );
     }
 
-    @Test(expected = AssertionError.class)
+    @Test
     public void testInvalidValueNull() throws Exception {
+        thrown.expect(RuntimeException.class);
+
         new EnumPartition(COL_RAW, (String)null);
     }
 
-    @Test(expected = AssertionError.class)
-    public void testInvalidColumnNullValue() throws Exception {
+    @Test
+    public void testInvalidColumnNull() throws Exception {
+        thrown.expect(RuntimeException.class);
+
         new EnumPartition(null, "enum1");
     }
 
-    @Test(expected = AssertionError.class)
+    @Test
     public void testInvalidExcludedNull() throws Exception {
+        thrown.expect(RuntimeException.class);
+
         new EnumPartition(COL_RAW, (String[])null);
     }
 
-    @Test(expected = AssertionError.class)
+    @Test
     public void testInvalidColumnNullExcluded() throws Exception {
+        thrown.expect(RuntimeException.class);
+
         new EnumPartition(null, new String[]{"enum1"});
     }
 
-    @Test(expected = AssertionError.class)
+    @Test
     public void testInvalidExcludedZeroLength() throws Exception {
+        thrown.expect(RuntimeException.class);
+
         new EnumPartition(COL_RAW, new String[]{});
     }
 
-    @Test(expected = AssertionError.class)
+    @Test
     public void testInvalidNullQuoteString() throws Exception {
+        thrown.expect(RuntimeException.class);
+
         EnumPartition partition = new EnumPartition(COL_RAW, "enum1");
         partition.toSqlConstraint(null, dbProduct);
     }
