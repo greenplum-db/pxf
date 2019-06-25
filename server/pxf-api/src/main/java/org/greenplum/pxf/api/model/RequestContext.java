@@ -43,6 +43,7 @@ public class RequestContext {
     // ----- NAMED PROPERTIES -----
     private String accessor;
     private EnumAggregationType aggType;
+    private String config;
     private int dataFragment = -1; /* should be deprecated */
     private String dataSource;
     private String fragmenter;
@@ -346,6 +347,27 @@ public class RequestContext {
      */
     public ColumnDescriptor getColumn(int index) {
         return tupleDescription.get(index);
+    }
+
+    /**
+     * Returns the name of the server configuration for this request.
+     *
+     * @return (optional) the name of the server configuration for this request
+     */
+    public String getConfig() {
+        return config;
+    }
+
+    /**
+     * Sets the name of the server configuration for this request.
+     *
+     * @param config the directory name for the configuration
+     */
+    public void setConfig(String config) {
+        if (StringUtils.isNotBlank(config) && !Utilities.isValidDirectoryName(config)) {
+            fail("invalid CONFIG directory name '%s'", config);
+        }
+        this.config = config;
     }
 
     /**
@@ -715,6 +737,10 @@ public class RequestContext {
         // accessor and resolver are user properties, might be missing if profile is not set
         ensureNotNull("ACCESSOR", accessor);
         ensureNotNull("RESOLVER", resolver);
+
+        if (StringUtils.isNotBlank(config) && !Utilities.isValidDirectoryName(config)) {
+            fail("invalid CONFIG directory name '%s'", config);
+        }
     }
 
     private void ensureNotNull(String property, Object value) {

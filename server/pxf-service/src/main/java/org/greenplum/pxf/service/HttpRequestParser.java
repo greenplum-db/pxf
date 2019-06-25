@@ -92,6 +92,10 @@ public class HttpRequestParser implements RequestParser<HttpHeaders> {
         context.setAccessor(params.removeUserProperty("ACCESSOR"));
         context.setAggType(EnumAggregationType.getAggregationType(params.removeOptionalProperty("AGG-TYPE")));
 
+        // An optional CONFIG value specifies the name of the server
+        // configuration
+        context.setConfig(params.removeUserProperty("CONFIG"));
+
         /*
          * Some resources don't require a fragment, hence the list can be empty.
          */

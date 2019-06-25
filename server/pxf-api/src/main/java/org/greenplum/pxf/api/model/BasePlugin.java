@@ -19,6 +19,7 @@ package org.greenplum.pxf.api.model;
  * under the License.
  */
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,8 +52,13 @@ public class BasePlugin implements Plugin {
     @Override
     public void initialize(RequestContext requestContext) {
         this.context = requestContext;
+
+        String serverName = !StringUtils.isBlank(context.getConfig()) ?
+                context.getConfig() :
+                context.getServerName();
+
         this.configuration = configurationFactory.
-                initConfiguration(context.getServerName(), context.getUser(), context.getAdditionalConfigProps());
+                initConfiguration(serverName, context.getUser(), context.getAdditionalConfigProps());
         this.initialized = true;
     }
 

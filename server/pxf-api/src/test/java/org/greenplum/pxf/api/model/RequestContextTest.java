@@ -184,4 +184,26 @@ public class RequestContextTest {
         Map<String, String> unmodifiableMap = context.getOptions();
         unmodifiableMap.put("foo", "bar");
     }
+
+    @Test
+    public void testConfigOptionIsSetWhenProvided() {
+        context.setConfig("foobar");
+        assertEquals("foobar", context.getConfig());
+    }
+
+    @Test
+    public void testFailsWhenConfigOptionIsAnInvalidDirectoryName() {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("invalid CONFIG directory name '../../malicious'");
+
+        context.setConfig("../../malicious");
+    }
+
+    @Test
+    public void testFailsWhenConfigOptionIsTwoDirectories() {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("invalid CONFIG directory name 'foo/bar'");
+
+        context.setConfig("foo/bar");
+    }
 }
