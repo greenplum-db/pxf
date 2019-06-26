@@ -19,44 +19,26 @@ package org.greenplum.pxf.plugins.hdfs;
  * under the License.
  */
 
-
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileContext;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
-import org.apache.hadoop.io.compress.BZip2Codec;
-import org.apache.hadoop.mapred.JobConf;
 import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mockito;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.core.classloader.annotations.SuppressStaticInitializationFor;
-import org.powermock.modules.junit4.PowerMockRunner;
-
-import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
+import org.junit.rules.ExpectedException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({SequenceFileAccessor.class, HdfsSplittableDataAccessor.class, HdfsUtilities.class})
-@SuppressStaticInitializationFor({"org.apache.hadoop.mapred.JobConf", "org.apache.hadoop.fs.FileContext"})
-// Prevents static inits
 public class SequenceFileAccessorTest {
 
-    private RequestContext requestContext;
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
+    private RequestContext context;
     private SequenceFileAccessor accessor;
     private ConfigurationFactory mockConfigurationFactory;
 
@@ -70,133 +52,75 @@ public class SequenceFileAccessorTest {
      * to be mocked (and provided good material for a new Kafka story).
      */
     @Before
-    public void setup() throws Exception {
+    public void setup() {
+        Configuration configuration = new Configuration();
+        configuration.set("fs.defaultFS", "hdfs://localhost:8020/");
 
         mockConfigurationFactory = mock(ConfigurationFactory.class);
-        Configuration mockConfiguration = mock(Configuration.class);
-        Path file = mock(Path.class);
-        FileSystem fs = mock(FileSystem.class);
-        FileContext fc = mock(FileContext.class);
+        when(mockConfigurationFactory.initConfiguration("default", "dummy", null))
+                .thenReturn(configuration);
 
-        requestContext = mock(RequestContext.class);
-        JobConf jobConf = mock(JobConf.class);
-        PowerMockito.whenNew(JobConf.class).withArguments(mockConfiguration, HdfsSplittableDataAccessor.class).thenReturn(jobConf);
-
-        PowerMockito.mockStatic(FileContext.class);
-        PowerMockito.mockStatic(HdfsUtilities.class);
-        PowerMockito.mockStatic(FileSystem.class);
-        PowerMockito.mockStatic(URI.class);
-        PowerMockito.whenNew(Path.class).withArguments(Mockito.anyString()).thenReturn(file);
-
-        Map<String, String> map = new HashMap<>();
-
-        when(requestContext.getServerName()).thenReturn("default");
-        when(requestContext.getUser()).thenReturn("dummy");
-        when(requestContext.getOptions()).thenReturn(map);
-
-        when(mockConfigurationFactory.initConfiguration("default", "dummy", map)).thenReturn(mockConfiguration);
-        when(file.getFileSystem(mockConfiguration)).thenReturn(fs);
-        when(fs.mkdirs(Mockito.any(Path.class))).thenReturn(true);
-        when(requestContext.getDataSource()).thenReturn("deep.throat");
-        when(requestContext.getSegmentId()).thenReturn(0);
-
-        when(mockConfiguration.get("fs.defaultFS", "file:///")).thenReturn("hdfs:///");
-        when(FileContext.getFileContext(mockConfiguration)).thenReturn(fc);
-    }
-
-    private void constructAccessor() throws Exception {
-
-        accessor = new SequenceFileAccessor(mockConfigurationFactory);
-        accessor.initialize(requestContext);
-        accessor.openForWrite();
-    }
-
-    private void mockCompressionOptions(String codec, String type) {
-
-        when(requestContext.getOption("COMPRESSION_CODEC")).thenReturn(codec);
-        when(requestContext.getOption("COMPRESSION_TYPE")).thenReturn(type);
+        context = new RequestContext();
+        context.setServerName("default");
+        context.setUser("dummy");
+        context.setDataSource("deep.throat");
+        context.setSegmentId(0);
     }
 
     @Test
     public void compressionNotSpecified() throws Exception {
-
-        mockCompressionOptions(null, null);
-        constructAccessor();
+        prepareTest(null, null);
         assertEquals(SequenceFile.CompressionType.NONE, accessor.getCompressionType());
         assertNull(accessor.getCodec());
     }
 
     @Test
     public void compressCodec() throws Exception {
-
         //using BZip2 as a valid example
-        when(HdfsUtilities.getCodec(Mockito.anyObject(), Mockito.anyString())).thenReturn(new BZip2Codec());
-        mockCompressionOptions("org.apache.hadoop.io.compress.BZip2Codec", null);
-        constructAccessor();
+        prepareTest("org.apache.hadoop.io.compress.BZip2Codec", null);
         assertEquals(".bz2", accessor.getCodec().getDefaultExtension());
     }
 
     @Test
-    public void bogusCompressCodec() {
+    public void bogusCompressCodec() throws Exception {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("Invalid codec: So I asked, who is he? He goes by the name of Wayne Rooney ");
 
         final String codecName = "So I asked, who is he? He goes by the name of Wayne Rooney";
-        when(HdfsUtilities.getCodec(Mockito.anyObject(), Mockito.anyString())).thenThrow(new IllegalArgumentException("Compression codec " + codecName + " was not found."));
-        mockCompressionOptions(codecName, null);
-
-        try {
-            constructAccessor();
-            fail("should throw no codec found exception");
-        } catch (Exception e) {
-            assertEquals("Compression codec " + codecName + " was not found.", e.getMessage());
-        }
+        prepareTest(codecName, null);
     }
 
     @Test
     public void compressTypes() throws Exception {
 
-        when(HdfsUtilities.getCodec(Mockito.anyObject(), Mockito.anyString())).thenReturn(new BZip2Codec());
-
         //proper value
-        mockCompressionOptions("org.apache.hadoop.io.compress.BZip2Codec", "BLOCK");
-        constructAccessor();
+        prepareTest("org.apache.hadoop.io.compress.BZip2Codec", "BLOCK");
         assertEquals(".bz2", accessor.getCodec().getDefaultExtension());
         assertEquals(org.apache.hadoop.io.SequenceFile.CompressionType.BLOCK, accessor.getCompressionType());
 
         //case (non) sensitivity
-        mockCompressionOptions("org.apache.hadoop.io.compress.BZip2Codec", "ReCoRd");
-        constructAccessor();
+        prepareTest("org.apache.hadoop.io.compress.BZip2Codec", "ReCoRd");
         assertEquals(".bz2", accessor.getCodec().getDefaultExtension());
         assertEquals(org.apache.hadoop.io.SequenceFile.CompressionType.RECORD, accessor.getCompressionType());
 
         //default (RECORD)
-        mockCompressionOptions("org.apache.hadoop.io.compress.BZip2Codec", null);
-        constructAccessor();
+        prepareTest("org.apache.hadoop.io.compress.BZip2Codec", null);
         assertEquals(".bz2", accessor.getCodec().getDefaultExtension());
         assertEquals(org.apache.hadoop.io.SequenceFile.CompressionType.RECORD, accessor.getCompressionType());
     }
 
     @Test
-    public void illegalCompressTypes() throws Exception {
+    public void illegalCompressTypeOy() throws Exception {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("Illegal compression type 'Oy'");
+        prepareTest("org.apache.hadoop.io.compress.BZip2Codec", "Oy");
+    }
 
-        when(HdfsUtilities.getCodec(Mockito.anyObject(), Mockito.anyString())).thenReturn(new BZip2Codec());
-        mockCompressionOptions("org.apache.hadoop.io.compress.BZip2Codec", "Oy");
-
-        try {
-            constructAccessor();
-            fail("illegal COMPRESSION_TYPE should throw IllegalArgumentException");
-        } catch (IllegalArgumentException e) {
-            assertEquals("Illegal compression type 'Oy'", e.getMessage());
-        }
-
-        mockCompressionOptions("org.apache.hadoop.io.compress.BZip2Codec", "NONE");
-
-        try {
-            constructAccessor();
-            fail("illegal COMPRESSION_TYPE should throw IllegalArgumentException");
-        } catch (IllegalArgumentException e) {
-            assertEquals("Illegal compression type 'NONE'. For disabling compression remove COMPRESSION_CODEC parameter.", e.getMessage());
-        }
-
+    @Test
+    public void illegalCompressTypeNone() throws Exception {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("Illegal compression type 'NONE'. For disabling compression remove COMPRESSION_CODEC parameter.");
+        prepareTest("org.apache.hadoop.io.compress.BZip2Codec", "NONE");
     }
 
     /*
@@ -204,12 +128,22 @@ public class SequenceFileAccessorTest {
      */
     @After
     public void tearDown() throws Exception {
-
-        if (accessor == null) {
-            return;
-        }
+        if (accessor == null) return;
 
         accessor.closeForWrite();
         accessor = null;
+    }
+
+    private void prepareTest(String codec, String type) throws Exception {
+        if (codec != null) {
+            context.addOption("COMPRESSION_CODEC", codec);
+        }
+        if (type != null) {
+            context.addOption("COMPRESSION_TYPE", type);
+        }
+
+        accessor = new SequenceFileAccessor(mockConfigurationFactory);
+        accessor.initialize(context);
+        accessor.openForWrite();
     }
 }

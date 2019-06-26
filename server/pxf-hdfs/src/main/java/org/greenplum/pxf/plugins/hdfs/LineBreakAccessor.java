@@ -45,12 +45,14 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor {
     private FSDataOutputStream fsdos;
     private FileSystem fs;
     private Path file;
+    private CodecFactory codecFactory;
 
     /**
      * Constructs a LineBreakAccessor.
      */
     public LineBreakAccessor() {
         super(new TextInputFormat());
+        this.codecFactory = CodecFactory.getInstance();
     }
 
     @Override
@@ -77,7 +79,7 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor {
         String compressCodec = context.getOption("COMPRESSION_CODEC");
         // get compression codec
         CompressionCodec codec = compressCodec != null ?
-                HdfsUtilities.getCodec(configuration, compressCodec) : null;
+                codecFactory.getCodec(configuration, compressCodec) : null;
 
         file = new Path(fileName);
         fs = FileSystem.get(URI.create(fileName), configuration);

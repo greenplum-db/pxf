@@ -33,6 +33,7 @@ import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.FragmentMetadata;
 import org.greenplum.pxf.api.utilities.Utilities;
+import org.greenplum.pxf.plugins.hdfs.CodecFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,71 +48,10 @@ import java.util.List;
 public class HdfsUtilities {
 
     private static Logger LOG = LoggerFactory.getLogger(HdfsUtilities.class);
-
-    /*
-     * Helper routine to get a compression codec class
-     */
-    private static Class<? extends CompressionCodec> getCodecClass(Configuration conf, String name) {
-        Class<? extends CompressionCodec> codecClass;
-        try {
-            codecClass = conf.getClassByName(name).asSubclass(CompressionCodec.class);
-        } catch (ClassNotFoundException e) {
-            throw new IllegalArgumentException("Compression codec " + name + " was not found.", e);
-        }
-        return codecClass;
-    }
+    private static CodecFactory codecFactory = CodecFactory.getInstance();
 
     /**
-     * Helper routine to get compression codec through reflection.
-     *
-     * @param conf configuration used for reflection
-     * @param name codec name
-     * @return generated CompressionCodec
-     */
-    public static CompressionCodec getCodec(Configuration conf, String name) {
-        return ReflectionUtils.newInstance(getCodecClass(conf, name), conf);
-    }
-
-    /**
-     * Helper routine to get compression codec class by path (file suffix).
-     *
-     * @param path path of file to get codec for
-     * @return matching codec class for the path. null if no codec is needed.
-     */
-    private static Class<? extends CompressionCodec> getCodecClassByPath(Configuration config, String path) {
-
-        Class<? extends CompressionCodec> codecClass = null;
-        CompressionCodecFactory factory = new CompressionCodecFactory(config);
-        CompressionCodec codec = factory.getCodec(new Path(path));
-        if (codec != null) {
-            codecClass = codec.getClass();
-        }
-        if (LOG.isDebugEnabled()) {
-            String msg = (codecClass == null ? "No codec" : "Codec " + codecClass);
-            LOG.debug("{} was found for file {}", msg, path);
-        }
-        return codecClass;
-    }
-
-    /**
-     * Returns true if the needed codec is splittable. If no codec is needed
-     * returns true as well.
-     *
-     * @param path path of the file to be read
-     * @return if the codec needed for reading the specified path is splittable.
-     */
-    static boolean isSplittableCodec(CompressionCodecFactory factory, Path path) {
-
-        final CompressionCodec codec = factory.getCodec(path);
-        if (null == codec) {
-            return true;
-        }
-
-        return codec instanceof SplittableCompressionCodec;
-    }
-
-    /**
-     * Checks if requests should be handle in a single thread or not.
+     * Checks if requests should be handled in a single thread or not.
      *
      * @param config    the configuration parameters object
      * @param dataDir   hdfs path to the data source
@@ -119,10 +59,9 @@ public class HdfsUtilities {
      * @return if the request can be run in multi-threaded mode.
      */
     public static boolean isThreadSafe(Configuration config, String dataDir, String compCodec) {
-
         Class<? extends CompressionCodec> codecClass = (compCodec != null) ?
-                HdfsUtilities.getCodecClass(config, compCodec) :
-                HdfsUtilities.getCodecClassByPath(config, dataDir);
+                codecFactory.getCodecClass(config, compCodec) :
+                codecFactory.getCodecClassByPath(config, dataDir);
         /* bzip2 codec is not thread safe */
         return (codecClass == null || !BZip2Codec.class.isAssignableFrom(codecClass));
     }

@@ -54,6 +54,7 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor {
     private CompressionType compressionType;
     private SequenceFile.Writer writer;
     private LongWritable defaultKey; // used when recordkey is not defined
+    private CodecFactory codecFactory;
 
     /**
      * Constructs a SequenceFileAccessor.
@@ -65,6 +66,7 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor {
     SequenceFileAccessor(ConfigurationFactory configurationFactory) {
         super(new SequenceFileInputFormat<Writable, Writable>());
         this.configurationFactory = configurationFactory;
+        this.codecFactory = CodecFactory.getInstance();
     }
 
     /**
@@ -122,7 +124,7 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor {
         compressionType = CompressionType.NONE;
         codec = null;
         if (userCompressCodec != null) {
-            codec = HdfsUtilities.getCodec(configuration, userCompressCodec);
+            codec = codecFactory.getCodec(configuration, userCompressCodec);
 
             try {
                 compressionType = CompressionType.valueOf(parsedCompressType);

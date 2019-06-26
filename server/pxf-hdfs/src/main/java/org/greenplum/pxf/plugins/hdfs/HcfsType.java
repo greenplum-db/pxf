@@ -5,7 +5,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -130,10 +129,21 @@ public enum HcfsType {
 
         String compressCodec = context.getOption("COMPRESSION_CODEC");
         if (compressCodec != null) {
-            // get compression codec
-            CompressionCodec codec = HdfsUtilities.getCodec(configuration, compressCodec);
+            // get compression codec default extension
+            CodecFactory codecFactory = CodecFactory.getInstance();
+            String extension;
+            try {
+                extension = codecFactory
+                        .getCodec(configuration, compressCodec)
+                        .getDefaultExtension();
+            } catch (IllegalArgumentException e) {
+                LOG.debug("Unable to get extension for codec '{}'", compressCodec);
+                extension = codecFactory
+                        .getCodec(compressCodec, null)
+                        .getExtension();
+            }
             // append codec extension to the filename
-            fileName += codec.getDefaultExtension();
+            fileName += extension;
         }
 
         LOG.debug("File name for write: {}", fileName);

@@ -89,6 +89,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
     private long rowsRead, rowsWritten, totalRowsRead, totalRowsWritten;
     private long rowsInRowGroup, rowGroupsReadCount;
     private WriterVersion parquetVersion;
+    private CodecFactory codecFactory = CodecFactory.getInstance();
 
     /**
      * Opens the resource for read.
@@ -160,22 +161,6 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
         return true;
     }
 
-    private CompressionCodecName getCodec(String name) {
-        CompressionCodecName codecName = CompressionCodecName.SNAPPY;
-        if (name != null) {
-            try {
-                codecName = CompressionCodecName.fromConf(name);
-            } catch (IllegalArgumentException ie) {
-                try {
-                    codecName = CompressionCodecName.fromCompressionCodec(Class.forName(name));
-                } catch (ClassNotFoundException ce) {
-                    throw new IllegalArgumentException(String.format("Invalid codec: %s ", name));
-                }
-            }
-        }
-        return codecName;
-    }
-
     private int getOption(String optionName, int defaultValue) {
         String optionStr = context.getOption(optionName);
         return optionStr != null ? Integer.parseInt(optionStr) : defaultValue;
@@ -210,7 +195,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
         HcfsType hcfsType = HcfsType.getHcfsType(configuration, context);
         filePrefix = hcfsType.getUriForWrite(configuration, context);
         String compressCodec = context.getOption("COMPRESSION_CODEC");
-        codecName = getCodec(compressCodec);
+        codecName = codecFactory.getCodec(compressCodec, CompressionCodecName.SNAPPY);
 
         // Options for parquet write
         pageSize = getOption("PAGE_SIZE", DEFAULT_PAGE_SIZE);

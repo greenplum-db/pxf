@@ -22,7 +22,9 @@ package org.greenplum.pxf.plugins.hdfs.utilities;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.io.compress.CompressionCodecFactory;
+import org.apache.hadoop.io.compress.SplittableCompressionCodec;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
@@ -47,12 +49,20 @@ public class PxfInputFormat extends FileInputFormat {
         throw new UnsupportedOperationException("PxfInputFormat should not be used for reading data, but only for obtaining the splits of a file");
     }
 
-    /*
-     * Return true if this file can be split.
+    /**
+     * Returns true if the needed codec is splittable. If no codec is needed
+     * returns true as well.
+     *
+     * @param fs the filesystem
+     * @param filename the name of the file to be read
+     * @return if the codec needed for reading the specified path is splittable.
      */
     @Override
     protected boolean isSplitable(FileSystem fs, Path filename) {
-        return HdfsUtilities.isSplittableCodec(new CompressionCodecFactory(fs.getConf()), filename);
+        CompressionCodecFactory factory = new CompressionCodecFactory(fs.getConf());
+        CompressionCodec codec = factory.getCodec(filename);
+
+        return null == codec || codec instanceof SplittableCompressionCodec;
     }
 
 }

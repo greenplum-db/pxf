@@ -290,39 +290,6 @@ public class HiveFilterBuilder implements FilterParser.FilterBuilder {
         return new BasicFilter(opId, column, constant);
     }
 
-    /**
-     * Handles AND of already calculated expressions. Currently only AND, in the
-     * future OR can be added
-     *
-     * Four cases here:
-     * <ol>
-     * <li>both are simple filters</li>
-     * <li>left is a FilterList and right is a filter</li>
-     * <li>left is a filter and right is a FilterList</li>
-     * <li>both are FilterLists</li>
-     * </ol>
-     * Currently, 1, 2 can occur, since no parenthesis are used
-     *
-     * @param left left hand filter
-     * @param right right hand filter
-     * @return list of filters constructing the filter tree
-     */
-    private List<BasicFilter> handleCompoundOperations(List<BasicFilter> left,
-                                                       BasicFilter right) {
-        left.add(right);
-        return left;
-    }
-
-    private List<BasicFilter> handleCompoundOperations(BasicFilter left,
-                                                       BasicFilter right) {
-        List<BasicFilter> result = new LinkedList<BasicFilter>();
-
-        result.add(left);
-        result.add(right);
-
-        return result;
-    }
-
     private Object handleLogicalOperation(FilterParser.LogicalOperation operator, Object leftOperand, Object rightOperand) {
 
         List<Object> result = new LinkedList<>();
