@@ -52,13 +52,8 @@ public class BasePlugin implements Plugin {
     @Override
     public void initialize(RequestContext requestContext) {
         this.context = requestContext;
-
-        String serverName = !StringUtils.isBlank(context.getConfig()) ?
-                context.getConfig() :
-                context.getServerName();
-
         this.configuration = configurationFactory.
-                initConfiguration(serverName, context.getUser(), context.getAdditionalConfigProps());
+                initConfiguration(context.getConfig(), context.getServerName(), context.getUser(), context.getAdditionalConfigProps());
         this.initialized = true;
     }
 

@@ -38,7 +38,7 @@ public class BaseConfigurationFactory implements ConfigurationFactory {
     }
 
     @Override
-    public Configuration initConfiguration(String serverName, String userName, Map<String, String> additionalProperties) {
+    public Configuration initConfiguration(String configDirectory, String serverName, String userName, Map<String, String> additionalProperties) {
         // start with built-in Hadoop configuration that loads core-site.xml
         LOG.debug("Initializing configuration for server {}", serverName);
         Configuration configuration = new Configuration();
@@ -46,11 +46,11 @@ public class BaseConfigurationFactory implements ConfigurationFactory {
         File[] serverDirectories = serversConfigDirectory
                 .listFiles(f -> f.isDirectory() &&
                         f.canRead() &&
-                        StringUtils.equalsIgnoreCase(serverName, f.getName()));
+                        StringUtils.equalsIgnoreCase(configDirectory, f.getName()));
 
         if (ArrayUtils.isEmpty(serverDirectories)) {
             LOG.warn("Directory {}{}{} does not exist or cannot be read by PXF, no configuration resources are added for server {}",
-                serversConfigDirectory, File.separator, serverName, serverName);
+                serversConfigDirectory, File.separator, configDirectory, serverName);
         } else if (serverDirectories.length > 1) {
             throw new IllegalStateException(String.format(
                     "Multiple directories found for server %s. Server directories are expected to be case-insensitive.", serverName

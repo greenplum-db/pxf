@@ -57,7 +57,8 @@ import static org.mockito.Mockito.when;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({HiveMetadataFetcher.class}) // Enables mocking 'new' calls
 @SuppressStaticInitializationFor({"org.apache.hadoop.hive.metastore.api.MetaException",
-        "org.greenplum.pxf.plugins.hive.utilities.HiveUtilities"}) // Prevents static inits
+        "org.greenplum.pxf.plugins.hive.utilities.HiveUtilities"})
+// Prevents static inits
 public class HiveMetadataFetcherTest {
     private RequestContext requestContext;
     private Logger LOG;
@@ -93,11 +94,12 @@ public class HiveMetadataFetcherTest {
         hiveClient = mock(HiveMetaStoreClient.class);
         PowerMockito.whenNew(HiveMetaStoreClient.class).withArguments(hiveConfiguration).thenReturn(hiveClient);
 
+        when(requestContext.getConfig()).thenReturn("default");
         when(requestContext.getServerName()).thenReturn("default");
         when(requestContext.getUser()).thenReturn("dummy");
         when(requestContext.getAdditionalConfigProps()).thenReturn(null);
         mockConfigurationFactory = mock(ConfigurationFactory.class);
-        when(mockConfigurationFactory.initConfiguration("default", "dummy", null)).thenReturn(hadoopConfiguration);
+        when(mockConfigurationFactory.initConfiguration("default", "default", "dummy", null)).thenReturn(hadoopConfiguration);
     }
 
     @Test

@@ -20,40 +20,21 @@ package org.greenplum.pxf.api.io;
  */
 
 
-import org.apache.commons.logging.Log;
-import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mockito;
 import org.mockito.stubbing.OngoingStubbing;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.core.classloader.annotations.SuppressStaticInitializationFor;
-import org.powermock.modules.junit4.PowerMockRunner;
-import org.powermock.reflect.Whitebox;
 
 import java.io.DataInput;
 import java.io.EOFException;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@RunWith(PowerMockRunner.class)
-@SuppressStaticInitializationFor("GPDBWritable")
-@PrepareForTest({GPDBWritable.class})
 public class GPDBWritableTest {
 
-    DataInput inputStream;
-    OngoingStubbing<Integer> ongoing;
-    Log LOG;
-
-    @Before
-    public void setupStaticLog() {
-        LOG = mock(Log.class);
-        Whitebox.setInternalState(GPDBWritable.class, LOG);
-    }
+    private DataInput inputStream;
 
     /*
      * Test the readFields method: empty stream
@@ -68,7 +49,6 @@ public class GPDBWritableTest {
 
         gpdbWritable.readFields(inputStream);
 
-        verifyLog("Reached end of stream (EOFException)");
         assertTrue(gpdbWritable.isEmpty());
     }
 
@@ -85,7 +65,6 @@ public class GPDBWritableTest {
 
         gpdbWritable.readFields(inputStream);
 
-        verifyLog("Reached end of stream (returned -1)");
         assertTrue(gpdbWritable.isEmpty());
     }
 
@@ -173,9 +152,7 @@ public class GPDBWritableTest {
 
         typeName = GPDBWritable.getTypeName(DataType.NUMERIC.getOID());
         assertEquals(typeName, DataType.NUMERIC.name());
-
     }
-
 
     /*
      * helpers functions
@@ -188,7 +165,7 @@ public class GPDBWritableTest {
     // add data to stream, end with EOFException on demand.
     private DataInput buildStream(int[] data, boolean throwException) throws Exception {
         inputStream = mock(DataInput.class);
-        ongoing = when(inputStream.readInt());
+        OngoingStubbing<Integer> ongoing = when(inputStream.readInt());
         for (int b : data) {
             ongoing = ongoing.thenReturn(b);
         }
@@ -197,9 +174,5 @@ public class GPDBWritableTest {
             ongoing.thenThrow(new EOFException());
         }
         return inputStream;
-    }
-
-    private void verifyLog(String msg) {
-        Mockito.verify(LOG).debug(msg);
     }
 }

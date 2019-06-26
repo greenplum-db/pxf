@@ -22,60 +22,50 @@ package org.greenplum.pxf.api;
 
 import org.greenplum.pxf.api.examples.DemoAccessor;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-import static org.mockito.Mockito.when;
-
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({DemoAccessor.class}) // Enables mocking 'new' calls
 
 public class DemoAccessorTest {
 
-    @Mock
-    RequestContext requestContext;
-    DemoAccessor accessor;
+    private RequestContext context;
+    private DemoAccessor accessor;
 
     @Before
     public void setup() {
+        context = new RequestContext();
         accessor = new DemoAccessor();
-        accessor.initialize(requestContext);
+        accessor.initialize(context);
     }
 
     @Test
     public void testRowsWithSingleColumn() throws Exception {
-
-        when(requestContext.getDataFragment()).thenReturn(0);
-        when(requestContext.getFragmentMetadata()).thenReturn("fragment1".getBytes(), "fragment1".getBytes());
-        when(requestContext.getColumns()).thenReturn(1);
+        context.setDataFragment(0);
+        context.setFragmentMetadata("fragment1".getBytes());
 
         int numRows = 2;
         for (int i = 0; i < numRows; i++) {
             OneRow row = accessor.readNextObject();
-            assertEquals(String.format("OneRow:0.%d->fragment1 row%d", i,
-                    i + 1), row.toString());
+            assertEquals(String.format("OneRow:0.%d->fragment1 row%d", i, i + 1), row.toString());
         }
         assertNull(accessor.readNextObject());
     }
 
     @Test
     public void testRowsWithMultipleColumns() throws Exception {
-
-        when(requestContext.getDataFragment()).thenReturn(0);
-        when(requestContext.getFragmentMetadata()).thenReturn("fragment1".getBytes(), "fragment1".getBytes());
-        when(requestContext.getColumns()).thenReturn(3);
+        context.setDataFragment(0);
+        context.setFragmentMetadata("fragment1".getBytes());//, "fragment1".getBytes());
+        context.getTupleDescription().add(new ColumnDescriptor("col1", 1, 1, "TEXT", null));
+        context.getTupleDescription().add(new ColumnDescriptor("col2", 1, 1, "TEXT", null));
+        context.getTupleDescription().add(new ColumnDescriptor("col3", 1, 1, "TEXT", null));
 
         int numRows = 2;
         for (int i = 0; i < numRows; i++) {
             OneRow row = accessor.readNextObject();
-            assertEquals(String.format("OneRow:0.%d->fragment1 row%d,value1," +
-                    "value2", i, i+1), row.toString());
+            assertEquals(String.format("OneRow:0.%d->fragment1 row%d,value1,value2", i, i + 1), row.toString());
         }
         assertNull(accessor.readNextObject());
     }

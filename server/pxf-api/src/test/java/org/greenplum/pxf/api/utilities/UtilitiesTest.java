@@ -28,10 +28,6 @@ import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectOutputStream;
@@ -47,8 +43,7 @@ import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({Class.class})
+
 public class UtilitiesTest {
 
     private String PROPERTY_KEY_USER_IMPERSONATION = "pxf.service.user.impersonation.enabled";
@@ -246,22 +241,34 @@ public class UtilitiesTest {
     }
 
     @Test
-    public void invalidDirectoryName() {
-        assertFalse(Utilities.isValidDirectoryName(null));
-        assertFalse(Utilities.isValidDirectoryName("\0"));
-        assertFalse(Utilities.isValidDirectoryName("a/a"));
-        assertFalse(Utilities.isValidDirectoryName("."));
-        assertFalse(Utilities.isValidDirectoryName(".."));
-        assertFalse(Utilities.isValidDirectoryName("abc ac"));
-        assertFalse(Utilities.isValidDirectoryName("abc;ac"));
-        assertFalse(Utilities.isValidDirectoryName("\\"));
-        assertFalse(Utilities.isValidDirectoryName("a,b"));
+    public void validDirectoryName() {
+        assertTrue(Utilities.isValidDirectoryName("/etc/hadoop/conf"));
+        assertTrue(Utilities.isValidDirectoryName("foo"));
     }
 
     @Test
-    public void validDirectoryName() {
-        assertTrue(Utilities.isValidDirectoryName("pxf"));
-        assertTrue(Utilities.isValidDirectoryName("\uD83D\uDE0A"));
+    public void invalidDirectoryName() {
+        assertFalse(Utilities.isValidDirectoryName(null));
+        assertFalse(Utilities.isValidDirectoryName("\0"));
+    }
+
+    @Test
+    public void invalidRestrictedDirectoryName() {
+        assertFalse(Utilities.isValidRestrictedDirectoryName(null));
+        assertFalse(Utilities.isValidRestrictedDirectoryName("\0"));
+        assertFalse(Utilities.isValidRestrictedDirectoryName("a/a"));
+        assertFalse(Utilities.isValidRestrictedDirectoryName("."));
+        assertFalse(Utilities.isValidRestrictedDirectoryName(".."));
+        assertFalse(Utilities.isValidRestrictedDirectoryName("abc ac"));
+        assertFalse(Utilities.isValidRestrictedDirectoryName("abc;ac"));
+        assertFalse(Utilities.isValidRestrictedDirectoryName("\\"));
+        assertFalse(Utilities.isValidRestrictedDirectoryName("a,b"));
+    }
+
+    @Test
+    public void validRestrictedDirectoryName() {
+        assertTrue(Utilities.isValidRestrictedDirectoryName("pxf"));
+        assertTrue(Utilities.isValidRestrictedDirectoryName("\uD83D\uDE0A"));
     }
 
     @Test
@@ -302,9 +309,6 @@ public class UtilitiesTest {
 
         RequestContext metaData = mock(RequestContext.class);
         String className = "com.pivotal.pxf.Lucy";
-        ClassNotFoundException exception = new ClassNotFoundException(className);
-        PowerMockito.mockStatic(Class.class);
-        when(Class.forName(className)).thenThrow(exception);
 
         try {
             Utilities.createAnyInstance(RequestContext.class,
@@ -320,14 +324,14 @@ public class UtilitiesTest {
     }
 
     @Test
-    public void maskNonPrintable() throws Exception {
+    public void maskNonPrintable() {
         String input = "";
         String result = Utilities.maskNonPrintables(input);
         assertEquals("", result);
 
         input = null;
         result = Utilities.maskNonPrintables(input);
-        assertEquals(null, result);
+        assertNull(result);
 
         input = "Lucy in the sky";
         result = Utilities.maskNonPrintables(input);

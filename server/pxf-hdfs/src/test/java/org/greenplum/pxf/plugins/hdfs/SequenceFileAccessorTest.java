@@ -57,10 +57,11 @@ public class SequenceFileAccessorTest {
         Configuration configuration = new Configuration();
 
         mockConfigurationFactory = mock(ConfigurationFactory.class);
-        when(mockConfigurationFactory.initConfiguration("dummy", "dummy", null))
+        when(mockConfigurationFactory.initConfiguration("dummy", "dummy", "dummy", null))
                 .thenReturn(configuration);
 
         context = new RequestContext();
+        context.setConfig("dummy");
         context.setServerName("dummy");
         context.setUser("dummy");
         context.setDataSource(path);

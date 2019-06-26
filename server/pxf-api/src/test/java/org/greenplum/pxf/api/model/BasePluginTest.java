@@ -25,7 +25,7 @@ public class BasePluginTest {
         RequestContext context = new RequestContext();
 
         when(mockConfigurationFactory.
-                initConfiguration(context.getServerName(), context.getUser(), context.getAdditionalConfigProps()))
+                initConfiguration(context.getConfig(), context.getServerName(), context.getUser(), context.getAdditionalConfigProps()))
                 .thenReturn(configuration);
 
         BasePlugin basePlugin = new BasePlugin(mockConfigurationFactory);

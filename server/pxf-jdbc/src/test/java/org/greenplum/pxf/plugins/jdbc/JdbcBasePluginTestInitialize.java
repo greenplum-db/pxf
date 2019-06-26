@@ -113,7 +113,7 @@ public class JdbcBasePluginTestInitialize {
      */
     private void prepareBaseConfigurationFactory(Configuration configuration) throws Exception {
         BaseConfigurationFactory configurationFactory = mock(BaseConfigurationFactory.class);
-        Mockito.when(configurationFactory.initConfiguration(Mockito.anyString(), Mockito.anyString(), Mockito.any())).thenReturn(configuration);
+        Mockito.when(configurationFactory.initConfiguration(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.any())).thenReturn(configuration);
         PowerMockito.mockStatic(BaseConfigurationFactory.class);
         PowerMockito.when(BaseConfigurationFactory.getInstance()).thenReturn(configurationFactory);
     }

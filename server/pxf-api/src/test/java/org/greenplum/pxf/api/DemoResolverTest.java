@@ -20,45 +20,40 @@ package org.greenplum.pxf.api;
  */
 
 
-import org.greenplum.pxf.api.examples.DemoAccessor;
 import org.greenplum.pxf.api.examples.DemoResolver;
 import org.greenplum.pxf.api.examples.DemoTextResolver;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 import static org.greenplum.pxf.api.io.DataType.VARCHAR;
-import static org.junit.Assert.*;
-
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({DemoAccessor.class}) // Enables mocking 'new' calls
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 public class DemoResolverTest {
 
     private static final String DATA = "value1,value2";
 
-    @Mock
-    RequestContext requestContext;
-    DemoResolver customResolver;
-    DemoTextResolver textResolver;
-    OneRow row;
-    OneField field;
+    private RequestContext context;
+    private DemoResolver customResolver;
+    private DemoTextResolver textResolver;
+    private OneRow row;
+    private OneField field;
 
     @Before
-    public void setup() throws Exception {
+    public void setup() {
+        context = new RequestContext();
+
         customResolver = new DemoResolver();
         textResolver = new DemoTextResolver();
 
-        customResolver.initialize(requestContext);
-        textResolver.initialize(requestContext);
+        customResolver.initialize(context);
+        textResolver.initialize(context);
 
         row = new OneRow("0.0", DATA);
         field = new OneField(VARCHAR.getOID(), DATA.getBytes());

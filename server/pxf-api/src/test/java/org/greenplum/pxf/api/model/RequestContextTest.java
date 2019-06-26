@@ -192,18 +192,20 @@ public class RequestContextTest {
     }
 
     @Test
-    public void testFailsWhenConfigOptionIsAnInvalidDirectoryName() {
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("invalid CONFIG directory name '../../malicious'");
-
-        context.setConfig("../../malicious");
+    public void testSucceedsWhenConfigOptionIsARelativeDirectoryName() {
+        context.setConfig("../../relative");
+        assertEquals("../../relative", context.getConfig());
     }
 
     @Test
-    public void testFailsWhenConfigOptionIsTwoDirectories() {
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("invalid CONFIG directory name 'foo/bar'");
+    public void testSucceedsWhenConfigOptionIsAnAbsoluteDirectoryName() {
+        context.setConfig("/etc/hadoop/conf");
+        assertEquals("/etc/hadoop/conf", context.getConfig());
+    }
 
+    @Test
+    public void testSucceedsWhenConfigOptionIsTwoDirectories() {
         context.setConfig("foo/bar");
+        assertEquals("foo/bar", context.getConfig());
     }
 }

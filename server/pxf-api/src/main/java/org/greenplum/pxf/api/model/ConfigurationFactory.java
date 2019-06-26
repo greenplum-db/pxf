@@ -18,10 +18,11 @@ public interface ConfigurationFactory {
      * Initializes a configuration object that applies server-specific configurations and
      * adds additional properties on top of it, if specified.
      *
+     * @param configDirectory name of the configuration directory
      * @param serverName name of the server
      * @param userName name of the user
      * @param additionalProperties additional properties to be added to the configuration
      * @return configuration object
      */
-    Configuration initConfiguration(String serverName, String userName, Map<String, String> additionalProperties);
+    Configuration initConfiguration(String configDirectory, String serverName, String userName, Map<String, String> additionalProperties);
 }

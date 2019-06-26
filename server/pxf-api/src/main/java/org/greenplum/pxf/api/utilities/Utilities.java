@@ -132,13 +132,39 @@ public class Utilities {
 
     /**
      * Validation for directory names that can be created
-     * for the server configuration directory.
+     * for the server directory.
      *
-     * @param name
+     * @param name the directory name
      * @return true if valid, false otherwise
      */
     public static boolean isValidDirectoryName(String name) {
-        if (StringUtils.isBlank(name) || StringUtils.containsAny(name, PROHIBITED_CHARS)) {
+        return isValidRestrictedDirectoryName(name, false);
+    }
+
+    /**
+     * Validation for directory names that can be created
+     * for the server configuration directory. Perform validation
+     * for prohibited characters.
+     *
+     * @param name the directory name
+     * @return true if valid, false otherwise
+     */
+    public static boolean isValidRestrictedDirectoryName(String name) {
+        return isValidRestrictedDirectoryName(name, true);
+    }
+
+    /**
+     * Validation for directory names that can be created
+     * for the server configuration directory. Optionally checking for
+     * prohibited characters in the directory name.
+     *
+     * @param name                    the directory name
+     * @param checkForProhibitedChars true to check for prohibited chars, false otherwise
+     * @return true if value, false otherwise
+     */
+    private static boolean isValidRestrictedDirectoryName(String name, boolean checkForProhibitedChars) {
+        if (StringUtils.isBlank(name) ||
+                (checkForProhibitedChars && StringUtils.containsAny(name, PROHIBITED_CHARS))) {
             return false;
         }
         File file = new File(name);

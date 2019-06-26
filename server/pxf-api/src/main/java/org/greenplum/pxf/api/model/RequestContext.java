@@ -609,7 +609,7 @@ public class RequestContext {
     public void setServerName(String serverName) {
         if (StringUtils.isNotBlank(serverName)) {
 
-            if (!Utilities.isValidDirectoryName(serverName)) {
+            if (!Utilities.isValidRestrictedDirectoryName(serverName)) {
                 throw new IllegalArgumentException(String.format("Invalid server name '%s'", serverName));
             }
 
@@ -737,10 +737,6 @@ public class RequestContext {
         // accessor and resolver are user properties, might be missing if profile is not set
         ensureNotNull("ACCESSOR", accessor);
         ensureNotNull("RESOLVER", resolver);
-
-        if (StringUtils.isNotBlank(config) && !Utilities.isValidDirectoryName(config)) {
-            fail("invalid CONFIG directory name '%s'", config);
-        }
     }
 
     private void ensureNotNull(String property, Object value) {

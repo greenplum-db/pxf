@@ -46,7 +46,8 @@ import java.util.*;
 @PrepareForTest({HiveDataFragmenter.class}) // Enables mocking 'new' calls
 @SuppressStaticInitializationFor({"org.apache.hadoop.mapred.JobConf",
         "org.apache.hadoop.hive.metastore.api.MetaException",
-        "org.greenplum.pxf.plugins.hive.utilities.HiveUtilities"}) // Prevents static inits
+        "org.greenplum.pxf.plugins.hive.utilities.HiveUtilities"})
+// Prevents static inits
 public class HiveDataFragmenterTest {
     RequestContext requestContext;
     Configuration hadoopConfiguration;
@@ -75,10 +76,11 @@ public class HiveDataFragmenterTest {
 
         Map<String, String> map = new HashMap<>();
 
+        when(requestContext.getConfig()).thenReturn("default");
         when(requestContext.getServerName()).thenReturn("default");
         when(requestContext.getUser()).thenReturn("dummy");
         when(requestContext.getOptions()).thenReturn(map);
-        when(configurationFactory.initConfiguration("default", "dummy", map)).
+        when(configurationFactory.initConfiguration("default", "default", "dummy", map)).
                 thenReturn(hadoopConfiguration);
 
         when(hadoopConfiguration.get("fs.defaultFS", "file:///")).thenReturn("hdfs:///");
