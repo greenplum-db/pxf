@@ -210,6 +210,28 @@ public class JsonTest extends BaseFeature {
 	}
 
 	/**
+	 * Test JSON file with pretty print format with reject limit configured. One of the records
+	 * is malformed. The query is allowed and a table is created.
+	 *
+	 * @throws Exception if test fails to run
+	 */
+	@Test(groups = {"features", "gpdb"})
+	public void malFormatedRecordWithRejectLimit() throws Exception {
+
+		exTable.setName("jsontest_malformed_record_with_reject_limit");
+		exTable.setProfile("Json");
+		exTable.setPath(hdfsPath + FILENAME_BROKEN + SUFFIX_JSON);
+		exTable.setFields(tweetsFields);
+		exTable.setUserParameters(new String[]{"IDENTIFIER=created_at"});
+		exTable.setSegmentRejectLimit(2);
+
+		gpdb.createTableAndVerify(exTable);
+
+		// Verify results
+		runTincTest("pxf.features.hdfs.readable.json.malformed_record_with_reject_limit.runTest");
+	}
+
+	/**
 	 * Test JSON file with all supported types. Some of the records
 	 * have type mismatches (e.g. an integer entered as '(').
 	 * In that case, the line will be sent to GPDB as TEXT, and we
@@ -220,7 +242,7 @@ public class JsonTest extends BaseFeature {
 	@Test(groups = {"features", "gpdb"})
 	public void mismatchedTypesRecord() throws Exception {
 
-		exTable.setName("jsontest_mismatched_types_record");
+		exTable.setName("jsontest_mismatched_types");
 		exTable.setProfile("Json");
 		exTable.setPath(hdfsPath + FILENAME_MISMATCHED_TYPES + SUFFIX_JSON);
 		exTable.setFields(new String[]{
@@ -239,7 +261,7 @@ public class JsonTest extends BaseFeature {
 		gpdb.createTableAndVerify(exTable);
 
 		// Verify results
-		runTincTest("pxf.features.hdfs.readable.json.mismatched_types_record.runTest");
+		runTincTest("pxf.features.hdfs.readable.json.mismatched_types.runTest");
 	}
 
 	/**
@@ -254,7 +276,7 @@ public class JsonTest extends BaseFeature {
 	@Test(groups = {"features", "gpdb"})
 	public void mismatchedTypesRecordWithRejectLimit() throws Exception {
 
-		exTable.setName("jsontest_mismatched_types_record_with_reject_limit");
+		exTable.setName("jsontest_mismatched_types_with_reject_limit");
 		exTable.setProfile("Json");
 		exTable.setPath(hdfsPath + FILENAME_MISMATCHED_TYPES + SUFFIX_JSON);
 		exTable.setFields(new String[]{
@@ -274,6 +296,6 @@ public class JsonTest extends BaseFeature {
 		gpdb.createTableAndVerify(exTable);
 
 		// Verify results
-		runTincTest("pxf.features.hdfs.readable.json.mismatched_types_record_with_reject_limit.runTest");
+		runTincTest("pxf.features.hdfs.readable.json.mismatched_types_with_reject_limit.runTest");
 	}
 }

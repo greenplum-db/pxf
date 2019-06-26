@@ -2,5 +2,5 @@
 -- end_ignore
 -- @description query01 for PXF HDFS Readable Json supported primitive types test cases
 SELECT * from jsontest_mismatched_types_record ORDER BY type_int;
-ERROR:  For field type_int schema requires type INTEGER but input record has type TEXT
+ERROR:  Given input value '"["' is not a valid INTEGER
 DETAIL:  External table jsontest_mismatched_types_record

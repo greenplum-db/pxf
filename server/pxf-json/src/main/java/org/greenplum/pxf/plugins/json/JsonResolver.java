@@ -21,9 +21,9 @@ package org.greenplum.pxf.plugins.json;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.greenplum.pxf.api.BadRecordException;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.io.DataType;
@@ -59,7 +59,7 @@ public class JsonResolver extends BasePlugin implements Resolver {
 	public void initialize(RequestContext requestContext) {
 		super.initialize(requestContext);
 		oneFieldList = new ArrayList<>();
-		mapper = new ObjectMapper(new JsonFactory());
+		mapper = new ObjectMapper();
 
 		// Precompute the column metadata. The metadata is used for mapping column names to json nodes.
 		columnDescriptorCache = new ColumnDescriptorCache[requestContext.getColumns()];
@@ -80,9 +80,7 @@ public class JsonResolver extends BasePlugin implements Resolver {
 		JsonNode root = decodeLineToJsonNode(jsonRecordAsText);
 
 		if (root == null) {
-			// TODO: error out here as well
-			LOG.warn("Return empty-fields row due to invalid JSON: " + jsonRecordAsText);
-			return emptyRow;
+			throw new BadRecordException("Invalid JSON: " + jsonRecordAsText);
 		}
 
 		// Iterate through the column definition and fetch our JSON data
@@ -160,11 +158,11 @@ public class JsonResolver extends BasePlugin implements Resolver {
 	 * @param index The array index to iterate to
 	 * @throws IOException
 	 */
-	private void addFieldFromJsonArray(DataType type, JsonNode node, int index) throws IOException {
+	private void addFieldFromJsonArray(DataType type, JsonNode node, int index) throws IOException, BadRecordException {
 
 		int count = 0;
 		boolean added = false;
-		for (Iterator<JsonNode> arrayNodes = node.getElements(); arrayNodes.hasNext(); ) {
+		for (Iterator<JsonNode> arrayNodes = node.elements(); arrayNodes.hasNext(); ) {
 			JsonNode arrayNode = arrayNodes.next();
 
 			if (count == index) {
@@ -189,7 +187,7 @@ public class JsonResolver extends BasePlugin implements Resolver {
 	 * @param val  The JSON node to extract the value.
 	 * @throws IOException
 	 */
-	private void addFieldFromJsonNode(DataType type, JsonNode val) throws IOException {
+	private void addFieldFromJsonNode(DataType type, JsonNode val) throws IOException, BadRecordException {
 		OneField oneField = new OneField();
 		oneField.type = type.getOID();
 
@@ -198,32 +196,32 @@ public class JsonResolver extends BasePlugin implements Resolver {
 		} else {
 			switch (type) {
 				case BIGINT:
+					validateNumber(type, val);
 					oneField.val = val.asLong();
-					validateNumber(val, oneField);
 					break;
 				case BOOLEAN:
+					validateBoolean(val);
 					oneField.val = val.asBoolean();
-					validateBoolean(val.asText(), oneField);
 					break;
 				case BYTEA:
+					validateNumber(type, val);
 					oneField.val = val.asText().getBytes();
-					validateNumber(val, oneField);
 					break;
 				case FLOAT8:
+					validateNumber(type, val);
 					oneField.val = val.asDouble();
-					validateNumber(val, oneField);
 					break;
 				case REAL:
+					validateNumber(type, val);
 					oneField.val = (float) val.asDouble();
-					validateNumber(val, oneField);
 					break;
 				case INTEGER:
+					validateNumber(type, val);
 					oneField.val = val.asInt();
-					validateNumber(val, oneField);
 					break;
 				case SMALLINT:
+					validateNumber(type, val);
 					oneField.val = (short) val.asInt();
-					validateNumber(val, oneField);
 					break;
 				case BPCHAR:
 				case TEXT:
@@ -243,35 +241,31 @@ public class JsonResolver extends BasePlugin implements Resolver {
 	 * When val is not a valid numeric type, the default is always returned
 	 * when calling val.asLong(). If not a numeric type, set as a TEXT type.
 	 *
+	 * @param type
 	 * @param val
-	 * @param oneField
 	 */
-	private static void validateNumber(JsonNode val, OneField oneField) {
+	private static void validateNumber(DataType type, JsonNode val) throws BadRecordException {
 		// to validate if val is of numeric type:
 		// if val is not a number, 0 will be returned by val.asLong()
 		// we need to check with another default to be sure that val is not a valid 0 value
 		if (val.asLong() == 0 && val.asLong(1) == 1) {
-			oneField.val = val.asText();
-			oneField.type = DataType.TEXT.getOID();
+			throw new BadRecordException("Given input value '" + val.toString() + "' is not a valid " + type.toString());
 		}
 	}
 
 	/**
 	 * Determines whether or not a String is a valid Boolean, if not,
 	 * set the oneField to TEXT type.
-	 *
+	 * <p>
 	 * Unfortunately asBoolean() implementation from TextNode class doesn't
 	 * work correctly when given "false", but that's fixed in later releases.
 	 *
-	 * @param value
-	 * @param oneField
+	 * @param val
 	 */
-	private static void validateBoolean(String value, OneField oneField) {
-		if ("true".equals(value.trim()) || "false".equals(value.trim())) {
-			return;
+	private static void validateBoolean(JsonNode val) throws BadRecordException {
+		if (!val.asBoolean(false) && val.asBoolean(true)) {
+			throw new BadRecordException("Given input value '" + val.toString() + "' is not of Boolean type.");
 		}
-		oneField.val = value;
-		oneField.type = DataType.TEXT.getOID();
 	}
 
 	/**
