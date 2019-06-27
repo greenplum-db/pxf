@@ -1,9 +1,25 @@
+-- start_ignore
+-- end_ignore
 -- @description query01 for PXF HDFS Readable Json supported primitive types test cases
-
-SELECT * from jsontest_mismatched_types_record_with_reject_limit ORDER BY type_int;
+SELECT *
+from jsontest_mismatched_types_with_reject_limit
+ORDER BY type_int;
 NOTICE:  Found 6 data formatting errors (6 or more input rows). Rejected related input data.
   type_int  | type_bigint | type_smallint | type_float | type_double |                 type_string1                  |                 type_string2                  |                 type_string3                  | type_char | type_boolean
 ------------+-------------+---------------+------------+-------------+-----------------------------------------------+-----------------------------------------------+-----------------------------------------------+-----------+--------------
  -200000002 | 20202020202 |            26 |       -2.2 |        -2.2 | testing all supported types in JsonResolver A | testing all supported types in JsonResolver B | testing all supported types in JsonResolver C | 1         | f
   100000001 | 10101010101 |            13 |        1.1 |         1.1 | testing all supported types in JsonResolver 1 | testing all supported types in JsonResolver 2 | testing all supported types in JsonResolver 3 | z         | t
 (2 rows)
+
+SELECT relname, errmsg
+from gp_read_error_log('jsontest_mismatched_types_with_reject_limit');
+                   relname                   |                          errmsg
+---------------------------------------------+----------------------------------------------------------
+ jsontest_mismatched_types_with_reject_limit | Given input value '"["' is not a valid INTEGER
+ jsontest_mismatched_types_with_reject_limit | Given input value '"?"' is not a valid BIGINT
+ jsontest_mismatched_types_with_reject_limit | Given input value '"("' is not a valid SMALLINT
+ jsontest_mismatched_types_with_reject_limit | Given input value '"_"' is not a valid REAL
+ jsontest_mismatched_types_with_reject_limit | Given input value '"!@#$"' is not a valid FLOAT8
+ jsontest_mismatched_types_with_reject_limit | Given input value '"not_a_bool"' is not of Boolean type.
+(6 rows)
+

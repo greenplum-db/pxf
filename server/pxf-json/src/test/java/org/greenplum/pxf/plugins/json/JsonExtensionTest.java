@@ -172,7 +172,7 @@ public class JsonExtensionTest extends PxfUnit {
 	@Test
 	public void testMismatchedTypes() throws Exception {
 		expectedException.expect(BadRecordException.class);
-		expectedException.expectMessage("Given input value '\"[\"' is not a valid BIGINT");
+		expectedException.expectMessage("invalid BIGINT input value '\"[\"'");
 
 		super.assertOutput(new Path(System.getProperty("user.dir") + File.separator
 				+ "src/test/resources/mismatched-types.json"), output);

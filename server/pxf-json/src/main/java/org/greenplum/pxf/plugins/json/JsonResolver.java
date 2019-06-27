@@ -44,252 +44,261 @@ import java.util.List;
  */
 public class JsonResolver extends BasePlugin implements Resolver {
 
-	private static final Log LOG = LogFactory.getLog(JsonResolver.class);
+    private static final Log LOG = LogFactory.getLog(JsonResolver.class);
 
-	private ArrayList<OneField> oneFieldList;
-	private ColumnDescriptorCache[] columnDescriptorCache;
-	private ObjectMapper mapper;
+    private ArrayList<OneField> oneFieldList;
+    private ColumnDescriptorCache[] columnDescriptorCache;
+    private ObjectMapper mapper;
 
-	/**
-	 * Row with empty fields. Returned in case of broken or malformed json records.
-	 */
-	private List<OneField> emptyRow;
+    /**
+     * Row with empty fields. Returned in case of broken or malformed json records.
+     */
+    private List<OneField> emptyRow;
 
-	@Override
-	public void initialize(RequestContext requestContext) {
-		super.initialize(requestContext);
-		oneFieldList = new ArrayList<>();
-		mapper = new ObjectMapper();
+    @Override
+    public void initialize(RequestContext requestContext) {
+        super.initialize(requestContext);
+        oneFieldList = new ArrayList<>();
+        mapper = new ObjectMapper();
 
-		// Precompute the column metadata. The metadata is used for mapping column names to json nodes.
-		columnDescriptorCache = new ColumnDescriptorCache[requestContext.getColumns()];
-		for (int i = 0; i < requestContext.getColumns(); ++i) {
-			ColumnDescriptor cd = requestContext.getColumn(i);
-			columnDescriptorCache[i] = new ColumnDescriptorCache(cd);
-		}
+        // Precompute the column metadata. The metadata is used for mapping column names to json nodes.
+        columnDescriptorCache = new ColumnDescriptorCache[requestContext.getColumns()];
+        for (int i = 0; i < requestContext.getColumns(); ++i) {
+            ColumnDescriptor cd = requestContext.getColumn(i);
+            columnDescriptorCache[i] = new ColumnDescriptorCache(cd);
+        }
 
-		emptyRow = createEmptyRow();
-	}
+        emptyRow = createEmptyRow();
+    }
 
-	@Override
-	public List<OneField> getFields(OneRow row) throws Exception {
-		oneFieldList.clear();
+    @Override
+    public List<OneField> getFields(OneRow row) throws Exception {
+        oneFieldList.clear();
 
-		String jsonRecordAsText = row.getData().toString();
+        String jsonRecordAsText = row.getData().toString();
 
-		JsonNode root = decodeLineToJsonNode(jsonRecordAsText);
+        JsonNode root = decodeLineToJsonNode(jsonRecordAsText);
 
-		if (root == null) {
-			throw new BadRecordException("Invalid JSON: " + jsonRecordAsText);
-		}
+        if (root == null) {
+            throw new BadRecordException("Invalid JSON: " + jsonRecordAsText);
+        }
 
-		// Iterate through the column definition and fetch our JSON data
-		for (ColumnDescriptorCache columnMetadata : columnDescriptorCache) {
+        // Iterate through the column definition and fetch our JSON data
+        for (ColumnDescriptorCache columnMetadata : columnDescriptorCache) {
 
-			JsonNode node = getChildJsonNode(root, columnMetadata.getNormalizedProjections());
+            JsonNode node = getChildJsonNode(root, columnMetadata.getNormalizedProjections());
 
-			// If this node is null or missing, add a null value here
-			if (node == null || node.isMissingNode()) {
-				addNullField(columnMetadata.getColumnType());
-			} else if (columnMetadata.isArray()) {
-				// If this column is an array index, ex. "tweet.hashtags[0]"
-				if (node.isArray()) {
-					// If the JSON node is an array, then add it to our list
-					addFieldFromJsonArray(columnMetadata.getColumnType(), node, columnMetadata.getArrayNodeIndex());
-				} else {
-					throw new IllegalStateException(columnMetadata.getColumnName() + " is not an array node");
-				}
-			} else {
-				// This column is not an array type
-				// Add the value to the record
-				addFieldFromJsonNode(columnMetadata.getColumnType(), node);
-			}
-		}
+            // If this node is null or missing, add a null value here
+            if (node == null || node.isMissingNode()) {
+                addNullField(columnMetadata.getColumnType());
+            } else if (columnMetadata.isArray()) {
+                // If this column is an array index, ex. "tweet.hashtags[0]"
+                if (node.isArray()) {
+                    // If the JSON node is an array, then add it to our list
+                    addFieldFromJsonArray(columnMetadata.getColumnType(), node, columnMetadata.getArrayNodeIndex());
+                } else {
+                    throw new IllegalStateException(columnMetadata.getColumnName() + " is not an array node");
+                }
+            } else {
+                // This column is not an array type
+                // Add the value to the record
+                addFieldFromJsonNode(columnMetadata.getColumnType(), node);
+            }
+        }
 
-		return oneFieldList;
-	}
+        return oneFieldList;
+    }
 
-	/**
-	 * Constructs and sets the fields of a {@link OneRow}.
-	 *
-	 * @param record list of {@link OneField}
-	 * @return the constructed {@link OneRow}
-	 * @throws Exception if constructing a row from the fields failed
-	 */
-	@Override
-	public OneRow setFields(List<OneField> record) throws Exception {
-		throw new UnsupportedOperationException();
-	}
+    /**
+     * Constructs and sets the fields of a {@link OneRow}.
+     *
+     * @param record list of {@link OneField}
+     * @return the constructed {@link OneRow}
+     * @throws Exception if constructing a row from the fields failed
+     */
+    @Override
+    public OneRow setFields(List<OneField> record) throws Exception {
+        throw new UnsupportedOperationException();
+    }
 
-	/**
-	 * @return Returns a row comprised of typed, empty fields. Used as a result of broken/malformed json records.
-	 */
-	private List<OneField> createEmptyRow() {
-		ArrayList<OneField> emptyFieldList = new ArrayList<OneField>();
-		for (ColumnDescriptorCache column : columnDescriptorCache) {
-			emptyFieldList.add(new OneField(column.getColumnType().getOID(), null));
-		}
-		return emptyFieldList;
-	}
+    /**
+     * @return Returns a row comprised of typed, empty fields. Used as a result of broken/malformed json records.
+     */
+    private List<OneField> createEmptyRow() {
+        ArrayList<OneField> emptyFieldList = new ArrayList<OneField>();
+        for (ColumnDescriptorCache column : columnDescriptorCache) {
+            emptyFieldList.add(new OneField(column.getColumnType().getOID(), null));
+        }
+        return emptyFieldList;
+    }
 
-	/**
-	 * Iterates down the root node to the child JSON node defined by the projs path.
-	 *
-	 * @param root  node to to start the traversal from.
-	 * @param projs defines the path from the root to the desired child node.
-	 * @return Returns the child node defined by the root and projs path.
-	 */
-	private JsonNode getChildJsonNode(JsonNode root, String[] projs) {
+    /**
+     * Iterates down the root node to the child JSON node defined by the projs path.
+     *
+     * @param root  node to to start the traversal from.
+     * @param projs defines the path from the root to the desired child node.
+     * @return Returns the child node defined by the root and projs path.
+     */
+    private JsonNode getChildJsonNode(JsonNode root, String[] projs) {
 
-		// Iterate through all the tokens to the desired JSON node
-		JsonNode node = root;
-		for (String proj : projs) {
-			node = node.path(proj);
-		}
+        // Iterate through all the tokens to the desired JSON node
+        JsonNode node = root;
+        for (String proj : projs) {
+            node = node.path(proj);
+        }
 
-		return node;
-	}
+        return node;
+    }
 
-	/**
-	 * Iterates through the given JSON node to the proper index and adds the field of corresponding type
-	 *
-	 * @param type  The {@link DataType} type
-	 * @param node  The JSON array node
-	 * @param index The array index to iterate to
-	 * @throws IOException
-	 */
-	private void addFieldFromJsonArray(DataType type, JsonNode node, int index) throws IOException, BadRecordException {
+    /**
+     * Iterates through the given JSON node to the proper index and adds the field of corresponding type
+     *
+     * @param type  The {@link DataType} type
+     * @param node  The JSON array node
+     * @param index The array index to iterate to
+     * @throws IOException, BadRecordException
+     */
+    private void addFieldFromJsonArray(DataType type, JsonNode node, int index) throws IOException, BadRecordException {
 
-		int count = 0;
-		boolean added = false;
-		for (Iterator<JsonNode> arrayNodes = node.elements(); arrayNodes.hasNext(); ) {
-			JsonNode arrayNode = arrayNodes.next();
+        int count = 0;
+        boolean added = false;
+        for (Iterator<JsonNode> arrayNodes = node.elements(); arrayNodes.hasNext(); ) {
+            JsonNode arrayNode = arrayNodes.next();
 
-			if (count == index) {
-				added = true;
-				addFieldFromJsonNode(type, arrayNode);
-				break;
-			}
+            if (count == index) {
+                added = true;
+                addFieldFromJsonNode(type, arrayNode);
+                break;
+            }
 
-			++count;
-		}
+            ++count;
+        }
 
-		// if we reached the end of the array without adding a field, add null
-		if (!added) {
-			addNullField(type);
-		}
-	}
+        // if we reached the end of the array without adding a field, add null
+        if (!added) {
+            addNullField(type);
+        }
+    }
 
-	/**
-	 * Adds a field from a given JSON node value based on the {@link DataType} type.
-	 *
-	 * @param type The DataType type
-	 * @param val  The JSON node to extract the value.
-	 * @throws IOException
-	 */
-	private void addFieldFromJsonNode(DataType type, JsonNode val) throws IOException, BadRecordException {
-		OneField oneField = new OneField();
-		oneField.type = type.getOID();
+    /**
+     * Adds a field from a given {@link JsonNode} value based on the {@link DataType} type.
+     *
+     * @param type The DataType type
+     * @param val  The JSON node to extract the value.
+     * @throws IOException, BadRecordException when there is bad data in the {@link JsonNode}
+     */
+    private void addFieldFromJsonNode(DataType type, JsonNode val) throws IOException, BadRecordException {
+        OneField oneField = new OneField();
+        oneField.type = type.getOID();
 
-		if (val.isNull()) {
-			oneField.val = null;
-		} else {
-			switch (type) {
-				case BIGINT:
-					validateNumber(type, val);
-					oneField.val = val.asLong();
-					break;
-				case BOOLEAN:
-					validateBoolean(val);
-					oneField.val = val.asBoolean();
-					break;
-				case BYTEA:
-					validateNumber(type, val);
-					oneField.val = val.asText().getBytes();
-					break;
-				case FLOAT8:
-					validateNumber(type, val);
-					oneField.val = val.asDouble();
-					break;
-				case REAL:
-					validateNumber(type, val);
-					oneField.val = (float) val.asDouble();
-					break;
-				case INTEGER:
-					validateNumber(type, val);
-					oneField.val = val.asInt();
-					break;
-				case SMALLINT:
-					validateNumber(type, val);
-					oneField.val = (short) val.asInt();
-					break;
-				case BPCHAR:
-				case TEXT:
-				case VARCHAR:
-					oneField.val = val.asText();
-					break;
-				default:
-					throw new IOException("Unsupported type " + type);
-			}
-		}
+        if (val.isNull()) {
+            oneField.val = null;
+            oneFieldList.add(oneField);
+            return;
+        }
 
-		oneFieldList.add(oneField);
-	}
+        // validate numeric types and booleans
+        switch (type) {
+            case BIGINT:
+            case FLOAT8:
+            case REAL:
+            case INTEGER:
+            case SMALLINT:
+                validateNumber(type, val);
+                break;
+            case BOOLEAN:
+                validateBoolean(val);
+                break;
+        }
 
-	/**
-	 * Determines whether or not a JsonNode contains a valid numeric type.
-	 * When val is not a valid numeric type, the default is always returned
-	 * when calling val.asLong(). If not a numeric type, set as a TEXT type.
-	 *
-	 * @param type
-	 * @param val
-	 */
-	private static void validateNumber(DataType type, JsonNode val) throws BadRecordException {
-		// to validate if val is of numeric type:
-		// if val is not a number, 0 will be returned by val.asLong()
-		// we need to check with another default to be sure that val is not a valid 0 value
-		if (val.asLong() == 0 && val.asLong(1) == 1) {
-			throw new BadRecordException("Given input value '" + val.toString() + "' is not a valid " + type.toString());
-		}
-	}
+        switch (type) {
+            case BIGINT:
+                oneField.val = val.asLong();
+                break;
+            case BOOLEAN:
+                oneField.val = val.asBoolean();
+                break;
+            case BYTEA:
+                oneField.val = val.asText().getBytes();
+                break;
+            case FLOAT8:
+                oneField.val = val.asDouble();
+                break;
+            case REAL:
+                oneField.val = (float) val.asDouble();
+                break;
+            case INTEGER:
+                oneField.val = val.asInt();
+                break;
+            case SMALLINT:
+                oneField.val = (short) val.asInt();
+                break;
+            case BPCHAR:
+            case TEXT:
+            case VARCHAR:
+                oneField.val = val.asText();
+                break;
+            default:
+                throw new IOException("Unsupported type " + type);
+        }
 
-	/**
-	 * Determines whether or not a String is a valid Boolean, if not,
-	 * set the oneField to TEXT type.
-	 * <p>
-	 * Unfortunately asBoolean() implementation from TextNode class doesn't
-	 * work correctly when given "false", but that's fixed in later releases.
-	 *
-	 * @param val
-	 */
-	private static void validateBoolean(JsonNode val) throws BadRecordException {
-		if (!val.asBoolean(false) && val.asBoolean(true)) {
-			throw new BadRecordException("Given input value '" + val.toString() + "' is not of Boolean type.");
-		}
-	}
+        oneFieldList.add(oneField);
+    }
 
-	/**
-	 * Adds a null field of the given type.
-	 *
-	 * @param type The {@link DataType} type
-	 */
-	private void addNullField(DataType type) {
-		oneFieldList.add(new OneField(type.getOID(), null));
-	}
+    /**
+     * Determines whether or not a {@link JsonNode} contains a valid numeric type.
+     * When val is not a valid numeric type, the default is always returned
+     * when calling {@link JsonNode#asLong()}. If not a numeric type, error out.
+     *
+     * @param type is used to report which numeric type is being validated
+     * @param val  is the {@link JsonNode} that we are validating
+     * @throws BadRecordException when there is a data mismatch (non-numeric data)
+     */
+    private static void validateNumber(DataType type, JsonNode val) throws BadRecordException {
+        // to validate if val is of numeric type:
+        // if val is not a number, 0 will be returned by val.asLong()
+        // we need to check with another default to be sure that val is not a valid 0 value
+        if (val.asLong() == 0 && val.asLong(1) == 1) {
+            throw new BadRecordException(String.format("invalid %s input value '%s'", type, val));
+        }
+    }
 
-	/**
-	 * Converts the input line parameter into {@link JsonNode} instance.
-	 *
-	 * @param line JSON text
-	 * @return Returns a {@link JsonNode} that represents the input line or null for invalid json.
-	 */
-	private JsonNode decodeLineToJsonNode(String line) {
+    /**
+     * Determines whether or not a {@link String} contains a valid
+     * {@link Boolean}, if not, error out.
+     * <p>
+     *
+     * @param val is the {@link JsonNode} that we are validating
+     * @throws BadRecordException when there is a data mismatch (non-Boolean data)
+     */
+    private static void validateBoolean(JsonNode val) throws BadRecordException {
+        if (!val.asBoolean(false) && val.asBoolean(true)) {
+            throw new BadRecordException(String.format("invalid boolean input '%s'", val));
+        }
+    }
 
-		try {
-			return mapper.readTree(line);
-		} catch (Exception e) {
-			LOG.error("Failed to parse JSON object", e);
-			return null;
-		}
-	}
+    /**
+     * Adds a null field of the given type.
+     *
+     * @param type The {@link DataType} type
+     */
+    private void addNullField(DataType type) {
+        oneFieldList.add(new OneField(type.getOID(), null));
+    }
+
+    /**
+     * Converts the input line parameter into {@link JsonNode} instance.
+     *
+     * @param line JSON text
+     * @return Returns a {@link JsonNode} that represents the input line or null for invalid json.
+     */
+    private JsonNode decodeLineToJsonNode(String line) {
+
+        try {
+            return mapper.readTree(line);
+        } catch (Exception e) {
+            LOG.error("Failed to parse JSON object", e);
+            return null;
+        }
+    }
 }
