@@ -242,7 +242,7 @@ public class JsonTest extends BaseFeature {
      * @throws Exception if test fails to run
      */
     @Test(groups = {"features", "gpdb"})
-    public void mismatchedTypesRecord() throws Exception {
+    public void mismatchedTypes() throws Exception {
 
         exTable.setName("jsontest_mismatched_types");
         exTable.setProfile("Json");
@@ -265,7 +265,7 @@ public class JsonTest extends BaseFeature {
      * @throws Exception if test fails to run
      */
     @Test(groups = {"features", "gpdb"})
-    public void mismatchedTypesRecordWithRejectLimit() throws Exception {
+    public void mismatchedTypesWithRejectLimit() throws Exception {
 
         exTable.setName("jsontest_mismatched_types_with_reject_limit");
         exTable.setProfile("Json");
