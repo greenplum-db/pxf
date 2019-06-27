@@ -115,16 +115,8 @@ public class ReadBridge extends BaseBridge {
             }
             output = outputBuilder.getErrorOutput(ex);
         } catch (BadRecordException ex) {
-            String row_info = "null";
-            if (onerow != null) {
-                row_info = onerow.toString();
-            }
-            if (ex.getCause() != null) {
-                LOG.debug("BadRecordException " + ex.getCause().toString()
-                        + ": " + row_info);
-            } else {
-                LOG.debug(ex.toString() + ": " + row_info);
-            }
+            String rowInfo = (onerow != null) ? onerow.toString() : "[record was not created]";
+            LOG.debug("BadRecordException {}: {}", (ex.getCause() != null) ? ex.getCause() : ex, rowInfo);
             output = outputBuilder.getErrorOutput(ex);
         }
 

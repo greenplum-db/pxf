@@ -39,138 +39,136 @@ import org.greenplum.pxf.plugins.json.parser.PartitionedJsonParser;
 /**
  * Multi-line json object reader. JsonRecordReader uses a member name (set by the <b>IDENTIFIER</b> PXF parameter) to
  * determine the encapsulating object to extract and read.
- *
+ * <p>
  * JsonRecordReader supports compressed input files as well.
- *
+ * <p>
  * As a safe guard set the optional <b>MAXLENGTH</b> parameter to limit the max size of a record.
  */
 public class JsonRecordReader implements RecordReader<LongWritable, Text> {
 
-	private static final Log LOG = LogFactory.getLog(JsonRecordReader.class);
+    private static final Log LOG = LogFactory.getLog(JsonRecordReader.class);
 
-	public static final String RECORD_MEMBER_IDENTIFIER = "json.input.format.record.identifier";
-	public static final String RECORD_MAX_LENGTH = "multilinejsonrecordreader.maxlength";
+    public static final String RECORD_MEMBER_IDENTIFIER = "json.input.format.record.identifier";
+    public static final String RECORD_MAX_LENGTH = "multilinejsonrecordreader.maxlength";
 
-	private CompressionCodecFactory compressionCodecs = null;
-	private long start;
-	private long pos;
-	private long end;
-	private int maxObjectLength;
-	private InputStream is;
-	private PartitionedJsonParser parser;
-	private final String jsonMemberName;
+    private CompressionCodecFactory compressionCodecs = null;
+    private long start;
+    private long pos;
+    private long end;
+    private int maxObjectLength;
+    private InputStream is;
+    private PartitionedJsonParser parser;
+    private final String jsonMemberName;
 
-	/**
-	 * Create new multi-line json object reader.
-	 *
-	 * @param conf
-	 *            Hadoop context
-	 * @param split
-	 *            HDFS split to start the reading from
-	 * @throws IOException IOException when reading the file
-	 */
-	public JsonRecordReader(JobConf conf, FileSplit split) throws IOException {
+    /**
+     * Create new multi-line json object reader.
+     *
+     * @param conf  Hadoop context
+     * @param split HDFS split to start the reading from
+     * @throws IOException IOException when reading the file
+     */
+    public JsonRecordReader(JobConf conf, FileSplit split) throws IOException {
 
-		this.jsonMemberName = conf.get(RECORD_MEMBER_IDENTIFIER);
-		this.maxObjectLength = conf.getInt(RECORD_MAX_LENGTH, Integer.MAX_VALUE);
+        this.jsonMemberName = conf.get(RECORD_MEMBER_IDENTIFIER);
+        this.maxObjectLength = conf.getInt(RECORD_MAX_LENGTH, Integer.MAX_VALUE);
 
-		start = split.getStart();
-		end = start + split.getLength();
-		final Path file = split.getPath();
-		compressionCodecs = new CompressionCodecFactory(conf);
-		final CompressionCodec codec = compressionCodecs.getCodec(file);
+        start = split.getStart();
+        end = start + split.getLength();
+        final Path file = split.getPath();
+        compressionCodecs = new CompressionCodecFactory(conf);
+        final CompressionCodec codec = compressionCodecs.getCodec(file);
 
-		// openForWrite the file and seek to the start of the split
-		FileSystem fs = file.getFileSystem(conf);
-		FSDataInputStream fileIn = fs.open(split.getPath());
-		if (codec != null) {
-			is = codec.createInputStream(fileIn);
-			start = 0;
-			end = Long.MAX_VALUE;
-		} else {
-			if (start != 0) {
-				fileIn.seek(start);
-			}
-			is = fileIn;
-		}
-		parser = new PartitionedJsonParser(is);
-		this.pos = start;
-	}
+        // openForWrite the file and seek to the start of the split
+        FileSystem fs = file.getFileSystem(conf);
+        FSDataInputStream fileIn = fs.open(split.getPath());
+        if (codec != null) {
+            is = codec.createInputStream(fileIn);
+            start = 0;
+            end = Long.MAX_VALUE;
+        } else {
+            if (start != 0) {
+                fileIn.seek(start);
+            }
+            is = fileIn;
+        }
+        parser = new PartitionedJsonParser(is);
+        this.pos = start;
+    }
 
-	/*
-	 * {@inheritDoc}
-	 */
-	@Override
-	public boolean next(LongWritable key, Text value) throws IOException {
+    /*
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean next(LongWritable key, Text value) throws IOException {
 
-		while (pos < end) {
+        while (pos < end) {
 
-			String json = parser.nextObjectContainingMember(jsonMemberName);
-			pos = start + parser.getBytesRead();
+            String json = parser.nextObjectContainingMember(jsonMemberName);
+            pos = start + parser.getBytesRead();
 
-			if (json == null) {
-				return false;
-			}
+            if (json == null) {
+                return false;
+            }
 
-			long jsonStart = pos - json.length();
+            long jsonStart = pos - json.length();
 
-			// if the "begin-object" position is after the end of our split, we should ignore it
-			if (jsonStart >= end) {
-				return false;
-			}
+            // if the "begin-object" position is after the end of our split, we should ignore it
+            if (jsonStart >= end) {
+                return false;
+            }
 
-			if (json.length() > maxObjectLength) {
-				LOG.warn("Skipped JSON object of size " + json.length() + " at pos " + jsonStart);
-			} else {
-				key.set(jsonStart);
-				value.set(json);
-				return true;
-			}
-		}
+            if (json.length() > maxObjectLength) {
+                LOG.warn("Skipped JSON object of size " + json.length() + " at pos " + jsonStart);
+            } else {
+                key.set(jsonStart);
+                value.set(json);
+                return true;
+            }
+        }
 
-		return false;
-	}
+        return false;
+    }
 
-	/*
-	 * {@inheritDoc}
-	 */
-	@Override
-	public LongWritable createKey() {
-		return new LongWritable();
-	}
+    /*
+     * {@inheritDoc}
+     */
+    @Override
+    public LongWritable createKey() {
+        return new LongWritable();
+    }
 
-	/*
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Text createValue() {
-		return new Text();
-	}
+    /*
+     * {@inheritDoc}
+     */
+    @Override
+    public Text createValue() {
+        return new Text();
+    }
 
-	@Override
-	public long getPos() throws IOException {
-		return pos;
-	}
+    @Override
+    public long getPos() throws IOException {
+        return pos;
+    }
 
-	/*
-	 * {@inheritDoc}
-	 */
-	@Override
-	public synchronized void close() throws IOException {
-		if (is != null) {
-			is.close();
-		}
-	}
+    /*
+     * {@inheritDoc}
+     */
+    @Override
+    public synchronized void close() throws IOException {
+        if (is != null) {
+            is.close();
+        }
+    }
 
-	/*
-	 * {@inheritDoc}
-	 */
-	@Override
-	public float getProgress() throws IOException {
-		if (start == end) {
-			return 0.0f;
-		} else {
-			return Math.min(1.0f, (pos - start) / (float) (end - start));
-		}
-	}
+    /*
+     * {@inheritDoc}
+     */
+    @Override
+    public float getProgress() throws IOException {
+        if (start == end) {
+            return 0.0f;
+        } else {
+            return Math.min(1.0f, (pos - start) / (float) (end - start));
+        }
+    }
 }

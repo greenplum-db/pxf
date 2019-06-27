@@ -77,10 +77,12 @@ public class JsonResolver extends BasePlugin implements Resolver {
 
         String jsonRecordAsText = row.getData().toString();
 
-        JsonNode root = decodeLineToJsonNode(jsonRecordAsText);
-
-        if (root == null) {
-            throw new BadRecordException("Invalid JSON: " + jsonRecordAsText);
+        JsonNode root;
+        try {
+            root = mapper.readTree(jsonRecordAsText);
+        } catch (IOException e) {
+            throw new BadRecordException(
+                    String.format("error while parsing json record '%s'. invalid JSON record\n%s", e.getMessage(), jsonRecordAsText), e);
         }
 
         // Iterate through the column definition and fetch our JSON data
@@ -284,21 +286,5 @@ public class JsonResolver extends BasePlugin implements Resolver {
      */
     private void addNullField(DataType type) {
         oneFieldList.add(new OneField(type.getOID(), null));
-    }
-
-    /**
-     * Converts the input line parameter into {@link JsonNode} instance.
-     *
-     * @param line JSON text
-     * @return Returns a {@link JsonNode} that represents the input line or null for invalid json.
-     */
-    private JsonNode decodeLineToJsonNode(String line) {
-
-        try {
-            return mapper.readTree(line);
-        } catch (Exception e) {
-            LOG.error("Failed to parse JSON object", e);
-            return null;
-        }
     }
 }
