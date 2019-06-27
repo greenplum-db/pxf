@@ -5,6 +5,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import org.greenplum.pxf.automation.features.BaseFeature;
+import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
 
 /**
  * Tests for Json plugin to read HDFS files in JSON format.
@@ -89,11 +90,11 @@ public class JsonTest extends BaseFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = {"features", "gpdb"})
+    @Test(groups = {"features", "gpdb", "hcfs"})
     public void jsonSimple() throws Exception {
 
         exTable.setName("jsontest_simple");
-        exTable.setProfile("Json");
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":json");
         exTable.setPath(hdfsPath + FILENAME_SIMPLE + SUFFIX_JSON);
         exTable.setFields(new String[]{"name text", "age int"});
 
@@ -108,11 +109,11 @@ public class JsonTest extends BaseFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = {"features", "gpdb"})
+    @Test(groups = {"features", "gpdb", "hcfs"})
     public void jsonSupportedPrimitives() throws Exception {
 
         exTable.setName("jsontest_supported_primitive_types");
-        exTable.setProfile("Json");
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":json");
         exTable.setPath(hdfsPath + FILENAME_TYPES + SUFFIX_JSON);
         exTable.setFields(supportedPrimitiveFields);
 
@@ -129,11 +130,11 @@ public class JsonTest extends BaseFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = {"features", "gpdb"})
+    @Test(groups = {"features", "gpdb", "hcfs"})
     public void jsonPrettyPrint() throws Exception {
 
         exTable.setName("jsontest_pretty_print");
-        exTable.setProfile("Json");
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":json");
         exTable.setPath(hdfsPath + FILENAME_PRETTY_PRINT + SUFFIX_JSON);
         exTable.setFields(tweetsFields);
         exTable.setUserParameters(new String[]{"IDENTIFIER=created_at"});
@@ -150,11 +151,11 @@ public class JsonTest extends BaseFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = {"features", "gpdb"})
+    @Test(groups = {"features", "gpdb", "hcfs"})
     public void missingIdentifier() throws Exception {
 
         exTable.setName("jsontest_missing_identifier");
-        exTable.setProfile("Json");
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":json");
         exTable.setPath(hdfsPath + FILENAME_PRETTY_PRINT_W_DELETE + SUFFIX_JSON);
         exTable.setFields(tweetsFields);
         exTable.setUserParameters(new String[]{"IDENTIFIER=created_at"});
@@ -171,11 +172,11 @@ public class JsonTest extends BaseFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = {"features", "gpdb"})
+    @Test(groups = {"features", "gpdb", "hcfs"})
     public void exceedsMaxSize() throws Exception {
 
         exTable.setName("jsontest_max_size");
-        exTable.setProfile("Json");
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":json");
         exTable.setPath(hdfsPath + FILENAME_PRETTY_PRINT + SUFFIX_JSON);
         exTable.setFields(tweetsFields);
         exTable.setUserParameters(new String[]{
@@ -195,11 +196,11 @@ public class JsonTest extends BaseFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = {"features", "gpdb"})
+    @Test(groups = {"features", "gpdb", "hcfs"})
     public void malFormatedRecord() throws Exception {
 
         exTable.setName("jsontest_malformed_record");
-        exTable.setProfile("Json");
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":json");
         exTable.setPath(hdfsPath + FILENAME_BROKEN + SUFFIX_JSON);
         exTable.setFields(tweetsFields);
         exTable.setUserParameters(new String[]{"IDENTIFIER=created_at"});
@@ -216,11 +217,11 @@ public class JsonTest extends BaseFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = {"features", "gpdb"})
+    @Test(groups = {"features", "gpdb", "hcfs"})
     public void malFormatedRecordWithRejectLimit() throws Exception {
 
         exTable.setName("jsontest_malformed_record_with_reject_limit");
-        exTable.setProfile("Json");
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":json");
         exTable.setPath(hdfsPath + FILENAME_BROKEN + SUFFIX_JSON);
         exTable.setFields(tweetsFields);
         exTable.setUserParameters(new String[]{"IDENTIFIER=created_at"});
@@ -241,11 +242,11 @@ public class JsonTest extends BaseFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = {"features", "gpdb"})
+    @Test(groups = {"features", "gpdb", "hcfs"})
     public void mismatchedTypes() throws Exception {
 
         exTable.setName("jsontest_mismatched_types");
-        exTable.setProfile("Json");
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":json");
         exTable.setPath(hdfsPath + FILENAME_MISMATCHED_TYPES + SUFFIX_JSON);
         exTable.setFields(supportedPrimitiveFields);
 
@@ -264,11 +265,11 @@ public class JsonTest extends BaseFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = {"features", "gpdb"})
+    @Test(groups = {"features", "gpdb", "hcfs"})
     public void mismatchedTypesWithRejectLimit() throws Exception {
 
         exTable.setName("jsontest_mismatched_types_with_reject_limit");
-        exTable.setProfile("Json");
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":json");
         exTable.setPath(hdfsPath + FILENAME_MISMATCHED_TYPES + SUFFIX_JSON);
         exTable.setFields(supportedPrimitiveFields);
         exTable.setSegmentRejectLimit(7);
