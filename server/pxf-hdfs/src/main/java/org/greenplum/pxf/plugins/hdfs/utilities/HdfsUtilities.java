@@ -48,7 +48,6 @@ import java.util.List;
 public class HdfsUtilities {
 
     private static Logger LOG = LoggerFactory.getLogger(HdfsUtilities.class);
-    private static CodecFactory codecFactory = CodecFactory.getInstance();
 
     /**
      * Checks if requests should be handled in a single thread or not.
@@ -58,7 +57,7 @@ public class HdfsUtilities {
      * @param compCodec the fully qualified name of the compression codec
      * @return if the request can be run in multi-threaded mode.
      */
-    public static boolean isThreadSafe(Configuration config, String dataDir, String compCodec) {
+    public static boolean isThreadSafe(CodecFactory codecFactory, Configuration config, String dataDir, String compCodec) {
         Class<? extends CompressionCodec> codecClass = (compCodec != null) ?
                 codecFactory.getCodecClass(config, compCodec) :
                 codecFactory.getCodecClassByPath(config, dataDir);

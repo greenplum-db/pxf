@@ -23,6 +23,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.FileSplit;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.plugins.hdfs.CodecFactory;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
@@ -34,6 +36,15 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 
 public class HdfsUtilitiesTest {
+
+    private CodecFactory codecFactory;
+    private Configuration conf;
+
+    @Before
+    public void setup() {
+        conf = new Configuration();
+        codecFactory = CodecFactory.getInstance();
+    }
 
     @Test
     public void isThreadSafe() {
@@ -76,9 +87,7 @@ public class HdfsUtilitiesTest {
     }
 
     private void testIsThreadSafe(String testDescription, String path, String codecStr, boolean expectedResult) {
-        Configuration conf = new Configuration();
-
-        boolean result = HdfsUtilities.isThreadSafe(conf, path, codecStr);
+        boolean result = HdfsUtilities.isThreadSafe(codecFactory, conf, path, codecStr);
         assertEquals(testDescription, expectedResult, result);
     }
 

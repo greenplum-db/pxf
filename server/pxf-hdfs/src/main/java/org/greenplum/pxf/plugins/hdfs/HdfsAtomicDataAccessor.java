@@ -50,10 +50,12 @@ import java.net.URI;
 public abstract class HdfsAtomicDataAccessor extends BasePlugin implements Accessor {
     InputStream inputStream;
     private FileSplit fileSplit;
+    private CodecFactory codecFactory;
 
     @Override
     public void initialize(RequestContext requestContext) {
         super.initialize(requestContext);
+        codecFactory = CodecFactory.getInstance();
         fileSplit = HdfsUtilities.parseFileSplit(context);
     }
 
@@ -118,6 +120,7 @@ public abstract class HdfsAtomicDataAccessor extends BasePlugin implements Acces
     @Override
     public boolean isThreadSafe() {
         return HdfsUtilities.isThreadSafe(
+                codecFactory,
                 configuration,
                 context.getDataSource(),
                 context.getOption("COMPRESSION_CODEC"));
