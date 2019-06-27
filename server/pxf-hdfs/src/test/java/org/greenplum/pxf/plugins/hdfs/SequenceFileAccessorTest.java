@@ -53,18 +53,19 @@ public class SequenceFileAccessorTest {
      */
     @Before
     public void setup() {
+        String path = this.getClass().getClassLoader().getResource("csv/").getPath();
         Configuration configuration = new Configuration();
-        configuration.set("fs.defaultFS", "hdfs://localhost:8020/");
 
         mockConfigurationFactory = mock(ConfigurationFactory.class);
-        when(mockConfigurationFactory.initConfiguration("default", "dummy", null))
+        when(mockConfigurationFactory.initConfiguration("dummy", "dummy", null))
                 .thenReturn(configuration);
 
         context = new RequestContext();
-        context.setServerName("default");
+        context.setServerName("dummy");
         context.setUser("dummy");
-        context.setDataSource("deep.throat");
+        context.setDataSource(path);
         context.setSegmentId(0);
+        context.setProtocol("localfile");
     }
 
     @Test
