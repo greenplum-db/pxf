@@ -171,6 +171,18 @@ public class HcfsTypeTest {
     }
 
     @Test
+    public void testUriForWriteWithSnappyCodecSkip() {
+        configuration.set("fs.defaultFS", "xyz://abc");
+        context.setDataSource("foo/bar");
+        context.setTransactionId("XID-XYZ-123456");
+        context.setSegmentId(3);
+        context.addOption("COMPRESSION_CODEC", "snappy");
+
+        HcfsType type = HcfsType.getHcfsType(configuration, context);
+        assertEquals("xyz://abc/foo/bar/XID-XYZ-123456_3", type.getUriForWrite(configuration, context, true));
+    }
+
+    @Test
     public void testUriForWriteWithGZipCodec() {
         configuration.set("fs.defaultFS", "xyz://abc");
         context.setDataSource("foo/bar");
@@ -183,6 +195,18 @@ public class HcfsTypeTest {
     }
 
     @Test
+    public void testUriForWriteWithGZipCodecSkip() {
+        configuration.set("fs.defaultFS", "xyz://abc");
+        context.setDataSource("foo/bar");
+        context.setTransactionId("XID-XYZ-123456");
+        context.setSegmentId(3);
+        context.addOption("COMPRESSION_CODEC", "gzip");
+
+        HcfsType type = HcfsType.getHcfsType(configuration, context);
+        assertEquals("xyz://abc/foo/bar/XID-XYZ-123456_3", type.getUriForWrite(configuration, context, true));
+    }
+
+    @Test
     public void testUriForWriteWithLzoCodec() {
         configuration.set("fs.defaultFS", "xyz://abc");
         context.setDataSource("foo/bar");
@@ -192,6 +216,18 @@ public class HcfsTypeTest {
 
         HcfsType type = HcfsType.getHcfsType(configuration, context);
         assertEquals("xyz://abc/foo/bar/XID-XYZ-123456_3.lzo", type.getUriForWrite(configuration, context));
+    }
+
+    @Test
+    public void testUriForWriteWithLzoCodecSkip() {
+        configuration.set("fs.defaultFS", "xyz://abc");
+        context.setDataSource("foo/bar");
+        context.setTransactionId("XID-XYZ-123456");
+        context.setSegmentId(3);
+        context.addOption("COMPRESSION_CODEC", "lzo");
+
+        HcfsType type = HcfsType.getHcfsType(configuration, context);
+        assertEquals("xyz://abc/foo/bar/XID-XYZ-123456_3", type.getUriForWrite(configuration, context, true));
     }
 
     @Test

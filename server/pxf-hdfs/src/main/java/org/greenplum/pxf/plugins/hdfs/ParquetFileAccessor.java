@@ -193,7 +193,8 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
     public boolean openForWrite() throws IOException {
 
         HcfsType hcfsType = HcfsType.getHcfsType(configuration, context);
-        filePrefix = hcfsType.getUriForWrite(configuration, context);
+        // skip codec extension in filePrefix, because we add it in this accessor
+        filePrefix = hcfsType.getUriForWrite(configuration, context, true);
         String compressCodec = context.getOption("COMPRESSION_CODEC");
         codecName = codecFactory.getCodec(compressCodec, CompressionCodecName.SNAPPY);
 

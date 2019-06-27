@@ -9,7 +9,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import static org.junit.Assert.assertNull;
 
-@RunWith(MockitoJUnitRunner.class)
 public class ParquetFileAccessorTest {
     ParquetFileAccessor accessor;
     RequestContext context;

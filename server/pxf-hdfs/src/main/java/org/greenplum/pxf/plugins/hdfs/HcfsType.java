@@ -3,7 +3,6 @@ package org.greenplum.pxf.plugins.hdfs;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.io.compress.CompressionCodec;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -121,6 +120,22 @@ public enum HcfsType {
      * @return an absolute data path for write
      */
     public String getUriForWrite(Configuration configuration, RequestContext context) {
+        return getUriForWrite(configuration, context, false);
+    }
+
+    /**
+     * Returns a unique fully resolved URI including the protocol for write.
+     * The filename is generated with the transaction and segment IDs resulting
+     * in <TRANSACTION-ID>_<SEGMENT-ID>. If a COMPRESSION_CODEC is provided and
+     * the skipCodedExtension parameter is false, the default codec extension
+     * will be appended to the name of the file.
+     *
+     * @param configuration      the hadoop configurations
+     * @param context            the input data parameters
+     * @param skipCodecExtension true if the codec extension is not desired, false otherwise
+     * @return an absolute data path for write
+     */
+    public String getUriForWrite(Configuration configuration, RequestContext context, boolean skipCodecExtension) {
         String fileName = StringUtils.removeEnd(getDataUri(configuration, context), "/") +
                 "/" +
                 context.getTransactionId() +
@@ -128,7 +143,7 @@ public enum HcfsType {
                 context.getSegmentId();
 
         String compressCodec = context.getOption("COMPRESSION_CODEC");
-        if (compressCodec != null) {
+        if (!skipCodecExtension && compressCodec != null) {
             // get compression codec default extension
             CodecFactory codecFactory = CodecFactory.getInstance();
             String extension;
