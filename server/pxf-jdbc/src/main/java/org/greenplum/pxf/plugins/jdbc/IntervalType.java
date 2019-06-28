@@ -3,7 +3,8 @@ package org.greenplum.pxf.plugins.jdbc;
 public enum IntervalType {
     DAY,
     MONTH,
-    YEAR;
+    YEAR,
+    NUMBER;
 
     public static IntervalType typeOf(String str) {
         return valueOf(str.toUpperCase());

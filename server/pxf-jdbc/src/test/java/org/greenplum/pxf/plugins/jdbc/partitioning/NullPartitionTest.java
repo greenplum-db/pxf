@@ -25,6 +25,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class NullPartitionTest {
     @Rule
@@ -37,40 +38,34 @@ public class NullPartitionTest {
     private final String COL = QUOTE + COL_RAW + QUOTE;
 
     @Test
-    public void testNormal() throws Exception {
+    public void testNormal() {
         NullPartition partition = new NullPartition(COL_RAW);
         String constraint = partition.toSqlConstraint(QUOTE, dbProduct);
 
-        assertEquals(
-            COL + " IS NULL",
-            constraint
-        );
+        assertEquals(COL + " IS NULL", constraint);
+        assertTrue(partition.isNull());
     }
 
     @Test
-    public void testIsNotNull() throws Exception {
+    public void testIsNotNull() {
         NullPartition partition = new NullPartition(COL_RAW, false);
         String constraint = partition.toSqlConstraint(QUOTE, dbProduct);
 
-        assertEquals(
-            COL + " IS NOT NULL",
-            constraint
-        );
+        assertEquals(COL + " IS NOT NULL", constraint);
     }
 
     @Test
-    public void testInvalidColumn() throws Exception {
+    public void testInvalidColumn() {
         thrown.expect(RuntimeException.class);
 
         new NullPartition(null);
     }
 
     @Test
-    public void testInvalidNullQuoteString() throws Exception {
-        NullPartition partition = new NullPartition(COL_RAW);
-
+    public void testInvalidNullQuoteString() {
         thrown.expect(RuntimeException.class);
 
+        NullPartition partition = new NullPartition(COL_RAW);
         partition.toSqlConstraint(null, dbProduct);
     }
 }

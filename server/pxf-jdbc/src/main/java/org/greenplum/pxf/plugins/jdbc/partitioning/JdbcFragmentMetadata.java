@@ -31,8 +31,8 @@ public interface JdbcFragmentMetadata extends Serializable {
      * Form a SQL constraint from the metadata of this fragment.
      *
      * @param quoteString a string to quote partition column
-     * @param dbProduct a {@link DbProduct} to wrap constraint values
+     * @param dbProduct   a {@link DbProduct} to wrap constraint values
      * @return a pure SQL constraint (without WHERE)
      */
-    public String toSqlConstraint(String quoteString, DbProduct dbProduct);
+    String toSqlConstraint(String quoteString, DbProduct dbProduct);
 }

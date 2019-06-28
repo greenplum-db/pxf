@@ -341,11 +341,17 @@ In `INT` and `DATE` partitions, every fragment queries data from either closed o
 
 For example, a `LOCATION` clause containing `PARTITION_BY=id:int&RANGE=1:5&INTERVAL=2` makes PXF produce five fragments, covering the whole range of data. Their constraints are as follows (column name is omitted for simplicity):
 1. `< 1`
-2. `>= 1 AND <= 2`
-3. `>= 3 AND <= 4`
+2. `>= 1 AND < 3`
+3. `>= 3 AND < 5`
 4. `>= 5`
 5. `IS NULL`
 
+When the step size goes over the upper bound, for example `PARTITION_BY=id:int&RANGE=1:5&INTERVAL=3`, PXF will generate the following fragments:
+1. `< 1`
+2. `>= 1 AND < 4`
+3. `>= 4 AND < 5`
+4. `>= 5`
+5. `IS NULL`
 
 ##### `ENUM` partitions
 `ENUM` partitions are value-based: every value of its [Range](#partition-range) forms its own partition.
