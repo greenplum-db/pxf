@@ -165,13 +165,7 @@ public class S3SelectAccessor extends BasePlugin implements Accessor {
                         StringUtils.equalsIgnoreCase(FILE_HEADER_INFO_NONE, fileHeaderInfo) ||
                         StringUtils.equalsIgnoreCase(FILE_HEADER_INFO_IGNORE, fileHeaderInfo));
         S3SelectQueryBuilder queryBuilder = new S3SelectQueryBuilder(context, usePositionToIdentifyColumn);
-        String query;
-        try {
-            query = queryBuilder.buildSelectQuery();
-        } catch (ParseException e) {
-            LOG.error("Unable to build S3 SELECT query", e);
-            throw new RuntimeException(e.getMessage(), e);
-        }
+        String query = queryBuilder.buildSelectQuery();
 
         LOG.trace("Select query: {}", query);
 
