@@ -220,8 +220,18 @@ public enum PartitionType {
 
     abstract BasePartition createPartition(String column, Object start, Object end);
 
+    /**
+     * Return the start of the next partition
+     * @param start the start of current partition
+     * @param end the end of partition range
+     * @param interval partition interval
+     * @return min('end', 'start' + 'end')
+     */
     abstract Object next(Object start, Object end, Interval interval);
 
+    /**
+     * @return valid format of interval for this partition type that can be provided to user
+     */
     abstract String getValidIntervalFormat();
 
     /**
