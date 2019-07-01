@@ -23,8 +23,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.util.List;
-
 import static org.junit.Assert.*;
 
 public class EnumPartitionTestGenerate {
@@ -36,13 +34,13 @@ public class EnumPartitionTestGenerate {
         String COLUMN = "col";
         String RANGE = "excellent:good:general:bad";
 
-        List<EnumPartition> parts = (List<EnumPartition>) PartitionType.ENUM.generate(COLUMN, RANGE, null);
+        EnumPartition[] parts = PartitionType.ENUM.generate(COLUMN, RANGE, null).stream().map(p -> EnumPartition.class.cast(p)).toArray(EnumPartition[]::new);
 
-        assertEquals(5, parts.size());
-        assertEnumPartitionEquals(parts.get(0), "excellent");
-        assertEnumPartitionEquals(parts.get(1), "good");
-        assertEnumPartitionEquals(parts.get(3), "bad");
-        assertEnumPartitionEquals(parts.get(4), new String[]{"excellent", "good", "general", "bad"});
+        assertEquals(5, parts.length);
+        assertEnumPartitionEquals(parts[0], "excellent");
+        assertEnumPartitionEquals(parts[1], "good");
+        assertEnumPartitionEquals(parts[3], "bad");
+        assertEnumPartitionEquals(parts[4], new String[]{"excellent", "good", "general", "bad"});
     }
 
     @Test
@@ -50,11 +48,11 @@ public class EnumPartitionTestGenerate {
         String COLUMN = "col";
         String RANGE = "100";
 
-        List<EnumPartition> parts = (List<EnumPartition>) PartitionType.ENUM.generate(COLUMN, RANGE, null);
+        EnumPartition[] parts = PartitionType.ENUM.generate(COLUMN, RANGE, null).stream().map(p -> EnumPartition.class.cast(p)).toArray(EnumPartition[]::new);
 
-        assertEquals(2, parts.size());
-        assertEnumPartitionEquals(parts.get(0), "100");
-        assertEnumPartitionEquals(parts.get(1), new String[]{"100"});
+        assertEquals(2, parts.length);
+        assertEnumPartitionEquals(parts[0], "100");
+        assertEnumPartitionEquals(parts[1], new String[]{"100"});
     }
 
     private void assertEnumPartitionEquals(EnumPartition partition, String value) {
