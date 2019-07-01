@@ -38,7 +38,7 @@ public class IntPartitionTest {
 
     @Test
     public void testNormal() throws Exception {
-        IntPartition partition = new IntPartition(COL_RAW, 0L, 1L);
+        IntPartition partition = new IntPartition(COL_RAW, new Long[]{0L, 1L}, new boolean[]{true, true});
         String constraint = partition.toSqlConstraint(QUOTE, dbProduct);
 
         assertEquals(
@@ -49,7 +49,7 @@ public class IntPartitionTest {
 
     @Test
     public void testRightBounded() throws Exception {
-        IntPartition partition = new IntPartition(COL_RAW, null, 0L, true);
+        IntPartition partition = new IntPartition(COL_RAW, new Long[]{null, 0L}, new boolean[]{false, false});
         String constraint = partition.toSqlConstraint(QUOTE, dbProduct);
 
         assertEquals(
@@ -60,7 +60,7 @@ public class IntPartitionTest {
 
     @Test
     public void testLeftBounded() throws Exception {
-        IntPartition partition = new IntPartition(COL_RAW, 0L, null, true);
+        IntPartition partition = new IntPartition(COL_RAW, new Long[]{0L, null}, new boolean[]{false, false});
         String constraint = partition.toSqlConstraint(QUOTE, dbProduct);
 
         assertEquals(
@@ -71,7 +71,7 @@ public class IntPartitionTest {
 
     @Test
     public void testRightBoundedInclusive() throws Exception {
-        IntPartition partition = new IntPartition(COL_RAW, null, 0L);
+        IntPartition partition = new IntPartition(COL_RAW, new Long[]{null, 0L}, new boolean[]{false, true});
         String constraint = partition.toSqlConstraint(QUOTE, dbProduct);
 
         assertEquals(
@@ -82,7 +82,7 @@ public class IntPartitionTest {
 
     @Test
     public void testLeftBoundedInclusive() throws Exception {
-        IntPartition partition = new IntPartition(COL_RAW, 0L, null);
+        IntPartition partition = new IntPartition(COL_RAW, new Long[]{0L, null}, new boolean[]{true, false});
         String constraint = partition.toSqlConstraint(QUOTE, dbProduct);
 
         assertEquals(
@@ -93,7 +93,7 @@ public class IntPartitionTest {
 
     @Test
     public void testEqualBoundaries() throws Exception {
-        IntPartition partition = new IntPartition(COL_RAW, 0L, 0L);
+        IntPartition partition = new IntPartition(COL_RAW, new Long[]{0L, 0L}, new boolean[]{true, true});
         String constraint = partition.toSqlConstraint(QUOTE, dbProduct);
 
         assertEquals(
@@ -113,12 +113,12 @@ public class IntPartitionTest {
     public void testInvalidColumnNull() throws Exception {
         thrown.expect(RuntimeException.class);
 
-        new IntPartition(null, 0L, 1L);
+        new IntPartition(null, new Long[]{0L, 1L}, new boolean[]{true, true});
     }
 
     @Test
     public void testInvalidNullQuoteString() throws Exception {
-        IntPartition partition = new IntPartition(COL_RAW, 0L, 1L);
+        IntPartition partition = new IntPartition(COL_RAW, new Long[]{0L, 1L}, new boolean[]{true, true});
 
         thrown.expect(RuntimeException.class);
 

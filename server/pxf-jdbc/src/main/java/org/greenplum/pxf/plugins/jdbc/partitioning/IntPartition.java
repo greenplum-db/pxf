@@ -29,7 +29,7 @@ class IntPartition extends BasePartition implements JdbcFragmentMetadata {
     private static final long serialVersionUID = 0L;
 
     private final Long[] boundaries;
-    private final boolean excludeBoundedBoundary;
+    private final boolean[] boundariesInclusionMask;
 
     /**
      * @return a type of {@link Partition} which is the caller of {@link DatePartition#generate} function.
@@ -88,7 +88,6 @@ class IntPartition extends BasePartition implements JdbcFragmentMetadata {
                     "The parameter 'RANGE' is invalid. The <end_value> '%s' must be greater or equal to the <start_value> '%s' for partition of type '%s'", rangeEnd, rangeStart, type()
                 ));
             }
-
         }
 
         // Parse INTERVAL
@@ -111,7 +110,9 @@ class IntPartition extends BasePartition implements JdbcFragmentMetadata {
         // Generate partitions
         List<IntPartition> partitions = new LinkedList<>();
         {
-            partitions.add(new IntPartition(column, null, rangeStart));
+            partitions.add(new IntPartition(
+                column, new Long[]{null, rangeStart}, new boolean[]{false, false}
+            ));
 
             boolean isLeftBoundedPartitionAdded = false;
             long fragStart = rangeStart;
@@ -120,18 +121,24 @@ class IntPartition extends BasePartition implements JdbcFragmentMetadata {
                 long fragEnd = fragStartNext - 1;
 
                 if (fragEnd > rangeEnd) {
-                    partitions.add(new IntPartition(column, fragStart, null, true));
+                    partitions.add(new IntPartition(
+                        column, new Long[]{fragStart, null}, new boolean[]{true, false}
+                    ));
                     isLeftBoundedPartitionAdded = true;
                 }
                 else {
-                    partitions.add(new IntPartition(column, fragStart, fragEnd));
+                    partitions.add(new IntPartition(
+                        column, new Long[]{fragStart, fragEnd}, new boolean[]{true, true}
+                    ));
                 }
 
                 fragStart = fragStartNext;
             }
 
             if (!isLeftBoundedPartitionAdded) {
-                partitions.add(new IntPartition(column, rangeEnd, null));
+                partitions.add(new IntPartition(
+                    column, new Long[]{rangeEnd, null}, new boolean[]{false, false}
+                ));
             }
         }
 
@@ -140,32 +147,28 @@ class IntPartition extends BasePartition implements JdbcFragmentMetadata {
 
     /**
      * @param column
-     * @param start null for right-bounded interval
-     * @param end null for left-bounded interval
-     * @param excludeBoundedBoundary exclude bounded boundary from the interval
+     * @param boundaries Null for infinite boundary. Two equal boundaries are automatically transformed into one (equality SQL operator is used for them then)
+     * @param boundariesInclusionMask whether to include partition boundaries into this fragment's range
      */
-    public IntPartition(String column, Long start, Long end, boolean excludeBoundedBoundary) {
+    public IntPartition(String column, Long[] boundaries, boolean[] boundariesInclusionMask) {
         super(column);
-        if (start == null && end == null) {
-            throw new RuntimeException("Both boundaries cannot be null");
+        if (boundaries.length > 2 || boundaries.length == 0) {
+            throw new RuntimeException("Invalid boundaries array length");
+        }
+        if (boundariesInclusionMask.length != boundaries.length) {
+            throw new RuntimeException("Boundaries inclusion mask length cannot differ from boundaries array length");
+        }
+        if (Stream.of(boundaries).allMatch(b -> b == null)) {
+            throw new RuntimeException("Boundaries array must contain at least one non-null element");
         }
 
-        if (start == end) {
-            this.boundaries = new Long[]{start};
+        if (boundaries.length == 2 && boundaries[0] == boundaries[1]) {
+            boundaries = new Long[]{boundaries[0]};
+            boundariesInclusionMask = new boolean[]{true};
         }
-        else {
-            this.boundaries = new Long[]{start, end};
-        }
-        this.excludeBoundedBoundary = excludeBoundedBoundary;
-    }
 
-    /**
-     * @param column
-     * @param start null for right-bounded interval
-     * @param end null for left-bounded interval
-     */
-    public IntPartition(String column, Long start, Long end) {
-        this(column, start, end, false);
+        this.boundaries = boundaries;
+        this.boundariesInclusionMask = boundariesInclusionMask;
     }
 
     @Override
@@ -174,17 +177,10 @@ class IntPartition extends BasePartition implements JdbcFragmentMetadata {
             throw new RuntimeException("Quote string cannot be null");
         }
 
-        boolean[] rangeInclusionMask = boundaries.length == 2 ?
-            new boolean[]{
-                !(boundaries[1] == null && excludeBoundedBoundary),
-                !(boundaries[0] == null && excludeBoundedBoundary)
-            }
-            : null;
-
         return RangePartitionsFormatter.generateRangeConstraint(
             quoteString + column + quoteString,
             Stream.of(boundaries).map(b -> b == null ? null : b.toString()).toArray(String[]::new),
-            rangeInclusionMask
+            boundariesInclusionMask
         );
     }
 
@@ -193,5 +189,12 @@ class IntPartition extends BasePartition implements JdbcFragmentMetadata {
      */
     public Long[] getBoundaries() {
         return boundaries;
+    }
+
+    /**
+     * Getter
+     */
+    public boolean[] getBoundariesInclusionMask() {
+        return boundariesInclusionMask;
     }
 }

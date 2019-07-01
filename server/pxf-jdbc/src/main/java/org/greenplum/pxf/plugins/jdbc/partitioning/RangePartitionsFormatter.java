@@ -31,6 +31,16 @@ class RangePartitionsFormatter {
      * @return a pure SQL constraint (without WHERE)
      */
     public static String generateRangeConstraint(String columnQuoted, String[] range, boolean[] rangeInclusionMask) {
+        if (columnQuoted == null) {
+            throw new IllegalArgumentException("Partition column cannot be null");
+        }
+        if (range == null || rangeInclusionMask == null) {
+            throw new IllegalArgumentException("Range or range inclusion mask cannot be null");
+        }
+        if (range.length != rangeInclusionMask.length) {
+            throw new IllegalArgumentException("Range length and range inclusion mask length must be the sames");
+        }
+
         StringBuilder sb = new StringBuilder();
 
         if (range.length == 1) {
