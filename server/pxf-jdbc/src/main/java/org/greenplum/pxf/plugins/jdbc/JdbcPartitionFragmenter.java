@@ -27,8 +27,6 @@ import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.jdbc.partitioning.JdbcFragmentMetadata;
 import org.greenplum.pxf.plugins.jdbc.partitioning.PartitionType;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.List;
 
 /**
