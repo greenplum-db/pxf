@@ -2,7 +2,7 @@ package org.greenplum.pxf.plugins.jdbc;
 
 import org.apache.commons.lang.SerializationUtils;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.plugins.jdbc.partitioning.Partition;
+import org.greenplum.pxf.plugins.jdbc.partitioning.PartitionType;
 import org.greenplum.pxf.plugins.jdbc.utils.ConnectionManager;
 import org.junit.Before;
 import org.junit.Rule;
@@ -37,11 +37,16 @@ public class JdbcAccessorTest {
     private JdbcAccessor accessor;
     private RequestContext context;
 
-    @Mock private ConnectionManager mockConnectionManager;
-    @Mock private DatabaseMetaData mockMetaData;
-    @Mock private Connection mockConnection;
-    @Mock private Statement mockStatement;
-    @Mock private ResultSet mockResultSet;
+    @Mock
+    private ConnectionManager mockConnectionManager;
+    @Mock
+    private DatabaseMetaData mockMetaData;
+    @Mock
+    private Connection mockConnection;
+    @Mock
+    private Statement mockStatement;
+    @Mock
+    private ResultSet mockResultSet;
 
     @Before
     public void setup() throws SQLException {
@@ -122,13 +127,11 @@ public class JdbcAccessorTest {
         accessor.initialize(context);
         accessor.openForRead();
 
-        StringBuilder b = new StringBuilder()
-        .append("SELECT  FROM (SELECT dept.name, count(), max(emp.salary)\n")
-        .append("FROM dept JOIN emp\n")
-        .append("ON dept.id = emp.dept_id\n")
-        .append("GROUP BY dept.name) pxfsubquery");
-
-        assertEquals(b.toString(), queryPassed.getValue());
+        String expected = "SELECT  FROM (SELECT dept.name, count(), max(emp.salary)\n" +
+                "FROM dept JOIN emp\n" +
+                "ON dept.id = emp.dept_id\n" +
+                "GROUP BY dept.name) pxfsubquery";
+        assertEquals(expected, queryPassed.getValue());
 
     }
 
@@ -177,21 +180,18 @@ public class JdbcAccessorTest {
         context.addOption("PARTITION_BY", "count:int");
         context.addOption("RANGE", "1:10");
         context.addOption("INTERVAL", "1");
-        context.setFragmentMetadata(SerializationUtils.serialize(Partition.INT.fragments("count", "1:10", "1").get(1)));
+        context.setFragmentMetadata(SerializationUtils.serialize(PartitionType.INT.getFragmentsMetadata("count", "1:10", "1").get(2)));
         ArgumentCaptor<String> queryPassed = ArgumentCaptor.forClass(String.class);
         when(mockStatement.executeQuery(queryPassed.capture())).thenReturn(mockResultSet);
 
         accessor.initialize(context);
         accessor.openForRead();
 
-        StringBuilder b = new StringBuilder()
-                .append("SELECT  FROM (SELECT dept.name, count(), max(emp.salary)\n")
-                .append("FROM dept JOIN emp\n")
-                .append("ON dept.id = emp.dept_id\n")
-                .append("GROUP BY dept.name) pxfsubquery WHERE count = 1");
-
-        assertEquals(b.toString(), queryPassed.getValue());
-
+        String expected = "SELECT  FROM (SELECT dept.name, count(), max(emp.salary)\n" +
+                "FROM dept JOIN emp\n" +
+                "ON dept.id = emp.dept_id\n" +
+                "GROUP BY dept.name) pxfsubquery WHERE count >= 1 AND count < 2";
+        assertEquals(expected, queryPassed.getValue());
     }
 
     @Test
@@ -202,22 +202,19 @@ public class JdbcAccessorTest {
         context.addOption("PARTITION_BY", "count:int");
         context.addOption("RANGE", "1:10");
         context.addOption("INTERVAL", "1");
-        context.setFragmentMetadata(SerializationUtils.serialize(Partition.INT.fragments("count", "1:10", "1").get(1)));
+        context.setFragmentMetadata(SerializationUtils.serialize(PartitionType.INT.getFragmentsMetadata("count", "1:10", "1").get(2)));
         ArgumentCaptor<String> queryPassed = ArgumentCaptor.forClass(String.class);
         when(mockStatement.executeQuery(queryPassed.capture())).thenReturn(mockResultSet);
 
         accessor.initialize(context);
         accessor.openForRead();
 
-        StringBuilder b = new StringBuilder()
-                .append("SELECT  FROM (SELECT dept.name, count(), max(emp.salary)\n")
-                .append("FROM dept JOIN emp\n")
-                .append("ON dept.id = emp.dept_id\n")
-                .append("WHERE dept.id < 10\n")
-                .append("GROUP BY dept.name) pxfsubquery WHERE count = 1");
-
-        assertEquals(b.toString(), queryPassed.getValue());
-
+        String expected = "SELECT  FROM (SELECT dept.name, count(), max(emp.salary)\n" +
+                "FROM dept JOIN emp\n" +
+                "ON dept.id = emp.dept_id\n" +
+                "WHERE dept.id < 10\n" +
+                "GROUP BY dept.name) pxfsubquery WHERE count >= 1 AND count < 2";
+        assertEquals(expected, queryPassed.getValue());
     }
 
     @Test
@@ -231,7 +228,7 @@ public class JdbcAccessorTest {
 
         JdbcPartitionFragmenter fragmenter = new JdbcPartitionFragmenter();
         fragmenter.initialize(context);
-        context.setFragmentMetadata(fragmenter.getFragments().get(1).getMetadata());
+        context.setFragmentMetadata(fragmenter.getFragments().get(2).getMetadata());
 
         ArgumentCaptor<String> queryPassed = ArgumentCaptor.forClass(String.class);
         when(mockStatement.executeQuery(queryPassed.capture())).thenReturn(mockResultSet);
@@ -239,12 +236,10 @@ public class JdbcAccessorTest {
         accessor.initialize(context);
         accessor.openForRead();
 
-        StringBuilder b = new StringBuilder()
-                .append("SELECT  FROM (SELECT dept.name, count(), max(emp.salary)\n")
-                .append("FROM dept JOIN emp\n")
-                .append("ON dept.id = emp.dept_id\n")
-                .append("GROUP BY dept.name) pxfsubquery WHERE count = 1");
-        assertEquals(b.toString(), queryPassed.getValue());
-
+        String expected = "SELECT  FROM (SELECT dept.name, count(), max(emp.salary)\n" +
+                "FROM dept JOIN emp\n" +
+                "ON dept.id = emp.dept_id\n" +
+                "GROUP BY dept.name) pxfsubquery WHERE count >= 1 AND count < 2";
+        assertEquals(expected, queryPassed.getValue());
     }
 }

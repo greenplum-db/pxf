@@ -19,7 +19,6 @@ package org.greenplum.pxf.plugins.jdbc.partitioning;
  * under the License.
  */
 
-import org.greenplum.pxf.plugins.jdbc.partitioning.DatePartition;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -34,138 +33,144 @@ public class DatePartitionTestGenerate {
     public ExpectedException thrown = ExpectedException.none();
 
     @Test
-    public void testPartitionByDateIntervalDay() throws Exception {
+    public void testPartitionByDateIntervalDay() {
         final String COLUMN = "col";
         final String RANGE = "2008-01-01:2008-01-11";
         final String INTERVAL = "1:day";
 
-        List<DatePartition> parts = DatePartition.generate(COLUMN, RANGE, INTERVAL);
+        List<DatePartition> parts = (List<DatePartition>) PartitionType.DATE.generate(COLUMN, RANGE, INTERVAL);
 
         assertEquals(12, parts.size());
         assertDatePartitionEquals(parts.get(0), null, Date.valueOf("2008-01-01"));
-        assertDatePartitionEquals(parts.get(1), Date.valueOf("2008-01-01"), Date.valueOf("2008-01-02"));
-        assertDatePartitionEquals(parts.get(5), Date.valueOf("2008-01-05"), Date.valueOf("2008-01-06"));
-        assertDatePartitionEquals(parts.get(10), Date.valueOf("2008-01-10"), Date.valueOf("2008-01-11"));
-        assertDatePartitionEquals(parts.get(11), Date.valueOf("2008-01-11"), null);
+        assertDatePartitionEquals(parts.get(1), Date.valueOf("2008-01-11"), null);
+        assertDatePartitionEquals(parts.get(2), Date.valueOf("2008-01-01"), Date.valueOf("2008-01-02"));
+        assertDatePartitionEquals(parts.get(6), Date.valueOf("2008-01-05"), Date.valueOf("2008-01-06"));
+        assertDatePartitionEquals(parts.get(11), Date.valueOf("2008-01-10"), Date.valueOf("2008-01-11"));
     }
 
     @Test
-    public void testPartitionByDateIntervalMonth() throws Exception {
+    public void testPartitionByDateIntervalMonth() {
         final String COLUMN = "col";
         final String RANGE = "2008-01-01:2008-12-31";
         final String INTERVAL = "1:month";
 
-        List<DatePartition> parts = DatePartition.generate(COLUMN, RANGE, INTERVAL);
+        List<DatePartition> parts = (List<DatePartition>) PartitionType.DATE.generate(COLUMN, RANGE, INTERVAL);
 
-        assertEquals(13, parts.size());
+        assertEquals(14, parts.size());
         assertDatePartitionEquals(parts.get(0), null, Date.valueOf("2008-01-01"));
-        assertDatePartitionEquals(parts.get(1), Date.valueOf("2008-01-01"), Date.valueOf("2008-02-01"));
-        assertDatePartitionEquals(parts.get(6), Date.valueOf("2008-06-01"), Date.valueOf("2008-07-01"));
-        assertDatePartitionEquals(parts.get(11), Date.valueOf("2008-11-01"), Date.valueOf("2008-12-01"));
-        assertDatePartitionEquals(parts.get(12), Date.valueOf("2008-12-01"), null);
+        assertDatePartitionEquals(parts.get(1), Date.valueOf("2008-12-31"), null);
+        assertDatePartitionEquals(parts.get(2), Date.valueOf("2008-01-01"), Date.valueOf("2008-02-01"));
+        assertDatePartitionEquals(parts.get(3), Date.valueOf("2008-02-01"), Date.valueOf("2008-03-01"));
+        assertDatePartitionEquals(parts.get(4), Date.valueOf("2008-03-01"), Date.valueOf("2008-04-01"));
+        assertDatePartitionEquals(parts.get(5), Date.valueOf("2008-04-01"), Date.valueOf("2008-05-01"));
+        assertDatePartitionEquals(parts.get(6), Date.valueOf("2008-05-01"), Date.valueOf("2008-06-01"));
+        assertDatePartitionEquals(parts.get(7), Date.valueOf("2008-06-01"), Date.valueOf("2008-07-01"));
+        assertDatePartitionEquals(parts.get(12), Date.valueOf("2008-11-01"), Date.valueOf("2008-12-01"));
     }
 
     @Test
-    public void testPartitionByDateIntervalYear() throws Exception {
+    public void testPartitionByDateIntervalYear() {
         final String COLUMN = "col";
         final String RANGE = "2008-02-03:2018-02-02";
         final String INTERVAL = "1:year";
 
-        List<DatePartition> parts = DatePartition.generate(COLUMN, RANGE, INTERVAL);
+        List<DatePartition> parts = (List<DatePartition>) PartitionType.DATE.generate(COLUMN, RANGE, INTERVAL);
 
-        assertEquals(11, parts.size());
+        assertEquals(12, parts.size());
         assertDatePartitionEquals(parts.get(0), null, Date.valueOf("2008-02-03"));
-        assertDatePartitionEquals(parts.get(1), Date.valueOf("2008-02-03"), Date.valueOf("2009-02-03"));
-        assertDatePartitionEquals(parts.get(6), Date.valueOf("2013-02-03"), Date.valueOf("2014-02-03"));
-        assertDatePartitionEquals(parts.get(9), Date.valueOf("2016-02-03"), Date.valueOf("2017-02-03"));
-        assertDatePartitionEquals(parts.get(10), Date.valueOf("2017-02-03"), null);
+        assertDatePartitionEquals(parts.get(1), Date.valueOf("2018-02-02"), null);
+        assertDatePartitionEquals(parts.get(2), Date.valueOf("2008-02-03"), Date.valueOf("2009-02-03"));
+        assertDatePartitionEquals(parts.get(7), Date.valueOf("2013-02-03"), Date.valueOf("2014-02-03"));
+        assertDatePartitionEquals(parts.get(10), Date.valueOf("2016-02-03"), Date.valueOf("2017-02-03"));
     }
 
     @Test
-    public void testPartitionByDateIntervalYearIncomplete() throws Exception {
+    public void testPartitionByDateIntervalYearIncomplete() {
         final String COLUMN = "col";
         final String RANGE = "2008-02-03:2010-01-15";
         final String INTERVAL = "1:year";
 
-        List<DatePartition> parts = DatePartition.generate(COLUMN, RANGE, INTERVAL);
+        List<DatePartition> parts = (List<DatePartition>) PartitionType.DATE.generate(COLUMN, RANGE, INTERVAL);
 
-        assertEquals(3, parts.size());
+        assertEquals(4, parts.size());
         assertDatePartitionEquals(parts.get(0), null, Date.valueOf("2008-02-03"));
-        assertDatePartitionEquals(parts.get(1), Date.valueOf("2008-02-03"), Date.valueOf("2009-02-03"));
-        assertDatePartitionEquals(parts.get(2), Date.valueOf("2009-02-03"), null);
+        assertDatePartitionEquals(parts.get(1), Date.valueOf("2010-01-15"), null);
+        assertDatePartitionEquals(parts.get(2), Date.valueOf("2008-02-03"), Date.valueOf("2009-02-03"));
+        assertDatePartitionEquals(parts.get(3), Date.valueOf("2009-02-03"), Date.valueOf("2010-01-15"));
     }
 
     @Test
-    public void testRangeDateFormatInvalid() throws Exception {
+    public void testRangeDateFormatInvalid() {
         thrown.expect(IllegalArgumentException.class);
 
         final String COLUMN = "col";
         final String RANGE = "2008/01/01:2009-01-01";
         final String INTERVAL = "1:month";
 
-        DatePartition.generate(COLUMN, RANGE, INTERVAL);
+        PartitionType.DATE.generate(COLUMN, RANGE, INTERVAL);
     }
 
     @Test
-    public void testIntervalValueInvalid() throws Exception {
+    public void testIntervalValueInvalid() {
         thrown.expect(IllegalArgumentException.class);
 
         final String COLUMN = "col";
         final String RANGE = "2008-01-01:2009-01-01";
         final String INTERVAL = "-1:month";
 
-        DatePartition.generate(COLUMN, RANGE, INTERVAL);
+        PartitionType.DATE.generate(COLUMN, RANGE, INTERVAL);
     }
 
     @Test
-    public void testIntervalTypeInvalid() throws Exception {
+    public void testIntervalTypeInvalid() {
         thrown.expect(IllegalArgumentException.class);
 
         final String COLUMN = "col";
         final String RANGE = "2008-01-01:2011-01-01";
         final String INTERVAL = "6:hour";
 
-        DatePartition.generate(COLUMN, RANGE, INTERVAL);
+        PartitionType.DATE.generate(COLUMN, RANGE, INTERVAL);
     }
 
     @Test
-    public void testIntervalTypeMissingInvalid() throws Exception {
+    public void testIntervalTypeMissingInvalid() {
         thrown.expect(IllegalArgumentException.class);
 
         final String COLUMN = "col";
         final String RANGE = "2008-01-01:2011-01-01";
         final String INTERVAL = "6";
 
-        DatePartition.generate(COLUMN, RANGE, INTERVAL);
+        PartitionType.DATE.generate(COLUMN, RANGE, INTERVAL);
     }
 
     @Test
-    public void testRangeMissingEndInvalid() throws Exception {
+    public void testRangeMissingEndInvalid() {
         thrown.expect(IllegalArgumentException.class);
 
         final String COLUMN = "col";
         final String RANGE = "2008-01-01";
         final String INTERVAL = "1:year";
 
-        DatePartition.generate(COLUMN, RANGE, INTERVAL);
+        PartitionType.DATE.generate(COLUMN, RANGE, INTERVAL);
     }
 
     @Test
-    public void testRangeDateSwappedInvalid() throws Exception {
+    public void testRangeDateSwappedInvalid() {
         thrown.expect(IllegalArgumentException.class);
 
         final String COLUMN = "col";
         final String RANGE = "2008-01-01:2001-01-01";
         final String INTERVAL = "1:month";
 
-        DatePartition.generate(COLUMN, RANGE, INTERVAL);
+        PartitionType.DATE.generate(COLUMN, RANGE, INTERVAL);
     }
 
     /**
      * Assert fragment metadata and given range of dates match.
+     *
      * @param fragment
      * @param rangeStart (null is allowed)
-     * @param rangeEnd (null is allowed)
+     * @param rangeEnd   (null is allowed)
      */
     private void assertDatePartitionEquals(DatePartition partition, Date rangeStart, Date rangeEnd) {
         Date[] boundaries = partition.getBoundaries();

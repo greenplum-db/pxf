@@ -46,8 +46,10 @@ public class SQLQueryBuilderTest {
 
     private RequestContext context;
 
-    @Mock private DatabaseMetaData mockMetaData;
-    @Mock private RequestContext mockContext;
+    @Mock
+    private DatabaseMetaData mockMetaData;
+    @Mock
+    private RequestContext mockContext;
 
     @Before
     public void setup() throws Exception {
@@ -120,7 +122,7 @@ public class SQLQueryBuilderTest {
         JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
         fragment.initialize(context);
         List<Fragment> fragments = fragment.getFragments();
-        assertEquals(8, fragments.size());
+        assertEquals(9, fragments.size());
 
         SQLQueryBuilder builder;
         String query;
@@ -135,21 +137,21 @@ public class SQLQueryBuilderTest {
         builder = new SQLQueryBuilder(context, mockMetaData);
         builder.autoSetQuoteString();
         query = builder.buildSelectQuery();
-        assertEquals(SQL + " WHERE cdate >= DATE('2008-01-01') AND cdate < DATE('2008-03-01')", query);
+        assertEquals(SQL + " WHERE cdate >= DATE('2008-12-01')", query);
 
         context.setFragmentMetadata(fragments.get(2).getMetadata());
         builder = new SQLQueryBuilder(context, mockMetaData);
         builder.autoSetQuoteString();
         query = builder.buildSelectQuery();
-        assertEquals(SQL + " WHERE cdate >= DATE('2008-03-01') AND cdate < DATE('2008-05-01')", query);
+        assertEquals(SQL + " WHERE cdate >= DATE('2008-01-01') AND cdate < DATE('2008-03-01')", query);
 
-        context.setFragmentMetadata(fragments.get(6).getMetadata());
+        context.setFragmentMetadata(fragments.get(3).getMetadata());
         builder = new SQLQueryBuilder(context, mockMetaData);
         builder.autoSetQuoteString();
         query = builder.buildSelectQuery();
-        assertEquals(SQL + " WHERE cdate >= DATE('2008-11-01')", query);
+        assertEquals(SQL + " WHERE cdate >= DATE('2008-03-01') AND cdate < DATE('2008-05-01')", query);
 
-        context.setFragmentMetadata(fragments.get(7).getMetadata());
+        context.setFragmentMetadata(fragments.get(8).getMetadata());
         builder = new SQLQueryBuilder(context, mockMetaData);
         builder.autoSetQuoteString();
         query = builder.buildSelectQuery();
@@ -173,6 +175,20 @@ public class SQLQueryBuilderTest {
         builder.autoSetQuoteString();
         String query = builder.buildSelectQuery();
         assertEquals(SQL + " WHERE id > 5 AND grade = 'excellent'", query);
+
+        context.setFragmentMetadata(fragments.get(4).getMetadata());
+
+        builder = new SQLQueryBuilder(context, mockMetaData);
+        builder.autoSetQuoteString();
+        query = builder.buildSelectQuery();
+        assertEquals(SQL + " WHERE id > 5 AND ( grade <> 'excellent' AND grade <> 'good' AND grade <> 'general' AND grade <> 'bad' )", query);
+
+        context.setFragmentMetadata(fragments.get(5).getMetadata());
+
+        builder = new SQLQueryBuilder(context, mockMetaData);
+        builder.autoSetQuoteString();
+        query = builder.buildSelectQuery();
+        assertEquals(SQL + " WHERE id > 5 AND grade IS NULL", query);
     }
 
     @Test
@@ -245,13 +261,11 @@ public class SQLQueryBuilderTest {
 
     @Test
     public void testIdMixedCaseWithFilterAndPartition() throws Exception {
-        when(mockContext.getDataSource()).thenReturn("sales");
+        context.setDataSource("sales");
         List<ColumnDescriptor> columns = new ArrayList<>();
         columns.add(new ColumnDescriptor("id", DataType.INTEGER.getOID(), 0, "int4", null));
         columns.add(new ColumnDescriptor("cDate", DataType.DATE.getOID(), 1, "date", null));
-        when(mockContext.getTupleDescription()).thenReturn(columns);
-        when(mockContext.getColumn(0)).thenReturn(columns.get(0));
-        when(mockContext.getColumn(1)).thenReturn(columns.get(1));
+        context.setTupleDescription(columns);
 
         DatabaseMetaData localDatabaseMetaData = mock(DatabaseMetaData.class);
         when(localDatabaseMetaData.supportsMixedCaseIdentifiers()).thenReturn(false);
@@ -259,26 +273,25 @@ public class SQLQueryBuilderTest {
         when(localDatabaseMetaData.getDatabaseProductName()).thenReturn("mysql");
         when(localDatabaseMetaData.getIdentifierQuoteString()).thenReturn("\"");
 
-        when(mockContext.hasFilter()).thenReturn(true);
         // id > 5
-        when(mockContext.getFilterString()).thenReturn("a0c20s1d5o2");
+        context.setFilterString("a0c20s1d5o2");
 
-        when(mockContext.getOption("PARTITION_BY")).thenReturn("cDate:date");
-        when(mockContext.getOption("RANGE")).thenReturn("2008-01-01:2009-01-01");
-        when(mockContext.getOption("INTERVAL")).thenReturn("2:month");
-        JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
-        fragment.initialize(mockContext);
-        List<Fragment> fragments = fragment.getFragments();
+        context.addOption("PARTITION_BY", "cDate:date");
+        context.addOption("RANGE", "2008-01-01:2009-01-01");
+        context.addOption("INTERVAL", "2:month");
+        JdbcPartitionFragmenter fragmenter = new JdbcPartitionFragmenter();
+        fragmenter.initialize(context);
+        List<Fragment> fragments = fragmenter.getFragments();
         assertEquals(9, fragments.size());
         // Partition: cdate >= 2008-01-01 and cdate < 2008-03-01
-        when(mockContext.getFragmentMetadata()).thenReturn(fragments.get(1).getMetadata());
+        context.setFragmentMetadata(fragments.get(2).getMetadata());
 
-        String localSQL = "SELECT \"id\", \"cDate\" FROM sales WHERE \"id\" > 5 AND \"cDate\" >= DATE('2008-01-01') AND \"cDate\" < DATE('2008-03-01')";
+        String expected = "SELECT \"id\", \"cDate\" FROM sales WHERE \"id\" > 5 AND \"cDate\" >= DATE('2008-01-01') AND \"cDate\" < DATE('2008-03-01')";
 
-        SQLQueryBuilder builder = new SQLQueryBuilder(mockContext, localDatabaseMetaData);
+        SQLQueryBuilder builder = new SQLQueryBuilder(context, localDatabaseMetaData);
         builder.autoSetQuoteString();
         String query = builder.buildSelectQuery();
-        assertEquals(localSQL, query);
+        assertEquals(expected, query);
     }
 
     @Test

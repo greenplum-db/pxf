@@ -34,89 +34,76 @@ public class EnumPartitionTest {
 
     private final String COL_RAW = "col";
     private final String QUOTE = "\"";
-    private final String COL = QUOTE + COL_RAW + QUOTE;
 
     @Test
-    public void testNormal() throws Exception {
+    public void testNormal() {
         EnumPartition partition = new EnumPartition(COL_RAW, "enum1");
         String constraint = partition.toSqlConstraint(QUOTE, dbProduct);
 
-        assertEquals(
-            COL + " = 'enum1'",
-            constraint
-        );
+        assertEquals("\"col\" = 'enum1'", constraint);
     }
 
     @Test
-    public void testExcluded1() throws Exception {
+    public void testExcluded1() {
         EnumPartition partition = new EnumPartition(COL_RAW, new String[]{"enum1"});
         String constraint = partition.toSqlConstraint(QUOTE, dbProduct);
 
-        assertEquals(
-            COL + " <> 'enum1'",
-            constraint
-        );
+        assertEquals("( \"col\" <> 'enum1' )", constraint);
     }
 
     @Test
-    public void testExcluded2() throws Exception {
+    public void testExcluded2() {
         EnumPartition partition = new EnumPartition(COL_RAW, new String[]{"enum1", "enum2"});
         String constraint = partition.toSqlConstraint(QUOTE, dbProduct);
 
-        assertEquals(
-            COL + " <> 'enum1' AND " + COL + " <> 'enum2'",
-            constraint
-        );
+        assertEquals("( \"col\" <> 'enum1' AND \"col\" <> 'enum2' )", constraint);
     }
 
     @Test
-    public void testExcluded3() throws Exception {
+    public void testExcluded3() {
         EnumPartition partition = new EnumPartition(COL_RAW, new String[]{"enum1", "enum2", "enum3"});
         String constraint = partition.toSqlConstraint(QUOTE, dbProduct);
 
-        assertEquals(
-            COL + " <> 'enum1' AND " + COL + " <> 'enum2' AND " + COL + " <> 'enum3'",
-            constraint
-        );
+        assertEquals("( \"col\" <> 'enum1' AND \"col\" <> 'enum2' AND \"col\" <> 'enum3' )", constraint);
     }
 
     @Test
-    public void testInvalidValueNull() throws Exception {
+    public void testInvalidValueNull() {
         thrown.expect(RuntimeException.class);
 
-        new EnumPartition(COL_RAW, (String)null);
+        new EnumPartition(COL_RAW, (String) null);
     }
 
     @Test
-    public void testInvalidColumnNull() throws Exception {
+    public void testInvalidColumnNull() {
         thrown.expect(RuntimeException.class);
 
         new EnumPartition(null, "enum1");
     }
 
     @Test
-    public void testInvalidExcludedNull() throws Exception {
+    public void testInvalidExcludedNull() {
         thrown.expect(RuntimeException.class);
 
-        new EnumPartition(COL_RAW, (String[])null);
+        new EnumPartition(COL_RAW, (String[]) null);
     }
 
     @Test
-    public void testInvalidColumnNullExcluded() throws Exception {
+    public void testInvalidColumnNullExcluded() {
         thrown.expect(RuntimeException.class);
 
         new EnumPartition(null, new String[]{"enum1"});
     }
 
     @Test
-    public void testInvalidExcludedZeroLength() throws Exception {
+    public void testInvalidExcludedZeroLength() {
         thrown.expect(RuntimeException.class);
 
         new EnumPartition(COL_RAW, new String[]{});
     }
 
     @Test
-    public void testInvalidNullQuoteString() throws Exception {
+    public void testInvalidNullQuoteString() {
         thrown.expect(RuntimeException.class);
 
         EnumPartition partition = new EnumPartition(COL_RAW, "enum1");

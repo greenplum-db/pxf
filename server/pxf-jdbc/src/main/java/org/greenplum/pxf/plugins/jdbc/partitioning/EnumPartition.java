@@ -21,8 +21,6 @@ package org.greenplum.pxf.plugins.jdbc.partitioning;
 
 import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
 
-import java.util.LinkedList;
-import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -33,50 +31,8 @@ class EnumPartition extends BasePartition implements JdbcFragmentMetadata {
     private final String[] excluded;
 
     /**
-     * @return a type of {@link Partition} which is the caller of {@link DatePartition#generate} function.
-     * Currently, only used for exception messages.
-     */
-    public static Partition type() {
-        return Partition.ENUM;
-    }
-
-    /**
-     * Generate an array of {@link EnumPartition}s using the provided column name, RANGE and INTERVAL string values
-     * @param column
-     * @param range
-     * @param interval
-     * @return an array of properly initialized {@link EnumPartition} objects
-     */
-    public static List<EnumPartition> generate(String column, String range, String interval) {
-        // Check input
-        if (column == null) {
-            throw new RuntimeException("The column name must be provided");
-        }
-        if (range == null) {
-            throw new IllegalArgumentException(String.format(
-                "The parameter 'RANGE' must be specified for partition of type '%s'", type()
-            ));
-        }
-
-        // Parse RANGE
-        String[] rangeValues = range.split(":");
-
-        // Generate partitions
-        List<EnumPartition> partitions = new LinkedList<>();
-        {
-            for (String rangeValue : rangeValues) {
-                partitions.add(new EnumPartition(column, rangeValue));
-            }
-
-            // "excluded" values
-            partitions.add(new EnumPartition(column, rangeValues));
-        }
-
-        return partitions;
-    }
-
-    /**
      * Construct an EnumPartition with given column and constraint
+     *
      * @param column
      * @param value
      */
@@ -93,6 +49,7 @@ class EnumPartition extends BasePartition implements JdbcFragmentMetadata {
     /**
      * Construct an EnumPartition with given column and a special (exclusion) constraint.
      * The partition created by this constructor contains all values that differ from the given ones.
+     *
      * @param column
      * @param excluded array of values this partition must NOT include
      */
@@ -117,17 +74,17 @@ class EnumPartition extends BasePartition implements JdbcFragmentMetadata {
 
         StringBuilder sb = new StringBuilder();
 
-        String columnQuoted = quoteString + column + quoteString;
+        String quotedColumn = quoteString + column + quoteString;
 
         if (excluded == null) {
-            sb.append(columnQuoted).append(" = '").append(value).append("'");
-        }
-        else {
+            sb.append(quotedColumn).append(" = '").append(value).append("'");
+        } else {
             // We use inequality operator as it is the widest supported method
-            sb.append(Stream.of(excluded)
-                .map(excludedValue -> columnQuoted + " <> '" + excludedValue + "'")
-                .collect(Collectors.joining(" AND "))
-            );
+            sb.append("( ")
+                    .append(Stream.of(excluded)
+                            .map(excludedValue -> quotedColumn + " <> '" + excludedValue + "'")
+                            .collect(Collectors.joining(" AND "))
+                    ).append(" )");
         }
 
         return sb.toString();

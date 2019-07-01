@@ -23,60 +23,66 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import static org.junit.Assert.assertEquals;
-
 import java.util.List;
+
+import static org.junit.Assert.assertEquals;
 
 public class IntPartitionTestGenerate {
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
     @Test
-    public void testPartionByInt() throws Exception {
+    public void testPartitionByInt() {
         String COLUMN = "col";
         String RANGE = "2001:2012";
         String INTERVAL = "2";
 
-        List<IntPartition> parts = IntPartition.generate(COLUMN, RANGE, INTERVAL);
+        List<IntPartition> parts = (List<IntPartition>) PartitionType.INT.generate(COLUMN, RANGE, INTERVAL);
 
         assertEquals(8, parts.size());
         assertFragmentRangeEquals(parts.get(0), null, 2001L);
-        assertFragmentRangeEquals(parts.get(1), 2001L, 2002L);
-        assertFragmentRangeEquals(parts.get(3), 2005L, 2006L);
-        assertFragmentRangeEquals(parts.get(6), 2011L, 2012L);
-        assertFragmentRangeEquals(parts.get(7), 2012L, null);
+        assertFragmentRangeEquals(parts.get(1), 2012L, null);
+        assertFragmentRangeEquals(parts.get(2), 2001L, 2003L);
+        assertFragmentRangeEquals(parts.get(3), 2003L, 2005L);
+        assertFragmentRangeEquals(parts.get(4), 2005L, 2007L);
+        assertFragmentRangeEquals(parts.get(5), 2007L, 2009L);
+        assertFragmentRangeEquals(parts.get(6), 2009L, 2011L);
+        assertFragmentRangeEquals(parts.get(7), 2011L, 2012L);
     }
 
     @Test
-    public void testPartionByIntIncomplete() throws Exception {
+    public void testPartionByIntIncomplete() {
         String COLUMN = "col";
         String RANGE = "2001:2012";
         String INTERVAL = "7";
 
-        List<IntPartition> parts = IntPartition.generate(COLUMN, RANGE, INTERVAL);
+        List<IntPartition> parts = (List<IntPartition>) PartitionType.INT.generate(COLUMN, RANGE, INTERVAL);
 
-        assertEquals(3, parts.size());
+        assertEquals(4, parts.size());
+
         assertFragmentRangeEquals(parts.get(0), null, 2001L);
-        assertFragmentRangeEquals(parts.get(1), 2001L, 2007L);
-        assertFragmentRangeEquals(parts.get(2), 2008L, null);
+        assertFragmentRangeEquals(parts.get(1), 2012L, null);
+        assertFragmentRangeEquals(parts.get(2), 2001L, 2008L);
+        assertFragmentRangeEquals(parts.get(3), 2008L, 2012L);
     }
 
     @Test
-    public void testRangeIntSwappedInvalid() throws Exception {
+    public void testRangeIntSwappedInvalid() {
         thrown.expect(IllegalArgumentException.class);
 
         final String COLUMN = "col";
         final String RANGE = "42:17";
         final String INTERVAL = "2";
 
-        IntPartition.generate(COLUMN, RANGE, INTERVAL);
+        PartitionType.INT.generate(COLUMN, RANGE, INTERVAL);
     }
 
     /**
      * Assert fragment metadata and given range match.
-     * @param fragment
+     *
+     * @param partition  partition information
      * @param rangeStart (null is allowed)
-     * @param rangeEnd (null is allowed)
+     * @param rangeEnd   (null is allowed)
      */
     private void assertFragmentRangeEquals(IntPartition partition, Long rangeStart, Long rangeEnd) {
         Long[] boundaries = partition.getBoundaries();

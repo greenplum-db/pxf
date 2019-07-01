@@ -19,15 +19,12 @@ package org.greenplum.pxf.plugins.jdbc.partitioning;
  * under the License.
  */
 
-import org.greenplum.pxf.plugins.jdbc.partitioning.DatePartition;
 import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
+import java.time.LocalDate;
 
 import static org.junit.Assert.assertEquals;
 
@@ -41,54 +38,53 @@ public class DatePartitionTest {
     private final String QUOTE = "\"";
     private final String COL = QUOTE + COL_RAW + QUOTE;
 
-    private SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-
     @Test
-    public void testNormal() throws Exception {
-        DatePartition partition = new DatePartition(COL_RAW, getCalendar("2000-01-01"), getCalendar("2000-01-02"));
+    public void testNormal() {
+        DatePartition partition = new DatePartition(COL_RAW, LocalDate.parse("2000-01-01"), LocalDate.parse("2000-01-02"));
         String constraint = partition.toSqlConstraint(QUOTE, dbProduct);
 
         assertEquals(
-            COL + " >= date'2000-01-01' AND " + COL + " < date'2000-01-02'",
-            constraint
+                COL + " >= date'2000-01-01' AND " + COL + " < date'2000-01-02'",
+                constraint
+        );
+        assertEquals(COL_RAW, partition.getColumn());
+    }
+
+    @Test
+    public void testRightBounded() {
+        DatePartition partition = new DatePartition(COL_RAW, null, LocalDate.parse("2000-01-01"));
+        String constraint = partition.toSqlConstraint(QUOTE, dbProduct);
+
+        assertEquals(
+                COL + " < date'2000-01-01'",
+                constraint
         );
     }
 
     @Test
-    public void testRightBounded() throws Exception {
-        DatePartition partition = new DatePartition(COL_RAW, null, getCalendar("2000-01-01"));
+    public void testLeftBounded() {
+        DatePartition partition = new DatePartition(COL_RAW, LocalDate.parse("2000-01-01"), null);
         String constraint = partition.toSqlConstraint(QUOTE, dbProduct);
 
         assertEquals(
-            COL + " < date'2000-01-01'",
-            constraint
+                COL + " >= date'2000-01-01'",
+                constraint
         );
     }
 
     @Test
-    public void testLeftBounded() throws Exception {
-        DatePartition partition = new DatePartition(COL_RAW, getCalendar("2000-01-01"), null);
+    public void testSpecialDateValue() {
+        DatePartition partition = new DatePartition(COL_RAW, LocalDate.parse("0001-01-01"), LocalDate.parse("1970-01-02"));
         String constraint = partition.toSqlConstraint(QUOTE, dbProduct);
 
         assertEquals(
-            COL + " >= date'2000-01-01'",
-            constraint
+                COL + " >= date'0001-01-01' AND " + COL + " < date'1970-01-02'",
+                constraint
         );
     }
 
     @Test
-    public void testSpecialDateValue() throws Exception {
-        DatePartition partition = new DatePartition(COL_RAW, getCalendar("0001-01-01"), getCalendar("1970-01-02"));
-        String constraint = partition.toSqlConstraint(QUOTE, dbProduct);
-
-        assertEquals(
-            COL + " >= date'0001-01-01' AND " + COL + " < date'1970-01-02'",
-            constraint
-        );
-    }
-
-    @Test
-    public void testInvalidBothBoundariesNull() throws Exception {
+    public void testInvalidBothBoundariesNull() {
         thrown.expect(RuntimeException.class);
         thrown.expectMessage("boundaries");
 
@@ -96,22 +92,22 @@ public class DatePartitionTest {
     }
 
     @Test
-    public void testInvalidColumnNull() throws Exception {
+    public void testInvalidColumnNull() {
         thrown.expect(RuntimeException.class);
 
-        new DatePartition(null, getCalendar("2000-01-01"), getCalendar("2000-01-02"));
+        new DatePartition(null, LocalDate.parse("2000-01-01"), LocalDate.parse("2000-01-02"));
     }
 
     @Test
-    public void testInvalidEqualBoundaries() throws Exception {
+    public void testInvalidEqualBoundaries() {
         thrown.expect(RuntimeException.class);
 
-        new DatePartition(COL_RAW, getCalendar("2000-01-01"), getCalendar("2000-01-01"));
+        new DatePartition(COL_RAW, LocalDate.parse("2000-01-01"), LocalDate.parse("2000-01-01"));
     }
 
     @Test
-    public void testInvalidNullQuoteString() throws Exception {
-        DatePartition partition = new DatePartition(COL_RAW, getCalendar("2000-01-01"), getCalendar("2000-01-02"));
+    public void testInvalidNullQuoteString() {
+        DatePartition partition = new DatePartition(COL_RAW, LocalDate.parse("2000-01-01"), LocalDate.parse("2000-01-02"));
 
         thrown.expect(RuntimeException.class);
 
@@ -119,23 +115,11 @@ public class DatePartitionTest {
     }
 
     @Test
-    public void testInvalidNullDbProduct() throws Exception {
-        DatePartition partition = new DatePartition(COL_RAW, getCalendar("2000-01-01"), getCalendar("2000-01-02"));
+    public void testInvalidNullDbProduct() {
+        DatePartition partition = new DatePartition(COL_RAW, LocalDate.parse("2000-01-01"), LocalDate.parse("2000-01-02"));
 
         thrown.expect(RuntimeException.class);
 
         partition.toSqlConstraint(COL, null);
-    }
-
-    /**
-     * Get Calendar object for the given date in format 'yyyy-MM-dd'
-     * @param date
-     * @return Calendar
-     * @throws ParseException
-     */
-    private Calendar getCalendar(String date) throws ParseException {
-        Calendar result = Calendar.getInstance();
-        result.setTime(df.parse(date));
-        return result;
     }
 }

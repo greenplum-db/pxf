@@ -23,20 +23,20 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import static org.junit.Assert.*;
-
 import java.util.List;
+
+import static org.junit.Assert.*;
 
 public class EnumPartitionTestGenerate {
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
     @Test
-    public void testPartionByEnum() throws Exception {
+    public void testPartitionByEnum() {
         String COLUMN = "col";
         String RANGE = "excellent:good:general:bad";
 
-        List<EnumPartition> parts = EnumPartition.generate(COLUMN, RANGE, null);
+        List<EnumPartition> parts = (List<EnumPartition>) PartitionType.ENUM.generate(COLUMN, RANGE, null);
 
         assertEquals(5, parts.size());
         assertEnumPartitionEquals(parts.get(0), "excellent");
@@ -46,11 +46,11 @@ public class EnumPartitionTestGenerate {
     }
 
     @Test
-    public void testPartitionByEnumSingleValue() throws Exception {
+    public void testPartitionByEnumSingleValue() {
         String COLUMN = "col";
         String RANGE = "100";
 
-        List<EnumPartition> parts = EnumPartition.generate(COLUMN, RANGE, null);
+        List<EnumPartition> parts = (List<EnumPartition>) PartitionType.ENUM.generate(COLUMN, RANGE, null);
 
         assertEquals(2, parts.size());
         assertEnumPartitionEquals(parts.get(0), "100");
