@@ -63,10 +63,10 @@ public class HiveFilterBuilder implements FilterParser.FilterBuilder {
      *
      * @param filterString the string representation of the filter
      * @return a single {@link BasicFilter}
-     *         object or a {@link java.util.List} of
-     *         {@link BasicFilter} objects.
+     * object or a {@link java.util.List} of
+     * {@link BasicFilter} objects.
      * @throws Exception if parsing the filter failed or filter is not a basic
-     *             filter or list of basic filters
+     *                   filter or list of basic filters
      */
     public Object getFilterObject(String filterString) throws Exception {
         if (filterString == null)
@@ -142,9 +142,7 @@ public class HiveFilterBuilder implements FilterParser.FilterBuilder {
 
         String filterString;
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Filter string input: {}", filterInput);
-        }
+        LOG.debug("Filter string input: {}", filterInput);
 
         Object filter = new HiveFilterBuilder().getFilterObject(filterInput);
 
@@ -157,7 +155,7 @@ public class HiveFilterBuilder implements FilterParser.FilterBuilder {
         return filterString;
     }
 
-    private String buildCompoundFilter(LogicalFilter filter) throws Exception {
+    private String buildCompoundFilter(LogicalFilter filter) {
         String logicalOperator;
         switch (filter.getOperator()) {
             case HDOP_AND:
@@ -291,7 +289,6 @@ public class HiveFilterBuilder implements FilterParser.FilterBuilder {
     }
 
     private Object handleLogicalOperation(FilterParser.LogicalOperation operator, Object leftOperand, Object rightOperand) {
-
         List<Object> result = new LinkedList<>();
 
         result.add(leftOperand);
