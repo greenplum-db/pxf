@@ -19,21 +19,21 @@
 
 package org.greenplum.pxf.api.utilities;
 
-import java.io.IOException;
-
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.greenplum.pxf.api.io.DataType;
-import org.codehaus.jackson.JsonGenerator;
-import org.codehaus.jackson.map.JsonSerializer;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.map.SerializerProvider;
-import org.codehaus.jackson.JsonProcessingException;
+
+import java.io.IOException;
 
 class EnumGpdbTypeSerializer extends JsonSerializer<EnumGpdbType> {
 
     @Override
     public void serialize(EnumGpdbType value, JsonGenerator generator,
                           SerializerProvider provider) throws IOException,
-              JsonProcessingException {
+            JsonProcessingException {
       generator.writeString(value.getTypeName());
     }
   }

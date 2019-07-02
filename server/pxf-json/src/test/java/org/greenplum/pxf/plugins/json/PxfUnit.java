@@ -19,34 +19,31 @@ package org.greenplum.pxf.plugins.json;
  * under the License.
  */
 
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.lang.reflect.Constructor;
-import java.security.InvalidParameterException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.greenplum.pxf.api.model.*;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.io.DataType;
+import org.greenplum.pxf.api.model.*;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.FragmentsResponse;
 import org.greenplum.pxf.api.utilities.FragmentsResponseFormatter;
-
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.junit.Assert;
+
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This abstract class contains a number of helpful utilities in developing a PXF extension for HAWQ. Extend this class
@@ -329,13 +326,11 @@ public abstract class PxfUnit {
 
         JsonNode fragmentsArray = node.get("PXFFragments");
         int i = 0;
-        Iterator<JsonNode> iter = fragmentsArray.getElements();
-        while (iter.hasNext()) {
-            JsonNode fragNode = iter.next();
-            String sourceData = fragNode.get("sourceName").getTextValue();
+        for (JsonNode fragNode : fragmentsArray) {
+            String sourceData = fragNode.get("sourceName").textValue();
             context = getContext(input);
             context.setDataSource(sourceData);
-            context.setFragmentMetadata(Utilities.parseBase64(fragNode.get("metadata").getTextValue(), "Fragment metadata information"));
+            context.setFragmentMetadata(Utilities.parseBase64(fragNode.get("metadata").textValue(), "Fragment metadata information"));
             context.setDataFragment(i++);
             context.setProtocol("localfile");
             inputs.add(context);

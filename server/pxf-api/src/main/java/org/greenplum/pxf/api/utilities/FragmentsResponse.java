@@ -19,19 +19,17 @@ package org.greenplum.pxf.api.utilities;
  * under the License.
  */
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.greenplum.pxf.api.model.Fragment;
+
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.StreamingOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
-
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.StreamingOutput;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.codehaus.jackson.map.ObjectMapper;
-
-import org.greenplum.pxf.api.model.Fragment;
 
 /**
  * Class for serializing fragments metadata in JSON format. The class implements

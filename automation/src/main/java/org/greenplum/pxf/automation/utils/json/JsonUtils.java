@@ -1,17 +1,16 @@
 package org.greenplum.pxf.automation.utils.json;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.greenplum.pxf.automation.structures.data.MetaTableData;
+import org.greenplum.pxf.automation.structures.data.MetaTableDataCollection;
+import org.greenplum.pxf.automation.structures.tables.basic.Table;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
-
-import org.greenplum.pxf.automation.structures.data.MetaTableData;
-import org.greenplum.pxf.automation.structures.data.MetaTableDataCollection;
-import org.greenplum.pxf.automation.structures.tables.basic.Table;
 
 /*
  * Utility Class that is used to read json format data and return

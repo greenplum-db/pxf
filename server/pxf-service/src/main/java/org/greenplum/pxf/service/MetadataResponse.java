@@ -19,20 +19,19 @@ package org.greenplum.pxf.service;
  * under the License.
  */
 
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-
-import java.util.List;
-
-import javax.ws.rs.core.StreamingOutput;
-
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.greenplum.pxf.api.model.Metadata;
 
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
+import javax.ws.rs.core.StreamingOutput;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.List;
+
 
 
 /**
@@ -64,8 +63,8 @@ public class MetadataResponse implements StreamingOutput {
     public void write(OutputStream output) throws IOException {
         DataOutputStream dos = new DataOutputStream(output);
         ObjectMapper mapper = new ObjectMapper();
-        mapper.configure(org.codehaus.jackson.map.SerializationConfig.Feature.USE_ANNOTATIONS, true); // enable annotations for serialization
-        mapper.setSerializationInclusion(Inclusion.NON_EMPTY); // ignore empty fields
+        mapper.configure(MapperFeature.USE_ANNOTATIONS, true); // enable annotations for serialization
+        mapper.setSerializationInclusion(Include.NON_EMPTY); // ignore empty fields
 
         if(metadataList == null || metadataList.isEmpty()) {
             dos.write(METADATA_DEFAULT_RESPONSE.getBytes());
