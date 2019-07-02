@@ -85,7 +85,6 @@ allprojects {
             force "commons-logging:commons-logging:1.1.3"
             force "org.apache.avro:avro:1.7.7"
             force "org.apache.zookeeper:zookeeper:3.4.6"
-            force "org.codehaus.jackson:jackson-mapper-asl:1.9.13"  // TODO: should we remove this line?
             force "junit:junit:${junitVersion}"
             force "com.google.guava:guava:11.0.2" // because this version ships with HDP-2.5.3
         }
@@ -196,8 +195,6 @@ project('pxf-hdfs') {
         bundleJars "org.apache.avro:avro:1.7.7"
         // Dependency in hadoop 2.9.2
         bundleJars "com.fasterxml.woodstox:woodstox-core:5.0.3"
-        bundleJars "org.codehaus.woodstox:stax2-api:3.1.4"  // TODO: should we remove this bundleJar? (not Jackson but woodstox)
-
     }
 }
 
