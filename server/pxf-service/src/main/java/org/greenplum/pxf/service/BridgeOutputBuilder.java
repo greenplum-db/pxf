@@ -32,6 +32,7 @@ import org.greenplum.pxf.api.io.Text;
 import org.greenplum.pxf.api.io.Writable;
 import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.api.utilities.CSVSerializer;
 
 import java.lang.reflect.Array;
 import java.util.Arrays;
@@ -261,26 +262,33 @@ public class BridgeOutputBuilder {
      *                            field
      */
     void fillText(List<OneField> recFields) throws BadRecordException {
-        /*
-         * For the TEXT case there must be only one record in the list
-         */
-        if (recFields.size() != 1) {
+        if (recFields.size() < 1)
             throw new BadRecordException(
                     "BridgeOutputBuilder must receive one field when handling the TEXT format");
-        }
 
         OneField fld = recFields.get(0);
         int type = fld.type;
         Object val = fld.val;
-        if (DataType.get(type) == DataType.BYTEA) {// from LineBreakAccessor
-            if (samplingEnabled) {
-                convertTextDataToLines((byte[]) val);
+        DataType dataType = DataType.get(type);
+
+        if (recFields.size() == 1 && (dataType == DataType.BYTEA || val instanceof String)) {
+            /*
+             * For the TEXT case there must be only one record in the list
+             */
+            if (dataType == DataType.BYTEA) {// from LineBreakAccessor
+                if (samplingEnabled) {
+                    convertTextDataToLines((byte[]) val);
+                } else {
+                    output = new BufferWritable((byte[]) val);
+                    outputList.add(output); // TODO break output into lines
+                }
             } else {
-                output = new BufferWritable((byte[]) val);
-                outputList.add(output); // TODO break output into lines
+                String textRec = (String) val;
+                output = new Text(textRec + "\n");
+                outputList.add(output);
             }
-        } else { // from QuotedLineBreakAccessor
-            String textRec = (String) val;
+        } else {
+            String textRec = new CSVSerializer().fieldListToCSVString(recFields);
             output = new Text(textRec + "\n");
             outputList.add(output);
         }
