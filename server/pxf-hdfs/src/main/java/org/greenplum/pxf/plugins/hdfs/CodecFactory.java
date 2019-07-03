@@ -15,11 +15,11 @@ public class CodecFactory {
     private static final CodecFactory codecFactoryInstance = new CodecFactory();
 
     /**
-     * Returns the CompressionCodeName for the given name, or default if name is null
+     * Returns the {@link CompressionCodecName} for the given name, or default if name is null
      *
      * @param name         the name or class name of the compression codec
      * @param defaultCodec the default codec
-     * @return the CompressionCodeName for the given name, or default if name is null
+     * @return the {@link CompressionCodecName} for the given name, or default if name is null
      */
     public CompressionCodecName getCodec(String name, CompressionCodecName defaultCodec) {
         if (name == null) return defaultCodec;
@@ -38,18 +38,18 @@ public class CodecFactory {
     /**
      * Helper routine to get compression codec through reflection.
      *
-     * @param conf configuration used for reflection
      * @param name codec name
+     * @param conf configuration used for reflection
      * @return generated CompressionCodec
      */
-    public CompressionCodec getCodec(Configuration conf, String name) {
-        return ReflectionUtils.newInstance(getCodecClass(conf, name), conf);
+    public CompressionCodec getCodec(String name, Configuration conf) {
+        return ReflectionUtils.newInstance(getCodecClass(name, conf), conf);
     }
 
     /*
      * Helper routine to get a compression codec class
      */
-    public Class<? extends CompressionCodec> getCodecClass(Configuration conf, String name) {
+    public Class<? extends CompressionCodec> getCodecClass(String name, Configuration conf) {
         Class<? extends CompressionCodec> codecClass;
         try {
             codecClass = conf.getClassByName(name).asSubclass(CompressionCodec.class);

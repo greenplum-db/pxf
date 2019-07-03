@@ -78,16 +78,10 @@ public class HdfsUtilitiesTest {
                 "/some/path",
                 "org.apache.hadoop.io.compress.BZip2Codec",
                 false);
-
-//        testIsThreadSafe(
-//                "writable compression, some compression codec - thread safe",
-//                "/some/path",
-//                "I.am.a.nice.codec",
-//                true);
     }
 
     private void testIsThreadSafe(String testDescription, String path, String codecStr, boolean expectedResult) {
-        boolean result = HdfsUtilities.isThreadSafe(codecFactory, conf, path, codecStr);
+        boolean result = HdfsUtilities.isThreadSafe(conf, path, codecStr);
         assertEquals(testDescription, expectedResult, result);
     }
 

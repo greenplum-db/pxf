@@ -49,7 +49,6 @@ public abstract class HdfsSplittableDataAccessor extends BasePlugin implements A
     protected Object key, data;
     HcfsType hcfsType;
 
-    private CodecFactory codecFactory;
     private ListIterator<InputSplit> iter;
 
     /**
@@ -64,8 +63,6 @@ public abstract class HdfsSplittableDataAccessor extends BasePlugin implements A
     @Override
     public void initialize(RequestContext requestContext) {
         super.initialize(requestContext);
-
-        codecFactory = CodecFactory.getInstance();
 
         // variable required for the splits iteration logic
         jobConf = new JobConf(configuration, HdfsSplittableDataAccessor.class);
@@ -164,7 +161,6 @@ public abstract class HdfsSplittableDataAccessor extends BasePlugin implements A
     @Override
     public boolean isThreadSafe() {
         return HdfsUtilities.isThreadSafe(
-                codecFactory,
                 configuration,
                 context.getDataSource(),
                 context.getOption("COMPRESSION_CODEC"));

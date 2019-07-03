@@ -3,6 +3,7 @@ package org.greenplum.pxf.plugins.hdfs;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -142,23 +143,25 @@ public enum HcfsType {
                 "_" +
                 context.getSegmentId();
 
-        String compressCodec = context.getOption("COMPRESSION_CODEC");
-        if (!skipCodecExtension && compressCodec != null) {
-            // get compression codec default extension
-            CodecFactory codecFactory = CodecFactory.getInstance();
-            String extension;
-            try {
-                extension = codecFactory
-                        .getCodec(configuration, compressCodec)
-                        .getDefaultExtension();
-            } catch (IllegalArgumentException e) {
-                LOG.debug("Unable to get extension for codec '{}'", compressCodec);
-                extension = codecFactory
-                        .getCodec(compressCodec, null)
-                        .getExtension();
+        if (!skipCodecExtension) {
+            String compressCodec = context.getOption("COMPRESSION_CODEC");
+            if (compressCodec != null) {
+                // get compression codec default extension
+                CodecFactory codecFactory = CodecFactory.getInstance();
+                String extension;
+                try {
+                    extension = codecFactory
+                            .getCodec(compressCodec, configuration)
+                            .getDefaultExtension();
+                } catch (IllegalArgumentException e) {
+                    LOG.debug("Unable to get extension for codec '{}'", compressCodec);
+                    extension = codecFactory
+                            .getCodec(compressCodec, CompressionCodecName.UNCOMPRESSED)
+                            .getExtension();
+                }
+                // append codec extension to the filename
+                fileName += extension;
             }
-            // append codec extension to the filename
-            fileName += extension;
         }
 
         LOG.debug("File name for write: {}", fileName);

@@ -24,10 +24,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.compress.BZip2Codec;
 import org.apache.hadoop.io.compress.CompressionCodec;
-import org.apache.hadoop.io.compress.CompressionCodecFactory;
-import org.apache.hadoop.io.compress.SplittableCompressionCodec;
 import org.apache.hadoop.mapred.FileSplit;
-import org.apache.hadoop.util.ReflectionUtils;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.RequestContext;
@@ -48,6 +45,7 @@ import java.util.List;
 public class HdfsUtilities {
 
     private static Logger LOG = LoggerFactory.getLogger(HdfsUtilities.class);
+    private static CodecFactory codecFactory = CodecFactory.getInstance();
 
     /**
      * Checks if requests should be handled in a single thread or not.
@@ -57,9 +55,9 @@ public class HdfsUtilities {
      * @param compCodec the fully qualified name of the compression codec
      * @return if the request can be run in multi-threaded mode.
      */
-    public static boolean isThreadSafe(CodecFactory codecFactory, Configuration config, String dataDir, String compCodec) {
+    public static boolean isThreadSafe(Configuration config, String dataDir, String compCodec) {
         Class<? extends CompressionCodec> codecClass = (compCodec != null) ?
-                codecFactory.getCodecClass(config, compCodec) :
+                codecFactory.getCodecClass(compCodec, config) :
                 codecFactory.getCodecClassByPath(config, dataDir);
         /* bzip2 codec is not thread safe */
         return (codecClass == null || !BZip2Codec.class.isAssignableFrom(codecClass));

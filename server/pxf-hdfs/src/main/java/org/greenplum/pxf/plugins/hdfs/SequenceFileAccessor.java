@@ -38,7 +38,6 @@ import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.BaseConfigurationFactory;
 import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 
 import java.io.IOException;
 import java.util.EnumSet;
@@ -124,7 +123,7 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor {
         compressionType = CompressionType.NONE;
         codec = null;
         if (userCompressCodec != null) {
-            codec = codecFactory.getCodec(configuration, userCompressCodec);
+            codec = codecFactory.getCodec(userCompressCodec, configuration);
 
             try {
                 compressionType = CompressionType.valueOf(parsedCompressType);

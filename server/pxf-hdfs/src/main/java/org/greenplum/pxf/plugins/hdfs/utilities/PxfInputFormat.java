@@ -8,9 +8,9 @@ package org.greenplum.pxf.plugins.hdfs.utilities;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -31,8 +31,6 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.Reporter;
 
-import java.io.IOException;
-
 /**
  * PxfInputFormat is not intended to read a specific format, hence it implements
  * a dummy getRecordReader Instead, its purpose is to apply
@@ -45,7 +43,7 @@ public class PxfInputFormat extends FileInputFormat {
     @Override
     public RecordReader getRecordReader(InputSplit split,
                                         JobConf conf,
-                                        Reporter reporter) throws IOException {
+                                        Reporter reporter) {
         throw new UnsupportedOperationException("PxfInputFormat should not be used for reading data, but only for obtaining the splits of a file");
     }
 
@@ -53,7 +51,7 @@ public class PxfInputFormat extends FileInputFormat {
      * Returns true if the needed codec is splittable. If no codec is needed
      * returns true as well.
      *
-     * @param fs the filesystem
+     * @param fs       the filesystem
      * @param filename the name of the file to be read
      * @return if the codec needed for reading the specified path is splittable.
      */
@@ -64,5 +62,4 @@ public class PxfInputFormat extends FileInputFormat {
 
         return null == codec || codec instanceof SplittableCompressionCodec;
     }
-
 }
