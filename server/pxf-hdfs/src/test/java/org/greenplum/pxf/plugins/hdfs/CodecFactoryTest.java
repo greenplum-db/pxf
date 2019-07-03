@@ -3,6 +3,7 @@ package org.greenplum.pxf.plugins.hdfs;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -12,8 +13,15 @@ import static org.junit.Assert.assertNotNull;
 
 public class CodecFactoryTest {
 
+    private CodecFactory factory;
+
     @Rule
     public ExpectedException thrown = ExpectedException.none();
+
+    @Before
+    public void setup() {
+        factory = new CodecFactory();
+    }
 
     @Test
     public void getCodecNoName() {
@@ -22,7 +30,7 @@ public class CodecFactoryTest {
 
         Configuration conf = new Configuration();
         String name = "some.bad.codec";
-        new CodecFactory().getCodec(name, conf);
+        factory.getCodec(name, conf);
     }
 
     @Test
@@ -32,7 +40,7 @@ public class CodecFactoryTest {
         Configuration configuration = null;
 
         String name = "org.apache.hadoop.io.compress.GzipCodec";
-        new CodecFactory().getCodec(name, configuration);
+        factory.getCodec(name, configuration);
     }
 
     @Test
@@ -40,7 +48,7 @@ public class CodecFactoryTest {
         Configuration conf = new Configuration();
         String name = "org.apache.hadoop.io.compress.GzipCodec";
 
-        CompressionCodec codec = new CodecFactory().getCodec(name, conf);
+        CompressionCodec codec = factory.getCodec(name, conf);
         assertNotNull(codec);
         assertEquals(".gz", codec.getDefaultExtension());
     }

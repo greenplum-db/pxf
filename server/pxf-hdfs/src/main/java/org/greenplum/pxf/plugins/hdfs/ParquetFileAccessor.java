@@ -74,6 +74,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
     private static final int DEFAULT_ROWGROUP_SIZE = 8 * 1024 * 1024;
     private static final int DEFAULT_DICTIONARY_PAGE_SIZE = 512 * 1024;
     private static final WriterVersion DEFAULT_PARQUET_VERSION = WriterVersion.PARQUET_1_0;
+    private static final CompressionCodecName DEFAULT_COMPRESSION = CompressionCodecName.SNAPPY;
 
     private ParquetFileReader fileReader;
     private MessageColumnIO columnIO;
@@ -196,7 +197,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
         // skip codec extension in filePrefix, because we add it in this accessor
         filePrefix = hcfsType.getUriForWrite(configuration, context, true);
         String compressCodec = context.getOption("COMPRESSION_CODEC");
-        codecName = codecFactory.getCodec(compressCodec, CompressionCodecName.SNAPPY);
+        codecName = codecFactory.getCodec(compressCodec, DEFAULT_COMPRESSION);
 
         // Options for parquet write
         pageSize = getOption("PAGE_SIZE", DEFAULT_PAGE_SIZE);
