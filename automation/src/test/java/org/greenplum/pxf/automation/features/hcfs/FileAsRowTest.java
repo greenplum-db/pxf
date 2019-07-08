@@ -21,7 +21,7 @@ public class FileAsRowTest extends BaseFeature {
 
     @AfterClass
     protected void cleanupData() throws Exception {
-//        hdfs.removeDirectory(hdfs.getWorkingDirectory() + "/file_as_row/");
+        hdfs.removeDirectory(hdfs.getWorkingDirectory() + "/file_as_row/");
     }
 
     @Test(groups = {"gpdb", "hcfs"})
