@@ -10,4 +10,5 @@ public interface PluginConf {
 
     String getProtocol(String key);
 
+    String getHandler(String key);
 }

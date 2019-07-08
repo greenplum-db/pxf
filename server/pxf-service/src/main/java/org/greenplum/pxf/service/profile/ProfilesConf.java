@@ -20,7 +20,6 @@ package org.greenplum.pxf.service.profile;
  */
 
 
-import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.api.model.PluginConf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +28,6 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import java.net.URL;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -52,14 +50,7 @@ public class ProfilesConf implements PluginConf {
     private final static ProfilesConf INSTANCE = new ProfilesConf();
     private final String externalProfilesFilename;
 
-    // index maps of (profileName --> protocol)
-    private Map<String, String> protocolMap;
-
-    // index map of (profileName --> (pluginType --> pluginClass))
-    private Map<String, Map<String, String>> pluginsMap;
-
-    // index map of (profileName --> (optionName --> propertyName))
-    private Map<String, Map<String, String>> configOptionsMap;
+    private Map<String, Profile> profilesMap;
 
     /**
      * Constructs the ProfilesConf enum singleton instance.
@@ -71,17 +62,15 @@ public class ProfilesConf implements PluginConf {
     }
 
     ProfilesConf(String internalProfilesFilename, String externalProfilesFilename) {
-        this.protocolMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-        this.pluginsMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-        this.configOptionsMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        this.profilesMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         this.externalProfilesFilename = externalProfilesFilename;
 
         loadConf(internalProfilesFilename, true);
         loadConf(externalProfilesFilename, false);
-        if (pluginsMap.isEmpty()) {
+        if (profilesMap.isEmpty()) {
             throw new ProfileConfException(PROFILES_FILE_NOT_FOUND, externalProfilesFilename);
         }
-        LOG.info("PXF profiles loaded: {}", pluginsMap.keySet());
+        LOG.info("PXF profiles loaded: {}", profilesMap.keySet());
     }
 
     public static ProfilesConf getInstance() {
@@ -89,8 +78,8 @@ public class ProfilesConf implements PluginConf {
     }
 
     @Override
-    public Map<String, String> getOptionMappings(String key) {
-        return configOptionsMap.get(key);
+    public Map<String, String> getOptionMappings(String profileName) {
+        return getProfile(profileName).getOptionsMap();
     }
 
     /**
@@ -103,10 +92,8 @@ public class ProfilesConf implements PluginConf {
      */
     @Override
     public Map<String, String> getPlugins(String profileName) {
-        Map<String, String> result = pluginsMap.get(profileName);
-        if (result == null) {
-            throw new ProfileConfException(NO_PROFILE_DEF, profileName, externalProfilesFilename);
-        }
+        Profile profile = getProfile(profileName);
+        Map<String, String> result = profile.getPluginsMap();
         if (result.isEmpty()) {
             throw new ProfileConfException(NO_PLUGINS_IN_PROFILE_DEF, profileName, externalProfilesFilename);
         }
@@ -115,7 +102,20 @@ public class ProfilesConf implements PluginConf {
 
     @Override
     public String getProtocol(String profileName) {
-        return protocolMap.get(profileName);
+        return getProfile(profileName).getProtocol();
+    }
+
+    @Override
+    public String getHandler(String profileName) {
+        return getProfile(profileName).getHandler();
+    }
+
+    private Profile getProfile(String profileName) {
+        Profile profile = profilesMap.get(profileName);
+        if (profile == null) {
+            throw new ProfileConfException(NO_PROFILE_DEF, profileName, externalProfilesFilename);
+        }
+        return profile;
     }
 
     private void loadConf(String fileName, boolean isMandatory) {
@@ -147,61 +147,14 @@ public class ProfilesConf implements PluginConf {
                 }
 
                 processedProfiles.add(profileName);
-                // update internal maps with the new profile definitions
-                pluginsMap.put(profileName, getPluginsForProfile(profile));
-                protocolMap.put(profileName, profile.getProtocol());
-                configOptionsMap.put(profileName, getOptionMappingsForProfile(profile));
+                // update internal map with the new profile definitions
+                profilesMap.put(profileName, profile);
             }
             LOG.info("Processed {} profiles from file {}", processedProfiles.size(), fileName);
 
         } catch (JAXBException e) {
             throw new ProfileConfException(PROFILES_FILE_LOAD_ERR, url.getFile(), String.valueOf(e.getCause()));
         }
-    }
-
-    private Map<String, String> getPluginsForProfile(Profile profile) {
-
-        Map<String, String> profilePluginsMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-
-        Profile.Plugins profilePlugins = profile.getPlugins();
-        if (profilePlugins != null) {
-            String fragmenter = profilePlugins.getFragmenter();
-            if (StringUtils.isNotBlank(fragmenter)) {
-                profilePluginsMap.put(Profile.Plugins.FRAGMENTER, fragmenter);
-            }
-
-            String accessor = profilePlugins.getAccessor();
-            if (StringUtils.isNotBlank(accessor)) {
-                profilePluginsMap.put(Profile.Plugins.ACCESSOR, accessor);
-            }
-
-            String resolver = profilePlugins.getResolver();
-            if (StringUtils.isNotBlank(resolver)) {
-                profilePluginsMap.put(Profile.Plugins.RESOLVER, resolver);
-            }
-
-            String metadata = profilePlugins.getMetadata();
-            if (StringUtils.isNotBlank(metadata)) {
-                profilePluginsMap.put(Profile.Plugins.METADATA, metadata);
-            }
-
-            String outputFormat = profilePlugins.getOutputFormat();
-            if (StringUtils.isNotBlank(outputFormat)) {
-                profilePluginsMap.put(Profile.Plugins.OUTPUTFORMAT, outputFormat);
-            }
-        }
-        return profilePluginsMap;
-    }
-
-    private Map<String, String> getOptionMappingsForProfile(Profile profile) {
-
-        Map<String, String> profileOptionMappingsMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-
-        List<Profile.Mapping> mappingList = profile.getOptionMappings();
-        if (mappingList != null) {
-            mappingList.forEach(m->profileOptionMappingsMap.put(m.getOption(), m.getProperty()));
-        }
-        return profileOptionMappingsMap;
     }
 
     private ClassLoader getClassLoader() {

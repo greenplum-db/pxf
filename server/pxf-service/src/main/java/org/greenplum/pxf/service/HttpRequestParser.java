@@ -3,6 +3,7 @@ package org.greenplum.pxf.service;
 import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.PluginConf;
+import org.greenplum.pxf.api.model.ProtocolHandler;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.EnumAggregationType;
@@ -33,6 +34,7 @@ public class HttpRequestParser implements RequestParser<HttpHeaders> {
 
     private static final Logger LOG = LoggerFactory.getLogger(HttpRequestParser.class);
     private static final HttpRequestParser instance = new HttpRequestParser();
+    private static final String PROFILE_SCHEME = "PROFILE-SCHEME";
 
     private PluginConf pluginConf;
 
@@ -78,6 +80,15 @@ public class HttpRequestParser implements RequestParser<HttpHeaders> {
         context.setProfile(profile);
         addProfilePlugins(profile, params);
 
+        // Ext table uses system property FORMAT for wire serialization format
+        String wireFormat = params.removeProperty("FORMAT");
+        context.setOutputFormat(OutputFormat.valueOf(wireFormat));
+
+        // FDW uses user property FORMAT to indicate format of data
+        String format = params.removeUserProperty("FORMAT");
+        format = StringUtils.isNotBlank(format) ? format : context.inferFormatName();
+        context.setFormat(format);
+
         context.setAccessor(params.removeUserProperty("ACCESSOR"));
         context.setAggType(EnumAggregationType.getAggregationType(params.removeOptionalProperty("AGG-TYPE")));
 
@@ -90,6 +101,7 @@ public class HttpRequestParser implements RequestParser<HttpHeaders> {
         }
 
         context.setDataSource(params.removeProperty("DATA-DIR"));
+
 
         String filterString = params.removeOptionalProperty("FILTER");
         String hasFilter = params.removeProperty("HAS-FILTER");
@@ -110,8 +122,8 @@ public class HttpRequestParser implements RequestParser<HttpHeaders> {
         context.setFragmentMetadata(Utilities.parseBase64(encodedFragmentMetadata, "Fragment metadata information"));
         context.setHost(params.removeProperty("URL-HOST"));
         context.setMetadata(params.removeUserProperty("METADATA"));
-        context.setOutputFormat(OutputFormat.valueOf(params.removeProperty("FORMAT")));
         context.setPort(params.removeIntProperty("URL-PORT"));
+        context.setProfileScheme(params.removeUserProperty(PROFILE_SCHEME));
         context.setProtocol(params.removeUserProperty("PROTOCOL"));
         context.setRemoteLogin(params.removeOptionalProperty("REMOTE-USER"));
         context.setRemoteSecret(params.removeOptionalProperty("REMOTE-PASS"));
@@ -193,6 +205,22 @@ public class HttpRequestParser implements RequestParser<HttpHeaders> {
         context.setAdditionalConfigProps(additionalConfigProps);
         context.setPluginConf(pluginConf);
 
+        // Call the protocol handler for any protocol-specific logic handling
+        if (StringUtils.isNotBlank(profile)) {
+            String handlerClassName = pluginConf.getHandler(profile);
+            if (StringUtils.isNotBlank(handlerClassName)) {
+                Class clazz;
+                try {
+                    clazz = Class.forName(handlerClassName);
+                    ProtocolHandler handler = (ProtocolHandler) clazz.newInstance();
+                    context.setAccessor(handler.getAccessorClassName(context));
+                    context.setResolver(handler.getResolverClassName(context));
+                } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+                    throw new RuntimeException(String.format("Error when invoking handlerClass '%s' : %s", handlerClassName, e), e);
+                }
+            }
+        }
+
         // validate that the result has all required fields, and values are in valid ranges
         context.validate();
 
@@ -232,7 +260,7 @@ public class HttpRequestParser implements RequestParser<HttpHeaders> {
         // add properties defined by profiles to the request map as if they were specified by the user
         pluginsMap.forEach((k, v) -> params.put(RequestMap.USER_PROP_PREFIX + k, v));
 
-        params.put(RequestMap.USER_PROP_PREFIX + "protocol", pluginConf.getProtocol(profile));
+        params.put(RequestMap.USER_PROP_PREFIX + PROFILE_SCHEME, pluginConf.getProtocol(profile));
     }
 
     private boolean parseBooleanValue(String threadSafeStr) {

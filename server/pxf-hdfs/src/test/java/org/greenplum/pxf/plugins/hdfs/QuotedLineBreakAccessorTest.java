@@ -40,7 +40,7 @@ public class QuotedLineBreakAccessorTest {
         context = new RequestContext();
         accessor = new QuotedLineBreakAccessor();
 
-        context.setProtocol("localfile");
+        context.setProfileScheme("localfile");
 
         FileSplit fileSplitMock = mock(FileSplit.class);
         UserGroupInformation ugiMock = mock(UserGroupInformation.class);

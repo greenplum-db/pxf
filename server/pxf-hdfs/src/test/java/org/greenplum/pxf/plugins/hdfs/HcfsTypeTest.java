@@ -26,7 +26,7 @@ public class HcfsTypeTest {
     @Test
     public void testProtocolTakesPrecedenceOverFileDefaultFs() {
         // Test that we can specify protocol when configuration defaults are loaded
-        context.setProtocol(S3_PROTOCOL);
+        context.setProfileScheme(S3_PROTOCOL);
 
         HcfsType type = HcfsType.getHcfsType(configuration, context);
         assertEquals(HcfsType.S3, type);
@@ -54,7 +54,7 @@ public class HcfsTypeTest {
 
     @Test
     public void testCustomProtocolWithFileDefaultFs() {
-        context.setProtocol("xyz");
+        context.setProfileScheme("xyz");
 
         HcfsType type = HcfsType.getHcfsType(configuration, context);
         assertEquals(HcfsType.CUSTOM, type);
@@ -117,7 +117,7 @@ public class HcfsTypeTest {
 
     @Test
     public void testAllowWritingToLocalFileSystemWithLOCALFILE() {
-        context.setProtocol("localfile");
+        context.setProfileScheme("localfile");
 
         HcfsType type = HcfsType.getHcfsType(configuration, context);
         assertEquals(HcfsType.LOCALFILE, type);
@@ -130,7 +130,7 @@ public class HcfsTypeTest {
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("profile protocol (s3a) is not compatible with server filesystem (hdfs)");
 
-        context.setProtocol("s3a");
+        context.setProfileScheme("s3a");
         configuration.set("fs.defaultFS", "hdfs://0.0.0.0:8020");
         HcfsType.getHcfsType(configuration, context);
     }

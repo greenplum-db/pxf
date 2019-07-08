@@ -64,6 +64,9 @@ public class ProfilesConfTest {
 
     @Test
     public void testUndefinedProfileWhenGettingProtocol() {
+        expectedException.expect(ProfileConfException.class);
+        expectedException.expectMessage("UndefinedProfile is not defined in profile/undefinedProfile/pxf-profiles.xml");
+
         ProfilesConf profilesConf = getProfilesConf("undefinedProfile");
         assertNull(profilesConf.getProtocol("UndefinedProfile"));
     }
@@ -72,6 +75,13 @@ public class ProfilesConfTest {
     public void testGetProtocol() {
         ProfilesConf profilesConf = getProfilesConf("testGetProtocol");
         assertEquals("bar", profilesConf.getProtocol("foo"));
+    }
+
+    @Test
+    public void testGetHandler() {
+        ProfilesConf profilesConf = getProfilesConf("testGetProtocol");
+        assertEquals("FooProtocolHandler.class", profilesConf.getHandler("with-handler"));
+        assertNull(profilesConf.getHandler("foo"));
     }
 
     @Test

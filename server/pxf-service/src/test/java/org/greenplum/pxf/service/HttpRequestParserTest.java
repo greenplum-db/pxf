@@ -24,6 +24,7 @@ import com.sun.jersey.core.util.MultivaluedMapImpl;
 import org.apache.commons.codec.CharEncoding;
 import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.PluginConf;
+import org.greenplum.pxf.api.model.ProtocolHandler;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.junit.After;
 import org.junit.Assert;
@@ -57,10 +58,13 @@ public class HttpRequestParserTest {
 
     private MultivaluedMap<String, String> parameters;
     private HttpRequestParser parser;
-    @Mock private HttpHeaders mockRequestHeaders;
-    @Mock private PluginConf mockPluginConf;
+    @Mock
+    private HttpHeaders mockRequestHeaders;
+    @Mock
+    private PluginConf mockPluginConf;
 
-    @Rule public ExpectedException thrown = ExpectedException.none();
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
 
     @Before
     public void setUp() {
@@ -165,7 +169,7 @@ public class HttpRequestParserTest {
         assertEquals(context.getServerName(), "custom_server");
         // since no profile was defined, these below are null or empty
         assertNull(context.getProfile());
-        assertNull(context.getProtocol());
+        assertNull(context.getProfileScheme());
         assertTrue(context.getAdditionalConfigProps().isEmpty());
     }
 
@@ -433,7 +437,7 @@ public class HttpRequestParserTest {
 
         RequestContext context = parser.parseRequest(mockRequestHeaders);
 
-        assertEquals("test-protocol", context.getProtocol());
+        assertEquals("test-protocol", context.getProfileScheme());
 
     }
 
@@ -468,4 +472,87 @@ public class HttpRequestParserTest {
         assertEquals("config-prop-value5", context.getOption("configprop5"));
     }
 
+    @Test
+    public void testWireFormatIsAbsent() {
+        RequestContext context = parser.parseRequest(mockRequestHeaders);
+        assertEquals(OutputFormat.TEXT, context.getOutputFormat());
+        assertNull(context.getFormat());
+    }
+
+    @Test
+    public void testWireFormatIsAbsentAndFormatIsInferred() {
+        parameters.putSingle("X-GP-FORMAT", "GPDBWritable");
+        parameters.putSingle("X-GP-OPTIONS-PROFILE", "foo:bar");
+        RequestContext context = parser.parseRequest(mockRequestHeaders);
+        assertEquals(OutputFormat.GPDBWritable, context.getOutputFormat());
+        assertEquals("bar", context.getFormat());
+    }
+
+    @Test
+    public void testWireFormatIsAbsentAndFormatIsInferredToNothing() {
+        parameters.putSingle("X-GP-FORMAT", "GPDBWritable");
+        parameters.putSingle("X-GP-OPTIONS-PROFILE", "foobar");
+        RequestContext context = parser.parseRequest(mockRequestHeaders);
+        assertEquals(OutputFormat.GPDBWritable, context.getOutputFormat());
+        assertNull(context.getFormat());
+    }
+
+    @Test
+    public void testWireFormatIsPresent() {
+        parameters.putSingle("X-GP-FORMAT", "TEXT");
+        RequestContext context = parser.parseRequest(mockRequestHeaders);
+        assertEquals(OutputFormat.TEXT, context.getOutputFormat());
+        assertNull(context.getFormat());
+    }
+
+    @Test
+    public void testWireFormatAndFormatArePresent() {
+        // wire format
+        parameters.putSingle("X-GP-FORMAT", "TEXT");
+        // data format
+        parameters.putSingle("X-GP-OPTIONS-FORMAT", "foobar");
+        RequestContext context = parser.parseRequest(mockRequestHeaders);
+        assertEquals(OutputFormat.TEXT, context.getOutputFormat());
+        assertEquals("foobar", context.getFormat());
+    }
+
+    @Test
+    public void testHandlerIsCalled() {
+        when(mockPluginConf.getHandler("test-profile")).thenReturn(TestHandler.class.getName());
+        parameters.putSingle("X-GP-OPTIONS-PROFILE", "test-profile");
+        RequestContext context = parser.parseRequest(mockRequestHeaders);
+        assertEquals("test-accessor", context.getAccessor());
+        assertEquals("test-resolver", context.getResolver());
+    }
+
+    @Test
+    public void testHandlerIsNotCalledWhenNotDefined() {
+        when(mockPluginConf.getHandler("test-profile")).thenReturn(null);
+        parameters.putSingle("X-GP-OPTIONS-PROFILE", "test-profile");
+        RequestContext context = parser.parseRequest(mockRequestHeaders);
+        assertEquals("are", context.getAccessor());
+        assertEquals("packed", context.getResolver());
+    }
+
+    @Test
+    public void testInvalidHandlerCausesException() {
+        thrown.expect(RuntimeException.class);
+        thrown.expectMessage("Error when invoking handlerClass 'foo' : java.lang.ClassNotFoundException: foo");
+        when(mockPluginConf.getHandler("test-profile")).thenReturn("foo");
+        parameters.putSingle("X-GP-OPTIONS-PROFILE", "test-profile");
+        parser.parseRequest(mockRequestHeaders);
+    }
+
+    static class TestHandler implements ProtocolHandler {
+
+        @Override
+        public String getAccessorClassName(RequestContext context) {
+            return "test-accessor";
+        }
+
+        @Override
+        public String getResolverClassName(RequestContext context) {
+            return "test-resolver";
+        }
+    }
 }

@@ -71,7 +71,12 @@ public class RequestContext {
     private int numAttrsProjected;
 
     private String profile;
+    private String profileScheme;
+
+    // The protocol defined at the foreign data wrapper (FDW) level
     private String protocol;
+    // The format defined at the foreign data wrapper (FDW) level
+    private String format;
 
     /**
      * The name of the recordkey column. It can appear in any location in the
@@ -114,7 +119,8 @@ public class RequestContext {
 
     /**
      * Returns a String value of the given option or a default value if the option was not provided
-     * @param option name of the option
+     *
+     * @param option       name of the option
      * @param defaultValue default value
      * @return string value of the option or default value if the option was not provided
      */
@@ -125,7 +131,8 @@ public class RequestContext {
     /**
      * Returns an integer value of the given option or a default value if the option was not provided.
      * Will throw an IllegalArgumentException if the option value can not be represented as an integer
-     * @param option name of the option
+     *
+     * @param option       name of the option
      * @param defaultValue default value
      * @return integer value of the option or default value if the option was not provided
      */
@@ -137,9 +144,10 @@ public class RequestContext {
      * Returns an integer value of the given option or a default value if the option was not provided.
      * Will throw an IllegalArgumentException if the option value can not be represented as an integer or
      * if the integer is negative but only natural integer was expected.
-     * @param option name of the option
+     *
+     * @param option       name of the option
      * @param defaultValue default value
-     * @param naturalOnly true if the integer is expected to be non-negative (natural), false otherwise
+     * @param naturalOnly  true if the integer is expected to be non-negative (natural), false otherwise
      * @return integer value of the option or default value if the option was not provided
      */
     public int getOption(String option, int defaultValue, boolean naturalOnly) {
@@ -148,8 +156,7 @@ public class RequestContext {
         if (value != null) {
             try {
                 result = Integer.parseInt(value);
-            }
-            catch (NumberFormatException e) {
+            } catch (NumberFormatException e) {
                 throw new IllegalArgumentException(String.format(
                         "Property %s has incorrect value %s : must be a%s integer", option, value, naturalOnly ? " non-negative" : "n"), e);
             }
@@ -163,6 +170,7 @@ public class RequestContext {
 
     /**
      * Returns a string value of the given option or null if the option was not provided.
+     *
      * @param option name of the option
      * @return string value of the given option or null if the option was not provided.
      */
@@ -172,7 +180,8 @@ public class RequestContext {
 
     /**
      * Adds an option with the given name and value to the set of options.
-     * @param name name of the option
+     *
+     * @param name  name of the option
      * @param value value of the option
      */
     public void addOption(String name, String value) {
@@ -181,6 +190,7 @@ public class RequestContext {
 
     /**
      * Returns unmodifiable map of options.
+     *
      * @return map of options, with keys as option names and values as option values
      */
     public Map<String, String> getOptions() {
@@ -282,6 +292,15 @@ public class RequestContext {
      */
     public boolean hasFilter() {
         return filterString != null;
+    }
+
+    /**
+     * Returns true if there is column projection.
+     *
+     * @return true if there is column projection, false otherwise
+     */
+    public boolean hasColumnProjection() {
+        return numAttrsProjected > 0 && numAttrsProjected < tupleDescription.size();
     }
 
     /**
@@ -497,6 +516,24 @@ public class RequestContext {
     }
 
     /**
+     * Returns the format of the external file
+     *
+     * @return format of the external file
+     */
+    public String getFormat() {
+        return format;
+    }
+
+    /**
+     * Sets the format of the external file
+     *
+     * @param format of the external file
+     */
+    public void setFormat(String format) {
+        this.format = format;
+    }
+
+    /**
      * Returns index of a fragment in a file
      *
      * @return index of a fragment
@@ -699,8 +736,16 @@ public class RequestContext {
         this.pluginConf = pluginConf;
     }
 
+    public String getProfileScheme() {
+        return profileScheme;
+    }
+
+    public void setProfileScheme(String profileScheme) {
+        this.profileScheme = profileScheme;
+    }
+
     public String getProtocol() {
-        return protocol;
+        return StringUtils.isNotBlank(protocol) ? protocol : inferProtocolName();
     }
 
     public void setProtocol(String protocol) {
@@ -721,5 +766,35 @@ public class RequestContext {
 
     public void setTransactionId(String transactionId) {
         this.transactionId = transactionId;
+    }
+
+    /**
+     * Infers the protocol name from the profileScheme or profile
+     * Introduced for backwards compatibility. Can be removed after
+     * the external framework is no longer supported
+     *
+     * @return the inferred protocol name
+     */
+    private String inferProtocolName() {
+        if (StringUtils.isBlank(profileScheme) && !StringUtils.isBlank(profile)) {
+            return profile.contains(":") ? profile.split(":")[0] : profile;
+            // When the profileScheme is not available, extract the profileScheme from the profile
+            // for example hdfs:text will return hdfs profileScheme
+        }
+        return profileScheme;
+    }
+
+    /**
+     * Infers the format name from the profile.
+     * Introduced for backwards compatibility. Can be removed after
+     * the external framework is no longer supported
+     *
+     * @return the inferred format name
+     */
+    public String inferFormatName() {
+        if (!StringUtils.isBlank(profile) && profile.contains(":")) {
+            return profile.split(":")[1];
+        }
+        return null;
     }
 }

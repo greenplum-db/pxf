@@ -8,7 +8,10 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Represents a PXF {@link Profile}. A profile is a way
@@ -17,21 +20,28 @@ import java.util.List;
  * and a list of option mappings
  */
 @XmlRootElement(name = "profile")
-@XmlAccessorType(XmlAccessType.FIELD)
 public class Profile {
 
     @XmlElement(name = "name", required = true)
     private String name;
 
-    @XmlElement(name = "plugins")
-    private Plugins plugins;
-
     @XmlElement(name = "protocol")
     private String protocol;
 
-    @XmlElementWrapper(name = "optionMappings")
-    @XmlElement(name = "mapping")
+    @XmlElement(name = "handler")
+    private String handler;
+
+    @XmlTransient
+    private Plugins plugins;
+
+    @XmlTransient
     private List<Mapping> mappingList;
+
+    @XmlTransient
+    private Map<String, String> optionsMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+
+    @XmlTransient
+    private Map<String, String> pluginsMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
     /**
      * Returns the name of the profile
@@ -43,30 +53,88 @@ public class Profile {
     }
 
     /**
-     * Returns the Plugins configured for this profile
-     *
-     * @return the Plugins configured for this profile
-     */
-    Plugins getPlugins() {
-        return plugins;
-    }
-
-    /**
      * Returns the protocol associated to this profile. (optional)
      *
      * @return (optional) the protocol associated to this profile
      */
-    public String getProtocol() {
+    String getProtocol() {
         return protocol;
     }
 
     /**
-     * Returns a list of whitelisted option mappings
+     * Returns the name of the class to handle this profile. (optional)
      *
-     * @return a list of whitelisted option mappings
+     * @return (optional) the name of the class that handles this profile
      */
-    List<Mapping> getOptionMappings() {
+    String getHandler() {
+        return handler;
+    }
+
+    /**
+     * Returns the options map for this profile. (optional)
+     *
+     * @return (optional) the options map for this profile
+     */
+    Map<String, String> getOptionsMap() {
+        return optionsMap;
+    }
+
+    /**
+     * Returns the map of plugins configured for this profile
+     *
+     * @return the map of plugins configured for this profile
+     */
+    Map<String, String> getPluginsMap() {
+        return pluginsMap;
+    }
+
+    @XmlElementWrapper(name = "optionMappings")
+    @XmlElement(name = "mapping")
+    private void setMappingList(List<Mapping> mappingList) {
+        this.mappingList = mappingList;
+        if (mappingList != null) {
+            mappingList.forEach(m -> optionsMap.put(m.getOption(), m.getProperty()));
+        }
+    }
+
+    private List<Mapping> getMappingList() {
         return mappingList;
+    }
+
+    @XmlElement(name = "plugins")
+    private void setPlugins(Plugins plugins) {
+        this.plugins = plugins;
+
+        if (plugins != null) {
+            String fragmenter = plugins.getFragmenter();
+            if (StringUtils.isNotBlank(fragmenter)) {
+                pluginsMap.put(Profile.Plugins.FRAGMENTER, fragmenter);
+            }
+
+            String accessor = plugins.getAccessor();
+            if (StringUtils.isNotBlank(accessor)) {
+                pluginsMap.put(Profile.Plugins.ACCESSOR, accessor);
+            }
+
+            String resolver = plugins.getResolver();
+            if (StringUtils.isNotBlank(resolver)) {
+                pluginsMap.put(Profile.Plugins.RESOLVER, resolver);
+            }
+
+            String metadata = plugins.getMetadata();
+            if (StringUtils.isNotBlank(metadata)) {
+                pluginsMap.put(Profile.Plugins.METADATA, metadata);
+            }
+
+            String outputFormat = plugins.getOutputFormat();
+            if (StringUtils.isNotBlank(outputFormat)) {
+                pluginsMap.put(Profile.Plugins.OUTPUTFORMAT, outputFormat);
+            }
+        }
+    }
+
+    private Plugins getPlugins() {
+        return plugins;
     }
 
     /**

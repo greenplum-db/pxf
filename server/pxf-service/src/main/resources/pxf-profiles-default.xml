@@ -251,7 +251,6 @@ under the License.
             <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
         </plugins>
     </profile>
-
     <profile>
         <name>s3:text</name>
         <description>This profile is suitable for using when reading delimited single line records
