@@ -149,6 +149,11 @@ public class ProfilesConf implements PluginConf {
                 processedProfiles.add(profileName);
                 // update internal map with the new profile definitions
                 profilesMap.put(profileName, profile);
+
+                // We were unable to get this working in the Profile class
+                if (profile.getMappingList() != null && profile.getMappingList().size() > 0) {
+                    profile.getMappingList().forEach(m -> profile.getOptionsMap().put(m.getOption(), m.getProperty()));
+                }
             }
             LOG.info("Processed {} profiles from file {}", processedProfiles.size(), fileName);
 

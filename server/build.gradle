@@ -278,6 +278,15 @@ project('pxf-service') {
     }
 }
 
+project('pxf-s3') {
+    dependencies {
+        compile(project(':pxf-api'))
+        compile(project(':pxf-jdbc'))
+        compile "org.apache.hadoop:hadoop-aws:${hadoopVersion}"
+        compile "com.amazonaws:aws-java-sdk-s3:${awsJavaSdk}"
+    }
+}
+
 task bundle(type: Copy, dependsOn: [subprojects.jar, project(':pxf-service').war, subprojects.copyRuntimeDependencies]) {
     into "build/stage"
     subprojects { project ->

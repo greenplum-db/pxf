@@ -262,6 +262,7 @@ under the License.
             <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
         </plugins>
         <protocol>s3a</protocol>
+        <handler>org.greenplum.pxf.plugins.s3.S3ProtocolHandler</handler>
         <optionMappings>
             <mapping option="accesskey" property="fs.s3a.access.key"/>
             <mapping option="secretkey" property="fs.s3a.secret.key"/>
@@ -273,11 +274,12 @@ under the License.
             from plain text CSV files on S3
         </description>
         <plugins>
-            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsFileFragmenter</fragmenter>
             <accessor>org.greenplum.pxf.plugins.hdfs.LineBreakAccessor</accessor>
             <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
         </plugins>
         <protocol>s3a</protocol>
+        <handler>org.greenplum.pxf.plugins.s3.S3ProtocolHandler</handler>
         <optionMappings>
             <mapping option="accesskey" property="fs.s3a.access.key"/>
             <mapping option="secretkey" property="fs.s3a.secret.key"/>
@@ -394,6 +396,7 @@ under the License.
             <resolver>org.greenplum.pxf.plugins.hdfs.ParquetResolver</resolver>
         </plugins>
         <protocol>s3a</protocol>
+        <handler>org.greenplum.pxf.plugins.s3.S3ProtocolHandler</handler>
         <optionMappings>
             <mapping option="accesskey" property="fs.s3a.access.key"/>
             <mapping option="secretkey" property="fs.s3a.secret.key"/>
@@ -502,6 +505,7 @@ under the License.
             <resolver>org.greenplum.pxf.plugins.json.JsonResolver</resolver>
         </plugins>
         <protocol>s3a</protocol>
+        <handler>org.greenplum.pxf.plugins.s3.S3ProtocolHandler</handler>
         <optionMappings>
             <mapping option="accesskey" property="fs.s3a.access.key"/>
             <mapping option="secretkey" property="fs.s3a.secret.key"/>

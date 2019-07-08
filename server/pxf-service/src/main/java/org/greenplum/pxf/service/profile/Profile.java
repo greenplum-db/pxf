@@ -34,7 +34,8 @@ public class Profile {
     @XmlTransient
     private Plugins plugins;
 
-    @XmlTransient
+    @XmlElementWrapper(name = "optionMappings")
+    @XmlElement(name = "mapping")
     private List<Mapping> mappingList;
 
     @XmlTransient
@@ -88,16 +89,7 @@ public class Profile {
         return pluginsMap;
     }
 
-    @XmlElementWrapper(name = "optionMappings")
-    @XmlElement(name = "mapping")
-    private void setMappingList(List<Mapping> mappingList) {
-        this.mappingList = mappingList;
-        if (mappingList != null) {
-            mappingList.forEach(m -> optionsMap.put(m.getOption(), m.getProperty()));
-        }
-    }
-
-    private List<Mapping> getMappingList() {
+    List<Mapping> getMappingList() {
         return mappingList;
     }
 

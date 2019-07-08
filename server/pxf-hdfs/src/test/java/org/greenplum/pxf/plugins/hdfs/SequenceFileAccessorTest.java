@@ -65,7 +65,7 @@ public class SequenceFileAccessorTest {
         context.setUser("dummy");
         context.setDataSource(path);
         context.setSegmentId(0);
-        context.setProtocol("localfile");
+        context.setProfileScheme("localfile");
     }
 
     @Test

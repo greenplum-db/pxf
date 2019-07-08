@@ -8,9 +8,9 @@ package org.greenplum.pxf.api;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -21,15 +21,12 @@ package org.greenplum.pxf.api;
 
 
 import org.greenplum.pxf.api.FilterParser.FilterBuilder;
-import org.greenplum.pxf.api.FilterParser.Operation;
 import org.greenplum.pxf.api.FilterParser.LogicalOperation;
+import org.greenplum.pxf.api.FilterParser.Operation;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -38,16 +35,14 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({FilterBuilder.class})
 public class FilterParserTest {
 
-    FilterBuilder filterBuilder;
-    FilterParser filterParser;
-    String filter, exception;
+    private FilterBuilder filterBuilder;
+    private FilterParser filterParser;
+    private String filter, exception;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         filterBuilder = mock(FilterBuilder.class);
         filterParser = new FilterParser(filterBuilder);
     }
@@ -121,7 +116,7 @@ public class FilterParserTest {
 
         filter = "c20sd";
         index = 4;
-        exception = "numeric argument expected at "  + index;
+        exception = "numeric argument expected at " + index;
         runParseNegative("const operand with missing numeric data length", filter, exception);
 
         filter = "c20s1500";
@@ -422,17 +417,14 @@ public class FilterParserTest {
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
+
     @Test
     public void parseLogicalUnknownCodeError() throws Exception {
         thrown.expect(FilterParser.FilterStringSyntaxException.class);
         thrown.expectMessage("unknown op ending at 2");
 
         filter = "l7";
-        when(filterBuilder.build(eq(LogicalOperation.HDOP_AND),
-                any(),
-                any())).thenReturn(null);
-
-        Object result = filterParser.parse(filter.getBytes());
+        filterParser.parse(filter.getBytes());
     }
 
     @Test
@@ -463,9 +455,9 @@ public class FilterParserTest {
         assertEquals(lastOp, result);
     }
 
-	/*
+    /*
      * Helper functions
-	 */
+     */
     private void runParseNegative(String description, String filter, String exception) {
         try {
             filterParser.parse(filter.getBytes());

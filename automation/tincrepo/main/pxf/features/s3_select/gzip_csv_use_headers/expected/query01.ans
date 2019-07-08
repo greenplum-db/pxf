@@ -1,0 +1,20 @@
+-- start_ignore
+-- end_ignore
+-- @description query01 test S3 Select access to CSV with headers and no compression
+--
+SELECT l_orderkey, l_partkey, l_commitdate FROM s3select_gzip_csv_use_headers WHERE l_orderkey = 194 OR l_orderkey = 82756;
+ l_orderkey | l_partkey | l_commitdate
+------------+-----------+--------------
+        194 |        39 | 1992-05-22
+        194 |      2753 | 1992-05-18
+        194 |       990 | 1992-06-18
+        194 |      2178 | 1992-05-18
+        194 |       843 | 1992-06-25
+        194 |      2235 | 1992-06-14
+        194 |      2518 | 1992-05-20
+      82756 |      1816 | 1998-05-13
+      82756 |       716 | 1998-05-16
+      82756 |      2578 | 1998-04-17
+      82756 |      1709 | 1998-04-26
+      82756 |       218 | 1998-05-23
+(12 rows)

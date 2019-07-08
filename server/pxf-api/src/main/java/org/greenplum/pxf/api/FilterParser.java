@@ -76,19 +76,36 @@ public class FilterParser {
 
     public static final String DEFAULT_CHARSET = "UTF-8";
 
-    /** Supported operations by the parser. */
+    /**
+     * Supported operations by the parser.
+     */
     public enum Operation {
-        NOOP,
-        HDOP_LT,
-        HDOP_GT,
-        HDOP_LE,
-        HDOP_GE,
-        HDOP_EQ,
-        HDOP_NE,
-        HDOP_LIKE,
-        HDOP_IS_NULL,
-        HDOP_IS_NOT_NULL,
-        HDOP_IN
+        NOOP(null) {
+            @Override
+            public String getOperator() {
+                throw new UnsupportedOperationException("NOOP doesn't have an operator");
+            }
+        },
+        HDOP_LT("<"),
+        HDOP_GT(">"),
+        HDOP_LE("<="),
+        HDOP_GE(">="),
+        HDOP_EQ("="),
+        HDOP_NE("<>"),
+        HDOP_LIKE("LIKE"),
+        HDOP_IS_NULL("IS NULL"),
+        HDOP_IS_NOT_NULL("IS NOT NULL"),
+        HDOP_IN("IN");
+
+        private String operator;
+
+        Operation(String operator) {
+            this.operator = operator;
+        }
+
+        public String getOperator() {
+            return operator;
+        }
     }
 
     /**
@@ -111,8 +128,8 @@ public class FilterParser {
          * Builds the filter for an operation with 2 operands
          *
          * @param operation the parsed operation to perform
-         * @param left the left operand
-         * @param right the right operand
+         * @param left      the left operand
+         * @param right     the right operand
          * @return the built filter
          * @throws Exception if building the filter failed
          */
@@ -122,7 +139,7 @@ public class FilterParser {
          * Builds the filter for an operation with one operand
          *
          * @param operation the parsed operation to perform
-         * @param operand the single operand
+         * @param operand   the single operand
          * @return the built filter
          * @throws Exception if building the filter failed
          */
@@ -132,8 +149,8 @@ public class FilterParser {
          * Builds the filter for a logical operation and two operands
          *
          * @param operation the parsed logical operation to perform
-         * @param left the left operand
-         * @param right the right operand
+         * @param left      the left operand
+         * @param right     the right operand
          * @return the built filter
          * @throws Exception if building the filter failed
          */
@@ -143,14 +160,16 @@ public class FilterParser {
          * Builds the filter for a logical operation and one operand
          *
          * @param operation the parsed unary logical operation to perform
-         * @param filter the single operand
+         * @param filter    the single operand
          * @return the built filter
          * @throws Exception if building the filter failed
          */
         Object build(LogicalOperation operation, Object filter) throws Exception;
     }
 
-    /** Represents a column index. */
+    /**
+     * Represents a column index.
+     */
     public class ColumnIndex {
         private int index;
 
@@ -163,7 +182,9 @@ public class FilterParser {
         }
     }
 
-    /** Represents a constant object (String, Long, ...). */
+    /**
+     * Represents a constant object (String, Long, ...).
+     */
     public class Constant {
         private Object constant;
 
@@ -275,8 +296,8 @@ public class FilterParser {
                     if (logicalOperation == LogicalOperation.HDOP_NOT) {
                         Object exp = operandsStack.pop();
                         result = filterBuilder.build(logicalOperation, exp);
-                    } else if (logicalOperation == LogicalOperation.HDOP_AND || logicalOperation == LogicalOperation.HDOP_OR){
-                        rightOperand  = operandsStack.pop();
+                    } else if (logicalOperation == LogicalOperation.HDOP_AND || logicalOperation == LogicalOperation.HDOP_OR) {
+                        rightOperand = operandsStack.pop();
                         Object leftOperand = operandsStack.pop();
 
                         result = filterBuilder.build(logicalOperation, leftOperand, rightOperand);
@@ -340,7 +361,7 @@ public class FilterParser {
 
     private int parseDataLength() throws Exception {
         if (((char) filterByteArr[index]) != CONST_LEN) {
-            throw new FilterStringSyntaxException("data length delimiter 's' expected at " +  index);
+            throw new FilterStringSyntaxException("data length delimiter 's' expected at " + index);
         }
 
         index++;
@@ -366,7 +387,7 @@ public class FilterParser {
         if (byteData.length < end)
             throw new FilterStringSyntaxException("filter string is shorter than expected");
 
-        String data = new String(byteData, start, end-start, DEFAULT_CHARSET);
+        String data = new String(byteData, start, end - start, DEFAULT_CHARSET);
         try {
             switch (dataType) {
                 case BIGINT:
@@ -400,6 +421,7 @@ public class FilterParser {
             throw new FilterStringSyntaxException("failed to parse number data type starting at " + index);
         }
     }
+
     /**
      * Parses either a number or a string.
      */
@@ -425,7 +447,7 @@ public class FilterParser {
 
         index++;
 
-        Object data = convertDataType(filterByteArr, index, index+dataLength, dataType);
+        Object data = convertDataType(filterByteArr, index, index + dataLength, dataType);
         index += dataLength;
         return data;
     }
@@ -457,7 +479,7 @@ public class FilterParser {
             }
 
             index++;
-            data.add(convertDataType(filterByteArr, index, index+dataLength, dataType.getTypeElem()));
+            data.add(convertDataType(filterByteArr, index, index + dataLength, dataType.getTypeElem()));
             index += dataLength;
         }
 

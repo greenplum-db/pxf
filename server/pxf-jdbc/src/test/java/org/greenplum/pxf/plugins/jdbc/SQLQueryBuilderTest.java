@@ -92,6 +92,16 @@ public class SQLQueryBuilderTest {
     }
 
     @Test
+    public void testIsNotNullOperator() throws Exception {
+        // a3 IS NOT NULL
+        context.setFilterString("a3o9");
+        SQLQueryBuilder builder = new SQLQueryBuilder(context, mockMetaData);
+        builder.autoSetQuoteString();
+        String query = builder.buildSelectQuery();
+        assertEquals(SQL + " WHERE grade IS NOT NULL", query);
+    }
+
+    @Test
     public void testUnsupportedOperationFilter() throws Exception {
         // IN 'bad'
         context.setFilterString("a3c25s3dbado10");
