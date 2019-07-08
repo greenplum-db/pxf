@@ -40,13 +40,19 @@ public class S3SelectAccessor extends BasePlugin implements Accessor {
     // We call this option compression_codec to make it compatible to
     // the COMPRESSION_CODECs from the s3:text, s3:parquet profiles
     public static final String COMPRESSION_TYPE = "COMPRESSION_CODEC";
-    public static final String FILE_HEADER_INFO = "FileHeaderInfo";
+    // Keep the same name as the FORMAT option in Greenplum
+    public static final String FILE_HEADER_INFO = "HEADER";
     public static final String FILE_HEADER_INFO_NONE = "NONE";
     public static final String FILE_HEADER_INFO_IGNORE = "IGNORE";
-    public static final String FIELD_DELIMITER = "fieldDelimiter";
-    public static final String QUOTE_ESCAPE_CHARACTER = "quoteEscapeCharacter";
-    public static final String RECORD_DELIMITER = "recordDelimiter";
-    public static final String QUOTE_CHARACTER = "quoteCharacter";
+    public static final String FILE_HEADER_INFO_USE = "USE";
+    // Keep the same name as the FORMAT option in Greenplum
+    public static final String FIELD_DELIMITER = "DELIMITER";
+    // Keep the same name as the FORMAT option in Greenplum
+    public static final String QUOTE_ESCAPE_CHARACTER = "ESCAPE";
+    // Keep the same name as the FORMAT option in Greenplum
+    public static final String RECORD_DELIMITER = "NEWLINE";
+    // Keep the same name as the FORMAT option in Greenplum
+    public static final String QUOTE_CHARACTER = "QUOTE";
     public static final String JSON_TYPE = "JSON-TYPE";
     private AtomicBoolean isResultComplete;
     private AmazonS3 s3Client;
@@ -149,7 +155,8 @@ public class S3SelectAccessor extends BasePlugin implements Accessor {
     SelectObjectContentRequest generateBaseCSVRequest(RequestContext context) {
 
         String fileHeaderInfo = context.getOption(FILE_HEADER_INFO);
-        boolean usePositionToIdentifyColumn = StringUtils.equalsIgnoreCase(FILE_HEADER_INFO_NONE, fileHeaderInfo) ||
+        boolean usePositionToIdentifyColumn = StringUtils.isBlank(fileHeaderInfo) ||
+                StringUtils.equalsIgnoreCase(FILE_HEADER_INFO_NONE, fileHeaderInfo) ||
                 StringUtils.equalsIgnoreCase(FILE_HEADER_INFO_IGNORE, fileHeaderInfo);
         S3SelectQueryBuilder queryBuilder = new S3SelectQueryBuilder(context, usePositionToIdentifyColumn);
         String query;

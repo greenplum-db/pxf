@@ -112,7 +112,7 @@ public class S3SelectAccessorTest {
     @Test
     public void testPipeDelimiter() {
         RequestContext context = getDefaultRequestContext();
-        context.addOption("fieldDelimiter", "|");
+        context.addOption("DELIMITER", "|");
 
         InputSerialization inputSerialization =
                 new S3SelectAccessor().getInputSerialization(context);
@@ -130,7 +130,7 @@ public class S3SelectAccessorTest {
     @Test
     public void testFileHeaderInfoIsIgnore() {
         RequestContext context = getDefaultRequestContext();
-        context.addOption("FileHeaderInfo", "IGNORE");
+        context.addOption("HEADER", "IGNORE");
         InputSerialization inputSerialization =
                 new S3SelectAccessor().getInputSerialization(context);
         assertEquals("IGNORE", inputSerialization.getCsv().getFileHeaderInfo());
@@ -139,7 +139,7 @@ public class S3SelectAccessorTest {
     @Test
     public void testFileHeaderInfoIsUse() {
         RequestContext context = getDefaultRequestContext();
-        context.addOption("FileHeaderInfo", "USE");
+        context.addOption("HEADER", "USE");
         InputSerialization inputSerialization =
                 new S3SelectAccessor().getInputSerialization(context);
         assertEquals("USE", inputSerialization.getCsv().getFileHeaderInfo());
@@ -148,7 +148,7 @@ public class S3SelectAccessorTest {
     @Test
     public void testFileHeaderInfoIsNone() {
         RequestContext context = getDefaultRequestContext();
-        context.addOption("FileHeaderInfo", "NONE");
+        context.addOption("HEADER", "NONE");
         InputSerialization inputSerialization =
                 new S3SelectAccessor().getInputSerialization(context);
         assertEquals("NONE", inputSerialization.getCsv().getFileHeaderInfo());
@@ -157,7 +157,7 @@ public class S3SelectAccessorTest {
     @Test
     public void testQuoteEscapeCharacter() {
         RequestContext context = getDefaultRequestContext();
-        context.addOption("quoteEscapeCharacter", "\"");
+        context.addOption("ESCAPE", "\"");
         InputSerialization inputSerialization =
                 new S3SelectAccessor().getInputSerialization(context);
         assertEquals(new Character('\"'), inputSerialization.getCsv().getQuoteEscapeCharacter());
@@ -166,7 +166,7 @@ public class S3SelectAccessorTest {
     @Test
     public void testRecordDelimiter() {
         RequestContext context = getDefaultRequestContext();
-        context.addOption("recordDelimiter", "\n");
+        context.addOption("NEWLINE", "\n");
         InputSerialization inputSerialization =
                 new S3SelectAccessor().getInputSerialization(context);
         assertEquals(new Character('\n'), inputSerialization.getCsv().getRecordDelimiter());
@@ -175,7 +175,7 @@ public class S3SelectAccessorTest {
     @Test
     public void testQuoteCharacter() {
         RequestContext context = getDefaultRequestContext();
-        context.addOption("QuoteCharacter", "\"");
+        context.addOption("QUOTE", "\"");
         InputSerialization inputSerialization =
                 new S3SelectAccessor().getInputSerialization(context);
         assertEquals(new Character('"'), inputSerialization.getCsv().getQuoteCharacter());

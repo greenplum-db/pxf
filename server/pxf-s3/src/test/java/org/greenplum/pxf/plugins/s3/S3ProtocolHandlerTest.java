@@ -115,6 +115,69 @@ public class S3ProtocolHandlerTest {
     }
 
     @Test
+    public void testTextWithSelectAutoWithNoBenefitResolverWithDelimiterOption() {
+        context.addOption("S3-SELECT", "auto");
+        context.addOption("DELIMITER", "|");
+        context.setOutputFormat(OutputFormat.TEXT);
+        verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_AUTO_BENEFIT);
+        verifyResolvers(context, EXPECTED_RESOLVER_TEXT_AUTO_BENEFIT);
+    }
+
+    @Test
+    public void testTextWithSelectAutoWithNoBenefitResolverWithQuoteCharacterOption() {
+        context.addOption("S3-SELECT", "auto");
+        context.addOption("QUOTE", "'");
+        context.setOutputFormat(OutputFormat.TEXT);
+        verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_AUTO_BENEFIT);
+        verifyResolvers(context, EXPECTED_RESOLVER_TEXT_AUTO_BENEFIT);
+    }
+
+    @Test
+    public void testTextWithSelectAutoWithNoBenefitResolverWithQuoteEscapeCharacterOption() {
+        context.addOption("S3-SELECT", "auto");
+        context.addOption("ESCAPE", "\\");
+        context.setOutputFormat(OutputFormat.TEXT);
+        verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_AUTO_BENEFIT);
+        verifyResolvers(context, EXPECTED_RESOLVER_TEXT_AUTO_BENEFIT);
+    }
+
+    @Test
+    public void testTextWithSelectAutoWithNoBenefitResolverWithRecordDelimiterOption() {
+        context.addOption("S3-SELECT", "auto");
+        context.addOption("NEWLINE", "\r");
+        context.setOutputFormat(OutputFormat.TEXT);
+        verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_AUTO_BENEFIT);
+        verifyResolvers(context, EXPECTED_RESOLVER_TEXT_AUTO_BENEFIT);
+    }
+
+    @Test
+    public void testTextWithSelectAutoWithNoBenefitResolverWithFileHeaderInfoOptionUSE() {
+        context.addOption("S3-SELECT", "auto");
+        context.addOption("HEADER", "USE");
+        context.setOutputFormat(OutputFormat.TEXT);
+        verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_AUTO_BENEFIT);
+        verifyResolvers(context, EXPECTED_RESOLVER_TEXT_AUTO_BENEFIT);
+    }
+
+    @Test
+    public void testTextWithSelectAutoWithNoBenefitResolverWithFileHeaderInfoOptionIGNORE() {
+        context.addOption("S3-SELECT", "auto");
+        context.addOption("HEADER", "IGNORE");
+        context.setOutputFormat(OutputFormat.TEXT);
+        verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_AUTO_BENEFIT);
+        verifyResolvers(context, EXPECTED_RESOLVER_TEXT_AUTO_BENEFIT);
+    }
+
+    @Test
+    public void testTextWithSelectAutoWithNoBenefitResolverWithFileHeaderInfoOptionNONE() {
+        context.addOption("S3-SELECT", "auto");
+        context.addOption("HEADER", "NONE");
+        context.setOutputFormat(OutputFormat.TEXT);
+        verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_AUTO_NO_BENEFIT);
+        verifyResolvers(context, EXPECTED_RESOLVER_TEXT_AUTO_NO_BENEFIT);
+    }
+
+    @Test
     public void testTextWithSelectAutoWithNoBenefitAllProjectedResolver() {
         context.addOption("S3-SELECT", "auto");
         context.setOutputFormat(OutputFormat.TEXT);
@@ -259,7 +322,6 @@ public class S3ProtocolHandlerTest {
         context.setFormat("custom");
         handler.getAccessorClassName(context);
     }
-
 
     @Test
     public void testSelectAutoMissingFormat() {
