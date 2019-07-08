@@ -154,10 +154,13 @@ public class S3SelectAccessor extends BasePlugin implements Accessor {
      */
     SelectObjectContentRequest generateBaseCSVRequest(RequestContext context) {
 
+        InputSerialization inputSerialization = getInputSerialization(context);
+
         String fileHeaderInfo = context.getOption(FILE_HEADER_INFO);
-        boolean usePositionToIdentifyColumn = StringUtils.isBlank(fileHeaderInfo) ||
-                StringUtils.equalsIgnoreCase(FILE_HEADER_INFO_NONE, fileHeaderInfo) ||
-                StringUtils.equalsIgnoreCase(FILE_HEADER_INFO_IGNORE, fileHeaderInfo);
+        boolean usePositionToIdentifyColumn = inputSerialization.getCsv() != null &&
+                (StringUtils.isBlank(fileHeaderInfo) ||
+                        StringUtils.equalsIgnoreCase(FILE_HEADER_INFO_NONE, fileHeaderInfo) ||
+                        StringUtils.equalsIgnoreCase(FILE_HEADER_INFO_IGNORE, fileHeaderInfo));
         S3SelectQueryBuilder queryBuilder = new S3SelectQueryBuilder(context, usePositionToIdentifyColumn);
         String query;
         try {
@@ -179,7 +182,6 @@ public class S3SelectAccessor extends BasePlugin implements Accessor {
         LOG.debug("With key '{}'", request.getKey());
         LOG.debug("With expression query '{}'", query);
 
-        InputSerialization inputSerialization = getInputSerialization(context);
         request.setInputSerialization(inputSerialization);
 
         OutputSerialization outputSerialization = getOutputSerialization(context);
