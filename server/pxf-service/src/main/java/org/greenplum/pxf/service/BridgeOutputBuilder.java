@@ -22,6 +22,7 @@ package org.greenplum.pxf.service;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.ObjectUtils;
+import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.api.BadRecordException;
 import org.greenplum.pxf.api.GreenplumDateTime;
 import org.greenplum.pxf.api.OneField;
@@ -33,6 +34,8 @@ import org.greenplum.pxf.api.io.Writable;
 import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.Utilities;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Array;
 import java.sql.Timestamp;
@@ -53,6 +56,9 @@ import static org.greenplum.pxf.api.io.DataType.TEXT;
  * record.
  */
 public class BridgeOutputBuilder {
+
+    private static final Logger LOG = LoggerFactory.getLogger(BridgeOutputBuilder.class);
+
     private static final byte DELIM = 10; /* (byte)'\n'; */
     private RequestContext context;
     private Writable output = null;
@@ -108,19 +114,25 @@ public class BridgeOutputBuilder {
     }
 
     /**
-     * Returns the error record. If the output format is not binary, error
-     * records are not supported, and the given exception will be thrown
+     * Returns the error record. If the output format is not binary, a
+     * comma-delimited row will be generated.
      *
      * @param ex exception to be stored in record
      * @return error record
-     * @throws Exception if the output format is not binary
      */
     public Writable getErrorOutput(Exception ex) throws Exception {
         if (context.getOutputFormat() == OutputFormat.GPDBWritable) {
             errorRecord.setString(0, ex.getMessage());
             return errorRecord;
         } else {
-            throw ex;
+            // Serialize error text into CSV
+            // We create a row with an extra column containing the error information
+            LOG.error(ex.getMessage(), ex);
+            return new Text(
+                    StringUtils.repeat(",", context.getTupleDescription().size()) +
+                            Utilities.toCsvText(ex.getMessage(), '"', true, true, true) +
+                            "\n"
+            );
         }
     }
 

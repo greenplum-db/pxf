@@ -125,6 +125,25 @@ public class JsonTest extends BaseFeature {
     }
 
     /**
+     * Test all JSON plugin supported types. TODO: no support for bytea type
+     *
+     * @throws Exception if test fails to run
+     */
+    @Test(groups = {"features", "gpdb", "hcfs"})
+    public void jsonSupportedPrimitivesWithCsvWireFormat() throws Exception {
+
+        exTable = new ReadableExternalTable("jsontest_supported_primitive_types", supportedPrimitiveFields, hdfsPath + FILENAME_TYPES + SUFFIX_JSON, "CSV");
+        exTable.setHost(pxfHost);
+        exTable.setPort(pxfPort);
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":json");
+
+        gpdb.createTableAndVerify(exTable);
+
+        // Verify results
+        runTincTest("pxf.features.hdfs.readable.json.supported_primitive_types.runTest");
+    }
+
+    /**
      * Test JSON file with pretty print format. Some of the fields return null
      * value because the field is missing of because the array doesn't contain
      * the requested item.
@@ -213,6 +232,28 @@ public class JsonTest extends BaseFeature {
     }
 
     /**
+     * Test JSON file with pretty print format. One of the records
+     * is malformed. In that case the whole line will be
+     * replaced by NULLs.
+     *
+     * @throws Exception if test fails to run
+     */
+    @Test(groups = {"features", "gpdb"})
+    public void malformedRecordWithCsvWireFormat() throws Exception {
+
+        exTable = new ReadableExternalTable("jsontest_malformed_record", tweetsFields, hdfsPath + FILENAME_BROKEN + SUFFIX_JSON, "CSV");
+        exTable.setHost(pxfHost);
+        exTable.setPort(pxfPort);
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":json");
+        exTable.setUserParameters(new String[]{"IDENTIFIER=created_at"});
+
+        gpdb.createTableAndVerify(exTable);
+
+        // Verify results
+        runTincTest("pxf.features.hdfs.readable.json.malformed_record_csv.runTest");
+    }
+
+    /**
      * Test JSON file with pretty print format with reject limit configured. One of the records
      * is malformed. The query is allowed and a table is created.
      *
@@ -233,6 +274,29 @@ public class JsonTest extends BaseFeature {
 
         // Verify results
         runTincTest("pxf.features.hdfs.readable.json.malformed_record_with_reject_limit.runTest");
+    }
+
+    /**
+     * Test JSON file with pretty print format with reject limit configured. One of the records
+     * is malformed. The query is allowed and a table is created.
+     *
+     * @throws Exception if test fails to run
+     */
+    @Test(groups = {"features", "gpdb", "hcfs"})
+    public void malformedRecordWithRejectLimitWithCsvWireFormat() throws Exception {
+
+        exTable = new ReadableExternalTable("jsontest_malformed_record_with_reject_limit", tweetsFields, hdfsPath + FILENAME_BROKEN + SUFFIX_JSON, "CSV");
+        exTable.setHost(pxfHost);
+        exTable.setPort(pxfPort);
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":json");
+        exTable.setUserParameters(new String[]{"IDENTIFIER=created_at"});
+        exTable.setSegmentRejectLimit(2);
+        exTable.setErrorTable("true");
+
+        gpdb.createTableAndVerify(exTable);
+
+        // Verify results
+        runTincTest("pxf.features.hdfs.readable.json.malformed_record_with_reject_limit_csv.runTest");
     }
 
     /**
