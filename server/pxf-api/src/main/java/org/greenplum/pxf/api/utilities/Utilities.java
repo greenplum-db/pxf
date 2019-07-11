@@ -56,24 +56,26 @@ public class Utilities {
     public static String toCsvText(String s,
                                    boolean prependQuoteChar,
                                    boolean appendQuoteChar) {
-        return toCsvText(s, CSV_QUOTE, prependQuoteChar, appendQuoteChar);
+        return toCsvText(s, CSV_QUOTE, prependQuoteChar, appendQuoteChar, false);
     }
 
     /**
      * Escapes the provided quote char to form a valid CSV string
      *
-     * @param s                the input string
-     * @param quoteChar        the quote char
-     * @param prependQuoteChar true to prepend the quote char to s, false
-     *                         otherwise
-     * @param appendQuoteChar  true to append the quote char to s, false
-     *                         otherwise
+     * @param s                        the input string
+     * @param quoteChar                the quote char
+     * @param prependQuoteChar         true to prepend the quote char to s, false
+     *                                 otherwise
+     * @param appendQuoteChar          true to append the quote char to s, false
+     *                                 otherwise
+     * @param skipIfQuotingIsNotNeeded skip if quoting is not needed
      * @return an escaped CSV string
      */
     public static String toCsvText(String s,
                                    char quoteChar,
                                    boolean prependQuoteChar,
-                                   boolean appendQuoteChar) {
+                                   boolean appendQuoteChar,
+                                   boolean skipIfQuotingIsNotNeeded) {
         if (s == null) return null;
 
         final int length = s.length();
@@ -88,7 +90,8 @@ public class Utilities {
         if (appendQuoteChar) total += 1;
         total += quotes;
 
-        if (length == total) return s;
+        if (length == total || (skipIfQuotingIsNotNeeded && quotes == 0))
+            return s;
 
         char[] chars = new char[total];
 
@@ -108,7 +111,7 @@ public class Utilities {
     /**
      * Returns a decoded base64 byte[], or throws an error if the base64 string is invalid
      *
-     * @param encoded the base64 encoded string
+     * @param encoded   the base64 encoded string
      * @param paramName the name of the parameter
      * @return the decoded base64 string
      */
@@ -152,13 +155,13 @@ public class Utilities {
      * located in the webapp's CLASSPATH.
      *
      * @param confClass the class of the metaData used to initialize the
-     *            instance
+     *                  instance
      * @param className a class name to be initialized.
-     * @param metaData input data used to initialize the class
+     * @param metaData  input data used to initialize the class
      * @return Initialized instance of given className
      * @throws Exception throws exception if classname was not found in
-     *             classpath, didn't have expected constructor or failed to be
-     *             instantiated
+     *                   classpath, didn't have expected constructor or failed to be
+     *                   instantiated
      */
     public static Object createAnyInstance(Class<?> confClass,
                                            String className, RequestContext metaData)
@@ -195,8 +198,8 @@ public class Utilities {
      * @param className a class name to be initialized
      * @return initialized instance of given className
      * @throws Exception throws exception if classname was not found in
-     *             classpath, didn't have expected constructor or failed to be
-     *             instantiated
+     *                   classpath, didn't have expected constructor or failed to be
+     *                   instantiated
      */
     public static Object createAnyInstance(String className) throws Exception {
         Class<?> cls = Class.forName(className);
@@ -228,16 +231,16 @@ public class Utilities {
     /**
      * Transforms a byte array into a string of octal codes in the form
      * \\xyz\\xyz
-     *
+     * <p>
      * We double escape each char because it is required in postgres bytea for
      * some bytes. In the minimum all non-printables, backslash, null and single
      * quote. Easier to just escape everything see
      * http://www.postgresql.org/docs/9.0/static/datatype-binary.html
-     *
+     * <p>
      * Octal codes must be padded to 3 characters (001, 012)
      *
      * @param bytes bytes to escape
-     * @param sb octal codes of given bytes
+     * @param sb    octal codes of given bytes
      */
     public static void byteArrayToOctalString(byte[] bytes, StringBuilder sb) {
         if ((bytes == null) || (sb == null)) {
@@ -273,7 +276,7 @@ public class Utilities {
      * @param requestContext input data which has protocol information
      * @return fragment metadata
      * @throws IllegalArgumentException if fragment metadata information wasn't found in input data
-     * @throws Exception when error occurred during metadata parsing
+     * @throws Exception                when error occurred during metadata parsing
      */
     public static FragmentMetadata parseFragmentMetadata(RequestContext requestContext) {
         if (requestContext.getFragmentMetadata() == null) {
@@ -315,8 +318,9 @@ public class Utilities {
 
     /**
      * Determines whether a class with a given name implements a specific interface.
+     *
      * @param className name of the class
-     * @param iface class of the interface
+     * @param iface     class of the interface
      * @return true if the class implements the interface, false otherwise
      */
     public static boolean implementsInterface(String className, Class<?> iface) {

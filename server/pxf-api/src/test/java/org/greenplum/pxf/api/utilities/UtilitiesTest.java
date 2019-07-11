@@ -203,11 +203,21 @@ public class UtilitiesTest {
                 Utilities.toCsvText(input, true, true));
 
         input = "aábcdefghijklm\"nñopqrstuvwxyz";
-        assertSame(input, Utilities.toCsvText(input, '|', false, false));
-        assertEquals("|" + input, Utilities.toCsvText(input, '|', true, false));
-        assertEquals(input + "|", Utilities.toCsvText(input, '|', false, true));
+        assertSame(input, Utilities.toCsvText(input, '|', false, false, false));
+        assertEquals("|" + input, Utilities.toCsvText(input, '|', true, false, false));
+        assertEquals(input + "|", Utilities.toCsvText(input, '|', false, true, false));
         assertEquals("|" + input + "|",
-                Utilities.toCsvText(input, '|', true, true));
+                Utilities.toCsvText(input, '|', true, true, false));
+    }
+
+    @Test
+    public void testToCsvDoesNotAddPrefixAndSuffixWhenSkipIfQuotingIsNotNeeded() {
+        String input = "aábcdefghijklmnñopqrstuvwxyz";
+
+        assertSame(input, Utilities.toCsvText(input, '"', false, false, true));
+        assertSame(input, Utilities.toCsvText(input, '"', false, true, true));
+        assertSame(input, Utilities.toCsvText(input, '"', true, false, true));
+        assertSame(input, Utilities.toCsvText(input, '"', true, true, true));
     }
 
     @Test
@@ -228,11 +238,11 @@ public class UtilitiesTest {
         String input = "a|b|c|d\ne|f|g|h";
         String expected = "a||b||c||d\ne||f||g||h";
 
-        assertEquals(expected, Utilities.toCsvText(input, quoteChar, false,false));
-        assertEquals(quoteChar + expected, Utilities.toCsvText(input, quoteChar, true, false));
-        assertEquals(expected + quoteChar, Utilities.toCsvText(input, quoteChar, false, true));
+        assertEquals(expected, Utilities.toCsvText(input, quoteChar, false, false, false));
+        assertEquals(quoteChar + expected, Utilities.toCsvText(input, quoteChar, true, false, false));
+        assertEquals(expected + quoteChar, Utilities.toCsvText(input, quoteChar, false, true, false));
         assertEquals(quoteChar + expected + quoteChar,
-                Utilities.toCsvText(input, quoteChar, true, true));
+                Utilities.toCsvText(input, quoteChar, true, true, false));
     }
 
     @Test
@@ -305,7 +315,7 @@ public class UtilitiesTest {
             assertEquals(
                     e.getMessage(),
                     "Class " + className + " does not appear in classpath. "
-                    + "Plugins provided by PXF must start with \"org.greenplum.pxf\"");
+                            + "Plugins provided by PXF must start with \"org.greenplum.pxf\"");
         }
     }
 
@@ -339,14 +349,14 @@ public class UtilitiesTest {
         ObjectOutputStream os = new ObjectOutputStream(bas);
         os.writeLong(10);
         os.writeLong(100);
-        os.writeObject(new String[] { "hostname" });
+        os.writeObject(new String[]{"hostname"});
         os.close();
         when(metaData.getFragmentMetadata()).thenReturn(bas.toByteArray());
         FragmentMetadata fragmentMetadata = Utilities.parseFragmentMetadata(metaData);
 
         assertEquals(10, fragmentMetadata.getStart());
         assertEquals(100, fragmentMetadata.getEnd());
-        assertArrayEquals(new String[] { "hostname" }, fragmentMetadata.getHosts());
+        assertArrayEquals(new String[]{"hostname"}, fragmentMetadata.getHosts());
     }
 
     @Test

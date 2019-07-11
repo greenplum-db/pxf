@@ -7,6 +7,7 @@ import org.apache.parquet.io.api.Binary;
 import org.apache.parquet.schema.OriginalType;
 import org.apache.parquet.schema.PrimitiveType;
 import org.apache.parquet.schema.Type;
+import org.greenplum.pxf.api.GreenplumDateTime;
 import org.greenplum.pxf.api.io.DataType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,9 +20,6 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
-import java.time.temporal.ChronoField;
 import java.util.Base64;
 
 /**
@@ -37,9 +35,12 @@ public enum ParquetTypeConverter {
                 return DataType.BYTEA;
             }
             switch (originalType) {
-                case DATE: return DataType.DATE;
-                case TIMESTAMP_MILLIS: return DataType.TIMESTAMP;
-                default: return DataType.TEXT;
+                case DATE:
+                    return DataType.DATE;
+                case TIMESTAMP_MILLIS:
+                    return DataType.TIMESTAMP;
+                default:
+                    return DataType.TEXT;
             }
         }
 
@@ -200,7 +201,9 @@ public enum ParquetTypeConverter {
 
     // ********** PUBLIC INTERFACE **********
     public abstract DataType getDataType(Type type);
+
     public abstract Object getValue(Group group, int columnIndex, int repeatIndex, Type type);
+
     public abstract void addValueToJsonArray(Group group, int columnIndex, int repeatIndex, Type type, ArrayNode jsonNode);
 
     private static final int SECOND_IN_MICROS = 1000 * 1000;
@@ -208,11 +211,6 @@ public enum ParquetTypeConverter {
     private static final long MILLIS_IN_DAY = 24 * 3600 * 1000;
     private static final long MICROS_IN_DAY = 24 * 3600 * 1000 * 1000L;
     private static final long NANOS_IN_MICROS = 1000;
-    private static final String DATE_FORMATTER_BASE_PATTERN = "yyyy-MM-dd HH:mm:ss";
-    static final DateTimeFormatter DATE_FORMATTER =
-            new DateTimeFormatterBuilder().appendPattern(DATE_FORMATTER_BASE_PATTERN)
-                    // Parsing nanos in strict mode, the number of parsed digits must be between 0 and 6 (millisecond support)
-                    .appendFraction(ChronoField.NANO_OF_SECOND, 0, 6, true).toFormatter();
     private static final Logger LOG = LoggerFactory.getLogger(ParquetTypeConverter.class);
 
     // Convert parquet byte array to java timestamp
@@ -225,7 +223,7 @@ public enum ParquetTypeConverter {
 
         Instant instant = Instant.ofEpochMilli(unixTimeMs); // time read from Parquet is in UTC
         instant = instant.plusNanos(timeOfDayNanos);
-        String timestamp = instant.atZone(ZoneId.systemDefault()).format(DATE_FORMATTER);
+        String timestamp = instant.atZone(ZoneId.systemDefault()).format(GreenplumDateTime.DATETIME_FORMATTER);
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("Converted bytes: {} to date: {} from: julianDays {}, timeOfDayNanos {}, unixTimeMs {}",
@@ -242,7 +240,7 @@ public enum ParquetTypeConverter {
     public static Binary getBinaryFromTimestamp(String timestampString) {
         // We receive a timestamp string from GPDB in the server timezone
         // We convert it to an instant of the current server timezone
-        LocalDateTime date = LocalDateTime.parse(timestampString, DATE_FORMATTER);
+        LocalDateTime date = LocalDateTime.parse(timestampString, GreenplumDateTime.DATETIME_FORMATTER);
         ZonedDateTime zdt = ZonedDateTime.of(date, ZoneId.systemDefault());
         long timeMicros = (zdt.toEpochSecond() * SECOND_IN_MICROS) + zdt.getNano() / NANOS_IN_MICROS;
         long daysSinceEpoch = timeMicros / MICROS_IN_DAY;

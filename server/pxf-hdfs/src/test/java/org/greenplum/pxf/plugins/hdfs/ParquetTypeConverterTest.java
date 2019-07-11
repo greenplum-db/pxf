@@ -1,6 +1,7 @@
 package org.greenplum.pxf.plugins.hdfs;
 
 import org.apache.parquet.io.api.Binary;
+import org.greenplum.pxf.api.GreenplumDateTime;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -49,7 +50,7 @@ public class ParquetTypeConverterTest {
     public void testBinaryWithNanos() {
         Instant instant = Instant.parse("2019-03-15T03:52:48.123456Z"); // UTC
         ZonedDateTime localTime = instant.atZone(ZoneId.systemDefault());
-        String expected = localTime.format(ParquetTypeConverter.DATE_FORMATTER); // should be "2019-03-14 20:52:48.123456" in PST
+        String expected = localTime.format(GreenplumDateTime.DATETIME_FORMATTER); // should be "2019-03-14 20:52:48.123456" in PST
 
         byte[] source = new byte[]{0, 106, 9, 53, -76, 12, 0, 0, -66, -125, 37, 0}; // represents 2019-03-14 20:52:48.1234567
         String timestamp = ParquetTypeConverter.bytesToTimestamp(source); // nanos get dropped

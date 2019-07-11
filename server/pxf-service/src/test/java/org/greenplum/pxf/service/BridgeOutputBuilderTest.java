@@ -21,6 +21,7 @@ package org.greenplum.pxf.service;
 
 
 import org.greenplum.pxf.api.BadRecordException;
+import org.greenplum.pxf.api.GreenplumDateTime;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.OutputFormat;
@@ -105,6 +106,57 @@ public class BridgeOutputBuilderTest {
         assertEquals(Timestamp.valueOf(output.getString(11)), new Timestamp(0));
         assertEquals(Date.valueOf(output.getString(12).trim()).toString(),
                 new Date(1).toString());
+    }
+
+    @Test
+    public void testCSVSerialization() throws Exception {
+        RequestContext context = new RequestContext();
+
+        addColumn(context, 0, DataType.INTEGER, "col0");
+        addColumn(context, 1, DataType.FLOAT8, "col1");
+        addColumn(context, 2, DataType.REAL, "col2");
+        addColumn(context, 3, DataType.BIGINT, "col3");
+        addColumn(context, 4, DataType.SMALLINT, "col4");
+        addColumn(context, 5, DataType.BOOLEAN, "col5");
+        addColumn(context, 6, DataType.BYTEA, "col6");
+        addColumn(context, 7, DataType.VARCHAR, "col7");
+        addColumn(context, 8, DataType.BPCHAR, "col8");
+        addColumn(context, 9, DataType.TEXT, "col9");
+        addColumn(context, 10, DataType.NUMERIC, "col10");
+        addColumn(context, 11, DataType.TIMESTAMP, "col11");
+        addColumn(context, 12, DataType.DATE, "col12");
+        addColumn(context, 13, DataType.VARCHAR, "col13");
+
+        BridgeOutputBuilder builder = makeBuilder(context);
+
+        List<OneField> recFields = Arrays.asList(
+                new OneField(DataType.INTEGER.getOID(), 0),
+                new OneField(DataType.FLOAT8.getOID(), (double) 0),
+                new OneField(DataType.REAL.getOID(), (float) 0),
+                new OneField(DataType.BIGINT.getOID(), (long) 0),
+                new OneField(DataType.SMALLINT.getOID(), (short) 0),
+                new OneField(DataType.BOOLEAN.getOID(), true),
+                new OneField(DataType.BYTEA.getOID(), new byte[]{0}),
+                new OneField(DataType.VARCHAR.getOID(), "value"),
+                new OneField(DataType.BPCHAR.getOID(), "value"),
+                new OneField(DataType.TEXT.getOID(), "va\"lue"),
+                new OneField(DataType.NUMERIC.getOID(), "0"),
+                new OneField(DataType.TIMESTAMP.getOID(), new Timestamp(0)),
+                new OneField(DataType.DATE.getOID(), new Date(1)),
+                new OneField(DataType.VARCHAR.getOID(), null)
+        );
+
+        List<Writable> outputQueue = builder.makeOutput(recFields);
+
+        assertNotNull(outputQueue);
+        assertEquals(1, outputQueue.size());
+
+        String datetime = new Timestamp(0).toLocalDateTime().format(GreenplumDateTime.DATETIME_FORMATTER);
+        String date = new Date(1).toString();
+
+        outputQueue.get(0).write(dos);
+        assertEquals("0,0.0,0.0,0,0,true,\\x00,value,value,\"va\"\"lue\",0," + datetime + "," + date + ",\n",
+                new String(dos.getOutput(), "UTF8"));
     }
 
     @Test
@@ -220,11 +272,11 @@ public class BridgeOutputBuilderTest {
     @Test
     public void convertTextDataToLines() throws Exception {
 
-        String data = "Que será será\n" + "Whatever will be will be\n"
+        String data = "Qué será será\n" + "Whatever will be will be\n"
                 + "We are going\n" + "to Wembeley!\n";
         byte[] dataBytes = data.getBytes();
         String[] dataLines = new String[]{
-                "Que será será\n",
+                "Qué será será\n",
                 "Whatever will be will be\n",
                 "We are going\n",
                 "to Wembeley!\n"};
@@ -357,8 +409,7 @@ public class BridgeOutputBuilderTest {
         assertArrayEquals(expected.getBytes(), dos.getOutput());
     }
 
-    private void addColumn(RequestContext context, int idx,
-                           DataType dataType, String name) {
+    private void addColumn(RequestContext context, int idx, DataType dataType, String name) {
         ColumnDescriptor column = new ColumnDescriptor(name, dataType.getOID(), idx, dataType.toString(), null);
         context.getTupleDescription().add(column);
     }
@@ -404,7 +455,7 @@ public class BridgeOutputBuilderTest {
 
         @Override
         public void write(byte[] b, int off, int len) throws IOException {
-            throw new IOException("not implemented");
+            output = Arrays.copyOfRange(b, off, len);
         }
 
         @Override
