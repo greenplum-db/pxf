@@ -38,6 +38,17 @@ public class S3ProtocolHandler implements ProtocolHandler {
     );
 
     private static final String STRING_PASS_RESOLVER = "org.greenplum.pxf.plugins.hdfs.StringPassResolver";
+    private static final String HCFS_FILE_FRAGMENTER = "org.greenplum.pxf.plugins.hdfs.HdfsFileFragmenter";
+
+    @Override
+    public String getFragmenterClassName(RequestContext context) {
+        String fragmenter = context.getFragmenter(); // default to fragmenter defined by the profile
+        if (useS3Select(context)) {
+            fragmenter = HCFS_FILE_FRAGMENTER;
+        }
+        LOG.debug("Determined to use {} fragmenter", fragmenter);
+        return fragmenter;
+    }
 
     @Override
     public String getAccessorClassName(RequestContext context) {

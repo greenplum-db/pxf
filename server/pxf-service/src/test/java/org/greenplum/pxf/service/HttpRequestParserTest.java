@@ -521,8 +521,9 @@ public class HttpRequestParserTest {
         when(mockPluginConf.getHandler("test-profile")).thenReturn(TestHandler.class.getName());
         parameters.putSingle("X-GP-OPTIONS-PROFILE", "test-profile");
         RequestContext context = parser.parseRequest(mockRequestHeaders);
-        assertEquals("test-accessor", context.getAccessor());
-        assertEquals("test-resolver", context.getResolver());
+        assertEquals("overridden-fragmenter", context.getFragmenter());
+        assertEquals("overridden-accessor", context.getAccessor());
+        assertEquals("overridden-resolver", context.getResolver());
     }
 
     @Test
@@ -546,13 +547,18 @@ public class HttpRequestParserTest {
     static class TestHandler implements ProtocolHandler {
 
         @Override
+        public String getFragmenterClassName(RequestContext context) {
+            return "overridden-fragmenter";
+        }
+
+        @Override
         public String getAccessorClassName(RequestContext context) {
-            return "test-accessor";
+            return "overridden-accessor";
         }
 
         @Override
         public String getResolverClassName(RequestContext context) {
-            return "test-resolver";
+            return "overridden-resolver";
         }
     }
 }

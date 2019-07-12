@@ -16,10 +16,12 @@ import static org.junit.Assert.assertEquals;
 
 public class S3ProtocolHandlerTest {
 
+    private static final String FILE_FRAGMENTER = "org.greenplum.pxf.plugins.hdfs.HdfsFileFragmenter";
     private static final String STRING_PASS_RESOLVER = "org.greenplum.pxf.plugins.hdfs.StringPassResolver";
     private static final String S3_ACCESSOR = S3SelectAccessor.class.getName();
     private static final String DEFAULT_ACCESSOR = "default-accessor";
     private static final String DEFAULT_RESOLVER = "default-resolver";
+    private static final String DEFAULT_FRAGMENTER = "default-fragmenter";
     private static final String NOT_SUPPORTED = "ERROR";
 
     private static String[] FORMATS = {"parquet", "text", "csv", "json", "avro"};
@@ -32,6 +34,15 @@ public class S3ProtocolHandlerTest {
     private static String[] EXPECTED_RESOLVER_GPDB_WRITABLE_ON = {NOT_SUPPORTED, NOT_SUPPORTED, NOT_SUPPORTED, NOT_SUPPORTED, NOT_SUPPORTED};
     private static String[] EXPECTED_RESOLVER_GPDB_WRITABLE_AUTO = {DEFAULT_RESOLVER, NOT_SUPPORTED, NOT_SUPPORTED, DEFAULT_RESOLVER, DEFAULT_RESOLVER};
     private static String[] EXPECTED_RESOLVER_GPDB_WRITABLE_OFF = {DEFAULT_RESOLVER, DEFAULT_RESOLVER, DEFAULT_RESOLVER, DEFAULT_RESOLVER, DEFAULT_RESOLVER};
+
+    private static String[] EXPECTED_FRAGMENTER_TEXT_ON = {FILE_FRAGMENTER, FILE_FRAGMENTER, FILE_FRAGMENTER, FILE_FRAGMENTER, NOT_SUPPORTED};
+    private static String[] EXPECTED_FRAGMENTER_TEXT_AUTO_BENEFIT = {FILE_FRAGMENTER, FILE_FRAGMENTER, FILE_FRAGMENTER, FILE_FRAGMENTER, DEFAULT_FRAGMENTER};
+    private static String[] EXPECTED_FRAGMENTER_TEXT_AUTO_NO_BENEFIT = {FILE_FRAGMENTER, DEFAULT_FRAGMENTER, DEFAULT_FRAGMENTER, FILE_FRAGMENTER, DEFAULT_FRAGMENTER};
+    private static String[] EXPECTED_FRAGMENTER_TEXT_OFF = {DEFAULT_FRAGMENTER, DEFAULT_FRAGMENTER, DEFAULT_FRAGMENTER, DEFAULT_FRAGMENTER, DEFAULT_FRAGMENTER};
+
+    private static String[] EXPECTED_FRAGMENTER_GPDB_WRITABLE_ON = {NOT_SUPPORTED, NOT_SUPPORTED, NOT_SUPPORTED, NOT_SUPPORTED, NOT_SUPPORTED};
+    private static String[] EXPECTED_FRAGMENTER_GPDB_WRITABLE_AUTO = {DEFAULT_FRAGMENTER, NOT_SUPPORTED, NOT_SUPPORTED, DEFAULT_FRAGMENTER, DEFAULT_FRAGMENTER};
+    private static String[] EXPECTED_FRAGMENTER_GPDB_WRITABLE_OFF = {DEFAULT_FRAGMENTER, DEFAULT_FRAGMENTER, DEFAULT_FRAGMENTER, DEFAULT_FRAGMENTER, DEFAULT_FRAGMENTER};
 
     private static String[] EXPECTED_ACCESSOR_TEXT_ON = {S3_ACCESSOR, S3_ACCESSOR, S3_ACCESSOR, S3_ACCESSOR, NOT_SUPPORTED};
     private static String[] EXPECTED_ACCESSOR_TEXT_AUTO_BENEFIT = {S3_ACCESSOR, S3_ACCESSOR, S3_ACCESSOR, S3_ACCESSOR, DEFAULT_ACCESSOR};
@@ -52,6 +63,7 @@ public class S3ProtocolHandlerTest {
     public void before() {
         handler = new S3ProtocolHandler();
         context = new RequestContext();
+        context.setFragmenter("default-fragmenter");
         context.setAccessor("default-accessor");
         context.setResolver("default-resolver");
         List<ColumnDescriptor> columns = new ArrayList<>();
@@ -66,6 +78,7 @@ public class S3ProtocolHandlerTest {
         context.setOutputFormat(OutputFormat.TEXT);
         verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_ON);
         verifyResolvers(context, EXPECTED_RESOLVER_TEXT_ON);
+        verifyFragmenters(context, EXPECTED_FRAGMENTER_TEXT_ON);
     }
 
     @Test
@@ -75,6 +88,7 @@ public class S3ProtocolHandlerTest {
         context.setFilterString("abc");
         verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_AUTO_BENEFIT);
         verifyResolvers(context, EXPECTED_RESOLVER_TEXT_AUTO_BENEFIT);
+        verifyFragmenters(context, EXPECTED_FRAGMENTER_TEXT_AUTO_BENEFIT);
     }
 
     @Test
@@ -84,6 +98,7 @@ public class S3ProtocolHandlerTest {
         context.setNumAttrsProjected(1);
         verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_AUTO_BENEFIT);
         verifyResolvers(context, EXPECTED_RESOLVER_TEXT_AUTO_BENEFIT);
+        verifyFragmenters(context, EXPECTED_FRAGMENTER_TEXT_AUTO_BENEFIT);
     }
 
     @Test
@@ -94,6 +109,7 @@ public class S3ProtocolHandlerTest {
         context.setNumAttrsProjected(1);
         verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_AUTO_BENEFIT);
         verifyResolvers(context, EXPECTED_RESOLVER_TEXT_AUTO_BENEFIT);
+        verifyFragmenters(context, EXPECTED_FRAGMENTER_TEXT_AUTO_BENEFIT);
     }
 
     @Test
@@ -104,6 +120,7 @@ public class S3ProtocolHandlerTest {
         context.setNumAttrsProjected(2);
         verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_AUTO_BENEFIT);
         verifyResolvers(context, EXPECTED_RESOLVER_TEXT_AUTO_BENEFIT);
+        verifyFragmenters(context, EXPECTED_FRAGMENTER_TEXT_AUTO_BENEFIT);
     }
 
     @Test
@@ -112,6 +129,7 @@ public class S3ProtocolHandlerTest {
         context.setOutputFormat(OutputFormat.TEXT);
         verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_AUTO_NO_BENEFIT);
         verifyResolvers(context, EXPECTED_RESOLVER_TEXT_AUTO_NO_BENEFIT);
+        verifyFragmenters(context, EXPECTED_FRAGMENTER_TEXT_AUTO_NO_BENEFIT);
     }
 
     @Test
@@ -121,6 +139,7 @@ public class S3ProtocolHandlerTest {
         context.setOutputFormat(OutputFormat.TEXT);
         verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_AUTO_BENEFIT);
         verifyResolvers(context, EXPECTED_RESOLVER_TEXT_AUTO_BENEFIT);
+        verifyFragmenters(context, EXPECTED_FRAGMENTER_TEXT_AUTO_BENEFIT);
     }
 
     @Test
@@ -130,6 +149,7 @@ public class S3ProtocolHandlerTest {
         context.setOutputFormat(OutputFormat.TEXT);
         verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_AUTO_BENEFIT);
         verifyResolvers(context, EXPECTED_RESOLVER_TEXT_AUTO_BENEFIT);
+        verifyFragmenters(context, EXPECTED_FRAGMENTER_TEXT_AUTO_BENEFIT);
     }
 
     @Test
@@ -139,6 +159,7 @@ public class S3ProtocolHandlerTest {
         context.setOutputFormat(OutputFormat.TEXT);
         verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_AUTO_BENEFIT);
         verifyResolvers(context, EXPECTED_RESOLVER_TEXT_AUTO_BENEFIT);
+        verifyFragmenters(context, EXPECTED_FRAGMENTER_TEXT_AUTO_BENEFIT);
     }
 
     @Test
@@ -148,6 +169,7 @@ public class S3ProtocolHandlerTest {
         context.setOutputFormat(OutputFormat.TEXT);
         verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_AUTO_BENEFIT);
         verifyResolvers(context, EXPECTED_RESOLVER_TEXT_AUTO_BENEFIT);
+        verifyFragmenters(context, EXPECTED_FRAGMENTER_TEXT_AUTO_BENEFIT);
     }
 
     @Test
@@ -157,6 +179,7 @@ public class S3ProtocolHandlerTest {
         context.setOutputFormat(OutputFormat.TEXT);
         verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_AUTO_BENEFIT);
         verifyResolvers(context, EXPECTED_RESOLVER_TEXT_AUTO_BENEFIT);
+        verifyFragmenters(context, EXPECTED_FRAGMENTER_TEXT_AUTO_BENEFIT);
     }
 
     @Test
@@ -166,6 +189,7 @@ public class S3ProtocolHandlerTest {
         context.setOutputFormat(OutputFormat.TEXT);
         verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_AUTO_BENEFIT);
         verifyResolvers(context, EXPECTED_RESOLVER_TEXT_AUTO_BENEFIT);
+        verifyFragmenters(context, EXPECTED_FRAGMENTER_TEXT_AUTO_BENEFIT);
     }
 
     @Test
@@ -175,6 +199,7 @@ public class S3ProtocolHandlerTest {
         context.setOutputFormat(OutputFormat.TEXT);
         verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_AUTO_NO_BENEFIT);
         verifyResolvers(context, EXPECTED_RESOLVER_TEXT_AUTO_NO_BENEFIT);
+        verifyFragmenters(context, EXPECTED_FRAGMENTER_TEXT_AUTO_NO_BENEFIT);
     }
 
     @Test
@@ -184,6 +209,7 @@ public class S3ProtocolHandlerTest {
         context.setNumAttrsProjected(2);
         verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_AUTO_NO_BENEFIT);
         verifyResolvers(context, EXPECTED_RESOLVER_TEXT_AUTO_NO_BENEFIT);
+        verifyFragmenters(context, EXPECTED_FRAGMENTER_TEXT_AUTO_NO_BENEFIT);
     }
 
     @Test
@@ -192,6 +218,7 @@ public class S3ProtocolHandlerTest {
         context.setOutputFormat(OutputFormat.TEXT);
         verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_OFF);
         verifyResolvers(context, EXPECTED_RESOLVER_TEXT_OFF);
+        verifyFragmenters(context, EXPECTED_FRAGMENTER_TEXT_OFF);
     }
 
     @Test
@@ -200,6 +227,7 @@ public class S3ProtocolHandlerTest {
         context.setOutputFormat(OutputFormat.GPDBWritable);
         verifyAccessors(context, EXPECTED_ACCESSOR_GPDB_WRITABLE_ON);
         verifyResolvers(context, EXPECTED_RESOLVER_GPDB_WRITABLE_ON);
+        verifyFragmenters(context, EXPECTED_FRAGMENTER_GPDB_WRITABLE_ON);
     }
 
     @Test
@@ -209,6 +237,7 @@ public class S3ProtocolHandlerTest {
         context.setFilterString("abc");
         verifyAccessors(context, EXPECTED_ACCESSOR_GPDB_WRITABLE_AUTO);
         verifyResolvers(context, EXPECTED_RESOLVER_GPDB_WRITABLE_AUTO);
+        verifyFragmenters(context, EXPECTED_FRAGMENTER_GPDB_WRITABLE_AUTO);
     }
 
     @Test
@@ -218,6 +247,7 @@ public class S3ProtocolHandlerTest {
         context.setNumAttrsProjected(1);
         verifyAccessors(context, EXPECTED_ACCESSOR_GPDB_WRITABLE_AUTO);
         verifyResolvers(context, EXPECTED_RESOLVER_GPDB_WRITABLE_AUTO);
+        verifyFragmenters(context, EXPECTED_FRAGMENTER_GPDB_WRITABLE_AUTO);
     }
 
     @Test
@@ -228,6 +258,7 @@ public class S3ProtocolHandlerTest {
         context.setNumAttrsProjected(1);
         verifyAccessors(context, EXPECTED_ACCESSOR_GPDB_WRITABLE_AUTO);
         verifyResolvers(context, EXPECTED_RESOLVER_GPDB_WRITABLE_AUTO);
+        verifyFragmenters(context, EXPECTED_FRAGMENTER_GPDB_WRITABLE_AUTO);
     }
 
     @Test
@@ -238,6 +269,7 @@ public class S3ProtocolHandlerTest {
         context.setNumAttrsProjected(2);
         verifyAccessors(context, EXPECTED_ACCESSOR_GPDB_WRITABLE_AUTO);
         verifyResolvers(context, EXPECTED_RESOLVER_GPDB_WRITABLE_AUTO);
+        verifyFragmenters(context, EXPECTED_FRAGMENTER_GPDB_WRITABLE_AUTO);
     }
 
     @Test
@@ -246,6 +278,7 @@ public class S3ProtocolHandlerTest {
         context.setOutputFormat(OutputFormat.GPDBWritable);
         verifyAccessors(context, EXPECTED_ACCESSOR_GPDB_WRITABLE_AUTO);
         verifyResolvers(context, EXPECTED_RESOLVER_GPDB_WRITABLE_AUTO);
+        verifyFragmenters(context, EXPECTED_FRAGMENTER_GPDB_WRITABLE_AUTO);
     }
 
     @Test
@@ -255,6 +288,7 @@ public class S3ProtocolHandlerTest {
         context.setNumAttrsProjected(2);
         verifyAccessors(context, EXPECTED_ACCESSOR_GPDB_WRITABLE_AUTO);
         verifyResolvers(context, EXPECTED_RESOLVER_GPDB_WRITABLE_AUTO);
+        verifyFragmenters(context, EXPECTED_FRAGMENTER_GPDB_WRITABLE_AUTO);
     }
 
     @Test
@@ -263,6 +297,7 @@ public class S3ProtocolHandlerTest {
         context.setOutputFormat(OutputFormat.GPDBWritable);
         verifyAccessors(context, EXPECTED_ACCESSOR_GPDB_WRITABLE_OFF);
         verifyResolvers(context, EXPECTED_RESOLVER_GPDB_WRITABLE_OFF);
+        verifyFragmenters(context, EXPECTED_FRAGMENTER_GPDB_WRITABLE_OFF);
     }
 
     @Test
@@ -338,15 +373,26 @@ public class S3ProtocolHandlerTest {
         assertEquals("default-resolver", handler.getResolverClassName(context));
     }
 
+    private void verifyFragmenters(RequestContext context, String[] expected) {
+        IntStream.range(0, FORMATS.length).forEach(i -> {
+            context.setFormat(FORMATS[i]);
+            try {
+                assertEquals(expected[i], handler.getFragmenterClassName(context));
+            } catch (IllegalArgumentException e) {
+                if (!expected[i].equals(NOT_SUPPORTED)) {
+                    throw e;
+                }
+            }
+        });
+    }
+
     private void verifyResolvers(RequestContext context, String[] expected) {
         IntStream.range(0, FORMATS.length).forEach(i -> {
             context.setFormat(FORMATS[i]);
             try {
                 assertEquals(expected[i], handler.getResolverClassName(context));
             } catch (IllegalArgumentException e) {
-                // Check reference
-                //noinspection StringEquality
-                if (expected[i] != NOT_SUPPORTED) {
+                if (!expected[i].equals(NOT_SUPPORTED)) {
                     throw e;
                 }
             }
@@ -359,9 +405,7 @@ public class S3ProtocolHandlerTest {
             try {
                 assertEquals(expected[i], handler.getAccessorClassName(context));
             } catch (IllegalArgumentException e) {
-                // Check reference
-                //noinspection StringEquality
-                if (expected[i] != NOT_SUPPORTED) {
+                if (!expected[i].equals(NOT_SUPPORTED)) {
                     throw e;
                 }
             }

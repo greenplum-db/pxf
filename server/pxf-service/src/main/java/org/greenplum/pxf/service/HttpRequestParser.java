@@ -213,6 +213,7 @@ public class HttpRequestParser implements RequestParser<HttpHeaders> {
                 try {
                     clazz = Class.forName(handlerClassName);
                     ProtocolHandler handler = (ProtocolHandler) clazz.newInstance();
+                    context.setFragmenter(handler.getFragmenterClassName(context));
                     context.setAccessor(handler.getAccessorClassName(context));
                     context.setResolver(handler.getResolverClassName(context));
                 } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {

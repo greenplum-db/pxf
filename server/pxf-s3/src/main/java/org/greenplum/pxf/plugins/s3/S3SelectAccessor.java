@@ -108,8 +108,11 @@ public class S3SelectAccessor extends BasePlugin implements Accessor {
     @Override
     public OneRow readNextObject() throws Exception {
         String str = reader.readLine();
-        lineReadCount++;
-        return str != null ? new OneRow(null, str) : null;
+        if (str != null) {
+            lineReadCount++;
+            return new OneRow(null, str);
+        }
+        return null;
     }
 
     @Override
