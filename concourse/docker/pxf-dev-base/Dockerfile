@@ -13,6 +13,12 @@ RUN cd /tmp && \
     echo >> /etc/bashrc 'export GOPATH=/opt/go' && \
     echo >> /etc/bashrc 'export PATH=${GOPATH}/bin:/usr/local/go/bin:$PATH'
 
+# add Java 11
+RUN wget -q https://download.java.net/openjdk/jdk11/ri/openjdk-11+28_linux-x64_bin.tar.gz && \
+    mkdir -p /usr/lib/jvm && \
+    tar -C /usr/lib/jvm -xzf openjdk-11+28_linux-x64_bin.tar.gz && \
+    rm -f openjdk-11+28_linux-x64_bin.tar.gz
+
 # add minio software
 RUN useradd -s /sbin/nologin -d /opt/minio minio && \
     mkdir -p /opt/minio/bin && \
