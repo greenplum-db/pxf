@@ -275,6 +275,14 @@ project('pxf-service') {
         bundleJars "com.google.protobuf:protobuf-java:2.5.0"
         bundleJars "org.slf4j:slf4j-api:1.7.10"
         bundleJars "org.slf4j:slf4j-log4j12:1.7.10"
+
+        // these JARs below are needed for Java 11
+        // jcenter doesn't have full com.sun.xml.bind:jaxb-core/jaxb-impl packages, using glassfish distro
+        bundleJars "javax.xml.bind:jaxb-api:2.3.0"
+        bundleJars "org.glassfish.jaxb:jaxb-core:2.3.0"
+        bundleJars "org.glassfish.jaxb:jaxb-runtime:2.3.0"
+        bundleJars "com.sun.istack:istack-commons-runtime:3.0.8"
+        bundleJars "javax.activation:activation:1.1.1"
     }
 }
 
