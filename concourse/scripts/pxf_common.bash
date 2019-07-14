@@ -279,6 +279,12 @@ function init_and_configure_pxf_server() {
 		su gpadmin -c "echo 'export PXF_USER_IMPERSONATION=false' >> ${PXF_CONF_DIR}/conf/pxf-env.sh"
 	fi
 
+	# update runtime JDK value based on CI parameter
+	if [[ ${RUN_JDK_VERSION} == "11" ]]; then
+		echo 'JDK 11 requested for runtime, setting PXF JAVA_HOME=/usr/lib/jvm/jdk-11 in pxf-env.sh'
+		su gpadmin -c "echo 'export JAVA_HOME=/usr/lib/jvm/jdk-11' >> ${PXF_CONF_DIR}/conf/pxf-env.sh"
+	fi
+
 	popd > /dev/null
 }
 
@@ -313,6 +319,7 @@ function start_pxf_server() {
 
 	echo 'Starting PXF service'
 	su gpadmin -c "./bin/pxf start"
+	ps -aef | grep tomcat
 
 	popd > /dev/null
 }
