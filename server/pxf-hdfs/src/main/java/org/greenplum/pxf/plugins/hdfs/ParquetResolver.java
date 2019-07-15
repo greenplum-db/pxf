@@ -49,7 +49,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
     private SimpleGroupFactory groupFactory;
     private ObjectMapper mapper = new ObjectMapper();
 
-    static Pattern pattern = Pattern.compile("[\\+-]\\d{2}(:\\d{2})?$");
+    private static final Pattern pattern = Pattern.compile("[\\+-]\\d{2}(:\\d{2})?$");
 
     @Override
     public List<OneField> getFields(OneRow row) {
