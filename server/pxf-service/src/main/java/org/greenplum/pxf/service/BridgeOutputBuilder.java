@@ -45,6 +45,11 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static org.greenplum.pxf.api.GreenplumCSV.DELIMITER;
+import static org.greenplum.pxf.api.GreenplumCSV.ESCAPE;
+import static org.greenplum.pxf.api.GreenplumCSV.NEWLINE;
+import static org.greenplum.pxf.api.GreenplumCSV.QUOTE;
+import static org.greenplum.pxf.api.GreenplumCSV.VALUE_OF_NULL;
 import static org.greenplum.pxf.api.io.DataType.TEXT;
 
 /**
@@ -69,14 +74,6 @@ public class BridgeOutputBuilder {
     private String[] colNames;
     private boolean samplingEnabled;
     private boolean isPartialLine = false;
-
-    // Greenplum CSV Defaults
-    // TODO: FDW: We want to read the values for delimiter, newline, value of null,
-    // TODO: FDW: etc from the request and serialize the CSV using those values
-    public static final String DELIMITER = ",";
-    private static final String NEWLINE = "\n";
-    private static final char QUOTE = '"';
-    private static final String VALUE_OF_NULL = "";
 
     /**
      * Constructs a BridgeOutputBuilder.
@@ -130,8 +127,13 @@ public class BridgeOutputBuilder {
             LOG.error(ex.getMessage(), ex);
             return new Text(
                     StringUtils.repeat(",", context.getTupleDescription().size()) +
-                            Utilities.toCsvText(ex.getMessage(), '"', true, true, true) +
-                            "\n"
+                            Utilities.toCsvText(
+                                    ex.getMessage(),
+                                    QUOTE,
+                                    ESCAPE,
+                                    NEWLINE,
+                                    DELIMITER,
+                                    true, true, true) + DELIMITER
             );
         }
     }
@@ -450,8 +452,15 @@ public class BridgeOutputBuilder {
                     else if (field.type == DataType.DATE.getOID())
                         return field.val.toString();
                     else
-                        return Utilities.toCsvText((String) field.val, QUOTE, true, true, true);
+                        return Utilities.toCsvText((String) field.val,
+                                QUOTE,
+                                QUOTE,
+                                NEWLINE,
+                                DELIMITER,
+                                true,
+                                true,
+                                true);
                 })
-                .collect(Collectors.joining(DELIMITER, "", NEWLINE));
+                .collect(Collectors.joining(DELIMITER + "", "", NEWLINE));
     }
 }

@@ -25,14 +25,9 @@ public class S3ProtocolHandler implements ProtocolHandler {
             new SupportMatrixEntry("TEXT", OutputFormat.TEXT, S3Mode.ON),
             new SupportMatrixEntry("CSV", OutputFormat.TEXT, S3Mode.ON),
             new SupportMatrixEntry("JSON", OutputFormat.TEXT, S3Mode.ON),
-            new SupportMatrixEntry("PARQUET", OutputFormat.TEXT, S3Mode.AUTO),
-            new SupportMatrixEntry("TEXT", OutputFormat.TEXT, S3Mode.AUTO),
-            new SupportMatrixEntry("CSV", OutputFormat.TEXT, S3Mode.AUTO),
-            new SupportMatrixEntry("JSON", OutputFormat.TEXT, S3Mode.AUTO),
+            new SupportMatrixEntry("PARQUET", OutputFormat.TEXT, S3Mode.OFF),
             new SupportMatrixEntry("TEXT", OutputFormat.TEXT, S3Mode.OFF),
             new SupportMatrixEntry("CSV", OutputFormat.TEXT, S3Mode.OFF),
-            new SupportMatrixEntry("PARQUET", OutputFormat.GPDBWritable, S3Mode.AUTO),
-            new SupportMatrixEntry("JSON", OutputFormat.GPDBWritable, S3Mode.AUTO),
             new SupportMatrixEntry("PARQUET", OutputFormat.GPDBWritable, S3Mode.OFF),
             new SupportMatrixEntry("JSON", OutputFormat.GPDBWritable, S3Mode.OFF)
     );
@@ -73,7 +68,6 @@ public class S3ProtocolHandler implements ProtocolHandler {
 
     private boolean useS3Select(RequestContext context) {
         String format = StringUtils.upperCase(context.getFormat());
-        String compressionType = context.getOption(S3SelectAccessor.COMPRESSION_TYPE);
         OutputFormat outputFormat = context.getOutputFormat();
         S3Mode selectMode = S3Mode.fromString(context.getOption(S3_SELECT_OPTION));
         boolean isS3SelectSupportedFormat = SUPPORTED_FORMATS.contains(format);
@@ -87,19 +81,19 @@ public class S3ProtocolHandler implements ProtocolHandler {
 
         switch (selectMode) {
             case ON:
-                return formatSupported(outputFormat, format, S3Mode.ON, compressionType, true);
+                return formatSupported(outputFormat, format, S3Mode.ON, true);
             case AUTO:
                 // if supported for ON and beneficial, use it
                 // if supported for ON and not beneficial -> if supported for OFF -> use OFF, else use ON
                 // if not supported for ON -> if supported for OFF -> use OFF, else ERROR out
-                if (formatSupported(outputFormat, format, S3Mode.ON, compressionType, false)) {
+                if (formatSupported(outputFormat, format, S3Mode.ON, false)) {
                     if (willBenefitFromSelect(context) || hasFormatOptions(format, context)) {
                         return true;
                     } else {
-                        return !formatSupported(outputFormat, format, S3Mode.OFF, compressionType, false);
+                        return !formatSupported(outputFormat, format, S3Mode.OFF, false);
                     }
                 } else {
-                    return !formatSupported(outputFormat, format, S3Mode.OFF, compressionType, true);
+                    return !formatSupported(outputFormat, format, S3Mode.OFF, true);
                 }
             default:
                 return false;
@@ -149,11 +143,10 @@ public class S3ProtocolHandler implements ProtocolHandler {
      * @param outputFormat    output format
      * @param format          data format
      * @param selectMode      s3-select mode requested by a user
-     * @param compressionType the remote file compression type (i.e GZIP or BZip2)
      * @param raiseException  true if an exception needs to be raised if the format is not supported, false otherwise
      * @return true if the data format is supported to be retrieved with s3select protocol
      */
-    private boolean formatSupported(OutputFormat outputFormat, String format, S3Mode selectMode, String compressionType, boolean raiseException) {
+    private boolean formatSupported(OutputFormat outputFormat, String format, S3Mode selectMode, boolean raiseException) {
         boolean supported = SUPPORT_MATRIX.contains(new SupportMatrixEntry(format, outputFormat, selectMode));
         if (!supported && raiseException) {
             throw new IllegalArgumentException(String.format("S3-SELECT optimization is not supported for format '%s'", format));

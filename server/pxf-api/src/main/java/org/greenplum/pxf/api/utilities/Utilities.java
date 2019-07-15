@@ -34,6 +34,11 @@ import java.io.ObjectInputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
+import static org.greenplum.pxf.api.GreenplumCSV.DELIMITER;
+import static org.greenplum.pxf.api.GreenplumCSV.ESCAPE;
+import static org.greenplum.pxf.api.GreenplumCSV.NEWLINE;
+import static org.greenplum.pxf.api.GreenplumCSV.QUOTE;
+
 /**
  * Utilities class exposes helper method for PXF classes
  */
@@ -43,7 +48,6 @@ public class Utilities {
     private static final String PROPERTY_KEY_USER_IMPERSONATION = "pxf.service.user.impersonation.enabled";
     private static final String PROPERTY_KEY_FRAGMENTER_CACHE = "pxf.service.fragmenter.cache.enabled";
     private static final char[] PROHIBITED_CHARS = new char[]{'/', '\\', '.', ' ', ',', ';'};
-    private static final char CSV_QUOTE = '"';
 
     /**
      * Escapes CSV quotes (") to form a valid CSV string
@@ -56,7 +60,7 @@ public class Utilities {
     public static String toCsvText(String s,
                                    boolean prependQuoteChar,
                                    boolean appendQuoteChar) {
-        return toCsvText(s, CSV_QUOTE, prependQuoteChar, appendQuoteChar, false);
+        return toCsvText(s, QUOTE, ESCAPE, NEWLINE, DELIMITER, prependQuoteChar, appendQuoteChar, false);
     }
 
     /**
@@ -73,24 +77,47 @@ public class Utilities {
      */
     public static String toCsvText(String s,
                                    char quoteChar,
+                                   char escapeChar,
+                                   String newlineChar,
+                                   Character delimiterChar,
                                    boolean prependQuoteChar,
                                    boolean appendQuoteChar,
                                    boolean skipIfQuotingIsNotNeeded) {
         if (s == null) return null;
 
         final int length = s.length();
-        int i, quotes = 0, pos = 0, total = length;
+        int i, j, quotes = 0, specialChars = 0, pos = 0, total = length;
 
         // count all the quotes
         for (i = 0; i < length; i++) {
-            if (s.charAt(i) == quoteChar) quotes++;
+            char curr = s.charAt(i);
+            if (curr == quoteChar) quotes++;
+            if (delimiterChar != null && curr == delimiterChar) specialChars++;
+            if (newlineChar != null && newlineChar.length() > 0) {
+
+                j = 0;
+
+                // let's say we have input asd\r\nacd
+                // and newlinechar \r\n then we need to
+                // increase the specialChars count by 1
+
+                while (i < length && j < newlineChar.length()
+                        && newlineChar.charAt(j) == s.charAt(i)) {
+                    j++;
+                    if (j < newlineChar.length()) i++;
+                }
+
+                if (j == newlineChar.length()) specialChars++;
+            }
         }
 
         if (prependQuoteChar) total += 1;
         if (appendQuoteChar) total += 1;
         total += quotes;
 
-        if (length == total || (skipIfQuotingIsNotNeeded && quotes == 0))
+        // if there are QUOTE, DELIMITER, NEWLINE characters
+        // in the string we also need to quote the CSV field
+        if (length == total || (skipIfQuotingIsNotNeeded && quotes == 0 && specialChars == 0))
             return s;
 
         char[] chars = new char[total];
@@ -99,7 +126,7 @@ public class Utilities {
 
         for (i = 0; i < length; i++) {
             if (quotes > 0 && s.charAt(i) == quoteChar)
-                chars[pos++] = quoteChar; // escape quote char
+                chars[pos++] = escapeChar; // escape quote char
             chars[pos++] = s.charAt(i);
         }
 
