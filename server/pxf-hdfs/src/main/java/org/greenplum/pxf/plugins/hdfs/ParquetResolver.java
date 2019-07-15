@@ -128,7 +128,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                 }
                 group.add(index, Binary.fromReusedByteArray(bytes));
                 break;
-            case INT96:  // SQL standard timestamp string value with or without time zone literals: https://www.postgresql.org/docs/9.1/datatype-datetime.html
+            case INT96:  // SQL standard timestamp string value with or without time zone literals: https://www.postgresql.org/docs/9.4/datatype-datetime.html
                 String timestamp = (String) field.val;
                 if (pattern.matcher(timestamp).find()) {
                     // timestamp with timezone format
