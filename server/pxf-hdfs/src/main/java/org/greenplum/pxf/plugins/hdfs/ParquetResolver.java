@@ -38,7 +38,6 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static org.apache.parquet.schema.Type.Repetition.REPEATED;
@@ -49,7 +48,9 @@ public class ParquetResolver extends BasePlugin implements Resolver {
     private SimpleGroupFactory groupFactory;
     private ObjectMapper mapper = new ObjectMapper();
 
-    private static final Pattern pattern = Pattern.compile("[\\+-]\\d{2}(:\\d{2})?$");
+    // used to distinguish string pattern between type "timestamp" ("2019-03-14 14:10:28")
+    // and type "timestamp with time zone" ("2019-03-14 14:10:28+07:30")
+    private static final Pattern timestampPattern = Pattern.compile("[+-]\\d{2}(:\\d{2})?$");
 
     @Override
     public List<OneField> getFields(OneRow row) {
@@ -130,7 +131,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                 break;
             case INT96:  // SQL standard timestamp string value with or without time zone literals: https://www.postgresql.org/docs/9.4/datatype-datetime.html
                 String timestamp = (String) field.val;
-                if (pattern.matcher(timestamp).find()) {
+                if (timestampPattern.matcher(timestamp).find()) {
                     // Note: this conversion convert type "timestamp with time zone" will lose timezone information
                     // while preserving the correct value. (as Parquet doesn't support timestamp with time zone.
                     group.add(index, ParquetTypeConverter.getBinaryFromTimestampWithTimeZone(timestamp));
