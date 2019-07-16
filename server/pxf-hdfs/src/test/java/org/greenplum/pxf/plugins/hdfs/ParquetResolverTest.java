@@ -66,6 +66,7 @@ public class ParquetResolverTest {
         context = new RequestContext();
         schema = new MessageType("test");
         context.setMetadata(schema);
+        context.setConfig("default");
 
         // for test cases that test conversions against server's time zone
         Instant timestamp = Instant.parse("2013-07-14T04:00:05Z"); // UTC

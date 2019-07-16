@@ -44,7 +44,7 @@ import static org.mockito.Mockito.*;
 public class HBaseAccessorTest {
     static final String tableName = "fishy_HBase_table";
 
-    RequestContext requestContext;
+    private RequestContext context;
     HBaseTupleDescription tupleDescription;
     Table table;
     Scan scanDetails;
@@ -79,8 +79,8 @@ public class HBaseAccessorTest {
     public void construction() throws Exception {
         prepareConstruction();
         HBaseAccessor accessor = new HBaseAccessor();
-        accessor.initialize(requestContext);
-        PowerMockito.verifyNew(HBaseTupleDescription.class).withArguments(requestContext);
+        accessor.initialize(context);
+        PowerMockito.verifyNew(HBaseTupleDescription.class).withArguments(context);
     }
 
 	/*
@@ -98,10 +98,8 @@ public class HBaseAccessorTest {
         prepareTableOpen();
         prepareEmptyScanner();
 
-        when(requestContext.getFragmentMetadata()).thenReturn(null);
-
         accessor = new HBaseAccessor();
-        accessor.initialize(requestContext);
+        accessor.initialize(context);
 
         try {
             accessor.openForRead();
@@ -118,9 +116,10 @@ public class HBaseAccessorTest {
      * Creates a mock for HBaseTupleDescription and RequestContext
      */
     private void prepareConstruction() throws Exception {
-        requestContext = mock(RequestContext.class);
+        context = new RequestContext();
+        context.setConfig("default");
         tupleDescription = mock(HBaseTupleDescription.class);
-        PowerMockito.whenNew(HBaseTupleDescription.class).withArguments(requestContext).thenReturn(tupleDescription);
+        PowerMockito.whenNew(HBaseTupleDescription.class).withArguments(context).thenReturn(tupleDescription);
     }
 
     /*
@@ -129,7 +128,7 @@ public class HBaseAccessorTest {
      */
     private void prepareTableOpen() throws Exception {
         // Set table name
-        when(requestContext.getDataSource()).thenReturn(tableName);
+        context.setDataSource(tableName);
 
         // Make sure we mock static functions in HBaseConfiguration
         PowerMockito.mockStatic(HBaseConfiguration.class);
@@ -154,7 +153,6 @@ public class HBaseAccessorTest {
         PowerMockito.whenNew(Scan.class).withNoArguments().thenReturn(scanDetails);
 
         when(tupleDescription.columns()).thenReturn(0);
-        when(requestContext.hasFilter()).thenReturn(false);
     }
 
     /*

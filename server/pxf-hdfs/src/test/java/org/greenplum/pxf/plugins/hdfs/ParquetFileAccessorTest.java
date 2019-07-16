@@ -18,6 +18,7 @@ public class ParquetFileAccessorTest {
     public void setup() {
         accessor = new ParquetFileAccessor();
         context = new RequestContext();
+        context.setConfig("default");
         schema = new MessageType("hive_schema");
     }
 

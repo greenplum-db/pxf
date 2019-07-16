@@ -20,6 +20,7 @@ public class HdfsFileFragmenterTest {
         String path = this.getClass().getClassLoader().getResource("csv/").getPath();
 
         RequestContext context = new RequestContext();
+        context.setConfig("default");
         context.setProfileScheme("localfile");
         context.setDataSource(path);
 

@@ -347,6 +347,7 @@ public abstract class PxfUnit {
 
         // 2.1.0 Properties
         // HDMetaData parameters
+        context.setConfig("default");
         context.setUser("who");
         System.setProperty("greenplum.alignment", "what");
         context.setSegmentId(1);

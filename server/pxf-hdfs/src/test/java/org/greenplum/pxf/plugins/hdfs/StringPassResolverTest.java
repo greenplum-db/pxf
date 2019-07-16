@@ -19,23 +19,22 @@ package org.greenplum.pxf.plugins.hdfs;
  * under the License.
  */
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.junit.Test;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+
 public class StringPassResolverTest {
-    RequestContext mockRequestContext;
+    RequestContext context;
 
     @Test
     /*
@@ -89,9 +88,10 @@ public class StringPassResolverTest {
      * helpers functions
      */
     private StringPassResolver buildResolver() throws Exception {
-        mockRequestContext = mock(RequestContext.class);
+        context = new RequestContext();
+        context.setConfig("default");
         StringPassResolver resolver = new StringPassResolver();
-        resolver.initialize(mockRequestContext);
+        resolver.initialize(context);
         return resolver;
     }
 
@@ -100,6 +100,6 @@ public class StringPassResolverTest {
         byte[] bytes = (byte[]) oneRow.getData();
         byte[] result = Arrays.copyOfRange(bytes, 0, bytes.length);
         assertEquals(result.length, expected.length);
-        assertTrue(Arrays.equals(result, expected));
+        assertArrayEquals(result, expected);
     }
 }

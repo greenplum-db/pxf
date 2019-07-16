@@ -48,6 +48,7 @@ public class DemoResolverTest {
     @Before
     public void setup() {
         context = new RequestContext();
+        context.setConfig("default");
 
         customResolver = new DemoResolver();
         textResolver = new DemoTextResolver();

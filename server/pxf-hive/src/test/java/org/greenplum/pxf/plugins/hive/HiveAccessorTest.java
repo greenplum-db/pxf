@@ -49,6 +49,7 @@ public class HiveAccessorTest {
 
         when(inputFormat.getRecordReader(any(InputSplit.class), any(JobConf.class), any(Reporter.class))).thenReturn(reader);
         PowerMockito.when(requestContext.getAccessor()).thenReturn(HiveORCAccessor.class.getName());
+        PowerMockito.when(requestContext.getConfig()).thenReturn("default");
 
         @SuppressWarnings("unchecked")
         OngoingStubbing ongoingStubbing = when(HiveDataFragmenter.makeInputFormat(any(String.class), any(JobConf.class))).thenReturn(inputFormat);

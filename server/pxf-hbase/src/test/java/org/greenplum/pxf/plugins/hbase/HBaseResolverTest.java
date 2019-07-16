@@ -37,8 +37,8 @@ import static org.mockito.Mockito.mock;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({HBaseResolver.class})
 public class HBaseResolverTest {
-    RequestContext requestContext;
-    HBaseTupleDescription tupleDesc;
+    private RequestContext context;
+    private HBaseTupleDescription tupleDesc;
 
     @Test
     /*
@@ -48,14 +48,15 @@ public class HBaseResolverTest {
 	 * creation is verified
 	 */
     public void construction() throws Exception {
-        requestContext = mock(RequestContext.class);
+        context = new RequestContext();
+        context.setConfig("default");
         tupleDesc = mock(HBaseTupleDescription.class);
-        PowerMockito.whenNew(HBaseTupleDescription.class).withArguments(requestContext).thenReturn(tupleDesc);
+        PowerMockito.whenNew(HBaseTupleDescription.class).withArguments(context).thenReturn(tupleDesc);
 
         HBaseResolver resolver = new HBaseResolver();
-        resolver.initialize(requestContext);
+        resolver.initialize(context);
 
-        PowerMockito.verifyNew(HBaseTupleDescription.class).withArguments(requestContext);
+        PowerMockito.verifyNew(HBaseTupleDescription.class).withArguments(context);
     }
 
     @Test
@@ -65,12 +66,13 @@ public class HBaseResolverTest {
     public void testConvertToJavaObject() throws Exception {
         Object result;
 
-        requestContext = mock(RequestContext.class);
+        context = new RequestContext();
+        context.setConfig("default");
         tupleDesc = mock(HBaseTupleDescription.class);
-        PowerMockito.whenNew(HBaseTupleDescription.class).withArguments(requestContext).thenReturn(tupleDesc);
+        PowerMockito.whenNew(HBaseTupleDescription.class).withArguments(context).thenReturn(tupleDesc);
 
         HBaseResolver resolver = new HBaseResolver();
-        resolver.initialize(requestContext);
+        resolver.initialize(context);
 
         /*
 		 * Supported type, No value.

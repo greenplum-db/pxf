@@ -29,8 +29,6 @@ import org.junit.rules.ExpectedException;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class JdbcPartitionFragmenterTest {
     @Rule
@@ -39,13 +37,14 @@ public class JdbcPartitionFragmenterTest {
     private RequestContext context;
 
     @Before
-    public void setUp() throws Exception {
-        context = mock(RequestContext.class);
-        when(context.getDataSource()).thenReturn("table");
+    public void setUp() {
+        context = new RequestContext();
+        context.setConfig("default");
+        context.setDataSource("table");
     }
 
     @Test
-    public void testNoPartition() throws Exception {
+    public void testNoPartition() {
 
         JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
         fragment.initialize(context);
@@ -55,20 +54,18 @@ public class JdbcPartitionFragmenterTest {
     }
 
     @Test
-    public void testPartitionByTypeInvalid() throws Exception {
+    public void testPartitionByTypeInvalid() {
         thrown.expect(IllegalArgumentException.class);
 
-        when(context.getOption("PARTITION_BY")).thenReturn("level:float");
-
+        context.addOption("PARTITION_BY", "level:float");
         new JdbcPartitionFragmenter().initialize(context);
     }
 
     @Test
-    public void testPartitionByFormatInvalid() throws Exception {
+    public void testPartitionByFormatInvalid() {
         thrown.expect(IllegalArgumentException.class);
 
-        when(context.getOption("PARTITION_BY")).thenReturn("level-enum");
-
+        context.addOption("PARTITION_BY", "level-enum");
         new JdbcPartitionFragmenter().initialize(context);
     }
 }

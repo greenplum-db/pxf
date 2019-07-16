@@ -88,6 +88,22 @@ public class BaseConfigurationFactoryTest {
     }
 
     @Test
+    public void testConfigurationsLoadedFromMultipleFilesForDefaultServerWithAbsolutePath() {
+        String config = this.getClass().getClassLoader().getResource("servers/default").getPath();
+        Configuration configuration = factory.initConfiguration(config, "default", "dummy", null);
+
+        assertEquals("blue", configuration.get("test.blue"));
+        assertEquals("red", configuration.get("test.red"));
+
+        // Should return null because the file name does not end in -site.xml
+        assertNull(configuration.get("test.green"));
+
+        assertEquals("bluevaluefromuser", configuration.get("test.blue.key"));
+        assertEquals("redvaluefromuser", configuration.get("test.red.key"));
+        assertEquals("uservalue", configuration.get("test.user.key"));
+    }
+
+    @Test
     public void testConfigurationsLoadedForCaseInsensitiveServerName() {
         Configuration configuration = factory.initConfiguration("DeFAulT", "DeFAulT", "dummy", null);
 

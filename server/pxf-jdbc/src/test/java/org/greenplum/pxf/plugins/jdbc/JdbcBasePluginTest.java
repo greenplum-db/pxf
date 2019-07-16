@@ -67,6 +67,7 @@ public class JdbcBasePluginTest {
 
     @Before public void before() {
         context = new RequestContext();
+        context.setConfig("default");
         context.setDataSource("test-table");
         additionalProps = new HashMap<>();
         context.setAdditionalConfigProps(additionalProps);

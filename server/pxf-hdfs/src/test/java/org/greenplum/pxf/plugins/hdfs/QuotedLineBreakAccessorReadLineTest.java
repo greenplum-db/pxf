@@ -37,6 +37,7 @@ public class QuotedLineBreakAccessorReadLineTest {
     public void setup() {
         FileSplit fileSplitMock = mock(FileSplit.class);
         RequestContext context = new RequestContext();
+        context.setConfig("default");
         context.addOption("FILE_AS_ROW", "true");
         context.getTupleDescription().add(new ColumnDescriptor(
                 "file_as_row", 1, 1, "TEXT", null

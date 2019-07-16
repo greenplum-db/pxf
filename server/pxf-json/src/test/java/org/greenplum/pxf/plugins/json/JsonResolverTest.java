@@ -30,6 +30,7 @@ public class JsonResolverTest {
     public void setUp() {
         resolver = new JsonResolver();
         context = new RequestContext();
+        context.setConfig("default");
         context.setTupleDescription(schema);
         resolver.initialize(context);
     }

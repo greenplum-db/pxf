@@ -54,6 +54,7 @@ public class SQLQueryBuilderTest {
     @Before
     public void setup() throws Exception {
         context = new RequestContext();
+        context.setConfig("default");
         context.setDataSource("sales");
         List<ColumnDescriptor> columns = new ArrayList<>();
         columns.add(new ColumnDescriptor("id", DataType.INTEGER.getOID(), 0, "int4", null));

@@ -28,6 +28,7 @@ import org.apache.hadoop.hive.ql.io.orc.Reader;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentFactory;
 import org.apache.hadoop.hive.serde2.io.DateWritable;
+import org.apache.hadoop.mapred.JobConf;
 import org.greenplum.pxf.api.BasicFilter;
 import org.greenplum.pxf.api.LogicalFilter;
 import org.greenplum.pxf.api.OneRow;
@@ -274,6 +275,15 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
             }
         }
         return row;
+    }
+
+    /**
+     * Package private for unit testing
+     *
+     * @return the jobConf
+     */
+    JobConf getJobConf() {
+        return jobConf;
     }
 
 }

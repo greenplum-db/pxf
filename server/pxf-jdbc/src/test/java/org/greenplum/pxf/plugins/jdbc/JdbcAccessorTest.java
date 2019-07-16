@@ -53,6 +53,7 @@ public class JdbcAccessorTest {
 
         accessor = new JdbcAccessor(mockConnectionManager);
         context = new RequestContext();
+        context.setConfig("default");
         context.setDataSource("test-table");
         Map<String, String> additionalProps = new HashMap<>();
         additionalProps.put("jdbc.driver", "org.greenplum.pxf.plugins.jdbc.FakeJdbcDriver");

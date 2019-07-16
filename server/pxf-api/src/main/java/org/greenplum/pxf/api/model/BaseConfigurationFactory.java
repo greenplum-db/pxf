@@ -43,14 +43,25 @@ public class BaseConfigurationFactory implements ConfigurationFactory {
         LOG.debug("Initializing configuration for server {}", serverName);
         Configuration configuration = new Configuration();
 
-        File[] serverDirectories = serversConfigDirectory
-                .listFiles(f -> f.isDirectory() &&
-                        f.canRead() &&
-                        StringUtils.equalsIgnoreCase(configDirectory, f.getName()));
+        File[] serverDirectories = null;
+        Path p = Paths.get(configDirectory);
+
+        if (p.isAbsolute()) {
+            File f = p.toFile();
+            if (f.exists() && f.isDirectory() && f.canRead()) {
+                serverDirectories = new File[]{f};
+            }
+        } else {
+            serverDirectories = serversConfigDirectory
+                    .listFiles(f ->
+                            f.isDirectory() &&
+                                    f.canRead() &&
+                                    StringUtils.equalsIgnoreCase(configDirectory, f.getName()));
+        }
 
         if (ArrayUtils.isEmpty(serverDirectories)) {
             LOG.warn("Directory {}{}{} does not exist or cannot be read by PXF, no configuration resources are added for server {}",
-                serversConfigDirectory, File.separator, configDirectory, serverName);
+                    serversConfigDirectory, File.separator, configDirectory, serverName);
         } else if (serverDirectories.length > 1) {
             throw new IllegalStateException(String.format(
                     "Multiple directories found for server %s. Server directories are expected to be case-insensitive.", serverName
@@ -68,7 +79,7 @@ public class BaseConfigurationFactory implements ConfigurationFactory {
         }
 
         // add user configuration
-        if(!ArrayUtils.isEmpty(serverDirectories)) {
+        if (!ArrayUtils.isEmpty(serverDirectories)) {
             processUserResource(configuration, serverName, userName, serverDirectories[0]);
         }
 
@@ -107,7 +118,7 @@ public class BaseConfigurationFactory implements ConfigurationFactory {
                 configuration.set(String.format("%s.%s", PXF_CONFIG_RESOURCE_PATH_PROPERTY, path.getFileName().toString()), resourceURL.toString());
             }
         } catch (Exception e) {
-            throw new RuntimeException(String.format("Unable to read user configuration for user % using server %s from %s",
+            throw new RuntimeException(String.format("Unable to read user configuration for user %s using server %s from %s",
                     userName, serverName, directory.getAbsolutePath()), e);
         }
     }

@@ -19,117 +19,81 @@ package org.greenplum.pxf.plugins.hive;
  * under the License.
  */
 
-import org.apache.hadoop.hive.ql.io.orc.OrcInputFormat;
-import org.apache.hadoop.hive.ql.io.orc.Reader;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentFactory;
-import org.apache.hadoop.mapred.*;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
-import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.core.classloader.annotations.SuppressStaticInitializationFor;
-import org.powermock.modules.junit4.PowerMockRunner;
 
 import static org.apache.hadoop.hive.ql.io.sarg.SearchArgumentFactory.SARG_PUSHDOWN;
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
-
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({HiveORCAccessor.class, HiveUtilities.class, HdfsUtilities.class, HiveDataFragmenter.class})
-@SuppressStaticInitializationFor({"org.apache.hadoop.mapred.JobConf",
-        "org.apache.hadoop.hive.metastore.api.MetaException",
-        "org.greenplum.pxf.plugins.hive.utilities.HiveUtilities"}) // Prevents static inits
 public class HiveORCAccessorTest {
 
-    @Mock
-    RequestContext requestContext;
-    @Mock OrcInputFormat orcInputFormat;
-    @Mock InputFormat inputFormat;
-    @Mock ColumnDescriptor columnDesc;
-    @Mock Reader orcReader;
-    private JobConf jobConf;
+    private RequestContext context;
     private HiveORCAccessor accessor;
 
     @Before
-    @SuppressWarnings("unchecked")
     public void setup() throws Exception {
-        jobConf = new JobConf();
-        PowerMockito.whenNew(JobConf.class).withAnyArguments().thenReturn(jobConf);
-
-        PowerMockito.mockStatic(HiveUtilities.class);
-        PowerMockito.when(HiveUtilities.parseHiveUserData(any(RequestContext.class))).thenReturn(new HiveUserData("", "", null, HiveDataFragmenter.HIVE_NO_PART_TBL, true, "1", "", 0));
-
-        PowerMockito.mockStatic(HdfsUtilities.class);
-
-        PowerMockito.mockStatic(HiveDataFragmenter.class);
-        PowerMockito.when(HiveDataFragmenter.makeInputFormat(any(String.class), any(JobConf.class))).thenReturn(inputFormat);
-
-        PowerMockito.whenNew(OrcInputFormat.class).withNoArguments().thenReturn(orcInputFormat);
-        RecordReader recordReader = mock(RecordReader.class);
-        PowerMockito.when(orcInputFormat.getRecordReader(any(InputSplit.class), any(JobConf.class), any(Reporter.class))).thenReturn(recordReader);
-        PowerMockito.when(requestContext.getAccessor()).thenReturn(HiveORCAccessor.class.getName());
+        HiveUserData userData = new HiveUserData("", "", null, HiveDataFragmenter.HIVE_NO_PART_TBL, true, "1", "", 0);
+        context = new RequestContext();
+        context.setConfig("default");
+        context.setDataSource("foo");
+        context.setFragmentMetadata(HdfsUtilities.prepareFragmentMetadata(0, 0, new String[]{"localhost"}));
+        context.setFragmentUserData(userData.toString().getBytes());
+        context.getTupleDescription().add(new ColumnDescriptor("col1", 1, 1, "TEXT", null));
+        context.getTupleDescription().add(new ColumnDescriptor("FOO", 1, 1, "TEXT", null));
+        context.setAccessor(HiveORCAccessor.class.getName());
 
         accessor = new HiveORCAccessor();
-        accessor.initialize(requestContext);
-        PowerMockito.when(accessor.getOrcReader()).thenReturn(orcReader);
+        accessor.initialize(context);
     }
 
     @Test
-    public void parseFilterWithISNULL() throws Exception {
-
-        when(requestContext.hasFilter()).thenReturn(true);
-        when(requestContext.getFilterString()).thenReturn("a1o8");
-        when(columnDesc.columnName()).thenReturn("FOO");
-        when(requestContext.getColumn(1)).thenReturn(columnDesc);
-
-        accessor.openForRead();
+    public void parseFilterWithISNULL() {
+        context.setFilterString("a1o8");
+        try {
+            accessor.openForRead();
+        } catch (Exception e) {
+            // Ignore exception thrown by openForRead complaining about file foo not found
+        }
 
         SearchArgument sarg = SearchArgumentFactory.newBuilder().startAnd().isNull("FOO").end().build();
-        assertEquals(sarg.toKryo(), jobConf.get(SARG_PUSHDOWN));
+        assertEquals(sarg.toKryo(), accessor.getJobConf().get(SARG_PUSHDOWN));
     }
 
     @Test
-    public void parseFilterWithISNOTNULL() throws Exception {
+    public void parseFilterWithISNOTNULL() {
 
-        when(requestContext.hasFilter()).thenReturn(true);
-        when(requestContext.getFilterString()).thenReturn("a1o9");
-        when(columnDesc.columnName()).thenReturn("FOO");
-        when(requestContext.getColumn(1)).thenReturn(columnDesc);
-
-        accessor.openForRead();
+        context.setFilterString("a1o9");
+        try {
+            accessor.openForRead();
+        } catch (Exception e) {
+            // Ignore exception thrown by openForRead complaining about file foo not found
+        }
 
         SearchArgument sarg = SearchArgumentFactory.newBuilder().startAnd().startNot().isNull("FOO").end().end().build();
-        assertEquals(sarg.toKryo(), jobConf.get(SARG_PUSHDOWN));
+        assertEquals(sarg.toKryo(), accessor.getJobConf().get(SARG_PUSHDOWN));
     }
 
     @Test
-    public void parseFilterWithIn() throws Exception {
+    public void parseFilterWithIn() {
 
-        when(requestContext.hasFilter()).thenReturn(true);
-        when(requestContext.getFilterString()).thenReturn("a1m1007s1d1s1d2s1d3o10");
-        when(columnDesc.columnName()).thenReturn("FOO");
-        when(requestContext.getColumn(1)).thenReturn(columnDesc);
-
-        accessor.openForRead();
+        context.setFilterString("a1m1007s1d1s1d2s1d3o10");
+        try {
+            accessor.openForRead();
+        } catch (Exception e) {
+            // Ignore exception thrown by openForRead complaining about file foo not found
+        }
 
         SearchArgument sarg = SearchArgumentFactory.newBuilder().startAnd().in("FOO", 1, 2, 3).end().build();
-
-        assertEquals(sarg.toKryo(), jobConf.get(SARG_PUSHDOWN));
+        assertEquals(sarg.toKryo(), accessor.getJobConf().get(SARG_PUSHDOWN));
     }
 
-    @Test(expected=IllegalStateException.class)
+    @Test(expected = IllegalStateException.class)
     public void emitAggObjectCountStatsNotInitialized() {
         accessor.emitAggObject();
     }
-
 }
