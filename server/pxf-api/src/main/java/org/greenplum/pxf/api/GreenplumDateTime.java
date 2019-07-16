@@ -13,21 +13,22 @@ public class GreenplumDateTime {
 
     /**
      * Supports date times with the format yyyy-MM-dd HH:mm:ss and
-     * optional milliseconds
+     * optional microsecond
      */
     public static final DateTimeFormatter DATETIME_FORMATTER =
             new DateTimeFormatterBuilder().appendPattern(DATETIME_FORMATTER_BASE_PATTERN)
-                    // Parsing nanos in strict mode, the number of parsed digits must be between 0 and 6 (millisecond support)
+                    // Parsing nanos in strict mode, the number of parsed digits must be between 0 and 6 (microsecond support)
                     .appendFraction(ChronoField.NANO_OF_SECOND, 0, 6, true).toFormatter();
 
     /**
-     * Supports date times with timezone and optional milliseconds
+     * Supports date times with timezone and optional microsecond
      */
+    private static DateTimeFormatter optionalFormatter = new DateTimeFormatterBuilder().appendOffset("+HH:mm", "Z").toFormatter();
     public static final DateTimeFormatter DATETIME_WITH_TIMEZONE_FORMATTER =
             new DateTimeFormatterBuilder()
                     .parseCaseInsensitive()
                     .append(DATETIME_FORMATTER)
                     // Make the mm optional since Greenplum will only send HH if mm == 00
-                    .appendOptional(new DateTimeFormatterBuilder().appendOffset("+HH:mm", "Z").toFormatter())
+                    .appendOptional(optionalFormatter)
                     .toFormatter();
 }
