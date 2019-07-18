@@ -21,8 +21,6 @@ under the License.
 
 <Server port="${base.shutdown.port}"
         shutdown="SHUTDOWN">
-    <Listener className="org.apache.catalina.core.JasperListener"/>
-    <Listener className="org.apache.catalina.core.JreMemoryLeakPreventionListener"/>
     <Listener className="org.apache.catalina.mbeans.GlobalResourcesLifecycleListener"/>
     <GlobalNamingResources>
         <Resource auth="Container"
