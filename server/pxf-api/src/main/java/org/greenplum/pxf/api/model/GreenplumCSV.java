@@ -53,6 +53,13 @@ public class GreenplumCSV {
         return delimiter;
     }
 
+    /**
+     * Set value of null string for parsing CSV. If the string input for customization is
+     * null, it will be ignored.
+     *
+     * @param valueOfNull the null character to be set
+     * @return GreenplumCSV object for builder pattern
+     */
     public GreenplumCSV withValueOfNull(String valueOfNull) {
         if (valueOfNull != null) {
             this.valueOfNull = valueOfNull;
@@ -60,6 +67,14 @@ public class GreenplumCSV {
         return this;
     }
 
+    /**
+     * Set quote character for parsing CSV with customized character. Will raise
+     * IllegalArgumentException if the input cannot be converted to char type.
+     * Empty string input will be ignored.
+     *
+     * @param quoteString the quote character to be set
+     * @return GreenplumCSV object for builder pattern
+     */
     public GreenplumCSV withQuoteChar(String quoteString) {
         if (StringUtils.isNotEmpty(quoteString)) {
             validateSingleCharacter(quoteString, "QUOTE");
@@ -68,6 +83,14 @@ public class GreenplumCSV {
         return this;
     }
 
+    /**
+     * Set escape character for parsing CSV with customized character. Will raise
+     * IllegalArgumentException if the input cannot be converted to char type.
+     * Empty string input will be ignored.
+     *
+     * @param escapeString the escape character to be set
+     * @return GreenplumCSV object for builder pattern
+     */
     public GreenplumCSV withEscapeChar(String escapeString) {
         if (StringUtils.isNotEmpty(escapeString)) {
             validateSingleCharacter(escapeString, "ESCAPE");
@@ -76,6 +99,14 @@ public class GreenplumCSV {
         return this;
     }
 
+    /**
+     * Set newline character for parsing CSV with designated newline character. Will
+     * raise IllegalArgumentException if the input is not supported newline character.
+     * Empty string input will be ignored.
+     *
+     * @param newline the newline character to be set
+     * @return GreenplumCSV object for builder pattern
+     */
     public GreenplumCSV withNewline(String newline) {
         if (StringUtils.isNotEmpty(newline)) {
             // validate that it is \n or \r or \r\n
@@ -91,6 +122,14 @@ public class GreenplumCSV {
         return this;
     }
 
+    /**
+     * Set delimiter character for parsing CSV with customized character. Will raise
+     * IlligalArugmentException if the input cannot be converted to char type.
+     * Empty string input will be ignored.
+     *
+     * @param delimiterString the delimiter to be set
+     * @return GreenplumCSV object for builder pattern
+     */
     public GreenplumCSV withDelimiter(String delimiterString) {
         if (StringUtils.isNotEmpty(delimiterString)) {
             validateSingleCharacter(delimiterString, "DELIMITER");
