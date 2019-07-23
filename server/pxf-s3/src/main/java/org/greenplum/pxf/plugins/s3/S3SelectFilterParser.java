@@ -5,6 +5,7 @@ import org.greenplum.pxf.api.BasicFilter;
 import org.greenplum.pxf.api.FilterParser;
 import org.greenplum.pxf.api.LogicalFilter;
 import org.greenplum.pxf.api.io.DataType;
+import org.greenplum.pxf.api.model.GreenplumCSV;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.slf4j.Logger;
@@ -19,6 +20,11 @@ import java.util.stream.StreamSupport;
 
 public class S3SelectFilterParser implements FilterParser.FilterBuilder {
 
+    private static final GreenplumCSV SINGLE_QUOTE_ESCAPE = new GreenplumCSV()
+            .withQuoteChar("'")
+            .withNewline(null)
+            .withDelimiter(null)
+            .withEscapeChar("'");
     private Logger LOG = LoggerFactory.getLogger(this.getClass());
 
     private boolean usePositionToIdentifyColumn;
@@ -142,7 +148,7 @@ public class S3SelectFilterParser implements FilterParser.FilterBuilder {
             case TEXT:
             case VARCHAR:
             case BPCHAR:
-                return Utilities.toCsvText(val.toString(), '\'', '\'', null, null, true, true, false);
+                return SINGLE_QUOTE_ESCAPE.toCsvText(val.toString(), true, true);
             case DATE:
             case TIMESTAMP:
                 return "TO_TIMESTAMP('" + val.toString() + "')";

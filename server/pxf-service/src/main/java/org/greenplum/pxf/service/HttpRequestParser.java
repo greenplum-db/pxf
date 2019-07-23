@@ -157,6 +157,9 @@ public class HttpRequestParser implements RequestParser<HttpHeaders> {
         // parse tuple description
         parseTupleDescription(params, context);
 
+        // parse CSV format information
+        parseGreenplumCSV(params, context);
+
         context.setUser(params.removeProperty("USER"));
 
         String encodedFragmentUserData = params.removeOptionalProperty("FRAGMENT-USER-DATA");
@@ -231,6 +234,15 @@ public class HttpRequestParser implements RequestParser<HttpHeaders> {
         context.validate();
 
         return context;
+    }
+
+    private void parseGreenplumCSV(RequestMap params, RequestContext context) {
+        context.getGreenplumCSV()
+                .withDelimiter(params.removeUserProperty("DELIMITER"))
+                .withEscapeChar(params.removeUserProperty("ESCAPE"))
+                .withNewline(params.removeUserProperty("NEWLINE"))
+                .withQuoteChar(params.removeUserProperty("QUOTE"))
+                .withValueOfNull(params.removeUserProperty("NULL"));
     }
 
     /**

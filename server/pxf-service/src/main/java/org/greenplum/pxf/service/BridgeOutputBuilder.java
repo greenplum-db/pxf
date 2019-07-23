@@ -31,9 +31,9 @@ import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.io.GPDBWritable;
 import org.greenplum.pxf.api.io.Text;
 import org.greenplum.pxf.api.io.Writable;
+import org.greenplum.pxf.api.model.GreenplumCSV;
 import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.api.utilities.Utilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,11 +45,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static org.greenplum.pxf.api.GreenplumCSV.DELIMITER;
-import static org.greenplum.pxf.api.GreenplumCSV.ESCAPE;
-import static org.greenplum.pxf.api.GreenplumCSV.NEWLINE;
-import static org.greenplum.pxf.api.GreenplumCSV.QUOTE;
-import static org.greenplum.pxf.api.GreenplumCSV.VALUE_OF_NULL;
 import static org.greenplum.pxf.api.io.DataType.TEXT;
 
 /**
@@ -74,6 +69,7 @@ public class BridgeOutputBuilder {
     private String[] colNames;
     private boolean samplingEnabled;
     private boolean isPartialLine = false;
+    private GreenplumCSV greenplumCSV;
 
     /**
      * Constructs a BridgeOutputBuilder.
@@ -83,6 +79,7 @@ public class BridgeOutputBuilder {
      */
     public BridgeOutputBuilder(RequestContext context) {
         this.context = context;
+        greenplumCSV = context.getGreenplumCSV();
         outputList = new LinkedList<>();
         makeErrorRecord();
         samplingEnabled = (this.context.getStatsSampleRatio() > 0);
@@ -127,14 +124,8 @@ public class BridgeOutputBuilder {
             LOG.error(ex.getMessage(), ex);
             return new Text(
                     StringUtils.repeat(",", context.getTupleDescription().size()) +
-                            Utilities.toCsvText(
-                                    ex.getMessage(),
-                                    QUOTE,
-                                    ESCAPE,
-                                    NEWLINE,
-                                    DELIMITER,
-                                    true, true, true) + DELIMITER
-            );
+                            greenplumCSV.toCsvText(ex.getMessage(), true, true, true) +
+                            greenplumCSV.getDelimiter());
         }
     }
 
@@ -310,7 +301,7 @@ public class BridgeOutputBuilder {
             }
         } else {
             String textRec = (recFields.size() == 1 && val instanceof String) ?
-                    val + NEWLINE :
+                    val + greenplumCSV.getNewline() :
                     fieldListToCSVString(recFields);
             output = new Text(textRec);
         }
@@ -442,7 +433,7 @@ public class BridgeOutputBuilder {
         return fields.stream()
                 .map(field -> {
                     if (field.val == null)
-                        return VALUE_OF_NULL;
+                        return greenplumCSV.getValueOfNull();
                     else if (field.type == DataType.BYTEA.getOID())
                         return "\\x" + Hex.encodeHexString((byte[]) field.val);
                     else if (field.type == DataType.NUMERIC.getOID() || !DataType.isTextForm(field.type))
@@ -452,15 +443,8 @@ public class BridgeOutputBuilder {
                     else if (field.type == DataType.DATE.getOID())
                         return field.val.toString();
                     else
-                        return Utilities.toCsvText((String) field.val,
-                                QUOTE,
-                                QUOTE,
-                                NEWLINE,
-                                DELIMITER,
-                                true,
-                                true,
-                                true);
+                        return greenplumCSV.toCsvText((String) field.val, true, true, true);
                 })
-                .collect(Collectors.joining(DELIMITER + "", "", NEWLINE));
+                .collect(Collectors.joining(String.valueOf(greenplumCSV.getDelimiter()), "", greenplumCSV.getNewline()));
     }
 }

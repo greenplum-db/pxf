@@ -79,6 +79,9 @@ public class RequestContext {
     // The format defined at the FDW foreign table level
     private String format;
 
+    // Encapsulates CSV parsing information
+    private GreenplumCSV greenplumCSV = new GreenplumCSV();
+
     /**
      * The name of the recordkey column. It can appear in any location in the
      * columns list. By specifying the recordkey column, the user declares that
@@ -644,6 +647,22 @@ public class RequestContext {
      */
     public void setPort(int port) {
         this.port = port;
+    }
+
+    /**
+     * Returns the GreenplumCSV object encapsulating the CSV information
+     *
+     * @return the {@link GreenplumCSV} object
+     */
+    public GreenplumCSV getGreenplumCSV() {
+        return greenplumCSV;
+    }
+
+    /**
+     * @param greenplumCSV the {@link GreenplumCSV} object
+     */
+    public void setGreenplumCSV(GreenplumCSV greenplumCSV) {
+        this.greenplumCSV = greenplumCSV;
     }
 
     /**

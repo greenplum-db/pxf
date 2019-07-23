@@ -34,11 +34,6 @@ import java.io.ObjectInputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
-import static org.greenplum.pxf.api.GreenplumCSV.DELIMITER;
-import static org.greenplum.pxf.api.GreenplumCSV.ESCAPE;
-import static org.greenplum.pxf.api.GreenplumCSV.NEWLINE;
-import static org.greenplum.pxf.api.GreenplumCSV.QUOTE;
-
 /**
  * Utilities class exposes helper method for PXF classes
  */
@@ -48,92 +43,6 @@ public class Utilities {
     private static final String PROPERTY_KEY_USER_IMPERSONATION = "pxf.service.user.impersonation.enabled";
     private static final String PROPERTY_KEY_FRAGMENTER_CACHE = "pxf.service.fragmenter.cache.enabled";
     private static final char[] PROHIBITED_CHARS = new char[]{'/', '\\', '.', ' ', ',', ';'};
-
-    /**
-     * Escapes CSV quotes (") to form a valid CSV string
-     *
-     * @param s                the input string
-     * @param prependQuoteChar true to prepend quotes (") to s, false otherwise
-     * @param appendQuoteChar  true to append quotes (") to s, false otherwise
-     * @return an escaped CSV string
-     */
-    public static String toCsvText(String s,
-                                   boolean prependQuoteChar,
-                                   boolean appendQuoteChar) {
-        return toCsvText(s, QUOTE, ESCAPE, NEWLINE, DELIMITER, prependQuoteChar, appendQuoteChar, false);
-    }
-
-    /**
-     * Escapes the provided quote char to form a valid CSV string
-     *
-     * @param s                        the input string
-     * @param quoteChar                the quote char
-     * @param prependQuoteChar         true to prepend the quote char to s, false
-     *                                 otherwise
-     * @param appendQuoteChar          true to append the quote char to s, false
-     *                                 otherwise
-     * @param skipIfQuotingIsNotNeeded skip if quoting is not needed
-     * @return an escaped CSV string
-     */
-    public static String toCsvText(String s,
-                                   char quoteChar,
-                                   char escapeChar,
-                                   String newlineChar,
-                                   Character delimiterChar,
-                                   boolean prependQuoteChar,
-                                   boolean appendQuoteChar,
-                                   boolean skipIfQuotingIsNotNeeded) {
-        if (s == null) return null;
-
-        final int length = s.length();
-        int i, j, quotes = 0, specialChars = 0, pos = 0, total = length;
-
-        // count all the quotes
-        for (i = 0; i < length; i++) {
-            char curr = s.charAt(i);
-            if (curr == quoteChar) quotes++;
-            if (delimiterChar != null && curr == delimiterChar) specialChars++;
-            if (newlineChar != null && newlineChar.length() > 0) {
-
-                j = 0;
-
-                // let's say we have input asd\r\nacd
-                // and newlinechar \r\n then we need to
-                // increase the specialChars count by 1
-
-                while (i < length && j < newlineChar.length()
-                        && newlineChar.charAt(j) == s.charAt(i)) {
-                    j++;
-                    if (j < newlineChar.length()) i++;
-                }
-
-                if (j == newlineChar.length()) specialChars++;
-            }
-        }
-
-        if (prependQuoteChar) total += 1;
-        if (appendQuoteChar) total += 1;
-        total += quotes;
-
-        // if there are QUOTE, DELIMITER, NEWLINE characters
-        // in the string we also need to quote the CSV field
-        if (length == total || (skipIfQuotingIsNotNeeded && quotes == 0 && specialChars == 0))
-            return s;
-
-        char[] chars = new char[total];
-
-        if (prependQuoteChar) chars[pos++] = quoteChar;
-
-        for (i = 0; i < length; i++) {
-            if (quotes > 0 && s.charAt(i) == quoteChar)
-                chars[pos++] = escapeChar; // escape quote char
-            chars[pos++] = s.charAt(i);
-        }
-
-        if (appendQuoteChar) chars[pos] = quoteChar;
-
-        return new String(chars);
-    }
 
     /**
      * Returns a decoded base64 byte[], or throws an error if the base64 string is invalid

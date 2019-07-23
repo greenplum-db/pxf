@@ -33,15 +33,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.ObjectOutputStream;
 import java.util.List;
 
-import static org.greenplum.pxf.api.GreenplumCSV.DELIMITER;
-import static org.greenplum.pxf.api.GreenplumCSV.ESCAPE;
-import static org.greenplum.pxf.api.GreenplumCSV.NEWLINE;
-import static org.greenplum.pxf.api.GreenplumCSV.QUOTE;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;

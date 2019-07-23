@@ -23,7 +23,6 @@ package org.greenplum.pxf.plugins.hdfs;
 import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.api.utilities.Utilities;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -84,7 +83,7 @@ public class QuotedLineBreakAccessor extends HdfsAtomicDataAccessor {
 
         if (fileAsRow) {
             // Wrap text around quotes, and escape single quotes
-            nextLine = Utilities.toCsvText(nextLine, firstLine, lastLine);
+            nextLine = context.getGreenplumCSV().toCsvText(nextLine, firstLine, lastLine);
             firstLine = false;
         }
 
