@@ -412,7 +412,7 @@ public class S3ProtocolHandlerTest {
     public void testWithSelectOffAndWithUnSupportedCompressionType() {
         context.addOption("S3-SELECT", "off");
         context.addOption(S3SelectAccessor.COMPRESSION_TYPE, "foo");
-        // EXPECTED_RESOLVER_GPDB_WRITABLE_ON is used as its values are desirable as expected value
+        // EXPECTED_RESOLVER_GPDB_WRITABLE_OFF is used as its values are desirable as expected value
         verifyResolvers(context, EXPECTED_RESOLVER_GPDB_WRITABLE_OFF);
     }
 
