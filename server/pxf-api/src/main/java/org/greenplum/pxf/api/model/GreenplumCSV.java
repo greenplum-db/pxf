@@ -153,8 +153,8 @@ public class GreenplumCSV {
      * @param appendQuoteChar  true to append quotes (") to s, false otherwise
      * @return an escaped CSV string
      */
-    public String toCsvText(String s, boolean prependQuoteChar, boolean appendQuoteChar) {
-        return toCsvText(s, prependQuoteChar, appendQuoteChar, false);
+    public String toCsvField(String s, boolean prependQuoteChar, boolean appendQuoteChar) {
+        return toCsvField(s, prependQuoteChar, appendQuoteChar, false);
     }
 
 
@@ -167,10 +167,10 @@ public class GreenplumCSV {
      * @param skipIfQuotingIsNotNeeded skip if quoting is not needed
      * @return an escaped CSV string
      */
-    public String toCsvText(String s,
-                            boolean prependQuoteChar,
-                            boolean appendQuoteChar,
-                            boolean skipIfQuotingIsNotNeeded) {
+    public String toCsvField(String s,
+                             boolean prependQuoteChar,
+                             boolean appendQuoteChar,
+                             boolean skipIfQuotingIsNotNeeded) {
         if (s == null) return null;
 
         final int length = s.length();

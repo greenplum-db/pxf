@@ -124,7 +124,7 @@ public class BridgeOutputBuilder {
             LOG.error(ex.getMessage(), ex);
             return new Text(
                     StringUtils.repeat(",", context.getTupleDescription().size()) +
-                            greenplumCSV.toCsvText(ex.getMessage(), true, true, true) +
+                            greenplumCSV.toCsvField(ex.getMessage(), true, true, true) +
                             greenplumCSV.getDelimiter());
         }
     }
@@ -443,7 +443,7 @@ public class BridgeOutputBuilder {
                     else if (field.type == DataType.DATE.getOID())
                         return field.val.toString();
                     else
-                        return greenplumCSV.toCsvText((String) field.val, true, true, true);
+                        return greenplumCSV.toCsvField((String) field.val, true, true, true);
                 })
                 .collect(Collectors.joining(String.valueOf(greenplumCSV.getDelimiter()), "", greenplumCSV.getNewline()));
     }

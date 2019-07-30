@@ -20,11 +20,6 @@ import java.util.stream.StreamSupport;
 
 public class S3SelectFilterParser implements FilterParser.FilterBuilder {
 
-    private static final GreenplumCSV SINGLE_QUOTE_ESCAPE = new GreenplumCSV()
-            .withQuoteChar("'")
-            .withNewline(null)
-            .withDelimiter(null)
-            .withEscapeChar("'");
     private Logger LOG = LoggerFactory.getLogger(this.getClass());
 
     private boolean usePositionToIdentifyColumn;
@@ -148,7 +143,7 @@ public class S3SelectFilterParser implements FilterParser.FilterBuilder {
             case TEXT:
             case VARCHAR:
             case BPCHAR:
-                return SINGLE_QUOTE_ESCAPE.toCsvText(val.toString(), true, true);
+                return "'" + StringUtils.replace(val.toString(), "'", "''") + "'";
             case DATE:
             case TIMESTAMP:
                 return "TO_TIMESTAMP('" + val.toString() + "')";

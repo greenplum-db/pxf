@@ -380,6 +380,42 @@ public class S3ProtocolHandlerTest {
         assertEquals("default-resolver", handler.getResolverClassName(context));
     }
 
+    @Test
+    public void testTextWithSelectOnAndWithSupportedCompressionType() {
+        context.addOption("S3-SELECT", "on");
+        context.addOption(S3SelectAccessor.COMPRESSION_TYPE, "gZiP");
+        context.setOutputFormat(OutputFormat.TEXT);
+        verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_ON);
+        verifyResolvers(context, EXPECTED_RESOLVER_TEXT_ON);
+        verifyFragmenters(context, EXPECTED_FRAGMENTER_TEXT_ON);
+    }
+
+    @Test
+    public void testTextWithSelectOnAndWithNoSupportedCompressionType() {
+        context.addOption("S3-SELECT", "on");
+        context.addOption(S3SelectAccessor.COMPRESSION_TYPE, "");
+        context.setOutputFormat(OutputFormat.TEXT);
+        verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_ON);
+        verifyResolvers(context, EXPECTED_RESOLVER_TEXT_ON);
+        verifyFragmenters(context, EXPECTED_FRAGMENTER_TEXT_ON);
+    }
+
+    @Test
+    public void testWithSelectOnAndWithUnSupportedCompressionType() {
+        context.addOption("S3-SELECT", "on");
+        context.addOption(S3SelectAccessor.COMPRESSION_TYPE, "foo");
+        // EXPECTED_RESOLVER_GPDB_WRITABLE_ON is used as its values are desirable as expected value
+        verifyResolvers(context, EXPECTED_RESOLVER_GPDB_WRITABLE_ON);
+    }
+
+    @Test
+    public void testWithSelectOffAndWithUnSupportedCompressionType() {
+        context.addOption("S3-SELECT", "off");
+        context.addOption(S3SelectAccessor.COMPRESSION_TYPE, "foo");
+        // EXPECTED_RESOLVER_GPDB_WRITABLE_ON is used as its values are desirable as expected value
+        verifyResolvers(context, EXPECTED_RESOLVER_GPDB_WRITABLE_OFF);
+    }
+
     private void verifyFragmenters(RequestContext context, String[] expected) {
         IntStream.range(0, FORMATS.length).forEach(i -> {
             context.setFormat(FORMATS[i]);

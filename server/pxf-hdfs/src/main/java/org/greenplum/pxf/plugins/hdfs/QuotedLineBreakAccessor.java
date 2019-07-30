@@ -83,7 +83,7 @@ public class QuotedLineBreakAccessor extends HdfsAtomicDataAccessor {
 
         if (fileAsRow) {
             // Wrap text around quotes, and escape single quotes
-            nextLine = context.getGreenplumCSV().toCsvText(nextLine, firstLine, lastLine);
+            nextLine = context.getGreenplumCSV().toCsvField(nextLine, firstLine, lastLine);
             firstLine = false;
         }
 
