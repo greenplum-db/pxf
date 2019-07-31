@@ -38,8 +38,6 @@ import java.util.TreeMap;
  */
 public class RequestContext {
 
-    public static final String DELIMITER_KEY = "DELIMITER";
-
     // ----- NAMED PROPERTIES -----
     private String accessor;
     private EnumAggregationType aggType;

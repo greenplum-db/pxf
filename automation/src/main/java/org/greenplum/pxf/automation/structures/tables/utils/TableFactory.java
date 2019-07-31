@@ -76,7 +76,6 @@ public abstract class TableFactory {
             exTable.setResolver("org.greenplum.pxf.plugins.hive.HiveColumnarSerdeResolver");
         }
         exTable.setDelimiter("E'\\x01'");
-        exTable.setUserParameters(new String[] { "delimiter=\\x01" });
 
         return exTable;
     }
@@ -143,7 +142,6 @@ public abstract class TableFactory {
             exTable.setResolver("org.greenplum.pxf.plugins.hive.HiveStringPassResolver");
         }
         exTable.setDelimiter("E'\\x01'");
-        exTable.setUserParameters(new String[] { "delimiter=\\x01" });
 
         return exTable;
     }

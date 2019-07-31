@@ -45,7 +45,6 @@ public class ColumnProjectionTest extends BaseFeature {
         pxfExternalTable.setAccessor(testPackage + "ColumnProjectionVerifyAccessor");
         pxfExternalTable.setResolver("org.greenplum.pxf.plugins.hdfs.StringPassResolver");
         pxfExternalTable.setDelimiter(",");
-        pxfExternalTable.setUserParameters(new String[] { "delimiter=," });
         pxfExternalTable.setHost(pxfHost);
         pxfExternalTable.setPort(pxfPort);
 

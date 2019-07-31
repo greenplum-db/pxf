@@ -52,7 +52,6 @@ public class FilterPushDownTest extends BaseFeature {
         pxfExternalTable.setAccessor(testPackage + "UserDataVerifyAccessor");
         pxfExternalTable.setResolver("org.greenplum.pxf.plugins.hdfs.StringPassResolver");
         pxfExternalTable.setDelimiter(",");
-        pxfExternalTable.setUserParameters(new String[] { "delimiter=," });
         pxfExternalTable.setHost(pxfHost);
         pxfExternalTable.setPort(pxfPort);
 
@@ -82,7 +81,6 @@ public class FilterPushDownTest extends BaseFeature {
         pxfExternalTable.setAccessor(testPackage + "UserDataVerifyAccessor");
         pxfExternalTable.setResolver("org.greenplum.pxf.plugins.hdfs.StringPassResolver");
         pxfExternalTable.setDelimiter(",");
-        pxfExternalTable.setUserParameters(new String[] { "delimiter=," });
         pxfExternalTable.setHost(pxfHost);
         pxfExternalTable.setPort(pxfPort);
 
@@ -112,7 +110,6 @@ public class FilterPushDownTest extends BaseFeature {
         pxfExternalTable.setAccessor(testPackage + "UserDataVerifyAccessor");
         pxfExternalTable.setResolver("org.greenplum.pxf.plugins.hdfs.StringPassResolver");
         pxfExternalTable.setDelimiter("E'\\x01'");
-        pxfExternalTable.setUserParameters(new String[] { "delimiter=\\x01" });
         pxfExternalTable.setHost(pxfHost);
         pxfExternalTable.setPort(pxfPort);
 

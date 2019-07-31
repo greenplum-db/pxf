@@ -51,7 +51,7 @@ import java.util.Set;
  */
 public class HiveMetadataFetcher extends BasePlugin implements MetadataFetcher {
 
-    private static final String DELIM_FIELD = RequestContext.DELIMITER_KEY;
+    private static final String DELIM_FIELD = "DELIMITER";
 
     private static final Log LOG = LogFactory.getLog(HiveMetadataFetcher.class);
     private HiveMetaStoreClient client;

@@ -24,4 +24,4 @@
 -- end_matchsubs
 SELECT * from gpdb_hive_types ORDER BY t1;
 ERROR:  remote component error (500) from 'SOME_IP:SOME_PORT':  type  Exception report   message   Invalid definition for column si: expected GPDB type SMALLINT, actual GPDB type INTEGER    description   DESCRIPTION
-DETAIL:  External table gpdb_hive_types, file pxf://hive_types_rc?FRAGMENTER=org.greenplum.pxf.plugins.hive.HiveInputFormatFragmenter&ACCESSOR=org.greenplum.pxf.plugins.hive.HiveRCFileAccessor&RESOLVER=org.greenplum.pxf.plugins.hive.HiveColumnarSerdeResolver&delimiter=
+DETAIL:  External table gpdb_hive_types, file pxf://hive_types_rc?FRAGMENTER=org.greenplum.pxf.plugins.hive.HiveInputFormatFragmenter&ACCESSOR=org.greenplum.pxf.plugins.hive.HiveRCFileAccessor&RESOLVER=org.greenplum.pxf.plugins.hive.HiveColumnarSerdeResolver

@@ -25,5 +25,5 @@
 
 SELECT * from pxf_hive_heterogen ORDER BY t1;
 ERROR:  remote component error (500) from 'SOME_IP:SOME_PORT':  type  Exception report   message   Hive table schema (4 fields, 1 partitions) doesn't match PXF table (4 fields)    description   DESCRIPTION
-DETAIL:  External table pxf_hive_heterogen, file pxf://reg_heterogen?PROFILE=HiveRC&delimiter=
+DETAIL:  External table pxf_hive_heterogen, file pxf://reg_heterogen?PROFILE=HiveRC
 

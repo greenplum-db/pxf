@@ -50,7 +50,6 @@ public class FailOverTest extends BaseFeature {
         pxfExternalTable.setAccessor("org.greenplum.pxf.plugins.hdfs.LineBreakAccessor");
         pxfExternalTable.setResolver("org.greenplum.pxf.plugins.hdfs.StringPassResolver");
         pxfExternalTable.setDelimiter(",");
-        pxfExternalTable.setUserParameters(new String[] { "delimiter=," });
         pxfExternalTable.setHost(pxfHost);
         pxfExternalTable.setPort(pxfPort);
 

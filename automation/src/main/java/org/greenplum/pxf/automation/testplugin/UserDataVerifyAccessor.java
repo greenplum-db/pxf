@@ -24,7 +24,7 @@ public class UserDataVerifyAccessor extends BasePlugin implements Accessor
 
         // TODO whitelist the option
         userData = new String(context.getFragmentUserData());
-        userDelimiter = context.getOption("DELIMITER");
+        userDelimiter = String.valueOf(context.getGreenplumCSV().getDelimiter());
 
         return true;
     }

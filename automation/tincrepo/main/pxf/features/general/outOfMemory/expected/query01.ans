@@ -27,7 +27,7 @@
 -- end_matchsubs
 SELECT * from test_out_of_memory;
 ERROR:  remote component error (500) from 'SOME_IP:SOME_PORT':  type  Exception java.lang.OutOfMemoryError: Java heap space
-CONTEXT:  External table test_out_of_memory, file pxf://dummy_path?FRAGMENTER=org.greenplum.pxf.automation.testplugin.OutOfMemoryFragmenter&ACCESSOR=org.greenplum.pxf.plugins.hdfs.LineBreakAccessor&RESOLVER=org.greenplum.pxf.plugins.hdfs.StringPassResolver&delimiter=,
+CONTEXT:  External table test_out_of_memory, file pxf://dummy_path?FRAGMENTER=org.greenplum.pxf.automation.testplugin.OutOfMemoryFragmenter&ACCESSOR=org.greenplum.pxf.plugins.hdfs.LineBreakAccessor&RESOLVER=org.greenplum.pxf.plugins.hdfs.StringPassResolver
 -- wait until the JVM has been killed
 SELECT pg_sleep(3);
  pg_sleep
@@ -38,4 +38,4 @@ SELECT pg_sleep(3);
 -- We expect to see a Failed to connect error
 SELECT * from test_out_of_memory;
 ERROR:  remote component error (0) from 'SOME_IP:SOME_PORT': Failed to connect to server, must be down
-CONTEXT:  External table test_out_of_memory, file pxf://dummy_path?FRAGMENTER=org.greenplum.pxf.automation.testplugin.OutOfMemoryFragmenter&ACCESSOR=org.greenplum.pxf.plugins.hdfs.LineBreakAccessor&RESOLVER=org.greenplum.pxf.plugins.hdfs.StringPassResolver&delimiter=,
+CONTEXT:  External table test_out_of_memory, file pxf://dummy_path?FRAGMENTER=org.greenplum.pxf.automation.testplugin.OutOfMemoryFragmenter&ACCESSOR=org.greenplum.pxf.plugins.hdfs.LineBreakAccessor&RESOLVER=org.greenplum.pxf.plugins.hdfs.StringPassResolver

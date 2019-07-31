@@ -123,9 +123,9 @@ public class BridgeOutputBuilder {
             // We create a row with an extra column containing the error information
             LOG.error(ex.getMessage(), ex);
             return new Text(
-                    StringUtils.repeat(",", context.getTupleDescription().size()) +
+                    StringUtils.repeat(String.valueOf(greenplumCSV.getDelimiter()), context.getTupleDescription().size()) +
                             greenplumCSV.toCsvField(ex.getMessage(), true, true, true) +
-                            greenplumCSV.getDelimiter());
+                            greenplumCSV.getNewline());
         }
     }
 

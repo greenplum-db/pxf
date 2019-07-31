@@ -626,13 +626,13 @@ public class HiveResolver extends HivePlugin implements Resolver {
      */
     void parseDelimiterChar(RequestContext input) {
 
-        String userDelim = input.getOption(RequestContext.DELIMITER_KEY);
+        String userDelim = String.valueOf(input.getGreenplumCSV().getDelimiter());
 
         if (userDelim == null) {
             /* No DELIMITER in URL, try to get it from fragment's user data*/
             HiveUserData hiveUserData = HiveUtilities.parseHiveUserData(input);
             if (hiveUserData.getDelimiter() == null) {
-                throw new IllegalArgumentException(RequestContext.DELIMITER_KEY + " is a required option");
+                throw new IllegalArgumentException("DELIMITER is a required option");
             }
             delimiter = (char) Integer.valueOf(hiveUserData.getDelimiter()).intValue();
         } else {
