@@ -836,6 +836,6 @@ public class RequestContext {
         if (!StringUtils.isBlank(profile) && profile.contains(":")) {
             return profile.split(":")[1];
         }
-        return null;
+        return format;
     }
 }

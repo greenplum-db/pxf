@@ -111,7 +111,7 @@ public class S3ProtocolHandler implements ProtocolHandler {
                 // if supported for ON and not beneficial -> if supported for OFF -> use OFF, else use ON
                 // if not supported for ON -> if supported for OFF -> use OFF, else ERROR out
                 if (formatSupported(outputFormat, format, S3Mode.ON, false)) {
-                    if (willBenefitFromSelect(context) || hasFormatOptions(format, context)) {
+                    if (willBenefitFromSelect(context)) {
                         return true;
                     } else {
                         return !formatSupported(outputFormat, format, S3Mode.OFF, false);
@@ -122,31 +122,6 @@ public class S3ProtocolHandler implements ProtocolHandler {
             default:
                 return false;
         }
-    }
-
-    /**
-     * Returns true if there are any format options for the given format
-     *
-     * @param format  the format
-     * @param context the request context
-     * @return true if there are any format options for the given format, false otherwise
-     */
-    private boolean hasFormatOptions(String format, RequestContext context) {
-        // TODO: FDW: this will not be required in the FDW framework
-        if (StringUtils.equals("CSV", format) || StringUtils.equals("TEXT", format)) {
-            String fileHeaderInfo = context.getOption(S3SelectAccessor.FILE_HEADER_INFO);
-            // There is a problem when the FORMAT options are different from the default
-            // options we use for CSV parsing. The formatter information is not passed
-            // from the client in the case of the external table framework. We cannot
-            // guarantee that they will be in sync.
-            return StringUtils.isNotEmpty(context.getOption(S3SelectAccessor.FIELD_DELIMITER)) ||
-                    StringUtils.isNotEmpty(context.getOption(S3SelectAccessor.QUOTE_CHARACTER)) ||
-                    StringUtils.isNotEmpty(context.getOption(S3SelectAccessor.QUOTE_ESCAPE_CHARACTER)) ||
-                    StringUtils.isNotEmpty(context.getOption(S3SelectAccessor.RECORD_DELIMITER)) ||
-                    StringUtils.equalsIgnoreCase(fileHeaderInfo, S3SelectAccessor.FILE_HEADER_INFO_IGNORE) ||
-                    StringUtils.equalsIgnoreCase(fileHeaderInfo, S3SelectAccessor.FILE_HEADER_INFO_USE);
-        }
-        return false;
     }
 
     /**

@@ -66,47 +66,47 @@ public class S3SelectTest extends BaseFeature {
     @Override
     protected void afterClass() throws Exception {
         super.afterClass();
-        s3Server.removeDirectory(PROTOCOL_S3 + s3Path);
+//        s3Server.removeDirectory(PROTOCOL_S3 + s3Path);
     }
 
     @Test(groups = {"gpdb", "s3"})
     public void testPlainCsvWithHeaders() throws Exception {
-        String[] userParameters = {"DELIMITER=|", "HEADER=IGNORE", "S3-SELECT=ON"};
+        String[] userParameters = {"FILE_HEADER=IGNORE", "S3-SELECT=ON"};
         runTestScenario("csv", "s3", "csv", s3Path,
                 localDataResourcesFolder + "/s3select/", sampleCsvFile,
-                userParameters);
+                "|", userParameters);
     }
 
     @Test(groups = {"gpdb", "s3"})
     public void testPlainCsvWithHeadersUsingHeaderInfo() throws Exception {
-        String[] userParameters = {"DELIMITER=|", "HEADER=USE", "S3-SELECT=ON"};
+        String[] userParameters = {"FILE_HEADER=USE", "S3-SELECT=ON"};
         runTestScenario("csv_use_headers", "s3", "csv", s3Path,
                 localDataResourcesFolder + "/s3select/", sampleCsvFile,
-                userParameters);
+                "|", userParameters);
     }
 
     @Test(groups = {"gpdb", "s3"})
     public void testPlainCsvWithNoHeaders() throws Exception {
-        String[] userParameters = {"DELIMITER=|", "HEADER=NONE", "S3-SELECT=ON"};
+        String[] userParameters = {"FILE_HEADER=NONE", "S3-SELECT=ON"};
         runTestScenario("csv_noheaders", "s3", "csv", s3Path,
                 localDataResourcesFolder + "/s3select/", sampleCsvNoHeaderFile,
-                userParameters);
+                "|", userParameters);
     }
 
     @Test(groups = {"gpdb", "s3"})
     public void testGzipCsvWithHeadersUsingHeaderInfo() throws Exception {
-        String[] userParameters = {"DELIMITER=|", "HEADER=USE", "S3-SELECT=ON", "COMPRESSION_CODEC=gzip"};
+        String[] userParameters = {"FILE_HEADER=USE", "S3-SELECT=ON", "COMPRESSION_CODEC=gzip"};
         runTestScenario("gzip_csv_use_headers", "s3", "csv", s3Path,
                 localDataResourcesFolder + "/s3select/", sampleGzippedCsvFile,
-                userParameters);
+                "|", userParameters);
     }
 
     @Test(groups = {"gpdb", "s3"})
     public void testBzip2CsvWithHeadersUsingHeaderInfo() throws Exception {
-        String[] userParameters = {"DELIMITER=|", "HEADER=USE", "S3-SELECT=ON", "COMPRESSION_CODEC=bzip2"};
+        String[] userParameters = {"FILE_HEADER=USE", "S3-SELECT=ON", "COMPRESSION_CODEC=bzip2"};
         runTestScenario("bzip2_csv_use_headers", "s3", "csv", s3Path,
                 localDataResourcesFolder + "/s3select/", sampleBzip2CsvFile,
-                userParameters);
+                "|", userParameters);
     }
 
     @Test(groups = {"gpdb", "s3"})
@@ -114,7 +114,7 @@ public class S3SelectTest extends BaseFeature {
         String[] userParameters = {"S3-SELECT=ON"};
         runTestScenario("parquet", "s3", "parquet", s3Path,
                 localDataResourcesFolder + "/s3select/", sampleParquetFile,
-                userParameters);
+                null, userParameters);
     }
 
     @Test(groups = {"gpdb", "s3"})
@@ -122,7 +122,7 @@ public class S3SelectTest extends BaseFeature {
         String[] userParameters = {"S3-SELECT=ON"};
         runTestScenario("parquet_snappy", "s3", "parquet", s3Path,
                 localDataResourcesFolder + "/s3select/", sampleParquetSnappyFile,
-                userParameters);
+                null, userParameters);
     }
 
     @Test(groups = {"gpdb", "s3"})
@@ -130,10 +130,18 @@ public class S3SelectTest extends BaseFeature {
         String[] userParameters = {"S3-SELECT=ON"};
         runTestScenario("parquet_gzip", "s3", "parquet", s3Path,
                 localDataResourcesFolder + "/s3select/", sampleParquetGzipFile,
-                userParameters);
+                null, userParameters);
     }
 
-    private void runTestScenario(String name, String server, String format, String s3Path, String srcPath, String filename, String[] userParameters)
+    private void runTestScenario(
+            String name,
+            String server,
+            String format,
+            String s3Path,
+            String srcPath,
+            String filename,
+            String delimiter,
+            String[] userParameters)
             throws Exception {
         String tableName = "s3select_" + name;
         String serverParam = (server == null) ? null : "server=" + server;
@@ -145,6 +153,8 @@ public class S3SelectTest extends BaseFeature {
         exTable.setProfile("s3:" + format);
         exTable.setServer(serverParam);
 
+        if (delimiter != null)
+            exTable.setDelimiter("|");
         if (userParameters != null)
             exTable.setUserParameters(userParameters);
 

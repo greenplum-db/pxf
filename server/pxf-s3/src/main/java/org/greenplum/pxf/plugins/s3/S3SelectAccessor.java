@@ -18,6 +18,7 @@ import org.apache.hadoop.fs.s3a.DefaultS3ClientFactory;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.BasePlugin;
+import org.greenplum.pxf.api.model.GreenplumCSV;
 import org.greenplum.pxf.api.model.RequestContext;
 
 import java.io.BufferedReader;
@@ -41,19 +42,12 @@ public class S3SelectAccessor extends BasePlugin implements Accessor {
     // the COMPRESSION_CODECs from the s3:text, s3:parquet profiles
     public static final String COMPRESSION_TYPE = "COMPRESSION_CODEC";
     // Keep the same name as the FORMAT option in Greenplum
-    public static final String FILE_HEADER_INFO = "HEADER";
+    public static final String FILE_HEADER_INFO = "FILE_HEADER";
     public static final String FILE_HEADER_INFO_NONE = "NONE";
     public static final String FILE_HEADER_INFO_IGNORE = "IGNORE";
     public static final String FILE_HEADER_INFO_USE = "USE";
-    // Keep the same name as the FORMAT option in Greenplum
-    public static final String FIELD_DELIMITER = "DELIMITER";
-    // Keep the same name as the FORMAT option in Greenplum
-    public static final String QUOTE_ESCAPE_CHARACTER = "ESCAPE";
-    // Keep the same name as the FORMAT option in Greenplum
-    public static final String RECORD_DELIMITER = "NEWLINE";
-    // Keep the same name as the FORMAT option in Greenplum
-    public static final String QUOTE_CHARACTER = "QUOTE";
     public static final String JSON_TYPE = "JSON-TYPE";
+
     private AtomicBoolean isResultComplete;
     private AmazonS3 s3Client;
     private SelectObjectContentResult result;
@@ -194,11 +188,16 @@ public class S3SelectAccessor extends BasePlugin implements Accessor {
      * @return a {@link OutputSerialization} object
      */
     private OutputSerialization getOutputSerialization(RequestContext context) {
+
+        GreenplumCSV csv = context.getGreenplumCSV();
+
         OutputSerialization outputSerialization = new OutputSerialization();
         CSVOutput csvOutput = new CSVOutput();
-        // TODO: FDW: In FDW world, these should be passed as part of the request
-        csvOutput.setQuoteCharacter("\"");
-        csvOutput.setQuoteEscapeCharacter("\"");
+        csvOutput.setFieldDelimiter(csv.getDelimiter());
+        csvOutput.setQuoteCharacter(csv.getQuote());
+        csvOutput.setQuoteEscapeCharacter(csv.getEscape());
+        csvOutput.setRecordDelimiter(csv.getNewline());
+
         outputSerialization.setCsv(csvOutput);
         return outputSerialization;
     }
@@ -213,7 +212,7 @@ public class S3SelectAccessor extends BasePlugin implements Accessor {
     InputSerialization getInputSerialization(RequestContext context) {
         InputSerialization inputSerialization = new InputSerialization();
 
-        String format = context.getFormat();
+        String format = context.inferFormatName();
         String compressionType = context.getOption(COMPRESSION_TYPE);
 
         LOG.debug("With format {}", format);
@@ -264,6 +263,7 @@ public class S3SelectAccessor extends BasePlugin implements Accessor {
      */
     CSVInput getCSVInput(RequestContext context) {
         CSVInput csvInput = new CSVInput();
+        GreenplumCSV csv = context.getGreenplumCSV();
 
         String fileHeaderInfo = context.getOption(FILE_HEADER_INFO);
         if (fileHeaderInfo != null) {
@@ -271,29 +271,21 @@ public class S3SelectAccessor extends BasePlugin implements Accessor {
             csvInput.setFileHeaderInfo(fileHeaderInfo);
         }
 
-        String fieldDelimiter = context.getOption(FIELD_DELIMITER);
-        if (fieldDelimiter != null) {
-            LOG.debug("With CSV field delimiter '{}'", fieldDelimiter);
-            csvInput.setFieldDelimiter(fieldDelimiter);
+        if (csv.getDelimiter() != null) {
+            LOG.debug("With CSV field delimiter '{}'", csv.getDelimiter());
+            csvInput.setFieldDelimiter(csv.getDelimiter());
         }
 
-        String quoteEscapeCharacter = context.getOption(QUOTE_ESCAPE_CHARACTER);
-        if (quoteEscapeCharacter != null) {
-            LOG.debug("With CSV quote escape character '{}'", quoteEscapeCharacter);
-            csvInput.setQuoteEscapeCharacter(quoteEscapeCharacter);
+        if (csv.getNewline() != null) {
+            LOG.debug("With CSV record delimiter '{}'", csv.getNewline());
+            csvInput.setRecordDelimiter(csv.getNewline());
         }
 
-        String recordDelimiter = context.getOption(RECORD_DELIMITER);
-        if (recordDelimiter != null) {
-            LOG.debug("With CSV record delimiter '{}'", recordDelimiter);
-            csvInput.setRecordDelimiter(recordDelimiter);
-        }
+        LOG.debug("With CSV quote escape character '{}'", csv.getEscape());
+        csvInput.setQuoteEscapeCharacter(csv.getEscape());
 
-        String quoteCharacter = context.getOption(QUOTE_CHARACTER);
-        if (quoteCharacter != null) {
-            LOG.debug("With CSV quote character '{}'", quoteCharacter);
-            csvInput.setQuoteCharacter(quoteCharacter);
-        }
+        LOG.debug("With CSV quote character '{}'", csv.getQuote());
+        csvInput.setQuoteCharacter(csv.getQuote());
 
         return csvInput;
     }
