@@ -22,7 +22,7 @@ import static org.greenplum.pxf.plugins.s3.S3SelectAccessor.FILE_HEADER_INFO_USE
  */
 public class S3ProtocolHandler implements ProtocolHandler {
 
-    public static final String S3_SELECT_OPTION = "S3-SELECT";
+    public static final String S3_SELECT_OPTION = "S3_SELECT";
 
     private static final Logger LOG = LoggerFactory.getLogger(S3ProtocolHandler.class);
     private static final Set<String> SUPPORTED_FORMATS = Sets.newHashSet("TEXT", "CSV", "PARQUET", "JSON");
@@ -91,7 +91,7 @@ public class S3ProtocolHandler implements ProtocolHandler {
 
         if (!isS3SelectSupportedFormat) {
             if (selectMode == S3Mode.ON) {
-                throw new IllegalArgumentException(String.format("S3-SELECT optimization is not supported for format '%s'. Use S3-SELECT=OFF for this format", format));
+                throw new IllegalArgumentException(String.format("%s optimization is not supported for format '%s'. Use %s=OFF for this format", S3_SELECT_OPTION, format, S3_SELECT_OPTION));
             }
             return false;
         }
@@ -101,7 +101,7 @@ public class S3ProtocolHandler implements ProtocolHandler {
 
         if (!isS3SelectSupportedCompressionType) {
             if (selectMode == S3Mode.ON) {
-                throw new IllegalArgumentException(String.format("S3-SELECT optimization is not supported for compression type '%s'. Use S3-SELECT=OFF for this compression codec", compressionType));
+                throw new IllegalArgumentException(String.format("%s optimization is not supported for compression type '%s'. Use %s=OFF for this compression codec", S3_SELECT_OPTION, compressionType, S3_SELECT_OPTION));
             }
             return false;
         }
@@ -150,51 +150,51 @@ public class S3ProtocolHandler implements ProtocolHandler {
     }
 
     /**
-     * Determines if the using S3-SELECT will be beneficial for performance, such as where there is
+     * Determines if the using S3_SELECT will be beneficial for performance, such as where there is
      * a column projection or a predicate pushdown for the given query
      *
      * @param context request context
-     * @return true if using S3-SELECT will be beneficial, false otherwise
+     * @return true if using S3_SELECT will be beneficial, false otherwise
      */
     private boolean willBenefitFromSelect(RequestContext context) {
         return context.hasFilter() || context.hasColumnProjection();
     }
 
     /**
-     * Determines if the given data format can be retrieved from S3 using S3-SELECT protocol
+     * Determines if the given data format can be retrieved from S3 using S3_SELECT protocol
      * and sent back to Greenplum using given OutputFormat
      *
      * @param outputFormat   output format
      * @param format         data format
-     * @param selectMode     s3-select mode requested by a user
+     * @param selectMode     s3_select mode requested by a user
      * @param raiseException true if an exception needs to be raised if the format is not supported, false otherwise
      * @return true if the data format is supported to be retrieved with s3select protocol
      */
     private boolean formatSupported(OutputFormat outputFormat, String format, S3Mode selectMode, boolean raiseException) {
         boolean supported = SUPPORT_MATRIX.contains(new SupportMatrixEntry(format, outputFormat, selectMode));
         if (!supported && raiseException) {
-            throw new IllegalArgumentException(String.format("S3-SELECT optimization is not supported for format '%s'", format));
+            throw new IllegalArgumentException(String.format("%s optimization is not supported for format '%s'", S3_SELECT_OPTION, format));
         }
 
         return supported;
     }
 
     /**
-     * Enumeration of modes a user can configure for using S3-SELECT optimization
+     * Enumeration of modes a user can configure for using S3_SELECT optimization
      */
     enum S3Mode {
         /**
-         * ON mode will apply S3-SELECT access always, no matter whether it's optimal or not
+         * ON mode will apply S3_SELECT access always, no matter whether it's optimal or not
          */
         ON,
 
         /**
-         * OFF mode will make sure S3-SELECT access is never applied, even if it would be the optimal one
+         * OFF mode will make sure S3_SELECT access is never applied, even if it would be the optimal one
          */
         OFF,
 
         /**
-         * AUTO mode will apply S3-SELECT only if it will result in more optimal execution
+         * AUTO mode will apply S3_SELECT only if it will result in more optimal execution
          */
         AUTO;
 

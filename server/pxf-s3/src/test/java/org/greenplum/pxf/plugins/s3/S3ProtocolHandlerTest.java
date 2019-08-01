@@ -82,7 +82,7 @@ public class S3ProtocolHandlerTest {
 
     @Test
     public void testTextWithSelectOnResolver() {
-        context.addOption("S3-SELECT", "on");
+        context.addOption("S3_SELECT", "on");
         context.setOutputFormat(OutputFormat.TEXT);
         verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_ON);
         verifyResolvers(context, EXPECTED_RESOLVER_TEXT_ON);
@@ -91,7 +91,7 @@ public class S3ProtocolHandlerTest {
 
     @Test
     public void testTextWithSelectAutoWithBenefitFilterOnlyResolver() {
-        context.addOption("S3-SELECT", "auto");
+        context.addOption("S3_SELECT", "auto");
         context.setOutputFormat(OutputFormat.TEXT);
         context.setFilterString("abc");
         verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_AUTO_BENEFIT);
@@ -101,7 +101,7 @@ public class S3ProtocolHandlerTest {
 
     @Test
     public void testTextWithSelectAutoWithBenefitProjectionOnlyResolver() {
-        context.addOption("S3-SELECT", "auto");
+        context.addOption("S3_SELECT", "auto");
         context.setOutputFormat(OutputFormat.TEXT);
         context.setNumAttrsProjected(1);
         verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_AUTO_BENEFIT);
@@ -111,7 +111,7 @@ public class S3ProtocolHandlerTest {
 
     @Test
     public void testTextWithSelectAutoWithBenefitFilterAndProjectionResolver() {
-        context.addOption("S3-SELECT", "auto");
+        context.addOption("S3_SELECT", "auto");
         context.setOutputFormat(OutputFormat.TEXT);
         context.setFilterString("abc");
         context.setNumAttrsProjected(1);
@@ -122,7 +122,7 @@ public class S3ProtocolHandlerTest {
 
     @Test
     public void testTextWithSelectAutoWithBenefitFilterAndFullProjectionResolver() {
-        context.addOption("S3-SELECT", "auto");
+        context.addOption("S3_SELECT", "auto");
         context.setOutputFormat(OutputFormat.TEXT);
         context.setFilterString("abc");
         context.setNumAttrsProjected(2);
@@ -133,7 +133,7 @@ public class S3ProtocolHandlerTest {
 
     @Test
     public void testTextWithSelectAutoWithNoBenefitResolver() {
-        context.addOption("S3-SELECT", "auto");
+        context.addOption("S3_SELECT", "auto");
         context.setOutputFormat(OutputFormat.TEXT);
         verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_AUTO_NO_BENEFIT);
         verifyResolvers(context, EXPECTED_RESOLVER_TEXT_AUTO_NO_BENEFIT);
@@ -142,7 +142,7 @@ public class S3ProtocolHandlerTest {
 
     @Test
     public void testTextWithSelectAutoWithNoBenefitResolverWithDelimiterOption() {
-        context.addOption("S3-SELECT", "auto");
+        context.addOption("S3_SELECT", "auto");
         context.addOption("DELIMITER", "|");
         context.setOutputFormat(OutputFormat.TEXT);
         verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_AUTO_NO_BENEFIT_HAS_FORMAT_OPTIONS);
@@ -152,7 +152,7 @@ public class S3ProtocolHandlerTest {
 
     @Test
     public void testTextWithSelectAutoWithNoBenefitResolverWithQuoteCharacterOption() {
-        context.addOption("S3-SELECT", "auto");
+        context.addOption("S3_SELECT", "auto");
         context.addOption("QUOTE", "'");
         context.setOutputFormat(OutputFormat.TEXT);
         verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_AUTO_NO_BENEFIT_HAS_FORMAT_OPTIONS);
@@ -162,7 +162,7 @@ public class S3ProtocolHandlerTest {
 
     @Test
     public void testTextWithSelectAutoWithNoBenefitResolverWithQuoteEscapeCharacterOption() {
-        context.addOption("S3-SELECT", "auto");
+        context.addOption("S3_SELECT", "auto");
         context.addOption("ESCAPE", "\\");
         context.setOutputFormat(OutputFormat.TEXT);
         verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_AUTO_NO_BENEFIT_HAS_FORMAT_OPTIONS);
@@ -172,7 +172,7 @@ public class S3ProtocolHandlerTest {
 
     @Test
     public void testTextWithSelectAutoWithNoBenefitResolverWithRecordDelimiterOption() {
-        context.addOption("S3-SELECT", "auto");
+        context.addOption("S3_SELECT", "auto");
         context.addOption("NEWLINE", "\r");
         context.setOutputFormat(OutputFormat.TEXT);
         verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_AUTO_NO_BENEFIT_HAS_FORMAT_OPTIONS);
@@ -182,7 +182,7 @@ public class S3ProtocolHandlerTest {
 
     @Test
     public void testTextWithSelectAutoWithNoBenefitResolverWithFileHeaderInfoOptionUSE() {
-        context.addOption("S3-SELECT", "auto");
+        context.addOption("S3_SELECT", "auto");
         context.addOption("FILE_HEADER", "USE");
         context.setOutputFormat(OutputFormat.TEXT);
         verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_AUTO_NO_BENEFIT_HAS_HEADER);
@@ -192,7 +192,7 @@ public class S3ProtocolHandlerTest {
 
     @Test
     public void testTextWithSelectAutoWithNoBenefitResolverWithFileHeaderInfoOptionIGNORE() {
-        context.addOption("S3-SELECT", "auto");
+        context.addOption("S3_SELECT", "auto");
         context.addOption("FILE_HEADER", "IGNORE");
         context.setOutputFormat(OutputFormat.TEXT);
         verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_AUTO_NO_BENEFIT_HAS_HEADER);
@@ -202,7 +202,7 @@ public class S3ProtocolHandlerTest {
 
     @Test
     public void testTextWithSelectAutoWithNoBenefitResolverWithFileHeaderInfoOptionNONE() {
-        context.addOption("S3-SELECT", "auto");
+        context.addOption("S3_SELECT", "auto");
         context.addOption("FILE_HEADER", "NONE");
         context.setOutputFormat(OutputFormat.TEXT);
         verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_AUTO_NO_BENEFIT);
@@ -212,7 +212,7 @@ public class S3ProtocolHandlerTest {
 
     @Test
     public void testTextWithSelectAutoWithNoBenefitAllProjectedResolver() {
-        context.addOption("S3-SELECT", "auto");
+        context.addOption("S3_SELECT", "auto");
         context.setOutputFormat(OutputFormat.TEXT);
         context.setNumAttrsProjected(2);
         verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_AUTO_NO_BENEFIT);
@@ -222,7 +222,7 @@ public class S3ProtocolHandlerTest {
 
     @Test
     public void testTextWithSelectOffResolver() {
-        context.addOption("S3-SELECT", "off");
+        context.addOption("S3_SELECT", "off");
         context.setOutputFormat(OutputFormat.TEXT);
         verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_OFF);
         verifyResolvers(context, EXPECTED_RESOLVER_TEXT_OFF);
@@ -231,7 +231,7 @@ public class S3ProtocolHandlerTest {
 
     @Test
     public void testGPDBWritableWithSelectOnResolver() {
-        context.addOption("S3-SELECT", "on");
+        context.addOption("S3_SELECT", "on");
         context.setOutputFormat(OutputFormat.GPDBWritable);
         verifyAccessors(context, EXPECTED_ACCESSOR_GPDB_WRITABLE_ON);
         verifyResolvers(context, EXPECTED_RESOLVER_GPDB_WRITABLE_ON);
@@ -240,7 +240,7 @@ public class S3ProtocolHandlerTest {
 
     @Test
     public void testGPDBWritableWithSelectAutoWithBenefitFilterOnlyResolver() {
-        context.addOption("S3-SELECT", "auto");
+        context.addOption("S3_SELECT", "auto");
         context.setOutputFormat(OutputFormat.GPDBWritable);
         context.setFilterString("abc");
         verifyAccessors(context, EXPECTED_ACCESSOR_GPDB_WRITABLE_AUTO);
@@ -250,7 +250,7 @@ public class S3ProtocolHandlerTest {
 
     @Test
     public void testGPDBWritableWithSelectAutoWithBenefitProjectionOnlyResolver() {
-        context.addOption("S3-SELECT", "auto");
+        context.addOption("S3_SELECT", "auto");
         context.setOutputFormat(OutputFormat.GPDBWritable);
         context.setNumAttrsProjected(1);
         verifyAccessors(context, EXPECTED_ACCESSOR_GPDB_WRITABLE_AUTO);
@@ -260,7 +260,7 @@ public class S3ProtocolHandlerTest {
 
     @Test
     public void testGPDBWritableWithSelectAutoWithBenefitFilterAndProjectionResolver() {
-        context.addOption("S3-SELECT", "auto");
+        context.addOption("S3_SELECT", "auto");
         context.setOutputFormat(OutputFormat.GPDBWritable);
         context.setFilterString("abc");
         context.setNumAttrsProjected(1);
@@ -271,7 +271,7 @@ public class S3ProtocolHandlerTest {
 
     @Test
     public void testGPDBWritableWithSelectAutoWithBenefitFilterAndFullProjectionResolver() {
-        context.addOption("S3-SELECT", "auto");
+        context.addOption("S3_SELECT", "auto");
         context.setOutputFormat(OutputFormat.GPDBWritable);
         context.setFilterString("abc");
         context.setNumAttrsProjected(2);
@@ -282,7 +282,7 @@ public class S3ProtocolHandlerTest {
 
     @Test
     public void testGPDBWritableWithSelectAutoWithNoBenefitResolver() {
-        context.addOption("S3-SELECT", "auto");
+        context.addOption("S3_SELECT", "auto");
         context.setOutputFormat(OutputFormat.GPDBWritable);
         verifyAccessors(context, EXPECTED_ACCESSOR_GPDB_WRITABLE_AUTO);
         verifyResolvers(context, EXPECTED_RESOLVER_GPDB_WRITABLE_AUTO);
@@ -291,7 +291,7 @@ public class S3ProtocolHandlerTest {
 
     @Test
     public void testGPDBWritableWithSelectAutoWithNoBenefitAllProjectedResolver() {
-        context.addOption("S3-SELECT", "auto");
+        context.addOption("S3_SELECT", "auto");
         context.setOutputFormat(OutputFormat.GPDBWritable);
         context.setNumAttrsProjected(2);
         verifyAccessors(context, EXPECTED_ACCESSOR_GPDB_WRITABLE_AUTO);
@@ -301,7 +301,7 @@ public class S3ProtocolHandlerTest {
 
     @Test
     public void testGPDBWritableWithSelectOffResolver() {
-        context.addOption("S3-SELECT", "off");
+        context.addOption("S3_SELECT", "off");
         context.setOutputFormat(OutputFormat.GPDBWritable);
         verifyAccessors(context, EXPECTED_ACCESSOR_GPDB_WRITABLE_OFF);
         verifyResolvers(context, EXPECTED_RESOLVER_GPDB_WRITABLE_OFF);
@@ -327,23 +327,23 @@ public class S3ProtocolHandlerTest {
     @Test
     public void testSelectInvalid() {
         thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("Invalid value 'foo' for S3-SELECT option");
+        thrown.expectMessage("Invalid value 'foo' for S3_SELECT option");
 
         context.setFormat("CSV");
-        context.addOption("S3-SELECT", "foo");
+        context.addOption("S3_SELECT", "foo");
         handler.getAccessorClassName(context);
     }
 
     @Test
     public void testSelectOffMissingFormat() {
-        context.addOption("S3-SELECT", "off");
+        context.addOption("S3_SELECT", "off");
         assertEquals("default-accessor", handler.getAccessorClassName(context));
         assertEquals("default-resolver", handler.getResolverClassName(context));
     }
 
     @Test
     public void testSelectOffUnsupportedFormat() {
-        context.addOption("S3-SELECT", "off");
+        context.addOption("S3_SELECT", "off");
         context.setFormat("custom");
         assertEquals("default-accessor", handler.getAccessorClassName(context));
         assertEquals("default-resolver", handler.getResolverClassName(context));
@@ -352,32 +352,32 @@ public class S3ProtocolHandlerTest {
     @Test
     public void testSelectOnMissingFormat() {
         thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("S3-SELECT optimization is not supported for format 'null'");
+        thrown.expectMessage("S3_SELECT optimization is not supported for format 'null'");
 
-        context.addOption("S3-SeLeCt", "on");
+        context.addOption("S3_SeLeCt", "on");
         handler.getAccessorClassName(context);
     }
 
     @Test
     public void testSelectOnUnsupportedFormat() {
         thrown.expect(RuntimeException.class);
-        thrown.expectMessage("S3-SELECT optimization is not supported for format 'CUSTOM'");
+        thrown.expectMessage("S3_SELECT optimization is not supported for format 'CUSTOM'");
 
-        context.addOption("S3-SELECT", "on");
+        context.addOption("S3_SELECT", "on");
         context.setFormat("custom");
         handler.getAccessorClassName(context);
     }
 
     @Test
     public void testSelectAutoMissingFormat() {
-        context.addOption("S3-SELECT", "AUTO");
+        context.addOption("S3_SELECT", "AUTO");
         assertEquals("default-accessor", handler.getAccessorClassName(context));
         assertEquals("default-resolver", handler.getResolverClassName(context));
     }
 
     @Test
     public void testSelectAutoUnsupportedFormat() {
-        context.addOption("S3-SELECT", "Auto");
+        context.addOption("S3_SELECT", "Auto");
         context.setFormat("custom");
         assertEquals("default-accessor", handler.getAccessorClassName(context));
         assertEquals("default-resolver", handler.getResolverClassName(context));
@@ -385,7 +385,7 @@ public class S3ProtocolHandlerTest {
 
     @Test
     public void testTextWithSelectOnAndWithSupportedCompressionType() {
-        context.addOption("S3-SELECT", "on");
+        context.addOption("S3_SELECT", "on");
         context.addOption(S3SelectAccessor.COMPRESSION_TYPE, "gZiP");
         context.setOutputFormat(OutputFormat.TEXT);
         verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_ON);
@@ -395,7 +395,7 @@ public class S3ProtocolHandlerTest {
 
     @Test
     public void testTextWithSelectOnAndWithNoSupportedCompressionType() {
-        context.addOption("S3-SELECT", "on");
+        context.addOption("S3_SELECT", "on");
         context.addOption(S3SelectAccessor.COMPRESSION_TYPE, "");
         context.setOutputFormat(OutputFormat.TEXT);
         verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_ON);
@@ -405,7 +405,7 @@ public class S3ProtocolHandlerTest {
 
     @Test
     public void testWithSelectOnAndWithUnSupportedCompressionType() {
-        context.addOption("S3-SELECT", "on");
+        context.addOption("S3_SELECT", "on");
         context.addOption(S3SelectAccessor.COMPRESSION_TYPE, "foo");
         // EXPECTED_RESOLVER_GPDB_WRITABLE_ON is used as its values are desirable as expected value
         verifyResolvers(context, EXPECTED_RESOLVER_GPDB_WRITABLE_ON);
@@ -413,7 +413,7 @@ public class S3ProtocolHandlerTest {
 
     @Test
     public void testWithSelectOffAndWithUnSupportedCompressionType() {
-        context.addOption("S3-SELECT", "off");
+        context.addOption("S3_SELECT", "off");
         context.addOption(S3SelectAccessor.COMPRESSION_TYPE, "foo");
         // EXPECTED_RESOLVER_GPDB_WRITABLE_OFF is used as its values are desirable as expected value
         verifyResolvers(context, EXPECTED_RESOLVER_GPDB_WRITABLE_OFF);

@@ -71,7 +71,7 @@ public class S3SelectTest extends BaseFeature {
 
     @Test(groups = {"gpdb", "s3"})
     public void testPlainCsvWithHeaders() throws Exception {
-        String[] userParameters = {"FILE_HEADER=IGNORE", "S3-SELECT=ON"};
+        String[] userParameters = {"FILE_HEADER=IGNORE", "S3_SELECT=ON"};
         runTestScenario("csv", "s3", "csv", s3Path,
                 localDataResourcesFolder + "/s3select/", sampleCsvFile,
                 "|", userParameters);
@@ -79,7 +79,7 @@ public class S3SelectTest extends BaseFeature {
 
     @Test(groups = {"gpdb", "s3"})
     public void testPlainCsvWithHeadersUsingHeaderInfo() throws Exception {
-        String[] userParameters = {"FILE_HEADER=USE", "S3-SELECT=ON"};
+        String[] userParameters = {"FILE_HEADER=USE", "S3_SELECT=ON"};
         runTestScenario("csv_use_headers", "s3", "csv", s3Path,
                 localDataResourcesFolder + "/s3select/", sampleCsvFile,
                 "|", userParameters);
@@ -87,7 +87,7 @@ public class S3SelectTest extends BaseFeature {
 
     @Test(groups = {"gpdb", "s3"})
     public void testPlainCsvWithNoHeaders() throws Exception {
-        String[] userParameters = {"FILE_HEADER=NONE", "S3-SELECT=ON"};
+        String[] userParameters = {"FILE_HEADER=NONE", "S3_SELECT=ON"};
         runTestScenario("csv_noheaders", "s3", "csv", s3Path,
                 localDataResourcesFolder + "/s3select/", sampleCsvNoHeaderFile,
                 "|", userParameters);
@@ -95,7 +95,7 @@ public class S3SelectTest extends BaseFeature {
 
     @Test(groups = {"gpdb", "s3"})
     public void testGzipCsvWithHeadersUsingHeaderInfo() throws Exception {
-        String[] userParameters = {"FILE_HEADER=USE", "S3-SELECT=ON", "COMPRESSION_CODEC=gzip"};
+        String[] userParameters = {"FILE_HEADER=USE", "S3_SELECT=ON", "COMPRESSION_CODEC=gzip"};
         runTestScenario("gzip_csv_use_headers", "s3", "csv", s3Path,
                 localDataResourcesFolder + "/s3select/", sampleGzippedCsvFile,
                 "|", userParameters);
@@ -103,7 +103,7 @@ public class S3SelectTest extends BaseFeature {
 
     @Test(groups = {"gpdb", "s3"})
     public void testBzip2CsvWithHeadersUsingHeaderInfo() throws Exception {
-        String[] userParameters = {"FILE_HEADER=USE", "S3-SELECT=ON", "COMPRESSION_CODEC=bzip2"};
+        String[] userParameters = {"FILE_HEADER=USE", "S3_SELECT=ON", "COMPRESSION_CODEC=bzip2"};
         runTestScenario("bzip2_csv_use_headers", "s3", "csv", s3Path,
                 localDataResourcesFolder + "/s3select/", sampleBzip2CsvFile,
                 "|", userParameters);
@@ -111,7 +111,7 @@ public class S3SelectTest extends BaseFeature {
 
     @Test(groups = {"gpdb", "s3"})
     public void testParquet() throws Exception {
-        String[] userParameters = {"S3-SELECT=ON"};
+        String[] userParameters = {"S3_SELECT=ON"};
         runTestScenario("parquet", "s3", "parquet", s3Path,
                 localDataResourcesFolder + "/s3select/", sampleParquetFile,
                 null, userParameters);
@@ -119,7 +119,7 @@ public class S3SelectTest extends BaseFeature {
 
     @Test(groups = {"gpdb", "s3"})
     public void testSnappyParquet() throws Exception {
-        String[] userParameters = {"S3-SELECT=ON"};
+        String[] userParameters = {"S3_SELECT=ON"};
         runTestScenario("parquet_snappy", "s3", "parquet", s3Path,
                 localDataResourcesFolder + "/s3select/", sampleParquetSnappyFile,
                 null, userParameters);
@@ -127,7 +127,7 @@ public class S3SelectTest extends BaseFeature {
 
     @Test(groups = {"gpdb", "s3"})
     public void testGzipParquet() throws Exception {
-        String[] userParameters = {"S3-SELECT=ON"};
+        String[] userParameters = {"S3_SELECT=ON"};
         runTestScenario("parquet_gzip", "s3", "parquet", s3Path,
                 localDataResourcesFolder + "/s3select/", sampleParquetGzipFile,
                 null, userParameters);
