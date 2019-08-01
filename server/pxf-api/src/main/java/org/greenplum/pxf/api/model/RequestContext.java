@@ -834,6 +834,8 @@ public class RequestContext {
         if (!StringUtils.isBlank(profile) && profile.contains(":")) {
             return profile.split(":")[1];
         }
-        return format;
+        // if the format name cannot be inferred from the profile
+        // we return null
+        return null;
     }
 }

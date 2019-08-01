@@ -57,6 +57,10 @@ public class S3ProtocolHandlerTest {
     private static String[] EXPECTED_RESOLVER_TEXT_AUTO_NO_BENEFIT_HAS_FORMAT_OPTIONS = {DEFAULT_RESOLVER, DEFAULT_RESOLVER, DEFAULT_RESOLVER, STRING_PASS_RESOLVER, DEFAULT_RESOLVER};
     private static String[] EXPECTED_FRAGMENTER_TEXT_AUTO_NO_BENEFIT_HAS_FORMAT_OPTIONS = {DEFAULT_FRAGMENTER, DEFAULT_FRAGMENTER, DEFAULT_FRAGMENTER, FILE_FRAGMENTER, DEFAULT_FRAGMENTER};
 
+    private static String[] EXPECTED_ACCESSOR_TEXT_AUTO_NO_BENEFIT_HAS_HEADER = {DEFAULT_ACCESSOR, S3_ACCESSOR, S3_ACCESSOR, S3_ACCESSOR, DEFAULT_ACCESSOR};
+    private static String[] EXPECTED_RESOLVER_TEXT_AUTO_NO_BENEFIT_HAS_HEADER = {DEFAULT_RESOLVER, STRING_PASS_RESOLVER, STRING_PASS_RESOLVER, STRING_PASS_RESOLVER, DEFAULT_RESOLVER};
+    private static String[] EXPECTED_FRAGMENTER_TEXT_AUTO_NO_BENEFIT_HAS_HEADER = {DEFAULT_FRAGMENTER, FILE_FRAGMENTER, FILE_FRAGMENTER, FILE_FRAGMENTER, DEFAULT_FRAGMENTER};
+
     private S3ProtocolHandler handler;
     private RequestContext context;
 
@@ -179,27 +183,27 @@ public class S3ProtocolHandlerTest {
     @Test
     public void testTextWithSelectAutoWithNoBenefitResolverWithFileHeaderInfoOptionUSE() {
         context.addOption("S3-SELECT", "auto");
-        context.addOption("HEADER", "USE");
+        context.addOption("FILE_HEADER", "USE");
         context.setOutputFormat(OutputFormat.TEXT);
-        verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_AUTO_NO_BENEFIT_HAS_FORMAT_OPTIONS);
-        verifyResolvers(context, EXPECTED_RESOLVER_TEXT_AUTO_NO_BENEFIT_HAS_FORMAT_OPTIONS);
-        verifyFragmenters(context, EXPECTED_FRAGMENTER_TEXT_AUTO_NO_BENEFIT_HAS_FORMAT_OPTIONS);
+        verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_AUTO_NO_BENEFIT_HAS_HEADER);
+        verifyResolvers(context, EXPECTED_RESOLVER_TEXT_AUTO_NO_BENEFIT_HAS_HEADER);
+        verifyFragmenters(context, EXPECTED_FRAGMENTER_TEXT_AUTO_NO_BENEFIT_HAS_HEADER);
     }
 
     @Test
     public void testTextWithSelectAutoWithNoBenefitResolverWithFileHeaderInfoOptionIGNORE() {
         context.addOption("S3-SELECT", "auto");
-        context.addOption("HEADER", "IGNORE");
+        context.addOption("FILE_HEADER", "IGNORE");
         context.setOutputFormat(OutputFormat.TEXT);
-        verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_AUTO_NO_BENEFIT_HAS_FORMAT_OPTIONS);
-        verifyResolvers(context, EXPECTED_RESOLVER_TEXT_AUTO_NO_BENEFIT_HAS_FORMAT_OPTIONS);
-        verifyFragmenters(context, EXPECTED_FRAGMENTER_TEXT_AUTO_NO_BENEFIT_HAS_FORMAT_OPTIONS);
+        verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_AUTO_NO_BENEFIT_HAS_HEADER);
+        verifyResolvers(context, EXPECTED_RESOLVER_TEXT_AUTO_NO_BENEFIT_HAS_HEADER);
+        verifyFragmenters(context, EXPECTED_FRAGMENTER_TEXT_AUTO_NO_BENEFIT_HAS_HEADER);
     }
 
     @Test
     public void testTextWithSelectAutoWithNoBenefitResolverWithFileHeaderInfoOptionNONE() {
         context.addOption("S3-SELECT", "auto");
-        context.addOption("HEADER", "NONE");
+        context.addOption("FILE_HEADER", "NONE");
         context.setOutputFormat(OutputFormat.TEXT);
         verifyAccessors(context, EXPECTED_ACCESSOR_TEXT_AUTO_NO_BENEFIT);
         verifyResolvers(context, EXPECTED_RESOLVER_TEXT_AUTO_NO_BENEFIT);

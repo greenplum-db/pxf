@@ -212,6 +212,8 @@ public class S3SelectAccessor extends BasePlugin implements Accessor {
     InputSerialization getInputSerialization(RequestContext context) {
         InputSerialization inputSerialization = new InputSerialization();
 
+        // We need to infer the format name from the profile (i.e. s3:parquet
+        // would return parquet for the format)
         String format = context.inferFormatName();
         String compressionType = context.getOption(COMPRESSION_TYPE);
 
@@ -277,7 +279,7 @@ public class S3SelectAccessor extends BasePlugin implements Accessor {
         }
 
         if (csv.getNewline() != null) {
-            LOG.debug("With CSV record delimiter '{}'", csv.getNewline());
+            LOG.debug("With CSV NEWLINE '{}'", csv.getNewline());
             csvInput.setRecordDelimiter(csv.getNewline());
         }
 

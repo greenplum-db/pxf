@@ -14,6 +14,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import static org.greenplum.pxf.plugins.s3.S3SelectAccessor.FILE_HEADER_INFO_IGNORE;
+import static org.greenplum.pxf.plugins.s3.S3SelectAccessor.FILE_HEADER_INFO_USE;
+
 /**
  * Implementation of ProtocolHandler for "s3" protocol.
  */
@@ -108,10 +111,11 @@ public class S3ProtocolHandler implements ProtocolHandler {
                 return formatSupported(outputFormat, format, S3Mode.ON, true);
             case AUTO:
                 // if supported for ON and beneficial, use it
+                // if file has header line, use S3 Select because reading with headers is not supported
                 // if supported for ON and not beneficial -> if supported for OFF -> use OFF, else use ON
                 // if not supported for ON -> if supported for OFF -> use OFF, else ERROR out
                 if (formatSupported(outputFormat, format, S3Mode.ON, false)) {
-                    if (willBenefitFromSelect(context)) {
+                    if (willBenefitFromSelect(context) || fileHasHeaderLine(format, context)) {
                         return true;
                     } else {
                         return !formatSupported(outputFormat, format, S3Mode.OFF, false);
@@ -122,6 +126,27 @@ public class S3ProtocolHandler implements ProtocolHandler {
             default:
                 return false;
         }
+    }
+
+    /**
+     * For CSV or TEXT files, it returns true if the file has headers
+     *
+     * @param context the request context
+     * @return true if the CSV/TEXT file has headers, false otherwise
+     */
+    private boolean fileHasHeaderLine(String format, RequestContext context) {
+        if (StringUtils.equals("CSV", format) || StringUtils.equals("TEXT", format)) {
+            // Currently, when you create a PXF external table,
+            // you cannot use the HEADER option in your formatter
+            // specification
+            String fileHeaderInfo = StringUtils.upperCase(
+                    context.getOption(S3SelectAccessor.FILE_HEADER_INFO));
+
+            return StringUtils.equals(FILE_HEADER_INFO_IGNORE, fileHeaderInfo) ||
+                    StringUtils.equals(FILE_HEADER_INFO_USE, fileHeaderInfo);
+        }
+
+        return false;
     }
 
     /**

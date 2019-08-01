@@ -154,7 +154,7 @@ public class S3SelectTest extends BaseFeature {
         exTable.setServer(serverParam);
 
         if (delimiter != null)
-            exTable.setDelimiter("|");
+            exTable.setDelimiter(delimiter);
         if (userParameters != null)
             exTable.setUserParameters(userParameters);
 
