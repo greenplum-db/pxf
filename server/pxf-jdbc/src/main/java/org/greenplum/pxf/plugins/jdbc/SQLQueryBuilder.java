@@ -23,6 +23,7 @@ import org.apache.commons.lang.SerializationUtils;
 
 import org.greenplum.pxf.api.BasicFilter;
 import org.greenplum.pxf.api.FilterParser;
+import org.greenplum.pxf.api.LogicalFilter;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.model.RequestContext;
@@ -243,16 +244,26 @@ public class SQLQueryBuilder {
         try {
             StringBuilder prepared = new StringBuilder(" WHERE ");
 
+            Object filterObject =  JdbcFilterParser.getFilterObject(requestContext.getFilterString());
+            FilterParser.LogicalOperation operation = null;
+            if(filterObject instanceof LogicalFilter) {
+                LogicalFilter logicalFilter = (LogicalFilter) filterObject;
+                operation = logicalFilter.getOperator();
+            }
+
             // Get constraints
             List<BasicFilter> filters = JdbcFilterParser.parseFilters(requestContext.getFilterString());
 
-            String andDivisor = "";
+            prepared.append("(");
+            String divisor = "";
             for (Object obj : filters) {
-                prepared.append(andDivisor);
-                andDivisor = " AND ";
-
                 // Insert constraint column name
                 BasicFilter filter = (BasicFilter) obj;
+
+
+                prepared.append(divisor);
+                divisor = retrieveDivisorBasedOnOperation(operation);
+
                 ColumnDescriptor column = requestContext.getColumn(filter.getColumn().index());
                 prepared.append(quoteString + column.columnName() + quoteString);
 
@@ -316,6 +327,7 @@ public class SQLQueryBuilder {
                         throw new UnsupportedOperationException("Unsupported column type for filtering: " + column.columnTypeCode());
                 }
             }
+            prepared.append(")");
 
             // No exceptions were thrown, change the provided query
             query.append(prepared);
@@ -323,6 +335,23 @@ public class SQLQueryBuilder {
         catch (UnsupportedOperationException e) {
             LOG.debug("WHERE clause is omitted: " + e.toString());
             // Silence the exception and do not insert constraints
+        }
+    }
+
+    private String retrieveDivisorBasedOnOperation(FilterParser.LogicalOperation operation) {
+        if(operation == null) {
+            return " AND ";
+        }
+        switch (operation) {
+            case HDOP_AND: {
+                return " AND ";
+            }
+            case HDOP_OR: {
+                return " OR ";
+            }
+            default: {
+                return "";
+            }
         }
     }
 

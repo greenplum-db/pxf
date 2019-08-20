@@ -115,7 +115,7 @@ public class JdbcFilterParser implements FilterParser.FilterBuilder {
      * @return a {@link BasicFilter} or a {@link List} of {@link BasicFilter}.
      * @throws ParseException if parsing the filter failed or filter is not a basic filter or list of basic filters
      */
-    private static Object getFilterObject(String filterString) throws ParseException {
+    public static Object getFilterObject(String filterString) throws ParseException {
         try {
             FilterParser parser = new FilterParser(new JdbcFilterParser());
             Object result = parser.parse(filterString.getBytes(FilterParser.DEFAULT_CHARSET));
@@ -153,7 +153,8 @@ public class JdbcFilterParser implements FilterParser.FilterBuilder {
         }
 
         LogicalFilter lfilter = (LogicalFilter) filter;
-        if (lfilter.getOperator() != FilterParser.LogicalOperation.HDOP_AND) {
+        if (lfilter.getOperator() != FilterParser.LogicalOperation.HDOP_AND &&
+                lfilter.getOperator() != FilterParser.LogicalOperation.HDOP_OR) {
             throw new UnsupportedOperationException("Logical operation '" + lfilter.getOperator() + "' is not supported");
         }
         for (Object f : lfilter.getFilterList()) {
