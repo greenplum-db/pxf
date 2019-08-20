@@ -244,89 +244,12 @@ public class SQLQueryBuilder {
         try {
             StringBuilder prepared = new StringBuilder(" WHERE ");
 
-            Object filterObject =  JdbcFilterParser.getFilterObject(requestContext.getFilterString());
-            FilterParser.LogicalOperation operation = null;
-            if(filterObject instanceof LogicalFilter) {
-                LogicalFilter logicalFilter = (LogicalFilter) filterObject;
-                operation = logicalFilter.getOperator();
-            }
-
             // Get constraints
-            List<BasicFilter> filters = JdbcFilterParser.parseFilters(requestContext.getFilterString());
+            //List<BasicFilter> filters = JdbcFilterParser.parseFilters(requestContext.getFilterString());
 
             prepared.append("(");
-            String divisor = "";
-            for (Object obj : filters) {
-                // Insert constraint column name
-                BasicFilter filter = (BasicFilter) obj;
-
-
-                prepared.append(divisor);
-                divisor = retrieveDivisorBasedOnOperation(operation);
-
-                ColumnDescriptor column = requestContext.getColumn(filter.getColumn().index());
-                prepared.append(quoteString + column.columnName() + quoteString);
-
-                // Insert constraint operator
-                FilterParser.Operation op = filter.getOperation();
-                switch (op) {
-                    case HDOP_LT:
-                        prepared.append(" < ");
-                        break;
-                    case HDOP_GT:
-                        prepared.append(" > ");
-                        break;
-                    case HDOP_LE:
-                        prepared.append(" <= ");
-                        break;
-                    case HDOP_GE:
-                        prepared.append(" >= ");
-                        break;
-                    case HDOP_EQ:
-                        prepared.append(" = ");
-                        break;
-                    case HDOP_LIKE:
-                        prepared.append(" LIKE ");
-                        break;
-                    case HDOP_NE:
-                        prepared.append(" <> ");
-                        break;
-                    case HDOP_IS_NULL:
-                        prepared.append(" IS NULL");
-                        continue;
-                    case HDOP_IS_NOT_NULL:
-                        prepared.append(" IS NOT NULL");
-                        continue;
-                    default:
-                        throw new UnsupportedOperationException("Unsupported Filter operation: " + op);
-                }
-
-                // Insert constraint constant
-                Object val = filter.getConstant().constant();
-                switch (DataType.get(column.columnTypeCode())) {
-                    case SMALLINT:
-                    case INTEGER:
-                    case BIGINT:
-                    case FLOAT8:
-                    case REAL:
-                    case BOOLEAN:
-                        prepared.append(val.toString());
-                        break;
-                    case TEXT:
-                        prepared.append("'").append(val.toString()).append("'");
-                        break;
-                    case DATE:
-                        // Date field has different format in different databases
-                        prepared.append(dbProduct.wrapDate(val));
-                        break;
-                    case TIMESTAMP:
-                        // Timestamp field has different format in different databases
-                        prepared.append(dbProduct.wrapTimestamp(val));
-                        break;
-                    default:
-                        throw new UnsupportedOperationException("Unsupported column type for filtering: " + column.columnTypeCode());
-                }
-            }
+            Object filterObject =  JdbcFilterParser.getFilterObject(requestContext.getFilterString());
+            buildWhereSQL(filterObject, prepared, null, false);
             prepared.append(")");
 
             // No exceptions were thrown, change the provided query
@@ -335,6 +258,84 @@ public class SQLQueryBuilder {
         catch (UnsupportedOperationException e) {
             LOG.debug("WHERE clause is omitted: " + e.toString());
             // Silence the exception and do not insert constraints
+        }
+    }
+
+    private void buildWhereSQL(Object filterObject, StringBuilder prepared, FilterParser.LogicalOperation operation, boolean appendOperator) {
+        if(filterObject instanceof LogicalFilter) {
+            LogicalFilter logicalFilter = (LogicalFilter) filterObject;
+            for (Object nestedFilterObject : logicalFilter.getFilterList()) {
+                buildWhereSQL(nestedFilterObject, prepared, logicalFilter.getOperator(), nestedFilterObject != logicalFilter.getFilterList().get(0));
+            }
+        } else {
+            BasicFilter filter = (BasicFilter) filterObject;
+            if(appendOperator) {
+                String divisor = retrieveDivisorBasedOnOperation(operation);
+                prepared.append(divisor);
+            }
+
+            ColumnDescriptor column = requestContext.getColumn(filter.getColumn().index());
+            prepared.append(quoteString + column.columnName() + quoteString);
+
+            // Insert constraint operator
+            FilterParser.Operation op = filter.getOperation();
+            switch (op) {
+                case HDOP_LT:
+                    prepared.append(" < ");
+                    break;
+                case HDOP_GT:
+                    prepared.append(" > ");
+                    break;
+                case HDOP_LE:
+                    prepared.append(" <= ");
+                    break;
+                case HDOP_GE:
+                    prepared.append(" >= ");
+                    break;
+                case HDOP_EQ:
+                    prepared.append(" = ");
+                    break;
+                case HDOP_LIKE:
+                    prepared.append(" LIKE ");
+                    break;
+                case HDOP_NE:
+                    prepared.append(" <> ");
+                    break;
+                case HDOP_IS_NULL:
+                    prepared.append(" IS NULL");
+                    return;
+                case HDOP_IS_NOT_NULL:
+                    prepared.append(" IS NOT NULL");
+                    return;
+                default:
+                    throw new UnsupportedOperationException("Unsupported Filter operation: " + op);
+            }
+
+            // Insert constraint constant
+            Object val = filter.getConstant().constant();
+            switch (DataType.get(column.columnTypeCode())) {
+                case SMALLINT:
+                case INTEGER:
+                case BIGINT:
+                case FLOAT8:
+                case REAL:
+                case BOOLEAN:
+                    prepared.append(val.toString());
+                    break;
+                case TEXT:
+                    prepared.append("'").append(val.toString()).append("'");
+                    break;
+                case DATE:
+                    // Date field has different format in different databases
+                    prepared.append(dbProduct.wrapDate(val));
+                    break;
+                case TIMESTAMP:
+                    // Timestamp field has different format in different databases
+                    prepared.append(dbProduct.wrapTimestamp(val));
+                    break;
+                default:
+                    throw new UnsupportedOperationException("Unsupported column type for filtering: " + column.columnTypeCode());
+            }
         }
     }
 

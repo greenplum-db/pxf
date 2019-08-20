@@ -94,8 +94,9 @@ public class SQLQueryBuilderTest {
 
     @Test
     public void testDateWithOrAndAmtFilter() throws Exception {
-        // cdate > '2008-02-01' and cdate < '2008-12-01' and amt > 1200
-        context.setFilterString("a1c25s10d2008-02-01o2a1c25s10d2008-12-01o1l0a2c20s4d1200o2l1");
+        // cdate > '2008-02-01' OR cdate < '2008-12-01' AND amt > 1200
+        context.setFilterString("a1c25s10d2008-02-01o2a1c25s10d2008-12-01o1l1a2c20s4d1200o2l0");
+        context.setFilterString("a1c1082s10d2008-02-01o2a1c1082s10d2008-12-01o1a0c23s4d1200o2l0l1");
 
         SQLQueryBuilder builder = new SQLQueryBuilder(context, mockMetaData);
         builder.autoSetQuoteString();
