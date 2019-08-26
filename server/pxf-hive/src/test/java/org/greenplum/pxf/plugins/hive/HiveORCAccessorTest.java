@@ -19,6 +19,10 @@ package org.greenplum.pxf.plugins.hive;
  * under the License.
  */
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Output;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.hadoop.hive.ql.io.sarg.PredicateLeaf;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentFactory;
 import org.greenplum.pxf.api.model.RequestContext;
@@ -27,7 +31,7 @@ import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.apache.hadoop.hive.ql.io.sarg.SearchArgumentFactory.SARG_PUSHDOWN;
+import static org.apache.hadoop.hive.ql.io.sarg.ConvertAstToSearchArg.SARG_PUSHDOWN;
 import static org.junit.Assert.assertEquals;
 
 public class HiveORCAccessorTest {
@@ -53,6 +57,9 @@ public class HiveORCAccessorTest {
 
     @Test
     public void parseFilterWithISNULL() {
+        SearchArgument sarg = SearchArgumentFactory.newBuilder().startAnd().isNull("FOO", PredicateLeaf.Type.STRING).end().build();
+        String expected = toKryo(sarg);
+
         context.setFilterString("a1o8");
         try {
             accessor.openForRead();
@@ -60,12 +67,14 @@ public class HiveORCAccessorTest {
             // Ignore exception thrown by openForRead complaining about file foo not found
         }
 
-        SearchArgument sarg = SearchArgumentFactory.newBuilder().startAnd().isNull("FOO").end().build();
-        assertEquals(sarg.toKryo(), accessor.getJobConf().get(SARG_PUSHDOWN));
+        assertEquals(expected, accessor.getJobConf().get(SARG_PUSHDOWN));
     }
 
     @Test
     public void parseFilterWithISNOTNULL() {
+
+        SearchArgument sarg = SearchArgumentFactory.newBuilder().startAnd().startNot().isNull("FOO", PredicateLeaf.Type.STRING).end().end().build();
+        String expected = toKryo(sarg);
 
         context.setFilterString("a1o9");
         try {
@@ -74,12 +83,19 @@ public class HiveORCAccessorTest {
             // Ignore exception thrown by openForRead complaining about file foo not found
         }
 
-        SearchArgument sarg = SearchArgumentFactory.newBuilder().startAnd().startNot().isNull("FOO").end().end().build();
-        assertEquals(sarg.toKryo(), accessor.getJobConf().get(SARG_PUSHDOWN));
+        assertEquals(expected, accessor.getJobConf().get(SARG_PUSHDOWN));
     }
 
     @Test
     public void parseFilterWithIn() {
+
+        SearchArgument sarg = SearchArgumentFactory.
+                newBuilder().
+                startAnd().
+                in("FOO", PredicateLeaf.Type.LONG, 1L, 2L, 3L).
+                end().
+                build();
+        String expected = toKryo(sarg);
 
         context.setFilterString("a1m1007s1d1s1d2s1d3o10");
         try {
@@ -88,12 +104,18 @@ public class HiveORCAccessorTest {
             // Ignore exception thrown by openForRead complaining about file foo not found
         }
 
-        SearchArgument sarg = SearchArgumentFactory.newBuilder().startAnd().in("FOO", 1, 2, 3).end().build();
-        assertEquals(sarg.toKryo(), accessor.getJobConf().get(SARG_PUSHDOWN));
+        assertEquals(expected, accessor.getJobConf().get(SARG_PUSHDOWN));
     }
 
     @Test(expected = IllegalStateException.class)
     public void emitAggObjectCountStatsNotInitialized() {
         accessor.emitAggObject();
+    }
+
+    private String toKryo(SearchArgument sarg) {
+        Output out = new Output(4 * 1024, 10 * 1024 * 1024);
+        new Kryo().writeObject(out, sarg);
+        out.close();
+        return Base64.encodeBase64String(out.toBytes());
     }
 }

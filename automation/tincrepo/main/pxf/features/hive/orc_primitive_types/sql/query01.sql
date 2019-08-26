@@ -8,6 +8,8 @@ SELECT num1 FROM pxf_hive_small_data WHERE (t1 LIKE 'r%1' OR t2 LIKE 's_1%') AND
 --IN
 --text
 SELECT * FROM pxf_hive_small_data WHERE t1 IN ('row1', 'row7');
+--same query with OR
+SELECT * FROM pxf_hive_small_data WHERE t1 = 'row1' OR t1 = 'row7';
 --float8
 SELECT t1 FROM pxf_hive_small_data WHERE dub1 IN (9,10,11);
 --int4
@@ -65,7 +67,7 @@ SELECT * FROM pxf_hive_small_data WHERE num1 = 1 OR (t1 = 'row9' AND t2 = 's_14'
 SELECT * FROM pxf_hive_small_data WHERE num1 = 1 OR (t1 = 'row9' AND t2 = 's_14' AND num1 > 5 AND dub1 > 1) OR num1 = 2;
 
 --Nested query
-SELECT t_out.t1 FROM pxf_hive_small_data t_out WHERE t_out.num1 IN (SELECT t_in.dub1 FROM pxf_hive_small_data t_in WHERE t_in.dub1 <= 10);
+SELECT t_out.t1 FROM pxf_hive_small_data t_out WHERE t_out.num1 IN (SELECT t_in.dub1 FROM pxf_hive_small_data t_in WHERE t_in.dub1 <= 10) order by t_out.t1;
 
 --Join between PXF table and local GPDB table
 SELECT local_t.t1, pxf_t.t2 FROM gpdb_small_data local_t, public.pxf_hive_small_data pxf_t WHERE pxf_t.t1 = local_t.t1 AND pxf_t.num1 > 6;

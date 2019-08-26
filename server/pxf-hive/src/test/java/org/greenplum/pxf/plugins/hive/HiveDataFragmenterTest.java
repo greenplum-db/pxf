@@ -19,110 +19,59 @@ package org.greenplum.pxf.plugins.hive;
  * under the License.
  */
 
-
+import org.apache.hadoop.conf.Configuration;
 import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.model.RequestContext;
-
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
-import org.apache.hadoop.hive.metastore.api.MetaException;
-import org.apache.hadoop.mapred.JobConf;
-
+import org.greenplum.pxf.plugins.hive.utilities.HiveClientHelper;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.rules.ExpectedException;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.core.classloader.annotations.SuppressStaticInitializationFor;
-import org.powermock.modules.junit4.PowerMockRunner;
-
-import java.util.*;
-
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({HiveDataFragmenter.class}) // Enables mocking 'new' calls
-@SuppressStaticInitializationFor({"org.apache.hadoop.mapred.JobConf",
-        "org.apache.hadoop.hive.metastore.api.MetaException",
-        "org.greenplum.pxf.plugins.hive.utilities.HiveUtilities"})
-// Prevents static inits
 public class HiveDataFragmenterTest {
-    RequestContext requestContext;
-    Configuration hadoopConfiguration;
-    JobConf jobConf;
-    HiveConf hiveConfiguration;
-    HiveMetaStoreClient hiveClient;
-    HiveDataFragmenter fragmenter;
-    HiveFilterBuilder filterBuilder;
+
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
+
+    private RequestContext context;
+    private Configuration configuration;
+    private HiveDataFragmenter fragmenter;
+    private HiveFilterBuilder filterBuilder;
     private ConfigurationFactory configurationFactory;
+    private HiveClientHelper hiveClientHelper;
 
+    @Before
+    public void setup() {
 
-    private void prepareConstruction() throws Exception {
+        hiveClientHelper = mock(HiveClientHelper.class);
         configurationFactory = mock(ConfigurationFactory.class);
-        requestContext = mock(RequestContext.class);
-        hadoopConfiguration = mock(Configuration.class);
-        filterBuilder = mock(HiveFilterBuilder.class);
 
-        jobConf = mock(JobConf.class);
-        PowerMockito.whenNew(JobConf.class).withArguments(hadoopConfiguration, HiveDataFragmenter.class).thenReturn(jobConf);
+        context = new RequestContext();
+        context.setConfig("default");
+        context.setServerName("default");
+        context.setUser("dummy");
 
-        hiveConfiguration = mock(HiveConf.class);
-        PowerMockito.whenNew(HiveConf.class).withArguments(hadoopConfiguration, HiveConf.class).thenReturn(hiveConfiguration);
+        configuration = new Configuration();
+        configuration.set("fs.defaultFS", "hdfs:///");
 
-        hiveClient = mock(HiveMetaStoreClient.class);
-        PowerMockito.whenNew(HiveMetaStoreClient.class).withArguments(hiveConfiguration).thenReturn(hiveClient);
+        filterBuilder = new HiveFilterBuilder();
 
-        Map<String, String> map = new HashMap<>();
-
-        when(requestContext.getConfig()).thenReturn("default");
-        when(requestContext.getServerName()).thenReturn("default");
-        when(requestContext.getUser()).thenReturn("dummy");
-        when(requestContext.getOptions()).thenReturn(map);
-        when(configurationFactory.initConfiguration("default", "default", "dummy", map)).
-                thenReturn(hadoopConfiguration);
-
-        when(hadoopConfiguration.get("fs.defaultFS", "file:///")).thenReturn("hdfs:///");
-    }
-
-    @Test
-    public void construction() throws Exception {
-        prepareConstruction();
-        fragmenter = new HiveDataFragmenter(configurationFactory, filterBuilder);
-        fragmenter.initialize(requestContext);
-
-        PowerMockito.verifyNew(JobConf.class).withArguments(hadoopConfiguration, HiveDataFragmenter.class);
-        PowerMockito.verifyNew(HiveMetaStoreClient.class).withArguments(hiveConfiguration);
+        when(configurationFactory
+                .initConfiguration("default", "default", "dummy", context.getAdditionalConfigProps()))
+                .thenReturn(configuration);
     }
 
     @Test
     public void constructorCantAccessMetaStore() throws Exception {
-        prepareConstruction();
-        PowerMockito.whenNew(HiveMetaStoreClient.class).withArguments(hiveConfiguration).thenThrow(new MetaException("which way to albuquerque"));
+        expectedException.expect(RuntimeException.class);
+        expectedException.expectMessage("Failed connecting to Hive MetaStore service: which way to albuquerque");
 
-        try {
-            fragmenter = new HiveDataFragmenter(configurationFactory, filterBuilder);
-            fragmenter.initialize(requestContext);
-            fail("Expected a RuntimeException");
-        } catch (RuntimeException ex) {
-            assertEquals(ex.getMessage(), "Failed connecting to Hive MetaStore service: which way to albuquerque");
-        }
-    }
+        when(hiveClientHelper.initHiveClient(configuration)).thenThrow(new RuntimeException("Failed connecting to Hive MetaStore service: which way to albuquerque"));
 
-    @Test
-    public void invalidTableName() throws Exception {
-        prepareConstruction();
-        fragmenter = new HiveDataFragmenter(configurationFactory, filterBuilder);
-        fragmenter.initialize(requestContext);
-
-        when(requestContext.getDataSource()).thenReturn("t.r.o.u.b.l.e.m.a.k.e.r");
-
-        try {
-            fragmenter.getFragments();
-            fail("Expected an IllegalArgumentException");
-        } catch (IllegalArgumentException ex) {
-            assertEquals(ex.getMessage(), "\"t.r.o.u.b.l.e.m.a.k.e.r\" is not a valid Hive table name. Should be either <table_name> or <db_name.table_name>");
-        }
+        fragmenter = new HiveDataFragmenter(configurationFactory, filterBuilder, hiveClientHelper);
+        fragmenter.initialize(context);
     }
 }

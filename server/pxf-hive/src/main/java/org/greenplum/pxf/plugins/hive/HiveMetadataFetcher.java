@@ -22,8 +22,7 @@ package org.greenplum.pxf.plugins.hive;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
+import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.mapred.InputFormat;
@@ -36,7 +35,7 @@ import org.greenplum.pxf.api.model.Metadata;
 import org.greenplum.pxf.api.model.MetadataFetcher;
 import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
+import org.greenplum.pxf.plugins.hive.utilities.HiveClientHelper;
 import org.greenplum.pxf.plugins.hive.utilities.ProfileFactory;
 
 import java.util.ArrayList;
@@ -54,19 +53,21 @@ public class HiveMetadataFetcher extends BasePlugin implements MetadataFetcher {
     private static final String DELIM_FIELD = "DELIMITER";
 
     private static final Log LOG = LogFactory.getLog(HiveMetadataFetcher.class);
-    private HiveMetaStoreClient client;
+    private IMetaStoreClient client;
     private JobConf jobConf;
+    private HiveClientHelper hiveClientHelper;
 
     public HiveMetadataFetcher(RequestContext context) {
-        this(context, BaseConfigurationFactory.getInstance());
+        this(context, BaseConfigurationFactory.getInstance(), HiveClientHelper.getInstance());
     }
 
-    HiveMetadataFetcher(RequestContext context, ConfigurationFactory configurationFactory) {
+    HiveMetadataFetcher(RequestContext context, ConfigurationFactory configurationFactory, HiveClientHelper hiveClientHelper) {
         this.configurationFactory = configurationFactory;
+        this.hiveClientHelper = hiveClientHelper;
         initialize(context);
 
         // init hive metastore client connection.
-        client = HiveUtilities.initHiveClient(configuration);
+        client = hiveClientHelper.initHiveClient(configuration);
         jobConf = new JobConf(configuration);
     }
 
@@ -85,28 +86,28 @@ public class HiveMetadataFetcher extends BasePlugin implements MetadataFetcher {
     public List<Metadata> getMetadata(String pattern) throws Exception {
 
         boolean ignoreErrors = false;
-        List<Metadata.Item> tblsDesc = HiveUtilities.extractTablesFromPattern(client, pattern);
+        List<Metadata.Item> tblsDesc = hiveClientHelper.extractTablesFromPattern(client, pattern);
 
-        if(tblsDesc == null || tblsDesc.isEmpty()) {
+        if (tblsDesc == null || tblsDesc.isEmpty()) {
             LOG.warn("No tables found for the given pattern: " + pattern);
             return null;
         }
 
-        List<Metadata> metadataList = new ArrayList<Metadata>();
+        List<Metadata> metadataList = new ArrayList<>();
 
-        if(tblsDesc.size() > 1) {
+        if (tblsDesc.size() > 1) {
             ignoreErrors = true;
         }
 
-        for(Metadata.Item tblDesc: tblsDesc) {
+        for (Metadata.Item tblDesc : tblsDesc) {
             try {
                 Metadata metadata = new Metadata(tblDesc);
-                Table tbl = HiveUtilities.getHiveTable(client, tblDesc);
-                HiveUtilities.getSchema(tbl, metadata);
-                boolean hasComplexTypes = HiveUtilities.hasComplexTypes(metadata);
+                Table tbl = hiveClientHelper.getHiveTable(client, tblDesc);
+                hiveClientHelper.getSchema(tbl, metadata);
+                boolean hasComplexTypes = hiveClientHelper.hasComplexTypes(metadata);
                 metadataList.add(metadata);
                 List<Partition> tablePartitions = client.listPartitionsByFilter(tblDesc.getPath(), tblDesc.getName(), "", (short) -1);
-                Set<OutputFormat> formats = new HashSet<OutputFormat>();
+                Set<OutputFormat> formats = new HashSet<>();
                 //If table has partitions - find out all formats
                 for (Partition tablePartition : tablePartitions) {
                     String inputFormat = tablePartition.getSd().getInputFormat();
@@ -114,20 +115,19 @@ public class HiveMetadataFetcher extends BasePlugin implements MetadataFetcher {
                     formats.add(outputFormat);
                 }
                 //If table has no partitions - get single format of table
-                if (tablePartitions.size() == 0 ) {
+                if (tablePartitions.size() == 0) {
                     String inputFormat = tbl.getSd().getInputFormat();
                     OutputFormat outputFormat = getOutputFormat(inputFormat, hasComplexTypes);
                     formats.add(outputFormat);
                 }
                 metadata.setOutputFormats(formats);
-                Map<String, String> outputParameters = new HashMap<String, String>();
-                Integer delimiterCode = HiveUtilities.getDelimiterCode(tbl.getSd());
+                Map<String, String> outputParameters = new HashMap<>();
+                Integer delimiterCode = hiveClientHelper.getDelimiterCode(tbl.getSd());
                 outputParameters.put(DELIM_FIELD, delimiterCode.toString());
                 metadata.setOutputParameters(outputParameters);
             } catch (UnsupportedTypeException | UnsupportedOperationException e) {
-                if(ignoreErrors) {
+                if (ignoreErrors) {
                     LOG.warn("Metadata fetch for " + tblDesc.toString() + " failed. " + e.getMessage());
-                    continue;
                 } else {
                     throw e;
                 }

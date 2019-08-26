@@ -3,7 +3,7 @@ package org.greenplum.pxf.automation.testplugin;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
+import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
@@ -18,7 +18,7 @@ import org.greenplum.pxf.api.model.Metadata;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hive.HiveDataFragmenter;
 import org.greenplum.pxf.plugins.hive.HiveUserData;
-import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
+import org.greenplum.pxf.plugins.hive.utilities.HiveClientHelper;
 
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectOutputStream;
@@ -29,7 +29,7 @@ import java.util.Properties;
 /**
  * Fragmenter which splits one file into multiple fragments. Helps to simulate a
  * case of big files.
- *
+ * <p>
  * inputData has to have following parameters:
  * TEST-FRAGMENTS-NUM - defines how many fragments will be returned for current file
  */
@@ -38,24 +38,29 @@ public class MultipleHiveFragmentsPerFileFragmenter extends BaseFragmenter {
 
     private static final long SPLIT_SIZE = 1024;
     private JobConf jobConf;
-    private HiveMetaStoreClient client;
+    private IMetaStoreClient client;
+    private HiveClientHelper hiveClientHelper;
+
+    public MultipleHiveFragmentsPerFileFragmenter() {
+        hiveClientHelper = HiveClientHelper.getInstance();
+    }
 
     @Override
     public void initialize(RequestContext requestContext) {
         super.initialize(requestContext);
         jobConf = new JobConf(configuration, MultipleHiveFragmentsPerFileFragmenter.class);
-        client = HiveUtilities.initHiveClient(configuration);
+        client = hiveClientHelper.initHiveClient(configuration);
     }
 
     @Override
     public List<Fragment> getFragments() throws Exception {
         String localhostname = java.net.InetAddress.getLocalHost().getHostName();
-        String[] localHosts = new String[] { localhostname, localhostname };
+        String[] localHosts = new String[]{localhostname, localhostname};
 
         // TODO whitelist property
         int fragmentsNum = Integer.parseInt(context.getOption("TEST-FRAGMENTS-NUM"));
-        Metadata.Item tblDesc = HiveUtilities.extractTableFromName(context.getDataSource());
-        Table tbl = HiveUtilities.getHiveTable(client, tblDesc);
+        Metadata.Item tblDesc = hiveClientHelper.extractTableFromName(context.getDataSource());
+        Table tbl = hiveClientHelper.getHiveTable(client, tblDesc);
         Properties properties = getSchema(tbl);
 
         for (int i = 0; i < fragmentsNum; i++) {
@@ -98,7 +103,7 @@ public class MultipleHiveFragmentsPerFileFragmenter extends BaseFragmenter {
 
         FileInputFormat.setInputPaths(jobConf, new Path(descTable.getLocation()));
 
-        InputSplit[] splits = null;
+        InputSplit[] splits;
         try {
             splits = fformat.getSplits(jobConf, 1);
         } catch (org.apache.hadoop.mapred.InvalidInputException e) {

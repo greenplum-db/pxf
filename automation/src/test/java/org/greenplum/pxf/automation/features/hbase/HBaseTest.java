@@ -500,23 +500,6 @@ public class HBaseTest extends BaseFeature {
     }
 
     /**
-     * Use Hive profile for HBase and verify Error.
-     *
-     * @throws Exception if test fails to run
-     */
-    @Test(groups = { "hbase", "features", "gpdb" })
-    public void useWrongProfile() throws Exception {
-
-        ReadableExternalTable wrongProfileHBaseTableExtTable = TableFactory.getPxfHBaseReadableTable(
-                "wrong_profile_hbase_table", exTableFields, hbaseTable);
-        wrongProfileHBaseTableExtTable.setHost(pxfHost);
-        wrongProfileHBaseTableExtTable.setPort(pxfPort);
-        wrongProfileHBaseTableExtTable.setProfile(EnumPxfDefaultProfiles.Hive.toString());
-        gpdb.createTableAndVerify(wrongProfileHBaseTableExtTable);
-        runTincTest("pxf.features.hbase.errors.useWrongProfile.runTest");
-    }
-
-    /**
      * use long HBase table qualifier (over 64 chars) with no lookup table mapping. Verify the
      * column name in GPDB is being truncated and data for this column is missing
      *

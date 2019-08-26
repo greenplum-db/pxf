@@ -19,15 +19,6 @@ package org.greenplum.pxf.plugins.hive;
  * under the License.
  */
 
-import org.apache.hadoop.io.BytesWritable;
-import org.greenplum.pxf.api.*;
-import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.api.model.Resolver;
-import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.api.utilities.Utilities;
-import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
-import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.apache.commons.lang.CharUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -35,12 +26,24 @@ import org.apache.hadoop.hive.common.JavaUtils;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.serde.serdeConstants;
-import org.apache.hadoop.hive.serde2.*;
+import org.apache.hadoop.hive.serde2.Deserializer;
 import org.apache.hadoop.hive.serde2.io.ByteWritable;
 import org.apache.hadoop.hive.serde2.objectinspector.*;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.*;
+import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapred.JobConf;
+import org.greenplum.pxf.api.BadRecordException;
+import org.greenplum.pxf.api.OneField;
+import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.UnsupportedTypeException;
+import org.greenplum.pxf.api.io.DataType;
+import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.api.model.Resolver;
+import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.api.utilities.Utilities;
+import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
+import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -65,19 +68,18 @@ import java.util.Properties;
  * also introduced in Hive 0.11.0). In order to cope with this inconsistency...
  * this bit of juggling has been necessary.
  */
-@SuppressWarnings("deprecation")
 public class HiveResolver extends HivePlugin implements Resolver {
     private static final Log LOG = LogFactory.getLog(HiveResolver.class);
-    protected static final String MAPKEY_DELIM = ":";
-    protected static final String COLLECTION_DELIM = ",";
-    protected String collectionDelim;
-    protected String mapkeyDelim;
-    protected SerDe deserializer;
+    static final String MAPKEY_DELIM = ":";
+    static final String COLLECTION_DELIM = ",";
+    String collectionDelim;
+    String mapkeyDelim;
+    Deserializer deserializer;
     private List<OneField> partitionFields;
-    protected String serdeClassName;
-    protected String propsString;
+    String serdeClassName;
+    String propsString;
     String partitionKeys;
-    protected char delimiter;
+    char delimiter;
     String nullChar = "\\N";
     private String hiveDefaultPartName;
     private int numberOfPartitions;
@@ -160,7 +162,7 @@ public class HiveResolver extends HivePlugin implements Resolver {
         Properties serdeProperties;
 
         Class<?> c = Class.forName(serdeClassName, true, JavaUtils.getClassLoader());
-        deserializer = (SerDe) c.newInstance();
+        deserializer = (Deserializer) c.newInstance();
         serdeProperties = new Properties();
         if (propsString != null) {
             ByteArrayInputStream inStream = new ByteArrayInputStream(propsString.getBytes());

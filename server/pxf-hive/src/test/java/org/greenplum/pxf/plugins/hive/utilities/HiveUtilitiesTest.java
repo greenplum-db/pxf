@@ -39,34 +39,33 @@ import org.greenplum.pxf.api.UnsupportedTypeException;
 public class HiveUtilitiesTest {
 
     FieldSchema hiveColumn;
-    Metadata.Item tblDesc;
 
     static String[][] typesMappings = {
-        /* hive type -> gpdb type */
-        {"tinyint", "int2"},
-        {"smallint", "int2"},
-        {"int", "int4"},
-        {"bigint", "int8"},
-        {"boolean", "bool"},
-        {"float", "float4"},
-        {"double", "float8"},
-        {"string", "text"},
-        {"binary", "bytea"},
-        {"timestamp", "timestamp"},
-        {"date", "date"},
+            /* hive type -> gpdb type */
+            {"tinyint", "int2"},
+            {"smallint", "int2"},
+            {"int", "int4"},
+            {"bigint", "int8"},
+            {"boolean", "bool"},
+            {"float", "float4"},
+            {"double", "float8"},
+            {"string", "text"},
+            {"binary", "bytea"},
+            {"timestamp", "timestamp"},
+            {"date", "date"},
     };
 
     static String[][] typesWithModifiers = {
-        {"decimal(19,84)", "numeric", "19,84"},
-        {"varchar(13)", "varchar", "13"},
-        {"char(40)", "bpchar", "40"},
+            {"decimal(19,84)", "numeric", "19,84"},
+            {"varchar(13)", "varchar", "13"},
+            {"char(40)", "bpchar", "40"},
     };
 
     static String[][] complexTypes = {
-        {"ArraY<string>", "text"},
-        {"MaP<stRing, float>", "text"},
-        {"Struct<street:string, city:string, state:string, zip:int>", "text"},
-        {"UnionType<array<string>, string,int>", "text"}
+            {"ArraY<string>", "text"},
+            {"MaP<stRing, float>", "text"},
+            {"Struct<street:string, city:string, state:string, zip:int>", "text"},
+            {"UnionType<array<string>, string,int>", "text"}
     };
 
     @Test
@@ -97,7 +96,7 @@ public class HiveUtilitiesTest {
          * timestamp -> timestamp
          * date -> date
          */
-        for (String[] line: typesMappings) {
+        for (String[] line : typesMappings) {
             String hiveType = line[0];
             String gpdbTypeName = line[1];
             hiveColumn = new FieldSchema("field" + hiveType, hiveType, null);
@@ -115,7 +114,7 @@ public class HiveUtilitiesTest {
          * varchar -> varchar
          * char -> bpchar
          */
-        for (String[] line: typesWithModifiers) {
+        for (String[] line : typesWithModifiers) {
             String hiveType = line[0];
             String expectedType = line[1];
             String modifiersStr = line[2];
@@ -173,8 +172,7 @@ public class HiveUtilitiesTest {
         try {
             compatibleTypeName = HiveUtilities.toCompatibleHiveType(DataType.UNSUPPORTED_TYPE, null);
             fail("should fail because there is no mapped Hive type");
-        }
-        catch (UnsupportedTypeException e) {
+        } catch (UnsupportedTypeException e) {
             String errorMsg = "Unable to find compatible Hive type for given GPDB's type: " + DataType.UNSUPPORTED_TYPE;
             assertEquals(errorMsg, e.getMessage());
         }
@@ -203,13 +201,10 @@ public class HiveUtilitiesTest {
         try {
             compatibleTypeName = HiveUtilities.toCompatibleHiveType(DataType.UNSUPPORTED_TYPE, gpdbModifiers);
             fail("should fail because there is no mapped Hive type");
-        }
-        catch (UnsupportedTypeException e) {
+        } catch (UnsupportedTypeException e) {
             String errorMsg = "Unable to find compatible Hive type for given GPDB's type: " + DataType.UNSUPPORTED_TYPE;
             assertEquals(errorMsg, e.getMessage());
         }
-
-
     }
 
     @Test
@@ -236,16 +231,14 @@ public class HiveUtilitiesTest {
         gpdbModifiers = new Integer[]{11, 3};
         HiveUtilities.validateTypeCompatible(DataType.NUMERIC, gpdbModifiers, "decimal(10,2)", columnName);
 
-
         //GPDB has lesser modifiers than Hive, types aren't compatible
         try {
             gpdbModifiers = new Integer[]{38, 17};
             HiveUtilities.validateTypeCompatible(DataType.NUMERIC, gpdbModifiers, "decimal(38,18)", columnName);
             fail("should fail with incompatible modifiers message");
-        }
-        catch (UnsupportedTypeException e) {
+        } catch (UnsupportedTypeException e) {
             String errorMsg = "Invalid definition for column " + columnName
-                    +  ": modifiers are not compatible, "
+                    + ": modifiers are not compatible, "
                     + Arrays.toString(new String[]{"38", "18"}) + ", "
                     + Arrays.toString(new String[]{"38", "17"});
             assertEquals(errorMsg, e.getMessage());
@@ -257,8 +250,7 @@ public class HiveUtilitiesTest {
             gpdbModifiers = new Integer[]{};
             HiveUtilities.validateTypeCompatible(DataType.NUMERIC, gpdbModifiers, "boolean", columnName);
             fail("should fail with incompatible types message");
-        }
-        catch (UnsupportedTypeException e) {
+        } catch (UnsupportedTypeException e) {
             String errorMsg = "Invalid definition for column " + columnName
                     + ": expected GPDB type " + DataType.BOOLEAN
                     + ", actual GPDB type " + DataType.NUMERIC;
@@ -282,7 +274,7 @@ public class HiveUtilitiesTest {
             fail("should fail with bad numeric type error");
         } catch (UnsupportedTypeException e) {
             String errorMsg = "GPDB does not support type " + badHiveType + " (Field badNumeric), " +
-                "expected number of modifiers: 2, actual number of modifiers: 1";
+                    "expected number of modifiers: 2, actual number of modifiers: 1";
             assertEquals(errorMsg, e.getMessage());
         }
 
@@ -304,7 +296,7 @@ public class HiveUtilitiesTest {
             fail("should fail with bad modifier error");
         } catch (UnsupportedTypeException e) {
             String errorMsg = "GPDB does not support type " + badHiveType + " (Field badModifier), " +
-                "modifiers should be integers";
+                    "modifiers should be integers";
             assertEquals(errorMsg, e.getMessage());
         }
     }
@@ -330,7 +322,7 @@ public class HiveUtilitiesTest {
          * struct<fieldName1:dataType, ..., fieldNameN:dataType> -> text
          * uniontype<...> -> text
          */
-        for (String[] line: complexTypes) {
+        for (String[] line : complexTypes) {
             String hiveType = line[0];
             String expectedType = line[1];
             hiveColumn = new FieldSchema("field" + hiveType, hiveType, null);
@@ -339,93 +331,5 @@ public class HiveUtilitiesTest {
             assertEquals(expectedType, result.getType().getTypeName());
             assertNull(result.getModifiers());
         }
-    }
-
-    @Test
-    public void parseTableQualifiedNameNoDbName() throws Exception {
-        String name = "orphan";
-        tblDesc = HiveUtilities.extractTableFromName(name);
-
-        assertEquals("default", tblDesc.getPath());
-        assertEquals(name, tblDesc.getName());
-    }
-
-    @Test
-    public void parseTableQualifiedName() throws Exception {
-        String name = "not.orphan";
-        tblDesc = HiveUtilities.extractTableFromName(name);
-
-        assertEquals("not", tblDesc.getPath());
-        assertEquals("orphan", tblDesc.getName());
-    }
-
-    @Test
-    public void parseTableQualifiedNameTooManyQualifiers() throws Exception {
-        String name = "too.many.parents";
-        String errorMsg = surroundByQuotes(name) + " is not a valid Hive table name. "
-                + "Should be either <table_name> or <db_name.table_name>";
-
-        parseTableQualifiedNameNegative(name, errorMsg, "too many qualifiers");
-    }
-
-    @Test
-    public void parseTableQualifiedNameEmpty() throws Exception {
-        String name = "";
-        String errorMsg = "empty string is not a valid Hive table name. "
-                + "Should be either <table_name> or <db_name.table_name>";
-
-        parseTableQualifiedNameNegative(name, errorMsg, "empty string");
-
-        name = null;
-        parseTableQualifiedNameNegative(name, errorMsg, "null string");
-
-        name = ".";
-        errorMsg = surroundByQuotes(name) + " is not a valid Hive table name. "
-                + "Should be either <table_name> or <db_name.table_name>";
-        parseTableQualifiedNameNegative(name, errorMsg, "empty db and table names");
-
-        name = " . ";
-        errorMsg = surroundByQuotes(name) + " is not a valid Hive table name. "
-                + "Should be either <table_name> or <db_name.table_name>";
-        parseTableQualifiedNameNegative(name, errorMsg, "only white spaces in string");
-    }
-
-    private String surroundByQuotes(String str) {
-        return "\"" + str + "\"";
-    }
-
-    private void parseTableQualifiedNameNegative(String name, String errorMsg, String reason) throws Exception {
-        try {
-            tblDesc = HiveUtilities.extractTableFromName(name);
-            fail("test should fail because of " + reason);
-        } catch (IllegalArgumentException e) {
-            assertEquals(errorMsg, e.getMessage());
-        }
-    }
-
-    @Test
-    public void getDelimiterCode() {
-
-        //Default delimiter code should be 44(comma)
-        Integer delimiterCode = HiveUtilities.getDelimiterCode(null);
-        char defaultDelim = ',';
-        assertTrue(delimiterCode == (int) defaultDelim);
-
-        //Some serdes use FIELD_DELIM key
-        char expectedDelim = '%';
-        StorageDescriptor sd = new StorageDescriptor();
-        SerDeInfo si = new SerDeInfo();
-        si.setParameters(Collections.singletonMap(serdeConstants.FIELD_DELIM, String.valueOf(expectedDelim)));
-        sd.setSerdeInfo(si);
-        delimiterCode = HiveUtilities.getDelimiterCode(sd);
-        assertTrue(delimiterCode == (int) expectedDelim);
-
-        //Some serdes use SERIALIZATION_FORMAT key
-        sd = new StorageDescriptor();
-        si = new SerDeInfo();
-        si.setParameters(Collections.singletonMap(serdeConstants.SERIALIZATION_FORMAT, String.valueOf((int)expectedDelim)));
-        sd.setSerdeInfo(si);
-        delimiterCode = HiveUtilities.getDelimiterCode(sd);
-        assertTrue(delimiterCode == (int) expectedDelim);
     }
 }

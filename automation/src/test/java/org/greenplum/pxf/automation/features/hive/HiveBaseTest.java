@@ -82,8 +82,8 @@ public class HiveBaseTest extends BaseFeature {
             "d1    DOUBLE"
     };
     static final String[] HIVE_RC_COLS = { // TODO: dedup with HIVE_SMALLDATA_COLS above
-            "t0    STRING",
             "t1    STRING",
+            "t2    STRING",
             "num1  INT",
             "d1    DOUBLE"
     };

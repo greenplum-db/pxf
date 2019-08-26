@@ -23,45 +23,21 @@ package org.greenplum.pxf.plugins.hive.utilities;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
-import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
-import org.apache.hadoop.hive.metastore.api.MetaException;
-import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
-import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.hive.ql.io.orc.OrcFile;
 import org.apache.hadoop.hive.ql.io.orc.Reader;
-import org.apache.hadoop.hive.serde.serdeConstants;
-import org.apache.hadoop.hive.serde2.*;
-import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.hive.serde2.Deserializer;
 import org.greenplum.pxf.api.UnsupportedTypeException;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.Metadata;
-import org.greenplum.pxf.api.model.Metadata.Field;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.EnumGpdbType;
 import org.greenplum.pxf.api.utilities.Utilities;
-import org.greenplum.pxf.plugins.hive.HiveDataFragmenter;
-import org.greenplum.pxf.plugins.hive.HiveInputFormatFragmenter;
-import org.greenplum.pxf.plugins.hive.HiveInputFormatFragmenter.PXF_HIVE_INPUT_FORMATS;
-import org.greenplum.pxf.plugins.hive.HiveTablePartition;
 import org.greenplum.pxf.plugins.hive.HiveUserData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.security.PrivilegedExceptionAction;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Properties;
-
-import static org.greenplum.pxf.api.model.ConfigurationFactory.PXF_CONFIG_RESOURCE_PATH_PROPERTY;
 
 
 /**
@@ -71,78 +47,6 @@ import static org.greenplum.pxf.api.model.ConfigurationFactory.PXF_CONFIG_RESOUR
 public class HiveUtilities {
 
     private static final Logger LOG = LoggerFactory.getLogger(HiveUtilities.class);
-    private static final String WILDCARD = "*";
-
-    /**
-     * Default Hive DB (schema) name.
-     */
-    private static final String HIVE_DEFAULT_DBNAME = "default";
-
-    static final String STR_RC_FILE_INPUT_FORMAT = "org.apache.hadoop.hive.ql.io.RCFileInputFormat";
-    static final String STR_TEXT_FILE_INPUT_FORMAT = "org.apache.hadoop.mapred.TextInputFormat";
-    static final String STR_ORC_FILE_INPUT_FORMAT = "org.apache.hadoop.hive.ql.io.orc.OrcInputFormat";
-    private static final int DEFAULT_DELIMITER_CODE = 44;
-
-    /**
-     * Initializes HiveConf configuration object from request configuration. Since hive-site.xml
-     * is not available on classpath due to multi-server support, it is added explicitly based
-     * on location for a given PXF configuration server
-     * @param configuration request configuration
-     * @return instance of HiveConf object
-     */
-    public static HiveConf getHiveConf(Configuration configuration) {
-        // prepare hiveConf object and explicitly add this request's hive-site.xml file to it
-        HiveConf hiveConf = new HiveConf(configuration, HiveConf.class);
-
-        String hiveSiteUrl = configuration.get(String.format("%s.%s", PXF_CONFIG_RESOURCE_PATH_PROPERTY, "hive-site.xml"));
-        if (hiveSiteUrl != null) {
-            try {
-                hiveConf.addResource(new URL(hiveSiteUrl));
-            } catch (MalformedURLException e) {
-                throw new RuntimeException(
-                        String.format("Failed to add %s to hive configuration", hiveSiteUrl), e);
-            }
-        }
-        return hiveConf;
-    }
-    /**
-     * Initializes the HiveMetaStoreClient
-     * Uses classpath configuration files to locate the MetaStore
-     *
-     * @return initialized client
-     */
-    public static HiveMetaStoreClient initHiveClient(Configuration configuration) {
-        HiveConf hiveConf = HiveUtilities.getHiveConf(configuration);
-        try {
-            if (UserGroupInformation.isSecurityEnabled()) {
-                LOG.debug("initialize HiveMetaStoreClient as login user '{}'", UserGroupInformation.getLoginUser().getUserName());
-                // wrap in doAs for Kerberos to propagate kerberos tokens from login Subject
-                return UserGroupInformation.getLoginUser().
-                        doAs((PrivilegedExceptionAction<HiveMetaStoreClient>) () ->
-                                new HiveMetaStoreClient(hiveConf));
-            } else {
-                return new HiveMetaStoreClient(hiveConf);
-            }
-        } catch (MetaException | InterruptedException | IOException e) {
-            throw new RuntimeException("Failed connecting to Hive MetaStore service: " + e.getMessage(), e);
-        }
-    }
-
-    public static Table getHiveTable(HiveMetaStoreClient client, Metadata.Item itemName)
-            throws Exception {
-        Table tbl = client.getTable(itemName.getPath(), itemName.getName());
-        String tblType = tbl.getTableType();
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Item: " + itemName.getPath() + "." + itemName.getName() + ", type: " + tblType);
-        }
-
-        if (TableType.valueOf(tblType) == TableType.VIRTUAL_VIEW) {
-            throw new UnsupportedOperationException("Hive views are not supported by GPDB");
-        }
-
-        return tbl;
-    }
 
     /**
      * Checks if hive type is supported, and if so return its matching GPDB
@@ -169,11 +73,9 @@ public class HiveUtilities {
      * <li>{@code uniontype<...> -> text}</li>
      * </ul>
      *
-     * @param hiveColumn
-     *            hive column schema
+     * @param hiveColumn hive column schema
      * @return field with mapped GPDB type and modifiers
-     * @throws UnsupportedTypeException
-     *             if the column type is not supported
+     * @throws UnsupportedTypeException if the column type is not supported
      * @see EnumHiveToGpdbType
      */
     public static Metadata.Field mapHiveType(FieldSchema hiveColumn) throws UnsupportedTypeException {
@@ -228,110 +130,21 @@ public class HiveUtilities {
         return true;
     }
 
-    /**
-     * Extracts the db_name and table_name from the qualifiedName.
-     * qualifiedName is the Hive table name that the user enters in the CREATE EXTERNAL TABLE statement
-     * or when querying HCatalog table.
-     * It can be either <code>table_name</code> or <code>db_name.table_name</code>.
-     *
-     * @param qualifiedName Hive table name
-     * @return {@link Metadata.Item} object holding the full table name
-     */
-    public static Metadata.Item extractTableFromName(String qualifiedName) {
-        List<Metadata.Item> items = extractTablesFromPattern(null, qualifiedName);
-        if (items.isEmpty()) {
-            throw new IllegalArgumentException("No tables found");
-        }
-        return items.get(0);
-    }
-
-    /**
-     * Extracts the db_name(s) and table_name(s) corresponding to the given pattern.
-     * pattern is the Hive table name or pattern that the user enters in the CREATE EXTERNAL TABLE statement
-     * or when querying HCatalog table.
-     * It can be either <code>table_name_pattern</code> or <code>db_name_pattern.table_name_pattern</code>.
-     *
-     * @param client  Hivemetastore client
-     * @param pattern Hive table name or pattern
-     * @return list of {@link Metadata.Item} objects holding the full table name
-     */
-    public static List<Metadata.Item> extractTablesFromPattern(HiveMetaStoreClient client, String pattern) {
-
-        String dbPattern, tablePattern;
-        String errorMsg = " is not a valid Hive table name. "
-                + "Should be either <table_name> or <db_name.table_name>";
-
-        if (StringUtils.isBlank(pattern)) {
-            throw new IllegalArgumentException("empty string" + errorMsg);
-        }
-
-        String[] rawToks = pattern.split("[.]");
-        ArrayList<String> toks = new ArrayList<String>();
-        for (String tok : rawToks) {
-            if (StringUtils.isBlank(tok)) {
-                continue;
-            }
-            toks.add(tok.trim());
-        }
-
-        if (toks.size() == 1) {
-            dbPattern = HIVE_DEFAULT_DBNAME;
-            tablePattern = toks.get(0);
-        } else if (toks.size() == 2) {
-            dbPattern = toks.get(0);
-            tablePattern = toks.get(1);
-        } else {
-            throw new IllegalArgumentException("\"" + pattern + "\"" + errorMsg);
-        }
-
-        return getTablesFromPattern(client, dbPattern, tablePattern);
-    }
-
-    private static List<Metadata.Item> getTablesFromPattern(HiveMetaStoreClient client, String dbPattern, String tablePattern) {
-
-        List<String> databases = null;
-        List<Metadata.Item> itemList = new ArrayList<Metadata.Item>();
-        List<String> tables = new ArrayList<String>();
-
-        if (client == null || (!dbPattern.contains(WILDCARD) && !tablePattern.contains(WILDCARD))) {
-            /* This case occurs when the call is invoked as part of the fragmenter api or when metadata is requested for a specific table name */
-            itemList.add(new Metadata.Item(dbPattern, tablePattern));
-            return itemList;
-        }
-
-        try {
-            databases = client.getDatabases(dbPattern);
-            if (databases.isEmpty()) {
-                LOG.warn("No database found for the given pattern: " + dbPattern);
-                return null;
-            }
-            for (String dbName : databases) {
-                for (String tableName : client.getTables(dbName, tablePattern)) {
-                    itemList.add(new Metadata.Item(dbName, tableName));
-                }
-            }
-            return itemList;
-
-        } catch (MetaException cause) {
-            throw new RuntimeException("Failed connecting to Hive MetaStore service: " + cause.getMessage(), cause);
-        }
-    }
-
 
     /**
      * Converts GPDB type to hive type.
-     * @see EnumHiveToGpdbType For supported mappings
+     *
      * @param type      GPDB data type
      * @param modifiers Integer array of modifier info
      * @return Hive type
      * @throws UnsupportedTypeException if type is not supported
+     * @see EnumHiveToGpdbType For supported mappings
      */
     public static String toCompatibleHiveType(DataType type, Integer[] modifiers) {
 
         EnumHiveToGpdbType hiveToGpdbType = EnumHiveToGpdbType.getCompatibleHiveToGpdbType(type);
         return EnumHiveToGpdbType.getFullHiveTypeName(hiveToGpdbType, modifiers);
     }
-
 
 
     /**
@@ -348,7 +161,6 @@ public class HiveUtilities {
      * Hive type - varchar(20), GPDB type varchar(25) - valid.
      * <p>
      * Hive type - varchar(20), GPDB type varchar(15) - invalid.
-     *
      *
      * @param gpdbDataType   GPDB data type
      * @param gpdbTypeMods   GPDB type modifiers
@@ -387,103 +199,6 @@ public class HiveUtilities {
         }
     }
 
-    /* Turns a Properties class into a string */
-    private static String serializeProperties(Properties props) throws Exception {
-        ByteArrayOutputStream outStream = new ByteArrayOutputStream();
-        props.store(outStream, ""/* comments */);
-        return outStream.toString();
-    }
-
-    /*
-     * Validates that partition format corresponds to PXF supported formats and
-     * transforms the class name to an enumeration for writing it to the
-     * accessors on other PXF instances.
-     */
-    private static String assertFileType(String className, HiveTablePartition partData)
-            throws Exception {
-        switch (className) {
-            case STR_RC_FILE_INPUT_FORMAT:
-                return PXF_HIVE_INPUT_FORMATS.RC_FILE_INPUT_FORMAT.name();
-            case STR_TEXT_FILE_INPUT_FORMAT:
-                return PXF_HIVE_INPUT_FORMATS.TEXT_FILE_INPUT_FORMAT.name();
-            case STR_ORC_FILE_INPUT_FORMAT:
-                return PXF_HIVE_INPUT_FORMATS.ORC_FILE_INPUT_FORMAT.name();
-            default:
-                throw new IllegalArgumentException(
-                        "HiveInputFormatFragmenter does not yet support "
-                                + className
-                                + " for "
-                                + partData
-                                + ". Supported InputFormat are "
-                                + Arrays.toString(PXF_HIVE_INPUT_FORMATS.values()));
-        }
-    }
-
-
-    /* Turns the partition keys into a string */
-    public static String serializePartitionKeys(HiveTablePartition partData) throws Exception {
-        if (partData.partition == null) /*
-         * this is a simple hive table - there
-         * are no partitions
-         */ {
-            return HiveDataFragmenter.HIVE_NO_PART_TBL;
-        }
-
-        StringBuilder partitionKeys = new StringBuilder();
-        String prefix = "";
-        ListIterator<String> valsIter = partData.partition.getValues().listIterator();
-        ListIterator<FieldSchema> keysIter = partData.partitionKeys.listIterator();
-        while (valsIter.hasNext() && keysIter.hasNext()) {
-            FieldSchema key = keysIter.next();
-            String name = key.getName();
-            String type = key.getType();
-            String val = valsIter.next();
-            String oneLevel = prefix + name + HiveDataFragmenter.HIVE_1_PART_DELIM + type
-                    + HiveDataFragmenter.HIVE_1_PART_DELIM + val;
-            partitionKeys.append(oneLevel);
-            prefix = HiveDataFragmenter.HIVE_PARTITIONS_DELIM;
-        }
-
-        return partitionKeys.toString();
-    }
-
-    /**
-     * The method which serializes fragment-related attributes, needed for reading and resolution to string
-     *
-     * @param fragmenterClassName fragmenter class name
-     * @param partData            partition data
-     * @param filterInFragmenter  whether filtering was done in fragmenter
-     * @return serialized representation of fragment-related attributes
-     * @throws Exception when error occurred during serialization
-     */
-    @SuppressWarnings("unchecked")
-    public static byte[] makeUserData(String fragmenterClassName, HiveTablePartition partData, boolean filterInFragmenter) throws Exception {
-
-        HiveUserData hiveUserData = null;
-
-        if (fragmenterClassName == null) {
-            throw new IllegalArgumentException("No fragmenter provided.");
-        }
-
-        Class fragmenterClass = Class.forName(fragmenterClassName);
-
-        String inputFormatName = partData.storageDesc.getInputFormat();
-        String serdeClassName = partData.storageDesc.getSerdeInfo().getSerializationLib();
-        String propertiesString = serializeProperties(partData.properties);
-        String partitionKeys = serializePartitionKeys(partData);
-        String delimiter = getDelimiterCode(partData.storageDesc).toString();
-        String colTypes = partData.properties.getProperty("columns.types");
-        int skipHeader = Integer.parseInt(partData.properties.getProperty("skip.header.line.count", "0"));
-
-        if (HiveInputFormatFragmenter.class.isAssignableFrom(fragmenterClass)) {
-            assertFileType(inputFormatName, partData);
-        }
-
-        hiveUserData = new HiveUserData(inputFormatName, serdeClassName, propertiesString, partitionKeys, filterInFragmenter, delimiter, colTypes, skipHeader);
-
-        return hiveUserData.toString().getBytes();
-    }
-
     /**
      * The method parses raw user data into HiveUserData class
      *
@@ -505,98 +220,6 @@ public class HiveUtilities {
         return hiveUserData;
     }
 
-    private static String getSerdeParameter(StorageDescriptor sd, String parameterKey) {
-        String parameterValue = null;
-        if (sd != null && sd.getSerdeInfo() != null && sd.getSerdeInfo().getParameters() != null && sd.getSerdeInfo().getParameters().get(parameterKey) != null) {
-            parameterValue = sd.getSerdeInfo().getParameters().get(parameterKey);
-        }
-
-        return parameterValue;
-    }
-
-    /**
-     * The method which extracts field delimiter from storage descriptor.
-     * When unable to extract delimiter from storage descriptor, default value is used
-     *
-     * @param sd StorageDescriptor of table/partition
-     * @return ASCII code of delimiter
-     */
-    public static Integer getDelimiterCode(StorageDescriptor sd) {
-        Integer delimiterCode = null;
-
-        String delimiter = getSerdeParameter(sd, serdeConstants.FIELD_DELIM);
-        if (delimiter != null) {
-            delimiterCode = (int) delimiter.charAt(0);
-            return delimiterCode;
-        }
-
-        delimiter = getSerdeParameter(sd, serdeConstants.SERIALIZATION_FORMAT);
-        if (delimiter != null) {
-            delimiterCode = Integer.parseInt(delimiter);
-            return delimiterCode;
-        }
-
-        return DEFAULT_DELIMITER_CODE;
-    }
-
-    /**
-     * The method determines whether metadata definition has any complex type
-     * @see EnumHiveToGpdbType for complex type attribute definition
-     *
-     * @param metadata metadata of relation
-     * @return true if metadata has at least one field of complex type
-     */
-    public static boolean hasComplexTypes(Metadata metadata) {
-        boolean hasComplexTypes = false;
-        List<Field> fields = metadata.getFields();
-        for (Field field : fields) {
-            if (field.isComplexType()) {
-                hasComplexTypes = true;
-                break;
-            }
-        }
-
-        return hasComplexTypes;
-    }
-
-    /**
-     * Populates the given metadata object with the given table's fields and partitions,
-     * The partition fields are added at the end of the table schema.
-     * Throws an exception if the table contains unsupported field types.
-     * Supported HCatalog types: TINYINT,
-     * SMALLINT, INT, BIGINT, BOOLEAN, FLOAT, DOUBLE, STRING, BINARY, TIMESTAMP,
-     * DATE, DECIMAL, VARCHAR, CHAR.
-     *
-     * @param tbl      Hive table
-     * @param metadata schema of given table
-     */
-    public static void getSchema(Table tbl, Metadata metadata) {
-
-        int hiveColumnsSize = tbl.getSd().getColsSize();
-        int hivePartitionsSize = tbl.getPartitionKeysSize();
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Hive table: " + hiveColumnsSize + " fields, " + hivePartitionsSize + " partitions.");
-        }
-
-        // check hive fields
-        try {
-            List<FieldSchema> hiveColumns = tbl.getSd().getCols();
-            for (FieldSchema hiveCol : hiveColumns) {
-                metadata.addField(HiveUtilities.mapHiveType(hiveCol));
-            }
-            // check partition fields
-            List<FieldSchema> hivePartitions = tbl.getPartitionKeys();
-            for (FieldSchema hivePart : hivePartitions) {
-                metadata.addField(HiveUtilities.mapHiveType(hivePart));
-            }
-        } catch (UnsupportedTypeException e) {
-            String errorMsg = "Failed to retrieve metadata for table " + metadata.getItem() + ". " +
-                    e.getMessage();
-            throw new UnsupportedTypeException(errorMsg);
-        }
-    }
-
     /**
      * Creates an instance of a given serde type
      *
@@ -604,14 +227,14 @@ public class HiveUtilities {
      * @return instance of a given serde
      * @throws Exception if an error occurs during the creation of SerDe instance
      */
-    @SuppressWarnings("deprecation")
-    public static SerDe createDeserializer(String serdeClassName) throws Exception {
-        SerDe deserializer = (SerDe) Utilities.createAnyInstance(serdeClassName);
+    public static Deserializer createDeserializer(String serdeClassName) throws Exception {
+        Deserializer deserializer = (Deserializer) Utilities.createAnyInstance(serdeClassName);
         return deserializer;
     }
 
     /**
      * Creates ORC file reader.
+     *
      * @param requestContext input data with given data source
      * @return ORC file reader
      */

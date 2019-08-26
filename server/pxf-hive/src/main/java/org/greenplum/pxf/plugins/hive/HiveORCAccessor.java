@@ -20,14 +20,22 @@ package org.greenplum.pxf.plugins.hive;
  */
 
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Output;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.hive.common.type.HiveChar;
+import org.apache.hadoop.hive.common.type.HiveDecimal;
+import org.apache.hadoop.hive.common.type.HiveVarchar;
 import org.apache.hadoop.hive.ql.io.orc.OrcInputFormat;
 import org.apache.hadoop.hive.ql.io.orc.Reader;
+import org.apache.hadoop.hive.ql.io.sarg.ConvertAstToSearchArg;
+import org.apache.hadoop.hive.ql.io.sarg.PredicateLeaf;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentFactory;
-import org.apache.hadoop.hive.serde2.io.DateWritable;
+import org.apache.hadoop.hive.serde2.ColumnProjectionUtils;
 import org.apache.hadoop.mapred.JobConf;
 import org.greenplum.pxf.api.BasicFilter;
 import org.greenplum.pxf.api.LogicalFilter;
@@ -37,10 +45,14 @@ import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.Utilities;
 
+import java.math.BigDecimal;
 import java.sql.Date;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import static org.apache.hadoop.hive.serde2.ColumnProjectionUtils.*;
 
 /**
  * Specialization of HiveAccessor for a Hive table that stores only ORC files.
@@ -51,10 +63,6 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
 
     private static final Log LOG = LogFactory.getLog(HiveORCAccessor.class);
 
-    private static final String READ_COLUMN_IDS_CONF_STR = "hive.io.file.readcolumn.ids";
-    private static final String READ_ALL_COLUMNS = "hive.io.file.read.all.columns";
-    private static final String READ_COLUMN_NAMES_CONF_STR = "hive.io.file.readcolumn.names";
-    private static final String SARG_PUSHDOWN = "sarg.pushdown";
     Reader orcReader;
 
     private boolean useStats;
@@ -100,8 +108,8 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
 
         List<Integer> colIds = new ArrayList<>();
         List<String> colNames = new ArrayList<>();
-        for(ColumnDescriptor col: context.getTupleDescription()) {
-            if(col.isProjected()) {
+        for (ColumnDescriptor col : context.getTupleDescription()) {
+            if (col.isProjected()) {
                 colIds.add(col.columnIndex());
                 colNames.add(col.columnName());
             }
@@ -125,7 +133,7 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
         String filterStr = context.getFilterString();
         HiveFilterBuilder eval = new HiveFilterBuilder();
         Object filter = eval.getFilterObject(filterStr);
-        SearchArgument.Builder filterBuilder = SearchArgumentFactory.newBuilder();
+        SearchArgument.Builder filterBuilder = SearchArgumentFactory.newBuilder(configuration);
 
         /*
          * If there is only a single filter it will be of type Basic Filter
@@ -136,22 +144,21 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
             if (!buildExpression(filterBuilder, Arrays.asList(filter))) {
                 return;
             }
-        }
-        else {
+        } else {
             filterBuilder.startAnd();
-            if(!buildArgument(filterBuilder, filter)) {
+            if (!buildArgument(filterBuilder, filter)) {
                 return;
             }
             filterBuilder.end();
         }
         SearchArgument sarg = filterBuilder.build();
-        jobConf.set(SARG_PUSHDOWN, sarg.toKryo());
+        jobConf.set(ConvertAstToSearchArg.SARG_PUSHDOWN, toKryo(sarg));
     }
 
     private boolean buildExpression(SearchArgument.Builder builder, List<Object> filterList) {
         for (Object f : filterList) {
             if (f instanceof LogicalFilter) {
-                switch(((LogicalFilter) f).getOperator()) {
+                switch (((LogicalFilter) f).getOperator()) {
                     case HDOP_OR:
                         builder.startOr();
                         break;
@@ -185,42 +192,58 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
         ColumnDescriptor filterColumn = context.getColumn(filterColumnIndex);
         String filterColumnName = filterColumn.columnName();
 
-        /* Need to convert java.sql.Date to Hive's DateWritable Format */
-        if (filterValue instanceof Date)
-            filterValue= new DateWritable((Date) filterValue);
+        if (filterValue instanceof List) {
+            @SuppressWarnings("unchecked")
+            List<Object> l = (List<Object>) filterValue;
+            List<Object> boxList = new ArrayList<>(l.size());
 
-        switch(filter.getOperation()) {
+            for (Object obj : l) {
+                boxList.add(boxLiteral(obj));
+            }
+
+            filterValue = boxList;
+        } else if (filterValue != null) {
+            filterValue = boxLiteral(filterValue);
+        }
+
+        PredicateLeaf.Type predicateLeafType = PredicateLeaf.Type.STRING;
+
+        if (filterValue != null) {
+            predicateLeafType = getType(filterValue);
+        }
+
+        switch (filter.getOperation()) {
             case HDOP_LT:
-                builder.lessThan(filterColumnName, filterValue);
+                builder.lessThan(filterColumnName, predicateLeafType, filterValue);
                 break;
             case HDOP_GT:
-                builder.startNot().lessThanEquals(filterColumnName, filterValue).end();
+                builder.startNot().lessThanEquals(filterColumnName, predicateLeafType, filterValue).end();
                 break;
             case HDOP_LE:
-                builder.lessThanEquals(filterColumnName, filterValue);
+                builder.lessThanEquals(filterColumnName, predicateLeafType, filterValue);
                 break;
             case HDOP_GE:
-                builder.startNot().lessThanEquals(filterColumnName, filterValue).end();
+                builder.startNot().lessThan(filterColumnName, predicateLeafType, filterValue).end();
                 break;
             case HDOP_EQ:
-                builder.equals(filterColumnName, filterValue);
+                builder.equals(filterColumnName, predicateLeafType, filterValue);
                 break;
             case HDOP_NE:
-                builder.startNot().equals(filterColumnName, filterValue).end();
+                builder.startNot().equals(filterColumnName, predicateLeafType, filterValue).end();
                 break;
             case HDOP_IS_NULL:
-                builder.isNull(filterColumnName);
+                builder.isNull(filterColumnName, predicateLeafType);
                 break;
             case HDOP_IS_NOT_NULL:
-                builder.startNot().isNull(filterColumnName).end();
+                builder.startNot().isNull(filterColumnName, predicateLeafType).end();
                 break;
             case HDOP_IN:
                 if (filterValue instanceof List) {
                     @SuppressWarnings("unchecked")
-                    List<Object> l = (List<Object>)filterValue;
-                    builder.in(filterColumnName, l.toArray());
+                    List<Object> l = (List<Object>) filterValue;
+                    builder.in(filterColumnName, predicateLeafType, l.toArray());
                 } else {
-                    throw new IllegalArgumentException("filterValue should be instace of List for HDOP_IN operation");
+                    throw new IllegalArgumentException("filterValue should be instance of List for HDOP_IN operation");
                 }
                 break;
             default: {
@@ -229,6 +252,70 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
             }
         }
         return true;
+    }
+
+    /**
+     * Get the type of the given expression node.
+     *
+     * @param literal the object
+     * @return int, string, or float or null if we don't know the type
+     */
+    private PredicateLeaf.Type getType(Object literal) {
+        if (literal instanceof Byte ||
+                literal instanceof Short ||
+                literal instanceof Integer ||
+                literal instanceof Long) {
+            return PredicateLeaf.Type.LONG;
+        } else if (literal instanceof HiveChar ||
+                literal instanceof HiveVarchar ||
+                literal instanceof String) {
+            return PredicateLeaf.Type.STRING;
+        } else if (literal instanceof Float ||
+                literal instanceof Double) {
+            return PredicateLeaf.Type.FLOAT;
+        } else if (literal instanceof Date) {
+            return PredicateLeaf.Type.DATE;
+        } else if (literal instanceof Timestamp) {
+            return PredicateLeaf.Type.TIMESTAMP;
+        } else if (literal instanceof HiveDecimal ||
+                literal instanceof BigDecimal) {
+            return PredicateLeaf.Type.DECIMAL;
+        } else if (literal instanceof Boolean) {
+            return PredicateLeaf.Type.BOOLEAN;
+        } else if (literal instanceof List) {
+            @SuppressWarnings("unchecked")
+            List<Object> l = (List<Object>) literal;
+            if (l.size() > 0)
+                return getType(l.get(0));
+        }
+        throw new IllegalArgumentException(String.format("Unknown type for literal %s", literal));
+    }
+
+    private static Object boxLiteral(Object literal) {
+        if (literal instanceof String ||
+                literal instanceof Long ||
+                literal instanceof Double ||
+                literal instanceof Date ||
+                literal instanceof Timestamp ||
+                literal instanceof HiveDecimal ||
+                literal instanceof BigDecimal ||
+                literal instanceof Boolean) {
+            return literal;
+        } else if (literal instanceof HiveChar ||
+                literal instanceof HiveVarchar) {
+            return StringUtils.stripEnd(literal.toString(), null);
+        } else if (literal instanceof Byte ||
+                literal instanceof Short ||
+                literal instanceof Integer) {
+            return ((Number) literal).longValue();
+        } else if (literal instanceof Float) {
+            // to avoid change in precision when upcasting float to double
+            // we convert the literal to string and parse it as double. (HIVE-8460)
+            return Double.parseDouble(literal.toString());
+        } else {
+            throw new IllegalArgumentException("Unknown type for literal " +
+                    literal);
+        }
     }
 
     /**
@@ -249,7 +336,6 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
             rowToEmitCount = readNextObject();
         }
         statsInitialized = true;
-
     }
 
     /**
@@ -257,7 +343,7 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
      */
     @Override
     public OneRow emitAggObject() {
-        if(!statsInitialized) {
+        if (!statsInitialized) {
             throw new IllegalStateException("retrieveStats() should be called before calling emitAggObject()");
         }
         OneRow row = null;
@@ -284,6 +370,13 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
      */
     JobConf getJobConf() {
         return jobConf;
+    }
+
+    private String toKryo(SearchArgument sarg) {
+        Output out = new Output(4 * 1024, 10 * 1024 * 1024);
+        new Kryo().writeObject(out, sarg);
+        out.close();
+        return Base64.encodeBase64String(out.toBytes());
     }
 
 }

@@ -10,6 +10,7 @@ INITIALIZATION_SCRIPT=${INITIALIZATION_SCRIPT:-gs://pxf-perf/scripts/initializat
 KERBEROS=${KERBEROS:-false}
 KEYRING=${KEYRING:-dataproc-kerberos}
 KEY=${KEY:-dataproc-kerberos-test}
+MACHINE_TYPE=${MACHINE_TYPE:-n1-standard-2}
 NUM_WORKERS=${NUM_WORKERS:-2}
 PROJECT=${GOOGLE_PROJECT_ID:-}
 REGION=${GOOGLE_ZONE%-*} # lop off '-a', '-b', etc. from $GOOGLE_ZONE
@@ -38,6 +39,8 @@ GCLOUD_COMMAND=(gcloud beta dataproc clusters
   --initialization-actions "$INITIALIZATION_SCRIPT"
   --no-address
   --subnet "projects/${PROJECT}/regions/${REGION}/subnetworks/$SUBNETWORK"
+  "--master-machine-type=$MACHINE_TYPE"
+  "--worker-machine-type=$MACHINE_TYPE"
   "--zone=$ZONE"
   "--tags=bosh-network,outbound-through-nat,tag-concourse-dynamic"
   "--num-workers=$NUM_WORKERS"

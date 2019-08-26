@@ -164,10 +164,9 @@ public class HiveOrcTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = {"hive", "hcatalog", "features", "gpdb" })
+    @Test(groups = {"hive", "hcatalog", "features", "gpdb", "security" })
     public void storeAsOrcAllTypesHive1Only() throws Exception {
 
-        // TODO: fix test in hive 2 and add it to the security group
         runTincTest("pxf.features.hive.orc_primitive_types_hive1_only.runTest");
     }
 

@@ -23,7 +23,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.JavaUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
+import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Partition;
@@ -43,7 +43,7 @@ import org.greenplum.pxf.api.model.Metadata;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
-import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
+import org.greenplum.pxf.plugins.hive.utilities.HiveClientHelper;
 import org.greenplum.pxf.plugins.hive.utilities.ProfileFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,31 +76,33 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
     public static final String HIVE_PARTITIONS_DELIM = "!HPAD!";
     public static final String HIVE_NO_PART_TBL = "!HNPT!";
 
-    private HiveMetaStoreClient client;
+    private IMetaStoreClient client;
     private HiveFilterBuilder filterBuilder;
+    private HiveClientHelper hiveClientHelper;
 
-    protected boolean filterInFragmenter = false;
+    private boolean filterInFragmenter = false;
 
     // Data structure to hold hive partition names if exist, to be used by
     // partition filtering
-    private Set<String> setPartitions = new TreeSet<String>(
+    private Set<String> setPartitions = new TreeSet<>(
             String.CASE_INSENSITIVE_ORDER);
-    private Map<String, String> partitionkeyTypes = new HashMap<>();
+    private Map<String, String> partitionKeyTypes = new HashMap<>();
 
     public HiveDataFragmenter() {
-        this(BaseConfigurationFactory.getInstance(), new HiveFilterBuilder());
+        this(BaseConfigurationFactory.getInstance(), new HiveFilterBuilder(), HiveClientHelper.getInstance());
     }
 
-    HiveDataFragmenter(ConfigurationFactory configurationFactory, HiveFilterBuilder filterBuilder) {
+    HiveDataFragmenter(ConfigurationFactory configurationFactory, HiveFilterBuilder filterBuilder, HiveClientHelper hiveClientHelper) {
         this.configurationFactory = configurationFactory;
         this.filterBuilder = filterBuilder;
+        this.hiveClientHelper = hiveClientHelper;
     }
 
     @Override
     public void initialize(RequestContext requestContext) {
         super.initialize(requestContext);
 
-        client = HiveUtilities.initHiveClient(configuration);
+        client = hiveClientHelper.initHiveClient(configuration);
         // canPushDownIntegral represents hive.metastore.integral.jdo.pushdown property in hive-site.xml
         filterBuilder.setColumnDescriptors(requestContext.getTupleDescription());
         filterBuilder.setCanPushdownIntegral(configuration.getBoolean(HiveConf.ConfVars.METASTORE_INTEGER_JDO_PUSHDOWN.varname,
@@ -109,7 +111,7 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
 
     @Override
     public List<Fragment> getFragments() throws Exception {
-        Metadata.Item tblDesc = HiveUtilities.extractTableFromName(context.getDataSource());
+        Metadata.Item tblDesc = hiveClientHelper.extractTableFromName(context.getDataSource());
 
         fetchTableMetaData(tblDesc);
 
@@ -145,11 +147,11 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
      */
     private void fetchTableMetaData(Metadata.Item tblDesc) throws Exception {
 
-        Table tbl = HiveUtilities.getHiveTable(client, tblDesc);
+        Table tbl = hiveClientHelper.getHiveTable(client, tblDesc);
 
         Metadata metadata = new Metadata(tblDesc);
-        HiveUtilities.getSchema(tbl, metadata);
-        boolean hasComplexTypes = HiveUtilities.hasComplexTypes(metadata);
+        hiveClientHelper.getSchema(tbl, metadata);
+        boolean hasComplexTypes = hiveClientHelper.hasComplexTypes(metadata);
 
         verifySchema(tbl);
 
@@ -163,13 +165,13 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
             // Save all hive partition names in a set for later filter match
             for (FieldSchema fs : tbl.getPartitionKeys()) {
                 setPartitions.add(fs.getName());
-                partitionkeyTypes.put(fs.getName(), fs.getType());
+                partitionKeyTypes.put(fs.getName(), fs.getType());
             }
 
             LOG.debug("setPartitions: {}", setPartitions);
 
             // Generate filter string for retrieve match pxf filter/hive partition name
-            filterBuilder.setPartitionKeys(partitionkeyTypes);
+            filterBuilder.setPartitionKeys(partitionKeyTypes);
             filterStringForHive = filterBuilder.buildFilterStringForHive(context.getFilterString());
         }
 
@@ -302,7 +304,7 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
 
             byte[] locationInfo = HdfsUtilities.prepareFragmentMetadata(fsp);
             Fragment fragment = new Fragment(filepath, hosts, locationInfo,
-                    HiveUtilities.makeUserData(fragmenterForProfile, tablePartition, filterInFragmenter), profile);
+                    hiveClientHelper.makeUserData(fragmenterForProfile, tablePartition, filterInFragmenter), profile);
             fragments.add(fragment);
         }
     }
@@ -312,10 +314,10 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
      */
     @Override
     public FragmentStats getFragmentStats() throws Exception {
-        Metadata.Item tblDesc = HiveUtilities.extractTableFromName(context.getDataSource());
-        Table tbl = HiveUtilities.getHiveTable(client, tblDesc);
+        Metadata.Item tblDesc = hiveClientHelper.extractTableFromName(context.getDataSource());
+        Table tbl = hiveClientHelper.getHiveTable(client, tblDesc);
         Metadata metadata = new Metadata(tblDesc);
-        HiveUtilities.getSchema(tbl, metadata);
+        hiveClientHelper.getSchema(tbl, metadata);
 
         long split_count = Long.parseLong(tbl.getParameters().get("numFiles"));
         long totalSize = Long.parseLong(tbl.getParameters().get("totalSize"));

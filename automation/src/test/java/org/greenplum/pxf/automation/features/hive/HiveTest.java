@@ -62,7 +62,7 @@ public class HiveTest extends HiveBaseTest {
                 HIVE_PARTITIONED_CLUSTERED_SORTED_TABLE, HIVE_RC_COLS);
         hivePartitionedClusteredSortedTable.setPartitionedBy(HIVE_PARTITION_COLUMN);
         hivePartitionedClusteredSortedTable.setSortedBy(new String[] { "num1" });
-        hivePartitionedClusteredSortedTable.setClusteredBy(new String[] { "t0" });
+        hivePartitionedClusteredSortedTable.setClusteredBy(new String[] { "t1" });
         hivePartitionedClusteredSortedTable.setClusterBucketCount(10);
         hive.createTableAndVerify(hivePartitionedClusteredSortedTable);
         hiveAlterPartitionedFileFormats(hivePartitionedClusteredSortedTable);
@@ -128,7 +128,7 @@ public class HiveTest extends HiveBaseTest {
         hivePartitionedClusteredTable = TableFactory.getHiveByRowCommaExternalTable(
                 HIVE_PARTITIONED_CLUSTERED_TABLE, HIVE_RC_COLS);
         hivePartitionedClusteredTable.setPartitionedBy(HIVE_PARTITION_COLUMN);
-        hivePartitionedClusteredTable.setClusteredBy(new String[] { "t0" });
+        hivePartitionedClusteredTable.setClusteredBy(new String[] { "t1" });
         hivePartitionedClusteredTable.setClusterBucketCount(10);
         hive.createTableAndVerify(hivePartitionedClusteredTable);
         hiveAlterPartitionedFileFormats(hivePartitionedClusteredTable);

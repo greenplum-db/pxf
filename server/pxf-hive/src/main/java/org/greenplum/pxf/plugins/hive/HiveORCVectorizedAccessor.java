@@ -20,13 +20,13 @@ package org.greenplum.pxf.plugins.hive;
  */
 
 import java.io.IOException;
-import org.apache.hadoop.mapred.*;
+
+import org.apache.hadoop.hive.ql.io.orc.Reader;
+import org.apache.hadoop.mapred.FileSplit;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
-import org.apache.hadoop.hive.ql.io.orc.Reader.Options;
 import org.apache.hadoop.hive.ql.io.orc.RecordReader;
 import org.apache.hadoop.io.LongWritable;
 
@@ -43,11 +43,12 @@ public class HiveORCVectorizedAccessor extends HiveORCAccessor {
 
     @Override
     public boolean openForRead() throws Exception {
-        Options options = new Options();
+        Reader.Options options = new org.apache.orc.Reader.Options();
         addColumns(options);
         addFragments(options);
         orcReader = getOrcReader();
         vrr = orcReader.rowsOptions(options);
+        batch = orcReader.getSchema().createRowBatch();
         return vrr.hasNext();
     }
 
@@ -56,7 +57,7 @@ public class HiveORCVectorizedAccessor extends HiveORCAccessor {
      * reader to one split.
      * @param options reader options to modify
      */
-    private void addFragments(Options options) {
+    private void addFragments(Reader.Options options) {
         FileSplit fileSplit = HdfsUtilities.parseFileSplit(context);
         options.range(fileSplit.getStart(), fileSplit.getLength());
     }
@@ -68,7 +69,7 @@ public class HiveORCVectorizedAccessor extends HiveORCAccessor {
     @Override
     public OneRow readNextObject() throws IOException {
         if (vrr.hasNext()) {
-            batch = vrr.nextBatch(batch);
+            vrr.nextBatch(batch);
             batchIndex++;
             return new OneRow(new LongWritable(batchIndex), batch);
         } else {
@@ -82,7 +83,7 @@ public class HiveORCVectorizedAccessor extends HiveORCAccessor {
      * @param options reader options to modify
      * @throws Exception
      */
-    private void addColumns(Options options) throws Exception {
+    private void addColumns(Reader.Options options) throws Exception {
         boolean[] includeColumns = new boolean[context.getColumns() + 1];
         for (ColumnDescriptor col : context.getTupleDescription()) {
             if (col.isProjected()) {

@@ -1,9 +1,8 @@
 -- start_ignore
 -- end_ignore
 -- @description query01 for HCatalog ORC all types cases
-
 SELECT * FROM pxf_hive_orc_types ORDER BY t1;
-          t1          |  t2  | num1 | dub1 |         dec1         |         tm          |  r   |    bg    | b | tn | sml  |     dt     |  vc1  | c1  | bin
+          t1          |  t2  | num1 | dub1 |         dec1         |         tm          |  r   |    bg    | b | tn | sml  |     dt     |  vc1  | c1  | bin 
 ----------------------+------+------+------+----------------------+---------------------+------+----------+---+----+------+------------+-------+-----+-----
  row1                 | s_6  |    1 |    6 |              1.23456 | 2013-07-13 21:00:05 |  7.7 | 23456789 | f |  1 |   10 | 2015-03-06 | abcd  | abc | 1
  row10                | s_15 |   10 |   15 |    45678.00002340089 | 2013-07-22 21:00:05 |  7.7 | 23456789 | t | 10 | 1000 | 2015-03-06 | abcde | abc | 0
@@ -22,7 +21,7 @@ SELECT * FROM pxf_hive_orc_types ORDER BY t1;
  row22_date_null      | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f | 11 | 1100 |            | abcde | ab  | 1
  row23_varchar_null   | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f | 11 | 1100 | 2015-03-06 |       | ab  | 1
  row24_char_null      | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f | 11 | 1100 | 2015-03-06 | abcde |     | 1
- row25_binary_null    | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f |  1 | 1100 | 2015-03-06 | abcde | ab  |
+ row25_binary_null    | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f |  1 | 1100 | 2015-03-06 | abcde | ab  | 
  row3                 | s_8  |    3 |    8 |             -1.23456 | 2013-07-15 21:00:05 |  9.7 | 23456789 | f |  3 |  300 | 2015-03-06 | abcde | abc | 3
  row4                 | s_9  |    4 |    9 |  123456789.123456789 | 2013-07-16 21:00:05 | 10.7 | 23456789 | t |  4 |  400 | 2015-03-06 | abcde | abc | 4
  row5                 | s_10 |    5 |   10 |       0.000000000001 | 2013-07-17 21:00:05 | 11.7 | 23456789 | f |  5 |  500 | 2015-03-06 | abcde | abc | 5
@@ -31,6 +30,7 @@ SELECT * FROM pxf_hive_orc_types ORDER BY t1;
  row8                 | s_13 |    8 |   13 |    45678.00002340089 | 2013-07-20 21:00:05 |  7.7 | 23456789 | t |  8 |  800 | 2015-03-06 | abcde | abc | 8
  row9                 | s_14 |    9 |   14 |              23457.1 | 2013-07-21 21:00:05 |  7.7 | 23456789 | f |  9 |  900 | 2015-03-06 | abcde | abc | 9
 (25 rows)
+
 --LIKE
 SELECT num1 FROM pxf_hive_small_data WHERE t1 LIKE 'r%1%';
  num1 
@@ -38,6 +38,7 @@ SELECT num1 FROM pxf_hive_small_data WHERE t1 LIKE 'r%1%';
     1
    10
 (2 rows)
+
 SELECT num1 FROM pxf_hive_small_data WHERE (t1 LIKE 'r%1' OR t2 LIKE 's_1%') AND dub1 < 12;
  num1 
 ------
@@ -45,6 +46,7 @@ SELECT num1 FROM pxf_hive_small_data WHERE (t1 LIKE 'r%1' OR t2 LIKE 's_1%') AND
     5
     6
 (3 rows)
+
 --IN
 --text
 SELECT * FROM pxf_hive_small_data WHERE t1 IN ('row1', 'row7');
@@ -53,6 +55,15 @@ SELECT * FROM pxf_hive_small_data WHERE t1 IN ('row1', 'row7');
  row1 | s_6  |    1 |    6
  row7 | s_12 |    7 |   12
 (2 rows)
+
+--same query with OR
+SELECT * FROM pxf_hive_small_data WHERE t1 = 'row1' OR t1 = 'row7';
+  t1  |  t2  | num1 | dub1 
+------+------+------+------
+ row1 | s_6  |    1 |    6
+ row7 | s_12 |    7 |   12
+(2 rows)
+
 --float8
 SELECT t1 FROM pxf_hive_small_data WHERE dub1 IN (9,10,11);
   t1  
@@ -61,9 +72,10 @@ SELECT t1 FROM pxf_hive_small_data WHERE dub1 IN (9,10,11);
  row5
  row6
 (3 rows)
+
 --int4
 SELECT * FROM pxf_hive_orc_types WHERE num1 IN (10, 11);
-          t1          |  t2  | num1 | dub1 |         dec1         |         tm          |  r  |    bg    | b | tn | sml  |     dt     |  vc1  | c1  | bin
+          t1          |  t2  | num1 | dub1 |         dec1         |         tm          |  r  |    bg    | b | tn | sml  |     dt     |  vc1  | c1  | bin 
 ----------------------+------+------+------+----------------------+---------------------+-----+----------+---+----+------+------------+-------+-----+-----
  row10                | s_15 |   10 |   15 |    45678.00002340089 | 2013-07-22 21:00:05 | 7.7 | 23456789 | t | 10 | 1000 | 2015-03-06 | abcde | abc | 0
  row11                | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 | 7.7 | 23456789 | f | 11 | 1100 | 2015-03-06 | abcde | ab  | 1
@@ -78,19 +90,21 @@ SELECT * FROM pxf_hive_orc_types WHERE num1 IN (10, 11);
  row22_date_null      | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 | 7.7 | 23456789 | f | 11 | 1100 |            | abcde | ab  | 1
  row23_varchar_null   | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 | 7.7 | 23456789 | f | 11 | 1100 | 2015-03-06 |       | ab  | 1
  row24_char_null      | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 | 7.7 | 23456789 | f | 11 | 1100 | 2015-03-06 | abcde |     | 1
- row25_binary_null    | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 | 7.7 | 23456789 | f |  1 | 1100 | 2015-03-06 | abcde | ab  |
+ row25_binary_null    | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 | 7.7 | 23456789 | f |  1 | 1100 | 2015-03-06 | abcde | ab  | 
 (14 rows)
+
 --numeric
 SELECT * FROM pxf_hive_orc_types WHERE dec1 IN (1.23456,-1.23456);
-  t1  | t2  | num1 | dub1 |   dec1   |         tm          |  r  |    bg    | b | tn | sml |     dt     |  vc1  | c1  | bin
+  t1  | t2  | num1 | dub1 |   dec1   |         tm          |  r  |    bg    | b | tn | sml |     dt     |  vc1  | c1  | bin 
 ------+-----+------+------+----------+---------------------+-----+----------+---+----+-----+------------+-------+-----+-----
  row1 | s_6 |    1 |    6 |  1.23456 | 2013-07-13 21:00:05 | 7.7 | 23456789 | f |  1 |  10 | 2015-03-06 | abcd  | abc | 1
  row2 | s_7 |    2 |    7 |  1.23456 | 2013-07-13 21:00:05 | 8.7 | 23456789 | t |  2 |  20 | 2015-03-06 | abcde | abc | 2
  row3 | s_8 |    3 |    8 | -1.23456 | 2013-07-15 21:00:05 | 9.7 | 23456789 | f |  3 | 300 | 2015-03-06 | abcde | abc | 3
 (3 rows)
+
 --timestamp without time zone
 SELECT * FROM pxf_hive_orc_types WHERE tm IN ('2013-07-17 21:00:05', '2013-07-23 21:00:05');
-         t1          |  t2  | num1 | dub1 |         dec1         |         tm          |  r   |    bg    | b | tn | sml  |     dt     |  vc1  | c1  | bin
+         t1          |  t2  | num1 | dub1 |         dec1         |         tm          |  r   |    bg    | b | tn | sml  |     dt     |  vc1  | c1  | bin 
 ---------------------+------+------+------+----------------------+---------------------+------+----------+---+----+------+------------+-------+-----+-----
  row5                | s_10 |    5 |   10 |       0.000000000001 | 2013-07-17 21:00:05 | 11.7 | 23456789 | f |  5 |  500 | 2015-03-06 | abcde | abc | 5
  row11               | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f | 11 | 1100 | 2015-03-06 | abcde | ab  | 1
@@ -105,19 +119,21 @@ SELECT * FROM pxf_hive_orc_types WHERE tm IN ('2013-07-17 21:00:05', '2013-07-23
  row22_date_null     | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f | 11 | 1100 |            | abcde | ab  | 1
  row23_varchar_null  | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f | 11 | 1100 | 2015-03-06 |       | ab  | 1
  row24_char_null     | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f | 11 | 1100 | 2015-03-06 | abcde |     | 1
- row25_binary_null   | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f |  1 | 1100 | 2015-03-06 | abcde | ab  |
+ row25_binary_null   | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f |  1 | 1100 | 2015-03-06 | abcde | ab  | 
 (14 rows)
+
 --float4
 SELECT * FROM pxf_hive_orc_types WHERE r IN ( CAST(8.7 as float4), CAST(9.7 as float4), CAST(10.7 as float4));
-  t1  | t2  | num1 | dub1 |        dec1         |         tm          |  r   |    bg    | b | tn | sml |     dt     |  vc1  | c1  | bin
+  t1  | t2  | num1 | dub1 |        dec1         |         tm          |  r   |    bg    | b | tn | sml |     dt     |  vc1  | c1  | bin 
 ------+-----+------+------+---------------------+---------------------+------+----------+---+----+-----+------------+-------+-----+-----
  row2 | s_7 |    2 |    7 |             1.23456 | 2013-07-13 21:00:05 |  8.7 | 23456789 | t |  2 |  20 | 2015-03-06 | abcde | abc | 2
  row3 | s_8 |    3 |    8 |            -1.23456 | 2013-07-15 21:00:05 |  9.7 | 23456789 | f |  3 | 300 | 2015-03-06 | abcde | abc | 3
  row4 | s_9 |    4 |    9 | 123456789.123456789 | 2013-07-16 21:00:05 | 10.7 | 23456789 | t |  4 | 400 | 2015-03-06 | abcde | abc | 4
 (3 rows)
+
 --int8
 SELECT * FROM pxf_hive_orc_types WHERE bg IN (23456789);
-          t1          |  t2  | num1 | dub1 |         dec1         |         tm          |  r   |    bg    | b | tn | sml  |     dt     |  vc1  | c1  | bin
+          t1          |  t2  | num1 | dub1 |         dec1         |         tm          |  r   |    bg    | b | tn | sml  |     dt     |  vc1  | c1  | bin 
 ----------------------+------+------+------+----------------------+---------------------+------+----------+---+----+------+------------+-------+-----+-----
  row1                 | s_6  |    1 |    6 |              1.23456 | 2013-07-13 21:00:05 |  7.7 | 23456789 | f |  1 |   10 | 2015-03-06 | abcd  | abc | 1
  row2                 | s_7  |    2 |    7 |              1.23456 | 2013-07-13 21:00:05 |  8.7 | 23456789 | t |  2 |   20 | 2015-03-06 | abcde | abc | 2
@@ -142,11 +158,12 @@ SELECT * FROM pxf_hive_orc_types WHERE bg IN (23456789);
  row22_date_null      | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f | 11 | 1100 |            | abcde | ab  | 1
  row23_varchar_null   | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f | 11 | 1100 | 2015-03-06 |       | ab  | 1
  row24_char_null      | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f | 11 | 1100 | 2015-03-06 | abcde |     | 1
- row25_binary_null    | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f |  1 | 1100 | 2015-03-06 | abcde | ab  |
+ row25_binary_null    | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f |  1 | 1100 | 2015-03-06 | abcde | ab  | 
 (24 rows)
+
 --boolean
 SELECT * FROM pxf_hive_orc_types WHERE b IN (TRUE);
-  t1   |  t2  | num1 | dub1 |        dec1         |         tm          |  r   |    bg    | b | tn | sml  |     dt     |  vc1  | c1  | bin
+  t1   |  t2  | num1 | dub1 |        dec1         |         tm          |  r   |    bg    | b | tn | sml  |     dt     |  vc1  | c1  | bin 
 -------+------+------+------+---------------------+---------------------+------+----------+---+----+------+------------+-------+-----+-----
  row2  | s_7  |    2 |    7 |             1.23456 | 2013-07-13 21:00:05 |  8.7 | 23456789 | t |  2 |   20 | 2015-03-06 | abcde | abc | 2
  row4  | s_9  |    4 |    9 | 123456789.123456789 | 2013-07-16 21:00:05 | 10.7 | 23456789 | t |  4 |  400 | 2015-03-06 | abcde | abc | 4
@@ -154,8 +171,9 @@ SELECT * FROM pxf_hive_orc_types WHERE b IN (TRUE);
  row8  | s_13 |    8 |   13 |   45678.00002340089 | 2013-07-20 21:00:05 |  7.7 | 23456789 | t |  8 |  800 | 2015-03-06 | abcde | abc | 8
  row10 | s_15 |   10 |   15 |   45678.00002340089 | 2013-07-22 21:00:05 |  7.7 | 23456789 | t | 10 | 1000 | 2015-03-06 | abcde | abc | 0
 (5 rows)
+
 SELECT * FROM pxf_hive_orc_types WHERE b IN (FALSE);
-          t1          |  t2  | num1 | dub1 |         dec1         |         tm          |  r   |    bg    | b | tn | sml  |     dt     |  vc1  | c1  | bin
+          t1          |  t2  | num1 | dub1 |         dec1         |         tm          |  r   |    bg    | b | tn | sml  |     dt     |  vc1  | c1  | bin 
 ----------------------+------+------+------+----------------------+---------------------+------+----------+---+----+------+------------+-------+-----+-----
  row1                 | s_6  |    1 |    6 |              1.23456 | 2013-07-13 21:00:05 |  7.7 | 23456789 | f |  1 |   10 | 2015-03-06 | abcd  | abc | 1
  row3                 | s_8  |    3 |    8 |             -1.23456 | 2013-07-15 21:00:05 |  9.7 | 23456789 | f |  3 |  300 | 2015-03-06 | abcde | abc | 3
@@ -175,10 +193,11 @@ SELECT * FROM pxf_hive_orc_types WHERE b IN (FALSE);
  row22_date_null      | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f | 11 | 1100 |            | abcde | ab  | 1
  row23_varchar_null   | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f | 11 | 1100 | 2015-03-06 |       | ab  | 1
  row24_char_null      | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f | 11 | 1100 | 2015-03-06 | abcde |     | 1
- row25_binary_null    | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f |  1 | 1100 | 2015-03-06 | abcde | ab  |
+ row25_binary_null    | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f |  1 | 1100 | 2015-03-06 | abcde | ab  | 
 (19 rows)
+
 SELECT * FROM pxf_hive_orc_types WHERE b IN (FALSE, TRUE);
-          t1          |  t2  | num1 | dub1 |         dec1         |         tm          |  r   |    bg    | b | tn | sml  |     dt     |  vc1  | c1  | bin
+          t1          |  t2  | num1 | dub1 |         dec1         |         tm          |  r   |    bg    | b | tn | sml  |     dt     |  vc1  | c1  | bin 
 ----------------------+------+------+------+----------------------+---------------------+------+----------+---+----+------+------------+-------+-----+-----
  row1                 | s_6  |    1 |    6 |              1.23456 | 2013-07-13 21:00:05 |  7.7 | 23456789 | f |  1 |   10 | 2015-03-06 | abcd  | abc | 1
  row2                 | s_7  |    2 |    7 |              1.23456 | 2013-07-13 21:00:05 |  8.7 | 23456789 | t |  2 |   20 | 2015-03-06 | abcde | abc | 2
@@ -203,10 +222,11 @@ SELECT * FROM pxf_hive_orc_types WHERE b IN (FALSE, TRUE);
  row22_date_null      | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f | 11 | 1100 |            | abcde | ab  | 1
  row23_varchar_null   | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f | 11 | 1100 | 2015-03-06 |       | ab  | 1
  row24_char_null      | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f | 11 | 1100 | 2015-03-06 | abcde |     | 1
- row25_binary_null    | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f |  1 | 1100 | 2015-03-06 | abcde | ab  |
+ row25_binary_null    | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f |  1 | 1100 | 2015-03-06 | abcde | ab  | 
 (24 rows)
+
 SELECT * FROM pxf_hive_orc_types WHERE b IN (TRUE, FALSE);
-          t1          |  t2  | num1 | dub1 |         dec1         |         tm          |  r   |    bg    | b | tn | sml  |     dt     |  vc1  | c1  | bin
+          t1          |  t2  | num1 | dub1 |         dec1         |         tm          |  r   |    bg    | b | tn | sml  |     dt     |  vc1  | c1  | bin 
 ----------------------+------+------+------+----------------------+---------------------+------+----------+---+----+------+------------+-------+-----+-----
  row1                 | s_6  |    1 |    6 |              1.23456 | 2013-07-13 21:00:05 |  7.7 | 23456789 | f |  1 |   10 | 2015-03-06 | abcd  | abc | 1
  row2                 | s_7  |    2 |    7 |              1.23456 | 2013-07-13 21:00:05 |  8.7 | 23456789 | t |  2 |   20 | 2015-03-06 | abcde | abc | 2
@@ -231,11 +251,12 @@ SELECT * FROM pxf_hive_orc_types WHERE b IN (TRUE, FALSE);
  row22_date_null      | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f | 11 | 1100 |            | abcde | ab  | 1
  row23_varchar_null   | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f | 11 | 1100 | 2015-03-06 |       | ab  | 1
  row24_char_null      | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f | 11 | 1100 | 2015-03-06 | abcde |     | 1
- row25_binary_null    | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f |  1 | 1100 | 2015-03-06 | abcde | ab  |
+ row25_binary_null    | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f |  1 | 1100 | 2015-03-06 | abcde | ab  | 
 (24 rows)
+
 --int2
 SELECT * FROM pxf_hive_orc_types WHERE tn IN (11,8);
-          t1          |  t2  | num1 | dub1 |         dec1         |         tm          |  r  |    bg    | b | tn | sml  |     dt     |  vc1  | c1  | bin
+          t1          |  t2  | num1 | dub1 |         dec1         |         tm          |  r  |    bg    | b | tn | sml  |     dt     |  vc1  | c1  | bin 
 ----------------------+------+------+------+----------------------+---------------------+-----+----------+---+----+------+------------+-------+-----+-----
  row8                 | s_13 |    8 |   13 |    45678.00002340089 | 2013-07-20 21:00:05 | 7.7 | 23456789 | t |  8 |  800 | 2015-03-06 | abcde | abc | 8
  row11                | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 | 7.7 | 23456789 | f | 11 | 1100 | 2015-03-06 | abcde | ab  | 1
@@ -252,9 +273,10 @@ SELECT * FROM pxf_hive_orc_types WHERE tn IN (11,8);
  row23_varchar_null   | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 | 7.7 | 23456789 | f | 11 | 1100 | 2015-03-06 |       | ab  | 1
  row24_char_null      | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 | 7.7 | 23456789 | f | 11 | 1100 | 2015-03-06 | abcde |     | 1
 (14 rows)
+
 --date
 SELECT * FROM pxf_hive_orc_types WHERE dt IN ('2015-03-06');
-          t1          |  t2  | num1 | dub1 |         dec1         |         tm          |  r   |    bg    | b | tn | sml  |     dt     |  vc1  | c1  | bin
+          t1          |  t2  | num1 | dub1 |         dec1         |         tm          |  r   |    bg    | b | tn | sml  |     dt     |  vc1  | c1  | bin 
 ----------------------+------+------+------+----------------------+---------------------+------+----------+---+----+------+------------+-------+-----+-----
  row1                 | s_6  |    1 |    6 |              1.23456 | 2013-07-13 21:00:05 |  7.7 | 23456789 | f |  1 |   10 | 2015-03-06 | abcd  | abc | 1
  row2                 | s_7  |    2 |    7 |              1.23456 | 2013-07-13 21:00:05 |  8.7 | 23456789 | t |  2 |   20 | 2015-03-06 | abcde | abc | 2
@@ -279,11 +301,12 @@ SELECT * FROM pxf_hive_orc_types WHERE dt IN ('2015-03-06');
  row21_smallint_null  | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f | 11 |      | 2015-03-06 | abcde | ab  | 1
  row23_varchar_null   | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f | 11 | 1100 | 2015-03-06 |       | ab  | 1
  row24_char_null      | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f | 11 | 1100 | 2015-03-06 | abcde |     | 1
- row25_binary_null    | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f |  1 | 1100 | 2015-03-06 | abcde | ab  |
+ row25_binary_null    | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f |  1 | 1100 | 2015-03-06 | abcde | ab  | 
 (24 rows)
+
 --varchar
 SELECT * FROM pxf_hive_orc_types WHERE vc1 IN ('abcd', 'abcde');
-          t1          |  t2  | num1 | dub1 |         dec1         |         tm          |  r   |    bg    | b | tn | sml  |     dt     |  vc1  | c1  | bin
+          t1          |  t2  | num1 | dub1 |         dec1         |         tm          |  r   |    bg    | b | tn | sml  |     dt     |  vc1  | c1  | bin 
 ----------------------+------+------+------+----------------------+---------------------+------+----------+---+----+------+------------+-------+-----+-----
  row1                 | s_6  |    1 |    6 |              1.23456 | 2013-07-13 21:00:05 |  7.7 | 23456789 | f |  1 |   10 | 2015-03-06 | abcd  | abc | 1
  row2                 | s_7  |    2 |    7 |              1.23456 | 2013-07-13 21:00:05 |  8.7 | 23456789 | t |  2 |   20 | 2015-03-06 | abcde | abc | 2
@@ -308,11 +331,12 @@ SELECT * FROM pxf_hive_orc_types WHERE vc1 IN ('abcd', 'abcde');
  row21_smallint_null  | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f | 11 |      | 2015-03-06 | abcde | ab  | 1
  row22_date_null      | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f | 11 | 1100 |            | abcde | ab  | 1
  row24_char_null      | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f | 11 | 1100 | 2015-03-06 | abcde |     | 1
- row25_binary_null    | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f |  1 | 1100 | 2015-03-06 | abcde | ab  |
+ row25_binary_null    | s_16 |   11 |   37 | 0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f |  1 | 1100 | 2015-03-06 | abcde | ab  | 
 (24 rows)
+
 --char
 SELECT * FROM pxf_hive_orc_types WHERE c1 IN ('abc');
-  t1   |  t2  | num1 | dub1 |        dec1         |         tm          |  r   |    bg    | b | tn | sml  |     dt     |  vc1  | c1  | bin
+  t1   |  t2  | num1 | dub1 |        dec1         |         tm          |  r   |    bg    | b | tn | sml  |     dt     |  vc1  | c1  | bin 
 -------+------+------+------+---------------------+---------------------+------+----------+---+----+------+------------+-------+-----+-----
  row1  | s_6  |    1 |    6 |             1.23456 | 2013-07-13 21:00:05 |  7.7 | 23456789 | f |  1 |   10 | 2015-03-06 | abcd  | abc | 1
  row2  | s_7  |    2 |    7 |             1.23456 | 2013-07-13 21:00:05 |  8.7 | 23456789 | t |  2 |   20 | 2015-03-06 | abcde | abc | 2
@@ -325,6 +349,7 @@ SELECT * FROM pxf_hive_orc_types WHERE c1 IN ('abc');
  row9  | s_14 |    9 |   14 |             23457.1 | 2013-07-21 21:00:05 |  7.7 | 23456789 | f |  9 |  900 | 2015-03-06 | abcde | abc | 9
  row10 | s_15 |   10 |   15 |   45678.00002340089 | 2013-07-22 21:00:05 |  7.7 | 23456789 | t | 10 | 1000 | 2015-03-06 | abcde | abc | 0
 (10 rows)
+
 --BETWEEN
 SELECT t1 FROM pxf_hive_small_data WHERE dub1 BETWEEN 10 AND 15;
   t1   
@@ -336,30 +361,35 @@ SELECT t1 FROM pxf_hive_small_data WHERE dub1 BETWEEN 10 AND 15;
  row9
  row10
 (6 rows)
+
 --IS NULL
 SELECT t1 FROM pxf_hive_orc_types WHERE t2 IS NULL;
        t1        
 -----------------
  row12_text_null
 (1 row)
+
 SELECT t1 FROM pxf_hive_orc_types WHERE dub1 IS NULL;
-        t1
+        t1         
 -------------------
  row14_double_null
 (1 row)
+
 SELECT t1 FROM pxf_hive_orc_types WHERE b IS NULL;
-       t1
+       t1        
 -----------------
  row19_bool_null
 (1 row)
+
 SELECT t1 FROM pxf_hive_orc_types WHERE bin IS NULL;
-        t1
+        t1         
 -------------------
  row25_binary_null
 (1 row)
+
 --IS NOT NULL
 SELECT t1 FROM pxf_hive_orc_types WHERE t2 IS NOT NULL;
-          t1
+          t1          
 ----------------------
  row1
  row2
@@ -386,8 +416,9 @@ SELECT t1 FROM pxf_hive_orc_types WHERE t2 IS NOT NULL;
  row24_char_null
  row25_binary_null
 (24 rows)
+
 SELECT t1 FROM pxf_hive_orc_types WHERE dub1 IS NOT NULL;
-          t1
+          t1          
 ----------------------
  row1
  row2
@@ -414,8 +445,9 @@ SELECT t1 FROM pxf_hive_orc_types WHERE dub1 IS NOT NULL;
  row24_char_null
  row25_binary_null
 (24 rows)
+
 SELECT t1 FROM pxf_hive_orc_types WHERE b IS NOT NULL;
-          t1
+          t1          
 ----------------------
  row1
  row2
@@ -442,8 +474,9 @@ SELECT t1 FROM pxf_hive_orc_types WHERE b IS NOT NULL;
  row24_char_null
  row25_binary_null
 (24 rows)
+
 SELECT t1 FROM pxf_hive_orc_types WHERE bin IS NOT NULL;
-          t1
+          t1          
 ----------------------
  row1
  row2
@@ -470,6 +503,7 @@ SELECT t1 FROM pxf_hive_orc_types WHERE bin IS NOT NULL;
  row23_varchar_null
  row24_char_null
 (24 rows)
+
 --NOT
 SELECT t1 FROM pxf_hive_small_data WHERE NOT (dub1 = 10);
   t1   
@@ -484,6 +518,7 @@ SELECT t1 FROM pxf_hive_small_data WHERE NOT (dub1 = 10);
  row9
  row10
 (9 rows)
+
 --OR
 SELECT t1 FROM pxf_hive_small_data WHERE dub1 = 10 OR num1 = 10;
   t1   
@@ -491,13 +526,13 @@ SELECT t1 FROM pxf_hive_small_data WHERE dub1 = 10 OR num1 = 10;
  row5
  row10
 (2 rows)
+
 --AND
 SELECT t1 FROM pxf_hive_small_data WHERE dub1 = 12 AND num1 = 7;
   t1  
 ------
  row7
 (1 row)
-
 
 --Complex logic expression, Var=Const, Const=Var, Const=Const, Var=Var
 SELECT * FROM pxf_hive_small_data WHERE num1+5 = dub1;
@@ -514,6 +549,7 @@ SELECT * FROM pxf_hive_small_data WHERE num1+5 = dub1;
  row9  | s_14 |    9 |   14
  row10 | s_15 |   10 |   15
 (10 rows)
+
 SELECT * FROM pxf_hive_small_data WHERE num1+5 = dub1 AND 1=1;
   t1   |  t2  | num1 | dub1 
 -------+------+------+------
@@ -528,12 +564,14 @@ SELECT * FROM pxf_hive_small_data WHERE num1+5 = dub1 AND 1=1;
  row9  | s_14 |    9 |   14
  row10 | s_15 |   10 |   15
 (10 rows)
+
 SELECT * FROM pxf_hive_small_data WHERE num1 = 1 OR (t1 = 'row9' AND t2 = 's_14' AND num1 > 5);
   t1  |  t2  | num1 | dub1 
 ------+------+------+------
  row1 | s_6  |    1 |    6
  row9 | s_14 |    9 |   14
 (2 rows)
+
 SELECT * FROM pxf_hive_small_data WHERE num1 = 1 OR (t1 = 'row9' AND t2 = 's_14' AND num1 > 5 AND dub1 > 1) OR num1 = 2;
   t1  |  t2  | num1 | dub1 
 ------+------+------+------
@@ -541,16 +579,18 @@ SELECT * FROM pxf_hive_small_data WHERE num1 = 1 OR (t1 = 'row9' AND t2 = 's_14'
  row2 | s_7  |    2 |    7
  row9 | s_14 |    9 |   14
 (3 rows)
+
 --Nested query
-SELECT t_out.t1 FROM pxf_hive_small_data t_out WHERE t_out.num1 IN (SELECT t_in.dub1 FROM pxf_hive_small_data t_in WHERE t_in.dub1 <= 10);
+SELECT t_out.t1 FROM pxf_hive_small_data t_out WHERE t_out.num1 IN (SELECT t_in.dub1 FROM pxf_hive_small_data t_in WHERE t_in.dub1 <= 10) order by t_out.t1;
   t1   
 -------
- row6
  row10
+ row6
  row7
  row8
  row9
 (5 rows)
+
 --Join between PXF table and local GPDB table
 SELECT local_t.t1, pxf_t.t2 FROM gpdb_small_data local_t, public.pxf_hive_small_data pxf_t WHERE pxf_t.t1 = local_t.t1 AND pxf_t.num1 > 6;
   t1   |  t2  
@@ -560,6 +600,7 @@ SELECT local_t.t1, pxf_t.t2 FROM gpdb_small_data local_t, public.pxf_hive_small_
  row9  | s_14
  row10 | s_15
 (4 rows)
+
 --Different primitive types as part of WHERE clause
 --text column in WHERE clause
 SELECT t1 FROM pxf_hive_orc_types WHERE t2 = 's_16';
@@ -579,6 +620,7 @@ SELECT t1 FROM pxf_hive_orc_types WHERE t2 = 's_16';
  row24_char_null
  row25_binary_null
 (13 rows)
+
 SELECT t1 FROM pxf_hive_orc_types WHERE 's_16' = t2;
           t1          
 ----------------------
@@ -596,28 +638,36 @@ SELECT t1 FROM pxf_hive_orc_types WHERE 's_16' = t2;
  row24_char_null
  row25_binary_null
 (13 rows)
+
 --integer column in WHERE clause
 SELECT t1 FROM pxf_hive_orc_types WHERE num1 = 7;
   t1  
 ------
  row7
 (1 row)
+
 SELECT t1 FROM pxf_hive_orc_types WHERE 7 = num1;
   t1  
 ------
  row7
 (1 row)
+
 --double precision column in WHERE clause
 SELECT t1 FROM pxf_hive_orc_types WHERE dub1 = 7;
   t1  
 ------
  row2
 (1 row)
+
 SELECT t1 FROM pxf_hive_orc_types WHERE 7 = dub1;
   t1  
 ------
  row2
 (1 row)
+
+--TODO: numeric column in WHERE clause, uncomment when HAWQ-1055 is done
+--SELECT t1 FROM pxf_hive_orc_types WHERE dec1 = 7;
+--real column in WHERE clause
 SELECT t1 FROM pxf_hive_orc_types WHERE r = CAST(7.7 AS float4);
           t1          
 ----------------------
@@ -641,6 +691,7 @@ SELECT t1 FROM pxf_hive_orc_types WHERE r = CAST(7.7 AS float4);
  row24_char_null
  row25_binary_null
 (19 rows)
+
 SELECT t1 FROM pxf_hive_orc_types WHERE CAST(7.7 AS float4) = r;
           t1          
 ----------------------
@@ -664,6 +715,8 @@ SELECT t1 FROM pxf_hive_orc_types WHERE CAST(7.7 AS float4) = r;
  row24_char_null
  row25_binary_null
 (19 rows)
+
+--bigint column in WHERE clause
 SELECT t1 FROM pxf_hive_orc_types WHERE bg = 23456789;
           t1          
 ----------------------
@@ -692,6 +745,7 @@ SELECT t1 FROM pxf_hive_orc_types WHERE bg = 23456789;
  row24_char_null
  row25_binary_null
 (24 rows)
+
 SELECT t1 FROM pxf_hive_orc_types WHERE 23456789 = bg;
           t1          
 ----------------------
@@ -720,6 +774,7 @@ SELECT t1 FROM pxf_hive_orc_types WHERE 23456789 = bg;
  row24_char_null
  row25_binary_null
 (24 rows)
+
 --boolean column in WHERE clause
 SELECT t1 FROM pxf_hive_orc_types WHERE b IS TRUE;
   t1   
@@ -730,6 +785,7 @@ SELECT t1 FROM pxf_hive_orc_types WHERE b IS TRUE;
  row8
  row10
 (5 rows)
+
 SELECT t1 FROM pxf_hive_orc_types WHERE b IS FALSE;
           t1          
 ----------------------
@@ -753,17 +809,20 @@ SELECT t1 FROM pxf_hive_orc_types WHERE b IS FALSE;
  row24_char_null
  row25_binary_null
 (19 rows)
+
 --smallint column in WHERE clause
 SELECT t1 FROM pxf_hive_orc_types WHERE tn = 7;
   t1  
 ------
  row7
 (1 row)
+
 SELECT t1 FROM pxf_hive_orc_types WHERE 7 = tn;
   t1  
 ------
  row7
 (1 row)
+
 --date column in WHERE clause
 SELECT t1 FROM pxf_hive_orc_types WHERE dt = '2015-03-06';
           t1          
@@ -793,6 +852,7 @@ SELECT t1 FROM pxf_hive_orc_types WHERE dt = '2015-03-06';
  row24_char_null
  row25_binary_null
 (24 rows)
+
 SELECT t1 FROM pxf_hive_orc_types WHERE '2015-03-06' = dt;
           t1          
 ----------------------
@@ -821,17 +881,20 @@ SELECT t1 FROM pxf_hive_orc_types WHERE '2015-03-06' = dt;
  row24_char_null
  row25_binary_null
 (24 rows)
+
 --varchar(n) column in WHERE clause
 SELECT t1 FROM pxf_hive_orc_types WHERE vc1 = 'abcd';
   t1  
 ------
  row1
 (1 row)
+
 SELECT t1 FROM pxf_hive_orc_types WHERE 'abcd' = vc1;
   t1  
 ------
  row1
 (1 row)
+
 --char(n) column in WHERE clause
 SELECT t1 FROM pxf_hive_orc_types WHERE c1 = 'abc';
   t1   
@@ -847,6 +910,7 @@ SELECT t1 FROM pxf_hive_orc_types WHERE c1 = 'abc';
  row9
  row10
 (10 rows)
+
 SELECT t1 FROM pxf_hive_orc_types WHERE 'abc' = c1;
   t1   
 -------
@@ -861,6 +925,7 @@ SELECT t1 FROM pxf_hive_orc_types WHERE 'abc' = c1;
  row9
  row10
 (10 rows)
+
 --bytea column in WHERE clause
 SELECT t1 FROM pxf_hive_orc_types WHERE bin = '1';
           t1          
@@ -881,6 +946,7 @@ SELECT t1 FROM pxf_hive_orc_types WHERE bin = '1';
  row23_varchar_null
  row24_char_null
 (15 rows)
+
 SELECT t1 FROM pxf_hive_orc_types WHERE '1' = bin;
           t1          
 ----------------------
@@ -900,3 +966,4 @@ SELECT t1 FROM pxf_hive_orc_types WHERE '1' = bin;
  row23_varchar_null
  row24_char_null
 (15 rows)
+
