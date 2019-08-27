@@ -75,7 +75,7 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor {
      */
     @Override
     public boolean openForWrite() throws IOException {
-        String fileName = hcfsType.getUriForWrite(configuration, context);
+        String fileName = hcfsType.getUriForWrite(jobConf, context);
         String compressCodec = context.getOption("COMPRESSION_CODEC");
         // get compression codec
         CompressionCodec codec = compressCodec != null ?

@@ -25,6 +25,9 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.compress.BZip2Codec;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.mapred.FileSplit;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapreduce.MRJobConfig;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.parquet.hadoop.codec.CompressionCodecNotSupportedException;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 import org.greenplum.pxf.api.OneField;
@@ -33,6 +36,7 @@ import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.FragmentMetadata;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hdfs.CodecFactory;
+import org.greenplum.pxf.plugins.hdfs.HcfsType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

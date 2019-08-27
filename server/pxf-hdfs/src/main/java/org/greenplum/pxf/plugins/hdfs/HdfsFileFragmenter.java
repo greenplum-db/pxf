@@ -25,7 +25,7 @@ public class HdfsFileFragmenter extends HdfsDataFragmenter {
      */
     @Override
     public List<Fragment> getFragments() throws Exception {
-        String fileName = hcfsType.getDataUri(configuration, context);
+        String fileName = hcfsType.getDataUri(jobConf, context);
         Path path = new Path(fileName);
         // The hostname is no longer used, hardcoding it to localhost
         String[] hosts = {"localhost"};

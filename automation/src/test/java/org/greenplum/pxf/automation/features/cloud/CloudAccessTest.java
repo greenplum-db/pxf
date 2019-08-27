@@ -2,6 +2,7 @@ package org.greenplum.pxf.automation.features.cloud;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.greenplum.pxf.automation.components.cluster.PhdCluster;
 import org.greenplum.pxf.automation.components.hdfs.Hdfs;
 import org.greenplum.pxf.automation.features.BaseFeature;
@@ -66,32 +67,41 @@ public class CloudAccessTest extends BaseFeature {
         s3Server.writeTableToFile(PROTOCOL_S3 + s3Path + fileName, dataTable, ",");
     }
 
-    @Test(groups = {"s3"})
+    @Test(groups = {"s3", "security"})
     public void testCloudAccessFailsWhenNoServerNoCredsSpecified() throws Exception {
-        runTestScenario("no_server_no_credentials", null, false);
+        // secure mode required a Kerberized Hadoop server configuration to be present
+        // in $PXF_CONF/servers/default which makes S3 access without a server specified in the DDL
+        // impossible without encountering protocol mismatch exception which the test below verifies
+        if (UserGroupInformation.isSecurityEnabled()) {
+            runTestScenario("no_server_no_credentials_secure", null, false);
+        } else{
+            runTestScenario("no_server_no_credentials", null, false);
+        }
     }
 
-    @Test(groups = {"s3"})
+    @Test(groups = {"s3", "security"})
     public void testCloudAccessFailsWhenServerNoCredsNoConfigFileExists() throws Exception {
         runTestScenario("server_no_credentials_no_config", "s3-non-existent", false);
     }
 
+    // a default server is required for Kerberos, and providing credentials in the DDL w/out a server
+    // is not supported when a default server is defined
     @Test(groups = {"s3"})
     public void testCloudAccessOkWhenNoServerCredsNoConfigFileExists() throws Exception {
         runTestScenario("no_server_credentials_no_config", null, true);
     }
 
-    @Test(groups = {"s3"})
+    @Test(groups = {"s3", "security"})
     public void testCloudAccessFailsWhenServerNoCredsInvalidConfigFileExists() throws Exception {
         runTestScenario("server_no_credentials_invalid_config", "s3-invalid", false);
     }
 
-    @Test(groups = {"s3"})
+    @Test(groups = {"s3", "security"})
     public void testCloudAccessOkWhenServerCredsInvalidConfigFileExists() throws Exception {
         runTestScenario("server_credentials_invalid_config", "s3-invalid", true);
     }
 
-    @Test(groups = {"s3"})
+    @Test(groups = {"s3", "security"})
     public void testCloudAccessOkWhenServerCredsNoConfigFileExists() throws Exception {
         runTestScenario("server_credentials_no_config", "s3-non-existent", true);
     }
@@ -101,8 +111,7 @@ public class CloudAccessTest extends BaseFeature {
         runTestScenario("no_server_no_credentials_with_hdfs", null, false);
     }
 
-    // TODO: restore security group
-    @Test(groups = {"gpdb"})
+    @Test(groups = {"gpdb", "security"})
     public void testCloudAccessWithHdfsOkWhenServerNoCredsValidConfigFileExists() throws Exception {
         runTestScenario("server_no_credentials_valid_config_with_hdfs", "s3", false);
     }
@@ -117,14 +126,12 @@ public class CloudAccessTest extends BaseFeature {
         runTestScenario("no_server_credentials_no_config_with_hdfs", null, true);
     }
 
-    // TODO: restore security group
-    @Test(groups = {"gpdb"})
+    @Test(groups = {"gpdb", "security"})
     public void testCloudAccessWithHdfsFailsWhenServerNoCredsInvalidConfigFileExists() throws Exception {
         runTestScenario("server_no_credentials_invalid_config_with_hdfs", "s3-invalid", false);
     }
 
-    // TODO: restore security group
-    @Test(groups = {"gpdb"})
+    @Test(groups = {"gpdb", "security"})
     public void testCloudAccessWithHdfsOkWhenServerCredsInvalidConfigFileExists() throws Exception {
         runTestScenario("server_credentials_invalid_config_with_hdfs", "s3-invalid", true);
     }

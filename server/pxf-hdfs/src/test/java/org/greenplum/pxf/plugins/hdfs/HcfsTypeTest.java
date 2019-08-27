@@ -1,26 +1,52 @@
 package org.greenplum.pxf.plugins.hdfs;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapreduce.MRJobConfig;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
+
+import javax.management.MBeanRegistrationException;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({UserGroupInformation.class})
 public class HcfsTypeTest {
     private final String S3_PROTOCOL = "s3";
     @Rule
     public ExpectedException thrown = ExpectedException.none();
     private RequestContext context;
     private Configuration configuration;
+    private UserGroupInformation mockUGI;
+    private Path mockPath;
+    private FileSystem mockFileSystem;
 
     @Before
     public void setUp() throws Exception {
         context = new RequestContext();
         context.setDataSource("/foo/bar.txt");
         configuration = new Configuration();
+        PowerMockito.mockStatic(UserGroupInformation.class);
+
+        mockUGI = mock(UserGroupInformation.class);
+        mockPath = mock(Path.class);
+        mockFileSystem = mock(FileSystem.class);
     }
 
     @Test
@@ -253,4 +279,89 @@ public class HcfsTypeTest {
         assertEquals("xyz://abc/foo/bar/XID-XYZ-123456_2.gz",
                 type.getUriForWrite(configuration, context));
     }
+
+    @Test
+    public void testNonSecureNoConfigChangeOnNonHdfs() {
+        configuration.set("fs.defaultFS", "xyz://abc/");
+        context.setDataSource("foo/bar.txt");
+
+        HcfsType type = HcfsType.getHcfsType(configuration, context);
+        String dataUri = type.getDataUri(configuration, context);
+        assertEquals("xyz://abc/foo/bar.txt", dataUri);
+        assertNull(configuration.get(MRJobConfig.JOB_NAMENODES_TOKEN_RENEWAL_EXCLUDE));
+    }
+
+    @Test
+    public void testNonSecureNoConfigChangeOnHdfs() {
+        PowerMockito.when(UserGroupInformation.isSecurityEnabled()).thenReturn(false);
+        configuration.set("fs.defaultFS", "hdfs://abc:8020/");
+        context.setDataSource("foo/bar.txt");
+
+        HcfsType type = HcfsType.getHcfsType(configuration, context);
+        String dataUri = type.getDataUri(configuration, context);
+        assertEquals("hdfs://abc:8020/foo/bar.txt", dataUri);
+        assertNull(configuration.get(MRJobConfig.JOB_NAMENODES_TOKEN_RENEWAL_EXCLUDE));
+    }
+
+    @Test
+    public void testSecureNoConfigChangeOnHdfs() throws IOException {
+        PowerMockito.when(UserGroupInformation.isSecurityEnabled()).thenReturn(true);
+        PowerMockito.when(UserGroupInformation.getCurrentUser()).thenReturn(mockUGI);
+        configuration.set("fs.defaultFS", "hdfs://abc:8020/");
+        context.setDataSource("foo/bar.txt");
+
+        HcfsType type = HcfsType.getHcfsType(configuration, context);
+        String dataUri = type.getDataUri(configuration, context);
+        assertEquals("hdfs://abc:8020/foo/bar.txt", dataUri);
+        assertNull(configuration.get(MRJobConfig.JOB_NAMENODES_TOKEN_RENEWAL_EXCLUDE));
+    }
+
+    @Test
+    public void testSecureConfigChangeOnNonHdfs() throws IOException, MBeanRegistrationException, URISyntaxException {
+        PowerMockito.when(UserGroupInformation.isSecurityEnabled()).thenReturn(true);
+        PowerMockito.when(UserGroupInformation.getCurrentUser()).thenReturn(mockUGI);
+        when(mockUGI.getShortUserName()).thenReturn("testuser");
+
+        configuration.set("fs.defaultFS", "s3a://abc/");
+        context.setDataSource("foo/bar.txt");
+
+        HcfsType type = HcfsType.getHcfsType(configuration, context);
+        type.setPathProvider(new HcfsType.PathProvider() {
+            @Override
+            public Path createPath(String path) {
+                return mockPath;
+            }
+        });
+
+        when(mockPath.getFileSystem(configuration)).thenReturn(mockFileSystem);
+        when(mockFileSystem.getUri()).thenReturn(new URI("xyz://host"));
+
+        String dataUri = type.getDataUri(configuration, context);
+        assertEquals("s3a://abc/foo/bar.txt", dataUri);
+        assertEquals("host", configuration.get(MRJobConfig.JOB_NAMENODES_TOKEN_RENEWAL_EXCLUDE));
+    }
+
+    @Test
+    public void testFailureOnNonHdfsOnShortPath() throws IOException, URISyntaxException {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("Expected authority at index 6: s3a://");
+
+        configuration.set("fs.defaultFS", "s3a://"); //bad URL without a scheme
+        HcfsType.getHcfsType(configuration, context);
+    }
+
+    @Test
+    public void testSecureFailsOnInvalidFilesystem() throws IOException {
+        thrown.expect(RuntimeException.class);
+        thrown.expectMessage("No FileSystem for scheme \"xyz\"");
+
+        PowerMockito.when(UserGroupInformation.isSecurityEnabled()).thenReturn(true);
+        PowerMockito.when(UserGroupInformation.getCurrentUser()).thenReturn(mockUGI);
+        configuration.set("fs.defaultFS", "xyz://abc/");
+        context.setDataSource("foo/bar.txt");
+
+        HcfsType type = HcfsType.getHcfsType(configuration, context);
+        type.getDataUri(configuration, context);
+    }
+
 }
