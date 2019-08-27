@@ -326,19 +326,9 @@ public class HcfsTypeTest {
         context.setDataSource("foo/bar.txt");
 
         HcfsType type = HcfsType.getHcfsType(configuration, context);
-        type.setPathProvider(new HcfsType.PathProvider() {
-            @Override
-            public Path createPath(String path) {
-                return mockPath;
-            }
-        });
-
-        when(mockPath.getFileSystem(configuration)).thenReturn(mockFileSystem);
-        when(mockFileSystem.getUri()).thenReturn(new URI("xyz://host"));
-
         String dataUri = type.getDataUri(configuration, context);
         assertEquals("s3a://abc/foo/bar.txt", dataUri);
-        assertEquals("host", configuration.get(MRJobConfig.JOB_NAMENODES_TOKEN_RENEWAL_EXCLUDE));
+        assertEquals("abc", configuration.get(MRJobConfig.JOB_NAMENODES_TOKEN_RENEWAL_EXCLUDE));
     }
 
     @Test
@@ -351,17 +341,16 @@ public class HcfsTypeTest {
     }
 
     @Test
-    public void testSecureFailsOnInvalidFilesystem() throws IOException {
-        thrown.expect(RuntimeException.class);
-        thrown.expectMessage("No FileSystem for scheme \"xyz\"");
-
+    public void testSecureConfigChangeOnInvalidFilesystem() throws IOException {
         PowerMockito.when(UserGroupInformation.isSecurityEnabled()).thenReturn(true);
         PowerMockito.when(UserGroupInformation.getCurrentUser()).thenReturn(mockUGI);
         configuration.set("fs.defaultFS", "xyz://abc/");
         context.setDataSource("foo/bar.txt");
 
         HcfsType type = HcfsType.getHcfsType(configuration, context);
-        type.getDataUri(configuration, context);
+        String dataUri = type.getDataUri(configuration, context);
+        assertEquals("xyz://abc/foo/bar.txt", dataUri);
+        assertEquals("abc", configuration.get(MRJobConfig.JOB_NAMENODES_TOKEN_RENEWAL_EXCLUDE));
     }
 
 }

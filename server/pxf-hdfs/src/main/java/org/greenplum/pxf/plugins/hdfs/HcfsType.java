@@ -3,7 +3,6 @@ package org.greenplum.pxf.plugins.hdfs;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.MRJobConfig;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
@@ -11,7 +10,6 @@ import org.greenplum.pxf.api.model.RequestContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
 
@@ -24,7 +22,7 @@ public enum HcfsType {
         public String getDataUri(Configuration configuration, RequestContext context) {
             String profileScheme = StringUtils.isBlank(context.getProfileScheme()) ? "" : context.getProfileScheme() + "://";
             String uri = getDataUriForPrefix(configuration, context, profileScheme);
-            disableSecureTokenRenewal(pathProvider.createPath(uri), configuration);
+            disableSecureTokenRenewal(uri, configuration);
             return uri;
         }
     },
@@ -43,6 +41,7 @@ public enum HcfsType {
     HDFS {
         @Override
         public String getDataUri(Configuration configuration, RequestContext context) {
+            // no token renewal disabling needed for HDFS
             return getDataUriForPrefix(configuration, context, this.prefix);
         }
     },
@@ -63,7 +62,6 @@ public enum HcfsType {
 
     private static final String FILE_SCHEME = "file";
     protected String prefix;
-    protected PathProvider pathProvider = DefaultPathProvider.getInstance();
 
     HcfsType() {
         this(null);
@@ -188,7 +186,7 @@ public enum HcfsType {
      */
     public String getDataUri(Configuration configuration, RequestContext context) {
         String uri = getDataUriForPrefix(configuration, context, this.prefix);
-        disableSecureTokenRenewal(pathProvider.createPath(uri), configuration);
+        disableSecureTokenRenewal(uri, configuration);
         return uri;
     }
 
@@ -217,46 +215,18 @@ public enum HcfsType {
     /**
      * For secured cluster, circumvent token renewal for non-HDFS hcfs access (such as s3 etc)
      *
-     * @param path          path of the resource to access
+     * @param uri           URI of the resource to access
      * @param configuration configuration used for HCFS operations
      */
-    protected void disableSecureTokenRenewal(Path path, Configuration configuration) {
+    protected void disableSecureTokenRenewal(String uri, Configuration configuration) {
         if (UserGroupInformation.isSecurityEnabled()) {
             // find the "host" that TokenCache will check against the exclusion list
-            FileSystem fs;
-            try {
-                fs = path.getFileSystem(configuration);
-            } catch (IOException e) {
-                throw new RuntimeException(e.getMessage(), e);
-            }
-            String host = fs.getUri().getHost();
-            LOG.debug("Disabling token renewal for host {} for path {}", host, path);
+            String host = URI.create(uri).getHost();
+            LOG.debug("Disabling token renewal for host {} for path {}", host, uri);
             if (host != null) {
                 // disable token renewal for the host in the path
                 configuration.set(MRJobConfig.JOB_NAMENODES_TOKEN_RENEWAL_EXCLUDE, host);
             }
-        }
-    }
-
-    void setPathProvider(PathProvider provider) {
-        this.pathProvider = provider;
-    }
-
-    interface PathProvider {
-        Path createPath(String path);
-    }
-
-    static class DefaultPathProvider implements PathProvider {
-
-        private static PathProvider instance = new DefaultPathProvider();
-
-        static PathProvider getInstance() {
-            return instance;
-        }
-
-        @Override
-        public Path createPath(String path) {
-            return new Path(path);
         }
     }
 }
