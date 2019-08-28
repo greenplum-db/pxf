@@ -296,7 +296,6 @@ resources:
     versioned_file: bin_gpdb_centos6/gpdb_branch_((gpdb-branch))/icw_green/bin_gpdb.tar.gz
 {% endif %}
 
-{% if pipeline_type == "release" %}
 {% if gpdb_branch == '5X_STABLE' %}
 - name: bin_gpdb_centos7
   type: s3
@@ -306,23 +305,21 @@ resources:
     secret_access_key: {{bucket-secret-access-key}}
     bucket: {{gpdb-stable-builds-bucket-name}}
     versioned_file: release_candidates/bin_gpdb_centos7/gpdb5/bin_gpdb.tar.gz
-{% else %}
+{% elif gpdb_branch == '6X_STABLE' %}
 - name: bin_gpdb_centos7
   type: gcs
   source:
     bucket: ((gcs-bucket-resources-prod))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: server/published/gpdb6/server-rc-(.*)-rhel7_x86_64.tar.gz
-{% endif %}
-{% elif pipeline_type == "pxf" %}
+{% else %}
+# master branch (doesn't appear in release pipelines)
 - name: bin_gpdb_centos7
-  type: s3
+  type: gcs
   source:
-    access_key_id: {{bucket-access-key-id}}
-    region_name: {{aws-region}}
-    secret_access_key: {{bucket-secret-access-key}}
-    bucket: {{icw_green_bucket}}
-    versioned_file: bin_gpdb_centos7/gpdb_branch_((gpdb-branch))/icw_green/bin_gpdb.tar.gz
+    bucket: pivotal-gpdb-concourse-resources-dev
+    json_key: ((concourse-gcs-resources-service-account-key))
+    regexp: server/published/master/server-build-7.(.*)-rhel7_x86_64.debug.tar.gz
 {% endif %}
 
 {% if gpdb_type == "5X_STABLE" %}
