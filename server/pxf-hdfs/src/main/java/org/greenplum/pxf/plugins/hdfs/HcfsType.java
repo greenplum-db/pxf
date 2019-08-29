@@ -219,14 +219,16 @@ public enum HcfsType {
      * @param configuration configuration used for HCFS operations
      */
     protected void disableSecureTokenRenewal(String uri, Configuration configuration) {
-        if (UserGroupInformation.isSecurityEnabled()) {
-            // find the "host" that TokenCache will check against the exclusion list
-            String host = URI.create(uri).getHost();
-            LOG.debug("Disabling token renewal for host {} for path {}", host, uri);
-            if (host != null) {
-                // disable token renewal for the host in the path
-                configuration.set(MRJobConfig.JOB_NAMENODES_TOKEN_RENEWAL_EXCLUDE, host);
-            }
+        if (!UserGroupInformation.isSecurityEnabled()) {
+            return;
+        }
+        // find the "host" that TokenCache will check against the exclusion list, for cloud file systems (like S3)
+        // it might actually be a bucket in the full resource path
+        String host = URI.create(uri).getHost();
+        LOG.debug("Disabling token renewal for host {} for path {}", host, uri);
+        if (host != null) {
+            // disable token renewal for the "host" in the path
+            configuration.set(MRJobConfig.JOB_NAMENODES_TOKEN_RENEWAL_EXCLUDE, host);
         }
     }
 }

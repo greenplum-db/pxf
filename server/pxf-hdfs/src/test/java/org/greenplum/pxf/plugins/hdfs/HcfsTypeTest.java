@@ -15,10 +15,7 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import javax.management.MBeanRegistrationException;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -317,7 +314,24 @@ public class HcfsTypeTest {
     }
 
     @Test
-    public void testSecureConfigChangeOnNonHdfs() throws IOException, MBeanRegistrationException, URISyntaxException {
+    public void testSecureNoConfigChangeOnHdfsForWrite() throws IOException {
+        PowerMockito.when(UserGroupInformation.isSecurityEnabled()).thenReturn(true);
+        PowerMockito.when(UserGroupInformation.getCurrentUser()).thenReturn(mockUGI);
+        when(mockUGI.getShortUserName()).thenReturn("testuser");
+
+        configuration.set("fs.defaultFS", "hdfs://abc:8020");
+        context.setDataSource("foo/bar");
+        context.setTransactionId("XID-XYZ-123456");
+        context.setSegmentId(3);
+
+        HcfsType type = HcfsType.getHcfsType(configuration, context);
+        String dataUri = type.getUriForWrite(configuration, context);
+        assertEquals("hdfs://abc:8020/foo/bar/XID-XYZ-123456_3", dataUri);
+        assertNull(configuration.get(MRJobConfig.JOB_NAMENODES_TOKEN_RENEWAL_EXCLUDE));
+    }
+
+    @Test
+    public void testSecureConfigChangeOnNonHdfs() throws IOException {
         PowerMockito.when(UserGroupInformation.isSecurityEnabled()).thenReturn(true);
         PowerMockito.when(UserGroupInformation.getCurrentUser()).thenReturn(mockUGI);
         when(mockUGI.getShortUserName()).thenReturn("testuser");
@@ -332,7 +346,24 @@ public class HcfsTypeTest {
     }
 
     @Test
-    public void testFailureOnNonHdfsOnShortPath() throws IOException, URISyntaxException {
+    public void testSecureConfigChangeOnNonHdfsForWrite() throws IOException {
+        PowerMockito.when(UserGroupInformation.isSecurityEnabled()).thenReturn(true);
+        PowerMockito.when(UserGroupInformation.getCurrentUser()).thenReturn(mockUGI);
+        when(mockUGI.getShortUserName()).thenReturn("testuser");
+
+        configuration.set("fs.defaultFS", "s3a://abc/");
+        context.setDataSource("foo/bar");
+        context.setTransactionId("XID-XYZ-123456");
+        context.setSegmentId(3);
+
+        HcfsType type = HcfsType.getHcfsType(configuration, context);
+        String dataUri = type.getUriForWrite(configuration, context);
+        assertEquals("s3a://abc/foo/bar/XID-XYZ-123456_3", dataUri);
+        assertEquals("abc", configuration.get(MRJobConfig.JOB_NAMENODES_TOKEN_RENEWAL_EXCLUDE));
+    }
+
+    @Test
+    public void testFailureOnNonHdfsOnShortPath() {
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("Expected authority at index 6: s3a://");
 
