@@ -1,8 +1,6 @@
 package org.greenplum.pxf.plugins.hdfs;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.MRJobConfig;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.greenplum.pxf.api.model.RequestContext;
@@ -15,24 +13,20 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import java.io.IOException;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({UserGroupInformation.class})
 public class HcfsTypeTest {
-    private final String S3_PROTOCOL = "s3";
+
+    private final static String S3_PROTOCOL = "s3";
+
     @Rule
     public ExpectedException thrown = ExpectedException.none();
+
     private RequestContext context;
     private Configuration configuration;
-    private UserGroupInformation mockUGI;
-    private Path mockPath;
-    private FileSystem mockFileSystem;
 
     @Before
     public void setUp() throws Exception {
@@ -40,10 +34,6 @@ public class HcfsTypeTest {
         context.setDataSource("/foo/bar.txt");
         configuration = new Configuration();
         PowerMockito.mockStatic(UserGroupInformation.class);
-
-        mockUGI = mock(UserGroupInformation.class);
-        mockPath = mock(Path.class);
-        mockFileSystem = mock(FileSystem.class);
     }
 
     @Test
@@ -301,9 +291,8 @@ public class HcfsTypeTest {
     }
 
     @Test
-    public void testSecureNoConfigChangeOnHdfs() throws IOException {
+    public void testSecureNoConfigChangeOnHdfs() {
         PowerMockito.when(UserGroupInformation.isSecurityEnabled()).thenReturn(true);
-        PowerMockito.when(UserGroupInformation.getCurrentUser()).thenReturn(mockUGI);
         configuration.set("fs.defaultFS", "hdfs://abc:8020/");
         context.setDataSource("foo/bar.txt");
 
@@ -314,11 +303,8 @@ public class HcfsTypeTest {
     }
 
     @Test
-    public void testSecureNoConfigChangeOnHdfsForWrite() throws IOException {
+    public void testSecureNoConfigChangeOnHdfsForWrite() {
         PowerMockito.when(UserGroupInformation.isSecurityEnabled()).thenReturn(true);
-        PowerMockito.when(UserGroupInformation.getCurrentUser()).thenReturn(mockUGI);
-        when(mockUGI.getShortUserName()).thenReturn("testuser");
-
         configuration.set("fs.defaultFS", "hdfs://abc:8020");
         context.setDataSource("foo/bar");
         context.setTransactionId("XID-XYZ-123456");
@@ -331,11 +317,8 @@ public class HcfsTypeTest {
     }
 
     @Test
-    public void testSecureConfigChangeOnNonHdfs() throws IOException {
+    public void testSecureConfigChangeOnNonHdfs() {
         PowerMockito.when(UserGroupInformation.isSecurityEnabled()).thenReturn(true);
-        PowerMockito.when(UserGroupInformation.getCurrentUser()).thenReturn(mockUGI);
-        when(mockUGI.getShortUserName()).thenReturn("testuser");
-
         configuration.set("fs.defaultFS", "s3a://abc/");
         context.setDataSource("foo/bar.txt");
 
@@ -346,11 +329,8 @@ public class HcfsTypeTest {
     }
 
     @Test
-    public void testSecureConfigChangeOnNonHdfsForWrite() throws IOException {
+    public void testSecureConfigChangeOnNonHdfsForWrite() {
         PowerMockito.when(UserGroupInformation.isSecurityEnabled()).thenReturn(true);
-        PowerMockito.when(UserGroupInformation.getCurrentUser()).thenReturn(mockUGI);
-        when(mockUGI.getShortUserName()).thenReturn("testuser");
-
         configuration.set("fs.defaultFS", "s3a://abc/");
         context.setDataSource("foo/bar");
         context.setTransactionId("XID-XYZ-123456");
@@ -372,9 +352,8 @@ public class HcfsTypeTest {
     }
 
     @Test
-    public void testSecureConfigChangeOnInvalidFilesystem() throws IOException {
+    public void testSecureConfigChangeOnInvalidFilesystem() {
         PowerMockito.when(UserGroupInformation.isSecurityEnabled()).thenReturn(true);
-        PowerMockito.when(UserGroupInformation.getCurrentUser()).thenReturn(mockUGI);
         configuration.set("fs.defaultFS", "xyz://abc/");
         context.setDataSource("foo/bar.txt");
 
