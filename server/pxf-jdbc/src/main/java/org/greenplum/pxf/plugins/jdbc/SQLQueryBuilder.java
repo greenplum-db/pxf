@@ -21,9 +21,6 @@ import org.apache.commons.lang.SerializationUtils;
  * under the License.
  */
 
-import org.greenplum.pxf.api.BasicFilter;
-import org.greenplum.pxf.api.FilterParser;
-import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
@@ -48,7 +45,7 @@ public class SQLQueryBuilder {
     private static final Logger LOG = LoggerFactory.getLogger(SQLQueryBuilder.class);
     private static final String SUBQUERY_ALIAS_SUFFIX = ") pxfsubquery"; // do not use AS, Oracle does not like it
 
-    private RequestContext requestContext;
+    private RequestContext context;
     private DatabaseMetaData databaseMetaData;
     private DbProduct dbProduct;
     private String quoteString;
@@ -81,7 +78,7 @@ public class SQLQueryBuilder {
         if (context == null) {
             throw new IllegalArgumentException("Provided RequestContext is null");
         }
-        requestContext = context;
+        this.context = context;
         if (metaData == null) {
             throw new IllegalArgumentException("Provided DatabaseMetaData is null");
         }
@@ -125,7 +122,7 @@ public class SQLQueryBuilder {
         buildWhereSQL(sb);
 
         // Insert partition constraints
-        buildFragmenterSql(requestContext, dbProduct, quoteString, sb);
+        buildFragmenterSql(context, dbProduct, quoteString, sb);
 
         return sb.toString();
     }
@@ -236,91 +233,18 @@ public class SQLQueryBuilder {
      * @throws ParseException if filter string is invalid
      */
     private void buildWhereSQL(StringBuilder query) throws ParseException {
-        if (!requestContext.hasFilter()) {
+        if (!context.hasFilter()) {
             return;
         }
 
+        boolean hasPartition = context.getOption("PARTITION_BY") != null;
+
+        JdbcFilterParser filterParser = new JdbcFilterParser(dbProduct, quoteString, hasPartition, context.getTupleDescription());
+
         try {
-            StringBuilder prepared = new StringBuilder(" WHERE ");
-
-            // Get constraints
-            List<BasicFilter> filters = JdbcFilterParser.parseFilters(requestContext.getFilterString());
-
-            String andDivisor = "";
-            for (Object obj : filters) {
-                prepared.append(andDivisor);
-                andDivisor = " AND ";
-
-                // Insert constraint column name
-                BasicFilter filter = (BasicFilter) obj;
-                ColumnDescriptor column = requestContext.getColumn(filter.getColumn().index());
-                prepared.append(quoteString + column.columnName() + quoteString);
-
-                // Insert constraint operator
-                FilterParser.Operation op = filter.getOperation();
-                switch (op) {
-                    case HDOP_LT:
-                        prepared.append(" < ");
-                        break;
-                    case HDOP_GT:
-                        prepared.append(" > ");
-                        break;
-                    case HDOP_LE:
-                        prepared.append(" <= ");
-                        break;
-                    case HDOP_GE:
-                        prepared.append(" >= ");
-                        break;
-                    case HDOP_EQ:
-                        prepared.append(" = ");
-                        break;
-                    case HDOP_LIKE:
-                        prepared.append(" LIKE ");
-                        break;
-                    case HDOP_NE:
-                        prepared.append(" <> ");
-                        break;
-                    case HDOP_IS_NULL:
-                        prepared.append(" IS NULL");
-                        continue;
-                    case HDOP_IS_NOT_NULL:
-                        prepared.append(" IS NOT NULL");
-                        continue;
-                    default:
-                        throw new UnsupportedOperationException("Unsupported Filter operation: " + op);
-                }
-
-                // Insert constraint constant
-                Object val = filter.getConstant().constant();
-                switch (DataType.get(column.columnTypeCode())) {
-                    case SMALLINT:
-                    case INTEGER:
-                    case BIGINT:
-                    case FLOAT8:
-                    case REAL:
-                    case BOOLEAN:
-                        prepared.append(val.toString());
-                        break;
-                    case TEXT:
-                        prepared.append("'").append(val.toString()).append("'");
-                        break;
-                    case DATE:
-                        // Date field has different format in different databases
-                        prepared.append(dbProduct.wrapDate(val));
-                        break;
-                    case TIMESTAMP:
-                        // Timestamp field has different format in different databases
-                        prepared.append(dbProduct.wrapTimestamp(val));
-                        break;
-                    default:
-                        throw new UnsupportedOperationException("Unsupported column type for filtering: " + column.columnTypeCode());
-                }
-            }
-
             // No exceptions were thrown, change the provided query
-            query.append(prepared);
-        }
-        catch (UnsupportedOperationException e) {
+            query.append(filterParser.buildFilterString(context.getFilterString()));
+        } catch (Exception e) {
             LOG.debug("WHERE clause is omitted: " + e.toString());
             // Silence the exception and do not insert constraints
         }

@@ -78,7 +78,7 @@ public class SQLQueryBuilderTest {
         SQLQueryBuilder builder = new SQLQueryBuilder(context, mockMetaData);
         builder.autoSetQuoteString();
         String query = builder.buildSelectQuery();
-        assertEquals(SQL + " WHERE (id = 1)", query);
+        assertEquals(SQL + " WHERE id = 1", query);
     }
 
     @Test
@@ -89,19 +89,18 @@ public class SQLQueryBuilderTest {
         SQLQueryBuilder builder = new SQLQueryBuilder(context, mockMetaData);
         builder.autoSetQuoteString();
         String query = builder.buildSelectQuery();
-        assertEquals(SQL + " WHERE (cdate > DATE('2008-02-01') AND cdate < DATE('2008-12-01') AND amt > 1200)", query);
+        assertEquals(SQL + " WHERE ((cdate > DATE('2008-02-01') AND cdate < DATE('2008-12-01')) AND amt > 1200)", query);
     }
 
     @Test
     public void testDateWithOrAndAmtFilter() throws Exception {
-        // cdate > '2008-02-01' OR cdate < '2008-12-01' AND amt > 1200
-        context.setFilterString("a1c25s10d2008-02-01o2a1c25s10d2008-12-01o1l1a2c20s4d1200o2l0");
+        // cdate > '2008-02-01' OR (cdate < '2008-12-01' AND amt > 1200)
         context.setFilterString("a1c1082s10d2008-02-01o2a1c1082s10d2008-12-01o1a0c23s4d1200o2l0l1");
 
         SQLQueryBuilder builder = new SQLQueryBuilder(context, mockMetaData);
         builder.autoSetQuoteString();
         String query = builder.buildSelectQuery();
-        assertEquals(SQL + " WHERE (cdate > DATE('2008-02-01') OR cdate < DATE('2008-12-01') AND amt > 1200)", query);
+        assertEquals(SQL + " WHERE (cdate > DATE('2008-02-01') OR (cdate < DATE('2008-12-01') AND id > 1200))", query);
     }
 
     @Test
@@ -122,7 +121,7 @@ public class SQLQueryBuilderTest {
         SQLQueryBuilder builder = new SQLQueryBuilder(context, mockMetaData);
         builder.autoSetQuoteString();
         String query = builder.buildSelectQuery();
-        assertEquals(SQL + " WHERE (grade IS NOT NULL)", query);
+        assertEquals(SQL + " WHERE grade IS NOT NULL", query);
     }
 
     @Test
@@ -274,7 +273,7 @@ public class SQLQueryBuilderTest {
         // id > 5
         when(mockContext.getFilterString()).thenReturn("a0c20s1d5o2");
 
-        String localSQL = "SELECT \"id\", \"cDate\" FROM sales WHERE (\"id\" > 5)";
+        String localSQL = "SELECT \"id\", \"cDate\" FROM sales WHERE \"id\" > 5";
 
         SQLQueryBuilder builder = new SQLQueryBuilder(mockContext, localDatabaseMetaData);
         builder.autoSetQuoteString();
@@ -351,7 +350,7 @@ public class SQLQueryBuilderTest {
         SQLQueryBuilder builder = new SQLQueryBuilder(context, mockMetaData);
         builder.forceSetQuoteString();
         String query = builder.buildSelectQuery();
-        assertEquals("SELECT \"id\", \"cdate\", \"amt\", \"grade\" FROM sales WHERE (\"id\" = 1)", query);
+        assertEquals("SELECT \"id\", \"cdate\", \"amt\", \"grade\" FROM sales WHERE \"id\" = 1", query);
     }
 
     @Test
@@ -363,7 +362,7 @@ public class SQLQueryBuilderTest {
 
         SQLQueryBuilder builder = new SQLQueryBuilder(context, mockMetaData);
         String query = builder.buildSelectQuery();
-        assertEquals("SELECT id, amt FROM sales WHERE (id = 1)", query);
+        assertEquals("SELECT id, amt FROM sales WHERE id = 1", query);
     }
 
     /* -------------- NAMED QUERY TESTS --------------- */
@@ -382,7 +381,7 @@ public class SQLQueryBuilderTest {
         SQLQueryBuilder builder = new SQLQueryBuilder(context, mockMetaData, NAMED_QUERY_WHERE);
         builder.forceSetQuoteString();
         String query = builder.buildSelectQuery();
-        assertEquals("SELECT \"id\", \"cdate\", \"amt\", \"grade\" FROM (SELECT a, b FROM c WHERE d = 'foo') pxfsubquery WHERE (\"id\" = 1)", query);
+        assertEquals("SELECT \"id\", \"cdate\", \"amt\", \"grade\" FROM (SELECT a, b FROM c WHERE d = 'foo') pxfsubquery WHERE \"id\" = 1", query);
     }
 
     @Test
@@ -394,7 +393,7 @@ public class SQLQueryBuilderTest {
 
         SQLQueryBuilder builder = new SQLQueryBuilder(context, mockMetaData, NAMED_QUERY_WHERE);
         String query = builder.buildSelectQuery();
-        assertEquals("SELECT id, amt FROM (SELECT a, b FROM c WHERE d = 'foo') pxfsubquery WHERE (id = 1)", query);
+        assertEquals("SELECT id, amt FROM (SELECT a, b FROM c WHERE d = 'foo') pxfsubquery WHERE id = 1", query);
     }
 
     @Test

@@ -72,16 +72,6 @@ public abstract class BaseFilterBuilder implements FilterBuilder {
         }
     }
 
-    protected abstract String getColumnName(ColumnDescriptor column);
-
-    protected abstract boolean isCompliantWithOperator(FilterParser.LogicalOperation operator);
-
-    protected abstract boolean isFilterCompatible(String filterColumnName, FilterParser.Operation operation, FilterParser.LogicalOperation logicalOperation);
-
-    protected abstract void addColumnName(StringBuilder result, FilterParser.Operation operation, DataType type, ColumnDescriptor filterColumn, String columnName);
-
-    protected abstract String mapValue(Object val, DataType type);
-
     /**
      * Translates a filterString into a {@link BasicFilter} or a
      * list of such filters.
@@ -106,6 +96,20 @@ public abstract class BaseFilterBuilder implements FilterBuilder {
 
         return result;
     }
+
+    protected void addColumnName(StringBuilder result, FilterParser.Operation operation, DataType type, ColumnDescriptor filterColumn, String columnName) {
+        result.append(columnName);
+    }
+
+    protected String getColumnName(ColumnDescriptor column) {
+        return column.columnName();
+    }
+
+    protected abstract boolean isCompliantWithOperator(FilterParser.LogicalOperation operator);
+
+    protected abstract boolean isFilterCompatible(String filterColumnName, FilterParser.Operation operation, FilterParser.LogicalOperation logicalOperation);
+
+    protected abstract String mapValue(Object val, DataType type);
 
     /**
      * Build filter string for a single filter and append to the filters string.

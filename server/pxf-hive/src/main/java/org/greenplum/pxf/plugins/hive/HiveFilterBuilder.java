@@ -98,16 +98,6 @@ public class HiveFilterBuilder extends BaseFilterBuilder {
         this.partitionKeys = partitionKeys;
     }
 
-    @Override
-    protected void addColumnName(StringBuilder result, FilterParser.Operation operation, DataType type, ColumnDescriptor filterColumn, String columnName) {
-        result.append(columnName);
-    }
-
-    @Override
-    protected String getColumnName(ColumnDescriptor column) {
-        return column.columnName();
-    }
-
     /**
      * Case when one of the predicates is non-compliant
      * and with OR operator P OR NP -> null

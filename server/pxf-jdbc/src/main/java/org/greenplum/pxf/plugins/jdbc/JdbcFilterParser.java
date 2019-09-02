@@ -19,148 +19,107 @@ package org.greenplum.pxf.plugins.jdbc;
  * under the License.
  */
 
-import org.greenplum.pxf.api.BasicFilter;
-import org.greenplum.pxf.api.FilterBuilder;
-import org.greenplum.pxf.api.FilterParser;
-import org.greenplum.pxf.api.LogicalFilter;
+import org.apache.commons.lang.StringUtils;
+import org.greenplum.pxf.api.*;
+import org.greenplum.pxf.api.io.DataType;
+import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
+import java.util.EnumSet;
 import java.util.List;
-import java.text.ParseException;
 
 /**
  * A filter parser. Converts filterString into List<BasicFilter>.
- *
+ * <p>
  * This class extends {@link \FilterBuilder} and implements its
  * public methods. These should not be used, though.
  */
-public class JdbcFilterParser implements FilterBuilder {
-    /**
-     * Parse filter string and return List<BasicFilter>
-     *
-     * @param filterString
-     *
-     * @return List of 'BasicFilter' objects
-     *
-     * @throws UnsupportedOperationException if filter string contains filter that is not supported by PXF-JDBC
-     * @throws ParseException if filter string is invalid
-     */
-    public static List<BasicFilter> parseFilters(String filterString) throws UnsupportedOperationException, ParseException {
-        return convertBasicFilterList(getFilterObject(filterString), null);
+public class JdbcFilterParser extends BaseFilterBuilder {
+
+    private static final EnumSet<FilterParser.Operation> SUPPORTED_OPERATIONS =
+            EnumSet.of(
+                    FilterParser.Operation.HDOP_LT,
+                    FilterParser.Operation.HDOP_GT,
+                    FilterParser.Operation.HDOP_LE,
+                    FilterParser.Operation.HDOP_GE,
+                    FilterParser.Operation.HDOP_EQ,
+                    FilterParser.Operation.HDOP_LIKE,
+                    FilterParser.Operation.HDOP_NE,
+                    // TODO: In is not supported?
+                    // FilterParser.Operation.HDOP_IN,
+                    FilterParser.Operation.HDOP_IS_NULL,
+                    FilterParser.Operation.HDOP_IS_NOT_NULL
+            );
+    private static final EnumSet<FilterParser.LogicalOperation> SUPPORTED_OPERATORS =
+            EnumSet.of(
+                    FilterParser.LogicalOperation.HDOP_AND,
+                    FilterParser.LogicalOperation.HDOP_NOT,
+                    FilterParser.LogicalOperation.HDOP_OR
+            );
+
+    private final boolean hasPartition;
+    private final DbProduct dbProduct;
+    private final String quoteString;
+
+    public JdbcFilterParser(DbProduct dbProduct, String quoteString, boolean hasPartition, List<ColumnDescriptor> tupleDescription) {
+        super(SUPPORTED_OPERATIONS, SUPPORTED_OPERATORS);
+        this.dbProduct = dbProduct;
+        this.quoteString = quoteString;
+        this.hasPartition = hasPartition;
+        setColumnDescriptors(tupleDescription);
     }
 
     @Override
-    public Object build(FilterParser.LogicalOperation op, Object leftOperand, Object rightOperand) {
-        return handleLogicalOperation(op, leftOperand, rightOperand);
-    }
-
-    @Override
-    public Object build(FilterParser.LogicalOperation op, Object filter) {
-        return handleLogicalOperation(op, filter);
-    }
-
-    @Override
-    public Object build(FilterParser.Operation opId, Object leftOperand,
-                        Object rightOperand) throws Exception {
-        // Assume column is on the left
-        return handleSimpleOperations(
-            opId,
-            (FilterParser.ColumnIndex) leftOperand,
-            (FilterParser.Constant) rightOperand
-        );
-    }
-
-    @Override
-    public Object build(FilterParser.Operation operation, Object operand) throws UnsupportedOperationException {
-        if (
-            operation == FilterParser.Operation.HDOP_IS_NULL ||
-            operation == FilterParser.Operation.HDOP_IS_NOT_NULL
-        ) {
-            // Use null for the constant value of null comparison
-            return handleSimpleOperations(operation, (FilterParser.ColumnIndex) operand, null);
-        }
-        else {
-            throw new UnsupportedOperationException("Unsupported unary operation '" + operation + "'");
-        }
-    }
-
-    /*
-     * Handles simple column-operator-constant expressions.
-     * Creates a special filter in the case the column is the row key column
-     */
-    private BasicFilter handleSimpleOperations(FilterParser.Operation opId,
-                                               FilterParser.ColumnIndex column,
-                                               FilterParser.Constant constant) {
-        return new BasicFilter(opId, column, constant);
-    }
-
-    private Object handleLogicalOperation(FilterParser.LogicalOperation operator, Object leftOperand, Object rightOperand) {
-        List<Object> result = new LinkedList<>();
-
-        result.add(leftOperand);
-        result.add(rightOperand);
-        return new LogicalFilter(operator, result);
-    }
-
-    private Object handleLogicalOperation(FilterParser.LogicalOperation operator, Object filter) {
-        return new LogicalFilter(operator, Arrays.asList(filter));
-    }
-
-    /**
-     * Translates a filterString into a {@link BasicFilter} or a
-     * list of such filters.
-     *
-     * @param filterString the string representation of the filter
-     * @return a {@link BasicFilter} or a {@link List} of {@link BasicFilter}.
-     * @throws ParseException if parsing the filter failed or filter is not a basic filter or list of basic filters
-     */
-    private static Object getFilterObject(String filterString) throws ParseException {
-        try {
-            FilterParser parser = new FilterParser(new JdbcFilterParser());
-            Object result = parser.parse(filterString.getBytes(FilterParser.DEFAULT_CHARSET));
-
-            if (
-                !(result instanceof LogicalFilter) &&
-                !(result instanceof BasicFilter) &&
-                !(result instanceof List)
-            ) {
-                throw new Exception("'" + filterString + "' could not be resolved to a filter");
+    public String buildFilterString(String filterInput) throws Exception {
+        String filterString = super.buildFilterString(filterInput);
+        if (StringUtils.isNotBlank(filterString)) {
+            String clause = " WHERE %s";
+            if (hasPartition) {
+                clause = " WHERE (%s)";
             }
-            return result;
-        }
-        catch (Exception e) {
-            throw new ParseException(e.getMessage(), 0);
+            return String.format(clause, filterString);
+        } else {
+            return "";
         }
     }
 
-    /**
-     * Convert filter object into a list of {@link BasicFilter}
-     *
-     * @param filter Filter object
-     * @param returnList A list of {@link BasicFilter} to append filters to. Must be null if the function is not called recursively
-     *
-     * @return list of filters
-     */
-    private static List<BasicFilter> convertBasicFilterList(Object filter, List<BasicFilter> returnList) throws UnsupportedOperationException {
-        if (returnList == null) {
-            returnList = new ArrayList<>();
-        }
+    @Override
+    protected String getColumnName(ColumnDescriptor column) {
+        return String.format("%s%s%s", quoteString, column.columnName(), quoteString);
+    }
 
-        if (filter instanceof BasicFilter) {
-            returnList.add((BasicFilter) filter);
-            return returnList;
-        }
+    @Override
+    protected boolean isCompliantWithOperator(FilterParser.LogicalOperation operator) {
+        return true;
+    }
 
-        LogicalFilter lfilter = (LogicalFilter) filter;
-        if (lfilter.getOperator() != FilterParser.LogicalOperation.HDOP_AND) {
-            throw new UnsupportedOperationException("Logical operation '" + lfilter.getOperator() + "' is not supported");
-        }
-        for (Object f : lfilter.getFilterList()) {
-            returnList = convertBasicFilterList(f, returnList);
-        }
+    @Override
+    protected boolean isFilterCompatible(String filterColumnName, FilterParser.Operation operation, FilterParser.LogicalOperation logicalOperation) {
+        return true;
+    }
 
-        return returnList;
+    @Override
+    protected String mapValue(Object val, DataType type) {
+        switch (type) {
+            case SMALLINT:
+            case INTEGER:
+            case BIGINT:
+            case FLOAT8:
+            case REAL:
+            case BOOLEAN:
+                return val.toString();
+            case TEXT:
+                return String.format("'%s'",
+                        StringUtils.replace(val.toString(), "'", "''"));
+            case DATE:
+                // Date field has different format in different databases
+                return dbProduct.wrapDate(val);
+            case TIMESTAMP:
+                // Timestamp field has different format in different databases
+                return dbProduct.wrapTimestamp(val);
+            default:
+                throw new UnsupportedOperationException(String.format(
+                        "Unsupported column type for filtering '%s' ", type.getOID()));
+        }
     }
 }
