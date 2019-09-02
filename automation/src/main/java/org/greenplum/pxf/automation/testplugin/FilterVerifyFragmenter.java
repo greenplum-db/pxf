@@ -1,5 +1,6 @@
 package org.greenplum.pxf.automation.testplugin;
 
+import org.greenplum.pxf.api.FilterBuilder;
 import org.greenplum.pxf.api.FilterParser;
 import org.greenplum.pxf.api.model.BaseFragmenter;
 import org.greenplum.pxf.api.model.Fragment;
@@ -14,7 +15,7 @@ import java.util.List;
  */
 public class FilterVerifyFragmenter extends BaseFragmenter
 {
-    private static class TestFilterBuilder implements FilterParser.FilterBuilder {
+    private static class TestFilterBuilder implements FilterBuilder {
         public Object build(FilterParser.Operation operation, Object left, Object right) throws Exception {return new Object();};
         public Object build(FilterParser.Operation operation, Object operand) throws Exception {return new Object();};
         public Object build(FilterParser.LogicalOperation operation, Object left, Object right) throws Exception {return new Object();};
