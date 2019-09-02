@@ -40,7 +40,7 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class SQLQueryBuilderTest {
 
-    private static final String SQL = "SELECT id, cdate, amt, grade FROM sales";
+    private static final String SQL = "SELECT id, cdate, amt, grade, b FROM sales";
     public static final String NAMED_QUERY = "SELECT a, b FROM c";
     public static final String NAMED_QUERY_WHERE = "SELECT a, b FROM c WHERE d = 'foo'";
 
@@ -61,6 +61,7 @@ public class SQLQueryBuilderTest {
         columns.add(new ColumnDescriptor("cdate", DataType.DATE.getOID(), 1, "date", null));
         columns.add(new ColumnDescriptor("amt", DataType.FLOAT8.getOID(), 2, "float8", null));
         columns.add(new ColumnDescriptor("grade", DataType.TEXT.getOID(), 3, "text", null));
+        columns.add(new ColumnDescriptor("b", DataType.BOOLEAN.getOID(), 4, "bool", null));
 
         context.setTupleDescription(columns);
 
@@ -350,7 +351,7 @@ public class SQLQueryBuilderTest {
         SQLQueryBuilder builder = new SQLQueryBuilder(context, mockMetaData);
         builder.forceSetQuoteString();
         String query = builder.buildSelectQuery();
-        assertEquals("SELECT \"id\", \"cdate\", \"amt\", \"grade\" FROM sales WHERE \"id\" = 1", query);
+        assertEquals("SELECT \"id\", \"cdate\", \"amt\", \"grade\", \"b\" FROM sales WHERE \"id\" = 1", query);
     }
 
     @Test
@@ -359,6 +360,7 @@ public class SQLQueryBuilderTest {
         context.setFilterString("a0c20s1d1o5");
         context.getTupleDescription().get(1).setProjected(false);
         context.getTupleDescription().get(3).setProjected(false);
+        context.getTupleDescription().get(4).setProjected(false);
 
         SQLQueryBuilder builder = new SQLQueryBuilder(context, mockMetaData);
         String query = builder.buildSelectQuery();
@@ -370,7 +372,7 @@ public class SQLQueryBuilderTest {
     public void testSimpleNamedQuery() throws Exception {
         SQLQueryBuilder builder = new SQLQueryBuilder(context, mockMetaData, NAMED_QUERY_WHERE);
         String query = builder.buildSelectQuery();
-        assertEquals("SELECT id, cdate, amt, grade FROM (SELECT a, b FROM c WHERE d = 'foo') pxfsubquery", query);
+        assertEquals("SELECT id, cdate, amt, grade, b FROM (SELECT a, b FROM c WHERE d = 'foo') pxfsubquery", query);
     }
 
     @Test
@@ -381,7 +383,7 @@ public class SQLQueryBuilderTest {
         SQLQueryBuilder builder = new SQLQueryBuilder(context, mockMetaData, NAMED_QUERY_WHERE);
         builder.forceSetQuoteString();
         String query = builder.buildSelectQuery();
-        assertEquals("SELECT \"id\", \"cdate\", \"amt\", \"grade\" FROM (SELECT a, b FROM c WHERE d = 'foo') pxfsubquery WHERE \"id\" = 1", query);
+        assertEquals("SELECT \"id\", \"cdate\", \"amt\", \"grade\", \"b\" FROM (SELECT a, b FROM c WHERE d = 'foo') pxfsubquery WHERE \"id\" = 1", query);
     }
 
     @Test
@@ -390,6 +392,7 @@ public class SQLQueryBuilderTest {
         context.setFilterString("a0c20s1d1o5");
         context.getTupleDescription().get(1).setProjected(false);
         context.getTupleDescription().get(3).setProjected(false);
+        context.getTupleDescription().get(4).setProjected(false);
 
         SQLQueryBuilder builder = new SQLQueryBuilder(context, mockMetaData, NAMED_QUERY_WHERE);
         String query = builder.buildSelectQuery();
@@ -412,7 +415,7 @@ public class SQLQueryBuilderTest {
         SQLQueryBuilder builder = new SQLQueryBuilder(context, mockMetaData, NAMED_QUERY_WHERE);
         builder.autoSetQuoteString();
         String query = builder.buildSelectQuery();
-        assertEquals("SELECT id, cdate, amt, grade FROM (SELECT a, b FROM c WHERE d = 'foo') pxfsubquery WHERE (id > 5) AND grade = 'excellent'", query);
+        assertEquals("SELECT id, cdate, amt, grade, b FROM (SELECT a, b FROM c WHERE d = 'foo') pxfsubquery WHERE (id > 5) AND grade = 'excellent'", query);
     }
 
     @Test
@@ -429,7 +432,7 @@ public class SQLQueryBuilderTest {
         SQLQueryBuilder builder = new SQLQueryBuilder(context, mockMetaData, NAMED_QUERY_WHERE);
         builder.autoSetQuoteString();
         String query = builder.buildSelectQuery();
-        assertEquals("SELECT id, cdate, amt, grade FROM (SELECT a, b FROM c WHERE d = 'foo') pxfsubquery WHERE grade = 'excellent'", query);
+        assertEquals("SELECT id, cdate, amt, grade, b FROM (SELECT a, b FROM c WHERE d = 'foo') pxfsubquery WHERE grade = 'excellent'", query);
     }
 
     @Test
@@ -448,7 +451,7 @@ public class SQLQueryBuilderTest {
         SQLQueryBuilder builder = new SQLQueryBuilder(context, mockMetaData, NAMED_QUERY);
         builder.autoSetQuoteString();
         String query = builder.buildSelectQuery();
-        assertEquals("SELECT id, cdate, amt, grade FROM (SELECT a, b FROM c) pxfsubquery WHERE (id > 5) AND grade = 'excellent'", query);
+        assertEquals("SELECT id, cdate, amt, grade, b FROM (SELECT a, b FROM c) pxfsubquery WHERE (id > 5) AND grade = 'excellent'", query);
     }
 
     @Test
@@ -465,7 +468,18 @@ public class SQLQueryBuilderTest {
         SQLQueryBuilder builder = new SQLQueryBuilder(context, mockMetaData, NAMED_QUERY);
         builder.autoSetQuoteString();
         String query = builder.buildSelectQuery();
-        assertEquals("SELECT id, cdate, amt, grade FROM (SELECT a, b FROM c) pxfsubquery WHERE grade = 'excellent'", query);
+        assertEquals("SELECT id, cdate, amt, grade, b FROM (SELECT a, b FROM c) pxfsubquery WHERE grade = 'excellent'", query);
+    }
+
+    @Test
+    public void testNotBoolean() throws Exception {
+        // NOT a4
+        context.setFilterString("a4c16s4dtrueo0l2");
+
+        SQLQueryBuilder builder = new SQLQueryBuilder(context, mockMetaData);
+        builder.autoSetQuoteString();
+
+        assertEquals("SELECT id, cdate, amt, grade, b FROM sales WHERE NOT (b)", builder.buildSelectQuery());
     }
 
 }
