@@ -5,11 +5,12 @@
 
 -- Display on for output consistency between GPDB 5 and 6
 \x on
+\pset format unaligned
 select * from file_as_row_json;
 
 
 -- Query JSON using JSON functions
-
+\pset format aligned
 select
        json_array_elements(json_blob->'root')->'record'->'created_at' as created_at,
        json_array_elements(json_blob->'root')->'record'->'text' as text,
