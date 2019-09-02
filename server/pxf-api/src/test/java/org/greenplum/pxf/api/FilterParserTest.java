@@ -20,7 +20,7 @@ package org.greenplum.pxf.api;
  */
 
 
-import org.greenplum.pxf.api.FilterParser.FilterBuilder;
+import org.greenplum.pxf.api.FilterBuilder;
 import org.greenplum.pxf.api.FilterParser.LogicalOperation;
 import org.greenplum.pxf.api.FilterParser.Operation;
 import org.junit.Before;

@@ -20,6 +20,7 @@ package org.greenplum.pxf.plugins.jdbc;
  */
 
 import org.greenplum.pxf.api.BasicFilter;
+import org.greenplum.pxf.api.FilterBuilder;
 import org.greenplum.pxf.api.FilterParser;
 import org.greenplum.pxf.api.LogicalFilter;
 
@@ -32,10 +33,10 @@ import java.text.ParseException;
 /**
  * A filter parser. Converts filterString into List<BasicFilter>.
  *
- * This class extends {@link FilterParser.FilterBuilder} and implements its
+ * This class extends {@link \FilterBuilder} and implements its
  * public methods. These should not be used, though.
  */
-public class JdbcFilterParser implements FilterParser.FilterBuilder {
+public class JdbcFilterParser implements FilterBuilder {
     /**
      * Parse filter string and return List<BasicFilter>
      *

@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
-import java.text.ParseException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -41,7 +40,6 @@ public class S3SelectAccessor extends BasePlugin implements Accessor {
     // We call this option compression_codec to make it compatible to
     // the COMPRESSION_CODECs from the s3:text, s3:parquet profiles
     public static final String COMPRESSION_TYPE = "COMPRESSION_CODEC";
-    // Keep the same name as the FORMAT option in Greenplum
     public static final String FILE_HEADER_INFO = "FILE_HEADER";
     public static final String FILE_HEADER_INFO_NONE = "NONE";
     public static final String FILE_HEADER_INFO_IGNORE = "IGNORE";

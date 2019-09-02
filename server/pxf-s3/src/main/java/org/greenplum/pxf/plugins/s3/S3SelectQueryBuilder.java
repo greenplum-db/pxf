@@ -59,7 +59,7 @@ public class S3SelectQueryBuilder {
 
         try {
             // No exceptions were thrown, change the provided query
-            query.append(filterParser.buildWhereClause(context.getFilterString()));
+            query.append(filterParser.buildFilterString(context.getFilterString()));
         } catch (Exception e) {
             LOG.debug("WHERE clause is omitted: " + e.toString());
             // Silence the exception and do not insert constraints

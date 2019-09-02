@@ -8,9 +8,9 @@ package org.greenplum.pxf.plugins.hbase;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -20,6 +20,17 @@ package org.greenplum.pxf.plugins.hbase;
  */
 
 
+import org.apache.hadoop.hbase.HConstants;
+import org.apache.hadoop.hbase.filter.BinaryComparator;
+import org.apache.hadoop.hbase.filter.ByteArrayComparable;
+import org.apache.hadoop.hbase.filter.CompareFilter;
+import org.apache.hadoop.hbase.filter.Filter;
+import org.apache.hadoop.hbase.filter.FilterList;
+import org.apache.hadoop.hbase.filter.NullComparator;
+import org.apache.hadoop.hbase.filter.RowFilter;
+import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
+import org.apache.hadoop.hbase.util.Bytes;
+import org.greenplum.pxf.api.FilterBuilder;
 import org.greenplum.pxf.api.FilterParser;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseColumnDescriptor;
@@ -27,9 +38,6 @@ import org.greenplum.pxf.plugins.hbase.utilities.HBaseDoubleComparator;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseFloatComparator;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseIntegerComparator;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseTupleDescription;
-import org.apache.hadoop.hbase.HConstants;
-import org.apache.hadoop.hbase.filter.*;
-import org.apache.hadoop.hbase.util.Bytes;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -54,7 +62,7 @@ import static org.greenplum.pxf.api.io.DataType.TEXT;
  * This is an addition on top of regular filters and does not replace
  * any logic in HBase filter objects.
  */
-public class HBaseFilterBuilder implements FilterParser.FilterBuilder {
+public class HBaseFilterBuilder implements FilterBuilder {
     private Map<FilterParser.Operation, CompareFilter.CompareOp> operatorsMap;
     private Map<FilterParser.LogicalOperation, FilterList.Operator> logicalOperatorsMap;
     private byte[] startKey;
@@ -136,9 +144,9 @@ public class HBaseFilterBuilder implements FilterParser.FilterBuilder {
      * Two kinds of operations are handled:
      * <ol>
      * <li>Simple operation between {@code FilterParser.Constant} and {@code FilterParser.ColumnIndex}.
-     *    Supported operations are {@code <, >, <=, <=, >=, =, !=}. </li>
+     * Supported operations are {@code <, >, <=, <=, >=, =, !=}. </li>
      * <li>Compound operations between {@link Filter} objects.
-     *    The only supported operation is {@code AND}. </li>
+     * The only supported operation is {@code AND}. </li>
      * </ol>
      * <p>
      * This function is called by {@link FilterParser},
@@ -223,7 +231,7 @@ public class HBaseFilterBuilder implements FilterParser.FilterBuilder {
         ByteArrayComparable comparator = getComparator(hbaseColumn.columnTypeCode(),
                 constant.constant());
 
-        if(operatorsMap.get(opId) == null){
+        if (operatorsMap.get(opId) == null) {
             //HBase does not support HDOP_LIKE, use 'NOT NULL' comparator
             return new SingleColumnValueFilter(hbaseColumn.columnFamilyBytes(),
                     hbaseColumn.qualifierBytes(),
@@ -306,7 +314,7 @@ public class HBaseFilterBuilder implements FilterParser.FilterBuilder {
      * Currently, 1, 2 can occur, since no parenthesis are used.
      */
     private Filter handleCompoundOperations(FilterParser.LogicalOperation opId, Filter left, Filter right) {
-        return new FilterList(logicalOperatorsMap.get(opId), new Filter[] {left, right});
+        return new FilterList(logicalOperatorsMap.get(opId), new Filter[]{left, right});
     }
 
     /**

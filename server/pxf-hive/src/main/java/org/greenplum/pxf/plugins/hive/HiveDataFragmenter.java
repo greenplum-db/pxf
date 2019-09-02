@@ -104,7 +104,7 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
         client = hiveClientWrapper.initHiveClient(configuration);
         // canPushDownIntegral represents hive.metastore.integral.jdo.pushdown property in hive-site.xml
         filterBuilder.setColumnDescriptors(requestContext.getTupleDescription());
-        filterBuilder.setCanPushdownIntegral(configuration.getBoolean(HiveConf.ConfVars.METASTORE_INTEGER_JDO_PUSHDOWN.varname,
+        filterBuilder.setCanPushDownIntegral(configuration.getBoolean(HiveConf.ConfVars.METASTORE_INTEGER_JDO_PUSHDOWN.varname,
                 false));
     }
 
@@ -171,7 +171,7 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
 
             // Generate filter string for retrieve match pxf filter/hive partition name
             filterBuilder.setPartitionKeys(partitionKeyTypes);
-            filterStringForHive = filterBuilder.buildFilterStringForHive(context.getFilterString());
+            filterStringForHive = filterBuilder.buildFilterString(context.getFilterString());
         }
 
         if (StringUtils.isNotBlank(filterStringForHive)) {
