@@ -22,9 +22,9 @@ groups:
       - test_pxf_no_impersonation
       - test_pxf_hdp_multinode_gpdb
       - test_pxf_hdp_centos7_java11
+      - test_pxf_mapr_centos6
 {% if pipeline_type == "release" %}
       - test_pxf_hdp_centos6
-      - test_pxf_mapr_centos6
       - test_pxf_adl
       - test_pxf_gs
       - test_pxf_minio
@@ -49,9 +49,9 @@ groups:
 {% endif %}
       - test_pxf_hdp_multinode_gpdb
       - test_pxf_secure_multinode_gpdb
+      - test_pxf_mapr_centos6
 {% if pipeline_type == "release" %}
       - test_pxf_hdp_centos6
-      - test_pxf_mapr_centos6
 {% endif %}
 
   - name: cloud
@@ -224,13 +224,11 @@ resources:
     repository: pivotaldata/gpdb-pxf-dev
     tag: centos7-hdp-server
 
-{% if pipeline_type == "release" %}
 - name: gpdb-pxf-dev-centos6-mapr-image
   type: docker-image
   source:
     repository: pivotaldata/gpdb-pxf-dev
     tag: centos6-mapr-server
-{% endif %}
 
 {% if gpdb_type == "5X_STABLE" %}
 - name: gpdb-pxf-dev-ubuntu16-hdp-server
@@ -568,6 +566,7 @@ jobs:
 {% if acceptance %}
       ACCEPTANCE: true
 {% endif %}
+{% endif %}
 
 - name: test_pxf_mapr_centos6
   plan:
@@ -598,14 +597,13 @@ jobs:
     file: pxf_src/concourse/tasks/test_pxf.yml
     image: gpdb-pxf-dev-centos6-mapr-image
     params:
-      GROUP: hcfs
+      GROUP: gpdb,proxy,profile
       TEST_ENV: {{test-env}}
       HADOOP_CLIENT: MAPR
       TARGET_OS: centos
       TARGET_OS_VERSION: 6
 {% if acceptance %}
       ACCEPTANCE: true
-{% endif %}
 {% endif %}
 
 - name: test_pxf_hdp_centos7_java11
