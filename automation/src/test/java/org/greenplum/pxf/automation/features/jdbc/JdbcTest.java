@@ -381,57 +381,57 @@ public class JdbcTest extends BaseFeature {
         gpdb.createTableAndVerify(pxfJdbcNamedQuery);
     }
 
-    @Test(groups = {"features", "gpdb", "security"})
+    @Test(groups = {"features", "gpdb", "security", "jdbc"})
     public void singleFragmentTable() throws Exception {
         runTincTest("pxf.features.jdbc.single_fragment.runTest");
     }
 
-    @Test(groups = {"features", "gpdb", "security"})
+    @Test(groups = {"features", "gpdb", "security", "jdbc"})
     public void multipleFragmentsTables() throws Exception {
         runTincTest("pxf.features.jdbc.multiple_fragments.runTest");
     }
 
-    @Test(groups = {"features", "gpdb", "security"})
+    @Test(groups = {"features", "gpdb", "security", "jdbc"})
     public void readServerConfig() throws Exception {
         runTincTest("pxf.features.jdbc.server_config.runTest");
     }
 
-    @Test(groups = {"features", "gpdb", "security"})
+    @Test(groups = {"features", "gpdb", "security", "jdbc"})
     public void readViewSessionParams() throws Exception {
         runTincTest("pxf.features.jdbc.session_params.runTest");
     }
 
-    @Test(groups = {"features", "gpdb", "security"})
+    @Test(groups = {"features", "gpdb", "security", "jdbc"})
     public void jdbcWritableTable() throws Exception {
         runTincTest("pxf.features.jdbc.writable.runTest");
     }
 
-    @Test(groups = {"features", "gpdb", "security"})
+    @Test(groups = {"features", "gpdb", "security", "jdbc"})
     public void jdbcWritableTableNoBatch() throws Exception {
         runTincTest("pxf.features.jdbc.writable_nobatch.runTest");
     }
 
-    @Test(groups = {"features", "gpdb", "security"})
+    @Test(groups = {"features", "gpdb", "security", "jdbc"})
     public void jdbcWritableTablePool() throws Exception {
         runTincTest("pxf.features.jdbc.writable_pool.runTest");
     }
 
-    @Test(groups = {"features", "gpdb", "security"})
+    @Test(groups = {"features", "gpdb", "security", "jdbc"})
     public void jdbcColumns() throws Exception {
         runTincTest("pxf.features.jdbc.columns.runTest");
     }
 
-    @Test(groups = {"features", "gpdb", "security"})
+    @Test(groups = {"features", "gpdb", "security", "jdbc"})
     public void jdbcColumnProjection() throws Exception {
         runTincTest("pxf.features.jdbc.column_projection.runTest");
     }
 
-    @Test(groups = {"features", "gpdb", "security"})
+    @Test(groups = {"features", "gpdb", "security", "jdbc"})
     public void jdbcReadableTableNoBatch() throws Exception {
         runTincTest("pxf.features.jdbc.readable_nobatch.runTest");
     }
 
-    @Test(groups = {"features", "gpdb", "security"})
+    @Test(groups = {"features", "gpdb", "security", "jdbc"})
     public void jdbcNamedQuery() throws Exception {
         runTincTest("pxf.features.jdbc.named_query.runTest");
     }

@@ -599,7 +599,7 @@ jobs:
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
       SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
-      GROUP: gpdb,proxy,profile
+      GROUP: hcfs,jdbc
       TEST_ENV: {{test-env}}
       HADOOP_CLIENT: MAPR
       TARGET_OS: centos
