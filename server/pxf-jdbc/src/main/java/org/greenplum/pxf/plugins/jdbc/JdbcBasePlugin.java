@@ -20,6 +20,7 @@ package org.greenplum.pxf.plugins.jdbc;
  */
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.RequestContext;
@@ -235,7 +236,7 @@ public class JdbcBasePlugin extends BasePlugin {
         }
 
         // Optional parameter. The default value is empty map
-        sessionConfiguration.putAll(configuration.getPropsWithPrefix(JDBC_SESSION_PROPERTY_PREFIX));
+        sessionConfiguration.putAll(getPropsWithPrefix(configuration, JDBC_SESSION_PROPERTY_PREFIX));
         // Check forbidden symbols
         // Note: PreparedStatement enables us to skip this check: its values are distinct from its SQL code
         // However, SET queries cannot be executed this way. This is why we do this check
@@ -261,7 +262,7 @@ public class JdbcBasePlugin extends BasePlugin {
         }
 
         // Optional parameter. The default value is empty map
-        connectionConfiguration.putAll(configuration.getPropsWithPrefix(JDBC_CONNECTION_PROPERTY_PREFIX));
+        connectionConfiguration.putAll(getPropsWithPrefix(configuration, JDBC_CONNECTION_PROPERTY_PREFIX));
 
         // Optional parameter. The default value depends on the database
         String transactionIsolationString = configuration.get(JDBC_CONNECTION_TRANSACTION_ISOLATION, "NOT_PROVIDED");
@@ -314,7 +315,7 @@ public class JdbcBasePlugin extends BasePlugin {
             poolConfiguration.setProperty("idleTimeout", "30000");
             poolConfiguration.setProperty("minimumIdle", "0");
             // apply values read from the template
-            poolConfiguration.putAll(configuration.getPropsWithPrefix(JDBC_CONNECTION_POOL_PROPERTY_PREFIX));
+            poolConfiguration.putAll(getPropsWithPrefix(configuration, JDBC_CONNECTION_POOL_PROPERTY_PREFIX));
 
             // packaged Hive JDBC Driver does not support connection.isValid() method, so we need to force set
             // connectionTestQuery parameter in this case, unless already set by the user
@@ -527,5 +528,29 @@ public class JdbcBasePlugin extends BasePlugin {
         }
     }
 
+    /**
+     * Constructs a mapping of configuration and includes all properties that start with the specified
+     * configuration prefix.  Property names in the mapping are trimmed to remove the configuration prefix.
+     * This is a method from Hadoop's Configuration class ported here to make older and custom versions of Hadoop
+     * work with JDBC profile.
+     *
+     * @param configuration configuration map
+     * @param confPrefix configuration prefix
+     * @return mapping of configuration properties with prefix stripped
+     */
+    private Map<String, String> getPropsWithPrefix(Configuration configuration, String confPrefix) {
+        Map<String, String> configMap = new HashMap<>();
+        Iterator<Map.Entry<String, String>> it = configuration.iterator();
+        while (it.hasNext()) {
+            String propertyName = it.next().getKey();
+                if (propertyName.startsWith(confPrefix)) {
+                    // do not use value from the iterator as it might not come with variable substitution
+                    String value = configuration.get(propertyName);
+                    String keyName = propertyName.substring(confPrefix.length());
+                    configMap.put(keyName, value);
+                }
+        }
+        return configMap;
+    }
 
 }
