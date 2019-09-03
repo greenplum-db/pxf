@@ -64,7 +64,7 @@ function configure_mapr_dependencies() {
 	HADOOP_COMMON=/opt/mapr/hadoop/hadoop-2.7.0/share/hadoop/common
 	cp ${HADOOP_COMMON}/lib/maprfs-5.2.2-mapr.jar ${PXF_CONF_DIR}/lib/
 	cp ${HADOOP_COMMON}/lib/hadoop-auth-2.7.0-mapr-1707.jar ${PXF_CONF_DIR}/lib/
-	cp ${HADOOP_COMMON}/hadoop-common-2.7.0-mapr-1707.jar ${PXF_CONF_DIR}/lib/
+	#cp ${HADOOP_COMMON}/hadoop-common-2.7.0-mapr-1707.jar ${PXF_CONF_DIR}/lib/
 	# Copy *-site.xml files
 	cp /opt/mapr/hadoop/hadoop-2.7.0/etc/hadoop/*-site.xml ${PXF_CONF_DIR}/servers/default/
 	# Copy mapred-site.xml for recursive hdfs directories test
