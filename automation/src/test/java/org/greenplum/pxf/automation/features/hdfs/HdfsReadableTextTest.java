@@ -304,9 +304,10 @@ public class HdfsReadableTextTest extends BaseFeature {
         // define and create external table
         exTable.setProfile(ProtocolUtils.getProtocol().value() + ":text");
         exTable.setDelimiter(",");
+        exTable.setPath(exTable.getPath() + "_empty");
         gpdb.createTableAndVerify(exTable);
         // write empty data to HDFS
-        hdfs.writeTableToFile(hdfsFilePath, new Table("emptyTable", null), ",");
+        hdfs.writeTableToFile(hdfsFilePath + "_empty", new Table("emptyTable", null), ",");
         // verify results
         runTincTest("pxf.features.hdfs.readable.text.empty_file.runTest");
     }
