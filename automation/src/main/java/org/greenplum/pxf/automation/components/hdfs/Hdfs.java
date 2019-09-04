@@ -398,7 +398,6 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
         FSDataOutputStream out = fs.create(getDatapath(pathToFile), true,
                 bufferSize, replicationSize, blockSize);
         writeTableToStream(out, dataTable, delimiter, encoding);
-        out.hflush(); // flush hdfs blocks from client buffer to datanodes
         ReportUtils.stopLevel(report);
     }
 
