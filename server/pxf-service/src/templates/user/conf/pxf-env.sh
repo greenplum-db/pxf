@@ -39,3 +39,6 @@ PXF_CONF="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
 
 # Dump heap on OutOfMemoryError, set to dump path to enable
 # export PXF_OOM_DUMP_PATH=/tmp/pxf_heap_dump
+
+# Login user for hadoop, defaults to the OS user that started PXF process
+# export HADOOP_USER_NAME=$(whoami)

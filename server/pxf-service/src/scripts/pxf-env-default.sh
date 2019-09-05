@@ -73,3 +73,6 @@ export PXF_OOM_KILL=${PXF_OOM_KILL:-true}
 
 # Dump heap on OutOfMemoryError, set to dump path to enable
 # export PXF_OOM_DUMP_PATH=
+
+# Login user for hadoop, defaults to the OS user that started PXF process
+export HADOOP_USER_NAME=${HADOOP_USER_NAME:-$(whoami)}
