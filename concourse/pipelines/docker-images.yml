@@ -23,6 +23,7 @@ groups:
   - docker-gpdb-pxf-dev-centos7-mapr-server
   - docker-gpdb-pxf-dev-centos7-cdh-server
   - docker-gpdb-pxf-dev-centos7-hdp2-server
+  - docker-gpdb-pxf-dev-centos7-hdp3-server
   - docker-gpdb-pxf-dev-ubuntu16-cdh-server
   - docker-gpdb-pxf-dev-ubuntu18-cdh-server
   - docker-gpdb-pxf-dev-ubuntu16-hdp2-server
