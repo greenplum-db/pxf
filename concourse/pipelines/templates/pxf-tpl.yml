@@ -1351,7 +1351,6 @@ jobs:
 {% else %}
     - test_pxf_hdp_ubuntu18
 {% endif %}
-    - test_pxf_mapr_centos6
     - test_pxf_adl
     - test_pxf_gs
     - test_pxf_minio
