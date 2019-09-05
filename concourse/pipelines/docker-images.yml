@@ -328,6 +328,14 @@ resources:
       username: {{docker-username}}
       password: {{docker-password}}
 
+  - name: gpdb-pxf-dev-centos7-hdp3-server-image
+    type: docker-image
+    source:
+      repository: pivotaldata/gpdb-pxf-dev
+      tag: centos7-hdp3-server
+      username: {{docker-username}}
+      password: {{docker-password}}
+
   - name: gpdb-pxf-dev-ubuntu16-cdh-server-image
     type: docker-image
     source:
