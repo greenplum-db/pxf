@@ -10,25 +10,25 @@ groups:
 {% endif %}
       - test_pxf_cdh_centos6
 {% if gpdb_type == "5X_STABLE" %}
-      - test_pxf_hdp_ubuntu16
+      - test_pxf_hdp2_ubuntu16
 {% else %}
-      - test_pxf_hdp_ubuntu18
+      - test_pxf_hdp2_ubuntu18
 {% endif %}
-      - test_pxf_hdp_multinode_gpdb
+      - test_pxf_hdp2_multinode_gpdb
       - test_pxf_secure_multinode_gpdb
       - test_pxf_s3_no_impersonation
       - test_pxf_s3_with_impersonation
-      - test_pxf_hdp_secure_with_impersonation
+      - test_pxf_hdp2_secure_with_impersonation
       - test_pxf_no_impersonation
-      - test_pxf_hdp_multinode_gpdb
-      - test_pxf_hdp_centos7_java11
+      - test_pxf_hdp2_multinode_gpdb
+      - test_pxf_hdp2_centos7_java11
       - test_pxf_mapr_centos6
 {% if pipeline_type == "release" %}
-      - test_pxf_hdp_centos6
+      - test_pxf_hdp2_centos6
       - test_pxf_adl
       - test_pxf_gs
       - test_pxf_minio
-      - test_pxf_hdp_secure_no_impersonation
+      - test_pxf_hdp2_secure_no_impersonation
       - build_release_candidate_centos
 {% elif pipeline_type == "pxf" and not acceptance %}
       - promote_pxf_artifact
@@ -41,17 +41,17 @@ groups:
       - compile_gpdb_centos6
 {% endif %}
       - test_pxf_cdh_centos6
-      - test_pxf_hdp_centos7_java11
+      - test_pxf_hdp2_centos7_java11
 {% if gpdb_type == "5X_STABLE" %}
-      - test_pxf_hdp_ubuntu16
+      - test_pxf_hdp2_ubuntu16
 {% else %}
-      - test_pxf_hdp_ubuntu18
+      - test_pxf_hdp2_ubuntu18
 {% endif %}
-      - test_pxf_hdp_multinode_gpdb
+      - test_pxf_hdp2_multinode_gpdb
       - test_pxf_secure_multinode_gpdb
       - test_pxf_mapr_centos6
 {% if pipeline_type == "release" %}
-      - test_pxf_hdp_centos6
+      - test_pxf_hdp2_centos6
 {% endif %}
 
   - name: cloud
@@ -74,9 +74,9 @@ groups:
 {% if compile_gpdb %}
       - compile_gpdb_centos6
 {% endif %}
-      - test_pxf_hdp_secure_with_impersonation
+      - test_pxf_hdp2_secure_with_impersonation
 {% if pipeline_type == "release" %}
-      - test_pxf_hdp_secure_no_impersonation
+      - test_pxf_hdp2_secure_no_impersonation
 {% endif %}
 
   - name: no_impersonation
@@ -91,7 +91,7 @@ groups:
       - test_pxf_adl
       - test_pxf_gs
       - test_pxf_minio
-      - test_pxf_hdp_secure_no_impersonation
+      - test_pxf_hdp2_secure_no_impersonation
 {% endif %}
 
 ## ======================================================================
@@ -212,17 +212,17 @@ resources:
     repository: pivotaldata/gpdb-pxf-dev
     tag: centos6-cdh-server
 
-- name: gpdb-pxf-dev-centos6-hdp-server
+- name: gpdb-pxf-dev-centos6-hdp2-server
   type: docker-image
   source:
     repository: pivotaldata/gpdb-pxf-dev
-    tag: centos6-hdp-server
+    tag: centos6-hdp2-server
 
-- name: gpdb-pxf-dev-centos7-hdp-server
+- name: gpdb-pxf-dev-centos7-hdp2-server
   type: docker-image
   source:
     repository: pivotaldata/gpdb-pxf-dev
-    tag: centos7-hdp-server
+    tag: centos7-hdp2-server
 
 - name: gpdb-pxf-dev-centos6-mapr-image
   type: docker-image
@@ -231,24 +231,24 @@ resources:
     tag: centos6-mapr-server
 
 {% if gpdb_type == "5X_STABLE" %}
-- name: gpdb-pxf-dev-ubuntu16-hdp-server
+- name: gpdb-pxf-dev-ubuntu16-hdp2-server
   type: docker-image
   source:
     repository: pivotaldata/gpdb-pxf-dev
-    tag: ubuntu16-hdp-server
+    tag: ubuntu16-hdp2-server
 {% else %}
-- name: gpdb-pxf-dev-ubuntu18-hdp-server
+- name: gpdb-pxf-dev-ubuntu18-hdp2-server
   type: docker-image
   source:
     repository: pivotaldata/gpdb-pxf-dev
-    tag: ubuntu18-hdp-server
+    tag: ubuntu18-hdp2-server
 {% endif %}
 
-- name: gpdb-pxf-dev-centos6-hdp-secure
+- name: gpdb-pxf-dev-centos6-hdp2-secure
   type: docker-image
   source:
     repository: pivotaldata/gpdb-pxf-dev
-    tag: centos6-hdp-secure
+    tag: centos6-hdp2-secure
 
 - name: ccp-7
   type: docker-image
@@ -528,7 +528,7 @@ jobs:
       file: pxf_artifacts/pxf.tar.gz
 
 {% if pipeline_type == "release" %}
-- name: test_pxf_hdp_centos6
+- name: test_pxf_hdp2_centos6
   plan:
   - aggregate:
     - get: gpdb_src
@@ -551,10 +551,10 @@ jobs:
       passed:
       - compile_pxf
       trigger: true
-    - get: gpdb-pxf-dev-centos6-hdp-server
+    - get: gpdb-pxf-dev-centos6-hdp2-server
   - task: test_pxf
     file: pxf_src/concourse/tasks/test_pxf.yml
-    image: gpdb-pxf-dev-centos6-hdp-server
+    image: gpdb-pxf-dev-centos6-hdp2-server
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
       SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
@@ -606,7 +606,7 @@ jobs:
       ACCEPTANCE: true
 {% endif %}
 
-- name: test_pxf_hdp_centos7_java11
+- name: test_pxf_hdp2_centos7_java11
   plan:
   - aggregate:
     - get: gpdb_src
@@ -633,10 +633,10 @@ jobs:
       passed:
       - compile_pxf
       trigger: true
-    - get: gpdb-pxf-dev-centos7-hdp-server
+    - get: gpdb-pxf-dev-centos7-hdp2-server
   - task: test_pxf
     file: pxf_src/concourse/tasks/test_pxf.yml
-    image: gpdb-pxf-dev-centos7-hdp-server
+    image: gpdb-pxf-dev-centos7-hdp2-server
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
       SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
@@ -651,7 +651,7 @@ jobs:
 {% endif %}
 
 {% if gpdb_type == "5X_STABLE" %}
-- name: test_pxf_hdp_ubuntu16
+- name: test_pxf_hdp2_ubuntu16
   plan:
   - aggregate:
     - get: gpdb_src
@@ -667,10 +667,10 @@ jobs:
       passed:
       - compile_pxf
       trigger: true
-    - get: gpdb-pxf-dev-ubuntu16-hdp-server
+    - get: gpdb-pxf-dev-ubuntu16-hdp2-server
   - task: test_pxf
     file: pxf_src/concourse/tasks/test_pxf.yml
-    image: gpdb-pxf-dev-ubuntu16-hdp-server
+    image: gpdb-pxf-dev-ubuntu16-hdp2-server
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
       SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
@@ -684,7 +684,7 @@ jobs:
       ACCEPTANCE: true
 {% endif %}
 {% else %}
-- name: test_pxf_hdp_ubuntu18
+- name: test_pxf_hdp2_ubuntu18
   plan:
   - aggregate:
     - get: gpdb_src
@@ -700,10 +700,10 @@ jobs:
       passed:
       - compile_pxf
       trigger: true
-    - get: gpdb-pxf-dev-ubuntu18-hdp-server
+    - get: gpdb-pxf-dev-ubuntu18-hdp2-server
   - task: test_pxf
     file: pxf_src/concourse/tasks/test_pxf.yml
-    image: gpdb-pxf-dev-ubuntu18-hdp-server
+    image: gpdb-pxf-dev-ubuntu18-hdp2-server
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
       SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
@@ -718,7 +718,7 @@ jobs:
 {% endif %}
 {% endif %}
 
-- name: test_pxf_hdp_secure_with_impersonation
+- name: test_pxf_hdp2_secure_with_impersonation
   plan:
   - aggregate:
     - get: gpdb_src
@@ -741,10 +741,10 @@ jobs:
       passed:
       - compile_pxf
       trigger: true
-    - get: gpdb-pxf-dev-centos6-hdp-secure
+    - get: gpdb-pxf-dev-centos6-hdp2-secure
   - task: test_pxf_secure
     file: pxf_src/concourse/tasks/test_pxf_secure.yml
-    image: gpdb-pxf-dev-centos6-hdp-secure
+    image: gpdb-pxf-dev-centos6-hdp2-secure
     privileged: true
     attempts: 2
     params:
@@ -760,7 +760,7 @@ jobs:
 {% endif %}
 
 {% if pipeline_type == "release" %}
-- name: test_pxf_hdp_secure_no_impersonation
+- name: test_pxf_hdp2_secure_no_impersonation
   plan:
   - aggregate:
     - get: gpdb_src
@@ -783,10 +783,10 @@ jobs:
       passed:
       - compile_pxf
       trigger: true
-    - get: gpdb-pxf-dev-centos6-hdp-secure
+    - get: gpdb-pxf-dev-centos6-hdp2-secure
   - task: test_pxf_secure
     file: pxf_src/concourse/tasks/test_pxf_secure.yml
-    image: gpdb-pxf-dev-centos6-hdp-secure
+    image: gpdb-pxf-dev-centos6-hdp2-secure
     privileged: true
     attempts: 2
     params:
@@ -802,7 +802,7 @@ jobs:
 {% endif %}
 {% endif %}
 
-- name: test_pxf_hdp_multinode_gpdb
+- name: test_pxf_hdp2_multinode_gpdb
   max_in_flight: 2
   plan:
   - get: ccp_src
@@ -827,7 +827,7 @@ jobs:
     - compile_pxf
     trigger: true
   - get: ccp-7
-  - get: gpdb-pxf-dev-centos6-hdp-server
+  - get: gpdb-pxf-dev-centos6-hdp2-server
   - put: terraform_gpdb
     resource: terraform
     params:
@@ -860,7 +860,7 @@ jobs:
       file: ccp_src/ci/tasks/gpinitsystem.yml
     - task: install_hadoop
       file: pxf_src/concourse/tasks/install_hadoop.yml
-      image: gpdb-pxf-dev-centos6-hdp-server
+      image: gpdb-pxf-dev-centos6-hdp2-server
       params:
         ACCESS_KEY_ID: {{tf-machine-access-key-id}}
         SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
@@ -890,7 +890,7 @@ jobs:
       bin_gpdb: gpdb_binary
     on_success:
       <<: *ccp_destroy
-    image: gpdb-pxf-dev-centos6-hdp-server
+    image: gpdb-pxf-dev-centos6-hdp2-server
     file: pxf_src/concourse/tasks/test_pxf_multinode.yml
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
@@ -929,7 +929,7 @@ jobs:
       - compile_pxf
       trigger: true
     - get: ccp-7
-    - get: gpdb-pxf-dev-centos6-hdp-server
+    - get: gpdb-pxf-dev-centos6-hdp2-server
   - aggregate:
     - do:
       - put: terraform_gpdb
@@ -997,7 +997,7 @@ jobs:
       <<: *dataproc_destroy
     on_failure:
       <<: *dataproc_timed_destroy
-    image: gpdb-pxf-dev-centos6-hdp-server
+    image: gpdb-pxf-dev-centos6-hdp2-server
     file: pxf_src/concourse/tasks/test_pxf_multinode.yml
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
@@ -1114,10 +1114,10 @@ jobs:
       passed:
       - compile_pxf
       trigger: true
-    - get: gpdb-pxf-dev-centos6-hdp-server
+    - get: gpdb-pxf-dev-centos6-hdp2-server
   - task: test_pxf
     file: pxf_src/concourse/tasks/test_pxf.yml
-    image: gpdb-pxf-dev-centos6-hdp-server
+    image: gpdb-pxf-dev-centos6-hdp2-server
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
       SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
@@ -1155,10 +1155,10 @@ jobs:
       passed:
       - compile_pxf
       trigger: true
-    - get: gpdb-pxf-dev-centos6-hdp-server
+    - get: gpdb-pxf-dev-centos6-hdp2-server
   - task: test_pxf
     file: pxf_src/concourse/tasks/test_pxf.yml
-    image: gpdb-pxf-dev-centos6-hdp-server
+    image: gpdb-pxf-dev-centos6-hdp2-server
     params:
       GROUP: hcfs
       IMPERSONATION: false
@@ -1275,10 +1275,10 @@ jobs:
       passed:
       - compile_pxf
       trigger: true
-    - get: gpdb-pxf-dev-centos6-hdp-server
+    - get: gpdb-pxf-dev-centos6-hdp2-server
   - task: test_pxf
     file: pxf_src/concourse/tasks/test_pxf.yml
-    image: gpdb-pxf-dev-centos6-hdp-server
+    image: gpdb-pxf-dev-centos6-hdp2-server
     params:
       IMPERSONATION: false
       TEST_ENV: {{test-env}}
@@ -1296,17 +1296,17 @@ jobs:
     passed:
     - test_pxf_cdh_centos6
     - test_pxf_mapr_centos6
-    - test_pxf_hdp_centos7_java11
+    - test_pxf_hdp2_centos7_java11
 {% if gpdb_type == "5X_STABLE" %}
-    - test_pxf_hdp_ubuntu16
+    - test_pxf_hdp2_ubuntu16
 {% else %}
-    - test_pxf_hdp_ubuntu18
+    - test_pxf_hdp2_ubuntu18
 {% endif %}
     - test_pxf_s3_no_impersonation
     - test_pxf_s3_with_impersonation
-    - test_pxf_hdp_secure_with_impersonation
+    - test_pxf_hdp2_secure_with_impersonation
     - test_pxf_no_impersonation
-    - test_pxf_hdp_multinode_gpdb
+    - test_pxf_hdp2_multinode_gpdb
     - test_pxf_secure_multinode_gpdb
     trigger: true
   - put: pxf_tarball_stable
@@ -1319,47 +1319,47 @@ jobs:
   - get: gpdb-pxf-dev-centos6
   - get: pxf_tarball
     passed:
-    - test_pxf_hdp_centos6
-    - test_pxf_hdp_centos7_java11
+    - test_pxf_hdp2_centos6
+    - test_pxf_hdp2_centos7_java11
     - test_pxf_cdh_centos6
     - test_pxf_mapr_centos6
 {% if gpdb_type == "5X_STABLE" %}
-    - test_pxf_hdp_ubuntu16
+    - test_pxf_hdp2_ubuntu16
 {% else %}
-    - test_pxf_hdp_ubuntu18
+    - test_pxf_hdp2_ubuntu18
 {% endif %}
     - test_pxf_adl
     - test_pxf_gs
     - test_pxf_minio
     - test_pxf_s3_no_impersonation
     - test_pxf_s3_with_impersonation
-    - test_pxf_hdp_secure_with_impersonation
-    - test_pxf_hdp_secure_no_impersonation
+    - test_pxf_hdp2_secure_with_impersonation
+    - test_pxf_hdp2_secure_no_impersonation
     - test_pxf_no_impersonation
-    - test_pxf_hdp_multinode_gpdb
+    - test_pxf_hdp2_multinode_gpdb
     - test_pxf_secure_multinode_gpdb
     trigger: true
   - get: gpdb_release
   - get: pxf_src
     passed:
-    - test_pxf_hdp_centos6
-    - test_pxf_hdp_centos7_java11
+    - test_pxf_hdp2_centos6
+    - test_pxf_hdp2_centos7_java11
     - test_pxf_cdh_centos6
     - test_pxf_mapr_centos6
 {% if gpdb_type == "5X_STABLE" %}
-    - test_pxf_hdp_ubuntu16
+    - test_pxf_hdp2_ubuntu16
 {% else %}
-    - test_pxf_hdp_ubuntu18
+    - test_pxf_hdp2_ubuntu18
 {% endif %}
     - test_pxf_adl
     - test_pxf_gs
     - test_pxf_minio
     - test_pxf_s3_no_impersonation
     - test_pxf_s3_with_impersonation
-    - test_pxf_hdp_secure_with_impersonation
-    - test_pxf_hdp_secure_no_impersonation
+    - test_pxf_hdp2_secure_with_impersonation
+    - test_pxf_hdp2_secure_no_impersonation
     - test_pxf_no_impersonation
-    - test_pxf_hdp_multinode_gpdb
+    - test_pxf_hdp2_multinode_gpdb
     - test_pxf_secure_multinode_gpdb
   - task: package_pxf_rc
     config:

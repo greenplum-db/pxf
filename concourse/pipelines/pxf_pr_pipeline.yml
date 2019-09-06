@@ -26,11 +26,11 @@ resources:
     repository: pivotaldata/gpdb-pxf-dev
     tag: centos6
 
-- name: gpdb-pxf-dev-centos6-hdp-server
+- name: gpdb-pxf-dev-centos6-hdp2-server
   type: docker-image
   source:
     repository: pivotaldata/gpdb-pxf-dev
-    tag: centos6-hdp-server
+    tag: centos6-hdp2-server
 
 jobs:
 
@@ -91,9 +91,9 @@ jobs:
     - get: gpdb_src
       passed:
       - compile_pxf
-    - get: gpdb-pxf-dev-centos6-hdp-server
+    - get: gpdb-pxf-dev-centos6-hdp2-server
   - task: test_pxf
-    image: gpdb-pxf-dev-centos6-hdp-server
+    image: gpdb-pxf-dev-centos6-hdp2-server
     config:
       platform: linux
       inputs:

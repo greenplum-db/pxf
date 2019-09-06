@@ -114,11 +114,11 @@ resources:
     repository: pivotaldata/ccp
     tag: 7
 
-- name: gpdb-pxf-dev-centos6-hdp-server
+- name: gpdb-pxf-dev-centos6-hdp2-server
   type: docker-image
   source:
     repository: pivotaldata/gpdb-pxf-dev
-    tag: centos6-hdp-server
+    tag: centos6-hdp2-server
 
 - name: bin_gpdb_centos6
   type: s3
@@ -200,7 +200,7 @@ jobs:
     - compile_pxf
     trigger: true
   - get: ccp-7
-  - get: gpdb-pxf-dev-centos6-hdp-server
+  - get: gpdb-pxf-dev-centos6-hdp2-server
 
   - aggregate:
     - task: clean_up_s3
@@ -321,7 +321,7 @@ jobs:
   - task: run-perf-multinode
     input_mapping:
       bin_gpdb: gpdb_binary
-    image: gpdb-pxf-dev-centos6-hdp-server
+    image: gpdb-pxf-dev-centos6-hdp2-server
     file: pxf_src/concourse/tasks/pxf-perf-multi-node.yml
     params:
       SCALE: {{perf-scale}}
