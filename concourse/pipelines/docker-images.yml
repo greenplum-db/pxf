@@ -610,8 +610,8 @@ jobs:
   - name: singlecluster_noarch_hdp2
     plan:
     - aggregate:
-      - get: hdp2_tars_tarball
-        resource: hdp_tars_tarball
+      - get: hdp_tars_tarball
+        resource: hdp2_tars_tarball
         trigger: true
       - get: jdbc
       - get: tomcat
@@ -630,8 +630,8 @@ jobs:
   - name: singlecluster_noarch_hdp3
     plan:
     - aggregate:
-      - get: hdp3_tars_tarball
-        resource: hdp_tars_tarball
+      - get: hdp_tars_tarball
+        resource: hdp3_tars_tarball
         trigger: true
       - get: jdbc
       - get: tomcat
