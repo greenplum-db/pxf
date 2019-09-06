@@ -67,7 +67,6 @@ groups:
 ## ======================================================================
 resources:
   - name: hdp2_tars_tarball
-    resource: hdp_tars_tarball
     type: s3
     source:
       access_key_id: {{bucket-access-key-id}}
@@ -77,7 +76,6 @@ resources:
       versioned_file: hortonworks/HDP-2.5.3.0-centos6-tars-tarball.tar.gz
 
   - name: hdp3_tars_tarball
-    resource: hdp_tars_tarball
     type: s3
     source:
       access_key_id: {{bucket-access-key-id}}
@@ -613,6 +611,7 @@ jobs:
     plan:
     - aggregate:
       - get: hdp2_tars_tarball
+        resource: hdp_tars_tarball
         trigger: true
       - get: jdbc
       - get: tomcat
@@ -632,6 +631,7 @@ jobs:
     plan:
     - aggregate:
       - get: hdp3_tars_tarball
+        resource: hdp_tars_tarball
         trigger: true
       - get: jdbc
       - get: tomcat
