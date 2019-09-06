@@ -1,0 +1,17 @@
+---
+platform: linux
+
+inputs:
+  - name: pxf_src
+  - name: hdp_tars_tarball
+  - name: tomcat
+  - name: jdbc
+
+outputs:
+  - name: artifacts
+
+run:
+  path: pxf_src/singlecluster/singlecluster.bash
+  args:
+    - "3.1.4.0"
+    - "HDP"

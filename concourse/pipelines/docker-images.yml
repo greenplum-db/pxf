@@ -67,6 +67,7 @@ groups:
 ## ======================================================================
 resources:
   - name: hdp2_tars_tarball
+    resource: hdp_tars_tarball
     type: s3
     source:
       access_key_id: {{bucket-access-key-id}}
@@ -76,6 +77,7 @@ resources:
       versioned_file: hortonworks/HDP-2.5.3.0-centos6-tars-tarball.tar.gz
 
   - name: hdp3_tars_tarball
+    resource: hdp_tars_tarball
     type: s3
     source:
       access_key_id: {{bucket-access-key-id}}
@@ -620,7 +622,7 @@ jobs:
         resource: pxf_singlecluster
         trigger: true
     - task: package_singlecluster
-      file: pxf_src/singlecluster/package_singlecluster_hdp.yml
+      file: pxf_src/singlecluster/package_singlecluster_hdp2.yml
       image: gpdb-dev-centos6-image
     - put: singlecluster-HDP2
       params:
@@ -639,7 +641,7 @@ jobs:
         resource: pxf_singlecluster
         trigger: true
     - task: package_singlecluster
-      file: pxf_src/singlecluster/package_singlecluster_hdp.yml
+      file: pxf_src/singlecluster/package_singlecluster_hdp3.yml
       image: gpdb-dev-centos7-image
     - put: singlecluster-HDP3
       params:
