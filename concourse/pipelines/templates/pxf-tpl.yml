@@ -23,6 +23,7 @@ groups:
       - test_pxf_hdp2_multinode_gpdb
       - test_pxf_hdp2_centos7_java11
       - test_pxf_mapr_centos6
+      - test_pxf_hdp3_centos7
 {% if pipeline_type == "release" %}
       - test_pxf_hdp2_centos6
       - test_pxf_adl
@@ -50,6 +51,7 @@ groups:
       - test_pxf_hdp2_multinode_gpdb
       - test_pxf_secure_multinode_gpdb
       - test_pxf_mapr_centos6
+      - test_pxf_hdp3_centos7
 {% if pipeline_type == "release" %}
       - test_pxf_hdp2_centos6
 {% endif %}
@@ -232,6 +234,12 @@ resources:
   source:
     repository: pivotaldata/gpdb-pxf-dev
     tag: centos7-hdp2-server
+
+- name: gpdb-pxf-dev-centos7-hdp3-server
+  type: docker-image
+  source:
+    repository: pivotaldata/gpdb-pxf-dev
+    tag: centos7-hdp3-server
 
 - name: gpdb-pxf-dev-centos6-mapr-image
   type: docker-image
@@ -611,6 +619,49 @@ jobs:
       HADOOP_CLIENT: MAPR
       TARGET_OS: centos
       TARGET_OS_VERSION: 6
+{% if acceptance %}
+      ACCEPTANCE: true
+{% endif %}
+
+- name: test_pxf_hdp3_centos7
+  plan:
+  - aggregate:
+    - get: gpdb_src
+      passed:
+      - compile_pxf
+{% if compile_gpdb %}
+      - compile_gpdb_centos6
+{% endif %}
+    - get: bin_gpdb
+{% if pipeline_type == "release" %}
+      resource: bin_gpdb_centos7
+{% else %}
+      resource: bin_gpdb_centos6
+{% endif %}
+{% if compile_gpdb %}
+      passed:
+        - compile_gpdb_centos6
+{% endif %}
+    - get: pxf_src
+      passed:
+      - compile_pxf
+      trigger: true
+    - get: pxf_tarball
+      passed:
+      - compile_pxf
+      trigger: true
+    - get: gpdb-pxf-dev-centos7-hdp3-server
+  - task: test_pxf
+    file: pxf_src/concourse/tasks/test_pxf.yml
+    image: gpdb-pxf-dev-centos7-hdp3-server
+    params:
+      ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+      SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+      GROUP: gpdb,proxy,profile
+      TEST_ENV: {{test-env}}
+      HADOOP_CLIENT: HDP
+      TARGET_OS: centos
+      TARGET_OS_VERSION: 7
 {% if acceptance %}
       ACCEPTANCE: true
 {% endif %}
@@ -1304,6 +1355,7 @@ jobs:
     passed:
     - test_pxf_cdh_centos6
     - test_pxf_mapr_centos6
+    - test_pxf_hdp3_centos7
     - test_pxf_hdp2_centos7_java11
 {% if gpdb_type == "5X_STABLE" %}
     - test_pxf_hdp2_ubuntu16
@@ -1331,6 +1383,7 @@ jobs:
     - test_pxf_hdp2_centos7_java11
     - test_pxf_cdh_centos6
     - test_pxf_mapr_centos6
+    - test_pxf_hdp3_centos7
 {% if gpdb_type == "5X_STABLE" %}
     - test_pxf_hdp2_ubuntu16
 {% else %}
@@ -1354,6 +1407,7 @@ jobs:
     - test_pxf_hdp2_centos7_java11
     - test_pxf_cdh_centos6
     - test_pxf_mapr_centos6
+    - test_pxf_hdp3_centos7
 {% if gpdb_type == "5X_STABLE" %}
     - test_pxf_hdp2_ubuntu16
 {% else %}
