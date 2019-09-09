@@ -20,7 +20,7 @@
 default: all
 
 BUILD_PARAMS+= -DdeployPath="$(PXF_HOME)"
-TOMCAT_VERSION="7.0.62"
+TOMCAT_VERSION="7.0.96"
 TOMCAT_DIR="tomcat/build"
 TOMCAT_TAR="apache-tomcat-${TOMCAT_VERSION}.tar.gz"
 TOMCAT_URL="http://archive.apache.org/dist/tomcat/tomcat-7/v${TOMCAT_VERSION}/bin/${TOMCAT_TAR}"

@@ -109,7 +109,7 @@ resources:
       secret_access_key: {{bucket-secret-access-key}}
       bucket: {{pxf-aws-bucket-name}}
       region_name: {{aws-region}}
-      versioned_file: tomcat/apache-tomcat-7.0.62.tar.gz
+      versioned_file: tomcat/apache-tomcat-7.0.96.tar.gz
 
   - name: singlecluster-HDP2
     type: s3
