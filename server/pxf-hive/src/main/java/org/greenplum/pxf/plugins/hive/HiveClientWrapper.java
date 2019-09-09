@@ -1,9 +1,14 @@
-package org.greenplum.pxf.plugins.hive.utilities;
+package org.greenplum.pxf.plugins.hive;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.metastore.*;
+import org.apache.hadoop.hive.metastore.HiveMetaHookLoader;
+import org.apache.hadoop.hive.metastore.HiveMetaStoreClientCompatibility1xx;
+import org.apache.hadoop.hive.metastore.IMetaStoreClient;
+import org.apache.hadoop.hive.metastore.MetaStoreUtils;
+import org.apache.hadoop.hive.metastore.RetryingMetaStoreClient;
+import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
@@ -13,10 +18,8 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.thrift.TException;
 import org.greenplum.pxf.api.UnsupportedTypeException;
 import org.greenplum.pxf.api.model.Metadata;
-import org.greenplum.pxf.plugins.hive.HiveDataFragmenter;
-import org.greenplum.pxf.plugins.hive.HiveInputFormatFragmenter;
-import org.greenplum.pxf.plugins.hive.HiveTablePartition;
-import org.greenplum.pxf.plugins.hive.HiveUserData;
+import org.greenplum.pxf.plugins.hive.utilities.EnumHiveToGpdbType;
+import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,11 +36,11 @@ import java.util.Properties;
 
 import static org.greenplum.pxf.api.model.ConfigurationFactory.PXF_CONFIG_RESOURCE_PATH_PROPERTY;
 
-public class HiveClientHelper {
+public class HiveClientWrapper {
 
-    private static final HiveClientHelper instance = new HiveClientHelper();
+    private static final HiveClientWrapper instance = new HiveClientWrapper();
 
-    private static final Logger LOG = LoggerFactory.getLogger(HiveUtilities.class);
+    private static final Logger LOG = LoggerFactory.getLogger(HiveClientWrapper.class);
 
     private static final String WILDCARD = "*";
     private static final int DEFAULT_DELIMITER_CODE = 44;
@@ -45,9 +48,14 @@ public class HiveClientHelper {
     private static final String STR_RC_FILE_INPUT_FORMAT = "org.apache.hadoop.hive.ql.io.RCFileInputFormat";
     private static final String STR_TEXT_FILE_INPUT_FORMAT = "org.apache.hadoop.mapred.TextInputFormat";
     private static final String STR_ORC_FILE_INPUT_FORMAT = "org.apache.hadoop.hive.ql.io.orc.OrcInputFormat";
+    private final HiveClientFactory hiveClientFactory;
 
-    HiveClientHelper() {
+    private HiveClientWrapper() {
+        this(HiveClientFactory.getInstance());
+    }
 
+    HiveClientWrapper(HiveClientFactory hiveClientFactory) {
+        this.hiveClientFactory = hiveClientFactory;
     }
 
     /**
@@ -55,7 +63,7 @@ public class HiveClientHelper {
      *
      * @return the static instance for this factory
      */
-    public static HiveClientHelper getInstance() {
+    public static HiveClientWrapper getInstance() {
         return instance;
     }
 
@@ -72,14 +80,9 @@ public class HiveClientHelper {
                 LOG.debug("initialize HiveMetaStoreClient as login user '{}'", UserGroupInformation.getLoginUser().getUserName());
                 // wrap in doAs for Kerberos to propagate kerberos tokens from login Subject
                 return UserGroupInformation.getLoginUser().
-                        doAs((PrivilegedExceptionAction<IMetaStoreClient>) () ->
-                                RetryingMetaStoreClient.getProxy(hiveConf, new Class[]{HiveConf.class, HiveMetaHookLoader.class, Boolean.class},
-                                        new Object[]{hiveConf, null, true}, null, HiveMetaStoreClientCompatibility1xx.class.getName()
-                                ));
+                        doAs((PrivilegedExceptionAction<IMetaStoreClient>) () -> hiveClientFactory.initHiveClient(hiveConf));
             } else {
-                return RetryingMetaStoreClient.getProxy(hiveConf, new Class[]{HiveConf.class, HiveMetaHookLoader.class, Boolean.class},
-                        new Object[]{hiveConf, null, true}, null, HiveMetaStoreClientCompatibility1xx.class.getName()
-                );
+                return hiveClientFactory.initHiveClient(hiveConf);
             }
         } catch (MetaException | InterruptedException | IOException e) {
             throw new RuntimeException("Failed connecting to Hive MetaStore service: " + e.getMessage(), e);
@@ -93,7 +96,7 @@ public class HiveClientHelper {
         LOG.debug("Item: {}.{}, type: {}", itemName.getPath(), itemName.getName(), tblType);
 
         if (TableType.valueOf(tblType) == TableType.VIRTUAL_VIEW) {
-            throw new UnsupportedOperationException("Hive views are not supported by GPDB");
+            throw new UnsupportedOperationException("Hive views are not supported by PXF");
         }
 
         return tbl;
@@ -311,10 +314,8 @@ public class HiveClientHelper {
 
     /* Turns the partition keys into a string */
     private String serializePartitionKeys(HiveTablePartition partData) {
-        if (partData.partition == null) /*
-         * this is a simple hive table - there
-         * are no partitions
-         */ {
+        if (partData.partition == null) {
+            /* this is a simple hive table - there are no partitions */
             return HiveDataFragmenter.HIVE_NO_PART_TBL;
         }
 
@@ -391,6 +392,25 @@ public class HiveClientHelper {
                                 + partData
                                 + ". Supported InputFormat are "
                                 + Arrays.toString(HiveInputFormatFragmenter.PXF_HIVE_INPUT_FORMATS.values()));
+        }
+    }
+
+    public static class HiveClientFactory {
+        private static final HiveClientFactory instance = new HiveClientFactory();
+
+        /**
+         * Returns the static instance for this factory
+         *
+         * @return the static instance for this factory
+         */
+        static HiveClientFactory getInstance() {
+            return instance;
+        }
+
+        IMetaStoreClient initHiveClient(HiveConf hiveConf) throws MetaException {
+            return RetryingMetaStoreClient.getProxy(hiveConf, new Class[]{HiveConf.class, HiveMetaHookLoader.class, Boolean.class},
+                    new Object[]{hiveConf, null, true}, null, HiveMetaStoreClientCompatibility1xx.class.getName()
+            );
         }
     }
 }

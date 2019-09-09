@@ -50,9 +50,9 @@ public class HiveMetaStoreClientCompatibility1xx extends HiveMetaStoreClient imp
             return super.getTable(dbname, name);
         } catch (TException e) {
             try {
-                LOG.info("Couldn't invoke method get_table_req");
+                LOG.debug("Couldn't invoke method getTable");
                 if (e.getClass().isAssignableFrom(TApplicationException.class)) {
-                    LOG.info("Attempting to fallback");
+                    LOG.debug("Attempting to fallback");
                     Table table = client.get_table(dbname, name);
                     return new GetTableResult(table).getTable();
                 }

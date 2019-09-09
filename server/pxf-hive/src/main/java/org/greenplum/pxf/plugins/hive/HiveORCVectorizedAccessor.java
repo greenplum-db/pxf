@@ -43,7 +43,7 @@ public class HiveORCVectorizedAccessor extends HiveORCAccessor {
 
     @Override
     public boolean openForRead() throws Exception {
-        Reader.Options options = new org.apache.orc.Reader.Options();
+        Reader.Options options = new Reader.Options();
         addColumns(options);
         addFragments(options);
         orcReader = getOrcReader();

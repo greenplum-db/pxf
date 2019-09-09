@@ -22,13 +22,13 @@ package org.greenplum.pxf.plugins.hive;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
+import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.model.Metadata;
 import org.greenplum.pxf.api.model.PluginConf;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.plugins.hive.utilities.HiveClientHelper;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -40,8 +40,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
+import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -51,15 +52,16 @@ public class HiveMetadataFetcherTest {
     public ExpectedException expectedException = ExpectedException.none();
 
     private RequestContext context;
-    private HiveMetaStoreClient hiveClient;
+    private HiveMetaStoreClient mockHiveClient;
     private HiveMetadataFetcher fetcher;
     private List<Metadata> metadataList;
-    private HiveClientHelper mockHiveClientHelper;
+    private HiveClientWrapper fakeHiveClientWrapper;
     private ConfigurationFactory mockConfigurationFactory;
     private Configuration configuration;
+    private HiveClientWrapper.HiveClientFactory mockClientFactory;
 
     @Before
-    public void setupCompressionFactory() {
+    public void setupCompressionFactory() throws MetaException {
 
         @SuppressWarnings("unchecked")
         Map<String, String> mockProfileMap = mock(Map.class);
@@ -72,7 +74,7 @@ public class HiveMetadataFetcherTest {
         when(mockPluginConf.getPlugins("HiveText")).thenReturn(mockProfileMap);
         when(mockProfileMap.get("OUTPUTFORMAT")).thenReturn("org.greenplum.pxf.api.io.Text");
 
-        hiveClient = mock(HiveMetaStoreClient.class);
+        mockHiveClient = mock(HiveMetaStoreClient.class);
 
         context.setConfig("default");
         context.setServerName("default");
@@ -83,183 +85,187 @@ public class HiveMetadataFetcherTest {
         when(mockConfigurationFactory.initConfiguration("default", "default", "dummy", null))
                 .thenReturn(configuration);
 
-        mockHiveClientHelper = mock(HiveClientHelper.class);
+        mockClientFactory = mock(HiveClientWrapper.HiveClientFactory.class);
+
+        fakeHiveClientWrapper = new HiveClientWrapper(mockClientFactory);
+
+        when(mockClientFactory.initHiveClient(any())).thenReturn(mockHiveClient);
     }
 
     @Test
     public void construction() {
-        fetcher = new HiveMetadataFetcher(context, mockConfigurationFactory, mockHiveClientHelper);
+        fetcher = new HiveMetadataFetcher(context, mockConfigurationFactory, fakeHiveClientWrapper);
         assertNotNull(fetcher);
     }
 
     @Test
-    public void constructorCantAccessMetaStore() {
+    public void constructorCantAccessMetaStore() throws MetaException {
         expectedException.expect(RuntimeException.class);
         expectedException.expectMessage("Failed connecting to Hive MetaStore service: which way to albuquerque");
 
-        when(mockHiveClientHelper.initHiveClient(configuration)).thenThrow(new RuntimeException("Failed connecting to Hive MetaStore service: which way to albuquerque"));
+        when(mockClientFactory.initHiveClient(any())).thenThrow(new MetaException("which way to albuquerque"));
 
-        fetcher = new HiveMetadataFetcher(context, mockConfigurationFactory, mockHiveClientHelper);
+        fetcher = new HiveMetadataFetcher(context, mockConfigurationFactory, fakeHiveClientWrapper);
     }
 
-//    @Test
-//    public void getTableMetadataView() throws Exception {
-//        expectedException.expect(UnsupportedOperationException.class);
-//        expectedException.expectMessage("Hive views are not supported by GPDB");
-//
-//        String tableName = "cause";
-//        fetcher = new HiveMetadataFetcher(context, mockConfigurationFactory, mockHiveClientHelper);
-//
-//        // mock hive table returned from hive client
-//        Table hiveTable = new Table();
-//        hiveTable.setTableType("VIRTUAL_VIEW");
-//        when(hiveClient.getTable("default", tableName)).thenReturn(hiveTable);
-//
-//        metadataList = fetcher.getMetadata(tableName);
-//    }
+    @Test
+    public void getTableMetadataView() throws Exception {
+        expectedException.expect(UnsupportedOperationException.class);
+        expectedException.expectMessage("Hive views are not supported by PXF");
 
-//    @Test
-//    public void getTableMetadata() throws Exception {
-//
-//        fetcher = new HiveMetadataFetcher(context, mockConfigurationFactory, mockHiveClientHelper);
-//        String tableName = "cause";
-//
-//        // mock hive table returned from hive client
-//        List<FieldSchema> fields = new ArrayList<>();
-//        fields.add(new FieldSchema("field1", "string", null));
-//        fields.add(new FieldSchema("field2", "int", null));
-//        StorageDescriptor sd = new StorageDescriptor();
-//        sd.setCols(fields);
-//        sd.setInputFormat("org.apache.hadoop.mapred.TextInputFormat");
-//        Table hiveTable = new Table();
-//        hiveTable.setTableType("MANAGED_TABLE");
-//        hiveTable.setSd(sd);
-//        hiveTable.setPartitionKeys(new ArrayList<>());
-//        when(hiveClient.getTable("default", tableName)).thenReturn(hiveTable);
-//
-//        // Get metadata
-//        metadataList = fetcher.getMetadata(tableName);
-//        Metadata metadata = metadataList.get(0);
-//
-//        assertEquals("default.cause", metadata.getItem().toString());
-//
-//        List<Metadata.Field> resultFields = metadata.getFields();
-//        assertNotNull(resultFields);
-//        assertEquals(2, resultFields.size());
-//        Metadata.Field field = resultFields.get(0);
-//        assertEquals("field1", field.getName());
-//        assertEquals("text", field.getType().getTypeName()); // converted type
-//        field = resultFields.get(1);
-//        assertEquals("field2", field.getName());
-//        assertEquals("int4", field.getType().getTypeName());
-//    }
+        String tableName = "cause";
+        fetcher = new HiveMetadataFetcher(context, mockConfigurationFactory, fakeHiveClientWrapper);
 
-//    @Test
-//    public void getTableMetadataWithMultipleTables() throws Exception {
-//
-//        fetcher = new HiveMetadataFetcher(context, mockConfigurationFactory, mockHiveClientHelper);
-//
-//        String tablePattern = "*";
-//        String dbPattern = "*";
-//        String dbName = "default";
-//        String tableNameBase = "regulartable";
-//        String pattern = dbPattern + "." + tablePattern;
-//
-//        List<String> dbNames = new ArrayList<>(Collections.singletonList(dbName));
-//        List<String> tableNames = new ArrayList<>();
-//
-//        // Prepare for tables
-//        List<FieldSchema> fields = new ArrayList<>();
-//        fields.add(new FieldSchema("field1", "string", null));
-//        fields.add(new FieldSchema("field2", "int", null));
-//        StorageDescriptor sd = new StorageDescriptor();
-//        sd.setCols(fields);
-//        sd.setInputFormat("org.apache.hadoop.mapred.TextInputFormat");
-//
-//        // Mock hive tables returned from hive client
-//        for (int index = 1; index <= 2; index++) {
-//            String tableName = tableNameBase + index;
-//            tableNames.add(tableName);
-//            Table hiveTable = new Table();
-//            hiveTable.setTableType("MANAGED_TABLE");
-//            hiveTable.setSd(sd);
-//            hiveTable.setPartitionKeys(new ArrayList<>());
-//            when(hiveClient.getTable(dbName, tableName)).thenReturn(hiveTable);
-//        }
-//
-//        // Mock database and table names return from hive client
-//        when(hiveClient.getDatabases(dbPattern)).thenReturn(dbNames);
-//        when(hiveClient.getTables(dbName, tablePattern)).thenReturn(tableNames);
-//
-//        // Get metadata
-//        metadataList = fetcher.getMetadata(pattern);
-//        assertEquals(2, metadataList.size());
-//
-//        for (int index = 1; index <= 2; index++) {
-//            Metadata metadata = metadataList.get(index - 1);
-//            assertEquals(dbName + "." + tableNameBase + index, metadata.getItem().toString());
-//            List<Metadata.Field> resultFields = metadata.getFields();
-//            assertNotNull(resultFields);
-//            assertEquals(2, resultFields.size());
-//            Metadata.Field field = resultFields.get(0);
-//            assertEquals("field1", field.getName());
-//            assertEquals("text", field.getType().getTypeName()); // converted type
-//            field = resultFields.get(1);
-//            assertEquals("field2", field.getName());
-//            assertEquals("int4", field.getType().getTypeName());
-//        }
-//    }
+        // mock hive table returned from hive client
+        Table hiveTable = new Table();
+        hiveTable.setTableType("VIRTUAL_VIEW");
+        when(mockHiveClient.getTable("default", tableName)).thenReturn(hiveTable);
 
-//    @Test
-//    public void getTableMetadataWithIncompatibleTables() throws Exception {
-//
-//        fetcher = new HiveMetadataFetcher(context, mockConfigurationFactory, mockHiveClientHelper);
-//
-//        String tablePattern = "*";
-//        String dbPattern = "*";
-//        String dbName = "default";
-//        String pattern = dbPattern + "." + tablePattern;
-//
-//        String tableName1 = "viewtable";
-//        // mock hive table returned from hive client
-//        Table hiveTable1 = new Table();
-//        hiveTable1.setTableType("VIRTUAL_VIEW");
-//        when(hiveClient.getTable(dbName, tableName1)).thenReturn(hiveTable1);
-//
-//        String tableName2 = "regulartable";
-//        // mock hive table returned from hive client
-//        List<FieldSchema> fields = new ArrayList<>();
-//        fields.add(new FieldSchema("field1", "string", null));
-//        fields.add(new FieldSchema("field2", "int", null));
-//        StorageDescriptor sd = new StorageDescriptor();
-//        sd.setCols(fields);
-//        sd.setInputFormat("org.apache.hadoop.mapred.TextInputFormat");
-//        Table hiveTable2 = new Table();
-//        hiveTable2.setTableType("MANAGED_TABLE");
-//        hiveTable2.setSd(sd);
-//        hiveTable2.setPartitionKeys(new ArrayList<>());
-//        when(hiveClient.getTable(dbName, tableName2)).thenReturn(hiveTable2);
-//
-//        // Mock get databases and tables return from hive client
-//        List<String> tableNames = new ArrayList<>(Arrays.asList(tableName1, tableName2));
-//        List<String> dbNames = new ArrayList<>(Collections.singletonList(dbName));
-//        when(hiveClient.getDatabases(dbPattern)).thenReturn(dbNames);
-//        when(hiveClient.getTables(dbName, tablePattern)).thenReturn(tableNames);
-//
-//        // Get metadata
-//        metadataList = fetcher.getMetadata(pattern);
-//        assertEquals(1, metadataList.size());
-//        Metadata metadata = metadataList.get(0);
-//        assertEquals(dbName + "." + tableName2, metadata.getItem().toString());
-//
-//        List<Metadata.Field> resultFields = metadata.getFields();
-//        assertNotNull(resultFields);
-//        assertEquals(2, resultFields.size());
-//        Metadata.Field field = resultFields.get(0);
-//        assertEquals("field1", field.getName());
-//        assertEquals("text", field.getType().getTypeName()); // converted type
-//        field = resultFields.get(1);
-//        assertEquals("field2", field.getName());
-//        assertEquals("int4", field.getType().getTypeName());
-//    }
+        metadataList = fetcher.getMetadata(tableName);
+    }
+
+    @Test
+    public void getTableMetadata() throws Exception {
+
+        fetcher = new HiveMetadataFetcher(context, mockConfigurationFactory, fakeHiveClientWrapper);
+        String tableName = "cause";
+
+        // mock hive table returned from hive client
+        List<FieldSchema> fields = new ArrayList<>();
+        fields.add(new FieldSchema("field1", "string", null));
+        fields.add(new FieldSchema("field2", "int", null));
+        StorageDescriptor sd = new StorageDescriptor();
+        sd.setCols(fields);
+        sd.setInputFormat("org.apache.hadoop.mapred.TextInputFormat");
+        Table hiveTable = new Table();
+        hiveTable.setTableType("MANAGED_TABLE");
+        hiveTable.setSd(sd);
+        hiveTable.setPartitionKeys(new ArrayList<>());
+        when(mockHiveClient.getTable("default", tableName)).thenReturn(hiveTable);
+
+        // Get metadata
+        metadataList = fetcher.getMetadata(tableName);
+        Metadata metadata = metadataList.get(0);
+
+        assertEquals("default.cause", metadata.getItem().toString());
+
+        List<Metadata.Field> resultFields = metadata.getFields();
+        assertNotNull(resultFields);
+        assertEquals(2, resultFields.size());
+        Metadata.Field field = resultFields.get(0);
+        assertEquals("field1", field.getName());
+        assertEquals("text", field.getType().getTypeName()); // converted type
+        field = resultFields.get(1);
+        assertEquals("field2", field.getName());
+        assertEquals("int4", field.getType().getTypeName());
+    }
+
+    @Test
+    public void getTableMetadataWithMultipleTables() throws Exception {
+
+        fetcher = new HiveMetadataFetcher(context, mockConfigurationFactory, fakeHiveClientWrapper);
+
+        String tablePattern = "*";
+        String dbPattern = "*";
+        String dbName = "default";
+        String tableNameBase = "regulartable";
+        String pattern = dbPattern + "." + tablePattern;
+
+        List<String> dbNames = new ArrayList<>(Collections.singletonList(dbName));
+        List<String> tableNames = new ArrayList<>();
+
+        // Prepare for tables
+        List<FieldSchema> fields = new ArrayList<>();
+        fields.add(new FieldSchema("field1", "string", null));
+        fields.add(new FieldSchema("field2", "int", null));
+        StorageDescriptor sd = new StorageDescriptor();
+        sd.setCols(fields);
+        sd.setInputFormat("org.apache.hadoop.mapred.TextInputFormat");
+
+        // Mock hive tables returned from hive client
+        for (int index = 1; index <= 2; index++) {
+            String tableName = tableNameBase + index;
+            tableNames.add(tableName);
+            Table hiveTable = new Table();
+            hiveTable.setTableType("MANAGED_TABLE");
+            hiveTable.setSd(sd);
+            hiveTable.setPartitionKeys(new ArrayList<>());
+            when(mockHiveClient.getTable(dbName, tableName)).thenReturn(hiveTable);
+        }
+
+        // Mock database and table names return from hive client
+        when(mockHiveClient.getDatabases(dbPattern)).thenReturn(dbNames);
+        when(mockHiveClient.getTables(dbName, tablePattern)).thenReturn(tableNames);
+
+        // Get metadata
+        metadataList = fetcher.getMetadata(pattern);
+        assertEquals(2, metadataList.size());
+
+        for (int index = 1; index <= 2; index++) {
+            Metadata metadata = metadataList.get(index - 1);
+            assertEquals(dbName + "." + tableNameBase + index, metadata.getItem().toString());
+            List<Metadata.Field> resultFields = metadata.getFields();
+            assertNotNull(resultFields);
+            assertEquals(2, resultFields.size());
+            Metadata.Field field = resultFields.get(0);
+            assertEquals("field1", field.getName());
+            assertEquals("text", field.getType().getTypeName()); // converted type
+            field = resultFields.get(1);
+            assertEquals("field2", field.getName());
+            assertEquals("int4", field.getType().getTypeName());
+        }
+    }
+
+    @Test
+    public void getTableMetadataWithIncompatibleTables() throws Exception {
+
+        fetcher = new HiveMetadataFetcher(context, mockConfigurationFactory, fakeHiveClientWrapper);
+
+        String tablePattern = "*";
+        String dbPattern = "*";
+        String dbName = "default";
+        String pattern = dbPattern + "." + tablePattern;
+
+        String tableName1 = "viewtable";
+        // mock hive table returned from hive client
+        Table hiveTable1 = new Table();
+        hiveTable1.setTableType("VIRTUAL_VIEW");
+        when(mockHiveClient.getTable(dbName, tableName1)).thenReturn(hiveTable1);
+
+        String tableName2 = "regulartable";
+        // mock hive table returned from hive client
+        List<FieldSchema> fields = new ArrayList<>();
+        fields.add(new FieldSchema("field1", "string", null));
+        fields.add(new FieldSchema("field2", "int", null));
+        StorageDescriptor sd = new StorageDescriptor();
+        sd.setCols(fields);
+        sd.setInputFormat("org.apache.hadoop.mapred.TextInputFormat");
+        Table hiveTable2 = new Table();
+        hiveTable2.setTableType("MANAGED_TABLE");
+        hiveTable2.setSd(sd);
+        hiveTable2.setPartitionKeys(new ArrayList<>());
+        when(mockHiveClient.getTable(dbName, tableName2)).thenReturn(hiveTable2);
+
+        // Mock get databases and tables return from hive client
+        List<String> tableNames = new ArrayList<>(Arrays.asList(tableName1, tableName2));
+        List<String> dbNames = new ArrayList<>(Collections.singletonList(dbName));
+        when(mockHiveClient.getDatabases(dbPattern)).thenReturn(dbNames);
+        when(mockHiveClient.getTables(dbName, tablePattern)).thenReturn(tableNames);
+
+        // Get metadata
+        metadataList = fetcher.getMetadata(pattern);
+        assertEquals(1, metadataList.size());
+        Metadata metadata = metadataList.get(0);
+        assertEquals(dbName + "." + tableName2, metadata.getItem().toString());
+
+        List<Metadata.Field> resultFields = metadata.getFields();
+        assertNotNull(resultFields);
+        assertEquals(2, resultFields.size());
+        Metadata.Field field = resultFields.get(0);
+        assertEquals("field1", field.getName());
+        assertEquals("text", field.getType().getTypeName()); // converted type
+        field = resultFields.get(1);
+        assertEquals("field2", field.getName());
+        assertEquals("int4", field.getType().getTypeName());
+    }
 }

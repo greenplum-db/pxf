@@ -211,6 +211,12 @@ project('pxf-hive') {
         compile("org.apache.hive:hive-metastore:${hiveVersion}")
         compile("org.apache.hive:hive-serde:${hiveVersion}")
         compile("com.esotericsoftware:kryo:3.0.3")
+        /*
+         * Transitive dependencies for hive-exec-core. Instead of bundling,
+         * hive-exec, hive-exec-core is used to avoid conflict with other
+         * dependencies included in hive-exec (i.e Parquet) which were causing
+         * other tests to fail.
+         * */
         bundleJars "org.apache.hive:hive-common:${hiveVersion}"
         bundleJars "org.apache.hive.shims:hive-shims-common:${hiveVersion}"
         bundleJars "org.apache.hive.shims:hive-shims-0.23:${hiveVersion}"
@@ -232,6 +238,9 @@ project('pxf-hive') {
         bundleJars "javax.jdo:jdo-api:3.0.1"
         bundleJars "org.codehaus.jackson:jackson-core-asl:1.9.13"
         bundleJars "org.codehaus.jackson:jackson-mapper-asl:1.9.13"
+        /*
+         * Transitive dependencies for hive-exec-core until here
+         * */
     }
 }
 

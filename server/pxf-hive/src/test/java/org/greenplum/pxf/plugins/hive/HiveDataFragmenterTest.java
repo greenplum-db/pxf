@@ -22,7 +22,6 @@ package org.greenplum.pxf.plugins.hive;
 import org.apache.hadoop.conf.Configuration;
 import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.plugins.hive.utilities.HiveClientHelper;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -41,12 +40,12 @@ public class HiveDataFragmenterTest {
     private HiveDataFragmenter fragmenter;
     private HiveFilterBuilder filterBuilder;
     private ConfigurationFactory configurationFactory;
-    private HiveClientHelper hiveClientHelper;
+    private HiveClientWrapper hiveClientWrapper;
 
     @Before
     public void setup() {
 
-        hiveClientHelper = mock(HiveClientHelper.class);
+        hiveClientWrapper = mock(HiveClientWrapper.class);
         configurationFactory = mock(ConfigurationFactory.class);
 
         context = new RequestContext();
@@ -69,9 +68,9 @@ public class HiveDataFragmenterTest {
         expectedException.expect(RuntimeException.class);
         expectedException.expectMessage("Failed connecting to Hive MetaStore service: which way to albuquerque");
 
-        when(hiveClientHelper.initHiveClient(configuration)).thenThrow(new RuntimeException("Failed connecting to Hive MetaStore service: which way to albuquerque"));
+        when(hiveClientWrapper.initHiveClient(configuration)).thenThrow(new RuntimeException("Failed connecting to Hive MetaStore service: which way to albuquerque"));
 
-        fragmenter = new HiveDataFragmenter(configurationFactory, filterBuilder, hiveClientHelper);
+        fragmenter = new HiveDataFragmenter(configurationFactory, filterBuilder, hiveClientWrapper);
         fragmenter.initialize(context);
     }
 }

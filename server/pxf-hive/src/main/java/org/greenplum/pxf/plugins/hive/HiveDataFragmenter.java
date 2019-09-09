@@ -43,7 +43,6 @@ import org.greenplum.pxf.api.model.Metadata;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
-import org.greenplum.pxf.plugins.hive.utilities.HiveClientHelper;
 import org.greenplum.pxf.plugins.hive.utilities.ProfileFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,7 +77,7 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
 
     private IMetaStoreClient client;
     private HiveFilterBuilder filterBuilder;
-    private HiveClientHelper hiveClientHelper;
+    private HiveClientWrapper hiveClientWrapper;
 
     private boolean filterInFragmenter = false;
 
@@ -89,20 +88,20 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
     private Map<String, String> partitionKeyTypes = new HashMap<>();
 
     public HiveDataFragmenter() {
-        this(BaseConfigurationFactory.getInstance(), new HiveFilterBuilder(), HiveClientHelper.getInstance());
+        this(BaseConfigurationFactory.getInstance(), new HiveFilterBuilder(), HiveClientWrapper.getInstance());
     }
 
-    HiveDataFragmenter(ConfigurationFactory configurationFactory, HiveFilterBuilder filterBuilder, HiveClientHelper hiveClientHelper) {
+    HiveDataFragmenter(ConfigurationFactory configurationFactory, HiveFilterBuilder filterBuilder, HiveClientWrapper hiveClientWrapper) {
         this.configurationFactory = configurationFactory;
         this.filterBuilder = filterBuilder;
-        this.hiveClientHelper = hiveClientHelper;
+        this.hiveClientWrapper = hiveClientWrapper;
     }
 
     @Override
     public void initialize(RequestContext requestContext) {
         super.initialize(requestContext);
 
-        client = hiveClientHelper.initHiveClient(configuration);
+        client = hiveClientWrapper.initHiveClient(configuration);
         // canPushDownIntegral represents hive.metastore.integral.jdo.pushdown property in hive-site.xml
         filterBuilder.setColumnDescriptors(requestContext.getTupleDescription());
         filterBuilder.setCanPushdownIntegral(configuration.getBoolean(HiveConf.ConfVars.METASTORE_INTEGER_JDO_PUSHDOWN.varname,
@@ -111,7 +110,7 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
 
     @Override
     public List<Fragment> getFragments() throws Exception {
-        Metadata.Item tblDesc = hiveClientHelper.extractTableFromName(context.getDataSource());
+        Metadata.Item tblDesc = hiveClientWrapper.extractTableFromName(context.getDataSource());
 
         fetchTableMetaData(tblDesc);
 
@@ -147,11 +146,11 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
      */
     private void fetchTableMetaData(Metadata.Item tblDesc) throws Exception {
 
-        Table tbl = hiveClientHelper.getHiveTable(client, tblDesc);
+        Table tbl = hiveClientWrapper.getHiveTable(client, tblDesc);
 
         Metadata metadata = new Metadata(tblDesc);
-        hiveClientHelper.getSchema(tbl, metadata);
-        boolean hasComplexTypes = hiveClientHelper.hasComplexTypes(metadata);
+        hiveClientWrapper.getSchema(tbl, metadata);
+        boolean hasComplexTypes = hiveClientWrapper.hasComplexTypes(metadata);
 
         verifySchema(tbl);
 
@@ -304,7 +303,7 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
 
             byte[] locationInfo = HdfsUtilities.prepareFragmentMetadata(fsp);
             Fragment fragment = new Fragment(filepath, hosts, locationInfo,
-                    hiveClientHelper.makeUserData(fragmenterForProfile, tablePartition, filterInFragmenter), profile);
+                    hiveClientWrapper.makeUserData(fragmenterForProfile, tablePartition, filterInFragmenter), profile);
             fragments.add(fragment);
         }
     }
@@ -314,10 +313,10 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
      */
     @Override
     public FragmentStats getFragmentStats() throws Exception {
-        Metadata.Item tblDesc = hiveClientHelper.extractTableFromName(context.getDataSource());
-        Table tbl = hiveClientHelper.getHiveTable(client, tblDesc);
+        Metadata.Item tblDesc = hiveClientWrapper.extractTableFromName(context.getDataSource());
+        Table tbl = hiveClientWrapper.getHiveTable(client, tblDesc);
         Metadata metadata = new Metadata(tblDesc);
-        hiveClientHelper.getSchema(tbl, metadata);
+        hiveClientWrapper.getSchema(tbl, metadata);
 
         long split_count = Long.parseLong(tbl.getParameters().get("numFiles"));
         long totalSize = Long.parseLong(tbl.getParameters().get("totalSize"));

@@ -18,7 +18,7 @@ import org.greenplum.pxf.api.model.Metadata;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hive.HiveDataFragmenter;
 import org.greenplum.pxf.plugins.hive.HiveUserData;
-import org.greenplum.pxf.plugins.hive.utilities.HiveClientHelper;
+import org.greenplum.pxf.plugins.hive.HiveClientWrapper;
 
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectOutputStream;
@@ -39,17 +39,17 @@ public class MultipleHiveFragmentsPerFileFragmenter extends BaseFragmenter {
     private static final long SPLIT_SIZE = 1024;
     private JobConf jobConf;
     private IMetaStoreClient client;
-    private HiveClientHelper hiveClientHelper;
+    private HiveClientWrapper hiveClientWrapper;
 
     public MultipleHiveFragmentsPerFileFragmenter() {
-        hiveClientHelper = HiveClientHelper.getInstance();
+        hiveClientWrapper = HiveClientWrapper.getInstance();
     }
 
     @Override
     public void initialize(RequestContext requestContext) {
         super.initialize(requestContext);
         jobConf = new JobConf(configuration, MultipleHiveFragmentsPerFileFragmenter.class);
-        client = hiveClientHelper.initHiveClient(configuration);
+        client = hiveClientWrapper.initHiveClient(configuration);
     }
 
     @Override
@@ -59,8 +59,8 @@ public class MultipleHiveFragmentsPerFileFragmenter extends BaseFragmenter {
 
         // TODO whitelist property
         int fragmentsNum = Integer.parseInt(context.getOption("TEST-FRAGMENTS-NUM"));
-        Metadata.Item tblDesc = hiveClientHelper.extractTableFromName(context.getDataSource());
-        Table tbl = hiveClientHelper.getHiveTable(client, tblDesc);
+        Metadata.Item tblDesc = hiveClientWrapper.extractTableFromName(context.getDataSource());
+        Table tbl = hiveClientWrapper.getHiveTable(client, tblDesc);
         Properties properties = getSchema(tbl);
 
         for (int i = 0; i < fragmentsNum; i++) {

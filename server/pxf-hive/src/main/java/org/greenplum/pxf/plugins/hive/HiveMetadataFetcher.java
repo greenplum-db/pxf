@@ -35,7 +35,6 @@ import org.greenplum.pxf.api.model.Metadata;
 import org.greenplum.pxf.api.model.MetadataFetcher;
 import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.plugins.hive.utilities.HiveClientHelper;
 import org.greenplum.pxf.plugins.hive.utilities.ProfileFactory;
 
 import java.util.ArrayList;
@@ -55,19 +54,19 @@ public class HiveMetadataFetcher extends BasePlugin implements MetadataFetcher {
     private static final Log LOG = LogFactory.getLog(HiveMetadataFetcher.class);
     private IMetaStoreClient client;
     private JobConf jobConf;
-    private HiveClientHelper hiveClientHelper;
+    private HiveClientWrapper hiveClientWrapper;
 
     public HiveMetadataFetcher(RequestContext context) {
-        this(context, BaseConfigurationFactory.getInstance(), HiveClientHelper.getInstance());
+        this(context, BaseConfigurationFactory.getInstance(), HiveClientWrapper.getInstance());
     }
 
-    HiveMetadataFetcher(RequestContext context, ConfigurationFactory configurationFactory, HiveClientHelper hiveClientHelper) {
+    HiveMetadataFetcher(RequestContext context, ConfigurationFactory configurationFactory, HiveClientWrapper hiveClientWrapper) {
         this.configurationFactory = configurationFactory;
-        this.hiveClientHelper = hiveClientHelper;
+        this.hiveClientWrapper = hiveClientWrapper;
         initialize(context);
 
         // init hive metastore client connection.
-        client = hiveClientHelper.initHiveClient(configuration);
+        client = hiveClientWrapper.initHiveClient(configuration);
         jobConf = new JobConf(configuration);
     }
 
@@ -86,7 +85,7 @@ public class HiveMetadataFetcher extends BasePlugin implements MetadataFetcher {
     public List<Metadata> getMetadata(String pattern) throws Exception {
 
         boolean ignoreErrors = false;
-        List<Metadata.Item> tblsDesc = hiveClientHelper.extractTablesFromPattern(client, pattern);
+        List<Metadata.Item> tblsDesc = hiveClientWrapper.extractTablesFromPattern(client, pattern);
 
         if (tblsDesc == null || tblsDesc.isEmpty()) {
             LOG.warn("No tables found for the given pattern: " + pattern);
@@ -102,9 +101,9 @@ public class HiveMetadataFetcher extends BasePlugin implements MetadataFetcher {
         for (Metadata.Item tblDesc : tblsDesc) {
             try {
                 Metadata metadata = new Metadata(tblDesc);
-                Table tbl = hiveClientHelper.getHiveTable(client, tblDesc);
-                hiveClientHelper.getSchema(tbl, metadata);
-                boolean hasComplexTypes = hiveClientHelper.hasComplexTypes(metadata);
+                Table tbl = hiveClientWrapper.getHiveTable(client, tblDesc);
+                hiveClientWrapper.getSchema(tbl, metadata);
+                boolean hasComplexTypes = hiveClientWrapper.hasComplexTypes(metadata);
                 metadataList.add(metadata);
                 List<Partition> tablePartitions = client.listPartitionsByFilter(tblDesc.getPath(), tblDesc.getName(), "", (short) -1);
                 Set<OutputFormat> formats = new HashSet<>();
@@ -122,7 +121,7 @@ public class HiveMetadataFetcher extends BasePlugin implements MetadataFetcher {
                 }
                 metadata.setOutputFormats(formats);
                 Map<String, String> outputParameters = new HashMap<>();
-                Integer delimiterCode = hiveClientHelper.getDelimiterCode(tbl.getSd());
+                Integer delimiterCode = hiveClientWrapper.getDelimiterCode(tbl.getSd());
                 outputParameters.put(DELIM_FIELD, delimiterCode.toString());
                 metadata.setOutputParameters(outputParameters);
             } catch (UnsupportedTypeException | UnsupportedOperationException e) {

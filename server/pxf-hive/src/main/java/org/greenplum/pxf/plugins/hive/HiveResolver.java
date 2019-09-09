@@ -59,30 +59,22 @@ import java.util.Properties;
  * Class HiveResolver handles deserialization of records that were serialized
  * using Hadoop's Hive serialization framework.
  */
-/*
- * TODO - remove SupressWarning once Hive resolves the problem described below
- * This line and the change of the deserialiazer member to Object instead of the
- * original Deserializer...., All this changes stem from the same issue. In
- * 0.11.0 The API changed and all Serde types extend a new interface -
- * AbstractSerde. But this change was not adopted by the OrcSerde (which was
- * also introduced in Hive 0.11.0). In order to cope with this inconsistency...
- * this bit of juggling has been necessary.
- */
 public class HiveResolver extends HivePlugin implements Resolver {
     private static final Log LOG = LogFactory.getLog(HiveResolver.class);
-    static final String MAPKEY_DELIM = ":";
-    static final String COLLECTION_DELIM = ",";
-    String collectionDelim;
-    String mapkeyDelim;
-    Deserializer deserializer;
-    private List<OneField> partitionFields;
-    String serdeClassName;
-    String propsString;
-    String partitionKeys;
-    char delimiter;
-    String nullChar = "\\N";
-    private String hiveDefaultPartName;
+    protected static final String MAPKEY_DELIM = ":";
+    protected static final String COLLECTION_DELIM = ",";
+    protected static final String nullChar = "\\N";
+    protected char delimiter;
+    protected String collectionDelim;
+    protected String mapkeyDelim;
+    protected Deserializer deserializer;
+    protected String serdeClassName;
+    protected String propsString;
+    protected String partitionKeys;
+
     private int numberOfPartitions;
+    private List<OneField> partitionFields;
+    private String hiveDefaultPartName;
 
     /**
      * Initializes the HiveResolver by parsing the request context and
