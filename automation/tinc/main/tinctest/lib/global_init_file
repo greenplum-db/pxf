@@ -20,6 +20,10 @@ s/^psql.*ERROR/ERROR/
 m/(ERROR|WARNING|CONTEXT|NOTICE):\s+/
 s/\.c\:\d+\)/\.c\:xxx\)/
 
+# Lower case error type
+m/(ERROR|WARNING):\s+/
+s/\:  Type/\:  type/
+
 # Remove timing information when \timing is set
 m/^Time: \d+.*/
 s/^Time: \d+.*//

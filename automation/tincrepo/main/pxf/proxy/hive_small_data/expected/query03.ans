@@ -30,7 +30,7 @@ CREATE ROLE testuser LOGIN RESOURCE QUEUE pg_default;
 CREATE ROLE
 \connect - testuser
 SELECT * FROM pxf_proxy_hive_small_data_prohibited ORDER BY name;
-ERROR:  remote component error (500) from 'SOME_IP:SOME_PORT':  type  Exception report   message   Permission denied: user=testuser, access=READ, inode=SOME_PATH:-rwx------    description   The server encountered an internal error that prevented it from fulfilling this request.    exception   java.io.IOException: Permission denied: user=testuser, access=READ, inode=SOME_PATH:-rwx------ (libchurl.c:xxx)
+ERROR:  remote component error (500) from 'SOME_IP:SOME_PORT':  type  Exception Report   Message  Permission denied: user=testuser, access=READ, inode=SOME_PATH:-rwx------   Description  The server encountered an unexpected condition that prevented it from fulfilling the request.   Exception   java.io.IOException: Permission denied: user=testuser, access=READ, inode=SOME_PATH:-rwx------ (libchurl.c:xxx)
 DETAIL:  External table pxf_proxy_hive_small_data_prohibited
 \connect - :OLD_GP_USER
 DROP ROLE IF EXISTS testuser;

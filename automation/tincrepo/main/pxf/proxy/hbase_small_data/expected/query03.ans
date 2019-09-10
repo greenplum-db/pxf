@@ -30,7 +30,7 @@ CREATE ROLE testuser LOGIN RESOURCE QUEUE pg_default;
 CREATE ROLE
 \connect - testuser
 SELECT * FROM pxf_proxy_hbase_small_data_prohibited ORDER BY name;
-ERROR:  remote component error (500) from 'SOME_IP:SOME_PORT':  type  Exception report   message   org.apache.hadoop.hbase.security.AccessDeniedException: Insufficient permissions for user 'testuser' (table=hbase_table_prohibited, action=READ)    description   The server encountered an internal error that prevented it from fulfilling this request.    exception   java.io.IOException: org.apache.hadoop.hbase.security.AccessDeniedException: Insufficient permissions for user 'testuser' (table=hbase_table_prohibited, action=READ) (libchurl.c:xxx)
+ERROR:  remote component error (500) from 'SOME_IP:SOME_PORT':  type  Exception Report   Message  org.apache.hadoop.hbase.security.AccessDeniedException: Insufficient permissions for user 'testuser' (table=hbase_table_prohibited, action=READ)   Description  The server encountered an unexpected condition that prevented it from fulfilling the request.   Exception   java.io.IOException: org.apache.hadoop.hbase.security.AccessDeniedException: Insufficient permissions for user 'testuser' (table=hbase_table_prohibited, action=READ) (libchurl.c:xxx)
 DETAIL:  External table pxf_proxy_hbase_small_data_prohibited
 \connect - :OLD_GP_USER
 DROP ROLE IF EXISTS testuser;

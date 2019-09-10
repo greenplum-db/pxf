@@ -12,8 +12,8 @@
 -- m/(ERROR|WARNING):.*javax.servlet.ServletException: java.lang.Exception:.*/
 -- s/javax.servlet.ServletException: //
 --
--- m/   description   .*/
--- s/description   .*/description   DESCRIPTION/
+-- m/  Description  .*/
+-- s/Description  .*/Description  DESCRIPTION/
 --
 -- m/DETAIL/
 -- s/DETAIL/CONTEXT/

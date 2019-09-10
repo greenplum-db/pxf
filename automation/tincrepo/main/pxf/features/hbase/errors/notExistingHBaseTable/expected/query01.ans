@@ -17,5 +17,5 @@
 --
 -- end_matchsubs
 SELECT * from pxf_not_existing_hbase_table ORDER BY recordkey;
-ERROR:  remote component error (500) from 'SOME_IP:SOME_PORT':  type  Exception report   message   org.apache.hadoop.hbase.TableNotFoundException: dummy    description   The server encountered an internal error that prevented it from fulfilling this request.    exception   javax.servlet.ServletException: org.apache.hadoop.hbase.TableNotFoundException: dummy  (libchurl.c:xxx)
+ERROR:  remote component error (500) from 'SOME_IP:SOME_PORT':  type  Exception Report   Message  org.apache.hadoop.hbase.TableNotFoundException: dummy   Description  The server encountered an unexpected condition that prevented it from fulfilling the request.   Exception   javax.servlet.ServletException: org.apache.hadoop.hbase.TableNotFoundException: dummy  (libchurl.c:xxx)
 DETAIL:  External table pxf_not_existing_hbase_table
