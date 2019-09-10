@@ -51,6 +51,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.apache.hadoop.hive.serde2.ColumnProjectionUtils.*;
 
@@ -62,6 +63,8 @@ import static org.apache.hadoop.hive.serde2.ColumnProjectionUtils.*;
 public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
 
     private static final Log LOG = LogFactory.getLog(HiveORCAccessor.class);
+    private static final int KRYO_BUFFER_SIZE = 4 * 1024;
+    private static final int KRYO_MAX_BUFFER_SIZE = 10 * 1024 * 1024;
 
     Reader orcReader;
 
@@ -192,16 +195,13 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
         ColumnDescriptor filterColumn = context.getColumn(filterColumnIndex);
         String filterColumnName = filterColumn.columnName();
 
+        // In Hive 1, boxing of values happened inside the builder
+        // For Hive 2 libraries, we need to do it before passing values to
+        // Hive jars
         if (filterValue instanceof List) {
             @SuppressWarnings("unchecked")
             List<Object> l = (List<Object>) filterValue;
-            List<Object> boxList = new ArrayList<>(l.size());
-
-            for (Object obj : l) {
-                boxList.add(boxLiteral(obj));
-            }
-
-            filterValue = boxList;
+            filterValue = l.stream().map(HiveORCAccessor::boxLiteral).collect(Collectors.toList());
         } else if (filterValue != null) {
             filterValue = boxLiteral(filterValue);
         }
@@ -373,7 +373,7 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
     }
 
     private String toKryo(SearchArgument sarg) {
-        Output out = new Output(4 * 1024, 10 * 1024 * 1024);
+        Output out = new Output(KRYO_BUFFER_SIZE, KRYO_MAX_BUFFER_SIZE);
         new Kryo().writeObject(out, sarg);
         out.close();
         return Base64.encodeBase64String(out.toBytes());
