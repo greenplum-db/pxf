@@ -53,9 +53,6 @@ import org.apache.hadoop.hive.common.ObjectPair;
 import org.apache.hadoop.hive.common.StatsSetupConst;
 import org.apache.hadoop.hive.common.ValidTxnList;
 import org.apache.hadoop.hive.common.auth.HiveAuthUtils;
-import org.apache.hadoop.hive.common.classification.InterfaceAudience;
-import org.apache.hadoop.hive.common.classification.InterfaceAudience.Public;
-import org.apache.hadoop.hive.common.classification.InterfaceStability.Unstable;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.conf.HiveConfUtil;
@@ -79,7 +76,6 @@ import org.apache.thrift.transport.TTransportException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 
 /**
@@ -89,8 +85,7 @@ import com.google.common.collect.Lists;
  * For users who require retry mechanism when the connection between metastore and client is
  * broken, RetryingMetaStoreClient class should be used.
  */
-@Public
-@Unstable
+@SuppressWarnings("deprecation")
 public class HiveMetaStoreClient implements IMetaStoreClient {
   /**
    * Capabilities of the current client. If this client talks to a MetaStore server in a manner
@@ -195,9 +190,9 @@ public class HiveMetaStoreClient implements IMetaStoreClient {
 
         }
         // make metastore URIS random
-        List uriList = Arrays.asList(metastoreUris);
+        List<URI> uriList = Arrays.asList(metastoreUris);
         Collections.shuffle(uriList);
-        metastoreUris = (URI[]) uriList.toArray();
+        metastoreUris = uriList.toArray(metastoreUris);
       } catch (IllegalArgumentException e) {
         throw (e);
       } catch (Exception e) {
@@ -287,7 +282,6 @@ public class HiveMetaStoreClient implements IMetaStoreClient {
     metastoreUris[index] = tmp;
   }
 
-  @VisibleForTesting
   public TTransport getTTransport() {
     return transport;
   }
@@ -2272,7 +2266,6 @@ public class HiveMetaStoreClient implements IMetaStoreClient {
     }
   }
 
-  @InterfaceAudience.LimitedPrivate({"HCatalog"})
   @Override
   public NotificationEventResponse getNextNotification(long lastEventId, int maxEvents,
                                                        NotificationFilter filter) throws TException {
@@ -2293,13 +2286,11 @@ public class HiveMetaStoreClient implements IMetaStoreClient {
     }
   }
 
-  @InterfaceAudience.LimitedPrivate({"HCatalog"})
   @Override
   public CurrentNotificationEventId getCurrentNotificationEventId() throws TException {
     return client.get_current_notificationEventId();
   }
 
-  @InterfaceAudience.LimitedPrivate({"Apache Hive, HCatalog"})
   @Override
   public FireEventResponse fireListenerEvent(FireEventRequest rqst) throws TException {
     return client.fire_listener_event(rqst);
