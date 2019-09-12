@@ -146,7 +146,7 @@ public class HiveFilterBuilder extends BaseFilterBuilder {
     }
 
     @Override
-    protected String mapValue(Object val, DataType type) {
+    protected String serializeValue(Object val, DataType type) {
         return String.format("%s%s%s", HIVE_API_D_QUOTE, val, HIVE_API_D_QUOTE);
     }
 }

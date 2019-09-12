@@ -15,7 +15,7 @@ import java.util.stream.StreamSupport;
 
 public abstract class BaseFilterBuilder implements FilterBuilder {
 
-    private Logger LOG = LoggerFactory.getLogger(this.getClass());
+    protected Logger LOG = LoggerFactory.getLogger(this.getClass());
 
     private final EnumSet<FilterParser.Operation> supportedOperations;
     private final EnumSet<FilterParser.LogicalOperation> supportedOperators;
@@ -34,7 +34,7 @@ public abstract class BaseFilterBuilder implements FilterBuilder {
         Object filter = getFilterObject(filterInput);
 
         if (filter instanceof LogicalFilter) {
-            filterString = buildCompoundFilter((LogicalFilter) filter);
+            filterString = serializeLogicalFilter((LogicalFilter) filter);
         } else {
             filterString = buildSingleFilter(filter, null);
         }
@@ -48,12 +48,12 @@ public abstract class BaseFilterBuilder implements FilterBuilder {
 
     @Override
     public Object build(FilterParser.LogicalOperation operation, Object left, Object right) {
-        return handleLogicalOperation(operation, left, right);
+        return buildLogicalFilter(operation, left, right);
     }
 
     @Override
     public Object build(FilterParser.LogicalOperation operation, Object filter) {
-        return handleLogicalOperation(operation, filter);
+        return buildLogicalFilter(operation, filter);
     }
 
     @Override
@@ -97,7 +97,7 @@ public abstract class BaseFilterBuilder implements FilterBuilder {
         return result;
     }
 
-    protected void addColumnName(StringBuilder result, FilterParser.Operation operation, DataType type, ColumnDescriptor filterColumn, String columnName) {
+    protected void serializeColumnName(StringBuilder result, FilterParser.Operation operation, DataType type, ColumnDescriptor filterColumn, String columnName) {
         result.append(columnName);
     }
 
@@ -109,7 +109,7 @@ public abstract class BaseFilterBuilder implements FilterBuilder {
 
     protected abstract boolean isFilterCompatible(String filterColumnName, FilterParser.Operation operation, FilterParser.LogicalOperation logicalOperation);
 
-    protected abstract String mapValue(Object val, DataType type);
+    protected abstract String serializeValue(Object val, DataType type);
 
     /**
      * Build filter string for a single filter and append to the filters string.
@@ -127,7 +127,7 @@ public abstract class BaseFilterBuilder implements FilterBuilder {
         int filterColumnIndex = bFilter.getColumn().index();
         ColumnDescriptor filterColumn = columnDescriptors.get(filterColumnIndex);
         String filterColumnName = getColumnName(filterColumn);
-        FilterParser.Operation operation = ((BasicFilter) filter).getOperation();
+        FilterParser.Operation operation = bFilter.getOperation();
         DataType dataType = DataType.get(filterColumn.columnTypeCode());
 
         // if filter is determined to be not being able to be pushed down, but not violating logical correctness,
@@ -138,7 +138,7 @@ public abstract class BaseFilterBuilder implements FilterBuilder {
 
         StringBuilder result = new StringBuilder();
 
-        addColumnName(result, operation, dataType, filterColumn, filterColumnName);
+        serializeColumnName(result, operation, dataType, filterColumn, filterColumnName);
 
         if (dataType == DataType.BOOLEAN)
             return result.toString();
@@ -148,7 +148,6 @@ public abstract class BaseFilterBuilder implements FilterBuilder {
                     .append(" ")
                     .append(operation.getOperator());
         } else {
-            result.setLength(0);
             return null;
         }
 
@@ -162,18 +161,18 @@ public abstract class BaseFilterBuilder implements FilterBuilder {
             if (val instanceof Iterable) {
                 Iterable<?> iterable = (Iterable<?>) val;
                 String listValue = StreamSupport.stream(iterable.spliterator(), false)
-                        .map(s -> mapValue(s, dataType))
+                        .map(s -> serializeValue(s, dataType))
                         .collect(Collectors.joining(","));
                 result.append(" (").append(listValue).append(")");
             } else {
-                result.append(" ").append(mapValue(val, dataType));
+                result.append(" ").append(serializeValue(val, dataType));
             }
         }
 
         return result.toString();
     }
 
-    private String buildCompoundFilter(LogicalFilter filter) {
+    private String serializeLogicalFilter(LogicalFilter filter) {
 
         if (!supportedOperators.contains(filter.getOperator())) {
             return null;
@@ -201,7 +200,7 @@ public abstract class BaseFilterBuilder implements FilterBuilder {
         String serializedFilter;
         for (Object f : filter.getFilterList()) {
             if (f instanceof LogicalFilter) {
-                serializedFilter = buildCompoundFilter((LogicalFilter) f);
+                serializedFilter = serializeLogicalFilter((LogicalFilter) f);
             } else {
                 serializedFilter = buildSingleFilter(f, filter.getOperator());
             }
@@ -238,11 +237,11 @@ public abstract class BaseFilterBuilder implements FilterBuilder {
         return new BasicFilter(operation, column, constant);
     }
 
-    private Object handleLogicalOperation(FilterParser.LogicalOperation operator, Object left, Object right) {
+    private LogicalFilter buildLogicalFilter(FilterParser.LogicalOperation operator, Object left, Object right) {
         return new LogicalFilter(operator, Arrays.asList(left, right));
     }
 
-    private Object handleLogicalOperation(FilterParser.LogicalOperation operator, Object filter) {
+    private LogicalFilter buildLogicalFilter(FilterParser.LogicalOperation operator, Object filter) {
         return new LogicalFilter(operator, Collections.singletonList(filter));
     }
 }

@@ -2,7 +2,7 @@ package org.greenplum.pxf.api;
 
 /**
  * Interface a user of FilterParser should implement.
- * This is used to let the user build filter expressions in the manner she sees fit.
+ * This is used to let the user build filter expressions in the manner they see fit.
  * When an operator is parsed, this function is called to let the user decide what to do with its operands.
  */
 public interface FilterBuilder {

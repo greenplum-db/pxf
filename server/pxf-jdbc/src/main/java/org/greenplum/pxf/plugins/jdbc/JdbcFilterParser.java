@@ -99,7 +99,7 @@ public class JdbcFilterParser extends BaseFilterBuilder {
     }
 
     @Override
-    protected String mapValue(Object val, DataType type) {
+    protected String serializeValue(Object val, DataType type) {
         switch (type) {
             case SMALLINT:
             case INTEGER:

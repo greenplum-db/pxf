@@ -43,7 +43,7 @@ public class S3SelectFilterParser extends BaseFilterBuilder {
     }
 
     @Override
-    protected void addColumnName(StringBuilder result, FilterParser.Operation operation, DataType type, ColumnDescriptor filterColumn, String columnName) {
+    protected void serializeColumnName(StringBuilder result, FilterParser.Operation operation, DataType type, ColumnDescriptor filterColumn, String columnName) {
         if (operation == FilterParser.Operation.HDOP_IS_NULL || operation == FilterParser.Operation.HDOP_IS_NOT_NULL) {
             result.append(columnName);
         } else {
@@ -114,7 +114,7 @@ public class S3SelectFilterParser extends BaseFilterBuilder {
     }
 
     @Override
-    protected String mapValue(Object val, DataType type) {
+    protected String serializeValue(Object val, DataType type) {
         switch (type) {
             case SMALLINT:
             case INTEGER:
