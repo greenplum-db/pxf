@@ -26,7 +26,10 @@ import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
 
 /**
@@ -66,56 +69,77 @@ public class FilterParser {
     private byte[] filterByteArr;
     private Stack<Object> operandsStack;
     private FilterBuilder filterBuilder;
-    public static final char COL_OP = 'a';
-    public static final char SCALAR_CONST_OP = 'c';
-    public static final char LIST_CONST_OP = 'm';
-    public static final char CONST_LEN = 's';
-    public static final char CONST_DATA = 'd';
-    public static final char COMP_OP = 'o';
-    public static final char LOG_OP = 'l';
+    private static final char COL_OP = 'a';
+    private static final char SCALAR_CONST_OP = 'c';
+    private static final char LIST_CONST_OP = 'm';
+    private static final char CONST_LEN = 's';
+    private static final char CONST_DATA = 'd';
+    private static final char COMP_OP = 'o';
+    private static final char LOG_OP = 'l';
 
     public static final String DEFAULT_CHARSET = "UTF-8";
+
+    private static final Map<Integer, Operator> OPERATOR_MAP =
+            Collections.unmodifiableMap(new HashMap<Integer, Operator>() {{
+                put(0, Operator.NOOP);
+                put(1, Operator.LESS_THAN);
+                put(2, Operator.GREATER_THAN);
+                put(3, Operator.LESS_THAN_OR_EQUAL);
+                put(4, Operator.GREATER_THAN_OR_EQUAL);
+                put(5, Operator.EQUALS);
+                put(6, Operator.NOT_EQUALS);
+                put(7, Operator.LIKE);
+                put(8, Operator.IS_NULL);
+                put(9, Operator.IS_NOT_NULL);
+                put(10, Operator.IN);
+            }});
+
+    private static final Map<Integer, Operator> LOGICAL_OPERATOR_MAP =
+            Collections.unmodifiableMap(new HashMap<Integer, Operator>() {{
+                put(0, Operator.AND);
+                put(1, Operator.OR);
+                put(2, Operator.NOT);
+            }});
 
     /**
      * Supported operations by the parser.
      */
-    public enum Operation {
-        NOOP(null) {
+    public enum Operator {
+        NOOP(null, false) {
             @Override
             public String getOperator() {
                 throw new UnsupportedOperationException("NOOP doesn't have an operator");
             }
         },
-        HDOP_LT("<"),
-        HDOP_GT(">"),
-        HDOP_LE("<="),
-        HDOP_GE(">="),
-        HDOP_EQ("="),
-        HDOP_NE("<>"),
-        HDOP_LIKE("LIKE"),
-        HDOP_IS_NULL("IS NULL"),
-        HDOP_IS_NOT_NULL("IS NOT NULL"),
-        HDOP_IN("IN");
+        LESS_THAN("<", false),
+        GREATER_THAN(">", false),
+        LESS_THAN_OR_EQUAL("<=", false),
+        GREATER_THAN_OR_EQUAL(">=", false),
+        EQUALS("=", false),
+        NOT_EQUALS("<>", false),
+        LIKE("LIKE", false),
+        IS_NULL("IS NULL", false),
+        IS_NOT_NULL("IS NOT NULL", false),
+        IN("IN", false),
+        AND("AND", true),
+        OR("OR", true),
+        NOT("NOT", true);
 
-        private String operator;
+        private final String operator;
+        private final boolean isLogical;
 
-        Operation(String operator) {
+        Operator(String operator, boolean isLogical) {
             this.operator = operator;
+            this.isLogical = isLogical;
         }
 
         public String getOperator() {
             return operator;
         }
-    }
 
-    /**
-     * This enum was added to support filter pushdown with the logical operators OR and NOT
-     * HAWQ-964
-     */
-    public enum LogicalOperation {
-        HDOP_AND,
-        HDOP_OR,
-        HDOP_NOT
+        public boolean isLogical() {
+            return isLogical;
+        }
     }
 
     /**
@@ -198,7 +222,7 @@ public class FilterParser {
                     break;
                 case COMP_OP:
                     opNumber = safeToInt(parseNumber());
-                    Operation operation = opNumber < Operation.values().length ? Operation.values()[opNumber] : null;
+                    Operator operation = OPERATOR_MAP.get(opNumber);
                     if (operation == null) {
                         throw new FilterStringSyntaxException("unknown op ending at " + index);
                     }
@@ -211,7 +235,7 @@ public class FilterParser {
 
                     // all operations other than null checks require 2 operands
                     Object result;
-                    if (operation == Operation.HDOP_IS_NULL || operation == Operation.HDOP_IS_NOT_NULL) {
+                    if (operation == Operator.IS_NULL || operation == Operator.IS_NOT_NULL) {
                         result = filterBuilder.build(operation, rightOperand);
                     } else {
                         // Pop left operand
@@ -238,16 +262,16 @@ public class FilterParser {
                 // Handle parsing logical operator (HAWQ-964)
                 case LOG_OP:
                     opNumber = safeToInt(parseNumber());
-                    LogicalOperation logicalOperation = opNumber < LogicalOperation.values().length ? LogicalOperation.values()[opNumber] : null;
+                    Operator logicalOperation = LOGICAL_OPERATOR_MAP.get(opNumber);
 
                     if (logicalOperation == null) {
                         throw new FilterStringSyntaxException("unknown op ending at " + index);
                     }
 
-                    if (logicalOperation == LogicalOperation.HDOP_NOT) {
+                    if (logicalOperation == Operator.NOT) {
                         Object exp = operandsStack.pop();
                         result = filterBuilder.build(logicalOperation, exp);
-                    } else if (logicalOperation == LogicalOperation.HDOP_AND || logicalOperation == LogicalOperation.HDOP_OR) {
+                    } else if (logicalOperation == Operator.AND || logicalOperation == Operator.OR) {
                         rightOperand = operandsStack.pop();
                         Object leftOperand = operandsStack.pop();
 
@@ -288,7 +312,7 @@ public class FilterParser {
      * @return the converted int value
      * @throws FilterStringSyntaxException if the long value is not inside an int scope
      */
-    int safeToInt(Long value) throws FilterStringSyntaxException {
+    private int safeToInt(Long value) throws FilterStringSyntaxException {
         if (value > Integer.MAX_VALUE || value < Integer.MIN_VALUE) {
             throw new FilterStringSyntaxException("value " + value + " larger than intmax ending at " + index);
         }
@@ -377,25 +401,13 @@ public class FilterParser {
      * Parses either a number or a string.
      */
     private Object parseScalarParameter() throws Exception {
-        if (index == filterByteArr.length) {
-            throw new FilterStringSyntaxException("argument should follow at " + index);
-        }
+        validateNotEndOfArray();
 
         DataType dataType = DataType.get(parseConstDataType());
-        if (dataType == DataType.UNSUPPORTED_TYPE) {
-            throw new FilterStringSyntaxException("invalid DataType OID at " + (index - 1));
-        }
+        validateDataType(dataType);
 
         int dataLength = parseDataLength();
-
-        if (index + dataLength > filterByteArr.length) {
-            throw new FilterStringSyntaxException("data size larger than filter string starting at " + index);
-        }
-
-        if (((char) filterByteArr[index]) != CONST_DATA) {
-            throw new FilterStringSyntaxException("data delimiter 'd' expected at " + index);
-        }
-
+        validateDataLengthAndType(dataLength);
         index++;
 
         Object data = convertDataType(filterByteArr, index, index + dataLength, dataType);
@@ -404,30 +416,19 @@ public class FilterParser {
     }
 
     private Object parseListParameter() throws Exception {
-        if (index == filterByteArr.length) {
-            throw new FilterStringSyntaxException("argument should follow at " + index);
-        }
+        validateNotEndOfArray();
 
         DataType dataType = DataType.get(parseConstDataType());
-        List<Object> data = new ArrayList<Object>();
-        if (dataType == DataType.UNSUPPORTED_TYPE) {
-            throw new FilterStringSyntaxException("invalid DataType OID at " + (index - 1));
-        }
+        validateDataType(dataType);
 
+        List<Object> data = new ArrayList<>();
         if (dataType.getTypeElem() == null) {
             throw new FilterStringSyntaxException("expected non-scalar datatype, but got datatype with oid = " + dataType.getOID());
         }
 
         while (((char) filterByteArr[index]) == CONST_LEN) {
             int dataLength = parseDataLength();
-
-            if (index + dataLength > filterByteArr.length) {
-                throw new FilterStringSyntaxException("data size larger than filter string starting at " + index);
-            }
-
-            if (((char) filterByteArr[index]) != CONST_DATA) {
-                throw new FilterStringSyntaxException("data delimiter 'd' expected at " + index);
-            }
+            validateDataLengthAndType(dataLength);
 
             index++;
             data.add(convertDataType(filterByteArr, index, index + dataLength, dataType.getTypeElem()));
@@ -488,24 +489,63 @@ public class FilterParser {
      * The function takes an operator and reverses it
      * e.g. > turns into <
      */
-    private Operation reverseOp(Operation operation) {
+    private Operator reverseOp(Operator operation) {
         switch (operation) {
-            case HDOP_LT:
-                operation = Operation.HDOP_GT;
+            case LESS_THAN:
+                operation = Operator.GREATER_THAN;
                 break;
-            case HDOP_GT:
-                operation = Operation.HDOP_LT;
+            case GREATER_THAN:
+                operation = Operator.LESS_THAN;
                 break;
-            case HDOP_LE:
-                operation = Operation.HDOP_GE;
+            case LESS_THAN_OR_EQUAL:
+                operation = Operator.GREATER_THAN_OR_EQUAL;
                 break;
-            case HDOP_GE:
-                operation = Operation.HDOP_LE;
+            case GREATER_THAN_OR_EQUAL:
+                operation = Operator.LESS_THAN_OR_EQUAL;
                 break;
             default:
                 // no change o/w
         }
 
         return operation;
+    }
+
+    /**
+     * Ensures that the data length and type of the element being parsed is valid
+     *
+     * @param dataLength the length of the data to be parsed
+     * @throws FilterStringSyntaxException the exception describing if the length or type are invalid
+     */
+    private void validateDataLengthAndType(int dataLength) throws FilterStringSyntaxException {
+        if (index + dataLength > filterByteArr.length) {
+            throw new FilterStringSyntaxException("data size larger than filter string starting at " + index);
+        }
+
+        if (((char) filterByteArr[index]) != CONST_DATA) {
+            throw new FilterStringSyntaxException("data delimiter 'd' expected at " + index);
+        }
+    }
+
+    /**
+     * Validates that the current parsing index is not at the end of the byte array
+     *
+     * @throws FilterStringSyntaxException the exception when the index is at the end of the byte array
+     */
+    private void validateNotEndOfArray() throws FilterStringSyntaxException {
+        if (index == filterByteArr.length) {
+            throw new FilterStringSyntaxException("argument should follow at " + index);
+        }
+    }
+
+    /**
+     * Validates that the data type is supported
+     *
+     * @param dataType the parsed data type
+     * @throws FilterStringSyntaxException the exception when the data type is not supported
+     */
+    private void validateDataType(DataType dataType) throws FilterStringSyntaxException {
+        if (dataType == DataType.UNSUPPORTED_TYPE) {
+            throw new FilterStringSyntaxException("invalid DataType OID at " + (index - 1));
+        }
     }
 }

@@ -35,7 +35,6 @@ import org.apache.hadoop.hive.ql.io.sarg.ConvertAstToSearchArg;
 import org.apache.hadoop.hive.ql.io.sarg.PredicateLeaf;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentFactory;
-import org.apache.hadoop.hive.serde2.ColumnProjectionUtils;
 import org.apache.hadoop.mapred.JobConf;
 import org.greenplum.pxf.api.BasicFilter;
 import org.greenplum.pxf.api.LogicalFilter;
@@ -162,13 +161,13 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
         for (Object f : filterList) {
             if (f instanceof LogicalFilter) {
                 switch (((LogicalFilter) f).getOperator()) {
-                    case HDOP_OR:
+                    case OR:
                         builder.startOr();
                         break;
-                    case HDOP_AND:
+                    case AND:
                         builder.startAnd();
                         break;
-                    case HDOP_NOT:
+                    case NOT:
                         builder.startNot();
                         break;
                 }
@@ -213,37 +212,37 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
         }
 
         switch (filter.getOperation()) {
-            case HDOP_LT:
+            case LESS_THAN:
                 builder.lessThan(filterColumnName, predicateLeafType, filterValue);
                 break;
-            case HDOP_GT:
+            case GREATER_THAN:
                 builder.startNot().lessThanEquals(filterColumnName, predicateLeafType, filterValue).end();
                 break;
-            case HDOP_LE:
+            case LESS_THAN_OR_EQUAL:
                 builder.lessThanEquals(filterColumnName, predicateLeafType, filterValue);
                 break;
-            case HDOP_GE:
+            case GREATER_THAN_OR_EQUAL:
                 builder.startNot().lessThan(filterColumnName, predicateLeafType, filterValue).end();
                 break;
-            case HDOP_EQ:
+            case EQUALS:
                 builder.equals(filterColumnName, predicateLeafType, filterValue);
                 break;
-            case HDOP_NE:
+            case NOT_EQUALS:
                 builder.startNot().equals(filterColumnName, predicateLeafType, filterValue).end();
                 break;
-            case HDOP_IS_NULL:
+            case IS_NULL:
                 builder.isNull(filterColumnName, predicateLeafType);
                 break;
-            case HDOP_IS_NOT_NULL:
+            case IS_NOT_NULL:
                 builder.startNot().isNull(filterColumnName, predicateLeafType).end();
                 break;
-            case HDOP_IN:
+            case IN:
                 if (filterValue instanceof List) {
                     @SuppressWarnings("unchecked")
                     List<Object> l = (List<Object>) filterValue;
                     builder.in(filterColumnName, predicateLeafType, l.toArray());
                 } else {
-                    throw new IllegalArgumentException("filterValue should be instance of List for HDOP_IN operation");
+                    throw new IllegalArgumentException("filterValue should be instance of List for IN operation");
                 }
                 break;
             default: {

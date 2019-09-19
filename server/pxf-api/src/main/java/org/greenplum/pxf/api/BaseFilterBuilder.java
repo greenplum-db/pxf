@@ -13,18 +13,21 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import static org.greenplum.pxf.api.FilterParser.Operator.NOT;
+
 public abstract class BaseFilterBuilder implements FilterBuilder {
 
     protected Logger LOG = LoggerFactory.getLogger(this.getClass());
 
-    private final EnumSet<FilterParser.Operation> supportedOperations;
-    private final EnumSet<FilterParser.LogicalOperation> supportedOperators;
+    private final EnumSet<FilterParser.Operator> supportedOperators;
+    private final EnumSet<FilterParser.Operator> supportedLogicalOperators;
 
     private List<ColumnDescriptor> columnDescriptors;
 
-    public BaseFilterBuilder(EnumSet<FilterParser.Operation> supportedOperations, EnumSet<FilterParser.LogicalOperation> supportedOperators) {
-        this.supportedOperations = supportedOperations;
-        this.supportedOperators = supportedOperators;
+    public BaseFilterBuilder(EnumSet<FilterParser.Operator> supportedOperations,
+                             EnumSet<FilterParser.Operator> supportedOperators) {
+        this.supportedOperators = supportedOperations;
+        this.supportedLogicalOperators = supportedOperators;
     }
 
     public String buildFilterString(String filterInput) throws Exception {
@@ -47,28 +50,25 @@ public abstract class BaseFilterBuilder implements FilterBuilder {
     }
 
     @Override
-    public Object build(FilterParser.LogicalOperation operation, Object left, Object right) {
-        return buildLogicalFilter(operation, left, right);
+    public Object build(FilterParser.Operator operator, Object left, Object right) throws Exception {
+        if (operator.isLogical())
+            return buildLogicalFilter(operator, left, right);
+        else
+            // Assume column is on the left
+            return handleSimpleOperations(operator, (FilterParser.ColumnIndex) left, (FilterParser.Constant) right);
     }
 
     @Override
-    public Object build(FilterParser.LogicalOperation operation, Object filter) {
-        return buildLogicalFilter(operation, filter);
-    }
-
-    @Override
-    public Object build(FilterParser.Operation operation, Object left, Object right) throws Exception {
-        // Assume column is on the left
-        return handleSimpleOperations(operation, (FilterParser.ColumnIndex) left, (FilterParser.Constant) right);
-    }
-
-    @Override
-    public Object build(FilterParser.Operation operation, Object operand) throws UnsupportedOperationException {
-        if (operation == FilterParser.Operation.HDOP_IS_NULL || operation == FilterParser.Operation.HDOP_IS_NOT_NULL) {
-            // Use null for the constant value of null comparison
-            return handleSimpleOperations(operation, (FilterParser.ColumnIndex) operand, null);
+    public Object build(FilterParser.Operator operator, Object operand) throws UnsupportedOperationException {
+        if (operator.isLogical()) {
+            return buildLogicalFilter(operator, operand);
         } else {
-            throw new UnsupportedOperationException(String.format("Unsupported unary operation '%s'", operation));
+            if (operator == FilterParser.Operator.IS_NULL || operator == FilterParser.Operator.IS_NOT_NULL) {
+                // Use null for the constant value of null comparison
+                return handleSimpleOperations(operator, (FilterParser.ColumnIndex) operand, null);
+            } else {
+                throw new UnsupportedOperationException(String.format("Unsupported unary operation '%s'", operator));
+            }
         }
     }
 
@@ -97,7 +97,7 @@ public abstract class BaseFilterBuilder implements FilterBuilder {
         return result;
     }
 
-    protected void serializeColumnName(StringBuilder result, FilterParser.Operation operation, DataType type, ColumnDescriptor filterColumn, String columnName) {
+    protected void serializeColumnName(StringBuilder result, FilterParser.Operator operation, DataType type, ColumnDescriptor filterColumn, String columnName) {
         result.append(columnName);
     }
 
@@ -105,20 +105,20 @@ public abstract class BaseFilterBuilder implements FilterBuilder {
         return column.columnName();
     }
 
-    protected abstract boolean isCompliantWithOperator(FilterParser.LogicalOperation operator);
+    protected abstract boolean canRightOperandBeOmitted(FilterParser.Operator logicalOperator);
 
-    protected abstract boolean isFilterCompatible(String filterColumnName, FilterParser.Operation operation, FilterParser.LogicalOperation logicalOperation);
+    protected abstract boolean shouldIncludeFilter(String filterColumnName, FilterParser.Operator operator, FilterParser.Operator logicalOperation);
 
     protected abstract String serializeValue(Object val, DataType type);
 
     /**
      * Build filter string for a single filter and append to the filters string.
      *
-     * @param filter the filter
+     * @param filter           the filter
      * @param logicalOperation the logical operation
      * @return the filter string if successful, null otherwise
      */
-    private String buildSingleFilter(Object filter, FilterParser.LogicalOperation logicalOperation) {
+    private String buildSingleFilter(Object filter, FilterParser.Operator logicalOperation) {
 
         // Let's look first at the filter
         BasicFilter bFilter = (BasicFilter) filter;
@@ -127,12 +127,12 @@ public abstract class BaseFilterBuilder implements FilterBuilder {
         int filterColumnIndex = bFilter.getColumn().index();
         ColumnDescriptor filterColumn = columnDescriptors.get(filterColumnIndex);
         String filterColumnName = getColumnName(filterColumn);
-        FilterParser.Operation operation = bFilter.getOperation();
+        FilterParser.Operator operation = bFilter.getOperation();
         DataType dataType = DataType.get(filterColumn.columnTypeCode());
 
         // if filter is determined to be not being able to be pushed down, but not violating logical correctness,
         // we just skip it and return null
-        if (!isFilterCompatible(filterColumnName, operation, logicalOperation)) {
+        if (!shouldIncludeFilter(filterColumnName, operation, logicalOperation)) {
             return null;
         }
 
@@ -143,7 +143,7 @@ public abstract class BaseFilterBuilder implements FilterBuilder {
         if (dataType == DataType.BOOLEAN)
             return result.toString();
 
-        if (supportedOperations.contains(operation)) {
+        if (supportedOperators.contains(operation)) {
             result
                     .append(" ")
                     .append(operation.getOperator());
@@ -152,7 +152,7 @@ public abstract class BaseFilterBuilder implements FilterBuilder {
         }
 
         boolean operationRequiresValue =
-                operation != FilterParser.Operation.HDOP_IS_NULL && operation != FilterParser.Operation.HDOP_IS_NOT_NULL;
+                operation != FilterParser.Operator.IS_NULL && operation != FilterParser.Operator.IS_NOT_NULL;
 
         if (operationRequiresValue) {
 
@@ -174,27 +174,12 @@ public abstract class BaseFilterBuilder implements FilterBuilder {
 
     private String serializeLogicalFilter(LogicalFilter filter) {
 
-        if (!supportedOperators.contains(filter.getOperator())) {
+        if (!supportedLogicalOperators.contains(filter.getOperator())) {
             return null;
         }
 
-        String logicalOperator;
-        String outputFormat = "(%s)";
-        switch (filter.getOperator()) {
-            case HDOP_AND:
-                logicalOperator = " AND ";
-                break;
-            case HDOP_OR:
-                logicalOperator = " OR ";
-                break;
-            case HDOP_NOT:
-                logicalOperator = " NOT ";
-                outputFormat = "%s";
-                break;
-            default:
-                // should not get here
-                return null;
-        }
+        String logicalOperator = String.format(" %s ", filter.getOperator().getOperator());
+        String outputFormat = filter.getOperator() == NOT ? "%s" : "(%s)";
 
         StringBuilder filterString = new StringBuilder();
         String serializedFilter;
@@ -205,21 +190,27 @@ public abstract class BaseFilterBuilder implements FilterBuilder {
                 serializedFilter = buildSingleFilter(f, filter.getOperator());
             }
 
-            if (serializedFilter != null) {
-                if (filter.getOperator() == FilterParser.LogicalOperation.HDOP_NOT) {
-                    filterString
-                            .append("NOT (")
-                            .append(serializedFilter)
-                            .append(")");
-                } else {
-                    // We only append the operator if there is something on the filterString
-                    if (filterString.length() > 0) {
-                        filterString.append(logicalOperator);
-                    }
-                    filterString.append(serializedFilter);
+            if (serializedFilter == null) {
+                // If the filter was skipped, a null is returned, so
+                // we need to decided whether the operator can handle
+                // the operation with the skipped filter
+                if (!canRightOperandBeOmitted(filter.getOperator())) {
+                    return null;
                 }
-            } else if (!isCompliantWithOperator(filter.getOperator())) {
-                return null;
+                continue;
+            }
+
+            if (filter.getOperator() == NOT) {
+                filterString
+                        .append("NOT (")
+                        .append(serializedFilter)
+                        .append(")");
+            } else {
+                // We only append the operator if there is something on the filterString
+                if (filterString.length() > 0) {
+                    filterString.append(logicalOperator);
+                }
+                filterString.append(serializedFilter);
             }
         }
 
@@ -231,17 +222,17 @@ public abstract class BaseFilterBuilder implements FilterBuilder {
      * Handles simple column-operator-constant expressions.
      * Creates a special filter in the case the column is the row key column
      */
-    private BasicFilter handleSimpleOperations(FilterParser.Operation operation,
+    private BasicFilter handleSimpleOperations(FilterParser.Operator operation,
                                                FilterParser.ColumnIndex column,
                                                FilterParser.Constant constant) {
         return new BasicFilter(operation, column, constant);
     }
 
-    private LogicalFilter buildLogicalFilter(FilterParser.LogicalOperation operator, Object left, Object right) {
+    private LogicalFilter buildLogicalFilter(FilterParser.Operator operator, Object left, Object right) {
         return new LogicalFilter(operator, Arrays.asList(left, right));
     }
 
-    private LogicalFilter buildLogicalFilter(FilterParser.LogicalOperation operator, Object filter) {
+    private LogicalFilter buildLogicalFilter(FilterParser.Operator operator, Object filter) {
         return new LogicalFilter(operator, Collections.singletonList(filter));
     }
 }

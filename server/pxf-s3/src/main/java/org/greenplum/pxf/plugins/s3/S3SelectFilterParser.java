@@ -11,29 +11,29 @@ import java.util.EnumSet;
 public class S3SelectFilterParser extends BaseFilterBuilder {
 
     private boolean usePositionToIdentifyColumn;
-    private static final EnumSet<FilterParser.Operation> SUPPORTED_OPERATIONS =
+    private static final EnumSet<FilterParser.Operator> SUPPORTED_OPERATIONS =
             EnumSet.of(
-                    FilterParser.Operation.HDOP_LT,
-                    FilterParser.Operation.HDOP_GT,
-                    FilterParser.Operation.HDOP_LE,
-                    FilterParser.Operation.HDOP_GE,
-                    FilterParser.Operation.HDOP_EQ,
+                    FilterParser.Operator.LESS_THAN,
+                    FilterParser.Operator.GREATER_THAN,
+                    FilterParser.Operator.LESS_THAN_OR_EQUAL,
+                    FilterParser.Operator.GREATER_THAN_OR_EQUAL,
+                    FilterParser.Operator.EQUALS,
                     // TODO: LIKE is not supported on the C side
-                    // FilterParser.Operation.HDOP_LIKE,
-                    FilterParser.Operation.HDOP_NE,
-                    FilterParser.Operation.HDOP_IN,
-                    FilterParser.Operation.HDOP_IS_NULL,
-                    FilterParser.Operation.HDOP_IS_NOT_NULL
+                    // FilterParser.Operator.LIKE,
+                    FilterParser.Operator.NOT_EQUALS,
+                    FilterParser.Operator.IN,
+                    FilterParser.Operator.IS_NULL,
+                    FilterParser.Operator.IS_NOT_NULL
             );
-    private static final EnumSet<FilterParser.LogicalOperation> SUPPORTED_OPERATORS =
+    private static final EnumSet<FilterParser.Operator> SUPPORTED_LOGICAL_OPERATORS =
             EnumSet.of(
-                    FilterParser.LogicalOperation.HDOP_AND,
-                    FilterParser.LogicalOperation.HDOP_NOT,
-                    FilterParser.LogicalOperation.HDOP_OR
+                    FilterParser.Operator.AND,
+                    FilterParser.Operator.NOT,
+                    FilterParser.Operator.OR
             );
 
     S3SelectFilterParser() {
-        super(SUPPORTED_OPERATIONS, SUPPORTED_OPERATORS);
+        super(SUPPORTED_OPERATIONS, SUPPORTED_LOGICAL_OPERATORS);
     }
 
     @Override
@@ -43,8 +43,8 @@ public class S3SelectFilterParser extends BaseFilterBuilder {
     }
 
     @Override
-    protected void serializeColumnName(StringBuilder result, FilterParser.Operation operation, DataType type, ColumnDescriptor filterColumn, String columnName) {
-        if (operation == FilterParser.Operation.HDOP_IS_NULL || operation == FilterParser.Operation.HDOP_IS_NOT_NULL) {
+    protected void serializeColumnName(StringBuilder result, FilterParser.Operator operation, DataType type, ColumnDescriptor filterColumn, String columnName) {
+        if (operation == FilterParser.Operator.IS_NULL || operation == FilterParser.Operator.IS_NOT_NULL) {
             result.append(columnName);
         } else {
             switch (type) {
@@ -104,12 +104,12 @@ public class S3SelectFilterParser extends BaseFilterBuilder {
     }
 
     @Override
-    protected boolean isCompliantWithOperator(FilterParser.LogicalOperation operator) {
+    protected boolean canRightOperandBeOmitted(FilterParser.Operator logicalOperator) {
         return true;
     }
 
     @Override
-    protected boolean isFilterCompatible(String filterColumnName, FilterParser.Operation operation, FilterParser.LogicalOperation logicalOperation) {
+    protected boolean shouldIncludeFilter(String filterColumnName, FilterParser.Operator operation, FilterParser.Operator logicalOperator) {
         return true;
     }
 

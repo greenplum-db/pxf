@@ -21,20 +21,21 @@ package org.greenplum.pxf.plugins.hive;
 
 
 import com.google.common.collect.Lists;
-import org.greenplum.pxf.api.FilterParser.LogicalOperation;
+import org.greenplum.pxf.api.BasicFilter;
+import org.greenplum.pxf.api.FilterParser;
 import org.greenplum.pxf.api.LogicalFilter;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.junit.Test;
-
-import org.greenplum.pxf.api.BasicFilter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.greenplum.pxf.api.FilterParser.Operation;
-import static org.greenplum.pxf.api.FilterParser.Operation.*;
+import static org.greenplum.pxf.api.FilterParser.Operator;
+import static org.greenplum.pxf.api.FilterParser.Operator.EQUALS;
+import static org.greenplum.pxf.api.FilterParser.Operator.GREATER_THAN;
+import static org.greenplum.pxf.api.FilterParser.Operator.LESS_THAN;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -43,11 +44,11 @@ public class HiveFilterBuilderTest {
     public void parseFilterWithThreeOperations() throws Exception {
         HiveFilterBuilder builder = new HiveFilterBuilder();
         String[] consts = new String[]{"first", "2"};
-        Operation[] ops = new Operation[]{HDOP_EQ, HDOP_GT};
+        Operator[] ops = new FilterParser.Operator[]{EQUALS, GREATER_THAN};
         int[] idx = new int[]{1, 2};
 
         LogicalFilter filterList = (LogicalFilter) builder.getFilterObject("a1c25s5dfirsto5a2c20s1d2o2l0");
-        assertEquals(LogicalOperation.HDOP_AND, filterList.getOperator());
+        assertEquals(Operator.AND, filterList.getOperator());
         BasicFilter leftOperand = (BasicFilter) filterList.getFilterList().get(0);
         assertEquals(consts[0], leftOperand.getConstant().constant());
         assertEquals(idx[0], leftOperand.getColumn().index());
@@ -80,7 +81,7 @@ public class HiveFilterBuilderTest {
     public void parseFilterWithLogicalOperation() throws Exception {
         HiveFilterBuilder builder = new HiveFilterBuilder();
         LogicalFilter filter = (LogicalFilter) builder.getFilterObject("a1c25s5dfirsto5a2c20s1d2o2l0");
-        assertEquals(LogicalOperation.HDOP_AND, filter.getOperator());
+        assertEquals(Operator.AND, filter.getOperator());
         assertEquals(2, filter.getFilterList().size());
     }
 
@@ -88,16 +89,16 @@ public class HiveFilterBuilderTest {
     public void parseNestedExpressionWithLogicalOperation() throws Exception {
         HiveFilterBuilder builder = new HiveFilterBuilder();
         LogicalFilter filter = (LogicalFilter) builder.getFilterObject("a1c25s5dfirsto5a2c20s1d2o2l0a1c20s1d1o1l1");
-        assertEquals(LogicalOperation.HDOP_OR, filter.getOperator());
-        assertEquals(LogicalOperation.HDOP_AND, ((LogicalFilter) filter.getFilterList().get(0)).getOperator());
-        assertEquals(HDOP_LT, ((BasicFilter) filter.getFilterList().get(1)).getOperation());
+        assertEquals(Operator.OR, filter.getOperator());
+        assertEquals(Operator.AND, ((LogicalFilter) filter.getFilterList().get(0)).getOperator());
+        assertEquals(LESS_THAN, ((BasicFilter) filter.getFilterList().get(1)).getOperation());
     }
 
     @Test
     public void parseISNULLExpression() throws Exception {
         HiveFilterBuilder builder = new HiveFilterBuilder();
         BasicFilter filter = (BasicFilter) builder.getFilterObject("a1o8");
-        assertEquals(Operation.HDOP_IS_NULL, filter.getOperation());
+        assertEquals(FilterParser.Operator.IS_NULL, filter.getOperation());
         assertEquals(1, filter.getColumn().index());
         assertNull(filter.getConstant());
     }
@@ -106,7 +107,7 @@ public class HiveFilterBuilderTest {
     public void parseISNOTNULLExpression() throws Exception {
         HiveFilterBuilder builder = new HiveFilterBuilder();
         BasicFilter filter = (BasicFilter) builder.getFilterObject("a1o9");
-        assertEquals(Operation.HDOP_IS_NOT_NULL, filter.getOperation());
+        assertEquals(FilterParser.Operator.IS_NOT_NULL, filter.getOperation());
         assertEquals(1, filter.getColumn().index());
         assertNull(filter.getConstant());
     }

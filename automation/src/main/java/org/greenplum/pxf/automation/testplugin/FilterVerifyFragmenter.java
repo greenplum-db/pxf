@@ -16,10 +16,8 @@ import java.util.List;
 public class FilterVerifyFragmenter extends BaseFragmenter
 {
     private static class TestFilterBuilder implements FilterBuilder {
-        public Object build(FilterParser.Operation operation, Object left, Object right) throws Exception {return new Object();};
-        public Object build(FilterParser.Operation operation, Object operand) throws Exception {return new Object();};
-        public Object build(FilterParser.LogicalOperation operation, Object left, Object right) throws Exception {return new Object();};
-        public Object build(FilterParser.LogicalOperation operation, Object filter) throws Exception {return new Object();};
+        public Object build(FilterParser.Operator operation, Object left, Object right) throws Exception {return new Object();}
+        public Object build(FilterParser.Operator operation, Object operand) throws Exception {return new Object();}
     }
 
     /**

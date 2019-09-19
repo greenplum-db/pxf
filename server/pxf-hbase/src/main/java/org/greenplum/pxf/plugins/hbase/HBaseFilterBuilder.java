@@ -63,8 +63,8 @@ import static org.greenplum.pxf.api.io.DataType.TEXT;
  * any logic in HBase filter objects.
  */
 public class HBaseFilterBuilder implements FilterBuilder {
-    private Map<FilterParser.Operation, CompareFilter.CompareOp> operatorsMap;
-    private Map<FilterParser.LogicalOperation, FilterList.Operator> logicalOperatorsMap;
+    private Map<FilterParser.Operator, CompareFilter.CompareOp> operatorsMap;
+    private Map<FilterParser.Operator, FilterList.Operator> logicalOperatorsMap;
     private byte[] startKey;
     private byte[] endKey;
     private HBaseTupleDescription tupleDescription;
@@ -153,61 +153,57 @@ public class HBaseFilterBuilder implements FilterBuilder {
      * each time the parser comes across an operator.
      */
     @Override
-    public Object build(FilterParser.Operation opId,
-                        Object leftOperand,
-                        Object rightOperand) throws Exception {
+    public Object build(FilterParser.Operator operator, Object leftOperand, Object rightOperand) throws Exception {
 
-        // Assume column is on the left
-        return handleSimpleOperations(opId,
-                (FilterParser.ColumnIndex) leftOperand,
-                (FilterParser.Constant) rightOperand);
+        if (operator.isLogical()) {
+            return handleCompoundOperations(operator, (Filter) leftOperand, (Filter) rightOperand);
+        } else {
+            // Assume column is on the left
+            return handleSimpleOperations(operator,
+                    (FilterParser.ColumnIndex) leftOperand,
+                    (FilterParser.Constant) rightOperand);
+        }
     }
 
     @Override
-    public Object build(FilterParser.Operation operation, Object operand) throws Exception {
-        return handleSimpleOperations(operation, (FilterParser.ColumnIndex) operand);
-    }
-
-    @Override
-    public Object build(FilterParser.LogicalOperation opId, Object leftOperand, Object rightOperand) {
-        return handleCompoundOperations(opId, (Filter) leftOperand, (Filter) rightOperand);
-    }
-
-    @Override
-    public Object build(FilterParser.LogicalOperation opId, Object leftOperand) {
-        return null;
+    public Object build(FilterParser.Operator operator, Object operand) throws Exception {
+        if (operator.isLogical()) {
+            return null;
+        } else {
+            return handleSimpleOperations(operator, (FilterParser.ColumnIndex) operand);
+        }
     }
 
     /**
      * Initializes the {@link #operatorsMap} with appropriate values.
      */
     private void initOperatorsMap() {
-        operatorsMap = new EnumMap<FilterParser.Operation, CompareFilter.CompareOp>(FilterParser.Operation.class);
-        operatorsMap.put(FilterParser.Operation.HDOP_LT, CompareFilter.CompareOp.LESS); // "<"
-        operatorsMap.put(FilterParser.Operation.HDOP_GT, CompareFilter.CompareOp.GREATER); // ">"
-        operatorsMap.put(FilterParser.Operation.HDOP_LE, CompareFilter.CompareOp.LESS_OR_EQUAL); // "<="
-        operatorsMap.put(FilterParser.Operation.HDOP_GE, CompareFilter.CompareOp.GREATER_OR_EQUAL); // ">="
-        operatorsMap.put(FilterParser.Operation.HDOP_EQ, CompareFilter.CompareOp.EQUAL); // "="
-        operatorsMap.put(FilterParser.Operation.HDOP_NE, CompareFilter.CompareOp.NOT_EQUAL); // "!="
+        operatorsMap = new EnumMap<>(FilterParser.Operator.class);
+        operatorsMap.put(FilterParser.Operator.LESS_THAN, CompareFilter.CompareOp.LESS); // "<"
+        operatorsMap.put(FilterParser.Operator.GREATER_THAN, CompareFilter.CompareOp.GREATER); // ">"
+        operatorsMap.put(FilterParser.Operator.LESS_THAN_OR_EQUAL, CompareFilter.CompareOp.LESS_OR_EQUAL); // "<="
+        operatorsMap.put(FilterParser.Operator.GREATER_THAN_OR_EQUAL, CompareFilter.CompareOp.GREATER_OR_EQUAL); // ">="
+        operatorsMap.put(FilterParser.Operator.EQUALS, CompareFilter.CompareOp.EQUAL); // "="
+        operatorsMap.put(FilterParser.Operator.NOT_EQUALS, CompareFilter.CompareOp.NOT_EQUAL); // "!="
     }
 
     private void initLogicalOperatorsMap() {
-        logicalOperatorsMap = new EnumMap<>(FilterParser.LogicalOperation.class);
-        logicalOperatorsMap.put(FilterParser.LogicalOperation.HDOP_AND, FilterList.Operator.MUST_PASS_ALL);
-        logicalOperatorsMap.put(FilterParser.LogicalOperation.HDOP_OR, FilterList.Operator.MUST_PASS_ONE);
+        logicalOperatorsMap = new EnumMap<>(FilterParser.Operator.class);
+        logicalOperatorsMap.put(FilterParser.Operator.AND, FilterList.Operator.MUST_PASS_ALL);
+        logicalOperatorsMap.put(FilterParser.Operator.OR, FilterList.Operator.MUST_PASS_ONE);
     }
 
-    private Object handleSimpleOperations(FilterParser.Operation opId,
+    private Object handleSimpleOperations(FilterParser.Operator opId,
                                           FilterParser.ColumnIndex column) throws Exception {
         HBaseColumnDescriptor hbaseColumn = tupleDescription.getColumn(column.index());
         CompareFilter.CompareOp compareOperation;
         ByteArrayComparable comparator;
         switch (opId) {
-            case HDOP_IS_NULL:
+            case IS_NULL:
                 compareOperation = CompareFilter.CompareOp.EQUAL;
                 comparator = new NullComparator();
                 break;
-            case HDOP_IS_NOT_NULL:
+            case IS_NOT_NULL:
                 compareOperation = CompareFilter.CompareOp.NOT_EQUAL;
                 comparator = new NullComparator();
                 break;
@@ -224,7 +220,7 @@ public class HBaseFilterBuilder implements FilterBuilder {
      * Handles simple column-operator-constant expressions.
      * Creates a special filter in the case the column is the row key column.
      */
-    private Filter handleSimpleOperations(FilterParser.Operation opId,
+    private Filter handleSimpleOperations(FilterParser.Operator opId,
                                           FilterParser.ColumnIndex column,
                                           FilterParser.Constant constant) throws Exception {
         HBaseColumnDescriptor hbaseColumn = tupleDescription.getColumn(column.index());
@@ -232,7 +228,7 @@ public class HBaseFilterBuilder implements FilterBuilder {
                 constant.constant());
 
         if (operatorsMap.get(opId) == null) {
-            //HBase does not support HDOP_LIKE, use 'NOT NULL' comparator
+            //HBase does not support LIKE, use 'NOT NULL' comparator
             return new SingleColumnValueFilter(hbaseColumn.columnFamilyBytes(),
                     hbaseColumn.qualifierBytes(),
                     CompareFilter.CompareOp.NOT_EQUAL,
@@ -313,16 +309,15 @@ public class HBaseFilterBuilder implements FilterBuilder {
      * <p>
      * Currently, 1, 2 can occur, since no parenthesis are used.
      */
-    private Filter handleCompoundOperations(FilterParser.LogicalOperation opId, Filter left, Filter right) {
-        return new FilterList(logicalOperatorsMap.get(opId), new Filter[]{left, right});
+    private Filter handleCompoundOperations(FilterParser.Operator logicalOperator, Filter left, Filter right) {
+        return new FilterList(logicalOperatorsMap.get(logicalOperator), left, right);
     }
 
     /**
      * Returns true if column is of type TEXT and is a row key column.
      */
     private boolean textualRowKey(HBaseColumnDescriptor column) {
-        return column.isKeyColumn() &&
-                column.columnTypeCode() == TEXT.getOID();
+        return column.isKeyColumn() && column.columnTypeCode() == TEXT.getOID();
     }
 
     /**
@@ -333,7 +328,7 @@ public class HBaseFilterBuilder implements FilterBuilder {
      * Currently, multiple calls to this function might change
      * previous assignments.
      */
-    private void storeStartEndKeys(FilterParser.Operation op, Object data) {
+    private void storeStartEndKeys(FilterParser.Operator op, Object data) {
         String key = (String) data;
 
         // Adding a zero byte to endkey, makes it inclusive
@@ -342,19 +337,19 @@ public class HBaseFilterBuilder implements FilterBuilder {
         zeroByte[0] = 0;
 
         switch (op) {
-            case HDOP_LT:
+            case LESS_THAN:
                 endKey = Bytes.toBytes(key);
                 break;
-            case HDOP_GT:
+            case GREATER_THAN:
                 startKey = Bytes.add(Bytes.toBytes(key), zeroByte);
                 break;
-            case HDOP_LE:
+            case LESS_THAN_OR_EQUAL:
                 endKey = Bytes.add(Bytes.toBytes(key), zeroByte);
                 break;
-            case HDOP_GE:
+            case GREATER_THAN_OR_EQUAL:
                 startKey = Bytes.toBytes(key);
                 break;
-            case HDOP_EQ:
+            case EQUALS:
                 startKey = Bytes.toBytes(key);
                 endKey = Bytes.add(Bytes.toBytes(key), zeroByte);
                 break;

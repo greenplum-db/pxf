@@ -269,10 +269,11 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
         boolean nonAndOp = true;
         for (Object filter : filterList) {
             if (filter instanceof LogicalFilter) {
-                if (((LogicalFilter) filter).getOperator() != FilterParser.LogicalOperation.HDOP_AND)
+                LogicalFilter logicalFilter = (LogicalFilter) filter;
+                if (logicalFilter.getOperator() != FilterParser.Operator.AND)
                     return false;
-                if (((LogicalFilter) filter).getFilterList() != null)
-                    nonAndOp = testForUnsupportedOperators(((LogicalFilter) filter).getFilterList());
+                if (logicalFilter.getFilterList() != null)
+                    nonAndOp = testForUnsupportedOperators(logicalFilter.getFilterList());
             }
         }
         return nonAndOp;
@@ -283,7 +284,7 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
         for (Object filter : filterList) {
             if (filter instanceof BasicFilter) {
                 BasicFilter bFilter = (BasicFilter) filter;
-                boolean isFilterOperationEqual = (bFilter.getOperation() == FilterParser.Operation.HDOP_EQ);
+                boolean isFilterOperationEqual = (bFilter.getOperation() == FilterParser.Operator.EQUALS);
                 if (!isFilterOperationEqual) /*
                  * in case this is not an "equality filter"
                  * we ignore it here - in partition
@@ -408,7 +409,7 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
 
     private void printOneBasicFilter(Object filter) {
         BasicFilter bFilter = (BasicFilter) filter;
-        boolean isOperationEqual = (bFilter.getOperation() == FilterParser.Operation.HDOP_EQ);
+        boolean isOperationEqual = (bFilter.getOperation() == FilterParser.Operator.EQUALS);
         int columnIndex = bFilter.getColumn().index();
         String value = bFilter.getConstant() == null ? null : bFilter.getConstant().constant().toString();
         LOG.debug("isOperationEqual: " + isOperationEqual + " columnIndex: "

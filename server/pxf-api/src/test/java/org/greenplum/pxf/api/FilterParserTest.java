@@ -20,9 +20,7 @@ package org.greenplum.pxf.api;
  */
 
 
-import org.greenplum.pxf.api.FilterBuilder;
-import org.greenplum.pxf.api.FilterParser.LogicalOperation;
-import org.greenplum.pxf.api.FilterParser.Operation;
+import org.greenplum.pxf.api.FilterParser.Operator;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -235,7 +233,7 @@ public class FilterParserTest {
 
         filter = "o1a3";
         int index = 2;
-        FilterParser.Operation operation = FilterParser.Operation.HDOP_LT;
+        Operator operation = FilterParser.Operator.LESS_THAN;
         exception = "missing operands for op " + operation + " at " + index;
         runParseNegative("filter with operation first", filter, exception);
 
@@ -249,45 +247,45 @@ public class FilterParserTest {
     public void parseColumnOnLeft() throws Exception {
 
         filter = "a1c20s1d1o1";
-        Operation op = Operation.HDOP_LT;
+        Operator op = Operator.LESS_THAN;
 
-        runParseOneOperation("this filter was build from HDOP_LT", filter, op);
+        runParseOneOperation("this filter was build from LESS_THAN", filter, op);
 
         filter = "a1c20s1d1o2";
-        op = Operation.HDOP_GT;
-        runParseOneOperation("this filter was build from HDOP_GT", filter, op);
+        op = Operator.GREATER_THAN;
+        runParseOneOperation("this filter was build from GREATER_THAN", filter, op);
 
         filter = "a1c20s1d1o3";
-        op = Operation.HDOP_LE;
-        runParseOneOperation("this filter was build from HDOP_LE", filter, op);
+        op = Operator.LESS_THAN_OR_EQUAL;
+        runParseOneOperation("this filter was build from LESS_THAN_OR_EQUAL", filter, op);
 
         filter = "a1c20s1d1o4";
-        op = Operation.HDOP_GE;
-        runParseOneOperation("this filter was build from HDOP_GE", filter, op);
+        op = Operator.GREATER_THAN_OR_EQUAL;
+        runParseOneOperation("this filter was build from GREATER_THAN_OR_EQUAL", filter, op);
 
         filter = "a1c20s1d1o5";
-        op = Operation.HDOP_EQ;
-        runParseOneOperation("this filter was build from HDOP_EQ", filter, op);
+        op = Operator.EQUALS;
+        runParseOneOperation("this filter was build from EQUALS", filter, op);
 
         filter = "a1c20s1d1o6";
-        op = Operation.HDOP_NE;
-        runParseOneOperation("this filter was build from HDOP_NE", filter, op);
+        op = Operator.NOT_EQUALS;
+        runParseOneOperation("this filter was build from NOT_EQUALS", filter, op);
 
         filter = "a1c20s1d1o7";
-        op = Operation.HDOP_LIKE;
-        runParseOneOperation("this filter was built from HDOP_LIKE", filter, op);
+        op = FilterParser.Operator.LIKE;
+        runParseOneOperation("this filter was built from LIKE", filter, op);
 
         filter = "a1o8";
-        op = Operation.HDOP_IS_NULL;
-        runParseOneUnaryOperation("this filter was build from HDOP_IS_NULL", filter, op);
+        op = Operator.IS_NULL;
+        runParseOneUnaryOperation("this filter was build from IS_NULL", filter, op);
 
         filter = "a1o9";
-        op = Operation.HDOP_IS_NOT_NULL;
-        runParseOneUnaryOperation("this filter was build from HDOP_IS_NULL", filter, op);
+        op = Operator.IS_NOT_NULL;
+        runParseOneUnaryOperation("this filter was build from IS_NULL", filter, op);
 
         filter = "a1m1005s1d1s1d2s1d3o10";
-        op = Operation.HDOP_IN;
-        runParseOneOperation("this filter was built from HDOP_IN", filter, op);
+        op = Operator.IN;
+        runParseOneOperation("this filter was built from IN", filter, op);
 
     }
 
@@ -295,51 +293,51 @@ public class FilterParserTest {
     public void parseColumnOnRight() throws Exception {
 
         filter = "c20s1d1a1o1";
-        Operation op = Operation.HDOP_GT;
-        runParseOneOperation("this filter was build from HDOP_LT -> HDOP_GT using reverse!", filter, op);
+        Operator op = Operator.GREATER_THAN;
+        runParseOneOperation("this filter was build from LESS_THAN -> GREATER_THAN using reverse!", filter, op);
 
         filter = "c20s1d1a1o2";
-        op = Operation.HDOP_LT;
-        runParseOneOperation("this filter was build from HDOP_GT -> HDOP_LT using reverse!", filter, op);
+        op = FilterParser.Operator.LESS_THAN;
+        runParseOneOperation("this filter was build from GREATER_THAN -> LESS_THAN using reverse!", filter, op);
 
         filter = "c20s1d1a1o3";
-        op = Operation.HDOP_GE;
-        runParseOneOperation("this filter was build from HDOP_LE -> HDOP_GE using reverse!", filter, op);
+        op = Operator.GREATER_THAN_OR_EQUAL;
+        runParseOneOperation("this filter was build from LESS_THAN_OR_EQUAL -> GREATER_THAN_OR_EQUAL using reverse!", filter, op);
 
         filter = "c20s1d1a1o4";
-        op = Operation.HDOP_LE;
-        runParseOneOperation("this filter was build from HDOP_GE -> HDOP_LE using reverse!", filter, op);
+        op = Operator.LESS_THAN_OR_EQUAL;
+        runParseOneOperation("this filter was build from GREATER_THAN_OR_EQUAL -> LESS_THAN_OR_EQUAL using reverse!", filter, op);
 
         filter = "c20s1d1a1o5";
-        op = Operation.HDOP_EQ;
-        runParseOneOperation("this filter was build from HDOP_EQ using reverse!", filter, op);
+        op = Operator.EQUALS;
+        runParseOneOperation("this filter was build from EQUALS using reverse!", filter, op);
 
         filter = "c20s1d1a1o6";
-        op = Operation.HDOP_NE;
-        runParseOneOperation("this filter was build from HDOP_NE using reverse!", filter, op);
+        op = Operator.NOT_EQUALS;
+        runParseOneOperation("this filter was build from NOT_EQUALS using reverse!", filter, op);
 
         filter = "c20s1d1a1o7";
-        op = Operation.HDOP_LIKE;
-        runParseOneOperation("this filter was build from HDOP_LIKE using reverse!", filter, op);
+        op = FilterParser.Operator.LIKE;
+        runParseOneOperation("this filter was build from LIKE using reverse!", filter, op);
     }
 
     @Test
     public void parseFilterWith2Operations() throws Exception {
         filter = "a1c25s5dfirsto5a2c20s1d1o2l0";
 
-        Object firstOp = "first operation HDOP_EQ";
-        Object secondOp = "second operation HDOP_GT";
+        Object firstOp = "first operation EQUALS";
+        Object secondOp = "second operation GREATER_THAN";
         Object lastOp = "filter with 2 operations connected by AND";
 
-        when(filterBuilder.build(eq(Operation.HDOP_EQ),
+        when(filterBuilder.build(eq(Operator.EQUALS),
                 any(),
                 any())).thenReturn(firstOp);
 
-        when(filterBuilder.build(eq(Operation.HDOP_GT),
+        when(filterBuilder.build(eq(Operator.GREATER_THAN),
                 any(),
                 any())).thenReturn(secondOp);
 
-        when(filterBuilder.build(eq(LogicalOperation.HDOP_AND),
+        when(filterBuilder.build(eq(Operator.AND),
                 eq(firstOp),
                 eq(secondOp))).thenReturn(lastOp);
 
@@ -352,19 +350,19 @@ public class FilterParserTest {
     public void parseLogicalAndOperator() throws Exception {
         filter = "a1c20s1d0o5a2c20s1d3o2l0";
 
-        Object firstOp = "first operation HDOP_EQ";
-        Object secondOp = "second operation HDOP_GT";
+        Object firstOp = "first operation EQUALS";
+        Object secondOp = "second operation GREATER_THAN";
         Object lastOp = "filter with 2 operations connected by AND";
 
-        when(filterBuilder.build(eq(Operation.HDOP_EQ),
+        when(filterBuilder.build(eq(Operator.EQUALS),
                 any(),
                 any())).thenReturn(firstOp);
 
-        when(filterBuilder.build(eq(Operation.HDOP_GT),
+        when(filterBuilder.build(eq(Operator.GREATER_THAN),
                 any(),
                 any())).thenReturn(secondOp);
 
-        when(filterBuilder.build(eq(LogicalOperation.HDOP_AND),
+        when(filterBuilder.build(eq(Operator.AND),
                 any(),
                 any())).thenReturn(lastOp);
 
@@ -377,19 +375,19 @@ public class FilterParserTest {
     public void parseLogicalOrOperator() throws Exception {
         filter = "a1c20s1d0o5a2c20s1d3o2l1";
 
-        Object firstOp = "first operation HDOP_EQ";
-        Object secondOp = "second operation HDOP_GT";
+        Object firstOp = "first operation EQUALS";
+        Object secondOp = "second operation GREATER_THAN";
         Object lastOp = "filter with 1 OR operator";
 
-        when(filterBuilder.build(eq(Operation.HDOP_EQ),
+        when(filterBuilder.build(eq(Operator.EQUALS),
                 any(),
                 any())).thenReturn(firstOp);
 
-        when(filterBuilder.build(eq(Operation.HDOP_GT),
+        when(filterBuilder.build(eq(FilterParser.Operator.GREATER_THAN),
                 any(),
                 any())).thenReturn(secondOp);
 
-        when(filterBuilder.build(eq(LogicalOperation.HDOP_OR),
+        when(filterBuilder.build(eq(Operator.OR),
                 any(),
                 any())).thenReturn(lastOp);
 
@@ -401,14 +399,14 @@ public class FilterParserTest {
     public void parseLogicalNotOperator() throws Exception {
         filter = "a1c20s1d0o5l2";
 
-        Object firstOp = "first operation HDOP_EQ";
+        Object firstOp = "first operation EQUALS";
         Object op = "filter with NOT operator";
 
-        when(filterBuilder.build(eq(Operation.HDOP_EQ),
+        when(filterBuilder.build(eq(FilterParser.Operator.EQUALS),
                 any(),
                 any())).thenReturn(firstOp);
 
-        when(filterBuilder.build(eq(LogicalOperation.HDOP_NOT),
+        when(filterBuilder.build(eq(Operator.NOT),
                 any())).thenReturn(op);
 
         Object result = filterParser.parse(filter.getBytes());
@@ -430,25 +428,25 @@ public class FilterParserTest {
     @Test
     public void parseLogicalOperatorNotExpression() throws Exception {
         filter = "a1c25s5dfirsto5a2c20s1d2o2l0l2";
-        Object firstOp = "first operation HDOP_EQ";
-        Object secondOp = "second operation HDOP_GT";
+        Object firstOp = "first operation EQUALS";
+        Object secondOp = "second operation GREATER_THAN";
         Object thirdOp = "filter with 2 operations connected by AND";
         Object lastOp = "filter with 1 NOT operation";
 
-        when(filterBuilder.build(eq(Operation.HDOP_EQ),
+        when(filterBuilder.build(eq(FilterParser.Operator.EQUALS),
                 any(),
                 any())).thenReturn(firstOp);
 
 
-        when(filterBuilder.build(eq(Operation.HDOP_GT),
+        when(filterBuilder.build(eq(Operator.GREATER_THAN),
                 any(),
                 any())).thenReturn(secondOp);
 
-        when(filterBuilder.build(eq(LogicalOperation.HDOP_AND),
+        when(filterBuilder.build(eq(Operator.AND),
                 any(),
                 any())).thenReturn(thirdOp);
 
-        when(filterBuilder.build(eq(LogicalOperation.HDOP_NOT),
+        when(filterBuilder.build(eq(Operator.NOT),
                 any())).thenReturn(lastOp);
 
         Object result = filterParser.parse(filter.getBytes());
@@ -469,7 +467,7 @@ public class FilterParserTest {
         }
     }
 
-    private void runParseOneOperation(String description, String filter, Operation op) throws Exception {
+    private void runParseOneOperation(String description, String filter, Operator op) throws Exception {
         when(filterBuilder.build(eq(op),
                 any(),
                 any())).thenReturn(description);
@@ -479,7 +477,7 @@ public class FilterParserTest {
         assertEquals(description, result);
     }
 
-    private void runParseOneUnaryOperation(String description, String filter, Operation op) throws Exception {
+    private void runParseOneUnaryOperation(String description, String filter, FilterParser.Operator op) throws Exception {
         when(filterBuilder.build(eq(op), any())).thenReturn(description);
 
         Object result = filterParser.parse(filter.getBytes());

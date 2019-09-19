@@ -36,25 +36,25 @@ import java.util.List;
  */
 public class JdbcFilterParser extends BaseFilterBuilder {
 
-    private static final EnumSet<FilterParser.Operation> SUPPORTED_OPERATIONS =
+    private static final EnumSet<FilterParser.Operator> SUPPORTED_OPERATORS =
             EnumSet.of(
-                    FilterParser.Operation.HDOP_LT,
-                    FilterParser.Operation.HDOP_GT,
-                    FilterParser.Operation.HDOP_LE,
-                    FilterParser.Operation.HDOP_GE,
-                    FilterParser.Operation.HDOP_EQ,
-                    FilterParser.Operation.HDOP_LIKE,
-                    FilterParser.Operation.HDOP_NE,
+                    FilterParser.Operator.LESS_THAN,
+                    FilterParser.Operator.GREATER_THAN,
+                    FilterParser.Operator.LESS_THAN_OR_EQUAL,
+                    FilterParser.Operator.GREATER_THAN_OR_EQUAL,
+                    FilterParser.Operator.EQUALS,
+                    FilterParser.Operator.LIKE,
+                    FilterParser.Operator.NOT_EQUALS,
                     // TODO: In is not supported?
-                    // FilterParser.Operation.HDOP_IN,
-                    FilterParser.Operation.HDOP_IS_NULL,
-                    FilterParser.Operation.HDOP_IS_NOT_NULL
+                    // FilterParser.Operator.IN,
+                    FilterParser.Operator.IS_NULL,
+                    FilterParser.Operator.IS_NOT_NULL
             );
-    private static final EnumSet<FilterParser.LogicalOperation> SUPPORTED_OPERATORS =
+    private static final EnumSet<FilterParser.Operator> SUPPORTED_LOGICAL_OPERATORS =
             EnumSet.of(
-                    FilterParser.LogicalOperation.HDOP_AND,
-                    FilterParser.LogicalOperation.HDOP_NOT,
-                    FilterParser.LogicalOperation.HDOP_OR
+                    FilterParser.Operator.AND,
+                    FilterParser.Operator.NOT,
+                    FilterParser.Operator.OR
             );
 
     private final boolean hasPartition;
@@ -62,7 +62,7 @@ public class JdbcFilterParser extends BaseFilterBuilder {
     private final String quoteString;
 
     public JdbcFilterParser(DbProduct dbProduct, String quoteString, boolean hasPartition, List<ColumnDescriptor> tupleDescription) {
-        super(SUPPORTED_OPERATIONS, SUPPORTED_OPERATORS);
+        super(SUPPORTED_OPERATORS, SUPPORTED_LOGICAL_OPERATORS);
         this.dbProduct = dbProduct;
         this.quoteString = quoteString;
         this.hasPartition = hasPartition;
@@ -89,12 +89,12 @@ public class JdbcFilterParser extends BaseFilterBuilder {
     }
 
     @Override
-    protected boolean isCompliantWithOperator(FilterParser.LogicalOperation operator) {
+    protected boolean canRightOperandBeOmitted(FilterParser.Operator logicalOperator) {
         return true;
     }
 
     @Override
-    protected boolean isFilterCompatible(String filterColumnName, FilterParser.Operation operation, FilterParser.LogicalOperation logicalOperation) {
+    protected boolean shouldIncludeFilter(String filterColumnName, FilterParser.Operator operation, FilterParser.Operator logicalOperator) {
         return true;
     }
 

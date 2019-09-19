@@ -7,44 +7,23 @@ package org.greenplum.pxf.api;
  */
 public interface FilterBuilder {
     /**
-     * Builds the filter for an operation with 2 operands
+     * Builds the filter for an operator with 2 operands
      *
-     * @param operation the parsed operation to perform
+     * @param operator the parsed operator to perform
      * @param left      the left operand
      * @param right     the right operand
      * @return the built filter
      * @throws Exception if building the filter failed
      */
-    Object build(FilterParser.Operation operation, Object left, Object right) throws Exception;
+    Object build(FilterParser.Operator operator, Object left, Object right) throws Exception;
 
     /**
-     * Builds the filter for an operation with one operand
+     * Builds the filter for an operator with one operand
      *
-     * @param operation the parsed operation to perform
+     * @param operator the parsed operator to perform
      * @param operand   the single operand
      * @return the built filter
      * @throws Exception if building the filter failed
      */
-    Object build(FilterParser.Operation operation, Object operand) throws Exception;
-
-    /**
-     * Builds the filter for a logical operation and two operands
-     *
-     * @param operation the parsed logical operation to perform
-     * @param left      the left operand
-     * @param right     the right operand
-     * @return the built filter
-     * @throws Exception if building the filter failed
-     */
-    Object build(FilterParser.LogicalOperation operation, Object left, Object right) throws Exception;
-
-    /**
-     * Builds the filter for a logical operation and one operand
-     *
-     * @param operation the parsed unary logical operation to perform
-     * @param filter    the single operand
-     * @return the built filter
-     * @throws Exception if building the filter failed
-     */
-    Object build(FilterParser.LogicalOperation operation, Object filter) throws Exception;
+    Object build(FilterParser.Operator operator, Object operand) throws Exception;
 }

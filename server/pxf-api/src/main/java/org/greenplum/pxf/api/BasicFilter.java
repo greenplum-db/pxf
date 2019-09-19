@@ -25,7 +25,7 @@ package org.greenplum.pxf.api;
  * SequenceFile there is no filter provided and so we need to have a default
  */
 public class BasicFilter {
-    private FilterParser.Operation oper;
+    private FilterParser.Operator oper;
     private FilterParser.ColumnIndex column;
     private FilterParser.Constant constant;
 
@@ -36,13 +36,18 @@ public class BasicFilter {
      * @param column the column index
      * @param constant the constant object
      */
-    public BasicFilter(FilterParser.Operation oper, FilterParser.ColumnIndex column, FilterParser.Constant constant) {
+    public BasicFilter(FilterParser.Operator oper, FilterParser.ColumnIndex column, FilterParser.Constant constant) {
+
+        if (oper.isLogical()) {
+            throw new IllegalArgumentException(String.format("Operator %s is not a basic operator", oper));
+        }
+
         this.oper = oper;
         this.column = column;
         this.constant = constant;
     }
 
-    public FilterParser.Operation getOperation() {
+    public FilterParser.Operator getOperation() {
         return oper;
     }
 

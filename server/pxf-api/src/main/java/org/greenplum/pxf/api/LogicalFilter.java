@@ -22,19 +22,24 @@ package org.greenplum.pxf.api;
 import java.util.List;
 
 public class LogicalFilter {
-    private FilterParser.LogicalOperation operator;
+    private FilterParser.Operator operator;
     private List<Object> filterList;
 
-    public LogicalFilter(FilterParser.LogicalOperation operator, List<Object> result) {
+    public LogicalFilter(FilterParser.Operator operator, List<Object> result) {
+
+        if (!operator.isLogical()) {
+            throw new IllegalArgumentException(String.format("Operator %s is not a logical operator", operator));
+        }
+
         this.operator = operator;
         this.filterList = result;
     }
 
-    public FilterParser.LogicalOperation getOperator() {
+    public FilterParser.Operator getOperator() {
         return operator;
     }
 
-    public void setOperator(FilterParser.LogicalOperation operator) {
+    public void setOperator(FilterParser.Operator operator) {
         this.operator = operator;
     }
 

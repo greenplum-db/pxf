@@ -25,7 +25,6 @@ import org.greenplum.pxf.api.BaseFilterBuilder;
 import org.greenplum.pxf.api.BasicFilter;
 import org.greenplum.pxf.api.FilterParser;
 import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,26 +67,26 @@ public class HiveFilterBuilder extends BaseFilterBuilder {
     private static final Logger LOG = LoggerFactory.getLogger(HiveFilterBuilder.class);
     private static final String HIVE_API_D_QUOTE = "\"";
 
-    private static final EnumSet<FilterParser.Operation> SUPPORTED_OPERATIONS =
+    private static final EnumSet<FilterParser.Operator> SUPPORTED_OPERATORS =
             EnumSet.of(
-                    FilterParser.Operation.HDOP_EQ,
-                    FilterParser.Operation.HDOP_LT,
-                    FilterParser.Operation.HDOP_GT,
-                    FilterParser.Operation.HDOP_LE,
-                    FilterParser.Operation.HDOP_GE,
-                    FilterParser.Operation.HDOP_NE
+                    FilterParser.Operator.EQUALS,
+                    FilterParser.Operator.LESS_THAN,
+                    FilterParser.Operator.GREATER_THAN,
+                    FilterParser.Operator.LESS_THAN_OR_EQUAL,
+                    FilterParser.Operator.GREATER_THAN_OR_EQUAL,
+                    FilterParser.Operator.NOT_EQUALS
             );
-    private static final EnumSet<FilterParser.LogicalOperation> SUPPORTED_OPERATORS =
+    private static final EnumSet<FilterParser.Operator> SUPPORTED_LOGICAL_OPERATORS =
             EnumSet.of(
-                    FilterParser.LogicalOperation.HDOP_AND,
-                    FilterParser.LogicalOperation.HDOP_OR
+                    FilterParser.Operator.AND,
+                    FilterParser.Operator.OR
             );
 
     private boolean canPushDownIntegral;
     private Map<String, String> partitionKeys;
 
     HiveFilterBuilder() {
-        super(SUPPORTED_OPERATIONS, SUPPORTED_OPERATORS);
+        super(SUPPORTED_OPERATORS, SUPPORTED_LOGICAL_OPERATORS);
     }
 
     public void setCanPushDownIntegral(boolean canPushDownIntegral) {
@@ -102,12 +101,12 @@ public class HiveFilterBuilder extends BaseFilterBuilder {
      * Case when one of the predicates is non-compliant
      * and with OR operator P OR NP -> null
      *
-     * @param operator the operator
+     * @param logicalOperator the operator
      * @return true if it is compliant, false otherwise
      */
     @Override
-    protected boolean isCompliantWithOperator(FilterParser.LogicalOperation operator) {
-        return operator != FilterParser.LogicalOperation.HDOP_OR;
+    protected boolean canRightOperandBeOmitted(FilterParser.Operator logicalOperator) {
+        return logicalOperator == FilterParser.Operator.AND;
     }
 
     /**
@@ -115,19 +114,19 @@ public class HiveFilterBuilder extends BaseFilterBuilder {
      * Single filter will be in a format of: [PARTITON NAME] = \"[PARTITON VALUE]\"
      *
      * @param filterColumnName the name of the column
-     * @param operation        the operation
-     * @param logicalOperation the logical operation
+     * @param operator         the operation
+     * @param logicalOperator  the logical operator
      * @return true if filter is compatible, false otherwise
      */
     @Override
-    protected boolean isFilterCompatible(String filterColumnName, FilterParser.Operation operation, FilterParser.LogicalOperation logicalOperation) {
+    protected boolean shouldIncludeFilter(String filterColumnName, FilterParser.Operator operator, FilterParser.Operator logicalOperator) {
 
         String colType = partitionKeys.get(filterColumnName);
         boolean isPartitionColumn = colType != null;
 
         boolean isIntegralSupported =
                 canPushDownIntegral &&
-                        (operation == FilterParser.Operation.HDOP_EQ || operation == FilterParser.Operation.HDOP_NE);
+                        (operator == FilterParser.Operator.EQUALS || operator == FilterParser.Operator.NOT_EQUALS);
 
         boolean canPushDown = isPartitionColumn && (
                 colType.equalsIgnoreCase(serdeConstants.STRING_TYPE_NAME) ||
@@ -135,7 +134,7 @@ public class HiveFilterBuilder extends BaseFilterBuilder {
         );
 
         if (!canPushDown) {
-            if (logicalOperation == FilterParser.LogicalOperation.HDOP_OR) {
+            if (logicalOperator == FilterParser.Operator.OR) {
                 return false;
             } else { // AND and NOT logical operators
                 LOG.trace("Filter is on a non-partition column or on a partition column that is not supported for pushdown, ignore this filter for column: {}", filterColumnName);
