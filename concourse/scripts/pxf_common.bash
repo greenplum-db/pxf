@@ -242,6 +242,47 @@ EOF
 	fi
 }
 
+function adjust_for_hdp3() {
+	local GPHD_ROOT=${1}
+
+	# remove deprecated conf from hive-env.sh
+	sed -i -e 's/-hiveconf hive.log.dir=$LOGS_ROOT //g' ${GPHD_ROOT}/hive/conf/hive-env.sh
+
+	# add properties to hive-site.xml
+    sed -i -e 's/>mr/>tez/g' ${GPHD_ROOT}/hive/conf/hive-site.xml
+	cat > patch.xml <<-EOF
+	<property>
+		<name>hive.tez.container.size</name>
+		<value>2048</value>
+	</property>
+	<property>
+		<name>datanucleus.schema.autoCreateAll</name>
+		<value>True</value>
+	</property>
+	<property>
+		<name>metastore.metastore.event.db.notification.api.auth</name>
+		<value>false</value>
+	</property>
+EOF
+	sed -i -e '/<configuration>/r patch.xml' ${GPHD_ROOT}/hive/conf/hive-site.xml
+	rm patch.xml
+
+	# add properties to tez-site.xml
+	cat > patch.xml <<-EOF
+	<property>
+		<name>tez.use.cluster.hadoop-libs</name>
+		<value>true</value>
+	</property>
+EOF
+	sed -i -e '/<configuration>/r patch.xml' ${GPHD_ROOT}/tez/conf/tez-site.xml
+	rm patch.xml
+
+	# update properties in yarn-site.xml
+	sed -i -e 's|HADOOP_CONF|HADOOP_CONF_DIR|g' ${GPHD_ROOT}/hadoop/etc/hadoop/yarn-site.xml
+	sed -i -e 's|HADOOP_ROOT|HADOOP_HOME|g' ${GPHD_ROOT}/hadoop/etc/hadoop/yarn-site.xml
+
+}
+
 function start_hadoop_services() {
 	local GPHD_ROOT=${1}
 
