@@ -242,7 +242,7 @@ EOF
 	fi
 }
 
-function adjust_for_hdp3() {
+function adjust_for_hadoop3() {
 	local GPHD_ROOT=${1}
 
 	# remove deprecated conf from hive-env.sh
