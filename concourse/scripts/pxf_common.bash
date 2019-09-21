@@ -274,7 +274,7 @@ EOF
 		<value>true</value>
 	</property>
 EOF
-	sed -i -e '/<configuration>/r patch.xml' ${GPHD_ROOT}/tez/conf/tez-site.xml
+	sed -i -e '/<configuration supports_final="true">/r patch.xml' ${GPHD_ROOT}/tez/conf/tez-site.xml
 	rm patch.xml
 
 	# update properties in yarn-site.xml
