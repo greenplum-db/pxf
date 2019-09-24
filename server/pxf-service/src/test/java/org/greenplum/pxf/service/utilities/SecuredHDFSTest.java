@@ -26,24 +26,23 @@ import org.apache.hadoop.security.token.Token;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 
 import javax.servlet.ServletContext;
 import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({UserGroupInformation.class})
 public class SecuredHDFSTest {
     RequestContext mockRequestContext;
     ServletContext mockContext;
+    UserGroupInformation mockLoginUser;
 
     /*
      * setUp function called before each test
@@ -52,32 +51,25 @@ public class SecuredHDFSTest {
     public void setUp() {
         mockRequestContext = mock(RequestContext.class);
         mockContext = mock(ServletContext.class);
-
-        PowerMockito.mockStatic(UserGroupInformation.class);
+        mockLoginUser = mock(UserGroupInformation.class);
     }
 
     @Test
     @SuppressWarnings("unchecked")
     public void nullToken() throws IOException {
-        when(UserGroupInformation.isSecurityEnabled()).thenReturn(true);
-        UserGroupInformation ugi = mock(UserGroupInformation.class);
         when(mockRequestContext.getToken()).thenReturn(null);
-        when(UserGroupInformation.getLoginUser()).thenReturn(ugi);
 
-        SecuredHDFS.verifyToken(null, mockContext);
-        verify(ugi).reloginFromKeytab();
-        verify(ugi, never()).addToken(any(Token.class));
+        SecuredHDFS.verifyToken(mockLoginUser, null, mockContext);
+        verify(mockLoginUser).reloginFromKeytab();
+        verify(mockLoginUser, never()).addToken(any(Token.class));
     }
 
     @Test
-    public void invalidTokenThrows() throws IOException {
-        when(UserGroupInformation.isSecurityEnabled()).thenReturn(true);
-        UserGroupInformation ugi = mock(UserGroupInformation.class);
-        when(UserGroupInformation.getLoginUser()).thenReturn(ugi);
+    public void invalidTokenThrows() {
         when(mockRequestContext.getToken()).thenReturn("This is odd");
 
         try {
-            SecuredHDFS.verifyToken("This is odd", mockContext);
+            SecuredHDFS.verifyToken(mockLoginUser, "This is odd", mockContext);
             fail("invalid X-GP-TOKEN should throw");
         } catch (SecurityException e) {
             assertEquals("Failed to verify delegation token java.io.EOFException", e.getMessage());
@@ -86,16 +78,13 @@ public class SecuredHDFSTest {
 
     @Test
     public void loggedOutUser() throws IOException {
-        when(UserGroupInformation.isSecurityEnabled()).thenReturn(true);
-        UserGroupInformation ugi = mock(UserGroupInformation.class);
-        when(UserGroupInformation.getLoginUser()).thenReturn(ugi);
         when(mockRequestContext.getToken()).thenReturn("This is odd");
 
         try {
-            SecuredHDFS.verifyToken("This is odd", mockContext);
+            SecuredHDFS.verifyToken(mockLoginUser, "This is odd", mockContext);
             fail("invalid X-GP-TOKEN should throw");
         } catch (SecurityException e) {
-            verify(ugi).reloginFromKeytab();
+            verify(mockLoginUser).reloginFromKeytab();
             assertEquals("Failed to verify delegation token java.io.EOFException", e.getMessage());
         }
     }

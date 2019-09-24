@@ -21,7 +21,6 @@ package org.greenplum.pxf.service.servlet;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.greenplum.pxf.api.model.BaseConfigurationFactory;
 import org.greenplum.pxf.api.model.ConfigurationFactory;
@@ -29,6 +28,7 @@ import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.service.KerberosLoginSession;
 import org.greenplum.pxf.service.SessionId;
 import org.greenplum.pxf.service.UGICache;
+import org.greenplum.pxf.service.utilities.SecureLogin;
 import org.greenplum.pxf.service.utilities.SecuredHDFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,9 +62,6 @@ public class SecurityServletFilter implements Filter {
     private static final String DELEGATION_TOKEN_HEADER = "X-GP-TOKEN";
     private static final String MISSING_HEADER_ERROR = "Header %s is missing in the request";
     private static final String EMPTY_HEADER_ERROR = "Header %s is empty in the request";
-
-    private static final String CONFIG_KEY_SERVICE_PRINCIPAL = "pxf.service.kerberos.principal";
-    private static final String CONFIG_KEY_SERVICE_KEYTAB = "pxf.service.kerberos.keytab";
 
     private static final Map<String, KerberosLoginSession> loginMap = new HashMap<>();
     UGICache ugiCache;
@@ -133,15 +130,20 @@ public class SecurityServletFilter implements Filter {
             // Kerberos security is enabled for the server, use identity of the Kerberos principal for the server
             KerberosLoginSession loginSession = getServerLoginSession(serverName, configDirectory, configuration);
             if (loginSession == null) {
-                synchronized (this.getClass()) {
+                synchronized (SecurityServletFilter.class) {
                     loginSession = getServerLoginSession(serverName, configDirectory, configuration);
                     if (loginSession == null) {
-                        loginSession = login(serverName, configDirectory, isUserImpersonation, configuration);
+                        LOG.info("Kerberos Security is enabled for server {}", serverName);
+                        loginSession = new SecureLogin().login(serverName, configDirectory, isUserImpersonation, configuration);
                         loginMap.put(serverName, loginSession);
                     }
                 }
             }
             loginUser = loginSession.getUgi();
+
+            // Refresh Kerberos token when security is enabled
+            String tokenString = getHeaderValue(request, DELEGATION_TOKEN_HEADER, false);
+            SecuredHDFS.verifyToken(loginUser, tokenString, config.getServletContext());
         } else {
             // Kerberos security is not enabled for the server, use identity of the user running the PXF process
             loginUser = UserGroupInformation.getLoginUser();
@@ -160,10 +162,6 @@ public class SecurityServletFilter implements Filter {
             chain.doFilter(request, response);
             return true;
         };
-
-        // Refresh Kerberos token when security is enabled
-        String tokenString = getHeaderValue(request, DELEGATION_TOKEN_HEADER, false);
-        SecuredHDFS.verifyToken(tokenString, config.getServletContext());
 
         try {
             LOG.debug("Retrieving proxy user for session: {}", session);
@@ -214,8 +212,8 @@ public class SecurityServletFilter implements Filter {
         // - keytab md5
 
 
-        final String principalName = configuration.get(CONFIG_KEY_SERVICE_PRINCIPAL);
-        final String keytabPath = configuration.get(CONFIG_KEY_SERVICE_KEYTAB);
+        final String principalName = configuration.get(SecureLogin.CONFIG_KEY_SERVICE_PRINCIPAL);
+        final String keytabPath = configuration.get(SecureLogin.CONFIG_KEY_SERVICE_KEYTAB);
         String keytabMd5 = null;
         // TODO calculate MD5
 
@@ -239,52 +237,6 @@ public class SecurityServletFilter implements Filter {
      */
     @Override
     public void destroy() {
-    }
-
-    /**
-     * Establishes Login Context for the PXF service principal using Kerberos keytab.
-     */
-    private KerberosLoginSession login(String serverName, String configDirectory, boolean isUserImpersonationEnabled, Configuration configuration) {
-        try {
-
-            LOG.info("User impersonation is {} for server {}", (isUserImpersonationEnabled ? "enabled" : "disabled"), serverName);
-
-            UserGroupInformation.setConfiguration(configuration);
-
-            LOG.info("Kerberos Security is enabled");
-
-            String defaultPrincipal = null, defaultKeytab = null;
-
-            if (StringUtils.equals(serverName, "default")) {
-                // use system property as default for backward compatibility when only 1 Kerberized cluster was supported
-                defaultPrincipal = System.getProperty(CONFIG_KEY_SERVICE_PRINCIPAL);
-                defaultKeytab = System.getProperty(CONFIG_KEY_SERVICE_KEYTAB);
-            }
-
-            String principal = configuration.get(CONFIG_KEY_SERVICE_PRINCIPAL, defaultPrincipal);
-            String keytabFilename = configuration.get(CONFIG_KEY_SERVICE_KEYTAB, defaultKeytab);
-
-            if (StringUtils.isEmpty(principal)) {
-                throw new RuntimeException("Kerberos Security requires a valid principal.");
-            }
-
-            if (StringUtils.isEmpty(keytabFilename)) {
-                throw new RuntimeException("Kerberos Security requires a valid keytab file name.");
-            }
-
-            configuration.set(CONFIG_KEY_SERVICE_PRINCIPAL, principal);
-            configuration.set(CONFIG_KEY_SERVICE_KEYTAB, keytabFilename);
-
-            LOG.info("Kerberos principal: {}", configuration.get(CONFIG_KEY_SERVICE_PRINCIPAL));
-            LOG.info("Kerberos keytab: {}", configuration.get(CONFIG_KEY_SERVICE_KEYTAB));
-
-            SecurityUtil.login(configuration, CONFIG_KEY_SERVICE_KEYTAB, CONFIG_KEY_SERVICE_PRINCIPAL);
-
-            return new KerberosLoginSession(configDirectory, principal, keytabFilename, null, UserGroupInformation.getLoginUser());
-        } catch (Exception e) {
-            LOG.error("PXF service login failed: {}", e.getMessage());
-            throw new RuntimeException(e);
-        }
     }
 
     private Integer getHeaderValueInt(ServletRequest request, String headerKey, boolean required)

@@ -23,13 +23,9 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.greenplum.pxf.api.model.BaseConfigurationFactory;
-import org.greenplum.pxf.api.model.ConfigurationFactory;
-import org.greenplum.pxf.api.utilities.Utilities;
+import org.greenplum.pxf.service.KerberosLoginSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
 
 /**
  * This class relies heavily on Hadoop API to
@@ -50,86 +46,49 @@ import java.io.File;
 public class SecureLogin {
     private static final Logger LOG = LoggerFactory.getLogger(SecureLogin.class);
 
-    private static final String CONFIG_KEY_SERVICE_PRINCIPAL = "pxf.service.kerberos.principal";
-    private static final String CONFIG_KEY_SERVICE_KEYTAB = "pxf.service.kerberos.keytab";
-    private final ConfigurationFactory configurationFactory;
-
-    public SecureLogin() {
-        this(BaseConfigurationFactory.getInstance());
-    }
-
-    SecureLogin(ConfigurationFactory configurationFactory) {
-        this.configurationFactory = configurationFactory;
-    }
+    public static final String CONFIG_KEY_SERVICE_PRINCIPAL = "pxf.service.kerberos.principal";
+    public static final String CONFIG_KEY_SERVICE_KEYTAB = "pxf.service.kerberos.keytab";
 
     /**
      * Establishes Login Context for the PXF service principal using Kerberos keytab.
      */
-    public void login() {
-//        try {
-//            boolean isUserImpersonationEnabled = Utilities.isUserImpersonationEnabled();
-//            LOG.info("User impersonation is {}", (isUserImpersonationEnabled ? "enabled" : "disabled"));
-//
-//            Configuration configuration = configurationFactory.initConfiguration("default", "default", null, null);
-//            UserGroupInformation.setConfiguration(configuration);
-//
-//            if (!UserGroupInformation.isSecurityEnabled()) {
-//                LOG.info("Kerberos Security is not enabled");
-//                return;
-//            }
-//
-//            File serverDirectory = new File(ConfigurationFactory.DEFAULT_SERVER_CONFIG_DIR);
-//            if (!serverDirectory.exists() || !serverDirectory.isDirectory() || !serverDirectory.canRead()) {
-//                // Fail to start PXF webapp if default directory does not exist.
-//                throw new RuntimeException(String.format(
-//                        "Directory %s does not exist, unable to create configuration for default server.",
-//                        ConfigurationFactory.DEFAULT_SERVER_CONFIG_DIR));
-//            }
-//
-//            LOG.info("Kerberos Security is enabled");
-//
-//            String principal = System.getProperty(CONFIG_KEY_SERVICE_PRINCIPAL);
-//            String keytabFilename = System.getProperty(CONFIG_KEY_SERVICE_KEYTAB);
-//
-//            if (StringUtils.isEmpty(principal)) {
-//                throw new RuntimeException("Kerberos Security requires a valid principal.");
-//            }
-//
-//            if (StringUtils.isEmpty(keytabFilename)) {
-//                throw new RuntimeException("Kerberos Security requires a valid keytab file name.");
-//            }
-//
-//            configuration.set(CONFIG_KEY_SERVICE_PRINCIPAL, principal);
-//            configuration.set(CONFIG_KEY_SERVICE_KEYTAB, keytabFilename);
-//
-//            LOG.info("Kerberos principal: {}", configuration.get(CONFIG_KEY_SERVICE_PRINCIPAL));
-//            LOG.info("Kerberos keytab: {}", configuration.get(CONFIG_KEY_SERVICE_KEYTAB));
-//
-////            SecurityUtil.login(configuration, CONFIG_KEY_SERVICE_KEYTAB, CONFIG_KEY_SERVICE_PRINCIPAL);
-//
-//            Configuration configuration1 = configurationFactory.initConfiguration("default", "default", null, null);
-//
-//            configuration1.set(CONFIG_KEY_SERVICE_PRINCIPAL, "fguerrero@C.DATA-GPDB-UD.INTERNAL");
-//            configuration1.set(CONFIG_KEY_SERVICE_KEYTAB, "/Users/pivotal/pxf/keytabs/pxf.service.gpdb-ud.keytab");
-//
-//            LOG.info("Kerberos principal: {}", configuration1.get(CONFIG_KEY_SERVICE_PRINCIPAL));
-//            LOG.info("Kerberos keytab: {}", configuration1.get(CONFIG_KEY_SERVICE_KEYTAB));
-//
-//            SecurityUtil.login(configuration1, CONFIG_KEY_SERVICE_KEYTAB, CONFIG_KEY_SERVICE_PRINCIPAL);
-//
-//            Configuration configuration2 = configurationFactory.initConfiguration("default-krb-large-fox", "default-krb-large-fox", null, null);
-//
-//            configuration2.set(CONFIG_KEY_SERVICE_PRINCIPAL, "gpadmin@C.DATA-RELINT.INTERNAL");
-//            configuration2.set(CONFIG_KEY_SERVICE_KEYTAB, "/Users/pivotal/pxf/keytabs/pxf.service.relint.keytab");
-//
-//            LOG.info("Kerberos principal: {}", configuration2.get(CONFIG_KEY_SERVICE_PRINCIPAL));
-//            LOG.info("Kerberos keytab: {}", configuration2.get(CONFIG_KEY_SERVICE_KEYTAB));
-//
-//            SecurityUtil.login(configuration2, CONFIG_KEY_SERVICE_KEYTAB, CONFIG_KEY_SERVICE_PRINCIPAL);
-//
-//        } catch (Exception e) {
-//            LOG.error("PXF service login failed: {}", e.getMessage());
-//            throw new RuntimeException(e);
-//        }
+    public KerberosLoginSession login(String serverName, String configDirectory, boolean isUserImpersonationEnabled, Configuration configuration) {
+        try {
+            LOG.info("User impersonation is {} for server {}", (isUserImpersonationEnabled ? "enabled" : "disabled"), serverName);
+
+            UserGroupInformation.setConfiguration(configuration);
+
+            String defaultPrincipal = null, defaultKeytab = null;
+
+            if (StringUtils.equals(serverName, "default")) {
+                // use system property as default for backward compatibility when only 1 Kerberized cluster was supported
+                defaultPrincipal = System.getProperty(CONFIG_KEY_SERVICE_PRINCIPAL);
+                defaultKeytab = System.getProperty(CONFIG_KEY_SERVICE_KEYTAB);
+            }
+
+            String principal = configuration.get(CONFIG_KEY_SERVICE_PRINCIPAL, defaultPrincipal);
+            String keytabFilename = configuration.get(CONFIG_KEY_SERVICE_KEYTAB, defaultKeytab);
+
+            if (StringUtils.isEmpty(principal)) {
+                throw new RuntimeException(String.format("Kerberos Security for server %s requires a valid principal.", serverName));
+            }
+
+            if (StringUtils.isEmpty(keytabFilename)) {
+                throw new RuntimeException(String.format("Kerberos Security for server %s requires a valid keytab file name.", serverName));
+            }
+
+            configuration.set(CONFIG_KEY_SERVICE_PRINCIPAL, principal);
+            configuration.set(CONFIG_KEY_SERVICE_KEYTAB, keytabFilename);
+
+            LOG.info("Kerberos principal for server {}: {}", serverName, principal);
+            LOG.info("Kerberos keytab for server {}: {}", serverName, keytabFilename);
+
+            SecurityUtil.login(configuration, CONFIG_KEY_SERVICE_KEYTAB, CONFIG_KEY_SERVICE_PRINCIPAL);
+
+            return new KerberosLoginSession(configDirectory, principal, keytabFilename, null, UserGroupInformation.getLoginUser());
+        } catch (Exception e) {
+            LOG.error("PXF service login failed: {}", e.getMessage());
+            throw new RuntimeException(e);
+        }
     }
 }
