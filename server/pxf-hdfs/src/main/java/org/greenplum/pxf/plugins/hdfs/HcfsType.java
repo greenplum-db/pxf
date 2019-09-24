@@ -1,11 +1,9 @@
 package org.greenplum.pxf.plugins.hdfs;
 
-import com.google.inject.internal.cglib.core.$ClassInfo;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.mapreduce.MRJobConfig;
-import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.Utilities;
@@ -188,6 +186,7 @@ public enum HcfsType {
      */
     public String getDataUri(Configuration configuration, RequestContext context) {
         String uri = getDataUriForPrefix(configuration, context, this.prefix);
+        //TODO -- is still relevant with multi-kerberos support, since there's no global security setting anymore ?
         disableSecureTokenRenewal(uri, configuration);
         return uri;
     }

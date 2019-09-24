@@ -36,6 +36,7 @@ class UGIProvider {
      * Wrapper for {@link UserGroupInformation} creation
      *
      * @param effectiveUser the name of the user that we want to impersonate
+     * @param loginUser the UGI of the login user (or Kerberos principal)
      * @return a {@link UserGroupInformation} for impersonation.
      * @throws IOException
      */
@@ -47,6 +48,7 @@ class UGIProvider {
      * Wrapper for {@link UserGroupInformation} creation of remote users
      *
      * @param user the name of the remote user
+     * @param session session containing information on current configuration and login user
      * @return a remote {@link UserGroupInformation}.
      */
     UserGroupInformation createRemoteUser(String user, SessionId session) throws IOException {

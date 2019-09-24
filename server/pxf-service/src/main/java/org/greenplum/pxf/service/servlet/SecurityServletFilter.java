@@ -33,7 +33,6 @@ import org.greenplum.pxf.service.utilities.SecuredHDFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.naming.Reference;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -42,10 +41,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.UndeclaredThrowableException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.security.PrivilegedExceptionAction;
 import java.util.HashMap;
 import java.util.Map;
@@ -56,9 +52,8 @@ import java.util.Map;
 public class SecurityServletFilter implements Filter {
 
     private static final Logger LOG = LoggerFactory.getLogger(SecurityServletFilter.class);
+
     private static final String CONFIG_HEADER = "X-GP-OPTIONS-CONFIG";
-    private static final String CONFIG_KEY_SERVICE_PRINCIPAL = "pxf.service.kerberos.principal";
-    private static final String CONFIG_KEY_SERVICE_KEYTAB = "pxf.service.kerberos.keytab";
     private static final String USER_HEADER = "X-GP-USER";
     private static final String SEGMENT_ID_HEADER = "X-GP-SEGMENT-ID";
     private static final String SERVER_HEADER = "X-GP-OPTIONS-SERVER";
@@ -67,7 +62,10 @@ public class SecurityServletFilter implements Filter {
     private static final String DELEGATION_TOKEN_HEADER = "X-GP-TOKEN";
     private static final String MISSING_HEADER_ERROR = "Header %s is missing in the request";
     private static final String EMPTY_HEADER_ERROR = "Header %s is empty in the request";
-    private static final Object KERBEROS_LOGIN_LOCK = new Object();
+
+    private static final String CONFIG_KEY_SERVICE_PRINCIPAL = "pxf.service.kerberos.principal";
+    private static final String CONFIG_KEY_SERVICE_KEYTAB = "pxf.service.kerberos.keytab";
+
     private static final Map<String, KerberosLoginSession> loginMap = new HashMap<>();
     UGICache ugiCache;
     private FilterConfig config;
@@ -94,8 +92,10 @@ public class SecurityServletFilter implements Filter {
 
     /**
      * If user impersonation is configured, examines the request for the presense of the expected security headers
-     * and create a proxy user to execute further request chain. Responds with an HTTP error if the header is missing
-     * or the chain processing throws an exception.
+     * and create a proxy user to execute further request chain. If security is enabled for the configuration server
+     * used for the requests, makes sure that a login UGI for the the Kerberos principal is created and cached for
+     * future use.
+     * Responds with an HTTP error if the header is missing or the chain processing throws an exception.
      *
      * @param request  http request
      * @param response http response
@@ -121,12 +121,16 @@ public class SecurityServletFilter implements Filter {
         final boolean lastCallForSegment = getHeaderValueBoolean(request, LAST_FRAGMENT_HEADER, false);
 
         final String serverName = StringUtils.defaultIfBlank(getHeaderValue(request, SERVER_HEADER, false), "default");
+        // TODO the directory will not be the full path if defaulted
         final String configDirectory = StringUtils.defaultIfBlank(getHeaderValue(request, CONFIG_HEADER, false), serverName);
 
-        // Secure login if kerberos is enabled
+        // Establish the UGI for the login user or the Kerberos principal for the given server, if applicable
         Configuration configuration = configurationFactory.initConfiguration(configDirectory, serverName, null, null);
-        UserGroupInformation loginUser = null;
+
+        UserGroupInformation loginUser;
         if (Utilities.isSecurityEnabled(configuration)) {
+
+            // Kerberos security is enabled for the server, use identity of the Kerberos principal for the server
             KerberosLoginSession loginSession = getServerLoginSession(serverName, configDirectory, configuration);
             if (loginSession == null) {
                 synchronized (this.getClass()) {
@@ -139,6 +143,7 @@ public class SecurityServletFilter implements Filter {
             }
             loginUser = loginSession.getUgi();
         } else {
+            // Kerberos security is not enabled for the server, use identity of the user running the PXF process
             loginUser = UserGroupInformation.getLoginUser();
         }
 
@@ -212,6 +217,7 @@ public class SecurityServletFilter implements Filter {
         final String principalName = configuration.get(CONFIG_KEY_SERVICE_PRINCIPAL);
         final String keytabPath = configuration.get(CONFIG_KEY_SERVICE_KEYTAB);
         String keytabMd5 = null;
+        // TODO calculate MD5
 
 //        try (InputStream is = Files.newInputStream(Paths.get(keytabPath))) {
 //            keytabMd5 = org.apache.commons.codec.digest.DigestUtils.md5Hex(is);
@@ -250,9 +256,7 @@ public class SecurityServletFilter implements Filter {
             String defaultPrincipal = null, defaultKeytab = null;
 
             if (StringUtils.equals(serverName, "default")) {
-
                 // use system property as default for backward compatibility when only 1 Kerberized cluster was supported
-
                 defaultPrincipal = System.getProperty(CONFIG_KEY_SERVICE_PRINCIPAL);
                 defaultKeytab = System.getProperty(CONFIG_KEY_SERVICE_KEYTAB);
             }

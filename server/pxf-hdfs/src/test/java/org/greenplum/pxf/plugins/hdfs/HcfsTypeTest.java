@@ -272,7 +272,6 @@ public class HcfsTypeTest {
 
     @Test
     public void testNonSecureNoConfigChangeOnHdfs() {
-        configuration.set("hadoop.security.authentication", "simple");
         configuration.set("fs.defaultFS", "hdfs://abc:8020/");
         context.setDataSource("foo/bar.txt");
 
