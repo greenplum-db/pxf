@@ -21,16 +21,13 @@ package org.greenplum.pxf.service.servlet;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.greenplum.pxf.api.model.BaseConfigurationFactory;
 import org.greenplum.pxf.api.model.ConfigurationFactory;
+import org.greenplum.pxf.api.utilities.SecureLogin;
 import org.greenplum.pxf.api.utilities.Utilities;
-import org.greenplum.pxf.service.KerberosLoginSession;
 import org.greenplum.pxf.service.SessionId;
 import org.greenplum.pxf.service.UGICache;
-import org.greenplum.pxf.service.utilities.SecureLogin;
-import org.greenplum.pxf.service.utilities.SecuredHDFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,8 +41,6 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.security.PrivilegedExceptionAction;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Listener on lifecycle events of our webapp
@@ -60,21 +55,19 @@ public class SecurityServletFilter implements Filter {
     private static final String SERVER_HEADER = "X-GP-OPTIONS-SERVER";
     private static final String TRANSACTION_ID_HEADER = "X-GP-XID";
     private static final String LAST_FRAGMENT_HEADER = "X-GP-LAST-FRAGMENT";
-    private static final String DELEGATION_TOKEN_HEADER = "X-GP-TOKEN";
     private static final String MISSING_HEADER_ERROR = "Header %s is missing in the request";
     private static final String EMPTY_HEADER_ERROR = "Header %s is empty in the request";
-
-    private static final Map<String, KerberosLoginSession> loginMap = new HashMap<>();
     UGICache ugiCache;
-    private FilterConfig config;
     private final ConfigurationFactory configurationFactory;
+    private final SecureLogin secureLogin;
 
     public SecurityServletFilter() {
-        this(BaseConfigurationFactory.getInstance());
+        this(BaseConfigurationFactory.getInstance(), SecureLogin.getInstance());
     }
 
-    SecurityServletFilter(ConfigurationFactory configurationFactory) {
+    SecurityServletFilter(ConfigurationFactory configurationFactory, SecureLogin secureLogin) {
         this.configurationFactory = configurationFactory;
+        this.secureLogin = secureLogin;
     }
 
     /**
@@ -84,12 +77,11 @@ public class SecurityServletFilter implements Filter {
      */
     @Override
     public void init(FilterConfig filterConfig) {
-        config = filterConfig;
         ugiCache = new UGICache();
     }
 
     /**
-     * If user impersonation is configured, examines the request for the presense of the expected security headers
+     * If user impersonation is configured, examines the request for the presence of the expected security headers
      * and create a proxy user to execute further request chain. If security is enabled for the configuration server
      * used for the requests, makes sure that a login UGI for the the Kerberos principal is created and cached for
      * future use.
@@ -103,15 +95,6 @@ public class SecurityServletFilter implements Filter {
     public void doFilter(final ServletRequest request, final ServletResponse response, final FilterChain chain)
             throws IOException, ServletException {
 
-        String impersonationHeaderValue = getHeaderValue(request, "X-GP-OPTIONS-IMPERSONATION", false);
-        boolean isUserImpersonation = StringUtils.isNotBlank(impersonationHeaderValue) ?
-                "true".equals(impersonationHeaderValue) :
-                Utilities.isUserImpersonationEnabled();
-
-        if (isUserImpersonation) {
-            LOG.debug("User impersonation is enabled");
-        }
-
         // retrieve user header and make sure header is present and is not empty
         final String gpdbUser = getHeaderValue(request, USER_HEADER, true);
         final String transactionId = getHeaderValue(request, TRANSACTION_ID_HEADER, true);
@@ -119,36 +102,14 @@ public class SecurityServletFilter implements Filter {
         final boolean lastCallForSegment = getHeaderValueBoolean(request, LAST_FRAGMENT_HEADER, false);
 
         final String serverName = StringUtils.defaultIfBlank(getHeaderValue(request, SERVER_HEADER, false), "default");
-        // TODO the directory will not be the full path if defaulted
         final String configDirectory = StringUtils.defaultIfBlank(getHeaderValue(request, CONFIG_HEADER, false), serverName);
 
-        // Establish the UGI for the login user or the Kerberos principal for the given server, if applicable
         Configuration configuration = configurationFactory.initConfiguration(configDirectory, serverName, null, null);
 
-        UserGroupInformation loginUser;
-        if (Utilities.isSecurityEnabled(configuration)) {
+        boolean isUserImpersonation = secureLogin.isUserImpersonationEnabled(configuration);
 
-            // Kerberos security is enabled for the server, use identity of the Kerberos principal for the server
-            KerberosLoginSession loginSession = getServerLoginSession(serverName, configDirectory, configuration);
-            if (loginSession == null) {
-                synchronized (SecurityServletFilter.class) {
-                    loginSession = getServerLoginSession(serverName, configDirectory, configuration);
-                    if (loginSession == null) {
-                        LOG.info("Kerberos Security is enabled for server {}", serverName);
-                        loginSession = new SecureLogin().login(serverName, configDirectory, isUserImpersonation, configuration);
-                        loginMap.put(serverName, loginSession);
-                    }
-                }
-            }
-            loginUser = loginSession.getUgi();
-
-            // Refresh Kerberos token when security is enabled
-            String tokenString = getHeaderValue(request, DELEGATION_TOKEN_HEADER, false);
-            SecuredHDFS.verifyToken(loginUser, tokenString, config.getServletContext());
-        } else {
-            // Kerberos security is not enabled for the server, use identity of the user running the PXF process
-            loginUser = UserGroupInformation.getLoginUser();
-        }
+        // Establish the UGI for the login user or the Kerberos principal for the given server, if applicable
+        UserGroupInformation loginUser = secureLogin.getLoginUser(serverName, configDirectory, configuration);
 
         SessionId session = new SessionId(
                 segmentId,
@@ -190,52 +151,6 @@ public class SecurityServletFilter implements Filter {
                 LOG.info("Finished processing {}", session);
             }
         }
-    }
-
-    private KerberosLoginSession getServerLoginSession(final String serverName, final String configDirectory, Configuration configuration) {
-
-
-        // if (server is not in map)
-        //    login
-        // else
-        //     if config directory changed or principal name changed or keytab path file changed or file md5 changed
-        //         clear old entry in map
-        //         login
-
-        KerberosLoginSession currentSession = loginMap.get(serverName);
-
-        if (currentSession == null)
-            return null;
-        // Check for changes in:
-        // - config directory
-        // - principal name
-        // - keytab path
-        // - keytab md5
-
-        final String principalName = SecureLogin.getServicePrincipal(serverName, configuration);
-        final String keytabPath = SecureLogin.getServiceKeytab(serverName, configuration);
-        String keytabMd5 = null;
-        // TODO calculate MD5
-
-//        try (InputStream is = Files.newInputStream(Paths.get(keytabPath))) {
-//            keytabMd5 = org.apache.commons.codec.digest.DigestUtils.md5Hex(is);
-//        } catch (IOException e) {
-//            throw new IllegalArgumentException(String.format("Unable to read keytab at path %s", keytabPath), e);
-//        }
-
-        KerberosLoginSession kerberosLoginSession = new KerberosLoginSession(configDirectory, principalName, keytabPath, keytabMd5);
-
-        if (!currentSession.equals(kerberosLoginSession)) {
-            LOG.error("Kerberos principal : changes detected in the kerberos login session");
-            try {
-                FileSystem.closeAllForUGI(currentSession.getUgi());
-            } catch (IOException e) {
-                LOG.error(String.format("Error releasing UGI for server: %s", serverName), e);
-            }
-            return null;
-        }
-
-        return currentSession;
     }
 
     /**

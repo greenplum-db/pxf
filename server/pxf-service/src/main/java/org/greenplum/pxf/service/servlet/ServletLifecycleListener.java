@@ -21,7 +21,6 @@ package org.greenplum.pxf.service.servlet;
 
 
 import org.greenplum.pxf.service.utilities.Log4jConfigure;
-import org.greenplum.pxf.service.utilities.SecureLogin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

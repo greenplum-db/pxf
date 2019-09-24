@@ -52,14 +52,7 @@ public class SecuredHDFS {
      */
     public static void verifyToken(UserGroupInformation loginUser, String tokenString, ServletContext context) {
         try {
-            /*
-             * The verify token method validates that the token sent from
-             * Gpdb to PXF is valid. However, this token is for a user other than
-             * 'pxf'. The following line ensures that before attempting any secure communication
-             * PXF tries to relogin in the case that its own ticket is about to expire
-             * #reloginFromKeytab is a no-op if the ticket is not near expiring
-             */
-            loginUser.reloginFromKeytab();
+
             if (tokenString != null) {
                 Token<DelegationTokenIdentifier> token = new Token<>();
                 token.decodeFromUrlString(tokenString);

@@ -3,13 +3,21 @@
     <property>
         <name>pxf.service.kerberos.principal</name>
         <value>gpadmin/_HOST@EXAMPLE.COM</value>
+        <description>Kerberos principal pxf service should use. _HOST is replaced automatically with hostnames FQDN</description>
     </property>
     <property>
         <name>pxf.service.kerberos.keytab</name>
-        <value>${PXF_CONF}/keytabs/pxf.service.keytab</value>
+        <value>${pxf.conf}/keytabs/pxf.service.keytab</value>
+        <description>Kerberos path to keytab file owned by pxf service with permissions 0400</description>
     </property>
     <property>
-        <name>pxf.user.impersonation</name>
-        <value>true</value>
+        <name>pxf.service.user.name</name>
+        <value>${user}</value>
+        <description>Login user for remote system, defaults to the OS user that started PXF process</description>
+    </property>
+    <property>
+        <name>pxf.service.user.impersonation</name>
+        <value>${pxf.service.user.impersonation.enabled}</value>
+        <description>End-user identity impersonation, set to true to enable, false to disable</description>
     </property>
 </configuration>
