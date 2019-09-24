@@ -20,21 +20,16 @@ package org.greenplum.pxf.plugins.hdfs;
  */
 
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapreduce.MRJobConfig;
-import org.apache.hadoop.security.UserGroupInformation;
 import org.greenplum.pxf.api.model.BaseFragmenter;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.FragmentStats;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.PxfInputFormat;
-import org.mortbay.util.StringUtil;
 
 import java.io.IOException;
 import java.util.ArrayList;
