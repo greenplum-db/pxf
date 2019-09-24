@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <property>
+        <name>pxf.service.kerberos.principal</name>
+        <value>gpadmin/_HOST@EXAMPLE.COM</value>
+    </property>
+    <property>
+        <name>pxf.service.kerberos.keytab</name>
+        <value>${PXF_CONF}/keytabs/pxf.service.keytab</value>
+    </property>
+    <property>
+        <name>pxf.user.impersonation</name>
+        <value>true</value>
+    </property>
+</configuration>
