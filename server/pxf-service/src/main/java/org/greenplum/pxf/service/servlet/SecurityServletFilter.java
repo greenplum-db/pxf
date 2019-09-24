@@ -21,6 +21,7 @@ package org.greenplum.pxf.service.servlet;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.greenplum.pxf.api.model.BaseConfigurationFactory;
 import org.greenplum.pxf.api.model.ConfigurationFactory;
@@ -226,6 +227,12 @@ public class SecurityServletFilter implements Filter {
         KerberosLoginSession kerberosLoginSession = new KerberosLoginSession(configDirectory, principalName, keytabPath, keytabMd5);
 
         if (!currentSession.equals(kerberosLoginSession)) {
+            LOG.error("Kerberos principal : changes detected in the kerberos login session");
+            try {
+                FileSystem.closeAllForUGI(currentSession.getUgi());
+            } catch (IOException e) {
+                LOG.error(String.format("Error releasing UGI for server: %s", serverName), e);
+            }
             return null;
         }
 
