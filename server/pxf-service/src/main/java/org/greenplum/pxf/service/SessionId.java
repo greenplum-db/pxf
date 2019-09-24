@@ -44,6 +44,17 @@ public class SessionId {
      * @param segmentId     the calling segment
      * @param transactionId the identifier for the transaction
      * @param gpdbUser      the GPDB username
+     */
+    public SessionId(Integer segmentId, String transactionId, String gpdbUser) {
+        this(segmentId, transactionId, gpdbUser, null, null);
+    }
+
+    /**
+     * Create a sessionId
+     *
+     * @param segmentId     the calling segment
+     * @param transactionId the identifier for the transaction
+     * @param gpdbUser      the GPDB username
      * @param configuration the configuration for the request
      * @param loginUser     the UGI of the login user (user that runs the service or Kerberos principal)
      */

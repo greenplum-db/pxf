@@ -19,14 +19,14 @@ package org.greenplum.pxf.service.utilities;
  * under the License.
  */
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hdfs.security.token.delegation.DelegationTokenIdentifier;
 import org.apache.hadoop.hdfs.server.namenode.NameNode;
 import org.apache.hadoop.hdfs.server.namenode.NameNodeHttpServer;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.token.Token;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletContext;
 import java.io.ByteArrayInputStream;
@@ -37,7 +37,7 @@ import java.io.IOException;
  * The class handles security functions for handling secured HDFS
  */
 public class SecuredHDFS {
-    private static final Log LOG = LogFactory.getLog(SecuredHDFS.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SecuredHDFS.class);
 
     /**
      * The function will get the token information from parameters and call
@@ -45,29 +45,27 @@ public class SecuredHDFS {
      *
      * All token properties will be deserialized from string to a Token object
      *
+     * @param loginUser   the loginUser
      * @param tokenString (optional) the delegation token
-     * @param context servlet context which contains the NN address
-     *
+     * @param context     servlet context which contains the NN address
      * @throws SecurityException Thrown when authentication fails
      */
-    public static void verifyToken(String tokenString, ServletContext context) {
+    public static void verifyToken(UserGroupInformation loginUser, String tokenString, ServletContext context) {
         try {
-            if (UserGroupInformation.isSecurityEnabled()) {
-                /*
-                 * The verify token method validates that the token sent from
-                 * Gpdb to PXF is valid. However, this token is for a user other than
-                 * 'pxf'. The following line ensures that before attempting any secure communication
-                 * PXF tries to relogin in the case that its own ticket is about to expire
-                 * #reloginFromKeytab is a no-op if the ticket is not near expiring
-                 */
-                UserGroupInformation.getLoginUser().reloginFromKeytab();
-                if (tokenString != null) {
-                    Token<DelegationTokenIdentifier> token = new Token<>();
-                    token.decodeFromUrlString(tokenString);
+            /*
+             * The verify token method validates that the token sent from
+             * Gpdb to PXF is valid. However, this token is for a user other than
+             * 'pxf'. The following line ensures that before attempting any secure communication
+             * PXF tries to relogin in the case that its own ticket is about to expire
+             * #reloginFromKeytab is a no-op if the ticket is not near expiring
+             */
+            loginUser.reloginFromKeytab();
+            if (tokenString != null) {
+                Token<DelegationTokenIdentifier> token = new Token<>();
+                token.decodeFromUrlString(tokenString);
 
-                    verifyToken(token.getIdentifier(), token.getPassword(),
-                            token.getKind(), token.getService(), context);
-                }
+                verifyToken(token.getIdentifier(), token.getPassword(),
+                        token.getKind(), token.getService(), context);
             }
         } catch (IOException e) {
             throw new SecurityException("Failed to verify delegation token "
@@ -93,7 +91,7 @@ public class SecuredHDFS {
                                     Text kind, Text service,
                                     ServletContext servletContext) {
         try {
-            Token<DelegationTokenIdentifier> token = new Token<DelegationTokenIdentifier>(
+            Token<DelegationTokenIdentifier> token = new Token<>(
                     identifier, password, kind, service);
 
             ByteArrayInputStream buf = new ByteArrayInputStream(
@@ -109,9 +107,9 @@ public class SecuredHDFS {
 
             UserGroupInformation userGroupInformation = id.getUser();
             userGroupInformation.addToken(token);
-            LOG.debug("user " + userGroupInformation.getUserName() + " ("
-                    + userGroupInformation.getShortUserName()
-                    + ") authenticated");
+            LOG.debug("user {} ({}) authenticated",
+                    userGroupInformation.getUserName(),
+                    userGroupInformation.getShortUserName());
         } catch (IOException e) {
             throw new SecurityException("Failed to verify delegation token "
                     + e, e);

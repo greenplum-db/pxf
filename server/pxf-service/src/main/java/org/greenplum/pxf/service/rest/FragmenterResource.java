@@ -132,7 +132,7 @@ public class FragmenterResource extends BaseResource {
         FragmentsResponse fragmentsResponse = FragmentsResponseFormatter.formatResponse(fragments, path);
 
         int numberOfFragments = fragments.size();
-        SessionId session = new SessionId(context.getSegmentId(), context.getTransactionId(), context.getUser(), null, null);
+        SessionId session = new SessionId(context.getSegmentId(), context.getTransactionId(), context.getUser());
         long elapsedMillis = System.currentTimeMillis() - startTime;
         LOG.info("{} returns {} fragment{} for path {} in {} ms for {} [profile {} filter is{} available]",
                 context.getFragmenter(), numberOfFragments, numberOfFragments == 1 ? "" : "s",
