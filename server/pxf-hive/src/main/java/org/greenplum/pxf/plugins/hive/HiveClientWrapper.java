@@ -18,6 +18,8 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.thrift.TException;
 import org.greenplum.pxf.api.UnsupportedTypeException;
 import org.greenplum.pxf.api.model.Metadata;
+import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.api.utilities.SecureLogin;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hive.utilities.EnumHiveToGpdbType;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
@@ -74,14 +76,14 @@ public class HiveClientWrapper {
      *
      * @return initialized client
      */
-    public IMetaStoreClient initHiveClient(Configuration configuration) {
+    public IMetaStoreClient initHiveClient(RequestContext context, Configuration configuration) {
         HiveConf hiveConf = getHiveConf(configuration);
         try {
             if (Utilities.isSecurityEnabled(configuration)) {
-                // TODO update to use LoginUser per Server
-                LOG.debug("initialize HiveMetaStoreClient as login user '{}'", UserGroupInformation.getLoginUser().getUserName());
+                UserGroupInformation loginUser = SecureLogin.getInstance().getLoginUser(context, configuration);
+                LOG.debug("initialize HiveMetaStoreClient as login user '{}'", loginUser.getUserName());
                 // wrap in doAs for Kerberos to propagate kerberos tokens from login Subject
-                return UserGroupInformation.getLoginUser().
+                return loginUser.
                         doAs((PrivilegedExceptionAction<IMetaStoreClient>) () -> hiveClientFactory.initHiveClient(hiveConf));
             } else {
                 return hiveClientFactory.initHiveClient(hiveConf);

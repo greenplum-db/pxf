@@ -25,6 +25,7 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.api.utilities.SecureLogin;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.jdbc.utils.ConnectionManager;
 import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
@@ -430,7 +431,7 @@ public class JdbcBasePlugin extends BasePlugin {
      */
     private Connection getConnectionInternal() throws Exception {
         if (Utilities.isSecurityEnabled(configuration) && StringUtils.startsWith(jdbcUrl, HIVE_URL_PREFIX)) {
-            return UserGroupInformation.getLoginUser().
+            return SecureLogin.getInstance().getLoginUser(context, configuration).
                     doAs((PrivilegedExceptionAction<Connection>) () ->
                             connectionManager.getConnection(context.getServerName(), jdbcUrl, connectionConfiguration, isConnectionPoolUsed, poolConfiguration));
 
