@@ -44,6 +44,8 @@ public class SessionId {
      * @param segmentId     the calling segment
      * @param transactionId the identifier for the transaction
      * @param gpdbUser      the GPDB username
+     * @param configuration the configuration for the request
+     * @param loginUser     the UGI of the login user (user that runs the service or Kerberos principal)
      */
     public SessionId(Integer segmentId, String transactionId, String gpdbUser, Configuration configuration, UserGroupInformation loginUser) {
         this.segmentId = segmentId;
@@ -67,10 +69,16 @@ public class SessionId {
         return user;
     }
 
+    /**
+     * @return the configuration for the session
+     */
     public Configuration getConfiguration() {
         return configuration;
     }
 
+    /**
+     * @return the UGI of the login user (or Kerberos principal)
+     */
     public UserGroupInformation getLoginUser() {
         return loginUser;
     }

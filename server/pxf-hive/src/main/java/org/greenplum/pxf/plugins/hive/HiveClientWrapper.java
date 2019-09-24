@@ -78,6 +78,7 @@ public class HiveClientWrapper {
         HiveConf hiveConf = getHiveConf(configuration);
         try {
             if (Utilities.isSecurityEnabled(configuration)) {
+                // TODO update to use LoginUser per Server
                 LOG.debug("initialize HiveMetaStoreClient as login user '{}'", UserGroupInformation.getLoginUser().getUserName());
                 // wrap in doAs for Kerberos to propagate kerberos tokens from login Subject
                 return UserGroupInformation.getLoginUser().
