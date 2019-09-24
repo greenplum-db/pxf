@@ -20,6 +20,7 @@ package org.greenplum.pxf.api.utilities;
  */
 
 
+import org.apache.hadoop.conf.Configuration;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.ReadVectorizedResolver;
@@ -407,5 +408,25 @@ public class UtilitiesTest {
     public void testImpersonationPropertyTrue() {
         System.setProperty(PROPERTY_KEY_USER_IMPERSONATION, "true");
         assertTrue(Utilities.isUserImpersonationEnabled());
+    }
+
+    @Test
+    public void testSecurityIsDisabledOnNewConfiguration() {
+        Configuration configuration = new Configuration();
+        assertFalse(Utilities.isSecurityEnabled(configuration));
+    }
+
+    @Test
+    public void testSecurityIsDisabledWithSimpleAuthentication() {
+        Configuration configuration = new Configuration();
+        configuration.set("hadoop.security.authentication", "simple");
+        assertFalse(Utilities.isSecurityEnabled(configuration));
+    }
+
+    @Test
+    public void testSecurityIsEnabledWithKerberosAuthentication() {
+        Configuration configuration = new Configuration();
+        configuration.set("hadoop.security.authentication", "kerberos");
+        assertTrue(Utilities.isSecurityEnabled(configuration));
     }
 }

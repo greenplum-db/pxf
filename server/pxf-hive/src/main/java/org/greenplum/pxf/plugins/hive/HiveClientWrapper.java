@@ -18,6 +18,7 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.thrift.TException;
 import org.greenplum.pxf.api.UnsupportedTypeException;
 import org.greenplum.pxf.api.model.Metadata;
+import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hive.utilities.EnumHiveToGpdbType;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.slf4j.Logger;
@@ -76,7 +77,7 @@ public class HiveClientWrapper {
     public IMetaStoreClient initHiveClient(Configuration configuration) {
         HiveConf hiveConf = getHiveConf(configuration);
         try {
-            if (UserGroupInformation.isSecurityEnabled()) {
+            if (Utilities.isSecurityEnabled(configuration)) {
                 LOG.debug("initialize HiveMetaStoreClient as login user '{}'", UserGroupInformation.getLoginUser().getUserName());
                 // wrap in doAs for Kerberos to propagate kerberos tokens from login Subject
                 return UserGroupInformation.getLoginUser().

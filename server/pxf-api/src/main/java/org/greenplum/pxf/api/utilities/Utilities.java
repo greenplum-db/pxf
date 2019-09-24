@@ -22,6 +22,9 @@ package org.greenplum.pxf.api.utilities;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.security.SecurityUtil;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.greenplum.pxf.api.StatsAccessor;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.slf4j.Logger;
@@ -324,5 +327,17 @@ public class Utilities {
      */
     public static String absoluteDataPath(String dataSource) {
         return (dataSource.charAt(0) == '/') ? dataSource : "/" + dataSource;
+    }
+
+    /**
+     * Determine whether the configuration is using Kerberos to
+     * establish user identities or is relying on simple authentication
+     *
+     * @param configuration the configuration for a given server
+     * @return true if the given configuration is for a secure environment
+     */
+    public static boolean isSecurityEnabled(Configuration configuration) {
+        return SecurityUtil.getAuthenticationMethod(configuration) !=
+                UserGroupInformation.AuthenticationMethod.SIMPLE;
     }
 }

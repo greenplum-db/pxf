@@ -1,5 +1,6 @@
 package org.greenplum.pxf.plugins.hdfs;
 
+import com.google.inject.internal.cglib.core.$ClassInfo;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -7,6 +8,7 @@ import org.apache.hadoop.mapreduce.MRJobConfig;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.api.utilities.Utilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -219,7 +221,7 @@ public enum HcfsType {
      * @param configuration configuration used for HCFS operations
      */
     protected void disableSecureTokenRenewal(String uri, Configuration configuration) {
-        if (!UserGroupInformation.isSecurityEnabled()) {
+        if (!Utilities.isSecurityEnabled(configuration)) {
             return;
         }
         // find the "host" that TokenCache will check against the exclusion list, for cloud file systems (like S3)

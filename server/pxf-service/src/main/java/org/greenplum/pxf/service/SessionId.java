@@ -19,6 +19,9 @@ package org.greenplum.pxf.service;
  * under the License.
  */
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.security.UserGroupInformation;
+
 /**
  * For the purposes of pxf-server, a session is the set of requests processed on a specific segment
  * on behalf of a particular user and transaction. Grouping requests together into a session allows
@@ -32,6 +35,8 @@ public class SessionId {
     private final String user;
     private final Integer segmentId;
     private final String sessionId;
+    private final Configuration configuration;
+    private final UserGroupInformation loginUser;
 
     /**
      * Create a sessionId
@@ -40,10 +45,12 @@ public class SessionId {
      * @param transactionId the identifier for the transaction
      * @param gpdbUser      the GPDB username
      */
-    public SessionId(Integer segmentId, String transactionId, String gpdbUser) {
+    public SessionId(Integer segmentId, String transactionId, String gpdbUser, Configuration configuration, UserGroupInformation loginUser) {
         this.segmentId = segmentId;
         this.user = gpdbUser;
         this.sessionId = gpdbUser + ":" + transactionId + ":" + segmentId;
+        this.configuration = configuration;
+        this.loginUser = loginUser;
     }
 
     /**
@@ -58,6 +65,14 @@ public class SessionId {
      */
     public String getUser() {
         return user;
+    }
+
+    public Configuration getConfiguration() {
+        return configuration;
+    }
+
+    public UserGroupInformation getLoginUser() {
+        return loginUser;
     }
 
     /**
