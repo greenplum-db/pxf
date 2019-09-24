@@ -58,16 +58,8 @@ public class SecureLogin {
 
             UserGroupInformation.setConfiguration(configuration);
 
-            String defaultPrincipal = null, defaultKeytab = null;
-
-            if (StringUtils.equalsIgnoreCase(serverName, "default")) {
-                // use system property as default for backward compatibility when only 1 Kerberized cluster was supported
-                defaultPrincipal = System.getProperty(CONFIG_KEY_SERVICE_PRINCIPAL);
-                defaultKeytab = System.getProperty(CONFIG_KEY_SERVICE_KEYTAB);
-            }
-
-            String principal = configuration.get(CONFIG_KEY_SERVICE_PRINCIPAL, defaultPrincipal);
-            String keytabFilename = configuration.get(CONFIG_KEY_SERVICE_KEYTAB, defaultKeytab);
+            String principal = getServicePrincipal(serverName, configuration);
+            String keytabFilename = getServiceKeytab(serverName, configuration);
 
             if (StringUtils.isEmpty(principal)) {
                 throw new RuntimeException(String.format("Kerberos Security for server %s requires a valid principal.", serverName));
@@ -90,5 +82,39 @@ public class SecureLogin {
             LOG.error("PXF service login failed: {}", e.getMessage());
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * Returns the service principal name from the configuration if available,
+     * or defaults to the system property for the default server for backwards
+     * compatibility.
+     *
+     * @param serverName    the name of the server
+     * @param configuration the hadoop configuration
+     * @return the service principal for the given server and configuration
+     */
+    public static String getServicePrincipal(String serverName, Configuration configuration) {
+        // use system property as default for backward compatibility when only 1 Kerberized cluster was supported
+        String defaultPrincipal = StringUtils.equalsIgnoreCase(serverName, "default") ?
+                System.getProperty(CONFIG_KEY_SERVICE_PRINCIPAL) :
+                null;
+        return configuration.get(CONFIG_KEY_SERVICE_PRINCIPAL, defaultPrincipal);
+    }
+
+    /**
+     * Returns the service keytab path from the configuration if available,
+     * or defaults to the system property for the default server for backwards
+     * compatibility.
+     *
+     * @param serverName    the name of the server
+     * @param configuration the hadoop configuration
+     * @return the path of the service keytab for the given server and configuration
+     */
+    public static String getServiceKeytab(String serverName, Configuration configuration) {
+        // use system property as default for backward compatibility when only 1 Kerberized cluster was supported
+        String defaultKeytab = StringUtils.equalsIgnoreCase(serverName, "default") ?
+                System.getProperty(CONFIG_KEY_SERVICE_KEYTAB) :
+                null;
+        return configuration.get(CONFIG_KEY_SERVICE_KEYTAB, defaultKeytab);
     }
 }

@@ -212,9 +212,8 @@ public class SecurityServletFilter implements Filter {
         // - keytab path
         // - keytab md5
 
-
-        final String principalName = configuration.get(SecureLogin.CONFIG_KEY_SERVICE_PRINCIPAL);
-        final String keytabPath = configuration.get(SecureLogin.CONFIG_KEY_SERVICE_KEYTAB);
+        final String principalName = SecureLogin.getServicePrincipal(serverName, configuration);
+        final String keytabPath = SecureLogin.getServiceKeytab(serverName, configuration);
         String keytabMd5 = null;
         // TODO calculate MD5
 
