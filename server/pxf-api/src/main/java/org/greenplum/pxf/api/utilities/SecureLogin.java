@@ -56,8 +56,8 @@ public class SecureLogin {
     public static final String CONFIG_KEY_SERVICE_PRINCIPAL = "pxf.service.kerberos.principal";
     public static final String CONFIG_KEY_SERVICE_KEYTAB = "pxf.service.kerberos.keytab";
     public static final String CONFIG_KEY_SERVICE_USER_IMPERSONATION = "pxf.service.user.impersonation";
-    private static final String PROPERTY_KEY_USER_IMPERSONATION = "pxf.service.user.impersonation.enabled";
     public static final String CONFIG_KEY_SERVICE_USER_NAME = "pxf.service.user.name";
+    private static final String PROPERTY_KEY_USER_IMPERSONATION = "pxf.service.user.impersonation.enabled";
 
     private static final Map<String, LoginSession> loginMap = new HashMap<>();
 
@@ -147,8 +147,13 @@ public class SecureLogin {
         }
     }
 
+    /**
+     * Returns whether user impersonation has been configured as enabled.
+     *
+     * @return true if user impersonation is enabled, false otherwise
+     */
     public boolean isUserImpersonationEnabled(Configuration configuration) {
-        String valueFromUserImpersonationOnServer = configuration.get(SecureLogin.CONFIG_KEY_SERVICE_USER_IMPERSONATION, System.getProperty(PROPERTY_KEY_USER_IMPERSONATION, "true"));
+        String valueFromUserImpersonationOnServer = configuration.get(SecureLogin.CONFIG_KEY_SERVICE_USER_IMPERSONATION, System.getProperty(PROPERTY_KEY_USER_IMPERSONATION, "false"));
         return StringUtils.equalsIgnoreCase(valueFromUserImpersonationOnServer, "true");
     }
 

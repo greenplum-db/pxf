@@ -298,15 +298,6 @@ public class Utilities {
     }
 
     /**
-     * Returns whether user impersonation has been configured as enabled.
-     *
-     * @return true if user impersonation is enabled, false otherwise
-     */
-//    public static boolean isUserImpersonationEnabled() {
-//        return StringUtils.equalsIgnoreCase(System.getProperty(PROPERTY_KEY_USER_IMPERSONATION, ""), "true");
-//    }
-
-    /**
      * Returns whether fragmenter cache has been configured as enabled.
      * Defaults to true.
      *

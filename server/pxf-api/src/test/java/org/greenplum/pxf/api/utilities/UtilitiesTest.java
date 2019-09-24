@@ -46,7 +46,6 @@ import static org.mockito.Mockito.when;
 
 public class UtilitiesTest {
 
-    private String PROPERTY_KEY_USER_IMPERSONATION = "pxf.service.user.impersonation.enabled";
     private String PROPERTY_KEY_FRAGMENTER_CACHE = "pxf.service.fragmenter.cache.enabled";
 
     class StatsAccessorImpl implements StatsAccessor {
@@ -378,36 +377,6 @@ public class UtilitiesTest {
     public void testFragmenterCachePropertyFalse() {
         System.setProperty(PROPERTY_KEY_FRAGMENTER_CACHE, "false");
         assertFalse(Utilities.isFragmenterCacheEnabled());
-    }
-
-    @Test
-    public void testImpersonationPropertyAbsent() {
-        System.clearProperty(PROPERTY_KEY_USER_IMPERSONATION);
-        assertFalse(Utilities.isUserImpersonationEnabled());
-    }
-
-    @Test
-    public void testImpersonationPropertyEmpty() {
-        System.setProperty(PROPERTY_KEY_USER_IMPERSONATION, "");
-        assertFalse(Utilities.isUserImpersonationEnabled());
-    }
-
-    @Test
-    public void testImpersonationPropertyFalse() {
-        System.setProperty(PROPERTY_KEY_USER_IMPERSONATION, "foo");
-        assertFalse(Utilities.isUserImpersonationEnabled());
-    }
-
-    @Test
-    public void testImpersonationPropertyTRUE() {
-        System.setProperty(PROPERTY_KEY_USER_IMPERSONATION, "TRUE");
-        assertTrue(Utilities.isUserImpersonationEnabled());
-    }
-
-    @Test
-    public void testImpersonationPropertyTrue() {
-        System.setProperty(PROPERTY_KEY_USER_IMPERSONATION, "true");
-        assertTrue(Utilities.isUserImpersonationEnabled());
     }
 
     @Test
