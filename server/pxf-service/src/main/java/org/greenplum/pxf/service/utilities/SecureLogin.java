@@ -60,7 +60,7 @@ public class SecureLogin {
 
             String defaultPrincipal = null, defaultKeytab = null;
 
-            if (StringUtils.equals(serverName, "default")) {
+            if (StringUtils.equalsIgnoreCase(serverName, "default")) {
                 // use system property as default for backward compatibility when only 1 Kerberized cluster was supported
                 defaultPrincipal = System.getProperty(CONFIG_KEY_SERVICE_PRINCIPAL);
                 defaultKeytab = System.getProperty(CONFIG_KEY_SERVICE_KEYTAB);
