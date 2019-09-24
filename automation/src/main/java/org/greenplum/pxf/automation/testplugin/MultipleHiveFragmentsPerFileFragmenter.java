@@ -46,10 +46,10 @@ public class MultipleHiveFragmentsPerFileFragmenter extends BaseFragmenter {
     }
 
     @Override
-    public void initialize(RequestContext requestContext) {
-        super.initialize(requestContext);
+    public void initialize(RequestContext context) {
+        super.initialize(context);
         jobConf = new JobConf(configuration, MultipleHiveFragmentsPerFileFragmenter.class);
-        client = hiveClientWrapper.initHiveClient(configuration);
+        client = hiveClientWrapper.initHiveClient(context, configuration);
     }
 
     @Override
