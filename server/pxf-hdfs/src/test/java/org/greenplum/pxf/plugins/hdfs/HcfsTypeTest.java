@@ -267,7 +267,7 @@ public class HcfsTypeTest {
         HcfsType type = HcfsType.getHcfsType(configuration, context);
         String dataUri = type.getDataUri(configuration, context);
         assertEquals("xyz://abc/foo/bar.txt", dataUri);
-        assertNull(configuration.get(MRJobConfig.JOB_NAMENODES_TOKEN_RENEWAL_EXCLUDE));
+        assertEquals("abc", configuration.get(MRJobConfig.JOB_NAMENODES_TOKEN_RENEWAL_EXCLUDE));
     }
 
     @Test
