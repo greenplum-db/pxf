@@ -1,6 +1,7 @@
 package org.greenplum.pxf.api.utilities;
 
 import org.apache.hadoop.conf.Configuration;
+import org.greenplum.pxf.api.security.SecureLogin;
 import org.junit.Before;
 import org.junit.Test;
 

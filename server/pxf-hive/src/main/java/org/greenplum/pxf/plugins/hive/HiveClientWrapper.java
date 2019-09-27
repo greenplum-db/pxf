@@ -19,7 +19,7 @@ import org.apache.thrift.TException;
 import org.greenplum.pxf.api.UnsupportedTypeException;
 import org.greenplum.pxf.api.model.Metadata;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.api.utilities.SecureLogin;
+import org.greenplum.pxf.api.security.SecureLogin;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hive.utilities.EnumHiveToGpdbType;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;

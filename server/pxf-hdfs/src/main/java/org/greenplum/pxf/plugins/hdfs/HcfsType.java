@@ -2,6 +2,7 @@ package org.greenplum.pxf.plugins.hdfs;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.mapreduce.MRJobConfig;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
@@ -38,13 +39,7 @@ public enum HcfsType {
         }
     },
     GS,
-    HDFS {
-        @Override
-        public String getDataUri(Configuration configuration, RequestContext context) {
-            // no token renewal disabling needed for HDFS
-            return getDataUriForPrefix(configuration, context, this.prefix);
-        }
-    },
+    HDFS,
     LOCALFILE("file") {
         @Override
         public String normalizeDataSource(String dataSource) {
@@ -220,6 +215,8 @@ public enum HcfsType {
      * @param configuration configuration used for HCFS operations
      */
     protected void disableSecureTokenRenewal(String uri, Configuration configuration) {
+        if (Utilities.isSecurityEnabled(configuration))
+            return;
         // find the "host" that TokenCache will check against the exclusion list, for cloud file systems (like S3)
         // it might actually be a bucket in the full resource path
         String host = URI.create(uri).getHost();

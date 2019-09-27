@@ -1,4 +1,4 @@
-package org.greenplum.pxf.api.utilities;
+package org.greenplum.pxf.api.security;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -21,17 +21,17 @@ package org.greenplum.pxf.api.utilities;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.security.SecurityUtil;
+import org.apache.hadoop.security.LoginSession;
+import org.apache.hadoop.security.PxfUserGroupInformation;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.api.utilities.Utilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 
 /**
@@ -63,8 +63,10 @@ public class SecureLogin {
 
     private static final SecureLogin instance = new SecureLogin();
 
+    /**
+     * Prevent instantiation of this class by e
+     */
     private SecureLogin() {
-
     }
 
     /**
@@ -90,36 +92,44 @@ public class SecureLogin {
 
                     if (Utilities.isSecurityEnabled(configuration)) {
                         LOG.info("Kerberos Security is enabled for server {}", serverName);
-                        loginSession = new SecureLogin().login(serverName, configDirectory, configuration);
+                        loginSession = login(serverName, configDirectory, configuration);
                     } else {
                         // Remote user specified in config file, or defaults to user running pxf service
-                        String remoteUser = configuration.get(CONFIG_KEY_SERVICE_USER_NAME, UserGroupInformation.getLoginUser().getUserName());
-                        loginSession = new LoginSession(configDirectory, remoteUser, null, null, UserGroupInformation.createRemoteUser(remoteUser));
+                        String remoteUser = configuration.get(CONFIG_KEY_SERVICE_USER_NAME, System.getProperty("user.name"));
+
+                        loginSession = new LoginSession(configDirectory, null, null, UserGroupInformation.createRemoteUser(remoteUser), null, 0L);
                     }
                     loginMap.put(serverName, loginSession);
                 }
             }
         }
 
-        UserGroupInformation loginUser = loginSession.getUgi();
         if (Utilities.isSecurityEnabled(configuration)) {
-            // TODO: we need to relogin from keytab ourselves because the method below relies on a static keytab file
-            loginUser.reloginFromKeytab();
+            PxfUserGroupInformation.reloginFromKeytab(loginSession);
         }
 
-        return loginUser;
+        return loginSession.getLoginUser();
     }
 
     /**
-     * Establishes Login Context for the PXF service principal using Kerberos keytab.
+     * Establishes login context (LoginSession) for the PXF service principal using Kerberos keytab.
+     *
+     * @param serverName      name of the configuration server
+     * @param configDirectory path to the configuration directory
+     * @param configuration   request configuration
+     * @return login session for the server
      */
-    public LoginSession login(String serverName, String configDirectory, Configuration configuration) {
+    private LoginSession login(String serverName, String configDirectory, Configuration configuration) {
         try {
             boolean isUserImpersonationEnabled = isUserImpersonationEnabled(configuration);
 
             LOG.info("User impersonation is {} for server {}", (isUserImpersonationEnabled ? "enabled" : "disabled"), serverName);
 
-            UserGroupInformation.setConfiguration(configuration);
+//            UserGroupInformation.setConfiguration(configuration);
+            UserGroupInformation.reset();
+            Configuration config = new Configuration();
+            config.set("hadoop.security.authentication", "kerberos");
+            UserGroupInformation.setConfiguration(config);
 
             String principal = getServicePrincipal(serverName, configuration);
             String keytabFilename = getServiceKeytab(serverName, configuration);
@@ -138,12 +148,14 @@ public class SecureLogin {
             LOG.info("Kerberos principal for server {}: {}", serverName, principal);
             LOG.info("Kerberos keytab for server {}: {}", serverName, keytabFilename);
 
-            SecurityUtil.login(configuration, CONFIG_KEY_SERVICE_KEYTAB, CONFIG_KEY_SERVICE_PRINCIPAL);
+            LoginSession loginSession = PxfUserGroupInformation
+                    .loginUserFromKeytab(configuration, serverName, configDirectory, principal, keytabFilename);
 
-            return new LoginSession(configDirectory, principal, keytabFilename, null, UserGroupInformation.getLoginUser());
+            LOG.info("Logged in as principal {} for server {}", loginSession.getLoginUser(), serverName);
+
+            return loginSession;
         } catch (Exception e) {
-            LOG.error("PXF service login failed: {}", e.getMessage());
-            throw new RuntimeException(e);
+            throw new RuntimeException(String.format("PXF service login failed for server %s", serverName), e);
         }
     }
 
@@ -157,46 +169,23 @@ public class SecureLogin {
         return StringUtils.equalsIgnoreCase(valueFromUserImpersonationOnServer, "true");
     }
 
+    /**
+     * Returns an existing login session for the server if it has already been established before and configuration has not changed.
+     *
+     * @param serverName      name of the configuration server
+     * @param configDirectory path to the configuration directory
+     * @param configuration   configuration for the request
+     * @return login session or null if it does not exist or does not match current configuration
+     */
     private LoginSession getServerLoginSession(final String serverName, final String configDirectory, Configuration configuration) {
 
-
-        // if (server is not in map)
-        //    login
-        // else
-        //     if config directory changed or principal name changed or keytab path file changed or file md5 changed
-        //         clear old entry in map
-        //         login
-
         LoginSession currentSession = loginMap.get(serverName);
-
         if (currentSession == null)
             return null;
-        // Check for changes in:
-        // - config directory
-        // - principal name
-        // - keytab path
-        // - keytab md5
 
-        final String principalName = SecureLogin.getServicePrincipal(serverName, configuration);
-        final String keytabPath = SecureLogin.getServiceKeytab(serverName, configuration);
-        String keytabMd5 = null;
-        // TODO calculate MD5
-
-//        try (InputStream is = Files.newInputStream(Paths.get(keytabPath))) {
-//            keytabMd5 = org.apache.commons.codec.digest.DigestUtils.md5Hex(is);
-//        } catch (IOException e) {
-//            throw new IllegalArgumentException(String.format("Unable to read keytab at path %s", keytabPath), e);
-//        }
-
-        LoginSession kerberosLoginSession = new LoginSession(configDirectory, principalName, keytabPath, keytabMd5);
-
-        if (!currentSession.equals(kerberosLoginSession)) {
-            LOG.error("Kerberos principal : changes detected in the kerberos login session");
-            try {
-                FileSystem.closeAllForUGI(currentSession.getUgi());
-            } catch (IOException e) {
-                LOG.error(String.format("Error releasing UGI for server: %s", serverName), e);
-            }
+        LoginSession expectedLoginSession = new LoginSession(configDirectory, SecureLogin.getServicePrincipal(serverName, configuration), SecureLogin.getServiceKeytab(serverName, configuration));
+        if (!currentSession.equals(expectedLoginSession)) {
+            LOG.warn("LoginSession has changed for server {} : existing {} expected {}", serverName, currentSession, expectedLoginSession);
             return null;
         }
 
@@ -235,72 +224,5 @@ public class SecureLogin {
                 System.getProperty(CONFIG_KEY_SERVICE_KEYTAB) :
                 null;
         return configuration.get(CONFIG_KEY_SERVICE_KEYTAB, defaultKeytab);
-    }
-
-    /**
-     * Stores information about Kerberos login details for a given configuration server.
-     */
-    private class LoginSession {
-
-        private String configDirectory;
-        private String principalName;
-        private String keytabPath;
-        private String keytabMd5;
-        private UserGroupInformation ugi;
-
-        /**
-         * Creates a new session object.
-         *
-         * @param configDirectory server configuration directory
-         * @param principalName   Kerberos principal name to use to obtain tokens
-         * @param keytabPath      full path to a keytab file for the principal
-         * @param keytabMd5       MD5 hash of the keytab file
-         */
-        public LoginSession(String configDirectory, String principalName, String keytabPath, String keytabMd5) {
-            this(configDirectory, principalName, keytabPath, keytabMd5, null);
-        }
-
-        /**
-         * Creates a new session object.
-         *
-         * @param configDirectory server configuration directory
-         * @param principalName   Kerberos principal name to use to obtain tokens
-         * @param keytabPath      full path to a keytab file for the principal
-         * @param keytabMd5       MD5 hash of the keytab file
-         * @param ugi             UserGroupInformation for the given principal after login to Kerberos was performed
-         */
-        public LoginSession(String configDirectory, String principalName, String keytabPath, String keytabMd5, UserGroupInformation ugi) {
-            this.configDirectory = configDirectory;
-            this.principalName = principalName;
-            this.keytabPath = keytabPath;
-            this.keytabMd5 = keytabMd5;
-            this.ugi = ugi;
-        }
-
-        /**
-         * Get the login UGI for this session
-         *
-         * @return the UGI for this session
-         */
-        public UserGroupInformation getUgi() {
-            return ugi;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            LoginSession that = (LoginSession) o;
-            // ugi is not included into expression below as it is a transient derived value
-            return Objects.equals(configDirectory, that.configDirectory) &&
-                    Objects.equals(principalName, that.principalName) &&
-                    Objects.equals(keytabPath, that.keytabPath) &&
-                    Objects.equals(keytabMd5, that.keytabMd5);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(configDirectory, principalName, keytabPath, keytabMd5);
-        }
     }
 }

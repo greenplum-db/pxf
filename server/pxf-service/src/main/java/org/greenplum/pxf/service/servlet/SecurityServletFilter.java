@@ -24,8 +24,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.greenplum.pxf.api.model.BaseConfigurationFactory;
 import org.greenplum.pxf.api.model.ConfigurationFactory;
-import org.greenplum.pxf.api.utilities.SecureLogin;
-import org.greenplum.pxf.api.utilities.Utilities;
+import org.greenplum.pxf.api.security.SecureLogin;
 import org.greenplum.pxf.service.SessionId;
 import org.greenplum.pxf.service.UGICache;
 import org.slf4j.Logger;
@@ -115,21 +114,23 @@ public class SecurityServletFilter implements Filter {
                 segmentId,
                 transactionId,
                 (isUserImpersonation ? gpdbUser : loginUser.getUserName()),
+                serverName,
                 configuration,
                 loginUser);
 
         // Prepare privileged action to run on behalf of proxy user
         PrivilegedExceptionAction<Boolean> action = () -> {
-            LOG.debug("Performing request chain call for proxy user = {}", gpdbUser);
+            LOG.debug("Performing request chain call for proxy user = {} service user = {}", gpdbUser, loginUser.getUserName());
             chain.doFilter(request, response);
             return true;
         };
 
         try {
-            LOG.debug("Retrieving proxy user for session: {}", session);
             // Retrieve proxy user UGI from the UGI of the logged in user
             UserGroupInformation userGroupInformation = ugiCache
                     .getUserGroupInformation(session, isUserImpersonation);
+
+            LOG.debug("Retrieved proxy user {} for server {} and session {}", userGroupInformation, serverName, session);
 
             // Execute the servlet chain as that user
             userGroupInformation.doAs(action);

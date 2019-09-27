@@ -3,6 +3,7 @@ package org.greenplum.pxf.api.model;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,6 +43,15 @@ public class BaseConfigurationFactory implements ConfigurationFactory {
         // start with built-in Hadoop configuration that loads core-site.xml
         LOG.debug("Initializing configuration for server {}", serverName);
         Configuration configuration = new Configuration();
+        // while implementing multiple kerberized support we noticed that non-kerberized hadoop
+        // access was trying to use SASL-client authentication. Setting the fallback to simple auth
+        // allows us to still access non-kerberized hadoop clusters when there exists at least one
+        // kerberized hadoop cluster. The root cause is that UGI has static fields and many hadoop
+        // libraries depend on the state of the UGI
+        // allow using SIMPLE auth for non-Kerberized HCFS access by SASL-enabled IPC client
+        // that is created due to the fact that it uses UGI.isSecurityEnabled
+        // and will try to use SASL if there is at least one Kerberized Hadoop cluster
+        configuration.set(CommonConfigurationKeys.IPC_CLIENT_FALLBACK_TO_SIMPLE_AUTH_ALLOWED_KEY, "true");
 
         File[] serverDirectories = null;
         Path p = Paths.get(configDirectory);

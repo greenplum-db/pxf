@@ -132,7 +132,7 @@ public class FragmenterResource extends BaseResource {
         FragmentsResponse fragmentsResponse = FragmentsResponseFormatter.formatResponse(fragments, path);
 
         int numberOfFragments = fragments.size();
-        SessionId session = new SessionId(context.getSegmentId(), context.getTransactionId(), context.getUser());
+        SessionId session = new SessionId(context.getSegmentId(), context.getTransactionId(), context.getUser(), context.getServerName());
         long elapsedMillis = System.currentTimeMillis() - startTime;
         LOG.info("{} returns {} fragment{} for path {} in {} ms for {} [profile {} filter is{} available]",
                 context.getFragmenter(), numberOfFragments, numberOfFragments == 1 ? "" : "s",
@@ -185,15 +185,16 @@ public class FragmenterResource extends BaseResource {
      * the cache. For the case where we have multiple slices (i.e select a, b from c
      * where a = 'part1' union all select a, b from c where a = 'part2'), the list of
      * fragments for each slice in the query will be different, but the transactionID
-     * will be the same. For that reason we must include the datasource and the filter
-     * string as part of the fragmenter cache.
+     * will be the same. For that reason we must include the server name, data source
+     * and the filter string as part of the fragmenter cache.
      *
      *
      * @param context the request context
      * @return the key for the fragmenter cache
      */
     private String getFragmenterCacheKey(RequestContext context) {
-        return String.format("%s:%s:%s",
+        return String.format("%s:%s:%s:%s",
+                context.getServerName(),
                 context.getTransactionId(),
                 context.getDataSource(),
                 context.getFilterString());
