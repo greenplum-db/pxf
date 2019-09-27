@@ -21,11 +21,10 @@ package org.greenplum.pxf.plugins.jdbc;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.security.UserGroupInformation;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.api.utilities.SecureLogin;
+import org.greenplum.pxf.api.security.SecureLogin;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.jdbc.utils.ConnectionManager;
 import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;

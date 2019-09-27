@@ -45,8 +45,8 @@ public class SessionId {
      * @param transactionId the identifier for the transaction
      * @param gpdbUser      the GPDB username
      */
-    public SessionId(Integer segmentId, String transactionId, String gpdbUser) {
-        this(segmentId, transactionId, gpdbUser, null, null);
+    public SessionId(Integer segmentId, String transactionId, String gpdbUser, String serverName) {
+        this(segmentId, transactionId, gpdbUser, serverName,null, null);
     }
 
     /**
@@ -55,13 +55,14 @@ public class SessionId {
      * @param segmentId     the calling segment
      * @param transactionId the identifier for the transaction
      * @param gpdbUser      the GPDB username
+     * @param serverName    the name of the configuration server
      * @param configuration the configuration for the request
      * @param loginUser     the UGI of the login user (user that runs the service or Kerberos principal)
      */
-    public SessionId(Integer segmentId, String transactionId, String gpdbUser, Configuration configuration, UserGroupInformation loginUser) {
+    public SessionId(Integer segmentId, String transactionId, String gpdbUser, String serverName, Configuration configuration, UserGroupInformation loginUser) {
         this.segmentId = segmentId;
         this.user = gpdbUser;
-        this.sessionId = gpdbUser + ":" + transactionId + ":" + segmentId;
+        this.sessionId = gpdbUser + ":" + transactionId + ":" + segmentId + ":" + serverName;
         this.configuration = configuration;
         this.loginUser = loginUser;
     }
