@@ -44,9 +44,10 @@ public class SessionId {
      * @param segmentId     the calling segment
      * @param transactionId the identifier for the transaction
      * @param gpdbUser      the GPDB username
+     * @param serverName    the name of the configuration server
      */
     public SessionId(Integer segmentId, String transactionId, String gpdbUser, String serverName) {
-        this(segmentId, transactionId, gpdbUser, serverName,null, null);
+        this(segmentId, transactionId, gpdbUser, serverName, null, null);
     }
 
     /**

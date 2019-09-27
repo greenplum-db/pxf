@@ -53,7 +53,7 @@ public class UGICacheMultiThreadTest {
         for (int i = 0; i < numberOfSegments; i++) {
             for (int j = 0; j < numberOfUsers; j++) {
                 for (int k = 0; k < numberOfTxns; k++) {
-                    sessions[l++] = new SessionId(i, "txn-id-" + k, "the-user-" + j, configuration, UserGroupInformation.getLoginUser());
+                    sessions[l++] = new SessionId(i, "txn-id-" + k, "the-user-" + j, "default", configuration, UserGroupInformation.getLoginUser());
                 }
             }
         }

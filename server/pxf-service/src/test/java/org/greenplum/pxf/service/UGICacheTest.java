@@ -51,7 +51,7 @@ public class UGICacheTest {
     @Before
     public void setUp() throws Exception {
         provider = mock(UGIProvider.class);
-        session = new SessionId(0, "txn-id", "the-user", new Configuration(), UserGroupInformation.getLoginUser());
+        session = new SessionId(0, "txn-id", "the-user", "default", new Configuration(), UserGroupInformation.getLoginUser());
         fakeTicker = new FakeTicker();
         cache = new UGICache(provider, fakeTicker);
 
@@ -96,7 +96,7 @@ public class UGICacheTest {
 
     @Test
     public void getUGIWithEquivalentSessionsReturnsTheSameInstance() throws Exception {
-        SessionId session2 = new SessionId(0, "txn-id", "the-user");
+        SessionId session2 = new SessionId(0, "txn-id", "the-user", "default");
         UserGroupInformation ugi1 = cache.getUserGroupInformation(session, false);
         UserGroupInformation ugi2 = cache.getUserGroupInformation(session2, false);
         assertEquals(ugi1, ugi2);
@@ -104,7 +104,7 @@ public class UGICacheTest {
 
     @Test
     public void getProxyUGIWithEquivalentSessionsReturnsTheSameInstance() throws Exception {
-        SessionId session2 = new SessionId(0, "txn-id", "the-user");
+        SessionId session2 = new SessionId(0, "txn-id", "the-user", "default");
         UserGroupInformation ugi1 = cache.getUserGroupInformation(session, true);
         UserGroupInformation ugi2 = cache.getUserGroupInformation(session2, true);
         assertEquals(ugi1, ugi2);
@@ -112,7 +112,7 @@ public class UGICacheTest {
 
     @Test
     public void getTwoUGIsWithDifferentTransactionsForSameUser() throws Exception {
-        SessionId otherSession = new SessionId(0, "txn-id-2", "the-user", new Configuration(), UserGroupInformation.getLoginUser());
+        SessionId otherSession = new SessionId(0, "txn-id-2", "the-user", "default", new Configuration(), UserGroupInformation.getLoginUser());
         UserGroupInformation ugi1 = cache.getUserGroupInformation(session, false);
         UserGroupInformation ugi2 = cache.getUserGroupInformation(otherSession, false);
         assertNotEquals(ugi1, ugi2);
@@ -123,7 +123,7 @@ public class UGICacheTest {
 
     @Test
     public void getTwoProxyUGIsWithDifferentTransactionsForSameUser() throws Exception {
-        SessionId otherSession = new SessionId(0, "txn-id-2", "the-user", new Configuration(), UserGroupInformation.getLoginUser());
+        SessionId otherSession = new SessionId(0, "txn-id-2", "the-user", "default", new Configuration(), UserGroupInformation.getLoginUser());
         UserGroupInformation proxyUGI1 = cache.getUserGroupInformation(session, true);
         UserGroupInformation proxyUGI2 = cache.getUserGroupInformation(otherSession, true);
         assertNotEquals(proxyUGI1, proxyUGI2);
@@ -137,7 +137,7 @@ public class UGICacheTest {
 
     @Test
     public void getTwoUGIsWithDifferentUsers() throws Exception {
-        SessionId otherSession = new SessionId(0, "txn-id", "different-user", new Configuration(), UserGroupInformation.getLoginUser());
+        SessionId otherSession = new SessionId(0, "txn-id", "different-user", "default", new Configuration(), UserGroupInformation.getLoginUser());
         UserGroupInformation ugi1 = cache.getUserGroupInformation(session, false);
         UserGroupInformation ugi2 = cache.getUserGroupInformation(otherSession, false);
         assertNotEquals(ugi1, ugi2);
@@ -150,7 +150,7 @@ public class UGICacheTest {
 
     @Test
     public void getTwoProxyUGIsWithDifferentUsers() throws Exception {
-        SessionId otherSession = new SessionId(0, "txn-id", "different-user", new Configuration(), UserGroupInformation.getLoginUser());
+        SessionId otherSession = new SessionId(0, "txn-id", "different-user", "default", new Configuration(), UserGroupInformation.getLoginUser());
         UserGroupInformation proxyUGI1 = cache.getUserGroupInformation(session, true);
         UserGroupInformation proxyUGI2 = cache.getUserGroupInformation(otherSession, true);
         assertNotEquals(proxyUGI1, proxyUGI2);
@@ -164,7 +164,7 @@ public class UGICacheTest {
     @Test
     public void anySegmentIdIsValid() throws Exception {
         int crazySegId = Integer.MAX_VALUE;
-        session = new SessionId(crazySegId, "txn-id", "the-user");
+        session = new SessionId(crazySegId, "txn-id", "the-user", "default");
         UserGroupInformation proxyUGI1 = cache.getUserGroupInformation(session, true);
         assertNotNull(proxyUGI1);
         assertStillInCache(session, proxyUGI1);
@@ -176,7 +176,7 @@ public class UGICacheTest {
         cache.release(session, false);
         fakeTicker.advanceTime(UGICache.UGI_CACHE_EXPIRY + 1000);
 
-        SessionId session2 = new SessionId(0, "txn-id", "the-user-2");
+        SessionId session2 = new SessionId(0, "txn-id", "the-user-2", "default");
         cache.getUserGroupInformation(session2, true); // this triggers cleanup of ugi1
         assertNoLongerInCache(session, ugi1);
         cache.release(session2, true);
@@ -185,7 +185,7 @@ public class UGICacheTest {
 
     @Test
     public void ensureExpiredUGIIsNotCleanedUpIfItIsStillReferenced() throws Exception {
-        SessionId session2 = new SessionId(0, "txn-id", "the-user-2");
+        SessionId session2 = new SessionId(0, "txn-id", "the-user-2", "default");
         UserGroupInformation stillInUse = cache.getUserGroupInformation(session, false);
         fakeTicker.advanceTime(UGICache.UGI_CACHE_EXPIRY + 1000);
 
@@ -202,7 +202,7 @@ public class UGICacheTest {
 
     @Test
     public void ensureExpiredProxyUGIIsNotCleanedUpIfItIsStillReferenced() throws Exception {
-        SessionId session2 = new SessionId(0, "txn-id", "the-user-2");
+        SessionId session2 = new SessionId(0, "txn-id", "the-user-2", "default");
         UserGroupInformation stillInUse = cache.getUserGroupInformation(session, true);
         fakeTicker.advanceTime(UGICache.UGI_CACHE_EXPIRY + 1000);
 
@@ -219,8 +219,8 @@ public class UGICacheTest {
 
     @Test
     public void putsItemsBackInTheQueueWhenResettingExpirationDate() throws Exception {
-        SessionId session2 = new SessionId(0, "txn-id", "the-user-2");
-        SessionId session3 = new SessionId(0, "txn-id", "the-user-3");
+        SessionId session2 = new SessionId(0, "txn-id", "the-user-2", "default");
+        SessionId session3 = new SessionId(0, "txn-id", "the-user-3", "default");
 
         UserGroupInformation ugi1 = cache.getUserGroupInformation(session, true);
         fakeTicker.advanceTime(UGICache.UGI_CACHE_EXPIRY - 1000);
@@ -255,7 +255,7 @@ public class UGICacheTest {
     public void releaseWithImmediateCleanupOnlyCleansUGIsForThatSegment() throws Exception {
         UserGroupInformation ugi1 = cache.getUserGroupInformation(session, true);
 
-        SessionId differentSeg = new SessionId(999, "txn-id", "user");
+        SessionId differentSeg = new SessionId(999, "txn-id", "user", "default");
         UserGroupInformation ugi2 = cache.getUserGroupInformation(differentSeg, true);
 
         cache.release(differentSeg, false); // ugi2 is now unreferenced
@@ -287,7 +287,7 @@ public class UGICacheTest {
         assertStillInCache(session, ugi1);
 
         fakeTicker.advanceTime(UGICache.UGI_CACHE_EXPIRY - 1000);
-        SessionId session2 = new SessionId(0, "txn-id", "the-user-2");
+        SessionId session2 = new SessionId(0, "txn-id", "the-user-2", "default");
         cache.getUserGroupInformation(session2, false); // triggers cleanup
         assertStillInCache(session, ugi1);
     }
@@ -301,7 +301,7 @@ public class UGICacheTest {
         assertStillInCache(session, ugi1);
 
         fakeTicker.advanceTime(UGICache.UGI_CACHE_EXPIRY - 1000);
-        SessionId session2 = new SessionId(0, "txn-id", "the-user-2");
+        SessionId session2 = new SessionId(0, "txn-id", "the-user-2", "default");
         cache.getUserGroupInformation(session2, true); // triggers cleanup
         assertStillInCache(session, ugi1);
     }

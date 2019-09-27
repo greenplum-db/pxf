@@ -278,7 +278,7 @@ public class HcfsTypeTest {
         HcfsType type = HcfsType.getHcfsType(configuration, context);
         String dataUri = type.getDataUri(configuration, context);
         assertEquals("hdfs://abc:8020/foo/bar.txt", dataUri);
-        assertNull(configuration.get(MRJobConfig.JOB_NAMENODES_TOKEN_RENEWAL_EXCLUDE));
+        assertEquals("abc", configuration.get(MRJobConfig.JOB_NAMENODES_TOKEN_RENEWAL_EXCLUDE));
     }
 
     @Test
@@ -309,7 +309,6 @@ public class HcfsTypeTest {
 
     @Test
     public void testSecureConfigChangeOnNonHdfs() {
-        configuration.set("hadoop.security.authentication", "kerberos");
         configuration.set("fs.defaultFS", "s3a://abc/");
         context.setDataSource("foo/bar.txt");
 
@@ -321,7 +320,6 @@ public class HcfsTypeTest {
 
     @Test
     public void testSecureConfigChangeOnNonHdfsForWrite() {
-        configuration.set("hadoop.security.authentication", "kerberos");
         configuration.set("fs.defaultFS", "s3a://abc/");
         context.setDataSource("foo/bar");
         context.setTransactionId("XID-XYZ-123456");
@@ -344,7 +342,6 @@ public class HcfsTypeTest {
 
     @Test
     public void testSecureConfigChangeOnInvalidFilesystem() {
-        configuration.set("hadoop.security.authentication", "kerberos");
         configuration.set("fs.defaultFS", "xyz://abc/");
         context.setDataSource("foo/bar.txt");
 
