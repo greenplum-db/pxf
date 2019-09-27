@@ -86,7 +86,7 @@ public class SecurityServletFilterTest {
         securityServletFilter.init(mock(FilterConfig.class));
         securityServletFilter.ugiCache = mock(UGICache.class);
 
-        SessionId sessionId = new SessionId(1, "0", "gpadmin");
+        SessionId sessionId = new SessionId(1, "0", "gpadmin", "default");
 
         when(securityServletFilter.ugiCache.getUserGroupInformation(sessionId, true))
                 .thenReturn(mock(UserGroupInformation.class));
@@ -111,7 +111,7 @@ public class SecurityServletFilterTest {
         securityServletFilter.init(mock(FilterConfig.class));
         securityServletFilter.ugiCache = mock(UGICache.class);
 
-        SessionId sessionId = new SessionId(1, "0", "gpadmin");
+        SessionId sessionId = new SessionId(1, "0", "gpadmin", "default");
 
         when(securityServletFilter.ugiCache.getUserGroupInformation(sessionId, true))
                 .thenReturn(mock(UserGroupInformation.class));
