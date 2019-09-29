@@ -536,7 +536,7 @@ public class JdbcBasePlugin extends BasePlugin {
      * work with JDBC profile.
      *
      * @param configuration configuration map
-     * @param confPrefix configuration prefix
+     * @param confPrefix    configuration prefix
      * @return mapping of configuration properties with prefix stripped
      */
     private Map<String, String> getPropsWithPrefix(Configuration configuration, String confPrefix) {
@@ -544,12 +544,12 @@ public class JdbcBasePlugin extends BasePlugin {
         Iterator<Map.Entry<String, String>> it = configuration.iterator();
         while (it.hasNext()) {
             String propertyName = it.next().getKey();
-                if (propertyName.startsWith(confPrefix)) {
-                    // do not use value from the iterator as it might not come with variable substitution
-                    String value = configuration.get(propertyName);
-                    String keyName = propertyName.substring(confPrefix.length());
-                    configMap.put(keyName, value);
-                }
+            if (propertyName.startsWith(confPrefix)) {
+                // do not use value from the iterator as it might not come with variable substitution
+                String value = configuration.get(propertyName);
+                String keyName = propertyName.substring(confPrefix.length());
+                configMap.put(keyName, value);
+            }
         }
         return configMap;
     }

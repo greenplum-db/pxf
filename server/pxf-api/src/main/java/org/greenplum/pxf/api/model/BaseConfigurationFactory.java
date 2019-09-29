@@ -102,7 +102,8 @@ public class BaseConfigurationFactory implements ConfigurationFactory {
             for (Path path : stream) {
                 URL resourceURL = path.toUri().toURL();
                 LOG.debug("Adding configuration resource for server {} from {}", serverName, resourceURL);
-                configuration.addResource(resourceURL);
+                // TODO: explain why are we passing restrictedParser set to false
+                configuration.addResource(resourceURL, false);
                 // store the path to the resource in the configuration in case plugins need to access the files again
                 configuration.set(String.format("%s.%s", PXF_CONFIG_RESOURCE_PATH_PROPERTY, path.getFileName().toString()), resourceURL.toString());
             }
