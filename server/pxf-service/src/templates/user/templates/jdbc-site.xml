@@ -119,4 +119,12 @@
     </property>
     -->
 
+    <!--
+    <property>
+        <name>hadoop.security.authentication</name>
+        <value>kerberos</value>
+        <description>When running against a kerberized-hive, this property has to be set to kerberos for the server configuration.</description>
+    </property>
+    -->
+
 </configuration>

@@ -136,6 +136,10 @@ function run_pxf_automation() {
 			-e "s|</hive>|<kerberosPrincipal>${KERBERIZED_HADOOP_URI}</kerberosPrincipal><userName>gpadmin</userName></hive>|g" \
 			"$multiNodesCluster"
 		ssh gpadmin@mdw "
+			cp ${PXF_CONF_DIR}/templates/pxf-site.xml ${PXF_CONF_DIR}/servers/db-hive/pxf-site.xml &&
+			sed -i 's|gpadmin/_HOST@EXAMPLE.COM|gpadmin@${REALM}|g' ${PXF_CONF_DIR}/servers/db-hive/pxf-site.xml &&
+			sed -i 's|</configuration>|<property><name>hadoop.security.authentication</name><value>kerberos</value></property></configuration>|g' \
+				${PXF_CONF_DIR}/servers/db-hive/jdbc-site.xml &&
 			sed -i -e 's|\(jdbc:hive2://${HADOOP_HOSTNAME}:10000/default\)|\1;principal=${KERBERIZED_HADOOP_URI}|g' \
 				${PXF_CONF_DIR}/servers/db-hive/jdbc-site.xml &&
 			${GPHOME}/pxf/bin/pxf cluster sync
