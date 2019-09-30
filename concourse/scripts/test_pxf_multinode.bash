@@ -212,7 +212,10 @@ function _main() {
 
 	setup_pxf_on_cluster
 
-	run_multinode_smoke_test 1000
+	if [[ $KERBEROS != true ]]; then
+		run_multinode_smoke_test 1000
+	fi
+
 	run_pxf_automation
 }
 
