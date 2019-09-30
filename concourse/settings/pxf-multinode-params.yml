@@ -1,9 +1,8 @@
 enable-impersonation-multinode: true
-number_of_gpdb_nodes: 3
+number_of_gpdb_nodes: 2
 tf-bucket-path: clusters-google/
 no_of_files: 10000
 pxf-jvm-opts: "-Xmx512m -Xms512m"
-hadoop-nodes: 3
 kerberos-enabled: true
 dataproc-destroy-timeout: 3600
 dataproc-image-version: "1.4.12-debian9"

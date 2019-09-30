@@ -112,7 +112,7 @@ ccp_destroy_anchor: &ccp_destroy
 
 dataproc_destroy_anchor: &dataproc_destroy
   do:
-  - in_parallel:
+  - aggregate:
     - task: cleanup_dataproc
       config:
         run:
@@ -484,7 +484,7 @@ jobs:
 {% if compile_gpdb %}
 - name: compile_gpdb_centos6
   plan:
-  - in_parallel:
+  - aggregate:
     - get: gpdb_src
     - get: gpdb-centos6-build
 {% if gpdb_branch == '5X_STABLE' %}
@@ -528,7 +528,7 @@ jobs:
 {% endif %}
 - name: compile_pxf
   plan:
-  - in_parallel:
+  - aggregate:
     - get: gpdb_src
 {% if pipeline_type == "pxf" %}
     - get: gpdb_pxf_trigger
@@ -547,7 +547,7 @@ jobs:
 {% if pipeline_type == "release" %}
 - name: test_pxf_hdp2_centos6
   plan:
-  - in_parallel:
+  - aggregate:
     - get: gpdb_src
       passed:
       - compile_pxf
@@ -587,7 +587,7 @@ jobs:
 
 - name: test_pxf_mapr_centos6
   plan:
-  - in_parallel:
+  - aggregate:
     - get: gpdb_src
       passed:
       - compile_pxf
@@ -625,7 +625,7 @@ jobs:
 
 - name: test_pxf_hdp3_centos7
   plan:
-  - in_parallel:
+  - aggregate:
     - get: gpdb_src
       passed:
       - compile_pxf
@@ -668,7 +668,7 @@ jobs:
 
 - name: test_pxf_hdp2_centos7_java11
   plan:
-  - in_parallel:
+  - aggregate:
     - get: gpdb_src
       passed:
       - compile_pxf
@@ -713,7 +713,7 @@ jobs:
 {% if gpdb_type == "5X_STABLE" %}
 - name: test_pxf_hdp2_ubuntu16
   plan:
-  - in_parallel:
+  - aggregate:
     - get: gpdb_src
       passed:
       - compile_pxf
@@ -746,7 +746,7 @@ jobs:
 {% else %}
 - name: test_pxf_hdp2_ubuntu18
   plan:
-  - in_parallel:
+  - aggregate:
     - get: gpdb_src
       passed:
       - compile_pxf
@@ -780,7 +780,7 @@ jobs:
 
 - name: test_pxf_hdp2_secure_with_impersonation
   plan:
-  - in_parallel:
+  - aggregate:
     - get: gpdb_src
       passed:
       - compile_pxf
@@ -822,7 +822,7 @@ jobs:
 {% if pipeline_type == "release" %}
 - name: test_pxf_hdp2_secure_no_impersonation
   plan:
-  - in_parallel:
+  - aggregate:
     - get: gpdb_src
       passed:
       - compile_pxf
@@ -915,10 +915,10 @@ jobs:
       BUCKET_NAME: {{tf-bucket-name}}
       PLATFORM: centos7
       CLOUD_PROVIDER: google
-  - in_parallel:
-    - task: intialize_greenplum
+  - aggregate:
+    - task: Initialize Greenplum
       file: ccp_src/ci/tasks/gpinitsystem.yml
-    - task: install_hadoop
+    - task: Install Hadoop
       file: pxf_src/concourse/tasks/install_hadoop.yml
       image: gpdb-pxf-dev-centos6-hdp2-server
       params:
@@ -928,7 +928,7 @@ jobs:
 {% if pipeline_type == "pxf" %}
         TARGET_OS: centos
 {% endif %}
-  - task: setup_pxf
+  - task: Setup PXF
     input_mapping:
       terraform: terraform_gpdb
       bin_gpdb: gpdb_binary
@@ -945,7 +945,7 @@ jobs:
       INSTALL_GPHDFS: false
       PLATFORM: centos7
       PXF_JVM_OPTS: {{pxf-jvm-opts}}
-  - task: test_pxf_multinode
+  - task: Test PXF Multinode
     input_mapping:
       bin_gpdb: gpdb_binary
     on_success:
@@ -966,7 +966,7 @@ jobs:
 - name: test_pxf_secure_multinode_gpdb
   max_in_flight: 2
   plan:
-  - in_parallel:
+  - aggregate:
     - get: ccp_src
     - get: gpdb_src
       passed:
@@ -990,7 +990,7 @@ jobs:
       trigger: true
     - get: ccp-7
     - get: gpdb-pxf-dev-centos6-hdp2-server
-  - in_parallel:
+  - aggregate:
     - do:
       - put: terraform_gpdb
         resource: terraform
@@ -1002,6 +1002,7 @@ jobs:
           vars:
             PLATFORM: centos7
             number_of_nodes: {{number_of_gpdb_nodes}}
+            extra_nodes: 1
             segments_per_host: 4
             instance_type: n1-standard-4
             ccp_reap_minutes: 120
@@ -1018,8 +1019,19 @@ jobs:
           BUCKET_NAME: {{tf-bucket-name}}
           PLATFORM: centos7
           CLOUD_PROVIDER: google
-      - task: intialize_greenplum
-        file: ccp_src/ci/tasks/gpinitsystem.yml
+      - aggregate:
+        - task: Initialize Greenplum
+          file: ccp_src/ci/tasks/gpinitsystem.yml
+        - task: Install Hadoop
+          file: pxf_src/concourse/tasks/install_hadoop.yml
+          image: gpdb-pxf-dev-centos6-hdp2-server
+          params:
+            ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+            SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+            IMPERSONATION: {{enable-impersonation-multinode}}
+    {% if pipeline_type == "pxf" %}
+            TARGET_OS: centos
+    {% endif %}
     - task: Generate Hadoop Cluster
       file: pxf_src/concourse/tasks/install_dataproc.yml
       image: ccp-7
@@ -1029,7 +1041,7 @@ jobs:
         GOOGLE_ZONE: {{google-zone}}
         IMAGE_VERSION: {{dataproc-image-version}}
         KERBEROS: {{kerberos-enabled}}
-  - task: setup_pxf
+  - task: Setup PXF
     input_mapping:
       terraform: terraform_gpdb
       bin_gpdb: gpdb_binary
@@ -1049,7 +1061,7 @@ jobs:
       PXF_JVM_OPTS: {{pxf-jvm-opts}}
     on_failure:
       <<: *dataproc_timed_destroy
-  - task: test_pxf_multinode
+  - task: Test PXF Multinode
     input_mapping:
       bin_gpdb: gpdb_binary
     on_success:
@@ -1073,7 +1085,7 @@ jobs:
 
 - name: test_pxf_cdh_centos6
   plan:
-  - in_parallel:
+  - aggregate:
     - get: gpdb_src
       passed:
       - compile_pxf
@@ -1112,7 +1124,7 @@ jobs:
 
 - name: test_pxf_s3_no_impersonation
   plan:
-  - in_parallel:
+  - aggregate:
     - get: gpdb_src
       passed:
       - compile_pxf
@@ -1152,7 +1164,7 @@ jobs:
 
 - name: test_pxf_s3_with_impersonation
   plan:
-  - in_parallel:
+  - aggregate:
     - get: gpdb_src
       passed:
       - compile_pxf
@@ -1193,7 +1205,7 @@ jobs:
 {% if pipeline_type == "release" %}
 - name: test_pxf_minio
   plan:
-  - in_parallel:
+  - aggregate:
     - get: gpdb_src
       passed:
       - compile_pxf
@@ -1231,7 +1243,7 @@ jobs:
 
 - name: test_pxf_adl
   plan:
-  - in_parallel:
+  - aggregate:
     - get: gpdb_src
       passed:
       - compile_pxf
@@ -1273,7 +1285,7 @@ jobs:
 
 - name: test_pxf_gs
   plan:
-  - in_parallel:
+  - aggregate:
     - get: gpdb_src
       passed:
       - compile_pxf
@@ -1313,7 +1325,7 @@ jobs:
 
 - name: test_pxf_no_impersonation
   plan:
-  - in_parallel:
+  - aggregate:
     - get: gpdb_src
       passed:
       - compile_pxf
