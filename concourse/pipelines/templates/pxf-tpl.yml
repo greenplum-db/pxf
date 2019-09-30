@@ -916,9 +916,9 @@ jobs:
       PLATFORM: centos7
       CLOUD_PROVIDER: google
   - aggregate:
-    - task: intialize_greenplum
+    - task: Initialize Greenplum
       file: ccp_src/ci/tasks/gpinitsystem.yml
-    - task: install_hadoop
+    - task: Install Hadoop
       file: pxf_src/concourse/tasks/install_hadoop.yml
       image: gpdb-pxf-dev-centos6-hdp2-server
       params:
@@ -928,7 +928,7 @@ jobs:
 {% if pipeline_type == "pxf" %}
         TARGET_OS: centos
 {% endif %}
-  - task: setup_pxf
+  - task: Setup PXF
     input_mapping:
       terraform: terraform_gpdb
       bin_gpdb: gpdb_binary
@@ -945,7 +945,7 @@ jobs:
       INSTALL_GPHDFS: false
       PLATFORM: centos7
       PXF_JVM_OPTS: {{pxf-jvm-opts}}
-  - task: test_pxf_multinode
+  - task: Test PXF Multinode
     input_mapping:
       bin_gpdb: gpdb_binary
     on_success:
@@ -1002,6 +1002,7 @@ jobs:
           vars:
             PLATFORM: centos7
             number_of_nodes: {{number_of_gpdb_nodes}}
+            extra_nodes: 1
             segments_per_host: 4
             instance_type: n1-standard-4
             ccp_reap_minutes: 120
@@ -1018,8 +1019,19 @@ jobs:
           BUCKET_NAME: {{tf-bucket-name}}
           PLATFORM: centos7
           CLOUD_PROVIDER: google
-      - task: intialize_greenplum
-        file: ccp_src/ci/tasks/gpinitsystem.yml
+      - aggregate:
+        - task: Initialize Greenplum
+          file: ccp_src/ci/tasks/gpinitsystem.yml
+        - task: Install Hadoop
+          file: pxf_src/concourse/tasks/install_hadoop.yml
+          image: gpdb-pxf-dev-centos6-hdp2-server
+          params:
+            ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+            SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+            IMPERSONATION: {{enable-impersonation-multinode}}
+    {% if pipeline_type == "pxf" %}
+            TARGET_OS: centos
+    {% endif %}
     - task: Generate Hadoop Cluster
       file: pxf_src/concourse/tasks/install_dataproc.yml
       image: ccp-7
@@ -1029,7 +1041,7 @@ jobs:
         GOOGLE_ZONE: {{google-zone}}
         IMAGE_VERSION: {{dataproc-image-version}}
         KERBEROS: {{kerberos-enabled}}
-  - task: setup_pxf
+  - task: Setup PXF
     input_mapping:
       terraform: terraform_gpdb
       bin_gpdb: gpdb_binary
@@ -1049,7 +1061,7 @@ jobs:
       PXF_JVM_OPTS: {{pxf-jvm-opts}}
     on_failure:
       <<: *dataproc_timed_destroy
-  - task: test_pxf_multinode
+  - task: Test PXF Multinode
     input_mapping:
       bin_gpdb: gpdb_binary
     on_success:
