@@ -3,6 +3,7 @@
 set -exuo pipefail
 
 CWDIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+# shellcheck source=/dev/null
 source "${CWDIR}/pxf_common.bash"
 
 SSH_OPTS=(-i cluster_env_files/private_key.pem -o 'StrictHostKeyChecking=no')
@@ -115,6 +116,11 @@ function setup_pxf_on_cluster() {
 
 function run_pxf_automation() {
 	local multiNodesCluster=pxf_src/automation/src/test/resources/sut/MultiNodesCluster.xml
+
+	if [[ $KERBEROS == true ]]; then
+		multiNodesCluster=pxf_src/automation/src/test/resources/sut/MultiHadoopMultiNodesCluster.xml
+	fi
+
 	if (( HIVE_VERSION == 2 )); then
 		local search='<hiveBaseHdfsDirectory>/hive/warehouse/</hiveBaseHdfsDirectory>'
 		local replace='<hiveBaseHdfsDirectory>/user/hive/warehouse/</hiveBaseHdfsDirectory>'
@@ -148,9 +154,23 @@ function run_pxf_automation() {
 		sudo cp "${DATAPROC_DIR}/pxf.service.keytab" /etc/security/keytabs/gpadmin.headless.keytab
 		sudo chown gpadmin:gpadmin /etc/security/keytabs/gpadmin.headless.keytab
 		sudo cp "${DATAPROC_DIR}/krb5.conf" /etc/krb5.conf
+
+		# Create the non-secure cluster configuration
+		NON_SECURE_HADOOP_IP=$(grep < cluster_env_files/etc_hostfile edw0 | awk '{print $1}')
+		ssh gpadmin@mdw "
+			mkdir -p ${PXF_CONF_DIR}/servers/hdfs-non-secure &&
+			cp ${PXF_CONF_DIR}/templates/{hdfs,mapred,yarn,core,hbase,hive}-site.xml ${PXF_CONF_DIR}/servers/hdfs-non-secure &&
+			sed -i -e 's/\(0.0.0.0\|localhost\|127.0.0.1\)/${NON_SECURE_HADOOP_IP}/g' ${PXF_CONF_DIR}/servers/hdfs-non-secure/*-site.xml &&
+			${GPHOME}/pxf/bin/pxf cluster sync
+		"
+		sed -i "s/>non-secure-hadoop</>edw0</g" "$multiNodesCluster"
 	fi
 
-	sed -i 's/sutFile=default.xml/sutFile=MultiNodesCluster.xml/g' pxf_src/automation/jsystem.properties
+	if [[ $KERBEROS == true ]]; then
+		sed -i 's/sutFile=default.xml/sutFile=MultiHadoopMultiNodesCluster.xml/g' pxf_src/automation/jsystem.properties
+	else
+		sed -i 's/sutFile=default.xml/sutFile=MultiNodesCluster.xml/g' pxf_src/automation/jsystem.properties
+	fi
 	chown -R gpadmin:gpadmin ~gpadmin/{.ssh,pxf} pxf_src/automation
 
 	cat > ~gpadmin/run_pxf_automation_test.sh <<-EOF

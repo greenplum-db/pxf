@@ -469,7 +469,7 @@ function main() {
 
     sleep_time=${SLEEP_BEFORE_DESTROY_IN_SEC:-150}
     echo "Destroying cluster in ${sleep_time} seconds"
-    sleep ${sleep_time}
+    sleep "${sleep_time}"
 }
 
 main

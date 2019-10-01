@@ -7,12 +7,15 @@ ENV_FILES_DIR=${ENV_FILES_DIR:-dataproc_env_files}
 HADOOP_USER=${HADOOP_USER:-gpadmin}
 IMAGE_VERSION=${IMAGE_VERSION:-1.3}
 INITIALIZATION_SCRIPT=${INITIALIZATION_SCRIPT:-gs://pxf-perf/scripts/initialization-for-kerberos.sh}
+INSTANCE_TAGS=${INSTANCE_TAGS:-bosh-network,outbound-through-nat,tag-concourse-dynamic}
 KERBEROS=${KERBEROS:-false}
 KEYRING=${KEYRING:-dataproc-kerberos}
 KEY=${KEY:-dataproc-kerberos-test}
 MACHINE_TYPE=${MACHINE_TYPE:-n1-standard-2}
+NO_ADDRESS=${NO_ADDRESS:-true}
 NUM_WORKERS=${NUM_WORKERS:-2}
 PROJECT=${GOOGLE_PROJECT_ID:-}
+PROXY_USER=${PROXY_USER:-gpadmin}
 REGION=${GOOGLE_ZONE%-*} # lop off '-a', '-b', etc. from $GOOGLE_ZONE
 REGION=${REGION:-us-central1}
 SECRETS_BUCKET=${SECRETS_BUCKET:-data-gpdb-ud-pxf-secrets}
@@ -37,15 +40,18 @@ PETNAME=ccp-$(petname)
 GCLOUD_COMMAND=(gcloud beta dataproc clusters
   "--region=$REGION" create "$PETNAME"
   --initialization-actions "$INITIALIZATION_SCRIPT"
-  --no-address
   --subnet "projects/${PROJECT}/regions/${REGION}/subnetworks/$SUBNETWORK"
   "--master-machine-type=$MACHINE_TYPE"
   "--worker-machine-type=$MACHINE_TYPE"
   "--zone=$ZONE"
-  "--tags=bosh-network,outbound-through-nat,tag-concourse-dynamic"
+  "--tags=$INSTANCE_TAGS"
   "--num-workers=$NUM_WORKERS"
   --image-version "$IMAGE_VERSION"
-  --properties 'core:hadoop.proxyuser.gpadmin.hosts=*,core:hadoop.proxyuser.gpadmin.groups=*')
+  --properties "core:hadoop.proxyuser.${PROXY_USER}.hosts=*,core:hadoop.proxyuser.${PROXY_USER}.groups=*")
+
+if [[ $NO_ADDRESS == true ]]; then
+    GCLOUD_COMMAND+=(--no-address)
+fi
 
 if [[ $KERBEROS == true ]]; then
     # Generate a random password
