@@ -163,7 +163,7 @@ function run_pxf_automation() {
 			sed -i -e 's/\(0.0.0.0\|localhost\|127.0.0.1\)/${NON_SECURE_HADOOP_IP}/g' ${PXF_CONF_DIR}/servers/hdfs-non-secure/*-site.xml &&
 			${GPHOME}/pxf/bin/pxf cluster sync
 		"
-		sed -i "s/>non-secure-hadoop</>edw0</g" "$multiNodesCluster"
+		sed -i "s/>non-secure-hadoop</>${NON_SECURE_HADOOP_IP}</g" "$multiNodesCluster"
 	fi
 
 	if [[ $KERBEROS == true ]]; then
