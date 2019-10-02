@@ -179,7 +179,7 @@ function run_pxf_automation() {
 			mkdir -p ${PXF_CONF_DIR}/servers/secure-hdfs-invalid-keytab &&
 			cp ${PXF_CONF_DIR}/servers/default/*-site.xml ${PXF_CONF_DIR}/servers/secure-hdfs-invalid-keytab &&
 			cp ${PXF_CONF_DIR}/templates/pxf-site.xml ${PXF_CONF_DIR}/servers/secure-hdfs-invalid-keytab &&
-			sed -i -e 's|>$\{pxf.conf}/keytabs/pxf.service.keytab<|>$\{pxf.conf}/keytabs/non.existent.keytab<|g' ${PXF_CONF_DIR}/servers/secure-hdfs-invalid-keytab/pxf-site.xml &&
+			sed -i -e 's|/pxf.service.keytab<|/non.existent.keytab<|g' ${PXF_CONF_DIR}/servers/secure-hdfs-invalid-keytab/pxf-site.xml &&
 			${GPHOME}/pxf/bin/pxf cluster sync
 		"
 	fi
