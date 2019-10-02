@@ -164,6 +164,24 @@ function run_pxf_automation() {
 			${GPHOME}/pxf/bin/pxf cluster sync
 		"
 		sed -i "s/>non-secure-hadoop</>${NON_SECURE_HADOOP_IP}</g" "$multiNodesCluster"
+
+		# Create a secured server configuration with invalid principal name
+		ssh gpadmin@mdw "
+			mkdir -p ${PXF_CONF_DIR}/servers/secure-hdfs-invalid-principal &&
+			cp ${PXF_CONF_DIR}/servers/default/*-site.xml ${PXF_CONF_DIR}/servers/secure-hdfs-invalid-principal &&
+			cp ${PXF_CONF_DIR}/templates/pxf-site.xml ${PXF_CONF_DIR}/servers/secure-hdfs-invalid-principal &&
+			sed -i -e 's|>gpadmin/_HOST@EXAMPLE.COM<|>foobar/_HOST@INVALID.REALM.INTERNAL<|g' ${PXF_CONF_DIR}/servers/secure-hdfs-invalid-principal/pxf-site.xml &&
+			${GPHOME}/pxf/bin/pxf cluster sync
+		"
+
+		# Create a secured server configuration with invalid keytab
+		ssh gpadmin@mdw "
+			mkdir -p ${PXF_CONF_DIR}/servers/secure-hdfs-invalid-keytab &&
+			cp ${PXF_CONF_DIR}/servers/default/*-site.xml ${PXF_CONF_DIR}/servers/secure-hdfs-invalid-keytab &&
+			cp ${PXF_CONF_DIR}/templates/pxf-site.xml ${PXF_CONF_DIR}/servers/secure-hdfs-invalid-keytab &&
+			sed -i -e 's|>$\{pxf.conf}/keytabs/pxf.service.keytab<|>$\{pxf.conf}/keytabs/non.existent.keytab<|g' ${PXF_CONF_DIR}/servers/secure-hdfs-invalid-keytab/pxf-site.xml &&
+			${GPHOME}/pxf/bin/pxf cluster sync
+		"
 	fi
 
 	if [[ $KERBEROS == true ]]; then
