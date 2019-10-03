@@ -63,7 +63,7 @@ function create_pxf_installer_scripts() {
 
 		    if [[ -f ~/dataproc_2_env_files/krb5.conf ]]; then
 		      # Merge krb5.conf files from two different REALMS
-		      diff --line-format %L /tmp/krb5.conf ~/dataproc_2_env_files/krb5.conf  > /tmp/krb5.conf-tmp
+		      diff --line-format %L /tmp/krb5.conf ~/dataproc_2_env_files/krb5.conf  > /tmp/krb5.conf-tmp || true
 		      rm -f /tmp/krb5.conf && mv /tmp/krb5.conf-tmp /tmp/krb5.conf
 		      # Remove the second instance of default_realm from the file
 		      awk '!/default_realm/ || !f++' /tmp/krb5.conf > /tmp/krb5.conf-tmp
