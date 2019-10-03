@@ -96,19 +96,23 @@ mkdir -p "dataproc_env_files/conf"
 
 gcloud compute scp \
   "${HADOOP_USER}@${HADOOP_HOSTNAME}:/etc/hadoop/conf/*-site.xml" \
-  "dataproc_env_files/conf"
+  "dataproc_env_files/conf" \
+  --zone "$ZONE"
 
 gcloud compute scp \
   "${HADOOP_USER}@${HADOOP_HOSTNAME}:/etc/hive/conf/*-site.xml" \
-  "dataproc_env_files/conf"
+  "dataproc_env_files/conf" \
+  --zone "$ZONE"
 
 gcloud compute ssh "${HADOOP_USER}@${HADOOP_HOSTNAME}" \
-  --command="sudo systemctl restart hadoop-hdfs-namenode" || exit 1
+  --command="sudo systemctl restart hadoop-hdfs-namenode" \
+  --zone "$ZONE" || exit 1
 
 cp ~/.ssh/google_compute_engine* "dataproc_env_files"
 
 if [[ $KERBEROS == true ]]; then
   gcloud compute ssh "${HADOOP_USER}@${HADOOP_HOSTNAME}" \
+    --zone "$ZONE" \
     -- -t \
     'set -euo pipefail
     grep default_realm /etc/krb5.conf | awk '"'"'{print $3}'"'"' > ~/REALM
@@ -122,5 +126,6 @@ if [[ $KERBEROS == true ]]; then
 
   gcloud compute scp \
     "${HADOOP_USER}@${HADOOP_HOSTNAME}":{~/{REALM,pxf.service.keytab},/etc/krb5.conf} \
-    "dataproc_env_files"
+    "dataproc_env_files" \
+    --zone "$ZONE"
 fi
