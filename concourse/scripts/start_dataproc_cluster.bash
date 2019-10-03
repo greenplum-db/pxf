@@ -126,7 +126,5 @@ if [[ $KERBEROS == true ]]; then
     sudo addgroup ${HADOOP_USER} hadoop
     "
 
-  ssh "${SSH_OPTS[@]}" -t "${HADOOP_USER}@${HADOOP_IP_ADDRESS}" '/tmp/generate_keytab_hadoop.sh'
-
   scp "${SSH_OPTS[@]}" "${HADOOP_USER}@${HADOOP_IP_ADDRESS}":{~/{REALM,pxf.service.keytab},/etc/krb5.conf} "dataproc_env_files"
 fi
