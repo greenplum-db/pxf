@@ -153,7 +153,27 @@ function run_pxf_automation() {
 		sudo mkdir -p /etc/security/keytabs
 		sudo cp "${DATAPROC_DIR}/pxf.service.keytab" /etc/security/keytabs/gpadmin.headless.keytab
 		sudo chown gpadmin:gpadmin /etc/security/keytabs/gpadmin.headless.keytab
-		sudo cp "${DATAPROC_DIR}/krb5.conf" /etc/krb5.conf
+		scp centos@mdw:/etc/krb5.conf /tmp/krb5.conf
+		sudo cp /tmp/krb5.conf /etc/krb5.conf
+
+		if [[ -d dataproc_2_env_files ]]; then
+			# Create the second hdfs-secure cluster configuration
+			HADOOP_2_HOSTNAME=$(< dataproc_2_env_files/name)
+#			HADOOP_2_USER=gpadmin
+#			hadoop_2_ip=$(getent hosts "$HADOOP_HOSTNAME" | awk '{ print $1 }')
+#			HADOOP_2_SSH_OPTS+=(-i dataproc_2_env_files/google_compute_engine)
+			ssh gpadmin@mdw "mkdir -p ${PXF_CONF_DIR}/servers/hdfs-secure"
+			scp dataproc_2_env_files/conf/*-site.xml "gpadmin@mdw:${PXF_CONF_DIR}/servers/hdfs-secure"
+			ssh gpadmin@mdw "${GPHOME}/pxf/bin/pxf cluster sync"
+
+			DATAPROC_2_DIR=$(find /tmp/build/ -name dataproc_2_env_files)
+			REALM2=$(< "${DATAPROC_2_DIR}/REALM")
+			REALM2=${REALM2^^} # make sure REALM2 is up-cased, down-case below for hive principal
+			KERBERIZED_HADOOP_2_URI="hive/${HADOOP_2_HOSTNAME}.${REALM2,,}@${REALM2};saslQop=auth-conf" # quoted because of semicolon
+			sed -i  -e "s|</hdfs2>|<hadoopRoot>$DATAPROC_2_DIR</hadoopRoot><testKerberosPrincipal>gpuser@${REALM2}</testKerberosPrincipal></hdfs2>|g" \
+				"$multiNodesCluster"
+#				-e "s|</hive2>|<kerberosPrincipal>${KERBERIZED_HADOOP_2_URI}</kerberosPrincipal><userName>gpadmin</userName></hive>|g" \
+		fi
 
 		# Create the non-secure cluster configuration
 		NON_SECURE_HADOOP_IP=$(grep < cluster_env_files/etc_hostfile edw0 | awk '{print $1}')

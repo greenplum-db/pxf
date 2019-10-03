@@ -8,6 +8,8 @@ inputs:
   - name: pxf_tarball
   - name: dataproc_env_files
     optional: true
+  - name: dataproc_2_env_files
+    optional: true
 params:
   ACCEPTANCE:
   ACCESS_KEY_ID:

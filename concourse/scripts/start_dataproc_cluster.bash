@@ -115,19 +115,16 @@ ssh "${SSH_OPTS[@]}" -t \
 cp ~/.ssh/google_compute_engine* "dataproc_env_files"
 
 if [[ $KERBEROS == true ]]; then
-  cat <<-EOF > /tmp/generate_keytab_hadoop.sh
-  set -euo pipefail
-  grep default_realm /etc/krb5.conf | awk '{print \$3}' > ~/REALM
-  sudo kadmin.local -q "addprinc -pw pxf ${HADOOP_USER}"
-  sudo kadmin.local -q "xst -k \${HOME}/pxf.service.keytab ${HADOOP_USER}"
-  sudo klist -e -k -t "\${HOME}/pxf.service.keytab"
-  sudo chown ${HADOOP_USER} "\${HOME}/pxf.service.keytab"
-  sudo addgroup ${HADOOP_USER} hdfs
-  sudo addgroup ${HADOOP_USER} hadoop
-EOF
-  chmod +x /tmp/generate_keytab_hadoop.sh
-  scp "${SSH_OPTS[@]}" /tmp/generate_keytab_hadoop.sh \
-    "${HADOOP_USER}@${HADOOP_IP_ADDRESS}":/tmp/generate_keytab_hadoop.sh
+  ssh "${SSH_OPTS[@]}" -t "${HADOOP_USER}@${HADOOP_HOSTNAME}" \
+    "set -euo pipefail
+    grep default_realm /etc/krb5.conf | awk '{print \$3}' > ~/REALM
+    sudo kadmin.local -q 'addprinc -pw pxf ${HADOOP_USER}'
+    sudo kadmin.local -q \"xst -k \${HOME}/pxf.service.keytab ${HADOOP_USER}\"
+    sudo klist -e -k -t \"\${HOME}/pxf.service.keytab\"
+    sudo chown ${HADOOP_USER} \"\${HOME}/pxf.service.keytab\"
+    sudo addgroup ${HADOOP_USER} hdfs
+    sudo addgroup ${HADOOP_USER} hadoop
+    "
 
   ssh "${SSH_OPTS[@]}" -t "${HADOOP_USER}@${HADOOP_IP_ADDRESS}" '/tmp/generate_keytab_hadoop.sh'
 

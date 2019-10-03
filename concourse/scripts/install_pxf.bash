@@ -57,10 +57,25 @@ function create_pxf_installer_scripts() {
 		  fi
 
 		  if [[ $KERBEROS == true ]]; then
+
+		    cp ~/dataproc_env_files/krb5.conf /tmp/krb5.conf
+
+		    if [[ -f ~/dataproc_2_env_files/krb5.conf ]]; then
+		      # Merge krb5.conf files from two different REALMS
+		      diff --line-format %L /tmp/krb5.conf ~/dataproc_2_env_files/krb5.conf  > /tmp/krb5.conf-tmp
+		      rm -f /tmp/krb5.conf && mv /tmp/krb5.conf-tmp /tmp/krb5.conf
+		      # Remove the second instance of default_realm from the file
+		      awk '!/default_realm/ || !f++' /tmp/krb5.conf > /tmp/krb5.conf-tmp
+		      rm -f /tmp/krb5.conf && mv /tmp/krb5.conf-tmp /tmp/krb5.conf
+		      # Add missing } to the new REALM
+		      REALM_2=$(cat ~/dataproc_2_env_files/REALM)
+		      sed -i "s/${REALM_2} =/}\n\t${REALM_2} =/g" /tmp/krb5.conf
+		    fi
+
 		    echo 'export PXF_KEYTAB="\${PXF_CONF}/keytabs/pxf.service.keytab"' >> "\${PXF_CONF}/conf/pxf-env.sh"
 		    echo 'export PXF_PRINCIPAL="gpadmin@${REALM}"' >> "\${PXF_CONF}/conf/pxf-env.sh"
 		    gpscp -f ~gpadmin/hostfile_all -v -r -u gpadmin ~/dataproc_env_files/pxf.service.keytab =:/home/gpadmin/pxf/keytabs/
-		    gpscp -f ~gpadmin/hostfile_all -v -r -u centos ~/dataproc_env_files/krb5.conf =:/tmp/krb5.conf
+		    gpscp -f ~gpadmin/hostfile_all -v -r -u centos /tmp/krb5.conf =:/tmp/krb5.conf
 		    gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e 'sudo mv /tmp/krb5.conf /etc/krb5.conf'
 		  fi
 		}
