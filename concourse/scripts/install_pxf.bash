@@ -182,6 +182,10 @@ function _main() {
 		SCP_FILES+=(dataproc_env_files)
 	fi
 
+	if [[ -d dataproc_2_env_files ]]; then
+		SCP_FILES+=(dataproc_2_env_files)
+	fi
+
 	scp -r "${SCP_FILES[@]}" "${MASTER_HOSTNAME}:~gpadmin"
 
 	create_pxf_installer_scripts

@@ -155,18 +155,31 @@ dataproc_timed_destroy_anchor: &dataproc_timed_destroy
         path: /bin/sleep
         args: [{{dataproc-destroy-timeout}}]
       platform: linux
-  - task: cleanup_dataproc
-    config:
-      run:
-        path: pxf_src/concourse/scripts/cleanup_dataproc_cluster.bash
-      platform: linux
-      inputs:
-        - name: pxf_src
-        - name: dataproc_env_files
-    image: ccp-7
-    params:
-      GOOGLE_CREDENTIALS: {{google-service-account-key}}
-      GOOGLE_ZONE: {{google-zone}}
+  - aggregate:
+    - task: Cleanup Dataproc 1
+      config:
+        run:
+          path: pxf_src/concourse/scripts/cleanup_dataproc_cluster.bash
+        inputs:
+          - name: pxf_src
+          - name: dataproc_env_files
+        platform: linux
+      image: ccp-7
+      params:
+        GOOGLE_CREDENTIALS: {{google-service-account-key}}
+        GOOGLE_ZONE: {{google-zone}}
+    - task: Cleanup Dataproc 2
+      config:
+        run:
+          path: pxf_src/concourse/scripts/cleanup_dataproc_cluster.bash
+        inputs:
+          - name: pxf_src
+          - name: dataproc_2_env_files
+        platform: linux
+      image: ccp-7
+      params:
+        GOOGLE_CREDENTIALS: {{data-gpdb-ud-kerberos-google-service-account-key}}
+        GOOGLE_ZONE: {{data-gpdb-ud-kerberos-google-zone}}
 
 ## ======================================================================
 ## RESOURCE TYPES
@@ -1057,7 +1070,7 @@ jobs:
       file: pxf_src/concourse/tasks/install_dataproc.yml
       image: ccp-7
       output_mapping:
-        dataproc_2_env_files: dataproc_env_files
+        dataproc_env_files: dataproc_2_env_files
       params:
         GOOGLE_CREDENTIALS: ((data-gpdb-ud-kerberos-google-service-account-key))
         GOOGLE_PROJECT_ID: ((data-gpdb-ud-kerberos-google-project-id))
