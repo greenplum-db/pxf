@@ -115,7 +115,7 @@ ssh "${SSH_OPTS[@]}" -t \
 cp ~/.ssh/google_compute_engine* "dataproc_env_files"
 
 if [[ $KERBEROS == true ]]; then
-  ssh "${SSH_OPTS[@]}" -t "${HADOOP_USER}@${HADOOP_HOSTNAME}" \
+  ssh "${SSH_OPTS[@]}" -t "${HADOOP_USER}@${HADOOP_IP_ADDRESS}" \
     "set -euo pipefail
     grep default_realm /etc/krb5.conf | awk '{print \$3}' > ~/REALM
     sudo kadmin.local -q 'addprinc -pw pxf ${HADOOP_USER}'
