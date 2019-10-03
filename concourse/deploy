@@ -69,6 +69,7 @@ def how_to_use_generated_pipeline_message():
     cmd += '    -l ~/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \\\n'
     cmd += '    -l ~/workspace/pxf/concourse/settings/pxf-multinode-params.yml \\\n'
     cmd += '    -l ~/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud.yml \\\n'
+    cmd += '    -l ~/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud_kerberos.yml \\\n'
 
     if ARGS.pipeline_type == 'pxf':
         cmd += '    -l ' + ARGS.YML_FILE + ' \\\n'
