@@ -94,24 +94,22 @@ echo "$HADOOP_HOSTNAME" > "dataproc_env_files/name"
 
 mkdir -p "dataproc_env_files/conf"
 
-SSH_OPTS=(-o 'UserKnownHostsFile=/dev/null' -o 'StrictHostKeyChecking=no' -i ~/.ssh/google_compute_engine)
-
-scp "${SSH_OPTS[@]}" \
+gcloud compute scp \
   "${HADOOP_USER}@${HADOOP_HOSTNAME}:/etc/hadoop/conf/*-site.xml" \
   "dataproc_env_files/conf"
 
-scp "${SSH_OPTS[@]}" \
+gcloud compute scp \
   "${HADOOP_USER}@${HADOOP_HOSTNAME}:/etc/hive/conf/*-site.xml" \
   "dataproc_env_files/conf"
 
-ssh "${SSH_OPTS[@]}" -t \
-  "${HADOOP_USER}@${HADOOP_HOSTNAME}" \
-  "sudo systemctl restart hadoop-hdfs-namenode" || exit 1
+gcloud compute ssh "${HADOOP_USER}@${HADOOP_HOSTNAME}" \
+  --command="sudo systemctl restart hadoop-hdfs-namenode" || exit 1
 
 cp ~/.ssh/google_compute_engine* "dataproc_env_files"
 
 if [[ $KERBEROS == true ]]; then
-  ssh "${SSH_OPTS[@]}" -t "${HADOOP_USER}@${HADOOP_HOSTNAME}" \
+  gcloud compute ssh "${HADOOP_USER}@${HADOOP_HOSTNAME}" \
+    -- -t \
     'set -euo pipefail
     grep default_realm /etc/krb5.conf | awk '"'"'{print $3}'"'"' > ~/REALM
     sudo kadmin.local -q "addprinc -pw pxf gpadmin"
@@ -122,5 +120,7 @@ if [[ $KERBEROS == true ]]; then
     sudo addgroup gpadmin hadoop
     '
 
-  scp "${SSH_OPTS[@]}" "${HADOOP_USER}@${HADOOP_HOSTNAME}":{~/{REALM,pxf.service.keytab},/etc/krb5.conf} "dataproc_env_files"
+  gcloud compute scp \
+    "${HADOOP_USER}@${HADOOP_HOSTNAME}":{~/{REALM,pxf.service.keytab},/etc/krb5.conf} \
+    "dataproc_env_files"
 fi
