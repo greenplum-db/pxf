@@ -7,6 +7,7 @@ GPHOME=/usr/local/greenplum-db-devel
 # we need word boundary in case of standby master (smdw)
 MASTER_HOSTNAME=$(grep < cluster_env_files/etc_hostfile '\bmdw' | awk '{print $2}')
 REALM=${REALM:-}
+REALM_2=${REALM_2:-}
 KERBEROS=${KERBEROS:-false}
 if [[ -f terraform_dataproc/name ]]; then
 	HADOOP_HOSTNAME=ccp-$(< terraform_dataproc/name)-m
