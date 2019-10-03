@@ -3,7 +3,6 @@
 set -euo pipefail
 
 # defaults
-ENV_FILES_DIR=${ENV_FILES_DIR:-dataproc_env_files}
 HADOOP_USER=${HADOOP_USER:-gpadmin}
 IMAGE_VERSION=${IMAGE_VERSION:-1.3}
 INITIALIZATION_SCRIPT=${INITIALIZATION_SCRIPT:-gs://pxf-perf/scripts/initialization-for-kerberos.sh}
@@ -91,25 +90,25 @@ do
     --zone "$ZONE"
 done
 
-echo "$HADOOP_HOSTNAME" > "${ENV_FILES_DIR}/name"
+echo "$HADOOP_HOSTNAME" > "dataproc_env_files/name"
 
-mkdir -p "${ENV_FILES_DIR}/conf"
+mkdir -p "dataproc_env_files/conf"
 
 SSH_OPTS=(-o 'UserKnownHostsFile=/dev/null' -o 'StrictHostKeyChecking=no' -i ~/.ssh/google_compute_engine)
 
 scp "${SSH_OPTS[@]}" \
   "${HADOOP_USER}@${HADOOP_HOSTNAME}:/etc/hadoop/conf/*-site.xml" \
-  "${ENV_FILES_DIR}/conf"
+  "dataproc_env_files/conf"
 
 scp "${SSH_OPTS[@]}" \
   "${HADOOP_USER}@${HADOOP_HOSTNAME}:/etc/hive/conf/*-site.xml" \
-  "${ENV_FILES_DIR}/conf"
+  "dataproc_env_files/conf"
 
 ssh "${SSH_OPTS[@]}" -t \
   "${HADOOP_USER}@${HADOOP_HOSTNAME}" \
   "sudo systemctl restart hadoop-hdfs-namenode" || exit 1
 
-cp ~/.ssh/google_compute_engine* "$ENV_FILES_DIR"
+cp ~/.ssh/google_compute_engine* "dataproc_env_files"
 
 if [[ $KERBEROS == true ]]; then
   ssh "${SSH_OPTS[@]}" -t "${HADOOP_USER}@${HADOOP_HOSTNAME}" \
@@ -123,5 +122,5 @@ if [[ $KERBEROS == true ]]; then
     sudo addgroup gpadmin hadoop
     '
 
-  scp "${SSH_OPTS[@]}" "${HADOOP_USER}@${HADOOP_HOSTNAME}":{~/{REALM,pxf.service.keytab},/etc/krb5.conf} "$ENV_FILES_DIR"
+  scp "${SSH_OPTS[@]}" "${HADOOP_USER}@${HADOOP_HOSTNAME}":{~/{REALM,pxf.service.keytab},/etc/krb5.conf} "dataproc_env_files"
 fi
