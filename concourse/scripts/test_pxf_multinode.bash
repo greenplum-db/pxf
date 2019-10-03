@@ -162,7 +162,12 @@ function run_pxf_automation() {
 #			HADOOP_2_USER=gpadmin
 #			hadoop_2_ip=$(getent hosts "$HADOOP_HOSTNAME" | awk '{ print $1 }')
 #			HADOOP_2_SSH_OPTS+=(-i dataproc_2_env_files/google_compute_engine)
-			ssh gpadmin@mdw "mkdir -p ${PXF_CONF_DIR}/servers/hdfs-secure"
+			ssh gpadmin@mdw "
+				mkdir -p ${PXF_CONF_DIR}/servers/hdfs-secure &&
+				cp ${PXF_CONF_DIR}/templates/pxf-site.xml ${PXF_CONF_DIR}/servers/hdfs-secure &&
+				sed -i -e \"s|>gpadmin/_HOST@EXAMPLE.COM<|>gpuser@${REALM2}<|g\" ${PXF_CONF_DIR}/servers/hdfs-secure/pxf-site.xml &&
+				sed -i -e 's|/pxf.service.keytab<|/non.existent.keytab<|g' ${PXF_CONF_DIR}/servers/hdfs-secure/pxf-site.xml
+			"
 			scp dataproc_2_env_files/conf/*-site.xml "gpadmin@mdw:${PXF_CONF_DIR}/servers/hdfs-secure"
 			ssh gpadmin@mdw "${GPHOME}/pxf/bin/pxf cluster sync"
 
