@@ -69,7 +69,7 @@ function create_pxf_installer_scripts() {
 		      awk '!/default_realm/ || !f++' /tmp/krb5.conf > /tmp/krb5.conf-tmp
 		      rm -f /tmp/krb5.conf && mv /tmp/krb5.conf-tmp /tmp/krb5.conf
 		      # Add missing } to the new REALM
-		      REALM_2=$(cat ~/dataproc_2_env_files/REALM)
+		      REALM_2=\$(cat ~/dataproc_2_env_files/REALM)
 		      sed -i "s/${REALM_2} =/}\n\t${REALM_2} =/g" /tmp/krb5.conf
 		    fi
 

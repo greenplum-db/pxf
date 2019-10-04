@@ -126,6 +126,8 @@ dataproc_destroy_anchor: &dataproc_destroy
         GOOGLE_CREDENTIALS: {{google-service-account-key}}
         GOOGLE_ZONE: {{google-zone}}
     - task: Cleanup Dataproc 2
+      input_mapping:
+        dataproc_2_env_files: dataproc_env_files
       config:
         run:
           path: pxf_src/concourse/scripts/cleanup_dataproc_cluster.bash
@@ -169,12 +171,14 @@ dataproc_timed_destroy_anchor: &dataproc_timed_destroy
         GOOGLE_CREDENTIALS: {{google-service-account-key}}
         GOOGLE_ZONE: {{google-zone}}
     - task: Cleanup Dataproc 2
+      input_mapping:
+        dataproc_2_env_files: dataproc_env_files
       config:
         run:
           path: pxf_src/concourse/scripts/cleanup_dataproc_cluster.bash
         inputs:
           - name: pxf_src
-          - name: dataproc_2_env_files
+          - name: dataproc_env_files
         platform: linux
       image: ccp-7
       params:
