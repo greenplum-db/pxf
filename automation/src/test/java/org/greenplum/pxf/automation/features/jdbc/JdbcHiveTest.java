@@ -89,7 +89,8 @@ public class JdbcHiveTest extends BaseFeature {
         if (hive2 != null)
             hive2.close();
 
-        removeWorkingDirectory(hdfs2);
+        if (hdfs2 != null)
+            removeWorkingDirectory(hdfs2);
     }
 
     protected void prepareData(Hive hive, Hdfs hdfs, String hiveTypesFileName) throws Exception {
