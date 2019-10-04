@@ -1128,6 +1128,7 @@ jobs:
       HIVE_VERSION: 2
       IMPERSONATION: {{enable-impersonation-multinode}}
       KERBEROS: {{kerberos-enabled}}
+      GOOGLE_PROJECT_ID: {{google-project-id}}
       GROUP: security
       PXF_JVM_OPTS: {{pxf-jvm-opts}}
       TARGET_OS: centos

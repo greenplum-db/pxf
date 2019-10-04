@@ -158,7 +158,10 @@ function run_pxf_automation() {
 
 		if [[ -d dataproc_2_env_files ]]; then
 			# Create the second hdfs-secure cluster configuration
+			GPDB_CLUSTER_NAME_BASE=$(grep < cluster_env_files/etc_hostfile edw0 | awk '{print substr($3, 1, length($3)-2)}')
 			HADOOP_2_HOSTNAME=$(< dataproc_2_env_files/name)
+			HADOOP_2_USER=gpuser
+			HADOOP_2_SSH_OPTS=(-o 'UserKnownHostsFile=/dev/null' -o 'StrictHostKeyChecking=no' -i dataproc_2_env_files/google_compute_engine)
 			DATAPROC_2_DIR=$(find /tmp/build/ -name dataproc_2_env_files)
 			REALM2=$(< "${DATAPROC_2_DIR}/REALM")
 			REALM2=${REALM2^^} # make sure REALM2 is up-cased, down-case below for hive principal
@@ -166,14 +169,14 @@ function run_pxf_automation() {
 			ssh gpadmin@mdw "
 				mkdir -p ${PXF_CONF_DIR}/servers/hdfs-secure &&
 				cp ${PXF_CONF_DIR}/templates/pxf-site.xml ${PXF_CONF_DIR}/servers/hdfs-secure &&
-				sed -i -e \"s|>gpadmin/_HOST@EXAMPLE.COM<|>gpuser@${REALM2}<|g\" ${PXF_CONF_DIR}/servers/hdfs-secure/pxf-site.xml &&
+				sed -i -e \"s|>gpadmin/_HOST@EXAMPLE.COM<|>${HADOOP_2_USER}/_HOST@${REALM2}<|g\" ${PXF_CONF_DIR}/servers/hdfs-secure/pxf-site.xml &&
 				sed -i -e 's|/pxf.service.keytab<|/pxf.service.2.keytab<|g' ${PXF_CONF_DIR}/servers/hdfs-secure/pxf-site.xml
 			"
 			scp dataproc_2_env_files/conf/*-site.xml "gpadmin@mdw:${PXF_CONF_DIR}/servers/hdfs-secure"
 			ssh gpadmin@mdw "${GPHOME}/pxf/bin/pxf cluster sync"
 
-			sed -i  -e "s|</hdfs2>|<hadoopRoot>$DATAPROC_2_DIR</hadoopRoot><testKerberosPrincipal>gpuser@${REALM2}</testKerberosPrincipal></hdfs2>|g" \
-				-e "s|</hive2>|<kerberosPrincipal>${KERBERIZED_HADOOP_2_URI}</kerberosPrincipal><userName>gpuser</userName></hive2>|g" \
+			sed -i  -e "s|</hdfs2>|<hadoopRoot>$DATAPROC_2_DIR</hadoopRoot><testKerberosPrincipal>${HADOOP_2_USER}@${REALM2}</testKerberosPrincipal></hdfs2>|g" \
+				-e "s|</hive2>|<kerberosPrincipal>${KERBERIZED_HADOOP_2_URI}</kerberosPrincipal><userName>${HADOOP_2_USER}</userName></hive2>|g" \
 				"$multiNodesCluster"
 
 			# Create the db-hive-kerberos server configuration
@@ -187,7 +190,7 @@ function run_pxf_automation() {
 					${PXF_CONF_DIR}/servers/db-hive-kerberos/jdbc-site.xml &&
 				cp ~gpadmin/hive-report.sql ${PXF_CONF_DIR}/servers/db-hive-kerberos &&
 				cp ${PXF_CONF_DIR}/templates/pxf-site.xml ${PXF_CONF_DIR}/servers/db-hive-kerberos/pxf-site.xml &&
-				sed -i 's|gpadmin/_HOST@EXAMPLE.COM|gpuser@${REALM2}|g' ${PXF_CONF_DIR}/servers/db-hive-kerberos/pxf-site.xml &&
+				sed -i 's|gpadmin/_HOST@EXAMPLE.COM|${HADOOP_2_USER}/_HOST@${REALM2}|g' ${PXF_CONF_DIR}/servers/db-hive-kerberos/pxf-site.xml &&
 				sed -i -e 's|/pxf.service.keytab<|/pxf.service.2.keytab<|g' ${PXF_CONF_DIR}/servers/db-hive-kerberos/pxf-site.xml &&
 				sed -i 's|</configuration>|<property><name>hadoop.security.authentication</name><value>kerberos</value></property></configuration>|g' \
 					${PXF_CONF_DIR}/servers/db-hive-kerberos/jdbc-site.xml &&
@@ -196,6 +199,23 @@ function run_pxf_automation() {
 
 			# Add foreign dataproc hostfile to /etc/hosts
 			sudo tee --append /etc/hosts < dataproc_2_env_files/etc_hostfile
+
+			ssh "${HADOOP_2_SSH_OPTS[@]}" -t "${HADOOP_2_USER}@${HADOOP_2_HOSTNAME}" \
+				"set -euo pipefail
+				sudo kadmin.local -q 'addprinc -pw pxf ${HADOOP_2_USER}/${GPDB_CLUSTER_NAME_BASE}-0.c.${GOOGLE_PROJECT_ID}.internal'
+				sudo kadmin.local -q 'addprinc -pw pxf ${HADOOP_2_USER}/${GPDB_CLUSTER_NAME_BASE}-1.c.${GOOGLE_PROJECT_ID}.internal'
+				sudo kadmin.local -q 'addprinc -pw pxf ${HADOOP_2_USER}/${GPDB_CLUSTER_NAME_BASE}-2.c.${GOOGLE_PROJECT_ID}.internal'
+				sudo kadmin.local -q \"xst -k \${HOME}/pxf.service-mdw.keytab ${HADOOP_2_USER}/${GPDB_CLUSTER_NAME_BASE}-0.c.${GOOGLE_PROJECT_ID}.internal\"
+				sudo kadmin.local -q \"xst -k \${HOME}/pxf.service-sdw1.keytab ${HADOOP_2_USER}/${GPDB_CLUSTER_NAME_BASE}-1.c.${GOOGLE_PROJECT_ID}.internal\"
+				sudo kadmin.local -q \"xst -k \${HOME}/pxf.service-sdw2.keytab ${HADOOP_2_USER}/${GPDB_CLUSTER_NAME_BASE}-2.c.${GOOGLE_PROJECT_ID}.internal\"
+				sudo chown ${HADOOP_2_USER} \"\${HOME}/pxf.service-mdw.keytab\"
+				sudo chown ${HADOOP_2_USER} \"\${HOME}/pxf.service-sdw1.keytab\"
+				sudo chown ${HADOOP_2_USER} \"\${HOME}/pxf.service-sdw2.keytab\"
+				"
+			scp "${HADOOP_2_SSH_OPTS[@]}" "${HADOOP_2_USER}@${HADOOP_2_HOSTNAME}":~/pxf.service-*.keytab \
+				/tmp/
+
+			scp /tmp/pxf.service-*.keytab gpadmin@mdw:~/dataproc_2_env_files/
 
 			# Add foreign dataproc hostfile to /etc/hosts on all nodes and copy keytab
 			ssh gpadmin@mdw "

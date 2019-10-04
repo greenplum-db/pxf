@@ -127,18 +127,9 @@ if [[ $KERBEROS == true ]]; then
     "set -euo pipefail
     grep default_realm /etc/krb5.conf | awk '{print \$3}' > ~/REALM
     sudo kadmin.local -q 'addprinc -pw pxf ${HADOOP_USER}'
-    sudo kadmin.local -q 'addprinc -pw pxf ${HADOOP_USER}/mdw'
-    sudo kadmin.local -q 'addprinc -pw pxf ${HADOOP_USER}/sdw1'
-    sudo kadmin.local -q 'addprinc -pw pxf ${HADOOP_USER}/sdw2'
     sudo kadmin.local -q \"xst -k \${HOME}/pxf.service.keytab ${HADOOP_USER}\"
-    sudo kadmin.local -q \"xst -k \${HOME}/pxf.service-mdw.keytab ${HADOOP_USER}/mdw\"
-    sudo kadmin.local -q \"xst -k \${HOME}/pxf.service-sdw1.keytab ${HADOOP_USER}/sdw1\"
-    sudo kadmin.local -q \"xst -k \${HOME}/pxf.service-sdw2.keytab ${HADOOP_USER}/sdw2\"
     sudo klist -e -k -t \"\${HOME}/pxf.service.keytab\"
     sudo chown ${HADOOP_USER} \"\${HOME}/pxf.service.keytab\"
-    sudo chown ${HADOOP_USER} \"\${HOME}/pxf.service-mdw.keytab\"
-    sudo chown ${HADOOP_USER} \"\${HOME}/pxf.service-sdw1.keytab\"
-    sudo chown ${HADOOP_USER} \"\${HOME}/pxf.service-sdw2.keytab\"
     sudo addgroup ${HADOOP_USER} hdfs
     sudo addgroup ${HADOOP_USER} hadoop
     "
