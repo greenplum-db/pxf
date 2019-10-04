@@ -179,6 +179,23 @@ function run_pxf_automation() {
 				-e "s|</hive2>|<kerberosPrincipal>${KERBERIZED_HADOOP_2_URI}</kerberosPrincipal><userName>gpuser</userName></hive2>|g" \
 				"$multiNodesCluster"
 
+			# Create the db-hive-kerberos server configuration
+			ssh "${SSH_OPTS[@]}" gpadmin@mdw "
+				mkdir -p ${PXF_CONF_DIR}/servers/db-hive-kerberos &&
+				cp ${PXF_CONF_DIR}/templates/jdbc-site.xml ${PXF_CONF_DIR}/servers/db-hive-kerberos &&
+				sed -i -e 's|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.apache.hive.jdbc.HiveDriver|' \
+					-e \"s|YOUR_DATABASE_JDBC_URL|jdbc:hive2://${HADOOP_2_HOSTNAME}:10000/default;principal=${KERBERIZED_HADOOP_2_URI}|\" \
+					-e 's|YOUR_DATABASE_JDBC_USER||' \
+					-e 's|YOUR_DATABASE_JDBC_PASSWORD||' \
+					${PXF_CONF_DIR}/servers/db-hive-kerberos/jdbc-site.xml &&
+				cp ~gpadmin/hive-report.sql ${PXF_CONF_DIR}/servers/db-hive-kerberos &&
+				cp ${PXF_CONF_DIR}/templates/pxf-site.xml ${PXF_CONF_DIR}/servers/db-hive-kerberos/pxf-site.xml &&
+				sed -i 's|gpadmin/_HOST@EXAMPLE.COM|gpuser@${REALM2}|g' ${PXF_CONF_DIR}/servers/db-hive-kerberos/pxf-site.xml &&
+				sed -i 's|</configuration>|<property><name>hadoop.security.authentication</name><value>kerberos</value></property></configuration>|g' \
+					${PXF_CONF_DIR}/servers/db-hive-kerberos/jdbc-site.xml &&
+				${GPHOME}/pxf/bin/pxf cluster sync
+			"
+
 			# Add foreign dataproc hostfile to /etc/hosts
 			sudo tee --append /etc/hosts < dataproc_2_env_files/etc_hostfile
 
