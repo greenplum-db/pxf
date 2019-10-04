@@ -162,15 +162,16 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
     }
 
     private Path getDatapath(String path) {
-        if (path.matches("^[a-zA-Z].*://.*$"))
-            return new Path(path);
-        else {
-            if(ProtocolUtils.getProtocol() != ProtocolEnum.HDFS) {
-                return new Path(getScheme() + "://" + path);
+        String pathString = path;
+        if (!path.matches("^[a-zA-Z].*://.*$")) {
+            if (ProtocolUtils.getProtocol() != ProtocolEnum.HDFS) {
+                pathString = getScheme() + "://" + path;
             } else {
-                return new Path("/" + path);
+                pathString = "/" + path;
             }
         }
+
+        return new Path(pathString);
     }
 
     @Override
@@ -279,12 +280,10 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
         BytesWritable val = new BytesWritable();
         Path path = getDatapath(pathToFile);
 
-        Writer.Option optPath = SequenceFile.Writer.file(path);
-        Writer.Option optKey = SequenceFile.Writer.keyClass(key.getClass());
-        Writer.Option optVal = SequenceFile.Writer.valueClass(val.getClass());
-
-        SequenceFile.Writer writer = SequenceFile.createWriter(config, optPath,
-                optKey, optVal);
+        // Even though this method is deprecated we need to pass the correct
+        // fs for multi hadoop tests
+        SequenceFile.Writer writer = SequenceFile.createWriter(fs, config, path,
+                key.getClass(), val.getClass());
 
         for (IAvroSchema datum : data) {
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
