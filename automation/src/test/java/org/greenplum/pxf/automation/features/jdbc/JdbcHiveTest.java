@@ -1,7 +1,10 @@
 package org.greenplum.pxf.automation.features.jdbc;
 
+import jsystem.framework.sut.SutFactory;
 import jsystem.framework.system.SystemManagerImpl;
+import jsystem.framework.system.SystemObject;
 import org.apache.commons.lang.StringUtils;
+import org.greenplum.pxf.automation.components.hdfs.Hdfs;
 import org.greenplum.pxf.automation.components.hive.Hive;
 import org.greenplum.pxf.automation.features.BaseFeature;
 import org.greenplum.pxf.automation.structures.tables.hive.HiveTable;
@@ -16,8 +19,13 @@ public class JdbcHiveTest extends BaseFeature {
 
     private static final String GPDB_TYPES_TABLE_NAME = "pxf_jdbc_hive_types_table";
     private static final String GPDB_QUERY_TABLE_NAME = "pxf_jdbc_hive_types_server_table";
+
+    private static final String GPDB_TYPES_TABLE_NAME_2 = "pxf_jdbc_hive_2_types_table";
+    private static final String GPDB_QUERY_TABLE_NAME_2 = "pxf_jdbc_hive_2_types_server_table";
+
     private static final String HIVE_TYPES_TABLE_NAME = "jdbc_hive_types_table";
-    private static final String HIVE_TYPES_FILE_NAME = "hive_types_no_binary.txt";
+    private static final String HIVE_TYPES_FILE_NAME_1 = "hive_types_no_binary.txt";
+    private static final String HIVE_TYPES_FILE_NAME_2 = "hive_types_no_binary_different_names.txt";
 
     private static final String[] GPDB_TYPES_TABLE_FIELDS = {
             "s1    TEXT",
@@ -58,14 +66,18 @@ public class JdbcHiveTest extends BaseFeature {
     };
 
     private Hive hive;
+    private Hive hive2;
     private ExternalTable pxfJdbcHiveTypesTable, pxfJdbcHiveTypesServerTable;
+
+    // and another kerberized hadoop environment
+    private Hdfs hdfs2;
 
     @Override
     public void beforeClass() throws Exception {
         // Initialize Hive system object
         hive = (Hive) SystemManagerImpl.getInstance().getSystemObject("hive");
-        prepareData();
-        createTables();
+        prepareData(hive, hdfs, HIVE_TYPES_FILE_NAME_1);
+        createTables(hive, "db-hive", GPDB_TYPES_TABLE_NAME, GPDB_QUERY_TABLE_NAME);
     }
 
     @Override
@@ -73,39 +85,45 @@ public class JdbcHiveTest extends BaseFeature {
         // close hive connection
         if (hive != null)
             hive.close();
+
+        if (hive2 != null)
+            hive2.close();
+
+        removeWorkingDirectory(hdfs2);
     }
 
-    protected void prepareData() throws Exception {
+    protected void prepareData(Hive hive, Hdfs hdfs, String hiveTypesFileName) throws Exception {
         // Create Hive table
         HiveTable hiveTypesTable = TableFactory.getHiveByRowCommaTable(HIVE_TYPES_TABLE_NAME, HIVE_TYPES_TABLE_FIELDS);
         hive.dropTable(hiveTypesTable, false);
         hive.createTableAndVerify(hiveTypesTable);
         // copy file with types data to hdfs
-        hdfs.copyFromLocal(localDataResourcesFolder + "/hive/" + HIVE_TYPES_FILE_NAME,hdfs.getWorkingDirectory() + "/" + HIVE_TYPES_FILE_NAME);
+        hdfs.copyFromLocal(localDataResourcesFolder + "/hive/" + hiveTypesFileName, hdfs.getWorkingDirectory() + "/" + hiveTypesFileName);
         // load to hive table
-        hive.loadData(hiveTypesTable, hdfs.getWorkingDirectory() + "/" + HIVE_TYPES_FILE_NAME, false);
+        hive.loadData(hiveTypesTable, hdfs.getWorkingDirectory() + "/" + hiveTypesFileName, false);
     }
 
-    protected void createTables() throws Exception {
+    protected void createTables(Hive hive, String serverName, String gpdbTypesTableName, String gpdbQueryTableName) throws Exception {
         String jdbcUrl = HIVE_JDBC_URL_PREFIX + hive.getHost() + ":10000/default";
         String user = null;
 
         // On kerberized cluster, enabled then we need the hive/hiveserver2_hostname principal in the connection string.
         // Assuming here that somewhere upstream ugi has a valid login context
         if (!StringUtils.isEmpty(hive.getKerberosPrincipal())) {
-            jdbcUrl += ";principal=" + hive.getKerberosPrincipal().replace("HOSTNAME", hive.getHost());
-            user = "gpadmin";
+            // When using Hive with Kerberos, JDBC properties must be defined in a server configuration
+            pxfJdbcHiveTypesTable = TableFactory.getPxfJdbcReadableTable(
+                    gpdbTypesTableName, GPDB_TYPES_TABLE_FIELDS, HIVE_TYPES_TABLE_NAME, serverName);
+        } else {
+            // Create GPDB external table pointing to Hive table using JDBC profile
+            pxfJdbcHiveTypesTable = TableFactory.getPxfJdbcReadableTable(
+                    gpdbTypesTableName, GPDB_TYPES_TABLE_FIELDS, HIVE_TYPES_TABLE_NAME, HIVE_JDBC_DRIVER_CLASS, jdbcUrl, user);
         }
-
-        // Create GPDB external table pointing to Hive table using JDBC profile
-        pxfJdbcHiveTypesTable = TableFactory.getPxfJdbcReadableTable(
-                GPDB_TYPES_TABLE_NAME, GPDB_TYPES_TABLE_FIELDS, HIVE_TYPES_TABLE_NAME, HIVE_JDBC_DRIVER_CLASS, jdbcUrl, user);
         pxfJdbcHiveTypesTable.setHost(pxfHost);
         pxfJdbcHiveTypesTable.setPort(pxfPort);
         gpdb.createTableAndVerify(pxfJdbcHiveTypesTable);
 
         pxfJdbcHiveTypesServerTable = TableFactory.getPxfJdbcReadableTable(
-                GPDB_QUERY_TABLE_NAME, GPDB_QUERY_FIELDS, "query:hive-report", "db-hive");
+                gpdbQueryTableName, GPDB_QUERY_FIELDS, "query:hive-report", serverName);
         pxfJdbcHiveTypesServerTable.setHost(pxfHost);
         pxfJdbcHiveTypesServerTable.setPort(pxfPort);
         gpdb.createTableAndVerify(pxfJdbcHiveTypesServerTable);
@@ -114,5 +132,23 @@ public class JdbcHiveTest extends BaseFeature {
     @Test(groups = {"features", "gpdb", "security"})
     public void jdbcHiveRead() throws Exception {
         runTincTest("pxf.features.jdbc.hive.runTest");
+    }
+
+    @Test(groups = {"features", "security"})
+    public void jdbcMultipleHiveRead() throws Exception {
+        // Initialize an additional HDFS system object (optional system object)
+        hdfs2 = (Hdfs) systemManager.
+                getSystemObject("/sut", "hdfs2", -1, (SystemObject) null, false, (String) null, SutFactory.getInstance().getSutInstance());
+
+        if (hdfs2 == null) return;
+
+        trySecureLogin(hdfs2, hdfs2.getTestKerberosPrincipal());
+        initializeWorkingDirectory(gpdb, hdfs2);
+
+        hive2 = (Hive) SystemManagerImpl.getInstance().getSystemObject("hive2");
+        prepareData(hive2, hdfs2, HIVE_TYPES_FILE_NAME_2);
+        createTables(hive2, "db-hive-kerberos", GPDB_TYPES_TABLE_NAME_2, GPDB_QUERY_TABLE_NAME_2);
+
+        runTincTest("pxf.features.jdbc.multiple-hive.runTest");
     }
 }

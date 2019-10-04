@@ -84,8 +84,6 @@ public abstract class BaseTestParent {
             hdfsNonSecure = (Hdfs) systemManager.
                     getSystemObject("/sut", "hdfsNonSecure", -1, (SystemObject) null, false, (String) null, SutFactory.getInstance().getSutInstance());
 
-
-
             // Create local Data folder
             File localDataTempFolder = new File(dataTempFolder);
             localDataTempFolder.mkdirs();

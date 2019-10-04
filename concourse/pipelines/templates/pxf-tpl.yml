@@ -124,6 +124,7 @@ dataproc_destroy_anchor: &dataproc_destroy
       image: ccp-7
       params:
         GOOGLE_CREDENTIALS: {{google-service-account-key}}
+        GOOGLE_PROJECT_ID: {{google-project-id}}
         GOOGLE_ZONE: {{google-zone}}
     - task: Cleanup Dataproc 2
       input_mapping:
@@ -170,6 +171,7 @@ dataproc_timed_destroy_anchor: &dataproc_timed_destroy
       image: ccp-7
       params:
         GOOGLE_CREDENTIALS: {{google-service-account-key}}
+        GOOGLE_PROJECT_ID: {{google-project-id}}
         GOOGLE_ZONE: {{google-zone}}
     - task: Cleanup Dataproc 2
       input_mapping:
