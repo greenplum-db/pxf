@@ -93,7 +93,7 @@ do
     --format='get(networkInterfaces[0].networkIP)' \
     --zone "$ZONE")
 
-  echo "${HADOOP_IP_ADDRESS} ${PETNAME}-w-${i}" >> dataproc_env_files/etc_hostfile
+  echo "${HADOOP_IP_ADDRESS} ${PETNAME}-w-${i} ${PETNAME}-w-${i}.c.${PROJECT}.internal" >> dataproc_env_files/etc_hostfile
 done
 
 echo "$HADOOP_HOSTNAME" > "dataproc_env_files/name"
@@ -106,7 +106,7 @@ HADOOP_IP_ADDRESS=$(gcloud compute instances describe "${HADOOP_HOSTNAME}" \
   --format='get(networkInterfaces[0].networkIP)' \
   --zone "$ZONE")
 
-echo "${HADOOP_IP_ADDRESS} ${HADOOP_HOSTNAME}" >> dataproc_env_files/etc_hostfile
+echo "${HADOOP_IP_ADDRESS} ${HADOOP_HOSTNAME} ${HADOOP_HOSTNAME}.c.${PROJECT}.internal" >> dataproc_env_files/etc_hostfile
 
 scp "${SSH_OPTS[@]}" \
   "${HADOOP_USER}@${HADOOP_IP_ADDRESS}:/etc/hadoop/conf/*-site.xml" \

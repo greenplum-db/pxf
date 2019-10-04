@@ -178,6 +178,12 @@ function run_pxf_automation() {
 			sed -i  -e "s|</hdfs2>|<hadoopRoot>$DATAPROC_2_DIR</hadoopRoot><testKerberosPrincipal>gpuser@${REALM2}</testKerberosPrincipal></hdfs2>|g" \
 				"$multiNodesCluster"
 #				-e "s|</hive2>|<kerberosPrincipal>${KERBERIZED_HADOOP_2_URI}</kerberosPrincipal><userName>gpadmin</userName></hive>|g" \
+
+			# Add foreign dataproc hostfile to /etc/hosts
+			sudo bash -c "cat dataproc_2_env_files/etc_hostfile >> /etc/hosts"
+			scp dataproc_2_env_files/etc_hostfile "centos@mdw:~/etc_hostfile"
+			ssh centos@mdw "bash -c 'cat ~/etc_hostfile >> /etc/hosts'"
+
 		fi
 
 		# Create the non-secure cluster configuration
