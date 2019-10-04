@@ -261,11 +261,11 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
                         + pathToFile);
         IntWritable key = new IntWritable();
         Path path = getDatapath(pathToFile);
-        Writer.Option optPath = SequenceFile.Writer.file(path);
-        Writer.Option optKey = SequenceFile.Writer.keyClass(key.getClass());
-        Writer.Option optVal = SequenceFile.Writer.valueClass(writableData[0].getClass());
-        SequenceFile.Writer writer = SequenceFile.createWriter(config, optPath,
-                optKey, optVal);
+
+        // Even though this method is deprecated we need to pass the correct
+        // fs for multi hadoop tests
+        SequenceFile.Writer writer = SequenceFile.createWriter(fs, config,
+                path, key.getClass(), writableData[0].getClass());
         for (int i = 1; i < writableData.length; i++) {
             writer.append(key, writableData[i]);
         }
