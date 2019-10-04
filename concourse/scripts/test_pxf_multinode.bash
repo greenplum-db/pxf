@@ -176,8 +176,8 @@ function run_pxf_automation() {
 			ssh gpadmin@mdw "${GPHOME}/pxf/bin/pxf cluster sync"
 
 			sed -i  -e "s|</hdfs2>|<hadoopRoot>$DATAPROC_2_DIR</hadoopRoot><testKerberosPrincipal>gpuser@${REALM2}</testKerberosPrincipal></hdfs2>|g" \
+				-e "s|</hive2>|<kerberosPrincipal>${KERBERIZED_HADOOP_2_URI}</kerberosPrincipal><userName>gpuser</userName></hive2>|g" \
 				"$multiNodesCluster"
-#				-e "s|</hive2>|<kerberosPrincipal>${KERBERIZED_HADOOP_2_URI}</kerberosPrincipal><userName>gpadmin</userName></hive>|g" \
 
 			# Add foreign dataproc hostfile to /etc/hosts
 			sudo tee --append /etc/hosts < dataproc_2_env_files/etc_hostfile

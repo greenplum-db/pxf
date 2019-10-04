@@ -75,6 +75,11 @@
         <port>10000</port>
         <userName>gpadmin</userName>
     </hive>
+    <hive2>
+        <class>org.greenplum.pxf.automation.components.hive.Hive</class>
+        <host>second-hadoop</host>
+        <port>10000</port>
+    </hive2>
     <tinc>
         <class>org.greenplum.pxf.automation.components.tinc.Tinc</class>
         <host>localhost</host>
