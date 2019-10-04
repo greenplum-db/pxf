@@ -190,6 +190,7 @@ function run_pxf_automation() {
 				gpscp -f ~gpadmin/hostfile_all -v -r -u gpadmin ~/dataproc_2_env_files/pxf.service.keytab =:/home/gpadmin/pxf/keytabs/pxf.service.2.keytab
 			"
 			sudo cp "${DATAPROC_2_DIR}/pxf.service.keytab" /etc/security/keytabs/gpuser.headless.keytab
+			sed -i "s/>second-hadoop</>${HADOOP_2_HOSTNAME}</g" "$multiNodesCluster"
 		fi
 
 		# Create the non-secure cluster configuration

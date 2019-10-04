@@ -10,6 +10,8 @@ REGION=${REGION:-us-central1}
 gcloud auth activate-service-account \
   --key-file=<(echo "$GOOGLE_CREDENTIALS")
 
+set -x
+
 PETNAME=$(< "${ENV_FILES_DIR}/name")
 # --quiet to avoid interactive prompts
 gcloud beta dataproc clusters --quiet \
