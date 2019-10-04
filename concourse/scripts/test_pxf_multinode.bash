@@ -202,7 +202,9 @@ function run_pxf_automation() {
 				source ${GPHOME}/greenplum_path.sh &&
 				gpscp -f ~gpadmin/hostfile_all -v -r -u centos ~/dataproc_2_env_files/etc_hostfile =:/tmp/etc_hostfile &&
 				gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e 'sudo tee --append /etc/hosts < /tmp/etc_hostfile' &&
-				gpscp -f ~gpadmin/hostfile_all -v -r -u gpadmin ~/dataproc_2_env_files/pxf.service.keytab =:/home/gpadmin/pxf/keytabs/pxf.service.2.keytab
+				gpscp -h mdw -v -r -u gpadmin ~/dataproc_2_env_files/pxf.service-mdw.keytab =:/home/gpadmin/pxf/keytabs/pxf.service.2.keytab &&
+				gpscp -h sdw1 -v -r -u gpadmin ~/dataproc_2_env_files/pxf.service-sdw1.keytab =:/home/gpadmin/pxf/keytabs/pxf.service.2.keytab &&
+				gpscp -h sdw2 -v -r -u gpadmin ~/dataproc_2_env_files/pxf.service-sdw2.keytab =:/home/gpadmin/pxf/keytabs/pxf.service.2.keytab
 			"
 			sudo cp "${DATAPROC_2_DIR}/pxf.service.keytab" /etc/security/keytabs/gpuser.headless.keytab
 			sudo chown gpadmin:gpadmin /etc/security/keytabs/gpuser.headless.keytab
