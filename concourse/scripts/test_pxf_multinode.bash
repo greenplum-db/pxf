@@ -163,9 +163,6 @@ function run_pxf_automation() {
 			REALM2=$(< "${DATAPROC_2_DIR}/REALM")
 			REALM2=${REALM2^^} # make sure REALM2 is up-cased, down-case below for hive principal
 			KERBERIZED_HADOOP_2_URI="hive/${HADOOP_2_HOSTNAME}.${REALM2,,}@${REALM2};saslQop=auth-conf" # quoted because of semicolon
-#			HADOOP_2_USER=gpadmin
-#			hadoop_2_ip=$(getent hosts "$HADOOP_HOSTNAME" | awk '{ print $1 }')
-#			HADOOP_2_SSH_OPTS+=(-i dataproc_2_env_files/google_compute_engine)
 			ssh gpadmin@mdw "
 				mkdir -p ${PXF_CONF_DIR}/servers/hdfs-secure &&
 				cp ${PXF_CONF_DIR}/templates/pxf-site.xml ${PXF_CONF_DIR}/servers/hdfs-secure &&
@@ -191,6 +188,7 @@ function run_pxf_automation() {
 				cp ~gpadmin/hive-report.sql ${PXF_CONF_DIR}/servers/db-hive-kerberos &&
 				cp ${PXF_CONF_DIR}/templates/pxf-site.xml ${PXF_CONF_DIR}/servers/db-hive-kerberos/pxf-site.xml &&
 				sed -i 's|gpadmin/_HOST@EXAMPLE.COM|gpuser@${REALM2}|g' ${PXF_CONF_DIR}/servers/db-hive-kerberos/pxf-site.xml &&
+				sed -i -e 's|/pxf.service.keytab<|/pxf.service.2.keytab<|g' ${PXF_CONF_DIR}/servers/db-hive-kerberos/pxf-site.xml &&
 				sed -i 's|</configuration>|<property><name>hadoop.security.authentication</name><value>kerberos</value></property></configuration>|g' \
 					${PXF_CONF_DIR}/servers/db-hive-kerberos/jdbc-site.xml &&
 				${GPHOME}/pxf/bin/pxf cluster sync
