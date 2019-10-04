@@ -137,9 +137,9 @@ dataproc_destroy_anchor: &dataproc_destroy
         platform: linux
       image: ccp-7
       params:
-        GOOGLE_CREDENTIALS: {{data-gpdb-ud-kerberos-google-service-account-key}}
-        GOOGLE_ZONE: {{data-gpdb-ud-kerberos-google-zone}}
+        GOOGLE_CREDENTIALS: ((data-gpdb-ud-kerberos-google-service-account-key))
         GOOGLE_PROJECT_ID: ((data-gpdb-ud-kerberos-google-project-id))
+        GOOGLE_ZONE: ((data-gpdb-ud-kerberos-google-zone))
     - put: terraform_gpdb
       resource: terraform
       params:
@@ -183,9 +183,9 @@ dataproc_timed_destroy_anchor: &dataproc_timed_destroy
         platform: linux
       image: ccp-7
       params:
-        GOOGLE_CREDENTIALS: {{data-gpdb-ud-kerberos-google-service-account-key}}
-        GOOGLE_ZONE: {{data-gpdb-ud-kerberos-google-zone}}
+        GOOGLE_CREDENTIALS: ((data-gpdb-ud-kerberos-google-service-account-key))
         GOOGLE_PROJECT_ID: ((data-gpdb-ud-kerberos-google-project-id))
+        GOOGLE_ZONE: ((data-gpdb-ud-kerberos-google-zone))
 
 ## ======================================================================
 ## RESOURCE TYPES
