@@ -70,7 +70,7 @@ function create_pxf_installer_scripts() {
 		      rm -f /tmp/krb5.conf && mv /tmp/krb5.conf-tmp /tmp/krb5.conf
 		      # Add missing } to the new REALM
 		      REALM_2=\$(cat ~/dataproc_2_env_files/REALM)
-		      sed -i "s/${REALM_2} =/}\n\t${REALM_2} =/g" /tmp/krb5.conf
+		      sed -i "s/\${REALM_2} =/}\n\t\${REALM_2} =/g" /tmp/krb5.conf
 		    fi
 
 		    echo 'export PXF_KEYTAB="\${PXF_CONF}/keytabs/pxf.service.keytab"' >> "\${PXF_CONF}/conf/pxf-env.sh"
