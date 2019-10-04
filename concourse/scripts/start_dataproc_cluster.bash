@@ -88,6 +88,12 @@ do
   gcloud compute instances add-metadata "${PETNAME}-w-${i}" \
     --metadata "ssh-keys=$HADOOP_USER:$(< ~/.ssh/google_compute_engine.pub)" \
     --zone "$ZONE"
+
+  HADOOP_IP_ADDRESS=$(gcloud compute instances describe "${PETNAME}-w-${i}" \
+    --format='get(networkInterfaces[0].networkIP)' \
+    --zone "$ZONE")
+
+  echo "${HADOOP_IP_ADDRESS} ${PETNAME}-w-${i}" >> dataproc_env_files/etc_hostfile
 done
 
 echo "$HADOOP_HOSTNAME" > "dataproc_env_files/name"
@@ -96,9 +102,11 @@ mkdir -p "dataproc_env_files/conf"
 
 SSH_OPTS=(-o 'UserKnownHostsFile=/dev/null' -o 'StrictHostKeyChecking=no' -i ~/.ssh/google_compute_engine)
 
-HADOOP_IP_ADDRESS=$(gcloud compute instances describe ${HADOOP_HOSTNAME} \
+HADOOP_IP_ADDRESS=$(gcloud compute instances describe "${HADOOP_HOSTNAME}" \
   --format='get(networkInterfaces[0].networkIP)' \
   --zone "$ZONE")
+
+echo "${HADOOP_IP_ADDRESS} ${HADOOP_HOSTNAME}" >> dataproc_env_files/etc_hostfile
 
 scp "${SSH_OPTS[@]}" \
   "${HADOOP_USER}@${HADOOP_IP_ADDRESS}:/etc/hadoop/conf/*-site.xml" \
