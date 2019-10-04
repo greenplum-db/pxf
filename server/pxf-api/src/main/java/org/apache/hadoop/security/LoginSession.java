@@ -7,22 +7,28 @@ import javax.security.auth.Subject;
 import java.util.Objects;
 
 /**
- * Stores information about Kerberos login details for a given configuration server.
+ * This class stores information about Kerberos login details for a given configuration server.
+ * A subset of fields establishes session identity based on the server configuration.
+ * Other fields are the result of the login action and do not establish identity.
+ *
+ * This class has to be a member of <code>org.apache.hadoop.security</code> package as it needs access
+ * to package-private <code>User</code> class.
  */
 public class LoginSession {
 
+    // fields establishing session identity from configuration
     private String configDirectory;
     private String principalName;
     private String keytabPath;
+    private long kerberosMinMillisBeforeRelogin;
+
+    // derived fields stored to be re-used for subsequent requests
     private UserGroupInformation loginUser;
     private Subject subject;
     private User user;
 
-    private long kerberosMinSecondsBeforeRelogin;
-
     /**
      * Creates a new session object.
-     *
      * @param configDirectory server configuration directory
      * @param principalName   Kerberos principal name to use to obtain tokens
      * @param keytabPath      full path to a keytab file for the principal
@@ -33,16 +39,15 @@ public class LoginSession {
 
     /**
      * Creates a new session object.
-     *
      * @param configDirectory                 server configuration directory
      * @param principalName                   Kerberos principal name to use to obtain tokens
      * @param keytabPath                      full path to a keytab file for the principal
      * @param loginUser                       UserGroupInformation for the given principal after login to Kerberos was performed
      * @param subject                         the subject
-     * @param kerberosMinSecondsBeforeRelogin the number of seconds before re-login
+     * @param kerberosMinMillisBeforeRelogin  the number of milliseconds before re-login
      */
     public LoginSession(String configDirectory, String principalName, String keytabPath, UserGroupInformation loginUser,
-                        Subject subject, long kerberosMinSecondsBeforeRelogin) {
+                        Subject subject, long kerberosMinMillisBeforeRelogin) {
         this.configDirectory = configDirectory;
         this.principalName = principalName;
         this.keytabPath = keytabPath;
@@ -51,34 +56,53 @@ public class LoginSession {
         if (subject != null) {
             this.user = subject.getPrincipals(User.class).iterator().next();
         }
-        this.kerberosMinSecondsBeforeRelogin = kerberosMinSecondsBeforeRelogin;
+        this.kerberosMinMillisBeforeRelogin = kerberosMinMillisBeforeRelogin;
     }
 
     /**
-     * Get the login UGI for this session
-     *
+     * Get the login UGI for this session.
      * @return the UGI for this session
      */
     public UserGroupInformation getLoginUser() {
         return loginUser;
     }
 
-    public long getKerberosMinSecondsBeforeRelogin() {
-        return kerberosMinSecondsBeforeRelogin;
+    /**
+     * Get the minimal number of milliseconds before re-login.
+     * @return the minimal number of milliseconds before re-login.
+     */
+    public long getKerberosMinMillisBeforeRelogin() {
+        return kerberosMinMillisBeforeRelogin;
     }
 
+    /**
+     * Get the Subject used for this session.
+     * @return the Subject for this session
+     */
     public Subject getSubject() {
         return subject;
     }
 
+    /**
+     * Get the User for this session.
+     * @return the User for this session.
+     */
     public User getUser() {
         return user;
     }
 
+    /**
+     * Get the path of the keytab file used to login.
+     * @return the path of the keytab file used to login
+     */
     public String getKeytabPath() {
         return keytabPath;
     }
 
+    /**
+     * Get the name of the Kerberos principal used to login.
+     * @return the name of the Kerberos principal used to login
+     */
     public String getPrincipalName() {
         return principalName;
     }
@@ -91,12 +115,13 @@ public class LoginSession {
         // ugi and subject are not included into expression below as they are transient derived values
         return Objects.equals(configDirectory, that.configDirectory) &&
                 Objects.equals(principalName, that.principalName) &&
-                Objects.equals(keytabPath, that.keytabPath);
+                Objects.equals(keytabPath, that.keytabPath) &&
+                kerberosMinMillisBeforeRelogin == that.kerberosMinMillisBeforeRelogin;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(configDirectory, principalName, keytabPath);
+        return Objects.hash(configDirectory, principalName, keytabPath, kerberosMinMillisBeforeRelogin);
     }
 
     @Override
@@ -105,6 +130,7 @@ public class LoginSession {
                 .append("config", configDirectory)
                 .append("principal", principalName)
                 .append("keytab", keytabPath)
+                .append("kerberosMinMillisBeforeRelogin", kerberosMinMillisBeforeRelogin)
                 .toString();
     }
 }
