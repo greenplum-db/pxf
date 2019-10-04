@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -64,7 +65,7 @@ public class SecureLogin {
     private static final SecureLogin instance = new SecureLogin();
 
     /**
-     * Prevent instantiation of this class by e
+     * Prevent instantiation of this class by external code
      */
     private SecureLogin() {
     }
@@ -78,10 +79,29 @@ public class SecureLogin {
         return instance;
     }
 
+    /**
+     * Returns UserGroupInformation for the login user for server specified by the configuration. Tries to re-use
+     * existing login user if there was a previous login for this server and no configuration parameters have
+     * changed since the last login, otherwise logs the user in and stored the result for future reference.
+     * @param context request context
+     * @param configuration location of server configuration directory
+     * @return UserGroupInformation of the login user
+     * @throws IOException if an error occurs
+     */
     public UserGroupInformation getLoginUser(RequestContext context, Configuration configuration) throws IOException {
         return getLoginUser(context.getServerName(), context.getConfig(), configuration);
     }
 
+    /**
+     * Returns UserGroupInformation for the login user for the specified server and configuration. Tries to re-use
+     * existing login user if there was a previous login for this server and no configuration parameters have
+     * changed since the last login, otherwise logs the user in and stored the result for future reference.
+     * @param serverName
+     * @param configDirectory
+     * @param configuration
+     * @return UserGroupInformation of the login user
+     * @throws IOException if an error occurs
+     */
     public UserGroupInformation getLoginUser(String serverName, String configDirectory, Configuration configuration) throws IOException {
         // Kerberos security is enabled for the server, use identity of the Kerberos principal for the server
         LoginSession loginSession = getServerLoginSession(serverName, configDirectory, configuration);
@@ -104,6 +124,7 @@ public class SecureLogin {
             }
         }
 
+        // try to relogin to keep the TGT token from expiring, if it still has a long validity, it will be a no-op
         if (Utilities.isSecurityEnabled(configuration)) {
             PxfUserGroupInformation.reloginFromKeytab(loginSession);
         }
@@ -125,7 +146,6 @@ public class SecureLogin {
 
             LOG.info("User impersonation is {} for server {}", (isUserImpersonationEnabled ? "enabled" : "disabled"), serverName);
 
-//            UserGroupInformation.setConfiguration(configuration);
             UserGroupInformation.reset();
             Configuration config = new Configuration();
             config.set("hadoop.security.authentication", "kerberos");
@@ -155,7 +175,7 @@ public class SecureLogin {
 
             return loginSession;
         } catch (Exception e) {
-            throw new RuntimeException(String.format("PXF service login failed for server %s", serverName), e);
+            throw new RuntimeException(String.format("PXF service login failed for server %s : %s", serverName, e.getMessage()), e);
         }
     }
 
@@ -201,7 +221,7 @@ public class SecureLogin {
      * @param configuration the hadoop configuration
      * @return the service principal for the given server and configuration
      */
-    public static String getServicePrincipal(String serverName, Configuration configuration) {
+    static String getServicePrincipal(String serverName, Configuration configuration) {
         // use system property as default for backward compatibility when only 1 Kerberized cluster was supported
         String defaultPrincipal = StringUtils.equalsIgnoreCase(serverName, "default") ?
                 System.getProperty(CONFIG_KEY_SERVICE_PRINCIPAL) :
@@ -218,11 +238,32 @@ public class SecureLogin {
      * @param configuration the hadoop configuration
      * @return the path of the service keytab for the given server and configuration
      */
-    public static String getServiceKeytab(String serverName, Configuration configuration) {
+    static String getServiceKeytab(String serverName, Configuration configuration) {
         // use system property as default for backward compatibility when only 1 Kerberized cluster was supported
         String defaultKeytab = StringUtils.equalsIgnoreCase(serverName, "default") ?
                 System.getProperty(CONFIG_KEY_SERVICE_KEYTAB) :
                 null;
         return configuration.get(CONFIG_KEY_SERVICE_KEYTAB, defaultKeytab);
     }
+
+    /* --------- Testing Only Methods --------- */
+
+    /**
+     * Resets and cleans the cache of login sessions. For testing only.
+     */
+    static void reset() {
+        synchronized (SecureLogin.class) {
+            loginMap.clear();
+        }
+    }
+
+    /**
+     * Resets and cleans the cache of login sessions. For testing only.
+     */
+    static Map<String, LoginSession> getCache() {
+        synchronized (SecureLogin.class) {
+            return Collections.unmodifiableMap(loginMap);
+        }
+    }
+
 }

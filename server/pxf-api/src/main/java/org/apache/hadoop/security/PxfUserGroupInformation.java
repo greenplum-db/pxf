@@ -1,5 +1,6 @@
 package org.apache.hadoop.security;
 
+import com.google.common.base.Preconditions;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.net.DNS;
@@ -23,31 +24,38 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.HADOOP_KERBEROS_MIN_SECONDS_BEFORE_RELOGIN;
 
-public class PxfUserGroupInformation {
+/**
+ * PXF-specific analog of <code>UserGroupInformation</code> class to support multiple concurrent Kerberos sessions
+ * for different Kerberos Realms and PXF configuration servers. The class must to reside on this package to gain access
+ * to package-private <code>User</code> class.
+ */
+public abstract class PxfUserGroupInformation {
 
     private static final String LOGIN_FAILURE = "Login failure";
     private static final Logger LOG = LoggerFactory.getLogger(PxfUserGroupInformation.class);
     private static final String MUST_FIRST_LOGIN_FROM_KEYTAB = "loginUserFromKeyTab must be done first";
-    private static String OS_LOGIN_MODULE_NAME = getOSLoginModuleName();
+    private static final String OS_LOGIN_MODULE_NAME = getOSLoginModuleName();
 
     /**
      * Percentage of the ticket window to use before we renew ticket.
      */
     private static final float TICKET_RENEW_WINDOW = 0.80f;
 
-    private static final boolean windows =
-            System.getProperty("os.name").startsWith("Windows");
-    private static final boolean is64Bit =
-            System.getProperty("os.arch").contains("64") ||
-                    System.getProperty("os.arch").contains("s390x");
+    private static final boolean windows = System.getProperty("os.name").startsWith("Windows");
+    private static final boolean is64Bit = System.getProperty("os.arch").contains("64") ||
+                                           System.getProperty("os.arch").contains("s390x");
     private static final boolean aix = System.getProperty("os.name").equals("AIX");
+
+    // package-private Subject provider to allow mock Subjects having User during testing
+    static Supplier<Subject> subjectProvider = () -> new Subject();
 
     /**
      * Log a user in from a keytab file. Loads a user identity from a keytab
-     * file and logs them in. They become the currently logged-in user.
+     * file and logs them in, returning the login session containing user's UGI object.
      *
      * @param configuration   the server configuration
      * @param serverName      the name of the server
@@ -60,30 +68,38 @@ public class PxfUserGroupInformation {
     public synchronized
     static LoginSession loginUserFromKeytab(Configuration configuration, String serverName, String configDirectory, String principal, String keytabFilename) throws IOException {
 
-        if (StringUtils.isBlank(keytabFilename))
-            throw new IOException("Running in secure mode, but config doesn't have a keytab");
+        Preconditions.checkArgument(StringUtils.isNotBlank(keytabFilename), "Running in secure mode, but config doesn't have a keytab");
 
-        UserGroupInformation loginUser;
-        String hostname = getLocalHostName(configuration);
-        String principalName = SecurityUtil.getServerPrincipal(principal, hostname);
-        Subject subject = new Subject();
-        LoginContext login;
+        // replace _HOST parameter in the server principal, is applicable
+        String principalName = SecurityUtil.getServerPrincipal(principal, getLocalHostName(configuration));
+
         try {
-            login = newLoginContext(HadoopConfiguration.KEYTAB_KERBEROS_CONFIG_NAME, subject, new HadoopConfiguration(principal, keytabFilename));
+            // create a new Subject to use for login, so that we can remember reference to Subject in LoginSession
+            Subject subject = subjectProvider.get();
+
+            // create login context with the given subject, using Kerberos principal and keytab filename; then login
+            LoginContext login = newLoginContext(HadoopConfiguration.KEYTAB_KERBEROS_CONFIG_NAME,
+                    subject, new HadoopConfiguration(principalName, keytabFilename));
             login.login();
-            loginUser = new UserGroupInformation(subject);
+
+            // create UGI with the same Subject used to login, store the login context with the subject's User principal
+            UserGroupInformation loginUser = new UserGroupInformation(subject);
             User user = subject.getPrincipals(User.class).iterator().next();
             user.setLogin(login);
             loginUser.setAuthenticationMethod(UserGroupInformation.AuthenticationMethod.KERBEROS);
+
+            LOG.info("Login successful for principal {} using keytab file {}", principalName, keytabFilename);
+
+            // store all the relevant information in the login session and return it
+            return new LoginSession(configDirectory, principalName, keytabFilename, loginUser, subject,
+                    getKerberosMinMillisBeforeRelogin(serverName, configuration));
+
         } catch (LoginException le) {
             KerberosAuthException kae = new KerberosAuthException(LOGIN_FAILURE, le);
             kae.setUser(principalName);
             kae.setKeytabFile(keytabFilename);
             throw kae;
         }
-        LOG.info("Login successful for user {} using keytab file {}", principalName, keytabFilename);
-
-        return new LoginSession(configDirectory, principal, keytabFilename, loginUser, subject, getKerberosMinSecondsBeforeRelogin(serverName, configuration));
     }
 
 
@@ -102,21 +118,22 @@ public class PxfUserGroupInformation {
 
         UserGroupInformation ugi = loginSession.getLoginUser();
 
-        if (ugi.getAuthenticationMethod() != UserGroupInformation.AuthenticationMethod.KERBEROS || !ugi.isFromKeytab()) {
+        if (ugi.getAuthenticationMethod() != UserGroupInformation.AuthenticationMethod.KERBEROS ||
+                !ugi.isFromKeytab()) {
             LOG.error("Did not attempt to relogin from keytab: auth={}, fromKeyTab={}", ugi.getAuthenticationMethod(), ugi.isFromKeytab());
             return;
         }
 
         synchronized (loginSession) {
             long now = Time.now();
-            if (/* TODO use Ticker: !shouldRenewImmediatelyForTests && */ !hasSufficientTimeElapsed(now, loginSession)) {
+            if (!hasSufficientTimeElapsed(now, loginSession)) {
                 return;
             }
 
             Subject subject = loginSession.getSubject();
             KerberosTicket tgt = getTGT(subject);
             //Return if TGT is valid and is not going to expire soon.
-            if (tgt != null && /*!shouldRenewImmediatelyForTests &&*/ now < getRefreshTime(tgt)) {
+            if (tgt != null && now < getRefreshTime(tgt)) {
                 return;
             }
 
@@ -185,7 +202,7 @@ public class PxfUserGroupInformation {
                 }
             }
         }
-        LOG.warn("Warning, no kerberos ticket found while attempting to renew ticket");
+        LOG.warn("Warning, no kerberos tickets found while attempting to renew ticket");
     }
 
     static String getLocalHostName(@Nullable Configuration conf) throws UnknownHostException {
@@ -195,12 +212,10 @@ public class PxfUserGroupInformation {
             if (dnsInterface != null) {
                 return DNS.getDefaultHost(dnsInterface, nameServer, true);
             }
-
             if (nameServer != null) {
-                throw new IllegalArgumentException("hadoop.security.dns.nameserver requires hadoop.security.dns.interface. Check yourconfiguration.");
+                throw new IllegalArgumentException("hadoop.security.dns.nameserver requires hadoop.security.dns.interface. Check your configuration.");
             }
         }
-
         return InetAddress.getLocalHost().getCanonicalHostName();
     }
 
@@ -210,9 +225,7 @@ public class PxfUserGroupInformation {
         return start + (long) ((end - start) * TICKET_RENEW_WINDOW);
     }
 
-    private static LoginContext
-    newLoginContext(String appName, Subject subject,
-                    javax.security.auth.login.Configuration loginConf)
+    private static LoginContext newLoginContext(String appName, Subject subject, javax.security.auth.login.Configuration loginConf)
             throws LoginException {
         // Temporarily switch the thread's ContextClassLoader to match this
         // class's classloader, so that we can properly load HadoopLoginModule
@@ -247,8 +260,7 @@ public class PxfUserGroupInformation {
      * @return the user's TGT or null if none was found
      */
     private static synchronized KerberosTicket getTGT(Subject subject) {
-        Set<KerberosTicket> tickets = subject
-                .getPrivateCredentials(KerberosTicket.class);
+        Set<KerberosTicket> tickets = subject.getPrivateCredentials(KerberosTicket.class);
         for (KerberosTicket ticket : tickets) {
             if (SecurityUtil.isOriginalTGT(ticket)) {
                 return ticket;
@@ -257,7 +269,7 @@ public class PxfUserGroupInformation {
         return null;
     }
 
-    private static long getKerberosMinSecondsBeforeRelogin(String serverName, Configuration configuration) {
+    private static long getKerberosMinMillisBeforeRelogin(String serverName, Configuration configuration) {
         try {
             return 1000L * configuration.getLong(HADOOP_KERBEROS_MIN_SECONDS_BEFORE_RELOGIN, 60L);
         } catch (NumberFormatException e) {
@@ -270,11 +282,11 @@ public class PxfUserGroupInformation {
 
     private static boolean hasSufficientTimeElapsed(long now, LoginSession loginSession) {
         long lastLogin = loginSession.getUser().getLastLogin();
-        long kerberosMinSecondsBeforeRelogin = loginSession.getKerberosMinSecondsBeforeRelogin();
+        long kerberosMinMillisBeforeRelogin = loginSession.getKerberosMinMillisBeforeRelogin();
 
-        if (now - lastLogin < kerberosMinSecondsBeforeRelogin) {
+        if (now - lastLogin < kerberosMinMillisBeforeRelogin) {
             LOG.debug("Not attempting to re-login since the last re-login was attempted less than {} seconds before. Last Login = {}",
-                    (kerberosMinSecondsBeforeRelogin / 1000), lastLogin);
+                    (kerberosMinMillisBeforeRelogin / 1000), lastLogin);
             return false;
         }
         return true;
@@ -284,7 +296,11 @@ public class PxfUserGroupInformation {
         return keytabPath.startsWith("file://") ? keytabPath : "file://" + keytabPath;
     }
 
-    private static class HadoopConfiguration extends javax.security.auth.login.Configuration {
+    /**
+     * This class is copied from <code>UserGroupInformation</code> class except it requires specific Kerberos
+     * principal and keytab, unlike in the source class, where those are static and thus common to all servers.
+     */
+    static class HadoopConfiguration extends javax.security.auth.login.Configuration {
         private static final String KEYTAB_KERBEROS_CONFIG_NAME = "hadoop-keytab-kerberos";
         private final Map<String, String> BASIC_JAAS_OPTIONS = new HashMap<>();
         private final AppConfigurationEntry OS_SPECIFIC_LOGIN;
