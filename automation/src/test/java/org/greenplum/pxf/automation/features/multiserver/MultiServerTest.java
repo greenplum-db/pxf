@@ -1,5 +1,7 @@
 package org.greenplum.pxf.automation.features.multiserver;
 
+import jsystem.framework.sut.SutFactory;
+import jsystem.framework.system.SystemObject;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.greenplum.pxf.automation.components.hdfs.Hdfs;
@@ -34,11 +36,23 @@ public class MultiServerTest extends BaseFeature {
     private String s3Path;
     private String defaultPath;
 
+    // and another kerberized hadoop environment
+    private Hdfs hdfs2;
+
     /**
      * Prepare all server configurations and components
      */
     @Override
     public void beforeClass() throws Exception {
+        // Initialize an additional HDFS system object (optional system object)
+        hdfs2 = (Hdfs) systemManager.
+                getSystemObject("/sut", "hdfs2", -1, (SystemObject) null, false, (String) null, SutFactory.getInstance().getSutInstance());
+
+        if (hdfs2 != null) {
+            trySecureLogin(hdfs2, hdfs2.getTestKerberosPrincipal());
+            initializeWorkingDirectory(gpdb, hdfs2);
+        }
+
         String hdfsWorkingDirectory = hdfs.getWorkingDirectory();
         defaultPath = hdfsWorkingDirectory + "/" + fileName;
 
@@ -71,6 +85,13 @@ public class MultiServerTest extends BaseFeature {
         super.afterMethod();
 
         s3Server.removeDirectory(PROTOCOL_S3 + s3Path);
+    }
+
+    @Override
+    protected void afterClass() throws Exception {
+        super.afterClass();
+
+        removeWorkingDirectory(hdfs2);
     }
 
     protected void prepareData() throws Exception {

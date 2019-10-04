@@ -127,18 +127,19 @@ dataproc_destroy_anchor: &dataproc_destroy
         GOOGLE_ZONE: {{google-zone}}
     - task: Cleanup Dataproc 2
       input_mapping:
-        dataproc_2_env_files: dataproc_env_files
+        dataproc_env_files: dataproc_2_env_files
       config:
         run:
           path: pxf_src/concourse/scripts/cleanup_dataproc_cluster.bash
         inputs:
           - name: pxf_src
-          - name: dataproc_2_env_files
+          - name: dataproc_env_files
         platform: linux
       image: ccp-7
       params:
         GOOGLE_CREDENTIALS: {{data-gpdb-ud-kerberos-google-service-account-key}}
         GOOGLE_ZONE: {{data-gpdb-ud-kerberos-google-zone}}
+        GOOGLE_PROJECT_ID: ((data-gpdb-ud-kerberos-google-project-id))
     - put: terraform_gpdb
       resource: terraform
       params:
@@ -172,18 +173,19 @@ dataproc_timed_destroy_anchor: &dataproc_timed_destroy
         GOOGLE_ZONE: {{google-zone}}
     - task: Cleanup Dataproc 2
       input_mapping:
-        dataproc_2_env_files: dataproc_env_files
+        dataproc_env_files: dataproc_2_env_files
       config:
         run:
           path: pxf_src/concourse/scripts/cleanup_dataproc_cluster.bash
         inputs:
           - name: pxf_src
-          - name: dataproc_2_env_files
+          - name: dataproc_env_files
         platform: linux
       image: ccp-7
       params:
         GOOGLE_CREDENTIALS: {{data-gpdb-ud-kerberos-google-service-account-key}}
         GOOGLE_ZONE: {{data-gpdb-ud-kerberos-google-zone}}
+        GOOGLE_PROJECT_ID: ((data-gpdb-ud-kerberos-google-project-id))
 
 ## ======================================================================
 ## RESOURCE TYPES

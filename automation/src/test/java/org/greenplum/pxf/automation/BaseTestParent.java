@@ -44,8 +44,6 @@ public abstract class BaseTestParent {
     // When running against multiple hadoop environments, we need to test against
     // a non-kerberized (secured) hadoop.
     protected Hdfs hdfsNonSecure;
-    // and another kerberized hadoop environment
-    protected Hdfs hdfs2;
     protected ReadableExternalTable exTable;
     // data resources folder
     protected String localDataResourcesFolder = "src/test/resources/data";
@@ -55,7 +53,7 @@ public abstract class BaseTestParent {
     protected String pxfPort;
     protected String testUserkeyTabPathFormat = "/etc/security/keytabs/%s.headless.keytab";
 
-    private SystemManagerImpl systemManager;
+    protected SystemManagerImpl systemManager;
 
     // c'tor
     public BaseTestParent() {
@@ -86,13 +84,7 @@ public abstract class BaseTestParent {
             hdfsNonSecure = (Hdfs) systemManager.
                     getSystemObject("/sut", "hdfsNonSecure", -1, (SystemObject) null, false, (String) null, SutFactory.getInstance().getSutInstance());
 
-            // Initialize an additional HDFS system object (optional system object)
-            hdfs2 = (Hdfs) systemManager.
-                    getSystemObject("/sut", "hdfs2", -1, (SystemObject) null, false, (String) null, SutFactory.getInstance().getSutInstance());
 
-            if (hdfs2 != null) {
-                trySecureLogin(hdfs2, hdfs2.getTestKerberosPrincipal());
-            }
 
             // Create local Data folder
             File localDataTempFolder = new File(dataTempFolder);
@@ -111,10 +103,6 @@ public abstract class BaseTestParent {
 
             if (hdfsNonSecure != null) {
                 initializeWorkingDirectory(gpdb, hdfsNonSecure);
-            }
-
-            if (hdfs2 != null) {
-                initializeWorkingDirectory(gpdb, hdfs2);
             }
 
             // get pxfHost
@@ -175,7 +163,6 @@ public abstract class BaseTestParent {
         // Remove workingDirectories
         removeWorkingDirectory(hdfs);
         removeWorkingDirectory(hdfsNonSecure);
-        removeWorkingDirectory(hdfs2);
     }
 
     /**
@@ -319,7 +306,7 @@ public abstract class BaseTestParent {
         return false;
     }
 
-    private void trySecureLogin(Hdfs hdfs, String kerberosPrincipal) throws Exception {
+    protected void trySecureLogin(Hdfs hdfs, String kerberosPrincipal) throws Exception {
         if (StringUtils.isEmpty(kerberosPrincipal)) return;
 
         String testUser = kerberosPrincipal.split("@")[0];
@@ -343,7 +330,7 @@ public abstract class BaseTestParent {
         hdfs.init();
     }
 
-    private void initializeWorkingDirectory(Gpdb gpdb, Hdfs hdfs) throws Exception {
+    protected void initializeWorkingDirectory(Gpdb gpdb, Hdfs hdfs) throws Exception {
         hdfs.removeDirectory(hdfs.getWorkingDirectory());
         hdfs.createDirectory(hdfs.getWorkingDirectory());
         if (gpdb.getUserName() != null) {
@@ -351,7 +338,7 @@ public abstract class BaseTestParent {
         }
     }
 
-    private void removeWorkingDirectory(Hdfs hdfs) {
+    protected void removeWorkingDirectory(Hdfs hdfs) {
         if (hdfs == null) return;
         try {
             hdfs.removeDirectory(hdfs.getWorkingDirectory());
