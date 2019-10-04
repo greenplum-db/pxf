@@ -178,7 +178,7 @@ dataproc_timed_destroy_anchor: &dataproc_timed_destroy
           path: pxf_src/concourse/scripts/cleanup_dataproc_cluster.bash
         inputs:
           - name: pxf_src
-          - name: dataproc_env_files
+          - name: dataproc_2_env_files
         platform: linux
       image: ccp-7
       params:
