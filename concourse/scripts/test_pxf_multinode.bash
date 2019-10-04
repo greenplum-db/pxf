@@ -170,7 +170,7 @@ function run_pxf_automation() {
 				mkdir -p ${PXF_CONF_DIR}/servers/hdfs-secure &&
 				cp ${PXF_CONF_DIR}/templates/pxf-site.xml ${PXF_CONF_DIR}/servers/hdfs-secure &&
 				sed -i -e \"s|>gpadmin/_HOST@EXAMPLE.COM<|>gpuser@${REALM2}<|g\" ${PXF_CONF_DIR}/servers/hdfs-secure/pxf-site.xml &&
-				sed -i -e 's|/pxf.service.keytab<|/non.existent.keytab<|g' ${PXF_CONF_DIR}/servers/hdfs-secure/pxf-site.xml
+				sed -i -e 's|/pxf.service.keytab<|/pxf.service.2.keytab<|g' ${PXF_CONF_DIR}/servers/hdfs-secure/pxf-site.xml
 			"
 			scp dataproc_2_env_files/conf/*-site.xml "gpadmin@mdw:${PXF_CONF_DIR}/servers/hdfs-secure"
 			ssh gpadmin@mdw "${GPHOME}/pxf/bin/pxf cluster sync"
@@ -180,10 +180,16 @@ function run_pxf_automation() {
 #				-e "s|</hive2>|<kerberosPrincipal>${KERBERIZED_HADOOP_2_URI}</kerberosPrincipal><userName>gpadmin</userName></hive>|g" \
 
 			# Add foreign dataproc hostfile to /etc/hosts
-			sudo bash -c "cat dataproc_2_env_files/etc_hostfile >> /etc/hosts"
-			scp dataproc_2_env_files/etc_hostfile "centos@mdw:~/etc_hostfile"
-			ssh centos@mdw "bash -c 'cat ~/etc_hostfile >> /etc/hosts'"
+			sudo tee --append /etc/hosts < dataproc_2_env_files/etc_hostfile
 
+			# Add foreign dataproc hostfile to /etc/hosts on all nodes and copy keytab
+			ssh gpadmin@mdw "
+				source ${GPHOME}/greenplum_path.sh &&
+				gpscp -f ~gpadmin/hostfile_all -v -r -u centos ~/dataproc_2_env_files/etc_hostfile =:/tmp/etc_hostfile &&
+				gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e 'sudo tee --append /etc/hosts < /tmp/etc_hostfile' &&
+				gpscp -f ~gpadmin/hostfile_all -v -r -u gpadmin ~/dataproc_2_env_files/pxf.service.keytab =:/home/gpadmin/pxf/keytabs/pxf.service.2.keytab
+			"
+			sudo cp "${DATAPROC_2_DIR}/pxf.service.keytab" /etc/security/keytabs/gpuser.headless.keytab
 		fi
 
 		# Create the non-secure cluster configuration

@@ -41,13 +41,13 @@
 		<workingDirectory>tmp/pxf_automation_data</workingDirectory>
 		<haNameservice></haNameservice>
 	</hdfs>
-	<!--hdfs2>
+	<hdfs2>
 		<class>org.greenplum.pxf.automation.components.hdfs.Hdfs</class>
 		<host>second-hadoop</host>
 		<port>8020</port>
 		<workingDirectory>tmp/pxf_automation_data</workingDirectory>
 		<haNameservice></haNameservice>
-	</hdfs2-->
+	</hdfs2>
 	<hdfsNonSecure>
 		<class>org.greenplum.pxf.automation.components.hdfs.Hdfs</class>
 		<host>non-secure-hadoop</host>
