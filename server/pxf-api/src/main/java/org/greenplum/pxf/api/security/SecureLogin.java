@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 
 /**
@@ -62,6 +63,10 @@ public class SecureLogin {
 
     private static final Map<String, LoginSession> loginMap = new HashMap<>();
 
+    // For Tracing purposes to make sure the loginCount and reloginCount remains reasonable
+    private static final Map<String, AtomicLong> loginCountMap = new HashMap<>();
+    private static final Map<String, AtomicLong> reloginCountMap = new HashMap<>();
+
     private static final SecureLogin instance = new SecureLogin();
 
     /**
@@ -83,7 +88,8 @@ public class SecureLogin {
      * Returns UserGroupInformation for the login user for server specified by the configuration. Tries to re-use
      * existing login user if there was a previous login for this server and no configuration parameters have
      * changed since the last login, otherwise logs the user in and stored the result for future reference.
-     * @param context request context
+     *
+     * @param context       request context
      * @param configuration location of server configuration directory
      * @return UserGroupInformation of the login user
      * @throws IOException if an error occurs
@@ -96,6 +102,7 @@ public class SecureLogin {
      * Returns UserGroupInformation for the login user for the specified server and configuration. Tries to re-use
      * existing login user if there was a previous login for this server and no configuration parameters have
      * changed since the last login, otherwise logs the user in and stored the result for future reference.
+     *
      * @param serverName
      * @param configDirectory
      * @param configuration
@@ -103,6 +110,9 @@ public class SecureLogin {
      * @throws IOException if an error occurs
      */
     public UserGroupInformation getLoginUser(String serverName, String configDirectory, Configuration configuration) throws IOException {
+        // Lowercase serverName to keep a single entry in the map
+        serverName = serverName.toLowerCase();
+
         // Kerberos security is enabled for the server, use identity of the Kerberos principal for the server
         LoginSession loginSession = getServerLoginSession(serverName, configDirectory, configuration);
         if (loginSession == null) {
@@ -127,6 +137,22 @@ public class SecureLogin {
         // try to relogin to keep the TGT token from expiring, if it still has a long validity, it will be a no-op
         if (Utilities.isSecurityEnabled(configuration)) {
             PxfUserGroupInformation.reloginFromKeytab(loginSession);
+        }
+
+        if (LOG.isTraceEnabled()) {
+            AtomicLong loginPerServer = loginCountMap.get(serverName);
+            AtomicLong reloginPerServer = reloginCountMap.get(serverName);
+
+            long loginPerServerValue = loginPerServer != null ? loginPerServer.get() : 0;
+            long reloginPerServerValue = reloginPerServer != null ? reloginPerServer.get() : 0;
+
+            LOG.trace("SecureLogin metrics: {} login{} and {} relogin{} for server {}",
+                    loginPerServerValue,
+                    loginPerServerValue == 1 ? "" : "s",
+                    reloginPerServerValue,
+                    reloginPerServerValue == 1 ? "" : "s",
+                    serverName
+            );
         }
 
         return loginSession.getLoginUser();
@@ -173,6 +199,17 @@ public class SecureLogin {
 
             LOG.info("Logged in as principal {} for server {}", loginSession.getLoginUser(), serverName);
 
+            // Keep track of the number of logins per server to make sure
+            // we are not logging in too often
+            AtomicLong loginCountPerServer = loginCountMap.get(serverName);
+
+            if (loginCountPerServer == null) {
+                loginCountPerServer = new AtomicLong(1L);
+                loginCountMap.put(serverName, loginCountPerServer);
+            } else {
+                loginCountPerServer.addAndGet(1L);
+            }
+
             return loginSession;
         } catch (Exception e) {
             throw new RuntimeException(String.format("PXF service login failed for server %s : %s", serverName, e.getMessage()), e);
@@ -203,7 +240,13 @@ public class SecureLogin {
         if (currentSession == null)
             return null;
 
-        LoginSession expectedLoginSession = new LoginSession(configDirectory, SecureLogin.getServicePrincipal(serverName, configuration), SecureLogin.getServiceKeytab(serverName, configuration));
+        long kerberosMinMillisBeforeReloginkerberosMinMillisBeforeRelogin =
+                PxfUserGroupInformation.getKerberosMinMillisBeforeRelogin(serverName, configuration);
+        LoginSession expectedLoginSession = new LoginSession(
+                configDirectory,
+                SecureLogin.getServicePrincipal(serverName, configuration),
+                SecureLogin.getServiceKeytab(serverName, configuration),
+                kerberosMinMillisBeforeReloginkerberosMinMillisBeforeRelogin);
         if (!currentSession.equals(expectedLoginSession)) {
             LOG.warn("LoginSession has changed for server {} : existing {} expected {}", serverName, currentSession, expectedLoginSession);
             return null;

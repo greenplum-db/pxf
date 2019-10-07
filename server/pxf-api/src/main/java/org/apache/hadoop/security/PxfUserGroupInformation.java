@@ -174,6 +174,17 @@ public abstract class PxfUserGroupInformation {
         }
     }
 
+    public static long getKerberosMinMillisBeforeRelogin(String serverName, Configuration configuration) {
+        try {
+            return 1000L * configuration.getLong(HADOOP_KERBEROS_MIN_SECONDS_BEFORE_RELOGIN, 60L);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(String.format("Invalid attribute value for %s of %s for server %s",
+                    HADOOP_KERBEROS_MIN_SECONDS_BEFORE_RELOGIN,
+                    configuration.get(HADOOP_KERBEROS_MIN_SECONDS_BEFORE_RELOGIN),
+                    serverName));
+        }
+    }
+
     // if the first kerberos ticket is not TGT, then remove and destroy it since
     // the kerberos library of jdk always use the first kerberos ticket as TGT.
     // See HADOOP-13433 for more details.
@@ -267,17 +278,6 @@ public abstract class PxfUserGroupInformation {
             }
         }
         return null;
-    }
-
-    private static long getKerberosMinMillisBeforeRelogin(String serverName, Configuration configuration) {
-        try {
-            return 1000L * configuration.getLong(HADOOP_KERBEROS_MIN_SECONDS_BEFORE_RELOGIN, 60L);
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException(String.format("Invalid attribute value for %s of %s for server %s",
-                    HADOOP_KERBEROS_MIN_SECONDS_BEFORE_RELOGIN,
-                    configuration.get(HADOOP_KERBEROS_MIN_SECONDS_BEFORE_RELOGIN),
-                    serverName));
-        }
     }
 
     private static boolean hasSufficientTimeElapsed(long now, LoginSession loginSession) {

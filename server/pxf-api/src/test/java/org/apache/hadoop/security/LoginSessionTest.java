@@ -29,7 +29,7 @@ public class LoginSessionTest {
 
     @Test
     public void testLoginSessionShortConstructor() {
-        session = new LoginSession("config", "principal", "keytab");
+        session = new LoginSession("config", "principal", "keytab", 0);
         assertEquals(0, session.getKerberosMinMillisBeforeRelogin());
         assertEquals("keytab", session.getKeytabPath());
         assertEquals("principal", session.getPrincipalName());

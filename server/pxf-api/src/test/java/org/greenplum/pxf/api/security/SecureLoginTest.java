@@ -125,6 +125,7 @@ public class SecureLoginTest {
         configuration.set("hadoop.security.authentication", "kerberos");
         configuration.set(PROPERTY_KEY_SERVICE_PRINCIPAL, "principal");
         configuration.set(PROPERTY_KEY_SERVICE_KEYTAB, "/path/to/keytab");
+        configuration.set("hadoop.kerberos.min.seconds.before.relogin", "90");
         when(PxfUserGroupInformation.loginUserFromKeytab(configuration, "server", "config", "principal", "/path/to/keytab")).thenReturn(expectedLoginSession);
 
         UserGroupInformation loginUGI = secureLogin.getLoginUser("server", "config", configuration);
@@ -148,11 +149,13 @@ public class SecureLoginTest {
     public void testLoginKerberosSameSession() throws IOException {
         PowerMockito.mockStatic(PxfUserGroupInformation.class);
         expectedUGI = UserGroupInformation.createUserForTesting("some", new String[]{});
-        expectedLoginSession = new LoginSession("config", "principal", "/path/to/keytab", expectedUGI, null, 0);
+        expectedLoginSession = new LoginSession("config", "principal", "/path/to/keytab", expectedUGI, null, 90000);
         configuration.set("hadoop.security.authentication", "kerberos");
         configuration.set(PROPERTY_KEY_SERVICE_PRINCIPAL, "principal");
         configuration.set(PROPERTY_KEY_SERVICE_KEYTAB, "/path/to/keytab");
+        configuration.set("hadoop.kerberos.min.seconds.before.relogin", "90");
         when(PxfUserGroupInformation.loginUserFromKeytab(configuration, "server", "config", "principal", "/path/to/keytab")).thenReturn(expectedLoginSession);
+        when(PxfUserGroupInformation.getKerberosMinMillisBeforeRelogin("server", configuration)).thenReturn(90000L);
 
         UserGroupInformation loginUGI = secureLogin.getLoginUser("server", "config", configuration);
 
@@ -175,6 +178,8 @@ public class SecureLoginTest {
         // verify static calls issued
         PowerMockito.verifyStatic();
         PxfUserGroupInformation.loginUserFromKeytab(configuration, "server", "config", "principal", "/path/to/keytab");
+        PowerMockito.verifyStatic();
+        PxfUserGroupInformation.getKerberosMinMillisBeforeRelogin("server", configuration);
         PowerMockito.verifyStatic(times(2)); // 1 extra relogin call
         PxfUserGroupInformation.reloginFromKeytab(expectedLoginSession);
 
@@ -244,6 +249,7 @@ public class SecureLoginTest {
         configuration.set("hadoop.security.authentication", "kerberos");
         configuration.set(PROPERTY_KEY_SERVICE_PRINCIPAL, "principal");
         configuration.set(PROPERTY_KEY_SERVICE_KEYTAB, "/path/to/keytab");
+        configuration.set("hadoop.kerberos.min.seconds.before.relogin", "90");
         when(PxfUserGroupInformation.loginUserFromKeytab(configuration, "server", "config", "principal", "/path/to/keytab")).thenReturn(expectedLoginSession);
 
         UserGroupInformation loginUGI = secureLogin.getLoginUser("server", "config", configuration);
@@ -256,12 +262,15 @@ public class SecureLoginTest {
 
         // ------------------- now change the principal in the configuration, login again -------------------------
 
-        LoginSession expectedDiffLoginSession = new LoginSession("config", "diff-principal", "/path/to/keytab", expectedUGI, null, 0);
+        LoginSession expectedDiffLoginSession = new LoginSession("config", "diff-principal", "/path/to/keytab", expectedUGI, null, 90000);
         Configuration diffConfiguration = new Configuration();
         diffConfiguration.set("hadoop.security.authentication", "kerberos");
         diffConfiguration.set(PROPERTY_KEY_SERVICE_PRINCIPAL, "diff-principal");
         diffConfiguration.set(PROPERTY_KEY_SERVICE_KEYTAB, "/path/to/keytab");
+        diffConfiguration.set("hadoop.kerberos.min.seconds.before.relogin", "180");
+        when(PxfUserGroupInformation.loginUserFromKeytab(configuration, "server", "config", "principal", "/path/to/keytab")).thenReturn(expectedLoginSession);
         when(PxfUserGroupInformation.loginUserFromKeytab(diffConfiguration, "server", "config", "diff-principal", "/path/to/keytab")).thenReturn(expectedDiffLoginSession);
+        when(PxfUserGroupInformation.getKerberosMinMillisBeforeRelogin("server", diffConfiguration)).thenReturn(180000L);
 
         UserGroupInformation diffLoginUGI = secureLogin.getLoginUser("server", "config", diffConfiguration);
 
@@ -280,6 +289,8 @@ public class SecureLoginTest {
 
         PowerMockito.verifyStatic();
         PxfUserGroupInformation.loginUserFromKeytab(diffConfiguration, "server", "config", "diff-principal", "/path/to/keytab");
+        PowerMockito.verifyStatic(times(2));
+        PxfUserGroupInformation.getKerberosMinMillisBeforeRelogin("server", diffConfiguration);
         PowerMockito.verifyStatic();
         PxfUserGroupInformation.reloginFromKeytab(expectedDiffLoginSession);
 

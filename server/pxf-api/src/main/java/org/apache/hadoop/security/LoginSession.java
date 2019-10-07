@@ -10,7 +10,7 @@ import java.util.Objects;
  * This class stores information about Kerberos login details for a given configuration server.
  * A subset of fields establishes session identity based on the server configuration.
  * Other fields are the result of the login action and do not establish identity.
- *
+ * <p>
  * This class has to be a member of <code>org.apache.hadoop.security</code> package as it needs access
  * to package-private <code>User</code> class.
  */
@@ -29,22 +29,24 @@ public class LoginSession {
 
     /**
      * Creates a new session object.
+     *
      * @param configDirectory server configuration directory
      * @param principalName   Kerberos principal name to use to obtain tokens
      * @param keytabPath      full path to a keytab file for the principal
      */
-    public LoginSession(String configDirectory, String principalName, String keytabPath) {
-        this(configDirectory, principalName, keytabPath, null, null, 0);
+    public LoginSession(String configDirectory, String principalName, String keytabPath, long kerberosMinMillisBeforeRelogin) {
+        this(configDirectory, principalName, keytabPath, null, null, kerberosMinMillisBeforeRelogin);
     }
 
     /**
      * Creates a new session object.
-     * @param configDirectory                 server configuration directory
-     * @param principalName                   Kerberos principal name to use to obtain tokens
-     * @param keytabPath                      full path to a keytab file for the principal
-     * @param loginUser                       UserGroupInformation for the given principal after login to Kerberos was performed
-     * @param subject                         the subject
-     * @param kerberosMinMillisBeforeRelogin  the number of milliseconds before re-login
+     *
+     * @param configDirectory                server configuration directory
+     * @param principalName                  Kerberos principal name to use to obtain tokens
+     * @param keytabPath                     full path to a keytab file for the principal
+     * @param loginUser                      UserGroupInformation for the given principal after login to Kerberos was performed
+     * @param subject                        the subject
+     * @param kerberosMinMillisBeforeRelogin the number of milliseconds before re-login
      */
     public LoginSession(String configDirectory, String principalName, String keytabPath, UserGroupInformation loginUser,
                         Subject subject, long kerberosMinMillisBeforeRelogin) {
@@ -61,6 +63,7 @@ public class LoginSession {
 
     /**
      * Get the login UGI for this session.
+     *
      * @return the UGI for this session
      */
     public UserGroupInformation getLoginUser() {
@@ -69,6 +72,7 @@ public class LoginSession {
 
     /**
      * Get the minimal number of milliseconds before re-login.
+     *
      * @return the minimal number of milliseconds before re-login.
      */
     public long getKerberosMinMillisBeforeRelogin() {
@@ -77,6 +81,7 @@ public class LoginSession {
 
     /**
      * Get the Subject used for this session.
+     *
      * @return the Subject for this session
      */
     public Subject getSubject() {
@@ -85,6 +90,7 @@ public class LoginSession {
 
     /**
      * Get the User for this session.
+     *
      * @return the User for this session.
      */
     public User getUser() {
@@ -93,6 +99,7 @@ public class LoginSession {
 
     /**
      * Get the path of the keytab file used to login.
+     *
      * @return the path of the keytab file used to login
      */
     public String getKeytabPath() {
@@ -101,6 +108,7 @@ public class LoginSession {
 
     /**
      * Get the name of the Kerberos principal used to login.
+     *
      * @return the name of the Kerberos principal used to login
      */
     public String getPrincipalName() {
