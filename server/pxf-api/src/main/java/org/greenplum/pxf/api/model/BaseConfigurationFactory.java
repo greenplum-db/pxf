@@ -7,6 +7,7 @@ import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.el.MethodNotFoundException;
 import java.io.File;
 import java.net.URL;
 import java.nio.file.DirectoryStream;
@@ -93,6 +94,15 @@ public class BaseConfigurationFactory implements ConfigurationFactory {
             processUserResource(configuration, serverName, userName, serverDirectories[0]);
         }
 
+        try {
+            // We need to set the restrict system properties to false so
+            // variables in the configuration get replaced by system property
+            // values
+            configuration.setRestrictSystemProps(false);
+        } catch (NoSuchMethodError e) {
+            // Expected exception for MapR
+        }
+
         return configuration;
     }
 
@@ -102,8 +112,7 @@ public class BaseConfigurationFactory implements ConfigurationFactory {
             for (Path path : stream) {
                 URL resourceURL = path.toUri().toURL();
                 LOG.debug("Adding configuration resource for server {} from {}", serverName, resourceURL);
-                // TODO: explain why are we passing restrictedParser set to false
-                configuration.addResource(resourceURL, false);
+                configuration.addResource(resourceURL);
                 // store the path to the resource in the configuration in case plugins need to access the files again
                 configuration.set(String.format("%s.%s", PXF_CONFIG_RESOURCE_PATH_PROPERTY, path.getFileName().toString()), resourceURL.toString());
             }
