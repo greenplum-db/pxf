@@ -39,13 +39,13 @@ public class SecureLoginTest {
     @Before
     public void setup() {
         secureLogin = SecureLogin.getInstance();
-        secureLogin.reset();
+        SecureLogin.reset();
         configuration = new Configuration();
         System.clearProperty(PROPERTY_KEY_USER_IMPERSONATION);
         System.clearProperty(PROPERTY_KEY_SERVICE_PRINCIPAL);
         System.clearProperty(PROPERTY_KEY_SERVICE_KEYTAB);
 
-        // simulate presense of krb.conf file
+        // simulate presence of krb.conf file
         System.setProperty("java.security.krb5.kdc", "localhost");
         System.setProperty("java.security.krb5.realm", "DEFAULT_REALM");
     }
@@ -64,8 +64,8 @@ public class SecureLoginTest {
 
         UserGroupInformation loginUGI = secureLogin.getLoginUser("server", "config", configuration);
 
-        LoginSession loginSession = secureLogin.getCache().get("server");
-        assertEquals(1, secureLogin.getCache().size());
+        LoginSession loginSession = SecureLogin.getCache().get("server");
+        assertEquals(1, SecureLogin.getCache().size());
         assertEquals(expectedLoginSession, loginSession);
         assertSame(loginUGI, loginSession.getLoginUser());
         assertEquals(System.getProperty("user.name"), loginUGI.getUserName());
@@ -83,8 +83,8 @@ public class SecureLoginTest {
 
         UserGroupInformation loginUGI = secureLogin.getLoginUser("server", "config", configuration);
 
-        LoginSession loginSession = secureLogin.getCache().get("server");
-        assertEquals(1, secureLogin.getCache().size());
+        LoginSession loginSession = SecureLogin.getCache().get("server");
+        assertEquals(1, SecureLogin.getCache().size());
         assertEquals(expectedLoginSession, loginSession);
         assertSame(loginUGI, loginSession.getLoginUser());
         assertEquals("foo", loginUGI.getUserName());
@@ -130,8 +130,8 @@ public class SecureLoginTest {
 
         UserGroupInformation loginUGI = secureLogin.getLoginUser("server", "config", configuration);
 
-        LoginSession loginSession = secureLogin.getCache().get("server");
-        assertEquals(1, secureLogin.getCache().size());
+        LoginSession loginSession = SecureLogin.getCache().get("server");
+        assertEquals(1, SecureLogin.getCache().size());
         assertEquals(expectedLoginSession, loginSession);
         assertSame(loginUGI, loginSession.getLoginUser());
         assertSame(expectedUGI, loginUGI); // since actual login was mocked, we should get back whatever we mocked
@@ -140,7 +140,7 @@ public class SecureLoginTest {
         PowerMockito.verifyStatic();
         PxfUserGroupInformation.loginUserFromKeytab(configuration, "server", "config", "principal", "/path/to/keytab");
         PowerMockito.verifyStatic();
-        PxfUserGroupInformation.reloginFromKeytab(expectedLoginSession);
+        PxfUserGroupInformation.reloginFromKeytab("server", expectedLoginSession);
 
         PowerMockito.verifyNoMoreInteractions(PxfUserGroupInformation.class);
     }
@@ -159,17 +159,17 @@ public class SecureLoginTest {
 
         UserGroupInformation loginUGI = secureLogin.getLoginUser("server", "config", configuration);
 
-        LoginSession loginSession = secureLogin.getCache().get("server");
-        assertEquals(1, secureLogin.getCache().size());
+        LoginSession loginSession = SecureLogin.getCache().get("server");
+        assertEquals(1, SecureLogin.getCache().size());
         assertEquals(expectedLoginSession, loginSession);
         assertSame(loginUGI, loginSession.getLoginUser());
         assertSame(expectedUGI, loginUGI); // since actual login was mocked, we should get back whatever we mocked
 
         // now login the same user again, should use cache and not login again, but call relogin to renew the tokens
-        UserGroupInformation loginAgainUGI = secureLogin.getLoginUser("server", "config", configuration);
+        secureLogin.getLoginUser("server", "config", configuration);
 
-        LoginSession loginAgainSession = secureLogin.getCache().get("server");
-        assertEquals(1, secureLogin.getCache().size());
+        LoginSession loginAgainSession = SecureLogin.getCache().get("server");
+        assertEquals(1, SecureLogin.getCache().size());
         assertEquals(expectedLoginSession, loginAgainSession);
         assertSame(loginUGI, loginAgainSession.getLoginUser());
         assertSame(expectedUGI, loginUGI); // since actual login was mocked, we should get back whatever we mocked
@@ -181,7 +181,7 @@ public class SecureLoginTest {
         PowerMockito.verifyStatic();
         PxfUserGroupInformation.getKerberosMinMillisBeforeRelogin("server", configuration);
         PowerMockito.verifyStatic(times(2)); // 1 extra relogin call
-        PxfUserGroupInformation.reloginFromKeytab(expectedLoginSession);
+        PxfUserGroupInformation.reloginFromKeytab("server", expectedLoginSession);
 
         PowerMockito.verifyNoMoreInteractions(PxfUserGroupInformation.class);
     }
@@ -200,8 +200,8 @@ public class SecureLoginTest {
 
         UserGroupInformation loginUGI = secureLogin.getLoginUser("server", "config", configuration);
 
-        LoginSession loginSession = secureLogin.getCache().get("server");
-        assertEquals(1, secureLogin.getCache().size());
+        LoginSession loginSession = SecureLogin.getCache().get("server");
+        assertEquals(1, SecureLogin.getCache().size());
         assertEquals(expectedLoginSession, loginSession);
         assertSame(loginUGI, loginSession.getLoginUser());
         assertSame(expectedUGI, loginUGI); // since actual login was mocked, we should get back whatever we mocked
@@ -218,8 +218,8 @@ public class SecureLoginTest {
 
         UserGroupInformation diffLoginUGI = secureLogin.getLoginUser("diff-server", "diff-config", diffConfiguration);
 
-        LoginSession diffLoginSession = secureLogin.getCache().get("diff-server");
-        assertEquals(2, secureLogin.getCache().size());
+        LoginSession diffLoginSession = SecureLogin.getCache().get("diff-server");
+        assertEquals(2, SecureLogin.getCache().size());
         assertEquals(expectedDiffLoginSession, diffLoginSession);
         assertSame(loginUGI, diffLoginSession.getLoginUser());
         assertSame(expectedUGI, diffLoginUGI); // since actual login was mocked, we should get back whatever we mocked
@@ -229,12 +229,12 @@ public class SecureLoginTest {
         PowerMockito.verifyStatic();
         PxfUserGroupInformation.loginUserFromKeytab(configuration, "server", "config", "principal", "/path/to/keytab");
         PowerMockito.verifyStatic();
-        PxfUserGroupInformation.reloginFromKeytab(expectedLoginSession);
+        PxfUserGroupInformation.reloginFromKeytab("server", expectedLoginSession);
 
         PowerMockito.verifyStatic();
         PxfUserGroupInformation.loginUserFromKeytab(diffConfiguration, "diff-server", "diff-config", "principal", "/path/to/keytab");
         PowerMockito.verifyStatic();
-        PxfUserGroupInformation.reloginFromKeytab(expectedDiffLoginSession);
+        PxfUserGroupInformation.reloginFromKeytab("diff-server", expectedDiffLoginSession);
 
         PowerMockito.verifyNoMoreInteractions(PxfUserGroupInformation.class);
     }
@@ -254,8 +254,8 @@ public class SecureLoginTest {
 
         UserGroupInformation loginUGI = secureLogin.getLoginUser("server", "config", configuration);
 
-        LoginSession loginSession = secureLogin.getCache().get("server");
-        assertEquals(1, secureLogin.getCache().size());
+        LoginSession loginSession = SecureLogin.getCache().get("server");
+        assertEquals(1, SecureLogin.getCache().size());
         assertEquals(expectedLoginSession, loginSession);
         assertSame(loginUGI, loginSession.getLoginUser());
         assertSame(expectedUGI, loginUGI); // since actual login was mocked, we should get back whatever we mocked
@@ -274,8 +274,8 @@ public class SecureLoginTest {
 
         UserGroupInformation diffLoginUGI = secureLogin.getLoginUser("server", "config", diffConfiguration);
 
-        LoginSession diffLoginSession = secureLogin.getCache().get("server");
-        assertEquals(1, secureLogin.getCache().size());
+        LoginSession diffLoginSession = SecureLogin.getCache().get("server");
+        assertEquals(1, SecureLogin.getCache().size());
         assertEquals(expectedDiffLoginSession, diffLoginSession);
         assertSame(loginUGI, diffLoginSession.getLoginUser());
         assertSame(expectedUGI, diffLoginUGI); // since actual login was mocked, we should get back whatever we mocked
@@ -285,14 +285,14 @@ public class SecureLoginTest {
         PowerMockito.verifyStatic();
         PxfUserGroupInformation.loginUserFromKeytab(configuration, "server", "config", "principal", "/path/to/keytab");
         PowerMockito.verifyStatic();
-        PxfUserGroupInformation.reloginFromKeytab(expectedLoginSession);
+        PxfUserGroupInformation.reloginFromKeytab("server", expectedLoginSession);
 
         PowerMockito.verifyStatic();
         PxfUserGroupInformation.loginUserFromKeytab(diffConfiguration, "server", "config", "diff-principal", "/path/to/keytab");
         PowerMockito.verifyStatic(times(2));
         PxfUserGroupInformation.getKerberosMinMillisBeforeRelogin("server", diffConfiguration);
         PowerMockito.verifyStatic();
-        PxfUserGroupInformation.reloginFromKeytab(expectedDiffLoginSession);
+        PxfUserGroupInformation.reloginFromKeytab("server", expectedDiffLoginSession);
 
         PowerMockito.verifyNoMoreInteractions(PxfUserGroupInformation.class);
     }
@@ -301,44 +301,44 @@ public class SecureLoginTest {
 
     @Test
     public void testPrincipalAbsentForServerNoSystemDefault() {
-        assertNull(secureLogin.getServicePrincipal("default", configuration));
-        assertNull(secureLogin.getServicePrincipal("any", configuration));
+        assertNull(SecureLogin.getServicePrincipal("default", configuration));
+        assertNull(SecureLogin.getServicePrincipal("any", configuration));
     }
 
     @Test
     public void testPrincipalAbsentForServerWithSystemDefault() {
         System.setProperty(PROPERTY_KEY_SERVICE_PRINCIPAL, "foo");
-        assertEquals("foo", secureLogin.getServicePrincipal("default", configuration));
-        assertNull(secureLogin.getServicePrincipal("any", configuration));
+        assertEquals("foo", SecureLogin.getServicePrincipal("default", configuration));
+        assertNull(SecureLogin.getServicePrincipal("any", configuration));
     }
 
     @Test
     public void testPrincipalSpecifiedForServer() {
         System.setProperty(PROPERTY_KEY_SERVICE_PRINCIPAL, "foo");
         configuration.set(PROPERTY_KEY_SERVICE_PRINCIPAL, "bar");
-        assertEquals("bar", secureLogin.getServicePrincipal("default", configuration));
-        assertEquals("bar", secureLogin.getServicePrincipal("any", configuration));
+        assertEquals("bar", SecureLogin.getServicePrincipal("default", configuration));
+        assertEquals("bar", SecureLogin.getServicePrincipal("any", configuration));
     }
 
     @Test
     public void testKeytabAbsentForServerNoSystemDefault() {
-        assertNull(secureLogin.getServiceKeytab("default", configuration));
-        assertNull(secureLogin.getServiceKeytab("any", configuration));
+        assertNull(SecureLogin.getServiceKeytab("default", configuration));
+        assertNull(SecureLogin.getServiceKeytab("any", configuration));
     }
 
     @Test
     public void testKeytabAbsentForServerWithSystemDefault() {
         System.setProperty(PROPERTY_KEY_SERVICE_KEYTAB, "foo");
-        assertEquals("foo", secureLogin.getServiceKeytab("default", configuration));
-        assertNull(secureLogin.getServiceKeytab("any", configuration));
+        assertEquals("foo", SecureLogin.getServiceKeytab("default", configuration));
+        assertNull(SecureLogin.getServiceKeytab("any", configuration));
     }
 
     @Test
     public void testKeytabSpecifiedForServer() {
         System.setProperty(PROPERTY_KEY_SERVICE_KEYTAB, "foo");
         configuration.set(PROPERTY_KEY_SERVICE_KEYTAB, "bar");
-        assertEquals("bar", secureLogin.getServiceKeytab("default", configuration));
-        assertEquals("bar", secureLogin.getServiceKeytab("any", configuration));
+        assertEquals("bar", SecureLogin.getServiceKeytab("default", configuration));
+        assertEquals("bar", SecureLogin.getServiceKeytab("any", configuration));
     }
 
     /* ---------- methods to test impersonation property ---------- */
