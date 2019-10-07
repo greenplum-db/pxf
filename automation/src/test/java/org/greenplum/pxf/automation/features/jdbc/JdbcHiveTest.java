@@ -23,9 +23,13 @@ public class JdbcHiveTest extends BaseFeature {
     private static final String GPDB_TYPES_TABLE_NAME_2 = "pxf_jdbc_hive_2_types_table";
     private static final String GPDB_QUERY_TABLE_NAME_2 = "pxf_jdbc_hive_2_types_server_table";
 
+    private static final String GPDB_TYPES_TABLE_NAME_3 = "pxf_jdbc_hive_non_secure_types_table";
+    private static final String GPDB_QUERY_TABLE_NAME_3 = "pxf_jdbc_hive_non_secure_types_server_table";
+
     private static final String HIVE_TYPES_TABLE_NAME = "jdbc_hive_types_table";
     private static final String HIVE_TYPES_FILE_NAME_1 = "hive_types_no_binary.txt";
-    private static final String HIVE_TYPES_FILE_NAME_2 = "hive_types_no_binary_different_names.txt";
+    private static final String HIVE_TYPES_FILE_NAME_2 = "hive_types_no_binary_second.txt";
+    private static final String HIVE_TYPES_FILE_NAME_3 = "hive_types_no_binary_third.txt";
 
     private static final String[] GPDB_TYPES_TABLE_FIELDS = {
             "s1    TEXT",
@@ -67,6 +71,7 @@ public class JdbcHiveTest extends BaseFeature {
 
     private Hive hive;
     private Hive hive2;
+    private Hive hiveNonSecure;
     private ExternalTable pxfJdbcHiveTypesTable, pxfJdbcHiveTypesServerTable;
 
     // and another kerberized hadoop environment
@@ -136,7 +141,7 @@ public class JdbcHiveTest extends BaseFeature {
     }
 
     @Test(groups = {"features", "security"})
-    public void jdbcMultipleHiveRead() throws Exception {
+    public void jdbcHiveReadFromTwoSecuredServers() throws Exception {
         // Initialize an additional HDFS system object (optional system object)
         hdfs2 = (Hdfs) systemManager.
                 getSystemObject("/sut", "hdfs2", -1, (SystemObject) null, false, (String) null, SutFactory.getInstance().getSutInstance());
@@ -150,6 +155,17 @@ public class JdbcHiveTest extends BaseFeature {
         prepareData(hive2, hdfs2, HIVE_TYPES_FILE_NAME_2);
         createTables(hive2, "db-hive-kerberos", GPDB_TYPES_TABLE_NAME_2, GPDB_QUERY_TABLE_NAME_2);
 
-        runTincTest("pxf.features.jdbc.multiple-hive.runTest");
+        runTincTest("pxf.features.jdbc.two_secured_hive.runTest");
+    }
+
+    @Test(groups = {"features", "security"})
+    public void jdbcHiveReadFromSecureServerAndNonSecuredServer() throws Exception {
+        if (hdfsNonSecure == null) return;
+
+        hiveNonSecure = (Hive) SystemManagerImpl.getInstance().getSystemObject("hiveNonSecure");
+        prepareData(hiveNonSecure, hdfsNonSecure, HIVE_TYPES_FILE_NAME_3);
+        createTables(hiveNonSecure, "db-hive-non-secure", GPDB_TYPES_TABLE_NAME_3, GPDB_QUERY_TABLE_NAME_3);
+
+        runTincTest("pxf.features.jdbc.secured_and_non_secured_hive.runTest");
     }
 }

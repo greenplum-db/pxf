@@ -234,6 +234,14 @@ function run_pxf_automation() {
 		# Create the non-secure cluster configuration
 		NON_SECURE_HADOOP_IP=$(grep < cluster_env_files/etc_hostfile edw0 | awk '{print $1}')
 		ssh gpadmin@mdw "
+			mkdir -p ${PXF_CONF_DIR}/servers/db-hive-non-secure &&
+			cp ${PXF_CONF_DIR}/templates/jdbc-site.xml ${PXF_CONF_DIR}/servers/db-hive-non-secure &&
+			sed -i -e 's|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.apache.hive.jdbc.HiveDriver|' \
+				-e \"s|YOUR_DATABASE_JDBC_URL|jdbc:hive2://${NON_SECURE_HADOOP_IP}:10000/default|\" \
+				-e 's|YOUR_DATABASE_JDBC_USER||' \
+				-e 's|YOUR_DATABASE_JDBC_PASSWORD||' \
+				${PXF_CONF_DIR}/servers/db-hive-non-secure/jdbc-site.xml &&
+			cp ~gpadmin/hive-report.sql ${PXF_CONF_DIR}/servers/db-hive-non-secure &&
 			mkdir -p ${PXF_CONF_DIR}/servers/hdfs-non-secure &&
 			cp ${PXF_CONF_DIR}/templates/{hdfs,mapred,yarn,core,hbase,hive}-site.xml ${PXF_CONF_DIR}/servers/hdfs-non-secure &&
 			sed -i -e 's/\(0.0.0.0\|localhost\|127.0.0.1\)/${NON_SECURE_HADOOP_IP}/g' ${PXF_CONF_DIR}/servers/hdfs-non-secure/*-site.xml &&

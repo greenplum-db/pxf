@@ -80,6 +80,11 @@
         <host>second-hadoop</host>
         <port>10000</port>
     </hive2>
+    <hiveNonSecure>
+        <class>org.greenplum.pxf.automation.components.hive.Hive</class>
+        <host>non-secure-hadoop</host>
+        <port>10000</port>
+    </hiveNonSecure>
     <tinc>
         <class>org.greenplum.pxf.automation.components.tinc.Tinc</class>
         <host>localhost</host>
