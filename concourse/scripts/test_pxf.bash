@@ -79,7 +79,7 @@ function run_pxf_automation() {
 		export JAVA_HOME=${JAVA_HOME}
 
 		cd pxf_src/automation
-		make -C pxf_src/automation GROUP=${GROUP}
+		make GROUP=${GROUP}
 	EOF
 
 	chown gpadmin:gpadmin ~gpadmin/run_pxf_automation_test.sh
