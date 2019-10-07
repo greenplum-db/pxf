@@ -38,6 +38,7 @@ public class PxfUserGroupInformationTest {
         }
     }
 
+    private String serverName;
     private Configuration configuration;
     private UserGroupInformation ugi;
     private Subject subject;
@@ -60,6 +61,7 @@ public class PxfUserGroupInformationTest {
         nowMs = System.currentTimeMillis();
         configuration = new Configuration();
         user = new User("user");
+        serverName = "server";
 
         // prepare common mocks
         mockTGT = PowerMockito.mock(KerberosTicket.class); // has final methods, needs PowerMock to mock it
@@ -131,7 +133,7 @@ public class PxfUserGroupInformationTest {
         // do NOT set authentication method of UGI to KERBEROS, will cause NOOP for relogin
         session = new LoginSession("config", "principal", "keytab", ugi, subject, 1);
 
-        PxfUserGroupInformation.reloginFromKeytab(session);
+        PxfUserGroupInformation.reloginFromKeytab(serverName, session);
 
         verifyZeroInteractions(mockLoginContext); // proves noop
     }
@@ -145,7 +147,7 @@ public class PxfUserGroupInformationTest {
         ugi.setAuthenticationMethod(UserGroupInformation.AuthenticationMethod.KERBEROS);
         session = new LoginSession("config", "principal", "keytab", ugi, subject, 1);
 
-        PxfUserGroupInformation.reloginFromKeytab(session);
+        PxfUserGroupInformation.reloginFromKeytab(serverName, session);
 
         verifyZeroInteractions(mockLoginContext); // proves noop
     }
@@ -161,7 +163,7 @@ public class PxfUserGroupInformationTest {
         // set 33 secs between re-login attempts
         session = new LoginSession("config", "principal", "keytab", ugi, subject, 55000L);
 
-        PxfUserGroupInformation.reloginFromKeytab(session);
+        PxfUserGroupInformation.reloginFromKeytab(serverName, session);
 
         verifyZeroInteractions(mockLoginContext); // proves noop
     }
@@ -184,7 +186,7 @@ public class PxfUserGroupInformationTest {
         // leave user.lastLogin at 0 to simulate old login
         session = new LoginSession("config", "principal", "keytab", ugi, subject, 1);
 
-        PxfUserGroupInformation.reloginFromKeytab(session);
+        PxfUserGroupInformation.reloginFromKeytab(serverName, session);
 
         verifyZeroInteractions(mockLoginContext);
     }
@@ -203,7 +205,7 @@ public class PxfUserGroupInformationTest {
         // leave user.lastLogin at 0 to simulate old login
         session = new LoginSession("config", "principal", "keytab", ugi, subject, 1);
 
-        PxfUserGroupInformation.reloginFromKeytab(session);
+        PxfUserGroupInformation.reloginFromKeytab(serverName, session);
     }
 
     @Test
@@ -220,7 +222,7 @@ public class PxfUserGroupInformationTest {
         // leave user.lastLogin at 0 to simulate old login
         session = new LoginSession("config", "principal", null, ugi, subject, 1);
 
-        PxfUserGroupInformation.reloginFromKeytab(session);
+        PxfUserGroupInformation.reloginFromKeytab(serverName, session);
     }
 
     /* ---------- Test below follow full login path via a few alternatives ---------- */
@@ -246,7 +248,7 @@ public class PxfUserGroupInformationTest {
         mockAnotherLoginContext = PowerMockito.mock(LoginContext.class);
         PowerMockito.whenNew(LoginContext.class).withAnyArguments().thenReturn(mockAnotherLoginContext);
 
-        PxfUserGroupInformation.reloginFromKeytab(session);
+        PxfUserGroupInformation.reloginFromKeytab(serverName, session);
 
         assertNotSame(mockLoginContext, user.getLogin());
         assertSame(mockAnotherLoginContext, user.getLogin());
@@ -284,7 +286,7 @@ public class PxfUserGroupInformationTest {
         mockAnotherLoginContext = PowerMockito.mock(LoginContext.class);
         PowerMockito.whenNew(LoginContext.class).withAnyArguments().thenReturn(mockAnotherLoginContext);
 
-        PxfUserGroupInformation.reloginFromKeytab(session);
+        PxfUserGroupInformation.reloginFromKeytab(serverName, session);
 
         assertNotSame(mockLoginContext, user.getLogin());
         assertSame(mockAnotherLoginContext, user.getLogin());
@@ -316,7 +318,7 @@ public class PxfUserGroupInformationTest {
         PowerMockito.whenNew(LoginContext.class).withAnyArguments().thenReturn(mockAnotherLoginContext);
         doThrow(new LoginException("foo")).when(mockAnotherLoginContext).login(); // simulate login failure
 
-        PxfUserGroupInformation.reloginFromKeytab(session);
+        PxfUserGroupInformation.reloginFromKeytab(serverName, session);
     }
 
 }

@@ -33,7 +33,6 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
 
 
 /**
@@ -62,10 +61,6 @@ public class SecureLogin {
     private static final String PROPERTY_KEY_USER_IMPERSONATION = "pxf.service.user.impersonation.enabled";
 
     private static final Map<String, LoginSession> loginMap = new HashMap<>();
-
-    // For Tracing purposes to make sure the loginCount and reloginCount remains reasonable
-    private static final Map<String, AtomicLong> loginCountMap = new HashMap<>();
-    private static final Map<String, AtomicLong> reloginCountMap = new HashMap<>();
 
     private static final SecureLogin instance = new SecureLogin();
 
@@ -136,23 +131,7 @@ public class SecureLogin {
 
         // try to relogin to keep the TGT token from expiring, if it still has a long validity, it will be a no-op
         if (Utilities.isSecurityEnabled(configuration)) {
-            PxfUserGroupInformation.reloginFromKeytab(loginSession);
-        }
-
-        if (LOG.isTraceEnabled()) {
-            AtomicLong loginPerServer = loginCountMap.get(serverName);
-            AtomicLong reloginPerServer = reloginCountMap.get(serverName);
-
-            long loginPerServerValue = loginPerServer != null ? loginPerServer.get() : 0;
-            long reloginPerServerValue = reloginPerServer != null ? reloginPerServer.get() : 0;
-
-            LOG.trace("SecureLogin metrics: {} login{} and {} relogin{} for server {}",
-                    loginPerServerValue,
-                    loginPerServerValue == 1 ? "" : "s",
-                    reloginPerServerValue,
-                    reloginPerServerValue == 1 ? "" : "s",
-                    serverName
-            );
+            PxfUserGroupInformation.reloginFromKeytab(serverName, loginSession);
         }
 
         return loginSession.getLoginUser();
@@ -198,17 +177,6 @@ public class SecureLogin {
                     .loginUserFromKeytab(configuration, serverName, configDirectory, principal, keytabFilename);
 
             LOG.info("Logged in as principal {} for server {}", loginSession.getLoginUser(), serverName);
-
-            // Keep track of the number of logins per server to make sure
-            // we are not logging in too often
-            AtomicLong loginCountPerServer = loginCountMap.get(serverName);
-
-            if (loginCountPerServer == null) {
-                loginCountPerServer = new AtomicLong(1L);
-                loginCountMap.put(serverName, loginCountPerServer);
-            } else {
-                loginCountPerServer.addAndGet(1L);
-            }
 
             return loginSession;
         } catch (Exception e) {

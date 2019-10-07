@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 
 import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.HADOOP_KERBEROS_MIN_SECONDS_BEFORE_RELOGIN;
@@ -47,11 +48,15 @@ public abstract class PxfUserGroupInformation {
 
     private static final boolean windows = System.getProperty("os.name").startsWith("Windows");
     private static final boolean is64Bit = System.getProperty("os.arch").contains("64") ||
-                                           System.getProperty("os.arch").contains("s390x");
+            System.getProperty("os.arch").contains("s390x");
     private static final boolean aix = System.getProperty("os.name").equals("AIX");
 
     // package-private Subject provider to allow mock Subjects having User during testing
     static Supplier<Subject> subjectProvider = () -> new Subject();
+
+    // For Tracing purposes to make sure the loginCount and reloginCount remains reasonable
+    private static final Map<String, AtomicLong> loginCountMap = new HashMap<>();
+    private static final Map<String, AtomicLong> reloginCountMap = new HashMap<>();
 
     /**
      * Log a user in from a keytab file. Loads a user identity from a keytab
@@ -90,6 +95,12 @@ public abstract class PxfUserGroupInformation {
 
             LOG.info("Login successful for principal {} using keytab file {}", principalName, keytabFilename);
 
+            // Keep track of the number of logins per server to make sure
+            // we are not logging in too often
+            trackEventPerServer(serverName, loginCountMap);
+
+            logStatistics(serverName);
+
             // store all the relevant information in the login session and return it
             return new LoginSession(configDirectory, principalName, keytabFilename, loginUser, subject,
                     getKerberosMinMillisBeforeRelogin(serverName, configuration));
@@ -102,7 +113,6 @@ public abstract class PxfUserGroupInformation {
         }
     }
 
-
     /**
      * Re-Login a user in from a keytab file. Loads a user identity from a keytab
      * file and logs them in. They become the currently logged-in user. This
@@ -111,10 +121,12 @@ public abstract class PxfUserGroupInformation {
      * The Subject field of this UserGroupInformation object is updated to have
      * the new credentials.
      *
+     * @param serverName   the name of the server
+     * @param loginSession the login session
      * @throws IOException
      * @throws KerberosAuthException on a failure
      */
-    public static void reloginFromKeytab(LoginSession loginSession) throws KerberosAuthException {
+    public static void reloginFromKeytab(String serverName, LoginSession loginSession) throws KerberosAuthException {
 
         UserGroupInformation ugi = loginSession.getLoginUser();
 
@@ -171,7 +183,13 @@ public abstract class PxfUserGroupInformation {
                 kae.setKeytabFile(keytabFile);
                 throw kae;
             }
+
+            // Keep track of the number of relogins per server to make sure
+            // we are not re-logging in too often
+            trackEventPerServer(serverName, reloginCountMap);
         }
+
+        logStatistics(serverName);
     }
 
     public static long getKerberosMinMillisBeforeRelogin(String serverName, Configuration configuration) {
@@ -191,7 +209,7 @@ public abstract class PxfUserGroupInformation {
     static private void fixKerberosTicketOrder(Subject subject) {
         Set<Object> creds = subject.getPrivateCredentials();
         synchronized (creds) {
-            for (Iterator<Object> iter = creds.iterator(); iter.hasNext();) {
+            for (Iterator<Object> iter = creds.iterator(); iter.hasNext(); ) {
                 Object cred = iter.next();
                 if (cred instanceof KerberosTicket) {
                     KerberosTicket ticket = (KerberosTicket) cred;
@@ -294,6 +312,35 @@ public abstract class PxfUserGroupInformation {
 
     private static String prependFileAuthority(String keytabPath) {
         return keytabPath.startsWith("file://") ? keytabPath : "file://" + keytabPath;
+    }
+
+    private static void trackEventPerServer(String serverName, Map<String, AtomicLong> map) {
+        AtomicLong loginCountPerServer = map.get(serverName);
+
+        if (loginCountPerServer == null) {
+            loginCountPerServer = new AtomicLong(1L);
+            map.put(serverName, loginCountPerServer);
+        } else {
+            loginCountPerServer.addAndGet(1L);
+        }
+    }
+
+    private static void logStatistics(String serverName) {
+        if (!LOG.isTraceEnabled()) return;
+
+        AtomicLong loginPerServer = loginCountMap.get(serverName);
+        AtomicLong reloginPerServer = reloginCountMap.get(serverName);
+
+        long loginPerServerValue = loginPerServer != null ? loginPerServer.get() : 0;
+        long reloginPerServerValue = reloginPerServer != null ? reloginPerServer.get() : 0;
+
+        LOG.trace("PxfUserGroupInformation metrics: {} login{} and {} relogin{} for server {}",
+                loginPerServerValue,
+                loginPerServerValue == 1 ? "" : "s",
+                reloginPerServerValue,
+                reloginPerServerValue == 1 ? "" : "s",
+                serverName
+        );
     }
 
     /**
