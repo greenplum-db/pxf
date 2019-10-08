@@ -287,7 +287,7 @@ public class HiveBaseTest extends BaseFeature {
 
     void prepareSmallData() throws Exception {
 
-        prepareSmallData(hdfs, hive, hiveSmallDataTable, HIVE_SMALL_DATA_TABLE, HIVE_SMALLDATA_COLS, HIVE_DATA_FILE_NAME);
+        hiveSmallDataTable = prepareSmallData(hdfs, hive, hiveSmallDataTable, HIVE_SMALL_DATA_TABLE, HIVE_SMALLDATA_COLS, HIVE_DATA_FILE_NAME);
     }
 
     HiveTable prepareSmallData(Hdfs hdfs, Hive hive, HiveTable hiveTable, String tableName, String[] tableColumns, String dataFileName) throws Exception {
