@@ -1,0 +1,85 @@
+-- start_ignore
+-- end_ignore
+-- @description query02 query with complex WHERE clause and some projected columns
+-- two queries with the same WHERE clause but different columns selected
+-- number of rows should be the same
+SELECT t1, t2
+FROM pxf_hive_small_data
+WHERE to_timestamp(1505056530 + num1 * 86400)::DATE = '2017-09-15'::DATE
+  AND t2 = 's_10';
+  t1  |  t2  
+------+------
+ row5 | s_10
+(1 row)
+
+SELECT t1, t2, num1
+FROM pxf_hive_small_data
+WHERE to_timestamp(1505056530 + num1 * 86400)::DATE = '2017-09-15'::DATE
+  AND t2 = 's_10';
+  t1  |  t2  | num1 
+------+------+------
+ row5 | s_10 |    5
+(1 row)
+
+SELECT t1, t2
+FROM pxf_hive_small_data_hive_non_secure
+WHERE to_timestamp(1505056530 + num1 * 86400)::DATE = '2017-09-15'::DATE
+  AND t2 = 's_10';
+     t1     |  t2  
+------------+------
+ third_row5 | s_10
+(1 row)
+
+SELECT t1, t2, num1
+FROM pxf_hive_small_data_hive_non_secure
+WHERE to_timestamp(1505056530 + num1 * 86400)::DATE = '2017-09-15'::DATE
+  AND t2 = 's_10';
+     t1     |  t2  | num1 
+------------+------+------
+ third_row5 | s_10 |    5
+(1 row)
+
+SELECT t1, t2
+FROM pxf_hive_small_data
+UNION ALL
+SELECT t1, t2
+FROM pxf_hive_small_data_hive_non_secure
+WHERE to_timestamp(1505056530 + num1 * 86400)::DATE = '2017-09-15'::DATE
+  AND t2 = 's_10';
+     t1     |  t2  
+------------+------
+ row1       | s_6
+ row2       | s_7
+ row3       | s_8
+ row4       | s_9
+ row5       | s_10
+ row6       | s_11
+ row7       | s_12
+ row8       | s_13
+ row9       | s_14
+ row10      | s_15
+ third_row5 | s_10
+(11 rows)
+
+SELECT t1, t2, num1
+FROM pxf_hive_small_data
+UNION ALL
+SELECT t1, t2, num1
+FROM pxf_hive_small_data_hive_non_secure
+WHERE to_timestamp(1505056530 + num1 * 86400)::DATE = '2017-09-15'::DATE
+  AND t2 = 's_10';
+     t1     |  t2  | num1 
+------------+------+------
+ row1       | s_6  |    1
+ row2       | s_7  |    2
+ row3       | s_8  |    3
+ row4       | s_9  |    4
+ row5       | s_10 |    5
+ row6       | s_11 |    6
+ row7       | s_12 |    7
+ row8       | s_13 |    8
+ row9       | s_14 |    9
+ row10      | s_15 |   10
+ third_row5 | s_10 |    5
+(11 rows)
+

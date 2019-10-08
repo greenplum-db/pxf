@@ -80,11 +80,15 @@ public enum HcfsType {
      * @param context The input data parameters
      * @return an absolute data path
      */
-    public static HcfsType getHcfsType(Configuration conf, RequestContext context) {
-        String scheme = getScheme(conf, context);
+    public static HcfsType getHcfsType(Configuration configuration, RequestContext context) {
+        String scheme = getScheme(configuration, context);
 
         // now we have scheme, resolve to enum
-        return HcfsType.fromString(scheme.toUpperCase());
+        HcfsType type = HcfsType.fromString(scheme.toUpperCase());
+        // disableSecureTokenRenewal for this configuration if non-secure
+        String uri = type.getDataUriForPrefix(configuration, "/", scheme);
+        type.disableSecureTokenRenewal(uri, configuration);
+        return type;
     }
 
     private static String getScheme(Configuration configuration, RequestContext context) {
@@ -181,7 +185,6 @@ public enum HcfsType {
      */
     public String getDataUri(Configuration configuration, RequestContext context) {
         String uri = getDataUriForPrefix(configuration, context, this.prefix);
-        //TODO -- is still relevant with multi-kerberos support, since there's no global security setting anymore ?
         disableSecureTokenRenewal(uri, configuration);
         return uri;
     }
@@ -197,14 +200,20 @@ public enum HcfsType {
     }
 
     protected String getDataUriForPrefix(Configuration configuration, RequestContext context, String scheme) {
+
+        return getDataUriForPrefix(configuration, context.getDataSource(), scheme);
+    }
+
+    protected String getDataUriForPrefix(Configuration configuration, String dataSource, String scheme) {
+
         URI defaultFS = FileSystem.getDefaultUri(configuration);
 
         if (FILE_SCHEME.equals(defaultFS.getScheme())) {
             // if the defaultFS is file://, but enum is not FILE, use enum scheme only
-            return scheme + normalizeDataSource(context.getDataSource());
+            return scheme + normalizeDataSource(dataSource);
         } else {
             // if the defaultFS is not file://, use it, instead of enum scheme and append user's path
-            return StringUtils.removeEnd(defaultFS.toString(), "/") + "/" + StringUtils.removeStart(context.getDataSource(), "/");
+            return StringUtils.removeEnd(defaultFS.toString(), "/") + "/" + StringUtils.removeStart(dataSource, "/");
         }
     }
 

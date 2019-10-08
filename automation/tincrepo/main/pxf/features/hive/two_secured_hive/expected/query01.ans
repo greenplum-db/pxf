@@ -1,0 +1,67 @@
+-- start_ignore
+-- end_ignore
+-- @description query01 for PXF with Two Secured Hive Small Data cases
+SELECT *
+from pxf_hive_small_data
+ORDER BY t1;
+  t1   |  t2  | num1 | dub1 
+-------+------+------+------
+ row1  | s_6  |    1 |    6
+ row10 | s_15 |   10 |   15
+ row2  | s_7  |    2 |    7
+ row3  | s_8  |    3 |    8
+ row4  | s_9  |    4 |    9
+ row5  | s_10 |    5 |   10
+ row6  | s_11 |    6 |   11
+ row7  | s_12 |    7 |   12
+ row8  | s_13 |    8 |   13
+ row9  | s_14 |    9 |   14
+(10 rows)
+
+SELECT *
+from pxf_hive_small_data_hive_secure
+ORDER BY t1;
+      t1      |  t2  | num1 | dub1 
+--------------+------+------+------
+ second_row1  | s_6  |    1 |    6
+ second_row10 | s_15 |   10 |   15
+ second_row2  | s_7  |    2 |    7
+ second_row3  | s_8  |    3 |    8
+ second_row4  | s_9  |    4 |    9
+ second_row5  | s_10 |    5 |   10
+ second_row6  | s_11 |    6 |   11
+ second_row7  | s_12 |    7 |   12
+ second_row8  | s_13 |    8 |   13
+ second_row9  | s_14 |    9 |   14
+(10 rows)
+
+SELECT *
+from pxf_hive_small_data
+UNION ALL
+SELECT *
+from pxf_hive_small_data_hive_secure
+ORDER BY t1;
+      t1      |  t2  | num1 | dub1 
+--------------+------+------+------
+ row1         | s_6  |    1 |    6
+ row10        | s_15 |   10 |   15
+ row2         | s_7  |    2 |    7
+ row3         | s_8  |    3 |    8
+ row4         | s_9  |    4 |    9
+ row5         | s_10 |    5 |   10
+ row6         | s_11 |    6 |   11
+ row7         | s_12 |    7 |   12
+ row8         | s_13 |    8 |   13
+ row9         | s_14 |    9 |   14
+ second_row1  | s_6  |    1 |    6
+ second_row10 | s_15 |   10 |   15
+ second_row2  | s_7  |    2 |    7
+ second_row3  | s_8  |    3 |    8
+ second_row4  | s_9  |    4 |    9
+ second_row5  | s_10 |    5 |   10
+ second_row6  | s_11 |    6 |   11
+ second_row7  | s_12 |    7 |   12
+ second_row8  | s_13 |    8 |   13
+ second_row9  | s_14 |    9 |   14
+(20 rows)
+

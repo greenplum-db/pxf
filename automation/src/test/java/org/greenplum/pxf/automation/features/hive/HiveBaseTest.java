@@ -1,5 +1,6 @@
 package org.greenplum.pxf.automation.features.hive;
 
+import org.greenplum.pxf.automation.components.hdfs.Hdfs;
 import org.greenplum.pxf.automation.components.hive.Hive;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
 import org.greenplum.pxf.automation.structures.tables.hive.HiveExternalTable;
@@ -253,6 +254,10 @@ public class HiveBaseTest extends BaseFeature {
     }
 
     void loadDataIntoHive(String fileName, HiveTable tableName) throws Exception {
+        loadDataIntoHive(hdfs, hive, fileName, tableName);
+    }
+
+    void loadDataIntoHive(Hdfs hdfs, Hive hive, String fileName, HiveTable tableName) throws Exception {
 
         // copy data to hdfs
         hdfs.copyFromLocal(localDataResourcesFolder + "/hive/" + fileName,
@@ -282,11 +287,17 @@ public class HiveBaseTest extends BaseFeature {
 
     void prepareSmallData() throws Exception {
 
-        if (hiveSmallDataTable != null)
-            return;
-        hiveSmallDataTable = TableFactory.getHiveByRowCommaTable(HIVE_SMALL_DATA_TABLE, HIVE_SMALLDATA_COLS);
-        hive.createTableAndVerify(hiveSmallDataTable);
-        loadDataIntoHive(HIVE_DATA_FILE_NAME, hiveSmallDataTable);
+        prepareSmallData(hdfs, hive, hiveSmallDataTable, HIVE_SMALL_DATA_TABLE, HIVE_SMALLDATA_COLS, HIVE_DATA_FILE_NAME);
+    }
+
+    HiveTable prepareSmallData(Hdfs hdfs, Hive hive, HiveTable hiveTable, String tableName, String[] tableColumns, String dataFileName) throws Exception {
+
+        if (hiveTable != null)
+            return hiveTable;
+        hiveTable = TableFactory.getHiveByRowCommaTable(tableName, tableColumns);
+        hive.createTableAndVerify(hiveTable);
+        loadDataIntoHive(hdfs, hive, dataFileName, hiveTable);
+        return hiveTable;
     }
 
     void prepareTypesData() throws Exception {
