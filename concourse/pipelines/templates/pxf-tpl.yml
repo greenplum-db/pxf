@@ -112,7 +112,7 @@ ccp_destroy_anchor: &ccp_destroy
 
 dataproc_destroy_anchor: &dataproc_destroy
   do:
-  - aggregate:
+  - in_parallel:
     - task: Cleanup Dataproc 1
       config:
         run:
@@ -159,7 +159,7 @@ dataproc_timed_destroy_anchor: &dataproc_timed_destroy
         path: /bin/sleep
         args: [{{dataproc-destroy-timeout}}]
       platform: linux
-  - aggregate:
+  - in_parallel:
     - task: Cleanup Dataproc 1
       config:
         run:
@@ -517,7 +517,7 @@ jobs:
 {% if compile_gpdb %}
 - name: compile_gpdb_centos6
   plan:
-  - aggregate:
+  - in_parallel:
     - get: gpdb_src
     - get: gpdb-centos6-build
 {% if gpdb_branch == '5X_STABLE' %}
@@ -561,7 +561,7 @@ jobs:
 {% endif %}
 - name: compile_pxf
   plan:
-  - aggregate:
+  - in_parallel:
     - get: gpdb_src
 {% if pipeline_type == "pxf" %}
     - get: gpdb_pxf_trigger
@@ -580,7 +580,7 @@ jobs:
 {% if pipeline_type == "release" %}
 - name: test_pxf_hdp2_centos6
   plan:
-  - aggregate:
+  - in_parallel:
     - get: gpdb_src
       passed:
       - compile_pxf
@@ -620,7 +620,7 @@ jobs:
 
 - name: test_pxf_mapr_centos6
   plan:
-  - aggregate:
+  - in_parallel:
     - get: gpdb_src
       passed:
       - compile_pxf
@@ -658,7 +658,7 @@ jobs:
 
 - name: test_pxf_hdp3_centos7
   plan:
-  - aggregate:
+  - in_parallel:
     - get: gpdb_src
       passed:
       - compile_pxf
@@ -701,7 +701,7 @@ jobs:
 
 - name: test_pxf_hdp2_centos7_java11
   plan:
-  - aggregate:
+  - in_parallel:
     - get: gpdb_src
       passed:
       - compile_pxf
@@ -746,7 +746,7 @@ jobs:
 {% if gpdb_type == "5X_STABLE" %}
 - name: test_pxf_hdp2_ubuntu16
   plan:
-  - aggregate:
+  - in_parallel:
     - get: gpdb_src
       passed:
       - compile_pxf
@@ -779,7 +779,7 @@ jobs:
 {% else %}
 - name: test_pxf_hdp2_ubuntu18
   plan:
-  - aggregate:
+  - in_parallel:
     - get: gpdb_src
       passed:
       - compile_pxf
@@ -813,7 +813,7 @@ jobs:
 
 - name: test_pxf_hdp2_secure_with_impersonation
   plan:
-  - aggregate:
+  - in_parallel:
     - get: gpdb_src
       passed:
       - compile_pxf
@@ -855,7 +855,7 @@ jobs:
 {% if pipeline_type == "release" %}
 - name: test_pxf_hdp2_secure_no_impersonation
   plan:
-  - aggregate:
+  - in_parallel:
     - get: gpdb_src
       passed:
       - compile_pxf
@@ -948,7 +948,7 @@ jobs:
       BUCKET_NAME: {{tf-bucket-name}}
       PLATFORM: centos7
       CLOUD_PROVIDER: google
-  - aggregate:
+  - in_parallel:
     - task: Initialize Greenplum
       file: ccp_src/ci/tasks/gpinitsystem.yml
     - task: Install Hadoop
@@ -999,7 +999,7 @@ jobs:
 - name: test_pxf_secure_multinode_gpdb
   max_in_flight: 2
   plan:
-  - aggregate:
+  - in_parallel:
     - get: ccp_src
     - get: gpdb_src
       passed:
@@ -1023,7 +1023,7 @@ jobs:
       trigger: true
     - get: ccp-7
     - get: gpdb-pxf-dev-centos6-hdp2-server
-  - aggregate:
+  - in_parallel:
     - do:
       - put: terraform_gpdb
         resource: terraform
@@ -1052,7 +1052,7 @@ jobs:
           BUCKET_NAME: {{tf-bucket-name}}
           PLATFORM: centos7
           CLOUD_PROVIDER: google
-      - aggregate:
+      - in_parallel:
         - task: Initialize Greenplum
           file: ccp_src/ci/tasks/gpinitsystem.yml
         - task: Install Hadoop
@@ -1138,7 +1138,7 @@ jobs:
 
 - name: test_pxf_cdh_centos6
   plan:
-  - aggregate:
+  - in_parallel:
     - get: gpdb_src
       passed:
       - compile_pxf
@@ -1177,7 +1177,7 @@ jobs:
 
 - name: test_pxf_s3_no_impersonation
   plan:
-  - aggregate:
+  - in_parallel:
     - get: gpdb_src
       passed:
       - compile_pxf
@@ -1217,7 +1217,7 @@ jobs:
 
 - name: test_pxf_s3_with_impersonation
   plan:
-  - aggregate:
+  - in_parallel:
     - get: gpdb_src
       passed:
       - compile_pxf
@@ -1258,7 +1258,7 @@ jobs:
 {% if pipeline_type == "release" %}
 - name: test_pxf_minio
   plan:
-  - aggregate:
+  - in_parallel:
     - get: gpdb_src
       passed:
       - compile_pxf
@@ -1296,7 +1296,7 @@ jobs:
 
 - name: test_pxf_adl
   plan:
-  - aggregate:
+  - in_parallel:
     - get: gpdb_src
       passed:
       - compile_pxf
@@ -1338,7 +1338,7 @@ jobs:
 
 - name: test_pxf_gs
   plan:
-  - aggregate:
+  - in_parallel:
     - get: gpdb_src
       passed:
       - compile_pxf
@@ -1378,7 +1378,7 @@ jobs:
 
 - name: test_pxf_no_impersonation
   plan:
-  - aggregate:
+  - in_parallel:
     - get: gpdb_src
       passed:
       - compile_pxf
