@@ -262,7 +262,7 @@ public class HiveBaseTest extends BaseFeature {
     }
 
     String[] hiveTestFilter(String filterString) {
-        return new String[] { "TEST-HIVE-FILTER=" + filterString };
+        return new String[]{"TEST-HIVE-FILTER=" + filterString};
     }
 
     private HiveTable prepareData(String tableName, String format) throws Exception {
@@ -385,7 +385,7 @@ public class HiveBaseTest extends BaseFeature {
         hive.insertData(hiveSmallDataTable, hiveSequenceTable);
     }
 
-    void prepareBinaryData() throws Exception{
+    void prepareBinaryData() throws Exception {
 
         if (hiveBinaryTable != null)
             return;
@@ -398,10 +398,10 @@ public class HiveBaseTest extends BaseFeature {
 
         if (hiveNonDefaultSchemaTable != null)
             return;
-    	hiveNonDefaultSchemaTable = TableFactory.getHiveByRowCommaTable(
-                HIVE_SMALL_DATA_TABLE, HIVE_SCHEMA, new String[] { "id INT", "name STRING" });
-    	hive.createDataBase(HIVE_SCHEMA, true);
-    	hive.createTableAndVerify(hiveNonDefaultSchemaTable);
+        hiveNonDefaultSchemaTable = TableFactory.getHiveByRowCommaTable(
+                HIVE_SMALL_DATA_TABLE, HIVE_SCHEMA, new String[]{"id INT", "name STRING"});
+        hive.createDataBase(HIVE_SCHEMA, true);
+        hive.createTableAndVerify(hiveNonDefaultSchemaTable);
     }
 
     void addHivePartition(String hiveTable, String partition, String location) throws Exception {
@@ -464,7 +464,6 @@ public class HiveBaseTest extends BaseFeature {
      *
      * @param tableName hive table name
      * @return hive table
-     *
      * @throws Exception if test fails to run
      */
     HiveExternalTable createGenerateHivePartitionTable(String tableName) throws Exception {
@@ -525,7 +524,7 @@ public class HiveBaseTest extends BaseFeature {
     void appendToEachRowOfComparisonTable(List<String> values) throws IOException {
 
         comparisonDataTable.loadDataFromFile(
-                localDataResourcesFolder + "/hive/" + HIVE_DATA_FILE_NAME,",",0);
+                localDataResourcesFolder + "/hive/" + HIVE_DATA_FILE_NAME, ",", 0);
 
         // get original number of line before pump
         int originalNumberOfLines = comparisonDataTable.getData().size();

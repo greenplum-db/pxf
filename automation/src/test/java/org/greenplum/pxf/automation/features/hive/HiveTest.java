@@ -172,6 +172,20 @@ public class HiveTest extends HiveBaseTest {
     }
 
     /**
+     * query for small data hive table against two kerberized hive servers
+     *
+     * @throws Exception if test fails to run
+     */
+    @Test(groups = {"features", "security"})
+    public void testTwoSecuredServers() throws Exception {
+
+        createExternalTable(PXF_HIVE_SMALL_DATA_TABLE, PXF_HIVE_SMALLDATA_COLS, hiveSmallDataTable);
+
+        runTincTest("pxf.features.hive.small_data.runTest");
+        runTincTest("pxf.features.hcatalog.small_data.runTest");
+    }
+
+    /**
      * Query external table directed to hive table using hive primitive types
      *
      * @throws Exception if test fails to run
