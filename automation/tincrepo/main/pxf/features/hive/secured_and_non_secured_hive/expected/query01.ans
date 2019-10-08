@@ -1,6 +1,6 @@
 -- start_ignore
 -- end_ignore
--- @description query01 for PXF with Two Secured Hive Small Data cases
+-- @description query01 for PXF with a Secured and Non-Secured Hive Small Data cases
 SELECT *
 from pxf_hive_small_data
 ORDER BY t1;
