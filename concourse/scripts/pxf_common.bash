@@ -200,11 +200,11 @@ function setup_impersonation() {
 		echo 'Impersonation is enabled, adding support for gpadmin proxy user'
 		cat > proxy-config.xml <<-EOF
 			<property>
-			  <name>hadoop.proxyuser.gpadmin.hosts</name>
+			  <name>hadoop.proxyuser.pxfuser.hosts</name>
 			  <value>*</value>
 			</property>
 			<property>
-			  <name>hadoop.proxyuser.gpadmin.groups</name>
+			  <name>hadoop.proxyuser.pxfuser.groups</name>
 			  <value>*</value>
 			</property>
 			<property>
