@@ -4,6 +4,7 @@ GPHOME=/usr/local/greenplum-db-devel
 PXF_HOME=${GPHOME}/pxf
 MDD_VALUE=/data/gpdata/master/gpseg-1
 PXF_COMMON_SRC_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+PROXY_USER=${PROXY_USER:-pxfuser}
 
 # on purpose do not call this PXF_CONF so that it is not set during pxf operations
 PXF_CONF_DIR=~gpadmin/pxf
@@ -319,6 +320,9 @@ function init_and_configure_pxf_server() {
 	if [[ ! ${IMPERSONATION} == true ]]; then
 		echo 'Impersonation is disabled, updating pxf-env.sh property'
 		su gpadmin -c "echo 'export PXF_USER_IMPERSONATION=false' >> ${PXF_CONF_DIR}/conf/pxf-env.sh"
+	else
+		cp ${PXF_CONF_DIR}/templates/pxf-site.xml ${PXF_CONF_DIR}/servers/default/pxf-site.xml
+		sed -i -e "s|\${user.name}|${PROXY_USER}|g" ${PXF_CONF_DIR}/servers/default/pxf-site.xml
 	fi
 
 	# update runtime JDK value based on CI parameter
