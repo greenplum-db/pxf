@@ -151,6 +151,9 @@ function _main() {
 	configure_pxf_default_server
 	secure_pxf
 
+	# clean up pxf-site.xml
+	rm "${PXF_CONF_DIR}/servers/default/pxf-site.xml"
+
 	create_gpdb_cluster
 	add_remote_user_access_for_gpdb testuser
 	start_pxf_server

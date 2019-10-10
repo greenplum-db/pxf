@@ -10,6 +10,7 @@ SSH_OPTS=(-i cluster_env_files/private_key.pem -o 'StrictHostKeyChecking=no')
 HADOOP_SSH_OPTS=(-o 'StrictHostKeyChecking=no')
 
 LOCAL_GPHD_ROOT=/singlecluster
+PROXY_USER=${PROXY_USER:-pxfuser}
 
 function configure_local_hdfs() {
 	sed -i -e "s|hdfs://0.0.0.0:8020|hdfs://${HADOOP_HOSTNAME}:8020|" \
@@ -243,8 +244,9 @@ function run_pxf_automation() {
 				${PXF_CONF_DIR}/servers/db-hive-non-secure/jdbc-site.xml &&
 			cp ~gpadmin/hive-report.sql ${PXF_CONF_DIR}/servers/db-hive-non-secure &&
 			mkdir -p ${PXF_CONF_DIR}/servers/hdfs-non-secure &&
-			cp ${PXF_CONF_DIR}/templates/{hdfs,mapred,yarn,core,hbase,hive}-site.xml ${PXF_CONF_DIR}/servers/hdfs-non-secure &&
+			cp ${PXF_CONF_DIR}/templates/{hdfs,mapred,yarn,core,hbase,hive,pxf}-site.xml ${PXF_CONF_DIR}/servers/hdfs-non-secure &&
 			sed -i -e 's/\(0.0.0.0\|localhost\|127.0.0.1\)/${NON_SECURE_HADOOP_IP}/g' ${PXF_CONF_DIR}/servers/hdfs-non-secure/*-site.xml &&
+			sed -i -e 's|\${user.name}|${PROXY_USER}|g' ${PXF_CONF_DIR}/servers/hdfs-non-secure/pxf-site.xml &&
 			${GPHOME}/pxf/bin/pxf cluster sync
 		"
 		sed -i "s/>non-secure-hadoop</>${NON_SECURE_HADOOP_IP}</g" "$multiNodesCluster"
