@@ -25,6 +25,7 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.greenplum.pxf.api.model.BaseConfigurationFactory;
 import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.security.SecureLogin;
+import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.service.SessionId;
 import org.greenplum.pxf.service.UGICache;
 import org.slf4j.Logger;
@@ -110,10 +111,26 @@ public class SecurityServletFilter implements Filter {
         // Establish the UGI for the login user or the Kerberos principal for the given server, if applicable
         UserGroupInformation loginUser = secureLogin.getLoginUser(serverName, configDirectory, configuration);
 
+        String serviceUser = loginUser.getUserName();
+
+        if (!isUserImpersonation && Utilities.isSecurityEnabled(configuration)) {
+            // When impersonation is disabled and security is enabled
+            // we check whether the pxf.service.user.name property was provided
+            // and if provided we use the value as the remote user instead of
+            // the principal defined in pxf.service.kerberos.principal. However,
+            // the principal will need to have proxy privileges on hadoop.
+            String pxfServiceUserName = configuration.get(SecureLogin.CONFIG_KEY_SERVICE_USER_NAME);
+            if (StringUtils.isNotBlank(pxfServiceUserName)) {
+                serviceUser = pxfServiceUserName;
+            }
+        }
+
+        String remoteUser = (isUserImpersonation ? gpdbUser : serviceUser);
+
         SessionId session = new SessionId(
                 segmentId,
                 transactionId,
-                (isUserImpersonation ? gpdbUser : loginUser.getUserName()),
+                remoteUser,
                 serverName,
                 configuration,
                 loginUser);
