@@ -20,6 +20,7 @@ else
 	HADOOP_HOSTNAME=hadoop
 	HADOOP_IP=$(grep < cluster_env_files/etc_hostfile edw0 | awk '{print $1}')
 fi
+PROXY_USER=${PROXY_USER:-pxfuser}
 PXF_CONF_DIR=~gpadmin/pxf
 INSTALL_GPHDFS=${INSTALL_GPHDFS:-true}
 
@@ -88,8 +89,9 @@ function create_pxf_installer_scripts() {
 		    # required for recursive directories tests
 		    cp "\$PXF_CONF/templates/mapred-site.xml" "\$PXF_CONF/servers/default/mapred1-site.xml"
 		  else
-		    cp \$PXF_CONF/templates/{hdfs,mapred,yarn,core,hbase,hive}-site.xml "\$PXF_CONF/servers/default"
+		    cp \$PXF_CONF/templates/{hdfs,mapred,yarn,core,hbase,hive,pxf}-site.xml "\$PXF_CONF/servers/default"
 		    sed -i -e 's/\(0.0.0.0\|localhost\|127.0.0.1\)/${HADOOP_IP}/g' \$PXF_CONF/servers/default/*-site.xml
+		    sed -i -e 's|\${user.name}|${PROXY_USER}|g' \$PXF_CONF/servers/default/pxf-site.xml
 		  fi
 		  setup_pxf_env
 		}

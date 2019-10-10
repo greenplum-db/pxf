@@ -5,6 +5,7 @@ PXF_HOME=${GPHOME}/pxf
 MDD_VALUE=/data/gpdata/master/gpseg-1
 PXF_COMMON_SRC_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 PROXY_USER=${PROXY_USER:-pxfuser}
+PROTOCOL=${PROTOCOL:-}
 
 # on purpose do not call this PXF_CONF so that it is not set during pxf operations
 PXF_CONF_DIR=~gpadmin/pxf
@@ -201,11 +202,11 @@ function setup_impersonation() {
 		echo 'Impersonation is enabled, adding support for gpadmin proxy user'
 		cat > proxy-config.xml <<-EOF
 			<property>
-			  <name>hadoop.proxyuser.pxfuser.hosts</name>
+			  <name>hadoop.proxyuser.${PROXY_USER}.hosts</name>
 			  <value>*</value>
 			</property>
 			<property>
-			  <name>hadoop.proxyuser.pxfuser.groups</name>
+			  <name>hadoop.proxyuser.${PROXY_USER}.groups</name>
 			  <value>*</value>
 			</property>
 			<property>
@@ -320,7 +321,10 @@ function init_and_configure_pxf_server() {
 	if [[ ! ${IMPERSONATION} == true ]]; then
 		echo 'Impersonation is disabled, updating pxf-env.sh property'
 		su gpadmin -c "echo 'export PXF_USER_IMPERSONATION=false' >> ${PXF_CONF_DIR}/conf/pxf-env.sh"
-	else
+	elif [[ -z ${PROTOCOL} ]]; then
+		# Copy pxf-site.xml to the server configuration and update the
+		# pxf.service.user.name property value to use the PROXY_USER
+		# Only copy this file when testing against non-cloud
 		cp ${PXF_CONF_DIR}/templates/pxf-site.xml ${PXF_CONF_DIR}/servers/default/pxf-site.xml
 		sed -i -e "s|\${user.name}|${PROXY_USER}|g" ${PXF_CONF_DIR}/servers/default/pxf-site.xml
 	fi
