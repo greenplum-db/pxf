@@ -122,7 +122,8 @@ public class SecureLogin {
                         // Remote user specified in config file, or defaults to user running pxf service
                         String remoteUser = configuration.get(CONFIG_KEY_SERVICE_USER_NAME, System.getProperty("user.name"));
 
-                        loginSession = new LoginSession(configDirectory, null, null, UserGroupInformation.createRemoteUser(remoteUser), null, 0L);
+                        UserGroupInformation loginUser = UserGroupInformation.createRemoteUser(remoteUser);
+                        loginSession = new LoginSession(configDirectory, null, null, loginUser, null, 0L);
                     }
                     loginMap.put(serverName, loginSession);
                 }
@@ -208,8 +209,8 @@ public class SecureLogin {
         if (currentSession == null)
             return null;
 
-        long kerberosMinMillisBeforeReloginkerberosMinMillisBeforeRelogin =
-                PxfUserGroupInformation.getKerberosMinMillisBeforeRelogin(serverName, configuration);
+        long kerberosMinMillisBeforeReloginkerberosMinMillisBeforeRelogin = Utilities.isSecurityEnabled(configuration) ?
+                PxfUserGroupInformation.getKerberosMinMillisBeforeRelogin(serverName, configuration) : 0L;
         LoginSession expectedLoginSession = new LoginSession(
                 configDirectory,
                 SecureLogin.getServicePrincipal(serverName, configuration),
