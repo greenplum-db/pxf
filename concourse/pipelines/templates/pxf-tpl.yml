@@ -574,12 +574,13 @@ jobs:
     image: gpdb-pxf-dev-centos6-hdp2-server
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
-      SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
       GROUP: gpdb,proxy,profile
-      TEST_ENV: {{test-env}}
       HADOOP_CLIENT: HDP
+      PGPORT: {{pgport}}
+      SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
       TARGET_OS: centos
       TARGET_OS_VERSION: 6
+      TEST_ENV: {{test-env}}
 {% if acceptance %}
       ACCEPTANCE: true
 {% endif %}
@@ -615,10 +616,11 @@ jobs:
     image: gpdb-pxf-dev-centos6-mapr-image
     params:
       GROUP: hcfs,jdbc
-      TEST_ENV: {{test-env}}
       HADOOP_CLIENT: MAPR
+      PGPORT: {{pgport}}
       TARGET_OS: centos
       TARGET_OS_VERSION: 6
+      TEST_ENV: {{test-env}}
 {% if acceptance %}
       ACCEPTANCE: true
 {% endif %}
@@ -656,12 +658,13 @@ jobs:
     image: gpdb-pxf-dev-centos7-hdp3-server
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
-      SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
       GROUP: gpdb,proxy,profile
-      TEST_ENV: {{test-env}}
       HADOOP_CLIENT: HDP
+      PGPORT: {{pgport}}
+      SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
       TARGET_OS: centos
       TARGET_OS_VERSION: 7
+      TEST_ENV: {{test-env}}
 {% if acceptance %}
       ACCEPTANCE: true
 {% endif %}
@@ -699,13 +702,14 @@ jobs:
     image: gpdb-pxf-dev-centos7-hdp2-server
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
-      SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
       GROUP: cloud-access-and-hdfs,hbase,hcfs,jdbc,profile,pushdown
-      TEST_ENV: {{test-env}}
       HADOOP_CLIENT: HDP
+      PGPORT: {{pgport}}
+      RUN_JDK_VERSION: 11
+      SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
       TARGET_OS: centos
       TARGET_OS_VERSION: 7
-      RUN_JDK_VERSION: 11
+      TEST_ENV: {{test-env}}
 {% if acceptance %}
       ACCEPTANCE: true
 {% endif %}
@@ -733,13 +737,14 @@ jobs:
     image: gpdb-pxf-dev-ubuntu16-hdp2-server
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
-      SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
       GROUP: gpdb,proxy,profile
-      TEST_ENV: {{test-env}}
       HADOOP_CLIENT: HDP
+      PGPORT: {{pgport}}
+      SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
       TEST_OS: ubuntu
       TARGET_OS: ubuntu
       TARGET_OS_VERSION: 16
+      TEST_ENV: {{test-env}}
 {% if acceptance %}
       ACCEPTANCE: true
 {% endif %}
@@ -766,13 +771,14 @@ jobs:
     image: gpdb-pxf-dev-ubuntu18-hdp2-server
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
-      SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
       GROUP: gpdb,proxy,profile
-      TEST_ENV: {{test-env}}
       HADOOP_CLIENT: HDP
-      TEST_OS: ubuntu
+      PGPORT: {{pgport}}
+      SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
       TARGET_OS: ubuntu
       TARGET_OS_VERSION: 18
+      TEST_ENV: {{test-env}}
+      TEST_OS: ubuntu
 {% if acceptance %}
       ACCEPTANCE: true
 {% endif %}
@@ -813,6 +819,7 @@ jobs:
       AWS_DEFAULT_REGION: {{aws-region}}
       GROUP: gpdb,proxy
       IMPERSONATION: true
+      PGPORT: {{pgport}}
       TEST_ENV: {{test-env}}
       TARGET_OS: centos
 {% if acceptance %}
@@ -855,6 +862,7 @@ jobs:
       AWS_DEFAULT_REGION: {{aws-region}}
       GROUP: gpdb,proxy
       IMPERSONATION: false
+      PGPORT: {{pgport}}
       TEST_ENV: {{test-env}}
       TARGET_OS: centos
 {% if acceptance %}
@@ -954,10 +962,11 @@ jobs:
     file: pxf_src/concourse/tasks/test_pxf_multinode.yml
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
-      SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
-      IMPERSONATION: {{enable-impersonation-multinode}}
       GROUP: gpdb,proxy
+      IMPERSONATION: {{enable-impersonation-multinode}}
+      PGPORT: {{pgport}}
       PXF_JVM_OPTS: {{pxf-jvm-opts}}
+      SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
       TARGET_OS: centos
 {% if acceptance %}
       ACCEPTANCE: true
@@ -1101,11 +1110,12 @@ jobs:
     attempts: 2
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
-      SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
       GROUP: gpdb,proxy,profile
-      TEST_ENV: {{test-env}}
-      TARGET_OS: centos
       HADOOP_CLIENT: CDH
+      PGPORT: {{pgport}}
+      SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+      TARGET_OS: centos
+      TEST_ENV: {{test-env}}
 {% if acceptance %}
       ACCEPTANCE: true
 {% endif %}
@@ -1139,13 +1149,14 @@ jobs:
     image: gpdb-pxf-dev-centos6-cdh-server
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
-      SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
       GROUP: hcfs,s3
       IMPERSONATION: false
+      PGPORT: {{pgport}}
       PROTOCOL: s3
+      SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+      TARGET_OS: centos
       TEST_ENV: {{test-env}}
       TEST_OS: centos
-      TARGET_OS: centos
 {% if acceptance %}
       ACCEPTANCE: true
 {% endif %}
@@ -1179,13 +1190,14 @@ jobs:
     image: gpdb-pxf-dev-centos6-hdp2-server
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
-      SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
       GROUP: hcfs,s3
       IMPERSONATION: true
+      PGPORT: {{pgport}}
       PROTOCOL: s3
+      SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+      TARGET_OS: centos
       TEST_ENV: {{test-env}}
       TEST_OS: centos
-      TARGET_OS: centos
 {% if acceptance %}
       ACCEPTANCE: true
 {% endif %}
@@ -1221,10 +1233,11 @@ jobs:
     params:
       GROUP: hcfs
       IMPERSONATION: false
+      PGPORT: {{pgport}}
       PROTOCOL: minio
+      TARGET_OS: centos
       TEST_ENV: {{test-env}}
       TEST_OS: centos
-      TARGET_OS: centos
 {% if acceptance %}
       ACCEPTANCE: true
 {% endif %}
@@ -1263,10 +1276,11 @@ jobs:
       ADL_REFRESH_URL: {{adl-refresh-url}}
       GROUP: hcfs
       IMPERSONATION: false
+      PGPORT: {{pgport}}
       PROTOCOL: adl
+      TARGET_OS: centos
       TEST_ENV: {{test-env}}
       TEST_OS: centos
-      TARGET_OS: centos
 {% if acceptance %}
       ACCEPTANCE: true
 {% endif %}
@@ -1302,10 +1316,11 @@ jobs:
       GOOGLE_CREDENTIALS: {{data-gpdb-ud-google-json-key}}
       GROUP: hcfs
       IMPERSONATION: false
+      PGPORT: {{pgport}}
       PROTOCOL: gs
+      TARGET_OS: centos
       TEST_ENV: {{test-env}}
       TEST_OS: centos
-      TARGET_OS: centos
 {% if acceptance %}
       ACCEPTANCE: true
 {% endif %}
@@ -1340,8 +1355,9 @@ jobs:
     image: gpdb-pxf-dev-centos6-hdp2-server
     params:
       IMPERSONATION: false
-      TEST_ENV: {{test-env}}
+      PGPORT: {{pgport}}
       TARGET_OS: centos
+      TEST_ENV: {{test-env}}
 {% if acceptance %}
       ACCEPTANCE: true
 {% endif %}

@@ -16,6 +16,7 @@ export GPHD_ROOT=/singlecluster
 if [[ ${HADOOP_CLIENT} == MAPR ]]; then
 	export GPHD_ROOT=/opt/mapr
 fi
+export PGPORT=${PGPORT:-15432}
 
 function run_pg_regress() {
 	# run desired groups (below we replace commas with spaces in $GROUPS)
@@ -27,7 +28,7 @@ function run_pg_regress() {
 
 		export GPHD_ROOT=${GPHD_ROOT}
 		export PXF_HOME=${PXF_HOME} PXF_CONF=${PXF_CONF_DIR}
-		export PGPORT=15432
+		export PGPORT=${PGPORT}
 		export HCFS_CMD=${GPHD_ROOT}/bin/hdfs
 		export HCFS_PROTOCOL=${PROTOCOL}
 		export HBASE_CMD=${GPHD_ROOT}/bin/hbase
@@ -62,7 +63,7 @@ function run_pxf_automation() {
 
 	su gpadmin -c "
 		source '${GPHOME}/greenplum_path.sh' &&
-		psql -p 15432 -d template1 -c 'CREATE EXTENSION PXF'
+		psql -p ${PGPORT} -d template1 -c 'CREATE EXTENSION PXF'
 	"
 
 	cat > ~gpadmin/run_pxf_automation_test.sh <<-EOF
@@ -73,7 +74,7 @@ function run_pxf_automation() {
 		export PATH=\$PATH:${GPHD_ROOT}/bin
 		export GPHD_ROOT=${GPHD_ROOT}
 		export PXF_HOME=${PXF_HOME}
-		export PGPORT=15432
+		export PGPORT=${PGPORT}
 
 		# JAVA_HOME is from pxf_common.bash
 		export JAVA_HOME=${JAVA_HOME}

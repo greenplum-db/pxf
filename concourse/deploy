@@ -89,7 +89,7 @@ def how_to_use_generated_pipeline_message():
             cmd += '    -v gcs-bucket-resources-prod=pivotal-gpdb-concourse-resources-prod\\\n'
     if ARGS.compile_gpdb:
         cmd += '    -v configure_flags=--enable-cassert -v gpaddon-git-branch=master \\\n'
-    cmd += '    -v gpdb-branch=' + ARGS.actual_gpdb_branch
+    cmd += '    -v gpdb-branch=' + ARGS.actual_gpdb_branch + ' -v pgport=' + ARGS.PGPORT
     if ARGS.pipeline_name:
         cmd += '    -p ' + ARGS.pipeline_name
     else:
@@ -175,6 +175,7 @@ if __name__ == "__main__":
     default_output_filename = "pxf_pipeline-generated.yml"
     PARSER = build_parser(default_output_filename)
     ARGS = PARSER.parse_args()
+    ARGS.PGPORT = '15432'
 
     if ARGS.gpdb_branch == '5x':
         ARGS.gpdb_branch = '5X_STABLE'
@@ -184,6 +185,7 @@ if __name__ == "__main__":
         ARGS.ICW_GREEN_BUCKET = 'gpdb5-assert-concourse-builds'
     elif ARGS.gpdb_branch == 'master':
         ARGS.ICW_GREEN_BUCKET = 'gpdb5-assert-concourse-builds'
+        ARGS.PGPORT = '7000'
     else:
         sys.stderr.write('error: Only master, 6x and 5x branches are supported for GPDB.'
                          'Include --compile_gpdb flag if you intend to compile GPDB from a different branch.\n')

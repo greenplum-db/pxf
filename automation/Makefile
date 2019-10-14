@@ -49,7 +49,11 @@ ifeq "$(JDBC_HOST)" ""
 	JDBC_HOST=localhost
 endif
 ifeq "$(JDBC_PORT)" ""
-	JDBC_PORT=15432
+	ifeq "$(PGPORT)" ""
+		JDBC_PORT=15432
+	else
+		JDBC_PORT=$(PGPORT)
+	endif
 endif
 
 ifeq "$(HIVE_SERVER_HOST)" ""
