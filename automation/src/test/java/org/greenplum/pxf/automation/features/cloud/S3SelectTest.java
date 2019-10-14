@@ -108,7 +108,7 @@ public class S3SelectTest extends BaseFeature {
     public void testCsvWithHeadersUsingHeaderInfoWithWrongColumnNames() throws Exception {
         String[] userParameters = {"FILE_HEADER=USE", "S3_SELECT=ON"};
         runTestScenario("errors.", "csv_use_headers_with_wrong_col_names", "s3", "csv", s3Path,
-                localDataResourcesFolder + "/s3select/", sampleCsvFile,
+                localDataResourcesFolder + "/s3select/", sampleCsvFile, "/" + s3Path + sampleCsvFile,
                 "|", userParameters, PXF_S3_SELECT_INVALID_COLS);
     }
 
@@ -145,6 +145,14 @@ public class S3SelectTest extends BaseFeature {
     }
 
     @Test(groups = {"gpdb", "s3", "pushdown"})
+    public void testParquetWildcardLocation() throws Exception {
+        String[] userParameters = {"S3_SELECT=ON"};
+        runTestScenario("", "parquet", "s3", "parquet", s3Path,
+                localDataResourcesFolder + "/s3select/", sampleParquetFile, "/" + s3Path + "*e.parquet",
+                null, userParameters, PXF_S3_SELECT_COLS);
+    }
+
+    @Test(groups = {"gpdb", "s3", "pushdown"})
     public void testSnappyParquet() throws Exception {
         String[] userParameters = {"S3_SELECT=ON"};
         runTestScenario("parquet_snappy", "s3", "parquet", s3Path,
@@ -178,6 +186,7 @@ public class S3SelectTest extends BaseFeature {
                 s3Path,
                 srcPath,
                 filename,
+                "/" + s3Path + filename,
                 delimiter,
                 userParameters,
                 PXF_S3_SELECT_COLS);
@@ -191,6 +200,7 @@ public class S3SelectTest extends BaseFeature {
             String s3Path,
             String srcPath,
             String filename,
+            String locationPath,
             String delimiter,
             String[] userParameters,
             String[] fields)
@@ -201,7 +211,7 @@ public class S3SelectTest extends BaseFeature {
 
         s3Server.copyFromLocal(srcPath + filename, PROTOCOL_S3 + s3Path + filename);
 
-        exTable = new ReadableExternalTable(tableName, fields, "/" + s3Path + filename, "CSV");
+        exTable = new ReadableExternalTable(tableName, fields, locationPath, "CSV");
         exTable.setProfile("s3:" + format);
         exTable.setServer(serverParam);
 

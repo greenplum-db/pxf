@@ -180,29 +180,8 @@ public class HdfsReadableTextTest extends BaseFeature {
      */
     @Test(groups = {"features", "gpdb", "security"})
     public void readMultiBlockedMultiLinedCsv() throws Exception {
-        // prepare local CSV file
-        dataTable = new Table("dataTable", null);
-        String tempLocalDataPath = dataTempFolder + "/data.csv";
-        // prepare template data of 10 lines
-        FileFormatsUtils.prepareData(new QuotedLineTextPreparer(), 10,
-                dataTable);
-        // multiple it to file
-        FileFormatsUtils.prepareDataFile(dataTable, 32, tempLocalDataPath);
-        // copy local file to HDFS
-        hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
-        // define and create external table
-        exTable = new ReadableExternalTable("pxf_multi_csv", new String[]{
-                "num1 int",
-                "word text",
-                "num2 int"}, hdfsFilePath, "CSV");
-        exTable.setFragmenter("org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter");
-        exTable.setAccessor("org.greenplum.pxf.plugins.hdfs.QuotedLineBreakAccessor");
-        exTable.setResolver("org.greenplum.pxf.plugins.hdfs.StringPassResolver");
-        exTable.setHost(pxfHost);
-        exTable.setPort(pxfPort);
-        gpdb.createTableAndVerify(exTable);
-        // Verify results
-        runTincTest("pxf.features.hdfs.readable.text.multiblocked_csv_data.runTest");
+
+        runMultiBlockedMultiLinedCsvTest(hdfsFilePath, false);
     }
 
     /**
@@ -213,6 +192,24 @@ public class HdfsReadableTextTest extends BaseFeature {
      */
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void readMultiBlockedMultiLinedCsvUsingProfile() throws Exception {
+
+        runMultiBlockedMultiLinedCsvTest(hdfsFilePath, true);
+    }
+
+    /**
+     * Create multi lined CSV data, use HdfsTextMulti pxf
+     * profile to read.
+     *
+     * @throws Exception
+     */
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    public void readMultiBlockedMultiLinedCsvWildcardLocation() throws Exception {
+
+        runMultiBlockedMultiLinedCsvTest(hdfs.getWorkingDirectory() + "/*", true);
+    }
+
+    private void runMultiBlockedMultiLinedCsvTest(String locationPath, boolean useProfile) throws Exception {
+
         // prepare local CSV file
         dataTable = new Table("dataTable", null);
         String tempLocalDataPath = dataTempFolder + "/data.csv";
@@ -227,8 +224,14 @@ public class HdfsReadableTextTest extends BaseFeature {
         exTable = new ReadableExternalTable("pxf_multi_csv", new String[]{
                 "num1 int",
                 "word text",
-                "num2 int"}, hdfsFilePath, "CSV");
-        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":text:multi");
+                "num2 int"}, locationPath, "CSV");
+        if (useProfile) {
+            exTable.setProfile(ProtocolUtils.getProtocol().value() + ":text:multi");
+        } else {
+            exTable.setFragmenter("org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter");
+            exTable.setAccessor("org.greenplum.pxf.plugins.hdfs.QuotedLineBreakAccessor");
+            exTable.setResolver("org.greenplum.pxf.plugins.hdfs.StringPassResolver");
+        }
         exTable.setHost(pxfHost);
         exTable.setPort(pxfPort);
         gpdb.createTableAndVerify(exTable);

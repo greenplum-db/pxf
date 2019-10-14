@@ -19,8 +19,9 @@ public class FileAsRowTest extends BaseFeature {
 
     private static final String[] PXF_MULTILINE_COLS = {"text_blob text"};
 
-    @AfterClass
-    protected void cleanupData() throws Exception {
+    @Override
+    protected void afterClass() throws Exception {
+        super.afterClass();
         hdfs.removeDirectory(hdfs.getWorkingDirectory() + "/file_as_row/");
     }
 
@@ -80,11 +81,26 @@ public class FileAsRowTest extends BaseFeature {
                 localDataResourcesFolder + "/text/" + twoLineTextFile};
 
         runTestScenario("multi_files", PXF_MULTILINE_COLS,
-                hdfsBasePath + "foo/", srcPaths);
+                hdfsBasePath + "multi/", srcPaths);
     }
 
-    private void runTestScenario(String name, String[] fields,
-                                 String hdfsPath, String[] srcPaths) throws Exception {
+    @Test(groups = {"gpdb", "hcfs", "security"})
+    public void testMultilineWithDirectoryWildcardLocation() throws Exception {
+        String hdfsBasePath = hdfs.getWorkingDirectory() + "/file_as_row/";
+        String[] srcPaths = {
+                localDataResourcesFolder + "/text/" + multiLineTextFile,
+                localDataResourcesFolder + "/text/" + singleLineTextFile,
+                localDataResourcesFolder + "/text/" + twoLineTextFile};
+
+        runTestScenario("multi_files", PXF_MULTILINE_COLS,
+                hdfsBasePath + "multi/", hdfsBasePath + "multi/*line", srcPaths);
+    }
+
+    private void runTestScenario(String name, String[] fields, String hdfsPath, String[] srcPaths) throws Exception {
+        runTestScenario(name, fields, hdfsPath, hdfsPath, srcPaths);
+    }
+
+    private void runTestScenario(String name, String[] fields, String hdfsPath, String locationPath, String[] srcPaths) throws Exception {
 
         if (srcPaths != null) {
             for (String srcPath : srcPaths) {
@@ -99,7 +115,7 @@ public class FileAsRowTest extends BaseFeature {
         }
 
         String tableName = "file_as_row_" + name;
-        exTable = new ReadableExternalTable(tableName, fields, hdfsPath, "CSV");
+        exTable = new ReadableExternalTable(tableName, fields, locationPath, "CSV");
         exTable.setProfile(ProtocolUtils.getProtocol().value() + ":text:multi");
         exTable.setUserParameters(new String[]{"FILE_AS_ROW=true"});
         gpdb.createTableAndVerify(exTable);

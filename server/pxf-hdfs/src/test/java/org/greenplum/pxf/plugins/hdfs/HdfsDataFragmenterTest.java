@@ -7,13 +7,9 @@ import org.junit.Test;
 
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
-/**
- * Test the HdfsFileFragmenter
- */
-public class HdfsFileFragmenterTest {
+public class HdfsDataFragmenterTest {
 
     @Test
     public void testFragmenterReturnsListOfFiles() throws Exception {
@@ -24,12 +20,13 @@ public class HdfsFileFragmenterTest {
         context.setProfileScheme("localfile");
         context.setDataSource(path);
 
-        Fragmenter fragmenter = new HdfsFileFragmenter();
+        Fragmenter fragmenter = new HdfsDataFragmenter();
         fragmenter.initialize(context);
 
         List<Fragment> fragmentList = fragmenter.getFragments();
         assertNotNull(fragmentList);
-        assertEquals(4, fragmentList.size());
+        // empty.csv gets ignored
+        assertEquals(3, fragmentList.size());
     }
 
     @Test
@@ -41,11 +38,12 @@ public class HdfsFileFragmenterTest {
         context.setProfileScheme("localfile");
         context.setDataSource(path + "*.csv");
 
-        Fragmenter fragmenter = new HdfsFileFragmenter();
+        Fragmenter fragmenter = new HdfsDataFragmenter();
         fragmenter.initialize(context);
 
         List<Fragment> fragmentList = fragmenter.getFragments();
         assertNotNull(fragmentList);
-        assertEquals(4, fragmentList.size());
+        // empty.csv gets ignored
+        assertEquals(3, fragmentList.size());
     }
 }
