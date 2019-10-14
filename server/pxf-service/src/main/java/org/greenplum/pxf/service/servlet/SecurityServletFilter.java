@@ -57,17 +57,19 @@ public class SecurityServletFilter implements Filter {
     private static final String LAST_FRAGMENT_HEADER = "X-GP-LAST-FRAGMENT";
     private static final String MISSING_HEADER_ERROR = "Header %s is missing in the request";
     private static final String EMPTY_HEADER_ERROR = "Header %s is empty in the request";
-    UGICache ugiCache;
+
+    private UGICache ugiCache;
     private final ConfigurationFactory configurationFactory;
     private final SecureLogin secureLogin;
 
     public SecurityServletFilter() {
-        this(BaseConfigurationFactory.getInstance(), SecureLogin.getInstance());
+        this(BaseConfigurationFactory.getInstance(), SecureLogin.getInstance(), null);
     }
 
-    SecurityServletFilter(ConfigurationFactory configurationFactory, SecureLogin secureLogin) {
+    SecurityServletFilter(ConfigurationFactory configurationFactory, SecureLogin secureLogin, UGICache ugiCache) {
         this.configurationFactory = configurationFactory;
         this.secureLogin = secureLogin;
+        this.ugiCache = ugiCache;
     }
 
     /**
@@ -135,9 +137,12 @@ public class SecurityServletFilter implements Filter {
                 configuration,
                 loginUser);
 
+        final String serviceUserName = serviceUser;
+
         // Prepare privileged action to run on behalf of proxy user
         PrivilegedExceptionAction<Boolean> action = () -> {
-            LOG.debug("Performing request chain call for proxy user = {} service user = {}", gpdbUser, loginUser.getUserName());
+            LOG.debug("Performing request for gpdb_user = {} as [remote_user = {} service_user = {} login_user ={}] with{} impersonation",
+                    gpdbUser, remoteUser, serviceUserName, loginUser.getUserName(), isUserImpersonation ? "" : "out");
             chain.doFilter(request, response);
             return true;
         };
