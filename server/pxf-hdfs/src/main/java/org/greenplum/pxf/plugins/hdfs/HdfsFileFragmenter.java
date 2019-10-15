@@ -44,7 +44,7 @@ public class HdfsFileFragmenter extends HdfsDataFragmenter {
         FileStatus[] fileStatusList = fs.globStatus(path);
 
         for (FileStatus fileStatus : fileStatusList) {
-            listFragments(fs, fileStatus.getPath());
+            listFragments(fs, fileStatus.getPath(), 0);
         }
         LOG.debug("Total number of fragments = {}", fragments.size());
 
@@ -55,15 +55,21 @@ public class HdfsFileFragmenter extends HdfsDataFragmenter {
      * List fragments recursively, if a directory is found, recursively
      * list the files
      *
-     * @param fs   the filesystem
-     * @param path the path to list
+     * @param fs    the filesystem
+     * @param path  the path to list
+     * @param depth recursion depth
      * @throws IOException for any IO error
      */
-    private void listFragments(FileSystem fs, Path path) throws IOException {
+    private void listFragments(FileSystem fs, Path path, int depth) throws IOException {
+
+        if (depth >= 32) {
+            throw new IOException("Exceeded depth for recursion");
+        }
+
         FileStatus[] fileStatusList = fs.listStatus(path);
         for (FileStatus fileStatus : fileStatusList) {
             if (fileStatus.isDirectory()) {
-                listFragments(fs, fileStatus.getPath());
+                listFragments(fs, fileStatus.getPath(), depth + 1);
             } else {
                 String sourceName = fileStatus.getPath().toUri().toString();
                 Fragment fragment = new Fragment(sourceName, HOSTS, DUMMY_METADATA);

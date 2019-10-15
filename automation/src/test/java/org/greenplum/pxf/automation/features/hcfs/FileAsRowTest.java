@@ -96,6 +96,18 @@ public class FileAsRowTest extends BaseFeature {
                 hdfsBasePath + "multi/", hdfsBasePath + "multi/*line", srcPaths);
     }
 
+    @Test(groups = {"gpdb", "hcfs", "security"})
+    public void testMultilineWithDirectoryWildcardPathLocation() throws Exception {
+        String hdfsBasePath = hdfs.getWorkingDirectory() + "/file_as_row/";
+        String[] srcPaths = {
+                localDataResourcesFolder + "/text/" + multiLineTextFile,
+                localDataResourcesFolder + "/text/" + singleLineTextFile,
+                localDataResourcesFolder + "/text/" + twoLineTextFile};
+
+        runTestScenario("multi_files", PXF_MULTILINE_COLS,
+                hdfsBasePath + "multi/", hdfsBasePath + "m*ti/*line", srcPaths);
+    }
+
     private void runTestScenario(String name, String[] fields, String hdfsPath, String[] srcPaths) throws Exception {
         runTestScenario(name, fields, hdfsPath, hdfsPath, srcPaths);
     }
