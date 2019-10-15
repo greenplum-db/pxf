@@ -209,13 +209,13 @@ public class SecureLogin {
         if (currentSession == null)
             return null;
 
-        long kerberosMinMillisBeforeReloginkerberosMinMillisBeforeRelogin = Utilities.isSecurityEnabled(configuration) ?
+        long kerberosMinMillisBeforeRelogin = Utilities.isSecurityEnabled(configuration) ?
                 PxfUserGroupInformation.getKerberosMinMillisBeforeRelogin(serverName, configuration) : 0L;
         LoginSession expectedLoginSession = new LoginSession(
                 configDirectory,
                 SecureLogin.getServicePrincipal(serverName, configuration),
                 SecureLogin.getServiceKeytab(serverName, configuration),
-                kerberosMinMillisBeforeReloginkerberosMinMillisBeforeRelogin);
+                kerberosMinMillisBeforeRelogin);
         if (!currentSession.equals(expectedLoginSession)) {
             LOG.warn("LoginSession has changed for server {} : existing {} expected {}", serverName, currentSession, expectedLoginSession);
             return null;
