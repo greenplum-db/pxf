@@ -831,6 +831,7 @@ jobs:
       - compile_pxf
       trigger: true
     - get: gpdb-pxf-dev-centos6-hdp2-server
+    - get: ccp-7
   - task: load_config_for_ambari
     file: pxf_src/concourse/tasks/load_ambari_config.yml
     image: ccp-7
@@ -845,6 +846,7 @@ jobs:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
       GROUP: gpdb
       HADOOP_CLIENT: HDP_KERBEROS
+      IMPERSONATION: false
       PGPORT: {{pgport}}
       SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
       TARGET_OS: centos
