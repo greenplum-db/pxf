@@ -146,7 +146,7 @@ function _main() {
 	install_pxf_client
 	install_pxf_server
 
-	if [[ -z ${PROTOCOL} && ${HADOOP_CLIENT} != MAPR ]]; then
+	if [[ -z ${PROTOCOL} && ${HADOOP_CLIENT} != MAPR && ${HADOOP_CLIENT} != HDP_KERBEROS ]]; then
 		# Setup Hadoop before creating GPDB cluster to use system python for yum install
 		# Must be after installing GPDB to transfer hbase jar
 		setup_hadoop "${GPHD_ROOT}"

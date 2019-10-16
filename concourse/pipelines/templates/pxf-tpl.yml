@@ -838,7 +838,7 @@ jobs:
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
       GROUP: gpdb
-      HADOOP_CLIENT: CDH
+      HADOOP_CLIENT: HDP_KERBEROS
       PGPORT: {{pgport}}
       SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
       TARGET_OS: centos
