@@ -830,11 +830,17 @@ jobs:
       passed:
       - compile_pxf
       trigger: true
-    - get: gpdb-pxf-dev-centos6-cdh-server
+    - get: gpdb-pxf-dev-centos6-hdp2-server
+  - task: load_config_for_ambari
+    file: pxf_src/concourse/tasks/load_ambari_config.yml
+    image: ccp-7
+    params:
+      GOOGLE_CREDENTIALS: {{google-service-account-key}}
+      GOOGLE_PROJECT_ID: {{google-project-id}}
+      GOOGLE_ZONE: {{google-zone}}
   - task: test_pxf
     file: pxf_src/concourse/tasks/test_pxf.yml
-    image: gpdb-pxf-dev-centos6-cdh-server
-    attempts: 2
+    image: gpdb-pxf-dev-centos6-hdp2-server
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
       GROUP: gpdb

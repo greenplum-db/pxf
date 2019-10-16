@@ -1,0 +1,12 @@
+platform: linux
+image_resource:
+  type: docker-image
+outputs:
+  - name: ambari_env_files
+params:
+  GOOGLE_CREDENTIALS:
+  GOOGLE_PROJECT_ID:
+  GOOGLE_ZONE:
+  GOOGLE_SERVICE_ACCOUNT:
+run:
+  path: pxf_src/concourse/scripts/load_ambari_config.bash
