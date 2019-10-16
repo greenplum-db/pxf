@@ -488,26 +488,26 @@ function configure_pxf_wasbs_server() {
 }
 
 function configure_pxf_default_server() {
-	# copy hadoop config files to PXF_CONF_DIR/servers/default
-	if [[ -d /etc/hadoop/conf/ ]]; then
-		cp /etc/hadoop/conf/*-site.xml "${PXF_CONF_DIR}/servers/default"
-	fi
-	if [[ -d /etc/hive/conf/ ]]; then
-		cp /etc/hive/conf/*-site.xml "${PXF_CONF_DIR}/servers/default"
-	fi
-	if [[ -d /etc/hbase/conf/ ]]; then
-		cp /etc/hbase/conf/*-site.xml "${PXF_CONF_DIR}/servers/default"
-	fi
-
 	AMBARI_DIR=$(find /tmp/build/ -name ambari_env_files)
 	if [[ -n $AMBARI_DIR  ]]; then
 	  AMBARI_KEYTAB_FILE=$(find "$AMBARI_DIR" -name "*.keytab")
-		cp "${AMBARI_DIR}/conf/*-site.xml" "${PXF_CONF_DIR}/servers/default"
+		cp "${AMBARI_DIR}"/conf/*-site.xml "${PXF_CONF_DIR}/servers/default"
 
 		if [[ -n $AMBARI_KEYTAB_FILE ]]; then
 			cp ${PXF_CONF_DIR}/templates/pxf-site.xml ${PXF_CONF_DIR}/servers/default/pxf-site.xml
 			sed -i -e "s|gpadmin/_HOST@EXAMPLE.COM|pxfuser@C.AMBARI.INTERNAL|g" ${PXF_CONF_DIR}/servers/default/pxf-site.xml
 			sed -i -e "s|\${pxf.conf}/keytabs/pxf.service.keytab|$AMBARI_KEYTAB_FILE|g" ${PXF_CONF_DIR}/servers/default/pxf-site.xml
+		fi
+	else
+		# copy hadoop config files to PXF_CONF_DIR/servers/default
+		if [[ -d /etc/hadoop/conf/ ]]; then
+			cp /etc/hadoop/conf/*-site.xml "${PXF_CONF_DIR}/servers/default"
+		fi
+		if [[ -d /etc/hive/conf/ ]]; then
+			cp /etc/hive/conf/*-site.xml "${PXF_CONF_DIR}/servers/default"
+		fi
+		if [[ -d /etc/hbase/conf/ ]]; then
+			cp /etc/hbase/conf/*-site.xml "${PXF_CONF_DIR}/servers/default"
 		fi
 	fi
 }
