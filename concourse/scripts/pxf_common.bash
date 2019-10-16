@@ -325,8 +325,10 @@ function init_and_configure_pxf_server() {
 		# Copy pxf-site.xml to the server configuration and update the
 		# pxf.service.user.name property value to use the PROXY_USER
 		# Only copy this file when testing against non-cloud
-		cp ${PXF_CONF_DIR}/templates/pxf-site.xml ${PXF_CONF_DIR}/servers/default/pxf-site.xml
-		sed -i -e "s|\${user.name}|${PROXY_USER}|g" ${PXF_CONF_DIR}/servers/default/pxf-site.xml
+		if [[ ! -f ${PXF_CONF_DIR}/templates/pxf-site.xml ]]; then
+			cp ${PXF_CONF_DIR}/templates/pxf-site.xml ${PXF_CONF_DIR}/servers/default/pxf-site.xml
+			sed -i -e "s|\${user.name}|${PROXY_USER}|g" ${PXF_CONF_DIR}/servers/default/pxf-site.xml
+		fi
 	fi
 
 	# update runtime JDK value based on CI parameter
@@ -495,6 +497,18 @@ function configure_pxf_default_server() {
 	fi
 	if [[ -d /etc/hbase/conf/ ]]; then
 		cp /etc/hbase/conf/*-site.xml "${PXF_CONF_DIR}/servers/default"
+	fi
+
+	AMBARI_DIR=$(find /tmp/build/ -name ambari_env_files)
+	if [[ -n $AMBARI_DIR  ]]; then
+	  AMBARI_KEYTAB_FILE=$(find "$AMBARI_DIR" -name "*.keytab")
+		cp "${AMBARI_DIR}/conf/*-site.xml" "${PXF_CONF_DIR}/servers/default"
+
+		if [[ -n $AMBARI_KEYTAB_FILE ]]; then
+			cp ${PXF_CONF_DIR}/templates/pxf-site.xml ${PXF_CONF_DIR}/servers/default/pxf-site.xml
+			sed -i -e "s|gpadmin/_HOST@EXAMPLE.COM|pxfuser@C.AMBARI.INTERNAL|g" ${PXF_CONF_DIR}/servers/default/pxf-site.xml
+			sed -i -e "s|\${pxf.conf}/keytabs/pxf.service.keytab|$AMBARI_KEYTAB_FILE|g" ${PXF_CONF_DIR}/servers/default/pxf-site.xml
+		fi
 	fi
 }
 
