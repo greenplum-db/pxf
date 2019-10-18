@@ -130,8 +130,8 @@ function configure_sut() {
 	if [[ -n $AMBARI_DIR  ]]; then
 		REALM=$(cat "$AMBARI_DIR"/REALM)
 		HADOOP_USER=$(cat "$AMBARI_DIR"/HADOOP_USER)
-		HADOOP_HOSTNAME=$(grep < cluster_env_files/etc_hostfile ambari-2 | awk '{print $2}')
-		HADOOP_IP=$(grep < cluster_env_files/etc_hostfile ambari-1 | awk '{print $1}')
+		HADOOP_HOSTNAME=$(grep < "$AMBARI_DIR"/etc_hostfile ambari-2 | awk '{print $2}')
+		HADOOP_IP=$(grep < "$AMBARI_DIR"/etc_hostfile ambari-1 | awk '{print $1}')
 		KERBERIZED_HADOOP_URI="hive/${HADOOP_HOSTNAME}.${REALM,,}@${REALM};saslQop=auth" # quoted because of semicolon
 		sed -i \
 			-e "s/>hadoop</>${HADOOP_IP}</g" \
