@@ -133,6 +133,8 @@ function configure_sut() {
 		HADOOP_HOSTNAME=$(grep < "$AMBARI_DIR"/etc_hostfile ambari-2 | awk '{print $2}')
 		HADOOP_IP=$(grep < "$AMBARI_DIR"/etc_hostfile ambari-1 | awk '{print $1}')
 		KERBERIZED_HADOOP_URI="hive/${HADOOP_HOSTNAME}.${REALM,,}@${REALM};saslQop=auth" # quoted because of semicolon
+		# Add ambari hostfile to /etc/hosts
+		sudo tee --append /etc/hosts < "$AMBARI_DIR"/etc_hostfile
 		sed -i \
 			-e "s/>hadoop</>${HADOOP_IP}</g" \
 			-e "s|</hdfs>|<hadoopRoot>$AMBARI_DIR</hadoopRoot></hdfs>|g" \
