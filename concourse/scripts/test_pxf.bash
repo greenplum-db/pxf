@@ -125,6 +125,23 @@ function setup_hadoop() {
 	start_hadoop_services "${hdfsrepo}"
 }
 
+function configure_sut() {
+	AMBARI_DIR=$(find /tmp/build/ -name ambari_env_files)
+	if [[ -n $AMBARI_DIR  ]]; then
+		REALM=$(cat "$AMBARI_DIR"/REALM)
+		HADOOP_USER=$(cat "$AMBARI_DIR"/HADOOP_USER)
+		HADOOP_HOSTNAME=$(grep < cluster_env_files/etc_hostfile ambari-2 | awk '{print $2}')
+		HADOOP_IP=$(grep < cluster_env_files/etc_hostfile ambari-1 | awk '{print $1}')
+		KERBERIZED_HADOOP_URI="hive/${HADOOP_HOSTNAME}.${REALM,,}@${REALM};saslQop=auth" # quoted because of semicolon
+		sed -i \
+			-e "s/>hadoop</>${HADOOP_IP}</g" \
+			-e "s|</hdfs>|<hadoopRoot>$AMBARI_DIR</hadoopRoot></hdfs>|g" \
+			-e "s|</cluster>|<hiveBaseHdfsDirectory>/user/hive/warehouse/</hiveBaseHdfsDirectory><testKerberosPrincipal>${HADOOP_USER}@${REALM}</testKerberosPrincipal></cluster>|g" \
+			-e "s|</hive>|<kerberosPrincipal>${KERBERIZED_HADOOP_URI}</kerberosPrincipal><userName>hive</userName></hive>|g" \
+			pxf_src/automation/src/test/resources/sut/default.xml
+	fi
+}
+
 function _main() {
 	# kill the sshd background process when this script exits. Otherwise, the
 	# concourse build will run forever.
@@ -199,6 +216,8 @@ function _main() {
 		echo 'Acceptance test pipeline'
 		exit 1
 	fi
+
+	configure_sut
 
 	# Run Tests
 	if [[ -n ${GROUP} ]]; then
