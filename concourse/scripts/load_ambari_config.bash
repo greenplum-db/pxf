@@ -8,6 +8,7 @@
 # - REALM (a file with the name of the REALM for this kerberized cluster)
 # - HADOOP_USER (a file with the name of the hadoop user)
 # - etc_hostfile (a file with the /etc/hosts configuration for this cluster)
+# - krb5.conf
 # To load the static configuration, prepare all the files above and
 #    gsutil cp -r configuration gs://data-gpdb-ud/configuration/ambari-cloud/
 

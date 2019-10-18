@@ -135,6 +135,7 @@ function configure_sut() {
 		KERBERIZED_HADOOP_URI="hive/${HADOOP_HOSTNAME}.${REALM,,}@${REALM};saslQop=auth" # quoted because of semicolon
 		# Add ambari hostfile to /etc/hosts
 		sudo tee --append /etc/hosts < "$AMBARI_DIR"/etc_hostfile
+		sudo cp "$AMBARI_DIR"/krb5.conf /etc/krb5.conf
 		sed -i \
 			-e "s/>hadoop</>${HADOOP_IP}</g" \
 			-e "s|</hdfs>|<hadoopRoot>$AMBARI_DIR</hadoopRoot></hdfs>|g" \
