@@ -129,15 +129,20 @@ function configure_sut() {
 	AMBARI_DIR=$(find /tmp/build/ -name ambari_env_files)
 	if [[ -n $AMBARI_DIR  ]]; then
 		REALM=$(cat "$AMBARI_DIR"/REALM)
-		HADOOP_USER=$(cat "$AMBARI_DIR"/HADOOP_USER)
-		HADOOP_HOSTNAME=$(grep < "$AMBARI_DIR"/etc_hostfile ambari-2 | awk '{print $2}')
 		HADOOP_IP=$(grep < "$AMBARI_DIR"/etc_hostfile ambari-1 | awk '{print $1}')
-		KERBERIZED_HADOOP_URI="hive/${HADOOP_HOSTNAME}.${REALM,,}@${REALM};saslQop=auth" # quoted because of semicolon
+		HADOOP_USER=$(cat "$AMBARI_DIR"/HADOOP_USER)
+		HBASE_IP=$(grep < "$AMBARI_DIR"/etc_hostfile ambari-3 | awk '{print $1}')
+		HIVE_IP=$(grep < "$AMBARI_DIR"/etc_hostfile ambari-2 | awk '{print $1}')
+		HIVE_HOSTNAME=$(grep < "$AMBARI_DIR"/etc_hostfile ambari-2 | awk '{print $2}')
+		KERBERIZED_HADOOP_URI="hive/${HIVE_HOSTNAME}.${REALM,,}@${REALM};saslQop=auth" # quoted because of semicolon
 		# Add ambari hostfile to /etc/hosts
 		sudo tee --append /etc/hosts < "$AMBARI_DIR"/etc_hostfile
 		sudo cp "$AMBARI_DIR"/krb5.conf /etc/krb5.conf
+		# Replace host, principal, and root path values in the SUT file
 		sed -i \
-			-e "s/>hadoop</>${HADOOP_IP}</g" \
+			-e "/<hdfs>/,/<\/hdfs/ s|<host>localhost</host>|<host>${HADOOP_IP}</host>|g" \
+			-e "/<hive>/,/<\/hive/ s|<host>localhost</host>|<host>${HIVE_IP}</host>|g" \
+			-e "/<hbase>/,/<\/hbase/ s|<host>localhost</host>|<host>${HBASE_IP}</host>|g" \
 			-e "s|</hdfs>|<hadoopRoot>$AMBARI_DIR</hadoopRoot></hdfs>|g" \
 			-e "s|</cluster>|<hiveBaseHdfsDirectory>/user/hive/warehouse/</hiveBaseHdfsDirectory><testKerberosPrincipal>${HADOOP_USER}@${REALM}</testKerberosPrincipal></cluster>|g" \
 			-e "s|</hive>|<kerberosPrincipal>${KERBERIZED_HADOOP_URI}</kerberosPrincipal><userName>hive</userName></hive>|g" \
