@@ -23,8 +23,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.security.SecureLogin;
+import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.jdbc.utils.ConnectionManager;
 import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
@@ -33,9 +33,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.security.PrivilegedExceptionAction;
-import java.sql.*;
-import java.util.*;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import java.util.stream.Collectors;
+
+import static org.greenplum.pxf.api.security.SecureLogin.CONFIG_KEY_SERVICE_USER_IMPERSONATION;
 
 /**
  * JDBC tables plugin (base class)
@@ -78,7 +88,6 @@ public class JdbcBasePlugin extends BasePlugin {
     private static final String FORBIDDEN_SESSION_PROPERTY_CHARACTERS = ";\n\b\0";
     private static final String QUERY_NAME_PREFIX = "query:";
     private static final int QUERY_NAME_PREFIX_LENGTH = QUERY_NAME_PREFIX.length();
-    private static final String PXF_IMPERSONATION_JDBC_PROPERTY_NAME = "pxf.service.user.impersonation";
 
     private static final String HIVE_URL_PREFIX = "jdbc:hive2://";
     private static final String HIVE_DEFAULT_DRIVER_CLASS = "org.apache.hive.jdbc.HiveDriver";
@@ -271,7 +280,7 @@ public class JdbcBasePlugin extends BasePlugin {
 
         // Set optional user parameter, taking into account impersonation setting for the server.
         String jdbcUser = configuration.get(JDBC_USER_PROPERTY_NAME);
-        boolean impersonationEnabledForServer = configuration.getBoolean(PXF_IMPERSONATION_JDBC_PROPERTY_NAME, false);
+        boolean impersonationEnabledForServer = configuration.getBoolean(CONFIG_KEY_SERVICE_USER_IMPERSONATION, false);
         LOG.debug("JDBC impersonation is {}enabled for server {}", impersonationEnabledForServer ? "" : "not ", context.getServerName());
         if (impersonationEnabledForServer) {
             if (Utilities.isSecurityEnabled(configuration) && StringUtils.startsWith(jdbcUrl, HIVE_URL_PREFIX)) {
@@ -280,11 +289,15 @@ public class JdbcBasePlugin extends BasePlugin {
                 LOG.debug("Replaced JDBC URL {} with {}", jdbcUrl, updatedJdbcUrl);
                 jdbcUrl = updatedJdbcUrl;
             } else {
+                // the jdbcUser is the GPDB user
                 jdbcUser = context.getUser();
             }
         }
         if (jdbcUser != null) {
+            LOG.debug("Effective JDBC user {}", jdbcUser);
             connectionConfiguration.setProperty("user", jdbcUser);
+        } else {
+            LOG.debug("JDBC user has not been set");
         }
 
         if (LOG.isDebugEnabled()) {

@@ -114,7 +114,7 @@
     <!--
     <property>
         <name>pxf.service.user.impersonation</name>
-        <value>true</value>
+        <value>${pxf.service.user.impersonation.enabled}</value>
         <description>Impersonate Greenplum user when connecting to the remote database (previously known as pxf.impersonation.jdbc)</description>
     </property>
     -->
