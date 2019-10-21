@@ -568,7 +568,7 @@ Follow these steps to enable connectivity to Hive:
             2) enable PXF JDBC impersonation so that PXF will automatically use Greenplum's user name to connect to Hive:
             ```
             <property>
-                <name>pxf.impersonation.jdbc</name>
+                <name>pxf.service.user.impersonation</name>
                 <value>true</value>
             </property>
             ```
@@ -614,7 +614,7 @@ Follow these steps to enable connectivity to Hive:
         3) enable PXF JDBC impersonation in `jdbc-site.xml` so that PXF will automatically use Greenplum's user name to connect to Hive:
             ```
             <property>
-                <name>pxf.impersonation.jdbc</name>
+                <name>pxf.service.user.impersonation</name>
                 <value>true</value>
             </property>
             ```

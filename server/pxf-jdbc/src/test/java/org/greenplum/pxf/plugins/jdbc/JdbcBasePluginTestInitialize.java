@@ -440,7 +440,7 @@ public class JdbcBasePluginTestInitialize {
     public void testUserWithImpersonation() throws Exception {
         // Configuration
         Configuration configuration = makeConfiguration();
-        configuration.set("pxf.impersonation.jdbc", "true");
+        configuration.set("pxf.service.user.impersonation", "true");
 
         // Context
         RequestContext context = makeContext();
@@ -462,7 +462,7 @@ public class JdbcBasePluginTestInitialize {
         // Configuration
         Configuration configuration = makeConfiguration();
         configuration.set(CONFIG_USER, "user");
-        configuration.set("pxf.impersonation.jdbc", "true");
+        configuration.set("pxf.service.user.impersonation", "true");
 
         // Context
         RequestContext context = makeContext();
@@ -484,7 +484,7 @@ public class JdbcBasePluginTestInitialize {
         // Configuration
         Configuration configuration = makeConfiguration();
         configuration.set(CONFIG_USER, "user");
-        configuration.set("pxf.impersonation.jdbc", "false");
+        configuration.set("pxf.service.user.impersonation", "false");
 
         // Context
         RequestContext context = makeContext();

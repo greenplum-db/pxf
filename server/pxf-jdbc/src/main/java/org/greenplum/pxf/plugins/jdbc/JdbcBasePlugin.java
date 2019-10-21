@@ -78,7 +78,7 @@ public class JdbcBasePlugin extends BasePlugin {
     private static final String FORBIDDEN_SESSION_PROPERTY_CHARACTERS = ";\n\b\0";
     private static final String QUERY_NAME_PREFIX = "query:";
     private static final int QUERY_NAME_PREFIX_LENGTH = QUERY_NAME_PREFIX.length();
-    private static final String PXF_IMPERSONATION_JDBC_PROPERTY_NAME = "pxf.impersonation.jdbc";
+    private static final String PXF_IMPERSONATION_JDBC_PROPERTY_NAME = "pxf.service.user.impersonation";
 
     private static final String HIVE_URL_PREFIX = "jdbc:hive2://";
     private static final String HIVE_DEFAULT_DRIVER_CLASS = "org.apache.hive.jdbc.HiveDriver";
