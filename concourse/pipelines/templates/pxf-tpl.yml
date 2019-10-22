@@ -844,7 +844,7 @@ jobs:
     image: gpdb-pxf-dev-centos6-hdp2-server
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
-      GROUP: gpdb
+      GROUP: hcfs,hive
       HADOOP_CLIENT: HDP_KERBEROS
       IMPERSONATION: false
       PGPORT: {{pgport}}
