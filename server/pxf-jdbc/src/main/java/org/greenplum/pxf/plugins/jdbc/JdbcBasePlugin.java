@@ -157,6 +157,12 @@ public class JdbcBasePlugin extends BasePlugin {
 
     private ConnectionManager connectionManager;
 
+    static {
+        // Deprecated as of Oct 22, 2019 in version 5.9.2+
+        Configuration.addDeprecation("pxf.impersonation.jdbc",
+                CONFIG_KEY_SERVICE_USER_IMPERSONATION,
+                "The property \"pxf.impersonation.jdbc\" has been deprecated in favor of \"pxf.service.user.impersonation\".");
+    }
 
     /**
      * Creates a new instance with default (singleton) instance of ConnectionManager.
