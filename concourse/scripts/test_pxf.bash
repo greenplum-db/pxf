@@ -134,7 +134,7 @@ function configure_sut() {
 		HBASE_IP=$(grep < "$AMBARI_DIR"/etc_hostfile ambari-3 | awk '{print $1}')
 		HIVE_IP=$(grep < "$AMBARI_DIR"/etc_hostfile ambari-2 | awk '{print $1}')
 		HIVE_HOSTNAME=$(grep < "$AMBARI_DIR"/etc_hostfile ambari-2 | awk '{print $2}')
-		KERBERIZED_HADOOP_URI="hive/${HIVE_HOSTNAME}.${REALM,,}@${REALM};saslQop=auth" # quoted because of semicolon
+		KERBERIZED_HADOOP_URI="hive/${HIVE_HOSTNAME}.c.data-gpdb-ud@${REALM};saslQop=auth" # quoted because of semicolon
 		# Add ambari hostfile to /etc/hosts
 		sudo tee --append /etc/hosts < "$AMBARI_DIR"/etc_hostfile
 		sudo cp "$AMBARI_DIR"/krb5.conf /etc/krb5.conf
