@@ -87,7 +87,7 @@ public class HdfsDataFragmenter extends BaseFragmenter {
     @Override
     public FragmentStats getFragmentStats() throws Exception {
         String absoluteDataPath = hcfsType.getDataUri(jobConf, context);
-        ArrayList<InputSplit> splits = getSplits(new Path(absoluteDataPath));
+        List<InputSplit> splits = getSplits(new Path(absoluteDataPath));
 
         if (splits.isEmpty()) {
             return new FragmentStats(0, 0, 0);
@@ -100,11 +100,11 @@ public class HdfsDataFragmenter extends BaseFragmenter {
         return new FragmentStats(splits.size(), firstSplit.getLength(), totalSize);
     }
 
-    private ArrayList<InputSplit> getSplits(Path path) throws IOException {
-        PxfInputFormat fformat = new PxfInputFormat();
+    protected List<InputSplit> getSplits(Path path) throws IOException {
+        PxfInputFormat pxfInputFormat = new PxfInputFormat();
         PxfInputFormat.setInputPaths(jobConf, path);
-        InputSplit[] splits = fformat.getSplits(jobConf, 1);
-        ArrayList<InputSplit> result = new ArrayList<>();
+        InputSplit[] splits = pxfInputFormat.getSplits(jobConf, 1);
+        List<InputSplit> result = new ArrayList<>();
 
         /*
          * HD-2547: If the file is empty, an empty split is returned: no

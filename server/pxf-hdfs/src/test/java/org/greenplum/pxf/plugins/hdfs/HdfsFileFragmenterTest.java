@@ -29,7 +29,8 @@ public class HdfsFileFragmenterTest {
 
         List<Fragment> fragmentList = fragmenter.getFragments();
         assertNotNull(fragmentList);
-        assertEquals(4, fragmentList.size());
+        // empty files are not returned
+        assertEquals(3, fragmentList.size());
     }
 
     @Test
@@ -46,6 +47,7 @@ public class HdfsFileFragmenterTest {
 
         List<Fragment> fragmentList = fragmenter.getFragments();
         assertNotNull(fragmentList);
-        assertEquals(4, fragmentList.size());
+        // empty files are not returned
+        assertEquals(3, fragmentList.size());
     }
 }

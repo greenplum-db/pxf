@@ -1,14 +1,13 @@
 package org.greenplum.pxf.plugins.hdfs;
 
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapred.FileSplit;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 
 import java.io.IOException;
-import java.net.URI;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Fragmenter class for file resources. This fragmenter
@@ -20,11 +19,11 @@ public class HdfsFileFragmenter extends HdfsDataFragmenter {
 
     // The hostname is no longer used, hardcoding it to localhost
     private static final String[] HOSTS = {"localhost"};
-    private static byte[] DUMMY_METADATA;
+    private static byte[] EMPTY_METADATA;
 
     static {
         try {
-            DUMMY_METADATA = HdfsUtilities.prepareFragmentMetadata(0, 0, HOSTS);
+            EMPTY_METADATA = HdfsUtilities.prepareFragmentMetadata(0, 0, HOSTS);
         } catch (IOException ignored) {
             // Should not fail
         }
@@ -37,44 +36,15 @@ public class HdfsFileFragmenter extends HdfsDataFragmenter {
      */
     @Override
     public List<Fragment> getFragments() throws Exception {
-        String fileName = hcfsType.getDataUri(jobConf, context);
-        Path path = new Path(fileName);
 
-        FileSystem fs = FileSystem.get(URI.create(fileName), configuration);
-        FileStatus[] fileStatusList = fs.globStatus(path);
-
-        for (FileStatus fileStatus : fileStatusList) {
-            listFragments(fs, fileStatus.getPath(), 0);
-        }
+        Path path = new Path(hcfsType.getDataUri(jobConf, context));
+        fragments = getSplits(path)
+                .stream()
+                .filter(split -> ((FileSplit) split).getStart() == 0L)
+                .map(split -> new Fragment(((FileSplit) split).getPath().toString(), HOSTS, EMPTY_METADATA))
+                .collect(Collectors.toList());
         LOG.debug("Total number of fragments = {}", fragments.size());
 
         return fragments;
-    }
-
-    /**
-     * List fragments recursively, if a directory is found, recursively
-     * list the files
-     *
-     * @param fs    the filesystem
-     * @param path  the path to list
-     * @param depth recursion depth
-     * @throws IOException for any IO error
-     */
-    private void listFragments(FileSystem fs, Path path, int depth) throws IOException {
-
-        if (depth >= 32) {
-            throw new IOException("Exceeded depth for recursion");
-        }
-
-        FileStatus[] fileStatusList = fs.listStatus(path);
-        for (FileStatus fileStatus : fileStatusList) {
-            if (fileStatus.isDirectory()) {
-                listFragments(fs, fileStatus.getPath(), depth + 1);
-            } else {
-                String sourceName = fileStatus.getPath().toUri().toString();
-                Fragment fragment = new Fragment(sourceName, HOSTS, DUMMY_METADATA);
-                fragments.add(fragment);
-            }
-        }
     }
 }
