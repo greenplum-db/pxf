@@ -1090,7 +1090,7 @@ jobs:
       IMPERSONATION: {{enable-impersonation-multinode}}
       KERBEROS: {{kerberos-enabled}}
       GOOGLE_PROJECT_ID: {{google-project-id}}
-      GROUP: security,proxySecurity,multi-cluster-security
+      GROUP: security,proxySecurity,multiClusterSecurity
       PXF_JVM_OPTS: {{pxf-jvm-opts}}
       TARGET_OS: centos
 {% if acceptance %}

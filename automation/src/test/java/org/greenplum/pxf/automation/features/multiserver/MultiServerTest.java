@@ -161,17 +161,17 @@ public class MultiServerTest extends BaseFeature {
         runTincTest("pxf.features.multi_server.hdfs_and_cloud.runTest");
     }
 
-    @Test(groups = {"features", "multi-cluster-security"})
+    @Test(groups = {"features", "multiClusterSecurity"})
     public void testTwoSecuredServers() throws Exception {
         runTincTest("pxf.features.multi_server.two_secure_hdfs.runTest");
     }
 
-    @Test(groups = {"features", "multi-cluster-security"})
+    @Test(groups = {"features", "multiClusterSecurity"})
     public void testSecureServerAndNonSecuredServer() throws Exception {
         runTincTest("pxf.features.multi_server.secure_hdfs_and_non_secure_hdfs.runTest");
     }
 
-    @Test(groups = {"features", "multi-cluster-security"})
+    @Test(groups = {"features", "multiClusterSecurity"})
     public void testTwoSecuredServersNonSecureServerAndCloudServer() throws Exception {
         runTincTest("pxf.features.multi_server.test_all.runTest");
     }

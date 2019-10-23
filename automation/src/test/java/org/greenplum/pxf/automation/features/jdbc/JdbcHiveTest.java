@@ -140,7 +140,7 @@ public class JdbcHiveTest extends BaseFeature {
         runTincTest("pxf.features.jdbc.hive.runTest");
     }
 
-    @Test(groups = {"features", "multi-cluster-security"})
+    @Test(groups = {"features", "multiClusterSecurity"})
     public void jdbcHiveReadFromTwoSecuredServers() throws Exception {
         // Initialize an additional HDFS system object (optional system object)
         hdfs2 = (Hdfs) systemManager.
@@ -158,7 +158,7 @@ public class JdbcHiveTest extends BaseFeature {
         runTincTest("pxf.features.jdbc.two_secured_hive.runTest");
     }
 
-    @Test(groups = {"features", "multi-cluster-security"})
+    @Test(groups = {"features", "multiClusterSecurity"})
     public void jdbcHiveReadFromSecureServerAndNonSecuredServer() throws Exception {
         if (hdfsNonSecure == null) return;
 
