@@ -435,5 +435,4 @@ public class JdbcTest extends BaseFeature {
     public void jdbcNamedQuery() throws Exception {
         runTincTest("pxf.features.jdbc.named_query.runTest");
     }
-
 }

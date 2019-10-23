@@ -844,9 +844,9 @@ jobs:
     image: gpdb-pxf-dev-centos6-hdp2-server
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
-      GROUP: hcfs,hive
+      GROUP: security
       HADOOP_CLIENT: HDP_KERBEROS
-      IMPERSONATION: false
+      IMPERSONATION: true
       PGPORT: {{pgport}}
       SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
       TARGET_OS: centos
@@ -1090,7 +1090,7 @@ jobs:
       IMPERSONATION: {{enable-impersonation-multinode}}
       KERBEROS: {{kerberos-enabled}}
       GOOGLE_PROJECT_ID: {{google-project-id}}
-      GROUP: security
+      GROUP: security,proxy-security,multi-cluster-security
       PXF_JVM_OPTS: {{pxf-jvm-opts}}
       TARGET_OS: centos
 {% if acceptance %}

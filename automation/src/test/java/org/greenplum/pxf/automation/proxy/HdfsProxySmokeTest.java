@@ -66,7 +66,7 @@ public class HdfsProxySmokeTest extends BaseSmoke {
         runTincTest("pxf.proxy.small_data.runTest");
     }
 
-    @Test(groups = { "proxy", "hdfs", "security" })
+    @Test(groups = { "proxy", "hdfs", "proxy-security" })
     public void test() throws Exception {
         runTest();
     }

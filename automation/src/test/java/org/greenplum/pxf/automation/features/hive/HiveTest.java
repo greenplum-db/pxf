@@ -201,7 +201,7 @@ public class HiveTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = {"features", "security"})
+    @Test(groups = {"features", "multi-cluster-security"})
     public void testTwoSecuredServers() throws Exception {
 
         Hdfs hdfs2 = (Hdfs) systemManager.
