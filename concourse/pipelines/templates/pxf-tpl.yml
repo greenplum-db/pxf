@@ -18,13 +18,13 @@ groups:
       - test_pxf_secure_multinode_gpdb
       - test_pxf_s3_no_impersonation
       - test_pxf_s3_with_impersonation
-      - test_pxf_hdp3_secure_with_impersonation
       - test_pxf_no_impersonation
       - test_pxf_hdp2_multinode_gpdb
       - test_pxf_hdp2_centos7_java11
       - test_pxf_mapr_centos6
       - test_pxf_hdp3_centos7
 {% if pipeline_type == "release" %}
+      - test_pxf_hdp3_secure_with_impersonation
       - test_pxf_hdp2_centos6
       - test_pxf_adl
       - test_pxf_gs
@@ -75,7 +75,9 @@ groups:
 {% if compile_gpdb %}
       - compile_gpdb_centos6
 {% endif %}
+{% if pipeline_type == "release" %}
       - test_pxf_hdp3_secure_with_impersonation
+{% endif %}
       - test_pxf_secure_multinode_gpdb
 
   - name: no_impersonation
@@ -807,6 +809,7 @@ jobs:
 {% endif %}
 {% endif %}
 
+{% if pipeline_type == "release" %}
 - name: test_pxf_hdp3_secure_with_impersonation
   plan:
   - in_parallel:
@@ -853,6 +856,7 @@ jobs:
       TEST_ENV: {{test-env}}
 {% if acceptance %}
       ACCEPTANCE: true
+{% endif %}
 {% endif %}
 
 - name: test_pxf_hdp2_multinode_gpdb
@@ -1397,7 +1401,6 @@ jobs:
 {% endif %}
     - test_pxf_s3_no_impersonation
     - test_pxf_s3_with_impersonation
-    - test_pxf_hdp3_secure_with_impersonation
     - test_pxf_no_impersonation
     - test_pxf_hdp2_multinode_gpdb
     - test_pxf_secure_multinode_gpdb
