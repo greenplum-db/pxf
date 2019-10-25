@@ -111,7 +111,7 @@ public class HiveTextTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "hive", "features", "gpdb", "security" })
+    @Test(groups = {"hive", "features", "gpdb", "security"})
     public void mismatchedTypes() throws Exception {
 
         // Hive column is SMALLINT, expected GPDB type is SMALLINT(int2), but actual is INTEGER(int4)
@@ -167,7 +167,7 @@ public class HiveTextTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "hive", "features", "gpdb", "security" })
+    @Test(groups = {"hive", "features", "gpdb", "security"})
     public void hiveTextTable() throws Exception {
 
         exTable = TableFactory.getPxfHiveTextReadableTable(HIVE_TEXT_TABLE,
@@ -183,7 +183,7 @@ public class HiveTextTest extends HiveBaseTest {
             gpdb.runQuery(createCmd);
         } catch (Exception e) {
             ExceptionUtils.validate(null, e, new Exception(
-                            "nonstandard use of escape in a string literal"), true,true);
+                    "nonstandard use of escape in a string literal"), true, true);
         }
         Assert.assertTrue("Table " + exTable.getName() + " was not created", gpdb.checkTableExists(exTable));
 
@@ -196,7 +196,7 @@ public class HiveTextTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "hive", "features", "gpdb", "security" })
+    @Test(groups = {"hive", "features", "gpdb", "security"})
     public void severalTextPartitions() throws Exception {
 
         createExternalTable(PXF_HIVE_HETEROGEN_TABLE,
@@ -216,7 +216,7 @@ public class HiveTextTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "hive", "features", "gpdb", "security" })
+    @Test(groups = {"hive", "features", "gpdb", "security"})
     public void severalTextPartitionsNoPartitonColumInGpdb() throws Exception {
 
         hiveTable = new HiveExternalTable(HIVE_REG_HETEROGEN_TABLE, HIVE_RC_COLS);
@@ -247,7 +247,7 @@ public class HiveTextTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "hive", "features", "gpdb", "security" })
+    @Test(groups = {"hive", "features", "gpdb", "security"})
     public void partitionFilterPushDown() throws Exception {
 
         hiveTable = new HiveExternalTable(HIVE_REG_HETEROGEN_TABLE, HIVE_RC_COLS);
@@ -319,12 +319,12 @@ public class HiveTextTest extends HiveBaseTest {
         exTable.setDelimiter("E'\\x01'");
         exTable.setUserParameters(hiveTestFilter(filterString));
         createTable(exTable);
-        gpdb.queryResults(exTable,"SELECT * FROM " + exTable.getName()
-                        + " WHERE t1='row6' AND t2='s_11' AND num1='6' AND dub1='11' ORDER BY fmt, t1");
+        gpdb.queryResults(exTable, "SELECT * FROM " + exTable.getName()
+                + " WHERE t1='row6' AND t2='s_11' AND num1='6' AND dub1='11' ORDER BY fmt, t1");
 
         // Prepare expected data
         Table dataCompareTable = new Table("dataTable", null);
-        dataCompareTable.addRow(new String[] { "row6", "s_11", "6", "11", "rc3", "c" });
+        dataCompareTable.addRow(new String[]{"row6", "s_11", "6", "11", "rc3", "c"});
         ComparisonUtils.compareTables(exTable, dataCompareTable, null);
 
         // Mixed filter with partition and non partition fields, partition filtering: fmt ='rc3'
@@ -332,14 +332,14 @@ public class HiveTextTest extends HiveBaseTest {
         exTable.setDelimiter("E'\\x01'");
         exTable.setUserParameters(hiveTestFilter(filterString));
         createTable(exTable);
-        gpdb.queryResults(exTable,"SELECT * FROM " + exTable.getName()
-                        + " WHERE t1='row6' AND t2='s_11' AND num1='6' AND dub1='11' ORDER BY fmt, t1, prt");
+        gpdb.queryResults(exTable, "SELECT * FROM " + exTable.getName()
+                + " WHERE t1='row6' AND t2='s_11' AND num1='6' AND dub1='11' ORDER BY fmt, t1, prt");
 
         // Prepare expected data
         dataCompareTable = new Table("dataTable", null);
-        dataCompareTable.addRow(new String[] { "row6", "s_11", "6", "11", "rc3", "a" });
-        dataCompareTable.addRow(new String[] { "row6", "s_11", "6", "11", "rc3", "c" });
-        dataCompareTable.addRow(new String[] { "row6", "s_11", "6", "11", "rc3", "f" });
+        dataCompareTable.addRow(new String[]{"row6", "s_11", "6", "11", "rc3", "a"});
+        dataCompareTable.addRow(new String[]{"row6", "s_11", "6", "11", "rc3", "c"});
+        dataCompareTable.addRow(new String[]{"row6", "s_11", "6", "11", "rc3", "f"});
         ComparisonUtils.compareTables(exTable, dataCompareTable, null);
 
         // Mixed filter with partition and non partition fields, partition filtering: part='a'
@@ -347,13 +347,13 @@ public class HiveTextTest extends HiveBaseTest {
         exTable.setDelimiter("E'\\x01'");
         exTable.setUserParameters(hiveTestFilter(filterString));
         createTable(exTable);
-        gpdb.queryResults(exTable,"SELECT * FROM " + exTable.getName()
-                        + " WHERE t1='row5' AND t2='s_10' AND num1='5' AND dub1='10' ORDER BY fmt, t1, prt");
+        gpdb.queryResults(exTable, "SELECT * FROM " + exTable.getName()
+                + " WHERE t1='row5' AND t2='s_10' AND num1='5' AND dub1='10' ORDER BY fmt, t1, prt");
 
         // prepare expected data
         dataCompareTable = new Table("dataTable", null);
-        dataCompareTable.addRow(new String[] { "row5", "s_10", "5", "10", "rc1", "a" });
-        dataCompareTable.addRow(new String[] { "row5", "s_10", "5", "10", "rc3", "a" });
+        dataCompareTable.addRow(new String[]{"row5", "s_10", "5", "10", "rc1", "a"});
+        dataCompareTable.addRow(new String[]{"row5", "s_10", "5", "10", "rc3", "a"});
         ComparisonUtils.compareTables(exTable, dataCompareTable, null);
     }
 
@@ -362,7 +362,7 @@ public class HiveTextTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "hive", "features", "gpdb", "security" })
+    @Test(groups = {"hive", "features", "gpdb", "security"})
     public void filterNonePartitions() throws Exception {
 
         // Create PXF Table using Hive profile
@@ -374,9 +374,9 @@ public class HiveTextTest extends HiveBaseTest {
 
         // prepare expected data
         Table dataCompareTable = new Table("dataTable", null);
-        dataCompareTable.addRow(new String[] { "row6", "s_11", "6", "11", "rc1", "a" });
-        dataCompareTable.addRow(new String[] { "row6", "s_11", "6", "11", "rc2", "b" });
-        dataCompareTable.addRow(new String[] { "row6", "s_11", "6", "11", "rc3", "c" });
+        dataCompareTable.addRow(new String[]{"row6", "s_11", "6", "11", "rc1", "a"});
+        dataCompareTable.addRow(new String[]{"row6", "s_11", "6", "11", "rc2", "b"});
+        dataCompareTable.addRow(new String[]{"row6", "s_11", "6", "11", "rc3", "c"});
 
         ComparisonUtils.compareTables(exTable, dataCompareTable, null);
     }
@@ -386,7 +386,7 @@ public class HiveTextTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "hive", "features", "gpdb", "security" })
+    @Test(groups = {"hive", "features", "gpdb", "security"})
     public void filterBetweenPartitions() throws Exception {
 
         // Create PXF Table using Hive profile
@@ -409,7 +409,7 @@ public class HiveTextTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "hive", "hcatalog", "features", "gpdb", "security" })
+    @Test(groups = {"hive", "hcatalog", "features", "gpdb", "security"})
     public void hiveTextTableCustomDelimiter() throws Exception {
 
         //hive text table with custom delimiter
@@ -429,7 +429,7 @@ public class HiveTextTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "hive", "hcatalog", "features", "gpdb", "security" })
+    @Test(groups = {"hive", "hcatalog", "features", "gpdb", "security"})
     public void hiveTextTableOptimizedProfile() throws Exception {
 
         runTincTest("pxf.features.hcatalog.heterogeneous_table_three_text_partitions.runTest");
@@ -440,7 +440,7 @@ public class HiveTextTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "hive", "hcatalog", "features", "gpdb", "security" })
+    @Test(groups = {"hive", "hcatalog", "features", "gpdb", "security"})
     public void aggregateQueries() throws Exception {
 
         //hive text table with nulls
@@ -462,7 +462,7 @@ public class HiveTextTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "hive", "features", "gpdb", "security" })
+    @Test(groups = {"hive", "features", "gpdb", "security"})
     public void hiveTableWithSkipHeader() throws Exception {
         List<List<String>> tableProperties = new ArrayList<>();
         tableProperties.add(Arrays.asList("skip.header.line.count", "3"));
@@ -490,8 +490,8 @@ public class HiveTextTest extends HiveBaseTest {
         comparisonDataTable.pumpUpTableData(pumpAmount, true);
 
         // extra field to add
-        String[] arr1 = { "rc1", "rc2", "rc3" };
-        String[] arr2 = { "a", "b", "c" };
+        String[] arr1 = {"rc1", "rc2", "rc3"};
+        String[] arr2 = {"a", "b", "c"};
 
         int lastIndex = 0;
 

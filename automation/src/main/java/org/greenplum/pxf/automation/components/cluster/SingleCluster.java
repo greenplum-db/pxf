@@ -40,7 +40,9 @@ public class SingleCluster extends PhdCluster {
         runCommand("cd " + getPhdRoot());
 
         // set hive base hdfs directory for SC cluster
-        setHiveBaseHdfsDirectory("/hive/warehouse/");
+        if (StringUtils.isEmpty(getHiveBaseHdfsDirectory())) {
+            setHiveBaseHdfsDirectory("/hive/warehouse/");
+        }
     }
 
     @Override
