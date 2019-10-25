@@ -516,6 +516,7 @@ function configure_pxf_default_server() {
 				-e "s|YOUR_DATABASE_JDBC_URL|jdbc:hive2://${HIVE_HOSTNAME}:10000/default;principal=${KERBERIZED_HADOOP_URI}|" \
 				-e 's|YOUR_DATABASE_JDBC_USER||' \
 				-e 's|YOUR_DATABASE_JDBC_PASSWORD||' \
+				-e 's|</configuration>|<property><name>hadoop.security.authentication</name><value>kerberos</value></property></configuration>|g' \
 				${PXF_CONF_DIR}/servers/db-hive/jdbc-site.xml
 
 			PXF_SRC_DIR=$(find /tmp/build/ -name pxf_src)
