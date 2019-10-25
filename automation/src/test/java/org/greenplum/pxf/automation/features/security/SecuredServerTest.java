@@ -10,7 +10,7 @@ import org.testng.annotations.Test;
  */
 public class SecuredServerTest extends BaseFeature {
 
-    @Test(groups = {"features", "security"})
+    @Test(groups = {"features", "multiClusterSecurity"})
     public void testSecuredServerFailsWithInvalidPrincipalName() throws Exception {
 
         exTable = TableFactory.getPxfReadableTextTable("pxf_secured_invalid_principal", new String[] {
@@ -29,7 +29,7 @@ public class SecuredServerTest extends BaseFeature {
         runTincTest("pxf.features.general.secured.errors.invalid_principal.runTest");
     }
 
-    @Test(groups = {"features", "security"})
+    @Test(groups = {"features", "multiClusterSecurity"})
     public void testSecuredServerFailsWithInvalidKeytabPath() throws Exception {
 
         exTable = TableFactory.getPxfReadableTextTable("pxf_secured_invalid_keytab", new String[] {
