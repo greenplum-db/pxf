@@ -110,7 +110,7 @@ dev: symlink_pxf_jars
 
 sync_jdbc_config:
 	@mkdir -p $(PXF_CONF_SERVERS)/database
-	@if [ ! -f "$(PXF_CONF_SERVERS)/database/jdbc-site.xml" ]; then \
+	@if [ ! -f $(PXF_CONF_SERVERS)/database/jdbc-site.xml ]; then \
 		cp $(PXF_HOME)/templates/user/templates/jdbc-site.xml $(PXF_CONF_SERVERS)/database/; \
 		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.postgresql.Driver|" $(PXF_CONF_SERVERS)/database/jdbc-site.xml; \
 		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_URL|jdbc:postgresql://$(JDBC_HOST):$(JDBC_PORT)/pxfautomation|" $(PXF_CONF_SERVERS)/database/jdbc-site.xml; \
@@ -122,7 +122,7 @@ sync_jdbc_config:
 	@cp src/test/resources/report.sql $(PXF_CONF_SERVERS)/database
 
 	@mkdir -p $(PXF_CONF_SERVERS)/db-session-params
-	@if [ ! -f "$(PXF_CONF_SERVERS)/db-session-params/jdbc-site.xml" ]; then \
+	@if [ ! -f $(PXF_CONF_SERVERS)/db-session-params/jdbc-site.xml ]; then \
 		cp $(PXF_HOME)/templates/user/templates/jdbc-site.xml $(PXF_CONF_SERVERS)/db-session-params/; \
 		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.postgresql.Driver|" $(PXF_CONF_SERVERS)/db-session-params/jdbc-site.xml; \
 		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_URL|jdbc:postgresql://$(JDBC_HOST):$(JDBC_PORT)/pxfautomation|" $(PXF_CONF_SERVERS)/db-session-params/jdbc-site.xml; \
@@ -133,14 +133,16 @@ sync_jdbc_config:
 	fi
 
 	@mkdir -p $(PXF_CONF_SERVERS)/db-hive
-	@if [ ! -f "$(PXF_CONF_SERVERS)/db-hive/jdbc-site.xml" ]; then \
+	@if [ ! -f $(PXF_CONF_SERVERS)/db-hive/jdbc-site.xml ]; then \
 		cp $(PXF_HOME)/templates/user/templates/jdbc-site.xml $(PXF_CONF_SERVERS)/db-hive/; \
 		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.apache.hive.jdbc.HiveDriver|" $(PXF_CONF_SERVERS)/db-hive/jdbc-site.xml; \
 		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_URL|jdbc:hive2://$(HIVE_SERVER_HOST):$(HIVE_SERVER_PORT)/default|" $(PXF_CONF_SERVERS)/db-hive/jdbc-site.xml; \
 		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_USER||" $(PXF_CONF_SERVERS)/db-hive/jdbc-site.xml; \
 		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_PASSWORD||" $(PXF_CONF_SERVERS)/db-hive/jdbc-site.xml; \
 	fi
-	@cp src/test/resources/hive-report.sql $(PXF_CONF_SERVERS)/db-hive
+	@if [ ! -f $(PXF_CONF_SERVERS)/db-hive/jdbc-site.xml ]; then \
+		@cp src/test/resources/hive-report.sql $(PXF_CONF_SERVERS)/db-hive; \
+	fi
 
 sync_cloud_configs:
 ifneq "$(PROTOCOL)" ""
