@@ -19,11 +19,27 @@ package org.greenplum.pxf.api.model;
  * under the License.
  */
 
+import org.greenplum.pxf.api.utilities.Utilities;
+
+import java.io.IOException;
+
 /**
  * Fragment holds a data fragment' information.
  * {@link Fragmenter#getFragments} returns a list of fragments.
  */
 public class Fragment {
+    // The hostname is no longer used, hardcoding it to localhost
+    private static final String[] HOSTS = {"localhost"};
+    private static byte[] EMPTY_METADATA;
+
+    static {
+        try {
+            EMPTY_METADATA = Utilities.writeBaseFragmentInfo(0, 0, HOSTS).toByteArray();
+        } catch (IOException ignored) {
+            // Should not fail
+        }
+    }
+
     /**
      * File path+name, table name, etc.
      */
@@ -58,8 +74,17 @@ public class Fragment {
      * Constructs a Fragment.
      *
      * @param sourceName the resource uri (File path+name, table name, etc.)
-     * @param hosts the replicas
-     * @param metadata the meta data (Starting point + length, region location, etc.).
+     */
+    public Fragment(String sourceName) {
+        this(sourceName, HOSTS, EMPTY_METADATA);
+    }
+
+    /**
+     * Constructs a Fragment.
+     *
+     * @param sourceName the resource uri (File path+name, table name, etc.)
+     * @param hosts      the replicas
+     * @param metadata   the meta data (Starting point + length, region location, etc.).
      */
     public Fragment(String sourceName,
                     String[] hosts,
@@ -73,9 +98,9 @@ public class Fragment {
      * Constructs a Fragment.
      *
      * @param sourceName the resource uri (File path+name, table name, etc.)
-     * @param hosts the replicas
-     * @param metadata the meta data (Starting point + length, region location, etc.).
-     * @param userData third party data added to a fragment.
+     * @param hosts      the replicas
+     * @param metadata   the meta data (Starting point + length, region location, etc.).
+     * @param userData   third party data added to a fragment.
      */
     public Fragment(String sourceName,
                     String[] hosts,
@@ -88,10 +113,10 @@ public class Fragment {
     }
 
     public Fragment(String sourceName,
-            String[] hosts,
-            byte[] metadata,
-            byte[] userData,
-            String profile) {
+                    String[] hosts,
+                    byte[] metadata,
+                    byte[] userData,
+                    String profile) {
         this(sourceName, hosts, metadata, userData);
         this.profile = profile;
     }

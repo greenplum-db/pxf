@@ -88,21 +88,22 @@ public class HdfsUtilities {
         return prepareFragmentMetadata(fsp.getStart(), fsp.getLength(), fsp.getLocations());
     }
 
+    /**
+     * Prepares byte serialization of a file split information (start, length,
+     * hosts) using {@link ObjectOutputStream}.
+     *
+     * @param start     the file split start
+     * @param length    the file split length
+     * @param locations the data node locations for this split
+     * @return byte serialization of the file split
+     * @throws IOException if I/O errors occur while writing to the underlying
+     *                     stream
+     */
     public static byte[] prepareFragmentMetadata(long start, long length, String[] locations)
             throws IOException {
 
-        ByteArrayOutputStream byteArrayStream = writeBaseFragmentInfo(start, length, locations);
+        ByteArrayOutputStream byteArrayStream = Utilities.writeBaseFragmentInfo(start, length, locations);
         return byteArrayStream.toByteArray();
-    }
-
-
-    private static ByteArrayOutputStream writeBaseFragmentInfo(long start, long length, String[] locations) throws IOException {
-        ByteArrayOutputStream byteArrayStream = new ByteArrayOutputStream();
-        ObjectOutputStream objectStream = new ObjectOutputStream(byteArrayStream);
-        objectStream.writeLong(start);
-        objectStream.writeLong(length);
-        objectStream.writeObject(locations);
-        return byteArrayStream;
     }
 
     /**
@@ -165,5 +166,4 @@ public class HdfsUtilities {
         }
         return buff.toString();
     }
-
 }

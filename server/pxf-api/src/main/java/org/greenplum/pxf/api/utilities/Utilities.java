@@ -31,9 +31,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
@@ -262,6 +264,26 @@ public class Utilities {
         } catch (IOException | ClassNotFoundException e) {
             throw new RuntimeException("Exception while reading expected fragment metadata", e);
         }
+    }
+
+    /**
+     * Serializes fragment metadata into a ByteArrayOutputStream
+     *
+     * @param start     the fragment metadata start
+     * @param length    the fragment metadata length
+     * @param locations the data node locations for this split
+     * @return byte serialization of the file split
+     * @throws IOException if I/O errors occur while writing to the underlying
+     *                     stream
+     */
+    public static ByteArrayOutputStream writeBaseFragmentInfo(long start, long length, String[] locations)
+            throws IOException {
+        ByteArrayOutputStream byteArrayStream = new ByteArrayOutputStream();
+        ObjectOutputStream objectStream = new ObjectOutputStream(byteArrayStream);
+        objectStream.writeLong(start);
+        objectStream.writeLong(length);
+        objectStream.writeObject(locations);
+        return byteArrayStream;
     }
 
     /**
