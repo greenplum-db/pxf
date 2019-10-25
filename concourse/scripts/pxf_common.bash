@@ -504,6 +504,22 @@ function configure_pxf_default_server() {
 			sudo mkdir -p /etc/security/keytabs/
 			sudo cp "$AMBARI_KEYTAB_FILE" /etc/security/keytabs/"${HADOOP_USER}".headless.keytab
 			sudo chown gpadmin:gpadmin /etc/security/keytabs/"${HADOOP_USER}".headless.keytab
+
+			mkdir -p ${PXF_CONF_DIR}/servers/db-hive/
+			cp ${PXF_CONF_DIR}/servers/default/pxf-site.xml ${PXF_CONF_DIR}/servers/db-hive/
+			cp ${PXF_CONF_DIR}/templates/jdbc-site.xml ${PXF_CONF_DIR}/servers/db-hive/
+
+			REALM=$(cat "$AMBARI_DIR"/REALM)
+			HIVE_HOSTNAME=$(grep < "$AMBARI_DIR"/etc_hostfile ambari-2 | awk '{print $2}')
+			KERBERIZED_HADOOP_URI="hive/${HIVE_HOSTNAME}.c.data-gpdb-ud.internal@${REALM};saslQop=auth" # quoted because of semicolon
+			sed -i -e 's|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.apache.hive.jdbc.HiveDriver|' \
+				-e "s|YOUR_DATABASE_JDBC_URL|jdbc:hive2://${HIVE_HOSTNAME}:10000/default;principal=${KERBERIZED_HADOOP_URI}|" \
+				-e 's|YOUR_DATABASE_JDBC_USER||' \
+				-e 's|YOUR_DATABASE_JDBC_PASSWORD||' \
+				${PXF_CONF_DIR}/servers/db-hive/jdbc-site.xml
+
+			PXF_SRC_DIR=$(find /tmp/build/ -name pxf_src)
+			cp "${PXF_SRC_DIR}"/automation/src/test/resources/hive-report.sql ${PXF_CONF_DIR}/servers/db-hive/
 		fi
 	else
 		# copy hadoop config files to PXF_CONF_DIR/servers/default
