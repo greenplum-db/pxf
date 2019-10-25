@@ -34,7 +34,6 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.SequenceFile;
-import org.apache.hadoop.io.SequenceFile.Writer;
 
 import org.greenplum.pxf.automation.components.common.BaseSystemObject;
 import org.greenplum.pxf.automation.fileformats.IAvroSchema;

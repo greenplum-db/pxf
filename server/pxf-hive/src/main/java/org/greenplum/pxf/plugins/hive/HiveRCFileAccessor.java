@@ -20,7 +20,6 @@ package org.greenplum.pxf.plugins.hive;
  */
 
 
-import org.greenplum.pxf.api.model.RequestContext;
 import org.apache.hadoop.hive.ql.io.RCFileInputFormat;
 import org.apache.hadoop.hive.ql.io.RCFileRecordReader;
 import org.apache.hadoop.mapred.FileSplit;

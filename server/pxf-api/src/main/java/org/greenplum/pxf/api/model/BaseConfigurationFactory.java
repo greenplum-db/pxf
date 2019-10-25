@@ -7,7 +7,6 @@ import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.el.MethodNotFoundException;
 import java.io.File;
 import java.net.URL;
 import java.nio.file.DirectoryStream;

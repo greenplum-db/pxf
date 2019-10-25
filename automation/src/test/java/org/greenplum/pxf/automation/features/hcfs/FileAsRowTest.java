@@ -3,7 +3,6 @@ package org.greenplum.pxf.automation.features.hcfs;
 import org.greenplum.pxf.automation.features.BaseFeature;
 import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
-import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 
 /**

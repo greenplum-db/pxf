@@ -23,15 +23,11 @@ package org.greenplum.pxf.plugins.hive.utilities;
 import static org.junit.Assert.*;
 
 import java.util.Arrays;
-import java.util.Collections;
 
 import com.google.common.base.Joiner;
 
 import org.greenplum.pxf.api.io.DataType;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
-import org.apache.hadoop.hive.metastore.api.SerDeInfo;
-import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
-import org.apache.hadoop.hive.serde.serdeConstants;
 import org.junit.Test;
 import org.greenplum.pxf.api.model.Metadata;
 import org.greenplum.pxf.api.UnsupportedTypeException;

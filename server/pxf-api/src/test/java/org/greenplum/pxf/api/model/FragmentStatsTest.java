@@ -24,7 +24,6 @@ import static org.junit.Assert.*;
 
 import java.io.IOException;
 
-import org.greenplum.pxf.api.model.FragmentStats;
 import org.greenplum.pxf.api.model.FragmentStats.SizeUnit;
 import org.junit.Test;
 

@@ -1,7 +1,6 @@
 package org.greenplum.pxf.automation.features.hbase;
 
 import org.greenplum.pxf.automation.components.hbase.HBase;
-import org.greenplum.pxf.automation.enums.EnumPxfDefaultProfiles;
 import org.greenplum.pxf.automation.structures.tables.hbase.HBaseTable;
 import org.greenplum.pxf.automation.structures.tables.hbase.LookupTable;
 import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
