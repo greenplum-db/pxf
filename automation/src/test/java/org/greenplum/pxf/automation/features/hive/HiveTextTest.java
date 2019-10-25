@@ -81,7 +81,7 @@ public class HiveTextTest extends HiveBaseTest {
         hive.createTableAndVerify(hiveTextPartitionTable);
 
         String tableName = hiveTextPartitionTable.getName();
-        String location = "'hdfs:" + hdfsBaseDir + hiveTextTable.getName() + "'";
+        String location = String.format("'%s%s'", hdfsBaseDir, hiveTextTable.getName());
         addHivePartition(tableName, "fmt = 'rc1'", location);
         addHivePartition(tableName, "fmt = 'rc2'", location);
         addHivePartition(tableName, "fmt = 'rc3'", location);
