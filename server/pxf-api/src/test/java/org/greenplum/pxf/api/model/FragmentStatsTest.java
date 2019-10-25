@@ -20,7 +20,7 @@ package org.greenplum.pxf.api.model;
  */
 
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 

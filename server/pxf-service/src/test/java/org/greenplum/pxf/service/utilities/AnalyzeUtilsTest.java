@@ -20,7 +20,8 @@ package org.greenplum.pxf.service.utilities;
  */
 
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -29,7 +30,6 @@ import java.util.BitSet;
 import java.util.List;
 
 import org.greenplum.pxf.api.model.Fragment;
-
 
 import org.greenplum.pxf.api.model.RequestContext;
 import org.junit.Assert;

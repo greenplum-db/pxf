@@ -19,25 +19,28 @@ package org.greenplum.pxf.service.servlet;
  * under the License.
  */
 
-import org.apache.hadoop.conf.*;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.greenplum.pxf.api.model.*;
-import org.greenplum.pxf.api.security.*;
+import org.greenplum.pxf.api.model.ConfigurationFactory;
+import org.greenplum.pxf.api.security.SecureLogin;
 import org.greenplum.pxf.service.SessionId;
 import org.greenplum.pxf.service.UGICache;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.junit.runner.*;
-import org.mockito.*;
-import org.mockito.runners.*;
+import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.Matchers;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 
-import java.security.*;
+import java.security.PrivilegedExceptionAction;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;

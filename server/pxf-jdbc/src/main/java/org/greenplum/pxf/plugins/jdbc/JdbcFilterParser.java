@@ -20,7 +20,8 @@ package org.greenplum.pxf.plugins.jdbc;
  */
 
 import org.apache.commons.lang.StringUtils;
-import org.greenplum.pxf.api.*;
+import org.greenplum.pxf.api.BaseFilterBuilder;
+import org.greenplum.pxf.api.FilterParser;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;

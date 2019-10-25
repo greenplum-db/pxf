@@ -20,8 +20,12 @@ package org.greenplum.pxf.plugins.hive;
  */
 
 
+import org.apache.hadoop.mapred.FileSplit;
+import org.apache.hadoop.mapred.InputSplit;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.LineRecordReader;
+import org.apache.hadoop.mapred.TextInputFormat;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.apache.hadoop.mapred.*;
 
 import java.io.IOException;
 

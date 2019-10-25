@@ -25,7 +25,7 @@ import org.apache.hadoop.mapred.SequenceFileInputFilter;
 import org.apache.hadoop.mapred.TextInputFormat;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class ProfileFactoryTest {
 
