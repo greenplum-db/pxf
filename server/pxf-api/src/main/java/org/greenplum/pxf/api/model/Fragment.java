@@ -19,26 +19,13 @@ package org.greenplum.pxf.api.model;
  * under the License.
  */
 
-import org.greenplum.pxf.api.utilities.Utilities;
-
-import java.io.IOException;
-
 /**
  * Fragment holds a data fragment' information.
  * {@link Fragmenter#getFragments} returns a list of fragments.
  */
 public class Fragment {
-    // The hostname is no longer used, hardcoding it to localhost
-    private static final String[] HOSTS = {"localhost"};
-    private static byte[] EMPTY_METADATA;
 
-    static {
-        try {
-            EMPTY_METADATA = Utilities.writeBaseFragmentInfo(0, 0, HOSTS).toByteArray();
-        } catch (IOException ignored) {
-            // Should not fail
-        }
-    }
+    private static final String[] HOSTS = new String[]{"localhost"};
 
     /**
      * File path+name, table name, etc.
@@ -76,7 +63,7 @@ public class Fragment {
      * @param sourceName the resource uri (File path+name, table name, etc.)
      */
     public Fragment(String sourceName) {
-        this(sourceName, HOSTS, EMPTY_METADATA);
+        this(sourceName, HOSTS, null);
     }
 
     /**
