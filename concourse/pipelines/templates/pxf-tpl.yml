@@ -15,7 +15,7 @@ groups:
       - test_pxf_hdp2_ubuntu18
 {% endif %}
       - test_pxf_hdp2_multinode_gpdb
-      - test_pxf_dataproc_multinode_with_impersonation
+      - test_pxf_secure_dataproc_multinode_with_impersonation
       - test_pxf_s3_no_impersonation
       - test_pxf_s3_with_impersonation
       - test_pxf_no_impersonation
@@ -25,7 +25,7 @@ groups:
       - test_pxf_hdp3_centos7
 {% if pipeline_type == "release" %}
       - test_pxf_hdp3_secure_with_impersonation
-      - test_pxf_dataproc_multinode_no_impersonation
+      - test_pxf_secure_dataproc_multinode_no_impersonation
       - test_pxf_hdp2_centos6
       - test_pxf_adl
       - test_pxf_gs
@@ -49,12 +49,12 @@ groups:
       - test_pxf_hdp2_ubuntu18
 {% endif %}
       - test_pxf_hdp2_multinode_gpdb
-      - test_pxf_dataproc_multinode_with_impersonation
+      - test_pxf_secure_dataproc_multinode_with_impersonation
       - test_pxf_mapr_centos6
       - test_pxf_hdp3_centos7
 {% if pipeline_type == "release" %}
       - test_pxf_hdp2_centos6
-      - test_pxf_dataproc_multinode_no_impersonation
+      - test_pxf_secure_dataproc_multinode_no_impersonation
 {% endif %}
 
   - name: cloud
@@ -79,9 +79,9 @@ groups:
 {% endif %}
 {% if pipeline_type == "release" %}
       - test_pxf_hdp3_secure_with_impersonation
-      - test_pxf_dataproc_multinode_no_impersonation
+      - test_pxf_secure_dataproc_multinode_no_impersonation
 {% endif %}
-      - test_pxf_dataproc_multinode_with_impersonation
+      - test_pxf_secure_dataproc_multinode_with_impersonation
 
   - name: no_impersonation
     jobs:
@@ -964,7 +964,7 @@ jobs:
       ACCEPTANCE: true
 {% endif %}
 
-- name: test_pxf_dataproc_multinode_with_impersonation
+- name: test_pxf_secure_dataproc_multinode_with_impersonation
   max_in_flight: 2
   plan:
   - in_parallel:
@@ -1105,7 +1105,7 @@ jobs:
 {% endif %}
 
 {% if pipeline_type == "release" %}
-- name: test_pxf_dataproc_multinode_no_impersonation
+- name: test_pxf_secure_dataproc_multinode_no_impersonation
   max_in_flight: 2
   plan:
   - in_parallel:
@@ -1545,7 +1545,7 @@ jobs:
     - test_pxf_s3_with_impersonation
     - test_pxf_no_impersonation
     - test_pxf_hdp2_multinode_gpdb
-    - test_pxf_dataproc_multinode_with_impersonation
+    - test_pxf_secure_dataproc_multinode_with_impersonation
     trigger: true
   - put: pxf_tarball_stable
     params:
@@ -1575,8 +1575,8 @@ jobs:
     - test_pxf_hdp3_secure_with_impersonation
     - test_pxf_no_impersonation
     - test_pxf_hdp2_multinode_gpdb
-    - test_pxf_dataproc_multinode_with_impersonation
-    - test_pxf_dataproc_multinode_no_impersonation
+    - test_pxf_secure_dataproc_multinode_with_impersonation
+    - test_pxf_secure_dataproc_multinode_no_impersonation
     trigger: true
   - get: gpdb_release
   - get: pxf_src
@@ -1599,8 +1599,8 @@ jobs:
     - test_pxf_hdp3_secure_with_impersonation
     - test_pxf_no_impersonation
     - test_pxf_hdp2_multinode_gpdb
-    - test_pxf_dataproc_multinode_with_impersonation
-    - test_pxf_dataproc_multinode_no_impersonation
+    - test_pxf_secure_dataproc_multinode_with_impersonation
+    - test_pxf_secure_dataproc_multinode_no_impersonation
   - task: package_pxf_rc
     config:
       inputs:
