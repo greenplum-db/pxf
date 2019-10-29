@@ -22,7 +22,7 @@
 -- s/DETAIL/CONTEXT/
 --
 -- m/pxf:\/\/(.*)\/pxf_automation_data/
--- s/pxf:\/\/.*\/pxf_automation_data/pxf:\/\/pxf_automation_data/
+-- s/pxf:\/\/.*\/pxf_automation_data\/[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}/pxf:\/\/pxf_automation_data/
 --
 -- m/CONTEXT:.*line.*/
 -- s/line \d* of //g

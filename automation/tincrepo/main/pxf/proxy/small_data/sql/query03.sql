@@ -13,8 +13,8 @@
 -- m/.*inode=.*/
 -- s/inode=.*?:-rwx/inode=SOME_PATH:-rwx/g
 --
--- m/pxf:\/\/(.*)\/pxf_automation_data\/proxy\/([0-9a-zA-Z]).*\/data.txt/
--- s/pxf:\/\/(.*)\/pxf_automation_data\/proxy\/([0-9a-zA-Z]).*\/data.txt/pxf:\/\/pxf_automation_data\/proxy\/OTHER_USER\/data.txt/
+-- m/pxf:\/\/(.*)\/pxf_automation_data\/[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}\/proxy\/([0-9a-zA-Z]).*\/data.txt/
+-- s/pxf:\/\/(.*)\/pxf_automation_data\/[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}\/proxy\/([0-9a-zA-Z]).*\/data.txt/pxf:\/\/pxf_automation_data\/proxy\/OTHER_USER\/data.txt/
 --
 -- m/DETAIL/
 -- s/DETAIL/CONTEXT/
