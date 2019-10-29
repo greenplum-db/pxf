@@ -141,7 +141,7 @@ sync_jdbc_config:
 		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_PASSWORD||" $(PXF_CONF_SERVERS)/db-hive/jdbc-site.xml; \
 	fi
 	@if [ ! -f $(PXF_CONF_SERVERS)/db-hive/hive-report.sql ]; then \
-		@cp src/test/resources/hive-report.sql $(PXF_CONF_SERVERS)/db-hive; \
+		cp src/test/resources/hive-report.sql $(PXF_CONF_SERVERS)/db-hive; \
 	fi
 
 sync_cloud_configs:
