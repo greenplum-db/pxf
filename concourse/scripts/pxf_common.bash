@@ -325,7 +325,7 @@ function init_and_configure_pxf_server() {
 		# Copy pxf-site.xml to the server configuration and update the
 		# pxf.service.user.name property value to use the PROXY_USER
 		# Only copy this file when testing against non-cloud
-		if [[ ! -f ${PXF_CONF_DIR}/templates/pxf-site.xml ]]; then
+		if [[ ! -f ${PXF_CONF_DIR}/servers/default/pxf-site.xml ]]; then
 			cp ${PXF_CONF_DIR}/templates/pxf-site.xml ${PXF_CONF_DIR}/servers/default/pxf-site.xml
 			sed -i -e "s|\${user.name}|${PROXY_USER}|g" ${PXF_CONF_DIR}/servers/default/pxf-site.xml
 		fi
