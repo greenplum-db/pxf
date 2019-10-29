@@ -15,7 +15,7 @@ groups:
       - test_pxf_hdp2_ubuntu18
 {% endif %}
       - test_pxf_hdp2_multinode_gpdb
-      - test_pxf_secure_multinode_gpdb
+      - test_pxf_dataproc_multinode_with_impersonation
       - test_pxf_s3_no_impersonation
       - test_pxf_s3_with_impersonation
       - test_pxf_no_impersonation
@@ -25,6 +25,7 @@ groups:
       - test_pxf_hdp3_centos7
 {% if pipeline_type == "release" %}
       - test_pxf_hdp3_secure_with_impersonation
+      - test_pxf_dataproc_multinode_no_impersonation
       - test_pxf_hdp2_centos6
       - test_pxf_adl
       - test_pxf_gs
@@ -48,11 +49,12 @@ groups:
       - test_pxf_hdp2_ubuntu18
 {% endif %}
       - test_pxf_hdp2_multinode_gpdb
-      - test_pxf_secure_multinode_gpdb
+      - test_pxf_dataproc_multinode_with_impersonation
       - test_pxf_mapr_centos6
       - test_pxf_hdp3_centos7
 {% if pipeline_type == "release" %}
       - test_pxf_hdp2_centos6
+      - test_pxf_dataproc_multinode_no_impersonation
 {% endif %}
 
   - name: cloud
@@ -77,8 +79,9 @@ groups:
 {% endif %}
 {% if pipeline_type == "release" %}
       - test_pxf_hdp3_secure_with_impersonation
+      - test_pxf_dataproc_multinode_no_impersonation
 {% endif %}
-      - test_pxf_secure_multinode_gpdb
+      - test_pxf_dataproc_multinode_with_impersonation
 
   - name: no_impersonation
     jobs:
@@ -961,7 +964,7 @@ jobs:
       ACCEPTANCE: true
 {% endif %}
 
-- name: test_pxf_secure_multinode_gpdb
+- name: test_pxf_dataproc_multinode_with_impersonation
   max_in_flight: 2
   plan:
   - in_parallel:
@@ -1099,6 +1102,145 @@ jobs:
       TARGET_OS: centos
 {% if acceptance %}
       ACCEPTANCE: true
+{% endif %}
+
+{% if pipeline_type == "release" %}
+- name: test_pxf_dataproc_multinode_no_impersonation
+  max_in_flight: 2
+  plan:
+  - in_parallel:
+    - get: ccp_src
+    - get: gpdb_src
+      passed:
+      - compile_pxf
+{% if compile_gpdb %}
+      - compile_gpdb_centos6
+{% endif %}
+    - get: gpdb_binary
+      resource: bin_gpdb_centos6
+{% if compile_gpdb %}
+      passed:
+      - compile_gpdb_centos6
+{% endif %}
+    - get: pxf_src
+      passed:
+      - compile_pxf
+      trigger: true
+    - get: pxf_tarball
+      passed:
+      - compile_pxf
+      trigger: true
+    - get: ccp-7
+    - get: gpdb-pxf-dev-centos6-hdp2-server
+  - in_parallel:
+    - do:
+      - put: terraform_gpdb
+        resource: terraform
+        params:
+          action: create
+          delete_on_failure: true
+          generate_random_name: true
+          terraform_source: ccp_src/google/
+          vars:
+            PLATFORM: centos7
+            number_of_nodes: {{number_of_gpdb_nodes}}
+            extra_nodes: 1
+            segments_per_host: 4
+            instance_type: n1-standard-4
+            ccp_reap_minutes: 120
+      - task: Generate Greenplum Cluster
+        input_mapping:
+          terraform: terraform_gpdb
+        file: ccp_src/ci/tasks/gen_cluster.yml
+        image: ccp-7
+        params:
+          AWS_ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+          AWS_SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+          AWS_DEFAULT_REGION: {{aws-region}}
+          BUCKET_PATH: {{tf-bucket-path}}
+          BUCKET_NAME: {{tf-bucket-name}}
+          PLATFORM: centos7
+          CLOUD_PROVIDER: google
+      - in_parallel:
+        - task: Initialize Greenplum
+          file: ccp_src/ci/tasks/gpinitsystem.yml
+        - task: Install Hadoop
+          file: pxf_src/concourse/tasks/install_hadoop.yml
+          image: gpdb-pxf-dev-centos6-hdp2-server
+          params:
+            ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+            SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+            IMPERSONATION: {{enable-impersonation-multinode}}
+    {% if pipeline_type == "pxf" %}
+            TARGET_OS: centos
+    {% endif %}
+    - task: Generate Hadoop Cluster 1
+      file: pxf_src/concourse/tasks/install_dataproc.yml
+      image: ccp-7
+      params:
+        GOOGLE_CREDENTIALS: {{google-service-account-key}}
+        GOOGLE_PROJECT_ID: {{google-project-id}}
+        GOOGLE_ZONE: {{google-zone}}
+        IMAGE_VERSION: {{dataproc-image-version}}
+        KERBEROS: {{kerberos-enabled}}
+    - task: Generate Hadoop Cluster 2
+      file: pxf_src/concourse/tasks/install_dataproc.yml
+      image: ccp-7
+      output_mapping:
+        dataproc_env_files: dataproc_2_env_files
+      params:
+        GOOGLE_CREDENTIALS: ((data-gpdb-ud-kerberos-google-service-account-key))
+        GOOGLE_PROJECT_ID: ((data-gpdb-ud-kerberos-google-project-id))
+        GOOGLE_ZONE: ((data-gpdb-ud-kerberos-google-zone))
+        HADOOP_USER: gpuser
+        IMAGE_VERSION: {{dataproc-image-version}}
+        INITIALIZATION_SCRIPT: gs://data-gpdb-ud-kerberos-scripts/scripts/initialization-for-kerberos.sh
+        INSTANCE_TAGS: bosh-network,data-gpdb-ud-access
+        KERBEROS: {{kerberos-enabled}}
+        KEY: dataproc-kerberos-key
+        KEYRING: dataproc-kerberos
+        NO_ADDRESS: false
+        PROXY_USER: gpuser
+        SECRETS_BUCKET: data-gpdb-ud-kerberos-pxf-secrets
+  - task: Setup PXF
+    input_mapping:
+      terraform: terraform_gpdb
+      bin_gpdb: gpdb_binary
+    file: pxf_src/concourse/tasks/install_pxf.yml
+    image: ccp-7
+    params:
+      AWS_ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+      AWS_SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+      AWS_DEFAULT_REGION: {{aws-region}}
+      BUCKET_PATH: {{tf-bucket-path}}
+      BUCKET_NAME: {{tf-bucket-name}}
+      CLOUD_PROVIDER: google
+      IMPERSONATION: {{enable-impersonation-multinode}}
+      INSTALL_GPHDFS: false
+      KERBEROS: {{kerberos-enabled}}
+      PLATFORM: centos7
+      PXF_JVM_OPTS: {{pxf-jvm-opts}}
+    on_failure:
+      <<: *dataproc_timed_destroy
+  - task: Test PXF Multinode
+    input_mapping:
+      bin_gpdb: gpdb_binary
+    on_success:
+      <<: *dataproc_destroy
+    on_failure:
+      <<: *dataproc_timed_destroy
+    image: gpdb-pxf-dev-centos6-hdp2-server
+    file: pxf_src/concourse/tasks/test_pxf_multinode.yml
+    params:
+      ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+      SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+      HIVE_VERSION: 2
+      IMPERSONATION: false
+      KERBEROS: {{kerberos-enabled}}
+      GOOGLE_PROJECT_ID: {{google-project-id}}
+      GROUP: security,multiClusterSecurity
+      PXF_JVM_OPTS: {{pxf-jvm-opts}}
+      TARGET_OS: centos
 {% endif %}
 
 - name: test_pxf_cdh_centos6
@@ -1403,7 +1545,7 @@ jobs:
     - test_pxf_s3_with_impersonation
     - test_pxf_no_impersonation
     - test_pxf_hdp2_multinode_gpdb
-    - test_pxf_secure_multinode_gpdb
+    - test_pxf_dataproc_multinode_with_impersonation
     trigger: true
   - put: pxf_tarball_stable
     params:
@@ -1433,7 +1575,8 @@ jobs:
     - test_pxf_hdp3_secure_with_impersonation
     - test_pxf_no_impersonation
     - test_pxf_hdp2_multinode_gpdb
-    - test_pxf_secure_multinode_gpdb
+    - test_pxf_dataproc_multinode_with_impersonation
+    - test_pxf_dataproc_multinode_no_impersonation
     trigger: true
   - get: gpdb_release
   - get: pxf_src
@@ -1456,7 +1599,8 @@ jobs:
     - test_pxf_hdp3_secure_with_impersonation
     - test_pxf_no_impersonation
     - test_pxf_hdp2_multinode_gpdb
-    - test_pxf_secure_multinode_gpdb
+    - test_pxf_dataproc_multinode_with_impersonation
+    - test_pxf_dataproc_multinode_no_impersonation
   - task: package_pxf_rc
     config:
       inputs:
