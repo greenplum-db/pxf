@@ -836,7 +836,7 @@ jobs:
       passed:
       - compile_pxf
       trigger: true
-    - get: gpdb-pxf-dev-centos6-hdp2-server
+    - get: gpdb-pxf-dev-centos7-hdp3-server
     - get: ccp-7
   - task: load_config_for_ambari
     file: pxf_src/concourse/tasks/load_ambari_config.yml
@@ -847,7 +847,7 @@ jobs:
       GOOGLE_ZONE: {{google-zone}}
   - task: test_pxf
     file: pxf_src/concourse/tasks/test_pxf.yml
-    image: gpdb-pxf-dev-centos6-hdp2-server
+    image: gpdb-pxf-dev-centos7-hdp3-server
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
       GROUP: security
@@ -857,9 +857,6 @@ jobs:
       SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
       TARGET_OS: centos
       TEST_ENV: {{test-env}}
-{% if acceptance %}
-      ACCEPTANCE: true
-{% endif %}
 {% endif %}
 
 - name: test_pxf_hdp2_multinode_gpdb
