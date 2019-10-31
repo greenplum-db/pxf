@@ -22,6 +22,9 @@ SUBNETWORK=${SUBNETWORK:-dynamic}
 ZONE=${GOOGLE_ZONE:-us-central1-a}
 
 pip install petname
+
+CLUSTER_NAME=${CLUSTER_NAME:-ccp-$(petname)}
+
 yum install -y -d1 openssh openssh-clients
 mkdir -p ~/.ssh
 ssh-keygen -b 4096 -t rsa -f ~/.ssh/google_compute_engine -N "" -C "$HADOOP_USER"
@@ -33,11 +36,10 @@ set -x
 
 PLAINTEXT=$(mktemp)
 PLAINTEXT_NAME=$(basename "$PLAINTEXT")
-PETNAME=ccp-$(petname)
 
 # Initialize the dataproc service
 GCLOUD_COMMAND=(gcloud beta dataproc clusters
-  "--region=$REGION" create "$PETNAME"
+  "--region=$REGION" create "$CLUSTER_NAME"
   --initialization-actions "$INITIALIZATION_SCRIPT"
   --subnet "projects/${PROJECT}/regions/${REGION}/subnetworks/$SUBNETWORK"
   "--master-machine-type=$MACHINE_TYPE"
@@ -77,7 +79,7 @@ fi
 
 "${GCLOUD_COMMAND[@]}"
 
-HADOOP_HOSTNAME=${PETNAME}-m
+HADOOP_HOSTNAME=${CLUSTER_NAME}-m
 
 gcloud compute instances add-metadata "$HADOOP_HOSTNAME" \
   --metadata "ssh-keys=$HADOOP_USER:$(< ~/.ssh/google_compute_engine.pub)" \
@@ -85,15 +87,15 @@ gcloud compute instances add-metadata "$HADOOP_HOSTNAME" \
 
 for ((i=0; i < NUM_WORKERS; i++));
 do
-  gcloud compute instances add-metadata "${PETNAME}-w-${i}" \
+  gcloud compute instances add-metadata "${CLUSTER_NAME}-w-${i}" \
     --metadata "ssh-keys=$HADOOP_USER:$(< ~/.ssh/google_compute_engine.pub)" \
     --zone "$ZONE"
 
-  HADOOP_IP_ADDRESS=$(gcloud compute instances describe "${PETNAME}-w-${i}" \
+  HADOOP_IP_ADDRESS=$(gcloud compute instances describe "${CLUSTER_NAME}-w-${i}" \
     --format='get(networkInterfaces[0].networkIP)' \
     --zone "$ZONE")
 
-  echo "${HADOOP_IP_ADDRESS} ${PETNAME}-w-${i} ${PETNAME}-w-${i}.c.${PROJECT}.internal" >> dataproc_env_files/etc_hostfile
+  echo "${HADOOP_IP_ADDRESS} ${CLUSTER_NAME}-w-${i} ${CLUSTER_NAME}-w-${i}.c.${PROJECT}.internal" >> dataproc_env_files/etc_hostfile
 done
 
 echo "$HADOOP_HOSTNAME" > "dataproc_env_files/name"

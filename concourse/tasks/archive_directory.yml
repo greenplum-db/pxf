@@ -1,0 +1,15 @@
+---
+platform: linux
+inputs:
+- name: in_dir
+outputs:
+- name: out_dir
+params:
+- name: result
+run:
+  path: bash
+  args:
+  - -exc
+  - |
+    set -x
+    tar -cvzf out_dir/${name}.tar.gz in_dir

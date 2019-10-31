@@ -1,0 +1,408 @@
+## ======================================================================
+## ANCHORS
+## ======================================================================
+ccp_destroy_anchor: &ccp_destroy
+  do:
+  - put: terraform_gpdb
+    resource: terraform
+    params:
+      action: destroy
+      env_name_file: terraform_gpdb/name
+      terraform_source: ccp_src/google/
+    get_params:
+      action: destroy
+
+dataproc_timed_destroy_anchor: &dataproc_timed_destroy
+  do:
+  - task: debug_sleep
+    image: ccp-7
+    config:
+      run:
+        path: /bin/sleep
+        args: [{{dataproc-destroy-timeout}}]
+      platform: linux
+  - in_parallel:
+    - task: Cleanup Dataproc 1
+      config:
+        run:
+          path: pxf_src/concourse/scripts/cleanup_dataproc_cluster.bash
+        inputs:
+          - name: pxf_src
+          - name: dataproc_env_files
+        platform: linux
+      image: ccp-7
+      params:
+        GOOGLE_CREDENTIALS: {{google-service-account-key}}
+        GOOGLE_PROJECT_ID: {{google-project-id}}
+        GOOGLE_ZONE: {{google-zone}}
+    - task: Cleanup Dataproc 2
+      input_mapping:
+        dataproc_env_files: dataproc_2_env_files
+      config:
+        run:
+          path: pxf_src/concourse/scripts/cleanup_dataproc_cluster.bash
+        inputs:
+          - name: pxf_src
+          - name: dataproc_env_files
+        platform: linux
+      image: ccp-7
+      params:
+        GOOGLE_CREDENTIALS: ((data-gpdb-ud-kerberos-google-service-account-key))
+        GOOGLE_PROJECT_ID: ((data-gpdb-ud-kerberos-google-project-id))
+        GOOGLE_ZONE: ((data-gpdb-ud-kerberos-google-zone))
+
+## ======================================================================
+## RESOURCE TYPES
+## ======================================================================
+resource_types:
+- name: terraform
+  type: docker-image
+  source:
+    repository: ljfranklin/terraform-resource
+    tag: 0.11.14
+
+- name: gcs
+  type: docker-image
+  source:
+    repository: frodenas/gcs-resource
+
+## ======================================================================
+## RESOURCES
+## ======================================================================
+resources:
+
+- name: every-15mins
+  type: time
+  icon: clock-outline
+  source:
+    interval: 15m
+
+- name: terraform
+  type: terraform
+  icon: tractor
+  source:
+    env:
+      AWS_ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+      AWS_SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+      GOOGLE_CREDENTIALS: {{google-service-account-key}}
+    vars:
+      project_id: {{google-project-id}}
+    storage:
+      access_key_id: {{tf-machine-access-key-id}}
+      secret_access_key: {{tf-machine-secret-access-key}}
+      region_name: {{aws-region}}
+      bucket: {{tf-bucket-name}}
+      bucket_path: {{tf-bucket-path}}
+
+- name: ccp_src
+  type: git
+  icon: github-circle
+  source:
+    branch: {{ccp-git-branch}}
+    private_key: {{ccp-git-key}}
+    uri: {{ccp-git-remote}}
+
+- name: ccp-7
+  type: docker-image
+  icon: docker
+  source:
+    repository: pivotaldata/ccp
+    tag: 7
+
+- name: gpdb-pxf-dev-centos6
+  type: docker-image
+  icon: docker
+  source:
+    repository: pivotaldata/gpdb-pxf-dev
+    tag: centos6
+
+- name: gpdb-pxf-dev-centos6-hdp2-server
+  type: docker-image
+  icon: docker
+  source:
+    repository: pivotaldata/gpdb-pxf-dev
+    tag: centos6-hdp2-server
+
+- name: bin_gpdb_centos6
+  type: gcs
+  icon: archive
+  source:
+    bucket: ((gcs-bucket-resources-prod))
+    json_key: ((concourse-gcs-resources-service-account-key))
+    regexp: server/published/gpdb6/server-rc-(.*)-rhel6_x86_64.tar.gz
+
+- name: gpdb_src
+  type: git
+  icon: github-circle
+  source:
+    branch: 6X_STABLE
+    uri: {{gpdb-git-remote}}
+
+- name: pxf_src_tag
+  type: git
+  icon: github-circle
+  source:
+    branch: master
+    uri: {{pxf-git-remote}}
+    tag_filter: ((pxf-tag))
+
+- name: pxf_src
+  type: git
+  icon: github-circle
+  source:
+    branch: {{pxf-git-branch}}
+    uri: {{pxf-git-remote}}
+
+- name: pxf_tarball
+  type: s3
+  icon: archive
+  source:
+    access_key_id: {{bucket-access-key-id}}
+    bucket: {{pxf-aws-bucket-name}}
+    region_name: {{aws-region}}
+    secret_access_key: {{bucket-secret-access-key}}
+    versioned_file: pxf_artifacts/longevity/((pxf-tag))/pxf.tar.gz
+
+- name: cluster_env_files
+  type: s3
+  icon: archive
+  source:
+    access_key_id: {{bucket-access-key-id}}
+    bucket: {{pxf-aws-bucket-name}}
+    region_name: {{aws-region}}
+    secret_access_key: {{bucket-secret-access-key}}
+    versioned_file: pxf_artifacts/longevity/((pxf-tag))/cluster_env_files.tar.gz
+
+- name: dataproc_env_files
+  type: s3
+  icon: archive
+  source:
+    access_key_id: {{bucket-access-key-id}}
+    bucket: {{pxf-aws-bucket-name}}
+    region_name: {{aws-region}}
+    secret_access_key: {{bucket-secret-access-key}}
+    versioned_file: pxf_artifacts/longevity/((pxf-tag))/dataproc_env_files.tar.gz
+
+- name: dataproc_2_env_files
+  type: s3
+  icon: archive
+  source:
+    access_key_id: {{bucket-access-key-id}}
+    bucket: {{pxf-aws-bucket-name}}
+    region_name: {{aws-region}}
+    secret_access_key: {{bucket-secret-access-key}}
+    versioned_file: pxf_artifacts/longevity/((pxf-tag))/dataproc_2_env_files.tar.gz
+
+## ======================================================================
+## JOBS
+## ======================================================================
+jobs:
+
+- name: compile_pxf_((pxf-tag))
+  plan:
+  - in_parallel:
+    - get: pxf_src
+      resource: pxf_src_tag
+    - get: gpdb-pxf-dev-centos6
+  - task: compile_pxf
+    image: gpdb-pxf-dev-centos6
+    file: pxf_src/concourse/tasks/compile_pxf.yml
+  - put: pxf_tarball
+    params:
+      file: pxf_artifacts/pxf.tar.gz
+
+- name: provision_clusters_((pxf-tag))
+  max_in_flight: 1
+  plan:
+  - in_parallel:
+    - get: ccp_src
+    - get: gpdb_src
+    - get: gpdb_binary
+      resource: bin_gpdb_centos6
+    - get: pxf_src
+    - get: pxf_tarball
+      passed:
+      - compile_pxf_((pxf-tag))
+      trigger: true
+    - get: ccp-7
+    - get: gpdb-pxf-dev-centos6-hdp2-server
+  - in_parallel:
+    - do:
+      - put: terraform_gpdb
+        resource: terraform
+        params:
+          action: create
+          delete_on_failure: true
+          generate_random_name: true
+          terraform_source: ccp_src/google/
+          vars:
+            PLATFORM: centos7
+            number_of_nodes: {{number_of_gpdb_nodes}}
+            extra_nodes: 1
+            segments_per_host: 4
+            instance_type: n1-standard-4
+            ccp_reap_minutes: 262800
+      - task: Generate Greenplum Cluster
+        input_mapping:
+          terraform: terraform_gpdb
+        file: ccp_src/ci/tasks/gen_cluster.yml
+        image: ccp-7
+        params:
+          AWS_ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+          AWS_SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+          AWS_DEFAULT_REGION: {{aws-region}}
+          BUCKET_PATH: {{tf-bucket-path}}
+          BUCKET_NAME: {{tf-bucket-name}}
+          PLATFORM: centos7
+          CLOUD_PROVIDER: google
+      - in_parallel:
+        - task: Initialize Greenplum
+          file: ccp_src/ci/tasks/gpinitsystem.yml
+        - task: Install Hadoop
+          file: pxf_src/concourse/tasks/install_hadoop.yml
+          image: gpdb-pxf-dev-centos6-hdp2-server
+          params:
+            ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+            SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+            IMPERSONATION: {{enable-impersonation-multinode}}
+            TARGET_OS: centos
+    - task: Generate Hadoop Cluster 1
+      file: pxf_src/concourse/tasks/install_dataproc.yml
+      image: ccp-7
+      params:
+        CLUSTER_NAME: pxf-((pxf-tag))-longevity-1
+        GOOGLE_CREDENTIALS: {{google-service-account-key}}
+        GOOGLE_PROJECT_ID: {{google-project-id}}
+        GOOGLE_ZONE: {{google-zone}}
+        IMAGE_VERSION: {{dataproc-image-version}}
+        KERBEROS: {{kerberos-enabled}}
+    - task: Generate Hadoop Cluster 2
+      file: pxf_src/concourse/tasks/install_dataproc.yml
+      image: ccp-7
+      output_mapping:
+        dataproc_env_files: dataproc_2_env_files
+      params:
+        CLUSTER_NAME: pxf-((pxf-tag))-longevity-2
+        GOOGLE_CREDENTIALS: ((data-gpdb-ud-kerberos-google-service-account-key))
+        GOOGLE_PROJECT_ID: ((data-gpdb-ud-kerberos-google-project-id))
+        GOOGLE_ZONE: ((data-gpdb-ud-kerberos-google-zone))
+        HADOOP_USER: gpuser
+        IMAGE_VERSION: {{dataproc-image-version}}
+        INITIALIZATION_SCRIPT: gs://data-gpdb-ud-kerberos-scripts/scripts/initialization-for-kerberos.sh
+        INSTANCE_TAGS: bosh-network,data-gpdb-ud-access
+        KERBEROS: {{kerberos-enabled}}
+        KEY: dataproc-kerberos-key
+        KEYRING: dataproc-kerberos
+        NO_ADDRESS: false
+        PROXY_USER: gpuser
+        SECRETS_BUCKET: data-gpdb-ud-kerberos-pxf-secrets
+  - task: Setup PXF
+    input_mapping:
+      terraform: terraform_gpdb
+      bin_gpdb: gpdb_binary
+    file: pxf_src/concourse/tasks/install_pxf.yml
+    image: ccp-7
+    params:
+      AWS_ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+      AWS_SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+      AWS_DEFAULT_REGION: {{aws-region}}
+      BUCKET_PATH: {{tf-bucket-path}}
+      BUCKET_NAME: {{tf-bucket-name}}
+      CLOUD_PROVIDER: google
+      IMPERSONATION: {{enable-impersonation-multinode}}
+      INSTALL_GPHDFS: false
+      KERBEROS: {{kerberos-enabled}}
+      PLATFORM: centos7
+      PXF_JVM_OPTS: {{pxf-jvm-opts}}
+    on_failure:
+      <<: *dataproc_timed_destroy
+  - in_parallel:
+    - task: Archive Cluster Configs
+      file: pxf_src/concourse/tasks/archive_directory.yml
+      input_mapping:
+        in_dir: cluster_env_files
+      output_mapping:
+        out_dir: env_archives
+      params:
+        name: cluster_env_files
+    - task: Archive Dataproc Configs
+      file: pxf_src/concourse/tasks/archive_directory.yml
+      input_mapping:
+        in_dir: dataproc_env_files
+      output_mapping:
+        out_dir: env_archives
+      params:
+        name: dataproc_env_files
+    - task: Archive Dataproc-2 Configs
+      file: pxf_src/concourse/tasks/archive_directory.yml
+      input_mapping:
+        in_dir: dataproc_2_env_files
+      output_mapping:
+        out_dir: env_archives
+      params:
+        name: dataproc_2_env_files
+  - in_parallel:
+    - put: cluster_env_files
+      params:
+        file: env_archives/cluster_env_files.tar.gz
+      get_params:
+        skip_download: true
+    - put: dataproc_env_files
+      params:
+        file: env_archives/dataproc_env_files.tar.gz
+      get_params:
+        skip_download: true
+    - put: dataproc_2_env_files
+      params:
+        file: env_archives/dataproc_2_env_files.tar.gz
+      get_params:
+        skip_download: true
+
+- name: longevity_test_((pxf-tag))
+  plan:
+  - get: every-15mins
+    trigger: true
+  - in_parallel:
+    - get: gpdb_src
+      passed:
+      - provision_clusters_((pxf-tag))
+    - get: bin_gpdb
+      resource: bin_gpdb_centos6
+      passed:
+      - provision_clusters_((pxf-tag))
+    - get: pxf_src
+      passed:
+      - provision_clusters_((pxf-tag))
+    - get: pxf_tarball
+      passed:
+      - provision_clusters_((pxf-tag))
+    - get: cluster_env_files
+      passed:
+      - provision_clusters_((pxf-tag))
+      params:
+        unpack: true
+    - get: dataproc_env_files
+      passed:
+      - provision_clusters_((pxf-tag))
+      params:
+        unpack: true
+    - get: dataproc_2_env_files
+      passed:
+      - provision_clusters_((pxf-tag))
+      params:
+        unpack: true
+  - task: Longevity Test PXF Multinode
+    input_mapping:
+      bin_gpdb: gpdb_binary
+    image: gpdb-pxf-dev-centos6-hdp2-server
+    file: pxf_src/concourse/tasks/test_pxf_multinode.yml
+    params:
+      ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+      SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+      HIVE_VERSION: 2
+      IMPERSONATION: {{enable-impersonation-multinode}}
+      KERBEROS: {{kerberos-enabled}}
+      GOOGLE_PROJECT_ID: {{google-project-id}}
+      GROUP: multiClusterSecurity
+      PXF_JVM_OPTS: {{pxf-jvm-opts}}
+      TARGET_OS: centos
