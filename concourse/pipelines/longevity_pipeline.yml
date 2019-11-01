@@ -319,6 +319,7 @@ jobs:
   - in_parallel:
     - task: Archive Cluster Configs
       file: pxf_src/concourse/tasks/archive_directory.yml
+      image: ccp-7
       input_mapping:
         in_dir: cluster_env_files
       output_mapping:
@@ -327,6 +328,7 @@ jobs:
         name: cluster_env_files
     - task: Archive Dataproc Configs
       file: pxf_src/concourse/tasks/archive_directory.yml
+      image: ccp-7
       input_mapping:
         in_dir: dataproc_env_files
       output_mapping:
@@ -335,6 +337,7 @@ jobs:
         name: dataproc_env_files
     - task: Archive Dataproc-2 Configs
       file: pxf_src/concourse/tasks/archive_directory.yml
+      image: ccp-7
       input_mapping:
         in_dir: dataproc_2_env_files
       output_mapping:
