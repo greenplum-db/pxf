@@ -24,6 +24,8 @@ ZONE=${GOOGLE_ZONE:-us-central1-a}
 pip install petname
 
 CLUSTER_NAME=${CLUSTER_NAME:-ccp-$(petname)}
+# remove any . in the value as dataproc names can not contain dots
+CLUSTER_NAME=${CLUSTER_NAME//./}
 
 yum install -y -d1 openssh openssh-clients
 mkdir -p ~/.ssh
