@@ -163,7 +163,7 @@ resources:
     secret_access_key: {{bucket-secret-access-key}}
     versioned_file: pxf_artifacts/longevity/((pxf-tag))/pxf.tar.gz
 
-- name: cluster_env_files
+- name: cluster_env_files_tar
   type: s3
   icon: archive
   source:
@@ -173,7 +173,7 @@ resources:
     secret_access_key: {{bucket-secret-access-key}}
     versioned_file: pxf_artifacts/longevity/((pxf-tag))/cluster_env_files.tar.gz
 
-- name: dataproc_env_files
+- name: dataproc_env_files_tar
   type: s3
   icon: archive
   source:
@@ -183,7 +183,7 @@ resources:
     secret_access_key: {{bucket-secret-access-key}}
     versioned_file: pxf_artifacts/longevity/((pxf-tag))/dataproc_env_files.tar.gz
 
-- name: dataproc_2_env_files
+- name: dataproc_2_env_files_tar
   type: s3
   icon: archive
   source:
@@ -317,49 +317,45 @@ jobs:
     on_failure:
       <<: *dataproc_timed_destroy
   - in_parallel:
-    - task: Archive Cluster Configs
-      file: pxf_src/concourse/tasks/archive_directory.yml
-      image: ccp-7
-      input_mapping:
-        in_dir: cluster_env_files
-      output_mapping:
-        out_dir: env_archives
-      params:
-        name: cluster_env_files
-    - task: Archive Dataproc Configs
-      file: pxf_src/concourse/tasks/archive_directory.yml
-      image: ccp-7
-      input_mapping:
-        in_dir: dataproc_env_files
-      output_mapping:
-        out_dir: env_archives
-      params:
-        name: dataproc_env_files
-    - task: Archive Dataproc-2 Configs
-      file: pxf_src/concourse/tasks/archive_directory.yml
-      image: ccp-7
-      input_mapping:
-        in_dir: dataproc_2_env_files
-      output_mapping:
-        out_dir: env_archives
-      params:
-        name: dataproc_2_env_files
-  - in_parallel:
-    - put: cluster_env_files
-      params:
-        file: env_archives/cluster_env_files.tar.gz
-      get_params:
-        skip_download: true
-    - put: dataproc_env_files
-      params:
-        file: env_archives/dataproc_env_files.tar.gz
-      get_params:
-        skip_download: true
-    - put: dataproc_2_env_files
-      params:
-        file: env_archives/dataproc_2_env_files.tar.gz
-      get_params:
-        skip_download: true
+    - do:
+      - task: Archive Cluster Configs
+        file: pxf_src/concourse/tasks/archive_directory.yml
+        image: ccp-7
+        input_mapping:
+          in_dir: cluster_env_files
+        output_mapping:
+          out_dir: archive
+        params:
+          name: cluster_env_files
+      - put: cluster_env_files_tar
+        params:
+          file: archive/cluster_env_files.tar.gz
+    - do:
+      - task: Archive Dataproc Configs
+        file: pxf_src/concourse/tasks/archive_directory.yml
+        image: ccp-7
+        input_mapping:
+          in_dir: dataproc_env_files
+        output_mapping:
+          out_dir: archive
+        params:
+          name: dataproc_env_files
+      - put: dataproc_env_files_tar
+        params:
+          file: archive/dataproc_env_files.tar.gz
+    - do:
+      - task: Archive Dataproc-2 Configs
+        file: pxf_src/concourse/tasks/archive_directory.yml
+        image: ccp-7
+        input_mapping:
+          in_dir: dataproc_2_env_files
+        output_mapping:
+          out_dir: archive
+        params:
+          name: dataproc_2_env_files
+      - put: dataproc_2_env_files_tar
+        params:
+          file: archive/dataproc_2_env_files.tar.gz
 
 - name: longevity_test_((pxf-tag))
   plan:
@@ -380,16 +376,19 @@ jobs:
       passed:
       - provision_clusters_((pxf-tag))
     - get: cluster_env_files
+      resource: cluster_env_files_tar
       passed:
       - provision_clusters_((pxf-tag))
       params:
         unpack: true
     - get: dataproc_env_files
+      resource: dataproc_env_files_tar
       passed:
       - provision_clusters_((pxf-tag))
       params:
         unpack: true
     - get: dataproc_2_env_files
+      resource: dataproc_2_env_files_tar
       passed:
       - provision_clusters_((pxf-tag))
       params:
