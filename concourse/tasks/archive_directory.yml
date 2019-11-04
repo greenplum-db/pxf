@@ -12,4 +12,4 @@ run:
   - -exc
   - |
     set -x
-    tar -cvzf out_dir/${name}.tar.gz in_dir
+    tar -cvzf out_dir/${name}.tar.gz -C in_dir .

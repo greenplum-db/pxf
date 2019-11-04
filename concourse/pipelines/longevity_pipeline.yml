@@ -365,7 +365,7 @@ jobs:
     - get: gpdb_src
       passed:
       - provision_clusters_((pxf-tag))
-    - get: bin_gpdb
+    - get: gpdb_binary
       resource: bin_gpdb_centos6
       passed:
       - provision_clusters_((pxf-tag))
@@ -393,6 +393,7 @@ jobs:
       - provision_clusters_((pxf-tag))
       params:
         unpack: true
+    - get: gpdb-pxf-dev-centos6-hdp2-server
   - task: Longevity Test PXF Multinode
     input_mapping:
       bin_gpdb: gpdb_binary
