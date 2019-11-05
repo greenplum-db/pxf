@@ -204,6 +204,8 @@ public class HiveTest extends HiveBaseTest {
     @Test(groups = {"features", "multiClusterSecurity"})
     public void testTwoSecuredServers() throws Exception {
 
+        createExternalTable(PXF_HIVE_SMALL_DATA_TABLE, PXF_HIVE_SMALLDATA_COLS, hiveSmallDataTable);
+
         Hdfs hdfs2 = (Hdfs) systemManager.
                 getSystemObject("/sut", "hdfs2", -1, (SystemObject) null, false, (String) null, SutFactory.getInstance().getSutInstance());
 
