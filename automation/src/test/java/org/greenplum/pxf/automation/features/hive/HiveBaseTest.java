@@ -218,22 +218,29 @@ public class HiveBaseTest extends BaseFeature {
     String configuredNameNodeAddress;
     String hdfsBaseDir;
 
+    protected boolean isRestartAllowed() {
+        return true;
+    }
+
     @Override
     protected void beforeClass() throws Exception {
 
-        // copy additional plugins classes to cluster nodes, used for filter pushdown cases
-        String oldPath = "target/classes" + TEST_PACKAGE_LOCATION;
-        String newPath = "/tmp/publicstage/pxf";
-        cluster.copyFileToNodes(new File(oldPath + "HiveDataFragmenterWithFilter.class")
-                .getAbsolutePath(), newPath + TEST_PACKAGE_LOCATION, true, false);
-        cluster.copyFileToNodes(new File(oldPath + "MultipleHiveFragmentsPerFileFragmenter.class")
-                .getAbsolutePath(), newPath + TEST_PACKAGE_LOCATION, true, false);
-        cluster.copyFileToNodes(new File(oldPath + "HiveInputFormatFragmenterWithFilter.class")
-                .getAbsolutePath(), newPath + TEST_PACKAGE_LOCATION, true, false);
+        if (isRestartAllowed()) {
+            // copy additional plugins classes to cluster nodes, used for filter pushdown cases
+            String oldPath = "target/classes" + TEST_PACKAGE_LOCATION;
+            String newPath = "/tmp/publicstage/pxf";
+            cluster.copyFileToNodes(new File(oldPath + "HiveDataFragmenterWithFilter.class")
+                    .getAbsolutePath(), newPath + TEST_PACKAGE_LOCATION, true, false);
+            cluster.copyFileToNodes(new File(oldPath + "MultipleHiveFragmentsPerFileFragmenter.class")
+                    .getAbsolutePath(), newPath + TEST_PACKAGE_LOCATION, true, false);
+            cluster.copyFileToNodes(new File(oldPath + "HiveInputFormatFragmenterWithFilter.class")
+                    .getAbsolutePath(), newPath + TEST_PACKAGE_LOCATION, true, false);
 
-        // add new path to classpath file and restart PXF service
-        cluster.addPathToPxfClassPath(newPath);
-        cluster.restart(PhdCluster.EnumClusterServices.pxf);
+            // add new path to classpath file and restart PXF service
+            cluster.addPathToPxfClassPath(newPath);
+            cluster.restart(PhdCluster.EnumClusterServices.pxf);
+        }
+
         hdfsBaseDir = cluster.getHiveBaseHdfsDirectory();
 
         hive = (Hive) SystemManagerImpl.getInstance().getSystemObject("hive");

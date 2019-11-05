@@ -1,10 +1,7 @@
 package org.greenplum.pxf.automation.features.hive;
 
-import jsystem.framework.sut.SutFactory;
 import jsystem.framework.system.SystemManagerImpl;
-import jsystem.framework.system.SystemObject;
 import org.greenplum.pxf.automation.components.common.ShellSystemObject;
-import org.greenplum.pxf.automation.components.hdfs.Hdfs;
 import org.greenplum.pxf.automation.components.hive.Hive;
 import org.greenplum.pxf.automation.enums.EnumPxfDefaultProfiles;
 import org.greenplum.pxf.automation.structures.tables.hive.HiveExternalTable;
@@ -39,10 +36,8 @@ public class HiveTest extends HiveBaseTest {
     private static final String PXF_HIVE_PARTITIONED_SKEWED_TABLE = "pxf_hive_partitioned_skewed_table";
     private static final String PXF_HIVE_PARTITIONED_SKEWED_STORED_TABLE = "pxf_hive_partitioned_skewed_stored_table";
 
-    private static final String HIVE_DATA_FILE_NAME_2 = "hive_small_data_second.txt";
     private static final String HIVE_DATA_FILE_NAME_3 = "hive_small_data_third.txt";
 
-    private static final String PXF_HIVE_SMALL_DATA_TABLE_SECURE = "pxf_hive_small_data_hive_secure";
     private static final String PXF_HIVE_SMALL_DATA_TABLE_NON_SECURE = "pxf_hive_small_data_hive_non_secure";
 
     private HiveExternalTable hivePartitionedTable;
@@ -52,10 +47,9 @@ public class HiveTest extends HiveBaseTest {
     private HiveTable hivePartitionedSkewedTable;
     private HiveTable hivePartitionedSkewedStoredAsDirsTable;
 
-    private Hive hive2;
     private Hive hiveNonSecure;
 
-    private void createExternalTable(String tableName, String[] fields,
+    protected void createExternalTable(String tableName, String[] fields,
                                      HiveTable hiveTable, boolean useProfile, String serverName)
             throws Exception {
 
@@ -67,13 +61,13 @@ public class HiveTest extends HiveBaseTest {
 
     }
 
-    private void createExternalTable(String tableName, String[] fields,
+    protected void createExternalTable(String tableName, String[] fields,
                                      HiveTable hiveTable, boolean useProfile) throws Exception {
 
         createExternalTable(tableName, fields, hiveTable, useProfile, null);
     }
 
-    private void createExternalTable(String tableName, String[] fields,
+    protected void createExternalTable(String tableName, String[] fields,
                                      HiveTable hiveTable) throws Exception {
 
         createExternalTable(tableName, fields, hiveTable, true);
@@ -194,32 +188,6 @@ public class HiveTest extends HiveBaseTest {
 
         runTincTest("pxf.features.hive.small_data.runTest");
         runTincTest("pxf.features.hcatalog.small_data.runTest");
-    }
-
-    /**
-     * query for small data hive table against two kerberized hive servers
-     *
-     * @throws Exception if test fails to run
-     */
-    @Test(groups = {"features", "multiClusterSecurity"})
-    public void testTwoSecuredServers() throws Exception {
-
-        createExternalTable(PXF_HIVE_SMALL_DATA_TABLE, PXF_HIVE_SMALLDATA_COLS, hiveSmallDataTable);
-
-        Hdfs hdfs2 = (Hdfs) systemManager.
-                getSystemObject("/sut", "hdfs2", -1, (SystemObject) null, false, (String) null, SutFactory.getInstance().getSutInstance());
-
-        if (hdfs2 == null) return;
-
-        trySecureLogin(hdfs2, hdfs2.getTestKerberosPrincipal());
-        initializeWorkingDirectory(gpdb, hdfs2);
-        hive2 = (Hive) SystemManagerImpl.getInstance().getSystemObject("hive2");
-
-        HiveTable hiveSmallDataTable2 =
-                prepareSmallData(hdfs2, hive2, null, HIVE_SMALL_DATA_TABLE, HIVE_SMALLDATA_COLS, HIVE_DATA_FILE_NAME_2);
-        createExternalTable(PXF_HIVE_SMALL_DATA_TABLE_SECURE, PXF_HIVE_SMALLDATA_COLS, hiveSmallDataTable2, true, "SERVER=hdfs-secure");
-
-        runTincTest("pxf.features.hive.two_secured_hive.runTest");
     }
 
     @Test(groups = {"features", "security"})
