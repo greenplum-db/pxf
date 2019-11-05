@@ -331,6 +331,19 @@ function init_and_configure_pxf_server() {
 		fi
 	fi
 
+	if [[ ${IMPERSONATION} == true ]]; then
+		cp -r ${PXF_CONF_DIR}/servers/default ${PXF_CONF_DIR}/servers/default-no-impersonation
+
+		if [[ ! -f ${PXF_CONF_DIR}/servers/default-no-impersonation/pxf-site.xml ]]; then
+			cp ${PXF_CONF_DIR}/templates/pxf-site.xml ${PXF_CONF_DIR}/servers/default-no-impersonation/pxf-site.xml
+		fi
+
+		sed -i \
+			-e "/<name>pxf.service.user.impersonation<\/name>/ {n;s|<value>.*</value>|<value>false</value>|g;}" \
+			-e "/<name>pxf.service.user.name<\/name>/ {n;s|<value>.*</value>|<value>foobar</value>|g;}" \
+			${PXF_CONF_DIR}/servers/default-no-impersonation/pxf-site.xml
+	fi
+
 	# update runtime JDK value based on CI parameter
 	RUN_JDK_VERSION=${RUN_JDK_VERSION:-8}
 	if [[ $RUN_JDK_VERSION == 11 ]]; then
