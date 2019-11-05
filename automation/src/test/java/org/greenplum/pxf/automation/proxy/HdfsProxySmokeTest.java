@@ -8,11 +8,20 @@ import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
 import org.testng.annotations.Test;
 
 
-/** Basic PXF on HDFS small text file using non-gpadmin user */
+/**
+ * Basic PXF on HDFS small text file using non-gpadmin user
+ */
 public class HdfsProxySmokeTest extends BaseSmoke {
 
     public static final String ADMIN_USER = System.getProperty("user.name");
     public static final String TEST_USER = "testuser";
+    public static final String[] FIELDS = {
+            "name text",
+            "num integer",
+            "dub double precision",
+            "longNum bigint",
+            "bool boolean"
+    };
 
     private String locationProhibited, locationAllowed;
 
@@ -36,28 +45,36 @@ public class HdfsProxySmokeTest extends BaseSmoke {
     protected void createTables() throws Exception {
         // Create GPDB external table directed to the HDFS file
         ReadableExternalTable exTableProhibited =
-                TableFactory.getPxfReadableTextTable("pxf_proxy_small_data_prohibited", new String[] {
-                        "name text",
-                        "num integer",
-                        "dub double precision",
-                        "longNum bigint",
-                        "bool boolean"
-                }, locationProhibited, ",");
+                TableFactory.getPxfReadableTextTable("pxf_proxy_small_data_prohibited",
+                        FIELDS, locationProhibited, ",");
         exTableProhibited.setHost(pxfHost);
         exTableProhibited.setPort(pxfPort);
         gpdb.createTableAndVerify(exTableProhibited);
 
+        ReadableExternalTable exTableProhibitedNoImpersonationServer =
+                TableFactory.getPxfReadableTextTable("pxf_proxy_small_data_prohibited_no_impersonation",
+                        FIELDS, locationProhibited, ",");
+        exTableProhibitedNoImpersonationServer.setHost(pxfHost);
+        exTableProhibitedNoImpersonationServer.setPort(pxfPort);
+        exTableProhibitedNoImpersonationServer.setServer("SERVER=default-no-impersonation");
+        gpdb.createTableAndVerify(exTableProhibitedNoImpersonationServer);
+
         ReadableExternalTable exTableAllowed =
-                TableFactory.getPxfReadableTextTable("pxf_proxy_small_data_allowed", new String[] {
-                        "name text",
-                        "num integer",
-                        "dub double precision",
-                        "longNum bigint",
-                        "bool boolean"
-                }, locationAllowed, ",");
+                TableFactory.getPxfReadableTextTable("pxf_proxy_small_data_allowed",
+                        FIELDS, locationAllowed, ",");
         exTableAllowed.setHost(pxfHost);
         exTableAllowed.setPort(pxfPort);
         gpdb.createTableAndVerify(exTableAllowed);
+
+        // Configure a server with the same configuration as the default
+        // server, but disable impersonation
+        ReadableExternalTable exTableAllowedNoImpersonationServer =
+                TableFactory.getPxfReadableTextTable("pxf_proxy_small_data_allowed_no_impersonation",
+                        FIELDS, locationAllowed, ",");
+        exTableAllowedNoImpersonationServer.setHost(pxfHost);
+        exTableAllowedNoImpersonationServer.setPort(pxfPort);
+        exTableAllowedNoImpersonationServer.setServer("SERVER=default-no-impersonation");
+        gpdb.createTableAndVerify(exTableAllowedNoImpersonationServer);
 
     }
 
@@ -66,7 +83,7 @@ public class HdfsProxySmokeTest extends BaseSmoke {
         runTincTest("pxf.proxy.small_data.runTest");
     }
 
-    @Test(groups = { "proxy", "hdfs", "proxySecurity" })
+    @Test(groups = {"proxy", "hdfs", "proxySecurity"})
     public void test() throws Exception {
         runTest();
     }
