@@ -552,4 +552,28 @@ public class HiveBaseTest extends BaseFeature {
             }
         }
     }
+
+    protected void createExternalTable(String tableName, String[] fields,
+                                       HiveTable hiveTable, boolean useProfile, String serverName)
+            throws Exception {
+
+        exTable = TableFactory.getPxfHiveReadableTable(tableName, fields, hiveTable, useProfile);
+        if (serverName != null) {
+            exTable.setServer(serverName);
+        }
+        createTable(exTable);
+
+    }
+
+    protected void createExternalTable(String tableName, String[] fields,
+                                       HiveTable hiveTable, boolean useProfile) throws Exception {
+
+        createExternalTable(tableName, fields, hiveTable, useProfile, null);
+    }
+
+    protected void createExternalTable(String tableName, String[] fields,
+                                       HiveTable hiveTable) throws Exception {
+
+        createExternalTable(tableName, fields, hiveTable, true);
+    }
 }
