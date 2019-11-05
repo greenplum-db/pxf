@@ -18,7 +18,8 @@ public class HiveRcTest extends HiveBaseTest {
     private HiveTable hiveRcTableNoSerde = null;
 
 
-    private void createExternalTable(String tableName, String[] fields,
+    @Override
+    protected void createExternalTable(String tableName, String[] fields,
                                      HiveTable hiveTable, boolean useProfile) throws Exception {
 
         exTable = TableFactory.getPxfHiveRcReadableTable(tableName, fields, hiveTable, useProfile);

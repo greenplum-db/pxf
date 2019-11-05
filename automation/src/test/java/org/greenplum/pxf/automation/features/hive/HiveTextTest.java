@@ -20,7 +20,8 @@ public class HiveTextTest extends HiveBaseTest {
     private HiveExternalTable hiveTextPartitionTable;
     private HiveTable hiveTextTable;
 
-    private void createExternalTable(String tableName, String[] fields,
+    @Override
+    protected void createExternalTable(String tableName, String[] fields,
                                      HiveTable hiveTable, boolean useProfile, String delimiter) throws Exception {
 
         exTable = TableFactory.getPxfHiveTextReadableTable(tableName, fields, hiveTable, useProfile);
@@ -28,14 +29,16 @@ public class HiveTextTest extends HiveBaseTest {
         createTable(exTable);
     }
 
-    private void createExternalTable(String tableName, String[] fields,
+    @Override
+    protected void createExternalTable(String tableName, String[] fields,
                                      HiveTable hiveTable, boolean useProfile) throws Exception {
 
         exTable = TableFactory.getPxfHiveTextReadableTable(tableName, fields, hiveTable, useProfile);
         createTable(exTable);
     }
 
-    private void createExternalTable(String tableName, String[] fields,
+    @Override
+    protected void createExternalTable(String tableName, String[] fields,
                                      HiveTable hiveTable) throws Exception {
 
         createExternalTable(tableName, fields, hiveTable, true);

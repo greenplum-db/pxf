@@ -17,7 +17,8 @@ public class HiveOrcTest extends HiveBaseTest {
     private HiveTable hiveOrcCollectionTable;
     private HiveTable hiveBinaryOrcDataTable;
 
-    private void createExternalTable(String tableName, String[] fields, HiveTable hiveTable) throws Exception {
+    @Override
+    protected void createExternalTable(String tableName, String[] fields, HiveTable hiveTable) throws Exception {
 
         exTable = TableFactory.getPxfHiveOrcReadableTable(tableName, fields, hiveTable, true);
         createTable(exTable);
