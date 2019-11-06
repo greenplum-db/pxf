@@ -69,7 +69,7 @@ public class HiveSmokeTest extends BaseSmoke {
         runTincTest("pxf.smoke.hcatalog_small_data.runTest");
     }
 
-    @Test(groups = {"smoke", "gpdb", "security"})
+    @Test(groups = { "smoke", "gpdb", "security" })
     public void test() throws Exception {
         runTest();
     }

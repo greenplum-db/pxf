@@ -691,7 +691,7 @@ jobs:
     image: gpdb-pxf-dev-centos7-hdp2-server
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
-      GROUP: cloud-access-and-hdfs,hbase,hcfs,jdbc,profile,pushdown
+      GROUP: gpdb,proxy,profile
       HADOOP_CLIENT: HDP
       PGPORT: {{pgport}}
       RUN_JDK_VERSION: 11

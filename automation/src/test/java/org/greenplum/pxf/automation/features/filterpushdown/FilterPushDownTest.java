@@ -36,7 +36,7 @@ public class FilterPushDownTest extends BaseFeature {
      *
      * @throws Exception
      */
-    @Test(groups = {"features", "gpdb", "security", "pushdown"})
+    @Test(groups = {"features", "gpdb", "security"})
     public void checkFilterPushDown() throws Exception {
 
         // Create PXF external table for filter testing
@@ -65,7 +65,7 @@ public class FilterPushDownTest extends BaseFeature {
      *
      * @throws Exception
      */
-    @Test(groups = {"features", "gpdb", "security", "pushdown"})
+    @Test(groups = {"features", "gpdb", "security"})
     public void checkFilterPushDownDisabled() throws Exception {
 
         // Create PXF external table for filter testing
@@ -94,7 +94,7 @@ public class FilterPushDownTest extends BaseFeature {
      *
      * @throws Exception
      */
-    @Test(groups = {"features", "gpdb", "security", "pushdown"})
+    @Test(groups = {"features", "gpdb", "security"})
     public void checkFilterStringHexDelimiter() throws Exception {
 
         // Create PXF external table for filter testing

@@ -35,7 +35,7 @@ public class HdfsSmokeTest extends BaseSmoke {
         runTincTest("pxf.smoke.small_data.runTest");
     }
 
-    @Test(groups = {"smoke", "gpdb", "security"})
+    @Test(groups = { "smoke", "gpdb", "security" })
     public void test() throws Exception {
         runTest();
     }

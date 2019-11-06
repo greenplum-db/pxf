@@ -88,7 +88,7 @@ public class HBaseSmokeTest extends BaseSmoke {
         runTincTest("pxf.smoke.small_data.runTest");
     }
 
-    @Test(groups = {"smoke", "gpdb", "hbase"})
+    @Test(groups = { "smoke", "gpdb", "hbase" })
     public void test() throws Exception {
         runTest();
     }

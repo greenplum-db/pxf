@@ -116,37 +116,37 @@ public class CloudAccessTest extends BaseFeature {
      * both without and with Kerberos security, testing that clud access works in presence of "default" server
      */
 
-    @Test(groups = {"gpdb", "security", "cloud-access-and-hdfs"})
+    @Test(groups = {"gpdb", "security"})
     public void testCloudAccessWithHdfsFailsWhenNoServerNoCredsSpecified() throws Exception {
         runTestScenario("no_server_no_credentials_with_hdfs", null, false);
     }
 
-    @Test(groups = {"gpdb", "security", "cloud-access-and-hdfs"})
+    @Test(groups = {"gpdb", "security"})
     public void testCloudAccessWithHdfsOkWhenServerNoCredsValidConfigFileExists() throws Exception {
         runTestScenario("server_no_credentials_valid_config_with_hdfs", "s3", false);
     }
 
-    @Test(groups = {"gpdb", "security", "cloud-access-and-hdfs"})
+    @Test(groups = {"gpdb", "security"})
     public void testCloudWriteWithHdfsOkWhenServerNoCredsValidConfigFileExists() throws Exception {
         runTestScenarioForWrite("server_no_credentials_valid_config_with_hdfs_write", "s3", false);
     }
 
-    @Test(groups = {"gpdb", "security", "cloud-access-and-hdfs"})
+    @Test(groups = {"gpdb", "security"})
     public void testCloudAccessWithHdfsFailsWhenServerNoCredsNoConfigFileExists() throws Exception {
         runTestScenario("server_no_credentials_no_config_with_hdfs", "s3-non-existent", false);
     }
 
-    @Test(groups = {"gpdb", "security", "cloud-access-and-hdfs"})
+    @Test(groups = {"gpdb", "security"})
     public void testCloudAccessWithHdfsFailsWhenNoServerCredsNoConfigFileExists() throws Exception {
         runTestScenario("no_server_credentials_no_config_with_hdfs", null, true);
     }
 
-    @Test(groups = {"gpdb", "security", "cloud-access-and-hdfs"})
+    @Test(groups = {"gpdb", "security"})
     public void testCloudAccessWithHdfsFailsWhenServerNoCredsInvalidConfigFileExists() throws Exception {
         runTestScenario("server_no_credentials_invalid_config_with_hdfs", "s3-invalid", false);
     }
 
-    @Test(groups = {"gpdb", "security", "cloud-access-and-hdfs"})
+    @Test(groups = {"gpdb", "security"})
     public void testCloudAccessWithHdfsOkWhenServerCredsInvalidConfigFileExists() throws Exception {
         runTestScenario("server_credentials_invalid_config_with_hdfs", "s3-invalid", true);
     }

@@ -30,7 +30,7 @@ public class ColumnProjectionTest extends BaseFeature {
      *
      * @throws Exception
      */
-    @Test(groups = {"features", "gpdb", "security", "pushdown"})
+    @Test(groups = {"features", "gpdb", "security"})
     public void checkColumnProjection() throws Exception {
 
         // Create PXF external table for column projection testing
