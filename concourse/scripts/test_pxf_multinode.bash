@@ -8,7 +8,7 @@ source "${CWDIR}/pxf_common.bash"
 
 SSH_OPTS=(-i cluster_env_files/private_key.pem -o 'StrictHostKeyChecking=no')
 HADOOP_SSH_OPTS=(-o 'StrictHostKeyChecking=no')
-
+IMPERSONATION=${IMPERSONATION:-true}
 LOCAL_GPHD_ROOT=/singlecluster
 PROXY_USER=${PROXY_USER:-pxfuser}
 
@@ -111,6 +111,155 @@ function setup_pxf_on_cluster() {
 			-e 's|YOUR_DATABASE_JDBC_PASSWORD||' \
 			${PXF_CONF_DIR}/servers/db-hive/jdbc-site.xml &&
 		cp ~gpadmin/hive-report.sql ${PXF_CONF_DIR}/servers/db-hive &&
+		if [[ ${IMPERSONATION} == true ]]; then
+			cp -r ${PXF_CONF_DIR}/servers/default ${PXF_CONF_DIR}/servers/default-no-impersonation
+
+			if [[ ! -f ${PXF_CONF_DIR}/servers/default-no-impersonation/pxf-site.xml ]]; then
+				cp ${PXF_CONF_DIR}/templates/pxf-site.xml ${PXF_CONF_DIR}/servers/default-no-impersonation/pxf-site.xml
+			fi
+			sed -i \
+			-e '/<name>pxf.service.user.impersonation<\/name>/ {n;s|<value>.*</value>|<value>false</value>|g;}' \
+			-e '/<name>pxf.service.user.name<\/name>/ {n;s|<value>.*</value>|<value>foobar</value>|g;}' \
+			${PXF_CONF_DIR}/servers/default-no-impersonation/pxf-site.xml
+		fi &&
+		${GPHOME}/pxf/bin/pxf cluster sync
+	"
+}
+
+function setup_pxf_kerberos_on_cluster() {
+	DATAPROC_DIR=$(find /tmp/build/ -name dataproc_env_files)
+	REALM=$(< "${DATAPROC_DIR}/REALM")
+	REALM=${REALM^^} # make sure REALM is up-cased, down-case below for hive principal
+	KERBERIZED_HADOOP_URI="hive/${HADOOP_HOSTNAME}.${REALM,,}@${REALM};saslQop=auth-conf" # quoted because of semicolon
+	sed -i  -e "s|</hdfs>|<hadoopRoot>$DATAPROC_DIR</hadoopRoot></hdfs>|g" \
+		-e "s|</cluster>|<testKerberosPrincipal>gpadmin@${REALM}</testKerberosPrincipal></cluster>|g" \
+		-e "s|</hive>|<kerberosPrincipal>${KERBERIZED_HADOOP_URI}</kerberosPrincipal><userName>gpadmin</userName></hive>|g" \
+		"$multiNodesCluster"
+	ssh gpadmin@mdw "
+		cp ${PXF_CONF_DIR}/templates/pxf-site.xml ${PXF_CONF_DIR}/servers/db-hive/pxf-site.xml &&
+		sed -i 's|gpadmin/_HOST@EXAMPLE.COM|gpadmin@${REALM}|g' ${PXF_CONF_DIR}/servers/db-hive/pxf-site.xml &&
+		sed -i 's|</configuration>|<property><name>hadoop.security.authentication</name><value>kerberos</value></property></configuration>|g' \
+			${PXF_CONF_DIR}/servers/db-hive/jdbc-site.xml &&
+		sed -i -e 's|\(jdbc:hive2://${HADOOP_HOSTNAME}:10000/default\)|\1;principal=${KERBERIZED_HADOOP_URI}|g' \
+			${PXF_CONF_DIR}/servers/db-hive/jdbc-site.xml &&
+		${GPHOME}/pxf/bin/pxf cluster sync
+	"
+	sudo mkdir -p /etc/security/keytabs
+	sudo cp "${DATAPROC_DIR}/pxf.service.keytab" /etc/security/keytabs/gpadmin.headless.keytab
+	sudo chown gpadmin:gpadmin /etc/security/keytabs/gpadmin.headless.keytab
+	scp centos@mdw:/etc/krb5.conf /tmp/krb5.conf
+	sudo cp /tmp/krb5.conf /etc/krb5.conf
+
+	if [[ -d dataproc_2_env_files ]]; then
+		# Create the second hdfs-secure cluster configuration
+		GPDB_CLUSTER_NAME_BASE=$(grep < cluster_env_files/etc_hostfile edw0 | awk '{print substr($3, 1, length($3)-2)}')
+		HADOOP_2_HOSTNAME=$(< dataproc_2_env_files/name)
+		HADOOP_2_USER=gpuser
+		HADOOP_2_SSH_OPTS=(-o 'UserKnownHostsFile=/dev/null' -o 'StrictHostKeyChecking=no' -i dataproc_2_env_files/google_compute_engine)
+		DATAPROC_2_DIR=$(find /tmp/build/ -name dataproc_2_env_files)
+		REALM2=$(< "${DATAPROC_2_DIR}/REALM")
+		REALM2=${REALM2^^} # make sure REALM2 is up-cased, down-case below for hive principal
+		KERBERIZED_HADOOP_2_URI="hive/${HADOOP_2_HOSTNAME}.${REALM2,,}@${REALM2};saslQop=auth-conf" # quoted because of semicolon
+		ssh gpadmin@mdw "
+			mkdir -p ${PXF_CONF_DIR}/servers/hdfs-secure &&
+			cp ${PXF_CONF_DIR}/templates/pxf-site.xml ${PXF_CONF_DIR}/servers/hdfs-secure &&
+			sed -i -e \"s|>gpadmin/_HOST@EXAMPLE.COM<|>${HADOOP_2_USER}/_HOST@${REALM2}<|g\" ${PXF_CONF_DIR}/servers/hdfs-secure/pxf-site.xml &&
+			sed -i -e 's|/pxf.service.keytab<|/pxf.service.2.keytab<|g' ${PXF_CONF_DIR}/servers/hdfs-secure/pxf-site.xml
+		"
+		scp dataproc_2_env_files/conf/*-site.xml "gpadmin@mdw:${PXF_CONF_DIR}/servers/hdfs-secure"
+		ssh gpadmin@mdw "${GPHOME}/pxf/bin/pxf cluster sync"
+
+		sed -i  -e "s|</hdfs2>|<hadoopRoot>$DATAPROC_2_DIR</hadoopRoot><testKerberosPrincipal>${HADOOP_2_USER}@${REALM2}</testKerberosPrincipal></hdfs2>|g" \
+			-e "s|</hive2>|<kerberosPrincipal>${KERBERIZED_HADOOP_2_URI}</kerberosPrincipal><userName>${HADOOP_2_USER}</userName></hive2>|g" \
+			"$multiNodesCluster"
+
+		# Create the db-hive-kerberos server configuration
+		ssh "${SSH_OPTS[@]}" gpadmin@mdw "
+			mkdir -p ${PXF_CONF_DIR}/servers/db-hive-kerberos &&
+			cp ${PXF_CONF_DIR}/templates/jdbc-site.xml ${PXF_CONF_DIR}/servers/db-hive-kerberos &&
+			sed -i -e 's|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.apache.hive.jdbc.HiveDriver|' \
+				-e \"s|YOUR_DATABASE_JDBC_URL|jdbc:hive2://${HADOOP_2_HOSTNAME}:10000/default;principal=${KERBERIZED_HADOOP_2_URI}|\" \
+				-e 's|YOUR_DATABASE_JDBC_USER||' \
+				-e 's|YOUR_DATABASE_JDBC_PASSWORD||' \
+				${PXF_CONF_DIR}/servers/db-hive-kerberos/jdbc-site.xml &&
+			cp ~gpadmin/hive-report.sql ${PXF_CONF_DIR}/servers/db-hive-kerberos &&
+			cp ${PXF_CONF_DIR}/templates/pxf-site.xml ${PXF_CONF_DIR}/servers/db-hive-kerberos/pxf-site.xml &&
+			sed -i 's|gpadmin/_HOST@EXAMPLE.COM|${HADOOP_2_USER}/_HOST@${REALM2}|g' ${PXF_CONF_DIR}/servers/db-hive-kerberos/pxf-site.xml &&
+			sed -i -e 's|/pxf.service.keytab<|/pxf.service.2.keytab<|g' ${PXF_CONF_DIR}/servers/db-hive-kerberos/pxf-site.xml &&
+			sed -i -e 's|\${pxf.service.user.impersonation.enabled}|false|g' ${PXF_CONF_DIR}/servers/db-hive-kerberos/pxf-site.xml &&
+			sed -i 's|</configuration>|<property><name>hadoop.security.authentication</name><value>kerberos</value></property></configuration>|g' \
+				${PXF_CONF_DIR}/servers/db-hive-kerberos/jdbc-site.xml &&
+			${GPHOME}/pxf/bin/pxf cluster sync
+		"
+
+		# Add foreign dataproc hostfile to /etc/hosts
+		sudo tee --append /etc/hosts < dataproc_2_env_files/etc_hostfile
+
+		ssh "${HADOOP_2_SSH_OPTS[@]}" -t "${HADOOP_2_USER}@${HADOOP_2_HOSTNAME}" \
+			"set -euo pipefail
+			sudo kadmin.local -q 'addprinc -pw pxf ${HADOOP_2_USER}/${GPDB_CLUSTER_NAME_BASE}-0.c.${GOOGLE_PROJECT_ID}.internal'
+			sudo kadmin.local -q 'addprinc -pw pxf ${HADOOP_2_USER}/${GPDB_CLUSTER_NAME_BASE}-1.c.${GOOGLE_PROJECT_ID}.internal'
+			sudo kadmin.local -q 'addprinc -pw pxf ${HADOOP_2_USER}/${GPDB_CLUSTER_NAME_BASE}-2.c.${GOOGLE_PROJECT_ID}.internal'
+			sudo kadmin.local -q \"xst -k \${HOME}/pxf.service-mdw.keytab ${HADOOP_2_USER}/${GPDB_CLUSTER_NAME_BASE}-0.c.${GOOGLE_PROJECT_ID}.internal\"
+			sudo kadmin.local -q \"xst -k \${HOME}/pxf.service-sdw1.keytab ${HADOOP_2_USER}/${GPDB_CLUSTER_NAME_BASE}-1.c.${GOOGLE_PROJECT_ID}.internal\"
+			sudo kadmin.local -q \"xst -k \${HOME}/pxf.service-sdw2.keytab ${HADOOP_2_USER}/${GPDB_CLUSTER_NAME_BASE}-2.c.${GOOGLE_PROJECT_ID}.internal\"
+			sudo chown ${HADOOP_2_USER} \"\${HOME}/pxf.service-mdw.keytab\"
+			sudo chown ${HADOOP_2_USER} \"\${HOME}/pxf.service-sdw1.keytab\"
+			sudo chown ${HADOOP_2_USER} \"\${HOME}/pxf.service-sdw2.keytab\"
+			"
+		scp "${HADOOP_2_SSH_OPTS[@]}" "${HADOOP_2_USER}@${HADOOP_2_HOSTNAME}":~/pxf.service-*.keytab \
+			/tmp/
+
+		scp /tmp/pxf.service-*.keytab gpadmin@mdw:~/dataproc_2_env_files/
+
+		# Add foreign dataproc hostfile to /etc/hosts on all nodes and copy keytab
+		ssh gpadmin@mdw "
+			source ${GPHOME}/greenplum_path.sh &&
+			gpscp -f ~gpadmin/hostfile_all -v -r -u centos ~/dataproc_2_env_files/etc_hostfile =:/tmp/etc_hostfile &&
+			gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e 'sudo tee --append /etc/hosts < /tmp/etc_hostfile' &&
+			gpscp -h mdw -v -r -u gpadmin ~/dataproc_2_env_files/pxf.service-mdw.keytab =:/home/gpadmin/pxf/keytabs/pxf.service.2.keytab &&
+			gpscp -h sdw1 -v -r -u gpadmin ~/dataproc_2_env_files/pxf.service-sdw1.keytab =:/home/gpadmin/pxf/keytabs/pxf.service.2.keytab &&
+			gpscp -h sdw2 -v -r -u gpadmin ~/dataproc_2_env_files/pxf.service-sdw2.keytab =:/home/gpadmin/pxf/keytabs/pxf.service.2.keytab
+		"
+		sudo cp "${DATAPROC_2_DIR}/pxf.service.keytab" /etc/security/keytabs/gpuser.headless.keytab
+		sudo chown gpadmin:gpadmin /etc/security/keytabs/gpuser.headless.keytab
+		sed -i "s/>second-hadoop</>${HADOOP_2_HOSTNAME}</g" "$multiNodesCluster"
+	fi
+
+	# Create the non-secure cluster configuration
+	NON_SECURE_HADOOP_IP=$(grep < cluster_env_files/etc_hostfile edw0 | awk '{print $1}')
+	ssh gpadmin@mdw "
+		mkdir -p ${PXF_CONF_DIR}/servers/db-hive-non-secure &&
+		cp ${PXF_CONF_DIR}/templates/jdbc-site.xml ${PXF_CONF_DIR}/servers/db-hive-non-secure &&
+		sed -i -e 's|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.apache.hive.jdbc.HiveDriver|' \
+			-e \"s|YOUR_DATABASE_JDBC_URL|jdbc:hive2://${NON_SECURE_HADOOP_IP}:10000/default|\" \
+			-e 's|YOUR_DATABASE_JDBC_USER||' \
+			-e 's|YOUR_DATABASE_JDBC_PASSWORD||' \
+			${PXF_CONF_DIR}/servers/db-hive-non-secure/jdbc-site.xml &&
+		cp ~gpadmin/hive-report.sql ${PXF_CONF_DIR}/servers/db-hive-non-secure &&
+		mkdir -p ${PXF_CONF_DIR}/servers/hdfs-non-secure &&
+		cp ${PXF_CONF_DIR}/templates/{hdfs,mapred,yarn,core,hbase,hive,pxf}-site.xml ${PXF_CONF_DIR}/servers/hdfs-non-secure &&
+		sed -i -e 's/\(0.0.0.0\|localhost\|127.0.0.1\)/${NON_SECURE_HADOOP_IP}/g' ${PXF_CONF_DIR}/servers/hdfs-non-secure/*-site.xml &&
+		sed -i -e 's|\${user.name}|${PROXY_USER}|g' ${PXF_CONF_DIR}/servers/hdfs-non-secure/pxf-site.xml &&
+		${GPHOME}/pxf/bin/pxf cluster sync
+	"
+	sed -i "s/>non-secure-hadoop</>${NON_SECURE_HADOOP_IP}</g" "$multiNodesCluster"
+
+	# Create a secured server configuration with invalid principal name
+	ssh gpadmin@mdw "
+		mkdir -p ${PXF_CONF_DIR}/servers/secure-hdfs-invalid-principal &&
+		cp ${PXF_CONF_DIR}/servers/default/*-site.xml ${PXF_CONF_DIR}/servers/secure-hdfs-invalid-principal &&
+		cp ${PXF_CONF_DIR}/templates/pxf-site.xml ${PXF_CONF_DIR}/servers/secure-hdfs-invalid-principal &&
+		sed -i -e 's|>gpadmin/_HOST@EXAMPLE.COM<|>foobar/_HOST@INVALID.REALM.INTERNAL<|g' ${PXF_CONF_DIR}/servers/secure-hdfs-invalid-principal/pxf-site.xml &&
+		${GPHOME}/pxf/bin/pxf cluster sync
+	"
+
+	# Create a secured server configuration with invalid keytab
+	ssh gpadmin@mdw "
+		mkdir -p ${PXF_CONF_DIR}/servers/secure-hdfs-invalid-keytab &&
+		cp ${PXF_CONF_DIR}/servers/default/*-site.xml ${PXF_CONF_DIR}/servers/secure-hdfs-invalid-keytab &&
+		cp ${PXF_CONF_DIR}/templates/pxf-site.xml ${PXF_CONF_DIR}/servers/secure-hdfs-invalid-keytab &&
+		sed -i -e 's|/pxf.service.keytab<|/non.existent.keytab<|g' ${PXF_CONF_DIR}/servers/secure-hdfs-invalid-keytab/pxf-site.xml &&
 		${GPHOME}/pxf/bin/pxf cluster sync
 	"
 }
@@ -134,144 +283,7 @@ function run_pxf_automation() {
 		"$multiNodesCluster"
 
 	if [[ $KERBEROS == true ]]; then
-		DATAPROC_DIR=$(find /tmp/build/ -name dataproc_env_files)
-		REALM=$(< "${DATAPROC_DIR}/REALM")
-		REALM=${REALM^^} # make sure REALM is up-cased, down-case below for hive principal
-		KERBERIZED_HADOOP_URI="hive/${HADOOP_HOSTNAME}.${REALM,,}@${REALM};saslQop=auth-conf" # quoted because of semicolon
-		sed -i  -e "s|</hdfs>|<hadoopRoot>$DATAPROC_DIR</hadoopRoot></hdfs>|g" \
-			-e "s|</cluster>|<testKerberosPrincipal>gpadmin@${REALM}</testKerberosPrincipal></cluster>|g" \
-			-e "s|</hive>|<kerberosPrincipal>${KERBERIZED_HADOOP_URI}</kerberosPrincipal><userName>gpadmin</userName></hive>|g" \
-			"$multiNodesCluster"
-		ssh gpadmin@mdw "
-			cp ${PXF_CONF_DIR}/templates/pxf-site.xml ${PXF_CONF_DIR}/servers/db-hive/pxf-site.xml &&
-			sed -i 's|gpadmin/_HOST@EXAMPLE.COM|gpadmin@${REALM}|g' ${PXF_CONF_DIR}/servers/db-hive/pxf-site.xml &&
-			sed -i 's|</configuration>|<property><name>hadoop.security.authentication</name><value>kerberos</value></property></configuration>|g' \
-				${PXF_CONF_DIR}/servers/db-hive/jdbc-site.xml &&
-			sed -i -e 's|\(jdbc:hive2://${HADOOP_HOSTNAME}:10000/default\)|\1;principal=${KERBERIZED_HADOOP_URI}|g' \
-				${PXF_CONF_DIR}/servers/db-hive/jdbc-site.xml &&
-			${GPHOME}/pxf/bin/pxf cluster sync
-		"
-		sudo mkdir -p /etc/security/keytabs
-		sudo cp "${DATAPROC_DIR}/pxf.service.keytab" /etc/security/keytabs/gpadmin.headless.keytab
-		sudo chown gpadmin:gpadmin /etc/security/keytabs/gpadmin.headless.keytab
-		scp centos@mdw:/etc/krb5.conf /tmp/krb5.conf
-		sudo cp /tmp/krb5.conf /etc/krb5.conf
-
-		if [[ -d dataproc_2_env_files ]]; then
-			# Create the second hdfs-secure cluster configuration
-			GPDB_CLUSTER_NAME_BASE=$(grep < cluster_env_files/etc_hostfile edw0 | awk '{print substr($3, 1, length($3)-2)}')
-			HADOOP_2_HOSTNAME=$(< dataproc_2_env_files/name)
-			HADOOP_2_USER=gpuser
-			HADOOP_2_SSH_OPTS=(-o 'UserKnownHostsFile=/dev/null' -o 'StrictHostKeyChecking=no' -i dataproc_2_env_files/google_compute_engine)
-			DATAPROC_2_DIR=$(find /tmp/build/ -name dataproc_2_env_files)
-			REALM2=$(< "${DATAPROC_2_DIR}/REALM")
-			REALM2=${REALM2^^} # make sure REALM2 is up-cased, down-case below for hive principal
-			KERBERIZED_HADOOP_2_URI="hive/${HADOOP_2_HOSTNAME}.${REALM2,,}@${REALM2};saslQop=auth-conf" # quoted because of semicolon
-			ssh gpadmin@mdw "
-				mkdir -p ${PXF_CONF_DIR}/servers/hdfs-secure &&
-				cp ${PXF_CONF_DIR}/templates/pxf-site.xml ${PXF_CONF_DIR}/servers/hdfs-secure &&
-				sed -i -e \"s|>gpadmin/_HOST@EXAMPLE.COM<|>${HADOOP_2_USER}/_HOST@${REALM2}<|g\" ${PXF_CONF_DIR}/servers/hdfs-secure/pxf-site.xml &&
-				sed -i -e 's|/pxf.service.keytab<|/pxf.service.2.keytab<|g' ${PXF_CONF_DIR}/servers/hdfs-secure/pxf-site.xml
-			"
-			scp dataproc_2_env_files/conf/*-site.xml "gpadmin@mdw:${PXF_CONF_DIR}/servers/hdfs-secure"
-			ssh gpadmin@mdw "${GPHOME}/pxf/bin/pxf cluster sync"
-
-			sed -i  -e "s|</hdfs2>|<hadoopRoot>$DATAPROC_2_DIR</hadoopRoot><testKerberosPrincipal>${HADOOP_2_USER}@${REALM2}</testKerberosPrincipal></hdfs2>|g" \
-				-e "s|</hive2>|<kerberosPrincipal>${KERBERIZED_HADOOP_2_URI}</kerberosPrincipal><userName>${HADOOP_2_USER}</userName></hive2>|g" \
-				"$multiNodesCluster"
-
-			# Create the db-hive-kerberos server configuration
-			ssh "${SSH_OPTS[@]}" gpadmin@mdw "
-				mkdir -p ${PXF_CONF_DIR}/servers/db-hive-kerberos &&
-				cp ${PXF_CONF_DIR}/templates/jdbc-site.xml ${PXF_CONF_DIR}/servers/db-hive-kerberos &&
-				sed -i -e 's|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.apache.hive.jdbc.HiveDriver|' \
-					-e \"s|YOUR_DATABASE_JDBC_URL|jdbc:hive2://${HADOOP_2_HOSTNAME}:10000/default;principal=${KERBERIZED_HADOOP_2_URI}|\" \
-					-e 's|YOUR_DATABASE_JDBC_USER||' \
-					-e 's|YOUR_DATABASE_JDBC_PASSWORD||' \
-					${PXF_CONF_DIR}/servers/db-hive-kerberos/jdbc-site.xml &&
-				cp ~gpadmin/hive-report.sql ${PXF_CONF_DIR}/servers/db-hive-kerberos &&
-				cp ${PXF_CONF_DIR}/templates/pxf-site.xml ${PXF_CONF_DIR}/servers/db-hive-kerberos/pxf-site.xml &&
-				sed -i 's|gpadmin/_HOST@EXAMPLE.COM|${HADOOP_2_USER}/_HOST@${REALM2}|g' ${PXF_CONF_DIR}/servers/db-hive-kerberos/pxf-site.xml &&
-				sed -i -e 's|/pxf.service.keytab<|/pxf.service.2.keytab<|g' ${PXF_CONF_DIR}/servers/db-hive-kerberos/pxf-site.xml &&
-				sed -i -e 's|\${pxf.service.user.impersonation.enabled}|false|g' ${PXF_CONF_DIR}/servers/db-hive-kerberos/pxf-site.xml &&
-				sed -i 's|</configuration>|<property><name>hadoop.security.authentication</name><value>kerberos</value></property></configuration>|g' \
-					${PXF_CONF_DIR}/servers/db-hive-kerberos/jdbc-site.xml &&
-				${GPHOME}/pxf/bin/pxf cluster sync
-			"
-
-			# Add foreign dataproc hostfile to /etc/hosts
-			sudo tee --append /etc/hosts < dataproc_2_env_files/etc_hostfile
-
-			ssh "${HADOOP_2_SSH_OPTS[@]}" -t "${HADOOP_2_USER}@${HADOOP_2_HOSTNAME}" \
-				"set -euo pipefail
-				sudo kadmin.local -q 'addprinc -pw pxf ${HADOOP_2_USER}/${GPDB_CLUSTER_NAME_BASE}-0.c.${GOOGLE_PROJECT_ID}.internal'
-				sudo kadmin.local -q 'addprinc -pw pxf ${HADOOP_2_USER}/${GPDB_CLUSTER_NAME_BASE}-1.c.${GOOGLE_PROJECT_ID}.internal'
-				sudo kadmin.local -q 'addprinc -pw pxf ${HADOOP_2_USER}/${GPDB_CLUSTER_NAME_BASE}-2.c.${GOOGLE_PROJECT_ID}.internal'
-				sudo kadmin.local -q \"xst -k \${HOME}/pxf.service-mdw.keytab ${HADOOP_2_USER}/${GPDB_CLUSTER_NAME_BASE}-0.c.${GOOGLE_PROJECT_ID}.internal\"
-				sudo kadmin.local -q \"xst -k \${HOME}/pxf.service-sdw1.keytab ${HADOOP_2_USER}/${GPDB_CLUSTER_NAME_BASE}-1.c.${GOOGLE_PROJECT_ID}.internal\"
-				sudo kadmin.local -q \"xst -k \${HOME}/pxf.service-sdw2.keytab ${HADOOP_2_USER}/${GPDB_CLUSTER_NAME_BASE}-2.c.${GOOGLE_PROJECT_ID}.internal\"
-				sudo chown ${HADOOP_2_USER} \"\${HOME}/pxf.service-mdw.keytab\"
-				sudo chown ${HADOOP_2_USER} \"\${HOME}/pxf.service-sdw1.keytab\"
-				sudo chown ${HADOOP_2_USER} \"\${HOME}/pxf.service-sdw2.keytab\"
-				"
-			scp "${HADOOP_2_SSH_OPTS[@]}" "${HADOOP_2_USER}@${HADOOP_2_HOSTNAME}":~/pxf.service-*.keytab \
-				/tmp/
-
-			scp /tmp/pxf.service-*.keytab gpadmin@mdw:~/dataproc_2_env_files/
-
-			# Add foreign dataproc hostfile to /etc/hosts on all nodes and copy keytab
-			ssh gpadmin@mdw "
-				source ${GPHOME}/greenplum_path.sh &&
-				gpscp -f ~gpadmin/hostfile_all -v -r -u centos ~/dataproc_2_env_files/etc_hostfile =:/tmp/etc_hostfile &&
-				gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e 'sudo tee --append /etc/hosts < /tmp/etc_hostfile' &&
-				gpscp -h mdw -v -r -u gpadmin ~/dataproc_2_env_files/pxf.service-mdw.keytab =:/home/gpadmin/pxf/keytabs/pxf.service.2.keytab &&
-				gpscp -h sdw1 -v -r -u gpadmin ~/dataproc_2_env_files/pxf.service-sdw1.keytab =:/home/gpadmin/pxf/keytabs/pxf.service.2.keytab &&
-				gpscp -h sdw2 -v -r -u gpadmin ~/dataproc_2_env_files/pxf.service-sdw2.keytab =:/home/gpadmin/pxf/keytabs/pxf.service.2.keytab
-			"
-			sudo cp "${DATAPROC_2_DIR}/pxf.service.keytab" /etc/security/keytabs/gpuser.headless.keytab
-			sudo chown gpadmin:gpadmin /etc/security/keytabs/gpuser.headless.keytab
-			sed -i "s/>second-hadoop</>${HADOOP_2_HOSTNAME}</g" "$multiNodesCluster"
-		fi
-
-		# Create the non-secure cluster configuration
-		NON_SECURE_HADOOP_IP=$(grep < cluster_env_files/etc_hostfile edw0 | awk '{print $1}')
-		ssh gpadmin@mdw "
-			mkdir -p ${PXF_CONF_DIR}/servers/db-hive-non-secure &&
-			cp ${PXF_CONF_DIR}/templates/jdbc-site.xml ${PXF_CONF_DIR}/servers/db-hive-non-secure &&
-			sed -i -e 's|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.apache.hive.jdbc.HiveDriver|' \
-				-e \"s|YOUR_DATABASE_JDBC_URL|jdbc:hive2://${NON_SECURE_HADOOP_IP}:10000/default|\" \
-				-e 's|YOUR_DATABASE_JDBC_USER||' \
-				-e 's|YOUR_DATABASE_JDBC_PASSWORD||' \
-				${PXF_CONF_DIR}/servers/db-hive-non-secure/jdbc-site.xml &&
-			cp ~gpadmin/hive-report.sql ${PXF_CONF_DIR}/servers/db-hive-non-secure &&
-			mkdir -p ${PXF_CONF_DIR}/servers/hdfs-non-secure &&
-			cp ${PXF_CONF_DIR}/templates/{hdfs,mapred,yarn,core,hbase,hive,pxf}-site.xml ${PXF_CONF_DIR}/servers/hdfs-non-secure &&
-			sed -i -e 's/\(0.0.0.0\|localhost\|127.0.0.1\)/${NON_SECURE_HADOOP_IP}/g' ${PXF_CONF_DIR}/servers/hdfs-non-secure/*-site.xml &&
-			sed -i -e 's|\${user.name}|${PROXY_USER}|g' ${PXF_CONF_DIR}/servers/hdfs-non-secure/pxf-site.xml &&
-			${GPHOME}/pxf/bin/pxf cluster sync
-		"
-		sed -i "s/>non-secure-hadoop</>${NON_SECURE_HADOOP_IP}</g" "$multiNodesCluster"
-
-		# Create a secured server configuration with invalid principal name
-		ssh gpadmin@mdw "
-			mkdir -p ${PXF_CONF_DIR}/servers/secure-hdfs-invalid-principal &&
-			cp ${PXF_CONF_DIR}/servers/default/*-site.xml ${PXF_CONF_DIR}/servers/secure-hdfs-invalid-principal &&
-			cp ${PXF_CONF_DIR}/templates/pxf-site.xml ${PXF_CONF_DIR}/servers/secure-hdfs-invalid-principal &&
-			sed -i -e 's|>gpadmin/_HOST@EXAMPLE.COM<|>foobar/_HOST@INVALID.REALM.INTERNAL<|g' ${PXF_CONF_DIR}/servers/secure-hdfs-invalid-principal/pxf-site.xml &&
-			${GPHOME}/pxf/bin/pxf cluster sync
-		"
-
-		# Create a secured server configuration with invalid keytab
-		ssh gpadmin@mdw "
-			mkdir -p ${PXF_CONF_DIR}/servers/secure-hdfs-invalid-keytab &&
-			cp ${PXF_CONF_DIR}/servers/default/*-site.xml ${PXF_CONF_DIR}/servers/secure-hdfs-invalid-keytab &&
-			cp ${PXF_CONF_DIR}/templates/pxf-site.xml ${PXF_CONF_DIR}/servers/secure-hdfs-invalid-keytab &&
-			sed -i -e 's|/pxf.service.keytab<|/non.existent.keytab<|g' ${PXF_CONF_DIR}/servers/secure-hdfs-invalid-keytab/pxf-site.xml &&
-			${GPHOME}/pxf/bin/pxf cluster sync
-		"
-	fi
-
-	if [[ $KERBEROS == true ]]; then
+		setup_pxf_kerberos_on_cluster
 		sed -i 's/sutFile=default.xml/sutFile=MultiHadoopMultiNodesCluster.xml/g' pxf_src/automation/jsystem.properties
 	else
 		sed -i 's/sutFile=default.xml/sutFile=MultiNodesCluster.xml/g' pxf_src/automation/jsystem.properties
