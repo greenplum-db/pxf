@@ -32,7 +32,6 @@ public class SecureLoginTest {
     private static final String PROPERTY_KEY_SERVICE_PRINCIPAL = "pxf.service.kerberos.principal";
     private static final String PROPERTY_KEY_SERVICE_KEYTAB = "pxf.service.kerberos.keytab";
 
-
     private SecureLogin secureLogin;
     private Configuration configuration;
     private LoginSession expectedLoginSession;
@@ -65,7 +64,7 @@ public class SecureLoginTest {
     @Test
     public void testLoginNoKerberosNoServiceUser() throws IOException {
         PowerMockito.mockStatic(PxfUserGroupInformation.class);
-        expectedLoginSession = new LoginSession("config", null, null, null, null, 0);
+        expectedLoginSession = new LoginSession("config");
 
         UserGroupInformation loginUGI = secureLogin.getLoginUser("server", "config", configuration);
 
@@ -76,6 +75,34 @@ public class SecureLoginTest {
         assertEquals(System.getProperty("user.name"), loginUGI.getUserName());
         assertNull(loginSession.getSubject());
         assertNull(loginSession.getUser());
+
+        // Make sure that the cached entry is the same after the second call
+        assertSame(loginUGI, secureLogin.getLoginUser("server", "config", configuration));
+
+        PowerMockito.verifyZeroInteractions(PxfUserGroupInformation.class);
+    }
+
+    @Test
+    public void testLoginNoKerberosNoServiceUserWhenConfigurationValuesAreProvided() throws IOException {
+        PowerMockito.mockStatic(PxfUserGroupInformation.class);
+        expectedLoginSession = new LoginSession("config");
+        // These values in the configuration should not be added to the LoginSession
+        configuration.set("pxf.service.kerberos.principal", "foo");
+        configuration.set("pxf.service.kerberos.keytab", "bar");
+        configuration.set("hadoop.kerberos.min.seconds.before.relogin", "100");
+
+        UserGroupInformation loginUGI = secureLogin.getLoginUser("server", "config", configuration);
+
+        LoginSession loginSession = SecureLogin.getCache().get("server");
+        assertEquals(1, SecureLogin.getCache().size());
+        assertEquals(expectedLoginSession, loginSession);
+        assertSame(loginUGI, loginSession.getLoginUser());
+        assertEquals(System.getProperty("user.name"), loginUGI.getUserName());
+        assertNull(loginSession.getSubject());
+        assertNull(loginSession.getUser());
+
+        // Make sure that the cached entry is the same after the second call
+        assertSame(loginUGI, secureLogin.getLoginUser("server", "config", configuration));
 
         PowerMockito.verifyZeroInteractions(PxfUserGroupInformation.class);
     }

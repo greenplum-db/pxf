@@ -31,6 +31,30 @@ public class LoginSessionTest {
     }
 
     @Test
+    public void testLoginSessionConfigurationConstructor() {
+        session = new LoginSession("config");
+        assertEquals(0, session.getKerberosMinMillisBeforeRelogin());
+        assertNull(session.getKeytabPath());
+        assertNull(session.getPrincipalName());
+        assertNull(session.getLoginUser());
+        assertNull(session.getSubject());
+        assertNull(session.getUser());
+        assertEquals("LoginSession[config=config,principal=<null>,keytab=<null>,kerberosMinMillisBeforeRelogin=0]", session.toString());
+    }
+
+    @Test
+    public void testLoginSessionConfigurationAndLoginUserConstructor() {
+        session = new LoginSession("config", ugiFoo);
+        assertEquals(0, session.getKerberosMinMillisBeforeRelogin());
+        assertSame(ugiFoo, session.getLoginUser());
+        assertNull(session.getKeytabPath());
+        assertNull(session.getPrincipalName());
+        assertNull(session.getSubject());
+        assertNull(session.getUser());
+        assertEquals("LoginSession[config=config,principal=<null>,keytab=<null>,kerberosMinMillisBeforeRelogin=0]", session.toString());
+    }
+
+    @Test
     public void testLoginSessionShortConstructor() {
         session = new LoginSession("config", "principal", "keytab", 0);
         assertEquals(0, session.getKerberosMinMillisBeforeRelogin());

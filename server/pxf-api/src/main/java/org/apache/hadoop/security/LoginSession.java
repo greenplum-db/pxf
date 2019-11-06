@@ -28,6 +28,25 @@ public class LoginSession {
     private User user;
 
     /**
+     * Creates a new session object with a config directory
+     *
+     * @param configDirectory server configuration directory
+     */
+    public LoginSession(String configDirectory) {
+        this(configDirectory, null, null, null, null, 0L);
+    }
+
+    /**
+     * Creates a new session object with a config directory and a login user
+     *
+     * @param configDirectory server configuration directory
+     * @param loginUser       UserGroupInformation for the given principal after login to Kerberos was performed
+     */
+    public LoginSession(String configDirectory, UserGroupInformation loginUser) {
+        this(configDirectory, null, null, loginUser, null, 0L);
+    }
+
+    /**
      * Creates a new session object.
      *
      * @param configDirectory server configuration directory

@@ -123,7 +123,7 @@ public class SecureLogin {
                         String remoteUser = configuration.get(CONFIG_KEY_SERVICE_USER_NAME, System.getProperty("user.name"));
 
                         UserGroupInformation loginUser = UserGroupInformation.createRemoteUser(remoteUser);
-                        loginSession = new LoginSession(configDirectory, null, null, loginUser, null, 0L);
+                        loginSession = new LoginSession(configDirectory, loginUser);
                     }
                     loginMap.put(serverName, loginSession);
                 }
@@ -209,13 +209,20 @@ public class SecureLogin {
         if (currentSession == null)
             return null;
 
-        long kerberosMinMillisBeforeRelogin = Utilities.isSecurityEnabled(configuration) ?
-                PxfUserGroupInformation.getKerberosMinMillisBeforeRelogin(serverName, configuration) : 0L;
-        LoginSession expectedLoginSession = new LoginSession(
-                configDirectory,
-                SecureLogin.getServicePrincipal(serverName, configuration),
-                SecureLogin.getServiceKeytab(serverName, configuration),
-                kerberosMinMillisBeforeRelogin);
+        boolean securityEnabled = Utilities.isSecurityEnabled(configuration);
+
+        LoginSession expectedLoginSession;
+        if (securityEnabled) {
+            long kerberosMinMillisBeforeRelogin = PxfUserGroupInformation.getKerberosMinMillisBeforeRelogin(serverName, configuration);
+            expectedLoginSession = new LoginSession(
+                    configDirectory,
+                    SecureLogin.getServicePrincipal(serverName, configuration),
+                    SecureLogin.getServiceKeytab(serverName, configuration),
+                    kerberosMinMillisBeforeRelogin);
+        } else {
+            expectedLoginSession = new LoginSession(configDirectory);
+        }
+
         if (!currentSession.equals(expectedLoginSession)) {
             LOG.warn("LoginSession has changed for server {} : existing {} expected {}", serverName, currentSession, expectedLoginSession);
             return null;
