@@ -262,6 +262,11 @@ function setup_pxf_kerberos_on_cluster() {
 		sed -i -e 's|/pxf.service.keytab<|/non.existent.keytab<|g' ${PXF_CONF_DIR}/servers/secure-hdfs-invalid-keytab/pxf-site.xml &&
 		${GPHOME}/pxf/bin/pxf cluster sync
 	"
+
+	# Configure the principal for the default-no-impersonation server
+	ssh gpadmin@mdw "
+		sed -i -e 's|gpadmin/_HOST@EXAMPLE.COM|gpadmin@${REALM}|g' ${PXF_CONF_DIR}/servers/default-no-impersonation/pxf-site.xml
+	"
 }
 
 function run_pxf_automation() {
