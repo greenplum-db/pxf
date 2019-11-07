@@ -20,13 +20,17 @@ package org.greenplum.pxf.plugins.hdfs;
  */
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.FileSplit;
+import org.apache.parquet.HadoopReadOptions;
+import org.apache.parquet.ParquetReadOptions;
 import org.apache.parquet.column.ParquetProperties.WriterVersion;
 import org.apache.parquet.column.page.PageReadStore;
 import org.apache.parquet.example.data.Group;
 import org.apache.parquet.example.data.simple.convert.GroupRecordConverter;
+import org.apache.parquet.filter2.compat.FilterCompat;
 import org.apache.parquet.format.converter.ParquetMetadataConverter;
 import org.apache.parquet.format.converter.ParquetMetadataConverter.MetadataFilter;
 import org.apache.parquet.hadoop.ParquetFileReader;
@@ -34,6 +38,7 @@ import org.apache.parquet.hadoop.ParquetWriter;
 import org.apache.parquet.hadoop.example.GroupWriteSupport;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
+import org.apache.parquet.hadoop.util.HadoopInputFile;
 import org.apache.parquet.io.ColumnIOFactory;
 import org.apache.parquet.io.MessageColumnIO;
 import org.apache.parquet.io.RecordReader;
@@ -61,6 +66,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static org.apache.parquet.filter.ColumnPredicates.equalTo;
+import static org.apache.parquet.filter.ColumnRecordFilter.column;
+
 /**
  * Parquet file accessor.
  * Unit of operation is record.
@@ -80,6 +88,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
     private MessageColumnIO columnIO;
     private CompressionCodecName codecName;
     private ParquetWriter<Group> parquetWriter;
+    private FilterCompat.Filter recordFilter;
     private RecordReader<Group> recordReader;
     private GroupRecordConverter groupRecordConverter;
     private GroupWriteSupport groupWriteSupport;
@@ -106,7 +115,17 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
         // Create reader for a given split, read a range in file
         MetadataFilter filter = ParquetMetadataConverter.range(
                 fileSplit.getStart(), fileSplit.getStart() + fileSplit.getLength());
-        fileReader = new ParquetFileReader(configuration, file, filter);
+
+        recordFilter = getRecordFilter();
+
+        ParquetReadOptions parquetReadOptions = HadoopReadOptions
+                .builder(configuration)
+                .withMetadataFilter(filter)
+                .withRecordFilter(recordFilter)
+                .build();
+        HadoopInputFile inputFile = HadoopInputFile.fromPath(this.file, configuration);
+        fileReader = ParquetFileReader.open(inputFile, parquetReadOptions);
+
         try {
             ParquetMetadata metadata = fileReader.getFooter();
             schema = metadata.getFileMetaData().getSchema();
@@ -127,6 +146,17 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
         return true;
     }
 
+    private FilterCompat.Filter getRecordFilter() {
+        String filterString = context.getFilterString();
+        if (StringUtils.isBlank(filterString)) {
+            return null;
+        }
+
+        return new ParquetRecordFilterBuilder(context.getTupleDescription())
+                .buildRecordFilter(filterString);
+//        return FilterCompat.get(column("l_partkey", equalTo(185761L)));
+    }
+
     /**
      * Reads the next record.
      *
@@ -139,7 +169,16 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
         if (rowsRead == rowsInRowGroup && !readNextRowGroup())
             return null;
         Group group = recordReader.read();
+
+        while (group == null && readNextRowGroup()) {
+            group = recordReader.read();
+        }
+
+        if (group == null)
+            return null;
+
         rowsRead++;
+
         return new OneRow(null, group);
     }
 
@@ -155,7 +194,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
         totalRowsRead += rowsRead;
         // Reset rows read
         rowsRead = 0;
-        recordReader = columnIO.getRecordReader(currentRowGroup, groupRecordConverter);
+        recordReader = columnIO.getRecordReader(currentRowGroup, groupRecordConverter, recordFilter);
         rowsInRowGroup = currentRowGroup.getRowCount();
 
         LOG.debug("Reading {} rows (rowgroup {})", rowsInRowGroup, rowGroupsReadCount);
