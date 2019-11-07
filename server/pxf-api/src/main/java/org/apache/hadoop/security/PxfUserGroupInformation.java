@@ -3,14 +3,12 @@ package org.apache.hadoop.security;
 import com.google.common.base.Preconditions;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.net.DNS;
 import org.apache.hadoop.security.authentication.util.KerberosUtil;
 import org.apache.hadoop.util.PlatformName;
 import org.apache.hadoop.util.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
 import javax.security.auth.DestroyFailedException;
 import javax.security.auth.Subject;
 import javax.security.auth.kerberos.KerberosTicket;
@@ -18,8 +16,6 @@ import javax.security.auth.login.AppConfigurationEntry;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -75,16 +71,13 @@ public abstract class PxfUserGroupInformation {
 
         Preconditions.checkArgument(StringUtils.isNotBlank(keytabFilename), "Running in secure mode, but config doesn't have a keytab");
 
-        // replace _HOST parameter in the server principal, is applicable
-        String principalName = SecurityUtil.getServerPrincipal(principal, getLocalHostName(configuration));
-
         try {
             // create a new Subject to use for login, so that we can remember reference to Subject in LoginSession
             Subject subject = subjectProvider.get();
 
             // create login context with the given subject, using Kerberos principal and keytab filename; then login
             LoginContext login = newLoginContext(HadoopConfiguration.KEYTAB_KERBEROS_CONFIG_NAME,
-                    subject, new HadoopConfiguration(principalName, keytabFilename));
+                    subject, new HadoopConfiguration(principal, keytabFilename));
             login.login();
 
             // create UGI with the same Subject used to login, store the login context with the subject's User principal
@@ -93,7 +86,7 @@ public abstract class PxfUserGroupInformation {
             user.setLogin(login);
             loginUser.setAuthenticationMethod(UserGroupInformation.AuthenticationMethod.KERBEROS);
 
-            LOG.info("Login successful for principal {} using keytab file {}", principalName, keytabFilename);
+            LOG.info("Login successful for principal {} using keytab file {}", principal, keytabFilename);
 
             // Keep track of the number of logins per server to make sure
             // we are not logging in too often
@@ -102,12 +95,12 @@ public abstract class PxfUserGroupInformation {
             logStatistics(serverName);
 
             // store all the relevant information in the login session and return it
-            return new LoginSession(configDirectory, principalName, keytabFilename, loginUser, subject,
+            return new LoginSession(configDirectory, principal, keytabFilename, loginUser, subject,
                     getKerberosMinMillisBeforeRelogin(serverName, configuration));
 
         } catch (LoginException le) {
             KerberosAuthException kae = new KerberosAuthException(LOGIN_FAILURE, le);
-            kae.setUser(principalName);
+            kae.setUser(principal);
             kae.setKeytabFile(keytabFilename);
             throw kae;
         }
@@ -232,20 +225,6 @@ public abstract class PxfUserGroupInformation {
             }
         }
         LOG.warn("Warning, no kerberos tickets found while attempting to renew ticket");
-    }
-
-    static String getLocalHostName(@Nullable Configuration conf) throws UnknownHostException {
-        if (conf != null) {
-            String dnsInterface = conf.get("hadoop.security.dns.interface");
-            String nameServer = conf.get("hadoop.security.dns.nameserver");
-            if (dnsInterface != null) {
-                return DNS.getDefaultHost(dnsInterface, nameServer, true);
-            }
-            if (nameServer != null) {
-                throw new IllegalArgumentException("hadoop.security.dns.nameserver requires hadoop.security.dns.interface. Check your configuration.");
-            }
-        }
-        return InetAddress.getLocalHost().getCanonicalHostName();
     }
 
     private static long getRefreshTime(KerberosTicket tgt) {

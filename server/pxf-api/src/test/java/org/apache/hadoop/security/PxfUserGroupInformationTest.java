@@ -18,7 +18,6 @@ import javax.security.auth.kerberos.KerberosPrincipal;
 import javax.security.auth.kerberos.KerberosTicket;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
-import java.net.InetAddress;
 import java.util.Date;
 import java.util.function.Supplier;
 
@@ -37,15 +36,6 @@ import static org.mockito.Mockito.when;
 @PrepareForTest({PxfUserGroupInformation.class, UserGroupInformation.class, KerberosUtil.class, KerberosTicket.class})
 public class PxfUserGroupInformationTest {
 
-    private static final String hostname;
-    static {
-        try {
-            hostname = InetAddress.getLocalHost().getCanonicalHostName();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     private String serverName;
     private Configuration configuration;
     private UserGroupInformation ugi;
@@ -57,7 +47,6 @@ public class PxfUserGroupInformationTest {
     private KerberosPrincipal nonTgtPrincipal = new KerberosPrincipal("some/somewhere@EXAMPLE.COM");
     private LoginSession session;
     private long nowMs;
-
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
@@ -92,12 +81,12 @@ public class PxfUserGroupInformationTest {
         configuration.set("hadoop.kerberos.min.seconds.before.relogin", "33");
         ugi = new UserGroupInformation(subject);
 
-        session = PxfUserGroupInformation.loginUserFromKeytab(configuration, "server", "config-dir", "principal/_HOST@EXAMPLE.COM", "/path/to/keytab");
+        session = PxfUserGroupInformation.loginUserFromKeytab(configuration, "server", "config-dir", "principal/some.host.com@EXAMPLE.COM", "/path/to/keytab");
 
         // assert that the login session was created with properly wired up ugi/subject/user/loginContext
         assertEquals(33000, session.getKerberosMinMillisBeforeRelogin()); // will pick from configuration
         assertEquals("/path/to/keytab", session.getKeytabPath());
-        assertEquals(String.format("principal/%s@EXAMPLE.COM", hostname), session.getPrincipalName());
+        assertEquals("principal/some.host.com@EXAMPLE.COM", session.getPrincipalName());
         assertEquals(ugi, session.getLoginUser()); // UGI equality only compares enclosed subjects
         assertNotSame(ugi, session.getLoginUser()); // UGI equality only compares enclosed subjects
         assertSame(subject, session.getSubject());
@@ -113,12 +102,12 @@ public class PxfUserGroupInformationTest {
     public void testLoginFromKeytabMinMillisFromDefault() throws Exception {
         ugi = new UserGroupInformation(subject);
 
-        session = PxfUserGroupInformation.loginUserFromKeytab(configuration, "server", "config-dir", "principal/_HOST@EXAMPLE.COM", "/path/to/keytab");
+        session = PxfUserGroupInformation.loginUserFromKeytab(configuration, "server", "config-dir", "principal/some.host.com@EXAMPLE.COM", "/path/to/keytab");
 
         // assert that the login session was created with properly wired up ugi/subject/user/loginContext
         assertEquals(60000, session.getKerberosMinMillisBeforeRelogin()); // will pick from default
         assertEquals("/path/to/keytab", session.getKeytabPath());
-        assertEquals(String.format("principal/%s@EXAMPLE.COM", hostname), session.getPrincipalName());
+        assertEquals("principal/some.host.com@EXAMPLE.COM", session.getPrincipalName());
         assertEquals(ugi, session.getLoginUser()); // UGI equality only compares enclosed subjects
         assertNotSame(ugi, session.getLoginUser()); // UGI equality only compares enclosed subjects
         assertSame(subject, session.getSubject());

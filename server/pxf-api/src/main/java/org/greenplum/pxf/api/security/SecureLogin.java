@@ -21,15 +21,16 @@ package org.greenplum.pxf.api.security;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.security.LoginSession;
-import org.apache.hadoop.security.PxfUserGroupInformation;
-import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.net.*;
+import org.apache.hadoop.security.*;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.*;
 import java.io.IOException;
+import java.net.*;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -209,15 +210,13 @@ public class SecureLogin {
         if (currentSession == null)
             return null;
 
-        boolean securityEnabled = Utilities.isSecurityEnabled(configuration);
-
         LoginSession expectedLoginSession;
-        if (securityEnabled) {
+        if (Utilities.isSecurityEnabled(configuration)) {
             long kerberosMinMillisBeforeRelogin = PxfUserGroupInformation.getKerberosMinMillisBeforeRelogin(serverName, configuration);
             expectedLoginSession = new LoginSession(
                     configDirectory,
-                    SecureLogin.getServicePrincipal(serverName, configuration),
-                    SecureLogin.getServiceKeytab(serverName, configuration),
+                    getServicePrincipal(serverName, configuration),
+                    getServiceKeytab(serverName, configuration),
                     kerberosMinMillisBeforeRelogin);
         } else {
             expectedLoginSession = new LoginSession(configDirectory);
@@ -234,18 +233,27 @@ public class SecureLogin {
     /**
      * Returns the service principal name from the configuration if available,
      * or defaults to the system property for the default server for backwards
-     * compatibility.
+     * compatibility. If the prncipal name contains _HOST element, replaces it with the
+     * name of the host where the service is running.
      *
      * @param serverName    the name of the server
      * @param configuration the hadoop configuration
      * @return the service principal for the given server and configuration
      */
-    static String getServicePrincipal(String serverName, Configuration configuration) {
+    String getServicePrincipal(String serverName, Configuration configuration) {
         // use system property as default for backward compatibility when only 1 Kerberized cluster was supported
         String defaultPrincipal = StringUtils.equalsIgnoreCase(serverName, "default") ?
                 System.getProperty(CONFIG_KEY_SERVICE_PRINCIPAL) :
                 null;
-        return configuration.get(CONFIG_KEY_SERVICE_PRINCIPAL, defaultPrincipal);
+        String principal = configuration.get(CONFIG_KEY_SERVICE_PRINCIPAL, defaultPrincipal);
+        try {
+            principal = SecurityUtil.getServerPrincipal(principal, getLocalHostName(configuration));
+            LOG.debug("Resolved Kerberos principal name to {} for server {}", principal, serverName);
+            return principal;
+        } catch (Exception e) {
+            throw new IllegalStateException(
+                String.format("Failed to determine local hostname for server {} : {}", serverName, e.getMessage()), e);
+        }
     }
 
     /**
@@ -257,12 +265,32 @@ public class SecureLogin {
      * @param configuration the hadoop configuration
      * @return the path of the service keytab for the given server and configuration
      */
-    static String getServiceKeytab(String serverName, Configuration configuration) {
+     String getServiceKeytab(String serverName, Configuration configuration) {
         // use system property as default for backward compatibility when only 1 Kerberized cluster was supported
         String defaultKeytab = StringUtils.equalsIgnoreCase(serverName, "default") ?
                 System.getProperty(CONFIG_KEY_SERVICE_KEYTAB) :
                 null;
         return configuration.get(CONFIG_KEY_SERVICE_KEYTAB, defaultKeytab);
+    }
+
+    /**
+     * Retrieve the name of the current host. The code is copied from org.hadoop.security.SecurityUtil class.
+     * @param conf configuration
+     * @return name of the host
+     * @throws IOException
+     */
+    private String getLocalHostName(@Nullable Configuration conf) throws IOException {
+        if (conf != null) {
+            String dnsInterface = conf.get("hadoop.security.dns.interface");
+            String nameServer = conf.get("hadoop.security.dns.nameserver");
+            if (dnsInterface != null) {
+                return DNS.getDefaultHost(dnsInterface, nameServer, true);
+            }
+            if (nameServer != null) {
+                throw new IllegalArgumentException("hadoop.security.dns.nameserver requires hadoop.security.dns.interface. Check your configuration.");
+            }
+        }
+        return InetAddress.getLocalHost().getCanonicalHostName();
     }
 
     /* --------- Testing Only Methods --------- */
@@ -278,10 +306,22 @@ public class SecureLogin {
 
     /**
      * Resets and cleans the cache of login sessions. For testing only.
+     * @return unmodifiable cache
      */
     static Map<String, LoginSession> getCache() {
         synchronized (SecureLogin.class) {
             return Collections.unmodifiableMap(loginMap);
+        }
+    }
+
+    /**
+     * Adds a given value to cache. For testing only.
+     * @param server server
+     * @param session session
+     */
+    static void addToCache(String server, LoginSession session) {
+        synchronized (SecureLogin.class) {
+            loginMap.put(server, session);
         }
     }
 
