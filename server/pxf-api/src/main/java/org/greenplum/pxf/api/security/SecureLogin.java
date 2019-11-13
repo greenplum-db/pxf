@@ -21,16 +21,19 @@ package org.greenplum.pxf.api.security;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.net.*;
-import org.apache.hadoop.security.*;
+import org.apache.hadoop.net.DNS;
+import org.apache.hadoop.security.LoginSession;
+import org.apache.hadoop.security.PxfUserGroupInformation;
+import org.apache.hadoop.security.SecurityUtil;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.*;
+import javax.annotation.Nullable;
 import java.io.IOException;
-import java.net.*;
+import java.net.InetAddress;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
