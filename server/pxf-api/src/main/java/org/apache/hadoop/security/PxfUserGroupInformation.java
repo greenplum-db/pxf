@@ -165,7 +165,7 @@ public abstract class PxfUserGroupInformation {
                     login = newLoginContext(
                             HadoopConfiguration.KEYTAB_KERBEROS_CONFIG_NAME, subject,
                             new HadoopConfiguration(keytabPrincipal, keytabFile));
-                    LOG.debug("Initiating re-login for {}", keytabPrincipal);
+                    LOG.info("Initiating re-login for {} for server {}", keytabPrincipal, serverName);
                     login.login();
                     fixKerberosTicketOrder(subject);
                     user.setLogin(login);
