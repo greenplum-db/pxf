@@ -240,7 +240,7 @@ jobs:
             number_of_nodes: {{number_of_gpdb_nodes}}
             extra_nodes: 1
             segments_per_host: 4
-            instance_type: n1-standard-4
+            instance_type: n1-standard-2
             ccp_reap_minutes: 262800
       - task: Generate Greenplum Cluster
         input_mapping:
