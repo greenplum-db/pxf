@@ -129,6 +129,27 @@ fly -t ud expose-pipeline -p pxf_master
 fly -t ud expose-pipeline -p pxf_5X_STABLE
 ```
 
+# Deploy Longevity Testing PXF pipeline
+The longevity testing pipeline is designed to work off a PXF tag that needs to be provided as a parameter when
+creating the pipeline. The generated pipeline compiles PXF, creates a Greenplum CCP cluster and 2 secure dataproc clusters
+and runs a multi-cluster security test every 15 minutes. CCP cluster is set with expiration time of more than 6 months, so
+it needs to be cleaned manually and so do the dataproc clusters.
+
+```
+fly -t ud set-pipeline \
+    -c ~/workspace/pxf/concourse/pipelines/longevity_pipeline.yml \
+    -l ~/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
+    -l ~/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
+    -l ~/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud.yml \
+    -l ~/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud_kerberos.yml \
+    -v folder-prefix=dev/pivotal -v test-env=dev \
+    -v icw_green_bucket=gpdb5-assert-concourse-builds \
+    -v gcs-bucket-intermediates=pivotal-gpdb-concourse-resources-intermediates-prod \
+    -v gcs-bucket-resources-prod=pivotal-gpdb-concourse-resources-prod \
+    -v gpdb-branch=6X_STABLE -v pgport=6000 \
+    -v pxf-tag=<YOUR-TAG> -p dev:longevity_<YOUR-TAG>_6X_STABLE
+```
+
 # Deploy `pg_regress` pipeline
 
 This pipeline currently runs the smoke test group against the different clouds using `pg_regress` instead of automation.
