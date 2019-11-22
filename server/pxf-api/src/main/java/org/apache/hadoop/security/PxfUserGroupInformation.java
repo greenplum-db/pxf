@@ -33,7 +33,8 @@ import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.HADOOP_KERBEROS
 public abstract class PxfUserGroupInformation {
 
     private static final String LOGIN_FAILURE = "Login failure";
-    private static final Logger LOG = LoggerFactory.getLogger(PxfUserGroupInformation.class);
+    // place logger into org.greenplum.pxf.api.security package to be governed by pxf log level, not hadoop one
+    private static final Logger LOG = LoggerFactory.getLogger("org.greenplum.pxf.api.security.PxfUserGroupInformation");
     private static final String MUST_FIRST_LOGIN_FROM_KEYTAB = "loginUserFromKeyTab must be done first";
     private static final String OS_LOGIN_MODULE_NAME = getOSLoginModuleName();
 
