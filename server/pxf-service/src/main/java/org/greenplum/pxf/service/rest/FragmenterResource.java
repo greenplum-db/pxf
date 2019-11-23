@@ -20,6 +20,7 @@ package org.greenplum.pxf.service.rest;
  */
 
 import com.google.common.util.concurrent.UncheckedExecutionException;
+import org.apache.log4j.Level;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.FragmentStats;
 import org.greenplum.pxf.api.model.Fragmenter;
@@ -62,6 +63,12 @@ public class FragmenterResource extends BaseResource {
 
     private FragmenterCacheFactory fragmenterCacheFactory;
 
+    // Records the startTime of the fragmenter call
+    private long startTime;
+
+    // this flag is set to true when the thread processes the fragment call
+    private boolean didThreadProcessFragmentCall;
+
     public FragmenterResource() {
         this(HttpRequestParser.getInstance(), FragmenterFactory.getInstance(), FragmenterCacheFactory.getInstance());
     }
@@ -84,8 +91,8 @@ public class FragmenterResource extends BaseResource {
      * {@code http://host:port/pxf/{version}/Fragmenter/getFragments} is used.
      *
      * @param servletContext Servlet context contains attributes required by
-     *            SecuredHDFS
-     * @param headers Holds HTTP headers from request
+     *                       SecuredHDFS
+     * @param headers        Holds HTTP headers from request
      * @return response object with JSON serialized fragments metadata
      * @throws Exception if getting fragments info failed
      */
@@ -97,7 +104,7 @@ public class FragmenterResource extends BaseResource {
             throws Throwable {
 
         LOG.debug("Received FRAGMENTER call");
-        long startTime = System.currentTimeMillis();
+        startTime = System.currentTimeMillis();
         final RequestContext context = parseRequest(headers);
         final String path = context.getDataSource();
         final String fragmenterCacheKey = getFragmenterCacheKey(context);
@@ -113,6 +120,7 @@ public class FragmenterResource extends BaseResource {
                         .get(fragmenterCacheKey, new Callable<List<Fragment>>() {
                             @Override
                             public List<Fragment> call() throws Exception {
+                                didThreadProcessFragmentCall = true;
                                 LOG.debug("Caching fragments for transactionId={} from segmentId={} with key={}",
                                         context.getTransactionId(), context.getSegmentId(), fragmenterCacheKey);
                                 return getFragments(context);
@@ -124,20 +132,16 @@ public class FragmenterResource extends BaseResource {
                     throw e.getCause();
                 throw e;
             }
+
+            if (!didThreadProcessFragmentCall) {
+                logFragmentStatistics(Level.DEBUG, context, fragments);
+            }
         } else {
             LOG.debug("Fragmenter cache is disabled");
             fragments = getFragments(context);
         }
 
         FragmentsResponse fragmentsResponse = FragmentsResponseFormatter.formatResponse(fragments, path);
-
-        int numberOfFragments = fragments.size();
-        SessionId session = new SessionId(context.getSegmentId(), context.getTransactionId(), context.getUser(), context.getServerName());
-        long elapsedMillis = System.currentTimeMillis() - startTime;
-        LOG.info("{} returns {} fragment{} for path {} in {} ms for {} [profile {} filter is{} available]",
-                context.getFragmenter(), numberOfFragments, numberOfFragments == 1 ? "" : "s",
-                path, elapsedMillis, session, context.getProfile(), context.hasFilter() ? "" : " not");
-
         return Response.ok(fragmentsResponse, MediaType.APPLICATION_JSON_TYPE).build();
     }
 
@@ -147,9 +151,9 @@ public class FragmenterResource extends BaseResource {
      * used.
      *
      * @param servletContext Servlet context contains attributes required by
-     *            SecuredHDFS
-     * @param headers Holds HTTP headers from request
-     * @param path Holds URI path option used in this request
+     *                       SecuredHDFS
+     * @param headers        Holds HTTP headers from request
+     * @param path           Holds URI path option used in this request
      * @return response object with JSON serialized fragments statistics
      * @throws Exception if getting fragments info failed
      */
@@ -177,7 +181,10 @@ public class FragmenterResource extends BaseResource {
 
     private List<Fragment> getFragments(RequestContext context) throws Exception {
         /* Create a fragmenter instance with API level parameters */
-        return AnalyzeUtils.getSampleFragments(fragmenterFactory.getPlugin(context).getFragments(), context);
+        List<Fragment> fragments = AnalyzeUtils.getSampleFragments(fragmenterFactory.getPlugin(context).getFragments(), context);
+
+        logFragmentStatistics(Level.INFO, context, fragments);
+        return fragments;
     }
 
     /**
@@ -188,7 +195,6 @@ public class FragmenterResource extends BaseResource {
      * will be the same. For that reason we must include the server name, data source
      * and the filter string as part of the fragmenter cache.
      *
-     *
      * @param context the request context
      * @return the key for the fragmenter cache
      */
@@ -198,6 +204,23 @@ public class FragmenterResource extends BaseResource {
                 context.getTransactionId(),
                 context.getDataSource(),
                 context.getFilterString());
+    }
+
+    private void logFragmentStatistics(Level level, RequestContext context, List<Fragment> fragments) {
+
+        int numberOfFragments = fragments.size();
+        SessionId session = new SessionId(context.getSegmentId(), context.getTransactionId(), context.getUser(), context.getServerName());
+        long elapsedMillis = System.currentTimeMillis() - startTime;
+
+        if (level == Level.INFO) {
+            LOG.info("{} returns {} fragment{} for path {} in {} ms for {} [profile {} filter is{} available]",
+                    context.getFragmenter(), numberOfFragments, numberOfFragments == 1 ? "" : "s",
+                    context.getDataSource(), elapsedMillis, session, context.getProfile(), context.hasFilter() ? "" : " not");
+        } else if (level == Level.DEBUG) {
+            LOG.debug("{} returns {} fragment{} for path {} in {} ms for {} [profile {} filter is{} available]",
+                    context.getFragmenter(), numberOfFragments, numberOfFragments == 1 ? "" : "s",
+                    context.getDataSource(), elapsedMillis, session, context.getProfile(), context.hasFilter() ? "" : " not");
+        }
     }
 
 }
