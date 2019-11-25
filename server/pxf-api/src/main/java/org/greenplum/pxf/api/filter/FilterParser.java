@@ -1,4 +1,4 @@
-package org.greenplum.pxf.api;
+package org.greenplum.pxf.api.filter;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -22,9 +22,6 @@ package org.greenplum.pxf.api;
 
 import org.greenplum.pxf.api.io.DataType;
 
-import java.sql.Date;
-import java.sql.Time;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -33,9 +30,9 @@ import java.util.Map;
 import java.util.Stack;
 
 /**
- * The parser code which goes over a filter string and pushes operands onto a stack.
- * Once an operation is read, the evaluate function is called for the {@link FilterBuilder}
- * interface with two pop-ed operands.
+ * The parser code which goes over a filter string and pushes operands onto a
+ * stack. Once an operation is read, a {@link Node} is created with two pop-ed
+ * operands.
  * <br>
  * The filter string is of the pattern:
  * [attcode][attnum][constcode][constval][constsizecode][constsize][constdata][constvalue][opercode][opernum]
@@ -53,22 +50,25 @@ import java.util.Stack;
  * <li>o means operator</li>
  * </ul>
  * <br>
- * For constants all three portions are required in order to parse the data type, the length of the data in bytes
- * and the data itself
+ * For constants all three portions are required in order to parse the data
+ * type, the length of the data in bytes and the data itself
  * <br>
- * The parsing operation parses each element of the filter (constants, columns, operations) and adds them to a stack.
- * When the parser sees an op code 'o' or 'l' it pops off two elements from the stack assigns them as children of the op
- * and pushses itself onto the stack. After parsing is complete there should only be one element in the stack, the root
- * node of the filter's tree representation which is returned from this method
+ * The parsing operation parses each element of the filter (constants, columns,
+ * operations) and adds them to a stack. When the parser sees an op code 'o' or
+ * 'l' it pops off two elements from the stack assigns them as children of the
+ * op and pushes itself onto the stack. After parsing is complete there should
+ * only be one element in the stack, the root node of the filter's tree
+ * representation which is returned from this method
  * <br>
- * FilterParser only knows about columns and constants. The rest is up to the {@link FilterBuilder} implementer.
- * FilterParser makes sure column objects are always on the left of the expression (when relevant).
+ * FilterParser only knows about columns and constants and it produces an
+ * expression tree.
+ * FilterParser makes sure column objects are always on the left of the
+ * expression (when relevant).
  */
 public class FilterParser {
     private int index;
     private byte[] filterByteArr;
-    private Stack<Object> operandsStack;
-    private FilterBuilder filterBuilder;
+    private Stack<Node> operandsStack;
     private static final char COL_OP = 'a';
     private static final char SCALAR_CONST_OP = 'c';
     private static final char LIST_CONST_OP = 'm';
@@ -102,80 +102,8 @@ public class FilterParser {
             }});
 
     /**
-     * Supported operations by the parser.
-     */
-    public enum Operator {
-        NOOP(null, false) {
-            @Override
-            public String getOperator() {
-                throw new UnsupportedOperationException("NOOP doesn't have an operator");
-            }
-        },
-        LESS_THAN("<", false),
-        GREATER_THAN(">", false),
-        LESS_THAN_OR_EQUAL("<=", false),
-        GREATER_THAN_OR_EQUAL(">=", false),
-        EQUALS("=", false),
-        NOT_EQUALS("<>", false),
-        LIKE("LIKE", false),
-        IS_NULL("IS NULL", false),
-        IS_NOT_NULL("IS NOT NULL", false),
-        IN("IN", false),
-        AND("AND", true),
-        OR("OR", true),
-        NOT("NOT", true);
-
-        private final String operator;
-        private final boolean isLogical;
-
-        Operator(String operator, boolean isLogical) {
-            this.operator = operator;
-            this.isLogical = isLogical;
-        }
-
-        public String getOperator() {
-            return operator;
-        }
-
-        public boolean isLogical() {
-            return isLogical;
-        }
-    }
-
-    /**
-     * Represents a column index.
-     */
-    public class ColumnIndex {
-        private int index;
-
-        public ColumnIndex(int idx) {
-            index = idx;
-        }
-
-        public int index() {
-            return index;
-        }
-    }
-
-    /**
-     * Represents a constant object (String, Long, ...).
-     */
-    public class Constant {
-        private Object constant;
-
-        public Constant(Object obj) {
-            constant = obj;
-        }
-
-        public Object constant() {
-            return constant;
-        }
-    }
-
-    /**
      * Thrown when a filter's parsing exception occurs.
      */
-    @SuppressWarnings("serial")
     class FilterStringSyntaxException extends Exception {
         FilterStringSyntaxException(String desc) {
             super(desc + " (filter string: '" + new String(filterByteArr) + "')");
@@ -184,12 +112,9 @@ public class FilterParser {
 
     /**
      * Constructs a FilterParser.
-     *
-     * @param eval the filter builder
      */
-    public FilterParser(FilterBuilder eval) {
+    public FilterParser() {
         operandsStack = new Stack<>();
-        filterBuilder = eval;
     }
 
     /**
@@ -199,7 +124,7 @@ public class FilterParser {
      * @return the parsed filter
      * @throws Exception if the filter string had wrong syntax
      */
-    public Object parse(byte[] filter) throws Exception {
+    public Node parse(byte[] filter) throws Exception {
         index = 0;
         filterByteArr = filter;
         int opNumber;
@@ -212,13 +137,13 @@ public class FilterParser {
             char op = (char) filterByteArr[index++];
             switch (op) {
                 case COL_OP:
-                    operandsStack.push(new ColumnIndex(safeToInt(parseNumber())));
+                    operandsStack.push(new ColumnIndexOperand(safeToInt(parseNumber())));
                     break;
                 case SCALAR_CONST_OP:
-                    operandsStack.push(new Constant(parseScalarParameter()));
+                    operandsStack.push(parseScalarParameter());
                     break;
                 case LIST_CONST_OP:
-                    operandsStack.push(new Constant(parseListParameter()));
+                    operandsStack.push(parseListParameter());
                     break;
                 case COMP_OP:
                     opNumber = safeToInt(parseNumber());
@@ -231,30 +156,30 @@ public class FilterParser {
                     if (operandsStack.empty()) {
                         throw new FilterStringSyntaxException("missing operands for op " + operation + " at " + index);
                     }
-                    Object rightOperand = operandsStack.pop();
+                    Node rightOperand = operandsStack.pop();
 
                     // all operations other than null checks require 2 operands
-                    Object result;
+                    Node result;
                     if (operation == Operator.IS_NULL || operation == Operator.IS_NOT_NULL) {
-                        result = filterBuilder.build(operation, rightOperand);
+                        result = new OperatorNode(operation, rightOperand);
                     } else {
                         // Pop left operand
                         if (operandsStack.empty()) {
                             throw new FilterStringSyntaxException("missing operands for op " + operation + " at " + index);
                         }
-                        Object leftOperand = operandsStack.pop();
+                        Node leftOperand = operandsStack.pop();
 
-                        if (leftOperand instanceof BasicFilter || rightOperand instanceof BasicFilter) {
-                            throw new FilterStringSyntaxException("missing logical operator before op " + operation + " at " + index);
+                        if (!(leftOperand instanceof Operand) || !(rightOperand instanceof Operand)) {
+                            throw new FilterStringSyntaxException(String.format("missing logical operator before op %s at %d", operation.name(), index));
                         }
 
                         // Normalize order, evaluate
                         // Column should be on the left
-                        result = (leftOperand instanceof Constant)
+                        result = (leftOperand instanceof ScalarOperand)
                                 // column on the right, reverse expression
-                                ? filterBuilder.build(reverseOp(operation), rightOperand, leftOperand)
+                                ? new OperatorNode(operation.transpose(), rightOperand, leftOperand)
                                 // no swap, column on the left
-                                : filterBuilder.build(operation, leftOperand, rightOperand);
+                                : new OperatorNode(operation, leftOperand, rightOperand);
                     }
                     // Store result on stack
                     operandsStack.push(result);
@@ -269,13 +194,17 @@ public class FilterParser {
                     }
 
                     if (logicalOperation == Operator.NOT) {
-                        Object exp = operandsStack.pop();
-                        result = filterBuilder.build(logicalOperation, exp);
+                        Node exp = operandsStack.pop();
+                        result = new OperatorNode(logicalOperation, exp);
                     } else if (logicalOperation == Operator.AND || logicalOperation == Operator.OR) {
                         rightOperand = operandsStack.pop();
-                        Object leftOperand = operandsStack.pop();
+                        Node leftOperand = operandsStack.pop();
 
-                        result = filterBuilder.build(logicalOperation, leftOperand, rightOperand);
+                        if (!(rightOperand instanceof OperatorNode) || !(leftOperand instanceof OperatorNode)) {
+                            throw new FilterStringSyntaxException(String.format("logical operator %s expects two operator nodes at %d", logicalOperation, index));
+                        }
+
+                        result = new OperatorNode(logicalOperation, leftOperand, rightOperand);
                     } else {
                         throw new FilterStringSyntaxException("unknown logical op code " + opNumber);
                     }
@@ -283,8 +212,7 @@ public class FilterParser {
                     break;
                 default:
                     index--; // move index back to operand location
-                    throw new FilterStringSyntaxException("unknown opcode " + op +
-                            "(" + (int) op + ") at " + index);
+                    throw new FilterStringSyntaxException(String.format("unknown opcode %s(%d) at %d", op, (int) op, index));
             }
         }
 
@@ -292,13 +220,13 @@ public class FilterParser {
             throw new FilterStringSyntaxException("filter parsing ended with no result");
         }
 
-        Object result = operandsStack.pop();
+        Node result = operandsStack.pop();
 
         if (!operandsStack.empty()) {
             throw new FilterStringSyntaxException("Stack not empty, missing operators?");
         }
 
-        if ((result instanceof Constant) || (result instanceof ColumnIndex)) {
+        if (result instanceof Operand) {
             throw new FilterStringSyntaxException("filter parsing failed, missing operators?");
         }
 
@@ -357,50 +285,38 @@ public class FilterParser {
         }
     }
 
-    private Object convertDataType(byte[] byteData, int start, int end, DataType dataType) throws Exception {
+    private String convertDataType(byte[] byteData, int start, int end, DataType dataType) throws Exception {
 
         if (byteData.length < end)
             throw new FilterStringSyntaxException("filter string is shorter than expected");
 
         String data = new String(byteData, start, end - start, DEFAULT_CHARSET);
-        try {
-            switch (dataType) {
-                case BIGINT:
-                    return Long.parseLong(data);
-                case INTEGER:
-                case SMALLINT:
-                    return Integer.parseInt(data);
-                case REAL:
-                    return Float.parseFloat(data);
-                case NUMERIC:
-                case FLOAT8:
-                    return Double.parseDouble(data);
-                case TEXT:
-                case VARCHAR:
-                case BPCHAR:
-                    return data;
-                case BOOLEAN:
-                    return Boolean.parseBoolean(data);
-                case DATE:
-                    return Date.valueOf(data);
-                case TIMESTAMP:
-                    return Timestamp.valueOf(data);
-                case TIME:
-                    return Time.valueOf(data);
-                case BYTEA:
-                    return data.getBytes();
-                default:
-                    throw new FilterStringSyntaxException("DataType " + dataType.toString() + " unsupported");
-            }
-        } catch (NumberFormatException nfe) {
-            throw new FilterStringSyntaxException("failed to parse number data type starting at " + index);
+        switch (dataType) {
+            case BIGINT:
+            case INTEGER:
+            case SMALLINT:
+            case REAL:
+            case NUMERIC:
+            case FLOAT8:
+            case TEXT:
+            case VARCHAR:
+            case BPCHAR:
+            case BOOLEAN:
+            case DATE:
+            case TIMESTAMP:
+            case TIME:
+            case BYTEA:
+                return data;
+            default:
+                throw new FilterStringSyntaxException(
+                        String.format("DataType %s unsupported", dataType));
         }
     }
 
     /**
      * Parses either a number or a string.
      */
-    private Object parseScalarParameter() throws Exception {
+    private ScalarOperand parseScalarParameter() throws Exception {
         validateNotEndOfArray();
 
         DataType dataType = DataType.get(parseConstDataType());
@@ -410,18 +326,20 @@ public class FilterParser {
         validateDataLengthAndType(dataLength);
         index++;
 
-        Object data = convertDataType(filterByteArr, index, index + dataLength, dataType);
+        String data = convertDataType(filterByteArr, index, index + dataLength, dataType);
         index += dataLength;
-        return data;
+
+        return new ScalarOperand(dataType, data);
     }
 
-    private Object parseListParameter() throws Exception {
+    private CollectionOperand parseListParameter() throws Exception {
         validateNotEndOfArray();
 
         DataType dataType = DataType.get(parseConstDataType());
         validateDataType(dataType);
 
-        List<Object> data = new ArrayList<>();
+        List<String> data = new ArrayList<>();
+
         if (dataType.getTypeElem() == null) {
             throw new FilterStringSyntaxException("expected non-scalar datatype, but got datatype with oid = " + dataType.getOID());
         }
@@ -435,7 +353,7 @@ public class FilterParser {
             index += dataLength;
         }
 
-        return data;
+        return new CollectionOperand(dataType, data);
     }
 
     private Long parseNumber() throws Exception {
@@ -483,31 +401,6 @@ public class FilterParser {
         result = new String(filterByteArr, index, i - index);
         index = i;
         return result;
-    }
-
-    /*
-     * The function takes an operator and reverses it
-     * e.g. > turns into <
-     */
-    private Operator reverseOp(Operator operation) {
-        switch (operation) {
-            case LESS_THAN:
-                operation = Operator.GREATER_THAN;
-                break;
-            case GREATER_THAN:
-                operation = Operator.LESS_THAN;
-                break;
-            case LESS_THAN_OR_EQUAL:
-                operation = Operator.GREATER_THAN_OR_EQUAL;
-                break;
-            case GREATER_THAN_OR_EQUAL:
-                operation = Operator.LESS_THAN_OR_EQUAL;
-                break;
-            default:
-                // no change o/w
-        }
-
-        return operation;
     }
 
     /**

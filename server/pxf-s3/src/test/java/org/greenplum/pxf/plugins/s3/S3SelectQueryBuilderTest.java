@@ -125,8 +125,8 @@ public class S3SelectQueryBuilderTest {
     public void testReal() {
         // a5 = 2.0
         context.setFilterString("a5c701s1d2o5");
-        assertEquals(SQL_POSITION + " WHERE CAST (s._6 AS decimal) = 2.0", builderPosition.buildSelectQuery());
-        assertEquals(SQL_NO_POSITION + " WHERE CAST (s.\"weight\" AS decimal) = 2.0", builderNoPosition.buildSelectQuery());
+        assertEquals(SQL_POSITION + " WHERE CAST (s._6 AS decimal) = 2", builderPosition.buildSelectQuery());
+        assertEquals(SQL_NO_POSITION + " WHERE CAST (s.\"weight\" AS decimal) = 2", builderNoPosition.buildSelectQuery());
     }
 
     @Test

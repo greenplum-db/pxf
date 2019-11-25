@@ -21,6 +21,12 @@ import org.apache.commons.lang.SerializationUtils;
  * under the License.
  */
 
+import org.greenplum.pxf.api.filter.BaseTreePruner;
+import org.greenplum.pxf.api.filter.FilterParser;
+import org.greenplum.pxf.api.filter.Node;
+import org.greenplum.pxf.api.filter.Operator;
+import org.greenplum.pxf.api.filter.TreePruner;
+import org.greenplum.pxf.api.filter.TreeTraverser;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
@@ -28,6 +34,7 @@ import org.greenplum.pxf.plugins.jdbc.partitioning.JdbcFragmentMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.sql.DatabaseMetaData;
@@ -37,13 +44,33 @@ import java.util.stream.Collectors;
 
 /**
  * SQL query builder.
- *
- * Uses {@link JdbcFilterParser} to get array of filters
+ * <p>
+ * Uses {@link JdbcTreeVisitor} to get array of filters
  */
 public class SQLQueryBuilder {
 
     private static final Logger LOG = LoggerFactory.getLogger(SQLQueryBuilder.class);
     private static final String SUBQUERY_ALIAS_SUFFIX = ") pxfsubquery"; // do not use AS, Oracle does not like it
+
+    private static final EnumSet<Operator> SUPPORTED_OPERATORS =
+            EnumSet.of(
+                    Operator.LESS_THAN,
+                    Operator.GREATER_THAN,
+                    Operator.LESS_THAN_OR_EQUAL,
+                    Operator.GREATER_THAN_OR_EQUAL,
+                    Operator.EQUALS,
+                    Operator.LIKE,
+                    Operator.NOT_EQUALS,
+                    // TODO: In is not supported?
+                    // Operator.IN,
+                    Operator.IS_NULL,
+                    Operator.IS_NOT_NULL,
+                    Operator.NOOP,
+                    Operator.AND,
+                    Operator.NOT,
+                    Operator.OR
+            );
+    private static final TreePruner treePruner = new BaseTreePruner(SUPPORTED_OPERATORS);
 
     private RequestContext context;
     private DatabaseMetaData databaseMetaData;
@@ -56,9 +83,8 @@ public class SQLQueryBuilder {
     /**
      * Construct a new SQLQueryBuilder
      *
-     * @param context {@link RequestContext}
+     * @param context  {@link RequestContext}
      * @param metaData {@link DatabaseMetaData}
-     *
      * @throws SQLException if some call of DatabaseMetaData method fails
      */
     public SQLQueryBuilder(RequestContext context, DatabaseMetaData metaData) throws SQLException {
@@ -68,10 +94,9 @@ public class SQLQueryBuilder {
     /**
      * Construct a new SQLQueryBuilder
      *
-     * @param context {@link RequestContext}
+     * @param context  {@link RequestContext}
      * @param metaData {@link DatabaseMetaData}
      * @param subQuery query to run and get results from, instead of using a table name
-     *
      * @throws SQLException if some call of DatabaseMetaData method fails
      */
     public SQLQueryBuilder(RequestContext context, DatabaseMetaData metaData, String subQuery) throws SQLException {
@@ -103,9 +128,8 @@ public class SQLQueryBuilder {
      * Build SELECT query (with "WHERE" and partition constraints).
      *
      * @return Complete SQL query
-     *
      * @throws ParseException if the constraints passed in RequestContext are incorrect
-     * @throws SQLException if some call of DatabaseMetaData method fails
+     * @throws SQLException   if some call of DatabaseMetaData method fails
      */
     public String buildSelectQuery() throws ParseException, SQLException {
         String columnsQuery = this.columns.stream()
@@ -165,7 +189,7 @@ public class SQLQueryBuilder {
 
     /**
      * Check whether column names must be quoted and set quoteString if so.
-     *
+     * <p>
      * Quote string is set to value provided by {@link DatabaseMetaData}.
      *
      * @throws SQLException if some method of {@link DatabaseMetaData} fails
@@ -202,8 +226,8 @@ public class SQLQueryBuilder {
         }
 
         if (
-            specialCharactersNamePresent ||
-            (mixedCaseNamePresent && !databaseMetaData.supportsMixedCaseIdentifiers())
+                specialCharactersNamePresent ||
+                        (mixedCaseNamePresent && !databaseMetaData.supportsMixedCaseIdentifiers())
         ) {
             quoteString = databaseMetaData.getIdentifierQuoteString();
             if (LOG.isDebugEnabled()) {
@@ -229,21 +253,28 @@ public class SQLQueryBuilder {
      * Note that if filter is not supported, query is left unchanged.
      *
      * @param query SQL query to insert constraints to. The query may may contain other WHERE statements
-     *
      * @throws ParseException if filter string is invalid
      */
-    private void buildWhereSQL(StringBuilder query) throws ParseException {
+    private void buildWhereSQL(StringBuilder query) {
         if (!context.hasFilter()) {
             return;
         }
 
         boolean hasPartition = context.getOption("PARTITION_BY") != null;
 
-        JdbcFilterParser filterParser = new JdbcFilterParser(dbProduct, quoteString, hasPartition, context.getTupleDescription());
+        JdbcTreeVisitor jdbcTreeVisitor = new JdbcTreeVisitor(
+                dbProduct,
+                quoteString,
+                hasPartition,
+                context.getTupleDescription());
 
         try {
+            Node root = new FilterParser().parse(context.getFilterString().getBytes());
+            root = treePruner.prune(root);
+            new TreeTraverser().inOrderTraversal(root, jdbcTreeVisitor);
+
             // No exceptions were thrown, change the provided query
-            query.append(filterParser.buildFilterString(context.getFilterString()));
+            query.append(jdbcTreeVisitor.toString());
         } catch (Exception e) {
             LOG.debug("WHERE clause is omitted: " + e.toString());
             // Silence the exception and do not insert constraints
@@ -253,10 +284,10 @@ public class SQLQueryBuilder {
     /**
      * Insert fragment constraints into the SQL query.
      *
-     * @param context RequestContext of the fragment
-     * @param dbProduct Database product (affects the behaviour for DATE partitions)
+     * @param context     RequestContext of the fragment
+     * @param dbProduct   Database product (affects the behaviour for DATE partitions)
      * @param quoteString String to use as quote for column identifiers
-     * @param query SQL query to insert constraints to. The query may may contain other WHERE statements
+     * @param query       SQL query to insert constraints to. The query may may contain other WHERE statements
      */
     public void buildFragmenterSql(RequestContext context, DbProduct dbProduct, String quoteString, StringBuilder query) {
         if (context.getOption("PARTITION_BY") == null) {
@@ -276,8 +307,7 @@ public class SQLQueryBuilder {
         }
         if (query.indexOf("WHERE", startIndexToSearchForWHERE) < 0) {
             query.append(" WHERE ");
-        }
-        else {
+        } else {
             query.append(" AND ");
         }
 

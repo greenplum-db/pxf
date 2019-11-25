@@ -166,7 +166,7 @@ public class HBaseLookupTable implements Closeable {
      * GPDB column values in lower case.
      */
     private Map<String, byte[]> lowerCaseMappings() {
-        Map<String, byte[]> lowCaseKeys = new HashMap<String, byte[]>();
+        Map<String, byte[]> lowCaseKeys = new HashMap<>();
         for (Map.Entry<byte[], byte[]> entry : rawTableMapping.entrySet()) {
             lowCaseKeys.put(lowerCase(entry.getKey()), entry.getValue());
         }

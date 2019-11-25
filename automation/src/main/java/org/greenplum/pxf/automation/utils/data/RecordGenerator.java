@@ -28,7 +28,7 @@ public class RecordGenerator {
 	private String columnsSeparator;
 	private List<String> columnTypes;
 
-	private Map<String, Generator<?>> mapGenerator = new HashMap<String, Generator<?>>();
+	private Map<String, Generator<?>> mapGenerator = new HashMap<>();
 
 	private ArrayList<Character> characters = new ArrayList<Character>();
 

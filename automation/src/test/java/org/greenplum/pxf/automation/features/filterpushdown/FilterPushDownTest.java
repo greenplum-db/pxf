@@ -19,7 +19,6 @@ public class FilterPushDownTest extends BaseFeature {
         String newPath = "/tmp/publicstage/pxf";
         // copy additional plugins classes to cluster nodes, used for filter pushdown cases
         cluster.copyFileToNodes(new File("target/classes/" + testPackageLocation + "FilterVerifyFragmenter.class").getAbsolutePath(), newPath + testPackageLocation, true, false);
-        cluster.copyFileToNodes(new File("target/classes/" + testPackageLocation + "FilterVerifyFragmenter$TestFilterBuilder.class").getAbsolutePath(), newPath + testPackageLocation, true, false);
         cluster.copyFileToNodes(new File("target/classes/" + testPackageLocation + "UserDataVerifyAccessor.class").getAbsolutePath(), newPath + testPackageLocation, true, false);
         // add new path to classpath file and restart PXF service
         cluster.addPathToPxfClassPath(newPath);

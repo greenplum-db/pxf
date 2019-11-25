@@ -79,7 +79,6 @@ public class S3ProtocolHandler implements ProtocolHandler {
         }
         LOG.debug("Determined to use {} resolver", resolver);
         return resolver;
-
     }
 
     private boolean useS3Select(RequestContext context) {

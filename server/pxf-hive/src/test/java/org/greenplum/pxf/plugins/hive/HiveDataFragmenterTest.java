@@ -37,7 +37,6 @@ public class HiveDataFragmenterTest {
 
     private RequestContext context;
     private Configuration configuration;
-    private HiveFilterBuilder filterBuilder;
     private ConfigurationFactory configurationFactory;
     private HiveClientWrapper hiveClientWrapper;
 
@@ -55,8 +54,6 @@ public class HiveDataFragmenterTest {
         configuration = new Configuration();
         configuration.set("fs.defaultFS", "hdfs:///");
 
-        filterBuilder = new HiveFilterBuilder();
-
         when(configurationFactory
                 .initConfiguration("default", "default", "dummy", context.getAdditionalConfigProps()))
                 .thenReturn(configuration);
@@ -69,7 +66,7 @@ public class HiveDataFragmenterTest {
 
         when(hiveClientWrapper.initHiveClient(context, configuration)).thenThrow(new RuntimeException("Failed connecting to Hive MetaStore service: which way to albuquerque"));
 
-        HiveDataFragmenter fragmenter = new HiveDataFragmenter(configurationFactory, filterBuilder, hiveClientWrapper);
+        HiveDataFragmenter fragmenter = new HiveDataFragmenter(configurationFactory, hiveClientWrapper);
         fragmenter.initialize(context);
     }
 }

@@ -19,8 +19,6 @@ package org.greenplum.pxf.plugins.hive;
  * under the License.
  */
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.ql.io.orc.Reader;
 import org.apache.hadoop.hive.serde.serdeConstants;
@@ -28,39 +26,50 @@ import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.Reporter;
-import org.greenplum.pxf.api.BasicFilter;
-import org.greenplum.pxf.api.FilterParser;
-import org.greenplum.pxf.api.LogicalFilter;
 import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.filter.CollectionOperand;
+import org.greenplum.pxf.api.filter.ColumnIndexOperand;
+import org.greenplum.pxf.api.filter.FilterParser;
+import org.greenplum.pxf.api.filter.Node;
+import org.greenplum.pxf.api.filter.Operand;
+import org.greenplum.pxf.api.filter.Operator;
+import org.greenplum.pxf.api.filter.OperatorNode;
+import org.greenplum.pxf.api.filter.ScalarOperand;
+import org.greenplum.pxf.api.filter.ToStringTreeVisitor;
+import org.greenplum.pxf.api.filter.TreeTraverser;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.plugins.hdfs.HdfsSplittableDataAccessor;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Accessor for Hive tables. The accessor will open and read a split belonging
- * to a Hive table. Opening a split means creating the corresponding InputFormat
- * and RecordReader required to access the split's data. The actual record
- * reading is done in the base class -
+ * to a Hive table. Opening a split means creating the corresponding
+ * InputFormat and RecordReader required to access the split's data. The actual
+ * record reading is done in the base class -
  * {@link HdfsSplittableDataAccessor}. <br>
  * HiveAccessor will also enforce Hive partition filtering by filtering-out a
  * split which does not belong to a partition filter. Naturally, the partition
  * filtering will be done only for Hive tables that are partitioned.
  */
 public class HiveAccessor extends HdfsSplittableDataAccessor {
-    private static final Log LOG = LogFactory.getLog(HiveAccessor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(HiveAccessor.class);
     private List<HivePartition> partitions;
     private static final String HIVE_DEFAULT_PARTITION = "__HIVE_DEFAULT_PARTITION__";
     private int skipHeaderCount;
 
-    class HivePartition {
+    static class HivePartition {
         public String name;
         public String type;
         public String val;
@@ -88,6 +97,7 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
 
     /**
      * Creates an instance of HiveAccessor using specified input format
+     *
      * @param inputFormat input format
      */
     HiveAccessor(InputFormat<?, ?> inputFormat) {
@@ -156,10 +166,9 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
      * Opens the resource for write.
      *
      * @return true if the resource is successfully opened
-     * @throws Exception if opening the resource failed
      */
     @Override
-    public boolean openForWrite() throws Exception {
+    public boolean openForWrite() {
         throw new UnsupportedOperationException();
     }
 
@@ -168,23 +177,19 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
      *
      * @param onerow the object to be written
      * @return true if the write succeeded
-     * @throws Exception writing to the resource failed
      */
     @Override
-    public boolean writeNextObject(OneRow onerow) throws Exception {
+    public boolean writeNextObject(OneRow onerow) {
         throw new UnsupportedOperationException();
     }
 
     /**
      * Closes the resource for write.
-     *
-     * @throws Exception if closing the resource failed
      */
     @Override
-    public void closeForWrite() throws Exception {
+    public void closeForWrite() {
         throw new UnsupportedOperationException();
     }
-
 
     /**
      * Creates the RecordReader suitable for this given split.
@@ -205,7 +210,7 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
      * by the fragmenter
      */
     void initPartitionFields(String partitionKeys) {
-        partitions = new LinkedList<HivePartition>();
+        partitions = new LinkedList<>();
         if (partitionKeys.equals(HiveDataFragmenter.HIVE_NO_PART_TBL)) {
             return;
         }
@@ -226,105 +231,136 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
         }
 
         String filterStr = context.getFilterString();
-        HiveFilterBuilder eval = new HiveFilterBuilder();
-        Object filter = eval.getFilterObject(filterStr);
-
-        boolean returnData = isFiltered(partitions, filter);
+        Node root = new FilterParser().parse(filterStr.getBytes());
+        boolean returnData = isFiltered(partitions, root);
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("segmentId: " + context.getSegmentId() + " "
-                    + context.getDataSource() + "--" + filterStr
-                    + " returnData: " + returnData);
-            if (filter instanceof LogicalFilter) {
-                printLogicalFilter((LogicalFilter) filter);
-            } else {
-                printOneBasicFilter(filter);
-            }
+            LOG.debug("{}-{}: {}--{} returnData: {}", context.getTransactionId(),
+                    context.getSegmentId(), context.getDataSource(), filterStr, returnData);
+
+            ToStringTreeVisitor toStringTreeVisitor = new ToStringTreeVisitor();
+            new TreeTraverser().inOrderTraversal(root, toStringTreeVisitor);
+
+            LOG.debug("Filter string after pruning {}", toStringTreeVisitor.toString());
         }
 
         return returnData;
     }
 
-    private boolean isFiltered(List<HivePartition> partitionFields,
-                               Object filter) {
-        if (filter instanceof List) {
-            /*
-             * We are going over each filter in the filters list and test it
-             * against all the partition fields since filters are connected only
-             * by AND operators, its enough for one filter to fail in order to
-             * deny this data.
-             */
-            for (Object f : (List<?>) filter) {
-                if (!testOneFilter(partitionFields, f, context)) {
-                    return false;
-                }
-            }
-            return true;
-        }
+    private boolean isFiltered(List<HivePartition> partitionFields, Node root) {
+//        if (filter instanceof List) {
+//            /*
+//             * We are going over each filter in the filters list and test it
+//             * against all the partition fields since filters are connected only
+//             * by AND operators, its enough for one filter to fail in order to
+//             * deny this data.
+//             */
+//            for (Object f : (List<?>) filter) {
+//                if (!testOneFilter(partitionFields, f, context)) {
+//                    return false;
+//                }
+//            }
+//            return true;
+//        }
 
-        return testOneFilter(partitionFields, filter, context);
+        return testOneFilter(partitionFields, root);
     }
 
-    private boolean testForUnsupportedOperators(List<Object> filterList) {
+    private boolean testForUnsupportedOperators(List<Node> nodeList) {
         boolean nonAndOp = true;
-        for (Object filter : filterList) {
-            if (filter instanceof LogicalFilter) {
-                LogicalFilter logicalFilter = (LogicalFilter) filter;
-                if (logicalFilter.getOperator() != FilterParser.Operator.AND)
-                    return false;
-                if (logicalFilter.getFilterList() != null)
-                    nonAndOp = testForUnsupportedOperators(logicalFilter.getFilterList());
+        for (Node node : nodeList) {
+            if (node instanceof OperatorNode) {
+                OperatorNode operatorNode = (OperatorNode) node;
+                Operator operator = operatorNode.getOperator();
+
+                if (operator.isLogical()) {
+                    if (operator != Operator.AND) {
+                        return false;
+                    }
+
+                    if (operatorNode.getChildren() != null) {
+                        nonAndOp = testForUnsupportedOperators(operatorNode.getChildren());
+                    }
+                }
             }
         }
         return nonAndOp;
     }
 
-    private boolean testForPartitionEquality(List<HivePartition> partitionFields, List<Object> filterList, RequestContext input) {
+    private boolean testForPartitionEquality(List<HivePartition> partitionFields, List<Node> nodeList) {
         boolean partitionAllowed = true;
-        for (Object filter : filterList) {
-            if (filter instanceof BasicFilter) {
-                BasicFilter bFilter = (BasicFilter) filter;
-                boolean isFilterOperationEqual = (bFilter.getOperation() == FilterParser.Operator.EQUALS);
-                if (!isFilterOperationEqual) /*
-                 * in case this is not an "equality filter"
-                 * we ignore it here - in partition
-                 * filtering
-                 */ {
-                    return true;
-                }
+        for (Node node : nodeList) {
 
-                int filterColumnIndex = bFilter.getColumn().index();
-                String filterValue = bFilter.getConstant().constant().toString();
-                ColumnDescriptor filterColumn = input.getColumn(filterColumnIndex);
-                String filterColumnName = filterColumn.columnName();
+            if (node instanceof OperatorNode) {
+                OperatorNode operatorNode = (OperatorNode) node;
+                Operator operator = operatorNode.getOperator();
 
-                for (HivePartition partition : partitionFields) {
-                    if (filterColumnName.equals(partition.name)) {
-
+                if (operator.isLogical()) {
+                    partitionAllowed = testForPartitionEquality(partitionFields, operatorNode.getChildren());
+                } else {
+                    if (operator != Operator.EQUALS) {
                         /*
-                         * the filter field matches a partition field, but the values do
-                         * not match
+                         * in case this is not an "equality node"
+                         * we ignore it here - in partition
+                         * filtering
                          */
-                        boolean keepPartition = filterValue.equals(partition.val);
-
-                        /*
-                         * If the string comparison fails then we should check the comparison of
-                         * the two operands as typed values
-                         * If the partition value equals HIVE_DEFAULT_PARTITION just skip
-                         */
-                        if (!keepPartition && !partition.val.equals(HIVE_DEFAULT_PARTITION)) {
-                            keepPartition = testFilterByType(filterValue, partition);
-                        }
-                        return keepPartition;
+                        return true;
                     }
-                }
 
-                /*
-                 * filter field did not match any partition field, so we ignore this
-                 * filter and hence return true
-                 */
-            } else if (filter instanceof LogicalFilter) {
-                partitionAllowed = testForPartitionEquality(partitionFields, ((LogicalFilter) filter).getFilterList(), input);
+                    Optional<ColumnIndexOperand> columnIndexOperand = operatorNode
+                            .getChildren()
+                            .stream()
+                            .filter(op -> op instanceof ColumnIndexOperand)
+                            .map(op -> (ColumnIndexOperand) op)
+                            .findFirst();
+
+                    Optional<Operand> valueOperand = operatorNode
+                            .getChildren()
+                            .stream()
+                            .filter(op -> op instanceof ScalarOperand || op instanceof CollectionOperand)
+                            .map(op -> (Operand) op)
+                            .findFirst();
+
+                    if (!columnIndexOperand.isPresent()) {
+                        throw new IllegalArgumentException(
+                                String.format("Operator %s does not contain a column index operand", operator));
+                    }
+
+                    if (!valueOperand.isPresent()) {
+                        throw new IllegalArgumentException(
+                                String.format("Operator %s does not contain a scalar operand", operator));
+                    }
+
+                    String filterValue = valueOperand.get().toString();
+                    ColumnDescriptor filterColumn = context.getColumn(columnIndexOperand.get().index());
+                    String filterColumnName = filterColumn.columnName();
+
+                    for (HivePartition partition : partitionFields) {
+                        if (filterColumnName.equals(partition.name)) {
+
+                            /*
+                             * the node field matches a partition field, but the values do
+                             * not match
+                             */
+                            boolean keepPartition = filterValue.equals(partition.val);
+
+                            /*
+                             * If the string comparison fails then we should check the comparison of
+                             * the two operands as typed values
+                             * If the partition value equals HIVE_DEFAULT_PARTITION just skip
+                             */
+                            if (!keepPartition && !partition.val.equals(HIVE_DEFAULT_PARTITION)) {
+                                keepPartition = testFilterByType(filterValue, partition);
+                            }
+                            return keepPartition;
+                        }
+                    }
+
+                    /*
+                     * node field did not match any partition field, so we ignore this
+                     * node and hence return true
+                     */
+                }
             }
         }
         return partitionAllowed;
@@ -365,7 +401,7 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
                 result = HiveDecimal.create(filterValue).bigDecimalValue().equals(HiveDecimal.create(partition.val).bigDecimalValue());
                 break;
             case serdeConstants.BINARY_TYPE_NAME:
-                result = filterValue.getBytes().equals(partition.val.getBytes());
+                result = Arrays.equals(filterValue.getBytes(), partition.val.getBytes());
                 break;
             case serdeConstants.STRING_TYPE_NAME:
             case serdeConstants.VARCHAR_TYPE_NAME:
@@ -388,32 +424,14 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
      * because it is not on a partition field. 3. If fieldA = partittionOne and
      * valueA != valueOne, then we return false.
      */
-    private boolean testOneFilter(List<HivePartition> partitionFields,
-                                  Object filter, RequestContext input) {
+    private boolean testOneFilter(List<HivePartition> partitionFields, Node root) {
+        List<Node> filterList = Collections.singletonList(root);
+
         // Let's look first at the filter and escape if there are any OR or NOT ops
-        if (!testForUnsupportedOperators(Arrays.asList(filter)))
+        if (!testForUnsupportedOperators(filterList))
             return true;
 
-        return testForPartitionEquality(partitionFields, Arrays.asList(filter), input);
-    }
-
-    private void printLogicalFilter(LogicalFilter filter) {
-        for (Object f : filter.getFilterList()) {
-            if (f instanceof LogicalFilter) {
-                printLogicalFilter((LogicalFilter) f);
-            } else {
-                printOneBasicFilter(f);
-            }
-        }
-    }
-
-    private void printOneBasicFilter(Object filter) {
-        BasicFilter bFilter = (BasicFilter) filter;
-        boolean isOperationEqual = (bFilter.getOperation() == FilterParser.Operator.EQUALS);
-        int columnIndex = bFilter.getColumn().index();
-        String value = bFilter.getConstant() == null ? null : bFilter.getConstant().constant().toString();
-        LOG.debug("isOperationEqual: " + isOperationEqual + " columnIndex: "
-                + columnIndex + " value: " + value);
+        return testForPartitionEquality(partitionFields, filterList);
     }
 
     /**

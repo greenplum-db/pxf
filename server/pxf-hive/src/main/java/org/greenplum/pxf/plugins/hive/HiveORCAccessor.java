@@ -19,38 +19,31 @@ package org.greenplum.pxf.plugins.hive;
  * under the License.
  */
 
-
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Output;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.hive.common.type.HiveChar;
-import org.apache.hadoop.hive.common.type.HiveDecimal;
-import org.apache.hadoop.hive.common.type.HiveVarchar;
 import org.apache.hadoop.hive.ql.io.orc.OrcInputFormat;
 import org.apache.hadoop.hive.ql.io.orc.Reader;
 import org.apache.hadoop.hive.ql.io.sarg.ConvertAstToSearchArg;
-import org.apache.hadoop.hive.ql.io.sarg.PredicateLeaf;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
-import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentFactory;
 import org.apache.hadoop.mapred.JobConf;
-import org.greenplum.pxf.api.BasicFilter;
-import org.greenplum.pxf.api.LogicalFilter;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.StatsAccessor;
+import org.greenplum.pxf.api.filter.BaseTreePruner;
+import org.greenplum.pxf.api.filter.FilterParser;
+import org.greenplum.pxf.api.filter.Node;
+import org.greenplum.pxf.api.filter.Operator;
+import org.greenplum.pxf.api.filter.TreePruner;
+import org.greenplum.pxf.api.filter.TreeTraverser;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.api.utilities.EnumAggregationType;
 import org.greenplum.pxf.api.utilities.Utilities;
 
-import java.math.BigDecimal;
-import java.sql.Date;
-import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.apache.hadoop.hive.serde2.ColumnProjectionUtils.READ_ALL_COLUMNS;
 import static org.apache.hadoop.hive.serde2.ColumnProjectionUtils.READ_COLUMN_IDS_CONF_STR;
@@ -63,9 +56,25 @@ import static org.apache.hadoop.hive.serde2.ColumnProjectionUtils.READ_COLUMN_NA
  */
 public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
 
-    private static final Log LOG = LogFactory.getLog(HiveORCAccessor.class);
     private static final int KRYO_BUFFER_SIZE = 4 * 1024;
     private static final int KRYO_MAX_BUFFER_SIZE = 10 * 1024 * 1024;
+
+    private static final EnumSet<Operator> SUPPORTED_OPERATORS =
+            EnumSet.of(
+                    Operator.LESS_THAN,
+                    Operator.GREATER_THAN,
+                    Operator.LESS_THAN_OR_EQUAL,
+                    Operator.GREATER_THAN_OR_EQUAL,
+                    Operator.EQUALS,
+                    Operator.NOT_EQUALS,
+                    Operator.IS_NULL,
+                    Operator.IS_NOT_NULL,
+                    Operator.IN,
+                    Operator.OR,
+                    Operator.AND,
+                    Operator.NOT
+            );
+    private static final TreePruner TREE_PRUNER = new BaseTreePruner(SUPPORTED_OPERATORS);
 
     Reader orcReader;
 
@@ -124,7 +133,7 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
     }
 
     /**
-     * Uses {@link HiveFilterBuilder} to translate a filter string into a
+     * Uses {@link HiveTreeVisitor} to translate a filter string into a
      * Hive {@link SearchArgument} object. The result is added as a filter to
      * JobConf object
      */
@@ -133,190 +142,18 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
             return;
         }
 
-        /* Predicate pushdown configuration */
+        /* Predicate push-down configuration */
         String filterStr = context.getFilterString();
-        HiveFilterBuilder eval = new HiveFilterBuilder();
-        Object filter = eval.getFilterObject(filterStr);
-        SearchArgument.Builder filterBuilder = SearchArgumentFactory.newBuilder(configuration);
 
-        /*
-         * If there is only a single filter it will be of type Basic Filter
-         * need special case logic to make sure to still wrap the filter in a
-         * startAnd() & end() block
-         */
-        if (filter instanceof LogicalFilter) {
-            if (!buildExpression(filterBuilder, Arrays.asList(filter))) {
-                return;
-            }
-        } else {
-            filterBuilder.startAnd();
-            if (!buildArgument(filterBuilder, filter)) {
-                return;
-            }
-            filterBuilder.end();
-        }
-        SearchArgument sarg = filterBuilder.build();
-        jobConf.set(ConvertAstToSearchArg.SARG_PUSHDOWN, toKryo(sarg));
-    }
+        Node root = new FilterParser().parse(filterStr.getBytes());
+        root = TREE_PRUNER.prune(root);
 
-    private boolean buildExpression(SearchArgument.Builder builder, List<Object> filterList) {
-        for (Object f : filterList) {
-            if (f instanceof LogicalFilter) {
-                switch (((LogicalFilter) f).getOperator()) {
-                    case OR:
-                        builder.startOr();
-                        break;
-                    case AND:
-                        builder.startAnd();
-                        break;
-                    case NOT:
-                        builder.startNot();
-                        break;
-                }
-                if (buildExpression(builder, ((LogicalFilter) f).getFilterList())) {
-                    builder.end();
-                } else {
-                    return false;
-                }
-            } else {
-                if (!buildArgument(builder, f)) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
+        HiveORCTreeVisitor treeVisitor = new HiveORCTreeVisitor(context.getTupleDescription(), configuration);
+        new TreeTraverser().inOrderTraversal(root, treeVisitor);
 
-    private boolean buildArgument(SearchArgument.Builder builder, Object filterObj) {
-        /* The below functions will not be compatible and requires update  with Hive 2.0 APIs */
-        BasicFilter filter = (BasicFilter) filterObj;
-        int filterColumnIndex = filter.getColumn().index();
-        // filter value might be null for unary operations
-        Object filterValue = filter.getConstant() == null ? null : filter.getConstant().constant();
-        ColumnDescriptor filterColumn = context.getColumn(filterColumnIndex);
-        String filterColumnName = filterColumn.columnName();
-
-        // In Hive 1, boxing of values happened inside the builder
-        // For Hive 2 libraries, we need to do it before passing values to
-        // Hive jars
-        if (filterValue instanceof List) {
-            @SuppressWarnings("unchecked")
-            List<Object> l = (List<Object>) filterValue;
-            filterValue = l.stream().map(HiveORCAccessor::boxLiteral).collect(Collectors.toList());
-        } else if (filterValue != null) {
-            filterValue = boxLiteral(filterValue);
-        }
-
-        PredicateLeaf.Type predicateLeafType = PredicateLeaf.Type.STRING;
-
-        if (filterValue != null) {
-            predicateLeafType = getType(filterValue);
-        }
-
-        switch (filter.getOperation()) {
-            case LESS_THAN:
-                builder.lessThan(filterColumnName, predicateLeafType, filterValue);
-                break;
-            case GREATER_THAN:
-                builder.startNot().lessThanEquals(filterColumnName, predicateLeafType, filterValue).end();
-                break;
-            case LESS_THAN_OR_EQUAL:
-                builder.lessThanEquals(filterColumnName, predicateLeafType, filterValue);
-                break;
-            case GREATER_THAN_OR_EQUAL:
-                builder.startNot().lessThan(filterColumnName, predicateLeafType, filterValue).end();
-                break;
-            case EQUALS:
-                builder.equals(filterColumnName, predicateLeafType, filterValue);
-                break;
-            case NOT_EQUALS:
-                builder.startNot().equals(filterColumnName, predicateLeafType, filterValue).end();
-                break;
-            case IS_NULL:
-                builder.isNull(filterColumnName, predicateLeafType);
-                break;
-            case IS_NOT_NULL:
-                builder.startNot().isNull(filterColumnName, predicateLeafType).end();
-                break;
-            case IN:
-                if (filterValue instanceof List) {
-                    @SuppressWarnings("unchecked")
-                    List<Object> l = (List<Object>) filterValue;
-                    builder.in(filterColumnName, predicateLeafType, l.toArray());
-                } else {
-                    throw new IllegalArgumentException("filterValue should be instance of List for IN operation");
-                }
-                break;
-            default: {
-                LOG.debug("Filter push-down is not supported for " + filter.getOperation() + "operation.");
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Get the type of the given expression node.
-     *
-     * @param literal the object
-     * @return int, string, or float or null if we don't know the type
-     */
-    private PredicateLeaf.Type getType(Object literal) {
-        if (literal instanceof Byte ||
-                literal instanceof Short ||
-                literal instanceof Integer ||
-                literal instanceof Long) {
-            return PredicateLeaf.Type.LONG;
-        } else if (literal instanceof HiveChar ||
-                literal instanceof HiveVarchar ||
-                literal instanceof String) {
-            return PredicateLeaf.Type.STRING;
-        } else if (literal instanceof Float ||
-                literal instanceof Double) {
-            return PredicateLeaf.Type.FLOAT;
-        } else if (literal instanceof Date) {
-            return PredicateLeaf.Type.DATE;
-        } else if (literal instanceof Timestamp) {
-            return PredicateLeaf.Type.TIMESTAMP;
-        } else if (literal instanceof HiveDecimal ||
-                literal instanceof BigDecimal) {
-            return PredicateLeaf.Type.DECIMAL;
-        } else if (literal instanceof Boolean) {
-            return PredicateLeaf.Type.BOOLEAN;
-        } else if (literal instanceof List) {
-            @SuppressWarnings("unchecked")
-            List<Object> l = (List<Object>) literal;
-            if (l.size() > 0)
-                return getType(l.get(0));
-        }
-        throw new IllegalArgumentException(String.format("Unknown type for literal %s", literal));
-    }
-
-    private static Object boxLiteral(Object literal) {
-        if (literal instanceof String ||
-                literal instanceof Long ||
-                literal instanceof Double ||
-                literal instanceof Date ||
-                literal instanceof Timestamp ||
-                literal instanceof HiveDecimal ||
-                literal instanceof BigDecimal ||
-                literal instanceof Boolean) {
-            return literal;
-        } else if (literal instanceof HiveChar ||
-                literal instanceof HiveVarchar) {
-            return StringUtils.stripEnd(literal.toString(), null);
-        } else if (literal instanceof Byte ||
-                literal instanceof Short ||
-                literal instanceof Integer) {
-            return ((Number) literal).longValue();
-        } else if (literal instanceof Float) {
-            // to avoid change in precision when upcasting float to double
-            // we convert the literal to string and parse it as double. (HIVE-8460)
-            return Double.parseDouble(literal.toString());
-        } else {
-            throw new IllegalArgumentException("Unknown type for literal " +
-                    literal);
-        }
+        SearchArgument.Builder filterBuilder = treeVisitor.getFilterBuilder();
+        SearchArgument searchArgument = filterBuilder.build();
+        jobConf.set(ConvertAstToSearchArg.SARG_PUSHDOWN, toKryo(searchArgument));
     }
 
     /**
@@ -350,16 +187,13 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
         OneRow row = null;
         if (context.getAggType() == null)
             throw new UnsupportedOperationException("Aggregate operation is required");
-        switch (context.getAggType()) {
-            case COUNT:
-                if (objectsEmitted < count) {
-                    objectsEmitted++;
-                    row = rowToEmitCount;
-                }
-                break;
-            default: {
-                throw new UnsupportedOperationException("Aggregation operation is not supported.");
+        if (context.getAggType() == EnumAggregationType.COUNT) {
+            if (objectsEmitted < count) {
+                objectsEmitted++;
+                row = rowToEmitCount;
             }
+        } else {
+            throw new UnsupportedOperationException("Aggregation operation is not supported.");
         }
         return row;
     }

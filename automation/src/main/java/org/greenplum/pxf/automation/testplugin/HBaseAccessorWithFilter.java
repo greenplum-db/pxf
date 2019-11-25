@@ -12,10 +12,17 @@ import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.filter.BaseTreePruner;
+import org.greenplum.pxf.api.filter.FilterParser;
+import org.greenplum.pxf.api.filter.Node;
+import org.greenplum.pxf.api.filter.Operator;
+import org.greenplum.pxf.api.filter.TreePruner;
+import org.greenplum.pxf.api.filter.TreeTraverser;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.plugins.hbase.HBaseFilterBuilder;
+import org.greenplum.pxf.plugins.hbase.HBaseAccessor;
+import org.greenplum.pxf.plugins.hbase.HBaseTreeVisitor;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseColumnDescriptor;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseTupleDescription;
 
@@ -23,6 +30,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 
 /**
@@ -32,231 +40,253 @@ import java.util.List;
  * instead of from GPDB.
  */
 public class HBaseAccessorWithFilter extends BasePlugin implements Accessor {
-	static private Log Log = LogFactory.getLog(HBaseAccessorWithFilter.class);
+    static private Log Log = LogFactory.getLog(HBaseAccessorWithFilter.class);
 
-	private HBaseTupleDescription tupleDescription;
-	private HTable table;
-	private List<SplitBoundary> splits;
-	private Scan scanDetails;
-	private ResultScanner currentScanner;
-	private int currentRegionIndex;
-	private byte[] scanStartKey;
-	private byte[] scanEndKey;
+    static final EnumSet<Operator> SUPPORTED_OPERATORS =
+            EnumSet.of(
+                    Operator.LESS_THAN,
+                    Operator.GREATER_THAN,
+                    Operator.LESS_THAN_OR_EQUAL,
+                    Operator.GREATER_THAN_OR_EQUAL,
+                    Operator.EQUALS,
+                    Operator.NOT_EQUALS,
+                    Operator.IS_NOT_NULL,
+                    Operator.IS_NULL,
+                    Operator.AND,
+                    Operator.OR
+            );
 
-	/*
-	 * The class represents a single split of a table
-	 * i.e. a start key and an end key
-	 */
-	private class SplitBoundary {
-		protected byte[] startKey;
-		protected byte[] endKey;
+    private static TreePruner TREE_PRUNER = new BaseTreePruner(SUPPORTED_OPERATORS);
+    private static TreeTraverser TREE_TRAVERSER = new TreeTraverser();
 
-		SplitBoundary(byte[] first, byte[] second) {
-			startKey = first;
-			endKey = second;
-		}
+    private HBaseTupleDescription tupleDescription;
+    private HTable table;
+    private List<SplitBoundary> splits;
+    private Scan scanDetails;
+    private ResultScanner currentScanner;
+    private int currentRegionIndex;
+    private byte[] scanStartKey;
+    private byte[] scanEndKey;
 
-		byte[] startKey() {
-			return startKey;
-		}
+    /*
+     * The class represents a single split of a table
+     * i.e. a start key and an end key
+     */
+    private class SplitBoundary {
+        protected byte[] startKey;
+        protected byte[] endKey;
 
-		byte[] endKey() {
-			return endKey;
-		}
-	}
+        SplitBoundary(byte[] first, byte[] second) {
+            startKey = first;
+            endKey = second;
+        }
 
-	@Override
-	public void initialize(RequestContext requestContext) {
-		super.initialize(requestContext);
-		tupleDescription = new HBaseTupleDescription(requestContext);
-		splits = new ArrayList<>();
-		currentRegionIndex = 0;
-		scanStartKey = HConstants.EMPTY_START_ROW;
-		scanEndKey = HConstants.EMPTY_END_ROW;
-	}
+        byte[] startKey() {
+            return startKey;
+        }
 
-	@Override
-	public boolean openForRead() throws Exception {
-		openTable();
-		createScanner();
-		selectTableSplits();
+        byte[] endKey() {
+            return endKey;
+        }
+    }
 
-		return openCurrentRegion();
-	}
+    @Override
+    public void initialize(RequestContext requestContext) {
+        super.initialize(requestContext);
+        tupleDescription = new HBaseTupleDescription(requestContext);
+        splits = new ArrayList<>();
+        currentRegionIndex = 0;
+        scanStartKey = HConstants.EMPTY_START_ROW;
+        scanEndKey = HConstants.EMPTY_END_ROW;
+    }
 
-	/*
-	 * Close the table
-	 */
-	@Override
-	public void closeForRead() throws Exception {
-		table.close();
-	}
+    @Override
+    public boolean openForRead() throws Exception {
+        openTable();
+        createScanner();
+        selectTableSplits();
 
-	/**
-	 * Opens the resource for write.
-	 *
-	 * @return true if the resource is successfully opened
-	 * @throws Exception if opening the resource failed
-	 */
-	@Override
-	public boolean openForWrite() throws Exception {
-		return false;
-	}
+        return openCurrentRegion();
+    }
 
-	/**
-	 * Writes the next object.
-	 *
-	 * @param onerow the object to be written
-	 * @return true if the write succeeded
-	 * @throws Exception writing to the resource failed
-	 */
-	@Override
-	public boolean writeNextObject(OneRow onerow) throws Exception {
-		return false;
-	}
+    /*
+     * Close the table
+     */
+    @Override
+    public void closeForRead() throws Exception {
+        table.close();
+    }
 
-	/**
-	 * Closes the resource for write.
-	 *
-	 * @throws Exception if closing the resource failed
-	 */
-	@Override
-	public void closeForWrite() throws Exception {
+    /**
+     * Opens the resource for write.
+     *
+     * @return true if the resource is successfully opened
+     * @throws Exception if opening the resource failed
+     */
+    @Override
+    public boolean openForWrite() throws Exception {
+        return false;
+    }
 
-	}
+    /**
+     * Writes the next object.
+     *
+     * @param onerow the object to be written
+     * @return true if the write succeeded
+     * @throws Exception writing to the resource failed
+     */
+    @Override
+    public boolean writeNextObject(OneRow onerow) throws Exception {
+        return false;
+    }
 
-	@Override
-	public OneRow readNextObject() throws IOException {
-		Result result;
-		// while currentScanner can't return a new result
-		while ((result = currentScanner.next()) == null) {
-			currentScanner.close(); // close it
-			++currentRegionIndex; // open next region
+    /**
+     * Closes the resource for write.
+     *
+     * @throws Exception if closing the resource failed
+     */
+    @Override
+    public void closeForWrite() throws Exception {
 
-			if (!openCurrentRegion()) {
-				return null; // no more splits on the list
-			}
-		}
+    }
 
-		return new OneRow(null, result);
-	}
+    @Override
+    public OneRow readNextObject() throws IOException {
+        Result result;
+        // while currentScanner can't return a new result
+        while ((result = currentScanner.next()) == null) {
+            currentScanner.close(); // close it
+            ++currentRegionIndex; // open next region
 
-	private void openTable() throws IOException	{
-		table = new HTable(HBaseConfiguration.create(configuration), context.getDataSource().getBytes());
-	}
+            if (!openCurrentRegion()) {
+                return null; // no more splits on the list
+            }
+        }
 
-	/*
-	 * The function creates an array of start,end keys pairs for each
-	 * table split this Accessor instance is assigned to scan.
-	 *
-	 * The function verifies splits are within user supplied range
-	 *
-	 * It is assumed, |startKeys| == |endKeys|
-	 * This assumption is made through HBase's code as well
-	 */
-	private void selectTableSplits() {
+        return new OneRow(null, result);
+    }
 
-		byte[] serializedMetadata = context.getFragmentMetadata();
-		if (serializedMetadata == null) {
-			throw new IllegalArgumentException("Missing fragment metadata information");
-		}
-		try {
-			ByteArrayInputStream bytesStream = new ByteArrayInputStream(serializedMetadata);
-			ObjectInputStream objectStream = new ObjectInputStream(bytesStream);
+    private void openTable() throws IOException {
+        table = new HTable(HBaseConfiguration.create(configuration), context.getDataSource().getBytes());
+    }
 
-			byte[] startKey = (byte[]) objectStream.readObject();
-			byte[] endKey = (byte[]) objectStream.readObject();
+    /*
+     * The function creates an array of start,end keys pairs for each
+     * table split this Accessor instance is assigned to scan.
+     *
+     * The function verifies splits are within user supplied range
+     *
+     * It is assumed, |startKeys| == |endKeys|
+     * This assumption is made through HBase's code as well
+     */
+    private void selectTableSplits() {
 
-			if (withinScanRange(startKey, endKey)) {
-				splits.add(new SplitBoundary(startKey, endKey));
-			}
+        byte[] serializedMetadata = context.getFragmentMetadata();
+        if (serializedMetadata == null) {
+            throw new IllegalArgumentException("Missing fragment metadata information");
+        }
+        try {
+            ByteArrayInputStream bytesStream = new ByteArrayInputStream(serializedMetadata);
+            ObjectInputStream objectStream = new ObjectInputStream(bytesStream);
 
-		} catch (Exception e) {
-			throw new RuntimeException("Exception while reading expected fragment metadata", e);
-		}
-	}
+            byte[] startKey = (byte[]) objectStream.readObject();
+            byte[] endKey = (byte[]) objectStream.readObject();
 
-	/*
-	 * returns true if given start/end key pair is within the scan range
-	 */
-	private boolean withinScanRange(byte[] startKey, byte[] endKey) {
-		// startKey <= scanStartKey
-		if (Bytes.compareTo(startKey, scanStartKey) <= 0) {
-			if (Bytes.equals(endKey, HConstants.EMPTY_END_ROW) || // endKey == table's end
-				Bytes.compareTo(endKey, scanStartKey) >= 0) { // endKey >= scanStartKey
-				return true;
-			}
-		} else { // startKey > scanStartKey
-			if (Bytes.equals(scanEndKey, HConstants.EMPTY_END_ROW) || //  scanEndKey == table's end
-				Bytes.compareTo(startKey, scanEndKey) <= 0) { // startKey <= scanEndKey
-				return true;
-			}
-		}
-		return false;
-	}
+            if (withinScanRange(startKey, endKey)) {
+                splits.add(new SplitBoundary(startKey, endKey));
+            }
 
-	/*
-	 * The function creates the Scan object used to describe the query
-	 * requested from HBase.
-	 * As the row key column always gets returned, no need to ask for it
-	 */
-	private void createScanner() throws Exception {
-		scanDetails = new Scan();
-		// Return only one version (latest)
-		scanDetails.setMaxVersions(1);
+        } catch (Exception e) {
+            throw new RuntimeException("Exception while reading expected fragment metadata", e);
+        }
+    }
 
-		addColumns();
-		addFilters();
-	}
+    /*
+     * returns true if given start/end key pair is within the scan range
+     */
+    private boolean withinScanRange(byte[] startKey, byte[] endKey) {
+        // startKey <= scanStartKey
+        if (Bytes.compareTo(startKey, scanStartKey) <= 0) {
+            if (Bytes.equals(endKey, HConstants.EMPTY_END_ROW) || // endKey == table's end
+                    Bytes.compareTo(endKey, scanStartKey) >= 0) { // endKey >= scanStartKey
+                return true;
+            }
+        } else { // startKey > scanStartKey
+            if (Bytes.equals(scanEndKey, HConstants.EMPTY_END_ROW) || //  scanEndKey == table's end
+                    Bytes.compareTo(startKey, scanEndKey) <= 0) { // startKey <= scanEndKey
+                return true;
+            }
+        }
+        return false;
+    }
 
-	/*
-	 * Open the region of index currentRegionIndex from splits list.
-	 * Update the Scan object to retrieve only rows from that region.
-	 */
-	private boolean openCurrentRegion() throws IOException {
-		if (currentRegionIndex == splits.size()) {
-			return false;
-		}
+    /*
+     * The function creates the Scan object used to describe the query
+     * requested from HBase.
+     * As the row key column always gets returned, no need to ask for it
+     */
+    private void createScanner() throws Exception {
+        scanDetails = new Scan();
+        // Return only one version (latest)
+        scanDetails.setMaxVersions(1);
 
-		SplitBoundary region = splits.get(currentRegionIndex);
-		scanDetails.setStartRow(region.startKey());
-		scanDetails.setStopRow(region.endKey());
+        addColumns();
+        addFilters();
+    }
 
-		currentScanner = table.getScanner(scanDetails);
-		return true;
-	}
+    /*
+     * Open the region of index currentRegionIndex from splits list.
+     * Update the Scan object to retrieve only rows from that region.
+     */
+    private boolean openCurrentRegion() throws IOException {
+        if (currentRegionIndex == splits.size()) {
+            return false;
+        }
 
-	private void addColumns() {
-		for (int i = 0; i < tupleDescription.columns(); ++i) {
-			HBaseColumnDescriptor column = tupleDescription.getColumn(i);
-			if (!column.isKeyColumn()) { // Row keys return anyway
-				scanDetails.addColumn(column.columnFamilyBytes(), column.qualifierBytes());
-			}
-		}
-	}
+        SplitBoundary region = splits.get(currentRegionIndex);
+        scanDetails.setStartRow(region.startKey());
+        scanDetails.setStopRow(region.endKey());
 
-	/*
-	 * Uses HBaseFilterBuilder to translate a filter string into a
-	 * HBase Filter object. The result is added as a filter to the
-	 * Scan object
-	 *
-	 * use row key ranges to limit split count
-	 *
-	 * ignores filter from gpdb, use user defined filter
-	 */
-	private void addFilters() throws Exception {
+        currentScanner = table.getScanner(scanDetails);
+        return true;
+    }
 
-		// TODO whitelist option
-		String filterStr = context.getOption("TEST-HBASE-FILTER");
-		Log.debug("user defined filter: " + filterStr);
-		if ((filterStr == null) || filterStr.isEmpty() || "null".equals(filterStr))
-			return;
+    private void addColumns() {
+        for (int i = 0; i < tupleDescription.columns(); ++i) {
+            HBaseColumnDescriptor column = tupleDescription.getColumn(i);
+            if (!column.isKeyColumn()) { // Row keys return anyway
+                scanDetails.addColumn(column.columnFamilyBytes(), column.qualifierBytes());
+            }
+        }
+    }
 
-		HBaseFilterBuilder eval = new HBaseFilterBuilder(tupleDescription);
-		Filter filter = eval.getFilterObject(filterStr);
-		scanDetails.setFilter(filter);
+    /*
+     * Uses HBaseFilterBuilder to translate a filter string into a
+     * HBase Filter object. The result is added as a filter to the
+     * Scan object
+     *
+     * use row key ranges to limit split count
+     *
+     * ignores filter from gpdb, use user defined filter
+     */
+    private void addFilters() throws Exception {
 
-		scanStartKey = eval.startKey();
-		scanEndKey = eval.endKey();
-	}
+        // TODO whitelist option
+        String filterStr = context.getOption("TEST-HBASE-FILTER");
+        Log.debug("user defined filter: " + filterStr);
+        if ((filterStr == null) || filterStr.isEmpty() || "null".equals(filterStr))
+            return;
+
+        HBaseTreeVisitor hBaseTreeVisitor = new HBaseTreeVisitor(tupleDescription);
+        Node root = new FilterParser().parse(filterStr.getBytes(FilterParser.DEFAULT_CHARSET));
+        root = TREE_PRUNER.prune(root);
+
+        TREE_TRAVERSER.postOrderTraversal(root, hBaseTreeVisitor);
+
+        Filter filter = hBaseTreeVisitor.buildFilter();
+        scanDetails.setFilter(filter);
+
+        scanStartKey = hBaseTreeVisitor.getStartKey();
+        scanEndKey = hBaseTreeVisitor.getEndKey();
+    }
 }

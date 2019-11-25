@@ -21,6 +21,12 @@ package org.greenplum.pxf.plugins.hbase;
 
 
 import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.filter.BaseTreePruner;
+import org.greenplum.pxf.api.filter.FilterParser;
+import org.greenplum.pxf.api.filter.Node;
+import org.greenplum.pxf.api.filter.Operator;
+import org.greenplum.pxf.api.filter.TreePruner;
+import org.greenplum.pxf.api.filter.TreeTraverser;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.BasePlugin;
@@ -43,6 +49,7 @@ import org.apache.hadoop.hbase.util.Bytes;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.util.EnumSet;
 
 /**
  * Accessor for HBase.
@@ -52,10 +59,28 @@ import java.io.ObjectInputStream;
  * The table is divided into several splits. Each accessor instance is assigned a single split.
  * For each region, a Scan object is used to describe the requested rows.
  * <p>
- * The class supports filters using the {@link HBaseFilterBuilder}.
- * Regions can be filtered out according to input from {@link HBaseFilterBuilder}.
+ * The class supports filters using the {@link HBaseTreeVisitor}.
+ * Regions can be filtered out according to input from {@link HBaseTreeVisitor}.
  */
 public class HBaseAccessor extends BasePlugin implements Accessor {
+
+    static final EnumSet<Operator> SUPPORTED_OPERATORS =
+            EnumSet.of(
+                    Operator.LESS_THAN,
+                    Operator.GREATER_THAN,
+                    Operator.LESS_THAN_OR_EQUAL,
+                    Operator.GREATER_THAN_OR_EQUAL,
+                    Operator.EQUALS,
+                    Operator.NOT_EQUALS,
+                    Operator.IS_NOT_NULL,
+                    Operator.IS_NULL,
+                    Operator.AND,
+                    Operator.OR
+            );
+
+    private static TreePruner TREE_PRUNER = new BaseTreePruner(SUPPORTED_OPERATORS);
+    private static TreeTraverser TREE_TRAVERSER = new TreeTraverser();
+
     private HBaseTupleDescription tupleDescription;
     private Connection connection;
     private Table table;
@@ -69,7 +94,7 @@ public class HBaseAccessor extends BasePlugin implements Accessor {
      * The class represents a single split of a table
      * i.e. a start key and an end key
      */
-    private class SplitBoundary {
+    private static class SplitBoundary {
         protected byte[] startKey;
         protected byte[] endKey;
 
@@ -131,10 +156,9 @@ public class HBaseAccessor extends BasePlugin implements Accessor {
      * Opens the resource for write.
      *
      * @return true if the resource is successfully opened
-     * @throws Exception if opening the resource failed
      */
     @Override
-    public boolean openForWrite() throws Exception {
+    public boolean openForWrite() {
         throw new UnsupportedOperationException();
     }
 
@@ -143,20 +167,17 @@ public class HBaseAccessor extends BasePlugin implements Accessor {
      *
      * @param onerow the object to be written
      * @return true if the write succeeded
-     * @throws Exception writing to the resource failed
      */
     @Override
-    public boolean writeNextObject(OneRow onerow) throws Exception {
+    public boolean writeNextObject(OneRow onerow) {
         throw new UnsupportedOperationException();
     }
 
     /**
      * Closes the resource for write.
-     *
-     * @throws Exception if closing the resource failed
      */
     @Override
-    public void closeForWrite() throws Exception {
+    public void closeForWrite() {
         throw new UnsupportedOperationException();
     }
 
@@ -209,7 +230,7 @@ public class HBaseAccessor extends BasePlugin implements Accessor {
             byte[] endKey = (byte[]) objectStream.readObject();
 
             if (withinScanRange(startKey, endKey)) {
-            	split = new SplitBoundary(startKey, endKey);
+                split = new SplitBoundary(startKey, endKey);
             }
         } catch (Exception e) {
             throw new RuntimeException("Exception while reading expected fragment metadata", e);
@@ -221,21 +242,16 @@ public class HBaseAccessor extends BasePlugin implements Accessor {
      */
     private boolean withinScanRange(byte[] startKey, byte[] endKey) {
 
-    	// startKey <= scanStartKey
+        // startKey <= scanStartKey
         if (Bytes.compareTo(startKey, scanStartKey) <= 0) {
-        	// endKey == table's end or endKey >= scanStartKey
-            if (Bytes.equals(endKey, HConstants.EMPTY_END_ROW) ||
-                    Bytes.compareTo(endKey, scanStartKey) >= 0) {
-                return true;
-            }
+            // endKey == table's end or endKey >= scanStartKey
+            return Bytes.equals(endKey, HConstants.EMPTY_END_ROW) ||
+                    Bytes.compareTo(endKey, scanStartKey) >= 0;
         } else { // startKey > scanStartKey
-        	// scanEndKey == table's end or startKey <= scanEndKey
-            if (Bytes.equals(scanEndKey, HConstants.EMPTY_END_ROW) ||
-                    Bytes.compareTo(startKey, scanEndKey) <= 0) {
-                return true;
-            }
+            // scanEndKey == table's end or startKey <= scanEndKey
+            return Bytes.equals(scanEndKey, HConstants.EMPTY_END_ROW) ||
+                    Bytes.compareTo(startKey, scanEndKey) <= 0;
         }
-        return false;
     }
 
     /**
@@ -283,7 +299,7 @@ public class HBaseAccessor extends BasePlugin implements Accessor {
     }
 
     /**
-     * Uses {@link HBaseFilterBuilder} to translate a filter string into a
+     * Uses {@link HBaseTreeVisitor} to translate a filter string into a
      * HBase {@link Filter} object. The result is added as a filter to the
      * Scan object.
      * <p>
@@ -294,11 +310,16 @@ public class HBaseAccessor extends BasePlugin implements Accessor {
             return;
         }
 
-        HBaseFilterBuilder eval = new HBaseFilterBuilder(tupleDescription);
-        Filter filter = eval.getFilterObject(context.getFilterString());
+        HBaseTreeVisitor hBaseTreeVisitor = new HBaseTreeVisitor(tupleDescription);
+        Node root = new FilterParser().parse(context.getFilterString().getBytes(FilterParser.DEFAULT_CHARSET));
+        root = TREE_PRUNER.prune(root);
+
+        TREE_TRAVERSER.postOrderTraversal(root, hBaseTreeVisitor);
+
+        Filter filter = hBaseTreeVisitor.buildFilter();
         scanDetails.setFilter(filter);
 
-        scanStartKey = eval.startKey();
-        scanEndKey = eval.endKey();
+        scanStartKey = hBaseTreeVisitor.getStartKey();
+        scanEndKey = hBaseTreeVisitor.getEndKey();
     }
 }

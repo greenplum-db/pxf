@@ -187,7 +187,7 @@ public class SingleCluster extends PhdCluster {
         // split according to line separator into String array
         String[] splitResults = cmdResult.split(System.getProperty("line.separator"));
         // create map to store results
-        HashMap<String, Integer> map = new HashMap<String, Integer>();
+        HashMap<String, Integer> map = new HashMap<>();
         // go over split results from jps command
         for (int i = 0; i < splitResults.length; i++) {
             String currentSplitResult = null;

@@ -1,7 +1,6 @@
 package org.greenplum.pxf.automation.testplugin;
 
-import org.greenplum.pxf.api.FilterBuilder;
-import org.greenplum.pxf.api.FilterParser;
+import org.greenplum.pxf.api.filter.FilterParser;
 import org.greenplum.pxf.api.model.BaseFragmenter;
 import org.greenplum.pxf.api.model.Fragment;
 
@@ -13,12 +12,7 @@ import java.util.List;
  * The only thing this class does is to take received filter string from GPDB (FILTER).
  * And return it in UserData back to gpdb for later validation in Resolver/Accessor
  */
-public class FilterVerifyFragmenter extends BaseFragmenter
-{
-    private static class TestFilterBuilder implements FilterBuilder {
-        public Object build(FilterParser.Operator operation, Object left, Object right) throws Exception {return new Object();}
-        public Object build(FilterParser.Operator operation, Object operand) throws Exception {return new Object();}
-    }
+public class FilterVerifyFragmenter extends BaseFragmenter {
 
     /**
      * Returns one fragment with incoming filter string value as the user data.
@@ -35,16 +29,15 @@ public class FilterVerifyFragmenter extends BaseFragmenter
         // Validate the filterstring by parsing using a dummy filterBuilder
         if (context.hasFilter()) {
             filter = context.getFilterString();
-            FilterParser parser = new FilterParser(new TestFilterBuilder());
-            parser.parse(filter.getBytes(FilterParser.DEFAULT_CHARSET));
+            new FilterParser().parse(filter.getBytes(FilterParser.DEFAULT_CHARSET));
         }
 
-        String [] hosts =  {"localhost" , "localhost" , "localhost"};
+        String[] hosts = {"localhost", "localhost", "localhost"};
 
         // Set filter value as returned user data.
         Fragment fragment = new Fragment("dummy_file_path",
                 hosts,
-                new String().getBytes(),
+                "".getBytes(),
                 filter.getBytes());
         fragments.add(fragment);
 

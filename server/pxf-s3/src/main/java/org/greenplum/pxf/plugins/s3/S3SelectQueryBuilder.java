@@ -1,10 +1,17 @@
 package org.greenplum.pxf.plugins.s3;
 
+import org.greenplum.pxf.api.filter.BaseTreePruner;
+import org.greenplum.pxf.api.filter.FilterParser;
+import org.greenplum.pxf.api.filter.Node;
+import org.greenplum.pxf.api.filter.Operator;
+import org.greenplum.pxf.api.filter.TreePruner;
+import org.greenplum.pxf.api.filter.TreeTraverser;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -12,6 +19,25 @@ public class S3SelectQueryBuilder {
 
     private static final String S3_SELECT_SOURCE = "S3Object";
     static final String S3_TABLE_ALIAS = "s";
+    private static final EnumSet<Operator> SUPPORTED_OPERATORS =
+            EnumSet.of(
+                    Operator.LESS_THAN,
+                    Operator.GREATER_THAN,
+                    Operator.LESS_THAN_OR_EQUAL,
+                    Operator.GREATER_THAN_OR_EQUAL,
+                    Operator.EQUALS,
+                    // TODO: LIKE is not supported on the C side
+                    // Operator.LIKE,
+                    Operator.NOT_EQUALS,
+                    Operator.IN,
+                    Operator.IS_NULL,
+                    Operator.IS_NOT_NULL,
+                    Operator.NOOP,
+                    Operator.AND,
+                    Operator.NOT,
+                    Operator.OR
+            );
+    private static final TreePruner treePruner = new BaseTreePruner(SUPPORTED_OPERATORS);
 
     private final RequestContext context;
     private List<ColumnDescriptor> columns;
@@ -53,13 +79,17 @@ public class S3SelectQueryBuilder {
     private void buildWhereSQL(StringBuilder query) {
         if (!context.hasFilter()) return;
 
-        S3SelectFilterParser filterParser = new S3SelectFilterParser();
-        filterParser.setColumnDescriptors(context.getTupleDescription());
-        filterParser.setUsePositionToIdentifyColumn(usePositionToIdentifyColumn);
+        S3SelectTreeVisitor s3SelectTreeVisitor = new S3SelectTreeVisitor(
+                usePositionToIdentifyColumn,
+                context.getTupleDescription());
 
         try {
+            Node root = new FilterParser().parse(context.getFilterString().getBytes());
+            root = treePruner.prune(root);
+            new TreeTraverser().inOrderTraversal(root, s3SelectTreeVisitor);
+
             // No exceptions were thrown, change the provided query
-            query.append(filterParser.buildFilterString(context.getFilterString()));
+            query.append(s3SelectTreeVisitor.toString());
         } catch (Exception e) {
             LOG.debug("WHERE clause is omitted: " + e.toString());
             // Silence the exception and do not insert constraints
@@ -75,7 +105,6 @@ public class S3SelectQueryBuilder {
      * @return the column name to use as part of the query
      */
     private String getColumnName(ColumnDescriptor column) {
-        // TODO: this code is duplicated in S3SelectFilterParser
         return usePositionToIdentifyColumn ?
                 String.format("%s._%d", S3_TABLE_ALIAS, column.columnIndex() + 1) :
                 String.format("%s.\"%s\"", S3_TABLE_ALIAS, column.columnName());

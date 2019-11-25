@@ -67,7 +67,7 @@ public class HBaseResolver extends BasePlugin implements Resolver {
     @Override
     public List<OneField> getFields(OneRow onerow) throws Exception {
         Result result = (Result) onerow.getData();
-        LinkedList<OneField> fields = new LinkedList<OneField>();
+        LinkedList<OneField> fields = new LinkedList<>();
 
         for (int i = 0; i < tupleDescription.columns(); ++i) {
             HBaseColumnDescriptor column = tupleDescription.getColumn(i);

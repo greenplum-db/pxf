@@ -26,7 +26,7 @@ import org.apache.hadoop.hbase.filter.ByteArrayComparable;
 import org.apache.hadoop.hbase.protobuf.generated.ComparatorProtos;
 import org.apache.hadoop.hbase.util.Bytes;
 
-public class HBaseDoubleComparator extends ByteArrayComparable{
+public class HBaseDoubleComparator extends ByteArrayComparable {
 
     private Double val;
 
