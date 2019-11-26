@@ -22,7 +22,7 @@ package org.greenplum.pxf.plugins.hdfs;
 
 import static org.apache.hadoop.mapreduce.lib.input.LineRecordReader.MAX_LINE_LENGTH;
 
-import java.io.*;
+import java.io.IOException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
