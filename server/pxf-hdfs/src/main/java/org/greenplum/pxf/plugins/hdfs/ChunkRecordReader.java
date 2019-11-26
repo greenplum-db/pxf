@@ -22,7 +22,7 @@ package org.greenplum.pxf.plugins.hdfs;
 
 import static org.apache.hadoop.mapreduce.lib.input.LineRecordReader.MAX_LINE_LENGTH;
 
-import java.io.IOException;
+import java.io.*;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -71,8 +71,13 @@ public class ChunkRecordReader implements
     /**
      * Translates the FSDataInputStream into a DFSInputStream.
      */
-    private DFSInputStream getInputStream() {
-        return (DFSInputStream) (fileIn.getWrappedStream());
+    private DFSInputStream getInputStream() throws IncompatibleInputStreamException {
+        InputStream inputStream = fileIn.getWrappedStream();
+        if (inputStream instanceof DFSInputStream) {
+            return (DFSInputStream) inputStream;
+        } else {
+            throw new IncompatibleInputStreamException(inputStream.getClass());
+        }
     }
 
     /**
@@ -82,7 +87,7 @@ public class ChunkRecordReader implements
      *
      * @return an instance of ReadStatistics class
      */
-    public ReadStatistics getReadStatistics() {
+    public ReadStatistics getReadStatistics() throws IncompatibleInputStreamException {
         return getInputStream().getReadStatistics();
     }
 
@@ -96,7 +101,7 @@ public class ChunkRecordReader implements
      *             creating input stream to read from it
      */
     public ChunkRecordReader(Configuration job, FileSplit split)
-            throws IOException {
+            throws IOException, IncompatibleInputStreamException {
         maxLineLength = job.getInt(MAX_LINE_LENGTH, Integer.MAX_VALUE);
         validateLength(maxLineLength);
         start = split.getStart();

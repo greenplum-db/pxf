@@ -65,9 +65,16 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor {
     protected Object getReader(JobConf jobConf, InputSplit split)
             throws IOException {
 
-        return (hcfsType == HcfsType.HDFS) ?
-                new ChunkRecordReader(jobConf, (FileSplit) split) :
-                new LineRecordReader(jobConf, (FileSplit) split);
+        // for HDFS, try to use ChunkRecordReader, if possible (not reading from encrypted zone)
+        if (hcfsType == HcfsType.HDFS) {
+            try {
+                return new ChunkRecordReader(jobConf, (FileSplit) split);
+            } catch (IncompatibleInputStreamException e) {
+                // ignore and fallback to using LineRecordReader
+                LOG.debug("Failed to use ChunkRecordReader, falling back to LineRecordReader : " + e.getMessage());
+            }
+        }
+        return new LineRecordReader(jobConf, (FileSplit) split);
     }
 
     /**
