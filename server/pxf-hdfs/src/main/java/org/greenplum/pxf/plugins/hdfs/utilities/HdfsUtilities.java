@@ -115,7 +115,7 @@ public class HdfsUtilities {
     public static FileSplit parseFileSplit(RequestContext requestContext) {
         FragmentMetadata metadata = Utilities.parseFragmentMetadata(requestContext);
         return new FileSplit(new Path(requestContext.getDataSource()),
-                metadata.getStart(), metadata.getEnd(), metadata.getHosts());
+                metadata.getStart(), metadata.getEnd(), (String[]) null);
     }
 
     /**
