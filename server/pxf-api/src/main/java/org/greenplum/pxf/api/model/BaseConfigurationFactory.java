@@ -70,7 +70,7 @@ public class BaseConfigurationFactory implements ConfigurationFactory {
         }
 
         if (ArrayUtils.isEmpty(serverDirectories)) {
-            LOG.warn("Directory {}{}{} does not exist or cannot be read by PXF, no configuration resources are added for server {}",
+            LOG.debug("Directory {}{}{} does not exist or cannot be read by PXF, no configuration resources are added for server {}",
                     serversConfigDirectory, File.separator, configDirectory, serverName);
         } else if (serverDirectories.length > 1) {
             throw new IllegalStateException(String.format(

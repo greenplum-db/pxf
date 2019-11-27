@@ -6,6 +6,7 @@ MDD_VALUE=/data/gpdata/master/gpseg-1
 PXF_COMMON_SRC_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 PROXY_USER=${PROXY_USER:-pxfuser}
 PROTOCOL=${PROTOCOL:-}
+GOOGLE_PROJECT_ID=${GOOGLE_PROJECT_ID:-data-gpdb-ud}
 
 # on purpose do not call this PXF_CONF so that it is not set during pxf operations
 PXF_CONF_DIR=~gpadmin/pxf
@@ -511,7 +512,7 @@ function configure_pxf_default_server() {
 
 			REALM=$(cat "$AMBARI_DIR"/REALM)
 			HIVE_HOSTNAME=$(grep < "$AMBARI_DIR"/etc_hostfile ambari-2 | awk '{print $2}')
-			KERBERIZED_HADOOP_URI="hive/${HIVE_HOSTNAME}.c.data-gpdb-ud.internal@${REALM};saslQop=auth" # quoted because of semicolon
+			KERBERIZED_HADOOP_URI="hive/${HIVE_HOSTNAME}.c.${GOOGLE_PROJECT_ID}.internal@${REALM};saslQop=auth" # quoted because of semicolon
 			sed -i -e 's|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.apache.hive.jdbc.HiveDriver|' \
 				-e "s|YOUR_DATABASE_JDBC_URL|jdbc:hive2://${HIVE_HOSTNAME}:10000/default;principal=${KERBERIZED_HADOOP_URI}|" \
 				-e 's|YOUR_DATABASE_JDBC_USER||' \

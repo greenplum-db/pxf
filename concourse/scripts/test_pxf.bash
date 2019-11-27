@@ -6,6 +6,7 @@ CWDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source "${CWDIR}/pxf_common.bash"
 PG_REGRESS=${PG_REGRESS:-false}
 
+export GOOGLE_PROJECT_ID=${GOOGLE_PROJECT_ID:-data-gpdb-ud}
 export GPHOME=${GPHOME:-/usr/local/greenplum-db-devel}
 export PXF_HOME=${GPHOME}/pxf
 export JAVA_HOME=${JAVA_HOME}
@@ -146,7 +147,7 @@ function configure_sut() {
 		HBASE_IP=$(grep < "$AMBARI_DIR"/etc_hostfile ambari-3 | awk '{print $1}')
 		HIVE_IP=$(grep < "$AMBARI_DIR"/etc_hostfile ambari-2 | awk '{print $1}')
 		HIVE_HOSTNAME=$(grep < "$AMBARI_DIR"/etc_hostfile ambari-2 | awk '{print $2}')
-		KERBERIZED_HADOOP_URI="hive/${HIVE_HOSTNAME}.c.data-gpdb-ud.internal@${REALM};saslQop=auth" # quoted because of semicolon
+		KERBERIZED_HADOOP_URI="hive/${HIVE_HOSTNAME}.c.${GOOGLE_PROJECT_ID}.internal@${REALM};saslQop=auth" # quoted because of semicolon
 		# Add ambari hostfile to /etc/hosts
 		sudo tee --append /etc/hosts < "$AMBARI_DIR"/etc_hostfile
 		sudo cp "$AMBARI_DIR"/krb5.conf /etc/krb5.conf

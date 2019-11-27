@@ -150,6 +150,9 @@ function setup_pxf_kerberos_on_cluster() {
 	scp centos@mdw:/etc/krb5.conf /tmp/krb5.conf
 	sudo cp /tmp/krb5.conf /etc/krb5.conf
 
+	# Add foreign dataproc hostfile to /etc/hosts
+	sudo tee --append /etc/hosts < "${DATAPROC_DIR}/etc_hostfile"
+
 	if [[ -d dataproc_2_env_files ]]; then
 		# Create the second hdfs-secure cluster configuration
 		GPDB_CLUSTER_NAME_BASE=$(grep < cluster_env_files/etc_hostfile edw0 | awk '{print substr($3, 1, length($3)-2)}')
@@ -330,7 +333,7 @@ function _main() {
 	if [[ -d dataproc_env_files ]]; then
 		HADOOP_HOSTNAME=$(< dataproc_env_files/name)
 		HADOOP_USER=gpadmin
-		hadoop_ip=$(getent hosts "$HADOOP_HOSTNAME" | awk '{ print $1 }')
+		hadoop_ip=$(getent hosts "${HADOOP_HOSTNAME}.c.${GOOGLE_PROJECT_ID}.internal" | awk '{ print $1 }')
 		HADOOP_SSH_OPTS+=(-i dataproc_env_files/google_compute_engine)
 		HDFS_BIN=/usr/bin
 	else

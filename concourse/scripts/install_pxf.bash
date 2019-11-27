@@ -8,13 +8,14 @@ GPHOME=/usr/local/greenplum-db-devel
 MASTER_HOSTNAME=$(grep < cluster_env_files/etc_hostfile '\bmdw' | awk '{print $2}')
 REALM=${REALM:-}
 REALM_2=${REALM_2:-}
+GOOGLE_PROJECT_ID=${GOOGLE_PROJECT_ID:-data-gpdb-ud}
 KERBEROS=${KERBEROS:-false}
 if [[ -f terraform_dataproc/name ]]; then
 	HADOOP_HOSTNAME=ccp-$(< terraform_dataproc/name)-m
-	HADOOP_IP=$(getent hosts "$HADOOP_HOSTNAME" | awk '{ print $1 }')
+	HADOOP_IP=$(getent hosts "${HADOOP_HOSTNAME}.c.${GOOGLE_PROJECT_ID}.internal" | awk '{ print $1 }')
 elif [[ -f dataproc_env_files/name ]]; then
 	HADOOP_HOSTNAME=$(< dataproc_env_files/name)
-	HADOOP_IP=$(getent hosts "$HADOOP_HOSTNAME" | awk '{ print $1 }')
+	HADOOP_IP=$(getent hosts "${HADOOP_HOSTNAME}.c.${GOOGLE_PROJECT_ID}.internal" | awk '{ print $1 }')
 	REALM=$(< dataproc_env_files/REALM)
 else
 	HADOOP_HOSTNAME=hadoop
