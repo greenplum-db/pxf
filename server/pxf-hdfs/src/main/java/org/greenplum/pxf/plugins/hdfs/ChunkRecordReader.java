@@ -34,6 +34,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.Seekable;
 import org.apache.hadoop.hdfs.DFSInputStream;
 import org.apache.hadoop.hdfs.DFSInputStream.ReadStatistics;
+import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.compress.CodecPool;
 import org.apache.hadoop.io.compress.CompressionCodec;
@@ -77,6 +78,7 @@ public class ChunkRecordReader implements
         if (inputStream instanceof DFSInputStream) {
             return (DFSInputStream) inputStream;
         } else {
+            IOUtils.closeStream(fileIn);
             throw new IncompatibleInputStreamException(inputStream.getClass());
         }
     }
