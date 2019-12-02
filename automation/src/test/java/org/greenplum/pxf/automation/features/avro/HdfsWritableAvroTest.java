@@ -268,35 +268,35 @@ public class HdfsWritableAvroTest extends BaseFeature {
 
     private void insertPrimitives(String exTable) throws Exception {
         gpdb.runQuery("INSERT INTO " + exTable + "_writable " + "SELECT " +
-                "i," +                                             // type_int
-                "i*100000000000," +                                // type_long
-                "i+1.0001," +                                      // type_float
-                "i*100000.0001," +                                 // type_double
-                "format('row_%s',i::varchar(255))," +              // type_string
-                "format('bytes for %s',i::varchar(255))::bytea," + // type_bytes
-                "CASE WHEN (i%2) = 0 THEN TRUE ELSE FALSE END " +  // type_boolean
+                "i, " +                                             // type_int
+                "i*100000000000, " +                                // type_long
+                "i+1.0001, " +                                      // type_float
+                "i*100000.0001, " +                                 // type_double
+                "'row_' || i::varchar(255), " +                     // type_string
+                "('bytes for ' || i::varchar(255))::bytea, " +      // type_bytes
+                "CASE WHEN (i%2) = 0 THEN TRUE ELSE FALSE END " +   // type_boolean
                 "from generate_series(1, 100) s(i);");
     }
 
     private void insertComplex(String gpdbTable) throws Exception {
         gpdb.runQuery("INSERT INTO " + gpdbTable + "_writable " + " SELECT " +
-                "i," +
-                "format('(%s, %s)',CASE WHEN (i%2) = 0 THEN FALSE ELSE TRUE END,(i*2)::varchar(255))::struct," +
+                "i, " +
+                "('(' || CASE WHEN (i%2) = 0 THEN FALSE ELSE TRUE END || ',' || (i*2)::varchar(255) || ')')::struct, " +
                 "CASE WHEN (i%2) = 0 THEN 'sad' ELSE 'happy' END::mood," +
-                "format('{%s,%s,%s}',i::varchar(255),(i*10)::varchar(255),(i*100)::varchar(255))::BIGINT[]," +
-                "format('{%s,%s,%s}',(i*1.0001)::varchar(255),((i*10.00001)*10)::varchar(255),((i*100.000001)*100)::varchar(255))::NUMERIC(8,1)[]," +
-                "format('{\"item %s\",\"item %s\",\"item %s\"}',((i-1)*10)::varchar(255),(i*10)::varchar(255),((i+1)*10)::varchar(255))::TEXT[]" +
+                "('{' || i::varchar(255) || ',' || (i*10)::varchar(255) || ',' || (i*100)::varchar(255) || '}')::BIGINT[], " +
+                "('{' || (i*1.0001)::varchar(255) || ',' || ((i*10.00001)*10)::varchar(255) || ',' || ((i*100.000001)*100)::varchar(255) || '}')::NUMERIC(8,1)[], " +
+                "('{\"item ' || ((i-1)*10)::varchar(255) || '\",\"item ' || (i*10)::varchar(255) || '\",\"item ' || ((i+1)*10)::varchar(255) || '\"}')::TEXT[] " +
                 "from generate_series(1, 100) s(i);");
     }
 
     private void insertComplexWithNulls(String gpdbTable) throws Exception {
         gpdb.runQuery("INSERT INTO " + gpdbTable + "_writable " + " SELECT " +
-                "i," +
-                "format('(%s, %s)',CASE WHEN (i%2) = 0 THEN FALSE ELSE TRUE END,(i*2)::varchar(255))::struct," +
-                "CASE WHEN (i%3) = 0 THEN 'sad' WHEN (i%2) = 0 THEN 'happy' ELSE NULL END::mood," +
-                "format('{%s,%s,%s}',i::varchar(255),(i*10)::varchar(255),(i*100)::varchar(255))::BIGINT[]," +
-                "format('{%s,%s,%s}',(i*1.0001)::varchar(255),((i*10.00001)*10)::varchar(255),((i*100.000001)*100)::varchar(255))::NUMERIC(8,1)[]," +
-                "format('{\"item %s\",\"item %s\",\"item %s\"}',((i-1)*10)::varchar(255),(i*10)::varchar(255),((i+1)*10)::varchar(255))::TEXT[]" +
+                "i, " +
+                "('(' || CASE WHEN (i%2) = 0 THEN FALSE ELSE TRUE END || ', ' || (i*2)::varchar(255) || ')')::struct, " +
+                "CASE WHEN (i%3) = 0 THEN 'sad' WHEN (i%2) = 0 THEN 'happy' ELSE NULL END::mood, " +
+                "('{' || i::varchar(255) || ',' || (i*10)::varchar(255) || ',' || (i*100)::varchar(255) || '}')::BIGINT[], " +
+                "('{' || (i*1.0001)::varchar(255) || ',' || ((i*10.00001)*10)::varchar(255) || ',' || ((i*100.000001)*100)::varchar(255) || '}')::NUMERIC(8,1)[], " +
+                "('{\"item ' || ((i-1)*10)::varchar(255) || '\",\"item ' || (i*10)::varchar(255) || '\",\"item ' || ((i+1)*10)::varchar(255) || '\"}')::TEXT[] " +
                 "from generate_series(1, 100) s(i);");
     }
 
