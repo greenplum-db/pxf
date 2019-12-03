@@ -400,7 +400,8 @@ public class HdfsReadableAvroTest extends BaseFeature {
      *
      * @throws Exception
      */
-    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    // TODO: Add back to HCFS group after updating Google dependency
+    @Test(groups = {"features", "gpdb", "security"})
     public void avroFileNameWithSpaces() throws Exception {
 
         exTable.setName("avro_in_seq_arrays");
