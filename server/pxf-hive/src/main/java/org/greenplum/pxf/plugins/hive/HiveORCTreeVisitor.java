@@ -50,17 +50,9 @@ public class HiveORCTreeVisitor implements TreeVisitor {
 
     @Override
     public void before(Node node) {
-    }
-
-    @Override
-    public void visit(Node node) {
-        if (node == null)
-            return;
-
         if (node instanceof OperatorNode) {
             OperatorNode operatorNode = (OperatorNode) node;
             Operator operator = operatorNode.getOperator();
-
             if (operator.isLogical()) {
                 // AND / OR / NOT
                 switch (operator) {
@@ -74,8 +66,18 @@ public class HiveORCTreeVisitor implements TreeVisitor {
                         filterBuilder.startNot();
                         break;
                 }
-                this.hasLogicalOperators = true;
-            } else {
+                hasLogicalOperators = true;
+            }
+        }
+    }
+
+    @Override
+    public void visit(Node node) {
+        if (node instanceof OperatorNode) {
+            OperatorNode operatorNode = (OperatorNode) node;
+            Operator operator = operatorNode.getOperator();
+
+            if (!operator.isLogical()) {
                 if (!hasLogicalOperators) {
                     /*
                      * If there is only a single filter it will need special
@@ -96,9 +98,7 @@ public class HiveORCTreeVisitor implements TreeVisitor {
     public void after(Node node) {
         if (node instanceof OperatorNode) {
             OperatorNode operatorNode = (OperatorNode) node;
-            Operator operator = operatorNode.getOperator();
-
-            if (operator.isLogical()) {
+            if (operatorNode.getOperator().isLogical()) {
                 // AND / OR / NOT
                 filterBuilder.end();
             }

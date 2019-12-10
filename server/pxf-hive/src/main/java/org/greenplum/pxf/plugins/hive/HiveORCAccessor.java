@@ -59,7 +59,7 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
     private static final int KRYO_BUFFER_SIZE = 4 * 1024;
     private static final int KRYO_MAX_BUFFER_SIZE = 10 * 1024 * 1024;
 
-    private static final EnumSet<Operator> SUPPORTED_OPERATORS =
+    static final EnumSet<Operator> SUPPORTED_OPERATORS =
             EnumSet.of(
                     Operator.LESS_THAN,
                     Operator.GREATER_THAN,
@@ -75,6 +75,7 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
                     Operator.NOT
             );
     private static final TreePruner TREE_PRUNER = new BaseTreePruner(SUPPORTED_OPERATORS);
+    private static final TreeTraverser TREE_TRAVERSER = new TreeTraverser();
 
     Reader orcReader;
 
@@ -149,7 +150,7 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
         root = TREE_PRUNER.prune(root);
 
         HiveORCTreeVisitor treeVisitor = new HiveORCTreeVisitor(context.getTupleDescription(), configuration);
-        new TreeTraverser().inOrderTraversal(root, treeVisitor);
+        TREE_TRAVERSER.inOrderTraversal(root, treeVisitor);
 
         SearchArgument.Builder filterBuilder = treeVisitor.getFilterBuilder();
         SearchArgument searchArgument = filterBuilder.build();

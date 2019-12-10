@@ -20,13 +20,13 @@ package org.greenplum.pxf.plugins.hive;
  */
 
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -48,9 +48,11 @@ import java.util.List;
  * </ol>
  */
 public class HiveInputFormatFragmenter extends HiveDataFragmenter {
-    private static final Log LOG = LogFactory.getLog(HiveInputFormatFragmenter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(HiveInputFormatFragmenter.class);
 
-    /** Defines the Hive input formats currently supported in pxf */
+    /**
+     * Defines the Hive input formats currently supported in pxf
+     */
     public enum PXF_HIVE_INPUT_FORMATS {
         RC_FILE_INPUT_FORMAT,
         TEXT_FILE_INPUT_FORMAT,
@@ -69,18 +71,14 @@ public class HiveInputFormatFragmenter extends HiveDataFragmenter {
         int hiveColumnsSize = tbl.getSd().getColsSize();
         int hivePartitionsSize = tbl.getPartitionKeysSize();
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Hive table: " + hiveColumnsSize + " fields, "
-                    + hivePartitionsSize + " partitions. " + "GPDB table: "
-                    + columnsSize + " fields.");
-        }
+        LOG.debug("Hive table: {} fields, {} partitions. GPDB table: {} fields.",
+                hiveColumnsSize, hivePartitionsSize, columnsSize);
 
         // check schema size
         if (columnsSize != (hiveColumnsSize + hivePartitionsSize)) {
-            throw new IllegalArgumentException("Hive table schema ("
-                    + hiveColumnsSize + " fields, " + hivePartitionsSize
-                    + " partitions) " + "doesn't match PXF table ("
-                    + columnsSize + " fields)");
+            throw new IllegalArgumentException(
+                    String.format("Hive table schema (%d fields, %d partitions) doesn't match PXF table (%d fields)",
+                            hiveColumnsSize, hivePartitionsSize, columnsSize));
         }
 
         int index = 0;
