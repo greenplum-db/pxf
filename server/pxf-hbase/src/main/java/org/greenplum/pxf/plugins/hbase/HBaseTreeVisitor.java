@@ -326,12 +326,24 @@ public class HBaseTreeVisitor implements TreeVisitor {
         }
     }
 
+    /**
+     * Sets the start key. Only allows for setting the start key during the
+     * first call. Subsequent calls trying to set the start key will be ignored
+     *
+     * @param startKey the start key
+     */
     private void setStartKey(byte[] startKey) {
         if (startKeyAssigned) return;
         this.startKey = startKey;
         this.startKeyAssigned = true;
     }
 
+    /**
+     * Sets the end key. Only allows for setting the end key during the
+     * first call. Subsequent calls trying to set the end key will be ignored
+     *
+     * @param endKey the end key
+     */
     private void setEndKey(byte[] endKey) {
         if (endKeyAssigned) return;
         this.endKey = endKey;

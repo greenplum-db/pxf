@@ -2,7 +2,11 @@ package org.greenplum.pxf.plugins.hive;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
-import org.greenplum.pxf.api.filter.*;
+import org.greenplum.pxf.api.filter.BaseTreePruner;
+import org.greenplum.pxf.api.filter.FilterParser;
+import org.greenplum.pxf.api.filter.Node;
+import org.greenplum.pxf.api.filter.TreePruner;
+import org.greenplum.pxf.api.filter.TreeTraverser;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.junit.Before;
 import org.junit.Test;
@@ -11,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.greenplum.pxf.plugins.hive.HiveORCAccessor.SUPPORTED_OPERATORS;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
 
 public class HiveORCTreeVisitorTest {
 
