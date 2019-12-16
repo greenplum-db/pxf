@@ -12,17 +12,17 @@ import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.filter.BaseTreePruner;
 import org.greenplum.pxf.api.filter.FilterParser;
 import org.greenplum.pxf.api.filter.Node;
 import org.greenplum.pxf.api.filter.Operator;
-import org.greenplum.pxf.api.filter.TreePruner;
+import org.greenplum.pxf.api.filter.SupportedOperatorPruner;
 import org.greenplum.pxf.api.filter.TreeTraverser;
+import org.greenplum.pxf.api.filter.TreeVisitor;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hbase.HBaseAccessor;
-import org.greenplum.pxf.plugins.hbase.HBaseTreeVisitor;
+import org.greenplum.pxf.plugins.hbase.HBaseFilterBuilder;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseColumnDescriptor;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseTupleDescription;
 
@@ -56,7 +56,7 @@ public class HBaseAccessorWithFilter extends BasePlugin implements Accessor {
                     Operator.OR
             );
 
-    private static TreePruner TREE_PRUNER = new BaseTreePruner(SUPPORTED_OPERATORS);
+    private static TreeVisitor TREE_PRUNER = new SupportedOperatorPruner(SUPPORTED_OPERATORS);
     private static TreeTraverser TREE_TRAVERSER = new TreeTraverser();
 
     private HBaseTupleDescription tupleDescription;
@@ -277,9 +277,9 @@ public class HBaseAccessorWithFilter extends BasePlugin implements Accessor {
         if ((filterStr == null) || filterStr.isEmpty() || "null".equals(filterStr))
             return;
 
-        HBaseTreeVisitor hBaseTreeVisitor = new HBaseTreeVisitor(tupleDescription);
+        HBaseFilterBuilder hBaseTreeVisitor = new HBaseFilterBuilder(tupleDescription);
         Node root = new FilterParser().parse(filterStr.getBytes(FilterParser.DEFAULT_CHARSET));
-        root = TREE_PRUNER.prune(root);
+        root = TREE_PRUNER.visit(root);
 
         TREE_TRAVERSER.postOrderTraversal(root, hBaseTreeVisitor);
 
