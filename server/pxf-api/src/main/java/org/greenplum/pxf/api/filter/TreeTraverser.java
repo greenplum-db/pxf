@@ -35,21 +35,4 @@ public class TreeTraverser {
         }
         visitor.after(node);
     }
-
-    /**
-     * Post order depth-first traversal
-     *
-     * @param node    the node
-     * @param visitor the visitor interface implementation
-     */
-    public void postOrderTraversal(Node node, TreeVisitor visitor) {
-        if (node == null) return;
-
-        visitor.before(node);
-        for (Node child : node.getChildren()) {
-            postOrderTraversal(child, visitor);
-        }
-        visitor.visit(node);
-        visitor.after(node);
-    }
 }

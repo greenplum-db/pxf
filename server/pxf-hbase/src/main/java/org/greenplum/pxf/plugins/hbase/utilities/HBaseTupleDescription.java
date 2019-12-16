@@ -39,15 +39,15 @@ import java.util.Map;
 public class HBaseTupleDescription {
     private Map<String, byte[]> tableMapping;
     private List<HBaseColumnDescriptor> tupleDescription;
-    private RequestContext conf;
+    private RequestContext context;
 
     /**
      * Constructs tuple description of the HBase table.
      *
-     * @param conf data containing table tuple description
+     * @param context data containing table tuple description
      */
-    public HBaseTupleDescription(RequestContext conf) {
-        this.conf = conf;
+    public HBaseTupleDescription(RequestContext context) {
+        this.context = context;
         parseHBaseTupleDescription();
     }
 
@@ -71,7 +71,7 @@ public class HBaseTupleDescription {
     }
 
     private void parseHBaseTupleDescription() {
-        tupleDescription = new ArrayList<HBaseColumnDescriptor>();
+        tupleDescription = new ArrayList<>();
         loadUserData();
         createTupleDescription();
     }
@@ -84,7 +84,7 @@ public class HBaseTupleDescription {
     @SuppressWarnings("unchecked")
     private void loadUserData() {
         try {
-            byte[] serializedTableMappings = conf.getFragmentUserData();
+            byte[] serializedTableMappings = context.getFragmentUserData();
 
             // No userdata means no mappings for our table in lookup table
             if (serializedTableMappings == null) {
@@ -100,14 +100,14 @@ public class HBaseTupleDescription {
     }
 
     private void createTupleDescription() {
-        for (int i = 0; i < conf.getColumns(); ++i) {
-            ColumnDescriptor column = conf.getColumn(i);
+        for (int i = 0; i < context.getColumns(); ++i) {
+            ColumnDescriptor column = context.getColumn(i);
             tupleDescription.add(getHBaseColumn(column));
         }
     }
 
     /**
-     * Returns the {@link #HBaseColumnDescriptor} for given column.
+     * Returns the {@link HBaseColumnDescriptor} for given column.
      * If the column has a lookup table mapping, the HBase column name is used.
      *
      * @param column GPDB column description

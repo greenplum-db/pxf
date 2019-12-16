@@ -22,6 +22,7 @@ package org.greenplum.pxf.plugins.jdbc;
 import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.api.filter.CollectionOperand;
 import org.greenplum.pxf.api.filter.ColumnIndexOperand;
+import org.greenplum.pxf.api.filter.Node;
 import org.greenplum.pxf.api.filter.Operand;
 import org.greenplum.pxf.api.filter.ToStringTreeVisitor;
 import org.greenplum.pxf.api.io.DataType;
@@ -32,10 +33,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * A filter parser. Converts filterString into List<BasicFilter>.
- * <p>
- * This class extends {@link \FilterBuilder} and implements its
- * public methods. These should not be used, though.
+ * Converts an expression {@link Node} into a valid predicate for the
+ * target {@link DbProduct}.
+ * This class extends {@link ToStringTreeVisitor} and overrides the required
+ * methods.
  */
 public class JdbcPredicateBuilder extends ToStringTreeVisitor {
 

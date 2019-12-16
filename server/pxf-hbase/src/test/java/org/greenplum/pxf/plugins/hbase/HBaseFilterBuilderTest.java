@@ -213,11 +213,59 @@ public class HBaseFilterBuilderTest {
         assertEquals(0, scvFilterRight.getComparator().compareTo("seq".getBytes()));
     }
 
+    @Test
+    public void testNestedLogicalOperators() throws Exception {
+        // cdate > '2008-02-01' OR (cdate < '2008-12-01' AND amt > 1200)
+        Filter filter = helper("a1c1082s10d2008-02-01o2a1c1082s10d2008-12-01o1a0c23s4d1200o2l0l1", tupleDescription);
+        assertNotNull(filter);
+        assertTrue(filter instanceof FilterList);
+        FilterList filterList = (FilterList) filter;
+        assertEquals(FilterList.Operator.MUST_PASS_ONE, filterList.getOperator());
+
+        assertNotNull(filterList.getFilters());
+        assertEquals(2, filterList.getFilters().size());
+
+        Filter left = filterList.getFilters().get(0);
+        Filter right = filterList.getFilters().get(1);
+        assertTrue(left instanceof SingleColumnValueFilter);
+        assertTrue(right instanceof FilterList);
+
+        SingleColumnValueFilter scvFilterLeft = (SingleColumnValueFilter) left;
+        FilterList scvFilterListRight = (FilterList) right;
+
+        assertEquals(families[1], scvFilterLeft.getFamily());
+        assertEquals(qualifiers[1], scvFilterLeft.getQualifier());
+        assertEquals(CompareFilter.CompareOp.GREATER, scvFilterLeft.getOperator());
+        assertEquals(0, scvFilterLeft.getComparator().compareTo("2008-02-01".getBytes()));
+
+        assertEquals(FilterList.Operator.MUST_PASS_ALL, scvFilterListRight.getOperator());
+        assertNotNull(scvFilterListRight.getFilters());
+        assertEquals(2, scvFilterListRight.getFilters().size());
+
+        left = scvFilterListRight.getFilters().get(0);
+        right = scvFilterListRight.getFilters().get(1);
+        assertTrue(left instanceof SingleColumnValueFilter);
+        assertTrue(right instanceof SingleColumnValueFilter);
+
+        scvFilterLeft = (SingleColumnValueFilter) left;
+        SingleColumnValueFilter scvFilterRight = (SingleColumnValueFilter) right;
+
+        assertEquals(families[1], scvFilterLeft.getFamily());
+        assertEquals(qualifiers[1], scvFilterLeft.getQualifier());
+        assertEquals(CompareFilter.CompareOp.LESS, scvFilterLeft.getOperator());
+        assertEquals(0, scvFilterLeft.getComparator().compareTo("2008-12-01".getBytes()));
+
+        assertEquals(families[0], scvFilterRight.getFamily());
+        assertEquals(qualifiers[0], scvFilterRight.getQualifier());
+        assertEquals(CompareFilter.CompareOp.GREATER, scvFilterRight.getOperator());
+        assertEquals(0, scvFilterRight.getComparator().compareTo("1200".getBytes()));
+    }
+
     private Filter helper(String filterString, HBaseTupleDescription desc) throws Exception {
         HBaseFilterBuilder hBaseFilterBuilder = new HBaseFilterBuilder(desc);
         Node root = new FilterParser().parse(filterString.getBytes());
         root = treePruner.visit(root);
-        treeTraverser.postOrderTraversal(root, hBaseFilterBuilder);
+        treeTraverser.inOrderTraversal(root, hBaseFilterBuilder);
 
         return hBaseFilterBuilder.buildFilter();
     }

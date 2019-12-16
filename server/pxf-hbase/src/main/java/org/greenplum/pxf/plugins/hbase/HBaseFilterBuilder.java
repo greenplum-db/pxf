@@ -23,7 +23,6 @@ import org.greenplum.pxf.plugins.hbase.utilities.HBaseFloatComparator;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseIntegerComparator;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseTupleDescription;
 
-
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
@@ -71,68 +70,49 @@ public class HBaseFilterBuilder implements TreeVisitor {
     private byte[] endKey;
     private byte[] startKey;
     private Deque<Filter> filterQueue;
+    private Filter currentFilter;
     private HBaseTupleDescription tupleDescription;
-
-    /**
-     * Stores the index of the last processed column
-     */
-    protected int lastIndex;
-
-    /**
-     * Stores the last operand visited
-     */
-    private Operand lastOperand;
 
     public HBaseFilterBuilder(HBaseTupleDescription tupleDescription) {
         this.filterQueue = new LinkedList<>();
         this.tupleDescription = tupleDescription;
         this.startKey = HConstants.EMPTY_START_ROW;
         this.endKey = HConstants.EMPTY_END_ROW;
-
     }
 
     @Override
     public Node before(Node node) {
+        if (node instanceof OperatorNode) {
+            OperatorNode operatorNode = (OperatorNode) node;
+            Operator operator = operatorNode.getOperator();
+            if (operator.isLogical()) {
+                Filter filter = new FilterList(LOGICAL_OPERATORS_MAP.get(operator));
+                processFilter(filter);
+                filterQueue.push(filter);
+            }
+        }
         return node;
     }
 
     @Override
     public Node visit(Node node) {
-        if (node == null) return null;
+        if (node instanceof OperatorNode) {
+            OperatorNode operatorNode = (OperatorNode) node;
+            Operator operator = operatorNode.getOperator();
 
-        if (node instanceof ColumnIndexOperand) {
-            ColumnIndexOperand columnIndexOperand = (ColumnIndexOperand) node;
-
-            /* We need the column index (column is guaranteed to be on the left,
-             * so it always comes first. The column index is needed to get the
-             * column type. The column type information is required to determine
-             * how the value will be processed
-             */
-            lastIndex = columnIndexOperand.index();
-        } else if (node instanceof Operand) {
-
-            /*
-             * Store the last operand used. This value will be processed by
-             * basic operators in processSimpleColumnOperator
-             * (i.e >, =, <, etc.)
-             */
-            lastOperand = (Operand) node;
-        } else {
-
-            HBaseColumnDescriptor hBaseColumn = tupleDescription.getColumn(lastIndex);
-
-            if (node instanceof OperatorNode) {
-                OperatorNode operatorNode = (OperatorNode) node;
-                Operator operator = operatorNode.getOperator();
+            if (!operator.isLogical()) {
+                ColumnIndexOperand columnIndexOperand = operatorNode.getColumnIndexOperand();
+                HBaseColumnDescriptor hBaseColumn = tupleDescription.getColumn(columnIndexOperand.index());
+                Filter filter;
 
                 if (operator == Operator.IS_NULL || operator == Operator.IS_NOT_NULL) {
-                    processNullOperator(hBaseColumn, operator);
-                } else if (operator.isLogical()) {
-                    // Handles AND / OR
-                    processLogicalOperator(operator);
+                    filter = processNullOperator(hBaseColumn, operator);
                 } else {
-                    processSimpleColumnOperator(hBaseColumn, operator);
+                    Operand data = operatorNode.getOperand().orElse(null);
+                    filter = processSimpleColumnOperator(hBaseColumn, operator, data);
                 }
+
+                processFilter(filter);
             }
         }
         return node;
@@ -140,6 +120,13 @@ public class HBaseFilterBuilder implements TreeVisitor {
 
     @Override
     public Node after(Node node) {
+        if (node instanceof OperatorNode) {
+            OperatorNode operatorNode = (OperatorNode) node;
+            Operator operator = operatorNode.getOperator();
+            if (operator.isLogical()) {
+                currentFilter = filterQueue.poll();
+            }
+        }
         return node;
     }
 
@@ -149,13 +136,10 @@ public class HBaseFilterBuilder implements TreeVisitor {
      * @return filter object
      */
     public Filter buildFilter() {
-        Filter result = filterQueue.poll();
-
         if (!filterQueue.isEmpty()) {
             throw new IllegalStateException("Filter queue is not empty after visiting all nodes");
         }
-
-        return result;
+        return currentFilter;
     }
 
     /**
@@ -183,71 +167,82 @@ public class HBaseFilterBuilder implements TreeVisitor {
     }
 
     /**
-     * Handles operation between already calculated expressions.
-     * Currently only {@code AND}, in the future {@code OR} can be added.
-     * <p>
-     * Four cases here:
-     * <ol>
-     * <li>Both are simple filters.</li>
-     * <li>Left is a FilterList and right is a filter.</li>
-     * <li>Left is a filter and right is a FilterList.</li>
-     * <li>Both are FilterLists.</li>
-     * </ol>
-     * <p>
-     * Currently, 1, 2 can occur, since no parenthesis are used.
+     * If the result is of type {@link FilterList}, add the {@link Filter} to
+     * the filter list. Otherwise, set it as the resulting {@link Filter}
+     *
+     * @param filter the filter to process
      */
-    private void processLogicalOperator(Operator operator) {
-        Filter right = filterQueue.poll();
-        Filter left = filterQueue.poll();
-        // FIXME: in case we have n operands
-        filterQueue.push(new FilterList(LOGICAL_OPERATORS_MAP.get(operator), left, right));
+    private void processFilter(Filter filter) {
+        Filter head = filterQueue.peek();
+        if (head instanceof FilterList) {
+            /*
+             * Handles operation between already calculated expressions.
+             * Currently only {@code AND}, in the future {@code OR} can be added.
+             * Four cases here:
+             *  - Both are simple filters.
+             *  - Left is a FilterList and right is a filter.
+             *  - Left is a filter and right is a FilterList.
+             *  - Both are FilterLists.
+             */
+            ((FilterList) head).addFilter(filter);
+        }
+        currentFilter = filter;
     }
 
     /**
      * Handles simple column-operator-constant expressions.
      * Creates a special filter in the case the column is the row key column.
+     *
+     * @param hBaseColumn the HBase column
+     * @param operator    the simple column operator
+     * @param data        the optional operand
+     * @return the {@link Filter} for the given simple column operator
      */
-    private void processSimpleColumnOperator(HBaseColumnDescriptor hBaseColumn, Operator operator) {
+    private Filter processSimpleColumnOperator(HBaseColumnDescriptor hBaseColumn, Operator operator, Operand data) {
         // The value of lastOperand has to be stored after visiting
         // the operand child of this node.
         ByteArrayComparable comparator = getComparator(
                 hBaseColumn.columnTypeCode(),
-                lastOperand);
+                data);
 
         /*
          * If row key is of type TEXT, allow filter in start/stop row
          * key API in HBaseAccessor/Scan object.
          */
-        if (textualRowKey(hBaseColumn)) {
-            storeStartEndKeys(operator, lastOperand.toString());
+        if (data != null && textualRowKey(hBaseColumn)) {
+            storeStartEndKeys(operator, data.toString());
         }
 
         if (hBaseColumn.isKeyColumn()) {
             // Special filter for row key column
-            filterQueue.push(new RowFilter(
+            return new RowFilter(
                     OPERATORS_MAP.get(operator),
-                    comparator));
+                    comparator);
         } else {
-            filterQueue.push(new SingleColumnValueFilter(
+            return new SingleColumnValueFilter(
                     hBaseColumn.columnFamilyBytes(),
                     hBaseColumn.qualifierBytes(),
                     OPERATORS_MAP.get(operator),
-                    comparator));
+                    comparator);
         }
     }
 
     /**
      * Handles IS NULL and IS NOT NULL operators
+     *
+     * @param hBaseColumn the HBase column
+     * @param operator    the IS NULL/IS NOT NULL operator
+     * @return the filter for the given operator
      */
-    private void processNullOperator(HBaseColumnDescriptor hBaseColumn, Operator operator) {
+    private Filter processNullOperator(HBaseColumnDescriptor hBaseColumn, Operator operator) {
         CompareFilter.CompareOp compareOperation = (operator == Operator.IS_NULL) ?
                 CompareFilter.CompareOp.EQUAL :
                 CompareFilter.CompareOp.NOT_EQUAL;
-        filterQueue.push(new SingleColumnValueFilter(
+        return new SingleColumnValueFilter(
                 hBaseColumn.columnFamilyBytes(),
                 hBaseColumn.qualifierBytes(),
                 compareOperation,
-                new NullComparator()));
+                new NullComparator());
     }
 
     /**
