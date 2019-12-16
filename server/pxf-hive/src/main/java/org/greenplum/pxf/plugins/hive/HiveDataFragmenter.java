@@ -38,8 +38,8 @@ import org.apache.hadoop.mapred.TextInputFormat;
 import org.greenplum.pxf.api.filter.FilterParser;
 import org.greenplum.pxf.api.filter.Node;
 import org.greenplum.pxf.api.filter.Operator;
-import org.greenplum.pxf.api.filter.TreePruner;
 import org.greenplum.pxf.api.filter.TreeTraverser;
+import org.greenplum.pxf.api.filter.TreeVisitor;
 import org.greenplum.pxf.api.model.BaseConfigurationFactory;
 import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.model.Fragment;
@@ -188,11 +188,11 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
             List<ColumnDescriptor> columnDescriptors = context.getTupleDescription();
 
             HiveTreeVisitor hiveTreeVisitor = new HiveTreeVisitor(columnDescriptors);
-            TreePruner treePruner = new HiveTreePruner(SUPPORTED_OPERATORS,
+            TreeVisitor hivePartitionPruner = new HivePartitionPruner(SUPPORTED_OPERATORS,
                     canPushDownIntegral, partitionKeyTypes, columnDescriptors);
 
             Node root = new FilterParser().parse(context.getFilterString().getBytes());
-            root = treePruner.prune(root);
+            root = hivePartitionPruner.visit(root);
             new TreeTraverser().inOrderTraversal(root, hiveTreeVisitor);
 
             // Generate filter string for retrieve match pxf filter/hive partition name

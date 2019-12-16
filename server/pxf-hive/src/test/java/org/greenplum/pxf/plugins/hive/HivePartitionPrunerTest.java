@@ -27,8 +27,8 @@ import org.greenplum.pxf.api.filter.Node;
 import org.greenplum.pxf.api.filter.Operand;
 import org.greenplum.pxf.api.filter.Operator;
 import org.greenplum.pxf.api.filter.OperatorNode;
-import org.greenplum.pxf.api.filter.TreePruner;
 import org.greenplum.pxf.api.filter.TreeTraverser;
+import org.greenplum.pxf.api.filter.TreeVisitor;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,10 +45,10 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-public class HiveTreePrunerTest {
+public class HivePartitionPrunerTest {
 
     private HiveTreeVisitor visitor;
-    private TreePruner treePruner;
+    private TreeVisitor treePruner;
     private FilterParser parser;
     private TreeTraverser treeTraverser;
 
@@ -57,7 +57,7 @@ public class HiveTreePrunerTest {
         treeTraverser = new TreeTraverser();
         parser = new FilterParser();
         visitor = new HiveTreeVisitor(getColumnDescriptors());
-        treePruner = new HiveTreePruner(SUPPORTED_OPERATORS,
+        treePruner = new HivePartitionPruner(SUPPORTED_OPERATORS,
                 false, getPartitionKeyTypes(), getColumnDescriptors());
     }
 
@@ -75,7 +75,7 @@ public class HiveTreePrunerTest {
 
     @Test
     public void testQueryWithNotOperator() throws Exception {
-        treePruner = new HiveTreePruner(SUPPORTED_OPERATORS,
+        treePruner = new HivePartitionPruner(SUPPORTED_OPERATORS,
                 true, getPartitionKeyTypes(), getColumnDescriptors());
 
         // (NOT (_3_ = 4) OR NOT (_2_ = s_9))
@@ -118,7 +118,7 @@ public class HiveTreePrunerTest {
     public void parseUnsupportedIsNullExpression() throws Exception {
         // _1_ IS NULL
         Node root = parser.parse("a1o8".getBytes());
-        root = treePruner.prune(root);
+        root = treePruner.visit(root);
         assertNull(root);
     }
 
@@ -133,13 +133,13 @@ public class HiveTreePrunerTest {
     public void parseUnsupportedIsNotNullExpression() throws Exception {
         // _1_ IS NOT NULL
         Node root = parser.parse("a1o9".getBytes());
-        root = treePruner.prune(root);
+        root = treePruner.visit(root);
         assertNull(root);
     }
 
     @Test
     public void testBuildFilterWithCompatibleAndIncompatiblePredicates() throws Exception {
-        treePruner = new HiveTreePruner(SUPPORTED_OPERATORS,
+        treePruner = new HivePartitionPruner(SUPPORTED_OPERATORS,
                 true, getPartitionKeyTypes(), getColumnDescriptors());
 
         // ((_1_ LIKE row1 AND _2_ < 999) AND _1_ = seq)
@@ -157,7 +157,7 @@ public class HiveTreePrunerTest {
 
         List<ColumnDescriptor> columnDescriptors = Lists.newArrayList(null, null, null, columnDescriptor);
         visitor = new HiveTreeVisitor(columnDescriptors);
-        treePruner = new HiveTreePruner(SUPPORTED_OPERATORS,
+        treePruner = new HivePartitionPruner(SUPPORTED_OPERATORS,
                 false, partitionKeyTypes, columnDescriptors);
 
         // _3_ <> 2016-01-03
@@ -179,7 +179,7 @@ public class HiveTreePrunerTest {
     @Test
     public void testIntegralPushDownTrue() throws Exception {
 
-        treePruner = new HiveTreePruner(SUPPORTED_OPERATORS,
+        treePruner = new HivePartitionPruner(SUPPORTED_OPERATORS,
                 true, getPartitionKeyTypes(), getColumnDescriptors());
 
         // _0_ >= 2016-01-03
@@ -220,7 +220,7 @@ public class HiveTreePrunerTest {
 
     @Test
     public void testIntegralPushDownFalse() throws Exception {
-        treePruner = new HiveTreePruner(SUPPORTED_OPERATORS,
+        treePruner = new HivePartitionPruner(SUPPORTED_OPERATORS,
                 false, getPartitionKeyTypes(), getColumnDescriptors());
 
         // _0_ >= 2016-01-03
@@ -268,7 +268,7 @@ public class HiveTreePrunerTest {
         partitionKeyTypes.put("stringColumn", "string");
         partitionKeyTypes.put("intColumn", "int");
 
-        treePruner = new HiveTreePruner(SUPPORTED_OPERATORS,
+        treePruner = new HivePartitionPruner(SUPPORTED_OPERATORS,
                 true, partitionKeyTypes, getColumnDescriptors());
 
         // Terminology:
@@ -324,9 +324,9 @@ public class HiveTreePrunerTest {
         return partitionKeyTypes;
     }
 
-    private void helper(String expected, String filterString, TreePruner pruner, HiveTreeVisitor treeVisitor) throws Exception {
+    private void helper(String expected, String filterString, TreeVisitor pruner, HiveTreeVisitor treeVisitor) throws Exception {
         Node root = parser.parse(filterString.getBytes());
-        root = pruner.prune(root);
+        root = pruner.visit(root);
         treeTraverser.inOrderTraversal(root, treeVisitor);
         assertEquals(expected, treeVisitor.toString());
         treeVisitor.reset();

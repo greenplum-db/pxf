@@ -1,7 +1,7 @@
 package org.greenplum.pxf.plugins.hive;
 
 import org.apache.hadoop.hive.serde.serdeConstants;
-import org.greenplum.pxf.api.filter.BaseTreePruner;
+import org.greenplum.pxf.api.filter.SupportedOperatorPruner;
 import org.greenplum.pxf.api.filter.ColumnIndexOperand;
 import org.greenplum.pxf.api.filter.Node;
 import org.greenplum.pxf.api.filter.Operator;
@@ -17,20 +17,20 @@ import java.util.Optional;
 
 /**
  * Prune the tree based on partition keys and whether or not pushing down
- * of integrals is enabled on the metastore.
+ * of integrals is enabled on the MetaStore.
  */
-public class HiveTreePruner extends BaseTreePruner {
+public class HivePartitionPruner extends SupportedOperatorPruner {
 
-    private static final Logger LOG = LoggerFactory.getLogger(HiveTreePruner.class);
+    private static final Logger LOG = LoggerFactory.getLogger(HivePartitionPruner.class);
 
     private final boolean canPushDownIntegral;
     private final Map<String, String> partitionKeys;
     private final List<ColumnDescriptor> columnDescriptors;
 
-    public HiveTreePruner(EnumSet<Operator> supportedOperators,
-                          boolean canPushDownIntegral,
-                          Map<String, String> partitionKeys,
-                          List<ColumnDescriptor> columnDescriptors) {
+    public HivePartitionPruner(EnumSet<Operator> supportedOperators,
+                               boolean canPushDownIntegral,
+                               Map<String, String> partitionKeys,
+                               List<ColumnDescriptor> columnDescriptors) {
         super(supportedOperators);
         this.canPushDownIntegral = canPushDownIntegral;
         this.partitionKeys = partitionKeys;
@@ -38,14 +38,22 @@ public class HiveTreePruner extends BaseTreePruner {
     }
 
     @Override
-    public Node prune(Node node) {
+    public Node visit(Node node) {
         if (node instanceof OperatorNode &&
                 !isFilterCompatible((OperatorNode) node)) {
             return null;
         }
-        return super.prune(node);
+        return super.visit(node);
     }
 
+    /**
+     * Returns true when the operator is logical, or for simple operators
+     * true when the column is a partitioned column, and push-down is enabled
+     * for integral types the column type is of string type
+     *
+     * @param operatorNode the operator node
+     * @return true when the filter is compatible, false otherwise
+     */
     private boolean isFilterCompatible(OperatorNode operatorNode) {
         Operator operation = operatorNode.getOperator();
 
@@ -78,7 +86,7 @@ public class HiveTreePruner extends BaseTreePruner {
                         isIntegralSupported && serdeConstants.IntegralTypes.contains(colType)
         );
 
-        LOG.trace("Filter is on a non-partition column or on a partition column that is not supported for pushdown, ignore this filter for column: {}", columnName);
+        LOG.trace("Filter is on a non-partition column or on a partition column that is not supported for push-down, ignore this filter for column: {}", columnName);
         return canPushDown;
     }
 }

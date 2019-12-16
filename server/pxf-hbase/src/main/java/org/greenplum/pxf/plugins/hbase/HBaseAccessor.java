@@ -21,12 +21,12 @@ package org.greenplum.pxf.plugins.hbase;
 
 
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.filter.BaseTreePruner;
 import org.greenplum.pxf.api.filter.FilterParser;
 import org.greenplum.pxf.api.filter.Node;
 import org.greenplum.pxf.api.filter.Operator;
-import org.greenplum.pxf.api.filter.TreePruner;
+import org.greenplum.pxf.api.filter.SupportedOperatorPruner;
 import org.greenplum.pxf.api.filter.TreeTraverser;
+import org.greenplum.pxf.api.filter.TreeVisitor;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.BasePlugin;
@@ -59,8 +59,8 @@ import java.util.EnumSet;
  * The table is divided into several splits. Each accessor instance is assigned a single split.
  * For each region, a Scan object is used to describe the requested rows.
  * <p>
- * The class supports filters using the {@link HBaseTreeVisitor}.
- * Regions can be filtered out according to input from {@link HBaseTreeVisitor}.
+ * The class supports filters using the {@link HBaseFilterBuilder}.
+ * Regions can be filtered out according to input from {@link HBaseFilterBuilder}.
  */
 public class HBaseAccessor extends BasePlugin implements Accessor {
 
@@ -78,7 +78,7 @@ public class HBaseAccessor extends BasePlugin implements Accessor {
                     Operator.OR
             );
 
-    private static TreePruner TREE_PRUNER = new BaseTreePruner(SUPPORTED_OPERATORS);
+    private static TreeVisitor TREE_PRUNER = new SupportedOperatorPruner(SUPPORTED_OPERATORS);
     private static TreeTraverser TREE_TRAVERSER = new TreeTraverser();
 
     private HBaseTupleDescription tupleDescription;
@@ -299,7 +299,7 @@ public class HBaseAccessor extends BasePlugin implements Accessor {
     }
 
     /**
-     * Uses {@link HBaseTreeVisitor} to translate a filter string into a
+     * Uses {@link HBaseFilterBuilder} to translate a filter string into a
      * HBase {@link Filter} object. The result is added as a filter to the
      * Scan object.
      * <p>
@@ -310,16 +310,16 @@ public class HBaseAccessor extends BasePlugin implements Accessor {
             return;
         }
 
-        HBaseTreeVisitor hBaseTreeVisitor = new HBaseTreeVisitor(tupleDescription);
+        HBaseFilterBuilder hBaseFilterBuilder = new HBaseFilterBuilder(tupleDescription);
         Node root = new FilterParser().parse(context.getFilterString().getBytes(FilterParser.DEFAULT_CHARSET));
-        root = TREE_PRUNER.prune(root);
+        root = TREE_PRUNER.visit(root);
 
-        TREE_TRAVERSER.postOrderTraversal(root, hBaseTreeVisitor);
+        TREE_TRAVERSER.postOrderTraversal(root, hBaseFilterBuilder);
 
-        Filter filter = hBaseTreeVisitor.buildFilter();
+        Filter filter = hBaseFilterBuilder.buildFilter();
         scanDetails.setFilter(filter);
 
-        scanStartKey = hBaseTreeVisitor.getStartKey();
-        scanEndKey = hBaseTreeVisitor.getEndKey();
+        scanStartKey = hBaseFilterBuilder.getStartKey();
+        scanEndKey = hBaseFilterBuilder.getEndKey();
     }
 }

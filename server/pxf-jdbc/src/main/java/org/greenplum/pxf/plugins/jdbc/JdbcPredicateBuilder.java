@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
  * This class extends {@link \FilterBuilder} and implements its
  * public methods. These should not be used, though.
  */
-public class JdbcTreeVisitor extends ToStringTreeVisitor {
+public class JdbcPredicateBuilder extends ToStringTreeVisitor {
 
     private final boolean hasPartition;
     private final DbProduct dbProduct;
@@ -49,11 +49,15 @@ public class JdbcTreeVisitor extends ToStringTreeVisitor {
      */
     protected int lastIndex;
 
-    public JdbcTreeVisitor(List<ColumnDescriptor> tupleDescription) {
-        this(null, null, false, tupleDescription);
+    public JdbcPredicateBuilder(DbProduct dbProduct,
+                                List<ColumnDescriptor> tupleDescription) {
+        this(dbProduct, null, false, tupleDescription);
     }
 
-    public JdbcTreeVisitor(DbProduct dbProduct, String quoteString, boolean hasPartition, List<ColumnDescriptor> tupleDescription) {
+    public JdbcPredicateBuilder(DbProduct dbProduct,
+                                String quoteString,
+                                boolean hasPartition,
+                                List<ColumnDescriptor> tupleDescription) {
         this.dbProduct = dbProduct;
         this.quoteString = quoteString;
         this.hasPartition = hasPartition;

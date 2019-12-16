@@ -13,9 +13,9 @@ import static org.greenplum.pxf.api.filter.Operator.OR;
 /**
  * A tree pruner that prunes a tree based on the supported operators.
  */
-public class BaseTreePruner implements TreePruner {
+public class SupportedOperatorPruner implements TreeVisitor {
 
-    private static final Logger LOG = LoggerFactory.getLogger(BaseTreePruner.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SupportedOperatorPruner.class);
 
     private final EnumSet<Operator> supportedOperators;
 
@@ -24,12 +24,17 @@ public class BaseTreePruner implements TreePruner {
      *
      * @param supportedOperators the set of supported operators
      */
-    public BaseTreePruner(EnumSet<Operator> supportedOperators) {
+    public SupportedOperatorPruner(EnumSet<Operator> supportedOperators) {
         this.supportedOperators = supportedOperators;
     }
 
     @Override
-    public Node prune(Node node) {
+    public Node before(Node node) {
+        return null;
+    }
+
+    @Override
+    public Node visit(Node node) {
         if (node == null) return null;
 
         if (node instanceof OperatorNode) {
@@ -47,7 +52,7 @@ public class BaseTreePruner implements TreePruner {
         List<Node> children = node.getChildren();
         for (int i = children.size() - 1; i >= 0; i--) {
             Node child = children.get(i);
-            Node pruned = prune(child);
+            Node pruned = visit(child);
 
             if (pruned == null) {
                 LOG.debug("Child {} at index {} was pruned", child, i);
@@ -117,12 +122,17 @@ public class BaseTreePruner implements TreePruner {
                 LOG.debug("Child with operator {} will be pruned because it has {} children",
                         operator, children.size());
 
-                // NOT needs 1 child
+                // AND needs 2 children / NOT needs 1 child
                 return null;
             }
         }
 
         return node;
+    }
+
+    @Override
+    public Node after(Node node) {
+        return null;
     }
 
     /**

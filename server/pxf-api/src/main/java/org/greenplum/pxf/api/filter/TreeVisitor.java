@@ -10,20 +10,20 @@ public interface TreeVisitor {
      *
      * @param node the Node that will be visited next
      */
-    void before(Node node);
+    Node before(Node node);
 
     /**
      * Called during the visit of a Node
      *
      * @param node the Node being visited
      */
-    void visit(Node node);
+    Node visit(Node node);
 
     /**
      * Called right after the Node has been visited
      *
      * @param node the Node that completed the visit
      */
-    void after(Node node);
+    Node after(Node node);
 
 }

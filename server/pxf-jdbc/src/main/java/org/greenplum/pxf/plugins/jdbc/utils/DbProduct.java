@@ -67,6 +67,18 @@ public enum DbProduct {
         public String wrapDate(Object val) {
             return "date'" + val + "'";
         }
+    },
+
+    S3_SELECT {
+        @Override
+        public String wrapDate(Object val) {
+            return "TO_TIMESTAMP('" + val + "')";
+        }
+
+        @Override
+        public String wrapTimestamp(Object val) {
+            return "TO_TIMESTAMP('" + val + "')";
+        }
     };
 
     /**

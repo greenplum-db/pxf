@@ -1,20 +1,20 @@
 package org.greenplum.pxf.plugins.s3;
 
-import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.api.filter.ColumnIndexOperand;
 import org.greenplum.pxf.api.filter.Operand;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.plugins.jdbc.JdbcTreeVisitor;
+import org.greenplum.pxf.plugins.jdbc.JdbcPredicateBuilder;
+import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
 
 import java.util.List;
 
-public class S3SelectTreeVisitor extends JdbcTreeVisitor {
+public class S3SelectPredicateBuilder extends JdbcPredicateBuilder {
 
     private final boolean usePositionToIdentifyColumn;
 
-    public S3SelectTreeVisitor(boolean usePositionToIdentifyColumn, List<ColumnDescriptor> tupleDescription) {
-        super(tupleDescription);
+    public S3SelectPredicateBuilder(boolean usePositionToIdentifyColumn, List<ColumnDescriptor> tupleDescription) {
+        super(DbProduct.S3_SELECT, tupleDescription);
         this.usePositionToIdentifyColumn = usePositionToIdentifyColumn;
     }
 
@@ -78,23 +78,11 @@ public class S3SelectTreeVisitor extends JdbcTreeVisitor {
     @Override
     protected String serializeValue(DataType type, String value) {
         switch (type) {
-            case SMALLINT:
-            case INTEGER:
-            case BIGINT:
-            case FLOAT8:
-            case REAL:
-            case BOOLEAN:
-                return value;
-            case TEXT:
             case VARCHAR:
             case BPCHAR:
-                return "'" + StringUtils.replace(value, "'", "''") + "'";
-            case DATE:
-            case TIMESTAMP:
-                return "TO_TIMESTAMP('" + value + "')";
-            default:
-                throw new UnsupportedOperationException(String.format(
-                        "Unsupported column type for filtering '%s' ", type.getOID()));
+                type = DataType.TEXT;
+                break;
         }
+        return super.serializeValue(type, value);
     }
 }

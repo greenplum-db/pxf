@@ -30,12 +30,12 @@ import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.mapred.JobConf;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.StatsAccessor;
-import org.greenplum.pxf.api.filter.BaseTreePruner;
 import org.greenplum.pxf.api.filter.FilterParser;
 import org.greenplum.pxf.api.filter.Node;
 import org.greenplum.pxf.api.filter.Operator;
-import org.greenplum.pxf.api.filter.TreePruner;
+import org.greenplum.pxf.api.filter.SupportedOperatorPruner;
 import org.greenplum.pxf.api.filter.TreeTraverser;
+import org.greenplum.pxf.api.filter.TreeVisitor;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.EnumAggregationType;
@@ -74,7 +74,7 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
                     Operator.AND,
                     Operator.NOT
             );
-    private static final TreePruner TREE_PRUNER = new BaseTreePruner(SUPPORTED_OPERATORS);
+    private static final TreeVisitor TREE_PRUNER = new SupportedOperatorPruner(SUPPORTED_OPERATORS);
     private static final TreeTraverser TREE_TRAVERSER = new TreeTraverser();
 
     Reader orcReader;
@@ -147,9 +147,9 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
         String filterStr = context.getFilterString();
 
         Node root = new FilterParser().parse(filterStr.getBytes());
-        root = TREE_PRUNER.prune(root);
+        root = TREE_PRUNER.visit(root);
 
-        HiveORCTreeVisitor treeVisitor = new HiveORCTreeVisitor(context.getTupleDescription(), configuration);
+        HiveORCSearchArgumentBuilder treeVisitor = new HiveORCSearchArgumentBuilder(context.getTupleDescription(), configuration);
         TREE_TRAVERSER.inOrderTraversal(root, treeVisitor);
 
         SearchArgument.Builder filterBuilder = treeVisitor.getFilterBuilder();

@@ -17,7 +17,11 @@ import org.greenplum.pxf.api.filter.Operator;
 import org.greenplum.pxf.api.filter.OperatorNode;
 import org.greenplum.pxf.api.filter.TreeVisitor;
 import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.plugins.hbase.utilities.*;
+import org.greenplum.pxf.plugins.hbase.utilities.HBaseColumnDescriptor;
+import org.greenplum.pxf.plugins.hbase.utilities.HBaseDoubleComparator;
+import org.greenplum.pxf.plugins.hbase.utilities.HBaseFloatComparator;
+import org.greenplum.pxf.plugins.hbase.utilities.HBaseIntegerComparator;
+import org.greenplum.pxf.plugins.hbase.utilities.HBaseTupleDescription;
 
 
 import java.util.Collections;
@@ -45,7 +49,7 @@ import static org.greenplum.pxf.api.io.DataType.TEXT;
  * This is an addition on top of regular filters and does not replace
  * any logic in HBase filter objects.
  */
-public class HBaseTreeVisitor implements TreeVisitor {
+public class HBaseFilterBuilder implements TreeVisitor {
 
     private static final Map<Operator, CompareFilter.CompareOp> OPERATORS_MAP =
             Collections.unmodifiableMap(new HashMap<Operator, CompareFilter.CompareOp>() {{
@@ -79,7 +83,7 @@ public class HBaseTreeVisitor implements TreeVisitor {
      */
     private Operand lastOperand;
 
-    public HBaseTreeVisitor(HBaseTupleDescription tupleDescription) {
+    public HBaseFilterBuilder(HBaseTupleDescription tupleDescription) {
         this.filterQueue = new LinkedList<>();
         this.tupleDescription = tupleDescription;
         this.startKey = HConstants.EMPTY_START_ROW;
@@ -88,12 +92,13 @@ public class HBaseTreeVisitor implements TreeVisitor {
     }
 
     @Override
-    public void before(Node node) {
+    public Node before(Node node) {
+        return node;
     }
 
     @Override
-    public void visit(Node node) {
-        if (node == null) return;
+    public Node visit(Node node) {
+        if (node == null) return null;
 
         if (node instanceof ColumnIndexOperand) {
             ColumnIndexOperand columnIndexOperand = (ColumnIndexOperand) node;
@@ -130,10 +135,12 @@ public class HBaseTreeVisitor implements TreeVisitor {
                 }
             }
         }
+        return node;
     }
 
     @Override
-    public void after(Node node) {
+    public Node after(Node node) {
+        return node;
     }
 
     /**
@@ -192,6 +199,7 @@ public class HBaseTreeVisitor implements TreeVisitor {
     private void processLogicalOperator(Operator operator) {
         Filter right = filterQueue.poll();
         Filter left = filterQueue.poll();
+        // FIXME: in case we have n operands
         filterQueue.push(new FilterList(LOGICAL_OPERATORS_MAP.get(operator), left, right));
     }
 

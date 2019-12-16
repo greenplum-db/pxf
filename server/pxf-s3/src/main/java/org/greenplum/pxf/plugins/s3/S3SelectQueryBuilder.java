@@ -1,13 +1,15 @@
 package org.greenplum.pxf.plugins.s3;
 
-import org.greenplum.pxf.api.filter.BaseTreePruner;
 import org.greenplum.pxf.api.filter.FilterParser;
 import org.greenplum.pxf.api.filter.Node;
 import org.greenplum.pxf.api.filter.Operator;
-import org.greenplum.pxf.api.filter.TreePruner;
+import org.greenplum.pxf.api.filter.SupportedOperatorPruner;
 import org.greenplum.pxf.api.filter.TreeTraverser;
+import org.greenplum.pxf.api.filter.TreeVisitor;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.plugins.jdbc.JdbcPredicateBuilder;
+import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +39,8 @@ public class S3SelectQueryBuilder {
                     Operator.NOT,
                     Operator.OR
             );
-    private static final TreePruner treePruner = new BaseTreePruner(SUPPORTED_OPERATORS);
+    private static final TreeVisitor PRUNER = new SupportedOperatorPruner(SUPPORTED_OPERATORS);
+    private static final String QUOTE_STRING = "\"";
 
     private final RequestContext context;
     private List<ColumnDescriptor> columns;
@@ -79,13 +82,13 @@ public class S3SelectQueryBuilder {
     private void buildWhereSQL(StringBuilder query) {
         if (!context.hasFilter()) return;
 
-        S3SelectTreeVisitor s3SelectTreeVisitor = new S3SelectTreeVisitor(
+        S3SelectPredicateBuilder s3SelectTreeVisitor = new S3SelectPredicateBuilder(
                 usePositionToIdentifyColumn,
                 context.getTupleDescription());
 
         try {
             Node root = new FilterParser().parse(context.getFilterString().getBytes());
-            root = treePruner.prune(root);
+            root = PRUNER.visit(root);
             new TreeTraverser().inOrderTraversal(root, s3SelectTreeVisitor);
 
             // No exceptions were thrown, change the provided query

@@ -24,11 +24,11 @@ import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.filter.NullComparator;
 import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
-import org.greenplum.pxf.api.filter.BaseTreePruner;
 import org.greenplum.pxf.api.filter.FilterParser;
 import org.greenplum.pxf.api.filter.Node;
-import org.greenplum.pxf.api.filter.TreePruner;
+import org.greenplum.pxf.api.filter.SupportedOperatorPruner;
 import org.greenplum.pxf.api.filter.TreeTraverser;
+import org.greenplum.pxf.api.filter.TreeVisitor;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseColumnDescriptor;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseIntegerComparator;
@@ -47,9 +47,9 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class HBaseTreeVisitorTest {
+public class HBaseFilterBuilderTest {
 
-    private static TreePruner treePruner = new BaseTreePruner(SUPPORTED_OPERATORS);
+    private static TreeVisitor treePruner = new SupportedOperatorPruner(SUPPORTED_OPERATORS);
     private static TreeTraverser treeTraverser = new TreeTraverser();
 
     @Rule
@@ -214,11 +214,11 @@ public class HBaseTreeVisitorTest {
     }
 
     private Filter helper(String filterString, HBaseTupleDescription desc) throws Exception {
-        HBaseTreeVisitor hBaseTreeVisitor = new HBaseTreeVisitor(desc);
+        HBaseFilterBuilder hBaseFilterBuilder = new HBaseFilterBuilder(desc);
         Node root = new FilterParser().parse(filterString.getBytes());
-        root = treePruner.prune(root);
-        treeTraverser.postOrderTraversal(root, hBaseTreeVisitor);
+        root = treePruner.visit(root);
+        treeTraverser.postOrderTraversal(root, hBaseFilterBuilder);
 
-        return hBaseTreeVisitor.buildFilter();
+        return hBaseFilterBuilder.buildFilter();
     }
 }

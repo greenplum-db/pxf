@@ -6,7 +6,7 @@ import java.util.List;
 /**
  * A node in the expression tree
  */
-public abstract class Node {
+public class Node {
 
     private List<Node> children = new ArrayList<>();
 

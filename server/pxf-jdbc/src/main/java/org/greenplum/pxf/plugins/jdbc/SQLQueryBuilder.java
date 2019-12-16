@@ -21,12 +21,12 @@ import org.apache.commons.lang.SerializationUtils;
  * under the License.
  */
 
-import org.greenplum.pxf.api.filter.BaseTreePruner;
 import org.greenplum.pxf.api.filter.FilterParser;
 import org.greenplum.pxf.api.filter.Node;
 import org.greenplum.pxf.api.filter.Operator;
-import org.greenplum.pxf.api.filter.TreePruner;
+import org.greenplum.pxf.api.filter.SupportedOperatorPruner;
 import org.greenplum.pxf.api.filter.TreeTraverser;
+import org.greenplum.pxf.api.filter.TreeVisitor;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
@@ -45,7 +45,7 @@ import java.util.stream.Collectors;
 /**
  * SQL query builder.
  * <p>
- * Uses {@link JdbcTreeVisitor} to get array of filters
+ * Uses {@link JdbcPredicateBuilder} to get array of filters
  */
 public class SQLQueryBuilder {
 
@@ -70,7 +70,7 @@ public class SQLQueryBuilder {
                     Operator.NOT,
                     Operator.OR
             );
-    private static final TreePruner treePruner = new BaseTreePruner(SUPPORTED_OPERATORS);
+    private static final TreeVisitor treePruner = new SupportedOperatorPruner(SUPPORTED_OPERATORS);
 
     private RequestContext context;
     private DatabaseMetaData databaseMetaData;
@@ -262,7 +262,7 @@ public class SQLQueryBuilder {
 
         boolean hasPartition = context.getOption("PARTITION_BY") != null;
 
-        JdbcTreeVisitor jdbcTreeVisitor = new JdbcTreeVisitor(
+        JdbcPredicateBuilder jdbcPredicateBuilder = new JdbcPredicateBuilder(
                 dbProduct,
                 quoteString,
                 hasPartition,
@@ -270,11 +270,11 @@ public class SQLQueryBuilder {
 
         try {
             Node root = new FilterParser().parse(context.getFilterString().getBytes());
-            root = treePruner.prune(root);
-            new TreeTraverser().inOrderTraversal(root, jdbcTreeVisitor);
+            root = treePruner.visit(root);
+            new TreeTraverser().inOrderTraversal(root, jdbcPredicateBuilder);
 
             // No exceptions were thrown, change the provided query
-            query.append(jdbcTreeVisitor.toString());
+            query.append(jdbcPredicateBuilder.toString());
         } catch (Exception e) {
             LOG.debug("WHERE clause is omitted: " + e.toString());
             // Silence the exception and do not insert constraints

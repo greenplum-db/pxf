@@ -32,24 +32,36 @@ import java.util.stream.Collectors;
 
 /**
  * This class implements {@link TreeVisitor} and generates a
- * {@link SearchArgument.Builder} for the given filter string
+ * {@link SearchArgument.Builder} for the given filter string.
+ * For example, for the filter string
+ * ( _1_ < 5 OR _1_ > 10 ) AND ( _2_ IS NULL )
+ * it will generate the following {@link SearchArgument.Builder}
+ * startAnd
+ * ..startOr
+ * ....lessThan
+ * ....greaterThan
+ * ..endOr
+ * ..startNot
+ * ....isNull
+ * ..endNot
+ * endAnd
  */
-public class HiveORCTreeVisitor implements TreeVisitor {
+public class HiveORCSearchArgumentBuilder implements TreeVisitor {
 
-    private static final Logger LOG = LoggerFactory.getLogger(HiveORCTreeVisitor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(HiveORCSearchArgumentBuilder.class);
 
     private final SearchArgument.Builder filterBuilder;
     private final List<ColumnDescriptor> columnDescriptors;
     private boolean hasLogicalOperators;
 
-    public HiveORCTreeVisitor(List<ColumnDescriptor> tupleDescription, Configuration configuration) {
+    public HiveORCSearchArgumentBuilder(List<ColumnDescriptor> tupleDescription, Configuration configuration) {
         this.filterBuilder = SearchArgumentFactory.newBuilder(configuration);
         this.columnDescriptors = tupleDescription;
         this.hasLogicalOperators = false;
     }
 
     @Override
-    public void before(Node node) {
+    public Node before(Node node) {
         if (node instanceof OperatorNode) {
             OperatorNode operatorNode = (OperatorNode) node;
             Operator operator = operatorNode.getOperator();
@@ -69,10 +81,11 @@ public class HiveORCTreeVisitor implements TreeVisitor {
                 hasLogicalOperators = true;
             }
         }
+        return node;
     }
 
     @Override
-    public void visit(Node node) {
+    public Node visit(Node node) {
         if (node instanceof OperatorNode) {
             OperatorNode operatorNode = (OperatorNode) node;
             Operator operator = operatorNode.getOperator();
@@ -92,10 +105,11 @@ public class HiveORCTreeVisitor implements TreeVisitor {
                 }
             }
         }
+        return node;
     }
 
     @Override
-    public void after(Node node) {
+    public Node after(Node node) {
         if (node instanceof OperatorNode) {
             OperatorNode operatorNode = (OperatorNode) node;
             if (operatorNode.getOperator().isLogical()) {
@@ -103,6 +117,7 @@ public class HiveORCTreeVisitor implements TreeVisitor {
                 filterBuilder.end();
             }
         }
+        return node;
     }
 
     public SearchArgument.Builder getFilterBuilder() {

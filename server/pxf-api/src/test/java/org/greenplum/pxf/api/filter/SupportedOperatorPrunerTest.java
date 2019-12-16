@@ -5,9 +5,9 @@ import org.junit.Test;
 
 import java.util.EnumSet;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
-public class BaseTreePrunerTest {
+public class SupportedOperatorPrunerTest {
 
     private final EnumSet<Operator> ALL_SUPPORTED = EnumSet.allOf(Operator.class);
     private final EnumSet<Operator> NONE_SUPPORTED = EnumSet.noneOf(Operator.class);
@@ -171,7 +171,7 @@ public class BaseTreePrunerTest {
                         String filterString,
                         EnumSet<Operator> supportedOperators) throws Exception {
         Node root = new FilterParser().parse(filterString.getBytes());
-        root = new BaseTreePruner(supportedOperators).prune(root);
+        root = new SupportedOperatorPruner(supportedOperators).visit(root);
 
         ToStringTreeVisitor visitor = new ToStringTreeVisitor();
         new TreeTraverser().inOrderTraversal(root, visitor);

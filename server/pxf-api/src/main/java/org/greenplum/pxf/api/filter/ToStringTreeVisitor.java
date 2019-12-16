@@ -22,7 +22,7 @@ public class ToStringTreeVisitor implements TreeVisitor {
     }
 
     @Override
-    public void before(Node node) {
+    public Node before(Node node) {
         if (node instanceof OperatorNode) {
             OperatorNode operatorNode = (OperatorNode) node;
             Operator operator = operatorNode.getOperator();
@@ -35,17 +35,18 @@ public class ToStringTreeVisitor implements TreeVisitor {
                 sb.append("(");
             }
         }
+        return node;
     }
 
     @Override
-    public void visit(Node node) {
+    public Node visit(Node node) {
         if (node instanceof Operand) {
 
             if (node instanceof ScalarOperand) {
                 ScalarOperand scalarOperand = (ScalarOperand) node;
                 // boolean does not need to be rendered
                 if (scalarOperand.getDataType() == DataType.BOOLEAN) {
-                    return;
+                    return node;
                 }
             }
 
@@ -56,7 +57,7 @@ public class ToStringTreeVisitor implements TreeVisitor {
 
             // Skip NOOP and NOT is already handled in the before method
             if (operator == NOOP || operator == NOT) {
-                return;
+                return node;
             }
 
             sb.append(" ").append(getOperatorName(operatorNode));
@@ -64,16 +65,18 @@ public class ToStringTreeVisitor implements TreeVisitor {
                 sb.append(" ");
             }
         }
+        return node;
     }
 
     @Override
-    public void after(Node node) {
+    public Node after(Node node) {
         if (node instanceof OperatorNode) {
             OperatorNode operatorNode = (OperatorNode) node;
             if (operatorNode.getOperator().isLogical()) {
                 sb.append(")");
             }
         }
+        return node;
     }
 
     /**
