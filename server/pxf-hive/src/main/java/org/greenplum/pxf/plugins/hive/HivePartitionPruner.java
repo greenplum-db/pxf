@@ -48,7 +48,17 @@ public class HivePartitionPruner extends SupportedOperatorPruner {
     /**
      * Returns true when the operator is logical, or for simple operators
      * true when the column is a partitioned column, and push-down is enabled
-     * for integral types or when the column is of string type
+     * for integral types or when the column is of string
+     * <p>
+     * Say P is a conforming predicate based on partition column and supported
+     * comparison operator NP is a non conforming predicate based on either a
+     * non-partition column or an unsupported operator.
+     * <p>
+     * The following rule will be used during filter pruning
+     * P <op> P -> P <op> P (op can be any logical operator)
+     * P AND NP -> P
+     * P OR NP -> null
+     * NP <op> NP -> null
      *
      * @param operatorNode the operator node
      * @return true when the filter is compatible, false otherwise

@@ -47,7 +47,7 @@ import static org.junit.Assert.assertTrue;
 
 public class HivePartitionPrunerTest {
 
-    private HiveTreeVisitor visitor;
+    private HivePartitionFilterBuilder visitor;
     private TreeVisitor treePruner;
     private FilterParser parser;
     private TreeTraverser treeTraverser;
@@ -56,7 +56,7 @@ public class HivePartitionPrunerTest {
     public void setup() {
         treeTraverser = new TreeTraverser();
         parser = new FilterParser();
-        visitor = new HiveTreeVisitor(getColumnDescriptors());
+        visitor = new HivePartitionFilterBuilder(getColumnDescriptors());
         treePruner = new HivePartitionPruner(SUPPORTED_OPERATORS,
                 false, getPartitionKeyTypes(), getColumnDescriptors());
     }
@@ -156,7 +156,7 @@ public class HivePartitionPrunerTest {
         partitionKeyTypes.put("textColumn", "string");
 
         List<ColumnDescriptor> columnDescriptors = Lists.newArrayList(null, null, null, columnDescriptor);
-        visitor = new HiveTreeVisitor(columnDescriptors);
+        visitor = new HivePartitionFilterBuilder(columnDescriptors);
         treePruner = new HivePartitionPruner(SUPPORTED_OPERATORS,
                 false, partitionKeyTypes, columnDescriptors);
 
@@ -324,7 +324,7 @@ public class HivePartitionPrunerTest {
         return partitionKeyTypes;
     }
 
-    private void helper(String expected, String filterString, TreeVisitor pruner, HiveTreeVisitor treeVisitor) throws Exception {
+    private void helper(String expected, String filterString, TreeVisitor pruner, HivePartitionFilterBuilder treeVisitor) throws Exception {
         Node root = parser.parse(filterString.getBytes());
         root = pruner.visit(root);
         treeTraverser.inOrderTraversal(root, treeVisitor);

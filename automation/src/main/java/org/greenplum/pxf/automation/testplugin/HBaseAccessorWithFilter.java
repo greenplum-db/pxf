@@ -281,7 +281,7 @@ public class HBaseAccessorWithFilter extends BasePlugin implements Accessor {
         Node root = new FilterParser().parse(filterStr.getBytes(FilterParser.DEFAULT_CHARSET));
         root = TREE_PRUNER.visit(root);
 
-        TREE_TRAVERSER.postOrderTraversal(root, hBaseTreeVisitor);
+        TREE_TRAVERSER.inOrderTraversal(root, hBaseTreeVisitor);
 
         Filter filter = hBaseTreeVisitor.buildFilter();
         scanDetails.setFilter(filter);

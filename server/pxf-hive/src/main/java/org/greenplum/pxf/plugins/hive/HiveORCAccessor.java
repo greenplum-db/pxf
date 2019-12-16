@@ -134,7 +134,7 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
     }
 
     /**
-     * Uses {@link HiveTreeVisitor} to translate a filter string into a
+     * Uses {@link HivePartitionFilterBuilder} to translate a filter string into a
      * Hive {@link SearchArgument} object. The result is added as a filter to
      * JobConf object
      */

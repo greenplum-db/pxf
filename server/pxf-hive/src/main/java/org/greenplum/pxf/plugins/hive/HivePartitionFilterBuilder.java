@@ -58,13 +58,13 @@ import java.util.stream.Collectors;
  * P OR NP -> null
  * NP <op> NP -> null
  */
-public class HiveTreeVisitor extends ToStringTreeVisitor {
+public class HivePartitionFilterBuilder extends ToStringTreeVisitor {
 
     private static final String HIVE_API_D_QUOTE = "\"";
 
     private final List<ColumnDescriptor> columnDescriptors;
 
-    public HiveTreeVisitor(List<ColumnDescriptor> tupleDescription) {
+    public HivePartitionFilterBuilder(List<ColumnDescriptor> tupleDescription) {
         this.columnDescriptors = tupleDescription;
     }
 
