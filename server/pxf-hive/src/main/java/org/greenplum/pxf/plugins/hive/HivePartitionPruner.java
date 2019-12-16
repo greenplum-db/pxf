@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * Prune the tree based on partition keys and whether or not pushing down
@@ -49,7 +48,7 @@ public class HivePartitionPruner extends SupportedOperatorPruner {
     /**
      * Returns true when the operator is logical, or for simple operators
      * true when the column is a partitioned column, and push-down is enabled
-     * for integral types the column type is of string type
+     * for integral types or when the column is of string type
      *
      * @param operatorNode the operator node
      * @return true when the filter is compatible, false otherwise
@@ -62,16 +61,8 @@ public class HivePartitionPruner extends SupportedOperatorPruner {
             return true;
         }
 
-        Optional<ColumnIndexOperand> columnIndexOperand = operatorNode.getChildren().stream()
-                .filter(child -> child instanceof ColumnIndexOperand)
-                .map(child -> (ColumnIndexOperand) child)
-                .findFirst();
-
-        if (!columnIndexOperand.isPresent()) {
-            throw new RuntimeException("Unable to find the column index operand");
-        }
-
-        ColumnDescriptor columnDescriptor = columnDescriptors.get(columnIndexOperand.get().index());
+        ColumnIndexOperand columnIndexOperand = operatorNode.getColumnIndexOperand();
+        ColumnDescriptor columnDescriptor = columnDescriptors.get(columnIndexOperand.index());
         String columnName = columnDescriptor.columnName();
 
         String colType = partitionKeys.get(columnName);

@@ -307,24 +307,8 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
                         return true;
                     }
 
-                    Optional<ColumnIndexOperand> columnIndexOperand = operatorNode
-                            .getChildren()
-                            .stream()
-                            .filter(op -> op instanceof ColumnIndexOperand)
-                            .map(op -> (ColumnIndexOperand) op)
-                            .findFirst();
-
-                    Optional<Operand> valueOperand = operatorNode
-                            .getChildren()
-                            .stream()
-                            .filter(op -> op instanceof ScalarOperand || op instanceof CollectionOperand)
-                            .map(op -> (Operand) op)
-                            .findFirst();
-
-                    if (!columnIndexOperand.isPresent()) {
-                        throw new IllegalArgumentException(
-                                String.format("Operator %s does not contain a column index operand", operator));
-                    }
+                    ColumnIndexOperand columnIndexOperand = operatorNode.getColumnIndexOperand();
+                    Optional<Operand> valueOperand = operatorNode.getOperand();
 
                     if (!valueOperand.isPresent()) {
                         throw new IllegalArgumentException(
@@ -332,7 +316,7 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
                     }
 
                     String filterValue = valueOperand.get().toString();
-                    ColumnDescriptor filterColumn = context.getColumn(columnIndexOperand.get().index());
+                    ColumnDescriptor filterColumn = context.getColumn(columnIndexOperand.index());
                     String filterColumnName = filterColumn.columnName();
 
                     for (HivePartition partition : partitionFields) {

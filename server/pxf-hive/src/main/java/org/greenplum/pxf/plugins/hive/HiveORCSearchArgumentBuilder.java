@@ -133,27 +133,10 @@ public class HiveORCSearchArgumentBuilder implements TreeVisitor {
     private boolean buildArgument(OperatorNode operatorNode) {
 
         Operator operator = operatorNode.getOperator();
+        ColumnIndexOperand columnIndexOperand = operatorNode.getColumnIndexOperand();
+        Optional<Operand> valueOperand = operatorNode.getOperand();
 
-        Optional<ColumnIndexOperand> columnIndexOperand = operatorNode
-                .getChildren()
-                .stream()
-                .filter(op -> op instanceof ColumnIndexOperand)
-                .map(op -> (ColumnIndexOperand) op)
-                .findFirst();
-
-        if (!columnIndexOperand.isPresent()) {
-            throw new IllegalArgumentException(
-                    String.format("Operator %s does not contain a column index operand", operator));
-        }
-
-        Optional<Operand> valueOperand = operatorNode
-                .getChildren()
-                .stream()
-                .filter(op -> op instanceof ScalarOperand || op instanceof CollectionOperand)
-                .map(op -> (Operand) op)
-                .findFirst();
-
-        ColumnDescriptor filterColumn = columnDescriptors.get(columnIndexOperand.get().index());
+        ColumnDescriptor filterColumn = columnDescriptors.get(columnIndexOperand.index());
         String filterColumnName = filterColumn.columnName();
         Object filterValue = null;
 
