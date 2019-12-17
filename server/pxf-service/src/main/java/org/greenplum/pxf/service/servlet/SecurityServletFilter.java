@@ -106,7 +106,7 @@ public class SecurityServletFilter implements Filter {
         final String serverName = StringUtils.defaultIfBlank(getHeaderValue(request, SERVER_HEADER, false), "default");
         final String configDirectory = StringUtils.defaultIfBlank(getHeaderValue(request, CONFIG_HEADER, false), serverName);
 
-        Configuration configuration = configurationFactory.initConfiguration(configDirectory, serverName, null, null);
+        Configuration configuration = configurationFactory.initConfiguration(configDirectory, serverName, gpdbUser, null);
 
         boolean isUserImpersonation = secureLogin.isUserImpersonationEnabled(configuration);
 
