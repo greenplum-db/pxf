@@ -177,6 +177,7 @@ public class S3SelectAccessorTest {
     public void testCorrectlyParsesDataSource() {
         RequestContext context = getDefaultRequestContext();
         context.setConfig("default");
+        context.setUser("test-user");
         context.setDataSource("s3a://my-bucket/my/s3/path/");
 
         S3SelectAccessor accessor = new S3SelectAccessor();
@@ -190,6 +191,7 @@ public class S3SelectAccessorTest {
     public void testCorrectlyParsesDataSourceWithNoKey() {
         RequestContext context = getDefaultRequestContext();
         context.setConfig("default");
+        context.setUser("test-user");
         context.setDataSource("s3a://my-bucket");
 
         S3SelectAccessor accessor = new S3SelectAccessor();

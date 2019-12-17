@@ -13,6 +13,7 @@ public interface ConfigurationFactory {
     String DEFAULT_SERVER_CONFIG_DIR = SERVERS_CONFIG_DIR + File.separator + "default";
     String PXF_CONFIG_RESOURCE_PATH_PROPERTY = "pxf.config.resource.path";
     String PXF_CONFIG_SERVER_DIRECTORY_PROPERTY = "pxf.config.server.directory";
+    String PXF_SESSION_USER_PROPERTY = "pxf.session.user";
 
     /**
      * Initializes a configuration object that applies server-specific configurations and

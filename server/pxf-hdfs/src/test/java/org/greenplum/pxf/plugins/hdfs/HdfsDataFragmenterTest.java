@@ -18,6 +18,7 @@ public class HdfsDataFragmenterTest {
 
         RequestContext context = new RequestContext();
         context.setConfig("default");
+        context.setUser("test-user");
         context.setProfileScheme("localfile");
         context.setDataSource(path);
 
@@ -36,6 +37,7 @@ public class HdfsDataFragmenterTest {
 
         RequestContext context = new RequestContext();
         context.setConfig("default");
+        context.setUser("test-user");
         context.setProfileScheme("localfile");
         context.setDataSource(path + "*.csv");
 

@@ -50,6 +50,7 @@ public class HBaseResolverTest {
     public void construction() throws Exception {
         context = new RequestContext();
         context.setConfig("default");
+        context.setUser("test-user");
         tupleDesc = mock(HBaseTupleDescription.class);
         PowerMockito.whenNew(HBaseTupleDescription.class).withArguments(context).thenReturn(tupleDesc);
 
@@ -68,6 +69,7 @@ public class HBaseResolverTest {
 
         context = new RequestContext();
         context.setConfig("default");
+        context.setUser("test-user");
         tupleDesc = mock(HBaseTupleDescription.class);
         PowerMockito.whenNew(HBaseTupleDescription.class).withArguments(context).thenReturn(tupleDesc);
 

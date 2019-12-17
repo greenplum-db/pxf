@@ -71,7 +71,7 @@ public class ConnectionManagerTest {
     @Test
     public void testGetConnectionPoolDisabled() throws SQLException {
         when(DriverManager.getConnection("test-url", connProps)).thenReturn(mockConnection);
-        Connection conn = manager.getConnection("test-server", "test-url", connProps, false, null);
+        Connection conn = manager.getConnection("test-server", "test-url", connProps, false, null, null);
         assertSame(mockConnection, conn);
     }
 
@@ -88,14 +88,14 @@ public class ConnectionManagerTest {
 
         Connection conn;
         for (int i=0; i< 5; i++) {
-            conn = manager.getConnection("test-server", "test-url", connProps, true, poolProps);
+            conn = manager.getConnection("test-server", "test-url", connProps, true, poolProps, null);
             assertNotNull(conn);
             assertTrue(conn instanceof HikariProxyConnection);
             assertSame(mockConnection, conn.unwrap(Connection.class));
             conn.close();
         }
 
-        Connection conn2 = manager.getConnection("test-server", "test-url-2", connProps, true, poolProps);
+        Connection conn2 = manager.getConnection("test-server", "test-url-2", connProps, true, poolProps, null);
         assertNotNull(conn2);
         assertTrue(conn2 instanceof HikariProxyConnection);
         assertSame(mockConnection2, conn2.unwrap(Connection.class));
@@ -117,9 +117,9 @@ public class ConnectionManagerTest {
         poolProps.setProperty("connectionTimeout", "250");
 
         // get connection, do not close it
-        manager.getConnection("test-server", "test-url", connProps, true, poolProps);
+        manager.getConnection("test-server", "test-url", connProps, true, poolProps, null);
         // ask for connection again, it should time out
-        manager.getConnection("test-server", "test-url", connProps, true, poolProps);
+        manager.getConnection("test-server", "test-url", connProps, true, poolProps, null);
     }
 
     @Test
@@ -137,7 +137,7 @@ public class ConnectionManagerTest {
         poolProps.setProperty("dataSource.foo", "123");
 
         // get connection, do not close it
-        Connection conn = manager.getConnection("test-server", "test-url", connProps, true, poolProps);
+        Connection conn = manager.getConnection("test-server", "test-url", connProps, true, poolProps, null);
         assertNotNull(conn);
 
         // make sure all connProps and "dataSource.foo" from poolProps are passed to the DriverManager
@@ -159,7 +159,7 @@ public class ConnectionManagerTest {
         when(mockMBean.getActiveConnections()).thenReturn(0);
         manager = new ConnectionManager(mockFactory, ticker, ConnectionManager.CLEANUP_SLEEP_INTERVAL_NANOS);
 
-        manager.getConnection("test-server", "test-url", connProps, true, poolProps);
+        manager.getConnection("test-server", "test-url", connProps, true, poolProps, null);
 
         ticker.advanceTime(ConnectionManager.POOL_EXPIRATION_TIMEOUT_HOURS + 1, TimeUnit.HOURS);
         manager.cleanCache();
@@ -184,7 +184,7 @@ public class ConnectionManagerTest {
         when(mockMBean.getActiveConnections()).thenReturn(2, 1, 0);
         manager = new ConnectionManager(mockFactory, ticker, TimeUnit.MILLISECONDS.toNanos(50));
 
-        manager.getConnection("test-server", "test-url", connProps, true, poolProps);
+        manager.getConnection("test-server", "test-url", connProps, true, poolProps, null);
 
         ticker.advanceTime(ConnectionManager.POOL_EXPIRATION_TIMEOUT_HOURS + 1, TimeUnit.HOURS);
         manager.cleanCache();
@@ -209,7 +209,7 @@ public class ConnectionManagerTest {
         when(mockMBean.getActiveConnections()).thenReturn(1); //always report pool has an active connection
         manager = new ConnectionManager(mockFactory, ticker, TimeUnit.MILLISECONDS.toNanos(50));
 
-        manager.getConnection("test-server", "test-url", connProps, true, poolProps);
+        manager.getConnection("test-server", "test-url", connProps, true, poolProps, null);
 
         ticker.advanceTime(ConnectionManager.POOL_EXPIRATION_TIMEOUT_HOURS + 1, TimeUnit.HOURS);
         manager.cleanCache();

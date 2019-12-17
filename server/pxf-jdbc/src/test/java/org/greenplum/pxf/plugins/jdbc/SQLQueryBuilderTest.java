@@ -64,6 +64,7 @@ public class SQLQueryBuilderTest {
         columns.add(new ColumnDescriptor("b", DataType.BOOLEAN.getOID(), 4, "bool", null));
 
         context.setTupleDescription(columns);
+        context.setUser("test-user");
 
         when(mockMetaData.supportsMixedCaseIdentifiers()).thenReturn(true);
         when(mockMetaData.getExtraNameCharacters()).thenReturn("");

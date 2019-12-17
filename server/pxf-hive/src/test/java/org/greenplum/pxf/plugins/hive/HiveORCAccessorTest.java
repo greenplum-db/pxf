@@ -44,6 +44,7 @@ public class HiveORCAccessorTest {
         HiveUserData userData = new HiveUserData("", "", null, HiveDataFragmenter.HIVE_NO_PART_TBL, true, "1", "", 0);
         context = new RequestContext();
         context.setConfig("default");
+        context.setUser("test-user");
         context.setDataSource("foo");
         context.setFragmentMetadata(HdfsUtilities.prepareFragmentMetadata(0, 0, new String[]{"localhost"}));
         context.setFragmentUserData(userData.toString().getBytes());

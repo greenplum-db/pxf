@@ -16,6 +16,7 @@ import java.util.Map;
 
 import static org.greenplum.pxf.api.model.ConfigurationFactory.PXF_CONFIG_RESOURCE_PATH_PROPERTY;
 import static org.greenplum.pxf.api.model.ConfigurationFactory.PXF_CONFIG_SERVER_DIRECTORY_PROPERTY;
+import static org.greenplum.pxf.api.model.ConfigurationFactory.PXF_SESSION_USER_PROPERTY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
@@ -70,6 +71,25 @@ public class BaseConfigurationFactoryTest {
         assertEquals("bluevaluefromuser", configuration.get("test.blue.key"));
         assertEquals("redvaluefromuser", configuration.get("test.red.key"));
         assertEquals("uservalue", configuration.get("test.user.key"));
+    }
+
+    @Test
+    public void testConfigurationsLoadedWithInterpolationFromMultipleFilesForDefaultServer() {
+        Configuration configuration = factory.initConfiguration("default", "default", "dummy", null);
+
+        assertEquals("blue", configuration.get("test.blue"));
+        assertEquals("dummy-blue", configuration.get("test.blue.interpolated.key"));
+        assertEquals("red", configuration.get("test.red"));
+        assertEquals("dummy-red", configuration.get("test.red.interpolated.key"));
+
+        // Should return null because the file name does not end in -site.xml
+        assertNull(configuration.get("test.green"));
+
+        assertEquals("bluevaluefromuser", configuration.get("test.blue.key"));
+        assertEquals("redvaluefromuser", configuration.get("test.red.key"));
+        assertEquals("uservalue", configuration.get("test.user.key"));
+        assertEquals("dummy-user", configuration.get("test.user.interpolated.key"));
+
     }
 
     @Test
@@ -175,6 +195,14 @@ public class BaseConfigurationFactoryTest {
         File defaultServerDirectory = new File(serversDirectory, "default");
 
         assertEquals(defaultServerDirectory.getCanonicalPath(), configuration.get(PXF_CONFIG_SERVER_DIRECTORY_PROPERTY));
+    }
+
+    @Test
+    public void testConfigurationSetsSessionUser() throws IOException {
+        Configuration configuration = factory.initConfiguration("default", "default", "dummy", additionalProperties);
+        File defaultServerDirectory = new File(serversDirectory, "default");
+
+        assertEquals("dummy", configuration.get(PXF_SESSION_USER_PROPERTY));
     }
 
 }

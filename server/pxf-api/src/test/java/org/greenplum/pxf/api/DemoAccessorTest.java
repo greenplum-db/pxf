@@ -38,6 +38,7 @@ public class DemoAccessorTest {
     public void setup() {
         context = new RequestContext();
         context.setConfig("default");
+        context.setUser("test-user");
         accessor = new DemoAccessor();
         accessor.initialize(context);
     }

@@ -31,6 +31,7 @@ public class JsonResolverTest {
         resolver = new JsonResolver();
         context = new RequestContext();
         context.setConfig("default");
+        context.setUser("test-user");
         context.setTupleDescription(schema);
         resolver.initialize(context);
     }

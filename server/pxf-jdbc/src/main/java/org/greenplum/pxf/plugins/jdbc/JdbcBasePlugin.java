@@ -80,6 +80,7 @@ public class JdbcBasePlugin extends BasePlugin {
     // connection pool properties
     private static final String JDBC_CONNECTION_POOL_ENABLED_PROPERTY_NAME = "jdbc.pool.enabled";
     private static final String JDBC_CONNECTION_POOL_PROPERTY_PREFIX = "jdbc.pool.property.";
+    private static final String JDBC_CONNECTION_POOL_SESSION_AUTHORIZATION_PROPERTY_NAME = "jdbc.pool.session.authorization";
 
     // DDL option names
     private static final String JDBC_DRIVER_OPTION_NAME = "JDBC_DRIVER";
@@ -154,6 +155,7 @@ public class JdbcBasePlugin extends BasePlugin {
     // connection pool fields
     private boolean isConnectionPoolUsed;
     private Properties poolConfiguration;
+    private String poolSessionAuthorization;
 
     private ConnectionManager connectionManager;
 
@@ -342,6 +344,10 @@ public class JdbcBasePlugin extends BasePlugin {
             if (jdbcUrl.startsWith(HIVE_URL_PREFIX) && HIVE_DEFAULT_DRIVER_CLASS.equals(jdbcDriver) && poolConfiguration.getProperty("connectionTestQuery") == null) {
                 poolConfiguration.setProperty("connectionTestQuery", "SELECT 1");
             }
+
+            // get the qualifier for connection pool, if configured. Used when connection session authorization is employed
+            // to switch effective user once connection is established
+            poolSessionAuthorization = configuration.get(JDBC_CONNECTION_POOL_SESSION_AUTHORIZATION_PROPERTY_NAME);
         }
     }
 
@@ -451,10 +457,10 @@ public class JdbcBasePlugin extends BasePlugin {
         if (Utilities.isSecurityEnabled(configuration) && StringUtils.startsWith(jdbcUrl, HIVE_URL_PREFIX)) {
             return SecureLogin.getInstance().getLoginUser(context, configuration).
                     doAs((PrivilegedExceptionAction<Connection>) () ->
-                            connectionManager.getConnection(context.getServerName(), jdbcUrl, connectionConfiguration, isConnectionPoolUsed, poolConfiguration));
+                            connectionManager.getConnection(context.getServerName(), jdbcUrl, connectionConfiguration, isConnectionPoolUsed, poolConfiguration, poolSessionAuthorization));
 
         } else {
-            return connectionManager.getConnection(context.getServerName(), jdbcUrl, connectionConfiguration, isConnectionPoolUsed, poolConfiguration);
+            return connectionManager.getConnection(context.getServerName(), jdbcUrl, connectionConfiguration, isConnectionPoolUsed, poolConfiguration, poolSessionAuthorization);
         }
     }
 

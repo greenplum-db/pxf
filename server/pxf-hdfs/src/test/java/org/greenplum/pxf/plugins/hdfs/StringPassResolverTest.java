@@ -90,6 +90,7 @@ public class StringPassResolverTest {
     private StringPassResolver buildResolver() throws Exception {
         context = new RequestContext();
         context.setConfig("default");
+        context.setUser("test-user");
         StringPassResolver resolver = new StringPassResolver();
         resolver.initialize(context);
         return resolver;

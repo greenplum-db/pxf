@@ -125,6 +125,7 @@ public class HBaseAccessorTest {
     private void prepareConstruction() throws Exception {
         context = new RequestContext();
         context.setConfig("default");
+        context.setUser("test-user");
         tupleDescription = mock(HBaseTupleDescription.class);
         PowerMockito.whenNew(HBaseTupleDescription.class).withArguments(context).thenReturn(tupleDescription);
     }

@@ -105,7 +105,7 @@ public class ConnectionManager {
      * @return connection instance
      * @throws SQLException if connection can not be obtained
      */
-    public Connection getConnection(String server, String jdbcUrl, Properties connectionConfiguration, boolean isPoolEnabled, Properties poolConfiguration) throws SQLException {
+    public Connection getConnection(String server, String jdbcUrl, Properties connectionConfiguration, boolean isPoolEnabled, Properties poolConfiguration, String qualifier) throws SQLException {
 
         Connection result;
         if (!isPoolEnabled) {
@@ -113,7 +113,7 @@ public class ConnectionManager {
             result = DriverManager.getConnection(jdbcUrl, connectionConfiguration);
         } else {
 
-            PoolDescriptor poolDescriptor = new PoolDescriptor(server, jdbcUrl, connectionConfiguration, poolConfiguration);
+            PoolDescriptor poolDescriptor = new PoolDescriptor(server, jdbcUrl, connectionConfiguration, poolConfiguration, qualifier);
 
             DataSource dataSource;
             try {

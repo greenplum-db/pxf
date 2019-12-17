@@ -53,6 +53,10 @@ public class BaseConfigurationFactory implements ConfigurationFactory {
         // and will try to use SASL if there is at least one Kerberized Hadoop cluster
         configuration.set(CommonConfigurationKeys.IPC_CLIENT_FALLBACK_TO_SIMPLE_AUTH_ALLOWED_KEY, "true");
 
+        // set synthetic property pxf.session.user so that is can be used in config files for interpolation in other properties
+        // for example in JDBC when setting session authorization from a proxy user to the end-user
+        configuration.set(PXF_SESSION_USER_PROPERTY, userName);
+
         File[] serverDirectories = null;
         Path p = Paths.get(configDirectory);
 

@@ -44,6 +44,7 @@ public class QuotedLineBreakAccessorTest {
 
         context.setConfig("default");
         context.setProfileScheme("localfile");
+        context.setUser("test-user");
 
         FileSplit fileSplitMock = mock(FileSplit.class);
         UserGroupInformation ugiMock = mock(UserGroupInformation.class);

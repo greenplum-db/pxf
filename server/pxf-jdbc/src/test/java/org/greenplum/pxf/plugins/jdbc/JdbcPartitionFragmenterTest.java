@@ -41,6 +41,7 @@ public class JdbcPartitionFragmenterTest {
         context = new RequestContext();
         context.setConfig("default");
         context.setDataSource("table");
+        context.setUser("test-user");
     }
 
     @Test

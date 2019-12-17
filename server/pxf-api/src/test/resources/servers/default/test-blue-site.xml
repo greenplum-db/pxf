@@ -7,4 +7,8 @@
         <name>test.blue.key</name>
         <value>bluevaluefromblue</value>
     </property>
+    <property>
+        <name>test.blue.interpolated.key</name>
+        <value>${pxf.session.user}-blue</value>
+    </property>
 </configuration>

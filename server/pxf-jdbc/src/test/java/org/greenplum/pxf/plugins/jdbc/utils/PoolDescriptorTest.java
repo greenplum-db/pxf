@@ -32,7 +32,7 @@ public class PoolDescriptorTest {
 
     @Test
     public void testPoolDescriptor() {
-        poolDescriptor = new PoolDescriptor("test-server", "test-jdbcUrl", connConfig, poolConfig);
+        poolDescriptor = new PoolDescriptor("test-server", "test-jdbcUrl", connConfig, poolConfig, null);
         assertEquals("test-server", poolDescriptor.getServer());
         assertEquals("test-jdbcUrl", poolDescriptor.getJdbcUrl());
         assertEquals("test-password", poolDescriptor.getPassword());
@@ -79,60 +79,75 @@ public class PoolDescriptorTest {
 
     @Test
     public void testPoolDescriptorHashCodeAndEquals() {
-        poolDescriptor = new PoolDescriptor("test-server", "test-jdbcUrl", connConfig, poolConfig);
+        poolDescriptor = new PoolDescriptor("test-server", "test-jdbcUrl", connConfig, poolConfig, "foo");
 
         Properties sameConnConfig = (Properties) connConfig.clone();
         Properties samePoolConfig = (Properties) poolConfig.clone();
-        PoolDescriptor samePoolDescriptor = new PoolDescriptor("test-server", "test-jdbcUrl", sameConnConfig, samePoolConfig);
+        PoolDescriptor samePoolDescriptor = new PoolDescriptor("test-server", "test-jdbcUrl", sameConnConfig, samePoolConfig, "foo");
 
         assertEquals(poolDescriptor.hashCode(), samePoolDescriptor.hashCode());
         assertEquals(poolDescriptor, samePoolDescriptor);
 
         // test different configs
-        PoolDescriptor diffPoolDescriptor = new PoolDescriptor("diff-server", "test-jdbcUrl", sameConnConfig, samePoolConfig);
+        PoolDescriptor diffPoolDescriptor = new PoolDescriptor("diff-server", "test-jdbcUrl", sameConnConfig, samePoolConfig, "foo");
         assertNotEquals(poolDescriptor.hashCode(), diffPoolDescriptor.hashCode());
         assertNotEquals(poolDescriptor, diffPoolDescriptor);
 
-        diffPoolDescriptor = new PoolDescriptor("test-server", "diff-jdbcUrl", sameConnConfig, samePoolConfig);
+        diffPoolDescriptor = new PoolDescriptor("test-server", "diff-jdbcUrl", sameConnConfig, samePoolConfig, "foo");
         assertNotEquals(poolDescriptor.hashCode(), diffPoolDescriptor.hashCode());
         assertNotEquals(poolDescriptor, diffPoolDescriptor);
 
 
         Properties diffConnConfig = (Properties) connConfig.clone();
         diffConnConfig.setProperty("user", "foo");
-        diffPoolDescriptor = new PoolDescriptor("test-server", "test-jdbcUrl", diffConnConfig, samePoolConfig);
+        diffPoolDescriptor = new PoolDescriptor("test-server", "test-jdbcUrl", diffConnConfig, samePoolConfig, "foo");
         assertNotEquals(poolDescriptor.hashCode(), diffPoolDescriptor.hashCode());
         assertNotEquals(poolDescriptor, diffPoolDescriptor);
 
         diffConnConfig = (Properties) connConfig.clone();
         diffConnConfig.setProperty("password", "bar");
-        diffPoolDescriptor = new PoolDescriptor("test-server", "test-jdbcUrl", diffConnConfig, samePoolConfig);
+        diffPoolDescriptor = new PoolDescriptor("test-server", "test-jdbcUrl", diffConnConfig, samePoolConfig, "foo");
         assertNotEquals(poolDescriptor.hashCode(), diffPoolDescriptor.hashCode());
         assertNotEquals(poolDescriptor, diffPoolDescriptor);
 
         diffConnConfig = (Properties) connConfig.clone();
         diffConnConfig.setProperty("foo", "bar");
-        diffPoolDescriptor = new PoolDescriptor("test-server", "test-jdbcUrl", diffConnConfig, samePoolConfig);
+        diffPoolDescriptor = new PoolDescriptor("test-server", "test-jdbcUrl", diffConnConfig, samePoolConfig, "foo");
         assertNotEquals(poolDescriptor.hashCode(), diffPoolDescriptor.hashCode());
         assertNotEquals(poolDescriptor, diffPoolDescriptor);
 
         Properties diffPoolConfig = (Properties) poolConfig.clone();
         diffPoolConfig.setProperty("abc", "xyz");
-        diffPoolDescriptor = new PoolDescriptor("test-server", "test-jdbcUrl", sameConnConfig, diffPoolConfig);
+        diffPoolDescriptor = new PoolDescriptor("test-server", "test-jdbcUrl", sameConnConfig, diffPoolConfig, "foo");
         assertNotEquals(poolDescriptor.hashCode(), diffPoolDescriptor.hashCode());
         assertNotEquals(poolDescriptor, diffPoolDescriptor);
+
+        diffPoolDescriptor = new PoolDescriptor("test-server", "test-jdbcUrl", sameConnConfig, samePoolConfig, "bar");
+        assertNotEquals(poolDescriptor.hashCode(), diffPoolDescriptor.hashCode());
+        assertNotEquals(poolDescriptor, diffPoolDescriptor);
+
+        diffPoolDescriptor = new PoolDescriptor("test-server", "test-jdbcUrl", sameConnConfig, samePoolConfig, null);
+        assertNotEquals(poolDescriptor.hashCode(), diffPoolDescriptor.hashCode());
+        assertNotEquals(poolDescriptor, diffPoolDescriptor);
+
+        poolDescriptor = new PoolDescriptor("test-server", "test-jdbcUrl", connConfig, poolConfig, null);
+        diffPoolDescriptor = new PoolDescriptor("test-server", "test-jdbcUrl", sameConnConfig, samePoolConfig, null);
+        assertEquals(poolDescriptor.hashCode(), diffPoolDescriptor.hashCode());
+        assertEquals(poolDescriptor, diffPoolDescriptor);
     }
 
     @Test
     public void testPoolDescriptorToString() {
-        poolDescriptor = new PoolDescriptor("test-server", "test-jdbcUrl", connConfig, poolConfig);
-        assertEquals("PoolDescriptor{jdbcUrl=test-jdbcUrl, user=test-user, password=*************, connectionConfig={test-other-property=test-other-property-value}, poolConfig={test-pool-property=test-pool-property-value}}", poolDescriptor.toString());
+        poolDescriptor = new PoolDescriptor("test-server", "test-jdbcUrl", connConfig, poolConfig, null);
+        assertEquals("PoolDescriptor{jdbcUrl=test-jdbcUrl, user=test-user, password=*************, connectionConfig={test-other-property=test-other-property-value}, poolConfig={test-pool-property=test-pool-property-value}, qualifier=null}", poolDescriptor.toString());
+        poolDescriptor = new PoolDescriptor("test-server", "test-jdbcUrl", connConfig, poolConfig, "foo");
+        assertEquals("PoolDescriptor{jdbcUrl=test-jdbcUrl, user=test-user, password=*************, connectionConfig={test-other-property=test-other-property-value}, poolConfig={test-pool-property=test-pool-property-value}, qualifier=foo}", poolDescriptor.toString());
     }
 
     private void testInvalidProperty(String property) {
         expectedException.expect(RuntimeException.class);
         expectedException.expectMessage("Property '" + property + "' should not be configured for the JDBC connection pool");
         poolConfig.setProperty(property, property + " not allowed");
-        poolDescriptor = new PoolDescriptor("test-server", "test-jdbcUrl", connConfig, poolConfig);
+        poolDescriptor = new PoolDescriptor("test-server", "test-jdbcUrl", connConfig, poolConfig, null);
     }
 }

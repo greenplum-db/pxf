@@ -59,8 +59,9 @@ public class JdbcAccessorTest {
         additionalProps.put("jdbc.driver", "org.greenplum.pxf.plugins.jdbc.FakeJdbcDriver");
         additionalProps.put("jdbc.url", "test-url");
         context.setAdditionalConfigProps(additionalProps);
+        context.setUser("test-user");
 
-        when(mockConnectionManager.getConnection(anyString(), anyString(), anyObject(), anyBoolean(), anyObject())).thenReturn(mockConnection);
+        when(mockConnectionManager.getConnection(anyString(), anyString(), anyObject(), anyBoolean(), anyObject(), anyString())).thenReturn(mockConnection);
         when(mockConnection.getMetaData()).thenReturn(mockMetaData);
         when(mockConnection.createStatement()).thenReturn(mockStatement);
         when(mockMetaData.getDatabaseProductName()).thenReturn("Greenplum");

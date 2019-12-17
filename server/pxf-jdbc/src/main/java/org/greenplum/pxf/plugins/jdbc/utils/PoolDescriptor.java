@@ -21,9 +21,10 @@ public class PoolDescriptor {
     private String user;
     private String password;
     private Properties connectionConfig, poolConfig;
+    private String qualifier;
 
 
-    public PoolDescriptor(String server, String jdbcUrl, Properties connectionConfig, Properties poolConfig) {
+    public PoolDescriptor(String server, String jdbcUrl, Properties connectionConfig, Properties poolConfig, String qualifier) {
         this.server = server;
         this.jdbcUrl = jdbcUrl;
 
@@ -35,6 +36,7 @@ public class PoolDescriptor {
         }
 
         this.poolConfig = (Properties) poolConfig.clone();
+        this.qualifier = qualifier;
 
         // validate pool configuration
         PROHIBITED_PROPERTIES.forEach(p -> ensurePoolPropertyNotPresent(p));
@@ -75,12 +77,13 @@ public class PoolDescriptor {
                 Objects.equals(user, that.user) &&
                 Objects.equals(password, that.password) &&
                 Objects.equals(connectionConfig, that.connectionConfig) &&
-                Objects.equals(poolConfig, that.poolConfig);
+                Objects.equals(poolConfig, that.poolConfig) &&
+                Objects.equals(qualifier, that.qualifier);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(server, jdbcUrl, user, password, connectionConfig, poolConfig);
+        return Objects.hash(server, jdbcUrl, user, password, connectionConfig, poolConfig, qualifier);
     }
 
 
@@ -91,7 +94,8 @@ public class PoolDescriptor {
                 ", user=" + user +
                 ", password=" + ConnectionManager.maskPassword(password) +
                 ", connectionConfig=" + connectionConfig +
-                ", poolConfig=" + poolConfig +'}';
+                ", poolConfig=" + poolConfig +
+                ", qualifier=" + qualifier + '}';
     }
 
     private void ensurePoolPropertyNotPresent(String propName) {

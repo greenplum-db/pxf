@@ -53,6 +53,18 @@
         <description>The minimum number of idle connections to maintain in the pool</description>
     </property>
 
+    <!--
+    <property>
+        <name>jdbc.pool.session.authorization</name>
+        <value>${pxf.session.user}</value>
+        <description>
+            Set to the value describing the actual effective user for the connection.
+            Used when the jdbc.session.property is set to do session authorization to switch users
+            once connected. Important so that only connections for the same effective user are pooled.
+        </description>
+    </property>
+    -->
+
     <!-- Statement level properties -->
     <!--
     <property>
