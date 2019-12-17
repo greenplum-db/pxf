@@ -233,7 +233,7 @@ public class SecurityServletFilterTest {
         when(mockServletRequest.getHeader("X-GP-SEGMENT-ID")).thenReturn("7");
         when(mockServletRequest.getHeader("X-GP-OPTIONS-SERVER")).thenReturn("server");
         when(mockServletRequest.getHeader("X-GP-OPTIONS-CONFIG")).thenReturn("config");
-        when(mockConfigurationFactory.initConfiguration("config", "server", null, null)).thenReturn(mockConfiguration);
+        when(mockConfigurationFactory.initConfiguration("config", "server", "gpdb-user", null)).thenReturn(mockConfiguration);
         when(mockSecureLogin.getLoginUser("server", "config", mockConfiguration)).thenReturn(mockLoginUGI);
         when(mockUGICache.getUserGroupInformation(any(SessionId.class), eq(impersonation))).thenReturn(mockProxyUGI);
     }

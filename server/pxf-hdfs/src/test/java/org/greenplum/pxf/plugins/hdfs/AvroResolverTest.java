@@ -34,6 +34,7 @@ public class AvroResolverTest {
         resolver = new AvroResolver();
         context = new RequestContext();
         context.setConfig("default");
+        context.setUser("test-user");
         // initialize checks that accessor is some kind of avro accessor
         context.setAccessor("avro");
     }
