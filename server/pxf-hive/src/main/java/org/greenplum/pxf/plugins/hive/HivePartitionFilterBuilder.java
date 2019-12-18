@@ -19,15 +19,11 @@ package org.greenplum.pxf.plugins.hive;
  * under the License.
  */
 
-import org.greenplum.pxf.api.filter.CollectionOperand;
-import org.greenplum.pxf.api.filter.ColumnIndexOperand;
-import org.greenplum.pxf.api.filter.Operand;
-import org.greenplum.pxf.api.filter.ToStringTreeVisitor;
+import org.greenplum.pxf.api.filter.ColumnPredicateBuilder;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * A tree visitor to generate a filter string for partition filtering.
@@ -58,14 +54,12 @@ import java.util.stream.Collectors;
  * P OR NP -> null
  * NP <op> NP -> null
  */
-public class HivePartitionFilterBuilder extends ToStringTreeVisitor {
+public class HivePartitionFilterBuilder extends ColumnPredicateBuilder {
 
     private static final String HIVE_API_D_QUOTE = "\"";
 
-    private final List<ColumnDescriptor> columnDescriptors;
-
     public HivePartitionFilterBuilder(List<ColumnDescriptor> tupleDescription) {
-        this.columnDescriptors = tupleDescription;
+        super(tupleDescription);
     }
 
     @Override
@@ -74,23 +68,6 @@ public class HivePartitionFilterBuilder extends ToStringTreeVisitor {
     }
 
     @Override
-    protected String getNodeValue(Operand operand) {
-        if (operand instanceof ColumnIndexOperand) {
-            ColumnIndexOperand columnIndexOperand = (ColumnIndexOperand) operand;
-            ColumnDescriptor columnDescriptor = columnDescriptors.get(columnIndexOperand.index());
-            return columnDescriptor.columnName();
-        } else if (operand instanceof CollectionOperand) {
-            CollectionOperand collectionOperand = (CollectionOperand) operand;
-            String listValue = collectionOperand.getData().stream()
-                    .map(s -> serializeValue(null, s))
-                    .collect(Collectors.joining(","));
-            return String.format("(%s)", listValue);
-        } else {
-            String value = super.getNodeValue(operand);
-            return serializeValue(null, value);
-        }
-    }
-
     protected String serializeValue(DataType type, String value) {
         return String.format("%s%s%s", HIVE_API_D_QUOTE, value, HIVE_API_D_QUOTE);
     }

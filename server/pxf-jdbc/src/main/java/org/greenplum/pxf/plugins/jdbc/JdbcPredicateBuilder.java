@@ -20,17 +20,15 @@ package org.greenplum.pxf.plugins.jdbc;
  */
 
 import org.apache.commons.lang.StringUtils;
-import org.greenplum.pxf.api.filter.CollectionOperand;
-import org.greenplum.pxf.api.filter.ColumnIndexOperand;
+import org.greenplum.pxf.api.filter.ColumnPredicateBuilder;
 import org.greenplum.pxf.api.filter.Node;
-import org.greenplum.pxf.api.filter.Operand;
 import org.greenplum.pxf.api.filter.ToStringTreeVisitor;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
 
 import java.util.List;
-import java.util.stream.Collectors;
+
 
 /**
  * Converts an expression {@link Node} into a valid predicate for the
@@ -38,76 +36,38 @@ import java.util.stream.Collectors;
  * This class extends {@link ToStringTreeVisitor} and overrides the required
  * methods.
  */
-public class JdbcPredicateBuilder extends ToStringTreeVisitor {
+public class JdbcPredicateBuilder extends ColumnPredicateBuilder {
 
     private final boolean hasPartition;
     private final DbProduct dbProduct;
-    private final String quoteString;
-    private final List<ColumnDescriptor> columnDescriptors;
-
-    /**
-     * Stores the index of the last processed column
-     */
-    protected int lastIndex;
 
     public JdbcPredicateBuilder(DbProduct dbProduct,
                                 List<ColumnDescriptor> tupleDescription) {
-        this(dbProduct, null, false, tupleDescription);
+        this(dbProduct, "", false, tupleDescription);
     }
 
     public JdbcPredicateBuilder(DbProduct dbProduct,
                                 String quoteString,
                                 boolean hasPartition,
                                 List<ColumnDescriptor> tupleDescription) {
+        super(quoteString, tupleDescription);
         this.dbProduct = dbProduct;
-        this.quoteString = quoteString;
         this.hasPartition = hasPartition;
-        this.columnDescriptors = tupleDescription;
     }
 
     @Override
     public String toString() {
-        if (sb.length() > 0) {
-            if (hasPartition) {
-                sb.insert(0, " WHERE (").append(")");
-            } else {
-                sb.insert(0, " WHERE ");
-            }
+        if (sb.length() == 0) return "";
+
+        if (hasPartition) {
+            sb.insert(0, " WHERE (").append(")");
+        } else {
+            sb.insert(0, " WHERE ");
         }
         return sb.toString();
     }
 
     @Override
-    protected String getNodeValue(Operand operand) {
-        if (operand instanceof ColumnIndexOperand) {
-            ColumnIndexOperand columnIndexOperand = (ColumnIndexOperand) operand;
-
-            /* We need the column index (column is guaranteed to be on the left,
-             * so it always comes first. The column index is needed to get the
-             * column type. The column type information is required to determine
-             * how the value will be processed
-             */
-            lastIndex = columnIndexOperand.index();
-            ColumnDescriptor columnDescriptor = columnDescriptors.get(lastIndex);
-            return String.format("%s%s%s", quoteString, columnDescriptor.columnName(), quoteString);
-        }
-
-        // Obtain the datatype of the column
-        ColumnDescriptor columnDescriptor = columnDescriptors.get(lastIndex);
-        DataType type = DataType.get(columnDescriptor.columnTypeCode());
-
-        if (operand instanceof CollectionOperand) {
-            CollectionOperand collectionOperand = (CollectionOperand) operand;
-            String listValue = collectionOperand.getData().stream()
-                    .map(s -> serializeValue(type, s))
-                    .collect(Collectors.joining(","));
-            return String.format("(%s)", listValue);
-        } else {
-            String value = super.getNodeValue(operand);
-            return serializeValue(type, value);
-        }
-    }
-
     protected String serializeValue(DataType type, String value) {
         switch (type) {
             case SMALLINT:
@@ -130,9 +90,5 @@ public class JdbcPredicateBuilder extends ToStringTreeVisitor {
                 throw new UnsupportedOperationException(String.format(
                         "Unsupported column type for filtering '%s' ", type.getOID()));
         }
-    }
-
-    protected List<ColumnDescriptor> getColumnDescriptors() {
-        return columnDescriptors;
     }
 }
