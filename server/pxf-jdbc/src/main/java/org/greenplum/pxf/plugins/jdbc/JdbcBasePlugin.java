@@ -155,7 +155,7 @@ public class JdbcBasePlugin extends BasePlugin {
     // connection pool fields
     private boolean isConnectionPoolUsed;
     private Properties poolConfiguration;
-    private String poolSessionAuthorization;
+    private String poolQualifier;
 
     private ConnectionManager connectionManager;
 
@@ -347,7 +347,7 @@ public class JdbcBasePlugin extends BasePlugin {
 
             // get the qualifier for connection pool, if configured. Might be used when connection session authorization is employed
             // to switch effective user once connection is established
-            poolSessionAuthorization = configuration.get(JDBC_POOL_QUALIFIER_PROPERTY_NAME);
+            poolQualifier = configuration.get(JDBC_POOL_QUALIFIER_PROPERTY_NAME);
         }
     }
 
@@ -457,10 +457,10 @@ public class JdbcBasePlugin extends BasePlugin {
         if (Utilities.isSecurityEnabled(configuration) && StringUtils.startsWith(jdbcUrl, HIVE_URL_PREFIX)) {
             return SecureLogin.getInstance().getLoginUser(context, configuration).
                     doAs((PrivilegedExceptionAction<Connection>) () ->
-                            connectionManager.getConnection(context.getServerName(), jdbcUrl, connectionConfiguration, isConnectionPoolUsed, poolConfiguration, poolSessionAuthorization));
+                            connectionManager.getConnection(context.getServerName(), jdbcUrl, connectionConfiguration, isConnectionPoolUsed, poolConfiguration, poolQualifier));
 
         } else {
-            return connectionManager.getConnection(context.getServerName(), jdbcUrl, connectionConfiguration, isConnectionPoolUsed, poolConfiguration, poolSessionAuthorization);
+            return connectionManager.getConnection(context.getServerName(), jdbcUrl, connectionConfiguration, isConnectionPoolUsed, poolConfiguration, poolQualifier);
         }
     }
 
