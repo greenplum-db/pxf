@@ -438,7 +438,7 @@ public class JdbcBasePluginTest {
         additionalProps.put("jdbc.connection.property.bar", "bar-val");
         // pool is enabled by default
 
-        additionalProps.put("jdbc.pool.session.authorization", "qual");
+        additionalProps.put("jdbc.pool.qualifier", "qual");
 
         when(mockConnectionManager.getConnection(anyString(), anyString(), anyObject(), anyBoolean(), anyObject(), anyString())).thenReturn(mockConnection);
         when(mockConnection.getMetaData()).thenReturn(mockMetaData);

@@ -80,7 +80,7 @@ public class JdbcBasePlugin extends BasePlugin {
     // connection pool properties
     private static final String JDBC_CONNECTION_POOL_ENABLED_PROPERTY_NAME = "jdbc.pool.enabled";
     private static final String JDBC_CONNECTION_POOL_PROPERTY_PREFIX = "jdbc.pool.property.";
-    private static final String JDBC_CONNECTION_POOL_SESSION_AUTHORIZATION_PROPERTY_NAME = "jdbc.pool.session.authorization";
+    private static final String JDBC_POOL_QUALIFIER_PROPERTY_NAME = "jdbc.pool.qualifier";
 
     // DDL option names
     private static final String JDBC_DRIVER_OPTION_NAME = "JDBC_DRIVER";
@@ -345,9 +345,9 @@ public class JdbcBasePlugin extends BasePlugin {
                 poolConfiguration.setProperty("connectionTestQuery", "SELECT 1");
             }
 
-            // get the qualifier for connection pool, if configured. Used when connection session authorization is employed
+            // get the qualifier for connection pool, if configured. Might be used when connection session authorization is employed
             // to switch effective user once connection is established
-            poolSessionAuthorization = configuration.get(JDBC_CONNECTION_POOL_SESSION_AUTHORIZATION_PROPERTY_NAME);
+            poolSessionAuthorization = configuration.get(JDBC_POOL_QUALIFIER_PROPERTY_NAME);
         }
     }
 

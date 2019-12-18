@@ -55,12 +55,13 @@
 
     <!--
     <property>
-        <name>jdbc.pool.session.authorization</name>
+        <name>jdbc.pool.qualifier</name>
         <value>${pxf.session.user}</value>
         <description>
-            Set to the value describing the actual effective user for the connection.
-            Used when the jdbc.session.property is set to do session authorization to switch users
-            once connected. Important so that only connections for the same effective user are pooled.
+            A separate connection pool will be created for each value of the given qualifier, even if all other parameters
+            are the same. Might be useful when jdbc.session.property is set to do session authorization to switch users
+            once connected, in which case set it to ${pxf.session.user} so that a separate pool is created for every
+            effective user.
         </description>
     </property>
     -->
