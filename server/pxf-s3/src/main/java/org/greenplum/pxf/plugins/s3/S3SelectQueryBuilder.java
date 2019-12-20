@@ -86,7 +86,7 @@ public class S3SelectQueryBuilder {
         try {
             Node root = new FilterParser().parse(context.getFilterString());
             root = PRUNER.visit(root);
-            new TreeTraverser().inOrderTraversal(root, s3SelectTreeVisitor);
+            new TreeTraverser().traverse(root, s3SelectTreeVisitor);
 
             // No exceptions were thrown, change the provided query
             query.append(s3SelectTreeVisitor.toString());

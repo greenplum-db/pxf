@@ -150,7 +150,7 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
         root = PRUNER.visit(root);
 
         HiveORCSearchArgumentBuilder treeVisitor = new HiveORCSearchArgumentBuilder(context.getTupleDescription(), configuration);
-        TRAVERSER.inOrderTraversal(root, treeVisitor);
+        TRAVERSER.traverse(root, treeVisitor);
 
         SearchArgument.Builder filterBuilder = treeVisitor.getFilterBuilder();
         SearchArgument searchArgument = filterBuilder.build();

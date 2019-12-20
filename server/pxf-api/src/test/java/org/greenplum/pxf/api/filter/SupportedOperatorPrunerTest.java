@@ -174,7 +174,7 @@ public class SupportedOperatorPrunerTest {
         root = new SupportedOperatorPruner(supportedOperators).visit(root);
 
         ToStringTreeVisitor visitor = new ToStringTreeVisitor();
-        new TreeTraverser().inOrderTraversal(root, visitor);
+        new TreeTraverser().traverse(root, visitor);
 
         assertEquals(expected, visitor.toString());
     }

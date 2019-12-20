@@ -265,7 +265,7 @@ public class HBaseFilterBuilderTest {
         HBaseFilterBuilder hBaseFilterBuilder = new HBaseFilterBuilder(desc);
         Node root = new FilterParser().parse(filterString);
         root = PRUNER.visit(root);
-        TRAVERSER.inOrderTraversal(root, hBaseFilterBuilder);
+        TRAVERSER.traverse(root, hBaseFilterBuilder);
 
         return hBaseFilterBuilder.build();
     }

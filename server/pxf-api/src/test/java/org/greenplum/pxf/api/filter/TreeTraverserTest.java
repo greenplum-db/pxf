@@ -72,7 +72,7 @@ public class TreeTraverserTest {
         Node root = new FilterParser().parse(filterString);
 
         ToStringTreeVisitor visitor = new ToStringTreeVisitor();
-        new TreeTraverser().inOrderTraversal(root, visitor);
+        new TreeTraverser().traverse(root, visitor);
 
         assertEquals(expected, visitor.toString());
     }

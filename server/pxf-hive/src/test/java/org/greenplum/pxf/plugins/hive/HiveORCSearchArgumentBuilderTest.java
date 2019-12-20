@@ -40,7 +40,7 @@ public class HiveORCSearchArgumentBuilderTest {
         root = TREE_PRUNER.visit(root);
 
         HiveORCSearchArgumentBuilder treeVisitor = new HiveORCSearchArgumentBuilder(tupleDescription, new Configuration());
-        new TreeTraverser().inOrderTraversal(root, treeVisitor);
+        new TreeTraverser().traverse(root, treeVisitor);
 
         SearchArgument.Builder filterBuilder = treeVisitor.getFilterBuilder();
 

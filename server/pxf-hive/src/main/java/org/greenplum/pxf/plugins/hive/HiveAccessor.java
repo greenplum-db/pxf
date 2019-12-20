@@ -236,7 +236,7 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
                     context.getSegmentId(), context.getDataSource(), filterStr, returnData);
 
             ToStringTreeVisitor toStringTreeVisitor = new ToStringTreeVisitor();
-            new TreeTraverser().inOrderTraversal(root, toStringTreeVisitor);
+            new TreeTraverser().traverse(root, toStringTreeVisitor);
 
             LOG.debug("Filter string after pruning {}", toStringTreeVisitor.toString());
         }

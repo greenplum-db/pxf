@@ -16,7 +16,7 @@ public class ToStringTreeVisitor implements TreeVisitor {
     private final StringBuilder sb = new StringBuilder();
 
     @Override
-    public Node before(Node node) {
+    public Node before(Node node, final int level) {
         if (node instanceof OperatorNode) {
             OperatorNode operatorNode = (OperatorNode) node;
             Operator operator = operatorNode.getOperator();
@@ -34,6 +34,11 @@ public class ToStringTreeVisitor implements TreeVisitor {
 
     @Override
     public Node visit(Node node) {
+        return visit(node, 0);
+    }
+
+    @Override
+    public Node visit(Node node, final int level) {
         if (node instanceof Operand) {
 
             if (node instanceof ScalarOperand) {
@@ -68,7 +73,7 @@ public class ToStringTreeVisitor implements TreeVisitor {
     }
 
     @Override
-    public Node after(Node node) {
+    public Node after(Node node, final int level) {
         if (node instanceof OperatorNode) {
             OperatorNode operatorNode = (OperatorNode) node;
             if (operatorNode.getOperator().isLogical()) {

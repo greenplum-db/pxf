@@ -267,7 +267,7 @@ public class SQLQueryBuilder {
         try {
             Node root = new FilterParser().parse(context.getFilterString());
             root = treePruner.visit(root);
-            new TreeTraverser().inOrderTraversal(root, jdbcPredicateBuilder);
+            new TreeTraverser().traverse(root, jdbcPredicateBuilder);
 
             // No exceptions were thrown, change the provided query
             query.append(jdbcPredicateBuilder.toString());

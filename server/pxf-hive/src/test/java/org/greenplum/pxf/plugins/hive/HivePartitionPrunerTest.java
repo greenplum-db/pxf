@@ -327,7 +327,7 @@ public class HivePartitionPrunerTest {
     private void helper(String expected, String filterString, TreeVisitor pruner, HivePartitionFilterBuilder treeVisitor) throws Exception {
         Node root = parser.parse(filterString);
         root = pruner.visit(root);
-        treeTraverser.inOrderTraversal(root, treeVisitor);
+        treeTraverser.traverse(root, treeVisitor);
         assertEquals(expected, treeVisitor.toString());
         treeVisitor.reset();
     }

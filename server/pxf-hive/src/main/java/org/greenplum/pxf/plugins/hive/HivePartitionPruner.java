@@ -37,12 +37,12 @@ public class HivePartitionPruner extends SupportedOperatorPruner {
     }
 
     @Override
-    public Node visit(Node node) {
+    public Node visit(Node node, final int level) {
         if (node instanceof OperatorNode &&
                 !canOperatorBePushedDown((OperatorNode) node)) {
             return null;
         }
-        return super.visit(node);
+        return super.visit(node, level);
     }
 
     /**

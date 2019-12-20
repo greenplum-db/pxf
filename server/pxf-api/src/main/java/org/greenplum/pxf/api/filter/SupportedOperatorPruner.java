@@ -29,12 +29,16 @@ public class SupportedOperatorPruner implements TreeVisitor {
     }
 
     @Override
-    public Node before(Node node) {
+    public Node before(Node node, final int level) {
         return node;
     }
 
-    @Override
     public Node visit(Node node) {
+        return visit(node, 0);
+    }
+
+    @Override
+    public Node visit(Node node, final int level) {
         if (node == null) return null;
 
         if (node instanceof OperatorNode) {
@@ -53,7 +57,7 @@ public class SupportedOperatorPruner implements TreeVisitor {
         // Reverse iteration because we might remove items from the array
         for (int i = children.size() - 1; i >= 0; i--) {
             Node child = children.get(i);
-            Node processed = visit(child);
+            Node processed = visit(child, level + 1);
 
             if (processed == null) {
                 LOG.debug("Child {} at index {} was pruned", child, i);
@@ -94,7 +98,7 @@ public class SupportedOperatorPruner implements TreeVisitor {
                 LOG.debug("Child {} at index {} was pruned, and child {} was promoted higher in the tree",
                         child, i, processed);
 
-                child.getChildren().clear();
+                // replace it with the new child
                 children.set(i, processed);
             }
         }
@@ -131,7 +135,7 @@ public class SupportedOperatorPruner implements TreeVisitor {
     }
 
     @Override
-    public Node after(Node node) {
+    public Node after(Node node, final int level) {
         return node;
     }
 }

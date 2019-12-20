@@ -318,7 +318,7 @@ public class HBaseAccessor extends BasePlugin implements Accessor {
         root = PRUNER.visit(root);
 
         // Traverse the tree with the hBaseFilterBuilder to produce a filter
-        TRAVERSER.inOrderTraversal(root, hBaseFilterBuilder);
+        TRAVERSER.traverse(root, hBaseFilterBuilder);
 
         // Retrieve the built filter
         Filter filter = hBaseFilterBuilder.build();

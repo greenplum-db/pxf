@@ -54,33 +54,36 @@ public class HiveORCSearchArgumentBuilder implements TreeVisitor {
 
     private final SearchArgument.Builder filterBuilder;
     private final List<ColumnDescriptor> columnDescriptors;
-    private boolean hasLogicalOperators;
 
     public HiveORCSearchArgumentBuilder(List<ColumnDescriptor> tupleDescription, Configuration configuration) {
         this.filterBuilder = SearchArgumentFactory.newBuilder(configuration);
         this.columnDescriptors = tupleDescription;
-        this.hasLogicalOperators = false;
     }
 
     @Override
-    public Node before(Node node) {
+    public Node before(Node node, final int level) {
         if (node instanceof OperatorNode) {
             OperatorNode operatorNode = (OperatorNode) node;
             Operator operator = operatorNode.getOperator();
-            if (operator.isLogical()) {
+            if (operator.isLogical() || level == 0) {
                 // AND / OR / NOT
                 switch (operator) {
                     case OR:
                         filterBuilder.startOr();
                         break;
-                    case AND:
-                        filterBuilder.startAnd();
-                        break;
                     case NOT:
                         filterBuilder.startNot();
                         break;
+
+                    default:
+                        /*
+                         * If there is only a single filter it will need special
+                         * case logic to make sure to still wrap the filter in a
+                         * startAnd() & end() block
+                         */
+                        filterBuilder.startAnd();
+                        break;
                 }
-                hasLogicalOperators = true;
             }
         }
         return node;
@@ -88,33 +91,27 @@ public class HiveORCSearchArgumentBuilder implements TreeVisitor {
 
     @Override
     public Node visit(Node node) {
+        return visit(node, 0);
+    }
+
+    @Override
+    public Node visit(Node node, final int level) {
         if (node instanceof OperatorNode) {
             OperatorNode operatorNode = (OperatorNode) node;
             Operator operator = operatorNode.getOperator();
 
             if (!operator.isLogical()) {
-                if (!hasLogicalOperators) {
-                    /*
-                     * If there is only a single filter it will need special
-                     * case logic to make sure to still wrap the filter in a
-                     * startAnd() & end() block
-                     */
-                    filterBuilder.startAnd();
-                }
                 buildArgument(operatorNode);
-                if (!hasLogicalOperators) {
-                    filterBuilder.end();
-                }
             }
         }
         return node;
     }
 
     @Override
-    public Node after(Node node) {
+    public Node after(Node node, final int level) {
         if (node instanceof OperatorNode) {
             OperatorNode operatorNode = (OperatorNode) node;
-            if (operatorNode.getOperator().isLogical()) {
+            if (operatorNode.getOperator().isLogical() || level == 0) {
                 // AND / OR / NOT
                 filterBuilder.end();
             }
