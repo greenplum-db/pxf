@@ -124,8 +124,8 @@ public class HBaseAccessorWithFilter extends BasePlugin implements Accessor {
      * @throws Exception if opening the resource failed
      */
     @Override
-    public boolean openForWrite() throws Exception {
-        return false;
+    public boolean openForWrite() {
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -136,8 +136,8 @@ public class HBaseAccessorWithFilter extends BasePlugin implements Accessor {
      * @throws Exception writing to the resource failed
      */
     @Override
-    public boolean writeNextObject(OneRow onerow) throws Exception {
-        return false;
+    public boolean writeNextObject(OneRow onerow) {
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -146,8 +146,8 @@ public class HBaseAccessorWithFilter extends BasePlugin implements Accessor {
      * @throws Exception if closing the resource failed
      */
     @Override
-    public void closeForWrite() throws Exception {
-
+    public void closeForWrite() {
+        throw new UnsupportedOperationException();
     }
 
     @Override
