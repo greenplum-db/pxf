@@ -74,8 +74,8 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
                     Operator.AND,
                     Operator.NOT
             );
-    private static final TreeVisitor TREE_PRUNER = new SupportedOperatorPruner(SUPPORTED_OPERATORS);
-    private static final TreeTraverser TREE_TRAVERSER = new TreeTraverser();
+    private static final TreeVisitor PRUNER = new SupportedOperatorPruner(SUPPORTED_OPERATORS);
+    private static final TreeTraverser TRAVERSER = new TreeTraverser();
 
     Reader orcReader;
 
@@ -147,10 +147,10 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
         String filterStr = context.getFilterString();
 
         Node root = new FilterParser().parse(filterStr);
-        root = TREE_PRUNER.visit(root);
+        root = PRUNER.visit(root);
 
         HiveORCSearchArgumentBuilder treeVisitor = new HiveORCSearchArgumentBuilder(context.getTupleDescription(), configuration);
-        TREE_TRAVERSER.inOrderTraversal(root, treeVisitor);
+        TRAVERSER.inOrderTraversal(root, treeVisitor);
 
         SearchArgument.Builder filterBuilder = treeVisitor.getFilterBuilder();
         SearchArgument searchArgument = filterBuilder.build();
