@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 public enum DbProduct {
     MICROSOFT {
         @Override
-        public String wrapDate(Object val){
+        public String wrapDate(Object val) {
             return "'" + val + "'";
         }
 
@@ -40,7 +40,7 @@ public enum DbProduct {
 
     MYSQL {
         @Override
-        public String wrapDate(Object val){
+        public String wrapDate(Object val) {
             return "DATE('" + val + "')";
         }
     },
@@ -102,9 +102,8 @@ public enum DbProduct {
     /**
      * Build a query to set session-level variables for target database
      *
-     * @param key variable name (key)
+     * @param key   variable name (key)
      * @param value variable value
-     *
      * @return a string with template SET query
      */
     public String buildSessionQuery(String key, String value) {
@@ -130,6 +129,8 @@ public enum DbProduct {
             result = DbProduct.MYSQL;
         else if (dbName.contains("ORACLE"))
             result = DbProduct.ORACLE;
+        else if (dbName.contains("S3 SELECT"))
+            result = DbProduct.S3_SELECT;
         else
             result = DbProduct.POSTGRES;
 

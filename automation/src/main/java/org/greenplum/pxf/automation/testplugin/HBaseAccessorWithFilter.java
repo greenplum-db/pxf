@@ -286,7 +286,7 @@ public class HBaseAccessorWithFilter extends BasePlugin implements Accessor {
 
         // Traverse all the nodes and use the HBaseFilterBuilder to generate
         // the filter
-        TRAVERSER.inOrderTraversal(root, hBaseFilterBuilder);
+        TRAVERSER.traverse(root, hBaseFilterBuilder);
 
         // Get the filter
         Filter filter = hBaseFilterBuilder.build();

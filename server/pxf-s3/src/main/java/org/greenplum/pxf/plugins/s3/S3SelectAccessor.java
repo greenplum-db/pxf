@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
+import java.sql.SQLException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -155,8 +156,13 @@ public class S3SelectAccessor extends BasePlugin implements Accessor {
         boolean usePositionToIdentifyColumn = inputSerialization.getCsv() != null &&
                 (StringUtils.isBlank(fileHeaderInfo) ||
                         !StringUtils.equalsIgnoreCase(FILE_HEADER_INFO_USE, fileHeaderInfo));
-        S3SelectQueryBuilder queryBuilder = new S3SelectQueryBuilder(context, usePositionToIdentifyColumn);
-        String query = queryBuilder.buildSelectQuery();
+        String query = null;
+        try {
+            S3SelectQueryBuilder queryBuilder = new S3SelectQueryBuilder(context, usePositionToIdentifyColumn);
+            query = queryBuilder.buildSelectQuery();
+        } catch (SQLException e) {
+            LOG.error("Unable to build select query for filter string {}", context.getFilterString());
+        }
 
         LOG.trace("Select query: {}", query);
 

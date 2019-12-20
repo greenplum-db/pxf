@@ -39,7 +39,6 @@ import java.util.List;
 import java.util.regex.Pattern;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
-import java.text.ParseException;
 import java.util.stream.Collectors;
 
 /**
@@ -70,14 +69,16 @@ public class SQLQueryBuilder {
                     Operator.NOT,
                     Operator.OR
             );
-    private static final TreeVisitor treePruner = new SupportedOperatorPruner(SUPPORTED_OPERATORS);
+    private static final TreeVisitor PRUNER = new SupportedOperatorPruner(SUPPORTED_OPERATORS);
+    private static final TreeTraverser TRAVERSER = new TreeTraverser();
 
-    private RequestContext context;
-    private DatabaseMetaData databaseMetaData;
-    private DbProduct dbProduct;
+    protected final RequestContext context;
+
+    private final DatabaseMetaData databaseMetaData;
+    private final DbProduct dbProduct;
+    private final List<ColumnDescriptor> columns;
+    private final String source;
     private String quoteString;
-    private List<ColumnDescriptor> columns;
-    private String source;
     private boolean subQueryUsed = false;
 
     /**
@@ -123,24 +124,16 @@ public class SQLQueryBuilder {
         quoteString = "";
     }
 
-
     /**
      * Build SELECT query (with "WHERE" and partition constraints).
      *
      * @return Complete SQL query
-     * @throws ParseException if the constraints passed in RequestContext are incorrect
-     * @throws SQLException   if some call of DatabaseMetaData method fails
      */
-    public String buildSelectQuery() throws ParseException, SQLException {
-        String columnsQuery = this.columns.stream()
-                .filter(ColumnDescriptor::isProjected)
-                .map(c -> quoteString + c.columnName() + quoteString)
-                .collect(Collectors.joining(", "));
-
+    public String buildSelectQuery() {
         StringBuilder sb = new StringBuilder("SELECT ")
-                .append(columnsQuery)
+                .append(buildColumnsQuery())
                 .append(" FROM ")
-                .append(source);
+                .append(getSource());
 
         // Insert regular WHERE constraints
         buildWhereSQL(sb);
@@ -225,10 +218,8 @@ public class SQLQueryBuilder {
             }
         }
 
-        if (
-                specialCharactersNamePresent ||
-                        (mixedCaseNamePresent && !databaseMetaData.supportsMixedCaseIdentifiers())
-        ) {
+        if (specialCharactersNamePresent || (mixedCaseNamePresent &&
+                !databaseMetaData.supportsMixedCaseIdentifiers())) {
             quoteString = databaseMetaData.getIdentifierQuoteString();
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Quotation auto-enabled; quote string set to '" + quoteString + "'");
@@ -249,25 +240,63 @@ public class SQLQueryBuilder {
     }
 
     /**
+     * Builds the columns queried in a SELECT query
+     *
+     * @return the columns query
+     */
+    protected String buildColumnsQuery() {
+        return this.columns.stream()
+                .filter(ColumnDescriptor::isProjected)
+                .map(c -> quoteString + c.columnName() + quoteString)
+                .collect(Collectors.joining(", "));
+    }
+
+    /**
+     * Returns the source table for the SELECT query
+     *
+     * @return the source table for the SELECT query
+     */
+    protected String getSource() {
+        return source;
+    }
+
+    /**
+     * Returns the JdbcPredicateBuilder that generates the predicate for this
+     * database
+     *
+     * @return the JdbcPredicateBuilder
+     */
+    protected JdbcPredicateBuilder getPredicateBuilder() {
+        return new JdbcPredicateBuilder(
+                dbProduct,
+                quoteString,
+                context.getTupleDescription());
+    }
+
+    /**
+     * Return the pruner for the parsed expression tree
+     *
+     * @return the tree pruner
+     */
+    protected TreeVisitor getPruner() {
+        return PRUNER;
+    }
+
+    /**
      * Insert WHERE constraints into a given query.
      * Note that if filter is not supported, query is left unchanged.
      *
      * @param query SQL query to insert constraints to. The query may may contain other WHERE statements
      */
     private void buildWhereSQL(StringBuilder query) {
-        if (!context.hasFilter()) {
-            return;
-        }
+        if (!context.hasFilter()) return;
 
-        JdbcPredicateBuilder jdbcPredicateBuilder = new JdbcPredicateBuilder(
-                dbProduct,
-                quoteString,
-                context.getTupleDescription());
+        JdbcPredicateBuilder jdbcPredicateBuilder = getPredicateBuilder();
 
         try {
             Node root = new FilterParser().parse(context.getFilterString());
-            root = treePruner.visit(root);
-            new TreeTraverser().traverse(root, jdbcPredicateBuilder);
+            root = getPruner().visit(root);
+            TRAVERSER.traverse(root, jdbcPredicateBuilder);
 
             // No exceptions were thrown, change the provided query
             query.append(jdbcPredicateBuilder.toString());

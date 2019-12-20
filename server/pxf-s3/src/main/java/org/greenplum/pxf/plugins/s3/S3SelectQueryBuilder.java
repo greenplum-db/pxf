@@ -1,25 +1,27 @@
 package org.greenplum.pxf.plugins.s3;
 
-import org.greenplum.pxf.api.filter.FilterParser;
-import org.greenplum.pxf.api.filter.Node;
 import org.greenplum.pxf.api.filter.Operator;
 import org.greenplum.pxf.api.filter.SupportedOperatorPruner;
-import org.greenplum.pxf.api.filter.TreeTraverser;
 import org.greenplum.pxf.api.filter.TreeVisitor;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.greenplum.pxf.plugins.jdbc.JdbcPredicateBuilder;
+import org.greenplum.pxf.plugins.jdbc.SQLQueryBuilder;
+import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
 
+import java.sql.SQLException;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class S3SelectQueryBuilder {
+/**
+ * Builds a query for the S3 Select API
+ */
+public class S3SelectQueryBuilder extends SQLQueryBuilder {
 
-    private static final String S3_SELECT_SOURCE = "S3Object";
+    static final String S3_SELECT_SOURCE = "S3Object";
     static final String S3_TABLE_ALIAS = "s";
-    private static final EnumSet<Operator> SUPPORTED_OPERATORS =
+    static final EnumSet<Operator> SUPPORTED_OPERATORS =
             EnumSet.of(
                     Operator.LESS_THAN,
                     Operator.GREATER_THAN,
@@ -37,63 +39,53 @@ public class S3SelectQueryBuilder {
                     Operator.NOT,
                     Operator.OR
             );
-    private static final TreeVisitor PRUNER = new SupportedOperatorPruner(SUPPORTED_OPERATORS);
+    static final TreeVisitor PRUNER = new SupportedOperatorPruner(SUPPORTED_OPERATORS);
 
-    private final RequestContext context;
     private List<ColumnDescriptor> columns;
     private boolean usePositionToIdentifyColumn;
-    private Logger LOG = LoggerFactory.getLogger(this.getClass());
 
-    public S3SelectQueryBuilder(RequestContext context, boolean usePositionToIdentifyColumn) {
-        this.context = context;
+    /**
+     * Constructor
+     *
+     * @param context                     the request context
+     * @param usePositionToIdentifyColumn whether to use the column name or the
+     *                                    position to identify the column
+     * @throws SQLException when a SQL exception occurs
+     */
+    public S3SelectQueryBuilder(RequestContext context,
+                                boolean usePositionToIdentifyColumn) throws SQLException {
+        super(context, new S3SelectDatabaseMetaData());
         this.usePositionToIdentifyColumn = usePositionToIdentifyColumn;
         this.columns = context.getTupleDescription();
     }
 
-    /**
-     * Build SELECT query with WHERE clause
-     *
-     * @return S3 Select SQL query
-     */
-    public String buildSelectQuery() {
-        String columnsQuery = columns.stream()
+    @Override
+    protected String buildColumnsQuery() {
+        return columns.stream()
                 .map(c -> c.isProjected() ? getColumnName(c) : "null")
                 .collect(Collectors.joining(", "));
-
-        StringBuilder sb = new StringBuilder("SELECT ")
-                .append(columnsQuery)
-                .append(" FROM ")
-                .append(S3_SELECT_SOURCE)
-                .append(" ")
-                .append(S3_TABLE_ALIAS);
-
-        // Insert regular WHERE constraints
-        buildWhereSQL(sb);
-
-        return sb.toString();
     }
 
-    /**
-     * Build a WHERE statement using the RequestContext provided to constructor.
-     */
-    private void buildWhereSQL(StringBuilder query) {
-        if (!context.hasFilter()) return;
+    @Override
+    protected String getSource() {
+        return String.format("%s %s", S3_SELECT_SOURCE, S3_TABLE_ALIAS);
+    }
 
-        S3SelectPredicateBuilder s3SelectTreeVisitor = new S3SelectPredicateBuilder(
+    @Override
+    protected JdbcPredicateBuilder getPredicateBuilder() {
+        return new S3SelectPredicateBuilder(
                 usePositionToIdentifyColumn,
                 context.getTupleDescription());
+    }
 
-        try {
-            Node root = new FilterParser().parse(context.getFilterString());
-            root = PRUNER.visit(root);
-            new TreeTraverser().traverse(root, s3SelectTreeVisitor);
+    @Override
+    protected TreeVisitor getPruner() {
+        return PRUNER;
+    }
 
-            // No exceptions were thrown, change the provided query
-            query.append(s3SelectTreeVisitor.toString());
-        } catch (Exception e) {
-            LOG.debug("WHERE clause is omitted: " + e.toString());
-            // Silence the exception and do not insert constraints
-        }
+    @Override
+    public void buildFragmenterSql(RequestContext context, DbProduct dbProduct, String quoteString, StringBuilder query) {
+        // DO NOTHING: fragmenter is not supported by S3 Select yet
     }
 
     /**

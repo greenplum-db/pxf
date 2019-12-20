@@ -6,6 +6,7 @@ import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,7 +21,7 @@ public class S3SelectQueryBuilderTest {
     private S3SelectQueryBuilder builderPosition, builderNoPosition;
 
     @Before
-    public void setup() {
+    public void setup() throws SQLException {
         context = new RequestContext();
         context.setDataSource("sales");
         List<ColumnDescriptor> columns = new ArrayList<>();
