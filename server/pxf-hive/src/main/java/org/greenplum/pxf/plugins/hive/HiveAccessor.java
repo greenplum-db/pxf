@@ -208,7 +208,7 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
      */
     void initPartitionFields(String partitionKeys) {
         partitions = new LinkedList<>();
-        if (partitionKeys.equals(HiveDataFragmenter.HIVE_NO_PART_TBL)) {
+        if (HiveDataFragmenter.HIVE_NO_PART_TBL.equals(partitionKeys)) {
             return;
         }
 
@@ -384,10 +384,10 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
      * has the form "fieldA = valueA". The partitions have the form
      * partitionOne=valueOne/partitionTwo=ValueTwo/partitionThree=valueThree 1.
      * For a filter to match one of the partitions, lets say partitionA for
-     * example, we need: fieldA = partittionOne and valueA = valueOne. If this
+     * example, we need: fieldA = partitionOne and valueA = valueOne. If this
      * condition occurs, we return true. 2. If fieldA does not match any one of
      * the partition fields we also return true, it means we ignore this filter
-     * because it is not on a partition field. 3. If fieldA = partittionOne and
+     * because it is not on a partition field. 3. If fieldA = partitionOne and
      * valueA != valueOne, then we return false.
      */
     private boolean testOneFilter(List<HivePartition> partitionFields, Node root) {

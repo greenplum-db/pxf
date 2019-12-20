@@ -97,7 +97,7 @@ public class HBaseResolver extends BasePlugin implements Resolver {
      * @throws Exception if constructing a row from the fields failed
      */
     @Override
-    public OneRow setFields(List<OneField> record) throws Exception {
+    public OneRow setFields(List<OneField> record) {
         throw new UnsupportedOperationException();
     }
 
@@ -120,6 +120,7 @@ public class HBaseResolver extends BasePlugin implements Resolver {
                 case TEXT:
                 case VARCHAR:
                 case BPCHAR:
+                case NUMERIC:
                     return Bytes.toString(val);
 
                 case INTEGER:
@@ -142,9 +143,6 @@ public class HBaseResolver extends BasePlugin implements Resolver {
 
                 case BOOLEAN:
                     return Boolean.valueOf(Bytes.toString(val));
-
-                case NUMERIC:
-                    return Bytes.toString(val);
 
                 case TIMESTAMP:
                     return Timestamp.valueOf(Bytes.toString(val));
