@@ -289,7 +289,7 @@ public class HBaseAccessorWithFilter extends BasePlugin implements Accessor {
         TRAVERSER.inOrderTraversal(root, hBaseFilterBuilder);
 
         // Get the filter
-        Filter filter = hBaseFilterBuilder.buildFilter();
+        Filter filter = hBaseFilterBuilder.build();
         scanDetails.setFilter(filter);
 
         scanStartKey = hBaseFilterBuilder.getStartKey();

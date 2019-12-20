@@ -27,32 +27,8 @@ import java.util.List;
 
 /**
  * A tree visitor to generate a filter string for partition filtering.
- * <p>
  * Build filter string for HiveMetaStoreClient.listPartitionsByFilter API
  * method.
- * <p>
- * The filter string parameter for HiveMetaStoreClient.listPartitionsByFilter
- * will be created from the incoming getFragments filter string parameter.
- * It will be in a format of:
- * [PARTITON1 NAME] = \"[PARTITON1 VALUE]\" AND [PARTITON2 NAME] =
- * \"[PARTITON2 VALUE]\" ... Filtering can be done only on string partition
- * keys. Integral partition keys are supported only if its enabled both in
- * Hive and PXF.
- * <p>
- * For Example for query: SELECT * FROM TABLE1 WHERE part1 = 'AAAA' AND
- * part2 = '1111' For HIVE HiveMetaStoreClient.listPartitionsByFilter, the
- * incoming GPDB filter string will be mapped into :
- * "part1 = \"AAAA\" and part2 = \"1111\""
- * <p>
- * Say P is a conforming predicate based on partition column and supported
- * comparison operator NP is a non conforming predicate based on either a
- * non-partition column or an unsupported operator.
- * <p>
- * The following rule will be used during filter processing
- * P <op> P -> P <op> P (op can be any logical operator)
- * P AND NP -> P
- * P OR NP -> null
- * NP <op> NP -> null
  */
 public class HivePartitionFilterBuilder extends ColumnPredicateBuilder {
 

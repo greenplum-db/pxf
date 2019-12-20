@@ -50,6 +50,7 @@ public class SupportedOperatorPruner implements TreeVisitor {
         }
 
         List<Node> children = node.getChildren();
+        // Reverse iteration because we might remove items from the array
         for (int i = children.size() - 1; i >= 0; i--) {
             Node child = children.get(i);
             Node processed = visit(child);
