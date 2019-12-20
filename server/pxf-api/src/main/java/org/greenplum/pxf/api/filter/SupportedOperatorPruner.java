@@ -57,7 +57,6 @@ public class SupportedOperatorPruner implements TreeVisitor {
 
             if (processed == null) {
                 LOG.debug("Child {} at index {} was pruned", child, i);
-                child.getChildren().clear();
                 // If pruned remove it from list of children
                 children.remove(i);
             } else if (processed != child) {
@@ -116,6 +115,7 @@ public class SupportedOperatorPruner implements TreeVisitor {
                 LOG.debug("Child with operator {} will be pruned because it has {} children",
                         operator, children.size());
 
+                children.clear();
                 // OR need two or more children
                 return null;
             } else if ((AND == operator || NOT == operator) && children.size() == 0) {
@@ -133,14 +133,5 @@ public class SupportedOperatorPruner implements TreeVisitor {
     @Override
     public Node after(Node node) {
         return node;
-    }
-
-    /**
-     * Returns a list of supported operators
-     *
-     * @return a list of supported operators
-     */
-    public EnumSet<Operator> getSupportedOperators() {
-        return supportedOperators;
     }
 }

@@ -9,11 +9,22 @@ import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
 
 import java.util.List;
 
+/**
+ * Builds a predicate to query data on S3 Select. It supports querying data
+ * using the column name or the column position.
+ */
 public class S3SelectPredicateBuilder extends JdbcPredicateBuilder {
 
     private final boolean usePositionToIdentifyColumn;
 
-    public S3SelectPredicateBuilder(boolean usePositionToIdentifyColumn, List<ColumnDescriptor> tupleDescription) {
+    /**
+     * Constructor for S3 Select predicate builder
+     *
+     * @param usePositionToIdentifyColumn true if column position is used, false to use the column name
+     * @param tupleDescription            the list of column descriptors
+     */
+    public S3SelectPredicateBuilder(boolean usePositionToIdentifyColumn,
+                                    List<ColumnDescriptor> tupleDescription) {
         super(DbProduct.S3_SELECT, tupleDescription);
         this.usePositionToIdentifyColumn = usePositionToIdentifyColumn;
     }
@@ -80,6 +91,7 @@ public class S3SelectPredicateBuilder extends JdbcPredicateBuilder {
         switch (type) {
             case VARCHAR:
             case BPCHAR:
+                // We can also push VARCHAR and BPCHAR
                 type = DataType.TEXT;
                 break;
         }
