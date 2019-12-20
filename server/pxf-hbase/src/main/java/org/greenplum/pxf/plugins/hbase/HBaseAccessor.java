@@ -78,8 +78,8 @@ public class HBaseAccessor extends BasePlugin implements Accessor {
                     Operator.OR
             );
 
-    private static TreeVisitor TREE_PRUNER = new SupportedOperatorPruner(SUPPORTED_OPERATORS);
-    private static TreeTraverser TREE_TRAVERSER = new TreeTraverser();
+    private static final TreeVisitor PRUNER = new SupportedOperatorPruner(SUPPORTED_OPERATORS);
+    private static final TreeTraverser TRAVERSER = new TreeTraverser();
 
     private HBaseTupleDescription tupleDescription;
     private Connection connection;
@@ -311,12 +311,12 @@ public class HBaseAccessor extends BasePlugin implements Accessor {
         }
 
         HBaseFilterBuilder hBaseFilterBuilder = new HBaseFilterBuilder(tupleDescription);
-        Node root = new FilterParser().parse(context.getFilterString().getBytes(FilterParser.DEFAULT_CHARSET));
-        root = TREE_PRUNER.visit(root);
+        Node root = new FilterParser().parse(context.getFilterString());
+        root = PRUNER.visit(root);
 
-        TREE_TRAVERSER.inOrderTraversal(root, hBaseFilterBuilder);
+        TRAVERSER.inOrderTraversal(root, hBaseFilterBuilder);
 
-        Filter filter = hBaseFilterBuilder.buildFilter();
+        Filter filter = hBaseFilterBuilder.build();
         scanDetails.setFilter(filter);
 
         scanStartKey = hBaseFilterBuilder.getStartKey();

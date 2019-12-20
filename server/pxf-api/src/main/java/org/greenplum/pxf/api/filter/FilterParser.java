@@ -24,6 +24,7 @@ import org.greenplum.pxf.api.io.DataType;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -79,6 +80,23 @@ public class FilterParser {
 
     public static final String DEFAULT_CHARSET = "UTF-8";
 
+    private static final EnumSet<DataType> SUPPORTED_DATA_TYPES = EnumSet.of(
+            DataType.BIGINT,
+            DataType.INTEGER,
+            DataType.SMALLINT,
+            DataType.REAL,
+            DataType.NUMERIC,
+            DataType.FLOAT8,
+            DataType.TEXT,
+            DataType.VARCHAR,
+            DataType.BPCHAR,
+            DataType.BOOLEAN,
+            DataType.DATE,
+            DataType.TIMESTAMP,
+            DataType.TIME,
+            DataType.BYTEA
+    );
+
     private static final Map<Integer, Operator> OPERATOR_MAP =
             Collections.unmodifiableMap(new HashMap<Integer, Operator>() {{
                 put(0, Operator.NOOP);
@@ -118,16 +136,26 @@ public class FilterParser {
     }
 
     /**
+     * Parses the filter string
+     *
+     * @param filterString the filter string to parse
+     * @return the parsed filter
+     * @throws Exception if the filter string was invalid
+     */
+    public Node parse(String filterString) throws Exception {
+        return parse(filterString.getBytes(DEFAULT_CHARSET));
+    }
+
+    /**
      * Parses the string filter.
      *
      * @param filter the filter to parse
      * @return the parsed filter
      * @throws Exception if the filter string had wrong syntax
      */
-    public Node parse(byte[] filter) throws Exception {
+    private Node parse(byte[] filter) throws Exception {
         index = 0;
         filterByteArr = filter;
-        int opNumber;
 
         if (filter == null) {
             throw new FilterStringSyntaxException("filter parsing ended with no result");
@@ -137,7 +165,7 @@ public class FilterParser {
             char op = (char) filterByteArr[index++];
             switch (op) {
                 case COL_OP:
-                    operandsStack.push(new ColumnIndexOperand(safeToInt(parseNumber())));
+                    operandsStack.push(parseColumnIndex());
                     break;
                 case SCALAR_CONST_OP:
                     operandsStack.push(parseScalarParameter());
@@ -146,69 +174,11 @@ public class FilterParser {
                     operandsStack.push(parseListParameter());
                     break;
                 case COMP_OP:
-                    opNumber = safeToInt(parseNumber());
-                    Operator operation = OPERATOR_MAP.get(opNumber);
-                    if (operation == null) {
-                        throw new FilterStringSyntaxException("unknown op ending at " + index);
-                    }
-
-                    // Pop right operand
-                    if (operandsStack.empty()) {
-                        throw new FilterStringSyntaxException("missing operands for op " + operation + " at " + index);
-                    }
-                    Node rightOperand = operandsStack.pop();
-
-                    // all operations other than null checks require 2 operands
-                    Node result;
-                    if (operation == Operator.IS_NULL || operation == Operator.IS_NOT_NULL) {
-                        result = new OperatorNode(operation, rightOperand);
-                    } else {
-                        // Pop left operand
-                        if (operandsStack.empty()) {
-                            throw new FilterStringSyntaxException("missing operands for op " + operation + " at " + index);
-                        }
-                        Node leftOperand = operandsStack.pop();
-
-                        if (!(leftOperand instanceof Operand) || !(rightOperand instanceof Operand)) {
-                            throw new FilterStringSyntaxException(String.format("missing logical operator before op %s at %d", operation.name(), index));
-                        }
-
-                        // Normalize order, evaluate
-                        // Column should be on the left
-                        result = (leftOperand instanceof ScalarOperand)
-                                // column on the right, reverse expression
-                                ? new OperatorNode(operation.transpose(), rightOperand, leftOperand)
-                                // no swap, column on the left
-                                : new OperatorNode(operation, leftOperand, rightOperand);
-                    }
-                    // Store result on stack
-                    operandsStack.push(result);
+                    operandsStack.push(parseComparisonOperator());
                     break;
                 // Handle parsing logical operator (HAWQ-964)
                 case LOG_OP:
-                    opNumber = safeToInt(parseNumber());
-                    Operator logicalOperation = LOGICAL_OPERATOR_MAP.get(opNumber);
-
-                    if (logicalOperation == null) {
-                        throw new FilterStringSyntaxException("unknown op ending at " + index);
-                    }
-
-                    if (logicalOperation == Operator.NOT) {
-                        Node exp = operandsStack.pop();
-                        result = new OperatorNode(logicalOperation, exp);
-                    } else if (logicalOperation == Operator.AND || logicalOperation == Operator.OR) {
-                        rightOperand = operandsStack.pop();
-                        Node leftOperand = operandsStack.pop();
-
-                        if (!(rightOperand instanceof OperatorNode) || !(leftOperand instanceof OperatorNode)) {
-                            throw new FilterStringSyntaxException(String.format("logical operator %s expects two operator nodes at %d", logicalOperation, index));
-                        }
-
-                        result = new OperatorNode(logicalOperation, leftOperand, rightOperand);
-                    } else {
-                        throw new FilterStringSyntaxException("unknown logical op code " + opNumber);
-                    }
-                    operandsStack.push(result);
+                    operandsStack.push(parseLogicalOperator());
                     break;
                 default:
                     index--; // move index back to operand location
@@ -290,27 +260,21 @@ public class FilterParser {
         if (byteData.length < end)
             throw new FilterStringSyntaxException("filter string is shorter than expected");
 
-        String data = new String(byteData, start, end - start, DEFAULT_CHARSET);
-        switch (dataType) {
-            case BIGINT:
-            case INTEGER:
-            case SMALLINT:
-            case REAL:
-            case NUMERIC:
-            case FLOAT8:
-            case TEXT:
-            case VARCHAR:
-            case BPCHAR:
-            case BOOLEAN:
-            case DATE:
-            case TIMESTAMP:
-            case TIME:
-            case BYTEA:
-                return data;
-            default:
-                throw new FilterStringSyntaxException(
-                        String.format("DataType %s unsupported", dataType));
-        }
+        if (!SUPPORTED_DATA_TYPES.contains(dataType))
+            throw new FilterStringSyntaxException(
+                    String.format("DataType %s unsupported", dataType));
+
+        return new String(byteData, start, end - start, DEFAULT_CHARSET);
+    }
+
+    /**
+     * Parses the column index operand
+     *
+     * @return a {@link ColumnIndexOperand}
+     * @throws Exception when parsing fails
+     */
+    private Node parseColumnIndex() throws Exception {
+        return new ColumnIndexOperand(safeToInt(parseNumber()));
     }
 
     /**
@@ -332,6 +296,12 @@ public class FilterParser {
         return new ScalarOperand(dataType, data);
     }
 
+    /**
+     * Parses parameters with a list of values.
+     *
+     * @return the parsed {@link CollectionOperand}
+     * @throws Exception when parsing fails
+     */
     private CollectionOperand parseListParameter() throws Exception {
         validateNotEndOfArray();
 
@@ -354,6 +324,85 @@ public class FilterParser {
         }
 
         return new CollectionOperand(dataType, data);
+    }
+
+    /**
+     * Parses the comparison operator
+     *
+     * @return the parsed {@link Node}
+     * @throws Exception when parsing fails
+     */
+    private Node parseComparisonOperator() throws Exception {
+        int opNumber = safeToInt(parseNumber());
+        Operator operation = OPERATOR_MAP.get(opNumber);
+        if (operation == null) {
+            throw new FilterStringSyntaxException("unknown op ending at " + index);
+        }
+
+        // Pop right operand
+        if (operandsStack.empty()) {
+            throw new FilterStringSyntaxException("missing operands for op " + operation + " at " + index);
+        }
+        Node rightOperand = operandsStack.pop();
+
+        // all operations other than null checks require 2 operands
+        Node result;
+        if (operation == Operator.IS_NULL || operation == Operator.IS_NOT_NULL) {
+            result = new OperatorNode(operation, rightOperand);
+        } else {
+            // Pop left operand
+            if (operandsStack.empty()) {
+                throw new FilterStringSyntaxException("missing operands for op " + operation + " at " + index);
+            }
+            Node leftOperand = operandsStack.pop();
+
+            if (!(leftOperand instanceof Operand) || !(rightOperand instanceof Operand)) {
+                throw new FilterStringSyntaxException(String.format("missing logical operator before op %s at %d", operation.name(), index));
+            }
+
+            // Normalize order, evaluate
+            // Column should be on the left
+            result = (leftOperand instanceof ScalarOperand)
+                    // column on the right, reverse expression
+                    ? new OperatorNode(operation.transpose(), rightOperand, leftOperand)
+                    // no swap, column on the left
+                    : new OperatorNode(operation, leftOperand, rightOperand);
+        }
+        // Store result on stack
+        return result;
+    }
+
+    /**
+     * Parses the logical operator
+     *
+     * @return the parsed {@link Node}
+     * @throws Exception when parsing fails
+     */
+    private Node parseLogicalOperator() throws Exception {
+        int opNumber = safeToInt(parseNumber());
+        Operator logicalOperation = LOGICAL_OPERATOR_MAP.get(opNumber);
+
+        if (logicalOperation == null) {
+            throw new FilterStringSyntaxException("unknown op ending at " + index);
+        }
+
+        Node result;
+        if (logicalOperation == Operator.NOT) {
+            Node exp = operandsStack.pop();
+            result = new OperatorNode(logicalOperation, exp);
+        } else if (logicalOperation == Operator.AND || logicalOperation == Operator.OR) {
+            Node rightOperand = operandsStack.pop();
+            Node leftOperand = operandsStack.pop();
+
+            if (!(rightOperand instanceof OperatorNode) || !(leftOperand instanceof OperatorNode)) {
+                throw new FilterStringSyntaxException(String.format("logical operator %s expects two operator nodes at %d", logicalOperation, index));
+            }
+
+            result = new OperatorNode(logicalOperation, leftOperand, rightOperand);
+        } else {
+            throw new FilterStringSyntaxException("unknown logical op code " + opNumber);
+        }
+        return result;
     }
 
     private Long parseNumber() throws Exception {

@@ -253,23 +253,19 @@ public class SQLQueryBuilder {
      * Note that if filter is not supported, query is left unchanged.
      *
      * @param query SQL query to insert constraints to. The query may may contain other WHERE statements
-     * @throws ParseException if filter string is invalid
      */
     private void buildWhereSQL(StringBuilder query) {
         if (!context.hasFilter()) {
             return;
         }
 
-        boolean hasPartition = context.getOption("PARTITION_BY") != null;
-
         JdbcPredicateBuilder jdbcPredicateBuilder = new JdbcPredicateBuilder(
                 dbProduct,
                 quoteString,
-                hasPartition,
                 context.getTupleDescription());
 
         try {
-            Node root = new FilterParser().parse(context.getFilterString().getBytes());
+            Node root = new FilterParser().parse(context.getFilterString());
             root = treePruner.visit(root);
             new TreeTraverser().inOrderTraversal(root, jdbcPredicateBuilder);
 

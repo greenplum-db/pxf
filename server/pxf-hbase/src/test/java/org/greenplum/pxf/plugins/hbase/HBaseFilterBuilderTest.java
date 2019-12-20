@@ -49,8 +49,8 @@ import static org.mockito.Mockito.when;
 
 public class HBaseFilterBuilderTest {
 
-    private static TreeVisitor treePruner = new SupportedOperatorPruner(SUPPORTED_OPERATORS);
-    private static TreeTraverser treeTraverser = new TreeTraverser();
+    private static final TreeVisitor PRUNER = new SupportedOperatorPruner(SUPPORTED_OPERATORS);
+    private static final TreeTraverser TRAVERSER = new TreeTraverser();
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
@@ -263,10 +263,10 @@ public class HBaseFilterBuilderTest {
 
     private Filter helper(String filterString, HBaseTupleDescription desc) throws Exception {
         HBaseFilterBuilder hBaseFilterBuilder = new HBaseFilterBuilder(desc);
-        Node root = new FilterParser().parse(filterString.getBytes());
-        root = treePruner.visit(root);
-        treeTraverser.inOrderTraversal(root, hBaseFilterBuilder);
+        Node root = new FilterParser().parse(filterString);
+        root = PRUNER.visit(root);
+        TRAVERSER.inOrderTraversal(root, hBaseFilterBuilder);
 
-        return hBaseFilterBuilder.buildFilter();
+        return hBaseFilterBuilder.build();
     }
 }

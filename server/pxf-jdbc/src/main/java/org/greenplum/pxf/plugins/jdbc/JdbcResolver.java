@@ -153,7 +153,7 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
             ColumnDescriptor column = columns.get(columnIndex++);
 
             DataType oneFieldType = DataType.get(oneField.type);
-            DataType columnType = DataType.get(column.columnTypeCode());
+            DataType columnType = column.getDataType();
 
             if (!DATATYPES_SUPPORTED.contains(oneFieldType)) {
                 throw new UnsupportedOperationException(

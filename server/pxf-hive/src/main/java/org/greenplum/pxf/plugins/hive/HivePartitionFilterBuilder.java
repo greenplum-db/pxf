@@ -64,18 +64,12 @@ public class HivePartitionFilterBuilder extends ColumnPredicateBuilder {
 
     @Override
     public String toString() {
+        StringBuilder sb = getStringBuilder();
         return sb.length() > 0 ? sb.toString() : null;
     }
 
     @Override
     protected String serializeValue(DataType type, String value) {
         return String.format("%s%s%s", HIVE_API_D_QUOTE, value, HIVE_API_D_QUOTE);
-    }
-
-    /**
-     * For testing purposes only
-     */
-    void reset() {
-        sb.setLength(0);
     }
 }

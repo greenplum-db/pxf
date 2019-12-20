@@ -24,7 +24,7 @@ public class S3SelectPredicateBuilder extends JdbcPredicateBuilder {
             ColumnIndexOperand columnIndexOperand = (ColumnIndexOperand) operand;
             lastIndex = columnIndexOperand.index();
             ColumnDescriptor columnDescriptor = getColumnDescriptors().get(lastIndex);
-            DataType type = DataType.get(columnDescriptor.columnTypeCode());
+            DataType type = columnDescriptor.getDataType();
 
             String columnName;
             String format = "%s";

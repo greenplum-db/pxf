@@ -8,8 +8,6 @@ import org.greenplum.pxf.api.filter.TreeTraverser;
 import org.greenplum.pxf.api.filter.TreeVisitor;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.plugins.jdbc.JdbcPredicateBuilder;
-import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +38,6 @@ public class S3SelectQueryBuilder {
                     Operator.OR
             );
     private static final TreeVisitor PRUNER = new SupportedOperatorPruner(SUPPORTED_OPERATORS);
-    private static final String QUOTE_STRING = "\"";
 
     private final RequestContext context;
     private List<ColumnDescriptor> columns;
@@ -87,7 +84,7 @@ public class S3SelectQueryBuilder {
                 context.getTupleDescription());
 
         try {
-            Node root = new FilterParser().parse(context.getFilterString().getBytes());
+            Node root = new FilterParser().parse(context.getFilterString());
             root = PRUNER.visit(root);
             new TreeTraverser().inOrderTraversal(root, s3SelectTreeVisitor);
 

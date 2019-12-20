@@ -36,7 +36,7 @@ public class HiveORCSearchArgumentBuilderTest {
         // NOT (_1_ IS NULL)
         String filterStr = "a1o8l2"; // ORCA transforms is not null to NOT ( a IS NULL )
 
-        Node root = new FilterParser().parse(filterStr.getBytes());
+        Node root = new FilterParser().parse(filterStr);
         root = TREE_PRUNER.visit(root);
 
         HiveORCSearchArgumentBuilder treeVisitor = new HiveORCSearchArgumentBuilder(tupleDescription, new Configuration());

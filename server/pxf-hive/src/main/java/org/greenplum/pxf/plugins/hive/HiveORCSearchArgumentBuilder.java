@@ -26,6 +26,8 @@ import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -134,31 +136,29 @@ public class HiveORCSearchArgumentBuilder implements TreeVisitor {
 
         Operator operator = operatorNode.getOperator();
         ColumnIndexOperand columnIndexOperand = operatorNode.getColumnIndexOperand();
-        Optional<Operand> valueOperand = operatorNode.getOperand();
+        Operand valueOperand = operatorNode.getValueOperand();
 
         ColumnDescriptor filterColumn = columnDescriptors.get(columnIndexOperand.index());
         String filterColumnName = filterColumn.columnName();
         Object filterValue = null;
 
-        if (valueOperand.isPresent()) {
-            // In Hive 1, boxing of values happened inside the builder
-            // For Hive 2 libraries, we need to do it before passing values to
-            // Hive jars
+        // In Hive 1, boxing of values happened inside the builder
+        // For Hive 2 libraries, we need to do it before passing values to
+        // Hive jars
 
-            if (valueOperand.get() instanceof CollectionOperand) {
-                CollectionOperand collectionOperand = (CollectionOperand) valueOperand.get();
+        if (valueOperand instanceof CollectionOperand) {
+            CollectionOperand collectionOperand = (CollectionOperand) valueOperand;
 
-                filterValue = collectionOperand
-                        .getData()
-                        .stream()
-                        .map(data -> boxLiteral(convertDataType(collectionOperand.getDataType().getTypeElem(), data)))
-                        .collect(Collectors.toList());
-            } else if (valueOperand.get() instanceof ScalarOperand) {
-                ScalarOperand scalarOperand = (ScalarOperand) valueOperand.get();
+            filterValue = collectionOperand
+                    .getData()
+                    .stream()
+                    .map(data -> boxLiteral(convertDataType(collectionOperand.getDataType().getTypeElem(), data)))
+                    .collect(Collectors.toList());
+        } else if (valueOperand instanceof ScalarOperand) {
+            ScalarOperand scalarOperand = (ScalarOperand) valueOperand;
 
-                filterValue = convertDataType(scalarOperand);
-                filterValue = boxLiteral(filterValue);
-            }
+            filterValue = convertDataType(scalarOperand);
+            filterValue = boxLiteral(filterValue);
         }
 
         PredicateLeaf.Type predicateLeafType = PredicateLeaf.Type.STRING;
@@ -193,10 +193,10 @@ public class HiveORCSearchArgumentBuilder implements TreeVisitor {
                 filterBuilder.startNot().isNull(filterColumnName, predicateLeafType).end();
                 break;
             case IN:
-                if (filterValue instanceof List) {
+                if (filterValue instanceof Collection) {
                     @SuppressWarnings("unchecked")
-                    List<Object> l = (List<Object>) filterValue;
-                    filterBuilder.in(filterColumnName, predicateLeafType, l.toArray());
+                    Collection<Object> l = (Collection<Object>) filterValue;
+                    filterBuilder.in(filterColumnName, predicateLeafType, l.toArray(new Object[0]));
                 } else {
                     throw new IllegalArgumentException("filterValue should be instance of List for IN operation");
                 }

@@ -7,7 +7,7 @@ import org.greenplum.pxf.api.io.DataType;
  */
 public class ScalarOperand extends Operand {
 
-    private String value;
+    private final String value;
 
     public ScalarOperand(DataType dataType, String value) {
         super(dataType);

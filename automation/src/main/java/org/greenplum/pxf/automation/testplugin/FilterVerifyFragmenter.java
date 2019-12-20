@@ -29,7 +29,7 @@ public class FilterVerifyFragmenter extends BaseFragmenter {
         // Validate the filterstring by parsing using a dummy filterBuilder
         if (context.hasFilter()) {
             filter = context.getFilterString();
-            new FilterParser().parse(filter.getBytes(FilterParser.DEFAULT_CHARSET));
+            new FilterParser().parse(filter);
         }
 
         String[] hosts = {"localhost", "localhost", "localhost"};

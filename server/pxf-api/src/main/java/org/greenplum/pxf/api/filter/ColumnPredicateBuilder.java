@@ -19,10 +19,21 @@ public class ColumnPredicateBuilder extends ToStringTreeVisitor {
      */
     protected int lastIndex;
 
+    /**
+     * Constructor that takes a list of column descriptors
+     *
+     * @param columnDescriptors the list of column descriptors
+     */
     public ColumnPredicateBuilder(List<ColumnDescriptor> columnDescriptors) {
         this("", columnDescriptors);
     }
 
+    /**
+     * Constructor that takes the quote string and a list of column descriptors
+     *
+     * @param quoteString       the quote string
+     * @param columnDescriptors the list of column descriptors
+     */
     public ColumnPredicateBuilder(String quoteString,
                                   List<ColumnDescriptor> columnDescriptors) {
         this.quoteString = quoteString;
@@ -46,7 +57,7 @@ public class ColumnPredicateBuilder extends ToStringTreeVisitor {
 
         // Obtain the datatype of the column
         ColumnDescriptor columnDescriptor = columnDescriptors.get(lastIndex);
-        DataType type = DataType.get(columnDescriptor.columnTypeCode());
+        DataType type = columnDescriptor.getDataType();
 
         if (operand instanceof CollectionOperand) {
             CollectionOperand collectionOperand = (CollectionOperand) operand;

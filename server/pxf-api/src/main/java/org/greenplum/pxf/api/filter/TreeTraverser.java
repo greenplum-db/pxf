@@ -13,26 +13,27 @@ public class TreeTraverser {
      * @param node    the node
      * @param visitor the visitor interface implementation
      */
-    public void inOrderTraversal(Node node, TreeVisitor visitor) {
-        if (node == null) return;
+    public Node inOrderTraversal(Node node, TreeVisitor visitor) {
+        if (node == null) return null;
 
-        visitor.before(node);
+        node = visitor.before(node);
 
         List<Node> children = node.getChildren();
         if (children.isEmpty()) {
             // visit this node if it has no children
-            visitor.visit(node);
+            node = visitor.visit(node);
         } else {
             for (int i = 0; i < children.size(); i++) {
                 Node child = children.get(i);
-                inOrderTraversal(child, visitor);
+                children.set(i, inOrderTraversal(child, visitor));
 
                 // always visit if there is only one child
                 if (children.size() == 1 || i < children.size() - 1) {
-                    visitor.visit(node);
+                    node = visitor.visit(node);
                 }
             }
         }
-        visitor.after(node);
+        node = visitor.after(node);
+        return node;
     }
 }

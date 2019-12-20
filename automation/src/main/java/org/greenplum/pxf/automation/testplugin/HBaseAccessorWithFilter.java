@@ -56,8 +56,8 @@ public class HBaseAccessorWithFilter extends BasePlugin implements Accessor {
                     Operator.OR
             );
 
-    private static TreeVisitor TREE_PRUNER = new SupportedOperatorPruner(SUPPORTED_OPERATORS);
-    private static TreeTraverser TREE_TRAVERSER = new TreeTraverser();
+    private static final TreeVisitor PRUNER = new SupportedOperatorPruner(SUPPORTED_OPERATORS);
+    private static final TreeTraverser TRAVERSER = new TreeTraverser();
 
     private HBaseTupleDescription tupleDescription;
     private HTable table;
@@ -277,16 +277,22 @@ public class HBaseAccessorWithFilter extends BasePlugin implements Accessor {
         if ((filterStr == null) || filterStr.isEmpty() || "null".equals(filterStr))
             return;
 
-        HBaseFilterBuilder hBaseTreeVisitor = new HBaseFilterBuilder(tupleDescription);
-        Node root = new FilterParser().parse(filterStr.getBytes(FilterParser.DEFAULT_CHARSET));
-        root = TREE_PRUNER.visit(root);
+        HBaseFilterBuilder hBaseFilterBuilder = new HBaseFilterBuilder(tupleDescription);
 
-        TREE_TRAVERSER.inOrderTraversal(root, hBaseTreeVisitor);
+        // Parse the filter string into a node
+        Node root = new FilterParser().parse(filterStr);
+        // Prune the filter string with supported operators
+        root = PRUNER.visit(root);
 
-        Filter filter = hBaseTreeVisitor.buildFilter();
+        // Traverse all the nodes and use the HBaseFilterBuilder to generate
+        // the filter
+        TRAVERSER.inOrderTraversal(root, hBaseFilterBuilder);
+
+        // Get the filter
+        Filter filter = hBaseFilterBuilder.buildFilter();
         scanDetails.setFilter(filter);
 
-        scanStartKey = hBaseTreeVisitor.getStartKey();
-        scanEndKey = hBaseTreeVisitor.getEndKey();
+        scanStartKey = hBaseFilterBuilder.getStartKey();
+        scanEndKey = hBaseFilterBuilder.getEndKey();
     }
 }

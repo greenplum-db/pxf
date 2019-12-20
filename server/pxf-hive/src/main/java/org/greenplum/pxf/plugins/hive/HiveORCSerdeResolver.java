@@ -75,7 +75,7 @@ public class HiveORCSerdeResolver extends HiveResolver {
         for (int i = 0; i < numberOfDataColumns; i++) {
             ColumnDescriptor column = input.getColumn(i);
             String columnName = column.columnName();
-            String columnType = HiveUtilities.toCompatibleHiveType(DataType.get(column.columnTypeCode()), column.columnTypeModifiers());
+            String columnType = HiveUtilities.toCompatibleHiveType(column.getDataType(), column.columnTypeModifiers());
             //Complex Types will have a mismatch between Hive and Gpdb type
             if (!columnType.equals(hiveColTypes[i])) {
                 columnType = hiveColTypes[i];

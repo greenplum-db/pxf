@@ -8,7 +8,7 @@ import java.util.List;
  */
 public class Node {
 
-    private List<Node> children = new ArrayList<>();
+    private final List<Node> children = new ArrayList<>();
 
     /**
      * Add a child to the list of children

@@ -27,14 +27,12 @@ import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.Reporter;
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.filter.CollectionOperand;
 import org.greenplum.pxf.api.filter.ColumnIndexOperand;
 import org.greenplum.pxf.api.filter.FilterParser;
 import org.greenplum.pxf.api.filter.Node;
 import org.greenplum.pxf.api.filter.Operand;
 import org.greenplum.pxf.api.filter.Operator;
 import org.greenplum.pxf.api.filter.OperatorNode;
-import org.greenplum.pxf.api.filter.ScalarOperand;
 import org.greenplum.pxf.api.filter.ToStringTreeVisitor;
 import org.greenplum.pxf.api.filter.TreeTraverser;
 import org.greenplum.pxf.api.model.RequestContext;
@@ -51,7 +49,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Accessor for Hive tables. The accessor will open and read a split belonging
@@ -231,7 +228,7 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
         }
 
         String filterStr = context.getFilterString();
-        Node root = new FilterParser().parse(filterStr.getBytes());
+        Node root = new FilterParser().parse(filterStr);
         boolean returnData = isFiltered(partitions, root);
 
         if (LOG.isDebugEnabled()) {
@@ -248,21 +245,6 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
     }
 
     private boolean isFiltered(List<HivePartition> partitionFields, Node root) {
-//        if (filter instanceof List) {
-//            /*
-//             * We are going over each filter in the filters list and test it
-//             * against all the partition fields since filters are connected only
-//             * by AND operators, its enough for one filter to fail in order to
-//             * deny this data.
-//             */
-//            for (Object f : (List<?>) filter) {
-//                if (!testOneFilter(partitionFields, f, context)) {
-//                    return false;
-//                }
-//            }
-//            return true;
-//        }
-
         return testOneFilter(partitionFields, root);
     }
 
@@ -308,14 +290,14 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
                     }
 
                     ColumnIndexOperand columnIndexOperand = operatorNode.getColumnIndexOperand();
-                    Optional<Operand> valueOperand = operatorNode.getOperand();
+                    Operand valueOperand = operatorNode.getValueOperand();
 
-                    if (!valueOperand.isPresent()) {
-                        throw new IllegalArgumentException(
-                                String.format("Operator %s does not contain a scalar operand", operator));
+                    if (valueOperand == null) {
+                        throw new IllegalArgumentException(String.format(
+                                "Operator %s does not contain a scalar operand", operator));
                     }
 
-                    String filterValue = valueOperand.get().toString();
+                    String filterValue = valueOperand.toString();
                     ColumnDescriptor filterColumn = context.getColumn(columnIndexOperand.index());
                     String filterColumnName = filterColumn.columnName();
 

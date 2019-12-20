@@ -108,7 +108,7 @@ public class HBaseFilterBuilder implements TreeVisitor {
                 if (operator == Operator.IS_NULL || operator == Operator.IS_NOT_NULL) {
                     filter = processNullOperator(hBaseColumn, operator);
                 } else {
-                    Operand data = operatorNode.getOperand().orElse(null);
+                    Operand data = operatorNode.getValueOperand();
                     filter = processSimpleColumnOperator(hBaseColumn, operator, data);
                 }
 
@@ -135,7 +135,7 @@ public class HBaseFilterBuilder implements TreeVisitor {
      *
      * @return filter object
      */
-    public Filter buildFilter() {
+    public Filter build() {
         if (!filterQueue.isEmpty()) {
             throw new IllegalStateException("Filter queue is not empty after visiting all nodes");
         }

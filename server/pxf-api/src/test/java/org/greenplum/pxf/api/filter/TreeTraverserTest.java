@@ -45,13 +45,31 @@ public class TreeTraverserTest {
     }
 
     @Test
-    public void testNotBoolean() throws Exception {
+    public void testNotTrueBoolean() throws Exception {
         // NOT a4
         helper("NOT (_4_)", "a4c16s4dtrueo0l2");
     }
 
+    @Test
+    public void testNotFalseBoolean() throws Exception {
+        // NOT (a4 = false)
+        helper("NOT (_4_ = false)", "a4c16s5dfalseo0l2");
+    }
+
+    @Test
+    public void testTrueBoolean() throws Exception {
+        // 0
+        helper ("_0_", "a0c16s4dtrueo0");
+    }
+
+    @Test
+    public void testFalseBoolean() throws Exception {
+        // 0
+        helper ("_0_ = false", "a0c16s5dfalseo0");
+    }
+
     private void helper(String expected, String filterString) throws Exception {
-        Node root = new FilterParser().parse(filterString.getBytes());
+        Node root = new FilterParser().parse(filterString);
 
         ToStringTreeVisitor visitor = new ToStringTreeVisitor();
         new TreeTraverser().inOrderTraversal(root, visitor);

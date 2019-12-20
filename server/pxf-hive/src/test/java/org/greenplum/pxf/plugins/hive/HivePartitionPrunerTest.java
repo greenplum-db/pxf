@@ -64,7 +64,7 @@ public class HivePartitionPrunerTest {
     @Test
     public void parseFilterWithThreeOperations() throws Exception {
         // (_1_ = first AND _2_ > 2)
-        Node root = parser.parse("a1c25s5dfirsto5a2c20s1d2o2l0".getBytes());
+        Node root = parser.parse("a1c25s5dfirsto5a2c20s1d2o2l0");
 
         assertOperatorEquals(Operator.AND, root);
         assertNotNull(root.getChildren());
@@ -88,7 +88,7 @@ public class HivePartitionPrunerTest {
     @Test
     public void parseFilterWithLogicalOperation() throws Exception {
         // (_1_ = first AND _2_ > 2)
-        Node root = parser.parse("a1c25s5dfirsto5a2c20s1d2o2l0".getBytes());
+        Node root = parser.parse("a1c25s5dfirsto5a2c20s1d2o2l0");
 
         assertOperatorEquals(Operator.AND, root);
         assertNotNull(root.getChildren());
@@ -98,7 +98,7 @@ public class HivePartitionPrunerTest {
     @Test
     public void parseNestedExpressionWithLogicalOperation() throws Exception {
         // ((_1_ = first AND _2_ > 2) OR _1_ < 1)
-        Node root = parser.parse("a1c25s5dfirsto5a2c20s1d2o2l0a1c20s1d1o1l1".getBytes());
+        Node root = parser.parse("a1c25s5dfirsto5a2c20s1d2o2l0a1c20s1d1o1l1");
 
         assertOperatorEquals(Operator.OR, root);
         assertNotNull(root.getChildren());
@@ -110,14 +110,14 @@ public class HivePartitionPrunerTest {
     @Test
     public void parseIsNullExpression() throws Exception {
         // _1_ IS NULL
-        Node root = parser.parse("a1o8".getBytes());
+        Node root = parser.parse("a1o8");
         assertOperatorEquals(Operator.IS_NULL, 1, root);
     }
 
     @Test
     public void parseUnsupportedIsNullExpression() throws Exception {
         // _1_ IS NULL
-        Node root = parser.parse("a1o8".getBytes());
+        Node root = parser.parse("a1o8");
         root = treePruner.visit(root);
         assertNull(root);
     }
@@ -125,14 +125,14 @@ public class HivePartitionPrunerTest {
     @Test
     public void parseIsNotNullExpression() throws Exception {
         // _1_ IS NOT NULL
-        Node root = parser.parse("a1o9".getBytes());
+        Node root = parser.parse("a1o9");
         assertOperatorEquals(Operator.IS_NOT_NULL, 1, root);
     }
 
     @Test
     public void parseUnsupportedIsNotNullExpression() throws Exception {
         // _1_ IS NOT NULL
-        Node root = parser.parse("a1o9".getBytes());
+        Node root = parser.parse("a1o9");
         root = treePruner.visit(root);
         assertNull(root);
     }
@@ -325,7 +325,7 @@ public class HivePartitionPrunerTest {
     }
 
     private void helper(String expected, String filterString, TreeVisitor pruner, HivePartitionFilterBuilder treeVisitor) throws Exception {
-        Node root = parser.parse(filterString.getBytes());
+        Node root = parser.parse(filterString);
         root = pruner.visit(root);
         treeTraverser.inOrderTraversal(root, treeVisitor);
         assertEquals(expected, treeVisitor.toString());

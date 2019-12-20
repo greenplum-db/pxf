@@ -170,7 +170,7 @@ public class SupportedOperatorPrunerTest {
     private void helper(String expected,
                         String filterString,
                         EnumSet<Operator> supportedOperators) throws Exception {
-        Node root = new FilterParser().parse(filterString.getBytes());
+        Node root = new FilterParser().parse(filterString);
         root = new SupportedOperatorPruner(supportedOperators).visit(root);
 
         ToStringTreeVisitor visitor = new ToStringTreeVisitor();

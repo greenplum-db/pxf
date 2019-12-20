@@ -44,12 +44,11 @@ public enum Operator {
     OR("OR", true),
     NOT("NOT", true);
 
-    // TODO: think of a better name
-    private final String prettyName;
+    private final String printableName;
     private final boolean isLogical;
 
-    Operator(String prettyName, boolean isLogical) {
-        this.prettyName = prettyName;
+    Operator(String printableName, boolean isLogical) {
+        this.printableName = printableName;
         this.isLogical = isLogical;
     }
 
@@ -69,6 +68,6 @@ public enum Operator {
 
     @Override
     public String toString() {
-        return prettyName;
+        return printableName;
     }
 }

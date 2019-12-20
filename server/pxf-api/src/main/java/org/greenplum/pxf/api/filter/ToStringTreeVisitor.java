@@ -1,5 +1,6 @@
 package org.greenplum.pxf.api.filter;
 
+import org.apache.commons.lang3.StringUtils;
 import org.greenplum.pxf.api.io.DataType;
 
 import static org.greenplum.pxf.api.filter.Operator.IS_NOT_NULL;
@@ -12,14 +13,7 @@ import static org.greenplum.pxf.api.filter.Operator.NOT;
  */
 public class ToStringTreeVisitor implements TreeVisitor {
 
-    protected final StringBuilder sb;
-
-    /**
-     * Default constructor
-     */
-    public ToStringTreeVisitor() {
-        sb = new StringBuilder();
-    }
+    private final StringBuilder sb = new StringBuilder();
 
     @Override
     public Node before(Node node) {
@@ -44,9 +38,14 @@ public class ToStringTreeVisitor implements TreeVisitor {
 
             if (node instanceof ScalarOperand) {
                 ScalarOperand scalarOperand = (ScalarOperand) node;
-                // boolean does not need to be rendered
+                // boolean does not need to be rendered when it's true
                 if (scalarOperand.getDataType() == DataType.BOOLEAN) {
-                    return node;
+                    if (StringUtils.equals("true", scalarOperand.getValue())) {
+                        return node;
+                    } else {
+                        // when boolean is not true
+                        sb.append(" = ");
+                    }
                 }
             }
 
@@ -87,6 +86,22 @@ public class ToStringTreeVisitor implements TreeVisitor {
     @Override
     public String toString() {
         return sb.toString();
+    }
+
+    /**
+     * For testing purposes only
+     */
+    public void reset() {
+        sb.setLength(0);
+    }
+
+    /**
+     * Returns the {@link StringBuilder} for this TreeVisitor
+     *
+     * @return the {@link StringBuilder} for this TreeVisitor
+     */
+    protected StringBuilder getStringBuilder() {
+        return sb;
     }
 
     /**

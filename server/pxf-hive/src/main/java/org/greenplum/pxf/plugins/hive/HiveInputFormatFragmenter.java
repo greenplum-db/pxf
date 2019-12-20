@@ -86,14 +86,14 @@ public class HiveInputFormatFragmenter extends HiveDataFragmenter {
         List<FieldSchema> hiveColumns = tbl.getSd().getCols();
         for (FieldSchema hiveCol : hiveColumns) {
             ColumnDescriptor colDesc = context.getColumn(index++);
-            DataType colType = DataType.get(colDesc.columnTypeCode());
+            DataType colType = colDesc.getDataType();
             HiveUtilities.validateTypeCompatible(colType, colDesc.columnTypeModifiers(), hiveCol.getType(), colDesc.columnName());
         }
         // check partition fields
         List<FieldSchema> hivePartitions = tbl.getPartitionKeys();
         for (FieldSchema hivePart : hivePartitions) {
             ColumnDescriptor colDesc = context.getColumn(index++);
-            DataType colType = DataType.get(colDesc.columnTypeCode());
+            DataType colType = colDesc.getDataType();
             HiveUtilities.validateTypeCompatible(colType, colDesc.columnTypeModifiers(), hivePart.getType(), colDesc.columnName());
         }
 

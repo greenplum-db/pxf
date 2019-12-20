@@ -38,30 +38,24 @@ import java.util.List;
  */
 public class JdbcPredicateBuilder extends ColumnPredicateBuilder {
 
-    private final boolean hasPartition;
     private final DbProduct dbProduct;
 
     public JdbcPredicateBuilder(DbProduct dbProduct,
                                 List<ColumnDescriptor> tupleDescription) {
-        this(dbProduct, "", false, tupleDescription);
+        this(dbProduct, "", tupleDescription);
     }
 
     public JdbcPredicateBuilder(DbProduct dbProduct,
                                 String quoteString,
-                                boolean hasPartition,
                                 List<ColumnDescriptor> tupleDescription) {
         super(quoteString, tupleDescription);
         this.dbProduct = dbProduct;
-        this.hasPartition = hasPartition;
     }
 
     @Override
     public String toString() {
-        if (sb.length() == 0) return "";
-
-        if (hasPartition) {
-            sb.insert(0, " WHERE (").append(")");
-        } else {
+        StringBuilder sb = getStringBuilder();
+        if (sb.length() > 0) {
             sb.insert(0, " WHERE ");
         }
         return sb.toString();

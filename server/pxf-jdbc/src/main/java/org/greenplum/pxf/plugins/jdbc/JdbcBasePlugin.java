@@ -566,8 +566,9 @@ public class JdbcBasePlugin extends BasePlugin {
      */
     private Map<String, String> getPropsWithPrefix(Configuration configuration, String confPrefix) {
         Map<String, String> configMap = new HashMap<>();
-        for (Map.Entry<String, String> stringStringEntry : configuration) {
-            String propertyName = stringStringEntry.getKey();
+        Iterator<Map.Entry<String, String>> it = configuration.iterator();
+        while (it.hasNext()) {
+            String propertyName = it.next().getKey();
             if (propertyName.startsWith(confPrefix)) {
                 // do not use value from the iterator as it might not come with variable substitution
                 String value = configuration.get(propertyName);

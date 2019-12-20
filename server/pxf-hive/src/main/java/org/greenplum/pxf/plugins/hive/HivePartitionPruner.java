@@ -39,7 +39,7 @@ public class HivePartitionPruner extends SupportedOperatorPruner {
     @Override
     public Node visit(Node node) {
         if (node instanceof OperatorNode &&
-                !isFilterCompatible((OperatorNode) node)) {
+                !canOperatorBePushedDown((OperatorNode) node)) {
             return null;
         }
         return super.visit(node);
@@ -63,10 +63,10 @@ public class HivePartitionPruner extends SupportedOperatorPruner {
      * @param operatorNode the operator node
      * @return true when the filter is compatible, false otherwise
      */
-    private boolean isFilterCompatible(OperatorNode operatorNode) {
-        Operator operation = operatorNode.getOperator();
+    private boolean canOperatorBePushedDown(OperatorNode operatorNode) {
+        Operator operator = operatorNode.getOperator();
 
-        if (operation.isLogical()) {
+        if (operator.isLogical()) {
             // Skip AND / OR
             return true;
         }
@@ -80,14 +80,16 @@ public class HivePartitionPruner extends SupportedOperatorPruner {
 
         boolean isIntegralSupported =
                 canPushDownIntegral &&
-                        (operation == Operator.EQUALS || operation == Operator.NOT_EQUALS);
+                        (operator == Operator.EQUALS || operator == Operator.NOT_EQUALS);
 
         boolean canPushDown = isPartitionColumn && (
                 colType.equalsIgnoreCase(serdeConstants.STRING_TYPE_NAME) ||
                         isIntegralSupported && serdeConstants.IntegralTypes.contains(colType)
         );
 
-        LOG.trace("Filter is on a non-partition column or on a partition column that is not supported for push-down, ignore this filter for column: {}", columnName);
+        if (!canPushDown) {
+            LOG.trace("Filter is on a non-partition column or on a partition column that is not supported for push-down, ignore this filter for column: {}", columnName);
+        }
         return canPushDown;
     }
 }

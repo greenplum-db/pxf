@@ -43,8 +43,8 @@ public class ColumnDescriptorCache {
 
 	public ColumnDescriptorCache(ColumnDescriptor columnDescriptor) {
 
-		// GPDB column type
-		this.columnType = DataType.get(columnDescriptor.columnTypeCode());
+		// Greenplum column type
+		this.columnType = columnDescriptor.getDataType();
 
 		this.columnName = columnDescriptor.columnName();
 

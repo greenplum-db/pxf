@@ -30,7 +30,7 @@ public class SupportedOperatorPruner implements TreeVisitor {
 
     @Override
     public Node before(Node node) {
-        return null;
+        return node;
     }
 
     @Override
@@ -52,14 +52,14 @@ public class SupportedOperatorPruner implements TreeVisitor {
         List<Node> children = node.getChildren();
         for (int i = children.size() - 1; i >= 0; i--) {
             Node child = children.get(i);
-            Node pruned = visit(child);
+            Node processed = visit(child);
 
-            if (pruned == null) {
+            if (processed == null) {
                 LOG.debug("Child {} at index {} was pruned", child, i);
                 child.getChildren().clear();
                 // If pruned remove it from list of children
                 children.remove(i);
-            } else if (pruned != child) {
+            } else if (processed != child) {
 
                 // This happens when AND operation end up with a single
                 // child. For example:
@@ -92,11 +92,10 @@ public class SupportedOperatorPruner implements TreeVisitor {
                 //          _1_      5             _2_     1200
 
                 LOG.debug("Child {} at index {} was pruned, and child {} was promoted higher in the tree",
-                        child, i, pruned);
+                        child, i, processed);
 
                 child.getChildren().clear();
-                children.remove(i);
-                children.add(i, pruned);
+                children.set(i, processed);
             }
         }
 
@@ -119,8 +118,8 @@ public class SupportedOperatorPruner implements TreeVisitor {
                 // OR need two or more children
                 return null;
             } else if ((AND == operator || NOT == operator) && children.size() == 0) {
-                LOG.debug("Child with operator {} will be pruned because it has {} children",
-                        operator, children.size());
+                LOG.debug("Child with operator {} will be pruned because it has no children",
+                        operator);
 
                 // AND needs 2 children / NOT needs 1 child
                 return null;
@@ -132,7 +131,7 @@ public class SupportedOperatorPruner implements TreeVisitor {
 
     @Override
     public Node after(Node node) {
-        return null;
+        return node;
     }
 
     /**

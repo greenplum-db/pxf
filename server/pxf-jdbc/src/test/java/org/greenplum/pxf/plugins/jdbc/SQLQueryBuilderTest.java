@@ -198,21 +198,54 @@ public class SQLQueryBuilderTest {
         SQLQueryBuilder builder = new SQLQueryBuilder(context, mockMetaData);
         builder.autoSetQuoteString();
         String query = builder.buildSelectQuery();
-        assertEquals(SQL + " WHERE (id > 5) AND grade = 'excellent'", query);
+        assertEquals(SQL + " WHERE id > 5 AND grade = 'excellent'", query);
 
         context.setFragmentMetadata(fragments.get(4).getMetadata());
 
         builder = new SQLQueryBuilder(context, mockMetaData);
         builder.autoSetQuoteString();
         query = builder.buildSelectQuery();
-        assertEquals(SQL + " WHERE (id > 5) AND ( grade <> 'excellent' AND grade <> 'good' AND grade <> 'general' AND grade <> 'bad' )", query);
+        assertEquals(SQL + " WHERE id > 5 AND ( grade <> 'excellent' AND grade <> 'good' AND grade <> 'general' AND grade <> 'bad' )", query);
 
         context.setFragmentMetadata(fragments.get(5).getMetadata());
 
         builder = new SQLQueryBuilder(context, mockMetaData);
         builder.autoSetQuoteString();
         query = builder.buildSelectQuery();
-        assertEquals(SQL + " WHERE (id > 5) AND grade IS NULL", query);
+        assertEquals(SQL + " WHERE id > 5 AND grade IS NULL", query);
+    }
+
+    @Test
+    public void testFilterAndPartitionWithOrPredicate() throws Exception {
+        // cdate > '2008-02-01' or amt > 1200
+        context.setFilterString("a1c25s10d2008-02-01o2a2c20s4d1200o2l1");
+        context.addOption("PARTITION_BY", "grade:enum");
+        context.addOption("RANGE", "excellent:good:general:bad");
+
+        JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
+        fragment.initialize(context);
+        List<Fragment> fragments = fragment.getFragments();
+        // Fragment 0: grade = 'excellent'
+        context.setFragmentMetadata(fragments.get(0).getMetadata());
+
+        SQLQueryBuilder builder = new SQLQueryBuilder(context, mockMetaData);
+        builder.autoSetQuoteString();
+        String query = builder.buildSelectQuery();
+        assertEquals(SQL + " WHERE (cdate > DATE('2008-02-01') OR amt > 1200) AND grade = 'excellent'", query);
+
+        context.setFragmentMetadata(fragments.get(4).getMetadata());
+
+        builder = new SQLQueryBuilder(context, mockMetaData);
+        builder.autoSetQuoteString();
+        query = builder.buildSelectQuery();
+        assertEquals(SQL + " WHERE (cdate > DATE('2008-02-01') OR amt > 1200) AND ( grade <> 'excellent' AND grade <> 'good' AND grade <> 'general' AND grade <> 'bad' )", query);
+
+        context.setFragmentMetadata(fragments.get(5).getMetadata());
+
+        builder = new SQLQueryBuilder(context, mockMetaData);
+        builder.autoSetQuoteString();
+        query = builder.buildSelectQuery();
+        assertEquals(SQL + " WHERE (cdate > DATE('2008-02-01') OR amt > 1200) AND grade IS NULL", query);
     }
 
     @Test
@@ -310,7 +343,7 @@ public class SQLQueryBuilderTest {
         // Partition: cdate >= 2008-01-01 and cdate < 2008-03-01
         context.setFragmentMetadata(fragments.get(2).getMetadata());
 
-        String expected = "SELECT \"id\", \"cDate\" FROM sales WHERE (\"id\" > 5) AND \"cDate\" >= DATE('2008-01-01') AND \"cDate\" < DATE('2008-03-01')";
+        String expected = "SELECT \"id\", \"cDate\" FROM sales WHERE \"id\" > 5 AND \"cDate\" >= DATE('2008-01-01') AND \"cDate\" < DATE('2008-03-01')";
 
         SQLQueryBuilder builder = new SQLQueryBuilder(context, localDatabaseMetaData);
         builder.autoSetQuoteString();
@@ -416,7 +449,7 @@ public class SQLQueryBuilderTest {
         SQLQueryBuilder builder = new SQLQueryBuilder(context, mockMetaData, NAMED_QUERY_WHERE);
         builder.autoSetQuoteString();
         String query = builder.buildSelectQuery();
-        assertEquals("SELECT id, cdate, amt, grade, b FROM (SELECT a, b FROM c WHERE d = 'foo') pxfsubquery WHERE (id > 5) AND grade = 'excellent'", query);
+        assertEquals("SELECT id, cdate, amt, grade, b FROM (SELECT a, b FROM c WHERE d = 'foo') pxfsubquery WHERE id > 5 AND grade = 'excellent'", query);
     }
 
     @Test
@@ -452,7 +485,7 @@ public class SQLQueryBuilderTest {
         SQLQueryBuilder builder = new SQLQueryBuilder(context, mockMetaData, NAMED_QUERY);
         builder.autoSetQuoteString();
         String query = builder.buildSelectQuery();
-        assertEquals("SELECT id, cdate, amt, grade, b FROM (SELECT a, b FROM c) pxfsubquery WHERE (id > 5) AND grade = 'excellent'", query);
+        assertEquals("SELECT id, cdate, amt, grade, b FROM (SELECT a, b FROM c) pxfsubquery WHERE id > 5 AND grade = 'excellent'", query);
     }
 
     @Test

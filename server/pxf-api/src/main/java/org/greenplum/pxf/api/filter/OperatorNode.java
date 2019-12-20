@@ -1,7 +1,6 @@
 package org.greenplum.pxf.api.filter;
 
 import java.util.Arrays;
-import java.util.Optional;
 
 /**
  * Operator node (i.e. AND, OR, =, >=)
@@ -38,30 +37,26 @@ public class OperatorNode extends Node {
      * @return the {@link ColumnIndexOperand} for this {@link OperatorNode}
      */
     public ColumnIndexOperand getColumnIndexOperand() {
-        Optional<ColumnIndexOperand> columnIndexOperand = getChildren()
+        return getChildren()
                 .stream()
                 .filter(op -> op instanceof ColumnIndexOperand)
                 .map(op -> (ColumnIndexOperand) op)
-                .findFirst();
-
-        if (!columnIndexOperand.isPresent()) {
-            throw new IllegalArgumentException(
-                    String.format("Operator %s does not contain a column index operand", operator));
-        }
-
-        return columnIndexOperand.get();
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException(String.format(
+                        "Operator %s does not contain a column index operand", operator)));
     }
 
     /**
-     * Returns the {@link Optional} {@link Operand} for this {@link OperatorNode}
+     * Returns the {@link Operand} for this {@link OperatorNode}
      *
-     * @return the {@link Optional} {@link Operand} for this {@link OperatorNode}
+     * @return the {@link Operand} for this {@link OperatorNode}
      */
-    public Optional<Operand> getOperand() {
+    public Operand getValueOperand() {
         return getChildren()
                 .stream()
                 .filter(op -> op instanceof ScalarOperand || op instanceof CollectionOperand)
                 .map(op -> (Operand) op)
-                .findFirst();
+                .findFirst()
+                .orElse(null);
     }
 }

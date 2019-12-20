@@ -330,7 +330,7 @@ public class FilterParserTest {
     public void parseFilterWith2Operations() throws Exception {
         filter = "a1c25s5dfirsto5a2c20s1d1o2l0";
 
-        Node result = filterParser.parse(filter.getBytes());
+        Node result = filterParser.parse(filter);
         assertNotNull(result);
         assertOperatorEquals(AND, result);
         assertNotNull(result.getChildren());
@@ -343,7 +343,7 @@ public class FilterParserTest {
     public void parseLogicalAndOperator() throws Exception {
         filter = "a1c20s1d0o5a2c20s1d3o2l0";
 
-        Node result = filterParser.parse(filter.getBytes());
+        Node result = filterParser.parse(filter);
         assertNotNull(result);
         assertOperatorEquals(AND, result);
         assertNotNull(result.getChildren());
@@ -356,7 +356,7 @@ public class FilterParserTest {
     public void parseLogicalOrOperator() throws Exception {
         filter = "a1c20s1d0o5a2c20s1d3o2l1";
 
-        Node result = filterParser.parse(filter.getBytes());
+        Node result = filterParser.parse(filter);
         assertNotNull(result);
         assertOperatorEquals(OR, result);
         assertNotNull(result.getChildren());
@@ -370,7 +370,7 @@ public class FilterParserTest {
         // NOT (_1_ = 0)
         filter = "a1c20s1d0o5l2";
 
-        Node result = filterParser.parse(filter.getBytes());
+        Node result = filterParser.parse(filter);
         assertNotNull(result);
         assertOperatorEquals(Operator.NOT, result);
         assertNotNull(result.getChildren());
@@ -384,14 +384,14 @@ public class FilterParserTest {
         thrown.expectMessage("unknown op ending at 2");
 
         filter = "l7";
-        filterParser.parse(filter.getBytes());
+        filterParser.parse(filter);
     }
 
     @Test
     public void parseLogicalOperatorNotExpression() throws Exception {
         filter = "a1c25s5dfirsto5a2c20s1d2o2l0l2";
 
-        Node result = filterParser.parse(filter.getBytes());
+        Node result = filterParser.parse(filter);
         assertOperatorEquals(NOT, result);
         assertNotNull(result.getChildren());
         assertEquals(1, result.getChildren().size());
@@ -407,7 +407,7 @@ public class FilterParserTest {
      */
     private void runParseNegative(String description, String filter, String exception) {
         try {
-            filterParser.parse(filter.getBytes());
+            filterParser.parse(filter);
             fail(description + ": should have failed with FilterStringSyntaxException");
         } catch (FilterParser.FilterStringSyntaxException e) {
             assertEquals(description, exception + filterStringMsg(filter), e.getMessage());
@@ -417,12 +417,12 @@ public class FilterParserTest {
     }
 
     private void runParseOneOperation(String filter, Operator op) throws Exception {
-        Node result = filterParser.parse(filter.getBytes());
+        Node result = filterParser.parse(filter);
         assertOperatorEquals(op, result);
     }
 
     private void runParseOneUnaryOperation(String filter, Operator op) throws Exception {
-        Node result = filterParser.parse(filter.getBytes());
+        Node result = filterParser.parse(filter);
         assertOperatorEquals(op, result);
     }
 
