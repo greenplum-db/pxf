@@ -312,12 +312,11 @@ public class HBaseAccessor extends BasePlugin implements Accessor {
 
         // Create the builder that produces a org.apache.hadoop.hbase.filter.Filter
         HBaseFilterBuilder hBaseFilterBuilder = new HBaseFilterBuilder(tupleDescription);
-        // Parse the filter string
+        // Parse the filter string into a expression tree Node
         Node root = new FilterParser().parse(context.getFilterString());
-        // Prune the parsed tree with valid supported operators
-        root = TRAVERSER.traverse(root, PRUNER);
-        // Traverse the tree with the hBaseFilterBuilder to produce a filter
-        TRAVERSER.traverse(root, hBaseFilterBuilder);
+        // Prune the parsed tree with valid supported operators and then
+        // traverse the tree with the hBaseFilterBuilder to produce a filter
+        TRAVERSER.traverse(root, PRUNER, hBaseFilterBuilder);
 
         // Retrieve the built filter
         Filter filter = hBaseFilterBuilder.build();

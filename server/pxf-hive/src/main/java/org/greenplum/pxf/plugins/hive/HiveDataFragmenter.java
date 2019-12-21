@@ -193,9 +193,11 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
             TreeVisitor hivePartitionPruner = new HivePartitionPruner(SUPPORTED_OPERATORS,
                     canPushDownIntegral, partitionKeyTypes, columnDescriptors);
 
+            // Parse the filter string into a expression tree Node
             Node root = new FilterParser().parse(context.getFilterString());
-            root = TRAVERSER.traverse(root, hivePartitionPruner);
-            TRAVERSER.traverse(root, hivePartitionFilterBuilder);
+            // Prune the parsed tree with valid supported operators and then
+            // traverse the pruned tree with the hivePartitionFilterBuilder to produce a filter string for hive
+            TRAVERSER.traverse(root, hivePartitionPruner, hivePartitionFilterBuilder);
 
             // Generate filter string for retrieve match pxf filter/hive partition name
             filterStringForHive = hivePartitionFilterBuilder.toString();

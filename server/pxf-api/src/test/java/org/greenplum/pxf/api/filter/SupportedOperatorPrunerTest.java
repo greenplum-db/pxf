@@ -173,12 +173,9 @@ public class SupportedOperatorPrunerTest {
                         EnumSet<Operator> supportedOperators) throws Exception {
         Node root = new FilterParser().parse(filterString);
         SupportedOperatorPruner supportedOperatorPruner = new SupportedOperatorPruner(supportedOperators);
-        ToStringTreeVisitor visitor = new ToStringTreeVisitor();
-
-        root = TRAVERSER.traverse(root, supportedOperatorPruner);
-        TRAVERSER.traverse(root, visitor);
-
-        assertEquals(expected, visitor.toString());
+        ToStringTreeVisitor toStringTreeVisitor = new ToStringTreeVisitor();
+        TRAVERSER.traverse(root, supportedOperatorPruner, toStringTreeVisitor);
+        assertEquals(expected, toStringTreeVisitor.toString());
     }
 
 }

@@ -12,14 +12,19 @@ public class TreeTraverser {
     private static final Logger LOG = LoggerFactory.getLogger(TreeTraverser.class);
 
     /**
-     * In order depth-first traversal L-M-R
+     * In order depth-first traversal L-M-R. This method will visit the node
+     * with each of the provided visitors in the order they are provided.
      *
-     * @param node    the node
-     * @param visitor the visitor interface implementation
+     * @param node     the node
+     * @param visitors one or more visitors interface implementation
      * @return the traversed node
      */
-    public Node traverse(Node node, TreeVisitor visitor) {
-        return traverse(node, visitor, 0);
+    public Node traverse(Node node, TreeVisitor... visitors) {
+        Node result = node;
+        for (TreeVisitor visitor : visitors) {
+            result = traverse(result, visitor, 0);
+        }
+        return result;
     }
 
     /**
@@ -53,12 +58,10 @@ public class TreeTraverser {
             return;
         }
 
+        String debugMessage;
+
         if (processed == null) {
-            if (index == 0) {
-                LOG.debug("Left child {} was pruned", child);
-            } else {
-                LOG.debug("Right child {} was pruned", child);
-            }
+            debugMessage = "{} child {} was pruned {}";
         } else {
 
             // This happens when AND operation end up with a single
@@ -91,17 +94,14 @@ public class TreeTraverser {
             //           |       |              |       |
             //          _1_      5             _2_     1200
 
-            // replace it with the new child
-            if (index == 0) {
-                LOG.debug("Left child {} was pruned, and child {} was promoted higher in the tree", child, processed);
-            } else {
-                LOG.debug("Right child {} was pruned, and child {} was promoted higher in the tree", child, processed);
-            }
+            debugMessage = "{} child {} was pruned, and child {} was promoted higher in the tree";
         }
 
         if (index == 0) {
+            LOG.debug(debugMessage, "Left", child, processed);
             node.setLeft(processed);
         } else {
+            LOG.debug(debugMessage, "Right", child, processed);
             node.setRight(processed);
         }
     }

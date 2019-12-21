@@ -323,8 +323,7 @@ public class HivePartitionPrunerTest {
 
     private void helper(String expected, String filterString, TreeVisitor pruner, HivePartitionFilterBuilder treeVisitor) throws Exception {
         Node root = parser.parse(filterString);
-        root = treeTraverser.traverse(root, pruner);
-        treeTraverser.traverse(root, treeVisitor);
+        treeTraverser.traverse(root, pruner, treeVisitor);
         assertEquals(expected, treeVisitor.toString());
         treeVisitor.reset();
     }

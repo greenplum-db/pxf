@@ -264,9 +264,7 @@ public class HBaseFilterBuilderTest {
     private Filter helper(String filterString, HBaseTupleDescription desc) throws Exception {
         HBaseFilterBuilder hBaseFilterBuilder = new HBaseFilterBuilder(desc);
         Node root = new FilterParser().parse(filterString);
-        root = TRAVERSER.traverse(root, PRUNER);
-        TRAVERSER.traverse(root, hBaseFilterBuilder);
-
+        TRAVERSER.traverse(root, PRUNER, hBaseFilterBuilder);
         return hBaseFilterBuilder.build();
     }
 }

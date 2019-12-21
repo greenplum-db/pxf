@@ -281,12 +281,10 @@ public class HBaseAccessorWithFilter extends BasePlugin implements Accessor {
 
         // Parse the filter string into a node
         Node root = new FilterParser().parse(filterStr);
-        // Prune the filter string with supported operators
-        root = PRUNER.visit(root);
-
-        // Traverse all the nodes and use the HBaseFilterBuilder to generate
-        // the filter
-        TRAVERSER.traverse(root, hBaseFilterBuilder);
+        // Prune the filter string with supported operators and then
+        // traverse all the nodes and use the HBaseFilterBuilder to generate
+        // the HBase filter
+        TRAVERSER.traverse(root, PRUNER, hBaseFilterBuilder);
 
         // Get the filter
         Filter filter = hBaseFilterBuilder.build();

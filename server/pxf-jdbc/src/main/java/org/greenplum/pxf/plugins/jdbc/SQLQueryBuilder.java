@@ -294,10 +294,11 @@ public class SQLQueryBuilder {
         JdbcPredicateBuilder jdbcPredicateBuilder = getPredicateBuilder();
 
         try {
+            // Parse the filter string into a expression tree Node
             Node root = new FilterParser().parse(context.getFilterString());
-            root = TRAVERSER.traverse(root, getPruner());
-            TRAVERSER.traverse(root, jdbcPredicateBuilder);
-
+            // Prune the parsed tree with the provided pruner and then
+            // traverse the tree with the JDBC predicate builder to produce a predicate
+            TRAVERSER.traverse(root, getPruner(), jdbcPredicateBuilder);
             // No exceptions were thrown, change the provided query
             query.append(jdbcPredicateBuilder.toString());
         } catch (Exception e) {
