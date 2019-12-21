@@ -1,30 +1,85 @@
 package org.greenplum.pxf.api.filter;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * A node in the expression tree
  */
 public class Node {
 
-    private final List<Node> children = new ArrayList<>();
+    private Node left;
+    private Node right;
 
     /**
-     * Add a child to the list of children
-     *
-     * @param child the child to be added
+     * Default constructor
      */
-    public void addChild(Node child) {
-        children.add(child);
+    public Node() {
+        this(null, null);
     }
 
     /**
-     * Returns the list of children for this node
+     * Constructs a node with a left Node
      *
-     * @return the list of children for this node
+     * @param left the left node
      */
-    public List<Node> getChildren() {
-        return children;
+    public Node(Node left) {
+        this(left, null);
+    }
+
+    /**
+     * Constructs a node with a left and right node
+     *
+     * @param left  the left node
+     * @param right the right node
+     */
+    public Node(Node left, Node right) {
+        this.left = left;
+        this.right = right;
+    }
+
+    /**
+     * Sets the left {@link Node} of the tree
+     *
+     * @param left the left node
+     */
+    public void setLeft(Node left) {
+        this.left = left;
+    }
+
+    /**
+     * Returns the left {@link Node}
+     *
+     * @return the left {@link Node}
+     */
+    public Node getLeft() {
+        return left;
+    }
+
+    /**
+     * Sets the right {@link Node} of the tree
+     *
+     * @param right the right node
+     */
+    public void setRight(Node right) {
+        this.right = right;
+    }
+
+    /**
+     * Returns the right {@link Node}
+     *
+     * @return the right {@link Node}
+     */
+    public Node getRight() {
+        return right;
+    }
+
+    /**
+     * Returns the number of children for this node
+     *
+     * @return the number of children for this node
+     */
+    public int childCount() {
+        int count = 0;
+        if (left != null) count++;
+        if (right != null) count++;
+        return count;
     }
 }

@@ -94,6 +94,8 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
                     Operator.OR
             );
 
+    private static final TreeTraverser TRAVERSER = new TreeTraverser();
+
     private IMetaStoreClient client;
     private HiveClientWrapper hiveClientWrapper;
 
@@ -192,8 +194,8 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
                     canPushDownIntegral, partitionKeyTypes, columnDescriptors);
 
             Node root = new FilterParser().parse(context.getFilterString());
-            root = hivePartitionPruner.visit(root);
-            new TreeTraverser().traverse(root, hivePartitionFilterBuilder);
+            root = TRAVERSER.traverse(root, hivePartitionPruner);
+            TRAVERSER.traverse(root, hivePartitionFilterBuilder);
 
             // Generate filter string for retrieve match pxf filter/hive partition name
             filterStringForHive = hivePartitionFilterBuilder.toString();

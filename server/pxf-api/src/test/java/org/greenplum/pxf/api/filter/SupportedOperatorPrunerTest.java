@@ -9,8 +9,9 @@ import static org.junit.Assert.assertEquals;
 
 public class SupportedOperatorPrunerTest {
 
-    private final EnumSet<Operator> ALL_SUPPORTED = EnumSet.allOf(Operator.class);
-    private final EnumSet<Operator> NONE_SUPPORTED = EnumSet.noneOf(Operator.class);
+    private static final EnumSet<Operator> ALL_SUPPORTED = EnumSet.allOf(Operator.class);
+    private static final EnumSet<Operator> NONE_SUPPORTED = EnumSet.noneOf(Operator.class);
+    private static final TreeTraverser TRAVERSER = new TreeTraverser();
 
     @Test
     public void testGreaterThanOperatorSupported() throws Exception {
@@ -171,10 +172,11 @@ public class SupportedOperatorPrunerTest {
                         String filterString,
                         EnumSet<Operator> supportedOperators) throws Exception {
         Node root = new FilterParser().parse(filterString);
-        root = new SupportedOperatorPruner(supportedOperators).visit(root);
-
+        SupportedOperatorPruner supportedOperatorPruner = new SupportedOperatorPruner(supportedOperators);
         ToStringTreeVisitor visitor = new ToStringTreeVisitor();
-        new TreeTraverser().traverse(root, visitor);
+
+        root = TRAVERSER.traverse(root, supportedOperatorPruner);
+        TRAVERSER.traverse(root, visitor);
 
         assertEquals(expected, visitor.toString());
     }

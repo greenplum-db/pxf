@@ -33,11 +33,6 @@ public class ToStringTreeVisitor implements TreeVisitor {
     }
 
     @Override
-    public Node visit(Node node) {
-        return visit(node, 0);
-    }
-
-    @Override
     public Node visit(Node node, final int level) {
         if (node instanceof Operand) {
 

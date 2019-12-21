@@ -67,10 +67,9 @@ public class HivePartitionPrunerTest {
         Node root = parser.parse("a1c25s5dfirsto5a2c20s1d2o2l0");
 
         assertOperatorEquals(Operator.AND, root);
-        assertNotNull(root.getChildren());
-        assertEquals(2, root.getChildren().size());
-        assertOperatorEquals(Operator.EQUALS, 1, "first", root.getChildren().get(0));
-        assertOperatorEquals(Operator.GREATER_THAN, 2, "2", root.getChildren().get(1));
+        assertEquals(2, root.childCount());
+        assertOperatorEquals(Operator.EQUALS, 1, "first", root.getLeft());
+        assertOperatorEquals(Operator.GREATER_THAN, 2, "2", root.getRight());
     }
 
     @Test
@@ -91,8 +90,7 @@ public class HivePartitionPrunerTest {
         Node root = parser.parse("a1c25s5dfirsto5a2c20s1d2o2l0");
 
         assertOperatorEquals(Operator.AND, root);
-        assertNotNull(root.getChildren());
-        assertEquals(2, root.getChildren().size());
+        assertEquals(2, root.childCount());
     }
 
     @Test
@@ -101,10 +99,9 @@ public class HivePartitionPrunerTest {
         Node root = parser.parse("a1c25s5dfirsto5a2c20s1d2o2l0a1c20s1d1o1l1");
 
         assertOperatorEquals(Operator.OR, root);
-        assertNotNull(root.getChildren());
-        assertEquals(2, root.getChildren().size());
-        assertOperatorEquals(Operator.AND, root.getChildren().get(0));
-        assertOperatorEquals(Operator.LESS_THAN, root.getChildren().get(1));
+        assertEquals(2, root.childCount());
+        assertOperatorEquals(Operator.AND, root.getLeft());
+        assertOperatorEquals(Operator.LESS_THAN, root.getRight());
     }
 
     @Test
@@ -118,7 +115,7 @@ public class HivePartitionPrunerTest {
     public void parseUnsupportedIsNullExpression() throws Exception {
         // _1_ IS NULL
         Node root = parser.parse("a1o8");
-        root = treePruner.visit(root);
+        root = treeTraverser.traverse(root, treePruner);
         assertNull(root);
     }
 
@@ -133,7 +130,7 @@ public class HivePartitionPrunerTest {
     public void parseUnsupportedIsNotNullExpression() throws Exception {
         // _1_ IS NOT NULL
         Node root = parser.parse("a1o9");
-        root = treePruner.visit(root);
+        root = treeTraverser.traverse(root, treePruner);
         assertNull(root);
     }
 
@@ -326,7 +323,7 @@ public class HivePartitionPrunerTest {
 
     private void helper(String expected, String filterString, TreeVisitor pruner, HivePartitionFilterBuilder treeVisitor) throws Exception {
         Node root = parser.parse(filterString);
-        root = pruner.visit(root);
+        root = treeTraverser.traverse(root, pruner);
         treeTraverser.traverse(root, treeVisitor);
         assertEquals(expected, treeVisitor.toString());
         treeVisitor.reset();
@@ -347,12 +344,11 @@ public class HivePartitionPrunerTest {
         OperatorNode operatorNode = (OperatorNode) node;
         assertFalse(operator.isLogical());
         assertEquals(operator, operatorNode.getOperator());
-        assertNotNull(node.getChildren());
-        assertEquals(2, node.getChildren().size());
-        assertEquals(ColumnIndexOperand.class, node.getChildren().get(0).getClass());
-        assertEquals(columnIndex, ((ColumnIndexOperand) node.getChildren().get(0)).index());
-        assertTrue(node.getChildren().get(1) instanceof Operand);
-        assertEquals(expectedValue, node.getChildren().get(1).toString());
+        assertEquals(2, node.childCount());
+        assertEquals(ColumnIndexOperand.class, node.getLeft().getClass());
+        assertEquals(columnIndex, ((ColumnIndexOperand) node.getLeft()).index());
+        assertTrue(node.getRight() instanceof Operand);
+        assertEquals(expectedValue, node.getRight().toString());
     }
 
     /**
@@ -364,9 +360,8 @@ public class HivePartitionPrunerTest {
         OperatorNode operatorNode = (OperatorNode) node;
         assertFalse(operator.isLogical());
         assertEquals(operator, operatorNode.getOperator());
-        assertNotNull(node.getChildren());
-        assertEquals(1, node.getChildren().size());
-        assertEquals(ColumnIndexOperand.class, node.getChildren().get(0).getClass());
-        assertEquals(columnIndex, ((ColumnIndexOperand) node.getChildren().get(0)).index());
+        assertEquals(1, node.childCount());
+        assertEquals(ColumnIndexOperand.class, node.getLeft().getClass());
+        assertEquals(columnIndex, ((ColumnIndexOperand) node.getLeft()).index());
     }
 }

@@ -19,7 +19,8 @@ import static org.junit.Assert.assertNotNull;
 
 public class HiveORCSearchArgumentBuilderTest {
 
-    private static final TreeVisitor TREE_PRUNER = new SupportedOperatorPruner(SUPPORTED_OPERATORS);
+    private static final TreeVisitor PRUNER = new SupportedOperatorPruner(SUPPORTED_OPERATORS);
+    private static final TreeTraverser TRAVERSER = new TreeTraverser();
     private List<ColumnDescriptor> tupleDescription;
 
     @Before
@@ -36,11 +37,10 @@ public class HiveORCSearchArgumentBuilderTest {
         // NOT (_1_ IS NULL)
         String filterStr = "a1o8l2"; // ORCA transforms is not null to NOT ( a IS NULL )
 
-        Node root = new FilterParser().parse(filterStr);
-        root = TREE_PRUNER.visit(root);
-
         HiveORCSearchArgumentBuilder treeVisitor = new HiveORCSearchArgumentBuilder(tupleDescription, new Configuration());
-        new TreeTraverser().traverse(root, treeVisitor);
+        Node root = new FilterParser().parse(filterStr);
+        root = TRAVERSER.traverse(root, PRUNER);
+        TRAVERSER.traverse(root, treeVisitor);
 
         SearchArgument.Builder filterBuilder = treeVisitor.getFilterBuilder();
 

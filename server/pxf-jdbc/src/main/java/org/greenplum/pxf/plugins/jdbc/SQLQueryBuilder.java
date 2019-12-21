@@ -295,7 +295,7 @@ public class SQLQueryBuilder {
 
         try {
             Node root = new FilterParser().parse(context.getFilterString());
-            root = getPruner().visit(root);
+            root = TRAVERSER.traverse(root, getPruner());
             TRAVERSER.traverse(root, jdbcPredicateBuilder);
 
             // No exceptions were thrown, change the provided query

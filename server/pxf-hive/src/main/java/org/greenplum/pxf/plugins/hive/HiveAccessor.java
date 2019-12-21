@@ -248,86 +248,90 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
         return testOneFilter(partitionFields, root);
     }
 
-    private boolean testForUnsupportedOperators(List<Node> nodeList) {
+    private boolean testForUnsupportedOperators(Node node) {
         boolean nonAndOp = true;
-        for (Node node : nodeList) {
-            if (node instanceof OperatorNode) {
-                OperatorNode operatorNode = (OperatorNode) node;
-                Operator operator = operatorNode.getOperator();
+        if (node instanceof OperatorNode) {
+            OperatorNode operatorNode = (OperatorNode) node;
+            Operator operator = operatorNode.getOperator();
 
-                if (operator.isLogical()) {
-                    if (operator != Operator.AND) {
-                        return false;
-                    }
+            if (operator.isLogical()) {
+                if (operator != Operator.AND) {
+                    return false;
+                }
 
-                    if (operatorNode.getChildren() != null) {
-                        nonAndOp = testForUnsupportedOperators(operatorNode.getChildren());
-                    }
+                if (operatorNode.getLeft() != null) {
+                    nonAndOp = testForUnsupportedOperators(operatorNode.getLeft());
+                }
+
+                if (operatorNode.getRight() != null) {
+                    nonAndOp = nonAndOp && testForUnsupportedOperators(operatorNode.getRight());
                 }
             }
         }
         return nonAndOp;
     }
 
-    private boolean testForPartitionEquality(List<HivePartition> partitionFields, List<Node> nodeList) {
+    private boolean testForPartitionEquality(List<HivePartition> partitionFields, Node node) {
+        if (!(node instanceof OperatorNode)) return true;
         boolean partitionAllowed = true;
-        for (Node node : nodeList) {
+        OperatorNode operatorNode = (OperatorNode) node;
+        Operator operator = operatorNode.getOperator();
 
-            if (node instanceof OperatorNode) {
-                OperatorNode operatorNode = (OperatorNode) node;
-                Operator operator = operatorNode.getOperator();
+        if (operator.isLogical()) {
+            if (operatorNode.getLeft() != null) {
+                partitionAllowed = testForPartitionEquality(partitionFields, operatorNode.getLeft());
+            }
 
-                if (operator.isLogical()) {
-                    partitionAllowed = testForPartitionEquality(partitionFields, operatorNode.getChildren());
-                } else {
-                    if (operator != Operator.EQUALS) {
-                        /*
-                         * in case this is not an "equality node"
-                         * we ignore it here - in partition
-                         * filtering
-                         */
-                        return true;
-                    }
+            if (operatorNode.getRight() != null) {
+                partitionAllowed = partitionAllowed && testForPartitionEquality(partitionFields, operatorNode.getRight());
+            }
+        } else {
+            if (operator != Operator.EQUALS) {
+                /*
+                 * in case this is not an "equality node"
+                 * we ignore it here - in partition
+                 * filtering
+                 */
+                return true;
+            }
 
-                    ColumnIndexOperand columnIndexOperand = operatorNode.getColumnIndexOperand();
-                    Operand valueOperand = operatorNode.getValueOperand();
+            ColumnIndexOperand columnIndexOperand = operatorNode.getColumnIndexOperand();
+            Operand valueOperand = operatorNode.getValueOperand();
 
-                    if (valueOperand == null) {
-                        throw new IllegalArgumentException(String.format(
-                                "Operator %s does not contain a scalar operand", operator));
-                    }
+            if (valueOperand == null) {
+                throw new IllegalArgumentException(String.format(
+                        "Operator %s does not contain a scalar operand", operator));
+            }
 
-                    String filterValue = valueOperand.toString();
-                    ColumnDescriptor filterColumn = context.getColumn(columnIndexOperand.index());
-                    String filterColumnName = filterColumn.columnName();
+            String filterValue = valueOperand.toString();
+            ColumnDescriptor filterColumn = context.getColumn(columnIndexOperand.index());
+            String filterColumnName = filterColumn.columnName();
 
-                    for (HivePartition partition : partitionFields) {
-                        if (filterColumnName.equals(partition.name)) {
-
-                            /*
-                             * the node field matches a partition field, but the values do
-                             * not match
-                             */
-                            boolean keepPartition = filterValue.equals(partition.val);
-
-                            /*
-                             * If the string comparison fails then we should check the comparison of
-                             * the two operands as typed values
-                             * If the partition value equals HIVE_DEFAULT_PARTITION just skip
-                             */
-                            if (!keepPartition && !partition.val.equals(HIVE_DEFAULT_PARTITION)) {
-                                keepPartition = testFilterByType(filterValue, partition);
-                            }
-                            return keepPartition;
-                        }
-                    }
+            for (HivePartition partition : partitionFields) {
+                if (filterColumnName.equals(partition.name)) {
 
                     /*
-                     * node field did not match any partition field, so we ignore this
-                     * node and hence return true
+                     * the node field matches a partition field, but the values do
+                     * not match
                      */
+                    boolean keepPartition = filterValue.equals(partition.val);
+
+                    /*
+                     * If the string comparison fails then we should check the comparison of
+                     * the two operands as typed values
+                     * If the partition value equals HIVE_DEFAULT_PARTITION just skip
+                     */
+                    if (!keepPartition && !partition.val.equals(HIVE_DEFAULT_PARTITION)) {
+                        keepPartition = testFilterByType(filterValue, partition);
+                    }
+                    return keepPartition;
                 }
             }
+
+            /*
+             * node field did not match any partition field, so we ignore this
+             * node and hence return true
+             */
         }
         return partitionAllowed;
     }
@@ -391,13 +395,11 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
      * valueA != valueOne, then we return false.
      */
     private boolean testOneFilter(List<HivePartition> partitionFields, Node root) {
-        List<Node> filterList = Collections.singletonList(root);
-
         // Let's look first at the filter and escape if there are any OR or NOT ops
-        if (!testForUnsupportedOperators(filterList))
+        if (!testForUnsupportedOperators(root))
             return true;
 
-        return testForPartitionEquality(partitionFields, filterList);
+        return testForPartitionEquality(partitionFields, root);
     }
 
     /**

@@ -146,10 +146,10 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
         /* Predicate push-down configuration */
         String filterStr = context.getFilterString();
 
-        Node root = new FilterParser().parse(filterStr);
-        root = PRUNER.visit(root);
-
         HiveORCSearchArgumentBuilder treeVisitor = new HiveORCSearchArgumentBuilder(context.getTupleDescription(), configuration);
+
+        Node root = new FilterParser().parse(filterStr);
+        root = TRAVERSER.traverse(root, PRUNER);
         TRAVERSER.traverse(root, treeVisitor);
 
         SearchArgument.Builder filterBuilder = treeVisitor.getFilterBuilder();

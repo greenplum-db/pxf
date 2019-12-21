@@ -315,8 +315,7 @@ public class HBaseAccessor extends BasePlugin implements Accessor {
         // Parse the filter string
         Node root = new FilterParser().parse(context.getFilterString());
         // Prune the parsed tree with valid supported operators
-        root = PRUNER.visit(root);
-
+        root = TRAVERSER.traverse(root, PRUNER);
         // Traverse the tree with the hBaseFilterBuilder to produce a filter
         TRAVERSER.traverse(root, hBaseFilterBuilder);
 

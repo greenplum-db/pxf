@@ -140,7 +140,6 @@ public class FilterParserTest {
         runParseNegative("const operand with missing data", filter, exception);
 
         filter = "c20s3ds9r";
-        index = 6;
         exception = "filter parsing failed, missing operators?";
         runParseNegative("const operand with an invalid value", filter, exception);
 
@@ -333,10 +332,9 @@ public class FilterParserTest {
         Node result = filterParser.parse(filter);
         assertNotNull(result);
         assertOperatorEquals(AND, result);
-        assertNotNull(result.getChildren());
-        assertEquals(2, result.getChildren().size());
-        assertOperatorEquals(EQUALS, result.getChildren().get(0));
-        assertOperatorEquals(GREATER_THAN, result.getChildren().get(1));
+        assertEquals(2, result.childCount());
+        assertOperatorEquals(EQUALS, result.getLeft());
+        assertOperatorEquals(GREATER_THAN, result.getRight());
     }
 
     @Test
@@ -346,10 +344,9 @@ public class FilterParserTest {
         Node result = filterParser.parse(filter);
         assertNotNull(result);
         assertOperatorEquals(AND, result);
-        assertNotNull(result.getChildren());
-        assertEquals(2, result.getChildren().size());
-        assertOperatorEquals(EQUALS, result.getChildren().get(0));
-        assertOperatorEquals(GREATER_THAN, result.getChildren().get(1));
+        assertEquals(2, result.childCount());
+        assertOperatorEquals(EQUALS, result.getLeft());
+        assertOperatorEquals(GREATER_THAN, result.getRight());
     }
 
     @Test
@@ -359,10 +356,9 @@ public class FilterParserTest {
         Node result = filterParser.parse(filter);
         assertNotNull(result);
         assertOperatorEquals(OR, result);
-        assertNotNull(result.getChildren());
-        assertEquals(2, result.getChildren().size());
-        assertOperatorEquals(EQUALS, result.getChildren().get(0));
-        assertOperatorEquals(GREATER_THAN, result.getChildren().get(1));
+        assertEquals(2, result.childCount());
+        assertOperatorEquals(EQUALS, result.getLeft());
+        assertOperatorEquals(GREATER_THAN, result.getRight());
     }
 
     @Test
@@ -373,9 +369,8 @@ public class FilterParserTest {
         Node result = filterParser.parse(filter);
         assertNotNull(result);
         assertOperatorEquals(Operator.NOT, result);
-        assertNotNull(result.getChildren());
-        assertEquals(1, result.getChildren().size());
-        assertOperatorEquals(Operator.EQUALS, result.getChildren().get(0));
+        assertEquals(1, result.childCount());
+        assertOperatorEquals(Operator.EQUALS, result.getLeft());
     }
 
     @Test
@@ -393,13 +388,11 @@ public class FilterParserTest {
 
         Node result = filterParser.parse(filter);
         assertOperatorEquals(NOT, result);
-        assertNotNull(result.getChildren());
-        assertEquals(1, result.getChildren().size());
-        assertOperatorEquals(AND, result.getChildren().get(0));
-        assertNotNull(result.getChildren().get(0).getChildren());
-        assertEquals(2, result.getChildren().get(0).getChildren().size());
-        assertOperatorEquals(EQUALS, result.getChildren().get(0).getChildren().get(0));
-        assertOperatorEquals(GREATER_THAN, result.getChildren().get(0).getChildren().get(1));
+        assertEquals(1, result.childCount());
+        assertOperatorEquals(AND, result.getLeft());
+        assertEquals(2, result.getLeft().childCount());
+        assertOperatorEquals(EQUALS, result.getLeft().getLeft());
+        assertOperatorEquals(GREATER_THAN, result.getLeft().getRight());
     }
 
     /*

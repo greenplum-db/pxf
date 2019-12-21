@@ -15,14 +15,6 @@ public interface TreeVisitor {
     Node before(Node node, final int level);
 
     /**
-     * Called during the visit of the root Node
-     *
-     * @param node the Node being visited
-     * @return the resulting node from the visit
-     */
-    Node visit(Node node);
-
-    /**
      * Called during the visit of a Node
      *
      * @param node  the Node being visited

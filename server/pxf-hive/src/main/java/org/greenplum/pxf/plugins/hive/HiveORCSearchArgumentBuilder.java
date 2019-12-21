@@ -90,11 +90,6 @@ public class HiveORCSearchArgumentBuilder implements TreeVisitor {
     }
 
     @Override
-    public Node visit(Node node) {
-        return visit(node, 0);
-    }
-
-    @Override
     public Node visit(Node node, final int level) {
         if (node instanceof OperatorNode) {
             OperatorNode operatorNode = (OperatorNode) node;
