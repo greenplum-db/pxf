@@ -23,11 +23,8 @@ package org.greenplum.pxf.api.filter;
 import org.greenplum.pxf.api.io.DataType;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Stack;
 
 /**
@@ -44,11 +41,12 @@ import java.util.Stack;
  * <br>
  * It is a RPN serialized representation of a filters tree in GPDB where
  * <ul>
- * <li> a means an attribute (column)</li>
+ * <li>a means an attribute (column)</li>
  * <li>c means a constant followed by the datatype oid</li>
  * <li>s means the length of the data in bytes</li>
  * <li>d denotes the start of the constant data</li>
  * <li>o means operator</li>
+ * <li>l means logical operator</li>
  * </ul>
  * <br>
  * For constants all three portions are required in order to parse the data
@@ -97,27 +95,25 @@ public class FilterParser {
             DataType.BYTEA
     );
 
-    private static final Map<Integer, Operator> OPERATOR_MAP =
-            Collections.unmodifiableMap(new HashMap<Integer, Operator>() {{
-                put(0, Operator.NOOP);
-                put(1, Operator.LESS_THAN);
-                put(2, Operator.GREATER_THAN);
-                put(3, Operator.LESS_THAN_OR_EQUAL);
-                put(4, Operator.GREATER_THAN_OR_EQUAL);
-                put(5, Operator.EQUALS);
-                put(6, Operator.NOT_EQUALS);
-                put(7, Operator.LIKE);
-                put(8, Operator.IS_NULL);
-                put(9, Operator.IS_NOT_NULL);
-                put(10, Operator.IN);
-            }});
+    private static final Operator[] OPERATOR_ARRAY = new Operator[]{
+            Operator.NOOP,
+            Operator.LESS_THAN,
+            Operator.GREATER_THAN,
+            Operator.LESS_THAN_OR_EQUAL,
+            Operator.GREATER_THAN_OR_EQUAL,
+            Operator.EQUALS,
+            Operator.NOT_EQUALS,
+            Operator.LIKE,
+            Operator.IS_NULL,
+            Operator.IS_NOT_NULL,
+            Operator.IN
+    };
 
-    private static final Map<Integer, Operator> LOGICAL_OPERATOR_MAP =
-            Collections.unmodifiableMap(new HashMap<Integer, Operator>() {{
-                put(0, Operator.AND);
-                put(1, Operator.OR);
-                put(2, Operator.NOT);
-            }});
+    private static final Operator[] LOGICAL_OPERATOR_ARRAY = new Operator[]{
+            Operator.AND,
+            Operator.OR,
+            Operator.NOT
+    };
 
     /**
      * Thrown when a filter's parsing exception occurs.
@@ -196,7 +192,7 @@ public class FilterParser {
             throw new FilterStringSyntaxException("Stack not empty, missing operators?");
         }
 
-        if (result instanceof Operand) {
+        if (result instanceof OperandNode) {
             throw new FilterStringSyntaxException("filter parsing failed, missing operators?");
         }
 
@@ -210,7 +206,7 @@ public class FilterParser {
      * @return the converted int value
      * @throws FilterStringSyntaxException if the long value is not inside an int scope
      */
-    private int safeToInt(Long value) throws FilterStringSyntaxException {
+    private int safeLongToInt(Long value) throws FilterStringSyntaxException {
         if (value > Integer.MAX_VALUE || value < Integer.MIN_VALUE) {
             throw new FilterStringSyntaxException("value " + value + " larger than intmax ending at " + index);
         }
@@ -270,17 +266,17 @@ public class FilterParser {
     /**
      * Parses the column index operand
      *
-     * @return a {@link ColumnIndexOperand}
+     * @return a {@link ColumnIndexOperandNode}
      * @throws Exception when parsing fails
      */
     private Node parseColumnIndex() throws Exception {
-        return new ColumnIndexOperand(safeToInt(parseNumber()));
+        return new ColumnIndexOperandNode(safeLongToInt(parseNumber()));
     }
 
     /**
      * Parses either a number or a string.
      */
-    private ScalarOperand parseScalarParameter() throws Exception {
+    private ScalarOperandNode parseScalarParameter() throws Exception {
         validateNotEndOfArray();
 
         DataType dataType = DataType.get(parseConstDataType());
@@ -293,16 +289,16 @@ public class FilterParser {
         String data = convertDataType(filterByteArr, index, index + dataLength, dataType);
         index += dataLength;
 
-        return new ScalarOperand(dataType, data);
+        return new ScalarOperandNode(dataType, data);
     }
 
     /**
      * Parses parameters with a list of values.
      *
-     * @return the parsed {@link CollectionOperand}
+     * @return the parsed {@link CollectionOperandNode}
      * @throws Exception when parsing fails
      */
-    private CollectionOperand parseListParameter() throws Exception {
+    private CollectionOperandNode parseListParameter() throws Exception {
         validateNotEndOfArray();
 
         DataType dataType = DataType.get(parseConstDataType());
@@ -323,7 +319,7 @@ public class FilterParser {
             index += dataLength;
         }
 
-        return new CollectionOperand(dataType, data);
+        return new CollectionOperandNode(dataType, data);
     }
 
     /**
@@ -333,40 +329,40 @@ public class FilterParser {
      * @throws Exception when parsing fails
      */
     private Node parseComparisonOperator() throws Exception {
-        int opNumber = safeToInt(parseNumber());
-        Operator operation = OPERATOR_MAP.get(opNumber);
-        if (operation == null) {
+        int opNumber = safeLongToInt(parseNumber());
+        Operator operator = getOperatorFromArray(OPERATOR_ARRAY, opNumber);
+        if (operator == null) {
             throw new FilterStringSyntaxException("unknown op ending at " + index);
         }
 
         // Pop right operand
         if (operandsStack.empty()) {
-            throw new FilterStringSyntaxException("missing operands for op " + operation + " at " + index);
+            throw new FilterStringSyntaxException("missing operands for op " + operator + " at " + index);
         }
         Node rightOperand = operandsStack.pop();
 
         // all operations other than null checks require 2 operands
         Node result;
-        if (operation == Operator.IS_NULL || operation == Operator.IS_NOT_NULL) {
-            result = new OperatorNode(operation, rightOperand);
+        if (operator == Operator.IS_NULL || operator == Operator.IS_NOT_NULL) {
+            result = new OperatorNode(operator, rightOperand);
         } else {
             // Pop left operand
             if (operandsStack.empty()) {
-                throw new FilterStringSyntaxException("missing operands for op " + operation + " at " + index);
+                throw new FilterStringSyntaxException("missing operands for op " + operator + " at " + index);
             }
             Node leftOperand = operandsStack.pop();
 
-            if (!(leftOperand instanceof Operand) || !(rightOperand instanceof Operand)) {
-                throw new FilterStringSyntaxException(String.format("missing logical operator before op %s at %d", operation.name(), index));
+            if (!(leftOperand instanceof OperandNode) || !(rightOperand instanceof OperandNode)) {
+                throw new FilterStringSyntaxException(String.format("missing logical operator before op %s at %d", operator.name(), index));
             }
 
             // Normalize order, evaluate
             // Column should be on the left
-            result = (leftOperand instanceof ScalarOperand)
+            result = (leftOperand instanceof ScalarOperandNode)
                     // column on the right, reverse expression
-                    ? new OperatorNode(operation.transpose(), rightOperand, leftOperand)
+                    ? new OperatorNode(operator.transpose(), rightOperand, leftOperand)
                     // no swap, column on the left
-                    : new OperatorNode(operation, leftOperand, rightOperand);
+                    : new OperatorNode(operator, leftOperand, rightOperand);
         }
         // Store result on stack
         return result;
@@ -379,26 +375,26 @@ public class FilterParser {
      * @throws Exception when parsing fails
      */
     private Node parseLogicalOperator() throws Exception {
-        int opNumber = safeToInt(parseNumber());
-        Operator logicalOperation = LOGICAL_OPERATOR_MAP.get(opNumber);
+        int opNumber = safeLongToInt(parseNumber());
+        Operator operator = getOperatorFromArray(LOGICAL_OPERATOR_ARRAY, opNumber);
 
-        if (logicalOperation == null) {
+        if (operator == null) {
             throw new FilterStringSyntaxException("unknown op ending at " + index);
         }
 
         Node result;
-        if (logicalOperation == Operator.NOT) {
+        if (operator == Operator.NOT) {
             Node exp = operandsStack.pop();
-            result = new OperatorNode(logicalOperation, exp);
-        } else if (logicalOperation == Operator.AND || logicalOperation == Operator.OR) {
+            result = new OperatorNode(operator, exp);
+        } else if (operator == Operator.AND || operator == Operator.OR) {
             Node rightOperand = operandsStack.pop();
             Node leftOperand = operandsStack.pop();
 
             if (!(rightOperand instanceof OperatorNode) || !(leftOperand instanceof OperatorNode)) {
-                throw new FilterStringSyntaxException(String.format("logical operator %s expects two operator nodes at %d", logicalOperation, index));
+                throw new FilterStringSyntaxException(String.format("logical operator %s expects two operator nodes at %d", operator, index));
             }
 
-            result = new OperatorNode(logicalOperation, leftOperand, rightOperand);
+            result = new OperatorNode(operator, leftOperand, rightOperand);
         } else {
             throw new FilterStringSyntaxException("unknown logical op code " + opNumber);
         }
@@ -418,6 +414,18 @@ public class FilterParser {
             throw new FilterStringSyntaxException("invalid numeric argument " + digits);
         }
 
+    }
+
+    /**
+     * Returns the operator from the given array if the array is not null
+     * and the index is within the bounds of the array, null otherwise
+     *
+     * @param array the OperatorNode array
+     * @param index the index
+     * @return the operator if exists, null otherwise
+     */
+    private Operator getOperatorFromArray(Operator[] array, int index) {
+        return (array != null && index >= 0 && index < array.length) ? array[index] : null;
     }
 
     /*

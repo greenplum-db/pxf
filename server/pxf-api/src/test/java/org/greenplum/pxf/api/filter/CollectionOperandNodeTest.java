@@ -9,24 +9,21 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
-public class CollectionOperandTest {
-
-    @Test
-    public void testConstructor() {
-        new CollectionOperand(DataType.INTEGER, new ArrayList<>());
-    }
+public class CollectionOperandNodeTest {
 
     @Test
     public void testGetDataType() {
-        Operand operand = new CollectionOperand(DataType.INTEGER, new ArrayList<>());
-        assertEquals(DataType.INTEGER, operand.getDataType());
+        OperandNode operandNode = new CollectionOperandNode(DataType.INTEGER, new ArrayList<>());
+
+        assertEquals(DataType.INTEGER, operandNode.getDataType());
     }
 
     @Test
     public void testGetData() {
         List<String> data = new ArrayList<>();
         data.add("s");
-        CollectionOperand operand = new CollectionOperand(DataType.INTEGER, data);
+        CollectionOperandNode operand = new CollectionOperandNode(DataType.INTEGER, data);
+
         assertSame(data, operand.getData());
         assertEquals("s", operand.getData().get(0));
     }
@@ -35,11 +32,13 @@ public class CollectionOperandTest {
     public void testToString() {
         List<String> data = new ArrayList<>();
         data.add("s");
-        CollectionOperand operand = new CollectionOperand(DataType.INTEGER, data);
+        CollectionOperandNode operand = new CollectionOperandNode(DataType.INTEGER, data);
+
         assertEquals("(s)", operand.toString());
 
         data.add("t");
-        operand = new CollectionOperand(DataType.INTEGER, data);
+        operand = new CollectionOperandNode(DataType.INTEGER, data);
+        
         assertEquals("(s,t)", operand.toString());
     }
 }

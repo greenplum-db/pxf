@@ -10,9 +10,9 @@ import org.apache.hadoop.hbase.filter.NullComparator;
 import org.apache.hadoop.hbase.filter.RowFilter;
 import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
 import org.apache.hadoop.hbase.util.Bytes;
-import org.greenplum.pxf.api.filter.ColumnIndexOperand;
+import org.greenplum.pxf.api.filter.ColumnIndexOperandNode;
 import org.greenplum.pxf.api.filter.Node;
-import org.greenplum.pxf.api.filter.Operand;
+import org.greenplum.pxf.api.filter.OperandNode;
 import org.greenplum.pxf.api.filter.Operator;
 import org.greenplum.pxf.api.filter.OperatorNode;
 import org.greenplum.pxf.api.filter.TreeVisitor;
@@ -101,14 +101,14 @@ public class HBaseFilterBuilder implements TreeVisitor {
             Operator operator = operatorNode.getOperator();
 
             if (!operator.isLogical()) {
-                ColumnIndexOperand columnIndexOperand = operatorNode.getColumnIndexOperand();
+                ColumnIndexOperandNode columnIndexOperand = operatorNode.getColumnIndexOperand();
                 HBaseColumnDescriptor hBaseColumn = tupleDescription.getColumn(columnIndexOperand.index());
                 Filter filter;
 
                 if (operator == Operator.IS_NULL || operator == Operator.IS_NOT_NULL) {
                     filter = processNullOperator(hBaseColumn, operator);
                 } else {
-                    Operand data = operatorNode.getValueOperand();
+                    OperandNode data = operatorNode.getValueOperand();
                     filter = processSimpleColumnOperator(hBaseColumn, operator, data);
                 }
 
@@ -193,12 +193,14 @@ public class HBaseFilterBuilder implements TreeVisitor {
      * Handles simple column-operator-constant expressions.
      * Creates a special filter in the case the column is the row key column.
      *
-     * @param hBaseColumn the HBase column
-     * @param operator    the simple column operator
-     * @param data        the optional operand
+     * @param hBaseColumn  the HBase column
+     * @param operator the simple column operator
+     * @param data         the optional operand
      * @return the {@link Filter} for the given simple column operator
      */
-    private Filter processSimpleColumnOperator(HBaseColumnDescriptor hBaseColumn, Operator operator, Operand data) {
+    private Filter processSimpleColumnOperator(HBaseColumnDescriptor hBaseColumn,
+                                               Operator operator,
+                                               OperandNode data) {
         // The value of lastOperand has to be stored after visiting
         // the operand child of this node.
         ByteArrayComparable comparator = getComparator(
@@ -209,7 +211,7 @@ public class HBaseFilterBuilder implements TreeVisitor {
          * If row key is of type TEXT, allow filter in start/stop row
          * key API in HBaseAccessor/Scan object.
          */
-        if (data != null && textualRowKey(hBaseColumn)) {
+        if (data != null && isTextualRowKey(hBaseColumn)) {
             storeStartEndKeys(operator, data.toString());
         }
 
@@ -230,8 +232,8 @@ public class HBaseFilterBuilder implements TreeVisitor {
     /**
      * Handles IS NULL and IS NOT NULL operators
      *
-     * @param hBaseColumn the HBase column
-     * @param operator    the IS NULL/IS NOT NULL operator
+     * @param hBaseColumn  the HBase column
+     * @param operator the IS NULL/IS NOT NULL operator
      * @return the filter for the given operator
      */
     private Filter processNullOperator(HBaseColumnDescriptor hBaseColumn, Operator operator) {
@@ -248,7 +250,7 @@ public class HBaseFilterBuilder implements TreeVisitor {
     /**
      * Returns true if column is of type TEXT and is a row key column.
      */
-    private boolean textualRowKey(HBaseColumnDescriptor column) {
+    private boolean isTextualRowKey(HBaseColumnDescriptor column) {
         return column.isKeyColumn() && column.columnTypeCode() == TEXT.getOID();
     }
 
@@ -256,7 +258,7 @@ public class HBaseFilterBuilder implements TreeVisitor {
      * Resolves the column's type to a comparator class to be used.
      * Currently, supported types are TEXT and INTEGER types.
      */
-    private ByteArrayComparable getComparator(int type, Operand data) {
+    private ByteArrayComparable getComparator(int type, OperandNode data) {
         ByteArrayComparable result;
         switch (DataType.get(type)) {
             case TEXT:

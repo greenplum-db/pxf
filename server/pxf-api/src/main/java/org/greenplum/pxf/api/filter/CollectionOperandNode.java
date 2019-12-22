@@ -7,11 +7,11 @@ import java.util.List;
 /**
  * Represents a collection of values
  */
-public class CollectionOperand extends Operand {
+public class CollectionOperandNode extends OperandNode {
 
     private final List<String> data;
 
-    public CollectionOperand(DataType dataType, List<String> data) {
+    public CollectionOperandNode(DataType dataType, List<String> data) {
         super(dataType);
         this.data = data;
     }

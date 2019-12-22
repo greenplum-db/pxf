@@ -21,10 +21,10 @@ package org.greenplum.pxf.plugins.hive;
 
 
 import com.google.common.collect.Lists;
-import org.greenplum.pxf.api.filter.ColumnIndexOperand;
+import org.greenplum.pxf.api.filter.ColumnIndexOperandNode;
 import org.greenplum.pxf.api.filter.FilterParser;
 import org.greenplum.pxf.api.filter.Node;
-import org.greenplum.pxf.api.filter.Operand;
+import org.greenplum.pxf.api.filter.OperandNode;
 import org.greenplum.pxf.api.filter.Operator;
 import org.greenplum.pxf.api.filter.OperatorNode;
 import org.greenplum.pxf.api.filter.TreeTraverser;
@@ -344,9 +344,9 @@ public class HivePartitionPrunerTest {
         assertFalse(operator.isLogical());
         assertEquals(operator, operatorNode.getOperator());
         assertEquals(2, node.childCount());
-        assertEquals(ColumnIndexOperand.class, node.getLeft().getClass());
-        assertEquals(columnIndex, ((ColumnIndexOperand) node.getLeft()).index());
-        assertTrue(node.getRight() instanceof Operand);
+        assertEquals(ColumnIndexOperandNode.class, node.getLeft().getClass());
+        assertEquals(columnIndex, ((ColumnIndexOperandNode) node.getLeft()).index());
+        assertTrue(node.getRight() instanceof OperandNode);
         assertEquals(expectedValue, node.getRight().toString());
     }
 
@@ -360,7 +360,7 @@ public class HivePartitionPrunerTest {
         assertFalse(operator.isLogical());
         assertEquals(operator, operatorNode.getOperator());
         assertEquals(1, node.childCount());
-        assertEquals(ColumnIndexOperand.class, node.getLeft().getClass());
-        assertEquals(columnIndex, ((ColumnIndexOperand) node.getLeft()).index());
+        assertEquals(ColumnIndexOperandNode.class, node.getLeft().getClass());
+        assertEquals(columnIndex, ((ColumnIndexOperandNode) node.getLeft()).index());
     }
 }

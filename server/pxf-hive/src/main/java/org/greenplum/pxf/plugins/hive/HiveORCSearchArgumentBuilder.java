@@ -9,13 +9,13 @@ import org.apache.hadoop.hive.ql.io.sarg.PredicateLeaf;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentFactory;
 import org.greenplum.pxf.api.UnsupportedTypeException;
-import org.greenplum.pxf.api.filter.CollectionOperand;
-import org.greenplum.pxf.api.filter.ColumnIndexOperand;
+import org.greenplum.pxf.api.filter.CollectionOperandNode;
+import org.greenplum.pxf.api.filter.ColumnIndexOperandNode;
 import org.greenplum.pxf.api.filter.Node;
-import org.greenplum.pxf.api.filter.Operand;
+import org.greenplum.pxf.api.filter.OperandNode;
 import org.greenplum.pxf.api.filter.Operator;
 import org.greenplum.pxf.api.filter.OperatorNode;
-import org.greenplum.pxf.api.filter.ScalarOperand;
+import org.greenplum.pxf.api.filter.ScalarOperandNode;
 import org.greenplum.pxf.api.filter.TreeVisitor;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
@@ -26,17 +26,15 @@ import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
  * This class implements {@link TreeVisitor} and generates a
  * {@link SearchArgument.Builder} for the given filter string.
  * For example, for the filter string
- * ( _1_ < 5 OR _1_ > 10 ) AND ( _2_ IS NULL )
+ * ( _1_ < 5 OR _1_ > 10 ) AND ( _2_ IS NOT NULL )
  * it will generate the following {@link SearchArgument.Builder}
  * startAnd
  * ..startOr
@@ -94,7 +92,6 @@ public class HiveORCSearchArgumentBuilder implements TreeVisitor {
         if (node instanceof OperatorNode) {
             OperatorNode operatorNode = (OperatorNode) node;
             Operator operator = operatorNode.getOperator();
-
             if (!operator.isLogical()) {
                 buildArgument(operatorNode);
             }
@@ -121,14 +118,14 @@ public class HiveORCSearchArgumentBuilder implements TreeVisitor {
     /**
      * Builds a single argument
      *
-     * @param operatorNode the operator node
+     * @param operatorNode the operatorNode node
      * @return true if the argument is build, false otherwise
      */
     private boolean buildArgument(OperatorNode operatorNode) {
 
         Operator operator = operatorNode.getOperator();
-        ColumnIndexOperand columnIndexOperand = operatorNode.getColumnIndexOperand();
-        Operand valueOperand = operatorNode.getValueOperand();
+        ColumnIndexOperandNode columnIndexOperand = operatorNode.getColumnIndexOperand();
+        OperandNode valueOperandNode = operatorNode.getValueOperand();
 
         ColumnDescriptor filterColumn = columnDescriptors.get(columnIndexOperand.index());
         String filterColumnName = filterColumn.columnName();
@@ -138,16 +135,16 @@ public class HiveORCSearchArgumentBuilder implements TreeVisitor {
         // For Hive 2 libraries, we need to do it before passing values to
         // Hive jars
 
-        if (valueOperand instanceof CollectionOperand) {
-            CollectionOperand collectionOperand = (CollectionOperand) valueOperand;
+        if (valueOperandNode instanceof CollectionOperandNode) {
+            CollectionOperandNode collectionOperand = (CollectionOperandNode) valueOperandNode;
 
             filterValue = collectionOperand
                     .getData()
                     .stream()
                     .map(data -> boxLiteral(convertDataType(collectionOperand.getDataType().getTypeElem(), data)))
                     .collect(Collectors.toList());
-        } else if (valueOperand instanceof ScalarOperand) {
-            ScalarOperand scalarOperand = (ScalarOperand) valueOperand;
+        } else if (valueOperandNode instanceof ScalarOperandNode) {
+            ScalarOperandNode scalarOperand = (ScalarOperandNode) valueOperandNode;
 
             filterValue = convertDataType(scalarOperand);
             filterValue = boxLiteral(filterValue);
@@ -271,7 +268,7 @@ public class HiveORCSearchArgumentBuilder implements TreeVisitor {
      * @param scalarOperand the scalar operand
      * @return the scalar operand value to its original type
      */
-    private Object convertDataType(ScalarOperand scalarOperand) {
+    private Object convertDataType(ScalarOperandNode scalarOperand) {
         return convertDataType(scalarOperand.getDataType(), scalarOperand.getValue());
     }
 

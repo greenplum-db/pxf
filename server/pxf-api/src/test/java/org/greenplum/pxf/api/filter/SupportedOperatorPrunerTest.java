@@ -52,7 +52,7 @@ public class SupportedOperatorPrunerTest {
     }
 
     @Test
-    public void testAndNotOperatorsSupported() throws Exception {
+    public void testAndOperatorIsNotSupported() throws Exception {
         EnumSet<Operator> supportedOperators = EnumSet.of(
                 Operator.EQUALS,
                 Operator.NOT_EQUALS,

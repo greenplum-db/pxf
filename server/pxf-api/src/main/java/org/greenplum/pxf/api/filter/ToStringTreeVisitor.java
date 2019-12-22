@@ -34,10 +34,10 @@ public class ToStringTreeVisitor implements TreeVisitor {
 
     @Override
     public Node visit(Node node, final int level) {
-        if (node instanceof Operand) {
+        if (node instanceof OperandNode) {
 
-            if (node instanceof ScalarOperand) {
-                ScalarOperand scalarOperand = (ScalarOperand) node;
+            if (node instanceof ScalarOperandNode) {
+                ScalarOperandNode scalarOperand = (ScalarOperandNode) node;
                 // boolean does not need to be rendered when it's true
                 if (scalarOperand.getDataType() == DataType.BOOLEAN) {
                     if (StringUtils.equals("true", scalarOperand.getValue())) {
@@ -49,7 +49,7 @@ public class ToStringTreeVisitor implements TreeVisitor {
                 }
             }
 
-            sb.append(getNodeValue((Operand) node));
+            sb.append(getNodeValue((OperandNode) node));
         } else if (node instanceof OperatorNode) {
             OperatorNode operatorNode = (OperatorNode) node;
             Operator operator = operatorNode.getOperator();
@@ -105,13 +105,13 @@ public class ToStringTreeVisitor implements TreeVisitor {
     }
 
     /**
-     * Returns the string representation of the value of the operand
+     * Returns the string representation of the value of the operandNode
      *
-     * @param operand the operand
-     * @return the string representation of the operand's value
+     * @param operandNode the operandNode
+     * @return the string representation of the operandNode's value
      */
-    protected String getNodeValue(Operand operand) {
-        return operand.toString();
+    protected String getNodeValue(OperandNode operandNode) {
+        return operandNode.toString();
     }
 
     /**

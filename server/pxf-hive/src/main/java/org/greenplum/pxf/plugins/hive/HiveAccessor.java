@@ -27,10 +27,10 @@ import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.Reporter;
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.filter.ColumnIndexOperand;
+import org.greenplum.pxf.api.filter.ColumnIndexOperandNode;
 import org.greenplum.pxf.api.filter.FilterParser;
 import org.greenplum.pxf.api.filter.Node;
-import org.greenplum.pxf.api.filter.Operand;
+import org.greenplum.pxf.api.filter.OperandNode;
 import org.greenplum.pxf.api.filter.Operator;
 import org.greenplum.pxf.api.filter.OperatorNode;
 import org.greenplum.pxf.api.filter.ToStringTreeVisitor;
@@ -294,15 +294,15 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
                 return true;
             }
 
-            ColumnIndexOperand columnIndexOperand = operatorNode.getColumnIndexOperand();
-            Operand valueOperand = operatorNode.getValueOperand();
+            ColumnIndexOperandNode columnIndexOperand = operatorNode.getColumnIndexOperand();
+            OperandNode valueOperandNode = operatorNode.getValueOperand();
 
-            if (valueOperand == null) {
+            if (valueOperandNode == null) {
                 throw new IllegalArgumentException(String.format(
-                        "Operator %s does not contain a scalar operand", operator));
+                        "OperatorNode %s does not contain a scalar operand", operator));
             }
 
-            String filterValue = valueOperand.toString();
+            String filterValue = valueOperandNode.toString();
             ColumnDescriptor filterColumn = context.getColumn(columnIndexOperand.index());
             String filterColumnName = filterColumn.columnName();
 

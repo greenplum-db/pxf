@@ -3,11 +3,11 @@ package org.greenplum.pxf.api.filter;
 /**
  * Represents a column index.
  */
-public class ColumnIndexOperand extends Operand {
+public class ColumnIndexOperandNode extends OperandNode {
 
     private final int index;
 
-    public ColumnIndexOperand(int idx) {
+    public ColumnIndexOperandNode(int idx) {
         super(null);
         index = idx;
     }

@@ -41,9 +41,9 @@ public class ColumnPredicateBuilder extends ToStringTreeVisitor {
     }
 
     @Override
-    protected String getNodeValue(Operand operand) {
-        if (operand instanceof ColumnIndexOperand) {
-            ColumnIndexOperand columnIndexOperand = (ColumnIndexOperand) operand;
+    protected String getNodeValue(OperandNode operandNode) {
+        if (operandNode instanceof ColumnIndexOperandNode) {
+            ColumnIndexOperandNode columnIndexOperand = (ColumnIndexOperandNode) operandNode;
 
             /* We need the column index (column is guaranteed to be on the left,
              * so it always comes first. The column index is needed to get the
@@ -59,14 +59,14 @@ public class ColumnPredicateBuilder extends ToStringTreeVisitor {
         ColumnDescriptor columnDescriptor = columnDescriptors.get(lastIndex);
         DataType type = columnDescriptor.getDataType();
 
-        if (operand instanceof CollectionOperand) {
-            CollectionOperand collectionOperand = (CollectionOperand) operand;
+        if (operandNode instanceof CollectionOperandNode) {
+            CollectionOperandNode collectionOperand = (CollectionOperandNode) operandNode;
             String listValue = collectionOperand.getData().stream()
                     .map(s -> serializeValue(type, s))
                     .collect(Collectors.joining(","));
             return String.format("(%s)", listValue);
         } else {
-            String value = super.getNodeValue(operand);
+            String value = super.getNodeValue(operandNode);
             return serializeValue(type, value);
         }
     }

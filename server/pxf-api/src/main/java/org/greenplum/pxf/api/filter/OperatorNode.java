@@ -1,7 +1,7 @@
 package org.greenplum.pxf.api.filter;
 
 /**
- * Operator node (i.e. AND, OR, =)
+ * OperatorNode node (i.e. AND, OR, =)
  */
 public class OperatorNode extends Node {
 
@@ -10,8 +10,8 @@ public class OperatorNode extends Node {
     /**
      * Constructs a new {@link OperatorNode} with a left operand
      *
-     * @param operator    the operator
-     * @param leftOperand the left operand
+     * @param operator the operator
+     * @param leftOperand  the left operand
      */
     public OperatorNode(Operator operator, Node leftOperand) {
         this(operator, leftOperand, null);
@@ -20,7 +20,7 @@ public class OperatorNode extends Node {
     /**
      * Constructs a new {@link OperatorNode} with left and right operands
      *
-     * @param operator     the operator
+     * @param operator the operator
      * @param leftOperand  the left operand
      * @param rightOperand the right operand
      */
@@ -40,28 +40,28 @@ public class OperatorNode extends Node {
     }
 
     /**
-     * Returns the {@link ColumnIndexOperand} for this {@link OperatorNode}
+     * Returns the {@link ColumnIndexOperandNode} for this {@link OperatorNode}
      *
-     * @return the {@link ColumnIndexOperand} for this {@link OperatorNode}
+     * @return the {@link ColumnIndexOperandNode} for this {@link OperatorNode}
      */
-    public ColumnIndexOperand getColumnIndexOperand() {
+    public ColumnIndexOperandNode getColumnIndexOperand() {
         Node left = getLeft();
-        if (!(left instanceof ColumnIndexOperand)) {
+        if (!(left instanceof ColumnIndexOperandNode)) {
             throw new IllegalArgumentException(String.format(
                     "Operator %s does not contain a column index operand", operator));
         }
-        return (ColumnIndexOperand) left;
+        return (ColumnIndexOperandNode) left;
     }
 
     /**
-     * Returns the {@link Operand} for this {@link OperatorNode}
+     * Returns the {@link OperandNode} for this {@link OperatorNode}
      *
-     * @return the {@link Operand} for this {@link OperatorNode}
+     * @return the {@link OperandNode} for this {@link OperatorNode}
      */
-    public Operand getValueOperand() {
+    public OperandNode getValueOperand() {
         Node right = getRight();
-        if (right instanceof ScalarOperand || right instanceof CollectionOperand) {
-            return (Operand) right;
+        if (right instanceof ScalarOperandNode || right instanceof CollectionOperandNode) {
+            return (OperandNode) right;
         }
         return null;
     }

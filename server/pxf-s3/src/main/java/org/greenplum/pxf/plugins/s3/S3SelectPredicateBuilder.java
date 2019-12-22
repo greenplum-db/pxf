@@ -1,7 +1,7 @@
 package org.greenplum.pxf.plugins.s3;
 
-import org.greenplum.pxf.api.filter.ColumnIndexOperand;
-import org.greenplum.pxf.api.filter.Operand;
+import org.greenplum.pxf.api.filter.ColumnIndexOperandNode;
+import org.greenplum.pxf.api.filter.OperandNode;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.plugins.jdbc.JdbcPredicateBuilder;
@@ -30,9 +30,9 @@ public class S3SelectPredicateBuilder extends JdbcPredicateBuilder {
     }
 
     @Override
-    protected String getNodeValue(Operand operand) {
-        if (operand instanceof ColumnIndexOperand) {
-            ColumnIndexOperand columnIndexOperand = (ColumnIndexOperand) operand;
+    protected String getNodeValue(OperandNode operandNode) {
+        if (operandNode instanceof ColumnIndexOperandNode) {
+            ColumnIndexOperandNode columnIndexOperand = (ColumnIndexOperandNode) operandNode;
             lastIndex = columnIndexOperand.index();
             ColumnDescriptor columnDescriptor = getColumnDescriptors().get(lastIndex);
             DataType type = columnDescriptor.getDataType();
@@ -83,7 +83,7 @@ public class S3SelectPredicateBuilder extends JdbcPredicateBuilder {
             return String.format(format, columnName);
         }
 
-        return super.getNodeValue(operand);
+        return super.getNodeValue(operandNode);
     }
 
     @Override

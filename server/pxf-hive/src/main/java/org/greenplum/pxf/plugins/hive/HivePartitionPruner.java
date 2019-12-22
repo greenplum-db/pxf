@@ -1,11 +1,11 @@
 package org.greenplum.pxf.plugins.hive;
 
 import org.apache.hadoop.hive.serde.serdeConstants;
-import org.greenplum.pxf.api.filter.SupportedOperatorPruner;
-import org.greenplum.pxf.api.filter.ColumnIndexOperand;
+import org.greenplum.pxf.api.filter.ColumnIndexOperandNode;
 import org.greenplum.pxf.api.filter.Node;
 import org.greenplum.pxf.api.filter.Operator;
 import org.greenplum.pxf.api.filter.OperatorNode;
+import org.greenplum.pxf.api.filter.SupportedOperatorPruner;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,21 +46,21 @@ public class HivePartitionPruner extends SupportedOperatorPruner {
     }
 
     /**
-     * Returns true when the operator is logical, or for simple operators
+     * Returns true when the operatorNode is logical, or for simple operators
      * true when the column is a partitioned column, and push-down is enabled
      * for integral types or when the column is of string
      * <p>
      * Say P is a conforming predicate based on partition column and supported
-     * comparison operator NP is a non conforming predicate based on either a
-     * non-partition column or an unsupported operator.
+     * comparison operatorNode NP is a non conforming predicate based on either a
+     * non-partition column or an unsupported operatorNode.
      * <p>
      * The following rule will be used during filter pruning
-     * P <op> P -> P <op> P (op can be any logical operator)
+     * P <op> P -> P <op> P (op can be any logical operatorNode)
      * P AND NP -> P
      * P OR NP -> null
      * NP <op> NP -> null
      *
-     * @param operatorNode the operator node
+     * @param operatorNode the operatorNode node
      * @return true when the filter is compatible, false otherwise
      */
     private boolean canOperatorBePushedDown(OperatorNode operatorNode) {
@@ -71,7 +71,7 @@ public class HivePartitionPruner extends SupportedOperatorPruner {
             return true;
         }
 
-        ColumnIndexOperand columnIndexOperand = operatorNode.getColumnIndexOperand();
+        ColumnIndexOperandNode columnIndexOperand = operatorNode.getColumnIndexOperand();
         ColumnDescriptor columnDescriptor = columnDescriptors.get(columnIndexOperand.index());
         String columnName = columnDescriptor.columnName();
 

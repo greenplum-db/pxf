@@ -53,13 +53,13 @@ public class FilterParserTest {
     }
 
     @Test
-    public void parseNegativeEmpty() {
+    public void parseNegativeEmpty() throws Exception {
         filter = "";
         runParseNegative("empty string", filter, "filter parsing ended with no result");
     }
 
     @Test
-    public void parseNegativeNotOperand() {
+    public void parseNegativeNotOperand() throws Exception {
         filter = "g is not an operand";
         int index = 0;
         char op = filter.charAt(index);
@@ -69,7 +69,7 @@ public class FilterParserTest {
     }
 
     @Test
-    public void parseNegativeBadNumber() {
+    public void parseNegativeBadNumber() throws Exception {
 
         filter = "a";
         int index = 1;
@@ -104,7 +104,7 @@ public class FilterParserTest {
     }
 
     @Test
-    public void parseNegativeBadConst() {
+    public void parseNegativeBadConst() throws Exception {
         filter = "cs";
         int index = 1;
         exception = "datatype OID should follow at " + index;
@@ -163,7 +163,7 @@ public class FilterParserTest {
     }
 
     @Test
-    public void parseNegativeBadOperation() {
+    public void parseNegativeBadOperation() throws Exception {
         filter = "o";
         int index = 1;
         exception = "numeric argument expected at " + index;
@@ -180,7 +180,7 @@ public class FilterParserTest {
     }
 
     @Test
-    public void parseNegativeNoOperator() {
+    public void parseNegativeNoOperator() throws Exception {
 
         filter = "a1234567890";
         runParseNegative("filter with only column", filter, "filter parsing failed, missing operators?");
@@ -190,14 +190,14 @@ public class FilterParserTest {
     }
 
     @Test
-    public void parseEmptyString() {
+    public void parseEmptyString() throws Exception {
         filter = "c25s0d";
         exception = "filter parsing failed, missing operators?";
         runParseNegative("const operand with empty string", filter, exception);
     }
 
     @Test
-    public void parseDecimalValues() {
+    public void parseDecimalValues() throws Exception {
         filter = "c700s3d9.0";
         exception = "filter parsing failed, missing operators?";
         runParseNegative("const operand with decimal value", filter, exception);
@@ -208,7 +208,7 @@ public class FilterParserTest {
     }
 
     @Test
-    public void parseNegativeValues() {
+    public void parseNegativeValues() throws Exception {
         filter = "c700s3d-90";
         exception = "filter parsing failed, missing operators?";
         runParseNegative("const operand with decimal value", filter, exception);
@@ -219,7 +219,7 @@ public class FilterParserTest {
     }
 
     @Test
-    public void parseNegativeTwoParams() {
+    public void parseNegativeTwoParams() throws Exception {
 
         filter = "c20s1d1c20s1d1";
         exception = "Stack not empty, missing operators?";
@@ -235,17 +235,17 @@ public class FilterParserTest {
     }
 
     @Test
-    public void parseNegativeOperationFirst() {
+    public void parseNegativeOperationFirst() throws Exception {
 
         filter = "o1a3";
         int index = 2;
-        Operator operation = LESS_THAN;
-        exception = "missing operands for op " + operation + " at " + index;
+        Operator operator = LESS_THAN;
+        exception = "missing operands for op " + operator + " at " + index;
         runParseNegative("filter with operation first", filter, exception);
 
         filter = "a2o1";
         index = 4;
-        exception = "missing operands for op " + operation + " at " + index;
+        exception = "missing operands for op " + operator + " at " + index;
         runParseNegative("filter with only attribute before operation", filter, exception);
     }
 
@@ -398,15 +398,12 @@ public class FilterParserTest {
     /*
      * Helper functions
      */
-    private void runParseNegative(String description, String filter, String exception) {
-        try {
-            filterParser.parse(filter);
-            fail(description + ": should have failed with FilterStringSyntaxException");
-        } catch (FilterParser.FilterStringSyntaxException e) {
-            assertEquals(description, exception + filterStringMsg(filter), e.getMessage());
-        } catch (Exception e) {
-            fail(description + ": should have failed with FilterStringSyntaxException and not " + e.getMessage());
-        }
+    private void runParseNegative(String description, String filter, String exception) throws Exception {
+        thrown.expect(FilterParser.FilterStringSyntaxException.class);
+        thrown.expectMessage(exception + filterStringMsg(filter));
+
+        filterParser.parse(filter);
+        fail(description);
     }
 
     private void runParseOneOperation(String filter, Operator op) throws Exception {

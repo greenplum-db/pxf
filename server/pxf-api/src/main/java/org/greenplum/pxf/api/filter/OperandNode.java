@@ -5,11 +5,11 @@ import org.greenplum.pxf.api.io.DataType;
 /**
  * Scalar, Column Index, List
  */
-public class Operand extends Node {
+public class OperandNode extends Node {
 
     private final DataType dataType;
 
-    public Operand(DataType dataType) {
+    public OperandNode(DataType dataType) {
         this.dataType = dataType;
     }
 

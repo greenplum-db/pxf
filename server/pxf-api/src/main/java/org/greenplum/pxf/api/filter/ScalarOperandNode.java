@@ -5,11 +5,11 @@ import org.greenplum.pxf.api.io.DataType;
 /**
  * Represents a scalar value (String, Long, Int).
  */
-public class ScalarOperand extends Operand {
+public class ScalarOperandNode extends OperandNode {
 
     private final String value;
 
-    public ScalarOperand(DataType dataType, String value) {
+    public ScalarOperandNode(DataType dataType, String value) {
         super(dataType);
         this.value = value;
     }
