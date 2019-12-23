@@ -190,13 +190,12 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
         OneRow row = null;
         if (context.getAggType() == null)
             throw new UnsupportedOperationException("Aggregate operation is required");
-        if (context.getAggType() == EnumAggregationType.COUNT) {
-            if (objectsEmitted < count) {
-                objectsEmitted++;
-                row = rowToEmitCount;
-            }
-        } else {
+        if (context.getAggType() != EnumAggregationType.COUNT)
             throw new UnsupportedOperationException("Aggregation operation is not supported.");
+
+        if (objectsEmitted < count) {
+            objectsEmitted++;
+            row = rowToEmitCount;
         }
         return row;
     }

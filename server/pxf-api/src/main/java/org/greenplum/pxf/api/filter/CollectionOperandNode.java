@@ -11,6 +11,13 @@ public class CollectionOperandNode extends OperandNode {
 
     private final List<String> data;
 
+    /**
+     * Constructs a CollectionOperandNode with the given data type and a data
+     * list
+     *
+     * @param dataType the data type
+     * @param data     the data list
+     */
     public CollectionOperandNode(DataType dataType, List<String> data) {
         super(dataType);
         this.data = data;

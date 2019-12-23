@@ -7,9 +7,14 @@ public class ColumnIndexOperandNode extends OperandNode {
 
     private final int index;
 
-    public ColumnIndexOperandNode(int idx) {
+    /**
+     * Constructs a ColumnIndexOperandNode with the column index
+     *
+     * @param index the zero-based column index
+     */
+    public ColumnIndexOperandNode(int index) {
         super(null);
-        index = idx;
+        this.index = index;
     }
 
     /**

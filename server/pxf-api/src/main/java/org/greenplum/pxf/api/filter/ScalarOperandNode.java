@@ -9,6 +9,12 @@ public class ScalarOperandNode extends OperandNode {
 
     private final String value;
 
+    /**
+     * Constructs an ScalarOperandNode with the datum data type and value
+     *
+     * @param dataType the data type
+     * @param value    the value
+     */
     public ScalarOperandNode(DataType dataType, String value) {
         super(dataType);
         this.value = value;
