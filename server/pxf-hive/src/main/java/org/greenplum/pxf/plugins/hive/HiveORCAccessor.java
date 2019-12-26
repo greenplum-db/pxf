@@ -61,6 +61,7 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
 
     static final EnumSet<Operator> SUPPORTED_OPERATORS =
             EnumSet.of(
+                    Operator.NOOP,
                     Operator.LESS_THAN,
                     Operator.GREATER_THAN,
                     Operator.LESS_THAN_OR_EQUAL,
