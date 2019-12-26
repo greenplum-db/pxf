@@ -10,8 +10,8 @@ public class OperatorNode extends Node {
     /**
      * Constructs a new {@link OperatorNode} with a left operand
      *
-     * @param operator the operator
-     * @param leftOperand  the left operand
+     * @param operator    the operator
+     * @param leftOperand the left operand
      */
     public OperatorNode(Operator operator, Node leftOperand) {
         this(operator, leftOperand, null);
@@ -20,14 +20,13 @@ public class OperatorNode extends Node {
     /**
      * Constructs a new {@link OperatorNode} with left and right operands
      *
-     * @param operator the operator
+     * @param operator     the operator
      * @param leftOperand  the left operand
      * @param rightOperand the right operand
      */
     public OperatorNode(Operator operator, Node leftOperand, Node rightOperand) {
         super(leftOperand, rightOperand);
         this.operator = operator;
-
     }
 
     /**

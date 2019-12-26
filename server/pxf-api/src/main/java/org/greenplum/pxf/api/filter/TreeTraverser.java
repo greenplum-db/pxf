@@ -1,6 +1,7 @@
 package org.greenplum.pxf.api.filter;
 
 
+import org.apache.commons.lang.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,6 +21,11 @@ public class TreeTraverser {
      * @return the traversed node
      */
     public Node traverse(Node node, TreeVisitor... visitors) {
+
+        if (ArrayUtils.isEmpty(visitors)) {
+            throw new IllegalArgumentException("You need to provide at least one visitor for this traverser");
+        }
+
         Node result = node;
         for (TreeVisitor visitor : visitors) {
             result = traverse(result, visitor, 0);
@@ -49,7 +55,13 @@ public class TreeTraverser {
         return node;
     }
 
-    private void traverseHelper(Node node, int index, TreeVisitor visitor, int level) {
+    /*
+     * This method helps during the traversing of a node. When the index is 0,
+     * we process the left node, and when the index is 1 we process the right
+     * node. This method also helps with the pruning of nodes and promoting,
+     * a child node one level up.
+     */
+    private void traverseHelper(Node node, int index, TreeVisitor visitor, final int level) {
         if (node == null) return;
         Node child = index == 0 ? node.getLeft() : node.getRight();
         Node processed = traverse(child, visitor, level);

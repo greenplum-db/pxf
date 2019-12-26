@@ -120,7 +120,8 @@ public class FilterParser {
      */
     class FilterStringSyntaxException extends Exception {
         FilterStringSyntaxException(String desc) {
-            super(desc + " (filter string: '" + new String(filterByteArr) + "')");
+            super(String.format("%s (%s)", desc, filterByteArr != null ?
+                    "filter string: '" + new String(filterByteArr) + "'" : "null filter string"));
         }
     }
 
@@ -139,6 +140,11 @@ public class FilterParser {
      * @throws Exception if the filter string was invalid
      */
     public Node parse(String filterString) throws Exception {
+
+        if (filterString == null) {
+            throw new FilterStringSyntaxException("filter parsing ended with no result");
+        }
+
         return parse(filterString.getBytes(DEFAULT_CHARSET));
     }
 
@@ -152,10 +158,6 @@ public class FilterParser {
     private Node parse(byte[] filter) throws Exception {
         index = 0;
         filterByteArr = filter;
-
-        if (filter == null) {
-            throw new FilterStringSyntaxException("filter parsing ended with no result");
-        }
 
         while (index < filterByteArr.length) {
             char op = (char) filterByteArr[index++];

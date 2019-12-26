@@ -49,7 +49,7 @@ public class RequestContext {
 
     /**
      * The request type can be set when parsing http parameters, etc.
-     * @see org.greenplum.pxf.service.HttpRequestParser#parseRequest()
+     * {@link org.greenplum.pxf.service.HttpRequestParser#parseRequest()}
      */
     public void setRequestType(RequestType requestType) {
         this.requestType = requestType;

@@ -1,79 +1,452 @@
 package org.greenplum.pxf.api.filter;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 public class TreeTraverserTest {
 
-    @Test
-    public void testGreaterThanOperator() throws Exception {
-        helper("_1_ >= 2016-01-03", "a1c25s10d2016-01-03o4");
-    }
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
 
     @Test
-    public void testAndedAndOr() throws Exception {
-        // (P1 AND P2) AND (P1 OR P3)
-        helper("((_1_ = foobar AND _2_ <> 999) AND (_1_ = foobar OR _3_ <> 999))", "a1c25s6dfoobaro5a2c23s3d999o6l0a1c25s6dfoobaro5a3c20s3d999o6l1l0");
-    }
+    public void testFailsWhenNoVisitorIsProvided() {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("You need to provide at least one visitor for this traverser");
 
-    @Test
-    public void testTwoAndOperators() throws Exception {
-        // _1_ > '2008-02-01' and _1_ < '2008-12-01' and _2_ > 1200
-        helper("((_1_ > 2008-02-01 AND _1_ < 2008-12-01) AND _2_ > 1200)", "a1c25s10d2008-02-01o2a1c25s10d2008-12-01o1l0a2c20s4d1200o2l0");
+        new TreeTraverser().traverse(new Node());
     }
 
     @Test
-    public void testNotOperator() throws Exception {
-        helper("NOT (_1_ = 0)", "a1c20s1d0o5l2");
+    public void testTraverseLeafNode() {
+        Node node = new Node();
+        TreeVisitor visitor = mock(TreeVisitor.class);
+        when(visitor.before(node, 0)).thenReturn(node);
+        when(visitor.visit(node, 0)).thenReturn(node);
+        when(visitor.after(node, 0)).thenReturn(node);
+
+        Node result = new TreeTraverser().traverse(node, visitor);
+
+        verify(visitor).before(node, 0);
+        verify(visitor).visit(node, 0);
+        verify(visitor).after(node, 0);
+        verifyNoMoreInteractions(visitor);
+
+        assertSame(node, result);
     }
 
     @Test
-    public void testFieldsWithText() throws Exception {
-        helper("(_1_ < l2 AND _1_ > 2)", "a1c25s2dl2o1a1c20s1d2o2l0");
+    public void testTraverseTree() {
+        TreeVisitor visitor = mock(TreeVisitor.class);
+        Node l0 = new Node();
+        l0.setLeft(new Node());
+        l0.setRight(new Node());
+        l0.getLeft().setLeft(new Node());
+        l0.getLeft().setRight(new Node());
+        l0.getLeft().getRight().setLeft(new Node());
+        l0.getLeft().getRight().setRight(new Node());
+
+
+        //                          l0
+        //                           |
+        //               ------------------------
+        //               |                      |
+        //              l1-l                   l1-r
+        //               |
+        //        ----------------
+        //        |              |
+        //       l2-l           l2-r
+        //                       |
+        //                   --------
+        //                   |      |
+        //                  l3-l   l3-r
+
+        // DFS in order traversal
+        when(visitor.before(l0, 0)).thenReturn(l0); // l0 - before
+        when(visitor.before(l0.getLeft(), 1)).thenReturn(l0.getLeft()); // l1-l before
+        when(visitor.before(l0.getLeft().getLeft(), 2)).thenReturn(l0.getLeft().getLeft()); // l2-l before
+        when(visitor.visit(l0.getLeft().getLeft(), 2)).thenReturn(l0.getLeft().getLeft()); // l2-l visit
+        when(visitor.after(l0.getLeft().getLeft(), 2)).thenReturn(l0.getLeft().getLeft()); // l2-l after
+        when(visitor.visit(l0.getLeft(), 1)).thenReturn(l0.getLeft()); // l1-l visit
+        when(visitor.before(l0.getLeft().getRight(), 2)).thenReturn(l0.getLeft().getRight()); // l2-r before
+        when(visitor.before(l0.getLeft().getRight().getLeft(), 3)).thenReturn(l0.getLeft().getRight().getLeft()); // l3-l before
+        when(visitor.visit(l0.getLeft().getRight().getLeft(), 3)).thenReturn(l0.getLeft().getRight().getLeft()); // l3-l visit
+        when(visitor.after(l0.getLeft().getRight().getLeft(), 3)).thenReturn(l0.getLeft().getRight().getLeft()); // l3-l after
+        when(visitor.visit(l0.getLeft().getRight(), 2)).thenReturn(l0.getLeft().getRight()); // l2-r visit
+        when(visitor.before(l0.getLeft().getRight().getRight(), 3)).thenReturn(l0.getLeft().getRight().getRight()); // l3-r before
+        when(visitor.visit(l0.getLeft().getRight().getRight(), 3)).thenReturn(l0.getLeft().getRight().getRight()); // l3-r visit
+        when(visitor.after(l0.getLeft().getRight().getRight(), 3)).thenReturn(l0.getLeft().getRight().getRight()); // l3-r after
+        when(visitor.after(l0.getLeft().getRight(), 2)).thenReturn(l0.getLeft().getRight()); // l2-r after
+        when(visitor.after(l0.getLeft(), 1)).thenReturn(l0.getLeft()); // l1-l after
+        when(visitor.visit(l0, 0)).thenReturn(l0); // l0 - visit
+        when(visitor.before(l0.getRight(), 1)).thenReturn(l0.getRight()); // l1-r before
+        when(visitor.visit(l0.getRight(), 1)).thenReturn(l0.getRight()); // l1-r visit
+        when(visitor.after(l0.getRight(), 1)).thenReturn(l0.getRight()); // l1-r after
+        when(visitor.after(l0, 0)).thenReturn(l0); // l0 - after
+
+        Node result = new TreeTraverser().traverse(l0, visitor);
+
+        verify(visitor).before(l0, 0); // l0 - before
+        verify(visitor).before(l0.getLeft(), 1); // l1-l before
+        verify(visitor).before(l0.getLeft().getLeft(), 2); // l2-l before
+        verify(visitor).visit(l0.getLeft().getLeft(), 2); // l2-l visit
+        verify(visitor).after(l0.getLeft().getLeft(), 2); // l2-l after
+        verify(visitor).visit(l0.getLeft(), 1); // l1-l visit
+        verify(visitor).before(l0.getLeft().getRight(), 2); // l2-r before
+        verify(visitor).before(l0.getLeft().getRight().getLeft(), 3); // l3-l before
+        verify(visitor).visit(l0.getLeft().getRight().getLeft(), 3); // l3-l visit
+        verify(visitor).after(l0.getLeft().getRight().getLeft(), 3); // l3-l after
+        verify(visitor).visit(l0.getLeft().getRight(), 2); // l2-r visit
+        verify(visitor).before(l0.getLeft().getRight().getRight(), 3); // l3-r before
+        verify(visitor).visit(l0.getLeft().getRight().getRight(), 3); // l3-r visit
+        verify(visitor).after(l0.getLeft().getRight().getRight(), 3); // l3-r after
+        verify(visitor).after(l0.getLeft().getRight(), 2); // l2-r after
+        verify(visitor).after(l0.getLeft(), 1); // l1-l after
+        verify(visitor).visit(l0, 0); // l0 - visit
+        verify(visitor).before(l0.getRight(), 1); // l1-r before
+        verify(visitor).visit(l0.getRight(), 1); // l1-r visit
+        verify(visitor).after(l0.getRight(), 1); // l1-r after
+        verify(visitor).after(l0, 0); // l0 - after
+        verifyNoMoreInteractions(visitor);
+
+        assertSame(l0, result);
     }
 
     @Test
-    public void testTwoNotWithOrAndAnd() throws Exception{
-        helper("(_1_ >= 9 AND (NOT (_3_ = 4) OR NOT (_2_ = s_9)))", "a1c701s1d9o4a3c23s1d4o5l2a2c25s3ds_9o5l2l1l0");
+    public void testChainingVisitors() {
+        TreeVisitor visitor1 = mock(TreeVisitor.class);
+        TreeVisitor visitor2 = mock(TreeVisitor.class);
+        TreeVisitor visitor3 = mock(TreeVisitor.class);
+
+        Node l0 = new Node();
+        l0.setLeft(new Node());
+        l0.setRight(new Node());
+        l0.getRight().setRight(new Node());
+
+        //                l0
+        //                 |
+        //     ------------------------
+        //     |                      |
+        //    l1-l                   l1-r
+        //                            |
+        //                            --------
+        //                                   |
+        //                                 l2-r
+
+        when(visitor1.before(l0, 0)).thenReturn(l0); // visitor1 - l0 - before
+        when(visitor1.before(l0.getLeft(), 1)).thenReturn(l0.getLeft()); // visitor1 - l1-l - before
+        when(visitor1.visit(l0.getLeft(), 1)).thenReturn(l0.getLeft()); // visitor1 - l1-l - visit
+        when(visitor1.after(l0.getLeft(), 1)).thenReturn(l0.getLeft()); // visitor1 - l1-l - after
+        when(visitor1.visit(l0, 0)).thenReturn(l0); // visitor1 - l0 - visit
+        when(visitor1.before(l0.getRight(), 1)).thenReturn(l0.getRight()); // visitor1 - l1-r - before
+        when(visitor1.visit(l0.getRight(), 1)).thenReturn(l0.getRight()); // visitor1 - l1-r - visit
+        when(visitor1.before(l0.getRight().getRight(), 2)).thenReturn(l0.getRight().getRight()); // visitor1 - l2-r - before
+        when(visitor1.visit(l0.getRight().getRight(), 2)).thenReturn(l0.getRight().getRight()); // visitor1 - l2-r - visit
+        when(visitor1.after(l0.getRight().getRight(), 2)).thenReturn(l0.getRight().getRight()); // visitor1 - l2-r - after
+        when(visitor1.after(l0.getRight(), 1)).thenReturn(l0.getRight()); // visitor1 - l1-r - after
+        when(visitor1.after(l0, 0)).thenReturn(l0); // visitor1 - l0 - after
+
+        when(visitor2.before(l0, 0)).thenReturn(l0); // visitor2 - l0 - before
+        when(visitor2.before(l0.getLeft(), 1)).thenReturn(l0.getLeft()); // visitor2 - l1-l - before
+        when(visitor2.visit(l0.getLeft(), 1)).thenReturn(l0.getLeft()); // visitor2 - l1-l - visit
+        when(visitor2.after(l0.getLeft(), 1)).thenReturn(l0.getLeft()); // visitor2 - l1-l - after
+        when(visitor2.visit(l0, 0)).thenReturn(l0); // visitor2 - l0 - visit
+        when(visitor2.before(l0.getRight(), 1)).thenReturn(l0.getRight()); // visitor2 - l1-r - before
+        when(visitor2.visit(l0.getRight(), 1)).thenReturn(l0.getRight()); // visitor2 - l1-r - visit
+        when(visitor2.before(l0.getRight().getRight(), 2)).thenReturn(l0.getRight().getRight()); // visitor2 - l2-r - before
+        when(visitor2.visit(l0.getRight().getRight(), 2)).thenReturn(l0.getRight().getRight()); // visitor2 - l2-r - visit
+        when(visitor2.after(l0.getRight().getRight(), 2)).thenReturn(l0.getRight().getRight()); // visitor2 - l2-r - after
+        when(visitor2.after(l0.getRight(), 1)).thenReturn(l0.getRight()); // visitor2 - l1-r - after
+        when(visitor2.after(l0, 0)).thenReturn(l0); // visitor2 - l0 - after
+
+        when(visitor3.before(l0, 0)).thenReturn(l0); // visitor3 - l0 - before
+        when(visitor3.before(l0.getLeft(), 1)).thenReturn(l0.getLeft()); // visitor3 - l1-l - before
+        when(visitor3.visit(l0.getLeft(), 1)).thenReturn(l0.getLeft()); // visitor3 - l1-l - visit
+        when(visitor3.after(l0.getLeft(), 1)).thenReturn(l0.getLeft()); // visitor3 - l1-l - after
+        when(visitor3.visit(l0, 0)).thenReturn(l0); // visitor3 - l0 - visit
+        when(visitor3.before(l0.getRight(), 1)).thenReturn(l0.getRight()); // visitor3 - l1-r - before
+        when(visitor3.visit(l0.getRight(), 1)).thenReturn(l0.getRight()); // visitor3 - l1-r - visit
+        when(visitor3.before(l0.getRight().getRight(), 2)).thenReturn(l0.getRight().getRight()); // visitor3 - l2-r - before
+        when(visitor3.visit(l0.getRight().getRight(), 2)).thenReturn(l0.getRight().getRight()); // visitor3 - l2-r - visit
+        when(visitor3.after(l0.getRight().getRight(), 2)).thenReturn(l0.getRight().getRight()); // visitor3 - l2-r - after
+        when(visitor3.after(l0.getRight(), 1)).thenReturn(l0.getRight()); // visitor3 - l1-r - after
+        when(visitor3.after(l0, 0)).thenReturn(l0); // visitor3 - l0 - after
+
+        Node result = new TreeTraverser().traverse(l0, visitor1, visitor2, visitor3);
+
+        verify(visitor1).before(l0, 0); // visitor1 - l0 - before
+        verify(visitor1).before(l0.getLeft(), 1); // visitor1 - l1-l - before
+        verify(visitor1).visit(l0.getLeft(), 1); // visitor1 - l1-l - visit
+        verify(visitor1).after(l0.getLeft(), 1); // visitor1 - l1-l - after
+        verify(visitor1).visit(l0, 0); // visitor1 - l0 - visit
+        verify(visitor1).before(l0.getRight(), 1); // visitor1 - l1-r - before
+        verify(visitor1).visit(l0.getRight(), 1); // visitor1 - l1-r - visit
+        verify(visitor1).before(l0.getRight().getRight(), 2); // visitor1 - l2-r - before
+        verify(visitor1).visit(l0.getRight().getRight(), 2); // visitor1 - l2-r - visit
+        verify(visitor1).after(l0.getRight().getRight(), 2); // visitor1 - l2-r - after
+        verify(visitor1).after(l0.getRight(), 1); // visitor1 - l1-r - after
+        verify(visitor1).after(l0, 0); // visitor1 - l0 - after
+        verifyNoMoreInteractions(visitor1);
+
+        verify(visitor2).before(l0, 0); // visitor2 - l0 - before
+        verify(visitor2).before(l0.getLeft(), 1); // visitor2 - l1-l - before
+        verify(visitor2).visit(l0.getLeft(), 1); // visitor2 - l1-l - visit
+        verify(visitor2).after(l0.getLeft(), 1); // visitor2 - l1-l - after
+        verify(visitor2).visit(l0, 0); // visitor2 - l0 - visit
+        verify(visitor2).before(l0.getRight(), 1); // visitor2 - l1-r - before
+        verify(visitor2).visit(l0.getRight(), 1); // visitor2 - l1-r - visit
+        verify(visitor2).before(l0.getRight().getRight(), 2); // visitor2 - l2-r - before
+        verify(visitor2).visit(l0.getRight().getRight(), 2); // visitor2 - l2-r - visit
+        verify(visitor2).after(l0.getRight().getRight(), 2); // visitor2 - l2-r - after
+        verify(visitor2).after(l0.getRight(), 1); // visitor2 - l1-r - after
+        verify(visitor2).after(l0, 0); // visitor2 - l0 - after
+        verifyNoMoreInteractions(visitor2);
+
+        verify(visitor3).before(l0, 0); // visitor3 - l0 - before
+        verify(visitor3).before(l0.getLeft(), 1); // visitor3 - l1-l - before
+        verify(visitor3).visit(l0.getLeft(), 1); // visitor3 - l1-l - visit
+        verify(visitor3).after(l0.getLeft(), 1); // visitor3 - l1-l - after
+        verify(visitor3).visit(l0, 0); // visitor3 - l0 - visit
+        verify(visitor3).before(l0.getRight(), 1); // visitor3 - l1-r - before
+        verify(visitor3).visit(l0.getRight(), 1); // visitor3 - l1-r - visit
+        verify(visitor3).before(l0.getRight().getRight(), 2); // visitor3 - l2-r - before
+        verify(visitor3).visit(l0.getRight().getRight(), 2); // visitor3 - l2-r - visit
+        verify(visitor3).after(l0.getRight().getRight(), 2); // visitor3 - l2-r - after
+        verify(visitor3).after(l0.getRight(), 1); // visitor3 - l1-r - after
+        verify(visitor3).after(l0, 0); // visitor3 - l0 - after
+        verifyNoMoreInteractions(visitor3);
+
+        assertSame(l0, result);
     }
 
     @Test
-    public void testIsNotNullOperator() throws Exception {
-        // a3 IS NOT NULL
-        helper("_3_ IS NOT NULL", "a3o9");
+    public void testPruningRootNodeDuringBefore() {
+        Node root = new Node();
+        TreeVisitor visitor = mock(TreeVisitor.class);
+        Node result = new TreeTraverser().traverse(root, visitor);
+
+        verify(visitor).before(root, 0);
+        verify(visitor).visit(result, 0);
+        verify(visitor).after(result, 0);
+        verifyNoMoreInteractions(visitor);
+        // the root is pruned so we end up with a null result
+        assertNull(result);
     }
 
     @Test
-    public void testNotTrueBoolean() throws Exception {
-        // NOT a4
-        helper("NOT (_4_)", "a4c16s4dtrueo0l2");
+    public void testPruningRootNodeDuringVisit() {
+        Node root = new Node();
+        TreeVisitor visitor = mock(TreeVisitor.class);
+
+        when(visitor.before(root, 0)).thenReturn(root);
+
+        Node result = new TreeTraverser().traverse(root, visitor);
+
+        verify(visitor).before(root, 0);
+        verify(visitor).visit(root, 0);
+        verify(visitor).after(result, 0);
+        verifyNoMoreInteractions(visitor);
+        // the root is pruned so we end up with a null result
+        assertNull(result);
     }
 
     @Test
-    public void testNotFalseBoolean() throws Exception {
-        // NOT (a4 = false)
-        helper("NOT (_4_ = false)", "a4c16s5dfalseo0l2");
+    public void testPruningRootNodeDuringAfter() {
+        Node root = new Node();
+        TreeVisitor visitor = mock(TreeVisitor.class);
+
+        when(visitor.before(root, 0)).thenReturn(root);
+        when(visitor.visit(root, 0)).thenReturn(root);
+
+        Node result = new TreeTraverser().traverse(root, visitor);
+
+        verify(visitor).before(root, 0);
+        verify(visitor).visit(root, 0);
+        verify(visitor).after(root, 0);
+        verifyNoMoreInteractions(visitor);
+        // the root is pruned so we end up with a null result
+        assertNull(result);
     }
 
     @Test
-    public void testTrueBoolean() throws Exception {
-        // 0
-        helper ("_0_", "a0c16s4dtrueo0");
+    public void testPruningLeftNodeDuringBefore() {
+        Node root = new Node();
+        Node left = new Node();
+        root.setLeft(left);
+        TreeVisitor visitor = mock(TreeVisitor.class);
+
+        //              l0
+        //               |
+        //     -----------
+        //     |
+        //    l1-l
+
+        when(visitor.before(root, 0)).thenReturn(root);
+        when(visitor.visit(root, 0)).thenReturn(root);
+        when(visitor.after(root, 0)).thenReturn(root);
+        when(visitor.before(root.getLeft(), 1)).thenReturn(null);
+
+        Node result = new TreeTraverser().traverse(root, visitor);
+
+        verify(visitor).before(root, 0);
+        // before returns null for the left node, and visit and after take a
+        // a null as input
+        verify(visitor).before(left, 1);
+        verify(visitor).visit(null, 1);
+        verify(visitor).after(null, 1);
+        verify(visitor).visit(root, 0);
+        verify(visitor).after(root, 0);
+        verifyNoMoreInteractions(visitor);
+
+        assertSame(root, result);
+        // the left child is pruned, so we end up with a root node with no children
+        assertEquals(0, result.childCount());
     }
 
     @Test
-    public void testFalseBoolean() throws Exception {
-        // 0
-        helper ("_0_ = false", "a0c16s5dfalseo0");
+    public void testPruningRightNodeDuringVisit() {
+        Node root = new Node();
+        Node right = new Node();
+        root.setRight(right);
+        TreeVisitor visitor = mock(TreeVisitor.class);
+
+        //       l0
+        //        |
+        //        -----------
+        //                  |
+        //                 l1-r
+
+        when(visitor.before(root, 0)).thenReturn(root);
+        when(visitor.visit(root, 0)).thenReturn(root);
+        when(visitor.after(root, 0)).thenReturn(root);
+        when(visitor.before(right, 1)).thenReturn(right);
+        when(visitor.visit(right, 1)).thenReturn(null);
+
+        Node result = new TreeTraverser().traverse(root, visitor);
+
+        verify(visitor).before(root, 0);
+        verify(visitor).visit(root, 0);
+        verify(visitor).before(right, 1);
+        // visit returns null for the right node, and visit and after take a
+        // a null as input
+        verify(visitor).visit(right, 1);
+        verify(visitor).after(null, 1);
+        verify(visitor).after(root, 0);
+        verifyNoMoreInteractions(visitor);
+
+        assertSame(root, result);
+        // the right child is pruned, so we end up with a root with no children
+        assertEquals(0, result.childCount());
     }
 
-    private void helper(String expected, String filterString) throws Exception {
-        Node root = new FilterParser().parse(filterString);
+    @Test
+    public void testPruningRightNodeDuringAfter() {
+        Node root = new Node();
+        Node right = new Node();
+        root.setRight(right);
+        TreeVisitor visitor = mock(TreeVisitor.class);
 
-        ToStringTreeVisitor visitor = new ToStringTreeVisitor();
-        new TreeTraverser().traverse(root, visitor);
+        //       l0
+        //        |
+        //        -----------
+        //                  |
+        //                 l1-r
 
-        assertEquals(expected, visitor.toString());
+        when(visitor.before(root, 0)).thenReturn(root);
+        when(visitor.visit(root, 0)).thenReturn(root);
+        when(visitor.after(root, 0)).thenReturn(root);
+        when(visitor.before(right, 1)).thenReturn(right);
+        when(visitor.visit(right, 1)).thenReturn(right);
+        when(visitor.after(right, 1)).thenReturn(null);
+
+        Node result = new TreeTraverser().traverse(root, visitor);
+
+        verify(visitor).before(root, 0);
+        verify(visitor).visit(root, 0);
+        verify(visitor).before(right, 1);
+        // visit returns null for the right node, and visit and after take a
+        // a null as input
+        verify(visitor).visit(right, 1);
+        verify(visitor).after(right, 1);
+        verify(visitor).after(root, 0);
+        verifyNoMoreInteractions(visitor);
+
+        assertSame(root, result);
+        // the right child is pruned, so we end up with a root with no children
+        assertEquals(0, result.childCount());
     }
+
+    @Test
+    public void testPruningRootNodeAndPromotingLeftChildToRootDuringVisit() {
+        Node root = new Node();
+        Node left = new Node();
+        root.setLeft(left);
+        TreeVisitor visitor = mock(TreeVisitor.class);
+
+        //              l0
+        //               |
+        //     -----------
+        //     |
+        //    l1-l
+
+        when(visitor.before(root, 0)).thenReturn(root);
+        when(visitor.visit(root, 0)).thenReturn(left);
+        when(visitor.after(left, 0)).thenReturn(left);
+        when(visitor.before(left, 1)).thenReturn(left);
+        when(visitor.visit(left, 1)).thenReturn(left);
+        when(visitor.after(left, 1)).thenReturn(left);
+
+        Node result = new TreeTraverser().traverse(root, visitor);
+
+        verify(visitor).before(root, 0);
+        verify(visitor).before(left, 1);
+        verify(visitor).visit(left, 1);
+        verify(visitor).after(left, 1);
+        verify(visitor).visit(root, 0);
+        verify(visitor).after(left, 0);
+        verifyNoMoreInteractions(visitor);
+
+        assertSame(left, result);
+        assertEquals(0, result.childCount());
+    }
+
+    @Test
+    public void testPruningRootNodeAndPromotingRightChildToRootDuringVisit() {
+        Node root = new Node();
+        Node right = new Node();
+        root.setRight(right);
+        TreeVisitor visitor = mock(TreeVisitor.class);
+
+        //       l0
+        //        |
+        //        -----------
+        //                  |
+        //                 l1-r
+
+        when(visitor.before(root, 0)).thenReturn(root);
+        when(visitor.visit(root, 0)).thenReturn(right);
+        when(visitor.after(right, 0)).thenReturn(right);
+        when(visitor.before(right, 1)).thenReturn(right);
+        when(visitor.visit(right, 1)).thenReturn(right);
+        when(visitor.after(right, 1)).thenReturn(right);
+
+        Node result = new TreeTraverser().traverse(root, visitor);
+
+        verify(visitor).before(root, 0);
+        verify(visitor).visit(root, 0);
+        verify(visitor).after(right, 0);
+        verifyNoMoreInteractions(visitor);
+
+        assertSame(right, result);
+        assertEquals(0, result.childCount());
+    }
+
 }

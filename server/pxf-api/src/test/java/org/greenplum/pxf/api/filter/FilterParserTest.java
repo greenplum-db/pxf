@@ -53,6 +53,26 @@ public class FilterParserTest {
     }
 
     @Test
+    public void testNullFilterString() throws Exception {
+        thrown.expect(FilterParser.FilterStringSyntaxException.class);
+        thrown.expectMessage("filter parsing ended with no result");
+
+        filterParser.parse(null);
+    }
+
+    @Test
+    public void testLongIndexFails() throws Exception {
+        thrown.expect(FilterParser.FilterStringSyntaxException.class);
+        thrown.expectMessage("value 2147483648 larger than intmax ending at 11");
+
+        filter = "a2147483647o8";
+        filterParser.parse(filter); // succeeds because it's a valid int32
+
+        filter = "a2147483648o8";
+        filterParser.parse(filter); // fails
+    }
+
+    @Test
     public void parseNegativeEmpty() throws Exception {
         filter = "";
         runParseNegative("empty string", filter, "filter parsing ended with no result");
@@ -351,6 +371,7 @@ public class FilterParserTest {
 
     @Test
     public void parseLogicalOrOperator() throws Exception {
+        // (_1_ = 0 OR _2_ > 3)
         filter = "a1c20s1d0o5a2c20s1d3o2l1";
 
         Node result = filterParser.parse(filter);
@@ -359,6 +380,16 @@ public class FilterParserTest {
         assertEquals(2, result.childCount());
         assertOperatorEquals(EQUALS, result.getLeft());
         assertOperatorEquals(GREATER_THAN, result.getRight());
+
+        assertTrue(result.getLeft().getLeft() instanceof ColumnIndexOperandNode);
+        assertEquals(1, ((ColumnIndexOperandNode) result.getLeft().getLeft()).index());
+        assertTrue(result.getLeft().getRight() instanceof ScalarOperandNode);
+        assertEquals("0", ((ScalarOperandNode) result.getLeft().getRight()).getValue());
+
+        assertTrue(result.getRight().getLeft() instanceof ColumnIndexOperandNode);
+        assertEquals(2, ((ColumnIndexOperandNode) result.getRight().getLeft()).index());
+        assertTrue(result.getRight().getRight() instanceof ScalarOperandNode);
+        assertEquals("3", ((ScalarOperandNode) result.getRight().getRight()).getValue());
     }
 
     @Test

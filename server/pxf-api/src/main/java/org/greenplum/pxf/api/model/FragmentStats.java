@@ -87,17 +87,6 @@ public class FragmentStats {
         }
 
         /**
-         * Constructor.
-         *
-         * @param size size
-         * @param unit unit
-         */
-        public SizeAndUnit(long size, SizeUnit unit) {
-            this.size = size;
-            this.unit = unit;
-        }
-
-        /**
          * Returns size.
          *
          * @return size
