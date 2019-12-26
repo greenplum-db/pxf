@@ -2,11 +2,7 @@ package org.greenplum.pxf.plugins.hive;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
-import org.greenplum.pxf.api.filter.FilterParser;
-import org.greenplum.pxf.api.filter.Node;
-import org.greenplum.pxf.api.filter.SupportedOperatorPruner;
-import org.greenplum.pxf.api.filter.TreeTraverser;
-import org.greenplum.pxf.api.filter.TreeVisitor;
+import org.greenplum.pxf.api.filter.*;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.junit.Before;
@@ -131,6 +127,16 @@ public class HiveORCSearchArgumentBuilderTest {
         SearchArgument.Builder filterBuilder = helper(filterString, columnDescriptors);
         assertNotNull(filterBuilder);
         assertEquals("leaf-0 = (EQUALS b true), expr = (not leaf-0)", filterBuilder.build().toString());
+    }
+
+    @Test
+    public void testBoolean() throws Exception {
+        // a4
+        String filterString = "a4c16s4dtrueo0";
+
+        SearchArgument.Builder filterBuilder = helper(filterString, columnDescriptors);
+        assertNotNull(filterBuilder);
+        assertEquals("leaf-0 = (EQUALS b true), expr = leaf-0", filterBuilder.build().toString());
     }
 
     @Test

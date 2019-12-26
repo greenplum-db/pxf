@@ -53,12 +53,9 @@ public class HiveORCSearchArgumentBuilder implements TreeVisitor {
     private final SearchArgument.Builder filterBuilder;
     private final List<ColumnDescriptor> columnDescriptors;
 
-    private boolean isNot;
-
     public HiveORCSearchArgumentBuilder(List<ColumnDescriptor> tupleDescription, Configuration configuration) {
         this.filterBuilder = SearchArgumentFactory.newBuilder(configuration);
         this.columnDescriptors = tupleDescription;
-        this.isNot = false;
     }
 
     @Override
@@ -74,7 +71,6 @@ public class HiveORCSearchArgumentBuilder implements TreeVisitor {
                         break;
                     case NOT:
                         filterBuilder.startNot();
-                        isNot = true;
                         break;
 
                     default:
@@ -110,7 +106,6 @@ public class HiveORCSearchArgumentBuilder implements TreeVisitor {
             if (operatorNode.getOperator().isLogical() || level == 0) {
                 // AND / OR / NOT
                 filterBuilder.end();
-                isNot = false;
             }
         }
         return node;
@@ -161,7 +156,7 @@ public class HiveORCSearchArgumentBuilder implements TreeVisitor {
             predicateLeafType = getType(filterValue);
         }
 
-        if (isNot && operator == Operator.NOOP) {
+        if (operator == Operator.NOOP) {
             // NOT boolean wraps a NOOP
             //       NOT
             //        |
@@ -171,6 +166,8 @@ public class HiveORCSearchArgumentBuilder implements TreeVisitor {
             //   |         |
             //   4        true
             // that needs to be replaced with equals
+
+            // also IN
             operator = Operator.EQUALS;
         }
 
