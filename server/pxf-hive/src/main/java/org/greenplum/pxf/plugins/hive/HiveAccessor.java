@@ -142,7 +142,7 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
         if (context.getFragmentIndex() != 0) {
             skipHeaderCount = 0;
         }
-        return isOurDataInsideFilteredPartition() && super.openForRead();
+        return shouldDataBeReturnedFromFilteredPartition() && super.openForRead();
     }
 
     /**
@@ -221,7 +221,7 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
         }
     }
 
-    private boolean isOurDataInsideFilteredPartition() throws Exception {
+    private boolean shouldDataBeReturnedFromFilteredPartition() throws Exception {
         if (!context.hasFilter()) {
             return true;
         }
