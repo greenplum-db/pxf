@@ -170,7 +170,7 @@ public class WritableResource extends BaseResource {
             try {
                 bridge.endIteration();
             } catch (Exception e) {
-                throw (ex == null) ? e: ex;
+                throw (ex == null) ? e : ex;
             }
         }
 
