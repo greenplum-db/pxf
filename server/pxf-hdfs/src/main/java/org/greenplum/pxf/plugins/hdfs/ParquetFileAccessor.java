@@ -75,6 +75,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
     private static final WriterVersion DEFAULT_PARQUET_VERSION = WriterVersion.PARQUET_1_0;
     private static final CompressionCodecName DEFAULT_COMPRESSION = CompressionCodecName.SNAPPY;
 
+    // From org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe
     public static final int PRECISION_TO_BYTE_COUNT[] = new int[38];
 
     static {
