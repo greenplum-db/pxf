@@ -174,28 +174,28 @@ public class GreenplumCSV {
         if (s == null) return null;
 
         final int length = s.length();
-        int i, j, quotes = 0, specialChars = 0, pos = 0, total = length;
+        int i, j, quotes = 0, specialChars = 0, pos = 0, total = length,
+                newLineLength = newline != null ? newline.length() : 0;
 
         // count all the quotes
         for (i = 0; i < length; i++) {
             char curr = s.charAt(i);
             if (curr == quote) quotes++;
             if (delimiter != null && curr == delimiter) specialChars++;
-            if (newline != null && newline.length() > 0) {
-
+            if (newLineLength > 0) {
                 j = 0;
 
                 // let's say we have input asd\r\nacd
                 // and newline \r\n then we need to
                 // increase the specialChars count by 1
 
-                while (i < length && j < newline.length()
+                while (i < length && j < newLineLength
                         && newline.charAt(j) == s.charAt(i)) {
                     j++;
-                    if (j < newline.length()) i++;
+                    if (j < newLineLength) i++;
                 }
 
-                if (j == newline.length()) specialChars++;
+                if (j == newLineLength) specialChars++;
             }
         }
 
