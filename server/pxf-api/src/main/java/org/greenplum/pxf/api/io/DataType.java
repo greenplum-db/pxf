@@ -22,9 +22,7 @@ package org.greenplum.pxf.api.io;
 
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Supported Data Types and OIDs (GPDB Data Type identifiers).
