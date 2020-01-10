@@ -28,10 +28,10 @@ public class GreenplumCSV {
      * Initialize with Greenplum CSV defaults
      */
     public GreenplumCSV() {
-        withQuoteChar(String.valueOf(QUOTE));
-        withEscapeChar(String.valueOf(ESCAPE));
+        withQuoteChar(QUOTE);
+        withEscapeChar(ESCAPE);
         withNewline(NEWLINE);
-        withDelimiter(String.valueOf(DELIMITER));
+        withDelimiter(DELIMITER);
         withValueOfNull(VALUE_OF_NULL);
     }
 
@@ -80,8 +80,19 @@ public class GreenplumCSV {
     public GreenplumCSV withQuoteChar(String quoteString) {
         if (StringUtils.isNotEmpty(quoteString)) {
             validateSingleCharacter(quoteString, "QUOTE");
-            quote = quoteString.charAt(0);
+            withQuoteChar(quoteString.charAt(0));
         }
+        return this;
+    }
+
+    /**
+     * Set quote character for parsing CSV with customized character.
+     *
+     * @param quoteChar the quote character to be set
+     * @return GreenplumCSV object for builder pattern
+     */
+    public GreenplumCSV withQuoteChar(char quoteChar) {
+        this.quote = quoteChar;
         return this;
     }
 
@@ -96,8 +107,19 @@ public class GreenplumCSV {
     public GreenplumCSV withEscapeChar(String escapeString) {
         if (StringUtils.isNotEmpty(escapeString)) {
             validateSingleCharacter(escapeString, "ESCAPE");
-            escape = escapeString.charAt(0);
+            withEscapeChar(escapeString.charAt(0));
         }
+        return this;
+    }
+
+    /**
+     * Set escape character for parsing CSV with customized character.
+     *
+     * @param escapeChar the escape character to be set
+     * @return GreenplumCSV object for builder pattern
+     */
+    public GreenplumCSV withEscapeChar(char escapeChar) {
+        escape = escapeChar;
         return this;
     }
 
@@ -136,8 +158,19 @@ public class GreenplumCSV {
     public GreenplumCSV withDelimiter(String delimiterString) {
         if (StringUtils.isNotEmpty(delimiterString)) {
             validateSingleCharacter(delimiterString, "DELIMITER");
-            delimiter = delimiterString.charAt(0);
+            withDelimiter(delimiterString.charAt(0));
         }
+        return this;
+    }
+
+    /**
+     * Set delimiter character for parsing CSV with customized character.
+     *
+     * @param delimiterChar the delimiter to be set
+     * @return GreenplumCSV object for builder pattern
+     */
+    public GreenplumCSV withDelimiter(char delimiterChar) {
+        delimiter = delimiterChar;
         return this;
     }
 
