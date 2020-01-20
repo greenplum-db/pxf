@@ -161,7 +161,8 @@ public class WritableResource extends BaseResource {
                 ++totalWritten;
             }
         } catch (ClientAbortException cae) {
-            LOG.error("Remote connection closed by GPDB", cae);
+            LOG.error("Remote connection closed by GPDB (Enable debug for additional details)");
+            LOG.debug("Details: Remote connection closed by GPDB", cae);
         } catch (Exception e) {
             LOG.error("Exception: totalWritten so far " + totalWritten + " to " + path, e);
             ex = e;
