@@ -103,8 +103,11 @@ public class ClusterNodesResource {
             LOG.error("Nodes verification failed", e);
             throw e;
         } catch (ClientAbortException e) {
-            LOG.error("Remote connection closed by GPDB (Enable debug for additional details)");
-            LOG.debug("Details: Remote connection closed by GPDB", e);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Remote connection closed by GPDB", e);
+            } else {
+                LOG.error("Remote connection closed by GPDB (Enable debug for stacktrace)");
+            }
             throw e;
         } catch (java.io.IOException e) {
             LOG.error("Unhandled exception thrown", e);

@@ -142,9 +142,12 @@ public class BridgeResource extends BaseResource {
                     LOG.debug("Finished streaming fragment {} of resource {}, {} records.", fragment, dataDir, recordCount);
                 } catch (ClientAbortException e) {
                     // Occurs whenever client (GPDB) decides to end the connection
-                    LOG.error("Remote connection closed by GPDB (Enable debug for additional details)");
-                    // Stacktrace in debug
-                    LOG.debug("Details: Remote connection closed by GPDB", e);
+                    if (LOG.isDebugEnabled()) {
+                        // Stacktrace in debug
+                        LOG.debug("Remote connection closed by GPDB", e);
+                    } else {
+                        LOG.error("Remote connection closed by GPDB (Enable debug for stacktrace)");
+                    }
                 } catch (Exception e) {
                     throw new IOException(e.getMessage(), e);
                 } finally {

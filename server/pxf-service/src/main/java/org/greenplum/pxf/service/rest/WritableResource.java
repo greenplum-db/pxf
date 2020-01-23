@@ -96,7 +96,8 @@ public class WritableResource extends BaseResource {
 
     /**
      * Creates an instance of the resource with provided instances of RequestParser and BridgeFactory.
-     * @param parser request parser
+     *
+     * @param parser        request parser
      * @param bridgeFactory bridge factory
      */
     WritableResource(RequestParser<HttpHeaders> parser, BridgeFactory bridgeFactory) {
@@ -161,8 +162,11 @@ public class WritableResource extends BaseResource {
                 ++totalWritten;
             }
         } catch (ClientAbortException cae) {
-            LOG.error("Remote connection closed by GPDB (Enable debug for additional details)");
-            LOG.debug("Details: Remote connection closed by GPDB", cae);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Remote connection closed by GPDB", cae);
+            } else {
+                LOG.error("Remote connection closed by GPDB (Enable debug for stacktrace)");
+            }
         } catch (Exception e) {
             LOG.error("Exception: totalWritten so far " + totalWritten + " to " + path, e);
             ex = e;
