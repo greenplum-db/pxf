@@ -13,8 +13,8 @@ gcloud auth activate-service-account --key-file=<(echo "$GOOGLE_CREDENTIALS")
 
 set -x
 
-PETNAME=$(< "${ENV_FILES_DIR}/name")
+PETNAME=$(awk -F'.' '{print $1}' < "${ENV_FILES_DIR}/name")
 # --quiet to avoid interactive prompts
 gcloud beta dataproc clusters --quiet \
-  "--region=$REGION" delete "${PETNAME%-m}" # lop off trailing '-m'
+  "--region=$REGION" delete "${PETNAME%-m*}" # lop off trailing '-m'
 

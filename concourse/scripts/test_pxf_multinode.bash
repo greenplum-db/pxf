@@ -8,6 +8,7 @@ source "${CWDIR}/pxf_common.bash"
 
 SSH_OPTS=(-i cluster_env_files/private_key.pem -o 'StrictHostKeyChecking=no')
 HADOOP_SSH_OPTS=(-o 'StrictHostKeyChecking=no')
+GOOGLE_ZONE=${GOOGLE_ZONE:-us-central1-a}
 IMPERSONATION=${IMPERSONATION:-true}
 LOCAL_GPHD_ROOT=/singlecluster
 PROXY_USER=${PROXY_USER:-pxfuser}
@@ -130,7 +131,7 @@ function setup_pxf_kerberos_on_cluster() {
 	DATAPROC_DIR=$(find /tmp/build/ -name dataproc_env_files)
 	REALM=$(< "${DATAPROC_DIR}/REALM")
 	REALM=${REALM^^} # make sure REALM is up-cased, down-case below for hive principal
-	KERBERIZED_HADOOP_URI="hive/${HADOOP_HOSTNAME}.${REALM,,}@${REALM};saslQop=auth-conf" # quoted because of semicolon
+	KERBERIZED_HADOOP_URI="hive/${HADOOP_HOSTNAME}@${REALM};saslQop=auth-conf" # quoted because of semicolon
 	sed -i  -e "s|</hdfs>|<hadoopRoot>$DATAPROC_DIR</hadoopRoot></hdfs>|g" \
 		-e "s|</cluster>|<testKerberosPrincipal>gpadmin@${REALM}</testKerberosPrincipal></cluster>|g" \
 		-e "s|</hive>|<kerberosPrincipal>${KERBERIZED_HADOOP_URI}</kerberosPrincipal><userName>gpadmin</userName></hive>|g" \
@@ -162,7 +163,7 @@ function setup_pxf_kerberos_on_cluster() {
 		DATAPROC_2_DIR=$(find /tmp/build/ -name dataproc_2_env_files)
 		REALM2=$(< "${DATAPROC_2_DIR}/REALM")
 		REALM2=${REALM2^^} # make sure REALM2 is up-cased, down-case below for hive principal
-		KERBERIZED_HADOOP_2_URI="hive/${HADOOP_2_HOSTNAME}.${REALM2,,}@${REALM2};saslQop=auth-conf" # quoted because of semicolon
+		KERBERIZED_HADOOP_2_URI="hive/${HADOOP_2_HOSTNAME}@${REALM2};saslQop=auth-conf" # quoted because of semicolon
 		ssh gpadmin@mdw "
 			mkdir -p ${PXF_CONF_DIR}/servers/hdfs-secure &&
 			cp ${PXF_CONF_DIR}/templates/pxf-site.xml ${PXF_CONF_DIR}/servers/hdfs-secure &&
@@ -335,7 +336,7 @@ function _main() {
 	if [[ -d dataproc_env_files ]]; then
 		HADOOP_HOSTNAME=$(< dataproc_env_files/name)
 		HADOOP_USER=gpadmin
-		hadoop_ip=$(getent hosts "${HADOOP_HOSTNAME}.c.${GOOGLE_PROJECT_ID}.internal" | awk '{ print $1 }')
+		hadoop_ip=$(getent hosts "${HADOOP_HOSTNAME}" | awk '{ print $1 }')
 		HADOOP_SSH_OPTS+=(-i dataproc_env_files/google_compute_engine)
 		HDFS_BIN=/usr/bin
 	else

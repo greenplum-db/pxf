@@ -1,6 +1,7 @@
 #!/bin/bash
 
 GOOGLE_PROJECT_ID=${GOOGLE_PROJECT_ID:-data-gpdb-ud}
+GOOGLE_ZONE=${GOOGLE_ZONE:-us-central1-a}
 
 yum install -y -d1 openssh openssh-clients
 mkdir -p ~/.ssh/
@@ -22,5 +23,5 @@ gcloud compute instances add-metadata "${HADOOP_HOSTNAME}" \
   --zone "us-central1-a"
 
 ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no \
-  -t -i ~/.ssh/google_compute_engine "ccp-ci-service@${HADOOP_HOSTNAME}.c.${GOOGLE_PROJECT_ID}.internal" \
+  -t -i ~/.ssh/google_compute_engine "ccp-ci-service@${HADOOP_HOSTNAME}.${GOOGLE_ZONE}.c.${GOOGLE_PROJECT_ID}.internal" \
   "hadoop distcp gs://data-gpdb-ud-tpch/${SCALE}/lineitem_data/*.tbl /tmp/lineitem_read/" || exit 1
