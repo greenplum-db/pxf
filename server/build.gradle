@@ -86,7 +86,7 @@ allprojects {
             force "org.apache.avro:avro:1.7.7"
             force "org.apache.zookeeper:zookeeper:3.4.6"
             force "junit:junit:${junitVersion}"
-            force "com.google.guava:guava:19.0" // stable cache api
+            force "com.google.guava:guava:28.2-jre"
         }
     }
 
@@ -296,7 +296,7 @@ project('pxf-service') {
         bundleJars "org.apache.hadoop:hadoop-auth:${hadoopVersion}"
         bundleJars "commons-cli:commons-cli:1.2"
         bundleJars "commons-io:commons-io:2.4"
-        bundleJars "com.google.guava:guava:11.0.2"
+        bundleJars "com.google.guava:guava:28.2-jre"
         bundleJars "org.mortbay.jetty:jetty:6.1.26"
         bundleJars "org.mortbay.jetty:jetty-util:6.1.26"
         bundleJars "com.sun.jersey:jersey-server:1.9"
