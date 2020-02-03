@@ -86,7 +86,7 @@ allprojects {
             force "org.apache.avro:avro:1.7.7"
             force "org.apache.zookeeper:zookeeper:3.4.6"
             force "junit:junit:${junitVersion}"
-            force "com.google.guava:guava:11.0.2" // because this version ships with HDP-2.5.3
+            force "com.google.guava:guava:19.0" // stable cache api
         }
     }
 
