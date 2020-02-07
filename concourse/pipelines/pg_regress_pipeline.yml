@@ -13,6 +13,21 @@ resources:
     branch: {{gpdb-git-branch}}
     uri: {{gpdb-git-remote}}
 
+- name: gpdb_pxf_trigger
+  type: git
+  source:
+    branch: {{gpdb-branch}}
+    uri: {{gpdb-git-remote}}
+    paths:
+      - gpcontrib/pxf_fdw
+      - src/backend/foreign
+      - src/backend/commands/copy.c
+      - src/include/commands/copy.h
+      - src/include/catalog/pg_foreign_server.h
+      - src/include/catalog/pg_foreign_data_wrapper.h
+      - src/backend/executor/nodeForeignscan.c
+      - src/include/executor/nodeForeignscan.h
+
 - name: pxf_src
   type: git
   source:
@@ -92,6 +107,7 @@ jobs:
     - get: pxf_src
       trigger: true
     - get: gpdb_src
+    - get: gpdb_pxf_trigger
       trigger: true
     - get: gpdb-pxf-dev-centos7
   - task: compile_pxf

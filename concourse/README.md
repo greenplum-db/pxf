@@ -159,11 +159,11 @@ For example, you may want to work off of a development branch for PXF or Greenpl
 
 ```
 fly -t ud set-pipeline -p pg_regress \
-	-c ~/workspace/pxf/concourse/pipelines/pg_regress_pipeline.yml \
-	-l ~/workspace/gp-continuous-integration/secrets/gpdb6-integration-testing.dev.yml \
-	-l ~/workspace/gp-continuous-integration/secrets/ccp-integration-pipelne-secrets.yml \
-	-l ~/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
-	-v "folder-prefix=dev/${USER}" -v gpdb-branch=master -v pgport=7000 \
-	-v gpdb-git-branch=master -v gpdb-git-remote=https://github.com/greenplum-db/gpdb \
-	-v pxf-git-branch=master -v pxf-git-remote=https://github.com/greenplum-db/pxf
+    -c ~/workspace/pxf/concourse/pipelines/pg_regress_pipeline.yml \
+    -l ~/workspace/gp-continuous-integration/secrets/gpdb6-integration-testing.dev.yml \
+    -l ~/workspace/gp-continuous-integration/secrets/ccp-integration-pipelne-secrets.yml \
+    -l ~/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
+    -v "folder-prefix=dev/${USER}" -v gpdb-branch=master -v pgport=7000 \
+    -v gpdb-git-branch=master -v gpdb-git-remote=https://github.com/greenplum-db/gpdb \
+    -v pxf-git-branch=master -v pxf-git-remote=https://github.com/greenplum-db/pxf
 ```
