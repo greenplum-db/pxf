@@ -1,5 +1,6 @@
 package org.greenplum.pxf.plugins.hdfs.parquet;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.parquet.filter2.compat.FilterCompat;
 import org.apache.parquet.filter2.predicate.FilterApi;
 import org.apache.parquet.filter2.predicate.FilterPredicate;
@@ -13,6 +14,7 @@ import org.greenplum.pxf.api.filter.OperandNode;
 import org.greenplum.pxf.api.filter.Operator;
 import org.greenplum.pxf.api.filter.OperatorNode;
 import org.greenplum.pxf.api.filter.TreeVisitor;
+import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -174,8 +176,22 @@ public class ParquetRecordFilterBuilder implements TreeVisitor {
                 break;
 
             case BINARY:
+                String value = null;
+
+                if (valueOperand != null) {
+                    value = valueOperand.toString();
+
+                    // Special case for char, we need to right pad the value to the width of the char
+                    if (columnDescriptor.getDataType() == DataType.BPCHAR &&
+                            columnDescriptor.columnTypeModifiers() != null &&
+                            columnDescriptor.columnTypeModifiers().length > 0) {
+                        int width = columnDescriptor.columnTypeModifiers()[0];
+                        value = StringUtils.rightPad(value, width);
+                    }
+                }
+
                 simpleFilter = ParquetRecordFilterBuilder.<Binary, Operators.BinaryColumn>getOperatorWithLtGtSupport(operator)
-                        .apply(binaryColumn(type.getName()), valueOperand == null ? null : Binary.fromString(valueOperand.toString()));
+                        .apply(binaryColumn(type.getName()), valueOperand == null ? null : Binary.fromString(value));
                 break;
 
             case BOOLEAN:
