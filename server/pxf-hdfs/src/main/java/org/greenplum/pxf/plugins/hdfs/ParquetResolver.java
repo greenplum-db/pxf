@@ -21,7 +21,6 @@ package org.greenplum.pxf.plugins.hdfs;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.parquet.example.data.Group;
 import org.apache.parquet.example.data.simple.SimpleGroupFactory;
@@ -35,6 +34,7 @@ import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.plugins.hdfs.parquet.ParquetSchemaUtility;
 import org.greenplum.pxf.plugins.hdfs.parquet.ParquetTypeConverter;
 
 import java.io.IOException;
@@ -143,7 +143,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                 byte[] decimalBytes = hiveDecimal.bigIntegerBytesScaled(scale);
 
                 // Estimated number of bytes needed.
-                int precToBytes = ParquetFileAccessor.PRECISION_TO_BYTE_COUNT[precision - 1];
+                int precToBytes = ParquetSchemaUtility.PRECISION_TO_BYTE_COUNT[precision - 1];
                 if (precToBytes == decimalBytes.length) {
                     // No padding needed.
                     group.add(index, Binary.fromReusedByteArray(decimalBytes));

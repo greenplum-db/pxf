@@ -23,54 +23,38 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.mapred.FileSplit;
-import org.apache.parquet.HadoopReadOptions;
-import org.apache.parquet.ParquetReadOptions;
 import org.apache.parquet.column.ParquetProperties.WriterVersion;
 import org.apache.parquet.example.data.Group;
 import org.apache.parquet.filter2.compat.FilterCompat;
-import org.apache.parquet.format.converter.ParquetMetadataConverter;
-import org.apache.parquet.hadoop.ParquetFileReader;
 import org.apache.parquet.hadoop.ParquetReader;
 import org.apache.parquet.hadoop.ParquetWriter;
 import org.apache.parquet.hadoop.example.GroupReadSupport;
 import org.apache.parquet.hadoop.example.GroupWriteSupport;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
-import org.apache.parquet.hadoop.metadata.FileMetaData;
-import org.apache.parquet.hadoop.util.HadoopInputFile;
-import org.apache.parquet.schema.DecimalMetadata;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.MessageTypeParser;
-import org.apache.parquet.schema.OriginalType;
-import org.apache.parquet.schema.PrimitiveType;
-import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName;
 import org.apache.parquet.schema.Type;
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.UnsupportedTypeException;
 import org.greenplum.pxf.api.filter.FilterParser;
 import org.greenplum.pxf.api.filter.Node;
 import org.greenplum.pxf.api.filter.Operator;
 import org.greenplum.pxf.api.filter.TreeTraverser;
 import org.greenplum.pxf.api.filter.TreeVisitor;
-import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.BasePlugin;
-import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hdfs.parquet.ParquetRecordFilterBuilder;
+import org.greenplum.pxf.plugins.hdfs.parquet.ParquetSchemaUtility;
 import org.greenplum.pxf.plugins.hdfs.parquet.SupportedParquetPrimitiveTypePruner;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import static org.apache.parquet.hadoop.api.ReadSupport.PARQUET_READ_SCHEMA;
 
@@ -86,17 +70,6 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
     private static final int DEFAULT_DICTIONARY_PAGE_SIZE = 512 * 1024;
     private static final WriterVersion DEFAULT_PARQUET_VERSION = WriterVersion.PARQUET_1_0;
     private static final CompressionCodecName DEFAULT_COMPRESSION = CompressionCodecName.SNAPPY;
-
-    // From org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe
-    public static final int[] PRECISION_TO_BYTE_COUNT = new int[38];
-
-    static {
-        for (int prec = 1; prec <= 38; prec++) {
-            // Estimated number of bytes needed.
-            PRECISION_TO_BYTE_COUNT[prec - 1] = (int)
-                    Math.ceil((Math.log(Math.pow(10, prec) - 1) / Math.log(2) + 1) / 8);
-        }
-    }
 
     public static final EnumSet<Operator> SUPPORTED_OPERATORS = EnumSet.of(
             Operator.NOOP,
@@ -127,8 +100,14 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
     private long rowsRead, rowsWritten, totalRowsRead, totalRowsWritten;
     private WriterVersion parquetVersion;
     private CodecFactory codecFactory = CodecFactory.getInstance();
-
     private long totalReadTimeInNanos;
+    private ParquetSchemaUtility parquetSchemaUtility;
+
+    @Override
+    public void initialize(RequestContext context) {
+        super.initialize(context);
+        this.parquetSchemaUtility = new ParquetSchemaUtility(context);
+    }
 
     /**
      * Opens the resource for read.
@@ -140,15 +119,13 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
         file = new Path(context.getDataSource());
         FileSplit fileSplit = HdfsUtilities.parseFileSplit(context);
 
-        // Read the original schema from the parquet file
-        MessageType originalSchema = getSchema(file, fileSplit);
+        LOG.debug("{}-{}: Get read schema from parquet file footer", context.getTransactionId(), context.getSegmentId());
+        MessageType readSchema = parquetSchemaUtility.getReadSchema(fileSplit, configuration, context.getTupleDescription());
+
         // Get a map of the column name to Types for the given schema
-        Map<String, Type> originalFieldsMap = getOriginalFieldsMap(originalSchema);
-        // Get the read schema. This is either the full set or a subset (in
-        // case of column projection) of the greenplum schema.
-        MessageType readSchema = buildReadSchema(originalFieldsMap, originalSchema);
+        Map<String, Type> originalFieldsMap = parquetSchemaUtility.getOriginalFieldsMap(readSchema);
         // Get the record filter in case of predicate push-down
-        FilterCompat.Filter recordFilter = getRecordFilter(context.getFilterString(), originalFieldsMap, readSchema);
+        FilterCompat.Filter recordFilter = getRecordFilter(context.getFilterString(), originalFieldsMap);
 
         // add column projection
         configuration.set(PARQUET_READ_SCHEMA, readSchema.toString());
@@ -239,7 +216,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
         // Read schema file, if given
         String schemaFile = context.getOption("SCHEMA");
         MessageType schema = (schemaFile != null) ? readSchemaFile(schemaFile) :
-                generateParquetSchema(context.getTupleDescription());
+                parquetSchemaUtility.generateParquetSchema(context.getTupleDescription());
         LOG.debug("{}-{}: Schema fields = {}", context.getTransactionId(),
                 context.getSegmentId(), schema.getFields());
         GroupWriteSupport.setSchema(schema, configuration);
@@ -301,10 +278,9 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
      *
      * @param filterString      the filter string
      * @param originalFieldsMap a map of field names to types
-     * @param schema            the parquet schema
      * @return the parquet record filter for the given filter string
      */
-    private FilterCompat.Filter getRecordFilter(String filterString, Map<String, Type> originalFieldsMap, MessageType schema) {
+    private FilterCompat.Filter getRecordFilter(String filterString, Map<String, Type> originalFieldsMap) {
         if (StringUtils.isBlank(filterString)) {
             return FilterCompat.NOOP;
         }
@@ -330,87 +306,6 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
                     context.getFilterString()), e);
             return FilterCompat.NOOP;
         }
-    }
-
-    /**
-     * Reads the original schema from the parquet file.
-     *
-     * @param parquetFile the path to the parquet file
-     * @param fileSplit   the file split we are accessing
-     * @return the original schema from the parquet file
-     * @throws IOException when there's an IOException while reading the schema
-     */
-    private MessageType getSchema(Path parquetFile, FileSplit fileSplit) throws IOException {
-
-        final long then = System.nanoTime();
-        ParquetMetadataConverter.MetadataFilter filter = ParquetMetadataConverter.range(
-                fileSplit.getStart(), fileSplit.getStart() + fileSplit.getLength());
-        ParquetReadOptions parquetReadOptions = HadoopReadOptions
-                .builder(configuration)
-                .withMetadataFilter(filter)
-                .build();
-        HadoopInputFile inputFile = HadoopInputFile.fromPath(parquetFile, configuration);
-        try (ParquetFileReader parquetFileReader =
-                     ParquetFileReader.open(inputFile, parquetReadOptions)) {
-            FileMetaData metadata = parquetFileReader.getFileMetaData();
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("{}-{}: Reading file {} with {} records in {} RowGroups",
-                        context.getTransactionId(), context.getSegmentId(),
-                        parquetFile.getName(), parquetFileReader.getRecordCount(),
-                        parquetFileReader.getRowGroups().size());
-            }
-            final long millis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - then);
-            LOG.debug("{}-{}: Read schema in {} ms", context.getTransactionId(),
-                    context.getSegmentId(), millis);
-            return metadata.getSchema();
-        } catch (Exception e) {
-            throw new IOException(e);
-        }
-    }
-
-    /**
-     * Builds a map of names to Types from the original schema, the map allows
-     * easy access from a given column name to the schema {@link Type}.
-     *
-     * @param originalSchema the original schema of the parquet file
-     * @return a map of field names to types
-     */
-    private Map<String, Type> getOriginalFieldsMap(MessageType originalSchema) {
-        Map<String, Type> originalFields = new HashMap<>(originalSchema.getFieldCount() * 2);
-
-        // We need to add the original name and lower cased name to
-        // the map to support mixed case where in GPDB the column name
-        // was created with quotes i.e "mIxEd CaSe". When quotes are not
-        // used to create a table in GPDB, the name of the column will
-        // always come in lower-case
-        originalSchema.getFields().forEach(t -> {
-            String columnName = t.getName();
-            originalFields.put(columnName, t);
-            originalFields.put(columnName.toLowerCase(), t);
-        });
-
-        return originalFields;
-    }
-
-    /**
-     * Generates a read schema when there is column projection
-     *
-     * @param originalFields a map of field names to types
-     * @param originalSchema the original read schema
-     */
-    private MessageType buildReadSchema(Map<String, Type> originalFields, MessageType originalSchema) {
-        List<Type> projectedFields = context.getTupleDescription().stream()
-                .filter(ColumnDescriptor::isProjected)
-                .map(c -> {
-                    Type t = originalFields.get(c.columnName());
-                    if (t == null) {
-                        throw new IllegalArgumentException(
-                                String.format("Column %s is missing from parquet schema", c.columnName()));
-                    }
-                    return t;
-                })
-                .collect(Collectors.toList());
-        return new MessageType(originalSchema.getName(), projectedFields);
     }
 
     private void createParquetWriter() throws IOException {
@@ -439,86 +334,5 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
         try (InputStream inputStream = fs.open(new Path(schemaFile))) {
             return MessageTypeParser.parseMessageType(IOUtils.toString(inputStream));
         }
-    }
-
-    /**
-     * Generate parquet schema using column descriptors
-     */
-    private MessageType generateParquetSchema(List<ColumnDescriptor> columns) {
-        LOG.debug("{}-{}: Generating parquet schema for write using {}", context.getTransactionId(),
-                context.getSegmentId(), columns);
-        List<Type> fields = new ArrayList<>();
-        for (ColumnDescriptor column : columns) {
-            String columnName = column.columnName();
-            int columnTypeCode = column.columnTypeCode();
-
-            PrimitiveTypeName typeName;
-            OriginalType origType = null;
-            DecimalMetadata dmt = null;
-            int length = 0;
-            switch (DataType.get(columnTypeCode)) {
-                case BOOLEAN:
-                    typeName = PrimitiveTypeName.BOOLEAN;
-                    break;
-                case BYTEA:
-                    typeName = PrimitiveTypeName.BINARY;
-                    break;
-                case BIGINT:
-                    typeName = PrimitiveTypeName.INT64;
-                    break;
-                case SMALLINT:
-                    origType = OriginalType.INT_16;
-                    typeName = PrimitiveTypeName.INT32;
-                    break;
-                case INTEGER:
-                    typeName = PrimitiveTypeName.INT32;
-                    break;
-                case REAL:
-                    typeName = PrimitiveTypeName.FLOAT;
-                    break;
-                case FLOAT8:
-                    typeName = PrimitiveTypeName.DOUBLE;
-                    break;
-                case NUMERIC:
-                    origType = OriginalType.DECIMAL;
-                    typeName = PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY;
-                    Integer[] columnTypeModifiers = column.columnTypeModifiers();
-                    int precision = HiveDecimal.SYSTEM_DEFAULT_PRECISION;
-                    int scale = HiveDecimal.SYSTEM_DEFAULT_SCALE;
-
-                    if (columnTypeModifiers != null && columnTypeModifiers.length > 1) {
-                        precision = columnTypeModifiers[0];
-                        scale = columnTypeModifiers[1];
-                    }
-                    length = PRECISION_TO_BYTE_COUNT[precision - 1];
-                    dmt = new DecimalMetadata(precision, scale);
-                    break;
-                case TIMESTAMP:
-                case TIMESTAMP_WITH_TIME_ZONE:
-                    typeName = PrimitiveTypeName.INT96;
-                    break;
-                case DATE:
-                case TIME:
-                case VARCHAR:
-                case BPCHAR:
-                case TEXT:
-                    origType = OriginalType.UTF8;
-                    typeName = PrimitiveTypeName.BINARY;
-                    break;
-                default:
-                    throw new UnsupportedTypeException(
-                            String.format("Type %d is not supported", columnTypeCode));
-            }
-            fields.add(new PrimitiveType(
-                    Type.Repetition.OPTIONAL,
-                    typeName,
-                    length,
-                    columnName,
-                    origType,
-                    dmt,
-                    null));
-        }
-
-        return new MessageType("hive_schema", fields);
     }
 }
