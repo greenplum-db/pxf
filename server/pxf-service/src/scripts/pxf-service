@@ -164,7 +164,7 @@ function waitForTomcat()
     # wait until tomcat is up:
     sleep 2
     echo 'Checking if tomcat is up and running...'
-    until $curl --silent --connect-timeout 1 -I "http://localhost:$PXF_PORT" | grep 'Coyote'; do
+    until $curl --silent --connect-timeout 1 -I "http://localhost:$PXF_PORT" | grep 'PXF Server'; do
         if (( ++attempts == max_attempts )); then
             echo 'ERROR: PXF is down - tomcat is not running'
             return 1
@@ -248,7 +248,6 @@ function generateUserConfigs()
     setup_conf_directory "${PXF_CONF}/conf" "${PXF_HOME}/templates/user/conf"
     setup_conf_directory "${PXF_CONF}/keytabs"
     setup_conf_directory "${PXF_CONF}/lib"
-    setup_conf_directory "${PXF_CONF}/logs"
     setup_conf_directory "${PXF_CONF}/servers/default"
     setup_conf_directory "${PXF_CONF}/templates" "${PXF_HOME}/templates/user/templates" 'override'
 }

@@ -75,6 +75,13 @@ tomcat:
 		echo "Extracting Tomcat into ${TOMCAT_DIR}..."; \
 		tar -xzf "${TOMCAT_DIR}/${TOMCAT_TAR}" -C "${TOMCAT_DIR}/apache-tomcat" --strip-components 1; \
 	fi
+	@if [ -d "${TOMCAT_DIR}/apache-tomcat/webapps" ]; then \
+		rm -rf "${TOMCAT_DIR}/apache-tomcat/webapps/ROOT"; \
+		rm -rf "${TOMCAT_DIR}/apache-tomcat/webapps/docs"; \
+		rm -rf "${TOMCAT_DIR}/apache-tomcat/webapps/examples"; \
+		rm -rf "${TOMCAT_DIR}/apache-tomcat/webapps/host-manager"; \
+		rm -rf "${TOMCAT_DIR}/apache-tomcat/webapps/manager"; \
+	fi
 
 .PHONY: install
 install: tomcat

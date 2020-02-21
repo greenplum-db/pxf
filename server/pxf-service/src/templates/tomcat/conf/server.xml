@@ -22,14 +22,6 @@ under the License.
 <Server port="${base.shutdown.port}"
         shutdown="SHUTDOWN">
     <Listener className="org.apache.catalina.mbeans.GlobalResourcesLifecycleListener"/>
-    <GlobalNamingResources>
-        <Resource auth="Container"
-                  description="User database that can be updated and saved"
-                  factory="org.apache.catalina.users.MemoryUserDatabaseFactory"
-                  name="UserDatabase"
-                  pathname="conf/tomcat-users.xml"
-                  type="org.apache.catalina.UserDatabase"/>
-    </GlobalNamingResources>
     <Service name="Catalina">
         <Executor maxThreads="${executor.threads.max}"
                   minSpareThreads="25"
@@ -37,10 +29,6 @@ under the License.
                   namePrefix="tomcat-http--"/>
         <Engine defaultHost="localhost"
                 name="Catalina">
-            <Realm className="org.apache.catalina.realm.LockOutRealm">
-                <Realm className="org.apache.catalina.realm.UserDatabaseRealm"
-                       resourceName="UserDatabase"/>
-            </Realm>
             <Host appBase="webapps"
                   autoDeploy="true"
                   deployOnStartup="true"
@@ -52,9 +40,13 @@ under the License.
                        pattern="%h %l %u %t &quot;%r&quot; %s %b"
                        prefix="localhost_access_log."
                        suffix=".txt"/>
+                <Valve className="org.apache.catalina.valves.ErrorReportValve"
+                       showReport="true"
+                       showServerInfo="false"/>
             </Host>
         </Engine>
-        <Connector acceptCount="100"
+        <Connector server="PXF Server"
+                   acceptCount="100"
                    connectionTimeout="20000"
                    executor="tomcatThreadPool"
                    maxKeepAliveRequests="15"
