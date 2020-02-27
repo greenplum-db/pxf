@@ -99,6 +99,7 @@ public class HiveResolver extends HivePlugin implements Resolver {
      * Initializes the HiveResolver by parsing the request context and
      * obtaining the serde class name, the serde properties string and the
      * partition keys.
+     *
      * @param requestContext request context
      */
     @Override
@@ -639,7 +640,8 @@ public class HiveResolver extends HivePlugin implements Resolver {
      */
     void parseDelimiterChar(RequestContext input) {
 
-        String userDelim = String.valueOf(input.getGreenplumCSV().getDelimiter());
+        String userDelim = input.getGreenplumCSV().getDelimiter() != null ?
+                String.valueOf(input.getGreenplumCSV().getDelimiter()) : null;
 
         if (userDelim == null) {
             /* No DELIMITER in URL, try to get it from fragment's user data*/

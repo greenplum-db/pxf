@@ -160,8 +160,15 @@ public class HttpRequestParser implements RequestParser<HttpHeaders> {
         // parse tuple description
         parseTupleDescription(params, context);
 
-        // parse CSV format information
-        parseGreenplumCSV(params, context);
+        if (context.getOutputFormat() == OutputFormat.TEXT) {
+            // parse CSV format information
+            parseGreenplumCSV(params, context);
+
+            // Only single column tables support 'OFF' delimiter
+            if (context.getTupleDescription().size() != 1 && context.getGreenplumCSV().getDelimiter() == null) {
+                throw new IllegalArgumentException(String.format("using no delimiter is only possible for a single column table. %d columns found", context.getTupleDescription().size()));
+            }
+        }
 
         context.setUser(params.removeProperty("USER"));
 

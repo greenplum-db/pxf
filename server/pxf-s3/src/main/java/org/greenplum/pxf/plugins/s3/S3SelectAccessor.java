@@ -287,8 +287,10 @@ public class S3SelectAccessor extends BasePlugin implements Accessor {
             csvInput.setRecordDelimiter(csv.getNewline());
         }
 
-        LOG.debug("With CSV quote escape character '{}'", csv.getEscape());
-        csvInput.setQuoteEscapeCharacter(csv.getEscape());
+        if (csv.getEscape() != null) {
+            LOG.debug("With CSV quote escape character '{}'", csv.getEscape());
+            csvInput.setQuoteEscapeCharacter(csv.getEscape());
+        }
 
         LOG.debug("With CSV quote character '{}'", csv.getQuote());
         csvInput.setQuoteCharacter(csv.getQuote());

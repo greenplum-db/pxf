@@ -142,6 +142,50 @@ public class GreenplumCSVTest {
     }
 
     @Test
+    public void testToCsvFieldSkipEscapesQuotes() {
+        String input = "b,\"b";
+        String expected = "b,\"b";
+
+        gpCSV.withEscapeChar("off");
+        gpCSV.withDelimiter(",");
+        assertEquals(expected, gpCSV.toCsvField(input, false, false));
+        assertEquals(expected, gpCSV.toCsvField(input, false, false, true));
+        assertEquals("\"" + expected, gpCSV.toCsvField(input, true, false));
+        assertEquals("\"" + expected, gpCSV.toCsvField(input, true, false, true));
+        assertEquals(expected + "\"", gpCSV.toCsvField(input, false, true));
+        assertEquals(expected + "\"", gpCSV.toCsvField(input, false, true, true));
+        assertEquals("\"" + expected + "\"", gpCSV.toCsvField(input, true, true));
+        assertEquals("\"" + expected + "\"", gpCSV.toCsvField(input, true, true, true));
+
+        input = "b,\nb";
+        expected = "b,\nb";
+
+        gpCSV.withEscapeChar("off");
+        gpCSV.withDelimiter(",");
+        assertEquals(expected, gpCSV.toCsvField(input, false, false, true));
+        assertEquals("\"" + expected, gpCSV.toCsvField(input, true, false));
+        assertEquals("\"" + expected, gpCSV.toCsvField(input, true, false, true));
+        assertEquals(expected + "\"", gpCSV.toCsvField(input, false, true));
+        assertEquals(expected + "\"", gpCSV.toCsvField(input, false, true, true));
+        assertEquals("\"" + expected + "\"", gpCSV.toCsvField(input, true, true));
+        assertEquals("\"" + expected + "\"", gpCSV.toCsvField(input, true, true, true));
+    }
+
+    @Test
+    public void testToCsvFieldSkipEscapeWhenDelimiterIsOff() {
+        String input = "b,b";
+        String expected = "b,b";
+
+        gpCSV.withEscapeChar("\"");
+        gpCSV.withDelimiter("off");
+        assertEquals(expected, gpCSV.toCsvField(input, false, false));
+        assertEquals("\"" + expected, gpCSV.toCsvField(input, true, false));
+        assertEquals(expected + "\"", gpCSV.toCsvField(input, false, true));
+        assertEquals("\"" + expected + "\"",
+                gpCSV.toCsvField(input, true, true));
+    }
+
+    @Test
     public void testToCsvFieldEscapesQuoteChar() {
         char quoteChar = '|';
         String input = "a|b|c|d\ne|f|g|h";
@@ -194,13 +238,13 @@ public class GreenplumCSVTest {
     @Test
     public void testCsvOptionWithEscapeCharValid() {
         gpCSV.withEscapeChar("\\");
-        assertEquals('\\', gpCSV.getEscape());
+        assertEquals(new Character('\\'), gpCSV.getEscape());
     }
 
     @Test
     public void testCsvOptionWithEscapeCharEmpty() {
         gpCSV.withEscapeChar("");
-        assertEquals('"', gpCSV.getEscape());
+        assertEquals(new Character('"'), gpCSV.getEscape());
     }
 
     @Test
@@ -250,5 +294,17 @@ public class GreenplumCSVTest {
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("invalid DELIMITER character '\\\\'. Only single character is allowed for DELIMITER.");
         gpCSV.withDelimiter("\\\\");
+    }
+
+    @Test
+    public void testShouldDisableDelimiterWithOffDelimiter() {
+        gpCSV.withDelimiter("OFF");
+        assertNull(gpCSV.getDelimiter());
+    }
+
+    @Test
+    public void testShouldDisableEscapeWithOffEscape() {
+        gpCSV.withEscapeChar("OFF");
+        assertNull(gpCSV.getEscape());
     }
 }

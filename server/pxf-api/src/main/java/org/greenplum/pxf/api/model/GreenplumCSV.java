@@ -18,7 +18,7 @@ public class GreenplumCSV {
 
     private String valueOfNull;
     private char quote;
-    private char escape;
+    private Character escape;
     private String newline;
     private Character delimiter;
 
@@ -43,7 +43,7 @@ public class GreenplumCSV {
         return quote;
     }
 
-    public char getEscape() {
+    public Character getEscape() {
         return escape;
     }
 
@@ -105,7 +105,9 @@ public class GreenplumCSV {
      * @return GreenplumCSV object for builder pattern
      */
     public GreenplumCSV withEscapeChar(String escapeString) {
-        if (StringUtils.isNotEmpty(escapeString)) {
+        if (StringUtils.equalsIgnoreCase("OFF", escapeString)) {
+            escape = null;
+        } else if (StringUtils.isNotEmpty(escapeString)) {
             validateSingleCharacter(escapeString, "ESCAPE");
             withEscapeChar(escapeString.charAt(0));
         }
@@ -156,7 +158,9 @@ public class GreenplumCSV {
      * @return GreenplumCSV object for builder pattern
      */
     public GreenplumCSV withDelimiter(String delimiterString) {
-        if (StringUtils.isNotEmpty(delimiterString)) {
+        if (StringUtils.equalsIgnoreCase("OFF", delimiterString)) {
+            delimiter = null;
+        } else if (StringUtils.isNotEmpty(delimiterString)) {
             validateSingleCharacter(delimiterString, "DELIMITER");
             withDelimiter(delimiterString.charAt(0));
         }
@@ -215,8 +219,9 @@ public class GreenplumCSV {
         // count all the quotes
         for (i = 0; i < length; i++) {
             char curr = s.charAt(i);
-            if (curr == quote) quotes++;
-            if (delimiter != null && curr == delimiter) specialChars++;
+            if (escape != null && curr == quote) quotes++;
+            if (delimiter != null && curr == delimiter)
+                specialChars++;
             if (newlineLength > 0) {
                 j = 0;
 
@@ -248,7 +253,7 @@ public class GreenplumCSV {
         if (prependQuoteChar) chars[pos++] = quote;
 
         for (i = 0; i < length; i++) {
-            if (quotes > 0 && s.charAt(i) == quote)
+            if (escape != null && quotes > 0 && s.charAt(i) == quote)
                 chars[pos++] = escape; // escape quote char
             chars[pos++] = s.charAt(i);
         }
