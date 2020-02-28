@@ -1,4 +1,4 @@
-**Master** [![Concourse Build Status](http://ud.ci.gpdb.pivotal.io/api/v1/teams/main/pipelines/pxf_master/badge)](https://ud.ci.gpdb.pivotal.io/teams/main/pipelines/pxf_master) |
+**Master FDW** [![Concourse Build Status](http://ud.ci.gpdb.pivotal.io/api/v1/teams/main/pipelines/pg_regress/badge)](https://ud.ci.gpdb.pivotal.io/teams/main/pipelines/pg_regress) |
 **6X_STABLE** [![Concourse Build Status](http://ud.ci.gpdb.pivotal.io/api/v1/teams/main/pipelines/pxf_6X_STABLE/badge)](https://ud.ci.gpdb.pivotal.io/teams/main/pipelines/pxf_6X_STABLE) |
 **5X_STABLE** [![Concourse Build Status](http://ud.ci.gpdb.pivotal.io/api/v1/teams/main/pipelines/pxf_5X_STABLE/badge)](https://ud.ci.gpdb.pivotal.io/teams/main/pipelines/pxf_5X_STABLE)
 
