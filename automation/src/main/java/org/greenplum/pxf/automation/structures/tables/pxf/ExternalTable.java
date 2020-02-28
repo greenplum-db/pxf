@@ -31,6 +31,8 @@ public abstract class ExternalTable extends Table {
 
     private String delimiter;
 
+    private String escape;
+
     private String[] userParameters;
 
     private String server;
@@ -182,6 +184,12 @@ public abstract class ExternalTable extends Table {
             createStatment += " (formatter='" + getFormatter() + "')";
         }
 
+        boolean hasDelimiterOrEscape = getDelimiter() != null || getEscape() != null;
+
+        if (hasDelimiterOrEscape) {
+            createStatment += " (";
+        }
+
         if (getDelimiter() != null) {
 
             // if Escape character, no need for "'"
@@ -189,7 +197,21 @@ public abstract class ExternalTable extends Table {
             if (!parsedDelimiter.startsWith("E")) {
                 parsedDelimiter = "'" + parsedDelimiter + "'";
             }
-            createStatment += " (DELIMITER " + parsedDelimiter + ")";
+            createStatment += " DELIMITER " + parsedDelimiter ;
+        }
+
+        if (getEscape() != null) {
+
+            // if Escape character, no need for "'"
+            String parsedEscapeCharacter = getEscape();
+            if (!parsedEscapeCharacter.startsWith("E")) {
+                parsedEscapeCharacter = "'" + parsedEscapeCharacter + "'";
+            }
+            createStatment += " ESCAPE " + parsedEscapeCharacter;
+        }
+
+        if (hasDelimiterOrEscape) {
+            createStatment += ")";
         }
 
         if (getEncoding() != null) {
@@ -229,8 +251,16 @@ public abstract class ExternalTable extends Table {
         return delimiter;
     }
 
+    public String getEscape() {
+        return escape;
+    }
+
     public void setDelimiter(String delimiter) {
         this.delimiter = delimiter;
+    }
+
+    public void setEscape(String escape) {
+        this.escape = escape;
     }
 
     public String getProfile() {

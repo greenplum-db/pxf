@@ -1,0 +1,14 @@
+-- start_ignore
+-- end_ignore
+-- start_ignore
+-- end_ignore
+-- @description query01 tests that escapes are disabled when table creation has escape 'off'
+--
+select * from hcfs_text_escape_off;
+   a    |    b    |       c        
+--------+---------+----------------
+ this\n | file    | ha\100s
+ three" | columns | and three rows
+ b,"b   | c,"c    | d,"\td
+(3 rows)
+

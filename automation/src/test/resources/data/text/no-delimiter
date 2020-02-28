@@ -1,0 +1,6 @@
+first line
+second line
+third line
+no delimiter, in this file
+commas (,) should be ignored
+a total of 6 lines should be reported ,,,
