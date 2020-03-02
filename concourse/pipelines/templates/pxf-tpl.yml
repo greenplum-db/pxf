@@ -151,45 +151,6 @@ dataproc_destroy_anchor: &dataproc_destroy
       get_params:
         action: destroy
 
-dataproc_timed_destroy_anchor: &dataproc_timed_destroy
-  do:
-  - task: debug_sleep
-    image: ccp-7
-    config:
-      run:
-        path: /bin/sleep
-        args: [{{dataproc-destroy-timeout}}]
-      platform: linux
-  - in_parallel:
-    - task: Cleanup Dataproc 1
-      config:
-        run:
-          path: pxf_src/concourse/scripts/cleanup_dataproc_cluster.bash
-        inputs:
-          - name: pxf_src
-          - name: dataproc_env_files
-        platform: linux
-      image: ccp-7
-      params:
-        GOOGLE_CREDENTIALS: {{google-service-account-key}}
-        GOOGLE_PROJECT_ID: {{google-project-id}}
-        GOOGLE_ZONE: {{google-zone}}
-    - task: Cleanup Dataproc 2
-      input_mapping:
-        dataproc_env_files: dataproc_2_env_files
-      config:
-        run:
-          path: pxf_src/concourse/scripts/cleanup_dataproc_cluster.bash
-        inputs:
-          - name: pxf_src
-          - name: dataproc_env_files
-        platform: linux
-      image: ccp-7
-      params:
-        GOOGLE_CREDENTIALS: ((data-gpdb-ud-kerberos-google-service-account-key))
-        GOOGLE_PROJECT_ID: ((data-gpdb-ud-kerberos-google-project-id))
-        GOOGLE_ZONE: ((data-gpdb-ud-kerberos-google-zone))
-
 ## ======================================================================
 ## RESOURCE TYPES
 ## ======================================================================
@@ -1039,6 +1000,7 @@ jobs:
         GOOGLE_ZONE: {{google-zone}}
         IMAGE_VERSION: {{dataproc-image-version}}
         KERBEROS: {{kerberos-enabled}}
+        ccp_reap_minutes: 120
     - task: Generate Hadoop Cluster 2
       file: pxf_src/concourse/tasks/install_dataproc.yml
       image: ccp-7
@@ -1055,6 +1017,7 @@ jobs:
         KERBEROS: {{kerberos-enabled}}
         KEY: dataproc-kerberos-key
         KEYRING: dataproc-kerberos
+        ccp_reap_minutes: 120
         NO_ADDRESS: false
         PROXY_USER: gpuser
         SECRETS_BUCKET: data-gpdb-ud-kerberos-pxf-secrets
@@ -1076,15 +1039,11 @@ jobs:
       KERBEROS: {{kerberos-enabled}}
       PLATFORM: centos7
       PXF_JVM_OPTS: {{pxf-jvm-opts}}
-    on_failure:
-      <<: *dataproc_timed_destroy
   - task: Test PXF Multinode
     input_mapping:
       bin_gpdb: gpdb_binary
     on_success:
       <<: *dataproc_destroy
-    on_failure:
-      <<: *dataproc_timed_destroy
     image: gpdb-pxf-dev-centos6-hdp2-server
     file: pxf_src/concourse/tasks/test_pxf_multinode.yml
     attempts: 2
@@ -1218,15 +1177,11 @@ jobs:
       KERBEROS: {{kerberos-enabled}}
       PLATFORM: centos7
       PXF_JVM_OPTS: {{pxf-jvm-opts}}
-    on_failure:
-      <<: *dataproc_timed_destroy
   - task: Test PXF Multinode
     input_mapping:
       bin_gpdb: gpdb_binary
     on_success:
       <<: *dataproc_destroy
-    on_failure:
-      <<: *dataproc_timed_destroy
     image: gpdb-pxf-dev-centos6-hdp2-server
     file: pxf_src/concourse/tasks/test_pxf_multinode.yml
     attempts: 2

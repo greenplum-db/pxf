@@ -3,6 +3,7 @@
 set -euo pipefail
 
 # defaults
+CCP_REAP_MINUTES=${ccp_reap_minutes:-}
 HADOOP_USER=${HADOOP_USER:-gpadmin}
 IMAGE_VERSION=${IMAGE_VERSION:-1.3}
 INITIALIZATION_SCRIPT=${INITIALIZATION_SCRIPT:-gs://pxf-perf/scripts/initialization-for-kerberos.sh}
@@ -52,6 +53,10 @@ GCLOUD_COMMAND=(gcloud beta dataproc clusters
   "--num-workers=$NUM_WORKERS"
   --image-version "$IMAGE_VERSION"
   --properties "core:hadoop.proxyuser.${PROXY_USER}.hosts=*,core:hadoop.proxyuser.${PROXY_USER}.groups=*")
+
+if [[ -n "$CCP_REAP_MINUTES" ]]; then
+    GCLOUD_COMMAND+=(--max-age "${CCP_REAP_MINUTES}m")
+fi
 
 if [[ $NO_ADDRESS == true ]]; then
     GCLOUD_COMMAND+=(--no-address)
