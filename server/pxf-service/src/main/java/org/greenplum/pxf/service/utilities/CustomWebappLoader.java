@@ -126,6 +126,7 @@ public class CustomWebappLoader extends WebappLoader {
 	}
 
 	private void addRepositories(String classpathFiles, boolean throwException) throws LifecycleException {
+		if (classpathFiles == null) return;
 
 		for (String classpathFile : classpathFiles.split(";")) {
 

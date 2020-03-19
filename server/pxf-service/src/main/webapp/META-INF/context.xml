@@ -21,6 +21,5 @@ under the License.
 
 <Context>
      <Loader className="org.greenplum.pxf.service.utilities.CustomWebappLoader"
-             classpathFiles="${pxf.home}/conf/pxf-private.classpath"
-             secondaryClasspathFiles="${pxf.home}/conf/pxf-public.classpath"/>
+             classpathFiles="${pxf.home}/conf/pxf-private.classpath"/>
 </Context>
