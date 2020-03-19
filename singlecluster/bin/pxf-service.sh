@@ -87,8 +87,7 @@ function patchWebapp()
 
 	context_file=$instance_root/$instance_name/webapps/pxf/META-INF/context.xml
 	cat $context_file | \
-	sed  -e "s/classpathFiles=\"[a-zA-Z0-9\/\;.-]*\"/classpathFiles=\"pxf\/conf\/pxf-private.classpath\"/" \
-	-e "s/secondaryClasspathFiles=\"[a-zA-Z0-9\/\;.-]*\"/secondaryClasspathFiles=\"pxf\/conf\/pxf-public.classpath\"/" > context.xml.tmp
+	sed  -e "s/classpathFiles=\"[a-zA-Z0-9\/\;.-]*\"/classpathFiles=\"pxf\/conf\/pxf-private.classpath\"/" > context.xml.tmp
 	mv context.xml.tmp $context_file
 
 	web_file=$instance_root/$instance_name/webapps/pxf/WEB-INF/web.xml

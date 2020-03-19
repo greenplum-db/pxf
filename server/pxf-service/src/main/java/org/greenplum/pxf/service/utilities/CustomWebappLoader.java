@@ -72,10 +72,6 @@ public class CustomWebappLoader extends WebappLoader {
 	 * The files specified under classpathFiles must exist - if they can't be read an exception will be thrown.
 	 */
 	private String classpathFiles;
-	/**
-	 * Secondary classpath files - if these files are unavailable only a warning will be logged.
-	 */
-	private String secondaryClasspathFiles;
 
 	/**
 	 * Constructs a WebappLoader with no defined parent class loader (actual parent will be the system class loader).
@@ -103,15 +99,6 @@ public class CustomWebappLoader extends WebappLoader {
 	}
 
 	/**
-	 * <code>secondaryClasspathFiles</code> attribute is automatically set from the context xml file.
-	 *
-	 * @param secondaryClasspathFiles Files separated by <code>;</code> Which contains <code>;</code> separated list of path entries.
-	 */
-	public void setSecondaryClasspathFiles(String secondaryClasspathFiles) {
-		this.secondaryClasspathFiles = secondaryClasspathFiles;
-	}
-
-	/**
 	 * Implements {@link org.apache.catalina.util.LifecycleBase#startInternal()}.
 	 *
 	 * @throws LifecycleException if this component detects a fatal error that prevents this component from being used.
@@ -120,7 +107,6 @@ public class CustomWebappLoader extends WebappLoader {
 	protected void startInternal() throws LifecycleException {
 
 		addRepositories(classpathFiles, true);
-		addRepositories(secondaryClasspathFiles, false);
 
 		super.startInternal();
 	}
