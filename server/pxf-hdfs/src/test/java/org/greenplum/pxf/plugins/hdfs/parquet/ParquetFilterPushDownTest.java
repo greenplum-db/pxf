@@ -401,6 +401,34 @@ public class ParquetFilterPushDownTest extends ParquetBaseTest {
     }
 
     @Test
+    public void testCharPushDownWithWhitespaces() throws Exception {
+        // a12 = 'EUR '
+        int[] expectedRows = {8, 12, 17, 22, 23};
+        context.setFilterString("a12c1042s4dEUR o5");
+        assertRowsReturned(expectedRows);
+
+        // a12 > 'EUR '
+        expectedRows = new int[]{1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 13, 14, 15, 16, 18, 19, 20, 21, 25};
+        context.setFilterString("a12c1042s4dEUR o2");
+        assertRowsReturned(expectedRows);
+
+        // a12 <= 'EUR '
+        expectedRows = new int[]{8, 12, 17, 22, 23};
+        context.setFilterString("a12c1042s4dEUR o3");
+        assertRowsReturned(expectedRows);
+
+        // a12 >= 'USD '
+        expectedRows = new int[]{1, 2, 3, 4, 5, 6, 7, 10, 13, 15, 16, 18, 19, 21, 25};
+        context.setFilterString("a12c1042s4dUSD o4");
+        assertRowsReturned(expectedRows);
+
+        // a12 <> 'USD '
+        expectedRows = new int[]{8, 9, 11, 12, 14, 17, 20, 22, 23, 24};
+        context.setFilterString("a12c1042s4dUSD o6");
+        assertRowsReturned(expectedRows);
+    }
+
+    @Test
     public void testSmallIntPushDown() throws Exception {
         // a9 = 1000
         int[] expectedRows = {16};

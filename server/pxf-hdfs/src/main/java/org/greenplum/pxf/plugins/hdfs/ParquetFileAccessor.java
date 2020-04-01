@@ -58,7 +58,7 @@ import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.plugins.hdfs.parquet.ParquetRecordFilterBuilder;
-import org.greenplum.pxf.plugins.hdfs.parquet.SupportedParquetPrimitiveTypePruner;
+import org.greenplum.pxf.plugins.hdfs.parquet.ParquetOperatorPrunerAndTransformer;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 
 import java.io.IOException;
@@ -311,7 +311,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
 
         ParquetRecordFilterBuilder filterBuilder = new ParquetRecordFilterBuilder(
                 context.getTupleDescription(), originalFieldsMap);
-        TreeVisitor pruner = new SupportedParquetPrimitiveTypePruner(
+        TreeVisitor pruner = new ParquetOperatorPrunerAndTransformer(
                 context.getTupleDescription(), originalFieldsMap, SUPPORTED_OPERATORS);
 
         try {

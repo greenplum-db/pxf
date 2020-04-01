@@ -7,3 +7,5 @@
 \x on
 \pset format unaligned
 SELECT s1, s2, n1, d1, dc1, f, bg, b, tn, sml, vc1, c1, bin FROM parquet_view WHERE c1 = 'a' OR c1 = e'b\t' OR c1 = e'c\n' ORDER BY s1;
+
+SELECT s1, s2, n1, d1, dc1, f, bg, b, tn, sml, vc1, c1, bin FROM parquet_view WHERE c1 = 'a  ' ORDER BY s1;

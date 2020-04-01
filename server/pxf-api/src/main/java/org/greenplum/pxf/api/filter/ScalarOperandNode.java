@@ -2,6 +2,8 @@ package org.greenplum.pxf.api.filter;
 
 import org.greenplum.pxf.api.io.DataType;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Represents a scalar value (String, Long, Int).
  */
@@ -17,7 +19,7 @@ public class ScalarOperandNode extends OperandNode {
      */
     public ScalarOperandNode(DataType dataType, String value) {
         super(dataType);
-        this.value = value;
+        this.value = requireNonNull(value, "value is null");
     }
 
     /**

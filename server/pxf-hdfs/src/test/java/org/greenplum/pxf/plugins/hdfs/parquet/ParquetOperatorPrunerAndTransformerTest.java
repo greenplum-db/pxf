@@ -15,7 +15,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-public class SupportedParquetPrimitiveTypePrunerTest extends ParquetBaseTest {
+public class ParquetOperatorPrunerAndTransformerTest extends ParquetBaseTest {
 
     @Test
     public void testIntegerFilter() throws Exception {
@@ -46,6 +46,49 @@ public class SupportedParquetPrimitiveTypePrunerTest extends ParquetBaseTest {
         assertEquals(5, ((ColumnIndexOperandNode) noopOperatorNode.getLeft()).index());
         assertTrue(noopOperatorNode.getRight() instanceof OperandNode);
         assertEquals("true", noopOperatorNode.getRight().toString());
+    }
+
+    @Test
+    public void testWhitespacePaddedChar() throws Exception {
+        // a12 = 'EUR'
+        Node result = helper("a12c1042s4dEUR o5");
+        assertNotNull(result);
+        assertTrue(result instanceof OperatorNode);
+        OperatorNode operatorNode = (OperatorNode) result;
+        assertEquals(Operator.OR, operatorNode.getOperator());
+        assertTrue(result.getLeft() instanceof OperatorNode);
+        OperatorNode leftOperatorNode = (OperatorNode) result.getLeft();
+        assertEquals(Operator.EQUALS, leftOperatorNode.getOperator());
+        assertTrue(leftOperatorNode.getLeft() instanceof ColumnIndexOperandNode);
+        assertEquals(12, ((ColumnIndexOperandNode) leftOperatorNode.getLeft()).index());
+        assertTrue(leftOperatorNode.getRight() instanceof OperandNode);
+        assertEquals("EUR ", leftOperatorNode.getRight().toString());
+        OperatorNode rightOperatorNode = (OperatorNode) result.getRight();
+        assertEquals(Operator.EQUALS, rightOperatorNode.getOperator());
+        assertTrue(rightOperatorNode.getLeft() instanceof ColumnIndexOperandNode);
+        assertEquals(12, ((ColumnIndexOperandNode) rightOperatorNode.getLeft()).index());
+        assertTrue(rightOperatorNode.getRight() instanceof OperandNode);
+        assertEquals("EUR", rightOperatorNode.getRight().toString());
+
+        // a12 <> 'USD '
+        result = helper("a12c1042s4dUSD o6");
+        assertNotNull(result);
+        assertTrue(result instanceof OperatorNode);
+        operatorNode = (OperatorNode) result;
+        assertEquals(Operator.AND, operatorNode.getOperator());
+        assertTrue(result.getLeft() instanceof OperatorNode);
+        leftOperatorNode = (OperatorNode) result.getLeft();
+        assertEquals(Operator.NOT_EQUALS, leftOperatorNode.getOperator());
+        assertTrue(leftOperatorNode.getLeft() instanceof ColumnIndexOperandNode);
+        assertEquals(12, ((ColumnIndexOperandNode) leftOperatorNode.getLeft()).index());
+        assertTrue(leftOperatorNode.getRight() instanceof OperandNode);
+        assertEquals("USD ", leftOperatorNode.getRight().toString());
+        rightOperatorNode = (OperatorNode) result.getRight();
+        assertEquals(Operator.NOT_EQUALS, rightOperatorNode.getOperator());
+        assertTrue(rightOperatorNode.getLeft() instanceof ColumnIndexOperandNode);
+        assertEquals(12, ((ColumnIndexOperandNode) rightOperatorNode.getLeft()).index());
+        assertTrue(rightOperatorNode.getRight() instanceof OperandNode);
+        assertEquals("USD", rightOperatorNode.getRight().toString());
     }
 
     @Test
@@ -101,7 +144,7 @@ public class SupportedParquetPrimitiveTypePrunerTest extends ParquetBaseTest {
 
     private Node helper(String filterString) throws Exception {
 
-        TreeVisitor pruner = new SupportedParquetPrimitiveTypePruner(
+        TreeVisitor pruner = new ParquetOperatorPrunerAndTransformer(
                 columnDescriptors, originalFieldsMap, ParquetFileAccessor.SUPPORTED_OPERATORS);
 
         // Parse the filter string into a expression tree Node

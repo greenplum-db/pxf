@@ -52,3 +52,17 @@ vc1|abcde
 c1|c
  
 bin|1
+SELECT s1, s2, n1, d1, dc1, f, bg, b, tn, sml, vc1, c1, bin FROM parquet_view WHERE c1 = 'a  ' ORDER BY s1;
+s1|row25_char_needs_padding
+s2|s_17
+n1|11
+d1|37
+dc1|0.123456789012345679
+f|7.7
+bg|23456789
+b|f
+tn|11
+sml|1100
+vc1|abcde
+c1|a  
+bin|1

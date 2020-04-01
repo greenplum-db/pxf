@@ -1,7 +1,7 @@
 package org.greenplum.pxf.api.filter;
 
 /**
- * OperatorNode node (i.e. AND, OR, =)
+ * OperatorNode node (i.e. AND, OR, =, etc.)
  */
 public class OperatorNode extends Node {
 
