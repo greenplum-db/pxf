@@ -106,6 +106,7 @@ public class ParquetResolverTest {
         // schema has changed, set metadata again
         context.setMetadata(schema);
         resolver.initialize(context);
+        context.setTupleDescription(getColumnDescriptorsFromSchema(schema));
 
         Instant timestamp = Instant.parse("2013-07-14T04:00:05Z"); // UTC
         ZonedDateTime localTime = timestamp.atZone(ZoneId.systemDefault());
@@ -170,10 +171,31 @@ public class ParquetResolverTest {
     }
 
     @Test
+    public void testSetFields_RightTrimChar() throws IOException {
+        testSetFields_RightTrimCharHelper("abcd  ", "abc   ", "abc");
+    }
+
+    @Test
+    public void testSetFields_RightTrimCharDontTrimTabChars() throws IOException {
+        testSetFields_RightTrimCharHelper("abcd\t\t", "abc\t\t\t ", "abc\t\t\t");
+    }
+
+    @Test
+    public void testSetFields_RightTrimCharDontTrimNewlineChars() throws IOException {
+        testSetFields_RightTrimCharHelper("abcd\n\n", "abc\n\n\n ", "abc\n\n\n");
+    }
+
+    @Test
+    public void testSetFields_RightTrimCharNoLeftTrim() throws IOException {
+        testSetFields_RightTrimCharHelper("  abcd  ", "  abc   ", "  abc");
+    }
+
+    @Test
     public void testSetFields_Primitive_Nulls() throws IOException {
         schema = getParquetSchemaForPrimitiveTypes(Type.Repetition.OPTIONAL, false);
         // schema has changed, set metadata again
         context.setMetadata(schema);
+        context.setTupleDescription(getColumnDescriptorsFromSchema(schema));
         resolver.initialize(context);
         List<OneField> fields = new ArrayList<>();
         fields.add(new OneField(DataType.TEXT.getOID(), null));
@@ -577,5 +599,41 @@ public class ParquetResolverTest {
             }
         }
         return new MessageType(originalSchema.getName(), projectedFields);
+    }
+
+    private void testSetFields_RightTrimCharHelper(String varchar, String inputChar, String expectedChar) throws IOException {
+        List<Type> typeFields = new ArrayList<>();
+        typeFields.add(new PrimitiveType(Type.Repetition.OPTIONAL, PrimitiveTypeName.BINARY, "vc1", OriginalType.UTF8));
+        typeFields.add(new PrimitiveType(Type.Repetition.OPTIONAL, PrimitiveTypeName.BINARY, "c1", OriginalType.UTF8));
+        schema = new MessageType("hive_schema", typeFields);
+        context.setMetadata(schema);
+
+        List<ColumnDescriptor> columnDescriptors = new ArrayList<>();
+        columnDescriptors.add(new ColumnDescriptor("vc1", DataType.VARCHAR.getOID(), 0, "varchar", null));
+        columnDescriptors.add(new ColumnDescriptor("c1", DataType.BPCHAR.getOID(), 1, "char", null));
+        context.setTupleDescription(columnDescriptors);
+
+        resolver.initialize(context);
+
+        List<OneField> fields = new ArrayList<>();
+        fields.add(new OneField(DataType.TEXT.getOID(), varchar));
+        // the whitespace on the after 'abc   ' needs to be trimmed
+        fields.add(new OneField(DataType.TEXT.getOID(), inputChar));
+
+        OneRow row = resolver.setFields(fields);
+        assertNotNull(row);
+        Object data = row.getData();
+        assertNotNull(data);
+        assertTrue(data instanceof Group);
+        Group group = (Group) data;
+
+        // assert column values
+        assertEquals(varchar, group.getString(0, 0));
+        assertEquals(expectedChar, group.getString(1, 0));
+
+        // assert value repetition count
+        for (int i = 0; i < 2; i++) {
+            assertEquals(1, group.getFieldRepetitionCount(i));
+        }
     }
 }

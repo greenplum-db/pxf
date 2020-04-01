@@ -18,6 +18,7 @@ public class ParquetTest extends BaseFeature {
     private static final String NUMERIC_UNDEFINED_PRECISION_TABLE = "numeric_undefined_precision";
     private static final String PXF_PARQUET_TABLE = "pxf_parquet_primitive_types";
     private static final String PARQUET_WRITE_PRIMITIVES = "parquet_write_primitives";
+    private static final String PARQUET_WRITE_PADDED_CHAR = "parquet_write_padded_char";
     private static final String PARQUET_WRITE_PRIMITIVES_GZIP = "parquet_write_primitives_gzip";
     private static final String PARQUET_WRITE_PRIMITIVES_GZIP_CLASSNAME = "parquet_write_primitives_gzip_classname";
     private static final String PARQUET_WRITE_PRIMITIVES_V2 = "parquet_write_primitives_v2";
@@ -147,6 +148,23 @@ public class ParquetTest extends BaseFeature {
         gpdb.createTableAndVerify(exTable);
 
         runTincTest("pxf.features.parquet.read_subset.runTest");
+    }
+
+    @Test(groups = {"features", "gpdb", "security", "hcfs"})
+    public void parquetWritePaddedChar() throws Exception {
+        
+        /* 1. run the regular test */
+        runWriteScenario("pxf_parquet_write_padded_char", "pxf_parquet_read_padded_char", PARQUET_WRITE_PADDED_CHAR, null);
+
+        /* 2. Insert data with chars that need padding */
+        gpdb.runQuery("INSERT INTO pxf_parquet_write_padded_char VALUES ('row25_char_needs_padding', 's_17', 11, 37, 0.123456789012345679, " +
+                "'2013-07-23 21:00:05', 7.7, 23456789, false, 11, 'abcde', 1100, 'a  ', '1')");
+        gpdb.runQuery("INSERT INTO pxf_parquet_write_padded_char VALUES ('row26_char_with_tab', 's_17', 11, 37, 0.123456789012345679, " +
+                "'2013-07-23 21:00:05', 7.7, 23456789, false, 11, 'abcde', 1100, e'b\\t ', '1')");
+        gpdb.runQuery("INSERT INTO pxf_parquet_write_padded_char VALUES ('row27_char_with_newline', 's_17', 11, 37, 0.123456789012345679, " +
+                "'2013-07-23 21:00:05', 7.7, 23456789, false, 11, 'abcde', 1100, e'c\\n ', '1')");
+
+        runTincTest("pxf.features.parquet.padded_char_pushdown.runTest");
     }
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})

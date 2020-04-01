@@ -35,6 +35,7 @@ import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hdfs.parquet.ParquetTypeConverter;
 
 import java.io.IOException;
@@ -90,7 +91,19 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         validateSchema();
         Group group = groupFactory.newGroup();
         for (int i = 0; i < record.size(); i++) {
-            fillGroup(i, record.get(i), group, schema.getType(i));
+            OneField field = record.get(i);
+            ColumnDescriptor columnDescriptor = context.getTupleDescription().get(i);
+
+            /*
+             * We need to right trim the incoming value from Greenplum. This is
+             * consistent with the behaviour in Hive, where char fields are right
+             * trimmed during write. Note that String and varchar Hive types are
+             * not right trimmed. Hive does not trim tabs or newlines
+             */
+            if (columnDescriptor.getDataType() == DataType.BPCHAR && field.val instanceof String) {
+                field.val = Utilities.rightTrimWhiteSpace((String) field.val);
+            }
+            fillGroup(i, field, group, schema.getType(i));
         }
         return new OneRow(null, group);
     }

@@ -169,6 +169,21 @@ public class UtilitiesTest {
     }
 
     @Test
+    public void testRightTrimWhitespace() {
+        assertNull(Utilities.rightTrimWhiteSpace(null));
+        assertEquals("", Utilities.rightTrimWhiteSpace(""));
+        assertEquals("abc", Utilities.rightTrimWhiteSpace("abc"));
+        assertEquals(" abc", Utilities.rightTrimWhiteSpace(" abc"));
+        assertEquals("abc", Utilities.rightTrimWhiteSpace("abc "));
+        assertEquals("abc", Utilities.rightTrimWhiteSpace("abc      "));
+        assertEquals("", Utilities.rightTrimWhiteSpace("    "));
+        assertEquals("abc \t", Utilities.rightTrimWhiteSpace("abc \t "));
+        assertEquals("abc \t\t", Utilities.rightTrimWhiteSpace("abc \t\t"));
+        assertEquals("abc \n", Utilities.rightTrimWhiteSpace("abc \n "));
+        assertEquals("abc \n", Utilities.rightTrimWhiteSpace("abc \n"));
+    }
+
+    @Test
     public void validDirectoryName() {
         assertTrue(Utilities.isValidDirectoryName("/etc/hadoop/conf"));
         assertTrue(Utilities.isValidDirectoryName("foo"));

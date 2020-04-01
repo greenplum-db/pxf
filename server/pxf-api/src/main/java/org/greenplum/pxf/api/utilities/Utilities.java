@@ -31,11 +31,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
@@ -331,5 +329,32 @@ public class Utilities {
     public static boolean isSecurityEnabled(Configuration configuration) {
         return SecurityUtil.getAuthenticationMethod(configuration) !=
                 UserGroupInformation.AuthenticationMethod.SIMPLE;
+    }
+
+    /**
+     * Right trim whitespace on a string (it does not trim tabs)
+     * <p>
+     *     <ul>
+     *         <li>null returns null</li>
+     *         <li>"abc" returns "abc"</li>
+     *         <li>" abc" returns " abc"</li>
+     *         <li>"abc " returns "abc"</li>
+     *         <li>"    " returns ""</li>
+     *         <li>"abc \t " returns "abc \t"</li>
+     *         <li>"abc \t\t" returns "abc \t\t"</li>
+     *     </ul>
+     * </p>
+     *
+     * @param s the string
+     * @return the right trimmed string
+     */
+    public static String rightTrimWhiteSpace(String s) {
+        if (s == null) return null;
+        int length = s.length();
+        while (length > 0 && s.charAt(length - 1) == ' ') length--;
+
+        if (length == s.length()) return s;
+        if (length == 0) return "";
+        return s.substring(0, length);
     }
 }
