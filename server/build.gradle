@@ -239,6 +239,7 @@ project('pxf-hive') {
         bundleJars "javax.jdo:jdo-api:3.0.1"
         bundleJars "org.codehaus.jackson:jackson-core-asl:1.9.13"
         bundleJars "org.codehaus.jackson:jackson-mapper-asl:1.9.13"
+        bundleJars "org.jodd:jodd-core:3.5.2"
         /*
          * Transitive dependencies for hive-exec-core until here
          * */

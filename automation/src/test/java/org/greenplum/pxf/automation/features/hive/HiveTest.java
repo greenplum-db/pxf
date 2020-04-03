@@ -342,6 +342,25 @@ public class HiveTest extends HiveBaseTest {
     }
 
     /**
+     * Test hive tables stored as parquet with timestamps issue #328
+     *
+     * @throws Exception if test fails to run
+     */
+    @Test(groups = {"hive", "features", "gpdb", "security"})
+    public void hiveStoredAsParquetWithTimestamps() throws Exception {
+
+        HiveTable parquetTimestampTable = new HiveTable(HIVE_PARQUET_TIMESTAMP_TABLE, PARQUET_TIMESTAMP_COLS);
+        parquetTimestampTable.setStoredAs("PARQUET");
+        hive.createTableAndVerify(parquetTimestampTable);
+        hive.runQuery("INSERT INTO TABLE " + parquetTimestampTable.getName() +
+                " VALUES ('2020-04-03 06:50:52.188'), ('2020-04-03 06:55:19.028'), ('2020-04-03 06:55:26.078'), ('2020-04-03 06:55:38.948')");
+
+        createExternalTable(PXF_HIVE_PARQUET_TIMESTAMP_TABLE, PARQUET_TIMESTAMP_COLS, parquetTimestampTable);
+
+        runTincTest("pxf.features.hive.parquet_timestamp.runTest");
+    }
+
+    /**
      * Test predicate pushdown(ppd) functionality on Hive table partitioned by string and integer columns
      *
      * @throws Exception if test fails to run

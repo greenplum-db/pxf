@@ -1,0 +1,10 @@
+-- @description query01 for PXF Hive parquet timestamp
+
+SELECT * FROM pxf_hive_parquet_timestamp ORDER BY tm;
+           tm            
+-------------------------
+ 2020-04-03 06:50:52.188
+ 2020-04-03 06:55:19.028
+ 2020-04-03 06:55:26.078
+ 2020-04-03 06:55:38.948
+(4 rows)

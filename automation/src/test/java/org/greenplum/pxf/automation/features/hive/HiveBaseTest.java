@@ -153,6 +153,10 @@ public class HiveBaseTest extends BaseFeature {
             "n1    INT"
     };
 
+    static final String[] PARQUET_TIMESTAMP_COLS ={
+            "tm    TIMESTAMP"
+    };
+
     static final String HIVE_TYPES_DATA_FILE_NAME = "hive_types.txt";
     static final String HIVE_COLLECTIONS_FILE_NAME = "hive_collections.txt";
     static final String HIVE_DATA_FILE_NAME = "hive_small_data.txt";
@@ -165,6 +169,7 @@ public class HiveBaseTest extends BaseFeature {
     static final String HIVE_ORC_TABLE = "hive_orc_table";
     static final String HIVE_ORC_SNAPPY_TABLE = "hive_orc_snappy";
     static final String HIVE_ORC_ZLIB_TABLE = "hive_orc_zlib";
+    static final String HIVE_PARQUET_TIMESTAMP_TABLE = "hive_parquet_timestamp";
     static final String HIVE_BINARY_TABLE = "hive_binary";
     static final String HIVE_COLLECTIONS_TABLE = "hive_collections_table";
     static final String HIVE_AVRO_TABLE = "hive_avro_table";
@@ -181,6 +186,7 @@ public class HiveBaseTest extends BaseFeature {
     static final String PXF_HIVE_TEXT_TABLE = "pxf_hive_text";
     static final String PXF_HIVE_ORC_TABLE = "pxf_hive_orc_types";
     static final String PXF_HIVE_ORC_ZLIB_TABLE = "pxf_hive_orc_zlib";
+    static final String PXF_HIVE_PARQUET_TIMESTAMP_TABLE = "pxf_hive_parquet_timestamp";
     static final String PXF_HIVE_HETEROGEN_TABLE = "pxf_hive_heterogen";
     static final String GPDB_SMALL_DATA_TABLE = "gpdb_small_data";
     static final String GPDB_HIVE_TYPES_TABLE = "gpdb_hive_types";
