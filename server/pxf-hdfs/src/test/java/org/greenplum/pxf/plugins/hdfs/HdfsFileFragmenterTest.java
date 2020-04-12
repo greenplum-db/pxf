@@ -74,4 +74,37 @@ public class HdfsFileFragmenterTest {
         assertNotNull(fragmentList);
         assertEquals(4, fragmentList.size());
     }
+
+    @Test
+    public void testInvalidInputPath() throws Exception {
+        expectedException.expect(InvalidInputException.class);
+        expectedException.expectMessage("Input Pattern file:/tmp/non-existent-path-on-disk/*.csv matches 0 files");
+
+        RequestContext context = new RequestContext();
+        context.setConfig("default");
+        context.setUser("test-user");
+        context.setProfileScheme("localfile");
+        context.setDataSource("/tmp/non-existent-path-on-disk/*.csv");
+
+        Fragmenter fragmenter = new HdfsFileFragmenter();
+        fragmenter.initialize(context);
+        fragmenter.getFragments();
+    }
+
+    @Test
+    public void testInvalidInputPathIgnored() throws Exception {
+        RequestContext context = new RequestContext();
+        context.setConfig("default");
+        context.setUser("test-user");
+        context.setProfileScheme("localfile");
+        context.addOption("IGNORE_INVALID_INPUT", "true");
+        context.setDataSource("/tmp/non-existent-path-on-disk/*.csv");
+
+        Fragmenter fragmenter = new HdfsFileFragmenter();
+        fragmenter.initialize(context);
+
+        List<Fragment> fragmentList = fragmenter.getFragments();
+        assertNotNull(fragmentList);
+        assertEquals(0, fragmentList.size());
+    }
 }

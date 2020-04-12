@@ -1,6 +1,9 @@
 package org.greenplum.pxf.plugins.hdfs;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapred.InvalidInputException;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.plugins.hdfs.utilities.PxfInputFormat;
 
@@ -29,7 +32,19 @@ public class HdfsFileFragmenter extends HdfsDataFragmenter {
         PxfInputFormat pxfInputFormat = new PxfInputFormat();
         PxfInputFormat.setInputPaths(jobConf, path);
 
-        fragments = Arrays.stream(pxfInputFormat.listStatus(jobConf))
+        FileStatus[] fileStatusArray;
+
+        try {
+            fileStatusArray = pxfInputFormat.listStatus(jobConf);
+        } catch (InvalidInputException e) {
+            if (StringUtils.equalsIgnoreCase("true", context.getOption("IGNORE_INVALID_INPUT"))) {
+                LOG.debug("Ignoring InvalidInputException", e);
+                return fragments;
+            }
+            throw e;
+        }
+
+        fragments = Arrays.stream(fileStatusArray)
                 .map(fileStatus -> new Fragment(fileStatus.getPath().toUri().toString()))
                 .collect(Collectors.toList());
         LOG.debug("Total number of fragments = {}", fragments.size());
