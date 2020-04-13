@@ -46,6 +46,8 @@ import java.util.List;
  */
 public class HdfsDataFragmenter extends BaseFragmenter {
 
+    protected static final String IGNORE_MISSING_PATH_OPTION = "IGNORE_MISSING_PATH";
+
     protected JobConf jobConf;
     protected HcfsType hcfsType;
 
@@ -70,7 +72,7 @@ public class HdfsDataFragmenter extends BaseFragmenter {
         try {
             splits = getSplits(path);
         } catch (InvalidInputException e) {
-            if (StringUtils.equalsIgnoreCase("true", context.getOption("IGNORE_INVALID_INPUT"))) {
+            if (StringUtils.equalsIgnoreCase("true", context.getOption(IGNORE_MISSING_PATH_OPTION))) {
                 LOG.debug("Ignoring InvalidInputException", e);
                 return fragments;
             }

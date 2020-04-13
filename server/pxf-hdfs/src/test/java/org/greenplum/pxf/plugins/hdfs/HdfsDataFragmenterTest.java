@@ -78,7 +78,7 @@ public class HdfsDataFragmenterTest {
         context.setConfig("default");
         context.setUser("test-user");
         context.setProfileScheme("localfile");
-        context.addOption("IGNORE_INVALID_INPUT", "true");
+        context.addOption("IGNORE_MISSING_PATH", "true");
         context.setDataSource("/tmp/non-existent-path-on-disk/*.csv");
 
         Fragmenter fragmenter = new HdfsDataFragmenter();

@@ -37,7 +37,7 @@ public class HdfsFileFragmenter extends HdfsDataFragmenter {
         try {
             fileStatusArray = pxfInputFormat.listStatus(jobConf);
         } catch (InvalidInputException e) {
-            if (StringUtils.equalsIgnoreCase("true", context.getOption("IGNORE_INVALID_INPUT"))) {
+            if (StringUtils.equalsIgnoreCase("true", context.getOption(IGNORE_MISSING_PATH_OPTION))) {
                 LOG.debug("Ignoring InvalidInputException", e);
                 return fragments;
             }
