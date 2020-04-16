@@ -1,0 +1,7 @@
+*.iml
+.idea/
+regression.diffs
+regression.out
+
+# Generated subdirectories
+/results/
