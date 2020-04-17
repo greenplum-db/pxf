@@ -17,30 +17,34 @@
 #
 # protect the default target for this file from the targets in Makefile.global
 
-default: all
+include ../common.mk
 
-BUILD_PARAMS+= -DdeployPath="$(PXF_HOME)"
+default: stage-notest
+
 TOMCAT_VERSION="7.0.100"
 TOMCAT_DIR="tomcat/build"
 TOMCAT_TAR="apache-tomcat-${TOMCAT_VERSION}.tar.gz"
 TOMCAT_URL="http://archive.apache.org/dist/tomcat/tomcat-7/v${TOMCAT_VERSION}/bin/${TOMCAT_TAR}"
 
+PXF_ROOT_DIR := $(shell cd .. && pwd)
+PXF_VERSION ?= $(shell cat $(PXF_ROOT_DIR)/version)
+
 help:
 	@echo
 	@echo   "Possible targets"
-	@echo	"  - all (clean, compile, test, install, tar, doc)"
+	@echo	"  - all (clean, compile, test, stage)"
 	@echo	"  - clean - cleans the workspace of all produced artifacts"
 	@echo	"  - compile - compiles all PXF modules and builds their JAR files"
 	@echo	"  - test - runs unit tests for all PXF modules"
 	@echo	"  - install - setup PXF along with tomcat in the configured deployPath"
-	@echo	"  - tar - bundle PXF along with tomcat into a single tarball"
+	@echo	"  - stage - build PXF server and stage resulting artifacts along with tomcat for packaging"
 	@echo	"  - doc - creates aggregate javadoc under docs"
 
 all:
-	./gradlew clean tar $(BUILD_PARAMS)
+	./gradlew -Pversion=$(PXF_VERSION) clean stage
 
 compile:
-	./gradlew compileJava
+	./gradlew -Pversion=$(PXF_VERSION) compileJava
 
 GRADLEW_TEST_PARAMS = test
 ifneq "$(TEST)" ""
@@ -58,10 +62,15 @@ test unittest:
 		echo 'Test $(TEST) was not found'; \
 		exit 1; \
 	fi
-	./gradlew ${GRADLEW_TEST_PARAMS}
+	./gradlew -Pversion=$(PXF_VERSION) ${GRADLEW_TEST_PARAMS}
 
-tar: tomcat
-	./gradlew tar ${BUILD_PARAMS}
+.PHONY: stage
+stage: tomcat test
+	./gradlew -Pversion=$(PXF_VERSION) stage
+
+.PHONY: stage-notest
+stage-notest: tomcat
+	./gradlew -Pversion=$(PXF_VERSION) stage -x test
 
 clean:
 	./gradlew clean
@@ -70,7 +79,7 @@ clean:
 distclean maintainer-clean: clean
 
 doc:
-	./gradlew aggregateJavadoc
+	./gradlew -Pversion=$(PXF_VERSION) aggregateJavadoc
 
 .PHONY: tomcat
 tomcat:
@@ -101,9 +110,9 @@ tomcat:
 .PHONY: install
 install: tomcat
 	@if [ -z "$(PXF_HOME)" ]; then \
-		echo "ERROR: PXF_HOME is not set correctly"; exit 2; \
+		echo "ERROR: PXF_HOME is not set"; exit 2; \
 	fi
-	./gradlew install ${BUILD_PARAMS}
+	./gradlew -Pversion=$(PXF_VERSION) install -DdeployPath="$(PXF_HOME)"
 
 .PHONY: version
 version:

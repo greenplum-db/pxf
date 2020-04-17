@@ -1,9 +1,10 @@
+---
 groups:
-  - name: all
-    jobs:
-      - compile_pxf
-      - test_pxf_cli_gpdb5
-      - test_pxf_cli_gpdb6
+- name: all
+  jobs:
+  - compile_pxf
+  - test_pxf_cli_gpdb5
+  - test_pxf_cli_gpdb6
 
 ## ======================================================================
 ## ANCHORS

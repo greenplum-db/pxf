@@ -26,7 +26,9 @@
 #include "pxfuriparser.h"
 
 #include "lib/stringinfo.h"
+#if PG_VERSION_NUM >= 90400
 #include "utils/rel.h"
+#endif
 
 /*
  * Context for the Fragmenter
@@ -69,10 +71,10 @@ typedef struct FragmentData
  */
 extern void
 get_fragments(GPHDUri *uri,
-              Relation relation,
-              char *filter_string,
-              ProjectionInfo *proj_info,
-              List *quals);
+			  Relation relation,
+			  char *filter_string,
+			  ProjectionInfo *proj_info,
+			  List *quals);
 
 /*
  * Frees the given fragment

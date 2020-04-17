@@ -26,9 +26,13 @@
 #include "libchurl.h"
 #include "pxfuriparser.h"
 
+#if PG_VERSION_NUM >= 90400
 #include "nodes/execnodes.h"
 #include "nodes/nodeFuncs.h"
 #include "utils/rel.h"
+#else
+#include "optimizer/walkers.h"
+#endif
 
 /*
  * Contains the data necessary to build the HTTP headers required for calling on the pxf service

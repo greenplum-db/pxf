@@ -1,10 +1,10 @@
 
 void
 get_fragments(GPHDUri *uri,
-              Relation relation,
-              char *filter_string,
-              ProjectionInfo *proj_info,
-              List *quals)
+			  Relation relation,
+			  char *filter_string,
+			  ProjectionInfo *proj_info,
+			  List *quals)
 {
 	check_expected(uri);
 	check_expected(relation);
@@ -15,6 +15,26 @@ get_fragments(GPHDUri *uri,
 	optional_assignment(quals);
 	mock();
 }
+
+#if PG_VERSION_NUM < 90400
+void
+call_rest(GPHDUri* hadoop_uri, ClientContext* client_context, char* rest_msg)
+{
+	check_expected(hadoop_uri);
+	check_expected(client_context);
+	check_expected(rest_msg);
+	optional_assignment(hadoop_uri);
+	optional_assignment(client_context);
+	optional_assignment(rest_msg);
+	mock();
+}
+
+static void
+process_request(ClientContext* client_context, char* uri)
+{
+	mock();
+}
+#endif
 
 void
 free_fragment(FragmentData *data)

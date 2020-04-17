@@ -14,11 +14,11 @@ To compile the PXF foreign data wrapper, we need a Greenplum 6+ installation and
 
     export PATH=/usr/local/greenplum-db/bin/:$PATH
 
-    make USE_PGXS=1
+    make
 
 ## Install
 
-    make USE_PGXS=1 install
+    make install
 
 ## Regression
 

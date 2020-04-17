@@ -1,6 +1,6 @@
 #!/bin/bash
 
-GPHOME=/usr/local/greenplum-db-devel
+GPHOME=${GPHOME:=/usr/local/greenplum-db-devel}
 PXF_HOME=${GPHOME}/pxf
 MDD_VALUE=/data/gpdata/master/gpseg-1
 PXF_COMMON_SRC_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
@@ -11,13 +11,42 @@ GOOGLE_PROJECT_ID=${GOOGLE_PROJECT_ID:-data-gpdb-ud}
 # on purpose do not call this PXF_CONF so that it is not set during pxf operations
 PXF_CONF_DIR=~gpadmin/pxf
 
-JAVA_HOME=$(find /usr/lib/jvm -name 'java-1.8.0-openjdk*' | head -1)
+if [[ -f ~/.pxfrc ]]; then
+	source <(grep JAVA_HOME ~/.pxfrc)
+	echo "JAVA_HOME found in ${HOME}/.pxfrc, set to ${JAVA_HOME}..."
+else
+	JAVA_HOME=$(find /usr/lib/jvm -name 'java-1.8.0-openjdk*' | head -1)
+fi
 
 if [[ -d gpdb_src/gpAux/extensions/pxf ]]; then
 	PXF_EXTENSIONS_DIR=gpdb_src/gpAux/extensions/pxf
 else
 	PXF_EXTENSIONS_DIR=gpdb_src/gpcontrib/pxf
 fi
+
+function inflate_dependencies() {
+	if [[ ! -f pxf-build-dependencies/pxf-build-dependencies.tar.gz ]]; then
+		return
+	fi
+	tar -xzf pxf-build-dependencies/pxf-build-dependencies.tar.gz -C ~gpadmin
+	ln -s ~gpadmin/.{tomcat,go-dep-cached-sources,m2,gradle} ~root
+	chown -R gpadmin:gpadmin ~gpadmin
+}
+
+function inflate_singlecluster() {
+	local singlecluster=$(find singlecluster -name 'singlecluster*.tar.gz')
+	if [[ ! -f ${singlecluster} ]]; then
+		echo "Didn't find ${PWD}/singlecluster directory... skipping tarball inflation..."
+		return
+	fi
+	tar zxf "${singlecluster}" -C /
+	mv /singlecluster-* /singlecluster
+	chmod a+w /singlecluster
+	mkdir -p /etc/hadoop/conf /etc/hive/conf /etc/hbase/conf
+	ln -s /singlecluster/hadoop/etc/hadoop/*-site.xml /etc/hadoop/conf
+	ln -s /singlecluster/hive/conf/hive-site.xml /etc/hive/conf
+	ln -s /singlecluster/hbase/conf/hbase-site.xml /etc/hbase/conf
+}
 
 function set_env() {
 	export TERM=xterm-256color
@@ -95,6 +124,63 @@ function install_gpdb_binary() {
 	echo "$export_pythonpath" >> "${PXF_COMMON_SRC_DIR}/../../automation/tinc/main/tinc_env.sh"
 }
 
+function install_gpdb_package() {
+	local gphome python_dir python_version=2.7 export_pythonpath='export PYTHONPATH=$PYTHONPATH' pkg_file version
+	gpdb_package=${PWD}/${GPDB_PKG_DIR:-gpdb_package}
+
+	if command -v rpm; then
+		# install GPDB RPM
+		pkg_file=$(find "${gpdb_package}" -name 'greenplum-db-*x86_64.rpm')
+		if [[ -z ${pkg_file} ]]; then
+			echo "Couldn't find RPM file in ${gpdb_package}. Skipping install..."
+			return 1
+		fi
+		echo "Installing ${pkg_file}..."
+		rpm --quiet -ivh "${pkg_file}" >/dev/null
+
+		# We can't use service sshd restart as service is not installed on CentOS 7.
+		/usr/sbin/sshd &
+		# CentOS 6 uses python 2.6
+		if grep 'CentOS release 6' /etc/centos-release; then
+			python_version=2.6
+		fi
+		python_dir=python${python_version}/site-packages
+		export_pythonpath+=:/usr/lib/${python_dir}:/usr/lib64/${python_dir}
+	elif command -v apt; then
+		# install GPDB DEB, apt wants an absolute path
+		pkg_file=$(find "${gpdb_package}" -name 'greenplum-db-*-ubuntu18.04-amd64.deb')
+		if [[ -z ${pkg_file} ]]; then
+			echo "Couldn't find DEB file in ${gpdb_package}. Skipping install..."
+			return 1
+		fi
+		echo "Installing ${pkg_file}..."
+		apt install -qq "${pkg_file}" >/dev/null
+
+		# Adjust GPHOME if the binary expects it to be /usr/local/gpdb
+		#gphome=$(grep ^GPHOME= /usr/local/greenplum-db-devel/greenplum_path.sh | cut -d= -f2)
+		#if [[ $gphome == /usr/local/gpdb ]]; then
+		#	mv /usr/local/greenplum-db-devel /usr/local/gpdb
+		#	GPHOME=/usr/local/gpdb
+		#	PXF_HOME=${GPHOME}/pxf
+		#fi
+		service ssh start
+		python_dir=python${python_version}/dist-packages
+		export_pythonpath+=:/usr/local/lib/$python_dir
+	else
+		printf "Unsupported operating system '%s'. Exiting...\n" "$(cat /etc/*os-release | head -1)"
+		exit 1
+	fi
+
+	echo "$export_pythonpath" >> "${PXF_COMMON_SRC_DIR}/../../automation/tinc/main/tinc_env.sh"
+
+	# create symlink to allow pgregress to run (hardcoded to look for /usr/local/greenplum-db-devel/psql)
+	rm -rf /usr/local/greenplum-db-devel
+	# get version from the package file name
+	: "${pkg_file#*greenplum-db-}"
+	version=${_%%-*}
+	ln -sf "/usr/local/greenplum-db-${version}" /usr/local/greenplum-db-devel
+}
+
 function remote_access_to_gpdb() {
 	# Copy cluster keys to root user
 	passwd -u root
@@ -132,7 +218,11 @@ function add_remote_user_access_for_gpdb() {
 	# load local cluster configuration
 	echo "Adding access entry for ${username} to pg_hba.conf and restarting GPDB for change to take effect"
 	su gpadmin -c "
-		source gpdb_src/gpAux/gpdemo/gpdemo-env.sh
+		if [[ -f gpdb_src/gpAux/gpdemo/gpdemo-env.sh ]]; then
+		    source gpdb_src/gpAux/gpdemo/gpdemo-env.sh
+		else
+		    export MASTER_DATA_DIRECTORY=~gpadmin/data/master/gpseg-1
+		fi
 		echo 'local    all     ${username}     trust' >> \${MASTER_DATA_DIRECTORY}/pg_hba.conf
 		source ${GPHOME}/greenplum_path.sh
 		gpstop -u
@@ -193,6 +283,12 @@ function install_pxf_server() {
 		fi
 	fi
 	chown -R gpadmin:gpadmin "${PXF_HOME}"
+}
+
+function install_pxf_tarball() {
+    tar -xzf pxf_tarball/pxf-*.tar.gz -C /tmp
+    /tmp/pxf*/install_component
+    chown -R gpadmin:gpadmin "${PXF_HOME}"
 }
 
 function setup_impersonation() {
@@ -312,7 +408,7 @@ function start_hadoop_services() {
 
 function init_and_configure_pxf_server() {
 	echo 'Ensure pxf version can be run before pxf init'
-	su gpadmin -c "${PXF_HOME}/bin/pxf version | grep -E '^PXF version [0-9]+.[0-9]+.[0-9]+$'" || exit 1
+	su gpadmin -c "${PXF_HOME}/bin/pxf version | grep -E '^PXF version [0-9]+.[0-9]+.[0-9]+'" || exit 1
 
 	echo 'Initializing PXF service'
 	# requires a login shell to source startup scripts (JAVA_HOME)

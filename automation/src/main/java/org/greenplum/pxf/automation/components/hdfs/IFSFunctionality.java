@@ -197,4 +197,6 @@ public interface IFSFunctionality extends SystemObject {
     public void writeProtocolBufferFile(String filePath,
                                         com.google.protobuf.GeneratedMessage generatedMessages)
             throws Exception;
+
+    public boolean doesFileExist(String pathToFile) throws Exception;
 }

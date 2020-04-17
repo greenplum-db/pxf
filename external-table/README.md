@@ -19,14 +19,6 @@ make
 ```
 
 The build will produce the pxf client shared library named `pxf.so`.
-
-### Run unit tests
-
-This will run the unit tests located in the `test` directory
-
-```
-make unittest-check
-```
  
 ### Install the PXF extension
 ```

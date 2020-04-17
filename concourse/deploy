@@ -5,6 +5,7 @@ import datetime
 import os
 import os.path
 import sys
+import subprocess, re
 
 from jinja2 import Environment, FileSystemLoader
 from shutil import copyfile
@@ -44,7 +45,9 @@ def create_pipeline():
         'acceptance': ARGS.acceptance,
         'gpdb_type': ARGS.gpdb_branch,
         'gpdb_branch': ARGS.actual_gpdb_branch,
-        'deploy_env': ARGS.deploy_env
+        'deploy_env': ARGS.deploy_env,
+        'num_gpdb5_versions': ARGS.num_gpdb5_versions,
+        'num_gpdb6_versions': ARGS.num_gpdb6_versions
     }
 
     pipeline_yml = render_template(ARGS.template_filename, context)
@@ -65,7 +68,7 @@ def how_to_use_generated_pipeline_message():
     m += '  Template file ............ : %s\n' % ARGS.template_filename
     m += '======================================================================\n\n'
 
-    cmd = 'fly -t ' + ARGS.TARGET + ' set-pipeline \\\n'
+    cmd = '/usr/local/bin/fly -t ' + ARGS.TARGET + ' set-pipeline --check-creds \\\n'
     cmd += '    -c ' + ARGS.output_filepath + ' \\\n'
     cmd += '    -l ~/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \\\n'
     cmd += '    -l ~/workspace/pxf/concourse/settings/pxf-multinode-params.yml \\\n'
@@ -86,6 +89,10 @@ def how_to_use_generated_pipeline_message():
             cmd += '    -v gcs-bucket-resources-prod=pivotal-gpdb-concourse-resources-prod\\\n'
 
     cmd += '    -v folder-prefix=' + ARGS.PREFIX + ' -v test-env=' + ARGS.TEST_ENV + ' \\\n'
+    if ARGS.pipeline_type == 'pivnet':
+            cmd += '    -l ~/workspace/gp-continuous-integration/secrets/pxf-pivnet-secrets.yml \\\n'
+            cmd += '    -v pxf-git-branch=' + ARGS.feature + ' \\\n'
+
     if ARGS.pipeline_type == 'pxf' and not ARGS.compile_gpdb:
         cmd += '    -v icw_green_bucket=' + ARGS.ICW_GREEN_BUCKET + ' \\\n'
         if ARGS.gpdb_branch != '5X_STABLE':
@@ -103,6 +110,10 @@ def how_to_use_generated_pipeline_message():
 
     return m, cmd.replace('\\\n', '').split()
 
+
+def get_current_branch():
+    my_list = subprocess.check_output("git branch --list", shell=True).split("\n")
+    return list(filter(lambda x: re.match("^\* ", x) != None,  my_list))[0][2:]
 
 def build_parser(output_filename):
     pxf_parser = PxfParser(
@@ -122,8 +133,22 @@ def build_parser(output_filename):
     pxf_parser.add_argument('feature',
                             nargs="?",
                             action='store',
-                            default="master",
+                            default = get_current_branch(),
                             help='PXF Branch')
+
+    pxf_parser.add_argument('--num_gpdb5_versions',
+                            type = int,
+                            action = 'store',
+                            dest = 'num_gpdb5_versions',
+                            default = 10,
+                            help = 'number of GPDB 5 versions to fetch/test against')
+
+    pxf_parser.add_argument('--num_gpdb6_versions',
+                            type = int,
+                            action = 'store',
+                            dest = 'num_gpdb6_versions',
+                            default = 9,
+                            help = 'number of GPDB 6 versions to fetch/test against')
 
     # When you compile your own GPDB branch
     pxf_parser.add_argument('-b', '--branch',
@@ -146,9 +171,9 @@ def build_parser(output_filename):
     pxf_parser.add_argument('-p', '--pipeline_type',
                             action='store',
                             dest='pipeline_type',
-                            choices=['pxf', 'release'],
+                            choices=['pxf', 'release', 'pivnet'],
                             default='pxf',
-                            help='Pipeline type ("pxf" or "release")')
+                            help='Pipeline type ("pxf", "pivnet", or "release")')
 
     pxf_parser.add_argument('-c', '--compile_gpdb',
                             action='store_true',

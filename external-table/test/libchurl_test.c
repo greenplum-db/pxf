@@ -3,8 +3,10 @@
 #include <setjmp.h>
 #include "cmockery.h"
 
+#if PG_VERSION_NUM >= 90400
 #include "postgres.h"
 #include "utils/memutils.h"
+#endif
 
 /* Define UNIT_TESTING so that the extension can skip declaring PG_MODULE_MAGIC */
 #define UNIT_TESTING
@@ -129,6 +131,9 @@ test_churl_init_upload(void **state)
 	assert_true(context->upload_buffer != NULL);
 	assert_true(context->curl_handle != NULL);
 	assert_true(context->multi_handle != NULL);
+#if PG_VERSION_NUM < 90400
+	assert_true(context->last_http_reponse == NULL);
+#endif
 	assert_true(context->curl_still_running == 0);
 
 	/* tear down */
@@ -172,6 +177,9 @@ test_churl_init_download(void **state)
 	assert_true(context->upload_buffer != NULL);
 	assert_true(context->curl_handle != NULL);
 	assert_true(context->multi_handle != NULL);
+#if PG_VERSION_NUM < 90400
+	assert_true(context->last_http_reponse == NULL);
+#endif
 
 	/* tear down */
 	pfree(mock_curl_handle);
@@ -182,9 +190,14 @@ test_churl_init_download(void **state)
 
 /*  wrapper function to enable sideeffect testing with multiple parameters */
 static void
+#if PG_VERSION_NUM >= 90400
 write_callback_wrapper(void *ptr)
 {
 	churl_context * user_context = (churl_context *) ptr;
+#else
+write_callback_wrapper(churl_context * user_context)
+{
+#endif
 	write_callback(read_string, sizeof(char), strlen(read_string) + 1, user_context);
 }
 

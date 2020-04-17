@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+
+INSTALL_COMPONENT_SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+PXF_VERSION=$(<"${INSTALL_COMPONENT_SCRIPT_DIR}/pxf/version")
+
+function show_help() {
+    echo "This script installs PXF Greenplum Extension and PXF Server"
+    echo "to install the PXF Extension :"
+    echo "  set GPHOME environment variable to the installation directory of Greenplum Database"
+    echo "to install the PXF Server :"
+    echo "  either set PXF_HOME environment variable to the target PXF Server installation directory"
+    echo "  or     set GPHOME   environment variable to have PXF Server installed into \${GPHOME}/pxf"
+    echo "current values:"
+    echo "  GPHOME   = ${GPHOME:-<unset>}"
+    echo "  PXF_HOME = ${PXF_HOME:-<unset>}"
+}
+
+function check_status() {
+    if [ $1 -ne 0 ]; then
+        echo "Error: Installation failed"
+        exit $1
+    fi
+}
+
+function check_gphome() {
+    if [[ -z "${GPHOME}" ]]; then
+        if [[ -z "${PXF_HOME}" ]]; then
+            echo "Error: environment variables GPHOME and PXF_HOME are not set"
+            exit 1
+        fi
+    else
+        if [[ ! -f ${GPHOME}/greenplum_path.sh ]]; then
+            echo "Error: environment variable GPHOME (${GPHOME}) must be set to a valid Greenplum installation"
+            exit 1
+        fi
+        if [[ -z "${PXF_HOME}" ]]; then
+            PXF_HOME="${GPHOME}/pxf"
+        fi
+    fi
+}
+
+function remove_old_component() {
+    if [[ ! -z "${PXF_HOME}" && -d ${PXF_HOME} ]]; then
+        if [[ -f ${PXF_HOME}/version ]]; then
+            OLD_PXF_VERSION="version $(<"${PXF_HOME}/version") "
+        fi
+
+        echo "Removing existing PXF ${OLD_PXF_VERSION}from ${PXF_HOME} ..."
+        #TODO check PXF is stopped
+        rm -rf ${PXF_HOME}
+        check_status $?
+    else
+        echo "No existing PXF installation found"
+    fi
+}
+
+function install_new_component() {
+    echo "Installing PXF version ${PXF_VERSION} ..."
+
+    if [[ ! -z "${GPHOME}" ]]; then
+        echo "... installing PXF Greenplum Extension into ${GPHOME} ..."
+        cp -av ${INSTALL_COMPONENT_SCRIPT_DIR}/{lib,share} ${GPHOME}
+        check_status $?
+    else
+        echo "... skipping PXF Greenplum Extension as GPHOME environment variable is not set ..."
+    fi
+
+    if [[ ! -z "${PXF_HOME}" ]]; then
+        echo "... installing PXF Server into ${PXF_HOME} ..."
+        cp -av ${INSTALL_COMPONENT_SCRIPT_DIR}/pxf ${PXF_HOME}
+        check_status $?
+    fi
+
+    echo "Successfully installed PXF version ${PXF_VERSION}"
+}
+
+if [[ $1 == "--help" ]]; then
+    show_help
+    exit 0
+fi
+
+check_gphome
+remove_old_component
+install_new_component
