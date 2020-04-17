@@ -20,6 +20,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 
+import static java.lang.Thread.sleep;
+
 /**
  * Collection of Test cases for PXF ability to write SequenceFile.
  */
@@ -163,6 +165,10 @@ public class HdfsWritableSequenceTest extends BaseWritableFeature {
                 gpdb.createTableAndVerify(readableExTable);
 
                 gpdb.copyFromFile(writableExTable, path, null, false);
+
+                // for HCFS on Cloud, wait a bit for async write in previous steps to finish
+                sleep(10000);
+
                 Assert.assertNotEquals(hdfs.listSize(hdfsDir), 0);
 
                 runTincTest("pxf.features.hdfs.readable.sequence.custom_writable.runTest");

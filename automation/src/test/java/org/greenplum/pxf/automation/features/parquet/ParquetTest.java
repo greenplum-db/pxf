@@ -8,6 +8,9 @@ import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
 import org.testng.annotations.Test;
 
 import java.io.File;
+import java.util.List;
+
+import static java.lang.Thread.sleep;
 
 public class ParquetTest extends BaseFeature {
 
@@ -164,6 +167,9 @@ public class ParquetTest extends BaseFeature {
         gpdb.runQuery("INSERT INTO pxf_parquet_write_padded_char VALUES ('row27_char_with_newline', 's_17', 11, 37, 0.123456789012345679, " +
                 "'2013-07-23 21:00:05', 7.7, 23456789, false, 11, 'abcde', 1100, e'c\\n ', '1')");
 
+        // for HCFS on Cloud, wait a bit for async write in previous steps to finish
+        sleep(10000);
+
         runTincTest("pxf.features.parquet.padded_char_pushdown.runTest");
     }
 
@@ -298,6 +304,16 @@ public class ParquetTest extends BaseFeature {
         gpdb.runQuery("INSERT INTO " + exTable.getName() + " SELECT s1, s2, n1, d1, dc1, tm, " +
                 "f, bg, b, tn, vc1, sml, c1, bin FROM " + PXF_PARQUET_TABLE);
 
+        // for HCFS on Cloud, wait a bit for async write in previous steps to finish
+        sleep(10000);
+        List<String> files = hdfs.list(hdfsPath + filename);
+        for (String file : files) {
+            // make sure the file is available, saw flakes on Cloud that listed files were not available
+            int attempts = 0;
+            while (!hdfs.doesFileExist(file) && attempts++ < 20) {
+                sleep(1000);
+            }
+        }
         exTable = new ReadableExternalTable(readTableName,
                 PARQUET_TABLE_COLUMNS, hdfsPath + filename, "custom");
         exTable.setHost(pxfHost);

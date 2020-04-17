@@ -22,9 +22,11 @@
 #include <setjmp.h>
 #include "cmockery.h"
 
+#if PG_VERSION_NUM >= 90400
 #include "postgres.h"
 #include "nodes/makefuncs.h"
 #include "utils/memutils.h"
+#endif
 
 /* Define UNIT_TESTING so that the extension can skip declaring PG_MODULE_MAGIC */
 #define UNIT_TESTING
@@ -119,6 +121,9 @@ expect_external_vars()
 static void
 test_build_http_headers(void **state)
 {
+#if PG_VERSION_NUM < 90400
+	const char *whitespace = " \t\n\r";
+#endif
 	char		alignment[3];
 	ExtTableEntry    ext_tbl;
 	struct tupleDesc tuple;
@@ -132,6 +137,7 @@ test_build_http_headers(void **state)
 	option_data2->key   = "key2";
 	option_data2->value = "value2";
 
+#if PG_VERSION_NUM >= 90400
 	List *copyOpts = NIL;
 	copyOpts = lappend(copyOpts, makeDefElem("format", (Node *)makeString("csv")));
 	copyOpts = lappend(copyOpts, makeDefElem("delimiter", (Node *)makeString("|")));
@@ -139,12 +145,17 @@ test_build_http_headers(void **state)
 	copyOpts = lappend(copyOpts, makeDefElem("escape", (Node *)makeString("\"")));
 	copyOpts = lappend(copyOpts, makeDefElem("quote", (Node *)makeString("\"")));
 	copyOpts = lappend(copyOpts, makeDefElem("encoding", (Node *)makeString("UTF8")));
+#endif
 
 	gphd_uri->options = list_make2(option_data1, option_data2);
 
 	tuple.natts = 0;
 	ext_tbl.fmtcode = 'c';
+#if PG_VERSION_NUM >= 90400
 	ext_tbl.fmtopts = "delimiter '|' null '' escape '\"' quote '\"'";
+#else
+	ext_tbl.fmtopts = NULL;
+#endif
 	ext_tbl.encoding = 6;
 	input_data->rel->rd_id = 56;
 	input_data->rel->rd_att = &tuple;
@@ -153,6 +164,7 @@ test_build_http_headers(void **state)
 
 	expect_value(GetExtTableEntry, relid, input_data->rel->rd_id);
 	will_return(GetExtTableEntry, &ext_tbl);
+#if PG_VERSION_NUM >= 90400
 	expect_value(parseCopyFormatString, rel, input_data->rel);
 	expect_value(parseCopyFormatString, fmtstr, ext_tbl.fmtopts);
 	expect_value(parseCopyFormatString, fmttype, ext_tbl.fmtcode);
@@ -160,9 +172,21 @@ test_build_http_headers(void **state)
 	expect_value(appendCopyEncodingOption, copyFmtOpts, copyOpts);
 	expect_value(appendCopyEncodingOption, encoding, ext_tbl.encoding);
 	will_return(appendCopyEncodingOption, copyOpts);
+#else
+	expect_value(strtokx2, s, NULL);
+	expect_value(strtokx2, whitespace, whitespace);
+	expect_value(strtokx2, delim, NULL);
+	expect_value(strtokx2, quote, NULL);
+	expect_value(strtokx2, escape, 0);
+	expect_value(strtokx2, e_strings, false);
+	expect_value(strtokx2, del_quotes, true);
+	expect_value(strtokx2, encoding, 0);
+	will_return(strtokx2, NIL);
+#endif
 
 	expect_string(normalize_key_name, key, "format");
 	will_return(normalize_key_name, pstrdup("X-GP-OPTIONS-FORMAT"));
+#if PG_VERSION_NUM >= 90400
 	expect_string(normalize_key_name, key, "delimiter");
 	will_return(normalize_key_name, pstrdup("X-GP-OPTIONS-DELIMITER"));
 	expect_string(normalize_key_name, key, "null");
@@ -171,15 +195,18 @@ test_build_http_headers(void **state)
 	will_return(normalize_key_name, pstrdup("X-GP-OPTIONS-ESCAPE"));
 	expect_string(normalize_key_name, key, "quote");
 	will_return(normalize_key_name, pstrdup("X-GP-OPTIONS-QUOTE"));
+#endif
 	expect_string(normalize_key_name, key, "encoding");
 	will_return(normalize_key_name, pstrdup("X-GP-OPTIONS-ENCODING"));
 
 	expect_headers_append(input_data->headers, "X-GP-FORMAT", TextFormatName);
 	expect_headers_append(input_data->headers, "X-GP-OPTIONS-FORMAT", "csv");
+#if PG_VERSION_NUM >= 90400
 	expect_headers_append(input_data->headers, "X-GP-OPTIONS-DELIMITER", "|");
 	expect_headers_append(input_data->headers, "X-GP-OPTIONS-NULL", "");
 	expect_headers_append(input_data->headers, "X-GP-OPTIONS-ESCAPE", "\"");
 	expect_headers_append(input_data->headers, "X-GP-OPTIONS-QUOTE", "\"");
+#endif
 	expect_headers_append(input_data->headers, "X-GP-OPTIONS-ENCODING", "UTF8");
 	expect_headers_append(input_data->headers, "X-GP-ATTRS", "0");
 

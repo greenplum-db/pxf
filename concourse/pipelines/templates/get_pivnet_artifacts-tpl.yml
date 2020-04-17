@@ -1,0 +1,185 @@
+---
+{% set max_concurrent_pivnet_jobs = 3 %}
+resource_types:
+- name: gcs
+  type: docker-image
+  source:
+    repository: frodenas/gcs-resource
+
+resources:
+
+- name: twice-a-day
+  type: time
+  icon: clock-outline
+  source:
+    interval: 12h
+
+- name: pxf_src
+  type: git
+  icon: git
+  source:
+    branch: {{pxf-git-branch}}
+    uri: {{pxf-git-remote}}
+    private_key: ((ccp-git-key))
+
+- name: ubuntu18
+  type: docker-image
+  icon: docker
+  source:
+    repository: pivotaldata/gpdb-dev
+    tag: ubuntu18
+
+- name: pivnet_cli
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: data-gpdb-ud-pivnet-artifacts
+    json_key: ((data-gpdb-ud-google-json-key))
+    versioned_file: pivotal-cf/pivnet-cli/pivnet
+
+{% for i in range(num_gpdb5_versions) %}
+- name: gpdb5_rhel6_rpm_latest-[[i]]
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: data-gpdb-ud-pivnet-artifacts
+    json_key: ((data-gpdb-ud-google-json-key))
+    regexp: latest-[[i]]_gpdb5/greenplum-db-(.*)-rhel6-x86_64.rpm
+
+- name: gpdb5_rhel7_rpm_latest-[[i]]
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: data-gpdb-ud-pivnet-artifacts
+    json_key: ((data-gpdb-ud-google-json-key))
+    regexp: latest-[[i]]_gpdb5/greenplum-db-(.*)-rhel7-x86_64.rpm
+
+{% endfor %}
+{% for i in range(num_gpdb6_versions) %}
+- name: gpdb6_rhel7_rpm_latest-[[i]]
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: data-gpdb-ud-pivnet-artifacts
+    json_key: ((data-gpdb-ud-google-json-key))
+    regexp: latest-[[i]]_gpdb6/greenplum-db-(.*)-rhel7-x86_64.rpm
+
+- name: gpdb6_ubuntu18_deb_latest-[[i]]
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: data-gpdb-ud-pivnet-artifacts
+    json_key: ((data-gpdb-ud-google-json-key))
+    regexp: latest-[[i]]_gpdb6/greenplum-db-(.*)-ubuntu18.04-amd64.deb
+
+{% endfor %}
+jobs:
+- name: Get Greenplum Product Files
+  plan:
+  - in_parallel:
+    - get: twice-a-day
+      trigger: true
+    - get: pxf_src
+    - get: ubuntu18
+    - get: pivnet_cli
+{% for i in range(num_gpdb5_versions) %}
+    - get: gpdb5_rhel6_rpm_latest-[[i]]
+    - get: gpdb5_rhel7_rpm_latest-[[i]]
+{% endfor %}
+{% for i in range(num_gpdb6_versions) %}
+    - get: gpdb6_rhel7_rpm_latest-[[i]]
+    - get: gpdb6_ubuntu18_deb_latest-[[i]]
+{% endfor %}
+  - in_parallel:
+      limit: [[max_concurrent_pivnet_jobs]]
+      fail_fast: true
+      steps:
+{% for i in range(num_gpdb5_versions) %}
+      - task: Get Greenplum Product Files GP5 Latest - [[i]]
+        attempts: 3
+        # this task will fail on centos6
+        image: ubuntu18
+        config:
+          platform: linux
+          inputs:
+            - name: pxf_src
+            - name: pivnet_cli
+            - name: gpdb5_rhel6_rpm_latest-[[i]]
+            - name: gpdb5_rhel7_rpm_latest-[[i]]
+            {% if i > 0 %}
+            # save a download from pivnet if not fetching latest
+            - name: gpdb5_rhel6_rpm_latest-[[i - 1]]
+            - name: gpdb5_rhel7_rpm_latest-[[i - 1]]
+            {% endif %}
+          outputs:
+            {% if i == 0 %}
+            {# only update the cli once #}
+            - name: pivnet_cli
+            {% endif %}
+            - name: gpdb5_rhel6_rpm_latest-[[i]]
+            - name: gpdb5_rhel7_rpm_latest-[[i]]
+          params:
+            GPDB_VERSION: 5
+            LIST_OF_DIRS: gpdb5_rhel6_rpm_latest-[[i]],gpdb5_rhel7_rpm_latest-[[i]]
+            LIST_OF_PRODUCTS: greenplum-db-GPDB_VERSION-rhel6-x86_64.rpm,greenplum-db-GPDB_VERSION-rhel7-x86_64.rpm
+            PIVNET_API_TOKEN: {{pivnet-uaa-refresh-token}}
+            PIVNET_CLI_DIR: pivnet_cli
+            PRODUCT_SLUG: pivotal-gpdb
+            VERSIONS_BEFORE_LATEST: [[i]]
+          run:
+            path: pxf_src/concourse/scripts/get_product_files.bash
+{% endfor %}
+{% for i in range(num_gpdb6_versions) %}
+      - task: Get Greenplum Product Files GP6 Latest - [[i]]
+        attempts: 3
+        # this task will fail on centos6
+        image: ubuntu18
+        config:
+          platform: linux
+          inputs:
+            - name: pxf_src
+            - name: pivnet_cli
+            - name: gpdb6_rhel7_rpm_latest-[[i]]
+            - name: gpdb6_ubuntu18_deb_latest-[[i]]
+            {% if i > 0 %}
+            # save a download from pivnet if not fetching latest
+            - name: gpdb6_rhel7_rpm_latest-[[i - 1]]
+            - name: gpdb6_ubuntu18_deb_latest-[[i - 1]]
+            {% endif %}
+          outputs:
+            - name: gpdb6_rhel7_rpm_latest-[[i]]
+            - name: gpdb6_ubuntu18_deb_latest-[[i]]
+          params:
+            GPDB_VERSION: 6
+            LIST_OF_DIRS: gpdb6_rhel7_rpm_latest-[[i]],gpdb6_ubuntu18_deb_latest-[[i]]
+            LIST_OF_PRODUCTS: greenplum-db-GPDB_VERSION-rhel6-x86_64.rpm,greenplum-db-GPDB_VERSION-rhel7-x86_64.rpm,greenplum-db-GPDB_VERSION-ubuntu18.04-amd64.deb
+            PIVNET_API_TOKEN: {{pivnet-uaa-refresh-token}}
+            PIVNET_CLI_DIR: pivnet_cli
+            PRODUCT_SLUG: pivotal-gpdb
+            VERSIONS_BEFORE_LATEST: [[i]]
+          run:
+            path: pxf_src/concourse/scripts/get_product_files.bash
+{% endfor %}
+  - in_parallel:
+{% for i in range(num_gpdb5_versions) %}
+    {% if i == 0 %}
+    {# only update the cli once #}
+    - put: pivnet_cli
+      params:
+        file: pivnet_cli/pivnet
+    {% endif %}
+    - put: gpdb5_rhel6_rpm_latest-[[i]]
+      params:
+        file: gpdb5_rhel6_rpm_latest-[[i]]/greenplum-db-5.*-rhel6-x86_64.rpm
+    - put: gpdb5_rhel7_rpm_latest-[[i]]
+      params:
+        file: gpdb5_rhel7_rpm_latest-[[i]]/greenplum-db-5.*-rhel7-x86_64.rpm
+{% endfor %}
+{% for i in range(num_gpdb6_versions) %}
+    - put: gpdb6_rhel7_rpm_latest-[[i]]
+      params:
+        file: gpdb6_rhel7_rpm_latest-[[i]]/greenplum-db-6.*-rhel7-x86_64.rpm
+    - put: gpdb6_ubuntu18_deb_latest-[[i]]
+      params:
+        file: gpdb6_ubuntu18_deb_latest-[[i]]/greenplum-db-6.*-ubuntu18.04-amd64.deb
+{% endfor %}

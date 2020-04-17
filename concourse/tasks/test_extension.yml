@@ -1,0 +1,30 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+
+inputs:
+- name: pxf-protocol-extension_src
+- name: pxf_src
+- name: pxf_tarball
+- name: gpdb_pkg
+
+params:
+  BIN_GPDB_DIR: /tmp
+  GPDB_PKG_DIR:
+  GPDB_PKG_TYPE:
+  GROUP:
+  PGPORT:
+  PXF_PROTOCOL_EXTENSION_SRC: pxf-protocol-extension_src
+
+run:
+  path: sh
+  args:
+  - -exc
+  - |
+    export PATH=pxf-protocol-extension_src/concourse/scripts:$PATH &&
+    extract_pxf.bash &&
+    install_pxf_protocol_extension.bash &&
+    su gpadmin pxf-protocol-extension_src/concourse/scripts/initialize_gpdb.bash &&
+    test_pxf.bash

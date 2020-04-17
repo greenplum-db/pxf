@@ -19,14 +19,14 @@ resources:
     branch: {{gpdb-branch}}
     uri: {{gpdb-git-remote}}
     paths:
-      - gpcontrib/pxf_fdw
-      - src/backend/foreign
-      - src/backend/commands/copy.c
-      - src/include/commands/copy.h
-      - src/include/catalog/pg_foreign_server.h
-      - src/include/catalog/pg_foreign_data_wrapper.h
-      - src/backend/executor/nodeForeignscan.c
-      - src/include/executor/nodeForeignscan.h
+    - gpcontrib/pxf_fdw
+    - src/backend/foreign
+    - src/backend/commands/copy.c
+    - src/include/commands/copy.h
+    - src/include/catalog/pg_foreign_server.h
+    - src/include/catalog/pg_foreign_data_wrapper.h
+    - src/backend/executor/nodeForeignscan.c
+    - src/include/executor/nodeForeignscan.h
 
 - name: pxf_src
   type: git
@@ -108,13 +108,13 @@ jobs:
     image: gpdb-pxf-dev-centos7
     file: pxf_src/concourse/tasks/compile_pxf.yml
   - put: pxf_tarball
-    params: { file: pxf_artifacts/pxf.tar.gz }
+    params: {file: pxf_artifacts/pxf.tar.gz}
 
 - name: compile_gpdb
   plan:
   - in_parallel:
     - get: gpdb_src
-      params: { submodules: all, submodules_recursive: true }
+      params: {submodules: all, submodules_recursive: true}
       trigger: true
     - get: gpdb6-centos7-build
     - get: libquicklz-installer
@@ -133,27 +133,27 @@ jobs:
       TARGET_OS_VERSION: 7
     timeout: 30m
   - put: bin_gpdb
-    params: { file: gpdb_artifacts/bin_gpdb.tar.gz }
+    params: {file: gpdb_artifacts/bin_gpdb.tar.gz}
 
 - name: test_pxf
   plan:
   - in_parallel:
     - get: pxf_src
       passed:
-        - compile_pxf
+      - compile_pxf
       trigger: true
     - get: pxf_tarball
       passed:
-        - compile_pxf
+      - compile_pxf
       trigger: true
     - get: bin_gpdb
       passed:
-        - compile_gpdb
+      - compile_gpdb
       trigger: true
     - get: gpdb_src
       passed:
-        - compile_pxf
-        - compile_gpdb
+      - compile_pxf
+      - compile_gpdb
       trigger: true
     - get: gpdb-pxf-dev-centos7-hdp2-server
   - task: test_pxf
@@ -161,10 +161,10 @@ jobs:
     config:
       platform: linux
       inputs:
-        - name: gpdb_src
-        - name: bin_gpdb
-        - name: pxf_src
-        - name: pxf_tarball
+      - name: gpdb_src
+      - name: bin_gpdb
+      - name: pxf_src
+      - name: pxf_tarball
       params:
         GROUP: fdw_smoke_schedule
         HADOOP_CLIENT: HDP
@@ -181,20 +181,20 @@ jobs:
   - in_parallel:
     - get: pxf_src
       passed:
-        - compile_pxf
+      - compile_pxf
       trigger: true
     - get: pxf_tarball
       passed:
-        - compile_pxf
+      - compile_pxf
       trigger: true
     - get: bin_gpdb
       passed:
-        - compile_gpdb
+      - compile_gpdb
       trigger: true
     - get: gpdb_src
       passed:
-        - compile_pxf
-        - compile_gpdb
+      - compile_pxf
+      - compile_gpdb
       trigger: true
     - get: gpdb-pxf-dev-centos7-hdp2-server
   - task: test_pxf
@@ -203,10 +203,10 @@ jobs:
     config:
       platform: linux
       inputs:
-        - name: gpdb_src
-        - name: bin_gpdb
-        - name: pxf_src
-        - name: pxf_tarball
+      - name: gpdb_src
+      - name: bin_gpdb
+      - name: pxf_src
+      - name: pxf_tarball
       params:
         ACCESS_KEY_ID: {{tf-machine-access-key-id}}
         GROUP: fdw_hcfs_schedule
@@ -226,20 +226,20 @@ jobs:
   - in_parallel:
     - get: pxf_src
       passed:
-        - compile_pxf
+      - compile_pxf
       trigger: true
     - get: pxf_tarball
       passed:
-        - compile_pxf
+      - compile_pxf
       trigger: true
     - get: bin_gpdb
       passed:
-        - compile_gpdb
+      - compile_gpdb
       trigger: true
     - get: gpdb_src
       passed:
-        - compile_pxf
-        - compile_gpdb
+      - compile_pxf
+      - compile_gpdb
       trigger: true
     - get: gpdb-pxf-dev-centos7-hdp2-server
   - task: test_pxf
@@ -248,10 +248,10 @@ jobs:
     config:
       platform: linux
       inputs:
-        - name: gpdb_src
-        - name: bin_gpdb
-        - name: pxf_src
-        - name: pxf_tarball
+      - name: gpdb_src
+      - name: bin_gpdb
+      - name: pxf_src
+      - name: pxf_tarball
       params:
         ACCESS_KEY_ID: {{tf-machine-access-key-id}}
         GOOGLE_CREDENTIALS: {{data-gpdb-ud-google-json-key}}
@@ -271,20 +271,20 @@ jobs:
   - in_parallel:
     - get: pxf_src
       passed:
-        - compile_pxf
+      - compile_pxf
       trigger: true
     - get: pxf_tarball
       passed:
-        - compile_pxf
+      - compile_pxf
       trigger: true
     - get: bin_gpdb
       passed:
-        - compile_gpdb
+      - compile_gpdb
       trigger: true
     - get: gpdb_src
       passed:
-        - compile_pxf
-        - compile_gpdb
+      - compile_pxf
+      - compile_gpdb
       trigger: true
     - get: gpdb-pxf-dev-centos7-hdp2-server
   - task: test_pxf
@@ -293,10 +293,10 @@ jobs:
     config:
       platform: linux
       inputs:
-        - name: gpdb_src
-        - name: bin_gpdb
-        - name: pxf_src
-        - name: pxf_tarball
+      - name: gpdb_src
+      - name: bin_gpdb
+      - name: pxf_src
+      - name: pxf_tarball
       params:
         ACCESS_KEY_ID: {{tf-machine-access-key-id}}
         GROUP: fdw_hcfs_schedule
@@ -317,20 +317,20 @@ jobs:
   - in_parallel:
     - get: pxf_src
       passed:
-        - compile_pxf
+      - compile_pxf
       trigger: true
     - get: pxf_tarball
       passed:
-        - compile_pxf
+      - compile_pxf
       trigger: true
     - get: bin_gpdb
       passed:
-        - compile_gpdb
+      - compile_gpdb
       trigger: true
     - get: gpdb_src
       passed:
-        - compile_pxf
-        - compile_gpdb
+      - compile_pxf
+      - compile_gpdb
       trigger: true
     - get: gpdb-pxf-dev-centos7-hdp2-server
   - task: test_pxf
@@ -339,10 +339,10 @@ jobs:
     config:
       platform: linux
       inputs:
-        - name: gpdb_src
-        - name: bin_gpdb
-        - name: pxf_src
-        - name: pxf_tarball
+      - name: gpdb_src
+      - name: bin_gpdb
+      - name: pxf_src
+      - name: pxf_tarball
       params:
         ADL_ACCOUNT: {{adl-account}}
         ADL_OAUTH2_CLIENT_ID: {{adl-client-id}}
@@ -364,20 +364,20 @@ jobs:
   - in_parallel:
     - get: pxf_src
       passed:
-        - compile_pxf
+      - compile_pxf
       trigger: true
     - get: pxf_tarball
       passed:
-        - compile_pxf
+      - compile_pxf
       trigger: true
     - get: bin_gpdb
       passed:
-        - compile_gpdb
+      - compile_gpdb
       trigger: true
     - get: gpdb_src
       passed:
-        - compile_pxf
-        - compile_gpdb
+      - compile_pxf
+      - compile_gpdb
       trigger: true
     - get: gpdb-pxf-dev-centos7-hdp2-server
   - task: test_pxf

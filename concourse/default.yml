@@ -1,3 +1,4 @@
+---
 # DEFAULT YML FILE #
 
 gpdb-git-remote: https://github.com/greenplum-db/gpdb.git

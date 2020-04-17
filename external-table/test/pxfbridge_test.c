@@ -3,8 +3,10 @@
 #include <setjmp.h>
 #include "cmockery.h"
 
+#if PG_VERSION_NUM >= 90400
 #include "postgres.h"
 #include "utils/memutils.h"
+#endif
 
 /* Define UNIT_TESTING so that the extension can skip declaring PG_MODULE_MAGIC */
 #define UNIT_TESTING

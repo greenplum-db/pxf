@@ -1,0 +1,20 @@
+---
+platform: linux
+
+image_resource:
+  type: registry-image
+
+inputs:
+- name: pxf-build-dependencies
+  optional: true
+- name: pxf_src
+- name: gpdb_package
+
+outputs:
+- name: dist
+
+params:
+  TARGET_OS:
+
+run:
+  path: pxf_src/concourse/scripts/build.bash

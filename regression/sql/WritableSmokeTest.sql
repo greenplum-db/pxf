@@ -1,3 +1,4 @@
+{{ 5X_CREATE_EXTENSION }}
 -- create writable external table
 CREATE WRITABLE EXTERNAL TABLE writable_smoke_test_external_writable_table
 	(name TEXT, num INTEGER, dub DOUBLE PRECISION, longNum BIGINT, bool BOOLEAN)
@@ -7,7 +8,7 @@ CREATE WRITABLE EXTERNAL TABLE writable_smoke_test_external_writable_table
 
 -- write to writable table
 INSERT INTO writable_smoke_test_external_writable_table
-	SELECT format('row_%s',i::varchar(255)),
+	SELECT 'row_' || i::varchar(255),
 		i,
 		i+0.0001,
 		i*100000000000,

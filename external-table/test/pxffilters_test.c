@@ -133,6 +133,57 @@ test__supported_operator_type_op_expr(void **state)
 	}
 }
 
+#if PG_VERSION_NUM < 90400
+void
+test__supported_operator_type_scalar_array_op_expr(void **state)
+{
+	Oid operator_oids[15][2] = {
+			{Int2EqualOperator, PXFOP_IN},
+			{Int4EqualOperator, PXFOP_IN},
+			{Int8EqualOperator, PXFOP_IN},
+			{TextEqualOperator, PXFOP_IN},
+			{Int24EqualOperator, PXFOP_IN},
+			{Int42EqualOperator, PXFOP_IN},
+			{Int84EqualOperator, PXFOP_IN},
+			{Int48EqualOperator, PXFOP_IN},
+			{Int28EqualOperator, PXFOP_IN},
+			{Int82EqualOperator, PXFOP_IN},
+			{DateEqualOperator, PXFOP_IN},
+			{Float8EqualOperator, PXFOP_IN},
+			{1120 , PXFOP_IN},
+			{BPCharEqualOperator, PXFOP_IN},
+			{BooleanEqualOperator, PXFOP_IN},
+	};
+
+	PxfFilterDesc *filter = (PxfFilterDesc*) palloc0(sizeof(PxfFilterDesc));
+
+	int array_size = sizeof(operator_oids) / sizeof(operator_oids[0]);
+	bool result = false;
+	int i = 0;
+
+	/* supported types */
+	for (; i < array_size-1; ++i)
+	{
+		result = supported_operator_type_scalar_array_op_expr(operator_oids[i][0], filter, true);
+		assert_true(result);
+		assert_true(operator_oids[i][1] == filter->op);
+	}
+
+	/* unsupported type */
+	result = supported_operator_type_op_expr(InvalidOid, filter);
+	assert_false(result);
+
+	/* go over pxf_supported_opr_scalar_array_op_expr array */
+	int nargs = sizeof(pxf_supported_opr_scalar_array_op_expr) / sizeof(dbop_pxfop_array_map);
+	assert_int_equal(nargs, 15);
+	for (i = 0; i < nargs; ++i)
+	{
+		assert_true(supported_operator_type_scalar_array_op_expr(pxf_supported_opr_op_expr[i].dbop, filter, pxf_supported_opr_scalar_array_op_expr[i].useOr));
+		assert_true(pxf_supported_opr_scalar_array_op_expr[i].pxfop == filter->op);
+	}
+}
+#endif
+
 /*
  * const_value must be palloc'ed, it will be freed by scalar_const_to_str
  */
@@ -509,7 +560,11 @@ build_null_expression_item(int attnum, Oid attrtype, NullTestType nullType)
 {
 	ExpressionItem *expressionItem = (ExpressionItem*) palloc0(sizeof(ExpressionItem));
 	Var *vararg = build_var(attrtype, attnum);
+#if PG_VERSION_NUM >= 90400
 	NullTest *operationExpression = build_null_expr((Expr *) vararg, nullType);
+#else
+	OpExpr *operationExpression = build_null_expr(vararg, nullType);
+#endif
 
 	expressionItem->node = (Node *) operationExpression;
 	expressionItem->processed = false;
@@ -567,7 +622,11 @@ build_nested_func_expr_operand(List *columnsOids, List *attrsIndices)
 	Var *var = NULL;
 	List* args = NIL;
 	forboth(columnOidLc, columnsOids, attrIndexLc, attrsIndices) {
+#if PG_VERSION_NUM >= 90400
 		var = build_var(lfirst_oid(columnOidLc), lfirst_int(attrIndexLc));
+#else
+		var = build_var(lfirst(columnOidLc), lfirst(attrIndexLc));
+#endif
 		args = lappend(args, var);
 	}
 	FuncExpr* operandImplicitCast = build_func_expr_operand(args, COERCE_IMPLICIT_CAST);
@@ -742,18 +801,18 @@ test__opexpr_to_pxffilter__unsupportedOpNot(void **state)
 static void
 test__pxf_serialize_filter_list__oneFilter(void **state)
 {
-    List* expressionItems = NIL;
+	List* expressionItems = NIL;
 
-    ExpressionItem* filterExpressionItem = build_expression_item(1, TEXTOID, "1984", TEXTOID, TextEqualOperator);
+	ExpressionItem* filterExpressionItem = build_expression_item(1, TEXTOID, "1984", TEXTOID, TextEqualOperator);
 
-    expressionItems = lappend(expressionItems, filterExpressionItem);
+	expressionItems = lappend(expressionItems, filterExpressionItem);
 
-    char* result = pxf_serialize_filter_list(expressionItems);
-    assert_string_equal(result, "a0c25s4d1984o5");
+	char* result = pxf_serialize_filter_list(expressionItems);
+	assert_string_equal(result, "a0c25s4d1984o5");
 
-    pxf_free_expression_items_list(expressionItems);
-    expressionItems = NIL;
-    pfree(result);
+	pxf_free_expression_items_list(expressionItems);
+	expressionItems = NIL;
+	pfree(result);
 
 }
 
@@ -761,46 +820,46 @@ static void
 test__pxf_serialize_fillter_list__nullFilter(void **state)
 {
 
-    List* expressionItems = NIL;
+	List* expressionItems = NIL;
 
-    ExpressionItem* filterExpressionItem = build_null_expression_item(1, TEXTOID, IS_NULL);
+	ExpressionItem* filterExpressionItem = build_null_expression_item(1, TEXTOID, IS_NULL);
 
-    expressionItems = lappend(expressionItems, filterExpressionItem);
+	expressionItems = lappend(expressionItems, filterExpressionItem);
 
-    char* result = pxf_serialize_filter_list(expressionItems);
-    assert_string_equal(result, "a0o8");
+	char* result = pxf_serialize_filter_list(expressionItems);
+	assert_string_equal(result, "a0o8");
 
-    pxf_free_expression_items_list(expressionItems);
-    expressionItems = NIL;
-    pfree(result);
+	pxf_free_expression_items_list(expressionItems);
+	expressionItems = NIL;
+	pfree(result);
 
 }
 
 static void
 test__pxf_serialize_filter_list__manyFilters(void **state)
 {
-    char* result = NULL;
-    List* expressionItems = NIL;
+	char* result = NULL;
+	List* expressionItems = NIL;
 
-    ExpressionItem* expressionItem1 = build_expression_item(1, TEXTOID, "1984", TEXTOID, TextEqualOperator);
-    ExpressionItem* expressionItem2 = build_expression_item(2, TEXTOID, "George Orwell", TEXTOID, TextEqualOperator);
-    ExpressionItem* expressionItem3 = build_expression_item(3, TEXTOID, "Winston", TEXTOID, TextEqualOperator);
-    ExpressionItem* expressionItem4 = build_expression_item(4, TEXTOID, "Eric-%", TEXTOID, 1209);
-    ExpressionItem* expressionItem5 = build_expression_item(5, TEXTOID, "\"Ugly\" string with quotes", TEXTOID, TextEqualOperator);
-    ExpressionItem* expressionItem6 = build_expression_item(6, TEXTOID, "", TEXTOID, TextEqualOperator);
-    ExpressionItem* expressionItem7 = build_null_expression_item(7, TEXTOID, IS_NOT_NULL);
+	ExpressionItem* expressionItem1 = build_expression_item(1, TEXTOID, "1984", TEXTOID, TextEqualOperator);
+	ExpressionItem* expressionItem2 = build_expression_item(2, TEXTOID, "George Orwell", TEXTOID, TextEqualOperator);
+	ExpressionItem* expressionItem3 = build_expression_item(3, TEXTOID, "Winston", TEXTOID, TextEqualOperator);
+	ExpressionItem* expressionItem4 = build_expression_item(4, TEXTOID, "Eric-%", TEXTOID, 1209);
+	ExpressionItem* expressionItem5 = build_expression_item(5, TEXTOID, "\"Ugly\" string with quotes", TEXTOID, TextEqualOperator);
+	ExpressionItem* expressionItem6 = build_expression_item(6, TEXTOID, "", TEXTOID, TextEqualOperator);
+	ExpressionItem* expressionItem7 = build_null_expression_item(7, TEXTOID, IS_NOT_NULL);
 
-    expressionItems = lappend(expressionItems, expressionItem1);
-    expressionItems = lappend(expressionItems, expressionItem2);
-    expressionItems = lappend(expressionItems, expressionItem3);
-    expressionItems = lappend(expressionItems, expressionItem4);
-    expressionItems = lappend(expressionItems, expressionItem5);
+	expressionItems = lappend(expressionItems, expressionItem1);
+	expressionItems = lappend(expressionItems, expressionItem2);
+	expressionItems = lappend(expressionItems, expressionItem3);
+	expressionItems = lappend(expressionItems, expressionItem4);
+	expressionItems = lappend(expressionItems, expressionItem5);
 
-    expressionItems = lappend(expressionItems, expressionItem6);
-    expressionItems = lappend(expressionItems, expressionItem7);
+	expressionItems = lappend(expressionItems, expressionItem6);
+	expressionItems = lappend(expressionItems, expressionItem7);
 
-    result = pxf_serialize_filter_list(expressionItems);
-    assert_string_equal(result, "a0c25s4d1984o5a1c25s13dGeorge Orwello5a2c25s7dWinstono5a3c25s6dEric-%o7a4c25s25d\"Ugly\" string with quoteso5a5c25s0do5a6o9");
+	result = pxf_serialize_filter_list(expressionItems);
+	assert_string_equal(result, "a0c25s4d1984o5a1c25s13dGeorge Orwello5a2c25s7dWinstono5a3c25s6dEric-%o7a4c25s25d\"Ugly\" string with quoteso5a5c25s0do5a6o9");
 	pfree(result);
 
 	int trivialExpressionItems = expressionItems->length;
@@ -855,27 +914,27 @@ test__serializePxfFilterQuals__nullFilter(void **state)
 static void
 test__serializePxfFilterQuals__manyFilters(void **state)
 {
-    char* result = NULL;
-    List* qualifierItems = NIL;
+	char* result = NULL;
+	List* qualifierItems = NIL;
 
-    OpExpr* qualifierItem1 = build_qualifier(1, TEXTOID, "1984", TEXTOID, TextEqualOperator);
-    OpExpr* qualifierItem2 = build_qualifier(2, TEXTOID, "George Orwell", TEXTOID, TextEqualOperator);
-    OpExpr* qualifierItem3 = build_qualifier(3, TEXTOID, "Winston", TEXTOID, TextEqualOperator);
-    OpExpr* qualifierItem4 = build_qualifier(4, TEXTOID, "Eric-%", TEXTOID, 1209);
-    OpExpr* qualifierItem5 = build_qualifier(5, TEXTOID, "\"Ugly\" string with quotes", TEXTOID, TextEqualOperator);
-    OpExpr* qualifierItem6 = build_qualifier(6, TEXTOID, "", TEXTOID, TextEqualOperator);
+	OpExpr* qualifierItem1 = build_qualifier(1, TEXTOID, "1984", TEXTOID, TextEqualOperator);
+	OpExpr* qualifierItem2 = build_qualifier(2, TEXTOID, "George Orwell", TEXTOID, TextEqualOperator);
+	OpExpr* qualifierItem3 = build_qualifier(3, TEXTOID, "Winston", TEXTOID, TextEqualOperator);
+	OpExpr* qualifierItem4 = build_qualifier(4, TEXTOID, "Eric-%", TEXTOID, 1209);
+	OpExpr* qualifierItem5 = build_qualifier(5, TEXTOID, "\"Ugly\" string with quotes", TEXTOID, TextEqualOperator);
+	OpExpr* qualifierItem6 = build_qualifier(6, TEXTOID, "", TEXTOID, TextEqualOperator);
 
-    qualifierItems = lappend(qualifierItems, qualifierItem1);
-    qualifierItems = lappend(qualifierItems, qualifierItem2);
-    qualifierItems = lappend(qualifierItems, qualifierItem3);
-    qualifierItems = lappend(qualifierItems, qualifierItem4);
-    qualifierItems = lappend(qualifierItems, qualifierItem5);
-    qualifierItems = lappend(qualifierItems, qualifierItem6);
+	qualifierItems = lappend(qualifierItems, qualifierItem1);
+	qualifierItems = lappend(qualifierItems, qualifierItem2);
+	qualifierItems = lappend(qualifierItems, qualifierItem3);
+	qualifierItems = lappend(qualifierItems, qualifierItem4);
+	qualifierItems = lappend(qualifierItems, qualifierItem5);
+	qualifierItems = lappend(qualifierItems, qualifierItem6);
 
-    result = serializePxfFilterQuals(qualifierItems);
-    // make sure the result has 5 "l0" at the end that correspond to implicit AND operation implied by planner's tree
-    assert_string_equal(result, "a0c25s4d1984o5a1c25s13dGeorge Orwello5a2c25s7dWinstono5a3c25s6dEric-%o7a4c25s25d\"Ugly\" string with quoteso5a5c25s0do5l0l0l0l0l0");
-    pfree(result);
+	result = serializePxfFilterQuals(qualifierItems);
+	// make sure the result has 5 "l0" at the end that correspond to implicit AND operation implied by planner's tree
+	assert_string_equal(result, "a0c25s4d1984o5a1c25s13dGeorge Orwello5a2c25s7dWinstono5a3c25s6dEric-%o7a4c25s25d\"Ugly\" string with quoteso5a5c25s0do5l0l0l0l0l0");
+	pfree(result);
 }
 
 static void
@@ -905,8 +964,13 @@ test__extractPxfAttributes_supported_function_one_arg(void **state) {
 	int argumentColumnIndex = 6; // index starts from 0
 	bool qualsAreSupported;
 	qualsAreSupported = true;
+#if PG_VERSION_NUM >= 90400
 	List* columnsOids = list_make1_oid(DATEOID);
 	List* attrsIndices = list_make1_int(argumentColumnIndex);
+#else
+	List* columnsOids = list_make1(DATEOID);
+	List* attrsIndices = list_make1(argumentColumnIndex);
+#endif
 
 	// Create operands FuncExpr, Const
 	FuncExpr* leftop = build_nested_func_expr_operand(columnsOids, attrsIndices);

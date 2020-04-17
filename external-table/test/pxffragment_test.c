@@ -3,9 +3,11 @@
 #include <setjmp.h>
 #include "cmockery.h"
 
+#if PG_VERSION_NUM >= 90400
 #include "postgres.h"
 #include "utils/memutils.h"
 #include "cdb/cdbvars.h"
+#endif
 
 /* Define UNIT_TESTING so that the extension can skip declaring PG_MODULE_MAGIC */
 #define UNIT_TESTING
@@ -164,6 +166,28 @@ test_filter_fragments_for_segment(void **state)
 		pfree(expected_message);
 	}
 	PG_END_TRY();
+
+#if PG_VERSION_NUM < 90400
+	/* special case -- invalid transaction id */
+	old_context = CurrentMemoryContext;
+	PG_TRY();
+	{
+		test_list(0, 1, 0, 1, NULL, 0);
+		assert_false("Expected Exception");
+	}
+	PG_CATCH();
+	{
+		MemoryContextSwitchTo(old_context);
+		ErrorData  *edata = CopyErrorData();
+
+		assert_true(edata->elevel == ERROR);
+		char	   *expected_message = pstrdup("Cannot get distributed transaction identifier in filter_fragments_for_segment");
+
+		assert_string_equal(edata->message, expected_message);
+		pfree(expected_message);
+	}
+	PG_END_TRY();
+#endif
 }
 
 static void
@@ -172,10 +196,12 @@ test_list(int segindex, int segtotal, int session_id, int fragtotal, char *expec
 	/* prepare the input list */
 	List	   *list = prepare_fragment_list(fragtotal, segindex, segtotal, session_id);
 
+#if PG_VERSION_NUM >= 90400
 	if (list)
 	{
 		will_return(getgpsegmentCount, segtotal);
 	}
+#endif
 
 	/* filter the list */
 	List	   *filtered = filter_fragments_for_segment(list);
@@ -204,8 +230,15 @@ static List *
 prepare_fragment_list(int fragtotal, int segindex, int segtotal, int session_id)
 {
 	GpIdentity.segindex = segindex;
+#if PG_VERSION_NUM >= 90400
 	gp_session_id = session_id;
 	gp_command_count = 0;
+#else
+	GpIdentity.numsegments = segtotal;
+
+	if (fragtotal > 0)
+		will_return(getDistributedTransactionId, xid);
+#endif
 
 	List	   *result = NIL;
 
@@ -341,6 +374,9 @@ test_call_rest(void **state)
 
 	expect_value(print_http_headers, headers, client_context->http_headers);
 	will_be_called(print_http_headers);
+#if PG_VERSION_NUM < 90400
+	(client_context->http_headers);
+#endif
 
 	StringInfoData expected_url;
 

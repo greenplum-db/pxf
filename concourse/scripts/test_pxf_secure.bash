@@ -10,6 +10,7 @@ CURL_OPTS=(-u admin:admin -H X-Requested-By:ambari)
 
 function run_pxf_smoke_secure() {
 	cat > /home/gpadmin/run_pxf_smoke_secure_test.sh <<-EOF
+		#!/usr/bin/env bash
 		set -exo pipefail
 
 		source '${GPHOME}/greenplum_path.sh'

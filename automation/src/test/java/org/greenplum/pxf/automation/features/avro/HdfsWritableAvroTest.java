@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import static java.lang.Thread.sleep;
 import static org.junit.Assert.assertEquals;
 
 public class HdfsWritableAvroTest extends BaseFeature {
@@ -307,12 +308,20 @@ public class HdfsWritableAvroTest extends BaseFeature {
 
         addJsonNodesToMap(jsonToCompare, resourcePath + compareFile);
 
+        // for HCFS on Cloud, wait a bit for async write in previous steps to finish
+        sleep(10000);
         for (String srcPath : hdfs.list(fullTestPath)) {
             final String fileName = "file_" + cnt++;
             final String filePath = publicStage + fileName;
             filesToDelete.add(new File(filePath + ".avro"));
             filesToDelete.add(new File(publicStage + "." + fileName + ".avro.crc"));
+            // make sure the file is available, saw flakes on Cloud that listed files were not available
+            int attempts = 0;
+            while (!hdfs.doesFileExist(srcPath) && attempts++ < 20) {
+                sleep(1000);
+            }
             hdfs.copyToLocal(srcPath, filePath + ".avro");
+            sleep(250);
             hdfs.writeJsonFileFromAvro("file://" + filePath + ".avro", filePath + ".json");
             addJsonNodesToMap(jsonFromHdfs, filePath + ".json");
             filesToDelete.add(new File(filePath + ".json"));

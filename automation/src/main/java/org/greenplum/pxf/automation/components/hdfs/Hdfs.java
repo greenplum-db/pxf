@@ -377,6 +377,11 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
     }
 
     @Override
+    public boolean doesFileExist(String pathToFile) throws Exception {
+        return fs.exists(new Path(pathToFile));
+    }
+
+    @Override
     public short getReplicationSize() {
         return replicationSize;
     }

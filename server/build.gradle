@@ -325,8 +325,8 @@ project('pxf-s3') {
     }
 }
 
-task bundle(type: Copy, dependsOn: [subprojects.jar, project(':pxf-service').war, subprojects.copyRuntimeDependencies]) {
-    into "build/stage"
+task stage(type: Copy, dependsOn: [subprojects.jar, project(':pxf-service').war, subprojects.copyRuntimeDependencies]) {
+    into "build/stage/pxf"
     subprojects { project ->
         from("${project.name}/build/libs") { into 'lib' }
         from("${project.name}/build/libs-shared") { into 'lib/shared' }
@@ -335,23 +335,16 @@ task bundle(type: Copy, dependsOn: [subprojects.jar, project(':pxf-service').war
     from("tomcat/build/apache-tomcat") { into 'apache-tomcat' }
     from("pxf-service/src/main/resources/pxf-profiles-default.xml") { into 'conf' }
     from("pxf-service/src/scripts/pxf-env-default.sh") { into 'conf' }
+    from("pxf-service/src/scripts/pxf") { into 'bin' }
     from("pxf-service/src/templates") { into 'templates' }
     doLast {
-        new File("${buildDir}/stage/version").text = "${version}\n"
+        new File("${buildDir}/stage/pxf/version").text = "${version}\n"
     }
 }
 
-task install(type: Copy, dependsOn: [bundle]) {
-    from bundle.outputs.files
+task install(type: Copy, dependsOn: [stage]) {
+    from stage.outputs.files
     into System.getProperty('deployPath')
-}
-
-task tar(type: Tar, dependsOn: [bundle]) {
-    baseName = "${project.name}"
-    compression = Compression.GZIP
-    extension = 'tar.gz'
-    destinationDir = file("${buildDir}/dist")
-    from bundle.outputs.files
 }
 
 task version {

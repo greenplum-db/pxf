@@ -1,3 +1,6 @@
+ifndef GPHOME
+$(error GPHOME is not defined)
+endif
 ifndef PXF_CONF
 $(error PXF_CONF is not defined)
 endif
@@ -15,6 +18,9 @@ SUBSTITUTE_COMMAND += --debug
 REGRESS_OPTS += --debug
 endif
 
+# we get this variable for free on 6X, but not on 5X
+pg_regress_installcheck=$(shell find "$$GPHOME" -name pg_regress)
+
 setup_test_dir :
 	mkdir -p /tmp/pxf_automation_data
 
@@ -23,21 +29,43 @@ setup_script_dir :
 
 setup_dirs: setup_test_dir setup_script_dir
 
+# 5X (Postgres 8) has no --load-extension flag (see targets below)
+# substitute.bash handles extension loading and different 5X/6X COPY syntax
 fdw_%_schedule : setup_dirs
-	$(SUBSTITUTE_COMMAND) schedules/$@
-	$(pg_regress_installcheck) $(REGRESS_OPTS) --load-extension=pxf_fdw --schedule=schedules/$@
+	@if $(PG_CONFIG) | grep -q 'VERSION.*PostgreSQL 8'; then \
+		GPDB_5X_STABLE=1 $(SUBSTITUTE_COMMAND) schedules/$@; \
+		$(pg_regress_installcheck) $(REGRESS_OPTS) --schedule=schedules/$@; \
+	else \
+		$(SUBSTITUTE_COMMAND) schedules/$@; \
+		$(pg_regress_installcheck) $(REGRESS_OPTS) --load-extension=pxf_fdw --schedule=schedules/$@; \
+	fi
 
 %_schedule : setup_dirs
-	$(SUBSTITUTE_COMMAND) schedules/$@
-	$(pg_regress_installcheck) $(REGRESS_OPTS) --load-extension=pxf --schedule=schedules/$@
+	@if $(PG_CONFIG) | grep -q 'VERSION.*PostgreSQL 8'; then \
+		GPDB_5X_STABLE=1 $(SUBSTITUTE_COMMAND) schedules/$@; \
+		$(pg_regress_installcheck) $(REGRESS_OPTS) --schedule=schedules/$@; \
+	else \
+		$(SUBSTITUTE_COMMAND) schedules/$@; \
+		$(pg_regress_installcheck) $(REGRESS_OPTS) --load-extension=pxf --schedule=schedules/$@; \
+	fi
 
 FDW_%Test : setup_dirs
-	$(SUBSTITUTE_COMMAND) $@
-	$(pg_regress_installcheck) $(REGRESS_OPTS) --load-extension=pxf_fdw _$@
+	@if $(PG_CONFIG) | grep -q 'VERSION.*PostgreSQL 8'; then \
+		GPDB_5X_STABLE=1 $(SUBSTITUTE_COMMAND) $@; \
+		$(pg_regress_installcheck) $(REGRESS_OPTS) _$@; \
+	else \
+		$(SUBSTITUTE_COMMAND) $@; \
+		$(pg_regress_installcheck) $(REGRESS_OPTS) --load-extension=pxf_fdw _$@; \
+	fi
 
 %Test : setup_dirs
-	$(SUBSTITUTE_COMMAND) $@
-	$(pg_regress_installcheck) $(REGRESS_OPTS) --load-extension=pxf _$@
+	@if $(PG_CONFIG) | grep -q 'VERSION.*PostgreSQL 8'; then \
+		GPDB_5X_STABLE=1 $(SUBSTITUTE_COMMAND) $@; \
+		$(pg_regress_installcheck) $(REGRESS_OPTS) _$@; \
+	else \
+		$(SUBSTITUTE_COMMAND) $@; \
+		$(pg_regress_installcheck) $(REGRESS_OPTS) --load-extension=pxf _$@; \
+	fi
 
 clean :
 	rm -rf /tmp/pxf_automation_data

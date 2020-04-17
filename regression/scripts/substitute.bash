@@ -138,6 +138,17 @@ for testname in "${tests[@]#_}"; do # remove leading underscore from list
 		-e "s|{{[[:space:]]*TEST_LOCATION[[:space:]]*}}|${TEST_LOCATION}|g"
 		-e "s|{{[[:space:]]*FULL_TESTNAME[[:space:]]*}}|${FULL_TESTNAME}|g"
 	)
+	if [[ -n ${GPDB_5X_STABLE} ]]; then
+		SED_ARGS+=(
+			-e "s|{{[[:space:]]*5X_CREATE_EXTENSION[[:space:]]*}}|CREATE EXTENSION PXF;|g"
+			-e "s|{{[[:space:]]*POSTGRES_COPY_CSV[[:space:]]*}}|CSV|g"
+		)
+	else
+		SED_ARGS+=(
+			-e "/{{[[:space:]]*5X_CREATE_EXTENSION[[:space:]]*}}/d"
+			-e "s|{{[[:space:]]*POSTGRES_COPY_CSV[[:space:]]*}}|(FORMAT 'csv')|g"
+		)
+	fi
 	_process_scripts
 	sed "${SED_ARGS[@]}" "sql/${testname}.sql" >"sql/_${testname}.sql"
 	sed "${SED_ARGS[@]}" "expected/${testname}.out" >"expected/_${testname}.out"

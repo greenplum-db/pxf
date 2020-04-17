@@ -1,15 +1,16 @@
+{{ 5X_CREATE_EXTENSION }}
 -- data prep
 {{ GPDB_REMOTE }}\!ssh {{ PGHOST }} mkdir -p {{ TEST_LOCATION }}
 \!mkdir -p {{ TEST_LOCATION }}
 COPY (
-	SELECT format('row_%s',i::varchar(255)),
+	SELECT 'row_' || i::varchar(255),
 		i,
 		i+0.0001,
 		i*100000000000,
 		CASE WHEN (i%2) = 0 THEN 'true' ELSE 'false' END
 		from generate_series(1, 100) s(i)
 	) TO '{{ TEST_LOCATION }}/data.csv'
-	WITH (FORMAT 'csv');
+	WITH {{ POSTGRES_COPY_CSV }};
 {{ GPDB_REMOTE }}-- if GPDB is remote, will need to scp file down from there for beeline
 {{ GPDB_REMOTE }}\!scp {{ PGHOST }}:{{ TEST_LOCATION }}/data.csv {{ TEST_LOCATION }}
 \!{{ HCFS_CMD }} dfs -mkdir -p {{ HCFS_SCHEME }}{{ HCFS_BUCKET }}{{ TEST_LOCATION }}

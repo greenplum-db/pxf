@@ -1,0 +1,87 @@
+#!/usr/bin/env python2
+"""Simple tool for interpolating jinja vars in pipeline configs
+Example usage:
+template-tool --template external-table-tpl.yml --vars gpdb_type=5X_STABLE num_gpdb5_versions=4
+Example with fly command:
+fly -t target -c <(template-tool -t foo-tpl.yml -v foo=bar bar=baz)
+"""
+
+import argparse
+import os.path
+import sys
+import re
+
+from jinja2 import Environment, FileSystemLoader
+
+PIPELINES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'pipelines')
+
+TEMPLATE_ENVIRONMENT = Environment(
+    autoescape=False,
+    loader=FileSystemLoader(os.path.join(PIPELINES_DIR, 'templates')),
+    trim_blocks=True,
+    lstrip_blocks=True,
+    variable_start_string='[[',  # 'default {{ has conflict with pipeline syntax'
+    variable_end_string=']]',
+    extensions=['jinja2.ext.loopcontrols'])
+
+
+class PxfParser(argparse.ArgumentParser):
+    """PXF Parser: adds error method to argparser"""
+    def error(self, message):
+        sys.stderr.write('error: %s\n' % message)
+        # self.print_help(sys.stderr)
+        sys.exit(2)
+
+
+def render_template(template_filename, context):
+    """Render template"""
+    return TEMPLATE_ENVIRONMENT.get_template(template_filename).render(context)
+
+
+def create_pipeline():
+    """create_pipeline: substitues user-defined vars with the jinja rendering"""
+    context = {}
+    for i in ARGS.vars:
+        key = i.split('=')[0]
+        val = i.split('=')[1]
+        context[key] = val
+        match = re.search('^[0-9]+$', val)
+        if match:
+            context[key] = int(val)
+
+    pipeline_yml = render_template(ARGS.template_filename, context)
+
+    header = render_template('header.yml', context)
+    sys.stdout.write(header + '\n')
+    sys.stdout.write(pipeline_yml)
+
+    return True
+
+def build_parser():
+    """build_parser: define some simple options for user"""
+    pxf_parser = PxfParser(
+        description='Generate Concourse Pipeline yaml from template file',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
+    pxf_parser.add_argument('-v', '--vars',
+                            action='store',
+                            nargs='+',
+                            dest='vars',
+                            help='space-separated list of variables to interpolate.' +
+                            'example: --vars var_name1=var_value1 var_name2=var_value2')
+
+    pxf_parser.add_argument('-t', '--template',
+                            action='store',
+                            dest='template_filename',
+                            default="pxf-tpl.yml",
+                            help='Name of template to use, in concourse/pipelines/templates/')
+
+    return pxf_parser
+
+if __name__ == "__main__":
+    PARSER = build_parser()
+    ARGS = PARSER.parse_args()
+    PIPELINE_CREATED = create_pipeline()
+
+    if not PIPELINE_CREATED:
+        sys.exit(1)

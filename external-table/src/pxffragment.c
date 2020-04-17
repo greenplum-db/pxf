@@ -28,10 +28,10 @@ static void pxf_array_element_end(void *state, bool isnull);
  */
 void
 get_fragments(GPHDUri *uri,
-              Relation relation,
-              char *filter_string,
-              ProjectionInfo *proj_info,
-              List *quals)
+			  Relation relation,
+			  char *filter_string,
+			  ProjectionInfo *proj_info,
+			  List *quals)
 {
 
 	List	   *data_fragments;
@@ -341,7 +341,7 @@ parse_get_fragments_response(List *fragments, StringInfo rest_buf)
 
 	pfree(state->lex);
 
-    return state->fragments;
+	return state->fragments;
 }
 
 /*

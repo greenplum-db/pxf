@@ -149,7 +149,7 @@ function createInstance()
 function deployWebapp()
 {
     cp "${PXF_HOME}/lib/pxf.war" "${instance}/webapps" || return 1
-    cp "$PXF_HOME"/lib/pxf-service-*[0-9].jar "${instance}/lib" || return 1
+    cp "$PXF_HOME"/lib/pxf-service-*[0-9]*.jar "${instance}/lib" || return 1
 
     return 0
 }

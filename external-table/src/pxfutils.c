@@ -1,6 +1,8 @@
 #include "pxfutils.h"
+#if PG_VERSION_NUM >= 90400
 #include "access/htup_details.h"
 #include "catalog/pg_type.h"
+#endif
 #include "utils/formatting.h"
 #include "utils/syscache.h"
 
@@ -13,9 +15,17 @@ char *
 normalize_key_name(const char *key)
 {
 	if (!key || strlen(key) == 0)
-		elog(ERROR, "internal error in pxfutils.c:normalize_key_name, parameter key is null or empty");
+	{
+		ereport(ERROR,
+				(errcode(ERRCODE_INTERNAL_ERROR),
+				 errmsg("internal error in pxfutils.c:normalize_key_name. Parameter key is null or empty.")));
+	}
 
+#if PG_VERSION_NUM >= 90400
 	return psprintf("X-GP-OPTIONS-%s", asc_toupper(pstrdup(key), strlen(key)));
+#else
+	return psprintf("X-GP-OPTIONS-%s", str_toupper(pstrdup(key), strlen(key)));
+#endif
 }
 
 /*

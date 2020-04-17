@@ -72,6 +72,13 @@ typedef struct
 	/* internal buffer for upload */
 	churl_buffer *upload_buffer;
 
+#if PG_VERSION_NUM < 90400
+	/*
+	 * holds http error code returned from remote server
+	 */
+	char	   *last_http_reponse;
+#endif
+
 	/* true on upload, false on download */
 	bool		upload;
 } churl_context;
@@ -98,6 +105,9 @@ static void		enlarge_internal_buffer(churl_buffer *buffer, size_t required);
 static void		finish_upload(churl_context *context);
 static void		cleanup_curl_handle(churl_context *context);
 static void		multi_remove_handle(churl_context *context);
+#if PG_VERSION_NUM < 90400
+static void		cleanup_internal_buffer(churl_buffer *buffer);
+#endif
 static void		churl_cleanup_context(churl_context *context);
 static size_t	write_callback(char *buffer, size_t size, size_t nitems, void *userp);
 static void		fill_internal_buffer(churl_context *context, int want);
@@ -105,7 +115,13 @@ static void		churl_headers_set(churl_context *context, CHURL_HEADERS settings);
 static void		check_response_status(churl_context *context);
 static void		check_response_code(churl_context *context);
 static void		check_response(churl_context *context);
+#if PG_VERSION_NUM < 90400
+static void		clear_error_buffer(churl_context *context);
+#endif
 static size_t	header_callback(char *buffer, size_t size, size_t nitems, void *userp);
+#if PG_VERSION_NUM < 90400
+static void		free_http_response(churl_context *context);
+#endif
 static void		compact_internal_buffer(churl_buffer *buffer);
 static void		realloc_internal_buffer(churl_buffer *buffer, size_t required);
 static bool		handle_special_error(long response, StringInfo err);
@@ -311,7 +327,9 @@ churl_headers_cleanup(CHURL_HEADERS headers)
 	if (!settings)
 		return;
 
-	curl_slist_free_all(settings->headers);
+	if (settings->headers)
+		curl_slist_free_all(settings->headers);
+
 	pfree(settings);
 }
 
@@ -321,6 +339,9 @@ churl_init(const char *url, CHURL_HEADERS headers)
 	churl_context *context = churl_new_context();
 
 	create_curl_handle(context);
+#if PG_VERSION_NUM < 90400
+	clear_error_buffer(context);
+#endif
 
 /* Required for resolving localhost on some docker environments that
  * had intermittent networking issues when using pxf on HAWQ
@@ -492,6 +513,10 @@ churl_cleanup(CHURL_HANDLE handle, bool after_error)
 	}
 
 	cleanup_curl_handle(context);
+#if PG_VERSION_NUM < 90400
+	cleanup_internal_buffer(context->download_buffer);
+	cleanup_internal_buffer(context->upload_buffer);
+#endif
 	churl_cleanup_context(context);
 }
 
@@ -504,6 +529,16 @@ churl_new_context()
 	context->upload_buffer = palloc0(sizeof(churl_buffer));
 	return context;
 }
+
+#if PG_VERSION_NUM < 90400
+static void
+clear_error_buffer(churl_context *context)
+{
+	if (!context)
+		return;
+	context->curl_error_buffer[0] = 0;
+}
+#endif
 
 static void
 create_curl_handle(churl_context *context)
@@ -694,6 +729,21 @@ multi_remove_handle(churl_context *context)
 		elog(ERROR, "internal error: curl_multi_remove_handle failed (%d - %s)",
 			 curl_error, curl_easy_strerror(curl_error));
 }
+
+#if PG_VERSION_NUM < 90400
+static void
+cleanup_internal_buffer(churl_buffer *buffer)
+{
+	if ((buffer) && (buffer->ptr))
+	{
+		pfree(buffer->ptr);
+		buffer->ptr = NULL;
+		buffer->bot = 0;
+		buffer->top = 0;
+		buffer->max = 0;
+	}
+}
+#endif
 
 static void
 churl_cleanup_context(churl_context *context)
@@ -935,6 +985,10 @@ check_response_code(churl_context *context)
 		elog(ERROR, "%s", err.data);
 
 	}
+
+#if PG_VERSION_NUM < 90400
+	free_http_response(context);
+#endif
 }
 
 /*
@@ -967,7 +1021,7 @@ check_response_code(churl_context *context)
  * Our first priority is to get the paragraph <p> inside <body>, and in case we don't find it, then we try to get
  * the <title>.
  */
-char *
+static char *
 get_http_error_msg(long http_ret_code, char *msg, char *curl_error_buffer)
 {
 	char	   *start,
@@ -1088,6 +1142,7 @@ get_http_error_msg(long http_ret_code, char *msg, char *curl_error_buffer)
 	return msg;
 }
 
+#if PG_VERSION_NUM >= 90400
 /*
  * Called during a perform by libcurl on either download or an upload.
  */
@@ -1097,6 +1152,38 @@ header_callback(char *buffer __attribute__((unused)), size_t size,
 {
 	return (size_t)size * nitems;
 }
+#else
+static void
+free_http_response(churl_context *context)
+{
+	if (!context->last_http_reponse)
+		return;
+
+	pfree(context->last_http_reponse);
+	context->last_http_reponse = NULL;
+}
+/*
+ * Called during a perform by libcurl on either download or an upload.
+ * Stores the first line of the header for error reporting
+ */
+static size_t
+header_callback(char *buffer, size_t size, size_t nitems, void *userp)
+{
+	const int	nbytes = size * nitems;
+	churl_context *context = (churl_context *) userp;
+
+	if (context->last_http_reponse)
+		return nbytes;
+
+	char	   *p = palloc(nbytes + 1);
+
+	memcpy(p, buffer, nbytes);
+	p[nbytes] = 0;
+	context->last_http_reponse = p;
+
+	return nbytes;
+}
+#endif
 
 static void
 compact_internal_buffer(churl_buffer *buffer)
