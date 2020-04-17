@@ -42,11 +42,15 @@ RUN ["/bin/bash", "-c", "export BUILD_PARAMS=-Dorg.gradle.daemon=false && \
     chown -R gpadmin:gpadmin ~gpadmin && \
     rm -rf /tmp/pxf_src && \
     if grep 'CentOS release 6' /etc/centos-release; then \
-      yum install -y krb5-workstation python-paramiko && yum clean all; \
+      yum install -y krb5-workstation python-paramiko apr-util && yum clean all; \
     else \
       pip install psi paramiko --no-cache-dir; \
     fi && \
+    if grep 'CentOS Linux release 7' /etc/centos-release; then \
+      yum install -y apr-util bzip2 openssl zip && yum clean all; \
+    fi; \
     if grep 'VERSION=.*18.04.*LTS.*Bionic Beaver.*$' /etc/os-release; then \
+      apt-get update && apt-get install -y zip libaprutil1 && rm -rf /var/lib/apt/lists/* && \
       PERL_VERSION=perl-5.22.1 && \
       wget http://www.cpan.org/src/5.0/${PERL_VERSION}.tar.gz && \
       tar -xzf ${PERL_VERSION}.tar.gz && \

@@ -32,6 +32,16 @@ _host_is_local() {
 	[[ $hostname =~ $host_regex ]]
 }
 
+_gen_random_string() {
+	local length=${1:-4}
+	base64 < /dev/urandom | tr -cd '[:alnum:]' | head -c "${length}"
+}
+
+_gen_uuid() {
+	: "$(_gen_random_string 8)_$(_gen_random_string)_$(_gen_random_string)_$(_gen_random_string)_$(_gen_random_string 12)"
+	echo "${_,,}" # downcase
+}
+
 case ${HCFS_PROTOCOL} in
 	adl|ADL)
 		HCFS_SCHEME=adl://
@@ -121,7 +131,7 @@ fi
 num_args=${#SED_ARGS[@]}
 for testname in "${tests[@]#_}"; do # remove leading underscore from list
 	date=$(date '+%Y_%m_%d_%H_%M_%S')
-	uuid=$(uuidgen | tr - _)
+	uuid=$(_gen_uuid)
 	FULL_TESTNAME=${testname}_${date}_${uuid}
 	TEST_LOCATION=/tmp/pxf_automation_data/${testname}/${date}_${uuid}
 	SED_ARGS+=(

@@ -15,7 +15,7 @@ INSERT INTO writable_smoke_test_external_writable_table
 		from generate_series(1, 100) s(i);
 
 -- Verify data entered HCFS correctly
-\!{{ HCFS_CMD }} dfs -cat '{{ HCFS_SCHEME }}{{ HCFS_BUCKET }}{{ TEST_LOCATION }}/bzip_et/*_0' 2>/dev/null | head -1
+\!{{ HCFS_CMD }} dfs -cat '{{ HCFS_SCHEME }}{{ HCFS_BUCKET }}{{ TEST_LOCATION }}/bzip_et/*' 2>/dev/null | sort -d
 
 -- External Table test
 CREATE EXTERNAL TABLE writable_smoke_test_external_readable_table
