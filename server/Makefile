@@ -28,16 +28,16 @@ TOMCAT_URL="http://archive.apache.org/dist/tomcat/tomcat-7/v${TOMCAT_VERSION}/bi
 help:
 	@echo
 	@echo   "Possible targets"
-	@echo	"  - all (clean, compile, test, install, tar, doc)"
+	@echo	"  - all (clean, compile, test, install, stage, doc)"
 	@echo	"  - clean - cleans the workspace of all produced artifacts"
 	@echo	"  - compile - compiles all PXF modules and builds their JAR files"
 	@echo	"  - test - runs unit tests for all PXF modules"
 	@echo	"  - install - setup PXF along with tomcat in the configured deployPath"
-	@echo	"  - tar - bundle PXF along with tomcat into a single tarball"
+	@echo	"  - stage - build PXF server and stage resulting artifacts along with tomcat for packaging"
 	@echo	"  - doc - creates aggregate javadoc under docs"
 
 all:
-	./gradlew clean tar $(BUILD_PARAMS)
+	./gradlew clean stage $(BUILD_PARAMS)
 
 compile:
 	./gradlew compileJava
@@ -60,8 +60,9 @@ test unittest:
 	fi
 	./gradlew ${GRADLEW_TEST_PARAMS}
 
-tar: tomcat
-	./gradlew tar ${BUILD_PARAMS}
+.PHONY: stage
+stage: tomcat
+	./gradlew stage ${BUILD_PARAMS}
 
 clean:
 	./gradlew clean
