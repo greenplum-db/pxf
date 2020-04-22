@@ -1,17 +1,17 @@
 package org.apache.hadoop.security;
 
 import com.google.common.collect.Sets;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import javax.security.auth.Subject;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 public class LoginSessionTest {
 
@@ -25,20 +25,20 @@ public class LoginSessionTest {
     private static String kdcDefault;
     private static String realmDefault;
 
-    @BeforeClass
+    @BeforeAll
     public static void setProperties() {
         // simulate presence of krb.conf file, important for prevention of test pollution when creating Users
         kdcDefault = System.setProperty(PROPERTY_KEY_KERBEROS_KDC, "localhost");
         realmDefault = System.setProperty(PROPERTY_KEY_KERBEROS_REALM, "DEFAULT_REALM");
     }
 
-    @AfterClass
+    @AfterAll
     public static void resetProperties() {
         resetProperty(PROPERTY_KEY_KERBEROS_KDC, kdcDefault);
         resetProperty(PROPERTY_KEY_KERBEROS_REALM, realmDefault);
     }
 
-    @Before
+    @BeforeEach
     public void setup() {
         ugiFoo = UserGroupInformation.createUserForTesting("foo", new String[]{});
         ugiBar = UserGroupInformation.createUserForTesting("bar", new String[]{});
