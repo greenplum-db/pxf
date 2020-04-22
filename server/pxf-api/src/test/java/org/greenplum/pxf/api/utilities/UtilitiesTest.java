@@ -28,18 +28,18 @@ import org.greenplum.pxf.api.StatsAccessor;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectOutputStream;
 import java.util.List;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -253,17 +253,15 @@ public class UtilitiesTest {
         RequestContext metaData = mock(RequestContext.class);
         String className = "com.pivotal.pxf.Lucy";
 
-        try {
-            Utilities.createAnyInstance(RequestContext.class,
-                    className, metaData);
-            fail("creating an instance should fail because the class doesn't exist in classpath");
-        } catch (Exception e) {
-            assertEquals(e.getClass(), Exception.class);
-            assertEquals(
-                    e.getMessage(),
-                    "Class " + className + " does not appear in classpath. "
-                            + "Plugins provided by PXF must start with \"org.greenplum.pxf\"");
-        }
+        Exception e = assertThrows(Exception.class,
+                () -> Utilities.createAnyInstance(RequestContext.class,
+                        className, metaData),
+                "creating an instance should fail because the class doesn't exist in classpath");
+
+        assertEquals(
+                e.getMessage(),
+                "Class " + className + " does not appear in classpath. "
+                        + "Plugins provided by PXF must start with \"org.greenplum.pxf\"");
     }
 
     @Test

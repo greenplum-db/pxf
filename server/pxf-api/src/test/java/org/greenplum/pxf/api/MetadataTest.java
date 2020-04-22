@@ -19,40 +19,35 @@
 
 package org.greenplum.pxf.api;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-
 import org.greenplum.pxf.api.model.Metadata;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class MetadataTest {
 
     @Test
     public void createFieldEmptyNameType() {
-        try {
-            Metadata.Field field = new Metadata.Field(null, null, false, null, null);
-            fail("Empty name, type and source type shouldn't be allowed.");
-        } catch (IllegalArgumentException e) {
-            assertEquals("Field name, type and source type cannot be empty", e.getMessage());
-        }
+        Exception e = assertThrows(IllegalArgumentException.class,
+                () -> new Metadata.Field(null, null, false, null, null),
+                "Empty name, type and source type shouldn't be allowed.");
+        assertEquals("Field name, type and source type cannot be empty", e.getMessage());
     }
 
     @Test
     public void createFieldNullType() {
-        try {
-            Metadata.Field field = new Metadata.Field("col1", null, "string");
-            fail("Empty name, type and source type shouldn't be allowed.");
-        } catch (IllegalArgumentException e) {
-            assertEquals("Field name, type and source type cannot be empty", e.getMessage());
-        }
+        Exception e = assertThrows(IllegalArgumentException.class,
+                () -> new Metadata.Field("col1", null, "string"),
+                "Empty name, type and source type shouldn't be allowed.");
+        assertEquals("Field name, type and source type cannot be empty", e.getMessage());
     }
+
     @Test
     public void createItemEmptyNameType() {
-        try {
-            Metadata.Item item = new Metadata.Item(null, null);
-            fail("Empty item name and path shouldn't be allowed.");
-        } catch (IllegalArgumentException e) {
-            assertEquals("Item or path name cannot be empty", e.getMessage());
-        }
+        Exception e = assertThrows(IllegalArgumentException.class,
+                () -> new Metadata.Item(null, null),
+                "Empty item name and path shouldn't be allowed.");
+        assertEquals("Item or path name cannot be empty", e.getMessage());
     }
 }

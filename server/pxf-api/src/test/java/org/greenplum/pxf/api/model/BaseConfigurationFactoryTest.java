@@ -1,10 +1,8 @@
 package org.greenplum.pxf.api.model;
 
 import org.apache.hadoop.conf.Configuration;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -17,24 +15,22 @@ import java.util.Map;
 import static org.greenplum.pxf.api.model.ConfigurationFactory.PXF_CONFIG_RESOURCE_PATH_PROPERTY;
 import static org.greenplum.pxf.api.model.ConfigurationFactory.PXF_CONFIG_SERVER_DIRECTORY_PROPERTY;
 import static org.greenplum.pxf.api.model.ConfigurationFactory.PXF_SESSION_USER_PROPERTY;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.mockito.Matchers.any;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
-import static org.powermock.api.mockito.PowerMockito.when;
+import static org.mockito.Mockito.when;
 
 public class BaseConfigurationFactoryTest {
-
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
 
     private BaseConfigurationFactory factory;
     private Map<String, String> additionalProperties;
     private File mockServersDirectory;
     private File serversDirectory;
 
-    @Before
+    @BeforeEach
     public void setup() throws URISyntaxException {
         mockServersDirectory = mock(File.class);
         additionalProperties = new HashMap<>();
@@ -49,13 +45,16 @@ public class BaseConfigurationFactoryTest {
 
     @Test
     public void testInitConfigurationFailsWhenMultipleDirectoriesWithSameName() {
-        thrown.expect(IllegalStateException.class);
-        thrown.expectMessage("Multiple directories found for server dummy. Server directories are expected to be case-insensitive.");
+        Exception ex = assertThrows(
+                IllegalStateException.class,
+                () -> {
+                    factory = new BaseConfigurationFactory(mockServersDirectory);
+                    when(mockServersDirectory.listFiles(any(FileFilter.class))).thenReturn(new File[]{new File("a"), new File("b")});
 
-        factory = new BaseConfigurationFactory(mockServersDirectory);
-        when(mockServersDirectory.listFiles(any(FileFilter.class))).thenReturn(new File[]{new File("a"), new File("b")});
+                    factory.initConfiguration("dummy", "dummy", "dummy", null);
+                });
 
-        factory.initConfiguration("dummy", "dummy", "dummy", null);
+        assertEquals("Multiple directories found for server dummy. Server directories are expected to be case-insensitive.", ex.getMessage());
     }
 
     @Test

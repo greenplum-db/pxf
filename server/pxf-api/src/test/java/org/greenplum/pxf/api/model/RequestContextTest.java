@@ -1,23 +1,18 @@
 package org.greenplum.pxf.api.model;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class RequestContextTest {
 
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
-
     private RequestContext context;
 
-    @Before
+    @BeforeEach
     public void before() {
         context = new RequestContext();
     }
@@ -37,80 +32,80 @@ public class RequestContextTest {
 
     @Test
     public void testInvalidServerName() {
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("Invalid server name 'foo,bar'");
-        context.setServerName("foo,bar");
+        Exception e = assertThrows(IllegalArgumentException.class,
+                () -> context.setServerName("foo,bar"));
+        assertEquals("Invalid server name 'foo,bar'", e.getMessage());
     }
 
     @Test
     public void testStatsMaxFragmentsFailsOnZero() {
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("Wrong value '0'. STATS-MAX-FRAGMENTS must be a positive integer");
-        context.setStatsMaxFragments(0);
+        Exception e = assertThrows(IllegalArgumentException.class,
+                () -> context.setStatsMaxFragments(0));
+        assertEquals("Wrong value '0'. STATS-MAX-FRAGMENTS must be a positive integer", e.getMessage());
     }
 
     @Test
     public void testStatsMaxFragmentsFailsOnNegative() {
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("Wrong value '-1'. STATS-MAX-FRAGMENTS must be a positive integer");
-        context.setStatsMaxFragments(-1);
+        Exception e = assertThrows(IllegalArgumentException.class,
+                () -> context.setStatsMaxFragments(-1));
+        assertEquals("Wrong value '-1'. STATS-MAX-FRAGMENTS must be a positive integer", e.getMessage());
     }
 
     @Test
     public void testStatsSampleRatioFailsOnOver1() {
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("Wrong value '1.1'. STATS-SAMPLE-RATIO must be a value between 0.0001 and 1.0");
-        context.setStatsSampleRatio(1.1f);
+        Exception e = assertThrows(IllegalArgumentException.class,
+                () -> context.setStatsSampleRatio(1.1f));
+        assertEquals("Wrong value '1.1'. STATS-SAMPLE-RATIO must be a value between 0.0001 and 1.0", e.getMessage());
     }
 
     @Test
     public void testStatsSampleRatioFailsOnZero() {
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("Wrong value '0.0'. STATS-SAMPLE-RATIO must be a value between 0.0001 and 1.0");
-        context.setStatsSampleRatio(0);
+        Exception e = assertThrows(IllegalArgumentException.class,
+                () -> context.setStatsSampleRatio(0));
+        assertEquals("Wrong value '0.0'. STATS-SAMPLE-RATIO must be a value between 0.0001 and 1.0", e.getMessage());
     }
 
     @Test
     public void testStatsSampleRatioFailsOnLessThanOneTenThousand() {
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("Wrong value '5.0E-5'. STATS-SAMPLE-RATIO must be a value between 0.0001 and 1.0");
-        context.setStatsSampleRatio(0.00005f);
+        Exception e = assertThrows(IllegalArgumentException.class,
+                () -> context.setStatsSampleRatio(0.00005f));
+        assertEquals("Wrong value '5.0E-5'. STATS-SAMPLE-RATIO must be a value between 0.0001 and 1.0", e.getMessage());
     }
 
     @Test
     public void testValidateFailsWhenStatsSampleRatioIsNotSet() {
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("Missing parameter: STATS-SAMPLE-RATIO and STATS-MAX-FRAGMENTS must be set together");
         context.setAccessor("DummyAccessor");
         context.setResolver("DummyResolver");
         context.setStatsMaxFragments(5);
-        context.validate();
+        Exception e = assertThrows(IllegalArgumentException.class,
+                () -> context.validate());
+        assertEquals("Missing parameter: STATS-SAMPLE-RATIO and STATS-MAX-FRAGMENTS must be set together", e.getMessage());
     }
 
     @Test
     public void testValidateFailsWhenStatsMaxFragmentsIsNotSet() {
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("Missing parameter: STATS-SAMPLE-RATIO and STATS-MAX-FRAGMENTS must be set together");
         context.setAccessor("DummyAccessor");
         context.setResolver("DummyResolver");
         context.setStatsSampleRatio(0.1f);
-        context.validate();
+        Exception e = assertThrows(IllegalArgumentException.class,
+                () -> context.validate());
+        assertEquals("Missing parameter: STATS-SAMPLE-RATIO and STATS-MAX-FRAGMENTS must be set together", e.getMessage());
     }
 
     @Test
     public void testValidateFailsWhenAccessorIsNotSet() {
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("Property ACCESSOR has no value in the current request");
         context.setResolver("dummy");
-        context.validate();
+        Exception e = assertThrows(IllegalArgumentException.class,
+                () -> context.validate());
+        assertEquals("Property ACCESSOR has no value in the current request", e.getMessage());
     }
 
     @Test
     public void testValidateFailsWhenResolverIsNotSet() {
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("Property RESOLVER has no value in the current request");
         context.setAccessor("dummy");
-        context.validate();
+        Exception e = assertThrows(IllegalArgumentException.class,
+                () -> context.validate());
+        assertEquals("Property RESOLVER has no value in the current request", e.getMessage());
     }
 
     @Test
@@ -152,37 +147,33 @@ public class RequestContextTest {
 
     @Test
     public void testFailsOnInvalidIntegerOptionWhenRequestedInteger() {
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("Property foo has incorrect value junk : must be an integer");
-
         context.addOption("foo", "junk");
-        context.getOption("foo", 77);
+        Exception e = assertThrows(IllegalArgumentException.class,
+                () -> context.getOption("foo", 77));
+        assertEquals("Property foo has incorrect value junk : must be an integer", e.getMessage());
     }
 
     @Test
     public void testFailsOnInvalidIntegerOptionWhenRequestedNaturalInteger() {
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("Property foo has incorrect value junk : must be a non-negative integer");
-
         context.addOption("foo", "junk");
-        context.getOption("foo", 77, true);
+        Exception e = assertThrows(IllegalArgumentException.class,
+                () -> context.getOption("foo", 77, true));
+        assertEquals("Property foo has incorrect value junk : must be a non-negative integer", e.getMessage());
     }
 
     @Test
     public void testFailsOnInvalidNaturalIntegerOptionWhenRequestedNaturalInteger() {
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("Property foo has incorrect value -5 : must be a non-negative integer");
-
         context.addOption("foo", "-5");
-        context.getOption("foo", 77, true);
+        Exception e = assertThrows(IllegalArgumentException.class,
+                () -> context.getOption("foo", 77, true));
+        assertEquals("Property foo has incorrect value -5 : must be a non-negative integer", e.getMessage());
     }
 
     @Test
     public void testReturnsUnmodifiableOptionsMap() {
-        thrown.expect(UnsupportedOperationException.class);
-
         Map<String, String> unmodifiableMap = context.getOptions();
-        unmodifiableMap.put("foo", "bar");
+        assertThrows(UnsupportedOperationException.class,
+                () -> unmodifiableMap.put("foo", "bar"));
     }
 
     @Test

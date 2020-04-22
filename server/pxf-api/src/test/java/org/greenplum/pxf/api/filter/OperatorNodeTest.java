@@ -1,17 +1,14 @@
 package org.greenplum.pxf.api.filter;
 
 import org.greenplum.pxf.api.io.DataType;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class OperatorNodeTest {
-
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
 
     @Test
     public void testConstructorWithSingleOperand() {
@@ -37,15 +34,17 @@ public class OperatorNodeTest {
 
     @Test
     public void testColumnIndexOperandMissing() {
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("Operator <= does not contain a column index operand");
+        Exception ex = assertThrows(
+            IllegalArgumentException.class,
+            () -> {
+                ScalarOperandNode scalarOperandNode1 = new ScalarOperandNode(DataType.INTEGER, "5");
+                ScalarOperandNode scalarOperandNode2 = new ScalarOperandNode(DataType.INTEGER, "5");
+                OperatorNode operatorNode = new OperatorNode(Operator.LESS_THAN_OR_EQUAL, scalarOperandNode1, scalarOperandNode2);
 
-        ScalarOperandNode scalarOperandNode1 = new ScalarOperandNode(DataType.INTEGER, "5");
-        ScalarOperandNode scalarOperandNode2 = new ScalarOperandNode(DataType.INTEGER, "5");
-        OperatorNode operatorNode = new OperatorNode(Operator.LESS_THAN_OR_EQUAL, scalarOperandNode1, scalarOperandNode2);
-
-        assertSame(Operator.LESS_THAN_OR_EQUAL, operatorNode.getOperator());
-        operatorNode.getColumnIndexOperand();
+                assertSame(Operator.LESS_THAN_OR_EQUAL, operatorNode.getOperator());
+                operatorNode.getColumnIndexOperand();
+            });
+        assertEquals("Operator <= does not contain a column index operand", ex.getMessage());
     }
 
     @Test
@@ -60,6 +59,5 @@ public class OperatorNodeTest {
         assertSame(columnIndexOperand1, operatorNode.getColumnIndexOperand());
         assertSame(columnIndexOperand2, operatorNode.getRight());
         assertNull(operatorNode.getValueOperand());
-
     }
 }

@@ -69,6 +69,11 @@ public class SecureLogin {
     private static final SecureLogin instance = new SecureLogin();
 
     /**
+     * Package-private for testing
+     */
+    static PxfUserGroupInformation pxfUserGroupInformation = PxfUserGroupInformation.getInstance();
+
+    /**
      * Prevent instantiation of this class by external code
      */
     private SecureLogin() {
@@ -136,7 +141,7 @@ public class SecureLogin {
 
         // try to relogin to keep the TGT token from expiring, if it still has a long validity, it will be a no-op
         if (Utilities.isSecurityEnabled(configuration)) {
-            PxfUserGroupInformation.reloginFromKeytab(serverName, loginSession);
+            pxfUserGroupInformation.reloginFromKeytab(serverName, loginSession);
         }
 
         return loginSession.getLoginUser();
@@ -178,7 +183,7 @@ public class SecureLogin {
             LOG.info("Kerberos principal for server {}: {}", serverName, principal);
             LOG.info("Kerberos keytab for server {}: {}", serverName, keytabFilename);
 
-            LoginSession loginSession = PxfUserGroupInformation
+            LoginSession loginSession = pxfUserGroupInformation
                     .loginUserFromKeytab(configuration, serverName, configDirectory, principal, keytabFilename);
 
             LOG.info("Logged in as principal {} for server {}", loginSession.getLoginUser(), serverName);
@@ -215,7 +220,7 @@ public class SecureLogin {
 
         LoginSession expectedLoginSession;
         if (Utilities.isSecurityEnabled(configuration)) {
-            long kerberosMinMillisBeforeRelogin = PxfUserGroupInformation.getKerberosMinMillisBeforeRelogin(serverName, configuration);
+            long kerberosMinMillisBeforeRelogin = pxfUserGroupInformation.getKerberosMinMillisBeforeRelogin(serverName, configuration);
             expectedLoginSession = new LoginSession(
                     configDirectory,
                     getServicePrincipal(serverName, configuration),

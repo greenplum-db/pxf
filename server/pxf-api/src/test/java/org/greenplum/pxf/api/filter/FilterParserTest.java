@@ -19,77 +19,63 @@ package org.greenplum.pxf.api.filter;
  * under the License.
  */
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
-import static org.greenplum.pxf.api.filter.Operator.AND;
-import static org.greenplum.pxf.api.filter.Operator.EQUALS;
-import static org.greenplum.pxf.api.filter.Operator.GREATER_THAN;
-import static org.greenplum.pxf.api.filter.Operator.GREATER_THAN_OR_EQUAL;
-import static org.greenplum.pxf.api.filter.Operator.IS_NULL;
-import static org.greenplum.pxf.api.filter.Operator.LESS_THAN;
-import static org.greenplum.pxf.api.filter.Operator.LESS_THAN_OR_EQUAL;
-import static org.greenplum.pxf.api.filter.Operator.LIKE;
-import static org.greenplum.pxf.api.filter.Operator.NOT;
-import static org.greenplum.pxf.api.filter.Operator.NOT_EQUALS;
-import static org.greenplum.pxf.api.filter.Operator.OR;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.greenplum.pxf.api.filter.Operator.*;
+import static org.junit.jupiter.api.Assertions.*;
+
 
 public class FilterParserTest {
 
     private FilterParser filterParser;
     private String filter, exception;
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
 
-    @Before
+    @BeforeEach
     public void setUp() {
         filterParser = new FilterParser();
     }
 
     @Test
-    public void testNullFilterString() throws Exception {
-        thrown.expect(FilterParser.FilterStringSyntaxException.class);
-        thrown.expectMessage("filter parsing ended with no result");
-
-        filterParser.parse(null);
+    public void testNullFilterString() {
+        Exception ex = assertThrows(
+            FilterParser.FilterStringSyntaxException.class,
+            () -> filterParser.parse(null));
+        assertEquals("filter parsing ended with no result (null filter string)", ex.getMessage());
     }
 
     @Test
     public void testLongIndexFails() throws Exception {
-        thrown.expect(FilterParser.FilterStringSyntaxException.class);
-        thrown.expectMessage("value 2147483648 larger than intmax ending at 11");
-
         filter = "a2147483647o8";
         filterParser.parse(filter); // succeeds because it's a valid int32
 
         filter = "a2147483648o8";
-        filterParser.parse(filter); // fails
+
+        Exception ex = assertThrows(
+            FilterParser.FilterStringSyntaxException.class,
+            () -> filterParser.parse(filter));
+        assertEquals("value 2147483648 larger than intmax ending at 11 (filter string: 'a2147483648o8')", ex.getMessage());
     }
 
     @Test
-    public void parseNegativeEmpty() throws Exception {
+    public void parseNegativeEmpty() {
         filter = "";
         runParseNegative("empty string", filter, "filter parsing ended with no result");
     }
 
     @Test
-    public void parseNegativeNotOperand() throws Exception {
+    public void parseNegativeNotOperand() {
         filter = "g is not an operand";
         int index = 0;
         char op = filter.charAt(index);
 
         runParseNegative("illegal operand g", filter,
-                "unknown opcode " + op + "(" + (int) op + ") at " + index);
+            "unknown opcode " + op + "(" + (int) op + ") at " + index);
     }
 
     @Test
-    public void parseNegativeBadNumber() throws Exception {
+    public void parseNegativeBadNumber() {
 
         filter = "a";
         int index = 1;
@@ -124,7 +110,7 @@ public class FilterParserTest {
     }
 
     @Test
-    public void parseNegativeBadConst() throws Exception {
+    public void parseNegativeBadConst() {
         filter = "cs";
         int index = 1;
         exception = "datatype OID should follow at " + index;
@@ -183,7 +169,7 @@ public class FilterParserTest {
     }
 
     @Test
-    public void parseNegativeBadOperation() throws Exception {
+    public void parseNegativeBadOperation() {
         filter = "o";
         int index = 1;
         exception = "numeric argument expected at " + index;
@@ -200,7 +186,7 @@ public class FilterParserTest {
     }
 
     @Test
-    public void parseNegativeNoOperator() throws Exception {
+    public void parseNegativeNoOperator() {
 
         filter = "a1234567890";
         runParseNegative("filter with only column", filter, "filter parsing failed, missing operators?");
@@ -210,14 +196,14 @@ public class FilterParserTest {
     }
 
     @Test
-    public void parseEmptyString() throws Exception {
+    public void parseEmptyString() {
         filter = "c25s0d";
         exception = "filter parsing failed, missing operators?";
         runParseNegative("const operand with empty string", filter, exception);
     }
 
     @Test
-    public void parseDecimalValues() throws Exception {
+    public void parseDecimalValues() {
         filter = "c700s3d9.0";
         exception = "filter parsing failed, missing operators?";
         runParseNegative("const operand with decimal value", filter, exception);
@@ -228,7 +214,7 @@ public class FilterParserTest {
     }
 
     @Test
-    public void parseNegativeValues() throws Exception {
+    public void parseNegativeValues() {
         filter = "c700s3d-90";
         exception = "filter parsing failed, missing operators?";
         runParseNegative("const operand with decimal value", filter, exception);
@@ -239,7 +225,7 @@ public class FilterParserTest {
     }
 
     @Test
-    public void parseNegativeTwoParams() throws Exception {
+    public void parseNegativeTwoParams() {
 
         filter = "c20s1d1c20s1d1";
         exception = "Stack not empty, missing operators?";
@@ -255,7 +241,7 @@ public class FilterParserTest {
     }
 
     @Test
-    public void parseNegativeOperationFirst() throws Exception {
+    public void parseNegativeOperationFirst() {
 
         filter = "o1a3";
         int index = 2;
@@ -405,12 +391,12 @@ public class FilterParserTest {
     }
 
     @Test
-    public void parseLogicalUnknownCodeError() throws Exception {
-        thrown.expect(FilterParser.FilterStringSyntaxException.class);
-        thrown.expectMessage("unknown op ending at 2");
-
+    public void parseLogicalUnknownCodeError() {
         filter = "l7";
-        filterParser.parse(filter);
+        Exception ex = assertThrows(
+            FilterParser.FilterStringSyntaxException.class,
+            () -> filterParser.parse(filter));
+        assertEquals("unknown op ending at 2 (filter string: 'l7')", ex.getMessage());
     }
 
     @Test
@@ -429,12 +415,12 @@ public class FilterParserTest {
     /*
      * Helper functions
      */
-    private void runParseNegative(String description, String filter, String exception) throws Exception {
-        thrown.expect(FilterParser.FilterStringSyntaxException.class);
-        thrown.expectMessage(exception + filterStringMsg(filter));
-
-        filterParser.parse(filter);
-        fail(description);
+    private void runParseNegative(String description, String filter, String exception) {
+        Exception ex = assertThrows(
+            FilterParser.FilterStringSyntaxException.class,
+            () -> filterParser.parse(filter),
+            description);
+        assertEquals(exception + filterStringMsg(filter), ex.getMessage());
     }
 
     private void runParseOneOperation(String filter, Operator op) throws Exception {
