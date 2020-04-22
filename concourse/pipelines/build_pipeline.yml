@@ -20,6 +20,7 @@ resources:
   source:
     branch: ((pxf-git-branch))
     uri: ((pxf-git-remote))
+
 ## ---------- Docker Images ----------
 - name: gpdb-pxf-dev-centos6
   type: docker-image
@@ -41,6 +42,18 @@ resources:
   source:
     repository: pivotaldata/gpdb-pxf-dev
     tag: ubuntu18
+
+- name: gpdb-pxf-dev-centos6-hdp2-server
+  type: docker-image
+  source:
+    repository: pivotaldata/gpdb-pxf-dev
+    tag: centos6-hdp2-server
+
+- name: gpdb-pxf-dev-centos7-hdp2-server
+  type: docker-image
+  source:
+    repository: pivotaldata/gpdb-pxf-dev
+    tag: centos7-hdp2-server
 
 ## ---------- Product Packages ----------
 - name: gpdb_rhel6_rpm
@@ -67,13 +80,38 @@ resources:
     json_key: ((data-gpdb-ud-google-json-key))
     regexp: latest/greenplum-db-(.*)-ubuntu18.04-amd64.deb
 
+## ---------- PXF Build Artifacts ----------
+- name: pxf_tarball_gpdb6_rhel6
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: data-gpdb-ud-pxf-build
+    json_key: ((data-gpdb-ud-google-json-key))
+    regexp: snapshots/pxf-gpdb6-(.*)-SNAPSHOT-rhel6-x86_64.tar.gz
+
+- name: pxf_tarball_gpdb6_rhel7
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: data-gpdb-ud-pxf-build
+    json_key: ((data-gpdb-ud-google-json-key))
+    regexp: snapshots/pxf-gpdb6-(.*)-SNAPSHOT-rhel7-x86_64.tar.gz
+
+- name: pxf_tarball_gpdb6_ubuntu18
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: data-gpdb-ud-pxf-build
+    json_key: ((data-gpdb-ud-google-json-key))
+    regexp: snapshots/pxf-gpdb6-(.*)-SNAPSHOT-ubuntu18.04-x86_64.tar.gz
 
 ## ======================================================================
 ## JOBS
 ## ======================================================================
 
+## ---------- Centos 6 Swimlane ----------
 jobs:
-- name: Build PXF for GPDB-6 on RHEL6
+- name: Build PXF-GP6 on RHEL6
   plan:
   - in_parallel:
     - get: pxf_src
@@ -86,8 +124,40 @@ jobs:
     file: pxf_src/concourse/tasks/build.yml
     params:
       TARGET_OS: rhel6
+  - put: pxf_tarball_gpdb6_rhel6
+    params:
+      file: dist/pxf-gpdb6-*-rhel6-x86_64.tar.gz
 
-- name: Build PXF for GPDB-6 on RHEL7
+- name: Test PXF-GP6-HDP2 on RHEL6
+  plan:
+  - in_parallel:
+    - get: pxf_tarball
+      resource: pxf_tarball_gpdb6_rhel6
+      passed: [Build PXF-GP6 on RHEL6]
+      trigger: true
+    - get: pxf_src
+      passed: [Build PXF-GP6 on RHEL6]
+    - get: gpdb-pxf-dev-centos6-hdp2-server
+    - get: gpdb_package
+      resource: gpdb_rhel6_rpm
+      passed: [Build PXF-GP6 on RHEL6]
+  - task: Test PXF-GP6-HDP2 on RHEL6
+    file: pxf_src/concourse/tasks/test_pxf.yml
+    image: gpdb-pxf-dev-centos6-hdp2-server
+    params:
+      ACCESS_KEY_ID: ((tf-machine-access-key-id))
+      GROUP: gpdb,proxy,profile
+      HADOOP_CLIENT: HDP
+      PGPORT: ((pgport))
+      SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
+      TARGET_OS: centos
+      TARGET_OS_VERSION: 6
+      TEST_ENV: ((test-env))
+
+
+
+## ---------- Centos 7 Swimlane ----------
+- name: Build PXF-GP6 on RHEL7
   plan:
   - in_parallel:
     - get: pxf_src
@@ -95,13 +165,17 @@ jobs:
     - get: gpdb-pxf-dev-centos7
     - get: gpdb_package
       resource: gpdb_rhel7_rpm
-  - task: Build PXF on RHEL7
+  - task: Build PXF-GP6 on RHEL7
     image: gpdb-pxf-dev-centos7
     file: pxf_src/concourse/tasks/build.yml
     params:
       TARGET_OS: rhel7
+  - put: pxf_tarball_gpdb6_rhel7
+    params:
+      file: dist/pxf-gpdb6-*-rhel7-x86_64.tar.gz
 
-- name: Build PXF for GPDB-6 on Ubuntu18
+## ---------- Ubuntu 18 Swimlane ----------
+- name: Build PXF-GP6 on Ubuntu18
   plan:
   - in_parallel:
     - get: pxf_src
@@ -109,8 +183,11 @@ jobs:
     - get: gpdb-pxf-dev-ubuntu18
     - get: gpdb_package
       resource: gpdb_ubuntu18_deb
-  - task: Build PXF on Ubuntu18
+  - task: Build PXF-GP6 on Ubuntu18
     image: gpdb-pxf-dev-ubuntu18
     file: pxf_src/concourse/tasks/build.yml
     params:
       TARGET_OS: ubuntu18.04
+  - put: pxf_tarball_gpdb6_ubuntu18
+    params:
+      file: dist/pxf-gpdb6-*-ubuntu18.04-x86_64.tar.gz

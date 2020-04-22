@@ -1,6 +1,6 @@
 #!/bin/bash
 
-GPHOME=/usr/local/greenplum-db-devel
+GPHOME=${GPHOME:=/usr/local/greenplum-db-devel}
 PXF_HOME=${GPHOME}/pxf
 MDD_VALUE=/data/gpdata/master/gpseg-1
 PXF_COMMON_SRC_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
@@ -90,6 +90,44 @@ function install_gpdb_binary() {
 		service ssh start
 		python_dir=python${python_version}/dist-packages
 		export_pythonpath+=:/usr/local/lib/$python_dir
+	fi
+
+	echo "$export_pythonpath" >> "${PXF_COMMON_SRC_DIR}/../../automation/tinc/main/tinc_env.sh"
+}
+
+function install_gpdb_package() {
+	local gphome python_dir python_version=2.7 export_pythonpath='export PYTHONPATH=$PYTHONPATH'
+
+	if [[ ${TARGET_OS} == centos* ]]; then
+	    # install GPDB RPM
+	    rpm --quiet -ivh gpdb_package/greenplum-db-*-rhel*-x86_64.rpm
+
+		# We can't use service sshd restart as service is not installed on CentOS 7.
+		/usr/sbin/sshd &
+		# CentOS 6 uses python 2.6
+		if grep 'CentOS release 6' /etc/centos-release; then
+			python_version=2.6
+		fi
+		python_dir=python${python_version}/site-packages
+		export_pythonpath+=:/usr/lib/${python_dir}:/usr/lib64/$python_dir
+
+	elif [[ ${TARGET_OS} == ubuntu* ]]; then
+	    # # install GPDB DEB, apt wants a full path
+	    apt install -qq "${PWD}/gpdb_package/greenplum-db-*-ubuntu18.04-amd64.deb"
+
+		# Adjust GPHOME if the binary expects it to be /usr/local/gpdb
+		gphome=$(grep ^GPHOME= /usr/local/greenplum-db-devel/greenplum_path.sh | cut -d= -f2)
+		if [[ $gphome == /usr/local/gpdb ]]; then
+			mv /usr/local/greenplum-db-devel /usr/local/gpdb
+			GPHOME=/usr/local/gpdb
+			PXF_HOME=${GPHOME}/pxf
+		fi
+		service ssh start
+		python_dir=python${python_version}/dist-packages
+		export_pythonpath+=:/usr/local/lib/$python_dir
+    else
+	    echo "Unsupported operating system ${TARGET_OS}. Exiting..."
+	    exit 1
 	fi
 
 	echo "$export_pythonpath" >> "${PXF_COMMON_SRC_DIR}/../../automation/tinc/main/tinc_env.sh"
@@ -193,6 +231,12 @@ function install_pxf_server() {
 		fi
 	fi
 	chown -R gpadmin:gpadmin "${PXF_HOME}"
+}
+
+function install_pxf_tarball() {
+    tar -xzf pxf_tarball/pxf-*.tar.gz -C /tmp
+    source /tmp/pxf*/install_component
+    chown -R gpadmin:gpadmin "${PXF_HOME}"
 }
 
 function setup_impersonation() {

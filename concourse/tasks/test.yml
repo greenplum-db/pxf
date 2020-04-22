@@ -1,0 +1,26 @@
+platform: linux
+
+image_resource:
+  type: docker-image
+
+inputs:
+- name: pxf_tarball
+- name: pxf_src
+- name: gpdb_package
+
+params:
+  ACCESS_KEY_ID:
+  GROUP: smoke
+  HADOOP_CLIENT: HDP
+  IMPERSONATION: true
+  SECRET_ACCESS_KEY:
+  TARGET_OS: centos
+  TARGET_OS_VERSION:
+  TEST_ENV:
+  TEST_OS:
+  RUN_JDK_VERSION: 8
+  PROTOCOL:
+  PG_REGRESS:
+
+run:
+  path: pxf_src/concourse/scripts/test.bash
