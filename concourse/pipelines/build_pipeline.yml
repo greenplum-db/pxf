@@ -87,7 +87,7 @@ resources:
   source:
     bucket: data-gpdb-ud-pxf-build
     json_key: ((data-gpdb-ud-google-json-key))
-    regexp: snapshots/pxf-gpdb6-(.*)-SNAPSHOT-rhel6-x86_64.tar.gz
+    versioned_file: snapshots/pxf-gpdb6-*-SNAPSHOT-rhel6-x86_64.tar.gz
 
 - name: pxf_tarball_gpdb6_rhel7
   type: gcs
@@ -95,7 +95,7 @@ resources:
   source:
     bucket: data-gpdb-ud-pxf-build
     json_key: ((data-gpdb-ud-google-json-key))
-    regexp: snapshots/pxf-gpdb6-(.*)-SNAPSHOT-rhel7-x86_64.tar.gz
+    versioned_file: snapshots/pxf-gpdb6-*-SNAPSHOT-rhel7-x86_64.tar.gz
 
 - name: pxf_tarball_gpdb6_ubuntu18
   type: gcs
@@ -103,7 +103,7 @@ resources:
   source:
     bucket: data-gpdb-ud-pxf-build
     json_key: ((data-gpdb-ud-google-json-key))
-    regexp: snapshots/pxf-gpdb6-(.*)-SNAPSHOT-ubuntu18.04-x86_64.tar.gz
+    versioned_file: snapshots/pxf-gpdb6-*-SNAPSHOT-ubuntu18.04-x86_64.tar.gz
 
 ## ======================================================================
 ## JOBS
@@ -126,7 +126,7 @@ jobs:
       TARGET_OS: rhel6
   - put: pxf_tarball_gpdb6_rhel6
     params:
-      file: dist/pxf-gpdb6-*-rhel6-x86_64.tar.gz
+      file: dist/pxf-gpdb6-*-SNAPSHOT-rhel6-x86_64.tar.gz
 
 - name: Test PXF-GP6-HDP2 on RHEL6
   plan:
@@ -173,7 +173,7 @@ jobs:
       TARGET_OS: rhel7
   - put: pxf_tarball_gpdb6_rhel7
     params:
-      file: dist/pxf-gpdb6-*-rhel7-x86_64.tar.gz
+      file: dist/pxf-gpdb6-*-SNAPSHOT-rhel7-x86_64.tar.gz
 
 ## ---------- Ubuntu 18 Swimlane ----------
 - name: Build PXF-GP6 on Ubuntu18
@@ -191,4 +191,4 @@ jobs:
       TARGET_OS: ubuntu18.04
   - put: pxf_tarball_gpdb6_ubuntu18
     params:
-      file: dist/pxf-gpdb6-*-ubuntu18.04-x86_64.tar.gz
+      file: dist/pxf-gpdb6-*-SNAPSHOT-ubuntu18.04-x86_64.tar.gz
