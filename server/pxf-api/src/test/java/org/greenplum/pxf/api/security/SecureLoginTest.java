@@ -4,33 +4,30 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.LoginSession;
 import org.apache.hadoop.security.PxfUserGroupInformation;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.net.InetAddress;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({PxfUserGroupInformation.class})
 public class SecureLoginTest {
 
     private static final String PROPERTY_KEY_USER_IMPERSONATION = "pxf.service.user.impersonation.enabled";
@@ -44,7 +41,7 @@ public class SecureLoginTest {
     private static String kdcDefault;
     private static String realmDefault;
 
-    @BeforeClass
+    @BeforeAll
     public static void getProperties() {
         userImpersonationEnabled = System.getProperty(PROPERTY_KEY_USER_IMPERSONATION);
         kerberosPrincipal = System.getProperty(PROPERTY_KEY_SERVICE_PRINCIPAL);
@@ -53,7 +50,7 @@ public class SecureLoginTest {
         realmDefault = System.getProperty(PROPERTY_KEY_KERBEROS_REALM);
     }
 
-    @AfterClass
+    @AfterAll
     public static void resetProperties() {
         resetProperty(PROPERTY_KEY_USER_IMPERSONATION, userImpersonationEnabled);
         resetProperty(PROPERTY_KEY_SERVICE_PRINCIPAL, kerberosPrincipal);
@@ -78,12 +75,13 @@ public class SecureLoginTest {
     private Configuration configuration;
     private LoginSession expectedLoginSession;
     private UserGroupInformation expectedUGI;
+    private PxfUserGroupInformation pxfUserGroupInformationMock;
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
 
-    @Before
+    @BeforeEach
     public void setup() {
+        pxfUserGroupInformationMock = mock(PxfUserGroupInformation.class);
+        SecureLogin.pxfUserGroupInformation = pxfUserGroupInformationMock;
         secureLogin = SecureLogin.getInstance();
         SecureLogin.reset();
         configuration = new Configuration();
@@ -104,7 +102,6 @@ public class SecureLoginTest {
 
     @Test
     public void testLoginNoKerberosNoServiceUser() throws IOException {
-        PowerMockito.mockStatic(PxfUserGroupInformation.class);
         expectedLoginSession = new LoginSession("config");
 
         UserGroupInformation loginUGI = secureLogin.getLoginUser("server", "config", configuration);
@@ -120,12 +117,11 @@ public class SecureLoginTest {
         // Make sure that the cached entry is the same after the second call
         assertSame(loginUGI, secureLogin.getLoginUser("server", "config", configuration));
 
-        PowerMockito.verifyZeroInteractions(PxfUserGroupInformation.class);
+        verifyNoInteractions(pxfUserGroupInformationMock);
     }
 
     @Test
     public void testLoginNoKerberosNoServiceUserWhenConfigurationValuesAreProvided() throws IOException {
-        PowerMockito.mockStatic(PxfUserGroupInformation.class);
         expectedLoginSession = new LoginSession("config");
         // These values in the configuration should not be added to the LoginSession
         configuration.set("pxf.service.kerberos.principal", "foo");
@@ -145,12 +141,11 @@ public class SecureLoginTest {
         // Make sure that the cached entry is the same after the second call
         assertSame(loginUGI, secureLogin.getLoginUser("server", "config", configuration));
 
-        PowerMockito.verifyZeroInteractions(PxfUserGroupInformation.class);
+        verifyNoInteractions(pxfUserGroupInformationMock);
     }
 
     @Test
     public void testLoginNoKerberosWithServiceUser() throws IOException {
-        PowerMockito.mockStatic(PxfUserGroupInformation.class);
         expectedLoginSession = new LoginSession("config", null, null, null, null, 0);
         configuration.set("pxf.service.user.name", "foo");
 
@@ -164,42 +159,37 @@ public class SecureLoginTest {
         assertNull(loginSession.getSubject());
         assertNull(loginSession.getUser());
 
-        PowerMockito.verifyZeroInteractions(PxfUserGroupInformation.class);
+        verifyNoInteractions(pxfUserGroupInformationMock);
     }
 
     @Test
     public void testLoginKerberosFailsWhenNoPrincipal() throws IOException {
-        expectedException.expect(RuntimeException.class);
-        expectedException.expectMessage("PXF service login failed for server test : Kerberos Security for server test requires a valid principal.");
-
-        PowerMockito.mockStatic(PxfUserGroupInformation.class);
         configuration.set("hadoop.security.authentication", "kerberos");
 
-        secureLogin.getLoginUser("test", "config", configuration);
+        Exception e = assertThrows(RuntimeException.class,
+                () -> secureLogin.getLoginUser("test", "config", configuration));
+        assertEquals("PXF service login failed for server test : Kerberos Security for server test requires a valid principal.", e.getMessage());
     }
 
     @Test
     public void testLoginKerberosFailsWhenNoKeytab() throws IOException {
-        expectedException.expect(RuntimeException.class);
-        expectedException.expectMessage("PXF service login failed for server test : Kerberos Security for server test requires a valid keytab file name.");
-
-        PowerMockito.mockStatic(PxfUserGroupInformation.class);
         configuration.set("hadoop.security.authentication", "kerberos");
         configuration.set(PROPERTY_KEY_SERVICE_PRINCIPAL, "foo");
 
-        secureLogin.getLoginUser("test", "config", configuration);
+        Exception e = assertThrows(RuntimeException.class,
+                () -> secureLogin.getLoginUser("test", "config", configuration));
+        assertEquals("PXF service login failed for server test : Kerberos Security for server test requires a valid keytab file name.", e.getMessage());
     }
 
     @Test
     public void testLoginKerberosFirstTime() throws IOException {
-        PowerMockito.mockStatic(PxfUserGroupInformation.class);
         expectedUGI = UserGroupInformation.createUserForTesting("some", new String[]{});
         expectedLoginSession = new LoginSession("config", "principal", "/path/to/keytab", expectedUGI, null, 0);
         configuration.set("hadoop.security.authentication", "kerberos");
         configuration.set(PROPERTY_KEY_SERVICE_PRINCIPAL, "principal");
         configuration.set(PROPERTY_KEY_SERVICE_KEYTAB, "/path/to/keytab");
         configuration.set("hadoop.kerberos.min.seconds.before.relogin", "90");
-        when(PxfUserGroupInformation.loginUserFromKeytab(configuration, "server", "config", "principal", "/path/to/keytab")).thenReturn(expectedLoginSession);
+        when(pxfUserGroupInformationMock.loginUserFromKeytab(configuration, "server", "config", "principal", "/path/to/keytab")).thenReturn(expectedLoginSession);
 
         UserGroupInformation loginUGI = secureLogin.getLoginUser("server", "config", configuration);
 
@@ -209,26 +199,22 @@ public class SecureLoginTest {
         assertSame(loginUGI, loginSession.getLoginUser());
         assertSame(expectedUGI, loginUGI); // since actual login was mocked, we should get back whatever we mocked
 
-        // verify static calls issued
-        PowerMockito.verifyStatic();
-        PxfUserGroupInformation.loginUserFromKeytab(configuration, "server", "config", "principal", "/path/to/keytab");
-        PowerMockito.verifyStatic();
-        PxfUserGroupInformation.reloginFromKeytab("server", expectedLoginSession);
+        verify(pxfUserGroupInformationMock).loginUserFromKeytab(configuration, "server", "config", "principal", "/path/to/keytab");
+        verify(pxfUserGroupInformationMock).reloginFromKeytab("server", expectedLoginSession);
 
-        PowerMockito.verifyNoMoreInteractions(PxfUserGroupInformation.class);
+        verifyNoMoreInteractions(pxfUserGroupInformationMock);
     }
 
     @Test
     public void testLoginKerberosSameSession() throws IOException {
-        PowerMockito.mockStatic(PxfUserGroupInformation.class);
         expectedUGI = UserGroupInformation.createUserForTesting("some", new String[]{});
         expectedLoginSession = new LoginSession("config", "principal", "/path/to/keytab", expectedUGI, null, 90000);
         configuration.set("hadoop.security.authentication", "kerberos");
         configuration.set(PROPERTY_KEY_SERVICE_PRINCIPAL, "principal");
         configuration.set(PROPERTY_KEY_SERVICE_KEYTAB, "/path/to/keytab");
         configuration.set("hadoop.kerberos.min.seconds.before.relogin", "90");
-        when(PxfUserGroupInformation.loginUserFromKeytab(configuration, "server", "config", "principal", "/path/to/keytab")).thenReturn(expectedLoginSession);
-        when(PxfUserGroupInformation.getKerberosMinMillisBeforeRelogin("server", configuration)).thenReturn(90000L);
+        when(pxfUserGroupInformationMock.loginUserFromKeytab(configuration, "server", "config", "principal", "/path/to/keytab")).thenReturn(expectedLoginSession);
+        when(pxfUserGroupInformationMock.getKerberosMinMillisBeforeRelogin("server", configuration)).thenReturn(90000L);
 
         UserGroupInformation loginUGI = secureLogin.getLoginUser("server", "config", configuration);
 
@@ -248,20 +234,16 @@ public class SecureLoginTest {
         assertSame(expectedUGI, loginUGI); // since actual login was mocked, we should get back whatever we mocked
         assertSame(loginSession, loginAgainSession); // got the same from cache
 
-        // verify static calls issued
-        PowerMockito.verifyStatic();
-        PxfUserGroupInformation.loginUserFromKeytab(configuration, "server", "config", "principal", "/path/to/keytab");
-        PowerMockito.verifyStatic();
-        PxfUserGroupInformation.getKerberosMinMillisBeforeRelogin("server", configuration);
-        PowerMockito.verifyStatic(times(2)); // 1 extra relogin call
-        PxfUserGroupInformation.reloginFromKeytab("server", expectedLoginSession);
+        verify(pxfUserGroupInformationMock).loginUserFromKeytab(configuration, "server", "config", "principal", "/path/to/keytab");
+        verify(pxfUserGroupInformationMock).getKerberosMinMillisBeforeRelogin("server", configuration);
+        // 1 extra relogin call
+        verify(pxfUserGroupInformationMock, times(2)).reloginFromKeytab("server", expectedLoginSession);
 
-        PowerMockito.verifyNoMoreInteractions(PxfUserGroupInformation.class);
+        verifyNoMoreInteractions(pxfUserGroupInformationMock);
     }
 
     @Test
     public void testLoginKerberosDifferentServer() throws IOException {
-        PowerMockito.mockStatic(PxfUserGroupInformation.class);
         expectedUGI = UserGroupInformation.createUserForTesting("some", new String[]{});
 
         expectedLoginSession = new LoginSession("config", "principal", "/path/to/keytab", expectedUGI, null, 0);
@@ -269,7 +251,7 @@ public class SecureLoginTest {
         configuration.set("hadoop.security.authentication", "kerberos");
         configuration.set(PROPERTY_KEY_SERVICE_PRINCIPAL, "principal");
         configuration.set(PROPERTY_KEY_SERVICE_KEYTAB, "/path/to/keytab");
-        when(PxfUserGroupInformation.loginUserFromKeytab(configuration, "server", "config", "principal", "/path/to/keytab")).thenReturn(expectedLoginSession);
+        when(pxfUserGroupInformationMock.loginUserFromKeytab(configuration, "server", "config", "principal", "/path/to/keytab")).thenReturn(expectedLoginSession);
 
         UserGroupInformation loginUGI = secureLogin.getLoginUser("server", "config", configuration);
 
@@ -287,7 +269,7 @@ public class SecureLoginTest {
         diffConfiguration.set("hadoop.security.authentication", "kerberos");
         diffConfiguration.set(PROPERTY_KEY_SERVICE_PRINCIPAL, "principal");
         diffConfiguration.set(PROPERTY_KEY_SERVICE_KEYTAB, "/path/to/keytab");
-        when(PxfUserGroupInformation.loginUserFromKeytab(diffConfiguration, "diff-server", "diff-config", "principal", "/path/to/keytab")).thenReturn(expectedDiffLoginSession);
+        when(pxfUserGroupInformationMock.loginUserFromKeytab(diffConfiguration, "diff-server", "diff-config", "principal", "/path/to/keytab")).thenReturn(expectedDiffLoginSession);
 
         UserGroupInformation diffLoginUGI = secureLogin.getLoginUser("diff-server", "diff-config", diffConfiguration);
 
@@ -298,23 +280,17 @@ public class SecureLoginTest {
         assertSame(expectedUGI, diffLoginUGI); // since actual login was mocked, we should get back whatever we mocked
         assertNotSame(loginSession, diffLoginSession); // should be different object
 
-        // verify static calls issued
-        PowerMockito.verifyStatic();
-        PxfUserGroupInformation.loginUserFromKeytab(configuration, "server", "config", "principal", "/path/to/keytab");
-        PowerMockito.verifyStatic();
-        PxfUserGroupInformation.reloginFromKeytab("server", expectedLoginSession);
+        verify(pxfUserGroupInformationMock).loginUserFromKeytab(configuration, "server", "config", "principal", "/path/to/keytab");
+        verify(pxfUserGroupInformationMock).reloginFromKeytab("server", expectedLoginSession);
 
-        PowerMockito.verifyStatic();
-        PxfUserGroupInformation.loginUserFromKeytab(diffConfiguration, "diff-server", "diff-config", "principal", "/path/to/keytab");
-        PowerMockito.verifyStatic();
-        PxfUserGroupInformation.reloginFromKeytab("diff-server", expectedDiffLoginSession);
+        verify(pxfUserGroupInformationMock).loginUserFromKeytab(diffConfiguration, "diff-server", "diff-config", "principal", "/path/to/keytab");
+        verify(pxfUserGroupInformationMock).reloginFromKeytab("diff-server", expectedDiffLoginSession);
 
-        PowerMockito.verifyNoMoreInteractions(PxfUserGroupInformation.class);
+        verifyNoMoreInteractions(pxfUserGroupInformationMock);
     }
 
     @Test
     public void testLoginKerberosSameServerDifferentPrincipal() throws IOException {
-        PowerMockito.mockStatic(PxfUserGroupInformation.class);
         expectedUGI = UserGroupInformation.createUserForTesting("some", new String[]{});
 
         expectedLoginSession = new LoginSession("config", "principal", "/path/to/keytab", expectedUGI, null, 0);
@@ -323,7 +299,7 @@ public class SecureLoginTest {
         configuration.set(PROPERTY_KEY_SERVICE_PRINCIPAL, "principal");
         configuration.set(PROPERTY_KEY_SERVICE_KEYTAB, "/path/to/keytab");
         configuration.set("hadoop.kerberos.min.seconds.before.relogin", "90");
-        when(PxfUserGroupInformation.loginUserFromKeytab(configuration, "server", "config", "principal", "/path/to/keytab")).thenReturn(expectedLoginSession);
+        when(pxfUserGroupInformationMock.loginUserFromKeytab(configuration, "server", "config", "principal", "/path/to/keytab")).thenReturn(expectedLoginSession);
 
         UserGroupInformation loginUGI = secureLogin.getLoginUser("server", "config", configuration);
 
@@ -341,9 +317,9 @@ public class SecureLoginTest {
         diffConfiguration.set(PROPERTY_KEY_SERVICE_PRINCIPAL, "diff-principal");
         diffConfiguration.set(PROPERTY_KEY_SERVICE_KEYTAB, "/path/to/keytab");
         diffConfiguration.set("hadoop.kerberos.min.seconds.before.relogin", "180");
-        when(PxfUserGroupInformation.loginUserFromKeytab(configuration, "server", "config", "principal", "/path/to/keytab")).thenReturn(expectedLoginSession);
-        when(PxfUserGroupInformation.loginUserFromKeytab(diffConfiguration, "server", "config", "diff-principal", "/path/to/keytab")).thenReturn(expectedDiffLoginSession);
-        when(PxfUserGroupInformation.getKerberosMinMillisBeforeRelogin("server", diffConfiguration)).thenReturn(180000L);
+        when(pxfUserGroupInformationMock.loginUserFromKeytab(configuration, "server", "config", "principal", "/path/to/keytab")).thenReturn(expectedLoginSession);
+        when(pxfUserGroupInformationMock.loginUserFromKeytab(diffConfiguration, "server", "config", "diff-principal", "/path/to/keytab")).thenReturn(expectedDiffLoginSession);
+        when(pxfUserGroupInformationMock.getKerberosMinMillisBeforeRelogin("server", diffConfiguration)).thenReturn(180000L);
 
         UserGroupInformation diffLoginUGI = secureLogin.getLoginUser("server", "config", diffConfiguration);
 
@@ -354,26 +330,19 @@ public class SecureLoginTest {
         assertSame(expectedUGI, diffLoginUGI); // since actual login was mocked, we should get back whatever we mocked
         assertNotSame(loginSession, diffLoginSession); // should be different object
 
-        // verify static calls issued
-        PowerMockito.verifyStatic();
-        PxfUserGroupInformation.loginUserFromKeytab(configuration, "server", "config", "principal", "/path/to/keytab");
-        PowerMockito.verifyStatic();
-        PxfUserGroupInformation.reloginFromKeytab("server", expectedLoginSession);
+        verify(pxfUserGroupInformationMock).loginUserFromKeytab(configuration, "server", "config", "principal", "/path/to/keytab");
+        verify(pxfUserGroupInformationMock).reloginFromKeytab("server", expectedLoginSession);
 
-        PowerMockito.verifyStatic();
-        PxfUserGroupInformation.loginUserFromKeytab(diffConfiguration, "server", "config", "diff-principal", "/path/to/keytab");
-        PowerMockito.verifyStatic(times(2));
-        PxfUserGroupInformation.getKerberosMinMillisBeforeRelogin("server", diffConfiguration);
-        PowerMockito.verifyStatic();
-        PxfUserGroupInformation.reloginFromKeytab("server", expectedDiffLoginSession);
+        verify(pxfUserGroupInformationMock).loginUserFromKeytab(diffConfiguration, "server", "config", "diff-principal", "/path/to/keytab");
+        verify(pxfUserGroupInformationMock, times(2)).getKerberosMinMillisBeforeRelogin("server", diffConfiguration);
+        verify(pxfUserGroupInformationMock).reloginFromKeytab("server", expectedDiffLoginSession);
 
-        PowerMockito.verifyNoMoreInteractions(PxfUserGroupInformation.class);
+        verifyNoMoreInteractions(pxfUserGroupInformationMock);
     }
 
     @Test
     public void testLoginKerberosReuseExistingLoginSessionWithResolvedHostnameInPrincipal() throws IOException {
-        PowerMockito.mockStatic(PxfUserGroupInformation.class);
-        when(PxfUserGroupInformation.getKerberosMinMillisBeforeRelogin("server", configuration)).thenReturn(90L);
+        when(pxfUserGroupInformationMock.getKerberosMinMillisBeforeRelogin("server", configuration)).thenReturn(90L);
 
         expectedUGI = UserGroupInformation.createUserForTesting("some", new String[]{});
 
@@ -394,10 +363,8 @@ public class SecureLoginTest {
         assertSame(expectedUGI, loginUGI); // since actual login was mocked, we should get back whatever we mocked
 
         // login should be never called, only re-login
-        PowerMockito.verifyStatic();
-        PxfUserGroupInformation.reloginFromKeytab("server", loginSession);
-        PowerMockito.verifyStatic(never());
-        PxfUserGroupInformation.loginUserFromKeytab(any(), any(), any(), any(), any());
+        verify(pxfUserGroupInformationMock).reloginFromKeytab("server", loginSession);
+        verify(pxfUserGroupInformationMock, never()).loginUserFromKeytab(any(), any(), any(), any(), any());
     }
 
     /* ---------- methods to test service principal / keytab properties ---------- */

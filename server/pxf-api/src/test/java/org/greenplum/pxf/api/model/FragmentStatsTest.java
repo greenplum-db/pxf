@@ -20,12 +20,12 @@ package org.greenplum.pxf.api.model;
  */
 
 
-import static org.junit.Assert.assertEquals;
-
 import java.io.IOException;
 
 import org.greenplum.pxf.api.model.FragmentStats.SizeUnit;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class FragmentStatsTest {
 

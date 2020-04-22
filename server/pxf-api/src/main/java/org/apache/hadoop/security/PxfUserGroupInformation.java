@@ -30,7 +30,7 @@ import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.HADOOP_KERBEROS
  * for different Kerberos Realms and PXF configuration servers. The class must to reside on this package to gain access
  * to package-private <code>User</code> class.
  */
-public abstract class PxfUserGroupInformation {
+public class PxfUserGroupInformation {
 
     private static final String LOGIN_FAILURE = "Login failure";
     // place logger into org.greenplum.pxf.api.security package to be governed by pxf log level, not hadoop one
@@ -48,12 +48,32 @@ public abstract class PxfUserGroupInformation {
             System.getProperty("os.arch").contains("s390x");
     private static final boolean aix = System.getProperty("os.name").equals("AIX");
 
+    private static final PxfUserGroupInformation instance = new PxfUserGroupInformation();
+
+    // package-private LoginContextProvider to allow mocking during testing
+    LoginContextProvider loginContextProvider = new LoginContextProvider();
+
     // package-private Subject provider to allow mock Subjects having User during testing
-    static Supplier<Subject> subjectProvider = () -> new Subject();
+    Supplier<Subject> subjectProvider = Subject::new;
 
     // For Tracing purposes to make sure the loginCount and reloginCount remains reasonable
-    private static final Map<String, AtomicLong> loginCountMap = new HashMap<>();
-    private static final Map<String, AtomicLong> reloginCountMap = new HashMap<>();
+    private final Map<String, AtomicLong> loginCountMap = new HashMap<>();
+    private final Map<String, AtomicLong> reloginCountMap = new HashMap<>();
+
+    /**
+     * Prevent instantiation of this class by external code
+     */
+    private PxfUserGroupInformation() {
+    }
+
+    /**
+     * Returns the static instance for this factory
+     *
+     * @return the static instance for this factory
+     */
+    public static PxfUserGroupInformation getInstance() {
+        return instance;
+    }
 
     /**
      * Log a user in from a keytab file. Loads a user identity from a keytab
@@ -68,7 +88,7 @@ public abstract class PxfUserGroupInformation {
      * @throws KerberosAuthException if it's a kerberos login exception.
      */
     public synchronized
-    static LoginSession loginUserFromKeytab(Configuration configuration, String serverName, String configDirectory, String principal, String keytabFilename) throws IOException {
+    LoginSession loginUserFromKeytab(Configuration configuration, String serverName, String configDirectory, String principal, String keytabFilename) throws IOException {
 
         Preconditions.checkArgument(StringUtils.isNotBlank(keytabFilename), "Running in secure mode, but config doesn't have a keytab");
 
@@ -77,7 +97,7 @@ public abstract class PxfUserGroupInformation {
             Subject subject = subjectProvider.get();
 
             // create login context with the given subject, using Kerberos principal and keytab filename; then login
-            LoginContext login = newLoginContext(HadoopConfiguration.KEYTAB_KERBEROS_CONFIG_NAME,
+            LoginContext login = loginContextProvider.newLoginContext(HadoopConfiguration.KEYTAB_KERBEROS_CONFIG_NAME,
                     subject, new HadoopConfiguration(principal, keytabFilename));
             login.login();
 
@@ -120,7 +140,7 @@ public abstract class PxfUserGroupInformation {
      * @throws IOException
      * @throws KerberosAuthException on a failure
      */
-    public static void reloginFromKeytab(String serverName, LoginSession loginSession) throws KerberosAuthException {
+    public void reloginFromKeytab(String serverName, LoginSession loginSession) throws KerberosAuthException {
 
         UserGroupInformation ugi = loginSession.getLoginUser();
 
@@ -163,7 +183,7 @@ public abstract class PxfUserGroupInformation {
                     login.logout();
                     // login and also update the subject field of this instance to
                     // have the new credentials (pass it to the LoginContext constructor)
-                    login = newLoginContext(
+                    login = loginContextProvider.newLoginContext(
                             HadoopConfiguration.KEYTAB_KERBEROS_CONFIG_NAME, subject,
                             new HadoopConfiguration(keytabPrincipal, keytabFile));
                     LOG.info("Initiating re-login for {} for server {}", keytabPrincipal, serverName);
@@ -186,7 +206,7 @@ public abstract class PxfUserGroupInformation {
         logStatistics(serverName);
     }
 
-    public static long getKerberosMinMillisBeforeRelogin(String serverName, Configuration configuration) {
+    public long getKerberosMinMillisBeforeRelogin(String serverName, Configuration configuration) {
         try {
             return 1000L * configuration.getLong(HADOOP_KERBEROS_MIN_SECONDS_BEFORE_RELOGIN, 60L);
         } catch (NumberFormatException e) {
@@ -200,7 +220,7 @@ public abstract class PxfUserGroupInformation {
     // if the first kerberos ticket is not TGT, then remove and destroy it since
     // the kerberos library of jdk always use the first kerberos ticket as TGT.
     // See HADOOP-13433 for more details.
-    static private void fixKerberosTicketOrder(Subject subject) {
+    private void fixKerberosTicketOrder(Subject subject) {
         Set<Object> creds = subject.getPrivateCredentials();
         synchronized (creds) {
             for (Iterator<Object> iter = creds.iterator(); iter.hasNext(); ) {
@@ -228,25 +248,10 @@ public abstract class PxfUserGroupInformation {
         LOG.warn("Warning, no kerberos tickets found while attempting to renew ticket");
     }
 
-    private static long getRefreshTime(KerberosTicket tgt) {
+    private long getRefreshTime(KerberosTicket tgt) {
         long start = tgt.getStartTime().getTime();
         long end = tgt.getEndTime().getTime();
         return start + (long) ((end - start) * TICKET_RENEW_WINDOW);
-    }
-
-    private static LoginContext newLoginContext(String appName, Subject subject, javax.security.auth.login.Configuration loginConf)
-            throws LoginException {
-        // Temporarily switch the thread's ContextClassLoader to match this
-        // class's classloader, so that we can properly load HadoopLoginModule
-        // from the JAAS libraries.
-        Thread t = Thread.currentThread();
-        ClassLoader oldCCL = t.getContextClassLoader();
-        t.setContextClassLoader(UserGroupInformation.HadoopLoginModule.class.getClassLoader());
-        try {
-            return new LoginContext(appName, subject, null, loginConf);
-        } finally {
-            t.setContextClassLoader(oldCCL);
-        }
     }
 
     private static String getOSLoginModuleName() {
@@ -268,7 +273,7 @@ public abstract class PxfUserGroupInformation {
      *
      * @return the user's TGT or null if none was found
      */
-    private static synchronized KerberosTicket getTGT(Subject subject) {
+    private synchronized KerberosTicket getTGT(Subject subject) {
         Set<KerberosTicket> tickets = subject.getPrivateCredentials(KerberosTicket.class);
         for (KerberosTicket ticket : tickets) {
             if (SecurityUtil.isOriginalTGT(ticket)) {
@@ -278,7 +283,7 @@ public abstract class PxfUserGroupInformation {
         return null;
     }
 
-    private static boolean hasSufficientTimeElapsed(long now, LoginSession loginSession) {
+    private boolean hasSufficientTimeElapsed(long now, LoginSession loginSession) {
         long lastLogin = loginSession.getUser().getLastLogin();
         long kerberosMinMillisBeforeRelogin = loginSession.getKerberosMinMillisBeforeRelogin();
 
@@ -290,11 +295,11 @@ public abstract class PxfUserGroupInformation {
         return true;
     }
 
-    private static String prependFileAuthority(String keytabPath) {
+    private String prependFileAuthority(String keytabPath) {
         return keytabPath.startsWith("file://") ? keytabPath : "file://" + keytabPath;
     }
 
-    private static void trackEventPerServer(String serverName, Map<String, AtomicLong> map) {
+    private void trackEventPerServer(String serverName, Map<String, AtomicLong> map) {
         AtomicLong loginCountPerServer = map.get(serverName);
 
         if (loginCountPerServer == null) {
@@ -305,7 +310,7 @@ public abstract class PxfUserGroupInformation {
         }
     }
 
-    private static void logStatistics(String serverName) {
+    private void logStatistics(String serverName) {
         if (!LOG.isTraceEnabled()) return;
 
         AtomicLong loginPerServer = loginCountMap.get(serverName);
@@ -323,11 +328,29 @@ public abstract class PxfUserGroupInformation {
         );
     }
 
+    static class LoginContextProvider {
+
+        LoginContext newLoginContext(String appName, Subject subject, javax.security.auth.login.Configuration loginConf)
+                throws LoginException {
+            // Temporarily switch the thread's ContextClassLoader to match this
+            // class's classloader, so that we can properly load HadoopLoginModule
+            // from the JAAS libraries.
+            Thread t = Thread.currentThread();
+            ClassLoader oldCCL = t.getContextClassLoader();
+            t.setContextClassLoader(UserGroupInformation.HadoopLoginModule.class.getClassLoader());
+            try {
+                return new LoginContext(appName, subject, null, loginConf);
+            } finally {
+                t.setContextClassLoader(oldCCL);
+            }
+        }
+    }
+
     /**
      * This class is copied from <code>UserGroupInformation</code> class except it requires specific Kerberos
      * principal and keytab, unlike in the source class, where those are static and thus common to all servers.
      */
-    static class HadoopConfiguration extends javax.security.auth.login.Configuration {
+    class HadoopConfiguration extends javax.security.auth.login.Configuration {
         private static final String KEYTAB_KERBEROS_CONFIG_NAME = "hadoop-keytab-kerberos";
         private final Map<String, String> BASIC_JAAS_OPTIONS = new HashMap<>();
         private final AppConfigurationEntry OS_SPECIFIC_LOGIN;

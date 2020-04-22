@@ -1,22 +1,18 @@
 package org.greenplum.pxf.api.model;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class GreenplumCSVTest {
 
     private GreenplumCSV gpCSV;
 
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
-
-    @Before
+    @BeforeEach
     public void setup() {
         gpCSV = new GreenplumCSV();
     }
@@ -230,9 +226,9 @@ public class GreenplumCSVTest {
 
     @Test
     public void testCsvOptionWithQuoteCharInvalidLength() {
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("invalid QUOTE character '\"\"'. Only single character is allowed for QUOTE.");
-        gpCSV.withQuoteChar("\"\"");
+        Exception e = assertThrows(IllegalArgumentException.class,
+                () -> gpCSV.withQuoteChar("\"\""));
+        assertEquals("invalid QUOTE character '\"\"'. Only single character is allowed for QUOTE.", e.getMessage());
     }
 
     @Test
@@ -249,9 +245,9 @@ public class GreenplumCSVTest {
 
     @Test
     public void testCsvOptionWithEscapeCharInvalidLength() {
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("invalid ESCAPE character '\\\\'. Only single character is allowed for ESCAPE.");
-        gpCSV.withEscapeChar("\\\\");
+        Exception e = assertThrows(IllegalArgumentException.class,
+                () -> gpCSV.withEscapeChar("\\\\"));
+        assertEquals("invalid ESCAPE character '\\\\'. Only single character is allowed for ESCAPE.", e.getMessage());
     }
 
     @Test
@@ -272,9 +268,9 @@ public class GreenplumCSVTest {
 
     @Test
     public void testCsvOptionWithNewlineInvalid() {
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("invalid newline character '\\\\'. Only LF, CR, or CRLF are supported for newline.");
-        gpCSV.withNewline("\\\\");
+        Exception e = assertThrows(IllegalArgumentException.class,
+                () -> gpCSV.withNewline("\\\\"));
+        assertEquals("invalid newline character '\\\\'. Only LF, CR, or CRLF are supported for newline.", e.getMessage());
     }
 
     @Test
@@ -291,9 +287,9 @@ public class GreenplumCSVTest {
 
     @Test
     public void testCsvOptionWithDelimiterInvalid() {
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("invalid DELIMITER character '\\\\'. Only single character is allowed for DELIMITER.");
-        gpCSV.withDelimiter("\\\\");
+        Exception e = assertThrows(IllegalArgumentException.class,
+                () -> gpCSV.withDelimiter("\\\\"));
+        assertEquals("invalid DELIMITER character '\\\\'. Only single character is allowed for DELIMITER.", e.getMessage());
     }
 
     @Test

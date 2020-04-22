@@ -1,23 +1,18 @@
 package org.greenplum.pxf.api.model;
 
 import org.greenplum.pxf.api.UnsupportedTypeException;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class OutputFormatTest {
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
     @Test
     public void testUnsupportedOutputFormat() {
-        expectedException.expect(UnsupportedTypeException.class);
-        expectedException.expectMessage("Unable to find output format by given class name: foo");
-
-        OutputFormat.getOutputFormat("foo");
+        Exception e = assertThrows(UnsupportedTypeException.class,
+                () -> OutputFormat.getOutputFormat("foo"));
+        assertEquals("Unable to find output format by given class name: foo", e.getMessage());
     }
 
     @Test

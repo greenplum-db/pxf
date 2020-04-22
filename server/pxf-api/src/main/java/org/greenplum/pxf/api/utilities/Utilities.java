@@ -71,7 +71,7 @@ public class Utilities {
         if (encoded == null) {
             return null;
         }
-        if (!Base64.isArrayByteBase64(encoded.getBytes())) {
+        if (!Base64.isBase64(encoded.getBytes())) {
             String message = String.format("%s must be Base64 encoded. (Bad value: %s)", paramName, encoded);
             throw new IllegalArgumentException(message);
         }
