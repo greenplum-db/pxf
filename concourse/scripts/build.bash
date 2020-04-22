@@ -26,6 +26,9 @@ function compile_pxf_protocol_extension() {
 	    source /opt/gcc_env.sh
     fi
 
+    echo "PATH=${PATH}"
+    echo "which dep=$(which dep)"
+    dep version
     make -C "pxf_src" tar
 }
 
