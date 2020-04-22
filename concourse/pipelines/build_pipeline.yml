@@ -49,11 +49,11 @@ resources:
     repository: pivotaldata/gpdb-pxf-dev
     tag: centos6-hdp2-server
 
-- name: gpdb-pxf-dev-centos7-hdp2-server
-  type: docker-image
-  source:
-    repository: pivotaldata/gpdb-pxf-dev
-    tag: centos7-hdp2-server
+#- name: gpdb-pxf-dev-centos7-hdp2-server
+#  type: docker-image
+#  source:
+#    repository: pivotaldata/gpdb-pxf-dev
+#    tag: centos7-hdp2-server
 
 ## ---------- Product Packages ----------
 - name: gpdb_rhel6_rpm
@@ -142,17 +142,18 @@ jobs:
       resource: gpdb_rhel6_rpm
       passed: [Build PXF-GP6 on RHEL6]
   - task: Test PXF-GP6-HDP2 on RHEL6
-    file: pxf_src/concourse/tasks/test_pxf.yml
+    file: pxf_src/concourse/tasks/test.yml
     image: gpdb-pxf-dev-centos6-hdp2-server
     params:
       ACCESS_KEY_ID: ((tf-machine-access-key-id))
       GROUP: gpdb,proxy,profile
       HADOOP_CLIENT: HDP
-      PGPORT: ((pgport))
+#      PGPORT: ((pgport))
+      PGPORT: 6000
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
       TARGET_OS: centos
       TARGET_OS_VERSION: 6
-      TEST_ENV: ((test-env))
+#      TEST_ENV: ((test-env))
 
 
 
