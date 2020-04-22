@@ -22,13 +22,14 @@ function install_gpdb() {
 
 function compile_pxf_protocol_extension() {
     # use a login shell for setting environment
-    bash --login -c "
+    #bash --login -c "
 	    source ${GPHOME}/greenplum_path.sh
         if [[ ${TARGET_OS} == rhel6 ]]; then
 	        source /opt/gcc_env.sh
         fi
+        source /etc/bashrc
 	    make -C '${PWD}/pxf_src' tar
-    "
+    #"
 }
 
 function package_pxf_protocol_extension() {
