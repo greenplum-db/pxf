@@ -1,17 +1,6 @@
-ifeq "$(GPHOME)" ""
-    GPHOME = "/usr/local/greenplum-db"
-endif
+include common.mk
 
-ifeq "$(PXF_HOME)" ""
-    PXF_HOME = "$(GPHOME)/pxf"
-endif
-
-SHELL := /bin/bash
-
-export GPHOME
-export PXF_HOME
-
-PXF_VERSION := $(shell grep version= server/gradle.properties | cut -d= -f2)
+PXF_VERSION ?= $(shell cat version)
 export PXF_VERSION
 
 default: all
