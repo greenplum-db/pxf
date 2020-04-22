@@ -3,13 +3,10 @@
 set -eox pipefail
 
 : "${TARGET_OS:?TARGET_OS must be set}"
-: "${TARGET_AR:?TARGET_AR must be set}"
 
 GPDB_PKG_DIR=gpdb_package
 GPDB_VERSION=$(<"${GPDB_PKG_DIR}/version")
-GPDB_MAJOR_VERSION=${GPDB_VERSION:0:1}
 GPHOME=/usr/local/greenplum-db-${GPDB_VERSION}
-PPE_VERSION=1.0.0
 
 function install_gpdb() {
     if [[ ${TARGET_OS} == rhel* ]]; then
@@ -29,36 +26,14 @@ function compile_pxf_protocol_extension() {
 	    source /opt/gcc_env.sh
     fi
 
-    USE_PGXS=1 make -C "pxf-protocol-extension_src"
+    make -C "pxf_src" tar
 }
 
 function package_pxf_protocol_extension() {
-
-    # store latest commit SHA
-    pushd pxf-protocol-extension_src > /dev/null
-    echo $(git rev-parse --verify HEAD) > commit.sha
-    echo ${PPE_VERSION} > version
-    popd > /dev/null
-
-    # establish OS-specific package name
-    local package_name=ppe-gpdb${GPDB_MAJOR_VERSION}-${PPE_VERSION}-${TARGET_OS}-${TARGET_AR}
-
-    # prepare directory layout for artifacts
-    mkdir -p dist/${package_name}/{lib/postgresql,share/postgresql/extension}
-
-    # place artifacts into appropriate locations
-    cp pxf-protocol-extension_src/pxf.so dist/${package_name}/lib/postgresql/
-    cp pxf-protocol-extension_src/pxf*.{sql,control} dist/${package_name}/share/postgresql/extension/
-    cp pxf-protocol-extension_src/{commit.sha,version,concourse/scripts/install_component.bash} dist/${package_name}
-
-    # package artifacts into a tarball
-    pushd dist > /dev/null
-    tar cvzf ${package_name}.tar.gz ${package_name}
-    popd > /dev/null
-
     # verify contents
-    ls -al dist
-    tar -tvzf dist/${package_name}.tar.gz
+    ls -al pxf_src/build/dist
+    tar -tvzf pxf_src/build/dist/pxf-*.tar.gz
+    cp pxf_src/build/dist/pxf-*.tar.gz dist
 }
 
 install_gpdb

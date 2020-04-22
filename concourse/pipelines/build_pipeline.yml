@@ -14,14 +14,12 @@ resource_types:
 resources:
 
 ## ---------- Github Repos ----------
-- name: pxf-protocol-extension_src
+- name: pxf_src
   type: git
   icon: git
   source:
-    branch: ((pxf-protocol-extension-git-branch))
-    uri: ((pxf-protocol-extension-git-remote))
-    private_key: ((ccp-git-key))
-
+    branch: ((pxf-git-branch))
+    uri: ((pxf-git-remote))
 ## ---------- Docker Images ----------
 - name: gpdb-pxf-dev-centos6
   type: docker-image
@@ -75,47 +73,44 @@ resources:
 ## ======================================================================
 
 jobs:
-- name: Build PPE on RHEL6
+- name: Build PXF for GPDB-6 on RHEL6
   plan:
   - in_parallel:
-    - get: pxf-protocol-extension_src
+    - get: pxf_src
       trigger: true
     - get: gpdb-pxf-dev-centos6
     - get: gpdb_package
       resource: gpdb_rhel6_rpm
-  - task: Build PPE on RHEL6
+  - task: Build PXF on RHEL6
     image: gpdb-pxf-dev-centos6
-    file: pxf-protocol-extension_src/concourse/tasks/build.yml
+    file: pxf_src/concourse/tasks/build.yml
     params:
       TARGET_OS: rhel6
-      TARGET_AR: x86_64
 
-- name: Build PPE on RHEL7
+- name: Build PXF for GPDB-6 on RHEL7
   plan:
   - in_parallel:
-    - get: pxf-protocol-extension_src
+    - get: pxf_src
       trigger: true
     - get: gpdb-pxf-dev-centos7
     - get: gpdb_package
       resource: gpdb_rhel7_rpm
-  - task: Build PPE on RHEL7
+  - task: Build PXF on RHEL7
     image: gpdb-pxf-dev-centos7
-    file: pxf-protocol-extension_src/concourse/tasks/build.yml
+    file: pxf_src/concourse/tasks/build.yml
     params:
       TARGET_OS: rhel7
-      TARGET_AR: x86_64
 
-- name: Build PPE on Ubuntu18
+- name: Build PXF for GPDB-6 on Ubuntu18
   plan:
   - in_parallel:
-    - get: pxf-protocol-extension_src
+    - get: pxf_src
       trigger: true
     - get: gpdb-pxf-dev-ubuntu18
     - get: gpdb_package
       resource: gpdb_ubuntu18_deb
-  - task: Build PPE on Ubuntu18
+  - task: Build PXF on Ubuntu18
     image: gpdb-pxf-dev-ubuntu18
-    file: pxf-protocol-extension_src/concourse/tasks/build.yml
+    file: pxf_src/concourse/tasks/build.yml
     params:
       TARGET_OS: ubuntu18.04
-      TARGET_AR: amd64
