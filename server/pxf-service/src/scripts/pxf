@@ -137,7 +137,7 @@ function createInstance()
 
     # copy configuration files into instance
     cp "$tomcat_templates"/bin/{kill-pxf,setenv,catalina}.sh "${instance}/bin"
-    cp "$tomcat_templates"/conf/{logging.properties,{server,web}.xml} "${instance}/conf"
+    cp "$tomcat_templates"/conf/logging.properties "${instance}/conf"
 
     return 0
 }
