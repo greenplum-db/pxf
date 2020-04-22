@@ -23,17 +23,18 @@ package org.greenplum.pxf.api;
 import org.greenplum.pxf.api.examples.DemoResolver;
 import org.greenplum.pxf.api.examples.DemoTextResolver;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 import static org.greenplum.pxf.api.io.DataType.VARCHAR;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class DemoResolverTest {
 
@@ -45,7 +46,7 @@ public class DemoResolverTest {
     private OneRow row;
     private OneField field;
 
-    @Before
+    @BeforeEach
     public void setup() {
         context = new RequestContext();
         context.setConfig("default");
@@ -91,22 +92,25 @@ public class DemoResolverTest {
         assertNull(output);
     }
 
-    @Test(expected = Exception.class)
-    public void testSetTextDataNullInput() throws Exception {
+    @Test
+    public void testSetTextDataNullInput() {
 
-        textResolver.setFields(null);
+        assertThrows(Exception.class,
+                () -> textResolver.setFields(null));
     }
 
-    @Test(expected = Exception.class)
-    public void testSetTextDataEmptyInput() throws Exception {
+    @Test
+    public void testSetTextDataEmptyInput() {
 
-        textResolver.setFields(Collections.<OneField>emptyList());
+        assertThrows(Exception.class,
+                () -> textResolver.setFields(Collections.emptyList()));
     }
 
-    @Test(expected = Exception.class)
-    public void testSetTextDataManyElements() throws Exception {
+    @Test
+    public void testSetTextDataManyElements() {
 
-        textResolver.setFields(Arrays.asList(field, field));
+        assertThrows(Exception.class,
+                () -> textResolver.setFields(Arrays.asList(field, field)));
     }
 
 }

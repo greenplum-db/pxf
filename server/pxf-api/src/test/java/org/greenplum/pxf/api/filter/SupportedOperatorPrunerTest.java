@@ -1,11 +1,10 @@
 package org.greenplum.pxf.api.filter;
 
-
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.EnumSet;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class SupportedOperatorPrunerTest {
 
@@ -177,5 +176,4 @@ public class SupportedOperatorPrunerTest {
         TRAVERSER.traverse(root, supportedOperatorPruner, toStringTreeVisitor);
         assertEquals(expected, toStringTreeVisitor.toString());
     }
-
 }

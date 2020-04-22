@@ -17,339 +17,97 @@
  * under the License.
  */
 
-wrapper {
-    gradleVersion = '4.10.3'
+buildscript {
+    repositories {
+        jcenter()
+    }
+}
+
+plugins {
+    id "com.github.hierynomus.license-report" version "0.15.0"
+    id "io.franzbecker.gradle-lombok" version "3.3.0"
+    id "org.springframework.boot" version "${spring_boot_version}" apply false
+}
+
+downloadLicenses {
+    dependencyConfiguration = 'bundleJars'
+}
+
+def javaProjects = subprojects.findAll {
+    it.name.startsWith("pxf-")
 }
 
 allprojects {
-    apply plugin: 'java'
-    apply plugin: 'idea'
+    apply plugin: "jacoco"
+    apply plugin: "idea"
+    apply plugin: "eclipse"
 
     repositories {
         jcenter()
     }
-
-    group = 'org.greenplum.pxf'
-    sourceCompatibility = 1.8
-
-    task allDeps(type: DependencyReportTask) {}
-    task allDepInsight(type: DependencyInsightReportTask) {}
-
-    compileJava {
-        options.compilerArgs += [
-            "-g", "-Xlint:varargs", "-Xlint:cast", "-Xlint:classfile", "-Xlint:dep-ann", "-Xlint:divzero",
-            "-Xlint:empty", "-Xlint:finally", "-Xlint:overrides", "-Xlint:path", "-Xlint:processing", "-Xlint:static",
-            "-Xlint:try", "-Xlint:fallthrough", "-Xlint:deprecation", "-Xlint:unchecked", "-Xlint:-options", "-Werror"]
-    }
-
-    javadoc {
-        source = sourceSets.main.allJava
-        classpath = configurations.compile
-    }
-
-    tasks.withType(JavaCompile) {
-        options.encoding = "UTF-8"
-    }
-
-    // Add LICENSE and NOTICE to generated jar files.
-    jar {
-        from "../../NOTICE"
-        from "../../LICENSE"
-    }
-
-    dependencies {
-        testCompile "junit:junit:${junitVersion}"
-        testCompile "org.powermock:powermock-core:1.5.6"
-        testCompile ("org.powermock:powermock-module-junit4:1.5.6") {
-            exclude group: 'org.javassist', module: 'javassist'
-        }
-        testCompile "org.powermock:powermock-api-mockito:1.5.6"
-        testCompile "org.mockito:mockito-core:1.9.5"
-        testCompile "org.javassist:javassist:3.22.0-GA"
-    }
-
-    configurations.all {
-        resolutionStrategy {
-            // force versions that were specified in dependencies:
-            // hbase/hive has a different versions than other hadoop components
-            force "commons-codec:commons-codec:1.4"
-            force "commons-collections:commons-collections:3.2.1"
-            force "commons-logging:commons-logging:1.1.3"
-            force "org.apache.avro:avro:1.7.7"
-            force "org.apache.zookeeper:zookeeper:3.4.6"
-            force "junit:junit:${junitVersion}"
-            force "com.google.guava:guava:19.0"
-        }
-    }
-
-    configurations {
-        bundleJars.extendsFrom runtime
-    }
-
-    configurations.bundleJars {
-        transitive = false
-    }
-
-    task copyRuntimeDependencies(type: Copy) {
-        delete "${buildDir}/libs-shared"
-        into "${buildDir}/libs-shared"
-        from configurations.bundleJars {
-            // providedCompile is a war plugin specific thing to exclude in war.
-            // We have to exclude tomcat explicitly
-            exclude 'tomcat-catalina-*'
-            exclude 'pxf-*'
-        }
-    }
 }
 
 idea {
-    module {
-        downloadJavadoc = true
-        downloadSources = true
+    project {
+        jdkName = "1.8"
+        languageLevel = "8"
+        vcs = "Git"
     }
 }
 
-project('pxf') {
-    jar.enabled = false
-    dependencies {
-        // AWS S3 support jars
-        bundleJars "org.apache.httpcomponents:httpclient:4.5.5"
-        bundleJars "org.apache.httpcomponents:httpcore:4.4.9"
-        bundleJars "org.apache.hadoop:hadoop-aws:${hadoopVersion}"
-        bundleJars "com.amazonaws:aws-java-sdk-core:${awsJavaSdk}"
-        bundleJars "com.amazonaws:aws-java-sdk-kms:${awsJavaSdk}"
-        bundleJars "com.amazonaws:aws-java-sdk-s3:${awsJavaSdk}"
-        // Azure Data Blob
-        bundleJars "org.apache.hadoop:hadoop-azure:${hadoopVersion}"
-        bundleJars "com.microsoft.azure:azure-storage:5.4.0"
-        // Azure Datalake jars
-        bundleJars "org.apache.hadoop:hadoop-azure-datalake:${hadoopVersion}"
-        bundleJars "com.microsoft.azure:azure-data-lake-store-sdk:2.2.3"
-        // GCS jars and dependencies
-        bundleJars "com.google.cloud.bigdataoss:gcs-connector:hadoop2-1.9.17:shaded"
-    }
-}
+configure(javaProjects) {
+    apply plugin: 'java'
+    apply plugin: 'io.spring.dependency-management'
+    apply plugin: "io.franzbecker.gradle-lombok"
 
-project('pxf-api') {
-    dependencies {
-        compile "commons-lang:commons-lang:2.6"
-        compile "commons-logging:commons-logging:1.1.3"
-        compile "commons-collections:commons-collections:3.2.2"
-        compile "commons-configuration:commons-configuration:1.6"
-        compile "commons-codec:commons-codec:1.4"
-        compile "com.sun.jersey:jersey-core:1.9"
-        compile "org.apache.hadoop:hadoop-common:${hadoopVersion}"
-        compile "com.fasterxml.jackson.core:jackson-core:2.11.0"
-        compile "com.fasterxml.jackson.core:jackson-databind:2.11.0"
+    group = 'org.greenplum.pxf'
+    version = "${version}"
 
-        bundleJars "asm:asm:3.2"
-    }
-}
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 
-project('pxf-hbase') {
-    dependencies {
-        compile(project(':pxf-api'))
-        compile "org.apache.hbase:hbase-client:${hbaseVersion}"
-
-        bundleJars "org.apache.hbase:hbase-common:${hbaseVersion}"
-        bundleJars "org.apache.hbase:hbase-protocol:${hbaseVersion}"
-        bundleJars "org.apache.htrace:htrace-core:3.1.0-incubating"
-        bundleJars "io.netty:netty-all:4.0.23.Final"
-        bundleJars "org.apache.zookeeper:zookeeper:3.4.6"
-        bundleJars "com.yammer.metrics:metrics-core:2.2.0"
-    }
-}
-
-project('pxf-hdfs') {
-    dependencies {
-        compile(project(':pxf-api'))
-        compile "org.apache.avro:avro-mapred:1.7.7"
-        compile "com.fasterxml.jackson.core:jackson-databind:2.11.0"
-        compile "com.fasterxml.jackson.core:jackson-core:2.11.0"
-        compile "com.fasterxml.jackson.core:jackson-annotations:2.11.0"
-        compile "org.apache.hadoop:hadoop-mapreduce-client-core:${hadoopVersion}"
-        compile "org.apache.hadoop:hadoop-yarn-api:${hadoopVersion}" // Kerberos dependency
-        compile "org.apache.hadoop:hadoop-yarn-client:${hadoopVersion}" // Kerberos dependency
-        compile "org.apache.hadoop:hadoop-common:${hadoopVersion}"
-        compile "org.apache.htrace:htrace-core4:${htraceVersion}"
-        compile "org.apache.hadoop:hadoop-hdfs:${hadoopVersion}"
-        compile "org.apache.hadoop:hadoop-hdfs-client:${hadoopVersion}"
-        compile "org.apache.parquet:parquet-format:2.7.0"
-        compile "org.apache.parquet:parquet-column:${parquetVersion}"
-        compile "org.apache.parquet:parquet-common:${parquetVersion}"
-        compile "org.apache.parquet:parquet-encoding:${parquetVersion}"
-        compile "org.apache.parquet:parquet-generator:${parquetVersion}"
-        compile "org.apache.parquet:parquet-hadoop:${parquetVersion}"
-        compile "org.apache.parquet:parquet-jackson:${parquetVersion}"
-        compile "org.apache.hive:hive-storage-api:2.4.0" // for parquet writing
-
-        // for parquet tests
-        testCompile "org.apache.parquet:parquet-pig:${parquetVersion}"
-
-        bundleJars "org.apache.avro:avro:1.7.7"
-        // Dependency in hadoop 2.9.2
-        bundleJars "com.fasterxml.woodstox:woodstox-core:5.0.3"
-        bundleJars "org.codehaus.woodstox:stax2-api:3.1.4"
-        bundleJars "org.apache.commons:commons-compress:1.20"
-        bundleJars "org.tukaani:xz:1.8"
-    }
-}
-
-project('pxf-hive') {
-    dependencies {
-        compile(project(':pxf-api'))
-        compile(project(':pxf-hdfs'))
-        compile("org.apache.hive:hive-exec:${hiveVersion}:core") {
-            exclude module: 'calcite-core'
-            exclude module: 'calcite-avatica'
-            exclude module: 'guava'
+    dependencyManagement {
+        imports {
+            mavenBom("org.springframework.boot:spring-boot-dependencies:${spring_boot_version}")
         }
-        compile("org.apache.hive:hive-metastore:${hiveVersion}")
-        compile("org.apache.hive:hive-serde:${hiveVersion}")
-        compile("com.esotericsoftware:kryo:3.0.3")
-        /*
-         * Transitive dependencies for hive-exec-core. Instead of bundling,
-         * hive-exec, hive-exec-core is used to avoid conflict with other
-         * dependencies included in hive-exec (i.e Parquet) which were causing
-         * other tests to fail.
-         * */
-        bundleJars "org.apache.hive:hive-common:${hiveVersion}"
-        bundleJars "org.apache.hive.shims:hive-shims-common:${hiveVersion}"
-        bundleJars "org.apache.hive.shims:hive-shims-0.23:${hiveVersion}"
-        bundleJars "org.apache.commons:commons-lang3:3.1"
-        bundleJars "org.apache.hive:hive-storage-api:2.4.0"
-        bundleJars "org.apache.orc:orc-core:1.3.4"
-        bundleJars "io.airlift:aircompressor:0.8"
-        bundleJars "joda-time:joda-time:2.8.1"
-        bundleJars "org.objenesis:objenesis:2.1"
-        bundleJars "com.esotericsoftware:kryo:3.0.3"
-        bundleJars "com.esotericsoftware:minlog:1.3.0"
-        bundleJars "com.esotericsoftware:reflectasm:1.11.6"
-        bundleJars "org.apache.thrift:libfb303:0.9.3"
-        bundleJars "org.apache.thrift:libthrift:0.9.3"
-        bundleJars "org.antlr:antlr-runtime:3.5.2"
-        bundleJars "org.datanucleus:datanucleus-api-jdo:4.2.4"
-        bundleJars "org.datanucleus:datanucleus-core:4.1.17"
-        bundleJars "org.xerial.snappy:snappy-java:1.0.5"
-        bundleJars "javax.jdo:jdo-api:3.0.1"
-        bundleJars "org.codehaus.jackson:jackson-core-asl:1.9.13"
-        bundleJars "org.codehaus.jackson:jackson-mapper-asl:1.9.13"
-        bundleJars "org.jodd:jodd-core:3.5.2"
-        /*
-         * Transitive dependencies for hive-exec-core until here
-         * */
+        dependencies {
+            dependency("commons-lang:commons-lang:2.6")
+            dependency("com.google.guava:guava:20.0")
+            dependency("commons-logging:commons-logging:1.2")
+            dependency("commons-collections:commons-collections:3.2.2")
+            dependency("commons-configuration:commons-configuration:1.10")
+            dependency("commons-codec:commons-codec:1.14")
 
-        /*
-         * Transitive dependency required for reading Hive tables with
-         * SerDe 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
-         */
-        bundleJars "net.sf.opencsv:opencsv:2.3"
+            dependency("com.fasterxml.jackson.core:jackson-databind:2.10.2")
+            dependency("com.fasterxml.jackson.core:jackson-core:2.10.2")
+            dependency("com.fasterxml.jackson.core:jackson-annotations:2.10.2")
 
-        /* Transitive dependency required by MapR */
-        bundleJars "org.json:json:20090211"
-    }
-}
-
-project('pxf-jdbc') {
-    dependencies {
-        compile(project(':pxf-api'))
-        compile("com.zaxxer:HikariCP:3.3.1")
-        bundleJars "org.postgresql:postgresql:42.2.5"
-        bundleJars "org.apache.hive:hive-jdbc:1.1.0"     // 1.2.2 breaks on CDH-5.x
-        bundleJars "org.apache.hive:hive-service:1.1.0"  // 1.2.2 breaks on CDH-5.x
-    }
-}
-
-project('pxf-json') {
-    dependencies {
-        compile(project(':pxf-hdfs'))
-        compile(project(':pxf-api'))
-        testCompile 'pl.pragmatists:JUnitParams:1.0.2'
-    }
-
-    task create_tweets_tgz(type: Exec) {
-        commandLine 'tar', '-zcf', 'src/test/resources/tweets.tar.gz', '-C', 'src/test/resources', 'tweets-pp.json'
-    }
-
-    test {
-        dependsOn(create_tweets_tgz)
-    }
-}
-
-project('pxf-service') {
-    apply plugin: 'war'
-    tasks.war {
-        archiveName = 'pxf.war'
-        processResources {
-            filesMatching('**/pxf-*') {
-                details ->
-                    details.exclude()
-            }
+            dependency("org.apache.httpcomponents:httpclient:4.5.5")
+            dependency("org.apache.httpcomponents:httpcore:4.4.9")
         }
     }
-    dependencies {
-        providedCompile(project(':pxf-api'))
-        providedCompile "org.apache.hadoop:hadoop-common:${hadoopVersion}"
-        providedCompile "org.apache.htrace:htrace-core4:${htraceVersion}"
-        providedCompile "org.apache.hadoop:hadoop-hdfs:${hadoopVersion}"
-        providedCompile "org.apache.hadoop:hadoop-hdfs-client:${hadoopVersion}"
-        providedCompile "org.apache.tomcat:tomcat-catalina:$tomcatVersion"
 
-        bundleJars "org.apache.hadoop:hadoop-auth:${hadoopVersion}"
-        bundleJars "commons-cli:commons-cli:1.2"
-        bundleJars "commons-io:commons-io:2.4"
-        bundleJars "com.google.guava:guava:19.0"
-        bundleJars "org.mortbay.jetty:jetty:6.1.26"
-        bundleJars "org.mortbay.jetty:jetty-util:6.1.26"
-        bundleJars "com.sun.jersey:jersey-server:1.9"
-        bundleJars "log4j:log4j:1.2.17"
-        bundleJars "com.google.protobuf:protobuf-java:2.5.0"
-        bundleJars "org.slf4j:slf4j-api:1.7.10"
-        bundleJars "org.slf4j:slf4j-log4j12:1.7.10"
+    task removeIdeaOutDirectory(type: Delete) {
+        file("${projectDir}/out").deleteDir()
+    }
 
-        // these JARs below are needed for Java 11
-        // jcenter doesn't have full com.sun.xml.bind:jaxb-core/jaxb-impl packages, using glassfish distro
-        bundleJars "javax.xml.bind:jaxb-api:2.3.0"
-        bundleJars "org.glassfish.jaxb:jaxb-core:2.3.0"
-        bundleJars "org.glassfish.jaxb:jaxb-runtime:2.3.0"
-        bundleJars "com.sun.istack:istack-commons-runtime:3.0.8"
-        bundleJars "javax.activation:activation:1.1.1"
+    clean {
+        dependsOn(removeIdeaOutDirectory)
+    }
+
+    compileJava {
+        options.compilerArgs += [
+                "-g", "-Xlint:varargs", "-Xlint:cast", "-Xlint:classfile", "-Xlint:dep-ann", "-Xlint:divzero",
+                "-Xlint:empty", "-Xlint:finally", "-Xlint:overrides", "-Xlint:path", "-Xlint:processing", "-Xlint:static",
+                "-Xlint:try", "-Xlint:fallthrough", "-Xlint:deprecation", "-Xlint:unchecked", "-Xlint:-options"
+        ]
+    }
+
+    configurations {
+        all*.exclude group: "javax.servlet", module: "servlet-api"
+        all*.exclude module: 'spring-boot-starter-logging'
+        all*.exclude group: 'org.slf4j', module: 'slf4j-log4j12'
     }
 }
 
-project('pxf-s3') {
-    dependencies {
-        compile(project(':pxf-api'))
-        compile(project(':pxf-jdbc'))
-        compile "org.apache.hadoop:hadoop-aws:${hadoopVersion}"
-        compile "com.amazonaws:aws-java-sdk-s3:${awsJavaSdk}"
-    }
-}
 
-task stage(type: Copy, dependsOn: [subprojects.jar, project(':pxf-service').war, subprojects.copyRuntimeDependencies]) {
-    into "build/stage/pxf"
-    subprojects { project ->
-        from("${project.name}/build/libs") { into 'lib' }
-        from("${project.name}/build/libs-shared") { into 'lib/shared' }
-    }
-
-    from("tomcat/build/apache-tomcat") { into 'apache-tomcat' }
-    from("pxf-service/src/main/resources/pxf-profiles-default.xml") { into 'conf' }
-    from("pxf-service/src/scripts/pxf-env-default.sh") { into 'conf' }
-    from("pxf-service/src/scripts/pxf") { into 'bin' }
-    from("pxf-service/src/templates") { into 'templates' }
-    doLast {
-        new File("${buildDir}/stage/pxf/version").text = "${version}\n"
-    }
-}
-
-task install(type: Copy, dependsOn: [stage]) {
-    from stage.outputs.files
-    into System.getProperty('deployPath')
-}
-
-task version {
-    doLast {
-        println ${version}
-    }
-}

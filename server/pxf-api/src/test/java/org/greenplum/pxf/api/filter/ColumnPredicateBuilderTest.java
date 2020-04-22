@@ -2,21 +2,21 @@ package org.greenplum.pxf.api.filter;
 
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
-public class ColumnPredicateBuilderTest {
+class ColumnPredicateBuilderTest {
 
     private List<ColumnDescriptor> columnDescriptors;
     private TreeTraverser treeTraverser;
 
-    @Before
+    @BeforeEach
     public void setup() {
         columnDescriptors = new ArrayList<>();
         columnDescriptors.add(new ColumnDescriptor("id", DataType.INTEGER.getOID(), 0, "int4", null));
