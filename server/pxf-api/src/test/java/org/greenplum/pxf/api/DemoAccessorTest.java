@@ -23,18 +23,18 @@ package org.greenplum.pxf.api;
 import org.greenplum.pxf.api.examples.DemoAccessor;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class DemoAccessorTest {
 
     private RequestContext context;
     private DemoAccessor accessor;
 
-    @Before
+    @BeforeEach
     public void setup() {
         context = new RequestContext();
         context.setConfig("default");

@@ -1,15 +1,16 @@
 package org.greenplum.pxf.api.filter;
 
 import org.greenplum.pxf.api.io.DataType;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
-public class CollectionOperandNodeTest {
+
+class CollectionOperandNodeTest {
 
     @Test
     public void testGetDataType() {
@@ -38,7 +39,7 @@ public class CollectionOperandNodeTest {
 
         data.add("t");
         operand = new CollectionOperandNode(DataType.INTEGER, data);
-        
+
         assertEquals("(s,t)", operand.toString());
     }
 }

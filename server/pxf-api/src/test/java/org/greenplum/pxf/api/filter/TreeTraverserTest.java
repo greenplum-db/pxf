@@ -1,12 +1,11 @@
 package org.greenplum.pxf.api.filter;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -14,15 +13,12 @@ import static org.mockito.Mockito.when;
 
 public class TreeTraverserTest {
 
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
-
     @Test
     public void testFailsWhenNoVisitorIsProvided() {
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("You need to provide at least one visitor for this traverser");
-
-        new TreeTraverser().traverse(new Node());
+        Exception ex = assertThrows(
+            IllegalArgumentException.class,
+            () -> new TreeTraverser().traverse(new Node()));
+        assertEquals("You need to provide at least one visitor for this traverser", ex.getMessage());
     }
 
     @Test
