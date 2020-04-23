@@ -117,12 +117,12 @@ function install_gpdb_package() {
 		apt install -qq "${PWD}/${deb_file}"
 
 		# Adjust GPHOME if the binary expects it to be /usr/local/gpdb
-		gphome=$(grep ^GPHOME= /usr/local/greenplum-db-devel/greenplum_path.sh | cut -d= -f2)
-		if [[ $gphome == /usr/local/gpdb ]]; then
-			mv /usr/local/greenplum-db-devel /usr/local/gpdb
-			GPHOME=/usr/local/gpdb
-			PXF_HOME=${GPHOME}/pxf
-		fi
+		#gphome=$(grep ^GPHOME= /usr/local/greenplum-db-devel/greenplum_path.sh | cut -d= -f2)
+		#if [[ $gphome == /usr/local/gpdb ]]; then
+		#	mv /usr/local/greenplum-db-devel /usr/local/gpdb
+		#	GPHOME=/usr/local/gpdb
+		#	PXF_HOME=${GPHOME}/pxf
+		#fi
 		service ssh start
 		python_dir=python${python_version}/dist-packages
 		export_pythonpath+=:/usr/local/lib/$python_dir
