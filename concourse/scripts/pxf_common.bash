@@ -360,7 +360,7 @@ function start_hadoop_services() {
 
 function init_and_configure_pxf_server() {
 	echo 'Ensure pxf version can be run before pxf init'
-	su gpadmin -c "${PXF_HOME}/bin/pxf version | grep -E '^PXF version [0-9]+.[0-9]+.[0-9]+$'" || exit 1
+	su gpadmin -c "${PXF_HOME}/bin/pxf version | grep -E '^PXF version [0-9]+.[0-9]+.[0-9]+'" || exit 1
 
 	echo 'Initializing PXF service'
 	# requires a login shell to source startup scripts (JAVA_HOME)
