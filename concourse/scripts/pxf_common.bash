@@ -173,7 +173,8 @@ function add_remote_user_access_for_gpdb() {
 		if [[ -f gpdb_src/gpAux/gpdemo/gpdemo-env.sh ]]; then
 		    source gpdb_src/gpAux/gpdemo/gpdemo-env.sh
 		else
-		    MASTER_DATA_DIRECTORY=~gpadmin/data/master
+		    export MASTER_DATA_DIRECTORY=~gpadmin/data/master
+		    echo 'Setting MASTER_DATA_DIRECTORY=\${MASTER_DATA_DIRECTORY}'
 		fi
 		echo 'local    all     ${username}     trust' >> \${MASTER_DATA_DIRECTORY}/pg_hba.conf
 		source ${GPHOME}/greenplum_path.sh
