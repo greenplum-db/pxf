@@ -37,4 +37,5 @@ echo 'host all all 0.0.0.0/0 password' >>~gpadmin/data/master/gpseg-1/pg_hba.con
 # reload pg_hba.conf
 MASTER_DATA_DIRECTORY=~gpadmin/data/master/gpseg-1 gpstop -u
 
+sleep 5
 psql -d template1 -c "CREATE DATABASE gpadmin;"

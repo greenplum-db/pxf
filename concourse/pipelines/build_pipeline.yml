@@ -45,18 +45,21 @@ resources:
 
 - name: gpdb-pxf-dev-centos6-hdp2-server
   type: docker-image
+  icon: docker
   source:
     repository: pivotaldata/gpdb-pxf-dev
     tag: centos6-hdp2-server
 
 - name: gpdb-pxf-dev-centos7-hdp2-server
   type: docker-image
+  icon: docker
   source:
     repository: pivotaldata/gpdb-pxf-dev
     tag: centos7-hdp2-server
 
 - name: gpdb-pxf-dev-ubuntu18-hdp2-server
   type: docker-image
+  icon: docker
   source:
     repository: pivotaldata/gpdb-pxf-dev
     tag: ubuntu18-hdp2-server
@@ -155,7 +158,6 @@ jobs:
       GROUP: gpdb,proxy,profile
       HADOOP_CLIENT: HDP
 #      PGPORT: ((pgport))
-      PGPORT: 6000
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
       TARGET_OS: centos
       TARGET_OS_VERSION: 6
@@ -200,7 +202,6 @@ jobs:
       GROUP: gpdb,proxy,profile
       HADOOP_CLIENT: HDP
       #      PGPORT: ((pgport))
-      PGPORT: 6000
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
       TARGET_OS: centos
       TARGET_OS_VERSION: 7
@@ -245,8 +246,7 @@ jobs:
       GROUP: gpdb,proxy,profile
       HADOOP_CLIENT: HDP
       #      PGPORT: ((pgport))
-      PGPORT: 6000
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-      TARGET_OS: centos
-      TARGET_OS_VERSION: 7
+      TARGET_OS: ubuntu
+      TARGET_OS_VERSION: 18
 #      TEST_ENV: ((test-env))
