@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-CWDIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-PXF_VERSION=$(<"${CWDIR}/pxf/version")
+INSTALL_COMPONENT_SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+PXF_VERSION=$(<"${INSTALL_COMPONENT_SCRIPT_DIR}/pxf/version")
 
 function show_help() {
     echo "This script installs PXF Greenplum Extension and PXF Server"
@@ -59,7 +59,7 @@ function install_new_component() {
 
     if [[ ! -z "${GPHOME}" ]]; then
         echo "... installing PXF Greenplum Extension into ${GPHOME} ..."
-        cp -av ${CWDIR}/{lib,share} ${GPHOME}
+        cp -av ${INSTALL_COMPONENT_SCRIPT_DIR}/{lib,share} ${GPHOME}
         check_status $?
     else
         echo "... skipping PXF Greenplum Extension as GPHOME environment variable is not set ..."
@@ -67,7 +67,7 @@ function install_new_component() {
 
     if [[ ! -z "${PXF_HOME}" ]]; then
         echo "... installing PXF Server into ${PXF_HOME} ..."
-        cp -av ${CWDIR}/pxf ${PXF_HOME}
+        cp -av ${INSTALL_COMPONENT_SCRIPT_DIR}/pxf ${PXF_HOME}
         check_status $?
     fi
 

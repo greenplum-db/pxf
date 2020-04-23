@@ -49,11 +49,17 @@ resources:
     repository: pivotaldata/gpdb-pxf-dev
     tag: centos6-hdp2-server
 
-#- name: gpdb-pxf-dev-centos7-hdp2-server
-#  type: docker-image
-#  source:
-#    repository: pivotaldata/gpdb-pxf-dev
-#    tag: centos7-hdp2-server
+- name: gpdb-pxf-dev-centos7-hdp2-server
+  type: docker-image
+  source:
+    repository: pivotaldata/gpdb-pxf-dev
+    tag: centos7-hdp2-server
+
+- name: gpdb-pxf-dev-ubuntu18-hdp2-server
+  type: docker-image
+  source:
+    repository: pivotaldata/gpdb-pxf-dev
+    tag: ubuntu18-hdp2-server
 
 ## ---------- Product Packages ----------
 - name: gpdb_rhel6_rpm
@@ -155,8 +161,6 @@ jobs:
       TARGET_OS_VERSION: 6
 #      TEST_ENV: ((test-env))
 
-
-
 ## ---------- Centos 7 Swimlane ----------
 - name: Build PXF-GP6 on RHEL7
   plan:
@@ -175,6 +179,33 @@ jobs:
     params:
       file: dist/pxf-gpdb6-*-SNAPSHOT-rhel7-x86_64.tar.gz
 
+- name: Test PXF-GP6-HDP2 on RHEL7
+  plan:
+  - in_parallel:
+    - get: pxf_tarball
+      resource: pxf_tarball_gpdb6_rhel7
+      passed: [Build PXF-GP6 on RHEL7]
+      trigger: true
+    - get: pxf_src
+      passed: [Build PXF-GP6 on RHEL7]
+    - get: gpdb-pxf-dev-centos7-hdp2-server
+    - get: gpdb_package
+      resource: gpdb_rhel7_rpm
+      passed: [Build PXF-GP6 on RHEL7]
+  - task: Test PXF-GP6-HDP2 on RHEL7
+    file: pxf_src/concourse/tasks/test.yml
+    image: gpdb-pxf-dev-centos7-hdp2-server
+    params:
+      ACCESS_KEY_ID: ((tf-machine-access-key-id))
+      GROUP: gpdb,proxy,profile
+      HADOOP_CLIENT: HDP
+      #      PGPORT: ((pgport))
+      PGPORT: 6000
+      SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
+      TARGET_OS: centos
+      TARGET_OS_VERSION: 7
+#      TEST_ENV: ((test-env))
+
 ## ---------- Ubuntu 18 Swimlane ----------
 - name: Build PXF-GP6 on Ubuntu18
   plan:
@@ -192,3 +223,30 @@ jobs:
   - put: pxf_tarball_gpdb6_ubuntu18
     params:
       file: dist/pxf-gpdb6-*-SNAPSHOT-ubuntu18.04-x86_64.tar.gz
+
+- name: Test PXF-GP6-HDP2 on Ubuntu18
+  plan:
+  - in_parallel:
+    - get: pxf_tarball
+      resource: pxf_tarball_gpdb6_ubuntu18
+      passed: [Build PXF-GP6 on Ubuntu18]
+      trigger: true
+    - get: pxf_src
+      passed: [Build PXF-GP6 on Ubuntu18]
+    - get: gpdb-pxf-dev-ubuntu18-hdp2-server
+    - get: gpdb_package
+      resource: gpdb_ubuntu18_deb
+      passed: [Build PXF-GP6 on Ubuntu18]
+  - task: Test PXF-GP6-HDP2 on Ubuntu18
+    file: pxf_src/concourse/tasks/test.yml
+    image: gpdb-pxf-dev-ubuntu18-hdp2-server
+    params:
+      ACCESS_KEY_ID: ((tf-machine-access-key-id))
+      GROUP: gpdb,proxy,profile
+      HADOOP_CLIENT: HDP
+      #      PGPORT: ((pgport))
+      PGPORT: 6000
+      SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
+      TARGET_OS: centos
+      TARGET_OS_VERSION: 7
+#      TEST_ENV: ((test-env))
