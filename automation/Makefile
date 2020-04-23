@@ -91,7 +91,7 @@ symlink_pxf_jars:
 		mkdir -p $(PXF_HOME)/tmp && \
 		cd $(PXF_HOME)/tmp && \
 		for X in $(PXF_HOME)/lib/pxf-*-[0-9]*.jar; do \
-			ln -sf $$X `echo \`basename $$X\` | sed -e 's/-[a-zA-Z0-9.]*.jar/.jar/'`; \
+			ln -sf $$X `echo \`basename $$X\` | sed -E -e 's/-[0-9]+[a-zA-Z0-9\.-]*.jar/.jar/'`; \
 		done; \
 		touch $(PXF_HOME)/tmp/pxf-extras.jar; \
 	fi
