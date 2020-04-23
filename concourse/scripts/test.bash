@@ -194,7 +194,9 @@ function _main() {
 		setup_hadoop "${GPHD_ROOT}"
 	fi
 
-	create_gpdb_cluster
+	# initialize GPDB as gpadmin user
+	su gpadmin -c ${CWDIR}/initialize_gpdb.bash
+
 	add_remote_user_access_for_gpdb testuser
 	init_and_configure_pxf_server
 

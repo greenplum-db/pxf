@@ -2,7 +2,7 @@
 
 set -exuo pipefail
 
-GPHOME=/usr/local/greenplum-db
+GPHOME=${GPHOME:=/usr/local/greenplum-db}
 PYTHONHOME='' source "${GPHOME}/greenplum_path.sh"
 
 # Create config and data dirs.
