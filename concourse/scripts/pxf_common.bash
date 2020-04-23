@@ -170,7 +170,11 @@ function add_remote_user_access_for_gpdb() {
 	# load local cluster configuration
 	echo "Adding access entry for ${username} to pg_hba.conf and restarting GPDB for change to take effect"
 	su gpadmin -c "
-		source gpdb_src/gpAux/gpdemo/gpdemo-env.sh
+		if [[ -f gpdb_src/gpAux/gpdemo/gpdemo-env.sh ]]; then
+		    source gpdb_src/gpAux/gpdemo/gpdemo-env.sh
+		else
+		    MASTER_DATA_DIRECTORY=~gpadmin/data/master
+		fi
 		echo 'local    all     ${username}     trust' >> \${MASTER_DATA_DIRECTORY}/pg_hba.conf
 		source ${GPHOME}/greenplum_path.sh
 		gpstop -u
