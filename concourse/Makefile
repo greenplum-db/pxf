@@ -12,7 +12,7 @@ PIVNET_PIPELINE_NAME       = pivnet_artifacts
 NUM_GPDB5_VERSIONS        ?= 11
 NUM_GPDB6_VERSIONS        ?=  9
 FLY_CMD                    = /usr/local/bin/fly
-TEMPLATE_CMD               = ./template-tool
+TEMPLATE_CMD               = ./template_tool
 FLY_OPTION_NON-INTERACTIVE =
 
 .PHONY: set-build
