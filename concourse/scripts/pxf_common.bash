@@ -112,8 +112,9 @@ function install_gpdb_package() {
 		export_pythonpath+=:/usr/lib/${python_dir}:/usr/lib64/$python_dir
 
 	elif [[ ${TARGET_OS} == ubuntu* ]]; then
-	    # # install GPDB DEB, apt wants a full path
-	    apt install -qq "${PWD}/gpdb_package/greenplum-db-*-ubuntu18.04-amd64.deb"
+		# # install GPDB DEB, apt wants a full path
+		local deb_file=$(ls gpdb_package/greenplum-db-*-ubuntu18.04-amd64.deb)
+		apt install -qq "${PWD}/${deb_file}"
 
 		# Adjust GPHOME if the binary expects it to be /usr/local/gpdb
 		gphome=$(grep ^GPHOME= /usr/local/greenplum-db-devel/greenplum_path.sh | cut -d= -f2)

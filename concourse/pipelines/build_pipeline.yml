@@ -157,7 +157,6 @@ jobs:
       ACCESS_KEY_ID: ((tf-machine-access-key-id))
       GROUP: gpdb,proxy,profile
       HADOOP_CLIENT: HDP
-#      PGPORT: ((pgport))
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
       TARGET_OS: centos
       TARGET_OS_VERSION: 6
@@ -201,7 +200,6 @@ jobs:
       ACCESS_KEY_ID: ((tf-machine-access-key-id))
       GROUP: gpdb,proxy,profile
       HADOOP_CLIENT: HDP
-      #      PGPORT: ((pgport))
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
       TARGET_OS: centos
       TARGET_OS_VERSION: 7
@@ -245,8 +243,39 @@ jobs:
       ACCESS_KEY_ID: ((tf-machine-access-key-id))
       GROUP: gpdb,proxy,profile
       HADOOP_CLIENT: HDP
-      #      PGPORT: ((pgport))
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
       TARGET_OS: ubuntu
       TARGET_OS_VERSION: 18
 #      TEST_ENV: ((test-env))
+
+## ---------- Gates ----------
+- name: Testing Gate for PXF-GP6
+  plan:
+  - in_parallel:
+    # pxf tarballs passed their respective first testing jobs
+    - get: pxf_tarball_gpdb6_rhel6
+      passed:
+      - Test PXF-GP6-HDP2 on RHEL6
+    - get: pxf_tarball_gpdb6_rhel7
+      passed:
+      - Test PXF-GP6-HDP2 on RHEL7
+    - get: pxf_tarball_gpdb6_ubuntu18
+      passed:
+      - Test PXF-GP6-HDP2 on Ubuntu18
+    # pxf source passed all first testing jobs
+    - get: pxf_src
+      passed:
+      - Test PXF-GP6-HDP2 on RHEL6
+      - Test PXF-GP6-HDP2 on RHEL7
+      - Test PXF-GP6-HDP2 on Ubuntu18
+      trigger: true
+    # gpdb packages used in first testing jobs
+    - get: gpdb_rhel6_rpm
+      passed:
+      - Test PXF-GP6-HDP2 on RHEL6
+    - get: gpdb_rhel7_rpm
+      passed:
+      - Test PXF-GP6-HDP2 on RHEL7
+    - get: gpdb_ubuntu18_deb
+      passed:
+      - Test PXF-GP6-HDP2 on Ubuntu18
