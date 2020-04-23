@@ -148,7 +148,7 @@ project('pxf-api') {
         compile "com.sun.jersey:jersey-core:1.9"
         compile "org.apache.hadoop:hadoop-common:${hadoopVersion}"
         compile "com.fasterxml.jackson.core:jackson-core:2.9.10"
-        compile "com.fasterxml.jackson.core:jackson-databind:2.9.10.3"
+        compile "com.fasterxml.jackson.core:jackson-databind:2.9.10.4"
 
         bundleJars "asm:asm:3.2"
     }
@@ -172,7 +172,7 @@ project('pxf-hdfs') {
     dependencies {
         compile(project(':pxf-api'))
         compile "org.apache.avro:avro-mapred:1.7.7"
-        compile "com.fasterxml.jackson.core:jackson-databind:2.9.10.3"
+        compile "com.fasterxml.jackson.core:jackson-databind:2.9.10.4"
         compile "com.fasterxml.jackson.core:jackson-core:2.9.10"
         compile "com.fasterxml.jackson.core:jackson-annotations:2.9.10"
         compile "org.apache.hadoop:hadoop-mapreduce-client-core:${hadoopVersion}"
