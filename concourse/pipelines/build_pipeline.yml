@@ -87,7 +87,7 @@ resources:
   source:
     bucket: data-gpdb-ud-pxf-build
     json_key: ((data-gpdb-ud-google-json-key))
-    versioned_file: snapshots/pxf-gpdb6-*-SNAPSHOT-rhel6-x86_64.tar.gz
+    versioned_file: prod/snapshots/pxf-gpdb6-SNAPSHOT-rhel6-x86_64.tar.gz
 
 - name: pxf_tarball_gpdb6_rhel7
   type: gcs
@@ -95,7 +95,7 @@ resources:
   source:
     bucket: data-gpdb-ud-pxf-build
     json_key: ((data-gpdb-ud-google-json-key))
-    versioned_file: snapshots/pxf-gpdb6-*-SNAPSHOT-rhel7-x86_64.tar.gz
+    versioned_file: prod/snapshots/pxf-gpdb6-SNAPSHOT-rhel7-x86_64.tar.gz
 
 - name: pxf_tarball_gpdb6_ubuntu18
   type: gcs
@@ -103,7 +103,7 @@ resources:
   source:
     bucket: data-gpdb-ud-pxf-build
     json_key: ((data-gpdb-ud-google-json-key))
-    versioned_file: snapshots/pxf-gpdb6-*-SNAPSHOT-ubuntu18.04-x86_64.tar.gz
+    versioned_file: prod/snapshots/pxf-gpdb6-SNAPSHOT-ubuntu18.04-x86_64.tar.gz
 
 ## ======================================================================
 ## JOBS
