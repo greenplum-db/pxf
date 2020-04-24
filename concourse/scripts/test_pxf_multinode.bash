@@ -3,6 +3,15 @@
 set -exuo pipefail
 
 CWDIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+
+# whether PXF is being installed from a new component-based packaging
+PXF_COMPONENT=${PXF_COMPONENT:=false}
+if [[ ${PXF_COMPONENT} == "true" ]]; then
+    GPHOME=/usr/local/greenplum-db
+else
+    GPHOME=/usr/local/greenplum-db-devel
+fi
+
 # shellcheck source=/dev/null
 source "${CWDIR}/pxf_common.bash"
 
@@ -348,9 +357,15 @@ function _main() {
 			"${LOCAL_GPHD_ROOT}/hbase/conf/hbase-site.xml"
 	fi
 
-	install_gpdb_binary # Installs the GPDB Binary on the container
-	setup_gpadmin_user
-	install_pxf_server
+	if [[ ${PXF_COMPONENT} == "true" ]]; then
+		install_gpdb_package
+		setup_gpadmin_user
+		install_pxf_tarball
+	else
+		install_gpdb_binary # Installs the GPDB Binary on the container
+		setup_gpadmin_user
+		install_pxf_server
+	fi
 	init_and_configure_pxf_server
 	remote_access_to_gpdb
 

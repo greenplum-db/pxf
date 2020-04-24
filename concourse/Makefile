@@ -27,6 +27,9 @@ set-build-pipeline:
 		--config=pipelines/build_pipeline.yml \
 		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/gpdb-6X_STABLE-release-secrets.prod.yml \
 		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
+		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
+		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud.yml \
+		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud_kerberos.yml \
 		--var=pxf-git-branch=${BRANCH} \
 		--var=folder-prefix=prod/gpdb_branch \
 		--var=gpdb-branch=6X_STABLE \

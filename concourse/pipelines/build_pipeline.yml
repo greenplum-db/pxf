@@ -1,12 +1,63 @@
 ---
 ## ======================================================================
+## ANCHORS
+## ======================================================================
+dataproc_destroy_anchor: &destroy_clusters
+  do:
+  - in_parallel:
+    - task: Cleanup Dataproc 1
+      config:
+        run:
+          path: pxf_src/concourse/scripts/cleanup_dataproc_cluster.bash
+        inputs:
+          - name: pxf_src
+          - name: dataproc_env_files
+        platform: linux
+      image: ccp-7-image
+      params:
+        GOOGLE_CREDENTIALS: {{google-service-account-key}}
+        GOOGLE_PROJECT_ID: {{google-project-id}}
+        GOOGLE_ZONE: {{google-zone}}
+    - task: Cleanup Dataproc 2
+      input_mapping:
+        dataproc_env_files: dataproc_2_env_files
+      config:
+        run:
+          path: pxf_src/concourse/scripts/cleanup_dataproc_cluster.bash
+        inputs:
+          - name: pxf_src
+          - name: dataproc_env_files
+        platform: linux
+      image: ccp-7-image
+      params:
+        GOOGLE_CREDENTIALS: {{data-gpdb-ud-kerberos-google-service-account-key}}
+        GOOGLE_PROJECT_ID: {{data-gpdb-ud-kerberos-google-project-id}}
+        GOOGLE_ZONE: {{data-gpdb-ud-kerberos-google-zone}}
+    - put: terraform_gpdb
+      resource: terraform
+      params:
+        action: destroy
+        env_name_file: terraform_gpdb/name
+        terraform_source: ccp_src/google/
+      get_params:
+        action: destroy
+
+
+## ======================================================================
 ## RESOURCE TYPES
 ## ======================================================================
 resource_types:
+
 - name: gcs
   type: docker-image
   source:
     repository: frodenas/gcs-resource
+
+- name: terraform
+  type: docker-image
+  source:
+    repository: ljfranklin/terraform-resource
+    tag: 0.11.14
 
 ## ======================================================================
 ## RESOURCES
@@ -18,8 +69,15 @@ resources:
   type: git
   icon: git
   source:
-    branch: ((pxf-git-branch))
-    uri: ((pxf-git-remote))
+    branch: {{pxf-git-branch}}
+    uri: {{pxf-git-remote}}
+
+- name: ccp_src
+  type: git
+  source:
+    branch: {{ccp-git-branch}}
+    private_key: {{ccp-git-key}}
+    uri: {{ccp-git-remote}}
 
 ## ---------- Docker Images ----------
 - name: gpdb-pxf-dev-centos6-image
@@ -85,13 +143,20 @@ resources:
     repository: pivotaldata/gpdb-pxf-dev
     tag: centos7-cdh-server
 
+- name: ccp-7-image
+  type: docker-image
+  icon: docker
+  source:
+    repository: pivotaldata/ccp
+    tag: 7
+
 ## ---------- Product Packages ----------
 - name: gpdb_rhel6_rpm
   type: gcs
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pivnet-artifacts
-    json_key: ((data-gpdb-ud-google-json-key))
+    json_key: {{data-gpdb-ud-google-json-key}}
     regexp: latest/greenplum-db-(.*)-rhel6-x86_64.rpm
 
 - name: gpdb_rhel7_rpm
@@ -99,7 +164,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pivnet-artifacts
-    json_key: ((data-gpdb-ud-google-json-key))
+    json_key: {{data-gpdb-ud-google-json-key}}
     regexp: latest/greenplum-db-(.*)-rhel7-x86_64.rpm
 
 - name: gpdb_ubuntu18_deb
@@ -107,7 +172,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pivnet-artifacts
-    json_key: ((data-gpdb-ud-google-json-key))
+    json_key: {{data-gpdb-ud-google-json-key}}
     regexp: latest/greenplum-db-(.*)-ubuntu18.04-amd64.deb
 
 ## ---------- PXF Build Artifacts ----------
@@ -116,7 +181,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pxf-build
-    json_key: ((data-gpdb-ud-google-json-key))
+    json_key: {{data-gpdb-ud-google-json-key}}
     versioned_file: prod/snapshots/pxf-gpdb6-SNAPSHOT-rhel6-x86_64.tar.gz
 
 - name: pxf_tarball_gpdb6_rhel7
@@ -124,7 +189,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pxf-build
-    json_key: ((data-gpdb-ud-google-json-key))
+    json_key: {{data-gpdb-ud-google-json-key}}
     versioned_file: prod/snapshots/pxf-gpdb6-SNAPSHOT-rhel7-x86_64.tar.gz
 
 - name: pxf_tarball_gpdb6_ubuntu18
@@ -132,15 +197,32 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pxf-build
-    json_key: ((data-gpdb-ud-google-json-key))
+    json_key: {{data-gpdb-ud-google-json-key}}
     versioned_file: prod/snapshots/pxf-gpdb6-SNAPSHOT-ubuntu18.04-x86_64.tar.gz
+
+## ---------- Auxiliary Resources ----------
+- name: terraform
+  type: terraform
+  source:
+    env:
+      AWS_ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+      AWS_SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+      GOOGLE_CREDENTIALS: {{google-service-account-key}}
+    vars:
+      project_id: {{google-project-id}}
+    storage:
+      access_key_id: {{tf-machine-access-key-id}}
+      secret_access_key: {{tf-machine-secret-access-key}}
+      region_name: {{aws-region}}
+      bucket: {{tf-bucket-name}}
+      bucket_path: {{tf-bucket-path}}
 
 ## ======================================================================
 ## JOBS
 ## ======================================================================
+jobs:
 
 ## ---------- Centos 6 Swimlane ----------
-jobs:
 - name: Build PXF-GP6 on RHEL6
   plan:
   - in_parallel:
@@ -175,9 +257,9 @@ jobs:
     file: pxf_src/concourse/tasks/test.yml
     image: gpdb-pxf-dev-centos6-hdp2-server-image
     params:
-      ACCESS_KEY_ID: ((tf-machine-access-key-id))
+      ACCESS_KEY_ID: {{tf-machine-access-key-id}}
       GROUP: gpdb,proxy,profile
-      SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
+      SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
       TARGET_OS: centos
       TARGET_OS_VERSION: 6
 #      TEST_ENV: ((test-env))
@@ -217,9 +299,9 @@ jobs:
     file: pxf_src/concourse/tasks/test.yml
     image: gpdb-pxf-dev-centos7-hdp2-server-image
     params:
-      ACCESS_KEY_ID: ((tf-machine-access-key-id))
+      ACCESS_KEY_ID: {{tf-machine-access-key-id}}
       GROUP: gpdb,proxy,profile
-      SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
+      SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
       TARGET_OS: centos
       TARGET_OS_VERSION: 7
 #      TEST_ENV: ((test-env))
@@ -259,9 +341,9 @@ jobs:
     file: pxf_src/concourse/tasks/test.yml
     image: gpdb-pxf-dev-ubuntu18-hdp2-server-image
     params:
-      ACCESS_KEY_ID: ((tf-machine-access-key-id))
+      ACCESS_KEY_ID: {{tf-machine-access-key-id}}
       GROUP: gpdb,proxy,profile
-      SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
+      SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
       TARGET_OS: ubuntu
       TARGET_OS_VERSION: 18
 #      TEST_ENV: ((test-env))
@@ -340,9 +422,9 @@ jobs:
     file: pxf_src/concourse/tasks/test.yml
     image: gpdb-pxf-dev-centos7-hdp3-server-image
     params:
-      ACCESS_KEY_ID: ((tf-machine-access-key-id))
+      ACCESS_KEY_ID: {{tf-machine-access-key-id}}
       GROUP: gpdb,proxy,profile
-      SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
+      SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
       TARGET_OS: centos
       TARGET_OS_VERSION: 7
 #      TEST_ENV: ((test-env))
@@ -364,10 +446,10 @@ jobs:
     file: pxf_src/concourse/tasks/test.yml
     image: gpdb-pxf-dev-centos7-hdp2-server-image
     params:
-      ACCESS_KEY_ID: ((tf-machine-access-key-id))
+      ACCESS_KEY_ID: {{tf-machine-access-key-id}}
       GROUP: cloud-access-and-hdfs,hbase,hcfs,jdbc,profile,pushdown
       RUN_JDK_VERSION: 11
-      SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
+      SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
       TARGET_OS: centos
       TARGET_OS_VERSION: 7
 #      TEST_ENV: ((test-env))
@@ -390,10 +472,10 @@ jobs:
     image: gpdb-pxf-dev-centos7-cdh-server-image
     attempts: 2
     params:
-      ACCESS_KEY_ID: ((tf-machine-access-key-id))
+      ACCESS_KEY_ID: {{tf-machine-access-key-id}}
       GROUP: gpdb,proxy,profile
       HADOOP_CLIENT: CDH
-      SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
+      SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
       TARGET_OS: centos
       TARGET_OS_VERSION: 7
 #      TEST_ENV: ((test-env))
@@ -415,12 +497,12 @@ jobs:
     file: pxf_src/concourse/tasks/test.yml
     image: gpdb-pxf-dev-centos7-cdh-server-image
     params:
-      ACCESS_KEY_ID: ((tf-machine-access-key-id))
+      ACCESS_KEY_ID: {{tf-machine-access-key-id}}
       GROUP: hcfs,s3
       HADOOP_CLIENT: CDH
       IMPERSONATION: false
       PROTOCOL: s3
-      SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
+      SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
       TARGET_OS: centos
       TARGET_OS_VERSION: 7
 #      TEST_ENV: ((test-env))
@@ -443,11 +525,11 @@ jobs:
     file: pxf_src/concourse/tasks/test.yml
     image: gpdb-pxf-dev-centos7-hdp2-server-image
     params:
-      ACCESS_KEY_ID: ((tf-machine-access-key-id))
+      ACCESS_KEY_ID: {{tf-machine-access-key-id}}
       GROUP: hcfs,s3
       IMPERSONATION: true
       PROTOCOL: s3
-      SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
+      SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
       TARGET_OS: centos
       TARGET_OS_VERSION: 7
       #      TEST_ENV: ((test-env))
@@ -475,3 +557,117 @@ jobs:
       TARGET_OS: centos
       TARGET_OS_VERSION: 7
 #      TEST_ENV: ((test-env))
+
+- name: Test PXF-GP6-HDP2-SECURE-MULTI-IMPERS on RHEL7
+  max_in_flight: 2
+  plan:
+  - in_parallel:
+    - get: pxf_src
+      passed: [Testing Gate for PXF-GP6]
+      trigger: true
+    - get: pxf_tarball
+      resource: pxf_tarball_gpdb6_rhel7
+      passed: [Testing Gate for PXF-GP6]
+    - get: gpdb_package
+      resource: gpdb_rhel7_rpm
+      passed: [Testing Gate for PXF-GP6]
+    - get: gpdb-pxf-dev-centos7-hdp2-server-image
+    - get: ccp_src
+    - get: ccp-7-image
+  - in_parallel:
+    - do:
+      - put: terraform_gpdb
+        resource: terraform
+        params:
+          action: create
+          delete_on_failure: true
+          generate_random_name: true
+          terraform_source: ccp_src/google/
+          vars:
+            PLATFORM: centos7
+            number_of_nodes: {{number_of_gpdb_nodes}}
+            extra_nodes: 1
+            segments_per_host: 4
+            instance_type: n1-standard-4
+            ccp_reap_minutes: 120
+      - task: Generate Greenplum Cluster
+        input_mapping:
+          gpdb_rpm: gpdb_package
+          terraform: terraform_gpdb
+        file: ccp_src/ci/tasks/gen_cluster.yml
+        image: ccp-7-image
+        params:
+          AWS_ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+          AWS_SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+          AWS_DEFAULT_REGION: {{aws-region}}
+          BUCKET_PATH: {{tf-bucket-path}}
+          BUCKET_NAME: {{tf-bucket-name}}
+          PLATFORM: centos7
+          CLOUD_PROVIDER: google
+      - in_parallel:
+        - task: Initialize Greenplum
+          file: ccp_src/ci/tasks/gpinitsystem.yml
+        - task: Install Hadoop
+          file: pxf_src/concourse/tasks/install_hadoop.yml
+          image: gpdb-pxf-dev-centos7-hdp2-server
+          params:
+            ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+            SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+            IMPERSONATION: {{enable-impersonation-multinode}}
+            TARGET_OS: centos
+    - task: Generate Hadoop Cluster 1
+      file: pxf_src/concourse/tasks/install_dataproc.yml
+      image: ccp-7-image
+      params:
+        GOOGLE_CREDENTIALS: {{google-service-account-key}}
+        GOOGLE_PROJECT_ID: {{google-project-id}}
+        GOOGLE_ZONE: {{google-zone}}
+        IMAGE_VERSION: {{dataproc-image-version}}
+        KERBEROS: {{kerberos-enabled}}
+        ccp_reap_minutes: 120
+    - task: Generate Hadoop Cluster 2
+      file: pxf_src/concourse/tasks/install_dataproc.yml
+      image: ccp-7-image
+      output_mapping:
+        dataproc_env_files: dataproc_2_env_files
+      params:
+        GOOGLE_CREDENTIALS: {{data-gpdb-ud-kerberos-google-service-account-key}}
+        GOOGLE_PROJECT_ID: {{data-gpdb-ud-kerberos-google-project-id}}
+        GOOGLE_ZONE: {{data-gpdb-ud-kerberos-google-zone}}
+        HADOOP_USER: gpuser
+        IMAGE_VERSION: {{dataproc-image-version}}
+        INITIALIZATION_SCRIPT: gs://data-gpdb-ud-kerberos-scripts/scripts/initialization-for-kerberos.sh
+        INSTANCE_TAGS: bosh-network,data-gpdb-ud-access
+        KERBEROS: {{kerberos-enabled}}
+        KEY: dataproc-kerberos-key
+        KEYRING: dataproc-kerberos
+        ccp_reap_minutes: 120
+        NO_ADDRESS: false
+        PROXY_USER: gpuser
+        SECRETS_BUCKET: data-gpdb-ud-kerberos-pxf-secrets
+  - task: Setup PXF
+    input_mapping:
+      terraform: terraform_gpdb
+    file: pxf_src/concourse/tasks/install_pxf_on_ccp.yml
+    image: ccp-7-image
+    params:
+      IMPERSONATION: {{enable-impersonation-multinode}}
+      INSTALL_GPHDFS: false
+      KERBEROS: {{kerberos-enabled}}
+      PXF_JVM_OPTS: {{pxf-jvm-opts}}
+  - task: Test PXF Multinode
+    on_success:
+      <<: *destroy_clusters
+    image: gpdb-pxf-dev-centos7-hdp2-server
+    file: pxf_src/concourse/tasks/test_pxf_on_ccp.yml
+    attempts: 2
+    params:
+      ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+      SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+      HIVE_VERSION: 2
+      IMPERSONATION: {{enable-impersonation-multinode}}
+      KERBEROS: {{kerberos-enabled}}
+      GOOGLE_PROJECT_ID: {{google-project-id}}
+      GROUP: security,proxySecurity,multiClusterSecurity
+      PXF_JVM_OPTS: {{pxf-jvm-opts}}
+      TARGET_OS: centos
