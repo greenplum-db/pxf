@@ -22,47 +22,68 @@ resources:
     uri: ((pxf-git-remote))
 
 ## ---------- Docker Images ----------
-- name: gpdb-pxf-dev-centos6
+- name: gpdb-pxf-dev-centos6-image
   type: docker-image
   icon: docker
   source:
     repository: pivotaldata/gpdb-pxf-dev
     tag: centos6
 
-- name: gpdb-pxf-dev-centos7
+- name: gpdb-pxf-dev-centos7-image
   type: docker-image
   icon: docker
   source:
     repository: pivotaldata/gpdb-pxf-dev
     tag: centos7
 
-- name: gpdb-pxf-dev-ubuntu18
+- name: gpdb-pxf-dev-ubuntu18-image
   type: docker-image
   icon: docker
   source:
     repository: pivotaldata/gpdb-pxf-dev
     tag: ubuntu18
 
-- name: gpdb-pxf-dev-centos6-hdp2-server
+- name: gpdb-pxf-dev-centos6-hdp2-server-image
   type: docker-image
   icon: docker
   source:
     repository: pivotaldata/gpdb-pxf-dev
     tag: centos6-hdp2-server
 
-- name: gpdb-pxf-dev-centos7-hdp2-server
+- name: gpdb-pxf-dev-centos7-hdp2-server-image
   type: docker-image
   icon: docker
   source:
     repository: pivotaldata/gpdb-pxf-dev
     tag: centos7-hdp2-server
 
-- name: gpdb-pxf-dev-ubuntu18-hdp2-server
+- name: gpdb-pxf-dev-ubuntu18-hdp2-server-image
   type: docker-image
   icon: docker
   source:
     repository: pivotaldata/gpdb-pxf-dev
     tag: ubuntu18-hdp2-server
+
+- name: gpdb-pxf-dev-centos7-mapr-server-image
+  type: docker-image
+  icon: docker
+  source:
+    repository: pivotaldata/gpdb-pxf-dev
+    tag: centos7-mapr-server
+
+- name: gpdb-pxf-dev-centos7-hdp3-server-image
+  type: docker-image
+  icon: docker
+  source:
+    repository: pivotaldata/gpdb-pxf-dev
+    tag: centos7-hdp3-server
+
+- name: gpdb-pxf-dev-centos7-cdh-server-image
+  type: docker-image
+  icon: docker
+  source:
+    repository: pivotaldata/gpdb-pxf-dev
+    tag: centos7-cdh-server
 
 ## ---------- Product Packages ----------
 - name: gpdb_rhel6_rpm
@@ -125,11 +146,11 @@ jobs:
   - in_parallel:
     - get: pxf_src
       trigger: true
-    - get: gpdb-pxf-dev-centos6
     - get: gpdb_package
       resource: gpdb_rhel6_rpm
+    - get: gpdb-pxf-dev-centos6-image
   - task: Build PXF on RHEL6
-    image: gpdb-pxf-dev-centos6
+    image: gpdb-pxf-dev-centos6-image
     file: pxf_src/concourse/tasks/build.yml
     params:
       TARGET_OS: rhel6
@@ -140,23 +161,22 @@ jobs:
 - name: Test PXF-GP6-HDP2 on RHEL6
   plan:
   - in_parallel:
+    - get: pxf_src
+      passed: [Build PXF-GP6 on RHEL6]
+      trigger: true
     - get: pxf_tarball
       resource: pxf_tarball_gpdb6_rhel6
       passed: [Build PXF-GP6 on RHEL6]
-      trigger: true
-    - get: pxf_src
-      passed: [Build PXF-GP6 on RHEL6]
-    - get: gpdb-pxf-dev-centos6-hdp2-server
     - get: gpdb_package
       resource: gpdb_rhel6_rpm
       passed: [Build PXF-GP6 on RHEL6]
+    - get: gpdb-pxf-dev-centos6-hdp2-server-image
   - task: Test PXF-GP6-HDP2 on RHEL6
     file: pxf_src/concourse/tasks/test.yml
-    image: gpdb-pxf-dev-centos6-hdp2-server
+    image: gpdb-pxf-dev-centos6-hdp2-server-image
     params:
       ACCESS_KEY_ID: ((tf-machine-access-key-id))
       GROUP: gpdb,proxy,profile
-      HADOOP_CLIENT: HDP
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
       TARGET_OS: centos
       TARGET_OS_VERSION: 6
@@ -168,11 +188,11 @@ jobs:
   - in_parallel:
     - get: pxf_src
       trigger: true
-    - get: gpdb-pxf-dev-centos7
     - get: gpdb_package
       resource: gpdb_rhel7_rpm
+    - get: gpdb-pxf-dev-centos7-image
   - task: Build PXF-GP6 on RHEL7
-    image: gpdb-pxf-dev-centos7
+    image: gpdb-pxf-dev-centos7-image
     file: pxf_src/concourse/tasks/build.yml
     params:
       TARGET_OS: rhel7
@@ -183,23 +203,22 @@ jobs:
 - name: Test PXF-GP6-HDP2 on RHEL7
   plan:
   - in_parallel:
+    - get: pxf_src
+      passed: [Build PXF-GP6 on RHEL7]
+      trigger: true
     - get: pxf_tarball
       resource: pxf_tarball_gpdb6_rhel7
       passed: [Build PXF-GP6 on RHEL7]
-      trigger: true
-    - get: pxf_src
-      passed: [Build PXF-GP6 on RHEL7]
-    - get: gpdb-pxf-dev-centos7-hdp2-server
     - get: gpdb_package
       resource: gpdb_rhel7_rpm
       passed: [Build PXF-GP6 on RHEL7]
+    - get: gpdb-pxf-dev-centos7-hdp2-server-image
   - task: Test PXF-GP6-HDP2 on RHEL7
     file: pxf_src/concourse/tasks/test.yml
-    image: gpdb-pxf-dev-centos7-hdp2-server
+    image: gpdb-pxf-dev-centos7-hdp2-server-image
     params:
       ACCESS_KEY_ID: ((tf-machine-access-key-id))
       GROUP: gpdb,proxy,profile
-      HADOOP_CLIENT: HDP
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
       TARGET_OS: centos
       TARGET_OS_VERSION: 7
@@ -211,11 +230,11 @@ jobs:
   - in_parallel:
     - get: pxf_src
       trigger: true
-    - get: gpdb-pxf-dev-ubuntu18
     - get: gpdb_package
       resource: gpdb_ubuntu18_deb
+    - get: gpdb-pxf-dev-ubuntu18-image
   - task: Build PXF-GP6 on Ubuntu18
-    image: gpdb-pxf-dev-ubuntu18
+    image: gpdb-pxf-dev-ubuntu18-image
     file: pxf_src/concourse/tasks/build.yml
     params:
       TARGET_OS: ubuntu18.04
@@ -226,33 +245,39 @@ jobs:
 - name: Test PXF-GP6-HDP2 on Ubuntu18
   plan:
   - in_parallel:
+    - get: pxf_src
+      passed: [Build PXF-GP6 on Ubuntu18]
+      trigger: true
     - get: pxf_tarball
       resource: pxf_tarball_gpdb6_ubuntu18
       passed: [Build PXF-GP6 on Ubuntu18]
-      trigger: true
-    - get: pxf_src
-      passed: [Build PXF-GP6 on Ubuntu18]
-    - get: gpdb-pxf-dev-ubuntu18-hdp2-server
     - get: gpdb_package
       resource: gpdb_ubuntu18_deb
       passed: [Build PXF-GP6 on Ubuntu18]
+    - get: gpdb-pxf-dev-ubuntu18-hdp2-server-image
   - task: Test PXF-GP6-HDP2 on Ubuntu18
     file: pxf_src/concourse/tasks/test.yml
-    image: gpdb-pxf-dev-ubuntu18-hdp2-server
+    image: gpdb-pxf-dev-ubuntu18-hdp2-server-image
     params:
       ACCESS_KEY_ID: ((tf-machine-access-key-id))
       GROUP: gpdb,proxy,profile
-      HADOOP_CLIENT: HDP
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
       TARGET_OS: ubuntu
       TARGET_OS_VERSION: 18
 #      TEST_ENV: ((test-env))
 
-## ---------- Gates ----------
+## ---------- Testing Gate ----------
 - name: Testing Gate for PXF-GP6
   plan:
   - in_parallel:
-    # pxf tarballs passed their respective first testing jobs
+    # pxf source passed all testing jobs
+    - get: pxf_src
+      passed:
+      - Test PXF-GP6-HDP2 on RHEL6
+      - Test PXF-GP6-HDP2 on RHEL7
+      - Test PXF-GP6-HDP2 on Ubuntu18
+      trigger: true
+    # pxf tarballs passed testing jobs
     - get: pxf_tarball_gpdb6_rhel6
       passed:
       - Test PXF-GP6-HDP2 on RHEL6
@@ -262,14 +287,7 @@ jobs:
     - get: pxf_tarball_gpdb6_ubuntu18
       passed:
       - Test PXF-GP6-HDP2 on Ubuntu18
-    # pxf source passed all first testing jobs
-    - get: pxf_src
-      passed:
-      - Test PXF-GP6-HDP2 on RHEL6
-      - Test PXF-GP6-HDP2 on RHEL7
-      - Test PXF-GP6-HDP2 on Ubuntu18
-      trigger: true
-    # gpdb packages used in first testing jobs
+    # gpdb packages used in testing jobs
     - get: gpdb_rhel6_rpm
       passed:
       - Test PXF-GP6-HDP2 on RHEL6
@@ -279,3 +297,181 @@ jobs:
     - get: gpdb_ubuntu18_deb
       passed:
       - Test PXF-GP6-HDP2 on Ubuntu18
+
+## ---------- Extended Tests ----------
+- name: Test PXF-GP6-MAPR on RHEL7
+  plan:
+  - in_parallel:
+    - get: pxf_src
+      passed: [Testing Gate for PXF-GP6]
+      trigger: true
+    - get: pxf_tarball
+      resource: pxf_tarball_gpdb6_rhel7
+      passed: [Testing Gate for PXF-GP6]
+    - get: gpdb_package
+      resource: gpdb_rhel7_rpm
+      passed: [Testing Gate for PXF-GP6]
+    - get: gpdb-pxf-dev-centos7-mapr-server-image
+  - task: Test PXF-GP6-MAPR on RHEL7
+    privileged: true
+    file: pxf_src/concourse/tasks/test.yml
+    image: gpdb-pxf-dev-centos7-mapr-server-image
+    params:
+      GROUP: hcfs,jdbc
+      HADOOP_CLIENT: MAPR
+      TARGET_OS: centos
+      TARGET_OS_VERSION: 7
+#      TEST_ENV: ((test-env))
+
+- name: Test PXF-GP6-HDP3 on RHEL7
+  plan:
+  - in_parallel:
+    - get: pxf_src
+      passed: [Testing Gate for PXF-GP6]
+      trigger: true
+    - get: pxf_tarball
+      resource: pxf_tarball_gpdb6_rhel7
+      passed: [Testing Gate for PXF-GP6]
+    - get: gpdb_package
+      resource: gpdb_rhel7_rpm
+      passed: [Testing Gate for PXF-GP6]
+    - get: gpdb-pxf-dev-centos7-hdp3-server-image
+  - task: Test PXF-GP6-HDP3 on RHEL7
+    file: pxf_src/concourse/tasks/test.yml
+    image: gpdb-pxf-dev-centos7-hdp3-server-image
+    params:
+      ACCESS_KEY_ID: ((tf-machine-access-key-id))
+      GROUP: gpdb,proxy,profile
+      SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
+      TARGET_OS: centos
+      TARGET_OS_VERSION: 7
+#      TEST_ENV: ((test-env))
+
+- name: Test PXF-GP6-HDP2-JDK11 on RHEL7
+  plan:
+  - in_parallel:
+    - get: pxf_src
+      passed: [Testing Gate for PXF-GP6]
+      trigger: true
+    - get: pxf_tarball
+      resource: pxf_tarball_gpdb6_rhel7
+      passed: [Testing Gate for PXF-GP6]
+    - get: gpdb_package
+      resource: gpdb_rhel7_rpm
+      passed: [Testing Gate for PXF-GP6]
+    - get: gpdb-pxf-dev-centos7-hdp2-server-image
+  - task: Test PXF-GP6-HDP2-JDK11 on RHEL7
+    file: pxf_src/concourse/tasks/test.yml
+    image: gpdb-pxf-dev-centos7-hdp2-server-image
+    params:
+      ACCESS_KEY_ID: ((tf-machine-access-key-id))
+      GROUP: cloud-access-and-hdfs,hbase,hcfs,jdbc,profile,pushdown
+      RUN_JDK_VERSION: 11
+      SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
+      TARGET_OS: centos
+      TARGET_OS_VERSION: 7
+#      TEST_ENV: ((test-env))
+
+- name: Test PXF-GP6-CDH on RHEL7
+  plan:
+  - in_parallel:
+    - get: pxf_src
+      passed: [Testing Gate for PXF-GP6]
+      trigger: true
+    - get: pxf_tarball
+      resource: pxf_tarball_gpdb6_rhel7
+      passed: [Testing Gate for PXF-GP6]
+    - get: gpdb_package
+      resource: gpdb_rhel7_rpm
+      passed: [Testing Gate for PXF-GP6]
+    - get: gpdb-pxf-dev-centos7-cdh-server-image
+  - task: Test PXF-GP6-CDH on RHEL7
+    file: pxf_src/concourse/tasks/test.yml
+    image: gpdb-pxf-dev-centos7-cdh-server-image
+    attempts: 2
+    params:
+      ACCESS_KEY_ID: ((tf-machine-access-key-id))
+      GROUP: gpdb,proxy,profile
+      HADOOP_CLIENT: CDH
+      SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
+      TARGET_OS: centos
+      TARGET_OS_VERSION: 7
+#      TEST_ENV: ((test-env))
+
+- name: Test PXF-GP6-CDH-S3-NO-IMPERS on RHEL7
+  plan:
+  - in_parallel:
+    - get: pxf_src
+      passed: [Testing Gate for PXF-GP6]
+      trigger: true
+    - get: pxf_tarball
+      resource: pxf_tarball_gpdb6_rhel7
+      passed: [Testing Gate for PXF-GP6]
+    - get: gpdb_package
+      resource: gpdb_rhel7_rpm
+      passed: [Testing Gate for PXF-GP6]
+    - get: gpdb-pxf-dev-centos7-cdh-server-image
+  - task: Test PXF-GP6-CDH-S3-NO-IMPERS on RHEL7
+    file: pxf_src/concourse/tasks/test.yml
+    image: gpdb-pxf-dev-centos7-cdh-server-image
+    params:
+      ACCESS_KEY_ID: ((tf-machine-access-key-id))
+      GROUP: hcfs,s3
+      HADOOP_CLIENT: CDH
+      IMPERSONATION: false
+      PROTOCOL: s3
+      SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
+      TARGET_OS: centos
+      TARGET_OS_VERSION: 7
+#      TEST_ENV: ((test-env))
+      TEST_OS: centos
+
+- name: Test PXF-GP6-HDP2-S3-IMPERS on RHEL7
+  plan:
+  - in_parallel:
+    - get: pxf_src
+      passed: [Testing Gate for PXF-GP6]
+      trigger: true
+    - get: pxf_tarball
+      resource: pxf_tarball_gpdb6_rhel7
+      passed: [Testing Gate for PXF-GP6]
+    - get: gpdb_package
+      resource: gpdb_rhel7_rpm
+      passed: [Testing Gate for PXF-GP6]
+    - get: gpdb-pxf-dev-centos7-hdp2-server-image
+  - task: Test PXF-GP6-HDP2-S3-IMPERS on RHEL7
+    file: pxf_src/concourse/tasks/test.yml
+    image: gpdb-pxf-dev-centos7-hdp2-server-image
+    params:
+      ACCESS_KEY_ID: ((tf-machine-access-key-id))
+      GROUP: hcfs,s3
+      IMPERSONATION: true
+      PROTOCOL: s3
+      SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
+      TARGET_OS: centos
+      TARGET_OS_VERSION: 7
+      #      TEST_ENV: ((test-env))
+      TEST_OS: centos
+
+- name: Test PXF-GP6-HDP2-NO-IMPERS on RHEL7
+  plan:
+  - in_parallel:
+    - get: pxf_src
+      passed: [Testing Gate for PXF-GP6]
+      trigger: true
+    - get: pxf_tarball
+      resource: pxf_tarball_gpdb6_rhel7
+      passed: [Testing Gate for PXF-GP6]
+    - get: gpdb_package
+      resource: gpdb_rhel7_rpm
+      passed: [Testing Gate for PXF-GP6]
+    - get: gpdb-pxf-dev-centos7-hdp2-server-image
+  - task: Test PXF-GP6-HDP2-NO-IMPERS on RHEL7
+    file: pxf_src/concourse/tasks/test.yml
+    image: gpdb-pxf-dev-centos7-hdp2-server-image
+    params:
+      GROUP: smoke
+      IMPERSONATION: false
+      TARGET_OS: centos
+      TARGET_OS_VERSION: 7
+#      TEST_ENV: ((test-env))
