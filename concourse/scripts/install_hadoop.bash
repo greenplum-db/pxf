@@ -12,8 +12,14 @@ REMOTE_GPHD_ROOT=~centos/singlecluster
 function install_hadoop_single_cluster() {
 	local hadoop_ip=${1}
 
-	tar -xzf pxf_tarball/pxf.tar.gz -C /tmp
-	cp /tmp/pxf/lib/pxf-hbase-*.jar "${LOCAL_GPHD_ROOT}/hbase/lib"
+	tar -xzf pxf_tarball/pxf*.tar.gz -C /tmp
+	if [[ -d /tmp/pxf/lib ]]; then
+	    # regular tarball based install (old)
+	    cp /tmp/pxf/lib/pxf-hbase-*.jar "${LOCAL_GPHD_ROOT}/hbase/lib"
+	else
+	    # componet tarball based install (new)
+	    cp /tmp/pxf*/pxf/lib/pxf-hbase-*.jar "${LOCAL_GPHD_ROOT}/hbase/lib"
+	fi
 
 	cat <<-EOF > ~/setup_hadoop.sh
 		yum install -y -d 1 java-1.8.0-openjdk-devel &&
