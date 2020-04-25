@@ -178,10 +178,15 @@ function run_pxf_installer_scripts() {
 		sed -i '/edw/d' hostfile_all &&
 		gpscp -f ~gpadmin/hostfile_all -v -u centos ~gpadmin/install_pxf_dependencies.sh centos@=: &&
 		gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e 'sudo ~centos/install_pxf_dependencies.sh' &&
-		gpscp -f ~gpadmin/hostfile_all -v -u gpadmin -r ~/pxf_tarball gpadmin@=: &&
 		if [[ ${PXF_COMPONENT} == true ]]; then
-		    gpssh -f ~gpadmin/hostfile_all -v -u gpadmin -s -e 'tar -xzf ~/pxf_tarball/pxf-*.tar.gz -C /tmp && GPHOME=${GPHOME} /tmp/pxf*/install_component'
+		    gpscp -f ~gpadmin/hostfile_all -v -u centos -r ~/pxf_tarball centos@=: &&
+		    gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e '
+		        tar -xzf ~/pxf_tarball/pxf-*.tar.gz -C /tmp &&
+		        sudo GPHOME=${GPHOME} /tmp/pxf*/install_component &&
+		        sudo chown -R gpadmin:gpadmin ${GPHOME}/pxf
+		    '
 		else
+		    gpscp -f ~gpadmin/hostfile_all -v -u gpadmin -r ~/pxf_tarball gpadmin@=: &&
 		    gpssh -f ~gpadmin/hostfile_all -v -u gpadmin -s -e 'tar -xzf ~/pxf_tarball/pxf.tar.gz -C ${GPHOME}'
 		fi &&
 		PXF_CONF=${PXF_CONF_DIR} ${GPHOME}/pxf/bin/pxf cluster init &&
