@@ -5,7 +5,7 @@ set -euxo pipefail
 SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
 # whether PXF is being installed from a new component-based packaging
-PXF_COMPONENT=${PXF_COMPONENT:=false}4
+PXF_COMPONENT=${PXF_COMPONENT:=false}
 if [[ ${PXF_COMPONENT} == "true" ]]; then
     GPHOME=/usr/local/greenplum-db
 else
