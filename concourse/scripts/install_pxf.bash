@@ -179,13 +179,13 @@ function run_pxf_installer_scripts() {
 		gpscp -f ~gpadmin/hostfile_all -v -u centos ~gpadmin/install_pxf_dependencies.sh centos@=: &&
 		gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e 'sudo ~centos/install_pxf_dependencies.sh' &&
 		if [[ ${PXF_COMPONENT} == true ]]; then
-		    gpscp -f ~gpadmin/hostfile_all -v -u centos -r ~/pxf_tarball centos@=: &&
-		    gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e 'tar -xzf ~/pxf_tarball/pxf-*.tar.gz -C /tmp'
-		    gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e 'sudo GPHOME=${GPHOME} /tmp/pxf*/install_component'
-		    gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e 'sudo chown -R gpadmin:gpadmin ${GPHOME}/pxf'
+			gpscp -f ~gpadmin/hostfile_all -v -u centos -r ~/pxf_tarball centos@=: &&
+			gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e 'tar -xzf ~centos/pxf_tarball/pxf-*.tar.gz -C /tmp'
+			gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e 'sudo GPHOME=${GPHOME} /tmp/pxf*/install_component'
+			gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e 'sudo chown -R gpadmin:gpadmin ${GPHOME}/pxf'
 		else
-		    gpscp -f ~gpadmin/hostfile_all -v -u gpadmin -r ~/pxf_tarball gpadmin@=: &&
-		    gpssh -f ~gpadmin/hostfile_all -v -u gpadmin -s -e 'tar -xzf ~/pxf_tarball/pxf.tar.gz -C ${GPHOME}'
+			gpscp -f ~gpadmin/hostfile_all -v -u gpadmin -r ~/pxf_tarball gpadmin@=: &&
+			gpssh -f ~gpadmin/hostfile_all -v -u gpadmin -s -e 'tar -xzf ~/pxf_tarball/pxf.tar.gz -C ${GPHOME}'
 		fi &&
 		PXF_CONF=${PXF_CONF_DIR} ${GPHOME}/pxf/bin/pxf cluster init &&
 		if [[ -d ~/dataproc_env_files ]]; then

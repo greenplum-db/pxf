@@ -240,7 +240,7 @@ function install_pxf_server() {
 
 function install_pxf_tarball() {
     tar -xzf pxf_tarball/pxf-*.tar.gz -C /tmp
-    source /tmp/pxf*/install_component
+    /tmp/pxf*/install_component
     chown -R gpadmin:gpadmin "${PXF_HOME}"
 }
 
