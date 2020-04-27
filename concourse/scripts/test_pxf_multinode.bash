@@ -11,6 +11,7 @@ if [[ ${PXF_COMPONENT} == "true" ]]; then
 else
     GPHOME=/usr/local/greenplum-db-devel
 fi
+export GPHOME
 
 # shellcheck source=/dev/null
 source "${CWDIR}/pxf_common.bash"
