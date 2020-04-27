@@ -298,6 +298,11 @@ function run_pxf_automation() {
 		sed -i "s|${search}|${replace}|g" "$multiNodesCluster"
 	fi
 
+	# adjust GPHOME in SUT files
+	if [[ ${PXF_COMPONENT} == "true" ]]; then
+		sed -i "s/greenplum-db-devel/greenplum-db/g" "$multiNodesCluster"
+	fi
+
 	# point the tests at remote Hadoop and GPDB
 	sed -i "s/>hadoop</>${HADOOP_HOSTNAME}</g" "$multiNodesCluster"
 	sed -i "/<class>org.greenplum.pxf.automation.components.gpdb.Gpdb<\/class>/ {n; s/localhost/mdw/}" \
