@@ -535,6 +535,8 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
             throws Exception {
 
         String localResultFile = dataTempFolder + "/" + hdfsPath.replaceAll("/", "_");
+        // wait a bit for async write to HDFS in previous steps to finish
+        sleep(3000);
         List<String> files = hdfs.list(hdfsPath);
         Table resultTable = new Table("result_table", null);
         int index = 0;
