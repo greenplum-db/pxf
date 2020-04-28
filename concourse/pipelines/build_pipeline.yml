@@ -452,12 +452,12 @@ jobs:
       TARGET_OS_VERSION: 7
 #      TEST_ENV: ((test-env))
 
-- name: Test PXF-GP6-HDP3-SECURE on RHEL7
+- name: Test PXF-GP6-HDP3-SECURE (MANUAL) on RHEL7
   plan:
   - in_parallel:
     - get: pxf_src
       passed: [Testing Gate for PXF-GP6]
-      trigger: true
+#      trigger: true
     - get: pxf_tarball
       resource: pxf_tarball_gpdb6_rhel7
       passed: [Testing Gate for PXF-GP6]
@@ -473,7 +473,7 @@ jobs:
       GOOGLE_CREDENTIALS: {{google-service-account-key}}
       GOOGLE_PROJECT_ID: {{google-project-id}}
       GOOGLE_ZONE: {{google-zone}}
-  - task: Test PXF-GP6-HDP3-SECURE-IMPERS on RHEL7
+  - task: Test PXF-GP6-HDP3-SECURE (MANUAL) on RHEL7
     file: pxf_src/concourse/tasks/test.yml
     image: gpdb-pxf-dev-centos7-hdp3-server-image
     params:
@@ -553,7 +553,7 @@ jobs:
   - task: Test PXF-GP6-S3 on RHEL7
     file: pxf_src/concourse/tasks/test.yml
     image: gpdb-pxf-dev-centos7-hdp2-server-image
-    attempts: 2
+#    attempts: 2
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
       GROUP: hcfs,s3
@@ -579,7 +579,7 @@ jobs:
   - task: Test PXF-GP6-S3-NO-IMPERS on RHEL7
     file: pxf_src/concourse/tasks/test.yml
     image: gpdb-pxf-dev-centos7-hdp2-server-image
-    attempts: 2
+#    attempts: 2
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
       GROUP: hcfs,s3
@@ -760,11 +760,11 @@ jobs:
     file: pxf_src/concourse/tasks/install_pxf_on_ccp.yml
     image: ccp-7-image
     params:
-      IMPERSONATION: {{enable-impersonation-multinode}}
+      IMPERSONATION: true
       INSTALL_GPHDFS: false
       KERBEROS: {{kerberos-enabled}}
       PXF_JVM_OPTS: {{pxf-jvm-opts}}
-  - task: Test PXF Multinode
+  - task: Test PXF-GP6-HDP2-SECURE-MULTI-IMPERS on RHEL7
     on_success:
       <<: *destroy_clusters
     image: gpdb-pxf-dev-centos7-hdp2-server-image
@@ -774,9 +774,283 @@ jobs:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
       SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
       HIVE_VERSION: 2
-      IMPERSONATION: {{enable-impersonation-multinode}}
+      IMPERSONATION: true
       KERBEROS: {{kerberos-enabled}}
       GOOGLE_PROJECT_ID: {{google-project-id}}
       GROUP: security,proxySecurity,multiClusterSecurity
       PXF_JVM_OPTS: {{pxf-jvm-opts}}
       TARGET_OS: centos
+
+- name: Test PXF-GP6-HDP2-SECURE-MULTI-NO-IMPERS on RHEL7
+  max_in_flight: 2
+  plan:
+  - in_parallel:
+    - get: pxf_src
+      passed: [Testing Gate for PXF-GP6]
+      trigger: true
+    - get: pxf_tarball
+      resource: pxf_tarball_gpdb6_rhel7
+      passed: [Testing Gate for PXF-GP6]
+    - get: gpdb_package
+      resource: gpdb_rhel7_rpm
+      passed: [Testing Gate for PXF-GP6]
+    - get: gpdb-pxf-dev-centos7-hdp2-server-image
+    - get: ccp_src
+    - get: ccp-7-image
+  - in_parallel:
+    - do:
+      - put: terraform_gpdb
+        resource: terraform
+        params:
+          action: create
+          delete_on_failure: true
+          generate_random_name: true
+          terraform_source: ccp_src/google/
+          vars:
+            PLATFORM: centos7
+            number_of_nodes: {{number_of_gpdb_nodes}}
+            extra_nodes: 1
+            segments_per_host: 4
+            instance_type: n1-standard-4
+            ccp_reap_minutes: 120
+      - task: Generate Greenplum Cluster
+        input_mapping:
+          gpdb_rpm: gpdb_package
+          terraform: terraform_gpdb
+        file: ccp_src/ci/tasks/gen_cluster.yml
+        image: ccp-7-image
+        params:
+          AWS_ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+          AWS_SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+          AWS_DEFAULT_REGION: {{aws-region}}
+          BUCKET_PATH: {{tf-bucket-path}}
+          BUCKET_NAME: {{tf-bucket-name}}
+          PLATFORM: centos7
+          CLOUD_PROVIDER: google
+          GPDB_RPM: true
+      - in_parallel:
+        - task: Initialize Greenplum
+          file: ccp_src/ci/tasks/gpinitsystem.yml
+        - task: Install Hadoop
+          file: pxf_src/concourse/tasks/install_hadoop.yml
+          image: gpdb-pxf-dev-centos7-hdp2-server-image
+          params:
+            ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+            SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+            IMPERSONATION: {{enable-impersonation-multinode}}
+            TARGET_OS: centos
+    - task: Generate Hadoop Cluster 1
+      file: pxf_src/concourse/tasks/install_dataproc.yml
+      image: ccp-7-image
+      params:
+        GOOGLE_CREDENTIALS: {{google-service-account-key}}
+        GOOGLE_PROJECT_ID: {{google-project-id}}
+        GOOGLE_ZONE: {{google-zone}}
+        IMAGE_VERSION: {{dataproc-image-version}}
+        KERBEROS: {{kerberos-enabled}}
+        ccp_reap_minutes: 120
+    - task: Generate Hadoop Cluster 2
+      file: pxf_src/concourse/tasks/install_dataproc.yml
+      image: ccp-7-image
+      output_mapping:
+        dataproc_env_files: dataproc_2_env_files
+      params:
+        GOOGLE_CREDENTIALS: {{data-gpdb-ud-kerberos-google-service-account-key}}
+        GOOGLE_PROJECT_ID: {{data-gpdb-ud-kerberos-google-project-id}}
+        GOOGLE_ZONE: {{data-gpdb-ud-kerberos-google-zone}}
+        HADOOP_USER: gpuser
+        IMAGE_VERSION: {{dataproc-image-version}}
+        INITIALIZATION_SCRIPT: gs://data-gpdb-ud-kerberos-scripts/scripts/initialization-for-kerberos.sh
+        INSTANCE_TAGS: bosh-network,data-gpdb-ud-access
+        KERBEROS: {{kerberos-enabled}}
+        KEY: dataproc-kerberos-key
+        KEYRING: dataproc-kerberos
+        ccp_reap_minutes: 120
+        NO_ADDRESS: false
+        PROXY_USER: gpuser
+        SECRETS_BUCKET: data-gpdb-ud-kerberos-pxf-secrets
+  - task: Setup PXF
+    input_mapping:
+      terraform: terraform_gpdb
+    file: pxf_src/concourse/tasks/install_pxf_on_ccp.yml
+    image: ccp-7-image
+    params:
+      IMPERSONATION: false
+      INSTALL_GPHDFS: false
+      KERBEROS: {{kerberos-enabled}}
+      PXF_JVM_OPTS: {{pxf-jvm-opts}}
+  - task: Test PXF-GP6-HDP2-SECURE-MULTI-NO-IMPERS on RHEL7
+    on_success:
+      <<: *destroy_clusters
+    image: gpdb-pxf-dev-centos7-hdp2-server-image
+    file: pxf_src/concourse/tasks/test_pxf_on_ccp.yml
+    attempts: 2
+    params:
+      ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+      SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+      HIVE_VERSION: 2
+      IMPERSONATION: false
+      KERBEROS: {{kerberos-enabled}}
+      GOOGLE_PROJECT_ID: {{google-project-id}}
+      GROUP: security,multiClusterSecurity
+      PXF_JVM_OPTS: {{pxf-jvm-opts}}
+      TARGET_OS: centos
+
+## ---------- Compatibility Gate ----------
+- name: Compatibility Gate for PXF-GP6
+  plan:
+  - in_parallel:
+    # pxf source passed all testing jobs
+    - get: pxf_src
+      passed:
+      - Test PXF-GP6-HDP2-NO-IMPERS on RHEL7
+      - Test PXF-GP6-MAPR on RHEL7
+      - Test PXF-GP6-HDP3 on RHEL7
+#      - Test PXF-GP6-HDP3-SECURE (MANUAL) on RHEL7
+      - Test PXF-GP6-HDP2-JDK11 on RHEL7
+      - Test PXF-GP6-CDH on RHEL7
+      - Test PXF-GP6-S3 on RHEL7
+      - Test PXF-GP6-S3-NO-IMPERS on RHEL7
+      - Test PXF-GP6-ADL-NO-IMPERS on RHEL7
+      - Test PXF-GP6-GS-NO-IMPERS on RHEL7
+      - Test PXF-GP6-MINIO-NO-IMPERS on RHEL7
+      - Test PXF-GP6-HDP2-SECURE-MULTI-IMPERS on RHEL7
+      - Test PXF-GP6-HDP2-SECURE-MULTI-NO-IMPERS on RHEL7
+      trigger: true
+    # pxf tarballs passed testing jobs
+    - get: pxf_tarball_gpdb6_rhel6
+      passed:
+      - Testing Gate for PXF-GP6
+    - get: pxf_tarball_gpdb6_rhel7
+      passed:
+      - Test PXF-GP6-HDP2-NO-IMPERS on RHEL7
+      - Test PXF-GP6-MAPR on RHEL7
+      - Test PXF-GP6-HDP3 on RHEL7
+      #      - Test PXF-GP6-HDP3-SECURE (MANUAL) on RHEL7
+      - Test PXF-GP6-HDP2-JDK11 on RHEL7
+      - Test PXF-GP6-CDH on RHEL7
+      - Test PXF-GP6-S3 on RHEL7
+      - Test PXF-GP6-S3-NO-IMPERS on RHEL7
+      - Test PXF-GP6-ADL-NO-IMPERS on RHEL7
+      - Test PXF-GP6-GS-NO-IMPERS on RHEL7
+      - Test PXF-GP6-MINIO-NO-IMPERS on RHEL7
+      - Test PXF-GP6-HDP2-SECURE-MULTI-IMPERS on RHEL7
+      - Test PXF-GP6-HDP2-SECURE-MULTI-NO-IMPERS on RHEL7
+    - get: pxf_tarball_gpdb6_ubuntu18
+      passed:
+      - Testing Gate for PXF-GP6
+    # gpdb packages used in testing jobs
+    - get: gpdb_rhel6_rpm
+      passed:
+      - Testing Gate for PXF-GP6
+    - get: gpdb_rhel7_rpm
+      passed:
+      - Test PXF-GP6-HDP2-NO-IMPERS on RHEL7
+      - Test PXF-GP6-MAPR on RHEL7
+      - Test PXF-GP6-HDP3 on RHEL7
+      #      - Test PXF-GP6-HDP3-SECURE (MANUAL) on RHEL7
+      - Test PXF-GP6-HDP2-JDK11 on RHEL7
+      - Test PXF-GP6-CDH on RHEL7
+      - Test PXF-GP6-S3 on RHEL7
+      - Test PXF-GP6-S3-NO-IMPERS on RHEL7
+      - Test PXF-GP6-ADL-NO-IMPERS on RHEL7
+      - Test PXF-GP6-GS-NO-IMPERS on RHEL7
+      - Test PXF-GP6-MINIO-NO-IMPERS on RHEL7
+      - Test PXF-GP6-HDP2-SECURE-MULTI-IMPERS on RHEL7
+      - Test PXF-GP6-HDP2-SECURE-MULTI-NO-IMPERS on RHEL7
+    - get: gpdb_ubuntu18_deb
+      passed:
+      - Testing Gate for PXF-GP6
+
+## ---------- Compatibility Testing ----------
+- name: Test PXF-GP6 Backward Compatibility on RHEL6
+  plan:
+  - in_parallel:
+    - get: pxf_src
+      passed: [Compatibility Gate for PXF-GP6]
+      trigger: true
+    - get: pxf_tarball
+      resource: pxf_tarball_gpdb6_rhel6
+      passed: [Compatibility Gate for PXF-GP6]
+    - get: gpdb_package
+      resource: gpdb_rhel6_rpm
+      passed: [Compatibility Gate for PXF-GP6]
+    - get: gpdb-pxf-dev-centos6-hdp2-server-image
+  - task: Test PXF-GP6 Backward Compatibility on RHEL6
+    image: gpdb-pxf-dev-centos6-hdp2-server-image
+    config:
+      platform: linux
+      run:
+        path: echo
+        args: [It is compatible on RHEL 6 !]
+
+- name: Test PXF-GP6 Backward Compatibility on RHEL7
+  plan:
+  - in_parallel:
+    - get: pxf_src
+      passed: [Compatibility Gate for PXF-GP6]
+      trigger: true
+    - get: pxf_tarball
+      resource: pxf_tarball_gpdb6_rhel7
+      passed: [Compatibility Gate for PXF-GP6]
+    - get: gpdb_package
+      resource: gpdb_rhel7_rpm
+      passed: [Compatibility Gate for PXF-GP6]
+    - get: gpdb-pxf-dev-centos7-hdp2-server-image
+  - task: Test PXF-GP6 Backward Compatibility on RHEL7
+    image: gpdb-pxf-dev-centos7-hdp2-server-image
+    config:
+      platform: linux
+      run:
+        path: echo
+        args: [It is compatible on RHEL 7 !]
+
+- name: Test PXF-GP6 Backward Compatibility on Ubuntu18
+  plan:
+  - in_parallel:
+    - get: pxf_src
+      passed: [Compatibility Gate for PXF-GP6]
+      trigger: true
+    - get: pxf_tarball
+      resource: pxf_tarball_gpdb6_ubuntu18
+      passed: [Compatibility Gate for PXF-GP6]
+    - get: gpdb_package
+      resource: gpdb_ubuntu18_deb
+      passed: [Compatibility Gate for PXF-GP6]
+    - get: gpdb-pxf-dev-ubuntu18-hdp2-server-image
+  - task: Test PXF-GP6 Backward Compatibility on Ubuntu18
+    image: gpdb-pxf-dev-ubuntu18-hdp2-server-image
+    config:
+      platform: linux
+      run:
+        path: echo
+        args: [It is compatible on Ubuntu 18 !]
+
+## ---------- Artifact Promotion Gate ----------
+- name: Promote PXF-GP6 Artifacts
+  plan:
+  - in_parallel:
+    # pxf source passed all testing jobs
+    - get: pxf_src
+      passed:
+      - Test PXF-GP6 Backward Compatibility on RHEL6
+      - Test PXF-GP6 Backward Compatibility on RHEL7
+      - Test PXF-GP6 Backward Compatibility on Ubuntu18
+      trigger: true
+    # pxf tarballs passed testing jobs
+    - get: pxf_tarball_gpdb6_rhel6
+      passed:
+      - Test PXF-GP6 Backward Compatibility on RHEL6
+    - get: pxf_tarball_gpdb6_rhel7
+      passed:
+      - Test PXF-GP6 Backward Compatibility on RHEL7
+    - get: pxf_tarball_gpdb6_ubuntu18
+      passed:
+      - Test PXF-GP6 Backward Compatibility on Ubuntu18
+  - task: Promote PXF-GP6 Artifacts
+    image: ccp7-image
+    config:
+      platform: linux
+      run:
+        path: echo
+        args: [Gonna get promoted soon !]
