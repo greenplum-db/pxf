@@ -24,23 +24,29 @@ resources:
   type: docker-image
   icon: docker
   source:
-    repository: pivotaldata/gpdb-pxf-dev
-    tag: centos6-hdp2-server
+    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb6-centos6-test-pxf-hdp2
+    tag: latest
+    username: _json_key
+    password: ((data-gpdb-ud-google-json-key))
 
 - name: gpdb-pxf-dev-centos7-hdp2-server
   type: docker-image
   icon: docker
   source:
-    repository: pivotaldata/gpdb-pxf-dev
-    tag: centos7-hdp2-server
+    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb6-centos7-test-pxf-hdp2
+    tag: latest
+    username: _json_key
+    password: ((data-gpdb-ud-google-json-key))
 {% if gpdb_type == "6X_STABLE" %}
 
 - name: gpdb-pxf-dev-ubuntu18-hdp2-server
   type: docker-image
   icon: docker
   source:
-    repository: pivotaldata/gpdb-pxf-dev
-    tag: ubuntu18-hdp2-server
+    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb6-ubuntu18.04-test-pxf-hdp2
+    tag: latest
+    username: _json_key
+    password: ((data-gpdb-ud-google-json-key))
 {% endif %}
 
 {% for version in range(num_versions) %}
