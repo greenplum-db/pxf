@@ -9,6 +9,8 @@ import org.testng.annotations.Test;
 
 import java.io.File;
 
+import static java.lang.Thread.sleep;
+
 public class ParquetTest extends BaseFeature {
 
     private String hdfsPath;
@@ -297,6 +299,9 @@ public class ParquetTest extends BaseFeature {
         gpdb.createTableAndVerify(exTable);
         gpdb.runQuery("INSERT INTO " + exTable.getName() + " SELECT s1, s2, n1, d1, dc1, tm, " +
                 "f, bg, b, tn, vc1, sml, c1, bin FROM " + PXF_PARQUET_TABLE);
+
+        // for HCFS on Cloud, wait a bit for async write in previous steps to finish
+        sleep(10000);
 
         exTable = new ReadableExternalTable(readTableName,
                 PARQUET_TABLE_COLUMNS, hdfsPath + filename, "custom");

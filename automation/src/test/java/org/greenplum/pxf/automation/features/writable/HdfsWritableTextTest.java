@@ -143,6 +143,9 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
         gpdb.createTableAndVerify(writableExTable);
         insertData(dataTable, writableExTable, InsertionMethod.INSERT);
 
+        // for HCFS on Cloud, wait a bit for async write in previous steps to finish
+        sleep(10000);
+
         gpdb.createTableAndVerify(readableExTable);
         gpdb.queryResults(readableExTable,
                 "SELECT * FROM " + readableExTable.getName() + " ORDER BY bi");
@@ -155,6 +158,9 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
         writableExTable.setCompressionCodec(COMPRESSION_CODEC);
         gpdb.createTableAndVerify(writableExTable);
         insertData(dataTable, writableExTable, InsertionMethod.COPY);
+
+        // for HCFS on Cloud, wait a bit for async write in previous steps to finish
+        sleep(10000);
 
         gpdb.createTableAndVerify(readableExTable);
         gpdb.queryResults(readableExTable,
@@ -175,6 +181,10 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
         gpdb.createTableAndVerify(writableExTable);
 
         insertData(readableExTable, writableExTable, InsertionMethod.INSERT_FROM_TABLE);
+
+        // for HCFS on Cloud, wait a bit for async write in previous steps to finish
+        sleep(10000);
+
         // create another Readable table to verify the data
         readableExTable.setPath(hdfsWritePath + writableTableName);
         gpdb.createTableAndVerify(readableExTable);
@@ -410,6 +420,10 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
         gpdb.createTableAndVerify(writableExTable);
 
         gpdb.copyFromFile(writableExTable, new File(multiBlockedLocalFilePath), ",", false);
+
+        // for HCFS on Cloud, wait a bit for async write in previous steps to finish
+        sleep(10000);
+
         readableExTable.setPath(hdfsPath);
         gpdb.createTableAndVerify(readableExTable);
         gpdb.runAnalyticQuery("SELECT COUNT(*) FROM " + readableExTable.getName(),
@@ -436,6 +450,10 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
         createTable(writableExTable);
 
         gpdb.copyFromFile(writableExTable, new File(multiBlockedLocalFilePath), ",", false);
+
+        // for HCFS on Cloud, wait a bit for async write in previous steps to finish
+        sleep(10000);
+
         readableExTable.setPath(hdfsPath);
         gpdb.createTableAndVerify(readableExTable);
         gpdb.runAnalyticQuery("SELECT COUNT(*) FROM " + readableExTable.getName(),
@@ -466,6 +484,10 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
         createTable(writableExTable);
 
         gpdb.copyFromFile(writableExTable, new File(multiBlockedLocalFilePath), ",", false);
+
+        // for HCFS on Cloud, wait a bit for async write in previous steps to finish
+        sleep(10000);
+
         readableExTable.setPath(hdfsPath);
         gpdb.createTableAndVerify(readableExTable);
         gpdb.runAnalyticQuery("SELECT COUNT(*) FROM " + readableExTable.getName(),
@@ -536,7 +558,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
 
         String localResultFile = dataTempFolder + "/" + hdfsPath.replaceAll("/", "_");
         // for HCFS on Cloud, wait a bit for async write in previous steps to finish
-        sleep(5000);
+        sleep(10000);
         List<String> files = hdfs.list(hdfsPath);
         Table resultTable = new Table("result_table", null);
         int index = 0;
