@@ -5,7 +5,7 @@ CONCOURSE ?= ud
 BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD)
 
 SHELL                      = /bin/bash
-BUILD_PIPELINE_NAME        = pxf-protocol-extension-build_6X_STABLE
+BUILD_PIPELINE_NAME        = pxf-build-GP6
 BC_5X_PIPELINE_NAME        = pgregress_external_table_5X_STABLE
 BC_6X_PIPELINE_NAME        = pgregress_external_table_6X_STABLE
 PIVNET_PIPELINE_NAME       = pivnet_artifacts
@@ -27,8 +27,10 @@ set-build-pipeline:
 		--config=pipelines/build_pipeline.yml \
 		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/gpdb-6X_STABLE-release-secrets.prod.yml \
 		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
-		--var=pxf-protocol-extension-git-branch=6X_STABLE_pipeline \
-		--var=pxf-protocol-extension-git-remote=https://github.com/greenplum-db/pxf-protocol-extension \
+		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
+		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud.yml \
+		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud_kerberos.yml \
+		--var=pxf-git-branch=${BRANCH} \
 		--var=folder-prefix=prod/gpdb_branch \
 		--var=gpdb-branch=6X_STABLE \
 		${FLY_OPTION_NON-INTERACTIVE}

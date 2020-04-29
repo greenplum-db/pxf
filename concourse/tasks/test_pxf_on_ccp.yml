@@ -1,0 +1,26 @@
+platform: linux
+image_resource:
+  type: docker-image
+inputs:
+- name: pxf_src
+- name: cluster_env_files
+- name: gpdb_package
+- name: pxf_tarball
+- name: dataproc_env_files
+  optional: true
+- name: dataproc_2_env_files
+  optional: true
+params:
+  ACCEPTANCE:
+  ACCESS_KEY_ID:
+  GROUP: feature
+  HIVE_VERSION: 1
+  IMPERSONATION: true
+  KERBEROS: false
+  PXF_COMPONENT: true
+  PXF_JVM_OPTS:
+  SECRET_ACCESS_KEY:
+  TARGET_OS: centos
+  TARGET_OS_VERSION: 7
+run:
+  path: pxf_src/concourse/scripts/test_pxf_multinode.bash

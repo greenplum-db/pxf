@@ -3,6 +3,16 @@
 set -exuo pipefail
 
 CWDIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+
+# whether PXF is being installed from a new component-based packaging
+PXF_COMPONENT=${PXF_COMPONENT:=false}
+if [[ ${PXF_COMPONENT} == "true" ]]; then
+    GPHOME=/usr/local/greenplum-db
+else
+    GPHOME=/usr/local/greenplum-db-devel
+fi
+export GPHOME
+
 # shellcheck source=/dev/null
 source "${CWDIR}/pxf_common.bash"
 
@@ -288,6 +298,11 @@ function run_pxf_automation() {
 		sed -i "s|${search}|${replace}|g" "$multiNodesCluster"
 	fi
 
+	# adjust GPHOME in SUT files
+	if [[ ${PXF_COMPONENT} == "true" ]]; then
+		sed -i "s/greenplum-db-devel/greenplum-db/g" "$multiNodesCluster"
+	fi
+
 	# point the tests at remote Hadoop and GPDB
 	sed -i "s/>hadoop</>${HADOOP_HOSTNAME}</g" "$multiNodesCluster"
 	sed -i "/<class>org.greenplum.pxf.automation.components.gpdb.Gpdb<\/class>/ {n; s/localhost/mdw/}" \
@@ -348,9 +363,15 @@ function _main() {
 			"${LOCAL_GPHD_ROOT}/hbase/conf/hbase-site.xml"
 	fi
 
-	install_gpdb_binary # Installs the GPDB Binary on the container
-	setup_gpadmin_user
-	install_pxf_server
+	if [[ ${PXF_COMPONENT} == "true" ]]; then
+		install_gpdb_package
+		setup_gpadmin_user
+		install_pxf_tarball
+	else
+		install_gpdb_binary # Installs the GPDB Binary on the container
+		setup_gpadmin_user
+		install_pxf_server
+	fi
 	init_and_configure_pxf_server
 	remote_access_to_gpdb
 

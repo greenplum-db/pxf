@@ -2,7 +2,7 @@
 
 set -exuo pipefail
 
-GPHOME=/usr/local/greenplum-db
+GPHOME=${GPHOME:=/usr/local/greenplum-db}
 PYTHONHOME='' source "${GPHOME}/greenplum_path.sh"
 
 # Create config and data dirs.
@@ -37,4 +37,5 @@ echo 'host all all 0.0.0.0/0 password' >>~gpadmin/data/master/gpseg-1/pg_hba.con
 # reload pg_hba.conf
 MASTER_DATA_DIRECTORY=~gpadmin/data/master/gpseg-1 gpstop -u
 
+sleep 3
 psql -d template1 -c "CREATE DATABASE gpadmin;"

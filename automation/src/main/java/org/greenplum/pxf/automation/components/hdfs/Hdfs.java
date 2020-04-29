@@ -222,8 +222,8 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
 
     @Override
     public void copyToLocal(String srcPath, String destPath) throws Exception {
-        ReportUtils.startLevel(report, getClass(), "Copy to " + srcPath
-                + " from " + destPath);
+        ReportUtils.startLevel(report, getClass(), "Copy to " + destPath
+                + " from " + srcPath);
         fs.copyToLocalFile(new Path(srcPath), new Path(destPath));
         ReportUtils.stopLevel(report);
     }
@@ -374,6 +374,11 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
                 replicationSize, blockSize);
         data.writeTo(out_stream);
         out_stream.close();
+    }
+
+    @Override
+    public boolean doesFileExist(String pathToFile) throws Exception {
+        return fs.exists(new Path(pathToFile));
     }
 
     @Override

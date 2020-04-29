@@ -5,7 +5,7 @@ image_resource:
   type: docker-image
 
 inputs:
-- name: pxf-protocol-extension_src
+- name: pxf_src
 - name: gpdb_package
 
 outputs:
@@ -13,7 +13,6 @@ outputs:
 
 params:
   TARGET_OS:
-  TARGET_AR:
 
 run:
-  path: pxf-protocol-extension_src/concourse/scripts/build.bash
+  path: pxf_src/concourse/scripts/build.bash
