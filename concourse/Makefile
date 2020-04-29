@@ -5,10 +5,10 @@ CONCOURSE ?= ud
 BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD)
 
 SHELL                      = /bin/bash
-BUILD_PIPELINE_NAME        = pxf-build-GP6
-BC_5X_PIPELINE_NAME        = pgregress_external_table_5X_STABLE
-BC_6X_PIPELINE_NAME        = pgregress_external_table_6X_STABLE
-PIVNET_PIPELINE_NAME       = pivnet_artifacts
+BUILD_PIPELINE_NAME       ?= pxf-build-GP6
+BC_5X_PIPELINE_NAME       ?= pgregress_external_table_5X_STABLE
+BC_6X_PIPELINE_NAME       ?= pgregress_external_table_6X_STABLE
+PIVNET_PIPELINE_NAME      ?= pivnet_artifacts
 NUM_GPDB5_VERSIONS        ?= 11
 NUM_GPDB6_VERSIONS        ?=  9
 FLY_CMD                    = /usr/local/bin/fly
