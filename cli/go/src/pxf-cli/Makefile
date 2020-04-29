@@ -7,7 +7,7 @@ TARGET := $(shell echo $${PWD\#\#*/})
 PXF_ROOT_DIR := $(shell cd ../../../.. && pwd)
 PXF_SERVER_DIR := ${PXF_ROOT_DIR}/server
 PXF_CLI_DIR := ${PXF_ROOT_DIR}/cli
-PXF_VERSION ?= $(shell $(PXF_ROOT_DIR)/version)
+PXF_VERSION ?= $(shell cat $(PXF_ROOT_DIR)/version)
 
 LDFLAGS := -ldflags "-X ${TARGET}/cmd.version=${PXF_VERSION}"
 GO_DEP_CACHE := ${PXF_ROOT_DIR}/cli/go/pkg/dep

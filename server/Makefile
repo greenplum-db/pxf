@@ -27,7 +27,7 @@ TOMCAT_TAR="apache-tomcat-${TOMCAT_VERSION}.tar.gz"
 TOMCAT_URL="http://archive.apache.org/dist/tomcat/tomcat-7/v${TOMCAT_VERSION}/bin/${TOMCAT_TAR}"
 
 PXF_ROOT_DIR := $(shell cd .. && pwd)
-PXF_VERSION ?= $(shell $(PXF_ROOT_DIR)/version)
+PXF_VERSION ?= $(shell cat $(PXF_ROOT_DIR)/version)
 
 help:
 	@echo

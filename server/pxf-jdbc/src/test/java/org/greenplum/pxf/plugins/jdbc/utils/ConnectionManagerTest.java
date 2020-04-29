@@ -7,7 +7,6 @@ import com.zaxxer.hikari.HikariPoolMXBean;
 import com.zaxxer.hikari.pool.HikariProxyConnection;
 import com.zaxxer.hikari.util.DriverDataSource;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -77,7 +76,6 @@ public class ConnectionManagerTest {
     }
 
     @Test
-    @Ignore
     public void testGetConnectionPoolEnabledNoPoolProps() throws SQLException {
         Driver mockDriver = mock(Driver.class);
         when(DriverManager.getDriver("test-url")).thenReturn(mockDriver);
