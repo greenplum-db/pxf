@@ -66,10 +66,8 @@ function create_pxf_installer_scripts() {
 
 		  if [[ $IMPERSONATION == false ]]; then
 		    echo 'Impersonation is disabled, updating pxf-env.sh property'
-		    su gpadmin -c "
-		      sed -ie 's|^[[:blank:]]*export PXF_USER_IMPERSONATION=.*$|export PXF_USER_IMPERSONATION=false|g' \
-		        "\${PXF_CONF}/conf/pxf-env.sh"
-		    "
+		    # sed -ie 's|^[[:blank:]]*export PXF_USER_IMPERSONATION=.*$|export PXF_USER_IMPERSONATION=false|g' "\${PXF_CONF}/conf/pxf-env.sh"
+		    echo 'PXF_USER_IMPERSONATION=false' >> "\${PXF_CONF}/conf/pxf-env.sh"
 		  fi
 
 		  if [[ -n "${PXF_JVM_OPTS}" ]]; then
