@@ -1048,9 +1048,9 @@ jobs:
     - get: pxf_tarball_gpdb6_ubuntu18
       passed:
       - Test PXF-GP6 Backward Compatibility on Ubuntu18
-    - get: ccp7-image
+    - get: ccp-7-image
   - task: Promote PXF-GP6 Artifacts
-    image: ccp7-image
+    image: ccp-7-image
     config:
       platform: linux
       run:
