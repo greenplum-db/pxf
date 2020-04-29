@@ -8,6 +8,7 @@ import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
 import org.testng.annotations.Test;
 
 import java.io.File;
+import java.util.List;
 
 import static java.lang.Thread.sleep;
 
@@ -305,7 +306,14 @@ public class ParquetTest extends BaseFeature {
 
         // for HCFS on Cloud, wait a bit for async write in previous steps to finish
         sleep(10000);
-
+        List<String> files = hdfs.list(hdfsPath + filename);
+        for (String file : files) {
+            // make sure the file is available, saw flakes on Cloud that listed files were not available
+            int attempts = 0;
+            while (!hdfs.doesFileExist(file) && attempts++ < 20) {
+                sleep(1000);
+            }
+        }
         exTable = new ReadableExternalTable(readTableName,
                 PARQUET_TABLE_COLUMNS, hdfsPath + filename, "custom");
         exTable.setHost(pxfHost);
