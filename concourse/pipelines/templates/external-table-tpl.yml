@@ -24,7 +24,11 @@ resources:
   type: docker-image
   icon: docker
   source:
+{% if gpdb_type == "6X_STABLE" %}
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb6-centos6-test-pxf-hdp2
+{% else %}
+    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb5-centos6-test-pxf-hdp2
+{% endif %}
     tag: latest
     username: _json_key
     password: ((data-gpdb-ud-google-json-key))
@@ -33,7 +37,11 @@ resources:
   type: docker-image
   icon: docker
   source:
+{% if gpdb_type == "6X_STABLE" %}
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb6-centos7-test-pxf-hdp2
+{% else %}
+    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb5-centos7-test-pxf-hdp2
+{% endif %}
     tag: latest
     username: _json_key
     password: ((data-gpdb-ud-google-json-key))
