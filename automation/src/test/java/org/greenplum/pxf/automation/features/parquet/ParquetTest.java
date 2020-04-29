@@ -166,6 +166,9 @@ public class ParquetTest extends BaseFeature {
         gpdb.runQuery("INSERT INTO pxf_parquet_write_padded_char VALUES ('row27_char_with_newline', 's_17', 11, 37, 0.123456789012345679, " +
                 "'2013-07-23 21:00:05', 7.7, 23456789, false, 11, 'abcde', 1100, e'c\\n ', '1')");
 
+        // for HCFS on Cloud, wait a bit for async write in previous steps to finish
+        sleep(10000);
+
         runTincTest("pxf.features.parquet.padded_char_pushdown.runTest");
     }
 
