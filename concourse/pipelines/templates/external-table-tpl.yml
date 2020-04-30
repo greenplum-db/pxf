@@ -131,7 +131,7 @@ anchors:
         limits='gpadmin soft core unlimited\ngpadmin soft nproc 131072\ngpadmin soft nofile 65536'
         echo -e "${limits}" >> /etc/security/limits.d/gpadmin-limits.conf
         export GROUP=HdfsSmokeTest,WritableSmokeTest "PATH=${PWD}/pxf_src/concourse/scripts:${PATH}" &&
-        export PXF_SRC="${PWD}/pxf_src" GPDB_PKG_DIR=gpdb_package &&
+        export PXF_SRC="${PWD}/pxf_src" &&
         install_gpdb.bash &&
         su gpadmin "$(command -v initialize_gpdb.bash)" &&
         pgregress_pxf.bash
@@ -141,8 +141,7 @@ anchors:
 ## ======================================================================
 
 jobs:
-{% for version in range(num_versions) %}
-- name: Test PXF Against Latest Minus [[ version ]] GPDB On RHEL6
+- name: Test PXF-GP6 Backward Compatibility on RHEL6
   plan:
   - in_parallel:
     - get: pxf_src
@@ -151,9 +150,12 @@ jobs:
       resource: pxf_tarball_gpdb6_rhel6
       trigger: true
     - get: gpdb-pxf-dev-centos6-hdp2-server
-    - get: gpdb_package
+{% for version in range(num_versions) %}
+    - get: gpdb_package_latest-[[ version ]]
       resource: gpdb_rhel6_rpm_latest-[[ version ]]
-  - task: Test Against Greenplum Product Files RHEL6
+{% endfor %}
+{% for version in range(num_versions) %}
+  - task: Test Against Greenplum Latest - [[ version ]] RHEL6
     image: gpdb-pxf-dev-centos6-hdp2-server
     config:
       platform: linux
@@ -161,9 +163,12 @@ jobs:
       inputs:
       - name: pxf_src
       - name: pxf_tarball
-      - name: gpdb_package
+      - name: gpdb_package_latest-[[ version ]]
+      params:
+        GPDB_PKG_DIR: gpdb_package_latest-[[ version ]]
+{% endfor %}
 
-- name: Test PXF Against Latest Minus [[ version ]] GPDB On RHEL7
+- name: Test PXF-GP6 Backward Compatibility on RHEL7
   plan:
   - in_parallel:
     - get: pxf_src
@@ -172,9 +177,12 @@ jobs:
       resource: pxf_tarball_gpdb6_rhel7
       trigger: true
     - get: gpdb-pxf-dev-centos7-hdp2-server
-    - get: gpdb_package
+{% for version in range(num_versions) %}
+    - get: gpdb_package_latest-[[ version ]]
       resource: gpdb_rhel7_rpm_latest-[[ version ]]
-  - task: Test Against Greenplum Product Files RHEL7
+{% endfor %}
+{% for version in range(num_versions) %}
+  - task: Test Against Greenplum Latest - [[ version ]] RHEL7
     image: gpdb-pxf-dev-centos7-hdp2-server
     config:
       platform: linux
@@ -182,10 +190,13 @@ jobs:
       inputs:
       - name: pxf_src
       - name: pxf_tarball
-      - name: gpdb_package
+      - name: gpdb_package_latest-[[ version ]]
+      params:
+        GPDB_PKG_DIR: gpdb_package_latest-[[ version ]]
+{% endfor %}
 {% if gpdb_type == "6X_STABLE" %}
 
-- name: Test PXF Against Latest Minus [[ version ]] GPDB On Ubuntu18
+- name: Test PXF-GP6 Backward Compatibility on Ubuntu18
   plan:
   - in_parallel:
     - get: pxf_src
@@ -194,9 +205,12 @@ jobs:
       resource: pxf_tarball_gpdb6_ubuntu18
       trigger: true
     - get: gpdb-pxf-dev-ubuntu18-hdp2-server
-    - get: gpdb_package
+{% for version in range(num_versions) %}
+    - get: gpdb_package_latest-[[ version ]]
       resource: gpdb_ubuntu18_deb_latest-[[ version ]]
-  - task: Test Against Greenplum Product Files Ubuntu18
+{% endfor %}
+{% for version in range(num_versions) %}
+  - task: Test Against Greenplum Latest - [[ version ]] Ubuntu18
     image: gpdb-pxf-dev-ubuntu18-hdp2-server
     config:
       platform: linux
@@ -204,6 +218,8 @@ jobs:
       inputs:
       - name: pxf_src
       - name: pxf_tarball
-      - name: gpdb_package
-{% endif %}
+      - name: gpdb_package_latest-[[ version ]]
+      params:
+        GPDB_PKG_DIR: gpdb_package_latest-[[ version ]]
 {% endfor %}
+{% endif %}
