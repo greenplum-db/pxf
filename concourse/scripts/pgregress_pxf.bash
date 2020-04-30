@@ -7,6 +7,10 @@ PXF_HOME=${GPHOME}/pxf
 PXF_CONF_DIR=~gpadmin/pxf
 GPHD_ROOT=/singlecluster
 JAVA_HOME=$(find /usr/lib/jvm -name 'java-1.8.0-openjdk*' | head -1)
+# on CentOS when we install java 1.8 we have to go down to jre
+if [[ -d ${JAVA_HOME}/jre ]]; then
+	JAVA_HOME+=/jre
+fi
 
 function run_pg_regress() {
 	# run desired groups (below we replace commas with spaces in $GROUPS)
