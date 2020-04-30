@@ -87,7 +87,7 @@ function start_pxf_server() {
 
 function init_and_configure_pxf_server() {
 	echo 'Ensure pxf version can be run before pxf init'
-	su gpadmin -c "${PXF_HOME}/bin/pxf version | grep -E '^PXF version [0-9]+.[0-9]+.[0-9]+$'" || exit 1
+	su gpadmin -c "${PXF_HOME}/bin/pxf version | grep -E '^PXF version [0-9]+.[0-9]+.[0-9]+.*$'" || exit 1
 
 	echo 'Initializing PXF service'
 	su gpadmin -c "JAVA_HOME=${JAVA_HOME} PXF_CONF=${PXF_CONF_DIR} ${PXF_HOME}/bin/pxf init"
