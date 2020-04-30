@@ -18,29 +18,6 @@ else
 	exit 1
 fi
 
-gphome=/usr/local/greenplum-db-${version}
-list_of_pxf_files=(
-	"${gphome}/share/postgresql/extension/pxf.control"
-	"${gphome}/share/postgresql/extension/pxf--1.0.sql"
-	"${gphome}/pxf"
-	"${gphome}/lib/postgresql/pxf.so"
-)
-
-for file in "${list_of_pxf_files[@]}"; do
-	if ! [[ -e "${file}" ]]; then
-		echo "${file} not found in GPDB archive, skipping..."
-		continue
-	fi
-	echo "removing ${file} from GPDB archive"
-	rm -rf "${file}"
-done
-
-source "${gphome}/greenplum_path.sh"
-if grep 'CentOS release 6' /etc/centos-release >/dev/null; then
-	source /opt/gcc_env.sh
-fi
-USE_PGXS=1 make -C "${PXF_SRC}/external-table" install
-
 # create symlink to allow pgregress to run (hardcoded to look for /usr/local/greenplum-db-devel/psql)
 rm -rf /usr/local/greenplum-db-devel
 ln -sf "/usr/local/greenplum-db-${version}" /usr/local/greenplum-db-devel

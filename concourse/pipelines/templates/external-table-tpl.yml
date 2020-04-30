@@ -92,15 +92,30 @@ resources:
 
 {% endif %}
 {% endfor %}
-- name: pxf_tarball
-  type: s3
-  icon: aws
+
+- name: pxf_tarball_gpdb6_rhel6
+  type: gcs
+  icon: google-drive
   source:
-    access_key_id: {{bucket-access-key-id}}
-    bucket: {{pxf-aws-bucket-name}}
-    region_name: {{aws-region}}
-    secret_access_key: {{bucket-secret-access-key}}
-    versioned_file: pxf_artifacts/((folder-prefix))_((gpdb-branch))/latest/pxf.tar.gz
+    bucket: data-gpdb-ud-pxf-build
+    json_key: {{data-gpdb-ud-google-json-key}}
+    versioned_file: prod/snapshots/pxf-gpdb6-SNAPSHOT-rhel6-x86_64.tar.gz
+
+- name: pxf_tarball_gpdb6_rhel7
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: data-gpdb-ud-pxf-build
+    json_key: {{data-gpdb-ud-google-json-key}}
+    versioned_file: prod/snapshots/pxf-gpdb6-SNAPSHOT-rhel7-x86_64.tar.gz
+
+- name: pxf_tarball_gpdb6_ubuntu18
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: data-gpdb-ud-pxf-build
+    json_key: {{data-gpdb-ud-google-json-key}}
+    versioned_file: prod/snapshots/pxf-gpdb6-SNAPSHOT-ubuntu18.04-x86_64.tar.gz
 
 ## ======================================================================
 ## ANCHORS
@@ -133,6 +148,7 @@ jobs:
     - get: pxf_src
       trigger: true
     - get: pxf_tarball
+      resource: pxf_tarball_gpdb6_rhel6
       trigger: true
     - get: gpdb-pxf-dev-centos6-hdp2-server
     - get: gpdb_package
@@ -153,6 +169,7 @@ jobs:
     - get: pxf_src
       trigger: true
     - get: pxf_tarball
+      resource: pxf_tarball_gpdb6_rhel7
       trigger: true
     - get: gpdb-pxf-dev-centos7-hdp2-server
     - get: gpdb_package
@@ -174,6 +191,7 @@ jobs:
     - get: pxf_src
       trigger: true
     - get: pxf_tarball
+      resource: pxf_tarball_gpdb6_ubuntu18
       trigger: true
     - get: gpdb-pxf-dev-ubuntu18-hdp2-server
     - get: gpdb_package

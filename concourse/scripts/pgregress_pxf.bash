@@ -67,7 +67,11 @@ function run_pxf_automation() {
 }
 
 function install_pxf_server() {
-	tar -xzf pxf_tarball/pxf.tar.gz -C ${GPHOME}
+	local TMP_DIR install_script
+	TMP_DIR=$(mktemp -d)
+	tar xzf pxf_tarball/pxf-*.tar.gz -C "${TMP_DIR}"
+	install_script=$(find "${TMP_DIR}" -name install_component)
+	GPHOME=${GPHOME} "${install_script}"
 	chown -R gpadmin:gpadmin "${PXF_HOME}"
 }
 

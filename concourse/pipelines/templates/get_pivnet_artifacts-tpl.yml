@@ -7,14 +7,11 @@ resource_types:
 
 resources:
 
-- name: every-night
+- name: twice-a-day
   type: time
   icon: clock-outline
   source:
-    location: America/Los_Angeles
-    start: 2:00 AM
-    stop: 3:00 AM
-    days: [Monday, Friday]
+    interval: 12h
 
 - name: pxf_src
   type: git
@@ -88,7 +85,7 @@ jobs:
 - name: Get Greenplum 5 Product Files Version Latest Minus [[ version ]]
   plan:
   - in_parallel:
-    - get: every-night
+    - get: twice-a-day
       trigger: true
     - get: pxf_src
     - get: ubuntu18
@@ -141,7 +138,7 @@ jobs:
 - name: Get Greenplum 6 Product Files Version Latest Minus [[ version ]]
   plan:
   - in_parallel:
-    - get: every-night
+    - get: twice-a-day
       trigger: true
     - get: pxf_src
     - get: ubuntu18
