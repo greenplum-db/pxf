@@ -58,8 +58,8 @@ for ((i = 0; i < ${#product_files[@]}; i++)); do
 			echo "Sum is equivalent, skipping download of ${file}..."
 			continue
 		fi
-		rm -f "${product_dirs[$i]}"/*.{rpm,deb}
 	fi
+	rm -f "${product_dirs[$i]}"/*.{rpm,deb}
 	id=$(jq <<<"${product_files_json}" -r --arg object_key "${file}" '.[] | select(.aws_object_key == $object_key).id')
 	echo "Downloading ${file} with id ${id} to ${product_dirs[$i]}..."
 	pivnet download-product-files \
