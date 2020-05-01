@@ -44,7 +44,7 @@ set-5X-build-pipeline-from-template:
 		set-pipeline \
 		--check-creds \
 		--pipeline=$(BUILD_PIPELINE_NAME) \
-		--config=<($(TEMPLATE_CMD) --template build_pipeline-tpl.yml --vars major_gpdb_version=5 num_gpdb5_versions=$(NUM_GPDB5_VERSIONS)) \
+		--config=<($(TEMPLATE_CMD) --template build_pipeline-tpl.yml --vars gp_ver=5 num_gpdb5_versions=$(NUM_GPDB5_VERSIONS)) \
 		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
 		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
 		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud.yml \
@@ -63,7 +63,7 @@ set-6X-build-pipeline-from-template:
 		set-pipeline \
 		--check-creds \
 		--pipeline=$(BUILD_PIPELINE_NAME) \
-		--config=<($(TEMPLATE_CMD) --template build_pipeline-tpl.yml --vars major_gpdb_version=6 num_gpdb6_versions=$(NUM_GPDB6_VERSIONS)) \
+		--config=<($(TEMPLATE_CMD) --template build_pipeline-tpl.yml --vars gp_ver=6 num_gpdb6_versions=$(NUM_GPDB6_VERSIONS)) \
 		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/gpdb-6X_STABLE-release-secrets.prod.yml \
 		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
 		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
