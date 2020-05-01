@@ -25,8 +25,7 @@ function compile_pxf_protocol_extension() {
     if [[ ${TARGET_OS} == "rhel6" ]]; then
         source /opt/gcc_env.sh
     fi
-    source /etc/bashrc
-    make -C "${PWD}/pxf_src" tar
+    GOPATH=/opt/go PATH=/opt/go/bin:$PATH make -C "${PWD}/pxf_src" tar
 }
 
 function package_pxf_protocol_extension() {
