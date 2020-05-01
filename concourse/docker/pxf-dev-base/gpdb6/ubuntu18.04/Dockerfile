@@ -20,13 +20,12 @@ RUN apt-get update -y && \
     maven python-dev curl sudo && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
-    pip install psi paramiko --no-cache-dir && \
     PERL_VERSION=perl-5.22.1 && \
     wget http://www.cpan.org/src/5.0/${PERL_VERSION}.tar.gz && \
     tar -xzf ${PERL_VERSION}.tar.gz && \
     cd $PERL_VERSION && \
       ./Configure -des -Dprefix=/usr && \
-      make && make install && \
+      make -j8 -s && make -j16 -s install && \
     cd - && rm -rf ${PERL_VERSION}*
 
 # create user gpadmin since GPDB cannot run under root
@@ -56,7 +55,9 @@ RUN locale-gen en_US.UTF-8 && \
 ADD . /tmp/build/
 
 # Untar the cached dependencies
+# install psi + paramiko as gpadmin
 RUN tar -xzf /tmp/build/pxf-build-dependencies.tar.gz -C ~gpadmin/ && \
     rm -rf /tmp/build && \
     ln -s ~gpadmin/.{tomcat,go-dep-cached-sources,m2,gradle} ~root && \
-    chown -R gpadmin:gpadmin ~gpadmin
+    chown -R gpadmin:gpadmin ~gpadmin && \
+    su gpadmin -c "pip install psi paramiko --no-cache-dir"
