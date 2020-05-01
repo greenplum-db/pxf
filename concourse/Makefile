@@ -38,13 +38,32 @@ set-build-pipeline:
 	@echo using the following command to unpause the pipeline:
 	@echo -e "\t$(FLY_CMD) -t ${CONCOURSE} unpause-pipeline --pipeline ${BUILD_PIPELINE_NAME}"
 
-.PHONY: set-build-pipeline-from-template
-set-build-pipeline-from-template:
+.PHONY: set-5X-build-pipeline-from-template
+set-5X-build-pipeline-from-template:
 	$(FLY_CMD) --target=$(CONCOURSE) \
 		set-pipeline \
 		--check-creds \
 		--pipeline=$(BUILD_PIPELINE_NAME) \
-		--config=<($(TEMPLATE_CMD) --template build_pipeline-tpl.yml --vars gpdb_type=6X_STABLE num_gpdb6_versions=$(NUM_GPDB6_VERSIONS)) \
+		--config=<($(TEMPLATE_CMD) --template build_pipeline-tpl.yml --vars major_gpdb_version=5 num_gpdb5_versions=$(NUM_GPDB5_VERSIONS)) \
+		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
+		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
+		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud.yml \
+		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud_kerberos.yml \
+		--var=pxf-git-branch=${BRANCH} \
+		--var=folder-prefix=prod/gpdb_branch \
+		--var=gpdb-branch=5X_STABLE \
+		${FLY_OPTION_NON-INTERACTIVE}
+
+	@echo using the following command to unpause the pipeline:
+	@echo -e "\t$(FLY_CMD) -t ${CONCOURSE} unpause-pipeline --pipeline ${BUILD_PIPELINE_NAME}"
+
+.PHONY: set-6X-build-pipeline-from-template
+set-6X-build-pipeline-from-template:
+	$(FLY_CMD) --target=$(CONCOURSE) \
+		set-pipeline \
+		--check-creds \
+		--pipeline=$(BUILD_PIPELINE_NAME) \
+		--config=<($(TEMPLATE_CMD) --template build_pipeline-tpl.yml --vars major_gpdb_version=6 num_gpdb6_versions=$(NUM_GPDB6_VERSIONS)) \
 		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/gpdb-6X_STABLE-release-secrets.prod.yml \
 		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
 		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/pxf-multinode-params.yml \

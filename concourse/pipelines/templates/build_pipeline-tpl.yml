@@ -1,7 +1,7 @@
 ---
 {# change num_versions manually to download more Greenplum versions #}
 {% set num_versions = num_gpdb5_versions %}
-{% if gpdb_type == '6X_STABLE' %}
+{% if major_gpdb_version == 6 %}
   {% set num_versions = num_gpdb6_versions %}
 {% endif %}
 ## ======================================================================
@@ -48,7 +48,7 @@ anchors:
       get_params:
         action: destroy
 
-- &run_anchor
+- &run_regress_anchor
   run:
     path: sh
     args:
@@ -99,29 +99,12 @@ resources:
     uri: {{ccp-git-remote}}
 
 ## ---------- Docker Images ----------
+{% if major_gpdb_version == 5 %}
 - name: gpdb-pxf-dev-centos6-image
   type: docker-image
   icon: docker
   source:
-    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb6-centos6-test-pxf
-    tag: latest
-    username: _json_key
-    password: ((data-gpdb-ud-google-json-key))
-
-- name: gpdb-pxf-dev-centos7-image
-  type: docker-image
-  icon: docker
-  source:
-    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb6-centos7-test-pxf
-    tag: latest
-    username: _json_key
-    password: ((data-gpdb-ud-google-json-key))
-
-- name: gpdb-pxf-dev-ubuntu18-image
-  type: docker-image
-  icon: docker
-  source:
-    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb6-ubuntu18.04-test-pxf
+    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb5-centos6-test-pxf
     tag: latest
     username: _json_key
     password: ((data-gpdb-ud-google-json-key))
@@ -130,16 +113,27 @@ resources:
   type: docker-image
   icon: docker
   source:
-    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb6-centos6-test-pxf-hdp2
+    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb5-centos6-test-pxf-hdp2
+    tag: latest
+    username: _json_key
+    password: ((data-gpdb-ud-google-json-key))
+{% endif %}
+
+- name: gpdb-pxf-dev-centos7-image
+  type: docker-image
+  icon: docker
+  source:
+    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[ major_gpdb_version ]]-centos7-test-pxf
     tag: latest
     username: _json_key
     password: ((data-gpdb-ud-google-json-key))
 
-- name: gpdb-pxf-dev-centos7-hdp2-server-image
+{% if major_gpdb_version == 6 %}
+- name: gpdb-pxf-dev-ubuntu18-image
   type: docker-image
   icon: docker
   source:
-    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb6-centos7-test-pxf-hdp2
+    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb6-ubuntu18.04-test-pxf
     tag: latest
     username: _json_key
     password: ((data-gpdb-ud-google-json-key))
@@ -152,12 +146,22 @@ resources:
     tag: latest
     username: _json_key
     password: ((data-gpdb-ud-google-json-key))
+{% endif %}
+
+- name: gpdb-pxf-dev-centos7-hdp2-server-image
+  type: docker-image
+  icon: docker
+  source:
+    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[ major_gpdb_version ]]-centos7-test-pxf-hdp2
+    tag: latest
+    username: _json_key
+    password: ((data-gpdb-ud-google-json-key))
 
 - name: gpdb-pxf-dev-centos7-mapr-server-image
   type: docker-image
   icon: docker
   source:
-    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb6-centos7-test-pxf-mapr
+    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[ major_gpdb_version ]]-centos7-test-pxf-mapr
     tag: latest
     username: _json_key
     password: ((data-gpdb-ud-google-json-key))
@@ -166,7 +170,7 @@ resources:
   type: docker-image
   icon: docker
   source:
-    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb6-centos7-test-pxf-hdp3
+    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[ major_gpdb_version ]]-centos7-test-pxf-hdp3
     tag: latest
     username: _json_key
     password: ((data-gpdb-ud-google-json-key))
@@ -175,7 +179,7 @@ resources:
   type: docker-image
   icon: docker
   source:
-    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb6-centos7-test-pxf-cdh
+    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[ major_gpdb_version ]]-centos7-test-pxf-cdh
     tag: latest
     username: _json_key
     password: ((data-gpdb-ud-google-json-key))
@@ -189,13 +193,15 @@ resources:
 
 ## ---------- Product Packages ----------
 {% for version in range(num_versions) %}
+{% if major_gpdb_version == 5 %}
 - name: gpdb_rhel6_rpm_latest-[[ version ]]
   type: gcs
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pivnet-artifacts
     json_key: ((data-gpdb-ud-google-json-key))
-    regexp: latest-[[ version ]]_gpdb6/greenplum-db-(.*)-rhel6-x86_64.rpm
+    regexp: latest-[[ version ]]_gpdb5/greenplum-db-(.*)-rhel6-x86_64.rpm
+{% endif %}
 
 - name: gpdb_rhel7_rpm_latest-[[ version ]]
   type: gcs
@@ -203,8 +209,9 @@ resources:
   source:
     bucket: data-gpdb-ud-pivnet-artifacts
     json_key: ((data-gpdb-ud-google-json-key))
-    regexp: latest-[[ version ]]_gpdb6/greenplum-db-(.*)-rhel7-x86_64.rpm
+    regexp: latest-[[ version ]]_gpdb[[ major_gpdb_version ]]/greenplum-db-(.*)-rhel7-x86_64.rpm
 
+{% if major_gpdb_version == 6 %}
 - name: gpdb_ubuntu18_deb_latest-[[ version ]]
   type: gcs
   icon: google-drive
@@ -212,32 +219,37 @@ resources:
     bucket: data-gpdb-ud-pivnet-artifacts
     json_key: ((data-gpdb-ud-google-json-key))
     regexp: latest-[[ version ]]_gpdb6/greenplum-db-(.*)-ubuntu18.04-amd64.deb
+{% endif %}
 {% endfor %}
 
 ## ---------- PXF Build Artifacts ----------
-- name: pxf_tarball_gpdb6_rhel6
+{% if major_gpdb_version == 5 %}
+- name: pxf_tarball_gpdb_rhel6
   type: gcs
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pxf-build
     json_key: {{data-gpdb-ud-google-json-key}}
-    versioned_file: prod/snapshots/pxf-gpdb6-SNAPSHOT-rhel6-x86_64.tar.gz
+    versioned_file: prod/snapshots/pxf-gpdb5-SNAPSHOT-rhel6-x86_64.tar.gz
+{% endif %}
 
-- name: pxf_tarball_gpdb6_rhel7
+- name: pxf_tarball_gpdb_rhel7
   type: gcs
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pxf-build
     json_key: {{data-gpdb-ud-google-json-key}}
-    versioned_file: prod/snapshots/pxf-gpdb6-SNAPSHOT-rhel7-x86_64.tar.gz
+    versioned_file: prod/snapshots/pxf-gpdb[[ major_gpdb_version ]]-SNAPSHOT-rhel7-x86_64.tar.gz
 
-- name: pxf_tarball_gpdb6_ubuntu18
+{% if major_gpdb_version == 6 %}
+- name: pxf_tarball_gpdb_ubuntu18
   type: gcs
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pxf-build
     json_key: {{data-gpdb-ud-google-json-key}}
     versioned_file: prod/snapshots/pxf-gpdb6-SNAPSHOT-ubuntu18.04-x86_64.tar.gz
+{% endif %}
 
 ## ---------- Auxiliary Resources ----------
 - name: terraform
@@ -262,7 +274,8 @@ resources:
 jobs:
 
 ## ---------- Centos 6 Swimlane ----------
-- name: Build PXF-GP6 on RHEL6
+{% if major_gpdb_version == 5 %}
+- name: Build PXF-GP5 on RHEL6
   plan:
   - in_parallel:
     - get: pxf_src
@@ -275,24 +288,24 @@ jobs:
     file: pxf_src/concourse/tasks/build.yml
     params:
       TARGET_OS: rhel6
-  - put: pxf_tarball_gpdb6_rhel6
+  - put: pxf_tarball_gpdb_rhel6
     params:
-      file: dist/pxf-gpdb6-*-SNAPSHOT-rhel6-x86_64.tar.gz
+      file: dist/pxf-gpdb5-*-SNAPSHOT-rhel6-x86_64.tar.gz
 
-- name: Test PXF-GP6-HDP2 on RHEL6
+- name: Test PXF-GP5-HDP2 on RHEL6
   plan:
   - in_parallel:
     - get: pxf_src
-      passed: [Build PXF-GP6 on RHEL6]
+      passed: [Build PXF-GP5 on RHEL6]
       trigger: true
     - get: pxf_tarball
-      resource: pxf_tarball_gpdb6_rhel6
-      passed: [Build PXF-GP6 on RHEL6]
+      resource: pxf_tarball_gpdb_rhel6
+      passed: [Build PXF-GP5 on RHEL6]
     - get: gpdb_package
       resource: gpdb_rhel6_rpm_latest-0
-      passed: [Build PXF-GP6 on RHEL6]
+      passed: [Build PXF-GP5 on RHEL6]
     - get: gpdb-pxf-dev-centos6-hdp2-server-image
-  - task: Test PXF-GP6-HDP2 on RHEL6
+  - task: Test PXF-GP5-HDP2 on RHEL6
     file: pxf_src/concourse/tasks/test.yml
     image: gpdb-pxf-dev-centos6-hdp2-server-image
     params:
@@ -302,9 +315,10 @@ jobs:
       TARGET_OS: centos
       TARGET_OS_VERSION: 6
 #      TEST_ENV: ((test-env))
+{% endif %}
 
 ## ---------- Centos 7 Swimlane ----------
-- name: Build PXF-GP6 on RHEL7
+- name: Build PXF-GP[[ major_gpdb_version ]] on RHEL7
   plan:
   - in_parallel:
     - get: pxf_src
@@ -312,29 +326,29 @@ jobs:
     - get: gpdb_package
       resource: gpdb_rhel7_rpm_latest-0
     - get: gpdb-pxf-dev-centos7-image
-  - task: Build PXF-GP6 on RHEL7
+  - task: Build PXF-GP[[ major_gpdb_version ]] on RHEL7
     image: gpdb-pxf-dev-centos7-image
     file: pxf_src/concourse/tasks/build.yml
     params:
       TARGET_OS: rhel7
-  - put: pxf_tarball_gpdb6_rhel7
+  - put: pxf_tarball_gpdb_rhel7
     params:
-      file: dist/pxf-gpdb6-*-SNAPSHOT-rhel7-x86_64.tar.gz
+      file: dist/pxf-gpdb[[ major_gpdb_version ]]-*-SNAPSHOT-rhel7-x86_64.tar.gz
 
-- name: Test PXF-GP6-HDP2 on RHEL7
+- name: Test PXF-GP[[ major_gpdb_version ]]-HDP2 on RHEL7
   plan:
   - in_parallel:
     - get: pxf_src
-      passed: [Build PXF-GP6 on RHEL7]
+      passed: [Build PXF-GP[[ major_gpdb_version ]] on RHEL7]
       trigger: true
     - get: pxf_tarball
-      resource: pxf_tarball_gpdb6_rhel7
-      passed: [Build PXF-GP6 on RHEL7]
+      resource: pxf_tarball_gpdb_rhel7
+      passed: [Build PXF-GP[[ major_gpdb_version ]] on RHEL7]
     - get: gpdb_package
       resource: gpdb_rhel7_rpm_latest-0
-      passed: [Build PXF-GP6 on RHEL7]
+      passed: [Build PXF-GP[[ major_gpdb_version ]] on RHEL7]
     - get: gpdb-pxf-dev-centos7-hdp2-server-image
-  - task: Test PXF-GP6-HDP2 on RHEL7
+  - task: Test PXF-GP[[ major_gpdb_version ]]-HDP2 on RHEL7
     file: pxf_src/concourse/tasks/test.yml
     image: gpdb-pxf-dev-centos7-hdp2-server-image
     params:
@@ -346,6 +360,7 @@ jobs:
 #      TEST_ENV: ((test-env))
 
 ## ---------- Ubuntu 18 Swimlane ----------
+{% if major_gpdb_version == 6 %}
 - name: Build PXF-GP6 on Ubuntu18
   plan:
   - in_parallel:
@@ -359,7 +374,7 @@ jobs:
     file: pxf_src/concourse/tasks/build.yml
     params:
       TARGET_OS: ubuntu18.04
-  - put: pxf_tarball_gpdb6_ubuntu18
+  - put: pxf_tarball_gpdb_ubuntu18
     params:
       file: dist/pxf-gpdb6-*-SNAPSHOT-ubuntu18.04-x86_64.tar.gz
 
@@ -370,7 +385,7 @@ jobs:
       passed: [Build PXF-GP6 on Ubuntu18]
       trigger: true
     - get: pxf_tarball
-      resource: pxf_tarball_gpdb6_ubuntu18
+      resource: pxf_tarball_gpdb_ubuntu18
       passed: [Build PXF-GP6 on Ubuntu18]
     - get: gpdb_package
       resource: gpdb_ubuntu18_deb_latest-0
@@ -386,55 +401,66 @@ jobs:
       TARGET_OS: ubuntu
       TARGET_OS_VERSION: 18
 #      TEST_ENV: ((test-env))
+{% endif %}
+
 
 ## ---------- Testing Gate ----------
-- name: Testing Gate for PXF-GP6
+- name: Testing Gate for PXF-GP[[ major_gpdb_version ]]
   plan:
   - in_parallel:
     # pxf source passed all testing jobs
     - get: pxf_src
       passed:
-      - Test PXF-GP6-HDP2 on RHEL6
-      - Test PXF-GP6-HDP2 on RHEL7
+      - Test PXF-GP[[ major_gpdb_version ]]-HDP2 on RHEL7
+{% if major_gpdb_version == 6 %}
       - Test PXF-GP6-HDP2 on Ubuntu18
+{% else %}
+      - Test PXF-GP5-HDP2 on RHEL6
+{% endif %}
       trigger: true
     # pxf tarballs passed testing jobs
-    - get: pxf_tarball_gpdb6_rhel6
-      passed:
-      - Test PXF-GP6-HDP2 on RHEL6
-    - get: pxf_tarball_gpdb6_rhel7
-      passed:
-      - Test PXF-GP6-HDP2 on RHEL7
-    - get: pxf_tarball_gpdb6_ubuntu18
+{% if major_gpdb_version == 6 %}
+    - get: pxf_tarball_gpdb_ubuntu18
       passed:
       - Test PXF-GP6-HDP2 on Ubuntu18
+{% else %}
+    - get: pxf_tarball_gpdb_rhel6
+      passed:
+      - Test PXF-GP5-HDP2 on RHEL6
+{% endif %}
+    - get: pxf_tarball_gpdb_rhel7
+      passed:
+      - Test PXF-GP[[ major_gpdb_version ]]-HDP2 on RHEL7
     # gpdb packages used in testing jobs
-    - get: gpdb_rhel6_rpm_latest-0
-      passed:
-      - Test PXF-GP6-HDP2 on RHEL6
-    - get: gpdb_rhel7_rpm_latest-0
-      passed:
-      - Test PXF-GP6-HDP2 on RHEL7
+{% if major_gpdb_version == 6 %}
     - get: gpdb_ubuntu18_deb_latest-0
       passed:
       - Test PXF-GP6-HDP2 on Ubuntu18
+{% else %}
+    - get: gpdb_rhel6_rpm_latest-0
+      passed:
+      - Test PXF-GP5-HDP2 on RHEL6
+{% endif %}
+    - get: gpdb_rhel7_rpm_latest-0
+      passed:
+      - Test PXF-GP[[ major_gpdb_version ]]-HDP2 on RHEL7
 
 ## ---------- Extended Tests ----------
 
-- name: Test PXF-GP6-HDP2-NO-IMPERS on RHEL7
+- name: Test PXF-GP[[ major_gpdb_version ]]-HDP2-NO-IMPERS on RHEL7
   plan:
   - in_parallel:
     - get: pxf_src
-      passed: [Testing Gate for PXF-GP6]
+      passed: [Testing Gate for PXF-GP[[ major_gpdb_version ]]]
       trigger: true
     - get: pxf_tarball
-      resource: pxf_tarball_gpdb6_rhel7
-      passed: [Testing Gate for PXF-GP6]
+      resource: pxf_tarball_gpdb_rhel7
+      passed: [Testing Gate for PXF-GP[[ major_gpdb_version ]]]
     - get: gpdb_package
       resource: gpdb_rhel7_rpm_latest-0
-      passed: [Testing Gate for PXF-GP6]
+      passed: [Testing Gate for PXF-GP[[ major_gpdb_version ]]]
     - get: gpdb-pxf-dev-centos7-hdp2-server-image
-  - task: Test PXF-GP6-HDP2-NO-IMPERS on RHEL7
+  - task: Test PXF-GP[[ major_gpdb_version ]]-HDP2-NO-IMPERS on RHEL7
     file: pxf_src/concourse/tasks/test.yml
     image: gpdb-pxf-dev-centos7-hdp2-server-image
     params:
@@ -443,20 +469,20 @@ jobs:
       TARGET_OS_VERSION: 7
 #      TEST_ENV: ((test-env))
 
-- name: Test PXF-GP6-MAPR on RHEL7
+- name: Test PXF-GP[[ major_gpdb_version ]]-MAPR on RHEL7
   plan:
   - in_parallel:
     - get: pxf_src
-      passed: [Testing Gate for PXF-GP6]
+      passed: [Testing Gate for PXF-GP[[ major_gpdb_version ]]]
       trigger: true
     - get: pxf_tarball
-      resource: pxf_tarball_gpdb6_rhel7
-      passed: [Testing Gate for PXF-GP6]
+      resource: pxf_tarball_gpdb_rhel7
+      passed: [Testing Gate for PXF-GP[[ major_gpdb_version ]]]
     - get: gpdb_package
       resource: gpdb_rhel7_rpm_latest-0
-      passed: [Testing Gate for PXF-GP6]
+      passed: [Testing Gate for PXF-GP[[ major_gpdb_version ]]]
     - get: gpdb-pxf-dev-centos7-mapr-server-image
-  - task: Test PXF-GP6-MAPR on RHEL7
+  - task: Test PXF-GP[[ major_gpdb_version ]]-MAPR on RHEL7
     privileged: true
     file: pxf_src/concourse/tasks/test.yml
     image: gpdb-pxf-dev-centos7-mapr-server-image
@@ -467,20 +493,20 @@ jobs:
       TARGET_OS_VERSION: 7
 #      TEST_ENV: ((test-env))
 
-- name: Test PXF-GP6-HDP3 on RHEL7
+- name: Test PXF-GP[[ major_gpdb_version ]]-HDP3 on RHEL7
   plan:
   - in_parallel:
     - get: pxf_src
-      passed: [Testing Gate for PXF-GP6]
+      passed: [Testing Gate for PXF-GP[[ major_gpdb_version ]]]
       trigger: true
     - get: pxf_tarball
-      resource: pxf_tarball_gpdb6_rhel7
-      passed: [Testing Gate for PXF-GP6]
+      resource: pxf_tarball_gpdb_rhel7
+      passed: [Testing Gate for PXF-GP[[ major_gpdb_version ]]]
     - get: gpdb_package
       resource: gpdb_rhel7_rpm_latest-0
-      passed: [Testing Gate for PXF-GP6]
+      passed: [Testing Gate for PXF-GP[[ major_gpdb_version ]]]
     - get: gpdb-pxf-dev-centos7-hdp3-server-image
-  - task: Test PXF-GP6-HDP3 on RHEL7
+  - task: Test PXF-GP[[ major_gpdb_version ]]-HDP3 on RHEL7
     file: pxf_src/concourse/tasks/test.yml
     image: gpdb-pxf-dev-centos7-hdp3-server-image
     params:
@@ -491,18 +517,18 @@ jobs:
       TARGET_OS_VERSION: 7
 #      TEST_ENV: ((test-env))
 
-- name: Test PXF-GP6-HDP3-SECURE (MANUAL) on RHEL7
+- name: Test PXF-GP[[ major_gpdb_version ]]-HDP3-SECURE (MANUAL) on RHEL7
   plan:
   - in_parallel:
     - get: pxf_src
-      passed: [Testing Gate for PXF-GP6]
+      passed: [Testing Gate for PXF-GP[[ major_gpdb_version ]]]
 #      trigger: true
     - get: pxf_tarball
-      resource: pxf_tarball_gpdb6_rhel7
-      passed: [Testing Gate for PXF-GP6]
+      resource: pxf_tarball_gpdb_rhel7
+      passed: [Testing Gate for PXF-GP[[ major_gpdb_version ]]]
     - get: gpdb_package
       resource: gpdb_rhel7_rpm_latest-0
-      passed: [Testing Gate for PXF-GP6]
+      passed: [Testing Gate for PXF-GP[[ major_gpdb_version ]]]
     - get: gpdb-pxf-dev-centos7-hdp3-server-image
     - get: ccp-7-image
   - task: load_config_for_ambari
@@ -512,7 +538,7 @@ jobs:
       GOOGLE_CREDENTIALS: {{google-service-account-key}}
       GOOGLE_PROJECT_ID: {{google-project-id}}
       GOOGLE_ZONE: {{google-zone}}
-  - task: Test PXF-GP6-HDP3-SECURE (MANUAL) on RHEL7
+  - task: Test PXF-GP[[ major_gpdb_version ]]-HDP3-SECURE (MANUAL) on RHEL7
     file: pxf_src/concourse/tasks/test.yml
     image: gpdb-pxf-dev-centos7-hdp3-server-image
     params:
@@ -523,20 +549,20 @@ jobs:
       TARGET_OS: centos
 #      TEST_ENV: ((test-env))
 
-- name: Test PXF-GP6-HDP2-JDK11 on RHEL7
+- name: Test PXF-GP[[ major_gpdb_version ]]-HDP2-JDK11 on RHEL7
   plan:
   - in_parallel:
     - get: pxf_src
-      passed: [Testing Gate for PXF-GP6]
+      passed: [Testing Gate for PXF-GP[[ major_gpdb_version ]]]
       trigger: true
     - get: pxf_tarball
-      resource: pxf_tarball_gpdb6_rhel7
-      passed: [Testing Gate for PXF-GP6]
+      resource: pxf_tarball_gpdb_rhel7
+      passed: [Testing Gate for PXF-GP[[ major_gpdb_version ]]]
     - get: gpdb_package
       resource: gpdb_rhel7_rpm_latest-0
-      passed: [Testing Gate for PXF-GP6]
+      passed: [Testing Gate for PXF-GP[[ major_gpdb_version ]]]
     - get: gpdb-pxf-dev-centos7-hdp2-server-image
-  - task: Test PXF-GP6-HDP2-JDK11 on RHEL7
+  - task: Test PXF-GP[[ major_gpdb_version ]]-HDP2-JDK11 on RHEL7
     file: pxf_src/concourse/tasks/test.yml
     image: gpdb-pxf-dev-centos7-hdp2-server-image
     params:
@@ -548,20 +574,20 @@ jobs:
       TARGET_OS_VERSION: 7
 #      TEST_ENV: ((test-env))
 
-- name: Test PXF-GP6-CDH on RHEL7
+- name: Test PXF-GP[[ major_gpdb_version ]]-CDH on RHEL7
   plan:
   - in_parallel:
     - get: pxf_src
-      passed: [Testing Gate for PXF-GP6]
+      passed: [Testing Gate for PXF-GP[[ major_gpdb_version ]]]
       trigger: true
     - get: pxf_tarball
-      resource: pxf_tarball_gpdb6_rhel7
-      passed: [Testing Gate for PXF-GP6]
+      resource: pxf_tarball_gpdb_rhel7
+      passed: [Testing Gate for PXF-GP[[ major_gpdb_version ]]]
     - get: gpdb_package
       resource: gpdb_rhel7_rpm_latest-0
-      passed: [Testing Gate for PXF-GP6]
+      passed: [Testing Gate for PXF-GP[[ major_gpdb_version ]]]
     - get: gpdb-pxf-dev-centos7-cdh-server-image
-  - task: Test PXF-GP6-CDH on RHEL7
+  - task: Test PXF-GP[[ major_gpdb_version ]]-CDH on RHEL7
     file: pxf_src/concourse/tasks/test.yml
     image: gpdb-pxf-dev-centos7-cdh-server-image
     # CDH often fails on HBASE permission grant
@@ -577,20 +603,20 @@ jobs:
 
 ## ---------- HCFS Cloud tests ----------
 
-- name: Test PXF-GP6-S3 on RHEL7
+- name: Test PXF-GP[[ major_gpdb_version ]]-S3 on RHEL7
   plan:
   - in_parallel:
     - get: pxf_src
-      passed: [Testing Gate for PXF-GP6]
+      passed: [Testing Gate for PXF-GP[[ major_gpdb_version ]]]
       trigger: true
     - get: pxf_tarball
-      resource: pxf_tarball_gpdb6_rhel7
-      passed: [Testing Gate for PXF-GP6]
+      resource: pxf_tarball_gpdb_rhel7
+      passed: [Testing Gate for PXF-GP[[ major_gpdb_version ]]]
     - get: gpdb_package
       resource: gpdb_rhel7_rpm_latest-0
-      passed: [Testing Gate for PXF-GP6]
+      passed: [Testing Gate for PXF-GP[[ major_gpdb_version ]]]
     - get: gpdb-pxf-dev-centos7-hdp2-server-image
-  - task: Test PXF-GP6-S3 on RHEL7
+  - task: Test PXF-GP[[ major_gpdb_version ]]-S3 on RHEL7
     file: pxf_src/concourse/tasks/test.yml
     image: gpdb-pxf-dev-centos7-hdp2-server-image
 #    attempts: 2
@@ -603,20 +629,20 @@ jobs:
       TARGET_OS_VERSION: 7
 #      TEST_ENV: ((test-env))
 
-- name: Test PXF-GP6-S3-NO-IMPERS on RHEL7
+- name: Test PXF-GP[[ major_gpdb_version ]]-S3-NO-IMPERS on RHEL7
   plan:
   - in_parallel:
     - get: pxf_src
-      passed: [Testing Gate for PXF-GP6]
+      passed: [Testing Gate for PXF-GP[[ major_gpdb_version ]]]
       trigger: true
     - get: pxf_tarball
-      resource: pxf_tarball_gpdb6_rhel7
-      passed: [Testing Gate for PXF-GP6]
+      resource: pxf_tarball_gpdb_rhel7
+      passed: [Testing Gate for PXF-GP[[ major_gpdb_version ]]]
     - get: gpdb_package
       resource: gpdb_rhel7_rpm_latest-0
-      passed: [Testing Gate for PXF-GP6]
+      passed: [Testing Gate for PXF-GP[[ major_gpdb_version ]]]
     - get: gpdb-pxf-dev-centos7-hdp2-server-image
-  - task: Test PXF-GP6-S3-NO-IMPERS on RHEL7
+  - task: Test PXF-GP[[ major_gpdb_version ]]-S3-NO-IMPERS on RHEL7
     file: pxf_src/concourse/tasks/test.yml
     image: gpdb-pxf-dev-centos7-hdp2-server-image
 #    attempts: 2
@@ -630,20 +656,20 @@ jobs:
       TARGET_OS_VERSION: 7
       #      TEST_ENV: ((test-env))
 
-- name: Test PXF-GP6-ADL-NO-IMPERS on RHEL7
+- name: Test PXF-GP[[ major_gpdb_version ]]-ADL-NO-IMPERS on RHEL7
   plan:
   - in_parallel:
     - get: pxf_src
-      passed: [Testing Gate for PXF-GP6]
+      passed: [Testing Gate for PXF-GP[[ major_gpdb_version ]]]
       trigger: true
     - get: pxf_tarball
-      resource: pxf_tarball_gpdb6_rhel7
-      passed: [Testing Gate for PXF-GP6]
+      resource: pxf_tarball_gpdb_rhel7
+      passed: [Testing Gate for PXF-GP[[ major_gpdb_version ]]]
     - get: gpdb_package
       resource: gpdb_rhel7_rpm_latest-0
-      passed: [Testing Gate for PXF-GP6]
+      passed: [Testing Gate for PXF-GP[[ major_gpdb_version ]]]
     - get: gpdb-pxf-dev-centos7-hdp2-server-image
-  - task: Test PXF-GP6-ADL-NO-IMPERS on RHEL7
+  - task: Test PXF-GP[[ major_gpdb_version ]]-ADL-NO-IMPERS on RHEL7
     file: pxf_src/concourse/tasks/test.yml
     image: gpdb-pxf-dev-centos7-hdp2-server-image
     params:
@@ -657,20 +683,20 @@ jobs:
       TARGET_OS: centos
 #      TEST_ENV: ((test-env))
 
-- name: Test PXF-GP6-GS-NO-IMPERS on RHEL7
+- name: Test PXF-GP[[ major_gpdb_version ]]-GS-NO-IMPERS on RHEL7
   plan:
   - in_parallel:
     - get: pxf_src
-      passed: [Testing Gate for PXF-GP6]
+      passed: [Testing Gate for PXF-GP[[ major_gpdb_version ]]]
       trigger: true
     - get: pxf_tarball
-      resource: pxf_tarball_gpdb6_rhel7
-      passed: [Testing Gate for PXF-GP6]
+      resource: pxf_tarball_gpdb_rhel7
+      passed: [Testing Gate for PXF-GP[[ major_gpdb_version ]]]
     - get: gpdb_package
       resource: gpdb_rhel7_rpm_latest-0
-      passed: [Testing Gate for PXF-GP6]
+      passed: [Testing Gate for PXF-GP[[ major_gpdb_version ]]]
     - get: gpdb-pxf-dev-centos7-hdp2-server-image
-  - task: Test PXF-GP6-GS-NO-IMPERS on RHEL7
+  - task: Test PXF-GP[[ major_gpdb_version ]]-GS-NO-IMPERS on RHEL7
     file: pxf_src/concourse/tasks/test.yml
     image: gpdb-pxf-dev-centos7-hdp2-server-image
     params:
@@ -681,20 +707,20 @@ jobs:
       TARGET_OS: centos
 #      TEST_ENV: ((test-env))
 
-- name: Test PXF-GP6-MINIO-NO-IMPERS on RHEL7
+- name: Test PXF-GP[[ major_gpdb_version ]]-MINIO-NO-IMPERS on RHEL7
   plan:
   - in_parallel:
     - get: pxf_src
-      passed: [Testing Gate for PXF-GP6]
+      passed: [Testing Gate for PXF-GP[[ major_gpdb_version ]]]
       trigger: true
     - get: pxf_tarball
-      resource: pxf_tarball_gpdb6_rhel7
-      passed: [Testing Gate for PXF-GP6]
+      resource: pxf_tarball_gpdb_rhel7
+      passed: [Testing Gate for PXF-GP[[ major_gpdb_version ]]]
     - get: gpdb_package
       resource: gpdb_rhel7_rpm_latest-0
-      passed: [Testing Gate for PXF-GP6]
+      passed: [Testing Gate for PXF-GP[[ major_gpdb_version ]]]
     - get: gpdb-pxf-dev-centos7-hdp2-server-image
-  - task: Test PXF-GP6-MINIO-NO-IMPERS on RHEL7
+  - task: Test PXF-GP[[ major_gpdb_version ]]-MINIO-NO-IMPERS on RHEL7
     file: pxf_src/concourse/tasks/test.yml
     image: gpdb-pxf-dev-centos7-hdp2-server-image
     params:
@@ -706,19 +732,19 @@ jobs:
 
 ## ---------- Multi-node tests ----------
 
-- name: Test PXF-GP6-HDP2-SECURE-MULTI-IMPERS on RHEL7
+- name: Test PXF-GP[[ major_gpdb_version ]]-HDP2-SECURE-MULTI-IMPERS on RHEL7
   max_in_flight: 2
   plan:
   - in_parallel:
     - get: pxf_src
-      passed: [Testing Gate for PXF-GP6]
+      passed: [Testing Gate for PXF-GP[[ major_gpdb_version ]]]
       trigger: true
     - get: pxf_tarball
-      resource: pxf_tarball_gpdb6_rhel7
-      passed: [Testing Gate for PXF-GP6]
+      resource: pxf_tarball_gpdb_rhel7
+      passed: [Testing Gate for PXF-GP[[ major_gpdb_version ]]]
     - get: gpdb_package
       resource: gpdb_rhel7_rpm_latest-0
-      passed: [Testing Gate for PXF-GP6]
+      passed: [Testing Gate for PXF-GP[[ major_gpdb_version ]]]
     - get: gpdb-pxf-dev-centos7-hdp2-server-image
     - get: ccp_src
     - get: ccp-7-image
@@ -804,7 +830,7 @@ jobs:
       INSTALL_GPHDFS: false
       KERBEROS: {{kerberos-enabled}}
       PXF_JVM_OPTS: {{pxf-jvm-opts}}
-  - task: Test PXF-GP6-HDP2-SECURE-MULTI-IMPERS on RHEL7
+  - task: Test PXF-GP[[ major_gpdb_version ]]-HDP2-SECURE-MULTI-IMPERS on RHEL7
     on_success:
       <<: *destroy_clusters
     image: gpdb-pxf-dev-centos7-hdp2-server-image
@@ -821,19 +847,19 @@ jobs:
       PXF_JVM_OPTS: {{pxf-jvm-opts}}
       TARGET_OS: centos
 
-- name: Test PXF-GP6-HDP2-SECURE-MULTI-NO-IMPERS on RHEL7
+- name: Test PXF-GP[[ major_gpdb_version ]]-HDP2-SECURE-MULTI-NO-IMPERS on RHEL7
   max_in_flight: 2
   plan:
   - in_parallel:
     - get: pxf_src
-      passed: [Testing Gate for PXF-GP6]
+      passed: [Testing Gate for PXF-GP[[ major_gpdb_version ]]]
       trigger: true
     - get: pxf_tarball
-      resource: pxf_tarball_gpdb6_rhel7
-      passed: [Testing Gate for PXF-GP6]
+      resource: pxf_tarball_gpdb_rhel7
+      passed: [Testing Gate for PXF-GP[[ major_gpdb_version ]]]
     - get: gpdb_package
       resource: gpdb_rhel7_rpm_latest-0
-      passed: [Testing Gate for PXF-GP6]
+      passed: [Testing Gate for PXF-GP[[ major_gpdb_version ]]]
     - get: gpdb-pxf-dev-centos7-hdp2-server-image
     - get: ccp_src
     - get: ccp-7-image
@@ -919,7 +945,7 @@ jobs:
       INSTALL_GPHDFS: false
       KERBEROS: {{kerberos-enabled}}
       PXF_JVM_OPTS: {{pxf-jvm-opts}}
-  - task: Test PXF-GP6-HDP2-SECURE-MULTI-NO-IMPERS on RHEL7
+  - task: Test PXF-GP[[ major_gpdb_version ]]-HDP2-SECURE-MULTI-NO-IMPERS on RHEL7
     on_success:
       <<: *destroy_clusters
     image: gpdb-pxf-dev-centos7-hdp2-server-image
@@ -937,81 +963,88 @@ jobs:
       TARGET_OS: centos
 
 ## ---------- Compatibility Gate ----------
-- name: Compatibility Gate for PXF-GP6
+- name: Compatibility Gate for PXF-GP[[ major_gpdb_version ]]
   plan:
   - in_parallel:
     # pxf source passed all testing jobs
     - get: pxf_src
       passed:
-      - Test PXF-GP6-HDP2-NO-IMPERS on RHEL7
-      - Test PXF-GP6-MAPR on RHEL7
-      - Test PXF-GP6-HDP3 on RHEL7
-#      - Test PXF-GP6-HDP3-SECURE (MANUAL) on RHEL7
-      - Test PXF-GP6-HDP2-JDK11 on RHEL7
-      - Test PXF-GP6-CDH on RHEL7
-      - Test PXF-GP6-S3 on RHEL7
-      - Test PXF-GP6-S3-NO-IMPERS on RHEL7
-      - Test PXF-GP6-ADL-NO-IMPERS on RHEL7
-      - Test PXF-GP6-GS-NO-IMPERS on RHEL7
-      - Test PXF-GP6-MINIO-NO-IMPERS on RHEL7
-      - Test PXF-GP6-HDP2-SECURE-MULTI-IMPERS on RHEL7
-      - Test PXF-GP6-HDP2-SECURE-MULTI-NO-IMPERS on RHEL7
+      - Test PXF-GP[[ major_gpdb_version ]]-HDP2-NO-IMPERS on RHEL7
+      - Test PXF-GP[[ major_gpdb_version ]]-MAPR on RHEL7
+      - Test PXF-GP[[ major_gpdb_version ]]-HDP3 on RHEL7
+#      - Test PXF-GP[[ major_gpdb_version ]]-HDP3-SECURE (MANUAL) on RHEL7
+      - Test PXF-GP[[ major_gpdb_version ]]-HDP2-JDK11 on RHEL7
+      - Test PXF-GP[[ major_gpdb_version ]]-CDH on RHEL7
+      - Test PXF-GP[[ major_gpdb_version ]]-S3 on RHEL7
+      - Test PXF-GP[[ major_gpdb_version ]]-S3-NO-IMPERS on RHEL7
+      - Test PXF-GP[[ major_gpdb_version ]]-ADL-NO-IMPERS on RHEL7
+      - Test PXF-GP[[ major_gpdb_version ]]-GS-NO-IMPERS on RHEL7
+      - Test PXF-GP[[ major_gpdb_version ]]-MINIO-NO-IMPERS on RHEL7
+      - Test PXF-GP[[ major_gpdb_version ]]-HDP2-SECURE-MULTI-IMPERS on RHEL7
+      - Test PXF-GP[[ major_gpdb_version ]]-HDP2-SECURE-MULTI-NO-IMPERS on RHEL7
       trigger: true
     # pxf tarballs passed testing jobs
-    - get: pxf_tarball_gpdb6_rhel6
+{% if major_gpdb_version == 5 %}
+    - get: pxf_tarball_gpdb_rhel6
+      passed:
+      - Testing Gate for PXF-GP5
+{% else %}
+    - get: pxf_tarball_gpdb_ubuntu18
       passed:
       - Testing Gate for PXF-GP6
-    - get: pxf_tarball_gpdb6_rhel7
+{% endif %}
+    - get: pxf_tarball_gpdb_rhel7
       passed:
-      - Test PXF-GP6-HDP2-NO-IMPERS on RHEL7
-      - Test PXF-GP6-MAPR on RHEL7
-      - Test PXF-GP6-HDP3 on RHEL7
-      #      - Test PXF-GP6-HDP3-SECURE (MANUAL) on RHEL7
-      - Test PXF-GP6-HDP2-JDK11 on RHEL7
-      - Test PXF-GP6-CDH on RHEL7
-      - Test PXF-GP6-S3 on RHEL7
-      - Test PXF-GP6-S3-NO-IMPERS on RHEL7
-      - Test PXF-GP6-ADL-NO-IMPERS on RHEL7
-      - Test PXF-GP6-GS-NO-IMPERS on RHEL7
-      - Test PXF-GP6-MINIO-NO-IMPERS on RHEL7
-      - Test PXF-GP6-HDP2-SECURE-MULTI-IMPERS on RHEL7
-      - Test PXF-GP6-HDP2-SECURE-MULTI-NO-IMPERS on RHEL7
-    - get: pxf_tarball_gpdb6_ubuntu18
-      passed:
-      - Testing Gate for PXF-GP6
+      - Test PXF-GP[[ major_gpdb_version ]]-HDP2-NO-IMPERS on RHEL7
+      - Test PXF-GP[[ major_gpdb_version ]]-MAPR on RHEL7
+      - Test PXF-GP[[ major_gpdb_version ]]-HDP3 on RHEL7
+      #      - Test PXF-GP[[ major_gpdb_version ]]-HDP3-SECURE (MANUAL) on RHEL7
+      - Test PXF-GP[[ major_gpdb_version ]]-HDP2-JDK11 on RHEL7
+      - Test PXF-GP[[ major_gpdb_version ]]-CDH on RHEL7
+      - Test PXF-GP[[ major_gpdb_version ]]-S3 on RHEL7
+      - Test PXF-GP[[ major_gpdb_version ]]-S3-NO-IMPERS on RHEL7
+      - Test PXF-GP[[ major_gpdb_version ]]-ADL-NO-IMPERS on RHEL7
+      - Test PXF-GP[[ major_gpdb_version ]]-GS-NO-IMPERS on RHEL7
+      - Test PXF-GP[[ major_gpdb_version ]]-MINIO-NO-IMPERS on RHEL7
+      - Test PXF-GP[[ major_gpdb_version ]]-HDP2-SECURE-MULTI-IMPERS on RHEL7
+      - Test PXF-GP[[ major_gpdb_version ]]-HDP2-SECURE-MULTI-NO-IMPERS on RHEL7
     # gpdb packages used in testing jobs
+{% if major_gpdb_version == 5 %}
     - get: gpdb_rhel6_rpm_latest-0
       passed:
-      - Testing Gate for PXF-GP6
-    - get: gpdb_rhel7_rpm_latest-0
-      passed:
-      - Test PXF-GP6-HDP2-NO-IMPERS on RHEL7
-      - Test PXF-GP6-MAPR on RHEL7
-      - Test PXF-GP6-HDP3 on RHEL7
-      #      - Test PXF-GP6-HDP3-SECURE (MANUAL) on RHEL7
-      - Test PXF-GP6-HDP2-JDK11 on RHEL7
-      - Test PXF-GP6-CDH on RHEL7
-      - Test PXF-GP6-S3 on RHEL7
-      - Test PXF-GP6-S3-NO-IMPERS on RHEL7
-      - Test PXF-GP6-ADL-NO-IMPERS on RHEL7
-      - Test PXF-GP6-GS-NO-IMPERS on RHEL7
-      - Test PXF-GP6-MINIO-NO-IMPERS on RHEL7
-      - Test PXF-GP6-HDP2-SECURE-MULTI-IMPERS on RHEL7
-      - Test PXF-GP6-HDP2-SECURE-MULTI-NO-IMPERS on RHEL7
+      - Testing Gate for PXF-GP5
+{% else %}
     - get: gpdb_ubuntu18_deb_latest-0
       passed:
       - Testing Gate for PXF-GP6
+{% endif %}
+    - get: gpdb_rhel7_rpm_latest-0
+      passed:
+      - Test PXF-GP[[ major_gpdb_version ]]-HDP2-NO-IMPERS on RHEL7
+      - Test PXF-GP[[ major_gpdb_version ]]-MAPR on RHEL7
+      - Test PXF-GP[[ major_gpdb_version ]]-HDP3 on RHEL7
+      #      - Test PXF-GP[[ major_gpdb_version ]]-HDP3-SECURE (MANUAL) on RHEL7
+      - Test PXF-GP[[ major_gpdb_version ]]-HDP2-JDK11 on RHEL7
+      - Test PXF-GP[[ major_gpdb_version ]]-CDH on RHEL7
+      - Test PXF-GP[[ major_gpdb_version ]]-S3 on RHEL7
+      - Test PXF-GP[[ major_gpdb_version ]]-S3-NO-IMPERS on RHEL7
+      - Test PXF-GP[[ major_gpdb_version ]]-ADL-NO-IMPERS on RHEL7
+      - Test PXF-GP[[ major_gpdb_version ]]-GS-NO-IMPERS on RHEL7
+      - Test PXF-GP[[ major_gpdb_version ]]-MINIO-NO-IMPERS on RHEL7
+      - Test PXF-GP[[ major_gpdb_version ]]-HDP2-SECURE-MULTI-IMPERS on RHEL7
+      - Test PXF-GP[[ major_gpdb_version ]]-HDP2-SECURE-MULTI-NO-IMPERS on RHEL7
 
 ## ---------- Compatibility Testing ----------
-- name: Test PXF-GP6 Backward Compatibility on RHEL6
+{% if major_gpdb_version == 5 %}
+- name: Test PXF-GP5 Backward Compatibility on RHEL6
   plan:
   - in_parallel:
     - get: pxf_src
-      passed: [Compatibility Gate for PXF-GP6]
+      passed: [Compatibility Gate for PXF-GP5]
       trigger: true
     - get: pxf_tarball
-      resource: pxf_tarball_gpdb6_rhel6
-      passed: [Compatibility Gate for PXF-GP6]
+      resource: pxf_tarball_gpdb_rhel6
+      passed: [Compatibility Gate for PXF-GP5]
     - get: gpdb-pxf-dev-centos6-hdp2-server-image
 {% for version in range(num_versions) %}
     - get: gpdb_package_latest-[[ version ]]
@@ -1023,7 +1056,7 @@ jobs:
       image: gpdb-pxf-dev-centos6-hdp2-server-image
       config:
         platform: linux
-        <<: *run_anchor
+        <<: *run_regress_anchor
         inputs:
         - name: pxf_src
         - name: pxf_tarball
@@ -1031,16 +1064,17 @@ jobs:
         params:
           GPDB_PKG_DIR: gpdb_package_latest-[[ version ]]
 {% endfor %}
+{% endif %}
 
-- name: Test PXF-GP6 Backward Compatibility on RHEL7
+- name: Test PXF-GP[[ major_gpdb_version ]] Backward Compatibility on RHEL7
   plan:
   - in_parallel:
     - get: pxf_src
-      passed: [Compatibility Gate for PXF-GP6]
+      passed: [Compatibility Gate for PXF-GP[[ major_gpdb_version ]]]
       trigger: true
     - get: pxf_tarball
-      passed: [Compatibility Gate for PXF-GP6]
-      resource: pxf_tarball_gpdb6_rhel7
+      passed: [Compatibility Gate for PXF-GP[[ major_gpdb_version ]]]
+      resource: pxf_tarball_gpdb_rhel7
     - get: gpdb-pxf-dev-centos7-hdp2-server-image
 {% for version in range(num_versions) %}
     - get: gpdb_package_latest-[[ version ]]
@@ -1052,7 +1086,7 @@ jobs:
       image: gpdb-pxf-dev-centos7-hdp2-server-image
       config:
         platform: linux
-        <<: *run_anchor
+        <<: *run_regress_anchor
         inputs:
         - name: pxf_src
         - name: pxf_tarball
@@ -1061,6 +1095,7 @@ jobs:
           GPDB_PKG_DIR: gpdb_package_latest-[[ version ]]
 {% endfor %}
 
+{% if major_gpdb_version == 6 %}
 - name: Test PXF-GP6 Backward Compatibility on Ubuntu18
   plan:
   - in_parallel:
@@ -1069,7 +1104,7 @@ jobs:
       trigger: true
     - get: pxf_tarball
       passed: [Compatibility Gate for PXF-GP6]
-      resource: pxf_tarball_gpdb6_ubuntu18
+      resource: pxf_tarball_gpdb_ubuntu18
     - get: gpdb-pxf-dev-ubuntu18-hdp2-server-image
 {% for version in range(num_versions) %}
     - get: gpdb_package_latest-[[ version ]]
@@ -1081,7 +1116,7 @@ jobs:
       image: gpdb-pxf-dev-ubuntu18-hdp2-server
       config:
         platform: linux
-        <<: *run_anchor
+        <<: *run_regress_anchor
         inputs:
         - name: pxf_src
         - name: pxf_tarball
@@ -1089,30 +1124,37 @@ jobs:
         params:
           GPDB_PKG_DIR: gpdb_package_latest-[[ version ]]
 {% endfor %}
+{% endif %}
 
 ## ---------- Artifact Promotion Gate ----------
-- name: Promote PXF-GP6 Artifacts
+- name: Promote PXF-GP[[ major_gpdb_version ]] Artifacts
   plan:
   - in_parallel:
     # pxf source passed all testing jobs
     - get: pxf_src
       passed:
-      - Test PXF-GP6 Backward Compatibility on RHEL6
-      - Test PXF-GP6 Backward Compatibility on RHEL7
+      - Test PXF-GP[[ major_gpdb_version ]] Backward Compatibility on RHEL7
+{% if major_gpdb_version == 6 %}
       - Test PXF-GP6 Backward Compatibility on Ubuntu18
+{% else %}
+      - Test PXF-GP5 Backward Compatibility on RHEL6
+{% endif %}
       trigger: true
     # pxf tarballs passed testing jobs
-    - get: pxf_tarball_gpdb6_rhel6
-      passed:
-      - Test PXF-GP6 Backward Compatibility on RHEL6
-    - get: pxf_tarball_gpdb6_rhel7
-      passed:
-      - Test PXF-GP6 Backward Compatibility on RHEL7
-    - get: pxf_tarball_gpdb6_ubuntu18
+{% if major_gpdb_version == 6 %}
+    - get: pxf_tarball_gpdb_ubuntu18
       passed:
       - Test PXF-GP6 Backward Compatibility on Ubuntu18
+{% else %}
+    - get: pxf_tarball_gpdb_rhel6
+      passed:
+      - Test PXF-GP5 Backward Compatibility on RHEL6
+{% endif %}
+    - get: pxf_tarball_gpdb_rhel7
+      passed:
+      - Test PXF-GP[[ major_gpdb_version ]] Backward Compatibility on RHEL7
     - get: ccp-7-image
-  - task: Promote PXF-GP6 Artifacts
+  - task: Promote PXF-GP[[ major_gpdb_version ]] Artifacts
     image: ccp-7-image
     config:
       platform: linux
