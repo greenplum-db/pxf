@@ -103,22 +103,28 @@ resources:
   type: docker-image
   icon: docker
   source:
-    repository: pivotaldata/gpdb-pxf-dev
-    tag: centos6
+    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb6-centos6-test-pxf
+    tag: latest
+    username: _json_key
+    password: ((data-gpdb-ud-google-json-key))
 
 - name: gpdb-pxf-dev-centos7-image
   type: docker-image
   icon: docker
   source:
-    repository: pivotaldata/gpdb-pxf-dev
-    tag: centos7
+    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb6-centos7-test-pxf
+    tag: latest
+    username: _json_key
+    password: ((data-gpdb-ud-google-json-key))
 
 - name: gpdb-pxf-dev-ubuntu18-image
   type: docker-image
   icon: docker
   source:
-    repository: pivotaldata/gpdb-pxf-dev
-    tag: ubuntu18
+    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb6-ubuntu18.04-test-pxf
+    tag: latest
+    username: _json_key
+    password: ((data-gpdb-ud-google-json-key))
 
 - name: gpdb-pxf-dev-centos6-hdp2-server-image
   type: docker-image
