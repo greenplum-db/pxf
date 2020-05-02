@@ -4,10 +4,8 @@ FROM ${BASE_IMAGE}
 
 # install Go utilities
 RUN mkdir -p /tmp/pxf_src/ && cd /tmp && \
-    wget -q https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz && \
-    tar -C /usr/local -xzf go*.linux-amd64.tar.gz && \
-    rm -f go*.linux-amd64.tar.gz && \
-    cd - && \
+    wget -O go.tgz -q https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz && \
+    tar -C /usr/local -xzf go.tgz && rm go.tgz && \
     GOPATH=/opt/go /usr/local/go/bin/go get github.com/golang/dep/cmd/dep && \
     GOPATH=/opt/go /usr/local/go/bin/go get github.com/onsi/ginkgo/ginkgo && \
     echo >> /etc/bashrc 'export GOPATH=/opt/go' && \

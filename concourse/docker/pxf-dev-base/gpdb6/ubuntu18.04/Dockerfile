@@ -4,10 +4,8 @@ FROM ${BASE_IMAGE}
 
 # install Go utilities
 RUN mkdir -p /tmp/pxf_src/ && cd /tmp && \
-    wget -q https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz && \
-    tar -C /usr/local -xzf go*.linux-amd64.tar.gz && \
-    rm -f go*.linux-amd64.tar.gz && \
-    cd - && \
+    wget -O go.tgz -q https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz && \
+    tar -C /usr/local -xzf go.tgz && rm go.tgz && \
     GOPATH=/opt/go /usr/local/go/bin/go get github.com/golang/dep/cmd/dep && \
     GOPATH=/opt/go /usr/local/go/bin/go get github.com/onsi/ginkgo/ginkgo && \
     echo >> /etc/bashrc 'export GOPATH=/opt/go' && \
@@ -15,18 +13,27 @@ RUN mkdir -p /tmp/pxf_src/ && cd /tmp && \
 
 # install dependencies that are missing on the base images
 # install a specific version of perl for tinc
-RUN apt-get update -y && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y \
-    maven python-dev curl sudo && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
-    PERL_VERSION=perl-5.22.1 && \
-    wget http://www.cpan.org/src/5.0/${PERL_VERSION}.tar.gz && \
-    tar -xzf ${PERL_VERSION}.tar.gz && \
-    cd $PERL_VERSION && \
-      ./Configure -des -Dprefix=/usr && \
-      make -j8 -s && make -j16 -s install && \
-    cd - && rm -rf ${PERL_VERSION}*
+
+ARG PERL_VERSION=perl-5.22.1
+ARG MAVEN_VERSION=3.6.3
+ARG USER_HOME_DIR="/root"
+ARG BASE_URL=https://apache.osuosl.org/maven/maven-3/${MAVEN_VERSION}/binaries
+
+RUN apt-get update -y \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y python-dev curl sudo \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
+    && mkdir -p /usr/share/maven /usr/share/maven/ref \
+    && curl -fsSL -o /tmp/apache-maven.tar.gz ${BASE_URL}/apache-maven-${MAVEN_VERSION}-bin.tar.gz \
+    && tar -xzf /tmp/apache-maven.tar.gz -C /usr/share/maven --strip-components=1 \
+    && rm -f /tmp/apache-maven.tar.gz \
+    && ln -s /usr/share/maven/bin/mvn /usr/bin/mvn \
+    && wget -q http://www.cpan.org/src/5.0/${PERL_VERSION}.tar.gz \
+    && tar -xzf ${PERL_VERSION}.tar.gz \
+    && cd $PERL_VERSION \
+      && ./Configure -des -Dprefix=/usr \
+      && make -j8 -s && make -j16 -s install \
+    && cd - && rm -rf ${PERL_VERSION}*
 
 # create user gpadmin since GPDB cannot run under root
 RUN locale-gen en_US.UTF-8 && \

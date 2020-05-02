@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM maven:3.6-openjdk-8-slim
 
 # install build dependencies for PXF
 RUN apt-get update && \
@@ -6,8 +6,6 @@ RUN apt-get update && \
         curl \
         git \
         make \
-        maven \
-        openjdk-8-jdk-headless \
         unzip \
         wget && \
     apt-get clean && \
@@ -15,9 +13,8 @@ RUN apt-get update && \
 
 # install go && go utilities
 RUN cd /tmp && \
-    wget -q https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz && \
-    tar -C /usr/local -xzf go*.linux-amd64.tar.gz && \
-    rm -f go*.linux-amd64.tar.gz && \
+    wget -O go.tgz -q https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz && \
+    tar -C /usr/local -xzf go.tgz && rm go.tgz && \
     GOPATH=/opt/go /usr/local/go/bin/go get github.com/golang/dep/cmd/dep && \
     GOPATH=/opt/go /usr/local/go/bin/go get github.com/onsi/ginkgo/ginkgo
 
@@ -25,7 +22,6 @@ ADD . /tmp/pxf_src
 
 # build pxf server and pxf automation
 RUN export BUILD_PARAMS=-Dorg.gradle.daemon=false && \
-    export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-amd64 && \
     GOPATH=/opt/go PATH=/opt/go/bin:/usr/local/go/bin:$PATH make -C /tmp/pxf_src tar && \
     PXF_HOME=/tmp/pxf_src/server/build/stage make -C /tmp/pxf_src/automation dev && \
     mkdir -p /tmp/output/.tomcat && \
