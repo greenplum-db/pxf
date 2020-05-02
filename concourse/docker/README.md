@@ -14,13 +14,12 @@ docker run --rm --privileged -p 8443:8443 -it pivotaldata/gpdb-dev:centos6-mapr5
   <tr>
     <td>&nbsp;</td>
     <td colspan="2">Greenplum 5</td>
-    <td colspan="3">Greenplum 6</td>
+    <td colspan="2">Greenplum 6</td>
   </tr>
   <tr>
     <td>&nbsp;</td>
     <td>CentOS6</td>
     <td>CentOS7</td>
-    <td>CentOS6</td>
     <td>CentOS7</td>
     <td>Ubuntu 18.04</td>
   </tr>
@@ -28,15 +27,13 @@ docker run --rm --privileged -p 8443:8443 -it pivotaldata/gpdb-dev:centos6-mapr5
     <td>Base Image</td>
     <td> <a href="https://console.cloud.google.com/gcr/images/${PROJECT_ID}/GLOBAL/gpdb-pxf-dev/gpdb5-centos6-test-pxf">gpdb5-centos6-test-pxf</a> </td>
     <td> <a href="https://console.cloud.google.com/gcr/images/${PROJECT_ID}/GLOBAL/gpdb-pxf-dev/gpdb5-centos7-test-pxf">gpdb5-centos7-test-pxf</a> </td>
-    <td> <a href="https://console.cloud.google.com/gcr/images/${PROJECT_ID}/GLOBAL/gpdb-pxf-dev/gpdb6-centos6-test-pxf">gpdb6-centos6-test-pxf</a> </td>
     <td> <a href="https://console.cloud.google.com/gcr/images/${PROJECT_ID}/GLOBAL/gpdb-pxf-dev/gpdb6-centos7-test-pxf">gpdb6-centos7-test-pxf</a> </td>
     <td> <a href="https://console.cloud.google.com/gcr/images/${PROJECT_ID}/GLOBAL/gpdb-pxf-dev/gpdb6-ubuntu18.04-test-pxf">gpdb6-ubuntu18.04-test-pxf</a> </td>
   </tr>
   <tr>
     <td>CDH</td>
     <td> N/A </td>
-    <td> <a href="https://console.cloud.google.com/gcr/images/${PROJECT_ID}/GLOBAL/gpdb-pxf-dev/gpdb6-centos6-test-pxf-cdh">gpdb6-centos6-test-pxf-cdh</a> </td>
-    <td> N/A </td>
+    <td> <a href="https://console.cloud.google.com/gcr/images/${PROJECT_ID}/GLOBAL/gpdb-pxf-dev/gpdb5-centos7-test-pxf-cdh">gpdb5-centos7-test-pxf-cdh</a> </td>
     <td> <a href="https://console.cloud.google.com/gcr/images/${PROJECT_ID}/GLOBAL/gpdb-pxf-dev/gpdb6-centos7-test-pxf-cdh">gpdb6-centos7-test-pxf-cdh</a> </td>
     <td> N/A </td>
   </tr>
@@ -44,7 +41,6 @@ docker run --rm --privileged -p 8443:8443 -it pivotaldata/gpdb-dev:centos6-mapr5
     <td>HDP2</td>
     <td> <a href="https://console.cloud.google.com/gcr/images/${PROJECT_ID}/GLOBAL/gpdb-pxf-dev/gpdb5-centos6-test-pxf-hdp2">gpdb5-centos6-test-pxf-hdp2</a> </td>
     <td> <a href="https://console.cloud.google.com/gcr/images/${PROJECT_ID}/GLOBAL/gpdb-pxf-dev/gpdb5-centos7-test-pxf-hdp2">gpdb5-centos7-test-pxf-hdp2</a> </td>
-    <td> <a href="https://console.cloud.google.com/gcr/images/${PROJECT_ID}/GLOBAL/gpdb-pxf-dev/gpdb6-centos6-test-pxf-hdp2">gpdb6-centos6-test-pxf-hdp2</a> </td>
     <td> <a href="https://console.cloud.google.com/gcr/images/${PROJECT_ID}/GLOBAL/gpdb-pxf-dev/gpdb6-centos7-test-pxf-hdp2">gpdb6-centos7-test-pxf-hdp2</a> </td>
     <td> <a href="https://console.cloud.google.com/gcr/images/${PROJECT_ID}/GLOBAL/gpdb-pxf-dev/gpdb6-ubuntu18.04-test-pxf-hdp2">gpdb6-ubuntu18.04-test-pxf-hdp2</a> </td>
   </tr>
@@ -52,7 +48,6 @@ docker run --rm --privileged -p 8443:8443 -it pivotaldata/gpdb-dev:centos6-mapr5
     <td>HDP3</td>
     <td> N/A </td>
     <td> <a href="https://console.cloud.google.com/gcr/images/${PROJECT_ID}/GLOBAL/gpdb-pxf-dev/gpdb5-centos7-test-pxf-hdp3">gpdb5-centos7-test-pxf-hdp3</a> </td>
-    <td> N/A </td>
     <td> <a href="https://console.cloud.google.com/gcr/images/${PROJECT_ID}/GLOBAL/gpdb-pxf-dev/gpdb6-centos7-test-pxf-hdp3">gpdb6-centos7-test-pxf-hdp3</a> </td>
     <td> N/A </td>
   </tr>
@@ -60,7 +55,6 @@ docker run --rm --privileged -p 8443:8443 -it pivotaldata/gpdb-dev:centos6-mapr5
     <td>MapR</td>
     <td> N/A </td>
     <td> <a href="https://console.cloud.google.com/gcr/images/${PROJECT_ID}/GLOBAL/gpdb-pxf-dev/gpdb5-centos7-test-pxf-mapr">gpdb5-centos7-test-pxf-mapr</a> </td>
-    <td> N/A </td>
     <td> <a href="https://console.cloud.google.com/gcr/images/${PROJECT_ID}/GLOBAL/gpdb-pxf-dev/gpdb6-centos7-test-pxf-mapr">gpdb6-centos7-test-pxf-mapr</a> </td>
     <td> N/A </td>
   </tr>

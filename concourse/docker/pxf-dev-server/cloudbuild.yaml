@@ -146,35 +146,6 @@ steps:
     - gpdb5-centos7-test-pxf-hdp3-image-cache
 
 ##############################################################################
-# GPDB 6 CentOS 6 Images
-##############################################################################
-
-# Builds the gpdb6-centos6-test-pxf-hdp2-image image
-- name: 'gcr.io/cloud-builders/docker'
-  id: gpdb6-centos6-test-pxf-hdp2-image-cache
-  entrypoint: 'bash'
-  args:
-  - '-c'
-  - |
-    docker pull gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos6-test-pxf-hdp2:latest || exit 0
-  waitFor: ['-']
-
-- name: 'gcr.io/cloud-builders/docker'
-  id: gpdb6-centos6-test-pxf-hdp2-image
-  args:
-  - 'build'
-  - '--build-arg=BASE_IMAGE=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos6-test-pxf:latest'
-  - '--tag=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos6-test-pxf-hdp2:$COMMIT_SHA'
-  - '--cache-from'
-  - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos6-test-pxf-hdp2:latest'
-  - '-f'
-  - 'concourse/docker/pxf-dev-server/Dockerfile'
-  - 'singlecluster/HDP2/'
-  waitFor:
-    - singlecluster-hdp2
-    - gpdb6-centos6-test-pxf-hdp2-image-cache
-
-##############################################################################
 # GPDB 6 CentOS 7 Images
 ##############################################################################
 
@@ -301,7 +272,6 @@ images:
 - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb5-centos7-test-pxf-cdh:$COMMIT_SHA'
 - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb5-centos7-test-pxf-hdp2:$COMMIT_SHA'
 - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb5-centos7-test-pxf-hdp3:$COMMIT_SHA'
-- 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos6-test-pxf-hdp2:$COMMIT_SHA'
 - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-test-pxf-cdh:$COMMIT_SHA'
 - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-test-pxf-hdp2:$COMMIT_SHA'
 - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-test-pxf-hdp3:$COMMIT_SHA'
