@@ -9,7 +9,7 @@ RUN GOPATH=/opt/go /usr/local/go/bin/go get github.com/golang/dep/cmd/dep && \
     echo >> /etc/bashrc 'export PATH=${GOPATH}/bin:/usr/local/go/bin:$PATH'
 
 # add Java 8 and rpm-build
-RUN yum install -y rpm-build java-1.8.0-openjdk && yum clean all
+RUN yum install -y rpm-build java-1.8.0-openjdk-devel && yum clean all
 
 # add minio software
 RUN useradd -s /sbin/nologin -d /opt/minio minio && \
