@@ -2,11 +2,15 @@ ARG BASE_IMAGE=pivotaldata/gpdb-dev:centos6
 
 FROM ${BASE_IMAGE}
 
-# add Java 8 and rpm-build
-RUN yum install -y rpm-build java-1.8.0-openjdk && yum clean all
+# install Go utilities
+RUN GOPATH=/opt/go /usr/local/go/bin/go get github.com/golang/dep/cmd/dep && \
+    GOPATH=/opt/go /usr/local/go/bin/go get github.com/onsi/ginkgo/ginkgo && \
+    echo >> /etc/bashrc 'export GOPATH=/opt/go' && \
+    echo >> /etc/bashrc 'export PATH=${GOPATH}/bin:/usr/local/go/bin:$PATH'
 
-# add Java 11
-RUN wget -q https://download.java.net/openjdk/jdk11/ri/openjdk-11+28_linux-x64_bin.tar.gz && \
+# add Java 8, Java 11 and rpm-build
+RUN yum install -y rpm-build java-1.8.0-openjdk && yum clean all && \
+    wget -q https://download.java.net/openjdk/jdk11/ri/openjdk-11+28_linux-x64_bin.tar.gz && \
     mkdir -p /usr/lib/jvm && \
     tar -C /usr/lib/jvm -xzf openjdk-11+28_linux-x64_bin.tar.gz && \
     rm -f openjdk-11+28_linux-x64_bin.tar.gz

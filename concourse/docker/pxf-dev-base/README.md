@@ -27,7 +27,7 @@ command to build the image:
 
     pushd ~/workspace/pxf/concourse/docker/pxf-dev-base/
     docker build \
-      --build-arg=BASE_IMAGE=centos-gpdb-dev:6-gcc6.2-llvm3.7 \
+      --build-arg=BASE_IMAGE=<REGISTRY_PATH>/centos-gpdb-dev:6-gcc6.2-llvm3.7 \
       --tag=gpdb5-centos6-test-pxf \
       -f ~/workspace/pxf/concourse/docker/pxf-dev-base/gpdb5/centos6/Dockerfile \
       <PATH_TO_YOUR_DOCKER_WORKSPACE>
@@ -40,7 +40,7 @@ command to build the image:
 
     pushd ~/workspace/pxf/concourse/docker/pxf-dev-base/
     docker build \
-      --build-arg=BASE_IMAGE=centos-gpdb-dev:7-gcc6.2-llvm3.7 \
+      --build-arg=BASE_IMAGE=<REGISTRY_PATH>/centos-gpdb-dev:7-gcc6.2-llvm3.7 \
       --tag=gpdb5-centos7-test-pxf \
       -f ~/workspace/pxf/concourse/docker/pxf-dev-base/gpdb5/centos7/Dockerfile \
       <PATH_TO_YOUR_DOCKER_WORKSPACE>
@@ -53,7 +53,7 @@ command to build the image:
 
     pushd ~/workspace/pxf/concourse/docker/pxf-dev-base/
     docker build \
-      --build-arg=BASE_IMAGE=gpdb6-centos6-test \
+      --build-arg=BASE_IMAGE=<REGISTRY_PATH>/gpdb6-centos6-test \
       --tag=gpdb6-centos6-test-pxf \
       -f ~/workspace/pxf/concourse/docker/pxf-dev-base/gpdb6/centos6/Dockerfile \
       <PATH_TO_YOUR_DOCKER_WORKSPACE>
@@ -66,7 +66,7 @@ command to build the image:
 
     pushd ~/workspace/pxf/concourse/docker/pxf-dev-base/
     docker build \
-      --build-arg=BASE_IMAGE=gpdb6-centos7-test:latest \
+      --build-arg=BASE_IMAGE=<REGISTRY_PATH>/gpdb6-centos7-test:latest \
       --tag=gpdb6-centos7-test-pxf \
       -f ~/workspace/pxf/concourse/docker/pxf-dev-base/gpdb6/centos7/Dockerfile \
       <PATH_TO_YOUR_DOCKER_WORKSPACE>
@@ -79,7 +79,7 @@ command to build the image:
 
     pushd ~/workspace/pxf/concourse/docker/pxf-dev-base/
     docker build \
-      --build-arg=BASE_IMAGE=gpdb6-ubuntu18.04-test:latest \
+      --build-arg=BASE_IMAGE=<REGISTRY_PATH>/gpdb6-ubuntu18.04-test:latest \
       --tag=gpdb6-ubuntu18.04-test-pxf \
       -f ~/workspace/pxf/concourse/docker/pxf-dev-base/gpdb6/ubuntu18.04/Dockerfile \
       <PATH_TO_YOUR_DOCKER_WORKSPACE>
