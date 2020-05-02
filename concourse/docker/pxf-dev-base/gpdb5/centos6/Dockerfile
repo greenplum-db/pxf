@@ -44,7 +44,7 @@ RUN ssh-keygen -t rsa -N "" -f /root/.ssh/id_rsa && \
     chown -R gpadmin:gpadmin /home/gpadmin/.ssh && \
     echo -e 'source /opt/gcc_env.sh' >> /home/gpadmin/.bashrc
 
-ADD . /tmp/build/
+COPY . /tmp/build/
 
 # Untar the cached dependencies
 RUN tar -xzf /tmp/build/pxf-build-dependencies.tar.gz -C ~gpadmin/ && \

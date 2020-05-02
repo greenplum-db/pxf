@@ -59,7 +59,7 @@ RUN locale-gen en_US.UTF-8 && \
     mkdir /usr/local/greenplum-db-devel && \
     chown gpadmin:gpadmin /usr/local/greenplum-db-devel
 
-ADD . /tmp/build/
+COPY . /tmp/build/
 
 # Untar the cached dependencies
 # install psi + paramiko as gpadmin
