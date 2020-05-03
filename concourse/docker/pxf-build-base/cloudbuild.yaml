@@ -37,8 +37,3 @@ steps:
 - name: 'gcr.io/cloud-builders/gsutil'
   id: pxf-build-dependencies-tarball
   args: ['cp', '/workspace/build/pxf-build-dependencies.tar.gz', 'gs://${_PXF_BUILD_BUCKET}/build-dependencies/pxf-build-dependencies.tar.gz']
-
-# Write the latest version of the pxf commit sha-1 to the build dependencies bucket
-- name: 'gcr.io/cloud-builders/gsutil'
-  id: pxf-commit-sha-file
-  args: ['cp', '/workspace/pxf_commit_sha', 'gs://${_PXF_BUILD_BUCKET}/build-dependencies/pxf_commit_sha']

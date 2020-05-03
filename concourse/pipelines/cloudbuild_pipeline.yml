@@ -93,14 +93,6 @@ resources:
         - images/docker/gpdb6/gpdb6-centos7-test
         - images/docker/gpdb6/gpdb6-ubuntu18.04-test
 
-  - name: pxf-build-dependencies-trigger
-    type: gcs
-    icon: google-drive
-    source:
-      bucket: data-gpdb-ud-pxf-build-resources
-      json_key: {{data-gpdb-ud-google-json-key}}
-      versioned_file: build-dependencies/pxf_commit_sha
-
 ## ======================================================================
 ## JOBS
 ## ======================================================================
@@ -113,8 +105,6 @@ jobs:
       - get: pxf_src
         resource: pxf-dev-base-cloudbuild-trigger
       - get: base-images-trigger
-        trigger: true
-      - get: pxf-build-dependencies-trigger
         trigger: true
     - task: trigger_builds
       image: ccp-7
@@ -139,9 +129,6 @@ jobs:
         resource: pxf-dev-base-cloudbuild-trigger
         trigger: true
       - get: base-images-trigger
-        passed: [Check upstream base images]
-        trigger: true
-      - get: pxf-build-dependencies-trigger
         passed: [Check upstream base images]
         trigger: true
     - task: check_docker_images_and_tag
@@ -191,9 +178,6 @@ jobs:
         resource: pxf-dev-base-cloudbuild-trigger
         passed: [Check pxf-dev-base images]
         trigger: true
-      - get: pxf-build-dependencies-trigger
-        passed: [Check pxf-dev-base images]
-        trigger: true
       - get: base-images-trigger
         passed: [Check pxf-dev-base images]
         trigger: true
@@ -216,9 +200,6 @@ jobs:
       - get: ccp-7
       - get: pxf_src
         resource: pxf-dev-base-cloudbuild-trigger
-        passed: [Check pxf-dev-base images]
-        trigger: true
-      - get: pxf-build-dependencies-trigger
         passed: [Check pxf-dev-base images]
         trigger: true
       - get: base-images-trigger

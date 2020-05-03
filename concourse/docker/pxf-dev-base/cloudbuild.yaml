@@ -10,11 +10,6 @@ options:
 
 steps:
 
-# Pull the pxf-build-dependencies.tar.gz tarball from Google Cloud Storage
-- name: 'gcr.io/cloud-builders/gsutil'
-  id: pxf-build-dependencies-tarball
-  args: ['cp', 'gs://${_PXF_BUILD_BUCKET}/build-dependencies/pxf-build-dependencies.tar.gz', './build/pxf-build-dependencies.tar.gz']
-
 ##############################################################################
 # GPDB 5 Images
 ##############################################################################
@@ -26,6 +21,7 @@ steps:
   args:
   - '-c'
   - |
+    mkdir -p /workspace/build
     docker pull gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb5-centos6-test-pxf:latest || exit 0
   waitFor: ['-']
 
@@ -39,9 +35,8 @@ steps:
   - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb5-centos6-test-pxf:latest'
   - '-f'
   - 'concourse/docker/pxf-dev-base/gpdb5/centos6/Dockerfile'
-  - './build/'
+  - '/workspace/build/'
   waitFor:
-    - pxf-build-dependencies-tarball
     - gpdb5-centos6-test-pxf-image-cache
 
 # An image for gpdb5 running on CentOS7
@@ -51,6 +46,7 @@ steps:
   args:
   - '-c'
   - |
+    mkdir -p /workspace/build
     docker pull gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb5-centos7-test-pxf:latest || exit 0
   waitFor: ['-']
 
@@ -64,9 +60,8 @@ steps:
   - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb5-centos7-test-pxf:latest'
   - '-f'
   - 'concourse/docker/pxf-dev-base/gpdb5/centos7/Dockerfile'
-  - './build/'
+  - '/workspace/build/'
   waitFor:
-    - pxf-build-dependencies-tarball
     - gpdb5-centos7-test-pxf-image-cache
 
 ##############################################################################
@@ -80,6 +75,7 @@ steps:
   args:
   - '-c'
   - |
+    mkdir -p /workspace/build
     docker pull gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-test-pxf:latest || exit 0
   waitFor: ['-']
 
@@ -93,9 +89,8 @@ steps:
   - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-test-pxf:latest'
   - '-f'
   - 'concourse/docker/pxf-dev-base/gpdb6/centos7/Dockerfile'
-  - './build/'
+  - '/workspace/build/'
   waitFor:
-    - pxf-build-dependencies-tarball
     - gpdb6-centos7-test-pxf-image-cache
 
 # Corresponds to the docker-gpdb-pxf-dev-ubuntu18 job in the docker pipeline
@@ -105,6 +100,7 @@ steps:
   args:
   - '-c'
   - |
+    mkdir -p /workspace/build
     docker pull gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-ubuntu18.04-test-pxf:latest || exit 0
   waitFor: ['-']
 
@@ -118,9 +114,8 @@ steps:
   - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-ubuntu18.04-test-pxf:latest'
   - '-f'
   - 'concourse/docker/pxf-dev-base/gpdb6/ubuntu18.04/Dockerfile'
-  - './build/'
+  - '/workspace/build/'
   waitFor:
-    - pxf-build-dependencies-tarball
     - gpdb6-ubuntu18.04-test-pxf-image-cache
 
 # Push images to Cloud Build to Container Registry
