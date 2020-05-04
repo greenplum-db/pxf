@@ -4,6 +4,9 @@ set -eox pipefail
 
 : "${TARGET_OS:?TARGET_OS must be set}"
 
+CWDIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+source "${CWDIR}/pxf_common.bash"
+
 GPDB_PKG_DIR=gpdb_package
 GPDB_VERSION=$(<"${GPDB_PKG_DIR}/version")
 GPHOME=/usr/local/greenplum-db-${GPDB_VERSION}
@@ -39,5 +42,6 @@ function package_pxf_protocol_extension() {
 }
 
 install_gpdb
+inflate_dependencies
 compile_pxf_protocol_extension
 package_pxf_protocol_extension

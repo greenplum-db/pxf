@@ -19,6 +19,15 @@ else
 	PXF_EXTENSIONS_DIR=gpdb_src/gpcontrib/pxf
 fi
 
+function inflate_dependencies() {
+	if [[ ! -f pxf-build-dependencies/pxf-build-dependencies.tar.gz ]]; then
+		return
+	fi
+	tar -xzf pxf-build-dependencies/pxf-build-dependencies.tar.gz -C ~gpadmin
+	ln -s ~gpadmin/.{tomcat,go-dep-cached-sources,m2,gradle} ~root
+	chown -R gpadmin:gpadmin ~gpadmin
+}
+
 function set_env() {
 	export TERM=xterm-256color
 	export TIMEFORMAT=$'\e[4;33mIt took %R seconds to complete this step\e[0m';

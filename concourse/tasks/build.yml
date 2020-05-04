@@ -11,16 +11,6 @@ inputs:
 outputs:
 - name: dist
 
-caches:
-- path: /home/gpadmin/.tomcat
-- path: /home/gpadmin/.go-dep-cached-sources
-- path: /home/gpadmin/.m2
-- path: /home/gpadmin/.gradle
-- path: /root/.tomcat
-- path: /root/.go-dep-cached-sources
-- path: /root/.m2
-- path: /root/.gradle
-
 params:
   TARGET_OS:
 
