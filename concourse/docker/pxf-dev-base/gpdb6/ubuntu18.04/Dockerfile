@@ -65,4 +65,5 @@ RUN locale-gen en_US.UTF-8 \
     && echo >> ~gpadmin/.pxfrc 'export PATH=${PXF_HOME}/bin:${GOPATH}/bin:/usr/local/go/bin:$PATH' \
     && ln -s ~gpadmin/.pxfrc ~root \
     && echo >> ~gpadmin/.bashrc 'source ~/.pxfrc' \
+    && echo >> ~gpadmin/.bash_profile '[[ -f ~/.bashrc ]] && . ~/.bashrc' \
     && chown -R gpadmin:gpadmin ~gpadmin
