@@ -1,0 +1,24 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+
+inputs:
+- name: pxf-build-dependencies
+
+caches:
+- path: ~gpadmin/.tomcat
+- path: ~gpadmin/.go-dep-cached-sources
+- path: ~gpadmin/.m2
+- path: ~gpadmin/.gradle
+- path: ~root/.tomcat
+- path: ~root/.go-dep-cached-sources
+- path: ~root/.m2
+- path: ~root/.gradle
+
+params:
+  TARGET_OS:
+
+run:
+  path: pxf_src/concourse/scripts/inflate-dependencies.bash

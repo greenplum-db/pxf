@@ -83,6 +83,14 @@ resource_types:
 ## ======================================================================
 resources:
 
+- name: pxf-build-dependencies
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: data-gpdb-ud-pxf-build-resources
+    json_key: {{data-gpdb-ud-google-json-key}}
+    versioned_file: build-dependencies/pxf-build-dependencies.tar.gz
+
 ## ---------- Github Repos ----------
 - name: pxf_src
   type: git
@@ -278,11 +286,15 @@ jobs:
 - name: Build PXF-GP5 on RHEL6
   plan:
   - in_parallel:
+    - get: pxf-build-dependencies
     - get: pxf_src
       trigger: true
     - get: gpdb_package
       resource: gpdb_rhel6_rpm_latest-0
     - get: gpdb-pxf-dev-centos6-image
+  - task: inflate-dependencies
+    image: gpdb-pxf-dev-centos6-image
+    file: pxf_src/concourse/tasks/inflate-dependencies.yml
   - task: Build PXF on RHEL6
     image: gpdb-pxf-dev-centos6-image
     file: pxf_src/concourse/tasks/build.yml
@@ -295,6 +307,7 @@ jobs:
 - name: Test PXF-GP5-HDP2 on RHEL6
   plan:
   - in_parallel:
+    - get: pxf-build-dependencies
     - get: pxf_src
       passed: [Build PXF-GP5 on RHEL6]
       trigger: true
@@ -305,6 +318,9 @@ jobs:
       resource: gpdb_rhel6_rpm_latest-0
       passed: [Build PXF-GP5 on RHEL6]
     - get: gpdb-pxf-dev-centos6-hdp2-server-image
+  - task: inflate-dependencies
+    image: gpdb-pxf-dev-centos6-image
+    file: pxf_src/concourse/tasks/inflate-dependencies.yml
   - task: Test PXF-GP5-HDP2 on RHEL6
     file: pxf_src/concourse/tasks/test.yml
     image: gpdb-pxf-dev-centos6-hdp2-server-image
@@ -321,11 +337,15 @@ jobs:
 - name: Build PXF-GP[[gp_ver]] on RHEL7
   plan:
   - in_parallel:
+    - get: pxf-build-dependencies
     - get: pxf_src
       trigger: true
     - get: gpdb_package
       resource: gpdb_rhel7_rpm_latest-0
     - get: gpdb-pxf-dev-centos7-image
+  - task: inflate-dependencies
+    image: gpdb-pxf-dev-centos7-image
+    file: pxf_src/concourse/tasks/inflate-dependencies.yml
   - task: Build PXF-GP[[gp_ver]] on RHEL7
     image: gpdb-pxf-dev-centos7-image
     file: pxf_src/concourse/tasks/build.yml
@@ -338,6 +358,7 @@ jobs:
 - name: Test PXF-GP[[gp_ver]]-HDP2 on RHEL7
   plan:
   - in_parallel:
+    - get: pxf-build-dependencies
     - get: pxf_src
       passed: [Build PXF-GP[[gp_ver]] on RHEL7]
       trigger: true
@@ -348,6 +369,9 @@ jobs:
       resource: gpdb_rhel7_rpm_latest-0
       passed: [Build PXF-GP[[gp_ver]] on RHEL7]
     - get: gpdb-pxf-dev-centos7-hdp2-server-image
+  - task: inflate-dependencies
+    image: gpdb-pxf-dev-centos7-image
+    file: pxf_src/concourse/tasks/inflate-dependencies.yml
   - task: Test PXF-GP[[gp_ver]]-HDP2 on RHEL7
     file: pxf_src/concourse/tasks/test.yml
     image: gpdb-pxf-dev-centos7-hdp2-server-image
@@ -364,11 +388,15 @@ jobs:
 - name: Build PXF-GP6 on Ubuntu18
   plan:
   - in_parallel:
+    - get: pxf-build-dependencies
     - get: pxf_src
       trigger: true
     - get: gpdb_package
       resource: gpdb_ubuntu18_deb_latest-0
     - get: gpdb-pxf-dev-ubuntu18-image
+  - task: inflate-dependencies
+    image: gpdb-pxf-dev-ubuntu18-image
+    file: pxf_src/concourse/tasks/inflate-dependencies.yml
   - task: Build PXF-GP6 on Ubuntu18
     image: gpdb-pxf-dev-ubuntu18-image
     file: pxf_src/concourse/tasks/build.yml
@@ -381,6 +409,7 @@ jobs:
 - name: Test PXF-GP6-HDP2 on Ubuntu18
   plan:
   - in_parallel:
+    - get: pxf-build-dependencies
     - get: pxf_src
       passed: [Build PXF-GP6 on Ubuntu18]
       trigger: true
@@ -391,6 +420,9 @@ jobs:
       resource: gpdb_ubuntu18_deb_latest-0
       passed: [Build PXF-GP6 on Ubuntu18]
     - get: gpdb-pxf-dev-ubuntu18-hdp2-server-image
+  - task: inflate-dependencies
+    image: gpdb-pxf-dev-ubuntu18-image
+    file: pxf_src/concourse/tasks/inflate-dependencies.yml
   - task: Test PXF-GP6-HDP2 on Ubuntu18
     file: pxf_src/concourse/tasks/test.yml
     image: gpdb-pxf-dev-ubuntu18-hdp2-server-image

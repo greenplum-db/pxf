@@ -7,7 +7,6 @@ set -eox pipefail
 GPDB_PKG_DIR=gpdb_package
 GPDB_VERSION=$(<"${GPDB_PKG_DIR}/version")
 GPHOME=/usr/local/greenplum-db-${GPDB_VERSION}
-source ~/.pxfrc
 
 function install_gpdb() {
     if [[ ${TARGET_OS} == rhel* ]]; then
@@ -26,7 +25,10 @@ function compile_pxf_protocol_extension() {
     if [[ ${TARGET_OS} == "rhel6" ]]; then
         source /opt/gcc_env.sh
     fi
-    make -C "${PWD}/pxf_src" tar
+    bash -c "
+        source ~/.pxfrc
+        make -C '${PWD}/pxf_src' tar
+    "
 }
 
 function package_pxf_protocol_extension() {
