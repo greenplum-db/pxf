@@ -9,9 +9,6 @@ GPHOME=/usr/local/greenplum-db
 
 source "${CWDIR}/pxf_common.bash"
 PG_REGRESS=${PG_REGRESS:-false}
-if [[ -f ~gpadmin/.pxfrc ]]; then
-	source ~gpadmin/.pxfrc
-fi
 
 export GOOGLE_PROJECT_ID=${GOOGLE_PROJECT_ID:-data-gpdb-ud}
 export GPHOME=${GPHOME:-/usr/local/greenplum-db-devel}
@@ -83,7 +80,11 @@ function run_pxf_automation() {
 	cat > ~gpadmin/run_pxf_automation_test.sh <<-EOF
 		set -exo pipefail
 
-		source ${GPHOME}/greenplum_path.sh
+		if [[ -f ~gpadmin/.pxfrc ]]; then
+			source ~gpadmin/.pxfrc
+		else
+			source ${GPHOME}/greenplum_path.sh
+		fi
 
 		export PATH=\$PATH:${GPHD_ROOT}/bin
 		export GPHD_ROOT=${GPHD_ROOT}
