@@ -7,6 +7,7 @@ inputs:
 - name: pxf_tarball
 - name: pxf_src
 - name: gpdb_package
+- name: singlecluster
 
 params:
   ACCESS_KEY_ID:

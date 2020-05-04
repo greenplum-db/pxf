@@ -9,6 +9,9 @@ GPHOME=/usr/local/greenplum-db
 
 source "${CWDIR}/pxf_common.bash"
 PG_REGRESS=${PG_REGRESS:-false}
+if [[ -f ~gpadmin/.pxfrc ]]; then
+	source ~gpadmin/.pxfrc
+fi
 
 export GOOGLE_PROJECT_ID=${GOOGLE_PROJECT_ID:-data-gpdb-ud}
 export GPHOME=${GPHOME:-/usr/local/greenplum-db-devel}
@@ -91,7 +94,7 @@ function run_pxf_automation() {
 		export JAVA_HOME=${JAVA_HOME}
 
 		cd pxf_src/automation
-		make GROUP=${GROUP} test
+		time make GROUP=${GROUP} test
 	EOF
 
 	chown gpadmin:gpadmin ~gpadmin/run_pxf_automation_test.sh
@@ -183,7 +186,11 @@ function _main() {
 
 	# Install GPDB
 	install_gpdb_package
-	setup_gpadmin_user
+	cat <<-EOF >> /etc/security/limits.d/gpadmin-limits.conf
+		gpadmin soft core unlimited
+		gpadmin soft nproc 131072
+		gpadmin soft nofile 65536
+	EOF
 
 	# Install PXF
 	install_pxf_tarball
@@ -191,6 +198,7 @@ function _main() {
 	if [[ -z ${PROTOCOL} && ${HADOOP_CLIENT} != MAPR && ${HADOOP_CLIENT} != HDP_KERBEROS ]]; then
 		# Setup Hadoop before creating GPDB cluster to use system python for yum install
 		# Must be after installing GPDB to transfer hbase jar
+		inflate_singlecluster
 		setup_hadoop "${GPHD_ROOT}"
 	fi
 
@@ -241,9 +249,10 @@ function _main() {
 
 	configure_sut
 
+	inflate_dependencies
 	# Run Tests
 	if [[ -n ${GROUP} ]]; then
-		time run_pxf_automation
+		run_pxf_automation
 	fi
 }
 

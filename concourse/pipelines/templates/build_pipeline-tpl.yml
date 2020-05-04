@@ -91,6 +91,14 @@ resources:
     json_key: {{data-gpdb-ud-google-json-key}}
     versioned_file: build-dependencies/pxf-build-dependencies.tar.gz
 
+- name: singlecluster-hdp2
+    type: gcs
+    icon: google-drive
+    source:
+      bucket: data-gpdb-ud-pxf-build-resources
+      json_key: {{data-gpdb-ud-google-json-key}}
+      versioned_file: singlecluster/HDP2/singlecluster-HDP2.tar.gz
+
 ## ---------- Github Repos ----------
 - name: pxf_src
   type: git
@@ -314,10 +322,12 @@ jobs:
     - get: gpdb_package
       resource: gpdb_rhel6_rpm_latest-0
       passed: [Build PXF-GP5 on RHEL6]
-    - get: gpdb-pxf-dev-centos6-hdp2-server-image
+    - get: gpdb-pxf-dev-centos6-image
+    - get: singlecluster
+      resource: singlecluster-hdp2
   - task: Test PXF-GP5-HDP2 on RHEL6
     file: pxf_src/concourse/tasks/test.yml
-    image: gpdb-pxf-dev-centos6-hdp2-server-image
+    image: gpdb-pxf-dev-centos6-image
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
       GROUP: gpdb,proxy,profile
@@ -359,10 +369,12 @@ jobs:
     - get: gpdb_package
       resource: gpdb_rhel7_rpm_latest-0
       passed: [Build PXF-GP[[gp_ver]] on RHEL7]
-    - get: gpdb-pxf-dev-centos7-hdp2-server-image
+    - get: gpdb-pxf-dev-centos7-image
+    - get: singlecluster
+      resource: singlecluster-hdp2
   - task: Test PXF-GP[[gp_ver]]-HDP2 on RHEL7
     file: pxf_src/concourse/tasks/test.yml
-    image: gpdb-pxf-dev-centos7-hdp2-server-image
+    image: gpdb-pxf-dev-centos7-image
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
       GROUP: gpdb,proxy,profile
@@ -404,10 +416,12 @@ jobs:
     - get: gpdb_package
       resource: gpdb_ubuntu18_deb_latest-0
       passed: [Build PXF-GP6 on Ubuntu18]
-    - get: gpdb-pxf-dev-ubuntu18-hdp2-server-image
+    - get: gpdb-pxf-dev-ubuntu18-image
+    - get: singlecluster
+      resource: singlecluster-hdp2
   - task: Test PXF-GP6-HDP2 on Ubuntu18
     file: pxf_src/concourse/tasks/test.yml
-    image: gpdb-pxf-dev-ubuntu18-hdp2-server-image
+    image: gpdb-pxf-dev-ubuntu18-image
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
       GROUP: gpdb,proxy,profile

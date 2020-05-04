@@ -28,6 +28,20 @@ function inflate_dependencies() {
 	chown -R gpadmin:gpadmin ~gpadmin
 }
 
+function inflate_singlecluster() {
+	local singlecluster=$(find singlecluster -name 'singlecluster*.tar.gz')
+	if [[ ! -f ${singlecluster} ]]; then
+		return
+	fi
+	tar zxvf "${singlecluster}" -C /
+	mv /singlecluster-* /singlecluster
+	chmod a+w /singlecluster
+	mkdir -p /etc/hadoop/conf /etc/hive/conf /etc/hbase/conf
+	ln -s /singlecluster/hadoop/etc/hadoop/*-site.xml /etc/hadoop/conf
+	ln -s /singlecluster/hive/conf/hive-site.xml /etc/hive/conf
+	ln -s /singlecluster/hbase/conf/hbase-site.xml /etc/hbase/conf
+}
+
 function set_env() {
 	export TERM=xterm-256color
 	export TIMEFORMAT=$'\e[4;33mIt took %R seconds to complete this step\e[0m';
