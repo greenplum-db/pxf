@@ -30,7 +30,7 @@ function check_gphome() {
         fi
     else
         if [[ ! -f ${GPHOME}/greenplum_path.sh ]]; then
-            echo "Error: environment variable GPHOME must be set to a valid Greenplum installation"
+            echo "Error: environment variable GPHOME (${GPHOME}) must be set to a valid Greenplum installation"
             exit 1
         fi
         if [[ -z "${PXF_HOME}" ]]; then

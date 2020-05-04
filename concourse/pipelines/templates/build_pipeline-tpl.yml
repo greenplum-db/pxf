@@ -68,12 +68,12 @@ anchors:
 resource_types:
 
 - name: gcs
-  type: docker-image
+  type: registry-image
   source:
     repository: frodenas/gcs-resource
 
 - name: terraform
-  type: docker-image
+  type: registry-image
   source:
     repository: ljfranklin/terraform-resource
     tag: 0.11.14
@@ -92,12 +92,12 @@ resources:
     versioned_file: build-dependencies/pxf-build-dependencies.tar.gz
 
 - name: singlecluster-hdp2
-    type: gcs
-    icon: google-drive
-    source:
-      bucket: data-gpdb-ud-pxf-build-resources
-      json_key: {{data-gpdb-ud-google-json-key}}
-      versioned_file: singlecluster/HDP2/singlecluster-HDP2.tar.gz
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: data-gpdb-ud-pxf-build-resources
+    json_key: {{data-gpdb-ud-google-json-key}}
+    versioned_file: singlecluster/HDP2/singlecluster-HDP2.tar.gz
 
 ## ---------- Github Repos ----------
 - name: pxf_src
@@ -117,7 +117,7 @@ resources:
 ## ---------- Docker Images ----------
 {% if gp_ver == 5 %}
 - name: gpdb-pxf-dev-centos6-image
-  type: docker-image
+  type: registry-image
   icon: docker
   source:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb5-centos6-test-pxf
@@ -126,7 +126,7 @@ resources:
     password: ((data-gpdb-ud-google-json-key))
 
 - name: gpdb-pxf-dev-centos6-hdp2-server-image
-  type: docker-image
+  type: registry-image
   icon: docker
   source:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb5-centos6-test-pxf-hdp2
@@ -136,7 +136,7 @@ resources:
 {% endif %}
 
 - name: gpdb-pxf-dev-centos7-image
-  type: docker-image
+  type: registry-image
   icon: docker
   source:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-centos7-test-pxf
@@ -146,7 +146,7 @@ resources:
 
 {% if gp_ver == 6 %}
 - name: gpdb-pxf-dev-ubuntu18-image
-  type: docker-image
+  type: registry-image
   icon: docker
   source:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb6-ubuntu18.04-test-pxf
@@ -155,7 +155,7 @@ resources:
     password: ((data-gpdb-ud-google-json-key))
 
 - name: gpdb-pxf-dev-ubuntu18-hdp2-server-image
-  type: docker-image
+  type: registry-image
   icon: docker
   source:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb6-ubuntu18.04-test-pxf-hdp2
@@ -165,7 +165,7 @@ resources:
 {% endif %}
 
 - name: gpdb-pxf-dev-centos7-hdp2-server-image
-  type: docker-image
+  type: registry-image
   icon: docker
   source:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-centos7-test-pxf-hdp2
@@ -174,7 +174,7 @@ resources:
     password: ((data-gpdb-ud-google-json-key))
 
 - name: gpdb-pxf-dev-centos7-mapr-server-image
-  type: docker-image
+  type: registry-image
   icon: docker
   source:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-centos7-test-pxf-mapr
@@ -183,7 +183,7 @@ resources:
     password: ((data-gpdb-ud-google-json-key))
 
 - name: gpdb-pxf-dev-centos7-hdp3-server-image
-  type: docker-image
+  type: registry-image
   icon: docker
   source:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-centos7-test-pxf-hdp3
@@ -192,7 +192,7 @@ resources:
     password: ((data-gpdb-ud-google-json-key))
 
 - name: gpdb-pxf-dev-centos7-cdh-server-image
-  type: docker-image
+  type: registry-image
   icon: docker
   source:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-centos7-test-pxf-cdh
@@ -201,7 +201,7 @@ resources:
     password: ((data-gpdb-ud-google-json-key))
 
 - name: ccp-7-image
-  type: docker-image
+  type: registry-image
   icon: docker
   source:
     repository: pivotaldata/ccp
