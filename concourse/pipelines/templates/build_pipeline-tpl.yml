@@ -380,7 +380,7 @@ jobs:
     - get: pxf_src
       trigger: true
     - get: gpdb_package
-       resource: gpdb_ubuntu18_deb_latest-0
+      resource: gpdb_ubuntu18_deb_latest-0
     - get: gpdb-pxf-dev-ubuntu18-image
   - task: Build PXF-GP6 on Ubuntu18
     image: gpdb-pxf-dev-ubuntu18-image

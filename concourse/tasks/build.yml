@@ -5,6 +5,8 @@ image_resource:
   type: docker-image
 
 inputs:
+- name: pxf-build-dependencies
+  optional: true
 - name: pxf_src
 - name: gpdb_package
 
