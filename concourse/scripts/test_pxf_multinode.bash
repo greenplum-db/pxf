@@ -386,6 +386,7 @@ function _main() {
 		run_multinode_smoke_test 1000
 	fi
 
+	inflate_singlecluster
 	run_pxf_automation
 }
 

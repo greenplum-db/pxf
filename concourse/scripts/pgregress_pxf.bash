@@ -7,10 +7,8 @@ PXF_HOME=${GPHOME}/pxf
 PXF_CONF_DIR=~gpadmin/pxf
 GPHD_ROOT=/singlecluster
 JAVA_HOME=$(find /usr/lib/jvm -name 'java-1.8.0-openjdk*' | head -1)
-# on CentOS when we install java 1.8 we have to go down to jre
-if [[ -d ${JAVA_HOME}/jre ]]; then
-	JAVA_HOME+=/jre
-fi
+CWDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source "${CWDIR}/pxf_common.bash"
 
 function run_pg_regress() {
 	# run desired groups (below we replace commas with spaces in $GROUPS)
@@ -24,6 +22,7 @@ function run_pg_regress() {
 		export HCFS_CMD=${GPHD_ROOT}/bin/hdfs
 		export HCFS_PROTOCOL=${PROTOCOL}
 		export JAVA_HOME=${JAVA_HOME}
+		[[ -f ~gpadmin/.pxfrc ]] && source ~gpadmin/.pxfrc
 		time make -C ${PWD}/pxf_src/regression ${GROUP//,/ }
 	EOF
 
@@ -156,8 +155,11 @@ init_and_configure_pxf_server
 
 start_pxf_server
 
+inflate_singlecluster
+
 JAVA_HOME="${JAVA_HOME}" init_hdfs
 
+inflate_dependencies
 if [[ -n ${AUTOMATION} ]]; then
 	run_pxf_automation
 else
