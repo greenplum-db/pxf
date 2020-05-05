@@ -80,11 +80,7 @@ function run_pxf_automation() {
 	cat > ~gpadmin/run_pxf_automation_test.sh <<-EOF
 		set -exo pipefail
 
-		if [[ -f ~gpadmin/.pxfrc ]]; then
-			source ~gpadmin/.pxfrc
-		else
-			source ${GPHOME}/greenplum_path.sh
-		fi
+		source ~gpadmin/.pxfrc
 
 		export PATH=\$PATH:${GPHD_ROOT}/bin
 		export GPHD_ROOT=${GPHD_ROOT}
@@ -196,11 +192,14 @@ function _main() {
 	# Install PXF
 	install_pxf_tarball
 
-	if [[ -z ${PROTOCOL} && ${HADOOP_CLIENT} != MAPR && ${HADOOP_CLIENT} != HDP_KERBEROS ]]; then
-		# Setup Hadoop before creating GPDB cluster to use system python for yum install
-		# Must be after installing GPDB to transfer hbase jar
+	if [[ ${HADOOP_CLIENT} != MAPR && ${HADOOP_CLIENT} != HDP_KERBEROS ]]; then
 		inflate_singlecluster
-		setup_hadoop "${GPHD_ROOT}"
+
+		if [[ -z ${PROTOCOL} ]]; then
+			# Setup Hadoop before creating GPDB cluster to use system python for yum install
+			# Must be after installing GPDB to transfer hbase jar
+			setup_hadoop "${GPHD_ROOT}"
+		fi
 	fi
 
 	# initialize GPDB as gpadmin user
