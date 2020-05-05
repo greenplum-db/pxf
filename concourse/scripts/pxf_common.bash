@@ -33,7 +33,7 @@ function inflate_singlecluster() {
 	if [[ ! -f ${singlecluster} ]]; then
 		return
 	fi
-	tar zxvf "${singlecluster}" -C /
+	tar zxf "${singlecluster}" -C /
 	mv /singlecluster-* /singlecluster
 	chmod a+w /singlecluster
 	mkdir -p /etc/hadoop/conf /etc/hive/conf /etc/hbase/conf

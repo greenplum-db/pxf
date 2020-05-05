@@ -91,8 +91,9 @@ function run_pxf_automation() {
 		export PXF_HOME=${PXF_HOME}
 		export PGPORT=${PGPORT}
 
-		# JAVA_HOME is from pxf_common.bash
+		# JAVA_HOME is from ~gpadmin/.pxfrc or pxf_common.bash
 		export JAVA_HOME=${JAVA_HOME}
+		export LANG=en_US.UTF-8
 
 		cd pxf_src/automation
 		time make GROUP=${GROUP} test

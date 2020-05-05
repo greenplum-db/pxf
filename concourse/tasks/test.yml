@@ -8,6 +8,8 @@ inputs:
 - name: pxf_src
 - name: gpdb_package
 - name: singlecluster
+- name: pxf-build-dependencies
+  optional: true
 
 params:
   ACCESS_KEY_ID:
