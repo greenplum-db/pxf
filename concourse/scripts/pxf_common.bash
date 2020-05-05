@@ -31,6 +31,7 @@ function inflate_dependencies() {
 function inflate_singlecluster() {
 	local singlecluster=$(find singlecluster -name 'singlecluster*.tar.gz')
 	if [[ ! -f ${singlecluster} ]]; then
+		echo "Didn't find ${PWD}/singlecluster directory... skipping tarball inflation..."
 		return
 	fi
 	tar zxf "${singlecluster}" -C /

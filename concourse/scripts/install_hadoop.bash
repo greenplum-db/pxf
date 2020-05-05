@@ -7,6 +7,7 @@ source "${CWDIR}/pxf_common.bash"
 
 SSH_OPTS=(-i cluster_env_files/private_key.pem)
 LOCAL_GPHD_ROOT=/singlecluster
+inflate_singlecluster
 REMOTE_GPHD_ROOT=~centos/singlecluster
 
 function install_hadoop_single_cluster() {

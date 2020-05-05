@@ -451,6 +451,7 @@ jobs:
 - name: Test PXF-GP[[gp_ver]]-HDP2-NO-IMPERS on RHEL7
   plan:
   - in_parallel:
+    - get: pxf-build-dependencies
     - get: pxf_src
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
       trigger: true
@@ -475,6 +476,7 @@ jobs:
 - name: Test PXF-GP[[gp_ver]]-MAPR on RHEL7
   plan:
   - in_parallel:
+    - get: pxf-build-dependencies
     - get: pxf_src
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
       trigger: true
@@ -499,6 +501,7 @@ jobs:
 - name: Test PXF-GP[[gp_ver]]-HDP3 on RHEL7
   plan:
   - in_parallel:
+    - get: pxf-build-dependencies
     - get: pxf_src
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
       trigger: true
@@ -525,6 +528,7 @@ jobs:
 - name: Test PXF-GP[[gp_ver]]-HDP3-SECURE (MANUAL) on RHEL7
   plan:
   - in_parallel:
+    - get: pxf-build-dependencies
     - get: pxf_src
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
 #      trigger: true
@@ -559,6 +563,7 @@ jobs:
 - name: Test PXF-GP[[gp_ver]]-HDP2-JDK11 on RHEL7
   plan:
   - in_parallel:
+    - get: pxf-build-dependencies
     - get: pxf_src
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
       trigger: true
@@ -586,6 +591,7 @@ jobs:
 - name: Test PXF-GP[[gp_ver]]-CDH on RHEL7
   plan:
   - in_parallel:
+    - get: pxf-build-dependencies
     - get: pxf_src
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
       trigger: true
@@ -617,6 +623,7 @@ jobs:
 - name: Test PXF-GP[[gp_ver]]-S3 on RHEL7
   plan:
   - in_parallel:
+    - get: pxf-build-dependencies
     - get: pxf_src
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
       trigger: true
@@ -645,6 +652,7 @@ jobs:
 - name: Test PXF-GP[[gp_ver]]-S3-NO-IMPERS on RHEL7
   plan:
   - in_parallel:
+    - get: pxf-build-dependencies
     - get: pxf_src
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
       trigger: true
@@ -674,6 +682,7 @@ jobs:
 - name: Test PXF-GP[[gp_ver]]-ADL-NO-IMPERS on RHEL7
   plan:
   - in_parallel:
+    - get: pxf-build-dependencies
     - get: pxf_src
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
       trigger: true
@@ -703,6 +712,7 @@ jobs:
 - name: Test PXF-GP[[gp_ver]]-GS-NO-IMPERS on RHEL7
   plan:
   - in_parallel:
+    - get: pxf-build-dependencies
     - get: pxf_src
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
       trigger: true
@@ -729,6 +739,7 @@ jobs:
 - name: Test PXF-GP[[gp_ver]]-MINIO-NO-IMPERS on RHEL7
   plan:
   - in_parallel:
+    - get: pxf-build-dependencies
     - get: pxf_src
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
       trigger: true
@@ -757,6 +768,7 @@ jobs:
   max_in_flight: 2
   plan:
   - in_parallel:
+    - get: pxf-build-dependencies
     - get: pxf_src
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
       trigger: true
@@ -874,6 +886,7 @@ jobs:
   max_in_flight: 2
   plan:
   - in_parallel:
+    - get: pxf-build-dependencies
     - get: pxf_src
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
       trigger: true
@@ -1064,6 +1077,7 @@ jobs:
 - name: Test PXF-GP5 Backward Compatibility on RHEL6
   plan:
   - in_parallel:
+    - get: pxf-build-dependencies
     - get: pxf_src
       passed: [Compatibility Gate for PXF-GP5]
       trigger: true
@@ -1098,6 +1112,7 @@ jobs:
 - name: Test PXF-GP[[gp_ver]] Backward Compatibility on RHEL7
   plan:
   - in_parallel:
+    - get: pxf-build-dependencies
     - get: pxf_src
       passed: [Compatibility Gate for PXF-GP[[gp_ver]]]
       trigger: true
@@ -1132,6 +1147,7 @@ jobs:
 - name: Test PXF-GP6 Backward Compatibility on Ubuntu18
   plan:
   - in_parallel:
+    - get: pxf-build-dependencies
     - get: pxf_src
       passed: [Compatibility Gate for PXF-GP6]
       trigger: true

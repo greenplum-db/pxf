@@ -10,7 +10,10 @@ inputs:
   optional: true
 - name: dataproc_2_env_files
   optional: true
+- name: pxf-build-dependencies
+  optional: true
 - name: singlecluster
+  optional: true
 params:
   ACCEPTANCE:
   ACCESS_KEY_ID:

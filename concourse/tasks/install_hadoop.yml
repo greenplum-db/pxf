@@ -5,6 +5,8 @@ inputs:
   - name: cluster_env_files
   - name: pxf_src
   - name: pxf_tarball
+  - name: singlecluster
+    optional: true
 params:
   SECRET_ACCESS_KEY:
   ACCESS_KEY_ID:
