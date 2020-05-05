@@ -8,6 +8,7 @@ inputs:
 - name: pxf_src
 - name: gpdb_package
 - name: singlecluster
+  optional: true
 - name: pxf-build-dependencies
   optional: true
 

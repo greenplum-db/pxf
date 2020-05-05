@@ -13,6 +13,7 @@ function install_hadoop_single_cluster() {
 	local hadoop_ip=${1}
 
 	tar -xzf pxf_tarball/pxf*.tar.gz -C /tmp
+	mkdir -p "${LOCAL_GPHD_ROOT}/hbase/lib"
 	if [[ -d /tmp/pxf/lib ]]; then
 	    # regular tarball based install (old)
 	    cp /tmp/pxf/lib/pxf-hbase-*.jar "${LOCAL_GPHD_ROOT}/hbase/lib"
