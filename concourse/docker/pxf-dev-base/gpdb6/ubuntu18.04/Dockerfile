@@ -26,7 +26,6 @@ RUN apt-get update -y \
     && tar -xzf /tmp/apache-maven.tar.gz -C /usr/share/maven --strip-components=1 \
     && rm -f /tmp/apache-maven.tar.gz \
     && ln -s /usr/share/maven/bin/mvn /usr/bin/mvn \
-    && /usr/bin/pip install psi paramiko --no-cache-dir \
     && wget -q http://www.cpan.org/src/5.0/${PERL_VERSION}.tar.gz \
     && tar -xzf ${PERL_VERSION}.tar.gz \
     && cd $PERL_VERSION \
@@ -55,7 +54,10 @@ RUN locale-gen en_US.UTF-8 \
     && echo "gpadmin:password" | chpasswd 2> /dev/null \
     && { ssh-keyscan localhost; ssh-keyscan 0.0.0.0; } >> /home/gpadmin/.ssh/known_hosts \
     && chown -R gpadmin:gpadmin /home/gpadmin \
+    # install dependencies
+    && su gpadmin -c "pip install psi paramiko --no-cache-dir" \
     # create .pxfrc
+    && echo >> ~gpadmin/.pxfrc 'export LANG=en_US.UTF-8' \
     && echo >> ~gpadmin/.pxfrc 'export PGPORT=5432' \
     && echo >> ~gpadmin/.pxfrc 'export GOPATH=/opt/go' \
     && echo >> ~gpadmin/.pxfrc 'export GPHOME=$(find /usr/local/ -name greenplum-db* -type d | head -n1)' \
