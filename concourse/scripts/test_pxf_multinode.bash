@@ -375,6 +375,7 @@ function _main() {
 	init_and_configure_pxf_server
 	remote_access_to_gpdb
 
+	inflate_singlecluster
 	configure_local_hdfs
 
 	# widen access to mdw to all nodes in the cluster for JDBC test
@@ -387,7 +388,6 @@ function _main() {
 	fi
 
 	inflate_dependencies
-	inflate_singlecluster
 	run_pxf_automation
 }
 

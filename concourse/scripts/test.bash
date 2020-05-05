@@ -145,9 +145,9 @@ function setup_hadoop() {
 function configure_sut() {
 	AMBARI_DIR=$(find /tmp/build/ -name ambari_env_files)
 	if [[ -n $AMBARI_DIR  ]]; then
-		REALM=$(cat "$AMBARI_DIR"/REALM)
+		REALM=$(< "$AMBARI_DIR"/REALM)
 		HADOOP_IP=$(grep < "$AMBARI_DIR"/etc_hostfile ambari-1 | awk '{print $1}')
-		HADOOP_USER=$(cat "$AMBARI_DIR"/HADOOP_USER)
+		HADOOP_USER=$(< "$AMBARI_DIR"/HADOOP_USER)
 		HBASE_IP=$(grep < "$AMBARI_DIR"/etc_hostfile ambari-3 | awk '{print $1}')
 		HIVE_IP=$(grep < "$AMBARI_DIR"/etc_hostfile ambari-2 | awk '{print $1}')
 		HIVE_HOSTNAME=$(grep < "$AMBARI_DIR"/etc_hostfile ambari-2 | awk '{print $2}')
@@ -192,15 +192,14 @@ function _main() {
 	# Install PXF
 	install_pxf_tarball
 
-	if [[ ${HADOOP_CLIENT} != MAPR && ${HADOOP_CLIENT} != HDP_KERBEROS ]]; then
-		inflate_singlecluster
-
-		if [[ -z ${PROTOCOL} ]]; then
-			# Setup Hadoop before creating GPDB cluster to use system python for yum install
-			# Must be after installing GPDB to transfer hbase jar
-			setup_hadoop "${GPHD_ROOT}"
-		fi
-	fi
+        if [[ ${HADOOP_CLIENT} != MAPR ]]; then
+                inflate_singlecluster
+                if [[ ${HADOOP_CLIENT} != HDP_KERBEROS && -z ${PROTOCOL} ]]; then
+                        # Setup Hadoop before creating GPDB cluster to use system python for yum install
+                        # Must be after installing GPDB to transfer hbase jar
+                        setup_hadoop "${GPHD_ROOT}"
+                fi
+        fi
 
 	# initialize GPDB as gpadmin user
 	su gpadmin -c ${CWDIR}/initialize_gpdb.bash

@@ -11,6 +11,8 @@ inputs:
   optional: true
 - name: pxf-build-dependencies
   optional: true
+- name: ambari_env_files
+  optional: true
 
 params:
   ACCESS_KEY_ID:

@@ -14,6 +14,7 @@ inputs:
   optional: true
 - name: singlecluster
   optional: true
+
 params:
   ACCEPTANCE:
   ACCESS_KEY_ID:
