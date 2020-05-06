@@ -29,6 +29,7 @@ function run_pg_regress() {
 		set -euxo pipefail
 
 		source ~gpadmin/.pxfrc
+		source "\${GPHOME}/greenplum_path.sh"
 
 		export GPHD_ROOT=${GPHD_ROOT}
 		export PXF_HOME=${PXF_HOME} PXF_CONF=${PXF_CONF_DIR}

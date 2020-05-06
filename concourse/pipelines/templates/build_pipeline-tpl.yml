@@ -54,7 +54,7 @@ anchors:
     args:
     - -exc
     - |
-        GROUP=HdfsSmokeTest,WritableSmokeTest HADOOP_CLIENT=hdp PG_REGRESS=true pxf_src/concourse/scripts/test.bash
+        pxf_src/concourse/scripts/test.bash
 
 ## ======================================================================
 ## RESOURCE TYPES
@@ -1100,6 +1100,11 @@ jobs:
         - name: singlecluster
         params:
           GPDB_PKG_DIR: gpdb_package_latest-[[version]]
+          GROUP: HdfsSmokeTest,WritableSmokeTest
+          HADOOP_CLIENT: hdp
+          IMPERSONATION: true
+          PGPORT: 5432
+          PG_REGRESS: true
 {% endfor %}
 {% endif %}
 
@@ -1135,6 +1140,11 @@ jobs:
         - name: singlecluster
         params:
           GPDB_PKG_DIR: gpdb_package_latest-[[version]]
+          GROUP: HdfsSmokeTest,WritableSmokeTest
+          HADOOP_CLIENT: hdp
+          IMPERSONATION: true
+          PGPORT: 5432
+          PG_REGRESS: true
 {% endfor %}
 
 {% if gp_ver == 6 %}
@@ -1170,6 +1180,11 @@ jobs:
         - name: singlecluster
         params:
           GPDB_PKG_DIR: gpdb_package_latest-[[version]]
+          GROUP: HdfsSmokeTest,WritableSmokeTest
+          HADOOP_CLIENT: hdp
+          IMPERSONATION: true
+          PGPORT: 5432
+          PG_REGRESS: true
 {% endfor %}
 {% endif %}
 
