@@ -126,12 +126,13 @@ function install_gpdb_binary() {
 
 function install_gpdb_package() {
 	local gphome python_dir python_version=2.7 export_pythonpath='export PYTHONPATH=$PYTHONPATH' pkg_file version
+	gpdb_package=${PWD}/${GPDB_PKG_DIR:-gpdb_package}
 
 	if command -v rpm; then
 		# install GPDB RPM
-		pkg_file=$(find "${PWD}/gpdb_package" -name 'greenplum-db-*x86_64.rpm')
+		pkg_file=$(find "${gpdb_package}" -name 'greenplum-db-*x86_64.rpm')
 		if [[ -z ${pkg_file} ]]; then
-			echo "Couldn't find RPM file in ${PWD}/gpdb_package. Skipping install..."
+			echo "Couldn't find RPM file in ${gpdb_package}. Skipping install..."
 			return 1
 		fi
 		echo "Installing ${pkg_file}..."
@@ -146,10 +147,10 @@ function install_gpdb_package() {
 		python_dir=python${python_version}/site-packages
 		export_pythonpath+=:/usr/lib/${python_dir}:/usr/lib64/${python_dir}
 	elif command -v apt; then
-		# install GPDB DEB, apt wants a full path
-		pkg_file=$(find "${PWD}/gpdb_package" -name 'greenplum-db-*-ubuntu18.04-amd64.deb')
+		# install GPDB DEB, apt wants an absolute path
+		pkg_file=$(find "${gpdb_package}" -name 'greenplum-db-*-ubuntu18.04-amd64.deb')
 		if [[ -z ${pkg_file} ]]; then
-			echo "Couldn't find DEB file in ${PWD}/gpdb_package. Skipping install..."
+			echo "Couldn't find DEB file in ${gpdb_package}. Skipping install..."
 			return 1
 		fi
 		echo "Installing ${pkg_file}..."

@@ -54,7 +54,6 @@ anchors:
     args:
     - -exc
     - |
-        ln -sf "${PWD}"/gpdb_package_latest-* "${PWD}/gpdb_package"
         GROUP=HdfsSmokeTest,WritableSmokeTest HADOOP_CLIENT=hdp PG_REGRESS=true pxf_src/concourse/scripts/test.bash
 
 ## ======================================================================
