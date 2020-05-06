@@ -125,11 +125,17 @@ function install_gpdb_binary() {
 }
 
 function install_gpdb_package() {
-	local gphome python_dir python_version=2.7 export_pythonpath='export PYTHONPATH=$PYTHONPATH'
+	local gphome python_dir python_version=2.7 export_pythonpath='export PYTHONPATH=$PYTHONPATH' pkg_file version
 
-	if [[ ${TARGET_OS} == centos* ]]; then
-	    # install GPDB RPM
-	    rpm --quiet -ivh gpdb_package/greenplum-db-*-rhel*-x86_64.rpm
+	if command -v rpm; then
+		# install GPDB RPM
+		pkg_file=$(find "${PWD}/gpdb_package" -name 'greenplum-db-*x86_64.rpm')
+		if [[ -z ${pkg_file} ]]; then
+			echo "Couldn't find RPM file in ${PWD}/gpdb_package. Skipping install..."
+			return 1
+		fi
+		echo "Installing ${pkg_file}..."
+		rpm --quiet -ivh "${pkg_file}" >/dev/null
 
 		# We can't use service sshd restart as service is not installed on CentOS 7.
 		/usr/sbin/sshd &
@@ -138,12 +144,16 @@ function install_gpdb_package() {
 			python_version=2.6
 		fi
 		python_dir=python${python_version}/site-packages
-		export_pythonpath+=:/usr/lib/${python_dir}:/usr/lib64/$python_dir
-
-	elif [[ ${TARGET_OS} == ubuntu* ]]; then
-		# # install GPDB DEB, apt wants a full path
-		local deb_file=$(ls gpdb_package/greenplum-db-*-ubuntu18.04-amd64.deb)
-		apt install -qq "${PWD}/${deb_file}"
+		export_pythonpath+=:/usr/lib/${python_dir}:/usr/lib64/${python_dir}
+	elif command -v apt; then
+		# install GPDB DEB, apt wants a full path
+		pkg_file=$(find "${PWD}/gpdb_package" -name 'greenplum-db-*-ubuntu18.04-amd64.deb')
+		if [[ -z ${pkg_file} ]]; then
+			echo "Couldn't find DEB file in ${PWD}/gpdb_package. Skipping install..."
+			return 1
+		fi
+		echo "Installing ${pkg_file}..."
+		apt install -qq "${pkg_file}" >/dev/null
 
 		# Adjust GPHOME if the binary expects it to be /usr/local/gpdb
 		#gphome=$(grep ^GPHOME= /usr/local/greenplum-db-devel/greenplum_path.sh | cut -d= -f2)
@@ -155,12 +165,19 @@ function install_gpdb_package() {
 		service ssh start
 		python_dir=python${python_version}/dist-packages
 		export_pythonpath+=:/usr/local/lib/$python_dir
-    else
-	    echo "Unsupported operating system ${TARGET_OS}. Exiting..."
-	    exit 1
+	else
+		printf "Unsupported operating system '%s'. Exiting...\n" "$(cat /etc/*os-release | head -1)"
+		exit 1
 	fi
 
 	echo "$export_pythonpath" >> "${PXF_COMMON_SRC_DIR}/../../automation/tinc/main/tinc_env.sh"
+
+	# create symlink to allow pgregress to run (hardcoded to look for /usr/local/greenplum-db-devel/psql)
+	rm -rf /usr/local/greenplum-db-devel
+	# get version from the package file name
+	: "${pkg_file#*greenplum-db-}"
+	version=${_%%-*}
+	ln -sf "/usr/local/greenplum-db-${version}" /usr/local/greenplum-db-devel
 }
 
 function remote_access_to_gpdb() {

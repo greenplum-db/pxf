@@ -54,11 +54,8 @@ anchors:
     args:
     - -exc
     - |
-        export GROUP=HdfsSmokeTest,WritableSmokeTest "PATH=${PWD}/pxf_src/concourse/scripts:${PATH}" &&
-        export PXF_SRC="${PWD}/pxf_src" &&
-        install_gpdb.bash &&
-        su gpadmin "$(command -v initialize_gpdb.bash)" &&
-        PG_REGRESS=true test.bash
+        ln -sf "${PWD}"/gpdb_package_latest-* "${PWD}/gpdb_package"
+        GROUP=HdfsSmokeTest,WritableSmokeTest HADOOP_CLIENT=hdp PG_REGRESS=true pxf_src/concourse/scripts/test.bash
 
 ## ======================================================================
 ## RESOURCE TYPES
@@ -523,7 +520,7 @@ jobs:
       TARGET_OS_VERSION: 7
 #      TEST_ENV: ((test-env))
 
-- name: Test PXF-GP[[gp_ver]]-HDP3-SECURE (MANUAL) on RHEL7
+- name: Test PXF-GP[[gp_ver]]-HDP3-SECURE AMBARI (MANUAL) on RHEL7
   plan:
   - in_parallel:
     - get: pxf-build-dependencies
@@ -547,7 +544,7 @@ jobs:
       GOOGLE_CREDENTIALS: {{google-service-account-key}}
       GOOGLE_PROJECT_ID: {{google-project-id}}
       GOOGLE_ZONE: {{google-zone}}
-  - task: Test PXF-GP[[gp_ver]]-HDP3-SECURE (MANUAL) on RHEL7
+  - task: Test PXF-GP[[gp_ver]]-HDP3-SECURE AMBARI (MANUAL) on RHEL7
     file: pxf_src/concourse/tasks/test.yml
     image: gpdb-pxf-dev-centos7-image
     params:
@@ -1008,7 +1005,7 @@ jobs:
       - Test PXF-GP[[gp_ver]]-HDP2-NO-IMPERS on RHEL7
       - Test PXF-GP[[gp_ver]]-MAPR on RHEL7
       - Test PXF-GP[[gp_ver]]-HDP3 on RHEL7
-#      - Test PXF-GP[[gp_ver]]-HDP3-SECURE (MANUAL) on RHEL7
+#      - Test PXF-GP[[gp_ver]]-HDP3-SECURE AMBARI (MANUAL) on RHEL7
       - Test PXF-GP[[gp_ver]]-HDP2-JDK11 on RHEL7
       - Test PXF-GP[[gp_ver]]-CDH on RHEL7
       - Test PXF-GP[[gp_ver]]-S3 on RHEL7
@@ -1034,7 +1031,7 @@ jobs:
       - Test PXF-GP[[gp_ver]]-HDP2-NO-IMPERS on RHEL7
       - Test PXF-GP[[gp_ver]]-MAPR on RHEL7
       - Test PXF-GP[[gp_ver]]-HDP3 on RHEL7
-      #      - Test PXF-GP[[gp_ver]]-HDP3-SECURE (MANUAL) on RHEL7
+      #      - Test PXF-GP[[gp_ver]]-HDP3-SECURE AMBARI (MANUAL) on RHEL7
       - Test PXF-GP[[gp_ver]]-HDP2-JDK11 on RHEL7
       - Test PXF-GP[[gp_ver]]-CDH on RHEL7
       - Test PXF-GP[[gp_ver]]-S3 on RHEL7
@@ -1059,7 +1056,7 @@ jobs:
       - Test PXF-GP[[gp_ver]]-HDP2-NO-IMPERS on RHEL7
       - Test PXF-GP[[gp_ver]]-MAPR on RHEL7
       - Test PXF-GP[[gp_ver]]-HDP3 on RHEL7
-      #      - Test PXF-GP[[gp_ver]]-HDP3-SECURE (MANUAL) on RHEL7
+      #      - Test PXF-GP[[gp_ver]]-HDP3-SECURE AMBARI (MANUAL) on RHEL7
       - Test PXF-GP[[gp_ver]]-HDP2-JDK11 on RHEL7
       - Test PXF-GP[[gp_ver]]-CDH on RHEL7
       - Test PXF-GP[[gp_ver]]-S3 on RHEL7
