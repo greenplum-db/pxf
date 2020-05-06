@@ -13,7 +13,6 @@ PG_REGRESS=${PG_REGRESS:-false}
 export GOOGLE_PROJECT_ID=${GOOGLE_PROJECT_ID:-data-gpdb-ud}
 export GPHOME=${GPHOME:-/usr/local/greenplum-db-devel}
 export PXF_HOME=${GPHOME}/pxf
-export JAVA_HOME=${JAVA_HOME}
 export JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8
 export HADOOP_HEAPSIZE=512
 export YARN_HEAPSIZE=512
@@ -29,7 +28,7 @@ function run_pg_regress() {
 		#!/usr/bin/env bash
 		set -euxo pipefail
 
-		source ${GPHOME}/greenplum_path.sh
+		source ~gpadmin/.pxfrc
 
 		export GPHD_ROOT=${GPHD_ROOT}
 		export PXF_HOME=${PXF_HOME} PXF_CONF=${PXF_CONF_DIR}
@@ -61,13 +60,6 @@ function run_pg_regress() {
 }
 
 function run_pxf_automation() {
-	ln -s "${PWD}/pxf_src" ~gpadmin/pxf_src
-
-	if [[ $PG_REGRESS == true ]]; then
-		run_pg_regress
-		return $?
-	fi
-
 	# Let's make sure that automation/singlecluster directories are writeable
 	chmod a+w pxf_src/automation /singlecluster || true
 	find pxf_src/automation/tinc* -type d -exec chmod a+w {} \;
@@ -86,9 +78,6 @@ function run_pxf_automation() {
 		export GPHD_ROOT=${GPHD_ROOT}
 		export PXF_HOME=${PXF_HOME}
 		export PGPORT=${PGPORT}
-
-		# JAVA_HOME is from ~gpadmin/.pxfrc or pxf_common.bash
-		export JAVA_HOME=${JAVA_HOME}
 
 		cd pxf_src/automation
 		time make GROUP=${GROUP} test
@@ -171,7 +160,7 @@ function configure_sut() {
 function _main() {
 	# kill the sshd background process when this script exits. Otherwise, the
 	# concourse build will run forever.
-	trap 'pkill sshd' EXIT
+	# trap 'pkill sshd' EXIT
 
 	# Ping is called by gpinitsystem, which must be run by gpadmin
 	chmod u+s /bin/ping
@@ -211,25 +200,25 @@ function _main() {
 	case ${PROTOCOL} in
 		s3)
 			echo 'Using S3 protocol'
-			[[ ${PG_REGRESS} != false ]] && setup_s3_for_pg_regress
+			[[ ${PG_REGRESS} == true ]] && setup_s3_for_pg_regress
 			;;
 		minio)
 			echo 'Using Minio with S3 protocol'
 			setup_minio
-			[[ ${PG_REGRESS} != false ]] && setup_minio_for_pg_regress
+			[[ ${PG_REGRESS} == true ]] && setup_minio_for_pg_regress
 			;;
 		gs)
 			echo 'Using GS protocol'
 			echo "${GOOGLE_CREDENTIALS}" > /tmp/gsc-ci-service-account.key.json
-			[[ ${PG_REGRESS} != false ]] && setup_gs_for_pg_regress
+			[[ ${PG_REGRESS} == true ]] && setup_gs_for_pg_regress
 			;;
 		adl)
 			echo 'Using ADL protocol'
-			[[ ${PG_REGRESS} != false ]] && setup_adl_for_pg_regress
+			[[ ${PG_REGRESS} == true ]] && setup_adl_for_pg_regress
 			;;
 		wasbs)
 			echo 'Using WASBS protocol'
-			[[ ${PG_REGRESS} != false ]] && setup_wasbs_for_pg_regress
+			[[ ${PG_REGRESS} == true ]] && setup_wasbs_for_pg_regress
 			;;
 		*) # no protocol, presumably
 			if [[ ${HADOOP_CLIENT} == MAPR ]]; then
@@ -249,9 +238,16 @@ function _main() {
 	configure_sut
 
 	inflate_dependencies
-	# Run Tests
+
+	ln -s "${PWD}/pxf_src" ~gpadmin/pxf_src
+
+	# Run tests
 	if [[ -n ${GROUP} ]]; then
-		run_pxf_automation
+		if [[ $PG_REGRESS == true ]]; then
+			run_pg_regress
+		else
+			run_pxf_automation
+		fi
 	fi
 }
 

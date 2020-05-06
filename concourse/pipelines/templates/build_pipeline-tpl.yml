@@ -54,13 +54,11 @@ anchors:
     args:
     - -exc
     - |
-        limits='gpadmin soft core unlimited\ngpadmin soft nproc 131072\ngpadmin soft nofile 65536'
-        echo -e "${limits}" >> /etc/security/limits.d/gpadmin-limits.conf
         export GROUP=HdfsSmokeTest,WritableSmokeTest "PATH=${PWD}/pxf_src/concourse/scripts:${PATH}" &&
         export PXF_SRC="${PWD}/pxf_src" &&
         install_gpdb.bash &&
         su gpadmin "$(command -v initialize_gpdb.bash)" &&
-        pgregress_pxf.bash
+        PG_REGRESS=true test.bash
 
 ## ======================================================================
 ## RESOURCE TYPES

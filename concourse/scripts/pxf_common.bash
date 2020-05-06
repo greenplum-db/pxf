@@ -11,7 +11,12 @@ GOOGLE_PROJECT_ID=${GOOGLE_PROJECT_ID:-data-gpdb-ud}
 # on purpose do not call this PXF_CONF so that it is not set during pxf operations
 PXF_CONF_DIR=~gpadmin/pxf
 
-JAVA_HOME=$(find /usr/lib/jvm -name 'java-1.8.0-openjdk*' | head -1)
+if [[ -f ~/.pxfrc ]]; then
+	source <(grep JAVA_HOME ~/.pxfrc)
+	echo "JAVA_HOME found in ${HOME}/.pxfrc, set to ${JAVA_HOME}..."
+else
+	JAVA_HOME=$(find /usr/lib/jvm -name 'java-1.8.0-openjdk*' | head -1)
+fi
 
 if [[ -d gpdb_src/gpAux/extensions/pxf ]]; then
 	PXF_EXTENSIONS_DIR=gpdb_src/gpAux/extensions/pxf
