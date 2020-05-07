@@ -1080,7 +1080,7 @@ jobs:
     - get: gpdb-pxf-dev-centos6-image
     - get: singlecluster
       resource: singlecluster-hdp2
-{% for i in range(num_versions) %}
+{% for i in range(1, num_versions) %}
     - get: gpdb_package_latest-[[i]]
       resource: gpdb_rhel6_rpm_latest-[[i]]
 {% endfor %}
@@ -1120,7 +1120,7 @@ jobs:
     - get: gpdb-pxf-dev-centos7-image
     - get: singlecluster
       resource: singlecluster-hdp2
-{% for i in range(num_versions) %}
+{% for i in range(1, num_versions) %}
     - get: gpdb_package_latest-[[i]]
       resource: gpdb_rhel7_rpm_latest-[[i]]
 {% endfor %}
@@ -1160,7 +1160,7 @@ jobs:
     - get: gpdb-pxf-dev-ubuntu18-image
     - get: singlecluster
       resource: singlecluster-hdp2
-{% for i in range(num_versions) %}
+{% for i in range(1, num_versions) %}
     - get: gpdb_package_latest-[[i]]
       resource: gpdb_ubuntu18_deb_latest-[[i]]
 {% endfor %}
