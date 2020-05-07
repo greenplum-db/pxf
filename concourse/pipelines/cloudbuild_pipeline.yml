@@ -1,37 +1,11 @@
 
 ## ======================================================================
-## RESOURCE TYPES
-## ======================================================================
-resource_types:
-
-- name: gcs
-  type: docker-image
-  source:
-    repository: frodenas/gcs-resource
-
-## ======================================================================
 ## ANCHORS
 ## ======================================================================
-pxf_dev_server_image_check: &pxf_dev_server_image
-  - task: check_docker_images_and_tag
-    timeout: 45m
-    image: ccp-7
-    params:
-      GOOGLE_CREDENTIALS: {{google-service-account-key}}
-      GOOGLE_PROJECT_ID: {{google-project-id}}
-      GOOGLE_ZONE: {{google-zone}}
-      IMAGE_LIST: "gpdb5-centos6-test-pxf-hdp2 gpdb5-centos7-test-pxf-cdh gpdb5-centos7-test-pxf-hdp2 gpdb5-centos7-test-pxf-hdp3 gpdb6-centos7-test-pxf-cdh gpdb6-centos7-test-pxf-hdp2 gpdb6-centos7-test-pxf-hdp3 gpdb6-ubuntu18.04-test-pxf-hdp2"
-    config:
-      platform: linux
-      inputs:
-        - name: pxf_src
-      run:
-        path: pxf_src/concourse/scripts/check_docker_images_and_tag.bash
-
 pxf_dev_mapr_image_check: &pxf_dev_mapr_image
   - task: check_docker_images_and_tag
     timeout: 30m
-    image: ccp-7
+    image: gcloud
     params:
       GOOGLE_CREDENTIALS: {{google-service-account-key}}
       GOOGLE_PROJECT_ID: {{google-project-id}}
@@ -48,12 +22,12 @@ pxf_dev_mapr_image_check: &pxf_dev_mapr_image
 ## RESOURCES
 ## ======================================================================
 resources:
-  - name: ccp-7
+  - name: gcloud
     type: docker-image
     icon: docker
     source:
-      repository: pivotaldata/ccp
-      tag: 7
+      repository: google/cloud-sdk
+      tag: slim
 
   - name: pxf-dev-base-cloudbuild-trigger
     type: git
@@ -63,15 +37,6 @@ resources:
       uri: https://github.com/greenplum-db/pxf.git
       paths:
         - concourse/docker/pxf-dev-base
-
-  - name: dockerfile-gpdb-pxf-dev-server
-    type: git
-    icon: git
-    source:
-      branch: {{pxf-git-branch}}
-      uri: https://github.com/greenplum-db/pxf.git
-      paths:
-        - concourse/docker/pxf-dev-server
 
   - name: dockerfile-gpdb-pxf-mapr
     type: git
@@ -101,13 +66,13 @@ jobs:
     max_in_flight: 1
     plan:
     - in_parallel:
-      - get: ccp-7
+      - get: gcloud
       - get: pxf_src
         resource: pxf-dev-base-cloudbuild-trigger
       - get: base-images-trigger
         trigger: true
     - task: trigger_builds
-      image: ccp-7
+      image: gcloud
       params:
         GOOGLE_CREDENTIALS: {{google-service-account-key}}
         GOOGLE_PROJECT_ID: {{google-project-id}}
@@ -124,7 +89,7 @@ jobs:
     max_in_flight: 1
     plan:
     - in_parallel:
-      - get: ccp-7
+      - get: gcloud
       - get: pxf_src
         resource: pxf-dev-base-cloudbuild-trigger
         trigger: true
@@ -133,7 +98,7 @@ jobs:
         trigger: true
     - task: check_docker_images_and_tag
       timeout: 30m
-      image: ccp-7
+      image: gcloud
       params:
         GOOGLE_CREDENTIALS: {{google-service-account-key}}
         GOOGLE_PROJECT_ID: {{google-project-id}}
@@ -146,7 +111,7 @@ jobs:
         run:
           path: pxf_src/concourse/scripts/check_docker_images_and_tag.bash
     - task: trigger_builds
-      image: ccp-7
+      image: gcloud
       params:
         GOOGLE_CREDENTIALS: {{google-service-account-key}}
         GOOGLE_PROJECT_ID: {{google-project-id}}
@@ -159,35 +124,11 @@ jobs:
         run:
           path: pxf_src/concourse/scripts/trigger_cloudbuild.bash
 
-  - name: Check pxf-dev-server images
-    max_in_flight: 1
-    plan:
-    - in_parallel:
-      - get: ccp-7
-      - get: pxf_src
-        resource: dockerfile-gpdb-pxf-dev-server
-        trigger: true
-    - do: *pxf_dev_server_image
-
-  - name: Check pxf-dev-server images 2
-    max_in_flight: 1
-    plan:
-    - in_parallel:
-      - get: ccp-7
-      - get: pxf_src
-        resource: pxf-dev-base-cloudbuild-trigger
-        passed: [Check pxf-dev-base images]
-        trigger: true
-      - get: base-images-trigger
-        passed: [Check pxf-dev-base images]
-        trigger: true
-    - do: *pxf_dev_server_image
-
   - name: Check pxf-dev-mapr images
     max_in_flight: 1
     plan:
     - in_parallel:
-      - get: ccp-7
+      - get: gcloud
       - get: pxf_src
         resource: dockerfile-gpdb-pxf-mapr
         trigger: true
@@ -197,7 +138,7 @@ jobs:
     max_in_flight: 1
     plan:
     - in_parallel:
-      - get: ccp-7
+      - get: gcloud
       - get: pxf_src
         resource: pxf-dev-base-cloudbuild-trigger
         passed: [Check pxf-dev-base images]

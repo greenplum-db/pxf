@@ -5,185 +5,20 @@
 # Increase timeout to 40 minutes
 timeout: 2400s
 
-# Use a bigger machine type to support concurrent docker builds
-options:
-  machineType: 'N1_HIGHCPU_32'
-
 steps:
 - name: 'gcr.io/cloud-builders/gsutil'
-  id: singlecluster-cdh
-  args: ['cp', 'gs://${_SINGLECLUSTER_BUCKET}/singlecluster/CDH/singlecluster-CDH.tar.gz', 'singlecluster/CDH/singlecluster-CDH.tar.gz']
+  id: pxf-build-dependencies
+  args: ['cp', 'gs://${_SINGLECLUSTER_BUCKET}/build-dependencies/pxf-build-dependencies.tar.gz', 'build/pxf-build-dependencies.tar.gz']
+  waitFor: ['-']
 
 - name: 'gcr.io/cloud-builders/gsutil'
   id: singlecluster-hdp2
-  args: ['cp', 'gs://${_SINGLECLUSTER_BUCKET}/singlecluster/HDP2/singlecluster-HDP2.tar.gz', 'singlecluster/HDP2/singlecluster-HDP2.tar.gz']
+  args: ['cp', 'gs://${_SINGLECLUSTER_BUCKET}/singlecluster/HDP2/singlecluster-HDP2.tar.gz', 'build/singlecluster-HDP2.tar.gz']
   waitFor: ['-']
 
-- name: 'gcr.io/cloud-builders/gsutil'
-  id: singlecluster-hdp3
-  args: ['cp', 'gs://${_SINGLECLUSTER_BUCKET}/singlecluster/HDP3/singlecluster-HDP3.tar.gz', 'singlecluster/HDP3/singlecluster-HDP3.tar.gz']
-  waitFor: ['-']
-
-##############################################################################
-# GPDB 5 CentOS 6 Images
-##############################################################################
-
-# Builds the gpdb5-centos6-test-pxf-hdp2-image image
-- name: 'gcr.io/cloud-builders/docker'
-  id: gpdb5-centos6-test-pxf-hdp2-image-cache
-  entrypoint: 'bash'
-  args:
-  - '-c'
-  - |
-    docker pull gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb5-centos6-test-pxf-hdp2:latest || exit 0
-  waitFor: ['-']
-
-- name: 'gcr.io/cloud-builders/docker'
-  id: gpdb5-centos6-test-pxf-hdp2-image
-  args:
-  - 'build'
-  - '--build-arg=BASE_IMAGE=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb5-centos6-test-pxf:latest'
-  - '--tag=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb5-centos6-test-pxf-hdp2:$COMMIT_SHA'
-  - '--cache-from'
-  - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb5-centos6-test-pxf-hdp2:latest'
-  - '-f'
-  - 'concourse/docker/pxf-dev-server/Dockerfile'
-  - 'singlecluster/HDP2/'
-  waitFor:
-    - singlecluster-hdp2
-    - gpdb5-centos6-test-pxf-hdp2-image-cache
-
-##############################################################################
-# GPDB 5 CentOS 7 Images
-##############################################################################
-
-# Fetch the base image
-- name: 'gcr.io/cloud-builders/docker'
-  id: gpdb5-centos7-test-pxf-image
-  entrypoint: 'bash'
-  args:
-    - '-c'
-    - |
-      docker pull gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb5-centos7-test-pxf:latest || exit 0
-  waitFor: ['-']
-
-# Builds the gpdb5-centos7-test-pxf-cdh-image image
-- name: 'gcr.io/cloud-builders/docker'
-  id: gpdb5-centos7-test-pxf-cdh-image-cache
-  entrypoint: 'bash'
-  args:
-  - '-c'
-  - |
-    docker pull gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb5-centos7-test-pxf-cdh:latest || exit 0
-  waitFor: ['-']
-
-- name: 'gcr.io/cloud-builders/docker'
-  id: gpdb5-centos7-test-pxf-cdh-image
-  args:
-  - 'build'
-  - '--build-arg=BASE_IMAGE=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb5-centos7-test-pxf:latest'
-  - '--tag=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb5-centos7-test-pxf-cdh:$COMMIT_SHA'
-  - '--cache-from'
-  - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb5-centos7-test-pxf-cdh:latest'
-  - '-f'
-  - 'concourse/docker/pxf-dev-server/Dockerfile'
-  - 'singlecluster/CDH/'
-  waitFor:
-    - singlecluster-cdh
-    - gpdb5-centos7-test-pxf-image
-    - gpdb5-centos7-test-pxf-cdh-image-cache
-
-# Builds the gpdb5-centos7-test-pxf-hdp2-image image
-- name: 'gcr.io/cloud-builders/docker'
-  id: gpdb5-centos7-test-pxf-hdp2-image-cache
-  entrypoint: 'bash'
-  args:
-  - '-c'
-  - |
-    docker pull gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb5-centos7-test-pxf-hdp2:latest || exit 0
-  waitFor: ['-']
-
-- name: 'gcr.io/cloud-builders/docker'
-  id: gpdb5-centos7-test-pxf-hdp2-image
-  args:
-  - 'build'
-  - '--build-arg=BASE_IMAGE=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb5-centos7-test-pxf:latest'
-  - '--tag=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb5-centos7-test-pxf-hdp2:$COMMIT_SHA'
-  - '--cache-from'
-  - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb5-centos7-test-pxf-hdp2:latest'
-  - '-f'
-  - 'concourse/docker/pxf-dev-server/Dockerfile'
-  - 'singlecluster/HDP2/'
-  waitFor:
-    - singlecluster-hdp2
-    - gpdb5-centos7-test-pxf-image
-    - gpdb5-centos7-test-pxf-hdp2-image-cache
-
-# Builds the gpdb5-centos7-test-pxf-hdp3-image image
-- name: 'gcr.io/cloud-builders/docker'
-  id: gpdb5-centos7-test-pxf-hdp3-image-cache
-  entrypoint: 'bash'
-  args:
-  - '-c'
-  - |
-    docker pull gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb5-centos7-test-pxf-hdp3:latest || exit 0
-  waitFor: ['-']
-
-- name: 'gcr.io/cloud-builders/docker'
-  id: gpdb5-centos7-test-pxf-hdp3-image
-  args:
-  - 'build'
-  - '--build-arg=BASE_IMAGE=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb5-centos7-test-pxf:latest'
-  - '--tag=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb5-centos7-test-pxf-hdp3:$COMMIT_SHA'
-  - '--cache-from'
-  - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb5-centos7-test-pxf-hdp3:latest'
-  - '-f'
-  - 'concourse/docker/pxf-dev-server/Dockerfile'
-  - 'singlecluster/HDP3/'
-  waitFor:
-    - singlecluster-hdp3
-    - gpdb5-centos7-test-pxf-image
-    - gpdb5-centos7-test-pxf-hdp3-image-cache
-
-##############################################################################
+  ##############################################################################
 # GPDB 6 CentOS 7 Images
 ##############################################################################
-
-# Fetch the base image
-- name: 'gcr.io/cloud-builders/docker'
-  id: gpdb6-centos7-test-pxf-image
-  entrypoint: 'bash'
-  args:
-    - '-c'
-    - |
-      docker pull gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-test-pxf:latest || exit 0
-  waitFor: ['-']
-
-# Builds the gpdb6-centos7-test-pxf-cdh-image image
-- name: 'gcr.io/cloud-builders/docker'
-  id: gpdb6-centos7-test-pxf-cdh-image-cache
-  entrypoint: 'bash'
-  args:
-  - '-c'
-  - |
-    docker pull gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-test-pxf-cdh:latest || exit 0
-  waitFor: ['-']
-
-- name: 'gcr.io/cloud-builders/docker'
-  id: gpdb6-centos7-test-pxf-cdh-image
-  args:
-  - 'build'
-  - '--build-arg=BASE_IMAGE=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-test-pxf:latest'
-  - '--tag=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-test-pxf-cdh:$COMMIT_SHA'
-  - '--cache-from'
-  - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-test-pxf-cdh:latest'
-  - '-f'
-  - 'concourse/docker/pxf-dev-server/Dockerfile'
-  - 'singlecluster/CDH/'
-  waitFor:
-    - singlecluster-cdh
-    - gpdb6-centos7-test-pxf-image
-    - gpdb6-centos7-test-pxf-cdh-image-cache
 
 # Builds the gpdb6-centos7-test-pxf-hdp2-image image
 - name: 'gcr.io/cloud-builders/docker'
@@ -205,74 +40,19 @@ steps:
   - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-test-pxf-hdp2:latest'
   - '-f'
   - 'concourse/docker/pxf-dev-server/Dockerfile'
-  - 'singlecluster/HDP2/'
+  - 'build/'
   waitFor:
+    - pxf-build-dependencies
     - singlecluster-hdp2
-    - gpdb6-centos7-test-pxf-image
     - gpdb6-centos7-test-pxf-hdp2-image-cache
 
-# Builds the gpdb6-centos7-test-pxf-hdp3-image image
+# Tag the latest version as :latest. We use gcr.io/cloud-builders/docker here
 - name: 'gcr.io/cloud-builders/docker'
-  id: gpdb6-centos7-test-pxf-hdp3-image-cache
-  entrypoint: 'bash'
-  args:
-  - '-c'
-  - |
-    docker pull gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-test-pxf-hdp3:latest || exit 0
-  waitFor: ['-']
-
-- name: 'gcr.io/cloud-builders/docker'
-  id: gpdb6-centos7-test-pxf-hdp3-image
-  args:
-  - 'build'
-  - '--build-arg=BASE_IMAGE=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-test-pxf:latest'
-  - '--tag=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-test-pxf-hdp3:$COMMIT_SHA'
-  - '--cache-from'
-  - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-test-pxf-hdp3:latest'
-  - '-f'
-  - 'concourse/docker/pxf-dev-server/Dockerfile'
-  - 'singlecluster/HDP3/'
-  waitFor:
-    - singlecluster-hdp3
-    - gpdb6-centos7-test-pxf-image
-    - gpdb6-centos7-test-pxf-hdp3-image-cache
-
-##############################################################################
-# GPDB 6 Ubuntu 18.04 Images
-##############################################################################
-
-# Builds the gpdb6-ubuntu18.04-test-pxf-hdp2-image image
-- name: 'gcr.io/cloud-builders/docker'
-  id: gpdb6-ubuntu18.04-test-pxf-hdp2-image-cache
-  entrypoint: 'bash'
-  args:
-  - '-c'
-  - |
-    docker pull gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-ubuntu18.04-test-pxf-hdp2:latest || exit 0
-  waitFor: ['-']
-
-- name: 'gcr.io/cloud-builders/docker'
-  id: gpdb6-ubuntu18.04-test-pxf-hdp2-image
-  args:
-  - 'build'
-  - '--build-arg=BASE_IMAGE=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-ubuntu18.04-test-pxf:latest'
-  - '--tag=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-ubuntu18.04-test-pxf-hdp2:$COMMIT_SHA'
-  - '--cache-from'
-  - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-ubuntu18.04-test-pxf-hdp2:latest'
-  - '-f'
-  - 'concourse/docker/pxf-dev-server/Dockerfile'
-  - 'singlecluster/HDP2/'
-  waitFor:
-    - singlecluster-hdp2
-    - gpdb6-ubuntu18.04-test-pxf-hdp2-image-cache
+  args: ['tag', 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-test-pxf-hdp2:$COMMIT_SHA', 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-test-pxf-hdp2']
+  wait_for:
+    - gpdb6-centos7-test-pxf-hdp2-image
 
 # Push images to Cloud Build to Container Registry
 images:
-- 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb5-centos6-test-pxf-hdp2:$COMMIT_SHA'
-- 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb5-centos7-test-pxf-cdh:$COMMIT_SHA'
-- 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb5-centos7-test-pxf-hdp2:$COMMIT_SHA'
-- 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb5-centos7-test-pxf-hdp3:$COMMIT_SHA'
-- 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-test-pxf-cdh:$COMMIT_SHA'
-- 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-test-pxf-hdp2:$COMMIT_SHA'
-- 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-test-pxf-hdp3:$COMMIT_SHA'
-- 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-ubuntu18.04-test-pxf-hdp2:$COMMIT_SHA'
+- 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-dev-pxf-hdp2'
+- 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-dev-pxf-hdp2:$COMMIT_SHA'
