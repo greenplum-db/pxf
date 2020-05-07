@@ -175,33 +175,33 @@ resources:
     tag: 7
 
 ## ---------- Product Packages ----------
-{% for version in range(num_versions) %}
+{% for i in range(num_versions) %}
 {% if gp_ver == 5 %}
-- name: gpdb_rhel6_rpm_latest-[[version]]
+- name: gpdb_rhel6_rpm_latest-[[i]]
   type: gcs
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pivnet-artifacts
     json_key: ((data-gpdb-ud-google-json-key))
-    regexp: latest-[[version]]_gpdb5/greenplum-db-(.*)-rhel6-x86_64.rpm
+    regexp: latest-[[i]]_gpdb5/greenplum-db-(.*)-rhel6-x86_64.rpm
 {% endif %}
 
-- name: gpdb_rhel7_rpm_latest-[[version]]
+- name: gpdb_rhel7_rpm_latest-[[i]]
   type: gcs
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pivnet-artifacts
     json_key: ((data-gpdb-ud-google-json-key))
-    regexp: latest-[[version]]_gpdb[[gp_ver]]/greenplum-db-(.*)-rhel7-x86_64.rpm
+    regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-(.*)-rhel7-x86_64.rpm
 
 {% if gp_ver == 6 %}
-- name: gpdb_ubuntu18_deb_latest-[[version]]
+- name: gpdb_ubuntu18_deb_latest-[[i]]
   type: gcs
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pivnet-artifacts
     json_key: ((data-gpdb-ud-google-json-key))
-    regexp: latest-[[version]]_gpdb6/greenplum-db-(.*)-ubuntu18.04-amd64.deb
+    regexp: latest-[[i]]_gpdb6/greenplum-db-(.*)-ubuntu18.04-amd64.deb
 {% endif %}
 {% endfor %}
 
@@ -1071,7 +1071,6 @@ jobs:
 - name: Test PXF-GP5 Backward Compatibility on RHEL6
   plan:
   - in_parallel:
-    - get: pxf-build-dependencies
     - get: pxf_src
       passed: [Compatibility Gate for PXF-GP5]
       trigger: true
@@ -1081,25 +1080,26 @@ jobs:
     - get: gpdb-pxf-dev-centos6-image
     - get: singlecluster
       resource: singlecluster-hdp2
-{% for version in range(num_versions) %}
-    - get: gpdb_package_latest-[[version]]
-      resource: gpdb_rhel6_rpm_latest-[[version]]
+{% for i in range(num_versions) %}
+    - get: gpdb_package_latest-[[i]]
+      resource: gpdb_rhel6_rpm_latest-[[i]]
 {% endfor %}
+{% for i in range(1, num_versions) %}
+{% if (i - 1) % 5 == 0 %}
   - in_parallel:
-{% for version in range(num_versions) %}
-    - task: Test Against Greenplum Latest - [[version]] RHEL6
+{% endif %}
+    - task: Test Against Greenplum Latest - [[i]] RHEL6
       image: gpdb-pxf-dev-centos6-image
       config:
         platform: linux
         <<: *run_regress_anchor
         inputs:
-        - name: gpdb_package_latest-[[version]]
-        - name: pxf-build-dependencies
+        - name: gpdb_package_latest-[[i]]
         - name: pxf_src
         - name: pxf_tarball
         - name: singlecluster
         params:
-          GPDB_PKG_DIR: gpdb_package_latest-[[version]]
+          GPDB_PKG_DIR: gpdb_package_latest-[[i]]
           GROUP: HdfsSmokeTest,WritableSmokeTest
           HADOOP_CLIENT: hdp
           IMPERSONATION: true
@@ -1111,7 +1111,6 @@ jobs:
 - name: Test PXF-GP[[gp_ver]] Backward Compatibility on RHEL7
   plan:
   - in_parallel:
-    - get: pxf-build-dependencies
     - get: pxf_src
       passed: [Compatibility Gate for PXF-GP[[gp_ver]]]
       trigger: true
@@ -1121,25 +1120,26 @@ jobs:
     - get: gpdb-pxf-dev-centos7-image
     - get: singlecluster
       resource: singlecluster-hdp2
-{% for version in range(num_versions) %}
-    - get: gpdb_package_latest-[[version]]
-      resource: gpdb_rhel7_rpm_latest-[[version]]
+{% for i in range(num_versions) %}
+    - get: gpdb_package_latest-[[i]]
+      resource: gpdb_rhel7_rpm_latest-[[i]]
 {% endfor %}
+{% for i in range(1, num_versions) %}
+{% if (i - 1) % 5 == 0 %}
   - in_parallel:
-{% for version in range(num_versions) %}
-    - task: Test Against Greenplum Latest - [[version]] RHEL7
+{% endif %}
+    - task: Test Against Greenplum Latest - [[i]] RHEL7
       image: gpdb-pxf-dev-centos7-image
       config:
         platform: linux
         <<: *run_regress_anchor
         inputs:
-        - name: gpdb_package_latest-[[version]]
-        - name: pxf-build-dependencies
+        - name: gpdb_package_latest-[[i]]
         - name: pxf_src
         - name: pxf_tarball
         - name: singlecluster
         params:
-          GPDB_PKG_DIR: gpdb_package_latest-[[version]]
+          GPDB_PKG_DIR: gpdb_package_latest-[[i]]
           GROUP: HdfsSmokeTest,WritableSmokeTest
           HADOOP_CLIENT: hdp
           IMPERSONATION: true
@@ -1151,7 +1151,6 @@ jobs:
 - name: Test PXF-GP6 Backward Compatibility on Ubuntu18
   plan:
   - in_parallel:
-    - get: pxf-build-dependencies
     - get: pxf_src
       passed: [Compatibility Gate for PXF-GP6]
       trigger: true
@@ -1161,25 +1160,26 @@ jobs:
     - get: gpdb-pxf-dev-ubuntu18-image
     - get: singlecluster
       resource: singlecluster-hdp2
-{% for version in range(num_versions) %}
-    - get: gpdb_package_latest-[[version]]
-      resource: gpdb_ubuntu18_deb_latest-[[version]]
+{% for i in range(num_versions) %}
+    - get: gpdb_package_latest-[[i]]
+      resource: gpdb_ubuntu18_deb_latest-[[i]]
 {% endfor %}
+{% for i in range(1, num_versions) %}
+{% if (i - 1) % 5 == 0 %}
   - in_parallel:
-{% for version in range(num_versions) %}
-    - task: Test Against Greenplum Latest - [[version]] Ubuntu18
+{% endif %}
+    - task: Test Against Greenplum Latest - [[i]] Ubuntu18
       image: gpdb-pxf-dev-ubuntu18-image
       config:
         platform: linux
         <<: *run_regress_anchor
         inputs:
-        - name: gpdb_package_latest-[[version]]
-        - name: pxf-build-dependencies
+        - name: gpdb_package_latest-[[i]]
         - name: pxf_src
         - name: pxf_tarball
         - name: singlecluster
         params:
-          GPDB_PKG_DIR: gpdb_package_latest-[[version]]
+          GPDB_PKG_DIR: gpdb_package_latest-[[i]]
           GROUP: HdfsSmokeTest,WritableSmokeTest
           HADOOP_CLIENT: hdp
           IMPERSONATION: true
