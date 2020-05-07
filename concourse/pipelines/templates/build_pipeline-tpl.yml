@@ -1,5 +1,6 @@
 ---
 {# change num_versions in Makefile to download more Greenplum versions #}
+{% set max_concurrent_bc_tasks = 3 %}
 {% set num_versions = num_gpdb5_versions %}
 {% if gp_ver == 6 %}
   {% set num_versions = num_gpdb6_versions %}
@@ -1085,7 +1086,7 @@ jobs:
       resource: gpdb_rhel6_rpm_latest-[[i]]
 {% endfor %}
 {% for i in range(1, num_versions) %}
-{% if (i - 1) % 5 == 0 %}
+{% if (i - 1) % max_concurrent_bc_tasks == 0 %}
   - in_parallel:
 {% endif %}
     - task: Test Against Greenplum Latest - [[i]] RHEL6
@@ -1125,7 +1126,7 @@ jobs:
       resource: gpdb_rhel7_rpm_latest-[[i]]
 {% endfor %}
 {% for i in range(1, num_versions) %}
-{% if (i - 1) % 5 == 0 %}
+{% if (i - 1) % max_concurrent_bc_tasks == 0 %}
   - in_parallel:
 {% endif %}
     - task: Test Against Greenplum Latest - [[i]] RHEL7
@@ -1165,7 +1166,7 @@ jobs:
       resource: gpdb_ubuntu18_deb_latest-[[i]]
 {% endfor %}
 {% for i in range(1, num_versions) %}
-{% if (i - 1) % 5 == 0 %}
+{% if (i - 1) % max_concurrent_bc_tasks == 0 %}
   - in_parallel:
 {% endif %}
     - task: Test Against Greenplum Latest - [[i]] Ubuntu18
