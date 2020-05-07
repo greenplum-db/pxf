@@ -23,7 +23,7 @@ pxf_dev_mapr_image_check: &pxf_dev_mapr_image
 ## ======================================================================
 resources:
   - name: gcloud
-    type: docker-image
+    type: registry-image
     icon: docker
     source:
       repository: google/cloud-sdk
