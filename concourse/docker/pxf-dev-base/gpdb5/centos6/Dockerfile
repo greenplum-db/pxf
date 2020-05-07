@@ -42,6 +42,10 @@ RUN ssh-keygen -t rsa -N "" -f /root/.ssh/id_rsa \
     && chown -R gpadmin:gpadmin /home/gpadmin/.ssh \
     # remove any java customization
     && rm -rf /etc/profile.d/java.sh \
+    # configure gpadmin limits
+    && echo >> /etc/security/limits.d/gpadmin-limits.conf 'gpadmin soft core unlimited' \
+    && echo >> /etc/security/limits.d/gpadmin-limits.conf 'gpadmin soft nproc 131072' \
+    && echo >> /etc/security/limits.d/gpadmin-limits.conf 'gpadmin soft nofile 65536' \
     # create .pxfrc
     && echo >> ~gpadmin/.pxfrc 'export PGPORT=5432' \
     && echo >> ~gpadmin/.pxfrc 'export GOPATH=/opt/go' \
