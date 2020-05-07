@@ -54,7 +54,7 @@ RUN locale-gen en_US.UTF-8 \
     && echo "gpadmin:password" | chpasswd 2> /dev/null \
     && { ssh-keyscan localhost; ssh-keyscan 0.0.0.0; } >> /home/gpadmin/.ssh/known_hosts \
     && chown -R gpadmin:gpadmin /home/gpadmin \
-    # install dependencies
+    # install dependencies as gpadmin
     && su gpadmin -c "pip install psi paramiko --no-cache-dir" \
     # create .pxfrc
     && echo >> ~gpadmin/.pxfrc 'export LANG=en_US.UTF-8' \
@@ -64,7 +64,7 @@ RUN locale-gen en_US.UTF-8 \
     && echo >> ~gpadmin/.pxfrc 'export PXF_HOME=${GPHOME}/pxf' \
     && echo >> ~gpadmin/.pxfrc 'export PXF_CONF=/home/gpadmin/pxf' \
     && echo >> ~gpadmin/.pxfrc 'export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-amd64' \
-    && echo >> ~gpadmin/.pxfrc 'export PATH=${PXF_HOME}/bin:${GOPATH}/bin:/usr/local/go/bin:$PATH' \
+    && echo >> ~gpadmin/.pxfrc 'export PATH=${GPHOME}/bin:${PXF_HOME}/bin:${GOPATH}/bin:/usr/local/go/bin:$PATH' \
     && ln -s ~gpadmin/.pxfrc ~root \
     && echo >> ~gpadmin/.bashrc 'source ~/.pxfrc' \
     && echo >> ~gpadmin/.bash_profile '[[ -f ~/.bashrc ]] && . ~/.bashrc' \
