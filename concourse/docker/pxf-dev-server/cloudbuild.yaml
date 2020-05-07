@@ -54,5 +54,5 @@ steps:
 
 # Push images to Cloud Build to Container Registry
 images:
-- 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-dev-pxf-hdp2'
-- 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-dev-pxf-hdp2:$COMMIT_SHA'
+- 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-test-pxf-hdp2'
+- 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-test-pxf-hdp2:$COMMIT_SHA'

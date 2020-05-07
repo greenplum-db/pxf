@@ -4,9 +4,9 @@ FROM ${BASE_IMAGE} as scratch
 
 ADD singlecluster-*.tar.gz /
 
-RUN cd / && mv singlecluster-* singlecluster && chmod a+w singlecluster
-
 ADD pxf-build-dependencies.tar.gz /tmp/build-dependencies
+
+RUN cd / && mv singlecluster-* singlecluster && chmod a+w singlecluster
 
 FROM ${BASE_IMAGE}
 
