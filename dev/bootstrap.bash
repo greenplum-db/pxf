@@ -49,8 +49,8 @@ GPH=/usr/local/greenplum-db
 if [[ -d ${GPH}/pxf ]]; then
     rm -rf ${GPH}/pxf
     rm ${GPH}/lib/postgresql/pxf.so
-	rm ${GPH}/share/postgresql/extension/pxf.control
-	rm ${GPH}/share/postgresql/extension/pxf*.sql
+    rm ${GPH}/share/postgresql/extension/pxf.control
+    rm ${GPH}/share/postgresql/extension/pxf*.sql
 fi
 
 su - gpadmin -c env

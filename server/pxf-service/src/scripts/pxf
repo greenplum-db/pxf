@@ -365,6 +365,20 @@ function doReset()
     echo "Finished cleaning PXF instance directories"
 }
 
+function installExternalTableExtension()
+{
+    if [[ -d ${parent_script_dir}/gpextable ]]; then
+        if [[ -z "${GPHOME}" ]]; then
+            echo 'WARNING: environment variable GPHOME is not set, skipping install of Greenplum External Table PXF Extension'
+        elif [[ ! -f ${GPHOME}/greenplum_path.sh ]]; then
+            echo "WARNING: environment variable GPHOME (${GPHOME}) must be set to a valid Greenplum installation, skipping install of Greenplum External Table PXF Extension'"
+        else
+            echo "Installing Greenplum External Table PXF Extension into ${GPHOME}"
+            cp -av ${parent_script_dir}/gpextable/* ${GPHOME}
+        fi
+    fi
+}
+
 # doInit handles the init command
 function doInit()
 {
@@ -384,6 +398,7 @@ function doInit()
     deployWebapp || return 1
     createLogsDir || return 1
     createRunDir  || return 1
+    installExternalTableExtension || return 1
 }
 
 function editPxfEnvSh()

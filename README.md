@@ -10,8 +10,6 @@ Introduction
 PXF is an extensible framework that allows a distributed database like Greenplum to query external data files, whose metadata is not managed by the database.
 PXF includes built-in connectors for accessing data that exists inside HDFS files, Hive tables, HBase tables, JDBC-accessible databases and more.
 Users can also create their own connectors to other data storage or processing engines.
-To create these connectors using JAVA plugins, see the PXF API and Reference Guide on GPDB.
-
 
 Repository Contents
 ================
@@ -63,7 +61,7 @@ ln -s ~/<git_repos_root> ~/workspace
 
 To build PXF, you must have:
 
-1. GCC compiler, `make` system, `unzip` package 
+1. GCC compiler, `make` system, `unzip` package, `maven` for running integration tests
 2. Installed Greenplum DB
     
     Either download and install Greenplum RPM or build Greenplum from the source by following instructions in the [GPDB README](https://github.com/greenplum-db/gpdb).

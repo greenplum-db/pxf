@@ -5,8 +5,11 @@
 # make TEST=<class>#<method> ===> run specific <method> from <class>.class
 # make OFFLINE=true ===> run using only cache
 
+SHELL := bash
+
 UNAME_S := $(shell uname -s)
 MAVEN_TEST_OPTS+= -B -e
+PXF_TMP_LIB := $(HOME)/automation_tmp_lib
 
 ifneq "$(TEST)" ""
 	MAVEN_TEST_OPTS+= -Dtest=$(TEST)
@@ -16,10 +19,7 @@ ifneq "$(GROUP)" ""
 	MAVEN_TEST_OPTS+= -Dgroups=$(GROUP)
 endif
 
-ifeq "$(PXF_HOME)" ""
-	PXF_HOME=$(GPHOME)/pxf
-endif
-MAVEN_TEST_OPTS+= -DPXF_TMP_LIB=$(PXF_HOME)/tmp "-Djava.awt.headless=true"
+MAVEN_TEST_OPTS+= "-Djava.awt.headless=true"
 
 ifneq "$(OFFLINE)" "true"
 	MAVEN_TEST_OPTS+= -U
@@ -85,23 +85,30 @@ MVN=mvn
 
 all: test
 
-symlink_pxf_jars:
+check-env:
+	@if [ -z "$(PXF_HOME)" ]; then echo 'ERROR: PXF_HOME must be set'; exit 1; fi
+
+symlink_pxf_jars: check-env
 	@if [ -d "$(PXF_HOME)/lib" ]; then \
-		rm -rf $(PXF_HOME)/tmp && \
-		mkdir -p $(PXF_HOME)/tmp && \
-		cd $(PXF_HOME)/tmp && \
-		for X in $(PXF_HOME)/lib/pxf-*-[0-9]*.jar; do \
-			ln -sf $$X `echo \`basename $$X\` | sed -E -e 's/-[0-9]+[a-zA-Z0-9\.-]*.jar/.jar/'`; \
+		rm -rf $(PXF_TMP_LIB) && \
+		mkdir -p $(PXF_TMP_LIB) && \
+		for jar in $(PXF_HOME)/lib/pxf-*.jar; do \
+			jar_name="$${jar##*/}"; \
+			if [[ $${jar_name} =~ ^pxf-[A-Za-z0-9]+(-[0-9.]+.*).jar$$ ]]; then \
+				link=$(PXF_TMP_LIB)/$${jar_name/$${BASH_REMATCH[1]}/}; \
+				echo "creating link $${link} -> $${jar}"; \
+				ln -sf "$${jar}" "$${link}"; \
+			fi; \
 		done; \
-		touch $(PXF_HOME)/tmp/pxf-extras.jar; \
+		touch $(PXF_TMP_LIB)/pxf-extras.jar; \
 	fi
 
-test: clean-logs symlink_pxf_jars sync_cloud_configs sync_jdbc_config
+test: check-env clean-logs symlink_pxf_jars sync_cloud_configs sync_jdbc_config
 	$(MVN) $(MAVEN_TEST_OPTS) ${MAVEN_DEBUG_OPTS} test
 
 clean: clean-logs
 	$(MVN) $(MAVEN_TEST_OPTS) clean
-	@rm -rf $(PXF_HOME)/tmp
+	@rm -rf $(PXF_TMP_LIB)
 
 clean-logs:
 	@rm -rf automation_logs/* tincrepo/main/log/* run-results/*

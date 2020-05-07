@@ -18,10 +18,6 @@ Prefix: /usr/local/%{name}
 # Java server can be installed on a new node, only bash is needed for management scripts
 Requires: bash
 
-%if 0%{?rhel} == 7
-Requires: openssl-libs
-%endif
-
 %description
 PXF is an extensible framework that allows a distributed database like Greenplum to query external data files,
 whose metadata is not managed by the database. PXF includes built-in connectors for accessing data that exists

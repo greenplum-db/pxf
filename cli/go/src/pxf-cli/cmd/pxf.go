@@ -14,6 +14,7 @@ import (
 type envVar string
 
 const (
+	gpHome   envVar = "GPHOME"
 	pxfHome  envVar = "PXF_HOME"
 	pxfConf  envVar = "PXF_CONF"
 	javaHome envVar = "JAVA_HOME"
@@ -69,6 +70,9 @@ func (cmd *command) GetFunctionToExecute() (func(string) string, error) {
 		}, nil
 	default:
 		pxfCommand := ""
+		if inputs[gpHome] != "" {
+			pxfCommand += "GPHOME=" + inputs[gpHome] + " "
+		}
 		if inputs[pxfConf] != "" {
 			pxfCommand += "PXF_CONF=" + inputs[pxfConf] + " "
 		}
@@ -114,7 +118,7 @@ var (
 			err:     "PXF failed to initialize on %d out of %d host%s\n",
 		},
 		warn:       false,
-		envVars:    []envVar{pxfHome, pxfConf, javaHome},
+		envVars:    []envVar{gpHome, pxfHome, pxfConf, javaHome},
 		whereToRun: cluster.ON_REMOTE | cluster.ON_HOSTS | cluster.INCLUDE_MASTER | cluster.INCLUDE_MIRRORS,
 	}
 	StartCommand = command{
