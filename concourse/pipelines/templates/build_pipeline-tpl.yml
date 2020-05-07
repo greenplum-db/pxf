@@ -1073,8 +1073,9 @@ jobs:
   plan:
   - in_parallel:
     - get: pxf_src
-      # passed: [Compatibility Gate for PXF-GP5]
-      passed: [Build PXF-GP5 on RHEL6]
+      passed: [Compatibility Gate for PXF-GP5]
+      # for faster iteration run BC right after build:
+      # passed: [Build PXF-GP5 on RHEL6]
       trigger: true
     - get: pxf_tarball
       resource: pxf_tarball_gpdb_rhel6
@@ -1117,8 +1118,9 @@ jobs:
   plan:
   - in_parallel:
     - get: pxf_src
-      # passed: [Compatibility Gate for PXF-GP[[gp_ver]]]
-      passed: [Build PXF-GP[[gp_ver]] on RHEL7]
+      passed: [Compatibility Gate for PXF-GP[[gp_ver]]]
+      # for faster iteration run BC right after build:
+      # passed: [Build PXF-GP[[gp_ver]] on RHEL7]
       trigger: true
     - get: pxf_tarball
       passed: [Compatibility Gate for PXF-GP[[gp_ver]]]
@@ -1161,8 +1163,9 @@ jobs:
   plan:
   - in_parallel:
     - get: pxf_src
-      # passed: [Compatibility Gate for PXF-GP6]
-      passed: [Build PXF-GP6 on Ubuntu18]
+      passed: [Compatibility Gate for PXF-GP6]
+      # for faster iteration run BC right after build:
+      # passed: [Build PXF-GP6 on Ubuntu18]
       trigger: true
     - get: pxf_tarball
       passed: [Compatibility Gate for PXF-GP6]
