@@ -1085,27 +1085,28 @@ jobs:
     - get: gpdb_package_latest-[[i]]
       resource: gpdb_rhel6_rpm_latest-[[i]]
 {% endfor %}
-{% for i in range(1, num_versions) %}
-{% if (i - 1) % max_concurrent_bc_tasks == 0 %}
   - in_parallel:
-{% endif %}
-    - task: Test Against Greenplum Latest - [[i]] RHEL6
-      image: gpdb-pxf-dev-centos6-image
-      config:
-        platform: linux
-        <<: *run_regress_anchor
-        inputs:
-        - name: gpdb_package_latest-[[i]]
-        - name: pxf_src
-        - name: pxf_tarball
-        - name: singlecluster
-        params:
-          GPDB_PKG_DIR: gpdb_package_latest-[[i]]
-          GROUP: HdfsSmokeTest,WritableSmokeTest
-          HADOOP_CLIENT: hdp
-          IMPERSONATION: true
-          PGPORT: 5432
-          PG_REGRESS: true
+      limit: [[max_concurrent_bc_tasks]]
+      fail_fast: false
+      steps:
+{% for i in range(1, num_versions) %}
+      - task: Test Against Greenplum Latest - [[i]] RHEL6
+        image: gpdb-pxf-dev-centos6-image
+        config:
+          platform: linux
+          <<: *run_regress_anchor
+          inputs:
+          - name: gpdb_package_latest-[[i]]
+          - name: pxf_src
+          - name: pxf_tarball
+          - name: singlecluster
+          params:
+            GPDB_PKG_DIR: gpdb_package_latest-[[i]]
+            GROUP: HdfsSmokeTest,WritableSmokeTest
+            HADOOP_CLIENT: hdp
+            IMPERSONATION: true
+            PGPORT: 5432
+            PG_REGRESS: true
 {% endfor %}
 {% endif %}
 
@@ -1125,27 +1126,28 @@ jobs:
     - get: gpdb_package_latest-[[i]]
       resource: gpdb_rhel7_rpm_latest-[[i]]
 {% endfor %}
-{% for i in range(1, num_versions) %}
-{% if (i - 1) % max_concurrent_bc_tasks == 0 %}
   - in_parallel:
-{% endif %}
-    - task: Test Against Greenplum Latest - [[i]] RHEL7
-      image: gpdb-pxf-dev-centos7-image
-      config:
-        platform: linux
-        <<: *run_regress_anchor
-        inputs:
-        - name: gpdb_package_latest-[[i]]
-        - name: pxf_src
-        - name: pxf_tarball
-        - name: singlecluster
-        params:
-          GPDB_PKG_DIR: gpdb_package_latest-[[i]]
-          GROUP: HdfsSmokeTest,WritableSmokeTest
-          HADOOP_CLIENT: hdp
-          IMPERSONATION: true
-          PGPORT: 5432
-          PG_REGRESS: true
+      limit: [[max_concurrent_bc_tasks]]
+      fail_fast: false
+      steps:
+{% for i in range(1, num_versions) %}
+      - task: Test Against Greenplum Latest - [[i]] RHEL7
+        image: gpdb-pxf-dev-centos7-image
+        config:
+          platform: linux
+          <<: *run_regress_anchor
+          inputs:
+          - name: gpdb_package_latest-[[i]]
+          - name: pxf_src
+          - name: pxf_tarball
+          - name: singlecluster
+          params:
+            GPDB_PKG_DIR: gpdb_package_latest-[[i]]
+            GROUP: HdfsSmokeTest,WritableSmokeTest
+            HADOOP_CLIENT: hdp
+            IMPERSONATION: true
+            PGPORT: 5432
+            PG_REGRESS: true
 {% endfor %}
 
 {% if gp_ver == 6 %}
@@ -1165,27 +1167,28 @@ jobs:
     - get: gpdb_package_latest-[[i]]
       resource: gpdb_ubuntu18_deb_latest-[[i]]
 {% endfor %}
-{% for i in range(1, num_versions) %}
-{% if (i - 1) % max_concurrent_bc_tasks == 0 %}
   - in_parallel:
-{% endif %}
-    - task: Test Against Greenplum Latest - [[i]] Ubuntu18
-      image: gpdb-pxf-dev-ubuntu18-image
-      config:
-        platform: linux
-        <<: *run_regress_anchor
-        inputs:
-        - name: gpdb_package_latest-[[i]]
-        - name: pxf_src
-        - name: pxf_tarball
-        - name: singlecluster
-        params:
-          GPDB_PKG_DIR: gpdb_package_latest-[[i]]
-          GROUP: HdfsSmokeTest,WritableSmokeTest
-          HADOOP_CLIENT: hdp
-          IMPERSONATION: true
-          PGPORT: 5432
-          PG_REGRESS: true
+      limit: [[max_concurrent_bc_tasks]]
+      fail_fast: false
+      steps:
+{% for i in range(1, num_versions) %}
+      - task: Test Against Greenplum Latest - [[i]] Ubuntu18
+        image: gpdb-pxf-dev-ubuntu18-image
+        config:
+          platform: linux
+          <<: *run_regress_anchor
+          inputs:
+          - name: gpdb_package_latest-[[i]]
+          - name: pxf_src
+          - name: pxf_tarball
+          - name: singlecluster
+          params:
+            GPDB_PKG_DIR: gpdb_package_latest-[[i]]
+            GROUP: HdfsSmokeTest,WritableSmokeTest
+            HADOOP_CLIENT: hdp
+            IMPERSONATION: true
+            PGPORT: 5432
+            PG_REGRESS: true
 {% endfor %}
 {% endif %}
 

@@ -20,7 +20,7 @@ export GPHD_ROOT=/singlecluster
 if [[ ${HADOOP_CLIENT} == MAPR ]]; then
 	export GPHD_ROOT=/opt/mapr
 fi
-export PGPORT=${PGPORT:-15432}
+export PGPORT=${PGPORT:-5432}
 
 function run_pg_regress() {
 	# run desired groups (below we replace commas with spaces in $GROUPS)
@@ -134,7 +134,7 @@ function setup_hadoop() {
 
 function configure_sut() {
 	AMBARI_DIR=$(find /tmp/build/ -name ambari_env_files)
-	if [[ -n $AMBARI_DIR  ]]; then
+	if [[ -n $AMBARI_DIR ]]; then
 		REALM=$(< "$AMBARI_DIR"/REALM)
 		HADOOP_IP=$(grep < "$AMBARI_DIR"/etc_hostfile ambari-1 | awk '{print $1}')
 		HADOOP_USER=$(< "$AMBARI_DIR"/HADOOP_USER)
@@ -173,11 +173,6 @@ function _main() {
 
 	# Install GPDB
 	install_gpdb_package
-	cat <<-EOF >> /etc/security/limits.d/gpadmin-limits.conf
-		gpadmin soft core unlimited
-		gpadmin soft nproc 131072
-		gpadmin soft nofile 65536
-	EOF
 
 	# Install PXF
 	install_pxf_tarball
@@ -192,7 +187,7 @@ function _main() {
         fi
 
 	# initialize GPDB as gpadmin user
-	su gpadmin -c ${CWDIR}/initialize_gpdb.bash
+	su gpadmin -c "${CWDIR}/initialize_gpdb.bash"
 
 	add_remote_user_access_for_gpdb testuser
 	init_and_configure_pxf_server
