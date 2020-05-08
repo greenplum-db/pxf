@@ -4,16 +4,14 @@ set -exuo pipefail
 
 CWDIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
+export GPHOME=/usr/local/greenplum-db-devel
 # whether PXF is being installed from a new component-based packaging
 PXF_COMPONENT=${PXF_COMPONENT:=false}
 if [[ ${PXF_COMPONENT} == "true" ]]; then
-    GPHOME=/usr/local/greenplum-db
     PXF_HOME=/usr/local/pxf-gp${GP_VER}
 else
-    GPHOME=/usr/local/greenplum-db-devel
     PXF_HOME=${GPHOME}/pxf
 fi
-export GPHOME
 export PXF_HOME
 
 # shellcheck source=/dev/null
