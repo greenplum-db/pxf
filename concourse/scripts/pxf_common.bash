@@ -179,6 +179,8 @@ function install_gpdb_package() {
 	: "${pkg_file#*greenplum-db-}"
 	version=${_%%-*}
 	ln -sf "/usr/local/greenplum-db-${version}" /usr/local/greenplum-db-devel
+	# change permissions to gpadmin
+	chown -R gpadmin:gpadmin /usr/local/greenplum-db*
 }
 
 function remote_access_to_gpdb() {
