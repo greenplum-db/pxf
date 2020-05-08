@@ -300,6 +300,7 @@ jobs:
     image: gpdb[[gp_ver]]-pxf-dev-centos6-image
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+      GP_VER: [[gp_ver]]
       GROUP: gpdb,proxy,profile
       SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
       TARGET_OS: centos
@@ -349,6 +350,7 @@ jobs:
     image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+      GP_VER: [[gp_ver]]
       GROUP: gpdb,proxy,profile
       SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
       TARGET_OS: centos
@@ -398,6 +400,7 @@ jobs:
     image: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+      GP_VER: [[gp_ver]]
       GROUP: gpdb,proxy,profile
       SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
       TARGET_OS: ubuntu
@@ -415,16 +418,16 @@ jobs:
       passed:
       - Test PXF-GP[[gp_ver]]-HDP2 on RHEL7
 {% if gp_ver == 6 %}
-      - Test PXF-GP[[gp_ver]]-HDP2 on Ubuntu18
+#      - Test PXF-GP[[gp_ver]]-HDP2 on Ubuntu18
 {% else %}
       - Test PXF-GP[[gp_ver]]-HDP2 on RHEL6
 {% endif %}
       trigger: true
     # pxf tarballs passed testing jobs
 {% if gp_ver == 6 %}
-    - get: pxf_gp[[gp_ver]]_tarball_ubuntu18
-      passed:
-      - Test PXF-GP[[gp_ver]]-HDP2 on Ubuntu18
+#    - get: pxf_gp[[gp_ver]]_tarball_ubuntu18
+#      passed:
+#      - Test PXF-GP[[gp_ver]]-HDP2 on Ubuntu18
 {% else %}
     - get: pxf_gp[[gp_ver]]_tarball_rhel6
       passed:
@@ -435,9 +438,9 @@ jobs:
       - Test PXF-GP[[gp_ver]]-HDP2 on RHEL7
     # gpdb packages used in testing jobs
 {% if gp_ver == 6 %}
-    - get: gpdb[[gp_ver]]_ubuntu18_deb_latest-0
-      passed:
-      - Test PXF-GP[[gp_ver]]-HDP2 on Ubuntu18
+#    - get: gpdb[[gp_ver]]_ubuntu18_deb_latest-0
+#      passed:
+#      - Test PXF-GP[[gp_ver]]-HDP2 on Ubuntu18
 {% else %}
     - get: gpdb[[gp_ver]]_rhel6_rpm_latest-0
       passed:
@@ -469,6 +472,7 @@ jobs:
     file: pxf_src/concourse/tasks/test.yml
     image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     params:
+      GP_VER: [[gp_ver]]
       IMPERSONATION: false
       TARGET_OS: centos
       TARGET_OS_VERSION: 7
@@ -493,6 +497,7 @@ jobs:
     file: pxf_src/concourse/tasks/test.yml
     image: gpdb[[gp_ver]]-pxf-dev-centos7-mapr-server-image
     params:
+      GP_VER: [[gp_ver]]
       GROUP: hcfs,jdbc
       HADOOP_CLIENT: MAPR
       TARGET_OS: centos
@@ -520,6 +525,7 @@ jobs:
     image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+      GP_VER: [[gp_ver]]
       GROUP: gpdb,proxy,profile
       SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
       TARGET_OS: centos
@@ -555,6 +561,7 @@ jobs:
     image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+      GP_VER: [[gp_ver]]
       GROUP: security
       HADOOP_CLIENT: HDP_KERBEROS
       SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
@@ -582,6 +589,7 @@ jobs:
     image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+      GP_VER: [[gp_ver]]
       GROUP: cloud-access-and-hdfs,hbase,hcfs,jdbc,profile,pushdown
       RUN_JDK_VERSION: 11
       SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
@@ -612,6 +620,7 @@ jobs:
     attempts: 3
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+      GP_VER: [[gp_ver]]
       GROUP: gpdb,proxy,profile
       HADOOP_CLIENT: CDH
       SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
@@ -643,6 +652,7 @@ jobs:
 #    attempts: 2
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+      GP_VER: [[gp_ver]]
       GROUP: hcfs,s3
       PROTOCOL: s3
       SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
@@ -672,6 +682,7 @@ jobs:
 #    attempts: 2
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+      GP_VER: [[gp_ver]]
       GROUP: hcfs,s3
       IMPERSONATION: false
       PROTOCOL: s3
@@ -704,6 +715,7 @@ jobs:
       ADL_CLIENT_ID: {{adl-client-id}}
       ADL_CREDENTIAL: {{adl-credential}}
       ADL_REFRESH_URL: {{adl-refresh-url}}
+      GP_VER: [[gp_ver]]
       GROUP: hcfs
       IMPERSONATION: false
       PROTOCOL: adl
@@ -731,6 +743,7 @@ jobs:
     image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     params:
       GOOGLE_CREDENTIALS: {{data-gpdb-ud-google-json-key}}
+      GP_VER: [[gp_ver]]
       GROUP: hcfs
       IMPERSONATION: false
       PROTOCOL: gs
@@ -757,6 +770,7 @@ jobs:
     file: pxf_src/concourse/tasks/test.yml
     image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     params:
+      GP_VER: [[gp_ver]]
       GROUP: hcfs
       IMPERSONATION: false
       PROTOCOL: minio
@@ -879,6 +893,7 @@ jobs:
       IMPERSONATION: true
       KERBEROS: {{kerberos-enabled}}
       GOOGLE_PROJECT_ID: {{google-project-id}}
+      GP_VER: [[gp_ver]]
       GROUP: security,proxySecurity,multiClusterSecurity
       PXF_JVM_OPTS: {{pxf-jvm-opts}}
       TARGET_OS: centos
@@ -997,6 +1012,7 @@ jobs:
       IMPERSONATION: false
       KERBEROS: {{kerberos-enabled}}
       GOOGLE_PROJECT_ID: {{google-project-id}}
+      GP_VER: [[gp_ver]]
       GROUP: security,multiClusterSecurity
       PXF_JVM_OPTS: {{pxf-jvm-opts}}
       TARGET_OS: centos

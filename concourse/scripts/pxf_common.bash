@@ -1,7 +1,7 @@
 #!/bin/bash
 
 GPHOME=${GPHOME:=/usr/local/greenplum-db-devel}
-PXF_HOME=${GPHOME}/pxf
+PXF_HOME=${PXF_HOME:=${GPHOME}/pxf}
 MDD_VALUE=/data/gpdata/master/gpseg-1
 PXF_COMMON_SRC_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 PROXY_USER=${PROXY_USER:-pxfuser}
