@@ -881,6 +881,7 @@ jobs:
     params:
       IMPERSONATION: true
       INSTALL_GPHDFS: false
+      GP_VER: [[gp_ver]]
       KERBEROS: {{kerberos-enabled}}
       PXF_JVM_OPTS: {{pxf-jvm-opts}}
   - task: Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-IMPERS on RHEL7
@@ -1000,6 +1001,7 @@ jobs:
     params:
       IMPERSONATION: false
       INSTALL_GPHDFS: false
+      GP_VER: [[gp_ver]]
       KERBEROS: {{kerberos-enabled}}
       PXF_JVM_OPTS: {{pxf-jvm-opts}}
   - task: Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-NO-IMPERS on RHEL7
