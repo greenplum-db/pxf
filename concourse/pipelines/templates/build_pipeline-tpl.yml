@@ -1048,8 +1048,8 @@ jobs:
       - Testing Gate for PXF-GP[[gp_ver]]
 {% else %}
     - get: pxf_gp[[gp_ver]]_tarball_ubuntu18
-      passed:
-      - Testing Gate for PXF-GP[[gp_ver]]
+#      passed:
+#      - Testing Gate for PXF-GP[[gp_ver]]
 {% endif %}
     - get: pxf_gp[[gp_ver]]_tarball_rhel7
       passed:
