@@ -127,7 +127,7 @@ resources:
 
 ## ---------- Docker Images ----------
 {% if gp_ver == 5 %}
-- name: gpdb-pxf-dev-centos6-image
+- name: gpdb[[gp_ver]]-pxf-dev-centos6-image
   type: registry-image
   icon: docker
   source:
@@ -138,7 +138,7 @@ resources:
 
 {% endif %}
 
-- name: gpdb-pxf-dev-centos7-image
+- name: gpdb[[gp_ver]]-pxf-dev-centos7-image
   type: registry-image
   icon: docker
   source:
@@ -148,7 +148,7 @@ resources:
     password: ((data-gpdb-ud-google-json-key))
 
 {% if gp_ver == 6 %}
-- name: gpdb-pxf-dev-ubuntu18-image
+- name: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image
   type: registry-image
   icon: docker
   source:
@@ -159,7 +159,7 @@ resources:
 
 {% endif %}
 
-- name: gpdb-pxf-dev-centos7-mapr-server-image
+- name: gpdb[[gp_ver]]-pxf-dev-centos7-mapr-server-image
   type: registry-image
   icon: docker
   source:
@@ -267,9 +267,9 @@ jobs:
       trigger: true
     - get: gpdb_package
       resource: gpdb[[gp_ver]]_rhel6_rpm_latest-0
-    - get: gpdb-pxf-dev-centos6-image
+    - get: gpdb[[gp_ver]]-pxf-dev-centos6-image
   - task: Build PXF on RHEL6
-    image: gpdb-pxf-dev-centos6-image
+    image: gpdb[[gp_ver]]-pxf-dev-centos6-image
     file: pxf_src/concourse/tasks/build.yml
     params:
       TARGET_OS: rhel6
@@ -290,12 +290,12 @@ jobs:
     - get: gpdb_package
       resource: gpdb[[gp_ver]]_rhel6_rpm_latest-0
       passed: [Build PXF-GP[[gp_ver]] on RHEL6]
-    - get: gpdb-pxf-dev-centos6-image
+    - get: gpdb[[gp_ver]]-pxf-dev-centos6-image
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: Test PXF-GP[[gp_ver]]-HDP2 on RHEL6
     file: pxf_src/concourse/tasks/test.yml
-    image: gpdb-pxf-dev-centos6-image
+    image: gpdb[[gp_ver]]-pxf-dev-centos6-image
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
       GROUP: gpdb,proxy,profile
@@ -314,9 +314,9 @@ jobs:
       trigger: true
     - get: gpdb_package
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
-    - get: gpdb-pxf-dev-centos7-image
+    - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
   - task: Build PXF-GP[[gp_ver]] on RHEL7
-    image: gpdb-pxf-dev-centos7-image
+    image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     file: pxf_src/concourse/tasks/build.yml
     params:
       TARGET_OS: rhel7
@@ -337,12 +337,12 @@ jobs:
     - get: gpdb_package
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
       passed: [Build PXF-GP[[gp_ver]] on RHEL7]
-    - get: gpdb-pxf-dev-centos7-image
+    - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: Test PXF-GP[[gp_ver]]-HDP2 on RHEL7
     file: pxf_src/concourse/tasks/test.yml
-    image: gpdb-pxf-dev-centos7-image
+    image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
       GROUP: gpdb,proxy,profile
@@ -361,9 +361,9 @@ jobs:
       trigger: true
     - get: gpdb_package
       resource: gpdb[[gp_ver]]_ubuntu18_deb_latest-0
-    - get: gpdb-pxf-dev-ubuntu18-image
+    - get: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image
   - task: Build PXF-GP[[gp_ver]] on Ubuntu18
-    image: gpdb-pxf-dev-ubuntu18-image
+    image: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image
     file: pxf_src/concourse/tasks/build.yml
     params:
       TARGET_OS: ubuntu18.04
@@ -384,12 +384,12 @@ jobs:
     - get: gpdb_package
       resource: gpdb[[gp_ver]]_ubuntu18_deb_latest-0
       passed: [Build PXF-GP[[gp_ver]] on Ubuntu18]
-    - get: gpdb-pxf-dev-ubuntu18-image
+    - get: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: Test PXF-GP[[gp_ver]]-HDP2 on Ubuntu18
     file: pxf_src/concourse/tasks/test.yml
-    image: gpdb-pxf-dev-ubuntu18-image
+    image: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
       GROUP: gpdb,proxy,profile
@@ -456,12 +456,12 @@ jobs:
     - get: gpdb_package
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
-    - get: gpdb-pxf-dev-centos7-image
+    - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: Test PXF-GP[[gp_ver]]-HDP2-NO-IMPERS on RHEL7
     file: pxf_src/concourse/tasks/test.yml
-    image: gpdb-pxf-dev-centos7-image
+    image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     params:
       IMPERSONATION: false
       TARGET_OS: centos
@@ -481,11 +481,11 @@ jobs:
     - get: gpdb_package
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
-    - get: gpdb-pxf-dev-centos7-mapr-server-image
+    - get: gpdb[[gp_ver]]-pxf-dev-centos7-mapr-server-image
   - task: Test PXF-GP[[gp_ver]]-MAPR on RHEL7
     privileged: true
     file: pxf_src/concourse/tasks/test.yml
-    image: gpdb-pxf-dev-centos7-mapr-server-image
+    image: gpdb[[gp_ver]]-pxf-dev-centos7-mapr-server-image
     params:
       GROUP: hcfs,jdbc
       HADOOP_CLIENT: MAPR
@@ -506,12 +506,12 @@ jobs:
     - get: gpdb_package
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
-    - get: gpdb-pxf-dev-centos7-image
+    - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
     - get: singlecluster
       resource: singlecluster-hdp3
   - task: Test PXF-GP[[gp_ver]]-HDP3 on RHEL7
     file: pxf_src/concourse/tasks/test.yml
-    image: gpdb-pxf-dev-centos7-image
+    image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
       GROUP: gpdb,proxy,profile
@@ -533,7 +533,7 @@ jobs:
     - get: gpdb_package
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
-    - get: gpdb-pxf-dev-centos7-image
+    - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
     - get: ccp-7-image
     - get: singlecluster
       resource: singlecluster-hdp3
@@ -546,7 +546,7 @@ jobs:
       GOOGLE_ZONE: {{google-zone}}
   - task: Test PXF-GP[[gp_ver]]-HDP3-SECURE AMBARI (MANUAL) on RHEL7
     file: pxf_src/concourse/tasks/test.yml
-    image: gpdb-pxf-dev-centos7-image
+    image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
       GROUP: security
@@ -568,12 +568,12 @@ jobs:
     - get: gpdb_package
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
-    - get: gpdb-pxf-dev-centos7-image
+    - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: Test PXF-GP[[gp_ver]]-HDP2-JDK11 on RHEL7
     file: pxf_src/concourse/tasks/test.yml
-    image: gpdb-pxf-dev-centos7-image
+    image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
       GROUP: cloud-access-and-hdfs,hbase,hcfs,jdbc,profile,pushdown
@@ -596,12 +596,12 @@ jobs:
     - get: gpdb_package
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
-    - get: gpdb-pxf-dev-centos7-image
+    - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
     - get: singlecluster
       resource: singlecluster-cdh
   - task: Test PXF-GP[[gp_ver]]-CDH on RHEL7
     file: pxf_src/concourse/tasks/test.yml
-    image: gpdb-pxf-dev-centos7-image
+    image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     # CDH often fails on HBASE permission grant
     attempts: 3
     params:
@@ -628,12 +628,12 @@ jobs:
     - get: gpdb_package
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
-    - get: gpdb-pxf-dev-centos7-image
+    - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: Test PXF-GP[[gp_ver]]-S3 on RHEL7
     file: pxf_src/concourse/tasks/test.yml
-    image: gpdb-pxf-dev-centos7-image
+    image: gpdb[[gp_ver]]-pxf-dev-centos7-image
 #    attempts: 2
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
@@ -657,12 +657,12 @@ jobs:
     - get: gpdb_package
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
-    - get: gpdb-pxf-dev-centos7-image
+    - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: Test PXF-GP[[gp_ver]]-S3-NO-IMPERS on RHEL7
     file: pxf_src/concourse/tasks/test.yml
-    image: gpdb-pxf-dev-centos7-image
+    image: gpdb[[gp_ver]]-pxf-dev-centos7-image
 #    attempts: 2
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
@@ -687,12 +687,12 @@ jobs:
     - get: gpdb_package
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
-    - get: gpdb-pxf-dev-centos7-image
+    - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: Test PXF-GP[[gp_ver]]-ADL-NO-IMPERS on RHEL7
     file: pxf_src/concourse/tasks/test.yml
-    image: gpdb-pxf-dev-centos7-image
+    image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     params:
       ADL_ACCOUNT: {{adl-account}}
       ADL_CLIENT_ID: {{adl-client-id}}
@@ -717,12 +717,12 @@ jobs:
     - get: gpdb_package
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
-    - get: gpdb-pxf-dev-centos7-image
+    - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: Test PXF-GP[[gp_ver]]-GS-NO-IMPERS on RHEL7
     file: pxf_src/concourse/tasks/test.yml
-    image: gpdb-pxf-dev-centos7-image
+    image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     params:
       GOOGLE_CREDENTIALS: {{data-gpdb-ud-google-json-key}}
       GROUP: hcfs
@@ -744,12 +744,12 @@ jobs:
     - get: gpdb_package
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
-    - get: gpdb-pxf-dev-centos7-image
+    - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: Test PXF-GP[[gp_ver]]-MINIO-NO-IMPERS on RHEL7
     file: pxf_src/concourse/tasks/test.yml
-    image: gpdb-pxf-dev-centos7-image
+    image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     params:
       GROUP: hcfs
       IMPERSONATION: false
@@ -773,7 +773,7 @@ jobs:
     - get: gpdb_package
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
-    - get: gpdb-pxf-dev-centos7-image
+    - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
     - get: ccp_src
     - get: ccp-7-image
     - get: singlecluster
@@ -814,7 +814,7 @@ jobs:
           file: ccp_src/ci/tasks/gpinitsystem.yml
         - task: Install Hadoop
           file: pxf_src/concourse/tasks/install_hadoop.yml
-          image: gpdb-pxf-dev-centos7-image
+          image: gpdb[[gp_ver]]-pxf-dev-centos7-image
           params:
             ACCESS_KEY_ID: {{tf-machine-access-key-id}}
             SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
@@ -863,7 +863,7 @@ jobs:
   - task: Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-IMPERS on RHEL7
     on_success:
       <<: *destroy_clusters
-    image: gpdb-pxf-dev-centos7-image
+    image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     file: pxf_src/concourse/tasks/test_pxf_on_ccp.yml
     attempts: 2
     params:
@@ -891,7 +891,7 @@ jobs:
     - get: gpdb_package
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
-    - get: gpdb-pxf-dev-centos7-image
+    - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
     - get: ccp_src
     - get: ccp-7-image
     - get: singlecluster
@@ -932,7 +932,7 @@ jobs:
           file: ccp_src/ci/tasks/gpinitsystem.yml
         - task: Install Hadoop
           file: pxf_src/concourse/tasks/install_hadoop.yml
-          image: gpdb-pxf-dev-centos7-image
+          image: gpdb[[gp_ver]]-pxf-dev-centos7-image
           params:
             ACCESS_KEY_ID: {{tf-machine-access-key-id}}
             SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
@@ -981,7 +981,7 @@ jobs:
   - task: Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-NO-IMPERS on RHEL7
     on_success:
       <<: *destroy_clusters
-    image: gpdb-pxf-dev-centos7-image
+    image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     file: pxf_src/concourse/tasks/test_pxf_on_ccp.yml
     attempts: 2
     params:
@@ -1082,7 +1082,7 @@ jobs:
       passed: [Compatibility Gate for PXF-GP[[gp_ver]]]
       # for faster iteration run BC right after build:
       # passed: [Build PXF-GP[[gp_ver]] on RHEL6]
-    - get: gpdb-pxf-dev-centos6-image
+    - get: gpdb[[gp_ver]]-pxf-dev-centos6-image
     - get: singlecluster
       resource: singlecluster-hdp2
 {% for i in range(1, num_versions) %}
@@ -1095,7 +1095,7 @@ jobs:
       steps:
 {% for i in range(1, num_versions) %}
       - task: Test Against Greenplum Latest - [[i]] RHEL6
-        image: gpdb-pxf-dev-centos6-image
+        image: gpdb[[gp_ver]]-pxf-dev-centos6-image
         config:
           platform: linux
           <<: *run_regress_anchor
@@ -1127,7 +1127,7 @@ jobs:
       # for faster iteration run BC right after build:
       # passed: [Build PXF-GP[[gp_ver]] on RHEL7]
       resource: pxf_gp[[gp_ver]]_tarball_rhel7
-    - get: gpdb-pxf-dev-centos7-image
+    - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
     - get: singlecluster
       resource: singlecluster-hdp2
 {% for i in range(1, num_versions) %}
@@ -1140,7 +1140,7 @@ jobs:
       steps:
 {% for i in range(1, num_versions) %}
       - task: Test Against Greenplum Latest - [[i]] RHEL7
-        image: gpdb-pxf-dev-centos7-image
+        image: gpdb[[gp_ver]]-pxf-dev-centos7-image
         config:
           platform: linux
           <<: *run_regress_anchor
@@ -1172,7 +1172,7 @@ jobs:
       # for faster iteration run BC right after build:
       # passed: [Build PXF-GP[[gp_ver]] on Ubuntu18]
       resource: pxf_gp[[gp_ver]]_tarball_ubuntu18
-    - get: gpdb-pxf-dev-ubuntu18-image
+    - get: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image
     - get: singlecluster
       resource: singlecluster-hdp2
 {% for i in range(1, num_versions) %}
@@ -1185,7 +1185,7 @@ jobs:
       steps:
 {% for i in range(1, num_versions) %}
       - task: Test Against Greenplum Latest - [[i]] Ubuntu18
-        image: gpdb-pxf-dev-ubuntu18-image
+        image: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image
         config:
           platform: linux
           <<: *run_regress_anchor
