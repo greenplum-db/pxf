@@ -77,12 +77,12 @@ rpm:
     echo $$(git rev-parse --verify HEAD) > build/rpmbuild/SOURCES/commit.sha ;\
 	cp package/*.spec build/rpmbuild/SPECS/ ;\
 	rpmbuild \
-	--define "_topdir ${PWD}/build/rpmbuild" \
+	--define "_topdir $${PWD}/build/rpmbuild" \
 	--define "pxf_version $${PXF_MAIN_VERSION}" \
 	--define "pxf_release $${PXF_RELEASE}" \
 	--define "license ${LICENSE}" \
 	--define "vendor ${VENDOR}" \
-	-bb ${PWD}/build/rpmbuild/SPECS/pxf-gp$${GP_MAJOR_VERSION}.spec
+	-bb $${PWD}/build/rpmbuild/SPECS/pxf-gp$${GP_MAJOR_VERSION}.spec
 
 rpm-tar: rpm
 	rm -rf build/{stagerpm,distrpm}
