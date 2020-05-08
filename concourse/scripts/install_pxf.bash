@@ -11,6 +11,7 @@ if [[ ${PXF_COMPONENT} == "true" ]]; then
     PXF_HOME=/usr/local/pxf-gp${GP_VER}
 else
     GPHOME=/usr/local/greenplum-db-devel
+    PXF_HOME=${GPHOME}/pxf
 fi
 
 # we need word boundary in case of standby master (smdw)
@@ -58,7 +59,7 @@ function create_pxf_installer_scripts() {
 		set -euxo pipefail
 
 		GPHOME=${GPHOME}
-		PXF_HOME=\${GPHOME}/pxf
+		PXF_HOME=${PXF_HOME}
 		PXF_CONF=${PXF_CONF_DIR}
 
 		function setup_pxf_env() {
@@ -123,7 +124,7 @@ function create_pxf_installer_scripts() {
 		set -euxo pipefail
 
 		GPHOME=${GPHOME}
-		PXF_HOME=\${GPHOME}/pxf
+		PXF_HOME=${PXF_HOME}
 		PXF_CONF=${PXF_CONF_DIR}
 		export HADOOP_VER=2.6.5.0-292
 
@@ -181,19 +182,19 @@ function run_pxf_installer_scripts() {
 			gpscp -f ~gpadmin/hostfile_all -v -u centos -r ~/pxf_tarball centos@=: &&
 			gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e 'tar -xzf ~centos/pxf_tarball/pxf-*.tar.gz -C /tmp'
 			gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e 'sudo GPHOME=${GPHOME} /tmp/pxf*/install_component'
-			gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e 'sudo chown -R gpadmin:gpadmin ${GPHOME}/pxf'
+			gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e 'sudo chown -R gpadmin:gpadmin ${PXF_HOME}'
 		else
 			gpscp -f ~gpadmin/hostfile_all -v -u gpadmin -r ~/pxf_tarball gpadmin@=: &&
 			gpssh -f ~gpadmin/hostfile_all -v -u gpadmin -s -e 'tar -xzf ~/pxf_tarball/pxf.tar.gz -C ${GPHOME}'
 		fi &&
-		PXF_CONF=${PXF_CONF_DIR} ${GPHOME}/pxf/bin/pxf cluster init &&
+		GPHOME=${GPHOME} PXF_CONF=${PXF_CONF_DIR} ${PXF_HOME}/bin/pxf cluster init &&
 		if [[ -d ~/dataproc_env_files ]]; then
 			gpscp -f ~gpadmin/hostfile_init -v -r -u gpadmin ~/dataproc_env_files =:
 		fi &&
 		~gpadmin/configure_pxf.sh &&
 		gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e \"sudo sed -i -e 's/edw0/edw0 hadoop/' /etc/hosts\" &&
-		${GPHOME}/pxf/bin/pxf cluster sync &&
-		${GPHOME}/pxf/bin/pxf cluster start &&
+		${PXF_HOME}/bin/pxf cluster sync &&
+		${PXF_HOME}/bin/pxf cluster start &&
 		if [[ $INSTALL_GPHDFS == true ]]; then
 			gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e '
 				sudo cp ${PXF_CONF_DIR}/servers/default/{core,hdfs}-site.xml /etc/hadoop/conf
