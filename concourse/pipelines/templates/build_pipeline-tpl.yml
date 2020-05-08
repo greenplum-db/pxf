@@ -214,7 +214,7 @@ resources:
   source:
     bucket: data-gpdb-ud-pxf-build
     json_key: {{data-gpdb-ud-google-json-key}}
-    versioned_file: prod/snapshots/pxf-gp[[gp_ver]]-SNAPSHOT-rhel6-x86_64.tar.gz
+    versioned_file: prod/snapshots/pxf-gp[[gp_ver]]-SNAPSHOT-el6-x86_64.tar.gz
 {% endif %}
 
 - name: pxf_gp[[gp_ver]]_tarball_rhel7
@@ -223,7 +223,7 @@ resources:
   source:
     bucket: data-gpdb-ud-pxf-build
     json_key: {{data-gpdb-ud-google-json-key}}
-    versioned_file: prod/snapshots/pxf-gp[[gp_ver]]-SNAPSHOT-rhel7-x86_64.tar.gz
+    versioned_file: prod/snapshots/pxf-gp[[gp_ver]]-SNAPSHOT-el7-x86_64.tar.gz
 
 {% if gp_ver == 6 %}
 - name: pxf_gp[[gp_ver]]_tarball_ubuntu18
@@ -1027,31 +1027,6 @@ jobs:
       - Testing Gate for PXF-GP[[gp_ver]]
 {% endif %}
     - get: pxf_gp[[gp_ver]]_tarball_rhel7
-      passed:
-      - Test PXF-GP[[gp_ver]]-HDP2-NO-IMPERS on RHEL7
-      - Test PXF-GP[[gp_ver]]-MAPR on RHEL7
-      - Test PXF-GP[[gp_ver]]-HDP3 on RHEL7
-      #      - Test PXF-GP[[gp_ver]]-HDP3-SECURE AMBARI (MANUAL) on RHEL7
-      - Test PXF-GP[[gp_ver]]-HDP2-JDK11 on RHEL7
-      - Test PXF-GP[[gp_ver]]-CDH on RHEL7
-      - Test PXF-GP[[gp_ver]]-S3 on RHEL7
-      - Test PXF-GP[[gp_ver]]-S3-NO-IMPERS on RHEL7
-      - Test PXF-GP[[gp_ver]]-ADL-NO-IMPERS on RHEL7
-      - Test PXF-GP[[gp_ver]]-GS-NO-IMPERS on RHEL7
-      - Test PXF-GP[[gp_ver]]-MINIO-NO-IMPERS on RHEL7
-      - Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-IMPERS on RHEL7
-      - Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-NO-IMPERS on RHEL7
-    # gpdb packages used in testing jobs
-{% if gp_ver == 5 %}
-    - get: gpdb[[gp_ver]]_rhel6_rpm_latest-0
-      passed:
-      - Testing Gate for PXF-GP[[gp_ver]]
-{% else %}
-    - get: gpdb[[gp_ver]]_ubuntu18_deb_latest-0
-      passed:
-      - Testing Gate for PXF-GP[[gp_ver]]
-{% endif %}
-    - get: gpdb[[gp_ver]]_rhel7_rpm_latest-0
       passed:
       - Test PXF-GP[[gp_ver]]-HDP2-NO-IMPERS on RHEL7
       - Test PXF-GP[[gp_ver]]-MAPR on RHEL7
