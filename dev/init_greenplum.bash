@@ -6,7 +6,7 @@ GPHOME=${GPHOME:=/usr/local/greenplum-db}
 PYTHONHOME='' source "${GPHOME}/greenplum_path.sh"
 
 # Create config and data dirs.
-data_dirs=(~gpadmin/data{1..6}/primary)
+data_dirs=(~gpadmin/data{1..3}/primary)
 dirs=(~gpadmin/{gpconfigs,data/master} "${data_dirs[@]}")
 mkdir -p "${dirs[@]}"
 

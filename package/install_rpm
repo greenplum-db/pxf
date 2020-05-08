@@ -3,7 +3,7 @@
 set -euo pipefail
 
 INSTALL_COMPONENT_SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-RPM_FILE=$(basename $(find ${INSTALL_COMPONENT_SCRIPT_DIR} -name '*.rpm'))
+RPM_FILE=$(basename $(find "${INSTALL_COMPONENT_SCRIPT_DIR}" -name '*.rpm'))
 
 echo "Installing PXF RPM ${RPM_FILE} ..."
 

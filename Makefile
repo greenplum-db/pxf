@@ -72,9 +72,9 @@ rpm:
 	mkdir -p build/rpmbuild/{BUILD,RPMS,SOURCES,SPECS} ;\
 	mkdir -p build/rpmbuild/SOURCES/gpextable ;\
 	cp -a external-table/build/stage/* build/rpmbuild/SOURCES/gpextable ;\
-    cp -a cli/build/stage/pxf/* build/rpmbuild/SOURCES ;\
-    cp -a server/build/stage/pxf/* build/rpmbuild/SOURCES ;\
-    echo $$(git rev-parse --verify HEAD) > build/rpmbuild/SOURCES/commit.sha ;\
+	cp -a cli/build/stage/pxf/* build/rpmbuild/SOURCES ;\
+	cp -a server/build/stage/pxf/* build/rpmbuild/SOURCES ;\
+	echo $$(git rev-parse --verify HEAD) > build/rpmbuild/SOURCES/commit.sha ;\
 	cp package/*.spec build/rpmbuild/SPECS/ ;\
 	rpmbuild \
 	--define "_topdir $${PWD}/build/rpmbuild" \
