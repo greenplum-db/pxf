@@ -24,6 +24,7 @@ function install_hadoop_single_cluster() {
 	fi
 
 	cat <<-EOF > ~/setup_hadoop.sh
+		#!/usr/bin/env bash
 		yum install -y -d 1 java-1.8.0-openjdk-devel &&
 		export JAVA_HOME=/etc/alternatives/jre_1.8.0_openjdk &&
 
@@ -42,11 +43,8 @@ function install_hadoop_single_cluster() {
 		start_hadoop_services ${REMOTE_GPHD_ROOT}
 	EOF
 
-	scp "${SSH_OPTS[@]}" -rq \
-		~/setup_hadoop.sh \
-		pxf_src/concourse/scripts/pxf_common.bash \
-		"${LOCAL_GPHD_ROOT}" \
-		centos@edw0:
+	local FILES_TO_SCP=(~/setup_hadoop.sh pxf_src/concourse/scripts/pxf_common.bash "${LOCAL_GPHD_ROOT}")
+	scp "${SSH_OPTS[@]}" -rq "${FILES_TO_SCP[@]}" centos@edw0:
 
 	ssh "${SSH_OPTS[@]}" centos@edw0 '
 		sudo chmod +x ~/setup_hadoop.sh &&

@@ -71,6 +71,7 @@ function run_pxf_automation() {
 	"
 
 	cat > ~gpadmin/run_pxf_automation_test.sh <<-EOF
+		#!/usr/bin/env bash
 		set -exo pipefail
 
 		source ~gpadmin/.pxfrc

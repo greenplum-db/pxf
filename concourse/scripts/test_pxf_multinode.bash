@@ -317,6 +317,7 @@ function run_pxf_automation() {
 	chown -R gpadmin:gpadmin ~gpadmin/{.ssh,pxf} pxf_src/automation
 
 	cat > ~gpadmin/run_pxf_automation_test.sh <<-EOF
+		#!/usr/bin/env bash
 		set -exuo pipefail
 
 		source ${GPHOME}/greenplum_path.sh
