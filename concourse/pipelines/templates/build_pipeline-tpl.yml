@@ -214,7 +214,7 @@ resources:
   source:
     bucket: data-gpdb-ud-pxf-build
     json_key: {{data-gpdb-ud-google-json-key}}
-    versioned_file: prod/snapshots/pxf-gp[[gp_ver]]-SNAPSHOT-el6-x86_64.tar.gz
+    versioned_file: prod/snapshots/pxf-gp[[gp_ver]]-SNAPSHOT.el6.tar.gz
 {% endif %}
 
 - name: pxf_gp[[gp_ver]]_tarball_rhel7
@@ -223,7 +223,7 @@ resources:
   source:
     bucket: data-gpdb-ud-pxf-build
     json_key: {{data-gpdb-ud-google-json-key}}
-    versioned_file: prod/snapshots/pxf-gp[[gp_ver]]-SNAPSHOT-el7-x86_64.tar.gz
+    versioned_file: prod/snapshots/pxf-gp[[gp_ver]]-SNAPSHOT.el7.tar.gz
 
 {% if gp_ver == 6 %}
 - name: pxf_gp[[gp_ver]]_tarball_ubuntu18
@@ -232,7 +232,7 @@ resources:
   source:
     bucket: data-gpdb-ud-pxf-build
     json_key: {{data-gpdb-ud-google-json-key}}
-    versioned_file: prod/snapshots/pxf-gp[[gp_ver]]-SNAPSHOT-ubuntu18.04-x86_64.tar.gz
+    versioned_file: prod/snapshots/pxf-gp[[gp_ver]]-SNAPSHOT.ubuntu18.04.tar.gz
 {% endif %}
 
 ## ---------- Auxiliary Resources ----------
@@ -262,25 +262,26 @@ jobs:
 - name: Build PXF-GP[[gp_ver]] on RHEL6
   plan:
   - in_parallel:
-    - get: pxf-build-dependencies
     - get: pxf_src
       trigger: true
     - get: gpdb_package
       resource: gpdb[[gp_ver]]_rhel6_rpm_latest-0
     - get: gpdb[[gp_ver]]-pxf-dev-centos6-image
+    - get: pxf-build-dependencies
   - task: Build PXF on RHEL6
     image: gpdb[[gp_ver]]-pxf-dev-centos6-image
     file: pxf_src/concourse/tasks/build.yml
     params:
+      LICENSE: {{pxf-rpm-license}}
       TARGET_OS: rhel6
+      VENDOR: {{pxf-rpm-vendor}}
   - put: pxf_gp[[gp_ver]]_tarball_rhel6
     params:
-      file: dist/pxf-gpdb[[gp_ver]]-*-SNAPSHOT-rhel6-x86_64.tar.gz
+      file: dist/pxf-gp[[gp_ver]]-*-SNAPSHOT.el6.tar.gz
 
 - name: Test PXF-GP[[gp_ver]]-HDP2 on RHEL6
   plan:
   - in_parallel:
-    - get: pxf-build-dependencies
     - get: pxf_src
       passed: [Build PXF-GP[[gp_ver]] on RHEL6]
       trigger: true
@@ -291,6 +292,7 @@ jobs:
       resource: gpdb[[gp_ver]]_rhel6_rpm_latest-0
       passed: [Build PXF-GP[[gp_ver]] on RHEL6]
     - get: gpdb[[gp_ver]]-pxf-dev-centos6-image
+    - get: pxf-build-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: Test PXF-GP[[gp_ver]]-HDP2 on RHEL6
@@ -309,25 +311,26 @@ jobs:
 - name: Build PXF-GP[[gp_ver]] on RHEL7
   plan:
   - in_parallel:
-    - get: pxf-build-dependencies
     - get: pxf_src
       trigger: true
     - get: gpdb_package
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
+    - get: pxf-build-dependencies
   - task: Build PXF-GP[[gp_ver]] on RHEL7
     image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     file: pxf_src/concourse/tasks/build.yml
     params:
+      LICENSE: {{pxf-rpm-license}}
       TARGET_OS: rhel7
+      VENDOR: {{pxf-rpm-vendor}}
   - put: pxf_gp[[gp_ver]]_tarball_rhel7
     params:
-      file: dist/pxf-gpdb[[gp_ver]]-*-SNAPSHOT-rhel7-x86_64.tar.gz
+      file: dist/pxf-gp[[gp_ver]]-*-SNAPSHOT.el7.tar.gz
 
 - name: Test PXF-GP[[gp_ver]]-HDP2 on RHEL7
   plan:
   - in_parallel:
-    - get: pxf-build-dependencies
     - get: pxf_src
       passed: [Build PXF-GP[[gp_ver]] on RHEL7]
       trigger: true
@@ -338,6 +341,7 @@ jobs:
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
       passed: [Build PXF-GP[[gp_ver]] on RHEL7]
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
+    - get: pxf-build-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: Test PXF-GP[[gp_ver]]-HDP2 on RHEL7
@@ -356,25 +360,26 @@ jobs:
 - name: Build PXF-GP[[gp_ver]] on Ubuntu18
   plan:
   - in_parallel:
-    - get: pxf-build-dependencies
     - get: pxf_src
       trigger: true
     - get: gpdb_package
       resource: gpdb[[gp_ver]]_ubuntu18_deb_latest-0
     - get: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image
+    - get: pxf-build-dependencies
   - task: Build PXF-GP[[gp_ver]] on Ubuntu18
     image: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image
     file: pxf_src/concourse/tasks/build.yml
     params:
+      LICENSE: {{pxf-rpm-license}}
       TARGET_OS: ubuntu18.04
+      VENDOR: {{pxf-rpm-vendor}}
   - put: pxf_gp[[gp_ver]]_tarball_ubuntu18
     params:
-      file: dist/pxf-gpdb[[gp_ver]]-*-SNAPSHOT-ubuntu18.04-x86_64.tar.gz
+      file: dist/pxf-gp[[gp_ver]]-*-SNAPSHOT.ubuntu18.04.tar.gz
 
 - name: Test PXF-GP[[gp_ver]]-HDP2 on Ubuntu18
   plan:
   - in_parallel:
-    - get: pxf-build-dependencies
     - get: pxf_src
       passed: [Build PXF-GP[[gp_ver]] on Ubuntu18]
       trigger: true
@@ -385,6 +390,7 @@ jobs:
       resource: gpdb[[gp_ver]]_ubuntu18_deb_latest-0
       passed: [Build PXF-GP[[gp_ver]] on Ubuntu18]
     - get: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image
+    - get: pxf-build-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: Test PXF-GP[[gp_ver]]-HDP2 on Ubuntu18
@@ -446,7 +452,6 @@ jobs:
 - name: Test PXF-GP[[gp_ver]]-HDP2-NO-IMPERS on RHEL7
   plan:
   - in_parallel:
-    - get: pxf-build-dependencies
     - get: pxf_src
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
       trigger: true
@@ -457,6 +462,7 @@ jobs:
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
+    - get: pxf-build-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: Test PXF-GP[[gp_ver]]-HDP2-NO-IMPERS on RHEL7
@@ -471,7 +477,6 @@ jobs:
 - name: Test PXF-GP[[gp_ver]]-MAPR on RHEL7
   plan:
   - in_parallel:
-    - get: pxf-build-dependencies
     - get: pxf_src
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
       trigger: true
@@ -482,6 +487,7 @@ jobs:
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-mapr-server-image
+    - get: pxf-build-dependencies
   - task: Test PXF-GP[[gp_ver]]-MAPR on RHEL7
     privileged: true
     file: pxf_src/concourse/tasks/test.yml
@@ -496,7 +502,6 @@ jobs:
 - name: Test PXF-GP[[gp_ver]]-HDP3 on RHEL7
   plan:
   - in_parallel:
-    - get: pxf-build-dependencies
     - get: pxf_src
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
       trigger: true
@@ -507,6 +512,7 @@ jobs:
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
+    - get: pxf-build-dependencies
     - get: singlecluster
       resource: singlecluster-hdp3
   - task: Test PXF-GP[[gp_ver]]-HDP3 on RHEL7
@@ -523,7 +529,6 @@ jobs:
 - name: Test PXF-GP[[gp_ver]]-HDP3-SECURE AMBARI (MANUAL) on RHEL7
   plan:
   - in_parallel:
-    - get: pxf-build-dependencies
     - get: pxf_src
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
 #      trigger: true
@@ -535,6 +540,7 @@ jobs:
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
     - get: ccp-7-image
+    - get: pxf-build-dependencies
     - get: singlecluster
       resource: singlecluster-hdp3
   - task: load_config_for_ambari
@@ -558,7 +564,6 @@ jobs:
 - name: Test PXF-GP[[gp_ver]]-HDP2-JDK11 on RHEL7
   plan:
   - in_parallel:
-    - get: pxf-build-dependencies
     - get: pxf_src
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
       trigger: true
@@ -569,6 +574,7 @@ jobs:
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
+    - get: pxf-build-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: Test PXF-GP[[gp_ver]]-HDP2-JDK11 on RHEL7
@@ -586,7 +592,6 @@ jobs:
 - name: Test PXF-GP[[gp_ver]]-CDH on RHEL7
   plan:
   - in_parallel:
-    - get: pxf-build-dependencies
     - get: pxf_src
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
       trigger: true
@@ -597,6 +602,7 @@ jobs:
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
+    - get: pxf-build-dependencies
     - get: singlecluster
       resource: singlecluster-cdh
   - task: Test PXF-GP[[gp_ver]]-CDH on RHEL7
@@ -618,7 +624,6 @@ jobs:
 - name: Test PXF-GP[[gp_ver]]-S3 on RHEL7
   plan:
   - in_parallel:
-    - get: pxf-build-dependencies
     - get: pxf_src
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
       trigger: true
@@ -629,6 +634,7 @@ jobs:
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
+    - get: pxf-build-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: Test PXF-GP[[gp_ver]]-S3 on RHEL7
@@ -647,7 +653,6 @@ jobs:
 - name: Test PXF-GP[[gp_ver]]-S3-NO-IMPERS on RHEL7
   plan:
   - in_parallel:
-    - get: pxf-build-dependencies
     - get: pxf_src
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
       trigger: true
@@ -658,6 +663,7 @@ jobs:
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
+    - get: pxf-build-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: Test PXF-GP[[gp_ver]]-S3-NO-IMPERS on RHEL7
@@ -677,7 +683,6 @@ jobs:
 - name: Test PXF-GP[[gp_ver]]-ADL-NO-IMPERS on RHEL7
   plan:
   - in_parallel:
-    - get: pxf-build-dependencies
     - get: pxf_src
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
       trigger: true
@@ -688,6 +693,7 @@ jobs:
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
+    - get: pxf-build-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: Test PXF-GP[[gp_ver]]-ADL-NO-IMPERS on RHEL7
@@ -707,7 +713,6 @@ jobs:
 - name: Test PXF-GP[[gp_ver]]-GS-NO-IMPERS on RHEL7
   plan:
   - in_parallel:
-    - get: pxf-build-dependencies
     - get: pxf_src
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
       trigger: true
@@ -718,6 +723,7 @@ jobs:
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
+    - get: pxf-build-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: Test PXF-GP[[gp_ver]]-GS-NO-IMPERS on RHEL7
@@ -734,7 +740,6 @@ jobs:
 - name: Test PXF-GP[[gp_ver]]-MINIO-NO-IMPERS on RHEL7
   plan:
   - in_parallel:
-    - get: pxf-build-dependencies
     - get: pxf_src
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
       trigger: true
@@ -745,6 +750,7 @@ jobs:
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
+    - get: pxf-build-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: Test PXF-GP[[gp_ver]]-MINIO-NO-IMPERS on RHEL7
@@ -763,7 +769,6 @@ jobs:
   max_in_flight: 2
   plan:
   - in_parallel:
-    - get: pxf-build-dependencies
     - get: pxf_src
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
       trigger: true
@@ -776,6 +781,7 @@ jobs:
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
     - get: ccp_src
     - get: ccp-7-image
+    - get: pxf-build-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
   - in_parallel:
@@ -881,7 +887,6 @@ jobs:
   max_in_flight: 2
   plan:
   - in_parallel:
-    - get: pxf-build-dependencies
     - get: pxf_src
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
       trigger: true
@@ -894,6 +899,7 @@ jobs:
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
     - get: ccp_src
     - get: ccp-7-image
+    - get: pxf-build-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
   - in_parallel:
