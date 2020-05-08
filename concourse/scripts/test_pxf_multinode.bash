@@ -323,6 +323,8 @@ function run_pxf_automation() {
 
 		source ${GPHOME}/greenplum_path.sh
 
+		# set explicit GPHOME here for consistency across container / CCP
+		export GPHOME=${GPHOME}
 		export PXF_HOME=${PXF_HOME}
 		export PGHOST=mdw
 		export PGPORT=5432
