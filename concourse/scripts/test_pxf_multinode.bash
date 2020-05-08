@@ -8,10 +8,13 @@ CWDIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 PXF_COMPONENT=${PXF_COMPONENT:=false}
 if [[ ${PXF_COMPONENT} == "true" ]]; then
     GPHOME=/usr/local/greenplum-db
+    PXF_HOME=/usr/local/pxf-gp${GP_VER}
 else
     GPHOME=/usr/local/greenplum-db-devel
+    PXF_HOME=${GPHOME}/pxf
 fi
 export GPHOME
+export PXF_HOME
 
 # shellcheck source=/dev/null
 source "${CWDIR}/pxf_common.bash"
@@ -82,7 +85,7 @@ function setup_pxf_on_cluster() {
 	ssh "${SSH_OPTS[@]}" gpadmin@mdw "
 		source ${GPHOME}/greenplum_path.sh &&
 		if [[ ! -d ${PXF_CONF_DIR} ]]; then
-			PXF_CONF=${PXF_CONF_DIR} ${GPHOME}/pxf/bin/pxf cluster init
+			GPHOME=${GPHOME} PXF_CONF=${PXF_CONF_DIR} ${PXF_HOME}/bin/pxf cluster init
 			cp ${PXF_CONF_DIR}/templates/{hdfs,mapred,yarn,core,hbase,hive}-site.xml ${PXF_CONF_DIR}/servers/default
 			sed -i -e 's/\(0.0.0.0\|localhost\|127.0.0.1\)/${hadoop_ip}/g' ${PXF_CONF_DIR}/servers/default/*-site.xml
 		else
@@ -132,7 +135,7 @@ function setup_pxf_on_cluster() {
 			-e '/<name>pxf.service.user.name<\/name>/ {n;s|<value>.*</value>|<value>foobar</value>|g;}' \
 			${PXF_CONF_DIR}/servers/default-no-impersonation/pxf-site.xml
 		fi &&
-		${GPHOME}/pxf/bin/pxf cluster sync
+		${PXF_HOME}/bin/pxf cluster sync
 	"
 }
 
@@ -152,7 +155,7 @@ function setup_pxf_kerberos_on_cluster() {
 			${PXF_CONF_DIR}/servers/db-hive/jdbc-site.xml &&
 		sed -i -e 's|\(jdbc:hive2://${HADOOP_HOSTNAME}:10000/default\)|\1;principal=${KERBERIZED_HADOOP_URI}|g' \
 			${PXF_CONF_DIR}/servers/db-hive/jdbc-site.xml &&
-		${GPHOME}/pxf/bin/pxf cluster sync
+		${PXF_HOME}/bin/pxf cluster sync
 	"
 	sudo mkdir -p /etc/security/keytabs
 	sudo cp "${DATAPROC_DIR}/pxf.service.keytab" /etc/security/keytabs/gpadmin.headless.keytab
@@ -180,7 +183,7 @@ function setup_pxf_kerberos_on_cluster() {
 			sed -i -e 's|/pxf.service.keytab<|/pxf.service.2.keytab<|g' ${PXF_CONF_DIR}/servers/hdfs-secure/pxf-site.xml
 		"
 		scp dataproc_2_env_files/conf/*-site.xml "gpadmin@mdw:${PXF_CONF_DIR}/servers/hdfs-secure"
-		ssh gpadmin@mdw "${GPHOME}/pxf/bin/pxf cluster sync"
+		ssh gpadmin@mdw "${PXF_HOME}/bin/pxf cluster sync"
 
 		sed -i  -e "s|</hdfs2>|<hadoopRoot>$DATAPROC_2_DIR</hadoopRoot><testKerberosPrincipal>${HADOOP_2_USER}@${REALM2}</testKerberosPrincipal></hdfs2>|g" \
 			-e "s|</hive2>|<kerberosPrincipal>${KERBERIZED_HADOOP_2_URI}</kerberosPrincipal><userName>${HADOOP_2_USER}</userName></hive2>|g" \
@@ -202,7 +205,7 @@ function setup_pxf_kerberos_on_cluster() {
 			sed -i -e 's|\${pxf.service.user.impersonation.enabled}|false|g' ${PXF_CONF_DIR}/servers/db-hive-kerberos/pxf-site.xml &&
 			sed -i 's|</configuration>|<property><name>hadoop.security.authentication</name><value>kerberos</value></property></configuration>|g' \
 				${PXF_CONF_DIR}/servers/db-hive-kerberos/jdbc-site.xml &&
-			${GPHOME}/pxf/bin/pxf cluster sync
+			${PXF_HOME}/bin/pxf cluster sync
 		"
 
 		# Add foreign dataproc hostfile to /etc/hosts
@@ -254,7 +257,7 @@ function setup_pxf_kerberos_on_cluster() {
 		cp ${PXF_CONF_DIR}/templates/{hdfs,mapred,yarn,core,hbase,hive,pxf}-site.xml ${PXF_CONF_DIR}/servers/hdfs-non-secure &&
 		sed -i -e 's/\(0.0.0.0\|localhost\|127.0.0.1\)/${NON_SECURE_HADOOP_IP}/g' ${PXF_CONF_DIR}/servers/hdfs-non-secure/*-site.xml &&
 		sed -i -e 's|\${user.name}|${PROXY_USER}|g' ${PXF_CONF_DIR}/servers/hdfs-non-secure/pxf-site.xml &&
-		${GPHOME}/pxf/bin/pxf cluster sync
+		${PXF_HOME}/bin/pxf cluster sync
 	"
 	sed -i "s/>non-secure-hadoop</>${NON_SECURE_HADOOP_IP}</g" "$multiNodesCluster"
 
@@ -264,7 +267,7 @@ function setup_pxf_kerberos_on_cluster() {
 		cp ${PXF_CONF_DIR}/servers/default/*-site.xml ${PXF_CONF_DIR}/servers/secure-hdfs-invalid-principal &&
 		cp ${PXF_CONF_DIR}/templates/pxf-site.xml ${PXF_CONF_DIR}/servers/secure-hdfs-invalid-principal &&
 		sed -i -e 's|>gpadmin/_HOST@EXAMPLE.COM<|>foobar/_HOST@INVALID.REALM.INTERNAL<|g' ${PXF_CONF_DIR}/servers/secure-hdfs-invalid-principal/pxf-site.xml &&
-		${GPHOME}/pxf/bin/pxf cluster sync
+		${PXF_HOME}/bin/pxf cluster sync
 	"
 
 	# Create a secured server configuration with invalid keytab
@@ -273,14 +276,14 @@ function setup_pxf_kerberos_on_cluster() {
 		cp ${PXF_CONF_DIR}/servers/default/*-site.xml ${PXF_CONF_DIR}/servers/secure-hdfs-invalid-keytab &&
 		cp ${PXF_CONF_DIR}/templates/pxf-site.xml ${PXF_CONF_DIR}/servers/secure-hdfs-invalid-keytab &&
 		sed -i -e 's|/pxf.service.keytab<|/non.existent.keytab<|g' ${PXF_CONF_DIR}/servers/secure-hdfs-invalid-keytab/pxf-site.xml &&
-		${GPHOME}/pxf/bin/pxf cluster sync
+		${PXF_HOME}/bin/pxf cluster sync
 	"
 
 	# Configure the principal for the default-no-impersonation server
 	ssh gpadmin@mdw "
 	if [[ ${IMPERSONATION} == true ]]; then
 		sed -i -e 's|gpadmin/_HOST@EXAMPLE.COM|gpadmin@${REALM}|g' ${PXF_CONF_DIR}/servers/default-no-impersonation/pxf-site.xml &&
-		${GPHOME}/pxf/bin/pxf cluster sync
+		${PXF_HOME}/bin/pxf cluster sync
 	fi
 	"
 }
@@ -322,7 +325,7 @@ function run_pxf_automation() {
 
 		source ${GPHOME}/greenplum_path.sh
 
-		export PXF_HOME=\${GPHOME}/pxf
+		export PXF_HOME=${PXF_HOME}
 		export PGHOST=mdw
 		export PGPORT=5432
 

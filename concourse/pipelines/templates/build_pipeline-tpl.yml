@@ -784,14 +784,17 @@ jobs:
   plan:
   - in_parallel:
     - get: pxf_src
-      passed: [Testing Gate for PXF-GP[[gp_ver]]]
+#      passed: [Testing Gate for PXF-GP[[gp_ver]]]
+      passed: [Build PXF-GP[[gp_ver]] on RHEL7]
       trigger: true
     - get: pxf_tarball
       resource: pxf_gp[[gp_ver]]_tarball_rhel7
-      passed: [Testing Gate for PXF-GP[[gp_ver]]]
+#      passed: [Testing Gate for PXF-GP[[gp_ver]]]
+      passed: [Build PXF-GP[[gp_ver]] on RHEL7]
     - get: gpdb_package
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
-      passed: [Testing Gate for PXF-GP[[gp_ver]]]
+#      passed: [Testing Gate for PXF-GP[[gp_ver]]]
+      passed: [Build PXF-GP[[gp_ver]] on RHEL7]
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
     - get: ccp_src
     - get: ccp-7-image
