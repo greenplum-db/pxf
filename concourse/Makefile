@@ -15,31 +15,12 @@ FLY_CMD                    = /usr/local/bin/fly
 TEMPLATE_CMD               = ./template_tool
 FLY_OPTION_NON-INTERACTIVE =
 
-.PHONY: set-build
-set-build: set-build-pipeline
+.PHONY: build-5 build-6
+build-5: set-5X-build-pipeline
+build-6: set-6X-build-pipeline
 
-.PHONY: set-build-pipeline
-set-build-pipeline:
-	$(FLY_CMD) --target=$(CONCOURSE) \
-		set-pipeline \
-		--check-creds \
-		--pipeline=$(BUILD_PIPELINE_NAME) \
-		--config=pipelines/build_pipeline.yml \
-		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/gpdb-6X_STABLE-release-secrets.prod.yml \
-		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
-		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
-		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud.yml \
-		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud_kerberos.yml \
-		--var=pxf-git-branch=${BRANCH} \
-		--var=folder-prefix=prod/gpdb_branch \
-		--var=gpdb-branch=6X_STABLE \
-		${FLY_OPTION_NON-INTERACTIVE}
-
-	@echo using the following command to unpause the pipeline:
-	@echo -e "\t$(FLY_CMD) -t ${CONCOURSE} unpause-pipeline --pipeline ${BUILD_PIPELINE_NAME}"
-
-.PHONY: set-5X-build-pipeline-from-template
-set-5X-build-pipeline-from-template:
+.PHONY: set-5X-build-pipeline
+set-5X-build-pipeline:
 	$(FLY_CMD) --target=$(CONCOURSE) \
 		set-pipeline \
 		--check-creds \
@@ -58,8 +39,8 @@ set-5X-build-pipeline-from-template:
 	@echo using the following command to unpause the pipeline:
 	@echo -e "\t$(FLY_CMD) -t ${CONCOURSE} unpause-pipeline --pipeline ${BUILD_PIPELINE_NAME}"
 
-.PHONY: set-6X-build-pipeline-from-template
-set-6X-build-pipeline-from-template:
+.PHONY: set-6X-build-pipeline
+set-6X-build-pipeline:
 	$(FLY_CMD) --target=$(CONCOURSE) \
 		set-pipeline \
 		--check-creds \
