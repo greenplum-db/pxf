@@ -19,8 +19,9 @@ function install_hadoop_single_cluster() {
 	    # regular tarball based install (old)
 	    cp /tmp/pxf/lib/pxf-hbase-*.jar "${LOCAL_GPHD_ROOT}/hbase/lib"
 	else
-	    # component tarball based install (new)
-	    cp /tmp/pxf*/pxf/lib/pxf-hbase-*.jar "${LOCAL_GPHD_ROOT}/hbase/lib"
+	    # component RPM tarball based install (new)
+	    /tmp/pxf*/install_component
+	    cp /usr/local/pxf-gp*/lib/pxf-hbase-*.jar "${LOCAL_GPHD_ROOT}/hbase/lib"
 	fi
 
 	cat <<-EOF > ~/setup_hadoop.sh

@@ -16,6 +16,7 @@ inputs:
 
 params:
   ACCESS_KEY_ID:
+  GP_VER:
   GROUP: smoke
   HADOOP_CLIENT: HDP
   IMPERSONATION: true

@@ -1,7 +1,7 @@
 #!/bin/bash
 
-mkdir -p /usr/local/greenplum-db-devel
-chown -R gpadmin:gpadmin /usr/local/greenplum-db-devel
+mkdir -p /usr/local/greenplum-db
+chown -R gpadmin:gpadmin /usr/local/greenplum-db
 
 # TODO: check if gpadmin-limits.conf already exists and bail out if it does
 >/etc/security/limits.d/gpadmin-limits.conf cat <<-EOF

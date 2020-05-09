@@ -7,14 +7,17 @@
 Introduction
 ============
 
-PXF is an extensible framework that allows a distributed database like GPDB to query external data files, whose metadata is not managed by the database.
-PXF includes built-in connectors for accessing data that exists inside HDFS files, Hive tables, HBase tables and more.
-Users can also create their own connectors to other data storages or processing engines.
-To create these connectors using JAVA plugins, see the PXF API and Reference Guide onGPDB.
+PXF is an extensible framework that allows a distributed database like Greenplum to query external data files, whose metadata is not managed by the database.
+PXF includes built-in connectors for accessing data that exists inside HDFS files, Hive tables, HBase tables, JDBC-accessible databases and more.
+Users can also create their own connectors to other data storage or processing engines.
 
-
-Package Contents
+Repository Contents
 ================
+## external-table/
+Contains the Greenplum extension implementing an External Table protocol handler
+
+## fdw/
+Contains the Greenplum extension implementing a Foreign Data Wrapper (FDW) for PXF
 
 ## server/
 Contains the server side code of PXF along with the PXF Service and all the Plugins
@@ -34,14 +37,14 @@ Resources for PXF's Continuous Integration pipelines
 ## regression/
 Contains the end-to-end (integration) tests for PXF against the various datasources, utilizing the PostgreSQL testing framework `pg_regress`
 
-## fdw/
-Contains the Greenplum extension implementing a Foreign Data Wrapper (FDW) for PXF.
+## downloads/
+An empty directory that serves as a staging location for Greenplum RPMs for the development Docker image
 
 PXF Development
 =================
-Below are the steps to build and install PXF along with its dependencies including GPDB and Hadoop.
+Below are the steps to build and install PXF along with its dependencies including Greenplum and Hadoop.
 
-To start, ensure you have a `~/workspace` directory and have cloned the `pxf` and its prerequisites(shown below) under it.
+To start, ensure you have a `~/workspace` directory and have cloned the `pxf` and its prerequisites (shown below) under it.
 (The name `workspace` is not strictly required but will be used throughout this guide.)
 ```bash
 mkdir -p ~/workspace
@@ -58,50 +61,53 @@ ln -s ~/<git_repos_root> ~/workspace
 
 To build PXF, you must have:
 
-- JDK 1.8 to compile (PXF runs on Java 8 and Java 11)
-- Go (1.9 or later)
-- unzip
+1. GCC compiler, `make` system, `unzip` package, `maven` for running integration tests
+2. Installed Greenplum DB
+    
+    Either download and install Greenplum RPM or build Greenplum from the source by following instructions in the [GPDB README](https://github.com/greenplum-db/gpdb).
+    
+    Assuming you have installed Greenplum into `/usr/local/greenplum-db` directory, run its environment script:
+    ```
+    source /usr/local/greenplum-db/greenplum_path.sh
+    ```
 
-Export your `JAVA_HOME`.
+3. JDK 1.8 to compile (PXF runs on Java 8 and Java 11)
+    
+    Export your `JAVA_HOME`:
+    ```
+    export JAVA_HOME=<PATH_TO_YOUR_JAVA_HOME>
+    ```
 
-```
-export JAVA_HOME=<PATH_TO_YOUR_JAVA_HOME>
-```
+4. Go (1.9 or later)
 
-To install Go on CentOS, `sudo yum install go`.
+    To install Go on CentOS, `sudo yum install go`. For other platforms, see the [Go downloads page](https://golang.org/dl/).
 
-For other platforms, see the [Go downloads page](https://golang.org/dl/).
+    Make sure to export your `GOPATH` and add go to your `PATH`. For example:
+    ```
+    export GOPATH=$HOME/go
+    export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
+    ```
 
-Make sure to export your `GOPATH` and add go to your `PATH`. For example:
+    Once you have installed Go, you will need the `dep` and `ginkgo` tools, which install Go dependencies and run Go tests,
+    respectively. Assuming `go` is on your `PATH`, you can run:
+    ```
+    go get github.com/golang/dep/cmd/dep
+    go get github.com/onsi/ginkgo/ginkgo
+    ```
 
-```
-export GOPATH=$HOME/go
-export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
-```
-
-Once you have installed Go, you will need the `dep` and `ginkgo` tools, which install Go dependencies and run Go tests,
-respectively. Assuming `go` is on your `PATH`, you can run:
-
-```
-go get github.com/golang/dep/cmd/dep
-go get github.com/onsi/ginkgo/ginkgo
-```
-
-to install them.
-
-## How to Build
-PXF uses gradle for build and has a wrapper makefile for abstraction
+## How to Build PXF
+PXF uses Makefiles to build its components. PXF server component uses Gradle that is wrapped into the Makefile for convenience.
 ```bash
 cd ~/workspace/pxf
 
 # Compile & Test PXF
 make
   
-# Simply Run unittest
+# Only run unit tests
 make test
 ```
 
-## Install
+## How to Install PXF
 
 To install PXF, specify the `PXF_HOME` location, for example `/usr/local/gpdb/pxf`:
 
@@ -111,11 +117,8 @@ cd ~/workspace/pxf
 PXF_HOME=/usr/local/gpdb/pxf make install
 ```
 
-## Demonstrating Hadoop Integration
-In order to demonstrate end to end functionality you will need GPDB and Hadoop installed.
-
-### Hadoop
-We have all the related hadoop components (hdfs, hive, hbase, zookeeper, etc) mapped into simple artifact named singlecluster.
+## How to demonstrate Hadoop Integration
+In order to demonstrate end to end functionality you will need Hadoop installed. We have all the related hadoop components (hdfs, hive, hbase, zookeeper, etc) mapped into simple artifact named singlecluster.
 You can [download from here](http://storage.googleapis.com/pxf-public/singlecluster-HDP.tar.gz) and untar the `singlecluster-HDP.tar.gz` file, which contains everything needed to run Hadoop.
 
 ```bash
@@ -124,30 +127,34 @@ cd ~/workspace
 tar xzf singlecluster-HDP.tar.gz
 ```
 
-### GPDB
-```
-git clone https://github.com/greenplum-db/gpdb.git
-```
 
-You'll end up with a directory structure like this:
-
-```
-~
-└── workspace
-    ├── pxf
-    ├── singlecluster-HDP
-    └── gpdb
-```
-
-If you already have GPDB installed and running using the instructions shown in the [GPDB README](https://github.com/greenplum-db/gpdb), 
-you can ignore the `Setup GPDB` section below and simply follow the steps in  `Setup Hadoop` and `Setup PXF`
-
-If you don't wish to use docker, make sure you manually install JDK.
-
-## Development With Docker
+# Development With Docker
 NOTE: Since the docker container will house all Single cluster Hadoop, Greenplum and PXF, we recommend that you have at least 4 cpus and 6GB memory allocated to Docker. These settings are available under docker preferences.
 
 The following commands run the docker container and set up and switch to user gpadmin.
+
+```bash
+# Get the latest image
+export GCR_PROJECT=<YOUR-GOOGLE_CONTAINER_REGISTRY-PROJECT-NAME>
+docker pull gcr.io/$GCR_PROJECT/gpdb-pxf-dev/gpdb6-centos7-test-pxf:latest
+
+docker run --rm -it \
+  -p 5432:5432 \
+  -p 5888:5888 \
+  -p 8000:8000 \
+  -p 5005:5005 \
+  -p 8020:8020 \
+  -p 9000:9000 \
+  -p 9090:9090 \
+  -p 50070:50070 \
+  -w /home/gpadmin/workspace \
+  -v ~/workspace/pxf:/home/gpadmin/workspace/pxf \
+  -v ~/workspace/singlecluster-HDP:/home/gpadmin/workspace/singlecluster \
+  gcr.io/$GCR_PROJECT/gpdb-pxf-dev/gpdb6-centos7-test-pxf:latest /bin/bash -c \
+  "/home/gpadmin/workspace/pxf/dev/indocker_setup.bash && /sbin/service sshd start && su - gpadmin"
+
+```
+
 
 ```bash
 # Get the latest image

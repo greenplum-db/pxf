@@ -14,7 +14,8 @@ import (
 type envVar string
 
 const (
-	gphome   envVar = "GPHOME"
+	gpHome   envVar = "GPHOME"
+	pxfHome  envVar = "PXF_HOME"
 	pxfConf  envVar = "PXF_CONF"
 	javaHome envVar = "JAVA_HOME"
 )
@@ -69,13 +70,16 @@ func (cmd *command) GetFunctionToExecute() (func(string) string, error) {
 		}, nil
 	default:
 		pxfCommand := ""
+		if inputs[gpHome] != "" {
+			pxfCommand += "GPHOME=" + inputs[gpHome] + " "
+		}
 		if inputs[pxfConf] != "" {
 			pxfCommand += "PXF_CONF=" + inputs[pxfConf] + " "
 		}
 		if inputs[javaHome] != "" {
 			pxfCommand += "JAVA_HOME=" + inputs[javaHome] + " "
 		}
-		pxfCommand += inputs[gphome] + "/pxf/bin/pxf" + " " + string(cmd.name)
+		pxfCommand += inputs[pxfHome] + "/bin/pxf" + " " + string(cmd.name)
 		if cmd.name == reset {
 			pxfCommand += " --force" // there is a prompt for local reset as well
 		}
@@ -114,7 +118,7 @@ var (
 			err:     "PXF failed to initialize on %d out of %d host%s\n",
 		},
 		warn:       false,
-		envVars:    []envVar{gphome, pxfConf, javaHome},
+		envVars:    []envVar{gpHome, pxfHome, pxfConf, javaHome},
 		whereToRun: cluster.ON_REMOTE | cluster.ON_HOSTS | cluster.INCLUDE_MASTER | cluster.INCLUDE_MIRRORS,
 	}
 	StartCommand = command{
@@ -125,7 +129,7 @@ var (
 			err:     "PXF failed to start on %d out of %d host%s\n",
 		},
 		warn:       false,
-		envVars:    []envVar{gphome},
+		envVars:    []envVar{pxfHome},
 		whereToRun: cluster.ON_REMOTE | cluster.ON_HOSTS | cluster.EXCLUDE_MASTER | cluster.EXCLUDE_MIRRORS,
 	}
 	StopCommand = command{
@@ -136,7 +140,7 @@ var (
 			err:     "PXF failed to stop on %d out of %d host%s\n",
 		},
 		warn:       false,
-		envVars:    []envVar{gphome},
+		envVars:    []envVar{pxfHome},
 		whereToRun: cluster.ON_REMOTE | cluster.ON_HOSTS | cluster.EXCLUDE_MASTER | cluster.EXCLUDE_MIRRORS,
 	}
 	SyncCommand = command{
@@ -161,7 +165,7 @@ var (
 			err:     "PXF is not running on %d out of %d host%s\n",
 		},
 		warn:       false,
-		envVars:    []envVar{gphome},
+		envVars:    []envVar{pxfHome},
 		whereToRun: cluster.ON_REMOTE | cluster.ON_HOSTS | cluster.EXCLUDE_MASTER | cluster.EXCLUDE_MIRRORS,
 	}
 	ResetCommand = command{
@@ -175,7 +179,7 @@ var (
 				"This is a destructive action. Press y to continue:\n",
 		},
 		warn:       true,
-		envVars:    []envVar{gphome},
+		envVars:    []envVar{pxfHome},
 		whereToRun: cluster.ON_REMOTE | cluster.ON_HOSTS | cluster.INCLUDE_MASTER | cluster.INCLUDE_MIRRORS,
 	}
 	RestartCommand = command{
@@ -186,7 +190,7 @@ var (
 			err:     "PXF failed to restart on %d out of %d host%s\n",
 		},
 		warn:       false,
-		envVars:    []envVar{gphome},
+		envVars:    []envVar{pxfHome},
 		whereToRun: cluster.ON_REMOTE | cluster.ON_HOSTS | cluster.EXCLUDE_MASTER | cluster.EXCLUDE_MIRRORS,
 	}
 )
