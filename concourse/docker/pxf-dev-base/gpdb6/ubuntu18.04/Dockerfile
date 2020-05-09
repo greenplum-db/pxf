@@ -65,7 +65,7 @@ RUN locale-gen en_US.UTF-8 \
     && echo >> ~gpadmin/.pxfrc 'export PGPORT=5432' \
     && echo >> ~gpadmin/.pxfrc 'export GOPATH=/opt/go' \
     && echo >> ~gpadmin/.pxfrc 'export GPHOME=$(find /usr/local/ -name greenplum-db* -type d | head -n1)' \
-    && echo >> ~gpadmin/.pxfrc 'export PXF_HOME=${GPHOME}/pxf' \
+    && echo >> ~gpadmin/.pxfrc 'export PXF_HOME=$(find /usr/local/ -name pxf-gp* -type d | head -n1)' \
     && echo >> ~gpadmin/.pxfrc 'export PXF_CONF=/home/gpadmin/pxf' \
     && echo >> ~gpadmin/.pxfrc 'export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-amd64' \
     && echo >> ~gpadmin/.pxfrc 'export PATH=${GPHOME}/bin:${PXF_HOME}/bin:${GOPATH}/bin:/usr/local/go/bin:$PATH' \

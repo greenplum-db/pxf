@@ -1,7 +1,7 @@
 # How to build pxf-dev-base docker images locally?
 
-The generated images are the base images for the CDH, HDP2, HDP3, and MapR
-images. This guide assumes the PXF repository lives under the `~/workspace/pxf`
+The generated images are the base images for building and testing PXF.
+This guide assumes the PXF repository lives under the `~/workspace/pxf`
 directory. The `cloudbuild.yaml` file produces the following docker images:
 
 ### Docker gpdb5-centos6-test-pxf-image image
@@ -11,10 +11,10 @@ command to build the image:
 
     pushd ~/workspace/pxf/concourse/docker/pxf-dev-base/
     docker build \
-      --build-arg=BASE_IMAGE=<REGISTRY_PATH>/centos-gpdb-dev:6-gcc6.2-llvm3.7 \
+      --build-arg=BASE_IMAGE=pivotaldata/centos-gpdb-dev:6-gcc6.2-llvm3.7 \
       --tag=gpdb5-centos6-test-pxf \
       -f ~/workspace/pxf/concourse/docker/pxf-dev-base/gpdb5/centos6/Dockerfile \
-      <PATH_TO_YOUR_DOCKER_WORKSPACE>
+      .
     popd
 
 ### Docker gpdb5-centos7-test-pxf-image image
@@ -24,10 +24,10 @@ command to build the image:
 
     pushd ~/workspace/pxf/concourse/docker/pxf-dev-base/
     docker build \
-      --build-arg=BASE_IMAGE=<REGISTRY_PATH>/centos-gpdb-dev:7-gcc6.2-llvm3.7 \
+      --build-arg=BASE_IMAGE=pivotaldata/centos-gpdb-dev:7-gcc6.2-llvm3.7 \
       --tag=gpdb5-centos7-test-pxf \
       -f ~/workspace/pxf/concourse/docker/pxf-dev-base/gpdb5/centos7/Dockerfile \
-      <PATH_TO_YOUR_DOCKER_WORKSPACE>
+      .
     popd
 
 ### Docker gpdb6-centos7-test-pxf-image image
@@ -37,10 +37,10 @@ command to build the image:
 
     pushd ~/workspace/pxf/concourse/docker/pxf-dev-base/
     docker build \
-      --build-arg=BASE_IMAGE=<REGISTRY_PATH>/gpdb6-centos7-test:latest \
+      --build-arg=BASE_IMAGE=pivotaldata/gpdb6-centos7-test:latest \
       --tag=gpdb6-centos7-test-pxf \
       -f ~/workspace/pxf/concourse/docker/pxf-dev-base/gpdb6/centos7/Dockerfile \
-      <PATH_TO_YOUR_DOCKER_WORKSPACE>
+      .
     popd
 
 ### Docker gpdb6-ubuntu18.04-test-pxf-image image
@@ -50,8 +50,8 @@ command to build the image:
 
     pushd ~/workspace/pxf/concourse/docker/pxf-dev-base/
     docker build \
-      --build-arg=BASE_IMAGE=<REGISTRY_PATH>/gpdb6-ubuntu18.04-test:latest \
+      --build-arg=BASE_IMAGE=pivotaldata/gpdb6-ubuntu18.04-test:latest \
       --tag=gpdb6-ubuntu18.04-test-pxf \
       -f ~/workspace/pxf/concourse/docker/pxf-dev-base/gpdb6/ubuntu18.04/Dockerfile \
-      <PATH_TO_YOUR_DOCKER_WORKSPACE>
+      .
     popd

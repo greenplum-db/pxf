@@ -5,7 +5,7 @@ set -euo pipefail
 COMMIT_SHA=$(cat pxf_src/.git/ref)
 echo "Checking images for PXF SHA-1: ${COMMIT_SHA}"
 
-if [ -z "$IMAGE_LIST" ]; then
+if [[ -z $IMAGE_LIST ]]; then
   echo "The IMAGE_LIST needs to be provided"
   exit 1
 fi
@@ -57,5 +57,6 @@ do
   sleep 1m
 done
 
+echo "Timeout exceeded while waiting for cloud build to complete"
 # fail if we wait for too long
 exit 1
