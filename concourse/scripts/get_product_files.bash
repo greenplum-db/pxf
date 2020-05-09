@@ -50,6 +50,7 @@ for ((i = 0; i < ${#product_files[@]}; i++)); do
 	file=${product_files[$i]}
 	download_path=${product_dirs[$i]}/${file##*/}
 	[[ -e ${download_path} ]] || {
+		echo "${download_path} does not exist, looking for version Latest - $((VERSIONS_BEFORE_LATEST - 1))"
 		new_version=$((VERSIONS_BEFORE_LATEST - 1))
 		# this assumes we are naming our paths with latest-X !
 		download_path=${download_path/latest-${VERSIONS_BEFORE_LATEST}\//latest-${new_version}/}
