@@ -17,5 +17,5 @@ TRIGGER_NAMES=(${TRIGGER_LIST})
 for trigger in "${TRIGGER_NAMES[@]}"
 do
   echo "Trigger cloud build for ${trigger}"
-  gcloud alpha builds triggers run --quiet "${trigger}" --sha="${COMMIT_SHA}"
+  gcloud beta builds triggers run --quiet "${trigger}" --sha="${COMMIT_SHA}"
 done
