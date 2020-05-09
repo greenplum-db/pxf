@@ -4,15 +4,21 @@ set -exo pipefail
 
 CWDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+# make sure GP_VER is set so that we know what PXF_HOME will be
+if [[ -z "GP_VER" ]]; then
+    echo 'ERROR: GP_VER must be set'
+    exit 1
+fi
+
 # set our own GPHOME for RPM-based installs before sourcing common script
 GPHOME=/usr/local/greenplum-db
+export PXF_HOME=/usr/local/pxf-gp${GP_VER}
 
 source "${CWDIR}/pxf_common.bash"
 PG_REGRESS=${PG_REGRESS:-false}
 
 export GOOGLE_PROJECT_ID=${GOOGLE_PROJECT_ID:-data-gpdb-ud}
 export GPHOME=${GPHOME:-/usr/local/greenplum-db-devel}
-export PXF_HOME=${GPHOME}/pxf
 export JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8
 export HADOOP_HEAPSIZE=512
 export YARN_HEAPSIZE=512

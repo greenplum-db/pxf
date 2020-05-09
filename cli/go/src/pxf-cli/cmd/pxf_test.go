@@ -11,47 +11,87 @@ import (
 )
 
 var _ = Describe("CommandFunc", func() {
-	Context("when JAVA_HOME, PXF_CONF and GPHOME are set", func() {
+	Context("when GPHOME, JAVA_HOME, PXF_CONF and PXF_HOME are set", func() {
 		BeforeEach(func() {
 			_ = os.Setenv("GPHOME", "/test/gphome")
-			_ = os.Setenv("PXF_CONF", "/test/gphome/pxf_conf")
+			_ = os.Setenv("PXF_HOME", "/test/pxfhome")
+			_ = os.Setenv("PXF_CONF", "/test/somewhere/pxf_conf")
 			_ = os.Setenv("JAVA_HOME", "/etc/java/home")
 		})
 
 		It("successfully generates init command", func() {
 			commandFunc, err := cmd.InitCommand.GetFunctionToExecute()
 			Expect(err).To(BeNil())
-			expected := "PXF_CONF=/test/gphome/pxf_conf JAVA_HOME=/etc/java/home /test/gphome/pxf/bin/pxf init"
+			expected := "GPHOME=/test/gphome PXF_CONF=/test/somewhere/pxf_conf JAVA_HOME=/etc/java/home /test/pxfhome/bin/pxf init"
 			Expect(commandFunc("foo")).To(Equal(expected))
 		})
 	})
 
-	Context("when only GPHOME is set", func() {
+	Context("when GPHOME is not set, JAVA_HOME, PXF_CONF and PXF_HOME are set", func() {
 		BeforeEach(func() {
-			_ = os.Setenv("GPHOME", "/test/gphome")
-			_ = os.Unsetenv("PXF_CONF")
+			_ = os.Unsetenv("GPHOME")
+			_ = os.Setenv("PXF_HOME", "/test/pxfhome")
+			_ = os.Setenv("PXF_CONF", "/test/somewhere/pxf_conf")
+			_ = os.Setenv("JAVA_HOME", "/etc/java/home")
+		})
+
+		It("fails to init", func() {
+			commandFunc, err := cmd.InitCommand.GetFunctionToExecute()
+			Expect(commandFunc).To(BeNil())
+			Expect(err).To(Equal(errors.New("GPHOME must be set")))
 		})
 
 		It("successfully generates start, stop, status, restart, and reset commands", func() {
 			commandFunc, err := cmd.StartCommand.GetFunctionToExecute()
 			Expect(err).To(BeNil())
-			Expect(commandFunc("foo")).To(Equal("/test/gphome/pxf/bin/pxf start"))
+			Expect(commandFunc("foo")).To(Equal("/test/pxfhome/bin/pxf start"))
 
 			commandFunc, err = cmd.StopCommand.GetFunctionToExecute()
 			Expect(err).To(BeNil())
-			Expect(commandFunc("foo")).To(Equal("/test/gphome/pxf/bin/pxf stop"))
+			Expect(commandFunc("foo")).To(Equal("/test/pxfhome/bin/pxf stop"))
 
 			commandFunc, err = cmd.StatusCommand.GetFunctionToExecute()
 			Expect(err).To(BeNil())
-			Expect(commandFunc("foo")).To(Equal("/test/gphome/pxf/bin/pxf status"))
+			Expect(commandFunc("foo")).To(Equal("/test/pxfhome/bin/pxf status"))
 
 			commandFunc, err = cmd.RestartCommand.GetFunctionToExecute()
 			Expect(err).To(BeNil())
-			Expect(commandFunc("foo")).To(Equal("/test/gphome/pxf/bin/pxf restart"))
+			Expect(commandFunc("foo")).To(Equal("/test/pxfhome/bin/pxf restart"))
 
 			commandFunc, err = cmd.ResetCommand.GetFunctionToExecute()
 			Expect(err).To(BeNil())
-			Expect(commandFunc("foo")).To(Equal("/test/gphome/pxf/bin/pxf reset --force"))
+			Expect(commandFunc("foo")).To(Equal("/test/pxfhome/bin/pxf reset --force"))
+		})
+	})
+
+	Context("when PXF_CONF is not set", func() {
+		BeforeEach(func() {
+			_ = os.Setenv("GPHOME", "/test/gphome")
+			_ = os.Setenv("PXF_HOME", "/test/pxfhome")
+			_ = os.Unsetenv("PXF_CONF")
+			_ = os.Unsetenv("JAVA_HOME")
+		})
+
+		It("successfully generates start, stop, status, restart, and reset commands", func() {
+			commandFunc, err := cmd.StartCommand.GetFunctionToExecute()
+			Expect(err).To(BeNil())
+			Expect(commandFunc("foo")).To(Equal("/test/pxfhome/bin/pxf start"))
+
+			commandFunc, err = cmd.StopCommand.GetFunctionToExecute()
+			Expect(err).To(BeNil())
+			Expect(commandFunc("foo")).To(Equal("/test/pxfhome/bin/pxf stop"))
+
+			commandFunc, err = cmd.StatusCommand.GetFunctionToExecute()
+			Expect(err).To(BeNil())
+			Expect(commandFunc("foo")).To(Equal("/test/pxfhome/bin/pxf status"))
+
+			commandFunc, err = cmd.RestartCommand.GetFunctionToExecute()
+			Expect(err).To(BeNil())
+			Expect(commandFunc("foo")).To(Equal("/test/pxfhome/bin/pxf restart"))
+
+			commandFunc, err = cmd.ResetCommand.GetFunctionToExecute()
+			Expect(err).To(BeNil())
+			Expect(commandFunc("foo")).To(Equal("/test/pxfhome/bin/pxf reset --force"))
 		})
 		It("fails to init or sync", func() {
 			commandFunc, err := cmd.InitCommand.GetFunctionToExecute()
@@ -65,8 +105,8 @@ var _ = Describe("CommandFunc", func() {
 	})
 	Context("when user specifies --delete", func() {
 		BeforeEach(func() {
-			_ = os.Setenv("PXF_CONF", "/test/gphome/pxf_conf")
-			_ = os.Unsetenv("GPHOME")
+			_ = os.Setenv("PXF_CONF", "/test/somewhere/pxf_conf")
+			_ = os.Unsetenv("PXF_HOME")
 			cmd.DeleteOnSync = true
 		})
 		It("sets up rsync commands of $PXF_CONF/{conf,lib,servers} dirs with --delete flag", func() {
@@ -74,17 +114,17 @@ var _ = Describe("CommandFunc", func() {
 			Expect(err).To(BeNil())
 			Expect(commandFunc("sdw1")).To(Equal(
 				"rsync -az --delete -e 'ssh -o StrictHostKeyChecking=no' " +
-					"'/test/gphome/pxf_conf/conf' " +
-					"'/test/gphome/pxf_conf/lib' " +
-					"'/test/gphome/pxf_conf/servers' " +
-					"'sdw1:/test/gphome/pxf_conf'",
+					"'/test/somewhere/pxf_conf/conf' " +
+					"'/test/somewhere/pxf_conf/lib' " +
+					"'/test/somewhere/pxf_conf/servers' " +
+					"'sdw1:/test/somewhere/pxf_conf'",
 			))
 			Expect(commandFunc("sdw2")).To(Equal(
 				"rsync -az --delete -e 'ssh -o StrictHostKeyChecking=no' " +
-					"'/test/gphome/pxf_conf/conf' " +
-					"'/test/gphome/pxf_conf/lib' " +
-					"'/test/gphome/pxf_conf/servers' " +
-					"'sdw2:/test/gphome/pxf_conf'",
+					"'/test/somewhere/pxf_conf/conf' " +
+					"'/test/somewhere/pxf_conf/lib' " +
+					"'/test/somewhere/pxf_conf/servers' " +
+					"'sdw2:/test/somewhere/pxf_conf'",
 			))
 		})
 		AfterEach(func() {
@@ -93,8 +133,10 @@ var _ = Describe("CommandFunc", func() {
 	})
 	Context("when only PXF_CONF is set", func() {
 		BeforeEach(func() {
-			_ = os.Setenv("PXF_CONF", "/test/gphome/pxf_conf")
 			_ = os.Unsetenv("GPHOME")
+			_ = os.Unsetenv("PXF_HOME")
+			_ = os.Setenv("PXF_CONF", "/test/somewhere/pxf_conf")
+			_ = os.Unsetenv("JAVA_HOME")
 		})
 
 		It("sets up rsync commands of $PXF_CONF/{conf,lib,servers} dirs", func() {
@@ -102,17 +144,17 @@ var _ = Describe("CommandFunc", func() {
 			Expect(err).To(BeNil())
 			Expect(commandFunc("sdw1")).To(Equal(
 				"rsync -az -e 'ssh -o StrictHostKeyChecking=no' " +
-					"'/test/gphome/pxf_conf/conf' " +
-					"'/test/gphome/pxf_conf/lib' " +
-					"'/test/gphome/pxf_conf/servers' " +
-					"'sdw1:/test/gphome/pxf_conf'",
+					"'/test/somewhere/pxf_conf/conf' " +
+					"'/test/somewhere/pxf_conf/lib' " +
+					"'/test/somewhere/pxf_conf/servers' " +
+					"'sdw1:/test/somewhere/pxf_conf'",
 			))
 			Expect(commandFunc("sdw2")).To(Equal(
 				"rsync -az -e 'ssh -o StrictHostKeyChecking=no' " +
-					"'/test/gphome/pxf_conf/conf' " +
-					"'/test/gphome/pxf_conf/lib' " +
-					"'/test/gphome/pxf_conf/servers' " +
-					"'sdw2:/test/gphome/pxf_conf'",
+					"'/test/somewhere/pxf_conf/conf' " +
+					"'/test/somewhere/pxf_conf/lib' " +
+					"'/test/somewhere/pxf_conf/servers' " +
+					"'sdw2:/test/somewhere/pxf_conf'",
 			))
 		})
 
@@ -122,23 +164,25 @@ var _ = Describe("CommandFunc", func() {
 			Expect(err).To(Equal(errors.New("GPHOME must be set")))
 			commandFunc, err = cmd.StartCommand.GetFunctionToExecute()
 			Expect(commandFunc).To(BeNil())
-			Expect(err).To(Equal(errors.New("GPHOME must be set")))
+			Expect(err).To(Equal(errors.New("PXF_HOME must be set")))
 			commandFunc, err = cmd.StopCommand.GetFunctionToExecute()
 			Expect(commandFunc).To(BeNil())
-			Expect(err).To(Equal(errors.New("GPHOME must be set")))
+			Expect(err).To(Equal(errors.New("PXF_HOME must be set")))
 			commandFunc, err = cmd.RestartCommand.GetFunctionToExecute()
 			Expect(commandFunc).To(BeNil())
-			Expect(err).To(Equal(errors.New("GPHOME must be set")))
+			Expect(err).To(Equal(errors.New("PXF_HOME must be set")))
 			commandFunc, err = cmd.StatusCommand.GetFunctionToExecute()
 			Expect(commandFunc).To(BeNil())
-			Expect(err).To(Equal(errors.New("GPHOME must be set")))
+			Expect(err).To(Equal(errors.New("PXF_HOME must be set")))
 		})
 	})
 
 	Context("when PXF_CONF is set to empty string", func() {
 		BeforeEach(func() {
-			_ = os.Setenv("PXF_CONF", "")
 			_ = os.Setenv("GPHOME", "/test/gphome")
+			_ = os.Setenv("PXF_HOME", "/test/pxfhome")
+			_ = os.Setenv("PXF_CONF", "")
+			_ = os.Unsetenv("JAVA_HOME")
 		})
 		It("fails to init or sync", func() {
 			_ = os.Setenv("PXF_CONF", "")
@@ -151,28 +195,30 @@ var _ = Describe("CommandFunc", func() {
 		})
 	})
 
-	Context("when GPHOME is set to empty string", func() {
+	Context("when PXF_HOME is set to empty string", func() {
 		BeforeEach(func() {
-			_ = os.Setenv("GPHOME", "")
+			_ = os.Setenv("GPHOME", "/test/gphome")
+			_ = os.Setenv("PXF_HOME", "")
 			_ = os.Unsetenv("PXF_CONF")
+			_ = os.Unsetenv("JAVA_HOME")
 		})
 		It("fails to init, start, stop, restart, or status", func() {
-			_ = os.Setenv("GPHOME", "")
+			_ = os.Setenv("PXF_HOME", "")
 			commandFunc, err := cmd.InitCommand.GetFunctionToExecute()
 			Expect(commandFunc).To(BeNil())
-			Expect(err).To(Equal(errors.New("GPHOME cannot be blank")))
+			Expect(err).To(Equal(errors.New("PXF_HOME cannot be blank")))
 			commandFunc, err = cmd.StartCommand.GetFunctionToExecute()
 			Expect(commandFunc).To(BeNil())
-			Expect(err).To(Equal(errors.New("GPHOME cannot be blank")))
+			Expect(err).To(Equal(errors.New("PXF_HOME cannot be blank")))
 			commandFunc, err = cmd.StopCommand.GetFunctionToExecute()
 			Expect(commandFunc).To(BeNil())
-			Expect(err).To(Equal(errors.New("GPHOME cannot be blank")))
+			Expect(err).To(Equal(errors.New("PXF_HOME cannot be blank")))
 			commandFunc, err = cmd.RestartCommand.GetFunctionToExecute()
 			Expect(commandFunc).To(BeNil())
-			Expect(err).To(Equal(errors.New("GPHOME cannot be blank")))
+			Expect(err).To(Equal(errors.New("PXF_HOME cannot be blank")))
 			commandFunc, err = cmd.StatusCommand.GetFunctionToExecute()
 			Expect(commandFunc).To(BeNil())
-			Expect(err).To(Equal(errors.New("GPHOME cannot be blank")))
+			Expect(err).To(Equal(errors.New("PXF_HOME cannot be blank")))
 		})
 	})
 

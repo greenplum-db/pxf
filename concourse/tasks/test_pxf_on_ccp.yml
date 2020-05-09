@@ -18,6 +18,7 @@ inputs:
 params:
   ACCEPTANCE:
   ACCESS_KEY_ID:
+  GP_VER:
   GROUP: feature
   HIVE_VERSION: 1
   IMPERSONATION: true

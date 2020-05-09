@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+INSTALL_COMPONENT_SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+RPM_FILE=$(basename $(find "${INSTALL_COMPONENT_SCRIPT_DIR}" -name '*.rpm'))
+
+echo "Installing PXF RPM ${RPM_FILE} ..."
+
+owner=$(whoami)
+sudo_if_needed=''
+if [[ "${owner}" != "root" ]]; then
+    sudo_if_needed='sudo'
+fi
+
+${sudo_if_needed} rpm -Uvh ${INSTALL_COMPONENT_SCRIPT_DIR}/${RPM_FILE}
+${sudo_if_needed} chown -R ${owner} /usr/local/pxf-gp*
+
+echo "Successfully installed PXF version $(cat /usr/local/pxf-gp*/version)"

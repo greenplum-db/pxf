@@ -14,7 +14,9 @@ outputs:
 - name: dist
 
 params:
+  LICENSE:
   TARGET_OS:
+  VENDOR:
 
 run:
   path: pxf_src/concourse/scripts/build.bash

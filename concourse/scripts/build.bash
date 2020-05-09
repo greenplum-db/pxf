@@ -28,25 +28,25 @@ function install_gpdb() {
     fi
 }
 
-function compile_pxf_protocol_extension() {
+function compile_pxf() {
     source "${GPHOME}/greenplum_path.sh"
     if [[ ${TARGET_OS} == "rhel6" ]]; then
         source /opt/gcc_env.sh
     fi
     bash -c "
         source ~/.pxfrc
-        make -C '${PWD}/pxf_src' tar
+        VENDOR='${VENDOR}' LICENSE='${LICENSE}' make -C '${PWD}/pxf_src' rpm-tar
     "
 }
 
-function package_pxf_protocol_extension() {
+function package_pxf() {
     # verify contents
-    ls -al pxf_src/build/dist
-    tar -tvzf pxf_src/build/dist/pxf-*.tar.gz
-    cp pxf_src/build/dist/pxf-*.tar.gz dist
+    ls -al pxf_src/build/distrpm
+    tar -tvzf pxf_src/build/distrpm/pxf-*.tar.gz
+    cp pxf_src/build/distrpm/pxf-*.tar.gz dist
 }
 
 install_gpdb
 inflate_dependencies
-compile_pxf_protocol_extension
-package_pxf_protocol_extension
+compile_pxf
+package_pxf
