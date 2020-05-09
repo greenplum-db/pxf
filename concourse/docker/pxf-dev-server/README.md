@@ -10,7 +10,7 @@ Build this image for Greenplum 6 running on CentOS 7 with HDP 2 support.
 Run the following command to build the image:
 
 ```
-export PROJECT_ID=<YOUR_PROJECT_ID>
+export GCR_PROJECT_ID=<YOUR_GCR_PROJECT_ID>
 export BUCKET_NAME=<YOUR_BUCKET_NAME>
 
 mkdir build
@@ -20,7 +20,7 @@ gsutil cp gs://${BUCKET_NAME}/singlecluster/HDP2/singlecluster-HDP2.tar.gz .
 gsutil cp gs://${BUCKET_NAME}/build-dependencies/pxf-build-dependencies.tar.gz .
 
 docker build \
-  --build-arg=BASE_IMAGE=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-test-pxf:latest \
+  --build-arg=BASE_IMAGE=gcr.io/$GCR_PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-test-pxf:latest \
   --tag=gpdb6-centos7-test-pxf-hdp2 \
   -f ~/workspace/pxf/concourse/docker/pxf-dev-server/Dockerfile .
 

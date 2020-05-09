@@ -35,16 +35,18 @@ when they are pushed to GCR.
   </tr>
   <tr>
     <td>Base Image</td>
-    <td> <a href="https://console.cloud.google.com/gcr/images/${PROJECT_ID}/GLOBAL/gpdb-pxf-dev/gpdb5-centos6-test-pxf">gpdb5-centos6-test-pxf</a> </td>
-    <td> <a href="https://console.cloud.google.com/gcr/images/${PROJECT_ID}/GLOBAL/gpdb-pxf-dev/gpdb5-centos7-test-pxf">gpdb5-centos7-test-pxf</a> </td>
-    <td> <a href="https://console.cloud.google.com/gcr/images/${PROJECT_ID}/GLOBAL/gpdb-pxf-dev/gpdb6-centos7-test-pxf">gpdb6-centos7-test-pxf</a> </td>
-    <td> <a href="https://console.cloud.google.com/gcr/images/${PROJECT_ID}/GLOBAL/gpdb-pxf-dev/gpdb6-ubuntu18.04-test-pxf">gpdb6-ubuntu18.04-test-pxf</a> </td>
+    <td> <a href="https://console.cloud.google.com/gcr/images/${GCR_PROJECT_ID}/GLOBAL/gpdb-pxf-dev/gpdb5-centos6-test-pxf">gpdb5-centos6-test-pxf</a> </td>
+    <td> <a href="https://console.cloud.google.com/gcr/images/${GCR_PROJECT_ID}/GLOBAL/gpdb-pxf-dev/gpdb5-centos7-test-pxf">gpdb5-centos7-test-pxf</a> </td>
+    <td> <a href="https://console.cloud.google.com/gcr/images/${GCR_PROJECT_ID}/GLOBAL/gpdb-pxf-dev/gpdb6-centos7-test-pxf">gpdb6-centos7-test-pxf</a> </td>
+    <td> <a href="https://console.cloud.google.com/gcr/images/${GCR_PROJECT_ID}/GLOBAL/gpdb-pxf-dev/gpdb6-ubuntu18.04-test-pxf">gpdb6-ubuntu18.04-test-pxf</a> </td>
   </tr>
   <tr>
     <td>MapR</td>
     <td> N/A </td>
-    <td> <a href="https://console.cloud.google.com/gcr/images/${PROJECT_ID}/GLOBAL/gpdb-pxf-dev/gpdb5-centos7-test-pxf-mapr">gpdb5-centos7-test-pxf-mapr</a> </td>
-    <td> <a href="https://console.cloud.google.com/gcr/images/${PROJECT_ID}/GLOBAL/gpdb-pxf-dev/gpdb6-centos7-test-pxf-mapr">gpdb6-centos7-test-pxf-mapr</a> </td>
+    <td> <a href="https://console.cloud.google.com/gcr/images/${GCR_PROJECT_ID}/GLOBAL/gpdb-pxf-dev/gpdb5-centos7-test-pxf-mapr">gpdb5-centos7-test-pxf-mapr</a> </td>
+    <td> <a href="https://console.cloud.google.com/gcr/images/${GCR_PROJECT_ID}/GLOBAL/gpdb-pxf-dev/gpdb6-centos7-test-pxf-mapr">gpdb6-centos7-test-pxf-mapr</a> </td>
     <td> N/A </td>
   </tr>
 </table>
+
+* Note: GCR_PROJECT_ID is the name of the Google Cloud Project ID

@@ -7,14 +7,14 @@ build the image:
 
 ```
 docker build \
-  --build-arg=BASE_IMAGE=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb5-centos7-test-pxf:latest \
+  --build-arg=BASE_IMAGE=gcr.io/$GCR_PROJECT_ID/gpdb-pxf-dev/gpdb5-centos7-test-pxf:latest \
   --tag=gpdb5-centos7-test-pxf-mapr \
   -f ~/workspace/pxf/concourse/docker/mapr/Dockerfile .
 ```
 
 ```
 docker build \
-  --build-arg=BASE_IMAGE=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-test-pxf:latest \
+  --build-arg=BASE_IMAGE=gcr.io/$GCR_PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-test-pxf:latest \
   --tag=gpdb6-centos7-test-pxf-mapr \
   -f ~/workspace/pxf/concourse/docker/mapr/Dockerfile .
 ```
