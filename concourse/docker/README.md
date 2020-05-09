@@ -13,10 +13,10 @@ PXF uses [Google Cloud Build](https://cloud.google.com/cloud-build) to produce
 development images that reside in
 [Google Container Registry (GCR)](https://cloud.google.com/container-registry).
 
-The `cloudbuild` pipeline provides visibility into the cloud builds. The cloud
-build pipeline triggers on changes to `pxf-dev-base` and changes to
-`pxf-build-base`. The `cloudbuild` is in charge of tagging the images as latest
-when they are pushed to GCR.
+The `cloudbuild` pipeline provides visibility into builds using Google Cloud
+Builds. The `cloudbuild` pipeline triggers on changes to `pxf-dev-base` and
+changes to `pxf-build-base` and is also in charge of tagging the images as
+`latest` when they are pushed to GCR.
 
 ## Available docker images
 

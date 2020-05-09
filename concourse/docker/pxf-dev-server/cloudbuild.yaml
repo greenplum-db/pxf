@@ -1,6 +1,6 @@
 # In this directory, run the following command to build this builder.
-# $ gcloud builds submit . --config=cloudbuild.yaml
-# You will need to provide replacements for _SINGLECLUSTER_BUCKET
+# $ gcloud builds submit . --config=cloudbuild.yaml \
+#  --substitutions=_SINGLECLUSTER_BUCKET=<NAME_OF_YOUR_BUCKET>
 
 # Increase timeout to 40 minutes
 timeout: 2400s
@@ -16,7 +16,7 @@ steps:
   args: ['cp', 'gs://${_SINGLECLUSTER_BUCKET}/singlecluster/HDP2/singlecluster-HDP2.tar.gz', 'build/singlecluster-HDP2.tar.gz']
   waitFor: ['-']
 
-  ##############################################################################
+##############################################################################
 # GPDB 6 CentOS 7 Images
 ##############################################################################
 
