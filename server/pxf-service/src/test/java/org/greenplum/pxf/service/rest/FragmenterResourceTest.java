@@ -12,48 +12,50 @@ import org.greenplum.pxf.api.utilities.FragmentsResponse;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.service.FakeTicker;
 import org.greenplum.pxf.service.RequestParser;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.http.ResponseEntity;
+import org.springframework.util.MultiValueMap;
 
-import javax.servlet.ServletContext;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@RunWith(MockitoJUnitRunner.class)
 public class FragmenterResourceTest {
 
-    @Mock private RequestParser parser;
-    @Mock private FragmenterFactory fragmenterFactory;
-    @Mock private FragmenterCacheFactory fragmenterCacheFactory;
-    @Mock private ServletContext servletContext;
-    @Mock private HttpHeaders headersFromRequest1;
-    @Mock private HttpHeaders headersFromRequest2;
-    @Mock private Fragmenter fragmenter1;
-    @Mock private Fragmenter fragmenter2;
+    private RequestParser<MultiValueMap<String, String>> parser;
+    private FragmenterFactory fragmenterFactory;
+    private FragmenterCacheFactory fragmenterCacheFactory;
+    private MultiValueMap<String, String> mockRequestHeaders1;
+    private MultiValueMap<String, String> mockRequestHeaders2;
+    private Fragmenter fragmenter1;
+    private Fragmenter fragmenter2;
     private Cache<String, List<Fragment>> fragmentCache;
     private FakeTicker fakeTicker;
 
-    private String PROPERTY_KEY_FRAGMENTER_CACHE = "pxf.service.fragmenter.cache.enabled";
+    private final String PROPERTY_KEY_FRAGMENTER_CACHE = "pxf.service.fragmenter.cache.enabled";
 
-    @Before
+    @BeforeEach
     public void setup() {
+
+        parser = mock(RequestParser.class);
+        fragmenterFactory = mock(FragmenterFactory.class);
+        fragmenterCacheFactory = mock(FragmenterCacheFactory.class);
+        mockRequestHeaders1 = mock(MultiValueMap.class);
+        mockRequestHeaders2 = mock(MultiValueMap.class);
+        fragmenter1 = mock(Fragmenter.class);
+        fragmenter2 = mock(Fragmenter.class);
+
         fakeTicker = new FakeTicker();
         fragmentCache = CacheBuilder.newBuilder()
                 .expireAfterAccess(10, TimeUnit.SECONDS)
@@ -71,11 +73,11 @@ public class FragmenterResourceTest {
         context.setTransactionId("XID-XYZ-123456");
         context.setSegmentId(0);
 
-        when(parser.parseRequest(headersFromRequest1, RequestType.FRAGMENTER)).thenReturn(context);
+        when(parser.parseRequest(mockRequestHeaders1, RequestType.FRAGMENTER)).thenReturn(context);
         when(fragmenterFactory.getPlugin(context)).thenReturn(fragmenter1);
 
         new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory)
-                .getFragments(servletContext, headersFromRequest1);
+                .getFragments(mockRequestHeaders1);
         verify(fragmenter1, times(1)).getFragments();
     }
 
@@ -149,29 +151,27 @@ public class FragmenterResourceTest {
         context2.setTransactionId("XID-XYZ-123456");
         context2.setSegmentId(1);
 
-        when(parser.parseRequest(headersFromRequest1, RequestType.FRAGMENTER)).thenReturn(context1);
-        when(parser.parseRequest(headersFromRequest2, RequestType.FRAGMENTER)).thenReturn(context2);
+        when(parser.parseRequest(mockRequestHeaders1, RequestType.FRAGMENTER)).thenReturn(context1);
+        when(parser.parseRequest(mockRequestHeaders2, RequestType.FRAGMENTER)).thenReturn(context2);
         when(fragmenterFactory.getPlugin(context1)).thenReturn(fragmenter1);
 
         when(fragmenter1.getFragments()).thenReturn(fragmentList);
 
-        Response response1 = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory)
-                .getFragments(servletContext, headersFromRequest1);
-        Response response2 = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory)
-                .getFragments(servletContext, headersFromRequest2);
+        ResponseEntity<FragmentsResponse> response1 = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory)
+                .getFragments(mockRequestHeaders1);
+        ResponseEntity<FragmentsResponse> response2 = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory)
+                .getFragments(mockRequestHeaders2);
 
         verify(fragmenter1, times(1)).getFragments();
         verify(fragmenterFactory, never()).getPlugin(context2);
 
         assertNotNull(response1);
         assertNotNull(response2);
-        assertNotNull(response1.getEntity());
-        assertNotNull(response2.getEntity());
-        assertTrue(response1.getEntity() instanceof FragmentsResponse);
-        assertTrue(response2.getEntity() instanceof FragmentsResponse);
+        assertNotNull(response1.getBody());
+        assertNotNull(response2.getBody());
 
-        assertSame(fragmentList, ((FragmentsResponse) response1.getEntity()).getFragments());
-        assertSame(fragmentList, ((FragmentsResponse) response2.getEntity()).getFragments());
+        assertSame(fragmentList, response1.getBody().getFragments());
+        assertSame(fragmentList, response2.getBody().getFragments());
     }
 
     @SuppressWarnings("unchecked")
@@ -188,32 +188,30 @@ public class FragmenterResourceTest {
         context2.setTransactionId("XID-XYZ-123456");
         context2.setSegmentId(1);
 
-        when(parser.parseRequest(headersFromRequest1, RequestType.FRAGMENTER)).thenReturn(context1);
-        when(parser.parseRequest(headersFromRequest2, RequestType.FRAGMENTER)).thenReturn(context2);
+        when(parser.parseRequest(mockRequestHeaders1, RequestType.FRAGMENTER)).thenReturn(context1);
+        when(parser.parseRequest(mockRequestHeaders2, RequestType.FRAGMENTER)).thenReturn(context2);
         when(fragmenterFactory.getPlugin(context1)).thenReturn(fragmenter1);
         when(fragmenterFactory.getPlugin(context2)).thenReturn(fragmenter2);
 
         when(fragmenter1.getFragments()).thenReturn(fragmentList1);
         when(fragmenter2.getFragments()).thenReturn(fragmentList2);
 
-        Response response1 = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory)
-                .getFragments(servletContext, headersFromRequest1);
+        ResponseEntity<FragmentsResponse> response1 = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory)
+                .getFragments(mockRequestHeaders1);
         fakeTicker.advanceTime(11 * 1000);
-        Response response2 = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory)
-                .getFragments(servletContext, headersFromRequest2);
+        ResponseEntity<FragmentsResponse> response2 = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory)
+                .getFragments(mockRequestHeaders2);
 
         verify(fragmenter1, times(1)).getFragments();
         verify(fragmenter2, times(1)).getFragments();
         assertNotNull(response1);
         assertNotNull(response2);
-        assertNotNull(response1.getEntity());
-        assertNotNull(response2.getEntity());
-        assertTrue(response1.getEntity() instanceof FragmentsResponse);
-        assertTrue(response2.getEntity() instanceof FragmentsResponse);
+        assertNotNull(response1.getBody());
+        assertNotNull(response2.getBody());
 
         // Checks for reference
-        assertSame(fragmentList1, ((FragmentsResponse) response1.getEntity()).getFragments());
-        assertSame(fragmentList2, ((FragmentsResponse) response2.getEntity()).getFragments());
+        assertSame(fragmentList1, response1.getBody().getFragments());
+        assertSame(fragmentList2, response2.getBody().getFragments());
     }
 
     @SuppressWarnings("unchecked")
@@ -229,8 +227,8 @@ public class FragmenterResourceTest {
             int index = i;
             threads[i] = new Thread(() -> {
 
-                RequestParser requestParser = mock(RequestParser.class);
-                HttpHeaders httpHeaders = mock(HttpHeaders.class);
+                RequestParser<MultiValueMap<String, String>> requestParser = mock(RequestParser.class);
+                MultiValueMap<String, String> httpHeaders = mock(MultiValueMap.class);
                 FragmenterFactory factory = mock(FragmenterFactory.class);
                 FragmenterCacheFactory cacheFactory = mock(FragmenterCacheFactory.class);
 
@@ -244,7 +242,7 @@ public class FragmenterResourceTest {
 
                 try {
                     new FragmenterResource(requestParser, factory, cacheFactory)
-                            .getFragments(servletContext, httpHeaders);
+                            .getFragments(httpHeaders);
 
                     finishedCount.incrementAndGet();
                 } catch (Throwable e) {
@@ -265,17 +263,17 @@ public class FragmenterResourceTest {
         // Expired entries may be counted in {@link Cache#size}, but will never be visible to read or
         // write operations. Expired entries are cleaned up as part of the routine maintenance described
         // in the class javadoc
-        assertEquals(1,fragmentCache.size());
+        assertEquals(1, fragmentCache.size());
         // advance time one second force a cache clean up.
         // Cache retains the entry
-        fakeTicker.advanceTime(1 * 1000);
+        fakeTicker.advanceTime(1000);
         fragmentCache.cleanUp();
-        assertEquals(1,fragmentCache.size());
+        assertEquals(1, fragmentCache.size());
         // advance 10 seconds and force a clean up
         // cache should be clean now
         fakeTicker.advanceTime(10 * 1000);
         fragmentCache.cleanUp();
-        assertEquals(0,fragmentCache.size());
+        assertEquals(0, fragmentCache.size());
     }
 
     @SuppressWarnings("unchecked")
@@ -285,44 +283,42 @@ public class FragmenterResourceTest {
         List<Fragment> fragmentList1 = new ArrayList<>();
         List<Fragment> fragmentList2 = new ArrayList<>();
 
-        when(parser.parseRequest(headersFromRequest1, RequestType.FRAGMENTER)).thenReturn(context1);
-        when(parser.parseRequest(headersFromRequest2, RequestType.FRAGMENTER)).thenReturn(context2);
+        when(parser.parseRequest(mockRequestHeaders1, RequestType.FRAGMENTER)).thenReturn(context1);
+        when(parser.parseRequest(mockRequestHeaders2, RequestType.FRAGMENTER)).thenReturn(context2);
         when(fragmenterFactory.getPlugin(context1)).thenReturn(fragmenter1);
         when(fragmenterFactory.getPlugin(context2)).thenReturn(fragmenter2);
 
         when(fragmenter1.getFragments()).thenReturn(fragmentList1);
         when(fragmenter2.getFragments()).thenReturn(fragmentList2);
 
-        Response response1 = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory)
-                .getFragments(servletContext, headersFromRequest1);
-        Response response2 = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory)
-                .getFragments(servletContext, headersFromRequest2);
+        ResponseEntity<FragmentsResponse> response1 = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory)
+                .getFragments(mockRequestHeaders1);
+        ResponseEntity<FragmentsResponse> response2 = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory)
+                .getFragments(mockRequestHeaders2);
 
         verify(fragmenter1, times(1)).getFragments();
         verify(fragmenter2, times(1)).getFragments();
 
         assertNotNull(response1);
         assertNotNull(response2);
-        assertNotNull(response1.getEntity());
-        assertNotNull(response2.getEntity());
-        assertTrue(response1.getEntity() instanceof FragmentsResponse);
-        assertTrue(response2.getEntity() instanceof FragmentsResponse);
+        assertNotNull(response1.getBody());
+        assertNotNull(response2.getBody());
 
-        assertSame(fragmentList1, ((FragmentsResponse) response1.getEntity()).getFragments());
-        assertSame(fragmentList2, ((FragmentsResponse) response2.getEntity()).getFragments());
+        assertSame(fragmentList1, response1.getBody().getFragments());
+        assertSame(fragmentList2, response2.getBody().getFragments());
 
         if (Utilities.isFragmenterCacheEnabled()) {
             assertEquals(2, fragmentCache.size());
             // advance time one second force a cache clean up.
             // Cache retains the entry
-            fakeTicker.advanceTime(1 * 1000);
+            fakeTicker.advanceTime(1000);
             fragmentCache.cleanUp();
-            assertEquals(2,fragmentCache.size());
+            assertEquals(2, fragmentCache.size());
             // advance 10 seconds and force a clean up
             // cache should be clean now
             fakeTicker.advanceTime(10 * 1000);
             fragmentCache.cleanUp();
-            assertEquals(0,fragmentCache.size());
+            assertEquals(0, fragmentCache.size());
         } else {
             // Cache should be empty when fragmenter cache is disabled
             assertEquals(0, fragmentCache.size());
