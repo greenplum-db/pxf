@@ -1,7 +1,8 @@
 # How to generate a tarball with PXF dependencies locally
 
-You can generate the tarball with all the dependencies for PXF (`.m2` cache,
-`.gradle` cache, `.tomcat` directory, go dependencies).
+You can generate the tarball with all the build dependencies for PXF
+(`.gradle` cache, `.tomcat` directory, go dependencies), and the tarball
+with all the automation dependencies (`.m2` cache).
 
 ### Requirements
 
@@ -21,7 +22,7 @@ docker build --tag=pxf-build-dev \
 
 docker run --rm \
   -v ~/workspace/build:/tmp/build/ \
-  pxf-build-dev /bin/bash -c "cp /tmp/pxf-build-dependencies.tar.gz /tmp/build/"
+  pxf-build-dev /bin/bash -c "cp /tmp/pxf-*-dependencies.tar.gz /tmp/build/"
 
 ```
 
@@ -39,6 +40,7 @@ gcloud builds submit . --config=cloudbuild.yaml \
 
 ```
 
-The dependencies will be stored in Google Cloud Storage in the
-`gs://${_PXF_BUILD_BUCKET}/build-dependencies/pxf-build-dependencies.tar.gz`
-path.
+The dependencies will be stored in Google Cloud Storage in:
+
+- `gs://${_PXF_BUILD_BUCKET}/build-dependencies/pxf-build-dependencies.tar.gz` for build dependencies
+- `gs://${_PXF_BUILD_BUCKET}/automation-dependencies/pxf-automation-dependencies.tar.gz` for automation dependencies
