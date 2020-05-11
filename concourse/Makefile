@@ -6,8 +6,6 @@ BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD)
 
 SHELL                      = /bin/bash
 BUILD_PIPELINE_NAME       ?= pxf-build-GP6
-BC_5X_PIPELINE_NAME       ?= pgregress_external_table_5X_STABLE
-BC_6X_PIPELINE_NAME       ?= pgregress_external_table_6X_STABLE
 PIVNET_PIPELINE_NAME      ?= pivnet_artifacts
 NUM_GPDB5_VERSIONS        ?= 10
 NUM_GPDB6_VERSIONS        ?=  9
@@ -59,46 +57,6 @@ set-6X-build-pipeline:
 
 	@echo using the following command to unpause the pipeline:
 	@echo -e "\t$(FLY_CMD) -t ${CONCOURSE} unpause-pipeline --pipeline ${BUILD_PIPELINE_NAME}"
-
-.PHONY: set-BC-5X
-set-BC-5X: set-BC-5X-pipeline
-
-.PHONY: set-BC-5X-pipeline
-set-BC-5X-pipeline:
-	@$(FLY_CMD) --target=$(CONCOURSE) \
-		set-pipeline \
-		--check-creds \
-		--config <($(TEMPLATE_CMD) --template external-table-tpl.yml --vars gpdb_type=5X_STABLE num_gpdb5_versions=$(NUM_GPDB5_VERSIONS)) \
-		--load-vars-from $(HOME)/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
-		--var pxf-git-branch=external-table \
-		--var pxf-git-remote=https://github.com/greenplum-db/pxf \
-		--var folder-prefix=dev/oalbertini-external-table \
-		--var gpdb-branch=5X_STABLE \
-		--pipeline $(BC_5X_PIPELINE_NAME) \
-		${FLY_OPTION_NON-INTERACTIVE}
-
-	@echo using the following command to unpause the pipeline:
-	@echo -e "\t$(FLY_CMD) -t ${CONCOURSE} unpause-pipeline --pipeline ${BC_5X_PIPELINE_NAME}"
-
-.PHONY: set-BC-6X
-set-BC-6X: set-BC-6X-pipeline
-
-.PHONY: set-BC-6X-pipeline
-set-BC-6X-pipeline:
-	@$(FLY_CMD) --target=$(CONCOURSE) \
-		set-pipeline \
-		--check-creds \
-		--config <($(TEMPLATE_CMD) --template external-table-tpl.yml --vars gpdb_type=6X_STABLE num_gpdb6_versions=$(NUM_GPDB6_VERSIONS)) \
-		--load-vars-from $(HOME)/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
-		--var pxf-git-branch=external-table \
-		--var pxf-git-remote=https://github.com/greenplum-db/pxf \
-		--var folder-prefix=dev/oalbertini-external-table \
-		--var gpdb-branch=6X_STABLE \
-		--pipeline $(BC_6X_PIPELINE_NAME) \
-		${FLY_OPTION_NON-INTERACTIVE}
-
-	@echo using the following command to unpause the pipeline:
-	@echo -e "\t$(FLY_CMD) -t ${CONCOURSE} unpause-pipeline --pipeline ${BC_6X_PIPELINE_NAME}"
 
 .PHONY: set-pivnet
 set-pivnet: set-pivnet-pipeline
