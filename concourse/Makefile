@@ -5,7 +5,8 @@ CONCOURSE ?= ud
 BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD)
 
 SHELL                      = /bin/bash
-BUILD_PIPELINE_NAME       ?= pxf-build-GP6
+BUILD_PIPELINE_5X_NAME       ?= pxf-build-GP5
+BUILD_PIPELINE_6X_NAME       ?= pxf-build-GP6
 PIVNET_PIPELINE_NAME      ?= pivnet_artifacts
 NUM_GPDB5_VERSIONS        ?= 10
 NUM_GPDB6_VERSIONS        ?=  9
@@ -22,7 +23,7 @@ set-5X-build-pipeline:
 	$(FLY_CMD) --target=$(CONCOURSE) \
 		set-pipeline \
 		--check-creds \
-		--pipeline=$(BUILD_PIPELINE_NAME) \
+		--pipeline=$(BUILD_PIPELINE_5X_NAME) \
 		--config=<($(TEMPLATE_CMD) --template build_pipeline-tpl.yml --vars gp_ver=5 num_gpdb5_versions=$(NUM_GPDB5_VERSIONS)) \
 		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
 		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
@@ -35,14 +36,14 @@ set-5X-build-pipeline:
 		${FLY_OPTION_NON-INTERACTIVE}
 
 	@echo using the following command to unpause the pipeline:
-	@echo -e "\t$(FLY_CMD) -t ${CONCOURSE} unpause-pipeline --pipeline ${BUILD_PIPELINE_NAME}"
+	@echo -e "\t$(FLY_CMD) -t ${CONCOURSE} unpause-pipeline --pipeline ${BUILD_PIPELINE_5X_NAME}"
 
 .PHONY: set-6X-build-pipeline
 set-6X-build-pipeline:
 	$(FLY_CMD) --target=$(CONCOURSE) \
 		set-pipeline \
 		--check-creds \
-		--pipeline=$(BUILD_PIPELINE_NAME) \
+		--pipeline=$(BUILD_PIPELINE_6X_NAME) \
 		--config=<($(TEMPLATE_CMD) --template build_pipeline-tpl.yml --vars gp_ver=6 num_gpdb6_versions=$(NUM_GPDB6_VERSIONS)) \
 		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/gpdb-6X_STABLE-release-secrets.prod.yml \
 		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
@@ -56,7 +57,7 @@ set-6X-build-pipeline:
 		${FLY_OPTION_NON-INTERACTIVE}
 
 	@echo using the following command to unpause the pipeline:
-	@echo -e "\t$(FLY_CMD) -t ${CONCOURSE} unpause-pipeline --pipeline ${BUILD_PIPELINE_NAME}"
+	@echo -e "\t$(FLY_CMD) -t ${CONCOURSE} unpause-pipeline --pipeline ${BUILD_PIPELINE_6X_NAME}"
 
 .PHONY: set-pivnet
 set-pivnet: set-pivnet-pipeline
