@@ -27,8 +27,8 @@ RUN export BUILD_PARAMS=-Dorg.gradle.daemon=false && \
     for X in /tmp/pxf_src/server/build/stage/lib/pxf-*-[0-9]*.jar; do \
       ln -sf $X /root/automation_tmp_lib/`echo \`basename $X\` | sed -e 's/-[a-zA-Z0-9.]*.jar/.jar/'`; \
     done && touch /root/automation_tmp_lib/pxf-extras.jar && \
-    cd /tmp/pxf_src/automation && mvn dependency:go-offline -DexcludeGroupIds=org.greenplum && \
-    cd - && mkdir -p /tmp/output/.tomcat && mkdir -p /tmp/automation && \
+    make -C /tmp/pxf_src/automation dev && \
+    mkdir -p /tmp/output/.tomcat && mkdir -p /tmp/automation && \
     mv /tmp/pxf_src/pxf_commit_sha /tmp/output/pxf_commit_sha && \
     mv /tmp/pxf_src/server/tomcat/build/apache-tomcat-*.tar.gz /tmp/output/.tomcat/ && \
     mv /tmp/pxf_src/cli/go/pkg/dep/sources /tmp/output/.go-dep-cached-sources && \
