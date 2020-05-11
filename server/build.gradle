@@ -30,7 +30,7 @@ plugins {
 }
 
 downloadLicenses {
-    dependencyConfiguration = 'bundleJars'
+    dependencyConfiguration = 'bootJar'
 }
 
 def javaProjects = subprojects.findAll {
@@ -110,4 +110,29 @@ configure(javaProjects) {
     }
 }
 
+task stage(type: Copy) {
+    description "Build PXF server and stage resulting artifacts for packaging."
+    dependsOn ":pxf-service:bootJar"
 
+    from("pxf-service/build/libs") {
+        into 'server'
+    }
+    from('pxf-service/src/main/resources/pxf-profiles-default.xml') {
+        into 'conf'
+    }
+    from('pxf-service/src/scripts/pxf-env-default.sh') {
+        into 'conf'
+    }
+    from('pxf-service/src/scripts/pxf-service') {
+        into 'bin'
+        rename '(.*)', 'pxf'
+    }
+    from('pxf-service/src/') {
+        include 'templates/**'
+    }
+    into "$buildDir/stage/pxf"
+
+    doLast {
+        new File("$buildDir/stage/pxf/version").text = "${version}\n"
+    }
+}

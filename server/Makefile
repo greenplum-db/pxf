@@ -77,11 +77,11 @@ doc:
 	./gradlew -Pversion=$(PXF_VERSION) aggregateJavadoc
 
 .PHONY: install
-install:
+install: stage
 	@if [ -z "$(PXF_HOME)" ]; then \
 		echo "ERROR: PXF_HOME is not set"; exit 2; \
 	fi
-	./gradlew -Pversion=$(PXF_VERSION) install -DdeployPath="$(PXF_HOME)"
+	cp -R build/stage/pxf/* "$(PXF_HOME)"
 
 .PHONY: version
 version:
