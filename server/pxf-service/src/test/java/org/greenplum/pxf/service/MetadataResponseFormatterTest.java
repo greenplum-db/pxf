@@ -19,36 +19,32 @@ package org.greenplum.pxf.service;
  * under the License.
  */
 
+import org.greenplum.pxf.api.model.Metadata;
+import org.greenplum.pxf.api.utilities.EnumGpdbType;
+import org.junit.jupiter.api.Test;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-
-import org.greenplum.pxf.api.model.Metadata;
-import org.greenplum.pxf.api.utilities.EnumGpdbType;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class MetadataResponseFormatterTest {
 
     MetadataResponse response = null;
 
-    private String convertResponseToString(MetadataResponse data) {
+    private String convertResponseToString(MetadataResponse data) throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        try {
-            data.write(outputStream);
-        } catch (IOException e) {
-            fail(e.toString());
-        }
+        data.write(outputStream);
         return outputStream.toString();
     }
 
     @Test
     public void formatResponseString() throws Exception {
-        List<Metadata> metadataList = new ArrayList<Metadata>();
-        List<Metadata.Field> fields = new ArrayList<Metadata.Field>();
+        List<Metadata> metadataList = new ArrayList<>();
+        List<Metadata.Field> fields = new ArrayList<>();
         Metadata.Item itemName = new Metadata.Item("default", "table1");
         Metadata metadata = new Metadata(itemName, fields);
         fields.add(new Metadata.Field("field1", EnumGpdbType.Int8Type, "bigint"));
@@ -56,135 +52,124 @@ public class MetadataResponseFormatterTest {
         metadataList.add(metadata);
 
         response = MetadataResponseFormatter.formatResponse(metadataList, "path.file");
-        StringBuilder expected = new StringBuilder("{\"PXFMetadata\":[{");
-        expected.append("\"item\":{\"path\":\"default\",\"name\":\"table1\"},")
-                .append("\"fields\":[{\"name\":\"field1\",\"type\":\"int8\",\"sourceType\":\"bigint\",\"complexType\":false},{\"name\":\"field2\",\"type\":\"text\",\"sourceType\":\"string\",\"complexType\":false}]}]}");
 
-        assertEquals(expected.toString(), convertResponseToString(response));
+        String expected = "{\"PXFMetadata\":[{" + "\"item\":{\"path\":\"default\",\"name\":\"table1\"}," +
+                "\"fields\":[{\"name\":\"field1\",\"type\":\"int8\",\"sourceType\":\"bigint\",\"complexType\":false},{\"name\":\"field2\",\"type\":\"text\",\"sourceType\":\"string\",\"complexType\":false}]}]}";
+        assertEquals(expected, convertResponseToString(response));
     }
 
     @Test
     public void formatResponseStringWithNullModifier() throws Exception {
-        List<Metadata> metadataList = new ArrayList<Metadata>();
-        List<Metadata.Field> fields = new ArrayList<Metadata.Field>();
+        List<Metadata> metadataList = new ArrayList<>();
+        List<Metadata.Field> fields = new ArrayList<>();
         Metadata.Item itemName = new Metadata.Item("default", "table1");
         Metadata metadata = new Metadata(itemName, fields);
         fields.add(new Metadata.Field("field1", EnumGpdbType.Int8Type, "bigint", null));
-        fields.add(new Metadata.Field("field2", EnumGpdbType.TextType, "string", new String[] {}));
+        fields.add(new Metadata.Field("field2", EnumGpdbType.TextType, "string", new String[]{}));
         metadataList.add(metadata);
 
         response = MetadataResponseFormatter.formatResponse(metadataList, "path.file");
-        StringBuilder expected = new StringBuilder("{\"PXFMetadata\":[{");
-        expected.append("\"item\":{\"path\":\"default\",\"name\":\"table1\"},")
-                .append("\"fields\":[{\"name\":\"field1\",\"type\":\"int8\",\"sourceType\":\"bigint\",\"complexType\":false},{\"name\":\"field2\",\"type\":\"text\",\"sourceType\":\"string\",\"complexType\":false}]}]}");
 
-        assertEquals(expected.toString(), convertResponseToString(response));
+        String expected = "{\"PXFMetadata\":[{" + "\"item\":{\"path\":\"default\",\"name\":\"table1\"}," +
+                "\"fields\":[{\"name\":\"field1\",\"type\":\"int8\",\"sourceType\":\"bigint\",\"complexType\":false},{\"name\":\"field2\",\"type\":\"text\",\"sourceType\":\"string\",\"complexType\":false}]}]}";
+        assertEquals(expected, convertResponseToString(response));
     }
 
     @Test
     public void formatResponseStringWithModifiers() throws Exception {
-        List<Metadata> metadataList = new ArrayList<Metadata>();
-        List<Metadata.Field> fields = new ArrayList<Metadata.Field>();
+        List<Metadata> metadataList = new ArrayList<>();
+        List<Metadata.Field> fields = new ArrayList<>();
         Metadata.Item itemName = new Metadata.Item("default", "table1");
         Metadata metadata = new Metadata(itemName, fields);
         fields.add(new Metadata.Field("field1", EnumGpdbType.Int8Type, "bigint"));
         fields.add(new Metadata.Field("field2", EnumGpdbType.NumericType, "decimal",
-                new String[] {"1349", "1789"}));
+                new String[]{"1349", "1789"}));
         fields.add(new Metadata.Field("field3", EnumGpdbType.BpcharType, "char",
-                new String[] {"50"}));
+                new String[]{"50"}));
         metadataList.add(metadata);
 
         response = MetadataResponseFormatter.formatResponse(metadataList, "path.file");
-        StringBuilder expected = new StringBuilder("{\"PXFMetadata\":[{");
-        expected.append("\"item\":{\"path\":\"default\",\"name\":\"table1\"},")
-                .append("\"fields\":[")
-                .append("{\"name\":\"field1\",\"type\":\"int8\",\"sourceType\":\"bigint\",\"complexType\":false},")
-                .append("{\"name\":\"field2\",\"type\":\"numeric\",\"sourceType\":\"decimal\",\"modifiers\":[\"1349\",\"1789\"],\"complexType\":false},")
-                .append("{\"name\":\"field3\",\"type\":\"bpchar\",\"sourceType\":\"char\",\"modifiers\":[\"50\"],\"complexType\":false}")
-                .append("]}]}");
 
-        assertEquals(expected.toString(), convertResponseToString(response));
+        String expected = "{\"PXFMetadata\":[{" + "\"item\":{\"path\":\"default\",\"name\":\"table1\"}," +
+                "\"fields\":[" +
+                "{\"name\":\"field1\",\"type\":\"int8\",\"sourceType\":\"bigint\",\"complexType\":false}," +
+                "{\"name\":\"field2\",\"type\":\"numeric\",\"sourceType\":\"decimal\",\"modifiers\":[\"1349\",\"1789\"],\"complexType\":false}," +
+                "{\"name\":\"field3\",\"type\":\"bpchar\",\"sourceType\":\"char\",\"modifiers\":[\"50\"],\"complexType\":false}" +
+                "]}]}";
+        assertEquals(expected, convertResponseToString(response));
     }
 
     @Test
     public void formatResponseStringWithSourceType() throws Exception {
-        List<Metadata> metadataList = new ArrayList<Metadata>();
-        List<Metadata.Field> fields = new ArrayList<Metadata.Field>();
+        List<Metadata> metadataList = new ArrayList<>();
+        List<Metadata.Field> fields = new ArrayList<>();
         Metadata.Item itemName = new Metadata.Item("default", "table1");
         Metadata metadata = new Metadata(itemName, fields);
         fields.add(new Metadata.Field("field1", EnumGpdbType.Float8Type, "double"));
         metadataList.add(metadata);
 
         response = MetadataResponseFormatter.formatResponse(metadataList, "path.file");
-        StringBuilder expected = new StringBuilder("{\"PXFMetadata\":[{");
-        expected.append("\"item\":{\"path\":\"default\",\"name\":\"table1\"},")
-                .append("\"fields\":[")
-                .append("{\"name\":\"field1\",\"type\":\"float8\",\"sourceType\":\"double\",\"complexType\":false}")
-                .append("]}]}");
 
-        assertEquals(expected.toString(), convertResponseToString(response));
+        String expected = "{\"PXFMetadata\":[{" + "\"item\":{\"path\":\"default\",\"name\":\"table1\"}," +
+                "\"fields\":[" +
+                "{\"name\":\"field1\",\"type\":\"float8\",\"sourceType\":\"double\",\"complexType\":false}" +
+                "]}]}";
+        assertEquals(expected, convertResponseToString(response));
     }
 
     @Test
     public void formatResponseStringNull() throws Exception {
-        List<Metadata> metadataList = null;
-        response = MetadataResponseFormatter.formatResponse(metadataList, "path.file");
-        String expected = new String("{\"PXFMetadata\":[]}");
+        response = MetadataResponseFormatter.formatResponse(null, "path.file");
+        String expected = "{\"PXFMetadata\":[]}";
 
         assertEquals(expected, convertResponseToString(response));
     }
 
     @Test
     public void formatResponseStringNoFields() throws Exception {
-        List<Metadata> metadataList = new ArrayList<Metadata>();
+        List<Metadata> metadataList = new ArrayList<>();
         Metadata.Item itemName = new Metadata.Item("default", "table1");
         Metadata metadata = new Metadata(itemName, null);
         metadataList.add(metadata);
-        try {
-            response = MetadataResponseFormatter.formatResponse(metadataList, "path.file");
-            convertResponseToString(response);
-            fail("formatting should fail because fields field is null");
-        } catch (IllegalArgumentException e) {
-            assertEquals("metadata for " + metadata.getItem() + " contains no fields - cannot serialize", e.getMessage());
-        }
+        response = MetadataResponseFormatter.formatResponse(metadataList, "path.file");
+        Exception e = assertThrows(IllegalArgumentException.class,
+                () -> convertResponseToString(response),
+                "formatting should fail because fields field is null");
+        assertEquals("metadata for " + metadata.getItem() + " contains no fields - cannot serialize", e.getMessage());
 
-        ArrayList<Metadata.Field> fields = new ArrayList<Metadata.Field>();
-        metadataList = new ArrayList<Metadata>();
+        ArrayList<Metadata.Field> fields = new ArrayList<>();
+        metadataList = new ArrayList<>();
         metadata = new Metadata(itemName, fields);
         metadataList.add(metadata);
-        try {
-            response = MetadataResponseFormatter.formatResponse(metadataList, "path.file");
-            convertResponseToString(response);
-            fail("formatting should fail because there are no fields");
-        } catch (IllegalArgumentException e) {
-            assertEquals("metadata for " + metadata.getItem() + " contains no fields - cannot serialize", e.getMessage());
-        }
+        response = MetadataResponseFormatter.formatResponse(metadataList, "path.file");
+        e = assertThrows(IllegalArgumentException.class,
+                () -> convertResponseToString(response),
+                "formatting should fail because there are no fields");
+        assertEquals("metadata for " + metadata.getItem() + " contains no fields - cannot serialize", e.getMessage());
     }
 
     @Test
     public void formatResponseStringPartialNull() throws Exception {
-        List<Metadata> metadataList = new ArrayList<Metadata>();
-        List<Metadata.Field> fields = new ArrayList<Metadata.Field>();
+        List<Metadata> metadataList = new ArrayList<>();
+        List<Metadata.Field> fields = new ArrayList<>();
         Metadata.Item itemName = new Metadata.Item("default", "table1");
         Metadata metadata = new Metadata(itemName, fields);
         fields.add(new Metadata.Field("field1", EnumGpdbType.Int8Type, "bigint"));
         metadataList.add(null);
         metadataList.add(metadata);
-        try {
-            response = MetadataResponseFormatter.formatResponse(metadataList, "path.file");
-            convertResponseToString(response);
-            fail("formatting should fail because one of the metdata object is null");
-        } catch (IllegalArgumentException e) {
-            assertEquals("metadata object is null - cannot serialize", e.getMessage());
-        }
+        response = MetadataResponseFormatter.formatResponse(metadataList, "path.file");
+        Exception e = assertThrows(IllegalArgumentException.class,
+                () -> convertResponseToString(response),
+                "formatting should fail because one of the metdata object is null");
+        assertEquals("metadata object is null - cannot serialize", e.getMessage());
     }
 
     @Test
     public void formatResponseStringWithMultipleItems() throws Exception {
-        List <Metadata> metdataList = new ArrayList<Metadata>();
-        for (int i=1; i<=10; i++) {
-            List<Metadata.Field> fields = new ArrayList<Metadata.Field>();
-            Metadata.Item itemName = new Metadata.Item("default", "table"+i);
+        List<Metadata> metdataList = new ArrayList<>();
+        for (int i = 1; i <= 10; i++) {
+            List<Metadata.Field> fields = new ArrayList<>();
+            Metadata.Item itemName = new Metadata.Item("default", "table" + i);
             Metadata metadata = new Metadata(itemName, fields);
             fields.add(new Metadata.Field("field1", EnumGpdbType.Int8Type, "bigint"));
             fields.add(new Metadata.Field("field2", EnumGpdbType.TextType, "string"));
@@ -193,8 +178,8 @@ public class MetadataResponseFormatterTest {
         response = MetadataResponseFormatter.formatResponse(metdataList, "path.file");
 
         StringBuilder expected = new StringBuilder();
-        for (int i=1; i<=10; i++) {
-            if(i==1) {
+        for (int i = 1; i <= 10; i++) {
+            if (i == 1) {
                 expected.append("{\"PXFMetadata\":[");
             } else {
                 expected.append(",");
@@ -209,10 +194,10 @@ public class MetadataResponseFormatterTest {
 
     @Test
     public void formatResponseStringWithMultiplePathsAndItems() throws Exception {
-        List <Metadata> metdataList = new ArrayList<Metadata>();
-        for (int i=1; i<=10; i++) {
-            List<Metadata.Field> fields = new ArrayList<Metadata.Field>();
-            Metadata.Item itemName = new Metadata.Item("default"+i, "table"+i);
+        List<Metadata> metdataList = new ArrayList<>();
+        for (int i = 1; i <= 10; i++) {
+            List<Metadata.Field> fields = new ArrayList<>();
+            Metadata.Item itemName = new Metadata.Item("default" + i, "table" + i);
             Metadata metadata = new Metadata(itemName, fields);
             fields.add(new Metadata.Field("field1", EnumGpdbType.Int8Type, "bigint"));
             fields.add(new Metadata.Field("field2", EnumGpdbType.TextType, "string"));
@@ -220,8 +205,8 @@ public class MetadataResponseFormatterTest {
         }
         response = MetadataResponseFormatter.formatResponse(metdataList, "path.file");
         StringBuilder expected = new StringBuilder();
-        for (int i=1; i<=10; i++) {
-            if(i==1) {
+        for (int i = 1; i <= 10; i++) {
+            if (i == 1) {
                 expected.append("{\"PXFMetadata\":[");
             } else {
                 expected.append(",");

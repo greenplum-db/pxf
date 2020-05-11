@@ -19,25 +19,21 @@ package org.greenplum.pxf.service.profile;
  * under the License.
  */
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Base test class for all ProfilesConf tests. Each test case is encapsulated
  * inside its own inner class to force reloading of ProfilesConf enum singleton
  */
 public class ProfilesConfTest {
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
 
     @Test
     public void definedProfile() {
@@ -55,20 +51,19 @@ public class ProfilesConfTest {
 
     @Test
     public void undefinedProfile() {
-        expectedException.expect(ProfileConfException.class);
-        expectedException.expectMessage("UndefinedProfile is not defined in profile/undefinedProfile/pxf-profiles.xml");
-
         ProfilesConf profilesConf = getProfilesConf("undefinedProfile");
-        profilesConf.getPlugins("UndefinedProfile");
+        Exception e = assertThrows(ProfileConfException.class,
+                () -> profilesConf.getPlugins("UndefinedProfile"));
+        assertEquals("UndefinedProfile is not defined in profile/undefinedProfile/pxf-profiles.xml", e.getMessage());
     }
 
     @Test
     public void testUndefinedProfileWhenGettingProtocol() {
-        expectedException.expect(ProfileConfException.class);
-        expectedException.expectMessage("UndefinedProfile is not defined in profile/undefinedProfile/pxf-profiles.xml");
-
         ProfilesConf profilesConf = getProfilesConf("undefinedProfile");
-        assertNull(profilesConf.getProtocol("UndefinedProfile"));
+
+        Exception e = assertThrows(ProfileConfException.class,
+                () -> profilesConf.getProtocol("UndefinedProfile"));
+        assertEquals("UndefinedProfile is not defined in profile/undefinedProfile/pxf-profiles.xml", e.getMessage());
     }
 
     @Test
@@ -99,7 +94,7 @@ public class ProfilesConfTest {
     @Test
     public void overrideProfile() {
         ProfilesConf profilesConf = getProfilesConf("overrideProfile");
-        Map profile = profilesConf.getPlugins("HBase");
+        Map<String, String> profile = profilesConf.getPlugins("HBase");
         assertEquals(2, profile.keySet().size());
         assertEquals("Y", profile.get("ACCESSOR"));
         assertEquals("YY", profile.get("RESOLVER"));
@@ -113,20 +108,16 @@ public class ProfilesConfTest {
 
     @Test
     public void malformedProfileFile() {
-        expectedException.expect(ProfileConfException.class);
-        expectedException.expectMessage("pxf-profiles-default.xml could not be loaded: org.xml.sax.SAXParseException");
-
-        ProfilesConf profilesConf = getProfilesConf("malformedProfileFile");
-        profilesConf.getPlugins("HBase");
+        Exception e = assertThrows(ProfileConfException.class,
+                () -> getProfilesConf("malformedProfileFile"));
+        assertTrue(e.getMessage().contains("pxf-profiles-default.xml could not be loaded: org.xml.sax.SAXParseException"));
     }
 
     @Test
     public void missingMandatoryProfileFile() {
-        expectedException.expect(ProfileConfException.class);
-        expectedException.expectMessage("profile/missingMandatoryProfileFile/pxf-profiles-default.xml was not found in the CLASSPATH");
-
-        ProfilesConf profilesConf = getProfilesConf("missingMandatoryProfileFile");
-        profilesConf.getPlugins("HBase");
+        Exception e = assertThrows(ProfileConfException.class,
+                () -> getProfilesConf("missingMandatoryProfileFile"));
+        assertEquals("profile/missingMandatoryProfileFile/pxf-profiles-default.xml was not found in the CLASSPATH", e.getMessage());
     }
 
     @Test
@@ -184,5 +175,4 @@ public class ProfilesConfTest {
         return new ProfilesConf(String.format("profile/%s/pxf-profiles-default.xml", testCase),
                 String.format("profile/%s/pxf-profiles.xml", testCase));
     }
-
 }

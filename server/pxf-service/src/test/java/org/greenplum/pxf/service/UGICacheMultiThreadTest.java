@@ -19,20 +19,19 @@ package org.greenplum.pxf.service;
  * under the License.
  */
 
-import io.netty.util.internal.ConcurrentSet;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class UGICacheMultiThreadTest {
     private static final int numberOfSegments = 3;
@@ -43,7 +42,7 @@ public class UGICacheMultiThreadTest {
     private UGICache cache = null;
     private FakeTicker fakeTicker;
 
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {
         provider = new FakeUgiProvider();
 
@@ -108,7 +107,7 @@ public class UGICacheMultiThreadTest {
     }
 
     class FakeUgiProvider extends UGIProvider {
-        Set<UserGroupInformation> ugis = new ConcurrentSet<>();
+        Set<UserGroupInformation> ugis = ConcurrentHashMap.newKeySet();
 
         @Override
         UserGroupInformation createProxyUGI(String effectiveUser, UserGroupInformation ugi) {

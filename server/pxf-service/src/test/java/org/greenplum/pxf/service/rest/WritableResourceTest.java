@@ -23,39 +23,39 @@ import org.greenplum.pxf.api.model.RequestContext.RequestType;
 import org.greenplum.pxf.service.HttpRequestParser;
 import org.greenplum.pxf.service.bridge.BridgeFactory;
 import org.greenplum.pxf.service.bridge.WriteBridge;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.util.MultiValueMap;
 
-import javax.servlet.ServletContext;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.Response;
-import java.io.InputStream;
+import javax.servlet.ServletInputStream;
+import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@RunWith(MockitoJUnitRunner.class)
 public class WritableResourceTest {
 
     private WritableResource writableResource;
 
-    // constructor dependencies
-    @Mock private HttpRequestParser mockParser;
-    @Mock private BridgeFactory mockFactory;
-
     // input parameters
-    @Mock private ServletContext mockServletContext;
-    @Mock private HttpHeaders mockHeaders;
-    @Mock private InputStream mockInputStream;
+    private MultiValueMap<String, String> mockHeaders;
+    private HttpServletRequest mockHttpServletRequest;
 
-    @Mock private RequestContext mockContext;
-    @Mock private WriteBridge mockBridge;
+    @BeforeEach
+    public void before() throws IOException {
 
-    @Before
-    public void before() {
+        // constructor dependencies
+        HttpRequestParser mockParser = mock(HttpRequestParser.class);
+        BridgeFactory mockFactory = mock(BridgeFactory.class);
+        mockHeaders = mock(MultiValueMap.class);
+        ServletInputStream mockInputStream = mock(ServletInputStream.class);
+        RequestContext mockContext = mock(RequestContext.class);
+        WriteBridge mockBridge = mock(WriteBridge.class);
+        mockHttpServletRequest = mock(HttpServletRequest.class);
 
         writableResource = new WritableResource(mockParser, mockFactory);
 
@@ -63,25 +63,26 @@ public class WritableResourceTest {
         when(mockFactory.getWriteBridge(mockContext)).thenReturn(mockBridge);
         when(mockContext.isThreadSafe()).thenReturn(true);
         when(mockBridge.isThreadSafe()).thenReturn(true);
+        when(mockHttpServletRequest.getInputStream()).thenReturn(mockInputStream);
     }
 
     @Test
     public void streamPathWithSpecialChars() throws Exception {
         // test path with special characters
         String path = "I'mso<bad>!";
-        Response result = writableResource.stream(mockServletContext, mockHeaders, path, mockInputStream);
+        ResponseEntity<String> result = writableResource.stream(mockHeaders, path, mockHttpServletRequest);
 
-        assertEquals(Response.Status.OK, Response.Status.fromStatusCode(result.getStatus()));
-        assertEquals("wrote 0 bulks to I.mso.bad..", result.getEntity().toString());
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertEquals("wrote 0 bulks to I.mso.bad..", result.getBody());
     }
 
     @Test
     public void streamPathWithRegularChars() throws Exception {
         // test path with regular characters
         String path = "whatCAN1tellYOU";
-        Response result = writableResource.stream(mockServletContext, mockHeaders, path, mockInputStream);
+        ResponseEntity<String> result = writableResource.stream(mockHeaders, path, mockHttpServletRequest);
 
-        assertEquals(Response.Status.OK, Response.Status.fromStatusCode(result.getStatus()));
-        assertEquals("wrote 0 bulks to " + path, result.getEntity().toString());
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertEquals("wrote 0 bulks to " + path, result.getBody());
     }
 }
