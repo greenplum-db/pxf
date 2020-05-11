@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+<Properties>
+    <Property name="LOG_EXCEPTION_CONVERSION_WORD">%xwEx</Property>
+    <Property name="LOG_LEVEL_PATTERN">%5p</Property>
+    <Property name="LOG_DATEFORMAT_PATTERN">yyyy-MM-dd HH:mm:ss.SSS</Property>
+    <Property name="CONSOLE_LOG_PATTERN">%clr{%d{${LOG_DATEFORMAT_PATTERN}}}{faint} %clr{${LOG_LEVEL_PATTERN}} %clr{%pid}{magenta} %clr{---}{faint} %clr{[%15.15t]}{faint} %clr{%-40.40c{1.}}{cyan} %clr{:}{faint} %m%n${sys:LOG_EXCEPTION_CONVERSION_WORD}</Property>
+    <Property name="FILE_LOG_PATTERN">%d{${LOG_DATEFORMAT_PATTERN}} ${LOG_LEVEL_PATTERN} %pid --- [%t] %-40.40c{1.} : %m%n${sys:LOG_EXCEPTION_CONVERSION_WORD}</Property>
+    <Property name="LOG_PATH">$${env:PXF_LOGDIR}</Property>
+    <Property name="LOG_FILE">$${env:PXF_LOGDIR}/pxf-service-2.log</Property>
+</Properties>
+<Appenders>
+    <Console name="Console" target="SYSTEM_OUT" follow="true">
+        <PatternLayout pattern="${sys:CONSOLE_LOG_PATTERN}" />
+    </Console>
+    <RollingFile name="RollingFile" fileName="${sys:LOG_FILE}" filePattern="${sys:LOG_PATH}/$${date:yyyy-MM}/app-%d{yyyy-MM-dd-HH}-%i.log.gz">
+        <PatternLayout>
+            <Pattern>${sys:FILE_LOG_PATTERN}</Pattern>
+        </PatternLayout>
+        <Policies>
+            <SizeBasedTriggeringPolicy size="10 MB" />
+        </Policies>
+        <DefaultRolloverStrategy max="10"/>
+    </RollingFile>
+</Appenders>
+<Loggers>
+    <Root level="info">
+        <AppenderRef ref="Console" />
+        <AppenderRef ref="RollingFile" />
+    </Root>
+
+    <!-- Uncomment to see DEBUG messages from PXF service -->
+    <!-- <Logger name="org.greenplum.pxf" level="debug"/> -->
+
+    <!-- The levels below are tuned to provide minimal output, change to INFO or DEBUG to troubleshoot -->
+    <Logger name="com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystemBase" level="warn"/>
+    <Logger name="org.apache.hadoop" level="warn"/>
+    <Logger name="org.apache.parquet" level="warn"/>
+    <Logger name="org.apache.zookeeper" level="warn"/>
+    <Logger name="hive.metastore" level="warn"/>
+    <Logger name="org.apache.catalina.startup.DigesterFactory" level="error" />
+    <Logger name="org.apache.catalina.util.LifecycleBase" level="error" />
+    <Logger name="org.apache.coyote.http11.Http11NioProtocol" level="warn" />
+    <Logger name="org.apache.sshd.common.util.SecurityUtils" level="warn"/>
+    <Logger name="org.apache.tomcat.util.net.NioSelectorPool" level="warn" />
+    <Logger name="org.eclipse.jetty.util.component.AbstractLifeCycle" level="error" />
+    <Logger name="org.hibernate.validator.internal.util.Version" level="warn" />
+    <Logger name="org.springframework.boot.actuate.endpoint.jmx" level="warn"/>
+</Loggers>
+</Configuration>

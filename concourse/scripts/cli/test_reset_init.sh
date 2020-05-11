@@ -31,7 +31,7 @@ list_pxf_home() {
 
 # all these things come from pxf init, but not removed by pxf reset
 pxf_conf_contents="${PXF_CONF}/conf/pxf-env.sh
-${PXF_CONF}/conf/pxf-log4j.properties
+${PXF_CONF}/conf/pxf-log4j2.xml
 ${PXF_CONF}/conf/pxf-profiles.xml
 ${PXF_CONF}/lib
 ${PXF_CONF}/logs
