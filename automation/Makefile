@@ -6,10 +6,6 @@
 # make OFFLINE=true ===> run using only cache
 
 SHELL := bash
-<<<<<<< HEAD
-=======
-
->>>>>>> 0da9795f... build and use PXF RPMs for Centos (#353)
 UNAME_S := $(shell uname -s)
 MAVEN_TEST_OPTS+= -B -e
 PXF_TMP_LIB := $(HOME)/automation_tmp_lib
@@ -22,12 +18,6 @@ ifneq "$(GROUP)" ""
 	MAVEN_TEST_OPTS+= -Dgroups=$(GROUP)
 endif
 
-<<<<<<< HEAD
-ifeq "$(PXF_HOME)" ""
-	PXF_HOME=$(GPHOME)/pxf
-endif
-=======
->>>>>>> 0da9795f... build and use PXF RPMs for Centos (#353)
 MAVEN_TEST_OPTS+= "-Djava.awt.headless=true"
 
 ifneq "$(OFFLINE)" "true"

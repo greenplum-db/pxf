@@ -9,7 +9,7 @@ inputs:
 - name: gpdb_package
 - name: singlecluster
   optional: true
-- name: pxf-build-dependencies
+- name: pxf-automation-dependencies
   optional: true
 - name: ambari_env_files
   optional: true
