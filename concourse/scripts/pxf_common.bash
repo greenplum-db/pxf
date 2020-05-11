@@ -25,11 +25,20 @@ else
 fi
 
 function inflate_dependencies() {
-	if [[ ! -f pxf-build-dependencies/pxf-build-dependencies.tar.gz ]]; then
-		return
+	local tarballs=() files_to_link=()
+	if [[ -f pxf-build-dependencies/pxf-build-dependencies.tar.gz ]]; then
+		tarballs+=(pxf-build-dependencies/pxf-build-dependencies.tar.gz)
+		files_to_link+=(~gpadmin/.{tomcat,go-dep-cached-sources,gradle})
 	fi
-	tar -xzf pxf-build-dependencies/pxf-build-dependencies.tar.gz -C ~gpadmin
-	ln -s ~gpadmin/.{tomcat,go-dep-cached-sources,m2,gradle} ~root
+	if [[ -f pxf-automation-dependencies/pxf-automation-dependencies.tar.gz ]]; then
+		tarballs+=pxf-automation-dependencies/pxf-automation-dependencies.tar.gz
+		files_to_link+=(~gpadmin/.m2)
+	fi
+	(( ${#tarballs[@]} == 0 )) && return
+	for t in "${tarballs[@]}"; do
+		tar -xzf "${t}" -C ~gpadmin
+	done
+	ln -s "${files_to_link[@]}" ~root
 	chown -R gpadmin:gpadmin ~gpadmin
 }
 

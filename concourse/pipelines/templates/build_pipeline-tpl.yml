@@ -86,6 +86,14 @@ resources:
     json_key: {{data-gpdb-ud-google-json-key}}
     versioned_file: build-dependencies/pxf-build-dependencies.tar.gz
 
+- name: pxf-automation-dependencies
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: data-gpdb-ud-pxf-build-resources
+    json_key: {{data-gpdb-ud-google-json-key}}
+    versioned_file: automation-dependencies/pxf-automation-dependencies.tar.gz
+
 - name: singlecluster-cdh
   type: gcs
   icon: google-drive
@@ -292,7 +300,7 @@ jobs:
       resource: gpdb[[gp_ver]]_rhel6_rpm_latest-0
       passed: [Build PXF-GP[[gp_ver]] on RHEL6]
     - get: gpdb[[gp_ver]]-pxf-dev-centos6-image
-    - get: pxf-build-dependencies
+    - get: pxf-automation-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: Test PXF-GP[[gp_ver]]-HDP2 on RHEL6
@@ -342,7 +350,7 @@ jobs:
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
       passed: [Build PXF-GP[[gp_ver]] on RHEL7]
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    - get: pxf-build-dependencies
+    - get: pxf-automation-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: Test PXF-GP[[gp_ver]]-HDP2 on RHEL7
@@ -392,7 +400,7 @@ jobs:
       resource: gpdb[[gp_ver]]_ubuntu18_deb_latest-0
       passed: [Build PXF-GP[[gp_ver]] on Ubuntu18]
     - get: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image
-    - get: pxf-build-dependencies
+    - get: pxf-automation-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: Test PXF-GP[[gp_ver]]-HDP2 on Ubuntu18
@@ -465,7 +473,7 @@ jobs:
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    - get: pxf-build-dependencies
+    - get: pxf-automation-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: Test PXF-GP[[gp_ver]]-HDP2-NO-IMPERS on RHEL7
@@ -491,7 +499,7 @@ jobs:
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-mapr-server-image
-    - get: pxf-build-dependencies
+    - get: pxf-automation-dependencies
   - task: Test PXF-GP[[gp_ver]]-MAPR on RHEL7
     privileged: true
     file: pxf_src/concourse/tasks/test.yml
@@ -517,7 +525,7 @@ jobs:
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    - get: pxf-build-dependencies
+    - get: pxf-automation-dependencies
     - get: singlecluster
       resource: singlecluster-hdp3
   - task: Test PXF-GP[[gp_ver]]-HDP3 on RHEL7
@@ -546,7 +554,7 @@ jobs:
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
     - get: ccp-7-image
-    - get: pxf-build-dependencies
+    - get: pxf-automation-dependencies
     - get: singlecluster
       resource: singlecluster-hdp3
   - task: load_config_for_ambari
@@ -581,7 +589,7 @@ jobs:
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    - get: pxf-build-dependencies
+    - get: pxf-automation-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: Test PXF-GP[[gp_ver]]-HDP2-JDK11 on RHEL7
@@ -610,7 +618,7 @@ jobs:
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    - get: pxf-build-dependencies
+    - get: pxf-automation-dependencies
     - get: singlecluster
       resource: singlecluster-cdh
   - task: Test PXF-GP[[gp_ver]]-CDH on RHEL7
@@ -643,7 +651,7 @@ jobs:
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    - get: pxf-build-dependencies
+    - get: pxf-automation-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: Test PXF-GP[[gp_ver]]-S3 on RHEL7
@@ -673,7 +681,7 @@ jobs:
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    - get: pxf-build-dependencies
+    - get: pxf-automation-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: Test PXF-GP[[gp_ver]]-S3-NO-IMPERS on RHEL7
@@ -704,7 +712,7 @@ jobs:
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    - get: pxf-build-dependencies
+    - get: pxf-automation-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: Test PXF-GP[[gp_ver]]-ADL-NO-IMPERS on RHEL7
@@ -735,7 +743,7 @@ jobs:
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    - get: pxf-build-dependencies
+    - get: pxf-automation-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: Test PXF-GP[[gp_ver]]-GS-NO-IMPERS on RHEL7
@@ -763,7 +771,7 @@ jobs:
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
       passed: [Testing Gate for PXF-GP[[gp_ver]]]
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    - get: pxf-build-dependencies
+    - get: pxf-automation-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: Test PXF-GP[[gp_ver]]-MINIO-NO-IMPERS on RHEL7
@@ -798,7 +806,7 @@ jobs:
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
     - get: ccp_src
     - get: ccp-7-image
-    - get: pxf-build-dependencies
+    - get: pxf-automation-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
   - in_parallel:
@@ -918,7 +926,7 @@ jobs:
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
     - get: ccp_src
     - get: ccp-7-image
-    - get: pxf-build-dependencies
+    - get: pxf-automation-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
   - in_parallel:
