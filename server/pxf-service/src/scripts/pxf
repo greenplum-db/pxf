@@ -67,7 +67,7 @@ function validate_user()
 
     # Run as user specified in RUN_AS_USER
     if [[ -n "$RUN_AS_USER" ]]; then
-        id -u "$RUN_AS_USER" || {
+        id -u "$RUN_AS_USER" &> /dev/null || {
             echoRed "Cannot run as '$RUN_AS_USER': no such user"
             exit 2
         }
@@ -172,6 +172,10 @@ function configureTemplates()
 {
     # copy configuration files into instance
     cp "$server_templates"/bin/{kill-pxf,setenv}.sh "${parent_script_dir}/bin"
+    if [[ -n "$run_user" ]]; then
+      chown "$run_user" "${parent_script_dir}/bin/kill-pxf.sh"
+      chown "$run_user" "${parent_script_dir}/bin/setenv.sh"
+    fi
     return 0
 }
 
@@ -213,8 +217,8 @@ function checkWebapp()
     curlResponse=$($curl -s "http://localhost:${PXF_PORT}/actuator/health")
     expectedResponse='{"status":"UP"}'
 
-    [[ $curlResponse =~ $expectedResponse ]] && return 0;
-    fail 'PXF is inaccessible. Check logs for more information'
+    [[ $curlResponse == $expectedResponse ]] || fail 'PXF is inaccessible. Check logs for more information'
+    return 0
 }
 
 # determines whether the application is running
@@ -234,7 +238,7 @@ function createLogsDir()
         mkdir -p "$PXF_LOGDIR"
         chmod 700 "$PXF_LOGDIR"
         if [[ -n "$run_user" ]]; then
-            chown "$run_user" "$PXF_RUNDIR"
+            chown "$run_user" "$PXF_LOGDIR"
         fi
     fi
 }
@@ -256,6 +260,7 @@ function generateUserConfigs()
     setup_conf_directory "${PXF_CONF}/conf" "${PXF_HOME}/templates/user/conf"
     setup_conf_directory "${PXF_CONF}/keytabs"
     setup_conf_directory "${PXF_CONF}/lib"
+    setup_conf_directory "${PXF_CONF}/servers"
     setup_conf_directory "${PXF_CONF}/servers/default"
     setup_conf_directory "${PXF_CONF}/templates" "${PXF_HOME}/templates/user/templates" 'override'
 }
