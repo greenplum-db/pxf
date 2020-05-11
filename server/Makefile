@@ -17,26 +17,27 @@
 #
 # protect the default target for this file from the targets in Makefile.global
 
-default: all
 
-BUILD_PARAMS+= -DdeployPath="$(PXF_HOME)"
+default: stage-notest
+
+PXF_ROOT_DIR := $(shell cd .. && pwd)
 
 help:
 	@echo
 	@echo   "Possible targets"
-	@echo	"  - all (clean, compile, test, install, tar, doc)"
+	@echo	"  - all (clean, compile, test, stage)"
 	@echo	"  - clean - cleans the workspace of all produced artifacts"
-	@echo	"  - compile - compiles all PXF modules and builds their JAR files"
+	@echo	"  - build - builds all PXF modules and builds their JAR files"
 	@echo	"  - test - runs unit tests for all PXF modules"
 	@echo	"  - install - setup PXF in the configured deployPath"
-	@echo	"  - tar - bundle PXF into a single tarball"
+	@echo	"  - stage - build PXF server and stage resulting artifacts for packaging"
 	@echo	"  - doc - creates aggregate javadoc under docs"
 
 all:
-	./gradlew clean tar $(BUILD_PARAMS)
+	./gradlew clean stage
 
-compile:
-	./gradlew compileJava
+build:
+	./gradlew build
 
 GRADLEW_TEST_PARAMS = test
 ifneq "$(TEST)" ""
@@ -56,8 +57,17 @@ test unittest:
 	fi
 	./gradlew ${GRADLEW_TEST_PARAMS}
 
-tar:
-	./gradlew tar ${BUILD_PARAMS}
+.PHONY: stage
+stage:
+	./gradlew stage
+
+.PHONY: stage-notest
+stage-notest:
+	./gradlew stage -x test
+
+tar: stage
+	mkdir -p build/dist
+	tar -C build/stage/pxf/ -czf build/dist/pxf.tar.gz .
 
 clean:
 	./gradlew clean
@@ -69,11 +79,11 @@ doc:
 	./gradlew aggregateJavadoc
 
 .PHONY: install
-install:
+install: stage
 	@if [ -z "$(PXF_HOME)" ]; then \
-		echo "ERROR: PXF_HOME is not set correctly"; exit 2; \
+		echo "ERROR: PXF_HOME is not set"; exit 2; \
 	fi
-	./gradlew install ${BUILD_PARAMS}
+	cp -R build/stage/pxf/* "$(PXF_HOME)"
 
 .PHONY: version
 version:
