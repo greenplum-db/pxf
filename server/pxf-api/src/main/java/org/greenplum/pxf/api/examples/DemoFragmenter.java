@@ -22,6 +22,7 @@ package org.greenplum.pxf.api.examples;
 import org.greenplum.pxf.api.model.BaseFragmenter;
 import org.greenplum.pxf.api.model.Fragment;
 
+import java.util.LinkedList;
 import java.util.List;
 
 /**
