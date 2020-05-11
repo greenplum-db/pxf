@@ -98,8 +98,8 @@ configure(javaProjects) {
     compileJava {
         options.compilerArgs += [
                 "-g", "-Xlint:varargs", "-Xlint:cast", "-Xlint:classfile", "-Xlint:dep-ann", "-Xlint:divzero",
-                "-Xlint:empty", "-Xlint:finally", "-Xlint:overrides", "-Xlint:path", "-Xlint:processing", "-Xlint:static",
-                "-Xlint:try", "-Xlint:fallthrough", "-Xlint:deprecation", "-Xlint:unchecked", "-Xlint:-options"
+                "-Xlint:empty", "-Xlint:finally", "-Xlint:overrides", "-Xlint:path", "-Xlint:-processing", "-Xlint:static",
+                "-Xlint:try", "-Xlint:fallthrough", "-Xlint:deprecation", "-Xlint:unchecked", "-Xlint:-options", "-Werror"
         ]
     }
 
