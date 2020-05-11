@@ -26,6 +26,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.greenplum.pxf.api.StatsAccessor;
+import org.greenplum.pxf.api.configuration.PxfServerProperties;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -315,8 +316,11 @@ public class Utilities {
      * Defaults to true.
      *
      * @return true if fragmenter cache is enabled, false otherwise
+     * deprecated use {@link PxfServerProperties#isMetadataCache()} instead
      */
+//    @Deprecated
     public static boolean isFragmenterCacheEnabled() {
+        // TODO: mark as deprecated
         return !StringUtils.equalsIgnoreCase(System.getProperty(PROPERTY_KEY_FRAGMENTER_CACHE, "true"), "false");
     }
 
