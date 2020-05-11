@@ -222,7 +222,7 @@ resources:
   source:
     bucket: data-gpdb-ud-pxf-build
     json_key: {{data-gpdb-ud-google-json-key}}
-    versioned_file: prod/snapshots/pxf-gp[[gp_ver]]-SNAPSHOT.el6.tar.gz
+    versioned_file: prod/snapshots/pxf-gp[[gp_ver]].el6.tar.gz
 {% endif %}
 
 - name: pxf_gp[[gp_ver]]_tarball_rhel7
@@ -231,7 +231,7 @@ resources:
   source:
     bucket: data-gpdb-ud-pxf-build
     json_key: {{data-gpdb-ud-google-json-key}}
-    versioned_file: prod/snapshots/pxf-gp[[gp_ver]]-SNAPSHOT.el7.tar.gz
+    versioned_file: prod/snapshots/pxf-gp[[gp_ver]].el7.tar.gz
 
 {% if gp_ver == 6 %}
 - name: pxf_gp[[gp_ver]]_tarball_ubuntu18
@@ -240,7 +240,7 @@ resources:
   source:
     bucket: data-gpdb-ud-pxf-build
     json_key: {{data-gpdb-ud-google-json-key}}
-    versioned_file: prod/snapshots/pxf-gp[[gp_ver]]-SNAPSHOT.ubuntu18.04.tar.gz
+    versioned_file: prod/snapshots/pxf-gp[[gp_ver]].ubuntu18.04.tar.gz
 {% endif %}
 
 ## ---------- Auxiliary Resources ----------
@@ -285,7 +285,7 @@ jobs:
       VENDOR: {{pxf-rpm-vendor}}
   - put: pxf_gp[[gp_ver]]_tarball_rhel6
     params:
-      file: dist/pxf-gp[[gp_ver]]-*-SNAPSHOT.el6.tar.gz
+      file: dist/pxf-gp[[gp_ver]]-*.el6.tar.gz
 
 - name: Test PXF-GP[[gp_ver]]-HDP2 on RHEL6
   plan:
@@ -335,7 +335,7 @@ jobs:
       VENDOR: {{pxf-rpm-vendor}}
   - put: pxf_gp[[gp_ver]]_tarball_rhel7
     params:
-      file: dist/pxf-gp[[gp_ver]]-*-SNAPSHOT.el7.tar.gz
+      file: dist/pxf-gp[[gp_ver]]-*.el7.tar.gz
 
 - name: Test PXF-GP[[gp_ver]]-HDP2 on RHEL7
   plan:
@@ -385,7 +385,7 @@ jobs:
       VENDOR: {{pxf-rpm-vendor}}
   - put: pxf_gp[[gp_ver]]_tarball_ubuntu18
     params:
-      file: dist/pxf-gp[[gp_ver]]-*-SNAPSHOT.ubuntu18.04.tar.gz
+      file: dist/pxf-gp[[gp_ver]]-*.ubuntu18.04.tar.gz
 
 - name: Test PXF-GP[[gp_ver]]-HDP2 on Ubuntu18
   plan:
