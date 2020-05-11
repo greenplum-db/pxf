@@ -27,16 +27,17 @@ import org.greenplum.pxf.service.RequestParser;
 import org.greenplum.pxf.service.bridge.Bridge;
 import org.greenplum.pxf.service.bridge.BridgeFactory;
 import org.greenplum.pxf.service.bridge.SimpleBridgeFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import javax.servlet.ServletContext;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import javax.servlet.http.HttpServletRequest;
 import java.io.DataInputStream;
 import java.io.InputStream;
 
@@ -82,7 +83,8 @@ import static org.greenplum.pxf.api.model.RequestContext.RequestType;
 /**
  * This class handles the subpath /&lt;version&gt;/Writable/ of this REST component
  */
-@Path("/" + Version.PXF_PROTOCOL_VERSION + "/Writable/")
+@RestController
+@RequestMapping("/pxf/" + Version.PXF_PROTOCOL_VERSION + "/Writable/")
 public class WritableResource extends BaseResource {
 
     private BridgeFactory bridgeFactory;
@@ -100,30 +102,26 @@ public class WritableResource extends BaseResource {
      * @param parser        request parser
      * @param bridgeFactory bridge factory
      */
-    WritableResource(RequestParser<HttpHeaders> parser, BridgeFactory bridgeFactory) {
+    WritableResource(RequestParser<MultiValueMap<String, String>> parser, BridgeFactory bridgeFactory) {
         super(RequestType.WRITE_BRIDGE, parser);
         this.bridgeFactory = bridgeFactory;
     }
 
     /**
      * This function is called when http://nn:port/pxf/{version}/Writable/stream?path=...
-	 * is used.
-	 *
-	 * @param servletContext Servlet context contains attributes required by SecuredHDFS
-	 * @param headers Holds HTTP headers from request
-	 * @param path Holds URI path option used in this request
-	 * @param inputStream stream of bytes to write from Gpdb
+     * is used.
+     *
+     * @param headers Holds HTTP headers from request
+     * @param path    Holds URI path option used in this request
+     * @param request the HttpServletRequest
      * @return ok response if the operation finished successfully
      * @throws Exception in case of wrong request parameters, failure to
-     *             initialize bridge or to write data
+     *                   initialize bridge or to write data
      */
-    @POST
-    @Path("stream")
-    @Consumes(MediaType.APPLICATION_OCTET_STREAM)
-    public Response stream(@Context final ServletContext servletContext,
-                           @Context HttpHeaders headers,
-                           @QueryParam("path") String path,
-                           InputStream inputStream) throws Exception {
+    @PostMapping(value = "stream", consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    public ResponseEntity<String> stream(@RequestHeader MultiValueMap<String, String> headers,
+                                         @RequestParam("path") String path,
+                                         HttpServletRequest request) throws Exception {
 
         RequestContext context = parseRequest(headers);
         Bridge bridge = bridgeFactory.getWriteBridge(context);
@@ -133,22 +131,20 @@ public class WritableResource extends BaseResource {
         LOG.debug("Request for {} will be handled {} synchronization", context.getDataSource(), (isThreadSafe ? "without" : "with"));
 
         return isThreadSafe ?
-                writeResponse(bridge, path, inputStream) :
-                synchronizedWriteResponse(bridge, path, inputStream);
+                writeResponse(bridge, path, request.getInputStream()) :
+                synchronizedWriteResponse(bridge, path, request.getInputStream());
     }
 
-    private Response synchronizedWriteResponse(Bridge bridge, String path, InputStream inputStream)
+    private ResponseEntity<String> synchronizedWriteResponse(Bridge bridge, String path, InputStream inputStream)
             throws Exception {
 
         // non tread-safe access will be synchronized on the class level
-        Response result;
         synchronized (WritableResource.class) {
-            result = writeResponse(bridge, path, inputStream);
+            return writeResponse(bridge, path, inputStream);
         }
-        return result;
     }
 
-    private Response writeResponse(Bridge bridge, String path, InputStream inputStream)
+    private ResponseEntity<String> writeResponse(Bridge bridge, String path, InputStream inputStream)
             throws Exception {
         // Open the output file
         bridge.beginIteration();
@@ -183,6 +179,6 @@ public class WritableResource extends BaseResource {
         String returnMsg = "wrote " + totalWritten + " bulks to " + censuredPath;
         LOG.debug(returnMsg);
 
-        return Response.ok(returnMsg).build();
+        return new ResponseEntity<>(returnMsg, HttpStatus.OK);
     }
 }

@@ -23,8 +23,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.greenplum.pxf.api.model.Fragment;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.StreamingOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -37,7 +37,7 @@ import java.util.List;
  * in one bulk, this in order to avoid running out of memory when processing a
  * lot of fragments.
  */
-public class FragmentsResponse implements StreamingOutput {
+public class FragmentsResponse implements StreamingResponseBody {
 
     private static final Log Log = LogFactory.getLog(FragmentsResponse.class);
 
@@ -66,8 +66,7 @@ public class FragmentsResponse implements StreamingOutput {
      * }]}</code>
      */
     @Override
-    public void write(OutputStream output) throws IOException,
-            WebApplicationException {
+    public void writeTo(OutputStream output) throws IOException {
         DataOutputStream dos = new DataOutputStream(output);
         ObjectMapper mapper = new ObjectMapper();
 

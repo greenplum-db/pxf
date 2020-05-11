@@ -27,27 +27,26 @@ import org.greenplum.pxf.service.RequestParser;
 import org.greenplum.pxf.service.bridge.Bridge;
 import org.greenplum.pxf.service.bridge.BridgeFactory;
 import org.greenplum.pxf.service.bridge.SimpleBridgeFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
-import javax.servlet.ServletContext;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.StreamingOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.concurrent.locks.ReentrantLock;
 
 /*
  * This class handles the subpath /<version>/Bridge/ of this
  * REST component
  */
-@Path("/" + Version.PXF_PROTOCOL_VERSION + "/Bridge/")
+@RestController
+@RequestMapping("/pxf/" + Version.PXF_PROTOCOL_VERSION)
 public class BridgeResource extends BaseResource {
 
     private BridgeFactory bridgeFactory;
@@ -55,7 +54,7 @@ public class BridgeResource extends BaseResource {
     /**
      * Lock is needed here in the case of a non-thread-safe plugin. Using
      * synchronized methods is not enough because the bridge work is called by
-     * jetty ({@link StreamingOutput}), after we are getting out of this class's
+     * jetty ({@link StreamingResponseBody}), after we are getting out of this class's
      * context.
      * <p/>
      * BRIDGE_LOCK is accessed through lock() and unlock() functions, based on
@@ -75,7 +74,7 @@ public class BridgeResource extends BaseResource {
      * @param parser request parser
      * @param bridgeFactory bridge factory
      */
-    BridgeResource(RequestParser<HttpHeaders> parser, BridgeFactory bridgeFactory) {
+    BridgeResource(RequestParser<MultiValueMap<String, String>> parser, BridgeFactory bridgeFactory) {
         super(RequestContext.RequestType.READ_BRIDGE, parser);
         this.bridgeFactory = bridgeFactory;
     }
@@ -86,14 +85,12 @@ public class BridgeResource extends BaseResource {
      *
      * Parameters come via HTTP headers.
      *
-     * @param servletContext Servlet context contains attributes required by SecuredHDFS
      * @param headers Holds HTTP headers from request
      * @return response object containing stream that will output records
      */
-    @GET
-    @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    public Response read(@Context final ServletContext servletContext,
-                         @Context HttpHeaders headers) {
+    @GetMapping(value = "/Bridge", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    public ResponseEntity<StreamingResponseBody> read(
+            @RequestHeader MultiValueMap<String, String> headers) {
 
         RequestContext context = parseRequest(headers);
         Bridge bridge = bridgeFactory.getReadBridge(context);
@@ -112,59 +109,55 @@ public class BridgeResource extends BaseResource {
      * @param threadSafe whether streaming can proceed in parallel
      * @return response object to be used by the container
      */
-    private Response readResponse(final Bridge bridge, RequestContext context, final boolean threadSafe) {
+    private ResponseEntity<StreamingResponseBody> readResponse(final Bridge bridge, RequestContext context, final boolean threadSafe) {
         final int fragment = context.getDataFragment();
         final String dataDir = context.getDataSource();
 
         // Creating an internal streaming class which will iterate
         // the records and put them on the output stream
-        final StreamingOutput streaming = new StreamingOutput() {
-            @Override
-            public void write(final OutputStream out) throws IOException,
-                    WebApplicationException {
-                long recordCount = 0;
+        StreamingResponseBody streaming = out -> {
+            long recordCount = 0;
 
-                if (!threadSafe) {
-                    lock(dataDir);
+            if (!threadSafe) {
+                lock(dataDir);
+            }
+            try {
+                if (!bridge.beginIteration()) {
+                    return;
                 }
-                try {
-                    if (!bridge.beginIteration()) {
-                        return;
-                    }
-                    Writable record;
-                    DataOutputStream dos = new DataOutputStream(out);
+                Writable record;
+                DataOutputStream dos = new DataOutputStream(out);
 
-                    LOG.debug("Starting streaming fragment {} of resource {}", fragment, dataDir);
-                    while ((record = bridge.getNext()) != null) {
-                        record.write(dos);
-                        ++recordCount;
-                    }
-                    LOG.debug("Finished streaming fragment {} of resource {}, {} records.", fragment, dataDir, recordCount);
-                } catch (ClientAbortException e) {
-                    // Occurs whenever client (GPDB) decides to end the connection
-                    if (LOG.isDebugEnabled()) {
-                        // Stacktrace in debug
-                        LOG.debug("Remote connection closed by GPDB", e);
-                    } else {
-                        LOG.error("Remote connection closed by GPDB (Enable debug for stacktrace)");
-                    }
+                LOG.debug("Starting streaming fragment {} of resource {}", fragment, dataDir);
+                while ((record = bridge.getNext()) != null) {
+                    record.write(dos);
+                    ++recordCount;
+                }
+                LOG.debug("Finished streaming fragment {} of resource {}, {} records.", fragment, dataDir, recordCount);
+            } catch (ClientAbortException e) {
+                // Occurs whenever client (GPDB) decides to end the connection
+                if (LOG.isDebugEnabled()) {
+                    // Stacktrace in debug
+                    LOG.debug("Remote connection closed by GPDB", e);
+                } else {
+                    LOG.error("Remote connection closed by GPDB (Enable debug for stacktrace)");
+                }
+            } catch (Exception e) {
+                throw new IOException(e.getMessage(), e);
+            } finally {
+                LOG.debug("Stopped streaming fragment {} of resource {}, {} records.", fragment, dataDir, recordCount);
+                try {
+                    bridge.endIteration();
                 } catch (Exception e) {
-                    throw new IOException(e.getMessage(), e);
-                } finally {
-                    LOG.debug("Stopped streaming fragment {} of resource {}, {} records.", fragment, dataDir, recordCount);
-                    try {
-                        bridge.endIteration();
-                    } catch (Exception e) {
-                        // ignore ... any significant errors should already have been handled
-                    }
-                    if (!threadSafe) {
-                        unlock(dataDir);
-                    }
+                    // ignore ... any significant errors should already have been handled
+                }
+                if (!threadSafe) {
+                    unlock(dataDir);
                 }
             }
         };
 
-        return Response.ok(streaming, MediaType.APPLICATION_OCTET_STREAM).build();
+        return new ResponseEntity<>(streaming, HttpStatus.OK);
     }
 
     /**

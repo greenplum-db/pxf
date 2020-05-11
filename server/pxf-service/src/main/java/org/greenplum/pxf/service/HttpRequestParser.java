@@ -11,9 +11,8 @@ import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.service.profile.ProfilesConf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.MultiValueMap;
 
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MultivaluedMap;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URLDecoder;
@@ -30,7 +29,7 @@ import java.util.stream.Collectors;
 /**
  * Parser for HTTP requests that contain data in HTTP headers.
  */
-public class HttpRequestParser implements RequestParser<HttpHeaders> {
+public class HttpRequestParser implements RequestParser<MultiValueMap<String, String>> {
 
     private static final String TRUE_LCASE = "true";
     private static final String FALSE_LCASE = "false";
@@ -66,9 +65,9 @@ public class HttpRequestParser implements RequestParser<HttpHeaders> {
     }
 
     @Override
-    public RequestContext parseRequest(HttpHeaders request, RequestContext.RequestType requestType) {
+    public RequestContext parseRequest(MultiValueMap<String, String> requestHeaders, RequestContext.RequestType requestType) {
 
-        RequestMap params = new RequestMap(request.getRequestHeaders());
+        RequestMap params = new RequestMap(requestHeaders);
 
         if (LOG.isDebugEnabled()) {
             // Logging only keys to prevent sensitive data to be logged
@@ -395,7 +394,7 @@ public class HttpRequestParser implements RequestParser<HttpHeaders> {
         private static final String USER_PROP_PREFIX_LOWERCASE = "x-gp-options-";
         private static final String ENCODED_HEADER_VALUES_NAME = PROP_PREFIX + "ENCODED-HEADER-VALUES";
 
-        RequestMap(MultivaluedMap<String, String> requestHeaders) {
+        RequestMap(MultiValueMap<String, String> requestHeaders) {
             super(String.CASE_INSENSITIVE_ORDER);
 
             boolean decodeHeaderValue = false;
