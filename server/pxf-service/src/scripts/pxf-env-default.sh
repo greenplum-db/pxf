@@ -44,42 +44,11 @@ export PXF_RUNDIR=${PXF_HOME}/run
 # Port
 export PXF_PORT=${PXF_PORT:=5888}
 
-# Shutdown Port
-export PXF_SHUTDOWN_PORT=${PXF_SHUTDOWN_PORT:=5889}
-
 # Memory
 export PXF_JVM_OPTS=${PXF_JVM_OPTS:='-Xmx2g -Xms1g'}
 
 # Threads
 export PXF_MAX_THREADS=${PXF_MAX_THREADS:=200}
-
-# Kerberos path to keytab file owned by pxf service with permissions 0400
-# Deprecation notice: PXF_KEYTAB will be deprecated in a future release of PXF.
-#                     A per-server configuration was introduced to support
-#                     multiple kerberized servers. Configuring the keytab path
-#                     in pxf-site.xml is now preferred. PXF_KEYTAB is only
-#                     supported for the default server for backwards
-#                     compatibility. Please refer to the official PXF
-#                     documentation for more details.
-export PXF_KEYTAB=${PXF_KEYTAB:="${PXF_CONF}/keytabs/pxf.service.keytab"}
-
-# Kerberos principal pxf service should use. _HOST is replaced automatically with hostnames FQDN
-# Deprecation notice: PXF_PRINCIPAL will be deprecated in a future release of
-#                     PXF. A per-server configuration was introduced to support
-#                     multiple kerberized servers. Configuring the principal
-#                     name in pxf-site.xml is now preferred. PXF_PRINCIPAL is
-#                     only supported for the default server for backwards
-#                     compatibility. Please refer to the official PXF
-#                     documentation for more details.
-export PXF_PRINCIPAL=${PXF_PRINCIPAL:='gpadmin/_HOST@EXAMPLE.COM'}
-
-# End-user identity impersonation, set to true to enable
-# Deprecation notice: PXF_USER_IMPERSONATION will be deprecated in a future
-#                     release of PXF. A per-server configuration was introduced
-#                     to support multiple servers. Configuring user
-#                     impersonation in pxf-site.xml is now preferred. Please
-#                     refer to the official PXF documentation for more details.
-export PXF_USER_IMPERSONATION=${PXF_USER_IMPERSONATION:=true}
 
 # Set to true to enable Remote debug via port 8000
 export PXF_DEBUG=${PXF_DEBUG:-false}
