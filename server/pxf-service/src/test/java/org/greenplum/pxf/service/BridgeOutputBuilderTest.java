@@ -19,22 +19,22 @@ package org.greenplum.pxf.service;
  * under the License.
  */
 
-
 import org.greenplum.pxf.api.BadRecordException;
 import org.greenplum.pxf.api.GreenplumDateTime;
 import org.greenplum.pxf.api.OneField;
+import org.greenplum.pxf.api.io.BufferWritable;
 import org.greenplum.pxf.api.io.DataType;
+import org.greenplum.pxf.api.io.GPDBWritable;
+import org.greenplum.pxf.api.io.Writable;
 import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.Utilities;
-import org.greenplum.pxf.api.io.BufferWritable;
-import org.greenplum.pxf.api.io.GPDBWritable;
-import org.greenplum.pxf.api.io.Writable;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.DataOutput;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -42,18 +42,18 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class BridgeOutputBuilderTest {
 
     private static final int UN_SUPPORTED_TYPE = -1;
     private GPDBWritable output = null;
-    private DataOutputToBytes dos = new DataOutputToBytes();
+    private final DataOutputToBytes dos = new DataOutputToBytes();
 
     @Test
     public void testFillGPDBWritable() throws Exception {
@@ -156,24 +156,22 @@ public class BridgeOutputBuilderTest {
 
         outputQueue.get(0).write(dos);
         assertEquals("0,0.0,0.0,0,0,true,\\x00,value,value,\"va\"\"lue\",0," + datetime + "," + date + ",\n",
-                new String(dos.getOutput(), "UTF8"));
+                new String(dos.getOutput(), StandardCharsets.UTF_8));
     }
 
     @Test
-    public void testFillOneGPDBWritableField() throws Exception {
+    public void testFillOneGPDBWritableField() {
         RequestContext context = new RequestContext();
         addColumn(context, 0, DataType.INTEGER, "col0");
         BridgeOutputBuilder builder = makeBuilder(context);
         output = builder.makeGPDBWritableOutput();
 
         OneField unSupportedField = new OneField(UN_SUPPORTED_TYPE, (byte) 0);
-        try {
-            builder.fillOneGPDBWritableField(unSupportedField, 0);
-            fail("Unsupported data type should throw exception");
-        } catch (UnsupportedOperationException e) {
-            assertEquals(e.getMessage(),
-                    "Byte is not supported for GPDB conversion");
-        }
+
+        Exception e = assertThrows(UnsupportedOperationException.class,
+                () -> builder.fillOneGPDBWritableField(unSupportedField, 0),
+                "Unsupported data type should throw exception");
+        assertEquals("Byte is not supported for GPDB conversion", e.getMessage());
     }
 
     @Test
@@ -205,13 +203,10 @@ public class BridgeOutputBuilderTest {
         List<OneField> incomplete = Arrays.asList(
                 new OneField(DataType.INTEGER.getOID(), 10), new OneField(
                         DataType.INTEGER.getOID(), 20));
-        try {
-            builder.fillGPDBWritable(incomplete);
-            fail("testRecordBiggerThanSchema should have failed on - Record has 2 fields but the schema size is 4");
-        } catch (BadRecordException e) {
-            assertEquals(e.getMessage(),
-                    "Record has 2 fields but the schema size is 4");
-        }
+        Exception e = assertThrows(BadRecordException.class,
+                () -> builder.fillGPDBWritable(incomplete),
+                "testRecordBiggerThanSchema should have failed on - Record has 2 fields but the schema size is 4");
+        assertEquals("Record has 2 fields but the schema size is 4", e.getMessage());
     }
 
     @Test
@@ -233,13 +228,10 @@ public class BridgeOutputBuilderTest {
                         DataType.INTEGER.getOID(), 30), new OneField(
                         DataType.INTEGER.getOID(), 40), new OneField(
                         DataType.INTEGER.getOID(), 50));
-        try {
-            builder.fillGPDBWritable(complete);
-            fail("testRecordBiggerThanSchema should have failed on - Record has 5 fields but the schema size is 4");
-        } catch (BadRecordException e) {
-            assertEquals(e.getMessage(),
-                    "Record has 5 fields but the schema size is 4");
-        }
+        Exception e = assertThrows(BadRecordException.class,
+                () -> builder.fillGPDBWritable(complete),
+                "testRecordBiggerThanSchema should have failed on - Record has 5 fields but the schema size is 4");
+        assertEquals("Record has 5 fields but the schema size is 4", e.getMessage());
     }
 
     @Test
@@ -260,13 +252,10 @@ public class BridgeOutputBuilderTest {
                         DataType.INTEGER.getOID(), 20), new OneField(
                         DataType.INTEGER.getOID(), 30), new OneField(
                         DataType.REAL.getOID(), 40.0));
-        try {
-            builder.fillGPDBWritable(complete);
-            fail("testFieldTypeMismatch should have failed on - For field 3 schema requires type INTEGER but input record has type REAL");
-        } catch (BadRecordException e) {
-            assertEquals(e.getMessage(),
-                    "For field col3 schema requires type INTEGER but input record has type REAL");
-        }
+        Exception e = assertThrows(BadRecordException.class,
+                () -> builder.fillGPDBWritable(complete),
+                "testFieldTypeMismatch should have failed on - For field 3 schema requires type INTEGER but input record has type REAL");
+        assertEquals("For field col3 schema requires type INTEGER but input record has type REAL", e.getMessage());
     }
 
     @Test
@@ -435,7 +424,7 @@ public class BridgeOutputBuilderTest {
     /**
      * Test class to check the data inside BufferWritable.
      */
-    private class DataOutputToBytes implements DataOutput {
+    private static class DataOutputToBytes implements DataOutput {
 
         byte[] output;
 
@@ -454,7 +443,7 @@ public class BridgeOutputBuilderTest {
         }
 
         @Override
-        public void write(byte[] b, int off, int len) throws IOException {
+        public void write(byte[] b, int off, int len) {
             output = Arrays.copyOfRange(b, off, len);
         }
 

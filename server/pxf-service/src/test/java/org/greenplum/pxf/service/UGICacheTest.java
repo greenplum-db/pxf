@@ -21,25 +21,27 @@ package org.greenplum.pxf.service;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.stubbing.Answer;
 
 import java.io.IOException;
 
-import static junit.framework.TestCase.assertTrue;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.powermock.api.mockito.PowerMockito.when;
+import static org.mockito.Mockito.when;
 
 public class UGICacheTest {
     private static final long MINUTES = 60 * 1000L;
@@ -48,7 +50,7 @@ public class UGICacheTest {
     private UGICache cache = null;
     private FakeTicker fakeTicker;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         provider = mock(UGIProvider.class);
         session = new SessionId(0, "txn-id", "the-user", "default", new Configuration(), UserGroupInformation.getLoginUser());
@@ -163,10 +165,14 @@ public class UGICacheTest {
 
     @Test
     public void anySegmentIdIsValid() throws Exception {
+
+        UserGroupInformation mockProxyUGI = mock(UserGroupInformation.class);
+        when(provider.createProxyUGI("the-user", null)).thenReturn(mockProxyUGI);
+
         int crazySegId = Integer.MAX_VALUE;
         session = new SessionId(crazySegId, "txn-id", "the-user", "default");
         UserGroupInformation proxyUGI1 = cache.getUserGroupInformation(session, true);
-        assertNotNull(proxyUGI1);
+        assertSame(mockProxyUGI, proxyUGI1);
         assertStillInCache(session, proxyUGI1);
     }
 
@@ -358,10 +364,12 @@ public class UGICacheTest {
         assertNoLongerInCache(session, ugi1);
     }
 
-    @Test(expected = IOException.class)
+    @Test
     public void errorsThrownByCreatingAUgiAreNotCaught() throws Exception {
         when(provider.createProxyUGI("the-user", UserGroupInformation.getLoginUser())).thenThrow(new IOException("test exception"));
-        cache.getUserGroupInformation(session, true);
+
+        assertThrows(IOException.class,
+                () -> cache.getUserGroupInformation(session, true));
     }
 
     @Test
@@ -371,10 +379,11 @@ public class UGICacheTest {
         cache.release(session, true); // does not throw
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void releaseAnEntryNotInTheCache() {
         // this could happen if some caller of the cache calls release twice.
-        cache.release(session, false);
+        assertThrows(IllegalStateException.class,
+                () -> cache.release(session, false));
     }
 
     private void assertStillInCache(SessionId session, UserGroupInformation ugi) throws Exception {
