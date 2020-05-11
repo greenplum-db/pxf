@@ -25,11 +25,8 @@ import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.junit.After;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -38,12 +35,11 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-@RunWith(PowerMockRunner.class)
 public class BridgeInputBuilderTest {
     RequestContext mockContext;
     BridgeInputBuilder inputBuilder;
@@ -129,19 +125,17 @@ public class BridgeInputBuilderTest {
      * helpers functions
      */
 
-    @After
+    @AfterEach
     public void cleanUp() throws IOException {
         if (inputStream != null) {
             inputStream.close();
         }
     }
 
-    private void prepareInput(byte[] data) throws Exception {
+    private void prepareInput(byte[] data) {
         mockContext = mock(RequestContext.class);
-        PowerMockito.when(mockContext.getOutputFormat()).thenReturn(
-                OutputFormat.TEXT);
-        inputBuilder = new BridgeInputBuilder(
-                mockContext);
+        when(mockContext.getOutputFormat()).thenReturn(OutputFormat.TEXT);
+        inputBuilder = new BridgeInputBuilder(mockContext);
         inputStream = new DataInputStream(
                 new ByteArrayInputStream(data));
     }

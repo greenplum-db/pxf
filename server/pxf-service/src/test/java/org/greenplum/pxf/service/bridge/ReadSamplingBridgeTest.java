@@ -20,39 +20,31 @@ package org.greenplum.pxf.service.bridge;
  */
 
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import org.greenplum.pxf.api.io.Writable;
+import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.api.utilities.AccessorFactory;
+import org.greenplum.pxf.api.utilities.ResolverFactory;
+import org.greenplum.pxf.service.utilities.AnalyzeUtils;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.BitSet;
 
-import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.api.utilities.AccessorFactory;
-import org.greenplum.pxf.api.utilities.ResolverFactory;
-import org.greenplum.pxf.api.io.Writable;
-import org.greenplum.pxf.service.utilities.AnalyzeUtils;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
-
-// TODO remove ignore
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({ AnalyzeUtils.class, ReadSamplingBridge.class })
-@Ignore
+// TODO remove Disabled
+@Disabled
 public class ReadSamplingBridgeTest {
 
     /**
@@ -224,7 +216,7 @@ public class ReadSamplingBridgeTest {
         assertNull(result);
     }
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
 
         mockContext = mock(RequestContext.class);
@@ -232,8 +224,8 @@ public class ReadSamplingBridgeTest {
         mockResolverFactory = mock(ResolverFactory.class);
 
         mockBridge = mock(ReadBridge.class);
-        PowerMockito.whenNew(ReadBridge.class).withAnyArguments().thenReturn(
-                mockBridge);
+//        whenNew(ReadBridge.class).withAnyArguments().thenReturn(
+//                mockBridge);
 
         when(mockBridge.getNext()).thenAnswer(new Answer<Writable>() {
             private int count = 0;
@@ -248,7 +240,7 @@ public class ReadSamplingBridgeTest {
             }
         });
 
-        PowerMockito.mockStatic(AnalyzeUtils.class);
+//        mockStatic(AnalyzeUtils.class);
         samplingBitSet = new BitSet();
         when(
                 AnalyzeUtils.generateSamplingBitSet(any(int.class),

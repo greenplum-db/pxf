@@ -25,62 +25,55 @@ import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.security.SecureLogin;
 import org.greenplum.pxf.service.SessionId;
 import org.greenplum.pxf.service.UGICache;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
-import org.mockito.Matchers;
-import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.ArgumentMatchers;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
-
 import java.security.PrivilegedExceptionAction;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@RunWith(MockitoJUnitRunner.class)
 public class SecurityServletFilterTest {
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
 
     private SecurityServletFilter filter;
 
-    @Mock
     private HttpServletRequest mockServletRequest;
-    @Mock
     private ServletResponse mockServletResponse;
-    @Mock
     private FilterChain mockFilterChain;
-    @Mock
     private ConfigurationFactory mockConfigurationFactory;
-    @Mock
     private SecureLogin mockSecureLogin;
-    @Mock
     private UGICache mockUGICache;
-    @Mock
     private Configuration mockConfiguration;
-    @Mock
     private UserGroupInformation mockLoginUGI;
-    @Mock
     private UserGroupInformation mockProxyUGI;
 
-    @Captor
     private ArgumentCaptor<SessionId> session;
 
-    @Before
+    @BeforeEach
     public void setup() {
+        mockServletRequest = mock(HttpServletRequest.class);
+        mockServletResponse = mock(ServletResponse.class);
+        mockFilterChain = mock(FilterChain.class);
+        mockConfigurationFactory = mock(ConfigurationFactory.class);
+        mockSecureLogin = mock(SecureLogin.class);
+        mockUGICache = mock(UGICache.class);
+        mockConfiguration = mock(Configuration.class);
+        mockLoginUGI = mock(UserGroupInformation.class);
+        mockProxyUGI = mock(UserGroupInformation.class);
+
+        session = ArgumentCaptor.forClass(SessionId.class);
+
         filter = new SecurityServletFilter(mockConfigurationFactory, mockSecureLogin, mockUGICache);
     }
 
@@ -88,52 +81,53 @@ public class SecurityServletFilterTest {
 
     @Test
     public void throwsWhenRequiredUserIdHeaderIsEmpty() throws Exception {
-        expectedException.expect(IllegalArgumentException.class);
-        expectedException.expectMessage("Header X-GP-USER is empty in the request");
         when(mockServletRequest.getHeader("X-GP-USER")).thenReturn("  ");
-        filter.doFilter(mockServletRequest, mockServletResponse, mockFilterChain);
+        Exception e = assertThrows(IllegalArgumentException.class,
+                () -> filter.doFilter(mockServletRequest, mockServletResponse, mockFilterChain));
+        assertEquals("Header X-GP-USER is empty in the request", e.getMessage());
     }
 
     @Test
     public void throwsWhenRequiredUserIdHeaderIsMissing() throws Exception {
-        expectedException.expect(IllegalArgumentException.class);
-        expectedException.expectMessage("Header X-GP-USER is missing in the request");
-        filter.doFilter(mockServletRequest, mockServletResponse, mockFilterChain);
+        Exception e = assertThrows(IllegalArgumentException.class,
+                () -> filter.doFilter(mockServletRequest, mockServletResponse, mockFilterChain));
+        assertEquals("Header X-GP-USER is missing in the request", e.getMessage());
     }
 
     @Test
     public void throwsWhenRequiredTxnIdHeaderIsEmpty() throws Exception {
-        expectedException.expect(IllegalArgumentException.class);
-        expectedException.expectMessage("Header X-GP-XID is empty in the request");
         when(mockServletRequest.getHeader("X-GP-USER")).thenReturn("user");
         when(mockServletRequest.getHeader("X-GP-XID")).thenReturn("  ");
-        filter.doFilter(mockServletRequest, mockServletResponse, mockFilterChain);
+        Exception e = assertThrows(IllegalArgumentException.class,
+                () -> filter.doFilter(mockServletRequest, mockServletResponse, mockFilterChain));
+        assertEquals("Header X-GP-XID is empty in the request", e.getMessage());
     }
 
     @Test
     public void throwsWhenRequiredTxnIdHeaderIsMissing() throws Exception {
-        expectedException.expect(IllegalArgumentException.class);
-        expectedException.expectMessage("Header X-GP-XID is missing in the request");
         when(mockServletRequest.getHeader("X-GP-USER")).thenReturn("user");
-        filter.doFilter(mockServletRequest, mockServletResponse, mockFilterChain);
+        Exception e = assertThrows(IllegalArgumentException.class,
+                () -> filter.doFilter(mockServletRequest, mockServletResponse, mockFilterChain));
+        assertEquals("Header X-GP-XID is missing in the request", e.getMessage());
     }
+
     @Test
     public void throwsWhenRequiredSegIdHeaderIsEmpty() throws Exception {
-        expectedException.expect(IllegalArgumentException.class);
-        expectedException.expectMessage("Header X-GP-SEGMENT-ID is empty in the request");
         when(mockServletRequest.getHeader("X-GP-USER")).thenReturn("user");
         when(mockServletRequest.getHeader("X-GP-XID")).thenReturn("xid");
         when(mockServletRequest.getHeader("X-GP-SEGMENT-ID")).thenReturn("  ");
-        filter.doFilter(mockServletRequest, mockServletResponse, mockFilterChain);
+        Exception e = assertThrows(IllegalArgumentException.class,
+                () -> filter.doFilter(mockServletRequest, mockServletResponse, mockFilterChain));
+        assertEquals("Header X-GP-SEGMENT-ID is empty in the request", e.getMessage());
     }
 
     @Test
     public void throwsWhenRequiredSegIdHeaderIsMissing() throws Exception {
-        expectedException.expect(IllegalArgumentException.class);
-        expectedException.expectMessage("Header X-GP-SEGMENT-ID is missing in the request");
         when(mockServletRequest.getHeader("X-GP-USER")).thenReturn("user");
         when(mockServletRequest.getHeader("X-GP-XID")).thenReturn("xid");
-        filter.doFilter(mockServletRequest, mockServletResponse, mockFilterChain);
+        Exception e = assertThrows(IllegalArgumentException.class,
+                () -> filter.doFilter(mockServletRequest, mockServletResponse, mockFilterChain));
+        assertEquals("Header X-GP-SEGMENT-ID is missing in the request", e.getMessage());
     }
 
     /* ----------- methods that test determining remote user ----------- */
@@ -240,7 +234,7 @@ public class SecurityServletFilterTest {
 
     private void verifyScenario(String user, boolean impersonation) throws Exception {
         verify(mockUGICache).getUserGroupInformation(session.capture(), eq(impersonation));
-        verify(mockProxyUGI).doAs(Matchers.<PrivilegedExceptionAction<Object>>any());
+        verify(mockProxyUGI).doAs(ArgumentMatchers.<PrivilegedExceptionAction<Object>>any());
         assertEquals(user, session.getValue().getUser());
         assertEquals(7, session.getValue().getSegmentId().intValue());
         assertSame(mockConfiguration, session.getValue().getConfiguration());
