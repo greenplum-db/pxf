@@ -8,7 +8,7 @@ _main() {
   sleep 1
   source "${PXF_HOME}/conf/pxf-env-default.sh"
   log 'Stopping PXF'
-  "${PXF_HOME}/pxf-service/bin/catalina.sh" stop -force && return
+  "${PXF_HOME}/bin/pxf" stop && return
   # "insurance policy":
   local PID=$1
   if [[ -n $PID ]]; then
