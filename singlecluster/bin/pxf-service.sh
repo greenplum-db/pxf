@@ -92,7 +92,7 @@ function patchWebapp()
 
 	web_file=$instance_root/$instance_name/webapps/pxf/WEB-INF/web.xml
 	cat $web_file | \
-	sed "s/<param-value>.*pxf-log4j.properties<\/param-value>/<param-value>..\/..\/..\/..\/..\/..\/pxf\/conf\/pxf-log4j.properties<\/param-value>/" > web.xml.tmp
+	sed "s/<param-value>.*pxf-log4j2.xml<\/param-value>/<param-value>..\/..\/..\/..\/..\/..\/pxf\/conf\/pxf-log4j2.xml<\/param-value>/" > web.xml.tmp
 	mv web.xml.tmp $web_file
 }
 
