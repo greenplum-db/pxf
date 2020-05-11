@@ -1049,7 +1049,7 @@ jobs:
       passed:
       - Testing Gate for PXF-GP[[gp_ver]]
 {% else %}
-    - get: pxf_gp[[gp_ver]]_tarball_ubuntu18
+#- get: pxf_gp[[gp_ver]]_tarball_ubuntu18
 #      passed:
 #      - Testing Gate for PXF-GP[[gp_ver]]
 {% endif %}
@@ -1113,6 +1113,7 @@ jobs:
             IMPERSONATION: true
             PGPORT: 5432
             PG_REGRESS: true
+            GP_VER: [[gp_ver]]
 {% endfor %}
 {% endif %}
 
@@ -1158,6 +1159,7 @@ jobs:
             IMPERSONATION: true
             PGPORT: 5432
             PG_REGRESS: true
+            GP_VER: [[gp_ver]]
 {% endfor %}
 
 {% if gp_ver == 6 %}
@@ -1165,12 +1167,12 @@ jobs:
   plan:
   - in_parallel:
     - get: pxf_src
-      passed: [Compatibility Gate for PXF-GP[[gp_ver]]]
+      # passed: [Compatibility Gate for PXF-GP[[gp_ver]]]
       # for faster iteration run BC right after build:
       # passed: [Build PXF-GP[[gp_ver]] on Ubuntu18]
       trigger: true
     - get: pxf_tarball
-      passed: [Compatibility Gate for PXF-GP[[gp_ver]]]
+      # passed: [Compatibility Gate for PXF-GP[[gp_ver]]]
       # for faster iteration run BC right after build:
       # passed: [Build PXF-GP[[gp_ver]] on Ubuntu18]
       resource: pxf_gp[[gp_ver]]_tarball_ubuntu18
@@ -1203,6 +1205,7 @@ jobs:
             IMPERSONATION: true
             PGPORT: 5432
             PG_REGRESS: true
+            GP_VER: [[gp_ver]]
 {% endfor %}
 {% endif %}
 

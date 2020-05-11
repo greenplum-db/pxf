@@ -143,6 +143,7 @@ jobs:
     - get: ubuntu18
     - get: pivnet_cli
       passed: [Get Greenplum Product Files GP5]
+      trigger: true
 {% for i in range(num_gpdb6_versions) %}
     - get: gpdb6_rhel7_rpm_latest-[[i]]
     - get: gpdb6_ubuntu18_deb_latest-[[i]]
