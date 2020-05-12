@@ -125,6 +125,7 @@ task stage(type: Copy) {
     }
     from('pxf-service/src/scripts/pxf-service') {
         into 'bin'
+        // TODO: remove rename below when merging
         rename '(.*)', 'pxf'
     }
     from('pxf-service/src/') {
@@ -133,6 +134,7 @@ task stage(type: Copy) {
     into "$buildDir/stage/pxf"
 
     doLast {
+        // TODO: look at diff when merging
         new File("$buildDir/stage/pxf/version").text = "${version}\n"
     }
 }
