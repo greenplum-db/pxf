@@ -41,7 +41,7 @@ export PXF_HOME=$parent_script_dir
 [[ -z "$STOP_WAIT_TIME" ]] && STOP_WAIT_TIME="60"
 identity="pxf-service"
 
-jarfile=$(find "${PXF_HOME}/server/" -name "pxf-service-*.jar" -type f)
+jarfile="${PXF_HOME}/server/pxf-service-_PXF_VERSION_.jar"
 default_env_script=${PXF_HOME}/conf/pxf-env-default.sh
 server_templates=${PXF_HOME}/templates/server-templates/
 
