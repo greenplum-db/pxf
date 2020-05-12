@@ -46,13 +46,7 @@ bootJar {
 
 springBoot {
     mainClassName = "org.greenplum.pxf.service.PxfServiceApplication"
-    buildInfo {
-        properties {
-            additional = [
-                    'protocol_version': "v15"
-            ]
-        }
-    }
+    buildInfo()
 }
 
 test {
