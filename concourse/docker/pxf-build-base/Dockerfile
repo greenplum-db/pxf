@@ -27,7 +27,7 @@ RUN export BUILD_PARAMS=-Dorg.gradle.daemon=false && \
     for X in /tmp/pxf_src/server/build/stage/lib/pxf-*-[0-9]*.jar; do \
       ln -sf $X /root/automation_tmp_lib/`echo \`basename $X\` | sed -e 's/-[a-zA-Z0-9.]*.jar/.jar/'`; \
     done && touch /root/automation_tmp_lib/pxf-extras.jar && \
-    make -C /tmp/pxf_src/automation dev && \
+    make -C /tmp/pxf_src/automation dev && make -C /tmp/pxf_src/automation TEST=HdfsSmokeTest || true && \
     mkdir -p /tmp/output/.tomcat && mkdir -p /tmp/automation && \
     mv /tmp/pxf_src/pxf_commit_sha /tmp/output/pxf_commit_sha && \
     mv /tmp/pxf_src/server/tomcat/build/apache-tomcat-*.tar.gz /tmp/output/.tomcat/ && \
