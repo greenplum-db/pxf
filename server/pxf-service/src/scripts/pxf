@@ -58,24 +58,7 @@ echoYellow() { echo $'\e[0;33m'"$1"$'\e[0m'; }
 
 function validate_user()
 {
-    # shellcheck disable=SC2012
-    [[ $EUID == 0 ]] && run_user=$(ls -ld "$jarfile" | awk '{print $3}')
-
-    # Run as user specified in RUN_AS_USER
-    if [[ -n "$RUN_AS_USER" ]]; then
-        id -u "$RUN_AS_USER" &> /dev/null || {
-            echoRed "Cannot run as '$RUN_AS_USER': no such user"
-            exit 2
-        }
-        [[ $EUID == 0 ]] || {
-            echoRed "Cannot run as '$RUN_AS_USER': current user is not root"
-            exit 4
-        }
-        run_user="$RUN_AS_USER"
-    fi
-
-    # make sure run_user is not root
-    [[ -n ${run_user} && $(id -u "${run_user}") == "0" ]] && { fail "Cannot run as root user. This is considered insecure."; }
+    [[ $EUID == 0 ]] && fail 'Cannot run as root user'
 }
 
 function confirm_with_user()
@@ -161,11 +144,7 @@ function fail()
 function configureTemplates()
 {
     # copy configuration files into instance
-    cp "$server_templates"/bin/{kill-pxf,setenv}.sh "${parent_script_dir}/bin"
-    if [[ -n "$run_user" ]]; then
-      chown "$run_user" "${parent_script_dir}/bin/kill-pxf.sh"
-      chown "$run_user" "${parent_script_dir}/bin/setenv.sh"
-    fi
+    cp "$server_templates"/bin/kill-pxf.sh "${parent_script_dir}/bin"
     return 0
 }
 
@@ -227,9 +206,6 @@ function createLogsDir()
         echoGreen "Creating PXF logs directory $PXF_LOGDIR ..."
         mkdir -p "$PXF_LOGDIR"
         chmod 700 "$PXF_LOGDIR"
-        if [[ -n "$run_user" ]]; then
-            chown "$run_user" "$PXF_LOGDIR"
-        fi
     fi
 }
 
@@ -238,9 +214,6 @@ function createRunDir()
     echoGreen "Creating PXF runtime directory $PXF_RUNDIR ..."
     mkdir -p "$PXF_RUNDIR"
     chmod 700 "$PXF_RUNDIR"
-    if [[ -n "$run_user" ]]; then
-      chown "$run_user" "$PXF_RUNDIR"
-    fi
 }
 
 function generateUserConfigs()
@@ -269,15 +242,9 @@ function setup_conf_directory()
             echoGreen "Copying configurations from $source to $target ..."
             cp -R "$source" "$(dirname "$target")"
         fi
-        if [[ -n "$run_user" ]]; then
-            chown -R "$run_user" "$target"
-        fi
     elif [[ -n $source && -n $override ]]; then
         echoGreen "Updating configurations from $source to $target ..."
         cp -R "$source" "$(dirname "$target")"
-        if [[ -n "$run_user" ]]; then
-            chown -R "$run_user" "$target"
-        fi
     else
         echoGreen "Directory $target already exists, no update required"
         return 0
@@ -451,15 +418,12 @@ function do_start() {
     working_dir=$(dirname "$jarfile")
     pushd "$working_dir" > /dev/null || exit 1
     checkPermissions || return $?
-    if [[ -n "$run_user" ]]; then
-      su -s /bin/sh -c "$javaexe $(printf "\"%s\" " "${arguments[@]}") >> \"/dev/null\" 2>&1 & echo \$!" "$run_user" > "$pid_file"
-      pid=$(cat "$pid_file")
-    else
-      "$javaexe" "${arguments[@]}" >> /dev/null 2>&1 &
-      pid=$!
-      disown $pid
-      echo "$pid" > "$pid_file"
-    fi
+
+    "$javaexe" "${arguments[@]}" >> /dev/null 2>&1 &
+    pid=$!
+    disown $pid
+    echo "$pid" > "$pid_file"
+
     [[ -z $pid ]] && fail "Failed to start PXF"
     checkWebapp 300 10 || return 1
     echoGreen "PXF started [pid=$pid]. Listening on port $PXF_PORT";
