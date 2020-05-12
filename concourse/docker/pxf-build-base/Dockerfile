@@ -39,4 +39,4 @@ RUN export BUILD_PARAMS=-Dorg.gradle.daemon=false && \
     mv /root/.gradle /tmp/output && mv /root/.m2 /tmp/automation && \
     cd /tmp/output/ && tar -czf /tmp/pxf-build-dependencies.tar.gz . && \
     cd /tmp/automation && tar -czf /tmp/pxf-automation-dependencies.tar.gz . && \
-    rm -rf /tmp/output /tmp/pxf_src /root/.gradle /root/.m2 /tmp/automation
+    rm -rf /tmp/output /tmp/pxf_src /root/.gradle /root/.m2 /tmp/automation /root/pxf
