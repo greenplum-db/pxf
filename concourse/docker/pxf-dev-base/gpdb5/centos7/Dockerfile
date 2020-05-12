@@ -56,6 +56,7 @@ RUN ssh-keygen -t rsa -N "" -f /root/.ssh/id_rsa \
     && echo >> ~gpadmin/.pxfrc 'export PGPORT=5432' \
     && echo >> ~gpadmin/.pxfrc 'export GOPATH=/opt/go' \
     && echo >> ~gpadmin/.pxfrc 'export GPHOME=$(find /usr/local/ -name greenplum-db* -type d | head -n1)' \
+    && echo >> ~gpadmin/.pxfrc 'export GPHD_ROOT=/singlecluster' \
     && echo >> ~gpadmin/.pxfrc 'export PXF_HOME=/usr/local/pxf-gp5' \
     && echo >> ~gpadmin/.pxfrc 'export PXF_CONF=/home/gpadmin/pxf' \
     && echo >> ~gpadmin/.pxfrc 'export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk' \

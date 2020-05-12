@@ -12,6 +12,11 @@ steps:
   waitFor: ['-']
 
 - name: 'gcr.io/cloud-builders/gsutil'
+  id: pxf-automation-dependencies
+  args: ['cp', 'gs://${_SINGLECLUSTER_BUCKET}/automation-dependencies/pxf-automation-dependencies.tar.gz', 'build/pxf-automation-dependencies.tar.gz']
+  waitFor: ['-']
+
+- name: 'gcr.io/cloud-builders/gsutil'
   id: singlecluster-hdp2
   args: ['cp', 'gs://${_SINGLECLUSTER_BUCKET}/singlecluster/HDP2/singlecluster-HDP2.tar.gz', 'build/singlecluster-HDP2.tar.gz']
   waitFor: ['-']
@@ -43,6 +48,7 @@ steps:
   - 'build/'
   waitFor:
     - pxf-build-dependencies
+    - pxf-automation-dependencies
     - singlecluster-hdp2
     - gpdb6-centos7-test-pxf-hdp2-image-cache
 

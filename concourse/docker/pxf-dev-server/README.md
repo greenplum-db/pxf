@@ -18,6 +18,7 @@ pushd build
 
 gsutil cp gs://${BUCKET_NAME}/singlecluster/HDP2/singlecluster-HDP2.tar.gz .
 gsutil cp gs://${BUCKET_NAME}/build-dependencies/pxf-build-dependencies.tar.gz .
+gsutil cp gs://${BUCKET_NAME}/automation-dependencies/pxf-automation-dependencies.tar.gz .
 
 docker build \
   --build-arg=BASE_IMAGE=gcr.io/$GCR_PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-test-pxf:latest \
