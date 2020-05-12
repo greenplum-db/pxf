@@ -28,9 +28,9 @@ RUN export BUILD_PARAMS=-Dorg.gradle.daemon=false && \
       ln -sf $X /root/automation_tmp_lib/`echo \`basename $X\` | sed -e 's/-[a-zA-Z0-9.]*.jar/.jar/'`; \
     done && touch /root/automation_tmp_lib/pxf-extras.jar && \
     make -C /tmp/pxf_src/automation dev && \
-    cp /tmp/pxf_src/server/pxf-service/src/templates/user/templates/jdbc-site.xml /root/pxf/servers/database/jdbc-site.xml && \
-    cp /tmp/pxf_src/server/pxf-service/src/templates/user/templates/jdbc-site.xml /root/pxf/servers/db-session-params/jdbc-site.xml && \
-    cp /tmp/pxf_src/server/pxf-service/src/templates/user/templates/jdbc-site.xml /root/pxf/servers/db-hive && \
+    mkdir -p /root/pxf/servers/database/ && cp /tmp/pxf_src/server/pxf-service/src/templates/user/templates/jdbc-site.xml /root/pxf/servers/database/ && \
+    mkdir -p /root/pxf/servers/db-session-params/ && cp /tmp/pxf_src/server/pxf-service/src/templates/user/templates/jdbc-site.xml /root/pxf/servers/db-session-params/ && \
+    mkdir -p /root/pxf/servers/db-hive/ && cp /tmp/pxf_src/server/pxf-service/src/templates/user/templates/jdbc-site.xml /root/pxf/servers/db-hive/ && \
     make -C /tmp/pxf_src/automation TEST=HdfsSmokeTest || true && \
     mkdir -p /tmp/output/.tomcat && mkdir -p /tmp/automation && \
     mv /tmp/pxf_src/pxf_commit_sha /tmp/output/pxf_commit_sha && \
