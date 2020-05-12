@@ -126,9 +126,8 @@ function getEnvironment()
 function checkJavaHome()
 {
     # Find Java
-    if [[ ! -x ${JAVA_HOME}/bin/java ]]; then
-        fail "\$JAVA_HOME=$JAVA_HOME is invalid. Set \$JAVA_HOME in your environment before initializing PXF."
-    fi
+    [[ -x ${JAVA_HOME}/bin/java ]] || fail "\$JAVA_HOME=$JAVA_HOME is invalid. Set \$JAVA_HOME in your environment before initializing PXF."
+    javaexe="$JAVA_HOME/bin/java"
 }
 
 # print error message and return with error code
@@ -337,7 +336,7 @@ function doReset()
     rm -f "${parent_script_dir}/bin/kill-pxf.sh"
 
     echoYellow "Reverting changes to ${default_env_script}..."
-    sed "${SED_OPTS[@]}" "s|{PXF_CONF:-\"${PXF_CONF}/*\"}|{PXF_CONF:-NOT_INITIALIZED}|g" "$default_env_script"
+    sed "${SED_OPTS[@]}" "s|{PXF_CONF:-\".*\"}|{PXF_CONF:-NOT_INITIALIZED}|g" "$default_env_script"
 
     echoGreen "Finished resetting PXF"
 }
