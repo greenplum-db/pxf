@@ -54,7 +54,7 @@ public class BridgeResource extends BaseResource {
     /**
      * Lock is needed here in the case of a non-thread-safe plugin. Using
      * synchronized methods is not enough because the bridge work is called by
-     * jetty ({@link StreamingResponseBody}), after we are getting out of this class's
+     * {@link StreamingResponseBody}, after we are getting out of this class's
      * context.
      * <p/>
      * BRIDGE_LOCK is accessed through lock() and unlock() functions, based on
