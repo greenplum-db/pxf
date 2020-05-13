@@ -1225,18 +1225,20 @@ jobs:
 {% else %}
       - Test PXF-GP[[gp_ver]] Backward Compatibility on RHEL6
 {% endif %}
-      trigger: true
     # pxf tarballs passed testing jobs
 {% if gp_ver == 6 %}
     - get: pxf_gp[[gp_ver]]_tarball_ubuntu18
+      trigger: true
       passed:
       - Test PXF-GP[[gp_ver]] Backward Compatibility on Ubuntu18
 {% else %}
     - get: pxf_gp[[gp_ver]]_tarball_rhel6
+      trigger: true
       passed:
       - Test PXF-GP[[gp_ver]] Backward Compatibility on RHEL6
 {% endif %}
     - get: pxf_gp[[gp_ver]]_tarball_rhel7
+      trigger: true
       passed:
       - Test PXF-GP[[gp_ver]] Backward Compatibility on RHEL7
     - get: ccp-7-image
@@ -1244,7 +1246,7 @@ jobs:
     image: ccp-7-image
     file: pxf_src/concourse/tasks/promote_pxf_artifacts.yml
     params:
-      GOOGLE_CREDENTIALS: {{google-service-account-key}}
+      GOOGLE_CREDENTIALS: {{ud-gcs-resources-service-account-key}}
       GCS_BUCKET: data-gpdb-ud-pxf-releases
       GCS_RELEASES_PATH: prod/releases/gp[[gp_ver]]
       GP_VER: [[gp_ver]]
