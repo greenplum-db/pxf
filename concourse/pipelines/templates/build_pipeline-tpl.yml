@@ -49,14 +49,6 @@ anchors:
       get_params:
         action: destroy
 
-- &run_regress_anchor
-  run:
-    path: sh
-    args:
-    - -exc
-    - |
-        pxf_src/concourse/scripts/test.bash
-
 ## ======================================================================
 ## RESOURCE TYPES
 ## ======================================================================
@@ -1108,7 +1100,6 @@ jobs:
         image: gpdb[[gp_ver]]-pxf-dev-centos6-image
         config:
           platform: linux
-          <<: *run_regress_anchor
           inputs:
           - name: gpdb_package_latest-[[i]]
           - name: pxf_src
@@ -1122,6 +1113,8 @@ jobs:
             PGPORT: 5432
             PG_REGRESS: true
             GP_VER: [[gp_ver]]
+          run:
+            path: pxf_src/concourse/scripts/test.bash
 {% endfor %}
 {% endif %}
 
@@ -1154,7 +1147,6 @@ jobs:
         image: gpdb[[gp_ver]]-pxf-dev-centos7-image
         config:
           platform: linux
-          <<: *run_regress_anchor
           inputs:
           - name: gpdb_package_latest-[[i]]
           - name: pxf_src
@@ -1168,6 +1160,8 @@ jobs:
             PGPORT: 5432
             PG_REGRESS: true
             GP_VER: [[gp_ver]]
+          run:
+            path: pxf_src/concourse/scripts/test.bash
 {% endfor %}
 
 {% if gp_ver == 6 %}
@@ -1200,7 +1194,6 @@ jobs:
         image: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image
         config:
           platform: linux
-          <<: *run_regress_anchor
           inputs:
           - name: gpdb_package_latest-[[i]]
           - name: pxf_src
@@ -1214,6 +1207,8 @@ jobs:
             PGPORT: 5432
             PG_REGRESS: true
             GP_VER: [[gp_ver]]
+          run:
+            path: pxf_src/concourse/scripts/test.bash
 {% endfor %}
 {% endif %}
 
@@ -1247,8 +1242,9 @@ jobs:
     - get: ccp-7-image
   - task: Promote PXF-GP[[gp_ver]] Artifacts
     image: ccp-7-image
-    config:
-      platform: linux
-      run:
-        path: echo
-        args: [Gonna get promoted soon !]
+    file: pxf_src/concourse/tasks/promote_pxf_artifacts.yml
+    params:
+      GOOGLE_CREDENTIALS: {{google-service-account-key}}
+      GCS_BUCKET: data-gpdb-ud-pxf-releases
+      GCS_RELEASES_PATH: prod/releases/gp[[gp_ver]]
+      GP_VER: [[gp_ver]]

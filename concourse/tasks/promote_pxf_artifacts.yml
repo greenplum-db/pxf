@@ -1,0 +1,24 @@
+platform: linux
+
+image_resource:
+  type: registry-image
+
+inputs:
+- name: pxf_src
+- name: pxf_gp5_tarball_rhel6
+  optional: true
+- name: pxf_gp5_tarball_rhel7
+  optional: true
+- name: pxf_gp6_tarball_rhel7
+  optional: true
+- name: pxf_gp6_tarball_ubuntu18
+  optional: true
+
+params:
+  GP_VER:
+  GOOGLE_CREDENTIALS:
+  GCS_BUCKET:
+  GCS_RELEASES_PATH:
+
+run:
+  path: pxf_src/concourse/scripts/promote_pxf_artifacts.bash
