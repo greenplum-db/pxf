@@ -37,7 +37,6 @@ set-5X-build-pipeline:
 		--var=pxf-git-branch=${BRANCH} \
 		--var=folder-prefix=prod/gpdb_branch \
 		--var=gpdb-branch=5X_STABLE \
-		--var=ccp-git-branch=fix-rpm-install \
 		${FLY_OPTION_NON-INTERACTIVE}
 
 	@echo using the following command to unpause the pipeline:
@@ -58,7 +57,6 @@ set-6X-build-pipeline:
 		--var=pxf-git-branch=${BRANCH} \
 		--var=folder-prefix=prod/gpdb_branch \
 		--var=gpdb-branch=6X_STABLE \
-		--var=ccp-git-branch=fix-rpm-install \
 		${FLY_OPTION_NON-INTERACTIVE}
 
 	@echo using the following command to unpause the pipeline:
