@@ -5,8 +5,10 @@ CONCOURSE ?= ud
 BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD)
 
 SHELL                      = /bin/bash
-BUILD_PIPELINE_5X_NAME       ?= pxf-build-GP5
-BUILD_PIPELINE_6X_NAME       ?= pxf-build-GP6
+BUILD_PIPELINE_5X_NAME    ?= pxf-build-GP5
+BUILD_PIPELINE_6X_NAME    ?= pxf-build-GP6
+FORCOM_PIPELINE_5X_NAME	  ?= pxf-forcom-GP5
+FORCOM_PIPELINE_6X_NAME	  ?= pxf-forcom-GP6
 PIVNET_PIPELINE_NAME      ?= pivnet_artifacts
 NUM_GPDB5_VERSIONS        ?= 10
 NUM_GPDB6_VERSIONS        ?=  9
@@ -14,10 +16,13 @@ FLY_CMD                    = /usr/local/bin/fly
 TEMPLATE_CMD               = ./template_tool
 FLY_OPTION_NON-INTERACTIVE =
 
-.PHONY: build-5 build-6
+.PHONY: build-5 build-6 forcom-5 forcom-6
 build-5: set-5X-build-pipeline
 build-6: set-6X-build-pipeline
+forcom-5: set-5X-forward-compatibility-pipeline
+forcom-6: set-6X-forward-compatibility-pipeline
 
+# ============================= BUILD PIPELINE TARGETS =============================
 .PHONY: set-5X-build-pipeline
 set-5X-build-pipeline:
 	$(FLY_CMD) --target=$(CONCOURSE) \
@@ -58,6 +63,44 @@ set-6X-build-pipeline:
 
 	@echo using the following command to unpause the pipeline:
 	@echo -e "\t$(FLY_CMD) -t ${CONCOURSE} unpause-pipeline --pipeline ${BUILD_PIPELINE_6X_NAME}"
+
+# ============================= FORWARD COMPATIBILITY PIPELINE TARGETS =============================
+
+.PHONY: set-5X-forward-compatibility-pipeline
+set-5X-forward-compatibility-pipeline:
+	$(FLY_CMD) --target=$(CONCOURSE) \
+		set-pipeline \
+		--check-creds \
+		--pipeline=$(FORCOM_PIPELINE_5X_NAME) \
+		--config=<($(TEMPLATE_CMD) --template forcom_pipeline-tpl.yml --vars gp_ver=5) \
+		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
+		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
+		--var=pxf-git-branch=${BRANCH} \
+		--var=folder-prefix=prod/gpdb_branch \
+		--var=gpdb-branch=5X_STABLE \
+		${FLY_OPTION_NON-INTERACTIVE}
+
+	@echo using the following command to unpause the pipeline:
+	@echo -e "\t$(FLY_CMD) -t ${CONCOURSE} unpause-pipeline --pipeline ${FORCOM_PIPELINE_5X_NAME}"
+
+.PHONY: set-6X-forward-compatibility-pipeline
+set-6X-forward-compatibility-pipeline:
+	$(FLY_CMD) --target=$(CONCOURSE) \
+		set-pipeline \
+		--check-creds \
+		--pipeline=$(FORCOM_PIPELINE_6X_NAME) \
+		--config=<($(TEMPLATE_CMD) --template forcom_pipeline-tpl.yml --vars gp_ver=6) \
+		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
+		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
+		--var=pxf-git-branch=${BRANCH} \
+		--var=folder-prefix=prod/gpdb_branch \
+		--var=gpdb-branch=6X_STABLE \
+		${FLY_OPTION_NON-INTERACTIVE}
+
+	@echo using the following command to unpause the pipeline:
+	@echo -e "\t$(FLY_CMD) -t ${CONCOURSE} unpause-pipeline --pipeline ${FORCOM_PIPELINE_6X_NAME}"
+
+# ============================= HELPER PIPELINE TARGETS =============================
 
 .PHONY: set-pivnet
 set-pivnet: set-pivnet-pipeline
