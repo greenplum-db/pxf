@@ -16,6 +16,5 @@ docker run --rm -it \
   -p 50070:50070 \
   -w /home/gpadmin/workspace \
   -v ~/workspace/pxf:/home/gpadmin/workspace/pxf \
-  -v ~/workspace/singlecluster-HDP:/home/gpadmin/workspace/singlecluster \
-  gcr.io/${GCR_PROJECT}/gpdb-pxf-dev/gpdb6-centos7-test-pxf:latest /bin/bash -c \
+  gcr.io/${GCR_PROJECT}/gpdb-pxf-dev/gpdb6-centos7-test-pxf-hdp2:latest /bin/bash -c \
   "/home/gpadmin/workspace/pxf/dev/bootstrap.bash && su - gpadmin"

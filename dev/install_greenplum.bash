@@ -33,5 +33,4 @@ else
 	sudo apt install -qq "${PWD}/${LATEST_DEB}"
 fi
 
-sudo chown -R gpadmin:gpadmin /usr/local/greenplum-db*
 popd > /dev/null
