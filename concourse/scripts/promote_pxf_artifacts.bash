@@ -7,7 +7,8 @@ set -e
 : "${GCS_RELEASES_PATH:?GCS_RELEASES_PATH must be set}"
 : "${GP_VER:?GP_VER must be set}"
 
-gcloud auth activate-service-account --key-file=<(echo "${GOOGLE_CREDENTIALS}")
+echo "Authenticating with Google service account..."
+gcloud auth activate-service-account --key-file=<(echo "${GOOGLE_CREDENTIALS}") >/dev/null 2>&1
 
 tarballs=(pxf_gp*_tarball_*/*gz)
 if (( ${#tarballs[@]} < 1 )); then
@@ -29,6 +30,8 @@ for tarball in "${tarballs[@]}"; do
 		echo "Couldn't determine version number from file named '${pkg_file}', skipping upload to releases..."
 		continue
 	fi
+	echo "Expanding tarball '${tarball}'..."
 	tar zxf "${tarball}"
+	echo "Copying '${pkg_file}' to 'gs://${GCS_BUCKET}/${GCS_RELEASES_PATH}/pxf-gp${GP_VER}-${pxf_version}-1.${suffix}'..."
 	gsutil cp "${pkg_file}" "gs://${GCS_BUCKET}/${GCS_RELEASES_PATH}/pxf-gp${GP_VER}-${pxf_version}-1.${suffix}"
 done

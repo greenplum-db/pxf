@@ -34,6 +34,7 @@ set-5X-build-pipeline:
 		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
 		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud.yml \
 		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud_kerberos.yml \
+		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/ud-pxf.yml \
 		--var=pxf-git-branch=${BRANCH} \
 		--var=folder-prefix=prod/gpdb_branch \
 		--var=gpdb-branch=5X_STABLE \
@@ -54,6 +55,7 @@ set-6X-build-pipeline:
 		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
 		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud.yml \
 		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud_kerberos.yml \
+		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/ud-pxf.yml \
 		--var=pxf-git-branch=${BRANCH} \
 		--var=folder-prefix=prod/gpdb_branch \
 		--var=gpdb-branch=6X_STABLE \
