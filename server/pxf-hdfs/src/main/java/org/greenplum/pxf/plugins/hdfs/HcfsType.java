@@ -240,7 +240,7 @@ public enum HcfsType {
      * @param configuration configuration used for HCFS operations
      */
     protected void disableSecureTokenRenewal(String uri, Configuration configuration) {
-        if (Utilities.isSecurityEnabled(configuration))
+        if (Utilities.isSecurityEnabled(configuration) || StringUtils.isBlank(uri))
             return;
 
         String host = null;
