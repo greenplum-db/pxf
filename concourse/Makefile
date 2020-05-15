@@ -30,11 +30,11 @@ set-5X-build-pipeline:
 		--check-creds \
 		--pipeline=$(BUILD_PIPELINE_5X_NAME) \
 		--config=<($(TEMPLATE_CMD) --template build_pipeline-tpl.yml --vars gp_ver=5 num_gpdb5_versions=$(NUM_GPDB5_VERSIONS)) \
+		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/pxf-secrets.yml \
 		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
 		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
 		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud.yml \
 		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud_kerberos.yml \
-		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/ud-pxf.yml \
 		--var=pxf-git-branch=${BRANCH} \
 		--var=folder-prefix=prod/gpdb_branch \
 		--var=gpdb-branch=5X_STABLE \
@@ -50,12 +50,12 @@ set-6X-build-pipeline:
 		--check-creds \
 		--pipeline=$(BUILD_PIPELINE_6X_NAME) \
 		--config=<($(TEMPLATE_CMD) --template build_pipeline-tpl.yml --vars gp_ver=6 num_gpdb6_versions=$(NUM_GPDB6_VERSIONS)) \
+		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/pxf-secrets.yml \
 		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/gpdb-6X_STABLE-release-secrets.prod.yml \
 		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
 		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
 		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud.yml \
 		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud_kerberos.yml \
-		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/ud-pxf.yml \
 		--var=pxf-git-branch=${BRANCH} \
 		--var=folder-prefix=prod/gpdb_branch \
 		--var=gpdb-branch=6X_STABLE \
@@ -111,7 +111,7 @@ set-pivnet-pipeline:
 		set-pipeline \
 		--check-creds \
 		--config <($(TEMPLATE_CMD) --template get_pivnet_artifacts-tpl.yml --vars num_gpdb5_versions=$(NUM_GPDB5_VERSIONS) num_gpdb6_versions=$(NUM_GPDB6_VERSIONS)) \
-		--load-vars-from $(HOME)/workspace/gp-continuous-integration/secrets/pxf-pivnet-secrets.yml \
+		--load-vars-from $(HOME)/workspace/gp-continuous-integration/secrets/pxf-secrets.yml \
 		--load-vars-from $(HOME)/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
 		--var pxf-git-branch=external-table \
 		--var pxf-git-remote=https://github.com/greenplum-db/pxf \
