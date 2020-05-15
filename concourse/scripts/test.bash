@@ -10,15 +10,20 @@ if [[ -z "GP_VER" ]]; then
     exit 1
 fi
 
-# set our own GPHOME for RPM-based installs before sourcing common script
-GPHOME=/usr/local/greenplum-db
+# set our own GPHOME for binary or RPM-based installs before sourcing common script
+if [[ -d bin_gpdb ]]; then
+	# forward compatibility pipeline works with Greenplum binary tarballs
+	export GPHOME=/usr/local/greenplum-db-devel
+else
+	# build pipeline works with Greenplum RPMs
+	export GPHOME=/usr/local/greenplum-db
+fi
 export PXF_HOME=/usr/local/pxf-gp${GP_VER}
 
 source "${CWDIR}/pxf_common.bash"
 PG_REGRESS=${PG_REGRESS:-false}
 
 export GOOGLE_PROJECT_ID=${GOOGLE_PROJECT_ID:-data-gpdb-ud}
-export GPHOME=${GPHOME:-/usr/local/greenplum-db-devel}
 export JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8
 export HADOOP_HEAPSIZE=512
 export YARN_HEAPSIZE=512
@@ -182,6 +187,7 @@ function _main() {
 	if [[ -d bin_gpdb ]]; then
 		# forward compatibility pipeline works with Greenplum binary tarballs, not RPMs
 		install_gpdb_binary
+		chown -R gpadmin:gpadmin "${GPHOME}"
 	else
 		install_gpdb_package
 	fi

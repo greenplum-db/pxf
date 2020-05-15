@@ -168,7 +168,7 @@ jobs:
     - get: pxf-automation-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
-  - task: GPDB-[[gp_ver]] with PXF-GP[[gp_ver]]-HDP2 on RHEL6
+  - task: Test GPDB-[[gp_ver]] with PXF-GP[[gp_ver]]-HDP2 on RHEL6
     file: pxf_src/concourse/tasks/test_forcom.yml
     image: gpdb[[gp_ver]]-pxf-dev-centos6-image
     params:
@@ -194,7 +194,7 @@ jobs:
     - get: pxf-automation-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
-  - task: GPDB-[[gp_ver]] with PXF-GP[[gp_ver]]-HDP2 on RHEL7
+  - task: Test GPDB-[[gp_ver]] with PXF-GP[[gp_ver]]-HDP2 on RHEL7
     file: pxf_src/concourse/tasks/test_forcom.yml
     image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     params:
