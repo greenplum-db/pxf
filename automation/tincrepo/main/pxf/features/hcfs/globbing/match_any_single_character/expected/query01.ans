@@ -3,9 +3,29 @@
 -- @description query01 tests glob to match any single character for example
 -- a?c will match abc, a2c, a.c, but it will not match abcd
 --
-select * from hcfs_glob_match_any_single_character order by name, num;
+select * from hcfs_glob_match_any_single_character order by name collate "C", num;
     name    | num | dub |    longnum    | bool 
 ------------+-----+-----+---------------+------
+ a.c_row_1  |   1 |   1 |  100000000000 | f
+ a.c_row_10 |  10 |  10 | 1000000000000 | t
+ a.c_row_11 |  11 |  11 | 1100000000000 | f
+ a.c_row_12 |  12 |  12 | 1200000000000 | t
+ a.c_row_13 |  13 |  13 | 1300000000000 | f
+ a.c_row_14 |  14 |  14 | 1400000000000 | t
+ a.c_row_15 |  15 |  15 | 1500000000000 | f
+ a.c_row_16 |  16 |  16 | 1600000000000 | t
+ a.c_row_17 |  17 |  17 | 1700000000000 | f
+ a.c_row_18 |  18 |  18 | 1800000000000 | t
+ a.c_row_19 |  19 |  19 | 1900000000000 | f
+ a.c_row_2  |   2 |   2 |  200000000000 | t
+ a.c_row_20 |  20 |  20 | 2000000000000 | t
+ a.c_row_3  |   3 |   3 |  300000000000 | f
+ a.c_row_4  |   4 |   4 |  400000000000 | t
+ a.c_row_5  |   5 |   5 |  500000000000 | f
+ a.c_row_6  |   6 |   6 |  600000000000 | t
+ a.c_row_7  |   7 |   7 |  700000000000 | f
+ a.c_row_8  |   8 |   8 |  800000000000 | t
+ a.c_row_9  |   9 |   9 |  900000000000 | f
  a2c_row_1  |   1 |   1 |  100000000000 | f
  a2c_row_10 |  10 |  10 | 1000000000000 | t
  a2c_row_11 |  11 |  11 | 1100000000000 | f
@@ -46,25 +66,5 @@ select * from hcfs_glob_match_any_single_character order by name, num;
  abc_row_7  |   7 |   7 |  700000000000 | f
  abc_row_8  |   8 |   8 |  800000000000 | t
  abc_row_9  |   9 |   9 |  900000000000 | f
- a.c_row_1  |   1 |   1 |  100000000000 | f
- a.c_row_10 |  10 |  10 | 1000000000000 | t
- a.c_row_11 |  11 |  11 | 1100000000000 | f
- a.c_row_12 |  12 |  12 | 1200000000000 | t
- a.c_row_13 |  13 |  13 | 1300000000000 | f
- a.c_row_14 |  14 |  14 | 1400000000000 | t
- a.c_row_15 |  15 |  15 | 1500000000000 | f
- a.c_row_16 |  16 |  16 | 1600000000000 | t
- a.c_row_17 |  17 |  17 | 1700000000000 | f
- a.c_row_18 |  18 |  18 | 1800000000000 | t
- a.c_row_19 |  19 |  19 | 1900000000000 | f
- a.c_row_2  |   2 |   2 |  200000000000 | t
- a.c_row_20 |  20 |  20 | 2000000000000 | t
- a.c_row_3  |   3 |   3 |  300000000000 | f
- a.c_row_4  |   4 |   4 |  400000000000 | t
- a.c_row_5  |   5 |   5 |  500000000000 | f
- a.c_row_6  |   6 |   6 |  600000000000 | t
- a.c_row_7  |   7 |   7 |  700000000000 | f
- a.c_row_8  |   8 |   8 |  800000000000 | t
- a.c_row_9  |   9 |   9 |  900000000000 | f
 (60 rows)
 
