@@ -4,13 +4,18 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.mapreduce.MRJobConfig;
+import org.apache.hadoop.net.NetUtils;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import static org.apache.hadoop.fs.FileSystem.FS_DEFAULT_NAME_KEY;
@@ -183,9 +188,7 @@ public enum HcfsType {
      * @return an absolute data path
      */
     public String getDataUri(Configuration configuration, RequestContext context) {
-        String uri = getDataUriForPrefix(configuration, context, this.prefix);
-        disableSecureTokenRenewal(uri, configuration);
-        return uri;
+        return getDataUriForPrefix(configuration, context, this.prefix);
     }
 
     /**
@@ -195,9 +198,7 @@ public enum HcfsType {
      * @return an absolute data path
      */
     public String getDataUri(Configuration configuration, String path) {
-        String uri = getDataUriForPrefix(configuration, path, this.prefix);
-        disableSecureTokenRenewal(uri, configuration);
-        return uri;
+        return getDataUriForPrefix(configuration, path, this.prefix);
     }
 
     /**
@@ -221,10 +222,14 @@ public enum HcfsType {
 
         if (FILE_SCHEME.equals(defaultFS.getScheme())) {
             // if the defaultFS is file://, but enum is not FILE, use enum scheme only
-            return scheme + normalizeDataSource(dataSource);
+            String uri = scheme + normalizeDataSource(dataSource);
+            disableSecureTokenRenewal(uri, configuration);
+            return uri;
         } else {
             // if the defaultFS is not file://, use it, instead of enum scheme and append user's path
-            return StringUtils.removeEnd(defaultFS.toString(), "/") + "/" + StringUtils.removeStart(dataSource, "/");
+            String uri = StringUtils.removeEnd(defaultFS.toString(), "/");
+            disableSecureTokenRenewal(uri, configuration);
+            return uri + "/" + normalizeDataSource(dataSource);
         }
     }
 
@@ -238,12 +243,17 @@ public enum HcfsType {
         if (Utilities.isSecurityEnabled(configuration))
             return;
 
-        // find the "host" that TokenCache will check against the exclusion list, for cloud file systems (like S3)
-        // it might actually be a bucket in the full resource path
-        String host = URI.create(StringUtils.replace(uri, " ", "%20")).getHost();
-        // String host = URI.create(uri).getHost();
-        LOG.debug("Disabling token renewal for host {} for path {}", host, uri);
+        String host = null;
+        try {
+            // find the "host" that TokenCache will check against the exclusion
+            // list, for cloud file systems (like S3) it might actually be a
+            // bucket in the full resource path
+            host = URI.create(StringUtils.replace(uri, " ", "%20")).getHost();
+        } catch (IllegalArgumentException e) {
+            LOG.error(String.format("Unable to create URI from string '%s'", uri), e);
+        }
         if (host != null) {
+            LOG.debug("Disabling token renewal for host {} for path {}", host, uri);
             // disable token renewal for the "host" in the path
             configuration.set(MRJobConfig.JOB_NAMENODES_TOKEN_RENEWAL_EXCLUDE, host);
         }

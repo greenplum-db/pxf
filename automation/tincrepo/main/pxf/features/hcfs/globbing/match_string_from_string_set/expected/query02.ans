@@ -1,0 +1,70 @@
+-- start_ignore
+-- end_ignore
+-- @description query02 tests glob to match a string from the given set
+-- a.{ab{c,d},jh}?? will match a.abcxx, a.abdxy, a.jhyy but it will not match a.hlp
+--
+select * from hcfs_glob_match_string_from_string_set_2 order by name, num;
+    name        | num | dub |    longnum    | bool
+----------------+-----+-----+---------------+------
+ a.abcxx_row_1  |   1 |   1 |  100000000000 | f
+ a.abcxx_row_10 |  10 |  10 | 1000000000000 | t
+ a.abcxx_row_11 |  11 |  11 | 1100000000000 | f
+ a.abcxx_row_12 |  12 |  12 | 1200000000000 | t
+ a.abcxx_row_13 |  13 |  13 | 1300000000000 | f
+ a.abcxx_row_14 |  14 |  14 | 1400000000000 | t
+ a.abcxx_row_15 |  15 |  15 | 1500000000000 | f
+ a.abcxx_row_16 |  16 |  16 | 1600000000000 | t
+ a.abcxx_row_17 |  17 |  17 | 1700000000000 | f
+ a.abcxx_row_18 |  18 |  18 | 1800000000000 | t
+ a.abcxx_row_19 |  19 |  19 | 1900000000000 | f
+ a.abcxx_row_2  |   2 |   2 |  200000000000 | t
+ a.abcxx_row_20 |  20 |  20 | 2000000000000 | t
+ a.abcxx_row_3  |   3 |   3 |  300000000000 | f
+ a.abcxx_row_4  |   4 |   4 |  400000000000 | t
+ a.abcxx_row_5  |   5 |   5 |  500000000000 | f
+ a.abcxx_row_6  |   6 |   6 |  600000000000 | t
+ a.abcxx_row_7  |   7 |   7 |  700000000000 | f
+ a.abcxx_row_8  |   8 |   8 |  800000000000 | t
+ a.abcxx_row_9  |   9 |   9 |  900000000000 | f
+ a.abdxy_row_1  |   1 |   1 |  100000000000 | f
+ a.abdxy_row_10 |  10 |  10 | 1000000000000 | t
+ a.abdxy_row_11 |  11 |  11 | 1100000000000 | f
+ a.abdxy_row_12 |  12 |  12 | 1200000000000 | t
+ a.abdxy_row_13 |  13 |  13 | 1300000000000 | f
+ a.abdxy_row_14 |  14 |  14 | 1400000000000 | t
+ a.abdxy_row_15 |  15 |  15 | 1500000000000 | f
+ a.abdxy_row_16 |  16 |  16 | 1600000000000 | t
+ a.abdxy_row_17 |  17 |  17 | 1700000000000 | f
+ a.abdxy_row_18 |  18 |  18 | 1800000000000 | t
+ a.abdxy_row_19 |  19 |  19 | 1900000000000 | f
+ a.abdxy_row_2  |   2 |   2 |  200000000000 | t
+ a.abdxy_row_20 |  20 |  20 | 2000000000000 | t
+ a.abdxy_row_3  |   3 |   3 |  300000000000 | f
+ a.abdxy_row_4  |   4 |   4 |  400000000000 | t
+ a.abdxy_row_5  |   5 |   5 |  500000000000 | f
+ a.abdxy_row_6  |   6 |   6 |  600000000000 | t
+ a.abdxy_row_7  |   7 |   7 |  700000000000 | f
+ a.abdxy_row_8  |   8 |   8 |  800000000000 | t
+ a.abdxy_row_9  |   9 |   9 |  900000000000 | f
+ a.jhyy_row_1   |   1 |   1 |  100000000000 | f
+ a.jhyy_row_10  |  10 |  10 | 1000000000000 | t
+ a.jhyy_row_11  |  11 |  11 | 1100000000000 | f
+ a.jhyy_row_12  |  12 |  12 | 1200000000000 | t
+ a.jhyy_row_13  |  13 |  13 | 1300000000000 | f
+ a.jhyy_row_14  |  14 |  14 | 1400000000000 | t
+ a.jhyy_row_15  |  15 |  15 | 1500000000000 | f
+ a.jhyy_row_16  |  16 |  16 | 1600000000000 | t
+ a.jhyy_row_17  |  17 |  17 | 1700000000000 | f
+ a.jhyy_row_18  |  18 |  18 | 1800000000000 | t
+ a.jhyy_row_19  |  19 |  19 | 1900000000000 | f
+ a.jhyy_row_2   |   2 |   2 |  200000000000 | t
+ a.jhyy_row_20  |  20 |  20 | 2000000000000 | t
+ a.jhyy_row_3   |   3 |   3 |  300000000000 | f
+ a.jhyy_row_4   |   4 |   4 |  400000000000 | t
+ a.jhyy_row_5   |   5 |   5 |  500000000000 | f
+ a.jhyy_row_6   |   6 |   6 |  600000000000 | t
+ a.jhyy_row_7   |   7 |   7 |  700000000000 | f
+ a.jhyy_row_8   |   8 |   8 |  800000000000 | t
+ a.jhyy_row_9   |   9 |   9 |  900000000000 | f
+(60 rows)
+

@@ -22,7 +22,7 @@ public class HcfsTypeTest {
     private Configuration configuration;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         context = new RequestContext();
         context.setDataSource("/foo/bar.txt");
         configuration = new Configuration();
@@ -349,6 +349,28 @@ public class HcfsTypeTest {
         String dataUri = type.getDataUri(configuration, context);
         assertEquals("xyz://abc/foo/bar.txt", dataUri);
         assertEquals("abc", configuration.get(MRJobConfig.JOB_NAMENODES_TOKEN_RENEWAL_EXCLUDE));
+    }
+
+    @Test
+    public void testWhitespaceInDataSource() {
+        configuration.set("fs.defaultFS", "s3a://abc/");
+        context.setDataSource("foo/bar 1.txt");
+
+        HcfsType type = HcfsType.getHcfsType(configuration, context);
+        String dataUri = type.getDataUri(configuration, context);
+        assertEquals("s3a://abc/foo/bar 1.txt", dataUri);
+        assertEquals("abc", configuration.get(MRJobConfig.JOB_NAMENODES_TOKEN_RENEWAL_EXCLUDE));
+    }
+
+    @Test
+    public void testHcfsGlobPattern() {
+        configuration.set("fs.defaultFS", "hdfs://0.0.0.0:8020");
+        context.setDataSource("/tmp/issues/172848577/[a-b].csv");
+
+        HcfsType type = HcfsType.getHcfsType(configuration, context);
+        String dataUri = type.getDataUri(configuration, context);
+        assertEquals("hdfs://0.0.0.0:8020/tmp/issues/172848577/[a-b].csv", dataUri);
+        assertEquals("0.0.0.0", configuration.get(MRJobConfig.JOB_NAMENODES_TOKEN_RENEWAL_EXCLUDE));
     }
 
 }
