@@ -1246,7 +1246,7 @@ jobs:
     image: ccp-7-image
     file: pxf_src/concourse/tasks/promote_pxf_artifacts.yml
     params:
-      GOOGLE_CREDENTIALS: {{ud-gcs-resources-service-account-key}}
+      GOOGLE_CREDENTIALS: {{pxf-ci-service-account-key}}
       GCS_BUCKET: data-gpdb-ud-pxf-releases
       GCS_RELEASES_PATH: prod/releases/gp[[gp_ver]]
       GP_VER: [[gp_ver]]
