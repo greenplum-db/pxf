@@ -413,4 +413,48 @@ public class UtilitiesTest {
         configuration.set("hadoop.security.authentication", "kerberos");
         assertTrue(Utilities.isSecurityEnabled(configuration));
     }
+
+    @Test
+    public void testGetHost() {
+
+        assertNull(Utilities.getHost(null));
+        assertNull(Utilities.getHost(""));
+        assertNull(Utilities.getHost("  "));
+        assertNull(Utilities.getHost(":"));
+        assertNull(Utilities.getHost("#"));
+        assertNull(Utilities.getHost("/"));
+
+        assertEquals("www.google.com", Utilities.getHost("https://www.google.com/"));
+        assertEquals("www.google.com", Utilities.getHost("http://www.google.com/"));
+
+        assertEquals("www.blog.classroom.me.uk", Utilities.getHost("http://www.blog.classroom.me.uk/index.php"));
+        assertEquals("www.youtube.com", Utilities.getHost("http://www.youtube.com/watch?v=ClkQA2Lb_iE"));
+        assertEquals("www.youtube.com", Utilities.getHost("https://www.youtube.com/watch?v=ClkQA2Lb_iE"));
+        assertEquals("www.youtube.com", Utilities.getHost("www.youtube.com/watch?v=ClkQA2Lb_iE"));
+        assertEquals("ftp.websitename.com", Utilities.getHost("ftps://ftp.websitename.com/dir/file.txt"));
+        assertEquals("websitename.com", Utilities.getHost("websitename.com:1234/dir/file.txt"));
+        assertEquals("websitename.com", Utilities.getHost("ftps://websitename.com:1234/dir/file.txt"));
+        assertEquals("example.com", Utilities.getHost("example.com?param=value"));
+        assertEquals("facebook.github.io", Utilities.getHost("https://facebook.github.io/jest/"));
+        assertEquals("youtube.com", Utilities.getHost("//youtube.com/watch?v=ClkQA2Lb_iE"));
+        assertEquals("localhost", Utilities.getHost("http://localhost:4200/watch?v=ClkQA2Lb_iE"));
+
+        assertEquals("127.0.0.1", Utilities.getHost("hdfs://127.0.0.1:8020"));
+        assertEquals("my-bucket", Utilities.getHost("s3a://my-bucket/foo/ba[rc]"));
+        assertEquals("foo", Utilities.getHost("s3://foo/bar.txt"));
+        assertEquals("foo.azuredatalakestore.net", Utilities.getHost("adl://foo.azuredatalakestore.net/foo/bar.txt"));
+        assertEquals("foo", Utilities.getHost("xyz://foo/bar.txt"));
+        assertEquals("0.0.0.0", Utilities.getHost("xyz://0.0.0.0:80/foo/bar.txt"));
+        assertEquals("abc", Utilities.getHost("xyz://abc/foo/bar.txt"));
+        assertNull(Utilities.getHost("file:///foo/bar.txt"));
+        assertEquals("0.0.0.0", Utilities.getHost("hdfs://0.0.0.0:8020"));
+        assertEquals("abc", Utilities.getHost("hdfs://abc:8020/foo/bar.txt"));
+        assertEquals("0.0.0.0", Utilities.getHost("hdfs://0.0.0.0:8020/tmp/issues/172848577/[a-b].csv"));
+
+        assertEquals("0.0.0.0", Utilities.getHost("hdfs://0.0.0.0#anchor"));
+        assertEquals("0.0.0.0", Utilities.getHost("hdfs://0.0.0.0/p"));
+        assertEquals("0.0.0.0", Utilities.getHost("hdfs://0.0.0.0?PROFILE=foo"));
+        assertEquals("www.example.com", Utilities.getHost("www.example.com"));
+        assertEquals("10.0.0.15", Utilities.getHost("10.0.0.15"));
+    }
 }

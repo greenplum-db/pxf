@@ -36,6 +36,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Utilities class exposes helper method for PXF classes
@@ -46,6 +48,17 @@ public class Utilities {
     private static final String PROPERTY_KEY_FRAGMENTER_CACHE = "pxf.service.fragmenter.cache.enabled";
     private static final char[] PROHIBITED_CHARS = new char[]{'/', '\\', '.', ' ', ',', ';'};
     private static final String[] HOSTS = new String[]{"localhost"};
+
+    /**
+     * matches the scheme:// portion of a URI where the "scheme:" is optional,
+     * and this entire pattern is optional
+     */
+    public static final Pattern SCHEME_PATTERN = Pattern.compile("^((([^:/?#]+):)?//)?");
+
+    /**
+     * matches a :, /, ?, or #
+     */
+    public static final Pattern NON_HOSTNAME_CHARACTERS = Pattern.compile("[:/?#]");
 
     /**
      * Returns a decoded base64 byte[], or throws an error if the base64 string is invalid
@@ -356,5 +369,33 @@ public class Utilities {
         if (length == s.length()) return s;
         if (length == 0) return "";
         return s.substring(0, length);
+    }
+
+    /**
+     * Returns the hostname from a given URI string
+     *
+     * @param uri the URI string
+     * @return the hostname from a given URI string
+     */
+    public static String getHost(String uri) {
+        if (StringUtils.isBlank(uri))
+            return null;
+
+        int start = 0, end = uri.length();
+        Matcher matcher = SCHEME_PATTERN.matcher(uri);
+
+        if (matcher.find()) {
+            // Get the start of the hostname
+            start = matcher.end();
+        }
+
+        matcher = NON_HOSTNAME_CHARACTERS.matcher(uri).region(start, uri.length());
+
+        if (matcher.find()) {
+            // Get the end of the hostname
+            end = matcher.start();
+        }
+
+        return (end > start) ? uri.substring(start, end) : null;
     }
 }
