@@ -74,10 +74,8 @@ set-5X-forward-compatibility-pipeline:
 		--pipeline=$(FORCOM_PIPELINE_5X_NAME) \
 		--config=<($(TEMPLATE_CMD) --template forcom_pipeline-tpl.yml --vars gp_ver=5) \
 		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
-		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
+		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/pxf-secrets.yml \
 		--var=pxf-git-branch=${BRANCH} \
-		--var=folder-prefix=prod/gpdb_branch \
-		--var=gpdb-branch=5X_STABLE \
 		${FLY_OPTION_NON-INTERACTIVE}
 
 	@echo using the following command to unpause the pipeline:
@@ -91,10 +89,8 @@ set-6X-forward-compatibility-pipeline:
 		--pipeline=$(FORCOM_PIPELINE_6X_NAME) \
 		--config=<($(TEMPLATE_CMD) --template forcom_pipeline-tpl.yml --vars gp_ver=6) \
 		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
-		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
+		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/pxf-secrets.yml \
 		--var=pxf-git-branch=${BRANCH} \
-		--var=folder-prefix=prod/gpdb_branch \
-		--var=gpdb-branch=6X_STABLE \
 		${FLY_OPTION_NON-INTERACTIVE}
 
 	@echo using the following command to unpause the pipeline:
