@@ -48,8 +48,7 @@ resources:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-centos6-test-pxf
     tag: latest
     username: _json_key
-    password: ((data-gpdb-ud-google-json-key))
-
+    password: {{data-gpdb-ud-google-json-key}}
 {% endif %}
 
 - name: gpdb[[gp_ver]]-pxf-dev-centos7-image
@@ -59,7 +58,7 @@ resources:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-centos7-test-pxf
     tag: latest
     username: _json_key
-    password: ((data-gpdb-ud-google-json-key))
+    password: {{data-gpdb-ud-google-json-key}}
 
 {% if gp_ver == 6 %}
 #- name: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image
@@ -69,8 +68,7 @@ resources:
 #    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-ubuntu18.04-test-pxf
 #    tag: latest
 #    username: _json_key
-#    password: ((data-gpdb-ud-google-json-key))
-
+#    password: {{data-gpdb-ud-google-json-key}}
 {% endif %}
 
 - name: ccp-7-image
@@ -83,21 +81,24 @@ resources:
 ## ---------- Greenplum Release Candidate Tarballs ----------
 {% if gp_ver == 5 %}
 - name: gpdb[[gp_ver]]_tarball_rhel6
-  type: gcs
-  icon: google-drive
+  type: s3
+  icon: aws
   source:
-    bucket: pivotal-gpdb-concourse-resources-prod
-    json_key: ((data-gpdb-ud-google-json-key))
-    regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-(.*)-rhel6-x86_64.rpm
+    access_key_id: {{bucket-access-key-id}}
+    bucket: {{gpdb-stable-builds-bucket-name}}
+    region_name: {{aws-region}}
+    secret_access_key: {{bucket-secret-access-key}}
+    versioned_file: release_candidates/bin_gpdb_centos6/gpdb5/bin_gpdb.tar.gz
 
 - name: gpdb[[gp_ver]]_tarball_rhel7
-  type: gcs
-  icon: google-drive
+  type: s3
+  icon: aws
   source:
-    bucket: pivotal-gpdb-concourse-resources-prod
-    json_key: ((data-gpdb-ud-google-json-key))
-    # not really, this is coming from S3
-    regexp: /server/published/gpdb5/server-rc-(.*)-rhel7_x86_64.debug.tar.gz
+    access_key_id: {{bucket-access-key-id}}
+    bucket: {{gpdb-stable-builds-bucket-name}}
+    region_name: {{aws-region}}
+    secret_access_key: {{bucket-secret-access-key}}
+    versioned_file: release_candidates/bin_gpdb_centos7/gpdb5/bin_gpdb.tar.gz
 {% endif %}
 
 {% if gp_ver == 6 %}
@@ -106,8 +107,8 @@ resources:
   icon: google-drive
   source:
     bucket: pivotal-gpdb-concourse-resources-prod
-    json_key: ((data-gpdb-ud-google-json-key))
-    regexp: /server/published/gpdb6/server-rc-(.*)-rhel7_x86_64.debug.tar.gz
+    json_key: {{concourse-gcs-resources-service-account-key}}
+    regexp: server/published/gpdb6/server-rc-(.*)-rhel7_x86_64.debug.tar.gz
 
 #- name: gpdb[[gp_ver]]_ubuntu18_tarball
 #  type: gcs
@@ -115,7 +116,7 @@ resources:
 #  source:
 #    bucket: pivotal-gpdb-concourse-resources-prod
 #    json_key: ((data-gpdb-ud-google-json-key))
-#    regexp: /server/published/gpdb6/server-rc-(.*)-ubuntu18.04_x86_64.debug.tar.gz
+#    regexp: server/published/gpdb6/server-rc-(.*)-ubuntu18.04_x86_64.debug.tar.gz
 {% endif %}
 
 ## ---------- PXF Released RPM Artifacts ----------
@@ -125,8 +126,8 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pxf-releases
-    json_key: {{data-gpdb-ud-google-json-key}}
-    regexp: prod/releases/gp[[gp_ver]]/pxf-gp[[gp_ver]]-(.*)-1.el7.x84_86.rpm
+    json_key: {{pxf-storage-service-account-key}}
+    regexp: prod/releases/gp[[gp_ver]]/pxf-gp[[gp_ver]]-(.*)-1.el6.x86_64.rpm
 {% endif %}
 
 - name: pxf_gp[[gp_ver]]_rpm_rhel7
@@ -134,8 +135,8 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pxf-releases
-    json_key: {{data-gpdb-ud-google-json-key}}
-    regexp: prod/releases/gp[[gp_ver]]/pxf-gp[[gp_ver]]-(.*)-1.el7.x84_86.rpm
+    json_key: {{pxf-storage-service-account-key}}
+    regexp: prod/releases/gp[[gp_ver]]/pxf-gp[[gp_ver]]-(.*)-1.el7.x86_64.rpm
 
 {% if gp_ver == 6 %}
 #- name: pxf_gp[[gp_ver]]_deb_ubuntu18
@@ -143,8 +144,8 @@ resources:
 #  icon: google-drive
 #  source:
 #    bucket: data-gpdb-ud-pxf-build
-#    json_key: {{data-gpdb-ud-google-json-key}}
-#    regexp: prod/releases/gp[[gp_ver]]/pxf-gp[[gp_ver]]-(.*)-1.ubuntu18.04.x84_86.deb
+#    json_key: ((pxf-storage-service-account-key))
+#    regexp: prod/releases/gp[[gp_ver]]/pxf-gp[[gp_ver]]-(.*)-1.ubuntu18.04.x86_64.deb
 {% endif %}
 
 ## ======================================================================
@@ -158,16 +159,17 @@ jobs:
   plan:
   - in_parallel:
     - get: pxf_src
-    - get: gpdb[[gp_ver]]_tarball_rhel6
+    - get: bin_gpdb
+      resource: gpdb[[gp_ver]]_tarball_rhel6
       trigger: true
-    - get: pxf_rpm_rhel6
+    - get: pxf_package
       resource: pxf_gp[[gp_ver]]_rpm_rhel6
     - get: gpdb[[gp_ver]]-pxf-dev-centos6-image
     - get: pxf-automation-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: GPDB-[[gp_ver]] with PXF-GP[[gp_ver]]-HDP2 on RHEL6
-    file: pxf_src/concourse/tasks/test.yml
+    file: pxf_src/concourse/tasks/test_forcom.yml
     image: gpdb[[gp_ver]]-pxf-dev-centos6-image
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
@@ -176,7 +178,6 @@ jobs:
       SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
       TARGET_OS: centos
       TARGET_OS_VERSION: 6
-#      TEST_ENV: ((test-env))
 {% endif %}
 
 ## ---------- Centos 7 Swimlane ----------
@@ -184,16 +185,17 @@ jobs:
   plan:
   - in_parallel:
     - get: pxf_src
-    - get: gpdb[[gp_ver]]_tarball_rhel7
+    - get: bin_gpdb
+      resource: gpdb[[gp_ver]]_tarball_rhel7
       trigger: true
-    - get: pxf_rpm_rhel7
+    - get: pxf_package
       resource: pxf_gp[[gp_ver]]_rpm_rhel7
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
     - get: pxf-automation-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
   - task: GPDB-[[gp_ver]] with PXF-GP[[gp_ver]]-HDP2 on RHEL7
-    file: pxf_src/concourse/tasks/test.yml
+    file: pxf_src/concourse/tasks/test_forcom.yml
     image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
@@ -202,7 +204,6 @@ jobs:
       SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
       TARGET_OS: centos
       TARGET_OS_VERSION: 7
-#      TEST_ENV: ((test-env))
 
 ## ---------- Ubuntu 18 Swimlane ----------
 {% if gp_ver == 6 %}

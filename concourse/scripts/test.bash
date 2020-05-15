@@ -179,19 +179,29 @@ function _main() {
 	fi
 
 	# Install GPDB
-	install_gpdb_package
+	if [[ -d bin_gpdb ]]; then
+		# forward compatibility pipeline works with Greenplum binary tarballs, not RPMs
+		install_gpdb_binary
+	else
+		install_gpdb_package
+	fi
 
 	# Install PXF
-	install_pxf_tarball
+	if [[ -d pxf_package ]]; then
+		# forward compatibility pipeline works with PXF rpms, not rpm tarballs
+		install_pxf_package
+	else
+		install_pxf_tarball
+	fi
 
-        if [[ ${HADOOP_CLIENT} != MAPR ]]; then
-                inflate_singlecluster
-                if [[ ${HADOOP_CLIENT} != HDP_KERBEROS && -z ${PROTOCOL} ]]; then
-                        # Setup Hadoop before creating GPDB cluster to use system python for yum install
-                        # Must be after installing GPDB to transfer hbase jar
-                        setup_hadoop "${GPHD_ROOT}"
-                fi
-        fi
+	if [[ ${HADOOP_CLIENT} != MAPR ]]; then
+		inflate_singlecluster
+		if [[ ${HADOOP_CLIENT} != HDP_KERBEROS && -z ${PROTOCOL} ]]; then
+			# Setup Hadoop before creating GPDB cluster to use system python for yum install
+			# Must be after installing GPDB to transfer hbase jar
+			setup_hadoop "${GPHD_ROOT}"
+		fi
+	fi
 
 	# initialize GPDB as gpadmin user
 	su gpadmin -c "${CWDIR}/initialize_gpdb.bash"

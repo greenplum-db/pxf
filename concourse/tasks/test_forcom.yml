@@ -1,0 +1,30 @@
+platform: linux
+
+image_resource:
+  type: registry-image
+
+inputs:
+- name: pxf_src
+- name: bin_gpdb
+- name: pxf_package
+- name: singlecluster
+- name: pxf-automation-dependencies
+
+params:
+  ACCESS_KEY_ID:
+  GP_VER:
+  GROUP: smoke
+  HADOOP_CLIENT: HDP
+  IMPERSONATION: true
+  PGPORT: 5432
+  SECRET_ACCESS_KEY:
+  TARGET_OS: centos
+  TARGET_OS_VERSION:
+  TEST_ENV:
+  TEST_OS:
+  RUN_JDK_VERSION: 8
+  PROTOCOL:
+  PG_REGRESS:
+
+run:
+  path: pxf_src/concourse/scripts/test.bash
