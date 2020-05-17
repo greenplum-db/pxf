@@ -11,13 +11,21 @@
         <description>Kerberos path to keytab file owned by pxf service with permissions 0400</description>
     </property>
     <property>
-        <name>pxf.service.user.name</name>
-        <value>${user.name}</value>
-        <description>Login user for remote system, defaults to the OS user that started PXF process</description>
-    </property>
-    <property>
         <name>pxf.service.user.impersonation</name>
         <value>${pxf.service.user.impersonation.enabled}</value>
         <description>End-user identity impersonation, set to true to enable, false to disable</description>
+    </property>
+    <property>
+        <name>pxf.service.user.name</name>
+        <value>${user.name}</value>
+        <description>
+            The pxf.service.user.name property is used to specify the login
+            identity when connecting to a remote system, typically an unsecured
+            Hadoop cluster. By default, it is set to the user that started the
+            PXF process. If PXF impersonation feature is used, this is the
+            identity that needs to be granted Hadoop proxy user privileges.
+            Change it ONLY if you would like to use another identity to login to
+            an unsecured Hadoop cluster
+        </description>
     </property>
 </configuration>
