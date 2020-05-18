@@ -4,6 +4,7 @@ image_resource:
   type: registry-image
 
 inputs:
+- name: pxf_src
 - name: certification
 
 params:
