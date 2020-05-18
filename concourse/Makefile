@@ -7,8 +7,7 @@ BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD)
 SHELL                      = /bin/bash
 BUILD_PIPELINE_5X_NAME    ?= pxf-build-GP5
 BUILD_PIPELINE_6X_NAME    ?= pxf-build-GP6
-FORCOM_PIPELINE_5X_NAME	  ?= pxf-forcom-GP5
-FORCOM_PIPELINE_6X_NAME	  ?= pxf-forcom-GP6
+FORCOM_PIPELINE_NAME	  ?= pxf-certification
 PIVNET_PIPELINE_NAME      ?= pivnet_artifacts
 NUM_GPDB5_VERSIONS        ?= 10
 NUM_GPDB6_VERSIONS        ?=  9
@@ -16,11 +15,10 @@ FLY_CMD                    = /usr/local/bin/fly
 TEMPLATE_CMD               = ./template_tool
 FLY_OPTION_NON-INTERACTIVE =
 
-.PHONY: build-5 build-6 forcom-5 forcom-6
+.PHONY: build-5 build-6 forcom
 build-5: set-5X-build-pipeline
 build-6: set-6X-build-pipeline
-forcom-5: set-5X-forward-compatibility-pipeline
-forcom-6: set-6X-forward-compatibility-pipeline
+forcom: set-forward-compatibility-pipeline
 
 # ============================= BUILD PIPELINE TARGETS =============================
 .PHONY: set-5X-build-pipeline
@@ -70,39 +68,20 @@ set-6X-build-pipeline:
 
 # ============================= FORWARD COMPATIBILITY PIPELINE TARGETS =============================
 
-.PHONY: set-5X-forward-compatibility-pipeline
-set-5X-forward-compatibility-pipeline:
-	@PIPELINE_FILE=$$(mktemp) && \
-	$(TEMPLATE_CMD) --template forcom_pipeline-tpl.yml --vars gp_ver=5 >"$${PIPELINE_FILE}" && \
+.PHONY: set-forward-compatibility-pipeline
+set-forward-compatibility-pipeline:
 	$(FLY_CMD) --target=$(CONCOURSE) \
 		set-pipeline \
 		--check-creds \
-		--pipeline=$(FORCOM_PIPELINE_5X_NAME) \
-		--config "$${PIPELINE_FILE}" \
+		--pipeline=$(FORCOM_PIPELINE_NAME) \
+		--config pipelines/forward_compatibility_pipeline.yml \
 		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
 		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/pxf-secrets.yml \
 		--var=pxf-git-branch=${BRANCH} \
-		${FLY_OPTION_NON-INTERACTIVE} || echo "Generated yaml has errors: check $${PIPELINE_FILE}"
+		${FLY_OPTION_NON-INTERACTIVE} || echo "pipelines/forward_compatibility_pipeline.yml has errors"
 
 	@echo using the following command to unpause the pipeline:
-	@echo -e "\t$(FLY_CMD) -t ${CONCOURSE} unpause-pipeline --pipeline ${FORCOM_PIPELINE_5X_NAME}"
-
-.PHONY: set-6X-forward-compatibility-pipeline
-set-6X-forward-compatibility-pipeline:
-	@PIPELINE_FILE=$$(mktemp) && \
-	$(TEMPLATE_CMD) --template forcom_pipeline-tpl.yml --vars gp_ver=6 >"$${PIPELINE_FILE}" && \
-	$(FLY_CMD) --target=$(CONCOURSE) \
-		set-pipeline \
-		--check-creds \
-		--pipeline=$(FORCOM_PIPELINE_6X_NAME) \
-		--config "$${PIPELINE_FILE}" \
-		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
-		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/pxf-secrets.yml \
-		--var=pxf-git-branch=${BRANCH} \
-		${FLY_OPTION_NON-INTERACTIVE} || echo "Generated yaml has errors: check $${PIPELINE_FILE}"
-
-	@echo using the following command to unpause the pipeline:
-	@echo -e "\t$(FLY_CMD) -t ${CONCOURSE} unpause-pipeline --pipeline ${FORCOM_PIPELINE_6X_NAME}"
+	@echo -e "\t$(FLY_CMD) -t ${CONCOURSE} unpause-pipeline --pipeline ${FORCOM_PIPELINE_NAME}"
 
 # ============================= HELPER PIPELINE TARGETS =============================
 

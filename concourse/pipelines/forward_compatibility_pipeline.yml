@@ -1,0 +1,317 @@
+---
+
+## ======================================================================
+## RESOURCE TYPES
+## ======================================================================
+resource_types:
+
+- name: gcs
+  type: registry-image
+  source:
+    repository: frodenas/gcs-resource
+
+## ======================================================================
+## RESOURCES
+## ======================================================================
+resources:
+
+- name: pxf-automation-dependencies
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: data-gpdb-ud-pxf-build-resources
+    json_key: {{pxf-storage-service-account-key}}
+    versioned_file: automation-dependencies/pxf-automation-dependencies.tar.gz
+
+- name: singlecluster-hdp2
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: data-gpdb-ud-pxf-build-resources
+    json_key: {{pxf-storage-service-account-key}}
+    versioned_file: singlecluster/HDP2/singlecluster-HDP2.tar.gz
+
+## ---------- Github Repos ----------
+- name: pxf_src
+  type: git
+  icon: git
+  source:
+    branch: {{pxf-git-branch}}
+    uri: {{pxf-git-remote}}
+
+## ---------- Docker Images ----------
+- name: gpdb5-pxf-dev-centos6-image
+  type: registry-image
+  icon: docker
+  source:
+    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb5-centos6-test-pxf
+    tag: latest
+    username: _json_key
+    password: {{pxf-storage-service-account-key}}
+
+- name: gpdb5-pxf-dev-centos7-image
+  type: registry-image
+  icon: docker
+  source:
+    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb5-centos7-test-pxf
+    tag: latest
+    username: _json_key
+    password: {{pxf-storage-service-account-key}}
+
+- name: gpdb6-pxf-dev-centos7-image
+  type: registry-image
+  icon: docker
+  source:
+    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb6-centos7-test-pxf
+    tag: latest
+    username: _json_key
+    password: {{pxf-storage-service-account-key}}
+
+#- name: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image
+#  type: registry-image
+#  icon: docker
+#  source:
+#    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-ubuntu18.04-test-pxf
+#    tag: latest
+#    username: _json_key
+#    password: {{data-gpdb-ud-google-json-key}}
+
+- name: ccp-7-image
+  type: registry-image
+  icon: docker
+  source:
+    repository: pivotaldata/ccp
+    tag: 7
+
+## ---------- Greenplum Release Candidate Tarballs ----------
+- name: gpdb5_tarball_rhel6
+  type: s3
+  icon: aws
+  source:
+    access_key_id: {{bucket-access-key-id}}
+    bucket: {{gpdb-stable-builds-bucket-name}}
+    region_name: {{aws-region}}
+    secret_access_key: {{bucket-secret-access-key}}
+    versioned_file: release_candidates/bin_gpdb_centos6/gpdb5/bin_gpdb.tar.gz
+
+- name: gpdb5_tarball_rhel7
+  type: s3
+  icon: aws
+  source:
+    access_key_id: {{bucket-access-key-id}}
+    bucket: {{gpdb-stable-builds-bucket-name}}
+    region_name: {{aws-region}}
+    secret_access_key: {{bucket-secret-access-key}}
+    versioned_file: release_candidates/bin_gpdb_centos7/gpdb5/bin_gpdb.tar.gz
+
+- name: gpdb6_tarball_rhel7
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: pivotal-gpdb-concourse-resources-prod
+    json_key: {{concourse-gcs-resources-service-account-key}}
+    regexp: server/published/gpdb6/server-rc-(.*)-rhel7_x86_64.debug.tar.gz
+
+#- name: gpdb[[gp_ver]]_ubuntu18_tarball
+#  type: gcs
+#  icon: google-drive
+#  source:
+#    bucket: pivotal-gpdb-concourse-resources-prod
+#    json_key: ((data-gpdb-ud-google-json-key))
+#    regexp: server/published/gpdb6/server-rc-(.*)-ubuntu18.04_x86_64.debug.tar.gz
+
+## ---------- PXF Released RPM Artifacts ----------
+- name: pxf_gp5_rpm_rhel6
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: data-gpdb-ud-pxf-releases
+    json_key: {{pxf-storage-service-account-key}}
+    regexp: prod/releases/gp5/pxf-gp5-(.*)-1.el6.x86_64.rpm
+
+- name: pxf_gp5_rpm_rhel7
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: data-gpdb-ud-pxf-releases
+    json_key: {{pxf-storage-service-account-key}}
+    regexp: prod/releases/gp5/pxf-gp5-(.*)-1.el7.x86_64.rpm
+
+- name: pxf_gp6_rpm_rhel7
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: data-gpdb-ud-pxf-releases
+    json_key: {{pxf-storage-service-account-key}}
+    regexp: prod/releases/gp5/pxf-gp6-(.*)-1.el7.x86_64.rpm
+
+#- name: pxf_gp[[gp_ver]]_deb_ubuntu18
+#  type: gcs
+#  icon: google-drive
+#  source:
+#    bucket: data-gpdb-ud-pxf-build
+#    json_key: ((pxf-storage-service-account-key))
+#    regexp: prod/releases/gp[[gp_ver]]/pxf-gp[[gp_ver]]-(.*)-1.ubuntu18.04.x86_64.deb
+
+## ======================================================================
+## JOBS
+## ======================================================================
+jobs:
+
+## ---------- Centos 6 Swimlane ----------
+
+- name: Certify GPDB-5 with PXF-GP5 on RHEL6
+  plan:
+  - in_parallel:
+    - get: pxf_src
+    - get: bin_gpdb
+      resource: gpdb5_tarball_rhel6
+      trigger: true
+    - get: pxf_package
+      resource: pxf_gp5_rpm_rhel6
+      trigger: true
+    - get: gpdb5-pxf-dev-centos6-image
+    - get: ccp-7-image
+    - get: pxf-automation-dependencies
+    - get: singlecluster
+      resource: singlecluster-hdp2
+  - task: Test GPDB-5 with PXF-GP5-HDP2 on RHEL6
+    file: pxf_src/concourse/tasks/test_forcom.yml
+    image: gpdb5-pxf-dev-centos6-image
+    params:
+      ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+      GP_VER: 5
+      #      GROUP: gpdb,proxy,profile
+      GROUP: smoke
+      SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+      TARGET_OS: centos
+      TARGET_OS_VERSION: 6
+  - task: Upload certification for GPDB-5 with PXF-GP5-HDP2 on RHEL6
+    file: pxf_src/concourse/tasks/upload_forcom_certification.yml
+    image: ccp-7-image
+    params:
+      GOOGLE_CREDENTIALS: {{pxf-storage-service-account-key}}
+      GP_VER: 5
+      PXF_CERTIFICATION_FOLDER: data-gpdb-ud-pxf-build/prod/certifications
+
+## ---------- Centos 7 Swimlane ----------
+- name: Certify GPDB-5 with PXF-GP5 on RHEL7
+  plan:
+  - in_parallel:
+    - get: pxf_src
+    - get: bin_gpdb
+      resource: gpdb5_tarball_rhel7
+      trigger: true
+    - get: pxf_package
+      resource: pxf_gp5_rpm_rhel7
+      trigger: true
+    - get: gpdb5-pxf-dev-centos7-image
+    - get: ccp-7-image
+    - get: pxf-automation-dependencies
+    - get: singlecluster
+      resource: singlecluster-hdp2
+  - task: Test GPDB-5 with PXF-GP5-HDP2 on RHEL7
+    file: pxf_src/concourse/tasks/test_forcom.yml
+    image: gpdb5-pxf-dev-centos7-image
+    params:
+      ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+      GP_VER: 5
+      #      GROUP: gpdb,proxy,profile
+      GROUP: smoke
+      SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+      TARGET_OS: centos
+      TARGET_OS_VERSION: 7
+  - task: Upload certification for GPDB-5 with PXF-GP5-HDP2 on RHEL7
+    file: pxf_src/concourse/tasks/upload_forcom_certification.yml
+    image: ccp-7-image
+    params:
+      GOOGLE_CREDENTIALS: {{pxf-storage-service-account-key}}
+      GP_VER: 5
+      PXF_CERTIFICATION_FOLDER: data-gpdb-ud-pxf-build/prod/certifications
+
+- name: Certify GPDB-6 with PXF-GP6 on RHEL7
+  plan:
+  - in_parallel:
+    - get: pxf_src
+    - get: bin_gpdb
+      resource: gpdb6_tarball_rhel7
+      trigger: true
+    - get: pxf_package
+      resource: pxf_gp6_rpm_rhel7
+      trigger: true
+    - get: gpdb6-pxf-dev-centos7-image
+    - get: ccp-7-image
+    - get: pxf-automation-dependencies
+    - get: singlecluster
+      resource: singlecluster-hdp2
+  - task: Test GPDB-6 with PXF-GP6-HDP2 on RHEL7
+    file: pxf_src/concourse/tasks/test_forcom.yml
+    image: gpdb6-pxf-dev-centos7-image
+    params:
+      ACCESS_KEY_ID: {{tf-machine-access-key-id}}
+      GP_VER: 6
+      #      GROUP: gpdb,proxy,profile
+      GROUP: smoke
+      SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
+      TARGET_OS: centos
+      TARGET_OS_VERSION: 7
+  - task: Upload certification for GPDB-6 with PXF-GP6-HDP2 on RHEL7
+    file: pxf_src/concourse/tasks/upload_forcom_certification.yml
+    image: ccp-7-image
+    params:
+      GOOGLE_CREDENTIALS: {{pxf-storage-service-account-key}}
+      GP_VER: 6
+      PXF_CERTIFICATION_FOLDER: data-gpdb-ud-pxf-build/prod/certifications
+
+## ---------- Ubuntu 18 Swimlane ----------
+
+## ---------- Reporting Gates ----------
+- name: Reporting Gate for PXF-GP5
+  plan:
+  - in_parallel:
+    # gpdb release candidate tarballs and PXF RPMs used in testing jobs
+    - get: gpdb5_tarball_rhel6
+      passed:
+      - Certify GPDB-5 with PXF-GP5 on RHEL6
+      trigger: true
+    - get: pxf_gp5_rpm_rhel6
+      passed:
+      - Certify GPDB-5 with PXF-GP5 on RHEL6
+      trigger: true
+    - get: gpdb5_tarball_rhel7
+      passed:
+      - Certify GPDB-5 with PXF-GP5 on RHEL7
+      trigger: true
+    - get: pxf_gp5_rpm_rhel7
+      passed:
+      - Certify GPDB-5 with PXF-GP5 on RHEL7
+      trigger: true
+    - get: ccp-7-image
+  - task: Print Report for GPDB-5 with PXF-GP5 Artifacts
+    file: pxf_src/concourse/tasks/certification_list.yml
+    image: ccp-7-image
+    params:
+      GOOGLE_CREDENTIALS: {{pxf-storage-service-account-key}}
+      GP_VER: 5
+      PXF_CERTIFICATION_FOLDER: data-gpdb-ud-pxf-build/prod/certifications
+
+- name: Reporting Gate for PXF-GP6
+  plan:
+  - in_parallel:
+    # gpdb release candidate tarballs and PXF RPMs used in testing jobs
+    - get: gpdb6_tarball_rhel7
+      passed:
+      - Certify GPDB-6 with PXF-GP6 on RHEL7
+      trigger: true
+    - get: pxf_gp6_rpm_rhel7
+      passed:
+      - Certify GPDB-6 with PXF-GP6 on RHEL7
+      trigger: true
+    - get: ccp-7-image
+  - task: Print Report for GPDB-6 with PXF-GP6 Artifacts
+    file: pxf_src/concourse/tasks/certification_list.yml
+    image: ccp-7-image
+    params:
+      GOOGLE_CREDENTIALS: {{pxf-storage-service-account-key}}
+      GP_VER: 6
+      PXF_CERTIFICATION_FOLDER: data-gpdb-ud-pxf-build/prod/certifications

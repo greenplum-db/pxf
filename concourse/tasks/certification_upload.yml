@@ -1,0 +1,17 @@
+platform: linux
+
+image_resource:
+  type: registry-image
+
+inputs:
+- name: pxf_src
+- name: certification
+
+params:
+  GOOGLE_CREDENTIALS:
+  GP_VER:
+  PXF_CERTIFICATION_FOLDER:
+
+run:
+  path: pxf_src/concourse/scripts/certification.bash
+  args: [upload]
