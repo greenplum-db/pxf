@@ -102,10 +102,10 @@ function run_pxf_automation() {
 		gpdb_build_from_sql=\$(psql -c 'select version()' | grep Greenplum | cut -d ' ' -f 6,8)
 		gpdb_build_clean=\${gpdb_build_from_sql%)}
 		pxf_version=\$(< ${PXF_HOME}/version)
-		echo "GPDB-\${gpdb_version_clean/ commit:/-}-PXF-\${pxf_version}" > "${PWD}/certification/certification.txt"
+		echo "GPDB-\${gpdb_build_clean/ commit:/-}-PXF-\${pxf_version}" > "${PWD}/certification/certification.txt"
 		echo
 		echo '****************************************************************************************************'
-		echo 'Wrote certification : \$(< "${PWD}/certification/certification.txt")'
+		echo "Wrote certification : \$(< ${PWD}/certification/certification.txt)"
 		echo '****************************************************************************************************'
 	EOF
 
