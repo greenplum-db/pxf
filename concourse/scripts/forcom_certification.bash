@@ -18,15 +18,15 @@ echo "Authenticating with Google service account..."
 gcloud auth activate-service-account --key-file=<(echo "${GOOGLE_CREDENTIALS}") >/dev/null 2>&1
 
 full_certification_dir="gs://${PXF_CERTIFICATION_FOLDER}/gp${GP_VER}"
+full_certification_path="${full_certification_dir}/${certification}"
+
 # find if the certification already exist to avoid error on duplicate publishing
-existing_certification=$(gsutil list "${full_certification_dir}" | grep ${certification})
-if [[ -n ${existing_certification} ]]; then
+if existing_certification=$(gsutil list "${full_certification_path}"); then
 	echo "Found existing certification: ${existing_certification}"
 	echo "Skipping upload, exiting successfully"
 	exit 0
 fi
 
-full_certification_path="${full_certification_dir}/${certification}"
 echo $(date) > /tmp/now
 echo "Uploading certification to ${full_certification_path}"
 gsutil cp /tmp/now "${full_certification_path}"
