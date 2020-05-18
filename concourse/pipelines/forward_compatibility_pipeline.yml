@@ -143,7 +143,7 @@ resources:
   source:
     bucket: data-gpdb-ud-pxf-releases
     json_key: {{pxf-storage-service-account-key}}
-    regexp: prod/releases/gp5/pxf-gp6-(.*)-1.el7.x86_64.rpm
+    regexp: prod/releases/gp6/pxf-gp6-(.*)-1.el7.x86_64.rpm
 
 #- name: pxf_gp[[gp_ver]]_deb_ubuntu18
 #  type: gcs
@@ -187,7 +187,7 @@ jobs:
       TARGET_OS: centos
       TARGET_OS_VERSION: 6
   - task: Upload certification for GPDB-5 with PXF-GP5-HDP2 on RHEL6
-    file: pxf_src/concourse/tasks/upload_forcom_certification.yml
+    file: pxf_src/concourse/tasks/certification_upload.yml
     image: ccp-7-image
     params:
       GOOGLE_CREDENTIALS: {{pxf-storage-service-account-key}}
@@ -222,7 +222,7 @@ jobs:
       TARGET_OS: centos
       TARGET_OS_VERSION: 7
   - task: Upload certification for GPDB-5 with PXF-GP5-HDP2 on RHEL7
-    file: pxf_src/concourse/tasks/upload_forcom_certification.yml
+    file: pxf_src/concourse/tasks/certification_upload.yml
     image: ccp-7-image
     params:
       GOOGLE_CREDENTIALS: {{pxf-storage-service-account-key}}
@@ -256,7 +256,7 @@ jobs:
       TARGET_OS: centos
       TARGET_OS_VERSION: 7
   - task: Upload certification for GPDB-6 with PXF-GP6-HDP2 on RHEL7
-    file: pxf_src/concourse/tasks/upload_forcom_certification.yml
+    file: pxf_src/concourse/tasks/certification_upload.yml
     image: ccp-7-image
     params:
       GOOGLE_CREDENTIALS: {{pxf-storage-service-account-key}}
