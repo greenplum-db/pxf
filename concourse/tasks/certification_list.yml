@@ -5,7 +5,6 @@ image_resource:
 
 inputs:
 - name: pxf_src
-- name: certification
 
 params:
   GOOGLE_CREDENTIALS:
@@ -13,4 +12,5 @@ params:
   PXF_CERTIFICATION_FOLDER:
 
 run:
-  path: pxf_src/concourse/scripts/forcom_certification.bash
+  path: pxf_src/concourse/scripts/certification.bash
+  args: [list]
