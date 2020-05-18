@@ -80,6 +80,9 @@ function run_pxf_automation() {
 		source '${GPHOME}/greenplum_path.sh' &&
 		psql -p ${PGPORT} -d template1 -c 'CREATE EXTENSION PXF'
 	"
+	# prepare certification output directory
+	mkdir -p certification
+	chmod a+w certification
 
 	cat > ~gpadmin/run_pxf_automation_test.sh <<-EOF
 		#!/usr/bin/env bash
@@ -94,6 +97,16 @@ function run_pxf_automation() {
 
 		cd pxf_src/automation
 		time make GROUP=${GROUP} test
+
+		# if the test is successful, create certification file
+		gpdb_build_from_sql=\$(psql -c 'select version()' | grep Greenplum | cut -d ' ' -f 6,8)
+		gpdb_build_clean=\${gpdb_build_from_sql%)}
+		pxf_version=\$(< ${PXF_HOME}/version)
+		echo GPDB-\${gpdb_version_clean/ commit:/-}-PXF-\${pxf_version}" > "${PWD}/certification/certification.txt"
+		echo
+		echo '****************************************************************************************************'
+		echo 'Wrote certification : \$(< "${PWD}/certification/certification.txt")'
+		echo '****************************************************************************************************'
 	EOF
 
 	chown gpadmin:gpadmin ~gpadmin/run_pxf_automation_test.sh

@@ -10,6 +10,9 @@ inputs:
 - name: singlecluster
 - name: pxf-automation-dependencies
 
+outputs:
+- name: certification
+
 params:
   ACCESS_KEY_ID:
   GP_VER:
