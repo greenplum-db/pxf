@@ -134,7 +134,7 @@ resources:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-centos6-test-pxf
     tag: latest
     username: _json_key
-    password: ((data-gpdb-ud-google-json-key))
+    password: ((pxf-cloudbuild-service-account-key))
 
 {% endif %}
 
@@ -145,7 +145,7 @@ resources:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-centos7-test-pxf
     tag: latest
     username: _json_key
-    password: ((data-gpdb-ud-google-json-key))
+    password: ((pxf-cloudbuild-service-account-key))
 
 {% if gp_ver == 6 %}
 - name: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image
@@ -155,7 +155,7 @@ resources:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-ubuntu18.04-test-pxf
     tag: latest
     username: _json_key
-    password: ((data-gpdb-ud-google-json-key))
+    password: ((pxf-cloudbuild-service-account-key))
 
 {% endif %}
 
@@ -166,7 +166,7 @@ resources:
     repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-centos7-test-pxf-mapr
     tag: latest
     username: _json_key
-    password: ((data-gpdb-ud-google-json-key))
+    password: ((pxf-cloudbuild-service-account-key))
 
 - name: ccp-7-image
   type: registry-image
