@@ -18,8 +18,8 @@ resources:
   type: git
   icon: git
   source:
-    branch: {{pxf-git-branch}}
-    uri: {{pxf-git-remote}}
+    branch: ((pxf-git-branch))
+    uri: ((pxf-git-remote))
     private_key: ((ccp-git-key))
 
 - name: ubuntu18
@@ -34,7 +34,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pivnet-artifacts
-    json_key: ((data-gpdb-ud-google-json-key))
+    json_key: ((pxf-storage-service-account-key))
     versioned_file: pivotal-cf/pivnet-cli/pivnet
 
 {% for i in range(num_gpdb5_versions) %}
@@ -43,7 +43,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pivnet-artifacts
-    json_key: ((data-gpdb-ud-google-json-key))
+    json_key: ((pxf-storage-service-account-key))
     regexp: latest-[[i]]_gpdb5/greenplum-db-(.*)-rhel6-x86_64.rpm
 
 - name: gpdb5_rhel7_rpm_latest-[[i]]
@@ -51,7 +51,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pivnet-artifacts
-    json_key: ((data-gpdb-ud-google-json-key))
+    json_key: ((pxf-storage-service-account-key))
     regexp: latest-[[i]]_gpdb5/greenplum-db-(.*)-rhel7-x86_64.rpm
 
 {% endfor %}
@@ -61,7 +61,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pivnet-artifacts
-    json_key: ((data-gpdb-ud-google-json-key))
+    json_key: ((pxf-storage-service-account-key))
     regexp: latest-[[i]]_gpdb6/greenplum-db-(.*)-rhel7-x86_64.rpm
 
 - name: gpdb6_ubuntu18_deb_latest-[[i]]
@@ -69,7 +69,7 @@ resources:
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pivnet-artifacts
-    json_key: ((data-gpdb-ud-google-json-key))
+    json_key: ((pxf-storage-service-account-key))
     regexp: latest-[[i]]_gpdb6/greenplum-db-(.*)-ubuntu18.04-amd64.deb
 
 {% endfor %}
@@ -114,7 +114,7 @@ jobs:
         GPDB_VERSION: 5
         LIST_OF_DIRS: gpdb5_rhel6_rpm_latest-[[i]],gpdb5_rhel7_rpm_latest-[[i]]
         LIST_OF_PRODUCTS: greenplum-db-GPDB_VERSION-rhel6-x86_64.rpm,greenplum-db-GPDB_VERSION-rhel7-x86_64.rpm
-        PIVNET_API_TOKEN: {{pivnet-uaa-refresh-token}}
+        PIVNET_API_TOKEN: ((pxf-pivnet-uaa-refresh-token))
         PIVNET_CLI_DIR: pivnet_cli
         PRODUCT_SLUG: pivotal-gpdb
         VERSIONS_BEFORE_LATEST: [[i]]
@@ -172,7 +172,7 @@ jobs:
         GPDB_VERSION: 6
         LIST_OF_DIRS: gpdb6_rhel7_rpm_latest-[[i]],gpdb6_ubuntu18_deb_latest-[[i]]
         LIST_OF_PRODUCTS: greenplum-db-GPDB_VERSION-rhel7-x86_64.rpm,greenplum-db-GPDB_VERSION-ubuntu18.04-amd64.deb
-        PIVNET_API_TOKEN: {{pivnet-uaa-refresh-token}}
+        PIVNET_API_TOKEN: ((pxf-pivnet-uaa-refresh-token))
         PIVNET_CLI_DIR: pivnet_cli
         PRODUCT_SLUG: pivotal-gpdb
         VERSIONS_BEFORE_LATEST: [[i]]
