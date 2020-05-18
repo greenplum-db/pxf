@@ -155,7 +155,7 @@ jobs:
 
 ## ---------- Centos 6 Swimlane ----------
 {% if gp_ver == 5 %}
-- name: Test GPDB-[[gp_ver]] with PXF-GP[[gp_ver]] on RHEL6
+- name: Certify GPDB-[[gp_ver]] with PXF-GP[[gp_ver]] on RHEL6
   plan:
   - in_parallel:
     - get: pxf_src
@@ -165,6 +165,7 @@ jobs:
     - get: pxf_package
       resource: pxf_gp[[gp_ver]]_rpm_rhel6
     - get: gpdb[[gp_ver]]-pxf-dev-centos6-image
+    - get: ccp-7-image
     - get: pxf-automation-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
@@ -174,14 +175,23 @@ jobs:
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
       GP_VER: [[gp_ver]]
-      GROUP: gpdb,proxy,profile
+#      GROUP: gpdb,proxy,profile
+      GROUP: smoke
       SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
       TARGET_OS: centos
       TARGET_OS_VERSION: 6
+  - task: Upload certification for GPDB-[[gp_ver]] with PXF-GP[[gp_ver]]-HDP2 on RHEL6
+    file: pxf_src/concourse/tasks/upload_forcom_certification.yml
+    image: ccp-7-image
+    params:
+      GOOGLE_CREDENTIALS: {{pxf-storage-service-account-key}}
+      GP_VER: [[gp_ver]]
+      PXF_CERTIFICATION_FOLDER: data-gpdb-ud-pxf-build/prod/certifications
+
 {% endif %}
 
 ## ---------- Centos 7 Swimlane ----------
-- name: Test GPDB-[[gp_ver]] with PXF-GP[[gp_ver]] on RHEL7
+- name: Certify GPDB-[[gp_ver]] with PXF-GP[[gp_ver]] on RHEL7
   plan:
   - in_parallel:
     - get: pxf_src
@@ -191,6 +201,7 @@ jobs:
     - get: pxf_package
       resource: pxf_gp[[gp_ver]]_rpm_rhel7
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
+    - get: ccp-7-image
     - get: pxf-automation-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
@@ -200,10 +211,18 @@ jobs:
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
       GP_VER: [[gp_ver]]
-      GROUP: gpdb,proxy,profile
+#      GROUP: gpdb,proxy,profile
+      GROUP: smoke
       SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
       TARGET_OS: centos
       TARGET_OS_VERSION: 7
+  - task: Upload certification for GPDB-[[gp_ver]] with PXF-GP[[gp_ver]]-HDP2 on RHEL7
+    file: pxf_src/concourse/tasks/upload_forcom_certification.yml
+    image: ccp-7-image
+    params:
+      GOOGLE_CREDENTIALS: {{pxf-storage-service-account-key}}
+      GP_VER: [[gp_ver]]
+      PXF_CERTIFICATION_FOLDER: data-gpdb-ud-pxf-build/prod/certifications
 
 ## ---------- Ubuntu 18 Swimlane ----------
 {% if gp_ver == 6 %}
@@ -218,17 +237,17 @@ jobs:
 {% if gp_ver == 5 %}
     - get: gpdb[[gp_ver]]_tarball_rhel6
       passed:
-      - Test GPDB-[[gp_ver]] with PXF-GP[[gp_ver]] on RHEL6
+      - Certify GPDB-[[gp_ver]] with PXF-GP[[gp_ver]] on RHEL6
     - get: pxf_gp[[gp_ver]]_rpm_rhel6
       passed:
-      - Test GPDB-[[gp_ver]] with PXF-GP[[gp_ver]] on RHEL6
+      - Certify GPDB-[[gp_ver]] with PXF-GP[[gp_ver]] on RHEL6
 {% endif %}
     - get: gpdb[[gp_ver]]_tarball_rhel7
       passed:
-      - Test GPDB-[[gp_ver]] with PXF-GP[[gp_ver]] on RHEL7
+      - Certify GPDB-[[gp_ver]] with PXF-GP[[gp_ver]] on RHEL7
     - get: pxf_gp[[gp_ver]]_rpm_rhel7
       passed:
-      - Test GPDB-[[gp_ver]] with PXF-GP[[gp_ver]] on RHEL7
+      - Certify GPDB-[[gp_ver]] with PXF-GP[[gp_ver]] on RHEL7
     - get: ccp-7-image
   - task: Print Declaration for GPDB-[[gp_ver]] with PXF-GP[[gp_ver]] Artifacts
     image: ccp-7-image
