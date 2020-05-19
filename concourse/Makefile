@@ -4,21 +4,21 @@ CONCOURSE ?= ud
 # set the pxf-protocol-extension default branch to current branch
 BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD)
 
-SHELL                      = /bin/bash
-BUILD_PIPELINE_5X_NAME    ?= pxf-build-GP5
-BUILD_PIPELINE_6X_NAME    ?= pxf-build-GP6
-FORCOM_PIPELINE_NAME	  ?= pxf-certification
-PIVNET_PIPELINE_NAME      ?= pivnet_artifacts
-NUM_GPDB5_VERSIONS        ?= 10
-NUM_GPDB6_VERSIONS        ?=  9
-FLY_CMD                    = /usr/local/bin/fly
-TEMPLATE_CMD               = ./template_tool
-FLY_OPTION_NON-INTERACTIVE =
+SHELL                        = /bin/bash
+BUILD_PIPELINE_5X_NAME      ?= pxf-build-GP5
+BUILD_PIPELINE_6X_NAME      ?= pxf-build-GP6
+CERTIFICATION_PIPELINE_NAME ?= pxf-certification
+PIVNET_PIPELINE_NAME        ?= pivnet_artifacts
+NUM_GPDB5_VERSIONS          ?= 10
+NUM_GPDB6_VERSIONS          ?=  9
+FLY_CMD                      = /usr/local/bin/fly
+TEMPLATE_CMD                 = ./template_tool
+FLY_OPTION_NON-INTERACTIVE   =
 
-.PHONY: build-5 build-6 forcom
+.PHONY: build-5 build-6 certification
 build-5: set-5X-build-pipeline
 build-6: set-6X-build-pipeline
-forcom: set-forward-compatibility-pipeline
+certification: set-certification-pipeline
 
 # ============================= BUILD PIPELINE TARGETS =============================
 .PHONY: set-5X-build-pipeline
@@ -68,20 +68,20 @@ set-6X-build-pipeline:
 
 # ============================= FORWARD COMPATIBILITY PIPELINE TARGETS =============================
 
-.PHONY: set-forward-compatibility-pipeline
-set-forward-compatibility-pipeline:
+.PHONY: set-certification-pipeline
+set-certification-pipeline:
 	$(FLY_CMD) --target=$(CONCOURSE) \
 		set-pipeline \
 		--check-creds \
-		--pipeline=$(FORCOM_PIPELINE_NAME) \
-		--config pipelines/forward_compatibility_pipeline.yml \
+		--pipeline=$(CERTIFICATION_PIPELINE_NAME) \
+		--config pipelines/certification_pipeline.yml \
 		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
 		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/pxf-secrets.yml \
 		--var=pxf-git-branch=${BRANCH} \
-		${FLY_OPTION_NON-INTERACTIVE} || echo "pipelines/forward_compatibility_pipeline.yml has errors"
+		${FLY_OPTION_NON-INTERACTIVE} || echo "pipelines/certification_pipeline.yml has errors"
 
 	@echo using the following command to unpause the pipeline:
-	@echo -e "\t$(FLY_CMD) -t ${CONCOURSE} unpause-pipeline --pipeline ${FORCOM_PIPELINE_NAME}"
+	@echo -e "\t$(FLY_CMD) -t ${CONCOURSE} unpause-pipeline --pipeline ${CERTIFICATION_PIPELINE_NAME}"
 
 # ============================= HELPER PIPELINE TARGETS =============================
 
