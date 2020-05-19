@@ -20,7 +20,6 @@ resources:
   source:
     branch: ((pxf-git-branch))
     uri: ((pxf-git-remote))
-    private_key: ((ccp-git-key))
 
 - name: ubuntu18
   type: docker-image

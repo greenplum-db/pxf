@@ -15,10 +15,13 @@ inputs:
   optional: true
 
 params:
-  GP_VER:
-  GOOGLE_CREDENTIALS:
   GCS_BUCKET:
   GCS_RELEASES_PATH:
+  GIT_EMAIL:
+  GIT_REMOTE_URL:
+  GIT_SSH_KEY:
+  GIT_USERNAME:
+  GOOGLE_CREDENTIALS:
 
 run:
   path: pxf_src/concourse/scripts/promote_pxf_artifacts.bash

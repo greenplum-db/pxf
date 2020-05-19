@@ -33,6 +33,8 @@ if [[ ${HADOOP_CLIENT} == MAPR ]]; then
 fi
 export PGPORT=${PGPORT:-5432}
 
+PXF_GIT_URL="https://github.com/greenplum-db/pxf.git"
+
 function run_pg_regress() {
 	# run desired groups (below we replace commas with spaces in $GROUPS)
 	cat > ~gpadmin/run_pxf_automation_test.sh <<-EOF
@@ -183,6 +185,30 @@ function configure_sut() {
 	fi
 }
 
+function adjust_automation_code() {
+	local pxf_src_version=$(< pxf_src/version)
+	local pxf_home_version=$(< "${PXF_HOME}/version")
+	if [[ "${pxf_src_version}" != "${pxf_home_version}" ]]; then
+		echo "WARNING: PXF source is version=${pxf_src_version} but PXF_HOME version=${pxf_home_version}"
+		echo "backing up current pxf_src directory as pxf_src_backup ..."
+		cp -R pxf_src pxf_src_backup
+		local pxf_home_sha=$(< "${PXF_HOME}/commit.sha")
+		echo "Switching PXF source to SHA=${pxf_home_sha}"
+		pushd pxf_src > /dev/null
+		git checkout ${pxf_home_sha}
+		popd > /dev/null
+		echo "restoring original concourse scripts into pxf_src from pxf_src_backup ..."
+		rm -rf pxf_src/concourse/scripts
+		cp -R pxf_src_backup/concourse/scripts pxf_src/concourse
+		pxf_src_version=$(< pxf_src/version)
+		if [[ "${pxf_src_version}" != "${pxf_home_version}" ]]; then
+			echo "ERROR: restored PXF source version=${pxf_src_version} still does not match PXF_HOME version=${pxf_home_version}"
+			exit 1
+		fi
+	fi
+	echo "PXF source version=${pxf_src_version} matches PXF_HOME version=${pxf_home_version}"
+}
+
 function _main() {
 	# kill the sshd background process when this script exits. Otherwise, the
 	# concourse build will run forever.
@@ -211,6 +237,13 @@ function _main() {
 		install_pxf_package
 	else
 		install_pxf_tarball
+	fi
+
+	# Certification jobs might install non-latest PXF, make sure automation code corresponds to what is installed
+	if [[ -f ${PXF_HOME}/commit.sha ]]; then
+		adjust_automation_code
+	else
+		echo "WARNING: no commit.sha file is found in PXF_HOME=${PXF_HOME}"
 	fi
 
 	if [[ ${HADOOP_CLIENT} != MAPR ]]; then
