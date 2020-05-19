@@ -269,6 +269,7 @@ jobs:
 - name: Reporting Gate for PXF-GP5
   plan:
   - in_parallel:
+    - get: pxf_src
     # gpdb release candidate tarballs and PXF RPMs used in testing jobs
     - get: gpdb5_tarball_rhel6
       passed:
@@ -298,6 +299,7 @@ jobs:
 - name: Reporting Gate for PXF-GP6
   plan:
   - in_parallel:
+    - get: pxf_src
     # gpdb release candidate tarballs and PXF RPMs used in testing jobs
     - get: gpdb6_tarball_rhel7
       passed:
