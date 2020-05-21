@@ -1,6 +1,10 @@
 ---
 {# change num_gpdb5_versions & num_gpdb6_versions in Makefile to download/test more Greenplum versions #}
 {# number of backwards compatibility tasks that can run at once #}
+{% if dev_pipeline == True %}
+{% set num_gpdb5_versions = 1 %}
+{% set num_gpdb6_versions = 1 %}
+{% endif %}
 {% set max_concurrent_bc_tasks = 3 %}
 ## ======================================================================
 ## ANCHORS
@@ -56,11 +60,13 @@ resource_types:
   source:
     repository: frodenas/gcs-resource
 
+{% if dev_pipeline != True %}
 - name: terraform
   type: registry-image
   source:
     repository: ljfranklin/terraform-resource
     tag: 0.11.14
+{% endif %}
 
 ## ======================================================================
 ## RESOURCES
@@ -83,14 +89,6 @@ resources:
     json_key: ((pxf-storage-service-account-key))
     versioned_file: automation-dependencies/pxf-automation-dependencies.tar.gz
 
-- name: singlecluster-cdh
-  type: gcs
-  icon: google-drive
-  source:
-    bucket: data-gpdb-ud-pxf-build-resources
-    json_key: ((pxf-storage-service-account-key))
-    versioned_file: singlecluster/CDH/singlecluster-CDH.tar.gz
-
 - name: singlecluster-hdp2
   type: gcs
   icon: google-drive
@@ -99,6 +97,15 @@ resources:
     json_key: ((data-gpdb-ud-google-json-key))
     versioned_file: singlecluster/HDP2/singlecluster-HDP2.tar.gz
 
+{% if dev_pipeline != True %}
+- name: singlecluster-cdh
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: data-gpdb-ud-pxf-build-resources
+    json_key: ((pxf-storage-service-account-key))
+    versioned_file: singlecluster/CDH/singlecluster-CDH.tar.gz
+
 - name: singlecluster-hdp3
   type: gcs
   icon: google-drive
@@ -106,6 +113,7 @@ resources:
     bucket: data-gpdb-ud-pxf-build-resources
     json_key: ((pxf-storage-service-account-key))
     versioned_file: singlecluster/HDP3/singlecluster-HDP3.tar.gz
+{% endif %}
 
 ## ---------- Github Repos ----------
 - name: pxf_src
@@ -115,12 +123,14 @@ resources:
     branch: ((pxf-git-branch))
     uri: ((pxf-git-remote))
 
+{% if dev_pipeline != True %}
 - name: ccp_src
   type: git
   source:
     branch: ((ccp-git-branch))
     private_key: ((ccp-git-key))
     uri: ((ccp-git-remote))
+{% endif %}
 
 ## ---------- Docker Images ----------
 {% set gp_ver = 5 %}
@@ -157,6 +167,7 @@ resources:
     password: ((pxf-cloudbuild-service-account-key))
 {% endif %}
 
+{% if dev_pipeline != True %}
 - name: gpdb[[gp_ver]]-pxf-dev-centos7-mapr-server-image
   type: registry-image
   icon: docker
@@ -165,8 +176,10 @@ resources:
     tag: latest
     username: _json_key
     password: ((pxf-cloudbuild-service-account-key))
+{% endif %}
 {% set gp_ver = None %}
 
+{% if dev_pipeline != True %}
 - name: ccp-7-image
   type: registry-image
   icon: docker
@@ -180,6 +193,7 @@ resources:
   source:
     repository: google/cloud-sdk
     tag: slim
+{% endif %}
 
 ## ---------- Product Packages ----------
 {% set gp_ver = 5 %}
@@ -257,6 +271,7 @@ resources:
 {% set gp_ver = None %}
 {% endif %}
 
+{% if dev_pipeline != True %}
 ## ---------- Auxiliary Resources ----------
 - name: terraform
   type: terraform
@@ -273,6 +288,7 @@ resources:
       region_name: ((aws-region))
       bucket: ((tf-bucket-name))
       bucket_path: ((tf-bucket-path))
+{% endif %}
 
 ## ======================================================================
 ## JOBS
@@ -484,7 +500,7 @@ jobs:
 {% endfor %}
 
 ## ---------- Extended Tests ----------
-
+{% if dev_pipeline != True %}
 {% set gp_ver = 6 %}
 - name: Test PXF-GP[[gp_ver]]-HDP2-NO-IMPERS on RHEL7
   plan:
@@ -1315,3 +1331,4 @@ jobs:
       GCS_BUCKET: data-gpdb-ud-pxf-releases
       GCS_RELEASES_PATH: prod/releases
       GOOGLE_CREDENTIALS: ((pxf-storage-service-account-key))
+{% endif %} {# if dev_pipeline == True #}

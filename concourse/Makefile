@@ -6,6 +6,7 @@ BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD)
 
 SHELL                        = /bin/bash
 BUILD_PIPELINE_NAME         ?= pxf-build
+DEV_BUILD_PIPELINE_NAME     ?= $(USER)-$(BRANCH)
 BUILD_WITH_DEB              ?= false
 CERTIFICATION_PIPELINE_NAME ?= pxf-certification
 PIVNET_PIPELINE_NAME        ?= pivnet_artifacts
@@ -15,7 +16,8 @@ FLY_CMD                      = /usr/local/bin/fly
 TEMPLATE_CMD                 = ./template_tool
 FLY_OPTION_NON-INTERACTIVE   =
 
-.PHONY: build certification
+.PHONY: dev build certification
+dev: set-dev-build-pipeline
 build: set-build-pipeline
 certification: set-certification-pipeline
 
@@ -43,6 +45,28 @@ set-build-pipeline:
 
 	@echo using the following command to unpause the pipeline:
 	@echo -e "\t$(FLY_CMD) -t ${CONCOURSE} unpause-pipeline --pipeline ${BUILD_PIPELINE_NAME}"
+
+.PHONY: set-dev-build-pipeline
+set-dev-build-pipeline:
+	@PIPELINE_FILE=$$(mktemp) && \
+	$(TEMPLATE_CMD) --template build_pipeline-tpl.yml --vars \
+		build_deb=$(BUILD_WITH_DEB) \
+		dev_pipeline=true \
+		num_gpdb5_versions=1 \
+		num_gpdb6_versions=1 >"$${PIPELINE_FILE}" && \
+	$(FLY_CMD) --target=$(CONCOURSE) \
+		set-pipeline \
+		--check-creds \
+		--pipeline=$(DEV_BUILD_PIPELINE_NAME) \
+		--config "$${PIPELINE_FILE}" \
+		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/pxf-secrets.yml \
+		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
+		--var=pxf-git-branch=${BRANCH} \
+		--var=folder-prefix=prod/gpdb_branch \
+		${FLY_OPTION_NON-INTERACTIVE} || echo "Generated yaml has errors: check $${PIPELINE_FILE}"
+
+	@echo using the following command to unpause the pipeline:
+	@echo -e "\t$(FLY_CMD) -t ${CONCOURSE} unpause-pipeline --pipeline ${DEV_BUILD_PIPELINE_NAME}"
 
 # ============================= FORWARD COMPATIBILITY PIPELINE TARGETS =============================
 
