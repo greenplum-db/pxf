@@ -236,6 +236,8 @@ public enum HcfsType {
         if (Utilities.isSecurityEnabled(configuration) || StringUtils.isBlank(uri))
             return;
 
+        // find the "host" that TokenCache will check against the exclusion list, for cloud file systems (like S3)
+        // it might actually be a bucket in the full resource path
         String host = Utilities.getHost(uri);
         if (host != null) {
             LOG.debug("Disabling token renewal for host {} for path {}", host, uri);

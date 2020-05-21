@@ -423,6 +423,7 @@ public class UtilitiesTest {
         assertNull(Utilities.getHost(":"));
         assertNull(Utilities.getHost("#"));
         assertNull(Utilities.getHost("/"));
+        assertNull(Utilities.getHost("/file/path/abc"));
 
         assertEquals("www.google.com", Utilities.getHost("https://www.google.com/"));
         assertEquals("www.google.com", Utilities.getHost("http://www.google.com/"));
