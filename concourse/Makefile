@@ -5,8 +5,8 @@ CONCOURSE ?= ud
 BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD)
 
 SHELL                        = /bin/bash
-BUILD_PIPELINE_5X_NAME      ?= pxf-build-GP5
-BUILD_PIPELINE_6X_NAME      ?= pxf-build-GP6
+BUILD_PIPELINE_NAME         ?= pxf-build
+BUILD_WITH_DEB              ?= false
 CERTIFICATION_PIPELINE_NAME ?= pxf-certification
 PIVNET_PIPELINE_NAME        ?= pivnet_artifacts
 NUM_GPDB5_VERSIONS          ?= 10
@@ -15,20 +15,22 @@ FLY_CMD                      = /usr/local/bin/fly
 TEMPLATE_CMD                 = ./template_tool
 FLY_OPTION_NON-INTERACTIVE   =
 
-.PHONY: build-5 build-6 certification
-build-5: set-5X-build-pipeline
-build-6: set-6X-build-pipeline
+.PHONY: build certification
+build: set-build-pipeline
 certification: set-certification-pipeline
 
 # ============================= BUILD PIPELINE TARGETS =============================
-.PHONY: set-5X-build-pipeline
-set-5X-build-pipeline:
+.PHONY: set-build-pipeline
+set-build-pipeline:
 	@PIPELINE_FILE=$$(mktemp) && \
-	$(TEMPLATE_CMD) --template build_pipeline-tpl.yml --vars gp_ver=5 num_gpdb5_versions=$(NUM_GPDB5_VERSIONS) >"$${PIPELINE_FILE}" && \
+	$(TEMPLATE_CMD) --template build_pipeline-tpl.yml --vars \
+		build_deb=$(BUILD_WITH_DEB) \
+		num_gpdb5_versions=$(NUM_GPDB5_VERSIONS) \
+		num_gpdb6_versions=$(NUM_GPDB6_VERSIONS) >"$${PIPELINE_FILE}" && \
 	$(FLY_CMD) --target=$(CONCOURSE) \
 		set-pipeline \
 		--check-creds \
-		--pipeline=$(BUILD_PIPELINE_5X_NAME) \
+		--pipeline=$(BUILD_PIPELINE_NAME) \
 		--config "$${PIPELINE_FILE}" \
 		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/pxf-secrets.yml \
 		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
@@ -37,34 +39,10 @@ set-5X-build-pipeline:
 		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud_kerberos.yml \
 		--var=pxf-git-branch=${BRANCH} \
 		--var=folder-prefix=prod/gpdb_branch \
-		--var=gpdb-branch=5X_STABLE \
 		${FLY_OPTION_NON-INTERACTIVE} || echo "Generated yaml has errors: check $${PIPELINE_FILE}"
 
 	@echo using the following command to unpause the pipeline:
-	@echo -e "\t$(FLY_CMD) -t ${CONCOURSE} unpause-pipeline --pipeline ${BUILD_PIPELINE_5X_NAME}"
-
-.PHONY: set-6X-build-pipeline
-set-6X-build-pipeline:
-	@PIPELINE_FILE=$$(mktemp) && \
-	$(TEMPLATE_CMD) --template build_pipeline-tpl.yml --vars gp_ver=6 num_gpdb6_versions=$(NUM_GPDB6_VERSIONS) >"$${PIPELINE_FILE}" && \
-	$(FLY_CMD) --target=$(CONCOURSE) \
-		set-pipeline \
-		--check-creds \
-		--pipeline=$(BUILD_PIPELINE_6X_NAME) \
-		--config "$${PIPELINE_FILE}" \
-		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/pxf-secrets.yml \
-		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/gpdb-6X_STABLE-release-secrets.prod.yml \
-		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
-		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
-		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud.yml \
-		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud_kerberos.yml \
-		--var=pxf-git-branch=${BRANCH} \
-		--var=folder-prefix=prod/gpdb_branch \
-		--var=gpdb-branch=6X_STABLE \
-		${FLY_OPTION_NON-INTERACTIVE} || echo "Generated yaml has errors: check $${PIPELINE_FILE}"
-
-	@echo using the following command to unpause the pipeline:
-	@echo -e "\t$(FLY_CMD) -t ${CONCOURSE} unpause-pipeline --pipeline ${BUILD_PIPELINE_6X_NAME}"
+	@echo -e "\t$(FLY_CMD) -t ${CONCOURSE} unpause-pipeline --pipeline ${BUILD_PIPELINE_NAME}"
 
 # ============================= FORWARD COMPATIBILITY PIPELINE TARGETS =============================
 
@@ -85,13 +63,15 @@ set-certification-pipeline:
 
 # ============================= HELPER PIPELINE TARGETS =============================
 
-.PHONY: set-pivnet
-set-pivnet: set-pivnet-pipeline
+.PHONY: pivnet
+pivnet: set-pivnet-pipeline
 
 .PHONY: set-pivnet-pipeline
 set-pivnet-pipeline:
 	@PIPELINE_FILE=$$(mktemp) && \
-	$(TEMPLATE_CMD) --template get_pivnet_artifacts-tpl.yml --vars num_gpdb5_versions=$(NUM_GPDB5_VERSIONS) num_gpdb6_versions=$(NUM_GPDB6_VERSIONS) >"$${PIPELINE_FILE}" && \
+	$(TEMPLATE_CMD) --template get_pivnet_artifacts-tpl.yml --vars \
+		num_gpdb5_versions=$(NUM_GPDB5_VERSIONS) \
+		num_gpdb6_versions=$(NUM_GPDB6_VERSIONS) >"$${PIPELINE_FILE}" && \
 	$(FLY_CMD) --target=$(CONCOURSE) \
 		set-pipeline \
 		--check-creds \

@@ -48,6 +48,12 @@ def create_pipeline():
         match = re.search('^[0-9]+$', val)
         if match:
             context[key] = int(val)
+        match = re.search('^[tT]rue$', val)
+        if match:
+            context[key] = True
+        match = re.search('^[fF]alse$', val)
+        if match:
+            context[key] = False
 
     pipeline_yml = render_template(ARGS.template_filename, context)
 
