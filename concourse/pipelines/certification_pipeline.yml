@@ -110,7 +110,7 @@ resources:
   source:
     bucket: pivotal-gpdb-concourse-resources-prod
     json_key: {{concourse-gcs-resources-service-account-key}}
-    regexp: server/published/gpdb6/server-rc-(.*)-rhel7_x86_64.debug.tar.gz
+    regexp: server/published/gpdb6/server-rc-(.*)-rhel7_x86_64.tar.gz
 
 #- name: gpdb[[gp_ver]]_ubuntu18_tarball
 #  type: gcs
@@ -118,7 +118,7 @@ resources:
 #  source:
 #    bucket: pivotal-gpdb-concourse-resources-prod
 #    json_key: ((data-gpdb-ud-google-json-key))
-#    regexp: server/published/gpdb6/server-rc-(.*)-ubuntu18.04_x86_64.debug.tar.gz
+#    regexp: server/published/gpdb6/server-rc-(.*)-ubuntu18.04_x86_64.tar.gz
 
 ## ---------- PXF Released RPM Artifacts ----------
 - name: pxf_gp5_rpm_rhel6
