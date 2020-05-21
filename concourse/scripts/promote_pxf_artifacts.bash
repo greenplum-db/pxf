@@ -19,14 +19,14 @@ if (( ${#tarballs[@]} < 1 )); then
 	exit 1
 fi
 
-ALL_RELEASABLE=true
+NOT_RELEASABLE=0
 sources=()
 destinations=()
 for tarball in "${tarballs[@]}"; do
 	pkg_file=$(tar tf "${tarball}" | grep -E 'pxf-gp.*/pxf-gp.*(rpm|deb)')
 	if [[ ${pkg_file} =~ -SNAPSHOT ]]; then
 		echo "SNAPSHOT files detected in tarball '${tarball}': '${pkg_file}'... skipping upload to releases..."
-		ALL_RELEASABLE=false
+		((NOT_RELEASABLE++))
 		continue
 	fi
 	if [[ ${pkg_file##*/} =~ pxf-gp[0-9]+-([0-9.]+)-1\.(.*\.(deb|rpm)) ]]; then
@@ -41,18 +41,20 @@ for tarball in "${tarballs[@]}"; do
 		tar zxf "${tarball}"
 	else
 		echo "Couldn't determine version number from file named '${pkg_file}', skipping upload to releases..."
-		ALL_RELEASABLE=false
-		continue
+		exit 1
 	fi
 done
 
-if [[ ${ALL_RELEASABLE} != true ]]; then
-	echo "Not all tarballs are in releasable state, exiting..."
-	exit 1
+if (( NOT_RELEASABLE > 0 )); then
+	# we should fail here if we have a mix of SNAPSHOT/release tarballs
+	rc=1
+	(( NOT_RELEASABLE == ${#tarballs[@]} )) && rc=0
+	echo "${NOT_RELEASABLE} out of ${#tarballs[@]} tarballs are snapshots, exiting with rc=${rc}..."
+	exit "${rc}"
 fi
 
 if [[ $(<pxf_src/version) != "${pxf_version}" ]]; then
-	echo "PXF version from RPM/DEB is not matching pxf_src/version: ${pxf_version} != $(<pxf_src/version), exiting..."
+	echo "PXF version from RPM/DEB doesn't match pxf_src/version: ${pxf_version} != $(<pxf_src/version), exiting..."
 	exit 1
 fi
 

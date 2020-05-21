@@ -39,7 +39,7 @@ def render_template(template_filename, context):
 
 
 def create_pipeline():
-    """create_pipeline: substitues user-defined vars with the jinja rendering"""
+    """create_pipeline: substitutes user-defined vars with the jinja rendering"""
     context = {}
     for i in ARGS.vars:
         key = i.split('=')[0]

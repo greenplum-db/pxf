@@ -15,6 +15,7 @@ NUM_GPDB6_VERSIONS          ?=  9
 FLY_CMD                      = /usr/local/bin/fly
 TEMPLATE_CMD                 = ./template_tool
 FLY_OPTION_NON-INTERACTIVE   =
+SECRETS_FILE                 = $(HOME)/workspace/gp-continuous-integration/secrets/pxf-secrets.yml
 
 .PHONY: dev build certification
 dev: set-dev-build-pipeline
@@ -34,7 +35,7 @@ set-build-pipeline:
 		--check-creds \
 		--pipeline=$(BUILD_PIPELINE_NAME) \
 		--config "$${PIPELINE_FILE}" \
-		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/pxf-secrets.yml \
+		--load-vars-from=$(SECRETS_FILE) \
 		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
 		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
 		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud.yml \
@@ -56,15 +57,18 @@ set-dev-build-pipeline:
 		branch=$(BRANCH) \
 		num_gpdb5_versions=1 \
 		num_gpdb6_versions=1 >"$${PIPELINE_FILE}" && \
+	SLACK_INTEGRATION_WEBHOOK_URL=$$(: "$$(grep "$${USER}-slack-integration-webhook" $(SECRETS_FILE) || \
+		 grep ud-dev-slack-integration-webhook $(SECRETS_FILE))" && echo "$${_##*: }") && \
 	$(FLY_CMD) --target=$(CONCOURSE) \
 		set-pipeline \
 		--check-creds \
 		--pipeline=$(DEV_BUILD_PIPELINE_NAME) \
 		--config "$${PIPELINE_FILE}" \
-		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/pxf-secrets.yml \
+		--load-vars-from=$(SECRETS_FILE) \
 		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
 		--var=pxf-git-branch=${BRANCH} \
 		--var=folder-prefix=prod/gpdb_branch \
+		--var=slack-integration-webhook-url=$${SLACK_INTEGRATION_WEBHOOK_URL} \
 		${FLY_OPTION_NON-INTERACTIVE} || echo "Generated yaml has errors: check $${PIPELINE_FILE}"
 
 	@echo using the following command to unpause the pipeline:
@@ -80,7 +84,7 @@ set-certification-pipeline:
 		--pipeline=$(CERTIFICATION_PIPELINE_NAME) \
 		--config pipelines/certification_pipeline.yml \
 		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
-		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/pxf-secrets.yml \
+		--load-vars-from=$(SECRETS_FILE) \
 		--var=pxf-git-branch=${BRANCH} \
 		${FLY_OPTION_NON-INTERACTIVE} || echo "pipelines/certification_pipeline.yml has errors"
 
@@ -102,8 +106,8 @@ set-pivnet-pipeline:
 		set-pipeline \
 		--check-creds \
 		--config "$${PIPELINE_FILE}" \
-		--load-vars-from $(HOME)/workspace/gp-continuous-integration/secrets/pxf-secrets.yml \
-		--load-vars-from $(HOME)/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
+		--load-vars-from=$(SECRETS_FILE) \
+		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
 		--var pxf-git-branch=external-table \
 		--var pxf-git-remote=https://github.com/greenplum-db/pxf \
 		--pipeline pivnet_artifacts \

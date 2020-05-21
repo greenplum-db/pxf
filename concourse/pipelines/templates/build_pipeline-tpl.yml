@@ -66,6 +66,12 @@ resource_types:
   source:
     repository: ljfranklin/terraform-resource
     tag: 0.11.14
+{% else %}
+- name: slack-notification
+  type: docker-image
+  source:
+    repository: cfcommunity/slack-notification-resource
+    tag: latest
 {% endif %}
 
 ## ======================================================================
@@ -193,6 +199,11 @@ resources:
   source:
     repository: google/cloud-sdk
     tag: slim
+{% else %}
+- name: slack-alert
+  type: slack-notification
+  source:
+    url: ((slack-integration-webhook-url))
 {% endif %}
 
 ## ---------- Product Packages ----------
@@ -510,6 +521,17 @@ jobs:
     - get: gpdb[[gp_ver]]_rhel7_rpm_latest-0
       passed: [Test PXF-GP[[gp_ver]]-HDP2 on RHEL7]
 {% endfor %}
+{% if dev_pipeline == True %}
+  - put: slack-alert
+    params:
+      text: |
+        The build had a result. Check it out at:
+        http://my.concourse.url/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+        or at:
+        http://my.concourse.url/builds/$BUILD_ID
+
+        Result: $TEXT_FILE_CONTENT
+{% endif %}
 
 ## ---------- Extended Tests ----------
 {% if dev_pipeline != True %}
