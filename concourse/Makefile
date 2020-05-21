@@ -6,7 +6,7 @@ BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD)
 
 SHELL                        = /bin/bash
 BUILD_PIPELINE_NAME         ?= pxf-build
-DEV_BUILD_PIPELINE_NAME     ?= $(USER)-$(BRANCH)
+DEV_BUILD_PIPELINE_NAME     ?= dev:$(USER)-$(BRANCH)
 BUILD_WITH_DEB              ?= false
 CERTIFICATION_PIPELINE_NAME ?= pxf-certification
 PIVNET_PIPELINE_NAME        ?= pivnet_artifacts
@@ -52,6 +52,8 @@ set-dev-build-pipeline:
 	$(TEMPLATE_CMD) --template build_pipeline-tpl.yml --vars \
 		build_deb=$(BUILD_WITH_DEB) \
 		dev_pipeline=true \
+		user=$(USER) \
+		branch=$(BRANCH) \
 		num_gpdb5_versions=1 \
 		num_gpdb6_versions=1 >"$${PIPELINE_FILE}" && \
 	$(FLY_CMD) --target=$(CONCOURSE) \

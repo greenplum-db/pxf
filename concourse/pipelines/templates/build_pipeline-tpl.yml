@@ -2,8 +2,8 @@
 {# change num_gpdb5_versions & num_gpdb6_versions in Makefile to download/test more Greenplum versions #}
 {# number of backwards compatibility tasks that can run at once #}
 {% if dev_pipeline == True %}
-{% set num_gpdb5_versions = 1 %}
-{% set num_gpdb6_versions = 1 %}
+  {% set num_gpdb5_versions = 1 %}
+  {% set num_gpdb6_versions = 1 %}
 {% endif %}
 {% set max_concurrent_bc_tasks = 3 %}
 ## ======================================================================
@@ -246,7 +246,11 @@ resources:
   source:
     bucket: data-gpdb-ud-pxf-build
     json_key: ((pxf-storage-service-account-key))
+{% if dev_pipeline == True %}
+    versioned_file: dev/[[user]]-[[branch]]/snapshots/pxf-gp[[gp_ver]].el6.tar.gz
+{% else %}
     versioned_file: prod/snapshots/pxf-gp[[gp_ver]].el6.tar.gz
+{% endif %}
 {% set gp_ver = None %}
 
 {% for gp_ver in range(5, 7) %}
@@ -256,7 +260,11 @@ resources:
   source:
     bucket: data-gpdb-ud-pxf-build
     json_key: ((pxf-storage-service-account-key))
+{% if dev_pipeline == True %}
+    versioned_file: dev/[[user]]-[[branch]]/snapshots/pxf-gp[[gp_ver]].el7.tar.gz
+{% else %}
     versioned_file: prod/snapshots/pxf-gp[[gp_ver]].el7.tar.gz
+{% endif %}
 {% endfor %}
 
 {% if build_deb == True %}
@@ -267,7 +275,11 @@ resources:
   source:
     bucket: data-gpdb-ud-pxf-build
     json_key: ((pxf-storage-service-account-key))
+{% if dev_pipeline == True %}
+    versioned_file: dev/[[user]]-[[branch]]/snapshots/pxf-gp[[gp_ver]].ubuntu18.04.tar.gz
+{% else %}
     versioned_file: prod/snapshots/pxf-gp[[gp_ver]].ubuntu18.04.tar.gz
+{% endif %}
 {% set gp_ver = None %}
 {% endif %}
 
