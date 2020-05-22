@@ -3,7 +3,7 @@
 set -e
 
 : "${GOOGLE_CREDENTIALS:?GOOGLE_CREDENTIALS must be set}"
-: "${GCS_BUCKET:?GCS_BUCKET must be set}"
+: "${GCS_RELEASES_BUCKET:?GCS_RELEASES_BUCKET must be set}"
 : "${GCS_RELEASES_PATH:?GCS_RELEASES_PATH must be set}"
 : "${GIT_SSH_KEY:?GIT_SSH_KEY must be set}"
 : "${GIT_USERNAME:?GIT_USERNAME must be set}"
@@ -36,7 +36,7 @@ for tarball in "${tarballs[@]}"; do
 		sources+=("${pkg_file}")
 		: "${pkg_file#pxf-gp}"
 		gp_ver=${_%%-*}
-		destinations+=("gs://${GCS_BUCKET}/${GCS_RELEASES_PATH}/gp${gp_ver}/pxf-gp${gp_ver}-${pxf_version}-1.${suffix}")
+		destinations+=("gs://${GCS_RELEASES_BUCKET}/${GCS_RELEASES_PATH}/gp${gp_ver}/pxf-gp${gp_ver}-${pxf_version}-1.${suffix}")
 		echo "Expanding tarball '${tarball}'..."
 		tar zxf "${tarball}"
 	else

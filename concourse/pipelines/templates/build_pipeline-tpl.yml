@@ -295,6 +295,16 @@ resources:
 {% endif %}
 
 {% if dev_pipeline != True %}
+- name: pxf_open_source_license_file
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: data-gpdb-ud-pxf-releases
+    json_key: ((pxf-storage-service-account-key))
+    regexp: prod/OSL/pxf-(.*).txt
+{% endif %}
+
+{% if dev_pipeline != True %}
 ## ---------- Auxiliary Resources ----------
 - name: terraform
   type: terraform
@@ -1362,7 +1372,25 @@ jobs:
       GIT_REMOTE_URL: ((pxf-git-remote-ssh-url))
       GIT_SSH_KEY: ((pxf-git-deploy-key))
       GIT_USERNAME: ((pxf-git-deploy-username))
-      GCS_BUCKET: data-gpdb-ud-pxf-releases
+      GCS_RELEASES_BUCKET: data-gpdb-ud-pxf-releases
       GCS_RELEASES_PATH: prod/releases
+      GOOGLE_CREDENTIALS: ((pxf-storage-service-account-key))
+
+- name: Publish PXF-GP5 and PXF-GP6 Artifacts to GP-RelEng
+  plan:
+  - in_parallel:
+    # pxf source passed all testing jobs
+    - get: pxf_src
+      passed:
+			- Promote PXF-GP5 and PXF-GP6 Artifacts
+    - get: pxf_open_source_license_file
+      trigger: true
+  - task: Publish PXF-GP5 and PXF-GP6 Artifacts to GP-RelEng
+    image: google-cloud-sdk-slim-image
+    file: pxf_src/concourse/tasks/publish_release_to_releng.yml
+    params:
+      GCS_RELEASES_BUCKET: data-gpdb-ud-pxf-releases
+      GCS_RELEASES_PATH: prod/releases
+      GCS_OSL_PATH: prod/OSL
       GOOGLE_CREDENTIALS: ((pxf-storage-service-account-key))
 {% endif %} {# if dev_pipeline == True #}

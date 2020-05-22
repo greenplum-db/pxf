@@ -1,0 +1,15 @@
+platform: linux
+
+image_resource:
+  type: registry-image
+
+inputs:
+- name: pxf_src
+
+params:
+  GCS_RELEASES_BUCKET:
+  GCS_RELEASES_PATH:
+  GOOGLE_CREDENTIALS:
+
+run:
+  path: pxf_src/concourse/scripts/publish_release_to_releng.bash
