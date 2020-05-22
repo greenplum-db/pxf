@@ -26,7 +26,7 @@ for tarball in "${tarballs[@]}"; do
 	pkg_file=$(tar tf "${tarball}" | grep -E 'pxf-gp.*/pxf-gp.*(rpm|deb)')
 	if [[ ${pkg_file} =~ -SNAPSHOT ]]; then
 		echo "SNAPSHOT files detected in tarball '${tarball}': '${pkg_file}'... skipping upload to releases..."
-		((NOT_RELEASABLE++))
+		((NOT_RELEASABLE+=1))
 		continue
 	fi
 	if [[ ${pkg_file##*/} =~ pxf-gp[0-9]+-([0-9.]+)-1\.(.*\.(deb|rpm)) ]]; then
