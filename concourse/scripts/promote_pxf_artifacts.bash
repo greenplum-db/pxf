@@ -2,13 +2,14 @@
 
 set -e
 
-: "${GOOGLE_CREDENTIALS:?GOOGLE_CREDENTIALS must be set}"
 : "${GCS_RELEASES_BUCKET:?GCS_RELEASES_BUCKET must be set}"
 : "${GCS_RELEASES_PATH:?GCS_RELEASES_PATH must be set}"
-: "${GIT_SSH_KEY:?GIT_SSH_KEY must be set}"
-: "${GIT_USERNAME:?GIT_USERNAME must be set}"
+: "${GIT_BRANCH:?GIT_BRANCH must be set}"
 : "${GIT_EMAIL:?GIT_EMAIL must be set}"
 : "${GIT_REMOTE_URL:?GIT_REMOTE_URL must be set}"
+: "${GIT_SSH_KEY:?GIT_SSH_KEY must be set}"
+: "${GIT_USERNAME:?GIT_USERNAME must be set}"
+: "${GOOGLE_CREDENTIALS:?GOOGLE_CREDENTIALS must be set}"
 
 echo "Authenticating with Google service account..."
 gcloud auth activate-service-account --key-file=<(echo "${GOOGLE_CREDENTIALS}") >/dev/null 2>&1
@@ -73,6 +74,8 @@ chmod 600 ~/.ssh/id_rsa
 git config --global user.email "${GIT_EMAIL}"
 git config --global user.name "${GIT_USERNAME}"
 git -C pxf_src remote set-url origin "${GIT_REMOTE_URL}"
+# avoid detached HEAD state from Concourse checking out a SHA
+git -C pxf_src checkout "${GIT_BRANCH}"
 
 echo "Creating new tag ${pxf_version}..."
 # create annotated tag

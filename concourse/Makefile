@@ -28,6 +28,7 @@ set-build-pipeline:
 	@PIPELINE_FILE=$$(mktemp) && \
 	$(TEMPLATE_CMD) --template build_pipeline-tpl.yml --vars \
 		build_deb=$(BUILD_WITH_DEB) \
+		git_branch=$(BRANCH) \
 		num_gpdb5_versions=$(NUM_GPDB5_VERSIONS) \
 		num_gpdb6_versions=$(NUM_GPDB6_VERSIONS) >"$${PIPELINE_FILE}" && \
 	$(FLY_CMD) --target=$(CONCOURSE) \
@@ -57,8 +58,6 @@ set-dev-build-pipeline:
 		branch=$(BRANCH) \
 		num_gpdb5_versions=1 \
 		num_gpdb6_versions=1 >"$${PIPELINE_FILE}" && \
-	SLACK_INTEGRATION_WEBHOOK_URL=$$(: "$$(grep "$${USER}-slack-integration-webhook" $(SECRETS_FILE) || \
-		 grep ud-dev-slack-integration-webhook $(SECRETS_FILE))" && echo "$${_##*: }") && \
 	$(FLY_CMD) --target=$(CONCOURSE) \
 		set-pipeline \
 		--check-creds \
