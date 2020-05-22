@@ -1382,7 +1382,7 @@ jobs:
     # pxf source passed all testing jobs
     - get: pxf_src
       passed:
-			- Promote PXF-GP5 and PXF-GP6 Artifacts
+      - Promote PXF-GP5 and PXF-GP6 Artifacts
     - get: pxf_open_source_license_file
       trigger: true
   - task: Publish PXF-GP5 and PXF-GP6 Artifacts to GP-RelEng
@@ -1393,4 +1393,6 @@ jobs:
       GCS_RELEASES_PATH: prod/releases
       GCS_OSL_PATH: prod/OSL
       GOOGLE_CREDENTIALS: ((pxf-storage-service-account-key))
+      RELENG_RELEASES_BUCKET: data-gpdb-ud-pxf-releases
+      RELENG_RELEASES_PATH: practice/releases
 {% endif %} {# if dev_pipeline == True #}

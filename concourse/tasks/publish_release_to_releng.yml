@@ -9,7 +9,10 @@ inputs:
 params:
   GCS_RELEASES_BUCKET:
   GCS_RELEASES_PATH:
+  GCS_OSL_PATH:
   GOOGLE_CREDENTIALS:
+  RELENG_RELEASES_BUCKET:
+  RELENG_RELEASES_PATH:
 
 run:
   path: pxf_src/concourse/scripts/publish_release_to_releng.bash
