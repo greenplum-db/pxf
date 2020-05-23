@@ -364,13 +364,13 @@ jobs:
     params:
       path: pxf_src
       status: failure
-      context: compile_pxf
+      context: Build and Test PXF-GP[[gp_ver]] on RHEL6
   on_success:
     put: pxf_src
     params:
       path: pxf_src
       status: success
-      context: compile_pxf
+      context: Build and Test PXF-GP[[gp_ver]] on RHEL6
 {% endif %}
   plan:
   - in_parallel:
@@ -457,13 +457,13 @@ jobs:
     params:
       path: pxf_src
       status: failure
-      context: compile_pxf
+      context: Build and Test PXF-GP[[gp_ver]] on RHEL7
   on_success:
     put: pxf_src
     params:
       path: pxf_src
       status: success
-      context: compile_pxf
+      context: Build and Test PXF-GP[[gp_ver]] on RHEL7
 {% endif %}
   plan:
   - in_parallel:
@@ -551,13 +551,13 @@ jobs:
     params:
       path: pxf_src
       status: failure
-      context: compile_pxf
+      context: Build and Test PXF-GP[[gp_ver]] on Ubuntu18
   on_success:
     put: pxf_src
     params:
       path: pxf_src
       status: success
-      context: compile_pxf
+      context: Build and Test PXF-GP[[gp_ver]] on Ubuntu18
   {% endif %}
   plan:
   - in_parallel:
