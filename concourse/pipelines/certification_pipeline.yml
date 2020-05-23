@@ -10,6 +10,12 @@ resource_types:
   source:
     repository: frodenas/gcs-resource
 
+- name: slack-notification
+  type: docker-image
+  source:
+    repository: cfcommunity/slack-notification-resource
+    tag: latest
+
 ## ======================================================================
 ## RESOURCES
 ## ======================================================================
@@ -153,6 +159,11 @@ resources:
 #    json_key: ((pxf-storage-service-account-key))
 #    regexp: prod/releases/gp[[gp_ver]]/pxf-gp[[gp_ver]]-(.*)-1.ubuntu18.04.x86_64.deb
 
+- name: slack-alert
+  type: slack-notification
+  source:
+    url: ((ud-dev-slack-integration-webhook))
+
 ## ======================================================================
 ## JOBS
 ## ======================================================================
@@ -292,6 +303,15 @@ jobs:
       GOOGLE_CREDENTIALS: {{pxf-storage-service-account-key}}
       GP_VER: 5
       PXF_CERTIFICATION_FOLDER: data-gpdb-ud-pxf-build/prod/certifications
+  - put: slack-alert
+    params:
+      text: |
+        The build had a result. Check it out at:
+        http://my.concourse.url/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+        or at:
+        http://my.concourse.url/builds/$BUILD_ID
+
+        Result: $TEXT_FILE_CONTENT
 
 - name: Reporting Gate for PXF-GP6
   plan:
@@ -314,3 +334,12 @@ jobs:
       GOOGLE_CREDENTIALS: {{pxf-storage-service-account-key}}
       GP_VER: 6
       PXF_CERTIFICATION_FOLDER: data-gpdb-ud-pxf-build/prod/certifications
+  - put: slack-alert
+    params:
+      text: |
+        The build had a result. Check it out at:
+        http://my.concourse.url/teams/$BUILD_TEAM_NAME/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+        or at:
+        http://my.concourse.url/builds/$BUILD_ID
+
+        Result: $TEXT_FILE_CONTENT

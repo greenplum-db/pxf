@@ -297,7 +297,8 @@ function install_pxf_server() {
 }
 
 function install_pxf_tarball() {
-    tar -xzf pxf_tarball/pxf-*.tar.gz -C /tmp
+    local tarball_dir=${PXF_PKG_DIR:-pxf_tarball}
+    tar -xzf "${tarball_dir}/"pxf-*.tar.gz -C /tmp
     /tmp/pxf*/install_component
     chown -R gpadmin:gpadmin "${PXF_HOME}"
 }

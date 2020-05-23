@@ -5,10 +5,7 @@ set -exo pipefail
 CWDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # make sure GP_VER is set so that we know what PXF_HOME will be
-if [[ -z "GP_VER" ]]; then
-    echo 'ERROR: GP_VER must be set'
-    exit 1
-fi
+: "${GP_VER:?GP_VER must be set}"
 
 # set our own GPHOME for binary or RPM-based installs before sourcing common script
 if [[ -d bin_gpdb ]]; then

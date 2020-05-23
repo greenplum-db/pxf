@@ -1,7 +1,7 @@
 ---
 {# change num_gpdb5_versions & num_gpdb6_versions in Makefile to download/test more Greenplum versions #}
 {# number of backwards compatibility tasks that can run at once #}
-{% if dev_pipeline == True %}
+{% if dev_pipeline == True or pr_pipeline == True %}
   {% set num_gpdb5_versions = 1 %}
   {% set num_gpdb6_versions = 1 %}
 {% endif %}
@@ -55,11 +55,6 @@ anchors:
 ## ======================================================================
 resource_types:
 
-- name: gcs
-  type: registry-image
-  source:
-    repository: frodenas/gcs-resource
-
 {% if dev_pipeline != True %}
 - name: terraform
   type: registry-image
@@ -68,11 +63,23 @@ resource_types:
     tag: 0.11.14
 {% endif %}
 
+- name: gcs
+  type: registry-image
+  source:
+    repository: frodenas/gcs-resource
+
+{% if pr_pipeline == True %}
+- name: pull-request
+  type: docker-image
+  source:
+    repository: teliaoss/github-pr-resource
+{% else %}
 - name: slack-notification
   type: docker-image
   source:
     repository: cfcommunity/slack-notification-resource
     tag: latest
+{% endif %}
 
 ## ======================================================================
 ## RESOURCES
@@ -87,6 +94,8 @@ resources:
     json_key: ((pxf-storage-service-account-key))
     versioned_file: build-dependencies/pxf-build-dependencies.tar.gz
 
+{% if pr_pipeline != True %}
+{# we only use pg_regress for the PR pipeline #}
 - name: pxf-automation-dependencies
   type: gcs
   icon: google-drive
@@ -94,16 +103,17 @@ resources:
     bucket: data-gpdb-ud-pxf-build-resources
     json_key: ((pxf-storage-service-account-key))
     versioned_file: automation-dependencies/pxf-automation-dependencies.tar.gz
+{% endif %}
 
 - name: singlecluster-hdp2
   type: gcs
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pxf-build-resources
-    json_key: ((data-gpdb-ud-google-json-key))
+    json_key: ((pxf-storage-service-account-key))
     versioned_file: singlecluster/HDP2/singlecluster-HDP2.tar.gz
 
-{% if dev_pipeline != True %}
+{% if dev_pipeline != True and pr_pipeline != True %}
 - name: singlecluster-cdh
   type: gcs
   icon: google-drive
@@ -122,14 +132,22 @@ resources:
 {% endif %}
 
 ## ---------- Github Repos ----------
+{% if pr_pipeline == True %}
+- name: pxf_src
+  type: pull-request
+  source:
+    repository: greenplum-db/pxf
+    access_token: {{pxf-bot-access-token}}
+{% else %}
 - name: pxf_src
   type: git
   icon: git
   source:
     branch: ((pxf-git-branch))
     uri: ((pxf-git-remote))
+{% endif %}
 
-{% if dev_pipeline != True %}
+{% if dev_pipeline != True and pr_pipeline != True %}
 - name: ccp_src
   type: git
   source:
@@ -173,7 +191,7 @@ resources:
     password: ((pxf-cloudbuild-service-account-key))
 {% endif %}
 
-{% if dev_pipeline != True %}
+{% if dev_pipeline != True and pr_pipeline != True %}
 - name: gpdb[[gp_ver]]-pxf-dev-centos7-mapr-server-image
   type: registry-image
   icon: docker
@@ -185,7 +203,7 @@ resources:
 {% endif %}
 {% set gp_ver = None %}
 
-{% if dev_pipeline != True %}
+{% if dev_pipeline != True and pr_pipeline != True %}
 - name: ccp-7-image
   type: registry-image
   icon: docker
@@ -201,13 +219,15 @@ resources:
     tag: slim
 {% endif %}
 
+{% if pr_pipeline != True %}
 - name: slack-alert
   type: slack-notification
   source:
-{% if dev_pipeline == True %}
+  {% if dev_pipeline == True %}
     url: (([[user]]-slack-integration-webhook))
-{% else %}
+  {% else %}
     url: ((ud-dev-slack-integration-webhook))
+  {% endif %}
 {% endif %}
 
 ## ---------- Product Packages ----------
@@ -254,51 +274,53 @@ resources:
 {% set gp_ver = None %}
 
 ## ---------- PXF Build Artifacts ----------
-{% set gp_ver = 5 %}
+{% if pr_pipeline != True %}
+  {% set gp_ver = 5 %}
 - name: pxf_gp[[gp_ver]]_tarball_rhel6
   type: gcs
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pxf-build
     json_key: ((pxf-storage-service-account-key))
-{% if dev_pipeline == True %}
+  {% if dev_pipeline == True %}
     versioned_file: dev/[[user]]-[[branch]]/snapshots/pxf-gp[[gp_ver]].el6.tar.gz
-{% else %}
+  {% else %}
     versioned_file: prod/snapshots/pxf-gp[[gp_ver]].el6.tar.gz
-{% endif %}
-{% set gp_ver = None %}
+  {% endif %}
+  {% set gp_ver = None %}
 
-{% for gp_ver in range(5, 7) %}
+  {% for gp_ver in range(5, 7) %}
 - name: pxf_gp[[gp_ver]]_tarball_rhel7
   type: gcs
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pxf-build
     json_key: ((pxf-storage-service-account-key))
-{% if dev_pipeline == True %}
+  {% if dev_pipeline == True %}
     versioned_file: dev/[[user]]-[[branch]]/snapshots/pxf-gp[[gp_ver]].el7.tar.gz
-{% else %}
+  {% else %}
     versioned_file: prod/snapshots/pxf-gp[[gp_ver]].el7.tar.gz
-{% endif %}
-{% endfor %}
+  {% endif %}
+  {% endfor %}
 
-{% if build_deb == True %}
-{% set gp_ver = 6 %}
+  {% if build_deb == True %}
+  {% set gp_ver = 6 %}
 - name: pxf_gp[[gp_ver]]_tarball_ubuntu18
   type: gcs
   icon: google-drive
   source:
     bucket: data-gpdb-ud-pxf-build
     json_key: ((pxf-storage-service-account-key))
-{% if dev_pipeline == True %}
+  {% if dev_pipeline == True %}
     versioned_file: dev/[[user]]-[[branch]]/snapshots/pxf-gp[[gp_ver]].ubuntu18.04.tar.gz
-{% else %}
+  {% else %}
     versioned_file: prod/snapshots/pxf-gp[[gp_ver]].ubuntu18.04.tar.gz
-{% endif %}
-{% set gp_ver = None %}
-{% endif %}
+  {% endif %}
+  {% set gp_ver = None %}
+  {% endif %}
+{% endif %} {# if pr_pipeline != True #}
 
-{% if dev_pipeline != True %}
+{% if dev_pipeline != True and pr_pipeline != True %}
 - name: pxf_open_source_license_file
   type: gcs
   icon: google-drive
@@ -308,7 +330,7 @@ resources:
     regexp: prod/OSL/pxf-(.*).txt
 {% endif %}
 
-{% if dev_pipeline != True %}
+{% if dev_pipeline != True and pr_pipeline != True %}
 ## ---------- Auxiliary Resources ----------
 - name: terraform
   type: terraform
@@ -335,6 +357,21 @@ jobs:
 ## ---------- Centos 6 Swimlane ----------
 {% set gp_ver = 5 %}
 - name: Build PXF-GP[[gp_ver]] on RHEL6
+{% if pr_pipeline == True %}
+  public: true
+  on_failure:
+    put: pxf_src
+    params:
+      path: pxf_src
+      status: failure
+      context: compile_pxf
+  on_success:
+    put: pxf_src
+    params:
+      path: pxf_src
+      status: success
+      context: compile_pxf
+{% endif %}
   plan:
   - in_parallel:
     - get: pxf_src
@@ -343,6 +380,10 @@ jobs:
       resource: gpdb[[gp_ver]]_rhel6_rpm_latest-0
     - get: gpdb[[gp_ver]]-pxf-dev-centos6-image
     - get: pxf-build-dependencies
+{% if pr_pipeline == True %}
+    - get: singlecluster
+      resource: singlecluster-hdp2
+{% endif %}
   - task: Build PXF on RHEL6
     image: gpdb[[gp_ver]]-pxf-dev-centos6-image
     file: pxf_src/concourse/tasks/build.yml
@@ -350,6 +391,28 @@ jobs:
       LICENSE: ((pxf-rpm-license))
       TARGET_OS: rhel6
       VENDOR: ((pxf-rpm-vendor))
+{% if pr_pipeline == True %}
+  - task: Test Against Greenplum Latest RHEL6
+    image: gpdb[[gp_ver]]-pxf-dev-centos6-image
+    config:
+      platform: linux
+      inputs:
+      - name: gpdb_package
+      - name: pxf_src
+      - name: pxf_gp[[gp_ver]]_tarball_rhel6
+      - name: singlecluster
+      params:
+        GPDB_PKG_DIR: gpdb_package
+        GP_VER: [[gp_ver]]
+        GROUP: HdfsSmokeTest,WritableSmokeTest
+        HADOOP_CLIENT: hdp
+        IMPERSONATION: true
+        PGPORT: 5432
+        PG_REGRESS: true
+        PXF_PKG_DIR: pxf_gp[[gp_ver]]_tarball_rhel6
+      run:
+        path: pxf_src/concourse/scripts/test.bash
+{% else %}
   - put: pxf_gp[[gp_ver]]_tarball_rhel6
     params:
       file: dist/pxf-gp[[gp_ver]]-*.el6.tar.gz
@@ -381,11 +444,27 @@ jobs:
       TARGET_OS: centos
       TARGET_OS_VERSION: 6
 #      TEST_ENV: ((test-env))
+{% endif %} {# if pr_pipeline == True #}
 {% set gp_ver = None %}
 
 ## ---------- Centos 7 Swimlane ----------
 {% for gp_ver in range(5, 7) %}
 - name: Build PXF-GP[[gp_ver]] on RHEL7
+{% if pr_pipeline == True %}
+  public: true
+  on_failure:
+    put: pxf_src
+    params:
+      path: pxf_src
+      status: failure
+      context: compile_pxf
+  on_success:
+    put: pxf_src
+    params:
+      path: pxf_src
+      status: success
+      context: compile_pxf
+{% endif %}
   plan:
   - in_parallel:
     - get: pxf_src
@@ -394,6 +473,10 @@ jobs:
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
     - get: pxf-build-dependencies
+{% if pr_pipeline == True %}
+    - get: singlecluster
+      resource: singlecluster-hdp2
+{% endif %}
   - task: Build PXF-GP[[gp_ver]] on RHEL7
     image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     file: pxf_src/concourse/tasks/build.yml
@@ -401,6 +484,28 @@ jobs:
       LICENSE: ((pxf-rpm-license))
       TARGET_OS: rhel7
       VENDOR: ((pxf-rpm-vendor))
+{% if pr_pipeline == True %}
+  - task: Test Against Greenplum Latest RHEL7
+    image: gpdb[[gp_ver]]-pxf-dev-centos7-image
+    config:
+      platform: linux
+      inputs:
+      - name: gpdb_package
+      - name: pxf_src
+      - name: pxf_gp[[gp_ver]]_tarball_rhel7
+      - name: singlecluster
+      params:
+        GPDB_PKG_DIR: gpdb_package
+        GP_VER: [[gp_ver]]
+        GROUP: HdfsSmokeTest,WritableSmokeTest
+        HADOOP_CLIENT: hdp
+        IMPERSONATION: true
+        PGPORT: 5432
+        PG_REGRESS: true
+        PXF_PKG_DIR: pxf_gp[[gp_ver]]_tarball_rhel7
+      run:
+        path: pxf_src/concourse/scripts/test.bash
+{% else %}
   - put: pxf_gp[[gp_ver]]_tarball_rhel7
     params:
       file: dist/pxf-gp[[gp_ver]]-*.el7.tar.gz
@@ -432,12 +537,28 @@ jobs:
       TARGET_OS: centos
       TARGET_OS_VERSION: 7
 #      TEST_ENV: ((test-env))
+{% endif %} # if pr_pipeline == True
 {% endfor %} {# gp_ver 5 and 6 #}
 
 ## ---------- Ubuntu 18 Swimlane ----------
 {% if build_deb == True %}
 {% set gp_ver = 6 %}
 - name: Build PXF-GP[[gp_ver]] on Ubuntu18
+  {% if pr_pipeline == True %}
+  public: true
+  on_failure:
+    put: pxf_src
+    params:
+      path: pxf_src
+      status: failure
+      context: compile_pxf
+  on_success:
+    put: pxf_src
+    params:
+      path: pxf_src
+      status: success
+      context: compile_pxf
+  {% endif %}
   plan:
   - in_parallel:
     - get: pxf_src
@@ -446,6 +567,10 @@ jobs:
       resource: gpdb[[gp_ver]]_ubuntu18_deb_latest-0
     - get: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image
     - get: pxf-build-dependencies
+{% if pr_pipeline == True %}
+    - get: singlecluster
+      resource: singlecluster-hdp2
+{% endif %}
   - task: Build PXF-GP[[gp_ver]] on Ubuntu18
     image: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image
     file: pxf_src/concourse/tasks/build.yml
@@ -453,6 +578,28 @@ jobs:
       LICENSE: ((pxf-rpm-license))
       TARGET_OS: ubuntu18.04
       VENDOR: ((pxf-rpm-vendor))
+  {% if pr_pipeline == True %}
+  - task: Test Against Greenplum Latest Ubuntu18
+    image: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image
+    config:
+      platform: linux
+      inputs:
+      - name: gpdb_package
+      - name: pxf_src
+      - name: pxf_gp[[gp_ver]]_tarball_ubuntu18
+      - name: singlecluster
+      params:
+        GPDB_PKG_DIR: gpdb_package
+        GP_VER: [[gp_ver]]
+        GROUP: HdfsSmokeTest,WritableSmokeTest
+        HADOOP_CLIENT: hdp
+        IMPERSONATION: true
+        PGPORT: 5432
+        PG_REGRESS: true
+        PXF_PKG_DIR: pxf_gp[[gp_ver]]_tarball_ubuntu18
+      run:
+        path: pxf_src/concourse/scripts/test.bash
+  {% else %}
   - put: pxf_gp[[gp_ver]]_tarball_ubuntu18
     params:
       file: dist/pxf-gp[[gp_ver]]-*.ubuntu18.04.tar.gz
@@ -484,9 +631,11 @@ jobs:
       TARGET_OS: ubuntu
       TARGET_OS_VERSION: 18
 #      TEST_ENV: ((test-env))
+  {% endif %} {# if pr_pipeline == True #}
 {% set gp_ver = None %}
-{% endif %}
+{% endif %} {# if build_deb == True #}
 
+{% if pr_pipeline != True %}
 ## ---------- Testing Gate ----------
 - name: Testing Gate for PXF-GP
   plan:
@@ -1420,3 +1569,4 @@ jobs:
 
         Result: $TEXT_FILE_CONTENT
 {% endif %} {# if dev_pipeline == True #}
+{% endif %} {# if pr_pipeline == True #}

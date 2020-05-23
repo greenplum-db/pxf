@@ -8,12 +8,6 @@ resource_types:
 
 resources:
 
-- name: gpdb_src
-  type: git
-  source:
-    branch: 6X_STABLE
-    uri: https://github.com/greenplum-db/gpdb.git
-
 - name: pxf_src
   type: pull-request
   source:
