@@ -399,7 +399,7 @@ jobs:
       inputs:
       - name: gpdb_package
       - name: pxf_src
-      - name: pxf_gp[[gp_ver]]_tarball_rhel6
+      - name: dist
       - name: singlecluster
       params:
         GPDB_PKG_DIR: gpdb_package
@@ -409,7 +409,7 @@ jobs:
         IMPERSONATION: true
         PGPORT: 5432
         PG_REGRESS: true
-        PXF_PKG_DIR: pxf_gp[[gp_ver]]_tarball_rhel6
+        PXF_PKG_DIR: dist
       run:
         path: pxf_src/concourse/scripts/test.bash
 {% else %}
@@ -492,7 +492,7 @@ jobs:
       inputs:
       - name: gpdb_package
       - name: pxf_src
-      - name: pxf_gp[[gp_ver]]_tarball_rhel7
+      - name: dist
       - name: singlecluster
       params:
         GPDB_PKG_DIR: gpdb_package
@@ -502,7 +502,7 @@ jobs:
         IMPERSONATION: true
         PGPORT: 5432
         PG_REGRESS: true
-        PXF_PKG_DIR: pxf_gp[[gp_ver]]_tarball_rhel7
+        PXF_PKG_DIR: dist
       run:
         path: pxf_src/concourse/scripts/test.bash
 {% else %}
@@ -586,7 +586,7 @@ jobs:
       inputs:
       - name: gpdb_package
       - name: pxf_src
-      - name: pxf_gp[[gp_ver]]_tarball_ubuntu18
+      - name: dist
       - name: singlecluster
       params:
         GPDB_PKG_DIR: gpdb_package
@@ -596,7 +596,7 @@ jobs:
         IMPERSONATION: true
         PGPORT: 5432
         PG_REGRESS: true
-        PXF_PKG_DIR: pxf_gp[[gp_ver]]_tarball_ubuntu18
+        PXF_PKG_DIR: dist
       run:
         path: pxf_src/concourse/scripts/test.bash
   {% else %}
