@@ -19,14 +19,14 @@ package org.greenplum.pxf.service.bridge;
  * under the License.
  */
 
-import org.apache.hadoop.conf.Configuration;
 import org.greenplum.pxf.api.io.Writable;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.api.utilities.AccessorFactory;
-import org.greenplum.pxf.api.utilities.ResolverFactory;
+import org.greenplum.pxf.service.BridgeOutputBuilder;
 import org.greenplum.pxf.service.utilities.AnalyzeUtils;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 import java.util.BitSet;
 
@@ -43,23 +43,16 @@ import java.util.BitSet;
  * bit and continuing until a 1 bit record is read.
  */
 @Component
-@Scope("prototype")
+@RequestScope
 public class ReadSamplingBridge extends ReadBridge {
 
     private BitSet sampleBitSet;
     private int bitSetSize;
     private int curIndex;
 
-    public ReadSamplingBridge(AccessorFactory accessorFactory, ResolverFactory resolverFactory) {
-        super(accessorFactory, resolverFactory);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void initialize(RequestContext context, Configuration configuration) {
-        super.initialize(context, configuration);
+    public ReadSamplingBridge(BridgeOutputBuilder outputBuilder, ApplicationContext applicationContext, RequestContext context) {
+        super(outputBuilder, applicationContext, context);
+        // TODO: has the request context been parsed by this time?
         calculateBitSet(context.getStatsSampleRatio());
         this.curIndex = 0;
     }

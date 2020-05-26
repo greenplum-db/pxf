@@ -19,11 +19,14 @@ package org.greenplum.pxf.api.model;
  * under the License.
  */
 
-
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.EnumAggregationType;
+import org.greenplum.pxf.api.utilities.FragmentMetadata;
 import org.greenplum.pxf.api.utilities.Utilities;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -31,11 +34,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-
 /**
  * Common configuration available to all PXF plugins. Represents input data
  * coming from client applications, such as GPDB.
  */
+@Component
+@RequestScope
 public class RequestContext {
 
     /**
@@ -43,6 +47,7 @@ public class RequestContext {
      * are in a read, write or fragmenter call.
      */
     private RequestType requestType;
+
     public RequestType getRequestType() {
         return requestType;
     }
@@ -59,17 +64,20 @@ public class RequestContext {
         FRAGMENTER,
         READ_BRIDGE,
         WRITE_BRIDGE,
-    };
+    }
+
+    ;
 
     // ----- NAMED PROPERTIES -----
     private String accessor;
     private EnumAggregationType aggType;
     private String config;
+    private Configuration configuration;
     private int dataFragment = -1; /* should be deprecated */
     private String dataSource;
     private String fragmenter;
     private int fragmentIndex;
-    private byte[] fragmentMetadata = null;
+    private FragmentMetadata fragmentMetadata;
     private String filterString;
     // Profile-centric metadata
     private Object metadata;
@@ -80,7 +88,6 @@ public class RequestContext {
     private String token;
     private int statsMaxFragments = 0;
     private float statsSampleRatio = 0;
-
 
     /**
      * Number of attributes projected in query.
@@ -134,7 +141,6 @@ public class RequestContext {
 
     private List<ColumnDescriptor> tupleDescription = new ArrayList<>();
     private String user;
-    private byte[] userData;
 
     // ----- Additional Configuration Properties to be added to configuration for the request
     private Map<String, String> additionalConfigProps;
@@ -238,50 +244,22 @@ public class RequestContext {
         this.remoteSecret = remoteSecret;
     }
 
-    public byte[] getUserData() {
-        return userData;
-    }
-
-    public void setUserData(byte[] userData) {
-        this.userData = userData;
-    }
-
     /**
-     * The byte serialization of a data fragment.
+     * The data fragment.
      *
-     * @return serialized fragment metadata
+     * @return fragment metadata
      */
-    public byte[] getFragmentMetadata() {
+    public FragmentMetadata getFragmentMetadata() {
         return fragmentMetadata;
     }
 
     /**
-     * Sets the byte serialization of a fragment meta data.
+     * Sets the fragment meta data.
      *
      * @param fragmentMetadata start, len, and location of the fragment
      */
-    public void setFragmentMetadata(byte[] fragmentMetadata) {
+    public void setFragmentMetadata(FragmentMetadata fragmentMetadata) {
         this.fragmentMetadata = fragmentMetadata;
-    }
-
-    /**
-     * Gets any custom user data that may have been passed from the fragmenter.
-     * Will mostly be used by the accessor or resolver.
-     *
-     * @return fragment user data
-     */
-    public byte[] getFragmentUserData() {
-        return userData;
-    }
-
-    /**
-     * Sets any custom user data that needs to be shared across plugins. Will
-     * mostly be set by the fragmenter.
-     *
-     * @param userData user data
-     */
-    public void setFragmentUserData(byte[] userData) {
-        this.userData = userData;
     }
 
     /**
@@ -392,6 +370,25 @@ public class RequestContext {
             fail("invalid CONFIG directory name '%s'", config);
         }
         this.config = config;
+    }
+
+    /**
+     * Returns the server configuration associated to the server that this
+     * request is accessing
+     *
+     * @return the server configuration
+     */
+    public Configuration getConfiguration() {
+        return configuration;
+    }
+
+    /**
+     * Sets the server configuration associated to this request.
+     *
+     * @param configuration the server configuration for this request
+     */
+    public void setConfiguration(Configuration configuration) {
+        this.configuration = configuration;
     }
 
     /**

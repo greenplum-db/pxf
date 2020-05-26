@@ -19,22 +19,25 @@ package org.greenplum.pxf.plugins.jdbc.partitioning;
  * under the License.
  */
 
+import lombok.Getter;
 import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
 
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 class EnumPartition extends BasePartition implements JdbcFragmentMetadata {
-    private static final long serialVersionUID = 0L;
 
+    @Getter
     private final String value;
+
+    @Getter
     private final String[] excluded;
 
     /**
      * Construct an EnumPartition with given column and constraint
      *
-     * @param column
-     * @param value
+     * @param column the partitioned column
+     * @param value  the value for the partition
      */
     public EnumPartition(String column, String value) {
         super(column);
@@ -88,19 +91,5 @@ class EnumPartition extends BasePartition implements JdbcFragmentMetadata {
         }
 
         return sb.toString();
-    }
-
-    /**
-     * Getter
-     */
-    public String getValue() {
-        return value;
-    }
-
-    /**
-     * Getter
-     */
-    public String[] getExcluded() {
-        return excluded;
     }
 }

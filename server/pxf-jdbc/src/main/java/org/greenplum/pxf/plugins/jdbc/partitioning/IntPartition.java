@@ -19,13 +19,14 @@ package org.greenplum.pxf.plugins.jdbc.partitioning;
  * under the License.
  */
 
+import lombok.Getter;
 import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
 
 import java.util.stream.Stream;
 
 class IntPartition extends BasePartition implements JdbcFragmentMetadata {
-    private static final long serialVersionUID = 0L;
 
+    @Getter
     private final Long[] boundaries;
 
     /**
@@ -56,12 +57,5 @@ class IntPartition extends BasePartition implements JdbcFragmentMetadata {
                 quoteString + column + quoteString,
                 Stream.of(boundaries).map(b -> b == null ? null : b.toString()).toArray(String[]::new)
         );
-    }
-
-    /**
-     * Getter
-     */
-    public Long[] getBoundaries() {
-        return boundaries;
     }
 }

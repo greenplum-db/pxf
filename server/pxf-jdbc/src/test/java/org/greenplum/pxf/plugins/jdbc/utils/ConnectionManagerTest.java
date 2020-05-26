@@ -5,34 +5,25 @@ import com.google.common.util.concurrent.Uninterruptibles;
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.HikariPoolMXBean;
 import com.zaxxer.hikari.pool.HikariProxyConnection;
-import org.greenplum.pxf.plugins.jdbc.JdbcTestConfig;
+import org.greenplum.pxf.plugins.jdbc.PxfJdbcProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.core.env.Environment;
-import org.springframework.stereotype.Component;
-import org.springframework.test.context.TestPropertySource;
 
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.SQLTransientConnectionException;
+import java.time.Duration;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static org.greenplum.pxf.plugins.jdbc.utils.ConnectionManager.CLEANUP_SLEEP_INTERVAL_NANOS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.anyObject;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.atLeast;
@@ -41,21 +32,16 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
-@SpringBootTest(
-        classes = JdbcTestConfig.class,
-        webEnvironment = SpringBootTest.WebEnvironment.NONE
-)
 public class ConnectionManagerTest {
 
     private ConnectionManager manager;
 
-    @Autowired
-    @MockBean
     private ConnectionManager.DriverManagerWrapper mockDriverManagerWrapper;
 
     private Properties connProps, poolProps;
     private Connection mockConnection;
+    private PxfJdbcProperties properties;
+    private PxfJdbcProperties.Connection connection;
 
     @BeforeEach
     public void before() {
@@ -63,7 +49,14 @@ public class ConnectionManagerTest {
         poolProps = new Properties();
         mockConnection = mock(Connection.class);
 
-        manager = new ConnectionManager(ConnectionManager.DataSourceFactory.getInstance(), Ticker.systemTicker(), CLEANUP_SLEEP_INTERVAL_NANOS, mockDriverManagerWrapper);
+        properties = new PxfJdbcProperties();
+        connection = properties.getConnection();
+
+        ConnectionManager.DataSourceFactory dataSourceFactory = new ConnectionManager.DataSourceFactory();
+
+        mockDriverManagerWrapper = mock(ConnectionManager.DriverManagerWrapper.class);
+
+        manager = new ConnectionManager(dataSourceFactory, Ticker.systemTicker(), properties, mockDriverManagerWrapper);
     }
 
     @Test
@@ -176,11 +169,11 @@ public class ConnectionManagerTest {
         HikariPoolMXBean mockMBean = mock(HikariPoolMXBean.class);
         when(mockDataSource.getHikariPoolMXBean()).thenReturn(mockMBean);
         when(mockMBean.getActiveConnections()).thenReturn(0);
-        manager = new ConnectionManager(mockFactory, ticker, CLEANUP_SLEEP_INTERVAL_NANOS, mockDriverManagerWrapper);
+        manager = new ConnectionManager(mockFactory, ticker, properties, mockDriverManagerWrapper);
 
         manager.getConnection("test-server", "test-url", connProps, true, poolProps, null);
 
-        ticker.advanceTime(ConnectionManager.POOL_EXPIRATION_TIMEOUT_HOURS + 1, TimeUnit.HOURS);
+        ticker.advanceTime(connection.getPoolExpirationTimeout().toHours() + 1, TimeUnit.HOURS);
         manager.cleanCache();
 
         Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
@@ -200,11 +193,13 @@ public class ConnectionManagerTest {
         HikariPoolMXBean mockMBean = mock(HikariPoolMXBean.class);
         when(mockDataSource.getHikariPoolMXBean()).thenReturn(mockMBean);
         when(mockMBean.getActiveConnections()).thenReturn(2, 1, 0);
-        ConnectionManager manager = new ConnectionManager(mockFactory, ticker, TimeUnit.MILLISECONDS.toNanos(50), mockDriverManagerWrapper);
+
+        connection.setCleanupSleepInterval(Duration.ofMillis(50));
+        manager = new ConnectionManager(mockFactory, ticker, properties, mockDriverManagerWrapper);
 
         manager.getConnection("test-server", "test-url", connProps, true, poolProps, null);
 
-        ticker.advanceTime(ConnectionManager.POOL_EXPIRATION_TIMEOUT_HOURS + 1, TimeUnit.HOURS);
+        ticker.advanceTime(connection.getPoolExpirationTimeout().toHours() + 1, TimeUnit.HOURS);
         manager.cleanCache();
 
         // wait for at least 3 iteration of sleeping
@@ -216,7 +211,7 @@ public class ConnectionManagerTest {
 
     @Test
     public void testPoolExpirationWithActiveConnectionsOver24Hours() throws SQLException {
-        ConnectionManagerTest.FakeTicker ticker = new ConnectionManagerTest.FakeTicker();
+        FakeTicker ticker = new FakeTicker();
         ConnectionManager.DataSourceFactory mockFactory = mock(ConnectionManager.DataSourceFactory.class);
         HikariDataSource mockDataSource = mock(HikariDataSource.class);
         when(mockFactory.createDataSource(any())).thenReturn(mockDataSource);
@@ -225,17 +220,18 @@ public class ConnectionManagerTest {
         HikariPoolMXBean mockMBean = mock(HikariPoolMXBean.class);
         when(mockDataSource.getHikariPoolMXBean()).thenReturn(mockMBean);
         when(mockMBean.getActiveConnections()).thenReturn(1); //always report pool has an active connection
-        ConnectionManager manager = new ConnectionManager(mockFactory, ticker, TimeUnit.MILLISECONDS.toNanos(50), mockDriverManagerWrapper);
+        connection.setCleanupSleepInterval(Duration.ofMillis(50));
+        manager = new ConnectionManager(mockFactory, ticker, properties, mockDriverManagerWrapper);
 
         manager.getConnection("test-server", "test-url", connProps, true, poolProps, null);
 
-        ticker.advanceTime(ConnectionManager.POOL_EXPIRATION_TIMEOUT_HOURS + 1, TimeUnit.HOURS);
+        ticker.advanceTime(connection.getPoolExpirationTimeout().toHours() + 1, TimeUnit.HOURS);
         manager.cleanCache();
 
         // wait for at least 3 iteration of sleeping (3 * 50ms = 150ms)
         Uninterruptibles.sleepUninterruptibly(150, TimeUnit.MILLISECONDS);
 
-        ticker.advanceTime(ConnectionManager.CLEANUP_TIMEOUT_NANOS + 100000, TimeUnit.NANOSECONDS);
+        ticker.advanceTime(connection.getCleanupTimeout().toNanos() + 100000, TimeUnit.NANOSECONDS);
 
         // wait again as cleaner needs to pick new ticker value
         Uninterruptibles.sleepUninterruptibly(150, TimeUnit.MILLISECONDS);

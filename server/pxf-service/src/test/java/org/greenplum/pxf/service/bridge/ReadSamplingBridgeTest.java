@@ -77,8 +77,7 @@ public class ReadSamplingBridgeTest {
 
     }
 
-    private Configuration configuration;
-    private RequestContext mockContext;
+    private RequestContext context;
     private ReadBridge mockBridge;
     private AccessorFactory mockAccessorFactory;
     private ResolverFactory mockResolverFactory;
@@ -91,14 +90,12 @@ public class ReadSamplingBridgeTest {
     @BeforeEach
     public void setUp() throws Exception {
 
-        configuration = new Configuration();
-        mockContext = mock(RequestContext.class);
+        context = new RequestContext();
+        context.setConfiguration(new Configuration());
         mockAccessorFactory = mock(AccessorFactory.class);
         mockResolverFactory = mock(ResolverFactory.class);
 
         mockBridge = mock(ReadBridge.class);
-//        whenNew(ReadBridge.class).withAnyArguments().thenReturn(
-//                mockBridge);
 
         when(mockBridge.getNext()).thenAnswer(new Answer<Writable>() {
             private int count = 0;
@@ -112,7 +109,6 @@ public class ReadSamplingBridgeTest {
             }
         });
 
-//        mockStatic(AnalyzeUtils.class);
         samplingBitSet = new BitSet();
         when(
                 AnalyzeUtils.generateSamplingBitSet(any(int.class),
@@ -124,10 +120,10 @@ public class ReadSamplingBridgeTest {
 
         samplingBitSet.set(0, 100);
         recordsLimit = 100;
-        when(mockContext.getStatsSampleRatio()).thenReturn((float) 1.0);
+        context.setStatsSampleRatio(1.0F);
 
         readSamplingBridge = new ReadSamplingBridge(mockAccessorFactory, mockResolverFactory);
-        readSamplingBridge.initialize(mockContext, configuration);
+        readSamplingBridge.initialize(context);
 
         result = readSamplingBridge.getNext();
         assertEquals("0", result.toString());
@@ -147,10 +143,10 @@ public class ReadSamplingBridgeTest {
         // set 10 bits from 5 to 14.
         samplingBitSet.set(5, 15);
         recordsLimit = 100;
-        when(mockContext.getStatsSampleRatio()).thenReturn((float) 0.1);
+        context.setStatsSampleRatio(0.1F);
 
         readSamplingBridge = new ReadSamplingBridge(mockAccessorFactory, mockResolverFactory);
-        readSamplingBridge.initialize(mockContext, configuration);
+        readSamplingBridge.initialize(context);
 
         for (int i = 0; i < 10; i++) {
             result = readSamplingBridge.getNext();
@@ -172,10 +168,10 @@ public class ReadSamplingBridgeTest {
             samplingBitSet.flip(i * 2);
         }
         recordsLimit = 100;
-        when(mockContext.getStatsSampleRatio()).thenReturn((float) 0.9);
+        context.setStatsSampleRatio(0.9F);
 
         readSamplingBridge = new ReadSamplingBridge(mockAccessorFactory, mockResolverFactory);
-        readSamplingBridge.initialize(mockContext, configuration);
+        readSamplingBridge.initialize(context);
 
         for (int i = 0; i < 90; i++) {
             result = readSamplingBridge.getNext();
@@ -199,10 +195,10 @@ public class ReadSamplingBridgeTest {
         samplingBitSet.set(40, 80);
         samplingBitSet.set(90, 99);
         recordsLimit = 350;
-        when(mockContext.getStatsSampleRatio()).thenReturn((float) 0.5);
+        context.setStatsSampleRatio(0.5F);
 
         readSamplingBridge = new ReadSamplingBridge(mockAccessorFactory, mockResolverFactory);
-        readSamplingBridge.initialize(mockContext, configuration);
+        readSamplingBridge.initialize(context);
 
         /*
          * expecting to have: 50 (out of first 100) 50 (out of second 100) 50
@@ -231,10 +227,10 @@ public class ReadSamplingBridgeTest {
         samplingBitSet.set(999);
         samplingBitSet.set(9999);
         recordsLimit = 100000;
-        when(mockContext.getStatsSampleRatio()).thenReturn(ratio);
+        context.setStatsSampleRatio(ratio);
 
         readSamplingBridge = new ReadSamplingBridge(mockAccessorFactory, mockResolverFactory);
-        readSamplingBridge.initialize(mockContext, configuration);
+        readSamplingBridge.initialize(context);
 
         for (int i = 0; i < 30; i++) {
             result = readSamplingBridge.getNext();

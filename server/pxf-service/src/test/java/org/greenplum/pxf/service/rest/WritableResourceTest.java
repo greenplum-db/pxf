@@ -63,11 +63,11 @@ public class WritableResourceTest {
         ConfigurationFactory mockConfigurationFactory = mock(ConfigurationFactory.class);
         mockHttpServletRequest = mock(HttpServletRequest.class);
 
-        writableResource = new WritableResource(mockParser, mockFactory, mockConfigurationFactory);
+        writableResource = new WritableResource(mockParser, mockFactory);
 
         when(mockConfigurationFactory.initConfiguration(any(), any(), any(), any())).thenReturn(configuration);
         when(mockParser.parseRequest(mockHeaders, RequestType.WRITE_BRIDGE)).thenReturn(mockContext);
-        when(mockFactory.getBridge(mockContext, configuration)).thenReturn(mockBridge);
+        when(mockFactory.getBridge(mockContext)).thenReturn(mockBridge);
         when(mockContext.isThreadSafe()).thenReturn(true);
         when(mockBridge.isThreadSafe()).thenReturn(true);
         when(mockHttpServletRequest.getInputStream()).thenReturn(mockInputStream);

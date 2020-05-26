@@ -1,6 +1,5 @@
 package org.greenplum.pxf.service.bridge;
 
-import org.apache.hadoop.conf.Configuration;
 import org.greenplum.pxf.api.ReadVectorizedResolver;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.Utilities;
@@ -20,7 +19,7 @@ public class SimpleBridgeFactory implements BridgeFactory {
      * {@inheritDoc}
      */
     @Override
-    public Bridge getBridge(RequestContext context, Configuration configuration) {
+    public Bridge getBridge(RequestContext context) {
 
         Bridge bridge;
         if (context.getRequestType() == RequestContext.RequestType.READ_BRIDGE) {
@@ -39,7 +38,6 @@ public class SimpleBridgeFactory implements BridgeFactory {
             throw new UnsupportedOperationException();
         }
 
-        bridge.initialize(context, configuration);
         return bridge;
     }
 

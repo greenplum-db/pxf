@@ -20,6 +20,8 @@ package org.greenplum.pxf.service;
  */
 
 
+import org.apache.hadoop.conf.Configuration;
+import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.PluginConf;
 import org.greenplum.pxf.api.model.ProtocolHandler;
@@ -45,6 +47,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -52,13 +55,18 @@ import static org.mockito.Mockito.when;
 
 public class HttpRequestParserTest {
 
-    private MultiValueMap<String, String> parameters;
+    private Configuration configuration;
+    private ConfigurationFactory mockConfigurationFactory;
     private HttpRequestParser parser;
+    private MultiValueMap<String, String> parameters;
     private PluginConf mockPluginConf;
 
     @BeforeEach
     public void setUp() {
         mockPluginConf = mock(PluginConf.class);
+        mockConfigurationFactory = mock(ConfigurationFactory.class);
+
+        configuration = new Configuration();
 
         parameters = new LinkedMultiValueMap<>();
         parameters.add("X-GP-ALIGNMENT", "all");
@@ -78,7 +86,7 @@ public class HttpRequestParserTest {
         parameters.add("X-GP-OPTIONS-SERVER", "custom_server");
         parameters.add("X-GP-XID", "transaction:id");
 
-        parser = new HttpRequestParser(mockPluginConf);
+        parser = new HttpRequestParser(mockPluginConf, mockConfigurationFactory);
     }
 
     @AfterEach
@@ -135,6 +143,9 @@ public class HttpRequestParserTest {
 
     @Test
     public void contextCreated() {
+
+        when(mockConfigurationFactory.initConfiguration("custom_server", "custom_server", "alex", new HashMap<>())).thenReturn(configuration);
+
         RequestContext context = parser.parseRequest(parameters, RequestType.FRAGMENTER);
 
         assertEquals(System.getProperty("greenplum.alignment"), "all");
@@ -160,6 +171,7 @@ public class HttpRequestParserTest {
         assertNull(context.getProfile());
         assertNull(context.getProfileScheme());
         assertTrue(context.getAdditionalConfigProps().isEmpty());
+        assertSame(configuration, context.getConfiguration());
     }
 
     @Test
@@ -232,18 +244,18 @@ public class HttpRequestParserTest {
         assertTrue(context.isThreadSafe());
 
         parameters.set("X-GP-OPTIONS-THREAD-SAFE", "true");
-        context = new HttpRequestParser(mockPluginConf).parseRequest(parameters, RequestType.FRAGMENTER);
+        context = new HttpRequestParser(mockPluginConf, mockConfigurationFactory).parseRequest(parameters, RequestType.FRAGMENTER);
         assertTrue(context.isThreadSafe());
     }
 
     @Test
     public void threadSafeFalse() {
         parameters.add("X-GP-OPTIONS-THREAD-SAFE", "False");
-        RequestContext context = new HttpRequestParser(mockPluginConf).parseRequest(parameters, RequestType.FRAGMENTER);
+        RequestContext context = new HttpRequestParser(mockPluginConf, mockConfigurationFactory).parseRequest(parameters, RequestType.FRAGMENTER);
         assertFalse(context.isThreadSafe());
 
         parameters.set("X-GP-OPTIONS-THREAD-SAFE", "falSE");
-        context = new HttpRequestParser(mockPluginConf).parseRequest(parameters, RequestType.FRAGMENTER);
+        context = new HttpRequestParser(mockPluginConf, mockConfigurationFactory).parseRequest(parameters, RequestType.FRAGMENTER);
         assertFalse(context.isThreadSafe());
     }
 

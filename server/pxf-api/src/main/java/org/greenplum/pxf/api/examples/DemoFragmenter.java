@@ -21,17 +21,18 @@ package org.greenplum.pxf.api.examples;
 
 import org.greenplum.pxf.api.model.BaseFragmenter;
 import org.greenplum.pxf.api.model.Fragment;
+import org.springframework.stereotype.Component;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Class that defines the splitting of a data resource into fragments that can be processed in parallel
  * getFragments() returns the fragments information of a given path (source name and location of each fragment).
- *
+ * <p>
  * Demo implementation
  */
-
+@Component("DemoFragmenter")
 public class DemoFragmenter extends BaseFragmenter {
 
     /**
@@ -41,11 +42,12 @@ public class DemoFragmenter extends BaseFragmenter {
      */
     @Override
     public List<Fragment> getFragments() throws Exception {
+        List<Fragment> fragments = new ArrayList<>(3);
         String localhostname = java.net.InetAddress.getLocalHost().getHostName();
         String[] localHosts = new String[]{localhostname, localhostname};
-        fragments.add(new Fragment(context.getDataSource() + ".1", localHosts, "fragment1".getBytes()));
-        fragments.add(new Fragment(context.getDataSource() + ".2", localHosts, "fragment2".getBytes()));
-        fragments.add(new Fragment(context.getDataSource() + ".3", localHosts, "fragment3".getBytes()));
+        fragments.add(new Fragment(context.getDataSource() + ".1", localHosts, new DemoFragmentMetadata("fragment1")));
+        fragments.add(new Fragment(context.getDataSource() + ".2", localHosts, new DemoFragmentMetadata("fragment2")));
+        fragments.add(new Fragment(context.getDataSource() + ".3", localHosts, new DemoFragmentMetadata("fragment3")));
         return fragments;
     }
 }

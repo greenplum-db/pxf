@@ -85,7 +85,7 @@ public class UtilitiesTest {
         }
 
         @Override
-        public void initialize(RequestContext context, Configuration configuration) {
+        public void initialize(RequestContext context) {
         }
 
         @Override
@@ -125,7 +125,7 @@ public class UtilitiesTest {
         }
 
         @Override
-        public void initialize(RequestContext context, Configuration configuration) {
+        public void initialize(RequestContext context) {
         }
 
         @Override
@@ -155,7 +155,7 @@ public class UtilitiesTest {
         }
 
         @Override
-        public void initialize(RequestContext context, Configuration configuration) {
+        public void initialize(RequestContext context) {
         }
 
         @Override

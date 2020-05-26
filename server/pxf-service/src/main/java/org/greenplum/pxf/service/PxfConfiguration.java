@@ -3,10 +3,8 @@ package org.greenplum.pxf.service;
 import org.greenplum.pxf.api.configuration.PxfServerProperties;
 import org.greenplum.pxf.service.rest.Version;
 import org.greenplum.pxf.service.servlet.SecurityServletFilter;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -18,10 +16,15 @@ import org.springframework.context.annotation.Configuration;
 @EnableConfigurationProperties(PxfServerProperties.class)
 public class PxfConfiguration {
 
-    private final ApplicationContext applicationContext;
+    private final SecurityServletFilter securityServletFilter;
 
-    public PxfConfiguration(ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
+    /**
+     * Constructs a new PxfConfiguration
+     *
+     * @param securityServletFilter the SecurityServletFilter
+     */
+    public PxfConfiguration(SecurityServletFilter securityServletFilter) {
+        this.securityServletFilter = securityServletFilter;
     }
 
     /**
@@ -34,7 +37,7 @@ public class PxfConfiguration {
     @Bean
     public FilterRegistrationBean<SecurityServletFilter> registerSecurityServletFilter() {
         FilterRegistrationBean<SecurityServletFilter> registrationBean = new FilterRegistrationBean<>();
-        registrationBean.setFilter(applicationContext.getBean(SecurityServletFilter.class));
+        registrationBean.setFilter(securityServletFilter);
         registrationBean.addUrlPatterns("/pxf/" + Version.PXF_PROTOCOL_VERSION + "/*");
         return registrationBean;
     }

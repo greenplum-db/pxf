@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
-import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -24,12 +23,9 @@ class PxfConfigurationTest {
     @Autowired
     SecurityServletFilter securityServletFilter;
 
-    @Autowired
-    ApplicationContext applicationContext;
-
     @Test
     void defaultFilterConfiguration() {
-        PxfConfiguration pxfConfiguration = new PxfConfiguration(applicationContext);
+        PxfConfiguration pxfConfiguration = new PxfConfiguration(securityServletFilter);
 
         FilterRegistrationBean<SecurityServletFilter> bean = pxfConfiguration.registerSecurityServletFilter();
         assertNotNull(bean);

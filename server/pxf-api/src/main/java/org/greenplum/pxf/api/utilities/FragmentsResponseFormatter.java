@@ -41,7 +41,7 @@ public class FragmentsResponseFormatter {
      * their respective IPs.
      *
      * @param fragments list of fragments
-     * @param data data (e.g. path) related to the fragments
+     * @param data      data (e.g. path) related to the fragments
      * @return FragmentsResponse with given fragments
      * @throws UnknownHostException if converting host names to IP fails
      */
@@ -132,9 +132,10 @@ public class FragmentsResponseFormatter {
         LOG.debug("List of " + (fragments.isEmpty() ? "no" : fragments.size())
                 + "fragments for \"" + datapath + "\"");
 
+        StringBuilder result = new StringBuilder();
         int i = 0;
         for (Fragment fragment : fragments) {
-            StringBuilder result = new StringBuilder();
+            result.setLength(0);
             result.append("Fragment #").append(++i).append(": [").append(
                     "Source: ").append(fragment.getSourceName()).append(
                     ", Index: ").append(fragment.getIndex()).append(
@@ -144,13 +145,7 @@ public class FragmentsResponseFormatter {
             }
 
             if (fragment.getMetadata() != null) {
-                result.append(", Metadata: ").append(
-                    new String(fragment.getMetadata()));
-            }
-
-            if (fragment.getUserData() != null) {
-                result.append(", User Data: ").append(
-                        new String(fragment.getUserData()));
+                result.append(", Metadata: ").append(fragment.getMetadata().toString());
             }
             result.append("] ");
             LOG.debug(result);

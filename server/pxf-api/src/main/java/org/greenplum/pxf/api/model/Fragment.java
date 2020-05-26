@@ -19,6 +19,19 @@ package org.greenplum.pxf.api.model;
  * under the License.
  */
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import com.fasterxml.jackson.databind.util.StdDateFormat;
+import lombok.Getter;
+import lombok.Setter;
+import org.greenplum.pxf.api.utilities.FragmentMetadata;
+
+import java.io.IOException;
+
 /**
  * Fragment holds a data fragment' information.
  * {@link Fragmenter#getFragments} returns a list of fragments.
@@ -30,31 +43,36 @@ public class Fragment {
     /**
      * File path+name, table name, etc.
      */
-    private String sourceName;
+    @Getter
+    private final String sourceName;
 
     /**
      * Fragment index (incremented per sourceName).
      */
+    @Getter
+    @Setter
     private int index;
 
     /**
      * Fragment replicas (1 or more).
      */
+    @Getter
+    @Setter
     private String[] replicas;
 
     /**
      * Fragment metadata information (starting point + length, region location, etc.).
      */
-    private byte[] metadata;
-
-    /**
-     * ThirdParty data added to a fragment. Ignored if null.
-     */
-    private byte[] userData;
+    @Getter
+    @Setter
+    @JsonSerialize(using = FragmentMetadataToString.class)
+    private FragmentMetadata metadata;
 
     /**
      * Profile name, recommended for reading given Fragment.
      */
+    @Getter
+    @Setter
     private String profile;
 
     /**
@@ -71,84 +89,50 @@ public class Fragment {
      *
      * @param sourceName the resource uri (File path+name, table name, etc.)
      * @param hosts      the replicas
-     * @param metadata   the meta data (Starting point + length, region location, etc.).
+     * @param metadata   the metadata for this fragment
      */
     public Fragment(String sourceName,
                     String[] hosts,
-                    byte[] metadata) {
-        this.sourceName = sourceName;
-        this.replicas = hosts;
-        this.metadata = metadata;
+                    FragmentMetadata metadata) {
+        this(sourceName, hosts, metadata, null);
     }
 
     /**
-     * Constructs a Fragment.
+     * Contructs a Fragment.
      *
      * @param sourceName the resource uri (File path+name, table name, etc.)
      * @param hosts      the replicas
-     * @param metadata   the meta data (Starting point + length, region location, etc.).
-     * @param userData   third party data added to a fragment.
+     * @param metadata   the metadata for this fragment
+     * @param profile    the profile to use for the query
      */
     public Fragment(String sourceName,
                     String[] hosts,
-                    byte[] metadata,
-                    byte[] userData) {
+                    FragmentMetadata metadata,
+                    String profile) {
         this.sourceName = sourceName;
         this.replicas = hosts;
         this.metadata = metadata;
-        this.userData = userData;
-    }
-
-    public Fragment(String sourceName,
-                    String[] hosts,
-                    byte[] metadata,
-                    byte[] userData,
-                    String profile) {
-        this(sourceName, hosts, metadata, userData);
         this.profile = profile;
     }
 
-    public String getSourceName() {
-        return sourceName;
-    }
+    static class FragmentMetadataToString extends StdSerializer<FragmentMetadata> {
 
-    public int getIndex() {
-        return index;
-    }
+        public static final ObjectMapper MAPPER;
 
-    public void setIndex(int index) {
-        this.index = index;
-    }
+        static {
+            MAPPER = new ObjectMapper();
+            MAPPER.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+            // StdDateFormat is ISO8601 since jackson 2.9
+            MAPPER.setDateFormat(new StdDateFormat().withColonInTimeZone(true));
+        }
 
-    public String[] getReplicas() {
-        return replicas;
-    }
+        protected FragmentMetadataToString() {
+            super(FragmentMetadata.class);
+        }
 
-    public void setReplicas(String[] replicas) {
-        this.replicas = replicas;
-    }
-
-    public byte[] getMetadata() {
-        return metadata;
-    }
-
-    public void setMetadata(byte[] metadata) {
-        this.metadata = metadata;
-    }
-
-    public byte[] getUserData() {
-        return userData;
-    }
-
-    public void setUserData(byte[] userData) {
-        this.userData = userData;
-    }
-
-    public String getProfile() {
-        return profile;
-    }
-
-    public void setProfile(String profile) {
-        this.profile = profile;
+        @Override
+        public void serialize(FragmentMetadata value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+            gen.writeString(MAPPER.writeValueAsString(value));
+        }
     }
 }

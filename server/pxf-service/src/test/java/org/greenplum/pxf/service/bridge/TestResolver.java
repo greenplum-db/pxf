@@ -21,7 +21,7 @@ public class TestResolver implements Resolver {
     }
 
     @Override
-    public void initialize(RequestContext context, Configuration configuration) {
+    public void initialize(RequestContext context) {
 
     }
 

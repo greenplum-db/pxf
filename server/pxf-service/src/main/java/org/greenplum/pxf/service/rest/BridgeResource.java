@@ -20,7 +20,6 @@ package org.greenplum.pxf.service.rest;
  */
 
 import org.apache.catalina.connector.ClientAbortException;
-import org.apache.hadoop.conf.Configuration;
 import org.greenplum.pxf.api.io.Writable;
 import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.model.RequestContext;
@@ -60,13 +59,10 @@ public class BridgeResource extends BaseResource {
      */
     private static final ReentrantLock BRIDGE_LOCK = new ReentrantLock();
 
-    private final ConfigurationFactory configurationFactory;
-
     private final BridgeFactory bridgeFactory;
 
-    public BridgeResource(ConfigurationFactory configurationFactory, BridgeFactory bridgeFactory, RequestParser<MultiValueMap<String, String>> parser) {
-        super(RequestContext.RequestType.READ_BRIDGE, parser);
-        this.configurationFactory = configurationFactory;
+    public BridgeResource(BridgeFactory bridgeFactory) {
+        super(RequestContext.RequestType.READ_BRIDGE);
         this.bridgeFactory = bridgeFactory;
     }
 
@@ -84,13 +80,7 @@ public class BridgeResource extends BaseResource {
             @RequestHeader MultiValueMap<String, String> headers) {
 
         RequestContext context = parseRequest(headers);
-        Configuration configuration = configurationFactory.
-                initConfiguration(
-                        context.getConfig(),
-                        context.getServerName(),
-                        context.getUser(),
-                        context.getAdditionalConfigProps());
-        Bridge bridge = bridgeFactory.getBridge(context, configuration);
+        Bridge bridge = bridgeFactory.getBridge(context);
 
         // THREAD-SAFE parameter has precedence
         boolean isThreadSafe = context.isThreadSafe() && bridge.isThreadSafe();

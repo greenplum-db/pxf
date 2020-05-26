@@ -7,11 +7,9 @@ import org.greenplum.pxf.api.model.ProtocolHandler;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.EnumAggregationType;
-import org.greenplum.pxf.api.utilities.Utilities;
-import org.greenplum.pxf.service.profile.ProfilesConf;
+import org.greenplum.pxf.api.utilities.FragmentMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.MultiValueMap;
 
@@ -40,27 +38,19 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
     private static final Logger LOG = LoggerFactory.getLogger(HttpRequestParser.class);
     private static final String PROFILE_SCHEME = "PROFILE-SCHEME";
 
+    private final FragmentMetadataDeserializer metadataSerDe;
     private final PluginConf pluginConf;
+    private final RequestContext context;
 
     /**
      * Create a new instance of the HttpRequestParser with the given PluginConf
      *
      * @param pluginConf the plugin conf
      */
-    public HttpRequestParser(PluginConf pluginConf) {
+    public HttpRequestParser(PluginConf pluginConf, RequestContext context, FragmentMetadataDeserializer metadataSerDe) {
         this.pluginConf = pluginConf;
-    }
-
-    /**
-     * Throws an exception when the given property value is missing in request.
-     *
-     * @param property missing property name
-     * @throws IllegalArgumentException throws an exception with the property
-     *                                  name in the error message
-     */
-    private static void protocolViolation(String property) {
-        String error = String.format("Property %s has no value in the current request", property);
-        throw new IllegalArgumentException(error);
+        this.context = context;
+        this.metadataSerDe = metadataSerDe;
     }
 
     @Override
@@ -73,8 +63,7 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
             LOG.debug("Parsing request parameters: " + params.keySet());
         }
 
-        // build new instance of RequestContext and fill it with parsed values
-        RequestContext context = new RequestContext();
+        // fill the Request-scoped RequestContext with parsed values
 
         // whether we are in a fragmenter, read_bridge, or write_bridge scenario
         context.setRequestType(requestType);
@@ -122,7 +111,8 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
         }
 
         String encodedFragmentMetadata = params.removeOptionalProperty("FRAGMENT-METADATA");
-        context.setFragmentMetadata(Utilities.parseBase64(encodedFragmentMetadata, "Fragment metadata information"));
+        FragmentMetadata fragmentMetadata = deserializeFragmentMetadata(encodedFragmentMetadata);
+        context.setFragmentMetadata(fragmentMetadata);
         context.setHost(params.removeProperty("URL-HOST"));
         context.setMetadata(params.removeUserProperty("METADATA"));
         context.setPort(params.removeIntProperty("URL-PORT"));
@@ -171,9 +161,6 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
         }
 
         context.setUser(params.removeProperty("USER"));
-
-        String encodedFragmentUserData = params.removeOptionalProperty("FRAGMENT-USER-DATA");
-        context.setUserData(Utilities.parseBase64(encodedFragmentUserData, "Fragment user data"));
 
         // Store alignment for global use as a system property
         System.setProperty("greenplum.alignment", params.removeProperty("ALIGNMENT"));
@@ -245,6 +232,23 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
         context.validate();
 
         return context;
+    }
+
+    private FragmentMetadata deserializeFragmentMetadata(String encodedFragmentMetadata) {
+        return StringUtils.isBlank(encodedFragmentMetadata) ? null: 
+                metadataSerDe.deserialize(encodedFragmentMetadata);
+    }
+
+    /**
+     * Throws an exception when the given property value is missing in request.
+     *
+     * @param property missing property name
+     * @throws IllegalArgumentException throws an exception with the property
+     *                                  name in the error message
+     */
+    private static void protocolViolation(String property) {
+        String error = String.format("Property %s has no value in the current request", property);
+        throw new IllegalArgumentException(error);
     }
 
     private void parseGreenplumCSV(RequestMap params, RequestContext context) {

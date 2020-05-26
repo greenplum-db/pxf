@@ -29,22 +29,28 @@ import org.greenplum.pxf.api.io.GPDBWritable;
 import org.greenplum.pxf.api.io.Text;
 import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 import java.io.DataInput;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+@Component
+@RequestScope
 public class BridgeInputBuilder {
-    private RequestContext protocolData;
+
     private static final Log LOG = LogFactory.getLog(BridgeInputBuilder.class);
 
-    public BridgeInputBuilder(RequestContext protocolData) {
-        this.protocolData = protocolData;
+    private final RequestContext context;
+
+    public BridgeInputBuilder(RequestContext context) {
+        this.context = context;
     }
 
     public List<OneField> makeInput(DataInput inputStream) throws Exception {
-        if (protocolData.getOutputFormat() == OutputFormat.TEXT) {
+        if (context.getOutputFormat() == OutputFormat.TEXT) {
             Text txt = new Text();
             txt.readFields(inputStream);
             return Collections.singletonList(new OneField(DataType.BYTEA.getOID(), txt.getBytes()));

@@ -19,6 +19,7 @@ package org.greenplum.pxf.plugins.jdbc.partitioning;
  * under the License.
  */
 
+import lombok.Getter;
 import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
 
 import java.sql.Date;
@@ -26,8 +27,8 @@ import java.time.LocalDate;
 import java.util.stream.Stream;
 
 class DatePartition extends BasePartition implements JdbcFragmentMetadata {
-    private static final long serialVersionUID = 0L;
 
+    @Getter
     private final Date[] boundaries;
 
     /**
@@ -69,12 +70,5 @@ class DatePartition extends BasePartition implements JdbcFragmentMetadata {
                 quoteString + column + quoteString,
                 Stream.of(boundaries).map(b -> b == null ? null : dbProduct.wrapDate(b)).toArray(String[]::new)
         );
-    }
-
-    /**
-     * Getter
-     */
-    public Date[] getBoundaries() {
-        return boundaries;
     }
 }

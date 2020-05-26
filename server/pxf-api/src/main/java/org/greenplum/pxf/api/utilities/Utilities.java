@@ -48,27 +48,27 @@ public class Utilities {
     private static final char[] PROHIBITED_CHARS = new char[]{'/', '\\', '.', ' ', ',', ';'};
     private static final String[] HOSTS = new String[]{"localhost"};
 
-    /**
-     * Returns a decoded base64 byte[], or throws an error if the base64 string is invalid
-     *
-     * @param encoded   the base64 encoded string
-     * @param paramName the name of the parameter
-     * @return the decoded base64 string
-     */
-    public static byte[] parseBase64(String encoded, String paramName) {
-        if (encoded == null) {
-            return null;
-        }
-        if (!Base64.isBase64(encoded.getBytes())) {
-            String message = String.format("%s must be Base64 encoded. (Bad value: %s)", paramName, encoded);
-            throw new IllegalArgumentException(message);
-        }
-        byte[] parsed = Base64.decodeBase64(encoded);
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Decoded value: {}", new String(parsed));
-        }
-        return parsed;
-    }
+//    /**
+//     * Returns a decoded base64 byte[], or throws an error if the base64 string is invalid
+//     *
+//     * @param encoded   the base64 encoded string
+//     * @param paramName the name of the parameter
+//     * @return the decoded base64 string
+//     */
+//    public static byte[] parseBase64(String encoded, String paramName) {
+//        if (encoded == null) {
+//            return null;
+//        }
+//        if (!Base64.isBase64(encoded.getBytes())) {
+//            String message = String.format("%s must be Base64 encoded. (Bad value: %s)", paramName, encoded);
+//            throw new IllegalArgumentException(message);
+//        }
+//        byte[] parsed = Base64.decodeBase64(encoded);
+//        if (LOG.isDebugEnabled()) {
+//            LOG.debug("Decoded value: {}", new String(parsed));
+//        }
+//        return parsed;
+//    }
 
     /**
      * Validation for directory names that can be created
@@ -234,35 +234,6 @@ public class Utilities {
             return input;
         }
         return input.replaceAll("[^a-zA-Z0-9_:/-]", ".");
-    }
-
-    /**
-     * Parses input data and returns fragment metadata.
-     *
-     * @param context input data which has protocol information
-     * @return fragment metadata
-     * @throws RuntimeException when error occurred during metadata parsing
-     */
-    public static FragmentMetadata parseFragmentMetadata(RequestContext context) {
-        if (context.getFragmentMetadata() == null) {
-            return new FragmentMetadata(0, 0, HOSTS);
-        }
-        try (ObjectInputStream objectStream =
-                     new ObjectInputStream(new ByteArrayInputStream(context.getFragmentMetadata()))) {
-            long start = objectStream.readLong();
-            long end = objectStream.readLong();
-            String[] hosts = (String[]) objectStream.readObject();
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Parsed split: path={} start={} end={} hosts={}",
-                        context.getDataSource(),
-                        start,
-                        end,
-                        ArrayUtils.toString(hosts));
-            }
-            return new FragmentMetadata(start, end, hosts);
-        } catch (IOException | ClassNotFoundException e) {
-            throw new RuntimeException("Exception while reading expected fragment metadata", e);
-        }
     }
 
     /**

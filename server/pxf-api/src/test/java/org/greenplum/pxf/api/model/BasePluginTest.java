@@ -21,9 +21,10 @@ public class BasePluginTest {
     public void testInitialize() {
         Configuration configuration = new Configuration();
         RequestContext context = new RequestContext();
+        context.setConfiguration(configuration);
 
         BasePlugin basePlugin = new BasePlugin();
-        basePlugin.initialize(context, configuration);
+        basePlugin.initialize(context);
         assertTrue(basePlugin.isInitialized());
         assertEquals(configuration, basePlugin.configuration);
         assertEquals(context, basePlugin.context);

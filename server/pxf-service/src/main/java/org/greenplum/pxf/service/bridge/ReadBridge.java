@@ -19,17 +19,17 @@ package org.greenplum.pxf.service.bridge;
  * under the License.
  */
 
-import org.apache.hadoop.conf.Configuration;
 import org.greenplum.pxf.api.BadRecordException;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.io.Writable;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.api.utilities.AccessorFactory;
-import org.greenplum.pxf.api.utilities.ResolverFactory;
 import org.greenplum.pxf.service.BridgeOutputBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 import java.io.CharConversionException;
 import java.io.DataInputStream;
@@ -51,23 +51,15 @@ import java.util.zip.ZipException;
  */
 @Component
 @Qualifier("readBridge")
-@Scope("prototype")
+@RequestScope
 public class ReadBridge extends BaseBridge {
 
     protected BridgeOutputBuilder outputBuilder;
     protected Deque<Writable> outputQueue = new LinkedList<>();
 
-    public ReadBridge(AccessorFactory accessorFactory, ResolverFactory resolverFactory) {
-        super(accessorFactory, resolverFactory);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void initialize(RequestContext context, Configuration configuration) {
-        super.initialize(context, configuration);
-        outputBuilder = new BridgeOutputBuilder(context);
+    public ReadBridge(BridgeOutputBuilder outputBuilder, ApplicationContext applicationContext, RequestContext context) {
+        super(applicationContext, context);
+        this.outputBuilder = outputBuilder;
     }
 
     /**

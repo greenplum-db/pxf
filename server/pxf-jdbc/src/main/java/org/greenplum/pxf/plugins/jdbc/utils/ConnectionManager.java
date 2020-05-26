@@ -12,6 +12,7 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.SneakyThrows;
 import org.apache.commons.lang.StringUtils;
+import org.greenplum.pxf.plugins.jdbc.PxfJdbcProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -22,6 +23,7 @@ import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.SQLTimeoutException;
+import java.time.temporal.TemporalUnit;
 import java.util.Properties;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -31,36 +33,25 @@ import java.util.concurrent.TimeUnit;
  * Responsible for obtaining and maintaining JDBC connections to databases. If configured for a given server,
  * uses Hikari Connection Pool to pool database connections.
  */
+@Component
 public class ConnectionManager {
 
     private static final Logger LOG = LoggerFactory.getLogger(ConnectionManager.class);
-
-    static final long CLEANUP_SLEEP_INTERVAL_NANOS = TimeUnit.MINUTES.toNanos(5);
-    static final long CLEANUP_TIMEOUT_NANOS = TimeUnit.HOURS.toNanos(24);
-    static final long POOL_EXPIRATION_TIMEOUT_HOURS = 6;
-
-    /**
-     * Singleton instance of the ConnectionManager
-     */
-    private static final ConnectionManager instance = new ConnectionManager();
 
     private Executor datasourceClosingExecutor;
     private LoadingCache<PoolDescriptor, HikariDataSource> dataSources;
     private final DriverManagerWrapper driverManagerWrapper;
 
-    /**
-     * Creates an instance of the connection manager.
-     */
-    private ConnectionManager() {
-        this(DataSourceFactory.getInstance(), Ticker.systemTicker(), CLEANUP_SLEEP_INTERVAL_NANOS, DriverManagerWrapper.getInstance());
-    }
-
-    ConnectionManager(DataSourceFactory factory, Ticker ticker, long sleepIntervalNanos, DriverManagerWrapper driverManagerWrapper) {
+    public ConnectionManager(DataSourceFactory factory, Ticker ticker, PxfJdbcProperties properties, DriverManagerWrapper driverManagerWrapper) {
         this.driverManagerWrapper = driverManagerWrapper;
         this.datasourceClosingExecutor = Executors.newCachedThreadPool();
+
+        // the connection properties
+        final PxfJdbcProperties.Connection connection = properties.getConnection();
+
         this.dataSources = CacheBuilder.newBuilder()
                 .ticker(ticker)
-                .expireAfterAccess(POOL_EXPIRATION_TIMEOUT_HOURS, TimeUnit.HOURS)
+                .expireAfterAccess(connection.getPoolExpirationTimeout().toNanos(), TimeUnit.NANOSECONDS)
                 .removalListener(RemovalListeners.asynchronous((RemovalListener<PoolDescriptor, HikariDataSource>) notification ->
                         {
                             HikariDataSource hds = notification.getValue();
@@ -70,19 +61,21 @@ public class ConnectionManager {
                                     notification.getKey().getUser(),
                                     notification.getCause().toString());
                             // if connection pool has been removed from the cache while active query is executing
-                            // wait until all connections finish execution and become idle, but no longer that CLEANUP_TIMEOUT
-                            long startTime = ticker.read();
+                            // wait until all connections finish execution and become idle, but no longer that cleanupTimeout
+                            final long startTime = ticker.read();
+                            final long cleanupTimeoutNanos = connection.getCleanupTimeout().toNanos();
+                            final long cleanupSleepIntervalNanos = connection.getCleanupSleepInterval().toNanos();
                             while (hds.getHikariPoolMXBean().getActiveConnections() > 0) {
-                                if ((ticker.read() - startTime) > CLEANUP_TIMEOUT_NANOS) {
+                                if ((ticker.read() - startTime) > cleanupTimeoutNanos) {
                                     LOG.warn("Pool {} has active connections for too long, destroying it", hds.getPoolName());
                                     break;
                                 }
-                                Uninterruptibles.sleepUninterruptibly(sleepIntervalNanos, TimeUnit.NANOSECONDS);
+                                Uninterruptibles.sleepUninterruptibly(cleanupSleepIntervalNanos, TimeUnit.NANOSECONDS);
                             }
                             LOG.debug("Destroying the pool {}", hds.getPoolName());
                             hds.close();
-                        }
-                        , datasourceClosingExecutor))
+                        },
+                        datasourceClosingExecutor))
                 .build(CacheLoader.from(factory::createDataSource));
     }
 
@@ -91,13 +84,6 @@ public class ConnectionManager {
      */
     void cleanCache() {
         dataSources.cleanUp();
-    }
-
-    /**
-     * @return a singleton instance of the connection manager.
-     */
-    public static ConnectionManager getInstance() {
-        return instance;
     }
 
     /**
@@ -150,12 +136,29 @@ public class ConnectionManager {
     }
 
     /**
+     * Provides the default system ticker as a component
+     */
+    @Component
+    static class DefaultTicker extends Ticker {
+
+        private Ticker ticker;
+
+        public DefaultTicker() {
+            ticker = Ticker.systemTicker();
+        }
+
+        @Override
+        public long read() {
+            return ticker.read();
+        }
+    }
+
+    /**
      * Factory class to create instances of datasources.
      * Default implementation creates instances of HikariDataSource.
      */
-    static class DataSourceFactory {
-
-        private static final DataSourceFactory dataSourceFactoryInstance = new DataSourceFactory();
+    @Component
+    public static class DataSourceFactory {
 
         /**
          * Creates a new datasource instance based on parameters contained in PoolDescriptor.
@@ -186,24 +189,13 @@ public class ConnectionManager {
 
             return result;
         }
-
-        /**
-         * Returns a singleton instance of the data source factory.
-         *
-         * @return a singleton instance of the data source factory
-         */
-        static DataSourceFactory getInstance() {
-            return dataSourceFactoryInstance;
-        }
     }
 
     /**
      * Wrap calls to the DriverManager
      */
     @Component
-    protected static class DriverManagerWrapper {
-
-        private static final DriverManagerWrapper driverManagerWrapperInstance = new DriverManagerWrapper();
+    public static class DriverManagerWrapper {
 
         /**
          * Attempts to establish a connection to the given database URL.
@@ -246,15 +238,6 @@ public class ConnectionManager {
          */
         public Driver getDriver(String url) throws SQLException {
             return DriverManager.getDriver(url);
-        }
-
-        /**
-         * Returns a singleton instance of the driver manager wrapper
-         *
-         * @return a singleton instance of the driver manager wrapper
-         */
-        static DriverManagerWrapper getInstance() {
-            return driverManagerWrapperInstance;
         }
 
     }

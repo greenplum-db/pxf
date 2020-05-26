@@ -23,20 +23,21 @@ import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.ReadVectorizedResolver;
 import org.greenplum.pxf.api.io.Writable;
-import org.greenplum.pxf.api.utilities.AccessorFactory;
-import org.greenplum.pxf.api.utilities.ResolverFactory;
-import org.springframework.context.annotation.Scope;
+import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.service.BridgeOutputBuilder;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 import java.util.Deque;
 import java.util.List;
 
 @Component
-@Scope("prototype")
+@RequestScope
 public class ReadVectorizedBridge extends ReadBridge {
 
-    public ReadVectorizedBridge(AccessorFactory accessorFactory, ResolverFactory resolverFactory) {
-        super(accessorFactory, resolverFactory);
+    public ReadVectorizedBridge(BridgeOutputBuilder outputBuilder, ApplicationContext applicationContext, RequestContext context) {
+        super(outputBuilder, applicationContext, context);
     }
 
     /**

@@ -20,7 +20,6 @@ package org.greenplum.pxf.service.rest;
  */
 
 import com.google.common.util.concurrent.UncheckedExecutionException;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.log4j.Level;
 import org.greenplum.pxf.api.configuration.PxfServerProperties;
 import org.greenplum.pxf.api.model.ConfigurationFactory;
@@ -29,12 +28,14 @@ import org.greenplum.pxf.api.model.FragmentStats;
 import org.greenplum.pxf.api.model.Fragmenter;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.FragmenterCacheFactory;
-import org.greenplum.pxf.api.utilities.FragmenterFactory;
 import org.greenplum.pxf.api.utilities.FragmentsResponse;
 import org.greenplum.pxf.api.utilities.FragmentsResponseFormatter;
 import org.greenplum.pxf.service.RequestParser;
 import org.greenplum.pxf.service.SessionId;
 import org.greenplum.pxf.service.utilities.AnalyzeUtils;
+import org.springframework.beans.factory.BeanFactoryUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
@@ -60,13 +61,11 @@ import static org.greenplum.pxf.api.model.RequestContext.RequestType;
 @RequestMapping("/pxf/" + Version.PXF_PROTOCOL_VERSION + "/Fragmenter/")
 public class FragmenterResource extends BaseResource {
 
-    private final FragmenterFactory fragmenterFactory;
+    private ApplicationContext applicationContext;
 
-    private final FragmenterCacheFactory fragmenterCacheFactory;
+    private FragmenterCacheFactory fragmenterCacheFactory;
 
-    private final PxfServerProperties pxfServerProperties;
-
-    private final ConfigurationFactory configurationFactory;
+    private PxfServerProperties pxfServerProperties;
 
     // Records the startTime of the fragmenter call
     private long startTime;
@@ -74,18 +73,23 @@ public class FragmenterResource extends BaseResource {
     // this flag is set to true when the thread processes the fragment call
     private boolean didThreadProcessFragmentCall;
 
-    public FragmenterResource(RequestParser<MultiValueMap<String, String>> parser, FragmenterFactory fragmenterFactory, FragmenterCacheFactory fragmenterCacheFactory, PxfServerProperties pxfServerProperties, ConfigurationFactory configurationFactory) {
-        super(RequestType.FRAGMENTER, parser);
-        this.fragmenterFactory = fragmenterFactory;
-        this.fragmenterCacheFactory = fragmenterCacheFactory;
-        this.pxfServerProperties = pxfServerProperties;
-        this.configurationFactory = configurationFactory;
+    public FragmenterResource() {
+        super(RequestType.FRAGMENTER);
+    }
 
-        if (LOG.isDebugEnabled() && pxfServerProperties.isMetadataCacheEnabled()) {
-            LOG.debug("fragmentCache size={}, stats={}",
-                    fragmenterCacheFactory.getCache().size(),
-                    fragmenterCacheFactory.getCache().stats().toString());
-        }
+    @Autowired
+    public void setApplicationContext(ApplicationContext applicationContext) {
+        this.applicationContext = applicationContext;
+    }
+
+    @Autowired
+    public void setFragmenterCacheFactory(FragmenterCacheFactory fragmenterCacheFactory) {
+        this.fragmenterCacheFactory = fragmenterCacheFactory;
+    }
+
+    @Autowired
+    public void setPxfServerProperties(PxfServerProperties pxfServerProperties) {
+        this.pxfServerProperties = pxfServerProperties;
     }
 
     /**
@@ -106,6 +110,12 @@ public class FragmenterResource extends BaseResource {
         final RequestContext context = parseRequest(headers);
         final String path = context.getDataSource();
         final String fragmenterCacheKey = getFragmenterCacheKey(context);
+
+        if (LOG.isDebugEnabled() && pxfServerProperties.isMetadataCacheEnabled()) {
+            LOG.debug("fragmentCache size={}, stats={}",
+                    fragmenterCacheFactory.getCache().size(),
+                    fragmenterCacheFactory.getCache().stats().toString());
+        }
 
         LOG.debug("FRAGMENTER started for path \"{}\"", path);
 
@@ -154,15 +164,9 @@ public class FragmenterResource extends BaseResource {
             @RequestHeader MultiValueMap<String, String> headers) throws Exception {
 
         RequestContext context = parseRequest(headers);
-        Configuration configuration = configurationFactory.
-                initConfiguration(
-                        context.getConfig(),
-                        context.getServerName(),
-                        context.getUser(),
-                        context.getAdditionalConfigProps());
 
         /* Create a fragmenter instance with API level parameters */
-        final Fragmenter fragmenter = fragmenterFactory.getPlugin(context, configuration);
+        final Fragmenter fragmenter = getFragmenter(context);
 
         FragmentStats fragmentStats = fragmenter.getFragmentStats();
         String response = FragmentStats.dataToJSON(fragmentStats);
@@ -174,20 +178,23 @@ public class FragmenterResource extends BaseResource {
     }
 
     private List<Fragment> getFragments(RequestContext context) throws Exception {
-        Configuration configuration = configurationFactory.
-                initConfiguration(
-                        context.getConfig(),
-                        context.getServerName(),
-                        context.getUser(),
-                        context.getAdditionalConfigProps());
-
         /* Create a fragmenter instance with API level parameters */
         List<Fragment> fragments = AnalyzeUtils.getSampleFragments(
-                fragmenterFactory.getPlugin(context, configuration).getFragments(),
+                getFragmenter(context).getFragments(),
                 context);
 
         logFragmentStatistics(Level.INFO, context, fragments);
         return fragments;
+    }
+
+    /**
+     * Returns the fragmenter initialized with the request context
+     *
+     * @param context the request context
+     * @return the fragmenter initialized with the request context
+     */
+    private Fragmenter getFragmenter(RequestContext context) {
+        return applicationContext.getBean(context.getFragmenter().substring(context.getFragmenter().lastIndexOf(".") + 1), Fragmenter.class);
     }
 
     /**

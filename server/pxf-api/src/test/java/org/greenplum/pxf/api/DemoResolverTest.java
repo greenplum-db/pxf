@@ -58,8 +58,8 @@ public class DemoResolverTest {
 
         Configuration configuration = new Configuration();
 
-        customResolver.initialize(context, configuration);
-        textResolver.initialize(context, configuration);
+        customResolver.initialize(context);
+        textResolver.initialize(context);
 
         row = new OneRow("0.0", DATA);
         field = new OneField(VARCHAR.getOID(), DATA.getBytes());

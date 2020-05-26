@@ -23,7 +23,6 @@ public class BaseBridgeTest {
 
     private Accessor mockAccessor;
     private AccessorFactory mockAccessorFactory;
-    private Configuration configuration;
     private RequestContext context;
     private Resolver mockResolver;
     private ResolverFactory mockResolverFactory;
@@ -33,7 +32,7 @@ public class BaseBridgeTest {
     public void setup() {
         bridge = new TestBridge();
         context = new RequestContext();
-        configuration = new Configuration();
+        context.setConfiguration(new Configuration());
 
         mockAccessorFactory = mock(AccessorFactory.class);
         mockResolverFactory = mock(ResolverFactory.class);
@@ -45,7 +44,7 @@ public class BaseBridgeTest {
     public void testContextConstructor() {
         context.setAccessor("org.greenplum.pxf.service.bridge.TestAccessor");
         context.setResolver("org.greenplum.pxf.service.bridge.TestResolver");
-        bridge.initialize(context, configuration);
+        bridge.initialize(context);
         assertTrue(bridge.getAccessor() instanceof TestAccessor);
         assertTrue(bridge.getResolver() instanceof TestResolver);
     }
@@ -57,7 +56,7 @@ public class BaseBridgeTest {
         context.setResolver("org.greenplum.pxf.service.bridge.TestResolver");
 
         Exception e = assertThrows(RuntimeException.class,
-                () -> bridge.initialize(context, configuration));
+                () -> bridge.initialize(context));
         assertEquals("Class unknown-accessor is not found", e.getMessage());
     }
 
@@ -67,51 +66,51 @@ public class BaseBridgeTest {
         context.setResolver("unknown-resolver");
 
         Exception e = assertThrows(RuntimeException.class,
-                () -> bridge.initialize(context, configuration));
+                () -> bridge.initialize(context));
         assertEquals("Class unknown-resolver is not found", e.getMessage());
     }
 
     @Test
     public void testIsThreadSafeTT() {
-        when(mockAccessorFactory.getPlugin(context, configuration)).thenReturn(mockAccessor);
-        when(mockResolverFactory.getPlugin(context, configuration)).thenReturn(mockResolver);
+        when(mockAccessorFactory.getPlugin(context)).thenReturn(mockAccessor);
+        when(mockResolverFactory.getPlugin(context)).thenReturn(mockResolver);
         when(mockAccessor.isThreadSafe()).thenReturn(true);
         when(mockResolver.isThreadSafe()).thenReturn(true);
         bridge = new TestBridge(mockAccessorFactory, mockResolverFactory);
-        bridge.initialize(context, configuration);
+        bridge.initialize(context);
         assertTrue(bridge.isThreadSafe());
     }
 
     @Test
     public void testIsThreadSafeTF() {
-        when(mockAccessorFactory.getPlugin(context, configuration)).thenReturn(mockAccessor);
-        when(mockResolverFactory.getPlugin(context, configuration)).thenReturn(mockResolver);
+        when(mockAccessorFactory.getPlugin(context)).thenReturn(mockAccessor);
+        when(mockResolverFactory.getPlugin(context)).thenReturn(mockResolver);
         when(mockAccessor.isThreadSafe()).thenReturn(true);
         when(mockResolver.isThreadSafe()).thenReturn(false);
         bridge = new TestBridge(mockAccessorFactory, mockResolverFactory);
-        bridge.initialize(context, configuration);
+        bridge.initialize(context);
         assertFalse(bridge.isThreadSafe());
     }
 
     @Test
     public void testIsThreadSafeFT() {
-        when(mockAccessorFactory.getPlugin(context, configuration)).thenReturn(mockAccessor);
-        when(mockResolverFactory.getPlugin(context, configuration)).thenReturn(mockResolver);
+        when(mockAccessorFactory.getPlugin(context)).thenReturn(mockAccessor);
+        when(mockResolverFactory.getPlugin(context)).thenReturn(mockResolver);
         when(mockAccessor.isThreadSafe()).thenReturn(false);
         when(mockResolver.isThreadSafe()).thenReturn(true);
         bridge = new TestBridge(mockAccessorFactory, mockResolverFactory);
-        bridge.initialize(context, configuration);
+        bridge.initialize(context);
         assertFalse(bridge.isThreadSafe());
     }
 
     @Test
     public void testIsThreadSafeFF() {
-        when(mockAccessorFactory.getPlugin(context, configuration)).thenReturn(mockAccessor);
-        when(mockResolverFactory.getPlugin(context, configuration)).thenReturn(mockResolver);
+        when(mockAccessorFactory.getPlugin(context)).thenReturn(mockAccessor);
+        when(mockResolverFactory.getPlugin(context)).thenReturn(mockResolver);
         when(mockAccessor.isThreadSafe()).thenReturn(false);
         when(mockResolver.isThreadSafe()).thenReturn(false);
         bridge = new TestBridge(mockAccessorFactory, mockResolverFactory);
-        bridge.initialize(context, configuration);
+        bridge.initialize(context);
         assertFalse(bridge.isThreadSafe());
     }
 
