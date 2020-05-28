@@ -1,5 +1,6 @@
 package org.greenplum.pxf.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.PluginConf;
@@ -8,6 +9,7 @@ import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.EnumAggregationType;
 import org.greenplum.pxf.api.utilities.FragmentMetadata;
+import org.greenplum.pxf.api.utilities.FragmentMetadataSerDe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -32,13 +34,14 @@ import java.util.stream.Collectors;
 @Component
 public class HttpRequestParser implements RequestParser<MultiValueMap<String, String>> {
 
+    private static final Logger LOG = LoggerFactory.getLogger(HttpRequestParser.class);
+
     private static final String TRUE_LCASE = "true";
     private static final String FALSE_LCASE = "false";
-
-    private static final Logger LOG = LoggerFactory.getLogger(HttpRequestParser.class);
     private static final String PROFILE_SCHEME = "PROFILE-SCHEME";
 
-    private final FragmentMetadataDeserializer metadataSerDe;
+    protected static final FragmentMetadataSerDe metadataSerDe = FragmentMetadataSerDe.getInstance();
+
     private final PluginConf pluginConf;
     private final RequestContext context;
 
@@ -47,10 +50,9 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
      *
      * @param pluginConf the plugin conf
      */
-    public HttpRequestParser(PluginConf pluginConf, RequestContext context, FragmentMetadataDeserializer metadataSerDe) {
+    public HttpRequestParser(PluginConf pluginConf, RequestContext context) {
         this.pluginConf = pluginConf;
         this.context = context;
-        this.metadataSerDe = metadataSerDe;
     }
 
     @Override
@@ -110,8 +112,14 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
             context.setFragmentIndex(Integer.parseInt(fragmentIndexStr));
         }
 
-        String encodedFragmentMetadata = params.removeOptionalProperty("FRAGMENT-METADATA");
-        FragmentMetadata fragmentMetadata = deserializeFragmentMetadata(encodedFragmentMetadata);
+        String jsonFragmentMetadata = params.removeOptionalProperty("FRAGMENT-METADATA");
+        FragmentMetadata fragmentMetadata;
+
+        try {
+            fragmentMetadata = deserializeFragmentMetadata(jsonFragmentMetadata);
+        } catch (JsonProcessingException e) {
+            throw new IllegalArgumentException(String.format("unable to deserialize fragment meta '%s'", jsonFragmentMetadata));
+        }
         context.setFragmentMetadata(fragmentMetadata);
         context.setHost(params.removeProperty("URL-HOST"));
         context.setMetadata(params.removeUserProperty("METADATA"));
@@ -234,9 +242,16 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
         return context;
     }
 
-    private FragmentMetadata deserializeFragmentMetadata(String encodedFragmentMetadata) {
-        return StringUtils.isBlank(encodedFragmentMetadata) ? null: 
-                metadataSerDe.deserialize(encodedFragmentMetadata);
+    /**
+     * Deserializes the JSON string into a {@link FragmentMetadata}
+     *
+     * @param jsonFragmentMetadata the fragment metadata
+     * @return the {@link FragmentMetadata}
+     * @throws JsonProcessingException when the JSON deserialization fails
+     */
+    private FragmentMetadata deserializeFragmentMetadata(String jsonFragmentMetadata) throws JsonProcessingException {
+        return StringUtils.isBlank(jsonFragmentMetadata) ? null :
+                metadataSerDe.deserialize(jsonFragmentMetadata);
     }
 
     /**
@@ -324,7 +339,7 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
             if (numberOfProjectedColumns > 0) {
                 String[] projectionIndices = params.removeProperty("ATTRS-PROJ-IDX").split(",");
                 for (String s : projectionIndices) {
-                    attrsProjected.set(Integer.valueOf(s));
+                    attrsProjected.set(Integer.parseInt(s));
                 }
             } else {
                 /* This is a special case to handle aggregate queries not related to any specific column
@@ -392,6 +407,7 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
      * (ISO-LATIN-1) to UTF_8.
      */
     static class RequestMap extends TreeMap<String, String> {
+        private static final long serialVersionUID = 4745394510220213936L;
         private static final String PROP_PREFIX = "X-GP-";
         private static final String USER_PROP_PREFIX = "X-GP-OPTIONS-";
         private static final String USER_PROP_PREFIX_LOWERCASE = "x-gp-options-";

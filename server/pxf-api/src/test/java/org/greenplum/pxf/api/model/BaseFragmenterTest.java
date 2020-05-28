@@ -5,14 +5,13 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class BaseFragmenterTest {
 
     @Test
-    public void testGetFragmentStatsIsUnsupported() throws Exception {
+    public void testGetFragmentStatsIsUnsupported() {
         Exception e = assertThrows(UnsupportedOperationException.class,
                 () -> new BaseFragmenter().getFragmentStats());
         assertEquals("Operation getFragmentStats is not supported", e.getMessage());
@@ -24,10 +23,4 @@ public class BaseFragmenterTest {
         assertNotNull(fragments);
         assertEquals(0, fragments.size());
     }
-
-    @Test
-    public void testBaseFragmenterIsNotInitialized() {
-        assertFalse(new BaseFragmenter().isInitialized());
-    }
-
 }

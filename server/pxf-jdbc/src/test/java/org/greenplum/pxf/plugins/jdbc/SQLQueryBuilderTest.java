@@ -158,7 +158,7 @@ public class SQLQueryBuilderTest {
         when(mockMetaData.getExtraNameCharacters()).thenReturn("");
 
         JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
-        fragment.initialize(context);
+        fragment.setRequestContext(context);
         List<Fragment> fragments = fragment.getFragments();
         assertEquals(9, fragments.size());
 
@@ -207,7 +207,7 @@ public class SQLQueryBuilderTest {
         when(mockMetaData.getExtraNameCharacters()).thenReturn("");
 
         JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
-        fragment.initialize(context);
+        fragment.setRequestContext(context);
         List<Fragment> fragments = fragment.getFragments();
         // Fragment 0: grade = 'excellent'
         context.setFragmentMetadata(fragments.get(0).getMetadata());
@@ -243,7 +243,7 @@ public class SQLQueryBuilderTest {
         when(mockMetaData.getExtraNameCharacters()).thenReturn("");
 
         JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
-        fragment.initialize(context);
+        fragment.setRequestContext(context);
         List<Fragment> fragments = fragment.getFragments();
         // Fragment 0: grade = 'excellent'
         context.setFragmentMetadata(fragments.get(0).getMetadata());
@@ -274,7 +274,7 @@ public class SQLQueryBuilderTest {
         when(mockMetaData.getExtraNameCharacters()).thenReturn("");
 
         JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
-        fragment.initialize(context);
+        fragment.setRequestContext(context);
         List<Fragment> fragments = fragment.getFragments();
         assertEquals(1, fragments.size());
         context.setFragmentMetadata(fragments.get(0).getMetadata());
@@ -351,7 +351,7 @@ public class SQLQueryBuilderTest {
         context.addOption("RANGE", "2008-01-01:2009-01-01");
         context.addOption("INTERVAL", "2:month");
         JdbcPartitionFragmenter fragmenter = new JdbcPartitionFragmenter();
-        fragmenter.initialize(context);
+        fragmenter.setRequestContext(context);
         List<Fragment> fragments = fragmenter.getFragments();
         assertEquals(9, fragments.size());
         // Partition: cdate >= 2008-01-01 and cdate < 2008-03-01
@@ -459,7 +459,7 @@ public class SQLQueryBuilderTest {
         when(mockMetaData.getExtraNameCharacters()).thenReturn("");
 
         JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
-        fragment.initialize(context);
+        fragment.setRequestContext(context);
         List<Fragment> fragments = fragment.getFragments();
         // Fragment 0: grade = 'excellent'
         context.setFragmentMetadata(fragments.get(0).getMetadata());
@@ -478,7 +478,7 @@ public class SQLQueryBuilderTest {
         when(mockMetaData.getExtraNameCharacters()).thenReturn("");
 
         JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
-        fragment.initialize(context);
+        fragment.setRequestContext(context);
         List<Fragment> fragments = fragment.getFragments();
         // Fragment 0: grade = 'excellent'
         context.setFragmentMetadata(fragments.get(0).getMetadata());
@@ -499,7 +499,7 @@ public class SQLQueryBuilderTest {
         when(mockMetaData.getExtraNameCharacters()).thenReturn("");
 
         JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
-        fragment.initialize(context);
+        fragment.setRequestContext(context);
         List<Fragment> fragments = fragment.getFragments();
         // Fragment 0: grade = 'excellent'
         context.setFragmentMetadata(fragments.get(0).getMetadata());
@@ -518,7 +518,7 @@ public class SQLQueryBuilderTest {
         when(mockMetaData.getExtraNameCharacters()).thenReturn("");
 
         JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
-        fragment.initialize(context);
+        fragment.setRequestContext(context);
         List<Fragment> fragments = fragment.getFragments();
         // Fragment 0: grade = 'excellent'
         context.setFragmentMetadata(fragments.get(0).getMetadata());

@@ -29,11 +29,8 @@ import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
 import org.junit.jupiter.api.Test;
 
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectOutputStream;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -85,10 +82,6 @@ public class UtilitiesTest {
         }
 
         @Override
-        public void initialize(RequestContext context) {
-        }
-
-        @Override
         public boolean isThreadSafe() {
             return false;
         }
@@ -125,10 +118,6 @@ public class UtilitiesTest {
         }
 
         @Override
-        public void initialize(RequestContext context) {
-        }
-
-        @Override
         public boolean isThreadSafe() {
             return false;
         }
@@ -152,10 +141,6 @@ public class UtilitiesTest {
         @Override
         public OneRow setFields(List<OneField> record) {
             return null;
-        }
-
-        @Override
-        public void initialize(RequestContext context) {
         }
 
         @Override
@@ -281,23 +266,6 @@ public class UtilitiesTest {
         input = "http://www.beatles.com/info?query=whoisthebest";
         result = Utilities.maskNonPrintables(input);
         assertEquals("http://www.beatles.com/info.query.whoisthebest", result);
-    }
-
-    @Test
-    public void parseFragmentMetadata() throws Exception {
-        RequestContext metaData = mock(RequestContext.class);
-        ByteArrayOutputStream bas = new ByteArrayOutputStream();
-        ObjectOutputStream os = new ObjectOutputStream(bas);
-        os.writeLong(10);
-        os.writeLong(100);
-        os.writeObject(new String[]{"hostname"});
-        os.close();
-        when(metaData.getFragmentMetadata()).thenReturn(bas.toByteArray());
-        FragmentMetadata fragmentMetadata = Utilities.parseFragmentMetadata(metaData);
-
-        assertEquals(10, fragmentMetadata.getStart());
-        assertEquals(100, fragmentMetadata.getEnd());
-        assertArrayEquals(new String[]{"hostname"}, fragmentMetadata.getHosts());
     }
 
     @Test

@@ -19,6 +19,8 @@ package org.greenplum.pxf.plugins.jdbc.partitioning;
  * under the License.
  */
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
 
@@ -40,7 +42,9 @@ class NullPartition extends BasePartition implements JdbcFragmentMetadata {
      * @param column the partitioned column
      * @param isNull true if IS NULL must be used
      */
-    public NullPartition(String column, boolean isNull) {
+    @JsonCreator
+    public NullPartition(@JsonProperty("column") String column,
+                         @JsonProperty("isNull") boolean isNull) {
         super(column);
         this.isNull = isNull;
     }
@@ -67,7 +71,7 @@ class NullPartition extends BasePartition implements JdbcFragmentMetadata {
     /**
      * Getter
      */
-    @JsonProperty("isNull")
+    @JsonGetter("isNull")
     public boolean isNull() {
         return isNull;
     }

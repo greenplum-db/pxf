@@ -20,8 +20,7 @@ package org.greenplum.pxf.api.utilities;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.greenplum.pxf.api.model.Fragment;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
@@ -39,7 +38,6 @@ import java.util.List;
  */
 public class FragmentsResponse implements StreamingResponseBody {
 
-    private static final Log Log = LogFactory.getLog(FragmentsResponse.class);
     public static final byte[] PXF_FRAGMENT_ARRAY_END_BYTES = "]}".getBytes();
     public static final byte[] PXF_FRAGMENT_ARRAY_START_BYTES = "{\"PXFFragments\":[".getBytes();
     public static final String COMMA_PREFIX = ",";
@@ -72,6 +70,10 @@ public class FragmentsResponse implements StreamingResponseBody {
     public void writeTo(OutputStream output) throws IOException {
         DataOutputStream dos = new DataOutputStream(output);
         ObjectMapper mapper = new ObjectMapper();
+
+        SimpleModule module = new SimpleModule();
+        module.addSerializer(FragmentMetadata.class, FragmentMetadataSerDe.getInstance());
+        mapper.registerModule(module);
 
         StringBuilder result = new StringBuilder();
         String prefix = "";

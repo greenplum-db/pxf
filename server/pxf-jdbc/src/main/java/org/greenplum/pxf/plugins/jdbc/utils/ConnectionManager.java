@@ -38,8 +38,8 @@ public class ConnectionManager {
 
     private static final Logger LOG = LoggerFactory.getLogger(ConnectionManager.class);
 
-    private Executor datasourceClosingExecutor;
-    private LoadingCache<PoolDescriptor, HikariDataSource> dataSources;
+    private final Executor datasourceClosingExecutor;
+    private final LoadingCache<PoolDescriptor, HikariDataSource> dataSources;
     private final DriverManagerWrapper driverManagerWrapper;
 
     public ConnectionManager(DataSourceFactory factory, Ticker ticker, PxfJdbcProperties properties, DriverManagerWrapper driverManagerWrapper) {
@@ -141,7 +141,7 @@ public class ConnectionManager {
     @Component
     static class DefaultTicker extends Ticker {
 
-        private Ticker ticker;
+        private final Ticker ticker;
 
         public DefaultTicker() {
             ticker = Ticker.systemTicker();

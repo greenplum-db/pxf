@@ -18,10 +18,7 @@ public abstract class BaseResource {
     protected final Logger LOG = LoggerFactory.getLogger(this.getClass());
     protected final RequestContext.RequestType requestType;
 
-    @Autowired
     private ConfigurationFactory configurationFactory;
-
-    @Autowired
     private RequestParser<MultiValueMap<String, String>> parser;
 
     /**
@@ -31,6 +28,29 @@ public abstract class BaseResource {
      */
     BaseResource(RequestContext.RequestType requestType) {
         this.requestType = requestType;
+    }
+
+    /**
+     * Sets the {@link ConfigurationFactory}. In the spring boot context,
+     * the {@link ConfigurationFactory} is injected automatically.
+     *
+     * @param configurationFactory the configuration factory
+     */
+    @Autowired
+    public void setConfigurationFactory(ConfigurationFactory configurationFactory) {
+        this.configurationFactory = configurationFactory;
+    }
+
+    /**
+     * Sets the {@link RequestParser<MultiValueMap<String, String>>} in charge
+     * of parsing the request headers. In the spring boot context, this value
+     * is injected automatically.
+     *
+     * @param parser the request parser
+     */
+    @Autowired
+    public void setRequestParser(RequestParser<MultiValueMap<String, String>> parser) {
+        this.parser = parser;
     }
 
     /**

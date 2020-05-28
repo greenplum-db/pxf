@@ -23,8 +23,6 @@ package org.greenplum.pxf.service.bridge;
 import org.apache.hadoop.conf.Configuration;
 import org.greenplum.pxf.api.io.Writable;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.api.utilities.AccessorFactory;
-import org.greenplum.pxf.api.utilities.ResolverFactory;
 import org.greenplum.pxf.service.utilities.AnalyzeUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -79,8 +77,6 @@ public class ReadSamplingBridgeTest {
 
     private RequestContext context;
     private ReadBridge mockBridge;
-    private AccessorFactory mockAccessorFactory;
-    private ResolverFactory mockResolverFactory;
 
     private ReadSamplingBridge readSamplingBridge;
     private int recordsLimit = 0;
@@ -92,8 +88,6 @@ public class ReadSamplingBridgeTest {
 
         context = new RequestContext();
         context.setConfiguration(new Configuration());
-        mockAccessorFactory = mock(AccessorFactory.class);
-        mockResolverFactory = mock(ResolverFactory.class);
 
         mockBridge = mock(ReadBridge.class);
 
@@ -122,8 +116,7 @@ public class ReadSamplingBridgeTest {
         recordsLimit = 100;
         context.setStatsSampleRatio(1.0F);
 
-        readSamplingBridge = new ReadSamplingBridge(mockAccessorFactory, mockResolverFactory);
-        readSamplingBridge.initialize(context);
+        // readSamplingBridge = new ReadSamplingBridge(new BridgeOutputBuilder(context), mockResolverFactory, context);
 
         result = readSamplingBridge.getNext();
         assertEquals("0", result.toString());
@@ -145,8 +138,7 @@ public class ReadSamplingBridgeTest {
         recordsLimit = 100;
         context.setStatsSampleRatio(0.1F);
 
-        readSamplingBridge = new ReadSamplingBridge(mockAccessorFactory, mockResolverFactory);
-        readSamplingBridge.initialize(context);
+        // readSamplingBridge = new ReadSamplingBridge(mockAccessorFactory, mockResolverFactory);
 
         for (int i = 0; i < 10; i++) {
             result = readSamplingBridge.getNext();
@@ -170,8 +162,7 @@ public class ReadSamplingBridgeTest {
         recordsLimit = 100;
         context.setStatsSampleRatio(0.9F);
 
-        readSamplingBridge = new ReadSamplingBridge(mockAccessorFactory, mockResolverFactory);
-        readSamplingBridge.initialize(context);
+        // readSamplingBridge = new ReadSamplingBridge(mockAccessorFactory, mockResolverFactory);
 
         for (int i = 0; i < 90; i++) {
             result = readSamplingBridge.getNext();
@@ -197,8 +188,7 @@ public class ReadSamplingBridgeTest {
         recordsLimit = 350;
         context.setStatsSampleRatio(0.5F);
 
-        readSamplingBridge = new ReadSamplingBridge(mockAccessorFactory, mockResolverFactory);
-        readSamplingBridge.initialize(context);
+        // readSamplingBridge = new ReadSamplingBridge(mockAccessorFactory, mockResolverFactory);
 
         /*
          * expecting to have: 50 (out of first 100) 50 (out of second 100) 50
@@ -229,8 +219,7 @@ public class ReadSamplingBridgeTest {
         recordsLimit = 100000;
         context.setStatsSampleRatio(ratio);
 
-        readSamplingBridge = new ReadSamplingBridge(mockAccessorFactory, mockResolverFactory);
-        readSamplingBridge.initialize(context);
+        // readSamplingBridge = new ReadSamplingBridge(mockAccessorFactory, mockResolverFactory);
 
         for (int i = 0; i < 30; i++) {
             result = readSamplingBridge.getNext();

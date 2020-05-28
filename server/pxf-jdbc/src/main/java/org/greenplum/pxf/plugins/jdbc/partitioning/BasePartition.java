@@ -1,6 +1,7 @@
 package org.greenplum.pxf.plugins.jdbc.partitioning;
 
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -15,6 +16,7 @@ public abstract class BasePartition implements JdbcFragmentMetadata {
      * Column name to use as a partition column. Must not be null
      */
     @Getter
+    @NonNull
     protected final String column;
 
     /**

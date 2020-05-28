@@ -19,6 +19,8 @@ package org.greenplum.pxf.plugins.jdbc.partitioning;
  * under the License.
  */
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
 
@@ -39,7 +41,10 @@ class DatePartition extends BasePartition implements JdbcFragmentMetadata {
      * @param end    null for left-bounded interval
      */
     public DatePartition(String column, LocalDate start, LocalDate end) {
-        super(column);
+        this(column, new Date[]{
+                start == null ? null : Date.valueOf(start),
+                end == null ? null : Date.valueOf(end)
+        });
         if (start == null && end == null) {
             throw new RuntimeException("Both boundaries cannot be null");
         }
@@ -48,11 +53,13 @@ class DatePartition extends BasePartition implements JdbcFragmentMetadata {
                     "Boundaries cannot be equal for partition of type '%s'", PartitionType.DATE
             ));
         }
+    }
 
-        this.boundaries = new Date[]{
-                start == null ? null : Date.valueOf(start),
-                end == null ? null : Date.valueOf(end)
-        };
+    @JsonCreator
+    public DatePartition(@JsonProperty("column") String column,
+                         @JsonProperty("boundaries") Date[] boundaries) {
+        super(column);
+        this.boundaries = boundaries;
     }
 
     @Override

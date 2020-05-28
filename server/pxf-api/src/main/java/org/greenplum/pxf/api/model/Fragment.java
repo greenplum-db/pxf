@@ -19,18 +19,9 @@ package org.greenplum.pxf.api.model;
  * under the License.
  */
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import com.fasterxml.jackson.databind.util.StdDateFormat;
 import lombok.Getter;
 import lombok.Setter;
 import org.greenplum.pxf.api.utilities.FragmentMetadata;
-
-import java.io.IOException;
 
 /**
  * Fragment holds a data fragment' information.
@@ -65,7 +56,6 @@ public class Fragment {
      */
     @Getter
     @Setter
-    @JsonSerialize(using = FragmentMetadataToString.class)
     private FragmentMetadata metadata;
 
     /**
@@ -113,26 +103,5 @@ public class Fragment {
         this.replicas = hosts;
         this.metadata = metadata;
         this.profile = profile;
-    }
-
-    static class FragmentMetadataToString extends StdSerializer<FragmentMetadata> {
-
-        public static final ObjectMapper MAPPER;
-
-        static {
-            MAPPER = new ObjectMapper();
-            MAPPER.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-            // StdDateFormat is ISO8601 since jackson 2.9
-            MAPPER.setDateFormat(new StdDateFormat().withColonInTimeZone(true));
-        }
-
-        protected FragmentMetadataToString() {
-            super(FragmentMetadata.class);
-        }
-
-        @Override
-        public void serialize(FragmentMetadata value, JsonGenerator gen, SerializerProvider provider) throws IOException {
-            gen.writeString(MAPPER.writeValueAsString(value));
-        }
     }
 }

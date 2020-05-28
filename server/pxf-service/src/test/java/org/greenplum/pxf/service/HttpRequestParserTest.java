@@ -20,13 +20,13 @@ package org.greenplum.pxf.service;
  */
 
 
-import org.apache.hadoop.conf.Configuration;
-import org.greenplum.pxf.api.model.ConfigurationFactory;
+import org.greenplum.pxf.api.examples.DemoFragmentMetadata;
 import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.PluginConf;
 import org.greenplum.pxf.api.model.ProtocolHandler;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.RequestContext.RequestType;
+import org.greenplum.pxf.api.utilities.FragmentMetadata;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -47,7 +47,6 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -55,8 +54,6 @@ import static org.mockito.Mockito.when;
 
 public class HttpRequestParserTest {
 
-    private Configuration configuration;
-    private ConfigurationFactory mockConfigurationFactory;
     private HttpRequestParser parser;
     private MultiValueMap<String, String> parameters;
     private PluginConf mockPluginConf;
@@ -64,9 +61,6 @@ public class HttpRequestParserTest {
     @BeforeEach
     public void setUp() {
         mockPluginConf = mock(PluginConf.class);
-        mockConfigurationFactory = mock(ConfigurationFactory.class);
-
-        configuration = new Configuration();
 
         parameters = new LinkedMultiValueMap<>();
         parameters.add("X-GP-ALIGNMENT", "all");
@@ -80,13 +74,13 @@ public class HttpRequestParserTest {
         parameters.add("X-GP-OPTIONS-ACCESSOR", "are");
         parameters.add("X-GP-OPTIONS-RESOLVER", "packed");
         parameters.add("X-GP-DATA-DIR", "i'm/ready/to/go");
-        parameters.add("X-GP-FRAGMENT-METADATA", "U29tZXRoaW5nIGluIHRoZSB3YXk=");
+        parameters.add("X-GP-FRAGMENT-METADATA", "{\"path\": \"i'm a json\", \"className\": \"org.greenplum.pxf.api.examples.DemoFragmentMetadata\"}");
         parameters.add("X-GP-OPTIONS-I'M-STANDING-HERE", "outside-your-door");
         parameters.add("X-GP-USER", "alex");
         parameters.add("X-GP-OPTIONS-SERVER", "custom_server");
         parameters.add("X-GP-XID", "transaction:id");
 
-        parser = new HttpRequestParser(mockPluginConf, mockConfigurationFactory);
+        parser = new HttpRequestParser(mockPluginConf, new RequestContext());
     }
 
     @AfterEach
@@ -144,8 +138,6 @@ public class HttpRequestParserTest {
     @Test
     public void contextCreated() {
 
-        when(mockConfigurationFactory.initConfiguration("custom_server", "custom_server", "alex", new HashMap<>())).thenReturn(configuration);
-
         RequestContext context = parser.parseRequest(parameters, RequestType.FRAGMENTER);
 
         assertEquals(System.getProperty("greenplum.alignment"), "all");
@@ -171,7 +163,8 @@ public class HttpRequestParserTest {
         assertNull(context.getProfile());
         assertNull(context.getProfileScheme());
         assertTrue(context.getAdditionalConfigProps().isEmpty());
-        assertSame(configuration, context.getConfiguration());
+        assertTrue(context.getFragmentMetadata() instanceof DemoFragmentMetadata);
+        assertEquals("i'm a json", ((DemoFragmentMetadata) context.getFragmentMetadata()).getPath());
     }
 
     @Test
@@ -244,18 +237,18 @@ public class HttpRequestParserTest {
         assertTrue(context.isThreadSafe());
 
         parameters.set("X-GP-OPTIONS-THREAD-SAFE", "true");
-        context = new HttpRequestParser(mockPluginConf, mockConfigurationFactory).parseRequest(parameters, RequestType.FRAGMENTER);
+        context = new HttpRequestParser(mockPluginConf, new RequestContext()).parseRequest(parameters, RequestType.FRAGMENTER);
         assertTrue(context.isThreadSafe());
     }
 
     @Test
     public void threadSafeFalse() {
         parameters.add("X-GP-OPTIONS-THREAD-SAFE", "False");
-        RequestContext context = new HttpRequestParser(mockPluginConf, mockConfigurationFactory).parseRequest(parameters, RequestType.FRAGMENTER);
+        RequestContext context = new HttpRequestParser(mockPluginConf, new RequestContext()).parseRequest(parameters, RequestType.FRAGMENTER);
         assertFalse(context.isThreadSafe());
 
         parameters.set("X-GP-OPTIONS-THREAD-SAFE", "falSE");
-        context = new HttpRequestParser(mockPluginConf, mockConfigurationFactory).parseRequest(parameters, RequestType.FRAGMENTER);
+        context = new HttpRequestParser(mockPluginConf, new RequestContext()).parseRequest(parameters, RequestType.FRAGMENTER);
         assertFalse(context.isThreadSafe());
     }
 
@@ -278,8 +271,9 @@ public class HttpRequestParserTest {
     @Test
     public void getFragmentMetadata() {
         RequestContext context = parser.parseRequest(parameters, RequestType.FRAGMENTER);
-        byte[] location = context.getFragmentMetadata();
-        assertEquals("Something in the way", new String(location));
+        FragmentMetadata metadata = context.getFragmentMetadata();
+        assertTrue(metadata instanceof DemoFragmentMetadata);
+        assertEquals("i'm a json", ((DemoFragmentMetadata) metadata).getPath());
     }
 
     @Test
@@ -296,7 +290,7 @@ public class HttpRequestParserTest {
         parameters.set("X-GP-FRAGMENT-METADATA", badValue);
         Exception e = assertThrows(IllegalArgumentException.class,
                 () -> parser.parseRequest(parameters, RequestType.FRAGMENTER));
-        assertEquals("Fragment metadata information must be Base64 encoded. (Bad value: so b@d)", e.getMessage());
+        assertEquals("unable to deserialize fragment meta 'so b@d'", e.getMessage());
     }
 
     @Test

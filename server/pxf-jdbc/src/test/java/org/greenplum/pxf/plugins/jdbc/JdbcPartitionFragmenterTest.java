@@ -48,7 +48,7 @@ public class JdbcPartitionFragmenterTest {
     public void testNoPartition() {
 
         JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
-        fragment.initialize(context);
+        fragment.setRequestContext(context);
         List<Fragment> fragments = fragment.getFragments();
 
         assertEquals(1, fragments.size());
@@ -58,13 +58,13 @@ public class JdbcPartitionFragmenterTest {
     public void testPartitionByTypeInvalid() {
         context.addOption("PARTITION_BY", "level:float");
         assertThrows(IllegalArgumentException.class,
-                () -> new JdbcPartitionFragmenter().initialize(context));
+                () -> new JdbcPartitionFragmenter().setRequestContext(context));
     }
 
     @Test
     public void testPartitionByFormatInvalid() {
         context.addOption("PARTITION_BY", "level-enum");
         assertThrows(IllegalArgumentException.class,
-                () -> new JdbcPartitionFragmenter().initialize(context));
+                () -> new JdbcPartitionFragmenter().setRequestContext(context));
     }
 }

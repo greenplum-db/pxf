@@ -28,7 +28,7 @@ public class Interval {
 
     public static class DateInterval extends Interval {
 
-        private static EnumSet<IntervalType> DATE_INTERVAL_TYPES = EnumSet.of(DAY, MONTH, YEAR);
+        private static final EnumSet<IntervalType> DATE_INTERVAL_TYPES = EnumSet.of(DAY, MONTH, YEAR);
 
         public DateInterval(String interval) {
             String[] intervalSplit = interval.split(":");
