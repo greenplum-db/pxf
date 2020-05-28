@@ -43,7 +43,7 @@ class FragmentMetadataSerDeTest {
         DemoFragmentMetadata metadata = new DemoFragmentMetadata("abc");
         assertEquals("\"{\\\"path\\\":\\\"abc\\\",\\\"className\\\":\\\"org.greenplum.pxf.api.examples.DemoFragmentMetadata\\\"}\"", mapper.writeValueAsString(metadata));
 
-        TestFragmentMetadata testMetadata = new TestFragmentMetadata("test", 5, 10, Date.valueOf("2020-05-28"));
+        TestFragmentMetadata testMetadata = new TestFragmentMetadata("test", 5, 10, new Date(1590649200000L));
         assertEquals("\"{\\\"a\\\":\\\"test\\\",\\\"b\\\":5,\\\"c\\\":10,\\\"d\\\":1590649200000,\\\"className\\\":\\\"org.greenplum.pxf.api.utilities.FragmentMetadataSerDeTest$TestFragmentMetadata\\\"}\"",
                 mapper.writeValueAsString(testMetadata));
     }
