@@ -30,6 +30,7 @@ import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -37,7 +38,6 @@ import java.net.InetAddress;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
 
 /**
  * This class relies heavily on Hadoop API to
@@ -55,7 +55,9 @@ import java.util.Map;
  * security is off, no login will be performed regardless of connector being
  * used.
  */
+@Component
 public class SecureLogin {
+
     private static final Logger LOG = LoggerFactory.getLogger(SecureLogin.class);
 
     public static final String CONFIG_KEY_SERVICE_PRINCIPAL = "pxf.service.kerberos.principal";
@@ -66,27 +68,10 @@ public class SecureLogin {
 
     private static final Map<String, LoginSession> loginMap = new HashMap<>();
 
-    private static final SecureLogin instance = new SecureLogin();
-
     /**
      * Package-private for testing
      */
     static PxfUserGroupInformation pxfUserGroupInformation = PxfUserGroupInformation.getInstance();
-
-    /**
-     * Prevent instantiation of this class by external code
-     */
-    private SecureLogin() {
-    }
-
-    /**
-     * Returns the static instance for this factory
-     *
-     * @return the static instance for this factory
-     */
-    public static SecureLogin getInstance() {
-        return instance;
-    }
 
     /**
      * Returns UserGroupInformation for the login user for server specified by the configuration. Tries to re-use
@@ -260,7 +245,7 @@ public class SecureLogin {
             return principal;
         } catch (Exception e) {
             throw new IllegalStateException(
-                String.format("Failed to determine local hostname for server {} : {}", serverName, e.getMessage()), e);
+                    String.format("Failed to determine local hostname for server {} : {}", serverName, e.getMessage()), e);
         }
     }
 
@@ -273,7 +258,7 @@ public class SecureLogin {
      * @param configuration the hadoop configuration
      * @return the path of the service keytab for the given server and configuration
      */
-     String getServiceKeytab(String serverName, Configuration configuration) {
+    String getServiceKeytab(String serverName, Configuration configuration) {
         // use system property as default for backward compatibility when only 1 Kerberized cluster was supported
         String defaultKeytab = StringUtils.equalsIgnoreCase(serverName, "default") ?
                 System.getProperty(CONFIG_KEY_SERVICE_KEYTAB) :
@@ -283,6 +268,7 @@ public class SecureLogin {
 
     /**
      * Retrieve the name of the current host. The code is copied from org.hadoop.security.SecurityUtil class.
+     *
      * @param conf configuration
      * @return name of the host
      * @throws IOException
@@ -314,6 +300,7 @@ public class SecureLogin {
 
     /**
      * Resets and cleans the cache of login sessions. For testing only.
+     *
      * @return unmodifiable cache
      */
     static Map<String, LoginSession> getCache() {
@@ -324,7 +311,8 @@ public class SecureLogin {
 
     /**
      * Adds a given value to cache. For testing only.
-     * @param server server
+     *
+     * @param server  server
      * @param session session
      */
     static void addToCache(String server, LoginSession session) {

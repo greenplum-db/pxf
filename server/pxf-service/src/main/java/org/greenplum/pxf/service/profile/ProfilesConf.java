@@ -23,6 +23,7 @@ package org.greenplum.pxf.service.profile;
 import org.greenplum.pxf.api.model.PluginConf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -43,12 +44,12 @@ import static org.greenplum.pxf.service.profile.ProfileConfException.MessageForm
  * This class holds the profiles files: pxf-profiles.xml and pxf-profiles-default.xml.
  * It exposes a public static method getProfilePluginsMap(String plugin) which returns the requested profile plugins
  */
+@Component
 public class ProfilesConf implements PluginConf {
     private final static String EXTERNAL_PROFILES = "pxf-profiles.xml";
     private final static String INTERNAL_PROFILES = "pxf-profiles-default.xml";
 
     private final static Logger LOG = LoggerFactory.getLogger(ProfilesConf.class);
-    private final static ProfilesConf INSTANCE = new ProfilesConf();
     private final String externalProfilesFilename;
 
     // maps a profileName --> Profile object
@@ -73,10 +74,6 @@ public class ProfilesConf implements PluginConf {
             throw new ProfileConfException(PROFILES_FILE_NOT_FOUND, externalProfilesFilename);
         }
         LOG.info("PXF profiles loaded: {}", profilesMap.keySet());
-    }
-
-    public static ProfilesConf getInstance() {
-        return INSTANCE;
     }
 
     @Override

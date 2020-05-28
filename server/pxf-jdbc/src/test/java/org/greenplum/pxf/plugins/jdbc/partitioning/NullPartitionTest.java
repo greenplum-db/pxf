@@ -20,16 +20,13 @@ package org.greenplum.pxf.plugins.jdbc.partitioning;
  */
 
 import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class NullPartitionTest {
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
 
     private DbProduct dbProduct = null;
 
@@ -56,16 +53,14 @@ public class NullPartitionTest {
 
     @Test
     public void testInvalidColumn() {
-        thrown.expect(RuntimeException.class);
-
-        new NullPartition(null);
+        assertThrows(RuntimeException.class,
+            () -> new NullPartition(null));
     }
 
     @Test
     public void testInvalidNullQuoteString() {
-        thrown.expect(RuntimeException.class);
-
         NullPartition partition = new NullPartition(COL_RAW);
-        partition.toSqlConstraint(null, dbProduct);
+        assertThrows(RuntimeException.class,
+            () -> partition.toSqlConstraint(null, dbProduct));
     }
 }

@@ -23,9 +23,13 @@ import org.greenplum.pxf.api.BadRecordException;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.io.Writable;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.api.utilities.AccessorFactory;
-import org.greenplum.pxf.api.utilities.ResolverFactory;
 import org.greenplum.pxf.service.BridgeOutputBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 import java.io.CharConversionException;
 import java.io.DataInputStream;
@@ -45,23 +49,17 @@ import java.util.zip.ZipException;
  * The class handles BadRecordException and other exception type and marks the
  * record as invalid for GPDB.
  */
+@Component
+@Qualifier("readBridge")
+@RequestScope
 public class ReadBridge extends BaseBridge {
 
-    final BridgeOutputBuilder outputBuilder;
-    Deque<Writable> outputQueue = new LinkedList<>();
+    protected BridgeOutputBuilder outputBuilder;
+    protected Deque<Writable> outputQueue = new LinkedList<>();
 
-    /**
-     * C'tor - set the implementation of the bridge.
-     *
-     * @param context input containing accessor and resolver names
-     */
-    public ReadBridge(RequestContext context) {
-        this(context, AccessorFactory.getInstance(), ResolverFactory.getInstance());
-    }
-
-    ReadBridge(RequestContext context, AccessorFactory accessorFactory, ResolverFactory resolverFactory) {
-        super(context, accessorFactory, resolverFactory);
-        outputBuilder = new BridgeOutputBuilder(context);
+    public ReadBridge(BridgeOutputBuilder outputBuilder, ApplicationContext applicationContext, RequestContext context) {
+        super(applicationContext, context);
+        this.outputBuilder = outputBuilder;
     }
 
     /**
@@ -153,6 +151,9 @@ public class ReadBridge extends BaseBridge {
                 || ex instanceof UTFDataFormatException || ex instanceof ZipException);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean setNext(DataInputStream inputStream) {
         throw new UnsupportedOperationException("setNext is not implemented");

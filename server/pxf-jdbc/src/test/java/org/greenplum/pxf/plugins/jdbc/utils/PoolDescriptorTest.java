@@ -1,25 +1,18 @@
 package org.greenplum.pxf.plugins.jdbc.utils;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Properties;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotSame;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class PoolDescriptorTest {
 
     private Properties connConfig, poolConfig;
     private PoolDescriptor poolDescriptor;
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
-    @Before
+    @BeforeEach
     public void setup() {
         connConfig = new Properties();
         connConfig.setProperty("user", "test-user");
@@ -145,9 +138,9 @@ public class PoolDescriptorTest {
     }
 
     private void testInvalidProperty(String property) {
-        expectedException.expect(RuntimeException.class);
-        expectedException.expectMessage("Property '" + property + "' should not be configured for the JDBC connection pool");
         poolConfig.setProperty(property, property + " not allowed");
-        poolDescriptor = new PoolDescriptor("test-server", "test-jdbcUrl", connConfig, poolConfig, null);
+        Exception ex = assertThrows(RuntimeException.class,
+                () -> new PoolDescriptor("test-server", "test-jdbcUrl", connConfig, poolConfig, null));
+        assertEquals("Property '" + property + "' should not be configured for the JDBC connection pool", ex.getMessage());
     }
 }

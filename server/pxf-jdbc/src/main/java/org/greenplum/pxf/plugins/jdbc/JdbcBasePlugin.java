@@ -21,7 +21,7 @@ package org.greenplum.pxf.plugins.jdbc;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.greenplum.pxf.api.model.BasePlugin;
+import org.greenplum.pxf.api.model.Plugin;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.security.SecureLogin;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
@@ -31,6 +31,7 @@ import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
 import org.greenplum.pxf.plugins.jdbc.utils.HiveJdbcUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.security.PrivilegedExceptionAction;
 import java.sql.Connection;
@@ -39,7 +40,6 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -52,7 +52,7 @@ import static org.greenplum.pxf.api.security.SecureLogin.CONFIG_KEY_SERVICE_USER
  * <p>
  * Implemented subclasses: {@link JdbcAccessor}, {@link JdbcResolver}.
  */
-public class JdbcBasePlugin extends BasePlugin {
+public class JdbcBasePlugin implements Plugin {
 
     private static final Logger LOG = LoggerFactory.getLogger(JdbcBasePlugin.class);
 
@@ -100,7 +100,7 @@ public class JdbcBasePlugin extends BasePlugin {
         SERIALIZABLE(8),
         NOT_PROVIDED(-1);
 
-        private int isolationLevel;
+        private final int isolationLevel;
 
         TransactionIsolation(int transactionIsolation) {
             isolationLevel = transactionIsolation;
@@ -138,7 +138,7 @@ public class JdbcBasePlugin extends BasePlugin {
     protected Boolean quoteColumns = null;
 
     // Environment variables to SET before query execution
-    protected Map<String, String> sessionConfiguration = new HashMap<String, String>();
+    protected Map<String, String> sessionConfiguration = new HashMap<>();
 
     // Properties object to pass to JDBC Driver when connection is created
     protected Properties connectionConfiguration = new Properties();
@@ -152,12 +152,15 @@ public class JdbcBasePlugin extends BasePlugin {
     // Name of query to execute for read flow (optional)
     protected String queryName;
 
+    protected RequestContext context;
+
     // connection pool fields
     private boolean isConnectionPoolUsed;
     private Properties poolConfiguration;
     private String poolQualifier;
 
-    private ConnectionManager connectionManager;
+    private final ConnectionManager connectionManager;
+    private final SecureLogin secureLogin;
 
     static {
         // Deprecated as of Oct 22, 2019 in version 5.9.2+
@@ -167,24 +170,20 @@ public class JdbcBasePlugin extends BasePlugin {
     }
 
     /**
-     * Creates a new instance with default (singleton) instance of ConnectionManager.
-     */
-    public JdbcBasePlugin() {
-        this(ConnectionManager.getInstance());
-    }
-
-    /**
-     * Creates a new instance with the given ConnectionManager.
+     * Creates a new instance with the given ConnectionManager and ConfigurationFactory
      *
      * @param connectionManager connection manager instance
      */
-    JdbcBasePlugin(ConnectionManager connectionManager) {
+    JdbcBasePlugin(ConnectionManager connectionManager, SecureLogin secureLogin) {
         this.connectionManager = connectionManager;
+        this.secureLogin = secureLogin;
     }
 
-    @Override
-    public void initialize(RequestContext context) {
-        super.initialize(context);
+    @Autowired
+    public void setRequestContext(RequestContext context) {
+        this.context = context;
+
+        Configuration configuration = context.getConfiguration();
 
         // Required parameter. Can be auto-overwritten by user options
         String jdbcDriver = configuration.get(JDBC_DRIVER_PROPERTY_NAME);
@@ -409,7 +408,7 @@ public class JdbcBasePlugin extends BasePlugin {
      * Close a JDBC statement and underlying {@link Connection}
      *
      * @param statement statement to close
-     * @throws SQLException
+     * @throws SQLException throws when a SQLException occurs
      */
     public static void closeStatementAndConnection(Statement statement) throws SQLException {
         if (statement == null) {
@@ -453,14 +452,13 @@ public class JdbcBasePlugin extends BasePlugin {
      *
      * @return for a Kerberized Hive JDBC connection, returns a new connection as the loginUser.
      * Otherwise, it returns a new connection.
-     * @throws Exception
+     * @throws Exception throws when an error occurs
      */
     private Connection getConnectionInternal() throws Exception {
+        Configuration configuration = context.getConfiguration();
         if (Utilities.isSecurityEnabled(configuration) && StringUtils.startsWith(jdbcUrl, HIVE_URL_PREFIX)) {
-            return SecureLogin.getInstance().getLoginUser(context, configuration).
-                    doAs((PrivilegedExceptionAction<Connection>) () ->
-                            connectionManager.getConnection(context.getServerName(), jdbcUrl, connectionConfiguration, isConnectionPoolUsed, poolConfiguration, poolQualifier));
-
+            return secureLogin.getLoginUser(context, configuration).doAs((PrivilegedExceptionAction<Connection>) () ->
+                    connectionManager.getConnection(context.getServerName(), jdbcUrl, connectionConfiguration, isConnectionPoolUsed, poolConfiguration, poolQualifier));
         } else {
             return connectionManager.getConnection(context.getServerName(), jdbcUrl, connectionConfiguration, isConnectionPoolUsed, poolConfiguration, poolQualifier);
         }
@@ -470,7 +468,7 @@ public class JdbcBasePlugin extends BasePlugin {
      * Close a JDBC connection
      *
      * @param connection connection to close
-     * @throws SQLException
+     * @throws SQLException throws when a SQLException occurs
      */
     private static void closeConnection(Connection connection) throws SQLException {
         if (connection == null) {
@@ -568,9 +566,8 @@ public class JdbcBasePlugin extends BasePlugin {
      */
     private Map<String, String> getPropsWithPrefix(Configuration configuration, String confPrefix) {
         Map<String, String> configMap = new HashMap<>();
-        Iterator<Map.Entry<String, String>> it = configuration.iterator();
-        while (it.hasNext()) {
-            String propertyName = it.next().getKey();
+        for (Map.Entry<String, String> stringStringEntry : configuration) {
+            String propertyName = stringStringEntry.getKey();
             if (propertyName.startsWith(confPrefix)) {
                 // do not use value from the iterator as it might not come with variable substitution
                 String value = configuration.get(propertyName);

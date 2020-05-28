@@ -22,7 +22,6 @@ package org.greenplum.pxf.service.servlet;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.greenplum.pxf.api.model.BaseConfigurationFactory;
 import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.security.SecureLogin;
 import org.greenplum.pxf.api.utilities.Utilities;
@@ -30,6 +29,7 @@ import org.greenplum.pxf.service.SessionId;
 import org.greenplum.pxf.service.UGICache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -45,6 +45,7 @@ import java.security.PrivilegedExceptionAction;
 /**
  * Listener on lifecycle events of our webapp
  */
+@Component
 public class SecurityServletFilter implements Filter {
 
     private static final Logger LOG = LoggerFactory.getLogger(SecurityServletFilter.class);
@@ -59,17 +60,15 @@ public class SecurityServletFilter implements Filter {
     private static final String EMPTY_HEADER_ERROR = "Header %s is empty in the request";
 
     private UGICache ugiCache;
+
     private final ConfigurationFactory configurationFactory;
+
     private final SecureLogin secureLogin;
 
-    public SecurityServletFilter() {
-        this(BaseConfigurationFactory.getInstance(), SecureLogin.getInstance(), null);
-    }
-
-    SecurityServletFilter(ConfigurationFactory configurationFactory, SecureLogin secureLogin, UGICache ugiCache) {
+    public SecurityServletFilter(ConfigurationFactory configurationFactory, SecureLogin secureLogin, UGICache ugiCache) {
+        this.ugiCache = ugiCache;
         this.configurationFactory = configurationFactory;
         this.secureLogin = secureLogin;
-        this.ugiCache = ugiCache;
     }
 
     /**

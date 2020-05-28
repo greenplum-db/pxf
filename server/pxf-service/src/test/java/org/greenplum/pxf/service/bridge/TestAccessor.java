@@ -2,42 +2,38 @@ package org.greenplum.pxf.service.bridge;
 
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.Accessor;
-import org.greenplum.pxf.api.model.RequestContext;
+import org.springframework.stereotype.Component;
 
+@Component
 public class TestAccessor implements Accessor {
 
     @Override
-    public boolean openForRead() throws Exception {
+    public boolean openForRead() {
         return false;
     }
 
     @Override
-    public OneRow readNextObject() throws Exception {
+    public OneRow readNextObject() {
         return null;
     }
 
     @Override
-    public void closeForRead() throws Exception {
+    public void closeForRead() {
 
     }
 
     @Override
-    public boolean openForWrite() throws Exception {
+    public boolean openForWrite() {
         return false;
     }
 
     @Override
-    public boolean writeNextObject(OneRow onerow) throws Exception {
+    public boolean writeNextObject(OneRow onerow) {
         return false;
     }
 
     @Override
-    public void closeForWrite() throws Exception {
-
-    }
-
-    @Override
-    public void initialize(RequestContext requestContext) {
+    public void closeForWrite() {
 
     }
 

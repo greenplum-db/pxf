@@ -21,19 +21,21 @@ package org.greenplum.pxf.service.rest;
 
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import org.apache.log4j.Level;
+import org.greenplum.pxf.api.configuration.PxfServerProperties;
+import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.FragmentStats;
 import org.greenplum.pxf.api.model.Fragmenter;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.FragmenterCacheFactory;
-import org.greenplum.pxf.api.utilities.FragmenterFactory;
 import org.greenplum.pxf.api.utilities.FragmentsResponse;
 import org.greenplum.pxf.api.utilities.FragmentsResponseFormatter;
-import org.greenplum.pxf.api.utilities.Utilities;
-import org.greenplum.pxf.service.HttpRequestParser;
 import org.greenplum.pxf.service.RequestParser;
 import org.greenplum.pxf.service.SessionId;
 import org.greenplum.pxf.service.utilities.AnalyzeUtils;
+import org.springframework.beans.factory.BeanFactoryUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
@@ -43,7 +45,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
 import static org.greenplum.pxf.api.model.RequestContext.RequestType;
@@ -60,9 +61,11 @@ import static org.greenplum.pxf.api.model.RequestContext.RequestType;
 @RequestMapping("/pxf/" + Version.PXF_PROTOCOL_VERSION + "/Fragmenter/")
 public class FragmenterResource extends BaseResource {
 
-    private FragmenterFactory fragmenterFactory;
+    private ApplicationContext applicationContext;
 
     private FragmenterCacheFactory fragmenterCacheFactory;
+
+    private PxfServerProperties pxfServerProperties;
 
     // Records the startTime of the fragmenter call
     private long startTime;
@@ -71,27 +74,29 @@ public class FragmenterResource extends BaseResource {
     private boolean didThreadProcessFragmentCall;
 
     public FragmenterResource() {
-        this(HttpRequestParser.getInstance(), FragmenterFactory.getInstance(), FragmenterCacheFactory.getInstance());
+        super(RequestType.FRAGMENTER);
     }
 
-    FragmenterResource(RequestParser<MultiValueMap<String, String>> parser,
-                       FragmenterFactory fragmenterFactory,
-                       FragmenterCacheFactory fragmenterCacheFactory) {
-        super(RequestType.FRAGMENTER, parser);
-        this.fragmenterFactory = fragmenterFactory;
+    @Autowired
+    public void setApplicationContext(ApplicationContext applicationContext) {
+        this.applicationContext = applicationContext;
+    }
+
+    @Autowired
+    public void setFragmenterCacheFactory(FragmenterCacheFactory fragmenterCacheFactory) {
         this.fragmenterCacheFactory = fragmenterCacheFactory;
-        if (LOG.isDebugEnabled() && Utilities.isFragmenterCacheEnabled()) {
-            LOG.debug("fragmentCache size={}, stats={}",
-                    fragmenterCacheFactory.getCache().size(),
-                    fragmenterCacheFactory.getCache().stats().toString());
-        }
+    }
+
+    @Autowired
+    public void setPxfServerProperties(PxfServerProperties pxfServerProperties) {
+        this.pxfServerProperties = pxfServerProperties;
     }
 
     /**
      * The function is called when
      * {@code http://host:port/pxf/{version}/Fragmenter/getFragments} is used.
      *
-     * @param headers        Holds HTTP headers from request
+     * @param headers Holds HTTP headers from request
      * @return response object with JSON serialized fragments metadata
      * @throws Exception if getting fragments info failed
      */
@@ -106,22 +111,25 @@ public class FragmenterResource extends BaseResource {
         final String path = context.getDataSource();
         final String fragmenterCacheKey = getFragmenterCacheKey(context);
 
+        if (LOG.isDebugEnabled() && pxfServerProperties.isMetadataCacheEnabled()) {
+            LOG.debug("fragmentCache size={}, stats={}",
+                    fragmenterCacheFactory.getCache().size(),
+                    fragmenterCacheFactory.getCache().stats().toString());
+        }
+
         LOG.debug("FRAGMENTER started for path \"{}\"", path);
 
         List<Fragment> fragments;
 
-        if (Utilities.isFragmenterCacheEnabled()) {
+        if (pxfServerProperties.isMetadataCacheEnabled()) {
             try {
                 // We can't support lambdas here because asm version doesn't support it
                 fragments = fragmenterCacheFactory.getCache()
-                        .get(fragmenterCacheKey, new Callable<List<Fragment>>() {
-                            @Override
-                            public List<Fragment> call() throws Exception {
-                                didThreadProcessFragmentCall = true;
-                                LOG.debug("Caching fragments for transactionId={} from segmentId={} with key={}",
-                                        context.getTransactionId(), context.getSegmentId(), fragmenterCacheKey);
-                                return getFragments(context);
-                            }
+                        .get(fragmenterCacheKey, () -> {
+                            didThreadProcessFragmentCall = true;
+                            LOG.debug("Caching fragments for transactionId={} from segmentId={} with key={}",
+                                    context.getTransactionId(), context.getSegmentId(), fragmenterCacheKey);
+                            return getFragments(context);
                         });
             } catch (UncheckedExecutionException | ExecutionException e) {
                 // Unwrap the error
@@ -147,7 +155,7 @@ public class FragmenterResource extends BaseResource {
      * {@code http://nn:port/pxf/{version}/Fragmenter/getFragmentsStats?path=...} is
      * used.
      *
-     * @param headers        Holds HTTP headers from request
+     * @param headers Holds HTTP headers from request
      * @return response object with JSON serialized fragments statistics
      * @throws Exception if getting fragments info failed
      */
@@ -158,7 +166,7 @@ public class FragmenterResource extends BaseResource {
         RequestContext context = parseRequest(headers);
 
         /* Create a fragmenter instance with API level parameters */
-        final Fragmenter fragmenter = fragmenterFactory.getPlugin(context);
+        final Fragmenter fragmenter = getFragmenter(context);
 
         FragmentStats fragmentStats = fragmenter.getFragmentStats();
         String response = FragmentStats.dataToJSON(fragmentStats);
@@ -171,10 +179,22 @@ public class FragmenterResource extends BaseResource {
 
     private List<Fragment> getFragments(RequestContext context) throws Exception {
         /* Create a fragmenter instance with API level parameters */
-        List<Fragment> fragments = AnalyzeUtils.getSampleFragments(fragmenterFactory.getPlugin(context).getFragments(), context);
+        List<Fragment> fragments = AnalyzeUtils.getSampleFragments(
+                getFragmenter(context).getFragments(),
+                context);
 
         logFragmentStatistics(Level.INFO, context, fragments);
         return fragments;
+    }
+
+    /**
+     * Returns the fragmenter initialized with the request context
+     *
+     * @param context the request context
+     * @return the fragmenter initialized with the request context
+     */
+    private Fragmenter getFragmenter(RequestContext context) {
+        return applicationContext.getBean(context.getFragmenter().substring(context.getFragmenter().lastIndexOf(".") + 1), Fragmenter.class);
     }
 
     /**

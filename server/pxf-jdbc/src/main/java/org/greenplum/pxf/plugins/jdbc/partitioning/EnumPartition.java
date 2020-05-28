@@ -19,31 +19,33 @@ package org.greenplum.pxf.plugins.jdbc.partitioning;
  * under the License.
  */
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
 import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
 
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-class EnumPartition extends BasePartition implements JdbcFragmentMetadata {
-    private static final long serialVersionUID = 0L;
+public class EnumPartition extends BasePartition implements JdbcFragmentMetadata {
 
+    @Getter
     private final String value;
+
+    @Getter
     private final String[] excluded;
 
     /**
      * Construct an EnumPartition with given column and constraint
      *
-     * @param column
-     * @param value
+     * @param column the partitioned column
+     * @param value  the value for the partition
      */
     public EnumPartition(String column, String value) {
-        super(column);
+        this(column, value, null);
         if (value == null) {
             throw new RuntimeException("Value cannot be null");
         }
-
-        this.value = value;
-        excluded = null;
     }
 
     /**
@@ -54,15 +56,21 @@ class EnumPartition extends BasePartition implements JdbcFragmentMetadata {
      * @param excluded array of values this partition must NOT include
      */
     public EnumPartition(String column, String[] excluded) {
-        super(column);
+        this(column, null, excluded);
         if (excluded == null) {
             throw new RuntimeException("Excluded values cannot be null");
         }
         if (excluded.length == 0) {
             throw new RuntimeException("Array of excluded values cannot be of zero length");
         }
+    }
 
-        value = null;
+    @JsonCreator
+    public EnumPartition(@JsonProperty("column") String column,
+                         @JsonProperty("value") String value,
+                         @JsonProperty("excluded") String[] excluded) {
+        super(column);
+        this.value = value;
         this.excluded = excluded;
     }
 
@@ -88,19 +96,5 @@ class EnumPartition extends BasePartition implements JdbcFragmentMetadata {
         }
 
         return sb.toString();
-    }
-
-    /**
-     * Getter
-     */
-    public String getValue() {
-        return value;
-    }
-
-    /**
-     * Getter
-     */
-    public String[] getExcluded() {
-        return excluded;
     }
 }

@@ -19,25 +19,25 @@ package org.greenplum.pxf.plugins.jdbc;
  * under the License.
  */
 
+import org.apache.hadoop.conf.Configuration;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class JdbcPartitionFragmenterTest {
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
 
+    private Configuration configuration;
     private RequestContext context;
 
-    @Before
+    @BeforeEach
     public void setUp() {
+        configuration = new Configuration();
         context = new RequestContext();
         context.setConfig("default");
         context.setDataSource("table");
@@ -48,7 +48,7 @@ public class JdbcPartitionFragmenterTest {
     public void testNoPartition() {
 
         JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
-        fragment.initialize(context);
+        fragment.setRequestContext(context);
         List<Fragment> fragments = fragment.getFragments();
 
         assertEquals(1, fragments.size());
@@ -56,17 +56,15 @@ public class JdbcPartitionFragmenterTest {
 
     @Test
     public void testPartitionByTypeInvalid() {
-        thrown.expect(IllegalArgumentException.class);
-
         context.addOption("PARTITION_BY", "level:float");
-        new JdbcPartitionFragmenter().initialize(context);
+        assertThrows(IllegalArgumentException.class,
+                () -> new JdbcPartitionFragmenter().setRequestContext(context));
     }
 
     @Test
     public void testPartitionByFormatInvalid() {
-        thrown.expect(IllegalArgumentException.class);
-
         context.addOption("PARTITION_BY", "level-enum");
-        new JdbcPartitionFragmenter().initialize(context);
+        assertThrows(IllegalArgumentException.class,
+                () -> new JdbcPartitionFragmenter().setRequestContext(context));
     }
 }

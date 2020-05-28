@@ -20,15 +20,12 @@ package org.greenplum.pxf.plugins.jdbc.partitioning;
  */
 
 import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class IntPartitionTest {
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
 
     private DbProduct dbProduct = null;
 
@@ -86,24 +83,21 @@ public class IntPartitionTest {
 
     @Test
     public void testInvalidBothBoundariesNull() {
-        thrown.expect(RuntimeException.class);
-
-        new IntPartition(COL_RAW, null, null);
+        assertThrows(RuntimeException.class,
+            () -> new IntPartition(COL_RAW, null, null));
     }
 
     @Test
     public void testInvalidColumnNull() {
-        thrown.expect(RuntimeException.class);
-
-        new IntPartition(null, 0L, 1L);
+        assertThrows(RuntimeException.class,
+            () -> new IntPartition(null, 0L, 1L));
     }
 
     @Test
     public void testInvalidNullQuoteString() {
         IntPartition partition = new IntPartition(COL_RAW, 0L, 1L);
 
-        thrown.expect(RuntimeException.class);
-
-        partition.toSqlConstraint(null, dbProduct);
+        assertThrows(RuntimeException.class,
+            () -> partition.toSqlConstraint(null, dbProduct));
     }
 }

@@ -21,12 +21,11 @@ package org.greenplum.pxf.service.rest;
 
 import org.apache.catalina.connector.ClientAbortException;
 import org.greenplum.pxf.api.io.Writable;
+import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.service.HttpRequestParser;
 import org.greenplum.pxf.service.RequestParser;
 import org.greenplum.pxf.service.bridge.Bridge;
 import org.greenplum.pxf.service.bridge.BridgeFactory;
-import org.greenplum.pxf.service.bridge.SimpleBridgeFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -39,6 +38,7 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.concurrent.locks.ReentrantLock;
 
 /*
  * This class handles the subpath /<version>/Bridge/ of this
@@ -48,23 +48,21 @@ import java.io.IOException;
 @RequestMapping("/pxf/" + Version.PXF_PROTOCOL_VERSION)
 public class BridgeResource extends BaseResource {
 
-    private BridgeFactory bridgeFactory;
-
     /**
-     * Creates an instance of the resource with the default singletons of RequestParser and BridgeFactory.
+     * Lock is needed here in the case of a non-thread-safe plugin. Using
+     * synchronized methods is not enough because the bridge work is called by
+     * {@link StreamingResponseBody}, after we are getting out of this class's
+     * context.
+     * <p/>
+     * BRIDGE_LOCK is accessed through lock() and unlock() functions, based on
+     * the isThreadSafe parameter that is determined by the bridge.
      */
-    public BridgeResource() {
-        this(HttpRequestParser.getInstance(), SimpleBridgeFactory.getInstance());
-    }
+    private static final ReentrantLock BRIDGE_LOCK = new ReentrantLock();
 
-    /**
-     * Creates an instance of the resource with provided instances of RequestParser and BridgeFactory.
-     *
-     * @param parser        request parser
-     * @param bridgeFactory bridge factory
-     */
-    BridgeResource(RequestParser<MultiValueMap<String, String>> parser, BridgeFactory bridgeFactory) {
-        super(RequestContext.RequestType.READ_BRIDGE, parser);
+    private final BridgeFactory bridgeFactory;
+
+    public BridgeResource(BridgeFactory bridgeFactory) {
+        super(RequestContext.RequestType.READ_BRIDGE);
         this.bridgeFactory = bridgeFactory;
     }
 
@@ -82,8 +80,24 @@ public class BridgeResource extends BaseResource {
             @RequestHeader MultiValueMap<String, String> headers) {
 
         RequestContext context = parseRequest(headers);
-        Bridge bridge = bridgeFactory.getReadBridge(context);
+        Bridge bridge = bridgeFactory.getBridge(context);
 
+        // THREAD-SAFE parameter has precedence
+        boolean isThreadSafe = context.isThreadSafe() && bridge.isThreadSafe();
+        LOG.debug("Request for {} will be handled {} synchronization", context.getDataSource(), (isThreadSafe ? "without" : "with"));
+
+        return readResponse(bridge, context, isThreadSafe);
+    }
+
+    /**
+     * Produces streaming Response used by the container to read data from the bridge.
+     *
+     * @param bridge     bridge to use to read data
+     * @param context    request context
+     * @param threadSafe whether streaming can proceed in parallel
+     * @return response object to be used by the container
+     */
+    private ResponseEntity<StreamingResponseBody> readResponse(final Bridge bridge, RequestContext context, final boolean threadSafe) {
         final int fragment = context.getDataFragment();
         final String dataDir = context.getDataSource();
 
@@ -92,6 +106,9 @@ public class BridgeResource extends BaseResource {
         StreamingResponseBody streaming = out -> {
             long recordCount = 0;
 
+            if (!threadSafe) {
+                lock(dataDir);
+            }
             try {
                 if (!bridge.beginIteration()) {
                     return;
@@ -122,9 +139,34 @@ public class BridgeResource extends BaseResource {
                 } catch (Exception e) {
                     // ignore ... any significant errors should already have been handled
                 }
+                if (!threadSafe) {
+                    unlock(dataDir);
+                }
             }
         };
 
         return new ResponseEntity<>(streaming, HttpStatus.OK);
+    }
+
+    /**
+     * Locks BRIDGE_LOCK
+     *
+     * @param path path for the request, used for logging.
+     */
+    private void lock(String path) {
+        LOG.trace("Locking BridgeResource for {}", path);
+        BRIDGE_LOCK.lock();
+        LOG.trace("Locked BridgeResource for {}", path);
+    }
+
+    /**
+     * Unlocks BRIDGE_LOCK
+     *
+     * @param path path for the request, used for logging.
+     */
+    private void unlock(String path) {
+        LOG.trace("Unlocking BridgeResource for {}", path);
+        BRIDGE_LOCK.unlock();
+        LOG.trace("Unlocked BridgeResource for {}", path);
     }
 }
