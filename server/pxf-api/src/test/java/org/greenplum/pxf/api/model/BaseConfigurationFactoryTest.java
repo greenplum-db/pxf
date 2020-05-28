@@ -38,10 +38,10 @@ public class BaseConfigurationFactoryTest {
         factory = new BaseConfigurationFactory(serversDirectory);
     }
 
-    @Test
-    public void testGetInstance() {
-        assertSame(BaseConfigurationFactory.getInstance(), BaseConfigurationFactory.getInstance());
-    }
+//    @Test
+//    public void testGetInstance() {
+//        assertSame(BaseConfigurationFactory.getInstance(), BaseConfigurationFactory.getInstance());
+//    }
 
     @Test
     public void testInitConfigurationFailsWhenMultipleDirectoriesWithSameName() {

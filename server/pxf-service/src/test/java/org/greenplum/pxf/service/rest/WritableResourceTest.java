@@ -18,6 +18,8 @@ package org.greenplum.pxf.service.rest;
  * under the License.
  */
 
+import org.apache.hadoop.conf.Configuration;
+import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.RequestContext.RequestType;
 import org.greenplum.pxf.service.HttpRequestParser;
@@ -34,6 +36,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -48,6 +51,8 @@ public class WritableResourceTest {
     @BeforeEach
     public void before() throws IOException {
 
+        Configuration configuration = new Configuration();
+
         // constructor dependencies
         HttpRequestParser mockParser = mock(HttpRequestParser.class);
         BridgeFactory mockFactory = mock(BridgeFactory.class);
@@ -55,12 +60,16 @@ public class WritableResourceTest {
         ServletInputStream mockInputStream = mock(ServletInputStream.class);
         RequestContext mockContext = mock(RequestContext.class);
         WriteBridge mockBridge = mock(WriteBridge.class);
+        ConfigurationFactory mockConfigurationFactory = mock(ConfigurationFactory.class);
         mockHttpServletRequest = mock(HttpServletRequest.class);
 
-        writableResource = new WritableResource(mockParser, mockFactory);
+        writableResource = new WritableResource(mockFactory);
+        writableResource.setRequestParser(mockParser);
+        writableResource.setConfigurationFactory(mockConfigurationFactory);
 
+        when(mockConfigurationFactory.initConfiguration(any(), any(), any(), any())).thenReturn(configuration);
         when(mockParser.parseRequest(mockHeaders, RequestType.WRITE_BRIDGE)).thenReturn(mockContext);
-        when(mockFactory.getWriteBridge(mockContext)).thenReturn(mockBridge);
+        when(mockFactory.getBridge(mockContext)).thenReturn(mockBridge);
         when(mockContext.isThreadSafe()).thenReturn(true);
         when(mockBridge.isThreadSafe()).thenReturn(true);
         when(mockHttpServletRequest.getInputStream()).thenReturn(mockInputStream);

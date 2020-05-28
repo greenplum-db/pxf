@@ -22,18 +22,20 @@ package org.greenplum.pxf.api.examples;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.api.model.BasePlugin;
+import org.greenplum.pxf.api.model.Plugin;
 import org.greenplum.pxf.api.model.Resolver;
+import org.springframework.stereotype.Component;
 
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Class that defines the deserializtion of one record brought from the external input data.
- *
+ * Class that defines the deserialization of one record brought from the external input data.
+ * <p>
  * Demo implementation that returns record custom format
  */
-public class DemoResolver extends BasePlugin implements Resolver {
+@Component("DemoResolver")
+public class DemoResolver implements Plugin, Resolver {
 
     /**
      * Read the next record
@@ -43,8 +45,8 @@ public class DemoResolver extends BasePlugin implements Resolver {
      * @return list of fields or columns
      */
     @Override
-    public List<OneField> getFields(OneRow row) throws Exception {
-        List<OneField> output = new LinkedList<OneField>();
+    public List<OneField> getFields(OneRow row) {
+        List<OneField> output = new LinkedList<>();
         Object data = row.getData();
 
         /* break up the row into fields */

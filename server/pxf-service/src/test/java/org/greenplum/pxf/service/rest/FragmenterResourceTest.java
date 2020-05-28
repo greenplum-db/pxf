@@ -2,19 +2,22 @@ package org.greenplum.pxf.service.rest;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import org.apache.hadoop.conf.Configuration;
+import org.greenplum.pxf.api.configuration.PxfServerProperties;
+import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.Fragmenter;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.RequestContext.RequestType;
 import org.greenplum.pxf.api.utilities.FragmenterCacheFactory;
-import org.greenplum.pxf.api.utilities.FragmenterFactory;
 import org.greenplum.pxf.api.utilities.FragmentsResponse;
-import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.service.FakeTicker;
 import org.greenplum.pxf.service.RequestParser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import java.util.ArrayList;
@@ -25,16 +28,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class FragmenterResourceTest {
 
-    private RequestParser<MultiValueMap<String, String>> parser;
-    private FragmenterFactory fragmenterFactory;
+    private ApplicationContext mockApplicationContext;
+    private ConfigurationFactory mockConfigurationFactory;
     private FragmenterCacheFactory fragmenterCacheFactory;
     private MultiValueMap<String, String> mockRequestHeaders1;
     private MultiValueMap<String, String> mockRequestHeaders2;
@@ -42,19 +45,24 @@ public class FragmenterResourceTest {
     private Fragmenter fragmenter2;
     private Cache<String, List<Fragment>> fragmentCache;
     private FakeTicker fakeTicker;
-
-    private final String PROPERTY_KEY_FRAGMENTER_CACHE = "pxf.service.fragmenter.cache.enabled";
+    private RequestParser<MultiValueMap<String, String>> mockParser;
+    private PxfServerProperties mockPxfServerProperties;
+    private FragmenterResource fragmenterResource;
 
     @BeforeEach
     public void setup() {
 
-        parser = mock(RequestParser.class);
-        fragmenterFactory = mock(FragmenterFactory.class);
+        mockParser = mock(RequestParser.class);
+        mockApplicationContext = mock(ApplicationContext.class);
         fragmenterCacheFactory = mock(FragmenterCacheFactory.class);
         mockRequestHeaders1 = mock(MultiValueMap.class);
         mockRequestHeaders2 = mock(MultiValueMap.class);
         fragmenter1 = mock(Fragmenter.class);
         fragmenter2 = mock(Fragmenter.class);
+        mockPxfServerProperties = mock(PxfServerProperties.class);
+        mockConfigurationFactory = mock(ConfigurationFactory.class);
+
+        when(mockConfigurationFactory.initConfiguration(any(), any(), any(), any())).thenReturn(new Configuration());
 
         fakeTicker = new FakeTicker();
         fragmentCache = CacheBuilder.newBuilder()
@@ -63,21 +71,27 @@ public class FragmenterResourceTest {
                 .build();
 
         when(fragmenterCacheFactory.getCache()).thenReturn(fragmentCache);
-        System.clearProperty(PROPERTY_KEY_FRAGMENTER_CACHE);
+        when(mockPxfServerProperties.isMetadataCacheEnabled()).thenReturn(true);
+
+        fragmenterResource = new FragmenterResource();
+        fragmenterResource.setApplicationContext(mockApplicationContext);
+        fragmenterResource.setFragmenterCacheFactory(fragmenterCacheFactory);
+        fragmenterResource.setPxfServerProperties(mockPxfServerProperties);
+        fragmenterResource.setConfigurationFactory(mockConfigurationFactory);
+        fragmenterResource.setRequestParser(mockParser);
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void getFragmentsResponseFromEmptyCache() throws Throwable {
         RequestContext context = new RequestContext();
         context.setTransactionId("XID-XYZ-123456");
         context.setSegmentId(0);
+        context.setFragmenter(Fragmenter.class.getName());
 
-        when(parser.parseRequest(mockRequestHeaders1, RequestType.FRAGMENTER)).thenReturn(context);
-        when(fragmenterFactory.getPlugin(context)).thenReturn(fragmenter1);
+        when(mockParser.parseRequest(mockRequestHeaders1, RequestType.FRAGMENTER)).thenReturn(context);
+        when(mockApplicationContext.getBean("Fragmenter", Fragmenter.class)).thenReturn(fragmenter1);
 
-        new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory)
-                .getFragments(mockRequestHeaders1);
+        fragmenterResource.getFragments(mockRequestHeaders1);
         verify(fragmenter1, times(1)).getFragments();
     }
 
@@ -85,9 +99,11 @@ public class FragmenterResourceTest {
     public void testFragmenterCallIsNotCachedForDifferentTransactions() throws Throwable {
         RequestContext context1 = new RequestContext();
         context1.setTransactionId("XID-XYZ-123456");
+        context1.setFragmenter("org.greenplum.pxf.api.model.Fragmenter1");
 
         RequestContext context2 = new RequestContext();
         context2.setTransactionId("XID-XYZ-654321");
+        context2.setFragmenter("org.greenplum.pxf.api.model.Fragmenter2");
 
         testContextsAreNotCached(context1, context2);
     }
@@ -98,11 +114,13 @@ public class FragmenterResourceTest {
         context1.setTransactionId("XID-XYZ-123456");
         context1.setDataSource("foo.bar");
         context1.setFilterString("a3c25s10d2016-01-03o6");
+        context1.setFragmenter("org.greenplum.pxf.api.model.Fragmenter1");
 
         RequestContext context2 = new RequestContext();
         context2.setTransactionId("XID-XYZ-123456");
         context2.setDataSource("bar.foo");
         context2.setFilterString("a3c25s10d2016-01-03o6");
+        context2.setFragmenter("org.greenplum.pxf.api.model.Fragmenter2");
 
         testContextsAreNotCached(context1, context2);
     }
@@ -112,10 +130,12 @@ public class FragmenterResourceTest {
         RequestContext context1 = new RequestContext();
         context1.setTransactionId("XID-XYZ-123456");
         context1.setFilterString("a3c25s10d2016-01-03o6");
+        context1.setFragmenter("org.greenplum.pxf.api.model.Fragmenter1");
 
         RequestContext context2 = new RequestContext();
         context2.setTransactionId("XID-XYZ-123456");
         context2.setFilterString("a3c25s10d2016-01-03o2");
+        context2.setFragmenter("org.greenplum.pxf.api.model.Fragmenter2");
 
         testContextsAreNotCached(context1, context2);
     }
@@ -123,22 +143,23 @@ public class FragmenterResourceTest {
     @Test
     public void testFragmenterCallIsNotCachedWhenCacheIsDisabled() throws Throwable {
         // Disable Fragmenter Cache
-        System.setProperty(PROPERTY_KEY_FRAGMENTER_CACHE, "false");
+        when(mockPxfServerProperties.isMetadataCacheEnabled()).thenReturn(false);
 
         RequestContext context1 = new RequestContext();
         context1.setTransactionId("XID-XYZ-123456");
         context1.setDataSource("foo.bar");
         context1.setFilterString("a3c25s10d2016-01-03o6");
+        context1.setFragmenter("org.greenplum.pxf.api.model.Fragmenter1");
 
         RequestContext context2 = new RequestContext();
         context2.setTransactionId("XID-XYZ-123456");
         context2.setDataSource("foo.bar");
         context2.setFilterString("a3c25s10d2016-01-03o6");
+        context2.setFragmenter("org.greenplum.pxf.api.model.Fragmenter2");
 
         testContextsAreNotCached(context1, context2);
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void getSameFragmenterCallTwiceUsesCache() throws Throwable {
         List<Fragment> fragmentList = new ArrayList<>();
@@ -146,24 +167,24 @@ public class FragmenterResourceTest {
         RequestContext context1 = new RequestContext();
         context1.setTransactionId("XID-XYZ-123456");
         context1.setSegmentId(0);
+        context1.setFragmenter("org.greenplum.pxf.api.model.Fragmenter1");
 
         RequestContext context2 = new RequestContext();
         context2.setTransactionId("XID-XYZ-123456");
         context2.setSegmentId(1);
+        context2.setFragmenter("org.greenplum.pxf.api.model.Fragmenter2");
 
-        when(parser.parseRequest(mockRequestHeaders1, RequestType.FRAGMENTER)).thenReturn(context1);
-        when(parser.parseRequest(mockRequestHeaders2, RequestType.FRAGMENTER)).thenReturn(context2);
-        when(fragmenterFactory.getPlugin(context1)).thenReturn(fragmenter1);
+        when(mockParser.parseRequest(mockRequestHeaders1, RequestType.FRAGMENTER)).thenReturn(context1);
+        when(mockParser.parseRequest(mockRequestHeaders2, RequestType.FRAGMENTER)).thenReturn(context2);
+        when(mockApplicationContext.getBean("Fragmenter1", Fragmenter.class)).thenReturn(fragmenter1);
+        when(mockApplicationContext.getBean("Fragmenter2", Fragmenter.class)).thenReturn(fragmenter2);
 
         when(fragmenter1.getFragments()).thenReturn(fragmentList);
 
-        ResponseEntity<FragmentsResponse> response1 = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory)
-                .getFragments(mockRequestHeaders1);
-        ResponseEntity<FragmentsResponse> response2 = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory)
-                .getFragments(mockRequestHeaders2);
+        ResponseEntity<FragmentsResponse> response1 = fragmenterResource.getFragments(mockRequestHeaders1);
+        ResponseEntity<FragmentsResponse> response2 = fragmenterResource.getFragments(mockRequestHeaders2);
 
         verify(fragmenter1, times(1)).getFragments();
-        verify(fragmenterFactory, never()).getPlugin(context2);
 
         assertNotNull(response1);
         assertNotNull(response2);
@@ -174,7 +195,6 @@ public class FragmenterResourceTest {
         assertSame(fragmentList, response2.getBody().getFragments());
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void testFragmenterCallExpiresAfterTimeout() throws Throwable {
         List<Fragment> fragmentList1 = new ArrayList<>();
@@ -183,24 +203,24 @@ public class FragmenterResourceTest {
         RequestContext context1 = new RequestContext();
         context1.setTransactionId("XID-XYZ-123456");
         context1.setSegmentId(0);
+        context1.setFragmenter("org.greenplum.pxf.api.model.Fragmenter1");
 
         RequestContext context2 = new RequestContext();
         context2.setTransactionId("XID-XYZ-123456");
         context2.setSegmentId(1);
+        context2.setFragmenter("org.greenplum.pxf.api.model.Fragmenter2");
 
-        when(parser.parseRequest(mockRequestHeaders1, RequestType.FRAGMENTER)).thenReturn(context1);
-        when(parser.parseRequest(mockRequestHeaders2, RequestType.FRAGMENTER)).thenReturn(context2);
-        when(fragmenterFactory.getPlugin(context1)).thenReturn(fragmenter1);
-        when(fragmenterFactory.getPlugin(context2)).thenReturn(fragmenter2);
+        when(mockParser.parseRequest(mockRequestHeaders1, RequestType.FRAGMENTER)).thenReturn(context1);
+        when(mockParser.parseRequest(mockRequestHeaders2, RequestType.FRAGMENTER)).thenReturn(context2);
+        when(mockApplicationContext.getBean("Fragmenter1", Fragmenter.class)).thenReturn(fragmenter1);
+        when(mockApplicationContext.getBean("Fragmenter2", Fragmenter.class)).thenReturn(fragmenter2);
 
         when(fragmenter1.getFragments()).thenReturn(fragmentList1);
         when(fragmenter2.getFragments()).thenReturn(fragmentList2);
 
-        ResponseEntity<FragmentsResponse> response1 = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory)
-                .getFragments(mockRequestHeaders1);
+        ResponseEntity<FragmentsResponse> response1 = fragmenterResource.getFragments(mockRequestHeaders1);
         fakeTicker.advanceTime(11 * 1000);
-        ResponseEntity<FragmentsResponse> response2 = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory)
-                .getFragments(mockRequestHeaders2);
+        ResponseEntity<FragmentsResponse> response2 = fragmenterResource.getFragments(mockRequestHeaders2);
 
         verify(fragmenter1, times(1)).getFragments();
         verify(fragmenter2, times(1)).getFragments();
@@ -227,22 +247,18 @@ public class FragmenterResourceTest {
             int index = i;
             threads[i] = new Thread(() -> {
 
-                RequestParser<MultiValueMap<String, String>> requestParser = mock(RequestParser.class);
-                MultiValueMap<String, String> httpHeaders = mock(MultiValueMap.class);
-                FragmenterFactory factory = mock(FragmenterFactory.class);
-                FragmenterCacheFactory cacheFactory = mock(FragmenterCacheFactory.class);
+                MultiValueMap<String, String> httpHeaders = new LinkedMultiValueMap<>();
 
                 final RequestContext context = new RequestContext();
                 context.setTransactionId("XID-MULTI_THREADED-123456");
                 context.setSegmentId(index % 10);
+                context.setFragmenter("org.greenplum.pxf.api.model.Fragmenter");
 
-                when(cacheFactory.getCache()).thenReturn(fragmentCache);
-                when(requestParser.parseRequest(httpHeaders, RequestType.FRAGMENTER)).thenReturn(context);
-                when(factory.getPlugin(context)).thenReturn(fragmenter);
+                when(mockParser.parseRequest(httpHeaders, RequestType.FRAGMENTER)).thenReturn(context);
+                when(mockApplicationContext.getBean("Fragmenter", Fragmenter.class)).thenReturn(fragmenter);
 
                 try {
-                    new FragmenterResource(requestParser, factory, cacheFactory)
-                            .getFragments(httpHeaders);
+                    fragmenterResource.getFragments(httpHeaders);
 
                     finishedCount.incrementAndGet();
                 } catch (Throwable e) {
@@ -276,25 +292,22 @@ public class FragmenterResourceTest {
         assertEquals(0, fragmentCache.size());
     }
 
-    @SuppressWarnings("unchecked")
     private void testContextsAreNotCached(RequestContext context1, RequestContext context2)
             throws Throwable {
 
         List<Fragment> fragmentList1 = new ArrayList<>();
         List<Fragment> fragmentList2 = new ArrayList<>();
 
-        when(parser.parseRequest(mockRequestHeaders1, RequestType.FRAGMENTER)).thenReturn(context1);
-        when(parser.parseRequest(mockRequestHeaders2, RequestType.FRAGMENTER)).thenReturn(context2);
-        when(fragmenterFactory.getPlugin(context1)).thenReturn(fragmenter1);
-        when(fragmenterFactory.getPlugin(context2)).thenReturn(fragmenter2);
+        when(mockParser.parseRequest(mockRequestHeaders1, RequestType.FRAGMENTER)).thenReturn(context1);
+        when(mockParser.parseRequest(mockRequestHeaders2, RequestType.FRAGMENTER)).thenReturn(context2);
+        when(mockApplicationContext.getBean("Fragmenter1", Fragmenter.class)).thenReturn(fragmenter1);
+        when(mockApplicationContext.getBean("Fragmenter2", Fragmenter.class)).thenReturn(fragmenter2);
 
         when(fragmenter1.getFragments()).thenReturn(fragmentList1);
         when(fragmenter2.getFragments()).thenReturn(fragmentList2);
 
-        ResponseEntity<FragmentsResponse> response1 = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory)
-                .getFragments(mockRequestHeaders1);
-        ResponseEntity<FragmentsResponse> response2 = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory)
-                .getFragments(mockRequestHeaders2);
+        ResponseEntity<FragmentsResponse> response1 = fragmenterResource.getFragments(mockRequestHeaders1);
+        ResponseEntity<FragmentsResponse> response2 = fragmenterResource.getFragments(mockRequestHeaders2);
 
         verify(fragmenter1, times(1)).getFragments();
         verify(fragmenter2, times(1)).getFragments();
@@ -307,7 +320,7 @@ public class FragmenterResourceTest {
         assertSame(fragmentList1, response1.getBody().getFragments());
         assertSame(fragmentList2, response2.getBody().getFragments());
 
-        if (Utilities.isFragmenterCacheEnabled()) {
+        if (mockPxfServerProperties.isMetadataCacheEnabled()) {
             assertEquals(2, fragmentCache.size());
             // advance time one second force a cache clean up.
             // Cache retains the entry
@@ -318,10 +331,7 @@ public class FragmenterResourceTest {
             // cache should be clean now
             fakeTicker.advanceTime(10 * 1000);
             fragmentCache.cleanUp();
-            assertEquals(0, fragmentCache.size());
-        } else {
-            // Cache should be empty when fragmenter cache is disabled
-            assertEquals(0, fragmentCache.size());
         }
+        assertEquals(0, fragmentCache.size());
     }
 }

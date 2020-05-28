@@ -1,15 +1,16 @@
 package org.greenplum.pxf.api.model;
 
 /**
- * Base interface for all plugin types that manages initialization and provides
- * information on plugin thread safety
+ * Base interface for all plugin types that provides information on plugin thread safety
  */
 public interface Plugin {
 
     /**
-     * Initialize the plugin for the incoming request
+     * Checks if the plugin is thread safe
      *
-     * @param requestContext data provided in the request
+     * @return true if plugin is thread safe, false otherwise
      */
-    void initialize(RequestContext requestContext);
+    default boolean isThreadSafe() {
+        return true;
+    }
 }

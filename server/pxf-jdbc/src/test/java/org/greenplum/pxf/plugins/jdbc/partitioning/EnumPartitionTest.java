@@ -20,15 +20,12 @@ package org.greenplum.pxf.plugins.jdbc.partitioning;
  */
 
 import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class EnumPartitionTest {
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
 
     private DbProduct dbProduct = null;
 
@@ -69,44 +66,38 @@ public class EnumPartitionTest {
 
     @Test
     public void testInvalidValueNull() {
-        thrown.expect(RuntimeException.class);
-
-        new EnumPartition(COL_RAW, (String) null);
+        assertThrows(RuntimeException.class,
+            () -> new EnumPartition(COL_RAW, (String) null));
     }
 
     @Test
     public void testInvalidColumnNull() {
-        thrown.expect(RuntimeException.class);
-
-        new EnumPartition(null, "enum1");
+        assertThrows(RuntimeException.class,
+            () -> new EnumPartition(null, "enum1"));
     }
 
     @Test
     public void testInvalidExcludedNull() {
-        thrown.expect(RuntimeException.class);
-
-        new EnumPartition(COL_RAW, (String[]) null);
+        assertThrows(RuntimeException.class,
+            () -> new EnumPartition(COL_RAW, (String[]) null));
     }
 
     @Test
     public void testInvalidColumnNullExcluded() {
-        thrown.expect(RuntimeException.class);
-
-        new EnumPartition(null, new String[]{"enum1"});
+        assertThrows(RuntimeException.class,
+            () -> new EnumPartition(null, new String[]{"enum1"}));
     }
 
     @Test
     public void testInvalidExcludedZeroLength() {
-        thrown.expect(RuntimeException.class);
-
-        new EnumPartition(COL_RAW, new String[]{});
+        assertThrows(RuntimeException.class,
+            () -> new EnumPartition(COL_RAW, new String[]{}));
     }
 
     @Test
     public void testInvalidNullQuoteString() {
-        thrown.expect(RuntimeException.class);
-
         EnumPartition partition = new EnumPartition(COL_RAW, "enum1");
-        partition.toSqlConstraint(null, dbProduct);
+        assertThrows(RuntimeException.class,
+            () -> partition.toSqlConstraint(null, dbProduct));
     }
 }

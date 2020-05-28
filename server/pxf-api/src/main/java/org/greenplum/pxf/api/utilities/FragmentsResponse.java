@@ -20,8 +20,7 @@ package org.greenplum.pxf.api.utilities;
  */
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.greenplum.pxf.api.model.Fragment;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
@@ -39,9 +38,11 @@ import java.util.List;
  */
 public class FragmentsResponse implements StreamingResponseBody {
 
-    private static final Log Log = LogFactory.getLog(FragmentsResponse.class);
+    public static final byte[] PXF_FRAGMENT_ARRAY_END_BYTES = "]}".getBytes();
+    public static final byte[] PXF_FRAGMENT_ARRAY_START_BYTES = "{\"PXFFragments\":[".getBytes();
+    public static final String COMMA_PREFIX = ",";
 
-    private List<Fragment> fragments;
+    private final List<Fragment> fragments;
 
     /**
      * Constructs fragments response out of a list of fragments
@@ -70,18 +71,23 @@ public class FragmentsResponse implements StreamingResponseBody {
         DataOutputStream dos = new DataOutputStream(output);
         ObjectMapper mapper = new ObjectMapper();
 
-        dos.write("{\"PXFFragments\":[".getBytes());
+        SimpleModule module = new SimpleModule();
+        module.addSerializer(FragmentMetadata.class, FragmentMetadataSerDe.getInstance());
+        mapper.registerModule(module);
 
+        StringBuilder result = new StringBuilder();
         String prefix = "";
+
+        dos.write(PXF_FRAGMENT_ARRAY_START_BYTES);
         for (Fragment fragment : fragments) {
-            StringBuilder result = new StringBuilder();
+            result.setLength(0);
+
             /* metaData and userData are automatically converted to Base64 */
             result.append(prefix).append(mapper.writeValueAsString(fragment));
-            prefix = ",";
+            prefix = COMMA_PREFIX;
             dos.write(result.toString().getBytes());
         }
-
-        dos.write("]}".getBytes());
+        dos.write(PXF_FRAGMENT_ARRAY_END_BYTES);
     }
 
     /**

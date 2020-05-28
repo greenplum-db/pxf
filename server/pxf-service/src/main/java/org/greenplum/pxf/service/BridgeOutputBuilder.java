@@ -36,6 +36,8 @@ import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 import java.lang.reflect.Array;
 import java.sql.Timestamp;
@@ -55,6 +57,8 @@ import static org.greenplum.pxf.api.io.DataType.TEXT;
  * of {@link OneField} objects (obtained from the Resolver) into an output
  * record.
  */
+@Component
+@RequestScope
 public class BridgeOutputBuilder {
 
     private static final Logger LOG = LoggerFactory.getLogger(BridgeOutputBuilder.class);
