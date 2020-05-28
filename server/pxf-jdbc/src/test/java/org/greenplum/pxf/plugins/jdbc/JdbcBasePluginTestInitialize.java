@@ -19,45 +19,38 @@ package org.greenplum.pxf.plugins.jdbc;
  * under the License.
  */
 
+import com.google.common.base.Ticker;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.api.security.SecureLogin;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.api.model.BaseConfigurationFactory;
+import org.greenplum.pxf.plugins.jdbc.utils.ConnectionManager;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.internal.util.reflection.FieldReader;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
-import org.apache.hadoop.conf.Configuration;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import org.mockito.Mockito;
-
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.internal.util.reflection.Whitebox.getInternalState;
 
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
-
-@PrepareForTest({BaseConfigurationFactory.class, Class.class})
-@RunWith(PowerMockRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class JdbcBasePluginTestInitialize {
-
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
 
     private static final String DATA_SOURCE = "t";
     private static final String JDBC_DRIVER = "java.lang.Object";  // we cannot mock Class.forName()
@@ -78,24 +71,46 @@ public class JdbcBasePluginTestInitialize {
     private static final String CONFIG_USER = "jdbc.user";
     private static final String CONFIG_PASSWORD = "jdbc.password";
 
+    private JdbcBasePlugin plugin;
+
+    @BeforeEach
+    public void setup() {
+
+        PxfJdbcProperties properties = new PxfJdbcProperties();
+
+        ConnectionManager.DriverManagerWrapper mockDriverManagerWrapper = mock(ConnectionManager.DriverManagerWrapper.class);
+
+        ConnectionManager connectionManager = new ConnectionManager(
+                new ConnectionManager.DataSourceFactory(),
+                Ticker.systemTicker(),
+                properties,
+                mockDriverManagerWrapper
+        );
+
+        plugin = new JdbcBasePlugin(connectionManager, new SecureLogin());
+    }
+
     /**
      * Create and prepare {@link RequestContext}
      */
-    private RequestContext makeContext() {
+    private RequestContext makeContext(Configuration configuration) {
         RequestContext context = new RequestContext();
         context.setDataSource(DATA_SOURCE);
         context.setTupleDescription(COLUMNS);
         context.setRequestType(RequestContext.RequestType.WRITE_BRIDGE);
+        context.setTotalSegments(1);
+        context.setConfiguration(configuration);
         return context;
     }
 
     /**
      * Create and prepare {@link RequestContext}
      */
-    private RequestContext makeContextWithDataSource(String datasource) {
+    private RequestContext makeContextWithDataSource(Configuration configuration, String datasource) {
         RequestContext context = new RequestContext();
         context.setDataSource(datasource);
         context.setTupleDescription(COLUMNS);
+        context.setConfiguration(configuration);
         return context;
     }
 
@@ -109,34 +124,18 @@ public class JdbcBasePluginTestInitialize {
         return configuration;
     }
 
-    /**
-     * Prepare {@link BaseConfigurationFactory} getInstance() method to return
-     * provided configuration
-     *
-     * @param configuration
-     */
-    private void prepareBaseConfigurationFactory(Configuration configuration) throws Exception {
-        BaseConfigurationFactory configurationFactory = mock(BaseConfigurationFactory.class);
-        Mockito.when(configurationFactory.initConfiguration(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.any())).thenReturn(configuration);
-        PowerMockito.mockStatic(BaseConfigurationFactory.class);
-        PowerMockito.when(BaseConfigurationFactory.getInstance()).thenReturn(configurationFactory);
-    }
-
     @Test
     public void testMinimumSettings() throws Exception {
         // Configuration
         Configuration configuration = makeConfiguration();
 
         // Context
-        RequestContext context = makeContext();
+        RequestContext context = makeContext(configuration);
 
         // Initialize plugin
-        prepareBaseConfigurationFactory(configuration);
-        JdbcBasePlugin plugin = new JdbcBasePlugin();
-        plugin.initialize(context);
+        plugin.setRequestContext(context);
 
         // Checks
-        PowerMockito.verifyStatic(times(1));
         Class.forName(JDBC_DRIVER);
         assertEquals(JDBC_URL, getInternalState(plugin, "jdbcUrl"));
         assertEquals(COLUMNS, getInternalState(plugin, "columns"));
@@ -155,9 +154,7 @@ public class JdbcBasePluginTestInitialize {
         configuration.set("jdbc.statement.batchSize", "0");
 
         // Initialize plugin
-        prepareBaseConfigurationFactory(configuration);
-        JdbcBasePlugin plugin = new JdbcBasePlugin();
-        plugin.initialize(makeContext());
+        plugin.setRequestContext(makeContext(configuration));
 
         // Checks
         assertEquals(1, getInternalState(plugin, "batchSize"));
@@ -171,9 +168,7 @@ public class JdbcBasePluginTestInitialize {
         configuration.set("jdbc.statement.batchSize", "1");
 
         // Initialize plugin
-        prepareBaseConfigurationFactory(configuration);
-        JdbcBasePlugin plugin = new JdbcBasePlugin();
-        plugin.initialize(makeContext());
+        plugin.setRequestContext(makeContext(configuration));
 
         // Checks
         assertEquals(1, getInternalState(plugin, "batchSize"));
@@ -187,9 +182,7 @@ public class JdbcBasePluginTestInitialize {
         configuration.set("jdbc.statement.batchSize", "2");
 
         // Initialize plugin
-        prepareBaseConfigurationFactory(configuration);
-        JdbcBasePlugin plugin = new JdbcBasePlugin();
-        plugin.initialize(makeContext());
+        plugin.setRequestContext(makeContext(configuration));
 
         // Checks
         assertEquals(2, getInternalState(plugin, "batchSize"));
@@ -197,47 +190,41 @@ public class JdbcBasePluginTestInitialize {
     }
 
     @Test
-    public void testBatchSizeOnRead() throws Exception {
+    public void testBatchSizeOnRead() {
         // Configuration
         Configuration configuration = makeConfiguration();
         configuration.set("jdbc.statement.batchSize", "foobar");
 
         // Initialize plugin
-        prepareBaseConfigurationFactory(configuration);
-        JdbcBasePlugin plugin = new JdbcBasePlugin();
-        RequestContext context = makeContext();
+        RequestContext context = makeContext(configuration);
         context.setRequestType(RequestContext.RequestType.READ_BRIDGE);
-        plugin.initialize(context);
+        plugin.setRequestContext(context);
 
         // should not error because we don't validate this on the READ path
     }
 
     @Test
-    public void testBatchSizeOnWrite() throws Exception {
-        thrown.expect(NumberFormatException.class);
-        thrown.expectMessage("For input string: \"foobar\"");
+    public void testBatchSizeOnWrite() {
         // Configuration
         Configuration configuration = makeConfiguration();
         configuration.set("jdbc.statement.batchSize", "foobar");
 
         // Initialize plugin
-        prepareBaseConfigurationFactory(configuration);
-        JdbcBasePlugin plugin = new JdbcBasePlugin();
-        plugin.initialize(makeContext());
+        Exception ex = assertThrows(NumberFormatException.class,
+                () -> plugin.setRequestContext(makeContext(configuration)));
+        assertEquals("For input string: \"foobar\"", ex.getMessage());
     }
 
     @Test
-    public void testBatchSizeNegative() throws Exception {
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("Property jdbc.statement.batchSize has incorrect value -1 : must be a non-negative integer");
+    public void testBatchSizeNegative() {
         // Configuration
         Configuration configuration = makeConfiguration();
         configuration.set("jdbc.statement.batchSize", "-1");
 
         // Initialize plugin
-        prepareBaseConfigurationFactory(configuration);
-        JdbcBasePlugin plugin = new JdbcBasePlugin();
-        plugin.initialize(makeContext());
+        Exception ex = assertThrows(IllegalArgumentException.class,
+                () -> plugin.setRequestContext(makeContext(configuration)));
+        assertEquals("Property jdbc.statement.batchSize has incorrect value -1 : must be a non-negative integer", ex.getMessage());
     }
 
     @Test
@@ -246,13 +233,11 @@ public class JdbcBasePluginTestInitialize {
         Configuration configuration = makeConfiguration();
 
         // Context
-        RequestContext context = makeContext();
+        RequestContext context = makeContext(configuration);
         context.addOption(OPTION_POOL_SIZE, "1");
 
         // Initialize plugin
-        prepareBaseConfigurationFactory(configuration);
-        JdbcBasePlugin plugin = new JdbcBasePlugin();
-        plugin.initialize(context);
+        plugin.setRequestContext(context);
 
         // Checks
         assertEquals(1, getInternalState(plugin, "poolSize"));
@@ -264,13 +249,11 @@ public class JdbcBasePluginTestInitialize {
         Configuration configuration = makeConfiguration();
 
         // Context
-        RequestContext context = makeContext();
+        RequestContext context = makeContext(configuration);
         context.addOption(OPTION_POOL_SIZE, "-1");
 
         // Initialize plugin
-        prepareBaseConfigurationFactory(configuration);
-        JdbcBasePlugin plugin = new JdbcBasePlugin();
-        plugin.initialize(context);
+        plugin.setRequestContext(context);
 
         // Checks
         assertEquals(-1, getInternalState(plugin, "poolSize"));
@@ -283,9 +266,7 @@ public class JdbcBasePluginTestInitialize {
         configuration.set("jdbc.statement.fetchSize", "4");
 
         // Initialize plugin
-        prepareBaseConfigurationFactory(configuration);
-        JdbcBasePlugin plugin = new JdbcBasePlugin();
-        plugin.initialize(makeContext());
+        plugin.setRequestContext(makeContext(configuration));
 
         // Checks
         assertEquals(4, getInternalState(plugin, "fetchSize"));
@@ -298,42 +279,35 @@ public class JdbcBasePluginTestInitialize {
         configuration.set("jdbc.statement.queryTimeout", "200");
 
         // Initialize plugin
-        prepareBaseConfigurationFactory(configuration);
-        JdbcBasePlugin plugin = new JdbcBasePlugin();
-        plugin.initialize(makeContext());
+        plugin.setRequestContext(makeContext(configuration));
 
         // Checks
         assertEquals(200, getInternalState(plugin, "queryTimeout"));
     }
 
     @Test
-    public void testInvalidStringQueryTimeout() throws Exception {
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("Property jdbc.statement.queryTimeout has incorrect value foo : must be a non-negative integer");
-
+    public void testInvalidStringQueryTimeout() {
         // Configuration
         Configuration configuration = makeConfiguration();
         configuration.set("jdbc.statement.queryTimeout", "foo");
 
         // Initialize plugin
-        prepareBaseConfigurationFactory(configuration);
-        JdbcBasePlugin plugin = new JdbcBasePlugin();
-        plugin.initialize(makeContext());
+        Exception ex = assertThrows(IllegalArgumentException.class,
+                () -> plugin.setRequestContext(makeContext(configuration)));
+        assertEquals("Property jdbc.statement.queryTimeout has incorrect value foo : must be a non-negative integer", ex.getMessage());
     }
 
     @Test
-    public void testInvalidNegativeQueryTimeout() throws Exception {
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("Property jdbc.statement.queryTimeout has incorrect value -1 : must be a non-negative integer");
+    public void testInvalidNegativeQueryTimeout() {
 
         // Configuration
         Configuration configuration = makeConfiguration();
         configuration.set("jdbc.statement.queryTimeout", "-1");
 
         // Initialize plugin
-        prepareBaseConfigurationFactory(configuration);
-        JdbcBasePlugin plugin = new JdbcBasePlugin();
-        plugin.initialize(makeContext());
+        Exception ex = assertThrows(IllegalArgumentException.class,
+                () -> plugin.setRequestContext(makeContext(configuration)));
+        assertEquals("Property jdbc.statement.queryTimeout has incorrect value -1 : must be a non-negative integer", ex.getMessage());
     }
 
     @Test
@@ -342,13 +316,11 @@ public class JdbcBasePluginTestInitialize {
         Configuration configuration = makeConfiguration();
 
         // Context
-        RequestContext context = makeContext();
+        RequestContext context = makeContext(configuration);
         context.addOption(OPTION_QUOTE_COLUMNS, "false");
 
         // Initialize plugin
-        prepareBaseConfigurationFactory(configuration);
-        JdbcBasePlugin plugin = new JdbcBasePlugin();
-        plugin.initialize(context);
+        plugin.setRequestContext(context);
 
         // Checks
         assertFalse((Boolean) getInternalState(plugin, "quoteColumns"));
@@ -360,13 +332,11 @@ public class JdbcBasePluginTestInitialize {
         Configuration configuration = makeConfiguration();
 
         // Context
-        RequestContext context = makeContext();
+        RequestContext context = makeContext(configuration);
         context.addOption(OPTION_QUOTE_COLUMNS, "true");
 
         // Initialize plugin
-        prepareBaseConfigurationFactory(configuration);
-        JdbcBasePlugin plugin = new JdbcBasePlugin();
-        plugin.initialize(context);
+        plugin.setRequestContext(context);
 
         // Checks
         assertTrue((Boolean) getInternalState(plugin, "quoteColumns"));
@@ -378,13 +348,11 @@ public class JdbcBasePluginTestInitialize {
         Configuration configuration = makeConfiguration();
 
         // Context
-        RequestContext context = makeContext();
+        RequestContext context = makeContext(configuration);
         context.addOption(OPTION_QUOTE_COLUMNS, "some_other_value");
 
         // Initialize plugin
-        prepareBaseConfigurationFactory(configuration);
-        JdbcBasePlugin plugin = new JdbcBasePlugin();
-        plugin.initialize(context);
+        plugin.setRequestContext(context);
 
         // Checks
         assertFalse((Boolean) getInternalState(plugin, "quoteColumns"));
@@ -399,36 +367,32 @@ public class JdbcBasePluginTestInitialize {
         configuration.set(CONFIG_SESSION_KEY_PREFIX + CONFIG_PROPERTIES_KEYS[1], "v2");
 
         // Context
-        RequestContext context = makeContext();
+        RequestContext context = makeContext(configuration);
 
         // Initialize plugin
-        prepareBaseConfigurationFactory(configuration);
-        JdbcBasePlugin plugin = new JdbcBasePlugin();
-        plugin.initialize(context);
+        plugin.setRequestContext(context);
 
         // Checks
-        Map<String, String> expected = new HashMap<String, String>();
+        Map<String, String> expected = new HashMap<>();
         expected.put(CONFIG_PROPERTIES_KEYS[0], "v1");
         expected.put(CONFIG_PROPERTIES_KEYS[1], "v2");
         assertEquals(expected.entrySet(), ((Map<String, String>) getInternalState(plugin, "sessionConfiguration")).entrySet());
     }
 
     @Test
-    public void testSessionConfigurationForbiddenSymbols() throws Exception {
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("Some session configuration parameter contains forbidden characters");
+    public void testSessionConfigurationForbiddenSymbols() {
         // Configuration
         Configuration configuration = makeConfiguration();
         configuration.set(CONFIG_SESSION_KEY_PREFIX + CONFIG_PROPERTIES_KEYS[0], "v1");
         configuration.set(CONFIG_SESSION_KEY_PREFIX + CONFIG_PROPERTIES_KEYS[1], "v2; SELECT * FROM secrets; ");
 
         // Context
-        RequestContext context = makeContext();
+        RequestContext context = makeContext(configuration);
 
         // Initialize plugin
-        prepareBaseConfigurationFactory(configuration);
-        JdbcBasePlugin plugin = new JdbcBasePlugin();
-        plugin.initialize(context);
+        Exception ex = assertThrows(IllegalArgumentException.class,
+                () -> plugin.setRequestContext(context));
+        assertEquals("Some session configuration parameter contains forbidden characters", ex.getMessage());
     }
 
     @Test
@@ -439,19 +403,17 @@ public class JdbcBasePluginTestInitialize {
         configuration.set(CONFIG_CONNECTION_KEY_PREFIX + CONFIG_PROPERTIES_KEYS[1], "v2");
 
         // Context
-        RequestContext context = makeContext();
+        RequestContext context = makeContext(configuration);
 
         // Initialize plugin
-        prepareBaseConfigurationFactory(configuration);
-        JdbcBasePlugin plugin = new JdbcBasePlugin();
-        plugin.initialize(context);
+        plugin.setRequestContext(context);
 
         // Checks
         // Note password and user are not set, thus configuration will be equal to the expected one
         Properties expected = new Properties();
         expected.setProperty(CONFIG_PROPERTIES_KEYS[0], "v1");
         expected.setProperty(CONFIG_PROPERTIES_KEYS[1], "v2");
-        assertEquals(expected.entrySet(), ((Properties) getInternalState(plugin, "connectionConfiguration")).entrySet());
+        assertEntrySetEquals(expected.entrySet(), ((Properties) getInternalState(plugin, "connectionConfiguration")).entrySet());
     }
 
     @Test
@@ -461,17 +423,15 @@ public class JdbcBasePluginTestInitialize {
         configuration.set(CONFIG_USER, "user");
 
         // Context
-        RequestContext context = makeContext();
+        RequestContext context = makeContext(configuration);
 
         // Initialize plugin
-        prepareBaseConfigurationFactory(configuration);
-        JdbcBasePlugin plugin = new JdbcBasePlugin();
-        plugin.initialize(context);
+        plugin.setRequestContext(context);
 
         // Checks
         Properties expected = new Properties();
         expected.setProperty("user", "user");
-        assertEquals(expected.entrySet(), ((Properties) getInternalState(plugin, "connectionConfiguration")).entrySet());
+        assertEntrySetEquals(expected.entrySet(), ((Properties) getInternalState(plugin, "connectionConfiguration")).entrySet());
     }
 
     @Test
@@ -481,18 +441,16 @@ public class JdbcBasePluginTestInitialize {
         configuration.set("pxf.service.user.impersonation", "true");
 
         // Context
-        RequestContext context = makeContext();
+        RequestContext context = makeContext(configuration);
         context.setUser("proxy");
 
         // Initialize plugin
-        prepareBaseConfigurationFactory(configuration);
-        JdbcBasePlugin plugin = new JdbcBasePlugin();
-        plugin.initialize(context);
+        plugin.setRequestContext(context);
 
         // Checks
         Properties expected = new Properties();
         expected.setProperty("user", "proxy");
-        assertEquals(expected.entrySet(), ((Properties) getInternalState(plugin, "connectionConfiguration")).entrySet());
+        assertEntrySetEquals(expected.entrySet(), ((Properties) getInternalState(plugin, "connectionConfiguration")).entrySet());
     }
 
     @Test
@@ -503,18 +461,16 @@ public class JdbcBasePluginTestInitialize {
         configuration.set("pxf.service.user.impersonation", "true");
 
         // Context
-        RequestContext context = makeContext();
+        RequestContext context = makeContext(configuration);
         context.setUser("proxy");
 
         // Initialize plugin
-        prepareBaseConfigurationFactory(configuration);
-        JdbcBasePlugin plugin = new JdbcBasePlugin();
-        plugin.initialize(context);
+        plugin.setRequestContext(context);
 
         // Checks
         Properties expected = new Properties();
         expected.setProperty("user", "proxy");
-        assertEquals(expected.entrySet(), ((Properties) getInternalState(plugin, "connectionConfiguration")).entrySet());
+        assertEntrySetEquals(expected.entrySet(), ((Properties) getInternalState(plugin, "connectionConfiguration")).entrySet());
     }
 
     @Test
@@ -525,18 +481,16 @@ public class JdbcBasePluginTestInitialize {
         configuration.set("pxf.service.user.impersonation", "false");
 
         // Context
-        RequestContext context = makeContext();
+        RequestContext context = makeContext(configuration);
         context.setUser("proxy");
 
         // Initialize plugin
-        prepareBaseConfigurationFactory(configuration);
-        JdbcBasePlugin plugin = new JdbcBasePlugin();
-        plugin.initialize(context);
+        plugin.setRequestContext(context);
 
         // Checks
         Properties expected = new Properties();
         expected.setProperty("user", "user");
-        assertEquals(expected.entrySet(), ((Properties) getInternalState(plugin, "connectionConfiguration")).entrySet());
+        assertEntrySetEquals(expected.entrySet(), ((Properties) getInternalState(plugin, "connectionConfiguration")).entrySet());
     }
 
     @Test
@@ -546,18 +500,16 @@ public class JdbcBasePluginTestInitialize {
         configuration.set(CONFIG_USER, "user");
 
         // Context
-        RequestContext context = makeContext();
+        RequestContext context = makeContext(configuration);
         context.setUser("proxy");
 
         // Initialize plugin
-        prepareBaseConfigurationFactory(configuration);
-        JdbcBasePlugin plugin = new JdbcBasePlugin();
-        plugin.initialize(context);
+        plugin.setRequestContext(context);
 
         // Checks
         Properties expected = new Properties();
         expected.setProperty("user", "user");
-        assertEquals(expected.entrySet(), ((Properties) getInternalState(plugin, "connectionConfiguration")).entrySet());
+        assertEntrySetEquals(expected.entrySet(), ((Properties) getInternalState(plugin, "connectionConfiguration")).entrySet());
     }
 
 
@@ -569,18 +521,16 @@ public class JdbcBasePluginTestInitialize {
         configuration.set(CONFIG_PASSWORD, "password");
 
         // Context
-        RequestContext context = makeContext();
+        RequestContext context = makeContext(configuration);
 
         // Initialize plugin
-        prepareBaseConfigurationFactory(configuration);
-        JdbcBasePlugin plugin = new JdbcBasePlugin();
-        plugin.initialize(context);
+        plugin.setRequestContext(context);
 
         // Checks
         Properties expected = new Properties();
         expected.setProperty("user", "user");
         expected.setProperty("password", "password");
-        assertEquals(expected.entrySet(), ((Properties) getInternalState(plugin, "connectionConfiguration")).entrySet());
+        assertEntrySetEquals(expected.entrySet(), ((Properties) getInternalState(plugin, "connectionConfiguration")).entrySet());
     }
 
     @Test
@@ -590,23 +540,19 @@ public class JdbcBasePluginTestInitialize {
         configuration.set(CONFIG_PASSWORD, "password");
 
         // Context
-        RequestContext context = makeContext();
+        RequestContext context = makeContext(configuration);
 
         // Initialize plugin
-        prepareBaseConfigurationFactory(configuration);
-        JdbcBasePlugin plugin = new JdbcBasePlugin();
-        plugin.initialize(context);
+        plugin.setRequestContext(context);
 
         // Checks
         Properties expected = new Properties();
-        assertEquals(expected.entrySet(), ((Properties) getInternalState(plugin, "connectionConfiguration")).entrySet());
+        assertEntrySetEquals(expected.entrySet(), ((Properties) getInternalState(plugin, "connectionConfiguration")).entrySet());
     }
 
     @Test
     public void testDatasourceIsTable() throws Exception {
-        prepareBaseConfigurationFactory(makeConfiguration());
-        JdbcBasePlugin plugin = new JdbcBasePlugin();
-        plugin.initialize(makeContextWithDataSource("foo"));
+        plugin.setRequestContext(makeContextWithDataSource(makeConfiguration(), "foo"));
 
         assertEquals("foo", getInternalState(plugin, "tableName"));
         assertNull(getInternalState(plugin, "queryName"));
@@ -614,31 +560,23 @@ public class JdbcBasePluginTestInitialize {
 
     @Test
     public void testDatasourceIsQuery() throws Exception {
-        prepareBaseConfigurationFactory(makeConfiguration());
-        JdbcBasePlugin plugin = new JdbcBasePlugin();
-        plugin.initialize(makeContextWithDataSource("query:foo"));
+        plugin.setRequestContext(makeContextWithDataSource(makeConfiguration(), "query:foo"));
 
         assertEquals("foo", getInternalState(plugin, "queryName"));
         assertNull(getInternalState(plugin, "tableName"));
     }
 
     @Test
-    public void testInitializationFailsWhenDatasourceIsEmptyQuery() throws Exception {
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("Query name is not provided in data source [query:]");
-
-        prepareBaseConfigurationFactory(makeConfiguration());
-        JdbcBasePlugin plugin = new JdbcBasePlugin();
-        plugin.initialize(makeContextWithDataSource("query:"));
+    public void testInitializationFailsWhenDatasourceIsEmptyQuery() {
+        Exception ex = assertThrows(IllegalArgumentException.class,
+                () -> plugin.setRequestContext(makeContextWithDataSource(makeConfiguration(), "query:")));
+        assertEquals("Query name is not provided in data source [query:]", ex.getMessage());
     }
 
     @Test
     public void testConnectionPoolEnabledPropertyNotDefined() throws Exception {
         Configuration configuration = makeConfiguration();
-        prepareBaseConfigurationFactory(configuration);
-
-        JdbcBasePlugin plugin = new JdbcBasePlugin();
-        plugin.initialize(makeContext());
+        plugin.setRequestContext(makeContext(configuration));
 
         Properties poolConfiguration = (Properties) getInternalState(plugin, "poolConfiguration");
         assertNotNull(poolConfiguration);
@@ -653,10 +591,8 @@ public class JdbcBasePluginTestInitialize {
     public void testConnectionPoolNotEnabledPropertyDefined() throws Exception {
         Configuration configuration = makeConfiguration();
         configuration.set("jdbc.pool.enabled", "false");
-        prepareBaseConfigurationFactory(configuration);
 
-        JdbcBasePlugin plugin = new JdbcBasePlugin();
-        plugin.initialize(makeContext());
+        plugin.setRequestContext(makeContext(configuration));
 
         assertNull(getInternalState(plugin, "poolConfiguration"));
     }
@@ -668,10 +604,8 @@ public class JdbcBasePluginTestInitialize {
         configuration.set("jdbc.pool.property.foo", "include-foo");
         configuration.set("jdbc.pool.property.bar", "include-bar");
         configuration.set("jdbc.whatever", "exclude-whatever");
-        prepareBaseConfigurationFactory(configuration);
 
-        JdbcBasePlugin plugin = new JdbcBasePlugin();
-        plugin.initialize(makeContext());
+        plugin.setRequestContext(makeContext(configuration));
 
         Properties poolProps = (Properties) getInternalState(plugin, "poolConfiguration");
         assertNotNull(poolProps);
@@ -685,5 +619,18 @@ public class JdbcBasePluginTestInitialize {
         expectedProps.setProperty("foo", "include-foo");
         expectedProps.setProperty("bar", "include-bar");
         assertEquals(expectedProps, poolProps);
+    }
+
+    private void assertEntrySetEquals(Set<Map.Entry<Object, Object>> expected, Set<Map.Entry<Object, Object>> actual) {
+        assertTrue(CollectionUtils.isEqualCollection(expected, actual));
+    }
+
+    private Object getInternalState(Object target, String fieldName) throws NoSuchFieldException {
+        Class<?> clazz = target.getClass();
+        if (clazz.getName().contains("$")) {
+            clazz = clazz.getSuperclass();
+        }
+        Field field = clazz.getDeclaredField(fieldName);
+        return new FieldReader(target, field).read();
     }
 }

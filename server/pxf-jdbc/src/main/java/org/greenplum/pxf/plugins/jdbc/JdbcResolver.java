@@ -23,9 +23,13 @@ import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.Resolver;
+import org.greenplum.pxf.api.security.SecureLogin;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.plugins.jdbc.utils.ConnectionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -44,6 +48,8 @@ import java.util.Set;
 /**
  * JDBC tables resolver
  */
+@Component("JdbcResolver")
+@RequestScope
 public class JdbcResolver extends JdbcBasePlugin implements Resolver {
     private static final Set<DataType> DATATYPES_SUPPORTED = EnumSet.of(
             DataType.VARCHAR,
@@ -62,6 +68,16 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
     );
 
     private static final Logger LOG = LoggerFactory.getLogger(JdbcResolver.class);
+
+    /**
+     * Creates a new instance of a JDBC resolver with provided connection manager and secure login.
+     *
+     * @param connectionManager connection manager
+     * @param secureLogin       the secure login
+     */
+    public JdbcResolver(ConnectionManager connectionManager, SecureLogin secureLogin) {
+        super(connectionManager, secureLogin);
+    }
 
     /**
      * getFields() implementation
@@ -165,11 +181,9 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
                 String valDebug;
                 if (oneField.val == null) {
                     valDebug = "null";
-                }
-                else if (oneFieldType == DataType.BYTEA) {
+                } else if (oneFieldType == DataType.BYTEA) {
                     valDebug = String.format("'{}'", new String((byte[]) oneField.val));
-                }
-                else {
+                } else {
                     valDebug = String.format("'{}'", oneField.val.toString());
                 }
 

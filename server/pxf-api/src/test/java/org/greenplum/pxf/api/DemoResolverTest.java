@@ -40,7 +40,6 @@ public class DemoResolverTest {
 
     private static final String DATA = "value1,value2";
 
-    private RequestContext context;
     private DemoResolver customResolver;
     private DemoTextResolver textResolver;
     private OneRow row;
@@ -48,45 +47,38 @@ public class DemoResolverTest {
 
     @BeforeEach
     public void setup() {
-        context = new RequestContext();
+        RequestContext context = new RequestContext();
         context.setConfig("default");
         context.setUser("test-user");
 
         customResolver = new DemoResolver();
         textResolver = new DemoTextResolver();
 
-        customResolver.initialize(context);
-        textResolver.initialize(context);
-
         row = new OneRow("0.0", DATA);
         field = new OneField(VARCHAR.getOID(), DATA.getBytes());
     }
 
     @Test
-    public void testGetCustomData() throws Exception {
-
+    public void testGetCustomData() {
         List<OneField> output = customResolver.getFields(row);
         assertEquals("value1", output.get(0).toString());
         assertEquals("value2", output.get(1).toString());
     }
 
     @Test
-    public void testGetTextData() throws Exception {
-
+    public void testGetTextData() {
         List<OneField> output = textResolver.getFields(row);
         assertEquals(DATA, output.get(0).toString());
     }
 
     @Test
     public void testSetTextData() throws Exception {
-
         OneRow output = textResolver.setFields(Collections.singletonList(field));
         assertArrayEquals(DATA.getBytes(), (byte[]) output.getData());
     }
 
     @Test
     public void testSetEmptyTextData() throws Exception {
-
         OneField field = new OneField(VARCHAR.getOID(), new byte[]{});
         OneRow output = textResolver.setFields(Collections.singletonList(field));
         assertNull(output);
@@ -94,21 +86,18 @@ public class DemoResolverTest {
 
     @Test
     public void testSetTextDataNullInput() {
-
         assertThrows(Exception.class,
                 () -> textResolver.setFields(null));
     }
 
     @Test
     public void testSetTextDataEmptyInput() {
-
         assertThrows(Exception.class,
                 () -> textResolver.setFields(Collections.emptyList()));
     }
 
     @Test
     public void testSetTextDataManyElements() {
-
         assertThrows(Exception.class,
                 () -> textResolver.setFields(Arrays.asList(field, field)));
     }

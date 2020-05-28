@@ -22,6 +22,7 @@ package org.greenplum.pxf.service;
 import org.greenplum.pxf.api.BadRecordException;
 import org.greenplum.pxf.api.GreenplumDateTime;
 import org.greenplum.pxf.api.OneField;
+import org.greenplum.pxf.api.examples.DemoFragmentMetadata;
 import org.greenplum.pxf.api.io.BufferWritable;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.io.GPDBWritable;
@@ -29,7 +30,6 @@ import org.greenplum.pxf.api.io.Writable;
 import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.api.utilities.Utilities;
 import org.junit.jupiter.api.Test;
 
 import java.io.DataOutput;
@@ -416,7 +416,7 @@ public class BridgeOutputBuilderTest {
         context.setUser("alex");
         context.addOption("I'M-STANDING-HERE", "outside-your-door");
         context.setDataSource("i'm/ready/to/go");
-        context.setFragmentMetadata(Utilities.parseBase64("U29tZXRoaW5nIGluIHRoZSB3YXk=", "Fragment metadata information"));
+        context.setFragmentMetadata(new DemoFragmentMetadata("Fragment metadata information"));
 
         return new BridgeOutputBuilder(context);
     }

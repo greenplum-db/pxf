@@ -19,15 +19,17 @@ package org.greenplum.pxf.service.bridge;
  * under the License.
  */
 
-
 import org.greenplum.pxf.api.BadRecordException;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.io.Writable;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.api.utilities.AccessorFactory;
-import org.greenplum.pxf.api.utilities.ResolverFactory;
 import org.greenplum.pxf.service.BridgeInputBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 import java.io.DataInputStream;
 import java.util.List;
@@ -37,23 +39,20 @@ import java.util.List;
  * It reads data from inputStream by the resolver,
  * and writes it to the Hadoop storage with the accessor.
  */
+@Component
+@RequestScope
 public class WriteBridge extends BaseBridge {
 
     private final BridgeInputBuilder inputBuilder;
 
-    /*
-     * C'tor - set the implementation of the bridge
+    public WriteBridge(BridgeInputBuilder inputBuilder, ApplicationContext applicationContext, RequestContext context) {
+        super(applicationContext, context);
+        this.inputBuilder = inputBuilder;
+    }
+
+    /**
+     * {@inheritDoc}
      */
-    public WriteBridge(RequestContext context) {
-        super(context);
-        inputBuilder = new BridgeInputBuilder(context);
-    }
-
-    WriteBridge(RequestContext context, AccessorFactory accessorFactory, ResolverFactory resolverFactory) {
-        super(context, accessorFactory, resolverFactory);
-        inputBuilder = new BridgeInputBuilder(context);
-    }
-
     @Override
     public boolean beginIteration() throws Exception {
         return accessor.openForWrite();
@@ -93,6 +92,9 @@ public class WriteBridge extends BaseBridge {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Writable getNext() {
         throw new UnsupportedOperationException("getNext is not implemented");

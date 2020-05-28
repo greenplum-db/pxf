@@ -24,11 +24,14 @@ import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.ConfigurationFactory;
+import org.greenplum.pxf.api.security.SecureLogin;
 import org.greenplum.pxf.plugins.jdbc.utils.ConnectionManager;
 import org.greenplum.pxf.plugins.jdbc.writercallable.WriterCallable;
 import org.greenplum.pxf.plugins.jdbc.writercallable.WriterCallableFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,7 +41,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLTimeoutException;
 import java.sql.Statement;
-import java.text.ParseException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -47,42 +49,35 @@ import java.util.concurrent.Future;
 
 /**
  * JDBC tables accessor
- *
+ * <p>
  * The SELECT queries are processed by {@link java.sql.Statement}
- *
+ * <p>
  * The INSERT queries are processed by {@link java.sql.PreparedStatement} and
  * built-in JDBC batches of arbitrary size
  */
+@Component("JdbcAccessor")
+@RequestScope
 public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
 
     private static final Logger LOG = LoggerFactory.getLogger(JdbcAccessor.class);
 
-    // Read variables
-    private String queryRead = null;
     private Statement statementRead = null;
     private ResultSet resultSetRead = null;
 
-    // Write variables
-    private String queryWrite = null;
     private PreparedStatement statementWrite = null;
     private WriterCallableFactory writerCallableFactory = null;
     private WriterCallable writerCallable = null;
     private ExecutorService executorServiceWrite = null;
-    private List<Future<SQLException> > poolTasks = null;
+    private List<Future<SQLException>> poolTasks = null;
 
     /**
-     * Creates a new instance of accessor with default connection manager.
-     */
-    public JdbcAccessor() {
-        super();
-    }
-
-    /**
-     * Creates a new instance of accessor with provided connection manager.
+     * Creates a new instance of a JDBC accessor with provided connection manager and secure login.
+     *
      * @param connectionManager connection manager
+     * @param secureLogin       the secure login
      */
-    JdbcAccessor(ConnectionManager connectionManager) {
-        super(connectionManager);
+    public JdbcAccessor(ConnectionManager connectionManager, SecureLogin secureLogin) {
+        super(connectionManager, secureLogin);
     }
 
     /**
@@ -90,13 +85,11 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
      * Create query, open JDBC connection, execute query and store the result into resultSet
      *
      * @return true if successful
-     * @throws SQLException if a database access error occurs
+     * @throws SQLException        if a database access error occurs
      * @throws SQLTimeoutException if a problem with the connection occurs
-     * @throws ParseException if th SQL statement provided in PXF RequestContext is incorrect
-     * @throws ClassNotFoundException if the JDBC driver was not found
      */
     @Override
-    public boolean openForRead() throws SQLException, SQLTimeoutException, ParseException {
+    public boolean openForRead() throws SQLException, SQLTimeoutException {
         if (statementRead != null && !statementRead.isClosed()) {
             return true;
         }
@@ -107,11 +100,11 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
         // Build SELECT query
         if (quoteColumns == null) {
             sqlQueryBuilder.autoSetQuoteString();
-        }
-        else if (quoteColumns) {
+        } else if (quoteColumns) {
             sqlQueryBuilder.forceSetQuoteString();
         }
-        queryRead = sqlQueryBuilder.buildSelectQuery();
+        // Read variables
+        String queryRead = sqlQueryBuilder.buildSelectQuery();
         LOG.trace("Select query: {}", queryRead);
 
         // Execute queries
@@ -155,13 +148,11 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
      * Create query template and open JDBC connection
      *
      * @return true if successful
-     * @throws SQLException if a database access error occurs
+     * @throws SQLException        if a database access error occurs
      * @throws SQLTimeoutException if a problem with the connection occurs
-     * @throws ParseException if the SQL statement provided in PXF RequestContext is incorrect
-     * @throws ClassNotFoundException if the JDBC driver was not found
      */
     @Override
-    public boolean openForWrite() throws SQLException, SQLTimeoutException, ParseException, ClassNotFoundException {
+    public boolean openForWrite() throws SQLException, SQLTimeoutException {
         if (queryName != null) {
             throw new IllegalArgumentException("specifying query name in data path is not supported for JDBC writable external tables");
         }
@@ -179,7 +170,8 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
         } else if (quoteColumns) {
             sqlQueryBuilder.forceSetQuoteString();
         }
-        queryWrite = sqlQueryBuilder.buildInsertQuery();
+        // Write variables
+        String queryWrite = sqlQueryBuilder.buildInsertQuery();
         LOG.trace("Insert query: {}", queryWrite);
 
         statementWrite = super.getPreparedStatement(connection, queryWrite);
@@ -188,8 +180,7 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
         if (!connection.getMetaData().supportsBatchUpdates()) {
             if ((batchSizeIsSetByUser) && (batchSize > 1)) {
                 throw new SQLException("The external database does not support batch updates");
-            }
-            else {
+            } else {
                 batchSize = 1;
             }
         }
@@ -197,9 +188,7 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
         // Process poolSize
         if (poolSize < 1) {
             poolSize = Runtime.getRuntime().availableProcessors();
-            LOG.info(
-                "The POOL_SIZE is set to the number of CPUs available (" + Integer.toString(poolSize) + ")"
-            );
+            LOG.info("The POOL_SIZE is set to the number of CPUs available ({})", poolSize);
         }
         if (poolSize > 1) {
             executorServiceWrite = Executors.newFixedThreadPool(poolSize);
@@ -214,21 +203,21 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
         return true;
     }
 
-	/**
+    /**
      * writeNextObject() implementation
-     *
+     * <p>
      * If batchSize is not 0 or 1, add a tuple to the batch of statementWrite
      * Otherwise, execute an INSERT query immediately
-     *
+     * <p>
      * In both cases, a {@link java.sql.PreparedStatement} is used
      *
      * @param row one row
      * @return true if successful
-     * @throws SQLException if a database access error occurs
-     * @throws IOException if the data provided by {@link JdbcResolver} is corrupted
+     * @throws SQLException           if a database access error occurs
+     * @throws IOException            if the data provided by {@link JdbcResolver} is corrupted
      * @throws ClassNotFoundException if pooling is used and the JDBC driver was not found
-     * @throws IllegalStateException if writerCallableFactory was not properly initialized
-     * @throws Exception if it happens in writerCallable.call()
+     * @throws IllegalStateException  if writerCallableFactory was not properly initialized
+     * @throws Exception              if it happens in writerCallable.call()
      */
     @Override
     public boolean writeNextObject(OneRow row) throws Exception {
@@ -278,15 +267,14 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
                                 firstException = currentSqlException;
                             }
                             LOG.error(
-                                "A SQLException in a pool thread occured: " + currentSqlException.getClass() + " " + currentSqlException.getMessage()
+                                    "A SQLException in a pool thread occured: " + currentSqlException.getClass() + " " + currentSqlException.getMessage()
                             );
                         }
-                    }
-                    catch (Exception e) {
+                    } catch (Exception e) {
                         // This exception must have been caused by some thread execution error. However, there may be other exception (maybe of class SQLException) that happened in one of threads that were not examined yet. That is why we do not modify firstException
                         if (LOG.isDebugEnabled()) {
                             LOG.debug(
-                                "A runtime exception in a thread pool occured: " + e.getClass() + " " + e.getMessage()
+                                    "A runtime exception in a thread pool occured: " + e.getClass() + " " + e.getMessage()
                             );
                         }
                     }
@@ -294,8 +282,7 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
                 try {
                     executorServiceWrite.shutdown();
                     executorServiceWrite.shutdownNow();
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                     if (LOG.isDebugEnabled()) {
                         LOG.debug("executorServiceWrite.shutdown() or .shutdownNow() threw an exception: " + e.getClass() + " " + e.getMessage());
                     }
@@ -327,7 +314,7 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
             return null;
         }
         // read the contents of the file holding the text of the query with a given name
-        String serverDirectory = configuration.get(ConfigurationFactory.PXF_CONFIG_SERVER_DIRECTORY_PROPERTY);
+        String serverDirectory = context.getConfiguration().get(ConfigurationFactory.PXF_CONFIG_SERVER_DIRECTORY_PROPERTY);
         if (StringUtils.isBlank(serverDirectory)) {
             throw new IllegalStateException("No server configuration directory found for server " + context.getServerName());
         }

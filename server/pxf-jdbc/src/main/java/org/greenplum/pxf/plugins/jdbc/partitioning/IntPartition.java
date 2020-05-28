@@ -19,13 +19,16 @@ package org.greenplum.pxf.plugins.jdbc.partitioning;
  * under the License.
  */
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
 import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
 
 import java.util.stream.Stream;
 
-class IntPartition extends BasePartition implements JdbcFragmentMetadata {
-    private static final long serialVersionUID = 0L;
+public class IntPartition extends BasePartition implements JdbcFragmentMetadata {
 
+    @Getter
     private final Long[] boundaries;
 
     /**
@@ -34,16 +37,17 @@ class IntPartition extends BasePartition implements JdbcFragmentMetadata {
      * @param end    null for left-bounded interval
      */
     public IntPartition(String column, Long start, Long end) {
-        super(column);
+        this(column, (start == end) ? new Long[]{start} : new Long[]{start, end});
         if (start == null && end == null) {
             throw new RuntimeException("Both boundaries cannot be null");
         }
+    }
 
-        if (start == end) {
-            this.boundaries = new Long[]{start};
-        } else {
-            this.boundaries = new Long[]{start, end};
-        }
+    @JsonCreator
+    public IntPartition(@JsonProperty("column") String column,
+                        @JsonProperty("boundaries") Long[] boundaries) {
+        super(column);
+        this.boundaries = boundaries;
     }
 
     @Override
@@ -56,12 +60,5 @@ class IntPartition extends BasePartition implements JdbcFragmentMetadata {
                 quoteString + column + quoteString,
                 Stream.of(boundaries).map(b -> b == null ? null : b.toString()).toArray(String[]::new)
         );
-    }
-
-    /**
-     * Getter
-     */
-    public Long[] getBoundaries() {
-        return boundaries;
     }
 }

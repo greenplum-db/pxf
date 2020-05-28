@@ -1,32 +1,23 @@
 package org.greenplum.pxf.plugins.jdbc.partitioning;
 
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+
 /**
  * A base class for partition of any type.
  * <p>
  * All partitions use some column as a partition column. It is processed by this class.
  */
-abstract class BasePartition implements JdbcFragmentMetadata {
-    private static final long serialVersionUID = 0L;
+@RequiredArgsConstructor
+public abstract class BasePartition implements JdbcFragmentMetadata {
 
+    /**
+     * Column name to use as a partition column. Must not be null
+     */
+    @Getter
+    @NonNull
     protected final String column;
-
-    /**
-     * @param column column name to use as a partition column. Must not be null
-     */
-    BasePartition(String column) {
-        // column and range are mandatory, interval is optional for some PartitionTypes
-        if (column == null) {
-            throw new IllegalArgumentException("The column name must be provided");
-        }
-        this.column = column;
-    }
-
-    /**
-     * Getter
-     */
-    public String getColumn() {
-        return column;
-    }
 
     /**
      * Generate a range-based SQL constraint

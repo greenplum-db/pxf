@@ -23,6 +23,7 @@ import com.google.common.base.Ticker;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -40,6 +41,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * The motivation for caching is that destroying UGIs is slow. The alternative, creating and
  * destroying a UGI per-request, is wasteful.
  */
+@Component
 public class UGICache {
 
     static final int NANOS_PER_MILLIS = 1000000;

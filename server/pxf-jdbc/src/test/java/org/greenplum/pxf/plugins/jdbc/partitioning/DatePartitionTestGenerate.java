@@ -19,17 +19,14 @@ package org.greenplum.pxf.plugins.jdbc.partitioning;
  * under the License.
  */
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import java.sql.Date;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class DatePartitionTestGenerate {
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
 
     @Test
     public void testPartitionByDateIntervalDay() {
@@ -100,74 +97,68 @@ public class DatePartitionTestGenerate {
 
     @Test
     public void testRangeDateFormatInvalid() {
-        thrown.expect(IllegalArgumentException.class);
-
         final String COLUMN = "col";
         final String RANGE = "2008/01/01:2009-01-01";
         final String INTERVAL = "1:month";
 
-        PartitionType.DATE.generate(COLUMN, RANGE, INTERVAL);
+        assertThrows(IllegalArgumentException.class,
+            () -> PartitionType.DATE.generate(COLUMN, RANGE, INTERVAL));
     }
 
     @Test
     public void testIntervalValueInvalid() {
-        thrown.expect(IllegalArgumentException.class);
-
         final String COLUMN = "col";
         final String RANGE = "2008-01-01:2009-01-01";
         final String INTERVAL = "-1:month";
 
-        PartitionType.DATE.generate(COLUMN, RANGE, INTERVAL);
+        assertThrows(IllegalArgumentException.class,
+            () -> PartitionType.DATE.generate(COLUMN, RANGE, INTERVAL));
     }
 
     @Test
     public void testIntervalTypeInvalid() {
-        thrown.expect(IllegalArgumentException.class);
-
         final String COLUMN = "col";
         final String RANGE = "2008-01-01:2011-01-01";
         final String INTERVAL = "6:hour";
 
-        PartitionType.DATE.generate(COLUMN, RANGE, INTERVAL);
+        assertThrows(IllegalArgumentException.class,
+            () -> PartitionType.DATE.generate(COLUMN, RANGE, INTERVAL));
     }
 
     @Test
     public void testIntervalTypeMissingInvalid() {
-        thrown.expect(IllegalArgumentException.class);
-
         final String COLUMN = "col";
         final String RANGE = "2008-01-01:2011-01-01";
         final String INTERVAL = "6";
 
-        PartitionType.DATE.generate(COLUMN, RANGE, INTERVAL);
+        assertThrows(IllegalArgumentException.class,
+            () -> PartitionType.DATE.generate(COLUMN, RANGE, INTERVAL));
     }
 
     @Test
     public void testRangeMissingEndInvalid() {
-        thrown.expect(IllegalArgumentException.class);
-
         final String COLUMN = "col";
         final String RANGE = "2008-01-01";
         final String INTERVAL = "1:year";
 
-        PartitionType.DATE.generate(COLUMN, RANGE, INTERVAL);
+        assertThrows(IllegalArgumentException.class,
+            () -> PartitionType.DATE.generate(COLUMN, RANGE, INTERVAL));
     }
 
     @Test
     public void testRangeDateSwappedInvalid() {
-        thrown.expect(IllegalArgumentException.class);
-
         final String COLUMN = "col";
         final String RANGE = "2008-01-01:2001-01-01";
         final String INTERVAL = "1:month";
 
-        PartitionType.DATE.generate(COLUMN, RANGE, INTERVAL);
+        assertThrows(IllegalArgumentException.class,
+            () -> PartitionType.DATE.generate(COLUMN, RANGE, INTERVAL));
     }
 
     /**
-     * Assert fragment metadata and given range of dates match.
+     * Assert partition and given range of dates match.
      *
-     * @param fragment
+     * @param partition  the data partition
      * @param rangeStart (null is allowed)
      * @param rangeEnd   (null is allowed)
      */

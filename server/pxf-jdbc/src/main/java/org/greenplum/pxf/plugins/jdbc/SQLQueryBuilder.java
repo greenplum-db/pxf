@@ -1,6 +1,24 @@
 package org.greenplum.pxf.plugins.jdbc;
 
-import org.apache.commons.lang.SerializationUtils;
+import org.greenplum.pxf.api.filter.FilterParser;
+import org.greenplum.pxf.api.filter.Node;
+import org.greenplum.pxf.api.filter.Operator;
+import org.greenplum.pxf.api.filter.SupportedOperatorPruner;
+import org.greenplum.pxf.api.filter.TreeTraverser;
+import org.greenplum.pxf.api.filter.TreeVisitor;
+import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.plugins.jdbc.partitioning.JdbcFragmentMetadata;
+import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -20,26 +38,6 @@ import org.apache.commons.lang.SerializationUtils;
  * specific language governing permissions and limitations
  * under the License.
  */
-
-import org.greenplum.pxf.api.filter.FilterParser;
-import org.greenplum.pxf.api.filter.Node;
-import org.greenplum.pxf.api.filter.Operator;
-import org.greenplum.pxf.api.filter.SupportedOperatorPruner;
-import org.greenplum.pxf.api.filter.TreeTraverser;
-import org.greenplum.pxf.api.filter.TreeVisitor;
-import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
-import org.greenplum.pxf.plugins.jdbc.partitioning.JdbcFragmentMetadata;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.EnumSet;
-import java.util.List;
-import java.util.regex.Pattern;
-import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
-import java.util.stream.Collectors;
 
 /**
  * SQL query builder.
@@ -316,14 +314,12 @@ public class SQLQueryBuilder {
      * @param query       SQL query to insert constraints to. The query may may contain other WHERE statements
      */
     public void buildFragmenterSql(RequestContext context, DbProduct dbProduct, String quoteString, StringBuilder query) {
-        if (context.getOption("PARTITION_BY") == null) {
+        if (context.getOption("PARTITION_BY") == null || context.getFragmentMetadata() == null) {
             return;
         }
 
-        byte[] meta = context.getFragmentMetadata();
-        if (meta == null) {
-            return;
-        }
+        if (!(context.getFragmentMetadata() instanceof JdbcFragmentMetadata))
+            throw new IllegalArgumentException("invalid metadata for JDBC");
 
         // determine if we need to add WHERE statement if not a single WHERE is in the query
         // or subquery is used and there are no WHERE statements after subquery alias
@@ -337,7 +333,7 @@ public class SQLQueryBuilder {
             query.append(" AND ");
         }
 
-        JdbcFragmentMetadata fragmentMetadata = JdbcFragmentMetadata.class.cast(SerializationUtils.deserialize(meta));
+        JdbcFragmentMetadata fragmentMetadata = (JdbcFragmentMetadata) context.getFragmentMetadata();
         String fragmentSql = fragmentMetadata.toSqlConstraint(quoteString, dbProduct);
 
         query.append(fragmentSql);

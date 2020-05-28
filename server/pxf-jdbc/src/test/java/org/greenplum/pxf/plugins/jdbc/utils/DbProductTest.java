@@ -19,13 +19,15 @@ package org.greenplum.pxf.plugins.jdbc.utils;
  * under the License.
  */
 
+import org.junit.jupiter.api.Test;
+
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 
-import org.junit.Test;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 
 public class DbProductTest {
     private static final Date[] DATES = new Date[1];
@@ -33,10 +35,10 @@ public class DbProductTest {
     static {
         try {
             DATES[0] = new Date(
-                new SimpleDateFormat("yyyy-MM-dd").parse("2001-01-01 00:00:00").getTime()
+                    new SimpleDateFormat("yyyy-MM-dd").parse("2001-01-01 00:00:00").getTime()
             );
             TIMESTAMPS[0] = new Timestamp(
-                new SimpleDateFormat("yyyy-MM-dd").parse("2001-01-01 00:00:00").getTime()
+                    new SimpleDateFormat("yyyy-MM-dd").parse("2001-01-01 00:00:00").getTime()
             );
         }
         catch (ParseException e) {

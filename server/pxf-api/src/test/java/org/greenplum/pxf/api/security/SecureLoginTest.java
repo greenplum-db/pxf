@@ -82,7 +82,7 @@ public class SecureLoginTest {
     public void setup() {
         pxfUserGroupInformationMock = mock(PxfUserGroupInformation.class);
         SecureLogin.pxfUserGroupInformation = pxfUserGroupInformationMock;
-        secureLogin = SecureLogin.getInstance();
+        secureLogin = new SecureLogin();
         SecureLogin.reset();
         configuration = new Configuration();
         System.clearProperty(PROPERTY_KEY_USER_IMPERSONATION);
@@ -91,11 +91,6 @@ public class SecureLoginTest {
         // simulate presence of krb.conf file
         System.setProperty(PROPERTY_KEY_KERBEROS_KDC, "localhost");
         System.setProperty(PROPERTY_KEY_KERBEROS_REALM, "DEFAULT_REALM");
-    }
-
-    @Test
-    public void testSingleton() {
-        assertSame(secureLogin, SecureLogin.getInstance());
     }
 
     /* ---------- methods to test login / relogin ---------- */
@@ -163,7 +158,7 @@ public class SecureLoginTest {
     }
 
     @Test
-    public void testLoginKerberosFailsWhenNoPrincipal() throws IOException {
+    public void testLoginKerberosFailsWhenNoPrincipal() {
         configuration.set("hadoop.security.authentication", "kerberos");
 
         Exception e = assertThrows(RuntimeException.class,
@@ -172,7 +167,7 @@ public class SecureLoginTest {
     }
 
     @Test
-    public void testLoginKerberosFailsWhenNoKeytab() throws IOException {
+    public void testLoginKerberosFailsWhenNoKeytab() {
         configuration.set("hadoop.security.authentication", "kerberos");
         configuration.set(PROPERTY_KEY_SERVICE_PRINCIPAL, "foo");
 
@@ -371,50 +366,57 @@ public class SecureLoginTest {
 
     @Test
     public void testPrincipalAbsentForServerNoSystemDefault() {
-        assertNull(SecureLogin.getInstance().getServicePrincipal("default", configuration));
-        assertNull(SecureLogin.getInstance().getServicePrincipal("any", configuration));
+        SecureLogin secureLogin = new SecureLogin();
+        assertNull(secureLogin.getServicePrincipal("default", configuration));
+        assertNull(secureLogin.getServicePrincipal("any", configuration));
     }
 
     @Test
     public void testPrincipalAbsentForServerWithSystemDefault() {
         System.setProperty(PROPERTY_KEY_SERVICE_PRINCIPAL, "foo");
-        assertEquals("foo", SecureLogin.getInstance().getServicePrincipal("default", configuration));
-        assertNull(SecureLogin.getInstance().getServicePrincipal("any", configuration));
+        SecureLogin secureLogin = new SecureLogin();
+        assertEquals("foo", secureLogin.getServicePrincipal("default", configuration));
+        assertNull(secureLogin.getServicePrincipal("any", configuration));
     }
 
     @Test
     public void testPrincipalSpecifiedForServer() {
         System.setProperty(PROPERTY_KEY_SERVICE_PRINCIPAL, "foo");
         configuration.set(PROPERTY_KEY_SERVICE_PRINCIPAL, "bar");
-        assertEquals("bar", SecureLogin.getInstance().getServicePrincipal("default", configuration));
-        assertEquals("bar", SecureLogin.getInstance().getServicePrincipal("any", configuration));
+        SecureLogin secureLogin = new SecureLogin();
+        assertEquals("bar", secureLogin.getServicePrincipal("default", configuration));
+        assertEquals("bar", secureLogin.getServicePrincipal("any", configuration));
     }
 
     @Test
     public void testPrincipalGetsResolvedForServer() {
         configuration.set(PROPERTY_KEY_SERVICE_PRINCIPAL, "principal/_HOST@REALM");
-        assertEquals(RESOLVED_PRINCIPAL, SecureLogin.getInstance().getServicePrincipal("any", configuration));
+        SecureLogin secureLogin = new SecureLogin();
+        assertEquals(RESOLVED_PRINCIPAL, secureLogin.getServicePrincipal("any", configuration));
     }
 
     @Test
     public void testKeytabAbsentForServerNoSystemDefault() {
-        assertNull(SecureLogin.getInstance().getServiceKeytab("default", configuration));
-        assertNull(SecureLogin.getInstance().getServiceKeytab("any", configuration));
+        SecureLogin secureLogin = new SecureLogin();
+        assertNull(secureLogin.getServiceKeytab("default", configuration));
+        assertNull(secureLogin.getServiceKeytab("any", configuration));
     }
 
     @Test
     public void testKeytabAbsentForServerWithSystemDefault() {
         System.setProperty(PROPERTY_KEY_SERVICE_KEYTAB, "foo");
-        assertEquals("foo", SecureLogin.getInstance().getServiceKeytab("default", configuration));
-        assertNull(SecureLogin.getInstance().getServiceKeytab("any", configuration));
+        SecureLogin secureLogin = new SecureLogin();
+        assertEquals("foo", secureLogin.getServiceKeytab("default", configuration));
+        assertNull(secureLogin.getServiceKeytab("any", configuration));
     }
 
     @Test
     public void testKeytabSpecifiedForServer() {
         System.setProperty(PROPERTY_KEY_SERVICE_KEYTAB, "foo");
         configuration.set(PROPERTY_KEY_SERVICE_KEYTAB, "bar");
-        assertEquals("bar", SecureLogin.getInstance().getServiceKeytab("default", configuration));
-        assertEquals("bar", SecureLogin.getInstance().getServiceKeytab("any", configuration));
+        SecureLogin secureLogin = new SecureLogin();
+        assertEquals("bar", secureLogin.getServiceKeytab("default", configuration));
+        assertEquals("bar", secureLogin.getServiceKeytab("any", configuration));
     }
 
     /* ---------- methods to test impersonation property ---------- */

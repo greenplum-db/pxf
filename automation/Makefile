@@ -65,7 +65,9 @@ ifeq "$(HIVE_SERVER_PORT)" ""
 	HIVE_SERVER_PORT=10000
 endif
 
-PXF_CONF_SERVERS=~/pxf/servers
+ifeq "$(PXF_CONF_SERVERS)" ""
+	PXF_CONF_SERVERS=~/pxf/servers
+endif
 
 SED_OPTS=-i
 ifeq ($(UNAME_S),Darwin)
