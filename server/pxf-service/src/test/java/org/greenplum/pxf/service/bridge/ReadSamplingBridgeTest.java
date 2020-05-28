@@ -20,10 +20,9 @@ package org.greenplum.pxf.service.bridge;
  */
 
 
+import org.apache.hadoop.conf.Configuration;
 import org.greenplum.pxf.api.io.Writable;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.api.utilities.AccessorFactory;
-import org.greenplum.pxf.api.utilities.ResolverFactory;
 import org.greenplum.pxf.service.utilities.AnalyzeUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -51,9 +50,9 @@ public class ReadSamplingBridgeTest {
      * Writable test object to test ReadSamplingBridge. The object receives a
      * string and returns it in its toString function.
      */
-    public class WritableTest implements Writable {
+    public static class WritableTest implements Writable {
 
-        private String data;
+        private final String data;
 
         public WritableTest(String data) {
             this.data = data;
@@ -76,24 +75,48 @@ public class ReadSamplingBridgeTest {
 
     }
 
-    private RequestContext mockContext;
+    private RequestContext context;
     private ReadBridge mockBridge;
-    private AccessorFactory mockAccessorFactory;
-    private ResolverFactory mockResolverFactory;
 
     private ReadSamplingBridge readSamplingBridge;
     private int recordsLimit = 0;
     private BitSet samplingBitSet;
     private Writable result;
 
+    @BeforeEach
+    public void setUp() throws Exception {
+
+        context = new RequestContext();
+        context.setConfiguration(new Configuration());
+
+        mockBridge = mock(ReadBridge.class);
+
+        when(mockBridge.getNext()).thenAnswer(new Answer<Writable>() {
+            private int count = 0;
+
+            @Override
+            public Writable answer(InvocationOnMock invocation) {
+                if (count >= recordsLimit) {
+                    return null;
+                }
+                return new WritableTest("" + (count++));
+            }
+        });
+
+        samplingBitSet = new BitSet();
+        when(
+                AnalyzeUtils.generateSamplingBitSet(any(int.class),
+                        any(int.class))).thenReturn(samplingBitSet);
+    }
+
     @Test
     public void getNextRecord100Percent() throws Exception {
 
         samplingBitSet.set(0, 100);
         recordsLimit = 100;
-        when(mockContext.getStatsSampleRatio()).thenReturn((float) 1.0);
+        context.setStatsSampleRatio(1.0F);
 
-        readSamplingBridge = new ReadSamplingBridge(mockContext, mockAccessorFactory, mockResolverFactory);
+        // readSamplingBridge = new ReadSamplingBridge(new BridgeOutputBuilder(context), mockResolverFactory, context);
 
         result = readSamplingBridge.getNext();
         assertEquals("0", result.toString());
@@ -113,9 +136,9 @@ public class ReadSamplingBridgeTest {
         // set 10 bits from 5 to 14.
         samplingBitSet.set(5, 15);
         recordsLimit = 100;
-        when(mockContext.getStatsSampleRatio()).thenReturn((float) 0.1);
+        context.setStatsSampleRatio(0.1F);
 
-        readSamplingBridge = new ReadSamplingBridge(mockContext, mockAccessorFactory, mockResolverFactory);
+        // readSamplingBridge = new ReadSamplingBridge(mockAccessorFactory, mockResolverFactory);
 
         for (int i = 0; i < 10; i++) {
             result = readSamplingBridge.getNext();
@@ -128,7 +151,7 @@ public class ReadSamplingBridgeTest {
 
     @Test
     public void getNextRecord100Records90Percent() throws Exception {
-        int expected = 0;
+        int expected;
 
         // set the first odd numbers until 20, then all numbers until 100
         // total: 90.
@@ -137,9 +160,9 @@ public class ReadSamplingBridgeTest {
             samplingBitSet.flip(i * 2);
         }
         recordsLimit = 100;
-        when(mockContext.getStatsSampleRatio()).thenReturn((float) 0.9);
+        context.setStatsSampleRatio(0.9F);
 
-        readSamplingBridge = new ReadSamplingBridge(mockContext, mockAccessorFactory, mockResolverFactory);
+        // readSamplingBridge = new ReadSamplingBridge(mockAccessorFactory, mockResolverFactory);
 
         for (int i = 0; i < 90; i++) {
             result = readSamplingBridge.getNext();
@@ -163,9 +186,9 @@ public class ReadSamplingBridgeTest {
         samplingBitSet.set(40, 80);
         samplingBitSet.set(90, 99);
         recordsLimit = 350;
-        when(mockContext.getStatsSampleRatio()).thenReturn((float) 0.5);
+        context.setStatsSampleRatio(0.5F);
 
-        readSamplingBridge = new ReadSamplingBridge(mockContext, mockAccessorFactory, mockResolverFactory);
+        // readSamplingBridge = new ReadSamplingBridge(mockAccessorFactory, mockResolverFactory);
 
         /*
          * expecting to have: 50 (out of first 100) 50 (out of second 100) 50
@@ -184,7 +207,7 @@ public class ReadSamplingBridgeTest {
 
     @Test
     public void getNextRecord100000Records30Sample() throws Exception {
-        int expected = 0;
+        int expected;
 
         // ratio = 0.0003
         float ratio = (float) (30.0 / 100000.0);
@@ -194,9 +217,9 @@ public class ReadSamplingBridgeTest {
         samplingBitSet.set(999);
         samplingBitSet.set(9999);
         recordsLimit = 100000;
-        when(mockContext.getStatsSampleRatio()).thenReturn(ratio);
+        context.setStatsSampleRatio(ratio);
 
-        readSamplingBridge = new ReadSamplingBridge(mockContext, mockAccessorFactory, mockResolverFactory);
+        // readSamplingBridge = new ReadSamplingBridge(mockAccessorFactory, mockResolverFactory);
 
         for (int i = 0; i < 30; i++) {
             result = readSamplingBridge.getNext();
@@ -214,36 +237,5 @@ public class ReadSamplingBridgeTest {
         }
         result = readSamplingBridge.getNext();
         assertNull(result);
-    }
-
-    @BeforeEach
-    public void setUp() throws Exception {
-
-        mockContext = mock(RequestContext.class);
-        mockAccessorFactory = mock(AccessorFactory.class);
-        mockResolverFactory = mock(ResolverFactory.class);
-
-        mockBridge = mock(ReadBridge.class);
-//        whenNew(ReadBridge.class).withAnyArguments().thenReturn(
-//                mockBridge);
-
-        when(mockBridge.getNext()).thenAnswer(new Answer<Writable>() {
-            private int count = 0;
-
-            @Override
-            public Writable answer(InvocationOnMock invocation)
-                    throws Throwable {
-                if (count >= recordsLimit) {
-                    return null;
-                }
-                return new WritableTest("" + (count++));
-            }
-        });
-
-//        mockStatic(AnalyzeUtils.class);
-        samplingBitSet = new BitSet();
-        when(
-                AnalyzeUtils.generateSamplingBitSet(any(int.class),
-                        any(int.class))).thenReturn(samplingBitSet);
     }
 }

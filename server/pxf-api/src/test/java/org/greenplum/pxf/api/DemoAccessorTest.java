@@ -19,8 +19,8 @@ package org.greenplum.pxf.api;
  * under the License.
  */
 
-
 import org.greenplum.pxf.api.examples.DemoAccessor;
+import org.greenplum.pxf.api.examples.DemoFragmentMetadata;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,14 +39,13 @@ public class DemoAccessorTest {
         context = new RequestContext();
         context.setConfig("default");
         context.setUser("test-user");
-        accessor = new DemoAccessor();
-        accessor.initialize(context);
+        accessor = new DemoAccessor(context);
     }
 
     @Test
-    public void testRowsWithSingleColumn() throws Exception {
+    public void testRowsWithSingleColumn() {
         context.setDataFragment(0);
-        context.setFragmentMetadata("fragment1".getBytes());
+        context.setFragmentMetadata(new DemoFragmentMetadata("fragment1"));
 
         int numRows = 2;
         for (int i = 0; i < numRows; i++) {
@@ -57,9 +56,9 @@ public class DemoAccessorTest {
     }
 
     @Test
-    public void testRowsWithMultipleColumns() throws Exception {
+    public void testRowsWithMultipleColumns() {
         context.setDataFragment(0);
-        context.setFragmentMetadata("fragment1".getBytes());//, "fragment1".getBytes());
+        context.setFragmentMetadata(new DemoFragmentMetadata("fragment1"));
         context.getTupleDescription().add(new ColumnDescriptor("col1", 1, 1, "TEXT", null));
         context.getTupleDescription().add(new ColumnDescriptor("col2", 1, 1, "TEXT", null));
         context.getTupleDescription().add(new ColumnDescriptor("col3", 1, 1, "TEXT", null));

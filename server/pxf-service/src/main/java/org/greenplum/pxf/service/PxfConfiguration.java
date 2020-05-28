@@ -16,6 +16,17 @@ import org.springframework.context.annotation.Configuration;
 @EnableConfigurationProperties(PxfServerProperties.class)
 public class PxfConfiguration {
 
+    private final SecurityServletFilter securityServletFilter;
+
+    /**
+     * Constructs a new PxfConfiguration
+     *
+     * @param securityServletFilter the SecurityServletFilter
+     */
+    public PxfConfiguration(SecurityServletFilter securityServletFilter) {
+        this.securityServletFilter = securityServletFilter;
+    }
+
     /**
      * Returns a {@link FilterRegistrationBean} that registers the
      * {@link SecurityServletFilter} for URL patterns that match
@@ -26,7 +37,7 @@ public class PxfConfiguration {
     @Bean
     public FilterRegistrationBean<SecurityServletFilter> registerSecurityServletFilter() {
         FilterRegistrationBean<SecurityServletFilter> registrationBean = new FilterRegistrationBean<>();
-        registrationBean.setFilter(new SecurityServletFilter());
+        registrationBean.setFilter(securityServletFilter);
         registrationBean.addUrlPatterns("/pxf/" + Version.PXF_PROTOCOL_VERSION + "/*");
         return registrationBean;
     }

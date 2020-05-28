@@ -24,28 +24,31 @@ import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.StatsAccessor;
 import org.greenplum.pxf.api.io.Writable;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.api.utilities.AccessorFactory;
-import org.greenplum.pxf.api.utilities.ResolverFactory;
+import org.greenplum.pxf.service.BridgeOutputBuilder;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 import java.util.LinkedList;
 
 /**
  * Bridge class optimized for aggregate queries.
- *
  */
+@Component
+@RequestScope
 public class AggBridge extends ReadBridge implements Bridge {
 
     /* Avoid resolving rows with the same key twice */
     private LRUMap outputCache;
 
-    public AggBridge(RequestContext context) {
-        this(context, AccessorFactory.getInstance(), ResolverFactory.getInstance());
+    public AggBridge(BridgeOutputBuilder outputBuilder, ApplicationContext applicationContext, RequestContext context) {
+        super(outputBuilder, applicationContext, context);
     }
 
-    AggBridge(RequestContext context, AccessorFactory accessorFactory, ResolverFactory resolverFactory) {
-        super(context, accessorFactory, resolverFactory);
-    }
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean beginIteration() throws Exception {
         /* Initialize LRU cache with 100 items*/
@@ -55,6 +58,9 @@ public class AggBridge extends ReadBridge implements Bridge {
         return openForReadStatus;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @SuppressWarnings("unchecked")
     public Writable getNext() throws Exception {

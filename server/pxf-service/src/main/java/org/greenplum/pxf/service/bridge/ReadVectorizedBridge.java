@@ -24,23 +24,25 @@ import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.ReadVectorizedResolver;
 import org.greenplum.pxf.api.io.Writable;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.api.utilities.AccessorFactory;
-import org.greenplum.pxf.api.utilities.ResolverFactory;
+import org.greenplum.pxf.service.BridgeOutputBuilder;
+import org.springframework.context.ApplicationContext;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 import java.util.Deque;
 import java.util.List;
 
-
+@Component
+@RequestScope
 public class ReadVectorizedBridge extends ReadBridge {
 
-    public ReadVectorizedBridge(RequestContext context) {
-        this(context, AccessorFactory.getInstance(), ResolverFactory.getInstance());
+    public ReadVectorizedBridge(BridgeOutputBuilder outputBuilder, ApplicationContext applicationContext, RequestContext context) {
+        super(outputBuilder, applicationContext, context);
     }
 
-    ReadVectorizedBridge(RequestContext context, AccessorFactory accessorFactory, ResolverFactory resolverFactory) {
-        super(context, accessorFactory, resolverFactory);
-    }
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected Deque<Writable> makeOutput(OneRow oneRow) throws Exception {
         List<List<OneField>> resolvedBatch = ((ReadVectorizedResolver) resolver).

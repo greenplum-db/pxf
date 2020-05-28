@@ -3,42 +3,42 @@ package org.greenplum.pxf.service.bridge;
 import org.greenplum.pxf.api.ReadVectorizedResolver;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.Utilities;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationContext;
+import org.springframework.stereotype.Component;
 
+@Component
 public class SimpleBridgeFactory implements BridgeFactory {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SimpleBridgeFactory.class);
-    private static final SimpleBridgeFactory instance = new SimpleBridgeFactory();
+    private final ApplicationContext applicationContext;
+
+    public SimpleBridgeFactory(ApplicationContext applicationContext) {
+        this.applicationContext = applicationContext;
+    }
 
     /**
-     * Returns a singleton instance of the factory.
-     *
-     * @return a singleton instance of the factory.
+     * {@inheritDoc}
      */
-    public static BridgeFactory getInstance() {
-        return instance;
-    }
-
     @Override
-    public Bridge getReadBridge(RequestContext context) {
+    public Bridge getBridge(RequestContext context) {
 
         Bridge bridge;
-        if (context.getStatsSampleRatio() > 0) {
-            bridge = new ReadSamplingBridge(context);
-        } else if (Utilities.aggregateOptimizationsSupported(context)) {
-            bridge = new AggBridge(context);
-        } else if (useVectorization(context)) {
-            bridge = new ReadVectorizedBridge(context);
+        if (context.getRequestType() == RequestContext.RequestType.READ_BRIDGE) {
+            if (context.getStatsSampleRatio() > 0) {
+                bridge = applicationContext.getBean(ReadSamplingBridge.class);
+            } else if (Utilities.aggregateOptimizationsSupported(context)) {
+                bridge = applicationContext.getBean(AggBridge.class);
+            } else if (useVectorization(context)) {
+                bridge = applicationContext.getBean(ReadVectorizedBridge.class);
+            } else {
+                bridge = applicationContext.getBean("readBridge", ReadBridge.class);
+            }
+        } else if (context.getRequestType() == RequestContext.RequestType.WRITE_BRIDGE) {
+            bridge = applicationContext.getBean(WriteBridge.class);
         } else {
-            bridge = new ReadBridge(context);
+            throw new UnsupportedOperationException();
         }
-        return bridge;
-    }
 
-    @Override
-    public Bridge getWriteBridge(RequestContext context) {
-        return new WriteBridge(context);
+        return bridge;
     }
 
     /**

@@ -21,22 +21,34 @@ package org.greenplum.pxf.api.examples;
 
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.Accessor;
-import org.greenplum.pxf.api.model.BasePlugin;
+import org.greenplum.pxf.api.model.Plugin;
+import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.api.utilities.FragmentMetadata;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 /**
  * Internal interface that would defined the access to a file on HDFS, but in
  * this case contains the data required.
- *
+ * <p>
  * Demo implementation
  */
-public class DemoAccessor extends BasePlugin implements Accessor {
+@Component("DemoAccessor")
+@RequestScope
+public class DemoAccessor implements Plugin, Accessor {
 
     private int rowNumber;
     private int fragmentNumber;
-    private static int NUM_ROWS = 2;
+    private static final int NUM_ROWS = 2;
+
+    protected final RequestContext context;
+
+    public DemoAccessor(RequestContext context) {
+        this.context = context;
+    }
 
     @Override
-    public boolean openForRead() throws Exception {
+    public boolean openForRead() {
         /* no-op, because this plugin doesn't read a file. */
         return true;
     }
@@ -48,19 +60,24 @@ public class DemoAccessor extends BasePlugin implements Accessor {
      * @return one row which corresponds to one record
      */
     @Override
-    public OneRow readNextObject() throws Exception {
+    public OneRow readNextObject() {
         /* return next row , <key=fragmentNo.rowNo, val=rowNo,text,fragmentNo>*/
         /* check for EOF */
         if (fragmentNumber > 0)
             return null; /* signal EOF, close will be called */
         int fragment = context.getDataFragment();
-        String fragmentMetadata = new String(context.getFragmentMetadata());
+        FragmentMetadata metadata = context.getFragmentMetadata();
         int colCount = context.getColumns();
 
+        if (!(metadata instanceof DemoFragmentMetadata))
+            throw new IllegalArgumentException("invalid metadata");
+
+        DemoFragmentMetadata demoMetadata = (DemoFragmentMetadata) metadata;
+
         /* generate row with (colCount) columns */
-        StringBuilder colValue = new StringBuilder(fragmentMetadata + " row" + (rowNumber+1));
-        for(int colIndex=1; colIndex<colCount; colIndex++) {
-            colValue.append(",").append("value" + colIndex);
+        StringBuilder colValue = new StringBuilder(demoMetadata.getPath() + " row" + (rowNumber + 1));
+        for (int colIndex = 1; colIndex < colCount; colIndex++) {
+            colValue.append(",").append("value").append(colIndex);
         }
         OneRow row = new OneRow(fragment + "." + rowNumber, colValue.toString());
 
@@ -77,7 +94,6 @@ public class DemoAccessor extends BasePlugin implements Accessor {
 
     /**
      * close the reader. no action here
-     *
      */
     @Override
     public void closeForRead() throws Exception {

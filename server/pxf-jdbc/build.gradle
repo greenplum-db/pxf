@@ -1,0 +1,36 @@
+apply plugin: "java-library"
+
+jar {
+    enabled = true
+}
+
+dependencies {
+    /*******************************
+     * API Dependencies
+     *******************************/
+
+    api(project(':pxf-api'))
+
+    /*******************************
+     * Implementation Dependencies
+     *******************************/
+
+    implementation("com.zaxxer:HikariCP:3.4.2")
+    implementation("org.postgresql:postgresql:42.2.11")
+
+    implementation("org.springframework.boot:spring-boot-starter-log4j2")
+
+    /*******************************
+     * Test Dependencies
+     *******************************/
+
+    testImplementation("org.apache.parquet:parquet-pig:${parquetVersion}")
+
+    testImplementation('org.springframework.boot:spring-boot-starter-test') {
+        exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+    }
+}
+
+test {
+    useJUnitPlatform()
+}

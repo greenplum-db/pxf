@@ -19,33 +19,38 @@ package org.greenplum.pxf.plugins.jdbc;
  * under the License.
  */
 
-import org.apache.commons.lang.SerializationUtils;
 import org.greenplum.pxf.api.model.BaseFragmenter;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.FragmentStats;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.jdbc.partitioning.JdbcFragmentMetadata;
 import org.greenplum.pxf.plugins.jdbc.partitioning.PartitionType;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 import java.util.List;
+
+import static org.greenplum.pxf.api.model.Fragment.HOSTS;
 
 /**
  * JDBC fragmenter
  * <p>
  * Splits the query to allow multiple simultaneous SELECTs
  */
+@Component("JdbcPartitionFragmenter")
+@RequestScope
 public class JdbcPartitionFragmenter extends BaseFragmenter {
-    // A PXF engine to use as a host for fragments
-    private static final String[] pxfHosts = {"localhost"};
 
     private PartitionType partitionType;
     private String column;
     private String range;
     private String interval;
 
+    @Autowired
     @Override
-    public void initialize(RequestContext context) {
-        super.initialize(context);
+    public void setRequestContext(RequestContext context) {
+        super.setRequestContext(context);
 
         String partitionByOption = context.getOption("PARTITION_BY");
         if (partitionByOption == null) return;
@@ -71,24 +76,14 @@ public class JdbcPartitionFragmenter extends BaseFragmenter {
     @Override
     public List<Fragment> getFragments() {
         if (partitionType == null) {
-            fragments.add(createFragment(null));
+            fragments.add(new Fragment(context.getDataSource()));
         } else {
             List<JdbcFragmentMetadata> fragmentsMetadata = partitionType.getFragmentsMetadata(column, range, interval);
             for (JdbcFragmentMetadata fragmentMetadata : fragmentsMetadata) {
-                fragments.add(createFragment(SerializationUtils.serialize(fragmentMetadata)));
+                fragments.add(new Fragment(context.getDataSource(), HOSTS, fragmentMetadata));
             }
         }
         return fragments;
-    }
-
-    /**
-     * Create {@link Fragment} from byte array.
-     *
-     * @param fragmentMetadata
-     * @return {@link Fragment}
-     */
-    private Fragment createFragment(byte[] fragmentMetadata) {
-        return new Fragment(context.getDataSource(), pxfHosts, fragmentMetadata);
     }
 
     /**

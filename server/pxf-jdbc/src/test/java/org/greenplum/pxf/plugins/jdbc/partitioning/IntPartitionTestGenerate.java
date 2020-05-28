@@ -19,15 +19,12 @@ package org.greenplum.pxf.plugins.jdbc.partitioning;
  * under the License.
  */
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class IntPartitionTestGenerate {
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
 
     @Test
     public void testPartitionByInt() {
@@ -66,13 +63,11 @@ public class IntPartitionTestGenerate {
 
     @Test
     public void testRangeIntSwappedInvalid() {
-        thrown.expect(IllegalArgumentException.class);
-
         final String COLUMN = "col";
         final String RANGE = "42:17";
         final String INTERVAL = "2";
-
-        PartitionType.INT.generate(COLUMN, RANGE, INTERVAL);
+        assertThrows(IllegalArgumentException.class,
+            () -> PartitionType.INT.generate(COLUMN, RANGE, INTERVAL));
     }
 
     /**
