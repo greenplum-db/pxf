@@ -36,7 +36,7 @@ public class PxfServerProperties {
     /**
      * Customizable settings for tomcat through PXF
      */
-    private Tomcat tomcat;
+    private Tomcat tomcat = new Tomcat();
 
     @Getter
     @Setter

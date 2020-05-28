@@ -33,11 +33,7 @@ public class FragmentMetadataSerDe extends StdSerializer<FragmentMetadata> {
      */
     private FragmentMetadataSerDe() {
         super(FragmentMetadata.class);
-
         mapper = new ObjectMapper();
-        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        // StdDateFormat is ISO8601 since jackson 2.9
-        mapper.setDateFormat(new StdDateFormat().withColonInTimeZone(true));
     }
 
     /**
