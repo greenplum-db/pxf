@@ -357,4 +357,16 @@ public class Utilities {
 
         return (end > start) ? uri.substring(start, end) : null;
     }
+
+    /**
+     * Returns the class name from a fully qualified classname. For example,
+     * for the input "org.greenplum.pxf.api.Foo" it will return the String "Foo"
+     *
+     * @param fullyQualifiedClassName the fully qualified class name
+     * @return the short class name
+     */
+    public static String getShortClassName(String fullyQualifiedClassName) {
+        int lastDot = StringUtils.lastIndexOf(fullyQualifiedClassName, ".");
+        return (lastDot >= 0) ? fullyQualifiedClassName.substring(lastDot + 1) : fullyQualifiedClassName;
+    }
 }

@@ -19,9 +19,9 @@ package org.greenplum.pxf.plugins.hdfs;
  * under the License.
  */
 
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Writable;
 import org.greenplum.pxf.api.BadRecordException;
 import org.greenplum.pxf.api.OneField;
@@ -34,6 +34,8 @@ import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.DataSchemaException;
 import org.greenplum.pxf.plugins.hdfs.utilities.RecordkeyAdapter;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -44,10 +46,12 @@ import java.util.List;
 /**
  * WritableResolver handles serialization and deserialization of records
  * that were serialized using Hadoop's Writable serialization framework.
- *
+ * <p>
  * A field named 'recordkey' is treated as a key of the given row, and not as
  * part of the data schema. See {@link RecordkeyAdapter}.
  */
+@Component("WritableResolver")
+@RequestScope
 public class WritableResolver extends BasePlugin implements Resolver {
     private static final int RECORDKEY_UNDEFINED = -1;
     private static final Log LOG = LogFactory.getLog(WritableResolver.class);
@@ -59,14 +63,10 @@ public class WritableResolver extends BasePlugin implements Resolver {
 
     /**
      * Initialize the plugin for the incoming request
-     *
-     * @param requestContext data provided in the request
      */
     @Override
-    public void initialize(RequestContext requestContext) {
-        super.initialize(requestContext);
-
-        String schemaName = context.getOption("DATA-SCHEMA");
+    public void initialize() {
+        String schemaName = this.context.getOption("DATA-SCHEMA");
 
         /* Testing that the schema name was supplied by the user - schema is an optional property. */
         if (schemaName == null) {

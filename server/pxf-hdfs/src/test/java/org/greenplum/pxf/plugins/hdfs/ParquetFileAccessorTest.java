@@ -2,17 +2,17 @@ package org.greenplum.pxf.plugins.hdfs;
 
 import org.apache.parquet.schema.MessageType;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class ParquetFileAccessorTest {
     ParquetFileAccessor accessor;
     RequestContext context;
     MessageType schema;
 
-    @Before
+    @BeforeEach
     public void setup() {
         accessor = new ParquetFileAccessor();
         context = new RequestContext();
@@ -23,8 +23,7 @@ public class ParquetFileAccessorTest {
 
     @Test
     public void testInitialize() {
-        accessor.initialize(context);
+        accessor.setRequestContext(context);
         assertNull(context.getMetadata());
     }
-
 }

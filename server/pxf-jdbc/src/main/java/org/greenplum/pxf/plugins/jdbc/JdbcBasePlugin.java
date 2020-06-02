@@ -21,7 +21,7 @@ package org.greenplum.pxf.plugins.jdbc;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.greenplum.pxf.api.model.Plugin;
+import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.security.SecureLogin;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
@@ -31,7 +31,6 @@ import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
 import org.greenplum.pxf.plugins.jdbc.utils.HiveJdbcUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.security.PrivilegedExceptionAction;
 import java.sql.Connection;
@@ -52,7 +51,7 @@ import static org.greenplum.pxf.api.security.SecureLogin.CONFIG_KEY_SERVICE_USER
  * <p>
  * Implemented subclasses: {@link JdbcAccessor}, {@link JdbcResolver}.
  */
-public class JdbcBasePlugin implements Plugin {
+public class JdbcBasePlugin extends BasePlugin {
 
     private static final Logger LOG = LoggerFactory.getLogger(JdbcBasePlugin.class);
 
@@ -152,8 +151,6 @@ public class JdbcBasePlugin implements Plugin {
     // Name of query to execute for read flow (optional)
     protected String queryName;
 
-    protected RequestContext context;
-
     // connection pool fields
     private boolean isConnectionPoolUsed;
     private Properties poolConfiguration;
@@ -179,12 +176,8 @@ public class JdbcBasePlugin implements Plugin {
         this.secureLogin = secureLogin;
     }
 
-    @Autowired
-    public void setRequestContext(RequestContext context) {
-        this.context = context;
-
-        Configuration configuration = context.getConfiguration();
-
+    @Override
+    public void initialize() {
         // Required parameter. Can be auto-overwritten by user options
         String jdbcDriver = configuration.get(JDBC_DRIVER_PROPERTY_NAME);
         assertMandatoryParameter(jdbcDriver, JDBC_DRIVER_PROPERTY_NAME, JDBC_DRIVER_OPTION_NAME);

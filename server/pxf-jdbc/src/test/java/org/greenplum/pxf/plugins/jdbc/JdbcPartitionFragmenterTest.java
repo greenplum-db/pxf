@@ -21,6 +21,7 @@ package org.greenplum.pxf.plugins.jdbc;
 
 import org.apache.hadoop.conf.Configuration;
 import org.greenplum.pxf.api.model.Fragment;
+import org.greenplum.pxf.api.model.Fragmenter;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -49,6 +50,7 @@ public class JdbcPartitionFragmenterTest {
 
         JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
         fragment.setRequestContext(context);
+        fragment.initialize();
         List<Fragment> fragments = fragment.getFragments();
 
         assertEquals(1, fragments.size());
@@ -57,14 +59,16 @@ public class JdbcPartitionFragmenterTest {
     @Test
     public void testPartitionByTypeInvalid() {
         context.addOption("PARTITION_BY", "level:float");
-        assertThrows(IllegalArgumentException.class,
-                () -> new JdbcPartitionFragmenter().setRequestContext(context));
+        Fragmenter fragmenter = new JdbcPartitionFragmenter();
+        fragmenter.setRequestContext(context);
+        assertThrows(IllegalArgumentException.class, fragmenter::initialize);
     }
 
     @Test
     public void testPartitionByFormatInvalid() {
         context.addOption("PARTITION_BY", "level-enum");
-        assertThrows(IllegalArgumentException.class,
-                () -> new JdbcPartitionFragmenter().setRequestContext(context));
+        Fragmenter fragmenter = new JdbcPartitionFragmenter();
+        fragmenter.setRequestContext(context);
+        assertThrows(IllegalArgumentException.class, fragmenter::initialize);
     }
 }

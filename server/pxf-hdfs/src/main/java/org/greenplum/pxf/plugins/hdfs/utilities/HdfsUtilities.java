@@ -19,6 +19,7 @@ package org.greenplum.pxf.plugins.hdfs.utilities;
  * under the License.
  */
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -33,12 +34,11 @@ import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.FragmentMetadata;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hdfs.CodecFactory;
+import org.greenplum.pxf.plugins.hdfs.HcfsFragmentMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.util.List;
 
 /**
@@ -49,48 +49,22 @@ public class HdfsUtilities {
     private static Logger LOG = LoggerFactory.getLogger(HdfsUtilities.class);
 
     /**
-     * Prepares byte serialization of a file split information (start, length,
-     * hosts) using {@link ObjectOutputStream}.
+     * Parses fragment metadata and return matching {@link FileSplit}. If the
+     * fragment metadata is null, a {@link FileSplit} with zero start and length
+     * is returned.
      *
-     * @param fsp file split to be serialized
-     * @return byte serialization of fsp
-     * @throws IOException if I/O errors occur while writing to the underlying
-     *                     stream
-     */
-    public static byte[] prepareFragmentMetadata(FileSplit fsp)
-            throws IOException {
-
-        return prepareFragmentMetadata(fsp.getStart(), fsp.getLength(), fsp.getLocations());
-    }
-
-    /**
-     * Prepares byte serialization of a file split information (start, length,
-     * hosts) using {@link ObjectOutputStream}.
-     *
-     * @param start     the file split start
-     * @param length    the file split length
-     * @param locations the data node locations for this split
-     * @return byte serialization of the file split
-     * @throws IOException if I/O errors occur while writing to the underlying
-     *                     stream
-     */
-    public static byte[] prepareFragmentMetadata(long start, long length, String[] locations)
-            throws IOException {
-
-        ByteArrayOutputStream byteArrayStream = writeBaseFragmentInfo(start, length, locations);
-        return byteArrayStream.toByteArray();
-    }
-
-    /**
-     * Parses fragment metadata and return matching {@link FileSplit}.
-     *
-     * @param requestContext request input data
+     * @param context request input data
      * @return FileSplit with fragment metadata
      */
-    public static FileSplit parseFileSplit(RequestContext requestContext) {
-        FragmentMetadata metadata = Utilities.parseFragmentMetadata(requestContext);
-        return new FileSplit(new Path(requestContext.getDataSource()),
-                metadata.getStart(), metadata.getEnd(), (String[]) null);
+    public static FileSplit parseFileSplit(RequestContext context) {
+        HcfsFragmentMetadata metadata = context.getFragmentMetadata();
+
+        long start = metadata == null ? 0 : metadata.getStart();
+        long length = metadata == null ? 0 : metadata.getLength();
+
+        LOG.debug("Parsed split: path={} start={} length={}", context.getDataSource(), start, length);
+
+        return new FileSplit(new Path(context.getDataSource()), start, length, (String[]) null);
     }
 
     /**
@@ -140,25 +114,5 @@ public class HdfsUtilities {
             delim = delimiter;
         }
         return buff.toString();
-    }
-
-    /**
-     * Serializes fragment metadata into a ByteArrayOutputStream
-     *
-     * @param start     the fragment metadata start
-     * @param length    the fragment metadata length
-     * @param locations the data node locations for this split
-     * @return byte serialization of the file split
-     * @throws IOException if I/O errors occur while writing to the underlying
-     *                     stream
-     */
-    private static ByteArrayOutputStream writeBaseFragmentInfo(long start, long length, String[] locations)
-            throws IOException {
-        ByteArrayOutputStream byteArrayStream = new ByteArrayOutputStream();
-        ObjectOutputStream objectStream = new ObjectOutputStream(byteArrayStream);
-        objectStream.writeLong(start);
-        objectStream.writeLong(length);
-        objectStream.writeObject(locations);
-        return byteArrayStream;
     }
 }

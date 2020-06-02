@@ -1,4 +1,4 @@
-package org.greenplum.pxf.api.utilities;
+package org.greenplum.pxf.service.rest;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -22,6 +22,8 @@ package org.greenplum.pxf.api.utilities;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.greenplum.pxf.api.model.Fragment;
+import org.greenplum.pxf.api.utilities.FragmentMetadata;
+import org.greenplum.pxf.api.utilities.FragmentMetadataSerDe;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import javax.ws.rs.core.StreamingOutput;
