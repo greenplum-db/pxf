@@ -20,8 +20,6 @@ package org.greenplum.pxf.plugins.hdfs.utilities;
  */
 
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.BooleanWritable;
 import org.apache.hadoop.io.ByteWritable;
 import org.apache.hadoop.io.DoubleWritable;
@@ -30,24 +28,15 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.core.classloader.annotations.SuppressStaticInitializationFor;
-import org.powermock.modules.junit4.PowerMockRunner;
-import org.powermock.reflect.Whitebox;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@RunWith(PowerMockRunner.class)
-@SuppressStaticInitializationFor("RecordkeyAdapter")
-@PrepareForTest({RecordkeyAdapter.class, LogFactory.class})
 public class RecordkeyAdapterTest {
-    Log LOG;
-    RecordkeyAdapter recordkeyAdapter;
+
+    private RecordkeyAdapter recordkeyAdapter;
 
     /**
      * Test convertKeyValue for Integer type
@@ -104,7 +93,7 @@ public class RecordkeyAdapterTest {
      */
     @Test
     public void convertKeyValueLong() {
-        long key = 12345678901234567l;
+        long key = 12345678901234567L;
         initRecordkeyAdapter();
         runConvertKeyValue(key, new LongWritable(key));
     }
@@ -124,18 +113,14 @@ public class RecordkeyAdapterTest {
      */
     @Test
     public void convertKeyValueManyCalls() {
-        Boolean key = true;
-        mockLog();
+        boolean key = true;
         initRecordkeyAdapter();
         runConvertKeyValue(key, new BooleanWritable(key));
-        verifyLog("converter initialized for type " + key.getClass() +
-                " (key value: " + key + ")");
 
         for (int i = 0; i < 5; ++i) {
             key = (i % 2) == 0;
             runConvertKeyValue(key, new BooleanWritable(key));
         }
-        verifyLogOnlyOnce();
     }
 
     /**
@@ -148,13 +133,11 @@ public class RecordkeyAdapterTest {
         initRecordkeyAdapter();
         runConvertKeyValue(key, new BooleanWritable(key));
         String badKey = "bad";
-        try {
-            recordkeyAdapter.convertKeyValue(badKey);
-            fail("conversion of string to boolean should fail");
-        } catch (ClassCastException e) {
-            assertEquals(e.getMessage(),
-                    "java.lang.String cannot be cast to java.lang.Boolean");
-        }
+
+        Exception e = assertThrows(ClassCastException.class,
+                () -> recordkeyAdapter.convertKeyValue(badKey),
+                "conversion of string to boolean should fail");
+        assertTrue(e.getMessage().contains("java.lang.String cannot be cast to "));
     }
 
     private void initRecordkeyAdapter() {
@@ -164,18 +147,5 @@ public class RecordkeyAdapterTest {
     private void runConvertKeyValue(Object key, Writable expected) {
         Writable writable = recordkeyAdapter.convertKeyValue(key);
         assertEquals(writable, expected);
-    }
-
-    private void mockLog() {
-        LOG = mock(Log.class);
-        Whitebox.setInternalState(RecordkeyAdapter.class, LOG);
-    }
-
-    private void verifyLog(String msg) {
-        Mockito.verify(LOG).debug(msg);
-    }
-
-    private void verifyLogOnlyOnce() {
-        Mockito.verify(LOG, Mockito.times(1)).debug(Mockito.any());
     }
 }

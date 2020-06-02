@@ -21,8 +21,7 @@ package org.greenplum.pxf.api.examples;
 
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.Accessor;
-import org.greenplum.pxf.api.model.Plugin;
-import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.utilities.FragmentMetadata;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.annotation.RequestScope;
@@ -35,17 +34,11 @@ import org.springframework.web.context.annotation.RequestScope;
  */
 @Component("DemoAccessor")
 @RequestScope
-public class DemoAccessor implements Plugin, Accessor {
+public class DemoAccessor extends BasePlugin implements Accessor {
 
     private int rowNumber;
     private int fragmentNumber;
     private static final int NUM_ROWS = 2;
-
-    protected final RequestContext context;
-
-    public DemoAccessor(RequestContext context) {
-        this.context = context;
-    }
 
     @Override
     public boolean openForRead() {

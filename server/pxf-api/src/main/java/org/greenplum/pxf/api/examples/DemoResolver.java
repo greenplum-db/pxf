@@ -22,9 +22,10 @@ package org.greenplum.pxf.api.examples;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.api.model.Plugin;
+import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.Resolver;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -35,7 +36,8 @@ import java.util.List;
  * Demo implementation that returns record custom format
  */
 @Component("DemoResolver")
-public class DemoResolver implements Plugin, Resolver {
+@RequestScope
+public class DemoResolver extends BasePlugin implements Resolver {
 
     /**
      * Read the next record

@@ -37,6 +37,8 @@ import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hdfs.parquet.ParquetTypeConverter;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 import java.io.IOException;
 import java.util.LinkedList;
@@ -45,6 +47,8 @@ import java.util.regex.Pattern;
 
 import static org.apache.parquet.schema.Type.Repetition.REPEATED;
 
+@Component("ParquetResolver")
+@RequestScope
 public class ParquetResolver extends BasePlugin implements Resolver {
 
     private MessageType schema;

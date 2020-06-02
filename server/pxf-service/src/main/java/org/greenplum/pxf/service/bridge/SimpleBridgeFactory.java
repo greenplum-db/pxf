@@ -30,7 +30,7 @@ public class SimpleBridgeFactory implements BridgeFactory {
             } else if (useVectorization(context)) {
                 bridge = applicationContext.getBean(ReadVectorizedBridge.class);
             } else {
-                bridge = applicationContext.getBean("readBridge", ReadBridge.class);
+                bridge = applicationContext.getBean("ReadBridge", ReadBridge.class);
             }
         } else if (context.getRequestType() == RequestContext.RequestType.WRITE_BRIDGE) {
             bridge = applicationContext.getBean(WriteBridge.class);
@@ -38,6 +38,7 @@ public class SimpleBridgeFactory implements BridgeFactory {
             throw new UnsupportedOperationException();
         }
 
+        bridge.initialize();
         return bridge;
     }
 

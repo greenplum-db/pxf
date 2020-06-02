@@ -34,9 +34,12 @@ ifeq "$(PROTOCOL)" "minio"
 	PROTOCOL=s3
 endif
 
+PXF_CONF ?= ~/pxf
+PXF_CONF_SERVERS=$(PXF_CONF)/servers
+
 ifneq "$(PROTOCOL)" ""
 	MAVEN_TEST_OPTS+= -DPROTOCOL=$(PROTOCOL)
-	PROTOCOL_HOME=~/pxf/servers/$(PROTOCOL)
+	PROTOCOL_HOME=$(PXF_CONF_SERVERS)/$(PROTOCOL)
 endif
 
 ifneq "$(ACCESS_KEY_ID)" ""
@@ -47,9 +50,8 @@ ifneq "$(SECRET_ACCESS_KEY)" ""
 	MAVEN_TEST_OPTS+= -DAWS_SECRET_ACCESS_KEY=$(SECRET_ACCESS_KEY)
 endif
 
-ifeq "$(JDBC_HOST)" ""
-	JDBC_HOST=localhost
-endif
+JDBC_HOST ?= localhost
+
 ifeq "$(JDBC_PORT)" ""
 	ifeq "$(PGPORT)" ""
 		JDBC_PORT=15432
@@ -58,16 +60,9 @@ ifeq "$(JDBC_PORT)" ""
 	endif
 endif
 
-ifeq "$(HIVE_SERVER_HOST)" ""
-	HIVE_SERVER_HOST=localhost
-endif
-ifeq "$(HIVE_SERVER_PORT)" ""
-	HIVE_SERVER_PORT=10000
-endif
+HIVE_SERVER_HOST ?= localhost
 
-ifeq "$(PXF_CONF_SERVERS)" ""
-	PXF_CONF_SERVERS=~/pxf/servers
-endif
+HIVE_SERVER_PORT ?= 10000
 
 SED_OPTS=-i
 ifeq ($(UNAME_S),Darwin)
@@ -105,7 +100,13 @@ symlink_pxf_jars: check-env
 	fi
 
 test: check-env clean-logs symlink_pxf_jars sync_cloud_configs sync_jdbc_config
+	@if ! grep "export PXF_LOADER_PATH=file:/tmp/publicstage/pxf" $(PXF_CONF)/conf/pxf-env.sh > /dev/null; then \
+		echo 'export PXF_LOADER_PATH=file:/tmp/publicstage/pxf' >> $(PXF_CONF)/conf/pxf-env.sh; \
+	fi
 	$(MVN) $(MAVEN_TEST_OPTS) ${MAVEN_DEBUG_OPTS} test
+	@if grep "export PXF_LOADER_PATH=file:/tmp/publicstage/pxf" $(PXF_CONF)/conf/pxf-env.sh > /dev/null; then \
+		sed -i .bak -n '/export PXF_LOADER_PATH=file:\/tmp\/publicstage\/pxf/!p' $(PXF_CONF)/conf/pxf-env.sh && rm -f $(PXF_CONF)/conf/pxf-env.sh.bak; \
+	fi
 
 clean: clean-logs
 	$(MVN) $(MAVEN_TEST_OPTS) clean

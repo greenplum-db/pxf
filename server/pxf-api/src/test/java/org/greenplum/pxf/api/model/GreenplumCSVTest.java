@@ -234,13 +234,13 @@ public class GreenplumCSVTest {
     @Test
     public void testCsvOptionWithEscapeCharValid() {
         gpCSV.withEscapeChar("\\");
-        assertEquals(new Character('\\'), gpCSV.getEscape());
+        assertEquals(Character.valueOf('\\'), gpCSV.getEscape());
     }
 
     @Test
     public void testCsvOptionWithEscapeCharEmpty() {
         gpCSV.withEscapeChar("");
-        assertEquals(new Character('"'), gpCSV.getEscape());
+        assertEquals(Character.valueOf('"'), gpCSV.getEscape());
     }
 
     @Test
@@ -276,13 +276,13 @@ public class GreenplumCSVTest {
     @Test
     public void testCsvOptionWithDelimiterValid() {
         gpCSV.withDelimiter("|");
-        assertEquals(new Character('|'), gpCSV.getDelimiter());
+        assertEquals(Character.valueOf('|'), gpCSV.getDelimiter());
     }
 
     @Test
     public void testCsvOptionWithDelimiterEmpty() {
         gpCSV.withDelimiter("");
-        assertEquals(new Character(','), gpCSV.getDelimiter());
+        assertEquals(Character.valueOf(','), gpCSV.getDelimiter());
     }
 
     @Test

@@ -1,4 +1,4 @@
-package org.greenplum.pxf.api.utilities;
+package org.greenplum.pxf.service.rest;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -19,9 +19,9 @@ package org.greenplum.pxf.api.utilities;
  * under the License.
  */
 
-import org.greenplum.pxf.api.model.Fragment;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.greenplum.pxf.api.model.Fragment;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;

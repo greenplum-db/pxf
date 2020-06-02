@@ -42,6 +42,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * destroying a UGI per-request, is wasteful.
  */
 @Component
+@SuppressWarnings("UnstableApiUsage")
 public class UGICache {
 
     static final int NANOS_PER_MILLIS = 1000000;
@@ -155,7 +156,7 @@ public class UGICache {
      */
     int allQueuesSize() {
         int count = 0;
-        for (DelayQueue queue : expirationQueueMap.values()) {
+        for (DelayQueue<UGICache.Entry> queue : expirationQueueMap.values()) {
             count += queue.size();
         }
         return count;
@@ -164,7 +165,7 @@ public class UGICache {
     /**
      * This method is O(n) in the number of cache entries and should only be called in tests.
      *
-     * @param session
+     * @param session the session
      * @return determine whether the session is in the internal cache
      */
     @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
@@ -180,7 +181,7 @@ public class UGICache {
      * Get the queue of cache entries associated with a segment, creating it if it doesn't yet
      * exist. This lets us lazily populate the expirationQueueMap.
      *
-     * @param segmentId
+     * @param segmentId the segment identifier
      * @return the {@link DelayQueue} associated to the segment.
      */
     private DelayQueue<Entry> getExpirationQueue(Integer segmentId) {
@@ -201,7 +202,7 @@ public class UGICache {
      * Iterate through all the entries in the queue and close expired {@link UserGroupInformation},
      * otherwise it resets the timer for every non-expired entry.
      *
-     * @param expirationQueue
+     * @param expirationQueue the expiration queue
      */
     private void cleanup(DelayQueue<Entry> expirationQueue) {
 
@@ -226,13 +227,11 @@ public class UGICache {
      * session.getSegmentId(). Removes the cachedUGI from the internal cache and then passes it to
      * {@link UGIProvider} to destroy the UGI.
      *
-     * @param expiredUGI
+     * @param expiredUGI the UserGroupInformation to close
      */
     private void closeUGI(Entry expiredUGI) {
         SessionId session = expiredUGI.getSession();
         String fsMsg = "FileSystem for proxy user = " + session.getUser();
-
-        LOG.debug("{} Closing {} (Cache Size = {})", session.toString(), fsMsg, cache.size());
 
         try {
             // Remove it from cache, as cache now has an
@@ -243,11 +242,14 @@ public class UGICache {
         } catch (Throwable t) {
             LOG.warn(session.toString() + " Error closing " + fsMsg, t);
         }
+
+        LOG.debug("{} Closed {} (Cache Size = {})", session.toString(), fsMsg, cache.size());
     }
 
     /**
      * Stores a {@link UserGroupInformation}, and determines when to expire the UGI.
      */
+    @SuppressWarnings("UnstableApiUsage")
     private static class Entry implements Delayed {
 
         private final SessionId session;
@@ -259,9 +261,9 @@ public class UGICache {
         /**
          * Creates a new UGICache Entry.
          *
-         * @param ticker
-         * @param proxyUGI
-         * @param session
+         * @param ticker   the time ticker
+         * @param proxyUGI the proxy UserGroupInformation
+         * @param session  the session
          */
         Entry(Ticker ticker, UserGroupInformation proxyUGI, SessionId session) {
             this.ticker = ticker;

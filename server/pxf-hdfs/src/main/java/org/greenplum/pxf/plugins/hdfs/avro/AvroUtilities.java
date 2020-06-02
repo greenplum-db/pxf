@@ -62,11 +62,11 @@ public final class AvroUtilities {
      * All-purpose method for obtaining an Avro schema based on the request context and
      * HCFS config.
      *
-     * @param context
-     * @param configuration
+     * @param context  the context for the request
+     * @param hcfsType the type of hadoop-compatible filesystem we are accessing
      * @return
      */
-    public Schema obtainSchema(RequestContext context, Configuration configuration, HcfsType hcfsType) {
+    public Schema obtainSchema(RequestContext context, HcfsType hcfsType) {
         Schema schema = (Schema) context.getMetadata();
 
         if (schema != null) {
@@ -74,7 +74,7 @@ public final class AvroUtilities {
         }
         try {
             schemaPath = context.getDataSource();
-            schema = readOrGenerateAvroSchema(context, configuration, hcfsType);
+            schema = readOrGenerateAvroSchema(context, hcfsType);
         } catch (Exception e) {
             throw new RuntimeException(String.format("Failed to obtain Avro schema from '%s'", schemaPath), e);
         }
@@ -82,13 +82,13 @@ public final class AvroUtilities {
         return schema;
     }
 
-    private Schema readOrGenerateAvroSchema(RequestContext context, Configuration configuration, HcfsType hcfsType) throws IOException {
+    private Schema readOrGenerateAvroSchema(RequestContext context, HcfsType hcfsType) throws IOException {
         // user-provided schema trumps everything
         String userProvidedSchemaFile = context.getOption("SCHEMA");
         if (userProvidedSchemaFile != null) {
             schemaPath = userProvidedSchemaFile;
             AvroSchemaFileReader schemaFileReader = schemaFileReaderFactory.getAvroSchemaFileReader(userProvidedSchemaFile);
-            return schemaFileReader.readSchema(configuration, userProvidedSchemaFile, hcfsType, fileSearcher);
+            return schemaFileReader.readSchema(context.getConfiguration(), userProvidedSchemaFile, hcfsType, fileSearcher);
         }
 
         // if we are writing we must generate the schema since there is none to read
@@ -97,7 +97,7 @@ public final class AvroUtilities {
         }
 
         // reading from external: get the schema from data source
-        return readSchemaFromAvroDataSource(configuration, context.getDataSource());
+        return readSchemaFromAvroDataSource(context.getConfiguration(), context.getDataSource());
     }
 
     private static Schema readSchemaFromAvroDataSource(Configuration configuration, String dataSource) throws IOException {

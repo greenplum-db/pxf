@@ -3,49 +3,50 @@ package org.greenplum.pxf.plugins.hdfs;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
+import org.apache.hadoop.conf.Configuration;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.plugins.hdfs.avro.AvroTypeConverter;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static junit.framework.TestCase.assertTrue;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class AvroResolverTest {
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
+
     private AvroResolver resolver;
     private RequestContext context;
     private Schema schema;
 
-    @Before
+    @BeforeEach
     public void setup() {
         resolver = new AvroResolver();
+        Configuration configuration = new Configuration();
         context = new RequestContext();
         context.setConfig("default");
         context.setUser("test-user");
         // initialize checks that accessor is some kind of avro accessor
         context.setAccessor("avro");
+        context.setConfiguration(configuration);
     }
 
     @Test
-    public void testSetFields_Primitive() throws Exception {
+    public void testSetFields_Primitive() {
         schema = getAvroSchemaForPrimitiveTypes();
         context.setMetadata(schema);
-        resolver.initialize(context);
+        resolver.setRequestContext(context);
+        resolver.initialize();
 
         List<OneField> fields = new ArrayList<>();
         fields.add(new OneField(DataType.BOOLEAN.getOID(), false));
@@ -74,10 +75,11 @@ public class AvroResolverTest {
     }
 
     @Test
-    public void testSetFields_Complex() throws Exception {
+    public void testSetFields_Complex() {
         schema = getAvroSchemaForComplexTypes();
         context.setMetadata(schema);
-        resolver.initialize(context);
+        resolver.setRequestContext(context);
+        resolver.initialize();
 
         List<OneField> fields = new ArrayList<>();
         fields.add(new OneField(DataType.BYTEA.getOID(), new byte[]{65, 66, 67, 68}));               // union of null and bytes
@@ -107,8 +109,8 @@ public class AvroResolverTest {
     public void testGetFields_Primitive() throws Exception {
         schema = getAvroSchemaForPrimitiveTypes();
         context.setMetadata(schema);
-        context.setTupleDescription(AvroTypeConverter.getColumnDescriptorsFromSchema(schema));
-        resolver.initialize(context);
+        resolver.setRequestContext(context);
+        resolver.initialize();
 
         GenericRecord genericRecord = new GenericData.Record(schema);
         genericRecord.put(0, false);
@@ -133,8 +135,8 @@ public class AvroResolverTest {
     public void testGetFields_PrimitiveNulls() throws Exception {
         schema = getAvroSchemaForPrimitiveTypes();
         context.setMetadata(schema);
-        context.setTupleDescription(AvroTypeConverter.getColumnDescriptorsFromSchema(schema));
-        resolver.initialize(context);
+        resolver.setRequestContext(context);
+        resolver.initialize();
 
         GenericRecord genericRecord = new GenericData.Record(schema);
         genericRecord.put(0, null);
@@ -159,8 +161,8 @@ public class AvroResolverTest {
     public void getFields_ComplexTypes() throws Exception {
         schema = getAvroSchemaForComplexTypes();
         context.setMetadata(schema);
-        context.setTupleDescription(AvroTypeConverter.getColumnDescriptorsFromSchema(schema));
-        resolver.initialize(context);
+        resolver.setRequestContext(context);
+        resolver.initialize();
         GenericRecord genericRecord = new GenericData.Record(schema);
 
         // UNION of NULL and BYTES
@@ -212,8 +214,8 @@ public class AvroResolverTest {
     public void getFields_ComplexTypesNulls() throws Exception {
         schema = getAvroSchemaForComplexTypes();
         context.setMetadata(schema);
-        context.setTupleDescription(AvroTypeConverter.getColumnDescriptorsFromSchema(schema));
-        resolver.initialize(context);
+        resolver.setRequestContext(context);
+        resolver.initialize();
         GenericRecord genericRecord = new GenericData.Record(schema);
         // UNION of NULL and BYTES
         genericRecord.put(0, null);
@@ -283,7 +285,7 @@ public class AvroResolverTest {
         // add a UNION of NULL with BYTES
         fields.add(new Schema.Field(
                 Schema.Type.UNION.getName(),
-                createUnion(Schema.Type.BYTES),
+                createUnion(),
                 "",
                 null)
         );
@@ -304,7 +306,7 @@ public class AvroResolverTest {
         // add an ENUM of card suites
         fields.add(new Schema.Field(
                 Schema.Type.ENUM.getName(),
-                createEnum("suites", new String[]{"SPADES", "HEARTS", "DIAMONDS", "CLUBS"}),
+                createEnum(new String[]{"SPADES", "HEARTS", "DIAMONDS", "CLUBS"}),
                 "",
                 null)
         );
@@ -327,11 +329,9 @@ public class AvroResolverTest {
         return schema;
     }
 
-    private Schema createEnum(String name, String[] symbols) {
+    private Schema createEnum(String[] symbols) {
         List<String> values = new ArrayList<>();
-        for (String sym : symbols) {
-            values.add(sym);
-        }
+        Collections.addAll(values, symbols);
         return Schema.createEnum("enum", "", null, values);
     }
 
@@ -345,10 +345,10 @@ public class AvroResolverTest {
 
     // we can only support Unions that have 2 elements, and one has to be NULL
     // otherwise we won't know which Greenplum type to use
-    private Schema createUnion(Schema.Type type) {
+    private Schema createUnion() {
         List<Schema> unionList = new ArrayList<>();
         unionList.add(Schema.create(Schema.Type.NULL));
-        unionList.add(Schema.create(type));
+        unionList.add(Schema.create(Schema.Type.BYTES));
         return Schema.createUnion(unionList);
     }
 

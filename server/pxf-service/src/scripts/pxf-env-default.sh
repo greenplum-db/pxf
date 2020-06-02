@@ -63,4 +63,4 @@ export PXF_OOM_KILL=${PXF_OOM_KILL:-true}
 # export PXF_OOM_DUMP_PATH=
 
 # Additional locations to be class-loaded by the application
-export LOADER_PATH="file:${PXF_CONF}/conf,file:${PXF_HOME}/conf,file:${PXF_CONF}/lib"
+export LOADER_PATH="${PXF_LOADER_PATH},file:${PXF_CONF}/conf,file:${PXF_HOME}/conf,file:${PXF_CONF}/lib"
