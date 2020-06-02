@@ -3,24 +3,20 @@ package org.greenplum.pxf.plugins.hdfs.utilities;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class PxfInputFormatTest {
 
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
-
     @Test
     public void testGetRecordReader() throws IOException {
-        thrown.expect(UnsupportedOperationException.class);
-        thrown.expectMessage("PxfInputFormat should not be used for reading data, but only for obtaining the splits of a file");
-        new PxfInputFormat().getRecordReader(null, null, null);
+        Exception e = assertThrows(UnsupportedOperationException.class,
+                () -> new PxfInputFormat().getRecordReader(null, null, null));
+        assertEquals("PxfInputFormat should not be used for reading data, but only for obtaining the splits of a file", e.getMessage());
     }
 
     @Test
@@ -42,6 +38,6 @@ public class PxfInputFormatTest {
         FileSystem fs = path.getFileSystem(configuration);
 
         boolean result = new PxfInputFormat().isSplitable(fs, path);
-        assertEquals(description, result, expected);
+        assertEquals(result, expected, description);
     }
 }

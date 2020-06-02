@@ -21,4 +21,5 @@ rootProject.name = 'pxf'
 
 include 'pxf-service',
         'pxf-api',
-        'pxf-jdbc'
+        'pxf-jdbc',
+        'pxf-hdfs'

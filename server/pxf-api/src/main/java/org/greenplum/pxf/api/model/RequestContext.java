@@ -77,6 +77,7 @@ public class RequestContext {
     private int fragmentIndex;
     private FragmentMetadata fragmentMetadata;
     private String filterString;
+    private boolean lastFragment;
     // Profile-centric metadata
     private Object metadata;
 
@@ -268,8 +269,9 @@ public class RequestContext {
      *
      * @return fragment metadata
      */
-    public FragmentMetadata getFragmentMetadata() {
-        return fragmentMetadata;
+    @SuppressWarnings("unchecked")
+    public <T extends FragmentMetadata> T getFragmentMetadata() {
+        return (T) fragmentMetadata;
     }
 
     /**
@@ -336,6 +338,24 @@ public class RequestContext {
 
     public void setFilterString(String filterString) {
         this.filterString = filterString;
+    }
+
+    /**
+     * Returns true if this is the last fragment being processed by the segment, false otherwise
+     *
+     * @return true if this is the last fragment being processed by the segment, false otherwise
+     */
+    public boolean isLastFragment() {
+        return lastFragment;
+    }
+
+    /**
+     * Indicates whether this is the last fragment being processed by a segment
+     *
+     * @param lastFragment the last fragment value
+     */
+    public void setLastFragment(boolean lastFragment) {
+        this.lastFragment = lastFragment;
     }
 
     /**

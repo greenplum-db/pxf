@@ -21,26 +21,19 @@ package org.greenplum.pxf.plugins.hdfs;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.SequenceFile;
-import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class SequenceFileAccessorTest {
 
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
     private RequestContext context;
     private SequenceFileAccessor accessor;
-    private ConfigurationFactory mockConfigurationFactory;
 
     /*
      * setup function called before each test.
@@ -51,14 +44,9 @@ public class SequenceFileAccessorTest {
      * Since openForWrite does some filesystem operations on HDFS, those had
      * to be mocked (and provided good material for a new Kafka story).
      */
-    @Before
+    @BeforeEach
     public void setup() {
         String path = this.getClass().getClassLoader().getResource("csv/").getPath();
-        Configuration configuration = new Configuration();
-
-        mockConfigurationFactory = mock(ConfigurationFactory.class);
-        when(mockConfigurationFactory.initConfiguration("dummy", "dummy", "dummy", null))
-                .thenReturn(configuration);
 
         context = new RequestContext();
         context.setConfig("dummy");
@@ -67,6 +55,7 @@ public class SequenceFileAccessorTest {
         context.setDataSource(path);
         context.setSegmentId(0);
         context.setProfileScheme("localfile");
+        context.setConfiguration(new Configuration());
     }
 
     @Test
@@ -84,12 +73,12 @@ public class SequenceFileAccessorTest {
     }
 
     @Test
-    public void bogusCompressCodec() throws Exception {
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("Invalid codec: So I asked, who is he? He goes by the name of Wayne Rooney ");
+    public void bogusCompressCodec() {
 
         final String codecName = "So I asked, who is he? He goes by the name of Wayne Rooney";
-        prepareTest(codecName, null);
+        Exception e = assertThrows(IllegalArgumentException.class,
+                () -> prepareTest(codecName, null));
+        assertEquals("Invalid codec: So I asked, who is he? He goes by the name of Wayne Rooney ", e.getMessage());
     }
 
     @Test
@@ -112,23 +101,23 @@ public class SequenceFileAccessorTest {
     }
 
     @Test
-    public void illegalCompressTypeOy() throws Exception {
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("Illegal compression type 'Oy'");
-        prepareTest("org.apache.hadoop.io.compress.BZip2Codec", "Oy");
+    public void illegalCompressTypeOy() {
+        Exception e = assertThrows(IllegalArgumentException.class,
+                () -> prepareTest("org.apache.hadoop.io.compress.BZip2Codec", "Oy"));
+        assertEquals("Illegal compression type 'Oy'", e.getMessage());
     }
 
     @Test
-    public void illegalCompressTypeNone() throws Exception {
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("Illegal compression type 'NONE'. For disabling compression remove COMPRESSION_CODEC parameter.");
-        prepareTest("org.apache.hadoop.io.compress.BZip2Codec", "NONE");
+    public void illegalCompressTypeNone() {
+        Exception e = assertThrows(IllegalArgumentException.class,
+                () -> prepareTest("org.apache.hadoop.io.compress.BZip2Codec", "NONE"));
+        assertEquals("Illegal compression type 'NONE'. For disabling compression remove COMPRESSION_CODEC parameter.", e.getMessage());
     }
 
     /*
      * After each test is done, close the accessor if it was created
      */
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         if (accessor == null) return;
 
@@ -144,8 +133,9 @@ public class SequenceFileAccessorTest {
             context.addOption("COMPRESSION_TYPE", type);
         }
 
-        accessor = new SequenceFileAccessor(mockConfigurationFactory);
-        accessor.initialize(context);
+        accessor = new SequenceFileAccessor();
+        accessor.setRequestContext(context);
+        accessor.initialize();
         accessor.openForWrite();
     }
 }

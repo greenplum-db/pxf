@@ -19,14 +19,14 @@ public enum HcfsType {
     ADL,
     CUSTOM {
         @Override
-        public String getDataUri(Configuration configuration, RequestContext context) {
+        public String getDataUri(RequestContext context) {
             String profileScheme = StringUtils.isBlank(context.getProfileScheme()) ? "" : context.getProfileScheme() + "://";
-            return getDataUriForPrefix(configuration, context, profileScheme);
+            return getDataUriForPrefix(context.getConfiguration(), context, profileScheme);
         }
     },
     FILE {
         @Override
-        public String getDataUri(Configuration configuration, RequestContext context) {
+        public String getDataUri(RequestContext context) {
             throw new IllegalStateException("core-site.xml is missing or using unsupported file:// as default filesystem");
         }
 
@@ -77,20 +77,20 @@ public enum HcfsType {
      * @param context The input data parameters
      * @return an absolute data path
      */
-    public static HcfsType getHcfsType(Configuration configuration, RequestContext context) {
-        String scheme = getScheme(configuration, context);
+    public static HcfsType getHcfsType(RequestContext context) {
+        String scheme = getScheme(context);
 
         // now we have scheme, resolve to enum
         HcfsType type = HcfsType.fromString(scheme.toUpperCase());
         // disableSecureTokenRenewal for this configuration if non-secure
-        type.getDataUriForPrefix(configuration, "/", scheme);
+        type.getDataUriForPrefix(context.getConfiguration(), "/", scheme);
         return type;
     }
 
-    private static String getScheme(Configuration configuration, RequestContext context) {
+    private static String getScheme(RequestContext context) {
         // if defaultFs is defined and not file://, it takes precedence over protocol
         String schemeFromContext = context.getProfileScheme();
-        URI defaultFS = FileSystem.getDefaultUri(configuration);
+        URI defaultFS = FileSystem.getDefaultUri(context.getConfiguration());
         String defaultFSScheme = defaultFS.getScheme();
         if (StringUtils.isBlank(defaultFSScheme)) {
             throw new IllegalStateException(String.format("No scheme for property %s=%s", FS_DEFAULT_NAME_KEY, defaultFS));
@@ -121,12 +121,11 @@ public enum HcfsType {
      * in <TRANSACTION-ID>_<SEGMENT-ID>. If a COMPRESSION_CODEC is provided, the
      * default codec extension will be appended to the name of the file.
      *
-     * @param configuration The hadoop configurations
-     * @param context       The input data parameters
+     * @param context The input data parameters
      * @return an absolute data path for write
      */
-    public String getUriForWrite(Configuration configuration, RequestContext context) {
-        return getUriForWrite(configuration, context, false);
+    public String getUriForWrite(RequestContext context) {
+        return getUriForWrite(context, false);
     }
 
     /**
@@ -136,13 +135,12 @@ public enum HcfsType {
      * the skipCodedExtension parameter is false, the default codec extension
      * will be appended to the name of the file.
      *
-     * @param configuration      the hadoop configurations
      * @param context            the input data parameters
      * @param skipCodecExtension true if the codec extension is not desired, false otherwise
      * @return an absolute data path for write
      */
-    public String getUriForWrite(Configuration configuration, RequestContext context, boolean skipCodecExtension) {
-        String fileName = StringUtils.removeEnd(getDataUri(configuration, context), "/") +
+    public String getUriForWrite(RequestContext context, boolean skipCodecExtension) {
+        String fileName = StringUtils.removeEnd(getDataUri(context), "/") +
                 "/" +
                 context.getTransactionId() +
                 "_" +
@@ -156,7 +154,7 @@ public enum HcfsType {
                 String extension;
                 try {
                     extension = codecFactory
-                            .getCodec(compressCodec, configuration)
+                            .getCodec(compressCodec, context.getConfiguration())
                             .getDefaultExtension();
                 } catch (IllegalArgumentException e) {
                     LOG.debug("Unable to get extension for codec '{}'", compressCodec);
@@ -179,8 +177,8 @@ public enum HcfsType {
      * @param context The input data parameters
      * @return an absolute data path
      */
-    public String getDataUri(Configuration configuration, RequestContext context) {
-        return getDataUriForPrefix(configuration, context, this.prefix);
+    public String getDataUri(RequestContext context) {
+        return getDataUriForPrefix(context, this.prefix);
     }
 
     /**
@@ -203,8 +201,8 @@ public enum HcfsType {
         return StringUtils.removeStart(dataSource, "/");
     }
 
-    protected String getDataUriForPrefix(Configuration configuration, RequestContext context, String scheme) {
-        return getDataUriForPrefix(configuration, context.getDataSource(), scheme);
+    protected String getDataUriForPrefix(RequestContext context, String scheme) {
+        return getDataUriForPrefix(context.getConfiguration(), context.getDataSource(), scheme);
     }
 
     protected String getDataUriForPrefix(Configuration configuration, String dataSource, String scheme) {

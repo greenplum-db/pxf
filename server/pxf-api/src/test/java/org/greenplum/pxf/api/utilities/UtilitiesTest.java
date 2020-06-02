@@ -44,6 +44,10 @@ public class UtilitiesTest {
     static class StatsAccessorImpl implements StatsAccessor {
 
         @Override
+        public void initialize() {
+        }
+
+        @Override
         public boolean openForRead() {
             return false;
         }
@@ -80,9 +84,22 @@ public class UtilitiesTest {
         public OneRow emitAggObject() {
             return null;
         }
+
+        @Override
+        public void setRequestContext(RequestContext context) {
+        }
+
+        @Override
+        public boolean isThreadSafe() {
+            return false;
+        }
     }
 
     static class NonStatsAccessorImpl implements Accessor {
+
+        @Override
+        public void initialize() {
+        }
 
         @Override
         public boolean openForRead() {
@@ -111,6 +128,15 @@ public class UtilitiesTest {
         @Override
         public void closeForWrite() {
         }
+
+        @Override
+        public void setRequestContext(RequestContext context) {
+        }
+
+        @Override
+        public boolean isThreadSafe() {
+            return false;
+        }
     }
 
     static class ReadVectorizedResolverImpl implements ReadVectorizedResolver {
@@ -124,6 +150,10 @@ public class UtilitiesTest {
     static class ReadResolverImpl implements Resolver {
 
         @Override
+        public void initialize() {
+        }
+
+        @Override
         public List<OneField> getFields(OneRow row) {
             return null;
         }
@@ -131,6 +161,15 @@ public class UtilitiesTest {
         @Override
         public OneRow setFields(List<OneField> record) {
             return null;
+        }
+
+        @Override
+        public void setRequestContext(RequestContext context) {
+        }
+
+        @Override
+        public boolean isThreadSafe() {
+            return false;
         }
     }
 
@@ -374,5 +413,13 @@ public class UtilitiesTest {
         assertEquals("0.0.0.0", Utilities.getHost("hdfs://0.0.0.0?PROFILE=foo"));
         assertEquals("www.example.com", Utilities.getHost("www.example.com"));
         assertEquals("10.0.0.15", Utilities.getHost("10.0.0.15"));
+    }
+
+    @Test
+    public void testShortClassName() {
+        assertNull(Utilities.getShortClassName(null));
+        assertEquals("", Utilities.getShortClassName(""));
+        assertEquals("FooBarClass", Utilities.getShortClassName("FooBarClass"));
+        assertEquals("FooBarClass", Utilities.getShortClassName("org.namespace.FooBarClass"));
     }
 }

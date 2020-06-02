@@ -21,7 +21,9 @@ package org.greenplum.pxf.service.bridge;
 
 
 import org.greenplum.pxf.api.io.Writable;
+import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.Plugin;
+import org.greenplum.pxf.api.model.Resolver;
 
 import java.io.DataInputStream;
 
@@ -30,7 +32,12 @@ import java.io.DataInputStream;
  * class acts as an iterator over externally stored data, and should implement
  * getNext (for reading) or setNext (for writing) for handling accessed data.
  */
-public interface Bridge extends Plugin {
+public interface Bridge {
+
+    /**
+     * Initializes the {@link Accessor} and {@link Resolver} for this bridge
+     */
+    void initialize();
 
     /**
      * Starts the iteration for data access.
@@ -43,6 +50,8 @@ public interface Bridge extends Plugin {
     Writable getNext() throws Exception;
 
     boolean setNext(DataInputStream inputStream) throws Exception;
+
+    boolean isThreadSafe();
 
     void endIteration() throws Exception;
 }

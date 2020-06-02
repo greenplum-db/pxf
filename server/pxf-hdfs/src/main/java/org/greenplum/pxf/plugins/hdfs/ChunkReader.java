@@ -141,7 +141,7 @@ public class ChunkReader implements Closeable {
      */
     public int readLine(Writable str, int maxBytesToConsume) throws IOException {
         ChunkWritable cw = (ChunkWritable) str;
-        List<Node> list = new LinkedList<Node>();
+        List<Node> list = new LinkedList<>();
 
         boolean newLine = false; // length of terminating newline
         long bytesConsumed = 0;

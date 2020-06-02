@@ -25,6 +25,7 @@ import org.greenplum.pxf.api.model.RequestContext.RequestType;
 import org.greenplum.pxf.service.HttpRequestParser;
 import org.greenplum.pxf.service.bridge.BridgeFactory;
 import org.greenplum.pxf.service.bridge.WriteBridge;
+import org.greenplum.pxf.service.security.SecurityService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -49,6 +50,7 @@ public class WritableResourceTest {
     private HttpServletRequest mockHttpServletRequest;
 
     @BeforeEach
+    @SuppressWarnings("unchecked")
     public void before() throws IOException {
 
         Configuration configuration = new Configuration();
@@ -56,6 +58,7 @@ public class WritableResourceTest {
         // constructor dependencies
         HttpRequestParser mockParser = mock(HttpRequestParser.class);
         BridgeFactory mockFactory = mock(BridgeFactory.class);
+        SecurityService mockSecurityService = mock(SecurityService.class);
         mockHeaders = mock(MultiValueMap.class);
         ServletInputStream mockInputStream = mock(ServletInputStream.class);
         RequestContext mockContext = mock(RequestContext.class);
@@ -63,10 +66,11 @@ public class WritableResourceTest {
         ConfigurationFactory mockConfigurationFactory = mock(ConfigurationFactory.class);
         mockHttpServletRequest = mock(HttpServletRequest.class);
 
-        writableResource = new WritableResource(mockFactory);
+        writableResource = new WritableResource(mockFactory, mockSecurityService);
         writableResource.setRequestParser(mockParser);
         writableResource.setConfigurationFactory(mockConfigurationFactory);
 
+        when(mockSecurityService.doAs(any(), any())).thenReturn(0L);
         when(mockConfigurationFactory.initConfiguration(any(), any(), any(), any())).thenReturn(configuration);
         when(mockParser.parseRequest(mockHeaders, RequestType.WRITE_BRIDGE)).thenReturn(mockContext);
         when(mockFactory.getBridge(mockContext)).thenReturn(mockBridge);

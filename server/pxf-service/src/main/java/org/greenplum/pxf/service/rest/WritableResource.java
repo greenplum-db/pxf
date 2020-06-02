@@ -20,12 +20,11 @@ package org.greenplum.pxf.service.rest;
  */
 
 import org.apache.catalina.connector.ClientAbortException;
-import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.Utilities;
-import org.greenplum.pxf.service.RequestParser;
 import org.greenplum.pxf.service.bridge.Bridge;
 import org.greenplum.pxf.service.bridge.BridgeFactory;
+import org.greenplum.pxf.service.security.SecurityService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -39,6 +38,7 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.servlet.http.HttpServletRequest;
 import java.io.DataInputStream;
 import java.io.InputStream;
+import java.security.PrivilegedExceptionAction;
 
 import static org.greenplum.pxf.api.model.RequestContext.RequestType;
 
@@ -87,15 +87,18 @@ public class WritableResource extends BaseResource {
 
     private final BridgeFactory bridgeFactory;
 
+    private final SecurityService securityService;
+
     /**
      * Creates an instance of the resource with provided instances of RequestParser and BridgeFactory.
      *
      * @param bridgeFactory bridge factory
      * @
      */
-    public WritableResource(BridgeFactory bridgeFactory) {
+    public WritableResource(BridgeFactory bridgeFactory, SecurityService securityService) {
         super(RequestType.WRITE_BRIDGE);
         this.bridgeFactory = bridgeFactory;
+        this.securityService = securityService;
     }
 
     /**
@@ -116,38 +119,47 @@ public class WritableResource extends BaseResource {
 
         RequestContext context = parseRequest(headers);
         Bridge bridge = bridgeFactory.getBridge(context);
+        InputStream inputStream = request.getInputStream();
 
-        // Open the output file
-        bridge.beginIteration();
-        long totalWritten = 0;
-        Exception ex = null;
+        PrivilegedExceptionAction<Long> action = () -> {
+            // Open the output file
+            bridge.beginIteration();
+            long totalWritten = 0;
+            Exception ex = null;
 
-        // dataStream will close automatically in the end of the try.
-        // inputStream is closed by dataStream.close().
-        try (DataInputStream dataStream = new DataInputStream(request.getInputStream())) {
-            while (bridge.setNext(dataStream)) {
-                ++totalWritten;
-            }
-        } catch (ClientAbortException cae) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Remote connection closed by GPDB", cae);
-            } else {
-                LOG.error("Remote connection closed by GPDB (Enable debug for stacktrace)");
-            }
-        } catch (Exception e) {
-            LOG.error("Exception: totalWritten so far " + totalWritten + " to " + path, e);
-            ex = e;
-            throw ex;
-        } finally {
-            try {
-                bridge.endIteration();
+            // dataStream will close automatically in the end of the try.
+            // inputStream is closed by dataStream.close().
+            try (DataInputStream dataStream = new DataInputStream(inputStream)) {
+                while (bridge.setNext(dataStream)) {
+                    ++totalWritten;
+                }
+            } catch (ClientAbortException cae) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Remote connection closed by GPDB", cae);
+                } else {
+                    LOG.error("Remote connection closed by GPDB (Enable debug for stacktrace)");
+                }
             } catch (Exception e) {
-                throw (ex == null) ? e : ex;
+                LOG.error(String.format("Exception: totalWritten so far %d to %s", totalWritten, path), e);
+                ex = e;
+                throw ex;
+            } finally {
+                try {
+                    bridge.endIteration();
+                } catch (Exception e) {
+                    ex = (ex == null) ? e : ex;
+                }
             }
-        }
 
+            // Report any errors we might have encountered
+            if (ex != null) throw ex;
+
+            return totalWritten;
+        };
+
+        Long totalWritten = securityService.doAs(context, action);
         String censuredPath = Utilities.maskNonPrintables(path);
-        String returnMsg = "wrote " + totalWritten + " bulks to " + censuredPath;
+        String returnMsg = String.format("wrote %d bulks to %s", totalWritten, censuredPath);
         LOG.debug(returnMsg);
 
         return new ResponseEntity<>(returnMsg, HttpStatus.OK);

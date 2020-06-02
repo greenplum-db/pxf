@@ -1,15 +1,15 @@
 package org.greenplum.pxf.plugins.hdfs.avro;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class AvroSchemaFileReaderFactoryTest {
 
     private AvroSchemaFileReaderFactory avroSchemaFileReaderFactory;
 
-    @Before
+    @BeforeEach
     public void setup() {
         avroSchemaFileReaderFactory = new AvroSchemaFileReaderFactory();
     }
