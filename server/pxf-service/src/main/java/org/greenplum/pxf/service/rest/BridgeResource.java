@@ -73,24 +73,10 @@ public class BridgeResource extends BaseResource {
         boolean isThreadSafe = context.isThreadSafe() && bridge.isThreadSafe();
         LOG.debug("Request for {} will be handled {} synchronization", context.getDataSource(), (isThreadSafe ? "without" : "with"));
 
-        return readResponse(bridge, context, isThreadSafe);
-    }
-
-    /**
-     * Produces streaming Response used by the container to read data from the bridge.
-     *
-     * @param bridge     bridge to use to read data
-     * @param context    request context
-     * @param threadSafe whether streaming can proceed in parallel
-     * @return response object to be used by the container
-     */
-    private ResponseEntity<StreamingResponseBody> readResponse(final Bridge bridge, RequestContext context, final boolean threadSafe) {
         // Create a streaming class which will iterate over the records and put
         // them on the output stream
-
-        // Prepare privileged action to run on behalf of proxy user
         StreamingResponseBody response =
-                new BridgeResponse(securityService, bridge, context, threadSafe);
+                new BridgeResponse(securityService, bridge, context, isThreadSafe);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

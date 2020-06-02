@@ -45,7 +45,7 @@ public class PxfServerProperties {
     /**
      * Configurable task execution properties for async tasks (i.e Bridge Read)
      */
-    private TaskExecutionProperties taskExecution = new TaskExecutionProperties();
+    private TaskExecutionProperties task = new TaskExecutionProperties();
 
     @Getter
     @Setter

@@ -271,11 +271,15 @@ public class FragmenterResourceTest {
                 context.setSegmentId(index % 10);
                 context.setFragmenter("org.greenplum.pxf.api.model.Fragmenter");
 
+                try {
+                    answerForSecurityService(context);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 when(mockParser.parseRequest(httpHeaders, RequestType.FRAGMENTER)).thenReturn(context);
                 when(mockApplicationContext.getBean("Fragmenter", Fragmenter.class)).thenReturn(fragmenter);
 
                 try {
-                    answerForSecurityService(context);
                     fragmenterResource.getFragments(httpHeaders);
 
                     finishedCount.incrementAndGet();
@@ -357,10 +361,7 @@ public class FragmenterResourceTest {
     }
 
     private void answerForSecurityService(RequestContext context) throws IOException {
-        when(mockSecurityService.doAs(eq(context), any())).thenAnswer(invocation -> {
-            @SuppressWarnings("unchecked")
-            PrivilegedExceptionAction<List<Fragment>> action = invocation.getArgument(1, PrivilegedExceptionAction.class);
-            return action.run();
-        });
+        when(mockSecurityService.doAs(eq(context), any())).thenAnswer(invocation ->
+                invocation.getArgument(1, PrivilegedExceptionAction.class).run());
     }
 }

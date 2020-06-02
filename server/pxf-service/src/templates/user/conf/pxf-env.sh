@@ -21,6 +21,10 @@ PXF_CONF="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
 
 # Threads
 # export PXF_MAX_THREADS="200"
+# export PXF_TASK_POOL_ALLOW_CORE_THREAD_TIMEOUT="false"
+# export PXF_TASK_POOL_CORE_SIZE="8"
+# export PXF_TASK_POOL_QUEUE_CAPACITY="0"
+# export PXF_TASK_POOL_MAX_SIZE="200"
 
 # Fragmenter cache, set to false to disable
 # export PXF_FRAGMENTER_CACHE=true

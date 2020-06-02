@@ -47,50 +47,50 @@ class PxfServerPropertiesTest {
 
     @Test
     public void testTaskExecutionThreadNamePrefixBinding() {
-        bind("pxf.task-execution.thread-name-prefix", "foo-bar");
-        assertThat(this.properties.getTaskExecution().getThreadNamePrefix()).isEqualTo("foo-bar");
+        bind("pxf.task.thread-name-prefix", "foo-bar");
+        assertThat(this.properties.getTask().getThreadNamePrefix()).isEqualTo("foo-bar");
     }
 
     @Test
     public void testTaskExecutionPoolCoreSizeBinding() {
-        bind("pxf.task-execution.pool.core-size", "50");
-        assertThat(this.properties.getTaskExecution().getPool().getCoreSize()).isEqualTo(50);
+        bind("pxf.task.pool.core-size", "50");
+        assertThat(this.properties.getTask().getPool().getCoreSize()).isEqualTo(50);
     }
 
     @Test
     public void testTaskExecutionPoolKeepAliveBinding() {
-        bind("pxf.task-execution.pool.keep-alive", "120s");
-        assertThat(this.properties.getTaskExecution().getPool().getKeepAlive()).isEqualTo(Duration.ofSeconds(120));
+        bind("pxf.task.pool.keep-alive", "120s");
+        assertThat(this.properties.getTask().getPool().getKeepAlive()).isEqualTo(Duration.ofSeconds(120));
     }
 
     @Test
     public void testTaskExecutionPoolMaxSizeBinding() {
-        bind("pxf.task-execution.pool.max-size", "200");
-        assertThat(this.properties.getTaskExecution().getPool().getMaxSize()).isEqualTo(200);
+        bind("pxf.task.pool.max-size", "200");
+        assertThat(this.properties.getTask().getPool().getMaxSize()).isEqualTo(200);
     }
 
     @Test
     public void testTaskExecutionPoolQueueCapacityBinding() {
-        bind("pxf.task-execution.pool.queue-capacity", "5");
-        assertThat(this.properties.getTaskExecution().getPool().getQueueCapacity()).isEqualTo(5);
+        bind("pxf.task.pool.queue-capacity", "5");
+        assertThat(this.properties.getTask().getPool().getQueueCapacity()).isEqualTo(5);
     }
 
     @Test
     public void testTaskExecutionPoolAllowCoreThreadTimeoutBinding() {
-        bind("pxf.task-execution.pool.allow-core-thread-timeout", "false");
-        assertThat(this.properties.getTaskExecution().getPool().isAllowCoreThreadTimeout()).isEqualTo(false);
+        bind("pxf.task.pool.allow-core-thread-timeout", "false");
+        assertThat(this.properties.getTask().getPool().isAllowCoreThreadTimeout()).isEqualTo(false);
     }
 
     @Test
     public void testTaskExecutionShutdownAwaitTerminationPeriodBinding() {
-        bind("pxf.task-execution.shutdown.await-termination-period", "20s");
-        assertThat(this.properties.getTaskExecution().getShutdown().getAwaitTerminationPeriod()).isEqualTo(Duration.ofSeconds(20));
+        bind("pxf.task.shutdown.await-termination-period", "20s");
+        assertThat(this.properties.getTask().getShutdown().getAwaitTerminationPeriod()).isEqualTo(Duration.ofSeconds(20));
     }
 
     @Test
     public void testTaskExecutionShutdownBinding() {
-        bind("pxf.task-execution.shutdown.await-termination", "true");
-        assertThat(this.properties.getTaskExecution().getShutdown().isAwaitTermination()).isEqualTo(true);
+        bind("pxf.task.shutdown.await-termination", "true");
+        assertThat(this.properties.getTask().getShutdown().isAwaitTermination()).isEqualTo(true);
     }
 
     private void bind(String name, String value) {

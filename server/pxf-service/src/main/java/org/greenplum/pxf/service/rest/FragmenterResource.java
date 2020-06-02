@@ -185,8 +185,10 @@ public class FragmenterResource extends BaseResource {
         PrivilegedExceptionAction<List<Fragment>> action = () ->
                 getFragmenter(context).getFragments();
 
+        List<Fragment> fragments = securityService.doAs(context, action);
+
         /* Create a fragmenter instance with API level parameters */
-        List<Fragment> fragments = AnalyzeUtils.getSampleFragments(securityService.doAs(context, action), context);
+        fragments = AnalyzeUtils.getSampleFragments(fragments, context);
         logFragmentStatistics(Level.INFO, context, fragments);
         return fragments;
     }
