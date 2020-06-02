@@ -1,35 +1,19 @@
 package org.greenplum.pxf.plugins.hdfs;
 
-import org.apache.hadoop.mapred.FileSplit;
-import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.conf.Configuration;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.powermock.api.mockito.PowerMockito.mock;
-import static org.powermock.api.mockito.PowerMockito.when;
-
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({HdfsUtilities.class, UserGroupInformation.class})
 public class QuotedLineBreakAccessorTest {
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
 
     private QuotedLineBreakAccessor accessor;
     private RequestContext context;
@@ -37,43 +21,37 @@ public class QuotedLineBreakAccessorTest {
     /*
      * setup function called before each test.
      */
-    @Before
-    public void setup() throws IOException {
+    @BeforeEach
+    public void setup() {
         context = new RequestContext();
         accessor = new QuotedLineBreakAccessor();
 
         context.setConfig("default");
         context.setProfileScheme("localfile");
         context.setUser("test-user");
-
-        FileSplit fileSplitMock = mock(FileSplit.class);
-        UserGroupInformation ugiMock = mock(UserGroupInformation.class);
-
-        PowerMockito.mockStatic(HdfsUtilities.class);
-        PowerMockito.mockStatic(UserGroupInformation.class);
-
-        when(UserGroupInformation.getCurrentUser()).thenReturn(ugiMock);
-        when(HdfsUtilities.parseFileSplit(context)).thenReturn(fileSplitMock);
-        when(fileSplitMock.getStart()).thenReturn(0L);
+        context.setFragmentMetadata(new HcfsFragmentMetadata(0, 10));
+        context.setConfiguration(new Configuration());
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         accessor.closeForRead();
     }
 
     @Test
     public void testFileAsRowFailsWithMoreThanOneColumn() {
-        expectedException.expect(IllegalArgumentException.class);
-        expectedException.expectMessage("the FILE_AS_ROW property " +
-                "only supports tables with a single column in the table " +
-                "definition. 2 columns were provided");
-
+        context.setDataSource("/foo/bar");
         context.addOption("FILE_AS_ROW", "true");
         // Add two columns
         context.getTupleDescription().add(new ColumnDescriptor("col1", 1, 1, "TEXT", null));
         context.getTupleDescription().add(new ColumnDescriptor("col2", 1, 2, "TEXT", null));
-        accessor.initialize(context);
+        accessor.setRequestContext(context);
+
+        Exception e = assertThrows(IllegalArgumentException.class,
+                () -> accessor.initialize());
+        assertEquals("the FILE_AS_ROW property " +
+                "only supports tables with a single column in the table " +
+                "definition. 2 columns were provided", e.getMessage());
     }
 
     @Test
@@ -199,7 +177,8 @@ public class QuotedLineBreakAccessorTest {
         context.setDataSource(this.getClass().getClassLoader()
                 .getResource(resourceName).toURI().toString());
 
-        accessor.initialize(context);
+        accessor.setRequestContext(context);
+        accessor.initialize();
         accessor.openForRead();
     }
 }

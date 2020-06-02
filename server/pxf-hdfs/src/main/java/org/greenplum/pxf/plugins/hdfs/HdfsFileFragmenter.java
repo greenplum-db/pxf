@@ -7,6 +7,8 @@ import org.apache.hadoop.mapred.InvalidInputException;
 import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.plugins.hdfs.utilities.PxfInputFormat;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 import java.util.Arrays;
 import java.util.List;
@@ -18,6 +20,8 @@ import java.util.stream.Collectors;
  * splits. The list of fragments will be the list of files
  * at the storage layer.
  */
+@Component("HdfsFileFragmenter")
+@RequestScope
 public class HdfsFileFragmenter extends HdfsDataFragmenter {
 
     public HdfsFileFragmenter() {
@@ -34,7 +38,8 @@ public class HdfsFileFragmenter extends HdfsDataFragmenter {
      */
     @Override
     public List<Fragment> getFragments() throws Exception {
-        String fileName = hcfsType.getDataUri(jobConf, context);
+        // TODO: make sure jobConf is not needed or revert to hcfsType.getDataUri(jobConf, context);
+        String fileName = hcfsType.getDataUri(context);
         Path path = new Path(fileName);
 
         PxfInputFormat pxfInputFormat = new PxfInputFormat();

@@ -50,12 +50,13 @@ public class AnalyzeUtils {
 
         int listSize = fragments.size();
         int maxSize = context.getStatsMaxFragments();
-        List<Fragment> samplingList = new ArrayList<Fragment>();
         BitSet bitSet;
 
         if (maxSize == 0) {
             return fragments;
         }
+
+        List<Fragment> samplingList = new ArrayList<>();
 
         LOG.debug("fragments list has " + listSize
                 + " fragments, maxFragments = " + maxSize);

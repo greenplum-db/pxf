@@ -6,7 +6,7 @@ import org.apache.parquet.schema.Type;
 import org.greenplum.pxf.api.filter.TreeTraverser;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,7 +20,7 @@ public class ParquetBaseTest {
     protected Map<String, Type> originalFieldsMap;
     protected List<ColumnDescriptor> columnDescriptors;
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         columnDescriptors = new ArrayList<>();
         columnDescriptors.add(new ColumnDescriptor("id", DataType.INTEGER.getOID(), 0, "int4", null));

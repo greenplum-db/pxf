@@ -423,7 +423,7 @@ public class SecureLoginTest {
 
     @Test
     public void testGlobalImpersonationPropertyAbsent() {
-        assertFalse(secureLogin.isUserImpersonationEnabled(configuration));
+        assertTrue(secureLogin.isUserImpersonationEnabled(configuration));
     }
 
     @Test
