@@ -28,7 +28,6 @@ import org.apache.hadoop.mapred.RecordReader;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.BasePlugin;
-import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 
 import java.io.IOException;
@@ -61,14 +60,12 @@ public abstract class HdfsSplittableDataAccessor extends BasePlugin implements A
     }
 
     @Override
-    public void initialize(RequestContext requestContext) {
-        super.initialize(requestContext);
-
+    public void initialize() {
         // variable required for the splits iteration logic
         jobConf = new JobConf(configuration, HdfsSplittableDataAccessor.class);
 
         // Check if the underlying configuration is for HDFS
-        hcfsType = HcfsType.getHcfsType(configuration, requestContext);
+        hcfsType = HcfsType.getHcfsType(context);
     }
 
     /**

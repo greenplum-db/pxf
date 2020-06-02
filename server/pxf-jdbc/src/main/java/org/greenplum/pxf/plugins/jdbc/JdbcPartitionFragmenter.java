@@ -47,11 +47,8 @@ public class JdbcPartitionFragmenter extends BaseFragmenter {
     private String range;
     private String interval;
 
-    @Autowired
     @Override
-    public void setRequestContext(RequestContext context) {
-        super.setRequestContext(context);
-
+    public void initialize() {
         String partitionByOption = context.getOption("PARTITION_BY");
         if (partitionByOption == null) return;
 

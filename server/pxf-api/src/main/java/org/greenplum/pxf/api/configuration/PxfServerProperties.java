@@ -2,12 +2,16 @@ package org.greenplum.pxf.api.configuration;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.boot.autoconfigure.task.TaskExecutionProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
 
+/**
+ * Configuration properties for PXF.
+ */
 @ConfigurationProperties(prefix = PxfServerProperties.PROPERTY_PREFIX)
 @Getter
 @Setter
@@ -38,6 +42,11 @@ public class PxfServerProperties {
      */
     private Tomcat tomcat = new Tomcat();
 
+    /**
+     * Configurable task execution properties for async tasks (i.e Bridge Read)
+     */
+    private TaskExecutionProperties task = new TaskExecutionProperties();
+
     @Getter
     @Setter
     public static class Tomcat {
@@ -47,5 +56,4 @@ public class PxfServerProperties {
          */
         private int maxHeaderCount = 30000;
     }
-
 }

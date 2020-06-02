@@ -26,7 +26,6 @@ import org.apache.hadoop.mapred.FileSplit;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.BasePlugin;
-import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 
 import java.io.IOException;
@@ -52,8 +51,7 @@ public abstract class HdfsAtomicDataAccessor extends BasePlugin implements Acces
     private FileSplit fileSplit;
 
     @Override
-    public void initialize(RequestContext requestContext) {
-        super.initialize(requestContext);
+    public void initialize() {
         fileSplit = HdfsUtilities.parseFileSplit(context);
     }
 

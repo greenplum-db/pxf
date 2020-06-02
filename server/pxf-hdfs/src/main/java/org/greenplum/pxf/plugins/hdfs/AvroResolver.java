@@ -32,11 +32,12 @@ import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.BasePlugin;
-import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.plugins.hdfs.avro.AvroUtilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.RecordkeyAdapter;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -48,6 +49,8 @@ import java.util.Map;
  * Class AvroResolver handles deserialization of records that were serialized
  * using the AVRO serialization framework.
  */
+@Component("AvroResolver")
+@RequestScope
 public class AvroResolver extends BasePlugin implements Resolver {
     private static final String MAPKEY_DELIM = ":";
     private static final String RECORDKEY_DELIM = ":";
@@ -68,7 +71,6 @@ public class AvroResolver extends BasePlugin implements Resolver {
      * Constructs a new instance of the AvroFileAccessor
      */
     public AvroResolver() {
-        super();
         avroUtilities = AvroUtilities.getInstance();
     }
 
@@ -81,11 +83,9 @@ public class AvroResolver extends BasePlugin implements Resolver {
      * throws RuntimeException if Avro schema could not be retrieved or parsed
      */
     @Override
-    public void initialize(RequestContext requestContext) {
-        super.initialize(requestContext);
-
-        hcfsType = HcfsType.getHcfsType(configuration, context);
-        Schema schema = avroUtilities.obtainSchema(context, configuration, hcfsType);
+    public void initialize() {
+        hcfsType = HcfsType.getHcfsType(context);
+        Schema schema = avroUtilities.obtainSchema(context, hcfsType);
 
         reader = new GenericDatumReader<>(schema);
 

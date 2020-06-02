@@ -1,56 +1,57 @@
 package org.greenplum.pxf.plugins.hdfs;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.InvalidInputException;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.Fragmenter;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Test the HdfsFileFragmenter
  */
 public class HdfsFileFragmenterTest {
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
+    private final RequestContext context = new RequestContext();
+
+    @BeforeEach
+    public void setup() {
+        context.setConfiguration(new Configuration());
+    }
 
     @Test
-    public void testFragmenterErrorsWhenPathDoesNotExist() throws Exception {
-        expectedException.expect(InvalidInputException.class);
-        expectedException.expectMessage("Input path does not exist:");
+    public void testFragmenterErrorsWhenPathDoesNotExist() {
 
         String path = this.getClass().getClassLoader().getResource("csv/").getPath();
 
-        RequestContext context = new RequestContext();
         context.setConfig("default");
         context.setUser("test-user");
         context.setProfileScheme("localfile");
         context.setDataSource(path + "non-existent");
 
-        Fragmenter fragmenter = new HdfsFileFragmenter();
-        fragmenter.initialize(context);
-        fragmenter.getFragments();
+        Fragmenter fragmenter = getFragmenter(context);
+        Exception e = assertThrows(InvalidInputException.class, fragmenter::getFragments);
+        assertTrue(e.getMessage().contains("Input path does not exist:"));
     }
 
     @Test
     public void testFragmenterReturnsListOfFiles() throws Exception {
         String path = this.getClass().getClassLoader().getResource("csv/").getPath();
 
-        RequestContext context = new RequestContext();
         context.setConfig("default");
         context.setUser("test-user");
         context.setProfileScheme("localfile");
         context.setDataSource(path);
 
-        Fragmenter fragmenter = new HdfsFileFragmenter();
-        fragmenter.initialize(context);
+        Fragmenter fragmenter = getFragmenter(context);
 
         List<Fragment> fragmentList = fragmenter.getFragments();
         assertNotNull(fragmentList);
@@ -61,14 +62,12 @@ public class HdfsFileFragmenterTest {
     public void testFragmenterWilcardPath() throws Exception {
         String path = this.getClass().getClassLoader().getResource("csv/").getPath();
 
-        RequestContext context = new RequestContext();
         context.setConfig("default");
         context.setUser("test-user");
         context.setProfileScheme("localfile");
         context.setDataSource(path + "*.csv");
 
-        Fragmenter fragmenter = new HdfsFileFragmenter();
-        fragmenter.initialize(context);
+        Fragmenter fragmenter = getFragmenter(context);
 
         List<Fragment> fragmentList = fragmenter.getFragments();
         assertNotNull(fragmentList);
@@ -76,35 +75,37 @@ public class HdfsFileFragmenterTest {
     }
 
     @Test
-    public void testInvalidInputPath() throws Exception {
-        expectedException.expect(InvalidInputException.class);
-        expectedException.expectMessage("Input Pattern file:/tmp/non-existent-path-on-disk/*.csv matches 0 files");
+    public void testInvalidInputPath() {
 
-        RequestContext context = new RequestContext();
         context.setConfig("default");
         context.setUser("test-user");
         context.setProfileScheme("localfile");
         context.setDataSource("/tmp/non-existent-path-on-disk/*.csv");
 
-        Fragmenter fragmenter = new HdfsFileFragmenter();
-        fragmenter.initialize(context);
-        fragmenter.getFragments();
+        Fragmenter fragmenter = getFragmenter(context);
+        Exception e = assertThrows(InvalidInputException.class, fragmenter::getFragments);
+        assertEquals("Input Pattern file:/tmp/non-existent-path-on-disk/*.csv matches 0 files", e.getMessage());
     }
 
     @Test
     public void testInvalidInputPathIgnored() throws Exception {
-        RequestContext context = new RequestContext();
         context.setConfig("default");
         context.setUser("test-user");
         context.setProfileScheme("localfile");
         context.addOption("IGNORE_MISSING_PATH", "true");
         context.setDataSource("/tmp/non-existent-path-on-disk/*.csv");
 
-        Fragmenter fragmenter = new HdfsFileFragmenter();
-        fragmenter.initialize(context);
+        Fragmenter fragmenter = getFragmenter(context);
 
         List<Fragment> fragmentList = fragmenter.getFragments();
         assertNotNull(fragmentList);
         assertEquals(0, fragmentList.size());
+    }
+
+    private Fragmenter getFragmenter(RequestContext context) {
+        Fragmenter fragmenter = new HdfsFileFragmenter();
+        fragmenter.setRequestContext(context);
+        fragmenter.initialize();
+        return fragmenter;
     }
 }

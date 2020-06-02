@@ -23,6 +23,7 @@ import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.io.DataType;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -33,6 +34,7 @@ import java.util.List;
  * Demo implementation of resolver that returns text format
  */
 @Component("DemoTextResolver")
+@RequestScope
 public class DemoTextResolver extends DemoResolver {
 
     /**

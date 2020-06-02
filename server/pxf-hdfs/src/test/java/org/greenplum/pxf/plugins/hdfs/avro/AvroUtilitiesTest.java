@@ -4,10 +4,8 @@ import org.apache.avro.Schema;
 import org.apache.hadoop.conf.Configuration;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hdfs.HcfsType;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -15,8 +13,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class AvroUtilitiesTest {
     private RequestContext context;
@@ -27,18 +26,16 @@ public class AvroUtilitiesTest {
     private AvroUtilities avroUtilities;
     private HcfsType hcfsType;
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
-    @Before
+    @BeforeEach
     public void setup() {
         avroDirectory = this.getClass().getClassLoader().getResource("avro/").getPath();
         context = new RequestContext();
         configuration = new Configuration();
         context.setDataSource(avroDirectory + "test.avro");
+        context.setConfiguration(configuration);
         testSchema = generateTestSchema();
         avroUtilities = AvroUtilities.getInstance();
-        hcfsType = HcfsType.getHcfsType(configuration, context);
+        hcfsType = HcfsType.getHcfsType(context);
     }
 
     /* READ PATH */
@@ -46,7 +43,7 @@ public class AvroUtilitiesTest {
     @Test
     public void testObtainSchema_OnRead() {
         context.setRequestType(RequestContext.RequestType.READ_BRIDGE);
-        schema = avroUtilities.obtainSchema(context, configuration, hcfsType);
+        schema = avroUtilities.obtainSchema(context, hcfsType);
 
         verifySchema(schema, "example_schema");
     }
@@ -57,7 +54,7 @@ public class AvroUtilitiesTest {
         context.setRequestType(RequestContext.RequestType.READ_BRIDGE);
         context.addOption("SCHEMA", avroDirectory + "user-provided.avro");
 
-        schema = avroUtilities.obtainSchema(context, configuration, hcfsType);
+        schema = avroUtilities.obtainSchema(context, hcfsType);
 
         verifySchema(schema, "user_provided_schema");
     }
@@ -68,7 +65,7 @@ public class AvroUtilitiesTest {
         context.setRequestType(RequestContext.RequestType.READ_BRIDGE);
         context.addOption("SCHEMA", avroDirectory + "user provided.avro");
 
-        schema = avroUtilities.obtainSchema(context, configuration, hcfsType);
+        schema = avroUtilities.obtainSchema(context, hcfsType);
 
         verifySchema(schema, "user_provided_schema");
     }
@@ -79,7 +76,7 @@ public class AvroUtilitiesTest {
         context.setRequestType(RequestContext.RequestType.READ_BRIDGE);
         context.addOption("SCHEMA", avroDirectory + "user-provided.avsc");
 
-        schema = avroUtilities.obtainSchema(context, configuration, hcfsType);
+        schema = avroUtilities.obtainSchema(context, hcfsType);
 
         verifySchema(schema, "user_provided_schema");
     }
@@ -90,7 +87,7 @@ public class AvroUtilitiesTest {
         context.setRequestType(RequestContext.RequestType.READ_BRIDGE);
         context.addOption("SCHEMA", avroDirectory + "user provided.avsc");
 
-        schema = avroUtilities.obtainSchema(context, configuration, hcfsType);
+        schema = avroUtilities.obtainSchema(context, hcfsType);
 
         verifySchema(schema, "user_provided_schema");
     }
@@ -100,7 +97,7 @@ public class AvroUtilitiesTest {
         context.setRequestType(RequestContext.RequestType.READ_BRIDGE);
         context.addOption("SCHEMA", avroDirectory + "user-provided.avro");
 
-        schema = avroUtilities.obtainSchema(context, configuration, hcfsType);
+        schema = avroUtilities.obtainSchema(context, hcfsType);
 
         verifySchema(schema, "user_provided_schema");
     }
@@ -110,7 +107,7 @@ public class AvroUtilitiesTest {
         context.setRequestType(RequestContext.RequestType.READ_BRIDGE);
         context.addOption("SCHEMA", avroDirectory + "user provided.avro");
 
-        schema = avroUtilities.obtainSchema(context, configuration, hcfsType);
+        schema = avroUtilities.obtainSchema(context, hcfsType);
 
         verifySchema(schema, "user_provided_schema");
     }
@@ -120,7 +117,7 @@ public class AvroUtilitiesTest {
         context.setRequestType(RequestContext.RequestType.READ_BRIDGE);
         context.addOption("SCHEMA", avroDirectory + "user-provided.avsc");
 
-        schema = avroUtilities.obtainSchema(context, configuration, hcfsType);
+        schema = avroUtilities.obtainSchema(context, hcfsType);
 
         verifySchema(schema, "user_provided_schema");
     }
@@ -130,7 +127,7 @@ public class AvroUtilitiesTest {
         context.setRequestType(RequestContext.RequestType.READ_BRIDGE);
         context.addOption("SCHEMA", avroDirectory + "user provided.avsc");
 
-        schema = avroUtilities.obtainSchema(context, configuration, hcfsType);
+        schema = avroUtilities.obtainSchema(context, hcfsType);
 
         verifySchema(schema, "user_provided_schema");
     }
@@ -140,7 +137,7 @@ public class AvroUtilitiesTest {
         context.setRequestType(RequestContext.RequestType.READ_BRIDGE);
         context.addOption("SCHEMA", "avro/user-provided.avro");
 
-        schema = avroUtilities.obtainSchema(context, configuration, hcfsType);
+        schema = avroUtilities.obtainSchema(context, hcfsType);
 
         verifySchema(schema, "user_provided_schema");
     }
@@ -150,7 +147,7 @@ public class AvroUtilitiesTest {
         context.setRequestType(RequestContext.RequestType.READ_BRIDGE);
         context.addOption("SCHEMA", "avro/user provided.avro");
 
-        schema = avroUtilities.obtainSchema(context, configuration, hcfsType);
+        schema = avroUtilities.obtainSchema(context, hcfsType);
 
         verifySchema(schema, "user_provided_schema");
     }
@@ -160,7 +157,7 @@ public class AvroUtilitiesTest {
         context.setRequestType(RequestContext.RequestType.READ_BRIDGE);
         context.addOption("SCHEMA", "avro/user-provided.avsc");
 
-        schema = avroUtilities.obtainSchema(context, configuration, hcfsType);
+        schema = avroUtilities.obtainSchema(context, hcfsType);
 
         verifySchema(schema, "user_provided_schema");
     }
@@ -170,49 +167,49 @@ public class AvroUtilitiesTest {
         context.setRequestType(RequestContext.RequestType.READ_BRIDGE);
         context.addOption("SCHEMA", "avro/user provided.avsc");
 
-        schema = avroUtilities.obtainSchema(context, configuration, hcfsType);
+        schema = avroUtilities.obtainSchema(context, hcfsType);
 
         verifySchema(schema, "user_provided_schema");
     }
 
     @Test
     public void testObtainSchema_OnRead_WhenUserProvidedSchema_Binary_NotFound() {
-        expectedException.expect(RuntimeException.class);
-        expectedException.expectMessage("Failed to obtain Avro schema from 'user-provided.avro'");
         context.setRequestType(RequestContext.RequestType.READ_BRIDGE);
         context.addOption("SCHEMA", "user-provided.avro");
 
-        schema = avroUtilities.obtainSchema(context, configuration, hcfsType);
+        Exception e = assertThrows(RuntimeException.class,
+                () -> schema = avroUtilities.obtainSchema(context, hcfsType));
+        assertEquals("Failed to obtain Avro schema from 'user-provided.avro'", e.getMessage());
     }
 
     @Test
     public void testObtainSchema_OnRead_WhenUserProvidedSchema_Binary_NotFound_Spaces() {
-        expectedException.expect(RuntimeException.class);
-        expectedException.expectMessage("Failed to obtain Avro schema from 'user provided.avro'");
         context.setRequestType(RequestContext.RequestType.READ_BRIDGE);
         context.addOption("SCHEMA", "user provided.avro");
 
-        schema = avroUtilities.obtainSchema(context, configuration, hcfsType);
+        Exception e = assertThrows(RuntimeException.class,
+                () -> schema = avroUtilities.obtainSchema(context, hcfsType));
+        assertEquals("Failed to obtain Avro schema from 'user provided.avro'", e.getMessage());
     }
 
     @Test
     public void testObtainSchema_OnRead_WhenUserProvidedSchema_Json_NotFound() {
-        expectedException.expect(RuntimeException.class);
-        expectedException.expectMessage("Failed to obtain Avro schema from 'user-provided.avsc'");
         context.setRequestType(RequestContext.RequestType.READ_BRIDGE);
         context.addOption("SCHEMA", "user-provided.avsc");
 
-        schema = avroUtilities.obtainSchema(context, configuration, hcfsType);
+        Exception e = assertThrows(RuntimeException.class,
+                () -> schema = avroUtilities.obtainSchema(context, hcfsType));
+        assertEquals("Failed to obtain Avro schema from 'user-provided.avsc'", e.getMessage());
     }
 
     @Test
     public void testObtainSchema_OnRead_WhenUserProvidedSchema_Json_NotFound_Spaces() {
-        expectedException.expect(RuntimeException.class);
-        expectedException.expectMessage("Failed to obtain Avro schema from 'user provided.avsc'");
         context.setRequestType(RequestContext.RequestType.READ_BRIDGE);
         context.addOption("SCHEMA", "user provided.avsc");
 
-        schema = avroUtilities.obtainSchema(context, configuration, hcfsType);
+        Exception e = assertThrows(RuntimeException.class,
+                () -> schema = avroUtilities.obtainSchema(context, hcfsType));
+        assertEquals("Failed to obtain Avro schema from 'user provided.avsc'", e.getMessage());
     }
 
     /* WRITE PATH */
@@ -222,7 +219,7 @@ public class AvroUtilitiesTest {
         context.setTupleDescription(AvroTypeConverter.getColumnDescriptorsFromSchema(testSchema));
         context.setRequestType(RequestContext.RequestType.WRITE_BRIDGE);
 
-        schema = avroUtilities.obtainSchema(context, configuration, hcfsType);
+        schema = avroUtilities.obtainSchema(context, hcfsType);
 
         verifyGeneratedSchema(schema);
     }
@@ -234,7 +231,7 @@ public class AvroUtilitiesTest {
         context.addOption("SCHEMA", avroDirectory + "user-provided.avro");
         context.setDataSource(avroDirectory);
 
-        schema = avroUtilities.obtainSchema(context, configuration, hcfsType);
+        schema = avroUtilities.obtainSchema(context, hcfsType);
 
         verifySchema(schema, "user_provided_schema");
     }
@@ -246,7 +243,7 @@ public class AvroUtilitiesTest {
         context.addOption("SCHEMA", avroDirectory + "user provided.avro");
         context.setDataSource(avroDirectory);
 
-        schema = avroUtilities.obtainSchema(context, configuration, hcfsType);
+        schema = avroUtilities.obtainSchema(context, hcfsType);
 
         verifySchema(schema, "user_provided_schema");
     }
@@ -258,7 +255,7 @@ public class AvroUtilitiesTest {
         context.addOption("SCHEMA", avroDirectory + "user-provided.avsc");
         context.setDataSource(avroDirectory);
 
-        schema = avroUtilities.obtainSchema(context, configuration, hcfsType);
+        schema = avroUtilities.obtainSchema(context, hcfsType);
 
         verifySchema(schema, "user_provided_schema");
     }
@@ -270,7 +267,7 @@ public class AvroUtilitiesTest {
         context.addOption("SCHEMA", avroDirectory + "user provided.avsc");
         context.setDataSource(avroDirectory);
 
-        schema = avroUtilities.obtainSchema(context, configuration, hcfsType);
+        schema = avroUtilities.obtainSchema(context, hcfsType);
 
         verifySchema(schema, "user_provided_schema");
     }
@@ -280,7 +277,7 @@ public class AvroUtilitiesTest {
         context.setRequestType(RequestContext.RequestType.WRITE_BRIDGE);
         context.addOption("SCHEMA", avroDirectory + "user-provided.avro");
 
-        schema = avroUtilities.obtainSchema(context, configuration, hcfsType);
+        schema = avroUtilities.obtainSchema(context, hcfsType);
 
         verifySchema(schema, "user_provided_schema");
     }
@@ -290,7 +287,7 @@ public class AvroUtilitiesTest {
         context.setRequestType(RequestContext.RequestType.WRITE_BRIDGE);
         context.addOption("SCHEMA", avroDirectory + "user provided.avro");
 
-        schema = avroUtilities.obtainSchema(context, configuration, hcfsType);
+        schema = avroUtilities.obtainSchema(context, hcfsType);
 
         verifySchema(schema, "user_provided_schema");
     }
@@ -300,7 +297,7 @@ public class AvroUtilitiesTest {
         context.setRequestType(RequestContext.RequestType.WRITE_BRIDGE);
         context.addOption("SCHEMA", avroDirectory + "user-provided.avsc");
 
-        schema = avroUtilities.obtainSchema(context, configuration, hcfsType);
+        schema = avroUtilities.obtainSchema(context, hcfsType);
 
         verifySchema(schema, "user_provided_schema");
     }
@@ -310,7 +307,7 @@ public class AvroUtilitiesTest {
         context.setRequestType(RequestContext.RequestType.WRITE_BRIDGE);
         context.addOption("SCHEMA", avroDirectory + "user provided.avsc");
 
-        schema = avroUtilities.obtainSchema(context, configuration, hcfsType);
+        schema = avroUtilities.obtainSchema(context, hcfsType);
 
         verifySchema(schema, "user_provided_schema");
     }
@@ -320,7 +317,7 @@ public class AvroUtilitiesTest {
         context.setRequestType(RequestContext.RequestType.WRITE_BRIDGE);
         context.addOption("SCHEMA", "avro/user-provided.avro");
 
-        schema = avroUtilities.obtainSchema(context, configuration, hcfsType);
+        schema = avroUtilities.obtainSchema(context, hcfsType);
 
         verifySchema(schema, "user_provided_schema");
     }
@@ -330,7 +327,7 @@ public class AvroUtilitiesTest {
         context.setRequestType(RequestContext.RequestType.WRITE_BRIDGE);
         context.addOption("SCHEMA", "avro/user provided.avro");
 
-        schema = avroUtilities.obtainSchema(context, configuration, hcfsType);
+        schema = avroUtilities.obtainSchema(context, hcfsType);
 
         verifySchema(schema, "user_provided_schema");
     }
@@ -340,7 +337,7 @@ public class AvroUtilitiesTest {
         context.setRequestType(RequestContext.RequestType.WRITE_BRIDGE);
         context.addOption("SCHEMA", "avro/user-provided.avsc");
 
-        schema = avroUtilities.obtainSchema(context, configuration, hcfsType);
+        schema = avroUtilities.obtainSchema(context, hcfsType);
 
         verifySchema(schema, "user_provided_schema");
     }
@@ -350,49 +347,49 @@ public class AvroUtilitiesTest {
         context.setRequestType(RequestContext.RequestType.WRITE_BRIDGE);
         context.addOption("SCHEMA", "avro/user provided.avsc");
 
-        schema = avroUtilities.obtainSchema(context, configuration, hcfsType);
+        schema = avroUtilities.obtainSchema(context, hcfsType);
 
         verifySchema(schema, "user_provided_schema");
     }
 
     @Test
     public void testObtainSchema_OnWrite_WithUserProvidedSchema_Binary_NotFound() {
-        expectedException.expect(RuntimeException.class);
-        expectedException.expectMessage("Failed to obtain Avro schema from 'user-provided.avro'");
         context.setRequestType(RequestContext.RequestType.WRITE_BRIDGE);
         context.addOption("SCHEMA", "user-provided.avro");
 
-        schema = avroUtilities.obtainSchema(context, configuration, hcfsType);
+        Exception e = assertThrows(RuntimeException.class,
+                () -> schema = avroUtilities.obtainSchema(context, hcfsType));
+        assertEquals("Failed to obtain Avro schema from 'user-provided.avro'", e.getMessage());
     }
 
     @Test
     public void testObtainSchema_OnWrite_WithUserProvidedSchema_Binary_NotFound_Spaces() {
-        expectedException.expect(RuntimeException.class);
-        expectedException.expectMessage("Failed to obtain Avro schema from 'user provided.avro'");
         context.setRequestType(RequestContext.RequestType.WRITE_BRIDGE);
         context.addOption("SCHEMA", "user provided.avro");
 
-        schema = avroUtilities.obtainSchema(context, configuration, hcfsType);
+        Exception e = assertThrows(RuntimeException.class,
+                () -> schema = avroUtilities.obtainSchema(context, hcfsType));
+        assertEquals("Failed to obtain Avro schema from 'user provided.avro'", e.getMessage());
     }
 
     @Test
     public void testObtainSchema_OnWrite_WithUserProvidedSchema_Json_NotFound() {
-        expectedException.expect(RuntimeException.class);
-        expectedException.expectMessage("Failed to obtain Avro schema from 'user-provided.avsc'");
         context.setRequestType(RequestContext.RequestType.WRITE_BRIDGE);
         context.addOption("SCHEMA", "user-provided.avsc");
 
-        schema = avroUtilities.obtainSchema(context, configuration, hcfsType);
+        Exception e = assertThrows(RuntimeException.class,
+                () -> schema = avroUtilities.obtainSchema(context, hcfsType));
+        assertEquals("Failed to obtain Avro schema from 'user-provided.avsc'", e.getMessage());
     }
 
     @Test
     public void testObtainSchema_OnWrite_WithUserProvidedSchema_Json_NotFound_Spaces() {
-        expectedException.expect(RuntimeException.class);
-        expectedException.expectMessage("Failed to obtain Avro schema from 'user provided.avsc'");
         context.setRequestType(RequestContext.RequestType.WRITE_BRIDGE);
         context.addOption("SCHEMA", "user provided.avsc");
 
-        schema = avroUtilities.obtainSchema(context, configuration, hcfsType);
+        Exception e = assertThrows(RuntimeException.class,
+                () -> schema = avroUtilities.obtainSchema(context, hcfsType));
+        assertEquals("Failed to obtain Avro schema from 'user provided.avsc'", e.getMessage());
     }
 
     /**

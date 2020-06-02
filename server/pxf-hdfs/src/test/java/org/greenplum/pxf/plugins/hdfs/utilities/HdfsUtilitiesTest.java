@@ -24,8 +24,9 @@ import org.apache.hadoop.mapred.FileSplit;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hdfs.CodecFactory;
-import org.junit.Before;
-import org.junit.Test;
+import org.greenplum.pxf.plugins.hdfs.HcfsFragmentMetadata;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectOutputStream;
@@ -33,14 +34,14 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class HdfsUtilitiesTest {
 
     private CodecFactory codecFactory;
     private Configuration conf;
 
-    @Before
+    @BeforeEach
     public void setup() {
         conf = new Configuration();
         codecFactory = CodecFactory.getInstance();
@@ -82,7 +83,7 @@ public class HdfsUtilitiesTest {
 
     private void testIsThreadSafe(String testDescription, String path, String codecStr, boolean expectedResult) {
         boolean result = HdfsUtilities.isThreadSafe(conf, path, codecStr);
-        assertEquals(testDescription, expectedResult, result);
+        assertEquals(expectedResult, result, testDescription);
     }
 
     @Test
@@ -95,17 +96,10 @@ public class HdfsUtilitiesTest {
     }
 
     @Test
-    public void testParseFileSplit() throws Exception {
+    public void testParseFileSplit() {
         RequestContext context = new RequestContext();
         context.setDataSource("/abc/path/to/data/source");
-        ByteArrayOutputStream bas = new ByteArrayOutputStream();
-        ObjectOutputStream os = new ObjectOutputStream(bas);
-        os.writeLong(10);
-        os.writeLong(100);
-        os.writeObject(new String[]{"hostname"});
-        os.close();
-
-        context.setFragmentMetadata(bas.toByteArray());
+        context.setFragmentMetadata(new HcfsFragmentMetadata(10, 100));
         FileSplit fileSplit = HdfsUtilities.parseFileSplit(context);
         assertEquals(fileSplit.getStart(), 10);
         assertEquals(fileSplit.getLength(), 100);

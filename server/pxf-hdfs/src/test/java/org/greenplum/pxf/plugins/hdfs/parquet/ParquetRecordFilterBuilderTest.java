@@ -2,172 +2,152 @@ package org.greenplum.pxf.plugins.hdfs.parquet;
 
 import org.greenplum.pxf.api.filter.FilterParser;
 import org.greenplum.pxf.api.filter.Node;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class ParquetRecordFilterBuilderTest extends ParquetBaseTest {
 
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
-
     @Test
-    public void testUnsupportedOperationError() throws Exception {
-        thrown.expect(UnsupportedOperationException.class);
-        thrown.expectMessage("not supported IN");
-
+    public void testUnsupportedOperationError() {
         // a16 in (11, 12)
-        filterBuilderFromFilterString("a16m1007s2d11s2d12o10");
+        Exception e = assertThrows(UnsupportedOperationException.class,
+                () -> filterBuilderFromFilterString("a16m1007s2d11s2d12o10"));
+        assertEquals("not supported IN", e.getMessage());
     }
 
     @Test
-    public void testUnsupportedINT96EqualsFilter() throws Exception {
-        thrown.expect(UnsupportedOperationException.class);
-        thrown.expectMessage("Column tm of type INT96 is not supported");
-
+    public void testUnsupportedINT96EqualsFilter() {
         // tm = '2013-07-23 21:00:00'
-        filterBuilderFromFilterString("a6c1114s19d2013-07-23 21:00:00o5");
+        Exception e = assertThrows(UnsupportedOperationException.class,
+                () -> filterBuilderFromFilterString("a6c1114s19d2013-07-23 21:00:00o5"));
+        assertEquals("Column tm of type INT96 is not supported", e.getMessage());
     }
 
     @Test
-    public void testUnsupportedINT96LessThanFilter() throws Exception {
-        thrown.expect(UnsupportedOperationException.class);
-        thrown.expectMessage("Column tm of type INT96 is not supported");
-
+    public void testUnsupportedINT96LessThanFilter() {
         // tm = '2013-07-23 21:00:00'
-        filterBuilderFromFilterString("a6c1114s19d2013-07-23 21:00:00o1");
+        Exception e = assertThrows(UnsupportedOperationException.class,
+                () -> filterBuilderFromFilterString("a6c1114s19d2013-07-23 21:00:00o1"));
+        assertEquals("Column tm of type INT96 is not supported", e.getMessage());
     }
 
     @Test
-    public void testUnsupportedINT96GreaterThanFilter() throws Exception {
-        thrown.expect(UnsupportedOperationException.class);
-        thrown.expectMessage("Column tm of type INT96 is not supported");
-
+    public void testUnsupportedINT96GreaterThanFilter() {
         // tm = '2013-07-23 21:00:00'
-        filterBuilderFromFilterString("a6c1114s19d2013-07-23 21:00:00o2");
+        Exception e = assertThrows(UnsupportedOperationException.class,
+                () -> filterBuilderFromFilterString("a6c1114s19d2013-07-23 21:00:00o2"));
+        assertEquals("Column tm of type INT96 is not supported", e.getMessage());
     }
 
     @Test
-    public void testUnsupportedINT96LessThanOrEqualsFilter() throws Exception {
-        thrown.expect(UnsupportedOperationException.class);
-        thrown.expectMessage("Column tm of type INT96 is not supported");
-
+    public void testUnsupportedINT96LessThanOrEqualsFilter() {
         // tm = '2013-07-23 21:00:00'
-        filterBuilderFromFilterString("a6c1114s19d2013-07-23 21:00:00o3");
+        Exception e = assertThrows(UnsupportedOperationException.class,
+                () -> filterBuilderFromFilterString("a6c1114s19d2013-07-23 21:00:00o3"));
+        assertEquals("Column tm of type INT96 is not supported", e.getMessage());
     }
 
     @Test
-    public void testUnsupportedINT96GreaterThanOrEqualsFilter() throws Exception {
-        thrown.expect(UnsupportedOperationException.class);
-        thrown.expectMessage("Column tm of type INT96 is not supported");
-
+    public void testUnsupportedINT96GreaterThanOrEqualsFilter() {
         // tm = '2013-07-23 21:00:00'
-        filterBuilderFromFilterString("a6c1114s19d2013-07-23 21:00:00o4");
+        Exception e = assertThrows(UnsupportedOperationException.class,
+                () -> filterBuilderFromFilterString("a6c1114s19d2013-07-23 21:00:00o4"));
+        assertEquals("Column tm of type INT96 is not supported", e.getMessage());
     }
 
     @Test
-    public void testUnsupportedINT96NotEqualsFilter() throws Exception {
-        thrown.expect(UnsupportedOperationException.class);
-        thrown.expectMessage("Column tm of type INT96 is not supported");
-
+    public void testUnsupportedINT96NotEqualsFilter() {
         // tm = '2013-07-23 21:00:00'
-        filterBuilderFromFilterString("a6c1114s19d2013-07-23 21:00:00o6");
+        Exception e = assertThrows(UnsupportedOperationException.class,
+                () -> filterBuilderFromFilterString("a6c1114s19d2013-07-23 21:00:00o6"));
+        assertEquals("Column tm of type INT96 is not supported", e.getMessage());
     }
 
     @Test
-    public void testUnsupportedINT96IsNullFilter() throws Exception {
-        thrown.expect(UnsupportedOperationException.class);
-        thrown.expectMessage("Column tm of type INT96 is not supported");
-
+    public void testUnsupportedINT96IsNullFilter() {
         // tm = '2013-07-23 21:00:00'
-        filterBuilderFromFilterString("a6o8");
+        Exception e = assertThrows(UnsupportedOperationException.class,
+                () -> filterBuilderFromFilterString("a6o8"));
+        assertEquals("Column tm of type INT96 is not supported", e.getMessage());
     }
 
     @Test
-    public void testUnsupportedINT96IsNotNullFilter() throws Exception {
-        thrown.expect(UnsupportedOperationException.class);
-        thrown.expectMessage("Column tm of type INT96 is not supported");
-
+    public void testUnsupportedINT96IsNotNullFilter() {
         // tm = '2013-07-23 21:00:00'
-        filterBuilderFromFilterString("a6o9");
+        Exception e = assertThrows(UnsupportedOperationException.class,
+                () -> filterBuilderFromFilterString("a6o9"));
+        assertEquals("Column tm of type INT96 is not supported", e.getMessage());
     }
 
     @Test
-    public void testUnsupportedFixedLenByteArrayEqualsFilter() throws Exception {
-        thrown.expect(UnsupportedOperationException.class);
-        thrown.expectMessage("Column dec2 of type FIXED_LEN_BYTE_ARRAY is not supported");
-
+    public void testUnsupportedFixedLenByteArrayEqualsFilter() {
         // dec2 = 0
-        filterBuilderFromFilterString("a14c23s1d0o5");
+        Exception e = assertThrows(UnsupportedOperationException.class,
+                () -> filterBuilderFromFilterString("a14c23s1d0o5"));
+        assertEquals("Column dec2 of type FIXED_LEN_BYTE_ARRAY is not supported", e.getMessage());
     }
 
     @Test
-    public void testUnsupportedFixedLenByteArrayLessThanFilter() throws Exception {
-        thrown.expect(UnsupportedOperationException.class);
-        thrown.expectMessage("Column dec2 of type FIXED_LEN_BYTE_ARRAY is not supported");
-
+    public void testUnsupportedFixedLenByteArrayLessThanFilter() {
         // dec2 = 0
-        filterBuilderFromFilterString("a14c23s1d0o1");
+        Exception e = assertThrows(UnsupportedOperationException.class,
+                () -> filterBuilderFromFilterString("a14c23s1d0o1"));
+        assertEquals("Column dec2 of type FIXED_LEN_BYTE_ARRAY is not supported", e.getMessage());
     }
 
     @Test
-    public void testUnsupportedFixedLenByteArrayGreaterThanFilter() throws Exception {
-        thrown.expect(UnsupportedOperationException.class);
-        thrown.expectMessage("Column dec2 of type FIXED_LEN_BYTE_ARRAY is not supported");
-
+    public void testUnsupportedFixedLenByteArrayGreaterThanFilter() {
         // dec2 = 0
-        filterBuilderFromFilterString("a14c23s1d0o2");
+        Exception e = assertThrows(UnsupportedOperationException.class,
+                () -> filterBuilderFromFilterString("a14c23s1d0o2"));
+        assertEquals("Column dec2 of type FIXED_LEN_BYTE_ARRAY is not supported", e.getMessage());
     }
 
     @Test
-    public void testUnsupportedFixedLenByteArrayLessThanOrEqualsFilter() throws Exception {
-        thrown.expect(UnsupportedOperationException.class);
-        thrown.expectMessage("Column dec2 of type FIXED_LEN_BYTE_ARRAY is not supported");
-
+    public void testUnsupportedFixedLenByteArrayLessThanOrEqualsFilter() {
         // dec2 = 0
-        filterBuilderFromFilterString("a14c23s1d0o3");
+        Exception e = assertThrows(UnsupportedOperationException.class,
+                () -> filterBuilderFromFilterString("a14c23s1d0o3"));
+        assertEquals("Column dec2 of type FIXED_LEN_BYTE_ARRAY is not supported", e.getMessage());
     }
 
     @Test
-    public void testUnsupportedFixedLenByteArrayGreaterThanOrEqualsFilter() throws Exception {
-        thrown.expect(UnsupportedOperationException.class);
-        thrown.expectMessage("Column dec2 of type FIXED_LEN_BYTE_ARRAY is not supported");
-
+    public void testUnsupportedFixedLenByteArrayGreaterThanOrEqualsFilter() {
         // dec2 = 0
-        filterBuilderFromFilterString("a14c23s1d0o4");
+        Exception e = assertThrows(UnsupportedOperationException.class,
+                () -> filterBuilderFromFilterString("a14c23s1d0o4"));
+        assertEquals("Column dec2 of type FIXED_LEN_BYTE_ARRAY is not supported", e.getMessage());
     }
 
     @Test
-    public void testUnsupportedFixedLenByteArrayNotEqualsFilter() throws Exception {
-        thrown.expect(UnsupportedOperationException.class);
-        thrown.expectMessage("Column dec2 of type FIXED_LEN_BYTE_ARRAY is not supported");
-
+    public void testUnsupportedFixedLenByteArrayNotEqualsFilter() {
         // dec2 = 0
-        filterBuilderFromFilterString("a14c23s1d0o6");
+        Exception e = assertThrows(UnsupportedOperationException.class,
+                () -> filterBuilderFromFilterString("a14c23s1d0o6"));
+        assertEquals("Column dec2 of type FIXED_LEN_BYTE_ARRAY is not supported", e.getMessage());
     }
 
     @Test
-    public void testUnsupportedFixedLenByteArrayIsNullFilter() throws Exception {
-        thrown.expect(UnsupportedOperationException.class);
-        thrown.expectMessage("Column dec2 of type FIXED_LEN_BYTE_ARRAY is not supported");
-
+    public void testUnsupportedFixedLenByteArrayIsNullFilter() {
         // tm = '2013-07-23 21:00:00'
-        filterBuilderFromFilterString("a14o8");
+        Exception e = assertThrows(UnsupportedOperationException.class,
+                () -> filterBuilderFromFilterString("a14o8"));
+        assertEquals("Column dec2 of type FIXED_LEN_BYTE_ARRAY is not supported", e.getMessage());
     }
 
     @Test
-    public void testUnsupportedFixedLenByteArrayIsNotNullFilter() throws Exception {
-        thrown.expect(UnsupportedOperationException.class);
-        thrown.expectMessage("Column dec2 of type FIXED_LEN_BYTE_ARRAY is not supported");
-
+    public void testUnsupportedFixedLenByteArrayIsNotNullFilter() {
         // tm = '2013-07-23 21:00:00'
-        filterBuilderFromFilterString("a14o9");
+        Exception e = assertThrows(UnsupportedOperationException.class,
+                () -> filterBuilderFromFilterString("a14o9"));
+        assertEquals("Column dec2 of type FIXED_LEN_BYTE_ARRAY is not supported", e.getMessage());
     }
 
     private ParquetRecordFilterBuilder filterBuilderFromFilterString(String filterString) throws Exception {
 
-        ParquetRecordFilterBuilder filterBuilder = new ParquetRecordFilterBuilder(
-                columnDescriptors, originalFieldsMap);
+        ParquetRecordFilterBuilder filterBuilder = new ParquetRecordFilterBuilder(columnDescriptors, originalFieldsMap);
 
         // Parse the filter string into a expression tree Node
         Node root = new FilterParser().parse(filterString);

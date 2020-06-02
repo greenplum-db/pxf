@@ -64,6 +64,7 @@ public class JdbcAccessorTest {
     public void testWriteFailsWhenQueryIsSpecified() {
         context.setDataSource("query:foo");
         accessor.setRequestContext(context);
+        accessor.initialize();
         Exception e = assertThrows(IllegalArgumentException.class,
                 () -> accessor.openForWrite());
         assertEquals("specifying query name in data path is not supported for JDBC writable external tables", e.getMessage());
@@ -75,6 +76,7 @@ public class JdbcAccessorTest {
         context.setServerName("unknown");
         context.setDataSource("query:foo");
         accessor.setRequestContext(context);
+        accessor.initialize();
         Exception e = assertThrows(IllegalStateException.class,
                 () -> accessor.openForRead());
         assertEquals("No server configuration directory found for server unknown", e.getMessage());
@@ -86,6 +88,7 @@ public class JdbcAccessorTest {
         configuration.set("pxf.config.server.directory", "/non-existing-directory");
         context.setDataSource("query:foo");
         accessor.setRequestContext(context);
+        accessor.initialize();
         Exception e = assertThrows(RuntimeException.class,
                 () -> accessor.openForRead());
         assertEquals("Failed to read text of query foo : File '/non-existing-directory/foo.sql' does not exist", e.getMessage());
@@ -97,6 +100,7 @@ public class JdbcAccessorTest {
         configuration.set("pxf.config.server.directory", "/tmp/");
         context.setDataSource("query:foo");
         accessor.setRequestContext(context);
+        accessor.initialize();
         Exception e = assertThrows(RuntimeException.class,
                 () -> accessor.openForRead());
         assertEquals("Failed to read text of query foo : File '/tmp/foo.sql' does not exist", e.getMessage());
@@ -109,6 +113,7 @@ public class JdbcAccessorTest {
         configuration.set("pxf.config.server.directory", serversDirectory + File.separator + "test-server");
         context.setDataSource("query:emptyquery");
         accessor.setRequestContext(context);
+        accessor.initialize();
         Exception e = assertThrows(RuntimeException.class,
                 () -> accessor.openForRead());
         assertEquals("Query text file is empty for query emptyquery", e.getMessage());
@@ -124,6 +129,7 @@ public class JdbcAccessorTest {
         wireMocksForReadWithCreateStatement();
 
         accessor.setRequestContext(context);
+        accessor.initialize();
         accessor.openForRead();
 
         String expected = "SELECT  FROM (SELECT dept.name, count(), max(emp.salary)\n" +
@@ -143,6 +149,7 @@ public class JdbcAccessorTest {
         wireMocksForReadWithCreateStatement();
 
         accessor.setRequestContext(context);
+        accessor.initialize();
         accessor.openForRead();
 
         String expected = "SELECT  FROM (SELECT dept.name, count(), max(emp.salary)\n" +
@@ -162,6 +169,7 @@ public class JdbcAccessorTest {
         wireMocksForReadWithCreateStatement();
 
         accessor.setRequestContext(context);
+        accessor.initialize();
         accessor.openForRead();
 
         String expected = "SELECT  FROM (SELECT dept.name, count(), max(emp.salary)\n" +
@@ -186,6 +194,7 @@ public class JdbcAccessorTest {
         wireMocksForReadWithCreateStatement();
 
         accessor.setRequestContext(context);
+        accessor.initialize();
         accessor.openForRead();
 
         String expected = "SELECT  FROM (SELECT dept.name, count(), max(emp.salary)\n" +
@@ -209,6 +218,7 @@ public class JdbcAccessorTest {
         wireMocksForReadWithCreateStatement();
 
         accessor.setRequestContext(context);
+        accessor.initialize();
         accessor.openForRead();
 
         String expected = "SELECT  FROM (SELECT dept.name, count(), max(emp.salary)\n" +
@@ -230,6 +240,7 @@ public class JdbcAccessorTest {
 
         JdbcPartitionFragmenter fragmenter = new JdbcPartitionFragmenter();
         fragmenter.setRequestContext(context);
+        fragmenter.initialize();
         context.setFragmentMetadata(fragmenter.getFragments().get(2).getMetadata());
 
         ArgumentCaptor<String> queryPassed = ArgumentCaptor.forClass(String.class);
@@ -237,6 +248,7 @@ public class JdbcAccessorTest {
         wireMocksForReadWithCreateStatement();
 
         accessor.setRequestContext(context);
+        accessor.initialize();
         accessor.openForRead();
 
         String expected = "SELECT  FROM (SELECT dept.name, count(), max(emp.salary)\n" +

@@ -35,9 +35,9 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.SequenceFileInputFormat;
 import org.apache.hadoop.mapred.SequenceFileRecordReader;
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.model.BaseConfigurationFactory;
-import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 import java.io.IOException;
 import java.util.EnumSet;
@@ -45,6 +45,8 @@ import java.util.EnumSet;
 /**
  * A PXF Accessor for reading and writing Sequence File records
  */
+@Component("SequenceFileAccessor")
+@RequestScope
 public class SequenceFileAccessor extends HdfsSplittableDataAccessor {
 
     private FileContext fc;
@@ -59,12 +61,7 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor {
      * Constructs a SequenceFileAccessor.
      */
     public SequenceFileAccessor() {
-        this(BaseConfigurationFactory.getInstance());
-    }
-
-    SequenceFileAccessor(ConfigurationFactory configurationFactory) {
         super(new SequenceFileInputFormat<Writable, Writable>());
-        this.configurationFactory = configurationFactory;
         this.codecFactory = CodecFactory.getInstance();
     }
 
@@ -79,7 +76,8 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor {
     @Override
     public boolean openForWrite() throws Exception {
         LOG.debug("openForWrite");
-        String filename = hcfsType.getUriForWrite(jobConf, context);
+        // TODO: make sure jobConf is not needed below or revert to hcfsType.getUriForWrite(jobConf, context);
+        String filename = hcfsType.getUriForWrite(context);
         getCompressionCodec(context);
 
         // construct the output stream

@@ -1,0 +1,52 @@
+apply plugin: "java-library"
+
+jar {
+    enabled = true
+}
+
+dependencies {
+    /*******************************
+     * API Dependencies
+     *******************************/
+
+    api(project(':pxf-api'))
+
+    /*******************************
+     * Implementation Dependencies
+     *******************************/
+
+    implementation("org.apache.avro:avro-mapred:1.7.7")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.9.10.4")
+    implementation("com.fasterxml.jackson.core:jackson-core:2.9.10")
+    implementation("com.fasterxml.jackson.core:jackson-annotations:2.9.10")
+    implementation("org.apache.hadoop:hadoop-mapreduce-client-core:${hadoopVersion}")
+    implementation("org.apache.hadoop:hadoop-yarn-api:${hadoopVersion}") // Kerberos dependency
+    implementation("org.apache.hadoop:hadoop-yarn-client:${hadoopVersion}") // Kerberos dependency
+    implementation("org.apache.hadoop:hadoop-common:${hadoopVersion}")
+    implementation("org.apache.htrace:htrace-core4:${htraceVersion}")
+    implementation("org.apache.hadoop:hadoop-hdfs:${hadoopVersion}")
+    implementation("org.apache.hadoop:hadoop-hdfs-client:${hadoopVersion}")
+    implementation("org.apache.parquet:parquet-format:2.7.0")
+    implementation("org.apache.parquet:parquet-column:${parquetVersion}")
+    implementation("org.apache.parquet:parquet-common:${parquetVersion}")
+    implementation("org.apache.parquet:parquet-encoding:${parquetVersion}")
+    implementation("org.apache.parquet:parquet-generator:${parquetVersion}")
+    implementation("org.apache.parquet:parquet-hadoop:${parquetVersion}")
+    implementation("org.apache.hive:hive-storage-api:2.4.0") // for parquet writing
+
+    /*******************************
+     * Test Dependencies
+     *******************************/
+
+    // for parquet tests
+    testImplementation("org.apache.parquet:parquet-pig:${parquetVersion}")
+
+    testImplementation('org.springframework.boot:spring-boot-starter-test') {
+        exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+    }
+
+}
+
+test {
+    useJUnitPlatform()
+}

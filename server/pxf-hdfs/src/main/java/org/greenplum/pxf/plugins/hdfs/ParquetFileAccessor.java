@@ -57,9 +57,11 @@ import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.plugins.hdfs.parquet.ParquetRecordFilterBuilder;
 import org.greenplum.pxf.plugins.hdfs.parquet.ParquetOperatorPrunerAndTransformer;
+import org.greenplum.pxf.plugins.hdfs.parquet.ParquetRecordFilterBuilder;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -78,6 +80,8 @@ import static org.apache.parquet.hadoop.api.ReadSupport.PARQUET_READ_SCHEMA;
  * Parquet file accessor.
  * Unit of operation is record.
  */
+@Component("ParquetFileAccessor")
+@RequestScope
 public class ParquetFileAccessor extends BasePlugin implements Accessor {
 
     private static final int DEFAULT_PAGE_SIZE = 1024 * 1024;
@@ -221,9 +225,9 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
     @Override
     public boolean openForWrite() throws IOException {
 
-        HcfsType hcfsType = HcfsType.getHcfsType(configuration, context);
+        HcfsType hcfsType = HcfsType.getHcfsType(context);
         // skip codec extension in filePrefix, because we add it in this accessor
-        filePrefix = hcfsType.getUriForWrite(configuration, context, true);
+        filePrefix = hcfsType.getUriForWrite(context, true);
         String compressCodec = context.getOption("COMPRESSION_CODEC");
         codecName = codecFactory.getCodec(compressCodec, DEFAULT_COMPRESSION);
 

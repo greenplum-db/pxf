@@ -19,22 +19,17 @@ package org.greenplum.pxf.api.utilities;
  * under the License.
  */
 
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.greenplum.pxf.api.StatsAccessor;
-import org.greenplum.pxf.api.configuration.PxfServerProperties;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
@@ -318,5 +313,17 @@ public class Utilities {
         if (length == s.length()) return s;
         if (length == 0) return "";
         return s.substring(0, length);
+    }
+
+    /**
+     * Returns the class name from a fully qualified classname. For example,
+     * for the input "org.greenplum.pxf.api.Foo" it will return the String "Foo"
+     *
+     * @param fullyQualifiedClassName the fully qualified class name
+     * @return the short class name
+     */
+    public static String getShortClassName(String fullyQualifiedClassName) {
+        int lastDot = StringUtils.lastIndexOf(fullyQualifiedClassName, ".");
+        return (lastDot >= 0) ? fullyQualifiedClassName.substring(lastDot + 1) : fullyQualifiedClassName;
     }
 }
