@@ -105,7 +105,7 @@ test: clean-logs symlink_pxf_jars sync_cloud_configs sync_jdbc_config
 	fi
 	$(MVN) $(MAVEN_TEST_OPTS) ${MAVEN_DEBUG_OPTS} test
 	@if grep "export PXF_LOADER_PATH=file:/tmp/publicstage/pxf" $(PXF_CONF)/conf/pxf-env.sh > /dev/null; then \
-		sed -i .bak -n '/export PXF_LOADER_PATH=file:\/tmp\/publicstage\/pxf/!p' $(PXF_CONF)/conf/pxf-env.sh; \
+		sed -i .bak -n '/export PXF_LOADER_PATH=file:\/tmp\/publicstage\/pxf/!p' $(PXF_CONF)/conf/pxf-env.sh && rm -f $(PXF_CONF)/conf/pxf-env.sh.bak; \
 	fi
 
 clean: clean-logs
