@@ -28,6 +28,7 @@ import org.apache.avro.mapred.AvroInputFormat;
 import org.apache.avro.mapred.AvroJob;
 import org.apache.avro.mapred.AvroRecordReader;
 import org.apache.avro.mapred.AvroWrapper;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -38,12 +39,16 @@ import org.apache.hadoop.mapred.JobConf;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hdfs.avro.AvroUtilities;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 import java.io.IOException;
 
 /**
  * A PXF Accessor for Avro File records
  */
+@Component("AvroFileAccessor")
+@RequestScope
 public class AvroFileAccessor extends HdfsSplittableDataAccessor {
 
     private AvroWrapper<GenericRecord> avroWrapper;
@@ -77,11 +82,9 @@ public class AvroFileAccessor extends HdfsSplittableDataAccessor {
      * avro file or by generating it on the fly from the Greenplum schema.
      */
     @Override
-    public void initialize(RequestContext requestContext) {
-        super.initialize(requestContext);
-
-        schema = avroUtilities.obtainSchema(context, configuration, hcfsType);
-
+    public void initialize() {
+        super.initialize();
+        schema = avroUtilities.obtainSchema(context, hcfsType);
     }
 
     @Override
@@ -138,7 +141,7 @@ public class AvroFileAccessor extends HdfsSplittableDataAccessor {
     public boolean openForWrite() throws Exception {
         // make writer
         writer = new DataFileWriter<>(new GenericDatumWriter<>(schema));
-        Path file = new Path(hcfsType.getUriForWrite(configuration, context, true) + ".avro");
+        Path file = new Path(hcfsType.getUriForWrite(context, true) + ".avro");
         FileSystem fs = file.getFileSystem(jobConf);
         FSDataOutputStream avroOut = null;
         try {

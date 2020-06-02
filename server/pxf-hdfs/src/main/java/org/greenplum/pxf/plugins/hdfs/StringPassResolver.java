@@ -24,6 +24,8 @@ import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.Resolver;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -36,6 +38,8 @@ import static org.greenplum.pxf.api.io.DataType.VARCHAR;
  * String records. StringPassResolver implements {@link Resolver}
  * interface. Returns strings as-is.
  */
+@Component("StringPassResolver")
+@RequestScope
 public class StringPassResolver extends BasePlugin implements Resolver {
     // for write
     private OneRow oneRow = new OneRow();

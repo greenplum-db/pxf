@@ -25,10 +25,8 @@ import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.plugins.hdfs.parquet.ParquetTypeConverter;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -44,22 +42,21 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ParquetResolverTest {
 
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
     private ParquetResolver resolver;
     private RequestContext context;
     private MessageType schema;
     private String localTimestampString;
 
-    @Before
+    @BeforeEach
     public void setup() {
         resolver = new ParquetResolver();
         context = new RequestContext();
@@ -77,27 +74,27 @@ public class ParquetResolverTest {
 
     @Test
     public void testInitialize() {
-        resolver.initialize(context);
+        resolver.setRequestContext(context);
     }
 
     @Test
     public void testGetFields_FailsOnMissingSchema() {
-        thrown.expect(RuntimeException.class);
-        thrown.expectMessage("No schema detected in request context");
-
         context.setMetadata(null);
-        resolver.initialize(context);
-        resolver.getFields(new OneRow());
+        resolver.setRequestContext(context);
+
+        Exception e = assertThrows(RuntimeException.class,
+                () -> resolver.getFields(new OneRow()));
+        assertEquals("No schema detected in request context", e.getMessage());
     }
 
     @Test
-    public void testSetFields_FailsOnMissingSchema() throws IOException {
-        thrown.expect(RuntimeException.class);
-        thrown.expectMessage("No schema detected in request context");
-
+    public void testSetFields_FailsOnMissingSchema() {
         context.setMetadata(null);
-        resolver.initialize(context);
-        resolver.setFields(new ArrayList<>());
+        resolver.setRequestContext(context);
+
+        Exception e = assertThrows(RuntimeException.class,
+                () -> resolver.setFields(new ArrayList<>()));
+        assertEquals("No schema detected in request context", e.getMessage());
     }
 
     @Test
@@ -105,7 +102,7 @@ public class ParquetResolverTest {
         schema = getParquetSchemaForPrimitiveTypes(Type.Repetition.OPTIONAL, false);
         // schema has changed, set metadata again
         context.setMetadata(schema);
-        resolver.initialize(context);
+        resolver.setRequestContext(context);
         context.setTupleDescription(getColumnDescriptorsFromSchema(schema));
 
         Instant timestamp = Instant.parse("2013-07-14T04:00:05Z"); // UTC
@@ -196,7 +193,7 @@ public class ParquetResolverTest {
         // schema has changed, set metadata again
         context.setMetadata(schema);
         context.setTupleDescription(getColumnDescriptorsFromSchema(schema));
-        resolver.initialize(context);
+        resolver.setRequestContext(context);
         List<OneField> fields = new ArrayList<>();
         fields.add(new OneField(DataType.TEXT.getOID(), null));
         fields.add(new OneField(DataType.TEXT.getOID(), null));
@@ -230,7 +227,7 @@ public class ParquetResolverTest {
 
     @Test
     public void testGetFields_Primitive_EmptySchema() throws IOException {
-        resolver.initialize(context);
+        resolver.setRequestContext(context);
 
         List<Group> groups = readParquetFile("primitive_types.parquet", 25, schema);
         OneRow row1 = new OneRow(groups.get(0)); // get row 1
@@ -244,7 +241,7 @@ public class ParquetResolverTest {
         // schema has changed, set metadata again
         context.setMetadata(schema);
         context.setTupleDescription(getColumnDescriptorsFromSchema(schema));
-        resolver.initialize(context);
+        resolver.setRequestContext(context);
 
         List<Group> groups = readParquetFile("primitive_types.parquet", 25, schema);
         assertEquals(25, groups.size());
@@ -313,7 +310,7 @@ public class ParquetResolverTest {
         // schema has changed, set metadata again
         context.setMetadata(readSchema);
 
-        resolver.initialize(context);
+        resolver.setRequestContext(context);
 
         // use readSchema to read only specific columns from parquet file into Group
         List<Group> groups = readParquetFile("primitive_types.parquet", 25, readSchema);
@@ -376,7 +373,7 @@ public class ParquetResolverTest {
         schema = new MessageType("TestProtobuf.StringArray", columns);
         context.setMetadata(schema);
         context.setTupleDescription(getColumnDescriptorsFromSchema(schema));
-        resolver.initialize(context);
+        resolver.setRequestContext(context);
 
         List<Group> groups = readParquetFile("proto-repeated-string.parquet", 3, schema);
         List<OneField> fields;
@@ -405,7 +402,7 @@ public class ParquetResolverTest {
         // schema has changed, set metadata again
         context.setMetadata(schema);
         context.setTupleDescription(getColumnDescriptorsFromSchema(schema));
-        resolver.initialize(context);
+        resolver.setRequestContext(context);
 
         /*
         Corresponding DB column types  are:
@@ -507,7 +504,7 @@ public class ParquetResolverTest {
         schema = new MessageType("TestProtobuf.RepeatedIntMessage", columns);
         context.setMetadata(schema);
         context.setTupleDescription(getColumnDescriptorsFromSchema(schema));
-        resolver.initialize(context);
+        resolver.setRequestContext(context);
 
         List<Group> groups = readParquetFile("old-repeated-int.parquet", 1, schema);
         List<OneField> fields = assertRow(groups, 0, 1);
@@ -613,7 +610,7 @@ public class ParquetResolverTest {
         columnDescriptors.add(new ColumnDescriptor("c1", DataType.BPCHAR.getOID(), 1, "char", null));
         context.setTupleDescription(columnDescriptors);
 
-        resolver.initialize(context);
+        resolver.setRequestContext(context);
 
         List<OneField> fields = new ArrayList<>();
         fields.add(new OneField(DataType.TEXT.getOID(), varchar));

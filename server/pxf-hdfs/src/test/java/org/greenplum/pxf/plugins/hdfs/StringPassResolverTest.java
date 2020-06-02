@@ -23,27 +23,27 @@ import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class StringPassResolverTest {
     RequestContext context;
 
-    @Test
     /*
      * Test the setFields method: small input
      */
-    public void testSetFields() throws Exception {
+    @Test
+    public void testSetFields() {
         StringPassResolver resolver = buildResolver();
 
-        byte[] data = new byte[] {
+        byte[] data = new byte[]{
                 (int) 'a',
                 (int) 'b',
                 (int) 'c',
@@ -51,7 +51,7 @@ public class StringPassResolverTest {
                 (int) '\n',
                 (int) 'n',
                 (int) 'o',
-                (int) '\n' };
+                (int) '\n'};
 
         List<OneField> record = Collections.singletonList(new OneField(DataType.BYTEA.getOID(),
                 Arrays.copyOfRange(data, 0, 5)));
@@ -70,14 +70,14 @@ public class StringPassResolverTest {
     /*
      * Test the setFields method: empty byte array
      */
-    public void testSetFieldsEmptyByteArray() throws Exception {
+    public void testSetFieldsEmptyByteArray() {
 
         StringPassResolver resolver = buildResolver();
 
         byte[] empty = new byte[0];
 
         List<OneField> record = Collections.singletonList(new OneField(DataType.BYTEA.getOID(),
-                                                          empty));
+                empty));
 
         OneRow oneRow = resolver.setFields(record);
 
@@ -87,12 +87,12 @@ public class StringPassResolverTest {
     /*
      * helpers functions
      */
-    private StringPassResolver buildResolver() throws Exception {
+    private StringPassResolver buildResolver() {
         context = new RequestContext();
         context.setConfig("default");
         context.setUser("test-user");
         StringPassResolver resolver = new StringPassResolver();
-        resolver.initialize(context);
+        resolver.setRequestContext(context);
         return resolver;
     }
 

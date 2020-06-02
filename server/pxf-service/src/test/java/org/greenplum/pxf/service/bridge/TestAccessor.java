@@ -2,10 +2,15 @@ package org.greenplum.pxf.service.bridge;
 
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.Accessor;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.springframework.stereotype.Component;
 
 @Component
 public class TestAccessor implements Accessor {
+
+    @Override
+    public void initialize() {
+    }
 
     @Override
     public boolean openForRead() {
@@ -34,7 +39,10 @@ public class TestAccessor implements Accessor {
 
     @Override
     public void closeForWrite() {
+    }
 
+    @Override
+    public void setRequestContext(RequestContext context) {
     }
 
     @Override

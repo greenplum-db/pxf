@@ -121,6 +121,8 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
             throw new IllegalArgumentException(String.format("unable to deserialize fragment meta '%s'", jsonFragmentMetadata));
         }
         context.setFragmentMetadata(fragmentMetadata);
+
+        context.setLastFragment(params.removeOptionalBoolProperty("LAST-FRAGMENT"));
         context.setHost(params.removeProperty("URL-HOST"));
         context.setMetadata(params.removeUserProperty("METADATA"));
         context.setPort(params.removeIntProperty("URL-PORT"));
@@ -511,16 +513,14 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
         }
 
         /**
-         * Returns a property value as boolean type. A boolean property is defined
-         * as an int where 0 means false, and anything else true (like C).
+         * Returns an optional property value as boolean type. If the property
+         * is missing, the default false is returned.
          *
-         * @param property the lookup property
-         * @return property value as boolean
-         * @throws NumberFormatException if the value is missing or can't be
-         *                               represented by an Integer
+         * @param property the lookup property key
+         * @return true when the property is true, false otherwise
          */
-        private boolean removeBoolProperty(String property) {
-            return removeIntProperty(property) != 0;
+        private boolean removeOptionalBoolProperty(String property) {
+            return StringUtils.equals("true", removeOptionalProperty(property));
         }
     }
 

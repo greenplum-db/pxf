@@ -2,44 +2,39 @@ package org.greenplum.pxf.plugins.hdfs;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.compress.CompressionCodec;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class CodecFactoryTest {
 
     private CodecFactory factory;
 
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
-
-    @Before
+    @BeforeEach
     public void setup() {
         factory = new CodecFactory();
     }
 
     @Test
     public void getCodecNoName() {
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("Compression codec some.bad.codec was not found.");
 
         Configuration conf = new Configuration();
         String name = "some.bad.codec";
-        factory.getCodec(name, conf);
+        Exception e = assertThrows(IllegalArgumentException.class,
+                () -> factory.getCodec(name, conf));
+        assertEquals("Compression codec some.bad.codec was not found.", e.getMessage());
     }
 
     @Test
     public void getCodecNoConf() {
-        thrown.expect(NullPointerException.class);
-
         Configuration configuration = null;
 
         String name = "org.apache.hadoop.io.compress.GzipCodec";
-        factory.getCodec(name, configuration);
+        assertThrows(NullPointerException.class,
+                () -> factory.getCodec(name, configuration));
     }
 
     @Test

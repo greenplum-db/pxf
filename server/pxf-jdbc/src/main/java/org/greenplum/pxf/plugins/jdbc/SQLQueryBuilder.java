@@ -333,7 +333,7 @@ public class SQLQueryBuilder {
             query.append(" AND ");
         }
 
-        JdbcFragmentMetadata fragmentMetadata = (JdbcFragmentMetadata) context.getFragmentMetadata();
+        JdbcFragmentMetadata fragmentMetadata = context.getFragmentMetadata();
         String fragmentSql = fragmentMetadata.toSqlConstraint(quoteString, dbProduct);
 
         query.append(fragmentSql);

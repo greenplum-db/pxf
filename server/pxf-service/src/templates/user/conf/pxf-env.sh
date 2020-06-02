@@ -30,3 +30,6 @@ PXF_CONF="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
 
 # Dump heap on OutOfMemoryError, set to dump path to enable
 # export PXF_OOM_DUMP_PATH=/tmp/pxf_heap_dump
+
+# Additional locations to be class-loaded by PXF
+# export PXF_LOADER_PATH=

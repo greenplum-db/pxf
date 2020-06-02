@@ -3,6 +3,7 @@ package org.greenplum.pxf.service.bridge;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
+import org.greenplum.pxf.api.utilities.Utilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -19,8 +20,16 @@ public abstract class BaseBridge implements Bridge {
     protected Resolver resolver;
 
     public BaseBridge(ApplicationContext applicationContext, RequestContext context) {
-        this.accessor = applicationContext.getBean(context.getAccessor().substring(context.getAccessor().lastIndexOf(".") + 1), Accessor.class);
-        this.resolver = applicationContext.getBean(context.getResolver().substring(context.getResolver().lastIndexOf(".") + 1), Resolver.class);
+        this.accessor = applicationContext.getBean(Utilities.getShortClassName(context.getAccessor()), Accessor.class);
+        this.resolver = applicationContext.getBean(Utilities.getShortClassName(context.getResolver()), Resolver.class);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void initialize() {
+        this.accessor.initialize();
+        this.resolver.initialize();
     }
 
     /**

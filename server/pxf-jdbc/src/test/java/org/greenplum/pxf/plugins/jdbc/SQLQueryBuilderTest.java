@@ -19,9 +19,9 @@ package org.greenplum.pxf.plugins.jdbc;
  * under the License.
  */
 
-import org.apache.hadoop.conf.Configuration;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.Fragment;
+import org.greenplum.pxf.api.model.Fragmenter;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,7 +45,6 @@ public class SQLQueryBuilderTest {
     public static final String NAMED_QUERY = "SELECT a, b FROM c";
     public static final String NAMED_QUERY_WHERE = "SELECT a, b FROM c WHERE d = 'foo'";
 
-    private Configuration configuration;
     private RequestContext context;
 
     @Mock
@@ -53,7 +52,6 @@ public class SQLQueryBuilderTest {
 
     @BeforeEach
     public void setup() {
-        configuration = new Configuration();
         context = new RequestContext();
         context.setConfig("default");
         context.setDataSource("sales");
@@ -157,9 +155,8 @@ public class SQLQueryBuilderTest {
         when(mockMetaData.getDatabaseProductName()).thenReturn("mysql");
         when(mockMetaData.getExtraNameCharacters()).thenReturn("");
 
-        JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
-        fragment.setRequestContext(context);
-        List<Fragment> fragments = fragment.getFragments();
+        Fragmenter fragmenter = getFragmenter(context);
+        List<Fragment> fragments = fragmenter.getFragments();
         assertEquals(9, fragments.size());
 
         SQLQueryBuilder builder;
@@ -206,9 +203,8 @@ public class SQLQueryBuilderTest {
         when(mockMetaData.getDatabaseProductName()).thenReturn("mysql");
         when(mockMetaData.getExtraNameCharacters()).thenReturn("");
 
-        JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
-        fragment.setRequestContext(context);
-        List<Fragment> fragments = fragment.getFragments();
+        Fragmenter fragmenter = getFragmenter(context);
+        List<Fragment> fragments = fragmenter.getFragments();
         // Fragment 0: grade = 'excellent'
         context.setFragmentMetadata(fragments.get(0).getMetadata());
 
@@ -242,9 +238,8 @@ public class SQLQueryBuilderTest {
         when(mockMetaData.getDatabaseProductName()).thenReturn("mysql");
         when(mockMetaData.getExtraNameCharacters()).thenReturn("");
 
-        JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
-        fragment.setRequestContext(context);
-        List<Fragment> fragments = fragment.getFragments();
+        Fragmenter fragmenter = getFragmenter(context);
+        List<Fragment> fragments = fragmenter.getFragments();
         // Fragment 0: grade = 'excellent'
         context.setFragmentMetadata(fragments.get(0).getMetadata());
 
@@ -273,9 +268,8 @@ public class SQLQueryBuilderTest {
         when(mockMetaData.getDatabaseProductName()).thenReturn("mysql");
         when(mockMetaData.getExtraNameCharacters()).thenReturn("");
 
-        JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
-        fragment.setRequestContext(context);
-        List<Fragment> fragments = fragment.getFragments();
+        Fragmenter fragmenter = getFragmenter(context);
+        List<Fragment> fragments = fragmenter.getFragments();
         assertEquals(1, fragments.size());
         context.setFragmentMetadata(fragments.get(0).getMetadata());
 
@@ -350,8 +344,7 @@ public class SQLQueryBuilderTest {
         context.addOption("PARTITION_BY", "cDate:date");
         context.addOption("RANGE", "2008-01-01:2009-01-01");
         context.addOption("INTERVAL", "2:month");
-        JdbcPartitionFragmenter fragmenter = new JdbcPartitionFragmenter();
-        fragmenter.setRequestContext(context);
+        Fragmenter fragmenter = getFragmenter(context);
         List<Fragment> fragments = fragmenter.getFragments();
         assertEquals(9, fragments.size());
         // Partition: cdate >= 2008-01-01 and cdate < 2008-03-01
@@ -458,9 +451,8 @@ public class SQLQueryBuilderTest {
         when(mockMetaData.getDatabaseProductName()).thenReturn("mysql");
         when(mockMetaData.getExtraNameCharacters()).thenReturn("");
 
-        JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
-        fragment.setRequestContext(context);
-        List<Fragment> fragments = fragment.getFragments();
+        Fragmenter fragmenter = getFragmenter(context);
+        List<Fragment> fragments = fragmenter.getFragments();
         // Fragment 0: grade = 'excellent'
         context.setFragmentMetadata(fragments.get(0).getMetadata());
 
@@ -477,9 +469,8 @@ public class SQLQueryBuilderTest {
         when(mockMetaData.getDatabaseProductName()).thenReturn("mysql");
         when(mockMetaData.getExtraNameCharacters()).thenReturn("");
 
-        JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
-        fragment.setRequestContext(context);
-        List<Fragment> fragments = fragment.getFragments();
+        Fragmenter fragmenter = getFragmenter(context);
+        List<Fragment> fragments = fragmenter.getFragments();
         // Fragment 0: grade = 'excellent'
         context.setFragmentMetadata(fragments.get(0).getMetadata());
 
@@ -498,9 +489,8 @@ public class SQLQueryBuilderTest {
         when(mockMetaData.getDatabaseProductName()).thenReturn("mysql");
         when(mockMetaData.getExtraNameCharacters()).thenReturn("");
 
-        JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
-        fragment.setRequestContext(context);
-        List<Fragment> fragments = fragment.getFragments();
+        Fragmenter fragmenter = getFragmenter(context);
+        List<Fragment> fragments = fragmenter.getFragments();
         // Fragment 0: grade = 'excellent'
         context.setFragmentMetadata(fragments.get(0).getMetadata());
 
@@ -517,9 +507,8 @@ public class SQLQueryBuilderTest {
         when(mockMetaData.getDatabaseProductName()).thenReturn("mysql");
         when(mockMetaData.getExtraNameCharacters()).thenReturn("");
 
-        JdbcPartitionFragmenter fragment = new JdbcPartitionFragmenter();
-        fragment.setRequestContext(context);
-        List<Fragment> fragments = fragment.getFragments();
+        Fragmenter fragmenter = getFragmenter(context);
+        List<Fragment> fragments = fragmenter.getFragments();
         // Fragment 0: grade = 'excellent'
         context.setFragmentMetadata(fragments.get(0).getMetadata());
 
@@ -541,6 +530,13 @@ public class SQLQueryBuilderTest {
         builder.autoSetQuoteString();
 
         assertEquals("SELECT id, cdate, amt, grade, b FROM sales WHERE NOT (b)", builder.buildSelectQuery());
+    }
+
+    private Fragmenter getFragmenter(RequestContext context) {
+        Fragmenter fragmenter = new JdbcPartitionFragmenter();
+        fragmenter.setRequestContext(context);
+        fragmenter.initialize();
+        return fragmenter;
     }
 
 }

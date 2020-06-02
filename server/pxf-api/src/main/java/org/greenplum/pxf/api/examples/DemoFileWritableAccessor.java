@@ -42,10 +42,6 @@ public class DemoFileWritableAccessor extends DemoAccessor {
 
     private OutputStream out;
 
-    public DemoFileWritableAccessor(RequestContext context) {
-        super(context);
-    }
-
     /**
      * Opens the resource for write.
      *

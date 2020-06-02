@@ -1,31 +1,23 @@
 package org.greenplum.pxf.plugins.hdfs;
 
-import org.apache.hadoop.mapred.FileSplit;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.powermock.api.mockito.PowerMockito.mock;
-import static org.powermock.api.mockito.PowerMockito.when;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Tests the readLine functionality in QuotedLineBreakAccessor
  * where we read one line ahead to be able to determine when
  * the last line occurs
  */
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({HdfsUtilities.class})
 public class QuotedLineBreakAccessorReadLineTest {
 
     private QuotedLineBreakAccessor accessor;
@@ -33,10 +25,10 @@ public class QuotedLineBreakAccessorReadLineTest {
     /*
      * setup function called before each test.
      */
-    @Before
+    @BeforeEach
     public void setup() {
-        FileSplit fileSplitMock = mock(FileSplit.class);
         RequestContext context = new RequestContext();
+        context.setDataSource("/foo/bar");
         context.setConfig("default");
         context.setUser("test-user");
         context.addOption("FILE_AS_ROW", "true");
@@ -44,11 +36,9 @@ public class QuotedLineBreakAccessorReadLineTest {
                 "file_as_row", 1, 1, "TEXT", null
         ));
 
-        PowerMockito.mockStatic(HdfsUtilities.class);
-        when(HdfsUtilities.parseFileSplit(context)).thenReturn(fileSplitMock);
-
         accessor = new QuotedLineBreakAccessor();
-        accessor.initialize(context);
+        accessor.setRequestContext(context);
+        accessor.initialize();
     }
 
     @Test
