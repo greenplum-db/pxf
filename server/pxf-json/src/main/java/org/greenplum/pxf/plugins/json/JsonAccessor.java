@@ -30,6 +30,8 @@ import org.apache.hadoop.mapred.LineRecordReader;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hdfs.HdfsSplittableDataAccessor;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 /**
  * This JSON accessor for PXF will read JSON data and pass it to a {@link JsonResolver}.
@@ -40,6 +42,8 @@ import org.greenplum.pxf.plugins.hdfs.HdfsSplittableDataAccessor;
  * When provided the <b>IDENTIFIER</b> indicates the member name used to determine the encapsulating json object to
  * return.
  */
+@Component("JsonAccessor")
+@RequestScope
 public class JsonAccessor extends HdfsSplittableDataAccessor {
 
     public static final String IDENTIFIER_PARAM = "IDENTIFIER";
@@ -63,8 +67,8 @@ public class JsonAccessor extends HdfsSplittableDataAccessor {
     }
 
     @Override
-    public void initialize(RequestContext requestContext) {
-        super.initialize(requestContext);
+    public void initialize() {
+        super.initialize();
 
         if (!isEmpty(context.getOption(IDENTIFIER_PARAM))) {
 
