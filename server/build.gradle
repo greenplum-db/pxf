@@ -103,6 +103,14 @@ configure(javaProjects) {
         ]
     }
 
+    compileTestJava {
+        options.compilerArgs += [
+                "-g", "-Xlint:varargs", "-Xlint:cast", "-Xlint:classfile", "-Xlint:dep-ann", "-Xlint:divzero",
+                "-Xlint:empty", "-Xlint:finally", "-Xlint:overrides", "-Xlint:path", "-Xlint:-processing", "-Xlint:static",
+                "-Xlint:try", "-Xlint:fallthrough", "-Xlint:deprecation", "-Xlint:unchecked", "-Xlint:-options", "-Werror"
+        ]
+    }
+
     configurations {
         all*.exclude group: "javax.servlet", module: "servlet-api"
         all*.exclude module: 'spring-boot-starter-logging'
