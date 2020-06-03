@@ -85,18 +85,20 @@ check-env:
 	@if [ -z "$(PXF_HOME)" ]; then echo 'ERROR: PXF_HOME must be set'; exit 1; fi
 
 symlink_pxf_jars: check-env
-	@if [ -d "$(PXF_HOME)/lib" ]; then \
+	@if [ -d "$(PXF_HOME)/server" ]; then \
 		rm -rf $(PXF_TMP_LIB) && \
-		mkdir -p $(PXF_TMP_LIB) && \
-		for jar in $(PXF_HOME)/lib/pxf-*.jar; do \
+		mkdir -p $(PXF_TMP_LIB)/tmp && \
+		unzip -qq $(PXF_HOME)/server/pxf-service-*.jar -d $(PXF_TMP_LIB)/tmp && \
+		for jar in $(PXF_TMP_LIB)/tmp/BOOT-INF/lib/pxf-*.jar; do \
 			jar_name="$${jar##*/}"; \
 			if [[ $${jar_name} =~ ^pxf-[A-Za-z0-9]+(-[0-9.]+.*).jar$$ ]]; then \
 				link=$(PXF_TMP_LIB)/$${jar_name/$${BASH_REMATCH[1]}/}; \
-				echo "creating link $${link} -> $${jar}"; \
-				ln -sf "$${jar}" "$${link}"; \
+				echo "copying $${link} -> $${jar}"; \
+				cp "$${jar}" "$${link}"; \
 			fi; \
 		done; \
-		touch $(PXF_TMP_LIB)/pxf-extras.jar; \
+		touch $(PXF_TMP_LIB)/pxf-extras.jar && \
+		rm -rf $(PXF_TMP_LIB)/tmp; \
 	fi
 
 test: check-env clean-logs symlink_pxf_jars sync_cloud_configs sync_jdbc_config
