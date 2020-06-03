@@ -19,6 +19,7 @@ dependencies {
     implementation(project(':pxf-api'))
     implementation(project(':pxf-jdbc'))
     implementation(project(':pxf-hdfs'))
+    implementation(project(':pxf-json'))
 
     implementation("commons-lang:commons-lang")
     implementation("commons-codec:commons-codec")

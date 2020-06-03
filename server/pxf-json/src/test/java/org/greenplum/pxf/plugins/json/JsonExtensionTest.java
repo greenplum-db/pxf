@@ -26,26 +26,26 @@ import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.Fragmenter;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 public class JsonExtensionTest extends PxfUnit {
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
 
     private static final String IDENTIFIER = JsonAccessor.IDENTIFIER_PARAM;
     private List<Pair<String, DataType>> columnDefs = null;
-    private List<Pair<String, String>> extraParams = new ArrayList<Pair<String, String>>();
-    private List<String> output = new ArrayList<String>();
+    private final List<Pair<String, String>> extraParams = new ArrayList<>();
+    private final List<String> output = new ArrayList<>();
 
-    @Before
+    @BeforeEach
     public void before() {
 
         columnDefs = new ArrayList<>();
@@ -62,8 +62,8 @@ public class JsonExtensionTest extends PxfUnit {
         extraParams.clear();
     }
 
-    @After
-    public void cleanup() throws Exception {
+    @AfterEach
+    public void cleanup() {
         columnDefs.clear();
     }
 
@@ -131,8 +131,8 @@ public class JsonExtensionTest extends PxfUnit {
                 + "src/test/resources/datatypes-test.json"), output);
     }
 
-    @Test(expected = IllegalStateException.class)
-    public void testMissingArrayJsonAttribute() throws Exception {
+    @Test
+    public void testMissingArrayJsonAttribute() {
 
         extraParams.add(new Pair<>(IDENTIFIER, "created_at"));
 
@@ -142,8 +142,9 @@ public class JsonExtensionTest extends PxfUnit {
         // User is not an array! An attempt to access it should throw an exception!
         columnDefs.add(new Pair<>("user[0]", DataType.TEXT));
 
-        super.assertOutput(new Path(System.getProperty("user.dir") + File.separator
-                + "src/test/resources/tweets-with-missing-text-attribtute.json"), output);
+        assertThrows(IllegalStateException.class,
+                () -> super.assertOutput(new Path(System.getProperty("user.dir") + File.separator
+                        + "src/test/resources/tweets-with-missing-text-attribtute.json"), output));
     }
 
     @Test
@@ -159,23 +160,23 @@ public class JsonExtensionTest extends PxfUnit {
     }
 
     @Test
-    public void testMalformedJsonObject() throws Exception {
-        expectedException.expect(BadRecordException.class);
-        expectedException.expectMessage("error while parsing json record 'Unexpected character (':' (code 58)): was expecting comma to separate");
+    public void testMalformedJsonObject() {
 
         extraParams.add(new Pair<>(IDENTIFIER, "created_at"));
 
-        super.assertOutput(new Path(System.getProperty("user.dir") + File.separator
-                + "src/test/resources/tweets-broken.json"), output);
+        BadRecordException e = assertThrows(BadRecordException.class,
+                () -> super.assertOutput(new Path(System.getProperty("user.dir") + File.separator
+                        + "src/test/resources/tweets-broken.json"), output));
+        assertTrue(e.getMessage().contains("error while parsing json record 'Unexpected character (':' (code 58)): was expecting comma to separate"));
     }
 
     @Test
-    public void testMismatchedTypes() throws Exception {
-        expectedException.expect(BadRecordException.class);
-        expectedException.expectMessage("invalid BIGINT input value '\"[\"'");
+    public void testMismatchedTypes() {
 
-        super.assertOutput(new Path(System.getProperty("user.dir") + File.separator
-                + "src/test/resources/mismatched-types.json"), output);
+        BadRecordException e = assertThrows(BadRecordException.class,
+                () -> super.assertOutput(new Path(System.getProperty("user.dir") + File.separator
+                        + "src/test/resources/mismatched-types.json"), output));
+        assertEquals("invalid BIGINT input value '\"[\"'", e.getMessage());
     }
 
     @Test

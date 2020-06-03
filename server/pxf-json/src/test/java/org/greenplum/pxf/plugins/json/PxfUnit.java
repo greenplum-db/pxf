@@ -37,18 +37,16 @@ import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.api.utilities.FragmentsResponse;
-import org.greenplum.pxf.api.utilities.FragmentsResponseFormatter;
-import org.greenplum.pxf.api.utilities.Utilities;
-import org.junit.Assert;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * This abstract class contains a number of helpful utilities in developing a PXF extension for HAWQ. Extend this class
@@ -58,8 +56,8 @@ public abstract class PxfUnit {
 
     private static final Log LOG = LogFactory.getLog(PxfUnit.class);
     protected static List<RequestContext> inputs = null;
-    private static JsonFactory factory = new JsonFactory();
-    private static ObjectMapper mapper = new ObjectMapper(factory);
+    private static final JsonFactory factory = new JsonFactory();
+    private static final ObjectMapper mapper = new ObjectMapper(factory);
 
     /**
      * Uses the given input directory to run through the PXF unit testing framework. Uses the lines in the file for
@@ -67,14 +65,14 @@ public abstract class PxfUnit {
      *
      * @param input          Input records
      * @param expectedOutput File containing output to check
-     * @throws Exception
+     * @throws Exception when an error occurs
      */
     public void assertOutput(Path input, Path expectedOutput) throws Exception {
 
         BufferedReader rdr = new BufferedReader(new InputStreamReader(FileSystem.get(new Configuration()).open(
                 expectedOutput)));
 
-        List<String> outputLines = new ArrayList<String>();
+        List<String> outputLines = new ArrayList<>();
 
         String line;
         while ((line = rdr.readLine()) != null) {
@@ -97,7 +95,7 @@ public abstract class PxfUnit {
     public void assertOutput(Path input, List<String> expectedOutput) throws Exception {
 
         setup(input);
-        List<String> actualOutput = new ArrayList<String>();
+        List<String> actualOutput = new ArrayList<>();
         for (RequestContext data : inputs) {
             Accessor accessor = getReadAccessor(data);
             Resolver resolver = getReadResolver(data);
@@ -105,7 +103,7 @@ public abstract class PxfUnit {
             actualOutput.addAll(getAllOutput(accessor, resolver));
         }
 
-        Assert.assertFalse("Output did not match expected output", compareOutput(expectedOutput, actualOutput));
+        assertFalse(compareOutput(expectedOutput, actualOutput), "Output did not match expected output");
     }
 
     /**
@@ -116,13 +114,13 @@ public abstract class PxfUnit {
      *
      * @param input          Input records
      * @param expectedOutput File containing output to check
-     * @throws Exception
+     * @throws Exception when an error occurs
      */
     public void assertUnorderedOutput(Path input, Path expectedOutput) throws Exception {
         BufferedReader rdr = new BufferedReader(new InputStreamReader(FileSystem.get(new Configuration()).open(
                 expectedOutput)));
 
-        List<String> outputLines = new ArrayList<String>();
+        List<String> outputLines = new ArrayList<>();
 
         String line;
         while ((line = rdr.readLine()) != null) {
@@ -147,7 +145,7 @@ public abstract class PxfUnit {
 
         setup(input);
 
-        List<String> actualOutput = new ArrayList<String>();
+        List<String> actualOutput = new ArrayList<>();
         for (RequestContext data : inputs) {
             Accessor accessor = getReadAccessor(data);
             Resolver resolver = getReadResolver(data);
@@ -155,7 +153,7 @@ public abstract class PxfUnit {
             actualOutput.addAll(getAllOutput(accessor, resolver));
         }
 
-        Assert.assertFalse("Output did not match expected output", compareUnorderedOutput(expectedOutput, actualOutput));
+        assertFalse(compareUnorderedOutput(expectedOutput, actualOutput), "Output did not match expected output");
     }
 
     /**
@@ -163,7 +161,7 @@ public abstract class PxfUnit {
      *
      * @param input  The input file
      * @param output The output stream
-     * @throws Exception
+     * @throws Exception when an error occurs
      */
     public void writeOutput(Path input, OutputStream output) throws Exception {
 
@@ -225,81 +223,11 @@ public abstract class PxfUnit {
      */
     public abstract List<Pair<String, DataType>> getColumnDefinitions();
 
-//	protected RequestContext getInputDataForWritableTable() {
-//		return getInputDataForWritableTable(null);
-//	}
-
-//    protected RequestContext getInputDataForWritableTable(Path input) {
-//
-//        if (getAccessorClass() == null) {
-//            throw new IllegalArgumentException(
-//                    "getAccessorClass() must be overwritten to return a non-null object");
-//        }
-//
-//        if (getResolverClass() == null) {
-//            throw new IllegalArgumentException(
-//                    "getResolverClass() must be overwritten to return a non-null object");
-//        }
-//
-//        RequestContext context = new RequestContext();
-//
-////		Map<String, String> paramsMap = new HashMap<String, String>();
-//
-//        System.setProperty("greenplum.alignment", "what");
-//        context.setSegmentId(1);
-//        context.setFilterStringValid(false);
-//        context.setTotalSegments(1);
-//        context.setOutputFormat(OutputFormat.GPDBWritable);
-//        context.setHost("localhost");
-//        context.setPort(50070);
-//
-//        if (input == null) {
-//            context.setDataSource("/dummydata");
-//        }
-//
-////		paramsMap.put("X-GP-ALIGNMENT", "what");
-////		paramsMap.put("X-GP-SEGMENT-ID", "1");
-////		paramsMap.put("X-GP-SEGMENT-COUNT", "1");
-//
-////		paramsMap.put("X-GP-FORMAT", "GPDBWritable");
-////		paramsMap.put("X-GP-URL-HOST", "localhost");
-////		paramsMap.put("X-GP-URL-PORT", "50070");
-//
-////		if (input == null) {
-////			paramsMap.put("X-GP-DATA-DIR", "/dummydata");
-////		}
-//
-//        List<Pair<String, DataType>> params = getColumnDefinitions();
-////		paramsMap.put("X-GP-ATTRS", Integer.toString(params.size()));
-//        for (int i = 0; i < params.size(); ++i) {
-////			paramsMap.put("X-GP-ATTR-NAME" + i, params.get(i).first);
-////			paramsMap.put("X-GP-ATTR-TYPENAME" + i, params.get(i).second.name());
-////			paramsMap.put("X-GP-ATTR-TYPECODE" + i, Integer.toString(params.get(i).second.getOID()));
-//
-//            ColumnDescriptor column = new ColumnDescriptor(params.get(i).first, params.get(i).second.getOID(), i, params.get(i).second.name(), null);
-//            context.getTupleDescription().add(column);
-//        }
-//
-////		paramsMap.put("X-GP-OPTIONS-ACCESSOR", getAccessorClass().getName());
-////		paramsMap.put("X-GP-OPTIONS-RESOLVER", getResolverClass().getName());
-//        context.setAccessor(getAccessorClass().getName());
-//        context.setResolver(getResolverClass().getName());
-//
-//        if (getExtraParams() != null) {
-//            for (Pair<String, String> param : getExtraParams()) {
-////				paramsMap.put("X-GP-OPTIONS-" + param.first, param.second);
-//                context.addOption().put(param.first, param.second);
-//            }
-//        }
-//
-//        return context;
-//    }
-
     /**
      * Set all necessary parameters for GPXF framework to function. Uses the given path as a single input split.
      *
      * @param input The input path, relative or absolute.
-     * @throws Exception
+     * @throws Exception when an error occurs
      */
     protected void setup(Path input) throws Exception {
 
@@ -318,25 +246,14 @@ public abstract class PxfUnit {
         RequestContext context = getContext(input);
         List<Fragment> fragments = getFragmenter(context).getFragments();
 
-        FragmentsResponse fragmentsResponse = FragmentsResponseFormatter.formatResponse(fragments, input.toString());
-
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        fragmentsResponse.write(baos);
-
-        String jsonOutput = baos.toString();
-
         inputs = new ArrayList<>();
 
-        JsonNode node = decodeLineToJsonNode(jsonOutput);
-
-        JsonNode fragmentsArray = node.get("PXFFragments");
-        int i = 0;
-        for (JsonNode fragNode : fragmentsArray) {
-            String sourceData = fragNode.get("sourceName").textValue();
+        for (int i = 0; i < fragments.size(); i++) {
+            Fragment fragment = fragments.get(i);
             context = getContext(input);
-            context.setDataSource(sourceData);
-            context.setFragmentMetadata(Utilities.parseBase64(fragNode.get("metadata").textValue(), "Fragment metadata information"));
-            context.setDataFragment(i++);
+            context.setDataSource(fragment.getSourceName());
+            context.setFragmentMetadata(fragment.getMetadata());
+            context.setDataFragment(i);
             context.setProfileScheme("localfile");
             inputs.add(context);
         }
@@ -344,6 +261,8 @@ public abstract class PxfUnit {
 
     private RequestContext getContext(Path input) {
         RequestContext context = new RequestContext();
+        
+        context.setConfiguration(new Configuration());
 
         // 2.1.0 Properties
         // HDMetaData parameters
@@ -457,20 +376,20 @@ public abstract class PxfUnit {
      * @param accessor The accessor instance to use
      * @param resolver The resolver instance to use
      * @return The list of output strings
-     * @throws Exception
+     * @throws Exception when an error occurs
      */
     protected List<String> getAllOutput(Accessor accessor, Resolver resolver) throws Exception {
 
-        Assert.assertTrue("Accessor failed to open", accessor.openForRead());
+        assertTrue(accessor.openForRead(), "Accessor failed to open");
 
-        List<String> output = new ArrayList<String>();
+        List<String> output = new ArrayList<>();
 
         OneRow row;
         while ((row = accessor.readNextObject()) != null) {
 
             StringBuilder bldr = new StringBuilder();
             for (OneField field : resolver.getFields(row)) {
-                bldr.append((field != null && field.val != null ? field.val : "") + ",");
+                bldr.append(field != null && field.val != null ? field.val : "").append(",");
             }
 
             if (bldr.length() > 0) {
@@ -497,25 +416,8 @@ public abstract class PxfUnit {
 
         Constructor<?> c = getFragmenterClass().getConstructor();
         Fragmenter fragmenter = (Fragmenter) c.newInstance();
-        fragmenter.initialize(meta);
-
-        /*
-        Fragmenter fragmenter = null;
-
-        for (Constructor<?> c : getFragmenterClass().getConstructors()) {
-            if (c.getParameterTypes().length == 1) {
-                for (Class<?> clazz : c.getParameterTypes()) {
-                    if (RequestContext.class.isAssignableFrom(clazz)) {
-                        fragmenter = (Fragmenter) c.newInstance(meta);
-                    }
-                }
-            }
-        }
-
-        if (fragmenter == null) {
-            throw new InvalidParameterException("Unable to find Fragmenter constructor with a BaseMetaData parameter");
-        }
-*/
+        fragmenter.setRequestContext(meta);
+        fragmenter.initialize();
         return fragmenter;
 
     }
@@ -532,25 +434,8 @@ public abstract class PxfUnit {
 
         Constructor<?> c = getAccessorClass().getConstructor();
         Accessor accessor = (Accessor) c.newInstance();
-        accessor.initialize(data);
-
-        /*
-
-        for (Constructor<?> c : getAccessorClass().getConstructors()) {
-            if (c.getParameterTypes().length == 1) {
-                for (Class<?> clazz : c.getParameterTypes()) {
-                    if (RequestContext.class.isAssignableFrom(clazz)) {
-                        accessor = (Accessor) c.newInstance(data);
-                    }
-                }
-            }
-        }
-
-        if (accessor == null) {
-            throw new InvalidParameterException("Unable to find Accessor constructor with a BaseMetaData parameter");
-        }
-        */
-
+        accessor.setRequestContext(data);
+        accessor.initialize();
         return accessor;
 
     }
@@ -567,27 +452,8 @@ public abstract class PxfUnit {
 
         Constructor<?> c = getResolverClass().getConstructor();
         Resolver resolver = (Resolver) c.newInstance();
-        resolver.initialize(data);
-
-        /*
-
-        // search for a constructor that has a single parameter of a type of
-        // BaseMetaData to create the accessor instance
-        for (Constructor<?> c : getResolverClass().getConstructors()) {
-            if (c.getParameterTypes().length == 1) {
-                for (Class<?> clazz : c.getParameterTypes()) {
-                    if (RequestContext.class.isAssignableFrom(clazz)) {
-                        resolver = (Resolver) c.newInstance(data);
-                    }
-                }
-            }
-        }
-
-        if (resolver == null) {
-            throw new InvalidParameterException("Unable to find Resolver constructor with a BaseMetaData parameter");
-        }
-        */
-
+        resolver.setRequestContext(data);
+        resolver.initialize();
         return resolver;
     }
 
