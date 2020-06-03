@@ -20,6 +20,8 @@ import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.GreenplumCSV;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -29,6 +31,8 @@ import java.net.URI;
 import java.sql.SQLException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
+
 /**
  * Accessor to read data from S3, using the S3 Select Framework.
  * S3 Select works on a single key (or object), pushing down as
@@ -36,6 +40,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * data we transfer over the wire, with the purpose of speeding up
  * query times from S3.
  */
+@Component("S3SelectAccessor")
+@RequestScope
 public class S3SelectAccessor extends BasePlugin implements Accessor {
 
     // We call this option compression_codec to make it compatible to
@@ -55,10 +61,11 @@ public class S3SelectAccessor extends BasePlugin implements Accessor {
     private int lineReadCount;
     private URI name;
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public void initialize(RequestContext requestContext) {
-        super.initialize(requestContext);
-
+    public void initialize() {
         name = URI.create(context.getDataSource());
         s3Client = initS3Client();
         lineReadCount = 0;
@@ -109,8 +116,10 @@ public class S3SelectAccessor extends BasePlugin implements Accessor {
     }
 
     @Override
-    public void closeForRead() throws Exception {
+    public void closeForRead() throws IOException {
         LOG.debug("Read {} lines", lineReadCount);
+        IOException error = null;
+
         /*
          * Make sure to close all streams
          */
@@ -120,6 +129,7 @@ public class S3SelectAccessor extends BasePlugin implements Accessor {
                 LOG.debug("SelectObjectContentResult closed");
             } catch (IOException e) {
                 LOG.error("Unable to close SelectObjectContentResult", e);
+                error = e;
             }
         }
 
@@ -129,7 +139,14 @@ public class S3SelectAccessor extends BasePlugin implements Accessor {
                 LOG.debug("ResultInputStream closed");
             } catch (IOException e) {
                 LOG.error("Unable to close ResultInputStream", e);
+                error = defaultIfNull(error, e);
             }
+        }
+
+        if (error != null) {
+            // If there's an error during closing of streams, report the first
+            // encountered error
+            throw error;
         }
 
         /*
