@@ -21,7 +21,7 @@ public enum HcfsType {
         @Override
         public String getDataUri(RequestContext context) {
             String profileScheme = StringUtils.isBlank(context.getProfileScheme()) ? "" : context.getProfileScheme() + "://";
-            return getDataUriForPrefix(context.getConfiguration(), context, profileScheme);
+            return getDataUriForPrefix(context, profileScheme);
         }
     },
     FILE {

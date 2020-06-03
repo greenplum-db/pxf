@@ -351,8 +351,8 @@ public class HcfsTypeTest {
         configuration.set("fs.defaultFS", "s3a://abc/");
         context.setDataSource("foo/bar 1.txt");
 
-        HcfsType type = HcfsType.getHcfsType(configuration, context);
-        String dataUri = type.getDataUri(configuration, context);
+        HcfsType type = HcfsType.getHcfsType(context);
+        String dataUri = type.getDataUri(context);
         assertEquals("s3a://abc/foo/bar 1.txt", dataUri);
         assertEquals("abc", configuration.get(MRJobConfig.JOB_NAMENODES_TOKEN_RENEWAL_EXCLUDE));
     }
@@ -362,8 +362,8 @@ public class HcfsTypeTest {
         configuration.set("fs.defaultFS", "hdfs://0.0.0.0:8020");
         context.setDataSource("/tmp/issues/172848577/[a-b].csv");
 
-        HcfsType type = HcfsType.getHcfsType(configuration, context);
-        String dataUri = type.getDataUri(configuration, context);
+        HcfsType type = HcfsType.getHcfsType(context);
+        String dataUri = type.getDataUri(context);
         assertEquals("hdfs://0.0.0.0:8020/tmp/issues/172848577/[a-b].csv", dataUri);
         assertEquals("0.0.0.0", configuration.get(MRJobConfig.JOB_NAMENODES_TOKEN_RENEWAL_EXCLUDE));
     }
