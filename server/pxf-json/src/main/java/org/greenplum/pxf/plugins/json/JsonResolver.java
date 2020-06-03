@@ -28,9 +28,10 @@ import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.BasePlugin;
-import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -42,6 +43,8 @@ import java.util.List;
  * decode this data into a JsonNode and walk the tree for each column. It supports normal value mapping via projections
  * and JSON array indexing.
  */
+@Component("JsonResolver")
+@RequestScope
 public class JsonResolver extends BasePlugin implements Resolver {
 
     private static final Log LOG = LogFactory.getLog(JsonResolver.class);
@@ -51,15 +54,14 @@ public class JsonResolver extends BasePlugin implements Resolver {
     private ObjectMapper mapper;
 
     @Override
-    public void initialize(RequestContext requestContext) {
-        super.initialize(requestContext);
+    public void initialize() {
         oneFieldList = new ArrayList<>();
         mapper = new ObjectMapper();
 
         // Precompute the column metadata. The metadata is used for mapping column names to json nodes.
-        columnDescriptorCache = new ColumnDescriptorCache[requestContext.getColumns()];
-        for (int i = 0; i < requestContext.getColumns(); ++i) {
-            ColumnDescriptor cd = requestContext.getColumn(i);
+        columnDescriptorCache = new ColumnDescriptorCache[context.getColumns()];
+        for (int i = 0; i < context.getColumns(); ++i) {
+            ColumnDescriptor cd = context.getColumn(i);
             columnDescriptorCache[i] = new ColumnDescriptorCache(cd);
         }
     }
