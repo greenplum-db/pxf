@@ -20,6 +20,7 @@ dependencies {
     implementation(project(':pxf-jdbc'))
     implementation(project(':pxf-hdfs'))
     implementation(project(':pxf-json'))
+    implementation(project(':pxf-s3'))
 
     implementation("commons-lang:commons-lang")
     implementation("commons-codec:commons-codec")

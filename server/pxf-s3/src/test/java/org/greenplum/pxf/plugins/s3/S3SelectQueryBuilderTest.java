@@ -3,14 +3,14 @@ package org.greenplum.pxf.plugins.s3;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class S3SelectQueryBuilderTest {
 
@@ -20,7 +20,7 @@ public class S3SelectQueryBuilderTest {
     private RequestContext context;
     private S3SelectQueryBuilder builderPosition, builderNoPosition;
 
-    @Before
+    @BeforeEach
     public void setup() throws SQLException {
         context = new RequestContext();
         context.setDataSource("sales");
