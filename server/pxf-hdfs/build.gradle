@@ -10,6 +10,7 @@ dependencies {
      *******************************/
 
     api(project(':pxf-api'))
+    api("org.apache.hadoop:hadoop-mapreduce-client-core:${hadoopVersion}")
 
     /*******************************
      * Implementation Dependencies
@@ -19,7 +20,6 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-databind:2.9.10.4")
     implementation("com.fasterxml.jackson.core:jackson-core:2.9.10")
     implementation("com.fasterxml.jackson.core:jackson-annotations:2.9.10")
-    implementation("org.apache.hadoop:hadoop-mapreduce-client-core:${hadoopVersion}")
     implementation("org.apache.hadoop:hadoop-yarn-api:${hadoopVersion}") // Kerberos dependency
     implementation("org.apache.hadoop:hadoop-yarn-client:${hadoopVersion}") // Kerberos dependency
     implementation("org.apache.hadoop:hadoop-common:${hadoopVersion}")
