@@ -6,39 +6,38 @@ import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class JsonResolverTest {
 
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
     private JsonResolver resolver;
     private RequestContext context;
-    private ArrayList<ColumnDescriptor> schema = generateJsonSchema();
+    private final ArrayList<ColumnDescriptor> schema = generateJsonSchema();
 
-
-    @Before
+    @BeforeEach
     public void setUp() {
         resolver = new JsonResolver();
         context = new RequestContext();
         context.setConfig("default");
         context.setUser("test-user");
         context.setTupleDescription(schema);
-        resolver.initialize(context);
+        resolver.setRequestContext(context);
+        resolver.initialize();
     }
 
     @Test
     public void testInitialize() {
-        resolver.initialize(context);
+        resolver.setRequestContext(context);
+        resolver.initialize();
     }
 
     @Test
@@ -111,9 +110,7 @@ public class JsonResolverTest {
     }
 
     @Test
-    public void testGetFieldsShouldFailOnMismatchedInt() throws Exception {
-        thrown.expect(BadRecordException.class);
-        thrown.expectMessage("invalid INTEGER input value '\"[\"'");
+    public void testGetFieldsShouldFailOnMismatchedInt() {
 
         String jsonStr = "{" +
                 "\"type_int\":\"[\"," +
@@ -131,13 +128,13 @@ public class JsonResolverTest {
 
         OneRow row = new OneRow(123, jsonStr);
 
-        assertRow(row, 12);
+        BadRecordException e = assertThrows(BadRecordException.class,
+                () -> assertRow(row, 12));
+        assertEquals("invalid INTEGER input value '\"[\"'", e.getMessage());
     }
 
     @Test
-    public void testGetFieldsShouldFailOnMismatchedBigInt() throws Exception {
-        thrown.expect(BadRecordException.class);
-        thrown.expectMessage("invalid BIGINT input value '\"garbage number\"'");
+    public void testGetFieldsShouldFailOnMismatchedBigInt() {
 
         String jsonStr = "{" +
                 "\"type_int\":\"1234\"," +
@@ -155,13 +152,13 @@ public class JsonResolverTest {
 
         OneRow row = new OneRow(123, jsonStr);
 
-        assertRow(row, 12);
+        BadRecordException e = assertThrows(BadRecordException.class,
+                () -> assertRow(row, 12));
+        assertEquals("invalid BIGINT input value '\"garbage number\"'", e.getMessage());
     }
 
     @Test
-    public void testGetFieldsShouldFailOnMismatchedSmallInt() throws Exception {
-        thrown.expect(BadRecordException.class);
-        thrown.expectMessage("invalid SMALLINT input value '\"not small int\"'");
+    public void testGetFieldsShouldFailOnMismatchedSmallInt() {
 
         String jsonStr = "{" +
                 "\"type_int\":\"1234\"," +
@@ -179,13 +176,13 @@ public class JsonResolverTest {
 
         OneRow row = new OneRow(123, jsonStr);
 
-        assertRow(row, 12);
+        BadRecordException e = assertThrows(BadRecordException.class,
+                () -> assertRow(row, 12));
+        assertEquals("invalid SMALLINT input value '\"not small int\"'", e.getMessage());
     }
 
     @Test
-    public void testGetFieldsShouldFailOnMismatchedFloat() throws Exception {
-        thrown.expect(BadRecordException.class);
-        thrown.expectMessage("invalid REAL input value '\"root beer float\"'");
+    public void testGetFieldsShouldFailOnMismatchedFloat() {
 
         String jsonStr = "{" +
                 "\"type_int\":\"1234\"," +
@@ -203,13 +200,13 @@ public class JsonResolverTest {
 
         OneRow row = new OneRow(123, jsonStr);
 
-        assertRow(row, 12);
+        BadRecordException e = assertThrows(BadRecordException.class,
+                () -> assertRow(row, 12));
+        assertEquals("invalid REAL input value '\"root beer float\"'", e.getMessage());
     }
 
     @Test
-    public void testGetFieldsShouldFailOnMismatchedDouble() throws Exception {
-        thrown.expect(BadRecordException.class);
-        thrown.expectMessage("invalid FLOAT8 input value '\"2 root beer floats\"'");
+    public void testGetFieldsShouldFailOnMismatchedDouble() {
 
         String jsonStr = "{" +
                 "\"type_int\":\"1234\"," +
@@ -227,13 +224,13 @@ public class JsonResolverTest {
 
         OneRow row = new OneRow(123, jsonStr);
 
-        assertRow(row, 12);
+        BadRecordException e = assertThrows(BadRecordException.class,
+                () -> assertRow(row, 12));
+        assertEquals("invalid FLOAT8 input value '\"2 root beer floats\"'", e.getMessage());
     }
 
     @Test
-    public void testGetFieldsShouldFailOnMismatchedBoolean() throws Exception {
-        thrown.expect(BadRecordException.class);
-        thrown.expectMessage("invalid BOOLEAN input value '\"true lies\"'");
+    public void testGetFieldsShouldFailOnMismatchedBoolean() {
 
         String jsonStr = "{" +
                 "\"type_int\":\"1234\"," +
@@ -251,13 +248,13 @@ public class JsonResolverTest {
 
         OneRow row = new OneRow(123, jsonStr);
 
-        assertRow(row, 12);
+        BadRecordException e = assertThrows(BadRecordException.class,
+                () -> assertRow(row, 12));
+        assertEquals("invalid BOOLEAN input value '\"true lies\"'", e.getMessage());
     }
 
     @Test
-    public void testGetFieldsShouldFailOnMalformedJson() throws Exception {
-        thrown.expect(BadRecordException.class);
-        thrown.expectMessage("error while parsing json record 'Unexpected character ('}' (code 125))");
+    public void testGetFieldsShouldFailOnMalformedJson() {
 
         String jsonStr = "{" +
                 "\"type_int\":\"1234\"," +
@@ -275,24 +272,25 @@ public class JsonResolverTest {
 
         OneRow row = new OneRow(123, jsonStr);
 
-        assertRow(row, 12);
+        BadRecordException e = assertThrows(BadRecordException.class,
+                () -> assertRow(row, 12));
+        assertTrue(e.getMessage().contains("error while parsing json record 'Unexpected character ('}' (code 125))"));
     }
 
     @Test
-    public void testGetFieldsShouldFailOnEmptyRow() throws Exception {
-        thrown.expect(BadRecordException.class);
-        resolver.initialize(context);
-        resolver.getFields(new OneRow());
+    public void testGetFieldsShouldFailOnEmptyRow() {
+        resolver.setRequestContext(context);
+        resolver.initialize();
+        assertThrows(BadRecordException.class, () -> resolver.getFields(new OneRow()));
     }
-
 
     @Test
     public void testSetFieldsShouldFail() throws UnsupportedOperationException {
-        thrown.expect(UnsupportedOperationException.class);
 
         context.setMetadata(null);
-        resolver.initialize(context);
-        resolver.setFields(null);
+        resolver.setRequestContext(context);
+        resolver.initialize();
+        assertThrows(UnsupportedOperationException.class, () -> resolver.setFields(null));
     }
 
     // helper functions for testing
@@ -302,7 +300,7 @@ public class JsonResolverTest {
         return fields;
     }
 
-    private void assertField(List<OneField> fields, int index, Object value, DataType type) throws Exception {
+    private void assertField(List<OneField> fields, int index, Object value, DataType type) {
         assertEquals(type.getOID(), fields.get(index).type);
         if (type == DataType.BYTEA) {
             assertArrayEquals((byte[]) value, (byte[]) fields.get(index).val);
