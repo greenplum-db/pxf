@@ -23,4 +23,5 @@ include 'pxf-service',
         'pxf-api',
         'pxf-jdbc',
         'pxf-hdfs',
-        'pxf-json'
+        'pxf-json',
+        'pxf-s3'

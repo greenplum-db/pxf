@@ -2,20 +2,17 @@ package org.greenplum.pxf.plugins.s3;
 
 import com.amazonaws.services.s3.model.InputSerialization;
 import com.amazonaws.services.s3.model.SelectObjectContentRequest;
+import org.apache.hadoop.conf.Configuration;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class S3SelectAccessorTest {
-
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
 
     @Test
     public void testGetInputSerializationDefaults() {
@@ -179,9 +176,11 @@ public class S3SelectAccessorTest {
         context.setConfig("default");
         context.setUser("test-user");
         context.setDataSource("s3a://my-bucket/my/s3/path/");
+        context.setConfiguration(new Configuration());
 
         S3SelectAccessor accessor = new S3SelectAccessor();
-        accessor.initialize(context);
+        accessor.setRequestContext(context);
+        accessor.initialize();
         SelectObjectContentRequest request = accessor.generateBaseCSVRequest(context);
         assertEquals("my-bucket", request.getBucketName());
         assertEquals("my/s3/path/", request.getKey());
@@ -193,9 +192,11 @@ public class S3SelectAccessorTest {
         context.setConfig("default");
         context.setUser("test-user");
         context.setDataSource("s3a://my-bucket");
+        context.setConfiguration(new Configuration());
 
         S3SelectAccessor accessor = new S3SelectAccessor();
-        accessor.initialize(context);
+        accessor.setRequestContext(context);
+        accessor.initialize();
         SelectObjectContentRequest request = accessor.generateBaseCSVRequest(context);
         assertEquals("my-bucket", request.getBucketName());
         assertEquals("", request.getKey());
@@ -203,31 +204,31 @@ public class S3SelectAccessorTest {
 
     @Test
     public void testFailsToParseNullDataSource() {
-        thrown.expect(NullPointerException.class);
-
         RequestContext context = new RequestContext();
-        new S3SelectAccessor().generateBaseCSVRequest(context);
+
+        assertThrows(NullPointerException.class,
+                () -> new S3SelectAccessor().generateBaseCSVRequest(context));
     }
 
     @Test
     public void testFailsOnOpenForWrite() {
-        thrown.expect(UnsupportedOperationException.class);
-        thrown.expectMessage("S3 Select does not support writing");
-        new S3SelectAccessor().openForWrite();
+        Exception e = assertThrows(UnsupportedOperationException.class,
+                () -> new S3SelectAccessor().openForWrite());
+        assertEquals("S3 Select does not support writing", e.getMessage());
     }
 
     @Test
     public void testFailsOnWriteNextObject() {
-        thrown.expect(UnsupportedOperationException.class);
-        thrown.expectMessage("S3 Select does not support writing");
-        new S3SelectAccessor().writeNextObject(new OneRow());
+        Exception e = assertThrows(UnsupportedOperationException.class,
+                () -> new S3SelectAccessor().writeNextObject(new OneRow()));
+        assertEquals("S3 Select does not support writing", e.getMessage());
     }
 
     @Test
     public void testFailsOnCloseForWrite() {
-        thrown.expect(UnsupportedOperationException.class);
-        thrown.expectMessage("S3 Select does not support writing");
-        new S3SelectAccessor().closeForWrite();
+        Exception e = assertThrows(UnsupportedOperationException.class,
+                () -> new S3SelectAccessor().closeForWrite());
+        assertEquals("S3 Select does not support writing", e.getMessage());
     }
 
     private RequestContext getDefaultRequestContext() {
