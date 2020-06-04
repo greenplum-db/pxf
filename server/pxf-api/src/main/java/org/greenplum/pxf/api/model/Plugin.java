@@ -1,9 +1,11 @@
 package org.greenplum.pxf.api.model;
 
+import org.springframework.beans.factory.InitializingBean;
+
 /**
  * Base interface for all plugin types that provides information on plugin thread safety
  */
-public interface Plugin {
+public interface Plugin extends InitializingBean {
 
     /**
      * Sets the context for the current request
@@ -11,14 +13,6 @@ public interface Plugin {
      * @param context the context for the current request
      */
     void setRequestContext(RequestContext context);
-
-
-    /**
-     * Method called after the {@link RequestContext} and 
-     * {@link org.apache.hadoop.conf.Configuration} have been bound to the
-     * BasePlugin and is ready to be consumed by implementing classes
-     */
-    void initialize();
 
     /**
      * Checks if the plugin is thread safe

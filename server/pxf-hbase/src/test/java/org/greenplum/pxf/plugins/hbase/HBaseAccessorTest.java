@@ -81,7 +81,7 @@ public class HBaseAccessorTest {
         prepareConstruction();
         HBaseAccessor accessor = new HBaseAccessor();
         accessor.setRequestContext(context);
-        accessor.initialize();
+        accessor.afterPropertiesSet();
     }
 
     /*
@@ -100,7 +100,7 @@ public class HBaseAccessorTest {
 
         accessor = new HBaseAccessor();
         accessor.setRequestContext(context);
-        accessor.initialize();
+        accessor.afterPropertiesSet();
 
         Exception e = assertThrows(Exception.class, accessor::openForRead,
                 "should throw no metadata exception");

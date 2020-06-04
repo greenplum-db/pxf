@@ -51,7 +51,7 @@ public class JsonResolver extends BasePlugin implements Resolver {
     private ColumnDescriptorCache[] columnDescriptorCache;
 
     @Override
-    public void initialize() {
+    public void afterPropertiesSet() {
         oneFieldList = new ArrayList<>();
 
         // Precompute the column metadata. The metadata is used for mapping column names to json nodes.

@@ -62,7 +62,7 @@ public class HdfsDataFragmenter extends BaseFragmenter {
     }
 
     @Override
-    public void initialize() {
+    public void afterPropertiesSet() {
         // Check if the underlying configuration is for HDFS
         hcfsType = HcfsType.getHcfsType(context);
         jobConf = new JobConf(configuration, this.getClass());

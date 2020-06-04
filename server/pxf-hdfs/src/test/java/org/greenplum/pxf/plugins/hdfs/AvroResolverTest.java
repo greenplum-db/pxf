@@ -46,7 +46,7 @@ public class AvroResolverTest {
         schema = getAvroSchemaForPrimitiveTypes();
         context.setMetadata(schema);
         resolver.setRequestContext(context);
-        resolver.initialize();
+        resolver.afterPropertiesSet();
 
         List<OneField> fields = new ArrayList<>();
         fields.add(new OneField(DataType.BOOLEAN.getOID(), false));
@@ -111,7 +111,7 @@ public class AvroResolverTest {
         schema = getAvroSchemaForComplexTypes();
         context.setMetadata(schema);
         resolver.setRequestContext(context);
-        resolver.initialize();
+        resolver.afterPropertiesSet();
 
         List<OneField> fields = new ArrayList<>();
         fields.add(new OneField(DataType.BYTEA.getOID(), new byte[]{65, 66, 67, 68}));               // union of null and bytes
@@ -142,7 +142,7 @@ public class AvroResolverTest {
         schema = getAvroSchemaForPrimitiveTypes();
         context.setMetadata(schema);
         resolver.setRequestContext(context);
-        resolver.initialize();
+        resolver.afterPropertiesSet();
 
         GenericRecord genericRecord = new GenericData.Record(schema);
         genericRecord.put(0, false);
@@ -168,7 +168,7 @@ public class AvroResolverTest {
         schema = getAvroSchemaForPrimitiveTypes();
         context.setMetadata(schema);
         resolver.setRequestContext(context);
-        resolver.initialize();
+        resolver.afterPropertiesSet();
 
         GenericRecord genericRecord = new GenericData.Record(schema);
         genericRecord.put(0, null);
@@ -194,7 +194,7 @@ public class AvroResolverTest {
         schema = getAvroSchemaForComplexTypes();
         context.setMetadata(schema);
         resolver.setRequestContext(context);
-        resolver.initialize();
+        resolver.afterPropertiesSet();
         GenericRecord genericRecord = new GenericData.Record(schema);
 
         // UNION of NULL and BYTES
@@ -247,7 +247,7 @@ public class AvroResolverTest {
         schema = getAvroSchemaForComplexTypes();
         context.setMetadata(schema);
         resolver.setRequestContext(context);
-        resolver.initialize();
+        resolver.afterPropertiesSet();
         GenericRecord genericRecord = new GenericData.Record(schema);
         // UNION of NULL and BYTES
         genericRecord.put(0, null);

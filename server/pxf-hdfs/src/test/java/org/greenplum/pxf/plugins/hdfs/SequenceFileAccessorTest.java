@@ -137,7 +137,7 @@ public class SequenceFileAccessorTest {
 
         accessor = new SequenceFileAccessor();
         accessor.setRequestContext(context);
-        accessor.initialize();
+        accessor.afterPropertiesSet();
         accessor.openForWrite();
     }
 }

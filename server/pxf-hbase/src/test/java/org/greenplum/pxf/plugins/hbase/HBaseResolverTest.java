@@ -47,7 +47,7 @@ public class HBaseResolverTest {
 
         HBaseResolver resolver = new HBaseResolver();
         resolver.setRequestContext(context);
-        resolver.initialize();
+        resolver.afterPropertiesSet();
     }
 
     /*
@@ -64,7 +64,7 @@ public class HBaseResolverTest {
 
         HBaseResolver resolver = new HBaseResolver();
         resolver.setRequestContext(context);
-        resolver.initialize();
+        resolver.afterPropertiesSet();
 
         /*
          * Supported type, No value.
