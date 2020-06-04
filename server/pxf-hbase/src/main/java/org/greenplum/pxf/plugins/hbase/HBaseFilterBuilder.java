@@ -88,9 +88,9 @@ public class HBaseFilterBuilder implements TreeVisitor {
     private boolean startKeyAssigned = false;
     private byte[] endKey;
     private byte[] startKey;
-    private Deque<Filter> filterQueue;
+    private final Deque<Filter> filterQueue;
     private Filter currentFilter;
-    private HBaseTupleDescription tupleDescription;
+    private final HBaseTupleDescription tupleDescription;
 
     public HBaseFilterBuilder(HBaseTupleDescription tupleDescription) {
         this.filterQueue = new LinkedList<>();

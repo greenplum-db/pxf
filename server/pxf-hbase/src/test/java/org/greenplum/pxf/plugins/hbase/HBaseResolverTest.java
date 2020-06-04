@@ -19,100 +19,83 @@ package org.greenplum.pxf.plugins.hbase;
  * under the License.
  */
 
-
 import org.greenplum.pxf.api.BadRecordException;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.plugins.hbase.utilities.HBaseTupleDescription;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
+import java.util.HashMap;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({HBaseResolver.class})
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 public class HBaseResolverTest {
     private RequestContext context;
-    private HBaseTupleDescription tupleDesc;
 
-    @Test
     /*
-	 * Test construction of HBaseResolver.
-	 *
-	 * HBaseResolver is created and then HBaseTupleDescription
-	 * creation is verified
-	 */
-    public void construction() throws Exception {
+     * Test construction of HBaseResolver.
+     *
+     * HBaseResolver is created and then HBaseTupleDescription
+     * creation is verified
+     */
+    @Test
+    public void construction() {
         context = new RequestContext();
         context.setConfig("default");
         context.setUser("test-user");
-        tupleDesc = mock(HBaseTupleDescription.class);
-        PowerMockito.whenNew(HBaseTupleDescription.class).withArguments(context).thenReturn(tupleDesc);
+        context.setFragmentMetadata(new HBaseFragmentMetadata(new byte[0], new byte[0], new HashMap<>()));
 
         HBaseResolver resolver = new HBaseResolver();
-        resolver.initialize(context);
-
-        PowerMockito.verifyNew(HBaseTupleDescription.class).withArguments(context);
+        resolver.setRequestContext(context);
+        resolver.initialize();
     }
 
+    /*
+     * Test the convertToJavaObject method
+     */
     @Test
-	/*
-	 * Test the convertToJavaObject method
-	 */
     public void testConvertToJavaObject() throws Exception {
         Object result;
 
         context = new RequestContext();
         context.setConfig("default");
         context.setUser("test-user");
-        tupleDesc = mock(HBaseTupleDescription.class);
-        PowerMockito.whenNew(HBaseTupleDescription.class).withArguments(context).thenReturn(tupleDesc);
+        context.setFragmentMetadata(new HBaseFragmentMetadata(new byte[0], new byte[0], new HashMap<>()));
 
         HBaseResolver resolver = new HBaseResolver();
-        resolver.initialize(context);
+        resolver.setRequestContext(context);
+        resolver.initialize();
 
         /*
-		 * Supported type, No value.
-		 * Should successfully return Null.
-		 */
+         * Supported type, No value.
+         * Should successfully return Null.
+         */
         result = resolver.convertToJavaObject(20, "bigint", null);
         assertNull(result);
 
-		/*
-		 * Supported type, With value
-		 * Should successfully return a Java Object that holds original value
-		 */
+        /*
+         * Supported type, With value
+         * Should successfully return a Java Object that holds original value
+         */
         result = resolver.convertToJavaObject(20, "bigint", "1234".getBytes());
         assertEquals(((Long) result).longValue(), 1234L);
 
-		/*
-		 * Supported type, Invalid value
-		 * Should throw a BadRecordException, with detailed explanation.
-		 */
-        try {
-            result = resolver.convertToJavaObject(20, "bigint", "not_a_numeral".getBytes());
-            fail("Supported type, Invalid value should throw an exception");
-        } catch (BadRecordException e) {
-            assertEquals("Error converting value 'not_a_numeral' to type bigint. (original error: For input string: \"not_a_numeral\")", e.getMessage());
-        } catch (Exception e) {
-            fail("Supported type, Invalid value expected to catch a BadRecordException, caught Exception");
-        }
+        /*
+         * Supported type, Invalid value
+         * Should throw a BadRecordException, with detailed explanation.
+         */
+        Exception e = assertThrows(BadRecordException.class,
+                () -> resolver.convertToJavaObject(20, "bigint", "not_a_numeral".getBytes()),
+                "Supported type, Invalid value should throw an exception");
+        assertEquals("Error converting value 'not_a_numeral' to type bigint. (original error: For input string: \"not_a_numeral\")", e.getMessage());
 
-		/*
-		 * Unsupported type
-		 * Should throw an Exception, indicating the name of the unsupported type
-		 */
-        try {
-            result = resolver.convertToJavaObject(600, "point", "[1,1]".getBytes());
-            fail("Unsupported data type should throw exception");
-        } catch (Exception e) {
-            assertEquals("Unsupported data type point", e.getMessage());
-        }
-
+        /*
+         * Unsupported type
+         * Should throw an Exception, indicating the name of the unsupported type
+         */
+        e = assertThrows(Exception.class,
+                () -> resolver.convertToJavaObject(600, "point", "[1,1]".getBytes()),
+                "Unsupported data type should throw exception");
+        assertEquals("Unsupported data type point", e.getMessage());
     }
 }
