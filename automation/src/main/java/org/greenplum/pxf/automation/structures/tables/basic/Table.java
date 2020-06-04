@@ -32,12 +32,14 @@ public class Table {
     private String name;
     private String[] fields;
     private String[] distributionFields;
+    private boolean randomDistribution;
 
     private DataPattern dataPattern;
     private long numberOfLines = 0;
 
     public Table(String name, String[] fields) {
         this.name = name;
+        this.randomDistribution = false;
 
         if (fields != null) {
             this.fields = Arrays.copyOf(fields, fields.length);
@@ -48,6 +50,7 @@ public class Table {
 
     public Table(String name, String[] fields, DataPattern dataPattern) {
         this.name = name;
+        this.randomDistribution = false;
 
         if (fields != null) {
             this.fields = Arrays.copyOf(fields, fields.length);
@@ -79,6 +82,10 @@ public class Table {
     }
 
     protected String distribution() {
+        if (randomDistribution) {
+            return " DISTRIBUTED RANDOMLY";
+        }
+
         StringBuilder sb = new StringBuilder();
 
         if (getDistributionFields() != null && getDistributionFields().length > 0) {
@@ -159,10 +166,14 @@ public class Table {
      */
     public void addRow(List<String> row) {
         if (data == null) {
-            data = new ArrayList<List<String>>();
+            data = new ArrayList<>();
         }
 
         data.add(row);
+    }
+
+    public void setRandomDistribution() {
+        randomDistribution = true;
     }
 
     /**
@@ -340,10 +351,10 @@ public class Table {
      * Load data from Text file to Table data List according to provided delimiter. The data is
      * being read as UTF-8. If the file is compressed the compression type should be mentioned.
      *
-     * @param path file to required file to load
-     * @param delimiter for splitting data on file
+     * @param path            file to required file to load
+     * @param delimiter       for splitting data on file
      * @param sortColumnIndex for splitting data on file
-     * @param encoding text encoding type (like UTF-8...)
+     * @param encoding        text encoding type (like UTF-8...)
      * @param compressionType required compression type.
      * @throws IOException
      */
@@ -356,16 +367,16 @@ public class Table {
 
         InputStream in = null;
         switch (compressionType) {
-        case GZip:
-            in = new GZIPInputStream(new FileInputStream(path));
-            break;
-        case BZip2:
-            in = new BZip2CompressorInputStream(new FileInputStream(path));
-            break;
-        case None:
-            break;
-        default:
-            break;
+            case GZip:
+                in = new GZIPInputStream(new FileInputStream(path));
+                break;
+            case BZip2:
+                in = new BZip2CompressorInputStream(new FileInputStream(path));
+                break;
+            case None:
+                break;
+            default:
+                break;
         }
 
         List<String> lines = null;
@@ -385,7 +396,7 @@ public class Table {
         // go over lines, split it according to delimiter and put in data list
         for (String line : lines) {
             // by default only one column
-            String[] columns = new String[] { line };
+            String[] columns = new String[]{line};
             // if delimiter exists, split it
             if (delimiter != null) {
                 // find out if quoted values exist in line
@@ -432,11 +443,11 @@ public class Table {
      * Load data from Text file to Table data List according to provided delimiter. The data is
      * being read as UTF-8. The assumption is that the file is not compressed.
      *
-     * @param path HDFS file to required file to load
-     * @param delimiter for splitting data on file
+     * @param path            HDFS file to required file to load
+     * @param delimiter       for splitting data on file
      * @param sortColumnIndex column to sort by
-     * @param appendData if true append to exists data, false create new {@link List}
-     * @param encoding text encoding type (like UTF-8...)
+     * @param appendData      if true append to exists data, false create new {@link List}
+     * @param encoding        text encoding type (like UTF-8...)
      */
     public void loadDataFromFile(String path, String delimiter, final int sortColumnIndex, String encoding, boolean appendData) throws IOException {
         loadDataFromFile(path, delimiter, sortColumnIndex, encoding, EnumCompressionTypes.None, appendData);
@@ -445,8 +456,8 @@ public class Table {
     /**
      * Load data from Text file to Table data List according to provided delimiter using UTF-8.
      *
-     * @param path HDFS file to required file to load
-     * @param delimiter for splitting data on file
+     * @param path            HDFS file to required file to load
+     * @param delimiter       for splitting data on file
      * @param sortColumnIndex column to sort by
      * @throws IOException
      */
@@ -458,8 +469,8 @@ public class Table {
      * Load data from Text file to Table data List according to provided delimiter. The data is
      * being read as UTF-8. The assumption is that the file is not compressed.
      *
-     * @param path HDFS file to required file to load
-     * @param delimiter for splitting data on file
+     * @param path            HDFS file to required file to load
+     * @param delimiter       for splitting data on file
      * @param sortColumnIndex column to sort by
      * @throws IOException
      */
@@ -470,8 +481,8 @@ public class Table {
     /**
      * Load data from Text file to Table data List according to provided delimiter using UTF-8.
      *
-     * @param path path HDFS file to required file to load
-     * @param delimiter for splitting data on file
+     * @param path       path HDFS file to required file to load
+     * @param delimiter  for splitting data on file
      * @param appendData if true append to exists data, false create new {@link List}
      * @throws IOException
      */
@@ -485,7 +496,7 @@ public class Table {
      * @param path
      * @param delimiter
      * @param compressionType compression of file to load
-     * @param appendData if true append to exists data, false create new {@link List}
+     * @param appendData      if true append to exists data, false create new {@link List}
      * @throws IOException
      */
     public void loadDataFromFile(String path, String delimiter, EnumCompressionTypes compressionType, boolean appendData) throws IOException {
@@ -541,6 +552,7 @@ public class Table {
     }
 
     public void setDistributionFields(String[] distributionFields) {
+        randomDistribution = false;
         this.distributionFields = Arrays.copyOf(distributionFields, distributionFields.length);
     }
 
@@ -579,5 +591,16 @@ public class Table {
             }
         }
         return sb.toString();
+    }
+
+    public String constructInsertStmt() {
+        StringBuilder insert = new StringBuilder("INSERT INTO " + name + " VALUES(");
+        for (List<String> row : data) {
+            insert.append(String.join(",", row));
+            insert.append("),(");
+        }
+        insert.setLength(insert.length() - 2);
+        insert.append(";");
+        return insert.toString();
     }
 }

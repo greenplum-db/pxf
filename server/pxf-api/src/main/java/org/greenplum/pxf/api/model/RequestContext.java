@@ -43,6 +43,7 @@ public class RequestContext {
      * are in a read, write or fragmenter call.
      */
     private RequestType requestType;
+
     public RequestType getRequestType() {
         return requestType;
     }
@@ -59,7 +60,7 @@ public class RequestContext {
         FRAGMENTER,
         READ_BRIDGE,
         WRITE_BRIDGE,
-    };
+    }
 
     // ----- NAMED PROPERTIES -----
     private String accessor;

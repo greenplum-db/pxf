@@ -190,6 +190,14 @@ project('pxf-hdfs') {
         compile "org.apache.parquet:parquet-hadoop:${parquetVersion}"
         compile "org.apache.hive:hive-storage-api:2.4.0" // for parquet writing
 
+        bundleJars "com.twelvemonkeys.imageio:imageio-core:3.4.2"
+        bundleJars "com.twelvemonkeys.common:common-lang:3.4.2"
+        bundleJars "com.twelvemonkeys.common:common-io:3.4.2"
+        bundleJars "com.twelvemonkeys.common:common-image:3.4.2"
+        bundleJars "com.twelvemonkeys.imageio:imageio-metadata:3.4.2"
+        bundleJars "com.twelvemonkeys.imageio:imageio-jpeg:3.4.2"
+        bundleJars "com.twelvemonkeys.imageio:imageio-tiff:3.4.2"
+
         // for parquet tests
         testCompile "org.apache.parquet:parquet-pig:${parquetVersion}"
 
@@ -197,6 +205,7 @@ project('pxf-hdfs') {
         // Dependency in hadoop 2.9.2
         bundleJars "com.fasterxml.woodstox:woodstox-core:5.0.3"
         bundleJars "org.codehaus.woodstox:stax2-api:3.1.4"
+
     }
 }
 

@@ -19,21 +19,30 @@ package org.greenplum.pxf.service;
  * under the License.
  */
 
-
+import org.greenplum.pxf.api.ArrayField;
+import org.greenplum.pxf.api.ArrayStreamingField;
 import org.greenplum.pxf.api.BadRecordException;
 import org.greenplum.pxf.api.GreenplumDateTime;
 import org.greenplum.pxf.api.OneField;
-import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.api.model.OutputFormat;
-import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.api.utilities.Utilities;
+import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.StreamingField;
 import org.greenplum.pxf.api.io.BufferWritable;
+import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.io.GPDBWritable;
 import org.greenplum.pxf.api.io.Writable;
+import org.greenplum.pxf.api.model.OutputFormat;
+import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.api.model.StreamingResolver;
+import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.api.utilities.Utilities;
+import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 
-import java.io.DataOutput;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.sql.Date;
 import java.sql.Timestamp;
@@ -49,31 +58,40 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+@RunWith(MockitoJUnitRunner.class)
 public class BridgeOutputBuilderTest {
-
     private static final int UN_SUPPORTED_TYPE = -1;
     private GPDBWritable output = null;
-    private DataOutputToBytes dos = new DataOutputToBytes();
+    private RequestContext context;
+    private BridgeOutputBuilder.WritableIterator writableIterator;
+    private List<OneField> records;
+    BridgeOutputBuilder builder;
+    @Mock
+    private StreamingResolver resolver;
+
+    @Before
+    public void setup() {
+        context = new RequestContext();
+    }
 
     @Test
     public void testFillGPDBWritable() throws Exception {
-        RequestContext context = new RequestContext();
 
-        addColumn(context, 0, DataType.INTEGER, "col0");
-        addColumn(context, 1, DataType.FLOAT8, "col1");
-        addColumn(context, 2, DataType.REAL, "col2");
-        addColumn(context, 3, DataType.BIGINT, "col3");
-        addColumn(context, 4, DataType.SMALLINT, "col4");
-        addColumn(context, 5, DataType.BOOLEAN, "col5");
-        addColumn(context, 6, DataType.BYTEA, "col6");
-        addColumn(context, 7, DataType.VARCHAR, "col7");
-        addColumn(context, 8, DataType.BPCHAR, "col8");
-        addColumn(context, 9, DataType.TEXT, "col9");
-        addColumn(context, 10, DataType.NUMERIC, "col10");
-        addColumn(context, 11, DataType.TIMESTAMP, "col11");
-        addColumn(context, 12, DataType.DATE, "col12");
+        addColumn(0, DataType.INTEGER, "col0");
+        addColumn(1, DataType.FLOAT8, "col1");
+        addColumn(2, DataType.REAL, "col2");
+        addColumn(3, DataType.BIGINT, "col3");
+        addColumn(4, DataType.SMALLINT, "col4");
+        addColumn(5, DataType.BOOLEAN, "col5");
+        addColumn(6, DataType.BYTEA, "col6");
+        addColumn(7, DataType.VARCHAR, "col7");
+        addColumn(8, DataType.BPCHAR, "col8");
+        addColumn(9, DataType.TEXT, "col9");
+        addColumn(10, DataType.NUMERIC, "col10");
+        addColumn(11, DataType.TIMESTAMP, "col11");
+        addColumn(12, DataType.DATE, "col12");
 
-        BridgeOutputBuilder builder = makeBuilder(context);
+        builder = makeBuilder(context);
         output = builder.makeGPDBWritableOutput();
 
         List<OneField> recFields = Arrays.asList(
@@ -110,24 +128,23 @@ public class BridgeOutputBuilderTest {
 
     @Test
     public void testCSVSerialization() throws Exception {
-        RequestContext context = new RequestContext();
 
-        addColumn(context, 0, DataType.INTEGER, "col0");
-        addColumn(context, 1, DataType.FLOAT8, "col1");
-        addColumn(context, 2, DataType.REAL, "col2");
-        addColumn(context, 3, DataType.BIGINT, "col3");
-        addColumn(context, 4, DataType.SMALLINT, "col4");
-        addColumn(context, 5, DataType.BOOLEAN, "col5");
-        addColumn(context, 6, DataType.BYTEA, "col6");
-        addColumn(context, 7, DataType.VARCHAR, "col7");
-        addColumn(context, 8, DataType.BPCHAR, "col8");
-        addColumn(context, 9, DataType.TEXT, "col9");
-        addColumn(context, 10, DataType.NUMERIC, "col10");
-        addColumn(context, 11, DataType.TIMESTAMP, "col11");
-        addColumn(context, 12, DataType.DATE, "col12");
-        addColumn(context, 13, DataType.VARCHAR, "col13");
+        addColumn(0, DataType.INTEGER, "col0");
+        addColumn(1, DataType.FLOAT8, "col1");
+        addColumn(2, DataType.REAL, "col2");
+        addColumn(3, DataType.BIGINT, "col3");
+        addColumn(4, DataType.SMALLINT, "col4");
+        addColumn(5, DataType.BOOLEAN, "col5");
+        addColumn(6, DataType.BYTEA, "col6");
+        addColumn(7, DataType.VARCHAR, "col7");
+        addColumn(8, DataType.BPCHAR, "col8");
+        addColumn(9, DataType.TEXT, "col9");
+        addColumn(10, DataType.NUMERIC, "col10");
+        addColumn(11, DataType.TIMESTAMP, "col11");
+        addColumn(12, DataType.DATE, "col12");
+        addColumn(13, DataType.VARCHAR, "col13");
 
-        BridgeOutputBuilder builder = makeBuilder(context);
+        builder = makeBuilder(context);
 
         List<OneField> recFields = Arrays.asList(
                 new OneField(DataType.INTEGER.getOID(), 0),
@@ -154,16 +171,13 @@ public class BridgeOutputBuilderTest {
         String datetime = new Timestamp(0).toLocalDateTime().format(GreenplumDateTime.DATETIME_FORMATTER);
         String date = new Date(1).toString();
 
-        outputQueue.get(0).write(dos);
-        assertEquals("0,0.0,0.0,0,0,true,\\x00,value,value,\"va\"\"lue\",0," + datetime + "," + date + ",\n",
-                new String(dos.getOutput(), "UTF8"));
+        assertOutputStream("0,0.0,0.0,0,0,true,\\x00,value,value,\"va\"\"lue\",0," + datetime + "," + date + ",\n", outputQueue.get(0));
     }
 
     @Test
     public void testFillOneGPDBWritableField() throws Exception {
-        RequestContext context = new RequestContext();
-        addColumn(context, 0, DataType.INTEGER, "col0");
-        BridgeOutputBuilder builder = makeBuilder(context);
+        addColumn(0, DataType.INTEGER, "col0");
+        builder = makeBuilder(context);
         output = builder.makeGPDBWritableOutput();
 
         OneField unSupportedField = new OneField(UN_SUPPORTED_TYPE, (byte) 0);
@@ -178,14 +192,12 @@ public class BridgeOutputBuilderTest {
 
     @Test
     public void testRecordSmallerThanSchema() throws Exception {
-        RequestContext context = new RequestContext();
+        addColumn(0, DataType.INTEGER, "col0");
+        addColumn(1, DataType.INTEGER, "col1");
+        addColumn(2, DataType.INTEGER, "col2");
+        addColumn(3, DataType.INTEGER, "col3");
 
-        addColumn(context, 0, DataType.INTEGER, "col0");
-        addColumn(context, 1, DataType.INTEGER, "col1");
-        addColumn(context, 2, DataType.INTEGER, "col2");
-        addColumn(context, 3, DataType.INTEGER, "col3");
-
-        BridgeOutputBuilder builder = makeBuilder(context);
+        builder = makeBuilder(context);
         output = builder.makeGPDBWritableOutput();
 
         /* all four fields */
@@ -216,14 +228,13 @@ public class BridgeOutputBuilderTest {
 
     @Test
     public void testRecordBiggerThanSchema() {
-        RequestContext context = new RequestContext();
 
-        addColumn(context, 0, DataType.INTEGER, "col0");
-        addColumn(context, 1, DataType.INTEGER, "col1");
-        addColumn(context, 2, DataType.INTEGER, "col2");
-        addColumn(context, 3, DataType.INTEGER, "col3");
+        addColumn(0, DataType.INTEGER, "col0");
+        addColumn(1, DataType.INTEGER, "col1");
+        addColumn(2, DataType.INTEGER, "col2");
+        addColumn(3, DataType.INTEGER, "col3");
 
-        BridgeOutputBuilder builder = makeBuilder(context);
+        builder = makeBuilder(context);
         output = builder.makeGPDBWritableOutput();
 
         /* five fields instead of four */
@@ -244,14 +255,13 @@ public class BridgeOutputBuilderTest {
 
     @Test
     public void testFieldTypeMismatch() {
-        RequestContext context = new RequestContext();
 
-        addColumn(context, 0, DataType.INTEGER, "col0");
-        addColumn(context, 1, DataType.INTEGER, "col1");
-        addColumn(context, 2, DataType.INTEGER, "col2");
-        addColumn(context, 3, DataType.INTEGER, "col3");
+        addColumn(0, DataType.INTEGER, "col0");
+        addColumn(1, DataType.INTEGER, "col1");
+        addColumn(2, DataType.INTEGER, "col2");
+        addColumn(3, DataType.INTEGER, "col3");
 
-        BridgeOutputBuilder builder = makeBuilder(context);
+        builder = makeBuilder(context);
         output = builder.makeGPDBWritableOutput();
 
         /* last field is REAL while schema requires INT */
@@ -285,13 +295,12 @@ public class BridgeOutputBuilderTest {
         List<OneField> fields = new ArrayList<>();
         fields.add(field);
 
-        RequestContext context = new RequestContext();
-        addColumn(context, 0, DataType.TEXT, "col0");
+        addColumn(0, DataType.TEXT, "col0");
         // activate sampling code
         context.setStatsMaxFragments(100);
         context.setStatsSampleRatio(1f);
 
-        BridgeOutputBuilder builder = makeBuilder(context);
+        builder = makeBuilder(context);
         LinkedList<Writable> outputQueue = builder.makeOutput(fields);
 
         assertEquals(4, outputQueue.size());
@@ -312,13 +321,12 @@ public class BridgeOutputBuilderTest {
         List<OneField> fields = new ArrayList<>();
         fields.add(field);
 
-        RequestContext context = new RequestContext();
-        addColumn(context, 0, DataType.TEXT, "col0");
+        addColumn(0, DataType.TEXT, "col0");
         // activate sampling code
         context.setStatsMaxFragments(100);
         context.setStatsSampleRatio(1f);
 
-        BridgeOutputBuilder builder = makeBuilder(context);
+        builder = makeBuilder(context);
         LinkedList<Writable> outputQueue = builder.makeOutput(fields);
 
         assertEquals(1, outputQueue.size());
@@ -402,14 +410,13 @@ public class BridgeOutputBuilderTest {
 
     }
 
-    private void compareBufferWritable(Writable line, String expected)
+    private static void compareBufferWritable(Writable line, String expected)
             throws IOException {
         assertTrue(line instanceof BufferWritable);
-        line.write(dos);
-        assertArrayEquals(expected.getBytes(), dos.getOutput());
+        assertOutputStream(expected, line);
     }
 
-    private void addColumn(RequestContext context, int idx, DataType dataType, String name) {
+    private void addColumn(int idx, DataType dataType, String name) {
         ColumnDescriptor column = new ColumnDescriptor(name, dataType.getOID(), idx, dataType.toString(), null);
         context.getTupleDescription().add(column);
     }
@@ -432,85 +439,152 @@ public class BridgeOutputBuilderTest {
         return new BridgeOutputBuilder(context);
     }
 
-    /**
-     * Test class to check the data inside BufferWritable.
-     */
-    private class DataOutputToBytes implements DataOutput {
+    @Test
+    public void testWritableIterator() throws IOException, InterruptedException {
+        setStreamingResolver(new String[]{"FOO", "BAR", "BAZ"});
+        records = new ArrayList<OneField>() {{
+            add(new OneField(DataType.FLOAT8.getOID(), 0.123456789));
+            add(new ArrayField(DataType.INT8ARRAY.getOID(), new ArrayList<Integer>() {{
+                add(100);
+                add(200);
+                add(300);
+            }}));
+            add(new ArrayStreamingField(resolver));
+        }};
+        builder = makeBuilder(new RequestContext());
+        writableIterator = builder.new WritableIterator(records);
+        assertOutputStream("0.123456789,", writableIterator.next());
+        assertOutputStream("\"{100,200,300}\",", writableIterator.next());
+        assertOutputStream("\"{FOO,", writableIterator.next());
+        assertOutputStream("BAR,", writableIterator.next());
+        assertOutputStream("BAZ}\"\n", writableIterator.next());
+    }
 
-        byte[] output;
+    @Test
+    public void testWritableIterator_StreamingFieldFirst() throws IOException, InterruptedException {
+        setStreamingResolver(new String[]{"FOO", "BAR", "BAZ"});
+        records = new ArrayList<OneField>() {{
+            add(new ArrayStreamingField(resolver));
+            add(new OneField(DataType.BOOLEAN.getOID(), true));
+            add(new ArrayField(DataType.TEXTARRAY.getOID(), new ArrayList<String>() {{
+                add("foo");
+                add("bar");
+                add("baz");
+            }}));
+        }};
+        builder = makeBuilder(new RequestContext());
+        writableIterator = builder.new WritableIterator(records);
+        assertOutputStream("\"{FOO,", writableIterator.next());
+        assertOutputStream("BAR,", writableIterator.next());
+        assertOutputStream("BAZ}\",", writableIterator.next());
+        assertOutputStream("true,", writableIterator.next());
+        assertOutputStream("\"{foo,bar,baz}\"\n", writableIterator.next());
 
-        byte[] getOutput() {
-            return output;
-        }
+    }
 
-        @Override
-        public void write(int b) throws IOException {
-            throw new IOException("not implemented");
-        }
+    @Test
+    public void testWritableIterator_EscapeNeeded() throws IOException, InterruptedException {
+        setStreamingResolver(new String[]{"FOO", "BA\"R", "BAZ"});
+        records = new ArrayList<OneField>() {{
+            add(new OneField(DataType.TEXT.getOID(), "just \"some text"));
+            add(new ArrayStreamingField(resolver));
+            add(new ArrayField(DataType.TEXTARRAY.getOID(), new ArrayList<String>() {{
+                add("foo");
+                add("bar");
+                add("baz");
+            }}));
+        }};
+        builder = makeBuilder(new RequestContext());
+        writableIterator = builder.new WritableIterator(records);
+        assertOutputStream("\"just \"\"some text\",", writableIterator.next());
+        assertOutputStream("\"{FOO,", writableIterator.next());
+        assertOutputStream("BA\"\"R,", writableIterator.next());
+        assertOutputStream("BAZ}\",", writableIterator.next());
+        assertOutputStream("\"{foo,bar,baz}\"\n", writableIterator.next());
+    }
 
-        @Override
-        public void write(byte[] b) {
-            output = b;
-        }
+    @Test
+    public void testWritableIterator_StreamingScalarField() throws IOException, InterruptedException {
+        setStreamingResolver(new String[]{"FOO", "BA\"R", "BAZ"});
+        records = new ArrayList<OneField>() {{
+            add(new OneField(DataType.BIGINT.getOID(), 1234567890));
+            add(new ArrayField(DataType.BOOLARRAY.getOID(), new ArrayList<Boolean>() {{
+                add(true);
+                add(false);
+                add(true);
+            }}));
+            add(new StreamingField(DataType.TEXT.getOID(), resolver));
+        }};
+        builder = makeBuilder(new RequestContext());
+        writableIterator = builder.new WritableIterator(records);
+        assertOutputStream("1234567890,", writableIterator.next());
+        assertOutputStream("\"{true,false,true}\",", writableIterator.next());
+        assertOutputStream("\"FOO", writableIterator.next());
+        assertOutputStream("BA\"\"R", writableIterator.next());
+        assertOutputStream("BAZ\"\n", writableIterator.next());
+    }
 
-        @Override
-        public void write(byte[] b, int off, int len) throws IOException {
-            output = Arrays.copyOfRange(b, off, len);
-        }
+    @Test
+    public void testWritableIterator_StreamingScalarField_StreamingFieldFirst() throws IOException, InterruptedException {
+        setStreamingResolver(new String[]{"FOO", "BA\"R", "BAZ"});
+        records = new ArrayList<OneField>() {{
+            add(new StreamingField(DataType.TEXT.getOID(), resolver));
+            add(new ArrayField(DataType.FLOAT8ARRAY.getOID(), new ArrayList<Double>() {{
+                add(0.123456789);
+                add(1.123456789);
+                add(2.123456789);
+            }}));
+        }};
+        builder = makeBuilder(new RequestContext());
+        writableIterator = builder.new WritableIterator(records);
+        assertOutputStream("\"FOO", writableIterator.next());
+        assertOutputStream("BA\"\"R", writableIterator.next());
+        assertOutputStream("BAZ\",", writableIterator.next());
+        assertOutputStream("\"{0.123456789,1.123456789,2.123456789}\"\n", writableIterator.next());
+    }
 
-        @Override
-        public void writeBoolean(boolean v) throws IOException {
-            throw new IOException("not implemented");
-        }
+    private void setStreamingResolver(String[] responses) {
+        resolver = new StreamingResolver() {
+            @Override
+            public void initialize(RequestContext requestContext) {
+            }
 
-        @Override
-        public void writeByte(int v) throws IOException {
-            throw new IOException("not implemented");
-        }
+            @Override
+            public boolean isThreadSafe() {
+                return false;
+            }
 
-        @Override
-        public void writeShort(int v) throws IOException {
-            throw new IOException("not implemented");
-        }
+            @Override
+            public List<OneField> getFields(OneRow row) throws Exception {
+                return null;
+            }
 
-        @Override
-        public void writeChar(int v) throws IOException {
-            throw new IOException("not implemented");
-        }
+            @Override
+            public OneRow setFields(List<OneField> record) throws Exception {
+                return null;
+            }
 
-        @Override
-        public void writeInt(int v) throws IOException {
-            throw new IOException("not implemented");
-        }
+            int cnt = 0;
 
-        @Override
-        public void writeLong(long v) throws IOException {
-            throw new IOException("not implemented");
-        }
+            @Override
+            public String next() {
+                if (cnt == responses.length) {
+                    return null;
+                }
+                return responses[cnt++];
+            }
 
-        @Override
-        public void writeFloat(float v) throws IOException {
-            throw new IOException("not implemented");
-        }
+            @Override
+            public boolean hasNext() {
+                return cnt < responses.length;
+            }
+        };
+    }
 
-        @Override
-        public void writeDouble(double v) throws IOException {
-            throw new IOException("not implemented");
-        }
-
-        @Override
-        public void writeBytes(String s) throws IOException {
-            throw new IOException("not implemented");
-        }
-
-        @Override
-        public void writeChars(String s) throws IOException {
-            throw new IOException("not implemented");
-        }
-
-        @Override
-        public void writeUTF(String s) throws IOException {
-            throw new IOException("not implemented");
+    private static void assertOutputStream(String correct, Writable writable) throws IOException {
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            writable.write(new DataOutputStream(out));
+            assertEquals(correct, out.toString());
         }
     }
 }

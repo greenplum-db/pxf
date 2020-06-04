@@ -37,7 +37,7 @@ import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.api.utilities.FragmentsResponse;
+import org.greenplum.pxf.api.utilities.SimpleFragmentsResponse;
 import org.greenplum.pxf.api.utilities.FragmentsResponseFormatter;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.junit.Assert;
@@ -318,10 +318,10 @@ public abstract class PxfUnit {
         RequestContext context = getContext(input);
         List<Fragment> fragments = getFragmenter(context).getFragments();
 
-        FragmentsResponse fragmentsResponse = FragmentsResponseFormatter.formatResponse(fragments, input.toString());
+        SimpleFragmentsResponse simpleFragmentsResponse = (SimpleFragmentsResponse) FragmentsResponseFormatter.formatSimpleFragmentsResponse(fragments, input.toString());
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        fragmentsResponse.write(baos);
+        simpleFragmentsResponse.write(baos);
 
         String jsonOutput = baos.toString();
 

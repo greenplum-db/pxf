@@ -26,6 +26,8 @@ package org.greenplum.pxf.api;
 public class OneField {
     /** OID value recognized by GPDBWritable. */
     public int type;
+    protected String prefix = "";
+    protected String suffix = "";
 
     /** Field value. */
     public Object val;
@@ -42,6 +44,22 @@ public class OneField {
     public OneField(int type, Object val) {
         this.type = type;
         this.val = val;
+    }
+
+    public void setPrefix(String prefix) {
+        this.prefix = prefix;
+    }
+
+    public String getPrefix() {
+        return prefix;
+    }
+
+    public void setSuffix(String suffix) {
+        this.suffix = suffix;
+    }
+
+    public String getSuffix() {
+        return suffix;
     }
 
     @Override

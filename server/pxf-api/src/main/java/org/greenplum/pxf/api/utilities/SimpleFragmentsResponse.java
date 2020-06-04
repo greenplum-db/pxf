@@ -37,9 +37,7 @@ import java.util.List;
  * in one bulk, this in order to avoid running out of memory when processing a
  * lot of fragments.
  */
-public class FragmentsResponse implements StreamingOutput {
-
-    private static final Log Log = LogFactory.getLog(FragmentsResponse.class);
+public class SimpleFragmentsResponse implements StreamingOutput {
 
     private List<Fragment> fragments;
 
@@ -48,7 +46,7 @@ public class FragmentsResponse implements StreamingOutput {
      *
      * @param fragments fragment list
      */
-    public FragmentsResponse(List<Fragment> fragments) {
+    public SimpleFragmentsResponse(List<Fragment> fragments) {
         this.fragments = fragments;
     }
 

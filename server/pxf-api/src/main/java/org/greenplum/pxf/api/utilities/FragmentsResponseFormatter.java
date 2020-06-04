@@ -22,14 +22,16 @@ package org.greenplum.pxf.api.utilities;
 import org.greenplum.pxf.api.model.Fragment;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.greenplum.pxf.api.model.Fragmenter;
 
+import javax.ws.rs.core.StreamingOutput;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.List;
 
 /**
- * Utility class for converting Fragments into a {@link FragmentsResponse} that
+ * Utility class for converting Fragments into a {@link SimpleFragmentsResponse} that
  * will serialize them into JSON format.
  */
 public class FragmentsResponseFormatter {
@@ -41,12 +43,11 @@ public class FragmentsResponseFormatter {
      * their respective IPs.
      *
      * @param fragments list of fragments
-     * @param data data (e.g. path) related to the fragments
+     * @param data      data (e.g. path) related to the fragments
      * @return FragmentsResponse with given fragments
      * @throws UnknownHostException if converting host names to IP fails
      */
-    public static FragmentsResponse formatResponse(List<Fragment> fragments,
-                                                   String data)
+    public static StreamingOutput formatSimpleFragmentsResponse(List<Fragment> fragments, String data)
             throws UnknownHostException {
         /* print the raw fragment list to log when in debug level */
         if (LOG.isDebugEnabled()) {
@@ -64,7 +65,7 @@ public class FragmentsResponseFormatter {
             FragmentsResponseFormatter.printList(fragments, data);
         }
 
-        return new FragmentsResponse(fragments);
+        return new SimpleFragmentsResponse(fragments);
     }
 
     /**
@@ -145,7 +146,7 @@ public class FragmentsResponseFormatter {
 
             if (fragment.getMetadata() != null) {
                 result.append(", Metadata: ").append(
-                    new String(fragment.getMetadata()));
+                        new String(fragment.getMetadata()));
             }
 
             if (fragment.getUserData() != null) {

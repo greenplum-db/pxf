@@ -31,7 +31,7 @@ import java.lang.UnsupportedOperationException;
  */
 public class BufferWritable implements Writable {
 
-    byte[] buf = null;
+    byte[] buf;
 
     /**
      * Constructs a BufferWritable. Copies the buffer reference and not the

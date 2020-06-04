@@ -25,10 +25,12 @@ import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.FragmentStats;
 import org.greenplum.pxf.api.model.Fragmenter;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.api.model.StreamingFragmenter;
 import org.greenplum.pxf.api.utilities.FragmenterCacheFactory;
 import org.greenplum.pxf.api.utilities.FragmenterFactory;
-import org.greenplum.pxf.api.utilities.FragmentsResponse;
 import org.greenplum.pxf.api.utilities.FragmentsResponseFormatter;
+import org.greenplum.pxf.api.utilities.SimpleFragmentsResponse;
+import org.greenplum.pxf.api.utilities.StreamingFragmentsResponse;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.service.HttpRequestParser;
 import org.greenplum.pxf.service.RequestParser;
@@ -115,7 +117,11 @@ public class FragmenterResource extends BaseResource {
 
         List<Fragment> fragments;
 
-        if (Utilities.isFragmenterCacheEnabled()) {
+        Fragmenter fragmenter = fragmenterFactory.getPlugin(context);
+        if (fragmenter != null && StreamingFragmenter.class.isAssignableFrom(fragmenter.getClass())) {
+            return Response.ok(new StreamingFragmentsResponse((StreamingFragmenter) fragmenter),
+                    MediaType.APPLICATION_JSON_TYPE).build();
+        } else if (Utilities.isFragmenterCacheEnabled()) {
             try {
                 // We can't support lambdas here because asm version doesn't support it
                 fragments = fragmenterCacheFactory.getCache()
@@ -143,8 +149,8 @@ public class FragmenterResource extends BaseResource {
             fragments = getFragments(context);
         }
 
-        FragmentsResponse fragmentsResponse = FragmentsResponseFormatter.formatResponse(fragments, path);
-        return Response.ok(fragmentsResponse, MediaType.APPLICATION_JSON_TYPE).build();
+        SimpleFragmentsResponse simpleFragmentsResponse = (SimpleFragmentsResponse) FragmentsResponseFormatter.formatSimpleFragmentsResponse(fragments, path);
+        return Response.ok(simpleFragmentsResponse, MediaType.APPLICATION_JSON_TYPE).build();
     }
 
     /**

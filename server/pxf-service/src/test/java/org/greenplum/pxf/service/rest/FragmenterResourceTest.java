@@ -8,7 +8,7 @@ import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.RequestContext.RequestType;
 import org.greenplum.pxf.api.utilities.FragmenterCacheFactory;
 import org.greenplum.pxf.api.utilities.FragmenterFactory;
-import org.greenplum.pxf.api.utilities.FragmentsResponse;
+import org.greenplum.pxf.api.utilities.SimpleFragmentsResponse;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.service.FakeTicker;
 import org.greenplum.pxf.service.RequestParser;
@@ -161,17 +161,17 @@ public class FragmenterResourceTest {
                 .getFragments(servletContext, headersFromRequest2);
 
         verify(fragmenter1, times(1)).getFragments();
-        verify(fragmenterFactory, never()).getPlugin(context2);
+        verify(fragmenterFactory, times(1)).getPlugin(context2);
 
         assertNotNull(response1);
         assertNotNull(response2);
         assertNotNull(response1.getEntity());
         assertNotNull(response2.getEntity());
-        assertTrue(response1.getEntity() instanceof FragmentsResponse);
-        assertTrue(response2.getEntity() instanceof FragmentsResponse);
+        assertTrue(response1.getEntity() instanceof SimpleFragmentsResponse);
+        assertTrue(response2.getEntity() instanceof SimpleFragmentsResponse);
 
-        assertSame(fragmentList, ((FragmentsResponse) response1.getEntity()).getFragments());
-        assertSame(fragmentList, ((FragmentsResponse) response2.getEntity()).getFragments());
+        assertSame(fragmentList, ((SimpleFragmentsResponse) response1.getEntity()).getFragments());
+        assertSame(fragmentList, ((SimpleFragmentsResponse) response2.getEntity()).getFragments());
     }
 
     @SuppressWarnings("unchecked")
@@ -208,12 +208,12 @@ public class FragmenterResourceTest {
         assertNotNull(response2);
         assertNotNull(response1.getEntity());
         assertNotNull(response2.getEntity());
-        assertTrue(response1.getEntity() instanceof FragmentsResponse);
-        assertTrue(response2.getEntity() instanceof FragmentsResponse);
+        assertTrue(response1.getEntity() instanceof SimpleFragmentsResponse);
+        assertTrue(response2.getEntity() instanceof SimpleFragmentsResponse);
 
         // Checks for reference
-        assertSame(fragmentList1, ((FragmentsResponse) response1.getEntity()).getFragments());
-        assertSame(fragmentList2, ((FragmentsResponse) response2.getEntity()).getFragments());
+        assertSame(fragmentList1, ((SimpleFragmentsResponse) response1.getEntity()).getFragments());
+        assertSame(fragmentList2, ((SimpleFragmentsResponse) response2.getEntity()).getFragments());
     }
 
     @SuppressWarnings("unchecked")
@@ -305,11 +305,11 @@ public class FragmenterResourceTest {
         assertNotNull(response2);
         assertNotNull(response1.getEntity());
         assertNotNull(response2.getEntity());
-        assertTrue(response1.getEntity() instanceof FragmentsResponse);
-        assertTrue(response2.getEntity() instanceof FragmentsResponse);
+        assertTrue(response1.getEntity() instanceof SimpleFragmentsResponse);
+        assertTrue(response2.getEntity() instanceof SimpleFragmentsResponse);
 
-        assertSame(fragmentList1, ((FragmentsResponse) response1.getEntity()).getFragments());
-        assertSame(fragmentList2, ((FragmentsResponse) response2.getEntity()).getFragments());
+        assertSame(fragmentList1, ((SimpleFragmentsResponse) response1.getEntity()).getFragments());
+        assertSame(fragmentList2, ((SimpleFragmentsResponse) response2.getEntity()).getFragments());
 
         if (Utilities.isFragmenterCacheEnabled()) {
             assertEquals(2, fragmentCache.size());

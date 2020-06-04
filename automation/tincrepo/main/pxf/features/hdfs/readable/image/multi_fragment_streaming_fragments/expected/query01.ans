@@ -1,0 +1,38 @@
+-- @description query01 for PXF HDFS Readable images
+SELECT image_test_multi_fragment_streaming_fragments.names, image_test_multi_fragment_streaming_fragments.directories, image_test_multi_fragment_streaming_fragments.one_hot_encodings FROM image_test_multi_fragment_streaming_fragments, compare_table_multi_fragment_streaming_fragments
+WHERE image_test_multi_fragment_streaming_fragments.fullpaths                = compare_table_multi_fragment_streaming_fragments.fullpaths
+  AND image_test_multi_fragment_streaming_fragments.names                    = compare_table_multi_fragment_streaming_fragments.names
+  AND image_test_multi_fragment_streaming_fragments.directories              = compare_table_multi_fragment_streaming_fragments.directories
+  AND image_test_multi_fragment_streaming_fragments.one_hot_encodings        = compare_table_multi_fragment_streaming_fragments.one_hot_encodings
+  AND image_test_multi_fragment_streaming_fragments.dimensions               = compare_table_multi_fragment_streaming_fragments.dimensions
+  AND image_test_multi_fragment_streaming_fragments.images                   = compare_table_multi_fragment_streaming_fragments.images
+ORDER BY names;
+         names          |                        directories                         |        one_hot_encodings
+------------------------+------------------------------------------------------------+---------------------------------
+ {0.png,1.png,2.png}    | {readableImages,readableImages,readableImages}             | {{0,0,0,1},{0,0,0,1},{0,0,0,1}}
+ {12.png,13.png,14.png} | {deeply_nested_dir1,deeply_nested_dir1,deeply_nested_dir1} | {{1,0,0,0},{1,0,0,0},{1,0,0,0}}
+ {15.png,16.png,17.png} | {nested_dir,nested_dir,nested_dir}                         | {{0,0,1,0},{0,0,1,0},{0,0,1,0}}
+ {18.png,19.png}        | {nested_dir,nested_dir}                                    | {{0,0,1,0},{0,0,1,0}}
+ {3.png,4.png,5.png}    | {readableImages,readableImages,deeply_nested_dir2}         | {{0,0,0,1},{0,0,0,1},{0,1,0,0}}
+ {6.png,7.png,8.png}    | {deeply_nested_dir2,deeply_nested_dir2,deeply_nested_dir2} | {{0,1,0,0},{0,1,0,0},{0,1,0,0}}
+ {9.png,10.png,11.png}  | {deeply_nested_dir2,deeply_nested_dir1,deeply_nested_dir1} | {{0,1,0,0},{1,0,0,0},{1,0,0,0}}
+(7 rows)
+
+SELECT image_test_multi_fragment_streaming_fragments_bytea.names, image_test_multi_fragment_streaming_fragments_bytea.directories, image_test_multi_fragment_streaming_fragments_bytea.one_hot_encodings FROM image_test_multi_fragment_streaming_fragments_bytea, compare_table_multi_fragment_streaming_fragments_bytea
+WHERE image_test_multi_fragment_streaming_fragments_bytea.fullpaths          = compare_table_multi_fragment_streaming_fragments_bytea.fullpaths
+  AND image_test_multi_fragment_streaming_fragments_bytea.names              = compare_table_multi_fragment_streaming_fragments_bytea.names
+  AND image_test_multi_fragment_streaming_fragments_bytea.directories        = compare_table_multi_fragment_streaming_fragments_bytea.directories
+  AND image_test_multi_fragment_streaming_fragments_bytea.one_hot_encodings  = compare_table_multi_fragment_streaming_fragments_bytea.one_hot_encodings
+  AND image_test_multi_fragment_streaming_fragments_bytea.dimensions         = compare_table_multi_fragment_streaming_fragments_bytea.dimensions
+  AND image_test_multi_fragment_streaming_fragments_bytea.images             = compare_table_multi_fragment_streaming_fragments_bytea.images
+ORDER BY names;
+         names          |                        directories                         |        one_hot_encodings
+------------------------+------------------------------------------------------------+---------------------------------
+ {0.png,1.png,2.png}    | {readableImages,readableImages,readableImages}             | {{0,0,0,1},{0,0,0,1},{0,0,0,1}}
+ {12.png,13.png,14.png} | {deeply_nested_dir1,deeply_nested_dir1,deeply_nested_dir1} | {{1,0,0,0},{1,0,0,0},{1,0,0,0}}
+ {15.png,16.png,17.png} | {nested_dir,nested_dir,nested_dir}                         | {{0,0,1,0},{0,0,1,0},{0,0,1,0}}
+ {18.png,19.png}        | {nested_dir,nested_dir}                                    | {{0,0,1,0},{0,0,1,0}}
+ {3.png,4.png,5.png}    | {readableImages,readableImages,deeply_nested_dir2}         | {{0,0,0,1},{0,0,0,1},{0,1,0,0}}
+ {6.png,7.png,8.png}    | {deeply_nested_dir2,deeply_nested_dir2,deeply_nested_dir2} | {{0,1,0,0},{0,1,0,0},{0,1,0,0}}
+ {9.png,10.png,11.png}  | {deeply_nested_dir2,deeply_nested_dir1,deeply_nested_dir1} | {{0,1,0,0},{1,0,0,0},{1,0,0,0}}
+(7 rows)

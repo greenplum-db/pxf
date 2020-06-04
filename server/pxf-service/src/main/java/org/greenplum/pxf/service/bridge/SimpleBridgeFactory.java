@@ -2,6 +2,7 @@ package org.greenplum.pxf.service.bridge;
 
 import org.greenplum.pxf.api.ReadVectorizedResolver;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.api.model.StreamingResolver;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,17 +24,24 @@ public class SimpleBridgeFactory implements BridgeFactory {
     @Override
     public Bridge getReadBridge(RequestContext context) {
 
-        Bridge bridge;
         if (context.getStatsSampleRatio() > 0) {
-            bridge = new ReadSamplingBridge(context);
+            return new ReadSamplingBridge(context);
         } else if (Utilities.aggregateOptimizationsSupported(context)) {
-            bridge = new AggBridge(context);
+            return new AggBridge(context);
         } else if (useVectorization(context)) {
-            bridge = new ReadVectorizedBridge(context);
+            return new ReadVectorizedBridge(context);
         } else {
-            bridge = new ReadBridge(context);
+            Class<?> resolverClass = null;
+            try {
+                resolverClass = Class.forName(context.getResolver());
+            } catch (ClassNotFoundException e) {
+                LOG.info("Could not get class for {}: {}", context.getResolver(), e);
+            }
+            if (resolverClass != null && StreamingResolver.class.isAssignableFrom(resolverClass)) {
+                return new StreamingReadBridge(context);
+            }
         }
-        return bridge;
+        return new ReadBridge(context);
     }
 
     @Override

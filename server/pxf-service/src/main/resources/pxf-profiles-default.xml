@@ -749,4 +749,48 @@ under the License.
         </plugins>
         <protocol>wasbs</protocol>
     </profile>
+    <!-- IMAGE PROFILES -->
+    <profile>
+        <name>hdfs:image</name>
+        <description>This profile is suitable for using when reading image files from HDFS</description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.StreamingImageFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.StreamingImageAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.StreamingImageResolver</resolver>
+        </plugins>
+    </profile>
+    <profile>
+        <name>gs:image</name>
+        <description>This profile is suitable for using when reading image files from GCS</description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.StreamingImageFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.StreamingImageAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.StreamingImageResolver</resolver>
+        </plugins>
+        <protocol>gs</protocol>
+    </profile>
+    <profile>
+        <name>adl:image</name>
+        <description>This profile is suitable for using when reading image files from Azure Data Lake</description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.StreamingImageFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.StreamingImageAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.StreamingImageResolver</resolver>
+        </plugins>
+        <protocol>adl</protocol>
+    </profile>
+    <profile>
+        <name>s3:image</name>
+        <description>This profile is suitable for using when reading image files from Amazon S3</description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.StreamingImageFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.StreamingImageAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.StreamingImageResolver</resolver>
+        </plugins>
+        <protocol>s3a</protocol>
+        <optionMappings>
+            <mapping option="accesskey" property="fs.s3a.access.key"/>
+            <mapping option="secretkey" property="fs.s3a.secret.key"/>
+        </optionMappings>
+    </profile>
 </profiles>
