@@ -144,8 +144,6 @@ public class HBaseAccessorTest {
      */
     private void prepareEmptyScanner() {
         scanDetails = mock(Scan.class);
-
-        // when(tupleDescription.columns()).thenReturn(0);
     }
 
     /*
