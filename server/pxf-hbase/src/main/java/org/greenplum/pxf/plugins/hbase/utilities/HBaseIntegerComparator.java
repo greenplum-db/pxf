@@ -43,8 +43,8 @@ import com.google.protobuf.InvalidProtocolBufferException;
  * A reference can be found in {@link SubstringComparator}.
  */
 public class HBaseIntegerComparator extends ByteArrayComparable {
-	private Long val;
 
+	private final Long val;
 
 	public HBaseIntegerComparator(Long inVal) {
 		super(Bytes.toBytes(inVal));

@@ -112,13 +112,21 @@ public class S3SelectAccessor extends BasePlugin implements Accessor {
             lineReadCount++;
             return new OneRow(null, str);
         }
+
+        /*
+         * The End Event indicates all matching records have been transmitted.
+         * If the End Event is not received, the results may be incomplete.
+         */
+        if (!isResultComplete.get()) {
+            throw new RuntimeException("S3 Select request was incomplete as End Event was not received.");
+        }
+
         return null;
     }
 
     @Override
     public void closeForRead() throws IOException {
         LOG.debug("Read {} lines", lineReadCount);
-        IOException error = null;
 
         /*
          * Make sure to close all streams
@@ -129,7 +137,6 @@ public class S3SelectAccessor extends BasePlugin implements Accessor {
                 LOG.debug("SelectObjectContentResult closed");
             } catch (IOException e) {
                 LOG.error("Unable to close SelectObjectContentResult", e);
-                error = e;
             }
         }
 
@@ -139,22 +146,7 @@ public class S3SelectAccessor extends BasePlugin implements Accessor {
                 LOG.debug("ResultInputStream closed");
             } catch (IOException e) {
                 LOG.error("Unable to close ResultInputStream", e);
-                error = defaultIfNull(error, e);
             }
-        }
-
-        if (error != null) {
-            // If there's an error during closing of streams, report the first
-            // encountered error
-            throw error;
-        }
-
-        /*
-         * The End Event indicates all matching records have been transmitted.
-         * If the End Event is not received, the results may be incomplete.
-         */
-        if (!isResultComplete.get()) {
-            throw new RuntimeException("S3 Select request was incomplete as End Event was not received.");
         }
     }
 

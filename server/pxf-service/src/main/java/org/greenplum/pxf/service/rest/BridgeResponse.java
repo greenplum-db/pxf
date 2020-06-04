@@ -86,7 +86,7 @@ public class BridgeResponse implements StreamingResponseBody {
             try {
                 bridge.endIteration();
             } catch (Exception e) {
-                // ignore ... any significant errors should already have been handled
+                LOG.error("Ignoring error encountered during bridge.endIteration()", e);
             }
             if (!threadSafe) {
                 unlock(dataDir);

@@ -1,8 +1,6 @@
 package org.greenplum.pxf.automation.testplugin;
 
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.client.HTable;
@@ -20,15 +18,15 @@ import org.greenplum.pxf.api.filter.TreeTraverser;
 import org.greenplum.pxf.api.filter.TreeVisitor;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.BasePlugin;
-import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hbase.HBaseAccessor;
 import org.greenplum.pxf.plugins.hbase.HBaseFilterBuilder;
+import org.greenplum.pxf.plugins.hbase.HBaseFragmentMetadata;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseColumnDescriptor;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseTupleDescription;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -39,8 +37,9 @@ import java.util.List;
  * that the filter is read from a user defined parameter TEST-HBASE-FILTER
  * instead of from GPDB.
  */
+@Component("HBaseAccessorWithFilter")
+@RequestScope
 public class HBaseAccessorWithFilter extends BasePlugin implements Accessor {
-    static private Log Log = LogFactory.getLog(HBaseAccessorWithFilter.class);
 
     static final EnumSet<Operator> SUPPORTED_OPERATORS =
             EnumSet.of(
@@ -72,7 +71,7 @@ public class HBaseAccessorWithFilter extends BasePlugin implements Accessor {
      * The class represents a single split of a table
      * i.e. a start key and an end key
      */
-    private class SplitBoundary {
+    private static class SplitBoundary {
         protected byte[] startKey;
         protected byte[] endKey;
 
@@ -91,9 +90,8 @@ public class HBaseAccessorWithFilter extends BasePlugin implements Accessor {
     }
 
     @Override
-    public void initialize(RequestContext requestContext) {
-        super.initialize(requestContext);
-        tupleDescription = new HBaseTupleDescription(requestContext);
+    public void initialize() {
+        tupleDescription = new HBaseTupleDescription(context);
         splits = new ArrayList<>();
         currentRegionIndex = 0;
         scanStartKey = HConstants.EMPTY_START_ROW;
@@ -121,7 +119,6 @@ public class HBaseAccessorWithFilter extends BasePlugin implements Accessor {
      * Opens the resource for write.
      *
      * @return true if the resource is successfully opened
-     * @throws Exception if opening the resource failed
      */
     @Override
     public boolean openForWrite() {
@@ -133,7 +130,6 @@ public class HBaseAccessorWithFilter extends BasePlugin implements Accessor {
      *
      * @param onerow the object to be written
      * @return true if the write succeeded
-     * @throws Exception writing to the resource failed
      */
     @Override
     public boolean writeNextObject(OneRow onerow) {
@@ -142,8 +138,6 @@ public class HBaseAccessorWithFilter extends BasePlugin implements Accessor {
 
     /**
      * Closes the resource for write.
-     *
-     * @throws Exception if closing the resource failed
      */
     @Override
     public void closeForWrite() {
@@ -181,21 +175,17 @@ public class HBaseAccessorWithFilter extends BasePlugin implements Accessor {
      */
     private void selectTableSplits() {
 
-        byte[] serializedMetadata = context.getFragmentMetadata();
-        if (serializedMetadata == null) {
+        HBaseFragmentMetadata metadata = context.getFragmentMetadata();
+        if (metadata == null) {
             throw new IllegalArgumentException("Missing fragment metadata information");
         }
         try {
-            ByteArrayInputStream bytesStream = new ByteArrayInputStream(serializedMetadata);
-            ObjectInputStream objectStream = new ObjectInputStream(bytesStream);
-
-            byte[] startKey = (byte[]) objectStream.readObject();
-            byte[] endKey = (byte[]) objectStream.readObject();
+            byte[] startKey = metadata.getStartKey();
+            byte[] endKey = metadata.getEndKey();
 
             if (withinScanRange(startKey, endKey)) {
                 splits.add(new SplitBoundary(startKey, endKey));
             }
-
         } catch (Exception e) {
             throw new RuntimeException("Exception while reading expected fragment metadata", e);
         }
@@ -207,17 +197,14 @@ public class HBaseAccessorWithFilter extends BasePlugin implements Accessor {
     private boolean withinScanRange(byte[] startKey, byte[] endKey) {
         // startKey <= scanStartKey
         if (Bytes.compareTo(startKey, scanStartKey) <= 0) {
-            if (Bytes.equals(endKey, HConstants.EMPTY_END_ROW) || // endKey == table's end
-                    Bytes.compareTo(endKey, scanStartKey) >= 0) { // endKey >= scanStartKey
-                return true;
-            }
+            // endKey >= scanStartKey
+            return Bytes.equals(endKey, HConstants.EMPTY_END_ROW) || // endKey == table's end
+                    Bytes.compareTo(endKey, scanStartKey) >= 0;
         } else { // startKey > scanStartKey
-            if (Bytes.equals(scanEndKey, HConstants.EMPTY_END_ROW) || //  scanEndKey == table's end
-                    Bytes.compareTo(startKey, scanEndKey) <= 0) { // startKey <= scanEndKey
-                return true;
-            }
+            // startKey <= scanEndKey
+            return Bytes.equals(scanEndKey, HConstants.EMPTY_END_ROW) || //  scanEndKey == table's end
+                    Bytes.compareTo(startKey, scanEndKey) <= 0;
         }
-        return false;
     }
 
     /*
@@ -273,7 +260,7 @@ public class HBaseAccessorWithFilter extends BasePlugin implements Accessor {
 
         // TODO whitelist option
         String filterStr = context.getOption("TEST-HBASE-FILTER");
-        Log.debug("user defined filter: " + filterStr);
+        LOG.debug("user defined filter: {}", filterStr);
         if ((filterStr == null) || filterStr.isEmpty() || "null".equals(filterStr))
             return;
 

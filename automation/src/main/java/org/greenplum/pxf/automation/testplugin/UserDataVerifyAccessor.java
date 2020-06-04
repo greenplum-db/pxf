@@ -3,6 +3,8 @@ package org.greenplum.pxf.automation.testplugin;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.BasePlugin;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 /**
  * Test class for regression tests.
@@ -11,19 +13,21 @@ import org.greenplum.pxf.api.model.BasePlugin;
  * The returned data has 4 columns delimited with DELIMITER property value.
  * First column - text, second column - int (counter), third column - bool, fourth column - text.
  */
-public class UserDataVerifyAccessor extends BasePlugin implements Accessor
-{
-    private String userData;
+@Component("UserDataVerifyAccessor")
+@RequestScope
+public class UserDataVerifyAccessor extends BasePlugin implements Accessor {
+    private String filter;
     private String userDelimiter;
 
     private int counter = 0;
     private char firstColumn = 'A';
 
     @Override
-    public boolean openForRead() throws Exception {
+    public boolean openForRead() {
 
         // TODO whitelist the option
-        userData = new String(context.getFragmentUserData());
+        FilterVerifyFragmentMetadata metadata = context.getFragmentMetadata();
+        filter = metadata.getFilter();
         userDelimiter = String.valueOf(context.getGreenplumCSV().getDelimiter());
 
         return true;
@@ -38,7 +42,7 @@ public class UserDataVerifyAccessor extends BasePlugin implements Accessor
         }
 
         // Generate tuple with user data value as last column.
-        String data = firstColumn + userDelimiter + counter + userDelimiter +  (counter % 2 == 0) + userDelimiter +  userData;
+        String data = firstColumn + userDelimiter + counter + userDelimiter + (counter % 2 == 0) + userDelimiter + filter;
         String key = Integer.toString(counter);
 
         counter++;
@@ -48,21 +52,21 @@ public class UserDataVerifyAccessor extends BasePlugin implements Accessor
     }
 
     @Override
-    public void closeForRead() throws Exception {
+    public void closeForRead() {
     }
 
     @Override
-    public boolean openForWrite() throws Exception {
+    public boolean openForWrite() {
         throw new UnsupportedOperationException("openForWrite method is not implemented");
     }
 
     @Override
-    public boolean writeNextObject(OneRow onerow) throws Exception {
+    public boolean writeNextObject(OneRow onerow) {
         throw new UnsupportedOperationException("writeNextObject method is not implemented");
     }
 
     @Override
-    public void closeForWrite() throws Exception {
+    public void closeForWrite() {
         throw new UnsupportedOperationException("closeForWrite method is not implemented");
     }
 }

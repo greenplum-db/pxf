@@ -1,14 +1,15 @@
 package org.greenplum.pxf.automation.components.cluster;
 
-import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.List;
-
+import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.automation.components.cluster.installer.nodes.Node;
 import org.greenplum.pxf.automation.components.common.ShellSystemObject;
 import org.greenplum.pxf.automation.structures.profiles.PxfProfileXml;
 import org.greenplum.pxf.automation.utils.jsystem.report.ReportUtils;
+
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
 
 /**
  * Common functionality class between ShellSystemObject phd clusters.
@@ -20,13 +21,15 @@ public abstract class PhdCluster extends ShellSystemObject {
 	// the sub directory inside the tempClusterFolderDirectory that leads to pxf-profiles
 	private String pathToPxfConfInGeneralConf = "";
 	// pxf classpath file name
-	private String pxfClasspathFile = "pxf-private.classpath";
+	private String pxfClasspathFile = "pxf-env.sh";
 	// path to local fetched pxf conf directory
 	private String pathToLocalPxfConfDirectory = "";
 	// folder which the cluster admin is installed
 	private String phdRoot;
 	// location where PXF is installed, for GPDB-based testing PXF is installed under GPDB, not inside single cluster
 	private String pxfHome;
+	// location where the PXF configuration lives
+	private String pxfConf;
 	// name of cluster
 	private String clusterName = "test";
 	// the path on hdfs directory which hive files will be stored
@@ -44,6 +47,10 @@ public abstract class PhdCluster extends ShellSystemObject {
 		if (!org.apache.commons.lang.StringUtils.isEmpty(pxfHome)) {
 			setPxfHome(pxfHome);
 		}
+
+		String pxfConf = StringUtils.defaultIfBlank(System.getenv("PXF_CONF"), System.getProperty("user.home") + "/pxf");
+		setPxfConf(pxfConf);
+
 		super.init();
 		// some cluster commands can take a while, set max time out for 2 minutes.
 		setCommandTimeout(_2_MINUTES);
@@ -59,17 +66,18 @@ public abstract class PhdCluster extends ShellSystemObject {
 	 * Adds path to PXF classpath file and deploy to all nodes
 	 *
 	 * @param path to add to classpath
-	 * @throws Exception
+	 * @throws Exception when an error occurs
 	 */
 	public void addPathToPxfClassPath(String path) throws Exception {
+		String content = "export PXF_LOADER_PATH=file:" + path;
 		// path to local fetch pxf class file
-		File pathToLocalClassPathFile = new File(getPathToLocalPxfConfDirectory() + "/" + getPxfClasspathFile());
-		ReportUtils.report(report, getClass(), "Add " + path + " to PXF class path (" + pathToLocalClassPathFile.getAbsolutePath() + ")");
+		File pathToLocalClassPathFile = new File(getPxfConf() + "/conf", getPxfClasspathFile());
+		ReportUtils.report(report, getClass(), "Add " + content + " to PXF class path (" + pathToLocalClassPathFile.getAbsolutePath() + ")");
 		// read file content
 		String pxfClasspathContent = new String(Files.readAllBytes(Paths.get(pathToLocalClassPathFile.getAbsolutePath())));
 		// check if path already in classpath, if not append
-		if (!pxfClasspathContent.contains(path)) {
-			pxfClasspathContent += System.lineSeparator() + path;
+		if (!pxfClasspathContent.contains(content)) {
+			pxfClasspathContent += System.lineSeparator() + content;
 			ReportUtils.report(report, getClass(), pxfClasspathContent);
 			// write new content to file
 			Files.write(pathToLocalClassPathFile.toPath(), pxfClasspathContent.getBytes());
@@ -220,6 +228,14 @@ public abstract class PhdCluster extends ShellSystemObject {
 
 	public void setPxfHome(String pxfHome) {
 		this.pxfHome = pxfHome;
+	}
+
+	public String getPxfConf() {
+		return pxfConf;
+	}
+
+	public void setPxfConf(String pxfConf) {
+		this.pxfConf = pxfConf;
 	}
 
 	public PxfProfileXml getPxfProfiles() {

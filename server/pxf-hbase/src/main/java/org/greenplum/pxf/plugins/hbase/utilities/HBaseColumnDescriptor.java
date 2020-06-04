@@ -8,9 +8,9 @@ package org.greenplum.pxf.plugins.hbase.utilities;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -20,8 +20,8 @@ package org.greenplum.pxf.plugins.hbase.utilities;
  */
 
 
-import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 
 import java.util.Arrays;
 
@@ -29,8 +29,9 @@ import java.util.Arrays;
  * {@link ColumnDescriptor} for HBase columns.
  */
 public class HBaseColumnDescriptor extends ColumnDescriptor {
-    byte[] columnFamily;
-    byte[] qualifier;
+
+    private byte[] columnFamily;
+    private byte[] qualifier;
 
     /**
      * Constructs a column descriptor using the given copy's column name.
@@ -52,7 +53,7 @@ public class HBaseColumnDescriptor extends ColumnDescriptor {
      * <p>
      * For recordkey, no HBase name is created.
      *
-     * @param copy column descriptor
+     * @param copy          column descriptor
      * @param newColumnName HBase column name - can be different than the given column descriptor name.
      */
     public HBaseColumnDescriptor(ColumnDescriptor copy, byte[] newColumnName) {

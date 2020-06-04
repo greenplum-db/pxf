@@ -14,16 +14,20 @@ dependencies {
      *******************************/
 
     implementation(project(':pxf-api'))
-    implementation("com.zaxxer:HikariCP:3.4.2")
-    implementation("org.postgresql:postgresql:42.2.11")
+    implementation("org.apache.hbase:hbase-client:${hbaseVersion}")
+    implementation("org.apache.hbase:hbase-common:${hbaseVersion}")
+    implementation("org.apache.hbase:hbase-protocol:${hbaseVersion}")
+    implementation("org.apache.htrace:htrace-core:3.1.0-incubating")
+    // TODO: spring_boot_todo determine whether the 3 dependencies are required
+//    implementation("io.netty:netty-all:4.0.23.Final")
+//    implementation("org.apache.zookeeper:zookeeper:3.4.6")
+//    implementation("com.yammer.metrics:metrics-core:2.2.0")
 
     implementation("org.springframework.boot:spring-boot-starter-log4j2")
 
     /*******************************
      * Test Dependencies
      *******************************/
-
-    testImplementation("org.apache.parquet:parquet-pig:${parquetVersion}")
 
     testImplementation('org.springframework.boot:spring-boot-starter-test') {
         exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
