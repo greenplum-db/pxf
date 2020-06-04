@@ -30,6 +30,7 @@ public class BasePlugin implements Plugin {
      * have been bound to the BasePlugin and is ready to be consumed by
      * implementing classes
      */
-    public void initialize() {
+    @Override
+    public void afterPropertiesSet() {
     }
 }

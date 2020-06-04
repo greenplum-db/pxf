@@ -56,7 +56,7 @@ public class HBaseResolver extends BasePlugin implements Resolver {
     private HBaseTupleDescription tupleDescription;
 
     @Override
-    public void initialize() {
+    public void afterPropertiesSet() {
         tupleDescription = new HBaseTupleDescription(context);
     }
 

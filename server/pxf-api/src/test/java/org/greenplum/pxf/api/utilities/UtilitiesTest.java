@@ -44,7 +44,7 @@ public class UtilitiesTest {
     static class StatsAccessorImpl implements StatsAccessor {
 
         @Override
-        public void initialize() {
+        public void afterPropertiesSet() {
         }
 
         @Override
@@ -98,7 +98,7 @@ public class UtilitiesTest {
     static class NonStatsAccessorImpl implements Accessor {
 
         @Override
-        public void initialize() {
+        public void afterPropertiesSet() {
         }
 
         @Override
@@ -150,7 +150,7 @@ public class UtilitiesTest {
     static class ReadResolverImpl implements Resolver {
 
         @Override
-        public void initialize() {
+        public void afterPropertiesSet() {
         }
 
         @Override

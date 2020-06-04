@@ -487,7 +487,7 @@ public class JdbcBasePluginTest {
     private JdbcBasePlugin getPlugin(ConnectionManager mockConnectionManager, SecureLogin mockSecureLogin, RequestContext context) {
         JdbcBasePlugin plugin = new JdbcBasePlugin(mockConnectionManager, mockSecureLogin);
         plugin.setRequestContext(context);
-        plugin.initialize();
+        plugin.afterPropertiesSet();
         return plugin;
     }
 }

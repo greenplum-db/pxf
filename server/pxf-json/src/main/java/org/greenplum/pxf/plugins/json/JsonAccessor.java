@@ -67,8 +67,8 @@ public class JsonAccessor extends HdfsSplittableDataAccessor {
     }
 
     @Override
-    public void initialize() {
-        super.initialize();
+    public void afterPropertiesSet() {
+        super.afterPropertiesSet();
 
         if (!isEmpty(context.getOption(IDENTIFIER_PARAM))) {
 

@@ -23,12 +23,4 @@ public abstract class BaseBridge implements Bridge {
         this.accessor = applicationContext.getBean(Utilities.getShortClassName(context.getAccessor()), Accessor.class);
         this.resolver = applicationContext.getBean(Utilities.getShortClassName(context.getResolver()), Resolver.class);
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void initialize() {
-        this.accessor.initialize();
-        this.resolver.initialize();
-    }
 }

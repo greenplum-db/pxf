@@ -65,7 +65,7 @@ public class WritableResolver extends BasePlugin implements Resolver {
      * Initialize the plugin for the incoming request
      */
     @Override
-    public void initialize() {
+    public void afterPropertiesSet() {
         String schemaName = this.context.getOption("DATA-SCHEMA");
 
         /* Testing that the schema name was supplied by the user - schema is an optional property. */

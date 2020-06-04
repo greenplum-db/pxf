@@ -51,7 +51,7 @@ public abstract class HdfsAtomicDataAccessor extends BasePlugin implements Acces
     private FileSplit fileSplit;
 
     @Override
-    public void initialize() {
+    public void afterPropertiesSet() {
         fileSplit = HdfsUtilities.parseFileSplit(context);
     }
 

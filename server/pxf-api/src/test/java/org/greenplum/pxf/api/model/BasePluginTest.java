@@ -21,7 +21,7 @@ class BasePluginTest {
 
         BasePlugin basePlugin = new BasePlugin();
         basePlugin.setRequestContext(context);
-        basePlugin.initialize();
+        basePlugin.afterPropertiesSet();
         assertSame(configuration, basePlugin.configuration);
         assertSame(context, basePlugin.context);
     }
