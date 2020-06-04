@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 public class TestAccessor implements Accessor {
 
     @Override
-    public void initialize() {
+    public void afterPropertiesSet() {
     }
 
     @Override

@@ -27,14 +27,6 @@ public abstract class BaseBridge implements Bridge {
     /**
      * {@inheritDoc}
      */
-    public void initialize() {
-        this.accessor.initialize();
-        this.resolver.initialize();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean isThreadSafe() {
         boolean result = accessor.isThreadSafe() && resolver.isThreadSafe();

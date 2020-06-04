@@ -10,7 +10,7 @@ import java.util.List;
 public class TestResolver implements Resolver {
 
     @Override
-    public void initialize() {
+    public void afterPropertiesSet() {
     }
 
     @Override

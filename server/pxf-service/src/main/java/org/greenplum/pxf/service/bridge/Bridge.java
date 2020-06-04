@@ -35,11 +35,6 @@ import java.io.DataInputStream;
 public interface Bridge {
 
     /**
-     * Initializes the {@link Accessor} and {@link Resolver} for this bridge
-     */
-    void initialize();
-
-    /**
      * Starts the iteration for data access.
      *
      * @return true if the operation succeeded

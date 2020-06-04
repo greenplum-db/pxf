@@ -83,7 +83,7 @@ public class AvroResolver extends BasePlugin implements Resolver {
      * throws RuntimeException if Avro schema could not be retrieved or parsed
      */
     @Override
-    public void initialize() {
+    public void afterPropertiesSet() {
         hcfsType = HcfsType.getHcfsType(context);
         Schema schema = avroUtilities.obtainSchema(context, hcfsType);
 

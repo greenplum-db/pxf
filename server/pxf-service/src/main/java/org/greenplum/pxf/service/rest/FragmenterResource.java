@@ -200,9 +200,7 @@ public class FragmenterResource extends BaseResource {
      * @return the fragmenter initialized with the request context
      */
     private Fragmenter getFragmenter(RequestContext context) {
-        Fragmenter fragmenter = applicationContext.getBean(Utilities.getShortClassName(context.getFragmenter()), Fragmenter.class);
-        fragmenter.initialize();
-        return fragmenter;
+        return applicationContext.getBean(Utilities.getShortClassName(context.getFragmenter()), Fragmenter.class);
     }
 
     /**

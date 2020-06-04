@@ -36,7 +36,7 @@ public class AvroFileAccessorTest {
     @Test
     public void testInitialize() {
         accessor.setRequestContext(context);
-        accessor.initialize();
+        accessor.afterPropertiesSet();
         Schema schema = (Schema) context.getMetadata();
         assertNotNull(schema);
         verifySchema(schema, "example_schema");

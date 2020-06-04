@@ -46,8 +46,8 @@ public class QuotedLineBreakAccessor extends HdfsAtomicDataAccessor {
     Queue<String> lineQueue;
 
     @Override
-    public void initialize() {
-        super.initialize();
+    public void afterPropertiesSet() {
+        super.afterPropertiesSet();
         // true if the files are read as a single row, false otherwise
         fileAsRow = StringUtils.equalsIgnoreCase("true", context.getOption("FILE_AS_ROW"));
 
