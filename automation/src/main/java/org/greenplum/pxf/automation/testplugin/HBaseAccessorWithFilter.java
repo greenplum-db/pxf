@@ -90,7 +90,7 @@ public class HBaseAccessorWithFilter extends BasePlugin implements Accessor {
     }
 
     @Override
-    public void initialize() {
+    public void afterPropertiesSet() {
         tupleDescription = new HBaseTupleDescription(context);
         splits = new ArrayList<>();
         currentRegionIndex = 0;

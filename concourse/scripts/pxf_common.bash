@@ -679,7 +679,7 @@ function start_pxf_server() {
 	echo 'Starting PXF service'
 	su --login gpadmin -c "${PXF_HOME}/bin/pxf start"
 	# grep with regex to avoid catching grep process itself
-	ps -aef | grep '[t]omcat'
+	ps -aef | grep '[p]xf-service'
 }
 
 function setup_s3_for_pg_regress() {

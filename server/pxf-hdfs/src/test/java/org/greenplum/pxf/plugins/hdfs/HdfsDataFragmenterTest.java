@@ -86,9 +86,9 @@ public class HdfsDataFragmenterTest {
     }
 
     private Fragmenter getFragmenter(RequestContext context) {
-        Fragmenter fragmenter = new HdfsDataFragmenter();
+        HdfsDataFragmenter fragmenter = new HdfsDataFragmenter();
         fragmenter.setRequestContext(context);
-        fragmenter.initialize();
+        fragmenter.afterPropertiesSet();
         return fragmenter;
     }
 }

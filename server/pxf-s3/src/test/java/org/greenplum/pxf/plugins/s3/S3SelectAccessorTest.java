@@ -180,7 +180,7 @@ public class S3SelectAccessorTest {
 
         S3SelectAccessor accessor = new S3SelectAccessor();
         accessor.setRequestContext(context);
-        accessor.initialize();
+        accessor.afterPropertiesSet();
         SelectObjectContentRequest request = accessor.generateBaseCSVRequest(context);
         assertEquals("my-bucket", request.getBucketName());
         assertEquals("my/s3/path/", request.getKey());
@@ -196,7 +196,7 @@ public class S3SelectAccessorTest {
 
         S3SelectAccessor accessor = new S3SelectAccessor();
         accessor.setRequestContext(context);
-        accessor.initialize();
+        accessor.afterPropertiesSet();
         SelectObjectContentRequest request = accessor.generateBaseCSVRequest(context);
         assertEquals("my-bucket", request.getBucketName());
         assertEquals("", request.getKey());

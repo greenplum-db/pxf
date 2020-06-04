@@ -177,7 +177,7 @@ public class JdbcBasePlugin extends BasePlugin {
     }
 
     @Override
-    public void initialize() {
+    public void afterPropertiesSet() {
         // Required parameter. Can be auto-overwritten by user options
         String jdbcDriver = configuration.get(JDBC_DRIVER_PROPERTY_NAME);
         assertMandatoryParameter(jdbcDriver, JDBC_DRIVER_PROPERTY_NAME, JDBC_DRIVER_OPTION_NAME);

@@ -417,7 +417,7 @@ public abstract class PxfUnit {
         Constructor<?> c = getFragmenterClass().getConstructor();
         Fragmenter fragmenter = (Fragmenter) c.newInstance();
         fragmenter.setRequestContext(meta);
-        fragmenter.initialize();
+        fragmenter.afterPropertiesSet();
         return fragmenter;
 
     }
@@ -435,7 +435,7 @@ public abstract class PxfUnit {
         Constructor<?> c = getAccessorClass().getConstructor();
         Accessor accessor = (Accessor) c.newInstance();
         accessor.setRequestContext(data);
-        accessor.initialize();
+        accessor.afterPropertiesSet();
         return accessor;
 
     }
@@ -453,7 +453,7 @@ public abstract class PxfUnit {
         Constructor<?> c = getResolverClass().getConstructor();
         Resolver resolver = (Resolver) c.newInstance();
         resolver.setRequestContext(data);
-        resolver.initialize();
+        resolver.afterPropertiesSet();
         return resolver;
     }
 

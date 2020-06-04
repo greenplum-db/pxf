@@ -48,7 +48,7 @@ public class QuotedLineBreakAccessorTest {
         accessor.setRequestContext(context);
 
         Exception e = assertThrows(IllegalArgumentException.class,
-                () -> accessor.initialize());
+                () -> accessor.afterPropertiesSet());
         assertEquals("the FILE_AS_ROW property " +
                 "only supports tables with a single column in the table " +
                 "definition. 2 columns were provided", e.getMessage());
@@ -178,7 +178,7 @@ public class QuotedLineBreakAccessorTest {
                 .getResource(resourceName).toURI().toString());
 
         accessor.setRequestContext(context);
-        accessor.initialize();
+        accessor.afterPropertiesSet();
         accessor.openForRead();
     }
 }

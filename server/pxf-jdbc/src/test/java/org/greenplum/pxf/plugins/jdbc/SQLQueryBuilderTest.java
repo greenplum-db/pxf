@@ -533,9 +533,9 @@ public class SQLQueryBuilderTest {
     }
 
     private Fragmenter getFragmenter(RequestContext context) {
-        Fragmenter fragmenter = new JdbcPartitionFragmenter();
+        JdbcPartitionFragmenter fragmenter = new JdbcPartitionFragmenter();
         fragmenter.setRequestContext(context);
-        fragmenter.initialize();
+        fragmenter.afterPropertiesSet();
         return fragmenter;
     }
 
