@@ -20,39 +20,33 @@ package org.greenplum.pxf.plugins.hbase;
  */
 
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.ConnectionFactory;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.client.Table;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.plugins.hbase.utilities.HBaseTupleDescription;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.TableName;
-import org.junit.After;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
+import java.util.HashMap;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({HBaseAccessor.class, HBaseConfiguration.class, ConnectionFactory.class})
 public class HBaseAccessorTest {
     static final String tableName = "fishy_HBase_table";
 
     private RequestContext context;
-    HBaseTupleDescription tupleDescription;
     Table table;
     Scan scanDetails;
     Configuration hbaseConfiguration;
@@ -60,10 +54,10 @@ public class HBaseAccessorTest {
     HBaseAccessor accessor;
 
     /*
-	 * After each test is done, close the accessor
-	 * if it was created
-	 */
-    @After
+     * After each test is done, close the accessor
+     * if it was created
+     */
+    @AfterEach
     public void tearDown() throws Exception {
         if (accessor == null) {
             return;
@@ -73,47 +67,44 @@ public class HBaseAccessorTest {
         accessor = null;
     }
 
-	/*
-	 * Test construction of HBaseAccessor.
-	 * Actually no need for this as it is tested in all other tests
-	 * constructing HBaseAccessor but it serves as a simple example
-	 * of mocking
-	 *
-	 * HBaseAccessor is created and then HBaseTupleDescriptioncreation
-	 * is verified
-	 */
+    /*
+     * Test construction of HBaseAccessor.
+     * Actually no need for this as it is tested in all other tests
+     * constructing HBaseAccessor but it serves as a simple example
+     * of mocking
+     *
+     * HBaseAccessor is created and then HBaseTupleDescriptioncreation
+     * is verified
+     */
     @Test
-    public void construction() throws Exception {
+    public void construction() {
         prepareConstruction();
         HBaseAccessor accessor = new HBaseAccessor();
-        accessor.initialize(context);
-        PowerMockito.verifyNew(HBaseTupleDescription.class).withArguments(context);
+        accessor.setRequestContext(context);
+        accessor.initialize();
     }
 
-	/*
-	 * Test Open returns false when table has no regions
-	 *
-	 * Done by returning an empty Map from getRegionLocations
-	 * Verify Scan object doesn't contain any columns / filters
-	 * Verify scan did not start
-	 */
+    /*
+     * Test Open returns false when table has no regions
+     *
+     * Done by returning an empty Map from getRegionLocations
+     * Verify Scan object doesn't contain any columns / filters
+     * Verify scan did not start
+     */
     @Test
-    @Ignore
-    @SuppressWarnings("unchecked")
+    @Disabled
     public void tableHasNoMetadata() throws Exception {
         prepareConstruction();
         prepareTableOpen();
         prepareEmptyScanner();
 
         accessor = new HBaseAccessor();
-        accessor.initialize(context);
+        accessor.setRequestContext(context);
+        accessor.initialize();
 
-        try {
-            accessor.openForRead();
-            fail("should throw no metadata exception");
-        } catch (Exception e) {
-            assertEquals("Missing fragment metadata information", e.getMessage());
-        }
+        Exception e = assertThrows(Exception.class, accessor::openForRead,
+                "should throw no metadata exception");
+        assertEquals("Missing fragment metadata information", e.getMessage());
 
         verifyScannerDidNothing();
     }
@@ -122,12 +113,11 @@ public class HBaseAccessorTest {
      * Helper for test setup.
      * Creates a mock for HBaseTupleDescription and RequestContext
      */
-    private void prepareConstruction() throws Exception {
+    private void prepareConstruction() {
         context = new RequestContext();
         context.setConfig("default");
         context.setUser("test-user");
-        tupleDescription = mock(HBaseTupleDescription.class);
-        PowerMockito.whenNew(HBaseTupleDescription.class).withArguments(context).thenReturn(tupleDescription);
+        context.setFragmentMetadata(new HBaseFragmentMetadata(new byte[0], new byte[0], new HashMap<>()));
     }
 
     /*
@@ -138,14 +128,10 @@ public class HBaseAccessorTest {
         // Set table name
         context.setDataSource(tableName);
 
-        // Make sure we mock static functions in HBaseConfiguration
-        PowerMockito.mockStatic(HBaseConfiguration.class);
-
         hbaseConfiguration = mock(Configuration.class);
         when(HBaseConfiguration.create()).thenReturn(hbaseConfiguration);
 
         // Make sure we mock static functions in ConnectionFactory
-        PowerMockito.mockStatic(ConnectionFactory.class);
         hbaseConnection = mock(Connection.class);
         when(ConnectionFactory.createConnection(hbaseConfiguration)).thenReturn(hbaseConnection);
         table = mock(Table.class);
@@ -156,11 +142,8 @@ public class HBaseAccessorTest {
      * Helper for test setup.
      * Sets zero columns (not realistic) and no filter
      */
-    private void prepareEmptyScanner() throws Exception {
+    private void prepareEmptyScanner() {
         scanDetails = mock(Scan.class);
-        PowerMockito.whenNew(Scan.class).withNoArguments().thenReturn(scanDetails);
-
-        when(tupleDescription.columns()).thenReturn(0);
     }
 
     /*

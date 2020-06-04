@@ -22,9 +22,8 @@ package org.greenplum.pxf.plugins.hbase.utilities;
 
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.plugins.hbase.HBaseFragmentMetadata;
 
-import java.io.ByteArrayInputStream;
-import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +38,7 @@ import java.util.Map;
 public class HBaseTupleDescription {
     private Map<String, byte[]> tableMapping;
     private List<HBaseColumnDescriptor> tupleDescription;
-    private RequestContext context;
+    private final RequestContext context;
 
     /**
      * Constructs tuple description of the HBase table.
@@ -81,19 +80,10 @@ public class HBaseTupleDescription {
      * The data contains optional table mappings from the lookup table,
      * between field names in GPDB table and in the HBase table.
      */
-    @SuppressWarnings("unchecked")
     private void loadUserData() {
         try {
-            byte[] serializedTableMappings = context.getFragmentUserData();
-
-            // No userdata means no mappings for our table in lookup table
-            if (serializedTableMappings == null) {
-                return;
-            }
-
-            ByteArrayInputStream bytesStream = new ByteArrayInputStream(serializedTableMappings);
-            ObjectInputStream objectStream = new ObjectInputStream(bytesStream);
-            tableMapping = (Map<String, byte[]>) objectStream.readObject();
+            HBaseFragmentMetadata metadata = context.getFragmentMetadata();
+            tableMapping = metadata.getColumnMapping();
         } catch (Exception e) {
             throw new RuntimeException("Exception while reading expected user data from HBase's fragmenter", e);
         }

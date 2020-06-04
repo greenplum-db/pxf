@@ -19,8 +19,6 @@ package org.greenplum.pxf.plugins.json;
  * under the License.
  */
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.greenplum.pxf.api.BadRecordException;
@@ -47,16 +45,14 @@ import java.util.List;
 @RequestScope
 public class JsonResolver extends BasePlugin implements Resolver {
 
-    private static final Log LOG = LogFactory.getLog(JsonResolver.class);
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private ArrayList<OneField> oneFieldList;
     private ColumnDescriptorCache[] columnDescriptorCache;
-    private ObjectMapper mapper;
 
     @Override
     public void initialize() {
         oneFieldList = new ArrayList<>();
-        mapper = new ObjectMapper();
 
         // Precompute the column metadata. The metadata is used for mapping column names to json nodes.
         columnDescriptorCache = new ColumnDescriptorCache[context.getColumns()];
@@ -77,7 +73,7 @@ public class JsonResolver extends BasePlugin implements Resolver {
 
         JsonNode root;
         try {
-            root = mapper.readTree(jsonRecordAsText);
+            root = MAPPER.readTree(jsonRecordAsText);
         } catch (IOException e) {
             throw new BadRecordException(
                     String.format("error while parsing json record '%s'. invalid JSON record\n%s", e.getMessage(), jsonRecordAsText), e);
@@ -114,7 +110,7 @@ public class JsonResolver extends BasePlugin implements Resolver {
      *
      * @param record list of {@link OneField}
      * @return the constructed {@link OneRow}
-     * @throws Exception if constructing a row from the fields failed
+     * @throws UnsupportedOperationException if constructing a row from the fields failed
      */
     @Override
     public OneRow setFields(List<OneField> record) throws UnsupportedOperationException {

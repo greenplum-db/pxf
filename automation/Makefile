@@ -88,8 +88,8 @@ symlink_pxf_jars: check-env
 	@if [ -d "$(PXF_HOME)/server" ]; then \
 		rm -rf $(PXF_TMP_LIB) && \
 		mkdir -p $(PXF_TMP_LIB)/tmp && \
-		unzip -qq $(PXF_HOME)/server/pxf-service-*.jar -d $(PXF_TMP_LIB)/tmp && \
-		for jar in $(PXF_TMP_LIB)/tmp/BOOT-INF/lib/pxf-*.jar; do \
+		unzip -qq -j $(PXF_HOME)/server/pxf-service-*.jar 'BOOT-INF/lib/pxf-*.jar' -d $(PXF_TMP_LIB)/tmp && \
+		for jar in $(PXF_TMP_LIB)/tmp/pxf-*.jar; do \
 			jar_name="$${jar##*/}"; \
 			if [[ $${jar_name} =~ ^pxf-[A-Za-z0-9]+(-[0-9.]+.*).jar$$ ]]; then \
 				link=$(PXF_TMP_LIB)/$${jar_name/$${BASH_REMATCH[1]}/}; \
@@ -102,13 +102,7 @@ symlink_pxf_jars: check-env
 	fi
 
 test: check-env clean-logs symlink_pxf_jars sync_cloud_configs sync_jdbc_config
-	@if ! grep "export PXF_LOADER_PATH=file:/tmp/publicstage/pxf" $(PXF_CONF)/conf/pxf-env.sh > /dev/null; then \
-		echo 'export PXF_LOADER_PATH=file:/tmp/publicstage/pxf' >> $(PXF_CONF)/conf/pxf-env.sh; \
-	fi
 	$(MVN) $(MAVEN_TEST_OPTS) ${MAVEN_DEBUG_OPTS} test
-	@if grep "export PXF_LOADER_PATH=file:/tmp/publicstage/pxf" $(PXF_CONF)/conf/pxf-env.sh > /dev/null; then \
-		sed -i .bak -n '/export PXF_LOADER_PATH=file:\/tmp\/publicstage\/pxf/!p' $(PXF_CONF)/conf/pxf-env.sh && rm -f $(PXF_CONF)/conf/pxf-env.sh.bak; \
-	fi
 
 clean: clean-logs
 	$(MVN) $(MAVEN_TEST_OPTS) clean

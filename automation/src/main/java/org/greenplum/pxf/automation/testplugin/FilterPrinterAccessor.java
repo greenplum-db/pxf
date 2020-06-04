@@ -6,12 +6,16 @@ import org.apache.commons.logging.LogFactory;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.BasePlugin;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 /**
  * Test class for regression tests.
  * The only thing this class does is to throw an exception
  * containing the received filter from GPDB (FILTER).
  */
+@Component("FilterPrinterAccessor")
+@RequestScope
 public class FilterPrinterAccessor extends BasePlugin implements Accessor
 {
     static private Log Log = LogFactory.getLog(FilterPrinterAccessor.class);

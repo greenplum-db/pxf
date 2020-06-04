@@ -20,6 +20,17 @@ package org.greenplum.pxf.plugins.hbase;
  */
 
 
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.HConstants;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.ConnectionFactory;
+import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.client.ResultScanner;
+import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.client.Table;
+import org.apache.hadoop.hbase.filter.Filter;
+import org.apache.hadoop.hbase.util.Bytes;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.filter.FilterParser;
 import org.greenplum.pxf.api.filter.Node;
@@ -28,27 +39,15 @@ import org.greenplum.pxf.api.filter.SupportedOperatorPruner;
 import org.greenplum.pxf.api.filter.TreeTraverser;
 import org.greenplum.pxf.api.filter.TreeVisitor;
 import org.greenplum.pxf.api.model.Accessor;
-import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.BasePlugin;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseColumnDescriptor;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseTupleDescription;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseUtilities;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
-import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.HConstants;
-import org.apache.hadoop.hbase.client.Connection;
-import org.apache.hadoop.hbase.client.ConnectionFactory;
-import org.apache.hadoop.hbase.client.Result;
-import org.apache.hadoop.hbase.client.ResultScanner;
-import org.apache.hadoop.hbase.client.Scan;
-import org.apache.hadoop.hbase.client.Table;
-import org.apache.hadoop.hbase.filter.Filter;
-import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.util.Bytes;
-
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.util.EnumSet;
 
 /**
@@ -62,6 +61,8 @@ import java.util.EnumSet;
  * The class supports filters using the {@link HBaseFilterBuilder}.
  * Regions can be filtered out according to input from {@link HBaseFilterBuilder}.
  */
+@Component("HBaseAccessor")
+@RequestScope
 public class HBaseAccessor extends BasePlugin implements Accessor {
 
     static final EnumSet<Operator> SUPPORTED_OPERATORS =
@@ -115,13 +116,9 @@ public class HBaseAccessor extends BasePlugin implements Accessor {
     /**
      * Initializes HBaseAccessor based on GPDB table description and
      * initializes the scan start and end keys of the HBase table to default values.
-     *
-     * @param requestContext data provided in the request
      */
     @Override
-    public void initialize(RequestContext requestContext) {
-        super.initialize(requestContext);
-
+    public void initialize() {
         tupleDescription = new HBaseTupleDescription(context);
         split = null;
         scanStartKey = HConstants.EMPTY_START_ROW;
@@ -218,16 +215,13 @@ public class HBaseAccessor extends BasePlugin implements Accessor {
      */
     private void addTableSplit() {
 
-        byte[] serializedMetadata = context.getFragmentMetadata();
-        if (serializedMetadata == null) {
+        HBaseFragmentMetadata metadata = context.getFragmentMetadata();
+        if (metadata == null) {
             throw new IllegalArgumentException("Missing fragment metadata information");
         }
         try {
-            ByteArrayInputStream bytesStream = new ByteArrayInputStream(serializedMetadata);
-            ObjectInputStream objectStream = new ObjectInputStream(bytesStream);
-
-            byte[] startKey = (byte[]) objectStream.readObject();
-            byte[] endKey = (byte[]) objectStream.readObject();
+            byte[] startKey = metadata.getStartKey();
+            byte[] endKey = metadata.getEndKey();
 
             if (withinScanRange(startKey, endKey)) {
                 split = new SplitBoundary(startKey, endKey);
