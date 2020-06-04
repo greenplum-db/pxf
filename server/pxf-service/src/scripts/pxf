@@ -138,16 +138,6 @@ function fail()
 }
 
 #
-# configureTemplates configures based on pre-configured template files.
-#
-function configureTemplates()
-{
-    # copy configuration files into instance
-    cp "$server_templates"/bin/kill-pxf.sh "${parent_script_dir}/bin"
-    return 0
-}
-
-#
 # waitForSpringBoot waits for spring boot to finish loading
 # for given attempts number.
 #
@@ -332,8 +322,6 @@ function doReset()
     echoYellow "Ignoring ${PXF_CONF}..."
     echoYellow "Cleaning ${PXF_RUNDIR}..."
     rm -rf "$PXF_RUNDIR"
-    echoYellow "Cleaning templates ${parent_script_dir}/bin/kill-pxf.sh"
-    rm -f "${parent_script_dir}/bin/kill-pxf.sh"
 
     echoYellow "Reverting changes to ${default_env_script}..."
     sed "${SED_OPTS[@]}" "s|{PXF_CONF:-\".*\"}|{PXF_CONF:-NOT_INITIALIZED}|g" "$default_env_script"
@@ -369,7 +357,6 @@ function doInit()
     checkJavaHome
     generateUserConfigs || return 1
     editPxfEnvSh || return 1
-    configureTemplates || return 1
     createLogsDir || return 1
     createRunDir  || return 1
     installExternalTableExtension || return 1
