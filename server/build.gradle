@@ -115,6 +115,7 @@ configure(javaProjects) {
         all*.exclude group: "javax.servlet", module: "servlet-api"
         all*.exclude module: 'spring-boot-starter-logging'
         all*.exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+        all*.exclude group: 'junit', module: 'junit'
     }
 }
 
@@ -122,25 +123,20 @@ task stage(type: Copy) {
     description "Build PXF server and stage resulting artifacts for packaging."
     dependsOn ":pxf-service:bootJar"
 
-    from("pxf-service/build/libs") {
-        into 'server'
-    }
-    from('pxf-service/src/main/resources/pxf-profiles-default.xml') {
-        into 'conf'
-    }
-    from('pxf-service/src/scripts/pxf-env-default.sh') {
-        into 'conf'
-    }
-    from('pxf-service/src/scripts/pxf') {
+    // Provide the pxf-hbase jar. The pxf-hbase.jar is required for the PXF
+    // HBase connector to support filter pushdown
+    from("pxf-hbase/build/libs") { into 'lib' }
+    from("pxf-service/build/libs") { into 'server' }
+    from('pxf-service/src/main/resources/pxf-profiles-default.xml') { into 'conf' }
+    from('pxf-service/src/scripts/pxf-env-default.sh') { into 'conf' }
+    from('pxf-service/src/scripts/') {
+        include 'pxf'
+        include 'kill-pxf.sh'
         into 'bin'
         filter { line -> line.replaceAll('_PXF_VERSION_', "${version}") }
     }
-    from('pxf-service/src/') {
-        include 'templates/**'
-    }
+    from('pxf-service/src/') { include 'templates/**' }
     into "$buildDir/stage/pxf"
 
-    doLast {
-        new File("${buildDir}/stage/pxf/version").text = "${version}\n"
-    }
+    doLast { new File("${buildDir}/stage/pxf/version").text = "${version}\n" }
 }

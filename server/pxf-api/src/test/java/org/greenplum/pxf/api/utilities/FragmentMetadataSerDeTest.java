@@ -10,6 +10,7 @@ import org.greenplum.pxf.api.examples.DemoFragmentMetadata;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -43,8 +44,8 @@ class FragmentMetadataSerDeTest {
         DemoFragmentMetadata metadata = new DemoFragmentMetadata("abc");
         assertEquals("\"{\\\"path\\\":\\\"abc\\\",\\\"className\\\":\\\"org.greenplum.pxf.api.examples.DemoFragmentMetadata\\\"}\"", mapper.writeValueAsString(metadata));
 
-        TestFragmentMetadata testMetadata = new TestFragmentMetadata("test", 5, 10, new Date(1590649200000L));
-        assertEquals("\"{\\\"a\\\":\\\"test\\\",\\\"b\\\":5,\\\"c\\\":10,\\\"d\\\":1590649200000,\\\"className\\\":\\\"org.greenplum.pxf.api.utilities.FragmentMetadataSerDeTest$TestFragmentMetadata\\\"}\"",
+        TestFragmentMetadata testMetadata = new TestFragmentMetadata("test", 5, 10, new Date(1590649200000L), "foo".getBytes(StandardCharsets.UTF_8));
+        assertEquals("\"{\\\"a\\\":\\\"test\\\",\\\"b\\\":5,\\\"c\\\":10,\\\"d\\\":1590649200000,\\\"e\\\":\\\"Zm9v\\\",\\\"className\\\":\\\"org.greenplum.pxf.api.utilities.FragmentMetadataSerDeTest$TestFragmentMetadata\\\"}\"",
                 mapper.writeValueAsString(testMetadata));
     }
 
@@ -58,7 +59,7 @@ class FragmentMetadataSerDeTest {
         assertTrue(metadata instanceof DemoFragmentMetadata);
         assertEquals("deserialize me", ((DemoFragmentMetadata) metadata).getPath());
 
-        String testMetadataJson = "{\"b\": 25, \"c\": 150, \"a\": \"test me\", \"d\": \"1590649200000\", \"className\": \"org.greenplum.pxf.api.utilities.FragmentMetadataSerDeTest$TestFragmentMetadata\"}";
+        String testMetadataJson = "{\"b\": 25, \"c\": 150, \"a\": \"test me\", \"d\": \"1590649200000\", \"e\": \"Zm9v\", \"className\": \"org.greenplum.pxf.api.utilities.FragmentMetadataSerDeTest$TestFragmentMetadata\"}";
 
         FragmentMetadata testMetadata = metadataSerDe.deserialize(testMetadataJson);
         assertNotNull(testMetadata);
@@ -68,6 +69,7 @@ class FragmentMetadataSerDeTest {
         assertEquals(25, testFragmentMetadata.getB());
         assertEquals(150, testFragmentMetadata.getC());
         assertEquals(new Date(1590649200000L), testFragmentMetadata.getD());
+        assertEquals("foo", new String(testFragmentMetadata.getE(), StandardCharsets.UTF_8));
     }
 
     static class TestFragmentMetadata implements FragmentMetadata {
@@ -84,17 +86,21 @@ class FragmentMetadataSerDeTest {
         @Getter
         private final Date d;
 
+        @Getter
+        private final byte[] e;
+
         @JsonCreator
         public TestFragmentMetadata(
                 @JsonProperty("a") String a,
                 @JsonProperty("b") int b,
                 @JsonProperty("c") int c,
-                @JsonProperty("d") Date d) {
+                @JsonProperty("d") Date d,
+                @JsonProperty("e") byte[] e) {
             this.a = a;
             this.b = b;
             this.c = c;
             this.d = d;
+            this.e = e;
         }
     }
-
 }

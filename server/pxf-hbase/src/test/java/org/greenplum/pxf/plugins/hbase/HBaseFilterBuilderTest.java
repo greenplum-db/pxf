@@ -33,17 +33,16 @@ import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseColumnDescriptor;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseIntegerComparator;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseTupleDescription;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.greenplum.pxf.plugins.hbase.HBaseAccessor.SUPPORTED_OPERATORS;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -51,9 +50,6 @@ public class HBaseFilterBuilderTest {
 
     private static final TreeVisitor PRUNER = new SupportedOperatorPruner(SUPPORTED_OPERATORS);
     private static final TreeTraverser TRAVERSER = new TreeTraverser();
-
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
 
     private HBaseTupleDescription tupleDescription;
     private byte[][] families = new byte[][]{
@@ -75,7 +71,7 @@ public class HBaseFilterBuilderTest {
             DataType.TEXT.getOID(),
     };
 
-    @Before
+    @BeforeEach
     public void setup() {
         tupleDescription = mock(HBaseTupleDescription.class);
         for (int i = 0; i < families.length; i++) {
@@ -94,12 +90,11 @@ public class HBaseFilterBuilderTest {
 
     @Test
     public void parseNotOpCodeInConstant() throws Exception {
-        thrown.expect(NullPointerException.class);
 
         String filter = "a1c25s2dl2o1a1c20s1d2o2l0";
         // Testing that we get past the parsing stage
         // Very crude but it avoids instantiating all the necessary dependencies
-        assertNull(helper(filter, null));
+        assertThrows(NullPointerException.class, () -> helper(filter, null));
     }
 
     @Test

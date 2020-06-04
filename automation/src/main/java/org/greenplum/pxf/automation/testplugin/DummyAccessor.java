@@ -5,6 +5,8 @@ import org.apache.commons.logging.LogFactory;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.BasePlugin;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 /*
  * Internal interface that defines the access to a file on HDFS.  All classes
@@ -12,19 +14,21 @@ import org.greenplum.pxf.api.model.BasePlugin;
  * must respect this interface
  * Dummy implementation, for documentation
  */
+@Component("DummyAccessor")
+@RequestScope
 public class DummyAccessor extends BasePlugin implements Accessor {
     private static final Log LOG = LogFactory.getLog(DummyAccessor.class);
     private int rowNumber;
     private int fragmentNumber;
 
     @Override
-    public boolean openForRead() throws Exception {
+    public boolean openForRead() {
         /* fopen or similar */
         return true;
     }
 
     @Override
-    public OneRow readNextObject() throws Exception {
+    public OneRow readNextObject() {
         /* return next row , <key=fragmentNo.rowNo, val=rowNo,text,fragmentNo>*/
         /* check for EOF */
         if (fragmentNumber > 0) {
@@ -32,10 +36,10 @@ public class DummyAccessor extends BasePlugin implements Accessor {
         }
 
         int fragment = context.getDataFragment();
-        String fragmentMetadata = new String(context.getFragmentMetadata());
+        DummyFragmentMetadata metadata = context.getFragmentMetadata();
         /* generate row */
         OneRow row = new OneRow(fragment + "." + rowNumber, /* key */
-                rowNumber + "," + fragmentMetadata + "," + fragment /* value */);
+                rowNumber + "," + metadata.getS() + "," + fragment /* value */);
         /* advance */
         rowNumber += 1;
         if (rowNumber == 2) {
@@ -47,25 +51,25 @@ public class DummyAccessor extends BasePlugin implements Accessor {
     }
 
     @Override
-    public void closeForRead() throws Exception {
+    public void closeForRead() {
         /* fclose or similar */
     }
 
     @Override
-    public boolean openForWrite() throws Exception {
+    public boolean openForWrite() {
         /* fopen or similar */
         return true;
     }
 
     @Override
-    public boolean writeNextObject(OneRow onerow) throws Exception {
+    public boolean writeNextObject(OneRow onerow) {
 
         LOG.info(onerow.getData());
         return true;
     }
 
     @Override
-    public void closeForWrite() throws Exception {
+    public void closeForWrite() {
         /* fclose or similar */
     }
 }

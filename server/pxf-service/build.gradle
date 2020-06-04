@@ -17,8 +17,9 @@ dependencies {
      *******************************/
 
     implementation(project(':pxf-api'))
-    implementation(project(':pxf-jdbc'))
+    implementation(project(':pxf-hbase'))
     implementation(project(':pxf-hdfs'))
+    implementation(project(':pxf-jdbc'))
     implementation(project(':pxf-json'))
     implementation(project(':pxf-s3'))
 
