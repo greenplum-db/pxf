@@ -118,7 +118,7 @@ public class HBaseAccessor extends BasePlugin implements Accessor {
      * initializes the scan start and end keys of the HBase table to default values.
      */
     @Override
-    public void initialize() {
+    public void afterPropertiesSet() {
         tupleDescription = new HBaseTupleDescription(context);
         split = null;
         scanStartKey = HConstants.EMPTY_START_ROW;

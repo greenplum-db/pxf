@@ -31,13 +31,13 @@ public class JsonResolverTest {
         context.setUser("test-user");
         context.setTupleDescription(schema);
         resolver.setRequestContext(context);
-        resolver.initialize();
+        resolver.afterPropertiesSet();
     }
 
     @Test
     public void testInitialize() {
         resolver.setRequestContext(context);
-        resolver.initialize();
+        resolver.afterPropertiesSet();
     }
 
     @Test
@@ -280,7 +280,7 @@ public class JsonResolverTest {
     @Test
     public void testGetFieldsShouldFailOnEmptyRow() {
         resolver.setRequestContext(context);
-        resolver.initialize();
+        resolver.afterPropertiesSet();
         assertThrows(BadRecordException.class, () -> resolver.getFields(new OneRow()));
     }
 
@@ -289,7 +289,7 @@ public class JsonResolverTest {
 
         context.setMetadata(null);
         resolver.setRequestContext(context);
-        resolver.initialize();
+        resolver.afterPropertiesSet();
         assertThrows(UnsupportedOperationException.class, () -> resolver.setFields(null));
     }
 

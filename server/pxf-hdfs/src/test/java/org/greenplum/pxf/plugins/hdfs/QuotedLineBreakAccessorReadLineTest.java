@@ -38,7 +38,7 @@ public class QuotedLineBreakAccessorReadLineTest {
 
         accessor = new QuotedLineBreakAccessor();
         accessor.setRequestContext(context);
-        accessor.initialize();
+        accessor.afterPropertiesSet();
     }
 
     @Test

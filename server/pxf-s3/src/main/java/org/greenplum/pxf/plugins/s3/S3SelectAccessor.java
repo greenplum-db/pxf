@@ -65,7 +65,7 @@ public class S3SelectAccessor extends BasePlugin implements Accessor {
      * {@inheritDoc}
      */
     @Override
-    public void initialize() {
+    public void afterPropertiesSet() {
         name = URI.create(context.getDataSource());
         s3Client = initS3Client();
         lineReadCount = 0;

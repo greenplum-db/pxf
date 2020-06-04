@@ -59,7 +59,7 @@ public class HBaseDataFragmenter extends BaseFragmenter {
     private Connection connection;
 
     @Override
-    public void initialize() {
+    public void afterPropertiesSet() {
         configuration = HBaseConfiguration.create(configuration);
         configuration.set("hbase.client.retries.number", "3");
     }

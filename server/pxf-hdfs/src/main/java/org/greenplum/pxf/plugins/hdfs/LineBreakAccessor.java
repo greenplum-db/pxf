@@ -67,8 +67,8 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor {
     }
 
     @Override
-    public void initialize() {
-        super.initialize();
+    public void afterPropertiesSet() {
+        super.afterPropertiesSet();
         ((TextInputFormat) inputFormat).configure(jobConf);
         skipHeaderCount = context.getFragmentIndex() == 0
                 ? context.getOption("SKIP_HEADER_COUNT", 0, true)

@@ -22,23 +22,19 @@ public class SimpleBridgeFactory implements BridgeFactory {
     public Bridge getBridge(RequestContext context) {
 
         Bridge bridge;
-        if (context.getRequestType() == RequestContext.RequestType.READ_BRIDGE) {
-            if (context.getStatsSampleRatio() > 0) {
-                bridge = applicationContext.getBean(ReadSamplingBridge.class);
-            } else if (Utilities.aggregateOptimizationsSupported(context)) {
-                bridge = applicationContext.getBean(AggBridge.class);
-            } else if (useVectorization(context)) {
-                bridge = applicationContext.getBean(ReadVectorizedBridge.class);
-            } else {
-                bridge = applicationContext.getBean("ReadBridge", ReadBridge.class);
-            }
-        } else if (context.getRequestType() == RequestContext.RequestType.WRITE_BRIDGE) {
+        if (context.getRequestType() == RequestContext.RequestType.WRITE_BRIDGE) {
             bridge = applicationContext.getBean(WriteBridge.class);
-        } else {
+        } else if (context.getRequestType() != RequestContext.RequestType.READ_BRIDGE) {
             throw new UnsupportedOperationException();
+        } else if (context.getStatsSampleRatio() > 0) {
+            bridge = applicationContext.getBean(ReadSamplingBridge.class);
+        } else if (Utilities.aggregateOptimizationsSupported(context)) {
+            bridge = applicationContext.getBean(AggBridge.class);
+        } else if (useVectorization(context)) {
+            bridge = applicationContext.getBean(ReadVectorizedBridge.class);
+        } else {
+            bridge = applicationContext.getBean("ReadBridge", ReadBridge.class);
         }
-
-        bridge.initialize();
         return bridge;
     }
 
