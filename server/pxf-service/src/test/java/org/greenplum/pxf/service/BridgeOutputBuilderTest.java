@@ -19,7 +19,7 @@ package org.greenplum.pxf.service;
  * under the License.
  */
 
-import org.greenplum.pxf.api.BadRecordException;
+import org.greenplum.pxf.api.error.BadRecordException;
 import org.greenplum.pxf.api.GreenplumDateTime;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.examples.DemoFragmentMetadata;

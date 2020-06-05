@@ -15,13 +15,13 @@ dependencies {
 
     implementation(project(':pxf-api'))
     implementation("org.apache.hbase:hbase-client:${hbaseVersion}")
-    implementation("org.apache.hbase:hbase-common:${hbaseVersion}")
-    implementation("org.apache.hbase:hbase-protocol:${hbaseVersion}")
-    implementation("org.apache.htrace:htrace-core:3.1.0-incubating")
+    implementation("org.apache.hbase:hbase-common:${hbaseVersion}")   { transitive = false }
+    implementation("org.apache.hbase:hbase-protocol:${hbaseVersion}") { transitive = false }
+    implementation("org.apache.htrace:htrace-core:3.1.0-incubating")  { transitive = false }
     // TODO: spring_boot_todo determine whether the 3 dependencies are required
-//    implementation("io.netty:netty-all:4.0.23.Final")
-//    implementation("org.apache.zookeeper:zookeeper:3.4.6")
-//    implementation("com.yammer.metrics:metrics-core:2.2.0")
+//    implementation("io.netty:netty-all:4.0.23.Final")                 { transitive = false }
+//    implementation("org.apache.zookeeper:zookeeper:3.4.6")            { transitive = false }
+//    implementation("com.yammer.metrics:metrics-core:2.2.0")           { transitive = false }
 
     implementation("org.springframework.boot:spring-boot-starter-log4j2")
 

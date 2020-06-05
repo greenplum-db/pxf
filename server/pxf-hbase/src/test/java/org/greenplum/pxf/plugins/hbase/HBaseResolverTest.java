@@ -19,7 +19,7 @@ package org.greenplum.pxf.plugins.hbase;
  * under the License.
  */
 
-import org.greenplum.pxf.api.BadRecordException;
+import org.greenplum.pxf.api.error.BadRecordException;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.junit.jupiter.api.Test;
 

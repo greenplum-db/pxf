@@ -5,6 +5,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.mapreduce.MRJobConfig;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
+import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.slf4j.Logger;
@@ -14,6 +15,7 @@ import java.net.URI;
 import java.util.Arrays;
 
 import static org.apache.hadoop.fs.FileSystem.FS_DEFAULT_NAME_KEY;
+import static org.greenplum.pxf.api.model.ConfigurationFactory.PXF_CONFIG_SERVER_DIRECTORY_PROPERTY;
 
 public enum HcfsType {
     ADL,
@@ -98,20 +100,22 @@ public enum HcfsType {
 
         // protocol from RequestContext will take precedence over defaultFS
         if (StringUtils.isNotBlank(schemeFromContext)) {
-            checkForConfigurationMismatch(defaultFSScheme, schemeFromContext);
+            checkForConfigurationMismatch(defaultFSScheme, schemeFromContext, context.getServerName(), context.getConfiguration().get(PXF_CONFIG_SERVER_DIRECTORY_PROPERTY));
             return schemeFromContext;
         }
 
         return defaultFSScheme;
     }
 
-    private static void checkForConfigurationMismatch(String defaultFSScheme, String schemeFromContext) {
+    private static void checkForConfigurationMismatch(String defaultFSScheme, String schemeFromContext, String serverName, String configurationDirectory) {
         // do not allow protocol mismatch, unless defaultFs has file:// scheme
         if (!FILE_SCHEME.equals(defaultFSScheme) &&
                 !StringUtils.equalsIgnoreCase(defaultFSScheme, schemeFromContext)) {
-            throw new IllegalArgumentException(
-                    String.format("profile protocol (%s) is not compatible with server filesystem (%s)",
-                            schemeFromContext, defaultFSScheme));
+            throw new PxfRuntimeException(
+                    String.format("profile '%s' is not compatible with server's '%s' configuration ('%s')",
+                            schemeFromContext, serverName, defaultFSScheme),
+                    String.format("Ensure that '%s' includes only the configuration files for profile '%s'.",
+                            configurationDirectory, schemeFromContext));
         }
     }
 

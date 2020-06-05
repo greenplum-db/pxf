@@ -3,7 +3,11 @@ package org.greenplum.pxf.automation.testplugin;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.BasePlugin;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
+@Component("FaultyGUCAccessor")
+@RequestScope
 public class FaultyGUCAccessor extends BasePlugin implements Accessor {
 
     @Override

@@ -1,5 +1,6 @@
 package org.greenplum.pxf.service.rest;
 
+import lombok.SneakyThrows;
 import org.apache.catalina.connector.ClientAbortException;
 import org.greenplum.pxf.api.io.Writable;
 import org.greenplum.pxf.api.model.RequestContext;
@@ -43,13 +44,14 @@ public class BridgeResponse implements StreamingResponseBody {
         this.threadSafe = threadSafe;
     }
 
+    @SneakyThrows
     @Override
-    public void writeTo(OutputStream out) throws IOException {
+    public void writeTo(OutputStream out) {
         PrivilegedExceptionAction<Void> action = () -> writeToInternal(out);
-        securityService.doAs(context, action);
+        securityService.doAs(context, context.isLastFragment(), action);
     }
 
-    private Void writeToInternal(OutputStream out) throws IOException{
+    private Void writeToInternal(OutputStream out) throws IOException {
         final int fragment = context.getDataFragment();
         final String dataDir = context.getDataSource();
         long recordCount = 0;
@@ -80,7 +82,7 @@ public class BridgeResponse implements StreamingResponseBody {
                 LOG.error("Remote connection closed by GPDB (Enable debug for stacktrace)");
             }
         } catch (Exception e) {
-            throw new IOException(e.getMessage(), e);
+            throw e instanceof IOException ? (IOException) e : new IOException(e.getMessage(), e);
         } finally {
             LOG.debug("Stopped streaming fragment {} of resource {}, {} records.", fragment, dataDir, recordCount);
             try {

@@ -118,7 +118,8 @@ public class WritableResource extends BaseResource {
                                          HttpServletRequest request) throws Exception {
 
         RequestContext context = parseRequest(headers);
-        Bridge bridge = bridgeFactory.getBridge(context);
+        Bridge bridge = securityService.doAs(context, false, 
+                () -> bridgeFactory.getBridge(context));
         InputStream inputStream = request.getInputStream();
 
         PrivilegedExceptionAction<Long> action = () -> {
@@ -157,7 +158,8 @@ public class WritableResource extends BaseResource {
             return totalWritten;
         };
 
-        Long totalWritten = securityService.doAs(context, action);
+        // TODO: should we do true instead of context.isLastFragment(). segments only stream one thing when they write
+        Long totalWritten = securityService.doAs(context, context.isLastFragment(), action);
         String censuredPath = Utilities.maskNonPrintables(path);
         String returnMsg = String.format("wrote %d bulks to %s", totalWritten, censuredPath);
         LOG.debug(returnMsg);

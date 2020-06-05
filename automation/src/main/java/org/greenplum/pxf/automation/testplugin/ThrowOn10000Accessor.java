@@ -4,6 +4,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.plugins.hdfs.LineBreakAccessor;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 import java.io.IOException;
 
@@ -13,6 +15,8 @@ import java.io.IOException;
  * Used to test an error that occurs after the first packet
  * of the response is already sent (GPSQL-2272).
  */
+@Component("ThrowOn10000Accessor")
+@RequestScope
 public class ThrowOn10000Accessor extends LineBreakAccessor {
 
     private static Log Log = LogFactory.getLog(ThrowOn10000Accessor.class);

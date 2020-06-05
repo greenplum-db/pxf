@@ -23,7 +23,7 @@ import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
-import org.greenplum.pxf.api.BadRecordException;
+import org.greenplum.pxf.api.error.BadRecordException;
 import org.greenplum.pxf.api.GreenplumDateTime;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.io.BufferWritable;

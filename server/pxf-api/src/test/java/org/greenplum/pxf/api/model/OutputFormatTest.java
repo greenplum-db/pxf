@@ -1,6 +1,6 @@
 package org.greenplum.pxf.api.model;
 
-import org.greenplum.pxf.api.UnsupportedTypeException;
+import org.greenplum.pxf.api.error.UnsupportedTypeException;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
