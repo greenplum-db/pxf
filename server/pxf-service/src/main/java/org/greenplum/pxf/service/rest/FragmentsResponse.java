@@ -21,9 +21,12 @@ package org.greenplum.pxf.service.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import org.apache.catalina.connector.ClientAbortException;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.utilities.FragmentMetadata;
 import org.greenplum.pxf.api.utilities.FragmentMetadataSerDe;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import javax.ws.rs.core.StreamingOutput;
@@ -39,6 +42,8 @@ import java.util.List;
  * lot of fragments.
  */
 public class FragmentsResponse implements StreamingResponseBody {
+
+    private static final Logger LOG = LoggerFactory.getLogger(FragmentsResponse.class);
 
     public static final byte[] PXF_FRAGMENT_ARRAY_END_BYTES = "]}".getBytes();
     public static final byte[] PXF_FRAGMENT_ARRAY_START_BYTES = "{\"PXFFragments\":[".getBytes();
@@ -70,6 +75,20 @@ public class FragmentsResponse implements StreamingResponseBody {
      */
     @Override
     public void writeTo(OutputStream output) throws IOException {
+        try {
+            writeToInternal(output);
+        } catch (ClientAbortException e) {
+            // Occurs whenever client (GPDB) decides to end the connection
+            if (LOG.isDebugEnabled()) {
+                // Stacktrace in debug
+                LOG.debug("Remote connection closed by GPDB", e);
+            } else {
+                LOG.error("Remote connection closed by GPDB (Enable debug for stacktrace)");
+            }
+        }
+    }
+
+    private void writeToInternal(OutputStream output) throws IOException {
         DataOutputStream dos = new DataOutputStream(output);
         ObjectMapper mapper = new ObjectMapper();
 

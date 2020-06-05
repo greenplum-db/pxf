@@ -17,9 +17,9 @@ dependencies {
      *******************************/
 
     implementation("org.apache.avro:avro-mapred:1.7.7")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.9.10.4")
-    implementation("com.fasterxml.jackson.core:jackson-core:2.9.10")
-    implementation("com.fasterxml.jackson.core:jackson-annotations:2.9.10")
+    implementation("com.fasterxml.jackson.core:jackson-databind")
+    implementation("com.fasterxml.jackson.core:jackson-core")
+    implementation("com.fasterxml.jackson.core:jackson-annotations")
     implementation("org.apache.hadoop:hadoop-yarn-api:${hadoopVersion}") // Kerberos dependency
     implementation("org.apache.hadoop:hadoop-yarn-client:${hadoopVersion}") // Kerberos dependency
     implementation("org.apache.hadoop:hadoop-common:${hadoopVersion}")
@@ -33,6 +33,26 @@ dependencies {
     implementation("org.apache.parquet:parquet-generator:${parquetVersion}")
     implementation("org.apache.parquet:parquet-hadoop:${parquetVersion}")
     implementation("org.apache.hive:hive-storage-api:2.4.0") // for parquet writing
+
+    implementation("org.apache.avro:avro:1.7.7")                  { transitive = false }
+    // Dependency in hadoop 2.9.2
+    implementation("com.fasterxml.woodstox:woodstox-core:5.0.3")  { transitive = false }
+    implementation("org.codehaus.woodstox:stax2-api:3.1.4")       { transitive = false }
+
+    /*******************************
+     * Dependencies for Supported Hadoop-Compatible Filesystems
+     *******************************/
+
+    // Azure Data Blob
+    implementation("org.apache.hadoop:hadoop-azure:${hadoopVersion}")  { transitive = false }
+    implementation("com.microsoft.azure:azure-storage:5.4.0")          { transitive = false }
+
+    // Azure Datalake jars
+    implementation("org.apache.hadoop:hadoop-azure-datalake:${hadoopVersion}") { transitive = false }
+    implementation("com.microsoft.azure:azure-data-lake-store-sdk:2.2.3")      { transitive = false }
+
+    // GCS jars and dependencies
+    implementation("com.google.cloud.bigdataoss:gcs-connector:hadoop2-1.9.17:shaded") { transitive = false }
 
     /*******************************
      * Test Dependencies

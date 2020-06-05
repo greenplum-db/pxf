@@ -67,9 +67,9 @@ public class AvroFileAccessor extends HdfsSplittableDataAccessor {
     /**
      * Constructs a new instance of the AvroFileAccessor
      */
-    public AvroFileAccessor() {
+    public AvroFileAccessor(AvroUtilities avroUtilities) {
         super(new AvroInputFormat<GenericRecord>());
-        avroUtilities = AvroUtilities.getInstance();
+        this.avroUtilities = avroUtilities;
     }
 
     /*

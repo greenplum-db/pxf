@@ -64,7 +64,6 @@ public class SecureLogin {
     public static final String CONFIG_KEY_SERVICE_KEYTAB = "pxf.service.kerberos.keytab";
     public static final String CONFIG_KEY_SERVICE_USER_IMPERSONATION = "pxf.service.user.impersonation";
     public static final String CONFIG_KEY_SERVICE_USER_NAME = "pxf.service.user.name";
-    private static final String PROPERTY_KEY_USER_IMPERSONATION = "pxf.service.user.impersonation.enabled";
 
     private static final Map<String, LoginSession> loginMap = new HashMap<>();
 
@@ -92,9 +91,9 @@ public class SecureLogin {
      * existing login user if there was a previous login for this server and no configuration parameters have
      * changed since the last login, otherwise logs the user in and stored the result for future reference.
      *
-     * @param serverName
-     * @param configDirectory
-     * @param configuration
+     * @param serverName      the name of the server
+     * @param configDirectory the location of the configuration directory
+     * @param configuration   the configuration for the server
      * @return UserGroupInformation of the login user
      * @throws IOException if an error occurs
      */
@@ -185,7 +184,7 @@ public class SecureLogin {
      * @return true if user impersonation is enabled, false otherwise
      */
     public boolean isUserImpersonationEnabled(Configuration configuration) {
-        String valueFromUserImpersonationOnServer = configuration.get(SecureLogin.CONFIG_KEY_SERVICE_USER_IMPERSONATION, System.getProperty(PROPERTY_KEY_USER_IMPERSONATION, "true"));
+        String valueFromUserImpersonationOnServer = configuration.get(SecureLogin.CONFIG_KEY_SERVICE_USER_IMPERSONATION, "true");
         return StringUtils.equalsIgnoreCase(valueFromUserImpersonationOnServer, "true");
     }
 
@@ -245,7 +244,7 @@ public class SecureLogin {
             return principal;
         } catch (Exception e) {
             throw new IllegalStateException(
-                    String.format("Failed to determine local hostname for server {} : {}", serverName, e.getMessage()), e);
+                    String.format("Failed to determine local hostname for server %s : %s", serverName, e.getMessage()), e);
         }
     }
 
@@ -271,7 +270,7 @@ public class SecureLogin {
      *
      * @param conf configuration
      * @return name of the host
-     * @throws IOException
+     * @throws IOException when an IOException occurs
      */
     private String getLocalHostName(@Nullable Configuration conf) throws IOException {
         if (conf != null) {

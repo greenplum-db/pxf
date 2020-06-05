@@ -84,6 +84,14 @@ install: stage
 	mkdir -p "$(PXF_HOME)"
 	cp -R build/stage/pxf/* "$(PXF_HOME)"
 
+.PHONY: install-dev
+install-dev: stage-notest
+	@if [ -z "$(PXF_HOME)" ]; then \
+		echo "ERROR: PXF_HOME is not set"; exit 2; \
+	fi
+	mkdir -p "$(PXF_HOME)"
+	cp -R build/stage/pxf/* "$(PXF_HOME)"
+
 .PHONY: version
 version:
 	@./gradlew -q version

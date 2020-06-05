@@ -17,6 +17,7 @@ public class ColumnProjectionTest extends BaseFeature {
     protected void beforeClass() throws Exception {
         String newPath = "/tmp/publicstage/pxf";
         // copy additional plugins classes to cluster nodes, used for filter pushdown cases
+        cluster.copyFileToNodes(new File("target/classes/" + testPackageLocation + "ColumnProjectionVerifyFragmentMetadata.class").getAbsolutePath(), newPath + testPackageLocation, true, false);
         cluster.copyFileToNodes(new File("target/classes/" + testPackageLocation + "ColumnProjectionVerifyFragmenter.class").getAbsolutePath(), newPath + testPackageLocation, true, false);
         cluster.copyFileToNodes(new File("target/classes/" + testPackageLocation + "ColumnProjectionVerifyAccessor.class").getAbsolutePath(), newPath + testPackageLocation, true, false);
         // add new path to classpath file and restart PXF service

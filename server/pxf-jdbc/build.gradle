@@ -15,7 +15,18 @@ dependencies {
 
     implementation(project(':pxf-api'))
     implementation("com.zaxxer:HikariCP:3.4.2")
-    implementation("org.postgresql:postgresql:42.2.11")
+    implementation("org.postgresql:postgresql:42.2.11")  { transitive = false }
+
+    /*******************************
+     * Transitive Dependencies for JDBC Hive Access
+     *******************************/
+
+    implementation("org.apache.hive:hive-jdbc:1.1.0")    { transitive = false }  // 1.2.2 breaks on CDH-5.x
+    implementation("org.apache.hive:hive-service:1.1.0") { transitive = false }  // 1.2.2 breaks on CDH-5.x
+    implementation("org.apache.thrift:libthrift:0.9.3")  { transitive = false }
+    implementation("org.apache.hive:hive-common:${hiveVersion}")             { transitive = false }
+    implementation("org.apache.hive.shims:hive-shims-0.23:${hiveVersion}")   { transitive = false }
+    implementation("org.apache.hive.shims:hive-shims-common:${hiveVersion}") { transitive = false }
 
     implementation("org.springframework.boot:spring-boot-starter-log4j2")
 

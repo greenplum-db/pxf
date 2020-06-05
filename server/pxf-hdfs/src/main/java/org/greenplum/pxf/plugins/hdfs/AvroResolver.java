@@ -69,8 +69,8 @@ public class AvroResolver extends BasePlugin implements Resolver {
     /**
      * Constructs a new instance of the AvroFileAccessor
      */
-    public AvroResolver() {
-        avroUtilities = AvroUtilities.getInstance();
+    public AvroResolver(AvroUtilities avroUtilities) {
+        this.avroUtilities = avroUtilities;
     }
 
     /*
