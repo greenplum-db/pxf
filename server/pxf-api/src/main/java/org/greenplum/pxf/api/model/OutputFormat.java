@@ -20,7 +20,7 @@ package org.greenplum.pxf.api.model;
  */
 
 
-import org.greenplum.pxf.api.UnsupportedTypeException;
+import org.greenplum.pxf.api.error.UnsupportedTypeException;
 
 /**
  * PXF supported output formats, enum which contains serializations classes

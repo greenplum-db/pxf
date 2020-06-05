@@ -51,7 +51,7 @@ public class HdfsDataFragmenter extends BaseFragmenter {
 
     protected static final String IGNORE_MISSING_PATH_OPTION = "IGNORE_MISSING_PATH";
 
-    protected JobConf jobConf;
+    private JobConf jobConf;
     protected HcfsType hcfsType;
 
     public HdfsDataFragmenter() {
@@ -65,7 +65,6 @@ public class HdfsDataFragmenter extends BaseFragmenter {
     public void afterPropertiesSet() {
         // Check if the underlying configuration is for HDFS
         hcfsType = HcfsType.getHcfsType(context);
-        jobConf = new JobConf(configuration, this.getClass());
     }
 
     /**
@@ -75,7 +74,6 @@ public class HdfsDataFragmenter extends BaseFragmenter {
      */
     @Override
     public List<Fragment> getFragments() throws Exception {
-        // TODO: do we need to revert to hcfsType.getDataUri(jobConf, context)
         Path path = new Path(hcfsType.getDataUri(context));
         List<InputSplit> splits;
         try {
@@ -108,7 +106,6 @@ public class HdfsDataFragmenter extends BaseFragmenter {
 
     @Override
     public FragmentStats getFragmentStats() throws Exception {
-        // TODO: make sure jobConf is not necessary or revert to hcfsType.getDataUri(jobConf, context)
         String absoluteDataPath = hcfsType.getDataUri(context);
         List<InputSplit> splits = getSplits(new Path(absoluteDataPath));
 
@@ -124,6 +121,7 @@ public class HdfsDataFragmenter extends BaseFragmenter {
     }
 
     protected List<InputSplit> getSplits(Path path) throws IOException {
+        JobConf jobConf = getJobConf();
         PxfInputFormat pxfInputFormat = new PxfInputFormat();
         PxfInputFormat.setInputPaths(jobConf, path);
         InputSplit[] splits = pxfInputFormat.getSplits(jobConf, 1);
@@ -142,5 +140,12 @@ public class HdfsDataFragmenter extends BaseFragmenter {
         }
 
         return result;
+    }
+
+    protected JobConf getJobConf() {
+        if (jobConf == null) {
+            jobConf = new JobConf(configuration, this.getClass());
+        }
+        return jobConf;
     }
 }

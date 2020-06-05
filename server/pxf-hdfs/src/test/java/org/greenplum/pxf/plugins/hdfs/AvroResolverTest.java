@@ -8,6 +8,7 @@ import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.plugins.hdfs.avro.AvroUtilities;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -31,7 +32,7 @@ public class AvroResolverTest {
 
     @BeforeEach
     public void setup() {
-        resolver = new AvroResolver();
+        resolver = new AvroResolver(new AvroUtilities());
         Configuration configuration = new Configuration();
         context = new RequestContext();
         context.setConfig("default");

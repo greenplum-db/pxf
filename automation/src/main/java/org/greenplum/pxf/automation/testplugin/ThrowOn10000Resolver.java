@@ -5,6 +5,8 @@ import org.apache.commons.logging.LogFactory;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.plugins.hdfs.StringPassResolver;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 import java.util.List;
 
@@ -13,6 +15,8 @@ import java.util.List;
  * This resolver throws a runtime exception after reading 10000 rows.
  * Used to test an error during ANALYZE.
  */
+@Component("ThrowOn10000Resolver")
+@RequestScope
 public class ThrowOn10000Resolver extends StringPassResolver {
 
 	private static Log Log = LogFactory.getLog(ThrowOn10000Resolver.class);

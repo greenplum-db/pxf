@@ -1,5 +1,6 @@
 package org.greenplum.pxf.plugins.hdfs.avro;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.generic.GenericDatumReader;
@@ -14,6 +15,7 @@ import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.plugins.hdfs.HcfsType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,10 +25,12 @@ import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.List;
 
+@Component
 public final class AvroUtilities {
-    private static String COMMON_NAMESPACE = "public.avro";
 
-    private FileSearcher fileSearcher;
+    private static final String COMMON_NAMESPACE = "public.avro";
+
+    private final FileSearcher fileSearcher;
     private String schemaPath;
     private final static Logger LOG = LoggerFactory.getLogger(AvroUtilities.class);
     AvroSchemaFileReaderFactory schemaFileReaderFactory = AvroSchemaFileReaderFactory.getInstance();
@@ -35,27 +39,17 @@ public final class AvroUtilities {
         File searchForFile(String filename);
     }
 
-    // default constructor
-    private AvroUtilities() {
-        fileSearcher = (file) -> {
-            try {
-                return searchForFile(file);
-            } catch (UnsupportedEncodingException e) {
-                LOG.info(e.toString());
-                return null;
-            }
-        };
+    /**
+     * default constructor
+     */
+    public AvroUtilities() {
+        this(new DefaultFileSearcher());
     }
-
-    private static AvroUtilities instance = new AvroUtilities();
 
     // constructor for use in test
+    @VisibleForTesting
     AvroUtilities(FileSearcher fileSearcher) {
         this.fileSearcher = fileSearcher;
-    }
-
-    public static AvroUtilities getInstance() {
-        return instance;
     }
 
     /**
@@ -64,7 +58,7 @@ public final class AvroUtilities {
      *
      * @param context  the context for the request
      * @param hcfsType the type of hadoop-compatible filesystem we are accessing
-     * @return
+     * @return the avro schema
      */
     public Schema obtainSchema(RequestContext context, HcfsType hcfsType) {
         Schema schema = (Schema) context.getMetadata();
@@ -100,7 +94,7 @@ public final class AvroUtilities {
         return readSchemaFromAvroDataSource(context.getConfiguration(), context.getDataSource());
     }
 
-    private static Schema readSchemaFromAvroDataSource(Configuration configuration, String dataSource) throws IOException {
+    private Schema readSchemaFromAvroDataSource(Configuration configuration, String dataSource) throws IOException {
         DatumReader<GenericRecord> datumReader = new GenericDatumReader<>();
         FsInput inStream = new FsInput(new Path(dataSource), configuration);
 
@@ -109,25 +103,7 @@ public final class AvroUtilities {
         }
     }
 
-    /*
-     * if user provided a full path, use that.
-     * otherwise we need to check classpath
-     */
-    private static File searchForFile(String schemaName) throws UnsupportedEncodingException {
-        File file = new File(schemaName);
-        if (!file.exists()) {
-            URL url = AvroUtilities.class.getClassLoader().getResource(schemaName);
-
-            // Testing that the schema resource exists
-            if (url == null) {
-                return null;
-            }
-            file = new File(URLDecoder.decode(url.getPath(), "UTF-8"));
-        }
-        return file;
-    }
-
-    private static Schema generateSchema(List<ColumnDescriptor> tupleDescription) throws IOException {
+    private Schema generateSchema(List<ColumnDescriptor> tupleDescription) throws IOException {
         Schema schema = Schema.createRecord("tableName", "", COMMON_NAMESPACE, false);
         List<Schema.Field> fields = new ArrayList<>();
 
@@ -145,7 +121,7 @@ public final class AvroUtilities {
         return schema;
     }
 
-    private static Schema getFieldSchema(DataType type, String colName) throws IOException {
+    private Schema getFieldSchema(DataType type, String colName) throws IOException {
         List<Schema> unionList = new ArrayList<>();
         // in this version of gpdb, external table should not set 'notnull' attribute
         // so we should use union between NULL and another type everywhere
@@ -179,4 +155,26 @@ public final class AvroUtilities {
         return Schema.createUnion(unionList);
     }
 
+    private static class DefaultFileSearcher implements FileSearcher {
+
+        @Override
+        public File searchForFile(String schemaName) {
+            try {
+                File file = new File(schemaName);
+                if (!file.exists()) {
+                    URL url = AvroUtilities.class.getClassLoader().getResource(schemaName);
+
+                    // Testing that the schema resource exists
+                    if (url == null) {
+                        return null;
+                    }
+                    file = new File(URLDecoder.decode(url.getPath(), "UTF-8"));
+                }
+                return file;
+            } catch (UnsupportedEncodingException e) {
+                LOG.info(e.toString());
+                return null;
+            }
+        }
+    }
 }

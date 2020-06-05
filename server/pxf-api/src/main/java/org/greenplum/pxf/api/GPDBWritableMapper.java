@@ -20,6 +20,7 @@ package org.greenplum.pxf.api;
  */
 
 
+import org.greenplum.pxf.api.error.UnsupportedTypeException;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.io.GPDBWritable;
 

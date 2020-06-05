@@ -30,12 +30,10 @@ import static org.mockito.Mockito.when;
 
 public class SecureLoginTest {
 
-    private static final String PROPERTY_KEY_USER_IMPERSONATION = "pxf.service.user.impersonation.enabled";
     private static final String PROPERTY_KEY_SERVICE_PRINCIPAL = "pxf.service.kerberos.principal";
     private static final String PROPERTY_KEY_SERVICE_KEYTAB = "pxf.service.kerberos.keytab";
     private static final String PROPERTY_KEY_KERBEROS_KDC = "java.security.krb5.kdc";
     private static final String PROPERTY_KEY_KERBEROS_REALM = "java.security.krb5.realm";
-    private static String userImpersonationEnabled;
     private static String kerberosPrincipal;
     private static String kerberosKeytab;
     private static String kdcDefault;
@@ -43,7 +41,6 @@ public class SecureLoginTest {
 
     @BeforeAll
     public static void getProperties() {
-        userImpersonationEnabled = System.getProperty(PROPERTY_KEY_USER_IMPERSONATION);
         kerberosPrincipal = System.getProperty(PROPERTY_KEY_SERVICE_PRINCIPAL);
         kerberosKeytab = System.getProperty(PROPERTY_KEY_SERVICE_KEYTAB);
         kdcDefault = System.getProperty(PROPERTY_KEY_KERBEROS_KDC);
@@ -52,7 +49,6 @@ public class SecureLoginTest {
 
     @AfterAll
     public static void resetProperties() {
-        resetProperty(PROPERTY_KEY_USER_IMPERSONATION, userImpersonationEnabled);
         resetProperty(PROPERTY_KEY_SERVICE_PRINCIPAL, kerberosPrincipal);
         resetProperty(PROPERTY_KEY_SERVICE_KEYTAB, kerberosKeytab);
         resetProperty(PROPERTY_KEY_KERBEROS_KDC, kdcDefault);
@@ -85,7 +81,6 @@ public class SecureLoginTest {
         secureLogin = new SecureLogin();
         SecureLogin.reset();
         configuration = new Configuration();
-        System.clearProperty(PROPERTY_KEY_USER_IMPERSONATION);
         System.clearProperty(PROPERTY_KEY_SERVICE_PRINCIPAL);
         System.clearProperty(PROPERTY_KEY_SERVICE_KEYTAB);
         // simulate presence of krb.conf file
@@ -427,30 +422,6 @@ public class SecureLoginTest {
     }
 
     @Test
-    public void testGlobalImpersonationPropertyEmpty() {
-        System.setProperty(PROPERTY_KEY_USER_IMPERSONATION, "");
-        assertFalse(secureLogin.isUserImpersonationEnabled(configuration));
-    }
-
-    @Test
-    public void testGlobalImpersonationPropertyFalse() {
-        System.setProperty(PROPERTY_KEY_USER_IMPERSONATION, "foo");
-        assertFalse(secureLogin.isUserImpersonationEnabled(configuration));
-    }
-
-    @Test
-    public void testGlobalImpersonationPropertyTRUE() {
-        System.setProperty(PROPERTY_KEY_USER_IMPERSONATION, "TRUE");
-        assertTrue(secureLogin.isUserImpersonationEnabled(configuration));
-    }
-
-    @Test
-    public void testGlobalImpersonationPropertyTrue() {
-        System.setProperty(PROPERTY_KEY_USER_IMPERSONATION, "true");
-        assertTrue(secureLogin.isUserImpersonationEnabled(configuration));
-    }
-
-    @Test
     public void testServerConfigurationImpersonationPropertyFalse() {
         configuration.set("pxf.service.user.impersonation", "foo");
         assertFalse(secureLogin.isUserImpersonationEnabled(configuration));
@@ -466,20 +437,6 @@ public class SecureLoginTest {
     public void testServerConfigurationImpersonationPropertyTRUE() {
         configuration.set("pxf.service.user.impersonation", "TRUE");
         assertTrue(secureLogin.isUserImpersonationEnabled(configuration));
-    }
-
-    @Test
-    public void testServerConfigurationImpersonationOverwritesGlobalTrue() {
-        System.setProperty(PROPERTY_KEY_USER_IMPERSONATION, "false");
-        configuration.set("pxf.service.user.impersonation", "true");
-        assertTrue(secureLogin.isUserImpersonationEnabled(configuration));
-    }
-
-    @Test
-    public void testServerConfigurationImpersonationOverwritesGlobalFalse() {
-        System.setProperty(PROPERTY_KEY_USER_IMPERSONATION, "true");
-        configuration.set("pxf.service.user.impersonation", "false");
-        assertFalse(secureLogin.isUserImpersonationEnabled(configuration));
     }
 
     private static void resetProperty(String key, String val) {
