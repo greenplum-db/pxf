@@ -60,18 +60,17 @@ public class AvroResolver extends BasePlugin implements Resolver {
     // member kept to enable reuse, and thus avoid repeated allocation
     private BinaryDecoder decoder = null;
     private List<Schema.Field> fields = null;
-    private RecordkeyAdapter recordkeyAdapter = new RecordkeyAdapter();
+    private final RecordkeyAdapter recordkeyAdapter = new RecordkeyAdapter();
     private String collectionDelim;
     private String mapkeyDelim;
     private String recordkeyDelim;
-    private HcfsType hcfsType;
-    private AvroUtilities avroUtilities;
+    private final AvroUtilities avroUtilities;
 
     /**
      * Constructs a new instance of the AvroFileAccessor
      */
-    public AvroResolver() {
-        avroUtilities = AvroUtilities.getInstance();
+    public AvroResolver(AvroUtilities avroUtilities) {
+        this.avroUtilities = avroUtilities;
     }
 
     /*
@@ -84,7 +83,7 @@ public class AvroResolver extends BasePlugin implements Resolver {
      */
     @Override
     public void afterPropertiesSet() {
-        hcfsType = HcfsType.getHcfsType(context);
+        HcfsType hcfsType = HcfsType.getHcfsType(context);
         Schema schema = avroUtilities.obtainSchema(context, hcfsType);
 
         reader = new GenericDatumReader<>(schema);

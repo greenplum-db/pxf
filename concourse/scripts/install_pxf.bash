@@ -66,9 +66,11 @@ function create_pxf_installer_scripts() {
 		  netstat -tlpna | grep 5888 || true
 
 		  if [[ $IMPERSONATION == false ]]; then
-		    echo 'Impersonation is disabled, updating pxf-env.sh property'
-		    # sed -ie 's|^[[:blank:]]*export PXF_USER_IMPERSONATION=.*$|export PXF_USER_IMPERSONATION=false|g' "\${PXF_CONF}/conf/pxf-env.sh"
-		    echo 'PXF_USER_IMPERSONATION=false' >> "\${PXF_CONF}/conf/pxf-env.sh"
+		    echo 'Impersonation is disabled, updating pxf-site.xml property'
+		    if [[ ! -f \${PXF_CONF}/servers/default/pxf-site.xml ]]; then
+		      cp \${PXF_CONF}/templates/pxf-site.xml \${PXF_CONF}/servers/default/pxf-site.xml
+		    fi
+		    sed -i -e "s|<value>true</value>|<value>false</value>|g" \${PXF_CONF}/servers/default/pxf-site.xml
 		  fi
 
 		  if [[ -n "${PXF_JVM_OPTS}" ]]; then
@@ -91,8 +93,11 @@ function create_pxf_installer_scripts() {
 		      sed -i "s/\${REALM_2} =/}\n\t\${REALM_2} =/g" /tmp/krb5.conf
 		    fi
 
-		    echo 'export PXF_KEYTAB="\${PXF_CONF}/keytabs/pxf.service.keytab"' >> "\${PXF_CONF}/conf/pxf-env.sh"
-		    echo 'export PXF_PRINCIPAL="gpadmin@${REALM}"' >> "\${PXF_CONF}/conf/pxf-env.sh"
+		    if [[ ! -f \${PXF_CONF}/servers/default/pxf-site.xml ]]; then
+		      cp \${PXF_CONF}/templates/pxf-site.xml \${PXF_CONF}/servers/default/pxf-site.xml
+		    fi
+
+		    sed -i -e "s|gpadmin/_HOST@EXAMPLE.COM|gpadmin@${REALM}|g" ${PXF_CONF_DIR}/servers/default/pxf-site.xml
 		    gpscp -f ~gpadmin/hostfile_all -v -r -u gpadmin ~/dataproc_env_files/pxf.service.keytab =:/home/gpadmin/pxf/keytabs/
 		    gpscp -f ~gpadmin/hostfile_all -v -r -u centos /tmp/krb5.conf =:/tmp/krb5.conf
 		    gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e 'sudo mv /tmp/krb5.conf /etc/krb5.conf'

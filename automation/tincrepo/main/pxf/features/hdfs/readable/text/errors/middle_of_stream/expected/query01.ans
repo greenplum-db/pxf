@@ -14,5 +14,5 @@
 -- end_matchsubs
 
 SELECT * FROM error_on_10000 ORDER BY num ASC;
-ERROR:  transfer error (18): Transferred a partial file from 'SOME_IP:SOME_PORT' (libchurl.c:xxx)
+ERROR:  extra data after last expected column
 DETAIL:  External table error_on_10000

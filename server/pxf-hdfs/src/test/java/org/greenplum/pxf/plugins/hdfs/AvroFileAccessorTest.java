@@ -3,6 +3,7 @@ package org.greenplum.pxf.plugins.hdfs;
 import org.apache.avro.Schema;
 import org.apache.hadoop.conf.Configuration;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.plugins.hdfs.avro.AvroUtilities;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -19,7 +20,7 @@ public class AvroFileAccessorTest {
 
     @BeforeEach
     public void setup() {
-        accessor = new AvroFileAccessor();
+        accessor = new AvroFileAccessor(new AvroUtilities());
         context = new RequestContext();
         context.setConfig("fakeConfig");
         context.setServerName("fakeServerName");

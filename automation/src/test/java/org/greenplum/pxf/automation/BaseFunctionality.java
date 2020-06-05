@@ -1,11 +1,11 @@
 package org.greenplum.pxf.automation;
 
+import org.apache.commons.lang.StringUtils;
+import org.greenplum.pxf.automation.structures.tables.basic.Table;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.apache.commons.lang.StringUtils;
-import org.greenplum.pxf.automation.structures.tables.basic.Table;
 
 /**
  * Functionality Tests Base Class
@@ -22,7 +22,7 @@ public abstract class BaseFunctionality extends BaseTestParent {
      * @return Table
      * @throws IOException
      */
-    protected Table getSmallData(String uniqueName, int numRows) throws IOException {
+    protected Table getSmallData(String uniqueName, int numRows) {
         List<List<String>> data = new ArrayList<>();
 
         for (int i = 1; i <= numRows; i++) {
@@ -30,7 +30,7 @@ public abstract class BaseFunctionality extends BaseTestParent {
             row.add(String.format("%s%srow_%d", uniqueName, StringUtils.isBlank(uniqueName) ? "" : "_", i));
             row.add(String.valueOf(i));
             row.add(String.valueOf(Double.toString(i)));
-            row.add(String.valueOf(Long.toString(100000000000L * i)));
+            row.add(Long.toString(100000000000L * i));
             row.add(String.valueOf(i % 2 == 0));
             data.add(row);
         }
@@ -45,7 +45,7 @@ public abstract class BaseFunctionality extends BaseTestParent {
         return getSmallData("");
     }
 
-    protected Table getSmallData(String uniqueName) throws IOException {
+    protected Table getSmallData(String uniqueName) {
         return getSmallData(uniqueName, 100);
     }
 

@@ -12,7 +12,7 @@
     </property>
     <property>
         <name>pxf.service.user.impersonation</name>
-        <value>${pxf.service.user.impersonation.enabled}</value>
+        <value>true</value>
         <description>End-user identity impersonation, set to true to enable, false to disable</description>
     </property>
     <property>

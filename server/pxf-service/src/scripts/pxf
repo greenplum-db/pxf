@@ -390,16 +390,12 @@ function do_start() {
     fi
 
     PXF_OPTS=(-Dlogging.config=${PXF_CONF}/conf/pxf-log4j2.xml)
-    if [ "$PXF_OOM_KILL" = true ]; then
-      PXF_OPTS+=(-XX:OnOutOfMemoryError="${PXF_HOME}/bin/kill-pxf.sh %p")
-    fi
-    if [ -n "$PXF_OOM_DUMP_PATH" ]; then
-      PXF_OPTS+=(-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=$PXF_OOM_DUMP_PATH)
-    fi
+    [[ $PXF_DEBUG == true ]]      && PXF_OPTS+=(-agentlib:jdwp=transport=dt_socket,address=2020,suspend=n,server=y)
+    [[ $PXF_OOM_KILL = true ]]    && PXF_OPTS+=(-XX:OnOutOfMemoryError="${PXF_HOME}/bin/kill-pxf.sh %p")
+    [[ -n "$PXF_OOM_DUMP_PATH" ]] && PXF_OPTS+=(-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=$PXF_OOM_DUMP_PATH)
     JAVA_OPTS=($PXF_JVM_OPTS  "${PXF_OPTS[@]}")
 
     local arguments=(-Dsun.misc.URLClassPath.disableJarChecking=true "${JAVA_OPTS[@]}" -jar "$jarfile" $RUN_ARGS)
-    [[ $PXF_DEBUG == true ]] && arguments+=(-Dagentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=2020)
 
     working_dir=$(dirname "$jarfile")
     pushd "$working_dir" > /dev/null || exit 1
@@ -440,13 +436,19 @@ function doStop()
     # first try endpoint (assume it might be disabled)
     if $curl --max-time 5 --silent -X POST "localhost:$PXF_PORT/actuator/shutdown" | grep "Shutting down, bye..." > /dev/null; then
       for i in $(seq 1 $STOP_WAIT_TIME); do
-        isRunning "$pid" || { echoGreen "PXF stopped [pid=$pid]"; return 0; }
-        sleep 1
+        if isRunning "$pid"; then
+          sleep 1
+        else
+          echoGreen "PXF stopped [pid=$pid]"
+          rm -f $pid_file
+          return 0
+        fi
       done
     fi
 
     # second try a nice kill and if that doesn't work force kill
     do_stop "$pid" "$pid_file" || do_stop "$pid" "$pid_file" "-f"
+    rm -f $pid_file
 }
 
 do_stop() {

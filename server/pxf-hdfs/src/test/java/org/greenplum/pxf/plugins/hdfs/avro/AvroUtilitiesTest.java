@@ -22,7 +22,6 @@ public class AvroUtilitiesTest {
     private Schema schema;
     private Schema testSchema;
     private String avroDirectory;
-    private Configuration configuration;
     private AvroUtilities avroUtilities;
     private HcfsType hcfsType;
 
@@ -30,11 +29,11 @@ public class AvroUtilitiesTest {
     public void setup() {
         avroDirectory = this.getClass().getClassLoader().getResource("avro/").getPath();
         context = new RequestContext();
-        configuration = new Configuration();
+        Configuration configuration = new Configuration();
         context.setDataSource(avroDirectory + "test.avro");
         context.setConfiguration(configuration);
         testSchema = generateTestSchema();
-        avroUtilities = AvroUtilities.getInstance();
+        avroUtilities = new AvroUtilities();
         hcfsType = HcfsType.getHcfsType(context);
     }
 
@@ -395,7 +394,8 @@ public class AvroUtilitiesTest {
     /**
      * Helper method for testing schema
      *
-     * @param schema
+     * @param schema the schema
+     * @param name   the name
      */
     private static void verifySchema(Schema schema, String name) {
         assertNotNull(schema);
@@ -417,7 +417,7 @@ public class AvroUtilitiesTest {
     /**
      * Helper method for testing generated schema
      *
-     * @param schema
+     * @param schema the schema
      */
     private static void verifyGeneratedSchema(Schema schema) {
         assertNotNull(schema);
@@ -453,7 +453,7 @@ public class AvroUtilitiesTest {
      * Generate a schema that matches the avro file
      * server/pxf-hdfs/src/test/resources/avro/test.avro
      *
-     * @return
+     * @return the schema
      */
     private Schema generateTestSchema() {
         Schema schema = Schema.createRecord("example_schema", "A basic schema for storing messages", "com.example", false);

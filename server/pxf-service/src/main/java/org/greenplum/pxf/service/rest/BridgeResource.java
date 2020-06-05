@@ -19,6 +19,7 @@ package org.greenplum.pxf.service.rest;
  * under the License.
  */
 
+import org.apache.catalina.connector.ClientAbortException;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.service.bridge.Bridge;
 import org.greenplum.pxf.service.bridge.BridgeFactory;
@@ -34,6 +35,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /*
  * This class handles the subpath /<version>/Bridge/ of this
@@ -64,19 +66,40 @@ public class BridgeResource extends BaseResource {
      */
     @GetMapping(value = "/Bridge", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity<StreamingResponseBody> read(
-            @RequestHeader MultiValueMap<String, String> headers) throws IOException {
+            @RequestHeader MultiValueMap<String, String> headers) throws IOException, InterruptedException {
+        try {
+            return readInternal(headers);
+        } catch (ClientAbortException e) {
+            // Occurs whenever client (GPDB) decides to end the connection
+            if (LOG.isDebugEnabled()) {
+                // Stacktrace in debug
+                LOG.debug("Remote connection closed by GPDB", e);
+            } else {
+                LOG.error("Remote connection closed by GPDB (Enable debug for stacktrace)");
+            }
+        }
+        // Return an empty outputStream on error
+        return new ResponseEntity<>(outputStream -> {
+        }, HttpStatus.OK);
+    }
+
+    private ResponseEntity<StreamingResponseBody> readInternal(MultiValueMap<String, String> headers) throws IOException, InterruptedException {
 
         RequestContext context = parseRequest(headers);
-        Bridge bridge = bridgeFactory.getBridge(context);
-
         // THREAD-SAFE parameter has precedence
-        boolean isThreadSafe = context.isThreadSafe() && bridge.isThreadSafe();
-        LOG.debug("Request for {} will be handled {} synchronization", context.getDataSource(), (isThreadSafe ? "without" : "with"));
+        AtomicBoolean isThreadSafe = new AtomicBoolean(context.isThreadSafe());
+        Bridge bridge = securityService.doAs(context, false, () -> {
+            Bridge br = bridgeFactory.getBridge(context);
+            isThreadSafe.set(isThreadSafe.get() && br.isThreadSafe());
+            return br;
+        });
+
+        LOG.debug("Request for {} will be handled {} synchronization", context.getDataSource(), (isThreadSafe.get() ? "without" : "with"));
 
         // Create a streaming class which will iterate over the records and put
         // them on the output stream
         StreamingResponseBody response =
-                new BridgeResponse(securityService, bridge, context, isThreadSafe);
+                new BridgeResponse(securityService, bridge, context, isThreadSafe.get());
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

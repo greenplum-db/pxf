@@ -20,12 +20,11 @@ package org.greenplum.pxf.plugins.hbase;
  */
 
 
-import org.greenplum.pxf.api.BadRecordException;
+import org.greenplum.pxf.api.error.BadRecordException;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.UnsupportedTypeException;
+import org.greenplum.pxf.api.error.UnsupportedTypeException;
 import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseColumnDescriptor;

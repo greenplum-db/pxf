@@ -21,7 +21,7 @@ package org.greenplum.pxf.plugins.json;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.greenplum.pxf.api.BadRecordException;
+import org.greenplum.pxf.api.error.BadRecordException;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.io.DataType;

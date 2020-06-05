@@ -20,8 +20,13 @@ public abstract class BaseBridge implements Bridge {
     protected Resolver resolver;
 
     public BaseBridge(ApplicationContext applicationContext, RequestContext context) {
-        this.accessor = applicationContext.getBean(Utilities.getShortClassName(context.getAccessor()), Accessor.class);
-        this.resolver = applicationContext.getBean(Utilities.getShortClassName(context.getResolver()), Resolver.class);
+        String accessorClassName = Utilities.getShortClassName(context.getAccessor());
+        String resolverClassName = Utilities.getShortClassName(context.getResolver());
+
+        LOG.debug("Creating accessor bean '{}' and resolver bean '{}'", accessorClassName, resolverClassName);
+
+        this.accessor = applicationContext.getBean(accessorClassName, Accessor.class);
+        this.resolver = applicationContext.getBean(resolverClassName, Resolver.class);
     }
 
     /**

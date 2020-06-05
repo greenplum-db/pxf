@@ -20,7 +20,7 @@ package org.greenplum.pxf.plugins.json;
  */
 
 import org.apache.hadoop.fs.Path;
-import org.greenplum.pxf.api.BadRecordException;
+import org.greenplum.pxf.api.error.BadRecordException;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.Fragmenter;

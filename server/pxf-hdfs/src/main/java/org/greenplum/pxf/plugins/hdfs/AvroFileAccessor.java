@@ -53,14 +53,14 @@ public class AvroFileAccessor extends HdfsSplittableDataAccessor {
     private DataFileWriter<GenericRecord> writer;
     private long rowsWritten, rowsRead;
     private Schema schema;
-    private AvroUtilities avroUtilities;
+    private final AvroUtilities avroUtilities;
 
     /**
      * Constructs a new instance of the AvroFileAccessor
      */
-    public AvroFileAccessor() {
+    public AvroFileAccessor(AvroUtilities avroUtilities) {
         super(new AvroInputFormat<GenericRecord>());
-        avroUtilities = AvroUtilities.getInstance();
+        this.avroUtilities = avroUtilities;
     }
 
     /*

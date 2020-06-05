@@ -39,6 +39,4 @@ fi
 
 %preun
 # cleanup files and directories created by 'pxf init' command
-%__rm -f %{prefix}/conf/pxf-private.classpath
-%__rm -rf %{prefix}/pxf-service
 %__rm -rf %{prefix}/run

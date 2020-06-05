@@ -39,6 +39,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.DataInputStream;
 import java.io.InputStream;
 import java.security.PrivilegedExceptionAction;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.greenplum.pxf.api.model.RequestContext.RequestType;
 
@@ -118,13 +119,18 @@ public class WritableResource extends BaseResource {
                                          HttpServletRequest request) throws Exception {
 
         RequestContext context = parseRequest(headers);
-        Bridge bridge = bridgeFactory.getBridge(context);
+        // THREAD-SAFE parameter has precedence
+        AtomicBoolean isThreadSafe = new AtomicBoolean(context.isThreadSafe());
+        Bridge bridge = securityService.doAs(context, false, () -> {
+            Bridge br = bridgeFactory.getBridge(context);
+            isThreadSafe.set(isThreadSafe.get() && br.isThreadSafe());
+            return br;
+        });
 
         // THREAD-SAFE parameter has precedence
-        boolean isThreadSafe = context.isThreadSafe() && bridge.isThreadSafe();
-        LOG.debug("Request for {} will be handled {} synchronization", context.getDataSource(), (isThreadSafe ? "without" : "with"));
+        LOG.debug("Request for {} will be handled {} synchronization", context.getDataSource(), (isThreadSafe.get() ? "without" : "with"));
 
-        return isThreadSafe ?
+        return isThreadSafe.get() ?
                 writeResponse(context, bridge, path, request.getInputStream()) :
                 synchronizedWriteResponse(context, bridge, path, request.getInputStream());
     }
@@ -177,7 +183,8 @@ public class WritableResource extends BaseResource {
             return totalWritten;
         };
 
-        Long totalWritten = securityService.doAs(context, action);
+        // TODO: should we do true instead of context.isLastFragment(). segments only stream one thing when they write
+        Long totalWritten = securityService.doAs(context, context.isLastFragment(), action);
         String censuredPath = Utilities.maskNonPrintables(path);
         String returnMsg = String.format("wrote %d bulks to %s", totalWritten, censuredPath);
         LOG.debug(returnMsg);
