@@ -10,11 +10,9 @@ import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.Fragmenter;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.RequestContext.RequestType;
-import org.greenplum.pxf.api.security.SecureLogin;
 import org.greenplum.pxf.api.utilities.FragmenterCacheFactory;
 import org.greenplum.pxf.service.FakeTicker;
 import org.greenplum.pxf.service.RequestParser;
-import org.greenplum.pxf.service.UGICache;
 import org.greenplum.pxf.service.security.SecurityService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,7 +32,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -50,7 +47,6 @@ public class FragmenterResourceTest {
     private Cache<String, List<Fragment>> fragmentCache;
     private FakeTicker fakeTicker;
     private RequestParser<MultiValueMap<String, String>> mockParser;
-    private SecurityService mockSecurityService;
     private PxfServerProperties mockPxfServerProperties;
     private FragmenterResource fragmenterResource;
 
@@ -79,7 +75,7 @@ public class FragmenterResourceTest {
         when(fragmenterCacheFactory.getCache()).thenReturn(fragmentCache);
         when(mockPxfServerProperties.isMetadataCacheEnabled()).thenReturn(true);
 
-        mockSecurityService = mock(SecurityService.class);
+        FakeSecurityService fakeSecurityService = new FakeSecurityService();
 
         fragmenterResource = new FragmenterResource();
         fragmenterResource.setApplicationContext(mockApplicationContext);
@@ -87,7 +83,7 @@ public class FragmenterResourceTest {
         fragmenterResource.setPxfServerProperties(mockPxfServerProperties);
         fragmenterResource.setConfigurationFactory(mockConfigurationFactory);
         fragmenterResource.setRequestParser(mockParser);
-        fragmenterResource.setSecurityService(mockSecurityService);
+        fragmenterResource.setSecurityService(fakeSecurityService);
     }
 
     @Test
@@ -99,7 +95,6 @@ public class FragmenterResourceTest {
 
         when(mockParser.parseRequest(mockRequestHeaders1, RequestType.FRAGMENTER)).thenReturn(context);
         when(mockApplicationContext.getBean("Fragmenter", Fragmenter.class)).thenReturn(fragmenter1);
-        answerForSecurityService(context);
 
         fragmenterResource.getFragments(mockRequestHeaders1);
         verify(fragmenter1, times(1)).getFragments();
@@ -192,9 +187,6 @@ public class FragmenterResourceTest {
 
         when(fragmenter1.getFragments()).thenReturn(fragmentList);
 
-        answerForSecurityService(context1);
-        answerForSecurityService(context2);
-
         ResponseEntity<FragmentsResponse> response1 = fragmenterResource.getFragments(mockRequestHeaders1);
         ResponseEntity<FragmentsResponse> response2 = fragmenterResource.getFragments(mockRequestHeaders2);
 
@@ -232,9 +224,6 @@ public class FragmenterResourceTest {
         when(fragmenter1.getFragments()).thenReturn(fragmentList1);
         when(fragmenter2.getFragments()).thenReturn(fragmentList2);
 
-        answerForSecurityService(context1);
-        answerForSecurityService(context2);
-
         ResponseEntity<FragmentsResponse> response1 = fragmenterResource.getFragments(mockRequestHeaders1);
         fakeTicker.advanceTime(11 * 1000);
         ResponseEntity<FragmentsResponse> response2 = fragmenterResource.getFragments(mockRequestHeaders2);
@@ -251,7 +240,6 @@ public class FragmenterResourceTest {
         assertSame(fragmentList2, response2.getBody().getFragments());
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void testMultiThreadedAccessToFragments() throws Throwable {
         final AtomicInteger finishedCount = new AtomicInteger();
@@ -259,6 +247,7 @@ public class FragmenterResourceTest {
         int threadCount = 100;
         Thread[] threads = new Thread[threadCount];
         final Fragmenter fragmenter = mock(Fragmenter.class);
+        when(mockApplicationContext.getBean("Fragmenter", Fragmenter.class)).thenReturn(fragmenter);
 
         for (int i = 0; i < threads.length; i++) {
             int index = i;
@@ -271,13 +260,7 @@ public class FragmenterResourceTest {
                 context.setSegmentId(index % 10);
                 context.setFragmenter("org.greenplum.pxf.api.model.Fragmenter");
 
-                try {
-                    answerForSecurityService(context);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
                 when(mockParser.parseRequest(httpHeaders, RequestType.FRAGMENTER)).thenReturn(context);
-                when(mockApplicationContext.getBean("Fragmenter", Fragmenter.class)).thenReturn(fragmenter);
 
                 try {
                     fragmenterResource.getFragments(httpHeaders);
@@ -328,9 +311,6 @@ public class FragmenterResourceTest {
         when(fragmenter1.getFragments()).thenReturn(fragmentList1);
         when(fragmenter2.getFragments()).thenReturn(fragmentList2);
 
-        answerForSecurityService(context1);
-        answerForSecurityService(context2);
-
         ResponseEntity<FragmentsResponse> response1 = fragmenterResource.getFragments(mockRequestHeaders1);
         ResponseEntity<FragmentsResponse> response2 = fragmenterResource.getFragments(mockRequestHeaders2);
 
@@ -360,8 +340,11 @@ public class FragmenterResourceTest {
         assertEquals(0, fragmentCache.size());
     }
 
-    private void answerForSecurityService(RequestContext context) throws IOException {
-        when(mockSecurityService.doAs(eq(context), any())).thenAnswer(invocation ->
-                invocation.getArgument(1, PrivilegedExceptionAction.class).run());
+    private static class FakeSecurityService implements SecurityService {
+
+        @Override
+        public <T> T doAs(RequestContext context, boolean lastCallForSegment, PrivilegedExceptionAction<T> action) throws IOException, InterruptedException {
+            return UserGroupInformation.getCurrentUser().doAs(action);
+        }
     }
 }

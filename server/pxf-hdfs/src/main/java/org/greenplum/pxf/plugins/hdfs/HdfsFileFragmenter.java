@@ -4,6 +4,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.InvalidInputException;
+import org.apache.hadoop.mapred.JobConf;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.plugins.hdfs.utilities.PxfInputFormat;
 import org.springframework.stereotype.Component;
@@ -30,7 +31,7 @@ public class HdfsFileFragmenter extends HdfsDataFragmenter {
      */
     @Override
     public List<Fragment> getFragments() throws Exception {
-        // TODO: make sure jobConf is not needed or revert to hcfsType.getDataUri(jobConf, context);
+        JobConf jobConf = getJobConf();
         String fileName = hcfsType.getDataUri(context);
         Path path = new Path(fileName);
 

@@ -35,9 +35,11 @@ import org.springframework.util.MultiValueMap;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.security.PrivilegedExceptionAction;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -51,7 +53,7 @@ public class WritableResourceTest {
 
     @BeforeEach
     @SuppressWarnings("unchecked")
-    public void before() throws IOException {
+    public void before() throws IOException, InterruptedException {
 
         Configuration configuration = new Configuration();
 
@@ -70,7 +72,8 @@ public class WritableResourceTest {
         writableResource.setRequestParser(mockParser);
         writableResource.setConfigurationFactory(mockConfigurationFactory);
 
-        when(mockSecurityService.doAs(any(), any())).thenReturn(0L);
+        when(mockSecurityService.doAs(any(), anyBoolean(), any())).thenAnswer(invocation ->
+                invocation.getArgument(2, PrivilegedExceptionAction.class).run());
         when(mockConfigurationFactory.initConfiguration(any(), any(), any(), any())).thenReturn(configuration);
         when(mockParser.parseRequest(mockHeaders, RequestType.WRITE_BRIDGE)).thenReturn(mockContext);
         when(mockFactory.getBridge(mockContext)).thenReturn(mockBridge);

@@ -16,8 +16,11 @@ dependencies {
      *******************************/
 
     implementation(project(':pxf-jdbc'))
-    implementation("org.apache.hadoop:hadoop-aws:${hadoopVersion}")
-    implementation("com.amazonaws:aws-java-sdk-s3:${awsJavaSdk}")
+    implementation("org.apache.hadoop:hadoop-aws:${hadoopVersion}") { transitive = false }
+    implementation("com.amazonaws:aws-java-sdk-core:${awsJavaSdk}") { transitive = false }
+    implementation("com.amazonaws:aws-java-sdk-kms:${awsJavaSdk}")  { transitive = false }
+    implementation("com.amazonaws:aws-java-sdk-s3:${awsJavaSdk}")   { transitive = false }
+    implementation("joda-time:joda-time:2.8.1")                     { transitive = false }
 
     /*******************************
      * Test Dependencies

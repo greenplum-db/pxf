@@ -29,5 +29,8 @@
 --
 -- end_matchsubs
 SELECT * FROM pxf_secured_invalid_keytab ORDER BY name;
-ERROR:  remote component error (500) from 'SOME_IP:SOME_PORT':  type  Exception Report   Message  PXF service login failed for server secure-hdfs-invalid-keytab
+ERROR:  PXF server error : PXF service login failed for server secure-hdfs-invalid-keytab
+-- start_ignore
+HINT:  Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=DEBUG1' for additional details.
+-- end_ignore
 DETAIL:  External table pxf_secured_invalid_keytab, file pxf://pxf_automation_data/data.txt?PROFILE=hdfs:text&SERVER=secure-hdfs-invalid-keytab

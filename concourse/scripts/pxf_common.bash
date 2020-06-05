@@ -442,8 +442,11 @@ function init_and_configure_pxf_server() {
 
 	# update impersonation value based on CI parameter
 	if [[ ! ${IMPERSONATION} == true ]]; then
-		echo 'Impersonation is disabled, updating pxf-env.sh property'
-		su gpadmin -c "echo 'export PXF_USER_IMPERSONATION=false' >> ${PXF_CONF_DIR}/conf/pxf-env.sh"
+		echo 'Impersonation is disabled, updating pxf-site.xml property'
+		if [[ ! -f ${PXF_CONF_DIR}/servers/default/pxf-site.xml ]]; then
+			cp ${PXF_CONF_DIR}/templates/pxf-site.xml ${PXF_CONF_DIR}/servers/default/pxf-site.xml
+		fi
+		sed -i -e "s|<value>true</value>|<value>false</value>|g" ${PXF_CONF_DIR}/servers/default/pxf-site.xml
 	elif [[ -z ${PROTOCOL} ]]; then
 		# Copy pxf-site.xml to the server configuration and update the
 		# pxf.service.user.name property value to use the PROXY_USER
