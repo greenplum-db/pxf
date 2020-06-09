@@ -1,0 +1,21 @@
+book_repo: greenplum-db/docs/book
+
+public_host: localhost:9292
+
+sections:
+- repository:
+    name: content
+  directory: pxf/WIP
+  subnav_template: pxf-subnav
+
+template_variables:
+  book_title: Greenplum Database PXF Documentation
+  book_title_short:  Greenplum Database PXF Docs
+  domain_name: greenplum.org
+  product_link: <div class="header-item"><a href="https://docs.greenplum.org">To Greenplum Database Docs</a></div>
+  product_url: https://greenplum.org
+  support_call_to_action: <a href="https://greenplum.org/community/" target="_blank">Need Support?</a>
+  support_link: <a href="https://github.com/greenplum-db/pxf/wiki">Wiki</a>
+  support_url: https://greenplum.org
+
+broken_link_exclusions: iefix|arrowhead
