@@ -180,7 +180,7 @@ The `gphdfs` protocol uses the `FORMAT` clause to determine the format of the ex
 | Parquet | FORMAT 'PARQUET' | FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import') (read)<br>FORMAT 'CUSTOM' (FORMATTER='pxfwritable_export') (write) | 
 | Text  | FORMAT 'TEXT' (DELIMITER ',') | FORMAT 'TEXT' (DELIMITER ',') | 
 
-For text data, the `FORMAT` clause may identify a delimiter or other formatting option as described on the [CREATE EXTERNAL TABLE](../ref_guide/sql_commands/CREATE_EXTERNAL_TABLE.html) command reference page.
+For text data, the `FORMAT` clause may identify a delimiter or other formatting option as described on the Greenplum Database [CREATE EXTERNAL TABLE](https://gpdb.docs.pivotal.io/latest/ref_guide/sql_commands/CREATE_EXTERNAL_TABLE.html) command reference page.
 
 
 ### <a id="text_example" class="no-quick-link"></a>Example gphdfs to pxf External Table Mapping for an HDFS Text File
