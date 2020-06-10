@@ -47,7 +47,7 @@ The administrator must also install any third-party commands or other components
 
 To verify that you deployed a connector successfully, you create a Greenplum Database external table and invoke `SELECT` and/or `INSERT` commands on the table to test read and write operations on the external data source.
 
-The Greenplum Database end user accesses an external data source by invoking a `CREATE EXTERNAL TABLE` command specifying the `pxf` protocol. (Refer to the [CREATE EXTERNAL TABLE](https://gpdb.docs.pivotal.io/latest/ref_guide/sql_commands/CREATE_EXTERNAL_TABLE.html) reference page in the Greenplum documentaion for more about this command.)
+The Greenplum Database end user accesses an external data source by invoking a `CREATE EXTERNAL TABLE` command specifying the `pxf` protocol. (Refer to the [CREATE EXTERNAL TABLE](https://gpdb.docs.pivotal.io/latest/ref_guide/sql_commands/CREATE_EXTERNAL_TABLE.html) reference page in the Greenplum documentation for more about this command.)
 
 The `LOCATION` clause of a `CREATE EXTERNAL TABLE` command specifying the `pxf` protocol is a URI that specifies the external data source and the location, path to, or name of the data. The query portion of the `pxf` protocol URI, introduced by a question mark (?), must include a profile name or the fully-qualified plug-in class names of the connector. 
 
