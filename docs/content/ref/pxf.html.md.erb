@@ -16,6 +16,7 @@ where \<command\> is:
 cluster
 help
 init
+register
 reset
 restart
 start
@@ -33,7 +34,9 @@ You can initialize or reset PXF on the master, master standby, or a specific seg
 
 You can start, stop, or restart the PXF service instance on a specific segment host, or display the status of the PXF service instance running on a segment host.
 
-(Use the [`pxf cluster`](pxf-cluster.html#topic1) command to initialize or reset PXF on all hosts, synchronize the PXF configuration to the Greenplum Database cluster, or to start, stop, or display the status of the PXF service instance on all segment hosts in the cluster.)
+You can copy the extension files from a PXF installation on the host to the Greenplum installation on the host after a Greenplum upgrade.
+
+(Use the [`pxf cluster`](pxf-cluster.html#topic1) command to copy extension files to, initialize, or reset PXF on all hosts, synchronize the PXF configuration to the Greenplum Database cluster, or to start, stop, or display the status of the PXF service instance on all segment hosts in the cluster.)
 
 ## <a id="commands"></a>Commands
 
@@ -45,6 +48,9 @@ You can start, stop, or restart the PXF service instance on a specific segment h
 
 <dt>init</dt>
 <dd>Initialize the PXF service instance on the host. When you initialize PXF, you must identify the PXF user configuration directory via an environment variable named `$PXF_CONF`. If you do not set `$PXF_CONF` prior to initializing PXF, PXF prompts you to accept or decline the default user configuration directory, `$HOME/pxf`, during the initialization process. See [Options](pxf.html#options).</dd>
+
+<dt>register</dt>
+<dd>Copy the PXF extension files from the PXF installation on the host to the Greenplum installation on the host. This command requires that `$GPHOME` be set, and is typically run after you upgrade your Greenplum Database installation.</dd>
 
 <dt>reset</dt>
 <dd>Reset the PXF service instance running on the host. Resetting removes PXF runtime files and directories, and returns PXF to an uninitialized state. You must stop the PXF service instance running on a segment host before you reset PXF on the host.</dd>

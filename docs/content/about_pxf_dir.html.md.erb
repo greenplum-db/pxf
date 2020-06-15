@@ -2,24 +2,27 @@
 title: About the PXF Installation and Configuration Directories
 ---
 
-PXF is installed on your master and segment nodes when you install Greenplum Database. 
+When you install the PXF `.rpm` package, PXF is installed to `/usr/local/pxf-gp<greenplum-major-version>`, or to a directory of your choosing. This documentation uses `$PXF_INSTALL_DIR` to refer to this directory.
 
 ## <a id="installed"></a>PXF Installation Directories
 
-The following PXF files and directories are installed in your Greenplum Database cluster when you install Greenplum. These files/directories are relative to the PXF installation directory `$GPHOME/pxf`:
+The following PXF files and directories are installed to `$PXF_INSTALL_DIR` when you install the PXF `.rpm`:
 
 | Directory | Description                                                                                                                                                                                                                                |
 |--------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | apache&#8209;tomcat/     | The PXF Tomcat directory.  |
 | bin/                | The PXF script and executable directory.                                                                                                                                                                                                                       |
+| commit.sha          | The commit identifier for this PXF release.                                                                                                                                                                                                                       |
 | conf/                | The PXF internal configuration directory. This directory contains the `pxf-env-default.sh` and `pxf-profiles-default.xml` configuration files. After initializing PXF, this directory will also include the `pxf-private.classpath` file. |
+| gpextable/           | The PXF extension files. The files in this directory are copied to the Greenplum installation (`$GPHOME`) on a single host or all hosts in the cluster when you run `pxf [cluster] register`.                                                                                                                                                                                                              |
 | lib/                 | The PXF library directory.                                                                                                                                                                                                                       |
 | templates/                | Configuration templates for PXF. |
+| version              | The PXF version.                                                                                                                                                                                                                       |
 
 
 ## <a id="runtime"></a>PXF Runtime Directories
 
-During initialization and startup, PXF creates the following internal directories in `$GPHOME/pxf`:
+During initialization and startup, PXF creates the following internal directories in `$PXF_INSTALL_DIR`:
 
 
 | Directory | Description                                                                                                                                                                                                                                |
@@ -29,7 +32,7 @@ During initialization and startup, PXF creates the following internal directorie
 
 ## <a id="usercfg"></a>PXF User Configuration Directories
 
-Also during initialization, PXF populates a user configuration directory that you choose (`$PXF_CONF`) with the following subdirectories and template files:
+Also during initialization, PXF populates a user configuration directory that you specify via the `PXF_CONF` environment variable with the following subdirectories and template files:
 
 | Directory | Description   |
 |-----------|---------------|

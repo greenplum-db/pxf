@@ -224,10 +224,10 @@ public class PxfExample_CustomWritable implements Writable {
     gpadmin@gpmaster$ cp /home/gpadmin/pxfex-customwritable.jar /usr/local/greenplum-pxf/lib/pxfex-customwritable.jar
     ```
 
-5. Synchronize the PXF configuration to the Greenplum Database cluster. For example:
+5. Synchronize the PXF configuration to the Greenplum Database cluster:
 
     ``` shell
-    gpadmin@gpmaster$ $GPHOME/pxf/bin/pxf cluster sync
+    gpadmin@gpmaster$ pxf cluster sync
     ```
 
 3. Restart PXF on each Greenplum Database segment host as described in [Restarting PXF](cfginitstart_pxf.html#restart_pxf).

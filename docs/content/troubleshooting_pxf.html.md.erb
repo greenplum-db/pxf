@@ -59,7 +59,7 @@ PXF provides more detailed logging when the `DEBUG` level is enabled. To configu
 2. Use the `pxf cluster sync` command to copy the updated `pxf-log4j.properties` file to the Greenplum Database cluster. For example:
 
     ``` shell
-    gpadmin@gpmaster$ $GPHOME/pxf/bin/pxf cluster sync
+    gpadmin@gpmaster$ pxf cluster sync
     ```
 
 3. Restart PXF on each Greenplum Database segment host as described in [Restarting PXF](cfginitstart_pxf.html#restart_pxf).
@@ -219,7 +219,7 @@ Auto-kill of the PXF server on OOM is enabled by default. Heap dump generation o
 6. Use the `pxf cluster sync` command to copy the updated `pxf-env.sh` file to the Greenplum Database cluster. For example:
 
     ``` shell
-    gpadmin@gpmaster$ $GPHOME/pxf/bin/pxf cluster sync
+    gpadmin@gpmaster$ pxf cluster sync
     ```
 
 7. Restart PXF on each Greenplum Database segment host as described in [Restarting PXF](cfginitstart_pxf.html#restart_pxf).
@@ -254,7 +254,7 @@ Perform the following procedure to increase the heap size for the PXF agent runn
 4. Use the `pxf cluster sync` command to copy the updated `pxf-env.sh` file to the Greenplum Database cluster. For example:
 
     ``` shell
-    gpadmin@gpmaster$ $GPHOME/pxf/bin/pxf cluster sync
+    gpadmin@gpmaster$ pxf cluster sync
     ```
 
 5. Restart PXF on each Greenplum Database segment host as described in [Restarting PXF](cfginitstart_pxf.html#restart_pxf).
@@ -294,7 +294,7 @@ Perform the following procedure to set the maximum number of Tomcat threads for 
 4. Use the `pxf cluster sync` command to copy the updated `pxf-env.sh` file to the Greenplum Database cluster. For example:
 
     ``` shell
-    gpadmin@gpmaster$ $GPHOME/pxf/bin/pxf cluster sync
+    gpadmin@gpmaster$ pxf cluster sync
     ```
 
 5. Restart PXF on each Greenplum Database segment host as described in [Restarting PXF](cfginitstart_pxf.html#restart_pxf).
@@ -351,7 +351,7 @@ PXF fragment metadata caching is enabled by default. To turn off fragment metada
 4. Use the `pxf cluster sync` command to copy the updated `pxf-env.sh` file to the Greenplum Database cluster. For example:
 
     ``` shell
-    gpadmin@gpmaster$ $GPHOME/pxf/bin/pxf cluster sync
+    gpadmin@gpmaster$ pxf cluster sync
     ```
 
 5. Restart PXF on each Greenplum Database segment host as described in [Restarting PXF](cfginitstart_pxf.html#restart_pxf).

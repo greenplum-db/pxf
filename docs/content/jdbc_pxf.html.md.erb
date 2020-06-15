@@ -264,10 +264,10 @@ This procedure will typically be performed by the Greenplum Database administrat
 </configuration>
     ```
 
-3. Synchronize the PXF server configuration to the Greenplum Database cluster. For example:
+3. Synchronize the PXF server configuration to the Greenplum Database cluster:
 
     ``` shell
-    gpadmin@gpmaster$ $GPHOME/pxf/bin/pxf cluster sync
+    gpadmin@gpmaster$ pxf cluster sync
     ``` 
 
 #### <a id="ex_readjdbc"></a>Read from the PostgreSQL Table
@@ -464,10 +464,10 @@ This procedure will typically be performed by the Greenplum Database administrat
 
 4. Save the file and exit the editor.
 
-5. Synchronize these changes to the PXF configuration to the Greenplum Database cluster. For example:
+5. Synchronize these changes to the PXF configuration to the Greenplum Database cluster:
 
     ``` shell
-    gpadmin@gpmaster$ $GPHOME/pxf/bin/pxf cluster sync
+    gpadmin@gpmaster$ pxf cluster sync
     ``` 
 
 #### <a id="nq_readjdbc"></a>Read the Query Results

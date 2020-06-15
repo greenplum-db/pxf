@@ -115,11 +115,11 @@ When you configure PXF for secure HDFS using an AD Kerberos KDC server, you will
 
 4. Save the file and exit the editor.
 
-5. Synchronize the PXF configuration to your Greenplum Database cluster and restart PXF. For example:
+5. Synchronize the PXF configuration to your Greenplum Database cluster and restart PXF:
 
     ``` shell
-    gpadmin@master$ $GPHOME/pxf/bin/pxf cluster sync
-    gpadmin@master$ $GPHOME/pxf/bin/pxf cluster restart
+    gpadmin@master$ pxf cluster sync
+    gpadmin@master$ pxf cluster restart
     ```
 
 6. Step 7 does not synchronize the keytabs in `$PXF_CONF`. You must distribute the keytab file to `$PXF_CONF/keytabs/`. Locate the keytab file, copy the file to the `$PXF_CONF` user configuration directory, and set required permissions. For example:
@@ -244,9 +244,9 @@ When you configure PXF for secure HDFS using an MIT Kerberos KDC server, you wil
 
 8. Save the file and exit the editor.
 
-9. Synchronize the PXF configuration to your Greenplum Database cluster. For example:
+9. Synchronize the PXF configuration to your Greenplum Database cluster:
 
     ``` shell
-    gpadmin@seghost$ $GPHOME/pxf/bin/pxf cluster sync
+    gpadmin@seghost$ pxf cluster sync
     ```
 

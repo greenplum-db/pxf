@@ -73,10 +73,10 @@ In this procedure, you use the `default`, or create a new, PXF server configurat
     gpadmin@gpmaster$ scp mapruser@maprhost:/opt/mapr/hadoop/hadoop-2.7.0/share/hadoop/common/hadoop-common-2.7.0-mapr-1707.jar .
     ```
         
-5. Synchronize the PXF configuration to the Greenplum Database cluster. For example:
+5. Synchronize the PXF configuration to the Greenplum Database cluster:
 
     ``` shell
-    gpadmin@gpmaster$ $GPHOME/pxf/bin/pxf cluster sync
+    gpadmin@gpmaster$ pxf cluster sync
     ```
 
 4. PXF accesses Hadoop services on behalf of Greenplum Database end users. By default, PXF tries to access HDFS, Hive, and HBase using the identity of the Greenplum Database user account that logs into Greenplum Database. In order to support this functionality, you must configure proxy settings for Hadoop, as well as for Hive and HBase if you intend to use those PXF connectors. Follow procedures in [Configuring User Impersonation and Proxying](pxfuserimpers.html) to configure user impersonation and proxying for Hadoop services, or to turn off PXF user impersonation.
@@ -93,6 +93,6 @@ If you update your Hadoop, Hive, or HBase configuration while the PXF service is
 ``` shell
 gpadmin@gpmaster$ cd $PXF_CONF/servers/<server_name>
 gpadmin@gpmaster$ scp hiveuser@hivehost:/etc/hive/conf/hive-site.xml .
-gpadmin@gpmaster$ $GPHOME/pxf/bin/pxf cluster sync
+gpadmin@gpmaster$ pxf cluster sync
 ```
 

@@ -34,13 +34,13 @@ Perform the following procedure for **_each_** database in which you want to use
 1. Connect to the database as the `gpadmin` user:
 
     ``` shell
-    gpadmin@gpmaster$ psql -d <database-name> -U gpadmin
+    gpadmin@gpmaster$ psql -d <dbname> -U gpadmin
     ```
 
 2. Create the PXF extension. You must have Greenplum Database administrator privileges to create an extension. For example:
 
     ``` sql
-    database-name=# CREATE EXTENSION pxf;
+    dbname=# CREATE EXTENSION pxf;
     ```
 
     Creating the `pxf` extension registers the `pxf` protocol and the call handlers required for PXF to access external data.
@@ -53,13 +53,13 @@ When you no longer want to use PXF on a specific database, you must explicitly d
 1. Connect to the database as the `gpadmin` user:
 
     ``` shell
-    gpadmin@gpmaster$ psql -d <database-name> -U gpadmin
+    gpadmin@gpmaster$ psql -d <dbname> -U gpadmin
     ```
 
 2. Drop the PXF extension:
 
     ``` sql
-    database-name=# DROP EXTENSION pxf;
+    dbname=# DROP EXTENSION pxf;
     ```
 
     The `DROP` command fails if there are any currently defined external tables using the `pxf` protocol. Add the `CASCADE` option if you choose to forcibly remove these external tables.

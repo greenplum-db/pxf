@@ -27,9 +27,11 @@ PXF provides two management commands:
 - `pxf cluster` - manage all PXF service instances in the Greenplum Database cluster
 - `pxf` - manage the PXF service instance on a specific Greenplum Database host
 
-The [`pxf cluster`](ref/pxf-cluster.html) command supports `init`, `start`, `restart`, `status`, `stop`, and `sync` subcommands. When you run a `pxf cluster` subcommand on the Greenplum Database master host, you perform the operation on all segment hosts in the Greenplum Database cluster. PXF also runs the `init` and `sync` commands on the standby master host.
+The [`pxf cluster`](ref/pxf-cluster.html) command supports `init`, `reset`, `start`, `restart`, `status`, `stop`, `register`, and `sync` subcommands. When you run a `pxf cluster` subcommand on the Greenplum Database master host, you perform the operation on all segment hosts in the Greenplum Database cluster. PXF also runs the `init` and `sync` commands on the standby master host.
 
-The [`pxf`](ref/pxf.html) command supports `init`, `start`, `stop`, `restart`, and `status` operations. These operations run locally. That is, if you want to start or stop the PXF agent on a specific Greenplum Database segment host, you log in to the host and run the command. 
+The [`pxf`](ref/pxf.html) command supports `init`, `reset`, `start`, `stop`, `restart`, `status`, and `register`  operations. These operations run locally. That is, if you want to start or stop the PXF agent on a specific Greenplum Database segment host, you log in to the host and run the command. 
+
+<div class="note">The procedures in this topic assume that you have added the <code>$PXF_INSTALL_DIR/bin</code> directory to your <code>$PATH</code>.</div>
 
 
 ## <a id="start_pxf"></a>Starting PXF
@@ -55,8 +57,8 @@ The `pxf-env.sh` file exposes the following PXF runtime configuration parameters
 | PXF_FRAGMENTER_CACHE  | Enable/disable fragment caching. | Enabled |
 | PXF_OOM_KILL  | Enable/disable PXF auto-kill on OutOfMemoryError. | Enabled |
 | PXF_OOM_DUMP_PATH  | Absolute pathname to dump file generated on OOM. | No dump file |
-| PXF_KEYTAB  | The absolute path to the PXF service Kerberos principal keytab file. Deprecated; specify the keytab in a server-specific `pxf-site.xml` file. | $PXF_CONF/keytabs/pxf.service.keytab |
-| PXF_PRINCIPAL  | The PXF service Kerberos principal. Deprecated; specify the principal in a server-specific `pxf-site.xml` file. | gpadmin/\_HOST@EXAMPLE.COM |
+| PXF_KEYTAB  | The absolute path to the PXF service Kerberos principal keytab file. *Deprecated*; specify the keytab in a server-specific `pxf-site.xml` file. | $PXF_CONF/keytabs/pxf.service.keytab |
+| PXF_PRINCIPAL  | The PXF service Kerberos principal. *Deprecated*; specify the principal in a server-specific `pxf-site.xml` file. | gpadmin/\_HOST@EXAMPLE.COM |
 | PXF_USER_IMPERSONATION  | Enable/disable end user identity impersonation. Deprecated; enable/disable impersonation in a server-specific `pxf-site.xml` file. | true |
 
 You must synchronize any changes that you make to `pxf-env.sh`, `pxf-log4j.properties`, or `pxf-profiles.xml` to the Greenplum Database cluster, and (re)start PXF on each segment host.
@@ -78,10 +80,10 @@ Perform the following procedure to start PXF on each segment host in your Greenp
     $ ssh gpadmin@<gpmaster>
     ```
 
-3. Run the `pxf cluster start` command to start PXF on each segment host. For example:
+3. Run the `pxf cluster start` command to start PXF on each segment host:
 
     ```shell
-    gpadmin@gpmaster$ $GPHOME/pxf/bin/pxf cluster start
+    gpadmin@gpmaster$ pxf cluster start
     ```
 
 ## <a id="stop_pxf"></a>Stopping PXF
@@ -102,10 +104,10 @@ Perform the following procedure to stop PXF on each segment host in your Greenpl
     $ ssh gpadmin@<gpmaster>
     ```
 
-3. Run the `pxf cluster stop` command to stop PXF on each segment host. For example:
+3. Run the `pxf cluster stop` command to stop PXF on each segment host:
 
     ```shell
-    gpadmin@gpmaster$ $GPHOME/pxf/bin/pxf cluster stop
+    gpadmin@gpmaster$ pxf cluster stop
     ```
 
 ## <a id="restart_pxf"></a>Restarting PXF
@@ -131,6 +133,6 @@ Perform the following procedure to restart PXF in your Greenplum Database cluste
 2. Restart PXF:
 
     ```shell
-    gpadmin@gpmaster$ $GPHOME/pxf/bin/pxf cluster restart
+    gpadmin@gpmaster$ pxf cluster restart
     ```
 

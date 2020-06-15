@@ -223,10 +223,10 @@ By default, PXF JDBC user impersonation is disabled.  Perform the following proc
 
 7. Save the `jdbc-site.xml` file and exit the editor.
 
-8. Use the `pxf cluster sync` command to synchronize the PXF JDBC server configuration to your Greenplum Database cluster. For example:
+8. Use the `pxf cluster sync` command to synchronize the PXF JDBC server configuration to your Greenplum Database cluster:
 
     ``` shell
-    gpadmin@gpmaster$ $GPHOME/pxf/bin/pxf cluster sync
+    gpadmin@gpmaster$ pxf cluster sync
     ```
 
 ## <a id="sessauth"></a>About Session Authorization
@@ -387,9 +387,9 @@ In this procedure, you name and add a PXF JDBC server configuration for a Postgr
     ```
 6. Save your changes and exit the editor.
 
-7. Use the `pxf cluster sync` command to copy the new server configuration to the Greenplum Database cluster. For example:
+7. Use the `pxf cluster sync` command to copy the new server configuration to the Greenplum Database cluster:
     
     ``` shell
-    gpadmin@gpmaster$ $GPHOME/pxf/bin/pxf cluster sync
+    gpadmin@gpmaster$ pxf cluster sync
     ```
 
