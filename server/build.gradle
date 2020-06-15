@@ -244,6 +244,12 @@ project('pxf-hive') {
          * Transitive dependencies for hive-exec-core until here
          * */
 
+        /*
+         * Transitive dependency required for reading Hive tables with
+         * SerDe 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+         */
+        bundleJars "net.sf.opencsv:opencsv:2.3"
+
         /* Transitive dependency required by MapR */
         bundleJars "org.json:json:20090211"
     }
