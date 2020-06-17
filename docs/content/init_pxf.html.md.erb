@@ -108,7 +108,7 @@ When you reset PXF, PXF prompts you to confirm the operation. If you confirm, PX
 - `$PXF_INSTALL_DIR/pxf-service`
 - `$PXF_INSTALL_DIR/run`
 
-PXF does not remove the `$PXF_CONF` directory during a reset operation.
+PXF does not remove the `$PXF_CONF` directory during a reset operation, nor does PXF remove any PXF extension files that may have been copied to your Greenplum Database installation.
 
 You must stop the PXF service instance on a segment host before you can reset PXF on the host.
 
