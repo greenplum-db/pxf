@@ -48,8 +48,6 @@ public class HiveTest extends HiveBaseTest {
     private HiveTable hivePartitionedSkewedTable;
     private HiveTable hivePartitionedSkewedStoredAsDirsTable;
 
-    private Hive hiveNonSecure;
-
     private void preparePartitionedClusteredSortedData() throws Exception {
 
         if (hivePartitionedClusteredSortedTable != null)
@@ -171,7 +169,7 @@ public class HiveTest extends HiveBaseTest {
     public void testSecureServerAndNonSecuredServer() throws Exception {
         if (hdfsNonSecure == null) return;
 
-        hiveNonSecure = (Hive) SystemManagerImpl.getInstance().getSystemObject("hiveNonSecure");
+        Hive hiveNonSecure = (Hive) SystemManagerImpl.getInstance().getSystemObject("hiveNonSecure");
 
         HiveTable hiveSmallDataTable3 =
                 prepareSmallData(hdfsNonSecure, hiveNonSecure, null, HIVE_SMALL_DATA_TABLE, HIVE_SMALLDATA_COLS, HIVE_DATA_FILE_NAME_3);
@@ -331,6 +329,21 @@ public class HiveTest extends HiveBaseTest {
 
         runTincTest("pxf.features.hive.small_data.runTest");
         runTincTest("pxf.features.hcatalog.small_data_parquet.runTest");
+    }
+
+    /**
+     * PXF on Hive OpenCSV format table
+     *
+     * @throws Exception if test fails to run
+     */
+    @Test(groups = {"hive", "features", "gpdb", "security"})
+    public void storeAsHiveOpenCsv() throws Exception {
+
+        prepareOpenCsvData();
+        createExternalTable(PXF_HIVE_SMALL_DATA_TABLE,
+                PXF_HIVE_SMALLDATA_AS_TEXT_COLS, hiveOpenCsvTable);
+
+        runTincTest("pxf.features.hive.small_data_as_text.runTest");
     }
 
     /**

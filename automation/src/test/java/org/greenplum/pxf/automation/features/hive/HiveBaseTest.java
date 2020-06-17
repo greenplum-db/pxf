@@ -99,6 +99,12 @@ public class HiveBaseTest extends BaseFeature {
             "num1  INTEGER",
             "dub1  DOUBLE PRECISION"
     };
+    static final String[] PXF_HIVE_SMALLDATA_AS_TEXT_COLS = {
+            "t1    TEXT",
+            "t2    TEXT",
+            "num1  TEXT",
+            "dub1  TEXT"
+    };
     static final String[] PXF_HIVE_SUBSET_COLS = {
             "dub1  DOUBLE PRECISION",
             "t2    TEXT"
@@ -186,6 +192,7 @@ public class HiveBaseTest extends BaseFeature {
     static final String HIVE_PARQUET_TABLE = "hive_parquet_table";
     static final String HIVE_PARQUET_FOR_ALTER_TABLE = "hive_parquet_alter_table";
     static final String HIVE_SEQUENCE_TABLE = "hive_sequence_table";
+    static final String HIVE_OPEN_CSV_TABLE = "hive_open_csv_table";
     static final String HIVE_PARTITIONED_TABLE = "hive_partitioned_table";
     static final String HIVE_PARTITIONED_PPD_TABLE = "hive_partitioned_ppd_table";
     static final String HIVE_REG_HETEROGEN_TABLE = "reg_heterogen";
@@ -204,6 +211,7 @@ public class HiveBaseTest extends BaseFeature {
 
     static final String HIVE_SCHEMA = "userdb";
     static final String AVRO = "AVRO";
+    static final String OPEN_CSV_INPUT_OUTPUT_FORMAT = "INPUTFORMAT 'org.apache.hadoop.mapred.TextInputFormat' OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'";
     static final String ORC = "ORC";
     static final String PARQUET = "PARQUET";
     static final String RCFILE = "RCFILE";
@@ -232,6 +240,7 @@ public class HiveBaseTest extends BaseFeature {
     HiveTable hiveBinaryTable;
     HiveTable hiveCollectionTable;
     HiveTable hiveNonDefaultSchemaTable;
+    HiveTable hiveOpenCsvTable;
     Table comparisonDataTable;
 
     String configuredNameNodeAddress;
@@ -446,6 +455,18 @@ public class HiveBaseTest extends BaseFeature {
                 HIVE_SMALL_DATA_TABLE, HIVE_SCHEMA, new String[]{"id INT", "name STRING"});
         hive.createDataBase(HIVE_SCHEMA, true);
         hive.createTableAndVerify(hiveNonDefaultSchemaTable);
+    }
+
+    void prepareOpenCsvData() throws Exception {
+
+        if (hiveOpenCsvTable != null)
+            return;
+        hiveOpenCsvTable = new HiveTable(HIVE_OPEN_CSV_TABLE, HIVE_RC_COLS);
+        hiveOpenCsvTable.setFormat("ROW");
+        hiveOpenCsvTable.setStoredAs(OPEN_CSV_INPUT_OUTPUT_FORMAT);
+        hiveOpenCsvTable.setSerde("org.apache.hadoop.hive.serde2.OpenCSVSerde");
+        hive.createTableAndVerify(hiveOpenCsvTable);
+        hive.insertData(hiveSmallDataTable, hiveOpenCsvTable);
     }
 
     void addHivePartition(String hiveTable, String partition, String location) throws Exception {
