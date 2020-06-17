@@ -25,12 +25,15 @@ import org.testng.annotations.Test;
         return false;
     }
 
+    // TODO: this test is being ignored because the reverse DNS lookup seems
+    // TODO: to cause issues when accessing the metastore on the second dataproc
+    // TODO: environment
     /**
      * query for small data hive table against two kerberized hive servers
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = {"features", "multiClusterSecurity"})
+    @Test(groups = {"features", "multiClusterSecurity"}, enabled = false)
     public void testTwoSecuredServers() throws Exception {
 
         createExternalTable(PXF_HIVE_SMALL_DATA_TABLE, PXF_HIVE_SMALLDATA_COLS, hiveSmallDataTable);
