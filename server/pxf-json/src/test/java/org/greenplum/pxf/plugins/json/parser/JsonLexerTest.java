@@ -29,6 +29,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.regex.Matcher;
@@ -57,10 +58,9 @@ public class JsonLexerTest {
     public static Pattern STATE_RECURRENCE = Pattern.compile("^([A-Za-z_0-9]+)\\{([0-9]+)}$");
 
     public void runTest(File jsonFile, File stateFile) throws IOException {
-        List<String> lexerStates = FileUtils.readLines(stateFile);
-        InputStream jsonInputStream = new FileInputStream(jsonFile);
+        List<String> lexerStates = FileUtils.readLines(stateFile, Charset.defaultCharset());
 
-        try {
+        try (InputStream jsonInputStream = new FileInputStream(jsonFile)) {
             JsonLexer lexer = new JsonLexer();
 
             int byteOffset = 0;
@@ -120,8 +120,6 @@ public class JsonLexerTest {
                         + ": Input stream has ended but more states were expected: '" + stateIterator.next() + "...'");
             }
 
-        } finally {
-            IOUtils.closeQuietly(jsonInputStream);
         }
 
         LOG.info("File " + jsonFile.getName() + " passed");

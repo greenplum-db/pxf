@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
 @SuppressWarnings("deprecation")
 public class HiveMetaStoreClientCompatibility1xx extends HiveMetaStoreClient implements IMetaStoreClient {
 
-    private Logger LOG = LoggerFactory.getLogger("org.greenplum.pxf.plugins.hive.HiveMetaStoreClientCompatibility1xx");
+    private final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
     public HiveMetaStoreClientCompatibility1xx(HiveConf conf) throws MetaException {
         super(conf);

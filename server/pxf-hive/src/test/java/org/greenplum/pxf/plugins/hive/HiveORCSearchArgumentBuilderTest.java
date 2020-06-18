@@ -9,28 +9,24 @@ import org.greenplum.pxf.api.filter.TreeTraverser;
 import org.greenplum.pxf.api.filter.TreeVisitor;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.greenplum.pxf.plugins.hive.HiveORCAccessor.SUPPORTED_OPERATORS;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class HiveORCSearchArgumentBuilderTest {
-
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
 
     private static final TreeVisitor PRUNER = new SupportedOperatorPruner(SUPPORTED_OPERATORS);
     private static final TreeTraverser TRAVERSER = new TreeTraverser();
     private List<ColumnDescriptor> columnDescriptors;
 
-    @Before
+    @BeforeEach
     public void setup() {
 
         columnDescriptors = new ArrayList<>();
@@ -103,14 +99,13 @@ public class HiveORCSearchArgumentBuilderTest {
     }
 
     @Test
-    public void testInOperatorWithSingleItem() throws Exception {
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("filterValue should be instance of List for IN operation");
-
+    public void testInOperatorWithSingleItem() {
         // grade IN 'bad'
         String filterString = "a3c25s3dbado10";
 
-        helper(filterString, columnDescriptors);
+        Exception e = assertThrows(IllegalArgumentException.class,
+                () -> helper(filterString, columnDescriptors));
+        assertEquals("filterValue should be instance of List for IN operation", e.getMessage());
     }
 
     @Test

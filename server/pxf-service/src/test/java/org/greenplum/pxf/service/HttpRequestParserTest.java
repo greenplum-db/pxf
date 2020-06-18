@@ -93,7 +93,6 @@ public class HttpRequestParserTest {
     public void testConvertToCaseInsensitiveMap() {
         List<String> multiCaseKeys = Arrays.asList("X-GP-SHLOMO", "x-gp-shlomo", "X-Gp-ShLoMo");
         String value = "\\\"The king";
-        String replacedValue = "\"The king";
 
         MultiValueMap<String, String> multivaluedMap = new LinkedMultiValueMap<>();
         for (String key : multiCaseKeys) {
@@ -107,7 +106,7 @@ public class HttpRequestParserTest {
         assertEquals(caseInsensitiveMap.keySet().size(), 1, "Only one key should have exist");
 
         for (String key : multiCaseKeys) {
-            assertEquals(caseInsensitiveMap.get(key), replacedValue, "All keys should have returned the same value");
+            assertEquals(value, caseInsensitiveMap.get(key), "All keys should have returned the same value");
         }
     }
 
@@ -132,7 +131,7 @@ public class HttpRequestParserTest {
 
         assertEquals(caseInsensitiveMap.keySet().size(), 1, "Only one key should have exist");
 
-        assertEquals(caseInsensitiveMap.get("one"), "a2c\"UTF8_計算機用語_00000000\"o5", "Value should be converted to UTF-8");
+        assertEquals("a2c\\\"UTF8_計算機用語_00000000\\\"o5", caseInsensitiveMap.get("one"), "Value should be converted to UTF-8");
     }
 
     @Test

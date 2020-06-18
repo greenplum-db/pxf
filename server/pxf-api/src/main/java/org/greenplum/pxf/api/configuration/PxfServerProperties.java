@@ -6,9 +6,6 @@ import org.springframework.boot.autoconfigure.task.TaskExecutionProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Pattern;
-
 /**
  * Configuration properties for PXF.
  */
@@ -25,11 +22,8 @@ public class PxfServerProperties {
 
     /**
      * The path for the server configuration. If the configuration has not
-     * been initialized, it will be set to NOT_INITIALIZED. This will cause
-     * the application to fail during start up.
+     * been initialized, it will be set to NOT_INITIALIZED.
      */
-    @NotBlank
-    @Pattern(regexp = "^(?!NOT_INITIALIZED).*$")
     @Getter
     private String conf;
 
@@ -66,6 +60,7 @@ public class PxfServerProperties {
 
     public void setConf(String conf) {
         this.conf = conf;
+        // ^(?!NOT_INITIALIZED).*$
         System.setProperty(PXF_CONF_PROPERTY, conf);
     }
 }

@@ -66,6 +66,7 @@ import org.springframework.web.context.annotation.RequestScope;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -441,7 +442,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
         LOG.debug("{}-{}: Using parquet schema from given schema file {}", context.getTransactionId(),
                 context.getSegmentId(), schemaFile);
         try (InputStream inputStream = fs.open(new Path(schemaFile))) {
-            return MessageTypeParser.parseMessageType(IOUtils.toString(inputStream));
+            return MessageTypeParser.parseMessageType(IOUtils.toString(inputStream, StandardCharsets.UTF_8));
         }
     }
 

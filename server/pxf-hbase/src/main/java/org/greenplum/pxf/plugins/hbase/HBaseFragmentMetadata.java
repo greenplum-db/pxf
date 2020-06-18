@@ -1,22 +1,23 @@
 package org.greenplum.pxf.plugins.hbase;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import org.apache.hadoop.hbase.HRegionInfo;
-import org.codehaus.jackson.annotate.JsonCreator;
 import org.greenplum.pxf.api.utilities.FragmentMetadata;
 
 import java.util.Map;
 
+/**
+ * Fragment metadata for HBase profiles
+ */
+@Getter
 public class HBaseFragmentMetadata implements FragmentMetadata {
 
-    @Getter
     private final byte[] startKey;
 
-    @Getter
     private final byte[] endKey;
 
-    @Getter
     private final Map<String, byte[]> columnMapping;
 
     public HBaseFragmentMetadata(HRegionInfo region, Map<String, byte[]> columnMapping) {

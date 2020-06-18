@@ -22,40 +22,55 @@ package org.greenplum.pxf.plugins.hive;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Output;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.io.sarg.PredicateLeaf;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentFactory;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 
 import static org.apache.hadoop.hive.ql.io.sarg.ConvertAstToSearchArg.SARG_PUSHDOWN;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class HiveORCAccessorTest {
 
     private RequestContext context;
     private HiveORCAccessor accessor;
 
-    @Before
-    public void setup() throws Exception {
-        HiveUserData userData = new HiveUserData("", "", null, HiveDataFragmenter.HIVE_NO_PART_TBL, true, "1", "", 0, Arrays.asList(new Integer[]{0, 1}), "col1,FOO", "string, string");
+    @BeforeEach
+    public void setup() {
+        HiveFragmentMetadata.Builder builder = HiveFragmentMetadata.Builder
+                .aHiveFragmentMetadata()
+                .withInputFormatName("")
+                .withSerdeClassName("")
+                .withPartitionKeys(HiveDataFragmenter.HIVE_NO_PART_TBL)
+                .withFilterInFragmenter(true)
+                .withDelimiter("1")
+                .withColTypes("")
+                .withSkipHeader(0)
+                .withHiveIndexes(Arrays.asList(0, 1))
+                .withAllColumnNames("col1,FOO")
+                .withAllColumnTypes("string, string")
+                .withStart(0)
+                .withLength(0);
         context = new RequestContext();
         context.setConfig("default");
         context.setUser("test-user");
         context.setDataSource("foo");
-        context.setFragmentMetadata(HdfsUtilities.prepareFragmentMetadata(0, 0, new String[]{"localhost"}));
-        context.setFragmentUserData(userData.toString().getBytes());
+        context.setFragmentMetadata(builder.build());
         context.getTupleDescription().add(new ColumnDescriptor("col1", 1, 1, "TEXT", null));
         context.getTupleDescription().add(new ColumnDescriptor("FOO", 1, 1, "TEXT", null));
         context.setAccessor(HiveORCAccessor.class.getName());
+        context.setConfiguration(new Configuration());
 
         accessor = new HiveORCAccessor();
-        accessor.initialize(context);
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
     }
 
     @Test
@@ -111,9 +126,9 @@ public class HiveORCAccessorTest {
         assertEquals(expected, accessor.getJobConf().get(SARG_PUSHDOWN));
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void emitAggObjectCountStatsNotInitialized() {
-        accessor.emitAggObject();
+        assertThrows(IllegalStateException.class, accessor::emitAggObject);
     }
 
     private String toKryo(SearchArgument sarg) {

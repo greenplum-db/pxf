@@ -118,7 +118,7 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
         try {
             fragmentMetadata = deserializeFragmentMetadata(jsonFragmentMetadata);
         } catch (JsonProcessingException e) {
-            throw new IllegalArgumentException(String.format("unable to deserialize fragment meta '%s'", jsonFragmentMetadata));
+            throw new IllegalArgumentException(String.format("unable to deserialize fragment meta '%s'", jsonFragmentMetadata), e);
         }
         context.setFragmentMetadata(fragmentMetadata);
 
@@ -440,7 +440,7 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
                     }
                 }
                 LOG.trace("Key: {} Value: {}", key, value);
-                put(key, value.replace("\\\"", "\""));
+                put(key, value);
             }
         }
 

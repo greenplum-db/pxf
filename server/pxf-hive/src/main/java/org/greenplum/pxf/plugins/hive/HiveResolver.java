@@ -51,21 +51,21 @@ import org.apache.hadoop.hive.serde2.objectinspector.primitive.TimestampObjectIn
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapred.JobConf;
-import org.greenplum.pxf.api.BadRecordException;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.UnsupportedTypeException;
+import org.greenplum.pxf.api.error.BadRecordException;
+import org.greenplum.pxf.api.error.UnsupportedTypeException;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
-import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Date;
@@ -78,10 +78,14 @@ import java.util.Properties;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
+
 /**
  * Class HiveResolver handles deserialization of records that were serialized
  * using Hadoop's Hive serialization framework.
  */
+@Component("HiveResolver")
+@RequestScope
 public class HiveResolver extends HivePlugin implements Resolver {
     private static final Logger LOG = LoggerFactory.getLogger(HiveResolver.class);
     protected static final String MAPKEY_DELIM = ":";
@@ -92,7 +96,7 @@ public class HiveResolver extends HivePlugin implements Resolver {
     protected String mapkeyDelim;
     protected Deserializer deserializer;
     protected String serdeClassName;
-    protected String propsString;
+    protected Properties properties;
     protected String partitionKeys;
     protected List<Integer> hiveIndexes;
 
@@ -104,12 +108,10 @@ public class HiveResolver extends HivePlugin implements Resolver {
      * Initializes the HiveResolver by parsing the request context and
      * obtaining the serde class name, the serde properties string and the
      * partition keys.
-     *
-     * @param requestContext request context
      */
     @Override
-    public void initialize(RequestContext requestContext) {
-        super.initialize(requestContext);
+    public void afterPropertiesSet() {
+        super.afterPropertiesSet();
 
         hiveDefaultPartName = HiveConf.getVar(configuration, HiveConf.ConfVars.DEFAULTPARTITIONNAME);
 
@@ -146,18 +148,16 @@ public class HiveResolver extends HivePlugin implements Resolver {
     }
 
     /* Parses user data string (arrived from fragmenter). */
-    void parseUserData(RequestContext input) throws Exception {
-        HiveUserData hiveUserData = HiveUtilities.parseHiveUserData(input);
+    void parseUserData(RequestContext input) {
+        HiveFragmentMetadata metadata = context.getFragmentMetadata();
 
-        serdeClassName = hiveUserData.getSerdeClassName();
-        propsString = hiveUserData.getPropertiesString();
-        partitionKeys = hiveUserData.getPartitionKeys();
+        serdeClassName = metadata.getSerdeClassName();
+        properties = metadata.getProperties();
+        partitionKeys = metadata.getPartitionKeys();
 
-        collectionDelim = input.getOption("COLLECTION_DELIM") == null ? COLLECTION_DELIM
-                : input.getOption("COLLECTION_DELIM");
-        mapkeyDelim = input.getOption("MAPKEY_DELIM") == null ? MAPKEY_DELIM
-                : input.getOption("MAPKEY_DELIM");
-        hiveIndexes = hiveUserData.getHiveIndexes();
+        collectionDelim = defaultIfNull(input.getOption("COLLECTION_DELIM"), COLLECTION_DELIM);
+        mapkeyDelim = defaultIfNull(input.getOption("MAPKEY_DELIM"), MAPKEY_DELIM);
+        hiveIndexes = metadata.getHiveIndexes();
     }
 
     /*
@@ -165,18 +165,12 @@ public class HiveResolver extends HivePlugin implements Resolver {
      * fragment.
      */
     void initSerde(RequestContext requestContext) throws Exception {
-        Properties serdeProperties;
-
         Class<?> c = Class.forName(serdeClassName, true, JavaUtils.getClassLoader());
         deserializer = (Deserializer) c.getDeclaredConstructor().newInstance();
-        serdeProperties = new Properties();
-        if (propsString != null) {
-            ByteArrayInputStream inStream = new ByteArrayInputStream(propsString.getBytes());
-            serdeProperties.load(inStream);
-        } else {
-            throw new IllegalArgumentException("propsString is mandatory to initialize serde.");
+        if (properties == null) {
+            throw new IllegalArgumentException("properties is mandatory to initialize serde.");
         }
-        deserializer.initialize(new JobConf(configuration, HiveResolver.class), serdeProperties);
+        deserializer.initialize(new JobConf(configuration, HiveResolver.class), properties);
     }
 
     /*
@@ -681,11 +675,11 @@ public class HiveResolver extends HivePlugin implements Resolver {
 
         if (userDelim == null) {
             /* No DELIMITER in URL, try to get it from fragment's user data*/
-            HiveUserData hiveUserData = HiveUtilities.parseHiveUserData(input);
-            if (hiveUserData.getDelimiter() == null) {
+            HiveFragmentMetadata metadata = context.getFragmentMetadata();
+            if (metadata.getDelimiter() == null) {
                 throw new IllegalArgumentException("DELIMITER is a required option");
             }
-            delimiter = (char) Integer.valueOf(hiveUserData.getDelimiter()).intValue();
+            delimiter = (char) Integer.valueOf(metadata.getDelimiter()).intValue();
         } else {
             final int VALID_LENGTH = 1;
             final int VALID_LENGTH_HEX = 4;

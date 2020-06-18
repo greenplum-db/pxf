@@ -16,7 +16,7 @@ import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.thrift.TException;
-import org.greenplum.pxf.api.UnsupportedTypeException;
+import org.greenplum.pxf.api.error.UnsupportedTypeException;
 import org.greenplum.pxf.api.model.Metadata;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.security.SecureLogin;
@@ -25,8 +25,9 @@ import org.greenplum.pxf.plugins.hive.utilities.EnumHiveToGpdbType;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -35,13 +36,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.Properties;
 
 import static org.greenplum.pxf.api.model.ConfigurationFactory.PXF_CONFIG_RESOURCE_PATH_PROPERTY;
 
+@Component
 public class HiveClientWrapper {
-
-    private static final HiveClientWrapper instance = new HiveClientWrapper();
 
     private static final Logger LOG = LoggerFactory.getLogger(HiveClientWrapper.class);
 
@@ -51,23 +50,39 @@ public class HiveClientWrapper {
     private static final String STR_RC_FILE_INPUT_FORMAT = "org.apache.hadoop.hive.ql.io.RCFileInputFormat";
     private static final String STR_TEXT_FILE_INPUT_FORMAT = "org.apache.hadoop.mapred.TextInputFormat";
     private static final String STR_ORC_FILE_INPUT_FORMAT = "org.apache.hadoop.hive.ql.io.orc.OrcInputFormat";
-    private final HiveClientFactory hiveClientFactory;
 
-    private HiveClientWrapper() {
-        this(HiveClientFactory.getInstance());
-    }
+    private HiveClientFactory hiveClientFactory;
+    private HiveUtilities hiveUtilities;
+    private SecureLogin secureLogin;
 
-    HiveClientWrapper(HiveClientFactory hiveClientFactory) {
+    /**
+     * Sets the {@link HiveClientFactory} object
+     *
+     * @param hiveClientFactory the hive client factory object
+     */
+    @Autowired
+    public void setHiveClientFactory(HiveClientFactory hiveClientFactory) {
         this.hiveClientFactory = hiveClientFactory;
     }
 
     /**
-     * Returns the static instance for this factory
+     * Sets the {@link HiveUtilities} object
      *
-     * @return the static instance for this factory
+     * @param hiveUtilities the hive utilities object
      */
-    public static HiveClientWrapper getInstance() {
-        return instance;
+    @Autowired
+    public void setHiveUtilities(HiveUtilities hiveUtilities) {
+        this.hiveUtilities = hiveUtilities;
+    }
+
+    /**
+     * Sets the {@link SecureLogin} object
+     *
+     * @param secureLogin the secure login object
+     */
+    @Autowired
+    public void setSecureLogin(SecureLogin secureLogin) {
+        this.secureLogin = secureLogin;
     }
 
     /**
@@ -80,7 +95,7 @@ public class HiveClientWrapper {
         HiveConf hiveConf = getHiveConf(configuration);
         try {
             if (Utilities.isSecurityEnabled(configuration)) {
-                UserGroupInformation loginUser = SecureLogin.getInstance().getLoginUser(context, configuration);
+                UserGroupInformation loginUser = secureLogin.getLoginUser(context, configuration);
                 LOG.debug("initialize HiveMetaStoreClient as login user '{}'", loginUser.getUserName());
                 // wrap in doAs for Kerberos to propagate kerberos tokens from login Subject
                 return loginUser.
@@ -128,12 +143,12 @@ public class HiveClientWrapper {
         try {
             List<FieldSchema> hiveColumns = tbl.getSd().getCols();
             for (FieldSchema hiveCol : hiveColumns) {
-                metadata.addField(HiveUtilities.mapHiveType(hiveCol));
+                metadata.addField(hiveUtilities.mapHiveType(hiveCol));
             }
             // check partition fields
             List<FieldSchema> hivePartitions = tbl.getPartitionKeys();
             for (FieldSchema hivePart : hivePartitions) {
-                metadata.addField(HiveUtilities.mapHiveType(hivePart));
+                metadata.addField(hiveUtilities.mapHiveType(hivePart));
             }
         } catch (UnsupportedTypeException e) {
             String errorMsg = "Failed to retrieve metadata for table " + metadata.getItem() + ". " +
@@ -147,21 +162,11 @@ public class HiveClientWrapper {
      *
      * @param fragmenterClassName fragmenter class name
      * @param partData            partition data
-     * @param filterInFragmenter  whether filtering was done in fragmenter
-     * @param hiveIndexes         the list of indices that we will retrieve from the Hive schema columns
-     * @param allColumnNames      the comma-separated list of column names defined in hive table
-     * @param allColumnTypes      the comma-separated list of column types defined in hive table
      * @return serialized representation of fragment-related attributes
-     * @throws Exception when error occurred during serialization
+     * @throws IOException            when error occurred during serialization
+     * @throws ClassNotFoundException when the fragmenter class name is not found
      */
-    public byte[] makeUserData(String fragmenterClassName,
-                               HiveTablePartition partData,
-                               boolean filterInFragmenter,
-                               List<Integer> hiveIndexes,
-                               String allColumnNames,
-                               String allColumnTypes) throws Exception {
-
-        HiveUserData hiveUserData;
+    public HiveFragmentMetadata.Builder buildMetadata(String fragmenterClassName, HiveTablePartition partData) throws IOException, ClassNotFoundException {
 
         if (fragmenterClassName == null) {
             throw new IllegalArgumentException("No fragmenter provided.");
@@ -171,9 +176,8 @@ public class HiveClientWrapper {
 
         String inputFormatName = partData.storageDesc.getInputFormat();
         String serdeClassName = partData.storageDesc.getSerdeInfo().getSerializationLib();
-        String propertiesString = serializeProperties(partData.properties);
         String partitionKeys = serializePartitionKeys(partData);
-        String delimiter = getDelimiterCode(partData.storageDesc).toString();
+        String delimiter = Integer.toString(getDelimiterCode(partData.storageDesc));
         String colTypes = partData.properties.getProperty("columns.types");
         int skipHeader = Integer.parseInt(partData.properties.getProperty("skip.header.line.count", "0"));
 
@@ -181,9 +185,16 @@ public class HiveClientWrapper {
             assertFileType(inputFormatName, partData);
         }
 
-        hiveUserData = new HiveUserData(inputFormatName, serdeClassName, propertiesString, partitionKeys, filterInFragmenter, delimiter, colTypes, skipHeader, hiveIndexes, allColumnNames, allColumnTypes);
-
-        return hiveUserData.toString().getBytes();
+        return HiveFragmentMetadata
+                .Builder
+                .aHiveFragmentMetadata()
+                .withInputFormatName(inputFormatName)
+                .withSerdeClassName(serdeClassName)
+                .withProperties(partData.properties)
+                .withPartitionKeys(partitionKeys)
+                .withDelimiter(delimiter)
+                .withColTypes(colTypes)
+                .withSkipHeader(skipHeader);
     }
 
     /**
@@ -317,15 +328,8 @@ public class HiveClientWrapper {
         return hiveConf;
     }
 
-    /* Turns a Properties class into a string */
-    private String serializeProperties(Properties props) throws Exception {
-        ByteArrayOutputStream outStream = new ByteArrayOutputStream();
-        props.store(outStream, ""/* comments */);
-        return outStream.toString();
-    }
-
     /* Turns the partition keys into a string */
-    private String serializePartitionKeys(HiveTablePartition partData) {
+    public String serializePartitionKeys(HiveTablePartition partData) {
         if (partData.partition == null) {
             /* this is a simple hive table - there are no partitions */
             return HiveDataFragmenter.HIVE_NO_PART_TBL;
@@ -356,19 +360,16 @@ public class HiveClientWrapper {
      * @param sd StorageDescriptor of table/partition
      * @return ASCII code of delimiter
      */
-    public Integer getDelimiterCode(StorageDescriptor sd) {
-        Integer delimiterCode;
+    public int getDelimiterCode(StorageDescriptor sd) {
 
         String delimiter = getSerdeParameter(sd, serdeConstants.FIELD_DELIM);
         if (delimiter != null) {
-            delimiterCode = (int) delimiter.charAt(0);
-            return delimiterCode;
+            return delimiter.charAt(0);
         }
 
         delimiter = getSerdeParameter(sd, serdeConstants.SERIALIZATION_FORMAT);
         if (delimiter != null) {
-            delimiterCode = Integer.parseInt(delimiter);
-            return delimiterCode;
+            return Integer.parseInt(delimiter);
         }
 
         return DEFAULT_DELIMITER_CODE;
@@ -407,18 +408,8 @@ public class HiveClientWrapper {
         }
     }
 
+    @Component
     public static class HiveClientFactory {
-        private static final HiveClientFactory instance = new HiveClientFactory();
-
-        /**
-         * Returns the static instance for this factory
-         *
-         * @return the static instance for this factory
-         */
-        static HiveClientFactory getInstance() {
-            return instance;
-        }
-
         IMetaStoreClient initHiveClient(HiveConf hiveConf) throws MetaException {
             return RetryingMetaStoreClient.getProxy(hiveConf, new Class[]{HiveConf.class, HiveMetaHookLoader.class, Boolean.class},
                     new Object[]{hiveConf, null, true}, null, HiveMetaStoreClientCompatibility1xx.class.getName()

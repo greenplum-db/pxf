@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -19,17 +19,17 @@
 
 package org.greenplum.pxf.plugins.hive.utilities;
 
+import org.greenplum.pxf.api.error.UnsupportedTypeException;
+import org.greenplum.pxf.api.io.DataType;
+import org.greenplum.pxf.api.utilities.EnumGpdbType;
+
 import java.util.Comparator;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.api.utilities.EnumGpdbType;
-import org.greenplum.pxf.api.UnsupportedTypeException;
-
 /**
- * 
  * Hive types, which are supported by plugin, mapped to GPDB's types
+ *
  * @see EnumGpdbType
  */
 public enum EnumHiveToGpdbType {
@@ -85,7 +85,6 @@ public enum EnumHiveToGpdbType {
     }
 
     /**
-     * 
      * @return name of type
      */
     public String getTypeName() {
@@ -93,7 +92,6 @@ public enum EnumHiveToGpdbType {
     }
 
     /**
-     * 
      * @return corresponding GPDB type
      */
     public EnumGpdbType getGpdbType() {
@@ -101,7 +99,6 @@ public enum EnumHiveToGpdbType {
     }
 
     /**
-     * 
      * @return split by expression
      */
     public String getSplitExpression() {
@@ -110,7 +107,7 @@ public enum EnumHiveToGpdbType {
 
     /**
      * Returns Hive to GPDB type mapping entry for given Hive type
-     * 
+     *
      * @param hiveType full Hive type with modifiers, for example - decimal(10, 0), char(5), binary, array&lt;string&gt;, map&lt;string,float&gt; etc
      * @return corresponding Hive to GPDB type mapping entry
      * @throws UnsupportedTypeException if there is no corresponding GPDB type
@@ -134,7 +131,6 @@ public enum EnumHiveToGpdbType {
 
 
     /**
-     * 
      * @param dataType Gpdb data type
      * @return compatible Hive type to given Gpdb type, if there are more than one compatible types, it returns one with bigger size
      * @throws UnsupportedTypeException if there is no corresponding Hive type for given Gpdb type
@@ -144,7 +140,7 @@ public enum EnumHiveToGpdbType {
         SortedSet<EnumHiveToGpdbType> types = new TreeSet<EnumHiveToGpdbType>(
                 new Comparator<EnumHiveToGpdbType>() {
                     public int compare(EnumHiveToGpdbType a,
-                            EnumHiveToGpdbType b) {
+                                       EnumHiveToGpdbType b) {
                         return Byte.compare(a.getSize(), b.getSize());
                     }
                 });
@@ -162,25 +158,24 @@ public enum EnumHiveToGpdbType {
     }
 
     /**
-     *
      * @param hiveToGpdbType EnumHiveToGpdbType enum
-     * @param modifiers Array of Modifiers
+     * @param modifiers      Array of Modifiers
      * @return full Hive type name including modifiers. eg: varchar(3)
      * This function is used for datatypes with modifier information
      * such as varchar, char, decimal, etc.
      */
     public static String getFullHiveTypeName(EnumHiveToGpdbType hiveToGpdbType, Integer[] modifiers) {
         hiveToGpdbType.getTypeName();
-        if(modifiers != null && modifiers.length > 0) {
+        if (modifiers != null && modifiers.length > 0) {
             String modExpression = hiveToGpdbType.getSplitExpression();
             StringBuilder fullType = new StringBuilder(hiveToGpdbType.typeName);
             Character start = modExpression.charAt(1);
             Character separator = modExpression.charAt(2);
-            Character end = modExpression.charAt(modExpression.length()-2);
+            Character end = modExpression.charAt(modExpression.length() - 2);
             fullType.append(start);
             int index = 0;
             for (Integer modifier : modifiers) {
-                if(index++ > 0) {
+                if (index++ > 0) {
                     fullType.append(separator);
                 }
                 fullType.append(modifier);
@@ -193,7 +188,6 @@ public enum EnumHiveToGpdbType {
     }
 
     /**
-     * 
      * @param hiveType full Hive data type, i.e. varchar(10) etc
      * @return array of type modifiers
      * @throws UnsupportedTypeException if there is no such Hive type supported
@@ -208,7 +202,7 @@ public enum EnumHiveToGpdbType {
                 hiveTypeName = tokens[0];
                 result = new Integer[tokens.length - 1];
                 for (int i = 0; i < tokens.length - 1; i++)
-                    result[i] = Integer.parseInt(tokens[i+1]);
+                    result[i] = Integer.parseInt(tokens[i + 1]);
             }
             if (t.getTypeName().toLowerCase()
                     .equals(hiveTypeName.toLowerCase())) {
@@ -221,6 +215,7 @@ public enum EnumHiveToGpdbType {
 
     /**
      * This field is needed to find compatible Hive type when more than one Hive type mapped to GPDB type
+     *
      * @return size of this type in bytes or 0
      */
     public byte getSize() {
