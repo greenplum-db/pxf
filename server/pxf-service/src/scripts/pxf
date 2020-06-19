@@ -389,7 +389,7 @@ function do_start() {
         isRunning "$pid" && { echoYellow "PXF is already running [pid=$pid]"; return 0; }
     fi
 
-    PXF_OPTS=(-Dlogging.config=${PXF_CONF}/conf/pxf-log4j2.xml)
+    PXF_OPTS=(-Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager -Dlogging.config=${PXF_CONF}/conf/pxf-log4j2.xml)
     [[ $PXF_DEBUG == true ]]      && PXF_OPTS+=(-agentlib:jdwp=transport=dt_socket,address=2020,suspend=n,server=y)
     [[ $PXF_OOM_KILL = true ]]    && PXF_OPTS+=(-XX:OnOutOfMemoryError="${PXF_HOME}/bin/kill-pxf.sh %p")
     [[ -n "$PXF_OOM_DUMP_PATH" ]] && PXF_OPTS+=(-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=$PXF_OOM_DUMP_PATH)
