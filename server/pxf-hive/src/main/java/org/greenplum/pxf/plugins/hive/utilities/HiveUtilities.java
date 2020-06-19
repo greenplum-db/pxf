@@ -21,36 +21,31 @@ package org.greenplum.pxf.plugins.hive.utilities;
 
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hive.common.JavaUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.io.orc.OrcFile;
 import org.apache.hadoop.hive.ql.io.orc.Reader;
 import org.apache.hadoop.hive.serde2.Deserializer;
-import org.greenplum.pxf.api.UnsupportedTypeException;
+import org.apache.hadoop.mapred.InputFormat;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.TextInputFormat;
+import org.greenplum.pxf.api.error.UnsupportedTypeException;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.Metadata;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.EnumGpdbType;
 import org.greenplum.pxf.api.utilities.Utilities;
-import org.greenplum.pxf.plugins.hive.HiveUserData;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 
 /**
  * Class containing helper functions connecting
  * and interacting with Hive.
  */
+@Component
 public class HiveUtilities {
-
-    private static final Logger LOG = LoggerFactory.getLogger(HiveUtilities.class);
 
     /**
      * Checks if hive type is supported, and if so return its matching GPDB
@@ -82,7 +77,7 @@ public class HiveUtilities {
      * @throws UnsupportedTypeException if the column type is not supported
      * @see EnumHiveToGpdbType
      */
-    public static Metadata.Field mapHiveType(FieldSchema hiveColumn) throws UnsupportedTypeException {
+    public Metadata.Field mapHiveType(FieldSchema hiveColumn) throws UnsupportedTypeException {
         String fieldName = hiveColumn.getName();
         String hiveType = hiveColumn.getType(); // Type name and modifiers if any
         String hiveTypeName; // Type name
@@ -115,25 +110,27 @@ public class HiveUtilities {
     }
 
     /**
-     * Verifies modifiers are null or integers.
-     * Modifier is a value assigned to a type,
-     * e.g. size of a varchar - varchar(size).
+     * Creates the partition InputFormat.
      *
-     * @param modifiers type modifiers to be verified
-     * @return whether modifiers are null or integers
+     * @param inputFormatName input format class name
+     * @param jobConf         configuration data for the Hadoop framework
+     * @return a {@link org.apache.hadoop.mapred.InputFormat} derived object
+     * @throws Exception if failed to create input format
      */
-    private static boolean verifyIntegerModifiers(String[] modifiers) {
-        if (modifiers == null) {
-            return true;
-        }
-        for (String modifier : modifiers) {
-            if (StringUtils.isBlank(modifier) || !StringUtils.isNumeric(modifier)) {
-                return false;
-            }
-        }
-        return true;
-    }
+    public InputFormat<?, ?> makeInputFormat(String inputFormatName,
+                                             JobConf jobConf)
+            throws Exception {
+        Class<?> c = Class.forName(inputFormatName, true,
+                JavaUtils.getClassLoader());
+        InputFormat<?, ?> inputFormat = (InputFormat<?, ?>) c.getDeclaredConstructor().newInstance();
 
+        if (TextInputFormat.class.getName().equals(inputFormatName)) {
+            // TextInputFormat needs a special configuration
+            ((TextInputFormat) inputFormat).configure(jobConf);
+        }
+
+        return inputFormat;
+    }
 
     /**
      * Converts GPDB type to hive type.
@@ -144,12 +141,11 @@ public class HiveUtilities {
      * @throws UnsupportedTypeException if type is not supported
      * @see EnumHiveToGpdbType For supported mappings
      */
-    public static String toCompatibleHiveType(DataType type, Integer[] modifiers) {
+    public String toCompatibleHiveType(DataType type, Integer[] modifiers) {
 
         EnumHiveToGpdbType hiveToGpdbType = EnumHiveToGpdbType.getCompatibleHiveToGpdbType(type);
         return EnumHiveToGpdbType.getFullHiveTypeName(hiveToGpdbType, modifiers);
     }
-
 
     /**
      * Validates whether given GPDB and Hive data types are compatible.
@@ -172,7 +168,7 @@ public class HiveUtilities {
      * @param gpdbColumnName Hive column name
      * @throws UnsupportedTypeException if types are incompatible
      */
-    public static void validateTypeCompatible(DataType gpdbDataType, Integer[] gpdbTypeMods, String hiveType, String gpdbColumnName) {
+    public void validateTypeCompatible(DataType gpdbDataType, Integer[] gpdbTypeMods, String hiveType, String gpdbColumnName) {
 
         EnumHiveToGpdbType hiveToGpdbType = EnumHiveToGpdbType.getHiveToGpdbType(hiveType);
         EnumGpdbType expectedGpdbType = hiveToGpdbType.getGpdbType();
@@ -204,68 +200,48 @@ public class HiveUtilities {
     }
 
     /**
-     * The method parses raw user data into HiveUserData class
-     *
-     * @param context input data
-     * @return instance of HiveUserData class
-     * @throws IllegalArgumentException when incorrect number of tokens in Hive user data received
-     */
-    public static HiveUserData parseHiveUserData(RequestContext context) throws IllegalArgumentException {
-        String userData = new String(context.getFragmentUserData());
-        String[] toks = userData.split(HiveUserData.HIVE_UD_DELIM, HiveUserData.getNumOfTokens());
-
-        if (toks.length != (HiveUserData.getNumOfTokens())) {
-            throw new IllegalArgumentException("HiveInputFormatFragmenter expected "
-                    + HiveUserData.getNumOfTokens() + " tokens, but got " + toks.length);
-        }
-
-        String indexesStr = toks[8];
-        List<Integer> indexes = null;
-
-        if (indexesStr != null && !"null".equals(indexesStr)) {
-            indexes = Stream.of(indexesStr.split(","))
-                    .map(s -> "null".equals(s) ? null : Integer.parseInt(s))
-                    .collect(Collectors.toList());
-        }
-
-        return new HiveUserData(
-                toks[0],
-                toks[1],
-                toks[2],
-                toks[3],
-                Boolean.parseBoolean(toks[4]),
-                toks[5],
-                toks[6],
-                Integer.parseInt(toks[7]),
-                indexes,
-                toks[9],
-                toks[10]);
-    }
-
-    /**
      * Creates an instance of a given serde type
      *
      * @param serdeClassName the name of the serde class
      * @return instance of a given serde
      * @throws Exception if an error occurs during the creation of SerDe instance
      */
-    public static Deserializer createDeserializer(String serdeClassName) throws Exception {
-        Deserializer deserializer = (Deserializer) Utilities.createAnyInstance(serdeClassName);
-        return deserializer;
+    public Deserializer createDeserializer(String serdeClassName) throws Exception {
+        return (Deserializer) Utilities.createAnyInstance(serdeClassName);
     }
 
     /**
      * Creates ORC file reader.
      *
-     * @param requestContext input data with given data source
+     * @param context input data with given data source
      * @return ORC file reader
      */
-    public static Reader getOrcReader(Configuration configuration, RequestContext requestContext) {
+    public Reader getOrcReader(RequestContext context) {
         try {
-            Path path = new Path(requestContext.getDataSource());
-            return OrcFile.createReader(path.getFileSystem(configuration), path);
+            Path path = new Path(context.getDataSource());
+            return OrcFile.createReader(path.getFileSystem(context.getConfiguration()), path);
         } catch (Exception e) {
             throw new RuntimeException("Exception while getting orc reader", e);
         }
+    }
+
+    /**
+     * Verifies modifiers are null or integers.
+     * Modifier is a value assigned to a type,
+     * e.g. size of a varchar - varchar(size).
+     *
+     * @param modifiers type modifiers to be verified
+     * @return whether modifiers are null or integers
+     */
+    private boolean verifyIntegerModifiers(String[] modifiers) {
+        if (modifiers == null) {
+            return true;
+        }
+        for (String modifier : modifiers) {
+            if (StringUtils.isBlank(modifier) || !StringUtils.isNumeric(modifier)) {
+                return false;
+            }
+        }
+        return true;
     }
 }

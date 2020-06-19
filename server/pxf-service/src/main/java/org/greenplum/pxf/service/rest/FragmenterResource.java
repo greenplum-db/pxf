@@ -20,7 +20,7 @@ package org.greenplum.pxf.service.rest;
  */
 
 import com.google.common.util.concurrent.UncheckedExecutionException;
-import org.apache.log4j.Level;
+import org.apache.logging.log4j.Level;
 import org.greenplum.pxf.api.configuration.PxfServerProperties;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.FragmentStats;

@@ -25,7 +25,8 @@ import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.LineRecordReader;
 import org.apache.hadoop.mapred.TextInputFormat;
-import org.greenplum.pxf.api.model.RequestContext;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 import java.io.IOException;
 
@@ -33,6 +34,8 @@ import java.io.IOException;
  * Specialization of HiveAccessor for a Hive table stored as Text files.
  * Use together with {@link HiveInputFormatFragmenter}/{@link HiveStringPassResolver}.
  */
+@Component("HiveLineBreakAccessor")
+@RequestScope
 public class HiveLineBreakAccessor extends HiveAccessor {
 
     /**
@@ -43,8 +46,8 @@ public class HiveLineBreakAccessor extends HiveAccessor {
     }
 
     @Override
-    public void initialize(RequestContext requestContext) {
-        super.initialize(requestContext);
+    public void afterPropertiesSet() {
+        super.afterPropertiesSet();
         ((TextInputFormat) inputFormat).configure(jobConf);
     }
 

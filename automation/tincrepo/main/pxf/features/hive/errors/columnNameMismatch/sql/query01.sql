@@ -4,9 +4,6 @@
 --                                                                                               
 -- # create a match/subs
 --
--- m/(ERROR|WARNING):.*remote component error.*\(\d+\).*from.*'\d+\.\d+\.\d+\.\d+:\d+'.*/
--- s/'\d+\.\d+\.\d+\.\d+:\d+'/'SOME_IP:SOME_PORT'/
---
 -- m/   description   .*/
 -- s/description   .*/description   DESCRIPTION/
 --

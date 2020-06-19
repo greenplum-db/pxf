@@ -508,6 +508,11 @@ call_rest(GPHDUri *hadoop_uri, ClientContext *client_context, char *rest_msg)
 					 PXF_SERVICE_PREFIX,
 					 PXF_VERSION);
 
+	if ((DEBUG1 >= log_min_messages) || (DEBUG1 >= client_min_messages))
+	{
+		appendStringInfo(&request, "?trace=true");
+	}
+
 	/* send the request. The response will exist in rest_buf.data */
 	process_request(client_context, request.data);
 	pfree(request.data);

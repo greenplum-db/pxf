@@ -30,6 +30,7 @@ import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -54,9 +55,7 @@ public class PartitionedJsonParserNoSeekTest {
     }
 
     public void runTest(final File jsonFile) throws IOException {
-        InputStream jsonInputStream = new FileInputStream(jsonFile);
-
-        try {
+        try (InputStream jsonInputStream = new FileInputStream(jsonFile)) {
             PartitionedJsonParser parser = new PartitionedJsonParser(jsonInputStream);
 
             File[] jsonObjectFiles = jsonFile.getParentFile().listFiles(new FilenameFilter() {
@@ -66,15 +65,12 @@ public class PartitionedJsonParserNoSeekTest {
             });
             Arrays.sort(jsonObjectFiles);
             for (File jsonObjectFile : jsonObjectFiles) {
-                String expected = trimWhitespaces(FileUtils.readFileToString(jsonObjectFile));
+                String expected = trimWhitespaces(FileUtils.readFileToString(jsonObjectFile, Charset.defaultCharset()));
                 String result = parser.nextObjectContainingMember("name");
                 assertNotNull(jsonFile.getName() + "/" + jsonObjectFile.getName(), result);
                 assertEquals(expected, trimWhitespaces(result), jsonFile.getName() + "/" + jsonObjectFile.getName());
                 LOG.info("File " + jsonFile.getName() + "/" + jsonObjectFile.getName() + " passed");
             }
-
-        } finally {
-            IOUtils.closeQuietly(jsonInputStream);
         }
     }
 

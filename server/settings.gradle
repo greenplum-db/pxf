@@ -23,6 +23,7 @@ include 'pxf-service',
         'pxf-api',
         'pxf-hbase',
         'pxf-hdfs',
+        'pxf-hive',
         'pxf-jdbc',
         'pxf-json',
         'pxf-s3'

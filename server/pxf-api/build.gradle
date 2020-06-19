@@ -17,24 +17,40 @@ dependencies {
      * API Dependencies
      *******************************/
 
-    api("org.apache.hadoop:hadoop-common:${hadoopVersion}") {
-        exclude group: 'commons-codec'
-    }
+    api("org.apache.hadoop:hadoop-common:${hadoopVersion}") { transitive = false }
     api("org.springframework.boot:spring-boot-starter")
     api('org.springframework.boot:spring-boot-starter-web')
+
+    /*******************************
+     * Compile Only Dependencies
+     *******************************/
+
+    compileOnly("org.apache.hadoop:hadoop-annotations:${hadoopVersion}")
 
     /*******************************
      * Implementation Dependencies
      *******************************/
 
     implementation("org.springframework.boot:spring-boot-starter-log4j2")
+
+    implementation("com.google.guava:guava")
     implementation("commons-codec:commons-codec")
-    implementation("com.fasterxml.jackson.core:jackson-core")
-    implementation("com.fasterxml.jackson.core:jackson-databind")
+    implementation("commons-collections:commons-collections")
+    implementation("commons-configuration:commons-configuration")
+    implementation("commons-lang:commons-lang")
+    implementation("org.apache.commons:commons-lang3")
+
+    implementation("org.apache.hadoop:hadoop-auth:${hadoopVersion}") { transitive = false }
+    implementation("org.codehaus.woodstox:stax2-api:3.1.4")      { transitive = false }
+    implementation("com.fasterxml.woodstox:woodstox-core:5.0.3") { transitive = false }
+    implementation("com.fasterxml.jackson.core:jackson-core") { transitive = false }
+    implementation("com.fasterxml.jackson.core:jackson-databind") { transitive = false }
 
     /*******************************
      * Test Dependencies
      *******************************/
+
+    testCompileOnly("org.apache.hadoop:hadoop-annotations:${hadoopVersion}")
 
     testImplementation('org.mockito:mockito-inline:3.1.0')
     testImplementation('org.springframework.boot:spring-boot-starter-test') {

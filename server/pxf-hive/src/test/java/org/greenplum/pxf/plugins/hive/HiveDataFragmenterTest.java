@@ -20,53 +20,44 @@ package org.greenplum.pxf.plugins.hive;
  */
 
 import org.apache.hadoop.conf.Configuration;
-import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class HiveDataFragmenterTest {
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
     private RequestContext context;
     private Configuration configuration;
-    private ConfigurationFactory configurationFactory;
     private HiveClientWrapper hiveClientWrapper;
 
-    @Before
+    @BeforeEach
     public void setup() {
 
         hiveClientWrapper = mock(HiveClientWrapper.class);
-        configurationFactory = mock(ConfigurationFactory.class);
+
+        configuration = new Configuration();
+        configuration.set("fs.defaultFS", "hdfs:///");
 
         context = new RequestContext();
         context.setConfig("default");
         context.setServerName("default");
         context.setUser("dummy");
-
-        configuration = new Configuration();
-        configuration.set("fs.defaultFS", "hdfs:///");
-
-        when(configurationFactory
-                .initConfiguration("default", "default", "dummy", context.getAdditionalConfigProps()))
-                .thenReturn(configuration);
+        context.setConfiguration(configuration);
     }
 
     @Test
     public void constructorCantAccessMetaStore() {
-        expectedException.expect(RuntimeException.class);
-        expectedException.expectMessage("Failed connecting to Hive MetaStore service: which way to albuquerque");
-
         when(hiveClientWrapper.initHiveClient(context, configuration)).thenThrow(new RuntimeException("Failed connecting to Hive MetaStore service: which way to albuquerque"));
 
-        HiveDataFragmenter fragmenter = new HiveDataFragmenter(configurationFactory, hiveClientWrapper);
-        fragmenter.initialize(context);
+        HiveDataFragmenter fragmenter = new HiveDataFragmenter();
+        fragmenter.setHiveClientWrapper(hiveClientWrapper);
+        fragmenter.setRequestContext(context);
+        Exception e = assertThrows(RuntimeException.class, fragmenter::afterPropertiesSet);
+        assertEquals("Failed connecting to Hive MetaStore service: which way to albuquerque", e.getMessage());
     }
 }
