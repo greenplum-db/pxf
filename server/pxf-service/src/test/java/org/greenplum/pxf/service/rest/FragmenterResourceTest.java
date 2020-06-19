@@ -24,9 +24,7 @@ import org.springframework.util.MultiValueMap;
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
-import java.util.Hashtable;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -251,7 +249,7 @@ public class FragmenterResourceTest {
         final Fragmenter fragmenter = mock(Fragmenter.class);
         when(mockApplicationContext.getBean("Fragmenter", Fragmenter.class)).thenReturn(fragmenter);
 
-        final FakeRequestParser fakeRequestParser = new FakeRequestParser();
+        final FakeRequestParser fakeRequestParser = new FakeRequestParser(threadCount);
         fragmenterResource.setRequestParser(fakeRequestParser);
 
         for (int i = 0; i < threads.length; i++) {
@@ -259,14 +257,14 @@ public class FragmenterResourceTest {
             threads[i] = new Thread(() -> {
 
                 MultiValueMap<String, String> httpHeaders = new LinkedMultiValueMap<>();
-                httpHeaders.add("path", "path" + index);
+                httpHeaders.add("index", Integer.toString(index));
 
                 final RequestContext context = new RequestContext();
                 context.setTransactionId("XID-MULTI_THREADED-123456");
                 context.setSegmentId(index % 10);
                 context.setFragmenter("org.greenplum.pxf.api.model.Fragmenter");
 
-                fakeRequestParser.register("path" + index, context);
+                fakeRequestParser.register(index, context);
 
                 try {
                     fragmenterResource.getFragments(httpHeaders);
@@ -356,16 +354,20 @@ public class FragmenterResourceTest {
 
     private static class FakeRequestParser implements RequestParser<MultiValueMap<String, String>> {
 
-        private final Map<String, RequestContext> map = new Hashtable<>();
+        private final RequestContext[] contexts;
+
+        FakeRequestParser(int threads) {
+            contexts = new RequestContext[threads];
+        }
 
         @Override
         public RequestContext parseRequest(MultiValueMap<String, String> request, RequestType requestType) {
-            String key = request.getFirst("path");
-            return map.get(key);
+            int key = Integer.parseInt(request.getFirst("index"));
+            return contexts[key];
         }
 
-        public void register(String key, RequestContext context) {
-            map.put(key, context);
+        public void register(int key, RequestContext context) {
+            contexts[key] = context;
         }
     }
 }
