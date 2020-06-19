@@ -4,11 +4,8 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import com.fasterxml.jackson.databind.util.StdDateFormat;
-import com.google.gson.JsonParseException;
 
 import java.io.IOException;
 
@@ -50,7 +47,7 @@ public class FragmentMetadataSerDe extends StdSerializer<FragmentMetadata> {
         gen.writeString(mapper.writeValueAsString(value));
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public FragmentMetadata deserialize(String json) throws JsonProcessingException {
         JsonNode node = mapper.readTree(json);
         String className = node.get(CLASSNAME).textValue();
@@ -59,11 +56,12 @@ public class FragmentMetadataSerDe extends StdSerializer<FragmentMetadata> {
         return (FragmentMetadata) mapper.readValue(json, klass);
     }
 
+    @SuppressWarnings("rawtypes")
     private Class getObjectClass(String className) {
         try {
             return Class.forName(className);
         } catch (ClassNotFoundException e) {
-            throw new JsonParseException(e.getMessage());
+            throw new RuntimeException(e.getMessage());
         }
     }
 }

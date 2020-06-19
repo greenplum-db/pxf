@@ -37,7 +37,7 @@ public class MetadataResponseFormatterTest {
 
     private String convertResponseToString(MetadataResponse data) throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        data.write(outputStream);
+        data.writeTo(outputStream);
         return outputStream.toString();
     }
 

@@ -4,15 +4,8 @@
 --                                                                                               
 -- # create a match/subs
 --
---
 -- m/\d+\.\d+\.\d+\.\d+:\d+/
 -- s/\d+\.\d+\.\d+\.\d+:\d+/SOME_IP:SOME_PORT/g
---
--- m/(ERROR|WARNING):.*remote component error.*\(\d+\).*from.*'(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])):\d+'.*/
--- s/'(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])):\d+'/'SOME_IP:SOME_PORT'/
---
--- m/(ERROR|WARNING):.*javax.servlet.ServletException: .*/
--- s/javax.servlet.ServletException: //g
 --
 -- m/DETAIL/
 -- s/DETAIL/GP_IGNORE: DETAIL/
@@ -22,4 +15,7 @@
 --
 -- end_matchsubs
 SELECT *  FROM hive_invalid_filter ORDER BY fmt, t1;
-ERROR:  remote component error (500) from 'SOME_IP:SOME_PORT':  type  Exception Report   Message  org.greenplum.pxf.api.filter.FilterParser$FilterStringSyntaxException: missing logical operator before op NOT_EQUALS at 28 (filter string: 'a4c25s3dtxto5a4c25s3dseqo5o6')   Description  The server encountered an unexpected condition that prevented it from fulfilling the request.   Exception   javax.servlet.ServletException: org.greenplum.pxf.api.filter.FilterParser$FilterStringSyntaxException: missing logical operator before op NOT_EQUALS at 28 (filter string: 'a4c25s3dtxto5a4c25s3dseqo5o6') (libchurl.c:xxx)
+ERROR:  PXF server error : org.greenplum.pxf.api.filter.FilterParser$FilterStringSyntaxException: missing logical operator before op NOT_EQUALS at 28 (filter string: 'a4c25s3dtxto5a4c25s3dseqo5o6')
+-- start_ignore
+HINT:  Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=DEBUG1' for additional details.
+-- end_ignore

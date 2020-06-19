@@ -5,6 +5,7 @@ import org.greenplum.pxf.api.configuration.PxfServerProperties;
 import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
+import org.springframework.boot.web.error.ErrorAttributeOptions;
 import org.springframework.boot.web.servlet.error.DefaultErrorAttributes;
 import org.springframework.boot.web.servlet.error.ErrorAttributes;
 import org.springframework.stereotype.Component;
@@ -60,13 +61,13 @@ public class PxfErrorAttributes extends DefaultErrorAttributes {
      * The map can be used as the model of an error page {@link ModelAndView},
      * or returned as a {@link ResponseBody @ResponseBody}.
      *
-     * @param webRequest        the source request
-     * @param includeStackTrace if stack trace elements should be included
+     * @param webRequest the source request
+     * @param options    options for error attribute contents
      * @return a map of error attributes and a hint
      */
     @Override
-    public Map<String, Object> getErrorAttributes(WebRequest webRequest, boolean includeStackTrace) {
-        Map<String, Object> errorAttributes = super.getErrorAttributes(webRequest, includeStackTrace);
+    public Map<String, Object> getErrorAttributes(WebRequest webRequest, ErrorAttributeOptions options) {
+        Map<String, Object> errorAttributes = super.getErrorAttributes(webRequest, options);
 
         Throwable throwable = getError(webRequest);
         StringBuilder hintSb = new StringBuilder(DEFAULT_HINT.length() * 3);

@@ -40,9 +40,8 @@ public class PxfUserGroupInformationTest {
     private LoginContext mockLoginContext, mockAnotherLoginContext;
     private PxfUserGroupInformation.LoginContextProvider mockLoginContextProvider;
     private KerberosTicket mockTGT;
-    private KeyTab mockKeyTab;
-    private KerberosPrincipal tgtPrincipal = new KerberosPrincipal("krbtgt/EXAMPLE.COM@EXAMPLE.COM");
-    private KerberosPrincipal nonTgtPrincipal = new KerberosPrincipal("some/somewhere@EXAMPLE.COM");
+    private final KerberosPrincipal tgtPrincipal = new KerberosPrincipal("krbtgt/EXAMPLE.COM@EXAMPLE.COM");
+    private final KerberosPrincipal nonTgtPrincipal = new KerberosPrincipal("some/somewhere@EXAMPLE.COM");
     private LoginSession session;
     private long nowMs;
     private PxfUserGroupInformation pxfUserGroupInformation;
@@ -84,7 +83,7 @@ public class PxfUserGroupInformationTest {
         // prepare common mocks
         mockTGT = mock(KerberosTicket.class);
 
-        mockKeyTab = mock(KeyTab.class);
+        KeyTab mockKeyTab = mock(KeyTab.class);
         // subject will have a known User as principal and mock TGT credential, train it to have appropriate expiration
         subject = new Subject(false, Sets.newHashSet(user), Sets.newHashSet(), Sets.newHashSet(mockTGT));
 

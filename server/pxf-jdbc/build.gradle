@@ -10,12 +10,22 @@ dependencies {
      *******************************/
 
     /*******************************
+     * Compile Only Dependencies
+     *******************************/
+
+    compileOnly("org.apache.hadoop:hadoop-annotations:${hadoopVersion}") { transitive = false }
+
+    /*******************************
      * Implementation Dependencies
      *******************************/
 
     implementation(project(':pxf-api'))
+    implementation("com.google.guava:guava")
     implementation("com.zaxxer:HikariCP:3.4.2")
-    implementation("org.postgresql:postgresql:42.2.11")  { transitive = false }
+    implementation("commons-collections:commons-collections")
+    implementation("commons-io:commons-io")
+    implementation("commons-lang:commons-lang")
+    implementation("org.postgresql:postgresql:42.2.14")  { transitive = false }
 
     /*******************************
      * Transitive Dependencies for JDBC Hive Access

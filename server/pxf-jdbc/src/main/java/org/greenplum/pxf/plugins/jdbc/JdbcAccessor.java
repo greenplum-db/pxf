@@ -35,6 +35,7 @@ import org.springframework.web.context.annotation.RequestScope;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -325,7 +326,7 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Reading text of query={} from {}", queryName, queryFile.getCanonicalPath());
             }
-            queryText = FileUtils.readFileToString(queryFile);
+            queryText = FileUtils.readFileToString(queryFile, Charset.defaultCharset());
         } catch (IOException e) {
             throw new RuntimeException(String.format("Failed to read text of query %s : %s", queryName, e.getMessage()), e);
         }

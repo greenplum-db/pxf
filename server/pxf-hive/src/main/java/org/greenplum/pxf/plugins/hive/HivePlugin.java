@@ -1,15 +1,20 @@
 package org.greenplum.pxf.plugins.hive;
 
-import org.apache.hadoop.hive.ql.io.orc.Reader;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
+import org.springframework.beans.factory.annotation.Autowired;
 
 public class HivePlugin extends BasePlugin {
 
+    protected HiveUtilities hiveUtilities;
+
     /**
-     * @return ORC file reader
+     * Sets the {@link HiveUtilities} object
+     *
+     * @param hiveUtilities the hive utilities object
      */
-    protected Reader getOrcReader() {
-        return HiveUtilities.getOrcReader(configuration, context);
+    @Autowired
+    public void setHiveUtilities(HiveUtilities hiveUtilities) {
+        this.hiveUtilities = hiveUtilities;
     }
 }

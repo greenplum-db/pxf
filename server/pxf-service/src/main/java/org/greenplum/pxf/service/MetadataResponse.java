@@ -25,22 +25,21 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.greenplum.pxf.api.model.Metadata;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
-import javax.ws.rs.core.StreamingOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
 
 
-
 /**
  * Class for serializing metadata in JSON format. The class implements
- * {@link StreamingOutput} so the serialization will be done in a stream and not
- * in one bulk, this in order to avoid running out of memory when processing a
- * lot of items.
+ * {@link StreamingResponseBody} so the serialization will be done in a
+ * stream and not in one bulk, this in order to avoid running out of memory
+ * when processing a lot of items.
  */
-public class MetadataResponse implements StreamingOutput {
+public class MetadataResponse implements StreamingResponseBody {
 
     private static final Log Log = LogFactory.getLog(MetadataResponse.class);
     private static final String METADATA_DEFAULT_RESPONSE = "{\"PXFMetadata\":[]}";
@@ -60,13 +59,13 @@ public class MetadataResponse implements StreamingOutput {
      * Serializes the metadata list in JSON, To be used as the result string for GPDB.
      */
     @Override
-    public void write(OutputStream output) throws IOException {
+    public void writeTo(OutputStream output) throws IOException {
         DataOutputStream dos = new DataOutputStream(output);
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(MapperFeature.USE_ANNOTATIONS, true); // enable annotations for serialization
         mapper.setSerializationInclusion(Include.NON_EMPTY); // ignore empty fields
 
-        if(metadataList == null || metadataList.isEmpty()) {
+        if (metadataList == null || metadataList.isEmpty()) {
             dos.write(METADATA_DEFAULT_RESPONSE.getBytes());
             return;
         }
@@ -75,7 +74,7 @@ public class MetadataResponse implements StreamingOutput {
 
         String prefix = "";
         for (Metadata metadata : metadataList) {
-            if(metadata == null) {
+            if (metadata == null) {
                 throw new IllegalArgumentException("metadata object is null - cannot serialize");
             }
             if ((metadata.getFields() == null) || metadata.getFields().isEmpty()) {
