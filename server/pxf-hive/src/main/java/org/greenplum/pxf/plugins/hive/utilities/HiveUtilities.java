@@ -124,7 +124,7 @@ public class HiveUtilities {
                 JavaUtils.getClassLoader());
         InputFormat<?, ?> inputFormat = (InputFormat<?, ?>) c.getDeclaredConstructor().newInstance();
 
-        if ("org.apache.hadoop.mapred.TextInputFormat".equals(inputFormatName)) {
+        if (TextInputFormat.class.getName().equals(inputFormatName)) {
             // TextInputFormat needs a special configuration
             ((TextInputFormat) inputFormat).configure(jobConf);
         }

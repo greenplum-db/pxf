@@ -33,6 +33,7 @@ import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
+import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.greenplum.pxf.api.filter.FilterParser;
 import org.greenplum.pxf.api.filter.Node;
 import org.greenplum.pxf.api.filter.Operator;
@@ -299,10 +300,10 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
         for (ColumnDescriptor cd : context.getTupleDescription()) {
             if (!columnAndPartitionNames.contains(cd.columnName()) &&
                     !columnAndPartitionNames.contains(cd.columnName().toLowerCase())) {
-                throw new IllegalArgumentException(
-                        String.format("Column '%s' does not exist in the Hive schema. " +
-                                        "Ensure the column exists and check the column name spelling and case",
-                                cd.columnName()));
+                throw new PxfRuntimeException(
+                        String.format("column '%s' does not exist in the Hive schema", cd.columnName()),
+                        "Ensure the column exists and check the column name spelling and case."
+                );
             }
 
             // The index of the column on the Hive schema
