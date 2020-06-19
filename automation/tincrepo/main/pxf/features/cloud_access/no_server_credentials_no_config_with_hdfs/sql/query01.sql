@@ -6,8 +6,8 @@
 --
 -- # create a match/subs
 --
--- m/Make sure no configuration files under.*/
--- s|Make sure no configuration files under.*|Make sure no configuration files under 'server-dir' specify the property 'defaultFS' with the value starting with 'hdfs://', which is incompatible with profile filesystem 's3a'. Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=DEBUG1' for additional details.|
+-- m/HINT:  Ensure that.*/
+-- s|HINT:  Ensure that.*|HINT:  Ensure that 'server-dir' includes only the configuration files for profile 's3a'. Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=DEBUG1' for additional details.|
 --
 -- m/DETAIL/
 -- s/DETAIL/CONTEXT/

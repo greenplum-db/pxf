@@ -29,17 +29,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
-import javax.ws.rs.core.StreamingOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
 
 /**
- * Class for serializing fragments metadata in JSON format. The class implements
- * {@link StreamingOutput} so the serialization will be done in a stream and not
- * in one bulk, this in order to avoid running out of memory when processing a
- * lot of fragments.
+ * Class for serializing fragments metadata in JSON format. The class
+ * implements {@link StreamingResponseBody} so the serialization will be done
+ * in a stream and not in one bulk, this in order to avoid running out of
+ * memory when processing a lot of fragments.
  */
 public class FragmentsResponse implements StreamingResponseBody {
 

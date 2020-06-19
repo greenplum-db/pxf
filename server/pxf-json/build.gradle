@@ -10,16 +10,26 @@ dependencies {
      *******************************/
 
     /*******************************
+     * Compile Only Dependencies
+     *******************************/
+
+    compileOnly("org.apache.hadoop:hadoop-annotations:${hadoopVersion}") { transitive = false }
+
+    /*******************************
      * Implementation Dependencies
      *******************************/
 
     implementation(project(':pxf-api'))
     implementation(project(':pxf-hdfs'))
+    implementation("commons-io:commons-io")
+    implementation("commons-lang:commons-lang")
     implementation("org.springframework.boot:spring-boot-starter-log4j2")
 
     /*******************************
      * Test Dependencies
      *******************************/
+
+    testCompileOnly("org.apache.hadoop:hadoop-annotations:${hadoopVersion}")
 
     testImplementation('org.springframework.boot:spring-boot-starter-test') {
         exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'

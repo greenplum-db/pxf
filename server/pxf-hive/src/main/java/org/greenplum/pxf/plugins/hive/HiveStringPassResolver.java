@@ -24,7 +24,8 @@ import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 import java.util.Collections;
 import java.util.List;
@@ -35,20 +36,22 @@ import static org.greenplum.pxf.api.io.DataType.VARCHAR;
  * Specialized HiveResolver for a Hive table stored as Text files.
  * Use together with HiveInputFormatFragmenter/HiveLineBreakAccessor.
  */
+@Component("HiveStringPassResolver")
+@RequestScope
 public class HiveStringPassResolver extends HiveResolver {
     private StringBuilder parts;
 
     @Override
-    void parseUserData(RequestContext input) throws Exception {
-        HiveUserData hiveUserData = HiveUtilities.parseHiveUserData(input);
+    void parseUserData(RequestContext input) {
+        HiveFragmentMetadata metadata = context.getFragmentMetadata();
         parseDelimiterChar(input);
         parts = new StringBuilder();
-        partitionKeys = hiveUserData.getPartitionKeys();
-        serdeClassName = hiveUserData.getSerdeClassName();
+        partitionKeys = metadata.getPartitionKeys();
+        serdeClassName = metadata.getSerdeClassName();
 
         /* Needed only for GPDBWritable format*/
         if (context.getOutputFormat() == OutputFormat.GPDBWritable) {
-            propsString = hiveUserData.getPropertiesString();
+            properties = metadata.getProperties();
         }
     }
 
@@ -83,5 +86,4 @@ public class HiveStringPassResolver extends HiveResolver {
             return super.getFields(onerow);
         }
     }
-
 }

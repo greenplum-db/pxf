@@ -27,6 +27,8 @@ import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -39,6 +41,8 @@ import static org.apache.hadoop.hive.serde2.ColumnProjectionUtils.*;
  * This class replaces the generic HiveAccessor for a case where a table is stored entirely as RC files.
  * Use together with {@link HiveInputFormatFragmenter}/{@link HiveColumnarSerdeResolver}
  */
+@Component("HiveRCFileAccessor")
+@RequestScope
 public class HiveRCFileAccessor extends HiveAccessor {
 
     /**

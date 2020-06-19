@@ -30,6 +30,7 @@ import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Comparator;
 
@@ -55,9 +56,8 @@ public class PartitionedJsonParserSeekTest {
     public void runTest(final File jsonDir) throws IOException {
 
         File jsonFile = new File(jsonDir, "input.json");
-        InputStream jsonInputStream = new FileInputStream(jsonFile);
 
-        try {
+        try (InputStream jsonInputStream = new FileInputStream(jsonFile)) {
             seekToStart(jsonInputStream);
             PartitionedJsonParser parser = new PartitionedJsonParser(jsonInputStream);
 
@@ -79,16 +79,13 @@ public class PartitionedJsonParserSeekTest {
                 LOG.info("File " + jsonFile.getAbsolutePath() + " passed");
             } else {
                 for (File jsonObjectFile : jsonOjbectFiles) {
-                    String expected = trimWhitespaces(FileUtils.readFileToString(jsonObjectFile));
+                    String expected = trimWhitespaces(FileUtils.readFileToString(jsonObjectFile, Charset.defaultCharset()));
                     String result = parser.nextObjectContainingMember("name");
                     assertNotNull(jsonFile.getAbsolutePath() + "/" + jsonObjectFile.getName(), result);
                     assertEquals(expected, trimWhitespaces(result), jsonFile.getAbsolutePath() + "/" + jsonObjectFile.getName());
                     LOG.info("File " + jsonFile.getAbsolutePath() + "/" + jsonObjectFile.getName() + " passed");
                 }
             }
-
-        } finally {
-            IOUtils.closeQuietly(jsonInputStream);
         }
     }
 

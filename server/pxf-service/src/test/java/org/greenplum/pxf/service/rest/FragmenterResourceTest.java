@@ -249,18 +249,22 @@ public class FragmenterResourceTest {
         final Fragmenter fragmenter = mock(Fragmenter.class);
         when(mockApplicationContext.getBean("Fragmenter", Fragmenter.class)).thenReturn(fragmenter);
 
+        final FakeRequestParser fakeRequestParser = new FakeRequestParser(threadCount);
+        fragmenterResource.setRequestParser(fakeRequestParser);
+
         for (int i = 0; i < threads.length; i++) {
             int index = i;
             threads[i] = new Thread(() -> {
 
                 MultiValueMap<String, String> httpHeaders = new LinkedMultiValueMap<>();
+                httpHeaders.add("index", Integer.toString(index));
 
                 final RequestContext context = new RequestContext();
                 context.setTransactionId("XID-MULTI_THREADED-123456");
                 context.setSegmentId(index % 10);
                 context.setFragmenter("org.greenplum.pxf.api.model.Fragmenter");
 
-                when(mockParser.parseRequest(httpHeaders, RequestType.FRAGMENTER)).thenReturn(context);
+                fakeRequestParser.register(index, context);
 
                 try {
                     fragmenterResource.getFragments(httpHeaders);
@@ -345,6 +349,25 @@ public class FragmenterResourceTest {
         @Override
         public <T> T doAs(RequestContext context, boolean lastCallForSegment, PrivilegedExceptionAction<T> action) throws IOException, InterruptedException {
             return UserGroupInformation.getCurrentUser().doAs(action);
+        }
+    }
+
+    private static class FakeRequestParser implements RequestParser<MultiValueMap<String, String>> {
+
+        private final RequestContext[] contexts;
+
+        FakeRequestParser(int threads) {
+            contexts = new RequestContext[threads];
+        }
+
+        @Override
+        public RequestContext parseRequest(MultiValueMap<String, String> request, RequestType requestType) {
+            int key = Integer.parseInt(request.getFirst("index"));
+            return contexts[key];
+        }
+
+        public void register(int key, RequestContext context) {
+            contexts[key] = context;
         }
     }
 }
