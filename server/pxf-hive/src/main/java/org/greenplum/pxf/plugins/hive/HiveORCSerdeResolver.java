@@ -23,18 +23,20 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.mapred.JobConf;
-import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 import java.util.Properties;
-import java.util.stream.Collectors;
 
 /**
  * Specialized HiveResolver for a Hive table stored as RC file.
  * Use together with HiveInputFormatFragmenter/HiveRCFileAccessor.
  */
+@Component("HiveORCSerdeResolver")
+@RequestScope
 public class HiveORCSerdeResolver extends HiveResolver {
     private static final Log LOG = LogFactory.getLog(HiveORCSerdeResolver.class);
     private String serdeType;
@@ -43,15 +45,15 @@ public class HiveORCSerdeResolver extends HiveResolver {
     /* read the data supplied by the fragmenter: inputformat name, serde name, partition keys */
     @Override
     void parseUserData(RequestContext input) {
-        HiveUserData hiveUserData = HiveUtilities.parseHiveUserData(input);
-        serdeType = hiveUserData.getSerdeClassName();
-        partitionKeys = hiveUserData.getPartitionKeys();
-        typesString = hiveUserData.getColTypes();
+        HiveFragmentMetadata metadata = context.getFragmentMetadata();
+        serdeType = metadata.getSerdeClassName();
+        partitionKeys = metadata.getPartitionKeys();
+        typesString = metadata.getColTypes();
         collectionDelim = input.getOption("COLLECTION_DELIM") == null ? COLLECTION_DELIM
                 : input.getOption("COLLECTION_DELIM");
         mapkeyDelim = input.getOption("MAPKEY_DELIM") == null ? MAPKEY_DELIM
                 : input.getOption("MAPKEY_DELIM");
-        hiveIndexes = hiveUserData.getHiveIndexes();
+        hiveIndexes = metadata.getHiveIndexes();
     }
 
     /*
@@ -80,7 +82,7 @@ public class HiveORCSerdeResolver extends HiveResolver {
             if (i == null) continue;
 
             String columnName = column.columnName();
-            String columnType = HiveUtilities.toCompatibleHiveType(column.getDataType(), column.columnTypeModifiers());
+            String columnType = hiveUtilities.toCompatibleHiveType(column.getDataType(), column.columnTypeModifiers());
             //Complex Types will have a mismatch between Hive and Gpdb type
             if (!columnType.equals(hiveColTypes[i])) {
                 columnType = hiveColTypes[i];
@@ -95,7 +97,7 @@ public class HiveORCSerdeResolver extends HiveResolver {
         serdeProperties.put(serdeConstants.LIST_COLUMNS, columnNames.toString());
         serdeProperties.put(serdeConstants.LIST_COLUMN_TYPES, columnTypes.toString());
 
-        deserializer = HiveUtilities.createDeserializer(serdeType);
+        deserializer = hiveUtilities.createDeserializer(serdeType);
         deserializer.initialize(new JobConf(configuration, HiveORCSerdeResolver.class), serdeProperties);
     }
 

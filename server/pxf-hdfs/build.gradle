@@ -10,34 +10,51 @@ dependencies {
      *******************************/
 
     api(project(':pxf-api'))
-    api("org.apache.hadoop:hadoop-mapreduce-client-core:${hadoopVersion}")
+    api("org.apache.hadoop:hadoop-mapreduce-client-core:${hadoopVersion}") { transitive = false }
+
+    /*******************************
+     * Compile Only Dependencies
+     *******************************/
+
+    compileOnly("org.apache.hadoop:hadoop-annotations:${hadoopVersion}") { transitive = false }
 
     /*******************************
      * Implementation Dependencies
      *******************************/
 
-    implementation("org.apache.avro:avro-mapred:1.7.7")
-    implementation("com.fasterxml.jackson.core:jackson-databind")
-    implementation("com.fasterxml.jackson.core:jackson-core")
-    implementation("com.fasterxml.jackson.core:jackson-annotations")
-    implementation("org.apache.hadoop:hadoop-yarn-api:${hadoopVersion}") // Kerberos dependency
-    implementation("org.apache.hadoop:hadoop-yarn-client:${hadoopVersion}") // Kerberos dependency
-    implementation("org.apache.hadoop:hadoop-common:${hadoopVersion}")
-    implementation("org.apache.htrace:htrace-core4:${htraceVersion}")
-    implementation("org.apache.hadoop:hadoop-hdfs:${hadoopVersion}")
-    implementation("org.apache.hadoop:hadoop-hdfs-client:${hadoopVersion}")
-    implementation("org.apache.parquet:parquet-format:2.7.0")
-    implementation("org.apache.parquet:parquet-column:${parquetVersion}")
-    implementation("org.apache.parquet:parquet-common:${parquetVersion}")
-    implementation("org.apache.parquet:parquet-encoding:${parquetVersion}")
-    implementation("org.apache.parquet:parquet-generator:${parquetVersion}")
-    implementation("org.apache.parquet:parquet-hadoop:${parquetVersion}")
-    implementation("org.apache.hive:hive-storage-api:2.4.0") // for parquet writing
+    implementation("com.google.guava:guava")
+    implementation("commons-configuration:commons-configuration")
+    implementation("commons-io:commons-io")
+    implementation("commons-lang:commons-lang")
+    implementation("org.apache.commons:commons-lang3")
+    implementation("org.slf4j:slf4j-api")
+
+    implementation("org.apache.avro:avro-mapred:1.7.7") { transitive = false }
+    implementation("com.fasterxml.jackson.core:jackson-databind") { transitive = false }
+    implementation("com.fasterxml.jackson.core:jackson-core") { transitive = false }
+    implementation("com.fasterxml.jackson.core:jackson-annotations") { transitive = false }
+    implementation("org.apache.hadoop:hadoop-yarn-api:${hadoopVersion}") { transitive = false } // Kerberos dependency
+    implementation("org.apache.hadoop:hadoop-yarn-client:${hadoopVersion}") { transitive = false } // Kerberos dependency
+    implementation("org.apache.hadoop:hadoop-common:${hadoopVersion}") { transitive = false }
+    implementation("org.apache.htrace:htrace-core4:${htraceVersion}") { transitive = false }
+    implementation("org.apache.hadoop:hadoop-hdfs:${hadoopVersion}") { transitive = false }
+    implementation("org.apache.hadoop:hadoop-hdfs-client:${hadoopVersion}") { transitive = false }
+    implementation("org.apache.parquet:parquet-format:2.7.0") { transitive = false }
+    implementation("org.apache.parquet:parquet-column:${parquetVersion}") { transitive = false }
+    implementation("org.apache.parquet:parquet-common:${parquetVersion}") { transitive = false }
+    implementation("org.apache.parquet:parquet-encoding:${parquetVersion}") { transitive = false }
+    implementation("org.apache.parquet:parquet-generator:${parquetVersion}") { transitive = false }
+    implementation("org.apache.parquet:parquet-hadoop:${parquetVersion}") { transitive = false }
+    implementation("org.apache.hive:hive-storage-api:2.4.0") { transitive = false }// for parquet writing
+
+    implementation("org.codehaus.jackson:jackson-core-asl:1.9.13") { transitive = false }
+    implementation("org.codehaus.jackson:jackson-mapper-asl:1.9.13") { transitive = false }
 
     implementation("org.apache.avro:avro:1.7.7")                  { transitive = false }
     // Dependency in hadoop 2.9.2
-    implementation("com.fasterxml.woodstox:woodstox-core:5.0.3")  { transitive = false }
-    implementation("org.codehaus.woodstox:stax2-api:3.1.4")       { transitive = false }
+    implementation("log4j:log4j:1.2.17")                         { transitive = false }
+    implementation("com.fasterxml.woodstox:woodstox-core:5.0.3") { transitive = false }
+    implementation("org.codehaus.woodstox:stax2-api:3.1.4")      { transitive = false }
 
     /*******************************
      * Dependencies for Supported Hadoop-Compatible Filesystems
@@ -57,6 +74,8 @@ dependencies {
     /*******************************
      * Test Dependencies
      *******************************/
+
+    testCompileOnly("org.apache.hadoop:hadoop-annotations:${hadoopVersion}")
 
     // for parquet tests
     testImplementation("org.apache.parquet:parquet-pig:${parquetVersion}")

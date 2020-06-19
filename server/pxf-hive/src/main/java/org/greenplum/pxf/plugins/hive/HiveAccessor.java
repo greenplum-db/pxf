@@ -20,7 +20,6 @@ package org.greenplum.pxf.plugins.hive;
  */
 
 import org.apache.hadoop.hive.common.type.HiveDecimal;
-import org.apache.hadoop.hive.ql.io.orc.Reader;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.InputSplit;
@@ -35,12 +34,14 @@ import org.greenplum.pxf.api.filter.Operator;
 import org.greenplum.pxf.api.filter.OperatorNode;
 import org.greenplum.pxf.api.filter.ToStringTreeVisitor;
 import org.greenplum.pxf.api.filter.TreeTraverser;
-import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.plugins.hdfs.HdfsSplittableDataAccessor;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 import java.io.IOException;
 import java.sql.Date;
@@ -59,11 +60,17 @@ import java.util.List;
  * split which does not belong to a partition filter. Naturally, the partition
  * filtering will be done only for Hive tables that are partitioned.
  */
+@Component("HiveAccessor")
+@RequestScope
 public class HiveAccessor extends HdfsSplittableDataAccessor {
+
     private static final Logger LOG = LoggerFactory.getLogger(HiveAccessor.class);
-    private List<HivePartition> partitions;
     private static final String HIVE_DEFAULT_PARTITION = "__HIVE_DEFAULT_PARTITION__";
+
     private int skipHeaderCount;
+    private List<HivePartition> partitions;
+
+    protected HiveUtilities hiveUtilities;
     protected List<Integer> hiveIndexes;
 
     static class HivePartition {
@@ -102,31 +109,39 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
     }
 
     /**
+     * Sets the {@link HiveUtilities} object
+     *
+     * @param hiveUtilities the hive utilities object
+     */
+    @Autowired
+    public void setHiveUtilities(HiveUtilities hiveUtilities) {
+        this.hiveUtilities = hiveUtilities;
+    }
+
+    /**
      * Initializes a HiveAccessor and creates an InputFormat (derived from
      * {@link org.apache.hadoop.mapred.InputFormat}) and the Hive partition
      * fields
      *
-     * @param requestContext request context
      * @throws RuntimeException if failed to create input format
      */
     @Override
-    public void initialize(RequestContext requestContext) {
-        super.initialize(requestContext);
-        HiveUserData hiveUserData;
+    public void afterPropertiesSet() {
+        super.afterPropertiesSet();
+        HiveFragmentMetadata metadata;
         try {
-            hiveUserData = HiveUtilities.parseHiveUserData(context);
+            metadata = context.getFragmentMetadata();
             if (inputFormat == null) {
-                this.inputFormat = HiveDataFragmenter.makeInputFormat(
-                        hiveUserData.getInputFormatName(), jobConf);
+                this.inputFormat = hiveUtilities.makeInputFormat(metadata.getInputFormatName(), jobConf);
             }
         } catch (Exception e) {
             throw new RuntimeException("Failed to initialize HiveAccessor", e);
         }
 
-        initPartitionFields(hiveUserData.getPartitionKeys());
-        filterInFragmenter = hiveUserData.isFilterInFragmenter();
-        skipHeaderCount = hiveUserData.getSkipHeader();
-        hiveIndexes = hiveUserData.getHiveIndexes();
+        initPartitionFields(metadata.getPartitionKeys());
+        filterInFragmenter = metadata.isFilterInFragmenter();
+        skipHeaderCount = metadata.getSkipHeader();
+        hiveIndexes = metadata.getHiveIndexes();
     }
 
     /**
@@ -401,12 +416,5 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
             return true;
 
         return testForPartitionEquality(partitionFields, root);
-    }
-
-    /**
-     * @return ORC file reader
-     */
-    protected Reader getOrcReader() {
-        return HiveUtilities.getOrcReader(configuration, context);
     }
 }

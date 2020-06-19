@@ -16,11 +16,18 @@ dependencies {
      *******************************/
 
     implementation(project(':pxf-jdbc'))
+    implementation("com.google.guava:guava")
+    implementation("commons-codec:commons-codec")
+    implementation("commons-lang:commons-lang")
+    implementation("org.apache.commons:commons-lang3")
+    implementation("org.apache.httpcomponents:httpclient:4.5.9") { transitive = false }
+    implementation("org.apache.httpcomponents:httpcore:4.4.13") { transitive = false }
     implementation("org.apache.hadoop:hadoop-aws:${hadoopVersion}") { transitive = false }
     implementation("com.amazonaws:aws-java-sdk-core:${awsJavaSdk}") { transitive = false }
-    implementation("com.amazonaws:aws-java-sdk-kms:${awsJavaSdk}")  { transitive = false }
-    implementation("com.amazonaws:aws-java-sdk-s3:${awsJavaSdk}")   { transitive = false }
-    implementation("joda-time:joda-time:2.8.1")                     { transitive = false }
+    implementation("com.amazonaws:aws-java-sdk-kms:${awsJavaSdk}") { transitive = false }
+    implementation("com.amazonaws:aws-java-sdk-s3:${awsJavaSdk}") { transitive = false }
+    implementation("joda-time:joda-time") { transitive = false }
+    implementation("org.slf4j:slf4j-api")
 
     /*******************************
      * Test Dependencies

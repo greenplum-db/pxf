@@ -19,22 +19,25 @@ package org.greenplum.pxf.plugins.hive;
  * under the License.
  */
 
-import java.io.IOException;
-
+import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.hive.ql.io.orc.Reader;
+import org.apache.hadoop.hive.ql.io.orc.RecordReader;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapred.FileSplit;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
-import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
-import org.apache.hadoop.hive.ql.io.orc.RecordReader;
-import org.apache.hadoop.io.LongWritable;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
+
+import java.io.IOException;
 
 /**
  * Accessor class which reads data in batches.
  * One batch is 1024 rows of all projected columns
- *
  */
+@Component("HiveORCVectorizedAccessor")
+@RequestScope
 public class HiveORCVectorizedAccessor extends HiveORCAccessor {
 
     private RecordReader vrr;
@@ -46,7 +49,7 @@ public class HiveORCVectorizedAccessor extends HiveORCAccessor {
         Reader.Options options = new Reader.Options();
         addColumns(options);
         addFragments(options);
-        orcReader = getOrcReader();
+        orcReader = hiveUtilities.getOrcReader(context);
         vrr = orcReader.rowsOptions(options);
         batch = orcReader.getSchema().createRowBatch();
         return vrr.hasNext();
@@ -55,6 +58,7 @@ public class HiveORCVectorizedAccessor extends HiveORCAccessor {
     /**
      * File might have multiple splits, so this method restricts
      * reader to one split.
+     *
      * @param options reader options to modify
      */
     private void addFragments(Reader.Options options) {
@@ -64,6 +68,7 @@ public class HiveORCVectorizedAccessor extends HiveORCAccessor {
 
     /**
      * Reads next batch for current fragment.
+     *
      * @return next batch in OneRow format, key is a batch number, data is a batch
      */
     @Override
@@ -80,10 +85,10 @@ public class HiveORCVectorizedAccessor extends HiveORCAccessor {
 
     /**
      * This method updated reader options to include projected columns only.
+     *
      * @param options reader options to modify
-     * @throws Exception
      */
-    private void addColumns(Reader.Options options) throws Exception {
+    private void addColumns(Reader.Options options) {
         boolean[] includeColumns = new boolean[context.getColumns() + 1];
         for (ColumnDescriptor col : context.getTupleDescription()) {
             if (col.isProjected()) {

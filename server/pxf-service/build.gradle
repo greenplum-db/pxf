@@ -13,27 +13,49 @@ dependencies {
      *******************************/
 
     /*******************************
+     * Compile Only Dependencies
+     *******************************/
+
+    compileOnly("org.apache.hadoop:hadoop-annotations:${hadoopVersion}") { transitive = false }
+
+    /*******************************
      * Implementation Dependencies
      *******************************/
 
     implementation(project(':pxf-api'))
     implementation(project(':pxf-hbase'))
     implementation(project(':pxf-hdfs'))
+    implementation(project(':pxf-hive'))
     implementation(project(':pxf-jdbc'))
     implementation(project(':pxf-json'))
     implementation(project(':pxf-s3'))
 
-    implementation("commons-lang:commons-lang")
+    implementation("com.google.guava:guava")
     implementation("commons-codec:commons-codec")
+    implementation("commons-collections:commons-collections")
+    implementation("commons-lang:commons-lang")
     implementation("org.springframework.boot:spring-boot-starter-log4j2")
     implementation('org.springframework.boot:spring-boot-starter-actuator')
-    implementation('org.springframework.boot:spring-boot-starter-webflux')
 
-    implementation("org.apache.hadoop:hadoop-hdfs-client:${hadoopVersion}")
+    implementation("org.apache.hadoop:hadoop-hdfs-client:${hadoopVersion}") { transitive = false }
+
+    /*******************************
+     * These JARs below are needed for Java 11
+     * jcenter doesn't have full com.sun.xml.bind:jaxb-core/jaxb-impl packages,
+     * using glassfish distro
+     *******************************/
+
+    implementation("javax.xml.bind:jaxb-api:2.3.0") { transitive = false }
+    implementation("org.glassfish.jaxb:jaxb-core:2.3.0") { transitive = false }
+    implementation("org.glassfish.jaxb:jaxb-runtime:2.3.0") { transitive = false }
+    implementation("com.sun.istack:istack-commons-runtime:3.0.8") { transitive = false }
+    implementation("javax.activation:activation:1.1.1") { transitive = false }
 
     /*******************************
      * Test Dependencies
      *******************************/
+
+    testCompileOnly("org.apache.hadoop:hadoop-annotations:${hadoopVersion}")
 
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     testImplementation('org.springframework.boot:spring-boot-starter-test') {

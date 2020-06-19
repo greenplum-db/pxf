@@ -4,9 +4,6 @@
 --                                                                                               
 -- # create a match/subs
 --
--- m/(ERROR|WARNING):.*remote component error.*\(\d+\).*from.*'\d+\.\d+\.\d+\.\d+:\d+'.*/
--- s/'\d+\.\d+\.\d+\.\d+:\d+'/'SOME_IP:SOME_PORT'/
---
 -- m/   description   .*/
 -- s/description   .*/description   DESCRIPTION/
 --
@@ -18,5 +15,8 @@
 --
 -- end_matchsubs
 SELECT * from pxf_hive_small_data ORDER BY t1;
-ERROR:  remote component error (500) from 'SOME_IP:SOME_PORT':  type  Exception Report   Message  Column 's2' does not exist in the Hive schema or Hive Partition. Ensure the column or partition exists and check the name spelling and case   Description  The server encountered an unexpected condition that prevented it from fulfilling the request.   Exception   java.lang.IllegalArgumentException: Column 's2' does not exist in the Hive schema or Hive Partition. Ensure the column or partition exists and check the name spelling and case (libchurl.c:xxx)
+ERROR:  PXF server error : column 's2' does not exist in the Hive schema or Hive Partition
+-- start_ignore
+HINT:  Ensure the column or partition exists and check the name spelling and case. Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=DEBUG1' for additional details.
+-- end_ignore
 CONTEXT:  External table pxf_hive_small_data, file pxf://hive_rc_table?PROFILE=HiveRC

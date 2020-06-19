@@ -90,13 +90,13 @@
             <version>LATEST</version>
         </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>org.greenplum</groupId>-->
-<!--            <artifactId>pxf-hive</artifactId>-->
-<!--            <scope>system</scope>-->
-<!--            <systemPath>${pxf.lib}/pxf-hive.jar</systemPath>-->
-<!--            <version>LATEST</version>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>org.greenplum</groupId>
+            <artifactId>pxf-hive</artifactId>
+            <scope>system</scope>
+            <systemPath>${pxf.lib}/pxf-hive.jar</systemPath>
+            <version>LATEST</version>
+        </dependency>
 
         <!-- Introduced for MapR dependencies that need to be classloaded
              before hadoop-common and hadoop-auth. -->

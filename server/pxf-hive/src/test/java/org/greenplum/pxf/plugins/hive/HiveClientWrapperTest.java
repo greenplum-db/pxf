@@ -5,29 +5,25 @@ import org.apache.hadoop.hive.metastore.api.SerDeInfo;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.greenplum.pxf.api.model.Metadata;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 
 public class HiveClientWrapperTest {
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
     private Metadata.Item tblDesc;
     private HiveClientWrapper hiveClientWrapper;
 
-    @Before
+    @BeforeEach
     public void setup() {
         HiveClientWrapper.HiveClientFactory factory = mock(HiveClientWrapper.HiveClientFactory.class);
-        hiveClientWrapper = new HiveClientWrapper(factory);
+        hiveClientWrapper = new HiveClientWrapper();
+        hiveClientWrapper.setHiveClientFactory(factory);
     }
 
     @Test
@@ -76,7 +72,7 @@ public class HiveClientWrapperTest {
         //Default delimiter code should be 44(comma)
         Integer delimiterCode = hiveClientWrapper.getDelimiterCode(null);
         char defaultDelim = ',';
-        assertEquals((int) delimiterCode, (int) defaultDelim);
+        assertEquals((int) delimiterCode, defaultDelim);
 
         //Some serdes use FIELD_DELIM key
         char expectedDelim = '%';
@@ -85,7 +81,7 @@ public class HiveClientWrapperTest {
         si.setParameters(Collections.singletonMap(serdeConstants.FIELD_DELIM, String.valueOf(expectedDelim)));
         sd.setSerdeInfo(si);
         delimiterCode = hiveClientWrapper.getDelimiterCode(sd);
-        assertEquals((int) delimiterCode, (int) expectedDelim);
+        assertEquals((int) delimiterCode, expectedDelim);
 
         //Some serdes use SERIALIZATION_FORMAT key
         sd = new StorageDescriptor();
@@ -93,7 +89,7 @@ public class HiveClientWrapperTest {
         si.setParameters(Collections.singletonMap(serdeConstants.SERIALIZATION_FORMAT, String.valueOf((int) expectedDelim)));
         sd.setSerdeInfo(si);
         delimiterCode = hiveClientWrapper.getDelimiterCode(sd);
-        assertEquals((int) delimiterCode, (int) expectedDelim);
+        assertEquals((int) delimiterCode, expectedDelim);
     }
 
     @Test
@@ -106,21 +102,19 @@ public class HiveClientWrapperTest {
     }
 
     @Test
-    public void invalidTableName() throws Exception {
-        expectedException.expect(IllegalArgumentException.class);
-        expectedException.expectMessage("\"t.r.o.u.b.l.e.m.a.k.e.r\" is not a valid Hive table name. Should be either <table_name> or <db_name.table_name>");
+    public void invalidTableName() {
 
         IMetaStoreClient metaStoreClient = mock(IMetaStoreClient.class);
-        hiveClientWrapper.extractTablesFromPattern(metaStoreClient, "t.r.o.u.b.l.e.m.a.k.e.r");
+        Exception e = assertThrows(IllegalArgumentException.class,
+                () -> hiveClientWrapper.extractTablesFromPattern(metaStoreClient, "t.r.o.u.b.l.e.m.a.k.e.r"));
+        assertEquals("\"t.r.o.u.b.l.e.m.a.k.e.r\" is not a valid Hive table name. Should be either <table_name> or <db_name.table_name>", e.getMessage());
     }
 
     private void parseTableQualifiedNameNegative(String name, String errorMsg, String reason) {
-        try {
-            tblDesc = hiveClientWrapper.extractTableFromName(name);
-            fail("test should fail because of " + reason);
-        } catch (IllegalArgumentException e) {
-            assertEquals(errorMsg, e.getMessage());
-        }
+        Exception e = assertThrows(IllegalArgumentException.class,
+                () -> hiveClientWrapper.extractTableFromName(name),
+                "test should fail because of " + reason);
+        assertEquals(errorMsg, e.getMessage());
     }
 
     private String surroundByQuotes(String str) {

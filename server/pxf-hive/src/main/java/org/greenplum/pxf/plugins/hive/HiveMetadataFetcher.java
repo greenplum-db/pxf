@@ -27,15 +27,12 @@ import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.JobConf;
-import org.greenplum.pxf.api.UnsupportedTypeException;
-import org.greenplum.pxf.api.model.BaseConfigurationFactory;
-import org.greenplum.pxf.api.model.BasePlugin;
-import org.greenplum.pxf.api.model.ConfigurationFactory;
+import org.greenplum.pxf.api.error.UnsupportedTypeException;
 import org.greenplum.pxf.api.model.Metadata;
 import org.greenplum.pxf.api.model.MetadataFetcher;
 import org.greenplum.pxf.api.model.OutputFormat;
-import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hive.utilities.ProfileFactory;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -47,23 +44,24 @@ import java.util.Set;
 /**
  * Class for connecting to Hive's MetaStore and getting schema of Hive tables.
  */
-public class HiveMetadataFetcher extends BasePlugin implements MetadataFetcher {
+@Component
+public class HiveMetadataFetcher extends HivePlugin implements MetadataFetcher {
 
     private static final String DELIM_FIELD = "DELIMITER";
 
     private static final Log LOG = LogFactory.getLog(HiveMetadataFetcher.class);
     private IMetaStoreClient client;
     private JobConf jobConf;
-    private HiveClientWrapper hiveClientWrapper;
+    private final HiveClientWrapper hiveClientWrapper;
 
-    public HiveMetadataFetcher(RequestContext context) {
-        this(context, BaseConfigurationFactory.getInstance(), HiveClientWrapper.getInstance());
+
+    public HiveMetadataFetcher(HiveClientWrapper hiveClientWrapper) {
+        this.hiveClientWrapper = hiveClientWrapper;
     }
 
-    HiveMetadataFetcher(RequestContext context, ConfigurationFactory configurationFactory, HiveClientWrapper hiveClientWrapper) {
-        this.configurationFactory = configurationFactory;
-        this.hiveClientWrapper = hiveClientWrapper;
-        initialize(context);
+    @Override
+    public void afterPropertiesSet() {
+        super.afterPropertiesSet();
 
         // init hive metastore client connection.
         client = hiveClientWrapper.initHiveClient(context, configuration);
@@ -137,7 +135,7 @@ public class HiveMetadataFetcher extends BasePlugin implements MetadataFetcher {
     }
 
     private OutputFormat getOutputFormat(String inputFormat, boolean hasComplexTypes) throws Exception {
-        InputFormat<?, ?> fformat = HiveDataFragmenter.makeInputFormat(inputFormat, jobConf);
+        InputFormat<?, ?> fformat = hiveUtilities.makeInputFormat(inputFormat, jobConf);
         String profile = ProfileFactory.get(fformat, hasComplexTypes);
         String outputFormatClassName = context.getPluginConf().getPlugins(profile).get("OUTPUTFORMAT");
         return OutputFormat.getOutputFormat(outputFormatClassName);

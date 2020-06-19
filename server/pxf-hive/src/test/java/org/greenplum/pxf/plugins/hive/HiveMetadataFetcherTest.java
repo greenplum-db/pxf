@@ -25,14 +25,12 @@ import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
-import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.model.Metadata;
 import org.greenplum.pxf.api.model.PluginConf;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,34 +38,31 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static junit.framework.TestCase.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.mockito.Matchers.any;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class HiveMetadataFetcherTest {
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
 
     private RequestContext context;
     private HiveMetaStoreClient mockHiveClient;
     private HiveMetadataFetcher fetcher;
     private List<Metadata> metadataList;
     private HiveClientWrapper fakeHiveClientWrapper;
-    private ConfigurationFactory mockConfigurationFactory;
-    private Configuration configuration;
     private HiveClientWrapper.HiveClientFactory mockClientFactory;
+    private final HiveUtilities hiveUtilities = new HiveUtilities();
 
-    @Before
+    @BeforeEach
     public void setupCompressionFactory() throws MetaException {
 
         @SuppressWarnings("unchecked")
         Map<String, String> mockProfileMap = mock(Map.class);
         PluginConf mockPluginConf = mock(PluginConf.class);
 
-        configuration = new Configuration();
+        Configuration configuration = new Configuration();
 
         context = new RequestContext();
         context.setPluginConf(mockPluginConf);
@@ -80,54 +75,61 @@ public class HiveMetadataFetcherTest {
         context.setServerName("default");
         context.setUser("dummy");
         context.setAdditionalConfigProps(null);
-        mockConfigurationFactory = mock(ConfigurationFactory.class);
-
-        when(mockConfigurationFactory.initConfiguration("default", "default", "dummy", null))
-                .thenReturn(configuration);
+        context.setConfiguration(configuration);
 
         mockClientFactory = mock(HiveClientWrapper.HiveClientFactory.class);
 
-        fakeHiveClientWrapper = new HiveClientWrapper(mockClientFactory);
+        fakeHiveClientWrapper = new HiveClientWrapper();
+        fakeHiveClientWrapper.setHiveClientFactory(mockClientFactory);
+        fakeHiveClientWrapper.setHiveUtilities(hiveUtilities);
 
         when(mockClientFactory.initHiveClient(any())).thenReturn(mockHiveClient);
     }
 
     @Test
     public void construction() {
-        fetcher = new HiveMetadataFetcher(context, mockConfigurationFactory, fakeHiveClientWrapper);
+        fetcher = new HiveMetadataFetcher(fakeHiveClientWrapper);
+        fetcher.setRequestContext(context);
+        fetcher.setHiveUtilities(hiveUtilities);
+        fetcher.afterPropertiesSet();
         assertNotNull(fetcher);
     }
 
     @Test
     public void constructorCantAccessMetaStore() throws MetaException {
-        expectedException.expect(RuntimeException.class);
-        expectedException.expectMessage("Failed connecting to Hive MetaStore service: which way to albuquerque");
-
         when(mockClientFactory.initHiveClient(any())).thenThrow(new MetaException("which way to albuquerque"));
 
-        fetcher = new HiveMetadataFetcher(context, mockConfigurationFactory, fakeHiveClientWrapper);
+        fetcher = new HiveMetadataFetcher(fakeHiveClientWrapper);
+        fetcher.setRequestContext(context);
+        Exception e = assertThrows(RuntimeException.class, fetcher::afterPropertiesSet);
+        assertEquals("Failed connecting to Hive MetaStore service: which way to albuquerque", e.getMessage());
     }
 
     @Test
     public void getTableMetadataView() throws Exception {
-        expectedException.expect(UnsupportedOperationException.class);
-        expectedException.expectMessage("Hive views are not supported by PXF");
 
         String tableName = "cause";
-        fetcher = new HiveMetadataFetcher(context, mockConfigurationFactory, fakeHiveClientWrapper);
+        fetcher = new HiveMetadataFetcher(fakeHiveClientWrapper);
+        fetcher.setRequestContext(context);
+        fetcher.afterPropertiesSet();
 
         // mock hive table returned from hive client
         Table hiveTable = new Table();
         hiveTable.setTableType("VIRTUAL_VIEW");
         when(mockHiveClient.getTable("default", tableName)).thenReturn(hiveTable);
 
-        metadataList = fetcher.getMetadata(tableName);
+        Exception e = assertThrows(UnsupportedOperationException.class,
+                () -> fetcher.getMetadata(tableName));
+        assertEquals("Hive views are not supported by PXF", e.getMessage());
     }
 
     @Test
     public void getTableMetadata() throws Exception {
 
-        fetcher = new HiveMetadataFetcher(context, mockConfigurationFactory, fakeHiveClientWrapper);
+        fetcher = new HiveMetadataFetcher(fakeHiveClientWrapper);
+        fetcher.setRequestContext(context);
+        fetcher.setHiveUtilities(hiveUtilities);
+        fetcher.afterPropertiesSet();
         String tableName = "cause";
 
         // mock hive table returned from hive client
@@ -163,7 +165,10 @@ public class HiveMetadataFetcherTest {
     @Test
     public void getTableMetadataWithMultipleTables() throws Exception {
 
-        fetcher = new HiveMetadataFetcher(context, mockConfigurationFactory, fakeHiveClientWrapper);
+        fetcher = new HiveMetadataFetcher(fakeHiveClientWrapper);
+        fetcher.setRequestContext(context);
+        fetcher.setHiveUtilities(hiveUtilities);
+        fetcher.afterPropertiesSet();
 
         String tablePattern = "*";
         String dbPattern = "*";
@@ -219,7 +224,10 @@ public class HiveMetadataFetcherTest {
     @Test
     public void getTableMetadataWithIncompatibleTables() throws Exception {
 
-        fetcher = new HiveMetadataFetcher(context, mockConfigurationFactory, fakeHiveClientWrapper);
+        fetcher = new HiveMetadataFetcher(fakeHiveClientWrapper);
+        fetcher.setRequestContext(context);
+        fetcher.setHiveUtilities(hiveUtilities);
+        fetcher.afterPropertiesSet();
 
         String tablePattern = "*";
         String dbPattern = "*";

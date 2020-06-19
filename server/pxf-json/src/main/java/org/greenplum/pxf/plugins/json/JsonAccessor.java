@@ -28,7 +28,6 @@ import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.LineRecordReader;
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hdfs.HdfsSplittableDataAccessor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.annotation.RequestScope;

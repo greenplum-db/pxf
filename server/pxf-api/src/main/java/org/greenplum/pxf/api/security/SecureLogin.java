@@ -32,7 +32,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Collections;
@@ -272,7 +271,7 @@ public class SecureLogin {
      * @return name of the host
      * @throws IOException when an IOException occurs
      */
-    private String getLocalHostName(@Nullable Configuration conf) throws IOException {
+    private String getLocalHostName(Configuration conf) throws IOException {
         if (conf != null) {
             String dnsInterface = conf.get("hadoop.security.dns.interface");
             String nameServer = conf.get("hadoop.security.dns.nameserver");

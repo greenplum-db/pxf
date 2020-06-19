@@ -41,17 +41,17 @@ import org.apache.hadoop.hive.serde2.objectinspector.primitive.StringObjectInspe
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.TimestampObjectInspector;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapred.JobConf;
-import org.greenplum.pxf.api.BadRecordException;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.UnsupportedTypeException;
+import org.greenplum.pxf.api.error.BadRecordException;
+import org.greenplum.pxf.api.error.UnsupportedTypeException;
 import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.Utilities;
-import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
-import java.io.IOException;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.Collections;
@@ -71,6 +71,8 @@ import static org.greenplum.pxf.api.io.DataType.VARCHAR;
  * Specialized HiveResolver for a Hive table stored as RC file.
  * Use together with HiveInputFormatFragmenter/HiveRCFileAccessor.
  */
+@Component("HiveColumnarSerdeResolver")
+@RequestScope
 public class HiveColumnarSerdeResolver extends HiveResolver {
     private static final Log LOG = LogFactory.getLog(HiveColumnarSerdeResolver.class);
     private boolean firstColumn;
@@ -79,18 +81,18 @@ public class HiveColumnarSerdeResolver extends HiveResolver {
     private String allColumnNames;
     private String allColumnTypes;
     private Map<String, String[]> partitionColumnNames;
-    
+
     /* read the data supplied by the fragmenter: inputformat name, serde name, partition keys */
     @Override
     void parseUserData(RequestContext input) {
-        HiveUserData hiveUserData = HiveUtilities.parseHiveUserData(input);
+        HiveFragmentMetadata metadata = context.getFragmentMetadata();
 
         partitionColumnNames = new HashMap<>();
-        serdeType = hiveUserData.getSerdeClassName();
-        partitionKeys = hiveUserData.getPartitionKeys();
-        hiveIndexes = hiveUserData.getHiveIndexes();
-        allColumnNames = hiveUserData.getAllColumnNames();
-        allColumnTypes = hiveUserData.getAllColumnTypes();
+        serdeType = metadata.getSerdeClassName();
+        partitionKeys = metadata.getPartitionKeys();
+        hiveIndexes = metadata.getHiveIndexes();
+        allColumnNames = metadata.getAllColumnNames();
+        allColumnTypes = metadata.getAllColumnTypes();
         parseDelimiterChar(input);
     }
 
@@ -144,7 +146,6 @@ public class HiveColumnarSerdeResolver extends HiveResolver {
      * Suppress Warnings added because deserializer.initialize is an abstract function that is deprecated
      * but its implementations (ColumnarSerDe, LazyBinaryColumnarSerDe) still use the deprecated interface.
      */
-    @SuppressWarnings("deprecation")
     @Override
     void initSerde(RequestContext input) throws Exception {
         Properties serdeProperties = new Properties();
@@ -172,7 +173,7 @@ public class HiveColumnarSerdeResolver extends HiveResolver {
         jobConf.set(READ_COLUMN_IDS_CONF_STR, projectedColumnIds.toString());
         jobConf.set(READ_COLUMN_NAMES_CONF_STR, projectedColumnNames.toString());
 
-        deserializer = HiveUtilities.createDeserializer(serdeType);
+        deserializer = hiveUtilities.createDeserializer(serdeType);
         deserializer.initialize(jobConf, serdeProperties);
     }
 
@@ -184,7 +185,7 @@ public class HiveColumnarSerdeResolver extends HiveResolver {
      * <p/>
      * Any other category will throw UnsupportedTypeException
      */
-    private void traverseTuple(Object obj, ObjectInspector objInspector) throws IOException, BadRecordException {
+    private void traverseTuple(Object obj, ObjectInspector objInspector) throws BadRecordException {
         ObjectInspector.Category category = objInspector.getCategory();
         if ((obj == null) && (category != ObjectInspector.Category.PRIMITIVE)) {
             throw new BadRecordException("NULL Hive composite object");
@@ -224,7 +225,7 @@ public class HiveColumnarSerdeResolver extends HiveResolver {
                         // This case is invoked only in the top level of fields and
                         // not when interpreting fields of type struct.
                         traverseTuple(null, fields.get(i).getFieldObjectInspector());
-                    } else if (structIndex < list.size()){
+                    } else if (structIndex < list.size()) {
                         traverseTuple(list.get(structIndex), fields.get(i).getFieldObjectInspector());
                     } else {
                         traverseTuple(null, fields.get(i).getFieldObjectInspector());
@@ -292,7 +293,7 @@ public class HiveColumnarSerdeResolver extends HiveResolver {
         firstColumn = false;
     }
 
-    private void resolvePrimitive(Object o, PrimitiveObjectInspector oi) throws IOException {
+    private void resolvePrimitive(Object o, PrimitiveObjectInspector oi) {
 
         if (!firstColumn) {
             builder.append(delimiter);
