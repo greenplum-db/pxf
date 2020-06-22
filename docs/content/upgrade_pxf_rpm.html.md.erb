@@ -6,12 +6,12 @@ If you have installed the PXF `.rpm` and have initialized, configured, and are u
 
 The PXF upgrade procedure has two parts. You perform one procedure before, and one procedure after, you install a new version to upgrade PXF:
 
--   [Step 1: PXF Pre-Upgrade Actions](#pxfpre)
+-   [Step 1: Complete the PXF Pre-Upgrade Actions](#pxfpre)
 -   Install the new version of PXF
--   [Step 2: Completing the PXF Upgrade](#pxfup)
+-   [Step 2: Upgrade PXF](#pxfup)
 
 
-## <a id="pxfpre"></a>Step 1: PXF Pre-Upgrade Actions
+## <a id="pxfpre"></a>Step 1: Complete the PXF Pre-Upgrade Actions
 
 Perform this procedure before you upgrade to a new version of PXF:
 
@@ -21,7 +21,7 @@ Perform this procedure before you upgrade to a new version of PXF:
     $ ssh gpadmin@<gpmaster>
     ```
 
-2. Identify and note the version of PXF currently running in your Greenplum cluster. For example:
+2. Identify and note the version of PXF currently running in your Greenplum cluster:
 
     ``` shell
     gpadmin@gpmaster$ pxf version
@@ -32,9 +32,9 @@ Perform this procedure before you upgrade to a new version of PXF:
 3. Install the new version of PXF, identify and note the new PXF version number, and then continue your PXF upgrade with [Step 2: Completing the PXF Upgrade](#pxfup).
 
 
-## <a id="pxfup"></a>Step 2: Completing the PXF Upgrade
+## <a id="pxfup"></a>Step 2: Upgrade PXF
 
-After you upgrade to the new version of PXF, perform the following procedure:
+After you install the new version of PXF, perform the following procedure:
 
 1. Log in to the Greenplum Database master node. For example:
 
