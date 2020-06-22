@@ -27,6 +27,15 @@ Perform this procedure before you upgrade to a new version of PXF:
     gpadmin@gpmaster$ pxf version
     ```
 
+2. If the `$GPHOME/pxf` directory exists, and you are running PXF version 5.12.x or older, back up the Greenplum PXF embedded installation. For example:
+
+    ``` shell
+    gpadmin@gpmaster$ mkdir $HOME/pxf_gp_backup
+    gpadmin@gpmaster$ cp -r $GPHOME/pxf $HOME/pxf_gp_backup/
+    gpadmin@gpmaster$ cp $GPHOME/share/postgresql/extension/pxf* $HOME/pxf_gp_backup/
+    gpadmin@gpmaster$ cp $GHOME/lib/postgresql/pxf* $HOME/pxf_gp_backup/
+    ```
+
 2. Stop PXF on each segment host as described in [Stopping PXF](cfginitstart_pxf.html#stop_pxf).
 
 3. Install the new version of PXF, identify and note the new PXF version number, and then continue your PXF upgrade with [Step 2: Completing the PXF Upgrade](#pxfup).
