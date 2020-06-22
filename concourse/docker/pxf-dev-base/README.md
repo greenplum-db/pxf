@@ -55,3 +55,16 @@ command to build the image:
       -f ~/workspace/pxf/concourse/docker/pxf-dev-base/gpdb6/ubuntu18.04/Dockerfile \
       .
     popd
+
+### Docker gpdb6-oel7-test-pxf-image image
+
+Build this image for Greenplum 6 running Oracle Enterprise Linux 7. Run the
+following command to build the image:
+
+    pushd ~/workspace/pxf/concourse/docker/pxf-dev-base/
+    docker build \
+      --build-arg=BASE_IMAGE=pivotaldata/gpdb-dev:latest \
+      --tag=gpdb6-oel7-test-pxf \
+      -f ~/workspace/pxf/concourse/docker/pxf-dev-base/gpdb6/oel7/Dockerfile \
+      .
+    popd
