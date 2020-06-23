@@ -30,13 +30,13 @@ PXF provides two management commands that you can use for initialization:
 
 PXF also provides similar `reset` commands that you can use to reset your PXF configuration.
 
-<div class="note">The procedures in this topic assume that you have added the <code>$PXF_INSTALL_DIR/bin</code> directory to your <code>$PATH</code>.</div>
+<div class="note">The procedures in this topic assume that you have added the <code>$PXF_HOME/bin</code> directory to your <code>$PATH</code>.</div>
 
 ## <a id="init_pxf"></a> Configuration Properties
 
 PXF supports both internal and user-customizable configuration properties.
 
-PXF internal configuration files are located in your PXF installation in the `$PXF_INSTALL_DIR/conf` directory.
+PXF internal configuration files are located in your PXF installation in the `$PXF_HOME/conf` directory.
 
 You identify the PXF user configuration directory at PXF initialization time via an environment variable named `$PXF_CONF`. If you do not set `$PXF_CONF` prior to initializing PXF, PXF may prompt you to accept or decline the default user configuration directory, `$HOME/pxf`, during the initialization process.
 
@@ -51,7 +51,7 @@ The PXF server runs on Java 8 or 11. You identify the PXF `$JAVA_HOME` and `$PXF
 
 Initializing PXF:
 
-- Copies PXF extension files from `$PXF_INSTALL_DIR/gpextable` to the Greenplum Database install directory when the `$GPHOME` environment variable is set.
+- Copies PXF extension files from `$PXF_HOME/gpextable` to the Greenplum Database install directory when the `$GPHOME` environment variable is set.
 - Creates the PXF Java web application.
 - Generates PXF internal configuration files, setting default properties specific to your configuration.
 
@@ -104,9 +104,9 @@ Should you need to, you can reset PXF to its uninitialized state. You might choo
 
 When you reset PXF, PXF prompts you to confirm the operation. If you confirm, PXF removes the following runtime files and directories:
 
-- `$PXF_INSTALL_DIR/conf/pxf-private.classpath`
-- `$PXF_INSTALL_DIR/pxf-service`
-- `$PXF_INSTALL_DIR/run`
+- `$PXF_HOME/conf/pxf-private.classpath`
+- `$PXF_HOME/pxf-service`
+- `$PXF_HOME/run`
 
 PXF does not remove the `$PXF_CONF` directory during a reset operation, nor does PXF remove any PXF extension files that may have been copied to your Greenplum Database installation.
 

@@ -23,7 +23,7 @@ under the License.
 
 You use PXF to access data stored on external systems. Depending upon the external data store, this access may require that you install and/or configure additional components or services for the external data store.
 
-PXF depends on JAR files and other configuration information provided by these additional components. The `$PXF_INSTALL_DIR/conf/pxf-private.classpath` file identifies PXF internal JAR dependencies. In most cases, PXF manages the `pxf-private.classpath` file, adding entries as necessary based on the connectors that you use.
+PXF depends on JAR files and other configuration information provided by these additional components. The `$PXF_HOME/conf/pxf-private.classpath` file identifies PXF internal JAR dependencies. In most cases, PXF manages the `pxf-private.classpath` file, adding entries as necessary based on the connectors that you use.
 
 Should you need to add an additional JAR dependency for PXF, for example a JDBC driver JAR file, you must log in to the Greenplum Database master host, copy the JAR file to the PXF user configuration runtime library directory (`$PXF_CONF/lib`), sync the PXF configuration to the Greenplum Database cluster, and then restart PXF on each segment host. For example:
 
