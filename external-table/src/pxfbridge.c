@@ -230,6 +230,7 @@ set_current_fragment_headers(gphadoop_context *context)
 	if (frag_data->fragment_idx == fragment_count)
 	{
 		churl_headers_override(context->churl_headers, "X-GP-LAST-FRAGMENT", "true");
+		churl_headers_override(context->churl_headers, "Connection", "close");
 	}
 
 	if (frag_data->user_data)
