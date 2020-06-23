@@ -422,7 +422,18 @@ init(GPHDUri *uri, ClientContext *cl_context)
 	/* set HTTP header that guarantees response in JSON format */
 	churl_headers_append(cl_context->http_headers, REST_HEADER_JSON_RESPONSE, NULL);
 
-	return;
+	/*
+	 * the connection is not considered persistent after this request completes.
+	 * Generally, servers will be able to make better decisions (avoid
+	 * unnecessary code paths) if the client sends a "Connection: close" header
+	 * when they do not intend to use keep-alive. This is the case for current
+	 * fragmentation call. The curl handle is not reused by the bridge call.
+	 * This is an opportunity for improvement though. We can reuse the HTTP
+	 * connection between fragmentation and bridge calls. This will reduce the
+	 * number of threads needed on the java side, as a single thread should be
+	 * able to handle both fragmentation and bridge calls.
+	 */
+	churl_headers_append(cl_context->http_headers, "Connection", "close");
 }
 
 /*
