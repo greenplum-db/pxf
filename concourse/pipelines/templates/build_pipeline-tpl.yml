@@ -17,6 +17,7 @@ groups:
   - Build PXF-GP[[gp_ver]] on RHEL7
   - Test PXF-GP[[gp_ver]]-HDP2 on RHEL7
 {% endfor %}
+  - Test PXF-GP6-HDP2 on OEL7
 {% if build_deb %}
 {% set gp_ver = 6 %}
   - Test PXF-GP[[gp_ver]]-HDP2 on Ubuntu18
@@ -63,6 +64,10 @@ groups:
   - Build PXF-GP[[gp_ver]] on RHEL7
   - Test PXF-GP[[gp_ver]]-HDP2 on RHEL7
 {% endfor %}
+- name: GP6 on OEL7
+  jobs:
+  - Build PXF-GP6 on RHEL7
+  - Test PXF-GP6-HDP2 on OEL7
 {% if build_deb %}
 {% set gp_ver = 6 %}
 - name: GP[[gp_ver]] on Ubuntu18
@@ -578,7 +583,6 @@ jobs:
       resource: gpdb6_rhel7_rpm_latest-0
       passed: [Build PXF-GP6 on RHEL7]
     - get: gpdb6-pxf-dev-oel7-image
-      passed: [Build PXF-GP6 on RHEL7]
     - get: pxf-automation-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
@@ -658,12 +662,12 @@ jobs:
 {% for gp_ver in range(5, 7) %}
       - Test PXF-GP[[gp_ver]]-HDP2 on RHEL7
 {% endfor %}
+      - Test PXF-GP6-HDP2 on OEL7
 {% set gp_ver = None %}
 {% set gp_ver = 6 %}
 {% if build_deb %}
       - Test PXF-GP[[gp_ver]]-HDP2 on Ubuntu18
 {% endif %}
-{% set gp_ver = None %}
 {% set gp_ver = 6 %}
 {% if build_deb %}
     - get: pxf_gp[[gp_ver]]_tarball_ubuntu18
@@ -673,11 +677,12 @@ jobs:
     - get: pxf_gp[[gp_ver]]_tarball_rhel6
       passed:
       - Test PXF-GP[[gp_ver]]-HDP2 on RHEL6
-{% set gp_ver = None %}
-{% for gp_ver in range(5, 7) %}
-    - get: pxf_gp[[gp_ver]]_tarball_rhel7
-      passed: [Test PXF-GP[[gp_ver]]-HDP2 on RHEL7]
-{% endfor %}
+    - get: pxf_gp5_tarball_rhel7
+      passed: [Test PXF-GP5-HDP2 on RHEL7]
+    - get: pxf_gp6_tarball_rhel7
+      passed:
+      - Test PXF-GP6-HDP2 on RHEL7
+      - Test PXF-GP6-HDP2 on OEL7
 {% set gp_ver = 5 %}
     - get: gpdb[[gp_ver]]_rhel6_rpm_latest-0
       passed: [Test PXF-GP[[gp_ver]]-HDP2 on RHEL6]
@@ -687,10 +692,12 @@ jobs:
       passed: [Test PXF-GP[[gp_ver]]-HDP2 on Ubuntu18]
 {% endif %}
 {% set gp_ver = None %}
-{% for gp_ver in range(5, 7) %}
-    - get: gpdb[[gp_ver]]_rhel7_rpm_latest-0
-      passed: [Test PXF-GP[[gp_ver]]-HDP2 on RHEL7]
-{% endfor %}
+    - get: gpdb5_rhel7_rpm_latest-0
+      passed: [Test PXF-GP5-HDP2 on RHEL7]
+    - get: gpdb6_rhel7_rpm_latest-0
+      passed:
+      - Test PXF-GP6-HDP2 on RHEL7
+      - Test PXF-GP6-HDP2 on OEL7
 
 ## ---------- Extended Tests ----------
 {% set gp_ver = 6 %}
