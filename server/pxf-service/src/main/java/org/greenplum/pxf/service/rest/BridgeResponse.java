@@ -81,6 +81,7 @@ public class BridgeResponse implements StreamingResponseBody {
             } else {
                 LOG.error("Remote connection closed by GPDB (Enable debug for stacktrace)");
             }
+            throw e;
         } catch (Exception e) {
             throw e instanceof IOException ? (IOException) e : new IOException(e.getMessage(), e);
         } finally {
