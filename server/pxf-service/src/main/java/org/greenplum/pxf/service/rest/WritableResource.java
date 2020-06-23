@@ -165,6 +165,8 @@ public class WritableResource extends BaseResource {
                 } else {
                     LOG.error("Remote connection closed by GPDB (Enable debug for stacktrace)");
                 }
+                ex = cae;
+                throw ex;
             } catch (Exception e) {
                 LOG.error(String.format("Exception: totalWritten so far %d to %s", totalWritten, path), e);
                 ex = e;

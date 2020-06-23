@@ -67,23 +67,6 @@ public class BridgeResource extends BaseResource {
     @GetMapping(value = "/Bridge", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity<StreamingResponseBody> read(
             @RequestHeader MultiValueMap<String, String> headers) throws IOException, InterruptedException {
-        try {
-            return readInternal(headers);
-        } catch (ClientAbortException e) {
-            // Occurs whenever client (GPDB) decides to end the connection
-            if (LOG.isDebugEnabled()) {
-                // Stacktrace in debug
-                LOG.debug("Remote connection closed by GPDB", e);
-            } else {
-                LOG.error("Remote connection closed by GPDB (Enable debug for stacktrace)");
-            }
-        }
-        // Return an empty outputStream on error
-        return new ResponseEntity<>(outputStream -> {
-        }, HttpStatus.OK);
-    }
-
-    private ResponseEntity<StreamingResponseBody> readInternal(MultiValueMap<String, String> headers) throws IOException, InterruptedException {
 
         RequestContext context = parseRequest(headers);
         // THREAD-SAFE parameter has precedence
