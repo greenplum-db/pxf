@@ -519,7 +519,7 @@ call_rest(GPHDUri *hadoop_uri, ClientContext *client_context, char *rest_msg)
 					 PXF_SERVICE_PREFIX,
 					 PXF_VERSION);
 
-	if ((DEBUG1 >= log_min_messages) || (DEBUG1 >= client_min_messages))
+	if ((LOG >= log_min_messages) || (LOG >= client_min_messages))
 	{
 		appendStringInfo(&request, "?trace=true");
 	}

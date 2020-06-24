@@ -7,7 +7,7 @@
 -- # create a match/subs
 --
 -- m/HINT:  Ensure that.*/
--- s|HINT:  Ensure that.*|HINT:  Ensure that 'server-dir' includes only the configuration files for profile 's3a'. Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=DEBUG1' for additional details.|
+-- s|HINT:  Ensure that.*|HINT:  Ensure that 'server-dir' includes only the configuration files for profile 's3a'. Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=LOG' for additional details.|
 --
 -- m/DETAIL/
 -- s/DETAIL/CONTEXT/

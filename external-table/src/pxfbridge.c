@@ -158,7 +158,7 @@ build_uri_for_read(gphadoop_context *context)
 	appendStringInfo(&context->uri, "http://%s/%s/%s/Bridge/",
 					 data->authority, PXF_SERVICE_PREFIX, PXF_VERSION);
 
-	if ((DEBUG1 >= log_min_messages) || (DEBUG1 >= client_min_messages))
+	if ((LOG >= log_min_messages) || (LOG >= client_min_messages))
 	{
 		appendStringInfo(&context->uri, "?trace=true");
 	}
@@ -172,10 +172,10 @@ build_uri_for_read(gphadoop_context *context)
 static void
 build_uri_for_write(gphadoop_context *context)
 {
-	appendStringInfo(&context->uri, "http://%s/%s/%s/Writable/stream?path=",
+	appendStringInfo(&context->uri, "http://%s/%s/%s/Writable/stream",
 					 get_authority(), PXF_SERVICE_PREFIX, PXF_VERSION);
 
-	if ((DEBUG1 >= log_min_messages) || (DEBUG1 >= client_min_messages))
+	if ((LOG >= log_min_messages) || (LOG >= client_min_messages))
 	{
 		appendStringInfo(&context->uri, "?trace=true");
 	}

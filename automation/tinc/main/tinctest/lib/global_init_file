@@ -47,7 +47,7 @@ s/^--.*//
 
 # replace the default hint with a generic log-dir and host
 m/Check the PXF logs located in the.*/
-s/Check the PXF logs located in the.*/Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=DEBUG1' for additional details./
+s/Check the PXF logs located in the.*/Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=LOG' for additional details./
 
 # suppress the HINT: line (Greenplum 5 does not render the HINT)
 m/HINT:  .*/
