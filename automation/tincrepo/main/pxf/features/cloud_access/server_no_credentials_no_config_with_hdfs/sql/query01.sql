@@ -10,7 +10,7 @@
 -- s/PXF server error.*/PXF server error : com.amazonaws.AmazonClientException: No AWS Credentials provided by BasicAWSCredentialsProvider/
 --
 -- m/Check the PXF logs located in the.*/
--- s/Check the PXF logs located in the.*/Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=DEBUG1' for additional details./
+-- s/Check the PXF logs located in the.*/Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=LOG' for additional details./
 --
 -- m/DETAIL/
 -- s/DETAIL/CONTEXT/

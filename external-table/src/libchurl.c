@@ -945,7 +945,7 @@ check_response_code(churl_context *context)
 		}
 
 		appendStringInfo(&err, "PXF server error");
-		if ((DEBUG1 >= log_min_messages) || (DEBUG1 >= client_min_messages))
+		if ((LOG >= log_min_messages) || (LOG >= client_min_messages))
 		{
 			/* add remote http error code */
 			appendStringInfo(&err, "(%ld)", response_code);
@@ -1205,7 +1205,7 @@ get_http_error_msg(long http_ret_code, char *msg, char *curl_error_buffer, char 
 	/* find the json_object_field_text function */
 	fmgr_info(F_JSON_OBJECT_FIELD_TEXT, json_object_field_text_fn);
 
-	if ((DEBUG1 >= log_min_messages) || (DEBUG1 >= client_min_messages))
+	if ((LOG >= log_min_messages) || (LOG >= client_min_messages))
 	{
 		/* get the "trace" field from the json error */
 		result = FunctionCall2(json_object_field_text_fn,

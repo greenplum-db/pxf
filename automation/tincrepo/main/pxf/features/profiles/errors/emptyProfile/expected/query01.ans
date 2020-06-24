@@ -23,6 +23,6 @@
 SELECT * FROM pxf_profiles_small_data ORDER BY name;
 ERROR:  PXF server error : Profile HdfsTextSimple does not define any plugins in pxf-profiles.xml
 -- start_ignore
-HINT:  Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=DEBUG1' for additional details.
+HINT:  Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=LOG' for additional details.
 -- end_ignore
 DETAIL:  External table pxf_profiles_small_data, file pxf://pxf_automation_data/data.txt?PROFILE=HdfsTextSimple

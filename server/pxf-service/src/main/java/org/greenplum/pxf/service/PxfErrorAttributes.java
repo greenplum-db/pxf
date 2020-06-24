@@ -40,7 +40,7 @@ import java.util.Map;
 @Component
 public class PxfErrorAttributes extends DefaultErrorAttributes {
 
-    private static final String DEFAULT_HINT = "Check the PXF logs located in the '%s/logs' directory on host '%s' or 'set client_min_messages=DEBUG1' for additional details.";
+    private static final String DEFAULT_HINT = "Check the PXF logs located in the '%s/logs' directory on host '%s' or 'set client_min_messages=LOG' for additional details.";
 
     private final PxfServerProperties pxfProperties;
     private final ServerProperties properties;

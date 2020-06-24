@@ -10,7 +10,7 @@
 -- s/PXF server error.*/PXF server error : com.amazonaws.AmazonClientException: No AWS Credentials provided by BasicAWSCredentialsProvider/
 --
 -- m/Check the PXF logs located in the.*/
--- s/Check the PXF logs located in the.*/Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=DEBUG1' for additional details./
+-- s/Check the PXF logs located in the.*/Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=LOG' for additional details./
 --
 -- m/DETAIL/
 -- s/DETAIL/CONTEXT/
@@ -25,6 +25,6 @@
 SELECT *  FROM cloudaccess_server_no_credentials_no_config_with_hdfs;
 ERROR:  PXF server error : com.amazonaws.AmazonClientException: No AWS Credentials provided by BasicAWSCredentialsProvider
 -- start_ignore
-HINT:  Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=DEBUG1' for additional details.
+HINT:  Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=LOG' for additional details.
 -- end_ignore
 DETAIL:  External table cloudaccess_server_no_credentials_no_config_with_hdfs, file pxf://pxf_automation_data?PROFILE=s3:text&server=s3-non-existent

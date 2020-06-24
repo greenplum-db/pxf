@@ -60,5 +60,5 @@ SELECT * FROM gpdb_types_pool_target ORDER BY t1;
 INSERT INTO pxf_jdbc_writable_pool SELECT t1, t2, num1 FROM gpdb_types;
 ERROR: duplicate key value violates unique constraint "gpdb_types_pool_target_t1_key"
 -- start_ignore
-HINT:  Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=DEBUG1' for additional details.
+HINT:  Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=LOG' for additional details.
 -- end_ignore
