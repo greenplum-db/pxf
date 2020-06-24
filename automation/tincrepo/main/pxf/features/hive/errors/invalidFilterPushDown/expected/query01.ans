@@ -17,5 +17,5 @@
 SELECT *  FROM hive_invalid_filter ORDER BY fmt, t1;
 ERROR:  PXF server error : org.greenplum.pxf.api.filter.FilterParser$FilterStringSyntaxException: missing logical operator before op NOT_EQUALS at 28 (filter string: 'a4c25s3dtxto5a4c25s3dseqo5o6')
 -- start_ignore
-HINT:  Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=DEBUG1' for additional details.
+HINT:  Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=LOG' for additional details.
 -- end_ignore

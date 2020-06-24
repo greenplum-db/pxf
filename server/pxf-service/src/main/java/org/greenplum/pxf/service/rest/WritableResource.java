@@ -32,7 +32,6 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
@@ -106,7 +105,6 @@ public class WritableResource extends BaseResource {
      * is used.
      *
      * @param headers Holds HTTP headers from request
-     * @param path    Holds URI path option used in this request
      * @param request the HttpServletRequest
      * @return ok response if the operation finished successfully
      * @throws Exception in case of wrong request parameters, failure to
@@ -114,11 +112,10 @@ public class WritableResource extends BaseResource {
      */
     @PostMapping(value = "stream", consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity<String> stream(@RequestHeader MultiValueMap<String, String> headers,
-                                         @RequestParam("path") String path,
                                          HttpServletRequest request) throws Exception {
 
         RequestContext context = parseRequest(headers);
-        Bridge bridge = securityService.doAs(context, false, 
+        Bridge bridge = securityService.doAs(context, false,
                 () -> bridgeFactory.getBridge(context));
         InputStream inputStream = request.getInputStream();
 
@@ -141,7 +138,7 @@ public class WritableResource extends BaseResource {
                     LOG.error("Remote connection closed by GPDB (Enable debug for stacktrace)");
                 }
             } catch (Exception e) {
-                LOG.error(String.format("Exception: totalWritten so far %d to %s", totalWritten, path), e);
+                LOG.error(String.format("Exception: totalWritten so far %d to %s", totalWritten, context.getDataSource()), e);
                 ex = e;
                 throw ex;
             } finally {
@@ -158,9 +155,8 @@ public class WritableResource extends BaseResource {
             return totalWritten;
         };
 
-        // TODO: should we do true instead of context.isLastFragment(). segments only stream one thing when they write
-        Long totalWritten = securityService.doAs(context, context.isLastFragment(), action);
-        String censuredPath = Utilities.maskNonPrintables(path);
+        Long totalWritten = securityService.doAs(context, true, action);
+        String censuredPath = Utilities.maskNonPrintables(context.getDataSource());
         String returnMsg = String.format("wrote %d bulks to %s", totalWritten, censuredPath);
         LOG.debug(returnMsg);
 

@@ -4,7 +4,7 @@
 -- # create a match/subs
 --
 -- m/Check the PXF logs located in the.*/
--- s/Check the PXF logs located in the.*/Check the PXF logs located in the 'log' directory on host 'mdw' or 'set client_min_messages=DEBUG1' for additional details./
+-- s/Check the PXF logs located in the.*/Check the PXF logs located in the 'log' directory on host 'mdw' or 'set client_min_messages=LOG' for additional details./
 --
 -- m/DETAIL/
 -- s/DETAIL/CONTEXT/
@@ -19,7 +19,7 @@
 SELECT * from test_out_of_memory;
 ERROR:  PXF server error : java.lang.OutOfMemoryError: Java heap space
 -- start_ignore
-HINT:  Check the PXF logs located in the '/Users/fguerrero/not-pxf/logs' directory on host 'fguerrero' or 'set client_min_messages=DEBUG1' for additional details.
+HINT:  Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=LOG' for additional details.
 -- end_ignore
 CONTEXT:  External table test_out_of_memory, file pxf://dummy_path?FRAGMENTER=org.greenplum.pxf.automation.testplugin.OutOfMemoryFragmenter&ACCESSOR=org.greenplum.pxf.plugins.hdfs.LineBreakAccessor&RESOLVER=org.greenplum.pxf.plugins.hdfs.StringPassResolver
 -- wait until the JVM has been killed

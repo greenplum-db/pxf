@@ -52,7 +52,6 @@ public class ReadSamplingBridge extends ReadBridge {
 
     public ReadSamplingBridge(BridgeOutputBuilder outputBuilder, ApplicationContext applicationContext, RequestContext context) {
         super(outputBuilder, applicationContext, context);
-        // TODO: has the request context been parsed by this time?
         calculateBitSet(context.getStatsSampleRatio());
         this.curIndex = 0;
     }

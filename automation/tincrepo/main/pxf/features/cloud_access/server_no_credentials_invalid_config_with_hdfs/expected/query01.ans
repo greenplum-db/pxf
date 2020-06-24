@@ -22,6 +22,6 @@
 SELECT *  FROM cloudaccess_server_no_credentials_invalid_config_with_hdfs;
 ERROR:  PXF server error : com.amazonaws.services.s3.model.AmazonS3Exception: Forbidden
 -- start_ignore
-HINT:  Check the PXF logs located in the '/Users/fguerrero/not-pxf/logs' directory on host 'fguerrero' or 'set client_min_messages=DEBUG1' for additional details.
+HINT:  Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=LOG' for additional details.
 -- end_ignore
 DETAIL:  External table cloudaccess_server_no_credentials_invalid_config_with_hdfs, file pxf://pxf_automation_data?PROFILE=s3:text&server=s3-invalid

@@ -14,6 +14,7 @@ import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.util.NestedServletException;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -39,7 +40,7 @@ import java.util.Map;
 @Component
 public class PxfErrorAttributes extends DefaultErrorAttributes {
 
-    private static final String DEFAULT_HINT = "Check the PXF logs located in the '%s/logs' directory on host '%s' or 'set client_min_messages=DEBUG1' for additional details.";
+    private static final String DEFAULT_HINT = "Check the PXF logs located in the '%s/logs' directory on host '%s' or 'set client_min_messages=LOG' for additional details.";
 
     private final PxfServerProperties pxfProperties;
     private final ServerProperties properties;
@@ -70,24 +71,22 @@ public class PxfErrorAttributes extends DefaultErrorAttributes {
         Map<String, Object> errorAttributes = super.getErrorAttributes(webRequest, options);
 
         Throwable throwable = getError(webRequest);
-        StringBuilder hintSb = new StringBuilder(DEFAULT_HINT.length() * 3);
-        if (throwable instanceof PxfRuntimeException && StringUtils.isNotBlank(((PxfRuntimeException) throwable).getHint())) {
-            hintSb.append(((PxfRuntimeException) throwable).getHint())
-                    .append(" ");
-        }
-        String hostname;
-        if (properties != null && properties.getAddress() != null) {
-            hostname = properties.getAddress().getHostName();
-        } else {
-            try {
-                hostname = InetAddress.getLocalHost().getHostName();
-            } catch (UnknownHostException e) {
-                hostname = System.getenv("HOSTNAME");
+        StringBuilder hint = new StringBuilder(DEFAULT_HINT.length() * 3);
+        if (throwable instanceof PxfRuntimeException) {
+            PxfRuntimeException pxfRuntimeException = (PxfRuntimeException) throwable;
+            if (StringUtils.isNotBlank(pxfRuntimeException.getHint())) {
+                hint.append(pxfRuntimeException.getHint()).append(" ");
             }
         }
-        hintSb.append(String.format(DEFAULT_HINT, pxfProperties.getConf(), hostname));
+        String hostname = getHostname();
+        hint.append(String.format(DEFAULT_HINT, pxfProperties.getConf(), hostname));
+        errorAttributes.put("hint", hint.toString());
 
-        errorAttributes.put("hint", hintSb.toString());
+        if (throwable != null && StringUtils.isNotBlank(throwable.getMessage())) {
+            // Provide the error message from the resolved throwable instead
+            errorAttributes.put("message", throwable.getMessage());
+        }
+
         return errorAttributes;
     }
 
@@ -103,6 +102,18 @@ public class PxfErrorAttributes extends DefaultErrorAttributes {
     @Override
     public Throwable getError(WebRequest webRequest) {
         Throwable exception = super.getError(webRequest);
+        return getReportableException(exception);
+    }
+
+    /**
+     * Get the exception to report. If there is a PxfRuntimeException as the
+     * cause, report it. Otherwise bubble up exceptions that are of type
+     * {@link BeanCreationException} or {@link NestedServletException}
+     *
+     * @param exception the original exception
+     * @return the exception to report
+     */
+    private Throwable getReportableException(Throwable exception) {
         if (exception == null) {
             return null;
         }
@@ -115,7 +126,8 @@ public class PxfErrorAttributes extends DefaultErrorAttributes {
                 break;
             }
 
-            if (exception instanceof BeanCreationException) {
+            if (exception instanceof BeanCreationException ||
+                    exception instanceof NestedServletException) {
                 // Unwrap exception
                 exceptionToReport = exception.getCause();
             }
@@ -125,4 +137,20 @@ public class PxfErrorAttributes extends DefaultErrorAttributes {
         return exceptionToReport;
     }
 
+    /**
+     * Returns the hostname to report for the hint
+     *
+     * @return the hostname to report for the hint
+     */
+    private String getHostname() {
+        if (properties != null && properties.getAddress() != null) {
+            return properties.getAddress().getHostName();
+        } else {
+            try {
+                return InetAddress.getLocalHost().getHostName();
+            } catch (UnknownHostException e) {
+                return System.getenv("HOSTNAME");
+            }
+        }
+    }
 }
