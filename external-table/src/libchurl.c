@@ -640,11 +640,11 @@ flush_internal_buffer(churl_context *context)
 		multi_perform(context);
 	}
 
+	check_response(context);
+
 	if ((context->curl_still_running == 0) &&
 		((context_buffer->top - context_buffer->bot) > 0))
 		elog(ERROR, "failed sending to remote component %s", get_dest_address(context->curl_handle));
-
-	check_response(context);
 
 	context_buffer->top = 0;
 	context_buffer->bot = 0;
@@ -963,12 +963,27 @@ check_response_code(churl_context *context)
 			appendStringInfo(&err, " : %s", http_error_msg);
 		}
 
-		if (trace_msg != NULL || hint_msg != NULL)
+		if (trace_msg != NULL && hint_msg != NULL)
 		{
 			ereport(ERROR,
 				(errcode(ERRCODE_CONNECTION_EXCEPTION),
 				errmsg("%s", err.data),
-				errhint("%s", (trace_msg != NULL ? trace_msg : hint_msg))));
+				errdetail("%s", trace_msg),
+				errhint("%s", hint_msg)));
+		}
+		else if (trace_msg != NULL)
+		{
+			ereport(ERROR,
+				(errcode(ERRCODE_CONNECTION_EXCEPTION),
+				errmsg("%s", err.data),
+				errdetail("%s", trace_msg)));
+		}
+		else if (hint_msg != NULL)
+		{
+			ereport(ERROR,
+				(errcode(ERRCODE_CONNECTION_EXCEPTION),
+				errmsg("%s", err.data),
+				errhint("%s", hint_msg)));
 		}
 		else
 		{

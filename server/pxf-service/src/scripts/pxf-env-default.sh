@@ -50,7 +50,7 @@ export PXF_JVM_OPTS=${PXF_JVM_OPTS:='-Xmx2g -Xms1g'}
 # Threads
 export PXF_MAX_THREADS=${PXF_MAX_THREADS:=200}
 
-# Set to true to enable Remote debug via port 8000
+# Set to true to enable Remote debug via port 2020
 export PXF_DEBUG=${PXF_DEBUG:-false}
 
 # Fragmenter cache, set to false to disable

@@ -39,9 +39,8 @@ install:
 	make -C cli/go/src/pxf-cli install
 	make -C server install
 
-install-dev:
-	make -C cli/go/src/pxf-cli install
-	make -C server install-dev
+install-server:
+	make -C server install-server
 
 stage:
 	rm -rf build/stage
@@ -111,7 +110,7 @@ help:
 	@echo	'  - clean - clean up external-table, CLI and server binaries'
 	@echo	'  - test - runs tests for PXF Go CLI and server'
 	@echo	'  - install - install PXF external table extension, CLI and server'
-	@echo	'  - install-dev - install CLI and server without running tests'
+	@echo	'  - install-server - install PXF server without running tests'
 	@echo	'  - tar - bundle PXF external table extension, CLI, server and tomcat into a single tarball'
 	@echo	'  - rpm - create PXF RPM / DEB package'
 	@echo	'  - rpm-tar - bundle PXF RPM / DEB package along with helper scripts into a single tarball'
