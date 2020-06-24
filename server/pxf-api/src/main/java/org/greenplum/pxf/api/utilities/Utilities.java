@@ -19,7 +19,6 @@ package org.greenplum.pxf.api.utilities;
  * under the License.
  */
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.SecurityUtil;
@@ -56,29 +55,6 @@ public class Utilities {
      * matches a :, /, ?, or #
      */
     public static final Pattern NON_HOSTNAME_CHARACTERS = Pattern.compile("[:/?#]");
-
-    /**
-     * Returns a decoded base64 byte[], or throws an error if the base64 string is invalid
-     *
-     * @param encoded   the base64 encoded string
-     * @param paramName the name of the parameter
-     * @return the decoded base64 string
-     */
-    // TODO: remove parseBase64
-    public static byte[] parseBase64(String encoded, String paramName) {
-        if (encoded == null) {
-            return null;
-        }
-        if (!Base64.isBase64(encoded.getBytes())) {
-            String message = String.format("%s must be Base64 encoded. (Bad value: %s)", paramName, encoded);
-            throw new IllegalArgumentException(message);
-        }
-        byte[] parsed = Base64.decodeBase64(encoded);
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Decoded value: {}", new String(parsed));
-        }
-        return parsed;
-    }
 
     /**
      * Validation for directory names that can be created

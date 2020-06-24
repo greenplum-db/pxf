@@ -76,7 +76,6 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor {
     @Override
     public boolean openForWrite() throws Exception {
         LOG.debug("openForWrite");
-        // TODO: spring_boot_todo make sure jobConf is not needed below or revert to hcfsType.getUriForWrite(jobConf, context);
         String filename = hcfsType.getUriForWrite(context);
         getCompressionCodec(context);
 
