@@ -28,7 +28,7 @@ public class PxfConfiguration implements WebMvcConfigurer {
     /**
      * Bean name of PXF's {@link TaskExecutor}.
      */
-    public static final String PXF_APPLICATION_TASK_EXECUTOR_BEAN_NAME = "pxfResponseStreamTaskExecutor";
+    public static final String PXF_RESPONSE_STREAM_TASK_EXECUTOR = "pxfResponseStreamTaskExecutor";
 
     private final ListableBeanFactory beanFactory;
 
@@ -49,7 +49,7 @@ public class PxfConfiguration implements WebMvcConfigurer {
     @Override
     public void configureAsyncSupport(AsyncSupportConfigurer configurer) {
         AsyncTaskExecutor taskExecutor = (AsyncTaskExecutor) this.beanFactory
-                .getBean(PXF_APPLICATION_TASK_EXECUTOR_BEAN_NAME);
+                .getBean(PXF_RESPONSE_STREAM_TASK_EXECUTOR);
         configurer.setTaskExecutor(taskExecutor);
     }
 
@@ -58,7 +58,7 @@ public class PxfConfiguration implements WebMvcConfigurer {
      *
      * @return the {@link ThreadPoolTaskExecutor}
      */
-    @Bean(name = {PXF_APPLICATION_TASK_EXECUTOR_BEAN_NAME,
+    @Bean(name = {PXF_RESPONSE_STREAM_TASK_EXECUTOR,
             AsyncAnnotationBeanPostProcessor.DEFAULT_TASK_EXECUTOR_BEAN_NAME})
     public ThreadPoolTaskExecutor pxfApplicationTaskExecutor(PxfServerProperties pxfServerProperties,
                                                              ObjectProvider<TaskExecutorCustomizer> taskExecutorCustomizers,
