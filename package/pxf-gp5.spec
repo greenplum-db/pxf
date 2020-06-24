@@ -21,7 +21,7 @@ Requires: bash
 %description
 PXF is an extensible framework that allows a distributed database like Greenplum to query external data files,
 whose metadata is not managed by the database. PXF includes built-in connectors for accessing data that exists
-inside HDFS files, Hive tables, HBase tables and more.
+inside HDFS files, Hive tables, HBase tables, databases that support JDBC, data stores (S3, GCS) and more.
 
 %prep
 # If the pxf_version macro is not defined, it gets interpreted as a literal string, need %% to escape it

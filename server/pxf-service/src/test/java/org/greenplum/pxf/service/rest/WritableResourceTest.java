@@ -50,11 +50,14 @@ public class WritableResourceTest {
     // input parameters
     private MultiValueMap<String, String> mockHeaders;
     private HttpServletRequest mockHttpServletRequest;
+    private RequestContext context;
 
     @BeforeEach
     @SuppressWarnings("unchecked")
     public void before() throws IOException, InterruptedException {
 
+        context = new RequestContext();
+        context.setThreadSafe(true);
         Configuration configuration = new Configuration();
 
         // constructor dependencies
@@ -63,7 +66,6 @@ public class WritableResourceTest {
         SecurityService mockSecurityService = mock(SecurityService.class);
         mockHeaders = mock(MultiValueMap.class);
         ServletInputStream mockInputStream = mock(ServletInputStream.class);
-        RequestContext mockContext = mock(RequestContext.class);
         WriteBridge mockBridge = mock(WriteBridge.class);
         ConfigurationFactory mockConfigurationFactory = mock(ConfigurationFactory.class);
         mockHttpServletRequest = mock(HttpServletRequest.class);
@@ -75,9 +77,8 @@ public class WritableResourceTest {
         when(mockSecurityService.doAs(any(), anyBoolean(), any())).thenAnswer(invocation ->
                 invocation.getArgument(2, PrivilegedExceptionAction.class).run());
         when(mockConfigurationFactory.initConfiguration(any(), any(), any(), any())).thenReturn(configuration);
-        when(mockParser.parseRequest(mockHeaders, RequestType.WRITE_BRIDGE)).thenReturn(mockContext);
-        when(mockFactory.getBridge(mockContext)).thenReturn(mockBridge);
-        when(mockContext.isThreadSafe()).thenReturn(true);
+        when(mockParser.parseRequest(mockHeaders, RequestType.WRITE_BRIDGE)).thenReturn(context);
+        when(mockFactory.getBridge(context)).thenReturn(mockBridge);
         when(mockBridge.isThreadSafe()).thenReturn(true);
         when(mockHttpServletRequest.getInputStream()).thenReturn(mockInputStream);
     }
@@ -85,8 +86,8 @@ public class WritableResourceTest {
     @Test
     public void streamPathWithSpecialChars() throws Exception {
         // test path with special characters
-        String path = "I'mso<bad>!";
-        ResponseEntity<String> result = writableResource.stream(mockHeaders, path, mockHttpServletRequest);
+        context.setDataSource("I'mso<bad>!");
+        ResponseEntity<String> result = writableResource.stream(mockHeaders, mockHttpServletRequest);
 
         assertEquals(HttpStatus.OK, result.getStatusCode());
         assertEquals("wrote 0 bulks to I.mso.bad..", result.getBody());
@@ -95,10 +96,10 @@ public class WritableResourceTest {
     @Test
     public void streamPathWithRegularChars() throws Exception {
         // test path with regular characters
-        String path = "whatCAN1tellYOU";
-        ResponseEntity<String> result = writableResource.stream(mockHeaders, path, mockHttpServletRequest);
+        context.setDataSource("whatCAN1tellYOU");
+        ResponseEntity<String> result = writableResource.stream(mockHeaders, mockHttpServletRequest);
 
         assertEquals(HttpStatus.OK, result.getStatusCode());
-        assertEquals("wrote 0 bulks to " + path, result.getBody());
+        assertEquals("wrote 0 bulks to whatCAN1tellYOU", result.getBody());
     }
 }
