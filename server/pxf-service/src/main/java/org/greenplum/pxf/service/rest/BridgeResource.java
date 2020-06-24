@@ -19,7 +19,6 @@ package org.greenplum.pxf.service.rest;
  * under the License.
  */
 
-import org.apache.catalina.connector.ClientAbortException;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.service.bridge.Bridge;
 import org.greenplum.pxf.service.bridge.BridgeFactory;
