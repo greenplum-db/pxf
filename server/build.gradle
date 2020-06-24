@@ -147,8 +147,8 @@ project('pxf-api') {
         compile "commons-codec:commons-codec:1.4"
         compile "com.sun.jersey:jersey-core:1.9"
         compile "org.apache.hadoop:hadoop-common:${hadoopVersion}"
-        compile "com.fasterxml.jackson.core:jackson-core:2.9.10"
-        compile "com.fasterxml.jackson.core:jackson-databind:2.9.10.4"
+        compile "com.fasterxml.jackson.core:jackson-core:2.11.0"
+        compile "com.fasterxml.jackson.core:jackson-databind:2.11.0"
 
         bundleJars "asm:asm:3.2"
     }
@@ -172,9 +172,9 @@ project('pxf-hdfs') {
     dependencies {
         compile(project(':pxf-api'))
         compile "org.apache.avro:avro-mapred:1.7.7"
-        compile "com.fasterxml.jackson.core:jackson-databind:2.9.10.4"
-        compile "com.fasterxml.jackson.core:jackson-core:2.9.10"
-        compile "com.fasterxml.jackson.core:jackson-annotations:2.9.10"
+        compile "com.fasterxml.jackson.core:jackson-databind:2.11.0"
+        compile "com.fasterxml.jackson.core:jackson-core:2.11.0"
+        compile "com.fasterxml.jackson.core:jackson-annotations:2.11.0"
         compile "org.apache.hadoop:hadoop-mapreduce-client-core:${hadoopVersion}"
         compile "org.apache.hadoop:hadoop-yarn-api:${hadoopVersion}" // Kerberos dependency
         compile "org.apache.hadoop:hadoop-yarn-client:${hadoopVersion}" // Kerberos dependency
