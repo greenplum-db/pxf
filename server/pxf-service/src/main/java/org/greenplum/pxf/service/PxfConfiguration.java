@@ -9,7 +9,6 @@ import org.springframework.boot.task.TaskExecutorBuilder;
 import org.springframework.boot.task.TaskExecutorCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.core.task.TaskDecorator;
 import org.springframework.core.task.TaskExecutor;
@@ -19,8 +18,8 @@ import org.springframework.web.servlet.config.annotation.AsyncSupportConfigurer;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
- * Declares the registerSecurityServletFilter bean method to be processed by
- * the Spring container
+ * Configures the {@link AsyncTaskExecutor} for tasks that will stream data to
+ * clients
  */
 @Configuration
 @EnableConfigurationProperties(PxfServerProperties.class)
@@ -29,7 +28,7 @@ public class PxfConfiguration implements WebMvcConfigurer {
     /**
      * Bean name of PXF's {@link TaskExecutor}.
      */
-    public static final String PXF_APPLICATION_TASK_EXECUTOR_BEAN_NAME = "pxfApplicationTaskExecutor";
+    public static final String PXF_APPLICATION_TASK_EXECUTOR_BEAN_NAME = "pxfResponseStreamTaskExecutor";
 
     private final ListableBeanFactory beanFactory;
 
@@ -49,11 +48,9 @@ public class PxfConfiguration implements WebMvcConfigurer {
      */
     @Override
     public void configureAsyncSupport(AsyncSupportConfigurer configurer) {
-        Object taskExecutor = this.beanFactory
+        AsyncTaskExecutor taskExecutor = (AsyncTaskExecutor) this.beanFactory
                 .getBean(PXF_APPLICATION_TASK_EXECUTOR_BEAN_NAME);
-        if (taskExecutor instanceof AsyncTaskExecutor) {
-            configurer.setTaskExecutor(((AsyncTaskExecutor) taskExecutor));
-        }
+        configurer.setTaskExecutor(taskExecutor);
     }
 
     /**
@@ -61,7 +58,6 @@ public class PxfConfiguration implements WebMvcConfigurer {
      *
      * @return the {@link ThreadPoolTaskExecutor}
      */
-    @Lazy
     @Bean(name = {PXF_APPLICATION_TASK_EXECUTOR_BEAN_NAME,
             AsyncAnnotationBeanPostProcessor.DEFAULT_TASK_EXECUTOR_BEAN_NAME})
     public ThreadPoolTaskExecutor pxfApplicationTaskExecutor(PxfServerProperties pxfServerProperties,
