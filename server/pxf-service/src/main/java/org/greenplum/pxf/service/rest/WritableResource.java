@@ -132,11 +132,16 @@ public class WritableResource extends BaseResource {
                     ++totalWritten;
                 }
             } catch (ClientAbortException cae) {
+                // Occurs whenever client (GPDB) decides to end the connection
                 if (LOG.isDebugEnabled()) {
+                    // Stacktrace in debug
                     LOG.debug("Remote connection closed by GPDB", cae);
                 } else {
-                    LOG.error("Remote connection closed by GPDB (Enable debug for stacktrace)");
+                    LOG.warn("Remote connection closed by GPDB (Enable debug for stacktrace)");
                 }
+                ex = cae;
+                // Re-throw the exception so Spring MVC is aware that an IO error has occurred
+                throw cae;
             } catch (Exception e) {
                 LOG.error(String.format("Exception: totalWritten so far %d to %s", totalWritten, context.getDataSource()), e);
                 ex = e;
