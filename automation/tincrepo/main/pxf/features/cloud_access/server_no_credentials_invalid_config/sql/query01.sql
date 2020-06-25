@@ -9,9 +9,6 @@
 -- m/PXF server error.*(com.amazonaws.services.s3.model.AmazonS3Exception: Forbidden).*/
 -- s/PXF server error.*/PXF server error : com.amazonaws.services.s3.model.AmazonS3Exception: Forbidden/
 --
--- m/Make sure no configuration files under.*/
--- s|Make sure no configuration files under.*|Make sure no configuration files under 'server-dir' specify the property 'defaultFS' with the value starting with 'hdfs://', which is incompatible with profile filesystem 's3a'. Check the PXF logs located in the 'logs-dir' directory on host 'mdw' or 'set client_min_messages=LOG' for additional details.|
---
 -- m/DETAIL/
 -- s/DETAIL/CONTEXT/
 --
