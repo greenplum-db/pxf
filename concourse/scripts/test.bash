@@ -120,11 +120,11 @@ function run_pxf_automation() {
 }
 
 function generate_extras_fat_jar() {
-	mkdir -p /tmp/fatjar "${PXF_HOME}/tmp"
+	mkdir -p /tmp/fatjar
 	pushd /tmp/fatjar
 		find "${PXF_CONF_DIR}/lib" -name '*.jar' -exec jar -xf {} \;
-		jar -cf "${PXF_HOME}/lib/pxf-extras-1.0.0.jar" .
-		chown -R gpadmin:gpadmin "${PXF_HOME}/lib/pxf-extras-1.0.0.jar"
+		jar -cf "/tmp/pxf-extras-1.0.0.jar" .
+		chown -R gpadmin:gpadmin "/tmp/pxf-extras-1.0.0.jar"
 	popd
 }
 
@@ -157,7 +157,7 @@ function setup_hadoop() {
 }
 
 function configure_sut() {
-	AMBARI_DIR=$(find /tmp/build/ -name ambari_env_files)
+	[[ -d /tmp/build/ ]] && AMBARI_DIR=$(find /tmp/build/ -name ambari_env_files)
 	if [[ -n $AMBARI_DIR ]]; then
 		REALM=$(< "$AMBARI_DIR"/REALM)
 		HADOOP_IP=$(grep < "$AMBARI_DIR"/etc_hostfile ambari-1 | awk '{print $1}')
