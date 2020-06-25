@@ -173,9 +173,8 @@ function checkWebapp()
     waitForSpringBoot "$1" "$2" || return 1
 
     curlResponse=$($curl -s "http://localhost:${PXF_PORT}/actuator/health")
-    expectedResponse='{"status":"UP"}'
 
-    [[ $curlResponse == $expectedResponse ]] || fail "PXF is inaccessible. Check logs ($PXF_LOGDIR) for more information"
+    [[ $curlResponse == {\"status\":\"UP\"* ]] || fail "PXF is inaccessible. Check logs ($PXF_LOGDIR) for more information"
     return 0
 }
 
