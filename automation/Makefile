@@ -98,7 +98,7 @@ symlink_pxf_jars: check-env
 			fi; \
 		done; \
 		touch $(PXF_TMP_LIB)/pxf-extras.jar && \
-		[ -f "/tmp/pxf-extras-1.0.0.jar" ] && cp /tmp/pxf-extras-1.0.0.jar $(PXF_TMP_LIB)/pxf-extras.jar && \
+		if [ -f "/tmp/pxf-extras-1.0.0.jar" ]; then cp /tmp/pxf-extras-1.0.0.jar $(PXF_TMP_LIB)/pxf-extras.jar; fi && \
 		rm -rf $(PXF_TMP_LIB)/tmp; \
 	fi
 
