@@ -118,7 +118,7 @@ steps:
   waitFor:
     - gpdb6-ubuntu18.04-test-pxf-image-cache
 
-# Push images to Cloud Build to Container Registry
+# Push images from Cloud Build to Container Registry
 images:
 - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb5-centos6-test-pxf:$COMMIT_SHA'
 - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb5-centos7-test-pxf:$COMMIT_SHA'
