@@ -40,24 +40,49 @@ Avro supports both primitive and complex data types.
 
 To represent Avro primitive data types in Greenplum Database, map data values to Greenplum Database columns of the same type. 
 
-Avro supports complex data types including arrays, maps, records, enumerations, and fixed types. Map top-level fields of these complex data types to the Greenplum Database `TEXT` type. While Greenplum Database does not natively support these types, you can create Greenplum Database functions or application code to extract or further process subcomponents of these complex data types.
+Avro supports complex data types including arrays, maps, records, enumerations, and fixed types. Map top-level fields of these complex data types to the Greenplum Database `TEXT` type. While Greenplum Database does not natively support reading these types, you can create Greenplum Database functions or application code to extract or further process subcomponents of these complex data types.
 
-The following table summarizes external mapping rules for Avro data.
+### <a id="datatype_map_read "></a>Read Mapping
 
-<a id="topic_oy3_qwm_ss__table_j4s_h1n_ss"></a>
+<a id="a2g_type_mapping_table"></a>
 
-| Avro Data Type                                                    | PXF/Greenplum Data Type                                                                                                                                                                                            |
-|-------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+PXF uses the following data type mapping when reading Avro data:
+
+| Avro Data Type     | PXF/Greenplum Data Type    |
+|--------------------|----------------------------|
 | boolean | boolean |
 | bytes | bytea |
 | double | double |
 | float | real |
-| int | int or smallint |
+| int | int |
 | long | bigint |
 | string | text |
-| Complex type: Array, Map, Record, or Enum                         | text, with delimiters inserted between collection items, mapped key-value pairs, and record data.                                                                                           |
-| Complex type: Fixed                                               | bytea (supported for read operations only).                                                                                                                                                                                 |
-| Union                                                             | Follows the above conventions for primitive or complex data types, depending on the union; must contain 2 elements, one of which must be null.                                                                     |
+| Complex type: Array, Map, Record, or Enum  | text, with delimiters inserted between collection items, mapped key-value pairs, and record data.   |
+| Complex type: Fixed     | bytea (supported for read operations only).   |
+| Union      | Follows the above conventions for primitive or complex data types, depending on the union; must contain 2 elements, one of which must be null.  |
+
+### <a id="datatype_map_Write "></a>Write Mapping
+
+PXF supports writing only Avro primitive data types. It does not support writing complex types to Avro.
+
+PXF uses the following data type mapping when writing Avro data:
+
+<a id="g2_type_mapping_table"></a>
+
+| PXF/Greenplum Data Type | Avro Data Type |
+|-------------------|----------------------|
+| bigint | long |
+| boolean | boolean |
+| bytea | bytes |
+| double | double |
+| enum | string |
+| integer |  int |
+| real | float |
+| smallint<sup>1</sup> | int |
+| text | string |
+| array ([]), enum, record | string |
+
+</br><sup>1</sup>&nbsp;PXF converts Greenplum <code>smallint</code> types to <code>int</code> before it writes the Avro data. Be sure to read the field into an <code>int</code>.
 
 
 ### <a id="topic_tr3_dpg_ts__section_m2p_ztg_ts"></a>Avro Schemas and Data
