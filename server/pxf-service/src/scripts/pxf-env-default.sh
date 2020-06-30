@@ -47,6 +47,11 @@ export PXF_PORT=${PXF_PORT:=5888}
 # Memory
 export PXF_JVM_OPTS=${PXF_JVM_OPTS:='-Xmx2g -Xms1g'}
 
+# The number of milliseconds the server will wait, after accepting a
+# connection, for the request URI line to be presented. Use a value of -1 to
+# indicate no (i.e. infinite) timeout.
+export PXF_CONNECTION_TIMEOUT=5m
+
 # Threads
 export PXF_MAX_THREADS=${PXF_MAX_THREADS:=200}
 
