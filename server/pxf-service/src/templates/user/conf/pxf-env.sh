@@ -19,6 +19,9 @@ PXF_CONF="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
 # Memory
 # export PXF_JVM_OPTS="-Xmx2g -Xms1g"
 
+# Server connection timeout (-1 for infinite timeout)
+# export PXF_CONNECTION_TIMEOUT=5m
+
 # Threads
 # export PXF_MAX_THREADS="200"
 # export PXF_TASK_POOL_ALLOW_CORE_THREAD_TIMEOUT="false"
