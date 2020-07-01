@@ -19,9 +19,7 @@ PXF_CONF="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
 # Memory
 # export PXF_JVM_OPTS="-Xmx2g -Xms1g"
 
-# The number of milliseconds the server will wait, after accepting a
-# connection, for the request URI line to be presented. Use a value of -1 to
-# indicate no (i.e. infinite) timeout.
+# Server connection timeout (-1 for infinite timeout)
 # export PXF_CONNECTION_TIMEOUT=5m
 
 # Threads

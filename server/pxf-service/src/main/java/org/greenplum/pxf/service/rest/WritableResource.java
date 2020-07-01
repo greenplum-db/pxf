@@ -160,7 +160,7 @@ public class WritableResource extends BaseResource {
                 // Occurs whenever client (GPDB) decides to end the connection
                 if (LOG.isDebugEnabled()) {
                     // Stacktrace in debug
-                    LOG.debug(String.format("Remote connection closed by GPDB (segment %s)", context.getSegmentId()), cae);
+                    LOG.warn(String.format("Remote connection closed by GPDB (segment %s)", context.getSegmentId()), cae);
                 } else {
                     LOG.warn("Remote connection closed by GPDB (segment {}) (Enable debug for stacktrace)", context.getSegmentId());
                 }
