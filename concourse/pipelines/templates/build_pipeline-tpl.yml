@@ -245,6 +245,11 @@ resources:
   source:
     branch: ((pxf-git-branch))
     uri: ((pxf-git-remote))
+    ignore_paths:
+      - docs/**
+      - singlecluster/**
+      - NOTICE
+      - README.md
 
 - name: ccp_src
   type: git
