@@ -214,6 +214,12 @@ function generateUserConfigs()
     setup_conf_directory "${PXF_CONF}/servers"
     setup_conf_directory "${PXF_CONF}/servers/default"
     setup_conf_directory "${PXF_CONF}/templates" "${PXF_HOME}/templates/user/templates" 'override'
+
+    if [[ ! -f "${PXF_CONF}/conf/pxf-log4j2.xml" ]]; then
+        # copy the new pxf-log4j2.xml if it doesn't exist. This allows us to
+        # initialize PXF 6.x using a pre-existing PXF 5.x configuration
+        cp "${PXF_HOME}/templates/user/conf/pxf-log4j2.xml" "${PXF_CONF}/conf/pxf-log4j2.xml"
+    fi
 }
 
 function setup_conf_directory()

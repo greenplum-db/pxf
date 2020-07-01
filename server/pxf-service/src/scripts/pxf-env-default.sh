@@ -47,6 +47,9 @@ export PXF_PORT=${PXF_PORT:=5888}
 # Memory
 export PXF_JVM_OPTS=${PXF_JVM_OPTS:='-Xmx2g -Xms1g'}
 
+# Server connection timeout (-1 for infinite timeout)
+export PXF_CONNECTION_TIMEOUT=5m
+
 # Threads
 export PXF_MAX_THREADS=${PXF_MAX_THREADS:=200}
 
