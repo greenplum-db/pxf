@@ -22,6 +22,9 @@ PXF_CONF="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
 # Server connection timeout (-1 for infinite timeout)
 # export PXF_CONNECTION_TIMEOUT=5m
 
+# Graceful shutdown timeout
+# export SPRING_LIFECYCLE_TIMEOUT_PER_SHUTDOWN_PHASE=1s
+
 # Threads
 # export PXF_MAX_THREADS="200"
 # export PXF_TASK_POOL_ALLOW_CORE_THREAD_TIMEOUT="false"

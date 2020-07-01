@@ -50,6 +50,9 @@ export PXF_JVM_OPTS=${PXF_JVM_OPTS:='-Xmx2g -Xms1g'}
 # Server connection timeout (-1 for infinite timeout)
 export PXF_CONNECTION_TIMEOUT=5m
 
+# Graceful shutdown timeout
+export SPRING_LIFECYCLE_TIMEOUT_PER_SHUTDOWN_PHASE=1s
+
 # Threads
 export PXF_MAX_THREADS=${PXF_MAX_THREADS:=200}
 
