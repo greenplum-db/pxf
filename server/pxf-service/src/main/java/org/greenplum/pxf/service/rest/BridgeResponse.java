@@ -77,9 +77,9 @@ public class BridgeResponse implements StreamingResponseBody {
             // Occurs whenever client (GPDB) decides to end the connection
             if (LOG.isDebugEnabled()) {
                 // Stacktrace in debug
-                LOG.debug("Remote connection closed by GPDB", e);
+                LOG.warn(String.format("Remote connection closed by GPDB (segment %s)", context.getSegmentId()), e);
             } else {
-                LOG.warn("Remote connection closed by GPDB (Enable debug for stacktrace)");
+                LOG.warn("Remote connection closed by GPDB (segment {}) (Enable debug for stacktrace)", context.getSegmentId());
             }
             // Re-throw the exception so Spring MVC is aware that an IO error has occurred
             throw e;

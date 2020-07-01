@@ -135,9 +135,9 @@ public class WritableResource extends BaseResource {
                 // Occurs whenever client (GPDB) decides to end the connection
                 if (LOG.isDebugEnabled()) {
                     // Stacktrace in debug
-                    LOG.debug("Remote connection closed by GPDB", cae);
+                    LOG.warn(String.format("Remote connection closed by GPDB (segment %s)", context.getSegmentId()), cae);
                 } else {
-                    LOG.warn("Remote connection closed by GPDB (Enable debug for stacktrace)");
+                    LOG.warn("Remote connection closed by GPDB (segment {}) (Enable debug for stacktrace)", context.getSegmentId());
                 }
                 ex = cae;
                 // Re-throw the exception so Spring MVC is aware that an IO error has occurred
