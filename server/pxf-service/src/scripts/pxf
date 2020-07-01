@@ -217,7 +217,7 @@ function generateUserConfigs()
 
     if [[ ! -f "${PXF_CONF}/conf/pxf-log4j2.xml" ]]; then
         # copy the new pxf-log4j2.xml if it doesn't exist. This allows us to
-        # initialize PXF 6.x on a PXF 5.x installation that had already been
+        # initialize PXF 6.x using a pre-existing PXF 5.x configuration
         # initialized
         cp "${PXF_HOME}/templates/user/conf/pxf-log4j2.xml" "${PXF_CONF}/conf/pxf-log4j2.xml"
     fi
