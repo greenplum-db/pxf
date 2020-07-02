@@ -119,8 +119,14 @@ The `hdfs:avro` profile supports the following \<custom-option\>s:
 | MAPKEY_DELIM | The delimiter character(s) placed between the key and value of a map entry when PXF maps an Avro complex data type to a text column. The default is the colon `:` character. (Read)|
 | RECORDKEY_DELIM | The delimiter character(s) placed between the field name and value of a record entry when PXF maps an Avro complex data type to a text column. The default is the colon `:` character. (Read)|
 | SCHEMA | The absolute path to the Avro schema file on the segment host or on HDFS, or the relative path to the schema file on the segment host. (Read and Write)|
-| IGNORE_MISSING_PATH | A Boolean value that specifies the action to take when \<path-to-hdfs-file\> is missing or invalid. The default value is `false`, PXF returns an error in this situation. When the value is `true`, PXF ignores missing path errors and returns an empty fragment. |
+| IGNORE_MISSING_PATH | A Boolean value that specifies the action to take when \<path-to-hdfs-file\> is missing or invalid. The default value is `false`, PXF returns an error in this situation. When the value is `true`, PXF ignores missing path errors and returns an empty fragment. (Read) |
 
+The PXF `hdfs:avro` profile supports encoding- and compression-related write options. You specify these write options in the `CREATE WRITABLE EXTERNAL TABLE` `LOCATION` clause. The `hdfs:avro` profile supports the following custom write options:
+
+| Write Option  | Value Description |
+|-------|-------------------------------------|
+| COMPRESSION_CODEC    | The compression codec alias. Supported compression codecs for writing Avro data include: `snappy`, `deflate`, and `uncompressed` . If this option is not provided, PXF compresses the data using `deflate` compression. |
+| CODEC_LEVEL    | The compression level (applicable to the `deflate` codec only). This level controls the trade-off between speed and compression. Valid values are 1 (fastest) to 9 (most compressed). The default compression level when using the `deflate` codec is 6. |
 
 ## <a id="avro_example"></a>Example: Reading Avro Data
 
@@ -281,6 +287,8 @@ Perform the following operations to create and query an external table that refe
     ```
 
 ## <a id="topic_avro_writedata"></a>Writing Avro Data
+
+The PXF HDFS connector `hdfs:avro` profile supports writing Avro data to HDFS. When you create a writable external table to write Avro data, you specify the name of a directory on HDFS. When you insert records into the writable external table, the block(s) of data that you insert are written to one or more files in the directory that you specify.
 
 When you create a writable external table to write data to an Avro file, each table row is an Avro record and each table column is an Avro field.
 
