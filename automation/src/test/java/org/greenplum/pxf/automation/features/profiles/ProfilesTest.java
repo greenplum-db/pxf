@@ -1,25 +1,26 @@
 package org.greenplum.pxf.automation.features.profiles;
 
+import jsystem.framework.system.SystemManagerImpl;
 import org.greenplum.pxf.automation.components.cluster.PhdCluster;
 import org.greenplum.pxf.automation.enums.EnumPxfDefaultProfiles;
+import org.greenplum.pxf.automation.features.BaseFeature;
 import org.greenplum.pxf.automation.structures.profiles.Profile;
 import org.greenplum.pxf.automation.structures.profiles.PxfProfileXml;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
 import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
 import org.greenplum.pxf.automation.utils.exception.ExceptionUtils;
-import org.greenplum.pxf.automation.features.BaseFeature;
-import jsystem.framework.system.SystemManagerImpl;
-import org.apache.commons.io.FileUtils;
 import org.postgresql.util.PSQLException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import java.io.File;
-
-/** Tests Package for Profiles feature in PXF */
+/**
+ * Tests Package for Profiles feature in PXF
+ */
 public class ProfilesTest extends BaseFeature {
 
     private PxfProfileXml pxfProfiles;
+
+    private boolean requiresRestartAfterTest;
 
     /**
      * Runs always before test method
@@ -29,9 +30,11 @@ public class ProfilesTest extends BaseFeature {
     @Override
     protected void beforeMethod() throws Exception {
 
+        requiresRestartAfterTest = false;
+
         super.beforeMethod();
         pxfProfiles = cluster.getPxfProfiles();
-        exTable = TableFactory.getPxfReadableTextTable("pxf_profiles_small_data", new String[] {
+        exTable = TableFactory.getPxfReadableTextTable("pxf_profiles_small_data", new String[]{
                 "name text",
                 "num integer",
                 "dub double precision",
@@ -51,11 +54,14 @@ public class ProfilesTest extends BaseFeature {
     protected void afterMethod() throws Exception {
 
         super.afterMethod();
-        pxfProfiles.restore();
-        cluster.copyFileToNodes(pxfProfiles.getXmlFilePath(), cluster.getPxfConfLocation(),
-                false, false);
-        cluster.restart(PhdCluster.EnumClusterServices.pxf);
-        exTable.setUserParameters(null);
+
+        if (requiresRestartAfterTest) {
+            pxfProfiles.restore();
+            cluster.copyFileToNodes(pxfProfiles.getXmlFilePath(), cluster.getPxfConfLocation(),
+                    false, false);
+            cluster.restart(PhdCluster.EnumClusterServices.pxf);
+            exTable.setUserParameters(null);
+        }
     }
 
     @Override
@@ -74,7 +80,7 @@ public class ProfilesTest extends BaseFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "sanity" })
+    @Test(groups = {"sanity"})
     protected void sanity() throws Exception {
 
         gpdb.createTableAndVerify(exTable);
@@ -104,7 +110,7 @@ public class ProfilesTest extends BaseFeature {
      * @throws Exception if test fails to run
      */
     @Test(groups = "unused")
-    public void caseInsensetive() throws Exception {
+    public void caseInsensitive() throws Exception {
 
         exTable.setProfile(EnumPxfDefaultProfiles.HdfsTextSimple.toString().toUpperCase());
         gpdb.createTableAndVerify(exTable);
@@ -116,70 +122,14 @@ public class ProfilesTest extends BaseFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "profile" })
+    @Test(groups = {"profile"})
     public void profileParameterNotAsFirstParameter() throws Exception {
 
         exTable.setProfile(null);
-        exTable.setUserParameters(new String[] { "Ready=Go", "Profile=" +
-                EnumPxfDefaultProfiles.HdfsTextSimple.toString() });
+        exTable.setUserParameters(new String[]{"Ready=Go", "Profile=" +
+                EnumPxfDefaultProfiles.HdfsTextSimple.toString()});
         gpdb.createTableAndVerify(exTable);
         runVerificationTinc();
-    }
-
-    /**
-     * not exists profile
-     *
-     * @throws Exception if test fails to run
-     */
-    @Test(groups = { "profile" })
-    public void missingProfile() throws Exception {
-
-        // set not exists profile
-        exTable.setProfile(EnumPxfDefaultProfiles.HdfsTextSimple.toString() + "_Fake");
-        gpdb.createTableAndVerify(exTable);
-        runTincTest("pxf.features.profiles.errors.missingProfile.runTest");
-    }
-
-    /**
-     * empty profile in profile XML. should work with default XML in jar
-     *
-     * @throws Exception if test fails to run
-     */
-    @Test(groups = { "profile" })
-    public void emptyProfile() throws Exception {
-
-        // clean profiles list, add empty profile and write to file
-        pxfProfiles.initProfilesList();
-        pxfProfiles.addProfile(new Profile("HdfsTextSimple"));
-        pxfProfiles.writeProfilesListToFile();
-
-        cluster.copyFileToNodes(pxfProfiles.getXmlFilePath(), cluster.getPxfConfLocation());
-        cluster.restart(PhdCluster.EnumClusterServices.pxf);
-
-        exTable.setProfile(EnumPxfDefaultProfiles.HdfsTextSimple.toString());
-        gpdb.createTableAndVerify(exTable);
-        runTincTest("pxf.features.profiles.errors.emptyProfile.runTest");
-    }
-
-    /**
-     * missing fragmenter to profile should throw Error
-     *
-     * @throws Exception if test fails to run
-     */
-    @Test(groups = { "profile" })
-    public void missingPlugin() throws Exception {
-
-        // get "HdfsTextSimple" profile, remove fragmenter and write to file
-        Profile hdfsTextSimpleProfile = pxfProfiles.getProfile(EnumPxfDefaultProfiles.HdfsTextSimple.toString());
-        hdfsTextSimpleProfile.setFragmenter(null);
-        pxfProfiles.writeProfilesListToFile();
-
-        cluster.copyFileToNodes(pxfProfiles.getXmlFilePath(), cluster.getPxfConfLocation());
-        cluster.restart(PhdCluster.EnumClusterServices.pxf);
-
-        exTable.setProfile(EnumPxfDefaultProfiles.HdfsTextSimple.toString());
-        gpdb.createTableAndVerify(exTable);
-        runTincTest("pxf.features.profiles.errors.missingPlugin.runTest");
     }
 
     /**
@@ -187,8 +137,10 @@ public class ProfilesTest extends BaseFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "profile" })
+    @Test(groups = {"profile"})
     public void customProfile() throws Exception {
+
+        requiresRestartAfterTest = true;
 
         // get "HdfsTextSimple" profile and change the name
         Profile hdfsTextSimpleProfile = pxfProfiles.getProfile(EnumPxfDefaultProfiles.HdfsTextSimple.toString());
@@ -212,7 +164,7 @@ public class ProfilesTest extends BaseFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "profile" })
+    @Test(groups = {"profile"})
     public void noProfile() throws Exception {
 
         exTable.setProfile(null);
@@ -229,36 +181,15 @@ public class ProfilesTest extends BaseFeature {
     }
 
     /**
-     * Error using malformed XML
-     *
-     * @throws Exception if test fails to run
-     */
-    @Test(groups = { "profile" })
-    public void malformedXmlFile() throws Exception {
-
-        File xmlProfileFile = new File(pxfProfiles.getXmlFilePath());
-        String xmlAsString = FileUtils.readFileToString(xmlProfileFile);
-        // remove all opening tags and write to file
-        FileUtils.writeStringToFile(xmlProfileFile, xmlAsString.replaceAll("<", ""));
-
-        cluster.copyFileToNodes(xmlProfileFile.getAbsolutePath(), cluster.getPxfConfLocation());
-        cluster.restart(PhdCluster.EnumClusterServices.pxf);
-        // wait for change to load
-        Thread.sleep(2000);
-        gpdb.createTableAndVerify(exTable);
-        runTincTest("pxf.features.profiles.errors.malformedXmlFile.runTest");
-    }
-
-    /**
      * work with same profile defined multiple times
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "profile" })
+    @Test(groups = {"profile"})
     public void duplicateProfile() throws Exception {
 
         exTable.setProfile(null);
-        exTable.setUserParameters(new String[] {
+        exTable.setUserParameters(new String[]{
                 "Profile=" + EnumPxfDefaultProfiles.HdfsTextSimple.toString().toUpperCase(),
                 "Profile=" + EnumPxfDefaultProfiles.HdfsTextSimple
         });
@@ -272,44 +203,6 @@ public class ProfilesTest extends BaseFeature {
                             "\\?Profile=HDFSTEXTSIMPLE&Profile=HdfsTextSimple: " +
                             "Duplicate option\\(s\\): PROFILE", null), true);
         }
-    }
-
-    /**
-     * profile has parameters and command line also defines same parameters
-     *
-     * @throws Exception if test fails to run
-     */
-    @Test(groups = { "profile" })
-    public void duplicateProfileParametersCheck() throws Exception {
-
-        exTable.setProfile(null);
-        exTable.setFragmenter("org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter");
-        exTable.setAccessor("org.greenplum.pxf.plugins.hdfs.LineBreakAccessor");
-        exTable.setResolver("org.greenplum.pxf.plugins.hdfs.StringPassResolver");
-        exTable.setUserParameters(new String[] { "Profile=" + EnumPxfDefaultProfiles.HdfsTextSimple });
-
-        gpdb.createTableAndVerify(exTable);
-
-        runTincTest("pxf.features.profiles.errors.duplicateProfileParametersCheck.runTest");
-        exTable.setFragmenter(null);
-        exTable.setAccessor(null);
-        exTable.setResolver(null);
-    }
-
-    /**
-     * work with profile and command line parameters as well
-     *
-     * @throws Exception if test fails to run
-     */
-    @Test(groups = { "profile" })
-    public void additionalParameterWithProfile() throws Exception {
-
-        exTable.setProfile(null);
-        exTable.setProfile(EnumPxfDefaultProfiles.HdfsTextSimple.toString());
-        exTable.setUserParameters(new String[] { "COMPRESSION_CODEC=org.apache.hadoop.io.compress.BZip2Codec" });
-
-        gpdb.createTableAndVerify(exTable);
-        runVerificationTinc();
     }
 
     private void runVerificationTinc() throws Exception {

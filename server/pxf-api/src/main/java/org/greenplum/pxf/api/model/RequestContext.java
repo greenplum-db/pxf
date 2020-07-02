@@ -791,6 +791,12 @@ public class RequestContext {
             fail("Missing parameter: STATS-SAMPLE-RATIO and STATS-MAX-FRAGMENTS must be set together");
         }
 
+        if (requestType == RequestType.FRAGMENTER) {
+            // fragmenter is required for fragmentation call only (PXF write
+            // does not require a fragmenter)
+            ensureNotNull("FRAGMENTER", fragmenter);
+        }
+
         // accessor and resolver are user properties, might be missing if profile is not set
         ensureNotNull("ACCESSOR", accessor);
         ensureNotNull("RESOLVER", resolver);

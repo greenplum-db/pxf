@@ -71,6 +71,7 @@ public class HttpRequestParserTest {
         parameters.add("X-GP-URL-HOST", "my://bags");
         parameters.add("X-GP-URL-PORT", "-8020");
         parameters.add("X-GP-ATTRS", "-1");
+        parameters.add("X-GP-OPTIONS-FRAGMENTER", "we");
         parameters.add("X-GP-OPTIONS-ACCESSOR", "are");
         parameters.add("X-GP-OPTIONS-RESOLVER", "packed");
         parameters.add("X-GP-DATA-DIR", "i'm/ready/to/go");
@@ -199,6 +200,7 @@ public class HttpRequestParserTest {
 
         // add profile and remove plugin parameters
         parameters.add("X-GP-OPTIONS-PROFILE", "test-profile");
+        parameters.remove("X-GP-OPTIONS-FRAGMENTER");
         parameters.remove("X-GP-OPTIONS-ACCESSOR");
         parameters.remove("X-GP-OPTIONS-RESOLVER");
         RequestContext context = parser.parseRequest(parameters, RequestType.FRAGMENTER);
@@ -209,6 +211,7 @@ public class HttpRequestParserTest {
 
     @Test
     public void pluginsRedefinedByProfileFails() {
+        parameters.remove("X-GP-OPTIONS-FRAGMENTER");
         Map<String, String> mockedPlugins = new HashMap<>();
         mockedPlugins.put("fragmenter", "test-fragmenter");
         mockedPlugins.put("accessor", "test-accessor");
@@ -221,6 +224,22 @@ public class HttpRequestParserTest {
         Exception e = assertThrows(IllegalArgumentException.class,
                 () -> parser.parseRequest(parameters, RequestType.FRAGMENTER));
         assertEquals("Profile 'test-profile' already defines: [resolver, accessor]", e.getMessage());
+    }
+
+    @Test
+    public void allPluginsRedefinedByProfileFails() {
+        Map<String, String> mockedPlugins = new HashMap<>();
+        mockedPlugins.put("fragmenter", "test-fragmenter");
+        mockedPlugins.put("accessor", "test-accessor");
+        mockedPlugins.put("resolver", "test-resolver");
+        when(mockPluginConf.getPlugins("test-profile")).thenReturn(mockedPlugins);
+
+        // add profile in addition to plugins
+        parameters.add("X-GP-OPTIONS-PROFILE", "test-profile");
+
+        Exception e = assertThrows(IllegalArgumentException.class,
+                () -> parser.parseRequest(parameters, RequestType.FRAGMENTER));
+        assertEquals("Profile 'test-profile' already defines: [resolver, accessor, fragmenter]", e.getMessage());
     }
 
     @Test
@@ -590,6 +609,52 @@ public class HttpRequestParserTest {
 
         RequestContext context = parser.parseRequest(parameters, RequestType.READ_BRIDGE);
         assertTrue(context.isLastFragment());
+    }
+
+    @Test
+    public void testMissingFragmenterInFragmenterCall() {
+        parameters.remove("X-GP-OPTIONS-FRAGMENTER");
+        Exception e = assertThrows(IllegalArgumentException.class,
+                () -> parser.parseRequest(parameters, RequestType.FRAGMENTER));
+        assertEquals("Property FRAGMENTER has no value in the current request", e.getMessage());
+    }
+
+    @Test
+    public void testMissingFragmenterInWriteBridgeCall() {
+        parameters.remove("X-GP-OPTIONS-FRAGMENTER");
+        parser.parseRequest(parameters, RequestType.WRITE_BRIDGE);
+    }
+
+    @Test
+    public void testMissingAccessor() {
+        parameters.remove("X-GP-OPTIONS-ACCESSOR");
+        Exception e = assertThrows(IllegalArgumentException.class,
+                () -> parser.parseRequest(parameters, RequestType.FRAGMENTER));
+        assertEquals("Property ACCESSOR has no value in the current request", e.getMessage());
+
+        e = assertThrows(IllegalArgumentException.class,
+                () -> parser.parseRequest(parameters, RequestType.READ_BRIDGE));
+        assertEquals("Property ACCESSOR has no value in the current request", e.getMessage());
+
+        e = assertThrows(IllegalArgumentException.class,
+                () -> parser.parseRequest(parameters, RequestType.WRITE_BRIDGE));
+        assertEquals("Property ACCESSOR has no value in the current request", e.getMessage());
+    }
+
+    @Test
+    public void testMissingResolver() {
+        parameters.remove("X-GP-OPTIONS-RESOLVER");
+        Exception e = assertThrows(IllegalArgumentException.class,
+                () -> parser.parseRequest(parameters, RequestType.FRAGMENTER));
+        assertEquals("Property RESOLVER has no value in the current request", e.getMessage());
+
+        e = assertThrows(IllegalArgumentException.class,
+                () -> parser.parseRequest(parameters, RequestType.READ_BRIDGE));
+        assertEquals("Property RESOLVER has no value in the current request", e.getMessage());
+
+        e = assertThrows(IllegalArgumentException.class,
+                () -> parser.parseRequest(parameters, RequestType.WRITE_BRIDGE));
+        assertEquals("Property RESOLVER has no value in the current request", e.getMessage());
     }
 
     static class TestHandler implements ProtocolHandler {

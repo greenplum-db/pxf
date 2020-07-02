@@ -1,0 +1,11 @@
+<profiles>
+    <profile>
+        <name>hdfs:text</name>
+        <description/>
+        <plugins>
+            <fragmenter/>
+            <accessor/>
+            <resolver/>
+        </plugins>
+    </profile>
+</profiles>

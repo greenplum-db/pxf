@@ -107,6 +107,14 @@ public class ProfilesConfTest {
     }
 
     @Test
+    public void emptyProfilePluginsFile() {
+        ProfilesConf profilesConf = getProfilesConf("emptyProfilePluginsFile");
+        Exception e = assertThrows(ProfileConfException.class,
+                () -> profilesConf.getPlugins("hdfs:text"));
+        assertEquals("Profile hdfs:text does not define any plugins in profile/emptyProfilePluginsFile/pxf-profiles.xml", e.getMessage());
+    }
+
+    @Test
     public void malformedProfileFile() {
         Exception e = assertThrows(ProfileConfException.class,
                 () -> getProfilesConf("malformedProfileFile"));
@@ -169,6 +177,19 @@ public class ProfilesConfTest {
         assertNotNull(map);
         assertEquals(1, map.size());
         assertEquals("Y", map.get("accessor"));
+    }
+
+    @Test
+    public void testMalformedXmlFile() {
+        Exception e = assertThrows(ProfileConfException.class,
+                () -> getProfilesConf("malformedXmlFile"));
+        assertTrue(e.getMessage().contains("Content is not allowed in prolog"));
+    }
+
+    @Test
+    public void missingPluginFile() {
+        ProfilesConf profilesConf = getProfilesConf("missingPluginFile");
+        profilesConf.getPlugins("hdfs:text");
     }
 
     private ProfilesConf getProfilesConf(String testCase) {
