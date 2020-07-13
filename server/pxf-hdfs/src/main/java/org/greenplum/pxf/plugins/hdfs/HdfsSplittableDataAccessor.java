@@ -50,8 +50,6 @@ public abstract class HdfsSplittableDataAccessor extends HcfsBaseAccessor {
     protected FileSplit fileSplit;
     HcfsType hcfsType;
 
-    private ListIterator<InputSplit> iter;
-
     /**
      * Constructs an HdfsSplittableDataAccessor
      *
@@ -82,13 +80,12 @@ public abstract class HdfsSplittableDataAccessor extends HcfsBaseAccessor {
      * @return true if succeeded, false if no more splits to be read
      */
     @Override
+    @SuppressWarnings("unchecked")
     public boolean openForRead() throws Exception {
-        LinkedList<InputSplit> requestSplits = new LinkedList<>();
-        requestSplits.add(fileSplit);
-
-        // Initialize record reader based on current split
-        iter = requestSplits.listIterator(0);
-        return getNextSplit();
+        reader = (RecordReader<Object, Object>) getReader(jobConf, fileSplit);
+        key = reader.createKey();
+        data = reader.createValue();
+        return true;
     }
 
     /**
@@ -106,26 +103,6 @@ public abstract class HdfsSplittableDataAccessor extends HcfsBaseAccessor {
             throws IOException;
 
     /**
-     * Sets the current split and initializes a RecordReader who feeds from the
-     * split
-     *
-     * @return true if there is a split to read
-     * @throws IOException if record reader could not be created
-     */
-    @SuppressWarnings(value = "unchecked")
-    protected boolean getNextSplit() throws IOException {
-        if (!iter.hasNext()) {
-            return false;
-        }
-
-        InputSplit currSplit = iter.next();
-        reader = (RecordReader<Object, Object>) getReader(jobConf, currSplit);
-        key = reader.createKey();
-        data = reader.createValue();
-        return true;
-    }
-
-    /**
      * Fetches one record from the file. The record is returned as a Java
      * object.
      */
@@ -133,13 +110,7 @@ public abstract class HdfsSplittableDataAccessor extends HcfsBaseAccessor {
     public OneRow readNextObject() throws IOException {
         // if there is one more record in the current split
         if (!reader.next(key, data)) {
-            // the current split is exhausted. try to move to the next split
-            boolean hasMoreSplits = getNextSplit();
-
-            // if there are more splits read the first record of the new split
-            if (!hasMoreSplits || !reader.next(key, data)) {
-                return null;
-            }
+            return null;
         }
 
         /*

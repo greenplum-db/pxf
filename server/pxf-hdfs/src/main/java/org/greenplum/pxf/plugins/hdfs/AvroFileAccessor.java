@@ -123,11 +123,6 @@ public class AvroFileAccessor extends HdfsSplittableDataAccessor {
         if (reader.next(avroWrapper, NullWritable.get())) { // There is one more record in the current split.
             rowsRead++;
             return new OneRow(null, avroWrapper.datum());
-        } else if (getNextSplit()) { // The current split is exhausted. try to move to the next split.
-            rowsRead++;
-            return reader.next(avroWrapper, NullWritable.get())
-                    ? new OneRow(null, avroWrapper.datum())
-                    : null;
         }
 
         // if neither condition was met, it means we already read all the records in all the splits, and
