@@ -132,6 +132,7 @@ public class LineBreakAccessorTest {
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("Property SKIP_HEADER_COUNT has incorrect value foo : must be a non-negative integer");
 
+        context.setDataSource("/foo");
         context.addOption("SKIP_HEADER_COUNT", "foo");
         accessor.initialize(context);
     }
@@ -141,6 +142,7 @@ public class LineBreakAccessorTest {
         thrown.expect(IllegalArgumentException.class);
         thrown.expectMessage("Property SKIP_HEADER_COUNT has incorrect value -5 : must be a non-negative integer");
 
+        context.setDataSource("/foo");
         context.addOption("SKIP_HEADER_COUNT", "-5");
         accessor.initialize(context);
     }

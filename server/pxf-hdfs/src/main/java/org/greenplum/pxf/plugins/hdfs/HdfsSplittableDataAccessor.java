@@ -47,6 +47,7 @@ public abstract class HdfsSplittableDataAccessor extends HcfsBaseAccessor {
     protected InputFormat<?, ?> inputFormat;
     protected JobConf jobConf;
     protected Object key, data;
+    protected FileSplit fileSplit;
     HcfsType hcfsType;
 
     private ListIterator<InputSplit> iter;
@@ -69,6 +70,9 @@ public abstract class HdfsSplittableDataAccessor extends HcfsBaseAccessor {
 
         // Check if the underlying configuration is for HDFS
         hcfsType = HcfsType.getHcfsType(configuration, requestContext);
+
+        // Parse fileSplit from context
+        fileSplit = HdfsUtilities.parseFileSplit(context);
     }
 
     /**
@@ -80,7 +84,6 @@ public abstract class HdfsSplittableDataAccessor extends HcfsBaseAccessor {
     @Override
     public boolean openForRead() throws Exception {
         LinkedList<InputSplit> requestSplits = new LinkedList<>();
-        FileSplit fileSplit = HdfsUtilities.parseFileSplit(context);
         requestSplits.add(fileSplit);
 
         // Initialize record reader based on current split
