@@ -1,0 +1,4 @@
+this,file
+has,line feeds
+as,new line delimiter
+LF,0x0A

@@ -136,8 +136,9 @@ public class GreenplumCSV {
     public GreenplumCSV withNewline(String newline) {
         if (StringUtils.isNotEmpty(newline)) {
             // validate that it is \n or \r or \r\n
-            // Greenplum only support LF (Line feed, 0x0A), CR (Carriage return, 0x0D), or
-            // CRLF (Carriage return plus line feed, 0x0D 0x0A) as newline character
+            // Greenplum only supports LF (Line feed, 0x0A), CR
+            // (Carriage return, 0x0D), or CRLF (Carriage return plus line
+            // feed, 0x0D 0x0A) as newline characters
             if (newline.equals("\n") || newline.equals("\r") || newline.equals("\r\n")) {
                 this.newline = newline;
             } else {

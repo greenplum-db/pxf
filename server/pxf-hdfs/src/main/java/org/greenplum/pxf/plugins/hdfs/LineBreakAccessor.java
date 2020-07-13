@@ -41,11 +41,12 @@ import java.net.URI;
  * A PXF Accessor for reading delimited plain text records.
  */
 public class LineBreakAccessor extends HdfsSplittableDataAccessor {
+    private int skipHeaderCount;
     private DataOutputStream dos;
     private FSDataOutputStream fsdos;
     private FileSystem fs;
     private Path file;
-    private CodecFactory codecFactory;
+    private final CodecFactory codecFactory;
 
     /**
      * Constructs a LineBreakAccessor.
@@ -56,17 +57,20 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor {
     }
 
     @Override
-    public void initialize(RequestContext requestContext) {
-        super.initialize(requestContext);
+    public void initialize(RequestContext context) {
+        super.initialize(context);
         ((TextInputFormat) inputFormat).configure(jobConf);
+        skipHeaderCount = context.getFragmentIndex() != 0 ? 0 :
+                context.getOption("SKIP_HEADER_COUNT", 0, true);
     }
 
     @Override
     protected Object getReader(JobConf jobConf, InputSplit split)
             throws IOException {
 
+        // when the file has header use LineReaderReader to read one line at at time
         // for HDFS, try to use ChunkRecordReader, if possible (not reading from encrypted zone)
-        if (hcfsType == HcfsType.HDFS) {
+        if (skipHeaderCount == 0 && hcfsType == HcfsType.HDFS) {
             try {
                 return new ChunkRecordReader(jobConf, (FileSplit) split);
             } catch (IncompatibleInputStreamException e) {
@@ -75,6 +79,16 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor {
             }
         }
         return new LineRecordReader(jobConf, (FileSplit) split);
+    }
+
+    @Override
+    public OneRow readNextObject() throws IOException {
+        while (skipHeaderCount > 0) {
+            if (super.readNextObject() == null)
+                return null;
+            skipHeaderCount--;
+        }
+        return super.readNextObject();
     }
 
     /**
@@ -95,21 +109,6 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor {
         // create output stream - do not allow overwriting existing file
         createOutputStream(file, codec);
         return true;
-    }
-
-    /*
-     * Creates output stream from given file. If compression codec is provided,
-     * wrap it around stream.
-     */
-    private void createOutputStream(Path file, CompressionCodec codec)
-            throws IOException {
-        fsdos = fs.create(file, false);
-        if (codec != null) {
-            dos = new DataOutputStream(codec.createOutputStream(fsdos));
-        } else {
-            dos = fsdos;
-        }
-
     }
 
     /**
@@ -139,5 +138,20 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor {
             fsdos.hsync();
             dos.close();
         }
+    }
+
+    /*
+     * Creates output stream from given file. If compression codec is provided,
+     * wrap it around stream.
+     */
+    private void createOutputStream(Path file, CompressionCodec codec)
+            throws IOException {
+        fsdos = fs.create(file, false);
+        if (codec != null) {
+            dos = new DataOutputStream(codec.createOutputStream(fsdos));
+        } else {
+            dos = fsdos;
+        }
+
     }
 }

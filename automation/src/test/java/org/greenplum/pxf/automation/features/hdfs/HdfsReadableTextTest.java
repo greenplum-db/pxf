@@ -170,6 +170,14 @@ public class HdfsReadableTextTest extends BaseFeature {
         hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
         // verify results
         runTincTest("pxf.features.hdfs.readable.text.small_data.runTest");
+
+        // create a new table with the SKIP_HEADER_COUNT parameter
+        exTable.setName("pxf_hdfs_small_data_with_skip");
+        exTable.setUserParameters(new String[]{"SKIP_HEADER_COUNT=10"});
+        // create external table
+        gpdb.createTableAndVerify(exTable);
+        // run the query skipping the first 10 lines of the text
+        runTincTest("pxf.features.hdfs.readable.text.small_data_with_skip.runTest");
     }
 
     /**
