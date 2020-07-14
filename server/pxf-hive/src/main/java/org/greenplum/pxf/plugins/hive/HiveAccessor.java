@@ -141,9 +141,7 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
     @Override
     public boolean openForRead() throws Exception {
         // Make sure lines aren't skipped outside of the first fragment
-        if (context.getFragmentIndex() != 0) {
-            skipHeaderCount = 0;
-        }
+        skipHeaderCount = fileSplit.getStart() == 0 ? skipHeaderCount : 0;
         return shouldDataBeReturnedFromFilteredPartition() && super.openForRead();
     }
 
