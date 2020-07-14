@@ -20,6 +20,8 @@ import org.greenplum.pxf.automation.datapreparer.CustomTextPreparer;
 import org.greenplum.pxf.automation.datapreparer.QuotedLineTextPreparer;
 import org.greenplum.pxf.automation.features.BaseFeature;
 
+import static org.greenplum.pxf.automation.features.tpch.LineItem.LINEITEM_SCHEMA;
+
 /**
  * Collection of Test cases for PXF ability to read Text/CSV files from HDFS.
  * Relates to cases located in "PXF Test Suite" in testrail:
@@ -151,7 +153,7 @@ public class HdfsReadableTextTest extends BaseFeature {
     }
 
     /**
-     * Read quoted CSV file from HDFS using HdfsTextSimple profile and CSV
+     * Read quoted CSV file from HDFS using *:text profile and CSV
      * format.
      *
      * @throws Exception
@@ -178,6 +180,30 @@ public class HdfsReadableTextTest extends BaseFeature {
         gpdb.createTableAndVerify(exTable);
         // run the query skipping the first 10 lines of the text
         runTincTest("pxf.features.hdfs.readable.text.small_data_with_skip.runTest");
+    }
+
+    /**
+     * Read multiple CSV files with headers from HCFS using *:text profile and
+     * CSV format.
+     *
+     * @throws Exception when the test fails
+     */
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    public void readCsvFilesWithHeader() throws Exception {
+        // set profile and format
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":text");
+        exTable.setFormat("CSV");
+        exTable.setName("pxf_hcfs_csv_files_with_header");
+        exTable.setUserParameters(new String[]{"SKIP_HEADER_COUNT=1"});
+        exTable.setDelimiter("|");
+        exTable.setPath(hdfsFilePath + "/csv_files_with_header");
+        exTable.setFields(LINEITEM_SCHEMA);
+        // create external table
+        gpdb.createTableAndVerify(exTable);
+        // copy local CSV to HCFS
+        hdfs.copyFromLocal(localDataResourcesFolder + "/csv", hdfsFilePath + "/csv_files_with_header");
+        // verify results
+        runTincTest("pxf.features.hdfs.readable.text.csv_files_with_header.runTest");
     }
 
     /**

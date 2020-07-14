@@ -11,31 +11,14 @@ import org.testng.annotations.Test;
 import java.net.URI;
 import java.util.UUID;
 
+import static org.greenplum.pxf.automation.features.tpch.LineItem.LINEITEM_SCHEMA;
+
 /**
  * Functional S3 Select Test
  */
 public class S3SelectTest extends BaseFeature {
 
     private static final String PROTOCOL_S3 = "s3a://";
-
-    private static final String[] PXF_S3_SELECT_COLS = {
-            "l_orderkey       BIGINT",
-            "l_partkey        BIGINT",
-            "l_suppkey        BIGINT",
-            "l_linenumber     BIGINT",
-            "l_quantity       DECIMAL(15,2)",
-            "l_extendedprice  DECIMAL(15,2)",
-            "l_discount       DECIMAL(15,2)",
-            "l_tax            DECIMAL(15,2)",
-            "l_returnflag     CHAR(1)",
-            "l_linestatus     CHAR(1)",
-            "l_shipdate       DATE",
-            "l_commitdate     DATE",
-            "l_receiptdate    DATE",
-            "l_shipinstruct   CHAR(25)",
-            "l_shipmode       CHAR(10)",
-            "l_comment        VARCHAR(44)"
-    };
 
     private static final String[] PXF_S3_SELECT_INVALID_COLS = {
             "invalid_orderkey       BIGINT",
@@ -149,7 +132,7 @@ public class S3SelectTest extends BaseFeature {
         String[] userParameters = {"S3_SELECT=ON"};
         runTestScenario("", "parquet", "s3", "parquet", s3Path,
                 localDataResourcesFolder + "/s3select/", sampleParquetFile, "/" + s3Path + "*e.parquet",
-                null, userParameters, PXF_S3_SELECT_COLS);
+                null, userParameters, LINEITEM_SCHEMA);
     }
 
     @Test(groups = {"gpdb", "s3"})
@@ -189,7 +172,7 @@ public class S3SelectTest extends BaseFeature {
                 "/" + s3Path + filename,
                 delimiter,
                 userParameters,
-                PXF_S3_SELECT_COLS);
+                LINEITEM_SCHEMA);
     }
 
     private void runTestScenario(
