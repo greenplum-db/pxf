@@ -1,12 +1,14 @@
 package org.greenplum.pxf.automation.features.hdfs;
 
-import java.io.File;
-import java.nio.charset.StandardCharsets;
-
 import org.greenplum.pxf.automation.components.cluster.PhdCluster;
+import org.greenplum.pxf.automation.datapreparer.CustomTextPreparer;
+import org.greenplum.pxf.automation.datapreparer.QuotedLineTextPreparer;
+import org.greenplum.pxf.automation.enums.EnumPxfDefaultProfiles;
+import org.greenplum.pxf.automation.features.BaseFeature;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
 import org.greenplum.pxf.automation.structures.tables.pxf.ErrorTable;
 import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
+import org.greenplum.pxf.automation.utils.csv.CsvUtils;
 import org.greenplum.pxf.automation.utils.fileformats.FileFormatsUtils;
 import org.greenplum.pxf.automation.utils.jsystem.report.ReportUtils;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
@@ -14,11 +16,8 @@ import org.greenplum.pxf.automation.utils.tables.ComparisonUtils;
 import org.junit.Assert;
 import org.testng.annotations.Test;
 
-import org.greenplum.pxf.automation.enums.EnumPxfDefaultProfiles;
-import org.greenplum.pxf.automation.utils.csv.CsvUtils;
-import org.greenplum.pxf.automation.datapreparer.CustomTextPreparer;
-import org.greenplum.pxf.automation.datapreparer.QuotedLineTextPreparer;
-import org.greenplum.pxf.automation.features.BaseFeature;
+import java.io.File;
+import java.nio.charset.StandardCharsets;
 
 import static org.greenplum.pxf.automation.features.tpch.LineItem.LINEITEM_SCHEMA;
 
@@ -217,7 +216,7 @@ public class HdfsReadableTextTest extends BaseFeature {
     @Test(groups = {"features", "gpdb", "security"})
     public void readMultiBlockedMultiLinedCsv() throws Exception {
 
-        runMultiBlockedMultiLinedCsvTest(hdfsFilePath, false);
+        runMultiBlockedMultiLinedCsvTest(hdfsFilePath, hdfsFilePath, false);
     }
 
     /**
@@ -229,7 +228,7 @@ public class HdfsReadableTextTest extends BaseFeature {
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void readMultiBlockedMultiLinedCsvUsingProfile() throws Exception {
 
-        runMultiBlockedMultiLinedCsvTest(hdfsFilePath, true);
+        runMultiBlockedMultiLinedCsvTest(hdfsFilePath, hdfsFilePath, true);
     }
 
     /**
@@ -241,10 +240,10 @@ public class HdfsReadableTextTest extends BaseFeature {
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void readMultiBlockedMultiLinedCsvWildcardLocation() throws Exception {
 
-        runMultiBlockedMultiLinedCsvTest(hdfs.getWorkingDirectory() + "/*", true);
+        runMultiBlockedMultiLinedCsvTest(hdfs.getWorkingDirectory() + "/multiblocked_csv_data/*", hdfs.getWorkingDirectory() + "/multiblocked_csv_data/data", true);
     }
 
-    private void runMultiBlockedMultiLinedCsvTest(String locationPath, boolean useProfile) throws Exception {
+    private void runMultiBlockedMultiLinedCsvTest(String locationPath, String hdfsPath, boolean useProfile) throws Exception {
 
         // prepare local CSV file
         dataTable = new Table("dataTable", null);
@@ -255,7 +254,7 @@ public class HdfsReadableTextTest extends BaseFeature {
         // multiple it to file
         FileFormatsUtils.prepareDataFile(dataTable, 32, tempLocalDataPath);
         // copy local file to HDFS
-        hdfs.copyFromLocal(tempLocalDataPath, hdfsFilePath);
+        hdfs.copyFromLocal(tempLocalDataPath, hdfsPath);
         // define and create external table
         exTable = new ReadableExternalTable("pxf_multi_csv", new String[]{
                 "num1 int",
