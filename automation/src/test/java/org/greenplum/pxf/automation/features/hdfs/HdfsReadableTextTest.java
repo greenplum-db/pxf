@@ -196,12 +196,14 @@ public class HdfsReadableTextTest extends BaseFeature {
         exTable.setName("pxf_hcfs_csv_files_with_header");
         exTable.setUserParameters(new String[]{"SKIP_HEADER_COUNT=1"});
         exTable.setDelimiter("|");
-        exTable.setPath(hdfsFilePath + "/csv_files_with_header");
+        exTable.setPath(hdfs.getWorkingDirectory() + "/csv_files_with_header");
         exTable.setFields(LINEITEM_SCHEMA);
         // create external table
         gpdb.createTableAndVerify(exTable);
         // copy local CSV to HCFS
-        hdfs.copyFromLocal(localDataResourcesFolder + "/csv", hdfsFilePath + "/csv_files_with_header");
+        hdfs.copyFromLocal(localDataResourcesFolder + "/csv/sample1.csv", hdfs.getWorkingDirectory() + "/csv_files_with_header/sample1.csv");
+        hdfs.copyFromLocal(localDataResourcesFolder + "/csv/sample2.csv", hdfs.getWorkingDirectory() + "/csv_files_with_header/sample2.csv");
+        hdfs.copyFromLocal(localDataResourcesFolder + "/csv/sample3.csv", hdfs.getWorkingDirectory() + "/csv_files_with_header/sample3.csv");
         // verify results
         runTincTest("pxf.features.hdfs.readable.text.csv_files_with_header.runTest");
     }
