@@ -193,6 +193,32 @@ public class LineBreakAccessorTest {
     }
 
     @Test
+    public void testSkipHeaderCountWhenNonZeroFragmentIndex() throws Exception {
+        prepareTest("csv/csv_with_header.csv");
+        context.addOption("SKIP_HEADER_COUNT", "1");
+        context.setFragmentIndex(2);
+        accessor.initialize(context);
+        accessor.openForRead();
+
+        OneRow oneRow = accessor.readNextObject();
+        assertNotNull(oneRow);
+        assertEquals("line1,header1,header2,header3", oneRow.getData().toString());
+
+        oneRow = accessor.readNextObject();
+        assertNotNull(oneRow);
+        assertEquals("line2,header1,header2,header3", oneRow.getData().toString());
+
+        oneRow = accessor.readNextObject();
+        assertNotNull(oneRow);
+        assertEquals("line3,value1,value2,value3", oneRow.getData().toString());
+
+        oneRow = accessor.readNextObject();
+        assertNull(oneRow);
+
+        accessor.closeForRead();
+    }
+
+    @Test
     public void testSkipHeaderCountTwo() throws Exception {
         prepareTest("csv/csv_with_header.csv");
         context.addOption("SKIP_HEADER_COUNT", "2");
