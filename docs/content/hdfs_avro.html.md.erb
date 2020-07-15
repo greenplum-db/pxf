@@ -75,14 +75,18 @@ PXF uses the following data type mapping when writing Avro data:
 | boolean | boolean |
 | bytea | bytes |
 | double | double |
+| char<sup>1</sup> | string |
 | enum | string |
 | int |  int |
 | real | float |
-| smallint<sup>1</sup> | int |
+| smallint<sup>2</sup> | int |
 | text | string |
+| varchar | string |
 | array ([]), enum, record | string |
+| date, time, timestamp, timestamptz | string |
 
-</br><sup>1</sup>&nbsp;PXF converts Greenplum <code>smallint</code> types to <code>int</code> before it writes the Avro data. Be sure to read the field into an <code>int</code>.
+</br><sup>1</sup>&nbsp;PXF right-pads <code>char[<i>n</i>]</code> types to length <code><i>n</i> + 1</code>, if required, with white space.
+</br><sup>2</sup>&nbsp;PXF converts Greenplum <code>smallint</code> types to <code>int</code> before it writes the Avro data. Be sure to read the field into an <code>int</code>.
 
 
 ### <a id="topic_tr3_dpg_ts__section_m2p_ztg_ts"></a>Avro Schemas and Data
