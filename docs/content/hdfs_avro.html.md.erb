@@ -85,7 +85,7 @@ PXF uses the following data type mapping when writing Avro data:
 | array ([]), enum, record | string |
 | date, time, timestamp, timestamptz | string |
 
-</br><sup>1</sup>&nbsp;PXF right-pads <code>char[<i>n</i>]</code> types to length <code><i>n</i> + 1</code>, if required, with white space.
+</br><sup>1</sup>&nbsp;PXF right-pads <code>char[<i>n</i>]</code> types to length <code><i>n</i></code>, if required, with white space.
 </br><sup>2</sup>&nbsp;PXF converts Greenplum <code>smallint</code> types to <code>int</code> before it writes the Avro data. Be sure to read the field into an <code>int</code>.
 
 
@@ -155,7 +155,7 @@ The PXF `hdfs:avro` profile supports encoding- and compression-related write opt
 | Write Option  | Value Description |
 |-------|-------------------------------------|
 | COMPRESSION_CODEC    | The compression codec alias. Supported compression codecs for writing Avro data include: `bzip2`, `xz`, `snappy`, `deflate`, and `uncompressed` . If this option is not provided, PXF compresses the data using `deflate` compression. |
-| CODEC_LEVEL    | The compression level (applicable to the `deflate` codec only). This level controls the trade-off between speed and compression. Valid values are 1 (fastest) to 9 (most compressed). The default compression level when using the `deflate` codec is 6. |
+| CODEC_LEVEL    | The compression level (applicable to the `deflate` and `xz` codecs only). This level controls the trade-off between speed and compression. Valid values are 1 (fastest) to 9 (most compressed). The default compression level is 6. |
 
 ## <a id="avro_example"></a>Example: Reading Avro Data
 
