@@ -1,74 +1,4 @@
 ## ======================================================================
-## GROUPS
-## ======================================================================
-groups:
-- name: all
-  jobs:
-  - docker-gpdb-dev-centos6
-  - docker-gpdb-dev-centos6-hdp2-secure
-#  - docker-gpdb-dev-centos7-hdp-secure
-  - docker-gpdb-dev-centos7
-  - docker-gpdb-dev-ubuntu16
-  - docker-gpdb-dev-ubuntu18
-  - singlecluster_noarch_cdh
-  - singlecluster_noarch_hdp2
-  - singlecluster_noarch_hdp3
-  - docker-gpdb-pxf-dev-centos6
-  - docker-gpdb-pxf-dev-centos7
-  - docker-gpdb-pxf-dev-ubuntu16
-  - docker-gpdb-pxf-dev-ubuntu18
-  - docker-gpdb-pxf-dev-centos6-mapr-server
-  - docker-gpdb-pxf-dev-centos6-cdh-server
-  - docker-gpdb-pxf-dev-centos6-hdp2-server
-  - docker-gpdb-pxf-dev-centos7-mapr-server
-  - docker-gpdb-pxf-dev-centos7-cdh-server
-  - docker-gpdb-pxf-dev-centos7-hdp2-server
-  - docker-gpdb-pxf-dev-centos7-hdp3-server
-  - docker-gpdb-pxf-dev-ubuntu16-cdh-server
-  - docker-gpdb-pxf-dev-ubuntu18-cdh-server
-  - docker-gpdb-pxf-dev-ubuntu16-hdp2-server
-  - docker-gpdb-pxf-dev-ubuntu18-hdp2-server
-
-- name: centos6
-  jobs:
-  - docker-gpdb-dev-centos6
-  - docker-gpdb-dev-centos6-hdp2-secure
-  - docker-gpdb-pxf-dev-centos6
-  - docker-gpdb-pxf-dev-centos6-mapr-server
-  - docker-gpdb-pxf-dev-centos6-cdh-server
-  - docker-gpdb-pxf-dev-centos6-hdp2-server
-
-- name: centos7
-  jobs:
-  - docker-gpdb-dev-centos7
-#  - docker-gpdb-dev-centos7-hdp-secure
-  - docker-gpdb-pxf-dev-centos7
-  - docker-gpdb-pxf-dev-centos7-mapr-server
-  - docker-gpdb-pxf-dev-centos7-cdh-server
-  - docker-gpdb-pxf-dev-centos7-hdp2-server
-  - docker-gpdb-pxf-dev-centos7-hdp3-server
-
-- name: ubuntu16
-  jobs:
-  - docker-gpdb-dev-ubuntu16
-  - docker-gpdb-pxf-dev-ubuntu16
-  - docker-gpdb-pxf-dev-ubuntu16-cdh-server
-  - docker-gpdb-pxf-dev-ubuntu16-hdp2-server
-
-- name: ubuntu18
-  jobs:
-  - docker-gpdb-dev-ubuntu18
-  - docker-gpdb-pxf-dev-ubuntu18
-  - docker-gpdb-pxf-dev-ubuntu18-cdh-server
-  - docker-gpdb-pxf-dev-ubuntu18-hdp2-server
-
-- name: singlecluster
-  jobs:
-  - singlecluster_noarch_cdh
-  - singlecluster_noarch_hdp2
-  - singlecluster_noarch_hdp3
-
-## ======================================================================
 ## RESOURCE TYPES
 ## ======================================================================
 resource_types:
@@ -83,6 +13,7 @@ resource_types:
 resources:
   - name: hdp2_tars_tarball
     type: s3
+    icon: s3
     source:
       access_key_id: {{bucket-access-key-id}}
       secret_access_key: {{bucket-secret-access-key}}
@@ -92,6 +23,7 @@ resources:
 
   - name: hdp3_tars_tarball
     type: s3
+    icon: s3
     source:
       access_key_id: {{bucket-access-key-id}}
       secret_access_key: {{bucket-secret-access-key}}
@@ -101,6 +33,7 @@ resources:
 
   - name: cdh_tars_tarball
     type: s3
+    icon: s3
     source:
       access_key_id: {{bucket-access-key-id}}
       secret_access_key: {{bucket-secret-access-key}}
@@ -110,6 +43,7 @@ resources:
 
   - name: jdbc
     type: s3
+    icon: s3
     source:
       access_key_id: {{bucket-access-key-id}}
       secret_access_key: {{bucket-secret-access-key}}
@@ -119,6 +53,7 @@ resources:
 
   - name: singlecluster-HDP2
     type: s3
+    icon: s3
     source:
       access_key_id: {{bucket-access-key-id}}
       secret_access_key: {{bucket-secret-access-key}}
@@ -136,6 +71,7 @@ resources:
 
   - name: singlecluster-HDP3
     type: s3
+    icon: s3
     source:
       access_key_id: {{bucket-access-key-id}}
       secret_access_key: {{bucket-secret-access-key}}
@@ -153,6 +89,7 @@ resources:
 
   - name: singlecluster-CDH
     type: s3
+    icon: s3
     source:
       access_key_id: {{bucket-access-key-id}}
       secret_access_key: {{bucket-secret-access-key}}
@@ -170,478 +107,36 @@ resources:
 
   - name: pxf_singlecluster
     type: git
+    icon: git
     source:
       branch: {{pxf-git-branch}}
       uri: https://github.com/greenplum-db/pxf.git
       paths: [singlecluster/*]
 
-  - name: dockerfile-gpdb-dev-centos6
-    type: git
+  - name: gpdb6-centos7
+    type: registry-image
+    icon: docker
     source:
-      branch: master
-      uri: https://github.com/greenplum-db/gpdb.git
-      paths: [src/tools/docker/centos6/Dockerfile]
-
-  - name: gpdb-pxf-dev-centos6-mapr-image
-    type: docker-image
-    source:
-      repository: pivotaldata/gpdb-pxf-dev
-      tag: centos6-mapr-server
-      username: {{docker-username}}
-      password: {{docker-password}}
-
-  - name: gpdb-pxf-dev-centos7-mapr-image
-    type: docker-image
-    source:
-      repository: pivotaldata/gpdb-pxf-dev
-      tag: centos7-mapr-server
-      username: {{docker-username}}
-      password: {{docker-password}}
-
-  - name: dockerfile-gpdb-pxf-mapr
-    type: git
-    source:
-      branch: {{pxf-git-branch}}
-      uri: https://github.com/greenplum-db/pxf.git
-      paths: [concourse/docker/mapr/Dockerfile]
-
-  - name: gpdb-dev-centos6-image
-    type: docker-image
-    source:
-      repository: pivotaldata/gpdb-dev
-      tag: centos6
-      username: {{docker-username}}
-      password: {{docker-password}}
-
-  - name: gpdb-dev-centos6-hdp2-secure-image
-    type: docker-image
-    source:
-      repository: pivotaldata/gpdb-pxf-dev
-      tag: centos6-hdp2-secure
-      username: {{docker-username}}
-      password: {{docker-password}}
-
-  - name: dockerfile-gpdb-pxf-dev-centos6-hdp2-secure
-    type: git
-    source:
-      branch: {{pxf-git-branch}}
-      uri: https://github.com/greenplum-db/pxf.git
-      paths: [concourse/docker/centos6-hdp2-secure/Dockerfile]
-
-  - name: dockerfile-gpdb-dev-centos7
-    type: git
-    source:
-      branch: master
-      uri: https://github.com/greenplum-db/gpdb.git
-      paths: [src/tools/docker/centos7/Dockerfile]
-
-  - name: gpdb-dev-centos7-image
-    type: docker-image
-    source:
-      repository: pivotaldata/gpdb-dev
-      tag: centos7
-      username: {{docker-username}}
-      password: {{docker-password}}
-
-#  - name: gpdb-dev-centos7-hdp-secure-image
-#    type: docker-image
-#    source:
-#      repository: pivotaldata/gpdb-pxf-dev
-#      tag: centos7-hdp-secure
-#      username: {{docker-username}}
-#      password: {{docker-password}}
-#
-#  - name: dockerfile-gpdb-dev-centos7-hdp-secure
-#    type: git
-#    source:
-#      branch: {{pxf-git-branch}}
-#      uri: https://github.com/greenplum-db/pxf.git
-#      paths: [concourse/docker/centos6-hdp-secure/Dockerfile]
-
-  - name: dockerfile-gpdb-dev-ubuntu
-    type: git
-    source:
-      branch: master
-      uri: https://github.com/greenplum-db/gpdb.git
-      paths: [src/tools/docker/ubuntu/Dockerfile]
-
-  - name: gpdb-dev-ubuntu16-image
-    type: docker-image
-    source:
-      repository: pivotaldata/gpdb-dev
-      tag: ubuntu16
-      username: {{docker-username}}
-      password: {{docker-password}}
-
-  - name: gpdb-dev-ubuntu18-image
-    type: docker-image
-    source:
-      repository: pivotaldata/gpdb-dev
-      tag: ubuntu18
-      username: {{docker-username}}
-      password: {{docker-password}}
-
-  - name: dockerfile-gpdb-pxf-dev-base
-    type: git
-    source:
-      branch: {{pxf-git-branch}}
-      uri: https://github.com/greenplum-db/pxf.git
-      paths:
-        - Makefile
-        - automation/Makefile
-        - automation/pom.xml
-        - cli/go/src/pxf-cli/Gopkg.lock
-        - cli/go/src/pxf-cli/Gopkg.toml
-        - cli/go/src/pxf-cli/Makefile
-        - concourse/docker/pxf-dev-base
-        - server/Makefile
-        - server/build.gradle
-        - server/gradle.properties
-
-  - name: gpdb-pxf-dev-centos6-image
-    type: docker-image
-    source:
-      repository: pivotaldata/gpdb-pxf-dev
-      tag: centos6
-      username: {{docker-username}}
-      password: {{docker-password}}
-
-  - name: gpdb-pxf-dev-centos7-image
-    type: docker-image
-    source:
-      repository: pivotaldata/gpdb-pxf-dev
-      tag: centos7
-      username: {{docker-username}}
-      password: {{docker-password}}
-
-  - name: gpdb-pxf-dev-ubuntu16-image
-    type: docker-image
-    source:
-      repository: pivotaldata/gpdb-pxf-dev
-      tag: ubuntu16
-      username: {{docker-username}}
-      password: {{docker-password}}
-
-  - name: gpdb-pxf-dev-ubuntu18-image
-    type: docker-image
-    source:
-      repository: pivotaldata/gpdb-pxf-dev
-      tag: ubuntu18
-      username: {{docker-username}}
-      password: {{docker-password}}
-
-  - name: dockerfile-gpdb-pxf-dev-server
-    type: git
-    source:
-      branch: {{pxf-git-branch}}
-      uri: https://github.com/greenplum-db/pxf.git
-      paths: [concourse/docker/pxf-dev-server]
-
-  - name: gpdb-pxf-dev-centos6-cdh-server-image
-    type: docker-image
-    source:
-      repository: pivotaldata/gpdb-pxf-dev
-      tag: centos6-cdh-server
-      username: {{docker-username}}
-      password: {{docker-password}}
-
-  - name: gpdb-pxf-dev-centos7-cdh-server-image
-    type: docker-image
-    source:
-      repository: pivotaldata/gpdb-pxf-dev
-      tag: centos7-cdh-server
-      username: {{docker-username}}
-      password: {{docker-password}}
-
-  - name: gpdb-pxf-dev-centos6-hdp2-server-image
-    type: docker-image
-    source:
-      repository: pivotaldata/gpdb-pxf-dev
-      tag: centos6-hdp2-server
-      username: {{docker-username}}
-      password: {{docker-password}}
-
-  - name: gpdb-pxf-dev-centos7-hdp2-server-image
-    type: docker-image
-    source:
-      repository: pivotaldata/gpdb-pxf-dev
-      tag: centos7-hdp2-server
-      username: {{docker-username}}
-      password: {{docker-password}}
-
-  - name: gpdb-pxf-dev-centos7-hdp3-server-image
-    type: docker-image
-    source:
-      repository: pivotaldata/gpdb-pxf-dev
-      tag: centos7-hdp3-server
-      username: {{docker-username}}
-      password: {{docker-password}}
-
-  - name: gpdb-pxf-dev-ubuntu16-cdh-server-image
-    type: docker-image
-    source:
-      repository: pivotaldata/gpdb-pxf-dev
-      tag: ubuntu16-cdh-server
-      username: {{docker-username}}
-      password: {{docker-password}}
-
-  - name: gpdb-pxf-dev-ubuntu18-cdh-server-image
-    type: docker-image
-    source:
-      repository: pivotaldata/gpdb-pxf-dev
-      tag: ubuntu18-cdh-server
-      username: {{docker-username}}
-      password: {{docker-password}}
-
-  - name: gpdb-pxf-dev-ubuntu16-hdp2-server-image
-    type: docker-image
-    source:
-      repository: pivotaldata/gpdb-pxf-dev
-      tag: ubuntu16-hdp2-server
-      username: {{docker-username}}
-      password: {{docker-password}}
-
-  - name: gpdb-pxf-dev-ubuntu18-hdp2-server-image
-    type: docker-image
-    source:
-      repository: pivotaldata/gpdb-pxf-dev
-      tag: ubuntu18-hdp2-server
-      username: {{docker-username}}
-      password: {{docker-password}}
+      repository: pivotaldata/gpdb6-centos7-test
+      tag: latest
 
 ## ======================================================================
 ## JOBS
 ## ======================================================================
 jobs:
-  - name: docker-gpdb-dev-centos6
-    plan:
-    - get: dockerfile
-      resource: dockerfile-gpdb-dev-centos6
-      trigger: true
-    - put: gpdb-dev-centos6-image
-      params:
-        build: dockerfile/src/tools/docker/centos6
-
-  - name: docker-gpdb-pxf-dev-centos6
-    plan:
-      - in_parallel:
-          - get: dockerfile-gpdb-dev-centos6
-            passed: [docker-gpdb-dev-centos6]
-            trigger: true
-          - get: pxf_src
-            resource: dockerfile-gpdb-pxf-dev-base
-            trigger: true
-          - get: gpdb-dev-centos6-image
-            passed: [docker-gpdb-dev-centos6]
-            trigger: true
-            params:
-              save: true
-      - put: gpdb-pxf-dev-centos6-image
-        params:
-          build: .
-          dockerfile: pxf_src/concourse/docker/pxf-dev-base/Dockerfile
-          build_args:
-            BASE_IMAGE: "gpdb-dev:centos6"
-          load_base: gpdb-dev-centos6-image
-
-  - name: docker-gpdb-dev-centos7
-    plan:
-      - get: dockerfile
-        resource: dockerfile-gpdb-dev-centos7
-        trigger: true
-      - put: gpdb-dev-centos7-image
-        params:
-          build: dockerfile/src/tools/docker/centos7
-
-  - name: docker-gpdb-pxf-dev-centos7
-    plan:
-      - in_parallel:
-          - get: dockerfile-gpdb-dev-centos7
-            passed: [docker-gpdb-dev-centos7]
-            trigger: true
-          - get: pxf_src
-            resource: dockerfile-gpdb-pxf-dev-base
-            trigger: true
-          - get: gpdb-dev-centos7-image
-            passed: [docker-gpdb-dev-centos7]
-            trigger: true
-            params:
-              save: true
-      - put: gpdb-pxf-dev-centos7-image
-        params:
-          build: .
-          dockerfile: pxf_src/concourse/docker/pxf-dev-base/Dockerfile
-          build_args:
-            BASE_IMAGE: "gpdb-dev:centos7"
-          load_base: gpdb-dev-centos7-image
-
-  - name: docker-gpdb-dev-ubuntu16
-    plan:
-      - get: dockerfile
-        resource: dockerfile-gpdb-dev-ubuntu
-        trigger: true
-      - put: gpdb-dev-ubuntu16-image
-        params:
-          build: dockerfile/src/tools/docker/ubuntu
-          build_args:
-            BASE_IMAGE: "ubuntu:16.04"
-
-  - name: docker-gpdb-pxf-dev-ubuntu16
-    plan:
-      - in_parallel:
-          - get: dockerfile-gpdb-dev-ubuntu
-            passed: [docker-gpdb-dev-ubuntu16]
-            trigger: true
-          - get: pxf_src
-            resource: dockerfile-gpdb-pxf-dev-base
-            trigger: true
-          - get: gpdb-dev-ubuntu16-image
-            passed: [docker-gpdb-dev-ubuntu16]
-            trigger: true
-            params:
-              save: true
-      - put: gpdb-pxf-dev-ubuntu16-image
-        params:
-          build: .
-          dockerfile: pxf_src/concourse/docker/pxf-dev-base/Dockerfile
-          build_args:
-            BASE_IMAGE: "gpdb-dev:ubuntu16"
-          load_base: gpdb-dev-ubuntu16-image
-
-  - name: docker-gpdb-dev-ubuntu18
-    plan:
-      - get: dockerfile
-        resource: dockerfile-gpdb-dev-ubuntu
-        trigger: true
-      - put: gpdb-dev-ubuntu18-image
-        params:
-          build: dockerfile/src/tools/docker/ubuntu
-          build_args:
-            BASE_IMAGE: "ubuntu:18.04"
-
-  - name: docker-gpdb-pxf-dev-ubuntu18
-    plan:
-      - in_parallel:
-          - get: dockerfile-gpdb-dev-ubuntu
-            passed: [docker-gpdb-dev-ubuntu18]
-            trigger: true
-          - get: pxf_src
-            resource: dockerfile-gpdb-pxf-dev-base
-            trigger: true
-          - get: gpdb-dev-ubuntu18-image
-            passed: [docker-gpdb-dev-ubuntu18]
-            trigger: true
-            params:
-              save: true
-      - put: gpdb-pxf-dev-ubuntu18-image
-        params:
-          build: .
-          dockerfile: pxf_src/concourse/docker/pxf-dev-base/Dockerfile
-          build_args:
-            BASE_IMAGE: "gpdb-dev:ubuntu18"
-          load_base: gpdb-dev-ubuntu18-image
-
-  - name: docker-gpdb-pxf-dev-centos6-mapr-server
-    plan:
-    - in_parallel:
-      - get: dockerfile-gpdb-dev-centos6
-        passed: [docker-gpdb-pxf-dev-centos6]
-        trigger: true
-      - get: dockerfile-gpdb-pxf-dev-base
-        passed: [docker-gpdb-pxf-dev-centos6]
-        trigger: true
-      - get: pxf_src
-        resource: dockerfile-gpdb-pxf-mapr
-        trigger: true
-      - get: gpdb-pxf-dev-centos6-image
-        passed: [docker-gpdb-pxf-dev-centos6]
-        trigger: true
-        params:
-          save: true
-    - put: gpdb-pxf-dev-centos6-mapr-image
-      params:
-        build: .
-        dockerfile: pxf_src/concourse/docker/mapr/Dockerfile
-        build_args:
-          BASE_IMAGE: "gpdb-pxf-dev:centos6"
-        load_base: gpdb-pxf-dev-centos6-image
-
-  - name: docker-gpdb-pxf-dev-centos7-mapr-server
-    plan:
-    - in_parallel:
-      - get: dockerfile-gpdb-dev-centos7
-        passed: [docker-gpdb-pxf-dev-centos7]
-        trigger: true
-      - get: dockerfile-gpdb-pxf-dev-base
-        passed: [docker-gpdb-pxf-dev-centos7]
-        trigger: true
-      - get: pxf_src
-        resource: dockerfile-gpdb-pxf-mapr
-        trigger: true
-      - get: gpdb-pxf-dev-centos7-image
-        passed: [docker-gpdb-pxf-dev-centos7]
-        trigger: true
-        params:
-          save: true
-    - put: gpdb-pxf-dev-centos7-mapr-image
-      params:
-        build: .
-        dockerfile: pxf_src/concourse/docker/mapr/Dockerfile
-        build_args:
-          BASE_IMAGE: "gpdb-pxf-dev:centos7"
-        load_base: gpdb-pxf-dev-centos7-image
-
-  - name: docker-gpdb-dev-centos6-hdp2-secure
-    plan:
-    - in_parallel:
-      - get: dockerfile-gpdb-dev-centos6
-        passed: [docker-gpdb-dev-centos6]
-        trigger: true
-      - get: pxf_src
-        resource: dockerfile-gpdb-pxf-dev-centos6-hdp2-secure
-        trigger: true
-      - get: gpdb-dev-centos6-image
-        passed: [docker-gpdb-dev-centos6]
-        trigger: true
-        params:
-          save: true
-    - put: gpdb-dev-centos6-hdp2-secure-image
-      params:
-        build: pxf_src/concourse/docker/centos6-hdp2-secure
-        build_args:
-          BASE_IMAGE: "gpdb-dev:centos6"
-        load_base: gpdb-dev-centos6-image
-
-#  - name: docker-gpdb-dev-centos7-hdp-secure
-#    plan:
-#    - in_parallel:
-#      - get: pxf_src
-#      - get: dockerfile-gpdb-dev-centos7
-#        passed: [docker-gpdb-dev-centos7]
-#        trigger: true
-#      - get: dockerfile
-#        resource: dockerfile-gpdb-dev-centos7-hdp-secure
-#        trigger: true
-#    - put: gpdb-dev-centos7-hdp-secure-image
-#      params:
-#        build: pxf_src/concourse/docker/centos6-hdp-secure
-#        build_args:
-#          BASE_IMAGE: "gpdb-dev:centos7"
-
   - name: singlecluster_noarch_cdh
     plan:
     - in_parallel:
       - get: cdh_tars_tarball
         trigger: true
       - get: jdbc
-      - get: gpdb-dev-centos6-image
-        passed: [docker-gpdb-dev-centos6]
+      - get: gpdb6-centos7
       - get: pxf_src
         resource: pxf_singlecluster
         trigger: true
     - task: package_singlecluster
       file: pxf_src/singlecluster/package_singlecluster_cdh.yml
-      image: gpdb-dev-centos6-image
+      image: gpdb6-centos7
     - in_parallel:
       - put: singlecluster-CDH
         params:
@@ -657,14 +152,13 @@ jobs:
         resource: hdp2_tars_tarball
         trigger: true
       - get: jdbc
-      - get: gpdb-dev-centos6-image
-        passed: [docker-gpdb-dev-centos6]
+      - get: gpdb6-centos7
       - get: pxf_src
         resource: pxf_singlecluster
         trigger: true
     - task: package_singlecluster
       file: pxf_src/singlecluster/package_singlecluster_hdp2.yml
-      image: gpdb-dev-centos6-image
+      image: gpdb6-centos7
     - in_parallel:
       - put: singlecluster-HDP2
         params:
@@ -680,14 +174,13 @@ jobs:
         resource: hdp3_tars_tarball
         trigger: true
       - get: jdbc
-      - get: gpdb-dev-centos7-image
-        passed: [docker-gpdb-dev-centos7]
+      - get: gpdb6-centos7
       - get: pxf_src
         resource: pxf_singlecluster
         trigger: true
     - task: package_singlecluster
       file: pxf_src/singlecluster/package_singlecluster_hdp3.yml
-      image: gpdb-dev-centos7-image
+      image: gpdb6-centos7
     - in_parallel:
       - put: singlecluster-HDP3
         params:
@@ -695,264 +188,3 @@ jobs:
       - put: singlecluster-HDP3-gcs
         params:
           file: artifacts/singlecluster-HDP.tar.gz
-
-  - name: docker-gpdb-pxf-dev-centos6-cdh-server
-    plan:
-    - in_parallel:
-      - get: dockerfile-gpdb-dev-centos6
-        passed: [docker-gpdb-pxf-dev-centos6]
-        trigger: true
-      - get: dockerfile-gpdb-pxf-dev-base
-        passed: [docker-gpdb-pxf-dev-centos6]
-        trigger: true
-      - get: pxf_src
-        resource: dockerfile-gpdb-pxf-dev-server
-        trigger: true
-      - get: singlecluster
-        resource: singlecluster-CDH
-        passed: [singlecluster_noarch_cdh]
-        trigger: true
-      - get: gpdb-pxf-dev-centos6-image
-        passed: [docker-gpdb-pxf-dev-centos6]
-        trigger: true
-        params:
-          save: true
-    - put: gpdb-pxf-dev-centos6-cdh-server-image
-      params:
-        build: .
-        dockerfile: pxf_src/concourse/docker/pxf-dev-server/Dockerfile
-        build_args:
-          BASE_IMAGE: "gpdb-pxf-dev:centos6"
-        load_base: gpdb-pxf-dev-centos6-image
-
-  - name: docker-gpdb-pxf-dev-centos7-cdh-server
-    plan:
-    - in_parallel:
-      - get: dockerfile-gpdb-dev-centos7
-        passed: [docker-gpdb-pxf-dev-centos7]
-        trigger: true
-      - get: dockerfile-gpdb-pxf-dev-base
-        passed: [docker-gpdb-pxf-dev-centos7]
-        trigger: true
-      - get: pxf_src
-        resource: dockerfile-gpdb-pxf-dev-server
-        trigger: true
-      - get: singlecluster
-        resource: singlecluster-CDH
-        passed: [singlecluster_noarch_cdh]
-        trigger: true
-      - get: gpdb-pxf-dev-centos7-image
-        passed: [docker-gpdb-pxf-dev-centos7]
-        trigger: true
-        params:
-          save: true
-    - put: gpdb-pxf-dev-centos7-cdh-server-image
-      params:
-        build: .
-        dockerfile: pxf_src/concourse/docker/pxf-dev-server/Dockerfile
-        build_args:
-          BASE_IMAGE: "gpdb-pxf-dev:centos7"
-        load_base: gpdb-pxf-dev-centos7-image
-
-  - name: docker-gpdb-pxf-dev-centos6-hdp2-server
-    plan:
-    - in_parallel:
-      - get: dockerfile-gpdb-dev-centos6
-        passed: [docker-gpdb-pxf-dev-centos6]
-        trigger: true
-      - get: dockerfile-gpdb-pxf-dev-base
-        passed: [docker-gpdb-pxf-dev-centos6]
-        trigger: true
-      - get: pxf_src
-        resource: dockerfile-gpdb-pxf-dev-server
-        trigger: true
-      - get: singlecluster
-        resource: singlecluster-HDP2
-        passed: [singlecluster_noarch_hdp2]
-        trigger: true
-      - get: gpdb-pxf-dev-centos6-image
-        passed: [docker-gpdb-pxf-dev-centos6]
-        trigger: true
-        params:
-          save: true
-    - put: gpdb-pxf-dev-centos6-hdp2-server-image
-      params:
-        build: .
-        dockerfile: pxf_src/concourse/docker/pxf-dev-server/Dockerfile
-        build_args:
-          BASE_IMAGE: "gpdb-pxf-dev:centos6"
-        load_base: gpdb-pxf-dev-centos6-image
-
-  - name: docker-gpdb-pxf-dev-centos7-hdp2-server
-    plan:
-    - in_parallel:
-      - get: dockerfile-gpdb-dev-centos7
-        passed: [docker-gpdb-pxf-dev-centos7]
-        trigger: true
-      - get: dockerfile-gpdb-pxf-dev-base
-        passed: [docker-gpdb-pxf-dev-centos7]
-        trigger: true
-      - get: pxf_src
-        resource: dockerfile-gpdb-pxf-dev-server
-        trigger: true
-      - get: singlecluster
-        resource: singlecluster-HDP2
-        passed: [singlecluster_noarch_hdp2]
-        trigger: true
-      - get: gpdb-pxf-dev-centos7-image
-        passed: [docker-gpdb-pxf-dev-centos7]
-        trigger: true
-        params:
-          save: true
-    - put: gpdb-pxf-dev-centos7-hdp2-server-image
-      params:
-        build: .
-        dockerfile: pxf_src/concourse/docker/pxf-dev-server/Dockerfile
-        build_args:
-          BASE_IMAGE: "gpdb-pxf-dev:centos7"
-        load_base: gpdb-pxf-dev-centos7-image
-
-  - name: docker-gpdb-pxf-dev-centos7-hdp3-server
-    plan:
-    - in_parallel:
-      - get: dockerfile-gpdb-dev-centos7
-        passed: [docker-gpdb-pxf-dev-centos7]
-        trigger: true
-      - get: dockerfile-gpdb-pxf-dev-base
-        passed: [docker-gpdb-pxf-dev-centos7]
-        trigger: true
-      - get: pxf_src
-        resource: dockerfile-gpdb-pxf-dev-server
-        trigger: true
-      - get: singlecluster
-        resource: singlecluster-HDP3
-        passed: [singlecluster_noarch_hdp3]
-        trigger: true
-      - get: gpdb-pxf-dev-centos7-image
-        passed: [docker-gpdb-pxf-dev-centos7]
-        trigger: true
-        params:
-          save: true
-    - put: gpdb-pxf-dev-centos7-hdp3-server-image
-      params:
-        build: .
-        dockerfile: pxf_src/concourse/docker/pxf-dev-server/Dockerfile
-        build_args:
-          BASE_IMAGE: "gpdb-pxf-dev:centos7"
-        load_base: gpdb-pxf-dev-centos7-image
-
-  - name: docker-gpdb-pxf-dev-ubuntu16-cdh-server
-    plan:
-    - in_parallel:
-      - get: dockerfile-gpdb-dev-ubuntu
-        passed: [docker-gpdb-pxf-dev-ubuntu16]
-        trigger: true
-      - get: dockerfile-gpdb-pxf-dev-base
-        passed: [docker-gpdb-pxf-dev-ubuntu16]
-        trigger: true
-      - get: pxf_src
-        resource: dockerfile-gpdb-pxf-dev-server
-        trigger: true
-      - get: singlecluster
-        resource: singlecluster-CDH
-        passed: [singlecluster_noarch_cdh]
-        trigger: true
-      - get: gpdb-pxf-dev-ubuntu16-image
-        passed: [docker-gpdb-pxf-dev-ubuntu16]
-        trigger: true
-        params:
-          save: true
-    - put: gpdb-pxf-dev-ubuntu16-cdh-server-image
-      params:
-        build: .
-        dockerfile: pxf_src/concourse/docker/pxf-dev-server/Dockerfile
-        build_args:
-          BASE_IMAGE: "gpdb-pxf-dev:ubuntu16"
-        load_base:  gpdb-pxf-dev-ubuntu16-image
-
-  - name: docker-gpdb-pxf-dev-ubuntu16-hdp2-server
-    plan:
-    - in_parallel:
-      - get: dockerfile-gpdb-dev-ubuntu
-        passed: [docker-gpdb-pxf-dev-ubuntu16]
-        trigger: true
-      - get: dockerfile-gpdb-pxf-dev-base
-        passed: [docker-gpdb-pxf-dev-ubuntu16]
-        trigger: true
-      - get: pxf_src
-        resource: dockerfile-gpdb-pxf-dev-server
-        trigger: true
-      - get: singlecluster
-        resource: singlecluster-HDP2
-        passed: [singlecluster_noarch_hdp2]
-        trigger: true
-      - get: gpdb-pxf-dev-ubuntu16-image
-        passed: [docker-gpdb-pxf-dev-ubuntu16]
-        trigger: true
-        params:
-          save: true
-    - put: gpdb-pxf-dev-ubuntu16-hdp2-server-image
-      params:
-        build: .
-        dockerfile: pxf_src/concourse/docker/pxf-dev-server/Dockerfile
-        build_args:
-          BASE_IMAGE: "gpdb-pxf-dev:ubuntu16"
-        load_base:  gpdb-pxf-dev-ubuntu16-image
-
-  - name: docker-gpdb-pxf-dev-ubuntu18-cdh-server
-    plan:
-    - in_parallel:
-      - get: dockerfile-gpdb-dev-ubuntu
-        passed: [docker-gpdb-pxf-dev-ubuntu18]
-        trigger: true
-      - get: dockerfile-gpdb-pxf-dev-base
-        passed: [docker-gpdb-pxf-dev-ubuntu18]
-        trigger: true
-      - get: pxf_src
-        resource: dockerfile-gpdb-pxf-dev-server
-        trigger: true
-      - get: singlecluster
-        resource: singlecluster-CDH
-        passed: [singlecluster_noarch_cdh]
-        trigger: true
-      - get: gpdb-pxf-dev-ubuntu18-image
-        passed: [docker-gpdb-pxf-dev-ubuntu18]
-        trigger: true
-        params:
-          save: true
-    - put: gpdb-pxf-dev-ubuntu18-cdh-server-image
-      params:
-        build: .
-        dockerfile: pxf_src/concourse/docker/pxf-dev-server/Dockerfile
-        build_args:
-          BASE_IMAGE: "gpdb-pxf-dev:ubuntu18"
-        load_base:  gpdb-pxf-dev-ubuntu18-image
-
-  - name: docker-gpdb-pxf-dev-ubuntu18-hdp2-server
-    plan:
-    - in_parallel:
-      - get: dockerfile-gpdb-dev-ubuntu
-        passed: [docker-gpdb-pxf-dev-ubuntu18]
-        trigger: true
-      - get: dockerfile-gpdb-pxf-dev-base
-        passed: [docker-gpdb-pxf-dev-ubuntu18]
-        trigger: true
-      - get: pxf_src
-        resource: dockerfile-gpdb-pxf-dev-server
-        trigger: true
-      - get: singlecluster
-        resource: singlecluster-HDP2
-        passed: [singlecluster_noarch_hdp2]
-        trigger: true
-      - get: gpdb-pxf-dev-ubuntu18-image
-        passed: [docker-gpdb-pxf-dev-ubuntu18]
-        trigger: true
-        params:
-          save: true
-    - put: gpdb-pxf-dev-ubuntu18-hdp2-server-image
-      params:
-        build: .
-        dockerfile: pxf_src/concourse/docker/pxf-dev-server/Dockerfile
-        build_args:
-          BASE_IMAGE: "gpdb-pxf-dev:ubuntu18"
-        load_base:  gpdb-pxf-dev-ubuntu18-image
