@@ -30,7 +30,6 @@ To contribute:
 
     - Create a [pull request from your fork](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/.creating-a-pull-request-from-a-fork).
 
-
     - Address PR feedback with fixup and/or squash commits.
         ```
         git add .
@@ -39,11 +38,9 @@ To contribute:
         git commit --squash <commit SHA>
         ```    
 
-    - Once approved, before merging into master squash your fixups with:
-        ```
-        git rebase -i --autosquash origin/master
-        git push --force-with-lease $USER <my-feature-branch>
-        ```
+    - Once approved, perform any additional squash operations that you deem
+      necessary. Committers will usually utilize the "Squash and Merge" or the
+      "Rebase and Merge" functionality to merge to master.
 
 # Community
 
