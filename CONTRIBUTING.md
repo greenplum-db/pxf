@@ -30,7 +30,6 @@ To contribute:
 
     - Create a [pull request from your fork](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/.creating-a-pull-request-from-a-fork).
 
-    - We will create a test pipeline which runs additional acceptance tests based on your branch.
 
     - Address PR feedback with fixup and/or squash commits.
         ```
