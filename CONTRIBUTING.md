@@ -48,7 +48,6 @@ To contribute:
 
 # Community
 
-Connect with Greenplum on:
+Connect with PXF and Greenplum on:
 - [Slack](https://greenplum.slack.com/)
 - [Dev Google Group mailing list](https://groups.google.com/a/greenplum.org/forum/#!forum/gpdb-dev/join)
-
