@@ -38,9 +38,9 @@ To contribute:
         git commit --squash <commit SHA>
         ```    
 
-    - Once approved, perform any additional squash operations that you deem
-      necessary. Committers will usually utilize the "Squash and Merge" or the
-      "Rebase and Merge" functionality to merge to master.
+    - Once the PR is approved, project committers will merge it to master
+      branch according to the product release schedule. They might further
+      squash the commits in the PR if they deem necessary.
 
 # Community
 
