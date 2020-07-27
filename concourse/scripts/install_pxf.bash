@@ -128,7 +128,7 @@ function create_pxf_installer_scripts() {
 		export HADOOP_VER=2.6.5.0-292
 
 		function install_java() {
-		  yum install -y -d 1 java-1.8.0-openjdk-devel java-1.8.0-openjdk-devel-debug
+		  yum install -y -q -e 0 java-1.8.0-openjdk
 		  echo 'export JAVA_HOME=/usr/lib/jvm/jre' | sudo tee -a ~gpadmin/.bashrc
 		  echo 'export JAVA_HOME=/usr/lib/jvm/jre' | sudo tee -a ~centos/.bashrc
 		}

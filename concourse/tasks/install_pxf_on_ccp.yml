@@ -17,9 +17,9 @@ inputs:
   optional: true
 
 params:
+  GP_VER:
   IMPERSONATION: true
   INSTALL_GPHDFS: true
-  GP_VER:
   SKIP_HADOOP_SETUP:
   KERBEROS: false
   PXF_COMPONENT: true

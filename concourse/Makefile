@@ -172,6 +172,24 @@ set-pivnet-pipeline:
 	@echo using the following command to unpause the pipeline:
 	@echo -e "\t$(FLY_CMD) -t ${CONCOURSE} unpause-pipeline --pipeline ${PIVNET_PIPELINE_NAME}"
 
+.PHONY: perf
+perf:
+	@if [ -z '$(SCALE)' ]; then \
+		echo 'Specify the SCALE for the test (i.e make SCALE=10 perf). Allowed SCALE values are 10, 50, 500'; \
+		exit 1; \
+	fi
+	$(FLY_CMD) --target=$(CONCOURSE) \
+		set-pipeline \
+		--check-creds \
+		--config $(HOME)/workspace/pxf/concourse/pipelines/perf_pipeline.yml \
+		--load-vars-from=$(SECRETS_FILE) \
+		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
+		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud.yml \
+		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/perf-settings-$(SCALE)g.yml \
+		--var pxf-git-branch=$(BRANCH) \
+		--pipeline pxf_perf-$(SCALE)g \
+		${FLY_OPTION_NON-INTERACTIVE}
+
 ## ----------------------------------------------------------------------
 ## List explicit rules
 ## ----------------------------------------------------------------------

@@ -1,12 +1,15 @@
 platform: linux
+
 image_resource:
-  type: docker-image
+  type: registry-image
+
 inputs:
 - name: pxf_src
 - name: cluster_env_files
-- name: bin_gpdb
+- name: gpdb_package
 - name: pxf_tarball
 - name: terraform_dataproc
+
 run:
   path: pxf_src/concourse/scripts/pxf-perf-multi-node.bash
 
@@ -32,3 +35,5 @@ params:
   WASB_ACCOUNT_KEY:
   AWS_SECRET_ACCESS_KEY:
   BENCHMARK_ADL:
+  GP_VER:
+  PXF_COMPONENT: true

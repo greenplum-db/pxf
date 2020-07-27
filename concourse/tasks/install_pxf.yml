@@ -4,9 +4,7 @@ image_resource:
   type: docker-image
 
 inputs:
-- name: gpdb_src
 - name: pxf_src
-- name: bin_gpdb
 - name: pxf_tarball
 - name: ccp_src
 - name: cluster_env_files
@@ -25,11 +23,13 @@ params:
   BUCKET_NAME:
   BUCKET_PATH:
   CLOUD_PROVIDER:
+  GP_VER:
   IMPERSONATION: true
   INSTALL_GPHDFS: true
   SKIP_HADOOP_SETUP:
   KERBEROS: false
   PLATFORM:
+  PXF_COMPONENT: true
   PXF_JVM_OPTS:
 
 run:

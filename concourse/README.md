@@ -47,13 +47,7 @@ make -C "${HOME}/workspace/pxf/concourse" pr
 10G Performance pipeline:
 
 ```shell
-fly -t ud set-pipeline \
-    -c ~/workspace/pxf/concourse/pipelines/perf_pipeline.yml \
-    -l ~/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
-    -l ~/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud.yml \
-    -l ~/workspace/pxf/concourse/settings/perf-settings-10g.yml \
-    -v gpdb-branch=5X_STABLE -v icw_green_bucket=gpdb5-stable-concourse-builds \
-    -v pxf-git-branch=master -p pxf_perf-10g
+make SCALE=10 perf
 ```
 
 You can deploy a development version of the perf pipeline by substituting the name
@@ -63,25 +57,13 @@ the name of your development pipeline (i.e. `-p dev:<YOUR-PIPELINE>`).
 50G Performance pipeline:
 
 ```shell
-fly -t ud set-pipeline \
-    -c ~/workspace/pxf/concourse/pipelines/perf_pipeline.yml \
-    -l ~/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
-    -l ~/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud.yml \
-    -l ~/workspace/pxf/concourse/settings/perf-settings-50g.yml \
-    -v gpdb-branch=5X_STABLE -v icw_green_bucket=gpdb5-stable-concourse-builds \
-    -v pxf-git-branch=master -p pxf_perf-50g
+make SCALE=50 perf
 ```
 
 500G Performance pipeline:
 
 ```shell
-fly -t ud set-pipeline \
-    -c ~/workspace/pxf/concourse/pipelines/perf_pipeline.yml \
-    -l ~/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
-    -l ~/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud.yml \
-    -l ~/workspace/pxf/concourse/settings/perf-settings-500g.yml \
-    -v gpdb-branch=5X_STABLE -v icw_green_bucket=gpdb5-stable-concourse-builds \
-    -v pxf-git-branch=master -p pxf_perf-500g
+make SCALE=500 perf
 ```
 
 # Deploy a PXF acceptance pipeline

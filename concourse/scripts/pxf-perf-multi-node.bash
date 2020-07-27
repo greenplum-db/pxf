@@ -10,7 +10,14 @@ CWDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 HADOOP_HOSTNAME="ccp-$(cat terraform_dataproc/name)-m"
 SCALE=${SCALE:-10}
 scale=$(($SCALE + 0))
+# whether PXF is being installed from a new component-based packaging
+PXF_COMPONENT=${PXF_COMPONENT:=false}
 PXF_CONF_DIR="/home/gpadmin/pxf"
+if [[ ${PXF_COMPONENT} == "true" ]]; then
+    PXF_HOME=/usr/local/pxf-gp${GP_VER}
+else
+    PXF_HOME=${GPHOME}/pxf
+fi
 PXF_SERVER_DIR="${PXF_CONF_DIR}/servers"
 UUID=$(cat /proc/sys/kernel/random/uuid)
 
@@ -58,7 +65,10 @@ function writable_external_table_parquet_query() {
 ###########################################
 
 function setup_sshd() {
-    service sshd start
+    # kill the sshd background process when this script exits. Otherwise, the
+    # concourse build will run forever.
+    trap 'pkill sshd' EXIT
+    /usr/sbin/sshd &
     passwd -u root
 
     if [[ -d cluster_env_files ]]; then
@@ -89,7 +99,7 @@ function read_and_validate_table_count() {
 }
 
 function sync_configuration() {
-    gpssh -u gpadmin -h mdw -v -s -e "source ${GPHOME}/greenplum_path.sh && ${GPHOME}/pxf/bin/pxf cluster sync"
+    gpssh -u gpadmin -h mdw -v -s -e "${PXF_HOME}/bin/pxf cluster sync"
 }
 
 function create_database_and_schema() {
@@ -417,9 +427,16 @@ function run_parquet_benchmark() {
 function main() {
     setup_sshd
     remote_access_to_gpdb
-    install_gpdb_binary
 
-    install_pxf_server
+    if [[ ${PXF_COMPONENT} == "true" ]]; then
+        install_gpdb_package
+        setup_gpadmin_user
+        install_pxf_tarball
+    else
+        install_gpdb_binary # Installs the GPDB Binary on the container
+        setup_gpadmin_user
+        install_pxf_server
+    fi
 
     echo "Running ${SCALE}G test with UUID ${UUID}"
     echo "PXF Process Details:"

@@ -82,61 +82,66 @@ resource_types:
     repository: ljfranklin/terraform-resource
     tag: 0.11.14
 
+- name: gcs
+  type: registry-image
+  source:
+    repository: frodenas/gcs-resource
+
 resources:
 - name: ccp_src
   type: git
+  icon: git
   source:
     branch: {{ccp-git-branch}}
     private_key: {{ccp-git-key}}
     uri: {{ccp-git-remote}}
 
-- name: gpdb_src
-  type: git
-  source:
-    branch: {{gpdb-branch}}
-    uri: {{gpdb-git-remote}}
-
 - name: pxf_src
   type: git
+  icon: git
   source:
     branch: {{pxf-git-branch}}
     uri: {{pxf-git-remote}}
 
-- name: gpdb-pxf-dev-centos6
-  type: docker-image
+- name: gpdb6_rhel7
+  type: gcs
+  icon: google-drive
   source:
-    repository: pivotaldata/gpdb-pxf-dev
-    tag: centos6
+    bucket: data-gpdb-ud-pivnet-artifacts
+    json_key: ((pxf-storage-service-account-key))
+    regexp: latest-0_gpdb6/greenplum-db-(.*)-rhel7-x86_64.rpm
+
+- name: gpdb6-pxf-dev-centos7-image
+  type: registry-image
+  icon: docker
+  source:
+    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb6-centos7-test-pxf
+    tag: latest
+    username: _json_key
+    password: ((pxf-cloudbuild-service-account-key))
 
 - name: ccp-7
-  type: docker-image
+  type: registry-image
+  icon: docker
   source:
     repository: pivotaldata/ccp
     tag: 7
 
-- name: gpdb-pxf-dev-centos6-hdp2-server
-  type: docker-image
-  source:
-    repository: pivotaldata/gpdb-pxf-dev
-    tag: centos6-hdp2-server
-
-- name: bin_gpdb_centos6
-  type: s3
-  source:
-    access_key_id: {{bucket-access-key-id}}
-    bucket: {{icw_green_bucket}}
-    region_name: {{aws-region}}
-    secret_access_key: {{bucket-secret-access-key}}
-    versioned_file: bin_gpdb_centos6/gpdb_branch_((gpdb-branch))/icw_green/bin_gpdb.tar.gz
-
 - name: pxf_tarball
-  type: s3
+  type: gcs
+  icon: google-drive
   source:
-    access_key_id: {{bucket-access-key-id}}
-    bucket: {{pxf-aws-bucket-name}}
-    region_name: {{aws-region}}
-    secret_access_key: {{bucket-secret-access-key}}
-    versioned_file: pxf_artifacts/((folder-prefix))_((gpdb-branch))/latest/pxf.tar.gz
+    bucket: data-gpdb-ud-pxf-build
+    json_key: ((pxf-storage-service-account-key))
+    versioned_file: perf/snapshots/pxf-gp6.el7.tar.gz
+
+- name: singlecluster
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: data-gpdb-ud-pxf-build-resources
+    json_key: ((pxf-storage-service-account-key))
+    versioned_file: singlecluster/HDP2/singlecluster-HDP2.tar.gz
 
 - name: terraform
   type: terraform
@@ -156,6 +161,7 @@ resources:
 
 - name: timed-trigger
   type: time
+  icon: timer
   source:
     interval: {{perf-trigger-interval}}
     location: America/Los_Angeles
@@ -164,65 +170,45 @@ resources:
 
 jobs:
 
-- name: compile_pxf
+- name: Build PXF-GP6 on RHEL7
   plan:
   - get: timed-trigger
     trigger: true
   - in_parallel:
-    - get: gpdb_src
     - get: pxf_src
-    - get: gpdb-pxf-dev-centos6
-  - task: compile_pxf
-    image: gpdb-pxf-dev-centos6
-    file: pxf_src/concourse/tasks/compile_pxf.yml
+    - get: gpdb6-pxf-dev-centos7-image
+    - get: gpdb_package
+      resource: gpdb6_rhel7
+  - task: Build PXF-GP6 on RHEL7
+    image: gpdb6-pxf-dev-centos7-image
+    file: pxf_src/concourse/tasks/build.yml
+    params:
+      TARGET_OS: rhel7
   - put: pxf_tarball
     params:
-      file: pxf_artifacts/pxf.tar.gz
+      file: dist/pxf-gp6-*.el7.tar.gz
 
-- name: pxf_perf_multinode
+- name: PXF Performance {{perf-scale}}G
   ensure:
     <<: *set_failed
   on_success:
     <<: *ccp_destroy
   plan:
-  - get: ccp_src
-  - get: gpdb_src
-    passed:
-    - compile_pxf
-  - get: gpdb_binary
-    resource: bin_gpdb_centos6
-  - get: pxf_src
-    passed:
-    - compile_pxf
-    trigger: true
-  - get: pxf_tarball
-    passed:
-    - compile_pxf
-    trigger: true
-  - get: ccp-7
-  - get: gpdb-pxf-dev-centos6-hdp2-server
+  - in_parallel:
+    - get: ccp_src
+    - get: gpdb_package
+      resource: gpdb6_rhel7
+    - get: pxf_src
+      passed: [Build PXF-GP6 on RHEL7]
+      trigger: true
+    - get: pxf_tarball
+      passed: [Build PXF-GP6 on RHEL7]
+      trigger: true
+    - get: ccp-7
+    - get: gpdb6-pxf-dev-centos7-image
+    - get: singlecluster
 
   - in_parallel:
-    - task: clean_up_s3
-      config:
-        platform: linux
-        image_resource:
-          type: docker-image
-          source:
-            repository: pivotaldata/ccp
-            tag: "7"
-        run:
-          path: aws
-          args:
-          - s3
-          - rm
-          - s3://gpdb-ud-scratch/s3-profile-test/output/
-          - --recursive
-        params:
-          AWS_ACCESS_KEY_ID: {{tf-machine-access-key-id}}
-          AWS_SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
-          AWS_DEFAULT_REGION: {{tf-machine-region}}
-
     - put: terraform_gpdb
       resource: terraform
       params:
@@ -237,6 +223,7 @@ jobs:
           instance_type: {{perf-gpdb-instance-type}}
           ccp_reap_minutes: {{perf-ccp-reap-minutes}}
           disk_size: {{perf-gpdb-disk-size}}
+          mirrors: false
 
     - put: terraform_dataproc
       resource: terraform
@@ -258,8 +245,9 @@ jobs:
 
   - in_parallel:
       - do:
-        - task: gen_gpdb_cluster
+        - task: Generate Greenplum Cluster
           input_mapping:
+            gpdb_rpm: gpdb_package
             terraform: terraform_gpdb
           file: ccp_src/ci/tasks/gen_cluster.yml
           image: ccp-7
@@ -271,16 +259,12 @@ jobs:
             BUCKET_NAME: {{tf-bucket-name}}
             PLATFORM: centos7
             CLOUD_PROVIDER: google
-        - task: customize_greenplum_init
-          image: ccp-7
-          file: pxf_src/concourse/tasks/customize_gpinitsystem.yml
-        - task: intialize_greenplum
-          input_mapping:
-            ccp_src: ccp_custom_src
+            GPDB_RPM: true
+        - task: Initialize Greenplum
           file: ccp_src/ci/tasks/gpinitsystem.yml
           on_failure:
             <<: *ccp_destroy
-        - task: setup_pxf
+        - task: Setup PXF
           input_mapping:
             terraform: terraform_gpdb
             bin_gpdb: gpdb_binary
@@ -292,16 +276,17 @@ jobs:
             AWS_DEFAULT_REGION: {{aws-region}}
             BUCKET_PATH: {{tf-bucket-path}}
             BUCKET_NAME: {{tf-bucket-name}}
-            PLATFORM: centos7
+            GP_VER: 6
             CLOUD_PROVIDER: google
             IMPERSONATION: {{enable-impersonation-multinode}}
             INSTALL_GPHDFS: {{perf-benchmark-gphdfs}}
+            PLATFORM: centos7
             PROXY_USER: gpadmin
             PXF_JVM_OPTS: {{pxf-jvm-opts}}
           on_failure:
             <<: *ccp_destroy
 
-      - task: load_data
+      - task: Load Data
         config:
           platform: linux
           inputs:
@@ -320,9 +305,7 @@ jobs:
         image: ccp-7
 
   - task: run-perf-multinode
-    input_mapping:
-      bin_gpdb: gpdb_binary
-    image: gpdb-pxf-dev-centos6-hdp2-server
+    image: gpdb6-pxf-dev-centos7-image
     file: pxf_src/concourse/tasks/pxf-perf-multi-node.yml
     params:
       SCALE: {{perf-scale}}
@@ -346,3 +329,4 @@ jobs:
       WASB_ACCOUNT_KEY: {{wasb-account-key}}
       SLEEP_BEFORE_DESTROY_IN_SEC: {{perf-sleep-before-destroy}}
       TARGET_OS: centos
+      GP_VER: 6
