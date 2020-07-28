@@ -145,6 +145,7 @@ resources:
 
 - name: terraform
   type: terraform
+  icon: terraform
   source:
     env:
       AWS_ACCESS_KEY_ID: {{tf-machine-access-key-id}}
