@@ -10,6 +10,7 @@ DEV_BUILD_PIPELINE_NAME     ?= dev:$(USER)-$(BRANCH)
 PR_BUILD_PIPELINE_NAME      ?= pxf_pr_pipeline
 BUILD_DEB                   ?= false
 CERTIFICATION_PIPELINE_NAME ?= pxf-certification
+PERF_PIPELINE_NAME          ?= pxf_perf-$(SCALE)g
 PIVNET_PIPELINE_NAME        ?= pivnet_artifacts
 NUM_GPDB5_VERSIONS          ?= 10
 NUM_GPDB6_VERSIONS          ?=  9
@@ -187,7 +188,7 @@ perf:
 		--load-vars-from=$(HOME)/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud.yml \
 		--load-vars-from=$(HOME)/workspace/pxf/concourse/settings/perf-settings-$(SCALE)g.yml \
 		--var pxf-git-branch=$(BRANCH) \
-		--pipeline pxf_perf-$(SCALE)g \
+		--pipeline $(PERF_PIPELINE_NAME) \
 		${FLY_OPTION_NON-INTERACTIVE}
 
 ## ----------------------------------------------------------------------
