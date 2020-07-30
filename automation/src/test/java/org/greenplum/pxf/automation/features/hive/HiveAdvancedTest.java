@@ -1,5 +1,7 @@
 package org.greenplum.pxf.automation.features.hive;
 
+import annotations.ExpectedFailure;
+
 import org.greenplum.pxf.automation.AdvancedFunctionality;
 import org.greenplum.pxf.automation.components.cluster.PhdCluster;
 import org.greenplum.pxf.automation.structures.tables.hive.HiveTable;
@@ -24,7 +26,8 @@ public class HiveAdvancedTest extends AdvancedFunctionality {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = {"hive", "features", "gpdb", "security"})
+    // @Test(groups = {"hive", "features", "gpdb", "security"})
+    @ExpectedFailure(reason = "[#91052648] - Can't start/stop Hive MetaStore in Ambari setup.")
     public void hiveMetastoreDown() throws Exception {
         HiveTable hiveTable = new HiveTable("hive_table", null);
         exTable = TableFactory.getPxfHiveReadableTable(
