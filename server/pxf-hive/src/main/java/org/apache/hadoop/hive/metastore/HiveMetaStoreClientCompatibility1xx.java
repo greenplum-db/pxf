@@ -3,6 +3,7 @@ package org.apache.hadoop.hive.metastore;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.GetTableResult;
 import org.apache.hadoop.hive.metastore.api.MetaException;
+import org.apache.hadoop.hive.metastore.api.NoSuchObjectException;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.thrift.TApplicationException;
 import org.apache.thrift.TException;
@@ -14,7 +15,7 @@ import org.slf4j.LoggerFactory;
  * In Hive 1.x.x, an API call get_table_req is made, however this API
  * call was introduced in Hive version 2. This class provides a fallback
  * for older Hive servers to still be able query metadata.
- *
+ * <p>
  * The motivation for this approach is taken from here:
  * https://github.com/HotelsDotCom/waggle-dance/pull/133/files
  */
@@ -56,6 +57,9 @@ public class HiveMetaStoreClientCompatibility1xx extends HiveMetaStoreClient imp
                     Table table = client.get_table(dbname, name);
                     return new GetTableResult(table).getTable();
                 }
+            } catch (MetaException | NoSuchObjectException ex) {
+                LOG.warn("Original exception not re-thrown", e);
+                throw ex;
             } catch (Throwable t) {
                 LOG.warn("Unable to run compatibility for metastore client method get_table_req. Will rethrow original exception: ", t);
             }
