@@ -12,6 +12,9 @@
 -- m/(ERROR|WARNING):.*javax.servlet.ServletException: .*/
 -- s/javax.servlet.ServletException: //g
 --
+-- m/message:hive.default.no_such_hive_table/
+-- s/hive.default.no_such_hive_table/default.no_such_hive_table/g
+--
 -- m/Exception (r|R)eport.*NoSuchObjectException\(message:default.no_such_hive_table table not found\).*/
 -- s/(r|R)eport.*/Exception Report   Message  NoSuchObjectException(message:default.no_such_hive_table table not found)/
 --
