@@ -308,18 +308,6 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
         params.put(RequestMap.USER_PROP_PREFIX + PROFILE_SCHEME, pluginConf.getProtocol(profile));
     }
 
-    private boolean parseBooleanValue(String threadSafeStr) {
-
-        if (threadSafeStr.equalsIgnoreCase(TRUE_LCASE)) {
-            return true;
-        }
-        if (threadSafeStr.equalsIgnoreCase(FALSE_LCASE)) {
-            return false;
-        }
-        throw new IllegalArgumentException("Illegal boolean value '"
-                + threadSafeStr + "'." + " Usage: [TRUE|FALSE]");
-    }
-
     /*
      * Sets the tuple description for the record
      * Attribute Projection information is optional
