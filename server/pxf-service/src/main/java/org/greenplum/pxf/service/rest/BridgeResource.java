@@ -68,20 +68,13 @@ public class BridgeResource extends BaseResource {
             @RequestHeader MultiValueMap<String, String> headers) throws IOException, InterruptedException {
 
         RequestContext context = parseRequest(headers);
-        // THREAD-SAFE parameter has precedence
-        AtomicBoolean isThreadSafe = new AtomicBoolean(context.isThreadSafe());
-        Bridge bridge = securityService.doAs(context, false, () -> {
-            Bridge br = bridgeFactory.getBridge(context);
-            isThreadSafe.set(isThreadSafe.get() && br.isThreadSafe());
-            return br;
-        });
-
-        LOG.debug("Request for {} will be handled {} synchronization", context.getDataSource(), (isThreadSafe.get() ? "without" : "with"));
+        Bridge bridge = securityService.doAs(context, false,
+                () -> bridgeFactory.getBridge(context));
 
         // Create a streaming class which will iterate over the records and put
         // them on the output stream
         StreamingResponseBody response =
-                new BridgeResponse(securityService, bridge, context, isThreadSafe.get());
+                new BridgeResponse(securityService, bridge, context);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

@@ -57,7 +57,6 @@ public class WritableResourceTest {
     public void before() throws IOException, InterruptedException {
 
         context = new RequestContext();
-        context.setThreadSafe(true);
         Configuration configuration = new Configuration();
 
         // constructor dependencies
@@ -79,7 +78,6 @@ public class WritableResourceTest {
         when(mockConfigurationFactory.initConfiguration(any(), any(), any(), any())).thenReturn(configuration);
         when(mockParser.parseRequest(mockHeaders, RequestType.WRITE_BRIDGE)).thenReturn(context);
         when(mockFactory.getBridge(context)).thenReturn(mockBridge);
-        when(mockBridge.isThreadSafe()).thenReturn(true);
         when(mockHttpServletRequest.getInputStream()).thenReturn(mockInputStream);
     }
 

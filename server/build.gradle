@@ -24,14 +24,9 @@ buildscript {
 }
 
 plugins {
-    id "com.github.hierynomus.license-report" version "0.15.0"
     id "io.franzbecker.gradle-lombok" version "3.3.0"
     id "org.springframework.boot" version "${spring_boot_version}" apply false
     id 'io.spring.dependency-management' version '1.0.9.RELEASE'
-}
-
-downloadLicenses {
-    dependencyConfiguration = 'bootJar'
 }
 
 def javaProjects = subprojects.findAll {

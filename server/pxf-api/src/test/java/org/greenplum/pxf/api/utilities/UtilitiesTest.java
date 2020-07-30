@@ -88,11 +88,6 @@ public class UtilitiesTest {
         @Override
         public void setRequestContext(RequestContext context) {
         }
-
-        @Override
-        public boolean isThreadSafe() {
-            return false;
-        }
     }
 
     static class NonStatsAccessorImpl implements Accessor {
@@ -132,11 +127,6 @@ public class UtilitiesTest {
         @Override
         public void setRequestContext(RequestContext context) {
         }
-
-        @Override
-        public boolean isThreadSafe() {
-            return false;
-        }
     }
 
     static class ReadVectorizedResolverImpl implements ReadVectorizedResolver {
@@ -165,11 +155,6 @@ public class UtilitiesTest {
 
         @Override
         public void setRequestContext(RequestContext context) {
-        }
-
-        @Override
-        public boolean isThreadSafe() {
-            return false;
         }
     }
 

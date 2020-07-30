@@ -72,54 +72,6 @@ public class BaseBridgeTest {
         assertEquals("No bean named 'unknown-resolver' available", e.getMessage());
     }
 
-    @Test
-    public void testIsThreadSafeTT() {
-        context.setAccessor("org.greenplum.pxf.service.bridge.MockAccessor");
-        context.setResolver("org.greenplum.pxf.service.bridge.MockResolver");
-        when(mockApplicationContext.getBean("MockAccessor", Accessor.class)).thenReturn(mockAccessor);
-        when(mockApplicationContext.getBean("MockResolver", Resolver.class)).thenReturn(mockResolver);
-        when(mockAccessor.isThreadSafe()).thenReturn(true);
-        when(mockResolver.isThreadSafe()).thenReturn(true);
-        bridge = new TestBridge(mockApplicationContext, context);
-        assertTrue(bridge.isThreadSafe());
-    }
-
-    @Test
-    public void testIsThreadSafeTF() {
-        context.setAccessor("org.greenplum.pxf.service.bridge.MockAccessor");
-        context.setResolver("org.greenplum.pxf.service.bridge.MockResolver");
-        when(mockApplicationContext.getBean("MockAccessor", Accessor.class)).thenReturn(mockAccessor);
-        when(mockApplicationContext.getBean("MockResolver", Resolver.class)).thenReturn(mockResolver);
-        when(mockAccessor.isThreadSafe()).thenReturn(true);
-        when(mockResolver.isThreadSafe()).thenReturn(false);
-        bridge = new TestBridge(mockApplicationContext, context);
-        assertFalse(bridge.isThreadSafe());
-    }
-
-    @Test
-    public void testIsThreadSafeFT() {
-        context.setAccessor("org.greenplum.pxf.service.bridge.MockAccessor");
-        context.setResolver("org.greenplum.pxf.service.bridge.MockResolver");
-        when(mockApplicationContext.getBean("MockAccessor", Accessor.class)).thenReturn(mockAccessor);
-        when(mockApplicationContext.getBean("MockResolver", Resolver.class)).thenReturn(mockResolver);
-        when(mockAccessor.isThreadSafe()).thenReturn(false);
-        when(mockResolver.isThreadSafe()).thenReturn(true);
-        bridge = new TestBridge(mockApplicationContext, context);
-        assertFalse(bridge.isThreadSafe());
-    }
-
-    @Test
-    public void testIsThreadSafeFF() {
-        context.setAccessor("org.greenplum.pxf.service.bridge.MockAccessor");
-        context.setResolver("org.greenplum.pxf.service.bridge.MockResolver");
-        when(mockApplicationContext.getBean("MockAccessor", Accessor.class)).thenReturn(mockAccessor);
-        when(mockApplicationContext.getBean("MockResolver", Resolver.class)).thenReturn(mockResolver);
-        when(mockAccessor.isThreadSafe()).thenReturn(false);
-        when(mockResolver.isThreadSafe()).thenReturn(false);
-        bridge = new TestBridge(mockApplicationContext, context);
-        assertFalse(bridge.isThreadSafe());
-    }
-
     static class TestBridge extends BaseBridge {
 
         public TestBridge(ApplicationContext applicationContext, RequestContext context) {
