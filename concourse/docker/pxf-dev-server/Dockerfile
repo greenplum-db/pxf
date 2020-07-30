@@ -24,4 +24,4 @@ RUN mkdir -p /etc/hadoop/conf /etc/hive/conf /etc/hbase/conf && \
     ln -s /singlecluster/hbase/conf/hbase-site.xml /etc/hbase/conf && \
     ln -s ~gpadmin/.{tomcat,go-dep-cached-sources,m2,gradle} ~root && \
     chown -R gpadmin:gpadmin ~gpadmin/.{tomcat,go-dep-cached-sources,m2,gradle} && \
-    chmod -R a+w /singlecluster
+    chmod a+w /singlecluster
