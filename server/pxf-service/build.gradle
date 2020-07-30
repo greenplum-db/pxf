@@ -56,6 +56,7 @@ dependencies {
      *******************************/
 
     testCompileOnly("org.apache.hadoop:hadoop-annotations:${hadoopVersion}")
+    testImplementation("commons-io:commons-io")
 
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     testImplementation('org.springframework.boot:spring-boot-starter-test') {

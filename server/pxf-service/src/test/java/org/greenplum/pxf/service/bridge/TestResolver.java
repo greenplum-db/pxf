@@ -26,9 +26,4 @@ public class TestResolver implements Resolver {
     @Override
     public void setRequestContext(RequestContext context) {
     }
-
-    @Override
-    public boolean isThreadSafe() {
-        return false;
-    }
 }

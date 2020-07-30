@@ -13,13 +13,4 @@ public interface Plugin extends InitializingBean {
      * @param context the context for the current request
      */
     void setRequestContext(RequestContext context);
-
-    /**
-     * Checks if the plugin is thread safe
-     *
-     * @return true if plugin is thread safe, false otherwise
-     */
-    default boolean isThreadSafe() {
-        return true;
-    }
 }
