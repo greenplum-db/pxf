@@ -2,32 +2,26 @@ package org.greenplum.pxf.plugins.hdfs;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapred.FileSplit;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class LineBreakAccessorTest {
 
     private Accessor accessor;
     private RequestContext context;
 
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
-
-    @Before
+    @BeforeEach
     public void setup() {
         accessor = new LineBreakAccessor();
 
@@ -35,6 +29,7 @@ public class LineBreakAccessorTest {
         context.setConfig("default");
         context.setProfileScheme("localfile");
         context.setUser("test-user");
+        context.setConfiguration(new Configuration());
     }
 
     @Test
@@ -42,7 +37,8 @@ public class LineBreakAccessorTest {
         prepareTest("csv/csv_with_line_feed.csv");
         context.getGreenplumCSV().withNewline("\n");
 
-        accessor.initialize(context);
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
         accessor.openForRead();
 
         OneRow oneRow = accessor.readNextObject();
@@ -72,7 +68,8 @@ public class LineBreakAccessorTest {
         prepareTest("csv/csv_with_carriage_return_line_feed.csv");
         context.getGreenplumCSV().withNewline("\r\n");
 
-        accessor.initialize(context);
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
         accessor.openForRead();
 
         OneRow oneRow = accessor.readNextObject();
@@ -102,7 +99,8 @@ public class LineBreakAccessorTest {
         prepareTest("csv/csv_with_carriage_return.csv");
         context.getGreenplumCSV().withNewline("\r");
 
-        accessor.initialize(context);
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
         accessor.openForRead();
 
         OneRow oneRow = accessor.readNextObject();
@@ -129,28 +127,27 @@ public class LineBreakAccessorTest {
 
     @Test
     public void testSkipHeaderCountIsNotANumber() {
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("Property SKIP_HEADER_COUNT has incorrect value foo : must be a non-negative integer");
-
         context.setDataSource("/foo");
         context.addOption("SKIP_HEADER_COUNT", "foo");
-        accessor.initialize(context);
+        accessor.setRequestContext(context);
+        Exception e = assertThrows(IllegalArgumentException.class, accessor::afterPropertiesSet);
+        assertEquals("Property SKIP_HEADER_COUNT has incorrect value foo : must be a non-negative integer", e.getMessage());
     }
 
     @Test
     public void testSkipHeaderCountIsNotANaturalNumber() {
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("Property SKIP_HEADER_COUNT has incorrect value -5 : must be a non-negative integer");
-
         context.setDataSource("/foo");
         context.addOption("SKIP_HEADER_COUNT", "-5");
-        accessor.initialize(context);
+        accessor.setRequestContext(context);
+        Exception e = assertThrows(IllegalArgumentException.class, accessor::afterPropertiesSet);
+        assertEquals("Property SKIP_HEADER_COUNT has incorrect value -5 : must be a non-negative integer", e.getMessage());
     }
 
     @Test
     public void testDontSkipHeaders() throws Exception {
         prepareTest("csv/csv_with_header.csv");
-        accessor.initialize(context);
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
         accessor.openForRead();
 
         OneRow oneRow = accessor.readNextObject();
@@ -175,7 +172,8 @@ public class LineBreakAccessorTest {
     public void testSkipHeaderCountOne() throws Exception {
         prepareTest("csv/csv_with_header.csv");
         context.addOption("SKIP_HEADER_COUNT", "1");
-        accessor.initialize(context);
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
         accessor.openForRead();
 
         OneRow oneRow = accessor.readNextObject();
@@ -197,7 +195,8 @@ public class LineBreakAccessorTest {
         prepareTest("csv/csv_with_header.csv");
         context.addOption("SKIP_HEADER_COUNT", "1");
         context.setFragmentIndex(2);
-        accessor.initialize(context);
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
         accessor.openForRead();
 
         OneRow oneRow = accessor.readNextObject();
@@ -222,7 +221,8 @@ public class LineBreakAccessorTest {
     public void testSkipHeaderCountTwo() throws Exception {
         prepareTest("csv/csv_with_header.csv");
         context.addOption("SKIP_HEADER_COUNT", "2");
-        accessor.initialize(context);
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
         accessor.openForRead();
 
         OneRow oneRow = accessor.readNextObject();
@@ -238,7 +238,8 @@ public class LineBreakAccessorTest {
     public void testSkipHeaderCountTen() throws Exception {
         prepareTest("csv/csv_with_header.csv");
         context.addOption("SKIP_HEADER_COUNT", "10");
-        accessor.initialize(context);
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
         accessor.openForRead();
 
         OneRow oneRow = accessor.readNextObject();
@@ -252,10 +253,9 @@ public class LineBreakAccessorTest {
                 .getResource(resourceName).toURI().toString();
         Path path = new Path(filepath);
         long length = path.getFileSystem(new Configuration()).getContentSummary(path).getLength();
-        FileSplit split = new FileSplit(path, 0, length, (String[]) null);
 
         context.setDataSource(filepath);
-        context.setFragmentMetadata(HdfsUtilities.prepareFragmentMetadata(split));
+        context.setFragmentMetadata(new HcfsFragmentMetadata(0, length));
     }
 
 }

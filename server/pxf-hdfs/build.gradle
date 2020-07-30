@@ -51,6 +51,11 @@ dependencies {
     implementation("org.codehaus.jackson:jackson-mapper-asl:1.9.13") { transitive = false }
 
     implementation("org.apache.avro:avro:1.7.7")                  { transitive = false }
+
+    // Dependencies for writing Avro files with compression
+    implementation("org.apache.commons:commons-compress:1.20")    { transitive = false }
+    implementation("org.tukaani:xz:1.8")                          { transitive = false }
+
     // Dependency in hadoop 2.9.2
     implementation("log4j:log4j:1.2.17")                         { transitive = false }
     implementation("com.fasterxml.woodstox:woodstox-core:5.0.3") { transitive = false }
