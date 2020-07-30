@@ -58,7 +58,7 @@ public class HiveMetaStoreClientCompatibility1xx extends HiveMetaStoreClient imp
                     return new GetTableResult(table).getTable();
                 }
             } catch (MetaException | NoSuchObjectException ex) {
-                LOG.warn("Original exception not re-thrown", e);
+                LOG.debug("Original exception not re-thrown", e);
                 throw ex;
             } catch (Throwable t) {
                 LOG.warn("Unable to run compatibility for metastore client method get_table_req. Will rethrow original exception: ", t);

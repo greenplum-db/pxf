@@ -425,8 +425,6 @@ public class HiveClientWrapper {
                         new Object[]{hiveConf, null, true}, null, HiveMetaStoreClientCompatibility1xx.class.getName()
                 );
             } catch (RuntimeException ex) {
-                LOG.warn("RuntimeException occurred while instantiating the HiveMetaStoreClientCompatibility1xx class", ex);
-
                 // Report MetaException if found in the stack. A RuntimeException
                 // was thrown when the HiveMetaStoreClientCompatibility1xx
                 // failed to instantiate with a MetaException cause.
@@ -436,6 +434,7 @@ public class HiveClientWrapper {
                 Throwable e = ex;
                 while (e.getCause() != null) {
                     if (e.getCause() instanceof MetaException) {
+                        LOG.warn("Original exception not re-thrown", ex);
                         throw (MetaException) e.getCause();
                     }
                     e = e.getCause();
