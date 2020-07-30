@@ -50,7 +50,7 @@ function inflate_singlecluster() {
 	fi
 	tar zxf "${singlecluster}" -C /
 	mv /singlecluster-* /singlecluster
-	chmod a+w /singlecluster
+	chmod -R a+w /singlecluster
 	mkdir -p /etc/hadoop/conf /etc/hive/conf /etc/hbase/conf
 	ln -s /singlecluster/hadoop/etc/hadoop/*-site.xml /etc/hadoop/conf
 	ln -s /singlecluster/hive/conf/hive-site.xml /etc/hive/conf

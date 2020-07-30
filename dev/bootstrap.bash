@@ -34,7 +34,7 @@ mkdir -p ${PXF_HOME}
 chown -R gpadmin:gpadmin ${PXF_HOME}
 
 # configure and start Hadoop single cluster
-chmod a+w /singlecluster
+chmod -R a+w /singlecluster
 SLAVES=1 ${SCRIPT_DIR}/init_hadoop.bash
 
 su - gpadmin -c "
