@@ -386,7 +386,7 @@ public class HiveTest extends HiveBaseTest {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = {"hive", "features", "gpdb", "security"})
+    @Test(groups = {"hive", "features", "gpdb"})
     public void notExistingHiveTable() throws Exception {
 
         HiveTable hiveTable = new HiveTable("no_such_hive_table", null);
