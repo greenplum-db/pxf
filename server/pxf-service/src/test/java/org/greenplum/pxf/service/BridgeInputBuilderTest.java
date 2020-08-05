@@ -20,26 +20,28 @@ package org.greenplum.pxf.service;
  */
 
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-
+import org.apache.commons.io.IOUtils;
 import org.greenplum.pxf.api.OneField;
-import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.io.DataType;
-
+import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.modules.junit4.PowerMockRunner;
+
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
 @RunWith(PowerMockRunner.class)
 public class BridgeInputBuilderTest {
@@ -53,7 +55,7 @@ public class BridgeInputBuilderTest {
      */
     public void makeInput() throws Exception {
 
-        byte[] data = new byte[] {
+        byte[] data = new byte[]{
                 (int) 'a',
                 (int) 'b',
                 (int) 'c',
@@ -61,16 +63,14 @@ public class BridgeInputBuilderTest {
                 (int) '\n',
                 (int) 'n',
                 (int) 'o',
-                (int) '\n' };
+                (int) '\n'};
 
         prepareInput(data);
 
         List<OneField> record = inputBuilder.makeInput(inputStream);
 
-        verifyRecord(record, Arrays.copyOfRange(data, 0, 5));
-
-        record = inputBuilder.makeInput(inputStream);
-        verifyRecord(record, Arrays.copyOfRange(data, 5, 8));
+        // the inputStream is exhausted completely, so we check line breaks too
+        verifyRecord(record, Arrays.copyOfRange(data, 0, 8));
     }
 
     @Test
@@ -146,15 +146,16 @@ public class BridgeInputBuilderTest {
                 new ByteArrayInputStream(data));
     }
 
-    private void verifyRecord(List<OneField> record, byte[] expected) {
+    private void verifyRecord(List<OneField> record, byte[] expected) throws IOException {
         assertEquals(record.size(), 1);
 
         OneField field = record.get(0);
         assertEquals(field.type, DataType.BYTEA.getOID());
+        assertTrue(field.val instanceof InputStream);
 
-        byte[] bytes = (byte[]) field.val;
+        byte[] bytes = IOUtils.toByteArray((InputStream) field.val);
         byte[] result = Arrays.copyOfRange(bytes, 0, bytes.length);
         assertEquals(result.length, expected.length);
-        assertTrue(Arrays.equals(result, expected));
+        assertArrayEquals(result, expected);
     }
 }

@@ -26,7 +26,6 @@ import org.greenplum.pxf.api.GPDBWritableMapper;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.io.GPDBWritable;
-import org.greenplum.pxf.api.io.Text;
 import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.RequestContext;
 
@@ -45,9 +44,16 @@ public class BridgeInputBuilder {
 
     public List<OneField> makeInput(DataInput inputStream) throws Exception {
         if (protocolData.getOutputFormat() == OutputFormat.TEXT) {
-            Text txt = new Text();
-            txt.readFields(inputStream);
-            return Collections.singletonList(new OneField(DataType.BYTEA.getOID(), txt.getBytes()));
+            // Avoid copying the bytes from the inputStream directly. This
+            // code used to use the Text class to read bytes until a line
+            // delimiter was found. This would cause issues with wide rows that
+            // had 1MB+, because the Text code grows the array to fit data, and
+            // it does it inefficiently. We observed multiple calls to
+            // System.arraycopy in the setCapacity method for every byte after
+            // we exceeded the original buffer size. This caused terrible
+            // performance in PXF, even when writing a single row to an external
+            // system.
+            return Collections.singletonList(new OneField(DataType.BYTEA.getOID(), inputStream));
         }
 
         GPDBWritable gpdbWritable = new GPDBWritable();

@@ -25,6 +25,7 @@ import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.Resolver;
 
+import java.io.InputStream;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -38,7 +39,8 @@ import static org.greenplum.pxf.api.io.DataType.VARCHAR;
  */
 public class StringPassResolver extends BasePlugin implements Resolver {
     // for write
-    private OneRow oneRow = new OneRow();
+    private final OneRow oneRow = new OneRow();
+    private int resolveWriteCount = 0;
 
     /**
      * Returns a list of the fields of one record.
@@ -50,11 +52,11 @@ public class StringPassResolver extends BasePlugin implements Resolver {
     public List<OneField> getFields(OneRow onerow) {
         /*
          * This call forces a whole text line into a single varchar field and replaces
-		 * the proper field separation code can be found in previous revisions. The reasons
-		 * for doing so as this point are:
-		 * 1. performance
-		 * 2. desire to not replicate text parsing logic from the backend into java
-		 */
+         * the proper field separation code can be found in previous revisions. The reasons
+         * for doing so as this point are:
+         * 1. performance
+         * 2. desire to not replicate text parsing logic from the backend into java
+         */
         List<OneField> record = new LinkedList<>();
         Object data = onerow.getData();
         if (data instanceof ChunkWritable) {
@@ -70,11 +72,17 @@ public class StringPassResolver extends BasePlugin implements Resolver {
      */
     @Override
     public OneRow setFields(List<OneField> record) {
-        if (((byte[]) record.get(0).val).length == 0) {
+        OneField oneField = record.get(0);
+
+        if ((oneField.val instanceof InputStream && resolveWriteCount > 0) ||
+                (oneField.val instanceof byte[] && ((byte[]) oneField.val).length == 0)) {
+            // For the inputStream case, we only consume the inputStream once
+            // and then we need to return null to indicate, during the next
+            // iteration, that the stream has been consumed
             return null;
         }
-
-        oneRow.setData(record.get(0).val);
+        oneRow.setData(oneField.val);
+        resolveWriteCount++;
         return oneRow;
     }
 }

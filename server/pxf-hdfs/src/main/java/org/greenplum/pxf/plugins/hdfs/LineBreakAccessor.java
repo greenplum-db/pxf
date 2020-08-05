@@ -20,6 +20,7 @@ package org.greenplum.pxf.plugins.hdfs;
  */
 
 
+import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -35,12 +36,16 @@ import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 
 /**
  * A PXF Accessor for reading delimited plain text records.
  */
 public class LineBreakAccessor extends HdfsSplittableDataAccessor {
+
+    private static final int DEFAULT_BUFFER_SIZE = 8192;
+
     private int skipHeaderCount;
     private DataOutputStream dos;
     private FSDataOutputStream fsdos;
@@ -117,7 +122,18 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor {
      */
     @Override
     public boolean writeNextObject(OneRow onerow) throws IOException {
-        dos.write((byte[]) onerow.getData());
+        if (onerow.getData() instanceof InputStream) {
+            // io.file.buffer.size is the name of the configuration parameter
+            // used to determine the buffer size of the DataOutputStream. We
+            // match same buffer size to read data from the input stream. The
+            // buffer size can be configured externally.
+            int bufferSize = configuration.getInt("io.file.buffer.size", DEFAULT_BUFFER_SIZE);
+            long count = IOUtils.copyLarge((InputStream) onerow.getData(), dos, new byte[bufferSize]);
+            LOG.debug("Wrote {} bytes to outputStream using a buffer of size {}", count, bufferSize);
+            return count > 0;
+        } else {
+            dos.write((byte[]) onerow.getData());
+        }
         return true;
     }
 
