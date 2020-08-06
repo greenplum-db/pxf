@@ -129,6 +129,8 @@ FORMAT 'CSV' [(delimiter '<delim_char>')];
 
 **Note**: Do not use the `(HEADER)` formatter option in the `CREATE EXTERNAL TABLE` command.
 
+**Note**: PXF does not support the `SKIP_HEADER_COUNT` custom option when you read a CSV file on S3 using the S3 Select service.
+
 For example, use the following command to have PXF always use S3 Select to access a `gzip`-compressed file on S3, where the field delimiter is a pipe ('|') character and the external table and CSV header columns are in the same order.
 
 ``` sql

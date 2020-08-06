@@ -40,7 +40,7 @@ The keywords and values used in the Greenplum Database [CREATE EXTERNAL TABLE](h
 | IGNORE_MISSING_PATH=\<boolean\> | Specify the action to take when \<path-to-files\> is missing or invalid. The default value is `false`, PXF returns an error in this situation. When the value is `true`, PXF ignores missing path errors and returns an empty fragment. |
 | FORMAT | The `FORMAT` must specify `'CSV'`.  |
 
-**Note**: The `hdfs:text:multi` profile does not support additional format options when you specify the `FILE_AS_ROW=true` option.
+**Note**: The `hdfs:text:multi` profile does not support additional custom or format options when you specify the `FILE_AS_ROW=true` option.
 
 For example, if `/data/pxf_examples/jdir` identifies an HDFS directory that contains a number of JSON files, the following statement creates a Greenplum Database external table that references all of the files in that directory:
 
