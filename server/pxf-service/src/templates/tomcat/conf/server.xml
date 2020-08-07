@@ -47,7 +47,7 @@ under the License.
         </Engine>
         <Connector server="PXF Server"
                    acceptCount="100"
-                   connectionTimeout="20000"
+                   connectionTimeout="300000"
                    executor="tomcatThreadPool"
                    maxKeepAliveRequests="15"
                    maxHeaderCount="30000"
