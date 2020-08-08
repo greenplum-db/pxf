@@ -85,7 +85,7 @@ import static org.greenplum.pxf.api.model.RequestContext.RequestType;
 @Path("/" + Version.PXF_PROTOCOL_VERSION + "/Writable/")
 public class WritableResource extends BaseResource {
 
-    private BridgeFactory bridgeFactory;
+    private final BridgeFactory bridgeFactory;
 
     /**
      * Creates an instance of the resource with the default singletons of RequestParser and BridgeFactory.

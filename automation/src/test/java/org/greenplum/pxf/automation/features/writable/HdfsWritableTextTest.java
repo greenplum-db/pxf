@@ -14,7 +14,10 @@ import org.junit.Assert;
 import org.testng.annotations.Test;
 
 import java.io.File;
+import java.sql.Timestamp;
 import java.util.List;
+import java.util.Random;
+import java.util.TimeZone;
 
 import static java.lang.Thread.sleep;
 
@@ -37,7 +40,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
     @Override
     protected void beforeClass() throws Exception {
         super.beforeClass();
-        gpdbTableFields = new String[] {
+        gpdbTableFields = new String[]{
                 "t1    TEXT",
                 "bi    BIGINT",
                 "b     BIT",
@@ -61,7 +64,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
     }
 
     @Override
-    protected void beforeMethod() throws Exception {
+    protected void beforeMethod() {
         writableExTable = TableFactory.getPxfWritableTextTable(writableTableName,
                 gpdbTableFields, hdfsWritePath + writableTableName, ",");
         writableExTable.setHost(pxfHost);
@@ -79,7 +82,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb", "security" })
+    @Test(groups = {"features", "gpdb", "security"})
     public void textFormatInsertNoProfile() throws Exception {
 
         writableExTable.setProfile(null);
@@ -97,10 +100,10 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb", "hcfs", "security"})
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void textFormatInsertThreadSafeFalse() throws Exception {
 
-        writableExTable.setUserParameters(new String[] { "THREAD-SAFE=FALSE" });
+        writableExTable.setUserParameters(new String[]{"THREAD-SAFE=FALSE"});
         gpdb.createTableAndVerify(writableExTable);
 
         insertData(dataTable, writableExTable, InsertionMethod.INSERT);
@@ -113,12 +116,12 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb", "hcfs", "security"})
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void textFormatInsertDifferentThreadSafeStates() throws Exception {
 
         WritableExternalTable writableExTableFalseThreadSafe = TableFactory.getPxfWritableTextTable(
                 writableTableName, gpdbTableFields, hdfsWritePath + writableTableName, ",");
-        writableExTableFalseThreadSafe.setUserParameters(new String[] { "THREAD-SAFE=FALSE" });
+        writableExTableFalseThreadSafe.setUserParameters(new String[]{"THREAD-SAFE=FALSE"});
         writableExTableFalseThreadSafe.setHost(pxfHost);
         writableExTableFalseThreadSafe.setPort(pxfPort);
         gpdb.createTableAndVerify(writableExTable);
@@ -136,7 +139,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb", "hcfs", "security"})
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void textFormatInsertDefaultCodec() throws Exception {
 
         writableExTable.setCompressionCodec(COMPRESSION_CODEC);
@@ -152,7 +155,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
         ComparisonUtils.compareTables(dataTable, readableExTable, null, "\\\\");
     }
 
-    @Test(groups = { "features", "gpdb", "hcfs", "security"})
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void textFormatCopyDefaultCodec() throws Exception {
 
         writableExTable.setCompressionCodec(COMPRESSION_CODEC);
@@ -168,7 +171,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
         ComparisonUtils.compareTables(dataTable, readableExTable, null, "\\\\");
     }
 
-    @Test(groups = { "features", "gpdb", "hcfs", "security"})
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void textFormatInsertFromTableDefaultCodec() throws Exception {
 
         // Generate data to HDFS, create Readable table pointing to HDFS data
@@ -198,7 +201,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb", "hcfs", "security"})
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void textFormatInsert() throws Exception {
 
         gpdb.createTableAndVerify(writableExTable);
@@ -211,7 +214,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb", "hcfs", "security"})
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void textFormatCopyFromStdin() throws Exception {
 
         gpdb.createTableAndVerify(writableExTable);
@@ -224,7 +227,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb", "hcfs", "security"})
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void textFormatInsertFromTable() throws Exception {
 
         hdfs.writeTableToFile(hdfsWorkingDataDir, dataTable, ",");
@@ -241,7 +244,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb", "hcfs", "security"})
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void csvFormatInsert() throws Exception {
 
         String hdfsPath = hdfsWritePath + writableTableName + "_csv";
@@ -258,7 +261,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb", "hcfs", "security"})
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void csvFormatCopyFromStdin() throws Exception {
 
         String hdfsPath = hdfsWritePath + writableTableName + "_csv";
@@ -275,7 +278,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb", "hcfs", "security"})
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void csvFormatInsertFromTable() throws Exception {
 
         hdfs.writeTableToFile(hdfsWorkingDataDir, dataTable, ",");
@@ -296,7 +299,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb", "hcfs", "security"})
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void textFormatGZipInsert() throws Exception {
 
         String hdfsPath = hdfsWritePath + writableTableName + "_gzip";
@@ -313,7 +316,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb", "hcfs", "security"})
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void textFormatGZipCopyFromStdin() throws Exception {
 
         String hdfsPath = hdfsWritePath + writableTableName + "_gzip";
@@ -330,7 +333,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb", "hcfs", "security"})
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void textFormatGZipInsertFromTable() throws Exception {
 
         hdfs.writeTableToFile(hdfsWorkingDataDir, dataTable, ",");
@@ -351,7 +354,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb", "hcfs", "security"})
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void textFormatBZip2Insert() throws Exception {
 
         String hdfsPath = hdfsWritePath + writableTableName + "_bzip2";
@@ -368,7 +371,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb", "hcfs", "security"})
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void textFormatBZip2CopyFromStdin() throws Exception {
 
         String hdfsPath = hdfsWritePath + writableTableName + "_bzip2";
@@ -381,11 +384,57 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
     }
 
     /**
+     * Copy plain text data from very wide rows
+     *
+     * @throws Exception if test fails to run
+     */
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    public void textFormatWideRowsInsert() throws Exception {
+
+        int rows = 10;
+        int leftLimit = 48; // numeral '0'
+        int rightLimit = 122; // letter 'z'
+        int targetStringLength = 10 * 1024 * 1024;
+        Random random = new Random();
+
+        String hdfsPath = hdfsWritePath + writableTableName + "_wide_row";
+        writableExTable.setName(writableTableName + "_wide_row_w");
+        writableExTable.setPath(hdfsPath);
+        createTable(writableExTable);
+
+        dataTable = new Table("data_table", null);
+        int timeZoneOffset = TimeZone.getDefault().getRawOffset();
+        for (int j = 0; j < rows; j++) {
+
+            // Generate a large string to insert
+            String generatedString = random.ints(leftLimit, rightLimit + 1)
+                    .filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 97))
+                    .limit(targetStringLength)
+                    .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+                    .toString();
+
+            dataTable.addRow(new String[]{
+                    ("aaa_" + (j + 1)),
+                    String.valueOf(j + 1000),
+                    (((j % 2) == 0) ? "1" : "0"),
+                    (((j % 2) == 0) ? "t" : "f"),
+                    String.valueOf(j + 1000),
+                    String.valueOf(j + 10),
+                    ("b#!?bbb_" + (j + 1)),
+                    new Timestamp((System.currentTimeMillis()) - timeZoneOffset).toString(),
+                    ("<(" + (j + 1) + "\\," + (j + 1) + ")\\," + (j + 1)) + ">"});
+        }
+
+        insertData(dataTable, writableExTable, InsertionMethod.INSERT);
+        verifyResult(hdfsPath, dataTable);
+    }
+
+    /**
      * Insert plain text data from readable table using BZip2 codec
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb", "hcfs", "security"})
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void textFormatBZip2InsertFromTable() throws Exception {
 
         hdfs.writeTableToFile(hdfsWorkingDataDir, dataTable, ",");
@@ -406,7 +455,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb", "hcfs", "security"})
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void copyFromFileMultiBlockedDataNoCompression() throws Exception {
 
         Table data = new Table("data", null);
@@ -435,7 +484,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = { "features", "gpdb", "hcfs", "security"})
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void copyFromFileMultiBlockedDataGZip() throws Exception {
 
         Table data = new Table("data", null);
@@ -462,7 +511,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
 
     /**
      * Copy plain text multi blocked data from file using BZip2 codec.
-     *
+     * <p>
      * TODO: enable test when issue is resolved.
      *
      * @throws Exception if test fails to run
@@ -480,7 +529,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
         String hdfsPath = hdfsWritePath + writableTableName + "_multi_block_bzip";
         writableExTable = TableFactory.getPxfWritableBZip2Table(writableTableName,
                 gpdbTableFields, hdfsPath, ",");
-        writableExTable.setUserParameters(new String[] { "THREAD-SAFE=FALSE" });
+        writableExTable.setUserParameters(new String[]{"THREAD-SAFE=FALSE"});
         createTable(writableExTable);
 
         gpdb.copyFromFile(writableExTable, new File(multiBlockedLocalFilePath), ",", false);
@@ -496,26 +545,26 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
 
     /**
      * Verify GPSQL-2657, handling of ~16k record followed by a short record.
-     *
+     * <p>
      * We create the writable external table with a distribution key. The reason
      * for that is to make sure all data is processed by the same segment.
      * Notice we use the key "alwayssamekey".
-     *
+     * <p>
      * The test creates a writable external table, copies the data into it, then
      * uses a readable external table to compare the data with the original.
      */
-    @Test(groups = { "features" })
+    @Test(groups = {"features"})
     public void veryLongRecords() throws Exception {
 
-        final String[][] data = new String[][] {
-                { "alwayssamekey", "1", StringUtils.repeat("x", 15486) },
-                { "alwayssamekey", "2", StringUtils.repeat("y", 233) },
-                { "alwayssamekey", "3", StringUtils.repeat("z", 656) } };
+        final String[][] data = new String[][]{
+                {"alwayssamekey", "1", StringUtils.repeat("x", 15486)},
+                {"alwayssamekey", "2", StringUtils.repeat("y", 233)},
+                {"alwayssamekey", "3", StringUtils.repeat("z", 656)}};
 
-        final String[] fields = new String[] {
+        final String[] fields = new String[]{
                 "key text",
                 "linenum int",
-                "longrecord text" };
+                "longrecord text"};
 
         Table dataTable = new Table("data", fields);
         dataTable.addRows(data);
@@ -525,7 +574,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
         writableExTable.setName("verylongrecordexport");
         writableExTable.setPath(hdfsPath);
         writableExTable.setFormat("CSV");
-        writableExTable.setDistributionFields(new String[] { "key" });
+        writableExTable.setDistributionFields(new String[]{"key"});
         gpdb.createTableAndVerify(writableExTable);
 
         gpdb.insertData(dataTable, writableExTable);
@@ -547,10 +596,9 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
      * Get HDFS path to text file (no compression or known compression), load it
      * to Table Object and compare with given data Table.
      *
-     * @param hdfsPath to text file
-     * @param data to compare to
+     * @param hdfsPath        to text file
+     * @param data            to compare to
      * @param compressionType used compression for given HDFS file
-     *
      * @throws Exception if test fails to run
      */
     private void verifyResult(String hdfsPath, Table data, EnumCompressionTypes compressionType)
@@ -584,8 +632,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
      * compare with given data Table.
      *
      * @param hdfsPath to text file
-     * @param data to compare to
-     *
+     * @param data     to compare to
      * @throws Exception if test fails to run
      */
     private void verifyResult(String hdfsPath, Table data) throws Exception {
@@ -596,9 +643,8 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
     /**
      * Support all data insertion methods for writable tables.
      *
-     * @param data to insert
+     * @param data  to insert
      * @param table to insert to
-     *
      * @throws Exception if test fails to run
      */
     private void insertData(Table data, WritableExternalTable table, InsertionMethod insertionMethod)
