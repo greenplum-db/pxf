@@ -414,7 +414,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
                     .toString();
 
             dataTable.addRow(new String[]{
-                    ("aaa_" + (j + 1)),
+                    generatedString,
                     String.valueOf(j + 1000),
                     (((j % 2) == 0) ? "1" : "0"),
                     (((j % 2) == 0) ? "t" : "f"),
