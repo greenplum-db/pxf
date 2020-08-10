@@ -46,11 +46,11 @@ The specific keywords and values used in the Greenplum Database [CREATE EXTERNAL
 | PROFILE    | The `PROFILE` keyword must specify `hdfs:text`. |
 | SERVER=\<server_name\>    | The named server configuration that PXF uses to access the data. Optional; PXF uses the `default` server if not specified. |
 | IGNORE_MISSING_PATH=\<boolean\> | Specify the action to take when \<path-to-hdfs-file\> is missing or invalid. The default value is `false`, PXF returns an error in this situation. When the value is `true`, PXF ignores missing path errors and returns an empty fragment. |
-| SKIP_HEADER_COUNT=\<numlines\> | Specify the number of header lines that PXF should skip in the first split of each \<hdfs-file\> before reading the data. The default value is 0, do not skip any lines. Supported for external tables that you create with `FORMAT` `'CSV'`. |
+| SKIP_HEADER_COUNT=\<numlines\> | Specify the number of header lines that PXF should skip in the first split of each \<hdfs-file\> before reading the data. The default value is 0, do not skip any lines. |
 | FORMAT | Use `FORMAT` `'TEXT'` when \<path-to-hdfs-file\> references plain text delimited data.<br> Use `FORMAT` `'CSV'`  when \<path-to-hdfs-file\> references comma-separated value data.  |
 | delimiter    | The delimiter character in the data. For `FORMAT` `'CSV'`, the default \<delim_value\> is a comma `,`. Preface the \<delim_value\> with an `E` when the value is an escape sequence. Examples: `(delimiter=E'\t')`, `(delimiter ':')`. |
 
-**Note**: PXF does not support the `(HEADER)` formatter option in the `CREATE EXTERNAL TABLE` command. If your CSV-format file includes header line(s), use `SKIP_HEADER_COUNT` to specify the number of lines that PXF should skip at the beginning of the first split of each file.
+**Note**: PXF does not support the `(HEADER)` formatter option in the `CREATE EXTERNAL TABLE` command. If your text file includes header line(s), use `SKIP_HEADER_COUNT` to specify the number of lines that PXF should skip at the beginning of the first split of each file.
 
 ### <a id="profile_text_query"></a>Example: Reading Text Data on HDFS
 
@@ -145,11 +145,11 @@ The specific keywords and values used in the [CREATE EXTERNAL TABLE](https://gpd
 | PROFILE    | The `PROFILE` keyword must specify `hdfs:text:multi`. |
 | SERVER=\<server_name\>    | The named server configuration that PXF uses to access the data. Optional; PXF uses the `default` server if not specified. |
 | IGNORE_MISSING_PATH=\<boolean\> | Specify the action to take when \<path-to-hdfs-file\> is missing or invalid. The default value is `false`, PXF returns an error in this situation. When the value is `true`, PXF ignores missing path errors and returns an empty fragment. |
-| SKIP_HEADER_COUNT=\<numlines\> | Specify the number of header lines that PXF should skip in the first split of each \<hdfs-file\> before reading the data. The default value is 0, do not skip any lines. Supported for external tables that you create with `FORMAT` `'CSV'`. |
+| SKIP_HEADER_COUNT=\<numlines\> | Specify the number of header lines that PXF should skip in the first split of each \<hdfs-file\> before reading the data. The default value is 0, do not skip any lines. |
 | FORMAT | Use `FORMAT` `'TEXT'` when \<path-to-hdfs-file\> references plain text delimited data.<br> Use `FORMAT` `'CSV'` when \<path-to-hdfs-file\> references comma-separated value data.  |
 | delimiter    | The delimiter character in the data. For `FORMAT` `'CSV'`, the default \<delim_value\> is a comma `,`. Preface the \<delim_value\> with an `E` when the value is an escape sequence. Examples: `(delimiter=E'\t')`, `(delimiter ':')`. |
 
-**Note**: PXF does not support the `(HEADER)` formatter option in the `CREATE EXTERNAL TABLE` command. If your CSV-format file includes header line(s), use `SKIP_HEADER_COUNT` to specify the number of lines that PXF should skip at the beginning of the first split of each file.
+**Note**: PXF does not support the `(HEADER)` formatter option in the `CREATE EXTERNAL TABLE` command. If your text file includes header line(s), use `SKIP_HEADER_COUNT` to specify the number of lines that PXF should skip at the beginning of the first split of each file.
 
 ### <a id="profile_textmulti_query"></a>Example: Reading Multi-Line Text Data on HDFS
 
