@@ -191,6 +191,13 @@ perf:
 		--pipeline $(PERF_PIPELINE_NAME) \
 		${FLY_OPTION_NON-INTERACTIVE}
 
+.PHONY: singlecluster
+singlecluster:
+	fly -t ud set-pipeline \
+		-c ~/workspace/pxf/concourse/pipelines/singlecluster-pipeline.yml \
+		-l ~/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
+		-v pxf-git-branch=master -p pxf-singlecluster
+
 ## ----------------------------------------------------------------------
 ## List explicit rules
 ## ----------------------------------------------------------------------

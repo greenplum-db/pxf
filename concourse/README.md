@@ -13,7 +13,7 @@ be embedded to further manipulate the generated pipeline.
 
 To deploy the build pipeline for PXF, make sure PXF master branch is currently checked-out and run this command:
 
-```shell
+```shell script
 make -C "${HOME}/workspace/pxf/concourse" build
 ```
 
@@ -21,7 +21,7 @@ make -C "${HOME}/workspace/pxf/concourse" build
 
 To deploy the certifcation pipeline (forward compatibility) for PXF, make sure PXF master branch is currently checked-out and run this command:
 
-```shell
+```shell script
 make -C "${HOME}/workspace/pxf/concourse" certification
 ```
 
@@ -32,10 +32,7 @@ and HDP3. The generated tarballs are then published to an S3 and GCS bucket.
 The produced tarballs can then be consumed in the pxf-build pipelines.
 
 ```shell script
-fly -t ud set-pipeline \
-    -c ~/workspace/pxf/concourse/pipelines/singlecluster-pipeline.yml \
-    -l ~/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
-    -v pxf-git-branch=master -p pxf-singlecluster
+make singlecluster
 ```
 
 # Deploy the cloudbuild pipeline
