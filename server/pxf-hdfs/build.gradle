@@ -71,7 +71,8 @@ dependencies {
 
     // Azure Datalake jars
     implementation("org.apache.hadoop:hadoop-azure-datalake:${hadoopVersion}") { transitive = false }
-    implementation("com.microsoft.azure:azure-data-lake-store-sdk:2.2.3")      { transitive = false }
+    implementation("com.microsoft.azure:azure-data-lake-store-sdk:2.3.8")      { transitive = false }
+    implementation("org.wildfly.openssl:wildfly-openssl:1.0.7.Final")          { transitive = false }
 
     // GCS jars and dependencies
     implementation("com.google.cloud.bigdataoss:gcs-connector:hadoop2-1.9.17:shaded") { transitive = false }
