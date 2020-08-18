@@ -107,49 +107,26 @@ public class WritableResource extends BaseResource {
 
     /**
      * This function is called when http://nn:port/pxf/{version}/Writable/stream?path=...
-	 * is used.
-	 *
-	 * @param servletContext Servlet context contains attributes required by SecuredHDFS
-	 * @param headers Holds HTTP headers from request
-	 * @param path Holds URI path option used in this request
-	 * @param inputStream stream of bytes to write from Gpdb
+     * is used.
+     *
+     * @param servletContext Servlet context contains attributes required by SecuredHDFS
+     * @param headers        Holds HTTP headers from request
+     * @param inputStream    stream of bytes to write from Gpdb
      * @return ok response if the operation finished successfully
      * @throws Exception in case of wrong request parameters, failure to
-     *             initialize bridge or to write data
+     *                   initialize bridge or to write data
      */
     @POST
     @Path("stream")
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     public Response stream(@Context final ServletContext servletContext,
                            @Context HttpHeaders headers,
-                           @QueryParam("path") String path,
                            InputStream inputStream) throws Exception {
 
         RequestContext context = parseRequest(headers);
         Bridge bridge = bridgeFactory.getWriteBridge(context);
+        String path = context.getDataSource();
 
-        // THREAD-SAFE parameter has precedence
-        boolean isThreadSafe = context.isThreadSafe() && bridge.isThreadSafe();
-        LOG.debug("Request for {} will be handled {} synchronization", context.getDataSource(), (isThreadSafe ? "without" : "with"));
-
-        return isThreadSafe ?
-                writeResponse(bridge, path, inputStream) :
-                synchronizedWriteResponse(bridge, path, inputStream);
-    }
-
-    private Response synchronizedWriteResponse(Bridge bridge, String path, InputStream inputStream)
-            throws Exception {
-
-        // non tread-safe access will be synchronized on the class level
-        Response result;
-        synchronized (WritableResource.class) {
-            result = writeResponse(bridge, path, inputStream);
-        }
-        return result;
-    }
-
-    private Response writeResponse(Bridge bridge, String path, InputStream inputStream)
-            throws Exception {
         // Open the output file
         bridge.beginIteration();
         long totalWritten = 0;

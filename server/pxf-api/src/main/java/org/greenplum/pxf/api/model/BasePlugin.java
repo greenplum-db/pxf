@@ -57,16 +57,6 @@ public class BasePlugin implements Plugin {
     }
 
     /**
-     * Checks if the plugin is thread safe
-     *
-     * @return true if plugin is thread safe, false otherwise
-     */
-    @Override
-    public boolean isThreadSafe() {
-        return true;
-    }
-
-    /**
      * Determines if the plugin is initialized
      *
      * @return true if initialized, false otherwise

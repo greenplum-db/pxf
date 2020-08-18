@@ -138,8 +138,8 @@ public abstract class ExternalTable extends Table {
 
         if (params != null) {
 
-            for (int i = 0; i < params.length; i++) {
-                appendParameter(sb, params[i]);
+            for (String param : params) {
+                appendParameter(sb, param);
             }
         }
 

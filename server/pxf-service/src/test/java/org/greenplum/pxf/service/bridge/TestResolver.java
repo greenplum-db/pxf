@@ -10,22 +10,16 @@ import java.util.List;
 public class TestResolver implements Resolver {
 
     @Override
-    public List<OneField> getFields(OneRow row) throws Exception {
+    public List<OneField> getFields(OneRow row) {
         return null;
     }
 
     @Override
-    public OneRow setFields(List<OneField> record) throws Exception {
+    public OneRow setFields(List<OneField> record) {
         return null;
     }
 
     @Override
     public void initialize(RequestContext requestContext) {
-
-    }
-
-    @Override
-    public boolean isThreadSafe() {
-        return false;
     }
 }

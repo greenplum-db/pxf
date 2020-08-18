@@ -12,11 +12,4 @@ public interface Plugin {
      * @param requestContext data provided in the request
      */
     void initialize(RequestContext requestContext);
-
-    /**
-     * Checks if the plugin is thread safe
-     *
-     * @return true if plugin is thread safe, false otherwise
-     */
-    boolean isThreadSafe();
 }

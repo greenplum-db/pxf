@@ -43,33 +43,38 @@ public class WritableResourceTest {
     private WritableResource writableResource;
 
     // constructor dependencies
-    @Mock private HttpRequestParser mockParser;
-    @Mock private BridgeFactory mockFactory;
+    @Mock
+    private HttpRequestParser mockParser;
+    @Mock
+    private BridgeFactory mockFactory;
 
     // input parameters
-    @Mock private ServletContext mockServletContext;
-    @Mock private HttpHeaders mockHeaders;
-    @Mock private InputStream mockInputStream;
+    @Mock
+    private ServletContext mockServletContext;
+    @Mock
+    private HttpHeaders mockHeaders;
+    @Mock
+    private InputStream mockInputStream;
 
-    @Mock private RequestContext mockContext;
-    @Mock private WriteBridge mockBridge;
+    private RequestContext context;
+    @Mock
+    private WriteBridge mockBridge;
 
     @Before
     public void before() {
 
+        context = new RequestContext();
         writableResource = new WritableResource(mockParser, mockFactory);
 
-        when(mockParser.parseRequest(mockHeaders, RequestType.WRITE_BRIDGE)).thenReturn(mockContext);
-        when(mockFactory.getWriteBridge(mockContext)).thenReturn(mockBridge);
-        when(mockContext.isThreadSafe()).thenReturn(true);
-        when(mockBridge.isThreadSafe()).thenReturn(true);
+        when(mockParser.parseRequest(mockHeaders, RequestType.WRITE_BRIDGE)).thenReturn(context);
+        when(mockFactory.getWriteBridge(context)).thenReturn(mockBridge);
     }
 
     @Test
     public void streamPathWithSpecialChars() throws Exception {
         // test path with special characters
-        String path = "I'mso<bad>!";
-        Response result = writableResource.stream(mockServletContext, mockHeaders, path, mockInputStream);
+        context.setDataSource("I'mso<bad>!");
+        Response result = writableResource.stream(mockServletContext, mockHeaders, mockInputStream);
 
         assertEquals(Response.Status.OK, Response.Status.fromStatusCode(result.getStatus()));
         assertEquals("wrote 0 bulks to I.mso.bad..", result.getEntity().toString());
@@ -78,10 +83,10 @@ public class WritableResourceTest {
     @Test
     public void streamPathWithRegularChars() throws Exception {
         // test path with regular characters
-        String path = "whatCAN1tellYOU";
-        Response result = writableResource.stream(mockServletContext, mockHeaders, path, mockInputStream);
+        context.setDataSource("whatCAN1tellYOU");
+        Response result = writableResource.stream(mockServletContext, mockHeaders, mockInputStream);
 
         assertEquals(Response.Status.OK, Response.Status.fromStatusCode(result.getStatus()));
-        assertEquals("wrote 0 bulks to " + path, result.getEntity().toString());
+        assertEquals("wrote 0 bulks to whatCAN1tellYOU", result.getEntity().toString());
     }
 }

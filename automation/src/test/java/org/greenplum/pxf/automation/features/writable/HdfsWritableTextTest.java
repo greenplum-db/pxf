@@ -8,6 +8,8 @@ import org.greenplum.pxf.automation.structures.tables.basic.Table;
 import org.greenplum.pxf.automation.structures.tables.pxf.WritableExternalTable;
 import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
 import org.greenplum.pxf.automation.utils.fileformats.FileFormatsUtils;
+import org.greenplum.pxf.automation.utils.system.ProtocolEnum;
+import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
 import org.greenplum.pxf.automation.utils.tables.ComparisonUtils;
 import org.apache.commons.lang.StringUtils;
 import org.junit.Assert;
@@ -512,12 +514,10 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
     /**
      * Copy plain text multi blocked data from file using BZip2 codec.
      * <p>
-     * TODO: enable test when issue is resolved.
      *
      * @throws Exception if test fails to run
      */
-    // @Test(groups = { "features" })
-    @ExpectedFailure(reason = "[#94043504] PXF times out because requests are not thread-safe")
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void copyFromFileMultiBlockedDataBZip2() throws Exception {
 
         Table data = new Table("data", null);
@@ -534,8 +534,10 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
 
         gpdb.copyFromFile(writableExTable, new File(multiBlockedLocalFilePath), ",", false);
 
-        // for HCFS on Cloud, wait a bit for async write in previous steps to finish
-        sleep(10000);
+        if (ProtocolUtils.getProtocol() != ProtocolEnum.HDFS) {
+            // for HCFS on Cloud, wait a bit for async write in previous steps to finish
+            sleep(10000);
+        }
 
         readableExTable.setPath(hdfsPath);
         gpdb.createTableAndVerify(readableExTable);

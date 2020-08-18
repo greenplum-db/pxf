@@ -39,11 +39,4 @@ public abstract class BaseBridge implements Bridge {
         this.accessor = accessorFactory.getPlugin(context);
         this.resolver = resolverFactory.getPlugin(context);
     }
-
-    @Override
-    public boolean isThreadSafe() {
-        boolean result = accessor.isThreadSafe() && resolver.isThreadSafe();
-        LOG.debug("Bridge is {}thread safe", (result ? "" : "not "));
-        return result;
-    }
 }

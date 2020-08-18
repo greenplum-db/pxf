@@ -45,6 +45,8 @@ import java.net.URI;
 public class LineBreakAccessor extends HdfsSplittableDataAccessor {
 
     private static final int DEFAULT_BUFFER_SIZE = 8192;
+    public static final String PXF_CHUNK_RECORD_READER_ENABLED = "pxf.reader.chunk-record-reader.enabled";
+    public static final boolean PXF_CHUNK_RECORD_READER_DEFAULT = false;
 
     private int skipHeaderCount;
     private DataOutputStream dos;
@@ -74,9 +76,9 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor {
     protected Object getReader(JobConf jobConf, InputSplit split)
             throws IOException {
 
-        // when the file has header use LineReaderReader to read one line at at time
-        // for HDFS, try to use ChunkRecordReader, if possible (not reading from encrypted zone)
-        if (skipHeaderCount == 0 && hcfsType == HcfsType.HDFS) {
+        // Disable the ChunkRecordReader by default, but it can be enabled by
+        // setting the `pxf.reader.chunk-record-reader.enabled` property to true
+        if (configuration.getBoolean(PXF_CHUNK_RECORD_READER_ENABLED, PXF_CHUNK_RECORD_READER_DEFAULT)) {
             try {
                 return new ChunkRecordReader(jobConf, (FileSplit) split);
             } catch (IncompatibleInputStreamException e) {

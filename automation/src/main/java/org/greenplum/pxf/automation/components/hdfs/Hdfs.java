@@ -23,6 +23,7 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.compress.CompressionCodec;
 import org.greenplum.pxf.automation.components.common.BaseSystemObject;
 import org.greenplum.pxf.automation.fileformats.IAvroSchema;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
@@ -32,6 +33,7 @@ import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
 
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -419,14 +421,28 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
     public void writeTableToFile(String pathToFile, Table dataTable,
                                  String delimiter, Charset encoding)
             throws Exception {
+        writeTableToFile(pathToFile, dataTable, delimiter, encoding, null);
+    }
+
+    @Override
+    public void writeTableToFile(String destPath, Table dataTable,
+                                 String delimiter, Charset encoding,
+                                 CompressionCodec codec) throws Exception {
+
         ReportUtils.startLevel(report, getClass(),
                 "Write Text File (Delimiter = '" + delimiter + "') to "
-                        + pathToFile
+                        + destPath
                         + ((encoding != null) ? " encoding: " + encoding : ""));
 
-        FSDataOutputStream out = fs.create(getDatapath(pathToFile), true,
+        FSDataOutputStream out = fs.create(getDatapath(destPath), true,
                 bufferSize, replicationSize, blockSize);
-        writeTableToStream(out, dataTable, delimiter, encoding);
+
+        DataOutputStream dos = out;
+        if (codec != null) {
+            dos = new DataOutputStream(codec.createOutputStream(out));
+        }
+
+        writeTableToStream(dos, dataTable, delimiter, encoding);
         ReportUtils.stopLevel(report);
     }
 
@@ -447,7 +463,8 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
         ReportUtils.stopLevel(report);
     }
 
-    private void writeTableToStream(FSDataOutputStream stream, Table dataTable, String delimiter, Charset encoding) throws Exception {
+    private void writeTableToStream(DataOutputStream stream, Table dataTable,
+                                    String delimiter, Charset encoding) throws Exception {
         BufferedWriter bufferedWriter = new BufferedWriter(
                 new OutputStreamWriter(stream, encoding));
         List<List<String>> data = dataTable.getData();
@@ -470,6 +487,13 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
             }
         }
         bufferedWriter.close();
+    }
+
+    /**
+     * @return the hadoop configuration
+     */
+    public Configuration getConfiguration() {
+        return config;
     }
 
     /**

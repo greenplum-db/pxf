@@ -1,5 +1,7 @@
 package org.greenplum.pxf.automation.features.hdfs;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.io.compress.BZip2Codec;
 import org.greenplum.pxf.automation.components.cluster.PhdCluster;
 import org.greenplum.pxf.automation.datapreparer.CustomTextPreparer;
 import org.greenplum.pxf.automation.datapreparer.QuotedLineTextPreparer;
@@ -8,6 +10,7 @@ import org.greenplum.pxf.automation.features.BaseFeature;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
 import org.greenplum.pxf.automation.structures.tables.pxf.ErrorTable;
 import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
+import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
 import org.greenplum.pxf.automation.utils.csv.CsvUtils;
 import org.greenplum.pxf.automation.utils.fileformats.FileFormatsUtils;
 import org.greenplum.pxf.automation.utils.jsystem.report.ReportUtils;
@@ -205,6 +208,40 @@ public class HdfsReadableTextTest extends BaseFeature {
         hdfs.copyFromLocal(localDataResourcesFolder + "/csv/sample3.csv", hdfs.getWorkingDirectory() + "/csv_files_with_header/sample3.csv");
         // verify results
         runTincTest("pxf.features.hdfs.readable.text.csv_files_with_header.runTest");
+    }
+
+    /**
+     * Read CSV files compressed with bzip2 from HDFS using *:text profile and
+     * CSV format.
+     *
+     * @throws Exception when the test fails
+     */
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    public void readBzip2CompressedCsv() throws Exception {
+        BZip2Codec codec = new BZip2Codec();
+        codec.setConf(hdfs.getConfiguration());
+        char c = 'a';
+
+        for (int i = 0; i < 10; i++, c++) {
+            Table dataTable = getSmallData(StringUtils.repeat(String.valueOf(c), 2), 10);
+            hdfs.writeTableToFile(hdfs.getWorkingDirectory() + "/bzip2/" + c + "_" + fileName + ".bz2",
+                    dataTable, ",", StandardCharsets.UTF_8, codec);
+        }
+
+        exTable =
+                TableFactory.getPxfReadableTextTable("pxf_hdfs_small_data_bzip2", new String[]{
+                        "name text",
+                        "num integer",
+                        "dub double precision",
+                        "longNum bigint",
+                        "bool boolean"
+                }, hdfs.getWorkingDirectory() + "/bzip2/", ",");
+        exTable.setHost(pxfHost);
+        exTable.setPort(pxfPort);
+        exTable.setFormat("CSV");
+        gpdb.createTableAndVerify(exTable);
+
+        runTincTest("pxf.features.hdfs.readable.text.bzip2.runTest");
     }
 
     /**

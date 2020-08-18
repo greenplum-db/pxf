@@ -14,8 +14,6 @@ public class BasePluginTest {
     @Test
     public void testDefaults() {
         BasePlugin basePlugin = new BasePlugin();
-
-        assertTrue(basePlugin.isThreadSafe());
         assertFalse(basePlugin.isInitialized());
     }
 

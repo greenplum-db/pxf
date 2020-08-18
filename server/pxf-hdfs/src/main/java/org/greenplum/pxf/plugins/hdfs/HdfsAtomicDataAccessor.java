@@ -47,7 +47,7 @@ import java.net.URI;
  * a specific file type should inherit from this class only if the file they are
  * reading does not support splitting: a protocol-buffer file, regular file, ...
  */
-public abstract class HdfsAtomicDataAccessor extends HcfsBaseAccessor {
+public abstract class HdfsAtomicDataAccessor extends BasePlugin implements Accessor {
     InputStream inputStream;
     private FileSplit fileSplit;
 

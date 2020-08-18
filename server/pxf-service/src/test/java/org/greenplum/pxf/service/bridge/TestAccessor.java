@@ -41,9 +41,4 @@ public class TestAccessor implements Accessor {
 
     }
 
-    @Override
-    public boolean isThreadSafe() {
-        return false;
-    }
-
 }
