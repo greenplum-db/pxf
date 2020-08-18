@@ -151,11 +151,6 @@ public class HttpRequestParser implements RequestParser<HttpHeaders> {
             context.setStatsSampleRatio(Float.parseFloat(sampleRatioStr));
         }
 
-        String threadSafeStr = params.removeUserProperty("THREAD-SAFE");
-        if (!StringUtils.isBlank(threadSafeStr)) {
-            context.setThreadSafe(parseBooleanValue(threadSafeStr));
-        }
-
         context.setTotalSegments(params.removeIntProperty("SEGMENT-COUNT"));
         context.setTransactionId(params.removeProperty("XID"));
 

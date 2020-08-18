@@ -127,10 +127,6 @@ public class RequestContext {
      */
     private String serverName = "default";
     private int totalSegments;
-    /**
-     * When false the bridge has to run in synchronized mode. default value is true.
-     */
-    private boolean threadSafe = true;
 
     private List<ColumnDescriptor> tupleDescription = new ArrayList<>();
     private String user;
@@ -513,20 +509,6 @@ public class RequestContext {
      */
     public String getSecret() {
         return remoteSecret;
-    }
-
-    /**
-     * Returns whether this request is thread safe.
-     * If it is not, request will be handled consequentially and not in parallel.
-     *
-     * @return whether the request is thread safe
-     */
-    public boolean isThreadSafe() {
-        return threadSafe;
-    }
-
-    public void setThreadSafe(boolean threadSafe) {
-        this.threadSafe = threadSafe;
     }
 
     /**

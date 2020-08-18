@@ -241,44 +241,6 @@ public class HttpRequestParserTest {
     }
 
     @Test
-    public void threadSafeTrue() {
-        parameters.putSingle("X-GP-OPTIONS-THREAD-SAFE", "TRUE");
-        RequestContext context = parser.parseRequest(mockRequestHeaders, RequestType.FRAGMENTER);
-        assertTrue(context.isThreadSafe());
-
-        parameters.putSingle("X-GP-OPTIONS-THREAD-SAFE", "true");
-        context = new HttpRequestParser().parseRequest(mockRequestHeaders, RequestType.FRAGMENTER);
-        assertTrue(context.isThreadSafe());
-    }
-
-    @Test
-    public void threadSafeFalse() {
-        parameters.putSingle("X-GP-OPTIONS-THREAD-SAFE", "False");
-        RequestContext context = new HttpRequestParser().parseRequest(mockRequestHeaders, RequestType.FRAGMENTER);
-        assertFalse(context.isThreadSafe());
-
-        parameters.putSingle("X-GP-OPTIONS-THREAD-SAFE", "falSE");
-        context = new HttpRequestParser().parseRequest(mockRequestHeaders, RequestType.FRAGMENTER);
-        assertFalse(context.isThreadSafe());
-    }
-
-    @Test
-    public void threadSafeMaybe() {
-        thrown.expect(IllegalArgumentException.class);
-        thrown.expectMessage("Illegal boolean value 'maybe'. Usage: [TRUE|FALSE]");
-
-        parameters.putSingle("X-GP-OPTIONS-THREAD-SAFE", "maybe");
-        parser.parseRequest(mockRequestHeaders, RequestType.FRAGMENTER);
-    }
-
-    @Test
-    public void threadSafeDefault() {
-        parameters.remove("X-GP-OPTIONS-THREAD-SAFE");
-        RequestContext context = parser.parseRequest(mockRequestHeaders, RequestType.FRAGMENTER);
-        assertTrue(context.isThreadSafe());
-    }
-
-    @Test
     public void getFragmentMetadata() {
         RequestContext context = parser.parseRequest(mockRequestHeaders, RequestType.FRAGMENTER);
         byte[] location = context.getFragmentMetadata();
