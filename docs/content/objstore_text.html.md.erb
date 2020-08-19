@@ -283,7 +283,6 @@ You specify the compression codec via custom options in the `CREATE EXTERNAL TAB
 |-------|-------------------------------------|
 | COMPRESSION_CODEC    | The compression codec Java class name. If this option is not provided, Greenplum Database performs no data compression. Supported compression codecs include:<br>`org.apache.hadoop.io.compress.DefaultCodec`<br>`org.apache.hadoop.io.compress.BZip2Codec`<br>`org.apache.hadoop.io.compress.GzipCodec` |
 | COMPRESSION_TYPE    | The compression type to employ; supported values are `RECORD` (the default) or `BLOCK`. |
-| THREAD-SAFE | Boolean value determining if a table query or write can run in multi-threaded mode. The default value is `TRUE`. *Deprecated*; PXF ignores this option, all operations are thread-safe. |
 
 If you are accessing an S3 object store, you can provide S3 credentials via custom options in the `CREATE EXTERNAL TABLE` command as described in [Overriding the S3 Server Configuration with DDL](access_s3.html#s3_override).
 
