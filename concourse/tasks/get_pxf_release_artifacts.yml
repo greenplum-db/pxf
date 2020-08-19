@@ -5,18 +5,17 @@ image_resource:
 
 inputs:
 - name: pxf_src
-- name: pxf_open_source_license_file
+- name: pxf_shipit_file
 
 outputs:
 - name: pxf_artifacts
 
 params:
+  GCS_ODP_PATH:
   GCS_OSL_PATH:
   GCS_RELEASES_BUCKET:
   GCS_RELEASES_PATH:
   GOOGLE_CREDENTIALS:
-  RELENG_RELEASES_BUCKET:
-  RELENG_RELEASES_PATH:
 
 run:
   path: pxf_src/concourse/scripts/get_pxf_release_artifacts.bash
