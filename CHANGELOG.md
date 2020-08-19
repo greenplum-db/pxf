@@ -7,6 +7,7 @@
 - [#392](https://github.com/greenplum-db/pxf/pull/392) Add support for Avro BZip2 and XZ Compression Codecs
 - [#395](https://github.com/greenplum-db/pxf/pull/395) Bump com.fasterxml.jackson.core:jackson-* version from 2.9.x to 2.11.0
 - [#410](https://github.com/greenplum-db/pxf/pull/410) Allow skipping the header for *:text profiles
+- [#423](https://github.com/greenplum-db/pxf/pull/423) Deprecate THREAD_SAFE custom option
 
 ### Bug Fixes:
 
