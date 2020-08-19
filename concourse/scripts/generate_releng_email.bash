@@ -18,21 +18,21 @@ function fail() {
 [[ -f pxf_shipit_file/version ]] || fail "Expected shipit file not found"
 version=$(<pxf_shipit_file/version)
 
-echo "Generating Releng Email"
-
-osl_file_url=$(< pxf_open_source_license_file/url)
-
+# compute artifact URLs
 pxf_gp5_el6_releng_url="${RELENG_GP5_DROP_URL}/pxf-gp5-${version}-1.el6.x86_64.rpm"
 pxf_gp5_el7_releng_url="${RELENG_GP5_DROP_URL}/pxf-gp5-${version}-1.el7.x86_64.rpm"
 pxf_gp6_el7_releng_url="${RELENG_GP6_DROP_URL}/pxf-gp6-${version}-1.el7.x86_64.rpm"
 pxf_osl_releng_url="${RELENG_OSL_DROP_URL}/${PXF_OSL_FILE_PREFIX}_${version}_GA.txt"
 pxf_odp_releng_url="${RELENG_ODP_DROP_URL}/${PXF_ODP_FILE_PREFIX}-${version}-ODP.tar.gz"
 
+echo "Generating Releng Email"
 
+# generate email subject
 cat > pxf_artifacts/email_subject.txt << EOF
 PXF Release ${version} is ready to be published to Tanzu Network
 EOF
 
+# generate email body
 cat > pxf_artifacts/email_body.txt << EOF
 Hi GPDB Releng Team,
 
