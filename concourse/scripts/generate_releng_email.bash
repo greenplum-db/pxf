@@ -2,10 +2,32 @@
 
 set -e
 
+: "${PXF_OSL_FILE_PREFIX:?PXF_OSL_FILE_PREFIX must be set}"
+: "${PXF_ODP_FILE_PREFIX:?PXF_ODP_FILE_PREFIX must be set}"
+: "${RELENG_GP5_DROP_URL:?RELENG_GP5_DROP_URL must be set}"
+: "${RELENG_GP6_DROP_URL:?RELENG_GP6_DROP_URL must be set}"
+: "${RELENG_OSL_DROP_URL:?RELENG_OSL_DROP_URL must be set}"
+: "${RELENG_ODP_DROP_URL:?RELENG_ODP_DROP_URL must be set}"
+
+function fail() {
+  echo "Error: $1"
+  exit 1
+}
+
+# determine PXF version to ship
+[[ -f pxf_shipit_file/version ]] || fail "Expected shipit file not found"
+version=$(<pxf_shipit_file/version)
+
 echo "Generating Releng Email"
 
-version=$(< pxf_open_source_license_file/version)
 osl_file_url=$(< pxf_open_source_license_file/url)
+
+pxf_gp5_el6_releng_url="${RELENG_GP5_DROP_URL}/pxf-gp5-${version}-1.el6.x86_64.rpm"
+pxf_gp5_el7_releng_url="${RELENG_GP5_DROP_URL}/pxf-gp5-${version}-1.el7.x86_64.rpm"
+pxf_gp6_el7_releng_url="${RELENG_GP6_DROP_URL}/pxf-gp6-${version}-1.el7.x86_64.rpm"
+pxf_osl_releng_url="${RELENG_OSL_DROP_URL}/${PXF_OSL_FILE_PREFIX}_${version}_GA.txt"
+pxf_odp_releng_url="${RELENG_ODP_DROP_URL}/${PXF_ODP_FILE_PREFIX}-${version}-ODP.tar.gz"
+
 
 cat > pxf_artifacts/email_subject.txt << EOF
 PXF Release ${version} is ready to be published to Tanzu Network
@@ -16,13 +38,17 @@ Hi GPDB Releng Team,
 
 The new PXF release ${version} is ready to be published to VMware Tanzu Network.
 
-We have uploaded the following artifacts to the appropriate RelEng release buckets:
+We have uploaded PXF release artifacts to the following RelEng locations:
 
-$(cd pxf_artifacts && ls pxf-*.*)
+${pxf_gp5_el6_releng_url}
+${pxf_gp5_el7_releng_url}
+${pxf_gp6_el7_releng_url}
+${pxf_osl_releng_url}
+${pxf_odp_releng_url}
 
-The attached OSL file can also be found at: ${osl_file_url}
+The OSL file is also attached to this email.
 
-Can you please upload the artifacts and the OSL file to the Greenplum Tanzu Network Release for our product, PXF?
+Can you please upload the artifacts and the OSL / ODP files to the Greenplum Tanzu Network Release for our product, PXF?
 The OSL file should appear as "Open Source Licenses for PXF ${version}".
 
 Thank you,

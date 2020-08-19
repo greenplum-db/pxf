@@ -262,35 +262,49 @@ resources:
   type: s3
   source:
     access_key_id: ((bucket-access-key-id))
-    bucket: gpdb-stable-concourse-builds
+    bucket: ((pxf-releng-gp5-drop-bucket))
     region_name: ((aws-region))
     secret_access_key: ((bucket-secret-access-key))
-    regexp: components/pxf/pxf-gp5-(.*)-1.el6.x86_64.rpm
+    regexp: ((pxf-releng-gp5-drop-path))/pxf-gp5-(.*)-1.el6.x86_64.rpm
 
 - name: pxf_gp5_rhel7_release_to_releng
   type: s3
   source:
     access_key_id: ((bucket-access-key-id))
-    bucket: gpdb-stable-concourse-builds
+    bucket: ((pxf-releng-gp5-drop-bucket))
     region_name: ((aws-region))
     secret_access_key: ((bucket-secret-access-key))
-    regexp: components/pxf/pxf-gp5-(.*)-1.el7.x86_64.rpm
+    regexp: ((pxf-releng-gp5-drop-path))/pxf-gp5-(.*)-1.el7.x86_64.rpm
 
 - name: pxf_gp6_rhel7_release_to_releng
   type: gcs
   source:
-    bucket: pivotal-gpdb-concourse-resources-prod
+    bucket: ((pxf-releng-gp6-drop-bucket))
     json_key: ((concourse-gcs-resources-service-account-key))
-    regexp: pxf/published/gpdb6/pxf-gp6-(.*)-1.el7.x86_64.rpm
+    regexp: ((pxf-releng-gp6-drop-path))/pxf-gp6-(.*)-1.el7.x86_64.rpm
 
 {% if build_deb %}
 - name: pxf_gp6_ubuntu18_release_to_releng
   type: gcs
   source:
-    bucket: pivotal-gpdb-concourse-resources-prod
+    bucket: ((pxf-releng-gp6-drop-bucket))
     json_key: ((concourse-gcs-resources-service-account-key))
-    regexp: pxf/published/gpdb6/pxf-gp6-(.*)-ubuntu18.04-amd64.deb
+    regexp: ((pxf-releng-gp6-drop-path))/pxf-gp6-(.*)-ubuntu18.04-amd64.deb
 {% endif %}
+
+- name: pxf_osl_to_releng
+  type: gcs
+  source:
+    bucket: ((pxf-releng-osl-drop-bucket))
+    json_key: ((concourse-gcs-resources-service-account-key))
+    regexp: ((pxf-releng-osl-drop-path))/((pxf-osl-file-prefix))_(.*)_GA.txt
+
+- name: pxf_odp_to_releng
+  type: gcs
+  source:
+    bucket: ((pxf-releng-odp-drop-bucket))
+    json_key: ((concourse-gcs-resources-service-account-key))
+    regexp: ((pxf-releng-odp-drop-path))/((pxf-odp-file-prefix))-(.*)-ODP.tar.gz
 
 ## ---------- Docker Images ----------
 {% set gp_ver = 5 %}
@@ -1530,3 +1544,10 @@ jobs:
       params:
         file: pxf_artifacts/pxf-gp6-*ubuntu18*deb
 {% endif %}
+    - put: pxf_osl_to_releng
+      params:
+        file: pxf_artifacts/((pxf-osl-file-prefix))*.txt
+    - put: pxf_odp_to_releng
+      params:
+        file: pxf_artifacts/((pxf-odp-file-prefix))*.tar.gz
+

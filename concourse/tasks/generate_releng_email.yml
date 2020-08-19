@@ -5,7 +5,7 @@ image_resource:
 
 inputs:
   - name: pxf_src
-  - name: pxf_open_source_license_file
+  - name: pxf_shipit_file
   - name: pxf_artifacts
 
 outputs:
@@ -16,6 +16,12 @@ params:
   BUILD_PIPELINE_NAME:
   BUILD_JOB_NAME:
   BUILD_NAME:
+  PXF_OSL_FILE_PREFIX:
+  PXF_ODP_FILE_PREFIX:
+  RELENG_GP5_DROP_URL:
+  RELENG_GP6_DROP_URL:
+  RELENG_OSL_DROP_URL:
+  RELENG_ODP_DROP_URL:
 
 run:
   path: pxf_src/concourse/scripts/generate_releng_email.bash
