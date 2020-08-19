@@ -8,14 +8,6 @@ set -e
 : "${GCS_ODP_PATH:?GCS_ODP_PATH must be set}"
 : "${GOOGLE_CREDENTIALS:?GOOGLE_CREDENTIALS must be set}"
 
-artifacts=(
-  "${GCS_RELEASES_PATH}/gp5/pxf-gp5-${version}-1.el6.x86_64.rpm"
-  "${GCS_RELEASES_PATH}/gp5/pxf-gp5-${version}-1.el7.x86_64.rpm"
-  "${GCS_RELEASES_PATH}/gp6/pxf-gp6-${version}-1.el7.x86_64.rpm"
-  "${GCS_OSL_PATH}/open_source_license_VMware_Tanzu_Greenplum_Platform_Extension_Framework_${version}_GA.txt"
-  "${GCS_ODP_PATH}/VMware-greenplum-pxf-${version}-ODP.tar.gz"
-)
-destination_dir=pxf_artifacts
 
 function fail() {
   echo "Error: $1"
@@ -36,14 +28,27 @@ copy_artifacts_to_local() {
   done
 }
 
+# authenticate to Google
 echo "Authenticating with Google service account..."
 gcloud auth activate-service-account --key-file=<(echo "${GOOGLE_CREDENTIALS}") >/dev/null 2>&1
 
+# determine PXF version to ship
 [[ -f pxf_shipit_file/version ]] || fail "Expected shipit file not found"
 version=$(<pxf_shipit_file/version)
 
 echo "Ship directive for PXF-${version} from : $(<pxf_shipit_file/*.txt)"
 
+# define artifacts to copy
+artifacts=(
+  "${GCS_RELEASES_PATH}/gp5/pxf-gp5-${version}-1.el6.x86_64.rpm"
+  "${GCS_RELEASES_PATH}/gp5/pxf-gp5-${version}-1.el7.x86_64.rpm"
+  "${GCS_RELEASES_PATH}/gp6/pxf-gp6-${version}-1.el7.x86_64.rpm"
+  "${GCS_OSL_PATH}/open_source_license_VMware_Tanzu_Greenplum_Platform_Extension_Framework_${version}_GA.txt"
+  "${GCS_ODP_PATH}/VMware-greenplum-pxf-${version}-ODP.tar.gz"
+)
+
+# check and copy artifacts to local destination
+destination_dir=pxf_artifacts
 check_artifacts
 copy_artifacts_to_local
 
