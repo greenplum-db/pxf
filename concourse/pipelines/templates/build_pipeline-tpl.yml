@@ -185,6 +185,11 @@ resource_types:
   source:
     repository: frodenas/gcs-resource
 
+- name: email
+  type: docker-image
+  source:
+    repository: pcfseceng/email-resource
+
 {% if slack_notification %}
 - name: slack-notification
   type: docker-image
@@ -214,6 +219,7 @@ resources:
     json_key: ((pxf-storage-service-account-key))
     versioned_file: automation-dependencies/pxf-automation-dependencies.tar.gz
 
+## ---------- Single Cluster tarballs ----------
 - name: singlecluster-hdp2
   type: gcs
   icon: google-drive
@@ -258,6 +264,7 @@ resources:
     private_key: ((ccp-git-key))
     uri: ((ccp-git-remote))
 
+## ---------- RelEng Drop Artifacts ----------
 - name: pxf_gp5_rhel6_release_to_releng
   type: s3
   source:
@@ -305,6 +312,26 @@ resources:
     bucket: ((pxf-releng-odp-drop-bucket))
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: ((pxf-releng-odp-drop-path))/((pxf-odp-file-prefix))-(.*)-ODP.tar.gz
+
+## ---------- PXF ShitIt resources ----------
+- name: pxf_shipit_file
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: data-gpdb-ud-pxf-releases
+    json_key: ((pxf-storage-service-account-key))
+    regexp: dev/shipit/greenplum-pxf-(.*).txt
+
+- name: send-an-email
+  type: email
+  source:
+    smtp:
+      host: ((pxf-smtp-host))
+      port: ((pxf-smpt-port)) # this must be a string
+      username: ((pxf-smtp-username))
+      password: ((pxf-smtp-password))
+    from: ((pxf-email-sender))
+
 
 ## ---------- Docker Images ----------
 {% set gp_ver = 5 %}
@@ -1519,16 +1546,32 @@ jobs:
     - get: pxf_src
       passed:
       - Promote PXF-GP5 and PXF-GP6 Artifacts
-    - get: pxf_open_source_license_file
+    - get: pxf_shipit_file
       trigger: true
     - get: google-cloud-sdk-slim-image
   - task: Get PXF-GP5 and PXF-GP6 Artifacts from Releases Directory
     image: google-cloud-sdk-slim-image
     file: pxf_src/concourse/tasks/get_pxf_release_artifacts.yml
     params:
+      GCS_ODP_PATH: prod/ODP
+      GCS_OSL_PATH: prod/OSL
       GCS_RELEASES_BUCKET: data-gpdb-ud-pxf-releases
       GCS_RELEASES_PATH: prod/releases
       GOOGLE_CREDENTIALS: ((pxf-storage-service-account-key))
+  - task: Generate Releng Email
+    image: google-cloud-sdk-slim-image
+    file: pxf_src/concourse/tasks/generate_releng_email.yml
+    params:
+      ATC_EXTERNAL_URL: ${ATC_EXTERNAL_URL}
+      BUILD_PIPELINE_NAME: ${BUILD_PIPELINE_NAME}
+      BUILD_JOB_NAME: ${BUILD_JOB_NAME}
+      BUILD_NAME: ${BUILD_NAME}
+      PXF_OSL_FILE_PREFIX: ((pxf-osl-file-prefix))
+      PXF_ODP_FILE_PREFIX: ((pxf-odp-file-prefix))
+      RELENG_GP5_DROP_URL: ((pxf-releng-gp5-drop-cloud))://((pxf-releng-gp5-drop-bucket))/((pxf-releng-gp5-drop-path))
+      RELENG_GP6_DROP_URL: ((pxf-releng-gp6-drop-cloud))://((pxf-releng-gp6-drop-bucket))/((pxf-releng-gp6-drop-path))
+      RELENG_OSL_DROP_URL: gs://((pxf-releng-osl-drop-bucket))/((pxf-releng-osl-drop-path))
+      RELENG_ODP_DROP_URL: gs://((pxf-releng-odp-drop-bucket))/((pxf-releng-odp-drop-path))
   - in_parallel:
     - put: pxf_gp5_rhel6_release_to_releng
       params:
@@ -1544,10 +1587,16 @@ jobs:
       params:
         file: pxf_artifacts/pxf-gp6-*ubuntu18*deb
 {% endif %}
-    - put: pxf_osl_to_releng
-      params:
-        file: pxf_artifacts/((pxf-osl-file-prefix))*.txt
     - put: pxf_odp_to_releng
       params:
         file: pxf_artifacts/((pxf-odp-file-prefix))*.tar.gz
+    - put: pxf_osl_to_releng
+      params:
+        file: pxf_artifacts/((pxf-osl-file-prefix))*.txt
+  - put: send-an-email
+    params:
+      subject: pxf_artifacts/email_subject.txt
+      body: pxf_artifacts/email_body.txt
+      attachment_globs: [pxf_artifacts/((pxf-osl-file-prefix))*.txt]
+      to_text: "((pxf-releng-email)),((pxf-ud-email))"
 
