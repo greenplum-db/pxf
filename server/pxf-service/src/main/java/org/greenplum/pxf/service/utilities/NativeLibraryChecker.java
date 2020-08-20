@@ -26,59 +26,60 @@ public class NativeLibraryChecker {
     public static void checkNativeLibraries() {
         boolean nativeHadoopLoaded = NativeCodeLoader.isNativeCodeLoaded();
 
-        if (nativeHadoopLoaded) {
-            Configuration conf = new Configuration();
-            boolean zlibLoaded;
-            boolean snappyLoaded;
-            boolean zStdLoaded;
-            boolean bzip2Loaded = Bzip2Factory.isNativeBzip2Loaded(conf);
-            boolean openSslLoaded;
-
-            String openSslDetail;
-            String hadoopLibraryName;
-            String zlibLibraryName = "";
-            String snappyLibraryName = "";
-            String zstdLibraryName = "";
-            String lz4LibraryName;
-            String bzip2LibraryName = "";
-
-            hadoopLibraryName = NativeCodeLoader.getLibraryName();
-            zlibLoaded = ZlibFactory.isNativeZlibLoaded(conf);
-            if (zlibLoaded) {
-                zlibLibraryName = ZlibFactory.getLibraryName();
-            }
-            snappyLoaded = NativeCodeLoader.buildSupportsSnappy() &&
-                    SnappyCodec.isNativeCodeLoaded();
-            if (snappyLoaded && NativeCodeLoader.buildSupportsSnappy()) {
-                snappyLibraryName = SnappyCodec.getLibraryName();
-            }
-            zStdLoaded = NativeCodeLoader.buildSupportsZstd() &&
-                    ZStandardCodec.isNativeCodeLoaded();
-            if (zStdLoaded && NativeCodeLoader.buildSupportsZstd()) {
-                zstdLibraryName = ZStandardCodec.getLibraryName();
-            }
-            if (OpensslCipher.getLoadingFailureReason() != null) {
-                openSslDetail = OpensslCipher.getLoadingFailureReason();
-                openSslLoaded = false;
-            } else {
-                openSslDetail = OpensslCipher.getLibraryName();
-                openSslLoaded = true;
-            }
-            lz4LibraryName = Lz4Codec.getLibraryName();
-            if (bzip2Loaded) {
-                bzip2LibraryName = Bzip2Factory.getLibraryName(conf);
-            }
-
-            LOG.info("Hadoop native library : {} {}", true, hadoopLibraryName);
-            LOG.info("zlib library          : {} {}", zlibLoaded, zlibLibraryName);
-            LOG.info("snappy library        : {} {}", snappyLoaded, snappyLibraryName);
-            LOG.info("zstd library          : {} {}", zStdLoaded, zstdLibraryName);
-            // lz4 is linked within libhadoop
-            LOG.info("lz4 library           : {} {}", true, lz4LibraryName);
-            LOG.info("bzip2 library         : {} {}", bzip2Loaded, bzip2LibraryName);
-            LOG.info("openssl library       : {} {}", openSslLoaded, openSslDetail);
-        } else {
+        if (!nativeHadoopLoaded) {
             LOG.info("Hadoop native library not loaded");
+            return;
         }
+
+        Configuration conf = new Configuration();
+        boolean zlibLoaded;
+        boolean snappyLoaded;
+        boolean zStdLoaded;
+        boolean bzip2Loaded = Bzip2Factory.isNativeBzip2Loaded(conf);
+        boolean openSslLoaded;
+
+        String openSslDetail;
+        String hadoopLibraryName;
+        String zlibLibraryName = "";
+        String snappyLibraryName = "";
+        String zstdLibraryName = "";
+        String lz4LibraryName;
+        String bzip2LibraryName = "";
+
+        hadoopLibraryName = NativeCodeLoader.getLibraryName();
+        zlibLoaded = ZlibFactory.isNativeZlibLoaded(conf);
+        if (zlibLoaded) {
+            zlibLibraryName = ZlibFactory.getLibraryName();
+        }
+        snappyLoaded = NativeCodeLoader.buildSupportsSnappy() &&
+                SnappyCodec.isNativeCodeLoaded();
+        if (snappyLoaded && NativeCodeLoader.buildSupportsSnappy()) {
+            snappyLibraryName = SnappyCodec.getLibraryName();
+        }
+        zStdLoaded = NativeCodeLoader.buildSupportsZstd() &&
+                ZStandardCodec.isNativeCodeLoaded();
+        if (zStdLoaded && NativeCodeLoader.buildSupportsZstd()) {
+            zstdLibraryName = ZStandardCodec.getLibraryName();
+        }
+        if (OpensslCipher.getLoadingFailureReason() != null) {
+            openSslDetail = OpensslCipher.getLoadingFailureReason();
+            openSslLoaded = false;
+        } else {
+            openSslDetail = OpensslCipher.getLibraryName();
+            openSslLoaded = true;
+        }
+        lz4LibraryName = Lz4Codec.getLibraryName();
+        if (bzip2Loaded) {
+            bzip2LibraryName = Bzip2Factory.getLibraryName(conf);
+        }
+
+        LOG.info("Hadoop native library : {} {}", true, hadoopLibraryName);
+        LOG.info("zlib library          : {} {}", zlibLoaded, zlibLibraryName);
+        LOG.info("snappy library        : {} {}", snappyLoaded, snappyLibraryName);
+        LOG.info("zstd library          : {} {}", zStdLoaded, zstdLibraryName);
+        // lz4 is linked within libhadoop
+        LOG.info("lz4 library           : {} {}", true, lz4LibraryName);
+        LOG.info("bzip2 library         : {} {}", bzip2Loaded, bzip2LibraryName);
+        LOG.info("openssl library       : {} {}", openSslLoaded, openSslDetail);
     }
 }
