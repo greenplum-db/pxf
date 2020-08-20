@@ -21,6 +21,7 @@ package org.greenplum.pxf.service.servlet;
 
 
 import org.greenplum.pxf.service.utilities.Log4jConfigure;
+import org.greenplum.pxf.service.utilities.NativeLibraryChecker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +33,7 @@ import javax.servlet.ServletContextListener;
  */
 public class ServletLifecycleListener implements ServletContextListener {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ServletContextListener.class);
+	private static final Logger LOG = LoggerFactory.getLogger(ServletContextListener.class);
 
 	/**
 	 * Called after the webapp has been initialized.
@@ -43,6 +44,9 @@ public class ServletLifecycleListener implements ServletContextListener {
 	public void contextInitialized(ServletContextEvent event) {
 		// 1. Initialize log4j:
 		Log4jConfigure.configure(event);
+
+		// 2. Check native libraries that have been loaded by PXF
+		NativeLibraryChecker.checkNativeLibraries();
 
 		LOG.info("PXF server webapp initialized");
 	}
