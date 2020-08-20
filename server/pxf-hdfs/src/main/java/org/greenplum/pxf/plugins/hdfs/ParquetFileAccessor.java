@@ -28,7 +28,6 @@ import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.parquet.HadoopReadOptions;
 import org.apache.parquet.ParquetReadOptions;
-import org.apache.parquet.column.ParquetProperties;
 import org.apache.parquet.column.ParquetProperties.WriterVersion;
 import org.apache.parquet.example.data.Group;
 import org.apache.parquet.filter2.compat.FilterCompat;
@@ -42,7 +41,6 @@ import org.apache.parquet.hadoop.example.GroupWriteSupport;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 import org.apache.parquet.hadoop.metadata.FileMetaData;
 import org.apache.parquet.hadoop.util.HadoopInputFile;
-import org.apache.parquet.schema.LogicalTypeAnnotation;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.MessageTypeParser;
 import org.apache.parquet.schema.PrimitiveType;
@@ -76,12 +74,18 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static org.apache.parquet.column.ParquetProperties.DEFAULT_DICTIONARY_PAGE_SIZE;
+import static org.apache.parquet.column.ParquetProperties.DEFAULT_IS_DICTIONARY_ENABLED;
+import static org.apache.parquet.column.ParquetProperties.DEFAULT_PAGE_SIZE;
+import static org.apache.parquet.column.ParquetProperties.DEFAULT_WRITER_VERSION;
 import static org.apache.parquet.hadoop.ParquetOutputFormat.BLOCK_SIZE;
 import static org.apache.parquet.hadoop.ParquetOutputFormat.DICTIONARY_PAGE_SIZE;
 import static org.apache.parquet.hadoop.ParquetOutputFormat.ENABLE_DICTIONARY;
 import static org.apache.parquet.hadoop.ParquetOutputFormat.PAGE_SIZE;
 import static org.apache.parquet.hadoop.ParquetOutputFormat.WRITER_VERSION;
 import static org.apache.parquet.hadoop.api.ReadSupport.PARQUET_READ_SCHEMA;
+import static org.apache.parquet.schema.LogicalTypeAnnotation.DecimalLogicalTypeAnnotation;
+import static org.apache.parquet.schema.LogicalTypeAnnotation.intType;
 import static org.apache.parquet.schema.LogicalTypeAnnotation.stringType;
 
 /**
@@ -243,13 +247,12 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
         codecName = codecFactory.getCodec(compressCodec, DEFAULT_COMPRESSION);
 
         // Options for parquet write
-        pageSize = context.getOption("PAGE_SIZE", ParquetProperties.DEFAULT_PAGE_SIZE);
+        pageSize = context.getOption("PAGE_SIZE", DEFAULT_PAGE_SIZE);
         rowGroupSize = context.getOption("ROWGROUP_SIZE", DEFAULT_ROWGROUP_SIZE);
-        enableDictionary = StringUtils.equalsIgnoreCase("true",
-                context.getOption("ENABLE_DICTIONARY", String.valueOf(ParquetProperties.DEFAULT_IS_DICTIONARY_ENABLED)));
-        dictionarySize = context.getOption("DICTIONARY_PAGE_SIZE", ParquetProperties.DEFAULT_DICTIONARY_PAGE_SIZE);
+        enableDictionary = context.getOption("ENABLE_DICTIONARY", DEFAULT_IS_DICTIONARY_ENABLED);
+        dictionarySize = context.getOption("DICTIONARY_PAGE_SIZE", DEFAULT_DICTIONARY_PAGE_SIZE);
         String parquetVerStr = context.getOption("PARQUET_VERSION");
-        parquetVersion = parquetVerStr != null ? WriterVersion.fromString(parquetVerStr.toLowerCase()) : ParquetProperties.DEFAULT_WRITER_VERSION;
+        parquetVersion = parquetVerStr != null ? WriterVersion.fromString(parquetVerStr.toLowerCase()) : DEFAULT_WRITER_VERSION;
         LOG.debug("{}-{}: Parquet options: PAGE_SIZE = {}, ROWGROUP_SIZE = {}, DICTIONARY_PAGE_SIZE = {}, PARQUET_VERSION = {}, ENABLE_DICTIONARY = {}",
                 context.getTransactionId(), context.getSegmentId(), pageSize, rowGroupSize, dictionarySize, parquetVersion, enableDictionary);
 
@@ -473,7 +476,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
                     break;
                 case SMALLINT:
                     builder = Types.optional(PrimitiveTypeName.INT32)
-                            .as(LogicalTypeAnnotation.intType(16, true));
+                            .as(intType(16, true));
                     break;
                 case INTEGER:
                     builder = Types.optional(PrimitiveTypeName.INT32);
@@ -496,7 +499,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
                     builder = Types
                             .optional(PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY)
                             .length(PRECISION_TO_BYTE_COUNT[precision - 1])
-                            .as(LogicalTypeAnnotation.DecimalLogicalTypeAnnotation.decimalType(scale, precision));
+                            .as(DecimalLogicalTypeAnnotation.decimalType(scale, precision));
                     break;
                 case TIMESTAMP:
                 case TIMESTAMP_WITH_TIME_ZONE:

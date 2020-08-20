@@ -16,7 +16,6 @@ import org.apache.parquet.hadoop.metadata.FileMetaData;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
 import org.apache.parquet.hadoop.util.HadoopInputFile;
 import org.apache.parquet.io.api.Binary;
-import org.apache.parquet.schema.LogicalTypeAnnotation;
 import org.apache.parquet.schema.MessageType;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
@@ -48,6 +47,9 @@ import static org.apache.parquet.hadoop.ParquetOutputFormat.DICTIONARY_PAGE_SIZE
 import static org.apache.parquet.hadoop.ParquetOutputFormat.ENABLE_DICTIONARY;
 import static org.apache.parquet.hadoop.ParquetOutputFormat.PAGE_SIZE;
 import static org.apache.parquet.hadoop.ParquetOutputFormat.WRITER_VERSION;
+import static org.apache.parquet.schema.LogicalTypeAnnotation.DecimalLogicalTypeAnnotation;
+import static org.apache.parquet.schema.LogicalTypeAnnotation.IntLogicalTypeAnnotation;
+import static org.apache.parquet.schema.LogicalTypeAnnotation.StringLogicalTypeAnnotation;
 import static org.greenplum.pxf.plugins.hdfs.parquet.ParquetTypeConverter.bytesToTimestamp;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -113,7 +115,7 @@ public class ParquetWriteTest {
     }
 
     @Test
-    public void testSettingPAGE_SIZEOption() throws Exception {
+    public void testSetting_PAGE_SIZE_Option() throws Exception {
 
         columnDescriptors.add(new ColumnDescriptor("id", DataType.INTEGER.getOID(), 0, "int4", null));
         context.setDataSource(temp.getRoot() + "/out/");
@@ -128,7 +130,7 @@ public class ParquetWriteTest {
     }
 
     @Test
-    public void testSettingDICTIONARY_PAGE_SIZEOption() throws Exception {
+    public void testSetting_DICTIONARY_PAGE_SIZE_Option() throws Exception {
 
         columnDescriptors.add(new ColumnDescriptor("id", DataType.INTEGER.getOID(), 0, "int4", null));
         context.setDataSource(temp.getRoot() + "/out/");
@@ -143,7 +145,7 @@ public class ParquetWriteTest {
     }
 
     @Test
-    public void testSettingENABLE_DICTIONARYOption() throws Exception {
+    public void testSetting_ENABLE_DICTIONARY_Option() throws Exception {
 
         columnDescriptors.add(new ColumnDescriptor("id", DataType.INTEGER.getOID(), 0, "int4", null));
         context.setDataSource(temp.getRoot() + "/out/");
@@ -158,7 +160,7 @@ public class ParquetWriteTest {
     }
 
     @Test
-    public void testSettingPARQUET_VERSIONOption() throws Exception {
+    public void testSetting_PARQUET_VERSION_Option() throws Exception {
 
         columnDescriptors.add(new ColumnDescriptor("id", DataType.INTEGER.getOID(), 0, "int4", null));
         context.setDataSource(temp.getRoot() + "/out/");
@@ -173,7 +175,7 @@ public class ParquetWriteTest {
     }
 
     @Test
-    public void testSettingROWGROUP_SIZEOption() throws Exception {
+    public void testSetting_ROWGROUP_SIZE_Option() throws Exception {
 
         columnDescriptors.add(new ColumnDescriptor("id", DataType.INTEGER.getOID(), 0, "int4", null));
         context.setDataSource(temp.getRoot() + "/out/");
@@ -270,7 +272,7 @@ public class ParquetWriteTest {
                 .build();
 
         // Physical type is binary, logical type is String
-        assertTrue(schema.getType(0).getLogicalTypeAnnotation() instanceof LogicalTypeAnnotation.StringLogicalTypeAnnotation);
+        assertTrue(schema.getType(0).getLogicalTypeAnnotation() instanceof StringLogicalTypeAnnotation);
         assertEquals("a", fileReader.read().getString(0, 0));
         assertEquals("aa", fileReader.read().getString(0, 0));
         assertEquals("aaa", fileReader.read().getString(0, 0));
@@ -318,7 +320,7 @@ public class ParquetWriteTest {
                 .build();
 
         // Physical type is binary, logical type is Date
-        assertTrue(schema.getType(0).getLogicalTypeAnnotation() instanceof LogicalTypeAnnotation.StringLogicalTypeAnnotation);
+        assertTrue(schema.getType(0).getLogicalTypeAnnotation() instanceof StringLogicalTypeAnnotation);
         assertEquals("2020-08-01", fileReader.read().getString(0, 0));
         assertEquals("2020-08-02", fileReader.read().getString(0, 0));
         assertEquals("2020-08-03", fileReader.read().getString(0, 0));
@@ -346,7 +348,7 @@ public class ParquetWriteTest {
 
         assertTrue(accessor.openForWrite());
 
-        // write parquet file with DATE from 2020-08-01 to 2020-08-10
+        // write parquet file with float8 values
         for (int i = 0; i < 10; i++) {
             List<OneField> record = Collections.singletonList(new OneField(DataType.FLOAT8.getOID(), 1.1 * i));
             OneRow rowToWrite = resolver.setFields(record);
@@ -365,7 +367,7 @@ public class ParquetWriteTest {
                 .withConf(configuration)
                 .build();
 
-        // Physical type is binary, logical type is Date
+        // Physical type is double
         assertNull(schema.getType(0).getLogicalTypeAnnotation());
         assertEquals(0, fileReader.read().getDouble(0, 0), 0.01);
         assertEquals(1.1, fileReader.read().getDouble(0, 0), 0.01);
@@ -611,8 +613,8 @@ public class ParquetWriteTest {
                 .withConf(configuration)
                 .build();
 
-        // Physical type is INT
-        assertTrue(schema.getType(0).getLogicalTypeAnnotation() instanceof LogicalTypeAnnotation.IntLogicalTypeAnnotation);
+        // Physical type is INT (32bits)
+        assertTrue(schema.getType(0).getLogicalTypeAnnotation() instanceof IntLogicalTypeAnnotation);
         assertEquals(0, fileReader.read().getInteger(0, 0));
         assertEquals(1, fileReader.read().getInteger(0, 0));
         assertEquals(2, fileReader.read().getInteger(0, 0));
@@ -709,7 +711,7 @@ public class ParquetWriteTest {
                 .build();
 
         // Physical type is BINARY
-        assertTrue(schema.getType(0).getLogicalTypeAnnotation() instanceof LogicalTypeAnnotation.StringLogicalTypeAnnotation);
+        assertTrue(schema.getType(0).getLogicalTypeAnnotation() instanceof StringLogicalTypeAnnotation);
         assertEquals("", fileReader.read().getString(0, 0));
         assertEquals("b", fileReader.read().getString(0, 0));
         assertEquals("bb", fileReader.read().getString(0, 0));
@@ -758,7 +760,7 @@ public class ParquetWriteTest {
                 .build();
 
         // Physical type is BINARY
-        assertTrue(schema.getType(0).getLogicalTypeAnnotation() instanceof LogicalTypeAnnotation.StringLogicalTypeAnnotation);
+        assertTrue(schema.getType(0).getLogicalTypeAnnotation() instanceof StringLogicalTypeAnnotation);
         assertEquals("", fileReader.read().getString(0, 0));
         assertEquals("c", fileReader.read().getString(0, 0));
         assertEquals("cc", fileReader.read().getString(0, 0));
@@ -776,7 +778,8 @@ public class ParquetWriteTest {
     @Test
     public void testWriteNumeric() throws Exception {
         String path = temp.getRoot() + "/out/numeric/";
-        columnDescriptors.add(new ColumnDescriptor("dec1", DataType.NUMERIC.getOID(), 0, "numeric", null));
+        // precision is 38 and scale is 18
+        columnDescriptors.add(new ColumnDescriptor("dec1", DataType.NUMERIC.getOID(), 0, "numeric", new Integer[]{38, 18}));
 
         context.setDataSource(path);
         context.setTransactionId("XID-XYZ-123469");
@@ -786,9 +789,22 @@ public class ParquetWriteTest {
 
         assertTrue(accessor.openForWrite());
 
-        // write parquet file with bigint values
-        for (int i = 0; i < 10; i++) {
-            List<OneField> record = Collections.singletonList(new OneField(DataType.NUMERIC.getOID(), String.format("%d.%d", (i + 1), (i + 2))));
+        String[] values = new String[]{
+                "1.2",
+                "22.2345",
+                "333.34567",
+                "4444.456789",
+                "55555.5678901",
+                "666666.67890123",
+                "7777777.789012345",
+                "88888888.8901234567",
+                "999999999.90123456789",
+                "12345678901234567890.123456789012345678"
+        };
+
+        // write parquet file with numeric values
+        for (String value : values) {
+            List<OneField> record = Collections.singletonList(new OneField(DataType.NUMERIC.getOID(), value));
             OneRow rowToWrite = resolver.setFields(record);
             assertTrue(accessor.writeNextObject(rowToWrite));
         }
@@ -806,17 +822,17 @@ public class ParquetWriteTest {
                 .build();
 
         // Physical type is BINARY
-        assertTrue(schema.getType(0).getLogicalTypeAnnotation() instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation);
+        assertTrue(schema.getType(0).getLogicalTypeAnnotation() instanceof DecimalLogicalTypeAnnotation);
         assertEquals(new BigDecimal("1.2").setScale(18, ROUND_UNNECESSARY), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), 18));
-        assertEquals(new BigDecimal("2.3").setScale(18, ROUND_UNNECESSARY), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), 18));
-        assertEquals(new BigDecimal("3.4").setScale(18, ROUND_UNNECESSARY), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), 18));
-        assertEquals(new BigDecimal("4.5").setScale(18, ROUND_UNNECESSARY), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), 18));
-        assertEquals(new BigDecimal("5.6").setScale(18, ROUND_UNNECESSARY), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), 18));
-        assertEquals(new BigDecimal("6.7").setScale(18, ROUND_UNNECESSARY), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), 18));
-        assertEquals(new BigDecimal("7.8").setScale(18, ROUND_UNNECESSARY), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), 18));
-        assertEquals(new BigDecimal("8.9").setScale(18, ROUND_UNNECESSARY), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), 18));
-        assertEquals(new BigDecimal("9.10").setScale(18, ROUND_UNNECESSARY), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), 18));
-        assertEquals(new BigDecimal("10.11").setScale(18, ROUND_UNNECESSARY), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), 18));
+        assertEquals(new BigDecimal("22.2345").setScale(18, ROUND_UNNECESSARY), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), 18));
+        assertEquals(new BigDecimal("333.34567").setScale(18, ROUND_UNNECESSARY), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), 18));
+        assertEquals(new BigDecimal("4444.456789").setScale(18, ROUND_UNNECESSARY), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), 18));
+        assertEquals(new BigDecimal("55555.5678901").setScale(18, ROUND_UNNECESSARY), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), 18));
+        assertEquals(new BigDecimal("666666.67890123").setScale(18, ROUND_UNNECESSARY), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), 18));
+        assertEquals(new BigDecimal("7777777.789012345").setScale(18, ROUND_UNNECESSARY), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), 18));
+        assertEquals(new BigDecimal("88888888.8901234567").setScale(18, ROUND_UNNECESSARY), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), 18));
+        assertEquals(new BigDecimal("999999999.90123456789").setScale(18, ROUND_UNNECESSARY), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), 18));
+        assertEquals(new BigDecimal("12345678901234567890.123456789012345678").setScale(18, ROUND_UNNECESSARY), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), 18));
         assertNull(fileReader.read());
         fileReader.close();
     }
@@ -871,11 +887,11 @@ public class ParquetWriteTest {
                 .withConf(configuration)
                 .build();
 
-        assertTrue(schema.getType(0).getLogicalTypeAnnotation() instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation); //numeric
-        assertTrue(schema.getType(1).getLogicalTypeAnnotation() instanceof LogicalTypeAnnotation.StringLogicalTypeAnnotation); //bpchar
+        assertTrue(schema.getType(0).getLogicalTypeAnnotation() instanceof DecimalLogicalTypeAnnotation); //numeric
+        assertTrue(schema.getType(1).getLogicalTypeAnnotation() instanceof StringLogicalTypeAnnotation); //bpchar
         assertNull(schema.getType(2).getLogicalTypeAnnotation()); //timestamp
         assertNull(schema.getType(3).getLogicalTypeAnnotation()); //bytea
-        assertTrue(schema.getType(4).getLogicalTypeAnnotation() instanceof LogicalTypeAnnotation.StringLogicalTypeAnnotation); //text
+        assertTrue(schema.getType(4).getLogicalTypeAnnotation() instanceof StringLogicalTypeAnnotation); //text
         Group row0 = fileReader.read();
         Group row1 = fileReader.read();
         Group row2 = fileReader.read();

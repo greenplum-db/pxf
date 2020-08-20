@@ -43,6 +43,7 @@ public class RequestContext {
      * are in a read, write or fragmenter call.
      */
     private RequestType requestType;
+
     public RequestType getRequestType() {
         return requestType;
     }
@@ -59,7 +60,7 @@ public class RequestContext {
         FRAGMENTER,
         READ_BRIDGE,
         WRITE_BRIDGE,
-    };
+    }
 
     // ----- NAMED PROPERTIES -----
     private String accessor;
@@ -201,6 +202,31 @@ public class RequestContext {
      */
     public String getOption(String option) {
         return options.get(option);
+    }
+
+    /**
+     * Returns a boolean value of the given option or a default value if the
+     * option was not provided. Will throw an IllegalArgumentException if the
+     * option value can not be represented as a boolean
+     *
+     * @param option       name of the option
+     * @param defaultValue default value
+     * @return boolean value of the option or default value if the option was not provided
+     */
+    public boolean getOption(String option, boolean defaultValue) {
+        boolean result;
+        String value = options.get(option);
+        if (value == null) {
+            result = defaultValue;
+        } else if (StringUtils.equalsIgnoreCase(value, "true")) {
+            result = true;
+        } else if (StringUtils.equalsIgnoreCase(value, "false")) {
+            result = false;
+        } else {
+            throw new IllegalArgumentException(String.format(
+                    "Property %s has incorrect value %s : must be either true or false", option, value));
+        }
+        return result;
     }
 
     /**

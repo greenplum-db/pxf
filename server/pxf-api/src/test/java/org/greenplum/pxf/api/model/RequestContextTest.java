@@ -8,6 +8,8 @@ import org.junit.rules.ExpectedException;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 
 public class RequestContextTest {
@@ -175,6 +177,38 @@ public class RequestContextTest {
 
         context.addOption("foo", "-5");
         context.getOption("foo", 77, true);
+    }
+
+    @Test
+    public void testReturnDefaultBooleanOptionValue() {
+        assertTrue(context.getOption("foo", true));
+        assertFalse(context.getOption("foo", false));
+    }
+
+    @Test
+    public void testReturnBooleanOptionValue() {
+        context.addOption("lowercase_false", "false");
+        context.addOption("uppercase_false", "FALSE");
+        context.addOption("mixed_case_false", "FaLsE");
+        context.addOption("lowercase_true", "true");
+        context.addOption("uppercase_true", "TRUE");
+        context.addOption("mixed_case_true", "tRuE");
+
+        assertFalse(context.getOption("lowercase_false", true));
+        assertFalse(context.getOption("uppercase_false", true));
+        assertFalse(context.getOption("mixed_case_false", true));
+        assertTrue(context.getOption("lowercase_true", false));
+        assertTrue(context.getOption("uppercase_true", false));
+        assertTrue(context.getOption("mixed_case_true", false));
+    }
+
+    @Test
+    public void testFailsOnInvalidBooleanOptionWhenRequestedBoolean() {
+        thrown.expect(IllegalArgumentException.class);
+        thrown.expectMessage("Property foo has incorrect value junk : must be either true or false");
+
+        context.addOption("foo", "junk");
+        context.getOption("foo", false);
     }
 
     @Test

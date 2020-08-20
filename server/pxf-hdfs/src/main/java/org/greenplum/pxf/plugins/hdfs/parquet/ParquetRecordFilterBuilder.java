@@ -34,6 +34,7 @@ import static org.apache.parquet.filter2.predicate.FilterApi.intColumn;
 import static org.apache.parquet.filter2.predicate.FilterApi.longColumn;
 import static org.apache.parquet.filter2.predicate.FilterApi.not;
 import static org.apache.parquet.filter2.predicate.FilterApi.or;
+import static org.apache.parquet.schema.LogicalTypeAnnotation.DateLogicalTypeAnnotation;
 
 /**
  * This is the implementation of {@link TreeVisitor} for Parquet.
@@ -262,7 +263,7 @@ public class ParquetRecordFilterBuilder implements TreeVisitor {
 
     private static Integer getIntegerForINT32(LogicalTypeAnnotation logicalTypeAnnotation, OperandNode valueOperand) {
         if (valueOperand == null) return null;
-        if (logicalTypeAnnotation instanceof LogicalTypeAnnotation.DateLogicalTypeAnnotation) {
+        if (logicalTypeAnnotation instanceof DateLogicalTypeAnnotation) {
             // Number of days since epoch
             LocalDate localDateValue = LocalDate.parse(valueOperand.toString());
             LocalDate epoch = LocalDate.ofEpochDay(0);

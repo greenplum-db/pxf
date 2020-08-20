@@ -24,6 +24,11 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Base64;
 
+import static org.apache.parquet.schema.LogicalTypeAnnotation.DateLogicalTypeAnnotation;
+import static org.apache.parquet.schema.LogicalTypeAnnotation.DecimalLogicalTypeAnnotation;
+import static org.apache.parquet.schema.LogicalTypeAnnotation.IntLogicalTypeAnnotation;
+import static org.apache.parquet.schema.LogicalTypeAnnotation.TimestampLogicalTypeAnnotation;
+
 /**
  * Converter for Parquet types and values into PXF data types and values.
  */
@@ -35,9 +40,9 @@ public enum ParquetTypeConverter {
             LogicalTypeAnnotation originalType = type.getLogicalTypeAnnotation();
             if (originalType == null) {
                 return DataType.BYTEA;
-            } else if (originalType instanceof LogicalTypeAnnotation.DateLogicalTypeAnnotation) {
+            } else if (originalType instanceof DateLogicalTypeAnnotation) {
                 return DataType.DATE;
-            } else if (originalType instanceof LogicalTypeAnnotation.TimestampLogicalTypeAnnotation) {
+            } else if (originalType instanceof TimestampLogicalTypeAnnotation) {
                 return DataType.TIMESTAMP;
             } else {
                 return DataType.TEXT;
@@ -67,12 +72,12 @@ public enum ParquetTypeConverter {
         @Override
         public DataType getDataType(Type type) {
             LogicalTypeAnnotation originalType = type.getLogicalTypeAnnotation();
-            if (originalType instanceof LogicalTypeAnnotation.DateLogicalTypeAnnotation) {
+            if (originalType instanceof DateLogicalTypeAnnotation) {
                 return DataType.DATE;
-            } else if (originalType instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) {
+            } else if (originalType instanceof DecimalLogicalTypeAnnotation) {
                 return DataType.NUMERIC;
-            } else if (originalType instanceof LogicalTypeAnnotation.IntLogicalTypeAnnotation) {
-                LogicalTypeAnnotation.IntLogicalTypeAnnotation intType = (LogicalTypeAnnotation.IntLogicalTypeAnnotation) originalType;
+            } else if (originalType instanceof IntLogicalTypeAnnotation) {
+                IntLogicalTypeAnnotation intType = (IntLogicalTypeAnnotation) originalType;
                 if (intType.getBitWidth() == 8 || intType.getBitWidth() == 16) {
                     return DataType.SMALLINT;
                 }
@@ -84,12 +89,12 @@ public enum ParquetTypeConverter {
         public Object getValue(Group group, int columnIndex, int repeatIndex, Type type) {
             int result = group.getInteger(columnIndex, repeatIndex);
             LogicalTypeAnnotation originalType = type.getLogicalTypeAnnotation();
-            if (originalType instanceof LogicalTypeAnnotation.DateLogicalTypeAnnotation) {
+            if (originalType instanceof DateLogicalTypeAnnotation) {
                 return new DateWritable(result).get(true);
-            } else if (originalType instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) {
-                return ParquetTypeConverter.bigDecimalFromLong((LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) originalType, result);
-            } else if (originalType instanceof LogicalTypeAnnotation.IntLogicalTypeAnnotation) {
-                LogicalTypeAnnotation.IntLogicalTypeAnnotation intType = (LogicalTypeAnnotation.IntLogicalTypeAnnotation) originalType;
+            } else if (originalType instanceof DecimalLogicalTypeAnnotation) {
+                return ParquetTypeConverter.bigDecimalFromLong((DecimalLogicalTypeAnnotation) originalType, result);
+            } else if (originalType instanceof IntLogicalTypeAnnotation) {
+                IntLogicalTypeAnnotation intType = (IntLogicalTypeAnnotation) originalType;
                 if (intType.getBitWidth() == 8 || intType.getBitWidth() == 16) {
                     return (short) result;
                 }
@@ -106,7 +111,7 @@ public enum ParquetTypeConverter {
     INT64 {
         @Override
         public DataType getDataType(Type type) {
-            if (type.getLogicalTypeAnnotation() instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) {
+            if (type.getLogicalTypeAnnotation() instanceof DecimalLogicalTypeAnnotation) {
                 return DataType.NUMERIC;
             }
             return DataType.BIGINT;
@@ -115,9 +120,9 @@ public enum ParquetTypeConverter {
         @Override
         public Object getValue(Group group, int columnIndex, int repeatIndex, Type type) {
             long value = group.getLong(columnIndex, repeatIndex);
-            if (type.getLogicalTypeAnnotation() instanceof LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) {
+            if (type.getLogicalTypeAnnotation() instanceof DecimalLogicalTypeAnnotation) {
                 return ParquetTypeConverter
-                        .bigDecimalFromLong((LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) type.getLogicalTypeAnnotation(), value);
+                        .bigDecimalFromLong((DecimalLogicalTypeAnnotation) type.getLogicalTypeAnnotation(), value);
             }
             return value;
         }
@@ -188,7 +193,7 @@ public enum ParquetTypeConverter {
 
         @Override
         public Object getValue(Group group, int columnIndex, int repeatIndex, Type type) {
-            int scale = ((LogicalTypeAnnotation.DecimalLogicalTypeAnnotation) type.getLogicalTypeAnnotation()).getScale();
+            int scale = ((DecimalLogicalTypeAnnotation) type.getLogicalTypeAnnotation()).getScale();
             return new BigDecimal(new BigInteger(group.getBinary(columnIndex, repeatIndex).getBytes()), scale);
         }
 
@@ -291,7 +296,7 @@ public enum ParquetTypeConverter {
     }
 
     // Helper method that returns a BigDecimal from the long value
-    private static BigDecimal bigDecimalFromLong(LogicalTypeAnnotation.DecimalLogicalTypeAnnotation decimalType, long value) {
+    private static BigDecimal bigDecimalFromLong(DecimalLogicalTypeAnnotation decimalType, long value) {
         return new BigDecimal(BigInteger.valueOf(value), decimalType.getScale());
     }
 }
