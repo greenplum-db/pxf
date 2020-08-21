@@ -53,6 +53,7 @@ import static org.apache.parquet.schema.LogicalTypeAnnotation.StringLogicalTypeA
 import static org.greenplum.pxf.plugins.hdfs.parquet.ParquetTypeConverter.bytesToTimestamp;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -272,6 +273,8 @@ public class ParquetWriteTest {
                 .build();
 
         // Physical type is binary, logical type is String
+        assertNotNull(schema.getColumns());
+        assertEquals(1, schema.getColumns().size());
         assertTrue(schema.getType(0).getLogicalTypeAnnotation() instanceof StringLogicalTypeAnnotation);
         assertEquals("a", fileReader.read().getString(0, 0));
         assertEquals("aa", fileReader.read().getString(0, 0));
@@ -320,6 +323,8 @@ public class ParquetWriteTest {
                 .build();
 
         // Physical type is binary, logical type is Date
+        assertNotNull(schema.getColumns());
+        assertEquals(1, schema.getColumns().size());
         assertTrue(schema.getType(0).getLogicalTypeAnnotation() instanceof StringLogicalTypeAnnotation);
         assertEquals("2020-08-01", fileReader.read().getString(0, 0));
         assertEquals("2020-08-02", fileReader.read().getString(0, 0));
@@ -614,6 +619,8 @@ public class ParquetWriteTest {
                 .build();
 
         // Physical type is INT (32bits)
+        assertNotNull(schema.getColumns());
+        assertEquals(1, schema.getColumns().size());
         assertTrue(schema.getType(0).getLogicalTypeAnnotation() instanceof IntLogicalTypeAnnotation);
         assertEquals(0, fileReader.read().getInteger(0, 0));
         assertEquals(1, fileReader.read().getInteger(0, 0));
@@ -711,6 +718,8 @@ public class ParquetWriteTest {
                 .build();
 
         // Physical type is BINARY
+        assertNotNull(schema.getColumns());
+        assertEquals(1, schema.getColumns().size());
         assertTrue(schema.getType(0).getLogicalTypeAnnotation() instanceof StringLogicalTypeAnnotation);
         assertEquals("", fileReader.read().getString(0, 0));
         assertEquals("b", fileReader.read().getString(0, 0));
@@ -760,6 +769,8 @@ public class ParquetWriteTest {
                 .build();
 
         // Physical type is BINARY
+        assertNotNull(schema.getColumns());
+        assertEquals(1, schema.getColumns().size());
         assertTrue(schema.getType(0).getLogicalTypeAnnotation() instanceof StringLogicalTypeAnnotation);
         assertEquals("", fileReader.read().getString(0, 0));
         assertEquals("c", fileReader.read().getString(0, 0));
@@ -822,6 +833,8 @@ public class ParquetWriteTest {
                 .build();
 
         // Physical type is BINARY
+        assertNotNull(schema.getColumns());
+        assertEquals(1, schema.getColumns().size());
         assertTrue(schema.getType(0).getLogicalTypeAnnotation() instanceof DecimalLogicalTypeAnnotation);
         assertEquals(new BigDecimal("1.2").setScale(18, ROUND_UNNECESSARY), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), 18));
         assertEquals(new BigDecimal("22.2345").setScale(18, ROUND_UNNECESSARY), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), 18));
@@ -887,6 +900,8 @@ public class ParquetWriteTest {
                 .withConf(configuration)
                 .build();
 
+        assertNotNull(schema.getColumns());
+        assertEquals(5, schema.getColumns().size());
         assertTrue(schema.getType(0).getLogicalTypeAnnotation() instanceof DecimalLogicalTypeAnnotation); //numeric
         assertTrue(schema.getType(1).getLogicalTypeAnnotation() instanceof StringLogicalTypeAnnotation); //bpchar
         assertNull(schema.getType(2).getLogicalTypeAnnotation()); //timestamp
