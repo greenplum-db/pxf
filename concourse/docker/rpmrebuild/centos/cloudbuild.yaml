@@ -12,7 +12,7 @@ steps:
     - '--tag=gcr.io/$PROJECT_ID/rpmrebuild-centos6:latest'
     - '-f'
     - 'concourse/docker/rpmrebuild/centos/Dockerfile'
-    - '/workspace/none'
+    - 'concourse/docker/rpmrebuild/centos'
   waitFor: ['-']
 
 # Builds the rpmrebuild-centos7 image
@@ -24,7 +24,7 @@ steps:
     - '--tag=gcr.io/$PROJECT_ID/rpmrebuild-centos7:latest'
     - '-f'
     - 'concourse/docker/rpmrebuild/centos/Dockerfile'
-    - '/workspace/none'
+    - 'concourse/docker/rpmrebuild/centos'
   waitFor: ['-']
 
 # Push images from Cloud Build to Container Registry
