@@ -39,7 +39,7 @@ export RPMREBUILD_TMPDIR=/build/temp
 rpmrebuild -d /build/output \
   --change-files="cp pxf_artifacts/${osl_file_name} /build/temp/work/root/usr/local/pxf-gp${GP_VER}/open_source_licenses.txt" \
   --change-spec-files="/build/scripts/add_license_file_to_spec.sh" \
-  --release=2 \
+  --release="2.el${TARGET_OS_VERSION}" \
   -p "pxf_artifacts/${rpm_file_name}"
 
 # check if the RPM for GP version and TARGET_OS_VERSION is available
@@ -48,6 +48,10 @@ new_rpm_file_name=$(find /build/output/x86_64/ -type f -name "pxf-gp${GP_VER}-*-
 
 # install the new RPM, check that the OSL file is present
 rpm -ivh "/build/output/x86_64/${new_rpm_file_name}"
+echo "listing installed directory /usr/local/pxf-gp${GP_VER}:"
+ls -al /usr/local/pxf-gp${GP_VER}
+
+# check that the OSL file is present
 [[ -f /usr/local/pxf-gp${GP_VER}/open_source_licenses.txt ]] || fail "/usr/local/pxf-gp${GP_VER}/open_source_licenses.txt not found"
 grep -q "Greenplum Platform Extension Framework" "/usr/local/pxf-gp${GP_VER}/open_source_licenses.txt" || \
   fail "/usr/local/pxf-gp${GP_VER}/open_source_licenses.txt has incorrect content"
