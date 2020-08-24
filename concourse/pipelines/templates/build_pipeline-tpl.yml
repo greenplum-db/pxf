@@ -272,7 +272,7 @@ resources:
     bucket: ((pxf-releng-gp5-drop-bucket))
     region_name: ((aws-region))
     secret_access_key: ((bucket-secret-access-key))
-    regexp: ((pxf-releng-gp5-drop-path))/pxf-gp5-(.*)-1.el6.x86_64.rpm
+    regexp: ((pxf-releng-gp5-drop-path))/pxf-gp5-(.*)-2.el6.x86_64.rpm
 
 - name: pxf_gp5_rhel7_release_to_releng
   type: s3
@@ -281,14 +281,14 @@ resources:
     bucket: ((pxf-releng-gp5-drop-bucket))
     region_name: ((aws-region))
     secret_access_key: ((bucket-secret-access-key))
-    regexp: ((pxf-releng-gp5-drop-path))/pxf-gp5-(.*)-1.el7.x86_64.rpm
+    regexp: ((pxf-releng-gp5-drop-path))/pxf-gp5-(.*)-2.el7.x86_64.rpm
 
 - name: pxf_gp6_rhel7_release_to_releng
   type: gcs
   source:
     bucket: ((pxf-releng-gp6-drop-bucket))
     json_key: ((concourse-gcs-resources-service-account-key))
-    regexp: ((pxf-releng-gp6-drop-path))/pxf-gp6-(.*)-1.el7.x86_64.rpm
+    regexp: ((pxf-releng-gp6-drop-path))/pxf-gp6-(.*)-2.el7.x86_64.rpm
 
 {% if build_deb %}
 - name: pxf_gp6_ubuntu18_release_to_releng
@@ -386,6 +386,24 @@ resources:
     username: _json_key
     password: ((pxf-cloudbuild-service-account-key))
 {% set gp_ver = None %}
+
+- name: rpmrebuild-centos6-image
+  type: registry-image
+  icon: docker
+  source:
+    repository: gcr.io/data-gpdb-ud/rpmrebuild-centos6
+    tag: latest
+    username: _json_key
+    password: ((pxf-cloudbuild-service-account-key))
+
+- name: rpmrebuild-centos7-image
+  type: registry-image
+  icon: docker
+  source:
+    repository: gcr.io/data-gpdb-ud/rpmrebuild-centos7
+    tag: latest
+    username: _json_key
+    password: ((pxf-cloudbuild-service-account-key))
 
 - name: ccp-7-image
   type: registry-image
@@ -1532,7 +1550,7 @@ jobs:
     <<: *slack_alert
 {% endif %}
 
-- name: Publish PXF-GP5 and PXF-GP6 Artifacts to GP-RelEng
+- name: Publish_PXF-GP5_and_PXF-GP6_Artifacts_to_GP-RelEng
   plan:
   - in_parallel:
     - get: pxf_src
@@ -1541,6 +1559,8 @@ jobs:
     - get: pxf_shipit_file
       trigger: true
     - get: google-cloud-sdk-slim-image
+    - get: rpmrebuild-centos6-image
+    - get: rpmrebuild-centos7-image
   - task: Get PXF-GP5 and PXF-GP6 Artifacts from Releases Directory
     image: google-cloud-sdk-slim-image
     file: pxf_src/concourse/tasks/get_pxf_release_artifacts.yml
@@ -1550,6 +1570,21 @@ jobs:
       GCS_RELEASES_BUCKET: data-gpdb-ud-pxf-releases
       GCS_RELEASES_PATH: prod/releases
       GOOGLE_CREDENTIALS: ((pxf-storage-service-account-key))
+  #  - in_parallel: does not work since all tasks modify pxf_artifacts
+  - task: Add OSL file to PXF-GP5 RPM on RHEL6
+    image: rpmrebuild-centos6-image
+    file: pxf_src/concourse/tasks/add_osl_rpm.yml
+    params:
+      GP_VER: 5
+      TARGET_OS_VERSION: 6
+{% for gp_ver in range(5, 7) %}
+  - task: Add OSL file to PXF-GP[[gp_ver]] RPM on RHEL7
+    image: rpmrebuild-centos7-image
+    file: pxf_src/concourse/tasks/add_osl_rpm.yml
+    params:
+      GP_VER: [[gp_ver]]
+      TARGET_OS_VERSION: 7
+{% endfor %}
   - task: Generate Releng Email
     image: google-cloud-sdk-slim-image
     file: pxf_src/concourse/tasks/generate_releng_email.yml
@@ -1567,13 +1602,13 @@ jobs:
   - in_parallel:
     - put: pxf_gp5_rhel6_release_to_releng
       params:
-        file: pxf_artifacts/pxf-gp5-*el6*rpm
+        file: pxf_artifacts/pxf-gp5-*-2.el6.x86_64.rpm
     - put: pxf_gp5_rhel7_release_to_releng
       params:
-        file: pxf_artifacts/pxf-gp5-*el7*rpm
+        file: pxf_artifacts/pxf-gp5-*-2.el7.x86_64.rpm
     - put: pxf_gp6_rhel7_release_to_releng
       params:
-        file: pxf_artifacts/pxf-gp6-*el7*rpm
+        file: pxf_artifacts/pxf-gp6-*-2.el7.x86_64.rpm
 {% if build_deb %}
     - put: pxf_gp6_ubuntu18_release_to_releng
       params:
