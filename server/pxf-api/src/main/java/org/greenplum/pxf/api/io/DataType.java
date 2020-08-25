@@ -21,8 +21,6 @@ package org.greenplum.pxf.api.io;
 
 
 import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Supported Data Types and OIDs (GPDB Data Type identifiers).
@@ -61,20 +59,27 @@ public enum DataType {
 
     UNSUPPORTED_TYPE(-1);
 
-    private static final Map<Integer, DataType> lookup = new HashMap<>();
+    private static final int[] OID_ARRAY;
+    private static final DataType[] DATA_TYPES;
     private static final int[] NOT_TEXT = {BIGINT.OID, BOOLEAN.OID, BYTEA.OID,
             FLOAT8.OID, INTEGER.OID, REAL.OID, SMALLINT.OID};
 
     static {
-
         INT2ARRAY.typeElem = SMALLINT;
         INT4ARRAY.typeElem = INTEGER;
         INT8ARRAY.typeElem = BIGINT;
         BOOLARRAY.typeElem = BOOLEAN;
         TEXTARRAY.typeElem = TEXT;
 
-        for (DataType dt : EnumSet.allOf(DataType.class)) {
-            lookup.put(dt.getOID(), dt);
+        EnumSet<DataType> set = EnumSet.allOf(DataType.class);
+        OID_ARRAY = new int[set.size()];
+        DATA_TYPES = new DataType[set.size()];
+
+        int index = 0;
+        for (DataType type : set) {
+            OID_ARRAY[index] = type.OID;
+            DATA_TYPES[index] = type;
+            index++;
         }
     }
 
@@ -92,13 +97,17 @@ public enum DataType {
      * @return the corresponding DataType if exists, else returns {@link #UNSUPPORTED_TYPE}
      */
     public static DataType get(int OID) {
-        DataType type = lookup.get(OID);
-        return type == null ? UNSUPPORTED_TYPE : type;
+        for (int i = 0; i < OID_ARRAY.length; i++) {
+            if (OID == OID_ARRAY[i]) {
+                return DATA_TYPES[i];
+            }
+        }
+        return UNSUPPORTED_TYPE;
     }
 
     public static boolean isArrayType(int OID) {
-        DataType type = lookup.get(OID);
-        return type != null && type.typeElem != null;
+        DataType type = get(OID);
+        return type != UNSUPPORTED_TYPE && type.typeElem != null;
     }
 
     public static boolean isTextForm(int OID) {
