@@ -77,6 +77,8 @@ public class ParquetFilterPushDownTest extends ParquetBaseTest {
 
         accessor.setRequestContext(context);
         resolver.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        resolver.afterPropertiesSet();
     }
 
     @Test
