@@ -18,6 +18,7 @@ public abstract class BaseBridge implements Bridge {
 
     protected Accessor accessor;
     protected Resolver resolver;
+    protected RequestContext context;
 
     public BaseBridge(ApplicationContext applicationContext, RequestContext context) {
         String accessorClassName = Utilities.getShortClassName(context.getAccessor());
@@ -25,6 +26,7 @@ public abstract class BaseBridge implements Bridge {
 
         LOG.debug("Creating accessor bean '{}' and resolver bean '{}'", accessorClassName, resolverClassName);
 
+        this.context = context;
         this.accessor = applicationContext.getBean(accessorClassName, Accessor.class);
         this.resolver = applicationContext.getBean(resolverClassName, Resolver.class);
     }

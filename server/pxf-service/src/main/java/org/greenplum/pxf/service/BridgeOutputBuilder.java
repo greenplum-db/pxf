@@ -57,8 +57,6 @@ import static org.greenplum.pxf.api.io.DataType.TEXT;
  * of {@link OneField} objects (obtained from the Resolver) into an output
  * record.
  */
-@Component
-@RequestScope
 public class BridgeOutputBuilder {
 
     private static final Logger LOG = LoggerFactory.getLogger(BridgeOutputBuilder.class);

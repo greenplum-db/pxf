@@ -46,16 +46,14 @@ import java.util.zip.ZipException;
  * The class handles BadRecordException and other exception type and marks the
  * record as invalid for GPDB.
  */
-@Component("ReadBridge")
-@RequestScope
 public class ReadBridge extends BaseBridge {
 
     protected BridgeOutputBuilder outputBuilder;
     protected Deque<Writable> outputQueue = new LinkedList<>();
 
-    public ReadBridge(BridgeOutputBuilder outputBuilder, ApplicationContext applicationContext, RequestContext context) {
+    public ReadBridge(ApplicationContext applicationContext, RequestContext context) {
         super(applicationContext, context);
-        this.outputBuilder = outputBuilder;
+        this.outputBuilder = new BridgeOutputBuilder(context);
     }
 
     /**

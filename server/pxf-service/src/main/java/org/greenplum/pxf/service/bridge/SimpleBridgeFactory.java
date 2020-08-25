@@ -23,17 +23,17 @@ public class SimpleBridgeFactory implements BridgeFactory {
 
         Bridge bridge;
         if (context.getRequestType() == RequestContext.RequestType.WRITE_BRIDGE) {
-            bridge = applicationContext.getBean(WriteBridge.class);
+            bridge = new WriteBridge(applicationContext, context);
         } else if (context.getRequestType() != RequestContext.RequestType.READ_BRIDGE) {
             throw new UnsupportedOperationException();
         } else if (context.getStatsSampleRatio() > 0) {
-            bridge = applicationContext.getBean(ReadSamplingBridge.class);
+            bridge = new ReadSamplingBridge(applicationContext, context);
         } else if (Utilities.aggregateOptimizationsSupported(context)) {
-            bridge = applicationContext.getBean(AggBridge.class);
+            bridge = new AggBridge(applicationContext, context);
         } else if (useVectorization(context)) {
-            bridge = applicationContext.getBean(ReadVectorizedBridge.class);
+            bridge = new ReadVectorizedBridge(applicationContext, context);
         } else {
-            bridge = applicationContext.getBean("ReadBridge", ReadBridge.class);
+            bridge = new ReadBridge(applicationContext, context);
         }
         return bridge;
     }
