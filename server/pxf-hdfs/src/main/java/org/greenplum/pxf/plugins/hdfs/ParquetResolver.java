@@ -52,11 +52,18 @@ public class ParquetResolver extends BasePlugin implements Resolver {
 
     private MessageType schema;
     private SimpleGroupFactory groupFactory;
+    private List<ColumnDescriptor> columnDescriptors;
     private ObjectMapper mapper = new ObjectMapper();
 
     // used to distinguish string pattern between type "timestamp" ("2019-03-14 14:10:28")
     // and type "timestamp with time zone" ("2019-03-14 14:10:28+07:30")
     public static final Pattern TIMESTAMP_PATTERN = Pattern.compile("[+-]\\d{2}(:\\d{2})?$");
+
+    @Override
+    public void afterPropertiesSet() {
+        super.afterPropertiesSet();
+        columnDescriptors = context.getTupleDescription();
+    }
 
     @Override
     public List<OneField> getFields(OneRow row) {
@@ -67,7 +74,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
 
         // schema is the readSchema, if there is column projection
         // the schema will be a subset of tuple descriptions
-        for (ColumnDescriptor columnDescriptor : context.getTupleDescription()) {
+        for (ColumnDescriptor columnDescriptor : columnDescriptors) {
             OneField oneField;
             if (!columnDescriptor.isProjected()) {
                 oneField = new OneField(columnDescriptor.columnTypeCode(), null);
@@ -95,7 +102,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         Group group = groupFactory.newGroup();
         for (int i = 0; i < record.size(); i++) {
             OneField field = record.get(i);
-            ColumnDescriptor columnDescriptor = context.getTupleDescription().get(i);
+            ColumnDescriptor columnDescriptor = columnDescriptors.get(i);
 
             /*
              * We need to right trim the incoming value from Greenplum. This is

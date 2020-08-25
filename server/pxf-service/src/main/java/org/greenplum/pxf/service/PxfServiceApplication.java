@@ -6,7 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 /**
  * Main PXF Spring Configuration class.
  */
-@SpringBootApplication(scanBasePackages = "org.greenplum.pxf", proxyBeanMethods = false)
+@SpringBootApplication(scanBasePackages = "org.greenplum.pxf")
 public class PxfServiceApplication {
 
     /**

@@ -314,10 +314,11 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
             return FilterCompat.NOOP;
         }
 
+        List<ColumnDescriptor> tupleDescription = context.getTupleDescription();
         ParquetRecordFilterBuilder filterBuilder = new ParquetRecordFilterBuilder(
-                context.getTupleDescription(), originalFieldsMap);
+                tupleDescription, originalFieldsMap);
         TreeVisitor pruner = new ParquetOperatorPrunerAndTransformer(
-                context.getTupleDescription(), originalFieldsMap, SUPPORTED_OPERATORS);
+                tupleDescription, originalFieldsMap, SUPPORTED_OPERATORS);
 
         try {
             // Parse the filter string into a expression tree Node
