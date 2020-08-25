@@ -23,6 +23,7 @@ import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.error.BadRecordException;
 import org.greenplum.pxf.api.io.Writable;
+import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.service.BridgeInputBuilder;
 import org.springframework.context.ApplicationContext;
@@ -38,10 +39,12 @@ import java.util.List;
 public class WriteBridge extends BaseBridge {
 
     private final BridgeInputBuilder inputBuilder;
+    private final OutputFormat outputFormat;
 
     public WriteBridge(ApplicationContext applicationContext, RequestContext context) {
         super(applicationContext, context);
         this.inputBuilder = new BridgeInputBuilder();
+        this.outputFormat = context.getOutputFormat();
     }
 
     /**
@@ -59,8 +62,7 @@ public class WriteBridge extends BaseBridge {
     @Override
     public boolean setNext(DataInputStream inputStream) throws Exception {
 
-        List<OneField> record = inputBuilder
-                .makeInput(context.getOutputFormat(), inputStream);
+        List<OneField> record = inputBuilder.makeInput(outputFormat, inputStream);
         if (record == null) {
             return false;
         }
