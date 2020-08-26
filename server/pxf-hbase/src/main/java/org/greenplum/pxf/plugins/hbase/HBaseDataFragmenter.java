@@ -35,8 +35,6 @@ import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.FragmentStats;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseLookupTable;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseUtilities;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.io.IOException;
 import java.util.List;
@@ -52,8 +50,6 @@ import java.util.Map;
  * This class also puts HBase lookup table information for the given
  * table (if exists) in each fragment's user data field.
  */
-@Component("HBaseDataFragmenter")
-@RequestScope
 public class HBaseDataFragmenter extends BaseFragmenter {
 
     private Connection connection;

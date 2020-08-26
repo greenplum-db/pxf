@@ -24,6 +24,7 @@ import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.StatsAccessor;
 import org.greenplum.pxf.api.io.Writable;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.service.utilities.BasePluginFactory;
 
 import java.util.LinkedList;
 
@@ -35,8 +36,8 @@ public class AggBridge extends ReadBridge implements Bridge {
     /* Avoid resolving rows with the same key twice */
     private LRUMap outputCache;
 
-    public AggBridge(RequestContext context) {
-        super(context);
+    public AggBridge(BasePluginFactory pluginFactory, RequestContext context) {
+        super(pluginFactory, context);
     }
 
     /**

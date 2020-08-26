@@ -24,6 +24,7 @@ import org.greenplum.pxf.api.error.BadRecordException;
 import org.greenplum.pxf.api.io.Writable;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.service.BridgeOutputBuilder;
+import org.greenplum.pxf.service.utilities.BasePluginFactory;
 
 import java.io.CharConversionException;
 import java.io.DataInputStream;
@@ -48,8 +49,8 @@ public class ReadBridge extends BaseBridge {
     protected BridgeOutputBuilder outputBuilder;
     protected Deque<Writable> outputQueue = new LinkedList<>();
 
-    public ReadBridge(RequestContext context) {
-        super(context);
+    public ReadBridge(BasePluginFactory pluginFactory, RequestContext context) {
+        super(pluginFactory, context);
         this.outputBuilder = new BridgeOutputBuilder(context);
     }
 

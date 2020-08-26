@@ -49,8 +49,6 @@ import org.greenplum.pxf.plugins.hive.utilities.ProfileFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -80,8 +78,6 @@ import static org.greenplum.pxf.api.model.Fragment.HOSTS;
  * file_input_format_name_DELIM_serde_name_DELIM_serialization_properties</li>
  * </ol>
  */
-@Component("HiveDataFragmenter")
-@RequestScope
 public class HiveDataFragmenter extends HdfsDataFragmenter {
     private static final Logger LOG = LoggerFactory.getLogger(HiveDataFragmenter.class);
     private static final short ALL_PARTS = -1;

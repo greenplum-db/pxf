@@ -399,12 +399,4 @@ public class UtilitiesTest {
         assertEquals("www.example.com", Utilities.getHost("www.example.com"));
         assertEquals("10.0.0.15", Utilities.getHost("10.0.0.15"));
     }
-
-    @Test
-    public void testShortClassName() {
-        assertNull(Utilities.getShortClassName(null));
-        assertEquals("", Utilities.getShortClassName(""));
-        assertEquals("FooBarClass", Utilities.getShortClassName("FooBarClass"));
-        assertEquals("FooBarClass", Utilities.getShortClassName("org.namespace.FooBarClass"));
-    }
 }

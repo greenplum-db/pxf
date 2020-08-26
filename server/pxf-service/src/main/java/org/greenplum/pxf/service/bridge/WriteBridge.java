@@ -26,6 +26,7 @@ import org.greenplum.pxf.api.io.Writable;
 import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.service.BridgeInputBuilder;
+import org.greenplum.pxf.service.utilities.BasePluginFactory;
 
 import java.io.DataInputStream;
 import java.util.List;
@@ -40,8 +41,8 @@ public class WriteBridge extends BaseBridge {
     private final BridgeInputBuilder inputBuilder;
     private final OutputFormat outputFormat;
 
-    public WriteBridge(RequestContext context) {
-        super(context);
+    public WriteBridge(BasePluginFactory pluginFactory, RequestContext context) {
+        super(pluginFactory, context);
         this.inputBuilder = new BridgeInputBuilder();
         this.outputFormat = context.getOutputFormat();
     }

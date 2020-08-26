@@ -3,10 +3,17 @@ package org.greenplum.pxf.service.bridge;
 import org.greenplum.pxf.api.ReadVectorizedResolver;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.Utilities;
+import org.greenplum.pxf.service.utilities.BasePluginFactory;
 import org.springframework.stereotype.Component;
 
 @Component
 public class SimpleBridgeFactory implements BridgeFactory {
+
+    private final BasePluginFactory pluginFactory;
+
+    public SimpleBridgeFactory(BasePluginFactory pluginFactory) {
+        this.pluginFactory = pluginFactory;
+    }
 
     /**
      * {@inheritDoc}
@@ -16,17 +23,17 @@ public class SimpleBridgeFactory implements BridgeFactory {
 
         Bridge bridge;
         if (context.getRequestType() == RequestContext.RequestType.WRITE_BRIDGE) {
-            bridge = new WriteBridge(context);
+            bridge = new WriteBridge(pluginFactory, context);
         } else if (context.getRequestType() != RequestContext.RequestType.READ_BRIDGE) {
             throw new UnsupportedOperationException();
         } else if (context.getStatsSampleRatio() > 0) {
-            bridge = new ReadSamplingBridge(context);
+            bridge = new ReadSamplingBridge(pluginFactory, context);
         } else if (Utilities.aggregateOptimizationsSupported(context)) {
-            bridge = new AggBridge(context);
+            bridge = new AggBridge(pluginFactory, context);
         } else if (useVectorization(context)) {
-            bridge = new ReadVectorizedBridge(context);
+            bridge = new ReadVectorizedBridge(pluginFactory, context);
         } else {
-            bridge = new ReadBridge(context);
+            bridge = new ReadBridge(pluginFactory, context);
         }
         return bridge;
     }
