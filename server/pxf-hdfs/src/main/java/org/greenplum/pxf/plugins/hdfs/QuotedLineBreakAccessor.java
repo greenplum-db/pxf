@@ -22,8 +22,6 @@ package org.greenplum.pxf.plugins.hdfs;
 
 import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.api.OneRow;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -36,8 +34,6 @@ import java.util.Queue;
  * field delimiter, line delimiter, and quotes. This accessor supports
  * multi-line records, that are read from a single source (non-parallel).
  */
-@Component("QuotedLineBreakAccessor")
-@RequestScope
 public class QuotedLineBreakAccessor extends HdfsAtomicDataAccessor {
     private boolean fileAsRow;
     private boolean firstLine, lastLine;

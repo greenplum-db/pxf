@@ -28,8 +28,6 @@ import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.plugins.jdbc.utils.ConnectionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -48,8 +46,6 @@ import java.util.Set;
 /**
  * JDBC tables resolver
  */
-@Component("JdbcResolver")
-@RequestScope
 public class JdbcResolver extends JdbcBasePlugin implements Resolver {
     private static final Set<DataType> DATATYPES_SUPPORTED = EnumSet.of(
             DataType.VARCHAR,

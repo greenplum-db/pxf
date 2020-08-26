@@ -40,8 +40,6 @@ import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.io.IOException;
 import java.sql.Date;
@@ -60,8 +58,6 @@ import java.util.List;
  * split which does not belong to a partition filter. Naturally, the partition
  * filtering will be done only for Hive tables that are partitioned.
  */
-@Component("HiveAccessor")
-@RequestScope
 public class HiveAccessor extends HdfsSplittableDataAccessor {
 
     private static final Logger LOG = LoggerFactory.getLogger(HiveAccessor.class);

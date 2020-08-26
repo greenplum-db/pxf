@@ -19,14 +19,11 @@ package org.greenplum.pxf.service.bridge;
  * under the License.
  */
 
-import org.greenplum.pxf.api.error.BadRecordException;
 import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.error.BadRecordException;
 import org.greenplum.pxf.api.io.Writable;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.service.BridgeOutputBuilder;
-import org.springframework.context.ApplicationContext;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.io.CharConversionException;
 import java.io.DataInputStream;
@@ -51,8 +48,8 @@ public class ReadBridge extends BaseBridge {
     protected BridgeOutputBuilder outputBuilder;
     protected Deque<Writable> outputQueue = new LinkedList<>();
 
-    public ReadBridge(ApplicationContext applicationContext, RequestContext context) {
-        super(applicationContext, context);
+    public ReadBridge(RequestContext context) {
+        super(context);
         this.outputBuilder = new BridgeOutputBuilder(context);
     }
 

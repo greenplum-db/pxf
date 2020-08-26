@@ -30,8 +30,6 @@ import org.greenplum.pxf.plugins.jdbc.writercallable.WriterCallable;
 import org.greenplum.pxf.plugins.jdbc.writercallable.WriterCallableFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.io.File;
 import java.io.IOException;
@@ -56,8 +54,6 @@ import java.util.concurrent.Future;
  * The INSERT queries are processed by {@link java.sql.PreparedStatement} and
  * built-in JDBC batches of arbitrary size
  */
-@Component("JdbcAccessor")
-@RequestScope
 public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
 
     private static final Logger LOG = LoggerFactory.getLogger(JdbcAccessor.class);

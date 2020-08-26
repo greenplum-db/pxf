@@ -39,8 +39,6 @@ import org.greenplum.pxf.api.filter.TreeVisitor;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.EnumAggregationType;
 import org.greenplum.pxf.api.utilities.Utilities;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -55,8 +53,6 @@ import static org.apache.hadoop.hive.serde2.ColumnProjectionUtils.READ_COLUMN_NA
  * This class replaces the generic HiveAccessor for a case where a table is stored entirely as ORC files.
  * Use together with {@link HiveInputFormatFragmenter}/{@link HiveColumnarSerdeResolver}
  */
-@Component("HiveORCAccessor")
-@RequestScope
 public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
 
     private static final int KRYO_BUFFER_SIZE = 4 * 1024;

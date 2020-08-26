@@ -37,8 +37,6 @@ import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.plugins.hdfs.avro.AvroUtilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.RecordkeyAdapter;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -50,8 +48,6 @@ import java.util.Map;
  * Class AvroResolver handles deserialization of records that were serialized
  * using the AVRO serialization framework.
  */
-@Component("AvroResolver")
-@RequestScope
 public class AvroResolver extends BasePlugin implements Resolver {
     private static final String MAPKEY_DELIM = ":";
     private static final String RECORDKEY_DELIM = ":";

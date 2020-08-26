@@ -21,15 +21,13 @@ package org.greenplum.pxf.plugins.json;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.greenplum.pxf.api.error.BadRecordException;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.error.BadRecordException;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -41,8 +39,6 @@ import java.util.List;
  * decode this data into a JsonNode and walk the tree for each column. It supports normal value mapping via projections
  * and JSON array indexing.
  */
-@Component("JsonResolver")
-@RequestScope
 public class JsonResolver extends BasePlugin implements Resolver {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();

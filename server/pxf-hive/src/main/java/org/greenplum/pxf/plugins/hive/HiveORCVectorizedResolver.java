@@ -40,8 +40,6 @@ import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.ReadVectorizedResolver;
 import org.greenplum.pxf.api.error.UnsupportedTypeException;
 import org.greenplum.pxf.api.io.DataType;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.sql.Date;
 import java.util.ArrayList;
@@ -63,8 +61,6 @@ import static org.greenplum.pxf.api.io.DataType.VARCHAR;
 /**
  * Class which implements resolving a batch of records at once
  */
-@Component("HiveORCVectorizedResolver")
-@RequestScope
 public class HiveORCVectorizedResolver extends HiveResolver implements ReadVectorizedResolver {
 
     private static final Log LOG = LogFactory.getLog(HiveORCVectorizedResolver.class);

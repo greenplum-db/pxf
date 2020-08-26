@@ -3,8 +3,6 @@ package org.greenplum.pxf.automation.testplugin;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.BasePlugin;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 /**
  * Test class for regression tests.
@@ -13,8 +11,6 @@ import org.springframework.web.context.annotation.RequestScope;
  * The returned data has 4 columns delimited with DELIMITER property value.
  * First column - text, second column - int (counter), third column - bool, fourth column - text.
  */
-@Component("ColumnProjectionVerifyAccessor")
-@RequestScope
 public class ColumnProjectionVerifyAccessor extends BasePlugin implements Accessor {
 
     private String columnProjection;

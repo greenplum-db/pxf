@@ -47,5 +47,6 @@
     <Logger name="org.hibernate.validator.internal.util.Version" level="warn"/>
     <Logger name="org.springframework.boot.actuate.endpoint.jmx" level="warn"/>
     <Logger name="org.apache.catalina.loader.WebappClassLoaderBase" level="error"/>
+    <Logger name="org.apache.hadoop.fs.s3a.S3AInstrumentation" level="error"/>
 </Loggers>
 </Configuration>

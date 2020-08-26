@@ -81,8 +81,6 @@ import static org.apache.parquet.hadoop.api.ReadSupport.PARQUET_READ_SCHEMA;
  * Parquet file accessor.
  * Unit of operation is record.
  */
-@Component("ParquetFileAccessor")
-@RequestScope
 public class ParquetFileAccessor extends BasePlugin implements Accessor {
 
     private static final int DEFAULT_PAGE_SIZE = 1024 * 1024;

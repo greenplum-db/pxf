@@ -36,8 +36,6 @@ import org.apache.hadoop.mapred.SequenceFileInputFormat;
 import org.apache.hadoop.mapred.SequenceFileRecordReader;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.io.IOException;
 import java.util.EnumSet;
@@ -45,8 +43,6 @@ import java.util.EnumSet;
 /**
  * A PXF Accessor for reading and writing Sequence File records
  */
-@Component("SequenceFileAccessor")
-@RequestScope
 public class SequenceFileAccessor extends HdfsSplittableDataAccessor {
 
     private FileContext fc;

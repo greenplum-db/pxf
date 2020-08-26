@@ -24,15 +24,14 @@ import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.ReadVectorizedResolver;
 import org.greenplum.pxf.api.io.Writable;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.springframework.context.ApplicationContext;
 
 import java.util.Deque;
 import java.util.List;
 
 public class ReadVectorizedBridge extends ReadBridge {
 
-    public ReadVectorizedBridge(ApplicationContext applicationContext, RequestContext context) {
-        super(applicationContext, context);
+    public ReadVectorizedBridge(RequestContext context) {
+        super(context);
     }
 
     /**

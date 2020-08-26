@@ -25,9 +25,6 @@ import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.mapred.JobConf;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.util.Properties;
 
@@ -35,8 +32,6 @@ import java.util.Properties;
  * Specialized HiveResolver for a Hive table stored as RC file.
  * Use together with HiveInputFormatFragmenter/HiveRCFileAccessor.
  */
-@Component("HiveORCSerdeResolver")
-@RequestScope
 public class HiveORCSerdeResolver extends HiveResolver {
     private static final Log LOG = LogFactory.getLog(HiveORCSerdeResolver.class);
     private String serdeType;

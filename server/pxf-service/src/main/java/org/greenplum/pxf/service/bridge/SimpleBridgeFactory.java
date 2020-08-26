@@ -3,17 +3,10 @@ package org.greenplum.pxf.service.bridge;
 import org.greenplum.pxf.api.ReadVectorizedResolver;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.Utilities;
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 @Component
 public class SimpleBridgeFactory implements BridgeFactory {
-
-    private final ApplicationContext applicationContext;
-
-    public SimpleBridgeFactory(ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
-    }
 
     /**
      * {@inheritDoc}
@@ -23,17 +16,17 @@ public class SimpleBridgeFactory implements BridgeFactory {
 
         Bridge bridge;
         if (context.getRequestType() == RequestContext.RequestType.WRITE_BRIDGE) {
-            bridge = new WriteBridge(applicationContext, context);
+            bridge = new WriteBridge(context);
         } else if (context.getRequestType() != RequestContext.RequestType.READ_BRIDGE) {
             throw new UnsupportedOperationException();
         } else if (context.getStatsSampleRatio() > 0) {
-            bridge = new ReadSamplingBridge(applicationContext, context);
+            bridge = new ReadSamplingBridge(context);
         } else if (Utilities.aggregateOptimizationsSupported(context)) {
-            bridge = new AggBridge(applicationContext, context);
+            bridge = new AggBridge(context);
         } else if (useVectorization(context)) {
-            bridge = new ReadVectorizedBridge(applicationContext, context);
+            bridge = new ReadVectorizedBridge(context);
         } else {
-            bridge = new ReadBridge(applicationContext, context);
+            bridge = new ReadBridge(context);
         }
         return bridge;
     }

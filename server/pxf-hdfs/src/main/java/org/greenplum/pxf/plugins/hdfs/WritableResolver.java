@@ -22,9 +22,9 @@ package org.greenplum.pxf.plugins.hdfs;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.Writable;
-import org.greenplum.pxf.api.error.BadRecordException;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.error.BadRecordException;
 import org.greenplum.pxf.api.error.UnsupportedTypeException;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.BasePlugin;
@@ -32,8 +32,6 @@ import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.DataSchemaException;
 import org.greenplum.pxf.plugins.hdfs.utilities.RecordkeyAdapter;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -48,8 +46,6 @@ import java.util.List;
  * A field named 'recordkey' is treated as a key of the given row, and not as
  * part of the data schema. See {@link RecordkeyAdapter}.
  */
-@Component("WritableResolver")
-@RequestScope
 public class WritableResolver extends BasePlugin implements Resolver {
     private static final int RECORDKEY_UNDEFINED = -1;
     private static final Log LOG = LogFactory.getLog(WritableResolver.class);

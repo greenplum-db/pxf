@@ -26,7 +26,6 @@ import org.greenplum.pxf.api.io.Writable;
 import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.service.BridgeInputBuilder;
-import org.springframework.context.ApplicationContext;
 
 import java.io.DataInputStream;
 import java.util.List;
@@ -41,8 +40,8 @@ public class WriteBridge extends BaseBridge {
     private final BridgeInputBuilder inputBuilder;
     private final OutputFormat outputFormat;
 
-    public WriteBridge(ApplicationContext applicationContext, RequestContext context) {
-        super(applicationContext, context);
+    public WriteBridge(RequestContext context) {
+        super(context);
         this.inputBuilder = new BridgeInputBuilder();
         this.outputFormat = context.getOutputFormat();
     }

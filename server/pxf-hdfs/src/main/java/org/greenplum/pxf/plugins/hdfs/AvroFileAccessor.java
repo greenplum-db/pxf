@@ -38,16 +38,12 @@ import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.plugins.hdfs.avro.AvroUtilities;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.io.IOException;
 
 /**
  * A PXF Accessor for Avro File records
  */
-@Component("AvroFileAccessor")
-@RequestScope
 public class AvroFileAccessor extends HdfsSplittableDataAccessor {
 
     private static final String COMPRESSION_CODEC_OPTION = "COMPRESSION_CODEC";

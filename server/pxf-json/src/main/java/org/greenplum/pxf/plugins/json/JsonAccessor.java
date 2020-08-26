@@ -19,18 +19,16 @@ package org.greenplum.pxf.plugins.json;
  * under the License.
  */
 
-import static org.apache.commons.lang.StringUtils.isEmpty;
-
-import java.io.IOException;
-
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.LineRecordReader;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.plugins.hdfs.HdfsSplittableDataAccessor;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
+
+import java.io.IOException;
+
+import static org.apache.commons.lang.StringUtils.isEmpty;
 
 /**
  * This JSON accessor for PXF will read JSON data and pass it to a {@link JsonResolver}.
@@ -41,8 +39,6 @@ import org.springframework.web.context.annotation.RequestScope;
  * When provided the <b>IDENTIFIER</b> indicates the member name used to determine the encapsulating json object to
  * return.
  */
-@Component("JsonAccessor")
-@RequestScope
 public class JsonAccessor extends HdfsSplittableDataAccessor {
 
     public static final String IDENTIFIER_PARAM = "IDENTIFIER";

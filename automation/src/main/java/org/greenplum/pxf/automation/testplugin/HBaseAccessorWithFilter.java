@@ -23,8 +23,6 @@ import org.greenplum.pxf.plugins.hbase.HBaseFilterBuilder;
 import org.greenplum.pxf.plugins.hbase.HBaseFragmentMetadata;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseColumnDescriptor;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseTupleDescription;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -37,8 +35,6 @@ import java.util.List;
  * that the filter is read from a user defined parameter TEST-HBASE-FILTER
  * instead of from GPDB.
  */
-@Component("HBaseAccessorWithFilter")
-@RequestScope
 public class HBaseAccessorWithFilter extends BasePlugin implements Accessor {
 
     static final EnumSet<Operator> SUPPORTED_OPERATORS =

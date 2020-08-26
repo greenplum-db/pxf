@@ -22,7 +22,6 @@ package org.greenplum.pxf.service.bridge;
 import org.greenplum.pxf.api.io.Writable;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.service.utilities.AnalyzeUtils;
-import org.springframework.context.ApplicationContext;
 
 import java.util.BitSet;
 
@@ -44,8 +43,8 @@ public class ReadSamplingBridge extends ReadBridge {
     private int bitSetSize;
     private int curIndex;
 
-    public ReadSamplingBridge(ApplicationContext applicationContext, RequestContext context) {
-        super(applicationContext, context);
+    public ReadSamplingBridge(RequestContext context) {
+        super(context);
         calculateBitSet(context.getStatsSampleRatio());
         this.curIndex = 0;
     }
