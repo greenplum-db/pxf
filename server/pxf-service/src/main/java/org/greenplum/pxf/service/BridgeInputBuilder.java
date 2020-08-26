@@ -29,6 +29,7 @@ import org.greenplum.pxf.api.io.GPDBWritable;
 import org.greenplum.pxf.api.model.OutputFormat;
 
 import java.io.DataInput;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -61,12 +62,11 @@ public class BridgeInputBuilder {
 
         GPDBWritableMapper mapper = new GPDBWritableMapper(gpdbWritable);
         int[] colTypes = gpdbWritable.getColType();
-        List<OneField> record = new LinkedList<>();
+        List<OneField> record = new ArrayList<>(colTypes.length);
         for (int i = 0; i < colTypes.length; i++) {
             mapper.setDataType(colTypes[i]);
             record.add(new OneField(colTypes[i], mapper.getData(i)));
         }
-
         return record;
     }
 }
