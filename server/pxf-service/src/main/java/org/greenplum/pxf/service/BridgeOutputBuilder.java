@@ -82,12 +82,12 @@ public class BridgeOutputBuilder {
      */
     public BridgeOutputBuilder(RequestContext context) {
         this.context = context;
+        columnDescriptors = context.getTupleDescription();
         greenplumCSV = context.getGreenplumCSV();
+        outputFormat = context.getOutputFormat();
         outputList = new LinkedList<>();
         makeErrorRecord();
         samplingEnabled = (this.context.getStatsSampleRatio() > 0);
-        outputFormat = context.getOutputFormat();
-        columnDescriptors = context.getTupleDescription();
     }
 
     /**
