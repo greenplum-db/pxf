@@ -63,9 +63,9 @@ public class AvroFileAccessor extends HdfsSplittableDataAccessor {
     /**
      * Constructs a new instance of the AvroFileAccessor
      */
-    public AvroFileAccessor(AvroUtilities avroUtilities) {
+    public AvroFileAccessor() {
         super(new AvroInputFormat<GenericRecord>());
-        this.avroUtilities = avroUtilities;
+        this.avroUtilities = AvroUtilities.getInstance();
     }
 
     /*
@@ -148,7 +148,7 @@ public class AvroFileAccessor extends HdfsSplittableDataAccessor {
             case SNAPPY_CODEC:
                 writer.setCodec(CodecFactory.snappyCodec());
                 break;
-            case  BZIP2_CODEC:
+            case BZIP2_CODEC:
                 writer.setCodec(CodecFactory.bzip2Codec());
                 break;
             case XZ_CODEC:

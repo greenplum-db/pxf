@@ -32,7 +32,7 @@ public class AvroResolverTest {
 
     @BeforeEach
     public void setup() {
-        resolver = new AvroResolver(new AvroUtilities());
+        resolver = new AvroResolver();
         Configuration configuration = new Configuration();
         context = new RequestContext();
         context.setConfig("default");

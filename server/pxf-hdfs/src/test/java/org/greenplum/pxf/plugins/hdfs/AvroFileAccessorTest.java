@@ -20,7 +20,7 @@ public class AvroFileAccessorTest {
 
     @BeforeEach
     public void setup() {
-        accessor = new AvroFileAccessor(new AvroUtilities());
+        accessor = new AvroFileAccessor();
         context = new RequestContext();
         context.setConfig("fakeConfig");
         context.setServerName("fakeServerName");
