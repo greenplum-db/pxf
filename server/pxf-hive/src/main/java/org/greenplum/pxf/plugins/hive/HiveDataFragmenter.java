@@ -48,7 +48,6 @@ import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.greenplum.pxf.plugins.hive.utilities.ProfileFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -101,8 +100,8 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
     private static final TreeTraverser TRAVERSER = new TreeTraverser();
 
     private IMetaStoreClient client;
-    private HiveClientWrapper hiveClientWrapper;
-    protected HiveUtilities hiveUtilities;
+    private final HiveClientWrapper hiveClientWrapper;
+    protected final HiveUtilities hiveUtilities;
 
     private boolean filterInFragmenter = false;
 
@@ -111,23 +110,12 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
     private final Set<String> setPartitions = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
     private final Map<String, String> partitionKeyTypes = new HashMap<>();
 
-    /**
-     * Sets the {@link HiveClientWrapper} object
-     *
-     * @param hiveClientWrapper the hive client wrapper object
-     */
-    @Autowired
-    public void setHiveClientWrapper(HiveClientWrapper hiveClientWrapper) {
-        this.hiveClientWrapper = hiveClientWrapper;
+    public HiveDataFragmenter() {
+        this(HiveClientWrapper.getInstance(), HiveUtilities.getInstance());
     }
 
-    /**
-     * Sets the {@link HiveUtilities} object
-     *
-     * @param hiveUtilities the hive utilities object
-     */
-    @Autowired
-    public void setHiveUtilities(HiveUtilities hiveUtilities) {
+    HiveDataFragmenter(HiveClientWrapper hiveClientWrapper, HiveUtilities hiveUtilities) {
+        this.hiveClientWrapper = hiveClientWrapper;
         this.hiveUtilities = hiveUtilities;
     }
 

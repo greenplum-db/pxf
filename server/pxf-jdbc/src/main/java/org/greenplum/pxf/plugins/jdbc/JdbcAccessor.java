@@ -68,12 +68,19 @@ public class JdbcAccessor extends JdbcBasePlugin implements Accessor {
     private List<Future<SQLException>> poolTasks = null;
 
     /**
-     * Creates a new instance of a JDBC accessor with provided connection manager and secure login.
+     * Creates a new instance of the JdbcAccessor
+     */
+    public JdbcAccessor() {
+        super();
+    }
+
+    /**
+     * Creates a new instance of accessor with provided connection manager.
      *
      * @param connectionManager connection manager
-     * @param secureLogin       the secure login
+     * @param secureLogin       the instance of the secure login
      */
-    public JdbcAccessor(ConnectionManager connectionManager, SecureLogin secureLogin) {
+    JdbcAccessor(ConnectionManager connectionManager, SecureLogin secureLogin) {
         super(connectionManager, secureLogin);
     }
 

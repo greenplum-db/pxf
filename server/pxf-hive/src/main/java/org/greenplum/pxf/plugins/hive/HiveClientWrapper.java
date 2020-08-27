@@ -42,6 +42,8 @@ import static org.greenplum.pxf.api.model.ConfigurationFactory.PXF_CONFIG_RESOUR
 @Component
 public class HiveClientWrapper {
 
+    private static final HiveClientWrapper instance = new HiveClientWrapper();
+
     private static final Logger LOG = LoggerFactory.getLogger(HiveClientWrapper.class);
 
     private static final String WILDCARD = "*";
@@ -51,38 +53,27 @@ public class HiveClientWrapper {
     private static final String STR_TEXT_FILE_INPUT_FORMAT = "org.apache.hadoop.mapred.TextInputFormat";
     private static final String STR_ORC_FILE_INPUT_FORMAT = "org.apache.hadoop.hive.ql.io.orc.OrcInputFormat";
 
-    private HiveClientFactory hiveClientFactory;
-    private HiveUtilities hiveUtilities;
-    private SecureLogin secureLogin;
+    private final HiveClientFactory hiveClientFactory;
+    private final HiveUtilities hiveUtilities;
+    private final SecureLogin secureLogin;
 
-    /**
-     * Sets the {@link HiveClientFactory} object
-     *
-     * @param hiveClientFactory the hive client factory object
-     */
-    @Autowired
-    public void setHiveClientFactory(HiveClientFactory hiveClientFactory) {
+    public HiveClientWrapper() {
+        this(HiveClientFactory.getInstance(), HiveUtilities.getInstance(), SecureLogin.getInstance());
+    }
+
+    HiveClientWrapper(HiveClientFactory hiveClientFactory, HiveUtilities hiveUtilities, SecureLogin secureLogin) {
         this.hiveClientFactory = hiveClientFactory;
-    }
-
-    /**
-     * Sets the {@link HiveUtilities} object
-     *
-     * @param hiveUtilities the hive utilities object
-     */
-    @Autowired
-    public void setHiveUtilities(HiveUtilities hiveUtilities) {
         this.hiveUtilities = hiveUtilities;
+        this.secureLogin = secureLogin;
     }
 
     /**
-     * Sets the {@link SecureLogin} object
+     * Returns the static instance for this factory
      *
-     * @param secureLogin the secure login object
+     * @return the static instance for this factory
      */
-    @Autowired
-    public void setSecureLogin(SecureLogin secureLogin) {
-        this.secureLogin = secureLogin;
+    public static HiveClientWrapper getInstance() {
+        return instance;
     }
 
     /**
@@ -408,8 +399,18 @@ public class HiveClientWrapper {
         }
     }
 
-    @Component
     public static class HiveClientFactory {
+        private static final HiveClientFactory instance = new HiveClientFactory();
+
+        /**
+         * Returns the static instance for this factory
+         *
+         * @return the static instance for this factory
+         */
+        static HiveClientFactory getInstance() {
+            return instance;
+        }
+
         IMetaStoreClient initHiveClient(HiveConf hiveConf) throws MetaException {
             try {
                 return RetryingMetaStoreClient.getProxy(hiveConf, new Class[]{HiveConf.class, HiveMetaHookLoader.class, Boolean.class},

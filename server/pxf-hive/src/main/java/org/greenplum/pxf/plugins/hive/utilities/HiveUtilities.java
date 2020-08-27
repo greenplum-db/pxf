@@ -48,6 +48,18 @@ import java.util.Arrays;
 public class HiveUtilities {
 
     /**
+     * Singleton instance of the ConnectionManager
+     */
+    private static final HiveUtilities instance = new HiveUtilities();
+
+    /**
+     * @return a singleton instance of the connection manager.
+     */
+    public static HiveUtilities getInstance() {
+        return instance;
+    }
+
+    /**
      * Checks if hive type is supported, and if so return its matching GPDB
      * type. Unsupported types will result in an exception. <br>
      * The supported mappings are:

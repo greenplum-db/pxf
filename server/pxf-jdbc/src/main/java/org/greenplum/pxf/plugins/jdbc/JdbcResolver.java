@@ -23,9 +23,7 @@ import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.Resolver;
-import org.greenplum.pxf.api.security.SecureLogin;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.plugins.jdbc.utils.ConnectionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,16 +62,6 @@ public class JdbcResolver extends JdbcBasePlugin implements Resolver {
     );
 
     private static final Logger LOG = LoggerFactory.getLogger(JdbcResolver.class);
-
-    /**
-     * Creates a new instance of a JDBC resolver with provided connection manager and secure login.
-     *
-     * @param connectionManager connection manager
-     * @param secureLogin       the secure login
-     */
-    public JdbcResolver(ConnectionManager connectionManager, SecureLogin secureLogin) {
-        super(connectionManager, secureLogin);
-    }
 
     /**
      * getFields() implementation

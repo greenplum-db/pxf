@@ -23,7 +23,6 @@ import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.SQLTimeoutException;
-import java.time.temporal.TemporalUnit;
 import java.util.Properties;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -41,6 +40,18 @@ public class ConnectionManager {
     private final Executor datasourceClosingExecutor;
     private final LoadingCache<PoolDescriptor, HikariDataSource> dataSources;
     private final DriverManagerWrapper driverManagerWrapper;
+
+    /**
+     * Singleton instance of the ConnectionManager
+     */
+    private static final ConnectionManager instance = new ConnectionManager();
+
+    /**
+     * Creates an instance of the connection manager.
+     */
+    private ConnectionManager() {
+        this(DataSourceFactory.getInstance(), new DefaultTicker(), new PxfJdbcProperties(), new DriverManagerWrapper());
+    }
 
     public ConnectionManager(DataSourceFactory factory, Ticker ticker, PxfJdbcProperties properties, DriverManagerWrapper driverManagerWrapper) {
         this.driverManagerWrapper = driverManagerWrapper;
@@ -84,6 +95,13 @@ public class ConnectionManager {
      */
     void cleanCache() {
         dataSources.cleanUp();
+    }
+
+    /**
+     * @return a singleton instance of the connection manager.
+     */
+    public static ConnectionManager getInstance() {
+        return instance;
     }
 
     /**
@@ -160,6 +178,8 @@ public class ConnectionManager {
     @Component
     public static class DataSourceFactory {
 
+        private static final DataSourceFactory dataSourceFactoryInstance = new DataSourceFactory();
+
         /**
          * Creates a new datasource instance based on parameters contained in PoolDescriptor.
          *
@@ -188,6 +208,15 @@ public class ConnectionManager {
             LOG.debug("Created new instance of HikariDataSource: {}", result);
 
             return result;
+        }
+
+        /**
+         * Returns a singleton instance of the data source factory.
+         *
+         * @return a singleton instance of the data source factory
+         */
+        static DataSourceFactory getInstance() {
+            return dataSourceFactoryInstance;
         }
     }
 

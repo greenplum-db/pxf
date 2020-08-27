@@ -66,6 +66,17 @@ public class SecureLogin {
 
     private static final Map<String, LoginSession> loginMap = new HashMap<>();
 
+    private static final SecureLogin instance = new SecureLogin();
+
+    /**
+     * Returns the static instance for this factory
+     *
+     * @return the static instance for this factory
+     */
+    public static SecureLogin getInstance() {
+        return instance;
+    }
+
     /**
      * Package-private for testing
      */

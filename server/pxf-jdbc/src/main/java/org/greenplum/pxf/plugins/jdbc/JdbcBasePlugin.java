@@ -167,6 +167,14 @@ public class JdbcBasePlugin extends BasePlugin {
     }
 
     /**
+     * Creates a new instance with default (singleton) instances of
+     * ConnectionManager and SecureLogin.
+     */
+    JdbcBasePlugin() {
+        this(ConnectionManager.getInstance(), SecureLogin.getInstance());
+    }
+
+    /**
      * Creates a new instance with the given ConnectionManager and ConfigurationFactory
      *
      * @param connectionManager connection manager instance

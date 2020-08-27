@@ -1,7 +1,7 @@
 package org.greenplum.pxf.api.model;
 
 /**
- * Base interface for all plugin types that provides information on plugin thread safety
+ * Base interface for all plugin types
  */
 public interface Plugin {
 

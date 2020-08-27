@@ -92,25 +92,17 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
          * calling the base constructor, otherwise it would have been:
          * super(input, createInputFormat(input))
          */
-        this(null);
+        this(null, HiveUtilities.getInstance());
     }
 
     /**
-     * Creates an instance of HiveAccessor using specified input format
+     * Creates an instance of HiveAccessor using specified input format and hive utilities
      *
      * @param inputFormat input format
+     * @param hiveUtilities the hive utilities
      */
-    HiveAccessor(InputFormat<?, ?> inputFormat) {
+    HiveAccessor(InputFormat<?, ?> inputFormat, HiveUtilities hiveUtilities) {
         super(inputFormat);
-    }
-
-    /**
-     * Sets the {@link HiveUtilities} object
-     *
-     * @param hiveUtilities the hive utilities object
-     */
-    @Autowired
-    public void setHiveUtilities(HiveUtilities hiveUtilities) {
         this.hiveUtilities = hiveUtilities;
     }
 
