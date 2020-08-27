@@ -66,21 +66,15 @@ public class SecureLogin {
 
     private static final Map<String, LoginSession> loginMap = new HashMap<>();
 
-    private static final SecureLogin instance = new SecureLogin();
-
-    /**
-     * Returns the static instance for this factory
-     *
-     * @return the static instance for this factory
-     */
-    public static SecureLogin getInstance() {
-        return instance;
-    }
-
     /**
      * Package-private for testing
      */
-    static PxfUserGroupInformation pxfUserGroupInformation = PxfUserGroupInformation.getInstance();
+    private PxfUserGroupInformation pxfUserGroupInformation;
+
+    public SecureLogin(PxfUserGroupInformation pxfUserGroupInformation) {
+        this.pxfUserGroupInformation = pxfUserGroupInformation;
+    }
+
 
     /**
      * Returns UserGroupInformation for the login user for server specified by the configuration. Tries to re-use

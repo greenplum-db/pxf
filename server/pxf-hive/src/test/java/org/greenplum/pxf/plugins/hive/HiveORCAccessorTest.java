@@ -28,6 +28,7 @@ import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentFactory;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -68,7 +69,7 @@ public class HiveORCAccessorTest {
         context.setAccessor(HiveORCAccessor.class.getName());
         context.setConfiguration(new Configuration());
 
-        accessor = new HiveORCAccessor();
+        accessor = new HiveORCAccessor(new HiveUtilities());
         accessor.setRequestContext(context);
         accessor.afterPropertiesSet();
     }

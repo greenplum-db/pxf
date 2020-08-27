@@ -77,8 +77,7 @@ public class SecureLoginTest {
     @BeforeEach
     public void setup() {
         pxfUserGroupInformationMock = mock(PxfUserGroupInformation.class);
-        SecureLogin.pxfUserGroupInformation = pxfUserGroupInformationMock;
-        secureLogin = new SecureLogin();
+        secureLogin = new SecureLogin(pxfUserGroupInformationMock);
         SecureLogin.reset();
         configuration = new Configuration();
         System.clearProperty(PROPERTY_KEY_SERVICE_PRINCIPAL);
@@ -361,7 +360,7 @@ public class SecureLoginTest {
 
     @Test
     public void testPrincipalAbsentForServerNoSystemDefault() {
-        SecureLogin secureLogin = new SecureLogin();
+        SecureLogin secureLogin = new SecureLogin(pxfUserGroupInformationMock);
         assertNull(secureLogin.getServicePrincipal("default", configuration));
         assertNull(secureLogin.getServicePrincipal("any", configuration));
     }
@@ -369,7 +368,7 @@ public class SecureLoginTest {
     @Test
     public void testPrincipalAbsentForServerWithSystemDefault() {
         System.setProperty(PROPERTY_KEY_SERVICE_PRINCIPAL, "foo");
-        SecureLogin secureLogin = new SecureLogin();
+        SecureLogin secureLogin = new SecureLogin(pxfUserGroupInformationMock);
         assertEquals("foo", secureLogin.getServicePrincipal("default", configuration));
         assertNull(secureLogin.getServicePrincipal("any", configuration));
     }
@@ -378,7 +377,7 @@ public class SecureLoginTest {
     public void testPrincipalSpecifiedForServer() {
         System.setProperty(PROPERTY_KEY_SERVICE_PRINCIPAL, "foo");
         configuration.set(PROPERTY_KEY_SERVICE_PRINCIPAL, "bar");
-        SecureLogin secureLogin = new SecureLogin();
+        SecureLogin secureLogin = new SecureLogin(pxfUserGroupInformationMock);
         assertEquals("bar", secureLogin.getServicePrincipal("default", configuration));
         assertEquals("bar", secureLogin.getServicePrincipal("any", configuration));
     }
@@ -386,13 +385,13 @@ public class SecureLoginTest {
     @Test
     public void testPrincipalGetsResolvedForServer() {
         configuration.set(PROPERTY_KEY_SERVICE_PRINCIPAL, "principal/_HOST@REALM");
-        SecureLogin secureLogin = new SecureLogin();
+        SecureLogin secureLogin = new SecureLogin(pxfUserGroupInformationMock);
         assertEquals(RESOLVED_PRINCIPAL, secureLogin.getServicePrincipal("any", configuration));
     }
 
     @Test
     public void testKeytabAbsentForServerNoSystemDefault() {
-        SecureLogin secureLogin = new SecureLogin();
+        SecureLogin secureLogin = new SecureLogin(pxfUserGroupInformationMock);
         assertNull(secureLogin.getServiceKeytab("default", configuration));
         assertNull(secureLogin.getServiceKeytab("any", configuration));
     }
@@ -400,7 +399,7 @@ public class SecureLoginTest {
     @Test
     public void testKeytabAbsentForServerWithSystemDefault() {
         System.setProperty(PROPERTY_KEY_SERVICE_KEYTAB, "foo");
-        SecureLogin secureLogin = new SecureLogin();
+        SecureLogin secureLogin = new SecureLogin(pxfUserGroupInformationMock);
         assertEquals("foo", secureLogin.getServiceKeytab("default", configuration));
         assertNull(secureLogin.getServiceKeytab("any", configuration));
     }
@@ -409,7 +408,7 @@ public class SecureLoginTest {
     public void testKeytabSpecifiedForServer() {
         System.setProperty(PROPERTY_KEY_SERVICE_KEYTAB, "foo");
         configuration.set(PROPERTY_KEY_SERVICE_KEYTAB, "bar");
-        SecureLogin secureLogin = new SecureLogin();
+        SecureLogin secureLogin = new SecureLogin(pxfUserGroupInformationMock);
         assertEquals("bar", secureLogin.getServiceKeytab("default", configuration));
         assertEquals("bar", secureLogin.getServiceKeytab("any", configuration));
     }

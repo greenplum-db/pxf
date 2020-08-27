@@ -5,8 +5,6 @@ import org.apache.hadoop.hive.metastore.api.SerDeInfo;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.greenplum.pxf.api.model.Metadata;
-import org.greenplum.pxf.api.security.SecureLogin;
-import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -24,9 +22,8 @@ public class HiveClientWrapperTest {
     @BeforeEach
     public void setup() {
         HiveClientWrapper.HiveClientFactory factory = mock(HiveClientWrapper.HiveClientFactory.class);
-        HiveUtilities mockHiveUtilities = mock(HiveUtilities.class);
-        SecureLogin mockSecureLogin = mock(SecureLogin.class);
-        hiveClientWrapper = new HiveClientWrapper(factory, mockHiveUtilities, mockSecureLogin);
+        hiveClientWrapper = new HiveClientWrapper();
+        hiveClientWrapper.setHiveClientFactory(factory);
     }
 
     @Test

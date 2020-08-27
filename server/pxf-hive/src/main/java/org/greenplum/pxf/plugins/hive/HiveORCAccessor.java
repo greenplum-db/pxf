@@ -38,6 +38,7 @@ import org.greenplum.pxf.api.filter.TreeTraverser;
 import org.greenplum.pxf.api.filter.TreeVisitor;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.EnumAggregationType;
+import org.greenplum.pxf.api.utilities.SpringContext;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 
@@ -91,7 +92,11 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
      * Constructs a HiveORCFileAccessor.
      */
     public HiveORCAccessor() {
-        super(new OrcInputFormat(), HiveUtilities.getInstance());
+        this(SpringContext.getBean(HiveUtilities.class));
+    }
+
+    public HiveORCAccessor(HiveUtilities hiveUtilities) {
+        super(new OrcInputFormat(), hiveUtilities);
     }
 
     @Override

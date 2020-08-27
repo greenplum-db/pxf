@@ -15,6 +15,7 @@ import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.plugins.hdfs.HcfsType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,6 +25,7 @@ import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.List;
 
+@Component
 public final class AvroUtilities {
 
     private static final String COMMON_NAMESPACE = "public.avro";
@@ -44,16 +46,10 @@ public final class AvroUtilities {
         this(new DefaultFileSearcher());
     }
 
-    private static final AvroUtilities instance = new AvroUtilities();
-
     // constructor for use in test
     @VisibleForTesting
     AvroUtilities(FileSearcher fileSearcher) {
         this.fileSearcher = fileSearcher;
-    }
-
-    public static AvroUtilities getInstance() {
-        return instance;
     }
 
     /**

@@ -43,6 +43,7 @@ import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.FragmentStats;
 import org.greenplum.pxf.api.model.Metadata;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.api.utilities.SpringContext;
 import org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.greenplum.pxf.plugins.hive.utilities.ProfileFactory;
@@ -111,10 +112,10 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
     private final Map<String, String> partitionKeyTypes = new HashMap<>();
 
     public HiveDataFragmenter() {
-        this(HiveClientWrapper.getInstance(), HiveUtilities.getInstance());
+        this(SpringContext.getBean(HiveUtilities.class), SpringContext.getBean(HiveClientWrapper.class));
     }
 
-    HiveDataFragmenter(HiveClientWrapper hiveClientWrapper, HiveUtilities hiveUtilities) {
+    HiveDataFragmenter(HiveUtilities hiveUtilities, HiveClientWrapper hiveClientWrapper) {
         this.hiveClientWrapper = hiveClientWrapper;
         this.hiveUtilities = hiveUtilities;
     }

@@ -35,6 +35,7 @@ import org.greenplum.pxf.api.filter.OperatorNode;
 import org.greenplum.pxf.api.filter.ToStringTreeVisitor;
 import org.greenplum.pxf.api.filter.TreeTraverser;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.api.utilities.SpringContext;
 import org.greenplum.pxf.plugins.hdfs.HdfsSplittableDataAccessor;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.slf4j.Logger;
@@ -92,7 +93,7 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
          * calling the base constructor, otherwise it would have been:
          * super(input, createInputFormat(input))
          */
-        this(null, HiveUtilities.getInstance());
+        this(null, SpringContext.getBean(HiveUtilities.class));
     }
 
     /**

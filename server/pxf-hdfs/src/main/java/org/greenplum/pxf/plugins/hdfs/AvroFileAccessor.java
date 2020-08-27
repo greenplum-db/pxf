@@ -37,6 +37,7 @@ import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.utilities.SpringContext;
 import org.greenplum.pxf.plugins.hdfs.avro.AvroUtilities;
 
 import java.io.IOException;
@@ -64,8 +65,12 @@ public class AvroFileAccessor extends HdfsSplittableDataAccessor {
      * Constructs a new instance of the AvroFileAccessor
      */
     public AvroFileAccessor() {
+        this(SpringContext.getBean(AvroUtilities.class));
+    }
+
+    AvroFileAccessor(AvroUtilities avroUtilities) {
         super(new AvroInputFormat<GenericRecord>());
-        this.avroUtilities = AvroUtilities.getInstance();
+        this.avroUtilities = avroUtilities;
     }
 
     /*
@@ -116,7 +121,7 @@ public class AvroFileAccessor extends HdfsSplittableDataAccessor {
      */
     @Override
     public OneRow readNextObject() throws IOException {
-        /** Resetting datum to null, to avoid stale bytes to be padded from the previous row's datum */
+        /* Resetting datum to null, to avoid stale bytes to be padded from the previous row's datum */
         avroWrapper.datum(null);
         if (reader.next(avroWrapper, NullWritable.get())) { // There is one more record in the current split.
             rowsRead++;

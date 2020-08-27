@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 
 public class CodecFactory {
 
-    private static final Logger LOG = LoggerFactory.getLogger(CodecFactory.class);
     private static final CodecFactory codecFactoryInstance = new CodecFactory();
 
     /**
@@ -56,26 +55,6 @@ public class CodecFactory {
         } catch (ClassNotFoundException e) {
             throw new IllegalArgumentException(
                     String.format("Compression codec %s was not found.", name), e);
-        }
-        return codecClass;
-    }
-
-    /**
-     * Helper routine to get compression codec class by path (file suffix).
-     *
-     * @param path path of file to get codec for
-     * @return matching codec class for the path. null if no codec is needed.
-     */
-    private Class<? extends CompressionCodec> getCodecClassByPath(Configuration config, String path) {
-        Class<? extends CompressionCodec> codecClass = null;
-        CompressionCodecFactory factory = new CompressionCodecFactory(config);
-        CompressionCodec codec = factory.getCodec(new Path(path));
-        if (codec != null) {
-            codecClass = codec.getClass();
-        }
-        if (LOG.isDebugEnabled()) {
-            String msg = (codecClass == null ? "No codec" : "Codec " + codecClass);
-            LOG.debug("{} was found for file {}", msg, path);
         }
         return codecClass;
     }

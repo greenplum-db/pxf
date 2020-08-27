@@ -28,7 +28,6 @@ import org.apache.hadoop.hive.metastore.api.Table;
 import org.greenplum.pxf.api.model.Metadata;
 import org.greenplum.pxf.api.model.PluginConf;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.api.security.SecureLogin;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -79,9 +78,11 @@ public class HiveMetadataFetcherTest {
         context.setConfiguration(configuration);
 
         mockClientFactory = mock(HiveClientWrapper.HiveClientFactory.class);
-        SecureLogin mockSecureLogin = mock(SecureLogin.class);
 
-        fakeHiveClientWrapper = new HiveClientWrapper(mockClientFactory, hiveUtilities, mockSecureLogin);
+        fakeHiveClientWrapper = new HiveClientWrapper();
+        fakeHiveClientWrapper.setHiveClientFactory(mockClientFactory);
+        fakeHiveClientWrapper.setHiveUtilities(hiveUtilities);
+
         when(mockClientFactory.initHiveClient(any())).thenReturn(mockHiveClient);
     }
 

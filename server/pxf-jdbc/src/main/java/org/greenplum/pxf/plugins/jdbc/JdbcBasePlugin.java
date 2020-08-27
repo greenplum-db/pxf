@@ -25,6 +25,7 @@ import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.security.SecureLogin;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.api.utilities.SpringContext;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.jdbc.utils.ConnectionManager;
 import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
@@ -171,7 +172,7 @@ public class JdbcBasePlugin extends BasePlugin {
      * ConnectionManager and SecureLogin.
      */
     JdbcBasePlugin() {
-        this(ConnectionManager.getInstance(), SecureLogin.getInstance());
+        this(SpringContext.getBean(ConnectionManager.class), SpringContext.getBean(SecureLogin.class));
     }
 
     /**

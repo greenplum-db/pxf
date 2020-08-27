@@ -405,7 +405,7 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
             for (Map.Entry<String, List<String>> entry : requestHeaders.entrySet()) {
                 if (StringUtils.equalsIgnoreCase(ENCODED_HEADER_VALUES_NAME, entry.getKey())) {
                     String value = getValue(entry.getValue());
-                    decodeHeaderValue = StringUtils.equalsIgnoreCase("true", value);
+                    decodeHeaderValue = StringUtils.equalsIgnoreCase(TRUE_LCASE, value);
                     break;
                 }
             }
@@ -503,7 +503,7 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
          * @return true when the property is true, false otherwise
          */
         private boolean removeOptionalBoolProperty(String property) {
-            return StringUtils.equals("true", removeOptionalProperty(property));
+            return StringUtils.equals(TRUE_LCASE, removeOptionalProperty(property));
         }
     }
 

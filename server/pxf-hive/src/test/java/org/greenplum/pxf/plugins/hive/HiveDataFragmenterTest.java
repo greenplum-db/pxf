@@ -57,7 +57,7 @@ public class HiveDataFragmenterTest {
     public void constructorCantAccessMetaStore() {
         when(hiveClientWrapper.initHiveClient(context, configuration)).thenThrow(new RuntimeException("Failed connecting to Hive MetaStore service: which way to albuquerque"));
 
-        HiveDataFragmenter fragmenter = new HiveDataFragmenter(hiveClientWrapper, hiveUtilities);
+        HiveDataFragmenter fragmenter = new HiveDataFragmenter(hiveUtilities, hiveClientWrapper);
         fragmenter.setRequestContext(context);
         Exception e = assertThrows(RuntimeException.class, fragmenter::afterPropertiesSet);
         assertEquals("Failed connecting to Hive MetaStore service: which way to albuquerque", e.getMessage());

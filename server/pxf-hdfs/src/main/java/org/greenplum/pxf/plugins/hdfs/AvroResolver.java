@@ -34,6 +34,7 @@ import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.Resolver;
+import org.greenplum.pxf.api.utilities.SpringContext;
 import org.greenplum.pxf.plugins.hdfs.avro.AvroUtilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.RecordkeyAdapter;
@@ -69,7 +70,11 @@ public class AvroResolver extends BasePlugin implements Resolver {
      * Constructs a new instance of the AvroFileAccessor
      */
     public AvroResolver() {
-        this.avroUtilities = AvroUtilities.getInstance();
+        this(SpringContext.getBean(AvroUtilities.class));
+    }
+
+    AvroResolver(AvroUtilities avroUtilities) {
+        this.avroUtilities = avroUtilities;
     }
 
     /*

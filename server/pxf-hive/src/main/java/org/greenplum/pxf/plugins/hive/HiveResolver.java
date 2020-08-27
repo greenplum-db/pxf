@@ -59,6 +59,7 @@ import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.api.utilities.SpringContext;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
@@ -102,7 +103,7 @@ public class HiveResolver extends HivePlugin implements Resolver {
     private String hiveDefaultPartName;
 
     public HiveResolver() {
-        this(HiveUtilities.getInstance());
+        this(SpringContext.getBean(HiveUtilities.class));
     }
 
     HiveResolver(HiveUtilities hiveUtilities) {

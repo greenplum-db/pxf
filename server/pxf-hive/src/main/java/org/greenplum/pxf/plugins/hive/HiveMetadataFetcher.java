@@ -31,6 +31,7 @@ import org.greenplum.pxf.api.error.UnsupportedTypeException;
 import org.greenplum.pxf.api.model.Metadata;
 import org.greenplum.pxf.api.model.MetadataFetcher;
 import org.greenplum.pxf.api.model.OutputFormat;
+import org.greenplum.pxf.api.utilities.SpringContext;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.greenplum.pxf.plugins.hive.utilities.ProfileFactory;
 
@@ -54,9 +55,8 @@ public class HiveMetadataFetcher extends HivePlugin implements MetadataFetcher {
     private final HiveClientWrapper hiveClientWrapper;
 
     public HiveMetadataFetcher() {
-        this(HiveUtilities.getInstance(), HiveClientWrapper.getInstance());
+        this(SpringContext.getBean(HiveUtilities.class), SpringContext.getBean(HiveClientWrapper.class));
     }
-
 
     HiveMetadataFetcher(HiveUtilities hiveUtilities, HiveClientWrapper hiveClientWrapper) {
         super(hiveUtilities);

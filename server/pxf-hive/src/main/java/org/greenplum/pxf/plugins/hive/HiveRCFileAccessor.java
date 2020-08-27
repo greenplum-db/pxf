@@ -27,6 +27,7 @@ import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.api.utilities.SpringContext;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 
 import java.io.IOException;
@@ -48,7 +49,7 @@ public class HiveRCFileAccessor extends HiveAccessor {
      * Constructs a HiveRCFileAccessor.
      */
     public HiveRCFileAccessor() {
-        super(new RCFileInputFormat(), HiveUtilities.getInstance());
+        super(new RCFileInputFormat(), SpringContext.getBean(HiveUtilities.class));
     }
 
     @Override
