@@ -253,12 +253,8 @@ Install PXF Server
 # Install PXF
 make -C ~/workspace/pxf install
 
-# Initialize PXF
-export PXF_CONF=~/pxf
-export PXF_JVM_OPTS="-Xmx512m -Xms256m"
-$PXF_HOME/bin/pxf init
-
 # Start PXF
+export PXF_JVM_OPTS="-Xmx512m -Xms256m"
 $PXF_HOME/bin/pxf start
 ```
 

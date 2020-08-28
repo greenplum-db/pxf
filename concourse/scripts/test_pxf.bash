@@ -193,7 +193,7 @@ function _main() {
 
 	create_gpdb_cluster
 	add_remote_user_access_for_gpdb testuser
-	init_and_configure_pxf_server
+	configure_pxf_server
 
 	local HCFS_BUCKET # team-specific bucket names
 	case ${PROTOCOL} in

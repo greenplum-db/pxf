@@ -34,9 +34,35 @@ fi
 %__mkdir -p %{buildroot}/%{prefix}
 %__cp -R %{_sourcedir}/* %{buildroot}/%{prefix}
 
+%post
+sed -i "s|directory =.*|directory = '%{prefix}/gpextable/'|g" %{prefix}/gpextable/pxf.control
+sed -i "s|module_pathname =.*|module_pathname = '%{prefix}/gpextable/pxf'|g" %{prefix}/gpextable/pxf.control
+
 %files
 %{prefix}
 
+# If a file is not marked as a config file, or if a file has not been altered
+# since installation, then it will be silently replaced by the version from the
+# RPM.
+
+# If a config file has been edited on disk, but is not actually different from
+# the file in the RPM then the edited version will be silently left in place.
+
+# When a config file has been edited and is different from the file in
+# the RPM, then the behavior is the following:
+# - %config(noreplace): The edited version will be left in place, and the new
+#                       version will be installed with an .rpmnew suffix.
+# - %config: The new file will be installed, and the the old edited version
+#            will be renamed with an .rpmsave suffix.
+
+# Configuration directories/files
+%config(noreplace) %{prefix}/conf/pxf-application.properties
+%config(noreplace) %{prefix}/conf/pxf-env.sh
+%config(noreplace) %{prefix}/conf/pxf-log4j2.xml
+%config(noreplace) %{prefix}/conf/pxf-profiles.xml
+
 %preun
 # cleanup files and directories created by 'pxf init' command
-%__rm -rf %{prefix}/run
+# only applies for old installations (pre 6.0.0)
+%__rm -f %{prefix}/conf/pxf-private.classpath
+%__rm -rf %{prefix}/pxf-service

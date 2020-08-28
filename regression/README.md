@@ -46,10 +46,12 @@ By setting environment variables you can change the location of the Greenplum ma
 
 ### General environment variables
 
-All the general environment variables that come from `greenplum_path.sh` and `gpdemo-env.sh`, along with `PXF_CONF` must be set.
+All the general environment variables that come from `greenplum_path.sh` and
+`gpdemo-env.sh` must be set. Additionally, `PXF_RUN` must be set if different
+from `PXF_HOME`.
 
 * `PXF_TEST_DEBUG`: set to anything to prevent deletion of data, and to run `pg_regress` in debug mode (optional)
-* `SERVER_CONFIG`: the name of the config directory for your server, under `${PXF_CONF}/servers` (optional). If not set, will use one of `${PXF_CONF}/servers/{default,s3,gs,adl,wasbs}` as appropriate
+* `SERVER_CONFIG`: the name of the config directory for your server, under `${PXF_RUN}/servers` (optional). If not set, PXF will use one of `${PXF_RUN}/servers/{default,s3,gs,adl,wasbs}` as appropriate
 * `PGHOST`: the hostname of the master Greenplum node (optional). Needed when Greenplum is remote
 
 ### HCFS-specific variables

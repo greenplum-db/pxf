@@ -115,8 +115,8 @@ deb:
 	cp -a server/build/stage/pxf/* build/debbuild/usr/local/pxf-gp$${GP_MAJOR_VERSION} ;\
 	echo $$(git rev-parse --verify HEAD) > build/debbuild/usr/local/pxf-gp$${GP_MAJOR_VERSION}/commit.sha ;\
 	mkdir build/debbuild/DEBIAN ;\
-	sed -e "s/%VERSION%/$${PXF_MAIN_VERSION}-$${PXF_RELEASE}/" -e "s/%MAINTAINER%/${VENDOR}/" package/control > build/debbuild/DEBIAN/control ;\
-	cp -a package/prerm build/debbuild/DEBIAN/prerm ;\
+	cp -a package/DEBIAN/* build/debbuild/DEBIAN/ ;\
+	sed -i -e "s/%VERSION%/$${PXF_MAIN_VERSION}-$${PXF_RELEASE}/" -e "s/%MAINTAINER%/${VENDOR}/" build/debbuild/DEBIAN/control ;\
 	dpkg-deb --build build/debbuild ;\
 	mv build/debbuild.deb build/pxf-gp$${GP_MAJOR_VERSION}-$${PXF_MAIN_VERSION}-$${PXF_RELEASE}-ubuntu18.04-amd64.deb
 
