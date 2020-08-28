@@ -21,7 +21,7 @@ import org.greenplum.pxf.automation.utils.jsystem.report.ReportUtils;
  */
 public class PxfProfileXml extends XmlBasedComponents {
 
-	public final static String XML_PROFILES_FILE_NAME = "pxf-profiles-default.xml";
+	public final static String XML_PROFILES_FILE_NAME = "pxf-profiles.xml";
 
 	// List of Profile object
 	private List<Profile> profilesList = null;

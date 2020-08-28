@@ -3,23 +3,23 @@
 ------------------------------------------------------------------
 
 CREATE OR REPLACE FUNCTION pg_catalog.pxf_write() RETURNS integer
-AS '$libdir/pxf.so', 'pxfprotocol_export'
+AS 'MODULE_PATHNAME', 'pxfprotocol_export'
 LANGUAGE C STABLE;
 
 CREATE OR REPLACE FUNCTION pg_catalog.pxf_read() RETURNS integer
-AS '$libdir/pxf.so', 'pxfprotocol_import'
+AS 'MODULE_PATHNAME', 'pxfprotocol_import'
 LANGUAGE C STABLE;
 
 CREATE OR REPLACE FUNCTION pg_catalog.pxf_validate() RETURNS void
-AS '$libdir/pxf.so', 'pxfprotocol_validate_urls'
+AS 'MODULE_PATHNAME', 'pxfprotocol_validate_urls'
 LANGUAGE C STABLE;
 
 CREATE OR REPLACE FUNCTION pg_catalog.pxfwritable_import() RETURNS record
-AS '$libdir/pxf.so', 'gpdbwritableformatter_import'
+AS 'MODULE_PATHNAME', 'gpdbwritableformatter_import'
 LANGUAGE C STABLE;
 
 CREATE OR REPLACE FUNCTION pg_catalog.pxfwritable_export(record) RETURNS bytea
-AS '$libdir/pxf.so', 'gpdbwritableformatter_export'
+AS 'MODULE_PATHNAME', 'gpdbwritableformatter_export'
 LANGUAGE C STABLE;
 
 CREATE TRUSTED PROTOCOL pxf (

@@ -1,6 +1,8 @@
 package org.greenplum.pxf.service;
 
 import org.greenplum.pxf.api.configuration.PxfServerProperties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.task.TaskExecutionProperties;
@@ -24,6 +26,8 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 @EnableConfigurationProperties(PxfServerProperties.class)
 public class PxfConfiguration implements WebMvcConfigurer {
+
+    private static final Logger LOG = LoggerFactory.getLogger(PxfConfiguration.class);
 
     /**
      * Bean name of PXF's {@link TaskExecutor}.
@@ -78,6 +82,22 @@ public class PxfConfiguration implements WebMvcConfigurer {
         builder = builder.threadNamePrefix(properties.getThreadNamePrefix());
         builder = builder.customizers(taskExecutorCustomizers.orderedStream()::iterator);
         builder = builder.taskDecorator(taskDecorator.getIfUnique());
+
+        LOG.debug("Initializing PXF ThreadPoolTaskExecutor with prefix={}. " +
+                        "Pool options: " +
+                        "queue capacity={}, core size={}, max size={}, " +
+                        "allow core thread timeout={}, keep alive={}. " +
+                        "Shutdown options: await termination={}, await " +
+                        "termination period={}.",
+                properties.getThreadNamePrefix(),
+                pool.getQueueCapacity(),
+                pool.getCoreSize(),
+                pool.getMaxSize(),
+                pool.isAllowCoreThreadTimeout(),
+                pool.getKeepAlive(),
+                shutdown.isAwaitTermination(),
+                shutdown.getAwaitTerminationPeriod());
+
         return builder.build(PxfThreadPoolTaskExecutor.class);
     }
 }

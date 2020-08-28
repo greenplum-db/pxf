@@ -91,7 +91,7 @@ SED_ARGS=(
 	-e "s|{{[[:space:]]*HCFS_PROTOCOL[[:space:]]*}}|${HCFS_PROTOCOL}|g"
 	-e "s|{{[[:space:]]*HCFS_SCHEME[[:space:]]*}}|${HCFS_SCHEME}|g"
 	-e "s|{{[[:space:]]*SERVER_PARAM[[:space:]]*}}|${SERVER_PARAM}|g"
-	-e "s|{{[[:space:]]*PXF_CONF[[:space:]]*}}|${PXF_CONF}|g"
+	-e "s|{{[[:space:]]*PXF_RUN[[:space:]]*}}|${PXF_RUN}|g"
 	-e "s|{{[[:space:]]*HBASE_CMD[[:space:]]*}}|${HBASE_CMD}|g"
 	-e "s|{{[[:space:]]*BEELINE_CMD[[:space:]]*}}|${BEELINE_CMD}|g"
 	-e "s|{{[[:space:]]*HIVE_HOST[[:space:]]*}}|${HIVE_HOST}|g"

@@ -6,7 +6,6 @@ log() {
 
 _main() {
   sleep 1
-  source "${PXF_HOME}/conf/pxf-env-default.sh"
   log 'Stopping PXF'
   "${PXF_HOME}/bin/pxf" stop && return
   # "insurance policy":

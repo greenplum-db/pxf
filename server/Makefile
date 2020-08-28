@@ -60,8 +60,15 @@ test unittest:
 	./gradlew -Pversion=$(PXF_VERSION) ${GRADLEW_TEST_PARAMS}
 
 .PHONY: stage
-stage: test
-	./gradlew -Pversion=$(PXF_VERSION) stage
+stage:
+	./gradlew -Pversion=$(PXF_VERSION) test stage
+	install -m 744 -d "build/stage/pxf/lib"
+	install -m 744 -d "build/stage/pxf/lib/native"
+	install -m 744 -d "build/stage/pxf/servers"
+	install -m 744 -d "build/stage/pxf/servers/default"
+	install -m 700 -d "build/stage/pxf/logs"
+	install -m 700 -d "build/stage/pxf/run"
+	install -m 700 -d "build/stage/pxf/keytabs"
 
 .PHONY: stage-notest
 stage-notest:
