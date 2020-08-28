@@ -85,6 +85,7 @@ import static org.apache.parquet.hadoop.ParquetOutputFormat.PAGE_SIZE;
 import static org.apache.parquet.hadoop.ParquetOutputFormat.WRITER_VERSION;
 import static org.apache.parquet.hadoop.api.ReadSupport.PARQUET_READ_SCHEMA;
 import static org.apache.parquet.schema.LogicalTypeAnnotation.DecimalLogicalTypeAnnotation;
+import static org.apache.parquet.schema.LogicalTypeAnnotation.dateType;
 import static org.apache.parquet.schema.LogicalTypeAnnotation.intType;
 import static org.apache.parquet.schema.LogicalTypeAnnotation.stringType;
 
@@ -506,6 +507,13 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
                     builder = Types.optional(PrimitiveTypeName.INT96);
                     break;
                 case DATE:
+                    // DATE is used to for a logical date type, without a time
+                    // of day. It must annotate an int32 that stores the number
+                    // of days from the Unix epoch, 1 January 1970. The sort
+                    // order used for DATE is signed.
+                    builder = Types.optional(PrimitiveTypeName.INT32)
+                            .as(dateType());
+                    break;
                 case TIME:
                 case VARCHAR:
                 case BPCHAR:

@@ -9,21 +9,33 @@ import java.time.temporal.ChronoField;
  */
 public class GreenplumDateTime {
 
+    public static final String DATE_FORMATTER_BASE_PATTERN = "yyyy-MM-dd";
+
     public static final String DATETIME_FORMATTER_BASE_PATTERN = "yyyy-MM-dd HH:mm:ss";
+
+    /**
+     * The date formatter for Greenplum values
+     */
+    public static final DateTimeFormatter DATE_FORMATTER =
+            new DateTimeFormatterBuilder()
+                    .appendPattern(DATE_FORMATTER_BASE_PATTERN)
+                    .toFormatter();
 
     /**
      * Supports date times with the format yyyy-MM-dd HH:mm:ss and
      * optional microsecond
      */
     public static final DateTimeFormatter DATETIME_FORMATTER =
-            new DateTimeFormatterBuilder().appendPattern(DATETIME_FORMATTER_BASE_PATTERN)
+            new DateTimeFormatterBuilder()
+                    .appendPattern(DATETIME_FORMATTER_BASE_PATTERN)
                     // Parsing nanos in strict mode, the number of parsed digits must be between 0 and 6 (microsecond support)
-                    .appendFraction(ChronoField.NANO_OF_SECOND, 0, 6, true).toFormatter();
+                    .appendFraction(ChronoField.NANO_OF_SECOND, 0, 6, true)
+                    .toFormatter();
 
     /**
      * Supports date times with timezone and optional microsecond
      */
-    private static DateTimeFormatter optionalFormatter = new DateTimeFormatterBuilder().appendOffset("+HH:mm", "Z").toFormatter();
+    private static final DateTimeFormatter optionalFormatter = new DateTimeFormatterBuilder().appendOffset("+HH:mm", "Z").toFormatter();
     public static final DateTimeFormatter DATETIME_WITH_TIMEZONE_FORMATTER =
             new DateTimeFormatterBuilder()
                     .parseCaseInsensitive()

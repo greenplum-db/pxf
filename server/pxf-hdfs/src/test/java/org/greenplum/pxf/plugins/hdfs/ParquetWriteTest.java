@@ -49,6 +49,7 @@ import static org.apache.parquet.hadoop.ParquetOutputFormat.DICTIONARY_PAGE_SIZE
 import static org.apache.parquet.hadoop.ParquetOutputFormat.ENABLE_DICTIONARY;
 import static org.apache.parquet.hadoop.ParquetOutputFormat.PAGE_SIZE;
 import static org.apache.parquet.hadoop.ParquetOutputFormat.WRITER_VERSION;
+import static org.apache.parquet.schema.LogicalTypeAnnotation.DateLogicalTypeAnnotation;
 import static org.apache.parquet.schema.LogicalTypeAnnotation.DecimalLogicalTypeAnnotation;
 import static org.apache.parquet.schema.LogicalTypeAnnotation.IntLogicalTypeAnnotation;
 import static org.apache.parquet.schema.LogicalTypeAnnotation.StringLogicalTypeAnnotation;
@@ -328,22 +329,24 @@ public class ParquetWriteTest {
                 .withConf(configuration)
                 .build();
 
-        // Physical type is binary, logical type is Date
+        // Physical type is INT32, logical type is DATE
         assertNotNull(schema.getColumns());
         assertEquals(1, schema.getColumns().size());
         Type type = schema.getType(0);
-        assertEquals(PrimitiveType.PrimitiveTypeName.BINARY, type.asPrimitiveType().getPrimitiveTypeName());
-        assertTrue(type.getLogicalTypeAnnotation() instanceof StringLogicalTypeAnnotation);
-        assertEquals("2020-08-01", fileReader.read().getString(0, 0));
-        assertEquals("2020-08-02", fileReader.read().getString(0, 0));
-        assertEquals("2020-08-03", fileReader.read().getString(0, 0));
-        assertEquals("2020-08-04", fileReader.read().getString(0, 0));
-        assertEquals("2020-08-05", fileReader.read().getString(0, 0));
-        assertEquals("2020-08-06", fileReader.read().getString(0, 0));
-        assertEquals("2020-08-07", fileReader.read().getString(0, 0));
-        assertEquals("2020-08-08", fileReader.read().getString(0, 0));
-        assertEquals("2020-08-09", fileReader.read().getString(0, 0));
-        assertEquals("2020-08-10", fileReader.read().getString(0, 0));
+        assertEquals(PrimitiveType.PrimitiveTypeName.INT32, type.asPrimitiveType().getPrimitiveTypeName());
+        assertTrue(type.getLogicalTypeAnnotation() instanceof DateLogicalTypeAnnotation);
+
+        // Days since epoch: 18475 days from 1970-01-01 -> 2020-08-01
+        assertEquals(18475, fileReader.read().getInteger(0, 0));
+        assertEquals(18476, fileReader.read().getInteger(0, 0));
+        assertEquals(18477, fileReader.read().getInteger(0, 0));
+        assertEquals(18478, fileReader.read().getInteger(0, 0));
+        assertEquals(18479, fileReader.read().getInteger(0, 0));
+        assertEquals(18480, fileReader.read().getInteger(0, 0));
+        assertEquals(18481, fileReader.read().getInteger(0, 0));
+        assertEquals(18482, fileReader.read().getInteger(0, 0));
+        assertEquals(18483, fileReader.read().getInteger(0, 0));
+        assertEquals(18484, fileReader.read().getInteger(0, 0));
         assertNull(fileReader.read());
         fileReader.close();
     }

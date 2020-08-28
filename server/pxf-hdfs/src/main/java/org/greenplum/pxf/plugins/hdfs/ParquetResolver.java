@@ -27,21 +27,25 @@ import org.apache.parquet.example.data.simple.SimpleGroupFactory;
 import org.apache.parquet.io.api.Binary;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.Type;
+import org.greenplum.pxf.api.GreenplumDateTime;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.ConfigurationFactory;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hdfs.parquet.ParquetTypeConverter;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import static org.apache.parquet.schema.LogicalTypeAnnotation.DateLogicalTypeAnnotation;
 import static org.apache.parquet.schema.LogicalTypeAnnotation.DecimalLogicalTypeAnnotation;
 import static org.apache.parquet.schema.LogicalTypeAnnotation.IntLogicalTypeAnnotation;
 import static org.apache.parquet.schema.LogicalTypeAnnotation.StringLogicalTypeAnnotation;
@@ -49,13 +53,14 @@ import static org.apache.parquet.schema.Type.Repetition.REPEATED;
 
 public class ParquetResolver extends BasePlugin implements Resolver {
 
-    private MessageType schema;
-    private SimpleGroupFactory groupFactory;
-    private final ObjectMapper mapper = new ObjectMapper();
-
     // used to distinguish string pattern between type "timestamp" ("2019-03-14 14:10:28")
     // and type "timestamp with time zone" ("2019-03-14 14:10:28+07:30")
     public static final Pattern TIMESTAMP_PATTERN = Pattern.compile("[+-]\\d{2}(:\\d{2})?$");
+
+    private MessageType schema;
+    private SimpleGroupFactory groupFactory;
+    private final ObjectMapper mapper = new ObjectMapper();
+    private List<ColumnDescriptor> columnDescriptors;
 
     public ParquetResolver() {
         super();
@@ -63,6 +68,12 @@ public class ParquetResolver extends BasePlugin implements Resolver {
 
     ParquetResolver(ConfigurationFactory configurationFactory) {
         this.configurationFactory = configurationFactory;
+    }
+
+    @Override
+    public void initialize(RequestContext requestContext) {
+        super.initialize(requestContext);
+        this.columnDescriptors = context.getTupleDescription();
     }
 
     @Override
@@ -74,7 +85,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
 
         // schema is the readSchema, if there is column projection
         // the schema will be a subset of tuple descriptions
-        for (ColumnDescriptor columnDescriptor : context.getTupleDescription()) {
+        for (ColumnDescriptor columnDescriptor : columnDescriptors) {
             OneField oneField;
             if (!columnDescriptor.isProjected()) {
                 oneField = new OneField(columnDescriptor.columnTypeCode(), null);
@@ -102,7 +113,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
         Group group = groupFactory.newGroup();
         for (int i = 0; i < record.size(); i++) {
             OneField field = record.get(i);
-            ColumnDescriptor columnDescriptor = context.getTupleDescription().get(i);
+            ColumnDescriptor columnDescriptor = columnDescriptors.get(i);
 
             /*
              * We need to right trim the incoming value from Greenplum. This is
@@ -129,11 +140,15 @@ public class ParquetResolver extends BasePlugin implements Resolver {
                     group.add(index, Binary.fromReusedByteArray((byte[]) field.val));
                 break;
             case INT32:
-                if (type.getLogicalTypeAnnotation() instanceof IntLogicalTypeAnnotation &&
-                        ((IntLogicalTypeAnnotation) type.getLogicalTypeAnnotation()).getBitWidth() == 16)
+                if (type.getLogicalTypeAnnotation() instanceof DateLogicalTypeAnnotation) {
+                    String dateString = (String) field.val;
+                    group.add(index, ParquetTypeConverter.getDaysFromEpochFromDateString(dateString));
+                } else if (type.getLogicalTypeAnnotation() instanceof IntLogicalTypeAnnotation &&
+                        ((IntLogicalTypeAnnotation) type.getLogicalTypeAnnotation()).getBitWidth() == 16) {
                     group.add(index, (Short) field.val);
-                else
+                } else {
                     group.add(index, (Integer) field.val);
+                }
                 break;
             case INT64:
                 group.add(index, (Long) field.val);

@@ -18,6 +18,7 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
@@ -258,6 +259,15 @@ public enum ParquetTypeConverter {
                     timestamp, julianDay, timeOfDayNanos, unixTimeMs);
         }
         return timestamp;
+    }
+
+    /**
+     * Parses the dateString and returns the number of days between the unix
+     * epoch (1 January 1970) until the given date in the dateString
+     */
+    public static int getDaysFromEpochFromDateString(String dateString) {
+        LocalDate date = LocalDate.parse(dateString, GreenplumDateTime.DATE_FORMATTER);
+        return (int) date.toEpochDay();
     }
 
     /**

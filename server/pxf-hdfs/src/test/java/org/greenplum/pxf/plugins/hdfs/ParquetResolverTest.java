@@ -107,8 +107,8 @@ public class ParquetResolverTest {
         schema = getParquetSchemaForPrimitiveTypes(Type.Repetition.OPTIONAL, false);
         // schema has changed, set metadata again
         context.setMetadata(schema);
-        resolver.initialize(context);
         context.setTupleDescription(getColumnDescriptorsFromSchema(schema));
+        resolver.initialize(context);
 
         Instant timestamp = Instant.parse("2013-07-14T04:00:05Z"); // UTC
         ZonedDateTime localTime = timestamp.atZone(ZoneId.systemDefault());
