@@ -9,7 +9,6 @@ import org.greenplum.pxf.api.utilities.FragmentMetadataSerDe;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -73,7 +72,7 @@ class HBaseFragmentMetadataTest {
 
         ObjectMapper mapper = new ObjectMapper();
         SimpleModule module = new SimpleModule();
-        module.addSerializer(FragmentMetadata.class, FragmentMetadataSerDe.getInstance());
+        module.addSerializer(FragmentMetadata.class, new FragmentMetadataSerDe());
         mapper.registerModule(module);
 
         assertEquals("\"{\\\"startKey\\\":\\\"YQ==\\\",\\\"endKey\\\":\\\"Yg==\\\",\\\"columnMapping\\\":{\\\"1\\\":\\\"ZW50cnktMQ==\\\",\\\"2\\\":\\\"ZW50cnktMg==\\\"},\\\"className\\\":\\\"org.greenplum.pxf.plugins.hbase.HBaseFragmentMetadata\\\"}\"",
@@ -84,7 +83,7 @@ class HBaseFragmentMetadataTest {
     public void testDeserialization() throws JsonProcessingException {
         String json = "{\"startKey\":\"YQ==\",\"endKey\":\"Yg==\",\"columnMapping\":{\"f\":\"RnJhbmNpc2Nv\",\"g\":\"UFhG\"},\"className\":\"org.greenplum.pxf.plugins.hbase.HBaseFragmentMetadata\"}";
 
-        FragmentMetadata testMetadata = FragmentMetadataSerDe.getInstance().deserialize(json);
+        FragmentMetadata testMetadata = new FragmentMetadataSerDe().deserialize(json);
         assertNotNull(testMetadata);
         assertTrue(testMetadata instanceof HBaseFragmentMetadata);
         HBaseFragmentMetadata metadata = (HBaseFragmentMetadata) testMetadata;

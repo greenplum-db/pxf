@@ -18,12 +18,14 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class AvroUtilitiesTest {
+    private AvroSchemaFileReaderFactory avroSchemaFileReaderFactory;
     private RequestContext context;
     private Schema schema;
     private Schema testSchema;
     private String avroDirectory;
     private AvroUtilities avroUtilities;
     private HcfsType hcfsType;
+
 
     @BeforeEach
     public void setup() {
@@ -34,6 +36,8 @@ public class AvroUtilitiesTest {
         context.setConfiguration(configuration);
         testSchema = generateTestSchema();
         avroUtilities = new AvroUtilities();
+        avroSchemaFileReaderFactory = new AvroSchemaFileReaderFactory();
+        avroUtilities.setSchemaFileReaderFactory(avroSchemaFileReaderFactory);
         hcfsType = HcfsType.getHcfsType(context);
     }
 
@@ -50,6 +54,7 @@ public class AvroUtilitiesTest {
     @Test
     public void testObtainSchema_OnRead_WithUserProvidedSchema_Binary_HCFS() {
         avroUtilities = new AvroUtilities((file) -> dontFindLocalFile());
+        avroUtilities.setSchemaFileReaderFactory(avroSchemaFileReaderFactory);
         context.setRequestType(RequestContext.RequestType.READ_BRIDGE);
         context.addOption("SCHEMA", avroDirectory + "user-provided.avro");
 
@@ -61,6 +66,7 @@ public class AvroUtilitiesTest {
     @Test
     public void testObtainSchema_OnRead_WithUserProvidedSchema_Binary_HCFS_Spaces() {
         avroUtilities = new AvroUtilities((file) -> dontFindLocalFile());
+        avroUtilities.setSchemaFileReaderFactory(avroSchemaFileReaderFactory);
         context.setRequestType(RequestContext.RequestType.READ_BRIDGE);
         context.addOption("SCHEMA", avroDirectory + "user provided.avro");
 
@@ -72,6 +78,7 @@ public class AvroUtilitiesTest {
     @Test
     public void testObtainSchema_OnRead_WithUserProvidedSchema_Json_HCFS() {
         avroUtilities = new AvroUtilities((file) -> dontFindLocalFile());
+        avroUtilities.setSchemaFileReaderFactory(avroSchemaFileReaderFactory);
         context.setRequestType(RequestContext.RequestType.READ_BRIDGE);
         context.addOption("SCHEMA", avroDirectory + "user-provided.avsc");
 
@@ -83,6 +90,7 @@ public class AvroUtilitiesTest {
     @Test
     public void testObtainSchema_OnRead_WithUserProvidedSchema_Json_HCFS_Spaces() {
         avroUtilities = new AvroUtilities((file) -> dontFindLocalFile());
+        avroUtilities.setSchemaFileReaderFactory(avroSchemaFileReaderFactory);
         context.setRequestType(RequestContext.RequestType.READ_BRIDGE);
         context.addOption("SCHEMA", avroDirectory + "user provided.avsc");
 
@@ -226,6 +234,7 @@ public class AvroUtilitiesTest {
     @Test
     public void testObtainSchema_OnWrite_WithUserProvidedSchema_Binary_HCFS() {
         avroUtilities = new AvroUtilities((file) -> dontFindLocalFile());
+        avroUtilities.setSchemaFileReaderFactory(avroSchemaFileReaderFactory);
         context.setRequestType(RequestContext.RequestType.WRITE_BRIDGE);
         context.addOption("SCHEMA", avroDirectory + "user-provided.avro");
         context.setDataSource(avroDirectory);
@@ -238,6 +247,7 @@ public class AvroUtilitiesTest {
     @Test
     public void testObtainSchema_OnWrite_WithUserProvidedSchema_Binary_HCFS_Spaces() {
         avroUtilities = new AvroUtilities((file) -> dontFindLocalFile());
+        avroUtilities.setSchemaFileReaderFactory(avroSchemaFileReaderFactory);
         context.setRequestType(RequestContext.RequestType.WRITE_BRIDGE);
         context.addOption("SCHEMA", avroDirectory + "user provided.avro");
         context.setDataSource(avroDirectory);
@@ -250,6 +260,7 @@ public class AvroUtilitiesTest {
     @Test
     public void testObtainSchema_OnWrite_WithUserProvidedSchema_Json_HCFS() {
         avroUtilities = new AvroUtilities((file) -> dontFindLocalFile());
+        avroUtilities.setSchemaFileReaderFactory(avroSchemaFileReaderFactory);
         context.setRequestType(RequestContext.RequestType.WRITE_BRIDGE);
         context.addOption("SCHEMA", avroDirectory + "user-provided.avsc");
         context.setDataSource(avroDirectory);
@@ -262,6 +273,7 @@ public class AvroUtilitiesTest {
     @Test
     public void testObtainSchema_OnWrite_WithUserProvidedSchema_Json_HCFS_Spaces() {
         avroUtilities = new AvroUtilities((file) -> dontFindLocalFile());
+        avroUtilities.setSchemaFileReaderFactory(avroSchemaFileReaderFactory);
         context.setRequestType(RequestContext.RequestType.WRITE_BRIDGE);
         context.addOption("SCHEMA", avroDirectory + "user provided.avsc");
         context.setDataSource(avroDirectory);

@@ -27,6 +27,7 @@ import org.greenplum.pxf.api.model.ProtocolHandler;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.RequestContext.RequestType;
 import org.greenplum.pxf.api.utilities.FragmentMetadata;
+import org.greenplum.pxf.api.utilities.FragmentMetadataSerDe;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -82,6 +83,7 @@ public class HttpRequestParserTest {
         parameters.add("X-GP-XID", "transaction:id");
 
         parser = new HttpRequestParser(mockPluginConf, new RequestContext());
+        parser.setMetadataSerDe(new FragmentMetadataSerDe());
     }
 
     @AfterEach

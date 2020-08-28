@@ -80,6 +80,7 @@ public class FragmenterResourceTest {
         fragmenterResource = new FragmenterResource();
         fragmenterResource.setPluginFactory(mockPluginFactory);
         fragmenterResource.setFragmenterCacheFactory(fragmenterCacheFactory);
+        fragmenterResource.setResponseFormatter(new FragmentsResponseFormatter());
         fragmenterResource.setPxfServerProperties(mockPxfServerProperties);
         fragmenterResource.setConfigurationFactory(mockConfigurationFactory);
         fragmenterResource.setRequestParser(mockParser);

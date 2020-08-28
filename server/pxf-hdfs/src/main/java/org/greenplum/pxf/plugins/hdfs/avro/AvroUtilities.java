@@ -15,6 +15,7 @@ import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.plugins.hdfs.HcfsType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -28,12 +29,12 @@ import java.util.List;
 @Component
 public final class AvroUtilities {
 
+    private static final Logger LOG = LoggerFactory.getLogger(AvroUtilities.class);
     private static final String COMMON_NAMESPACE = "public.avro";
 
-    private final FileSearcher fileSearcher;
     private String schemaPath;
-    private final static Logger LOG = LoggerFactory.getLogger(AvroUtilities.class);
-    AvroSchemaFileReaderFactory schemaFileReaderFactory = AvroSchemaFileReaderFactory.getInstance();
+    private AvroSchemaFileReaderFactory schemaFileReaderFactory;
+    private final FileSearcher fileSearcher;
 
     public interface FileSearcher {
         File searchForFile(String filename);
@@ -50,6 +51,11 @@ public final class AvroUtilities {
     @VisibleForTesting
     AvroUtilities(FileSearcher fileSearcher) {
         this.fileSearcher = fileSearcher;
+    }
+
+    @Autowired
+    public void setSchemaFileReaderFactory(AvroSchemaFileReaderFactory schemaFileReaderFactory) {
+        this.schemaFileReaderFactory = schemaFileReaderFactory;
     }
 
     /**
@@ -121,7 +127,7 @@ public final class AvroUtilities {
         return schema;
     }
 
-    private Schema getFieldSchema(DataType type, String colName) throws IOException {
+    private Schema getFieldSchema(DataType type, String colName) {
         List<Schema> unionList = new ArrayList<>();
         // in this version of gpdb, external table should not set 'notnull' attribute
         // so we should use union between NULL and another type everywhere

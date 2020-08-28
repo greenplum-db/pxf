@@ -31,6 +31,7 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.LineRecordReader;
 import org.apache.hadoop.mapred.TextInputFormat;
 import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.utilities.SpringContext;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 
 import java.io.DataOutputStream;
@@ -58,8 +59,12 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor {
      * Constructs a LineBreakAccessor.
      */
     public LineBreakAccessor() {
+        this(SpringContext.getBean(CodecFactory.class));
+    }
+
+    public LineBreakAccessor(CodecFactory codecFactory) {
         super(new TextInputFormat());
-        this.codecFactory = CodecFactory.getInstance();
+        this.codecFactory = codecFactory;
     }
 
     @Override
@@ -103,11 +108,11 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor {
      */
     @Override
     public boolean openForWrite() throws IOException {
-        String fileName = hcfsType.getUriForWrite(context);
         String compressCodec = context.getOption("COMPRESSION_CODEC");
         // get compression codec
         CompressionCodec codec = compressCodec != null ?
                 codecFactory.getCodec(compressCodec, configuration) : null;
+        String fileName = hcfsType.getUriForWrite(context, codec);
 
         file = new Path(fileName);
         fs = FileSystem.get(URI.create(fileName), configuration);

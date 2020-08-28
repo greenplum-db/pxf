@@ -12,6 +12,7 @@ import org.greenplum.pxf.api.utilities.FragmentMetadata;
 import org.greenplum.pxf.api.utilities.FragmentMetadataSerDe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.MultiValueMap;
 
@@ -40,10 +41,9 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
     private static final String FALSE_LCASE = "false";
     private static final String PROFILE_SCHEME = "PROFILE-SCHEME";
 
-    protected static final FragmentMetadataSerDe metadataSerDe = FragmentMetadataSerDe.getInstance();
-
     private final PluginConf pluginConf;
     private final RequestContext context;
+    protected FragmentMetadataSerDe metadataSerDe;
 
     /**
      * Create a new instance of the HttpRequestParser with the given PluginConf
@@ -53,6 +53,11 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
     public HttpRequestParser(PluginConf pluginConf, RequestContext context) {
         this.pluginConf = pluginConf;
         this.context = context;
+    }
+
+    @Autowired
+    public void setMetadataSerDe(FragmentMetadataSerDe metadataSerDe) {
+        this.metadataSerDe = metadataSerDe;
     }
 
     @Override

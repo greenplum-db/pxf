@@ -57,11 +57,10 @@ import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.api.utilities.SpringContext;
 import org.greenplum.pxf.plugins.hdfs.parquet.ParquetOperatorPrunerAndTransformer;
 import org.greenplum.pxf.plugins.hdfs.parquet.ParquetRecordFilterBuilder;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -129,9 +128,17 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
     private int fileIndex, pageSize, rowGroupSize, dictionarySize;
     private long rowsRead, rowsWritten, totalRowsRead, totalRowsWritten;
     private WriterVersion parquetVersion;
-    private CodecFactory codecFactory = CodecFactory.getInstance();
-
     private long totalReadTimeInNanos;
+
+    private final CodecFactory codecFactory;
+
+    public ParquetFileAccessor() {
+        this(SpringContext.getBean(CodecFactory.class));
+    }
+
+    public ParquetFileAccessor(CodecFactory codecFactory) {
+        this.codecFactory = codecFactory;
+    }
 
     /**
      * Opens the resource for read.
@@ -226,7 +233,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
 
         HcfsType hcfsType = HcfsType.getHcfsType(context);
         // skip codec extension in filePrefix, because we add it in this accessor
-        filePrefix = hcfsType.getUriForWrite(context, true);
+        filePrefix = hcfsType.getUriForWrite(context);
         String compressCodec = context.getOption("COMPRESSION_CODEC");
         codecName = codecFactory.getCodec(compressCodec, DEFAULT_COMPRESSION);
 

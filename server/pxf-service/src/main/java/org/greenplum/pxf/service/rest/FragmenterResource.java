@@ -62,6 +62,8 @@ public class FragmenterResource extends BaseResource {
 
     private FragmenterCacheFactory fragmenterCacheFactory;
 
+    private FragmentsResponseFormatter responseFormatter;
+
     private PxfServerProperties pxfServerProperties;
 
     private SecurityService securityService;
@@ -84,6 +86,11 @@ public class FragmenterResource extends BaseResource {
     @Autowired
     public void setFragmenterCacheFactory(FragmenterCacheFactory fragmenterCacheFactory) {
         this.fragmenterCacheFactory = fragmenterCacheFactory;
+    }
+
+    @Autowired
+    public void setResponseFormatter(FragmentsResponseFormatter responseFormatter) {
+        this.responseFormatter = responseFormatter;
     }
 
     @Autowired
@@ -149,7 +156,7 @@ public class FragmenterResource extends BaseResource {
             fragments = getFragments(context);
         }
 
-        FragmentsResponse fragmentsResponse = FragmentsResponseFormatter.formatResponse(fragments, path);
+        FragmentsResponse fragmentsResponse = responseFormatter.formatResponse(fragments, path);
         return new ResponseEntity<>(fragmentsResponse, HttpStatus.OK);
     }
 

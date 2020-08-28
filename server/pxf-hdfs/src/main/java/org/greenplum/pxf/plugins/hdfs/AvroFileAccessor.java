@@ -166,7 +166,7 @@ public class AvroFileAccessor extends HdfsSplittableDataAccessor {
                 throw new RuntimeException(String.format("Avro Compression codec %s not supported", codec));
         }
 
-        Path file = new Path(hcfsType.getUriForWrite(context, true) + ".avro");
+        Path file = new Path(hcfsType.getUriForWrite(context) + ".avro");
         FileSystem fs = file.getFileSystem(jobConf);
         FSDataOutputStream avroOut = null;
         try {
