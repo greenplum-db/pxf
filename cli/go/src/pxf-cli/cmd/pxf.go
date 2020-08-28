@@ -16,7 +16,7 @@ type envVar string
 const (
 	gpHome   envVar = "GPHOME"
 	pxfHome  envVar = "PXF_HOME"
-	pxfConf  envVar = "PXF_CONF"
+	pxfRun  envVar = "PXF_RUN"
 	javaHome envVar = "JAVA_HOME"
 )
 
@@ -62,19 +62,19 @@ func (cmd *command) GetFunctionToExecute() (func(string) string, error) {
 			return fmt.Sprintf(
 				rsyncCommand,
 				deleteString,
-				inputs[pxfConf],
-				inputs[pxfConf],
-				inputs[pxfConf],
+				inputs[pxfRun],
+				inputs[pxfRun],
+				inputs[pxfRun],
 				hostname,
-				inputs[pxfConf])
+				inputs[pxfRun])
 		}, nil
 	default:
 		pxfCommand := ""
 		if inputs[gpHome] != "" {
 			pxfCommand += "GPHOME=" + inputs[gpHome] + " "
 		}
-		if inputs[pxfConf] != "" {
-			pxfCommand += "PXF_CONF=" + inputs[pxfConf] + " "
+		if inputs[pxfRun] != "" {
+			pxfCommand += "PXF_RUN=" + inputs[pxfRun] + " "
 		}
 		if inputs[javaHome] != "" {
 			pxfCommand += "JAVA_HOME=" + inputs[javaHome] + " "
@@ -114,12 +114,20 @@ var (
 		name: pxfInit,
 		messages: map[messageType]string{
 			success: "PXF initialized successfully on %d out of %d host%s\n",
-			status:  "Initializing PXF on master host%s and %d segment host%s...\n",
+			status:  "*****************************************************************************\n" +
+				 "* DEPRECATION NOTICE:\n" +
+				 "* The \"pxf cluster init\" command is deprecated and will be removed\n" +
+				 "* in a future release of PXF.\n" +
+				 "*\n" +
+				 "* Use the \"pxf cluster register\" command instead.\n" +
+				 "*\n" +
+				 "*****************************************************************************\n\n" +
+				 "Initializing PXF on master host%s and %d segment host%s...\n",
 			standby: ", standby master host,",
 			err:     "PXF failed to initialize on %d out of %d host%s\n",
 		},
 		warn:       false,
-		envVars:    []envVar{gpHome, pxfHome, pxfConf, javaHome},
+		envVars:    []envVar{gpHome, pxfHome, javaHome},
 		whereToRun: cluster.ON_REMOTE | cluster.ON_HOSTS | cluster.INCLUDE_MASTER | cluster.INCLUDE_MIRRORS,
 	}
 	StartCommand = command{
@@ -130,7 +138,7 @@ var (
 			err:     "PXF failed to start on %d out of %d host%s\n",
 		},
 		warn:       false,
-		envVars:    []envVar{pxfHome},
+		envVars:    []envVar{pxfHome, pxfRun},
 		whereToRun: cluster.ON_REMOTE | cluster.ON_HOSTS | cluster.EXCLUDE_MASTER | cluster.EXCLUDE_MIRRORS,
 	}
 	StopCommand = command{
@@ -141,7 +149,7 @@ var (
 			err:     "PXF failed to stop on %d out of %d host%s\n",
 		},
 		warn:       false,
-		envVars:    []envVar{pxfHome},
+		envVars:    []envVar{pxfHome, pxfRun},
 		whereToRun: cluster.ON_REMOTE | cluster.ON_HOSTS | cluster.EXCLUDE_MASTER | cluster.EXCLUDE_MIRRORS,
 	}
 	SyncCommand = command{
@@ -153,7 +161,7 @@ var (
 			err:     "PXF configs failed to sync on %d out of %d host%s\n",
 		},
 		warn:    false,
-		envVars: []envVar{pxfConf},
+		envVars: []envVar{pxfRun},
 		// cluster.ON_LOCAL | cluster.ON_HOSTS: the command will target host%s, but be run from master
 		// this is ideal for rsync from master to segment host%s. also exclude master but include standby master
 		whereToRun: cluster.ON_LOCAL | cluster.ON_HOSTS | cluster.EXCLUDE_MASTER | cluster.INCLUDE_MIRRORS,
@@ -166,7 +174,7 @@ var (
 			err:     "PXF is not running on %d out of %d host%s\n",
 		},
 		warn:       false,
-		envVars:    []envVar{pxfHome},
+		envVars:    []envVar{pxfHome, pxfRun},
 		whereToRun: cluster.ON_REMOTE | cluster.ON_HOSTS | cluster.EXCLUDE_MASTER | cluster.EXCLUDE_MIRRORS,
 	}
 	RegisterCommand = command{
@@ -185,13 +193,16 @@ var (
 		name: reset,
 		messages: map[messageType]string{
 			success: "PXF has been reset on %d out of %d host%s\n",
-			status:  "Resetting PXF on master host%s and %d segment host%s...\n",
+			status:  "*****************************************************************************\n" +
+				 "* DEPRECATION NOTICE:\n" +
+				 "* The \"pxf cluster reset\" command is deprecated and will be removed\n" +
+				 "* in a future release of PXF.\n" +
+				 "*****************************************************************************\n\n" +
+				 "Resetting PXF on master host%s and %d segment host%s...\n",
 			standby: ", standby master host,",
 			err:     "Failed to reset PXF on %d out of %d host%s\n",
-			warning: "Ensure your PXF cluster is stopped before continuing. " +
-				"This is a destructive action. Press y to continue:\n",
 		},
-		warn:       true,
+		warn:       false,
 		envVars:    []envVar{pxfHome},
 		whereToRun: cluster.ON_REMOTE | cluster.ON_HOSTS | cluster.INCLUDE_MASTER | cluster.INCLUDE_MIRRORS,
 	}
@@ -203,7 +214,7 @@ var (
 			err:     "PXF failed to restart on %d out of %d host%s\n",
 		},
 		warn:       false,
-		envVars:    []envVar{pxfHome},
+		envVars:    []envVar{pxfHome, pxfRun},
 		whereToRun: cluster.ON_REMOTE | cluster.ON_HOSTS | cluster.EXCLUDE_MASTER | cluster.EXCLUDE_MIRRORS,
 	}
 )

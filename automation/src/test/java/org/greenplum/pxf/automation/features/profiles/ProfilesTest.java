@@ -143,8 +143,11 @@ public class ProfilesTest extends BaseFeature {
         requiresRestartAfterTest = true;
 
         // get "HdfsTextSimple" profile and change the name
-        Profile hdfsTextSimpleProfile = pxfProfiles.getProfile(EnumPxfDefaultProfiles.HdfsTextSimple.toString());
-        hdfsTextSimpleProfile.setName("BeHereNow");
+        Profile hdfsTextSimpleProfile = new Profile("BeHereNow");
+        hdfsTextSimpleProfile.setDescription("BeHereNow");
+        hdfsTextSimpleProfile.setAccessor("org.greenplum.pxf.plugins.hdfs.LineBreakAccessor");
+        hdfsTextSimpleProfile.setResolver("org.greenplum.pxf.plugins.hdfs.StringPassResolver");
+        hdfsTextSimpleProfile.setFragmenter("org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter");
         // clean profiles list
         pxfProfiles.initProfilesList();
         // add "edited" profile to list
@@ -152,7 +155,7 @@ public class ProfilesTest extends BaseFeature {
         // write list to file
         pxfProfiles.writeProfilesListToFile();
 
-        cluster.copyFileToNodes(pxfProfiles.getXmlFilePath(), cluster.getPxfConfLocation());
+        cluster.copyFileToNodes(pxfProfiles.getXmlFilePath(), cluster.getPxfRun() + "/conf");
         cluster.restart(PhdCluster.EnumClusterServices.pxf);
         exTable.setProfile("BeHereNow");
         gpdb.createTableAndVerify(exTable);

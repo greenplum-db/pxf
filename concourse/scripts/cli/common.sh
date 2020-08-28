@@ -17,7 +17,7 @@ compare() {
 	local usage='compare <expected_text> <text_to_compare> <msg>'
 	local expected=${1:?${usage}} text=${2:?${usage}} msg="$(( ++test_cnt ))) ${3:?${usage}}"
 	echo -e "${yellow}${msg}${white}:"
-	if [[ ${expected} == "${text///}" ]]; then # clean up any cairrage returns
+	if [[ ${expected} == "${text///}" ]]; then # clean up any carriage returns
 		echo -e "${green}pass${reset}"
 		return
 	fi

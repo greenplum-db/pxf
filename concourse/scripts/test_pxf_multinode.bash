@@ -79,61 +79,61 @@ function setup_pxf_on_cluster() {
 	# drop named query file for JDBC test to gpadmin's home on mdw
 	scp "${SSH_OPTS[@]}" pxf_src/automation/src/test/resources/{,hive-}report.sql gpadmin@mdw:
 
-	# init all PXFs using cluster command, configure PXF on master, sync configs and start pxf
+	# configure PXF on master, sync configs and start pxf
 	ssh "${SSH_OPTS[@]}" gpadmin@mdw "
 		source ${GPHOME}/greenplum_path.sh &&
-		if [[ ! -d ${PXF_CONF_DIR} ]]; then
-			GPHOME=${GPHOME} PXF_CONF=${PXF_CONF_DIR} ${PXF_HOME}/bin/pxf cluster init
-			cp ${PXF_CONF_DIR}/templates/{hdfs,mapred,yarn,core,hbase,hive}-site.xml ${PXF_CONF_DIR}/servers/default
-			sed -i -e 's/\(0.0.0.0\|localhost\|127.0.0.1\)/${hadoop_ip}/g' ${PXF_CONF_DIR}/servers/default/*-site.xml
+		${PXF_HOME}/bin/pxf cluster register
+		if [[ ! -d ${PXF_RUN_DIR} ]]; then
+			cp ${PXF_RUN_DIR}/templates/{hdfs,mapred,yarn,core,hbase,hive}-site.xml ${PXF_RUN_DIR}/servers/default
+			sed -i -e 's/\(0.0.0.0\|localhost\|127.0.0.1\)/${hadoop_ip}/g' ${PXF_RUN_DIR}/servers/default/*-site.xml
 		else
-			cp ${PXF_CONF_DIR}/templates/mapred{,1}-site.xml
+			cp ${PXF_RUN_DIR}/templates/mapred{,1}-site.xml
 		fi &&
-		mkdir -p ${PXF_CONF_DIR}/servers/s3{,-invalid} &&
-		cp ${PXF_CONF_DIR}/templates/s3-site.xml ${PXF_CONF_DIR}/servers/s3 &&
-		cp ${PXF_CONF_DIR}/templates/s3-site.xml ${PXF_CONF_DIR}/servers/s3-invalid &&
+		mkdir -p ${PXF_RUN_DIR}/servers/s3{,-invalid} &&
+		cp ${PXF_RUN_DIR}/templates/s3-site.xml ${PXF_RUN_DIR}/servers/s3 &&
+		cp ${PXF_RUN_DIR}/templates/s3-site.xml ${PXF_RUN_DIR}/servers/s3-invalid &&
 		sed -i  -e \"s|YOUR_AWS_ACCESS_KEY_ID|${ACCESS_KEY_ID}|\" \
 			-e \"s|YOUR_AWS_SECRET_ACCESS_KEY|${SECRET_ACCESS_KEY}|\" \
-			${PXF_CONF_DIR}/servers/s3/s3-site.xml &&
-		mkdir -p ${PXF_CONF_DIR}/servers/database &&
-		cp ${PXF_CONF_DIR}/templates/jdbc-site.xml ${PXF_CONF_DIR}/servers/database/ &&
+			${PXF_RUN_DIR}/servers/s3/s3-site.xml &&
+		mkdir -p ${PXF_RUN_DIR}/servers/database &&
+		cp ${PXF_RUN_DIR}/templates/jdbc-site.xml ${PXF_RUN_DIR}/servers/database/ &&
 		sed -i  -e 's|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.postgresql.Driver|' \
 			-e 's|YOUR_DATABASE_JDBC_URL|jdbc:postgresql://mdw:5432/pxfautomation|' \
 			-e 's|YOUR_DATABASE_JDBC_USER|gpadmin|' \
 			-e 's|YOUR_DATABASE_JDBC_PASSWORD||' \
-			${PXF_CONF_DIR}/servers/database/jdbc-site.xml &&
-		cp ~gpadmin/report.sql ${PXF_CONF_DIR}/servers/database &&
-		cp ${PXF_CONF_DIR}/servers/database/jdbc-site.xml ${PXF_CONF_DIR}/servers/database/testuser-user.xml &&
-		sed -i 's|pxfautomation|template1|' ${PXF_CONF_DIR}/servers/database/testuser-user.xml &&
-		mkdir -p ${PXF_CONF_DIR}/servers/db-session-params &&
-		cp ${PXF_CONF_DIR}/templates/jdbc-site.xml ${PXF_CONF_DIR}/servers/db-session-params &&
+			${PXF_RUN_DIR}/servers/database/jdbc-site.xml &&
+		cp ~gpadmin/report.sql ${PXF_RUN_DIR}/servers/database &&
+		cp ${PXF_RUN_DIR}/servers/database/jdbc-site.xml ${PXF_RUN_DIR}/servers/database/testuser-user.xml &&
+		sed -i 's|pxfautomation|template1|' ${PXF_RUN_DIR}/servers/database/testuser-user.xml &&
+		mkdir -p ${PXF_RUN_DIR}/servers/db-session-params &&
+		cp ${PXF_RUN_DIR}/templates/jdbc-site.xml ${PXF_RUN_DIR}/servers/db-session-params &&
 		sed -i  -e 's|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.postgresql.Driver|' \
 			-e 's|YOUR_DATABASE_JDBC_URL|jdbc:postgresql://mdw:5432/pxfautomation|' \
 			-e 's|YOUR_DATABASE_JDBC_USER||' \
 			-e 's|YOUR_DATABASE_JDBC_PASSWORD||' \
 			-e 's|</configuration>|<property><name>jdbc.session.property.client_min_messages</name><value>debug1</value></property></configuration>|' \
 			-e 's|</configuration>|<property><name>jdbc.session.property.default_statistics_target</name><value>123</value></property></configuration>|' \
-			${PXF_CONF_DIR}/servers/db-session-params/jdbc-site.xml &&
-		mkdir -p ${PXF_CONF_DIR}/servers/db-hive &&
-		cp ${PXF_CONF_DIR}/templates/jdbc-site.xml ${PXF_CONF_DIR}/servers/db-hive &&
+			${PXF_RUN_DIR}/servers/db-session-params/jdbc-site.xml &&
+		mkdir -p ${PXF_RUN_DIR}/servers/db-hive &&
+		cp ${PXF_RUN_DIR}/templates/jdbc-site.xml ${PXF_RUN_DIR}/servers/db-hive &&
 		sed -i  -e 's|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.apache.hive.jdbc.HiveDriver|' \
 			-e \"s|YOUR_DATABASE_JDBC_URL|jdbc:hive2://${HADOOP_HOSTNAME}:10000/default|\" \
 			-e 's|YOUR_DATABASE_JDBC_USER||' \
 			-e 's|YOUR_DATABASE_JDBC_PASSWORD||' \
-			${PXF_CONF_DIR}/servers/db-hive/jdbc-site.xml &&
-		cp ~gpadmin/hive-report.sql ${PXF_CONF_DIR}/servers/db-hive &&
+			${PXF_RUN_DIR}/servers/db-hive/jdbc-site.xml &&
+		cp ~gpadmin/hive-report.sql ${PXF_RUN_DIR}/servers/db-hive &&
 		if [[ ${IMPERSONATION} == true ]]; then
-			cp -r ${PXF_CONF_DIR}/servers/default ${PXF_CONF_DIR}/servers/default-no-impersonation
+			cp -r ${PXF_RUN_DIR}/servers/default ${PXF_RUN_DIR}/servers/default-no-impersonation
 
-			if [[ ! -f ${PXF_CONF_DIR}/servers/default-no-impersonation/pxf-site.xml ]]; then
-				cp ${PXF_CONF_DIR}/templates/pxf-site.xml ${PXF_CONF_DIR}/servers/default-no-impersonation/pxf-site.xml
+			if [[ ! -f ${PXF_RUN_DIR}/servers/default-no-impersonation/pxf-site.xml ]]; then
+				cp ${PXF_RUN_DIR}/templates/pxf-site.xml ${PXF_RUN_DIR}/servers/default-no-impersonation/pxf-site.xml
 			fi
 			sed -i \
 			-e '/<name>pxf.service.user.impersonation<\/name>/ {n;s|<value>.*</value>|<value>false</value>|g;}' \
 			-e '/<name>pxf.service.user.name<\/name>/ {n;s|<value>.*</value>|<value>foobar</value>|g;}' \
-			${PXF_CONF_DIR}/servers/default-no-impersonation/pxf-site.xml
+			${PXF_RUN_DIR}/servers/default-no-impersonation/pxf-site.xml
 		fi &&
-		echo 'export PXF_LOADER_PATH=file:/tmp/publicstage/pxf' >> ${PXF_CONF_DIR}/conf/pxf-env.sh && \
+		echo 'export PXF_LOADER_PATH=file:/tmp/publicstage/pxf' >> ${PXF_RUN_DIR}/conf/pxf-env.sh && \
 		${PXF_HOME}/bin/pxf cluster sync
 	"
 }
@@ -148,12 +148,12 @@ function setup_pxf_kerberos_on_cluster() {
 		-e "s|</hive>|<kerberosPrincipal>${KERBERIZED_HADOOP_URI}</kerberosPrincipal><userName>gpadmin</userName></hive>|g" \
 		"$multiNodesCluster"
 	ssh gpadmin@mdw "
-		cp ${PXF_CONF_DIR}/templates/pxf-site.xml ${PXF_CONF_DIR}/servers/db-hive/pxf-site.xml &&
-		sed -i 's|gpadmin/_HOST@EXAMPLE.COM|gpadmin@${REALM}|g' ${PXF_CONF_DIR}/servers/db-hive/pxf-site.xml &&
+		cp ${PXF_RUN_DIR}/templates/pxf-site.xml ${PXF_RUN_DIR}/servers/db-hive/pxf-site.xml &&
+		sed -i 's|gpadmin/_HOST@EXAMPLE.COM|gpadmin@${REALM}|g' ${PXF_RUN_DIR}/servers/db-hive/pxf-site.xml &&
 		sed -i 's|</configuration>|<property><name>hadoop.security.authentication</name><value>kerberos</value></property></configuration>|g' \
-			${PXF_CONF_DIR}/servers/db-hive/jdbc-site.xml &&
+			${PXF_RUN_DIR}/servers/db-hive/jdbc-site.xml &&
 		sed -i -e 's|\(jdbc:hive2://${HADOOP_HOSTNAME}:10000/default\)|\1;principal=${KERBERIZED_HADOOP_URI}|g' \
-			${PXF_CONF_DIR}/servers/db-hive/jdbc-site.xml &&
+			${PXF_RUN_DIR}/servers/db-hive/jdbc-site.xml &&
 		${PXF_HOME}/bin/pxf cluster sync
 	"
 	sudo mkdir -p /etc/security/keytabs
@@ -176,12 +176,12 @@ function setup_pxf_kerberos_on_cluster() {
 		REALM2=${REALM2^^} # make sure REALM2 is up-cased, down-case below for hive principal
 		KERBERIZED_HADOOP_2_URI="hive/${HADOOP_2_HOSTNAME}.${REALM2,,}@${REALM2};saslQop=auth-conf" # quoted because of semicolon
 		ssh gpadmin@mdw "
-			mkdir -p ${PXF_CONF_DIR}/servers/hdfs-secure &&
-			cp ${PXF_CONF_DIR}/templates/pxf-site.xml ${PXF_CONF_DIR}/servers/hdfs-secure &&
-			sed -i -e \"s|>gpadmin/_HOST@EXAMPLE.COM<|>${HADOOP_2_USER}/_HOST@${REALM2}<|g\" ${PXF_CONF_DIR}/servers/hdfs-secure/pxf-site.xml &&
-			sed -i -e 's|/pxf.service.keytab<|/pxf.service.2.keytab<|g' ${PXF_CONF_DIR}/servers/hdfs-secure/pxf-site.xml
+			mkdir -p ${PXF_RUN_DIR}/servers/hdfs-secure &&
+			cp ${PXF_RUN_DIR}/templates/pxf-site.xml ${PXF_RUN_DIR}/servers/hdfs-secure &&
+			sed -i -e \"s|>gpadmin/_HOST@EXAMPLE.COM<|>${HADOOP_2_USER}/_HOST@${REALM2}<|g\" ${PXF_RUN_DIR}/servers/hdfs-secure/pxf-site.xml &&
+			sed -i -e 's|/pxf.service.keytab<|/pxf.service.2.keytab<|g' ${PXF_RUN_DIR}/servers/hdfs-secure/pxf-site.xml
 		"
-		scp dataproc_2_env_files/conf/*-site.xml "gpadmin@mdw:${PXF_CONF_DIR}/servers/hdfs-secure"
+		scp dataproc_2_env_files/conf/*-site.xml "gpadmin@mdw:${PXF_RUN_DIR}/servers/hdfs-secure"
 		ssh gpadmin@mdw "${PXF_HOME}/bin/pxf cluster sync"
 
 		sed -i  -e "s|</hdfs2>|<hadoopRoot>$DATAPROC_2_DIR</hadoopRoot><testKerberosPrincipal>${HADOOP_2_USER}@${REALM2}</testKerberosPrincipal></hdfs2>|g" \
@@ -190,20 +190,20 @@ function setup_pxf_kerberos_on_cluster() {
 
 		# Create the db-hive-kerberos server configuration
 		ssh "${SSH_OPTS[@]}" gpadmin@mdw "
-			mkdir -p ${PXF_CONF_DIR}/servers/db-hive-kerberos &&
-			cp ${PXF_CONF_DIR}/templates/jdbc-site.xml ${PXF_CONF_DIR}/servers/db-hive-kerberos &&
+			mkdir -p ${PXF_RUN_DIR}/servers/db-hive-kerberos &&
+			cp ${PXF_RUN_DIR}/templates/jdbc-site.xml ${PXF_RUN_DIR}/servers/db-hive-kerberos &&
 			sed -i -e 's|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.apache.hive.jdbc.HiveDriver|' \
 				-e \"s|YOUR_DATABASE_JDBC_URL|jdbc:hive2://${HADOOP_2_HOSTNAME}:10000/default;principal=${KERBERIZED_HADOOP_2_URI}|\" \
 				-e 's|YOUR_DATABASE_JDBC_USER||' \
 				-e 's|YOUR_DATABASE_JDBC_PASSWORD||' \
-				${PXF_CONF_DIR}/servers/db-hive-kerberos/jdbc-site.xml &&
-			cp ~gpadmin/hive-report.sql ${PXF_CONF_DIR}/servers/db-hive-kerberos &&
-			cp ${PXF_CONF_DIR}/templates/pxf-site.xml ${PXF_CONF_DIR}/servers/db-hive-kerberos/pxf-site.xml &&
-			sed -i 's|gpadmin/_HOST@EXAMPLE.COM|${HADOOP_2_USER}/_HOST@${REALM2}|g' ${PXF_CONF_DIR}/servers/db-hive-kerberos/pxf-site.xml &&
-			sed -i -e 's|/pxf.service.keytab<|/pxf.service.2.keytab<|g' ${PXF_CONF_DIR}/servers/db-hive-kerberos/pxf-site.xml &&
-			sed -i -e 's|<value>true</value>|<value>false</value>|g' ${PXF_CONF_DIR}/servers/db-hive-kerberos/pxf-site.xml &&
+				${PXF_RUN_DIR}/servers/db-hive-kerberos/jdbc-site.xml &&
+			cp ~gpadmin/hive-report.sql ${PXF_RUN_DIR}/servers/db-hive-kerberos &&
+			cp ${PXF_RUN_DIR}/templates/pxf-site.xml ${PXF_RUN_DIR}/servers/db-hive-kerberos/pxf-site.xml &&
+			sed -i 's|gpadmin/_HOST@EXAMPLE.COM|${HADOOP_2_USER}/_HOST@${REALM2}|g' ${PXF_RUN_DIR}/servers/db-hive-kerberos/pxf-site.xml &&
+			sed -i -e 's|/pxf.service.keytab<|/pxf.service.2.keytab<|g' ${PXF_RUN_DIR}/servers/db-hive-kerberos/pxf-site.xml &&
+			sed -i -e 's|<value>true</value>|<value>false</value>|g' ${PXF_RUN_DIR}/servers/db-hive-kerberos/pxf-site.xml &&
 			sed -i 's|</configuration>|<property><name>hadoop.security.authentication</name><value>kerberos</value></property></configuration>|g' \
-				${PXF_CONF_DIR}/servers/db-hive-kerberos/jdbc-site.xml &&
+				${PXF_RUN_DIR}/servers/db-hive-kerberos/jdbc-site.xml &&
 			${PXF_HOME}/bin/pxf cluster sync
 		"
 
@@ -232,9 +232,9 @@ function setup_pxf_kerberos_on_cluster() {
 			source ${GPHOME}/greenplum_path.sh &&
 			gpscp -f ~gpadmin/hostfile_all -v -r -u centos ~/dataproc_2_env_files/etc_hostfile =:/tmp/etc_hostfile &&
 			gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e 'sudo tee --append /etc/hosts < /tmp/etc_hostfile' &&
-			gpscp -h mdw -v -r -u gpadmin ~/dataproc_2_env_files/pxf.service-mdw.keytab =:/home/gpadmin/pxf/keytabs/pxf.service.2.keytab &&
-			gpscp -h sdw1 -v -r -u gpadmin ~/dataproc_2_env_files/pxf.service-sdw1.keytab =:/home/gpadmin/pxf/keytabs/pxf.service.2.keytab &&
-			gpscp -h sdw2 -v -r -u gpadmin ~/dataproc_2_env_files/pxf.service-sdw2.keytab =:/home/gpadmin/pxf/keytabs/pxf.service.2.keytab
+			gpscp -h mdw -v -r -u gpadmin ~/dataproc_2_env_files/pxf.service-mdw.keytab =:${PXF_RUN_DIR}/keytabs/pxf.service.2.keytab &&
+			gpscp -h sdw1 -v -r -u gpadmin ~/dataproc_2_env_files/pxf.service-sdw1.keytab =:${PXF_RUN_DIR}/keytabs/pxf.service.2.keytab &&
+			gpscp -h sdw2 -v -r -u gpadmin ~/dataproc_2_env_files/pxf.service-sdw2.keytab =:${PXF_RUN_DIR}/keytabs/pxf.service.2.keytab
 		"
 		sudo cp "${DATAPROC_2_DIR}/pxf.service.keytab" /etc/security/keytabs/gpuser.headless.keytab
 		sudo chown gpadmin:gpadmin /etc/security/keytabs/gpuser.headless.keytab
@@ -244,44 +244,44 @@ function setup_pxf_kerberos_on_cluster() {
 	# Create the non-secure cluster configuration
 	NON_SECURE_HADOOP_IP=$(grep < cluster_env_files/etc_hostfile edw0 | awk '{print $1}')
 	ssh gpadmin@mdw "
-		mkdir -p ${PXF_CONF_DIR}/servers/db-hive-non-secure &&
-		cp ${PXF_CONF_DIR}/templates/jdbc-site.xml ${PXF_CONF_DIR}/servers/db-hive-non-secure &&
+		mkdir -p ${PXF_RUN_DIR}/servers/db-hive-non-secure &&
+		cp ${PXF_RUN_DIR}/templates/jdbc-site.xml ${PXF_RUN_DIR}/servers/db-hive-non-secure &&
 		sed -i -e 's|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.apache.hive.jdbc.HiveDriver|' \
 			-e \"s|YOUR_DATABASE_JDBC_URL|jdbc:hive2://${NON_SECURE_HADOOP_IP}:10000/default|\" \
 			-e 's|YOUR_DATABASE_JDBC_USER||' \
 			-e 's|YOUR_DATABASE_JDBC_PASSWORD||' \
-			${PXF_CONF_DIR}/servers/db-hive-non-secure/jdbc-site.xml &&
-		cp ~gpadmin/hive-report.sql ${PXF_CONF_DIR}/servers/db-hive-non-secure &&
-		mkdir -p ${PXF_CONF_DIR}/servers/hdfs-non-secure &&
-		cp ${PXF_CONF_DIR}/templates/{hdfs,mapred,yarn,core,hbase,hive,pxf}-site.xml ${PXF_CONF_DIR}/servers/hdfs-non-secure &&
-		sed -i -e 's/\(0.0.0.0\|localhost\|127.0.0.1\)/${NON_SECURE_HADOOP_IP}/g' ${PXF_CONF_DIR}/servers/hdfs-non-secure/*-site.xml &&
-		sed -i -e 's|\${user.name}|${PROXY_USER}|g' ${PXF_CONF_DIR}/servers/hdfs-non-secure/pxf-site.xml &&
+			${PXF_RUN_DIR}/servers/db-hive-non-secure/jdbc-site.xml &&
+		cp ~gpadmin/hive-report.sql ${PXF_RUN_DIR}/servers/db-hive-non-secure &&
+		mkdir -p ${PXF_RUN_DIR}/servers/hdfs-non-secure &&
+		cp ${PXF_RUN_DIR}/templates/{hdfs,mapred,yarn,core,hbase,hive,pxf}-site.xml ${PXF_RUN_DIR}/servers/hdfs-non-secure &&
+		sed -i -e 's/\(0.0.0.0\|localhost\|127.0.0.1\)/${NON_SECURE_HADOOP_IP}/g' ${PXF_RUN_DIR}/servers/hdfs-non-secure/*-site.xml &&
+		sed -i -e 's|\${user.name}|${PROXY_USER}|g' ${PXF_RUN_DIR}/servers/hdfs-non-secure/pxf-site.xml &&
 		${PXF_HOME}/bin/pxf cluster sync
 	"
 	sed -i "s/>non-secure-hadoop</>${NON_SECURE_HADOOP_IP}</g" "$multiNodesCluster"
 
 	# Create a secured server configuration with invalid principal name
 	ssh gpadmin@mdw "
-		mkdir -p ${PXF_CONF_DIR}/servers/secure-hdfs-invalid-principal &&
-		cp ${PXF_CONF_DIR}/servers/default/*-site.xml ${PXF_CONF_DIR}/servers/secure-hdfs-invalid-principal &&
-		cp ${PXF_CONF_DIR}/templates/pxf-site.xml ${PXF_CONF_DIR}/servers/secure-hdfs-invalid-principal &&
-		sed -i -e 's|>gpadmin/_HOST@EXAMPLE.COM<|>foobar/_HOST@INVALID.REALM.INTERNAL<|g' ${PXF_CONF_DIR}/servers/secure-hdfs-invalid-principal/pxf-site.xml &&
+		mkdir -p ${PXF_RUN_DIR}/servers/secure-hdfs-invalid-principal &&
+		cp ${PXF_RUN_DIR}/servers/default/*-site.xml ${PXF_RUN_DIR}/servers/secure-hdfs-invalid-principal &&
+		cp ${PXF_RUN_DIR}/templates/pxf-site.xml ${PXF_RUN_DIR}/servers/secure-hdfs-invalid-principal &&
+		sed -i -e 's|>gpadmin/_HOST@EXAMPLE.COM<|>foobar/_HOST@INVALID.REALM.INTERNAL<|g' ${PXF_RUN_DIR}/servers/secure-hdfs-invalid-principal/pxf-site.xml &&
 		${PXF_HOME}/bin/pxf cluster sync
 	"
 
 	# Create a secured server configuration with invalid keytab
 	ssh gpadmin@mdw "
-		mkdir -p ${PXF_CONF_DIR}/servers/secure-hdfs-invalid-keytab &&
-		cp ${PXF_CONF_DIR}/servers/default/*-site.xml ${PXF_CONF_DIR}/servers/secure-hdfs-invalid-keytab &&
-		cp ${PXF_CONF_DIR}/templates/pxf-site.xml ${PXF_CONF_DIR}/servers/secure-hdfs-invalid-keytab &&
-		sed -i -e 's|/pxf.service.keytab<|/non.existent.keytab<|g' ${PXF_CONF_DIR}/servers/secure-hdfs-invalid-keytab/pxf-site.xml &&
+		mkdir -p ${PXF_RUN_DIR}/servers/secure-hdfs-invalid-keytab &&
+		cp ${PXF_RUN_DIR}/servers/default/*-site.xml ${PXF_RUN_DIR}/servers/secure-hdfs-invalid-keytab &&
+		cp ${PXF_RUN_DIR}/templates/pxf-site.xml ${PXF_RUN_DIR}/servers/secure-hdfs-invalid-keytab &&
+		sed -i -e 's|/pxf.service.keytab<|/non.existent.keytab<|g' ${PXF_RUN_DIR}/servers/secure-hdfs-invalid-keytab/pxf-site.xml &&
 		${PXF_HOME}/bin/pxf cluster sync
 	"
 
 	# Configure the principal for the default-no-impersonation server
 	ssh gpadmin@mdw "
 	if [[ ${IMPERSONATION} == true ]]; then
-		sed -i -e 's|gpadmin/_HOST@EXAMPLE.COM|gpadmin@${REALM}|g' ${PXF_CONF_DIR}/servers/default-no-impersonation/pxf-site.xml &&
+		sed -i -e 's|gpadmin/_HOST@EXAMPLE.COM|gpadmin@${REALM}|g' ${PXF_RUN_DIR}/servers/default-no-impersonation/pxf-site.xml &&
 		${PXF_HOME}/bin/pxf cluster sync
 	fi
 	"
@@ -316,7 +316,7 @@ function run_pxf_automation() {
 	else
 		sed -i 's/sutFile=default.xml/sutFile=MultiNodesCluster.xml/g' pxf_src/automation/jsystem.properties
 	fi
-	chown -R gpadmin:gpadmin ~gpadmin/{.ssh,pxf} pxf_src/automation
+	chown -R gpadmin:gpadmin ~gpadmin/.ssh pxf_src/automation
 
 	cat > ~gpadmin/run_pxf_automation_test.sh <<-EOF
 		#!/usr/bin/env bash
@@ -377,7 +377,7 @@ function _main() {
 		setup_gpadmin_user
 		install_pxf_server
 	fi
-	init_and_configure_pxf_server
+	configure_pxf_server
 	remote_access_to_gpdb
 
 	inflate_singlecluster

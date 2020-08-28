@@ -1,0 +1,4 @@
+#!/bin/sh
+
+sed -i "s|directory =.*|directory = '/usr/local/pxf-gp6/gpextable/'|g" /usr/local/pxf-gp6/gpextable/pxf.control
+sed -i "s|module_pathname =.*|module_pathname = '/usr/local/pxf-gp6/gpextable/pxf'|g" /usr/local/pxf-gp6/gpextable/pxf.control

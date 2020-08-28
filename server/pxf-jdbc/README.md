@@ -64,9 +64,9 @@ Settings can be set in two sites:
 
 * `LOCATION` clause of external table DDL. Every setting must have format `&<name>=<value>`. Hereinafter a setting set in `LOCATION` clause is referred to as an "option".
 
-* Configuration file located at `$PXF_CONF/servers/<server_name>/jdbc-site.xml` (on every PXF segment), where `<server_name>` is an arbitrary name (the file is intended to include options specific for each external database server). Hereinafter setting set in configuration file is referred to as "configuration parameter".
+* Configuration file located at `$PXF_RUN/servers/<server_name>/jdbc-site.xml` (on every PXF segment), where `<server_name>` is an arbitrary name (the file is intended to include options specific for each external database server). Hereinafter setting set in configuration file is referred to as "configuration parameter".
 
-If `SERVER` option is not set in external table DDL, PXF will assume it equal to `default` and load configuration files from `$PXF_CONF/servers/default/`. A warning is added to PXF log file if `SERVER` is set to incorrect value (PXF is unable to read the requested configuration file).
+If `SERVER` option is not set in external table DDL, PXF will assume it equal to `default` and load configuration files from `$PXF_RUN/servers/default/`. A warning is added to PXF log file if `SERVER` is set to incorrect value (PXF is unable to read the requested configuration file).
 
 If a setting can be set by both option and configuration parameter, option value overrides configuration parameter value.
 
@@ -275,7 +275,7 @@ insert into emp values(2, 'bob', 10000);
 insert into emp values(3, 'charlie', 10500);
 ```
 
-Then a complex aggregation query is created and placed in a file, say `report.sql`. The file needs to be placed in the server configuration directory under `$PXF_CONF/servers/`. So, let's assume we have created a `mydb` server configuration directory, then this file will be `$PXF_CONF/servers/mydb/report.sql`. Jdbc driver name and connection parameters should be configured in `$PXF_CONF/servers/mydb/jdbc-site.xml` for this server.
+Then a complex aggregation query is created and placed in a file, say `report.sql`. The file needs to be placed in the server configuration directory under `$PXF_RUN/servers/`. So, let's assume we have created a `mydb` server configuration directory, then this file will be `$PXF_RUN/servers/mydb/report.sql`. Jdbc driver name and connection parameters should be configured in `$PXF_RUN/servers/mydb/jdbc-site.xml` for this server.
 ```
 SELECT dept.name AS name, count(*) AS count, max(emp.salary) AS max
 FROM demodb.dept JOIN demodb.emp
@@ -284,7 +284,7 @@ GROUP BY dept.name;
 ```
 This query returns a name of the department, count of employees, and the maximal salary in each department.
 
-The MySQL JDBC driver files (JAR) are copied to `$PXF_CONF/lib` on all hosts with PXF. After this, all PXF segments are restarted.
+The MySQL JDBC driver files (JAR) are copied to `$PXF_RUN/lib` on all hosts with PXF. After this, all PXF segments are restarted.
 
 Then a table in GPDB is created with the schema corresponding to the results returned by the aggregation query. It is important that the table column names and types correspond to those returned by the aggregation query.
 ```
@@ -432,7 +432,7 @@ Batching is enabled by default, and the default batch size is `100` (this is a [
 * `integer > 1`. Use batch of given size.
 
 Batching must be supported by the JDBC driver of an external database. If the driver does not support batching, behaviour depends on the `BATCH_SIZE` parameter:
-Set the value in `jdbc.statement.batchSize` in `$PXF_CONF/servers/EXAMPLE/jdbc-site.xml` on every PXF segment. Alternative, can be set in the DDL location.
+Set the value in `jdbc.statement.batchSize` in `$PXF_RUN/servers/EXAMPLE/jdbc-site.xml` on every PXF segment. Alternative, can be set in the DDL location.
 
 * `BATCH_SIZE` is not present; `BATCH_SIZE` is `0` or `1`. PXF will try to execute INSERT query without batching;
 * `BATCH_SIZE` is an `integer > 1`. INSERT query will fail with an appropriate error message.
@@ -500,7 +500,7 @@ LOCATION ('pxf://PUBLIC.T2?PROFILE=JDBC&SERVER=EXAMPLE')
 FORMAT 'CUSTOM' (formatter='pxfwritable_import');
 ```
 
-and `$PXF_CONF/servers/EXAMPLE/jdbc-site.xml` on every PXF segment:
+and `$PXF_RUN/servers/EXAMPLE/jdbc-site.xml` on every PXF segment:
 ```
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
@@ -530,8 +530,8 @@ You can use the PXF JDBC connector to retrieve data from Hive. You can also use 
 
 While you can specify most of the properties in the EXTERNAL TABLE DDL, the instructions below assume you would use server-based configuration.
 Follow these steps to enable connectivity to Hive:
-1. Define a new PXF configuration server in `$PXF_CONF/servers/` directory
-2. Copy template from `$PXF_CONF/templates/jdbc-site.xml` to your server directory
+1. Define a new PXF configuration server in `$PXF_RUN/servers/` directory
+2. Copy template from `$PXF_RUN/templates/jdbc-site.xml` to your server directory
 3. Edit the file and provide Hive JDBC driver and URL
     ```angular2html
     <property>
@@ -586,7 +586,7 @@ Follow these steps to enable connectivity to Hive:
         </property>
         ```
         then make sure the JDBC URL has `saslQop=auth-conf` fragment. This must be done in the URL and cannot be specified using connection properties.
-    - Make sure there is `core-site.xml` file in `$PXF_CONF/servers/default` and it has Kerberos authentication turned on:
+    - Make sure there is `core-site.xml` file in `$PXF_RUN/servers/default` and it has Kerberos authentication turned on:
         ```$xslt
         <property>
             <name>hadoop.security.authentication</name>
@@ -595,7 +595,7 @@ Follow these steps to enable connectivity to Hive:
         ```
         This is required even if JDBC configuration server is different from `default` since PXF determines whether Kerberos is enabled by checking `core-site.xml` in the `default` server.
 
-    - Make sure the PXF Kerberos principal is created in KDC and the keytab file named `pxf.service.keytab` is located on all PXF nodes in `$PXF_CONF/keytabs`
+    - Make sure the PXF Kerberos principal is created in KDC and the keytab file named `pxf.service.keytab` is located on all PXF nodes in `$PXF_RUN/keytabs`
 
     - Make sure to include HiveServer2 principal name in the JDBC URL, e.g:
         ```$xslt

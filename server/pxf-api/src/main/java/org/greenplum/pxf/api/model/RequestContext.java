@@ -125,7 +125,7 @@ public class RequestContext {
     private String transactionId;
     /**
      * The name of the server to access. The name will be used to build
-     * a path for the config files (i.e. $PXF_CONF/servers/$serverName/*.xml)
+     * a path for the config files (i.e. $PXF_RUN/servers/$serverName/*.xml)
      */
     private String serverName = "default";
     private int totalSegments;

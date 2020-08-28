@@ -18,11 +18,10 @@ SHLIB_LINK += -lcurl
 .PHONY: stage
 stage: pxf.so
 	mkdir -p build/metadata
-	mkdir -p build/stage/lib/postgresql
-	mkdir -p build/stage/share/postgresql/extension
-	install -c -m 755 pxf.so build/stage/lib/postgresql/pxf.so
-	install -c -m 644 pxf.control build/stage/share/postgresql/extension/
-	install -c -m 644 pxf--1.0.sql build/stage/share/postgresql/extension/
+	mkdir -p build/stage
+	install -c -m 755 pxf.so build/stage/pxf.so
+	install -c -m 644 pxf.control build/stage/
+	install -c -m 644 pxf--1.0.sql build/stage/
 	@echo $(GP_MAJORVERSION) > build/metadata/gp_major_version
 	@echo $(BLD_ARCH) | sed 's/_/-/' > build/metadata/build_arch
 

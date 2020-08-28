@@ -104,6 +104,9 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
 
         // if hadoop root exists in the SUT file, load configuration from it
         if (StringUtils.isNotEmpty(hadoopRoot)) {
+
+            ReportUtils.startLevel(report, getClass(), "Using root directory: " + hadoopRoot);
+
             ProtocolEnum protocol = ProtocolUtils.getProtocol();
             if (protocol == ProtocolEnum.HDFS) {
                 config.addResource(new Path(getHadoopRoot() + "/conf/core-site.xml"));
@@ -545,6 +548,12 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
 
     public void setHadoopRoot(String hadoopRoot) {
         this.hadoopRoot = hadoopRoot;
+
+        if (this.hadoopRoot != null) {
+            String pxfHome = System.getenv("PXF_HOME");
+            String pxfRun = StringUtils.defaultIfBlank(System.getenv("PXF_RUN"), pxfHome);
+            this.hadoopRoot = this.hadoopRoot.replace("${pxf.run}", pxfRun);
+        }
     }
 
     public String getTestKerberosPrincipal() {

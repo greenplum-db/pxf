@@ -34,12 +34,12 @@ ifeq "$(PROTOCOL)" "minio"
 	PROTOCOL=s3
 endif
 
-PXF_CONF ?= ~/pxf
-PXF_CONF_SERVERS=$(PXF_CONF)/servers
+PXF_RUN ?= $(PXF_HOME)
+PXF_RUN_SERVERS=$(PXF_RUN)/servers
 
 ifneq "$(PROTOCOL)" ""
 	MAVEN_TEST_OPTS+= -DPROTOCOL=$(PROTOCOL)
-	PROTOCOL_HOME=$(PXF_CONF_SERVERS)/$(PROTOCOL)
+	PROTOCOL_HOME=$(PXF_RUN_SERVERS)/$(PROTOCOL)
 endif
 
 ifneq "$(ACCESS_KEY_ID)" ""
@@ -85,10 +85,10 @@ check-env:
 	@if [ -z "$(PXF_HOME)" ]; then echo 'ERROR: PXF_HOME must be set'; exit 1; fi
 
 symlink_pxf_jars: check-env
-	@if [ -d "$(PXF_HOME)/server" ]; then \
+	@if [ -d "$(PXF_HOME)/application" ]; then \
 		rm -rf $(PXF_TMP_LIB) && \
 		mkdir -p $(PXF_TMP_LIB)/tmp && \
-		unzip -qq -j $(PXF_HOME)/server/pxf-service-*.jar 'BOOT-INF/lib/pxf-*.jar' -d $(PXF_TMP_LIB)/tmp && \
+		unzip -qq -j $(PXF_HOME)/application/pxf-app-*.jar 'BOOT-INF/lib/pxf-*.jar' -d $(PXF_TMP_LIB)/tmp && \
 		for jar in $(PXF_TMP_LIB)/tmp/pxf-*.jar; do \
 			jar_name="$${jar##*/}"; \
 			if [[ $${jar_name} =~ ^pxf-[A-Za-z0-9]+(-[0-9.]+.*).jar$$ ]]; then \
@@ -118,52 +118,52 @@ dev: symlink_pxf_jars
 	$(MVN) $(MAVEN_TEST_OPTS) package -DskipTests=true
 
 sync_jdbc_config:
-	@mkdir -p $(PXF_CONF_SERVERS)/database
-	@if [ ! -f $(PXF_CONF_SERVERS)/database/jdbc-site.xml ]; then \
-		cp $(PXF_HOME)/templates/user/templates/jdbc-site.xml $(PXF_CONF_SERVERS)/database/; \
-		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.postgresql.Driver|" $(PXF_CONF_SERVERS)/database/jdbc-site.xml; \
-		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_URL|jdbc:postgresql://$(JDBC_HOST):$(JDBC_PORT)/pxfautomation|" $(PXF_CONF_SERVERS)/database/jdbc-site.xml; \
-		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_USER||" $(PXF_CONF_SERVERS)/database/jdbc-site.xml; \
-		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_PASSWORD||" $(PXF_CONF_SERVERS)/database/jdbc-site.xml; \
-		cp $(PXF_CONF_SERVERS)/database/jdbc-site.xml $(PXF_CONF_SERVERS)/database/testuser-user.xml; \
-		sed $(SED_OPTS) "s|pxfautomation|template1|" $(PXF_CONF_SERVERS)/database/testuser-user.xml; \
+	@mkdir -p $(PXF_RUN_SERVERS)/database
+	@if [ ! -f $(PXF_RUN_SERVERS)/database/jdbc-site.xml ]; then \
+		cp $(PXF_HOME)/templates/jdbc-site.xml $(PXF_RUN_SERVERS)/database/; \
+		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.postgresql.Driver|" $(PXF_RUN_SERVERS)/database/jdbc-site.xml; \
+		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_URL|jdbc:postgresql://$(JDBC_HOST):$(JDBC_PORT)/pxfautomation|" $(PXF_RUN_SERVERS)/database/jdbc-site.xml; \
+		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_USER||" $(PXF_RUN_SERVERS)/database/jdbc-site.xml; \
+		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_PASSWORD||" $(PXF_RUN_SERVERS)/database/jdbc-site.xml; \
+		cp $(PXF_RUN_SERVERS)/database/jdbc-site.xml $(PXF_RUN_SERVERS)/database/testuser-user.xml; \
+		sed $(SED_OPTS) "s|pxfautomation|template1|" $(PXF_RUN_SERVERS)/database/testuser-user.xml; \
 	fi
-	@cp src/test/resources/report.sql $(PXF_CONF_SERVERS)/database
-	@mkdir -p $(PXF_CONF_SERVERS)/db-session-params
-	@if [ ! -f $(PXF_CONF_SERVERS)/db-session-params/jdbc-site.xml ]; then \
-		cp $(PXF_HOME)/templates/user/templates/jdbc-site.xml $(PXF_CONF_SERVERS)/db-session-params/; \
-		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.postgresql.Driver|" $(PXF_CONF_SERVERS)/db-session-params/jdbc-site.xml; \
-		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_URL|jdbc:postgresql://$(JDBC_HOST):$(JDBC_PORT)/pxfautomation|" $(PXF_CONF_SERVERS)/db-session-params/jdbc-site.xml; \
-		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_USER||" $(PXF_CONF_SERVERS)/db-session-params/jdbc-site.xml; \
-		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_PASSWORD||" $(PXF_CONF_SERVERS)/db-session-params/jdbc-site.xml; \
-		sed $(SED_OPTS) "s|</configuration>|<property><name>jdbc.session.property.client_min_messages</name><value>debug1</value></property></configuration>|"  $(PXF_CONF_SERVERS)/db-session-params/jdbc-site.xml; \
-		sed $(SED_OPTS) "s|</configuration>|<property><name>jdbc.session.property.default_statistics_target</name><value>123</value></property></configuration>|"  $(PXF_CONF_SERVERS)/db-session-params/jdbc-site.xml; \
+	@cp src/test/resources/report.sql $(PXF_RUN_SERVERS)/database
+	@mkdir -p $(PXF_RUN_SERVERS)/db-session-params
+	@if [ ! -f $(PXF_RUN_SERVERS)/db-session-params/jdbc-site.xml ]; then \
+		cp $(PXF_HOME)/templates/jdbc-site.xml $(PXF_RUN_SERVERS)/db-session-params/; \
+		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.postgresql.Driver|" $(PXF_RUN_SERVERS)/db-session-params/jdbc-site.xml; \
+		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_URL|jdbc:postgresql://$(JDBC_HOST):$(JDBC_PORT)/pxfautomation|" $(PXF_RUN_SERVERS)/db-session-params/jdbc-site.xml; \
+		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_USER||" $(PXF_RUN_SERVERS)/db-session-params/jdbc-site.xml; \
+		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_PASSWORD||" $(PXF_RUN_SERVERS)/db-session-params/jdbc-site.xml; \
+		sed $(SED_OPTS) "s|</configuration>|<property><name>jdbc.session.property.client_min_messages</name><value>debug1</value></property></configuration>|"  $(PXF_RUN_SERVERS)/db-session-params/jdbc-site.xml; \
+		sed $(SED_OPTS) "s|</configuration>|<property><name>jdbc.session.property.default_statistics_target</name><value>123</value></property></configuration>|"  $(PXF_RUN_SERVERS)/db-session-params/jdbc-site.xml; \
 	fi
-	@mkdir -p $(PXF_CONF_SERVERS)/db-hive
-	@if [ ! -f $(PXF_CONF_SERVERS)/db-hive/jdbc-site.xml ]; then \
-		cp $(PXF_HOME)/templates/user/templates/jdbc-site.xml $(PXF_CONF_SERVERS)/db-hive/; \
-		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.apache.hive.jdbc.HiveDriver|" $(PXF_CONF_SERVERS)/db-hive/jdbc-site.xml; \
-		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_URL|jdbc:hive2://$(HIVE_SERVER_HOST):$(HIVE_SERVER_PORT)/default|" $(PXF_CONF_SERVERS)/db-hive/jdbc-site.xml; \
-		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_USER||" $(PXF_CONF_SERVERS)/db-hive/jdbc-site.xml; \
-		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_PASSWORD||" $(PXF_CONF_SERVERS)/db-hive/jdbc-site.xml; \
+	@mkdir -p $(PXF_RUN_SERVERS)/db-hive
+	@if [ ! -f $(PXF_RUN_SERVERS)/db-hive/jdbc-site.xml ]; then \
+		cp $(PXF_HOME)/templates/jdbc-site.xml $(PXF_RUN_SERVERS)/db-hive/; \
+		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.apache.hive.jdbc.HiveDriver|" $(PXF_RUN_SERVERS)/db-hive/jdbc-site.xml; \
+		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_URL|jdbc:hive2://$(HIVE_SERVER_HOST):$(HIVE_SERVER_PORT)/default|" $(PXF_RUN_SERVERS)/db-hive/jdbc-site.xml; \
+		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_USER||" $(PXF_RUN_SERVERS)/db-hive/jdbc-site.xml; \
+		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_PASSWORD||" $(PXF_RUN_SERVERS)/db-hive/jdbc-site.xml; \
 	fi
-	@if [ ! -f $(PXF_CONF_SERVERS)/db-hive/hive-report.sql ]; then \
-		cp src/test/resources/hive-report.sql $(PXF_CONF_SERVERS)/db-hive; \
+	@if [ ! -f $(PXF_RUN_SERVERS)/db-hive/hive-report.sql ]; then \
+		cp src/test/resources/hive-report.sql $(PXF_RUN_SERVERS)/db-hive; \
 	fi
 
 sync_cloud_configs:
 ifneq "$(PROTOCOL)" ""
 	@mkdir -p $(PROTOCOL_HOME)
 	@if [ ! -f "$(PROTOCOL_HOME)/$(PROTOCOL)-site.xml" ]; then \
-		cp $(PXF_HOME)/templates/user/templates/$(PROTOCOL)-site.xml $(PROTOCOL_HOME)/; \
-		cp $(PXF_HOME)/templates/user/templates/mapred-site.xml $(PROTOCOL_HOME)/; \
+		cp $(PXF_HOME)/templates/$(PROTOCOL)-site.xml $(PROTOCOL_HOME)/; \
+		cp $(PXF_HOME)/templates/mapred-site.xml $(PROTOCOL_HOME)/; \
 		if [ $(PROTOCOL) = s3 ]; then \
 			if [ "$(MINIO)" = "true" ]; then \
-				cp $(PXF_HOME)/templates/user/templates/minio-site.xml $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
+				cp $(PXF_HOME)/templates/minio-site.xml $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
 				sed $(SED_OPTS) "s|YOUR_MINIO_URL|http://localhost:9000|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
 			fi; \
 			mkdir -p $(PROTOCOL_HOME)-invalid; \
-			cp $(PXF_HOME)/templates/user/templates/$(PROTOCOL)-site.xml $(PROTOCOL_HOME)-invalid/; \
+			cp $(PXF_HOME)/templates/$(PROTOCOL)-site.xml $(PROTOCOL_HOME)-invalid/; \
 			if [ -z "$(ACCESS_KEY_ID)" ] || [ -z "$(SECRET_ACCESS_KEY)" ]; then \
 				echo "AWS Keys (ACCESS_KEY_ID, SECRET_ACCESS_KEY) not set"; \
 				rm -rf $(PROTOCOL_HOME); \
