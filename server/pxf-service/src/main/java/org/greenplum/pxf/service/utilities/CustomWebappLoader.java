@@ -86,7 +86,7 @@ public class CustomWebappLoader extends WebappLoader {
 	 * @param parent The parent class loader
 	 */
 	public CustomWebappLoader(ClassLoader parent) {
-		super(parent);
+		this.getContainer().setParentClassLoader(parent);
 	}
 
 	/**
