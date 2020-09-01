@@ -21,7 +21,7 @@ include ../common.mk
 
 default: stage-notest
 
-TOMCAT_VERSION="7.0.100"
+TOMCAT_VERSION="7.0.105"
 TOMCAT_DIR="tomcat/build"
 TOMCAT_TAR="apache-tomcat-${TOMCAT_VERSION}.tar.gz"
 TOMCAT_URL="http://archive.apache.org/dist/tomcat/tomcat-7/v${TOMCAT_VERSION}/bin/${TOMCAT_TAR}"
