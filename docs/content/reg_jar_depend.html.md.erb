@@ -1,5 +1,5 @@
 ---
-title: Registering PXF JAR Dependencies
+title: Registering PXF Library Dependencies
 ---
 
 <!--
@@ -25,7 +25,11 @@ You use PXF to access data stored on external systems. Depending upon the extern
 
 PXF depends on JAR files and other configuration information provided by these additional components. The `$PXF_HOME/conf/pxf-private.classpath` file identifies PXF internal JAR dependencies. In most cases, PXF manages the `pxf-private.classpath` file, adding entries as necessary based on the connectors that you use.
 
-Should you need to add an additional JAR dependency for PXF, for example a JDBC driver JAR file, you must log in to the Greenplum Database master host, copy the JAR file to the PXF user configuration runtime library directory (`$PXF_CONF/lib`), sync the PXF configuration to the Greenplum Database cluster, and then restart PXF on each segment host. For example:
+Should you need to add additional JAR or native library dependencies, you must register these dependencies with PXF.
+
+## <a id="reg_jar"></a> Registering a JAR Dependency
+
+To add a JAR dependency for PXF, for example a MySQL driver JAR file, you must log in to the Greenplum Database master host, copy the JAR file to the PXF user configuration runtime library directory (`$PXF_CONF/lib`), sync the PXF configuration to the Greenplum Database cluster, and then restart PXF on each segment host. For example:
 
 ``` shell
 $ ssh gpadmin@<gpmaster>
@@ -33,4 +37,45 @@ gpadmin@gpmaster$ cp new_dependent_jar.jar $PXF_CONF/lib/
 gpadmin@gpmaster$ pxf cluster sync
 gpadmin@gpmaster$ pxf cluster restart
 ```
+
+## <a id="reg_native"></a> Registering a Native Library Dependency
+
+To register a native library dependency for PXF, for example a Hadoop compression library, you must copy the native library to the Greenplum hosts, update PXF user configuration, synchronize the PXF configuration to the cluster, and then restart PXF on each segment host.
+
+You have two options for copying the native library to Greenplum hosts:
+
+- You copy the library to the same location on the Greenplum master, standby, and all segment hosts.
+- You copy the library to the `$PXF_CONF/lib` directory hierarchy on the Greenplum master host. When you next synchronize PXF, the PXF configuration, including the native library, is copied to all hosts in the Greenplum Database cluster.
+
+### <a id="reg_native_proc"></a> Procedure
+
+1. Copy the native library file to a user-defined location on all Greenplum Database hosts, or copy to the `$PXF_CONF/lib` directory hierarchy on the Greenplum Database master node. Note the file system location of the native library.
+
+2. Open the `$PXF_CONF/conf/pxf-env.sh` in the editor of your choice, and set `LD_LIBRARY_PATH`. For example, if you copied a native library named `dependent_native_lib.so` to `/usr/local/lib/dependent_native_lib.so` on all Greenplum hosts, add the following text to the `pxf-env.sh` file to set this environment variable:
+
+    ``` shell
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib/dependent_native_lib.so
+    ```
+
+    If you copied a native library named `dependent_native_lib.so` to `$PXF_CONF/lib/native/dependent_native_lib.so` on the Greenplum master host, add the following text to the `pxf-env.sh` file to set this environment variable:
+
+    ``` shell
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PXF_CONF/lib/native/dependent_native_lib.so
+    ```
+
+3. Save the file and exit the editor.
+
+4. Synchronize the PXF configuration from the Greenplum Database master host to the standby and segment hosts. 
+
+    ``` shell
+    gpadmin@gpmaster$ pxf cluster sync
+    ```
+
+    If you copied the native library to the `$PXF_CONF/lib` directory hierarchy, this command copies the library to the same location on the standby and segment hosts. 
+
+5. Restart PXF on all segment hosts:
+
+    ``` shell
+    gpadmin@gpmaster$ pxf cluster restart
+    ```
 
