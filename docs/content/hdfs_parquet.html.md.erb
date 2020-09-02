@@ -80,7 +80,7 @@ PXF uses the following data type mapping when writing Parquet data:
 | Numeric/Decimal | Decimal | fixed\_len\_byte\_array |
 | Timestamp<sup>1</sup> | -- | int96 |
 | Timestamptz<sup>2</sup> | -- | int96 |
-| Date | utf8 | binary |
+| Date | date | int32 |
 | Time | utf8 | binary |
 | Varchar | utf8 | binary |
 | Text | utf8 | binary |
