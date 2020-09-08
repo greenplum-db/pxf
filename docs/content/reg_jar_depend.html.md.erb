@@ -40,7 +40,7 @@ gpadmin@gpmaster$ pxf cluster restart
 
 ## <a id="reg_native"></a> Registering a Native Library Dependency
 
-To register a native library dependency for PXF, for example a Hadoop compression library, you must copy the native library to the Greenplum hosts, update PXF user configuration, synchronize the PXF configuration to the cluster, and then restart PXF on each segment host.
+To register a native library dependency for PXF, for example [Hadoop native libraries](https://hadoop.apache.org/docs/r2.9.2/hadoop-project-dist/hadoop-common/NativeLibraries.html), you must copy the native library to the Greenplum hosts, update PXF user configuration, synchronize the PXF configuration to the cluster, and then restart PXF on each segment host.
 
 You have two options for copying the native library to Greenplum hosts:
 
@@ -54,13 +54,13 @@ You have two options for copying the native library to Greenplum hosts:
 2. Open the `$PXF_CONF/conf/pxf-env.sh` in the editor of your choice, and set `LD_LIBRARY_PATH`. For example, if you copied a native library named `dependent_native_lib.so` to `/usr/local/lib/dependent_native_lib.so` on all Greenplum hosts, add the following text to the `pxf-env.sh` file to set this environment variable:
 
     ``` shell
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib/dependent_native_lib.so
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib/
     ```
 
     If you copied a native library named `dependent_native_lib.so` to `$PXF_CONF/lib/native/dependent_native_lib.so` on the Greenplum master host, add the following text to the `pxf-env.sh` file to set this environment variable:
 
     ``` shell
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PXF_CONF/lib/native/dependent_native_lib.so
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PXF_CONF/lib/native/
     ```
 
 3. Save the file and exit the editor.
