@@ -59,5 +59,5 @@ PXF_CONF="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
 # Dump heap on OutOfMemoryError, set to dump path to enable
 # export PXF_OOM_DUMP_PATH=/tmp/pxf_heap_dump
 
-# Uncomment below if you installed native libraries to be loaded by PXF
-# export LD_LIBRARY_PATH=${PXF_CONF}/lib/native${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
+# Additional native libraries to be loaded by PXF
+# export LD_LIBRARY_PATH=
