@@ -40,40 +40,62 @@ gpadmin@gpmaster$ pxf cluster restart
 
 ## <a id="reg_native"></a> Registering a Native Library Dependency
 
-To register a native library dependency for PXF, for example [Hadoop native libraries](https://hadoop.apache.org/docs/r2.9.2/hadoop-project-dist/hadoop-common/NativeLibraries.html), you must copy the native library to the Greenplum hosts, update PXF user configuration, synchronize the PXF configuration to the cluster, and then restart PXF on each segment host.
+PXF loads native libraries from the following directories in this order:
 
-You have two options for copying the native library to Greenplum hosts:
+1. The directories that you specify in the `$PXF_CONF/conf/pxf-env.sh` user configuration file `LD_LIBRARY_PATH` setting. Starting in PXF version 5.15.1, the `pxf-env.sh` file includes this commented-out block:
 
-- You copy the library to the same location on the Greenplum master, standby, and all segment hosts.
-- You copy the library to the `$PXF_CONF/lib` directory hierarchy on the Greenplum master host. When you next synchronize PXF, the PXF configuration, including the native library, is copied to all hosts in the Greenplum Database cluster.
+    ``` pre
+    # Additional native libraries to be loaded by PXF
+    # export LD_LIBRARY_PATH=
+    ```
+
+2. The default PXF native library directory `$PXF_CONF/lib/native`.
+3. The default Hadoop native library directory `/usr/lib/hadoop/lib/native`.
+
+When you register a native library dependency with PXF, for example [Hadoop native libraries](https://hadoop.apache.org/docs/r2.9.2/hadoop-project-dist/hadoop-common/NativeLibraries.html), you copy the native library to a location known to PXF *or* inform PXF of a custom location, and then you must synchronize and restart PXF.
+
+You have three file location options when you register a native library with PXF:
+
+- You copy the library to the default PXF native library directory, `$PXF_CONF/lib/native`, on only the Greenplum Database master host. When you next synchronize PXF, PXF copies the native library to all hosts in the Greenplum cluster.
+- You copy the library to the default Hadoop native library directory, `/usr/lib/hadoop/lib/native`, on the Greenplum master, standby, and each segment host.
+- You copy the library to the same, custom location on the Greenplum master, standby, and each segment host, and uncomment and add the directory to the `pxf-env.sh` `LD_LIBRARY_PATH` setting.
+
 
 ### <a id="reg_native_proc"></a> Procedure
 
-1. Copy the native library file to a user-defined location on all Greenplum Database hosts, or copy to the `$PXF_CONF/lib` directory hierarchy on the Greenplum Database master node. Note the file system location of the native library.
+1. Copy the native library file to one of the following:
+    - The `$PXF_CONF/lib/native` directory on the Greenplum Database master host.
+    - The `/usr/lib/hadoop/lib/native` directory on all Greenplum Database hosts.
+    - A user-defined location on all Greenplum Database hosts; note the file system location of the native library.
 
-2. Open the `$PXF_CONF/conf/pxf-env.sh` in the editor of your choice, and set `LD_LIBRARY_PATH`. For example, if you copied a native library named `dependent_native_lib.so` to `/usr/local/lib/dependent_native_lib.so` on all Greenplum hosts, add the following text to the `pxf-env.sh` file to set this environment variable:
+2. If you copied the native library to a custom location:
 
-    ``` shell
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib/
-    ```
+    1. Open the `$PXF_CONF/conf/pxf-env.sh` file in the editor of your choice, and uncomment the `LD_LIBRARY_PATH` setting:
 
-    If you copied a native library named `dependent_native_lib.so` to `$PXF_CONF/lib/native/dependent_native_lib.so` on the Greenplum master host, add the following text to the `pxf-env.sh` file to set this environment variable:
+        ``` pre
+        # Additional native libraries to be loaded by PXF
+        export LD_LIBRARY_PATH=
+        ```
 
-    ``` shell
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PXF_CONF/lib/native/
-    ```
+    2. Specify the custom location in the `LD_LIBRARY_PATH` setting. For example, if you copied a library named `dependent_native_lib.so` to `/usr/local/lib` on all Greenplum hosts, your `LD_LIBRARY_PATH` setting would look as follows:
 
-3. Save the file and exit the editor.
+        ``` shell
+        export LD_LIBRARY_PATH=/usr/local/lib
+        ```
 
-4. Synchronize the PXF configuration from the Greenplum Database master host to the standby and segment hosts. 
+    3. Save the file and exit the editor.
+
+3. Synchronize the PXF configuration from the Greenplum Database master host to the standby and segment hosts.
 
     ``` shell
     gpadmin@gpmaster$ pxf cluster sync
     ```
 
-    If you copied the native library to the `$PXF_CONF/lib` directory hierarchy, this command copies the library to the same location on the standby and segment hosts. 
+    If you copied the native library to the `$PXF_CONF/lib/native` directory, this command copies the library to the same location on the Greenplum Database standby and segment hosts.
 
-5. Restart PXF on all segment hosts:
+    If you updated the `pxf-env.sh` `LD_LIBRARY_PATH` setting, this command copies the configuration change to the Greenplum Database standby and segment hosts.
+
+4. Restart PXF on all segment hosts:
 
     ``` shell
     gpadmin@gpmaster$ pxf cluster restart
