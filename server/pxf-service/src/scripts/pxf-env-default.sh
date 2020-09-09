@@ -30,7 +30,7 @@ export PXF_CONF=${PXF_CONF:-NOT_INITIALIZED}
 export PXF_HOME=${PXF_HOME:=${PARENT_SCRIPT_DIR}}
 
 # Path to HDFS native libraries
-export LD_LIBRARY_PATH=/usr/lib/hadoop/lib/native${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}/usr/lib/hadoop/lib/native
 
 # Path to JAVA
 export JAVA_HOME=${JAVA_HOME:=/usr/java/default}
