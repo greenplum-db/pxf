@@ -450,7 +450,7 @@ function init_and_configure_pxf_server() {
 		# Only copy this file when testing against non-cloud
 		if [[ ! -f ${PXF_CONF_DIR}/servers/default/pxf-site.xml ]]; then
 			cp ${PXF_CONF_DIR}/templates/pxf-site.xml ${PXF_CONF_DIR}/servers/default/pxf-site.xml
-			sed -i -e "s|\${user.name}|${PROXY_USER}|g" ${PXF_CONF_DIR}/servers/default/pxf-site.xml
+			sed -i -e "s|</configuration>|<property><name>pxf.service.user.name</name><value>${PROXY_USER}</value></property></configuration>|g" ${PXF_CONF_DIR}/servers/default/pxf-site.xml
 		fi
 	fi
 
@@ -667,7 +667,7 @@ function configure_pxf_default_server() {
 
 		sed -i \
 			-e "/<name>pxf.service.user.impersonation<\/name>/ {n;s|<value>.*</value>|<value>false</value>|g;}" \
-			-e "/<name>pxf.service.user.name<\/name>/ {n;s|<value>.*</value>|<value>foobar</value>|g;}" \
+			-e "s|</configuration>|<property><name>pxf.service.user.name</name><value>foobar</value></property></configuration>|g" \
 			${PXF_CONF_DIR}/servers/default-no-impersonation/pxf-site.xml
 	fi
 }

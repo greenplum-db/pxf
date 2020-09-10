@@ -130,7 +130,7 @@ function setup_pxf_on_cluster() {
 			fi
 			sed -i \
 			-e '/<name>pxf.service.user.impersonation<\/name>/ {n;s|<value>.*</value>|<value>false</value>|g;}' \
-			-e '/<name>pxf.service.user.name<\/name>/ {n;s|<value>.*</value>|<value>foobar</value>|g;}' \
+			-e 's|</configuration>|<property><name>pxf.service.user.name</name><value>foobar</value></property></configuration>|g' \
 			${PXF_CONF_DIR}/servers/default-no-impersonation/pxf-site.xml
 		fi &&
 		${PXF_HOME}/bin/pxf cluster sync
