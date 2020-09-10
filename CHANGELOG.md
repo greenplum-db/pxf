@@ -1,5 +1,14 @@
 # Changelog
 
+## 5.15.1 (09/10/2020)
+
+### Bug Fixes:
+
+- [#418](https://github.com/greenplum-db/pxf/pull/418) Parquet performance improvements for write
+- [#433](https://github.com/greenplum-db/pxf/pull/433) Parquet Write: Fix physical and logical storage for DATE types
+- [#435](https://github.com/greenplum-db/pxf/pull/435) Upgrade from Tomcat 7.0.100 to 7.0.105
+- [#439](https://github.com/greenplum-db/pxf/pull/439) Add lib/native directory in PXF_CONF
+
 ## 5.15.0 (08/19/2020)
 
 ### Enhancements:
