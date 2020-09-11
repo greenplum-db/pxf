@@ -12,9 +12,8 @@ import java.lang.reflect.InvocationTargetException;
  * The base implementation of the {@code PluginFactory}
  */
 @Component
-public class BasePluginFactory implements PluginFactory {
+public class BasePluginFactory {
 
-    @Override
     public <T extends Plugin> T getPlugin(RequestContext context, String pluginClassName) {
 
         // get the class name of the plugin
