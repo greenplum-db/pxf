@@ -20,6 +20,7 @@ package org.greenplum.pxf.plugins.hdfs;
  */
 
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -62,7 +63,8 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor {
         this(SpringContext.getBean(CodecFactory.class));
     }
 
-    public LineBreakAccessor(CodecFactory codecFactory) {
+    @VisibleForTesting
+    LineBreakAccessor(CodecFactory codecFactory) {
         super(new TextInputFormat());
         this.codecFactory = codecFactory;
     }

@@ -40,10 +40,9 @@ public class FragmentsResponseFormatter {
 
     private static final Logger LOG = LoggerFactory.getLogger(FragmentsResponseFormatter.class);
 
-    private FragmentMetadataSerDe metadataSerDe;
+    private final FragmentMetadataSerDe metadataSerDe;
 
-    @Autowired
-    public void setMetadataSerDe(FragmentMetadataSerDe metadataSerDe) {
+    public FragmentsResponseFormatter(FragmentMetadataSerDe metadataSerDe) {
         this.metadataSerDe = metadataSerDe;
     }
 

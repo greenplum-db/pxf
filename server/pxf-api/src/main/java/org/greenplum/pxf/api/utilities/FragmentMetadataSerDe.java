@@ -19,7 +19,8 @@ public class FragmentMetadataSerDe extends StdSerializer<FragmentMetadata> {
 
     private static final long serialVersionUID = 123173996615107417L;
     private static final String CLASSNAME = "className";
-    public final ObjectMapper mapper;
+
+    private final ObjectMapper mapper;
 
     /**
      * Private constructor to prevent initialization

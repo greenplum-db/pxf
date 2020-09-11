@@ -10,6 +10,7 @@ import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.Fragmenter;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.RequestContext.RequestType;
+import org.greenplum.pxf.api.utilities.FragmentMetadataSerDe;
 import org.greenplum.pxf.api.utilities.FragmenterCacheFactory;
 import org.greenplum.pxf.service.FakeTicker;
 import org.greenplum.pxf.service.RequestParser;
@@ -80,7 +81,7 @@ public class FragmenterResourceTest {
         fragmenterResource = new FragmenterResource();
         fragmenterResource.setPluginFactory(mockPluginFactory);
         fragmenterResource.setFragmenterCacheFactory(fragmenterCacheFactory);
-        fragmenterResource.setResponseFormatter(new FragmentsResponseFormatter());
+        fragmenterResource.setResponseFormatter(new FragmentsResponseFormatter(new FragmentMetadataSerDe()));
         fragmenterResource.setPxfServerProperties(mockPxfServerProperties);
         fragmenterResource.setConfigurationFactory(mockConfigurationFactory);
         fragmenterResource.setRequestParser(mockParser);

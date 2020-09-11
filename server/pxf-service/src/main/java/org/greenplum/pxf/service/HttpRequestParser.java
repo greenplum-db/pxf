@@ -42,7 +42,6 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
     private static final String PROFILE_SCHEME = "PROFILE-SCHEME";
 
     private final PluginConf pluginConf;
-    private final RequestContext context;
     protected FragmentMetadataSerDe metadataSerDe;
 
     /**
@@ -50,9 +49,8 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
      *
      * @param pluginConf the plugin conf
      */
-    public HttpRequestParser(PluginConf pluginConf, RequestContext context) {
+    public HttpRequestParser(PluginConf pluginConf) {
         this.pluginConf = pluginConf;
-        this.context = context;
     }
 
     @Autowired
@@ -69,6 +67,8 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
             // Logging only keys to prevent sensitive data to be logged
             LOG.debug("Parsing request parameters: " + params.keySet());
         }
+
+        RequestContext context = new RequestContext();
 
         // fill the Request-scoped RequestContext with parsed values
 

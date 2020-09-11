@@ -69,7 +69,7 @@ public class SecureLogin {
     /**
      * Package-private for testing
      */
-    private PxfUserGroupInformation pxfUserGroupInformation;
+    private final PxfUserGroupInformation pxfUserGroupInformation;
 
     public SecureLogin(PxfUserGroupInformation pxfUserGroupInformation) {
         this.pxfUserGroupInformation = pxfUserGroupInformation;
