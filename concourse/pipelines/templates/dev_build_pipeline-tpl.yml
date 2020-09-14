@@ -286,7 +286,7 @@ resources:
   source:
     bucket: data-gpdb-ud-pxf-build
     json_key: ((pxf-storage-service-account-key))
-    versioned_file: dev/[[user]]-[[branch]]/snapshots/pxf-gp[[gp_ver]].ubuntu18.04.tar.gz
+    versioned_file: dev/[[user]]-[[branch]]/snapshots/pxf-gp[[gp_ver]]-ubuntu18.04.tar.gz
 {% set gp_ver = None %}
 
 ## ---------- Auxiliary Resources ----------
@@ -473,7 +473,7 @@ jobs:
       VENDOR: ((pxf-rpm-vendor))
   - put: pxf_gp[[gp_ver]]_tarball_ubuntu18
     params:
-      file: dist/pxf-gp[[gp_ver]]-*.ubuntu18.04.tar.gz
+      file: dist/pxf-gp[[gp_ver]]-*-ubuntu18.04.tar.gz
 
 - name: Test PXF-GP[[gp_ver]]-HDP2 on Ubuntu18
   plan:
