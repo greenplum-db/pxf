@@ -19,14 +19,12 @@ package org.greenplum.pxf.service.bridge;
  * under the License.
  */
 
-import org.greenplum.pxf.api.error.BadRecordException;
 import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.error.BadRecordException;
 import org.greenplum.pxf.api.io.Writable;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.service.BridgeOutputBuilder;
-import org.springframework.context.ApplicationContext;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
+import org.greenplum.pxf.service.utilities.BasePluginFactory;
 
 import java.io.CharConversionException;
 import java.io.DataInputStream;
@@ -46,16 +44,14 @@ import java.util.zip.ZipException;
  * The class handles BadRecordException and other exception type and marks the
  * record as invalid for GPDB.
  */
-@Component("ReadBridge")
-@RequestScope
 public class ReadBridge extends BaseBridge {
 
     protected BridgeOutputBuilder outputBuilder;
     protected Deque<Writable> outputQueue = new LinkedList<>();
 
-    public ReadBridge(BridgeOutputBuilder outputBuilder, ApplicationContext applicationContext, RequestContext context) {
-        super(applicationContext, context);
-        this.outputBuilder = outputBuilder;
+    public ReadBridge(BasePluginFactory pluginFactory, RequestContext context) {
+        super(pluginFactory, context);
+        this.outputBuilder = new BridgeOutputBuilder(context);
     }
 
     /**

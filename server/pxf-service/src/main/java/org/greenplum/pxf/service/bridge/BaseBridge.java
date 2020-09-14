@@ -3,10 +3,9 @@ package org.greenplum.pxf.service.bridge;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
-import org.greenplum.pxf.api.utilities.Utilities;
+import org.greenplum.pxf.service.utilities.BasePluginFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationContext;
 
 /**
  * Abstract class representing the bridge that provides to subclasses logger and accessor and
@@ -18,14 +17,16 @@ public abstract class BaseBridge implements Bridge {
 
     protected Accessor accessor;
     protected Resolver resolver;
+    protected RequestContext context;
 
-    public BaseBridge(ApplicationContext applicationContext, RequestContext context) {
-        String accessorClassName = Utilities.getShortClassName(context.getAccessor());
-        String resolverClassName = Utilities.getShortClassName(context.getResolver());
+    public BaseBridge(BasePluginFactory pluginFactory, RequestContext context) {
+        String accessorClassName = context.getAccessor();
+        String resolverClassName = context.getResolver();
 
         LOG.debug("Creating accessor bean '{}' and resolver bean '{}'", accessorClassName, resolverClassName);
 
-        this.accessor = applicationContext.getBean(accessorClassName, Accessor.class);
-        this.resolver = applicationContext.getBean(resolverClassName, Resolver.class);
+        this.context = context;
+        this.accessor = pluginFactory.getPlugin(context, accessorClassName);
+        this.resolver = pluginFactory.getPlugin(context, resolverClassName);
     }
 }

@@ -23,8 +23,6 @@ import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.utilities.FragmentMetadata;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 /**
  * Internal interface that would defined the access to a file on HDFS, but in
@@ -32,8 +30,6 @@ import org.springframework.web.context.annotation.RequestScope;
  * <p>
  * Demo implementation
  */
-@Component("DemoAccessor")
-@RequestScope
 public class DemoAccessor extends BasePlugin implements Accessor {
 
     private int rowNumber;

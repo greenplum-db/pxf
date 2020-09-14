@@ -25,8 +25,6 @@ import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.EnumAggregationType;
 import org.greenplum.pxf.api.utilities.FragmentMetadata;
 import org.greenplum.pxf.api.utilities.Utilities;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -38,8 +36,6 @@ import java.util.TreeMap;
  * Common configuration available to all PXF plugins. Represents input data
  * coming from client applications, such as GPDB.
  */
-@Component
-@RequestScope
 public class RequestContext {
 
     /**

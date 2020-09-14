@@ -27,29 +27,19 @@ import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.io.GPDBWritable;
 import org.greenplum.pxf.api.model.OutputFormat;
-import org.greenplum.pxf.api.model.RequestContext;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.io.DataInput;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-@Component
-@RequestScope
 public class BridgeInputBuilder {
 
     private static final Log LOG = LogFactory.getLog(BridgeInputBuilder.class);
 
-    private final RequestContext context;
-
-    public BridgeInputBuilder(RequestContext context) {
-        this.context = context;
-    }
-
-    public List<OneField> makeInput(DataInput inputStream) throws Exception {
-        if (context.getOutputFormat() == OutputFormat.TEXT) {
+    public List<OneField> makeInput(OutputFormat outputFormat, DataInput inputStream) throws Exception {
+        if (outputFormat == OutputFormat.TEXT) {
             // Avoid copying the bytes from the inputStream directly. This
             // code used to use the Text class to read bytes until a line
             // delimiter was found. This would cause issues with wide rows that
@@ -72,12 +62,11 @@ public class BridgeInputBuilder {
 
         GPDBWritableMapper mapper = new GPDBWritableMapper(gpdbWritable);
         int[] colTypes = gpdbWritable.getColType();
-        List<OneField> record = new LinkedList<>();
+        List<OneField> record = new ArrayList<>(colTypes.length);
         for (int i = 0; i < colTypes.length; i++) {
             mapper.setDataType(colTypes[i]);
             record.add(new OneField(colTypes[i], mapper.getData(i)));
         }
-
         return record;
     }
 }

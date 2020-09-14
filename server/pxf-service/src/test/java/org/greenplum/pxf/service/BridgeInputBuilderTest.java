@@ -24,7 +24,6 @@ import org.apache.commons.io.IOUtils;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.OutputFormat;
-import org.greenplum.pxf.api.model.RequestContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -38,11 +37,8 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class BridgeInputBuilderTest {
-    RequestContext mockContext;
     BridgeInputBuilder inputBuilder;
     DataInputStream inputStream;
 
@@ -64,7 +60,7 @@ public class BridgeInputBuilderTest {
 
         prepareInput(data);
 
-        List<OneField> record = inputBuilder.makeInput(inputStream);
+        List<OneField> record = inputBuilder.makeInput(OutputFormat.TEXT, inputStream);
 
         // the inputStream is exhausted completely, so we check line breaks too
         verifyRecord(record, Arrays.copyOfRange(data, 0, 8));
@@ -84,7 +80,7 @@ public class BridgeInputBuilderTest {
 
         prepareInput(bigArray);
 
-        List<OneField> record = inputBuilder.makeInput(inputStream);
+        List<OneField> record = inputBuilder.makeInput(OutputFormat.TEXT, inputStream);
 
         verifyRecord(record, bigArray);
     }
@@ -102,7 +98,7 @@ public class BridgeInputBuilderTest {
 
         prepareInput(bigArray);
 
-        List<OneField> record = inputBuilder.makeInput(inputStream);
+        List<OneField> record = inputBuilder.makeInput(OutputFormat.TEXT, inputStream);
 
         verifyRecord(record, bigArray);
     }
@@ -117,7 +113,7 @@ public class BridgeInputBuilderTest {
 
         prepareInput(empty);
 
-        List<OneField> record = inputBuilder.makeInput(inputStream);
+        List<OneField> record = inputBuilder.makeInput(OutputFormat.TEXT, inputStream);
 
         verifyRecord(record, empty);
     }
@@ -134,11 +130,8 @@ public class BridgeInputBuilderTest {
     }
 
     private void prepareInput(byte[] data) {
-        mockContext = mock(RequestContext.class);
-        when(mockContext.getOutputFormat()).thenReturn(OutputFormat.TEXT);
-        inputBuilder = new BridgeInputBuilder(mockContext);
-        inputStream = new DataInputStream(
-                new ByteArrayInputStream(data));
+        inputBuilder = new BridgeInputBuilder();
+        inputStream = new DataInputStream(new ByteArrayInputStream(data));
     }
 
     private void verifyRecord(List<OneField> record, byte[] expected) throws IOException {

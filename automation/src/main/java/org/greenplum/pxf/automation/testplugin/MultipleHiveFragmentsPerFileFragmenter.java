@@ -20,8 +20,6 @@ import org.greenplum.pxf.plugins.hive.HiveDataFragmenter;
 import org.greenplum.pxf.plugins.hive.HiveFragmentMetadata;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.util.List;
 import java.util.Properties;
@@ -34,8 +32,6 @@ import java.util.Properties;
  * inputData has to have following parameters:
  * TEST-FRAGMENTS-NUM - defines how many fragments will be returned for current file
  */
-@Component("MultipleHiveFragmentsPerFileFragmenter")
-@RequestScope
 public class MultipleHiveFragmentsPerFileFragmenter extends BaseFragmenter {
     private static final Log LOG = LogFactory.getLog(MultipleHiveFragmentsPerFileFragmenter.class);
 

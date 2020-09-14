@@ -8,6 +8,7 @@ import org.apache.hadoop.util.PlatformName;
 import org.apache.hadoop.util.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import javax.security.auth.DestroyFailedException;
 import javax.security.auth.Subject;
@@ -30,6 +31,7 @@ import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.HADOOP_KERBEROS
  * for different Kerberos Realms and PXF configuration servers. The class must to reside on this package to gain access
  * to package-private <code>User</code> class.
  */
+@Component
 public class PxfUserGroupInformation {
 
     private static final String LOGIN_FAILURE = "Login failure";
@@ -48,8 +50,6 @@ public class PxfUserGroupInformation {
             System.getProperty("os.arch").contains("s390x");
     private static final boolean aix = System.getProperty("os.name").equals("AIX");
 
-    private static final PxfUserGroupInformation instance = new PxfUserGroupInformation();
-
     // package-private LoginContextProvider to allow mocking during testing
     LoginContextProvider loginContextProvider = new LoginContextProvider();
 
@@ -61,21 +61,6 @@ public class PxfUserGroupInformation {
     private final Map<String, AtomicLong> reloginCountMap = new HashMap<>();
 
     /**
-     * Prevent instantiation of this class by external code
-     */
-    private PxfUserGroupInformation() {
-    }
-
-    /**
-     * Returns the static instance for this factory
-     *
-     * @return the static instance for this factory
-     */
-    public static PxfUserGroupInformation getInstance() {
-        return instance;
-    }
-
-    /**
      * Log a user in from a keytab file. Loads a user identity from a keytab
      * file and logs them in, returning the login session containing user's UGI object.
      *
@@ -84,11 +69,10 @@ public class PxfUserGroupInformation {
      * @param configDirectory the path to the configuration files for the external system
      * @param principal       the principal name to load from the keytab
      * @param keytabFilename  the path to the keytab file
-     * @throws IOException
+     * @throws IOException           when an IO error occurs.
      * @throws KerberosAuthException if it's a kerberos login exception.
      */
-    public synchronized
-    LoginSession loginUserFromKeytab(Configuration configuration, String serverName, String configDirectory, String principal, String keytabFilename) throws IOException {
+    public synchronized LoginSession loginUserFromKeytab(Configuration configuration, String serverName, String configDirectory, String principal, String keytabFilename) throws IOException {
 
         Preconditions.checkArgument(StringUtils.isNotBlank(keytabFilename), "Running in secure mode, but config doesn't have a keytab");
 
@@ -137,7 +121,7 @@ public class PxfUserGroupInformation {
      *
      * @param serverName   the name of the server
      * @param loginSession the login session
-     * @throws IOException
+     * @throws IOException           when an IO error occurs
      * @throws KerberosAuthException on a failure
      */
     public void reloginFromKeytab(String serverName, LoginSession loginSession) throws KerberosAuthException {

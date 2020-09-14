@@ -22,6 +22,7 @@ package org.greenplum.pxf.plugins.jdbc;
 import com.google.common.base.Ticker;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.security.PxfUserGroupInformation;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.security.SecureLogin;
@@ -87,7 +88,8 @@ public class JdbcBasePluginTestInitialize {
                 mockDriverManagerWrapper
         );
 
-        plugin = new JdbcBasePlugin(connectionManager, new SecureLogin());
+        PxfUserGroupInformation mockPxfUserGroupInformation = mock(PxfUserGroupInformation.class);
+        plugin = new JdbcBasePlugin(connectionManager, new SecureLogin(mockPxfUserGroupInformation));
     }
 
     /**

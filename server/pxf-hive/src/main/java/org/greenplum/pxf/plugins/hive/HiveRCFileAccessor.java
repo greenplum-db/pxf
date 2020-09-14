@@ -27,29 +27,29 @@ import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
+import org.greenplum.pxf.api.utilities.SpringContext;
+import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.apache.hadoop.hive.serde2.ColumnProjectionUtils.*;
+import static org.apache.hadoop.hive.serde2.ColumnProjectionUtils.READ_ALL_COLUMNS;
+import static org.apache.hadoop.hive.serde2.ColumnProjectionUtils.READ_COLUMN_IDS_CONF_STR;
+import static org.apache.hadoop.hive.serde2.ColumnProjectionUtils.READ_COLUMN_NAMES_CONF_STR;
 
 /**
  * Specialization of HiveAccessor for a Hive table that stores only RC files.
  * This class replaces the generic HiveAccessor for a case where a table is stored entirely as RC files.
  * Use together with {@link HiveInputFormatFragmenter}/{@link HiveColumnarSerdeResolver}
  */
-@Component("HiveRCFileAccessor")
-@RequestScope
 public class HiveRCFileAccessor extends HiveAccessor {
 
     /**
      * Constructs a HiveRCFileAccessor.
      */
     public HiveRCFileAccessor() {
-        super(new RCFileInputFormat());
+        super(new RCFileInputFormat(), SpringContext.getBean(HiveUtilities.class));
     }
 
     @Override

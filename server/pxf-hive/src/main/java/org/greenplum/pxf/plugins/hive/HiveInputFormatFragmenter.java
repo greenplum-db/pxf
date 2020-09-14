@@ -26,8 +26,6 @@ import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -55,8 +53,6 @@ import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
  * <li>userData: inputformat name, serde names and partition keys</li>
  * </ol>
  */
-@Component("HiveInputFormatFragmenter")
-@RequestScope
 public class HiveInputFormatFragmenter extends HiveDataFragmenter {
     private static final Logger LOG = LoggerFactory.getLogger(HiveInputFormatFragmenter.class);
 

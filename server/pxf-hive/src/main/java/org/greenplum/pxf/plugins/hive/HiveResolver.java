@@ -59,12 +59,12 @@ import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.api.utilities.SpringContext;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
+import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -84,8 +84,6 @@ import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
  * Class HiveResolver handles deserialization of records that were serialized
  * using Hadoop's Hive serialization framework.
  */
-@Component("HiveResolver")
-@RequestScope
 public class HiveResolver extends HivePlugin implements Resolver {
     private static final Logger LOG = LoggerFactory.getLogger(HiveResolver.class);
     protected static final String MAPKEY_DELIM = ":";
@@ -103,6 +101,14 @@ public class HiveResolver extends HivePlugin implements Resolver {
     private int numberOfPartitions;
     private Map<String, OneField> partitionColumnNames;
     private String hiveDefaultPartName;
+
+    public HiveResolver() {
+        this(SpringContext.getBean(HiveUtilities.class));
+    }
+
+    HiveResolver(HiveUtilities hiveUtilities) {
+        super(hiveUtilities);
+    }
 
     /**
      * Initializes the HiveResolver by parsing the request context and

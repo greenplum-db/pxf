@@ -38,8 +38,6 @@ import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hdfs.parquet.ParquetTypeConverter;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -53,8 +51,6 @@ import static org.apache.parquet.schema.LogicalTypeAnnotation.IntLogicalTypeAnno
 import static org.apache.parquet.schema.LogicalTypeAnnotation.StringLogicalTypeAnnotation;
 import static org.apache.parquet.schema.Type.Repetition.REPEATED;
 
-@Component("ParquetResolver")
-@RequestScope
 public class ParquetResolver extends BasePlugin implements Resolver {
 
     // used to distinguish string pattern between type "timestamp" ("2019-03-14 14:10:28")
@@ -63,21 +59,13 @@ public class ParquetResolver extends BasePlugin implements Resolver {
 
     private MessageType schema;
     private SimpleGroupFactory groupFactory;
-    private final ObjectMapper mapper = new ObjectMapper();
     private List<ColumnDescriptor> columnDescriptors;
-
-    public ParquetResolver() {
-        super();
-    }
-
-    ParquetResolver(ConfigurationFactory configurationFactory) {
-        this.configurationFactory = configurationFactory;
-    }
+    private ObjectMapper mapper = new ObjectMapper();
 
     @Override
-    public void initialize(RequestContext requestContext) {
-        super.initialize(requestContext);
-        this.columnDescriptors = context.getTupleDescription();
+    public void afterPropertiesSet() {
+        super.afterPropertiesSet();
+        columnDescriptors = context.getTupleDescription();
     }
 
     @Override

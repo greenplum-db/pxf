@@ -21,8 +21,6 @@ package org.greenplum.pxf.api.examples;
 
 import org.greenplum.pxf.api.model.BaseFragmenter;
 import org.greenplum.pxf.api.model.Fragment;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,8 +31,6 @@ import java.util.List;
  * <p>
  * Demo implementation
  */
-@Component("DemoFragmenter")
-@RequestScope
 public class DemoFragmenter extends BaseFragmenter {
 
     /**

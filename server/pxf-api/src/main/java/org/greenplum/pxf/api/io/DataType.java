@@ -20,10 +20,6 @@ package org.greenplum.pxf.api.io;
  */
 
 
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * Supported Data Types and OIDs (GPDB Data Type identifiers).
  * There's a one-to-one match between a Data Type and it's corresponding OID.
@@ -61,20 +57,27 @@ public enum DataType {
 
     UNSUPPORTED_TYPE(-1);
 
-    private static final Map<Integer, DataType> lookup = new HashMap<>();
+    private static final int[] OID_ARRAY;
+    private static final DataType[] DATA_TYPES;
     private static final int[] NOT_TEXT = {BIGINT.OID, BOOLEAN.OID, BYTEA.OID,
             FLOAT8.OID, INTEGER.OID, REAL.OID, SMALLINT.OID};
 
     static {
-
         INT2ARRAY.typeElem = SMALLINT;
         INT4ARRAY.typeElem = INTEGER;
         INT8ARRAY.typeElem = BIGINT;
         BOOLARRAY.typeElem = BOOLEAN;
         TEXTARRAY.typeElem = TEXT;
 
-        for (DataType dt : EnumSet.allOf(DataType.class)) {
-            lookup.put(dt.getOID(), dt);
+        DataType[] allTypes = DataType.values();
+        OID_ARRAY = new int[allTypes.length];
+        DATA_TYPES = new DataType[allTypes.length];
+
+        int index = 0;
+        for (DataType type : allTypes) {
+            OID_ARRAY[index] = type.OID;
+            DATA_TYPES[index] = type;
+            index++;
         }
     }
 
@@ -92,13 +95,33 @@ public enum DataType {
      * @return the corresponding DataType if exists, else returns {@link #UNSUPPORTED_TYPE}
      */
     public static DataType get(int OID) {
-        DataType type = lookup.get(OID);
-        return type == null ? UNSUPPORTED_TYPE : type;
+        // Previously, this lookup was based on a HashMap, but during profiling
+        // we noticed that the Hashmap.get call was a hot spot. A for loop is
+        // more performant when the number of elements is low (usually less
+        // than 100). We built a small benchmark based on JMH to compare the
+        // two implementations and here are the results we obtained at that
+        // time:
+        //
+        // Throughput Benchmark (Higher score is better)
+        // Benchmark                               (iterations)   Mode  Cnt    Score    Error   Units
+        // DemoApplication.benchmarkGetForLoop            10000  thrpt   40  477.072 ± 11.663  ops/us
+        // DemoApplication.benchmarkHashMapLookup         10000  thrpt   40    0.009 ±  0.001  ops/us
+        //
+        // Average Time Benchmark (Lower score is better)
+        // Benchmark                               (iterations)  Mode  Cnt    Score    Error  Units
+        // DemoApplication.benchmarkGetForLoop            10000  avgt   40    0.002 ±  0.001  us/op
+        // DemoApplication.benchmarkHashMapLookup         10000  avgt   40  110.740 ±  5.670  us/op
+        for (int i = 0; i < OID_ARRAY.length; i++) {
+            if (OID == OID_ARRAY[i]) {
+                return DATA_TYPES[i];
+            }
+        }
+        return UNSUPPORTED_TYPE;
     }
 
     public static boolean isArrayType(int OID) {
-        DataType type = lookup.get(OID);
-        return type != null && type.typeElem != null;
+        DataType type = get(OID);
+        return type.typeElem != null;
     }
 
     public static boolean isTextForm(int OID) {

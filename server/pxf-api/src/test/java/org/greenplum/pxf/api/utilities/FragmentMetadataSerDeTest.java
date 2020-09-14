@@ -15,7 +15,6 @@ import java.sql.Date;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class FragmentMetadataSerDeTest {
@@ -24,12 +23,7 @@ class FragmentMetadataSerDeTest {
 
     @BeforeEach
     public void setup() {
-        metadataSerDe = FragmentMetadataSerDe.getInstance();
-    }
-
-    @Test
-    public void testSingleton() {
-        assertSame(metadataSerDe, FragmentMetadataSerDe.getInstance());
+        metadataSerDe = new FragmentMetadataSerDe();
     }
 
     @Test
@@ -38,7 +32,7 @@ class FragmentMetadataSerDeTest {
         ObjectMapper mapper = new ObjectMapper();
 
         SimpleModule module = new SimpleModule();
-        module.addSerializer(FragmentMetadata.class, FragmentMetadataSerDe.getInstance());
+        module.addSerializer(FragmentMetadata.class, metadataSerDe);
         mapper.registerModule(module);
 
         DemoFragmentMetadata metadata = new DemoFragmentMetadata("abc");

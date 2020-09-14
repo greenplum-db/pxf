@@ -8,6 +8,7 @@ import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.plugins.hdfs.CodecFactory;
 import org.greenplum.pxf.plugins.hdfs.HcfsFragmentMetadata;
 import org.greenplum.pxf.plugins.hdfs.ParquetFileAccessor;
 import org.greenplum.pxf.plugins.hdfs.ParquetResolver;
@@ -58,7 +59,7 @@ public class ParquetFilterPushDownTest extends ParquetBaseTest {
     public void setup() throws Exception {
         super.setup();
 
-        accessor = new ParquetFileAccessor();
+        accessor = new ParquetFileAccessor(new CodecFactory());
         resolver = new ParquetResolver();
         context = new RequestContext();
 
@@ -77,6 +78,8 @@ public class ParquetFilterPushDownTest extends ParquetBaseTest {
 
         accessor.setRequestContext(context);
         resolver.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        resolver.afterPropertiesSet();
     }
 
     @Test

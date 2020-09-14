@@ -36,8 +36,7 @@ import org.apache.hadoop.mapred.SequenceFileInputFormat;
 import org.apache.hadoop.mapred.SequenceFileRecordReader;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
+import org.greenplum.pxf.api.utilities.SpringContext;
 
 import java.io.IOException;
 import java.util.EnumSet;
@@ -45,8 +44,6 @@ import java.util.EnumSet;
 /**
  * A PXF Accessor for reading and writing Sequence File records
  */
-@Component("SequenceFileAccessor")
-@RequestScope
 public class SequenceFileAccessor extends HdfsSplittableDataAccessor {
 
     private FileContext fc;
@@ -55,14 +52,18 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor {
     private CompressionType compressionType;
     private SequenceFile.Writer writer;
     private LongWritable defaultKey; // used when recordkey is not defined
-    private CodecFactory codecFactory;
+    private final CodecFactory codecFactory;
 
     /**
      * Constructs a SequenceFileAccessor.
      */
     public SequenceFileAccessor() {
+        this(SpringContext.getBean(CodecFactory.class));
+    }
+
+    SequenceFileAccessor(CodecFactory codecFactory) {
         super(new SequenceFileInputFormat<Writable, Writable>());
-        this.codecFactory = CodecFactory.getInstance();
+        this.codecFactory = codecFactory;
     }
 
     /**
@@ -76,8 +77,8 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor {
     @Override
     public boolean openForWrite() throws Exception {
         LOG.debug("openForWrite");
-        String filename = hcfsType.getUriForWrite(context);
-        getCompressionCodec(context);
+        codec = getCompressionCodec(context);
+        String filename = hcfsType.getUriForWrite(context, codec);
 
         // construct the output stream
         file = new Path(filename);
@@ -111,14 +112,14 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor {
      *
      * @param context - container where compression codec and type are held
      */
-    private void getCompressionCodec(RequestContext context) {
+    private CompressionCodec getCompressionCodec(RequestContext context) {
 
         String userCompressCodec = context.getOption("COMPRESSION_CODEC");
         String userCompressType = context.getOption("COMPRESSION_TYPE");
         String parsedCompressType = parseCompressionType(userCompressType);
 
         compressionType = CompressionType.NONE;
-        codec = null;
+        CompressionCodec codec = null;
         if (userCompressCodec != null) {
             codec = codecFactory.getCodec(userCompressCodec, configuration);
 
@@ -131,6 +132,7 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor {
             LOG.debug("Compression ON: compression codec: {}, compression type: {}",
                     userCompressCodec, compressionType);
         }
+        return codec;
     }
 
     /*

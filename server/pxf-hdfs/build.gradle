@@ -83,6 +83,9 @@ dependencies {
 
     testCompileOnly("org.apache.hadoop:hadoop-annotations:${hadoopVersion}")
 
+    // Used by HcfsTypeTest when testing the write URI when using LzopCodec
+    testImplementation("io.airlift:aircompressor:0.8")
+
     // for parquet tests
     testImplementation("org.apache.parquet:parquet-pig:${parquetVersion}")
 

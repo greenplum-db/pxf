@@ -49,14 +49,16 @@ public class FragmentsResponse implements StreamingResponseBody {
     public static final String COMMA_PREFIX = ",";
 
     private final List<Fragment> fragments;
+    private final FragmentMetadataSerDe metadataSerDe;
 
     /**
      * Constructs fragments response out of a list of fragments
      *
      * @param fragments fragment list
      */
-    public FragmentsResponse(List<Fragment> fragments) {
+    public FragmentsResponse(List<Fragment> fragments, FragmentMetadataSerDe metadataSerDe) {
         this.fragments = fragments;
+        this.metadataSerDe = metadataSerDe;
     }
 
     /**
@@ -98,7 +100,7 @@ public class FragmentsResponse implements StreamingResponseBody {
         ObjectMapper mapper = new ObjectMapper();
 
         SimpleModule module = new SimpleModule();
-        module.addSerializer(FragmentMetadata.class, FragmentMetadataSerDe.getInstance());
+        module.addSerializer(FragmentMetadata.class, metadataSerDe);
         mapper.registerModule(module);
 
         StringBuilder result = new StringBuilder();

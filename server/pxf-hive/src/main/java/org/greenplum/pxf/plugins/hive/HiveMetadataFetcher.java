@@ -31,9 +31,9 @@ import org.greenplum.pxf.api.error.UnsupportedTypeException;
 import org.greenplum.pxf.api.model.Metadata;
 import org.greenplum.pxf.api.model.MetadataFetcher;
 import org.greenplum.pxf.api.model.OutputFormat;
+import org.greenplum.pxf.api.utilities.SpringContext;
+import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.greenplum.pxf.plugins.hive.utilities.ProfileFactory;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -45,8 +45,6 @@ import java.util.Set;
 /**
  * Class for connecting to Hive's MetaStore and getting schema of Hive tables.
  */
-@Component
-@RequestScope
 public class HiveMetadataFetcher extends HivePlugin implements MetadataFetcher {
 
     private static final String DELIM_FIELD = "DELIMITER";
@@ -56,8 +54,12 @@ public class HiveMetadataFetcher extends HivePlugin implements MetadataFetcher {
     private JobConf jobConf;
     private final HiveClientWrapper hiveClientWrapper;
 
+    public HiveMetadataFetcher() {
+        this(SpringContext.getBean(HiveUtilities.class), SpringContext.getBean(HiveClientWrapper.class));
+    }
 
-    public HiveMetadataFetcher(HiveClientWrapper hiveClientWrapper) {
+    HiveMetadataFetcher(HiveUtilities hiveUtilities, HiveClientWrapper hiveClientWrapper) {
+        super(hiveUtilities);
         this.hiveClientWrapper = hiveClientWrapper;
     }
 

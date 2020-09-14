@@ -88,9 +88,8 @@ public class HiveMetadataFetcherTest {
 
     @Test
     public void construction() {
-        fetcher = new HiveMetadataFetcher(fakeHiveClientWrapper);
+        fetcher = new HiveMetadataFetcher(hiveUtilities, fakeHiveClientWrapper);
         fetcher.setRequestContext(context);
-        fetcher.setHiveUtilities(hiveUtilities);
         fetcher.afterPropertiesSet();
         assertNotNull(fetcher);
     }
@@ -99,7 +98,7 @@ public class HiveMetadataFetcherTest {
     public void constructorCantAccessMetaStore() throws MetaException {
         when(mockClientFactory.initHiveClient(any())).thenThrow(new MetaException("which way to albuquerque"));
 
-        fetcher = new HiveMetadataFetcher(fakeHiveClientWrapper);
+        fetcher = new HiveMetadataFetcher(hiveUtilities, fakeHiveClientWrapper);
         fetcher.setRequestContext(context);
         Exception e = assertThrows(RuntimeException.class, fetcher::afterPropertiesSet);
         assertEquals("Failed connecting to Hive MetaStore service: which way to albuquerque", e.getMessage());
@@ -109,7 +108,7 @@ public class HiveMetadataFetcherTest {
     public void getTableMetadataView() throws Exception {
 
         String tableName = "cause";
-        fetcher = new HiveMetadataFetcher(fakeHiveClientWrapper);
+        fetcher = new HiveMetadataFetcher(hiveUtilities, fakeHiveClientWrapper);
         fetcher.setRequestContext(context);
         fetcher.afterPropertiesSet();
 
@@ -126,9 +125,8 @@ public class HiveMetadataFetcherTest {
     @Test
     public void getTableMetadata() throws Exception {
 
-        fetcher = new HiveMetadataFetcher(fakeHiveClientWrapper);
+        fetcher = new HiveMetadataFetcher(hiveUtilities, fakeHiveClientWrapper);
         fetcher.setRequestContext(context);
-        fetcher.setHiveUtilities(hiveUtilities);
         fetcher.afterPropertiesSet();
         String tableName = "cause";
 
@@ -165,9 +163,8 @@ public class HiveMetadataFetcherTest {
     @Test
     public void getTableMetadataWithMultipleTables() throws Exception {
 
-        fetcher = new HiveMetadataFetcher(fakeHiveClientWrapper);
+        fetcher = new HiveMetadataFetcher(hiveUtilities, fakeHiveClientWrapper);
         fetcher.setRequestContext(context);
-        fetcher.setHiveUtilities(hiveUtilities);
         fetcher.afterPropertiesSet();
 
         String tablePattern = "*";
@@ -224,9 +221,8 @@ public class HiveMetadataFetcherTest {
     @Test
     public void getTableMetadataWithIncompatibleTables() throws Exception {
 
-        fetcher = new HiveMetadataFetcher(fakeHiveClientWrapper);
+        fetcher = new HiveMetadataFetcher(hiveUtilities, fakeHiveClientWrapper);
         fetcher.setRequestContext(context);
-        fetcher.setHiveUtilities(hiveUtilities);
         fetcher.afterPropertiesSet();
 
         String tablePattern = "*";

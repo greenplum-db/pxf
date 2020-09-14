@@ -20,9 +20,6 @@ package org.greenplum.pxf.api.examples;
  */
 
 import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.model.RequestContext;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.io.BufferedOutputStream;
 import java.io.IOException;
@@ -36,8 +33,6 @@ import java.nio.file.Path;
  * <p>
  * Demo implementation.
  */
-@Component("DemoFileWritableAccessor")
-@RequestScope
 public class DemoFileWritableAccessor extends DemoAccessor {
 
     private OutputStream out;

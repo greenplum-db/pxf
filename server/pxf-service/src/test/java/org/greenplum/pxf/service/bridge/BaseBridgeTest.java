@@ -5,46 +5,35 @@ import org.greenplum.pxf.api.io.Writable;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
+import org.greenplum.pxf.service.utilities.BasePluginFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.NoSuchBeanDefinitionException;
-import org.springframework.context.ApplicationContext;
 
 import java.io.DataInputStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class BaseBridgeTest {
 
-    private Accessor mockAccessor;
-    private ApplicationContext mockApplicationContext;
     private RequestContext context;
-    private Resolver mockResolver;
-    private TestBridge bridge;
+    private BasePluginFactory pluginFactory;
 
     @BeforeEach
     public void setup() {
         context = new RequestContext();
         context.setConfiguration(new Configuration());
 
-        mockAccessor = mock(Accessor.class);
-        mockResolver = mock(Resolver.class);
-        mockApplicationContext = mock(ApplicationContext.class);
+        pluginFactory = new BasePluginFactory();
     }
 
     @Test
     public void testContextConstructor() {
         context.setAccessor("org.greenplum.pxf.service.bridge.TestAccessor");
         context.setResolver("org.greenplum.pxf.service.bridge.TestResolver");
-        when(mockApplicationContext.getBean("TestAccessor", Accessor.class)).thenReturn(new TestAccessor());
-        when(mockApplicationContext.getBean("TestResolver", Resolver.class)).thenReturn(new TestResolver());
 
-        bridge = new TestBridge(mockApplicationContext, context);
+        TestBridge bridge = new TestBridge(pluginFactory, context);
         assertTrue(bridge.getAccessor() instanceof TestAccessor);
         assertTrue(bridge.getResolver() instanceof TestResolver);
     }
@@ -53,29 +42,24 @@ public class BaseBridgeTest {
     public void testContextConstructorUnknownAccessor() {
         context.setAccessor("org.greenplum.pxf.unknown-accessor");
         context.setResolver("org.greenplum.pxf.service.bridge.TestResolver");
-        when(mockApplicationContext.getBean("unknown-accessor", Accessor.class)).thenThrow(new NoSuchBeanDefinitionException("unknown-accessor"));
 
-        NoSuchBeanDefinitionException e = assertThrows(NoSuchBeanDefinitionException.class,
-                () -> new TestBridge(mockApplicationContext, context));
-        assertEquals("No bean named 'unknown-accessor' available", e.getMessage());
+        RuntimeException e = assertThrows(RuntimeException.class, () -> new TestBridge(pluginFactory, context));
+        assertEquals("Class org.greenplum.pxf.unknown-accessor is not found", e.getMessage());
     }
 
     @Test
     public void testContextConstructorUnknownResolver() {
         context.setAccessor("org.greenplum.pxf.service.bridge.TestAccessor");
         context.setResolver("org.greenplum.pxf.unknown-resolver");
-        when(mockApplicationContext.getBean("TestAccessor", Accessor.class)).thenReturn(new TestAccessor());
-        when(mockApplicationContext.getBean("unknown-resolver", Resolver.class)).thenThrow(new NoSuchBeanDefinitionException("unknown-resolver"));
 
-        Exception e = assertThrows(RuntimeException.class,
-                () -> new TestBridge(mockApplicationContext, context));
-        assertEquals("No bean named 'unknown-resolver' available", e.getMessage());
+        Exception e = assertThrows(RuntimeException.class, () -> new TestBridge(pluginFactory, context));
+        assertEquals("Class org.greenplum.pxf.unknown-resolver is not found", e.getMessage());
     }
 
     static class TestBridge extends BaseBridge {
 
-        public TestBridge(ApplicationContext applicationContext, RequestContext context) {
-            super(applicationContext, context);
+        public TestBridge(BasePluginFactory pluginFactory, RequestContext context) {
+            super(pluginFactory, context);
         }
 
         @Override

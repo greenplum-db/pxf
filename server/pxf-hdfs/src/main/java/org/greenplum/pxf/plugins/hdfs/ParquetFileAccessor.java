@@ -59,11 +59,10 @@ import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.api.utilities.SpringContext;
 import org.greenplum.pxf.plugins.hdfs.parquet.ParquetOperatorPrunerAndTransformer;
 import org.greenplum.pxf.plugins.hdfs.parquet.ParquetRecordFilterBuilder;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -96,8 +95,6 @@ import static org.apache.parquet.schema.LogicalTypeAnnotation.stringType;
  * Parquet file accessor.
  * Unit of operation is record.
  */
-@Component("ParquetFileAccessor")
-@RequestScope
 public class ParquetFileAccessor extends BasePlugin implements Accessor {
 
     private static final int DEFAULT_ROWGROUP_SIZE = 8 * 1024 * 1024;
@@ -143,16 +140,16 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
     private int pageSize, rowGroupSize, dictionarySize;
     private long rowsRead, totalRowsRead, totalRowsWritten;
     private WriterVersion parquetVersion;
-    private final CodecFactory codecFactory = CodecFactory.getInstance();
-
     private long totalReadTimeInNanos;
 
+    private final CodecFactory codecFactory;
+
     public ParquetFileAccessor() {
-        super();
+        this(SpringContext.getBean(CodecFactory.class));
     }
 
-    ParquetFileAccessor(ConfigurationFactory configurationFactory) {
-        this.configurationFactory = configurationFactory;
+    public ParquetFileAccessor(CodecFactory codecFactory) {
+        this.codecFactory = codecFactory;
     }
 
     /**
@@ -248,7 +245,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
 
         HcfsType hcfsType = HcfsType.getHcfsType(context);
         // skip codec extension in filePrefix, because we add it in this accessor
-        filePrefix = hcfsType.getUriForWrite(context, true);
+        filePrefix = hcfsType.getUriForWrite(context);
         String compressCodec = context.getOption("COMPRESSION_CODEC");
         codecName = codecFactory.getCodec(compressCodec, DEFAULT_COMPRESSION);
 
@@ -323,10 +320,11 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
             return FilterCompat.NOOP;
         }
 
+        List<ColumnDescriptor> tupleDescription = context.getTupleDescription();
         ParquetRecordFilterBuilder filterBuilder = new ParquetRecordFilterBuilder(
-                context.getTupleDescription(), originalFieldsMap);
+                tupleDescription, originalFieldsMap);
         TreeVisitor pruner = new ParquetOperatorPrunerAndTransformer(
-                context.getTupleDescription(), originalFieldsMap, SUPPORTED_OPERATORS);
+                tupleDescription, originalFieldsMap, SUPPORTED_OPERATORS);
 
         try {
             // Parse the filter string into a expression tree Node

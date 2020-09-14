@@ -21,6 +21,7 @@ package org.greenplum.pxf.plugins.hive;
 
 import org.apache.hadoop.conf.Configuration;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -34,11 +35,13 @@ public class HiveDataFragmenterTest {
     private RequestContext context;
     private Configuration configuration;
     private HiveClientWrapper hiveClientWrapper;
+    private HiveUtilities hiveUtilities;
 
     @BeforeEach
     public void setup() {
 
         hiveClientWrapper = mock(HiveClientWrapper.class);
+        hiveUtilities = mock(HiveUtilities.class);
 
         configuration = new Configuration();
         configuration.set("fs.defaultFS", "hdfs:///");
@@ -54,8 +57,7 @@ public class HiveDataFragmenterTest {
     public void constructorCantAccessMetaStore() {
         when(hiveClientWrapper.initHiveClient(context, configuration)).thenThrow(new RuntimeException("Failed connecting to Hive MetaStore service: which way to albuquerque"));
 
-        HiveDataFragmenter fragmenter = new HiveDataFragmenter();
-        fragmenter.setHiveClientWrapper(hiveClientWrapper);
+        HiveDataFragmenter fragmenter = new HiveDataFragmenter(hiveUtilities, hiveClientWrapper);
         fragmenter.setRequestContext(context);
         Exception e = assertThrows(RuntimeException.class, fragmenter::afterPropertiesSet);
         assertEquals("Failed connecting to Hive MetaStore service: which way to albuquerque", e.getMessage());

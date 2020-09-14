@@ -35,13 +35,12 @@ import org.greenplum.pxf.api.filter.OperatorNode;
 import org.greenplum.pxf.api.filter.ToStringTreeVisitor;
 import org.greenplum.pxf.api.filter.TreeTraverser;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.api.utilities.SpringContext;
 import org.greenplum.pxf.plugins.hdfs.HdfsSplittableDataAccessor;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.io.IOException;
 import java.sql.Date;
@@ -60,8 +59,6 @@ import java.util.List;
  * split which does not belong to a partition filter. Naturally, the partition
  * filtering will be done only for Hive tables that are partitioned.
  */
-@Component("HiveAccessor")
-@RequestScope
 public class HiveAccessor extends HdfsSplittableDataAccessor {
 
     private static final Logger LOG = LoggerFactory.getLogger(HiveAccessor.class);
@@ -96,25 +93,17 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
          * calling the base constructor, otherwise it would have been:
          * super(input, createInputFormat(input))
          */
-        this(null);
+        this(null, SpringContext.getBean(HiveUtilities.class));
     }
 
     /**
-     * Creates an instance of HiveAccessor using specified input format
+     * Creates an instance of HiveAccessor using specified input format and hive utilities
      *
      * @param inputFormat input format
+     * @param hiveUtilities the hive utilities
      */
-    HiveAccessor(InputFormat<?, ?> inputFormat) {
+    HiveAccessor(InputFormat<?, ?> inputFormat, HiveUtilities hiveUtilities) {
         super(inputFormat);
-    }
-
-    /**
-     * Sets the {@link HiveUtilities} object
-     *
-     * @param hiveUtilities the hive utilities object
-     */
-    @Autowired
-    public void setHiveUtilities(HiveUtilities hiveUtilities) {
         this.hiveUtilities = hiveUtilities;
     }
 

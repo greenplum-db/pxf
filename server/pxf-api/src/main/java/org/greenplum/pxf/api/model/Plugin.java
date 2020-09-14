@@ -1,11 +1,9 @@
 package org.greenplum.pxf.api.model;
 
-import org.springframework.beans.factory.InitializingBean;
-
 /**
- * Base interface for all plugin types that provides information on plugin thread safety
+ * Base interface for all plugin types
  */
-public interface Plugin extends InitializingBean {
+public interface Plugin {
 
     /**
      * Sets the context for the current request
@@ -13,4 +11,9 @@ public interface Plugin extends InitializingBean {
      * @param context the context for the current request
      */
     void setRequestContext(RequestContext context);
+
+    /**
+     * Invoked after the {@code RequestContext} has been bound
+     */
+    void afterPropertiesSet();
 }
