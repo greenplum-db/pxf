@@ -20,6 +20,7 @@ package org.greenplum.pxf.plugins.hdfs;
  */
 
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -31,9 +32,8 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.LineRecordReader;
 import org.apache.hadoop.mapred.TextInputFormat;
 import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.utilities.SpringContext;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -43,8 +43,6 @@ import java.net.URI;
 /**
  * A PXF Accessor for reading delimited plain text records.
  */
-@Component("LineBreakAccessor")
-@RequestScope
 public class LineBreakAccessor extends HdfsSplittableDataAccessor {
 
     private static final int DEFAULT_BUFFER_SIZE = 8192;
@@ -62,8 +60,13 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor {
      * Constructs a LineBreakAccessor.
      */
     public LineBreakAccessor() {
+        this(SpringContext.getBean(CodecFactory.class));
+    }
+
+    @VisibleForTesting
+    LineBreakAccessor(CodecFactory codecFactory) {
         super(new TextInputFormat());
-        this.codecFactory = CodecFactory.getInstance();
+        this.codecFactory = codecFactory;
     }
 
     @Override
@@ -107,11 +110,11 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor {
      */
     @Override
     public boolean openForWrite() throws IOException {
-        String fileName = hcfsType.getUriForWrite(context);
         String compressCodec = context.getOption("COMPRESSION_CODEC");
         // get compression codec
         CompressionCodec codec = compressCodec != null ?
                 codecFactory.getCodec(compressCodec, configuration) : null;
+        String fileName = hcfsType.getUriForWrite(context, codec);
 
         file = new Path(fileName);
         fs = FileSystem.get(URI.create(fileName), configuration);

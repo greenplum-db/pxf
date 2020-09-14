@@ -30,8 +30,6 @@ import org.greenplum.pxf.api.model.BaseFragmenter;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.FragmentStats;
 import org.greenplum.pxf.plugins.hdfs.utilities.PxfInputFormat;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -44,8 +42,6 @@ import java.util.List;
  * the data into fragments and return a list of them along with a list of
  * host:port locations for each.
  */
-@Component("HdfsDataFragmenter")
-@RequestScope
 public class HdfsDataFragmenter extends BaseFragmenter {
 
     protected static final String IGNORE_MISSING_PATH_OPTION = "IGNORE_MISSING_PATH";

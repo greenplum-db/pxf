@@ -24,25 +24,20 @@ import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.StatsAccessor;
 import org.greenplum.pxf.api.io.Writable;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.service.BridgeOutputBuilder;
-import org.springframework.context.ApplicationContext;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
+import org.greenplum.pxf.service.utilities.BasePluginFactory;
 
 import java.util.LinkedList;
 
 /**
  * Bridge class optimized for aggregate queries.
  */
-@Component
-@RequestScope
 public class AggBridge extends ReadBridge implements Bridge {
 
     /* Avoid resolving rows with the same key twice */
     private LRUMap outputCache;
 
-    public AggBridge(BridgeOutputBuilder outputBuilder, ApplicationContext applicationContext, RequestContext context) {
-        super(outputBuilder, applicationContext, context);
+    public AggBridge(BasePluginFactory pluginFactory, RequestContext context) {
+        super(pluginFactory, context);
     }
 
     /**
@@ -89,7 +84,7 @@ public class AggBridge extends ReadBridge implements Bridge {
                 }
             }
         } catch (Exception ex) {
-            LOG.error("Error occurred when reading next object from aggregate bridge: ", ex.getMessage());
+            LOG.error("Error occurred when reading next object from aggregate bridge: {}", ex.getMessage());
             throw ex;
         }
         return output;

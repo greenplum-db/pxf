@@ -78,7 +78,7 @@ public class SequenceFileAccessorTest {
         final String codecName = "So I asked, who is he? He goes by the name of Wayne Rooney";
         Exception e = assertThrows(IllegalArgumentException.class,
                 () -> prepareTest(codecName, null));
-        assertEquals("Invalid codec: So I asked, who is he? He goes by the name of Wayne Rooney ", e.getMessage());
+        assertEquals("Compression codec So I asked, who is he? He goes by the name of Wayne Rooney was not found.", e.getMessage());
     }
 
     @Test
@@ -133,7 +133,7 @@ public class SequenceFileAccessorTest {
             context.addOption("COMPRESSION_TYPE", type);
         }
 
-        accessor = new SequenceFileAccessor();
+        accessor = new SequenceFileAccessor(new CodecFactory());
         accessor.setRequestContext(context);
         accessor.afterPropertiesSet();
         accessor.openForWrite();

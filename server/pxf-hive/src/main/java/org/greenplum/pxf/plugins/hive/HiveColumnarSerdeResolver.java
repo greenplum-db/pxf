@@ -49,8 +49,6 @@ import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.Utilities;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.sql.Date;
 import java.sql.Timestamp;
@@ -71,8 +69,6 @@ import static org.greenplum.pxf.api.io.DataType.VARCHAR;
  * Specialized HiveResolver for a Hive table stored as RC file.
  * Use together with HiveInputFormatFragmenter/HiveRCFileAccessor.
  */
-@Component("HiveColumnarSerdeResolver")
-@RequestScope
 public class HiveColumnarSerdeResolver extends HiveResolver {
     private static final Log LOG = LogFactory.getLog(HiveColumnarSerdeResolver.class);
     private boolean firstColumn;

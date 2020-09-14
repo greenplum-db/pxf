@@ -23,7 +23,7 @@ public class LineBreakAccessorTest {
 
     @BeforeEach
     public void setup() {
-        accessor = new LineBreakAccessor();
+        accessor = new LineBreakAccessor(new CodecFactory());
 
         context = new RequestContext();
         context.setConfig("default");

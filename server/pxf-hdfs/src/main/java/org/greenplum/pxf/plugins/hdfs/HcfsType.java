@@ -3,8 +3,8 @@ package org.greenplum.pxf.plugins.hdfs;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.mapreduce.MRJobConfig;
-import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.Utilities;
@@ -122,53 +122,36 @@ public enum HcfsType {
     /**
      * Returns a unique fully resolved URI including the protocol for write.
      * The filename is generated with the transaction and segment IDs resulting
-     * in <TRANSACTION-ID>_<SEGMENT-ID>. If a COMPRESSION_CODEC is provided, the
-     * default codec extension will be appended to the name of the file.
+     * in <TRANSACTION-ID>_<SEGMENT-ID>.
      *
      * @param context The input data parameters
      * @return an absolute data path for write
      */
     public String getUriForWrite(RequestContext context) {
-        return getUriForWrite(context, false);
+        return getUriForWrite(context, null);
     }
 
     /**
      * Returns a unique fully resolved URI including the protocol for write.
      * The filename is generated with the transaction and segment IDs resulting
-     * in <TRANSACTION-ID>_<SEGMENT-ID>. If a COMPRESSION_CODEC is provided and
-     * the skipCodedExtension parameter is false, the default codec extension
-     * will be appended to the name of the file.
+     * in <TRANSACTION-ID>_<SEGMENT-ID>. If a compressionCodec is provided, the
+     * default codec extension will be appended to the name of the file.
      *
-     * @param context            the input data parameters
-     * @param skipCodecExtension true if the codec extension is not desired, false otherwise
+     * @param context          the input data parameters
+     * @param compressionCodec the compression coded used for the extension
      * @return an absolute data path for write
      */
-    public String getUriForWrite(RequestContext context, boolean skipCodecExtension) {
+    public String getUriForWrite(RequestContext context, CompressionCodec compressionCodec) {
         String fileName = StringUtils.removeEnd(getDataUri(context), "/") +
                 "/" +
                 context.getTransactionId() +
                 "_" +
                 context.getSegmentId();
 
-        if (!skipCodecExtension) {
-            String compressCodec = context.getOption("COMPRESSION_CODEC");
-            if (compressCodec != null) {
-                // get compression codec default extension
-                CodecFactory codecFactory = CodecFactory.getInstance();
-                String extension;
-                try {
-                    extension = codecFactory
-                            .getCodec(compressCodec, context.getConfiguration())
-                            .getDefaultExtension();
-                } catch (IllegalArgumentException e) {
-                    LOG.debug("Unable to get extension for codec '{}'", compressCodec);
-                    extension = codecFactory
-                            .getCodec(compressCodec, CompressionCodecName.UNCOMPRESSED)
-                            .getExtension();
-                }
-                // append codec extension to the filename
-                fileName += extension;
-            }
+        if (compressionCodec != null) {
+            String extension = compressionCodec.getDefaultExtension();
+            // append codec extension to the filename
+            fileName += extension;
         }
 
         LOG.debug("File name for write: {}", fileName);

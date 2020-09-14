@@ -24,8 +24,6 @@ import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.util.Collections;
 import java.util.List;
@@ -36,8 +34,6 @@ import static org.greenplum.pxf.api.io.DataType.VARCHAR;
  * Specialized HiveResolver for a Hive table stored as Text files.
  * Use together with HiveInputFormatFragmenter/HiveLineBreakAccessor.
  */
-@Component("HiveStringPassResolver")
-@RequestScope
 public class HiveStringPassResolver extends HiveResolver {
     private StringBuilder parts;
 

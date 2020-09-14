@@ -19,15 +19,14 @@ package org.greenplum.pxf.service.bridge;
  * under the License.
  */
 
-import org.greenplum.pxf.api.error.BadRecordException;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.error.BadRecordException;
 import org.greenplum.pxf.api.io.Writable;
+import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.service.BridgeInputBuilder;
-import org.springframework.context.ApplicationContext;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
+import org.greenplum.pxf.service.utilities.BasePluginFactory;
 
 import java.io.DataInputStream;
 import java.util.List;
@@ -37,15 +36,15 @@ import java.util.List;
  * It reads data from inputStream by the resolver,
  * and writes it to the Hadoop storage with the accessor.
  */
-@Component
-@RequestScope
 public class WriteBridge extends BaseBridge {
 
     private final BridgeInputBuilder inputBuilder;
+    private final OutputFormat outputFormat;
 
-    public WriteBridge(BridgeInputBuilder inputBuilder, ApplicationContext applicationContext, RequestContext context) {
-        super(applicationContext, context);
-        this.inputBuilder = inputBuilder;
+    public WriteBridge(BasePluginFactory pluginFactory, RequestContext context) {
+        super(pluginFactory, context);
+        this.inputBuilder = new BridgeInputBuilder();
+        this.outputFormat = context.getOutputFormat();
     }
 
     /**
@@ -63,7 +62,7 @@ public class WriteBridge extends BaseBridge {
     @Override
     public boolean setNext(DataInputStream inputStream) throws Exception {
 
-        List<OneField> record = inputBuilder.makeInput(inputStream);
+        List<OneField> record = inputBuilder.makeInput(outputFormat, inputStream);
         if (record == null) {
             return false;
         }

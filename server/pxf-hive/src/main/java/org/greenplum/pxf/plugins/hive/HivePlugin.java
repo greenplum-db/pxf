@@ -2,19 +2,20 @@ package org.greenplum.pxf.plugins.hive;
 
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
-import org.springframework.beans.factory.annotation.Autowired;
 
-public class HivePlugin extends BasePlugin {
+/**
+ * The base class for hive plugins
+ */
+public abstract class HivePlugin extends BasePlugin {
 
     protected HiveUtilities hiveUtilities;
 
     /**
-     * Sets the {@link HiveUtilities} object
+     * Creates a {@code HivePlugin} with the provided {@code HiveUtilities}
      *
-     * @param hiveUtilities the hive utilities object
+     * @param hiveUtilities the {@code HiveUtilities} instance
      */
-    @Autowired
-    public void setHiveUtilities(HiveUtilities hiveUtilities) {
+    public HivePlugin(HiveUtilities hiveUtilities) {
         this.hiveUtilities = hiveUtilities;
     }
 }

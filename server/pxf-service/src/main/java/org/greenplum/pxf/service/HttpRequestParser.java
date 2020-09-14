@@ -12,6 +12,7 @@ import org.greenplum.pxf.api.utilities.FragmentMetadata;
 import org.greenplum.pxf.api.utilities.FragmentMetadataSerDe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.MultiValueMap;
 
@@ -40,19 +41,21 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
     private static final String FALSE_LCASE = "false";
     private static final String PROFILE_SCHEME = "PROFILE-SCHEME";
 
-    protected static final FragmentMetadataSerDe metadataSerDe = FragmentMetadataSerDe.getInstance();
-
     private final PluginConf pluginConf;
-    private final RequestContext context;
+    protected FragmentMetadataSerDe metadataSerDe;
 
     /**
      * Create a new instance of the HttpRequestParser with the given PluginConf
      *
      * @param pluginConf the plugin conf
      */
-    public HttpRequestParser(PluginConf pluginConf, RequestContext context) {
+    public HttpRequestParser(PluginConf pluginConf) {
         this.pluginConf = pluginConf;
-        this.context = context;
+    }
+
+    @Autowired
+    public void setMetadataSerDe(FragmentMetadataSerDe metadataSerDe) {
+        this.metadataSerDe = metadataSerDe;
     }
 
     @Override
@@ -64,6 +67,8 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
             // Logging only keys to prevent sensitive data to be logged
             LOG.debug("Parsing request parameters: " + params.keySet());
         }
+
+        RequestContext context = new RequestContext();
 
         // fill the Request-scoped RequestContext with parsed values
 
@@ -405,7 +410,7 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
             for (Map.Entry<String, List<String>> entry : requestHeaders.entrySet()) {
                 if (StringUtils.equalsIgnoreCase(ENCODED_HEADER_VALUES_NAME, entry.getKey())) {
                     String value = getValue(entry.getValue());
-                    decodeHeaderValue = StringUtils.equalsIgnoreCase("true", value);
+                    decodeHeaderValue = StringUtils.equalsIgnoreCase(TRUE_LCASE, value);
                     break;
                 }
             }
@@ -503,7 +508,7 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
          * @return true when the property is true, false otherwise
          */
         private boolean removeOptionalBoolProperty(String property) {
-            return StringUtils.equals("true", removeOptionalProperty(property));
+            return StringUtils.equals(TRUE_LCASE, removeOptionalProperty(property));
         }
     }
 

@@ -412,7 +412,7 @@ class HiveFragmentMetadataTest {
     public void testSerialization() throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
         SimpleModule module = new SimpleModule();
-        module.addSerializer(FragmentMetadata.class, FragmentMetadataSerDe.getInstance());
+        module.addSerializer(FragmentMetadata.class, new FragmentMetadataSerDe());
         mapper.registerModule(module);
 
         assertEquals("\"{\\\"start\\\":5,\\\"length\\\":25,\\\"inputFormatName\\\":\\\"input format name\\\",\\\"serdeClassName\\\":\\\"serde class name\\\",\\\"properties\\\":{},\\\"partitionKeys\\\":\\\"partition keys\\\",\\\"filterInFragmenter\\\":true,\\\"delimiter\\\":\\\"delimiter\\\",\\\"colTypes\\\":\\\"column types\\\",\\\"skipHeader\\\":208,\\\"hiveIndexes\\\":[5,6],\\\"allColumnNames\\\":\\\"all column names\\\",\\\"allColumnTypes\\\":\\\"all column types\\\",\\\"className\\\":\\\"org.greenplum.pxf.plugins.hive.HiveFragmentMetadata\\\"}\"",
@@ -423,7 +423,7 @@ class HiveFragmentMetadataTest {
     public void testDeserialization() throws JsonProcessingException {
         String json = "{\"start\":5,\"length\":25,\"inputFormatName\":\"input format name\",\"serdeClassName\":\"serde class name\",\"properties\":{},\"partitionKeys\":\"partition keys\",\"filterInFragmenter\":true,\"delimiter\":\"delimiter\",\"colTypes\":\"column types\",\"skipHeader\":208,\"hiveIndexes\":[5,6],\"allColumnNames\":\"all column names\",\"allColumnTypes\":\"all column types\",\"className\":\"org.greenplum.pxf.plugins.hive.HiveFragmentMetadata\"}";
 
-        FragmentMetadata testMetadata = FragmentMetadataSerDe.getInstance().deserialize(json);
+        FragmentMetadata testMetadata = new FragmentMetadataSerDe().deserialize(json);
         assertNotNull(testMetadata);
         assertTrue(testMetadata instanceof HiveFragmentMetadata);
         metadata = (HiveFragmentMetadata) testMetadata;

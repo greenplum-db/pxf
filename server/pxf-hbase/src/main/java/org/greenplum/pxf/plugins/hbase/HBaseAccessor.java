@@ -44,8 +44,6 @@ import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseColumnDescriptor;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseTupleDescription;
 import org.greenplum.pxf.plugins.hbase.utilities.HBaseUtilities;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.io.IOException;
 import java.util.EnumSet;
@@ -61,8 +59,6 @@ import java.util.EnumSet;
  * The class supports filters using the {@link HBaseFilterBuilder}.
  * Regions can be filtered out according to input from {@link HBaseFilterBuilder}.
  */
-@Component("HBaseAccessor")
-@RequestScope
 public class HBaseAccessor extends BasePlugin implements Accessor {
 
     static final EnumSet<Operator> SUPPORTED_OPERATORS =

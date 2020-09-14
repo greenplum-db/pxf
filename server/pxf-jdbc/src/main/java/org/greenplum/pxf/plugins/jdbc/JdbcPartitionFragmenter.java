@@ -22,12 +22,8 @@ package org.greenplum.pxf.plugins.jdbc;
 import org.greenplum.pxf.api.model.BaseFragmenter;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.FragmentStats;
-import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.jdbc.partitioning.JdbcFragmentMetadata;
 import org.greenplum.pxf.plugins.jdbc.partitioning.PartitionType;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.util.List;
 
@@ -38,8 +34,6 @@ import static org.greenplum.pxf.api.model.Fragment.HOSTS;
  * <p>
  * Splits the query to allow multiple simultaneous SELECTs
  */
-@Component("JdbcPartitionFragmenter")
-@RequestScope
 public class JdbcPartitionFragmenter extends BaseFragmenter {
 
     private PartitionType partitionType;

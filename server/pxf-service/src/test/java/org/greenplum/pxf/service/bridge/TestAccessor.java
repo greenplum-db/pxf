@@ -5,7 +5,6 @@ import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.springframework.stereotype.Component;
 
-@Component
 public class TestAccessor implements Accessor {
 
     @Override

@@ -78,7 +78,7 @@ public class PxfUserGroupInformationTest {
         configuration = new Configuration();
         user = new User("user");
         serverName = "server";
-        pxfUserGroupInformation = PxfUserGroupInformation.getInstance();
+        pxfUserGroupInformation = new PxfUserGroupInformation();
 
         // prepare common mocks
         mockTGT = mock(KerberosTicket.class);

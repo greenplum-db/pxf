@@ -1,6 +1,9 @@
 package org.greenplum.pxf.plugins.hdfs;
 
+import io.airlift.compress.lzo.LzopCodec;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.io.compress.GzipCodec;
+import org.apache.hadoop.io.compress.SnappyCodec;
 import org.apache.hadoop.mapreduce.MRJobConfig;
 import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.greenplum.pxf.api.model.RequestContext;
@@ -167,10 +170,9 @@ public class HcfsTypeTest {
         context.setDataSource("foo/bar");
         context.setTransactionId("XID-XYZ-123456");
         context.setSegmentId(3);
-        context.addOption("COMPRESSION_CODEC", "snappy");
 
         HcfsType type = HcfsType.getHcfsType(context);
-        assertEquals("xyz://abc/foo/bar/XID-XYZ-123456_3.snappy", type.getUriForWrite(context));
+        assertEquals("xyz://abc/foo/bar/XID-XYZ-123456_3.snappy", type.getUriForWrite(context, new SnappyCodec()));
     }
 
     @Test
@@ -182,7 +184,7 @@ public class HcfsTypeTest {
         context.addOption("COMPRESSION_CODEC", "snappy");
 
         HcfsType type = HcfsType.getHcfsType(context);
-        assertEquals("xyz://abc/foo/bar/XID-XYZ-123456_3", type.getUriForWrite(context, true));
+        assertEquals("xyz://abc/foo/bar/XID-XYZ-123456_3", type.getUriForWrite(context));
     }
 
     @Test
@@ -191,22 +193,9 @@ public class HcfsTypeTest {
         context.setDataSource("foo/bar");
         context.setTransactionId("XID-XYZ-123456");
         context.setSegmentId(3);
-        context.addOption("COMPRESSION_CODEC", "gzip");
 
         HcfsType type = HcfsType.getHcfsType(context);
-        assertEquals("xyz://abc/foo/bar/XID-XYZ-123456_3.gz", type.getUriForWrite(context));
-    }
-
-    @Test
-    public void testUriForWriteWithGZipCodecSkip() {
-        configuration.set("fs.defaultFS", "xyz://abc");
-        context.setDataSource("foo/bar");
-        context.setTransactionId("XID-XYZ-123456");
-        context.setSegmentId(3);
-        context.addOption("COMPRESSION_CODEC", "gzip");
-
-        HcfsType type = HcfsType.getHcfsType(context);
-        assertEquals("xyz://abc/foo/bar/XID-XYZ-123456_3", type.getUriForWrite(context, true));
+        assertEquals("xyz://abc/foo/bar/XID-XYZ-123456_3.gz", type.getUriForWrite(context, new GzipCodec()));
     }
 
     @Test
@@ -215,10 +204,9 @@ public class HcfsTypeTest {
         context.setDataSource("foo/bar");
         context.setTransactionId("XID-XYZ-123456");
         context.setSegmentId(3);
-        context.addOption("COMPRESSION_CODEC", "lzo");
 
         HcfsType type = HcfsType.getHcfsType(context);
-        assertEquals("xyz://abc/foo/bar/XID-XYZ-123456_3.lzo", type.getUriForWrite(context));
+        assertEquals("xyz://abc/foo/bar/XID-XYZ-123456_3.lzo", type.getUriForWrite(context, new LzopCodec()));
     }
 
     @Test
@@ -230,7 +218,7 @@ public class HcfsTypeTest {
         context.addOption("COMPRESSION_CODEC", "lzo");
 
         HcfsType type = HcfsType.getHcfsType(context);
-        assertEquals("xyz://abc/foo/bar/XID-XYZ-123456_3", type.getUriForWrite(context, true));
+        assertEquals("xyz://abc/foo/bar/XID-XYZ-123456_3", type.getUriForWrite(context, null));
     }
 
     @Test
@@ -250,11 +238,9 @@ public class HcfsTypeTest {
         context.setDataSource("foo/bar/");
         context.setTransactionId("XID-XYZ-123456");
         context.setSegmentId(2);
-        context.addOption("COMPRESSION_CODEC", "org.apache.hadoop.io.compress.GzipCodec");
 
         HcfsType type = HcfsType.getHcfsType(context);
-        assertEquals("xyz://abc/foo/bar/XID-XYZ-123456_2.gz",
-                type.getUriForWrite(context));
+        assertEquals("xyz://abc/foo/bar/XID-XYZ-123456_2.gz", type.getUriForWrite(context, new GzipCodec()));
     }
 
     @Test

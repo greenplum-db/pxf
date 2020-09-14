@@ -27,8 +27,6 @@ import org.apache.hadoop.mapred.FileSplit;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.io.IOException;
 
@@ -36,8 +34,6 @@ import java.io.IOException;
  * Accessor class which reads data in batches.
  * One batch is 1024 rows of all projected columns
  */
-@Component("HiveORCVectorizedAccessor")
-@RequestScope
 public class HiveORCVectorizedAccessor extends HiveORCAccessor {
 
     private RecordReader vrr;

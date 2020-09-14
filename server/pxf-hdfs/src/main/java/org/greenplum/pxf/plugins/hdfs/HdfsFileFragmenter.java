@@ -7,8 +7,6 @@ import org.apache.hadoop.mapred.InvalidInputException;
 import org.apache.hadoop.mapred.JobConf;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.plugins.hdfs.utilities.PxfInputFormat;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.util.Arrays;
 import java.util.List;
@@ -20,8 +18,6 @@ import java.util.stream.Collectors;
  * splits. The list of fragments will be the list of files
  * at the storage layer.
  */
-@Component("HdfsFileFragmenter")
-@RequestScope
 public class HdfsFileFragmenter extends HdfsDataFragmenter {
 
     /**

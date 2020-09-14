@@ -5,8 +5,6 @@ import org.apache.commons.logging.LogFactory;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.BasePlugin;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 /*
  * Internal interface that defines the access to a file on HDFS.  All classes
@@ -14,8 +12,6 @@ import org.springframework.web.context.annotation.RequestScope;
  * must respect this interface
  * Dummy implementation, for documentation
  */
-@Component("DummyAccessor")
-@RequestScope
 public class DummyAccessor extends BasePlugin implements Accessor {
     private static final Log LOG = LogFactory.getLog(DummyAccessor.class);
     private int rowNumber;

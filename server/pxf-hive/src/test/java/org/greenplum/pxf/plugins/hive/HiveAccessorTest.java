@@ -60,9 +60,8 @@ public class HiveAccessorTest {
         HiveFragmentMetadata metadata = userDataBuilder.withSkipHeader(2).build();
         context.setFragmentMetadata(metadata);
 
-        accessor = new HiveAccessor();
+        accessor = new HiveAccessor(null, mockHiveUtilities);
         accessor.setRequestContext(context);
-        accessor.setHiveUtilities(mockHiveUtilities);
         accessor.afterPropertiesSet();
         accessor.openForRead();
         accessor.readNextObject();
@@ -76,9 +75,8 @@ public class HiveAccessorTest {
         context.setFragmentIndex(0);
         context.setFragmentMetadata(metadata);
 
-        accessor = new HiveAccessor();
+        accessor = new HiveAccessor(null, mockHiveUtilities);
         accessor.setRequestContext(context);
-        accessor.setHiveUtilities(mockHiveUtilities);
         accessor.afterPropertiesSet();
         accessor.openForRead();
         accessor.readNextObject();
@@ -92,9 +90,8 @@ public class HiveAccessorTest {
         context.setFragmentIndex(2);
         context.setFragmentMetadata(metadata);
 
-        accessor = new HiveAccessor();
+        accessor = new HiveAccessor(null, mockHiveUtilities);
         accessor.setRequestContext(context);
-        accessor.setHiveUtilities(mockHiveUtilities);
         accessor.afterPropertiesSet();
         accessor.openForRead();
         accessor.readNextObject();
@@ -108,9 +105,8 @@ public class HiveAccessorTest {
         context.setFragmentIndex(0);
         context.setFragmentMetadata(metadata);
 
-        accessor = new HiveAccessor();
+        accessor = new HiveAccessor(null, mockHiveUtilities);
         accessor.setRequestContext(context);
-        accessor.setHiveUtilities(mockHiveUtilities);
         accessor.afterPropertiesSet();
         accessor.openForRead();
         accessor.readNextObject();
@@ -124,9 +120,8 @@ public class HiveAccessorTest {
         context.setFragmentIndex(0);
         context.setFragmentMetadata(metadata);
 
-        accessor = new HiveAccessor();
+        accessor = new HiveAccessor(null, mockHiveUtilities);
         accessor.setRequestContext(context);
-        accessor.setHiveUtilities(mockHiveUtilities);
         accessor.afterPropertiesSet();
         accessor.openForRead();
         accessor.readNextObject();

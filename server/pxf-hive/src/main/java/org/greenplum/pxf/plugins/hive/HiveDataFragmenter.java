@@ -43,14 +43,12 @@ import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.FragmentStats;
 import org.greenplum.pxf.api.model.Metadata;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.api.utilities.SpringContext;
 import org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.greenplum.pxf.plugins.hive.utilities.ProfileFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -80,8 +78,6 @@ import static org.greenplum.pxf.api.model.Fragment.HOSTS;
  * file_input_format_name_DELIM_serde_name_DELIM_serialization_properties</li>
  * </ol>
  */
-@Component("HiveDataFragmenter")
-@RequestScope
 public class HiveDataFragmenter extends HdfsDataFragmenter {
     private static final Logger LOG = LoggerFactory.getLogger(HiveDataFragmenter.class);
     private static final short ALL_PARTS = -1;
@@ -105,8 +101,8 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
     private static final TreeTraverser TRAVERSER = new TreeTraverser();
 
     private IMetaStoreClient client;
-    private HiveClientWrapper hiveClientWrapper;
-    protected HiveUtilities hiveUtilities;
+    private final HiveClientWrapper hiveClientWrapper;
+    protected final HiveUtilities hiveUtilities;
 
     private boolean filterInFragmenter = false;
 
@@ -115,23 +111,12 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
     private final Set<String> setPartitions = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
     private final Map<String, String> partitionKeyTypes = new HashMap<>();
 
-    /**
-     * Sets the {@link HiveClientWrapper} object
-     *
-     * @param hiveClientWrapper the hive client wrapper object
-     */
-    @Autowired
-    public void setHiveClientWrapper(HiveClientWrapper hiveClientWrapper) {
-        this.hiveClientWrapper = hiveClientWrapper;
+    public HiveDataFragmenter() {
+        this(SpringContext.getBean(HiveUtilities.class), SpringContext.getBean(HiveClientWrapper.class));
     }
 
-    /**
-     * Sets the {@link HiveUtilities} object
-     *
-     * @param hiveUtilities the hive utilities object
-     */
-    @Autowired
-    public void setHiveUtilities(HiveUtilities hiveUtilities) {
+    HiveDataFragmenter(HiveUtilities hiveUtilities, HiveClientWrapper hiveClientWrapper) {
+        this.hiveClientWrapper = hiveClientWrapper;
         this.hiveUtilities = hiveUtilities;
     }
 
