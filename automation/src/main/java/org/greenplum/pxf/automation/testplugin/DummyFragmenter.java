@@ -3,8 +3,6 @@ package org.greenplum.pxf.automation.testplugin;
 import org.greenplum.pxf.api.model.BaseFragmenter;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.FragmentStats;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.net.InetAddress;
 import java.util.List;
@@ -16,8 +14,6 @@ import java.util.List;
  * Used to get fragments of data that could be read in parallel from the different segments.
  * Dummy implementation, for documentation
  */
-@Component("DummyFragmenter")
-@RequestScope
 public class DummyFragmenter extends BaseFragmenter {
 
     /*

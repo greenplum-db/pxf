@@ -3,11 +3,7 @@ package org.greenplum.pxf.automation.testplugin;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.greenplum.pxf.plugins.hive.HiveDataFragmenter;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
-@Component("HiveDataFragmenterWithFilter")
-@RequestScope
 public class HiveDataFragmenterWithFilter extends HiveDataFragmenter {
 
     private static final Log LOG = LogFactory.getLog(HiveDataFragmenterWithFilter.class);

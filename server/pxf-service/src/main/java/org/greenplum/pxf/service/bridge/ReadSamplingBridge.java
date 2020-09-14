@@ -21,12 +21,8 @@ package org.greenplum.pxf.service.bridge;
 
 import org.greenplum.pxf.api.io.Writable;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.service.BridgeOutputBuilder;
 import org.greenplum.pxf.service.utilities.AnalyzeUtils;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
+import org.greenplum.pxf.service.utilities.BasePluginFactory;
 
 import java.util.BitSet;
 
@@ -42,16 +38,14 @@ import java.util.BitSet;
  * set. This map is matched against each read record, discarding ones with a 0
  * bit and continuing until a 1 bit record is read.
  */
-@Component
-@RequestScope
 public class ReadSamplingBridge extends ReadBridge {
 
     private BitSet sampleBitSet;
     private int bitSetSize;
     private int curIndex;
 
-    public ReadSamplingBridge(BridgeOutputBuilder outputBuilder, ApplicationContext applicationContext, RequestContext context) {
-        super(outputBuilder, applicationContext, context);
+    public ReadSamplingBridge(BasePluginFactory pluginFactory, RequestContext context) {
+        super(pluginFactory, context);
         calculateBitSet(context.getStatsSampleRatio());
         this.curIndex = 0;
     }

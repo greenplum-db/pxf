@@ -20,21 +20,19 @@ package org.greenplum.pxf.plugins.hbase;
  */
 
 
-import org.greenplum.pxf.api.error.BadRecordException;
-import org.greenplum.pxf.api.OneField;
-import org.greenplum.pxf.api.OneRow;
-import org.greenplum.pxf.api.error.UnsupportedTypeException;
-import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.api.model.Resolver;
-import org.greenplum.pxf.api.model.BasePlugin;
-import org.greenplum.pxf.plugins.hbase.utilities.HBaseColumnDescriptor;
-import org.greenplum.pxf.plugins.hbase.utilities.HBaseTupleDescription;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.util.Bytes;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
+import org.greenplum.pxf.api.OneField;
+import org.greenplum.pxf.api.OneRow;
+import org.greenplum.pxf.api.error.BadRecordException;
+import org.greenplum.pxf.api.error.UnsupportedTypeException;
+import org.greenplum.pxf.api.io.DataType;
+import org.greenplum.pxf.api.model.BasePlugin;
+import org.greenplum.pxf.api.model.Resolver;
+import org.greenplum.pxf.plugins.hbase.utilities.HBaseColumnDescriptor;
+import org.greenplum.pxf.plugins.hbase.utilities.HBaseTupleDescription;
 
 import java.sql.Timestamp;
 import java.util.LinkedList;
@@ -49,8 +47,6 @@ import java.util.List;
  *
  * Currently, the class assumes all HBase values are stored as String object Bytes encoded.
  */
-@Component("HBaseResolver")
-@RequestScope
 public class HBaseResolver extends BasePlugin implements Resolver {
     private HBaseTupleDescription tupleDescription;
 

@@ -19,9 +19,12 @@ package org.greenplum.pxf.service.rest;
  * under the License.
  */
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.greenplum.pxf.api.model.Fragment;
+import org.greenplum.pxf.api.utilities.FragmentMetadataSerDe;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -32,9 +35,16 @@ import java.util.List;
  * Utility class for converting Fragments into a {@link FragmentsResponse} that
  * will serialize them into JSON format.
  */
+@Component
 public class FragmentsResponseFormatter {
 
-    private static final Log LOG = LogFactory.getLog(FragmentsResponseFormatter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FragmentsResponseFormatter.class);
+
+    private final FragmentMetadataSerDe metadataSerDe;
+
+    public FragmentsResponseFormatter(FragmentMetadataSerDe metadataSerDe) {
+        this.metadataSerDe = metadataSerDe;
+    }
 
     /**
      * Converts Fragments list to FragmentsResponse after replacing host name by
@@ -45,13 +55,12 @@ public class FragmentsResponseFormatter {
      * @return FragmentsResponse with given fragments
      * @throws UnknownHostException if converting host names to IP fails
      */
-    public static FragmentsResponse formatResponse(List<Fragment> fragments,
-                                                   String data)
+    public FragmentsResponse formatResponse(List<Fragment> fragments, String data)
             throws UnknownHostException {
         /* print the raw fragment list to log when in debug level */
         if (LOG.isDebugEnabled()) {
             LOG.debug("Fragments before conversion to IP list:");
-            FragmentsResponseFormatter.printList(fragments, data);
+            printList(fragments, data);
         }
 
         /* HD-2550: convert host names to IPs */
@@ -61,10 +70,10 @@ public class FragmentsResponseFormatter {
 
         /* print the fragment list to log when in debug level */
         if (LOG.isDebugEnabled()) {
-            FragmentsResponseFormatter.printList(fragments, data);
+            printList(fragments, data);
         }
 
-        return new FragmentsResponse(fragments);
+        return new FragmentsResponse(fragments, metadataSerDe);
     }
 
     /**
@@ -73,7 +82,7 @@ public class FragmentsResponseFormatter {
      *
      * @param fragments fragments to be updated
      */
-    private static void updateFragmentIndex(List<Fragment> fragments) {
+    private void updateFragmentIndex(List<Fragment> fragments) {
 
         String sourceName = null;
         int index = 0;
@@ -93,10 +102,10 @@ public class FragmentsResponseFormatter {
      *
      * @throws UnknownHostException if converting host name to IP fails
      */
-    private static void convertHostsToIPs(List<Fragment> fragments)
+    private void convertHostsToIPs(List<Fragment> fragments)
             throws UnknownHostException {
         /* host converted to IP map. Used to limit network calls. */
-        HashMap<String, String> hostToIpMap = new HashMap<String, String>();
+        HashMap<String, String> hostToIpMap = new HashMap<>();
 
         for (Fragment fragment : fragments) {
             String[] hosts = fragment.getReplicas();
@@ -128,9 +137,9 @@ public class FragmentsResponseFormatter {
      * Intended for debugging purposes only. 'datapath' is the data path part of
      * the original URI (e.g., table name, *.csv, etc).
      */
-    private static void printList(List<Fragment> fragments, String datapath) {
-        LOG.debug("List of " + (fragments.isEmpty() ? "no" : fragments.size())
-                + "fragments for \"" + datapath + "\"");
+    private void printList(List<Fragment> fragments, String datapath) {
+        LOG.debug("List of {} fragments for \"{}\"",
+                (fragments.isEmpty() ? "no" : fragments.size()), datapath);
 
         StringBuilder result = new StringBuilder();
         int i = 0;
@@ -148,7 +157,7 @@ public class FragmentsResponseFormatter {
                 result.append(", Metadata: ").append(fragment.getMetadata().toString());
             }
             result.append("] ");
-            LOG.debug(result);
+            LOG.debug(result.toString());
         }
     }
 }

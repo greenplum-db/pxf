@@ -3,8 +3,6 @@ package org.greenplum.pxf.automation.testplugin;
 import org.greenplum.pxf.api.model.BaseFragmenter;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -14,8 +12,6 @@ import java.util.stream.Collectors;
  * Stringify column projection information when available as a comma separated list of column names.
  * Return it as UserData
  */
-@Component("ColumnProjectionVerifyFragmenter")
-@RequestScope
 public class ColumnProjectionVerifyFragmenter extends BaseFragmenter {
 
     /**

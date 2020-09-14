@@ -20,8 +20,6 @@ import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.GreenplumCSV;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -31,8 +29,6 @@ import java.net.URI;
 import java.sql.SQLException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
-
 /**
  * Accessor to read data from S3, using the S3 Select Framework.
  * S3 Select works on a single key (or object), pushing down as
@@ -40,8 +36,6 @@ import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
  * data we transfer over the wire, with the purpose of speeding up
  * query times from S3.
  */
-@Component("S3SelectAccessor")
-@RequestScope
 public class S3SelectAccessor extends BasePlugin implements Accessor {
 
     // We call this option compression_codec to make it compatible to

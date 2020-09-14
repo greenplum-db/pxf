@@ -27,12 +27,11 @@ import org.greenplum.pxf.api.model.FragmentStats;
 import org.greenplum.pxf.api.model.Fragmenter;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.FragmenterCacheFactory;
-import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.service.SessionId;
 import org.greenplum.pxf.service.security.SecurityService;
 import org.greenplum.pxf.service.utilities.AnalyzeUtils;
+import org.greenplum.pxf.service.utilities.BasePluginFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
@@ -59,9 +58,11 @@ import static org.greenplum.pxf.api.model.RequestContext.RequestType;
 @RequestMapping("/pxf/" + Version.PXF_PROTOCOL_VERSION + "/Fragmenter/")
 public class FragmenterResource extends BaseResource {
 
-    private ApplicationContext applicationContext;
+    private BasePluginFactory pluginFactory;
 
     private FragmenterCacheFactory fragmenterCacheFactory;
+
+    private FragmentsResponseFormatter responseFormatter;
 
     private PxfServerProperties pxfServerProperties;
 
@@ -78,13 +79,18 @@ public class FragmenterResource extends BaseResource {
     }
 
     @Autowired
-    public void setApplicationContext(ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
+    public void setPluginFactory(BasePluginFactory pluginFactory) {
+        this.pluginFactory = pluginFactory;
     }
 
     @Autowired
     public void setFragmenterCacheFactory(FragmenterCacheFactory fragmenterCacheFactory) {
         this.fragmenterCacheFactory = fragmenterCacheFactory;
+    }
+
+    @Autowired
+    public void setResponseFormatter(FragmentsResponseFormatter responseFormatter) {
+        this.responseFormatter = responseFormatter;
     }
 
     @Autowired
@@ -150,7 +156,7 @@ public class FragmenterResource extends BaseResource {
             fragments = getFragments(context);
         }
 
-        FragmentsResponse fragmentsResponse = FragmentsResponseFormatter.formatResponse(fragments, path);
+        FragmentsResponse fragmentsResponse = responseFormatter.formatResponse(fragments, path);
         return new ResponseEntity<>(fragmentsResponse, HttpStatus.OK);
     }
 
@@ -200,7 +206,7 @@ public class FragmenterResource extends BaseResource {
      * @return the fragmenter initialized with the request context
      */
     private Fragmenter getFragmenter(RequestContext context) {
-        return applicationContext.getBean(Utilities.getShortClassName(context.getFragmenter()), Fragmenter.class);
+        return pluginFactory.getPlugin(context, context.getFragmenter());
     }
 
     /**

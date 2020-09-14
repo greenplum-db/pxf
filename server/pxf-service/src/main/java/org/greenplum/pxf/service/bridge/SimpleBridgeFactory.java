@@ -3,16 +3,16 @@ package org.greenplum.pxf.service.bridge;
 import org.greenplum.pxf.api.ReadVectorizedResolver;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.Utilities;
-import org.springframework.context.ApplicationContext;
+import org.greenplum.pxf.service.utilities.BasePluginFactory;
 import org.springframework.stereotype.Component;
 
 @Component
 public class SimpleBridgeFactory implements BridgeFactory {
 
-    private final ApplicationContext applicationContext;
+    private final BasePluginFactory pluginFactory;
 
-    public SimpleBridgeFactory(ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
+    public SimpleBridgeFactory(BasePluginFactory pluginFactory) {
+        this.pluginFactory = pluginFactory;
     }
 
     /**
@@ -23,17 +23,17 @@ public class SimpleBridgeFactory implements BridgeFactory {
 
         Bridge bridge;
         if (context.getRequestType() == RequestContext.RequestType.WRITE_BRIDGE) {
-            bridge = applicationContext.getBean(WriteBridge.class);
+            bridge = new WriteBridge(pluginFactory, context);
         } else if (context.getRequestType() != RequestContext.RequestType.READ_BRIDGE) {
             throw new UnsupportedOperationException();
         } else if (context.getStatsSampleRatio() > 0) {
-            bridge = applicationContext.getBean(ReadSamplingBridge.class);
+            bridge = new ReadSamplingBridge(pluginFactory, context);
         } else if (Utilities.aggregateOptimizationsSupported(context)) {
-            bridge = applicationContext.getBean(AggBridge.class);
+            bridge = new AggBridge(pluginFactory, context);
         } else if (useVectorization(context)) {
-            bridge = applicationContext.getBean(ReadVectorizedBridge.class);
+            bridge = new ReadVectorizedBridge(pluginFactory, context);
         } else {
-            bridge = applicationContext.getBean("ReadBridge", ReadBridge.class);
+            bridge = new ReadBridge(pluginFactory, context);
         }
         return bridge;
     }

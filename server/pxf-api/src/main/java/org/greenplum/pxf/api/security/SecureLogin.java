@@ -69,7 +69,12 @@ public class SecureLogin {
     /**
      * Package-private for testing
      */
-    static PxfUserGroupInformation pxfUserGroupInformation = PxfUserGroupInformation.getInstance();
+    private final PxfUserGroupInformation pxfUserGroupInformation;
+
+    public SecureLogin(PxfUserGroupInformation pxfUserGroupInformation) {
+        this.pxfUserGroupInformation = pxfUserGroupInformation;
+    }
+
 
     /**
      * Returns UserGroupInformation for the login user for server specified by the configuration. Tries to re-use

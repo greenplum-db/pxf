@@ -27,17 +27,17 @@ import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DecoderFactory;
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.io.BytesWritable;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.Resolver;
+import org.greenplum.pxf.api.utilities.SpringContext;
 import org.greenplum.pxf.plugins.hdfs.avro.AvroUtilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.RecordkeyAdapter;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -49,8 +49,6 @@ import java.util.Map;
  * Class AvroResolver handles deserialization of records that were serialized
  * using the AVRO serialization framework.
  */
-@Component("AvroResolver")
-@RequestScope
 public class AvroResolver extends BasePlugin implements Resolver {
     private static final String MAPKEY_DELIM = ":";
     private static final String RECORDKEY_DELIM = ":";
@@ -64,12 +62,18 @@ public class AvroResolver extends BasePlugin implements Resolver {
     private String collectionDelim;
     private String mapkeyDelim;
     private String recordkeyDelim;
+    private int recordkeyIndex;
+    private Schema schema;
     private final AvroUtilities avroUtilities;
 
     /**
      * Constructs a new instance of the AvroFileAccessor
      */
-    public AvroResolver(AvroUtilities avroUtilities) {
+    public AvroResolver() {
+        this(SpringContext.getBean(AvroUtilities.class));
+    }
+
+    AvroResolver(AvroUtilities avroUtilities) {
         this.avroUtilities = avroUtilities;
     }
 
@@ -90,12 +94,10 @@ public class AvroResolver extends BasePlugin implements Resolver {
 
         fields = schema.getFields();
 
-        collectionDelim = context.getOption("COLLECTION_DELIM") == null ? COLLECTION_DELIM
-                : context.getOption("COLLECTION_DELIM");
-        mapkeyDelim = context.getOption("MAPKEY_DELIM") == null ? MAPKEY_DELIM
-                : context.getOption("MAPKEY_DELIM");
-        recordkeyDelim = context.getOption("RECORDKEY_DELIM") == null ? RECORDKEY_DELIM
-                : context.getOption("RECORDKEY_DELIM");
+        collectionDelim = StringUtils.defaultString(context.getOption("COLLECTION_DELIM"), COLLECTION_DELIM);
+        mapkeyDelim = StringUtils.defaultString(context.getOption("MAPKEY_DELIM"), MAPKEY_DELIM);
+        recordkeyDelim = StringUtils.defaultString(context.getOption("RECORDKEY_DELIM"), RECORDKEY_DELIM);
+        recordkeyIndex = (context.getRecordkeyColumn() == null) ? -1 : context.getRecordkeyColumn().columnIndex();
     }
 
     /**
@@ -109,10 +111,7 @@ public class AvroResolver extends BasePlugin implements Resolver {
         avroRecord = makeAvroRecord(row.getData(), avroRecord);
         List<OneField> record = new LinkedList<>();
 
-        int recordkeyIndex = (context.getRecordkeyColumn() == null) ? -1
-                : context.getRecordkeyColumn().columnIndex();
         int currentIndex = 0;
-
         for (Schema.Field field : fields) {
             /*
              * Add the record key if exists
@@ -125,7 +124,6 @@ public class AvroResolver extends BasePlugin implements Resolver {
             currentIndex += populateRecord(record,
                     avroRecord.get(field.name()), field.schema());
         }
-
         return record;
     }
 
@@ -137,7 +135,10 @@ public class AvroResolver extends BasePlugin implements Resolver {
      */
     @Override
     public OneRow setFields(List<OneField> record) {
-        GenericRecord genericRecord = new GenericData.Record((Schema) context.getMetadata());
+        if (schema == null) {
+            schema = (Schema) context.getMetadata();
+        }
+        GenericRecord genericRecord = new GenericData.Record(schema);
         int cnt = 0;
         for (OneField field : record) {
             if (field.type == DataType.BYTEA.getOID()) {

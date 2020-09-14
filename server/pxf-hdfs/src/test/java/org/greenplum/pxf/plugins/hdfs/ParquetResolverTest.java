@@ -105,8 +105,7 @@ public class ParquetResolverTest {
         // schema has changed, set metadata again
         context.setMetadata(schema);
         context.setTupleDescription(getColumnDescriptorsFromSchema(schema));
-        resolver.setRequestContext(context);
-        resolver.initialize(context);
+        resolver.afterPropertiesSet();
 
         Instant timestamp = Instant.parse("2013-07-14T04:00:05Z"); // UTC
         ZonedDateTime localTime = timestamp.atZone(ZoneId.systemDefault());
@@ -197,6 +196,7 @@ public class ParquetResolverTest {
         context.setMetadata(schema);
         context.setTupleDescription(getColumnDescriptorsFromSchema(schema));
         resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
         List<OneField> fields = new ArrayList<>();
         fields.add(new OneField(DataType.TEXT.getOID(), null));
         fields.add(new OneField(DataType.TEXT.getOID(), null));
@@ -231,6 +231,7 @@ public class ParquetResolverTest {
     @Test
     public void testGetFields_Primitive_EmptySchema() throws IOException {
         resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
 
         List<Group> groups = readParquetFile("primitive_types.parquet", 25, schema);
         OneRow row1 = new OneRow(groups.get(0)); // get row 1
@@ -245,6 +246,7 @@ public class ParquetResolverTest {
         context.setMetadata(schema);
         context.setTupleDescription(getColumnDescriptorsFromSchema(schema));
         resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
 
         List<Group> groups = readParquetFile("primitive_types.parquet", 25, schema);
         assertEquals(25, groups.size());
@@ -314,6 +316,7 @@ public class ParquetResolverTest {
         context.setMetadata(readSchema);
 
         resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
 
         // use readSchema to read only specific columns from parquet file into Group
         List<Group> groups = readParquetFile("primitive_types.parquet", 25, readSchema);
@@ -378,6 +381,7 @@ public class ParquetResolverTest {
         context.setMetadata(schema);
         context.setTupleDescription(getColumnDescriptorsFromSchema(schema));
         resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
 
         List<Group> groups = readParquetFile("proto-repeated-string.parquet", 3, schema);
         List<OneField> fields;
@@ -407,6 +411,7 @@ public class ParquetResolverTest {
         context.setMetadata(schema);
         context.setTupleDescription(getColumnDescriptorsFromSchema(schema));
         resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
 
         /*
         Corresponding DB column types  are:
@@ -509,6 +514,7 @@ public class ParquetResolverTest {
         context.setMetadata(schema);
         context.setTupleDescription(getColumnDescriptorsFromSchema(schema));
         resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
 
         List<Group> groups = readParquetFile("old-repeated-int.parquet", 1, schema);
         List<OneField> fields = assertRow(groups, 0, 1);
@@ -617,6 +623,7 @@ public class ParquetResolverTest {
         context.setTupleDescription(columnDescriptors);
 
         resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
 
         List<OneField> fields = new ArrayList<>();
         fields.add(new OneField(DataType.TEXT.getOID(), varchar));

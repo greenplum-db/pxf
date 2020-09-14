@@ -10,13 +10,14 @@ import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.Fragmenter;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.RequestContext.RequestType;
+import org.greenplum.pxf.api.utilities.FragmentMetadataSerDe;
 import org.greenplum.pxf.api.utilities.FragmenterCacheFactory;
 import org.greenplum.pxf.service.FakeTicker;
 import org.greenplum.pxf.service.RequestParser;
 import org.greenplum.pxf.service.security.SecurityService;
+import org.greenplum.pxf.service.utilities.BasePluginFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.context.ApplicationContext;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -39,7 +40,7 @@ import static org.mockito.Mockito.when;
 
 public class FragmenterResourceTest {
 
-    private ApplicationContext mockApplicationContext;
+    private BasePluginFactory mockPluginFactory;
     private MultiValueMap<String, String> mockRequestHeaders1;
     private MultiValueMap<String, String> mockRequestHeaders2;
     private Fragmenter fragmenter1;
@@ -55,7 +56,7 @@ public class FragmenterResourceTest {
     public void setup() {
 
         mockParser = mock(RequestParser.class);
-        mockApplicationContext = mock(ApplicationContext.class);
+        mockPluginFactory = mock(BasePluginFactory.class);
         FragmenterCacheFactory fragmenterCacheFactory = mock(FragmenterCacheFactory.class);
         mockRequestHeaders1 = mock(MultiValueMap.class);
         mockRequestHeaders2 = mock(MultiValueMap.class);
@@ -78,8 +79,9 @@ public class FragmenterResourceTest {
         FakeSecurityService fakeSecurityService = new FakeSecurityService();
 
         fragmenterResource = new FragmenterResource();
-        fragmenterResource.setApplicationContext(mockApplicationContext);
+        fragmenterResource.setPluginFactory(mockPluginFactory);
         fragmenterResource.setFragmenterCacheFactory(fragmenterCacheFactory);
+        fragmenterResource.setResponseFormatter(new FragmentsResponseFormatter(new FragmentMetadataSerDe()));
         fragmenterResource.setPxfServerProperties(mockPxfServerProperties);
         fragmenterResource.setConfigurationFactory(mockConfigurationFactory);
         fragmenterResource.setRequestParser(mockParser);
@@ -94,7 +96,7 @@ public class FragmenterResourceTest {
         context.setFragmenter(Fragmenter.class.getName());
 
         when(mockParser.parseRequest(mockRequestHeaders1, RequestType.FRAGMENTER)).thenReturn(context);
-        when(mockApplicationContext.getBean("Fragmenter", Fragmenter.class)).thenReturn(fragmenter1);
+        when(mockPluginFactory.getPlugin(context, context.getFragmenter())).thenReturn(fragmenter1);
 
         fragmenterResource.getFragments(mockRequestHeaders1);
         verify(fragmenter1, times(1)).getFragments();
@@ -182,8 +184,9 @@ public class FragmenterResourceTest {
 
         when(mockParser.parseRequest(mockRequestHeaders1, RequestType.FRAGMENTER)).thenReturn(context1);
         when(mockParser.parseRequest(mockRequestHeaders2, RequestType.FRAGMENTER)).thenReturn(context2);
-        when(mockApplicationContext.getBean("Fragmenter1", Fragmenter.class)).thenReturn(fragmenter1);
-        when(mockApplicationContext.getBean("Fragmenter2", Fragmenter.class)).thenReturn(fragmenter2);
+
+        when(mockPluginFactory.getPlugin(context1, context1.getFragmenter())).thenReturn(fragmenter1);
+        when(mockPluginFactory.getPlugin(context2, context2.getFragmenter())).thenReturn(fragmenter2);
 
         when(fragmenter1.getFragments()).thenReturn(fragmentList);
 
@@ -218,8 +221,8 @@ public class FragmenterResourceTest {
 
         when(mockParser.parseRequest(mockRequestHeaders1, RequestType.FRAGMENTER)).thenReturn(context1);
         when(mockParser.parseRequest(mockRequestHeaders2, RequestType.FRAGMENTER)).thenReturn(context2);
-        when(mockApplicationContext.getBean("Fragmenter1", Fragmenter.class)).thenReturn(fragmenter1);
-        when(mockApplicationContext.getBean("Fragmenter2", Fragmenter.class)).thenReturn(fragmenter2);
+        when(mockPluginFactory.getPlugin(context1, context1.getFragmenter())).thenReturn(fragmenter1);
+        when(mockPluginFactory.getPlugin(context2, context2.getFragmenter())).thenReturn(fragmenter2);
 
         when(fragmenter1.getFragments()).thenReturn(fragmentList1);
         when(fragmenter2.getFragments()).thenReturn(fragmentList2);
@@ -247,10 +250,9 @@ public class FragmenterResourceTest {
         int threadCount = 100;
         Thread[] threads = new Thread[threadCount];
         final Fragmenter fragmenter = mock(Fragmenter.class);
-        when(mockApplicationContext.getBean("Fragmenter", Fragmenter.class)).thenReturn(fragmenter);
-
         final FakeRequestParser fakeRequestParser = new FakeRequestParser(threadCount);
         fragmenterResource.setRequestParser(fakeRequestParser);
+        when(mockPluginFactory.getPlugin(any(), any())).thenReturn(fragmenter);
 
         for (int i = 0; i < threads.length; i++) {
             int index = i;
@@ -309,8 +311,8 @@ public class FragmenterResourceTest {
 
         when(mockParser.parseRequest(mockRequestHeaders1, RequestType.FRAGMENTER)).thenReturn(context1);
         when(mockParser.parseRequest(mockRequestHeaders2, RequestType.FRAGMENTER)).thenReturn(context2);
-        when(mockApplicationContext.getBean("Fragmenter1", Fragmenter.class)).thenReturn(fragmenter1);
-        when(mockApplicationContext.getBean("Fragmenter2", Fragmenter.class)).thenReturn(fragmenter2);
+        when(mockPluginFactory.getPlugin(context1, context1.getFragmenter())).thenReturn(fragmenter1);
+        when(mockPluginFactory.getPlugin(context2, context2.getFragmenter())).thenReturn(fragmenter2);
 
         when(fragmenter1.getFragments()).thenReturn(fragmentList1);
         when(fragmenter2.getFragments()).thenReturn(fragmentList2);

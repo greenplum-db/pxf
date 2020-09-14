@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
@@ -13,33 +14,20 @@ import java.io.IOException;
  * This class serializes and deserializes {@link FragmentMetadata} objects into
  * JSON.
  */
+@Component
 public class FragmentMetadataSerDe extends StdSerializer<FragmentMetadata> {
 
     private static final long serialVersionUID = 123173996615107417L;
     private static final String CLASSNAME = "className";
 
-    /**
-     * Singleton instance of the FragmentMetadataSerDe
-     */
-    private static final FragmentMetadataSerDe INSTANCE = new FragmentMetadataSerDe();
-
-    public final ObjectMapper mapper;
+    private final ObjectMapper mapper;
 
     /**
      * Private constructor to prevent initialization
      */
-    private FragmentMetadataSerDe() {
+    public FragmentMetadataSerDe() {
         super(FragmentMetadata.class);
         mapper = new ObjectMapper();
-    }
-
-    /**
-     * Returns the singleton instance of this class
-     *
-     * @return the singleton instance of this class
-     */
-    public static FragmentMetadataSerDe getInstance() {
-        return INSTANCE;
     }
 
     @Override
