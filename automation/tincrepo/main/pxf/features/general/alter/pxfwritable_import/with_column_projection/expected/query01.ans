@@ -1,0 +1,284 @@
+-- start_ignore
+-- end_ignore
+-- @description query01 test altering table, dropping columns and then adding them back
+-- sets the date style and bytea output to the expected by the tests
+SET datestyle='ISO, MDY';
+SET
+SET bytea_output='escape';
+SET
+SELECT s1, s2, n1, d1, dc1, CAST(tm AS TIMESTAMP WITH TIME ZONE) AT TIME ZONE 'PDT' as tm, f, bg, b, tn, sml, vc1, c1, bin FROM pxf_alter_parquet_table ORDER BY s1;
+          s1          |  s2  | n1 | d1 |             dc1              |         tm          |  f   |    bg    | b | tn | sml  |  vc1  | c1  | bin 
+----------------------+------+----+----+------------------------------+---------------------+------+----------+---+----+------+-------+-----+-----
+ row1                 | s_6  |  1 |  6 |         1.234560000000000000 | 2013-07-13 21:00:05 |  7.7 | 23456789 | f |  1 |   10 | abcd  | abc | 1
+ row10                | s_15 | 10 | 15 |     45678.000023400890000000 | 2013-07-22 21:00:05 |  7.7 | 23456789 | t | 10 | 1000 | abcde | abc | 0
+ row11                | s_16 | 11 | 37 |         0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f | 11 | 1100 | abcde | ab  | 1
+ row12_text_null      |      | 11 | 37 |         0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f | 11 | 1100 | abcde | ab  | 1
+ row13_int_null       | s_16 |    | 37 |         0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f | 11 | 1100 | abcde | ab  | 1
+ row14_double_null    | s_16 | 11 |    |         0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f | 11 | 1100 | abcde | ab  | 1
+ row15_decimal_null   | s_17 | 12 | 38 |                              | 2013-07-24 21:00:05 |  7.7 | 23456789 | f | 11 | 1100 | abcde | ab  | 1
+ row16_timestamp_null | s_16 | 11 | 37 |         0.123456789012345679 |                     |  7.7 | 23456789 | f | 11 | 1100 | abcde | ab  | 1
+ row17_real_null      | s_16 | 11 | 37 |         0.123456789012345679 | 2013-07-23 21:00:05 |      | 23456789 | f | 11 | 1100 | abcde | ab  | 1
+ row18_bigint_null    | s_16 | 11 | 37 |         0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 |          | f | 11 | 1100 | abcde | ab  | 1
+ row19_bool_null      | s_16 | 11 | 37 |         0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 |   | 11 | 1100 | abcde | ab  | 1
+ row2                 | s_7  |  2 |  7 |         1.234560000000000000 | 2013-07-13 21:00:05 |  8.7 | 23456789 | t |  2 |   20 | abcde | abc | 2
+ row20_tinyint_null   | s_16 | 11 | 37 |         0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f |    | 1100 | abcde | ab  | 1
+ row21_smallint_null  | s_16 | 11 | 37 |         0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f | 11 |      | abcde | ab  | 1
+ row22_date_null      | s_16 | 11 | 37 |         0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f | 11 | 1100 | abcde | ab  | 1
+ row23_varchar_null   | s_16 | 11 | 37 |         0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f | 11 | 1100 |       | ab  | 1
+ row24_char_null      | s_16 | 11 | 37 |         0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f | 11 | 1100 | abcde |     | 1
+ row25_binary_null    | s_16 | 11 | 37 |         0.123456789012345679 | 2013-07-23 21:00:05 |  7.7 | 23456789 | f |  1 | 1100 | abcde | ab  | 
+ row3                 | s_8  |  3 |  8 |        -1.234560000000000000 | 2013-07-15 21:00:05 |  9.7 | 23456789 | f |  3 |  300 | abcde | abc | 3
+ row4                 | s_9  |  4 |  9 | 123456789.123456789000000000 | 2013-07-16 21:00:05 | 10.7 | 23456789 | t |  4 |  400 | abcde | abc | 4
+ row5                 | s_10 |  5 | 10 |         0.000000000001000000 | 2013-07-17 21:00:05 | 11.7 | 23456789 | f |  5 |  500 | abcde | abc | 5
+ row6                 | s_11 |  6 | 11 |      1234.888999911100000000 | 2013-07-18 21:00:05 | 12.7 | 23456789 | t |  6 |  600 | abcde | abc | 6
+ row7                 | s_12 |  7 | 12 |         0.000100000000000000 | 2013-07-19 21:00:05 |  7.7 | 23456789 | f |  7 |  700 | abcde | abc | 7
+ row8                 | s_13 |  8 | 13 |     45678.000023400890000000 | 2013-07-20 21:00:05 |  7.7 | 23456789 | t |  8 |  800 | abcde | abc | 8
+ row9                 | s_14 |  9 | 14 |     23457.100000000000000000 | 2013-07-21 21:00:05 |  7.7 | 23456789 | f |  9 |  900 | abcde | abc | 9
+(25 rows)
+
+-- Drop one of the columns
+ALTER EXTERNAL TABLE pxf_alter_parquet_table DROP COLUMN tm;
+ALTER EXTERNAL TABLE
+-- Select query after alter
+SELECT s1, s2, n1, d1, dc1, f, bg, b, tn, sml, vc1, c1, bin FROM pxf_alter_parquet_table ORDER BY s1;
+          s1          |  s2  | n1 | d1 |             dc1              |  f   |    bg    | b | tn | sml  |  vc1  | c1  | bin 
+----------------------+------+----+----+------------------------------+------+----------+---+----+------+-------+-----+-----
+ row1                 | s_6  |  1 |  6 |         1.234560000000000000 |  7.7 | 23456789 | f |  1 |   10 | abcd  | abc | 1
+ row10                | s_15 | 10 | 15 |     45678.000023400890000000 |  7.7 | 23456789 | t | 10 | 1000 | abcde | abc | 0
+ row11                | s_16 | 11 | 37 |         0.123456789012345679 |  7.7 | 23456789 | f | 11 | 1100 | abcde | ab  | 1
+ row12_text_null      |      | 11 | 37 |         0.123456789012345679 |  7.7 | 23456789 | f | 11 | 1100 | abcde | ab  | 1
+ row13_int_null       | s_16 |    | 37 |         0.123456789012345679 |  7.7 | 23456789 | f | 11 | 1100 | abcde | ab  | 1
+ row14_double_null    | s_16 | 11 |    |         0.123456789012345679 |  7.7 | 23456789 | f | 11 | 1100 | abcde | ab  | 1
+ row15_decimal_null   | s_17 | 12 | 38 |                              |  7.7 | 23456789 | f | 11 | 1100 | abcde | ab  | 1
+ row16_timestamp_null | s_16 | 11 | 37 |         0.123456789012345679 |  7.7 | 23456789 | f | 11 | 1100 | abcde | ab  | 1
+ row17_real_null      | s_16 | 11 | 37 |         0.123456789012345679 |      | 23456789 | f | 11 | 1100 | abcde | ab  | 1
+ row18_bigint_null    | s_16 | 11 | 37 |         0.123456789012345679 |  7.7 |          | f | 11 | 1100 | abcde | ab  | 1
+ row19_bool_null      | s_16 | 11 | 37 |         0.123456789012345679 |  7.7 | 23456789 |   | 11 | 1100 | abcde | ab  | 1
+ row2                 | s_7  |  2 |  7 |         1.234560000000000000 |  8.7 | 23456789 | t |  2 |   20 | abcde | abc | 2
+ row20_tinyint_null   | s_16 | 11 | 37 |         0.123456789012345679 |  7.7 | 23456789 | f |    | 1100 | abcde | ab  | 1
+ row21_smallint_null  | s_16 | 11 | 37 |         0.123456789012345679 |  7.7 | 23456789 | f | 11 |      | abcde | ab  | 1
+ row22_date_null      | s_16 | 11 | 37 |         0.123456789012345679 |  7.7 | 23456789 | f | 11 | 1100 | abcde | ab  | 1
+ row23_varchar_null   | s_16 | 11 | 37 |         0.123456789012345679 |  7.7 | 23456789 | f | 11 | 1100 |       | ab  | 1
+ row24_char_null      | s_16 | 11 | 37 |         0.123456789012345679 |  7.7 | 23456789 | f | 11 | 1100 | abcde |     | 1
+ row25_binary_null    | s_16 | 11 | 37 |         0.123456789012345679 |  7.7 | 23456789 | f |  1 | 1100 | abcde | ab  | 
+ row3                 | s_8  |  3 |  8 |        -1.234560000000000000 |  9.7 | 23456789 | f |  3 |  300 | abcde | abc | 3
+ row4                 | s_9  |  4 |  9 | 123456789.123456789000000000 | 10.7 | 23456789 | t |  4 |  400 | abcde | abc | 4
+ row5                 | s_10 |  5 | 10 |         0.000000000001000000 | 11.7 | 23456789 | f |  5 |  500 | abcde | abc | 5
+ row6                 | s_11 |  6 | 11 |      1234.888999911100000000 | 12.7 | 23456789 | t |  6 |  600 | abcde | abc | 6
+ row7                 | s_12 |  7 | 12 |         0.000100000000000000 |  7.7 | 23456789 | f |  7 |  700 | abcde | abc | 7
+ row8                 | s_13 |  8 | 13 |     45678.000023400890000000 |  7.7 | 23456789 | t |  8 |  800 | abcde | abc | 8
+ row9                 | s_14 |  9 | 14 |     23457.100000000000000000 |  7.7 | 23456789 | f |  9 |  900 | abcde | abc | 9
+(25 rows)
+
+-- Predicate push-down after alter
+SELECT s1, s2, n1, d1, dc1, f, bg, b, tn, sml, vc1, c1, bin FROM pxf_alter_parquet_table WHERE s2 = 's_7' ORDER BY s1;
+  s1  | s2  | n1 | d1 |         dc1          |  f  |    bg    | b | tn | sml |  vc1  | c1  | bin 
+------+-----+----+----+----------------------+-----+----------+---+----+-----+-------+-----+-----
+ row2 | s_7 |  2 |  7 | 1.234560000000000000 | 8.7 | 23456789 | t |  2 |  20 | abcde | abc | 2
+(1 row)
+
+-- Column projection after alter
+SELECT s1, d1 FROM pxf_alter_parquet_table ORDER BY s1;
+          s1          | d1 
+----------------------+----
+ row1                 |  6
+ row10                | 15
+ row11                | 37
+ row12_text_null      | 37
+ row13_int_null       | 37
+ row14_double_null    |   
+ row15_decimal_null   | 38
+ row16_timestamp_null | 37
+ row17_real_null      | 37
+ row18_bigint_null    | 37
+ row19_bool_null      | 37
+ row2                 |  7
+ row20_tinyint_null   | 37
+ row21_smallint_null  | 37
+ row22_date_null      | 37
+ row23_varchar_null   | 37
+ row24_char_null      | 37
+ row25_binary_null    | 37
+ row3                 |  8
+ row4                 |  9
+ row5                 | 10
+ row6                 | 11
+ row7                 | 12
+ row8                 | 13
+ row9                 | 14
+(25 rows)
+
+-- Drop multiple columns
+ALTER EXTERNAL TABLE pxf_alter_parquet_table
+    DROP COLUMN n1,
+    DROP COLUMN dc1,
+    DROP COLUMN bg,
+    DROP COLUMN vc1,
+    DROP COLUMN bin;
+ALTER EXTERNAL TABLE
+-- Select query after alter
+SELECT * FROM pxf_alter_parquet_table ORDER BY s1;
+          s1          |  s2  | d1 |  f   | b | tn | sml  | c1  
+----------------------+------+----+------+---+----+------+-----
+ row1                 | s_6  |  6 |  7.7 | f |  1 |   10 | abc
+ row10                | s_15 | 15 |  7.7 | t | 10 | 1000 | abc
+ row11                | s_16 | 37 |  7.7 | f | 11 | 1100 | ab 
+ row12_text_null      |      | 37 |  7.7 | f | 11 | 1100 | ab 
+ row13_int_null       | s_16 | 37 |  7.7 | f | 11 | 1100 | ab 
+ row14_double_null    | s_16 |    |  7.7 | f | 11 | 1100 | ab 
+ row15_decimal_null   | s_17 | 38 |  7.7 | f | 11 | 1100 | ab 
+ row16_timestamp_null | s_16 | 37 |  7.7 | f | 11 | 1100 | ab 
+ row17_real_null      | s_16 | 37 |      | f | 11 | 1100 | ab 
+ row18_bigint_null    | s_16 | 37 |  7.7 | f | 11 | 1100 | ab 
+ row19_bool_null      | s_16 | 37 |  7.7 |   | 11 | 1100 | ab 
+ row2                 | s_7  |  7 |  8.7 | t |  2 |   20 | abc
+ row20_tinyint_null   | s_16 | 37 |  7.7 | f |    | 1100 | ab 
+ row21_smallint_null  | s_16 | 37 |  7.7 | f | 11 |      | ab 
+ row22_date_null      | s_16 | 37 |  7.7 | f | 11 | 1100 | ab 
+ row23_varchar_null   | s_16 | 37 |  7.7 | f | 11 | 1100 | ab 
+ row24_char_null      | s_16 | 37 |  7.7 | f | 11 | 1100 | 
+ row25_binary_null    | s_16 | 37 |  7.7 | f |  1 | 1100 | ab 
+ row3                 | s_8  |  8 |  9.7 | f |  3 |  300 | abc
+ row4                 | s_9  |  9 | 10.7 | t |  4 |  400 | abc
+ row5                 | s_10 | 10 | 11.7 | f |  5 |  500 | abc
+ row6                 | s_11 | 11 | 12.7 | t |  6 |  600 | abc
+ row7                 | s_12 | 12 |  7.7 | f |  7 |  700 | abc
+ row8                 | s_13 | 13 |  7.7 | t |  8 |  800 | abc
+ row9                 | s_14 | 14 |  7.7 | f |  9 |  900 | abc
+(25 rows)
+
+-- Predicate push-down after dropping multiple columns
+SELECT * FROM pxf_alter_parquet_table WHERE sml = 20 ORDER BY s1;
+  s1  | s2  | d1 |  f  | b | tn | sml | c1  
+------+-----+----+-----+---+----+-----+-----
+ row2 | s_7 |  7 | 8.7 | t |  2 |  20 | abc
+(1 row)
+
+-- Column projection after dropping multiple columns
+SELECT f, tn FROM pxf_alter_parquet_table ORDER BY s1;
+  f   | tn 
+------+----
+  7.7 |  1
+  7.7 | 10
+  7.7 | 11
+  7.7 | 11
+  7.7 | 11
+  7.7 | 11
+  7.7 | 11
+  7.7 | 11
+      | 11
+  7.7 | 11
+  7.7 | 11
+  8.7 |  2
+  7.7 |   
+  7.7 | 11
+  7.7 | 11
+  7.7 | 11
+  7.7 | 11
+  7.7 |  1
+  9.7 |  3
+ 10.7 |  4
+ 11.7 |  5
+ 12.7 |  6
+  7.7 |  7
+  7.7 |  8
+  7.7 |  9
+(25 rows)
+
+-- Add one of the columns back to the table
+ALTER EXTERNAL TABLE pxf_alter_parquet_table ADD COLUMN n1 INT;
+ALTER EXTERNAL TABLE
+-- Select query after adding the column back
+SELECT * FROM pxf_alter_parquet_table ORDER BY s1;
+          s1          |  s2  | d1 |  f   | b | tn | sml  | c1  | n1 
+----------------------+------+----+------+---+----+------+-----+----
+ row1                 | s_6  |  6 |  7.7 | f |  1 |   10 | abc |  1
+ row10                | s_15 | 15 |  7.7 | t | 10 | 1000 | abc | 10
+ row11                | s_16 | 37 |  7.7 | f | 11 | 1100 | ab  | 11
+ row12_text_null      |      | 37 |  7.7 | f | 11 | 1100 | ab  | 11
+ row13_int_null       | s_16 | 37 |  7.7 | f | 11 | 1100 | ab  |   
+ row14_double_null    | s_16 |    |  7.7 | f | 11 | 1100 | ab  | 11
+ row15_decimal_null   | s_17 | 38 |  7.7 | f | 11 | 1100 | ab  | 12
+ row16_timestamp_null | s_16 | 37 |  7.7 | f | 11 | 1100 | ab  | 11
+ row17_real_null      | s_16 | 37 |      | f | 11 | 1100 | ab  | 11
+ row18_bigint_null    | s_16 | 37 |  7.7 | f | 11 | 1100 | ab  | 11
+ row19_bool_null      | s_16 | 37 |  7.7 |   | 11 | 1100 | ab  | 11
+ row2                 | s_7  |  7 |  8.7 | t |  2 |   20 | abc |  2
+ row20_tinyint_null   | s_16 | 37 |  7.7 | f |    | 1100 | ab  | 11
+ row21_smallint_null  | s_16 | 37 |  7.7 | f | 11 |      | ab  | 11
+ row22_date_null      | s_16 | 37 |  7.7 | f | 11 | 1100 | ab  | 11
+ row23_varchar_null   | s_16 | 37 |  7.7 | f | 11 | 1100 | ab  | 11
+ row24_char_null      | s_16 | 37 |  7.7 | f | 11 | 1100 |     | 11
+ row25_binary_null    | s_16 | 37 |  7.7 | f |  1 | 1100 | ab  | 11
+ row3                 | s_8  |  8 |  9.7 | f |  3 |  300 | abc |  3
+ row4                 | s_9  |  9 | 10.7 | t |  4 |  400 | abc |  4
+ row5                 | s_10 | 10 | 11.7 | f |  5 |  500 | abc |  5
+ row6                 | s_11 | 11 | 12.7 | t |  6 |  600 | abc |  6
+ row7                 | s_12 | 12 |  7.7 | f |  7 |  700 | abc |  7
+ row8                 | s_13 | 13 |  7.7 | t |  8 |  800 | abc |  8
+ row9                 | s_14 | 14 |  7.7 | f |  9 |  900 | abc |  9
+(25 rows)
+
+-- Predicate push-down after adding one column back
+SELECT * FROM pxf_alter_parquet_table WHERE n1 <= 5 ORDER BY s1;
+  s1  |  s2  | d1 |  f   | b | tn | sml | c1  | n1 
+------+------+----+------+---+----+-----+-----+----
+ row1 | s_6  |  6 |  7.7 | f |  1 |  10 | abc |  1
+ row2 | s_7  |  7 |  8.7 | t |  2 |  20 | abc |  2
+ row3 | s_8  |  8 |  9.7 | f |  3 | 300 | abc |  3
+ row4 | s_9  |  9 | 10.7 | t |  4 | 400 | abc |  4
+ row5 | s_10 | 10 | 11.7 | f |  5 | 500 | abc |  5
+(5 rows)
+
+-- Column projection after adding one column back
+SELECT s1, n1 FROM pxf_alter_parquet_table ORDER BY s1;
+          s1          | n1 
+----------------------+----
+ row1                 |  1
+ row10                | 10
+ row11                | 11
+ row12_text_null      | 11
+ row13_int_null       |   
+ row14_double_null    | 11
+ row15_decimal_null   | 12
+ row16_timestamp_null | 11
+ row17_real_null      | 11
+ row18_bigint_null    | 11
+ row19_bool_null      | 11
+ row2                 |  2
+ row20_tinyint_null   | 11
+ row21_smallint_null  | 11
+ row22_date_null      | 11
+ row23_varchar_null   | 11
+ row24_char_null      | 11
+ row25_binary_null    | 11
+ row3                 |  3
+ row4                 |  4
+ row5                 |  5
+ row6                 |  6
+ row7                 |  7
+ row8                 |  8
+ row9                 |  9
+(25 rows)
+
+-- Edge cases
+-- Drop the first column
+ALTER EXTERNAL TABLE pxf_alter_parquet_table DROP COLUMN s1;
+ALTER EXTERNAL TABLE
+-- Select query after dropping the first column
+SELECT * FROM pxf_alter_parquet_table WHERE s2 <> 's_16' ORDER BY s2;
+  s2  | d1 |  f   | b | tn | sml  | c1  | n1 
+------+----+------+---+----+------+-----+----
+ s_10 | 10 | 11.7 | f |  5 |  500 | abc |  5
+ s_11 | 11 | 12.7 | t |  6 |  600 | abc |  6
+ s_12 | 12 |  7.7 | f |  7 |  700 | abc |  7
+ s_13 | 13 |  7.7 | t |  8 |  800 | abc |  8
+ s_14 | 14 |  7.7 | f |  9 |  900 | abc |  9
+ s_15 | 15 |  7.7 | t | 10 | 1000 | abc | 10
+ s_17 | 38 |  7.7 | f | 11 | 1100 | ab  | 12
+ s_6  |  6 |  7.7 | f |  1 |   10 | abc |  1
+ s_7  |  7 |  8.7 | t |  2 |   20 | abc |  2
+ s_8  |  8 |  9.7 | f |  3 |  300 | abc |  3
+ s_9  |  9 | 10.7 | t |  4 |  400 | abc |  4
+(11 rows)
+

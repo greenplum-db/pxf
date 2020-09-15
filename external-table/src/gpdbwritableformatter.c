@@ -323,9 +323,25 @@ boolArrayToByteArray(bool *data, int len, int *outlen)
 /*
  * Helper routine to convert byte array to boolean array
  * It'll write the output to booldata.
+ *
+ * This routine supports dropped columns, in the case of tables with dropped
+ * columns booldata's size will match the number of original columns
+ * (including dropped columns), and the source `data` will match the number
+ * of columns provided by the PXF server, so if there are dropped columns,
+ * PXF server will only provide the subset of columns. Below a graphical
+ * representation of the mapping.
+ *
+ *  --------------------------------------------
+ * |  col1  |  col2  |  col3  |  col5  |  col6  |  input: *data
+ *  --------------------------------------------
+ *     |        |        |         |        └----------------⬎
+ *     ↓        ↓        ↓         └----------------⬎        ↓
+ *  -------------------------------------------------------------
+ * |  col1  |  col2  |  col3  |  col4 (dropped)  | col5  | col6  | output: **booldata
+ *  -------------------------------------------------------------
  */
 static void
-byteArrayToBoolArray(bits8 *data, int len, bool **booldata, int boollen)
+byteArrayToBoolArray(bits8 *data, int len, bool **booldata, int boollen, TupleDesc tupdesc)
 {
 	int			i,
 				j,
@@ -333,6 +349,13 @@ byteArrayToBoolArray(bits8 *data, int len, bool **booldata, int boollen)
 
 	for (i = 0, j = 0, k = 7; i < boollen; i++)
 	{
+		/* Ignore dropped attributes. */
+		if (tupdesc->attrs[i]->attisdropped)
+		{
+			(*booldata)[i] = true;
+			continue;
+		}
+
 		(*booldata)[i] = ((data[j] >> k--) & 0x01) == 1;
 		if (k < 0)
 		{
@@ -346,23 +369,30 @@ byteArrayToBoolArray(bits8 *data, int len, bool **booldata, int boollen)
  * Verify external table definition matches to input data columns
  */
 static void
-verifyExternalTableDefinition(int16 ncolumns_remote, AttrNumber ncolumns, TupleDesc tupdesc, char *data_buf, int *bufidx)
+verifyExternalTableDefinition(int16 ncolumns_remote, AttrNumber nvalidcolumns, AttrNumber ncolumns, TupleDesc tupdesc, char *data_buf, int *bufidx)
 {
+	int			   i;
 	StringInfoData errMsg;
+	Oid			   input_type;
+	Oid			   defined_type;
+	int8		   enumType;
 
-	initStringInfo(&errMsg);
-
-	if (ncolumns_remote != ncolumns)
+	if (ncolumns_remote != nvalidcolumns)
 		ereport(ERROR, (errcode(ERRCODE_INVALID_TABLE_DEFINITION),
 						errmsg("input data column count (%d) did not match the external table definition",
 							   ncolumns_remote)));
 
+	initStringInfo(&errMsg);
+
 	/* Extract Column Type and check against External Table definition */
-	for (int i = 0; i < ncolumns; i++)
+	for (i = 0; i < ncolumns; i++)
 	{
-		Oid			input_type = 0;
-		Oid			defined_type = tupdesc->attrs[i]->atttypid;
-		int8		enumType = readInt1FromBuffer(data_buf, bufidx);
+		/* Ignore dropped attributes. */
+		if (tupdesc->attrs[i]->attisdropped) continue;
+
+		input_type = 0;
+		defined_type = tupdesc->attrs[i]->atttypid;
+		enumType = readInt1FromBuffer(data_buf, bufidx);
 
 		/* Convert enumType to type oid */
 		input_type = getTypeOidFromJavaEnumOrdinal(enumType);
@@ -616,14 +646,15 @@ gpdbwritableformatter_import(PG_FUNCTION_ARGS)
 	MemoryContext per_row_ctx,
 				oldcontext;
 	format_t   *myData;
-	AttrNumber	ncolumns = 0;
+	AttrNumber	ncolumns;
+	AttrNumber	nvalidcolumns = 0;
 	AttrNumber	i;
 	char	   *data_buf;
 	int			data_cur;
 	int			data_len;
-	int			tuplelen = 0;
+	int			tuplelen;
 	int			bufidx = 0;
-	int16		version = 0;
+	int16		version;
 	int8		error_flag = 0;
 	int16		ncolumns_remote = 0;
 	int			remaining = 0;
@@ -638,6 +669,11 @@ gpdbwritableformatter_import(PG_FUNCTION_ARGS)
 	/* Get our internal description of the formatter */
 	ncolumns = tupdesc->natts;
 	myData = (format_t *) FORMATTER_GET_USER_CTX(fcinfo);
+
+	/* Get the number of valid columns, excluding dropped columns */
+	for (i = 0; i < ncolumns; i++)
+		if (!tupdesc->attrs[i]->attisdropped)
+			nvalidcolumns++;
 
 	/*
 	 * Initialize the context structure
@@ -661,10 +697,9 @@ gpdbwritableformatter_import(PG_FUNCTION_ARGS)
 			Oid			type = tupdesc->attrs[i]->atttypid;
 			Oid			functionId;
 
-			/* External table do not support dropped columns; error out now */
+			/* Ignore dropped attributes. */
 			if (tupdesc->attrs[i]->attisdropped)
-				ereport(ERROR, (errcode(ERRCODE_EXTERNAL_ROUTINE_EXCEPTION),
-								errmsg("cannot handle external table with dropped columns")));
+				continue;
 
 			/* Get the text/binary "receive" function */
 			if (isBinaryFormatType(type))
@@ -757,27 +792,27 @@ gpdbwritableformatter_import(PG_FUNCTION_ARGS)
 
 	/* Verify once on the first row */
 	if (FIRST_LINE_NUM == myData->lineno++)
-	{
-		verifyExternalTableDefinition(ncolumns_remote, ncolumns, tupdesc, data_buf, &bufidx);
-	}
-	/* Skipping the columns' enum types */
-	else
-	{
-		bufidx += ncolumns;
-	}
+		verifyExternalTableDefinition(ncolumns_remote, nvalidcolumns, ncolumns, tupdesc, data_buf, &bufidx);
+	else /* Skip the columns' enum types */
+		bufidx += ncolumns_remote;
 
 	/* Extract null bit array */
 	{
-		int			nullByteLen = getNullByteArraySize(ncolumns);
+		int			nullByteLen = getNullByteArraySize(ncolumns_remote);
 		bits8	   *nullByteArray = (bits8 *) (data_buf + bufidx);
 
 		bufidx += nullByteLen;
-		byteArrayToBoolArray(nullByteArray, nullByteLen, &myData->nulls, ncolumns);
+		byteArrayToBoolArray(nullByteArray, nullByteLen, &myData->nulls, ncolumns, tupdesc);
 	}
 
 	/* extract column value */
 	for (i = 0; i < ncolumns; i++)
 	{
+		Form_pg_attribute attr = tupdesc->attrs[i];
+
+		/* Ignore dropped attributes. */
+		if (attr->attisdropped) continue;
+
 		if (!myData->nulls[i])
 		{
 			FmgrInfo   *iofunc = &(myData->io_functions[i]);
@@ -787,7 +822,7 @@ gpdbwritableformatter_import(PG_FUNCTION_ARGS)
 			 * align int4 because we're reading a length header. we'll get the
 			 * payload length from the first 4 byte.
 			 */
-			if (isVariableLength(tupdesc->attrs[i]->atttypid))
+			if (isVariableLength(attr->atttypid))
 			{
 				bufidx = INTALIGN(bufidx);
 				myData->outlen[i] = readIntFromBuffer(data_buf, &bufidx);
@@ -799,11 +834,11 @@ gpdbwritableformatter_import(PG_FUNCTION_ARGS)
 			 */
 			else
 			{
-				bufidx = att_align_nominal(bufidx, tupdesc->attrs[i]->attalign);
-				myData->outlen[i] = tupdesc->attrs[i]->attlen;
+				bufidx = att_align_nominal(bufidx, attr->attalign);
+				myData->outlen[i] = attr->attlen;
 			}
 
-			if (isBinaryFormatType(tupdesc->attrs[i]->atttypid))
+			if (isBinaryFormatType(attr->atttypid))
 			{
 				StringInfoData tmpbuf;
 
@@ -815,14 +850,14 @@ gpdbwritableformatter_import(PG_FUNCTION_ARGS)
 				myData->values[i] = ReceiveFunctionCall(iofunc,
 														&tmpbuf,
 														myData->typioparams[i],
-														tupdesc->attrs[i]->atttypmod);
+														attr->atttypmod);
 			}
 			else
 			{
 				myData->values[i] = InputFunctionCall(iofunc,
 													  data_buf + bufidx,
 													  myData->typioparams[i],
-													  tupdesc->attrs[i]->atttypmod);
+													  attr->atttypmod);
 			}
 			bufidx += myData->outlen[i];
 		}

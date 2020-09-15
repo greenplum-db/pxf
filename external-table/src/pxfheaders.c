@@ -33,7 +33,7 @@ static void add_alignment_size_httpheader(CHURL_HEADERS headers);
 static void add_tuple_desc_httpheader(CHURL_HEADERS headers, Relation rel);
 static void add_location_options_httpheader(CHURL_HEADERS headers, GPHDUri *gphduri);
 static char *get_format_name(char fmtcode);
-static void add_projection_desc_httpheader(CHURL_HEADERS headers, ProjectionInfo *projInfo, List *qualsAttributes);
+static void add_projection_desc_httpheader(CHURL_HEADERS headers, ProjectionInfo *projInfo, List *qualsAttributes, Relation rel);
 static bool add_attnums_from_targetList(Node *node, List *attnums);
 static void add_projection_index_header(CHURL_HEADERS pVoid, StringInfoData data, int attno, char number[32]);
 #if PG_VERSION_NUM < 90400
@@ -98,7 +98,7 @@ build_http_headers(PxfInputData *input)
 		if (qualsAreSupported &&
 			(qualsAttributes != NIL || list_length(input->quals) == 0))
 		{
-			add_projection_desc_httpheader(headers, proj_info, qualsAttributes);
+			add_projection_desc_httpheader(headers, proj_info, qualsAttributes, rel);
 		}
 		else
 		{
@@ -170,65 +170,79 @@ add_alignment_size_httpheader(CHURL_HEADERS headers)
  * X-GP-ATTR-TYPENAMEX - attribute X's type name (e.g, "boolean")
  * optional - X-GP-ATTR-TYPEMODX-COUNT - total number of modifier for attribute X
  * optional - X-GP-ATTR-TYPEMODX-Y - attribute X's modifiers Y (types which have precision info, like numeric(p,s))
+ *
+ * If a column has been dropped from the external table definition, that
+ * column will not be reported to the PXF server (as if it never existed).
+ * For example:
+ *
+ *  ---------------------------------------------
+ * |  col1  |  col2  |  col3 (dropped)  |  col4  |
+ *  ---------------------------------------------
+ *
+ * Col4 will appear as col3 to the PXF server as if col3 never existed, and
+ * only 3 columns will be reported to PXF server.
  */
 static void
 add_tuple_desc_httpheader(CHURL_HEADERS headers, Relation rel)
 {
-	char           long_number[sizeof(int32) * 8];
-	StringInfoData formatter;
-	TupleDesc      tuple;
+	int				i, attrIx;
+	char			long_number[sizeof(int32) * 8];
+	StringInfoData	formatter;
+	TupleDesc		tuple;
 
 	initStringInfo(&formatter);
 
 	/* Get tuple description itself */
 	tuple = RelationGetDescr(rel);
 
-	/* Convert the number of attributes to a string */
-	pg_ltoa(tuple->natts, long_number);
-	churl_headers_append(headers, "X-GP-ATTRS", long_number);
-
 	/* Iterate attributes */
-	for (int i = 0; i < tuple->natts; ++i)
+	for (i = 0, attrIx = 0; i < tuple->natts; ++i)
 	{
+		FormData_pg_attribute *attribute = tuple->attrs[i];
+
+		/* Ignore dropped attributes. */
+		if (attribute->attisdropped)
+			continue;
+
 		/* Add a key/value pair for attribute name */
 		resetStringInfo(&formatter);
-		appendStringInfo(&formatter, "X-GP-ATTR-NAME%u", i);
-		churl_headers_append(headers, formatter.data, tuple->attrs[i]->attname.data);
+		appendStringInfo(&formatter, "X-GP-ATTR-NAME%u", attrIx);
+		churl_headers_append(headers, formatter.data, attribute->attname.data);
 
 		/* Add a key/value pair for attribute type */
 		resetStringInfo(&formatter);
-		appendStringInfo(&formatter, "X-GP-ATTR-TYPECODE%u", i);
-		pg_ltoa(tuple->attrs[i]->atttypid, long_number);
+		appendStringInfo(&formatter, "X-GP-ATTR-TYPECODE%u", attrIx);
+		pg_ltoa(attribute->atttypid, long_number);
 		churl_headers_append(headers, formatter.data, long_number);
 
 		/* Add a key/value pair for attribute type name */
 		resetStringInfo(&formatter);
-		appendStringInfo(&formatter, "X-GP-ATTR-TYPENAME%u", i);
-		churl_headers_append(headers, formatter.data, TypeOidGetTypename(tuple->attrs[i]->atttypid));
+		appendStringInfo(&formatter, "X-GP-ATTR-TYPENAME%u", attrIx);
+		churl_headers_append(headers, formatter.data, TypeOidGetTypename(attribute->atttypid));
 
 		/* Add attribute type modifiers if any */
-		if (tuple->attrs[i]->atttypmod > -1)
+		if (attribute->atttypmod > -1)
 		{
-			switch (tuple->attrs[i]->atttypid)
+			switch (attribute->atttypid)
 			{
 				case NUMERICOID:
 					{
 						resetStringInfo(&formatter);
-						appendStringInfo(&formatter, "X-GP-ATTR-TYPEMOD%u-COUNT", i);
+						appendStringInfo(&formatter, "X-GP-ATTR-TYPEMOD%u-COUNT", attrIx);
 						pg_ltoa(2, long_number);
 						churl_headers_append(headers, formatter.data, long_number);
 
 
 						/* precision */
 						resetStringInfo(&formatter);
-						appendStringInfo(&formatter, "X-GP-ATTR-TYPEMOD%u-%u", i, 0);
-						pg_ltoa((tuple->attrs[i]->atttypmod >> 16) & 0xffff, long_number);
+						appendStringInfo(&formatter, "X-GP-ATTR-TYPEMOD%u-%u", attrIx, 0);
+						pg_ltoa((attribute->atttypmod >> 16) & 0xffff, long_number);
 						churl_headers_append(headers, formatter.data, long_number);
 
 						/* scale */
 						resetStringInfo(&formatter);
-						appendStringInfo(&formatter, "X-GP-ATTR-TYPEMOD%u-%u", i, 1);
-						pg_ltoa((tuple->attrs[i]->atttypmod - VARHDRSZ) & 0xffff, long_number);
+						appendStringInfo(&formatter, "X-GP-ATTR-TYPEMOD%u-%u", attrIx, 1);
+						pg_ltoa((attribute->atttypmod - VARHDRSZ) & 0xffff, long_number);
 						churl_headers_append(headers, formatter.data, long_number);
 						break;
 					}
@@ -237,13 +251,13 @@ add_tuple_desc_httpheader(CHURL_HEADERS headers, Relation rel)
 				case VARCHAROID:
 					{
 						resetStringInfo(&formatter);
-						appendStringInfo(&formatter, "X-GP-ATTR-TYPEMOD%u-COUNT", i);
+						appendStringInfo(&formatter, "X-GP-ATTR-TYPEMOD%u-COUNT", attrIx);
 						pg_ltoa(1, long_number);
 						churl_headers_append(headers, formatter.data, long_number);
 
 						resetStringInfo(&formatter);
-						appendStringInfo(&formatter, "X-GP-ATTR-TYPEMOD%u-%u", i, 0);
-						pg_ltoa((tuple->attrs[i]->atttypmod - VARHDRSZ), long_number);
+						appendStringInfo(&formatter, "X-GP-ATTR-TYPEMOD%u-%u", attrIx, 0);
+						pg_ltoa((attribute->atttypmod - VARHDRSZ), long_number);
 						churl_headers_append(headers, formatter.data, long_number);
 						break;
 					}
@@ -255,56 +269,76 @@ add_tuple_desc_httpheader(CHURL_HEADERS headers, Relation rel)
 				case TIMETZOID:
 					{
 						resetStringInfo(&formatter);
-						appendStringInfo(&formatter, "X-GP-ATTR-TYPEMOD%u-COUNT", i);
+						appendStringInfo(&formatter, "X-GP-ATTR-TYPEMOD%u-COUNT", attrIx);
 						pg_ltoa(1, long_number);
 						churl_headers_append(headers, formatter.data, long_number);
 
 						resetStringInfo(&formatter);
-						appendStringInfo(&formatter, "X-GP-ATTR-TYPEMOD%u-%u", i, 0);
-						pg_ltoa((tuple->attrs[i]->atttypmod), long_number);
+						appendStringInfo(&formatter, "X-GP-ATTR-TYPEMOD%u-%u", attrIx, 0);
+						pg_ltoa((attribute->atttypmod), long_number);
 						churl_headers_append(headers, formatter.data, long_number);
 						break;
 					}
 				case INTERVALOID:
 					{
 						resetStringInfo(&formatter);
-						appendStringInfo(&formatter, "X-GP-ATTR-TYPEMOD%u-COUNT", i);
+						appendStringInfo(&formatter, "X-GP-ATTR-TYPEMOD%u-COUNT", attrIx);
 						pg_ltoa(1, long_number);
 						churl_headers_append(headers, formatter.data, long_number);
 
 						resetStringInfo(&formatter);
-						appendStringInfo(&formatter, "X-GP-ATTR-TYPEMOD%u-%u", i, 0);
-						pg_ltoa(INTERVAL_PRECISION(tuple->attrs[i]->atttypmod), long_number);
+						appendStringInfo(&formatter, "X-GP-ATTR-TYPEMOD%u-%u", attrIx, 0);
+						pg_ltoa(INTERVAL_PRECISION(attribute->atttypmod), long_number);
 						churl_headers_append(headers, formatter.data, long_number);
 						break;
 					}
 				default:
-					elog(DEBUG5, "add_tuple_desc_httpheader: unsupported type %d ", tuple->attrs[i]->atttypid);
+					elog(DEBUG5, "add_tuple_desc_httpheader: unsupported type %d ", attribute->atttypid);
 					break;
 			}
 		}
+		attrIx++;
 	}
+
+	/* Convert the number of attributes to a string */
+	pg_ltoa(attrIx, long_number);
+	churl_headers_append(headers, "X-GP-ATTRS", long_number);
 
 	pfree(formatter.data);
 }
 
 /*
- * Report projection description to the remote component
+ * Report projection description to the remote component, the indices of
+ * dropped columns do not get reported, as if they never existed, and
+ * column indices that follow dropped columns will be shifted by the number
+ * of dropped columns that precede it. For example,
+ *
+ *  ---------------------------------------------
+ * |  col1  |  col2 (dropped)  |  col3  |  col4  |
+ *  ---------------------------------------------
+ *
+ * Let's assume that col1 and col4 are projected, the reported projected
+ * indices will be 0, 2. This is because we use 0-based indexing and because
+ * col2 was dropped, the indices for col3 and col4 get shifted by -1.
  */
 static void
 add_projection_desc_httpheader(CHURL_HEADERS headers,
 							   ProjectionInfo *projInfo,
-							   List *qualsAttributes)
+							   List *qualsAttributes,
+							   Relation rel)
 {
-	int            i;
-	int            number;
-	int            numTargetList;
+	int			   i;
+	int			   dropped_count;
+	int			   number;
+	int			   numTargetList;
 #if PG_VERSION_NUM < 90400
-	int            numSimpleVars;
+	int			   numSimpleVars;
 #endif
-	char           long_number[sizeof(int32) * 8];
-	int            *varNumbers = projInfo->pi_varNumbers;
-	StringInfoData formatter;
+	char			long_number[sizeof(int32) * 8];
+	int				*varNumbers = projInfo->pi_varNumbers;
+	Bitmapset		*attrs_used;
+	StringInfoData	formatter;
+	TupleDesc		tupdesc;
 
 	initStringInfo(&formatter);
 	numTargetList = 0;
@@ -366,6 +400,8 @@ add_projection_desc_httpheader(CHURL_HEADERS headers,
 	if (number == 0)
 		return;
 
+	attrs_used = NULL;
+
 	/* Convert the number of projection columns to a string */
 	pg_ltoa(number, long_number);
 	churl_headers_append(headers, "X-GP-ATTRS-PROJ", long_number);
@@ -376,8 +412,9 @@ add_projection_desc_httpheader(CHURL_HEADERS headers,
 	for (i = 0; varNumbers && i < numSimpleVars; i++)
 #endif
 	{
-		add_projection_index_header(headers,
-									formatter, varNumbers[i] - 1, long_number);
+		attrs_used =
+			bms_add_member(attrs_used,
+						 varNumbers[i] - FirstLowInvalidHeapAttributeNumber);
 	}
 
 	ListCell *attribute = NULL;
@@ -388,12 +425,35 @@ add_projection_desc_httpheader(CHURL_HEADERS headers,
 	foreach(attribute, qualsAttributes)
 	{
 		AttrNumber attrNumber = (AttrNumber) lfirst_int(attribute);
-		add_projection_index_header(headers,
-									formatter, attrNumber, long_number);
+		attrs_used =
+			bms_add_member(attrs_used,
+						 attrNumber + 1 - FirstLowInvalidHeapAttributeNumber);
+	}
+
+	tupdesc = RelationGetDescr(rel);
+	dropped_count = 0;
+
+	for (i = 1; i <= tupdesc->natts; i++)
+	{
+		/* Ignore dropped attributes. */
+		if (tupdesc->attrs[i - 1]->attisdropped)
+		{
+			/* keep a counter of the number of dropped attributes */
+			dropped_count++;
+			continue;
+		}
+
+		if (bms_is_member(i - FirstLowInvalidHeapAttributeNumber, attrs_used))
+		{
+			/* Shift the column index by the running dropped_count */
+			add_projection_index_header(headers, formatter,
+										i - 1 - dropped_count, long_number);
+		}
 	}
 
 	list_free(qualsAttributes);
 	pfree(formatter.data);
+	bms_free(attrs_used);
 }
 
 /*

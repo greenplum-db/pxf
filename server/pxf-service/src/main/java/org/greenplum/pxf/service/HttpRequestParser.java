@@ -317,7 +317,7 @@ public class HttpRequestParser implements RequestParser<HttpHeaders> {
             if (numberOfProjectedColumns > 0) {
                 String[] projectionIndices = params.removeProperty("ATTRS-PROJ-IDX").split(",");
                 for (String s : projectionIndices) {
-                    attrsProjected.set(Integer.valueOf(s));
+                    attrsProjected.set(Integer.parseInt(s));
                 }
             } else {
                 /* This is a special case to handle aggregate queries not related to any specific column

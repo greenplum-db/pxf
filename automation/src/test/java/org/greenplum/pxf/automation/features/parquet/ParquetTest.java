@@ -15,7 +15,6 @@ import static java.lang.Thread.sleep;
 public class ParquetTest extends BaseFeature {
 
     private String hdfsPath;
-    private String resourcePath;
 
     private static final String NUMERIC_TABLE = "numeric_precision";
     private static final String NUMERIC_UNDEFINED_PRECISION_TABLE = "numeric_undefined_precision";
@@ -100,7 +99,7 @@ public class ParquetTest extends BaseFeature {
         // path for storing data on HDFS (for processing by PXF)
         hdfsPath = hdfs.getWorkingDirectory() + "/parquet/";
 
-        resourcePath = localDataResourcesFolder + "/parquet/";
+        String resourcePath = localDataResourcesFolder + "/parquet/";
         hdfs.copyFromLocal(resourcePath + PARQUET_PRIMITIVE_TYPES, hdfsPath + PARQUET_PRIMITIVE_TYPES);
         hdfs.copyFromLocal(resourcePath + PARQUET_UNDEFINED_PRECISION_NUMERIC_FILE, hdfsPath + PARQUET_UNDEFINED_PRECISION_NUMERIC_FILE);
         hdfs.copyFromLocal(resourcePath + PARQUET_NUMERIC_FILE, hdfsPath + PARQUET_NUMERIC_FILE);
