@@ -1,0 +1,48 @@
+-- start_ignore
+-- end_ignore
+-- @description query01 test altering table, dropping columns during write
+-- Insert all columns
+INSERT INTO pxf_alter_write_parquet_table
+SELECT s1, s2, n1, d1, dc1, tm, f, bg, b, tn, vc1, sml, c1, bin
+FROM pxf_alter_parquet_primitive_types WHERE tn <= 10;
+INSERT 0 11
+-- Drop two columns
+ALTER EXTERNAL TABLE pxf_alter_write_parquet_table
+    DROP COLUMN tm,
+    DROP COLUMN bin;
+ALTER EXTERNAL TABLE
+-- Insert a subset of columns removing the dropped columns
+INSERT INTO pxf_alter_write_parquet_table
+SELECT s1, s2, n1, d1, dc1, f, bg, b, tn, vc1, sml, c1
+FROM pxf_alter_parquet_primitive_types WHERE tn > 10;
+INSERT 0 13
+-- Query the data with fewer columns
+SELECT * FROM pxf_alter_write_parquet_table_r ORDER BY s1;
+          s1          |  s2  | n1 | d1 |             dc1              |  f   |    bg    | b | tn |  vc1  | sml  | c1  
+----------------------+------+----+----+------------------------------+------+----------+---+----+-------+------+-----
+ row1                 | s_6  |  1 |  6 |         1.234560000000000000 |  7.7 | 23456789 | f |  1 | abcd  |   10 | abc
+ row10                | s_15 | 10 | 15 |     45678.000023400890000000 |  7.7 | 23456789 | t | 10 | abcde | 1000 | abc
+ row11                | s_16 | 11 | 37 |         0.123456789012345679 |  7.7 | 23456789 | f | 11 | abcde | 1100 | ab 
+ row12_text_null      |      | 11 | 37 |         0.123456789012345679 |  7.7 | 23456789 | f | 11 | abcde | 1100 | ab 
+ row13_int_null       | s_16 |    | 37 |         0.123456789012345679 |  7.7 | 23456789 | f | 11 | abcde | 1100 | ab 
+ row14_double_null    | s_16 | 11 |    |         0.123456789012345679 |  7.7 | 23456789 | f | 11 | abcde | 1100 | ab 
+ row15_decimal_null   | s_17 | 12 | 38 |                              |  7.7 | 23456789 | f | 11 | abcde | 1100 | ab 
+ row16_timestamp_null | s_16 | 11 | 37 |         0.123456789012345679 |  7.7 | 23456789 | f | 11 | abcde | 1100 | ab 
+ row17_real_null      | s_16 | 11 | 37 |         0.123456789012345679 |      | 23456789 | f | 11 | abcde | 1100 | ab 
+ row18_bigint_null    | s_16 | 11 | 37 |         0.123456789012345679 |  7.7 |          | f | 11 | abcde | 1100 | ab 
+ row19_bool_null      | s_16 | 11 | 37 |         0.123456789012345679 |  7.7 | 23456789 |   | 11 | abcde | 1100 | ab 
+ row2                 | s_7  |  2 |  7 |         1.234560000000000000 |  8.7 | 23456789 | t |  2 | abcde |   20 | abc
+ row21_smallint_null  | s_16 | 11 | 37 |         0.123456789012345679 |  7.7 | 23456789 | f | 11 | abcde |      | ab 
+ row22_date_null      | s_16 | 11 | 37 |         0.123456789012345679 |  7.7 | 23456789 | f | 11 | abcde | 1100 | ab 
+ row23_varchar_null   | s_16 | 11 | 37 |         0.123456789012345679 |  7.7 | 23456789 | f | 11 |       | 1100 | ab 
+ row24_char_null      | s_16 | 11 | 37 |         0.123456789012345679 |  7.7 | 23456789 | f | 11 | abcde | 1100 | 
+ row25_binary_null    | s_16 | 11 | 37 |         0.123456789012345679 |  7.7 | 23456789 | f |  1 | abcde | 1100 | ab 
+ row3                 | s_8  |  3 |  8 |        -1.234560000000000000 |  9.7 | 23456789 | f |  3 | abcde |  300 | abc
+ row4                 | s_9  |  4 |  9 | 123456789.123456789000000000 | 10.7 | 23456789 | t |  4 | abcde |  400 | abc
+ row5                 | s_10 |  5 | 10 |         0.000000000001000000 | 11.7 | 23456789 | f |  5 | abcde |  500 | abc
+ row6                 | s_11 |  6 | 11 |      1234.888999911100000000 | 12.7 | 23456789 | t |  6 | abcde |  600 | abc
+ row7                 | s_12 |  7 | 12 |         0.000100000000000000 |  7.7 | 23456789 | f |  7 | abcde |  700 | abc
+ row8                 | s_13 |  8 | 13 |     45678.000023400890000000 |  7.7 | 23456789 | t |  8 | abcde |  800 | abc
+ row9                 | s_14 |  9 | 14 |     23457.100000000000000000 |  7.7 | 23456789 | f |  9 | abcde |  900 | abc
+(24 rows)
+

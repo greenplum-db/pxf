@@ -3,6 +3,7 @@ package org.greenplum.pxf.automation.features.general;
 import org.greenplum.pxf.automation.features.BaseFeature;
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
 import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
+import org.greenplum.pxf.automation.structures.tables.pxf.WritableExternalTable;
 import org.greenplum.pxf.automation.structures.tables.utils.TableFactory;
 import org.greenplum.pxf.automation.utils.system.ProtocolUtils;
 import org.testng.annotations.Test;
@@ -13,8 +14,11 @@ public class AlterTableTest extends BaseFeature {
     private static final String FILE_SCHEME = "file://";
     private static final String PXF_ALTER_AVRO_TABLE = "pxf_alter_avro_table";
     private static final String PXF_ALTER_CSV_TABLE = "pxf_alter_csv_table";
+    private static final String PXF_PARQUET_TABLE_SOURCE = "pxf_alter_parquet_primitive_types";
     private static final String PXF_ALTER_PARQUET_TABLE = "pxf_alter_parquet_table";
+    private static final String PXF_ALTER_WRITE_PARQUET_TABLE = "pxf_alter_write_parquet_table";
     private static final String PARQUET_PRIMITIVE_TYPES = "parquet_primitive_types";
+    private static final String PARQUET_WRITE_PRIMITIVES = "parquet_write_primitives";
     private static final String SUFFIX_JSON = ".json";
     private static final String SUFFIX_AVRO = ".avro";
     private static final String SUFFIX_AVSC = ".avsc";
@@ -34,6 +38,21 @@ public class AlterTableTest extends BaseFeature {
             "sml   SMALLINT",
             "c1    CHAR(3)",
             "bin   BYTEA"
+    };
+
+    private static final String[] PARQUET_TABLE_SUBSET_COLUMNS = new String[]{
+            "s1    TEXT",
+            "s2    TEXT",
+            "n1    INTEGER",
+            "d1    DOUBLE PRECISION",
+            "dc1   NUMERIC",
+            "f     REAL",
+            "bg    BIGINT",
+            "b     BOOLEAN",
+            "tn    SMALLINT",
+            "vc1   VARCHAR(5)",
+            "sml   SMALLINT",
+            "c1    CHAR(3)"
     };
 
     private String hdfsPath;
@@ -80,6 +99,39 @@ public class AlterTableTest extends BaseFeature {
         gpdb.createTableAndVerify(exTable);
 
         runTincTest("pxf.features.general.alter.pxfwritable_import.with_column_projection.runTest");
+    }
+
+    @Test(groups = {"features", "gpdb", "security"})
+    public void dropColumnsPxfWritableExport() throws Exception {
+
+        // Create source table
+        exTable = new ReadableExternalTable(PXF_PARQUET_TABLE_SOURCE,
+                PARQUET_TABLE_COLUMNS, hdfsPath + "/parquet/" + PARQUET_PRIMITIVE_TYPES, "custom");
+        exTable.setHost(pxfHost);
+        exTable.setPort(pxfPort);
+        exTable.setFormatter("pxfwritable_import");
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":parquet");
+        gpdb.createTableAndVerify(exTable);
+
+        // Create writable table
+        exTable = new WritableExternalTable(PXF_ALTER_WRITE_PARQUET_TABLE,
+                PARQUET_TABLE_COLUMNS, hdfsPath + "/parquet-write/" + PARQUET_WRITE_PRIMITIVES, "custom");
+        exTable.setHost(pxfHost);
+        exTable.setPort(pxfPort);
+        exTable.setFormatter("pxfwritable_export");
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":parquet");
+        gpdb.createTableAndVerify(exTable);
+
+        // Create validation table
+        exTable = new ReadableExternalTable(PXF_ALTER_WRITE_PARQUET_TABLE + "_r",
+                PARQUET_TABLE_SUBSET_COLUMNS, hdfsPath + "/parquet-write/" + PARQUET_WRITE_PRIMITIVES, "custom");
+        exTable.setHost(pxfHost);
+        exTable.setPort(pxfPort);
+        exTable.setFormatter("pxfwritable_import");
+        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":parquet");
+        gpdb.createTableAndVerify(exTable);
+
+        runTincTest("pxf.features.general.alter.pxfwritable_export.parquet.runTest");
     }
 
     @Test(groups = {"features", "gpdb", "security"})

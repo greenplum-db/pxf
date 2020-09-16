@@ -295,21 +295,27 @@ getNullByteArraySize(int colCnt)
 }
 
 /*
- * Helper routine to convert boolean array to byte array
+ * Helper routine to convert boolean array to byte array.
+ *
+ * This routine is aware of the attributes in the table, and it will only
+ * produce a result for valid columns (excludes dropped columns).
  */
 static bits8 *
-boolArrayToByteArray(bool *data, int len, int *outlen)
+boolArrayToByteArray(bool *data, int len, int validlen, int *outlen, TupleDesc tupdesc)
 {
 	int			i,
 				j,
 				k;
 	bits8	   *result;
 
-	*outlen = getNullByteArraySize(len);
+	*outlen = getNullByteArraySize(validlen);
 	result = palloc0(*outlen * sizeof(bits8));
 
 	for (i = 0, j = 0, k = 7; i < len; i++)
 	{
+		/* Ignore dropped attributes. */
+		if (tupdesc->attrs[i]->attisdropped) continue;
+
 		result[j] |= (data[i] ? 1 : 0) << k--;
 		if (k < 0)
 		{
@@ -429,7 +435,8 @@ gpdbwritableformatter_export(PG_FUNCTION_ARGS)
 	HeapTupleData tuple;
 	format_t   *myData;
 	int			datlen;
-	AttrNumber	ncolumns = 0;
+	AttrNumber	ncolumns;
+	AttrNumber	nvalidcolumns;
 	AttrNumber	i;
 	MemoryContext per_row_ctx,
 				oldcontext;
@@ -447,6 +454,12 @@ gpdbwritableformatter_export(PG_FUNCTION_ARGS)
 	/* Get our internal description of the formatter */
 	ncolumns = tupdesc->natts;
 	myData = (format_t *) FORMATTER_GET_USER_CTX(fcinfo);
+
+	/* Get the number of valid columns, excludes dropped columns */
+	nvalidcolumns = 0;
+	for (i = 0; i < ncolumns; i++)
+		if (!tupdesc->attrs[i]->attisdropped)
+			nvalidcolumns++;
 
 	/*
 	 * Initialize the context structure
@@ -473,10 +486,9 @@ gpdbwritableformatter_export(PG_FUNCTION_ARGS)
 			bool		isvarlena;
 			Oid			functionId;
 
-			/* External table do not support dropped columns; error out now */
+			/* Ignore dropped attributes. */
 			if (tupdesc->attrs[i]->attisdropped)
-				ereport(ERROR, (errcode(ERRCODE_EXTERNAL_ROUTINE_EXCEPTION),
-								errmsg("cannot handle external table with dropped columns")));
+				continue;
 
 			/* Get the text/binary "send" function */
 			if (isBinaryFormatType(type))
@@ -504,7 +516,8 @@ gpdbwritableformatter_export(PG_FUNCTION_ARGS)
 	 */
 
 	/*-----
-	 * Now, compute the total payload and header length:
+	 * Now, compute the total payload and header length (#col excludes
+	 * dropped columns):
 	 *
 	 * header = total length (4 byte), Version (2 byte), Error (1 byte), #col (2 byte)
 	 * col type array = #col * 1 byte
@@ -512,8 +525,8 @@ gpdbwritableformatter_export(PG_FUNCTION_ARGS)
 	 *-----
 	 */
 	datlen = sizeof(int32) + sizeof(int16) + sizeof(int8) + sizeof(int16);
-	datlen += ncolumns;
-	datlen += getNullByteArraySize(ncolumns);
+	datlen += nvalidcolumns;
+	datlen += getNullByteArraySize(nvalidcolumns);
 
 	/*
 	 * We need to know the total length of the tuple. So, we've to transformed
@@ -525,7 +538,12 @@ gpdbwritableformatter_export(PG_FUNCTION_ARGS)
 	 */
 	for (i = 0; i < ncolumns; i++)
 	{
-		Oid			type = tupdesc->attrs[i]->atttypid;
+		Form_pg_attribute attr = tupdesc->attrs[i];
+
+		/* Ignore dropped attributes. */
+		if (attr->attisdropped) continue;
+
+		Oid			type = attr->atttypid;
 		Datum		val = myData->values[i];
 		bool		nul = myData->nulls[i];
 		FmgrInfo   *iofunc = &(myData->io_functions[i]);
@@ -561,7 +579,7 @@ gpdbwritableformatter_export(PG_FUNCTION_ARGS)
 				datlen += sizeof(int32);
 			}
 			else
-				alignpadlen = att_align_nominal(datlen, tupdesc->attrs[i]->attalign) - datlen;
+				alignpadlen = att_align_nominal(datlen, attr->attalign) - datlen;
 			myData->outpadlen[i] = alignpadlen;
 			datlen += alignpadlen;
 		}
@@ -601,21 +619,28 @@ gpdbwritableformatter_export(PG_FUNCTION_ARGS)
 	appendIntToBuffer(myData->export_format_tuple, datlen);
 	appendInt2ToBuffer(myData->export_format_tuple, GPDBWRITABLE_VERSION);
 	appendInt1ToBuffer(myData->export_format_tuple, 0); /* error */
-	appendInt2ToBuffer(myData->export_format_tuple, ncolumns);
+	appendInt2ToBuffer(myData->export_format_tuple, nvalidcolumns);
 
-	/* Write col type */
+	/* Write col type for columns that have not been dropped */
 	for (i = 0; i < ncolumns; i++)
-		appendInt1ToBuffer(myData->export_format_tuple,
-						   getJavaEnumOrdinal(tupdesc->attrs[i]->atttypid));
+	{
+		/* Ignore dropped attributes. */
+		if (!tupdesc->attrs[i]->attisdropped)
+		{
+			appendInt1ToBuffer(myData->export_format_tuple,
+							   getJavaEnumOrdinal(tupdesc->attrs[i]->atttypid));
+		}
+	}
 
 	/* Write Nullness */
-	nullBit = boolArrayToByteArray(myData->nulls, ncolumns, &nullBitLen);
+	nullBit = boolArrayToByteArray(myData->nulls, ncolumns, nvalidcolumns, &nullBitLen, tupdesc);
 	appendBinaryStringInfo(myData->export_format_tuple, nullBit, nullBitLen);
 
 	/* Column Value */
 	for (i = 0; i < ncolumns; i++)
 	{
-		if (!myData->nulls[i])
+		/* Ignore dropped attributes and null values. */
+		if (!tupdesc->attrs[i]->attisdropped && !myData->nulls[i])
 		{
 			/* Pad the alignment byte first */
 			appendStringInfoFill(myData->export_format_tuple, myData->outpadlen[i], '\0');
