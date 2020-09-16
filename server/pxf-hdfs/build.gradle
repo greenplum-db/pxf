@@ -45,6 +45,7 @@ dependencies {
     implementation("org.apache.parquet:parquet-encoding:${parquetVersion}") { transitive = false }
     implementation("org.apache.parquet:parquet-generator:${parquetVersion}") { transitive = false }
     implementation("org.apache.parquet:parquet-hadoop:${parquetVersion}") { transitive = false }
+    implementation("org.apache.parquet:parquet-jackson:${parquetVersion}") { transitive = false }
     implementation("org.apache.hive:hive-storage-api:2.4.0") { transitive = false }// for parquet writing
 
     implementation("org.codehaus.jackson:jackson-core-asl:1.9.13") { transitive = false }

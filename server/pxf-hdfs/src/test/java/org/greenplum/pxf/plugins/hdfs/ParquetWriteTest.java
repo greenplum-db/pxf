@@ -23,15 +23,14 @@ import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.Accessor;
-import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
+import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -54,13 +53,11 @@ import static org.apache.parquet.schema.LogicalTypeAnnotation.DecimalLogicalType
 import static org.apache.parquet.schema.LogicalTypeAnnotation.IntLogicalTypeAnnotation;
 import static org.apache.parquet.schema.LogicalTypeAnnotation.StringLogicalTypeAnnotation;
 import static org.greenplum.pxf.plugins.hdfs.parquet.ParquetTypeConverter.bytesToTimestamp;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ParquetWriteTest {
 
@@ -71,19 +68,18 @@ public class ParquetWriteTest {
 
     protected List<ColumnDescriptor> columnDescriptors;
 
-    @Rule
-    public TemporaryFolder temp = new TemporaryFolder();
+    @TempDir
+    File temp; // must be non-private
 
-    @Before
+    @BeforeEach
     public void setup() {
 
         columnDescriptors = new ArrayList<>();
 
-        ConfigurationFactory mockConfigurationFactory = mock(ConfigurationFactory.class);
-
-        accessor = new ParquetFileAccessor(mockConfigurationFactory);
-        resolver = new ParquetResolver(mockConfigurationFactory);
+        accessor = new ParquetFileAccessor(new CodecFactory());
+        resolver = new ParquetResolver();
         context = new RequestContext();
+        configuration = new Configuration();
 
         context.setConfig("fakeConfig");
         context.setServerName("fakeServerName");
@@ -92,22 +88,18 @@ public class ParquetWriteTest {
         context.setSegmentId(4);
         context.setRequestType(RequestContext.RequestType.WRITE_BRIDGE);
         context.setTupleDescription(columnDescriptors);
-
-        configuration = new Configuration();
-
-        when(mockConfigurationFactory.
-                initConfiguration(context.getConfig(), context.getServerName(), context.getUser(), context.getAdditionalConfigProps()))
-                .thenReturn(configuration);
+        context.setConfiguration(configuration);
     }
 
     @Test
     public void testDefaultWriteOptions() throws Exception {
 
         columnDescriptors.add(new ColumnDescriptor("id", DataType.INTEGER.getOID(), 0, "int4", null));
-        context.setDataSource(temp.getRoot() + "/out/");
+        context.setDataSource(temp + "/out/");
         context.setTransactionId("XID-XYZ-123453");
 
-        accessor.initialize(context);
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
         assertTrue(accessor.openForWrite());
         accessor.closeForWrite();
 
@@ -122,11 +114,12 @@ public class ParquetWriteTest {
     public void testSetting_PAGE_SIZE_Option() throws Exception {
 
         columnDescriptors.add(new ColumnDescriptor("id", DataType.INTEGER.getOID(), 0, "int4", null));
-        context.setDataSource(temp.getRoot() + "/out/");
+        context.setDataSource(temp + "/out/");
         context.setTransactionId("XID-XYZ-123453");
         context.addOption("PAGE_SIZE", "5242880");
 
-        accessor.initialize(context);
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
         assertTrue(accessor.openForWrite());
         accessor.closeForWrite();
 
@@ -137,11 +130,12 @@ public class ParquetWriteTest {
     public void testSetting_DICTIONARY_PAGE_SIZE_Option() throws Exception {
 
         columnDescriptors.add(new ColumnDescriptor("id", DataType.INTEGER.getOID(), 0, "int4", null));
-        context.setDataSource(temp.getRoot() + "/out/");
+        context.setDataSource(temp + "/out/");
         context.setTransactionId("XID-XYZ-123453");
         context.addOption("DICTIONARY_PAGE_SIZE", "5242880");
 
-        accessor.initialize(context);
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
         assertTrue(accessor.openForWrite());
         accessor.closeForWrite();
 
@@ -152,11 +146,12 @@ public class ParquetWriteTest {
     public void testSetting_ENABLE_DICTIONARY_Option() throws Exception {
 
         columnDescriptors.add(new ColumnDescriptor("id", DataType.INTEGER.getOID(), 0, "int4", null));
-        context.setDataSource(temp.getRoot() + "/out/");
+        context.setDataSource(temp + "/out/");
         context.setTransactionId("XID-XYZ-123453");
         context.addOption("ENABLE_DICTIONARY", "false");
 
-        accessor.initialize(context);
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
         assertTrue(accessor.openForWrite());
         accessor.closeForWrite();
 
@@ -167,11 +162,12 @@ public class ParquetWriteTest {
     public void testSetting_PARQUET_VERSION_Option() throws Exception {
 
         columnDescriptors.add(new ColumnDescriptor("id", DataType.INTEGER.getOID(), 0, "int4", null));
-        context.setDataSource(temp.getRoot() + "/out/");
+        context.setDataSource(temp + "/out/");
         context.setTransactionId("XID-XYZ-123453");
         context.addOption("PARQUET_VERSION", "v2");
 
-        accessor.initialize(context);
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
         assertTrue(accessor.openForWrite());
         accessor.closeForWrite();
 
@@ -182,11 +178,12 @@ public class ParquetWriteTest {
     public void testSetting_ROWGROUP_SIZE_Option() throws Exception {
 
         columnDescriptors.add(new ColumnDescriptor("id", DataType.INTEGER.getOID(), 0, "int4", null));
-        context.setDataSource(temp.getRoot() + "/out/");
+        context.setDataSource(temp + "/out/");
         context.setTransactionId("XID-XYZ-123453");
         context.addOption("ROWGROUP_SIZE", "33554432");
 
-        accessor.initialize(context);
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
         assertTrue(accessor.openForWrite());
         accessor.closeForWrite();
 
@@ -196,15 +193,17 @@ public class ParquetWriteTest {
     @Test
     public void testWriteInt() throws Exception {
 
-        String path = temp.getRoot() + "/out/int/";
+        String path = temp + "/out/int/";
 
         columnDescriptors.add(new ColumnDescriptor("id", DataType.INTEGER.getOID(), 0, "int4", null));
 
         context.setDataSource(path);
         context.setTransactionId("XID-XYZ-123456");
 
-        accessor.initialize(context);
-        resolver.initialize(context);
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
 
         assertTrue(accessor.openForWrite());
 
@@ -218,7 +217,7 @@ public class ParquetWriteTest {
         accessor.closeForWrite();
 
         // Validate write
-        Path expectedFile = new Path(HcfsType.LOCALFILE.getUriForWrite(configuration, context, true) + ".snappy.parquet");
+        Path expectedFile = new Path(HcfsType.LOCALFILE.getUriForWrite(context) + ".snappy.parquet");
         assertTrue(expectedFile.getFileSystem(configuration).exists(expectedFile));
 
         MessageType schema = validateFooter(expectedFile);
@@ -247,14 +246,16 @@ public class ParquetWriteTest {
 
     @Test
     public void testWriteText() throws Exception {
-        String path = temp.getRoot() + "/out/text/";
+        String path = temp + "/out/text/";
         columnDescriptors.add(new ColumnDescriptor("name", DataType.TEXT.getOID(), 0, "text", null));
 
         context.setDataSource(path);
         context.setTransactionId("XID-XYZ-123457");
 
-        accessor.initialize(context);
-        resolver.initialize(context);
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
 
         assertTrue(accessor.openForWrite());
 
@@ -268,7 +269,7 @@ public class ParquetWriteTest {
         accessor.closeForWrite();
 
         // Validate write
-        Path expectedFile = new Path(HcfsType.LOCALFILE.getUriForWrite(configuration, context, true) + ".snappy.parquet");
+        Path expectedFile = new Path(HcfsType.LOCALFILE.getUriForWrite(context) + ".snappy.parquet");
         assertTrue(expectedFile.getFileSystem(configuration).exists(expectedFile));
 
         MessageType schema = validateFooter(expectedFile);
@@ -299,14 +300,16 @@ public class ParquetWriteTest {
 
     @Test
     public void testWriteDate() throws Exception {
-        String path = temp.getRoot() + "/out/date/";
+        String path = temp + "/out/date/";
         columnDescriptors.add(new ColumnDescriptor("cdate", DataType.DATE.getOID(), 0, "date", null));
 
         context.setDataSource(path);
         context.setTransactionId("XID-XYZ-123458");
 
-        accessor.initialize(context);
-        resolver.initialize(context);
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
 
         assertTrue(accessor.openForWrite());
 
@@ -320,7 +323,7 @@ public class ParquetWriteTest {
         accessor.closeForWrite();
 
         // Validate write
-        Path expectedFile = new Path(HcfsType.LOCALFILE.getUriForWrite(configuration, context, true) + ".snappy.parquet");
+        Path expectedFile = new Path(HcfsType.LOCALFILE.getUriForWrite(context) + ".snappy.parquet");
         assertTrue(expectedFile.getFileSystem(configuration).exists(expectedFile));
 
         MessageType schema = validateFooter(expectedFile);
@@ -353,14 +356,16 @@ public class ParquetWriteTest {
 
     @Test
     public void testWriteFloat8() throws Exception {
-        String path = temp.getRoot() + "/out/float/";
+        String path = temp + "/out/float/";
         columnDescriptors.add(new ColumnDescriptor("amt", DataType.FLOAT8.getOID(), 0, "float8", null));
 
         context.setDataSource(path);
         context.setTransactionId("XID-XYZ-123459");
 
-        accessor.initialize(context);
-        resolver.initialize(context);
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
 
         assertTrue(accessor.openForWrite());
 
@@ -374,7 +379,7 @@ public class ParquetWriteTest {
         accessor.closeForWrite();
 
         // Validate write
-        Path expectedFile = new Path(HcfsType.LOCALFILE.getUriForWrite(configuration, context, true) + ".snappy.parquet");
+        Path expectedFile = new Path(HcfsType.LOCALFILE.getUriForWrite(context) + ".snappy.parquet");
         assertTrue(expectedFile.getFileSystem(configuration).exists(expectedFile));
 
         MessageType schema = validateFooter(expectedFile);
@@ -403,14 +408,16 @@ public class ParquetWriteTest {
 
     @Test
     public void testWriteBoolean() throws Exception {
-        String path = temp.getRoot() + "/out/boolean/";
+        String path = temp + "/out/boolean/";
         columnDescriptors.add(new ColumnDescriptor("b", DataType.BOOLEAN.getOID(), 5, "bool", null));
 
         context.setDataSource(path);
         context.setTransactionId("XID-XYZ-123460");
 
-        accessor.initialize(context);
-        resolver.initialize(context);
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
 
         assertTrue(accessor.openForWrite());
 
@@ -424,7 +431,7 @@ public class ParquetWriteTest {
         accessor.closeForWrite();
 
         // Validate write
-        Path expectedFile = new Path(HcfsType.LOCALFILE.getUriForWrite(configuration, context, true) + ".snappy.parquet");
+        Path expectedFile = new Path(HcfsType.LOCALFILE.getUriForWrite(context) + ".snappy.parquet");
         assertTrue(expectedFile.getFileSystem(configuration).exists(expectedFile));
 
         MessageType schema = validateFooter(expectedFile);
@@ -453,14 +460,16 @@ public class ParquetWriteTest {
 
     @Test
     public void testWriteTimestamp() throws Exception {
-        String path = temp.getRoot() + "/out/timestamp/";
+        String path = temp + "/out/timestamp/";
         columnDescriptors.add(new ColumnDescriptor("tm", DataType.TIMESTAMP.getOID(), 0, "timestamp", null));
 
         context.setDataSource(path);
         context.setTransactionId("XID-XYZ-123462");
 
-        accessor.initialize(context);
-        resolver.initialize(context);
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
 
         assertTrue(accessor.openForWrite());
 
@@ -479,7 +488,7 @@ public class ParquetWriteTest {
         accessor.closeForWrite();
 
         // Validate write
-        Path expectedFile = new Path(HcfsType.LOCALFILE.getUriForWrite(configuration, context, true) + ".snappy.parquet");
+        Path expectedFile = new Path(HcfsType.LOCALFILE.getUriForWrite(context) + ".snappy.parquet");
         assertTrue(expectedFile.getFileSystem(configuration).exists(expectedFile));
 
         MessageType schema = validateFooter(expectedFile);
@@ -507,14 +516,16 @@ public class ParquetWriteTest {
 
     @Test
     public void testWriteBigInt() throws Exception {
-        String path = temp.getRoot() + "/out/bigint/";
+        String path = temp + "/out/bigint/";
         columnDescriptors.add(new ColumnDescriptor("bg", DataType.BIGINT.getOID(), 0, "bigint", null));
 
         context.setDataSource(path);
         context.setTransactionId("XID-XYZ-123463");
 
-        accessor.initialize(context);
-        resolver.initialize(context);
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
 
         assertTrue(accessor.openForWrite());
 
@@ -529,7 +540,7 @@ public class ParquetWriteTest {
         accessor.closeForWrite();
 
         // Validate write
-        Path expectedFile = new Path(HcfsType.LOCALFILE.getUriForWrite(configuration, context, true) + ".snappy.parquet");
+        Path expectedFile = new Path(HcfsType.LOCALFILE.getUriForWrite(context) + ".snappy.parquet");
         assertTrue(expectedFile.getFileSystem(configuration).exists(expectedFile));
 
         MessageType schema = validateFooter(expectedFile);
@@ -558,14 +569,16 @@ public class ParquetWriteTest {
 
     @Test
     public void testWriteBytea() throws Exception {
-        String path = temp.getRoot() + "/out/bytea/";
+        String path = temp + "/out/bytea/";
         columnDescriptors.add(new ColumnDescriptor("bin", DataType.BYTEA.getOID(), 0, "bytea", null));
 
         context.setDataSource(path);
         context.setTransactionId("XID-XYZ-123464");
 
-        accessor.initialize(context);
-        resolver.initialize(context);
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
 
         assertTrue(accessor.openForWrite());
 
@@ -580,7 +593,7 @@ public class ParquetWriteTest {
         accessor.closeForWrite();
 
         // Validate write
-        Path expectedFile = new Path(HcfsType.LOCALFILE.getUriForWrite(configuration, context, true) + ".snappy.parquet");
+        Path expectedFile = new Path(HcfsType.LOCALFILE.getUriForWrite(context) + ".snappy.parquet");
         assertTrue(expectedFile.getFileSystem(configuration).exists(expectedFile));
 
         MessageType schema = validateFooter(expectedFile);
@@ -609,14 +622,16 @@ public class ParquetWriteTest {
 
     @Test
     public void testWriteSmallInt() throws Exception {
-        String path = temp.getRoot() + "/out/smallint/";
+        String path = temp + "/out/smallint/";
         columnDescriptors.add(new ColumnDescriptor("sml", DataType.SMALLINT.getOID(), 0, "int2", null));
 
         context.setDataSource(path);
         context.setTransactionId("XID-XYZ-123465");
 
-        accessor.initialize(context);
-        resolver.initialize(context);
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
 
         assertTrue(accessor.openForWrite());
 
@@ -630,7 +645,7 @@ public class ParquetWriteTest {
         accessor.closeForWrite();
 
         // Validate write
-        Path expectedFile = new Path(HcfsType.LOCALFILE.getUriForWrite(configuration, context, true) + ".snappy.parquet");
+        Path expectedFile = new Path(HcfsType.LOCALFILE.getUriForWrite(context) + ".snappy.parquet");
         assertTrue(expectedFile.getFileSystem(configuration).exists(expectedFile));
 
         MessageType schema = validateFooter(expectedFile);
@@ -661,14 +676,16 @@ public class ParquetWriteTest {
 
     @Test
     public void testWriteReal() throws Exception {
-        String path = temp.getRoot() + "/out/real/";
+        String path = temp + "/out/real/";
         columnDescriptors.add(new ColumnDescriptor("r", DataType.REAL.getOID(), 0, "real", null));
 
         context.setDataSource(path);
         context.setTransactionId("XID-XYZ-123466");
 
-        accessor.initialize(context);
-        resolver.initialize(context);
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
 
         assertTrue(accessor.openForWrite());
 
@@ -682,7 +699,7 @@ public class ParquetWriteTest {
         accessor.closeForWrite();
 
         // Validate write
-        Path expectedFile = new Path(HcfsType.LOCALFILE.getUriForWrite(configuration, context, true) + ".snappy.parquet");
+        Path expectedFile = new Path(HcfsType.LOCALFILE.getUriForWrite(context) + ".snappy.parquet");
         assertTrue(expectedFile.getFileSystem(configuration).exists(expectedFile));
 
         MessageType schema = validateFooter(expectedFile);
@@ -711,14 +728,16 @@ public class ParquetWriteTest {
 
     @Test
     public void testWriteVarchar() throws Exception {
-        String path = temp.getRoot() + "/out/varchar/";
+        String path = temp + "/out/varchar/";
         columnDescriptors.add(new ColumnDescriptor("vc1", DataType.VARCHAR.getOID(), 0, "varchar", new Integer[]{5}));
 
         context.setDataSource(path);
         context.setTransactionId("XID-XYZ-123467");
 
-        accessor.initialize(context);
-        resolver.initialize(context);
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
 
         assertTrue(accessor.openForWrite());
 
@@ -733,7 +752,7 @@ public class ParquetWriteTest {
         accessor.closeForWrite();
 
         // Validate write
-        Path expectedFile = new Path(HcfsType.LOCALFILE.getUriForWrite(configuration, context, true) + ".snappy.parquet");
+        Path expectedFile = new Path(HcfsType.LOCALFILE.getUriForWrite(context) + ".snappy.parquet");
         assertTrue(expectedFile.getFileSystem(configuration).exists(expectedFile));
 
         MessageType schema = validateFooter(expectedFile);
@@ -764,14 +783,16 @@ public class ParquetWriteTest {
 
     @Test
     public void testWriteChar() throws Exception {
-        String path = temp.getRoot() + "/out/char/";
+        String path = temp + "/out/char/";
         columnDescriptors.add(new ColumnDescriptor("c1", DataType.BPCHAR.getOID(), 0, "char", new Integer[]{3}));
 
         context.setDataSource(path);
         context.setTransactionId("XID-XYZ-123468");
 
-        accessor.initialize(context);
-        resolver.initialize(context);
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
 
         assertTrue(accessor.openForWrite());
 
@@ -786,7 +807,7 @@ public class ParquetWriteTest {
         accessor.closeForWrite();
 
         // Validate write
-        Path expectedFile = new Path(HcfsType.LOCALFILE.getUriForWrite(configuration, context, true) + ".snappy.parquet");
+        Path expectedFile = new Path(HcfsType.LOCALFILE.getUriForWrite(context) + ".snappy.parquet");
         assertTrue(expectedFile.getFileSystem(configuration).exists(expectedFile));
 
         MessageType schema = validateFooter(expectedFile);
@@ -817,15 +838,17 @@ public class ParquetWriteTest {
 
     @Test
     public void testWriteNumeric() throws Exception {
-        String path = temp.getRoot() + "/out/numeric/";
+        String path = temp + "/out/numeric/";
         // precision is 38 and scale is 18
         columnDescriptors.add(new ColumnDescriptor("dec1", DataType.NUMERIC.getOID(), 0, "numeric", new Integer[]{38, 18}));
 
         context.setDataSource(path);
         context.setTransactionId("XID-XYZ-123469");
 
-        accessor.initialize(context);
-        resolver.initialize(context);
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
 
         assertTrue(accessor.openForWrite());
 
@@ -852,7 +875,7 @@ public class ParquetWriteTest {
         accessor.closeForWrite();
 
         // Validate write
-        Path expectedFile = new Path(HcfsType.LOCALFILE.getUriForWrite(configuration, context, true) + ".snappy.parquet");
+        Path expectedFile = new Path(HcfsType.LOCALFILE.getUriForWrite(context) + ".snappy.parquet");
         assertTrue(expectedFile.getFileSystem(configuration).exists(expectedFile));
 
         MessageType schema = validateFooter(expectedFile);
@@ -883,7 +906,7 @@ public class ParquetWriteTest {
 
     @Test
     public void testWriteMultipleTypes() throws Exception {
-        String path = temp.getRoot() + "/out/multiple/";
+        String path = temp + "/out/multiple/";
         columnDescriptors.add(new ColumnDescriptor("dec1", DataType.NUMERIC.getOID(), 0, "numeric", null));
         columnDescriptors.add(new ColumnDescriptor("c1", DataType.BPCHAR.getOID(), 1, "char", new Integer[]{3}));
         columnDescriptors.add(new ColumnDescriptor("tm", DataType.TIMESTAMP.getOID(), 2, "timestamp", null));
@@ -893,8 +916,10 @@ public class ParquetWriteTest {
         context.setDataSource(path);
         context.setTransactionId("XID-XYZ-123470");
 
-        accessor.initialize(context);
-        resolver.initialize(context);
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
 
         assertTrue(accessor.openForWrite());
 
@@ -922,7 +947,7 @@ public class ParquetWriteTest {
         accessor.closeForWrite();
 
         // Validate write
-        Path expectedFile = new Path(HcfsType.LOCALFILE.getUriForWrite(configuration, context, true) + ".snappy.parquet");
+        Path expectedFile = new Path(HcfsType.LOCALFILE.getUriForWrite(context) + ".snappy.parquet");
         assertTrue(expectedFile.getFileSystem(configuration).exists(expectedFile));
 
         MessageType schema = validateFooter(expectedFile, 5, 3);
