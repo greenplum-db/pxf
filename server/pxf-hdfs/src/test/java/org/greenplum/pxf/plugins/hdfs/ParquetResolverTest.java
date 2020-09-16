@@ -14,11 +14,7 @@ import org.apache.parquet.io.MessageColumnIO;
 import org.apache.parquet.io.RecordReader;
 import org.apache.parquet.io.api.Binary;
 import org.apache.parquet.pig.convert.DecimalUtils;
-import org.apache.parquet.schema.DecimalMetadata;
 import org.apache.parquet.schema.MessageType;
-//noinspection deprecation
-import org.apache.parquet.schema.OriginalType;
-//noinspection deprecation
 import org.apache.parquet.schema.PrimitiveType;
 import org.apache.parquet.schema.Type;
 import org.greenplum.pxf.api.OneField;
@@ -105,6 +101,7 @@ public class ParquetResolverTest {
         // schema has changed, set metadata again
         context.setMetadata(schema);
         context.setTupleDescription(getColumnDescriptorsFromSchema(schema));
+        resolver.setRequestContext(context);
         resolver.afterPropertiesSet();
 
         Instant timestamp = Instant.parse("2013-07-14T04:00:05Z"); // UTC
@@ -376,7 +373,7 @@ public class ParquetResolverTest {
     @SuppressWarnings("deprecation")
     public void testGetFields_Primitive_RepeatedString() throws IOException {
         List<Type> columns = new ArrayList<>();
-        columns.add(new PrimitiveType(Type.Repetition.REPEATED, PrimitiveTypeName.BINARY, "myString", OriginalType.UTF8));
+        columns.add(new PrimitiveType(Type.Repetition.REPEATED, PrimitiveTypeName.BINARY, "myString", org.apache.parquet.schema.OriginalType.UTF8));
         schema = new MessageType("TestProtobuf.StringArray", columns);
         context.setMetadata(schema);
         context.setTupleDescription(getColumnDescriptorsFromSchema(schema));
@@ -543,22 +540,22 @@ public class ParquetResolverTest {
     private MessageType getParquetSchemaForPrimitiveTypes(Type.Repetition repetition, boolean readCase) {
         List<Type> fields = new ArrayList<>();
 
-        fields.add(new PrimitiveType(repetition, PrimitiveTypeName.BINARY, "s1", OriginalType.UTF8));
-        fields.add(new PrimitiveType(repetition, PrimitiveTypeName.BINARY, "s2", OriginalType.UTF8));
+        fields.add(new PrimitiveType(repetition, PrimitiveTypeName.BINARY, "s1", org.apache.parquet.schema.OriginalType.UTF8));
+        fields.add(new PrimitiveType(repetition, PrimitiveTypeName.BINARY, "s2", org.apache.parquet.schema.OriginalType.UTF8));
         fields.add(new PrimitiveType(repetition, PrimitiveTypeName.INT32, "n1", null));
         fields.add(new PrimitiveType(repetition, PrimitiveTypeName.DOUBLE, "d1", null));
-        fields.add(new PrimitiveType(repetition, PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY, 16, "dc1", OriginalType.DECIMAL, new DecimalMetadata(38, 18), null));
+        fields.add(new PrimitiveType(repetition, PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY, 16, "dc1", org.apache.parquet.schema.OriginalType.DECIMAL, new org.apache.parquet.schema.DecimalMetadata(38, 18), null));
         fields.add(new PrimitiveType(repetition, PrimitiveTypeName.INT96, "tm", null));
         fields.add(new PrimitiveType(repetition, PrimitiveTypeName.FLOAT, "f", null));
         fields.add(new PrimitiveType(repetition, PrimitiveTypeName.INT64, "bg", null));
         fields.add(new PrimitiveType(repetition, PrimitiveTypeName.BOOLEAN, "b", null));
 
         // GPDB only has int16 and not int8 type, so for write tiny numbers int8 are still treated as shorts in16
-        OriginalType tinyType = readCase ? OriginalType.INT_8 : OriginalType.INT_16;
+        org.apache.parquet.schema.OriginalType tinyType = readCase ? org.apache.parquet.schema.OriginalType.INT_8 : org.apache.parquet.schema.OriginalType.INT_16;
         fields.add(new PrimitiveType(repetition, PrimitiveTypeName.INT32, "tn", tinyType));
-        fields.add(new PrimitiveType(repetition, PrimitiveTypeName.INT32, "sml", OriginalType.INT_16));
-        fields.add(new PrimitiveType(repetition, PrimitiveTypeName.BINARY, "vc1", OriginalType.UTF8));
-        fields.add(new PrimitiveType(repetition, PrimitiveTypeName.BINARY, "c1", OriginalType.UTF8));
+        fields.add(new PrimitiveType(repetition, PrimitiveTypeName.INT32, "sml", org.apache.parquet.schema.OriginalType.INT_16));
+        fields.add(new PrimitiveType(repetition, PrimitiveTypeName.BINARY, "vc1", org.apache.parquet.schema.OriginalType.UTF8));
+        fields.add(new PrimitiveType(repetition, PrimitiveTypeName.BINARY, "c1", org.apache.parquet.schema.OriginalType.UTF8));
         fields.add(new PrimitiveType(repetition, PrimitiveTypeName.BINARY, "bin", null));
 
         fields.add(new PrimitiveType(repetition, PrimitiveTypeName.INT96, "tmtz", null));
@@ -612,8 +609,8 @@ public class ParquetResolverTest {
     @SuppressWarnings("deprecation")
     private void testSetFields_RightTrimCharHelper(String varchar, String inputChar, String expectedChar) throws IOException {
         List<Type> typeFields = new ArrayList<>();
-        typeFields.add(new PrimitiveType(Type.Repetition.OPTIONAL, PrimitiveTypeName.BINARY, "vc1", OriginalType.UTF8));
-        typeFields.add(new PrimitiveType(Type.Repetition.OPTIONAL, PrimitiveTypeName.BINARY, "c1", OriginalType.UTF8));
+        typeFields.add(new PrimitiveType(Type.Repetition.OPTIONAL, PrimitiveTypeName.BINARY, "vc1", org.apache.parquet.schema.OriginalType.UTF8));
+        typeFields.add(new PrimitiveType(Type.Repetition.OPTIONAL, PrimitiveTypeName.BINARY, "c1", org.apache.parquet.schema.OriginalType.UTF8));
         schema = new MessageType("hive_schema", typeFields);
         context.setMetadata(schema);
 
