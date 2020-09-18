@@ -54,7 +54,7 @@ export JAVA_HOME=${JAVA_HOME:=/usr/java/default}
 export PXF_LOGDIR=${PXF_LOGDIR:=${PXF_BASE}/logs}
 
 # Path to Run directory
-export PXF_BASEDIR=${PXF_BASEDIR:=${PXF_BASE}/run}
+export PXF_RUNDIR=${PXF_RUNDIR:=${PXF_BASE}/run}
 
 # Port
 export PXF_PORT=${PXF_PORT:=5888}
@@ -75,7 +75,7 @@ export LOADER_PATH="${PXF_LOADER_PATH:+$PXF_LOADER_PATH,}file:${PXF_BASE}/conf,f
 identity="pxf-app"
 
 jarfile="${PXF_HOME}/application/pxf-app-_PXF_VERSION_.jar"
-pid_file="${PXF_BASEDIR}/${identity}.pid"
+pid_file="${PXF_RUNDIR}/${identity}.pid"
 
 # ANSI Colors
 echoRed() { echo $'\e[0;31m'"$1"$'\e[0m'; }
@@ -153,6 +153,28 @@ function isRunning() {
     ps -p "$1" &> /dev/null
 }
 
+# creates the runtime directory structure inside $PXF_BASE
+function createPxfBaseDirectories()
+{
+    install -m 744 -d "${PXF_BASE}/conf"
+    install -m 744 -d "${PXF_BASE}/lib"
+    install -m 744 -d "${PXF_BASE}/lib/native"
+    install -m 744 -d "${PXF_BASE}/servers"
+    install -m 744 -d "${PXF_BASE}/servers/default"
+    install -m 700 -d "${PXF_BASE}/logs"
+    install -m 700 -d "${PXF_BASE}/run"
+    install -m 700 -d "${PXF_BASE}/keytabs"
+}
+
+# copies configuration files inside $PXF_BASE
+function copyConfigurationFilesToPxfBase()
+{
+    cp -Lv "${PXF_HOME}/conf/pxf-application.properties" "${PXF_BASE}/conf"
+    cp -Lv "${PXF_HOME}/conf/pxf-env.sh"                 "${PXF_BASE}/conf"
+    cp -Lv "${PXF_HOME}/conf/pxf-log4j2.xml"             "${PXF_BASE}/conf"
+    cp -Lv "${PXF_HOME}/conf/pxf-profiles.xml"           "${PXF_BASE}/conf"
+}
+
 function validate_system()
 {
     # validate curl
@@ -191,6 +213,9 @@ doHelp() {
 	  status              show the status of the local PXF server instance
 	  version             show the version of PXF server
 	  register            install PXF extension under \$GPHOME (useful after upgrades of Greenplum server)
+	  prepare             prepares a new base directory specified by the \$PXF_BASE environment variable.
+	                      It creates the servers, logs, lib, keytabs, and run directories inside \$PXF_BASE
+	                      and copies configuration files.
 	  cluster <command>   perform <command> on all the segment hosts in the cluster; try ${bold}pxf cluster help$normal
 
 	  sync <hostname>     synchronize \$PXF_BASE/{conf,lib,servers} directories onto <hostname>. Use --delete to delete extraneous remote files
@@ -252,6 +277,31 @@ function doInit()
     installExternalTableExtension || return 1
 }
 
+# doPrepare changes the PXF_BASE outside of PXF_HOME
+function doPrepare()
+{
+    if [[ $PXF_HOME == $PXF_BASE ]]; then
+        echoRed    "ERROR: 'pxf [cluster] prepare' requires a \$PXF_BASE value different from your PXF installation directory."
+        echoYellow "HINT:  Use 'PXF_BASE=<YOUR_PXF_BASE_DIRECTORY> pxf [cluster] prepare'."
+        exit 1
+    fi
+
+    if [[ -d $PXF_BASE ]] && [[ "$(ls -A $PXF_BASE)" ]]; then
+        echoRed "ERROR: The \$PXF_BASE ($PXF_BASE) location is not empty."
+        echoRed "       Ensure that the \$PXF_BASE directory you configured is empty."
+        exit 1
+    fi
+
+    mkdir -p $PXF_BASE || fail "Unable to create the \$PXF_BASE directory under $PXF_BASE"
+    createPxfBaseDirectories || fail "Unable to create the runtime directory structure inside $PXF_BASE"
+    copyConfigurationFilesToPxfBase || fail "Unable to copy configuration files inside $PXF_BASE/conf"
+
+    echoGreen ""
+    echoGreen "PXF configurations and runtime have been created under '$PXF_BASE'"
+    echoGreen "Ensure you run PXF commands with the \$PXF_BASE environment set to '$PXF_BASE'"
+    echoGreen "Consider adding PXF_BASE to ~/.bashrc: 'export PXF_BASE=$PXF_BASE'"
+}
+
 #
 # doStart handles start commands
 # command is executed as the current user
@@ -290,7 +340,7 @@ function do_start() {
     echoGreen "   PXF_HOME=${PXF_HOME}"
     echoGreen "   PXF_BASE=${PXF_BASE}"
     echoGreen "   PXF_LOGDIR=${PXF_LOGDIR}"
-    echoGreen "   PXF_BASEDIR=${PXF_BASEDIR}"
+    echoGreen "   PXF_RUNDIR=${PXF_RUNDIR}"
     echoGreen "   PXF_JVM_OPTS=${PXF_JVM_OPTS}"
     [[ $PXF_DEBUG == true ]] && echoGreen "   LOADER_PATH=${LOADER_PATH}"
 
@@ -377,10 +427,11 @@ function doSync()
 
 function doCluster()
 {
-    local pxf_cluster_command=$2 is_init=false
-    [[ ${pxf_cluster_command} == init ]] && is_init=true
+    local cmd=$2
     # Go CLI handles unset PXF_BASE when appropriate
-    [[ ${is_init} == false ]] && warnUserEnvScript
+    if [[ ${cmd} != init ]] && [[ ${cmd} != prepare ]]; then
+        warnUserEnvScript
+    fi
     "${parent_script_dir}/bin/pxf-cli" "$@"
 }
 
@@ -438,6 +489,9 @@ case $pxf_script_command in
         ;;
     'reset')
         doReset "$@"
+        ;;
+    'prepare')
+        doPrepare "$@"
         ;;
     *)
         printUsage

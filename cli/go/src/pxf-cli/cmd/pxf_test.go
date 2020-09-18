@@ -44,7 +44,7 @@ var _ = Describe("CommandFunc", func() {
 			Expect(err).To(Equal(errors.New("GPHOME must be set")))
 		})
 
-		It("successfully generates start, stop, status, restart, and reset commands", func() {
+		It("it successfully generates start, stop, status, restart, reset, and prepare commands", func() {
 			commandFunc, err := cmd.StartCommand.GetFunctionToExecute()
 			Expect(err).To(BeNil())
 			Expect("PXF_BASE=/test/somewhere/pxf_base /test/pxfhome/bin/pxf start").To(Equal(commandFunc("foo")))
@@ -64,6 +64,10 @@ var _ = Describe("CommandFunc", func() {
 			commandFunc, err = cmd.ResetCommand.GetFunctionToExecute()
 			Expect(err).To(BeNil())
 			Expect("/test/pxfhome/bin/pxf reset --force").To(Equal(commandFunc("foo")))
+
+			commandFunc, err = cmd.PrepareCommand.GetFunctionToExecute()
+			Expect(err).To(BeNil())
+			Expect("PXF_BASE=/test/somewhere/pxf_base /test/pxfhome/bin/pxf prepare").To(Equal(commandFunc("foo")))
 		})
 	})
 
@@ -104,8 +108,13 @@ var _ = Describe("CommandFunc", func() {
 			commandFunc, err = cmd.SyncCommand.GetFunctionToExecute()
 			Expect(commandFunc).To(BeNil())
 			Expect(err).To(Equal(errors.New("PXF_BASE must be set")))
+
+			commandFunc, err = cmd.PrepareCommand.GetFunctionToExecute()
+			Expect(commandFunc).To(BeNil())
+			Expect(err).To(Equal(errors.New("PXF_BASE must be set")))
 		})
 	})
+
 	Context("when user specifies --delete", func() {
 		BeforeEach(func() {
 			_ = os.Setenv("PXF_BASE", "/test/somewhere/pxf_base")
@@ -134,6 +143,7 @@ var _ = Describe("CommandFunc", func() {
 			cmd.DeleteOnSync = false
 		})
 	})
+
 	Context("when only PXF_BASE is set", func() {
 		BeforeEach(func() {
 			_ = os.Unsetenv("GPHOME")
@@ -177,6 +187,9 @@ var _ = Describe("CommandFunc", func() {
 			commandFunc, err = cmd.StatusCommand.GetFunctionToExecute()
 			Expect(commandFunc).To(BeNil())
 			Expect(err).To(Equal(errors.New("PXF_HOME must be set")))
+			commandFunc, err = cmd.PrepareCommand.GetFunctionToExecute()
+			Expect(commandFunc).To(BeNil())
+			Expect(err).To(Equal(errors.New("PXF_HOME must be set")))
 		})
 	})
 
@@ -204,6 +217,9 @@ var _ = Describe("CommandFunc", func() {
 			commandFunc, err = cmd.SyncCommand.GetFunctionToExecute()
 			Expect(commandFunc).To(BeNil())
 			Expect(err).To(Equal(errors.New("PXF_BASE cannot be blank")))
+			commandFunc, err = cmd.PrepareCommand.GetFunctionToExecute()
+			Expect(commandFunc).To(BeNil())
+			Expect(err).To(Equal(errors.New("PXF_BASE cannot be blank")))
 		})
 	})
 
@@ -214,7 +230,7 @@ var _ = Describe("CommandFunc", func() {
 			_ = os.Unsetenv("PXF_BASE")
 			_ = os.Unsetenv("JAVA_HOME")
 		})
-		It("fails to init, start, stop, restart, register, or status", func() {
+		It("it fails to init, start, stop, restart, register, or status", func() {
 			_ = os.Setenv("PXF_HOME", "")
 			commandFunc, err := cmd.RegisterCommand.GetFunctionToExecute()
 			Expect(commandFunc).To(BeNil())
@@ -234,10 +250,50 @@ var _ = Describe("CommandFunc", func() {
 			commandFunc, err = cmd.StatusCommand.GetFunctionToExecute()
 			Expect(commandFunc).To(BeNil())
 			Expect(err).To(Equal(errors.New("PXF_HOME cannot be blank")))
+			commandFunc, err = cmd.PrepareCommand.GetFunctionToExecute()
+			Expect(commandFunc).To(BeNil())
+			Expect(err).To(Equal(errors.New("PXF_HOME cannot be blank")))
 		})
 	})
 
-	Context("When the user tries to run a warn command and they answer y", func() {
+	Context("when PXF_BASE is the same as PXF_HOME", func() {
+		BeforeEach(func() {
+			_ = os.Unsetenv("GPHOME")
+			_ = os.Setenv("PXF_HOME", "/test/pxfhome")
+			_ = os.Setenv("PXF_BASE", "/test/pxfhome")
+			_ = os.Unsetenv("JAVA_HOME")
+		})
+
+		It("it fails to run the prepare command", func() {
+			commandFunc, err := cmd.PrepareCommand.GetFunctionToExecute()
+			Expect(commandFunc).To(BeNil())
+			Expect(err).To(Equal(errors.New("the PXF_BASE value must be different from your PXF installation directory")))
+		})
+
+		It("it successfully generates start, stop, status, restart, and reset commands", func() {
+			commandFunc, err := cmd.StartCommand.GetFunctionToExecute()
+			Expect(err).To(BeNil())
+			Expect("PXF_BASE=/test/pxfhome /test/pxfhome/bin/pxf start").To(Equal(commandFunc("foo")))
+
+			commandFunc, err = cmd.StopCommand.GetFunctionToExecute()
+			Expect(err).To(BeNil())
+			Expect("PXF_BASE=/test/pxfhome /test/pxfhome/bin/pxf stop").To(Equal(commandFunc("foo")))
+
+			commandFunc, err = cmd.StatusCommand.GetFunctionToExecute()
+			Expect(err).To(BeNil())
+			Expect("PXF_BASE=/test/pxfhome /test/pxfhome/bin/pxf status").To(Equal(commandFunc("foo")))
+
+			commandFunc, err = cmd.RestartCommand.GetFunctionToExecute()
+			Expect(err).To(BeNil())
+			Expect("PXF_BASE=/test/pxfhome /test/pxfhome/bin/pxf restart").To(Equal(commandFunc("foo")))
+
+			commandFunc, err = cmd.ResetCommand.GetFunctionToExecute()
+			Expect(err).To(BeNil())
+			Expect("/test/pxfhome/bin/pxf reset --force").To(Equal(commandFunc("foo")))
+		})
+	})
+
+	Context("when the user tries to run a warn command and they answer y", func() {
 		It("Returns an error", func() {
 			var input bytes.Buffer
 			input.Write([]byte("Y"))
@@ -246,7 +302,7 @@ var _ = Describe("CommandFunc", func() {
 		})
 	})
 
-	Context("When the user tries to run a non-warn command", func() {
+	Context("when the user tries to run a non-warn command", func() {
 		It("Returns an error", func() {
 			var input bytes.Buffer
 			input.Write([]byte("this input shouldn't matter!"))
