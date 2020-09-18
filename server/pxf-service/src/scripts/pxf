@@ -39,22 +39,22 @@ cd "$WORKING_DIR" || exit 1
 # establish PXF_HOME and global vars used by all commands
 export PXF_HOME=${parent_script_dir}
 
-# Path to PXF_RUN directories, defaults to PXF_HOME
-export PXF_RUN=${PXF_RUN:=$PXF_HOME}
+# Path to PXF_BASE directories, defaults to PXF_HOME
+export PXF_BASE=${PXF_BASE:=$PXF_HOME}
 
-[[ -f ${PXF_RUN}/conf/pxf-env.sh ]] && source "${PXF_RUN}/conf/pxf-env.sh"
+[[ -f ${PXF_BASE}/conf/pxf-env.sh ]] && source "${PXF_BASE}/conf/pxf-env.sh"
 
 # Path to HDFS native libraries
-export LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}${PXF_RUN}/lib/native:/usr/lib/hadoop/lib/native
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}${PXF_BASE}/lib/native:/usr/lib/hadoop/lib/native
 
 # Path to JAVA
 export JAVA_HOME=${JAVA_HOME:=/usr/java/default}
 
 # Path to Log directory
-export PXF_LOGDIR=${PXF_LOGDIR:=${PXF_RUN}/logs}
+export PXF_LOGDIR=${PXF_LOGDIR:=${PXF_BASE}/logs}
 
 # Path to Run directory
-export PXF_RUNDIR=${PXF_RUNDIR:=${PXF_RUN}/run}
+export PXF_BASEDIR=${PXF_BASEDIR:=${PXF_BASE}/run}
 
 # Port
 export PXF_PORT=${PXF_PORT:=5888}
@@ -69,13 +69,13 @@ export PXF_DEBUG=${PXF_DEBUG:-false}
 export PXF_OOM_KILL=${PXF_OOM_KILL:-true}
 
 # Additional locations to be class-loaded by the application
-export LOADER_PATH="${PXF_LOADER_PATH:+$PXF_LOADER_PATH,}file:${PXF_RUN}/conf,file:${PXF_RUN}/lib"
+export LOADER_PATH="${PXF_LOADER_PATH:+$PXF_LOADER_PATH,}file:${PXF_BASE}/conf,file:${PXF_BASE}/lib"
 
 [[ -z "$STOP_WAIT_TIME" ]] && STOP_WAIT_TIME="60"
 identity="pxf-app"
 
 jarfile="${PXF_HOME}/application/pxf-app-_PXF_VERSION_.jar"
-pid_file="${PXF_RUNDIR}/${identity}.pid"
+pid_file="${PXF_BASEDIR}/${identity}.pid"
 
 # ANSI Colors
 echoRed() { echo $'\e[0;31m'"$1"$'\e[0m'; }
@@ -193,7 +193,7 @@ doHelp() {
 	  register            install PXF extension under \$GPHOME (useful after upgrades of Greenplum server)
 	  cluster <command>   perform <command> on all the segment hosts in the cluster; try ${bold}pxf cluster help$normal
 
-	  sync <hostname>     synchronize \$PXF_RUN/{conf,lib,servers} directories onto <hostname>. Use --delete to delete extraneous remote files
+	  sync <hostname>     synchronize \$PXF_BASE/{conf,lib,servers} directories onto <hostname>. Use --delete to delete extraneous remote files
 
 	  init                ${bold}(deprecated)${normal} install PXF extension under \$GPHOME
 	  reset               ${bold}(deprecated)${normal} no operation
@@ -272,12 +272,12 @@ function do_start() {
         isRunning "$pid" && { echoYellow "PXF is already running [pid=$pid]"; return 0; }
     fi
 
-    PXF_OPTS=(-Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager -Dlogging.config=${PXF_RUN}/conf/pxf-log4j2.xml)
+    PXF_OPTS=(-Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager -Dlogging.config=${PXF_BASE}/conf/pxf-log4j2.xml)
     [[ $PXF_DEBUG == true ]]      && PXF_OPTS+=(-agentlib:jdwp=transport=dt_socket,address=2020,suspend=n,server=y)
     [[ $PXF_OOM_KILL = true ]]    && PXF_OPTS+=(-XX:OnOutOfMemoryError="${PXF_HOME}/bin/kill-pxf.sh %p")
     [[ -n "$PXF_OOM_DUMP_PATH" ]] && PXF_OPTS+=(-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=$PXF_OOM_DUMP_PATH)
     JAVA_OPTS=($PXF_JVM_OPTS  "${PXF_OPTS[@]}")
-    RUN_ARGS=(--spring.config.location=classpath:/application.properties,file:${PXF_RUN}/conf/pxf-application.properties)
+    RUN_ARGS=(--spring.config.location=classpath:/application.properties,file:${PXF_BASE}/conf/pxf-application.properties)
 
     local arguments=(-Dsun.misc.URLClassPath.disableJarChecking=true "${JAVA_OPTS[@]}" -jar "$jarfile" $RUN_ARGS)
 
@@ -288,9 +288,9 @@ function do_start() {
     echoGreen "Starting PXF with properties:"
     echoGreen "   JAVA_HOME=${JAVA_HOME}"
     echoGreen "   PXF_HOME=${PXF_HOME}"
-    echoGreen "   PXF_RUN=${PXF_RUN}"
+    echoGreen "   PXF_BASE=${PXF_BASE}"
     echoGreen "   PXF_LOGDIR=${PXF_LOGDIR}"
-    echoGreen "   PXF_RUNDIR=${PXF_RUNDIR}"
+    echoGreen "   PXF_BASEDIR=${PXF_BASEDIR}"
     echoGreen "   PXF_JVM_OPTS=${PXF_JVM_OPTS}"
     [[ $PXF_DEBUG == true ]] && echoGreen "   LOADER_PATH=${LOADER_PATH}"
 
@@ -372,21 +372,21 @@ function doSync()
         fail 'A destination hostname must be provided'
     fi
     warnUserEnvScript
-    rsync -az${DELETE:+ --delete} -e "ssh -o StrictHostKeyChecking=no" "$PXF_RUN"/{conf,lib,servers} "${target_host}:$PXF_RUN"
+    rsync -az${DELETE:+ --delete} -e "ssh -o StrictHostKeyChecking=no" "$PXF_BASE"/{conf,lib,servers} "${target_host}:$PXF_BASE"
 }
 
 function doCluster()
 {
     local pxf_cluster_command=$2 is_init=false
     [[ ${pxf_cluster_command} == init ]] && is_init=true
-    # Go CLI handles unset PXF_RUN when appropriate
+    # Go CLI handles unset PXF_BASE when appropriate
     [[ ${is_init} == false ]] && warnUserEnvScript
     "${parent_script_dir}/bin/pxf-cli" "$@"
 }
 
 function warnUserEnvScript()
 {
-   local user_env_script=${PXF_RUN}/conf/pxf-env.sh
+   local user_env_script=${PXF_BASE}/conf/pxf-env.sh
    [[ -f $user_env_script ]] || echoYellow "WARNING: failed to find ${user_env_script}, default parameters will be used"
 }
 

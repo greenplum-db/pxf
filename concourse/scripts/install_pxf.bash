@@ -40,7 +40,7 @@ SKIP_HADOOP_SETUP=${SKIP_HADOOP_SETUP:-false}
 get_hadoop_ip
 
 PROXY_USER=${PROXY_USER:-pxfuser}
-PXF_RUN_DIR=${PXF_RUN_DIR:-$PXF_HOME}
+PXF_BASE_DIR=${PXF_BASE_DIR:-$PXF_HOME}
 INSTALL_GPHDFS=${INSTALL_GPHDFS:-true}
 
 cat << EOF
@@ -59,7 +59,7 @@ function create_pxf_installer_scripts() {
 
 		GPHOME=${GPHOME}
 		PXF_HOME=${PXF_HOME}
-		PXF_RUN=${PXF_RUN_DIR}
+		PXF_BASE=${PXF_BASE_DIR}
 
 		function setup_pxf_env() {
 		  #Check if some other process is listening on 5888
@@ -67,14 +67,14 @@ function create_pxf_installer_scripts() {
 
 		  if [[ $IMPERSONATION == false ]]; then
 		    echo 'Impersonation is disabled, updating pxf-site.xml property'
-		    if [[ ! -f \${PXF_RUN}/servers/default/pxf-site.xml ]]; then
-		      cp \${PXF_RUN}/templates/pxf-site.xml \${PXF_RUN}/servers/default/pxf-site.xml
+		    if [[ ! -f \${PXF_BASE}/servers/default/pxf-site.xml ]]; then
+		      cp \${PXF_BASE}/templates/pxf-site.xml \${PXF_BASE}/servers/default/pxf-site.xml
 		    fi
-		    sed -i -e "s|<value>true</value>|<value>false</value>|g" \${PXF_RUN}/servers/default/pxf-site.xml
+		    sed -i -e "s|<value>true</value>|<value>false</value>|g" \${PXF_BASE}/servers/default/pxf-site.xml
 		  fi
 
 		  if [[ -n "${PXF_JVM_OPTS}" ]]; then
-		    echo 'export PXF_JVM_OPTS="${PXF_JVM_OPTS}"' >> "\${PXF_RUN}/conf/pxf-env.sh"
+		    echo 'export PXF_JVM_OPTS="${PXF_JVM_OPTS}"' >> "\${PXF_BASE}/conf/pxf-env.sh"
 		  fi
 
 		  if [[ $KERBEROS == true ]]; then
@@ -93,27 +93,27 @@ function create_pxf_installer_scripts() {
 		      sed -i "s/\${REALM_2} =/}\n\t\${REALM_2} =/g" /tmp/krb5.conf
 		    fi
 
-		    if [[ ! -f \${PXF_RUN}/servers/default/pxf-site.xml ]]; then
-		      cp \${PXF_RUN}/templates/pxf-site.xml \${PXF_RUN}/servers/default/pxf-site.xml
+		    if [[ ! -f \${PXF_BASE}/servers/default/pxf-site.xml ]]; then
+		      cp \${PXF_BASE}/templates/pxf-site.xml \${PXF_BASE}/servers/default/pxf-site.xml
 		    fi
 
-		    sed -i -e "s|gpadmin/_HOST@EXAMPLE.COM|gpadmin@${REALM}|g" ${PXF_RUN_DIR}/servers/default/pxf-site.xml
-		    gpscp -f ~gpadmin/hostfile_all -v -r -u gpadmin ~/dataproc_env_files/pxf.service.keytab =:${PXF_RUN_DIR}/keytabs/
+		    sed -i -e "s|gpadmin/_HOST@EXAMPLE.COM|gpadmin@${REALM}|g" ${PXF_BASE_DIR}/servers/default/pxf-site.xml
+		    gpscp -f ~gpadmin/hostfile_all -v -r -u gpadmin ~/dataproc_env_files/pxf.service.keytab =:${PXF_BASE_DIR}/keytabs/
 		    gpscp -f ~gpadmin/hostfile_all -v -r -u centos /tmp/krb5.conf =:/tmp/krb5.conf
 		    gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e 'sudo mv /tmp/krb5.conf /etc/krb5.conf'
 		  fi
 		}
 
 		function main() {
-		  rm -rf \$PXF_RUN/servers/default/*-site.xml
+		  rm -rf \$PXF_BASE/servers/default/*-site.xml
 		  if [[ -d ~/dataproc_env_files/conf ]]; then
-		    cp ~/dataproc_env_files/conf/*-site.xml "\$PXF_RUN/servers/default"
+		    cp ~/dataproc_env_files/conf/*-site.xml "\$PXF_BASE/servers/default"
 		    # required for recursive directories tests
-		    cp "\$PXF_RUN/templates/mapred-site.xml" "\$PXF_RUN/servers/default/mapred1-site.xml"
+		    cp "\$PXF_BASE/templates/mapred-site.xml" "\$PXF_BASE/servers/default/mapred1-site.xml"
 		  else
-		    cp \$PXF_RUN/templates/{hdfs,mapred,yarn,core,hbase,hive,pxf}-site.xml "\$PXF_RUN/servers/default"
-		    sed -i -e 's/\(0.0.0.0\|localhost\|127.0.0.1\)/${HADOOP_IP}/g' \$PXF_RUN/servers/default/*-site.xml
-		    sed -i -e 's|\${user.name}|${PROXY_USER}|g' \$PXF_RUN/servers/default/pxf-site.xml
+		    cp \$PXF_BASE/templates/{hdfs,mapred,yarn,core,hbase,hive,pxf}-site.xml "\$PXF_BASE/servers/default"
+		    sed -i -e 's/\(0.0.0.0\|localhost\|127.0.0.1\)/${HADOOP_IP}/g' \$PXF_BASE/servers/default/*-site.xml
+		    sed -i -e 's|\${user.name}|${PROXY_USER}|g' \$PXF_BASE/servers/default/pxf-site.xml
 		  fi
 		  setup_pxf_env
 		}
@@ -129,7 +129,7 @@ function create_pxf_installer_scripts() {
 
 		GPHOME=${GPHOME}
 		PXF_HOME=${PXF_HOME}
-		PXF_RUN=${PXF_RUN_DIR}
+		PXF_BASE=${PXF_BASE_DIR}
 		export HADOOP_VER=2.6.5.0-292
 
 		function install_java() {
@@ -201,7 +201,7 @@ function run_pxf_installer_scripts() {
 		${PXF_HOME}/bin/pxf cluster start &&
 		if [[ $INSTALL_GPHDFS == true ]]; then
 			gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e '
-				sudo cp ${PXF_RUN_DIR}/servers/default/{core,hdfs}-site.xml /etc/hadoop/conf
+				sudo cp ${PXF_BASE_DIR}/servers/default/{core,hdfs}-site.xml /etc/hadoop/conf
 			'
 		fi
 	"

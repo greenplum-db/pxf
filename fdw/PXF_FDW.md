@@ -185,7 +185,7 @@ for example:
 To reduce the amount of configuration required for each server, we introduce a 
 new option `config`. This new option provides the name of the server directory where
 the configuration files reside. In the example above, configuration files live
-in the `$PXF_RUN/servers/hdp_1` directory, and all three servers share the same
+in the `$PXF_BASE/servers/hdp_1` directory, and all three servers share the same
 configuration directory.
 
 The `config` option is intended for Hadoop based configurations, but we do

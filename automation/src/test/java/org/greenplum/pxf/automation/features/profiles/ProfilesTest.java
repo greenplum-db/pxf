@@ -155,7 +155,7 @@ public class ProfilesTest extends BaseFeature {
         // write list to file
         pxfProfiles.writeProfilesListToFile();
 
-        cluster.copyFileToNodes(pxfProfiles.getXmlFilePath(), cluster.getPxfRun() + "/conf");
+        cluster.copyFileToNodes(pxfProfiles.getXmlFilePath(), cluster.getPxfBase() + "/conf");
         cluster.restart(PhdCluster.EnumClusterServices.pxf);
         exTable.setProfile("BeHereNow");
         gpdb.createTableAndVerify(exTable);

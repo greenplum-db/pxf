@@ -12,7 +12,7 @@
 # export JAVA_HOME=/usr/java/default
 
 # Path to Log directory
-# export PXF_LOGDIR="${PXF_RUN}/logs"
+# export PXF_LOGDIR="${PXF_BASE}/logs"
 
 # Memory
 # export PXF_JVM_OPTS="-Xmx2g -Xms1g"
@@ -21,7 +21,7 @@
 # export PXF_OOM_KILL=true
 
 # Dump heap on OutOfMemoryError, set to dump path to enable
-# export PXF_OOM_DUMP_PATH=${PXF_RUN}/run/pxf_heap_dump
+# export PXF_OOM_DUMP_PATH=${PXF_BASE}/run/pxf_heap_dump
 
 # Additional locations to be class-loaded by PXF
 # export PXF_LOADER_PATH=

@@ -27,7 +27,7 @@ public class BaseConfigurationFactory implements ConfigurationFactory {
 
     @Autowired
     public BaseConfigurationFactory(PxfServerProperties pxfServerProperties) {
-        this(new File(String.format("%s%sservers", pxfServerProperties.getRun(), File.separator)));
+        this(new File(String.format("%s%sservers", pxfServerProperties.getBase(), File.separator)));
     }
 
     BaseConfigurationFactory(File serversConfigDirectory) {

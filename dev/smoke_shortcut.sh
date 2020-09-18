@@ -19,12 +19,12 @@ pushd ~/workspace/singlecluster/bin
 popd
 
 make -C ~/workspace/pxf install
-export PXF_RUN=$PXF_HOME
+export PXF_BASE=$PXF_HOME
 export PXF_JVM_OPTS="-Xmx512m -Xms256m"
 $PXF_HOME/bin/pxf init
 $PXF_HOME/bin/pxf start
 
-cp "${PXF_RUN}"/templates/*-site.xml "${PXF_RUN}"/servers/default
+cp "${PXF_BASE}"/templates/*-site.xml "${PXF_BASE}"/servers/default
 
 if [ -d ~/workspace/gpdb/gpAux/extensions/pxf ]; then
   PXF_EXTENSIONS_DIR=gpAux/extensions/pxf
