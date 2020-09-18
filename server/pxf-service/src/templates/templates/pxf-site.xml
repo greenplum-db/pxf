@@ -7,7 +7,7 @@
     </property>
     <property>
         <name>pxf.service.kerberos.keytab</name>
-        <value>${pxf.run}/keytabs/pxf.service.keytab</value>
+        <value>${pxf.base}/keytabs/pxf.service.keytab</value>
         <description>Kerberos path to keytab file owned by pxf service with permissions 0400</description>
     </property>
     <property>

@@ -16,7 +16,7 @@ display "Starting PXF"
 pxf start
 
 display "Setting up default PXF server"
-cp "${PXF_RUN}"/templates/*-site.xml "${PXF_RUN}"/servers/default
+cp "${PXF_BASE}"/templates/*-site.xml "${PXF_BASE}"/servers/default
 
 display "Registering PXF Greenplum extension"
 psql -d template1 -c "create extension pxf"

@@ -34,12 +34,12 @@ ifeq "$(PROTOCOL)" "minio"
 	PROTOCOL=s3
 endif
 
-PXF_RUN ?= $(PXF_HOME)
-PXF_RUN_SERVERS=$(PXF_RUN)/servers
+PXF_BASE ?= $(PXF_HOME)
+PXF_BASE_SERVERS=$(PXF_BASE)/servers
 
 ifneq "$(PROTOCOL)" ""
 	MAVEN_TEST_OPTS+= -DPROTOCOL=$(PROTOCOL)
-	PROTOCOL_HOME=$(PXF_RUN_SERVERS)/$(PROTOCOL)
+	PROTOCOL_HOME=$(PXF_BASE_SERVERS)/$(PROTOCOL)
 endif
 
 ifneq "$(ACCESS_KEY_ID)" ""
@@ -118,37 +118,37 @@ dev: symlink_pxf_jars
 	$(MVN) $(MAVEN_TEST_OPTS) package -DskipTests=true
 
 sync_jdbc_config:
-	@mkdir -p $(PXF_RUN_SERVERS)/database
-	@if [ ! -f $(PXF_RUN_SERVERS)/database/jdbc-site.xml ]; then \
-		cp $(PXF_HOME)/templates/jdbc-site.xml $(PXF_RUN_SERVERS)/database/; \
-		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.postgresql.Driver|" $(PXF_RUN_SERVERS)/database/jdbc-site.xml; \
-		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_URL|jdbc:postgresql://$(JDBC_HOST):$(JDBC_PORT)/pxfautomation|" $(PXF_RUN_SERVERS)/database/jdbc-site.xml; \
-		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_USER||" $(PXF_RUN_SERVERS)/database/jdbc-site.xml; \
-		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_PASSWORD||" $(PXF_RUN_SERVERS)/database/jdbc-site.xml; \
-		cp $(PXF_RUN_SERVERS)/database/jdbc-site.xml $(PXF_RUN_SERVERS)/database/testuser-user.xml; \
-		sed $(SED_OPTS) "s|pxfautomation|template1|" $(PXF_RUN_SERVERS)/database/testuser-user.xml; \
+	@mkdir -p $(PXF_BASE_SERVERS)/database
+	@if [ ! -f $(PXF_BASE_SERVERS)/database/jdbc-site.xml ]; then \
+		cp $(PXF_HOME)/templates/jdbc-site.xml $(PXF_BASE_SERVERS)/database/; \
+		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.postgresql.Driver|" $(PXF_BASE_SERVERS)/database/jdbc-site.xml; \
+		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_URL|jdbc:postgresql://$(JDBC_HOST):$(JDBC_PORT)/pxfautomation|" $(PXF_BASE_SERVERS)/database/jdbc-site.xml; \
+		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_USER||" $(PXF_BASE_SERVERS)/database/jdbc-site.xml; \
+		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_PASSWORD||" $(PXF_BASE_SERVERS)/database/jdbc-site.xml; \
+		cp $(PXF_BASE_SERVERS)/database/jdbc-site.xml $(PXF_BASE_SERVERS)/database/testuser-user.xml; \
+		sed $(SED_OPTS) "s|pxfautomation|template1|" $(PXF_BASE_SERVERS)/database/testuser-user.xml; \
 	fi
-	@cp src/test/resources/report.sql $(PXF_RUN_SERVERS)/database
-	@mkdir -p $(PXF_RUN_SERVERS)/db-session-params
-	@if [ ! -f $(PXF_RUN_SERVERS)/db-session-params/jdbc-site.xml ]; then \
-		cp $(PXF_HOME)/templates/jdbc-site.xml $(PXF_RUN_SERVERS)/db-session-params/; \
-		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.postgresql.Driver|" $(PXF_RUN_SERVERS)/db-session-params/jdbc-site.xml; \
-		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_URL|jdbc:postgresql://$(JDBC_HOST):$(JDBC_PORT)/pxfautomation|" $(PXF_RUN_SERVERS)/db-session-params/jdbc-site.xml; \
-		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_USER||" $(PXF_RUN_SERVERS)/db-session-params/jdbc-site.xml; \
-		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_PASSWORD||" $(PXF_RUN_SERVERS)/db-session-params/jdbc-site.xml; \
-		sed $(SED_OPTS) "s|</configuration>|<property><name>jdbc.session.property.client_min_messages</name><value>debug1</value></property></configuration>|"  $(PXF_RUN_SERVERS)/db-session-params/jdbc-site.xml; \
-		sed $(SED_OPTS) "s|</configuration>|<property><name>jdbc.session.property.default_statistics_target</name><value>123</value></property></configuration>|"  $(PXF_RUN_SERVERS)/db-session-params/jdbc-site.xml; \
+	@cp src/test/resources/report.sql $(PXF_BASE_SERVERS)/database
+	@mkdir -p $(PXF_BASE_SERVERS)/db-session-params
+	@if [ ! -f $(PXF_BASE_SERVERS)/db-session-params/jdbc-site.xml ]; then \
+		cp $(PXF_HOME)/templates/jdbc-site.xml $(PXF_BASE_SERVERS)/db-session-params/; \
+		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.postgresql.Driver|" $(PXF_BASE_SERVERS)/db-session-params/jdbc-site.xml; \
+		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_URL|jdbc:postgresql://$(JDBC_HOST):$(JDBC_PORT)/pxfautomation|" $(PXF_BASE_SERVERS)/db-session-params/jdbc-site.xml; \
+		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_USER||" $(PXF_BASE_SERVERS)/db-session-params/jdbc-site.xml; \
+		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_PASSWORD||" $(PXF_BASE_SERVERS)/db-session-params/jdbc-site.xml; \
+		sed $(SED_OPTS) "s|</configuration>|<property><name>jdbc.session.property.client_min_messages</name><value>debug1</value></property></configuration>|"  $(PXF_BASE_SERVERS)/db-session-params/jdbc-site.xml; \
+		sed $(SED_OPTS) "s|</configuration>|<property><name>jdbc.session.property.default_statistics_target</name><value>123</value></property></configuration>|"  $(PXF_BASE_SERVERS)/db-session-params/jdbc-site.xml; \
 	fi
-	@mkdir -p $(PXF_RUN_SERVERS)/db-hive
-	@if [ ! -f $(PXF_RUN_SERVERS)/db-hive/jdbc-site.xml ]; then \
-		cp $(PXF_HOME)/templates/jdbc-site.xml $(PXF_RUN_SERVERS)/db-hive/; \
-		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.apache.hive.jdbc.HiveDriver|" $(PXF_RUN_SERVERS)/db-hive/jdbc-site.xml; \
-		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_URL|jdbc:hive2://$(HIVE_SERVER_HOST):$(HIVE_SERVER_PORT)/default|" $(PXF_RUN_SERVERS)/db-hive/jdbc-site.xml; \
-		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_USER||" $(PXF_RUN_SERVERS)/db-hive/jdbc-site.xml; \
-		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_PASSWORD||" $(PXF_RUN_SERVERS)/db-hive/jdbc-site.xml; \
+	@mkdir -p $(PXF_BASE_SERVERS)/db-hive
+	@if [ ! -f $(PXF_BASE_SERVERS)/db-hive/jdbc-site.xml ]; then \
+		cp $(PXF_HOME)/templates/jdbc-site.xml $(PXF_BASE_SERVERS)/db-hive/; \
+		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_DRIVER_CLASS_NAME|org.apache.hive.jdbc.HiveDriver|" $(PXF_BASE_SERVERS)/db-hive/jdbc-site.xml; \
+		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_URL|jdbc:hive2://$(HIVE_SERVER_HOST):$(HIVE_SERVER_PORT)/default|" $(PXF_BASE_SERVERS)/db-hive/jdbc-site.xml; \
+		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_USER||" $(PXF_BASE_SERVERS)/db-hive/jdbc-site.xml; \
+		sed $(SED_OPTS) "s|YOUR_DATABASE_JDBC_PASSWORD||" $(PXF_BASE_SERVERS)/db-hive/jdbc-site.xml; \
 	fi
-	@if [ ! -f $(PXF_RUN_SERVERS)/db-hive/hive-report.sql ]; then \
-		cp src/test/resources/hive-report.sql $(PXF_RUN_SERVERS)/db-hive; \
+	@if [ ! -f $(PXF_BASE_SERVERS)/db-hive/hive-report.sql ]; then \
+		cp src/test/resources/hive-report.sql $(PXF_BASE_SERVERS)/db-hive; \
 	fi
 
 sync_cloud_configs:

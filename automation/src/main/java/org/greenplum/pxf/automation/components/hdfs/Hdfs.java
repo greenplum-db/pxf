@@ -551,8 +551,8 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
 
         if (this.hadoopRoot != null) {
             String pxfHome = System.getenv("PXF_HOME");
-            String pxfRun = StringUtils.defaultIfBlank(System.getenv("PXF_RUN"), pxfHome);
-            this.hadoopRoot = this.hadoopRoot.replace("${pxf.run}", pxfRun);
+            String pxfBase = StringUtils.defaultIfBlank(System.getenv("PXF_BASE"), pxfHome);
+            this.hadoopRoot = this.hadoopRoot.replace("${pxf.base}", pxfBase);
         }
     }
 

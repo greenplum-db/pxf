@@ -7,7 +7,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
-import static org.greenplum.pxf.api.configuration.PxfServerProperties.PXF_RUN_PROPERTY;
+import static org.greenplum.pxf.api.configuration.PxfServerProperties.PXF_BASE_PROPERTY;
 
 /**
  * A {@link ThreadPoolTaskExecutor} that enhances error reporting when a
@@ -35,7 +35,7 @@ public class PxfThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
         } catch (TaskRejectedException ex) {
             PxfRuntimeException exception = new PxfRuntimeException(
                     PXF_SERVER_PROCESSING_CAPACITY_EXCEEDED_MESSAGE,
-                    String.format(PXF_SERVER_PROCESSING_CAPACITY_EXCEEDED_HINT, System.getProperty(PXF_RUN_PROPERTY)),
+                    String.format(PXF_SERVER_PROCESSING_CAPACITY_EXCEEDED_HINT, System.getProperty(PXF_BASE_PROPERTY)),
                     ex.getCause());
             throw new TaskRejectedException(ex.getMessage(), exception);
         }
@@ -56,7 +56,7 @@ public class PxfThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
         } catch (TaskRejectedException ex) {
             PxfRuntimeException exception = new PxfRuntimeException(
                     PXF_SERVER_PROCESSING_CAPACITY_EXCEEDED_MESSAGE,
-                    String.format(PXF_SERVER_PROCESSING_CAPACITY_EXCEEDED_HINT, System.getProperty(PXF_RUN_PROPERTY)),
+                    String.format(PXF_SERVER_PROCESSING_CAPACITY_EXCEEDED_HINT, System.getProperty(PXF_BASE_PROPERTY)),
                     ex.getCause());
             throw new TaskRejectedException(ex.getMessage(), exception);
         }
