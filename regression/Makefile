@@ -5,7 +5,7 @@ ifndef PXF_HOME
 $(error PXF_HOME is not defined)
 endif
 
-PXF_RUN ?= $(PXF_HOME)
+PXF_BASE ?= $(PXF_HOME)
 
 REGRESS_OPTS = --init-file=./init_file
 

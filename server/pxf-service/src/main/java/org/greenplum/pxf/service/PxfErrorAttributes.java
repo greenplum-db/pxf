@@ -79,7 +79,7 @@ public class PxfErrorAttributes extends DefaultErrorAttributes {
             }
         }
         String hostname = getHostname();
-        hint.append(String.format(DEFAULT_HINT, pxfProperties.getRun(), hostname));
+        hint.append(String.format(DEFAULT_HINT, pxfProperties.getBase(), hostname));
         errorAttributes.put("hint", hint.toString());
 
         if (throwable != null && StringUtils.isNotBlank(throwable.getMessage())) {

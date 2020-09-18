@@ -11,7 +11,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = PxfServerProperties.PROPERTY_PREFIX)
 public class PxfServerProperties {
 
-    public static final String PXF_RUN_PROPERTY = "pxf.run";
+    public static final String PXF_BASE_PROPERTY = "pxf.base";
 
     /**
      * The property prefix for all properties in this group.
@@ -23,7 +23,7 @@ public class PxfServerProperties {
      * been initialized, it will be set to NOT_INITIALIZED.
      */
     @Getter
-    private String run;
+    private String base;
 
     /**
      * Enable caching of metadata calls from a single JVM
@@ -56,8 +56,8 @@ public class PxfServerProperties {
         private int maxHeaderCount = 30000;
     }
 
-    public void setRun(String run) {
-        this.run = run;
-        System.setProperty(PXF_RUN_PROPERTY, run);
+    public void setBase(String base) {
+        this.base = base;
+        System.setProperty(PXF_BASE_PROPERTY, base);
     }
 }

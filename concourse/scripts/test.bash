@@ -42,7 +42,7 @@ function run_pg_regress() {
 		source "\${GPHOME}/greenplum_path.sh"
 
 		export GPHD_ROOT=${GPHD_ROOT}
-		export PXF_HOME=${PXF_HOME} PXF_RUN=${PXF_RUN_DIR}
+		export PXF_HOME=${PXF_HOME} PXF_BASE=${PXF_BASE_DIR}
 		export PGPORT=${PGPORT}
 		export HCFS_CMD=${GPHD_ROOT}/bin/hdfs
 		export HCFS_PROTOCOL=${PROTOCOL}
@@ -122,23 +122,23 @@ function run_pxf_automation() {
 function generate_extras_fat_jar() {
 	mkdir -p /tmp/fatjar
 	pushd /tmp/fatjar
-		find "${PXF_RUN_DIR}/lib" -name '*.jar' -exec jar -xf {} \;
+		find "${PXF_BASE_DIR}/lib" -name '*.jar' -exec jar -xf {} \;
 		jar -cf "/tmp/pxf-extras-1.0.0.jar" .
 		chown -R gpadmin:gpadmin "/tmp/pxf-extras-1.0.0.jar"
 	popd
 }
 
 function configure_mapr_dependencies() {
-	# Copy mapr specific jars to $PXF_RUN_DIR/lib
+	# Copy mapr specific jars to $PXF_BASE_DIR/lib
 	HADOOP_COMMON=/opt/mapr/hadoop/hadoop-2.7.0/share/hadoop/common
 	cp "${HADOOP_COMMON}/lib/maprfs-5.2.2-mapr.jar" \
 		"${HADOOP_COMMON}/lib/hadoop-auth-2.7.0-mapr-1707.jar" \
-		"${HADOOP_COMMON}/hadoop-common-2.7.0-mapr-1707.jar" "${PXF_RUN_DIR}/lib"
+		"${HADOOP_COMMON}/hadoop-common-2.7.0-mapr-1707.jar" "${PXF_BASE_DIR}/lib"
 	# Copy *-site.xml files
-	cp /opt/mapr/hadoop/hadoop-2.7.0/etc/hadoop/*-site.xml "${PXF_RUN_DIR}/servers/default"
+	cp /opt/mapr/hadoop/hadoop-2.7.0/etc/hadoop/*-site.xml "${PXF_BASE_DIR}/servers/default"
 	# Copy mapred-site.xml for recursive hdfs directories test
 	# We need to do this step after PXF Server init
-	cp "${PXF_RUN_DIR}/templates/mapred-site.xml" "${PXF_RUN_DIR}/servers/default/recursive-site.xml"
+	cp "${PXF_BASE_DIR}/templates/mapred-site.xml" "${PXF_BASE_DIR}/servers/default/recursive-site.xml"
 	# Set mapr port to 7222 in default.xml (sut)
 	sed -i 's|<port>8020</port>|<port>7222</port>|' pxf_src/automation/src/test/resources/sut/default.xml
 }
