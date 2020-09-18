@@ -69,17 +69,27 @@ func (cmd *command) GetFunctionToExecute() (func(string) string, error) {
 				inputs[pxfBase])
 		}, nil
 	default:
+		var effectivePxfBase string
+
 		pxfCommand := ""
 		if inputs[gpHome] != "" {
 			pxfCommand += "GPHOME=" + inputs[gpHome] + " "
 		}
 		if inputs[pxfBase] != "" {
 			pxfCommand += "PXF_BASE=" + inputs[pxfBase] + " "
+			effectivePxfBase = inputs[pxfBase]
+		} else {
+			// PXF_BASE defaults to PXF_HOME
+			effectivePxfBase = inputs[pxfHome]
 		}
 		if inputs[javaHome] != "" {
 			pxfCommand += "JAVA_HOME=" + inputs[javaHome] + " "
 		}
 		pxfCommand += inputs[pxfHome] + "/bin/pxf" + " " + string(cmd.name)
+		if cmd.name == prepare && inputs[pxfHome] == effectivePxfBase {
+			// error out when PXF_BASE equals PXF_HOME
+			return nil, errors.New("the PXF_BASE value must be different from your PXF installation directory")
+		}
 		if cmd.name == reset {
 			pxfCommand += " --force" // there is a prompt for local reset as well
 		}
@@ -106,6 +116,7 @@ const (
 	reset    = "reset"
 	register = "register"
 	restart  = "restart"
+	prepare  = "prepare"
 )
 
 // The pxf cli commands, exported for testing
@@ -216,6 +227,18 @@ var (
 		warn:       false,
 		envVars:    []envVar{pxfHome, pxfBase},
 		whereToRun: cluster.ON_REMOTE | cluster.ON_HOSTS | cluster.EXCLUDE_MASTER | cluster.EXCLUDE_MIRRORS,
+	}
+	PrepareCommand = command{
+		name: prepare,
+		messages: map[messageType]string{
+			success: "PXF prepared successfully on %d out of %d host%s\n",
+			status:  "Preparing PXF on master host%s and %d segment host%s...\n",
+			standby: ", standby master host,",
+			err:     "PXF failed to prepare on %d out of %d host%s\n",
+		},
+		warn:       false,
+		envVars:    []envVar{pxfHome, pxfBase},
+		whereToRun: cluster.ON_REMOTE | cluster.ON_HOSTS | cluster.INCLUDE_MASTER | cluster.INCLUDE_MIRRORS,
 	}
 )
 

@@ -73,6 +73,13 @@ stage:
 .PHONY: stage-notest
 stage-notest:
 	./gradlew -Pversion=$(PXF_VERSION) stage -x test
+	install -m 744 -d "build/stage/pxf/lib"
+	install -m 744 -d "build/stage/pxf/lib/native"
+	install -m 744 -d "build/stage/pxf/servers"
+	install -m 744 -d "build/stage/pxf/servers/default"
+	install -m 700 -d "build/stage/pxf/logs"
+	install -m 700 -d "build/stage/pxf/run"
+	install -m 700 -d "build/stage/pxf/keytabs"
 
 clean:
 	./gradlew clean
