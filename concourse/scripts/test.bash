@@ -138,7 +138,7 @@ function configure_mapr_dependencies() {
 	cp /opt/mapr/hadoop/hadoop-2.7.0/etc/hadoop/*-site.xml "${PXF_BASE_DIR}/servers/default"
 	# Copy mapred-site.xml for recursive hdfs directories test
 	# We need to do this step after PXF Server init
-	cp "${PXF_BASE_DIR}/templates/mapred-site.xml" "${PXF_BASE_DIR}/servers/default/recursive-site.xml"
+	cp "${PXF_HOME}/templates/mapred-site.xml" "${PXF_BASE_DIR}/servers/default/recursive-site.xml"
 	# Set mapr port to 7222 in default.xml (sut)
 	sed -i 's|<port>8020</port>|<port>7222</port>|' pxf_src/automation/src/test/resources/sut/default.xml
 }

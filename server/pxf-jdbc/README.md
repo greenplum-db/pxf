@@ -531,7 +531,7 @@ You can use the PXF JDBC connector to retrieve data from Hive. You can also use 
 While you can specify most of the properties in the EXTERNAL TABLE DDL, the instructions below assume you would use server-based configuration.
 Follow these steps to enable connectivity to Hive:
 1. Define a new PXF configuration server in `$PXF_BASE/servers/` directory
-2. Copy template from `$PXF_BASE/templates/jdbc-site.xml` to your server directory
+2. Copy template from `$PXF_HOME/templates/jdbc-site.xml` to your server directory
 3. Edit the file and provide Hive JDBC driver and URL
     ```angular2html
     <property>

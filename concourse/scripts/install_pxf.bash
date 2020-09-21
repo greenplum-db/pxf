@@ -68,7 +68,7 @@ function create_pxf_installer_scripts() {
 		  if [[ $IMPERSONATION == false ]]; then
 		    echo 'Impersonation is disabled, updating pxf-site.xml property'
 		    if [[ ! -f \${PXF_BASE}/servers/default/pxf-site.xml ]]; then
-		      cp \${PXF_BASE}/templates/pxf-site.xml \${PXF_BASE}/servers/default/pxf-site.xml
+		      cp \${PXF_HOME}/templates/pxf-site.xml \${PXF_BASE}/servers/default/pxf-site.xml
 		    fi
 		    sed -i -e "s|<value>true</value>|<value>false</value>|g" \${PXF_BASE}/servers/default/pxf-site.xml
 		  fi
@@ -94,7 +94,7 @@ function create_pxf_installer_scripts() {
 		    fi
 
 		    if [[ ! -f \${PXF_BASE}/servers/default/pxf-site.xml ]]; then
-		      cp \${PXF_BASE}/templates/pxf-site.xml \${PXF_BASE}/servers/default/pxf-site.xml
+		      cp \${PXF_HOME}/templates/pxf-site.xml \${PXF_BASE}/servers/default/pxf-site.xml
 		    fi
 
 		    sed -i -e "s|gpadmin/_HOST@EXAMPLE.COM|gpadmin@${REALM}|g" ${PXF_BASE_DIR}/servers/default/pxf-site.xml
