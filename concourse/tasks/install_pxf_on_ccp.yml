@@ -20,10 +20,11 @@ params:
   GP_VER:
   IMPERSONATION: true
   INSTALL_GPHDFS: true
-  SKIP_HADOOP_SETUP:
   KERBEROS: false
+  PXF_BASE_DIR:
   PXF_COMPONENT: true
   PXF_JVM_OPTS:
+  SKIP_HADOOP_SETUP:
 
 run:
   path: sh

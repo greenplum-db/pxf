@@ -450,6 +450,14 @@ function configure_pxf_server() {
 	# requires a login shell to source startup scripts (JAVA_HOME)
 	su --login gpadmin -c "${PXF_HOME}/bin/pxf register"
 
+	# prepare pxf if PXF_BASE_DIR is different from PXF_HOME
+	if [[ "$PXF_BASE_DIR" != "$PXF_HOME" ]]; then
+		echo "Prepare PXF in $PXF_BASE_DIR"
+		su --login gpadmin -c "PXF_BASE=${PXF_BASE_DIR} pxf prepare"
+		export PXF_BASE=${PXF_BASE_DIR}
+		echo "export PXF_BASE=${PXF_BASE_DIR}" >> ~/.pxfrc
+	fi
+
 	# update impersonation value based on CI parameter
 	if [[ ! ${IMPERSONATION} == true ]]; then
 		echo 'Impersonation is disabled, updating pxf-site.xml property'
