@@ -85,6 +85,8 @@ configure(javaProjects) {
 
             dependency("org.slf4j:slf4j-api:1.7.30")
             dependency("org.slf4j:slf4j-log4j12:1.7.30")
+
+            dependency("org.postgresql:postgresql:42.2.14")
         }
     }
 

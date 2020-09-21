@@ -25,7 +25,7 @@ dependencies {
     implementation("commons-collections:commons-collections")
     implementation("commons-io:commons-io")
     implementation("commons-lang:commons-lang")
-    implementation("org.postgresql:postgresql:42.2.14")  { transitive = false }
+    implementation("org.postgresql:postgresql") { transitive = false }
 
     /*******************************
      * Transitive Dependencies for JDBC Hive Access
