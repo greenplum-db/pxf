@@ -462,7 +462,7 @@ function configure_pxf_server() {
 	if [[ ! ${IMPERSONATION} == true ]]; then
 		echo 'Impersonation is disabled, updating pxf-site.xml property'
 		if [[ ! -f ${PXF_BASE_DIR}/servers/default/pxf-site.xml ]]; then
-			cp ${PXF_BASE_DIR}/templates/pxf-site.xml ${PXF_BASE_DIR}/servers/default/pxf-site.xml
+			cp ${PXF_HOME}/templates/pxf-site.xml ${PXF_BASE_DIR}/servers/default/pxf-site.xml
 		fi
 		sed -i -e "s|<value>true</value>|<value>false</value>|g" ${PXF_BASE_DIR}/servers/default/pxf-site.xml
 	elif [[ -z ${PROTOCOL} ]]; then
@@ -470,7 +470,7 @@ function configure_pxf_server() {
 		# pxf.service.user.name property value to use the PROXY_USER
 		# Only copy this file when testing against non-cloud
 		if [[ ! -f ${PXF_BASE_DIR}/servers/default/pxf-site.xml ]]; then
-			cp ${PXF_BASE_DIR}/templates/pxf-site.xml ${PXF_BASE_DIR}/servers/default/pxf-site.xml
+			cp ${PXF_HOME}/templates/pxf-site.xml ${PXF_BASE_DIR}/servers/default/pxf-site.xml
 			sed -i -e "s|</configuration>|<property><name>pxf.service.user.name</name><value>${PROXY_USER}</value></property></configuration>|g" ${PXF_BASE_DIR}/servers/default/pxf-site.xml
 		fi
 	fi
@@ -595,17 +595,17 @@ function configure_pxf_gs_server() {
 	echo "${GOOGLE_CREDENTIALS}" > "${GOOGLE_KEYFILE}"
 	chown gpadmin "${GOOGLE_KEYFILE}"
 	sed -e "s|YOUR_GOOGLE_STORAGE_KEYFILE|${GOOGLE_KEYFILE}|" \
-		${PXF_BASE_DIR}/templates/gs-site.xml >"${PXF_BASE_DIR}/servers/gs/gs-site.xml"
+		${PXF_HOME}/templates/gs-site.xml >"${PXF_BASE_DIR}/servers/gs/gs-site.xml"
 }
 
 function configure_pxf_s3_server() {
 	mkdir -p ${PXF_BASE_DIR}/servers/s3
 	sed -e "s|YOUR_AWS_ACCESS_KEY_ID|${ACCESS_KEY_ID}|" \
 		-e "s|YOUR_AWS_SECRET_ACCESS_KEY|${SECRET_ACCESS_KEY}|" \
-		${PXF_BASE_DIR}/templates/s3-site.xml >${PXF_BASE_DIR}/servers/s3/s3-site.xml
+		${PXF_HOME}/templates/s3-site.xml >${PXF_BASE_DIR}/servers/s3/s3-site.xml
 
 	mkdir -p ${PXF_BASE_DIR}/servers/s3-invalid
-	cp ${PXF_BASE_DIR}/templates/s3-site.xml ${PXF_BASE_DIR}/servers/s3-invalid/s3-site.xml
+	cp ${PXF_HOME}/templates/s3-site.xml ${PXF_BASE_DIR}/servers/s3-invalid/s3-site.xml
 	chown -R gpadmin:gpadmin "${PXF_BASE_DIR}/servers/s3" "${PXF_BASE_DIR}/servers/s3-invalid"
 }
 
@@ -614,7 +614,7 @@ function configure_pxf_minio_server() {
 	sed -e "s|YOUR_AWS_ACCESS_KEY_ID|${ACCESS_KEY_ID}|" \
 		-e "s|YOUR_AWS_SECRET_ACCESS_KEY|${SECRET_ACCESS_KEY}|" \
 		-e "s|YOUR_MINIO_URL|http://localhost:9000|" \
-		${PXF_BASE_DIR}/templates/minio-site.xml >${PXF_BASE_DIR}/servers/minio/minio-site.xml
+		${PXF_HOME}/templates/minio-site.xml >${PXF_BASE_DIR}/servers/minio/minio-site.xml
 }
 
 function configure_pxf_adl_server() {
@@ -622,14 +622,14 @@ function configure_pxf_adl_server() {
 	sed -e "s|YOUR_ADL_REFRESH_URL|${ADL_OAUTH2_REFRESH_URL}|g" \
 		-e "s|YOUR_ADL_CLIENT_ID|${ADL_OAUTH2_CLIENT_ID}|g" \
 		-e "s|YOUR_ADL_CREDENTIAL|${ADL_OAUTH2_CREDENTIAL}|g" \
-		"${PXF_BASE_DIR}/templates/adl-site.xml" >"${PXF_BASE_DIR}/servers/adl/adl-site.xml"
+		"${PXF_HOME}/templates/adl-site.xml" >"${PXF_BASE_DIR}/servers/adl/adl-site.xml"
 }
 
 function configure_pxf_wasbs_server() {
 	mkdir -p ${PXF_BASE_DIR}/servers/wasbs
 	sed -e "s|YOUR_AZURE_BLOB_STORAGE_ACCOUNT_NAME|${WASBS_ACCOUNT_NAME}|g" \
 		-e "s|YOUR_AZURE_BLOB_STORAGE_ACCOUNT_KEY|${WASBS_ACCOUNT_KEY}|g" \
-		"${PXF_BASE_DIR}/templates/wasbs-site.xml" >"${PXF_BASE_DIR}/servers/wasbs/wasbs-site.xml"
+		"${PXF_HOME}/templates/wasbs-site.xml" >"${PXF_BASE_DIR}/servers/wasbs/wasbs-site.xml"
 }
 
 function configure_pxf_default_server() {
@@ -641,8 +641,8 @@ function configure_pxf_default_server() {
 		if [[ -n $AMBARI_KEYTAB_FILE ]]; then
 			REALM=$(cat "$AMBARI_DIR"/REALM)
 			HADOOP_USER=$(cat "$AMBARI_DIR"/HADOOP_USER)
-			cp ${PXF_BASE_DIR}/templates/mapred-site.xml ${PXF_BASE_DIR}/servers/default/mapred1-site.xml
-			cp ${PXF_BASE_DIR}/templates/pxf-site.xml ${PXF_BASE_DIR}/servers/default/pxf-site.xml
+			cp ${PXF_HOME}/templates/mapred-site.xml ${PXF_BASE_DIR}/servers/default/mapred1-site.xml
+			cp ${PXF_HOME}/templates/pxf-site.xml ${PXF_BASE_DIR}/servers/default/pxf-site.xml
 			sed -i -e "s|gpadmin/_HOST@EXAMPLE.COM|${HADOOP_USER}@${REALM}|g" ${PXF_BASE_DIR}/servers/default/pxf-site.xml
 			sed -i -e "s|\${pxf.base}/keytabs/pxf.service.keytab|$AMBARI_KEYTAB_FILE|g" ${PXF_BASE_DIR}/servers/default/pxf-site.xml
 			sed -i -e "s|\${user.name}||g" ${PXF_BASE_DIR}/servers/default/pxf-site.xml
@@ -652,7 +652,7 @@ function configure_pxf_default_server() {
 
 			mkdir -p ${PXF_BASE_DIR}/servers/db-hive/
 			cp ${PXF_BASE_DIR}/servers/default/pxf-site.xml ${PXF_BASE_DIR}/servers/db-hive/
-			cp ${PXF_BASE_DIR}/templates/jdbc-site.xml ${PXF_BASE_DIR}/servers/db-hive/
+			cp ${PXF_HOME}/templates/jdbc-site.xml ${PXF_BASE_DIR}/servers/db-hive/
 
 			REALM=$(cat "$AMBARI_DIR"/REALM)
 			HIVE_HOSTNAME=$(grep < "$AMBARI_DIR"/etc_hostfile ambari-2 | awk '{print $2}')
@@ -684,7 +684,7 @@ function configure_pxf_default_server() {
 		cp -r ${PXF_BASE_DIR}/servers/default ${PXF_BASE_DIR}/servers/default-no-impersonation
 
 		if [[ ! -f ${PXF_BASE_DIR}/servers/default-no-impersonation/pxf-site.xml ]]; then
-			cp ${PXF_BASE_DIR}/templates/pxf-site.xml ${PXF_BASE_DIR}/servers/default-no-impersonation/pxf-site.xml
+			cp ${PXF_HOME}/templates/pxf-site.xml ${PXF_BASE_DIR}/servers/default-no-impersonation/pxf-site.xml
 		fi
 
 		sed -i \
