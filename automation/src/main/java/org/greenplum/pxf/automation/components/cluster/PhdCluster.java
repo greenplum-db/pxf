@@ -192,11 +192,7 @@ public abstract class PhdCluster extends ShellSystemObject {
 	}
 
 	public String getPxfConfLocation() {
-
-		// if pxfHome is not explicitly set, assume relative to phdRoot
-		String home = (pxfHome == null) ? phdRoot + "/pxf" : pxfHome;
-
-		return home + "/conf";
+		return getPxfBase() + "/conf";
 	}
 
 	public int getNodesAmount() {

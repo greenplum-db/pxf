@@ -557,6 +557,7 @@ jobs:
       ACCESS_KEY_ID: ((tf-machine-access-key-id))
       GP_VER: [[gp_ver]]
       GROUP: gpdb,proxy,profile
+      PXF_BASE_DIR: /home/gpadmin/pxf
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
       TARGET_OS: centos
       TARGET_OS_VERSION: 6
@@ -686,6 +687,7 @@ jobs:
       ACCESS_KEY_ID: ((tf-machine-access-key-id))
       GP_VER: [[gp_ver]]
       GROUP: gpdb,proxy,profile
+      PXF_BASE_DIR: /home/gpadmin/pxf
       SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
       TARGET_OS: ubuntu
       TARGET_OS_VERSION: 18
@@ -1146,10 +1148,11 @@ jobs:
     file: pxf_src/concourse/tasks/install_pxf_on_ccp.yml
     image: ccp-7-image
     params:
+      GP_VER: [[gp_ver]]
       IMPERSONATION: true
       INSTALL_GPHDFS: false
-      GP_VER: [[gp_ver]]
       KERBEROS: ((kerberos-enabled))
+      PXF_BASE_DIR: /home/gpadmin/pxf
       PXF_JVM_OPTS: ((pxf-jvm-opts))
   - task: Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-IMPERS on RHEL7
     on_success:
@@ -1166,6 +1169,7 @@ jobs:
       GOOGLE_PROJECT_ID: ((google-project-id))
       GP_VER: [[gp_ver]]
       GROUP: security,proxySecurity,multiClusterSecurity
+      PXF_BASE_DIR: /home/gpadmin/pxf
       PXF_JVM_OPTS: ((pxf-jvm-opts))
       TARGET_OS: centos
 
