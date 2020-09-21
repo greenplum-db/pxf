@@ -171,7 +171,7 @@ EOF
 			${PXF_BASE_DIR}/servers/default-no-impersonation/pxf-site.xml
 		fi &&
 		echo 'export PXF_LOADER_PATH=file:/tmp/publicstage/pxf' >> ${PXF_BASE_DIR}/conf/pxf-env.sh && \
-		${PXF_HOME}/bin/pxf cluster sync
+		PXF_BASE=${PXF_BASE_DIR} ${PXF_HOME}/bin/pxf cluster sync
 	"
 }
 
@@ -191,7 +191,7 @@ function setup_pxf_kerberos_on_cluster() {
 			${PXF_BASE_DIR}/servers/db-hive/jdbc-site.xml &&
 		sed -i -e 's|\(jdbc:hive2://${HADOOP_HOSTNAME}:10000/default\)|\1;principal=${KERBERIZED_HADOOP_URI}|g' \
 			${PXF_BASE_DIR}/servers/db-hive/jdbc-site.xml &&
-		${PXF_HOME}/bin/pxf cluster sync
+		PXF_BASE=${PXF_BASE_DIR} ${PXF_HOME}/bin/pxf cluster sync
 	"
 	sudo mkdir -p /etc/security/keytabs
 	sudo cp "${DATAPROC_DIR}/pxf.service.keytab" /etc/security/keytabs/gpadmin.headless.keytab
@@ -219,7 +219,7 @@ function setup_pxf_kerberos_on_cluster() {
 			sed -i -e 's|/pxf.service.keytab<|/pxf.service.2.keytab<|g' ${PXF_BASE_DIR}/servers/hdfs-secure/pxf-site.xml
 		"
 		scp dataproc_2_env_files/conf/*-site.xml "gpadmin@mdw:${PXF_BASE_DIR}/servers/hdfs-secure"
-		ssh gpadmin@mdw "${PXF_HOME}/bin/pxf cluster sync"
+		ssh gpadmin@mdw "PXF_BASE=${PXF_BASE_DIR} ${PXF_HOME}/bin/pxf cluster sync"
 
 		sed -i  -e "s|</hdfs2>|<hadoopRoot>$DATAPROC_2_DIR</hadoopRoot><testKerberosPrincipal>${HADOOP_2_USER}@${REALM2}</testKerberosPrincipal></hdfs2>|g" \
 			-e "s|</hive2>|<kerberosPrincipal>${KERBERIZED_HADOOP_2_URI}</kerberosPrincipal><userName>${HADOOP_2_USER}</userName></hive2>|g" \
@@ -241,7 +241,7 @@ function setup_pxf_kerberos_on_cluster() {
 			sed -i -e 's|<value>true</value>|<value>false</value>|g' ${PXF_BASE_DIR}/servers/db-hive-kerberos/pxf-site.xml &&
 			sed -i 's|</configuration>|<property><name>hadoop.security.authentication</name><value>kerberos</value></property></configuration>|g' \
 				${PXF_BASE_DIR}/servers/db-hive-kerberos/jdbc-site.xml &&
-			${PXF_HOME}/bin/pxf cluster sync
+			PXF_BASE=${PXF_BASE_DIR} ${PXF_HOME}/bin/pxf cluster sync
 		"
 
 		# Add foreign dataproc hostfile to /etc/hosts
@@ -293,7 +293,7 @@ function setup_pxf_kerberos_on_cluster() {
 		cp ${PXF_BASE_DIR}/templates/{hdfs,mapred,yarn,core,hbase,hive,pxf}-site.xml ${PXF_BASE_DIR}/servers/hdfs-non-secure &&
 		sed -i -e 's/\(0.0.0.0\|localhost\|127.0.0.1\)/${NON_SECURE_HADOOP_IP}/g' ${PXF_BASE_DIR}/servers/hdfs-non-secure/*-site.xml &&
 		sed -i -e 's|</configuration>|<property><name>pxf.service.user.name</name><value>${PROXY_USER}</value></property></configuration>|g' ${PXF_BASE_DIR}/servers/hdfs-non-secure/pxf-site.xml &&
-		${PXF_HOME}/bin/pxf cluster sync
+		PXF_BASE=${PXF_BASE_DIR} ${PXF_HOME}/bin/pxf cluster sync
 	"
 	sed -i "s/>non-secure-hadoop</>${NON_SECURE_HADOOP_IP}</g" "$multiNodesCluster"
 
@@ -303,7 +303,7 @@ function setup_pxf_kerberos_on_cluster() {
 		cp ${PXF_BASE_DIR}/servers/default/*-site.xml ${PXF_BASE_DIR}/servers/secure-hdfs-invalid-principal &&
 		cp ${PXF_BASE_DIR}/templates/pxf-site.xml ${PXF_BASE_DIR}/servers/secure-hdfs-invalid-principal &&
 		sed -i -e 's|>gpadmin/_HOST@EXAMPLE.COM<|>foobar/_HOST@INVALID.REALM.INTERNAL<|g' ${PXF_BASE_DIR}/servers/secure-hdfs-invalid-principal/pxf-site.xml &&
-		${PXF_HOME}/bin/pxf cluster sync
+		PXF_BASE=${PXF_BASE_DIR} ${PXF_HOME}/bin/pxf cluster sync
 	"
 
 	# Create a secured server configuration with invalid keytab
@@ -312,14 +312,14 @@ function setup_pxf_kerberos_on_cluster() {
 		cp ${PXF_BASE_DIR}/servers/default/*-site.xml ${PXF_BASE_DIR}/servers/secure-hdfs-invalid-keytab &&
 		cp ${PXF_BASE_DIR}/templates/pxf-site.xml ${PXF_BASE_DIR}/servers/secure-hdfs-invalid-keytab &&
 		sed -i -e 's|/pxf.service.keytab<|/non.existent.keytab<|g' ${PXF_BASE_DIR}/servers/secure-hdfs-invalid-keytab/pxf-site.xml &&
-		${PXF_HOME}/bin/pxf cluster sync
+		PXF_BASE=${PXF_BASE_DIR} ${PXF_HOME}/bin/pxf cluster sync
 	"
 
 	# Configure the principal for the default-no-impersonation server
 	ssh gpadmin@mdw "
 	if [[ ${IMPERSONATION} == true ]]; then
 		sed -i -e 's|gpadmin/_HOST@EXAMPLE.COM|gpadmin@${REALM}|g' ${PXF_BASE_DIR}/servers/default-no-impersonation/pxf-site.xml &&
-		${PXF_HOME}/bin/pxf cluster sync
+		PXF_BASE=${PXF_BASE_DIR} ${PXF_HOME}/bin/pxf cluster sync
 	fi
 	"
 }

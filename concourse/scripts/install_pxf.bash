@@ -105,13 +105,19 @@ function create_pxf_installer_scripts() {
 		}
 
 		function main() {
+		  if [[ "\$PXF_BASE" != "\$PXF_HOME" ]]; then
+		    echo 'Prepare PXF in $PXF_BASE_DIR'
+		    PXF_BASE=\$PXF_BASE \$PXF_HOME/bin/pxf cluster prepare
+		    echo "export PXF_BASE=${PXF_BASE_DIR}" >> ~gpadmin/.bashrc
+		  fi
+
 		  rm -rf \$PXF_BASE/servers/default/*-site.xml
 		  if [[ -d ~/dataproc_env_files/conf ]]; then
 		    cp ~/dataproc_env_files/conf/*-site.xml "\$PXF_BASE/servers/default"
 		    # required for recursive directories tests
-		    cp "\$PXF_BASE/templates/mapred-site.xml" "\$PXF_BASE/servers/default/mapred1-site.xml"
+		    cp "\$PXF_HOME/templates/mapred-site.xml" "\$PXF_BASE/servers/default/mapred1-site.xml"
 		  else
-		    cp \$PXF_BASE/templates/{hdfs,mapred,yarn,core,hbase,hive,pxf}-site.xml "\$PXF_BASE/servers/default"
+		    cp \$PXF_HOME/templates/{hdfs,mapred,yarn,core,hbase,hive,pxf}-site.xml "\$PXF_BASE/servers/default"
 		    sed -i -e 's/\(0.0.0.0\|localhost\|127.0.0.1\)/${HADOOP_IP}/g' \$PXF_BASE/servers/default/*-site.xml
 		    sed -i -e 's|\${user.name}|${PROXY_USER}|g' \$PXF_BASE/servers/default/pxf-site.xml
 		  fi
@@ -197,8 +203,8 @@ function run_pxf_installer_scripts() {
 		fi &&
 		~gpadmin/configure_pxf.sh &&
 		gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e \"sudo sed -i -e 's/edw0/edw0 hadoop/' /etc/hosts\" &&
-		${PXF_HOME}/bin/pxf cluster sync &&
-		${PXF_HOME}/bin/pxf cluster start &&
+		PXF_BASE=${PXF_BASE_DIR} ${PXF_HOME}/bin/pxf cluster sync &&
+		PXF_BASE=${PXF_BASE_DIR} ${PXF_HOME}/bin/pxf cluster start &&
 		if [[ $INSTALL_GPHDFS == true ]]; then
 			gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e '
 				sudo cp ${PXF_BASE_DIR}/servers/default/{core,hdfs}-site.xml /etc/hadoop/conf

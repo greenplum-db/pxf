@@ -103,7 +103,7 @@ public class MultiNodeCluster extends PhdCluster {
         // build command
         String command;
         if (service == EnumClusterServices.pxf && getPxfHome() != null) {
-            command = getPxfHome() + "/bin/pxf " + operation;
+            command = "PXF_BASE=" + getPxfBase() + " " + getPxfHome() + "/bin/pxf " + operation;
         } else {
             command = "sudo -s /etc/init.d/" + service.getServiceName() + " " + operation;
         }
