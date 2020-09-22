@@ -105,17 +105,16 @@ public class SecurityServletFilter implements Filter {
 
         final String serverName = StringUtils.defaultIfBlank(getHeaderValue(request, SERVER_HEADER, false), "default");
         final String configDirectory = StringUtils.defaultIfBlank(getHeaderValue(request, CONFIG_HEADER, false), serverName);
-
-        Configuration configuration = configurationFactory.initConfiguration(configDirectory, serverName, gpdbUser, null);
-
-        boolean isUserImpersonation = secureLogin.isUserImpersonationEnabled(configuration);
+        final Configuration configuration = configurationFactory.initConfiguration(configDirectory, serverName, gpdbUser, null);
+        final boolean isUserImpersonation = secureLogin.isUserImpersonationEnabled(configuration);
+        final boolean isSecurityEnabled = Utilities.isSecurityEnabled(configuration);
 
         // Establish the UGI for the login user or the Kerberos principal for the given server, if applicable
         UserGroupInformation loginUser = secureLogin.getLoginUser(serverName, configDirectory, configuration);
 
         String serviceUser = loginUser.getUserName();
 
-        if (!isUserImpersonation && Utilities.isSecurityEnabled(configuration)) {
+        if (!isUserImpersonation && isSecurityEnabled) {
             // When impersonation is disabled and security is enabled
             // we check whether the pxf.service.user.name property was provided
             // and if provided we use the value as the remote user instead of
@@ -134,7 +133,7 @@ public class SecurityServletFilter implements Filter {
                 transactionId,
                 remoteUser,
                 serverName,
-                configuration,
+                isSecurityEnabled,
                 loginUser);
 
         final String serviceUserName = serviceUser;

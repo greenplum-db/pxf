@@ -19,23 +19,23 @@ package org.greenplum.pxf.service;
  * under the License.
  */
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
 
 /**
- * For the purposes of pxf-server, a session is the set of requests processed on a specific segment
- * on behalf of a particular user and transaction. Grouping requests together into a session allows
- * us to re-use the UserGroupInformation object (which is expensive to destroy) for each session.
+ * For the purposes of pxf-server, a session is the set of requests processed
+ * on a specific segment on behalf of a particular user and transaction ID.
+ * Grouping requests together into a session allows us to re-use the
+ * UserGroupInformation object (which is expensive to destroy) for each session.
  * <p>
- * SessionId is used as the cache key to look up the UserGroupInformation for a request. See {@link
- * UGICache}.
+ * SessionId is used as the cache key to look up the UserGroupInformation for
+ * a request. See {@link UGICache}.
  */
 public class SessionId {
 
     private final String user;
     private final Integer segmentId;
     private final String sessionId;
-    private final Configuration configuration;
+    private final boolean isSecurityEnabled;
     private final UserGroupInformation loginUser;
 
     /**
@@ -47,24 +47,24 @@ public class SessionId {
      * @param serverName    the name of the configuration server
      */
     public SessionId(Integer segmentId, String transactionId, String gpdbUser, String serverName) {
-        this(segmentId, transactionId, gpdbUser, serverName, null, null);
+        this(segmentId, transactionId, gpdbUser, serverName, false, null);
     }
 
     /**
      * Create a sessionId
      *
-     * @param segmentId     the calling segment
-     * @param transactionId the identifier for the transaction
-     * @param gpdbUser      the GPDB username
-     * @param serverName    the name of the configuration server
-     * @param configuration the configuration for the request
-     * @param loginUser     the UGI of the login user (user that runs the service or Kerberos principal)
+     * @param segmentId         the calling segment
+     * @param transactionId     the identifier for the transaction
+     * @param gpdbUser          the GPDB username
+     * @param serverName        the name of the configuration server
+     * @param isSecurityEnabled whether the Session is using Kerberos to establish user identities or is relying on simple authentication
+     * @param loginUser         the UGI of the login user (user that runs the service or Kerberos principal)
      */
-    public SessionId(Integer segmentId, String transactionId, String gpdbUser, String serverName, Configuration configuration, UserGroupInformation loginUser) {
+    public SessionId(Integer segmentId, String transactionId, String gpdbUser, String serverName, boolean isSecurityEnabled, UserGroupInformation loginUser) {
         this.segmentId = segmentId;
         this.user = gpdbUser;
         this.sessionId = gpdbUser + ":" + transactionId + ":" + segmentId + ":" + serverName;
-        this.configuration = configuration;
+        this.isSecurityEnabled = isSecurityEnabled;
         this.loginUser = loginUser;
     }
 
@@ -83,10 +83,10 @@ public class SessionId {
     }
 
     /**
-     * @return the configuration for the session
+     * @return whether the Session is using Kerberos to establish user identities or is relying on simple authentication
      */
-    public Configuration getConfiguration() {
-        return configuration;
+    public boolean isSecurityEnabled() {
+        return isSecurityEnabled;
     }
 
     /**

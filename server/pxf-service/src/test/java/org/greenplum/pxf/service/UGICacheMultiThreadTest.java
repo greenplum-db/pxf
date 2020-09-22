@@ -20,7 +20,6 @@ package org.greenplum.pxf.service;
  */
 
 import io.netty.util.internal.ConcurrentSet;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,7 +31,6 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
 
 public class UGICacheMultiThreadTest {
     private static final int numberOfSegments = 3;
@@ -47,13 +45,11 @@ public class UGICacheMultiThreadTest {
     public void setUp() throws IOException {
         provider = new FakeUgiProvider();
 
-        Configuration configuration = new Configuration();
-
         int l = 0;
         for (int i = 0; i < numberOfSegments; i++) {
             for (int j = 0; j < numberOfUsers; j++) {
                 for (int k = 0; k < numberOfTxns; k++) {
-                    sessions[l++] = new SessionId(i, "txn-id-" + k, "the-user-" + j, "default", configuration, UserGroupInformation.getLoginUser());
+                    sessions[l++] = new SessionId(i, "txn-id-" + k, "the-user-" + j, "default", false, UserGroupInformation.getLoginUser());
                 }
             }
         }

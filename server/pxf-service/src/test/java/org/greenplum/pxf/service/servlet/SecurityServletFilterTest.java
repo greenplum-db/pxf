@@ -210,6 +210,7 @@ public class SecurityServletFilterTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void cleansUGICacheWhenTheFilterExecutionThrowsAnUndeclaredThrowableException() throws Exception {
         expectedException.expect(ServletException.class);
         expectScenario(false, false, false);
@@ -220,6 +221,7 @@ public class SecurityServletFilterTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void cleansUGICacheWhenTheFilterExecutionThrowsAnInterruptedException() throws Exception {
         expectedException.expect(ServletException.class);
         expectScenario(false, false, false);
@@ -256,7 +258,6 @@ public class SecurityServletFilterTest {
         verify(mockProxyUGI).doAs(Matchers.<PrivilegedExceptionAction<Object>>any());
         assertEquals(user, session.getValue().getUser());
         assertEquals(7, session.getValue().getSegmentId().intValue());
-        assertSame(mockConfiguration, session.getValue().getConfiguration());
         assertSame(mockLoginUGI, session.getValue().getLoginUser());
     }
 }

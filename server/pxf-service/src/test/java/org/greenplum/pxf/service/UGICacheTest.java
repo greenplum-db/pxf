@@ -19,7 +19,6 @@ package org.greenplum.pxf.service;
  * under the License.
  */
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.junit.Before;
 import org.junit.Test;
@@ -51,7 +50,7 @@ public class UGICacheTest {
     @Before
     public void setUp() throws Exception {
         provider = mock(UGIProvider.class);
-        session = new SessionId(0, "txn-id", "the-user", "default", new Configuration(), UserGroupInformation.getLoginUser());
+        session = new SessionId(0, "txn-id", "the-user", "default", false, UserGroupInformation.getLoginUser());
         fakeTicker = new FakeTicker();
         cache = new UGICache(provider, fakeTicker);
 
@@ -112,7 +111,7 @@ public class UGICacheTest {
 
     @Test
     public void getTwoUGIsWithDifferentTransactionsForSameUser() throws Exception {
-        SessionId otherSession = new SessionId(0, "txn-id-2", "the-user", "default", new Configuration(), UserGroupInformation.getLoginUser());
+        SessionId otherSession = new SessionId(0, "txn-id-2", "the-user", "default", false, UserGroupInformation.getLoginUser());
         UserGroupInformation ugi1 = cache.getUserGroupInformation(session, false);
         UserGroupInformation ugi2 = cache.getUserGroupInformation(otherSession, false);
         assertNotEquals(ugi1, ugi2);
@@ -123,7 +122,7 @@ public class UGICacheTest {
 
     @Test
     public void getTwoProxyUGIsWithDifferentTransactionsForSameUser() throws Exception {
-        SessionId otherSession = new SessionId(0, "txn-id-2", "the-user", "default", new Configuration(), UserGroupInformation.getLoginUser());
+        SessionId otherSession = new SessionId(0, "txn-id-2", "the-user", "default", false, UserGroupInformation.getLoginUser());
         UserGroupInformation proxyUGI1 = cache.getUserGroupInformation(session, true);
         UserGroupInformation proxyUGI2 = cache.getUserGroupInformation(otherSession, true);
         assertNotEquals(proxyUGI1, proxyUGI2);
@@ -137,7 +136,7 @@ public class UGICacheTest {
 
     @Test
     public void getTwoUGIsWithDifferentUsers() throws Exception {
-        SessionId otherSession = new SessionId(0, "txn-id", "different-user", "default", new Configuration(), UserGroupInformation.getLoginUser());
+        SessionId otherSession = new SessionId(0, "txn-id", "different-user", "default", false, UserGroupInformation.getLoginUser());
         UserGroupInformation ugi1 = cache.getUserGroupInformation(session, false);
         UserGroupInformation ugi2 = cache.getUserGroupInformation(otherSession, false);
         assertNotEquals(ugi1, ugi2);
@@ -150,7 +149,7 @@ public class UGICacheTest {
 
     @Test
     public void getTwoProxyUGIsWithDifferentUsers() throws Exception {
-        SessionId otherSession = new SessionId(0, "txn-id", "different-user", "default", new Configuration(), UserGroupInformation.getLoginUser());
+        SessionId otherSession = new SessionId(0, "txn-id", "different-user", "default", false, UserGroupInformation.getLoginUser());
         UserGroupInformation proxyUGI1 = cache.getUserGroupInformation(session, true);
         UserGroupInformation proxyUGI2 = cache.getUserGroupInformation(otherSession, true);
         assertNotEquals(proxyUGI1, proxyUGI2);
