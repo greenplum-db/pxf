@@ -147,6 +147,7 @@ public class SecurityServletFilter implements Filter {
             return true;
         };
 
+        boolean exceptionDetected = false;
         try {
             // Retrieve proxy user UGI from the UGI of the logged in user
             UserGroupInformation userGroupInformation = ugiCache
@@ -157,20 +158,25 @@ public class SecurityServletFilter implements Filter {
             // Execute the servlet chain as that user
             userGroupInformation.doAs(action);
         } catch (UndeclaredThrowableException ute) {
+            exceptionDetected = true;
             // unwrap the real exception thrown by the action
             throw new ServletException(ute.getCause());
         } catch (InterruptedException ie) {
+            exceptionDetected = true;
             throw new ServletException(ie);
         } finally {
             // Optimization to cleanup the cache if it is the last fragment
-            LOG.debug("Releasing proxy user for session: {}. {}",
-                    session, lastCallForSegment ? " Last fragment call" : "");
+            boolean releaseUgi = lastCallForSegment || exceptionDetected;
+            LOG.debug("Releasing UGI from cache for session: {}. {}",
+                    session, exceptionDetected
+                            ? " Exception while processing"
+                            : (lastCallForSegment ? " Processed last fragment for segment" : ""));
             try {
-                ugiCache.release(session, lastCallForSegment);
+                ugiCache.release(session, releaseUgi);
             } catch (Throwable t) {
-                LOG.error("Error releasing UGICache for session: {}", session, t);
+                LOG.error("Error releasing UGI from cache for session: {}", session, t);
             }
-            if (lastCallForSegment) {
+            if (releaseUgi) {
                 LOG.info("Finished processing {}", session);
             }
         }

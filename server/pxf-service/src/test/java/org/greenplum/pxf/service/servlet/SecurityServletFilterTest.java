@@ -37,15 +37,17 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
-
+import java.lang.reflect.UndeclaredThrowableException;
 import java.security.PrivilegedExceptionAction;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -57,27 +59,17 @@ public class SecurityServletFilterTest {
 
     private SecurityServletFilter filter;
 
-    @Mock
-    private HttpServletRequest mockServletRequest;
-    @Mock
-    private ServletResponse mockServletResponse;
-    @Mock
-    private FilterChain mockFilterChain;
-    @Mock
-    private ConfigurationFactory mockConfigurationFactory;
-    @Mock
-    private SecureLogin mockSecureLogin;
-    @Mock
-    private UGICache mockUGICache;
-    @Mock
-    private Configuration mockConfiguration;
-    @Mock
-    private UserGroupInformation mockLoginUGI;
-    @Mock
-    private UserGroupInformation mockProxyUGI;
+    @Mock private HttpServletRequest mockServletRequest;
+    @Mock private ServletResponse mockServletResponse;
+    @Mock private FilterChain mockFilterChain;
+    @Mock private ConfigurationFactory mockConfigurationFactory;
+    @Mock private SecureLogin mockSecureLogin;
+    @Mock private UGICache mockUGICache;
+    @Mock private Configuration mockConfiguration;
+    @Mock private UserGroupInformation mockLoginUGI;
+    @Mock private UserGroupInformation mockProxyUGI;
 
-    @Captor
-    private ArgumentCaptor<SessionId> session;
+    @Captor private ArgumentCaptor<SessionId> session;
 
     @Before
     public void setup() {
@@ -117,6 +109,7 @@ public class SecurityServletFilterTest {
         when(mockServletRequest.getHeader("X-GP-USER")).thenReturn("user");
         filter.doFilter(mockServletRequest, mockServletResponse, mockFilterChain);
     }
+
     @Test
     public void throwsWhenRequiredSegIdHeaderIsEmpty() throws Exception {
         expectedException.expect(IllegalArgumentException.class);
@@ -211,6 +204,26 @@ public class SecurityServletFilterTest {
     public void tellsTheUGICacheToCleanItselfOnTheLastCallForASegment() throws Exception {
         when(mockServletRequest.getHeader("X-GP-LAST-FRAGMENT")).thenReturn("true");
         expectScenario(false, false, false);
+        filter.doFilter(mockServletRequest, mockServletResponse, mockFilterChain);
+        verifyScenario("login-user", false);
+        verify(mockUGICache).release(any(SessionId.class), eq(true));
+    }
+
+    @Test
+    public void cleansUGICacheWhenTheFilterExecutionThrowsAnUndeclaredThrowableException() throws Exception {
+        expectedException.expect(ServletException.class);
+        expectScenario(false, false, false);
+        doThrow(UndeclaredThrowableException.class).when(mockProxyUGI).doAs(any(PrivilegedExceptionAction.class));
+        filter.doFilter(mockServletRequest, mockServletResponse, mockFilterChain);
+        verifyScenario("login-user", false);
+        verify(mockUGICache).release(any(SessionId.class), eq(true));
+    }
+
+    @Test
+    public void cleansUGICacheWhenTheFilterExecutionThrowsAnInterruptedException() throws Exception {
+        expectedException.expect(ServletException.class);
+        expectScenario(false, false, false);
+        doThrow(InterruptedException.class).when(mockProxyUGI).doAs(any(PrivilegedExceptionAction.class));
         filter.doFilter(mockServletRequest, mockServletResponse, mockFilterChain);
         verifyScenario("login-user", false);
         verify(mockUGICache).release(any(SessionId.class), eq(true));
