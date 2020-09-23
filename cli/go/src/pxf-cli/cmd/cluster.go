@@ -48,6 +48,7 @@ var (
 	registerCmd = createCobraCommand("register", "Install PXF extension under $GPHOME on master, standby master, and all segment hosts", &RegisterCommand)
 	restartCmd  = createCobraCommand("restart", "Restart the PXF server on all segment hosts", &RestartCommand)
 	prepareCmd  = createCobraCommand("prepare", "Prepares a new base directory specified by the $PXF_BASE environment variable", &PrepareCommand)
+	migrateCmd  = createCobraCommand("migrate", "Migrates configurations from older installations of PXF", &MigrateCommand)
 	// DeleteOnSync is a boolean for determining whether to use rsync with --delete, exported for tests
 	DeleteOnSync bool
 )
@@ -64,6 +65,7 @@ func init() {
 	clusterCmd.AddCommand(registerCmd)
 	clusterCmd.AddCommand(restartCmd)
 	clusterCmd.AddCommand(prepareCmd)
+	clusterCmd.AddCommand(migrateCmd)
 }
 
 func exitWithReturnCode(err error) {
