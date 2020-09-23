@@ -14,6 +14,9 @@
 # Path to Log directory
 # export PXF_LOGDIR="${PXF_BASE}/logs"
 
+# Path to Run directory
+# export PXF_RUNDIR=${PXF_RUNDIR:=${PXF_BASE}/run}
+
 # Memory
 # export PXF_JVM_OPTS="-Xmx2g -Xms1g"
 
