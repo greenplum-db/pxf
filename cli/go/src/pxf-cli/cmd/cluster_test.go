@@ -37,7 +37,7 @@ var (
 
 var _ = Describe("GenerateStatusReport()", func() {
 	Context("When there is no standby master", func() {
-		It("reports master host and segment hosts are initializing, resetting, registering, syncing, and preparing", func() {
+		It("reports master host and segment hosts are initializing, resetting, registering, syncing, preparing, and migrating", func() {
 			cmd.GenerateStatusReport(&cmd.InitCommand, createClusterData(3, clusterWithoutStandby))
 			Expect(testStdout).To(gbytes.Say("Initializing PXF on master host and 2 segment hosts"))
 			cmd.GenerateStatusReport(&cmd.ResetCommand, createClusterData(3, clusterWithoutStandby))
@@ -48,6 +48,8 @@ var _ = Describe("GenerateStatusReport()", func() {
 			Expect(testStdout).To(gbytes.Say("Installing PXF extension on master host and 2 segment hosts"))
 			cmd.GenerateStatusReport(&cmd.PrepareCommand, createClusterData(3, clusterWithoutStandby))
 			Expect(testStdout).To(gbytes.Say("Preparing PXF on master host and 2 segment hosts"))
+			cmd.GenerateStatusReport(&cmd.MigrateCommand, createClusterData(3, clusterWithoutStandby))
+			Expect(testStdout).To(gbytes.Say("Migrating PXF configuration on master host and 2 segment hosts"))
 		})
 		It("reports segment hosts are starting, stopping, restarting and statusing", func() {
 			cmd.GenerateStatusReport(&cmd.StartCommand, createClusterData(2, clusterWithoutStandby))
@@ -61,7 +63,7 @@ var _ = Describe("GenerateStatusReport()", func() {
 		})
 	})
 	Context("When there is a standby master on its own host", func() {
-		It("reports master host, standby master host and segment hosts are initializing, resetting, registering, syncing, and preparing", func() {
+		It("reports master host, standby master host and segment hosts are initializing, resetting, registering, syncing, preparing, and migrating", func() {
 			cmd.GenerateStatusReport(&cmd.InitCommand, createClusterData(4, clusterWithStandby))
 			Expect(testStdout).To(gbytes.Say("Initializing PXF on master host, standby master host, and 2 segment hosts"))
 			cmd.GenerateStatusReport(&cmd.ResetCommand, createClusterData(4, clusterWithStandby))
@@ -72,6 +74,8 @@ var _ = Describe("GenerateStatusReport()", func() {
 			Expect(testStdout).To(gbytes.Say("Installing PXF extension on master host, standby master host, and 2 segment hosts"))
 			cmd.GenerateStatusReport(&cmd.PrepareCommand, createClusterData(4, clusterWithStandby))
 			Expect(testStdout).To(gbytes.Say("Preparing PXF on master host, standby master host, and 2 segment hosts"))
+			cmd.GenerateStatusReport(&cmd.MigrateCommand, createClusterData(4, clusterWithStandby))
+			Expect(testStdout).To(gbytes.Say("Migrating PXF configuration on master host, standby master host, and 2 segment hosts"))
 		})
 		It("reports segment hosts are starting, stopping, restarting and statusing", func() {
 			cmd.GenerateStatusReport(&cmd.StartCommand, createClusterData(2, clusterWithStandby))
@@ -85,7 +89,7 @@ var _ = Describe("GenerateStatusReport()", func() {
 		})
 	})
 	Context("When there is a standby master on a segment host", func() {
-		It("reports master host and segment hosts are initializing, resetting, registering, syncing, and preparing", func() {
+		It("reports master host and segment hosts are initializing, resetting, registering, syncing, preparing, and migrating", func() {
 			cmd.GenerateStatusReport(&cmd.InitCommand, createClusterData(3, clusterWithStandbyOnSegHost))
 			Expect(testStdout).To(gbytes.Say("Initializing PXF on master host and 2 segment hosts"))
 			cmd.GenerateStatusReport(&cmd.ResetCommand, createClusterData(3, clusterWithStandbyOnSegHost))
@@ -96,6 +100,8 @@ var _ = Describe("GenerateStatusReport()", func() {
 			Expect(testStdout).To(gbytes.Say("Installing PXF extension on master host and 2 segment hosts"))
 			cmd.GenerateStatusReport(&cmd.PrepareCommand, createClusterData(3, clusterWithStandbyOnSegHost))
 			Expect(testStdout).To(gbytes.Say("Preparing PXF on master host and 2 segment hosts"))
+			cmd.GenerateStatusReport(&cmd.MigrateCommand, createClusterData(3, clusterWithStandbyOnSegHost))
+			Expect(testStdout).To(gbytes.Say("Migrating PXF configuration on master host and 2 segment hosts"))
 		})
 		It("reports segment hosts are starting, stopping, restarting and statusing", func() {
 			cmd.GenerateStatusReport(&cmd.StartCommand, createClusterData(2, clusterWithStandbyOnSegHost))
@@ -109,7 +115,7 @@ var _ = Describe("GenerateStatusReport()", func() {
 		})
 	})
 	Context("When there is only one segment host", func() {
-		It("reports master host and segment host are initializing, resetting, registering, syncing, and preparing", func() {
+		It("reports master host and segment host are initializing, resetting, registering, syncing, preparing, and migrating", func() {
 			cmd.GenerateStatusReport(&cmd.InitCommand, createClusterData(2, clusterWithOneSeg))
 			Expect(testStdout).To(gbytes.Say("Initializing PXF on master host and 1 segment host"))
 			cmd.GenerateStatusReport(&cmd.ResetCommand, createClusterData(2, clusterWithOneSeg))
@@ -120,6 +126,8 @@ var _ = Describe("GenerateStatusReport()", func() {
 			Expect(testStdout).To(gbytes.Say("Installing PXF extension on master host and 1 segment host"))
 			cmd.GenerateStatusReport(&cmd.PrepareCommand, createClusterData(2, clusterWithOneSeg))
 			Expect(testStdout).To(gbytes.Say("Preparing PXF on master host and 1 segment host"))
+			cmd.GenerateStatusReport(&cmd.MigrateCommand, createClusterData(2, clusterWithOneSeg))
+			Expect(testStdout).To(gbytes.Say("Migrating PXF configuration on master host and 1 segment host"))
 		})
 		It("reports segment hosts are starting, stopping, restarting and statusing", func() {
 			cmd.GenerateStatusReport(&cmd.StartCommand, createClusterData(1, clusterWithOneSeg))
@@ -210,6 +218,11 @@ var _ = Describe("GenerateOutput()", func() {
 			_ = cmd.GenerateOutput(&cmd.PrepareCommand, clusterData)
 			Expect(testStdout).To(gbytes.Say("PXF prepared successfully on 3 out of 3 hosts"))
 		})
+
+		It("reports all hosts migrated PXF successfully", func() {
+			_ = cmd.GenerateOutput(&cmd.MigrateCommand, clusterData)
+			Expect(testStdout).To(gbytes.Say("PXF configuration migrated successfully on 3 out of 3 hosts"))
+		})
 	})
 
 	Context("when some hosts fail", func() {
@@ -293,6 +306,12 @@ var _ = Describe("GenerateOutput()", func() {
 		It("reports the number of hosts that failed to prepare", func() {
 			_ = cmd.GenerateOutput(&cmd.PrepareCommand, clusterData)
 			Expect(testStdout).Should(gbytes.Say("PXF failed to prepare on 1 out of 3 hosts"))
+			Expect(testStderr).Should(gbytes.Say("sdw2 ==> an error happened on sdw2"))
+		})
+
+		It("reports the number of hosts that failed to migrate", func() {
+			_ = cmd.GenerateOutput(&cmd.MigrateCommand, clusterData)
+			Expect(testStdout).Should(gbytes.Say("PXF failed to migrate configuration on 1 out of 3 hosts"))
 			Expect(testStderr).Should(gbytes.Say("sdw2 ==> an error happened on sdw2"))
 		})
 	})
@@ -462,6 +481,11 @@ stderr line three`
 				_ = cmd.GenerateOutput(&cmd.PrepareCommand, clusterDataWithOneHost)
 				Expect(testStdout).To(gbytes.Say("PXF prepared successfully on 1 out of 1 host"))
 			})
+
+			It("reports host migrated successfully", func() {
+				_ = cmd.GenerateOutput(&cmd.MigrateCommand, clusterDataWithOneHost)
+				Expect(testStdout).To(gbytes.Say("PXF configuration migrated successfully on 1 out of 1 host"))
+			})
 		})
 		Context("when host is not successful", func() {
 			BeforeEach(func() {
@@ -532,6 +556,12 @@ stderr line three`
 			It("reports the number of hosts that failed to prepare", func() {
 				_ = cmd.GenerateOutput(&cmd.PrepareCommand, clusterDataWithOneHost)
 				Expect(testStdout).Should(gbytes.Say("PXF failed to prepare on 1 out of 1 host"))
+				Expect(testStderr).Should(gbytes.Say("mdw ==> an error happened on mdw"))
+			})
+
+			It("reports the number of hosts that failed to migrate", func() {
+				_ = cmd.GenerateOutput(&cmd.MigrateCommand, clusterDataWithOneHost)
+				Expect(testStdout).Should(gbytes.Say("PXF failed to migrate configuration on 1 out of 1 host"))
 				Expect(testStderr).Should(gbytes.Say("mdw ==> an error happened on mdw"))
 			})
 		})

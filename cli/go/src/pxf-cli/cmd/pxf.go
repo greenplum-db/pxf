@@ -18,6 +18,8 @@ const (
 	pxfHome  envVar = "PXF_HOME"
 	pxfBase  envVar = "PXF_BASE"
 	javaHome envVar = "JAVA_HOME"
+	// For pxf migrate
+	pxfConf  envVar = "PXF_CONF"
 )
 
 type messageType int
@@ -75,6 +77,9 @@ func (cmd *command) GetFunctionToExecute() (func(string) string, error) {
 		if inputs[gpHome] != "" {
 			pxfCommand += "GPHOME=" + inputs[gpHome] + " "
 		}
+		if inputs[pxfConf] != "" {
+			pxfCommand += "PXF_CONF=" + inputs[pxfConf] + " "
+		}
 		if inputs[pxfBase] != "" {
 			pxfCommand += "PXF_BASE=" + inputs[pxfBase] + " "
 			effectivePxfBase = inputs[pxfBase]
@@ -89,6 +94,10 @@ func (cmd *command) GetFunctionToExecute() (func(string) string, error) {
 		if cmd.name == prepare && inputs[pxfHome] == effectivePxfBase {
 			// error out when PXF_BASE equals PXF_HOME
 			return nil, errors.New("the PXF_BASE value must be different from your PXF installation directory")
+		}
+		if cmd.name == migrate && inputs[pxfConf] == effectivePxfBase {
+			// error out when PXF_BASE equals PXF_CONF
+			return nil, errors.New("your target PXF_BASE directory must be different from your existing PXF_CONF directory")
 		}
 		if cmd.name == reset {
 			pxfCommand += " --force" // there is a prompt for local reset as well
@@ -117,6 +126,7 @@ const (
 	register = "register"
 	restart  = "restart"
 	prepare  = "prepare"
+	migrate  = "migrate"
 )
 
 // The pxf cli commands, exported for testing
@@ -238,6 +248,18 @@ var (
 		},
 		warn:       false,
 		envVars:    []envVar{pxfHome, pxfBase},
+		whereToRun: cluster.ON_REMOTE | cluster.ON_HOSTS | cluster.INCLUDE_MASTER | cluster.INCLUDE_MIRRORS,
+	}
+	MigrateCommand = command{
+		name: migrate,
+		messages: map[messageType]string{
+			success: "PXF configuration migrated successfully on %d out of %d host%s\n",
+			status:  "Migrating PXF configuration on master host%s and %d segment host%s...\n",
+			standby: ", standby master host,",
+			err:     "PXF failed to migrate configuration on %d out of %d host%s\n",
+		},
+		warn: false,
+		envVars: []envVar{pxfHome, pxfConf, pxfBase},
 		whereToRun: cluster.ON_REMOTE | cluster.ON_HOSTS | cluster.INCLUDE_MASTER | cluster.INCLUDE_MIRRORS,
 	}
 )
