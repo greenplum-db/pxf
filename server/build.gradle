@@ -139,6 +139,7 @@ task stage(type: Copy) {
     from('pxf-service/src/scripts/') {
         include 'pxf'
         include 'kill-pxf.sh'
+        include 'merge-pxf-config.sh'
         into 'bin'
         filter { line -> line.replaceAll('_PXF_VERSION_', "${version}") }
     }
