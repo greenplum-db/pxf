@@ -260,21 +260,17 @@ resources:
 
 ## ---------- RelEng Drop Artifacts ----------
 - name: pxf_gp5_rhel6_release_to_releng
-  type: s3
+  type: gcs
   source:
-    access_key_id: ((bucket-access-key-id))
     bucket: ((pxf-releng-gp5-drop-bucket))
-    region_name: ((aws-region))
-    secret_access_key: ((bucket-secret-access-key))
+    json_key: ((concourse-gcs-resources-service-account-key))
     regexp: ((pxf-releng-gp5-drop-path))/pxf-gp5-(.*)-2.el6.x86_64.rpm
 
 - name: pxf_gp5_rhel7_release_to_releng
-  type: s3
+  type: gcs
   source:
-    access_key_id: ((bucket-access-key-id))
     bucket: ((pxf-releng-gp5-drop-bucket))
-    region_name: ((aws-region))
-    secret_access_key: ((bucket-secret-access-key))
+    json_key: ((concourse-gcs-resources-service-account-key))
     regexp: ((pxf-releng-gp5-drop-path))/pxf-gp5-(.*)-2.el7.x86_64.rpm
 
 - name: pxf_gp6_rhel7_release_to_releng
