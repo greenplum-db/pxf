@@ -1,0 +1,18 @@
+platform: linux
+
+image_resource:
+  type: registry-image
+
+inputs:
+  - name: pxf_src
+  - name: pxf_artifacts
+
+outputs:
+  - name: pxf_artifacts
+
+params:
+  GP_VER:
+  TARGET_OS_VERSION:
+
+run:
+  path: pxf_src/concourse/scripts/generate_tarball_from_rpm.bash

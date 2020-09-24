@@ -25,6 +25,8 @@ pxf_gp6_el7_releng_url="${RELENG_GP6_DROP_URL}/pxf-gp6-${version}-2.el7.x86_64.r
 pxf_gp6_ubuntu18_releng_url="${RELENG_GP6_DROP_URL}/pxf-gp6-${version}-2-ubuntu18.04-amd64.deb"
 pxf_osl_releng_url="${RELENG_OSL_DROP_URL}/${PXF_OSL_FILE_PREFIX}_${version}_GA.txt"
 pxf_odp_releng_url="${RELENG_ODP_DROP_URL}/${PXF_ODP_FILE_PREFIX}-${version}-ODP.tar.gz"
+pxf_gp5_tarball_releng_url="${RELENG_GP5_DROP_URL}/pxf-${version}.tar.gz"
+pxf_gp6_tarball_releng_url="${RELENG_GP6_DROP_URL}/pxf-${version}.tar.gz"
 
 echo "Generating Releng Email"
 
@@ -41,8 +43,10 @@ The new PXF release ${version} is ready to be published to VMware Tanzu Network.
 
 We have uploaded PXF release artifacts to the following RelEng locations:
 
+${pxf_gp5_tarball_releng_url}
 ${pxf_gp5_el6_releng_url}
 ${pxf_gp5_el7_releng_url}
+${pxf_gp6_tarball_releng_url}
 ${pxf_gp6_el7_releng_url}
 ${pxf_gp6_ubuntu18_releng_url}
 ${pxf_osl_releng_url}
