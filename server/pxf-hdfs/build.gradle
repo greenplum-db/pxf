@@ -78,6 +78,12 @@ dependencies {
     // GCS jars and dependencies
     implementation("com.google.cloud.bigdataoss:gcs-connector:hadoop2-1.9.17:shaded") { transitive = false }
 
+    // Aliyun (Alibaba cloud) jars
+    implementation("org.apache.hadoop:hadoop-aliyun:${hadoopVersion}") { transitive = false }
+    implementation("com.aliyun.oss:aliyun-sdk-oss:3.8.1") { transitive = false }
+    implementation("com.aliyun.odps:hadoop-fs-oss:3.3.8-public") { transitive = false }
+    implementation("org.jdom:jdom:1.1") { transitive = false }
+
     /*******************************
      * Test Dependencies
      *******************************/

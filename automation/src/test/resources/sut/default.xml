@@ -54,6 +54,13 @@
         <scheme>wasbs</scheme>
     </wasbs>
 
+    <oss>
+        <class>org.greenplum.pxf.automation.components.hdfs.Hdfs</class>
+        <workingDirectory>data-gpdb-ud-automation/tmp/pxf_automation_data/__UUID__</workingDirectory>
+        <hadoopRoot>${pxf.base}/servers/oss</hadoopRoot>
+        <scheme>oss</scheme>
+    </oss>
+
     <hbase>
         <class>org.greenplum.pxf.automation.components.hbase.HBase</class>
         <host>localhost</host>

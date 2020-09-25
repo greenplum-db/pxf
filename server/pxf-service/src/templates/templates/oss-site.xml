@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <property>
+        <name>fs.oss.endpoint</name>
+        <value>YOUR_OSS_ENDPOINT</value>
+        <description>Aliyun OSS endpoint to connect to. An up-to-date list is
+            provided in the Aliyun OSS Documentation.</description>
+    </property>
+    <property>
+        <name>fs.oss.accessKeyId</name>
+        <value>YOUR_OSS_ACCESS_KEY_ID</value>
+        <description>Aliyun Access Key ID</description>
+    </property>
+    <property>
+        <name>fs.oss.accessKeySecret</name>
+        <value>YOUR_OSS_SECRET_ACCESS_KEY</value>
+        <description>Aliyun Access Key Secret</description>
+    </property>
+    <property>
+        <name>fs.AbstractFileSystem.oss.impl</name>
+        <value>org.apache.hadoop.fs.aliyun.oss.OSS</value>
+    </property>
+    <property>
+        <name>fs.oss.impl</name>
+        <value>org.apache.hadoop.fs.aliyun.oss.AliyunOSSFileSystem</value>
+    </property>
+</configuration>

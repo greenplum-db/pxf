@@ -16,6 +16,7 @@ public enum ProtocolEnum {
             return StringUtils.removeStart(path, basePath);
         }
     },
+    OSS("oss"),
     S3("s3"),
     WASBS("wasbs");
 

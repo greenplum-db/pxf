@@ -41,6 +41,7 @@ groups:
   - Test PXF-GP[[gp_ver]]-S3-NO-IMPERS on RHEL7
   - Test PXF-GP[[gp_ver]]-ADL-NO-IMPERS on RHEL7
   - Test PXF-GP[[gp_ver]]-GS-NO-IMPERS on RHEL7
+  - Test PXF-GP[[gp_ver]]-OSS-NO-IMPERS on RHEL7
   - Test PXF-GP[[gp_ver]]-MINIO-NO-IMPERS on RHEL7
   - Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-IMPERS on RHEL7
   - Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-NO-IMPERS on RHEL7
@@ -85,6 +86,7 @@ groups:
   - Test PXF-GP[[gp_ver]]-S3-NO-IMPERS on RHEL7
   - Test PXF-GP[[gp_ver]]-ADL-NO-IMPERS on RHEL7
   - Test PXF-GP[[gp_ver]]-GS-NO-IMPERS on RHEL7
+  - Test PXF-GP[[gp_ver]]-OSS-NO-IMPERS on RHEL7
   - Test PXF-GP[[gp_ver]]-MINIO-NO-IMPERS on RHEL7
   - Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-IMPERS on RHEL7
   - Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-NO-IMPERS on RHEL7
@@ -1154,6 +1156,35 @@ jobs:
       PROTOCOL: minio
       TARGET_OS: centos
 
+- name: Test PXF-GP[[gp_ver]]-OSS-NO-IMPERS on RHEL7
+  plan:
+  - in_parallel:
+    - get: pxf_src
+      passed: [Testing Gate for PXF-GP]
+      trigger: true
+    - get: pxf_tarball
+      resource: pxf_gp[[gp_ver]]_tarball_rhel7
+      passed: [Testing Gate for PXF-GP]
+    - get: gpdb_package
+      resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
+      passed: [Testing Gate for PXF-GP]
+    - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
+    - get: pxf-automation-dependencies
+    - get: singlecluster
+      resource: singlecluster-hdp2
+  - task: Test PXF-GP[[gp_ver]]-OSS-NO-IMPERS on RHEL7
+    file: pxf_src/concourse/tasks/test.yml
+    image: gpdb[[gp_ver]]-pxf-dev-centos7-image
+    params:
+      GP_VER: [[gp_ver]]
+      GROUP: hcfs
+      IMPERSONATION: false
+      OSS_ACCESS_KEY_ID: ((data-gpdb-ud-oss-access-key-id))
+      OSS_SECRET_ACCESS_KEY: ((data-gpdb-ud-oss-access-key))
+      OSS_ENDPOINT: ((data-gpdb-ud-oss-endpoint))
+      PROTOCOL: oss
+      TARGET_OS: centos
+
 ## ---------- Multi-node tests ----------
 
 - name: Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-IMPERS on RHEL7
@@ -1414,6 +1445,7 @@ jobs:
       - Test PXF-GP[[gp_ver]]-S3-NO-IMPERS on RHEL7
       - Test PXF-GP[[gp_ver]]-ADL-NO-IMPERS on RHEL7
       - Test PXF-GP[[gp_ver]]-GS-NO-IMPERS on RHEL7
+      - Test PXF-GP[[gp_ver]]-OSS-NO-IMPERS on RHEL7
       - Test PXF-GP[[gp_ver]]-MINIO-NO-IMPERS on RHEL7
       - Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-IMPERS on RHEL7
       - Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-NO-IMPERS on RHEL7
@@ -1441,6 +1473,7 @@ jobs:
       - Test PXF-GP[[gp_ver]]-S3-NO-IMPERS on RHEL7
       - Test PXF-GP[[gp_ver]]-ADL-NO-IMPERS on RHEL7
       - Test PXF-GP[[gp_ver]]-GS-NO-IMPERS on RHEL7
+      - Test PXF-GP[[gp_ver]]-OSS-NO-IMPERS on RHEL7
       - Test PXF-GP[[gp_ver]]-MINIO-NO-IMPERS on RHEL7
       - Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-IMPERS on RHEL7
       - Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-NO-IMPERS on RHEL7
@@ -1733,4 +1766,3 @@ jobs:
       attachment_globs: [pxf_artifacts/((pxf-osl-file-prefix))*.txt]
       to_text: "((pxf-releng-email)),((pxf-ud-email))"
 {% endif %}
-

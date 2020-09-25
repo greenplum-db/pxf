@@ -43,6 +43,8 @@ public enum HcfsType {
     },
     GS,
     HDFS,
+    // OSS is for Aliyun (Alibaba Cloud)
+    OSS,
     S3,
     S3A,
     S3N,

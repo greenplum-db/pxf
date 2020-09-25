@@ -285,6 +285,22 @@
             <version>5.4.0</version>
         </dependency>
 
+        <!-- Aliyun Dependencies -->
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-aliyun</artifactId>
+            <version>${hdp.hadoop.version}</version>
+        </dependency>
+
+        <!-- Use version 3.8.1 (version 3.0.0 would produce a lot of output for
+        a NoSuchKey error. The issue is detailed here:
+        https://github.com/aliyun/aliyun-oss-java-sdk/issues/145 -->
+        <dependency>
+            <groupId>com.aliyun.oss</groupId>
+            <artifactId>aliyun-sdk-oss</artifactId>
+            <version>3.8.1</version>
+        </dependency>
+
         <!-- HADOOP Dependencies -->
         <dependency>
             <groupId>org.apache.hadoop</groupId>

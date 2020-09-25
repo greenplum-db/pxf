@@ -31,6 +31,7 @@
     <!-- <Logger name="org.greenplum.pxf" level="debug"/> -->
 
     <!-- The levels below are tuned to provide minimal output, change to INFO or DEBUG to troubleshoot -->
+    <Logger name="com.aliyun.oss" level="error"/>
     <Logger name="com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystemBase" level="warn"/>
     <Logger name="org.apache.hadoop" level="warn"/>
     <Logger name="org.apache.parquet" level="warn"/>

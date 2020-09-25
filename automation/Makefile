@@ -211,6 +211,16 @@ ifneq "$(PROTOCOL)" ""
 			sed $(SED_OPTS) "s|YOUR_AZURE_BLOB_STORAGE_ACCOUNT_NAME|$(WASB_ACCOUNT_NAME)|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
 			sed $(SED_OPTS) "s|YOUR_AZURE_BLOB_STORAGE_ACCOUNT_KEY|$(WASB_ACCOUNT_KEY)|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
 		fi; \
+		if [ $(PROTOCOL) = oss ]; then \
+			if [ -z "$(OSS_ACCESS_KEY_ID)" ] || [ -z "$(OSS_SECRET_ACCESS_KEY)" ] || [ -z "$(OSS_ENDPOINT)" ]; then \
+				echo "Aliyun Keys or Endpoint (OSS_ACCESS_KEY_ID, OSS_SECRET_ACCESS_KEY, OSS_ENDPOINT) not set"; \
+				rm -rf $(PROTOCOL_HOME); \
+				exit 1; \
+			fi; \
+			sed $(SED_OPTS) "s|YOUR_OSS_ACCESS_KEY_ID|$(OSS_ACCESS_KEY_ID)|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
+			sed $(SED_OPTS) "s|YOUR_OSS_SECRET_ACCESS_KEY|$(OSS_SECRET_ACCESS_KEY)|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
+			sed $(SED_OPTS) "s|YOUR_OSS_ENDPOINT|$(OSS_ENDPOINT)|" $(PROTOCOL_HOME)/$(PROTOCOL)-site.xml; \
+		fi; \
 		echo "Created $(PROTOCOL) server configuration"; \
 	fi
 endif

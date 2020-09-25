@@ -367,7 +367,7 @@ public class HdfsWritableTextTest extends BaseWritableFeature {
      *
      * @throws Exception if test fails to run
      */
-    @Test(groups = {"features", "gpdb", "hcfs", "security"}, timeOut = 120000)
+    @Test(groups = {"features", "gpdb", "hcfs", "security"}, timeOut = 180000)
     public void textFormatWideRowsInsert() throws Exception {
 
         int rows = 10;
