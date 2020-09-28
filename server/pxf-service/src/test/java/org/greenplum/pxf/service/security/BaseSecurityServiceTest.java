@@ -33,12 +33,16 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.io.IOException;
+import java.lang.reflect.UndeclaredThrowableException;
 import java.security.PrivilegedExceptionAction;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -47,25 +51,21 @@ public class BaseSecurityServiceTest {
 
     private static final PrivilegedExceptionAction<Boolean> EMPTY_ACTION = () -> true;
 
+    private Configuration configuration;
+    private RequestContext context;
     private SecurityService service;
 
-    private RequestContext context;
-    @Mock
-    private SecureLogin mockSecureLogin;
-    @Mock
-    private UGICache mockUGICache;
-    @Mock
-    private Configuration mockConfiguration;
-    @Mock
-    private UserGroupInformation mockLoginUGI;
-    @Mock
-    private UserGroupInformation mockProxyUGI;
+    @Mock private SecureLogin mockSecureLogin;
+    @Mock private UGICache mockUGICache;
+    @Mock private UserGroupInformation mockLoginUGI;
+    @Mock private UserGroupInformation mockProxyUGI;
 
     private ArgumentCaptor<SessionId> session;
 
     @BeforeEach
     public void setup() {
         context = new RequestContext();
+        configuration = new Configuration();
         session = ArgumentCaptor.forClass(SessionId.class);
 
         service = new BaseSecurityService(mockSecureLogin, mockUGICache);
@@ -75,7 +75,7 @@ public class BaseSecurityServiceTest {
         context.setSegmentId(7);
         context.setServerName("server");
         context.setConfig("config");
-        context.setConfiguration(mockConfiguration);
+        context.setConfiguration(configuration);
     }
 
     /* ----------- methods that test determining remote user ----------- */
@@ -158,21 +158,42 @@ public class BaseSecurityServiceTest {
         verify(mockUGICache).release(any(SessionId.class), eq(true));
     }
 
+    @Test
+    @SuppressWarnings("unchecked")
+    public void cleansUGICacheWhenTheFilterExecutionThrowsAnUndeclaredThrowableException() throws Exception {
+        expectScenario(false, false, false);
+        doThrow(UndeclaredThrowableException.class).when(mockProxyUGI).doAs(any(PrivilegedExceptionAction.class));
+        assertThrows(IOException.class,
+                () -> service.doAs(context, context.isLastFragment(), EMPTY_ACTION));
+        verifyScenario("login-user", false);
+        verify(mockUGICache).release(any(SessionId.class), eq(true));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void cleansUGICacheWhenTheFilterExecutionThrowsAnInterruptedException() throws Exception {
+        expectScenario(false, false, false);
+        doThrow(InterruptedException.class).when(mockProxyUGI).doAs(any(PrivilegedExceptionAction.class));
+        assertThrows(IOException.class,
+                () -> service.doAs(context, context.isLastFragment(), EMPTY_ACTION));
+        verifyScenario("login-user", false);
+        verify(mockUGICache).release(any(SessionId.class), eq(true));
+    }
+
     /* ----------- helper methods ----------- */
 
     private void expectScenario(boolean kerberos, boolean impersonation, boolean serviceUser) throws Exception {
-        if (!impersonation) {
-            when(mockConfiguration.get("hadoop.security.authentication", "simple"))
-                    .thenReturn(kerberos ? "kerberos" : "simple");
+        if (!impersonation && kerberos) {
+            configuration.set("hadoop.security.authentication", "kerberos");
         }
-        when(mockSecureLogin.isUserImpersonationEnabled(mockConfiguration)).thenReturn(impersonation);
+        when(mockSecureLogin.isUserImpersonationEnabled(configuration)).thenReturn(impersonation);
         when(mockLoginUGI.getUserName()).thenReturn("login-user");
 
         if (!impersonation && serviceUser && kerberos) {
-            when(mockConfiguration.get("pxf.service.user.name")).thenReturn("service-user");
+            configuration.set("pxf.service.user.name", "service-user");
         }
 
-        when(mockSecureLogin.getLoginUser("server", "config", mockConfiguration)).thenReturn(mockLoginUGI);
+        when(mockSecureLogin.getLoginUser("server", "config", configuration)).thenReturn(mockLoginUGI);
         when(mockUGICache.getUserGroupInformation(any(SessionId.class), eq(impersonation))).thenReturn(mockProxyUGI);
     }
 
@@ -181,7 +202,6 @@ public class BaseSecurityServiceTest {
         verify(mockProxyUGI).doAs(ArgumentMatchers.<PrivilegedExceptionAction<Object>>any());
         assertEquals(user, session.getValue().getUser());
         assertEquals(7, session.getValue().getSegmentId().intValue());
-        assertSame(mockConfiguration, session.getValue().getConfiguration());
         assertSame(mockLoginUGI, session.getValue().getLoginUser());
     }
 }
