@@ -19,29 +19,28 @@ package org.greenplum.pxf.service;
  * under the License.
  */
 
-import io.netty.util.internal.ConcurrentSet;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class UGICacheMultiThreadTest {
     private static final int numberOfSegments = 3;
     private static final int numberOfUsers = 3;
     private static final int numberOfTxns = 3;
     private FakeUgiProvider provider = null;
-    private SessionId[] sessions = new SessionId[numberOfSegments * numberOfUsers * numberOfTxns];
+    private final SessionId[] sessions = new SessionId[numberOfSegments * numberOfUsers * numberOfTxns];
     private UGICache cache = null;
-    private FakeTicker fakeTicker;
 
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {
         provider = new FakeUgiProvider();
 
@@ -53,7 +52,7 @@ public class UGICacheMultiThreadTest {
                 }
             }
         }
-        fakeTicker = new FakeTicker();
+        FakeTicker fakeTicker = new FakeTicker();
         cache = new UGICache(provider, fakeTicker);
     }
 
@@ -103,8 +102,8 @@ public class UGICacheMultiThreadTest {
         assertEquals(0, cache.allQueuesSize());
     }
 
-    class FakeUgiProvider extends UGIProvider {
-        Set<UserGroupInformation> ugis = new ConcurrentSet<>();
+    static class FakeUgiProvider extends UGIProvider {
+        Set<UserGroupInformation> ugis = ConcurrentHashMap.newKeySet();
 
         @Override
         UserGroupInformation createProxyUGI(String effectiveUser, UserGroupInformation ugi) {

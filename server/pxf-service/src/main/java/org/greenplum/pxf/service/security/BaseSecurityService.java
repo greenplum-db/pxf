@@ -54,16 +54,16 @@ public class BaseSecurityService implements SecurityService {
         final Integer segmentId = context.getSegmentId();
         final String serverName = context.getServerName();
         final String configDirectory = context.getConfig();
-        Configuration configuration = context.getConfiguration();
-
-        boolean isUserImpersonation = secureLogin.isUserImpersonationEnabled(configuration);
+        final Configuration configuration = context.getConfiguration();
+        final boolean isUserImpersonation = secureLogin.isUserImpersonationEnabled(configuration);
+        final boolean isSecurityEnabled = Utilities.isSecurityEnabled(configuration);
 
         // Establish the UGI for the login user or the Kerberos principal for the given server, if applicable
         UserGroupInformation loginUser = secureLogin.getLoginUser(serverName, configDirectory, configuration);
 
         String serviceUser = loginUser.getUserName();
 
-        if (!isUserImpersonation && Utilities.isSecurityEnabled(configuration)) {
+        if (!isUserImpersonation && isSecurityEnabled) {
             // When impersonation is disabled and security is enabled
             // we check whether the pxf.service.user.name property was provided
             // and if provided we use the value as the remote user instead of
@@ -82,9 +82,10 @@ public class BaseSecurityService implements SecurityService {
                 transactionId,
                 remoteUser,
                 serverName,
-                configuration,
+                isSecurityEnabled,
                 loginUser);
 
+        boolean exceptionDetected = false;
         try {
             // Retrieve proxy user UGI from the UGI of the logged in user
             UserGroupInformation userGroupInformation = ugiCache
@@ -96,20 +97,25 @@ public class BaseSecurityService implements SecurityService {
             // Execute the servlet chain as that user
             return userGroupInformation.doAs(action);
         } catch (UndeclaredThrowableException ute) {
+            exceptionDetected = true;
             // unwrap the real exception thrown by the action
             throw new IOException(ute.getCause());
         } catch (InterruptedException ie) {
+            exceptionDetected = true;
             throw new IOException(ie);
         } finally {
             // Optimization to cleanup the cache if it is the last fragment
-            LOG.debug("Releasing proxy user for session: {}. {}",
-                    session, lastCallForSegment ? " Last fragment call" : "");
+            boolean releaseUgi = lastCallForSegment || exceptionDetected;
+            LOG.debug("Releasing UGI from cache for session: {}. {}",
+                    session, exceptionDetected
+                            ? " Exception while processing"
+                            : (lastCallForSegment ? " Processed last fragment for segment" : ""));
             try {
-                ugiCache.release(session, lastCallForSegment);
+                ugiCache.release(session, releaseUgi);
             } catch (Throwable t) {
-                LOG.error("Error releasing UGICache for session: {}", session, t);
+                LOG.error("Error releasing UGI from cache for session: {}", session, t);
             }
-            if (lastCallForSegment) {
+            if (releaseUgi) {
                 LOG.info("Finished processing {}", session);
             }
         }
