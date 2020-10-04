@@ -1,3 +1,3 @@
 -- @description query01 for PXF HDFS Readable Sequence with int recordkey 
 
-SELECT * from readable_recordkey_int ORDER BY num1;
+SELECT * from pxf_recordkey_int_type_r ORDER BY num1;

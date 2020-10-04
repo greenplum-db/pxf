@@ -1,6 +1,6 @@
 -- @description query01 for PXF HDFS Readable Sequence with int recordkey 
 
-SELECT * from readable_recordkey_int ORDER BY num1;
+SELECT * from pxf_recordkey_int_type_r ORDER BY num1;
  recordkey |           tmp1           | num1 | num2 | num3 | num4 |               t1                |               t2                |               t3                |               t4                |               t5                |        t6         | dub1 | dub2 | dub3 | ft1  | ft2  | ft3  | ln1  | ln2  | ln3 | bool1 | bool2 | bool3 | short1 | short2 | short3 | short4 | short5 |    bt    
 -----------+--------------------------+------+------+------+------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------+------+------+------+------+------+------+------+------+-----+-------+-------+-------+--------+--------+--------+--------+--------+----------
          1 | 1919-06-28 23:59:59.2233 |   10 |   20 |   10 |   20 | strings_array_member_number___1 | strings_array_member_number___2 | strings_array_member_number___3 | strings_array_member_number___4 | strings_array_member_number___5 | short_string___1  |   10 |   20 |   60 |   23 |   46 |   23 |   30 |   40 |  15 | f     | t     | f     |     20 |     20 |     20 |     20 |    100 | Writable
