@@ -754,7 +754,7 @@ under the License.
     <profile>
         <name>file:text</name>
         <description>This profile is suitable for using when reading delimited single line records
-            from plain text, tab-delimited, files on Azure Data Lake
+            from plain text, tab-delimited, files
         </description>
         <plugins>
             <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
@@ -765,7 +765,7 @@ under the License.
     <profile>
         <name>file:csv</name>
         <description>This profile is suitable for using when reading delimited single line records
-            from plain text CSV files on Azure Data Lake
+            from plain text CSV files
         </description>
         <plugins>
             <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
@@ -776,7 +776,7 @@ under the License.
     <profile>
         <name>file:text:multi</name>
         <description>This profile is suitable for using when reading delimited single or multi line
-            records (with quoted linefeeds) from plain text files on HDFS. It is not splittable (non
+            records (with quoted linefeeds) from plain text files. It is not splittable (non
             parallel) and slower than HdfsTextSimple.
         </description>
         <plugins>
@@ -787,7 +787,7 @@ under the License.
     </profile>
     <profile>
         <name>file:parquet</name>
-        <description>A profile for reading and writing Parquet data from Google Cloud Storage
+        <description>A profile for reading and writing Parquet files
         </description>
         <plugins>
             <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
