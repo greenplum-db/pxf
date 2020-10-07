@@ -24,7 +24,9 @@ public class HdfsFileFragmenterTest {
 
     @BeforeEach
     public void setup() {
-        context.setConfiguration(new Configuration());
+        Configuration configuration = new Configuration();
+        configuration.set("pxf.fs.basePath", "/");
+        context.setConfiguration(configuration);
     }
 
     @Test
@@ -34,7 +36,6 @@ public class HdfsFileFragmenterTest {
 
         context.setConfig("default");
         context.setUser("test-user");
-        context.setProfileScheme("localfile");
         context.setDataSource(path + "non-existent");
 
         Fragmenter fragmenter = getFragmenter(context);
@@ -48,7 +49,6 @@ public class HdfsFileFragmenterTest {
 
         context.setConfig("default");
         context.setUser("test-user");
-        context.setProfileScheme("localfile");
         context.setDataSource(path);
 
         Fragmenter fragmenter = getFragmenter(context);
@@ -64,7 +64,6 @@ public class HdfsFileFragmenterTest {
 
         context.setConfig("default");
         context.setUser("test-user");
-        context.setProfileScheme("localfile");
         context.setDataSource(path + "*.csv");
 
         Fragmenter fragmenter = getFragmenter(context);
@@ -79,7 +78,6 @@ public class HdfsFileFragmenterTest {
 
         context.setConfig("default");
         context.setUser("test-user");
-        context.setProfileScheme("localfile");
         context.setDataSource("/tmp/non-existent-path-on-disk/*.csv");
 
         Fragmenter fragmenter = getFragmenter(context);
@@ -91,7 +89,6 @@ public class HdfsFileFragmenterTest {
     public void testInvalidInputPathIgnored() throws Exception {
         context.setConfig("default");
         context.setUser("test-user");
-        context.setProfileScheme("localfile");
         context.addOption("IGNORE_MISSING_PATH", "true");
         context.setDataSource("/tmp/non-existent-path-on-disk/*.csv");
 

@@ -15,6 +15,11 @@ public interface ConfigurationFactory {
     String PXF_CONFIG_SERVER_DIRECTORY_PROPERTY = "pxf.config.server.directory";
 
     /**
+     * Configuration property that stores the server name
+     */
+    String PXF_SERVER_NAME_PROPERTY = "pxf.config.server.name";
+
+    /**
      * Synthetic configuration property that stores the user so that is can be
      * used in config files for interpolation in other properties, for example
      * in JDBC when setting session authorization from a proxy user to the

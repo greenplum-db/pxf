@@ -254,15 +254,16 @@ public abstract class PxfUnit {
             context.setDataSource(fragment.getSourceName());
             context.setFragmentMetadata(fragment.getMetadata());
             context.setDataFragment(i);
-            context.setProfileScheme("localfile");
             inputs.add(context);
         }
     }
 
     private RequestContext getContext(Path input) {
+        Configuration configuration = new Configuration();
+        configuration.set("pxf.fs.basePath", "/");
+
         RequestContext context = new RequestContext();
-        
-        context.setConfiguration(new Configuration());
+        context.setConfiguration(configuration);
 
         // 2.1.0 Properties
         // HDMetaData parameters
@@ -275,7 +276,6 @@ public abstract class PxfUnit {
         context.setHost("localhost");
         context.setPort(50070);
         context.setDataSource(input.toString());
-        context.setProfileScheme("localfile");
 
         List<Pair<String, DataType>> params = getColumnDefinitions();
         for (int i = 0; i < params.size(); ++i) {

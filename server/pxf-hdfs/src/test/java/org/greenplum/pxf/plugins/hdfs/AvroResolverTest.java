@@ -34,6 +34,7 @@ public class AvroResolverTest {
     public void setup() {
         resolver = new AvroResolver(new AvroUtilities());
         Configuration configuration = new Configuration();
+        configuration.set("pxf.fs.basePath", "/");
         context = new RequestContext();
         context.setConfig("default");
         context.setUser("test-user");
