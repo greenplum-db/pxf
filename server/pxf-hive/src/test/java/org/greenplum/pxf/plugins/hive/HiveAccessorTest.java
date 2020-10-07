@@ -47,12 +47,15 @@ public class HiveAccessorTest {
         when(mockInputFormat.getRecordReader(any(InputSplit.class), any(JobConf.class), any(Reporter.class))).thenReturn(mockReader);
         when(mockHiveUtilities.makeInputFormat(any(), any())).thenReturn(mockInputFormat);
 
+        Configuration configuration = new Configuration();
+        configuration.set("pxf.fs.basePath", "/");
+
         context = new RequestContext();
         context.setAccessor(HiveORCAccessor.class.getName());
         context.setConfig("default");
         context.setUser("test-user");
         context.setDataSource("/foo/bar");
-        context.setConfiguration(new Configuration());
+        context.setConfiguration(configuration);
     }
 
     @Test

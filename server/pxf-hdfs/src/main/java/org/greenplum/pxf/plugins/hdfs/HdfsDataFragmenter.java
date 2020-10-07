@@ -50,13 +50,6 @@ public class HdfsDataFragmenter extends BaseFragmenter {
     private JobConf jobConf;
     protected HcfsType hcfsType;
 
-    public HdfsDataFragmenter() {
-    }
-
-    HdfsDataFragmenter(ConfigurationFactory configurationFactory) {
-        this.configurationFactory = configurationFactory;
-    }
-
     @Override
     public void afterPropertiesSet() {
         // Check if the underlying configuration is for HDFS

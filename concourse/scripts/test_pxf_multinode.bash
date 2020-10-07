@@ -104,7 +104,7 @@ function setup_pxf_on_cluster() {
 </profiles>
 EOF
 
-		scp "${SSH_OPTS[@]}" /tmp/pxf-profiles.xml "gpadmin@mdw:${PXF_CONF_DIR}/conf/pxf-profiles.xml"
+		scp "${SSH_OPTS[@]}" /tmp/pxf-profiles.xml "gpadmin@mdw:${PXF_BASE_DIR}/conf/pxf-profiles.xml"
 	fi
 
 	# configure PXF on master, sync configs and start pxf

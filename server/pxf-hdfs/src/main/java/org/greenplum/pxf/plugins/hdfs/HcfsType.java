@@ -16,6 +16,7 @@ import java.util.Arrays;
 
 import static org.apache.hadoop.fs.FileSystem.FS_DEFAULT_NAME_KEY;
 import static org.greenplum.pxf.api.model.ConfigurationFactory.PXF_CONFIG_SERVER_DIRECTORY_PROPERTY;
+import static org.greenplum.pxf.api.model.ConfigurationFactory.PXF_SERVER_NAME_PROPERTY;
 
 public enum HcfsType {
     ADL,
@@ -28,11 +29,12 @@ public enum HcfsType {
     },
     FILE {
         @Override
-        protected String validateAndNormalizeBasePath(String basePath) {
+        protected String validateAndNormalizeBasePath(String serverName, String basePath) {
             if (StringUtils.isBlank(basePath))
-                throw new IllegalArgumentException(
-                        String.format("configure a valid value for '%s' property for this server to access the filesystem",
-                                CONFIG_KEY_BASE_PATH));
+                throw new PxfRuntimeException(
+                        String.format("invalid configuration for server '%s'", serverName),
+                        String.format("Configure a valid value for '%s' property for server '%s' to access the filesystem.",
+                                CONFIG_KEY_BASE_PATH, serverName));
 
             return "/".equals(basePath)
                     ? "/"
@@ -41,14 +43,6 @@ public enum HcfsType {
     },
     GS,
     HDFS,
-    // LOCALFILE is deprecated and it will be removed in version 6.0.0 of PXF
-    @Deprecated
-    LOCALFILE("file") {
-        @Override
-        public String validateAndNormalizeDataSource(String dataSource) {
-            return dataSource;
-        }
-    },
     S3,
     S3A,
     S3N,
@@ -219,7 +213,7 @@ public enum HcfsType {
         URI defaultFS = FileSystem.getDefaultUri(configuration);
 
         String uri;
-        String normalizedBasePath = validateAndNormalizeBasePath(configuration.get(CONFIG_KEY_BASE_PATH));
+        String normalizedBasePath = validateAndNormalizeBasePath(configuration.get(PXF_SERVER_NAME_PROPERTY), configuration.get(CONFIG_KEY_BASE_PATH));
         String normalizedDataSource = validateAndNormalizeDataSource(dataSource);
 
         if (FILE_SCHEME.equals(defaultFS.getScheme())) {
@@ -237,10 +231,11 @@ public enum HcfsType {
     /**
      * Validates the basePath and normalizes it for the appropriate filesystem
      *
-     * @param basePath the basePath as configured by the user
+     * @param serverName the name of the server being accessed
+     * @param basePath   the basePath as configured by the user
      * @return the normalized basePath
      */
-    protected String validateAndNormalizeBasePath(String basePath) {
+    protected String validateAndNormalizeBasePath(String serverName, String basePath) {
         return StringUtils.isBlank(basePath)
                 // Return an empty string to prevent "null" in the string concatenation
                 ? ""

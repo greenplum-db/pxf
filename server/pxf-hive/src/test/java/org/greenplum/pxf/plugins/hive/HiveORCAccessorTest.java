@@ -59,6 +59,10 @@ public class HiveORCAccessorTest {
                 .withAllColumnTypes("string, string")
                 .withStart(0)
                 .withLength(0);
+
+        Configuration configuration = new Configuration();
+        configuration.set("pxf.fs.basePath", "/");
+
         context = new RequestContext();
         context.setConfig("default");
         context.setUser("test-user");
@@ -67,7 +71,7 @@ public class HiveORCAccessorTest {
         context.getTupleDescription().add(new ColumnDescriptor("col1", 1, 1, "TEXT", null));
         context.getTupleDescription().add(new ColumnDescriptor("FOO", 1, 1, "TEXT", null));
         context.setAccessor(HiveORCAccessor.class.getName());
-        context.setConfiguration(new Configuration());
+        context.setConfiguration(configuration);
 
         accessor = new HiveORCAccessor(new HiveUtilities());
         accessor.setRequestContext(context);

@@ -56,7 +56,7 @@
 	<file>
 		<class>org.greenplum.pxf.automation.components.hdfs.Hdfs</class>
 		<workingDirectory>${base.path}/tmp/pxf_automation_data/__UUID__</workingDirectory>
-		<hadoopRoot>/home/gpadmin/pxf/servers/file</hadoopRoot>
+		<hadoopRoot>${pxf.base}/servers/file</hadoopRoot>
 		<scheme>file</scheme>
 	</file>
 	<tinc>

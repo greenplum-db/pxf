@@ -20,13 +20,6 @@ import java.util.stream.Collectors;
  */
 public class HdfsFileFragmenter extends HdfsDataFragmenter {
 
-    public HdfsFileFragmenter() {
-    }
-
-    HdfsFileFragmenter(ConfigurationFactory configurationFactory) {
-        super(configurationFactory);
-    }
-
     /**
      * Gets the fragments for a data source URI that can appear as a file name,
      * a directory name or a wildcard. Returns the data fragments in JSON

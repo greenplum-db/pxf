@@ -21,26 +21,9 @@ public class HdfsDataFragmenterTest {
 
     @BeforeEach
     public void setup() {
-        context.setConfiguration(new Configuration());
-    }
-
-    @Before
-    public void setup() {
-
         Configuration configuration = new Configuration();
         configuration.set("pxf.fs.basePath", "/");
-
-        context = new RequestContext();
-        context.setConfig("default");
-        context.setServerName("default");
-        context.setUser("test-user");
-
-        ConfigurationFactory mockConfigurationFactory = mock(ConfigurationFactory.class);
-        when(mockConfigurationFactory.
-                initConfiguration(context.getConfig(), context.getServerName(), context.getUser(), context.getAdditionalConfigProps()))
-                .thenReturn(configuration);
-
-        fragmenter = new HdfsDataFragmenter(mockConfigurationFactory);
+        context.setConfiguration(configuration);
     }
 
     @Test
@@ -49,7 +32,6 @@ public class HdfsDataFragmenterTest {
 
         context.setConfig("default");
         context.setUser("test-user");
-        context.setProfileScheme("localfile");
         context.setDataSource(path);
 
         Fragmenter fragmenter = getFragmenter(context);
@@ -66,7 +48,6 @@ public class HdfsDataFragmenterTest {
 
         context.setConfig("default");
         context.setUser("test-user");
-        context.setProfileScheme("localfile");
         context.setDataSource(path + "*.csv");
 
         Fragmenter fragmenter = getFragmenter(context);
@@ -81,7 +62,6 @@ public class HdfsDataFragmenterTest {
     public void testInvalidInputPath() {
         context.setConfig("default");
         context.setUser("test-user");
-        context.setProfileScheme("localfile");
         context.setDataSource("/tmp/non-existent-path-on-disk/*.csv");
 
         Fragmenter fragmenter = getFragmenter(context);
@@ -94,7 +74,6 @@ public class HdfsDataFragmenterTest {
     public void testInvalidInputPathIgnored() throws Exception {
         context.setConfig("default");
         context.setUser("test-user");
-        context.setProfileScheme("localfile");
         context.addOption("IGNORE_MISSING_PATH", "true");
         context.setDataSource("/tmp/non-existent-path-on-disk/*.csv");
 
