@@ -329,16 +329,16 @@ function doMigrate()
     [[ -d "${PXF_CONF}/keytabs" ]]               || fail "Invalid \$PXF_CONF location. The '${PXF_CONF}/keytabs' directory is missing"
 
     # validate PXF_BASE
-    [[ -d $PXF_BASE ]] || failWithHint "PXF_BASE=$PXF_BASE does not exist" "Prepare PXF_BASE by running: 'PXF_BASE=$PXF_BASE pxf prepare'"
+    [[ -d $PXF_BASE ]] || failWithHint "PXF_BASE=$PXF_BASE does not exist" "Prepare PXF_BASE by running: 'PXF_BASE=$PXF_BASE pxf [cluster] prepare'"
     [[ -w $PXF_BASE ]] || fail "PXF_BASE=$PXF_BASE is not writable"
 
     # FILE1 -ef FILE2  True if file1 is a hard link to file2.
     [[ ! "$PXF_CONF" -ef "$PXF_BASE" ]] || fail "The PXF_CONF directory must be different from your target directory '$PXF_BASE'"
 
     # Validate PXF_BASE
-    [[ -f "${PXF_BASE}/conf/pxf-env.sh" ]]                 || failWithHint "The '${PXF_BASE}/conf/pxf-env.sh' file is missing" "Prepare PXF_BASE by running: 'PXF_BASE=$PXF_BASE pxf prepare'"
-    [[ -f "${PXF_BASE}/conf/pxf-application.properties" ]] || failWithHint "The '${PXF_BASE}/conf/pxf-application.properties' file is missing" "Prepare PXF_BASE by running: 'PXF_BASE=$PXF_BASE pxf prepare'"
-    [[ -f "${PXF_BASE}/conf/pxf-log4j2.xml" ]]             || failWithHint "The '${PXF_BASE}/conf/pxf-log4j2.xml' file is missing" "Prepare PXF_BASE by running: 'PXF_BASE=$PXF_BASE pxf prepare'"
+    [[ -f "${PXF_BASE}/conf/pxf-env.sh" ]]                 || failWithHint "The '${PXF_BASE}/conf/pxf-env.sh' file is missing" "Prepare PXF_BASE by running: 'PXF_BASE=$PXF_BASE pxf [cluster] prepare'"
+    [[ -f "${PXF_BASE}/conf/pxf-application.properties" ]] || failWithHint "The '${PXF_BASE}/conf/pxf-application.properties' file is missing" "Prepare PXF_BASE by running: 'PXF_BASE=$PXF_BASE pxf [cluster] prepare'"
+    [[ -f "${PXF_BASE}/conf/pxf-log4j2.xml" ]]             || failWithHint "The '${PXF_BASE}/conf/pxf-log4j2.xml' file is missing" "Prepare PXF_BASE by running: 'PXF_BASE=$PXF_BASE pxf [cluster] prepare'"
 
     echoGreen ""
     echoGreen "Starting PXF configuration migration from PXF_CONF='${PXF_CONF}' to PXF_BASE='${PXF_BASE}'"
