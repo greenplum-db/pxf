@@ -23,6 +23,7 @@ import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 public class AvroResolverTest {
     @Rule
@@ -72,6 +73,38 @@ public class AvroResolverTest {
         assertEquals((float) 7.7, genericRecord.get(4));
         assertEquals(6.0, genericRecord.get(5));
         assertEquals("row1", genericRecord.get(6));
+    }
+
+    @Test
+    public void testSetFields_PrimitiveNulls() throws Exception {
+        schema = getAvroSchemaForPrimitiveTypes();
+        context.setMetadata(schema);
+        resolver.initialize(context);
+
+        List<OneField> fields = new ArrayList<>();
+        fields.add(new OneField(DataType.BOOLEAN.getOID(), null));
+        fields.add(new OneField(DataType.BYTEA.getOID(), null));
+        fields.add(new OneField(DataType.BIGINT.getOID(), null));
+        fields.add(new OneField(DataType.SMALLINT.getOID(), null));
+        fields.add(new OneField(DataType.REAL.getOID(), null));
+        fields.add(new OneField(DataType.FLOAT8.getOID(), null));
+        fields.add(new OneField(DataType.TEXT.getOID(), null));
+        OneRow row = resolver.setFields(fields);
+
+        assertNotNull(row);
+        Object data = row.getData();
+        assertNotNull(data);
+        assertTrue(data instanceof GenericRecord);
+        GenericRecord genericRecord = (GenericRecord) data;
+
+        // assert column values
+        assertNull(genericRecord.get(0));
+        assertNull(genericRecord.get(1));
+        assertNull(genericRecord.get(2));
+        assertNull(genericRecord.get(3));
+        assertNull(genericRecord.get(4));
+        assertNull(genericRecord.get(5));
+        assertNull(genericRecord.get(6));
     }
 
     @Test
