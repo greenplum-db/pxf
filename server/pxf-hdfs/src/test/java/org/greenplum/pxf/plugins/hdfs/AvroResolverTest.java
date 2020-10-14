@@ -22,6 +22,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class AvroResolverTest {
@@ -80,7 +81,8 @@ public class AvroResolverTest {
     public void testSetFields_PrimitiveNulls() throws Exception {
         schema = getAvroSchemaForPrimitiveTypes();
         context.setMetadata(schema);
-        resolver.initialize(context);
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
 
         List<OneField> fields = new ArrayList<>();
         fields.add(new OneField(DataType.BOOLEAN.getOID(), null));
