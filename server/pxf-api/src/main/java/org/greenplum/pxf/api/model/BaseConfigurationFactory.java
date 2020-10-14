@@ -56,6 +56,9 @@ public class BaseConfigurationFactory implements ConfigurationFactory {
         // for example in JDBC when setting session authorization from a proxy user to the end-user
         configuration.set(PXF_SESSION_USER_PROPERTY, userName);
 
+        // add the server name itself as a configuration property
+        configuration.set(PXF_SERVER_NAME_PROPERTY, serverName);
+
         File[] serverDirectories = null;
         Path p = Paths.get(configDirectory);
 
@@ -120,8 +123,6 @@ public class BaseConfigurationFactory implements ConfigurationFactory {
             }
             // add the server directory itself as configuration property in case plugins need to access non-site-xml files
             configuration.set(PXF_CONFIG_SERVER_DIRECTORY_PROPERTY, directory.getCanonicalPath());
-            // add the server name itself as a configuration property
-            configuration.set(PXF_SERVER_NAME_PROPERTY, serverName);
 
         } catch (Exception e) {
             throw new RuntimeException(String.format("Unable to read configuration for server %s from %s",
