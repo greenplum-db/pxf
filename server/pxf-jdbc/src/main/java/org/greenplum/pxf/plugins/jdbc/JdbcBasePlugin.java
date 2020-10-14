@@ -334,7 +334,7 @@ public class JdbcBasePlugin extends BasePlugin {
         if (isConnectionPoolUsed) {
             poolConfiguration = new Properties();
             // for PXF upgrades where jdbc-site template has not been updated, make sure there're sensible defaults
-            poolConfiguration.setProperty("maximumPoolSize", "5");
+            poolConfiguration.setProperty("maximumPoolSize", "15");
             poolConfiguration.setProperty("connectionTimeout", "30000");
             poolConfiguration.setProperty("idleTimeout", "30000");
             poolConfiguration.setProperty("minimumIdle", "0");

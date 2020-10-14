@@ -74,7 +74,7 @@ public class JdbcBasePluginTest {
         context.setUser("test-user");
 
         poolProps = new Properties();
-        poolProps.setProperty("maximumPoolSize", "5");
+        poolProps.setProperty("maximumPoolSize", "15");
         poolProps.setProperty("connectionTimeout", "30000");
         poolProps.setProperty("idleTimeout", "30000");
         poolProps.setProperty("minimumIdle", "0");
@@ -426,7 +426,7 @@ public class JdbcBasePluginTest {
         connProps.setProperty("foo", "foo-val");
         connProps.setProperty("bar", "bar-val");
 
-        verify(mockConnectionManager).getConnection("test-server", "test-url", connProps, true, poolProps, null);
+       verify(mockConnectionManager).getConnection("test-server", "test-url", connProps, true, poolProps, null);
     }
 
     @Test

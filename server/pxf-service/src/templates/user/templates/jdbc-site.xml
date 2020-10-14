@@ -34,7 +34,7 @@
 
     <property>
         <name>jdbc.pool.property.maximumPoolSize</name>
-        <value>5</value>
+        <value>15</value>
         <description>The maximum number of actual connections to the database backend</description>
     </property>
     <property>
