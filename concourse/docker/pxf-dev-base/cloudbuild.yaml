@@ -10,6 +10,10 @@ options:
 
 steps:
 
+##############################################################################
+# GPDB 5 Images
+##############################################################################
+
 # An image for gpdb5 running on CentOS6
 - name: 'gcr.io/cloud-builders/docker'
   id: gpdb5-centos6-test-pxf-image-cache
