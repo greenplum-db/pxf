@@ -76,20 +76,6 @@ make SCALE=50 perf
 make SCALE=500 perf
 ```
 
-# Deploy a PXF acceptance pipeline
-Acceptance pipelines can be deployed for feature testing purposes.
-```shell
-./deploy dev master -a -n acceptance
-```
-For 5x:
-```shell
-./deploy dev 5x -a -n acceptance
-```
-After acceptance, the pipeline can be cleaned up as follows:
-```shell
-fly -t ud dp -p acceptance
-```
-
 # Deploy development PXF pipelines
 
 The dev pipeline is an abbreviated version of the `pxf-build` pipeline.
