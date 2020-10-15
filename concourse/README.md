@@ -37,18 +37,13 @@ make singlecluster
 
 # Deploy the cloudbuild pipeline
 
-```shell
-fly -t ud set-pipeline \
-    -c /Users/fguerrero/workspace/pxf/concourse/pipelines/cloudbuild_pipeline.yml \
-    -l ~/workspace/gp-continuous-integration/secrets/gp-image-baking-dockerfiles.prod.yml \
-    -l ~/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
-    -l ~/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud.yml \
-    -v pxf-git-branch=master -p cloudbuild
+```shell script
+make cloudbuild
 ```
 
 # Deploy the pull-request pipeline
 
-```shell
+```shell script
 make -C "${HOME}/workspace/pxf/concourse" pr
 ```
 
@@ -56,7 +51,7 @@ make -C "${HOME}/workspace/pxf/concourse" pr
 
 10G Performance pipeline:
 
-```shell
+```shell script
 make SCALE=10 perf
 ```
 
@@ -66,13 +61,13 @@ the name of your development pipeline (i.e. `-p dev:<YOUR-PIPELINE>`).
 
 50G Performance pipeline:
 
-```shell
+```shell script
 make SCALE=50 perf
 ```
 
 500G Performance pipeline:
 
-```shell
+```shell script
 make SCALE=500 perf
 ```
 

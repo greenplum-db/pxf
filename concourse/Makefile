@@ -35,12 +35,13 @@ MINIO                       ?= false
 OEL7                        ?= false
 FILE                        ?= false
 
-.PHONY: build certification dev pr
+.PHONY: build certification dev pr cloudbuild
 build: set-build-pipeline
 certification: set-certification-pipeline
 dev-release: set-dev-release-pipeline
 dev: set-dev-build-pipeline
 pr: set-pr-build-pipeline
+cloudbuild: set-cloudbuild-pipeline
 
 # ============================= BUILD PIPELINE TARGETS =============================
 .PHONY: set-build-pipeline
@@ -177,6 +178,17 @@ set-certification-pipeline:
 	@echo -e "\t$(FLY_CMD) -t ${CONCOURSE} unpause-pipeline --pipeline ${CERTIFICATION_PIPELINE_NAME}"
 
 # ============================= HELPER PIPELINE TARGETS =============================
+
+.PHONY: set-cloudbuild-pipeline
+set-cloudbuild-pipeline:
+	$(FLY_CMD) --target=$(CONCOURSE) \
+		set-pipeline \
+		--check-creds \
+		--config $(HOME)/workspace/pxf/concourse/pipelines/cloudbuild_pipeline.yml \
+		--load-vars-from=$(SECRETS_HOME)/gp-image-baking-dockerfiles.prod.yml \
+		--load-vars-from=$(SECRETS_HOME)/pxf-secrets.yml \
+		--var pxf-git-branch=$(BRANCH) \
+		--pipeline cloudbuild
 
 .PHONY: pivnet
 pivnet: set-pivnet-pipeline

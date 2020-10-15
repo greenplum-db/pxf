@@ -103,7 +103,7 @@ jobs:
         GOOGLE_CREDENTIALS: {{google-service-account-key}}
         GOOGLE_PROJECT_ID: {{google-project-id}}
         GOOGLE_ZONE: {{google-zone}}
-        IMAGE_LIST: "gpdb5-centos6-test-pxf gpdb5-centos7-test-pxf gpdb6-centos7-test-pxf gpdb6-ubuntu18.04-test-pxf gpdb6-oel7-test-pxf"
+        IMAGE_LIST: "gpdb5-centos6-test-pxf gpdb5-centos7-test-pxf gpdb6-centos7-test-pxf gpdb6-ubuntu18.04-test-pxf gpdb6-oel7-test-pxf gpdb7-centos7-test-pxf gpdb7-ubuntu18.04-test-pxf"
       config:
         platform: linux
         inputs:
