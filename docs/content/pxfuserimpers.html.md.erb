@@ -8,7 +8,7 @@ When user impersonation is enabled (the default), PXF accesses Hadoop services u
 
 When user impersonation is disabled, PXF executes all Hadoop service requests as the PXF process owner (usually `gpadmin`) or the Hadoop user identity that you specify. This behavior provides no means to control access to Hadoop services for different Greenplum Database users. It requires that this user have access to all files and directories in HDFS, and all tables in Hive and HBase that are referenced in PXF external table definitions.
 
-You configure the Hadoop user and PXF user impersonation setting for a server via the `pxf-site.xml` server configuration file. Refer to [About Kerberos and User Impersonation Configuration (pxf-site.xml)](cfg_server.html#pxf-site) for more information about the configuration properties in this file.
+You configure the Hadoop user and PXF user impersonation setting for a server via the `pxf-site.xml` server configuration file. Refer to [About the pxf-site.xml Configuration File](cfg_server.html#pxf-site) for more information about the configuration properties in this file.
 
 The following table describes some of the PXF configuration scenarios for Hadoop access:
 
