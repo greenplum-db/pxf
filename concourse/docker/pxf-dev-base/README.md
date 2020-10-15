@@ -1,6 +1,16 @@
 # How to build pxf-dev-base docker images locally?
 
 The generated images are the base images for building and testing PXF.
+
+If you do NOT want to build the images yourself, you can pull them from GCR
+by running docker pull. For example, for the CentOS7 image for Greenplum 6,
+use the following command:
+
+    export PROJECT_ID=<YOUR_PROJECT_ID>
+    docker pull gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-test-pxf:latest
+
+For a list of images built by `cloudbuild` take a look [here](../README.md).
+
 This guide assumes the PXF repository lives under the `~/workspace/pxf`
 directory. The `cloudbuild.yaml` file produces the following docker images:
 
