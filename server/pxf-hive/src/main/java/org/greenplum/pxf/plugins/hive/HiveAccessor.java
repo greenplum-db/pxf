@@ -20,6 +20,7 @@ package org.greenplum.pxf.plugins.hive;
  */
 
 import org.apache.hadoop.hive.common.type.HiveDecimal;
+import org.apache.hadoop.hive.ql.io.IOConstants;
 import org.apache.hadoop.hive.ql.io.orc.Reader;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.mapred.InputFormat;
@@ -65,6 +66,8 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
     private static final String HIVE_DEFAULT_PARTITION = "__HIVE_DEFAULT_PARTITION__";
     private int skipHeaderCount;
     protected List<Integer> hiveIndexes;
+    private String hiveColumnsString;
+    private String hiveColumnTypesString;
 
     static class HivePartition {
         public String name;
@@ -127,6 +130,8 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
         filterInFragmenter = hiveUserData.isFilterInFragmenter();
         skipHeaderCount = hiveUserData.getSkipHeader();
         hiveIndexes = hiveUserData.getHiveIndexes();
+        hiveColumnsString = hiveUserData.getAllColumnNames();
+        hiveColumnTypesString = hiveUserData.getColTypes();
     }
 
     /**
@@ -200,6 +205,8 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
     @Override
     protected Object getReader(JobConf jobConf, InputSplit split)
             throws IOException {
+        jobConf.set(IOConstants.COLUMNS, hiveColumnsString);
+        jobConf.set(IOConstants.COLUMNS_TYPES, hiveColumnTypesString);
         return inputFormat.getRecordReader(split, jobConf, Reporter.NULL);
     }
 
