@@ -19,6 +19,7 @@ package org.greenplum.pxf.plugins.hive;
  * under the License.
  */
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.ql.io.IOConstants;
 import org.apache.hadoop.hive.ql.io.orc.Reader;
@@ -205,8 +206,12 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
     @Override
     protected Object getReader(JobConf jobConf, InputSplit split)
             throws IOException {
-        jobConf.set(IOConstants.COLUMNS, hiveColumnsString);
-        jobConf.set(IOConstants.COLUMNS_TYPES, hiveColumnTypesString);
+        if (StringUtils.isNotBlank(hiveColumnsString)) {
+            jobConf.set(IOConstants.COLUMNS, hiveColumnsString);
+        }
+        if (StringUtils.isNotBlank(hiveColumnTypesString)) {
+            jobConf.set(IOConstants.COLUMNS_TYPES, hiveColumnTypesString);
+        }
         return inputFormat.getRecordReader(split, jobConf, Reporter.NULL);
     }
 
