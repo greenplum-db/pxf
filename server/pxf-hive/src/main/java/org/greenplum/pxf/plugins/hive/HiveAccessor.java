@@ -47,9 +47,14 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.sql.Date;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+
+import static org.apache.hadoop.hive.serde2.ColumnProjectionUtils.READ_ALL_COLUMNS;
+import static org.apache.hadoop.hive.serde2.ColumnProjectionUtils.READ_COLUMN_IDS_CONF_STR;
+import static org.apache.hadoop.hive.serde2.ColumnProjectionUtils.READ_COLUMN_NAMES_CONF_STR;
 
 /**
  * Accessor for Hive tables. The accessor will open and read a split belonging
@@ -150,7 +155,12 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
         if (context.getFragmentIndex() != 0) {
             skipHeaderCount = 0;
         }
-        return shouldDataBeReturnedFromFilteredPartition() && super.openForRead();
+        if (!shouldDataBeReturnedFromFilteredPartition()) {
+            return false;
+        }
+        // add projected columns to JobConf to make it available to RecordReaders
+        addColumns();
+        return super.openForRead();
     }
 
     /**
@@ -421,4 +431,26 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
     protected Reader getOrcReader() {
         return HiveUtilities.getOrcReader(configuration, context);
     }
+
+    /**
+     * Adds the table tuple description to JobConf object
+     * so only these columns will be returned.
+     */
+    protected void addColumns() {
+
+        List<Integer> colIds = new ArrayList<>();
+        List<String> colNames = new ArrayList<>();
+        List<ColumnDescriptor> tupleDescription = context.getTupleDescription();
+        for (int i = 0; i < tupleDescription.size(); i++) {
+            ColumnDescriptor col = tupleDescription.get(i);
+            if (col.isProjected() && hiveIndexes.get(i) != null) {
+                colIds.add(hiveIndexes.get(i));
+                colNames.add(col.columnName());
+            }
+        }
+        jobConf.set(READ_ALL_COLUMNS, "false");
+        jobConf.set(READ_COLUMN_IDS_CONF_STR, StringUtils.join(colIds, ","));
+        jobConf.set(READ_COLUMN_NAMES_CONF_STR, StringUtils.join(colNames, ","));
+    }
+
 }

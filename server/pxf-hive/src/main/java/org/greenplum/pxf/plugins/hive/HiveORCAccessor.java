@@ -109,31 +109,9 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
             }
             objectsEmitted = 0;
         } else {
-            addColumns();
             addFilters();
         }
         return super.openForRead();
-    }
-
-    /**
-     * Adds the table tuple description to JobConf object
-     * so only these columns will be returned.
-     */
-    private void addColumns() {
-
-        List<Integer> colIds = new ArrayList<>();
-        List<String> colNames = new ArrayList<>();
-        List<ColumnDescriptor> tupleDescription = context.getTupleDescription();
-        for (int i = 0; i < tupleDescription.size(); i++) {
-            ColumnDescriptor col = tupleDescription.get(i);
-            if (col.isProjected() && hiveIndexes.get(i) != null) {
-                colIds.add(hiveIndexes.get(i));
-                colNames.add(col.columnName());
-            }
-        }
-        jobConf.set(READ_ALL_COLUMNS, "false");
-        jobConf.set(READ_COLUMN_IDS_CONF_STR, StringUtils.join(colIds, ","));
-        jobConf.set(READ_COLUMN_NAMES_CONF_STR, StringUtils.join(colNames, ","));
     }
 
     /**
