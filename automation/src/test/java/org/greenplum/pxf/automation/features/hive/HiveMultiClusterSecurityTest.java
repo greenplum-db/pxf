@@ -48,7 +48,7 @@ import org.testng.annotations.Test;
         hive2 = (Hive) SystemManagerImpl.getInstance().getSystemObject("hive2");
 
         HiveTable hiveSmallDataTable2 =
-                prepareSmallData(hdfs2, hive2, null, HIVE_SMALL_DATA_TABLE, HIVE_SMALLDATA_COLS, HIVE_DATA_FILE_NAME_2);
+                prepareTableData(hdfs2, hive2, null, HIVE_SMALL_DATA_TABLE, HIVE_SMALLDATA_COLS, HIVE_DATA_FILE_NAME_2);
         createExternalTable(PXF_HIVE_SMALL_DATA_TABLE_SECURE, PXF_HIVE_SMALLDATA_COLS, hiveSmallDataTable2, true, "SERVER=hdfs-secure");
 
         runTincTest("pxf.features.hive.two_secured_hive.runTest");

@@ -11,7 +11,6 @@ import org.greenplum.pxf.automation.utils.exception.ExceptionUtils;
 import org.greenplum.pxf.automation.utils.tables.ComparisonUtils;
 import jsystem.utils.FileUtils;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.postgresql.util.PSQLException;
 import org.testng.annotations.Test;
 
@@ -172,7 +171,7 @@ public class HiveTest extends HiveBaseTest {
         Hive hiveNonSecure = (Hive) SystemManagerImpl.getInstance().getSystemObject("hiveNonSecure");
 
         HiveTable hiveSmallDataTable3 =
-                prepareSmallData(hdfsNonSecure, hiveNonSecure, null, HIVE_SMALL_DATA_TABLE, HIVE_SMALLDATA_COLS, HIVE_DATA_FILE_NAME_3);
+                prepareTableData(hdfsNonSecure, hiveNonSecure, null, HIVE_SMALL_DATA_TABLE, HIVE_SMALLDATA_COLS, HIVE_DATA_FILE_NAME_3);
         createExternalTable(PXF_HIVE_SMALL_DATA_TABLE_NON_SECURE, PXF_HIVE_SMALLDATA_COLS, hiveSmallDataTable3, true, "SERVER=hdfs-non-secure");
 
         runTincTest("pxf.features.hive.secured_and_non_secured_hive.runTest");
@@ -1078,4 +1077,25 @@ public class HiveTest extends HiveBaseTest {
 
         runTincTest("pxf.features.hive.skip_header_rows.runTest");
     }
+
+    /**
+     * Queries a Hive Parquet table consisting of several partitions with backing Parquet files having
+     * column order mismatch and several extra / missing columns.
+     *
+     * @throws Exception if test fails to run
+     */
+    @Test(groups = {"hive", "features", "gpdb", "security"})
+    public void hiveTablePartitionedWithParquetColumnMismatch() throws Exception {
+        // create the source table with the superset of all columns and data for all partitions
+        prepareParquetMismatchSourceTable();
+
+        // create Hive readable table with a subset of source columns (no 'ext_par' column)
+        createHiveParquetColumnMismatchPartitionTable();
+
+        // create PXF external table with a narrower subset of columns (no 'ext_par' and 'ext_hive_par' columns)
+        createExternalTable("pxf_hive_parquet_mismatch", PXF_HIVE_PARQUET_MISMATCH_COLS, hiveParquetMismatchTable);
+
+        runTincTest("pxf.features.hive.parquet_mismatch.runTest");
+    }
+
 }

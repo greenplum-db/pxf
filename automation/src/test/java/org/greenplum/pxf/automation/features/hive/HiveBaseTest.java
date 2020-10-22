@@ -172,10 +172,69 @@ public class HiveBaseTest extends BaseFeature {
             "tm    TIMESTAMP"
     };
 
+    // PXF Table columns for Parquet Mismatch test on partitioned hive table
+    // column order in the table definition is different from the references Hive table
+    static final String[] PXF_HIVE_PARQUET_MISMATCH_COLS = {
+            "num   INTEGER",        // 10
+            "s2    TEXT",           // s_10
+            "dec   NUMERIC(38,12)", // 1.0
+            "part  TEXT",           // a
+            "s1    TEXT"            // a_row0
+    };
+
+    static final String[] HIVE_PARQUET_MISMATCH_TABLE_COLS = {
+            "s1           STRING",         // a_row0
+            "dec          DECIMAL(38,12)", // 1.0
+            "num          INT",            // 10
+            "s2           STRING",         // s_10
+            "ext_hive_par STRING"          // ext_hive_par_10
+    };
+
+    static final String[] HIVE_PARQUET_MISMATCH_SOURCE_TABLE_COLS = {
+            "part         STRING",         // a
+            "s1           STRING",         // a_row0
+            "s2           STRING",         // s_10
+            "num          INT",            // 10
+            "dec          DECIMAL(38,12)", // 1.0
+            "ext_par      STRING",         // ext_par_10
+            "ext_hive_par STRING"          // ext_hive_par_10
+    };
+
+    // - partition A: has 3 GP columns, 'extra_hive_par', --> missing a column present in Hive and GP tables
+    static final String[] HIVE_PARQUET_MISMATCH_WRITE_PART_A_COL_NAMES = {"dec", "num", "s1", "ext_hive_par", "part"};
+    static final String[] HIVE_PARQUET_MISMATCH_WRITE_PART_A_COLS = {
+            "dec          DECIMAL(38,12)", // 1.0
+            "num          INT",            // 10
+            "s1           STRING",         // a_row0
+            "ext_hive_par STRING"          // ext_hive_par_10
+    };
+
+    // - partition B: has 4 GP columns, 'extra_hive_par'
+    static final String[] HIVE_PARQUET_MISMATCH_WRITE_PART_B_COL_NAMES = {"s2", "s1", "dec", "ext_hive_par","num", "part"};
+    static final String[] HIVE_PARQUET_MISMATCH_WRITE_PART_B_COLS = {
+            "s2           STRING",         // s_10
+            "s1           STRING",         // a_row0
+            "dec          DECIMAL(38,12)", // 1.0
+            "ext_hive_par STRING",         // ext_hive_par_10
+            "num          INT"             // 10
+    };
+
+    // - partition C: has 4 GP columns, 'extra_hive_par', --> and 'extra_par' column (not present in Hive or GP)
+    static final String[] HIVE_PARQUET_MISMATCH_WRITE_PART_C_COL_NAMES = {"ext_par", "num", "s1", "s2", "dec", "ext_hive_par", "part"};
+    static final String[] HIVE_PARQUET_MISMATCH_WRITE_PART_C_COLS = {
+            "ext_par      STRING",         // ext_par_10
+            "num          INT",            // 10
+            "s1           STRING",         // a_row0
+            "s2           STRING",         // s_10
+            "dec          DECIMAL(38,12)", // 1.0
+            "ext_hive_par STRING"          // ext_hive_par_10
+    };
+
     static final String HIVE_TYPES_DATA_FILE_NAME = "hive_types.txt";
     static final String HIVE_COLLECTIONS_FILE_NAME = "hive_collections.txt";
     static final String HIVE_DATA_FILE_NAME = "hive_small_data.txt";
     static final String HIVE_TYPES_LIMITED_FILE_NAME = "hive_types_limited.txt";
+    static final String HIVE_PARQUET_MISMATCH_DATA_FILE_NAME = "hive_parquet_mismatch_data.txt";
 
     static final String HIVE_SMALL_DATA_TABLE = "hive_small_data";
     static final String HIVE_TYPES_TABLE = "hive_types";
@@ -191,6 +250,8 @@ public class HiveBaseTest extends BaseFeature {
     static final String HIVE_AVRO_TABLE = "hive_avro_table";
     static final String HIVE_PARQUET_TABLE = "hive_parquet_table";
     static final String HIVE_PARQUET_FOR_ALTER_TABLE = "hive_parquet_alter_table";
+    static final String HIVE_PARQUET_MISMATCH_SOURCE_TABLE = "hive_parquet_mismatch_source_table";
+    static final String HIVE_PARQUET_MISMATCH_TABLE = "hive_parquet_mismatch_table";
     static final String HIVE_SEQUENCE_TABLE = "hive_sequence_table";
     static final String HIVE_OPEN_CSV_TABLE = "hive_open_csv_table";
     static final String HIVE_PARTITIONED_TABLE = "hive_partitioned_table";
@@ -236,6 +297,8 @@ public class HiveBaseTest extends BaseFeature {
     HiveTable hiveSequenceTable;
     HiveTable hiveParquetTable;
     HiveTable hiveParquetForAlterTable;
+    HiveTable hiveParquetMismatchSourceTable; // intermediate table holding all data for parquet file creation process
+    HiveTable hiveParquetMismatchTable;       // partitioned table on top of parquet files with mismatched columns
     HiveTable hiveAvroTable;
     HiveTable hiveBinaryTable;
     HiveTable hiveCollectionTable;
@@ -322,10 +385,10 @@ public class HiveBaseTest extends BaseFeature {
 
     void prepareSmallData() throws Exception {
 
-        hiveSmallDataTable = prepareSmallData(hdfs, hive, hiveSmallDataTable, HIVE_SMALL_DATA_TABLE, HIVE_SMALLDATA_COLS, HIVE_DATA_FILE_NAME);
+        hiveSmallDataTable = prepareTableData(hdfs, hive, hiveSmallDataTable, HIVE_SMALL_DATA_TABLE, HIVE_SMALLDATA_COLS, HIVE_DATA_FILE_NAME);
     }
 
-    HiveTable prepareSmallData(Hdfs hdfs, Hive hive, HiveTable hiveTable, String tableName, String[] tableColumns, String dataFileName) throws Exception {
+    HiveTable prepareTableData(Hdfs hdfs, Hive hive, HiveTable hiveTable, String tableName, String[] tableColumns, String dataFileName) throws Exception {
 
         if (hiveTable != null)
             return hiveTable;
@@ -419,6 +482,15 @@ public class HiveBaseTest extends BaseFeature {
         if (hiveParquetForAlterTable != null)
             return;
         hiveParquetForAlterTable = prepareData(HIVE_PARQUET_FOR_ALTER_TABLE, PARQUET);
+    }
+
+    void prepareParquetMismatchSourceTable() throws Exception {
+        if (hiveParquetMismatchSourceTable != null)
+            return;
+        hiveParquetMismatchSourceTable = prepareTableData(hdfs, hive,null,
+                HIVE_PARQUET_MISMATCH_SOURCE_TABLE,
+                HIVE_PARQUET_MISMATCH_SOURCE_TABLE_COLS,
+                HIVE_PARQUET_MISMATCH_DATA_FILE_NAME);
     }
 
     void prepareAvroData() throws Exception {
@@ -579,6 +651,67 @@ public class HiveBaseTest extends BaseFeature {
         setHivePartitionFormat(tableName, "fmt = 'orc'", ORC);
 
         return hiveTable;
+    }
+
+    /**
+     * First, creates 3 different sets of Parquet files using 3 Hive writable tables.
+     * The files from each table will then be used in the readable table partitions:
+     * - partition A: has 3 GP columns, 'extra_hive_par', --> missing a column 's2' present in Hive and GP tables
+     * - partition B: has 4 GP columns, 'extra_hive_par'
+     * - partition C: has 4 GP columns, 'extra_hive_par', --> and 'extra_par' column (not present in Hive or GP)
+     * The order of the columns in parquet files for all partitions is different
+
+     * Then, creates Hive readable partitioned table that has the same 4 columns as GP and 2 extra columns:
+     * - 'extra_hive_par' -- column that is present in Hive table and in all underlying Parquet files
+     * - 'extra_hive'     -- column that is present in Hive table, but not in any underlying Parquet files
+     *
+     * @throws Exception if test fails to run
+     */
+    void createHiveParquetColumnMismatchPartitionTable() throws Exception {
+
+        String[] partitionColumns = new String[]{"part"};
+        String[] partitionColumnsWithType = new String[]{"part STRING"};
+        String location = "hdfs:" + hdfsBaseDir + HIVE_PARQUET_MISMATCH_TABLE;
+
+        hive.runQuery("SET hive.exec.dynamic.partition = true");
+        hive.runQuery("SET hive.exec.dynamic.partition.mode = nonstrict");
+
+        // process partition A
+        String writeTableName = "hive_parquet_mismatch_write_a";
+        HiveTable hiveParquetExtTableA = new HiveExternalTable(writeTableName, HIVE_PARQUET_MISMATCH_WRITE_PART_A_COLS, location);
+        hiveParquetExtTableA.setPartitionedBy(partitionColumnsWithType);
+        hiveParquetExtTableA.setStoredAs(PARQUET);
+        hive.createTableAndVerify(hiveParquetExtTableA);
+        hive.insertDataToPartition(hiveParquetMismatchSourceTable, hiveParquetExtTableA,
+                partitionColumns, HIVE_PARQUET_MISMATCH_WRITE_PART_A_COL_NAMES, "part='a'");
+
+        // process partition B
+        writeTableName = "hive_parquet_mismatch_write_b";
+        HiveTable hiveParquetExtTableB = new HiveExternalTable(writeTableName, HIVE_PARQUET_MISMATCH_WRITE_PART_B_COLS, location);
+        hiveParquetExtTableB.setPartitionedBy(partitionColumnsWithType);
+        hiveParquetExtTableB.setStoredAs(PARQUET);
+        hive.createTableAndVerify(hiveParquetExtTableB);
+        hive.insertDataToPartition(hiveParquetMismatchSourceTable, hiveParquetExtTableB,
+                partitionColumns, HIVE_PARQUET_MISMATCH_WRITE_PART_B_COL_NAMES, "part='b'");
+
+        // process partition B
+        writeTableName = "hive_parquet_mismatch_write_c";
+        HiveTable hiveParquetExtTableC = new HiveExternalTable(writeTableName, HIVE_PARQUET_MISMATCH_WRITE_PART_C_COLS, location);
+        hiveParquetExtTableC.setPartitionedBy(partitionColumnsWithType);
+        hiveParquetExtTableC.setStoredAs(PARQUET);
+        hive.createTableAndVerify(hiveParquetExtTableC);
+        hive.insertDataToPartition(hiveParquetMismatchSourceTable, hiveParquetExtTableC,
+                partitionColumns, HIVE_PARQUET_MISMATCH_WRITE_PART_C_COL_NAMES, "part='c'");
+
+        // create readable Hive table with a fixed schema to read all 3 partitions
+        hiveParquetMismatchTable = new HiveExternalTable(HIVE_PARQUET_MISMATCH_TABLE, HIVE_PARQUET_MISMATCH_TABLE_COLS, location);
+        hiveParquetMismatchTable.setPartitionedBy(partitionColumnsWithType);
+        hiveParquetMismatchTable.setStoredAs(PARQUET);
+        hive.createTableAndVerify(hiveParquetMismatchTable);
+        // add existing data as partitions to the table
+        hive.alterTableAddPartition(hiveParquetMismatchTable, new String[]{"part='a'"});
+        hive.alterTableAddPartition(hiveParquetMismatchTable, new String[]{"part='b'"});
+        hive.alterTableAddPartition(hiveParquetMismatchTable, new String[]{"part='c'"});
     }
 
     /**

@@ -110,6 +110,10 @@ public class HiveTable extends Table {
 			sb.append(" STORED AS " + storedAs);
 		}
 
+		if (getLocation() != null) {
+			sb.append(" LOCATION '").append(getLocation()).append("'");
+		}
+
 		if (tableProperties != null && tableProperties.size() > 0) {
 			addTablePropertiesToString(sb);
 		}
@@ -207,4 +211,8 @@ public class HiveTable extends Table {
 		}
 		sb.append(")");
 	}
+
+	protected String getLocation() {
+		return null;
+	};
 }

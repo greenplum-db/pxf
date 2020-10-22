@@ -160,12 +160,18 @@ public class Hive extends DbSystemObject {
 
     public void insertDataToPartition(Table source, Table target,
                                       String[] partitions, String[] columnsToSelect) throws Exception {
+        insertDataToPartition(source, target, partitions, columnsToSelect, null);
+    }
+
+    public void insertDataToPartition(Table source, Table target,
+                                      String[] partitions, String[] columnsToSelect, String filter) throws Exception {
         if (ArrayUtils.isEmpty(partitions)) {
             throw new IllegalArgumentException("No partitions to insert data to");
         } else {
             runQuery("INSERT INTO TABLE " + target.getName() + " PARTITION ("
                     + StringUtils.join(partitions, ", ") + ")"
-                    + " SELECT " + StringUtils.join(columnsToSelect, ", ") + " FROM " + source.getName());
+                    + " SELECT " + StringUtils.join(columnsToSelect, ", ") + " FROM " + source.getName()
+                    + (filter == null ? "" : " WHERE " + filter));
         }
     }
 
