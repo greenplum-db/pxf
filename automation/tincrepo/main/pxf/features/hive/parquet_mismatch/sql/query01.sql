@@ -3,7 +3,7 @@
 SELECT * FROM pxf_hive_parquet_mismatch ORDER BY num;
 
 -- column projection on non-part column
-SELECT dec FROM pxf_hive_parquet_mismatch ORDER BY dec;
+SELECT dcm FROM pxf_hive_parquet_mismatch ORDER BY dcm;
 
 -- column projection on non-part and part columns
 SELECT part, s1 FROM pxf_hive_parquet_mismatch ORDER BY s1;

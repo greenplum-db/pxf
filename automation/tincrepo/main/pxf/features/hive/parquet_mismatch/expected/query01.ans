@@ -1,6 +1,6 @@
 -- @description query01 for PXF Hive parquet mismatch
 SELECT * FROM pxf_hive_parquet_mismatch ORDER BY num;
- num |  s2  |      dec       | part |   s1
+ num |  s2  |      dcm       | part |   s1
 -----+------+----------------+------+--------
   10 |      | 1.000000000000 | a    | a_row0
   11 |      | 1.100000000000 | a    | a_row1
@@ -35,8 +35,8 @@ SELECT * FROM pxf_hive_parquet_mismatch ORDER BY num;
 (30 rows)
 
 -- column projection on non-part column
-SELECT dec FROM pxf_hive_parquet_mismatch ORDER BY dec;
-      dec
+SELECT dcm FROM pxf_hive_parquet_mismatch ORDER BY dcm;
+      dcm
 ----------------
  1.000000000000
  1.100000000000

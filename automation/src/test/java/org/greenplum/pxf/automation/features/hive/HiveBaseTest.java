@@ -177,14 +177,14 @@ public class HiveBaseTest extends BaseFeature {
     static final String[] PXF_HIVE_PARQUET_MISMATCH_COLS = {
             "num   INTEGER",        // 10
             "s2    TEXT",           // s_10
-            "dec   NUMERIC(38,12)", // 1.0
+            "dcm   NUMERIC(38,12)", // 1.0
             "part  TEXT",           // a
             "s1    TEXT"            // a_row0
     };
 
     static final String[] HIVE_PARQUET_MISMATCH_TABLE_COLS = {
             "s1           STRING",         // a_row0
-            "dec          DECIMAL(38,12)", // 1.0
+            "dcm          DECIMAL(38,12)", // 1.0
             "num          INT",            // 10
             "s2           STRING",         // s_10
             "ext_hive_par STRING"          // ext_hive_par_10
@@ -195,38 +195,38 @@ public class HiveBaseTest extends BaseFeature {
             "s1           STRING",         // a_row0
             "s2           STRING",         // s_10
             "num          INT",            // 10
-            "dec          DECIMAL(38,12)", // 1.0
+            "dcm          DECIMAL(38,12)", // 1.0
             "ext_par      STRING",         // ext_par_10
             "ext_hive_par STRING"          // ext_hive_par_10
     };
 
     // - partition A: has 3 GP columns, 'extra_hive_par', --> missing a column present in Hive and GP tables
-    static final String[] HIVE_PARQUET_MISMATCH_WRITE_PART_A_COL_NAMES = {"dec", "num", "s1", "ext_hive_par", "part"};
+    static final String[] HIVE_PARQUET_MISMATCH_WRITE_PART_A_COL_NAMES = {"dcm", "num", "s1", "ext_hive_par", "part"};
     static final String[] HIVE_PARQUET_MISMATCH_WRITE_PART_A_COLS = {
-            "dec          DECIMAL(38,12)", // 1.0
+            "dcm          DECIMAL(38,12)", // 1.0
             "num          INT",            // 10
             "s1           STRING",         // a_row0
             "ext_hive_par STRING"          // ext_hive_par_10
     };
 
     // - partition B: has 4 GP columns, 'extra_hive_par'
-    static final String[] HIVE_PARQUET_MISMATCH_WRITE_PART_B_COL_NAMES = {"s2", "s1", "dec", "ext_hive_par","num", "part"};
+    static final String[] HIVE_PARQUET_MISMATCH_WRITE_PART_B_COL_NAMES = {"s2", "s1", "dcm", "ext_hive_par","num", "part"};
     static final String[] HIVE_PARQUET_MISMATCH_WRITE_PART_B_COLS = {
             "s2           STRING",         // s_10
             "s1           STRING",         // a_row0
-            "dec          DECIMAL(38,12)", // 1.0
+            "dcm          DECIMAL(38,12)", // 1.0
             "ext_hive_par STRING",         // ext_hive_par_10
             "num          INT"             // 10
     };
 
     // - partition C: has 4 GP columns, 'extra_hive_par', --> and 'extra_par' column (not present in Hive or GP)
-    static final String[] HIVE_PARQUET_MISMATCH_WRITE_PART_C_COL_NAMES = {"ext_par", "num", "s1", "s2", "dec", "ext_hive_par", "part"};
+    static final String[] HIVE_PARQUET_MISMATCH_WRITE_PART_C_COL_NAMES = {"ext_par", "num", "s1", "s2", "dcm", "ext_hive_par", "part"};
     static final String[] HIVE_PARQUET_MISMATCH_WRITE_PART_C_COLS = {
             "ext_par      STRING",         // ext_par_10
             "num          INT",            // 10
             "s1           STRING",         // a_row0
             "s2           STRING",         // s_10
-            "dec          DECIMAL(38,12)", // 1.0
+            "dcm          DECIMAL(38,12)", // 1.0
             "ext_hive_par STRING"          // ext_hive_par_10
     };
 
