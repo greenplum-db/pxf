@@ -46,7 +46,7 @@ dependencies {
     implementation("org.apache.parquet:parquet-generator:${parquetVersion}") { transitive = false }
     implementation("org.apache.parquet:parquet-hadoop:${parquetVersion}") { transitive = false }
     implementation("org.apache.parquet:parquet-jackson:${parquetVersion}") { transitive = false }
-    implementation("org.apache.hive:hive-storage-api:2.4.0") { transitive = false }// for parquet writing
+    implementation("org.apache.hive:hive-storage-api:${hiveStorageApiVersion}") { transitive = false }// for parquet writing
 
     implementation("org.codehaus.jackson:jackson-core-asl:1.9.13") { transitive = false }
     implementation("org.codehaus.jackson:jackson-mapper-asl:1.9.13") { transitive = false }
@@ -61,6 +61,13 @@ dependencies {
     implementation("log4j:log4j:1.2.17")                         { transitive = false }
     implementation("com.fasterxml.woodstox:woodstox-core:5.0.3") { transitive = false }
     implementation("org.codehaus.woodstox:stax2-api:3.1.4")      { transitive = false }
+
+    // ORC dependencies
+    implementation("org.apache.orc:orc-core:${orcVersion}")      { transitive = false }
+    implementation("org.apache.orc:orc-shims:${orcVersion}")     { transitive = false }
+    implementation("org.apache.hive:hive-common:${hiveVersion}") { transitive = false }
+    implementation("com.google.protobuf:protobuf-java:2.5.0")    { transitive = false }
+    implementation("org.threeten:threeten-extra:1.5.0")          { transitive = false }
 
     /*******************************
      * Dependencies for Supported Hadoop-Compatible Filesystems

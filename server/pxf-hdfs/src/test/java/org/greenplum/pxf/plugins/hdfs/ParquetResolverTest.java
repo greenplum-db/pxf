@@ -73,6 +73,7 @@ public class ParquetResolverTest {
     @Test
     public void testInitialize() {
         resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
     }
 
     @Test

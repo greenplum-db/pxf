@@ -49,6 +49,7 @@ import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.SerializationService;
 import org.greenplum.pxf.api.utilities.SpringContext;
 import org.greenplum.pxf.plugins.hdfs.HdfsSplittableDataAccessor;
+import org.greenplum.pxf.plugins.hdfs.filter.SearchArgumentBuilder;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -611,7 +612,7 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
     }
 
     /**
-     * Uses {@link HiveSearchArgumentBuilder} to translate a filter string into a
+     * Uses {@link SearchArgumentBuilder} to translate a filter string into a
      * Hive {@link SearchArgument} object. The result is added as a filter to
      * JobConf object
      */
@@ -621,8 +622,8 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
         }
 
         /* Predicate push-down configuration */
-        HiveSearchArgumentBuilder searchArgumentBuilder =
-                new HiveSearchArgumentBuilder(context.getTupleDescription(), configuration);
+        SearchArgumentBuilder searchArgumentBuilder =
+                new SearchArgumentBuilder(context.getTupleDescription(), configuration);
 
         // Parse the filter string into a expression tree Node
         String filterStr = context.getFilterString();

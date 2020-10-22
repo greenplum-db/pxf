@@ -1,4 +1,4 @@
-package org.greenplum.pxf.plugins.hive;
+package org.greenplum.pxf.plugins.hdfs.filter;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
@@ -15,14 +15,14 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.greenplum.pxf.plugins.hive.HiveAccessor.ORC_SUPPORTED_OPERATORS;
+import static org.greenplum.pxf.plugins.hdfs.orc.ORCVectorizedAccessor.SUPPORTED_OPERATORS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class HiveSearchArgumentBuilderTest {
+public class SearchArgumentBuilderTest {
 
-    private static final TreeVisitor PRUNER = new SupportedOperatorPruner(ORC_SUPPORTED_OPERATORS);
+    private static final TreeVisitor PRUNER = new SupportedOperatorPruner(SUPPORTED_OPERATORS);
     private static final TreeTraverser TRAVERSER = new TreeTraverser();
     private List<ColumnDescriptor> columnDescriptors;
 
@@ -149,11 +149,12 @@ public class HiveSearchArgumentBuilderTest {
     }
 
     private SearchArgument.Builder helper(String filterString, List<ColumnDescriptor> columnDescriptors) throws Exception {
-        HiveSearchArgumentBuilder treeVisitor =
-                new HiveSearchArgumentBuilder(columnDescriptors, new Configuration());
+        SearchArgumentBuilder treeVisitor =
+                new SearchArgumentBuilder(columnDescriptors, new Configuration());
         // Parse the filter string into a expression tree Node
         Node root = new FilterParser().parse(filterString);
         TRAVERSER.traverse(root, PRUNER, treeVisitor);
         return treeVisitor.getFilterBuilder();
     }
+
 }

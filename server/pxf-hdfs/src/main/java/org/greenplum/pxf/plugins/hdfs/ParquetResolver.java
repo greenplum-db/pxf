@@ -60,7 +60,7 @@ public class ParquetResolver extends BasePlugin implements Resolver {
     private MessageType schema;
     private SimpleGroupFactory groupFactory;
     private List<ColumnDescriptor> columnDescriptors;
-    private ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper = new ObjectMapper();
 
     @Override
     public void afterPropertiesSet() {

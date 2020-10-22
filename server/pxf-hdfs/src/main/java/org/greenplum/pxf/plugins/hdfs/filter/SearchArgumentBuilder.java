@@ -1,4 +1,4 @@
-package org.greenplum.pxf.plugins.hive;
+package org.greenplum.pxf.plugins.hdfs.filter;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -46,14 +46,14 @@ import java.util.stream.Collectors;
  * ..endNot
  * endAnd
  */
-public class HiveSearchArgumentBuilder implements TreeVisitor {
+public class SearchArgumentBuilder implements TreeVisitor {
 
-    private static final Logger LOG = LoggerFactory.getLogger(HiveSearchArgumentBuilder.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SearchArgumentBuilder.class);
 
     private final SearchArgument.Builder filterBuilder;
     private final List<ColumnDescriptor> columnDescriptors;
 
-    public HiveSearchArgumentBuilder(List<ColumnDescriptor> tupleDescription, Configuration configuration) {
+    public SearchArgumentBuilder(List<ColumnDescriptor> tupleDescription, Configuration configuration) {
         this.filterBuilder = SearchArgumentFactory.newBuilder(configuration);
         this.columnDescriptors = tupleDescription;
     }
