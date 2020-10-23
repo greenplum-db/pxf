@@ -116,7 +116,7 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
         int columnIndex = 0;
         OneField[] oneFields;
         for (ColumnDescriptor columnDescriptor : columnDescriptors) {
-            if (!columnDescriptor.isProjected()) {
+            if (!columnDescriptor.isProjected() || columnIndex >= readSchema.getChildren().size()) {
                 oneFields = ORCVectorizedMappingFunctions
                         .getNullResultSet(columnDescriptor.columnTypeCode(), batchSize);
             } else {

@@ -54,6 +54,7 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
     private static final TreeVisitor PRUNER = new SupportedOperatorPruner(SUPPORTED_OPERATORS);
     private static final TreeTraverser TRAVERSER = new TreeTraverser();
 
+    private boolean positionalAccess;
     private int batchIndex;
     private long totalRowsRead;
     private long totalReadTimeInNanos;
@@ -66,6 +67,7 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
     public void afterPropertiesSet() {
         super.afterPropertiesSet();
         columnDescriptors = context.getTupleDescription();
+        positionalAccess = context.getOption("MAP_BY_POSITION", false);
     }
 
     @Override
@@ -88,6 +90,7 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
         Reader.Options options = fileReader
                 .options()
                 .schema(readSchema)
+                .positionalEvolutionLevel(0)
                 .range(fileSplit.getStart(), fileSplit.getLength())
                 .searchArgument(searchArgument, new String[]{});
 
@@ -188,31 +191,41 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
      * @return the read schema
      */
     private TypeDescription buildReadSchema(TypeDescription originalSchema) {
-        int schemaSize = originalSchema.getFieldNames().size();
-        // Build a map of column names to TypeDescription
-        // We need to add the original name and lower cased name to
-        // the map to support mixed case where in Greenplum the column name
-        // was created with quotes i.e "mIxEd CaSe". When quotes are not
-        // used to create a table in Greenplum, the name of the column will
-        // always come in lower-case
-        Map<String, TypeDescription> originalFields = new HashMap<>(schemaSize);
-        IntStream.range(0, schemaSize).forEach(idx -> {
-            String columnName = originalSchema.getFieldNames().get(idx);
-            TypeDescription t = originalSchema.getChildren().get(idx);
-            originalFields.put(columnName, t);
-            originalFields.put(columnName.toLowerCase(), t);
-        });
-
         TypeDescription readSchema = TypeDescription.createStruct();
-        for (ColumnDescriptor columnDescriptor : columnDescriptors) {
-            if (!columnDescriptor.isProjected()) continue;
-            String columnName = columnDescriptor.columnName();
-            TypeDescription t = originalFields.get(columnName);
-            if (t == null) {
-                throw new IllegalArgumentException(
-                        String.format("Column %s is missing from ORC schema", columnName));
+        if (positionalAccess) {
+            for (int i = 0; i < columnDescriptors.size() && i < originalSchema.getFieldNames().size(); i++) {
+                ColumnDescriptor columnDescriptor = columnDescriptors.get(i);
+                if (!columnDescriptor.isProjected()) continue;
+                String columnName = originalSchema.getFieldNames().get(i);
+                TypeDescription t = originalSchema.getChildren().get(i);
+                readSchema.addField(columnName, t.clone());
             }
-            readSchema.addField(columnName, t.clone());
+        } else {
+            int schemaSize = originalSchema.getFieldNames().size();
+            // Build a map of column names to TypeDescription
+            // We need to add the original name and lower cased name to
+            // the map to support mixed case where in Greenplum the column name
+            // was created with quotes i.e "mIxEd CaSe". When quotes are not
+            // used to create a table in Greenplum, the name of the column will
+            // always come in lower-case
+            Map<String, TypeDescription> originalFields = new HashMap<>(schemaSize);
+            IntStream.range(0, schemaSize).forEach(idx -> {
+                String columnName = originalSchema.getFieldNames().get(idx);
+                TypeDescription t = originalSchema.getChildren().get(idx);
+                originalFields.put(columnName, t);
+                originalFields.put(columnName.toLowerCase(), t);
+            });
+
+            for (ColumnDescriptor columnDescriptor : columnDescriptors) {
+                if (!columnDescriptor.isProjected()) continue;
+                String columnName = columnDescriptor.columnName();
+                TypeDescription t = originalFields.get(columnName);
+                if (t == null) {
+                    throw new IllegalArgumentException(
+                            String.format("Column %s is missing from ORC schema", columnName));
+                }
+                readSchema.addField(columnName, t.clone());
+            }
         }
         return readSchema;
     }
