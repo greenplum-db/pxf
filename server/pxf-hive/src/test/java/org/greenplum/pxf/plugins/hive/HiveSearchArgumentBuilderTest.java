@@ -21,7 +21,7 @@ import static org.greenplum.pxf.plugins.hive.HiveORCAccessor.SUPPORTED_OPERATORS
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-public class HiveORCSearchArgumentBuilderTest {
+public class HiveSearchArgumentBuilderTest {
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
@@ -154,8 +154,8 @@ public class HiveORCSearchArgumentBuilderTest {
     }
 
     private SearchArgument.Builder helper(String filterString, List<ColumnDescriptor> columnDescriptors) throws Exception {
-        HiveORCSearchArgumentBuilder treeVisitor =
-                new HiveORCSearchArgumentBuilder(columnDescriptors, new Configuration());
+        HiveSearchArgumentBuilder treeVisitor =
+                new HiveSearchArgumentBuilder(columnDescriptors, new Configuration());
         // Parse the filter string into a expression tree Node
         Node root = new FilterParser().parse(filterString);
         TRAVERSER.traverse(root, PRUNER, treeVisitor);

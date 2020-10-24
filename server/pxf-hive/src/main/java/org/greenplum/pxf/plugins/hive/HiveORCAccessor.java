@@ -19,27 +19,13 @@ package org.greenplum.pxf.plugins.hive;
  * under the License.
  */
 
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.io.Output;
-import org.apache.commons.codec.binary.Base64;
 import org.apache.hadoop.hive.ql.io.orc.OrcInputFormat;
 import org.apache.hadoop.hive.ql.io.orc.Reader;
-import org.apache.hadoop.hive.ql.io.sarg.ConvertAstToSearchArg;
-import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
-import org.apache.hadoop.mapred.JobConf;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.StatsAccessor;
-import org.greenplum.pxf.api.filter.FilterParser;
-import org.greenplum.pxf.api.filter.Node;
-import org.greenplum.pxf.api.filter.Operator;
-import org.greenplum.pxf.api.filter.SupportedOperatorPruner;
-import org.greenplum.pxf.api.filter.TreeTraverser;
-import org.greenplum.pxf.api.filter.TreeVisitor;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.EnumAggregationType;
 import org.greenplum.pxf.api.utilities.Utilities;
-
-import java.util.EnumSet;
 
 /**
  * Specialization of HiveAccessor for a Hive table that stores only ORC files.
@@ -47,28 +33,6 @@ import java.util.EnumSet;
  * Use together with {@link HiveInputFormatFragmenter}/{@link HiveColumnarSerdeResolver}
  */
 public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
-
-    private static final int KRYO_BUFFER_SIZE = 4 * 1024;
-    private static final int KRYO_MAX_BUFFER_SIZE = 10 * 1024 * 1024;
-
-    static final EnumSet<Operator> SUPPORTED_OPERATORS =
-            EnumSet.of(
-                    Operator.NOOP,
-                    Operator.LESS_THAN,
-                    Operator.GREATER_THAN,
-                    Operator.LESS_THAN_OR_EQUAL,
-                    Operator.GREATER_THAN_OR_EQUAL,
-                    Operator.EQUALS,
-                    Operator.NOT_EQUALS,
-                    Operator.IS_NULL,
-                    Operator.IS_NOT_NULL,
-                    Operator.IN,
-                    Operator.OR,
-                    Operator.AND,
-                    Operator.NOT
-            );
-    private static final TreeVisitor PRUNER = new SupportedOperatorPruner(SUPPORTED_OPERATORS);
-    private static final TreeTraverser TRAVERSER = new TreeTraverser();
 
     Reader orcReader;
 
@@ -100,36 +64,13 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
                 return false;
             }
             objectsEmitted = 0;
-        } else {
-            addFilters();
         }
         return super.openForRead();
     }
 
-    /**
-     * Uses {@link HivePartitionFilterBuilder} to translate a filter string into a
-     * Hive {@link SearchArgument} object. The result is added as a filter to
-     * JobConf object
-     */
-    private void addFilters() throws Exception {
-        if (!context.hasFilter()) {
-            return;
-        }
-
-        /* Predicate push-down configuration */
-        String filterStr = context.getFilterString();
-
-        HiveORCSearchArgumentBuilder searchArgumentBuilder = new HiveORCSearchArgumentBuilder(context.getTupleDescription(), configuration);
-
-        // Parse the filter string into a expression tree Node
-        Node root = new FilterParser().parse(filterStr);
-        // Prune the parsed tree with valid supported operators and then
-        // traverse the pruned tree with the searchArgumentBuilder to produce a SearchArgument for ORC
-        TRAVERSER.traverse(root, PRUNER, searchArgumentBuilder);
-
-        SearchArgument.Builder filterBuilder = searchArgumentBuilder.getFilterBuilder();
-        SearchArgument searchArgument = filterBuilder.build();
-        jobConf.set(ConvertAstToSearchArg.SARG_PUSHDOWN, toKryo(searchArgument));
+    @Override
+    protected boolean shouldAddProjectionsAndFilters() {
+        return !useStats;
     }
 
     /**
@@ -171,22 +112,6 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
             row = rowToEmitCount;
         }
         return row;
-    }
-
-    /**
-     * Package private for unit testing
-     *
-     * @return the jobConf
-     */
-    JobConf getJobConf() {
-        return jobConf;
-    }
-
-    private String toKryo(SearchArgument sarg) {
-        Output out = new Output(KRYO_BUFFER_SIZE, KRYO_MAX_BUFFER_SIZE);
-        new Kryo().writeObject(out, sarg);
-        out.close();
-        return Base64.encodeBase64String(out.toBytes());
     }
 
 }
