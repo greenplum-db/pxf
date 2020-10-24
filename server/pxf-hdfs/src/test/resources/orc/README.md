@@ -56,9 +56,9 @@ where you ran the script.
 ## Origin of orc_file_predicate_pushdown.orc file
 
 The `orc_file_predicate_pushdown.orc` file comes from the ORC repository:
-https://github.com/apache/orc/blob/master/examples/TestOrcFile.testSeek.orc
+https://github.com/apache/orc/blob/master/examples/over1k_bloom.orc
 
 ```shell script
-cp ~/workspace/orc/examples/TestOrcFile.testSeek.orc ~/workspace/pxf/server/pxf-hdfs/src/test/resources/orc/
+cp ~/workspace/orc/examples/over1k_bloom.orc ~/workspace/pxf/server/pxf-hdfs/src/test/resources/orc/
 ```
 

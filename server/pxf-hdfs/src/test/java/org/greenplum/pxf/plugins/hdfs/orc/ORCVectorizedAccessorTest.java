@@ -49,29 +49,13 @@ class ORCVectorizedAccessorTest extends ORCVectorizedBaseTest {
 
     @Test
     public void testReadOrcTypesFile() throws IOException {
-        String path = Objects.requireNonNull(getClass().getClassLoader().getResource("orc/orc_types.orc")).getPath();
-        context.setDataSource(path);
-        context.setFragmentMetadata(new HcfsFragmentMetadata(0, 2257));
-        context.setTupleDescription(columnDescriptors);
-        accessor.setRequestContext(context);
-        accessor.afterPropertiesSet();
+        runTestScenarioReadOrcTypesFile(15);
+    }
 
-        assertTrue(accessor.openForRead());
-        OneRow oneRow = accessor.readNextObject();
-        assertNotNull(oneRow);
-        assertNotNull(oneRow.getKey());
-        assertNotNull(oneRow.getData());
-        assertTrue(oneRow.getKey() instanceof LongWritable);
-        assertTrue(oneRow.getData() instanceof VectorizedRowBatch);
-
-        VectorizedRowBatch batch = (VectorizedRowBatch) oneRow.getData();
-        assertEquals(15, batch.numCols);
-        assertEquals(25, batch.count());
-        assertEquals(25, batch.getSelectedSize());
-
-        assertNull(accessor.readNextObject());
-
-        accessor.closeForRead();
+    @Test
+    public void testReadOrcTypesFileByPosition() throws IOException {
+        context.addOption("MAP_BY_POSITION", "true");
+        runTestScenarioReadOrcTypesFile(15);
     }
 
     @Test
@@ -82,29 +66,19 @@ class ORCVectorizedAccessorTest extends ORCVectorizedBaseTest {
                         .get(idx)
                         .setProjected(idx == 2 || idx == 5 || idx == 12));
 
-        String path = Objects.requireNonNull(getClass().getClassLoader().getResource("orc/orc_types.orc")).getPath();
-        context.setDataSource(path);
-        context.setFragmentMetadata(new HcfsFragmentMetadata(0, 2257));
-        context.setTupleDescription(columnDescriptors);
-        accessor.setRequestContext(context);
-        accessor.afterPropertiesSet();
+        runTestScenarioReadOrcTypesFile(3);
+    }
 
-        assertTrue(accessor.openForRead());
-        OneRow oneRow = accessor.readNextObject();
-        assertNotNull(oneRow);
-        assertNotNull(oneRow.getKey());
-        assertNotNull(oneRow.getData());
-        assertTrue(oneRow.getKey() instanceof LongWritable);
-        assertTrue(oneRow.getData() instanceof VectorizedRowBatch);
+    @Test
+    public void testReadOrcTypesFileByPositionWithColumnProjection() throws IOException {
+        // Only project indexes 2, 5 and 12
+        IntStream.range(0, columnDescriptors.size()).forEach(idx ->
+                columnDescriptors
+                        .get(idx)
+                        .setProjected(idx == 2 || idx == 5 || idx == 12));
 
-        VectorizedRowBatch batch = (VectorizedRowBatch) oneRow.getData();
-        assertEquals(3, batch.projectionSize);
-        assertEquals(25, batch.count());
-        assertEquals(25, batch.getSelectedSize());
-
-        assertNull(accessor.readNextObject());
-
-        accessor.closeForRead();
+        context.addOption("MAP_BY_POSITION", "true");
+        runTestScenarioReadOrcTypesFile(3);
     }
 
     /**
@@ -125,29 +99,7 @@ class ORCVectorizedAccessorTest extends ORCVectorizedBaseTest {
         columnDescriptors.add(new ColumnDescriptor("dt", DataType.DATE.getOID(), 11, "date", null));
         columnDescriptors.add(new ColumnDescriptor("bin", DataType.BYTEA.getOID(), 14, "bin", null));
 
-        String path = Objects.requireNonNull(getClass().getClassLoader().getResource("orc/orc_types.orc")).getPath();
-        context.setDataSource(path);
-        context.setFragmentMetadata(new HcfsFragmentMetadata(0, 2257));
-        context.setTupleDescription(columnDescriptors);
-        accessor.setRequestContext(context);
-        accessor.afterPropertiesSet();
-
-        assertTrue(accessor.openForRead());
-        OneRow oneRow = accessor.readNextObject();
-        assertNotNull(oneRow);
-        assertNotNull(oneRow.getKey());
-        assertNotNull(oneRow.getData());
-        assertTrue(oneRow.getKey() instanceof LongWritable);
-        assertTrue(oneRow.getData() instanceof VectorizedRowBatch);
-
-        VectorizedRowBatch batch = (VectorizedRowBatch) oneRow.getData();
-        assertEquals(7, batch.projectionSize);
-        assertEquals(25, batch.count());
-        assertEquals(25, batch.getSelectedSize());
-
-        assertNull(accessor.readNextObject());
-
-        accessor.closeForRead();
+        runTestScenarioReadOrcTypesFile(7);
     }
 
     /**
@@ -167,6 +119,17 @@ class ORCVectorizedAccessorTest extends ORCVectorizedBaseTest {
         columnDescriptors.add(new ColumnDescriptor("dec1", DataType.NUMERIC.getOID(), 4, "numeric", new Integer[]{38, 18}));
         columnDescriptors.add(new ColumnDescriptor("bg", DataType.BIGINT.getOID(), 7, "int8", null));
 
+        runTestScenarioReadOrcTypesFile(6);
+    }
+
+    @Test
+    public void testOrcWriteIsNotSupported() {
+        assertThrows(UnsupportedOperationException.class, () -> accessor.openForWrite());
+        assertThrows(UnsupportedOperationException.class, () -> accessor.writeNextObject(new OneRow()));
+        assertThrows(UnsupportedOperationException.class, () -> accessor.closeForWrite());
+    }
+
+    private void runTestScenarioReadOrcTypesFile(int expectedNumCols) throws IOException {
         String path = Objects.requireNonNull(getClass().getClassLoader().getResource("orc/orc_types.orc")).getPath();
         context.setDataSource(path);
         context.setFragmentMetadata(new HcfsFragmentMetadata(0, 2257));
@@ -183,20 +146,13 @@ class ORCVectorizedAccessorTest extends ORCVectorizedBaseTest {
         assertTrue(oneRow.getData() instanceof VectorizedRowBatch);
 
         VectorizedRowBatch batch = (VectorizedRowBatch) oneRow.getData();
-        assertEquals(6, batch.projectionSize);
+        assertEquals(expectedNumCols, batch.numCols);
         assertEquals(25, batch.count());
         assertEquals(25, batch.getSelectedSize());
 
         assertNull(accessor.readNextObject());
 
         accessor.closeForRead();
-    }
-
-    @Test
-    public void testOrcWriteIsNotSupported() {
-        assertThrows(UnsupportedOperationException.class, () -> accessor.openForWrite());
-        assertThrows(UnsupportedOperationException.class, () -> accessor.writeNextObject(new OneRow()));
-        assertThrows(UnsupportedOperationException.class, () -> accessor.closeForWrite());
     }
 
 }

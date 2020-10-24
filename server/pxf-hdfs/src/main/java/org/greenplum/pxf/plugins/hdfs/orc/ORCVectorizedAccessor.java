@@ -54,6 +54,8 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
     private static final TreeVisitor PRUNER = new SupportedOperatorPruner(SUPPORTED_OPERATORS);
     private static final TreeTraverser TRAVERSER = new TreeTraverser();
 
+    private static final String MAP_BY_POSITION_OPTION = "MAP_BY_POSITION";
+
     private boolean positionalAccess;
     private int batchIndex;
     private long totalRowsRead;
@@ -67,7 +69,7 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
     public void afterPropertiesSet() {
         super.afterPropertiesSet();
         columnDescriptors = context.getTupleDescription();
-        positionalAccess = context.getOption("MAP_BY_POSITION", false);
+        positionalAccess = context.getOption(MAP_BY_POSITION_OPTION, false);
     }
 
     @Override

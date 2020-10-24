@@ -14,6 +14,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.sql.Date;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -269,7 +270,7 @@ public class ORCFilterPushDownTest extends ORCVectorizedBaseTest {
             }
 
             batchOfRows = accessor.readNextObject();
-            assertNull(batchOfRows, "No more rows expected");
+            assertNull(batchOfRows, "No more batches expected");
         }
         accessor.closeForRead();
     }
