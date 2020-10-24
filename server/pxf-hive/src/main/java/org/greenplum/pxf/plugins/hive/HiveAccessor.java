@@ -199,10 +199,16 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
         if (!shouldDataBeReturnedFromFilteredPartition()) {
             return false;
         }
+        // add Hive schema information for the RecordReader to return data in the Hive schema column order
+        if (StringUtils.isNotBlank(hiveColumnsString)) {
+            jobConf.set(IOConstants.COLUMNS, hiveColumnsString);
+        }
+        if (StringUtils.isNotBlank(hiveColumnTypesString)) {
+            jobConf.set(IOConstants.COLUMNS_TYPES, hiveColumnTypesString);
+        }
+        // add column projection and predicate pushdown filters to JobConf to make them available to RecordReaders
         if (shouldAddProjectionsAndFilters()) {
-            // add projected columns to JobConf to make them available to RecordReaders
             addColumns();
-            // add predicate pushdown filters to JobConf to make them available to RecordReaders
             addFilters();
         }
         return super.openForRead();
@@ -261,12 +267,6 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
     @Override
     protected Object getReader(JobConf jobConf, InputSplit split)
             throws IOException {
-        if (StringUtils.isNotBlank(hiveColumnsString)) {
-            jobConf.set(IOConstants.COLUMNS, hiveColumnsString);
-        }
-        if (StringUtils.isNotBlank(hiveColumnTypesString)) {
-            jobConf.set(IOConstants.COLUMNS_TYPES, hiveColumnTypesString);
-        }
         return inputFormat.getRecordReader(split, jobConf, Reporter.NULL);
     }
 
