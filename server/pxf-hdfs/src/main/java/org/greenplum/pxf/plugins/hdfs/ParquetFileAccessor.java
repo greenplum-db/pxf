@@ -214,18 +214,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
 
         totalRowsRead += rowsRead;
 
-        if (LOG.isDebugEnabled()) {
-            final long millis = TimeUnit.NANOSECONDS.toMillis(totalReadTimeInNanos);
-            long average = totalReadTimeInNanos / totalRowsRead;
-            LOG.debug("{}-{}: Read TOTAL of {} rows from file {} on server {} in {} ms. Average speed: {} nanoseconds",
-                    context.getTransactionId(),
-                    context.getSegmentId(),
-                    totalRowsRead,
-                    context.getDataSource(),
-                    context.getServerName(),
-                    millis,
-                    average);
-        }
+        logReadStats(totalRowsRead, totalReadTimeInNanos);
         if (fileReader != null) {
             fileReader.close();
         }

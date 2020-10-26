@@ -26,11 +26,11 @@ import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
@@ -86,7 +86,7 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
         // Add column projection to the Reader.Options
         TypeDescription readSchema = buildReadSchema(schema);
         // Get the record filter in case of predicate push-down
-        SearchArgument searchArgument = getSearchArgument(context.getFilterString());
+        SearchArgument searchArgument = getSearchArgument(context.getFilterString(), schema);
 
         // Build the reader options
         Reader.Options options = fileReader
@@ -123,18 +123,7 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
 
     @Override
     public void closeForRead() throws IOException {
-        if (LOG.isDebugEnabled()) {
-            final long millis = TimeUnit.NANOSECONDS.toMillis(totalReadTimeInNanos);
-            long average = totalReadTimeInNanos / totalRowsRead;
-            LOG.debug("{}-{}: Read TOTAL of {} rows from file {} on server {} in {} ms. Average speed: {} nanoseconds",
-                    context.getTransactionId(),
-                    context.getSegmentId(),
-                    totalRowsRead,
-                    context.getDataSource(),
-                    context.getServerName(),
-                    millis,
-                    average);
-        }
+        logReadStats(totalRowsRead, totalReadTimeInNanos);
         if (recordReader != null) {
             recordReader.close();
         }
@@ -162,17 +151,38 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
      * Given a filter string, builds the SearchArgument object to perform
      * predicated pushdown for ORC
      *
-     * @param filterString the serialized filter string from the query predicate
+     * @param filterString   the serialized filter string from the query predicate
+     * @param originalSchema the original schema for the ORC file
      * @return null if filter string is null, the built SearchArgument otherwise
      * @throws IOException when a filter parsing error occurs
      */
-    private SearchArgument getSearchArgument(String filterString) throws IOException {
+    private SearchArgument getSearchArgument(String filterString, TypeDescription originalSchema) throws IOException {
         if (StringUtils.isBlank(filterString)) {
             return null;
         }
 
+        List<ColumnDescriptor> descriptors = columnDescriptors;
+
+        if (positionalAccess) {
+            // We need to adjust the descriptors to match the column names
+            // in the ORC schema to support predicate push down
+            descriptors = new ArrayList<>();
+            for (int i = 0; i < columnDescriptors.size() && i < originalSchema.getFieldNames().size(); i++) {
+                ColumnDescriptor columnDescriptor = columnDescriptors.get(i);
+                String columnName = originalSchema.getFieldNames().get(i);
+                ColumnDescriptor copyDescriptor = new ColumnDescriptor(
+                        columnName, // the name of the column in the ORC schema
+                        columnDescriptor.columnTypeCode(),
+                        columnDescriptor.columnIndex(),
+                        columnDescriptor.columnTypeName(),
+                        columnDescriptor.columnTypeModifiers(),
+                        columnDescriptor.isProjected());
+                descriptors.add(copyDescriptor);
+            }
+        }
+
         SearchArgumentBuilder searchArgumentBuilder =
-                new SearchArgumentBuilder(columnDescriptors, configuration);
+                new SearchArgumentBuilder(descriptors, configuration);
 
         // Parse the filter string into a expression tree Node
         Node root = new FilterParser().parse(filterString);
