@@ -8,6 +8,7 @@ import org.greenplum.pxf.api.filter.Operator;
 import org.greenplum.pxf.api.filter.OperatorNode;
 import org.greenplum.pxf.api.filter.TreeVisitor;
 import org.greenplum.pxf.plugins.hdfs.ParquetFileAccessor;
+import org.greenplum.pxf.plugins.hdfs.filter.BPCharOperatorTransformer;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -16,6 +17,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ParquetOperatorPrunerTest extends ParquetBaseTest {
+
+    private static final TreeVisitor BPCHAR_TRANSFORMER = new BPCharOperatorTransformer();
 
     @Test
     public void testIntegerFilter() throws Exception {
@@ -51,7 +54,7 @@ public class ParquetOperatorPrunerTest extends ParquetBaseTest {
     @Test
     public void testWhitespacePaddedChar() throws Exception {
         // a12 = 'EUR'
-        Node result = helper("a12c1042s4dEUR o5");
+        Node result = helperWithBPCharTransformer("a12c1042s4dEUR o5");
         assertNotNull(result);
         assertTrue(result instanceof OperatorNode);
         OperatorNode operatorNode = (OperatorNode) result;
@@ -71,7 +74,7 @@ public class ParquetOperatorPrunerTest extends ParquetBaseTest {
         assertEquals("EUR", rightOperatorNode.getRight().toString());
 
         // a12 <> 'USD '
-        result = helper("a12c1042s4dUSD o6");
+        result = helperWithBPCharTransformer("a12c1042s4dUSD o6");
         assertNotNull(result);
         assertTrue(result instanceof OperatorNode);
         operatorNode = (OperatorNode) result;
@@ -153,5 +156,18 @@ public class ParquetOperatorPrunerTest extends ParquetBaseTest {
         // traverse the pruned tree with the ParquetRecordFilterBuilder to
         // produce a record filter for parquet
         return TRAVERSER.traverse(root, pruner);
+    }
+
+    private Node helperWithBPCharTransformer(String filterString) throws Exception {
+
+        TreeVisitor pruner = new ParquetOperatorPruner(
+                columnDescriptors, originalFieldsMap, ParquetFileAccessor.SUPPORTED_OPERATORS);
+
+        // Parse the filter string into a expression tree Node
+        Node root = new FilterParser().parse(filterString);
+        // Prune the parsed tree with valid supported operators and then
+        // traverse the pruned tree with the ParquetRecordFilterBuilder to
+        // produce a record filter for parquet
+        return TRAVERSER.traverse(root, pruner, BPCHAR_TRANSFORMER);
     }
 }
