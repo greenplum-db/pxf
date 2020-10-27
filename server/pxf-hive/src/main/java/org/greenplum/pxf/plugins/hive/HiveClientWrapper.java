@@ -147,7 +147,6 @@ public class HiveClientWrapper {
      *
      * @param fragmenterClassName fragmenter class name
      * @param partData            partition data
-     * @param filterInFragmenter  whether filtering was done in fragmenter
      * @param hiveIndexes         the list of indices that we will retrieve from the Hive schema columns
      * @param allColumnNames      the comma-separated list of column names defined in hive table
      * @param allColumnTypes      the comma-separated list of column types defined in hive table
@@ -156,7 +155,6 @@ public class HiveClientWrapper {
      */
     public byte[] makeUserData(String fragmenterClassName,
                                HiveTablePartition partData,
-                               boolean filterInFragmenter,
                                List<Integer> hiveIndexes,
                                String allColumnNames,
                                String allColumnTypes) throws Exception {
@@ -181,7 +179,7 @@ public class HiveClientWrapper {
             assertFileType(inputFormatName, partData);
         }
 
-        hiveUserData = new HiveUserData(inputFormatName, serdeClassName, propertiesString, partitionKeys, filterInFragmenter, delimiter, colTypes, skipHeader, hiveIndexes, allColumnNames, allColumnTypes);
+        hiveUserData = new HiveUserData(inputFormatName, serdeClassName, propertiesString, partitionKeys, delimiter, colTypes, skipHeader, hiveIndexes, allColumnNames, allColumnTypes);
 
         return hiveUserData.toString().getBytes();
     }

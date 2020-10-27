@@ -37,7 +37,6 @@ import org.greenplum.pxf.plugins.hive.HiveUserData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -49,8 +48,6 @@ import java.util.stream.Stream;
  * and interacting with Hive.
  */
 public class HiveUtilities {
-
-    private static final Logger LOG = LoggerFactory.getLogger(HiveUtilities.class);
 
     /**
      * Checks if hive type is supported, and if so return its matching GPDB
@@ -219,7 +216,7 @@ public class HiveUtilities {
                     + HiveUserData.getNumOfTokens() + " tokens, but got " + toks.length);
         }
 
-        String indexesStr = toks[8];
+        String indexesStr = toks[7];
         List<Integer> indexes = null;
 
         if (indexesStr != null && !"null".equals(indexesStr)) {
@@ -233,13 +230,12 @@ public class HiveUtilities {
                 toks[1],
                 toks[2],
                 toks[3],
-                Boolean.parseBoolean(toks[4]),
+                toks[4],
                 toks[5],
-                toks[6],
-                Integer.parseInt(toks[7]),
+                Integer.parseInt(toks[6]),
                 indexes,
-                toks[9],
-                toks[10]);
+                toks[8],
+                toks[9]);
     }
 
     /**
@@ -250,8 +246,7 @@ public class HiveUtilities {
      * @throws Exception if an error occurs during the creation of SerDe instance
      */
     public static Deserializer createDeserializer(String serdeClassName) throws Exception {
-        Deserializer deserializer = (Deserializer) Utilities.createAnyInstance(serdeClassName);
-        return deserializer;
+        return (Deserializer) Utilities.createAnyInstance(serdeClassName);
     }
 
     /**

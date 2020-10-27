@@ -87,8 +87,6 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
         }
     }
 
-    protected Boolean filterInFragmenter;
-
     /**
      * Constructs a HiveAccessor
      */
@@ -133,7 +131,6 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
         }
 
         initPartitionFields(hiveUserData.getPartitionKeys());
-        filterInFragmenter = hiveUserData.isFilterInFragmenter();
         skipHeaderCount = hiveUserData.getSkipHeader();
         hiveIndexes = hiveUserData.getHiveIndexes();
         hiveColumnsString = hiveUserData.getAllColumnNames();

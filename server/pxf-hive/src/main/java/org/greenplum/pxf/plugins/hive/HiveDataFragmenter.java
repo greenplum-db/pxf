@@ -103,15 +103,12 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
     private static final TreeTraverser TRAVERSER = new TreeTraverser();
 
     private IMetaStoreClient client;
-    private HiveClientWrapper hiveClientWrapper;
-
-    private boolean filterInFragmenter = false;
+    private final HiveClientWrapper hiveClientWrapper;
 
     // Data structure to hold hive partition names if exist, to be used by
     // partition filtering
-    private Set<String> setPartitions = new TreeSet<>(
-            String.CASE_INSENSITIVE_ORDER);
-    private Map<String, String> partitionKeyTypes = new HashMap<>();
+    private final Set<String> setPartitions = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+    private final Map<String, String> partitionKeyTypes = new HashMap<>();
 
     public HiveDataFragmenter() {
         this(BaseConfigurationFactory.getInstance(), HiveClientWrapper.getInstance());
@@ -229,8 +226,6 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
 
             LOG.debug("Filter String for Hive partition retrieval : {}",
                     filterStringForHive);
-
-            filterInFragmenter = true;
 
             // API call to Hive MetaStore, will return a List of all the
             // partitions for this table, that matches the partition filters
@@ -360,7 +355,7 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
                                                   String allColumnTypes)
             throws Exception {
         fetchMetaData(new HiveTablePartition(stdsc, props, partition,
-                partitionKeys, tableName), hasComplexTypes, hiveIndexes,
+                        partitionKeys, tableName), hasComplexTypes, hiveIndexes,
                 allColumnNames, allColumnTypes);
     }
 
@@ -407,7 +402,6 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
             byte[] userData = hiveClientWrapper.makeUserData(
                     fragmenterForProfile,
                     tablePartition,
-                    filterInFragmenter,
                     hiveIndexes,
                     allColumnNames,
                     allColumnTypes);

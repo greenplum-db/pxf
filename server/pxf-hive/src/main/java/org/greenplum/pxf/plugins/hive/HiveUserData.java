@@ -29,13 +29,12 @@ import java.util.stream.Collectors;
 public class HiveUserData {
 
     public static final String HIVE_UD_DELIM = "!HUDD!";
-    private static final int EXPECTED_NUM_OF_TOKS = 11;
+    private static final int EXPECTED_NUM_OF_TOKS = 10;
 
     private final String inputFormatName;
     private final String serdeClassName;
     private final String propertiesString;
     private final String partitionKeys;
-    private final boolean filterInFragmenter;
     private final String delimiter;
     private final String colTypes;
     private final int skipHeader;
@@ -45,7 +44,6 @@ public class HiveUserData {
 
     public HiveUserData(String inputFormatName, String serdeClassName,
             String propertiesString, String partitionKeys,
-            boolean filterInFragmenter,
             String delimiter,
             String colTypes,
             int skipHeader,
@@ -57,7 +55,6 @@ public class HiveUserData {
         this.serdeClassName = serdeClassName;
         this.propertiesString = propertiesString;
         this.partitionKeys = partitionKeys;
-        this.filterInFragmenter = filterInFragmenter;
         this.delimiter = (delimiter == null ? "0" : delimiter);
         this.colTypes = colTypes;
         this.skipHeader = skipHeader;
@@ -100,15 +97,6 @@ public class HiveUserData {
      */
     public String getPartitionKeys() {
         return partitionKeys;
-    }
-
-    /**
-     * Returns whether filtering was done in fragmenter
-     *
-     * @return true if filtering was done in fragmenter
-     */
-    public boolean isFilterInFragmenter() {
-        return filterInFragmenter;
     }
 
     /**
@@ -183,7 +171,6 @@ public class HiveUserData {
                 + serdeClassName + HiveUserData.HIVE_UD_DELIM
                 + propertiesString + HiveUserData.HIVE_UD_DELIM
                 + partitionKeys + HiveUserData.HIVE_UD_DELIM
-                + filterInFragmenter + HiveUserData.HIVE_UD_DELIM
                 + delimiter + HiveUserData.HIVE_UD_DELIM
                 + colTypes + HiveUserData.HIVE_UD_DELIM
                 + skipHeader + HiveUserData.HIVE_UD_DELIM

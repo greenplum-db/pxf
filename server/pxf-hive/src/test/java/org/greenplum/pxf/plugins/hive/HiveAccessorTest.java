@@ -140,7 +140,6 @@ class HiveUserDataBuilder {
                 serdeClassName,
                 null,
                 partitionKeys,
-                false,
                 null,
                 null,
                 skipHeader,
