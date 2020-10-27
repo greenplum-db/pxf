@@ -24,12 +24,11 @@ import java.util.stream.Collectors;
 
 /**
  * Class which is a carrier for user data in Hive fragment.
- *
  */
 public class HiveUserData {
 
     public static final String HIVE_UD_DELIM = "!HUDD!";
-    private static final int EXPECTED_NUM_OF_TOKS = 10;
+    private static final int EXPECTED_NUM_OF_TOKS = 9;
 
     private final String inputFormatName;
     private final String serdeClassName;
@@ -40,16 +39,14 @@ public class HiveUserData {
     private final int skipHeader;
     private final List<Integer> hiveIndexes;
     private final String allColumnNames;
-    private final String allColumnTypes;
 
     public HiveUserData(String inputFormatName, String serdeClassName,
-            String propertiesString, String partitionKeys,
-            String delimiter,
-            String colTypes,
-            int skipHeader,
-            List<Integer> hiveIndexes,
-            String allColumnNames,
-            String allColumnTypes) {
+                        String propertiesString, String partitionKeys,
+                        String delimiter,
+                        String colTypes,
+                        int skipHeader,
+                        List<Integer> hiveIndexes,
+                        String allColumnNames) {
 
         this.inputFormatName = inputFormatName;
         this.serdeClassName = serdeClassName;
@@ -60,7 +57,6 @@ public class HiveUserData {
         this.skipHeader = skipHeader;
         this.hiveIndexes = hiveIndexes;
         this.allColumnNames = allColumnNames;
-        this.allColumnTypes = allColumnTypes;
     }
 
     /**
@@ -138,7 +134,7 @@ public class HiveUserData {
     /**
      * Returns a list of indexes corresponding to columns on the Hive table
      * that will be retrieved during the query
-     * 
+     *
      * @return the list of indexes
      */
     public List<Integer> getHiveIndexes() {
@@ -148,21 +144,11 @@ public class HiveUserData {
     /**
      * Returns a comma-separated list of column names defined in the Hive
      * table definition
-     * 
+     *
      * @return the comma-separated list of column names
      */
     public String getAllColumnNames() {
         return allColumnNames;
-    }
-
-    /**
-     * Returnts a comma-separated list of column types defined in the Hive
-     * table definition
-     * 
-     * @return the comma-separated list of column types
-     */
-    public String getAllColumnTypes() {
-        return allColumnTypes;
     }
 
     @Override
@@ -175,8 +161,7 @@ public class HiveUserData {
                 + colTypes + HiveUserData.HIVE_UD_DELIM
                 + skipHeader + HiveUserData.HIVE_UD_DELIM
                 + (hiveIndexes != null ? hiveIndexes.stream().map(String::valueOf).collect(Collectors.joining(",")) : "null") + HiveUserData.HIVE_UD_DELIM
-                + allColumnNames + HiveUserData.HIVE_UD_DELIM
-                + allColumnTypes;
+                + allColumnNames;
     }
 
 }

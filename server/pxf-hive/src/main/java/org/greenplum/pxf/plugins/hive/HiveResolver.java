@@ -26,6 +26,7 @@ import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.hive.serde2.Deserializer;
+import org.apache.hadoop.hive.serde2.SerDeException;
 import org.apache.hadoop.hive.serde2.io.ByteWritable;
 import org.apache.hadoop.hive.serde2.objectinspector.ListObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.MapObjectInspector;
@@ -67,6 +68,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.Timestamp;
@@ -169,13 +171,7 @@ public class HiveResolver extends HivePlugin implements Resolver {
 
         Class<?> c = Class.forName(serdeClassName, true, JavaUtils.getClassLoader());
         deserializer = (Deserializer) c.getDeclaredConstructor().newInstance();
-        serdeProperties = new Properties();
-        if (propsString != null) {
-            ByteArrayInputStream inStream = new ByteArrayInputStream(propsString.getBytes());
-            serdeProperties.load(inStream);
-        } else {
-            throw new IllegalArgumentException("propsString is mandatory to initialize serde.");
-        }
+        serdeProperties = getSerdeProperties();
         deserializer.initialize(new JobConf(configuration, HiveResolver.class), serdeProperties);
     }
 
@@ -716,5 +712,16 @@ public class HiveResolver extends HivePlugin implements Resolver {
             }
             delimiter = userDelim.charAt(0);
         }
+    }
+
+    protected Properties getSerdeProperties() throws IOException {
+        Properties serdeProperties = new Properties();
+        if (propsString != null) {
+            ByteArrayInputStream inStream = new ByteArrayInputStream(propsString.getBytes());
+            serdeProperties.load(inStream);
+        } else {
+            throw new IllegalArgumentException("propsString is mandatory to initialize serde.");
+        }
+        return serdeProperties;
     }
 }

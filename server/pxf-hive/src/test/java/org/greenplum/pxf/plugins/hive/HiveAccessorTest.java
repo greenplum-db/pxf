@@ -144,7 +144,6 @@ class HiveUserDataBuilder {
                 null,
                 skipHeader,
                 null,
-                null,
                 null);
     }
 

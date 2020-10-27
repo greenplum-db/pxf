@@ -20,8 +20,6 @@ package org.greenplum.pxf.plugins.hive;
  */
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
@@ -72,25 +70,21 @@ import static org.greenplum.pxf.api.io.DataType.VARCHAR;
  * Use together with HiveInputFormatFragmenter/HiveRCFileAccessor.
  */
 public class HiveColumnarSerdeResolver extends HiveResolver {
-    private static final Log LOG = LogFactory.getLog(HiveColumnarSerdeResolver.class);
     private boolean firstColumn;
     private StringBuilder builder;
     private String serdeType;
-    private String allColumnNames;
-    private String allColumnTypes;
     private Map<String, String[]> partitionColumnNames;
-    
+
     /* read the data supplied by the fragmenter: inputformat name, serde name, partition keys */
     @Override
     void parseUserData(RequestContext input) {
         HiveUserData hiveUserData = HiveUtilities.parseHiveUserData(input);
 
         partitionColumnNames = new HashMap<>();
+        propsString = hiveUserData.getPropertiesString();
         serdeType = hiveUserData.getSerdeClassName();
         partitionKeys = hiveUserData.getPartitionKeys();
         hiveIndexes = hiveUserData.getHiveIndexes();
-        allColumnNames = hiveUserData.getAllColumnNames();
-        allColumnTypes = hiveUserData.getAllColumnTypes();
         parseDelimiterChar(input);
     }
 
@@ -144,10 +138,9 @@ public class HiveColumnarSerdeResolver extends HiveResolver {
      * Suppress Warnings added because deserializer.initialize is an abstract function that is deprecated
      * but its implementations (ColumnarSerDe, LazyBinaryColumnarSerDe) still use the deprecated interface.
      */
-    @SuppressWarnings("deprecation")
     @Override
     void initSerde(RequestContext input) throws Exception {
-        Properties serdeProperties = new Properties();
+        Properties serdeProperties;
         StringBuilder projectedColumnNames = new StringBuilder();
         StringBuilder projectedColumnIds = new StringBuilder();
 
@@ -164,8 +157,7 @@ public class HiveColumnarSerdeResolver extends HiveResolver {
                 projectedColumnIds.append(hiveIndexes.get(i));
             }
         }
-        serdeProperties.put(serdeConstants.LIST_COLUMNS, allColumnNames);
-        serdeProperties.put(serdeConstants.LIST_COLUMN_TYPES, allColumnTypes);
+        serdeProperties = getSerdeProperties();
 
         JobConf jobConf = new JobConf(configuration, HiveColumnarSerdeResolver.class);
         jobConf.set(READ_ALL_COLUMNS, "false");
@@ -224,7 +216,7 @@ public class HiveColumnarSerdeResolver extends HiveResolver {
                         // This case is invoked only in the top level of fields and
                         // not when interpreting fields of type struct.
                         traverseTuple(null, fields.get(i).getFieldObjectInspector());
-                    } else if (structIndex < list.size()){
+                    } else if (structIndex < list.size()) {
                         traverseTuple(list.get(structIndex), fields.get(i).getFieldObjectInspector());
                     } else {
                         traverseTuple(null, fields.get(i).getFieldObjectInspector());

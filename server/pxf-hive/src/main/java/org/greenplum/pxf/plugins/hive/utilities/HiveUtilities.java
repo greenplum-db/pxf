@@ -34,8 +34,6 @@ import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.EnumGpdbType;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hive.HiveUserData;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.List;
@@ -234,8 +232,7 @@ public class HiveUtilities {
                 toks[5],
                 Integer.parseInt(toks[6]),
                 indexes,
-                toks[8],
-                toks[9]);
+                toks[8]);
     }
 
     /**

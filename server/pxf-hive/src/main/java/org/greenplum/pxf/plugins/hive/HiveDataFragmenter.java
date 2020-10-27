@@ -176,15 +176,12 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
 
         // Get the column names and column types
         StringBuilder allColumnNames = new StringBuilder();
-        StringBuilder allColumnTypes = new StringBuilder();
         String delim = ",";
         for (FieldSchema fieldSchema : fieldSchemaList) {
             if (allColumnNames.length() > 0) {
                 allColumnNames.append(delim);
-                allColumnTypes.append(delim);
             }
             allColumnNames.append(fieldSchema.getName());
-            allColumnTypes.append(fieldSchema.getType());
         }
 
         List<Partition> partitions;
@@ -257,7 +254,7 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
         if (partitions.isEmpty()) {
             props = getSchema(tbl);
             fetchMetaDataForSimpleTable(descTable, props, hasComplexTypes,
-                    hiveIndexes, allColumnNames.toString(), allColumnTypes.toString());
+                    hiveIndexes, allColumnNames.toString());
         } else {
             List<FieldSchema> partitionKeys = tbl.getPartitionKeys();
 
@@ -269,7 +266,7 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
                         partitionKeys);
                 fetchMetaDataForPartitionedTable(descPartition, props, partition,
                         partitionKeys, tblDesc.getName(), hasComplexTypes,
-                        hiveIndexes, allColumnNames.toString(), allColumnTypes.toString());
+                        hiveIndexes, allColumnNames.toString());
             }
         }
     }
@@ -326,10 +323,9 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
                                              Properties props,
                                              boolean hasComplexTypes,
                                              List<Integer> hiveIndexes,
-                                             String allColumnNames,
-                                             String allColumnTypes) throws Exception {
+                                             String allColumnNames) throws Exception {
         fetchMetaDataForSimpleTable(stdsc, props, null, hasComplexTypes,
-                hiveIndexes, allColumnNames, allColumnTypes);
+                hiveIndexes, allColumnNames);
     }
 
     private void fetchMetaDataForSimpleTable(StorageDescriptor stdsc,
@@ -337,11 +333,10 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
                                              String tableName,
                                              boolean hasComplexTypes,
                                              List<Integer> hiveIndexes,
-                                             String allColumnNames,
-                                             String allColumnTypes)
+                                             String allColumnNames)
             throws Exception {
         fetchMetaData(new HiveTablePartition(stdsc, props, null, null,
-                tableName), hasComplexTypes, hiveIndexes, allColumnNames, allColumnTypes);
+                tableName), hasComplexTypes, hiveIndexes, allColumnNames);
     }
 
     private void fetchMetaDataForPartitionedTable(StorageDescriptor stdsc,
@@ -351,20 +346,18 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
                                                   String tableName,
                                                   boolean hasComplexTypes,
                                                   List<Integer> hiveIndexes,
-                                                  String allColumnNames,
-                                                  String allColumnTypes)
+                                                  String allColumnNames)
             throws Exception {
         fetchMetaData(new HiveTablePartition(stdsc, props, partition,
                         partitionKeys, tableName), hasComplexTypes, hiveIndexes,
-                allColumnNames, allColumnTypes);
+                allColumnNames);
     }
 
     /* Fills a table partition */
     private void fetchMetaData(HiveTablePartition tablePartition,
                                boolean hasComplexTypes,
                                List<Integer> hiveIndexes,
-                               String allColumnNames,
-                               String allColumnTypes)
+                               String allColumnNames)
             throws Exception {
         InputFormat<?, ?> fformat = makeInputFormat(
                 tablePartition.storageDesc.getInputFormat(), jobConf);
@@ -403,8 +396,7 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
                     fragmenterForProfile,
                     tablePartition,
                     hiveIndexes,
-                    allColumnNames,
-                    allColumnTypes);
+                    allColumnNames);
             Fragment fragment = new Fragment(filepath, hosts, locationInfo,
                     userData, profile);
             fragments.add(fragment);
