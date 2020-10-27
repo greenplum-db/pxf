@@ -59,7 +59,8 @@ import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.SpringContext;
-import org.greenplum.pxf.plugins.hdfs.parquet.ParquetOperatorPrunerAndTransformer;
+import org.greenplum.pxf.plugins.hdfs.filter.BPCharOperatorTransformer;
+import org.greenplum.pxf.plugins.hdfs.parquet.ParquetOperatorPruner;
 import org.greenplum.pxf.plugins.hdfs.parquet.ParquetRecordFilterBuilder;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 
@@ -127,6 +128,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
     );
 
     private static final TreeTraverser TRAVERSER = new TreeTraverser();
+    private static final TreeVisitor BPCHAR_TRANSFORMER = new BPCharOperatorTransformer();
 
     private ParquetReader<Group> fileReader;
     private CompressionCodecName codecName;
@@ -311,7 +313,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
         List<ColumnDescriptor> tupleDescription = context.getTupleDescription();
         ParquetRecordFilterBuilder filterBuilder = new ParquetRecordFilterBuilder(
                 tupleDescription, originalFieldsMap);
-        TreeVisitor pruner = new ParquetOperatorPrunerAndTransformer(
+        TreeVisitor pruner = new ParquetOperatorPruner(
                 tupleDescription, originalFieldsMap, SUPPORTED_OPERATORS);
 
         try {
@@ -320,7 +322,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
             // Prune the parsed tree with valid supported operators and then
             // traverse the pruned tree with the ParquetRecordFilterBuilder to
             // produce a record filter for parquet
-            TRAVERSER.traverse(root, pruner, filterBuilder);
+            TRAVERSER.traverse(root, pruner, BPCHAR_TRANSFORMER, filterBuilder);
             return filterBuilder.getRecordFilter();
         } catch (Exception e) {
             LOG.error(String.format("%s-%d: %s--%s Unable to generate Parquet Record Filter for filter",

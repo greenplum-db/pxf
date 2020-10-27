@@ -20,6 +20,7 @@ import org.greenplum.pxf.api.filter.TreeVisitor;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.plugins.hdfs.filter.BPCharOperatorTransformer;
 import org.greenplum.pxf.plugins.hdfs.filter.SearchArgumentBuilder;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 
@@ -52,10 +53,16 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
                     Operator.NOT
             );
     private static final TreeVisitor PRUNER = new SupportedOperatorPruner(SUPPORTED_OPERATORS);
+    private static final TreeVisitor BPCHAR_TRANSFORMER = new BPCharOperatorTransformer();
     private static final TreeTraverser TRAVERSER = new TreeTraverser();
 
-    private static final String MAP_BY_POSITION_OPTION = "MAP_BY_POSITION";
+    static final String MAP_BY_POSITION_OPTION = "MAP_BY_POSITION";
 
+    /**
+     * True if the accessor accesses the columns defined in the
+     * ORC file in the same order they were defined in the Greenplum table,
+     * otherwise the columns are matches by name. (Defaults to false)
+     */
     private boolean positionalAccess;
     private int batchIndex;
     private long totalRowsRead;
@@ -189,7 +196,7 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
         // Prune the parsed tree with valid supported operators and then
         // traverse the pruned tree with the searchArgumentBuilder to produce a
         // SearchArgument for ORC
-        TRAVERSER.traverse(root, PRUNER, searchArgumentBuilder);
+        TRAVERSER.traverse(root, PRUNER, BPCHAR_TRANSFORMER, searchArgumentBuilder);
 
         // Build the SearchArgument object
         return searchArgumentBuilder.getFilterBuilder().build();
@@ -232,11 +239,9 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
                 if (!columnDescriptor.isProjected()) continue;
                 String columnName = columnDescriptor.columnName();
                 TypeDescription t = originalFields.get(columnName);
-                if (t == null) {
-                    throw new IllegalArgumentException(
-                            String.format("Column %s is missing from ORC schema", columnName));
+                if (t != null) {
+                    readSchema.addField(columnName, t.clone());
                 }
-                readSchema.addField(columnName, t.clone());
             }
         }
         return readSchema;

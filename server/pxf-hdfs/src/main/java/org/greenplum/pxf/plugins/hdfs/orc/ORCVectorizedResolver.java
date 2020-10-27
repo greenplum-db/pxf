@@ -14,7 +14,10 @@ import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.IntStream;
 
 import static org.greenplum.pxf.api.io.DataType.BIGINT;
 import static org.greenplum.pxf.api.io.DataType.BOOLEAN;
@@ -29,6 +32,7 @@ import static org.greenplum.pxf.api.io.DataType.SMALLINT;
 import static org.greenplum.pxf.api.io.DataType.TEXT;
 import static org.greenplum.pxf.api.io.DataType.TIMESTAMP;
 import static org.greenplum.pxf.api.io.DataType.VARCHAR;
+import static org.greenplum.pxf.plugins.hdfs.orc.ORCVectorizedAccessor.MAP_BY_POSITION_OPTION;
 
 /**
  * Resolves ORC VectorizedRowBatch into lists of List<OneField>. Only primitive
@@ -73,6 +77,15 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
      */
     private int[] typeOidMappings;
 
+    private Map<String, TypeDescription> readFields;
+
+    /**
+     * True if the resolver resolves the columns defined in the
+     * ORC file in the same order they were defined in the Greenplum table,
+     * otherwise the columns are matches by name. (Defaults to false)
+     */
+    private boolean positionalAccess;
+
     /**
      * A local copy of the column descriptors coming from the RequestContext.
      * We make this variable local to improve performance while accessing the
@@ -87,6 +100,7 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
     public void afterPropertiesSet() {
         super.afterPropertiesSet();
         columnDescriptors = context.getTupleDescription();
+        positionalAccess = context.getOption(MAP_BY_POSITION_OPTION, false);
     }
 
     /**
@@ -116,19 +130,31 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
         int columnIndex = 0;
         OneField[] oneFields;
         for (ColumnDescriptor columnDescriptor : columnDescriptors) {
-            if (!columnDescriptor.isProjected() || columnIndex >= readSchema.getChildren().size()) {
+            if (!columnDescriptor.isProjected()) {
                 oneFields = ORCVectorizedMappingFunctions
                         .getNullResultSet(columnDescriptor.columnTypeCode(), batchSize);
             } else {
-                TypeDescription schema = readSchema.getChildren().get(columnIndex);
-                if (schema.getCategory().isPrimitive()) {
+                TypeDescription orcColumn = positionalAccess
+                        ? columnIndex < readSchema.getChildren().size() ? readSchema.getChildren().get(columnIndex) : null
+                        : readFields.get(columnDescriptor.columnName());
+                if (orcColumn == null) {
+                    // this column is missing in the underlying ORC file, but
+                    // it is defined in the Greenplum table. This can happen
+                    // when a schema evolves, for example the original
+                    // ORC-backed table had 4 columns, and at a later point in
+                    // time a fifth column was added. Files written before the
+                    // column was added will have 4 columns, and new files
+                    // will have 5 columns
+                    oneFields = ORCVectorizedMappingFunctions
+                            .getNullResultSet(columnDescriptor.columnTypeCode(), batchSize);
+                } else if (orcColumn.getCategory().isPrimitive()) {
                     oneFields = functions[columnIndex]
                             .apply(vectorizedBatch, vectorizedBatch.cols[columnIndex], typeOidMappings[columnIndex]);
                     columnIndex++;
                 } else {
                     throw new UnsupportedTypeException(
                             String.format("Unable to resolve column '%s' with category '%s'. Only primitive types are supported.",
-                                    readSchema.getFieldNames().get(columnIndex), schema.getCategory()));
+                                    readSchema.getFieldNames().get(columnIndex), orcColumn.getCategory()));
                 }
             }
 
@@ -170,8 +196,18 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
             throw new PxfRuntimeException("No schema detected in request context");
 
         readSchema = (TypeDescription) context.getMetadata();
-        functions = new TriFunction[readSchema.getChildren().size()];
-        typeOidMappings = new int[readSchema.getChildren().size()];
+        int schemaSize = readSchema.getChildren().size();
+
+        functions = new TriFunction[schemaSize];
+        typeOidMappings = new int[schemaSize];
+
+        readFields = new HashMap<>(schemaSize);
+        IntStream.range(0, schemaSize).forEach(idx -> {
+            String columnName = readSchema.getFieldNames().get(idx);
+            TypeDescription t = readSchema.getChildren().get(idx);
+            readFields.put(columnName, t);
+            readFields.put(columnName.toLowerCase(), t);
+        });
 
         List<TypeDescription> children = readSchema.getChildren();
         for (int i = 0; i < children.size(); i++) {

@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class ParquetOperatorPrunerAndTransformerTest extends ParquetBaseTest {
+public class ParquetOperatorPrunerTest extends ParquetBaseTest {
 
     @Test
     public void testIntegerFilter() throws Exception {
@@ -144,7 +144,7 @@ public class ParquetOperatorPrunerAndTransformerTest extends ParquetBaseTest {
 
     private Node helper(String filterString) throws Exception {
 
-        TreeVisitor pruner = new ParquetOperatorPrunerAndTransformer(
+        TreeVisitor pruner = new ParquetOperatorPruner(
                 columnDescriptors, originalFieldsMap, ParquetFileAccessor.SUPPORTED_OPERATORS);
 
         // Parse the filter string into a expression tree Node

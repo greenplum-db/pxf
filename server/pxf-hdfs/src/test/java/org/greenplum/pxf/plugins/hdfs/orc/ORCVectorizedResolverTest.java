@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.sql.Date;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -144,7 +145,13 @@ class ORCVectorizedResolverTest extends ORCVectorizedBaseTest {
         TypeDescription schema = TypeDescription.fromString("struct<actor:struct<" +
                 "avatar_url:string,gravatar_id:string,id:int,login:string,url:string>," +
                 "num1:int>");
+
+        columnDescriptors = new ArrayList<>();
+        columnDescriptors.add(new ColumnDescriptor("actor", DataType.TEXT.getOID(), 0, "text", null));
+        columnDescriptors.add(new ColumnDescriptor("num1", DataType.INTEGER.getOID(), 1, "int4", null));
+
         context.setMetadata(schema);
+        context.setTupleDescription(columnDescriptors);
 
         resolver.setRequestContext(context);
         resolver.afterPropertiesSet();
