@@ -56,6 +56,7 @@ import java.util.Properties;
 
 import static org.apache.hadoop.hive.metastore.api.hive_metastoreConstants.FILE_INPUT_FORMAT;
 import static org.apache.hadoop.hive.metastore.api.hive_metastoreConstants.META_TABLE_COLUMNS;
+import static org.apache.hadoop.hive.metastore.api.hive_metastoreConstants.META_TABLE_COLUMN_TYPES;
 import static org.apache.hadoop.hive.serde2.ColumnProjectionUtils.READ_ALL_COLUMNS;
 import static org.apache.hadoop.hive.serde2.ColumnProjectionUtils.READ_COLUMN_IDS_CONF_STR;
 import static org.apache.hadoop.hive.serde2.ColumnProjectionUtils.READ_COLUMN_NAMES_CONF_STR;
@@ -141,7 +142,7 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
         skipHeaderCount = hiveUserData.getSkipHeader();
         hiveIndexes = hiveUserData.getHiveIndexes();
         hiveColumnsString = properties.getProperty(META_TABLE_COLUMNS);
-        hiveColumnTypesString = hiveUserData.getColTypes();
+        hiveColumnTypesString = properties.getProperty(META_TABLE_COLUMN_TYPES);
         context.setMetadata(hiveUserData);
     }
 

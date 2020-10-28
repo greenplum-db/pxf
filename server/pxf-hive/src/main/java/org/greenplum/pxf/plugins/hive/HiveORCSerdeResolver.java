@@ -22,12 +22,13 @@ package org.greenplum.pxf.plugins.hive;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.serde.serdeConstants;
-import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 
 import java.io.IOException;
 import java.util.Properties;
+
+import static org.apache.hadoop.hive.metastore.api.hive_metastoreConstants.META_TABLE_COLUMN_TYPES;
 
 /**
  * Specialized HiveResolver for a Hive table stored as RC file.
@@ -42,9 +43,10 @@ public class HiveORCSerdeResolver extends HiveResolver {
 
         LOG.debug("Serde number of columns is " + numberOfDataColumns);
 
+        Properties properties = super.getSerdeProperties(propsString);
         StringBuilder columnNames = new StringBuilder(numberOfDataColumns * 2); // column + delimiter
         StringBuilder columnTypes = new StringBuilder(numberOfDataColumns * 2); // column + delimiter
-        String[] cols = hiveUserData.getColTypes().split(":");
+        String[] cols = properties.getProperty(META_TABLE_COLUMN_TYPES).split(":");
         String[] hiveColTypes = new String[cols.length];
         parseColTypes(cols, hiveColTypes);
 
@@ -67,7 +69,6 @@ public class HiveORCSerdeResolver extends HiveResolver {
             columnNames.append(columnName);
             columnTypes.append(columnType);
         }
-        Properties properties = super.getSerdeProperties(propsString);
         properties.put(serdeConstants.LIST_COLUMNS, columnNames.toString());
         properties.put(serdeConstants.LIST_COLUMN_TYPES, columnTypes.toString());
         return properties;

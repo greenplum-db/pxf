@@ -151,7 +151,6 @@ class HiveUserDataBuilder {
                 propertiesString,
                 partitionKeys,
                 null,
-                null,
                 skipHeader,
                 null);
     }
