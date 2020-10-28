@@ -18,7 +18,6 @@ import org.greenplum.pxf.api.model.Metadata;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.plugins.hive.HiveClientWrapper;
 import org.greenplum.pxf.plugins.hive.HiveDataFragmenter;
-import org.greenplum.pxf.plugins.hive.HiveUserData;
 
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectOutputStream;
@@ -65,13 +64,7 @@ public class MultipleHiveFragmentsPerFileFragmenter extends BaseFragmenter {
 
         for (int i = 0; i < fragmentsNum; i++) {
 
-            String userData = "inputFormatName" + HiveUserData.HIVE_UD_DELIM
-                    + tbl.getSd().getSerdeInfo().getSerializationLib()
-                    + HiveUserData.HIVE_UD_DELIM + "propertiesString"
-                    + HiveUserData.HIVE_UD_DELIM + HiveDataFragmenter.HIVE_NO_PART_TBL
-                    + HiveUserData.HIVE_UD_DELIM + "filterInFragmenter"
-                    + HiveUserData.HIVE_UD_DELIM + "delimiter"
-                    + HiveUserData.HIVE_UD_DELIM + properties.getProperty("columns.types");
+            String userData = serializeProperties(properties);
 
             ByteArrayOutputStream bas = new ByteArrayOutputStream();
             ObjectOutputStream os = new ObjectOutputStream(bas);
@@ -113,10 +106,15 @@ public class MultipleHiveFragmentsPerFileFragmenter extends BaseFragmenter {
 
         for (InputSplit split : splits) {
             FileSplit fsp = (FileSplit) split;
-            String[] hosts = fsp.getLocations();
-            String filepath = fsp.getPath().toString();
-            return filepath;
+            return fsp.getPath().toString();
         }
         throw new RuntimeException("Unable to get file path for table.");
+    }
+
+    /* Turns a Properties class into a string */
+    private String serializeProperties(Properties props) throws Exception {
+        ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+        props.store(outStream, ""/* comments */);
+        return outStream.toString();
     }
 }
