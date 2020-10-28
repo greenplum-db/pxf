@@ -24,7 +24,6 @@ import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 
 import java.util.Collections;
 import java.util.List;
@@ -39,23 +38,14 @@ public class HiveStringPassResolver extends HiveResolver {
     private StringBuilder parts;
 
     @Override
-    void parseUserData(RequestContext input) throws Exception {
-        HiveUserData hiveUserData = HiveUtilities.parseHiveUserData(input);
-        parseDelimiterChar(input);
+    void parseUserData(RequestContext context) {
+        super.parseUserData(context);
+        parseDelimiterChar(context);
         parts = new StringBuilder();
-        partitionKeys = hiveUserData.getPartitionKeys();
-        serdeClassName = hiveUserData.getSerdeClassName();
 
         /* Needed only for GPDBWritable format*/
-        if (context.getOutputFormat() == OutputFormat.GPDBWritable) {
-            propsString = hiveUserData.getPropertiesString();
-        }
-    }
-
-    @Override
-    void initSerde(RequestContext input) throws Exception {
-        if (context.getOutputFormat() == OutputFormat.GPDBWritable) {
-            super.initSerde(input);
+        if (context.getOutputFormat() != OutputFormat.GPDBWritable) {
+            propsString = null;
         }
     }
 
@@ -76,11 +66,31 @@ public class HiveStringPassResolver extends HiveResolver {
     @Override
     public List<OneField> getFields(OneRow onerow) throws Exception {
         if (context.getOutputFormat() == OutputFormat.TEXT) {
+            ensureInitialized();
             String line = (onerow.getData()).toString();
             /* We follow Hive convention. Partition fields are always added at the end of the record */
             return Collections.singletonList(new OneField(VARCHAR.getOID(), line + parts));
         } else {
             return super.getFields(onerow);
+        }
+    }
+
+    /**
+     * Make sure the required fields have been initialized
+     */
+    private void ensureInitialized() {
+        if (hiveUserData != null) return;
+        // HiveUserData is passed from accessor
+        hiveUserData = (HiveUserData) context.getMetadata();
+        if (hiveUserData == null) {
+            throw new RuntimeException("No hive metadata detected in request context");
+        }
+
+        try {
+            parseUserData(context);
+            initPartitionFields();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to initialize HiveStringPassResolver", e);
         }
     }
 

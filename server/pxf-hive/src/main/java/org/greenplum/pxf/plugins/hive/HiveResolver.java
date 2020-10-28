@@ -26,7 +26,6 @@ import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.hive.serde2.Deserializer;
-import org.apache.hadoop.hive.serde2.SerDeException;
 import org.apache.hadoop.hive.serde2.io.ByteWritable;
 import org.apache.hadoop.hive.serde2.objectinspector.ListObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.MapObjectInspector;
@@ -62,13 +61,11 @@ import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
-import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.Timestamp;
@@ -92,11 +89,12 @@ public class HiveResolver extends HivePlugin implements Resolver {
     protected char delimiter;
     protected String collectionDelim;
     protected String mapkeyDelim;
-    protected Deserializer deserializer;
+    protected Deserializer d;
     protected String serdeClassName;
     protected String propsString;
     protected String partitionKeys;
     protected List<Integer> hiveIndexes;
+    protected HiveUserData hiveUserData;
 
     private int numberOfPartitions;
     private Map<String, OneField> partitionColumnNames;
@@ -107,25 +105,17 @@ public class HiveResolver extends HivePlugin implements Resolver {
      * obtaining the serde class name, the serde properties string and the
      * partition keys.
      *
-     * @param requestContext request context
+     * @param context request context
      */
     @Override
-    public void initialize(RequestContext requestContext) {
-        super.initialize(requestContext);
-
+    public void initialize(RequestContext context) {
+        super.initialize(context);
         hiveDefaultPartName = HiveConf.getVar(configuration, HiveConf.ConfVars.DEFAULTPARTITIONNAME);
-
-        try {
-            parseUserData(context);
-            initPartitionFields();
-            initSerde(context);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to initialize HiveResolver", e);
-        }
     }
 
     @Override
     public List<OneField> getFields(OneRow onerow) throws Exception {
+        Deserializer deserializer = getDeserializer();
         Object tuple = deserializer.deserialize((Writable) onerow.getData());
         // Each Hive record is a Struct
         StructObjectInspector soi = (StructObjectInspector) deserializer.getObjectInspector();
@@ -147,32 +137,18 @@ public class HiveResolver extends HivePlugin implements Resolver {
         return numberOfPartitions;
     }
 
-    /* Parses user data string (arrived from fragmenter). */
-    void parseUserData(RequestContext input) throws Exception {
-        HiveUserData hiveUserData = HiveUtilities.parseHiveUserData(input);
-
+    /* Parses user data string (received from fragmenter). */
+    void parseUserData(RequestContext context) {
         serdeClassName = hiveUserData.getSerdeClassName();
         propsString = hiveUserData.getPropertiesString();
         partitionKeys = hiveUserData.getPartitionKeys();
-
-        collectionDelim = input.getOption("COLLECTION_DELIM") == null ? COLLECTION_DELIM
-                : input.getOption("COLLECTION_DELIM");
-        mapkeyDelim = input.getOption("MAPKEY_DELIM") == null ? MAPKEY_DELIM
-                : input.getOption("MAPKEY_DELIM");
+        collectionDelim = StringUtils.defaultString(context.getOption("COLLECTION_DELIM"), COLLECTION_DELIM);
+        mapkeyDelim = StringUtils.defaultString(context.getOption("MAPKEY_DELIM"), MAPKEY_DELIM);
         hiveIndexes = hiveUserData.getHiveIndexes();
     }
 
-    /*
-     * Gets and init the deserializer for the records of this Hive data
-     * fragment.
-     */
-    void initSerde(RequestContext requestContext) throws Exception {
-        Properties serdeProperties;
-
-        Class<?> c = Class.forName(serdeClassName, true, JavaUtils.getClassLoader());
-        deserializer = (Deserializer) c.getDeclaredConstructor().newInstance();
-        serdeProperties = getSerdeProperties();
-        deserializer.initialize(new JobConf(configuration, HiveResolver.class), serdeProperties);
+    protected JobConf getJobConf() {
+        return new JobConf(configuration, this.getClass());
     }
 
     /*
@@ -677,7 +653,6 @@ public class HiveResolver extends HivePlugin implements Resolver {
 
         if (userDelim == null) {
             /* No DELIMITER in URL, try to get it from fragment's user data*/
-            HiveUserData hiveUserData = HiveUtilities.parseHiveUserData(input);
             if (hiveUserData.getDelimiter() == null) {
                 throw new IllegalArgumentException("DELIMITER is a required option");
             }
@@ -723,5 +698,26 @@ public class HiveResolver extends HivePlugin implements Resolver {
             throw new IllegalArgumentException("propsString is mandatory to initialize serde.");
         }
         return serdeProperties;
+    }
+
+    protected Deserializer getDeserializer() {
+        if (d == null) {
+            // HiveUserData is passed from accessor
+            hiveUserData = (HiveUserData) context.getMetadata();
+            if (hiveUserData == null) {
+                throw new RuntimeException("No hive metadata detected in request context");
+            }
+
+            try {
+                parseUserData(context);
+                initPartitionFields();
+                Class<?> c = Class.forName(serdeClassName, true, JavaUtils.getClassLoader());
+                d = (Deserializer) c.getDeclaredConstructor().newInstance();
+                d.initialize(getJobConf(), getSerdeProperties());
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to initialize HiveResolver", e);
+            }
+        }
+        return d;
     }
 }

@@ -22,6 +22,7 @@ package org.greenplum.pxf.plugins.hive;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.serde.serdeConstants;
+import org.apache.hadoop.hive.serde2.Deserializer;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.PrimitiveObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.StructField;
@@ -47,7 +48,6 @@ import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.Utilities;
-import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 
 import java.io.IOException;
 import java.sql.Date;
@@ -56,7 +56,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -72,20 +71,14 @@ import static org.greenplum.pxf.api.io.DataType.VARCHAR;
 public class HiveColumnarSerdeResolver extends HiveResolver {
     private boolean firstColumn;
     private StringBuilder builder;
-    private String serdeType;
     private Map<String, String[]> partitionColumnNames;
 
     /* read the data supplied by the fragmenter: inputformat name, serde name, partition keys */
     @Override
-    void parseUserData(RequestContext input) {
-        HiveUserData hiveUserData = HiveUtilities.parseHiveUserData(input);
-
+    void parseUserData(RequestContext context) {
+        super.parseUserData(context);
         partitionColumnNames = new HashMap<>();
-        propsString = hiveUserData.getPropertiesString();
-        serdeType = hiveUserData.getSerdeClassName();
-        partitionKeys = hiveUserData.getPartitionKeys();
-        hiveIndexes = hiveUserData.getHiveIndexes();
-        parseDelimiterChar(input);
+        parseDelimiterChar(context);
     }
 
     @Override
@@ -122,6 +115,7 @@ public class HiveColumnarSerdeResolver extends HiveResolver {
     @Override
     public List<OneField> getFields(OneRow onerow) throws Exception {
         if (context.getOutputFormat() == OutputFormat.TEXT) {
+            Deserializer deserializer = getDeserializer();
             firstColumn = true;
             builder = new StringBuilder();
             Object tuple = deserializer.deserialize((Writable) onerow.getData());
@@ -133,19 +127,13 @@ public class HiveColumnarSerdeResolver extends HiveResolver {
         }
     }
 
-    /*
-     * Get and init the deserializer for the records of this Hive data fragment.
-     * Suppress Warnings added because deserializer.initialize is an abstract function that is deprecated
-     * but its implementations (ColumnarSerDe, LazyBinaryColumnarSerDe) still use the deprecated interface.
-     */
     @Override
-    void initSerde(RequestContext input) throws Exception {
-        Properties serdeProperties;
+    protected JobConf getJobConf() {
         StringBuilder projectedColumnNames = new StringBuilder();
         StringBuilder projectedColumnIds = new StringBuilder();
 
         String delim = ",";
-        List<ColumnDescriptor> tupleDescription = input.getTupleDescription();
+        List<ColumnDescriptor> tupleDescription = context.getTupleDescription();
         for (int i = 0; i < tupleDescription.size(); i++) {
             ColumnDescriptor column = tupleDescription.get(i);
             if (column.isProjected() && hiveIndexes.get(i) != null) {
@@ -157,15 +145,11 @@ public class HiveColumnarSerdeResolver extends HiveResolver {
                 projectedColumnIds.append(hiveIndexes.get(i));
             }
         }
-        serdeProperties = getSerdeProperties();
-
-        JobConf jobConf = new JobConf(configuration, HiveColumnarSerdeResolver.class);
+        JobConf jobConf = super.getJobConf();
         jobConf.set(READ_ALL_COLUMNS, "false");
         jobConf.set(READ_COLUMN_IDS_CONF_STR, projectedColumnIds.toString());
         jobConf.set(READ_COLUMN_NAMES_CONF_STR, projectedColumnNames.toString());
-
-        deserializer = HiveUtilities.createDeserializer(serdeType);
-        deserializer.initialize(jobConf, serdeProperties);
+        return jobConf;
     }
 
     /**

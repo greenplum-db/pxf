@@ -135,6 +135,7 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
         hiveIndexes = hiveUserData.getHiveIndexes();
         hiveColumnsString = hiveUserData.getAllColumnNames();
         hiveColumnTypesString = hiveUserData.getColTypes();
+        context.setMetadata(hiveUserData);
     }
 
     /**
@@ -449,5 +450,4 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
         jobConf.set(READ_COLUMN_IDS_CONF_STR, StringUtils.join(colIds, ","));
         jobConf.set(READ_COLUMN_NAMES_CONF_STR, StringUtils.join(colNames, ","));
     }
-
 }
