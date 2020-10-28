@@ -42,7 +42,6 @@ public class HiveAccessorTest {
     public void setup() throws Exception {
         properties = new Properties();
         userDataBuilder = new HiveUserDataBuilder()
-                .withPartitionKeys(HiveDataFragmenter.HIVE_NO_PART_TBL)
                 .withProperties(properties);
 
         PowerMockito.mockStatic(HiveUtilities.class);
@@ -140,7 +139,6 @@ public class HiveAccessorTest {
 }
 
 class HiveUserDataBuilder {
-    private String partitionKeys;
     private Properties properties;
 
     public HiveUserData build() throws IOException {
@@ -152,12 +150,7 @@ class HiveUserDataBuilder {
             propertiesString = outStream.toString();
         }
 
-        return new HiveUserData(propertiesString, partitionKeys, null);
-    }
-
-    public HiveUserDataBuilder withPartitionKeys(String s) {
-        partitionKeys = s;
-        return this;
+        return new HiveUserData(propertiesString, null);
     }
 
     public HiveUserDataBuilder withProperties(Properties properties) {

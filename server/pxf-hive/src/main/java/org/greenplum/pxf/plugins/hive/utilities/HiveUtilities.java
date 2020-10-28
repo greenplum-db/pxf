@@ -220,7 +220,7 @@ public class HiveUtilities {
                     + HiveUserData.getNumOfTokens() + " tokens, but got " + toks.length);
         }
 
-        String indexesStr = toks[2];
+        String indexesStr = toks[1];
         List<Integer> indexes = null;
 
         if (indexesStr != null && !"null".equals(indexesStr)) {
@@ -229,10 +229,7 @@ public class HiveUtilities {
                     .collect(Collectors.toList());
         }
 
-        return new HiveUserData(
-                toks[0],
-                toks[1],
-                indexes);
+        return new HiveUserData(toks[0], indexes);
     }
 
     /**
@@ -270,7 +267,7 @@ public class HiveUtilities {
      */
     public static int getDelimiterCode(StorageDescriptor sd) {
         if (sd != null && sd.getSerdeInfo() != null && sd.getSerdeInfo().getParameters() != null) {
-            Map<String,String> parameters = sd.getSerdeInfo().getParameters();
+            Map<String, String> parameters = sd.getSerdeInfo().getParameters();
             String delimiter = parameters.get(serdeConstants.FIELD_DELIM);
             if (delimiter != null) {
                 return delimiter.charAt(0);

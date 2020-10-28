@@ -25,7 +25,6 @@ import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.RequestContext;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
@@ -39,7 +38,7 @@ public class HiveStringPassResolver extends HiveResolver {
     private StringBuilder parts;
 
     @Override
-    void parseUserData(RequestContext context) throws IOException {
+    void parseUserData(RequestContext context) {
         super.parseUserData(context);
         parseDelimiterChar(context);
         parts = new StringBuilder();
@@ -75,10 +74,10 @@ public class HiveStringPassResolver extends HiveResolver {
      * Make sure the required fields have been initialized
      */
     private void ensureInitialized() {
-        if (hiveUserData != null) return;
-        // HiveUserData is passed from accessor
-        hiveUserData = (HiveUserData) context.getMetadata();
-        if (hiveUserData == null) {
+        if (metadata != null) return;
+        // HiveParsedMetadata is passed from accessor
+        metadata = (HiveParsedMetadata) context.getMetadata();
+        if (metadata == null) {
             throw new RuntimeException("No hive metadata detected in request context");
         }
 

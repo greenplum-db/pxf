@@ -28,18 +28,13 @@ import java.util.stream.Collectors;
 public class HiveUserData {
 
     public static final String HIVE_UD_DELIM = "!HUDD!";
-    private static final int EXPECTED_NUM_OF_TOKS = 3;
+    private static final int EXPECTED_NUM_OF_TOKS = 2;
 
     private final String propertiesString;
-    private final String partitionKeys;
     private final List<Integer> hiveIndexes;
 
-    public HiveUserData(String propertiesString,
-                        String partitionKeys,
-                        List<Integer> hiveIndexes) {
-
+    public HiveUserData(String propertiesString, List<Integer> hiveIndexes) {
         this.propertiesString = propertiesString;
-        this.partitionKeys = partitionKeys;
         this.hiveIndexes = hiveIndexes;
     }
 
@@ -50,15 +45,6 @@ public class HiveUserData {
      */
     public String getPropertiesString() {
         return propertiesString;
-    }
-
-    /**
-     * Returns partition keys
-     *
-     * @return partition keys
-     */
-    public String getPartitionKeys() {
-        return partitionKeys;
     }
 
     /**
@@ -83,7 +69,6 @@ public class HiveUserData {
     @Override
     public String toString() {
         return propertiesString + HiveUserData.HIVE_UD_DELIM
-                + partitionKeys + HiveUserData.HIVE_UD_DELIM
                 + (hiveIndexes != null ? hiveIndexes.stream().map(String::valueOf).collect(Collectors.joining(",")) : "null");
     }
 

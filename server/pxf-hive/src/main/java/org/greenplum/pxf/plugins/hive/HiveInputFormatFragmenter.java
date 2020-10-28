@@ -76,10 +76,9 @@ public class HiveInputFormatFragmenter extends HiveDataFragmenter {
      * partition column
      *
      * @param tbl the hive table
-     * @return a list of indexes
      */
     @Override
-    List<Integer> verifySchema(Table tbl) {
+    void verifySchema(Table tbl) {
 
         List<Integer> indexes = new ArrayList<>();
         List<FieldSchema> hiveColumns = tbl.getSd().getCols();

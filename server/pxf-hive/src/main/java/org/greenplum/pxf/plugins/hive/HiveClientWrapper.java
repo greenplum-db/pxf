@@ -34,10 +34,11 @@ import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Properties;
 
 import static org.greenplum.pxf.api.model.ConfigurationFactory.PXF_CONFIG_RESOURCE_PATH_PROPERTY;
+import static org.greenplum.pxf.plugins.hive.HiveDataFragmenter.HIVE_PARTITIONS_DELIM;
+import static org.greenplum.pxf.plugins.hive.HiveDataFragmenter.PXF_META_TABLE_PARTITION_COLUMN_VALUES;
 
 public class HiveClientWrapper {
 
@@ -164,14 +165,14 @@ public class HiveClientWrapper {
 
         Properties properties = partData.properties;
         addDelimiterInformation(properties, partData.storageDesc);
-        String partitionKeys = serializePartitionKeys(partData);
+        addPartitionValuesInformation(properties, partData);
         String propertiesString = serializeProperties(properties);
 
         if (HiveInputFormatFragmenter.class.isAssignableFrom(fragmenterClass)) {
             assertFileType(partData.storageDesc.getInputFormat(), partData);
         }
 
-        hiveUserData = new HiveUserData(propertiesString, partitionKeys, hiveIndexes);
+        hiveUserData = new HiveUserData(propertiesString, hiveIndexes);
         return hiveUserData.toString().getBytes();
     }
 
@@ -313,29 +314,12 @@ public class HiveClientWrapper {
         return outStream.toString();
     }
 
-    /* Turns the partition keys into a string */
-    private String serializePartitionKeys(HiveTablePartition partData) {
-        if (partData.partition == null) {
-            /* this is a simple hive table - there are no partitions */
-            return HiveDataFragmenter.HIVE_NO_PART_TBL;
+    /* Turns the partition values into a string and adds them to the properties */
+    private void addPartitionValuesInformation(Properties properties, HiveTablePartition partData) {
+        if (partData.partition != null) {
+            properties.put(PXF_META_TABLE_PARTITION_COLUMN_VALUES,
+                    String.join(HIVE_PARTITIONS_DELIM, partData.partition.getValues()));
         }
-
-        StringBuilder partitionKeys = new StringBuilder();
-        String prefix = "";
-        ListIterator<String> valsIter = partData.partition.getValues().listIterator();
-        ListIterator<FieldSchema> keysIter = partData.partitionKeys.listIterator();
-        while (valsIter.hasNext() && keysIter.hasNext()) {
-            FieldSchema key = keysIter.next();
-            String name = key.getName();
-            String type = key.getType();
-            String val = valsIter.next();
-            String oneLevel = prefix + name + HiveDataFragmenter.HIVE_1_PART_DELIM + type
-                    + HiveDataFragmenter.HIVE_1_PART_DELIM + val;
-            partitionKeys.append(oneLevel);
-            prefix = HiveDataFragmenter.HIVE_PARTITIONS_DELIM;
-        }
-
-        return partitionKeys.toString();
     }
 
     /**

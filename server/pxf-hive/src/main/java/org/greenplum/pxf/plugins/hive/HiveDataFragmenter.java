@@ -53,7 +53,6 @@ import org.greenplum.pxf.plugins.hive.utilities.ProfileFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
@@ -62,10 +61,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
-
-import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
 
 /**
  * Fragmenter class for HIVE tables. <br>
@@ -84,9 +80,8 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
     private static final Logger LOG = LoggerFactory.getLogger(HiveDataFragmenter.class);
     private static final short ALL_PARTS = -1;
 
-    public static final String HIVE_1_PART_DELIM = "!H1PD!";
     public static final String HIVE_PARTITIONS_DELIM = "!HPAD!";
-    public static final String HIVE_NO_PART_TBL = "!HNPT!";
+    public static final String PXF_META_TABLE_PARTITION_COLUMN_VALUES = "pxf.partition_columns.values";
 
     static final EnumSet<Operator> SUPPORTED_OPERATORS =
             EnumSet.of(
@@ -261,27 +256,17 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
 
     /**
      * Verifies that all the Greenplum defined columns are present in the Hive
-     * table schema. Then return a list of indexes corresponding to the
-     * matching columns in Greenplum, ordered by the Greenplum schema order.
+     * table schema.
      *
      * @param tbl the hive table
-     * @return a list of indexes
      */
-    List<Integer> verifySchema(Table tbl) {
-
-        List<Integer> indexes = new ArrayList<>();
+    void verifySchema(Table tbl) {
         List<FieldSchema> hiveColumns = tbl.getSd().getCols();
         List<FieldSchema> hivePartitions = tbl.getPartitionKeys();
-
         Set<String> columnAndPartitionNames =
                 Stream.concat(hiveColumns.stream(), hivePartitions.stream())
                         .map(FieldSchema::getName)
                         .collect(Collectors.toSet());
-
-        Map<String, Integer> columnNameToColsIndexMap =
-                IntStream.range(0, hiveColumns.size())
-                        .boxed()
-                        .collect(Collectors.toMap(i -> hiveColumns.get(i).getName(), i -> i));
 
         for (ColumnDescriptor cd : context.getTupleDescription()) {
             if (!columnAndPartitionNames.contains(cd.columnName()) &&
@@ -291,14 +276,7 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
                                         "Ensure the column exists and check the column name spelling and case",
                                 cd.columnName()));
             }
-
-            // The index of the column on the Hive schema
-            Integer index =
-                    defaultIfNull(columnNameToColsIndexMap.get(cd.columnName()),
-                            columnNameToColsIndexMap.get(cd.columnName().toLowerCase()));
-            indexes.add(index);
         }
-        return indexes;
     }
 
     private static Properties getSchema(Table table) {

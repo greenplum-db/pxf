@@ -21,6 +21,7 @@ package org.greenplum.pxf.plugins.hive;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
+import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.io.IOConstants;
 import org.apache.hadoop.hive.ql.io.orc.Reader;
 import org.apache.hadoop.hive.serde.serdeConstants;
@@ -52,15 +53,25 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
+import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
 import static org.apache.hadoop.hive.metastore.api.hive_metastoreConstants.FILE_INPUT_FORMAT;
 import static org.apache.hadoop.hive.metastore.api.hive_metastoreConstants.META_TABLE_COLUMNS;
 import static org.apache.hadoop.hive.metastore.api.hive_metastoreConstants.META_TABLE_COLUMN_TYPES;
+import static org.apache.hadoop.hive.metastore.api.hive_metastoreConstants.META_TABLE_PARTITION_COLUMNS;
+import static org.apache.hadoop.hive.metastore.api.hive_metastoreConstants.META_TABLE_PARTITION_COLUMN_TYPES;
 import static org.apache.hadoop.hive.serde.serdeConstants.HEADER_COUNT;
 import static org.apache.hadoop.hive.serde2.ColumnProjectionUtils.READ_ALL_COLUMNS;
 import static org.apache.hadoop.hive.serde2.ColumnProjectionUtils.READ_COLUMN_IDS_CONF_STR;
 import static org.apache.hadoop.hive.serde2.ColumnProjectionUtils.READ_COLUMN_NAMES_CONF_STR;
+import static org.greenplum.pxf.plugins.hive.HiveDataFragmenter.HIVE_PARTITIONS_DELIM;
+import static org.greenplum.pxf.plugins.hive.HiveDataFragmenter.PXF_META_TABLE_PARTITION_COLUMN_VALUES;
 
 /**
  * Accessor for Hive tables. The accessor will open and read a split belonging
@@ -79,21 +90,8 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
     private List<HivePartition> partitions;
     private static final String HIVE_DEFAULT_PARTITION = "__HIVE_DEFAULT_PARTITION__";
     private int skipHeaderCount;
-    protected List<Integer> hiveIndexes;
     private String hiveColumnsString;
     private String hiveColumnTypesString;
-
-    static class HivePartition {
-        public String name;
-        public String type;
-        public String val;
-
-        HivePartition(String name, String type, String val) {
-            this.name = name;
-            this.type = type;
-            this.val = val;
-        }
-    }
 
     /**
      * Constructs a HiveAccessor
@@ -127,13 +125,13 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
     @Override
     public void initialize(RequestContext context) {
         super.initialize(context);
+        HiveParsedMetadata metadata;
         HiveUserData hiveUserData;
         Properties properties;
         try {
             hiveUserData = HiveUtilities.parseHiveUserData(context);
             properties = getSerdeProperties(hiveUserData.getPropertiesString());
             if (inputFormat == null) {
-                // TODO: serde properties should be in context.setMetadata
                 String inputFormatClassName = properties.getProperty(FILE_INPUT_FORMAT);
                 inputFormat = HiveDataFragmenter.makeInputFormat(inputFormatClassName, jobConf);
             }
@@ -141,12 +139,15 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
             throw new RuntimeException("Failed to initialize HiveAccessor", e);
         }
 
-        initPartitionFields(hiveUserData.getPartitionKeys());
+        initPartitionFields(properties);
         skipHeaderCount = Integer.parseInt(properties.getProperty(HEADER_COUNT, "0"));
-        hiveIndexes = hiveUserData.getHiveIndexes();
+        List<Integer> hiveIndexes = buildHiveIndexes(properties);
         hiveColumnsString = properties.getProperty(META_TABLE_COLUMNS);
         hiveColumnTypesString = properties.getProperty(META_TABLE_COLUMN_TYPES);
-        context.setMetadata(hiveUserData);
+
+        metadata = new HiveParsedMetadata(properties, partitions, hiveIndexes);
+
+        context.setMetadata(metadata);
     }
 
     /**
@@ -238,20 +239,61 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
      * The partition fields are initialized one time base on userData provided
      * by the fragmenter
      */
-    void initPartitionFields(String partitionKeys) {
+    void initPartitionFields(Properties properties) {
         partitions = new LinkedList<>();
-        if (HiveDataFragmenter.HIVE_NO_PART_TBL.equals(partitionKeys)) {
+
+        String partitionColumns = properties.getProperty(META_TABLE_PARTITION_COLUMNS);
+        String partitionColumnTypes = properties.getProperty(META_TABLE_PARTITION_COLUMN_TYPES);
+        String partitionColumnValue = properties.getProperty(PXF_META_TABLE_PARTITION_COLUMN_VALUES);
+        if (StringUtils.isBlank(partitionColumns) || StringUtils.isBlank(partitionColumnTypes)) {
+            // no partition column information
             return;
         }
 
-        String[] partitionLevels = partitionKeys.split(HiveDataFragmenter.HIVE_PARTITIONS_DELIM);
-        for (String partLevel : partitionLevels) {
-            String[] levelKey = partLevel.split(HiveDataFragmenter.HIVE_1_PART_DELIM);
-            String name = levelKey[0];
-            String type = levelKey[1];
-            String val = levelKey[2];
-            partitions.add(new HivePartition(name, type, val));
+        String[] partKeys = partitionColumns.trim().split("/");
+        String[] partKeyTypes = partitionColumnTypes.trim().split(":");
+        String[] partKeyValues = partitionColumnValue.trim().split(HIVE_PARTITIONS_DELIM);
+
+        if (partKeys.length != partKeyTypes.length ||
+                partKeys.length != partKeyValues.length) {
+            throw new IllegalArgumentException(String.format("The partition keys and partition key types length does not match. partKeys.length=%d partKeyTypes.length=%d",
+                    partKeys.length, partKeyTypes.length));
         }
+
+        for (int i = 0; i < partKeys.length; i++) {
+            partitions.add(new HivePartition(partKeys[i], partKeyTypes[i], partKeyValues[i]));
+        }
+    }
+
+    /**
+     * Builds a list of indexes corresponding to the matching columns in
+     * Greenplum, ordered by the Greenplum schema order.
+     *
+     * @param properties the metadata properties
+     * @return the hive indexes
+     */
+    private List<Integer> buildHiveIndexes(Properties properties) {
+        List<Integer> indexes = new ArrayList<>();
+
+        Set<String> columnAndPartitionNames =
+                Stream.concat(hiveColumns.stream(), hivePartitions.stream())
+                        .map(FieldSchema::getName)
+                        .collect(Collectors.toSet());
+
+        Map<String, Integer> columnNameToColsIndexMap =
+                IntStream.range(0, hiveColumns.size())
+                        .boxed()
+                        .collect(Collectors.toMap(i -> hiveColumns.get(i).getName(), i -> i));
+
+        for (ColumnDescriptor cd : context.getTupleDescription()) {
+
+            // The index of the column on the Hive schema
+            Integer index =
+                    defaultIfNull(columnNameToColsIndexMap.get(cd.columnName()),
+                            columnNameToColsIndexMap.get(cd.columnName().toLowerCase()));
+            indexes.add(index);
+        }
+        return indexes;
     }
 
     private boolean shouldDataBeReturnedFromFilteredPartition() throws Exception {
@@ -340,20 +382,20 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
             String filterColumnName = filterColumn.columnName();
 
             for (HivePartition partition : partitionFields) {
-                if (filterColumnName.equals(partition.name)) {
+                if (filterColumnName.equals(partition.getName())) {
 
                     /*
                      * the node field matches a partition field, but the values do
                      * not match
                      */
-                    boolean keepPartition = filterValue.equals(partition.val);
+                    boolean keepPartition = filterValue.equals(partition.getValue());
 
                     /*
                      * If the string comparison fails then we should check the comparison of
                      * the two operands as typed values
                      * If the partition value equals HIVE_DEFAULT_PARTITION just skip
                      */
-                    if (!keepPartition && !partition.val.equals(HIVE_DEFAULT_PARTITION)) {
+                    if (!keepPartition && !partition.getValue().equals(HIVE_DEFAULT_PARTITION)) {
                         keepPartition = testFilterByType(filterValue, partition);
                     }
                     return keepPartition;
@@ -373,37 +415,37 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
      */
     private boolean testFilterByType(String filterValue, HivePartition partition) {
         boolean result;
-        switch (partition.type) {
+        switch (partition.getType()) {
             case serdeConstants.BOOLEAN_TYPE_NAME:
-                result = Boolean.valueOf(filterValue).equals(Boolean.valueOf(partition.val));
+                result = Boolean.valueOf(filterValue).equals(Boolean.valueOf(partition.getValue()));
                 break;
             case serdeConstants.TINYINT_TYPE_NAME:
             case serdeConstants.SMALLINT_TYPE_NAME:
-                result = (Short.parseShort(filterValue) == Short.parseShort(partition.val));
+                result = (Short.parseShort(filterValue) == Short.parseShort(partition.getValue()));
                 break;
             case serdeConstants.INT_TYPE_NAME:
-                result = (Integer.parseInt(filterValue) == Integer.parseInt(partition.val));
+                result = (Integer.parseInt(filterValue) == Integer.parseInt(partition.getValue()));
                 break;
             case serdeConstants.BIGINT_TYPE_NAME:
-                result = (Long.parseLong(filterValue) == Long.parseLong(partition.val));
+                result = (Long.parseLong(filterValue) == Long.parseLong(partition.getValue()));
                 break;
             case serdeConstants.FLOAT_TYPE_NAME:
-                result = (Float.parseFloat(filterValue) == Float.parseFloat(partition.val));
+                result = (Float.parseFloat(filterValue) == Float.parseFloat(partition.getValue()));
                 break;
             case serdeConstants.DOUBLE_TYPE_NAME:
-                result = (Double.parseDouble(filterValue) == Double.parseDouble(partition.val));
+                result = (Double.parseDouble(filterValue) == Double.parseDouble(partition.getValue()));
                 break;
             case serdeConstants.TIMESTAMP_TYPE_NAME:
-                result = Timestamp.valueOf(filterValue).equals(Timestamp.valueOf(partition.val));
+                result = Timestamp.valueOf(filterValue).equals(Timestamp.valueOf(partition.getValue()));
                 break;
             case serdeConstants.DATE_TYPE_NAME:
-                result = Date.valueOf(filterValue).equals(Date.valueOf(partition.val));
+                result = Date.valueOf(filterValue).equals(Date.valueOf(partition.getValue()));
                 break;
             case serdeConstants.DECIMAL_TYPE_NAME:
-                result = HiveDecimal.create(filterValue).bigDecimalValue().equals(HiveDecimal.create(partition.val).bigDecimalValue());
+                result = HiveDecimal.create(filterValue).bigDecimalValue().equals(HiveDecimal.create(partition.getValue()).bigDecimalValue());
                 break;
             case serdeConstants.BINARY_TYPE_NAME:
-                result = Arrays.equals(filterValue.getBytes(), partition.val.getBytes());
+                result = Arrays.equals(filterValue.getBytes(), partition.getValue().getBytes());
                 break;
             case serdeConstants.STRING_TYPE_NAME:
             case serdeConstants.VARCHAR_TYPE_NAME:

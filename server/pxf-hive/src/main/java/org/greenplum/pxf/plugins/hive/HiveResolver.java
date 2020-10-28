@@ -65,7 +65,6 @@ import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.Date;
@@ -97,10 +96,9 @@ public class HiveResolver extends HivePlugin implements Resolver {
     protected String mapkeyDelim;
     protected Deserializer d;
     protected String serdeClassName;
-    protected String partitionKeys;
     protected List<Integer> hiveIndexes;
-    protected HiveUserData hiveUserData;
     protected Properties metastoreProperties;
+    protected HiveParsedMetadata metadata;
 
     private int numberOfPartitions;
     private Map<String, OneField> partitionColumnNames;
@@ -144,13 +142,12 @@ public class HiveResolver extends HivePlugin implements Resolver {
     }
 
     /* Parses user data string (received from fragmenter). */
-    void parseUserData(RequestContext context) throws IOException {
-        hiveIndexes = hiveUserData.getHiveIndexes();
-        partitionKeys = hiveUserData.getPartitionKeys();
+    void parseUserData(RequestContext context) {
         collectionDelim = StringUtils.defaultString(context.getOption("COLLECTION_DELIM"), COLLECTION_DELIM);
         mapkeyDelim = StringUtils.defaultString(context.getOption("MAPKEY_DELIM"), MAPKEY_DELIM);
-        metastoreProperties = getSerdeProperties(hiveUserData.getPropertiesString());
-        serdeClassName = metastoreProperties.getProperty(SERIALIZATION_LIB);
+        hiveIndexes = metadata.getHiveIndexes();
+        metastoreProperties = getSerdeProperties();
+        serdeClassName = metadata.getProperties().getProperty(SERIALIZATION_LIB);
     }
 
     protected JobConf getJobConf() {
@@ -163,16 +160,17 @@ public class HiveResolver extends HivePlugin implements Resolver {
      */
     void initPartitionFields() {
         partitionColumnNames = new HashMap<>();
-        if (partitionKeys.equals(HiveDataFragmenter.HIVE_NO_PART_TBL)) {
+
+        List<HivePartition> hivePartitionList = metadata.getPartitions();
+        if (hivePartitionList == null || hivePartitionList.size() == 0) {
+            // no partition column information
             return;
         }
 
-        String[] partitionLevels = partitionKeys.split(HiveDataFragmenter.HIVE_PARTITIONS_DELIM);
-        for (String partLevel : partitionLevels) {
-            String[] levelKey = partLevel.split(HiveDataFragmenter.HIVE_1_PART_DELIM);
-            String columnName = StringUtils.lowerCase(levelKey[0]);
-            String type = levelKey[1];
-            String val = levelKey[2];
+        for (HivePartition partition : hivePartitionList) {
+            String columnName = partition.getName();
+            String type = partition.getType();
+            String val = partition.getValue();
             DataType convertedType;
             Object convertedValue;
             boolean isDefaultPartition;
@@ -257,25 +255,18 @@ public class HiveResolver extends HivePlugin implements Resolver {
         numberOfPartitions = partitionColumnNames.size();
     }
 
-    private boolean columnDescriptorContainsColumn(String columnName) {
-        return context.getTupleDescription()
-                .stream()
-                .anyMatch(cd -> columnName.equals(cd.columnName()));
-    }
-
     /*
      * The partition fields are initialized one time based on userData provided
      * by the fragmenter.
      */
     void initTextPartitionFields(StringBuilder parts) {
-        if (partitionKeys.equals(HiveDataFragmenter.HIVE_NO_PART_TBL)) {
+        List<HivePartition> hivePartitionList = metadata.getPartitions();
+        if (hivePartitionList == null || hivePartitionList.size() == 0) {
             return;
         }
-        String[] partitionLevels = partitionKeys.split(HiveDataFragmenter.HIVE_PARTITIONS_DELIM);
-        for (String partLevel : partitionLevels) {
-            String[] levelKey = partLevel.split(HiveDataFragmenter.HIVE_1_PART_DELIM);
-            String type = levelKey[1];
-            String val = levelKey[2];
+        for (HivePartition partition : hivePartitionList) {
+            String type = partition.getType();
+            String val = partition.getValue();
             parts.append(delimiter);
             if (isDefaultPartition(type, val)) {
                 parts.append(nullChar);
@@ -325,7 +316,7 @@ public class HiveResolver extends HivePlugin implements Resolver {
                 }
             }
         }
-        this.numberOfPartitions = partitionLevels.length;
+        this.numberOfPartitions = hivePartitionList.size();
     }
 
     /**
@@ -692,22 +683,15 @@ public class HiveResolver extends HivePlugin implements Resolver {
         }
     }
 
-    protected Properties getSerdeProperties(String propsString) throws IOException {
-        Properties serdeProperties = new Properties();
-        if (propsString != null) {
-            ByteArrayInputStream inStream = new ByteArrayInputStream(propsString.getBytes());
-            serdeProperties.load(inStream);
-        } else {
-            throw new IllegalArgumentException("propsString is mandatory to initialize serde.");
-        }
-        return serdeProperties;
+    protected Properties getSerdeProperties() {
+        return metadata.getProperties();
     }
 
     protected Deserializer getDeserializer() {
         if (d == null) {
             // HiveUserData is passed from accessor
-            hiveUserData = (HiveUserData) context.getMetadata();
-            if (hiveUserData == null) {
+            metadata = (HiveParsedMetadata) context.getMetadata();
+            if (metadata == null) {
                 throw new RuntimeException("No hive metadata detected in request context");
             }
 
@@ -722,5 +706,11 @@ public class HiveResolver extends HivePlugin implements Resolver {
             }
         }
         return d;
+    }
+
+    private boolean columnDescriptorContainsColumn(String columnName) {
+        return context.getTupleDescription()
+                .stream()
+                .anyMatch(cd -> columnName.equals(cd.columnName()));
     }
 }

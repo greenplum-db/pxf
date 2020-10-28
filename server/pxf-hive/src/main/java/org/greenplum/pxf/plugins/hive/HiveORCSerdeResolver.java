@@ -25,7 +25,6 @@ import org.apache.hadoop.hive.serde.serdeConstants;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 
-import java.io.IOException;
 import java.util.Properties;
 
 import static org.apache.hadoop.hive.metastore.api.hive_metastoreConstants.META_TABLE_COLUMN_TYPES;
@@ -38,12 +37,12 @@ public class HiveORCSerdeResolver extends HiveResolver {
     private static final Log LOG = LogFactory.getLog(HiveORCSerdeResolver.class);
 
     @Override
-    protected Properties getSerdeProperties(String propsString) throws IOException {
+    protected Properties getSerdeProperties() {
         int numberOfDataColumns = context.getColumns() - getNumberOfPartitions();
 
         LOG.debug("Serde number of columns is " + numberOfDataColumns);
 
-        Properties properties = super.getSerdeProperties(propsString);
+        Properties properties = super.getSerdeProperties();
         StringBuilder columnNames = new StringBuilder(numberOfDataColumns * 2); // column + delimiter
         StringBuilder columnTypes = new StringBuilder(numberOfDataColumns * 2); // column + delimiter
         String[] cols = properties.getProperty(META_TABLE_COLUMN_TYPES).split(":");
