@@ -36,12 +36,14 @@ public class HiveAccessorTest {
 
     HiveAccessor accessor;
     HiveUserDataBuilder userDataBuilder;
+    Properties properties;
 
     @Before
     public void setup() throws Exception {
+        properties = new Properties();
         userDataBuilder = new HiveUserDataBuilder()
                 .withPartitionKeys(HiveDataFragmenter.HIVE_NO_PART_TBL)
-                .withProperties(new Properties());
+                .withProperties(properties);
 
         PowerMockito.mockStatic(HiveUtilities.class);
         PowerMockito.mockStatic(HdfsUtilities.class);
@@ -60,7 +62,8 @@ public class HiveAccessorTest {
 
     @Test
     public void testSkipHeaderCountGreaterThanZero() throws Exception {
-        HiveUserData userData = userDataBuilder.withSkipHeader(2).build();
+        properties.put("skip.header.line.count", "2");
+        HiveUserData userData = userDataBuilder.build();
         PowerMockito.when(HiveUtilities.parseHiveUserData(requestContext)).thenReturn(userData);
         when(requestContext.hasFilter()).thenReturn(false);
 
@@ -74,7 +77,8 @@ public class HiveAccessorTest {
 
     @Test
     public void testSkipHeaderCountGreaterThanZeroFirstFragment() throws Exception {
-        HiveUserData userData = userDataBuilder.withSkipHeader(2).build();
+        properties.put("skip.header.line.count", "2");
+        HiveUserData userData = userDataBuilder.build();
         PowerMockito.when(HiveUtilities.parseHiveUserData(requestContext)).thenReturn(userData);
         when(requestContext.hasFilter()).thenReturn(false);
         when(requestContext.getFragmentIndex()).thenReturn(0);
@@ -89,7 +93,8 @@ public class HiveAccessorTest {
 
     @Test
     public void testSkipHeaderCountGreaterThanZeroNotFirstFragment() throws Exception {
-        HiveUserData userData = userDataBuilder.withSkipHeader(2).build();
+        properties.put("skip.header.line.count", "2");
+        HiveUserData userData = userDataBuilder.build();
         PowerMockito.when(HiveUtilities.parseHiveUserData(requestContext)).thenReturn(userData);
         when(requestContext.hasFilter()).thenReturn(false);
         when(requestContext.getFragmentIndex()).thenReturn(2);
@@ -104,7 +109,7 @@ public class HiveAccessorTest {
 
     @Test
     public void testSkipHeaderCountZeroFirstFragment() throws Exception {
-        HiveUserData userData = userDataBuilder.withSkipHeader(0).build();
+        HiveUserData userData = userDataBuilder.build();
         PowerMockito.when(HiveUtilities.parseHiveUserData(requestContext)).thenReturn(userData);
         when(requestContext.hasFilter()).thenReturn(false);
         when(requestContext.getFragmentIndex()).thenReturn(0);
@@ -119,7 +124,8 @@ public class HiveAccessorTest {
 
     @Test
     public void testSkipHeaderCountNegativeFirstFragment() throws Exception {
-        HiveUserData userData = userDataBuilder.withSkipHeader(-1).build();
+        properties.put("skip.header.line.count", "-1");
+        HiveUserData userData = userDataBuilder.build();
         PowerMockito.when(HiveUtilities.parseHiveUserData(requestContext)).thenReturn(userData);
         when(requestContext.hasFilter()).thenReturn(false);
         when(requestContext.getFragmentIndex()).thenReturn(0);
@@ -135,7 +141,6 @@ public class HiveAccessorTest {
 
 class HiveUserDataBuilder {
     private String partitionKeys;
-    private int skipHeader;
     private Properties properties;
 
     public HiveUserData build() throws IOException {
@@ -151,17 +156,11 @@ class HiveUserDataBuilder {
                 propertiesString,
                 partitionKeys,
                 null,
-                skipHeader,
                 null);
     }
 
     public HiveUserDataBuilder withPartitionKeys(String s) {
         partitionKeys = s;
-        return this;
-    }
-
-    public HiveUserDataBuilder withSkipHeader(int n) {
-        skipHeader = n;
         return this;
     }
 
