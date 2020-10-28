@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 public class HiveUserData {
 
     public static final String HIVE_UD_DELIM = "!HUDD!";
-    private static final int EXPECTED_NUM_OF_TOKS = 7;
+    private static final int EXPECTED_NUM_OF_TOKS = 6;
 
     private final String propertiesString;
     private final String partitionKeys;
@@ -36,15 +36,13 @@ public class HiveUserData {
     private final String colTypes;
     private final int skipHeader;
     private final List<Integer> hiveIndexes;
-    private final String allColumnNames;
 
     public HiveUserData(String propertiesString,
                         String partitionKeys,
                         String delimiter,
                         String colTypes,
                         int skipHeader,
-                        List<Integer> hiveIndexes,
-                        String allColumnNames) {
+                        List<Integer> hiveIndexes) {
 
         this.propertiesString = propertiesString;
         this.partitionKeys = partitionKeys;
@@ -52,7 +50,6 @@ public class HiveUserData {
         this.colTypes = colTypes;
         this.skipHeader = skipHeader;
         this.hiveIndexes = hiveIndexes;
-        this.allColumnNames = allColumnNames;
     }
 
     /**
@@ -119,16 +116,6 @@ public class HiveUserData {
         return hiveIndexes;
     }
 
-    /**
-     * Returns a comma-separated list of column names defined in the Hive
-     * table definition
-     *
-     * @return the comma-separated list of column names
-     */
-    public String getAllColumnNames() {
-        return allColumnNames;
-    }
-
     @Override
     public String toString() {
         return propertiesString + HiveUserData.HIVE_UD_DELIM
@@ -136,8 +123,7 @@ public class HiveUserData {
                 + delimiter + HiveUserData.HIVE_UD_DELIM
                 + colTypes + HiveUserData.HIVE_UD_DELIM
                 + skipHeader + HiveUserData.HIVE_UD_DELIM
-                + (hiveIndexes != null ? hiveIndexes.stream().map(String::valueOf).collect(Collectors.joining(",")) : "null") + HiveUserData.HIVE_UD_DELIM
-                + allColumnNames;
+                + (hiveIndexes != null ? hiveIndexes.stream().map(String::valueOf).collect(Collectors.joining(",")) : "null");
     }
 
 }

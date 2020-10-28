@@ -229,8 +229,7 @@ public class HiveUtilities {
                 toks[2],
                 toks[3],
                 Integer.parseInt(toks[4]),
-                indexes,
-                toks[6]);
+                indexes);
     }
 
     /**

@@ -148,14 +148,12 @@ public class HiveClientWrapper {
      * @param fragmenterClassName fragmenter class name
      * @param partData            partition data
      * @param hiveIndexes         the list of indices that we will retrieve from the Hive schema columns
-     * @param allColumnNames      the comma-separated list of column names defined in hive table
      * @return serialized representation of fragment-related attributes
      * @throws Exception when error occurred during serialization
      */
     public byte[] makeUserData(String fragmenterClassName,
                                HiveTablePartition partData,
-                               List<Integer> hiveIndexes,
-                               String allColumnNames) throws Exception {
+                               List<Integer> hiveIndexes) throws Exception {
 
         HiveUserData hiveUserData;
 
@@ -175,7 +173,7 @@ public class HiveClientWrapper {
             assertFileType(partData.storageDesc.getInputFormat(), partData);
         }
 
-        hiveUserData = new HiveUserData(propertiesString, partitionKeys, delimiter, colTypes, skipHeader, hiveIndexes, allColumnNames);
+        hiveUserData = new HiveUserData(propertiesString, partitionKeys, delimiter, colTypes, skipHeader, hiveIndexes);
 
         return hiveUserData.toString().getBytes();
     }

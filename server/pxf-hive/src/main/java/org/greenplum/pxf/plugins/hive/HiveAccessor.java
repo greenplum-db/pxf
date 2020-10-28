@@ -55,6 +55,7 @@ import java.util.List;
 import java.util.Properties;
 
 import static org.apache.hadoop.hive.metastore.api.hive_metastoreConstants.FILE_INPUT_FORMAT;
+import static org.apache.hadoop.hive.metastore.api.hive_metastoreConstants.META_TABLE_COLUMNS;
 import static org.apache.hadoop.hive.serde2.ColumnProjectionUtils.READ_ALL_COLUMNS;
 import static org.apache.hadoop.hive.serde2.ColumnProjectionUtils.READ_COLUMN_IDS_CONF_STR;
 import static org.apache.hadoop.hive.serde2.ColumnProjectionUtils.READ_COLUMN_NAMES_CONF_STR;
@@ -116,18 +117,20 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
      * {@link org.apache.hadoop.mapred.InputFormat}) and the Hive partition
      * fields
      *
-     * @param requestContext request context
+     * @param context request context
      * @throws RuntimeException if failed to create input format
      */
     @Override
-    public void initialize(RequestContext requestContext) {
-        super.initialize(requestContext);
+    public void initialize(RequestContext context) {
+        super.initialize(context);
         HiveUserData hiveUserData;
+        Properties properties;
         try {
             hiveUserData = HiveUtilities.parseHiveUserData(context);
+            properties = getSerdeProperties(hiveUserData.getPropertiesString());
             if (inputFormat == null) {
                 // TODO: serde properties should be in context.setMetadata
-                String inputFormatClassName = getSerdeProperties(hiveUserData.getPropertiesString()).getProperty(FILE_INPUT_FORMAT);
+                String inputFormatClassName = properties.getProperty(FILE_INPUT_FORMAT);
                 inputFormat = HiveDataFragmenter.makeInputFormat(inputFormatClassName, jobConf);
             }
         } catch (Exception e) {
@@ -137,7 +140,7 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
         initPartitionFields(hiveUserData.getPartitionKeys());
         skipHeaderCount = hiveUserData.getSkipHeader();
         hiveIndexes = hiveUserData.getHiveIndexes();
-        hiveColumnsString = hiveUserData.getAllColumnNames();
+        hiveColumnsString = properties.getProperty(META_TABLE_COLUMNS);
         hiveColumnTypesString = hiveUserData.getColTypes();
         context.setMetadata(hiveUserData);
     }

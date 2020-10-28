@@ -153,7 +153,6 @@ class HiveUserDataBuilder {
                 null,
                 null,
                 skipHeader,
-                null,
                 null);
     }
 
