@@ -213,6 +213,7 @@ public class HiveUtilities {
         try {
             Configuration configuration = context.getConfiguration();
             Path path = new Path(context.getDataSource());
+            // similar to OrcFile.createReader(path.getFileSystem(context.getConfiguration()), path);
             OrcFile.ReaderOptions opts = new OrcFile.ReaderOptions(configuration);
             opts.filesystem(path.getFileSystem(configuration));
             return new PxfReaderImpl(path, opts);

@@ -18,7 +18,7 @@ import java.io.IOException;
 public class PxfReaderImpl extends ReaderImpl
         implements Reader {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ReaderImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PxfReaderImpl.class);
 
     /**
      * Constructor that let's the user specify additional options.
