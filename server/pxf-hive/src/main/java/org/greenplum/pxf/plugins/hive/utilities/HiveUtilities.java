@@ -28,21 +28,15 @@ import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.ql.io.orc.OrcFile;
 import org.apache.hadoop.hive.ql.io.orc.Reader;
 import org.apache.hadoop.hive.serde.serdeConstants;
-import org.apache.hadoop.hive.serde2.Deserializer;
 import org.greenplum.pxf.api.UnsupportedTypeException;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.Metadata;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.EnumGpdbType;
-import org.greenplum.pxf.api.utilities.Utilities;
-import org.greenplum.pxf.plugins.hive.HiveUserData;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 
 /**
@@ -202,45 +196,6 @@ public class HiveUtilities {
                 }
                 break;
         }
-    }
-
-    /**
-     * The method parses raw user data into HiveUserData class
-     *
-     * @param context input data
-     * @return instance of HiveUserData class
-     * @throws IllegalArgumentException when incorrect number of tokens in Hive user data received
-     */
-    public static HiveUserData parseHiveUserData(RequestContext context) throws IllegalArgumentException {
-        String userData = new String(context.getFragmentUserData());
-        String[] toks = userData.split(HiveUserData.HIVE_UD_DELIM, HiveUserData.getNumOfTokens());
-
-        if (toks.length != (HiveUserData.getNumOfTokens())) {
-            throw new IllegalArgumentException("HiveInputFormatFragmenter expected "
-                    + HiveUserData.getNumOfTokens() + " tokens, but got " + toks.length);
-        }
-
-        String indexesStr = toks[1];
-        List<Integer> indexes = null;
-
-        if (indexesStr != null && !"null".equals(indexesStr)) {
-            indexes = Stream.of(indexesStr.split(","))
-                    .map(s -> "null".equals(s) ? null : Integer.parseInt(s))
-                    .collect(Collectors.toList());
-        }
-
-        return new HiveUserData(toks[0], indexes);
-    }
-
-    /**
-     * Creates an instance of a given serde type
-     *
-     * @param serdeClassName the name of the serde class
-     * @return instance of a given serde
-     * @throws Exception if an error occurs during the creation of SerDe instance
-     */
-    public static Deserializer createDeserializer(String serdeClassName) throws Exception {
-        return (Deserializer) Utilities.createAnyInstance(serdeClassName);
     }
 
     /**

@@ -98,7 +98,7 @@ public class HiveResolver extends HivePlugin implements Resolver {
     protected String serdeClassName;
     protected List<Integer> hiveIndexes;
     protected Properties metastoreProperties;
-    protected HiveParsedMetadata metadata;
+    protected HiveMetadata metadata;
 
     private int numberOfPartitions;
     private Map<String, OneField> partitionColumnNames;
@@ -690,7 +690,7 @@ public class HiveResolver extends HivePlugin implements Resolver {
     protected Deserializer getDeserializer() {
         if (d == null) {
             // HiveUserData is passed from accessor
-            metadata = (HiveParsedMetadata) context.getMetadata();
+            metadata = (HiveMetadata) context.getMetadata();
             if (metadata == null) {
                 throw new RuntimeException("No hive metadata detected in request context");
             }

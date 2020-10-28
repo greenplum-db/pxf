@@ -31,7 +31,9 @@ import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Arrays;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.Properties;
 
 import static org.apache.hadoop.hive.ql.io.sarg.ConvertAstToSearchArg.SARG_PUSHDOWN;
 import static org.junit.Assert.assertEquals;
@@ -43,14 +45,16 @@ public class HiveORCAccessorTest {
 
     @Before
     public void setup() throws Exception {
-        HiveUserData userData = new HiveUserData(null, Arrays.asList(0, 1));
+        Properties properties = new Properties();
+        properties.put("columns", "");
+
         context = new RequestContext();
         context.setConfig("default");
         context.setUser("test-user");
         context.setDataSource("foo");
         context.setProfileScheme("localfile");
         context.setFragmentMetadata(HdfsUtilities.prepareFragmentMetadata(0, 0, new String[]{"localhost"}));
-        context.setFragmentUserData(userData.toString().getBytes());
+        context.setFragmentUserData(serializeProperties(properties));
         context.getTupleDescription().add(new ColumnDescriptor("col1", 1, 1, "TEXT", null));
         context.getTupleDescription().add(new ColumnDescriptor("FOO", 1, 1, "TEXT", null));
         context.setAccessor(HiveORCAccessor.class.getName());
@@ -122,5 +126,11 @@ public class HiveORCAccessorTest {
         new Kryo().writeObject(out, sarg);
         out.close();
         return Base64.encodeBase64String(out.toBytes());
+    }
+
+    private byte[] serializeProperties(Properties properties) throws IOException {
+        ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+        properties.store(outStream, ""/* comments */);
+        return outStream.toString().getBytes();
     }
 }

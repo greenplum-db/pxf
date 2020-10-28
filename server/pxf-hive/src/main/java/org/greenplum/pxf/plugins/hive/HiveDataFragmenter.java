@@ -164,9 +164,8 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
         hiveClientWrapper.getSchema(tbl, metadata);
         boolean hasComplexTypes = hiveClientWrapper.hasComplexTypes(metadata);
 
-        // Keep a list of indices from the Hive schema columns that we need to
-        // retrieve
-        List<Integer> hiveIndexes = verifySchema(tbl);
+        // make sure the schema is valid
+        verifySchema(tbl);
 
         List<Partition> partitions;
         String filterStringForHive = "";
@@ -237,7 +236,7 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
 
         if (partitions.isEmpty()) {
             props = getSchema(tbl);
-            fetchMetaDataForSimpleTable(descTable, props, hasComplexTypes, hiveIndexes);
+            fetchMetaDataForSimpleTable(descTable, props, hasComplexTypes);
         } else {
             List<FieldSchema> partitionKeys = tbl.getPartitionKeys();
 
@@ -248,8 +247,7 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
                         tblDesc.getPath(), tblDesc.getName(),
                         partitionKeys);
                 fetchMetaDataForPartitionedTable(descPartition, props, partition,
-                        partitionKeys, tblDesc.getName(), hasComplexTypes,
-                        hiveIndexes);
+                        partitionKeys, tblDesc.getName(), hasComplexTypes);
             }
         }
     }
@@ -287,20 +285,17 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
 
     private void fetchMetaDataForSimpleTable(StorageDescriptor stdsc,
                                              Properties props,
-                                             boolean hasComplexTypes,
-                                             List<Integer> hiveIndexes) throws Exception {
-        fetchMetaDataForSimpleTable(stdsc, props, null, hasComplexTypes,
-                hiveIndexes);
+                                             boolean hasComplexTypes) throws Exception {
+        fetchMetaDataForSimpleTable(stdsc, props, null, hasComplexTypes);
     }
 
     private void fetchMetaDataForSimpleTable(StorageDescriptor stdsc,
                                              Properties props,
                                              String tableName,
-                                             boolean hasComplexTypes,
-                                             List<Integer> hiveIndexes)
+                                             boolean hasComplexTypes)
             throws Exception {
         fetchMetaData(new HiveTablePartition(stdsc, props, null, null,
-                tableName), hasComplexTypes, hiveIndexes);
+                tableName), hasComplexTypes);
     }
 
     private void fetchMetaDataForPartitionedTable(StorageDescriptor stdsc,
@@ -308,17 +303,14 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
                                                   Partition partition,
                                                   List<FieldSchema> partitionKeys,
                                                   String tableName,
-                                                  boolean hasComplexTypes,
-                                                  List<Integer> hiveIndexes)
+                                                  boolean hasComplexTypes)
             throws Exception {
-        fetchMetaData(new HiveTablePartition(stdsc, props, partition,
-                partitionKeys, tableName), hasComplexTypes, hiveIndexes);
+        fetchMetaData(new HiveTablePartition(stdsc, props, partition, partitionKeys, tableName),
+                hasComplexTypes);
     }
 
     /* Fills a table partition */
-    private void fetchMetaData(HiveTablePartition tablePartition,
-                               boolean hasComplexTypes,
-                               List<Integer> hiveIndexes)
+    private void fetchMetaData(HiveTablePartition tablePartition, boolean hasComplexTypes)
             throws Exception {
         InputFormat<?, ?> fformat = makeInputFormat(
                 tablePartition.storageDesc.getInputFormat(), jobConf);
@@ -353,10 +345,7 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
             String filepath = fsp.getPath().toString();
 
             byte[] locationInfo = HdfsUtilities.prepareFragmentMetadata(fsp);
-            byte[] userData = hiveClientWrapper.makeUserData(
-                    fragmenterForProfile,
-                    tablePartition,
-                    hiveIndexes);
+            byte[] userData = hiveClientWrapper.makeUserData(fragmenterForProfile, tablePartition);
             Fragment fragment = new Fragment(filepath, hosts, locationInfo,
                     userData, profile);
             fragments.add(fragment);

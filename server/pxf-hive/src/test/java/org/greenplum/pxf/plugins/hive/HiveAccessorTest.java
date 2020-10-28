@@ -6,8 +6,6 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.Reporter;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
-import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -27,33 +25,31 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({HiveAccessor.class, HiveUtilities.class, HdfsUtilities.class, HiveDataFragmenter.class})
+@PrepareForTest({HiveAccessor.class, HiveDataFragmenter.class})
 public class HiveAccessorTest {
 
-    @Mock RequestContext requestContext;
     @Mock InputFormat inputFormat;
     @Mock RecordReader<Object, Object> reader;
 
+    RequestContext context;
     HiveAccessor accessor;
-    HiveUserDataBuilder userDataBuilder;
     Properties properties;
 
     @Before
     public void setup() throws Exception {
         properties = new Properties();
-        userDataBuilder = new HiveUserDataBuilder()
-                .withProperties(properties);
-
-        PowerMockito.mockStatic(HiveUtilities.class);
-        PowerMockito.mockStatic(HdfsUtilities.class);
+        properties.put("columns", "");
 
         PowerMockito.mockStatic(HiveDataFragmenter.class);
 
         when(inputFormat.getRecordReader(any(InputSplit.class), any(JobConf.class), any(Reporter.class))).thenReturn(reader);
-        PowerMockito.when(requestContext.getAccessor()).thenReturn(HiveORCAccessor.class.getName());
-        PowerMockito.when(requestContext.getConfig()).thenReturn("default");
-        PowerMockito.when(requestContext.getUser()).thenReturn("test-user");
-        PowerMockito.when(requestContext.getProfileScheme()).thenReturn("localfile");
+
+        context = new RequestContext();
+        context.setAccessor(HiveORCAccessor.class.getName());
+        context.setConfig("default");
+        context.setUser("test-user");
+        context.setProfileScheme("localfile");
+        context.setDataSource("/foo/bar");
 
         @SuppressWarnings("unchecked")
         OngoingStubbing ongoingStubbing = when(HiveDataFragmenter.makeInputFormat(any(String.class), any(JobConf.class))).thenReturn(inputFormat);
@@ -62,12 +58,10 @@ public class HiveAccessorTest {
     @Test
     public void testSkipHeaderCountGreaterThanZero() throws Exception {
         properties.put("skip.header.line.count", "2");
-        HiveUserData userData = userDataBuilder.build();
-        PowerMockito.when(HiveUtilities.parseHiveUserData(requestContext)).thenReturn(userData);
-        when(requestContext.hasFilter()).thenReturn(false);
+        context.setFragmentUserData(serializeProperties(properties));
 
         accessor = new HiveAccessor();
-        accessor.initialize(requestContext);
+        accessor.initialize(context);
         accessor.openForRead();
         accessor.readNextObject();
 
@@ -77,13 +71,10 @@ public class HiveAccessorTest {
     @Test
     public void testSkipHeaderCountGreaterThanZeroFirstFragment() throws Exception {
         properties.put("skip.header.line.count", "2");
-        HiveUserData userData = userDataBuilder.build();
-        PowerMockito.when(HiveUtilities.parseHiveUserData(requestContext)).thenReturn(userData);
-        when(requestContext.hasFilter()).thenReturn(false);
-        when(requestContext.getFragmentIndex()).thenReturn(0);
+        context.setFragmentUserData(serializeProperties(properties));
 
         accessor = new HiveAccessor();
-        accessor.initialize(requestContext);
+        accessor.initialize(context);
         accessor.openForRead();
         accessor.readNextObject();
 
@@ -93,13 +84,11 @@ public class HiveAccessorTest {
     @Test
     public void testSkipHeaderCountGreaterThanZeroNotFirstFragment() throws Exception {
         properties.put("skip.header.line.count", "2");
-        HiveUserData userData = userDataBuilder.build();
-        PowerMockito.when(HiveUtilities.parseHiveUserData(requestContext)).thenReturn(userData);
-        when(requestContext.hasFilter()).thenReturn(false);
-        when(requestContext.getFragmentIndex()).thenReturn(2);
+        context.setFragmentIndex(2);
+        context.setFragmentUserData(serializeProperties(properties));
 
         accessor = new HiveAccessor();
-        accessor.initialize(requestContext);
+        accessor.initialize(context);
         accessor.openForRead();
         accessor.readNextObject();
 
@@ -108,13 +97,10 @@ public class HiveAccessorTest {
 
     @Test
     public void testSkipHeaderCountZeroFirstFragment() throws Exception {
-        HiveUserData userData = userDataBuilder.build();
-        PowerMockito.when(HiveUtilities.parseHiveUserData(requestContext)).thenReturn(userData);
-        when(requestContext.hasFilter()).thenReturn(false);
-        when(requestContext.getFragmentIndex()).thenReturn(0);
+        context.setFragmentUserData(serializeProperties(properties));
 
         accessor = new HiveAccessor();
-        accessor.initialize(requestContext);
+        accessor.initialize(context);
         accessor.openForRead();
         accessor.readNextObject();
 
@@ -124,37 +110,19 @@ public class HiveAccessorTest {
     @Test
     public void testSkipHeaderCountNegativeFirstFragment() throws Exception {
         properties.put("skip.header.line.count", "-1");
-        HiveUserData userData = userDataBuilder.build();
-        PowerMockito.when(HiveUtilities.parseHiveUserData(requestContext)).thenReturn(userData);
-        when(requestContext.hasFilter()).thenReturn(false);
-        when(requestContext.getFragmentIndex()).thenReturn(0);
+        context.setFragmentUserData(serializeProperties(properties));
 
         accessor = new HiveAccessor();
-        accessor.initialize(requestContext);
+        accessor.initialize(context);
         accessor.openForRead();
         accessor.readNextObject();
 
         verify(reader, times(1)).next(any(), any());
     }
-}
 
-class HiveUserDataBuilder {
-    private Properties properties;
-
-    public HiveUserData build() throws IOException {
-        String propertiesString = null;
-
-        if (properties != null) {
-            ByteArrayOutputStream outStream = new ByteArrayOutputStream();
-            properties.store(outStream, ""/* comments */);
-            propertiesString = outStream.toString();
-        }
-
-        return new HiveUserData(propertiesString, null);
-    }
-
-    public HiveUserDataBuilder withProperties(Properties properties) {
-        this.properties = properties;
-        return this;
+    private byte[] serializeProperties(Properties properties) throws IOException {
+        ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+        properties.store(outStream, ""/* comments */);
+        return outStream.toString().getBytes();
     }
 }

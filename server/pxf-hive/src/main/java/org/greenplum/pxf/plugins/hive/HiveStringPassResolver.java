@@ -75,8 +75,8 @@ public class HiveStringPassResolver extends HiveResolver {
      */
     private void ensureInitialized() {
         if (metadata != null) return;
-        // HiveParsedMetadata is passed from accessor
-        metadata = (HiveParsedMetadata) context.getMetadata();
+        // HiveMetadata is passed from accessor
+        metadata = (HiveMetadata) context.getMetadata();
         if (metadata == null) {
             throw new RuntimeException("No hive metadata detected in request context");
         }

@@ -21,7 +21,6 @@ package org.greenplum.pxf.plugins.hive;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
-import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.io.IOConstants;
 import org.apache.hadoop.hive.ql.io.orc.Reader;
 import org.apache.hadoop.hive.serde.serdeConstants;
@@ -54,11 +53,10 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
 import static org.apache.hadoop.hive.metastore.api.hive_metastoreConstants.FILE_INPUT_FORMAT;
@@ -90,6 +88,7 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
     private List<HivePartition> partitions;
     private static final String HIVE_DEFAULT_PARTITION = "__HIVE_DEFAULT_PARTITION__";
     private int skipHeaderCount;
+    protected List<Integer> hiveIndexes;
     private String hiveColumnsString;
     private String hiveColumnTypesString;
 
@@ -125,12 +124,10 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
     @Override
     public void initialize(RequestContext context) {
         super.initialize(context);
-        HiveParsedMetadata metadata;
-        HiveUserData hiveUserData;
+        HiveMetadata metadata;
         Properties properties;
         try {
-            hiveUserData = HiveUtilities.parseHiveUserData(context);
-            properties = getSerdeProperties(hiveUserData.getPropertiesString());
+            properties = getSerdeProperties(new String(context.getFragmentUserData()));
             if (inputFormat == null) {
                 String inputFormatClassName = properties.getProperty(FILE_INPUT_FORMAT);
                 inputFormat = HiveDataFragmenter.makeInputFormat(inputFormatClassName, jobConf);
@@ -141,11 +138,11 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
 
         initPartitionFields(properties);
         skipHeaderCount = Integer.parseInt(properties.getProperty(HEADER_COUNT, "0"));
-        List<Integer> hiveIndexes = buildHiveIndexes(properties);
+        hiveIndexes = buildHiveIndexes(properties);
         hiveColumnsString = properties.getProperty(META_TABLE_COLUMNS);
         hiveColumnTypesString = properties.getProperty(META_TABLE_COLUMN_TYPES);
 
-        metadata = new HiveParsedMetadata(properties, partitions, hiveIndexes);
+        metadata = new HiveMetadata(properties, partitions, hiveIndexes);
 
         context.setMetadata(metadata);
     }
@@ -275,22 +272,19 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
     private List<Integer> buildHiveIndexes(Properties properties) {
         List<Integer> indexes = new ArrayList<>();
 
-        Set<String> columnAndPartitionNames =
-                Stream.concat(hiveColumns.stream(), hivePartitions.stream())
-                        .map(FieldSchema::getName)
-                        .collect(Collectors.toSet());
+        String delimiter = properties.getProperty(serdeConstants.COLUMN_NAME_DELIMITER, ",");
+        String columns = Objects.requireNonNull(properties.getProperty(META_TABLE_COLUMNS), "The \"columns\" property cannot be null");
+        List<String> hiveColumns = Arrays.asList(columns.trim().split(delimiter));
 
         Map<String, Integer> columnNameToColsIndexMap =
                 IntStream.range(0, hiveColumns.size())
                         .boxed()
-                        .collect(Collectors.toMap(i -> hiveColumns.get(i).getName(), i -> i));
+                        .collect(Collectors.toMap(hiveColumns::get, i -> i));
 
         for (ColumnDescriptor cd : context.getTupleDescription()) {
-
             // The index of the column on the Hive schema
-            Integer index =
-                    defaultIfNull(columnNameToColsIndexMap.get(cd.columnName()),
-                            columnNameToColsIndexMap.get(cd.columnName().toLowerCase()));
+            Integer index = defaultIfNull(columnNameToColsIndexMap.get(cd.columnName()),
+                    columnNameToColsIndexMap.get(cd.columnName().toLowerCase()));
             indexes.add(index);
         }
         return indexes;

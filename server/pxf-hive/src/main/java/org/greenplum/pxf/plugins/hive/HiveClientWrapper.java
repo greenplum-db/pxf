@@ -147,33 +147,25 @@ public class HiveClientWrapper {
      *
      * @param fragmenterClassName fragmenter class name
      * @param partData            partition data
-     * @param hiveIndexes         the list of indices that we will retrieve from the Hive schema columns
      * @return serialized representation of fragment-related attributes
      * @throws Exception when error occurred during serialization
      */
-    public byte[] makeUserData(String fragmenterClassName,
-                               HiveTablePartition partData,
-                               List<Integer> hiveIndexes) throws Exception {
-
-        HiveUserData hiveUserData;
+    public byte[] makeUserData(String fragmenterClassName, HiveTablePartition partData)
+            throws Exception {
 
         if (fragmenterClassName == null) {
             throw new IllegalArgumentException("No fragmenter provided.");
         }
 
         Class<?> fragmenterClass = Class.forName(fragmenterClassName);
-
-        Properties properties = partData.properties;
-        addDelimiterInformation(properties, partData.storageDesc);
-        addPartitionValuesInformation(properties, partData);
-        String propertiesString = serializeProperties(properties);
-
         if (HiveInputFormatFragmenter.class.isAssignableFrom(fragmenterClass)) {
             assertFileType(partData.storageDesc.getInputFormat(), partData);
         }
 
-        hiveUserData = new HiveUserData(propertiesString, hiveIndexes);
-        return hiveUserData.toString().getBytes();
+        Properties properties = partData.properties;
+        addDelimiterInformation(properties, partData.storageDesc);
+        addPartitionValuesInformation(properties, partData);
+        return serializeProperties(properties).getBytes();
     }
 
     /**
