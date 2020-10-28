@@ -43,7 +43,7 @@ public class HiveORCAccessorTest {
 
     @Before
     public void setup() throws Exception {
-        HiveUserData userData = new HiveUserData(null, HiveDataFragmenter.HIVE_NO_PART_TBL, "1", Arrays.asList(0, 1));
+        HiveUserData userData = new HiveUserData(null, HiveDataFragmenter.HIVE_NO_PART_TBL, Arrays.asList(0, 1));
         context = new RequestContext();
         context.setConfig("default");
         context.setUser("test-user");

@@ -152,11 +152,7 @@ class HiveUserDataBuilder {
             propertiesString = outStream.toString();
         }
 
-        return new HiveUserData(
-                propertiesString,
-                partitionKeys,
-                null,
-                null);
+        return new HiveUserData(propertiesString, partitionKeys, null);
     }
 
     public HiveUserDataBuilder withPartitionKeys(String s) {

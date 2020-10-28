@@ -73,7 +73,9 @@ import static org.apache.hadoop.hive.serde2.ColumnProjectionUtils.READ_COLUMN_NA
  * filtering will be done only for Hive tables that are partitioned.
  */
 public class HiveAccessor extends HdfsSplittableDataAccessor {
+
     private static final Logger LOG = LoggerFactory.getLogger(HiveAccessor.class);
+
     private List<HivePartition> partitions;
     private static final String HIVE_DEFAULT_PARTITION = "__HIVE_DEFAULT_PARTITION__";
     private int skipHeaderCount;

@@ -61,6 +61,7 @@ import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
+import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,10 +85,13 @@ import static org.apache.hadoop.hive.serde.serdeConstants.SERIALIZATION_LIB;
  * using Hadoop's Hive serialization framework.
  */
 public class HiveResolver extends HivePlugin implements Resolver {
+
     private static final Logger LOG = LoggerFactory.getLogger(HiveResolver.class);
+
     protected static final String MAPKEY_DELIM = ":";
     protected static final String COLLECTION_DELIM = ",";
     protected static final String nullChar = "\\N";
+
     protected char delimiter;
     protected String collectionDelim;
     protected String mapkeyDelim;
@@ -655,10 +659,7 @@ public class HiveResolver extends HivePlugin implements Resolver {
 
         if (userDelim == null) {
             /* No DELIMITER in URL, try to get it from fragment's user data*/
-            if (hiveUserData.getDelimiter() == null) {
-                throw new IllegalArgumentException("DELIMITER is a required option");
-            }
-            delimiter = (char) Integer.valueOf(hiveUserData.getDelimiter()).intValue();
+            delimiter = (char) HiveUtilities.getDelimiterCode(metastoreProperties);
         } else {
             final int VALID_LENGTH = 1;
             final int VALID_LENGTH_HEX = 4;

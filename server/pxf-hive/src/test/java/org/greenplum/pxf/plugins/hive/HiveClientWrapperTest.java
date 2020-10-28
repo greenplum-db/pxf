@@ -71,32 +71,6 @@ public class HiveClientWrapperTest {
     }
 
     @Test
-    public void getDelimiterCode() {
-
-        //Default delimiter code should be 44(comma)
-        Integer delimiterCode = hiveClientWrapper.getDelimiterCode(null);
-        char defaultDelim = ',';
-        assertEquals((int) delimiterCode, (int) defaultDelim);
-
-        //Some serdes use FIELD_DELIM key
-        char expectedDelim = '%';
-        StorageDescriptor sd = new StorageDescriptor();
-        SerDeInfo si = new SerDeInfo();
-        si.setParameters(Collections.singletonMap(serdeConstants.FIELD_DELIM, String.valueOf(expectedDelim)));
-        sd.setSerdeInfo(si);
-        delimiterCode = hiveClientWrapper.getDelimiterCode(sd);
-        assertEquals((int) delimiterCode, (int) expectedDelim);
-
-        //Some serdes use SERIALIZATION_FORMAT key
-        sd = new StorageDescriptor();
-        si = new SerDeInfo();
-        si.setParameters(Collections.singletonMap(serdeConstants.SERIALIZATION_FORMAT, String.valueOf((int) expectedDelim)));
-        sd.setSerdeInfo(si);
-        delimiterCode = hiveClientWrapper.getDelimiterCode(sd);
-        assertEquals((int) delimiterCode, (int) expectedDelim);
-    }
-
-    @Test
     public void parseTableQualifiedNameTooManyQualifiers() {
         String name = "too.many.parents";
         String errorMsg = surroundByQuotes(name) + " is not a valid Hive table name. "

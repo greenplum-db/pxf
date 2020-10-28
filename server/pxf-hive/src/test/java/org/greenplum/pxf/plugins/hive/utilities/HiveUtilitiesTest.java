@@ -26,11 +26,14 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 import java.util.Arrays;
+import java.util.Properties;
 
 import com.google.common.base.Joiner;
 
+import org.apache.hadoop.hive.serde.serdeConstants;
 import org.greenplum.pxf.api.io.DataType;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
+import org.greenplum.pxf.plugins.hive.HiveResolver;
 import org.junit.Test;
 import org.greenplum.pxf.api.model.Metadata;
 import org.greenplum.pxf.api.UnsupportedTypeException;
@@ -314,7 +317,7 @@ public class HiveUtilitiesTest {
     }
 
     @Test
-    public void mapHiveTypeComplex() throws Exception {
+    public void mapHiveTypeComplex() {
         /*
          * array<dataType> -> text
          * map<keyDataType, valueDataType> -> text
@@ -330,5 +333,27 @@ public class HiveUtilitiesTest {
             assertEquals(expectedType, result.getType().getTypeName());
             assertNull(result.getModifiers());
         }
+    }
+
+    @Test
+    public void getDelimiterCode() {
+        Properties properties = new Properties();
+
+        //Default delimiter code should be 44(comma)
+        int delimiterCode = HiveUtilities.getDelimiterCode(properties);
+        char defaultDelim = ',';
+        assertEquals(delimiterCode, (int) defaultDelim);
+
+        //Some serdes use FIELD_DELIM key
+        char expectedDelim = '%';
+        properties.put(serdeConstants.FIELD_DELIM, String.valueOf(expectedDelim));
+        delimiterCode = HiveUtilities.getDelimiterCode(properties);
+        assertEquals(delimiterCode, (int) expectedDelim);
+
+        //Some serdes use SERIALIZATION_FORMAT key
+        properties = new Properties();
+        properties.put(serdeConstants.SERIALIZATION_FORMAT, String.valueOf((int) expectedDelim));
+        delimiterCode = HiveUtilities.getDelimiterCode(properties);
+        assertEquals(delimiterCode, (int) expectedDelim);
     }
 }

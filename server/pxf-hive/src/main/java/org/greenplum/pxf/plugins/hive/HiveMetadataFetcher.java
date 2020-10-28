@@ -35,6 +35,7 @@ import org.greenplum.pxf.api.model.Metadata;
 import org.greenplum.pxf.api.model.MetadataFetcher;
 import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.greenplum.pxf.plugins.hive.utilities.ProfileFactory;
 
 import java.util.ArrayList;
@@ -52,9 +53,9 @@ public class HiveMetadataFetcher extends BasePlugin implements MetadataFetcher {
     private static final String DELIM_FIELD = "DELIMITER";
 
     private static final Log LOG = LogFactory.getLog(HiveMetadataFetcher.class);
-    private IMetaStoreClient client;
-    private JobConf jobConf;
-    private HiveClientWrapper hiveClientWrapper;
+    private final IMetaStoreClient client;
+    private final JobConf jobConf;
+    private final HiveClientWrapper hiveClientWrapper;
 
     public HiveMetadataFetcher(RequestContext context) {
         this(context, BaseConfigurationFactory.getInstance(), HiveClientWrapper.getInstance());
@@ -121,8 +122,8 @@ public class HiveMetadataFetcher extends BasePlugin implements MetadataFetcher {
                 }
                 metadata.setOutputFormats(formats);
                 Map<String, String> outputParameters = new HashMap<>();
-                Integer delimiterCode = hiveClientWrapper.getDelimiterCode(tbl.getSd());
-                outputParameters.put(DELIM_FIELD, delimiterCode.toString());
+                int delimiterCode = HiveUtilities.getDelimiterCode(tbl.getSd());
+                outputParameters.put(DELIM_FIELD, Integer.toString(delimiterCode));
                 metadata.setOutputParameters(outputParameters);
             } catch (UnsupportedTypeException | UnsupportedOperationException e) {
                 if (ignoreErrors) {

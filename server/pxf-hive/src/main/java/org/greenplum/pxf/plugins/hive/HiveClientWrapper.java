@@ -46,7 +46,6 @@ public class HiveClientWrapper {
     private static final Logger LOG = LoggerFactory.getLogger(HiveClientWrapper.class);
 
     private static final String WILDCARD = "*";
-    private static final int DEFAULT_DELIMITER_CODE = 44;
 
     private static final String STR_RC_FILE_INPUT_FORMAT = "org.apache.hadoop.hive.ql.io.RCFileInputFormat";
     private static final String STR_TEXT_FILE_INPUT_FORMAT = "org.apache.hadoop.mapred.TextInputFormat";
@@ -163,16 +162,16 @@ public class HiveClientWrapper {
 
         Class<?> fragmenterClass = Class.forName(fragmenterClassName);
 
-        String propertiesString = serializeProperties(partData.properties);
+        Properties properties = partData.properties;
+        addDelimiterInformation(properties, partData.storageDesc);
         String partitionKeys = serializePartitionKeys(partData);
-        String delimiter = getDelimiterCode(partData.storageDesc).toString();
+        String propertiesString = serializeProperties(properties);
 
         if (HiveInputFormatFragmenter.class.isAssignableFrom(fragmenterClass)) {
             assertFileType(partData.storageDesc.getInputFormat(), partData);
         }
 
-        hiveUserData = new HiveUserData(propertiesString, partitionKeys, delimiter, hiveIndexes);
-
+        hiveUserData = new HiveUserData(propertiesString, partitionKeys, hiveIndexes);
         return hiveUserData.toString().getBytes();
     }
 
@@ -340,28 +339,20 @@ public class HiveClientWrapper {
     }
 
     /**
-     * The method which extracts field delimiter from storage descriptor.
-     * When unable to extract delimiter from storage descriptor, default value is used
+     * Adds field delimiter information to the properties object
      *
-     * @param sd StorageDescriptor of table/partition
-     * @return ASCII code of delimiter
+     * @param properties the properties
+     * @param sd         the storage descriptor
      */
-    public Integer getDelimiterCode(StorageDescriptor sd) {
-        Integer delimiterCode;
-
+    private void addDelimiterInformation(Properties properties, StorageDescriptor sd) {
         String delimiter = getSerdeParameter(sd, serdeConstants.FIELD_DELIM);
         if (delimiter != null) {
-            delimiterCode = (int) delimiter.charAt(0);
-            return delimiterCode;
+            properties.put(serdeConstants.FIELD_DELIM, delimiter);
         }
-
         delimiter = getSerdeParameter(sd, serdeConstants.SERIALIZATION_FORMAT);
         if (delimiter != null) {
-            delimiterCode = Integer.parseInt(delimiter);
-            return delimiterCode;
+            properties.put(serdeConstants.SERIALIZATION_FORMAT, delimiter);
         }
-
-        return DEFAULT_DELIMITER_CODE;
     }
 
     private String getSerdeParameter(StorageDescriptor sd, String parameterKey) {
@@ -369,7 +360,6 @@ public class HiveClientWrapper {
         if (sd != null && sd.getSerdeInfo() != null && sd.getSerdeInfo().getParameters() != null && sd.getSerdeInfo().getParameters().get(parameterKey) != null) {
             parameterValue = sd.getSerdeInfo().getParameters().get(parameterKey);
         }
-
         return parameterValue;
     }
 

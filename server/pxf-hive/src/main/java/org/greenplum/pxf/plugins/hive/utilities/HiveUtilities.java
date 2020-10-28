@@ -24,8 +24,10 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
+import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.ql.io.orc.OrcFile;
 import org.apache.hadoop.hive.ql.io.orc.Reader;
+import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.hive.serde2.Deserializer;
 import org.greenplum.pxf.api.UnsupportedTypeException;
 import org.greenplum.pxf.api.io.DataType;
@@ -37,6 +39,8 @@ import org.greenplum.pxf.plugins.hive.HiveUserData;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -46,6 +50,8 @@ import java.util.stream.Stream;
  * and interacting with Hive.
  */
 public class HiveUtilities {
+
+    private static final int DEFAULT_DELIMITER_CODE = 44;
 
     /**
      * Checks if hive type is supported, and if so return its matching GPDB
@@ -214,7 +220,7 @@ public class HiveUtilities {
                     + HiveUserData.getNumOfTokens() + " tokens, but got " + toks.length);
         }
 
-        String indexesStr = toks[3];
+        String indexesStr = toks[2];
         List<Integer> indexes = null;
 
         if (indexesStr != null && !"null".equals(indexesStr)) {
@@ -226,7 +232,6 @@ public class HiveUtilities {
         return new HiveUserData(
                 toks[0],
                 toks[1],
-                toks[2],
                 indexes);
     }
 
@@ -254,5 +259,50 @@ public class HiveUtilities {
         } catch (Exception e) {
             throw new RuntimeException("Exception while getting orc reader", e);
         }
+    }
+
+    /**
+     * The method which extracts field delimiter from storage descriptor.
+     * When unable to extract delimiter from storage descriptor, default value is used
+     *
+     * @param sd StorageDescriptor of table/partition
+     * @return ASCII code of delimiter
+     */
+    public static int getDelimiterCode(StorageDescriptor sd) {
+        if (sd != null && sd.getSerdeInfo() != null && sd.getSerdeInfo().getParameters() != null) {
+            Map<String,String> parameters = sd.getSerdeInfo().getParameters();
+            String delimiter = parameters.get(serdeConstants.FIELD_DELIM);
+            if (delimiter != null) {
+                return delimiter.charAt(0);
+            }
+
+            delimiter = parameters.get(serdeConstants.SERIALIZATION_FORMAT);
+            if (delimiter != null) {
+                return Integer.parseInt(delimiter);
+            }
+        }
+
+        return DEFAULT_DELIMITER_CODE;
+    }
+
+    /**
+     * The method which extracts field delimiter from the metastore properties.
+     * When unable to extract delimiter from storage descriptor, default value is used
+     *
+     * @param properties the properties that we received from the fragmenter
+     * @return ASCII code of delimiter
+     */
+    public static int getDelimiterCode(Properties properties) {
+        String delimiter = properties.getProperty(serdeConstants.FIELD_DELIM);
+        if (delimiter != null) {
+            return delimiter.charAt(0);
+        }
+
+        delimiter = properties.getProperty(serdeConstants.SERIALIZATION_FORMAT);
+        if (delimiter != null) {
+            return Integer.parseInt(delimiter);
+        }
+
+        return DEFAULT_DELIMITER_CODE;
     }
 }
