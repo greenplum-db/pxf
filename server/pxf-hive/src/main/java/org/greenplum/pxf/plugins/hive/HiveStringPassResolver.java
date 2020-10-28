@@ -25,6 +25,7 @@ import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.RequestContext;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
@@ -38,15 +39,10 @@ public class HiveStringPassResolver extends HiveResolver {
     private StringBuilder parts;
 
     @Override
-    void parseUserData(RequestContext context) {
+    void parseUserData(RequestContext context) throws IOException {
         super.parseUserData(context);
         parseDelimiterChar(context);
         parts = new StringBuilder();
-
-        /* Needed only for GPDBWritable format*/
-        if (context.getOutputFormat() != OutputFormat.GPDBWritable) {
-            propsString = null;
-        }
     }
 
     @Override

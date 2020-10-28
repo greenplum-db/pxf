@@ -75,7 +75,7 @@ public class HiveColumnarSerdeResolver extends HiveResolver {
 
     /* read the data supplied by the fragmenter: inputformat name, serde name, partition keys */
     @Override
-    void parseUserData(RequestContext context) {
+    void parseUserData(RequestContext context) throws IOException {
         super.parseUserData(context);
         partitionColumnNames = new HashMap<>();
         parseDelimiterChar(context);

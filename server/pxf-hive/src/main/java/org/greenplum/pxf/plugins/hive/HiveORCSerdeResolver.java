@@ -35,24 +35,16 @@ import java.util.Properties;
  */
 public class HiveORCSerdeResolver extends HiveResolver {
     private static final Log LOG = LogFactory.getLog(HiveORCSerdeResolver.class);
-    private String typesString;
-
-    /* read the data supplied by the fragmenter: inputformat name, serde name, partition keys */
-    @Override
-    void parseUserData(RequestContext context) {
-        super.parseUserData(context);
-        typesString = hiveUserData.getColTypes();
-    }
 
     @Override
-    protected Properties getSerdeProperties() throws IOException {
+    protected Properties getSerdeProperties(String propsString) throws IOException {
         int numberOfDataColumns = context.getColumns() - getNumberOfPartitions();
 
         LOG.debug("Serde number of columns is " + numberOfDataColumns);
 
         StringBuilder columnNames = new StringBuilder(numberOfDataColumns * 2); // column + delimiter
         StringBuilder columnTypes = new StringBuilder(numberOfDataColumns * 2); // column + delimiter
-        String[] cols = typesString.split(":");
+        String[] cols = hiveUserData.getColTypes().split(":");
         String[] hiveColTypes = new String[cols.length];
         parseColTypes(cols, hiveColTypes);
 
@@ -75,7 +67,7 @@ public class HiveORCSerdeResolver extends HiveResolver {
             columnNames.append(columnName);
             columnTypes.append(columnType);
         }
-        Properties properties = super.getSerdeProperties();
+        Properties properties = super.getSerdeProperties(propsString);
         properties.put(serdeConstants.LIST_COLUMNS, columnNames.toString());
         properties.put(serdeConstants.LIST_COLUMN_TYPES, columnTypes.toString());
         return properties;

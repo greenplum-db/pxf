@@ -166,7 +166,6 @@ public class HiveClientWrapper {
         Class<?> fragmenterClass = Class.forName(fragmenterClassName);
 
         String inputFormatName = partData.storageDesc.getInputFormat();
-        String serdeClassName = partData.storageDesc.getSerdeInfo().getSerializationLib();
         String propertiesString = serializeProperties(partData.properties);
         String partitionKeys = serializePartitionKeys(partData);
         String delimiter = getDelimiterCode(partData.storageDesc).toString();
@@ -177,7 +176,7 @@ public class HiveClientWrapper {
             assertFileType(inputFormatName, partData);
         }
 
-        hiveUserData = new HiveUserData(inputFormatName, serdeClassName, propertiesString, partitionKeys, delimiter, colTypes, skipHeader, hiveIndexes, allColumnNames);
+        hiveUserData = new HiveUserData(inputFormatName, propertiesString, partitionKeys, delimiter, colTypes, skipHeader, hiveIndexes, allColumnNames);
 
         return hiveUserData.toString().getBytes();
     }

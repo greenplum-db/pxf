@@ -77,6 +77,8 @@ import java.util.Properties;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static org.apache.hadoop.hive.serde.serdeConstants.SERIALIZATION_LIB;
+
 /**
  * Class HiveResolver handles deserialization of records that were serialized
  * using Hadoop's Hive serialization framework.
@@ -91,10 +93,10 @@ public class HiveResolver extends HivePlugin implements Resolver {
     protected String mapkeyDelim;
     protected Deserializer d;
     protected String serdeClassName;
-    protected String propsString;
     protected String partitionKeys;
     protected List<Integer> hiveIndexes;
     protected HiveUserData hiveUserData;
+    protected Properties metastoreProperties;
 
     private int numberOfPartitions;
     private Map<String, OneField> partitionColumnNames;
@@ -138,9 +140,9 @@ public class HiveResolver extends HivePlugin implements Resolver {
     }
 
     /* Parses user data string (received from fragmenter). */
-    void parseUserData(RequestContext context) {
-        serdeClassName = hiveUserData.getSerdeClassName();
-        propsString = hiveUserData.getPropertiesString();
+    void parseUserData(RequestContext context) throws IOException {
+        metastoreProperties = getSerdeProperties(hiveUserData.getPropertiesString());
+        serdeClassName = metastoreProperties.getProperty(SERIALIZATION_LIB);
         partitionKeys = hiveUserData.getPartitionKeys();
         collectionDelim = StringUtils.defaultString(context.getOption("COLLECTION_DELIM"), COLLECTION_DELIM);
         mapkeyDelim = StringUtils.defaultString(context.getOption("MAPKEY_DELIM"), MAPKEY_DELIM);
@@ -689,7 +691,7 @@ public class HiveResolver extends HivePlugin implements Resolver {
         }
     }
 
-    protected Properties getSerdeProperties() throws IOException {
+    protected Properties getSerdeProperties(String propsString) throws IOException {
         Properties serdeProperties = new Properties();
         if (propsString != null) {
             ByteArrayInputStream inStream = new ByteArrayInputStream(propsString.getBytes());
@@ -713,7 +715,7 @@ public class HiveResolver extends HivePlugin implements Resolver {
                 initPartitionFields();
                 Class<?> c = Class.forName(serdeClassName, true, JavaUtils.getClassLoader());
                 d = (Deserializer) c.getDeclaredConstructor().newInstance();
-                d.initialize(getJobConf(), getSerdeProperties());
+                d.initialize(getJobConf(), metastoreProperties);
             } catch (Exception e) {
                 throw new RuntimeException("Failed to initialize HiveResolver", e);
             }

@@ -214,7 +214,7 @@ public class HiveUtilities {
                     + HiveUserData.getNumOfTokens() + " tokens, but got " + toks.length);
         }
 
-        String indexesStr = toks[7];
+        String indexesStr = toks[6];
         List<Integer> indexes = null;
 
         if (indexesStr != null && !"null".equals(indexesStr)) {
@@ -229,10 +229,9 @@ public class HiveUtilities {
                 toks[2],
                 toks[3],
                 toks[4],
-                toks[5],
-                Integer.parseInt(toks[6]),
+                Integer.parseInt(toks[5]),
                 indexes,
-                toks[8]);
+                toks[7]);
     }
 
     /**

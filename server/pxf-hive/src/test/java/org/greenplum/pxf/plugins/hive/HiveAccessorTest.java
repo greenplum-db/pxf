@@ -36,7 +36,6 @@ public class HiveAccessorTest {
     @Before
     public void setup() throws Exception {
         userDataBuilder = new HiveUserDataBuilder()
-                .withSerdeClassName("org.apache.hadoop.mapred.TextInputFormat")
                 .withPartitionKeys(HiveDataFragmenter.HIVE_NO_PART_TBL);
 
         PowerMockito.mockStatic(HiveUtilities.class);
@@ -130,14 +129,12 @@ public class HiveAccessorTest {
 }
 
 class HiveUserDataBuilder {
-    private String serdeClassName;
     private String partitionKeys;
     private int skipHeader;
 
     public HiveUserData build() {
         return new HiveUserData(
                 null,
-                serdeClassName,
                 null,
                 partitionKeys,
                 null,
@@ -145,11 +142,6 @@ class HiveUserDataBuilder {
                 skipHeader,
                 null,
                 null);
-    }
-
-    public HiveUserDataBuilder withSerdeClassName(String s) {
-        serdeClassName = s;
-        return this;
     }
 
     public HiveUserDataBuilder withPartitionKeys(String s) {

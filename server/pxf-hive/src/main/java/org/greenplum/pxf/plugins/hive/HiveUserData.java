@@ -28,10 +28,9 @@ import java.util.stream.Collectors;
 public class HiveUserData {
 
     public static final String HIVE_UD_DELIM = "!HUDD!";
-    private static final int EXPECTED_NUM_OF_TOKS = 9;
+    private static final int EXPECTED_NUM_OF_TOKS = 8;
 
     private final String inputFormatName;
-    private final String serdeClassName;
     private final String propertiesString;
     private final String partitionKeys;
     private final String delimiter;
@@ -40,8 +39,9 @@ public class HiveUserData {
     private final List<Integer> hiveIndexes;
     private final String allColumnNames;
 
-    public HiveUserData(String inputFormatName, String serdeClassName,
-                        String propertiesString, String partitionKeys,
+    public HiveUserData(String inputFormatName,
+                        String propertiesString,
+                        String partitionKeys,
                         String delimiter,
                         String colTypes,
                         int skipHeader,
@@ -49,7 +49,6 @@ public class HiveUserData {
                         String allColumnNames) {
 
         this.inputFormatName = inputFormatName;
-        this.serdeClassName = serdeClassName;
         this.propertiesString = propertiesString;
         this.partitionKeys = partitionKeys;
         this.delimiter = (delimiter == null ? "0" : delimiter);
@@ -66,15 +65,6 @@ public class HiveUserData {
      */
     public String getInputFormatName() {
         return inputFormatName;
-    }
-
-    /**
-     * Returns SerDe class name
-     *
-     * @return SerDe class name
-     */
-    public String getSerdeClassName() {
-        return serdeClassName;
     }
 
     /**
@@ -154,7 +144,6 @@ public class HiveUserData {
     @Override
     public String toString() {
         return inputFormatName + HiveUserData.HIVE_UD_DELIM
-                + serdeClassName + HiveUserData.HIVE_UD_DELIM
                 + propertiesString + HiveUserData.HIVE_UD_DELIM
                 + partitionKeys + HiveUserData.HIVE_UD_DELIM
                 + delimiter + HiveUserData.HIVE_UD_DELIM
