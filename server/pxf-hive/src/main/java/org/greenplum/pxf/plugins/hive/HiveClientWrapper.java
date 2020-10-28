@@ -165,7 +165,6 @@ public class HiveClientWrapper {
 
         Class<?> fragmenterClass = Class.forName(fragmenterClassName);
 
-        String inputFormatName = partData.storageDesc.getInputFormat();
         String propertiesString = serializeProperties(partData.properties);
         String partitionKeys = serializePartitionKeys(partData);
         String delimiter = getDelimiterCode(partData.storageDesc).toString();
@@ -173,10 +172,10 @@ public class HiveClientWrapper {
         int skipHeader = Integer.parseInt(partData.properties.getProperty("skip.header.line.count", "0"));
 
         if (HiveInputFormatFragmenter.class.isAssignableFrom(fragmenterClass)) {
-            assertFileType(inputFormatName, partData);
+            assertFileType(partData.storageDesc.getInputFormat(), partData);
         }
 
-        hiveUserData = new HiveUserData(inputFormatName, propertiesString, partitionKeys, delimiter, colTypes, skipHeader, hiveIndexes, allColumnNames);
+        hiveUserData = new HiveUserData(propertiesString, partitionKeys, delimiter, colTypes, skipHeader, hiveIndexes, allColumnNames);
 
         return hiveUserData.toString().getBytes();
     }

@@ -17,6 +17,10 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.Properties;
+
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -36,7 +40,8 @@ public class HiveAccessorTest {
     @Before
     public void setup() throws Exception {
         userDataBuilder = new HiveUserDataBuilder()
-                .withPartitionKeys(HiveDataFragmenter.HIVE_NO_PART_TBL);
+                .withPartitionKeys(HiveDataFragmenter.HIVE_NO_PART_TBL)
+                .withProperties(new Properties());
 
         PowerMockito.mockStatic(HiveUtilities.class);
         PowerMockito.mockStatic(HdfsUtilities.class);
@@ -131,11 +136,19 @@ public class HiveAccessorTest {
 class HiveUserDataBuilder {
     private String partitionKeys;
     private int skipHeader;
+    private Properties properties;
 
-    public HiveUserData build() {
+    public HiveUserData build() throws IOException {
+        String propertiesString = null;
+
+        if (properties != null) {
+            ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+            properties.store(outStream, ""/* comments */);
+            propertiesString = outStream.toString();
+        }
+
         return new HiveUserData(
-                null,
-                null,
+                propertiesString,
                 partitionKeys,
                 null,
                 null,
@@ -151,6 +164,11 @@ class HiveUserDataBuilder {
 
     public HiveUserDataBuilder withSkipHeader(int n) {
         skipHeader = n;
+        return this;
+    }
+
+    public HiveUserDataBuilder withProperties(Properties properties) {
+        this.properties = properties;
         return this;
     }
 }

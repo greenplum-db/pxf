@@ -141,12 +141,12 @@ public class HiveResolver extends HivePlugin implements Resolver {
 
     /* Parses user data string (received from fragmenter). */
     void parseUserData(RequestContext context) throws IOException {
-        metastoreProperties = getSerdeProperties(hiveUserData.getPropertiesString());
-        serdeClassName = metastoreProperties.getProperty(SERIALIZATION_LIB);
+        hiveIndexes = hiveUserData.getHiveIndexes();
         partitionKeys = hiveUserData.getPartitionKeys();
         collectionDelim = StringUtils.defaultString(context.getOption("COLLECTION_DELIM"), COLLECTION_DELIM);
         mapkeyDelim = StringUtils.defaultString(context.getOption("MAPKEY_DELIM"), MAPKEY_DELIM);
-        hiveIndexes = hiveUserData.getHiveIndexes();
+        metastoreProperties = getSerdeProperties(hiveUserData.getPropertiesString());
+        serdeClassName = metastoreProperties.getProperty(SERIALIZATION_LIB);
     }
 
     protected JobConf getJobConf() {

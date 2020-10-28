@@ -44,6 +44,7 @@ import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.sql.Date;
 import java.sql.Timestamp;
@@ -51,7 +52,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Properties;
 
+import static org.apache.hadoop.hive.metastore.api.hive_metastoreConstants.FILE_INPUT_FORMAT;
 import static org.apache.hadoop.hive.serde2.ColumnProjectionUtils.READ_ALL_COLUMNS;
 import static org.apache.hadoop.hive.serde2.ColumnProjectionUtils.READ_COLUMN_IDS_CONF_STR;
 import static org.apache.hadoop.hive.serde2.ColumnProjectionUtils.READ_COLUMN_NAMES_CONF_STR;
@@ -123,8 +126,9 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
         try {
             hiveUserData = HiveUtilities.parseHiveUserData(context);
             if (inputFormat == null) {
-                this.inputFormat = HiveDataFragmenter.makeInputFormat(
-                        hiveUserData.getInputFormatName(), jobConf);
+                // TODO: serde properties should be in context.setMetadata
+                String inputFormatClassName = getSerdeProperties(hiveUserData.getPropertiesString()).getProperty(FILE_INPUT_FORMAT);
+                inputFormat = HiveDataFragmenter.makeInputFormat(inputFormatClassName, jobConf);
             }
         } catch (Exception e) {
             throw new RuntimeException("Failed to initialize HiveAccessor", e);
@@ -449,5 +453,16 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
         jobConf.set(READ_ALL_COLUMNS, "false");
         jobConf.set(READ_COLUMN_IDS_CONF_STR, StringUtils.join(colIds, ","));
         jobConf.set(READ_COLUMN_NAMES_CONF_STR, StringUtils.join(colNames, ","));
+    }
+
+    protected Properties getSerdeProperties(String propsString) throws IOException {
+        Properties serdeProperties = new Properties();
+        if (propsString != null) {
+            ByteArrayInputStream inStream = new ByteArrayInputStream(propsString.getBytes());
+            serdeProperties.load(inStream);
+        } else {
+            throw new IllegalArgumentException("propsString is mandatory to initialize serde.");
+        }
+        return serdeProperties;
     }
 }

@@ -28,9 +28,8 @@ import java.util.stream.Collectors;
 public class HiveUserData {
 
     public static final String HIVE_UD_DELIM = "!HUDD!";
-    private static final int EXPECTED_NUM_OF_TOKS = 8;
+    private static final int EXPECTED_NUM_OF_TOKS = 7;
 
-    private final String inputFormatName;
     private final String propertiesString;
     private final String partitionKeys;
     private final String delimiter;
@@ -39,8 +38,7 @@ public class HiveUserData {
     private final List<Integer> hiveIndexes;
     private final String allColumnNames;
 
-    public HiveUserData(String inputFormatName,
-                        String propertiesString,
+    public HiveUserData(String propertiesString,
                         String partitionKeys,
                         String delimiter,
                         String colTypes,
@@ -48,7 +46,6 @@ public class HiveUserData {
                         List<Integer> hiveIndexes,
                         String allColumnNames) {
 
-        this.inputFormatName = inputFormatName;
         this.propertiesString = propertiesString;
         this.partitionKeys = partitionKeys;
         this.delimiter = (delimiter == null ? "0" : delimiter);
@@ -56,15 +53,6 @@ public class HiveUserData {
         this.skipHeader = skipHeader;
         this.hiveIndexes = hiveIndexes;
         this.allColumnNames = allColumnNames;
-    }
-
-    /**
-     * Returns input format of a fragment
-     *
-     * @return input format of a fragment
-     */
-    public String getInputFormatName() {
-        return inputFormatName;
     }
 
     /**
@@ -143,8 +131,7 @@ public class HiveUserData {
 
     @Override
     public String toString() {
-        return inputFormatName + HiveUserData.HIVE_UD_DELIM
-                + propertiesString + HiveUserData.HIVE_UD_DELIM
+        return propertiesString + HiveUserData.HIVE_UD_DELIM
                 + partitionKeys + HiveUserData.HIVE_UD_DELIM
                 + delimiter + HiveUserData.HIVE_UD_DELIM
                 + colTypes + HiveUserData.HIVE_UD_DELIM
