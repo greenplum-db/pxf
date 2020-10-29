@@ -31,8 +31,6 @@ import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.Properties;
 
 import static org.apache.hadoop.hive.ql.io.sarg.ConvertAstToSearchArg.SARG_PUSHDOWN;
@@ -128,9 +126,10 @@ public class HiveORCAccessorTest {
         return Base64.encodeBase64String(out.toBytes());
     }
 
-    private byte[] serializeProperties(Properties properties) throws IOException {
-        ByteArrayOutputStream outStream = new ByteArrayOutputStream();
-        properties.store(outStream, ""/* comments */);
-        return outStream.toString().getBytes();
+    private byte[] serializeProperties(Properties properties) {
+        Output out = new Output(4 * 1024, 10 * 1024 * 1024);
+        new Kryo().writeObject(out, properties);
+        out.close();
+        return out.toBytes();
     }
 }

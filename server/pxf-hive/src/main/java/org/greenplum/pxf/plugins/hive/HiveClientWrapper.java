@@ -1,5 +1,7 @@
 package org.greenplum.pxf.plugins.hive;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Output;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -26,7 +28,6 @@ import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -49,6 +50,11 @@ public class HiveClientWrapper {
     private static final Logger LOG = LoggerFactory.getLogger(HiveClientWrapper.class);
 
     private static final String WILDCARD = "*";
+
+    // The Kryo instance is not thread safe, and quite expensive to build,
+    // storing it on a ThreadLocal is a recommended way to make sure that the
+    // serializer is thread safe.
+    private static final ThreadLocal<Kryo> kryo = ThreadLocal.withInitial(Kryo::new);
 
     private static final String STR_RC_FILE_INPUT_FORMAT = "org.apache.hadoop.hive.ql.io.RCFileInputFormat";
     private static final String STR_TEXT_FILE_INPUT_FORMAT = "org.apache.hadoop.mapred.TextInputFormat";
@@ -150,10 +156,10 @@ public class HiveClientWrapper {
      * @param fragmenterClassName fragmenter class name
      * @param partData            partition data
      * @return serialized representation of fragment-related attributes
-     * @throws Exception when error occurred during serialization
+     * @throws ClassNotFoundException when the fragmenter class is not found
      */
     public byte[] makeUserData(String fragmenterClassName, HiveTablePartition partData)
-            throws Exception {
+            throws ClassNotFoundException {
 
         if (fragmenterClassName == null) {
             throw new IllegalArgumentException("No fragmenter provided.");
@@ -168,7 +174,7 @@ public class HiveClientWrapper {
         addDelimiterInformation(properties, partData.storageDesc);
         addPartitionValuesInformation(properties, partData);
         removeUnusedProperties(properties);
-        return serializeProperties(properties).getBytes();
+        return serializeProperties(properties);
     }
 
     /**
@@ -303,10 +309,11 @@ public class HiveClientWrapper {
     }
 
     /* Turns a Properties class into a string */
-    private String serializeProperties(Properties props) throws Exception {
-        ByteArrayOutputStream outStream = new ByteArrayOutputStream();
-        props.store(outStream, ""/* comments */);
-        return outStream.toString();
+    private byte[] serializeProperties(Properties properties) {
+        Output out = new Output(4 * 1024, 10 * 1024 * 1024);
+        kryo.get().writeObject(out, properties);
+        out.close();
+        return out.toBytes();
     }
 
     /* Turns the partition values into a string and adds them to the properties */

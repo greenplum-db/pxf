@@ -19,6 +19,8 @@ package org.greenplum.pxf.plugins.hive;
  * under the License.
  */
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.ql.io.IOConstants;
@@ -44,7 +46,6 @@ import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.sql.Date;
 import java.sql.Timestamp;
@@ -84,6 +85,8 @@ import static org.greenplum.pxf.plugins.hive.HiveDataFragmenter.PXF_META_TABLE_P
 public class HiveAccessor extends HdfsSplittableDataAccessor {
 
     private static final Logger LOG = LoggerFactory.getLogger(HiveAccessor.class);
+
+    private static final ThreadLocal<Kryo> kryo = ThreadLocal.withInitial(Kryo::new);
 
     private List<HivePartition> partitions;
     private static final String HIVE_DEFAULT_PARTITION = "__HIVE_DEFAULT_PARTITION__";
@@ -127,7 +130,7 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
         HiveMetadata metadata;
         Properties properties;
         try {
-            properties = getSerdeProperties(new String(context.getFragmentUserData()));
+            properties = getSerdeProperties(context.getFragmentUserData());
             if (inputFormat == null) {
                 String inputFormatClassName = properties.getProperty(FILE_INPUT_FORMAT);
                 inputFormat = HiveDataFragmenter.makeInputFormat(inputFormatClassName, jobConf);
@@ -498,14 +501,9 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
         jobConf.set(READ_COLUMN_NAMES_CONF_STR, StringUtils.join(colNames, ","));
     }
 
-    protected Properties getSerdeProperties(String propsString) throws IOException {
-        Properties serdeProperties = new Properties();
-        if (propsString != null) {
-            ByteArrayInputStream inStream = new ByteArrayInputStream(propsString.getBytes());
-            serdeProperties.load(inStream);
-        } else {
+    protected Properties getSerdeProperties(byte[] userData) {
+        if (userData == null)
             throw new IllegalArgumentException("propsString is mandatory to initialize serde.");
-        }
-        return serdeProperties;
+        return kryo.get().readObject(new Input(userData), Properties.class);
     }
 }

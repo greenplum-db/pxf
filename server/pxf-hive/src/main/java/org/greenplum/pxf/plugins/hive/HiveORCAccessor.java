@@ -22,7 +22,6 @@ package org.greenplum.pxf.plugins.hive;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Output;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.ql.io.orc.OrcInputFormat;
 import org.apache.hadoop.hive.ql.io.orc.Reader;
 import org.apache.hadoop.hive.ql.io.sarg.ConvertAstToSearchArg;
@@ -37,17 +36,10 @@ import org.greenplum.pxf.api.filter.SupportedOperatorPruner;
 import org.greenplum.pxf.api.filter.TreeTraverser;
 import org.greenplum.pxf.api.filter.TreeVisitor;
 import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.EnumAggregationType;
 import org.greenplum.pxf.api.utilities.Utilities;
 
-import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.List;
-
-import static org.apache.hadoop.hive.serde2.ColumnProjectionUtils.READ_ALL_COLUMNS;
-import static org.apache.hadoop.hive.serde2.ColumnProjectionUtils.READ_COLUMN_IDS_CONF_STR;
-import static org.apache.hadoop.hive.serde2.ColumnProjectionUtils.READ_COLUMN_NAMES_CONF_STR;
 
 /**
  * Specialization of HiveAccessor for a Hive table that stores only ORC files.

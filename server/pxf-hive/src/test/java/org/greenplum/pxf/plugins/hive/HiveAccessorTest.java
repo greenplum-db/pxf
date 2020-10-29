@@ -1,5 +1,7 @@
 package org.greenplum.pxf.plugins.hive;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Output;
 import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
@@ -120,9 +122,10 @@ public class HiveAccessorTest {
         verify(reader, times(1)).next(any(), any());
     }
 
-    private byte[] serializeProperties(Properties properties) throws IOException {
-        ByteArrayOutputStream outStream = new ByteArrayOutputStream();
-        properties.store(outStream, ""/* comments */);
-        return outStream.toString().getBytes();
+    private byte[] serializeProperties(Properties properties) {
+        Output out = new Output(4 * 1024, 10 * 1024 * 1024);
+        new Kryo().writeObject(out, properties);
+        out.close();
+        return out.toBytes();
     }
 }

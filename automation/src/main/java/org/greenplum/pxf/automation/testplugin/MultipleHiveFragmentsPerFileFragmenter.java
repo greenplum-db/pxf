@@ -12,6 +12,8 @@ import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
+import org.apache.hive.com.esotericsoftware.kryo.Kryo;
+import org.apache.hive.com.esotericsoftware.kryo.io.Output;
 import org.greenplum.pxf.api.model.BaseFragmenter;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.Metadata;
@@ -35,10 +37,11 @@ import java.util.Properties;
 public class MultipleHiveFragmentsPerFileFragmenter extends BaseFragmenter {
     private static final Log LOG = LogFactory.getLog(MultipleHiveFragmentsPerFileFragmenter.class);
 
+    private static final ThreadLocal<Kryo> kryo = ThreadLocal.withInitial(Kryo::new);
     private static final long SPLIT_SIZE = 1024;
     private JobConf jobConf;
     private IMetaStoreClient client;
-    private HiveClientWrapper hiveClientWrapper;
+    private final HiveClientWrapper hiveClientWrapper;
 
     public MultipleHiveFragmentsPerFileFragmenter() {
         hiveClientWrapper = HiveClientWrapper.getInstance();
@@ -64,7 +67,7 @@ public class MultipleHiveFragmentsPerFileFragmenter extends BaseFragmenter {
 
         for (int i = 0; i < fragmentsNum; i++) {
 
-            String userData = serializeProperties(properties);
+            byte[] userData = serializeProperties(properties);
 
             ByteArrayOutputStream bas = new ByteArrayOutputStream();
             ObjectOutputStream os = new ObjectOutputStream(bas);
@@ -75,7 +78,7 @@ public class MultipleHiveFragmentsPerFileFragmenter extends BaseFragmenter {
 
             String filePath = getFilePath(tbl);
 
-            fragments.add(new Fragment(filePath, localHosts, bas.toByteArray(), userData.getBytes()));
+            fragments.add(new Fragment(filePath, localHosts, bas.toByteArray(), userData));
         }
 
         return fragments;
@@ -112,9 +115,10 @@ public class MultipleHiveFragmentsPerFileFragmenter extends BaseFragmenter {
     }
 
     /* Turns a Properties class into a string */
-    private String serializeProperties(Properties props) throws Exception {
-        ByteArrayOutputStream outStream = new ByteArrayOutputStream();
-        props.store(outStream, ""/* comments */);
-        return outStream.toString();
+    private byte[] serializeProperties(Properties properties) {
+        Output out = new Output(4 * 1024, 10 * 1024 * 1024);
+        kryo.get().writeObject(out, properties);
+        out.close();
+        return out.toBytes();
     }
 }
