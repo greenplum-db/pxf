@@ -36,6 +36,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
+import static org.apache.hadoop.hive.metastore.api.hive_metastoreConstants.FILE_OUTPUT_FORMAT;
+import static org.apache.hadoop.hive.metastore.api.hive_metastoreConstants.META_TABLE_LOCATION;
 import static org.greenplum.pxf.api.model.ConfigurationFactory.PXF_CONFIG_RESOURCE_PATH_PROPERTY;
 import static org.greenplum.pxf.plugins.hive.HiveDataFragmenter.HIVE_PARTITIONS_DELIM;
 import static org.greenplum.pxf.plugins.hive.HiveDataFragmenter.PXF_META_TABLE_PARTITION_COLUMN_VALUES;
@@ -165,6 +167,7 @@ public class HiveClientWrapper {
         Properties properties = partData.properties;
         addDelimiterInformation(properties, partData.storageDesc);
         addPartitionValuesInformation(properties, partData);
+        removeUnusedProperties(properties);
         return serializeProperties(properties).getBytes();
     }
 
@@ -312,6 +315,18 @@ public class HiveClientWrapper {
             properties.put(PXF_META_TABLE_PARTITION_COLUMN_VALUES,
                     String.join(HIVE_PARTITIONS_DELIM, partData.partition.getValues()));
         }
+    }
+
+    /**
+     * Removes properties that are not used by PXF or Hive's serde
+     */
+    private void removeUnusedProperties(Properties properties) {
+        properties.remove(META_TABLE_LOCATION);
+        properties.remove(FILE_OUTPUT_FORMAT);
+        properties.remove("columns.comments");
+        properties.remove("transient_lastDdlTime");
+        properties.remove("last_modified_time");
+        properties.remove("last_modified_by");
     }
 
     /**

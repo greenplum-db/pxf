@@ -83,7 +83,7 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
     private static final short ALL_PARTS = -1;
 
     public static final String HIVE_PARTITIONS_DELIM = "!HPAD!";
-    public static final String PXF_META_TABLE_PARTITION_COLUMN_VALUES = "pxf.partition_columns.values";
+    public static final String PXF_META_TABLE_PARTITION_COLUMN_VALUES = "pxf.pcv";
 
     static final EnumSet<Operator> SUPPORTED_OPERATORS =
             EnumSet.of(
