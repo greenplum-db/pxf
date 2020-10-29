@@ -193,6 +193,8 @@ Perform the following procedure to insert some data into the `ex1` directory and
     INSERT 0 1
     ```
 
+    PXF writes one or more files to the `ex1/` directory when you insert into the `pxf_write_nfs` table.
+
 5. Use the `pxf_read_nfs` readable external table that you created in the previous section to view the new data you inserted into the `pxf_write_nfs` table:
 
     ``` sql
@@ -207,4 +209,6 @@ Perform the following procedure to insert some data into the `ex1` directory and
      Rome      | Mar   |         87 |     1557.39
     (6 rows)
     ```
+
+    When you select from the `pxf_read_nfs` table here, PXF reads the `somedata.csv` file and the new files that it added to the `ex1/` directory in the previous step.
 
