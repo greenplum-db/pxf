@@ -43,6 +43,7 @@ import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.plugins.hdfs.HdfsSplittableDataAccessor;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
+import org.greenplum.pxf.plugins.hive.utilities.PropertiesSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,7 +87,11 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
 
     private static final Logger LOG = LoggerFactory.getLogger(HiveAccessor.class);
 
-    private static final ThreadLocal<Kryo> kryo = ThreadLocal.withInitial(Kryo::new);
+    private static final ThreadLocal<Kryo> kryo = ThreadLocal.withInitial(() -> {
+        Kryo k = new Kryo();
+        k.addDefaultSerializer(Map.class, PropertiesSerializer.class);
+        return k;
+    });
 
     private List<HivePartition> partitions;
     private static final String HIVE_DEFAULT_PARTITION = "__HIVE_DEFAULT_PARTITION__";

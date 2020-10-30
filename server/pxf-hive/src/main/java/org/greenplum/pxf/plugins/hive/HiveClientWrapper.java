@@ -25,6 +25,7 @@ import org.greenplum.pxf.api.security.SecureLogin;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hive.utilities.EnumHiveToGpdbType;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
+import org.greenplum.pxf.plugins.hive.utilities.PropertiesSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +36,7 @@ import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import static org.apache.hadoop.hive.metastore.api.hive_metastoreConstants.FILE_OUTPUT_FORMAT;
@@ -54,7 +56,11 @@ public class HiveClientWrapper {
     // The Kryo instance is not thread safe, and quite expensive to build,
     // storing it on a ThreadLocal is a recommended way to make sure that the
     // serializer is thread safe.
-    private static final ThreadLocal<Kryo> kryo = ThreadLocal.withInitial(Kryo::new);
+    private static final ThreadLocal<Kryo> kryo = ThreadLocal.withInitial(() -> {
+        Kryo k = new Kryo();
+        k.addDefaultSerializer(Map.class, PropertiesSerializer.class);
+        return k;
+    });
 
     private static final String STR_RC_FILE_INPUT_FORMAT = "org.apache.hadoop.hive.ql.io.RCFileInputFormat";
     private static final String STR_TEXT_FILE_INPUT_FORMAT = "org.apache.hadoop.mapred.TextInputFormat";
