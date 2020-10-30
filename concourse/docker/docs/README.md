@@ -1,0 +1,42 @@
+# Docker container for PXF Documentation
+
+PXF Documentation can be built using the `Dockerfile` provided in this
+directory.
+
+## How to build pxf-docs docker image locally?
+
+```shell script
+pushd ~/workspace/pxf/concourse/docker/docs/
+docker build \
+  --tag=pxf-docs \
+  -f ~/workspace/pxf/concourse/docker/docs/Dockerfile \
+  .
+popd
+```
+
+## Run the pxf-docs image
+
+```shell script
+docker run -it \
+  -p 9292:9292 \
+  -p 1234:1234 \
+  -v ~/workspace/pxf/docs:/pxfdocs \
+  --workdir /pxfdocs/book \
+  pxf-docs
+```
+
+Once inside the container run the following commands:
+
+```shell script
+bundle install
+bundle update nokogiri
+bundle update kramdown
+bundle update bookbindery
+bundle exec bookbinder bind local
+cd final_app
+rackup
+```
+
+At this point, you can go to a browser window and type
+http://localhost:9292 and you will see the formatted PXF open source
+documentation.
