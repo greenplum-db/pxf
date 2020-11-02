@@ -247,6 +247,9 @@ project('pxf-hive') {
 
         /* Transitive dependency required by MapR */
         bundleJars "org.json:json:20090211"
+
+        /* have to re-declare to be available for the integration test HiveParquetFilterPushDownTest */
+        testRuntime "org.jodd:jodd-core:3.5.2"
     }
 }
 

@@ -54,8 +54,8 @@ public class HiveORCAccessorTest {
         context.setProfileScheme("localfile");
         context.setFragmentMetadata(HdfsUtilities.prepareFragmentMetadata(0, 0, new String[]{"localhost"}));
         context.setFragmentUserData(serializeProperties(properties));
-        context.getTupleDescription().add(new ColumnDescriptor("col1", 1, 1, "TEXT", null));
-        context.getTupleDescription().add(new ColumnDescriptor("FOO", 1, 1, "TEXT", null));
+        context.getTupleDescription().add(new ColumnDescriptor("col1", 25, 0, "TEXT", null));
+        context.getTupleDescription().add(new ColumnDescriptor("FOO", 25, 1, "TEXT", null));
         context.setAccessor(HiveORCAccessor.class.getName());
 
         accessor = new HiveORCAccessor();

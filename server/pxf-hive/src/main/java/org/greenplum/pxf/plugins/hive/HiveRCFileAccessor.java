@@ -26,10 +26,13 @@ import org.apache.hadoop.hive.ql.io.RCFileRecordReader;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
+import org.greenplum.pxf.api.filter.Operator;
+import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 
 import static org.apache.hadoop.hive.serde2.ColumnProjectionUtils.*;
@@ -51,5 +54,15 @@ public class HiveRCFileAccessor extends HiveAccessor {
     @Override
     protected Object getReader(JobConf jobConf, InputSplit split) throws IOException {
         return new RCFileRecordReader(jobConf, (FileSplit) split);
+    }
+
+    @Override
+    protected EnumSet<Operator> getSupportedOperatorsForPushdown() {
+        return ORC_SUPPORTED_OPERATORS; // RC same as ORC
+    }
+
+    @Override
+    protected EnumSet<DataType> getSupportedDatatypesForPushdown() {
+        return ORC_SUPPORTED_DATATYPES; // RC same as ORC
     }
 }

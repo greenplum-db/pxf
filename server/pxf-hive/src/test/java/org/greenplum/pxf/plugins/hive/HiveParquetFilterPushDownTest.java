@@ -1,5 +1,9 @@
-package org.greenplum.pxf.plugins.hdfs.parquet;
+package org.greenplum.pxf.plugins.hive;
 
+import org.apache.hadoop.hive.serde.serdeConstants;
+import org.apache.parquet.schema.MessageType;
+import org.apache.parquet.schema.MessageTypeParser;
+import org.apache.parquet.schema.Type;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.io.DataType;
@@ -8,27 +12,31 @@ import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
-import org.greenplum.pxf.plugins.hdfs.ParquetFileAccessor;
-import org.greenplum.pxf.plugins.hdfs.ParquetResolver;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Properties;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-public class ParquetFilterPushDownTest extends ParquetBaseTest {
+public class HiveParquetFilterPushDownTest {
 
     // From resources/parquet/parquet_types.csv
     private static final int[] COL1 = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25};
@@ -44,25 +52,96 @@ public class ParquetFilterPushDownTest extends ParquetBaseTest {
     private static final Float[] COL11 = {7.7F, 8.7F, 9.7F, 10.7F, 11.7F, 12.7F, 7.7F, 7.7F, 7.7F, 7.7F, 7.7F, 7.7F, 7.7F, 7.7F, 7.7F, 7.7F, null, 7.7F, 7.7F, 7.7F, 7.7F, 7.7F, 7.7F, 7.7F, 7.7F};
     private static final String[] COL12 = {"s_6", "s_7", "s_8", "s_9", "s_10", "s_11", "s_12", "s_13", "s_14", "s_15", "s_16", "s_16", "s_16", "s_16", "s_17", "s_160", "s_161", "s_162", "s_163", "s_164", "s_165", "s_166", null, "s_168", "s_169"};
     private static final String[] COL13 = {"USD", "USD", "USD", "USD", "USD", "USD", "USD", "EUR", "UAH", "USD", "UAH", "EUR", "USD", "UAH", "USD", "USD", "EUR", "USD", "USD", "UAH", "USD", "EUR", "EUR", null, "USD"};
-    private static final Double[] COL14 = {1.23456, 1.23456, -1.23456, 123456789.1, 1E-12, 1234.889, 0.0001, 45678.00002, 23457.1, 45678.00002, 0.123456789, 0.123456789, 0.123456789, 0.123456789, null, 0.123456789, 0.123456789, 0.123456789, 0.123456789, 0.123456789, 0.123456789, 0.123456789, 0.123456789, 0.123456789, 0.123456789};
-    private static final Double[] COL15 = {0.0, 123.45, -1.45, 0.25, -.25, 999.99, -999.99, 1.0, -1.0, 789.0, -789.0, 0.99, -0.99, 1.99, null, -1.99, 15.99, -15.99, -299.99, 299.99, 555.55, 0.15, 3.89, 3.14, 8.0};
-    private static final Double[] COL16 = {0.12345, -0.12345, 12345678.90123, -12345678.90123, 99999999.0, -99999999.0, -99999999.99999, 99999999.99999, 0.0, 1.0, -1.0, 0.9, -0.9, 45.0, null, -45.0, 3.14159, -3.14159, 2.71828, -2.71828, 45.99999, -45.99999, 450.45001, 0.00001, -0.00001};
+    private static final String[] COL14 = {"1.23456", "1.23456", "-1.23456", "123456789.1", "1E-12", "1234.889", "0.0001", "45678.00002", "23457.1", "45678.00002", "0.123456789", "0.123456789", "0.123456789", "0.123456789", null, "0.123456789", "0.123456789", "0.123456789", "0.123456789", "0.123456789", "0.123456789", "0.123456789", "0.123456789", "0.123456789", "0.123456789"};
+    private static final String[] COL15 = {"0", "123.45", "-1.45", "0.25", "-0.25", "999.99", "-999.99", "1", "-1", "789", "-789", "0.99", "-0.99", "1.99", null, "-1.99", "15.99", "-15.99", "-299.99", "299.99", "555.55", "0.15", "3.89", "3.14", "8"};
+    private static final String[] COL16 = {"0.12345", "-0.12345", "12345678.90123", "-12345678.90123", "99999999", "-99999999", "-99999999.99999", "99999999.99999", "0", "1", "-1", "0.9", "-0.9", "45", null, "-45", "3.14159", "-3.14159", "2.71828", "-2.71828", "45.99999", "-45.99999", "450.45001", "0.00001", "-0.00001"};
     private static final Integer[] COL17 = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 11, null, 11, 12, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11};
     private static final int[] ALL = COL1;
+    private static final int[] NONE = new int[]{};
+
+    // HiveUserData
+    private static final String INPUT_FORMAT_NAME = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat";
+    private static final String SERDE_CLASS_NAME = "org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe";
+    private static final String COLUMN_NAMES = "id,name,cdate,amt,grade,b,tm,bg,bin,sml,r,vc1,c1,dec1,dec2,dec3,num1";
+    private static final String COLUMN_TYPES = "int:string:date:double:string:boolean:timestamp:bigint:binary:smallint:float:varchar(5):char(3):decimal(38,18):decimal(5,2):decimal(13,5):int";
 
     private Accessor accessor;
     private Resolver resolver;
     private RequestContext context;
 
+    private Map<String, Type> originalFieldsMap;
+    private List<ColumnDescriptor> columnDescriptors;
+
     @Before
     public void setup() throws Exception {
-        super.setup();
+        columnDescriptors = new ArrayList<>();
+        columnDescriptors.add(new ColumnDescriptor("id", DataType.INTEGER.getOID(), 0, "int4", null));
+        columnDescriptors.add(new ColumnDescriptor("name", DataType.TEXT.getOID(), 1, "text", null));
+        columnDescriptors.add(new ColumnDescriptor("cdate", DataType.DATE.getOID(), 2, "date", null));
+        columnDescriptors.add(new ColumnDescriptor("amt", DataType.FLOAT8.getOID(), 3, "float8", null));
+        columnDescriptors.add(new ColumnDescriptor("grade", DataType.TEXT.getOID(), 4, "text", null));
+        columnDescriptors.add(new ColumnDescriptor("b", DataType.BOOLEAN.getOID(), 5, "bool", null));
+        columnDescriptors.add(new ColumnDescriptor("tm", DataType.TIMESTAMP.getOID(), 6, "timestamp", null));
+        columnDescriptors.add(new ColumnDescriptor("bg", DataType.BIGINT.getOID(), 7, "bigint", null));
+        columnDescriptors.add(new ColumnDescriptor("bin", DataType.BYTEA.getOID(), 8, "bytea", null));
+        columnDescriptors.add(new ColumnDescriptor("sml", DataType.SMALLINT.getOID(), 9, "int2", null));
+        columnDescriptors.add(new ColumnDescriptor("r", DataType.REAL.getOID(), 10, "real", null));
+        columnDescriptors.add(new ColumnDescriptor("vc1", DataType.VARCHAR.getOID(), 11, "varchar", new Integer[]{5}));
+        columnDescriptors.add(new ColumnDescriptor("c1", DataType.BPCHAR.getOID(), 12, "char", new Integer[]{3}));
+        columnDescriptors.add(new ColumnDescriptor("dec1", DataType.NUMERIC.getOID(), 13, "numeric", null));
+        columnDescriptors.add(new ColumnDescriptor("dec2", DataType.NUMERIC.getOID(), 14, "numeric", new Integer[]{5, 2}));
+        columnDescriptors.add(new ColumnDescriptor("dec3", DataType.NUMERIC.getOID(), 15, "numeric", new Integer[]{13, 5}));
+        columnDescriptors.add(new ColumnDescriptor("num1", DataType.INTEGER.getOID(), 16, "int", null));
 
-        accessor = new ParquetFileAccessor();
-        resolver = new ParquetResolver();
+        MessageType schema = MessageTypeParser.parseMessageType("message hive_schema {\n" +
+                "  optional int32 id;\n" +
+                "  optional binary name (UTF8);\n" +
+                "  optional int32 cdate (DATE);\n" +
+                "  optional double amt;\n" +
+                "  optional binary grade (UTF8);\n" +
+                "  optional boolean b;\n" +
+                "  optional int96 tm;\n" +
+                "  optional int64 bg;\n" +
+                "  optional binary bin;\n" +
+                "  optional int32 sml (INT_16);\n" +
+                "  optional float r;\n" +
+                "  optional binary vc1 (UTF8);\n" +
+                "  optional binary c1 (UTF8);\n" +
+                "  optional fixed_len_byte_array(16) dec1 (DECIMAL(38,18));\n" +
+                "  optional fixed_len_byte_array(3) dec2 (DECIMAL(5,2));\n" +
+                "  optional fixed_len_byte_array(6) dec3 (DECIMAL(13,5));\n" +
+                "  optional int32 num1;\n" +
+                "}");
+
+        originalFieldsMap = getOriginalFieldsMap(schema);
+        // Hive User Data
+        Properties props = new Properties();
+        props.put(serdeConstants.LIST_COLUMNS, COLUMN_NAMES);
+        props.put(serdeConstants.LIST_COLUMN_TYPES, COLUMN_TYPES);
+        String propString;
+        try (ByteArrayOutputStream outStream = new ByteArrayOutputStream()) {
+            props.store(outStream, "");
+            propString = outStream.toString();
+        }
+
+        String hud = new HiveUserData(INPUT_FORMAT_NAME, SERDE_CLASS_NAME,
+                propString,
+                "!HNPT!",
+                false,
+                "1",
+                COLUMN_TYPES,
+                0,
+                Arrays.asList(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16),
+                COLUMN_NAMES,
+                COLUMN_TYPES)
+                .toString();
+
+
+        accessor = new HiveAccessor();
+        resolver = new HiveResolver();
         context = new RequestContext();
 
-        String path = Objects.requireNonNull(getClass().getClassLoader().getResource("parquet/parquet_types.parquet")).getPath();
+        String path = Objects.requireNonNull(getClass().getClassLoader().getResource("parquet_types.parquet")).getPath();
 
         context.setConfig("fakeConfig");
         context.setServerName("fakeServerName");
@@ -72,6 +151,7 @@ public class ParquetFilterPushDownTest extends ParquetBaseTest {
         context.setRequestType(RequestContext.RequestType.READ_BRIDGE);
         context.setDataSource(path);
         context.setFragmentMetadata(HdfsUtilities.prepareFragmentMetadata(0, 4196, Fragment.HOSTS));
+        context.setFragmentUserData(hud.getBytes());
         context.setTupleDescription(columnDescriptors);
 
         accessor.initialize(context);
@@ -133,16 +213,13 @@ public class ParquetFilterPushDownTest extends ParquetBaseTest {
         context.setFilterString("a5c16s5dfalseo6");
         assertRowsReturned(expectedRows);
 
-        // a5 IS NULL
-        expectedRows = new int[]{19};
+        // a5 IS NULL -- not supported in HIVE Parquet PPD
         context.setFilterString("a5o8");
-        assertRowsReturned(expectedRows);
+        assertRowsReturned(ALL);
 
-        // a5 IS NOT NULL
-        expectedRows = new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21, 22, 23, 24, 25};
+        // a5 IS NOT NULL -- not supported in HIVE Parquet PPD
         context.setFilterString("a5o9");
-        assertRowsReturned(expectedRows);
-
+        assertRowsReturned(ALL);
     }
 
     @Test
@@ -157,6 +234,7 @@ public class ParquetFilterPushDownTest extends ParquetBaseTest {
     public void testIntPushDown() throws Exception {
         // a16 = 11
         int[] expectedRows = {11, 12, 14, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25};
+
         context.setFilterString("a16c23s2d11o5");
         assertRowsReturned(expectedRows);
 
@@ -185,15 +263,13 @@ public class ParquetFilterPushDownTest extends ParquetBaseTest {
         context.setFilterString("a16c23s2d11o6");
         assertRowsReturned(expectedRows);
 
-        // a16 IS NULL
-        expectedRows = new int[]{13};
+        // a16 IS NULL -- not supported in HIVE Parquet PPD
         context.setFilterString("a16o8");
-        assertRowsReturned(expectedRows);
+        assertRowsReturned(ALL);
 
-        // a16 IS NOT NULL
-        expectedRows = new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25};
+        // a16 IS NOT NULL -- not supported in HIVE Parquet PPD
         context.setFilterString("a16o9");
-        assertRowsReturned(expectedRows);
+        assertRowsReturned(ALL);
     }
 
     @Test
@@ -228,15 +304,13 @@ public class ParquetFilterPushDownTest extends ParquetBaseTest {
         context.setFilterString("a7c23s2d-1o6");
         assertRowsReturned(expectedRows);
 
-        // a7 IS NULL
-        expectedRows = new int[]{18};
+        // a7 IS NULL -- not supported in HIVE Parquet PPD
         context.setFilterString("a7o8");
-        assertRowsReturned(expectedRows);
+        assertRowsReturned(ALL);
 
-        // a7 IS NOT NULL
-        expectedRows = new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 19, 20, 21, 22, 23, 24, 25};
+        // a7 IS NOT NULL -- not supported in HIVE Parquet PPD
         context.setFilterString("a7o9");
-        assertRowsReturned(expectedRows);
+        assertRowsReturned(ALL);
     }
 
     @Test
@@ -271,15 +345,13 @@ public class ParquetFilterPushDownTest extends ParquetBaseTest {
         context.setFilterString("a10c701s3d8.7o6");
         assertRowsReturned(expectedRows);
 
-        // a10 IS NULL
-        expectedRows = new int[]{17};
+        // a10 IS NULL -- not supported in HIVE Parquet PPD
         context.setFilterString("a10o8");
-        assertRowsReturned(expectedRows);
+        assertRowsReturned(ALL);
 
-        // a10 IS NOT NULL
-        expectedRows = new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 19, 20, 21, 22, 23, 24, 25};
+        // a10 IS NOT NULL -- not supported in HIVE Parquet PPD
         context.setFilterString("a10o9");
-        assertRowsReturned(expectedRows);
+        assertRowsReturned(ALL);
     }
 
     @Test
@@ -314,15 +386,13 @@ public class ParquetFilterPushDownTest extends ParquetBaseTest {
         context.setFilterString("a4c25s9dexcellento6");
         assertRowsReturned(expectedRows);
 
-        // a4 IS NULL
-        expectedRows = new int[]{12};
+        // a4 IS NULL -- not supported in HIVE Parquet PPD
         context.setFilterString("a4o8");
-        assertRowsReturned(expectedRows);
+        assertRowsReturned(ALL);
 
-        // a4 IS NOT NULL
-        expectedRows = new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25};
+        // a4 IS NOT NULL -- not supported in HIVE Parquet PPD
         context.setFilterString("a4o9");
-        assertRowsReturned(expectedRows);
+        assertRowsReturned(ALL);
     }
 
     @Test
@@ -357,15 +427,13 @@ public class ParquetFilterPushDownTest extends ParquetBaseTest {
         context.setFilterString("a11c25s4ds_16o6");
         assertRowsReturned(expectedRows);
 
-        // a11 IS NULL
-        expectedRows = new int[]{23};
+        // a11 IS NULL -- not supported in HIVE Parquet PPD
         context.setFilterString("a11o8");
-        assertRowsReturned(expectedRows);
+        assertRowsReturned(ALL);
 
-        // a11 IS NOT NULL
-        expectedRows = new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 24, 25};
+        // a11 IS NOT NULL -- not supported in HIVE Parquet PPD
         context.setFilterString("a11o9");
-        assertRowsReturned(expectedRows);
+        assertRowsReturned(ALL);
     }
 
     @Test
@@ -400,26 +468,23 @@ public class ParquetFilterPushDownTest extends ParquetBaseTest {
         context.setFilterString("a12c1042s3dUSDo6");
         assertRowsReturned(expectedRows);
 
-        // a12 IS NULL
-        expectedRows = new int[]{24};
+        // a12 IS NULL -- not supported in HIVE Parquet PPD
         context.setFilterString("a12o8");
-        assertRowsReturned(expectedRows);
+        assertRowsReturned(ALL);
 
-        // a12 IS NOT NULL
-        expectedRows = new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 25};
+        // a12 IS NOT NULL -- not supported in HIVE Parquet PPD
         context.setFilterString("a12o9");
-        assertRowsReturned(expectedRows);
+        assertRowsReturned(ALL);
     }
 
     @Test
-    public void testCharPushDownWithWhitespaces() throws Exception {
+    public void testUnsupportedCharPushDownWithWhitespaces() throws Exception {
         // a12 = 'EUR '
-        int[] expectedRows = {8, 12, 17, 22, 23};
         context.setFilterString("a12c1042s4dEUR o5");
-        assertRowsReturned(expectedRows);
+        assertRowsReturned(NONE);
 
         // a12 > 'EUR '
-        expectedRows = new int[]{1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 13, 14, 15, 16, 18, 19, 20, 21, 25};
+        int[] expectedRows = new int[]{1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 13, 14, 15, 16, 18, 19, 20, 21, 25};
         context.setFilterString("a12c1042s4dEUR o2");
         assertRowsReturned(expectedRows);
 
@@ -429,14 +494,12 @@ public class ParquetFilterPushDownTest extends ParquetBaseTest {
         assertRowsReturned(expectedRows);
 
         // a12 >= 'USD '
-        expectedRows = new int[]{1, 2, 3, 4, 5, 6, 7, 10, 13, 15, 16, 18, 19, 21, 25};
         context.setFilterString("a12c1042s4dUSD o4");
-        assertRowsReturned(expectedRows);
+        assertRowsReturned(NONE);
 
         // a12 <> 'USD '
-        expectedRows = new int[]{8, 9, 11, 12, 14, 17, 20, 22, 23, 24};
         context.setFilterString("a12c1042s4dUSD o6");
-        assertRowsReturned(expectedRows);
+        assertRowsReturned(ALL);
     }
 
     @Test
@@ -471,58 +534,49 @@ public class ParquetFilterPushDownTest extends ParquetBaseTest {
         context.setFilterString("a9c23s1d0o6");
         assertRowsReturned(expectedRows);
 
-        // a9 IS NULL
-        expectedRows = new int[]{21};
+        // a9 IS NULL -- not supported in HIVE Parquet PPD
         context.setFilterString("a9o8");
-        assertRowsReturned(expectedRows);
+        assertRowsReturned(ALL);
 
-        // a9 IS NOT NULL
-        expectedRows = new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 22, 23, 24, 25};
+        // a9 IS NOT NULL -- not supported in HIVE Parquet PPD
         context.setFilterString("a9o9");
-        assertRowsReturned(expectedRows);
+        assertRowsReturned(ALL);
     }
 
     @Test
     public void testDatePushDown() throws Exception {
+        // DATE pushdown is not supported for Hive Parquet, expect to receive all rows back
         // a2 = '2019-12-04'
-        int[] expectedRows = {4};
         context.setFilterString("a2c1082s10d2019-12-04o5");
-        assertRowsReturned(expectedRows);
+        assertRowsReturned(ALL);
 
         // a2 < '2019-12-04'
-        expectedRows = new int[]{1, 2, 3};
         context.setFilterString("a2c1082s10d2019-12-04o1");
-        assertRowsReturned(expectedRows);
+        assertRowsReturned(ALL);
 
         // a2 > '2019-12-20'
-        expectedRows = new int[]{21, 23, 24, 25};
         context.setFilterString("a2c1082s10d2019-12-20o2");
-        assertRowsReturned(expectedRows);
+        assertRowsReturned(ALL);
 
         // a2 <= '2019-12-06'
-        expectedRows = new int[]{1, 2, 3, 4, 5, 6};
         context.setFilterString("a2c1082s10d2019-12-06o3");
-        assertRowsReturned(expectedRows);
+        assertRowsReturned(ALL);
 
         // a2 >= '2019-12-15'
-        expectedRows = new int[]{15, 16, 17, 18, 19, 20, 21, 23, 24, 25};
         context.setFilterString("a2c1082s10d2019-12-15o4");
-        assertRowsReturned(expectedRows);
+        assertRowsReturned(ALL);
 
         // a2 <> '2019-12-15'
-        expectedRows = new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25};
         context.setFilterString("a2c1082s10d2019-12-15o6");
-        assertRowsReturned(expectedRows);
+        assertRowsReturned(ALL);
 
         // a2 IS NULL
-        expectedRows = new int[]{22};
         context.setFilterString("a2o8");
-        assertRowsReturned(expectedRows);
+        assertRowsReturned(ALL);
 
         // a2 IS NOT NULL
-        expectedRows = new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 23, 24, 25};
         context.setFilterString("a2o9");
-        assertRowsReturned(expectedRows);
+        assertRowsReturned(ALL);
     }
 
     @Test
@@ -557,15 +611,13 @@ public class ParquetFilterPushDownTest extends ParquetBaseTest {
         context.setFilterString("a3c701s4d1200o6");
         assertRowsReturned(expectedRows);
 
-        // a3 IS NULL
-        expectedRows = new int[]{14};
+        // a3 IS NULL -- not supported in HIVE Parquet PPD
         context.setFilterString("a3o8");
-        assertRowsReturned(expectedRows);
+        assertRowsReturned(ALL);
 
-        // a3 IS NOT NULL
-        expectedRows = new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25};
+        // a3 IS NOT NULL -- not supported in HIVE Parquet PPD
         context.setFilterString("a3o9");
-        assertRowsReturned(expectedRows);
+        assertRowsReturned(ALL);
     }
 
     @Test
@@ -600,35 +652,33 @@ public class ParquetFilterPushDownTest extends ParquetBaseTest {
         context.setFilterString("a8c25s1d1o6");
         assertRowsReturned(expectedRows);
 
-        // bin IS NULL
-        expectedRows = new int[]{25};
+        // bin IS NULL -- not supported in HIVE Parquet PPD
         context.setFilterString("a8o8");
-        assertRowsReturned(expectedRows);
+        assertRowsReturned(ALL);
 
-        // bin IS NOT NULL
-        expectedRows = new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24};
+        // bin IS NOT NULL -- not supported in HIVE Parquet PPD
         context.setFilterString("a8o9");
-        assertRowsReturned(expectedRows);
+        assertRowsReturned(ALL);
     }
 
     @Test
-    public void testDateAndAmtFilter() throws Exception {
+    public void testUnsupportedDateAndAmtFilter() throws Exception {
         // cdate > '2019-12-02' and cdate < '2019-12-12' and amt > 1500
-        int[] expectedRows = {5, 6, 7, 8, 9, 10, 11};
+        // DATE is not supported, only amt > 1500 will be effective
+        int[] expectedRows = new int[]{5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25};
         context.setFilterString("a2c1082s10d2019-12-02o2a2c1082s10d2019-12-12o1a3c701s4d1500o2l0l0");
         assertRowsReturned(expectedRows);
     }
 
     @Test
-    public void testDateWithOrAndAmtFilter() throws Exception {
+    public void testUnsupportedDateWithOrAndAmtFilter() throws Exception {
         // cdate > '2019-12-19' OR ( cdate <= '2019-12-15' and amt > 2000)
-        int[] expectedRows = {10, 11, 12, 13, 15, 20, 21, 23, 24, 25};
         context.setFilterString("a2c1082s10d2019-12-19o2a2c1082s10d2019-12-15o3a3c701s4d2000o2l0l1");
-        assertRowsReturned(expectedRows);
+        assertRowsReturned(ALL);
     }
 
     @Test
-    public void testDateWithOrAndAmtFilterWithProjectedColumns() throws Exception {
+    public void testUnsupportedDateWithOrAndAmtFilterWithProjectedColumns() throws Exception {
 
         List<ColumnDescriptor> columnDescriptors = context.getTupleDescription();
         columnDescriptors.forEach(d -> d.setProjected(false));
@@ -638,17 +688,15 @@ public class ParquetFilterPushDownTest extends ParquetBaseTest {
         columnDescriptors.get(5).setProjected(true);
 
         // cdate > '2019-12-19' OR ( cdate <= '2019-12-15' and amt > 2000)
-        int[] expectedRows = {10, 11, 12, 13, 15, 20, 21, 23, 24, 25};
         context.setFilterString("a2c1082s10d2019-12-19o2a2c1082s10d2019-12-15o3a3c701s4d2000o2l0l1");
-        assertRowsReturned(expectedRows);
+        assertRowsReturned(ALL);
     }
 
     @Test
-    public void testDateOrAmtFilter() throws Exception {
+    public void testUnsupportedDateOrAmtFilter() throws Exception {
         // cdate > '2019-12-20' OR amt < 1500
-        int[] expectedRows = {1, 2, 3, 21, 23, 24, 25};
         context.setFilterString("a2c1082s10d2019-12-20o2a3c701s4d1500o1l1");
-        assertRowsReturned(expectedRows);
+        assertRowsReturned(ALL);
     }
 
     @Test
@@ -668,11 +716,28 @@ public class ParquetFilterPushDownTest extends ParquetBaseTest {
     }
 
     @Test
-    public void testUnsupportedInOperationFilter() throws Exception {
+    public void testInOperationFilter() throws Exception {
         // a16 in (11, 12)
+        int[] expectedRows = {11, 12, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25};
         context.setFilterString("a16m1007s2d11s2d12o10");
-        // all rows are expected
-        assertRowsReturned(ALL);
+        assertRowsReturned(expectedRows);
+    }
+
+    private Map<String, Type> getOriginalFieldsMap(MessageType originalSchema) {
+        Map<String, Type> originalFields = new HashMap<>(originalSchema.getFieldCount() * 2);
+
+        // We need to add the original name and lower cased name to
+        // the map to support mixed case where in GPDB the column name
+        // was created with quotes i.e "mIxEd CaSe". When quotes are not
+        // used to create a table in GPDB, the name of the column will
+        // always come in lower-case
+        originalSchema.getFields().forEach(t -> {
+            String columnName = t.getName();
+            originalFields.put(columnName, t);
+            originalFields.put(columnName.toLowerCase(), t);
+        });
+
+        return originalFields;
     }
 
     private void assertRowsReturned(int[] expectedRows) throws Exception {
@@ -732,10 +797,12 @@ public class ParquetFilterPushDownTest extends ParquetBaseTest {
             assertEquals(DataType.REAL.getOID(), fieldList.get(10).type);
         }
         if (columnDescriptors.get(11).isProjected()) {
-            assertEquals(DataType.TEXT.getOID(), fieldList.get(11).type);
+            // Direct Parquet Resolver: assertEquals(DataType.TEXT.getOID(), fieldList.get(11).type);
+            assertEquals(DataType.VARCHAR.getOID(), fieldList.get(11).type);
         }
         if (columnDescriptors.get(12).isProjected()) {
-            assertEquals(DataType.TEXT.getOID(), fieldList.get(12).type);
+            // assertEquals(DataType.TEXT.getOID(), fieldList.get(12).type);
+            assertEquals(DataType.BPCHAR.getOID(), fieldList.get(12).type);
         }
         if (columnDescriptors.get(13).isProjected()) {
             assertEquals(DataType.NUMERIC.getOID(), fieldList.get(13).type);
@@ -794,9 +861,9 @@ public class ParquetFilterPushDownTest extends ParquetBaseTest {
 
             Instant timestamp = Instant.parse(COL7[row]); // UTC
             ZonedDateTime localTime = timestamp.atZone(ZoneId.systemDefault());
-            String localTimestampString = localTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            String localTimestampString = localTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.S"));
 
-            assertEquals("Row " + row, localTimestampString, fieldList.get(6).val);
+            assertEquals("Row " + row, localTimestampString, fieldList.get(6).val.toString());
         } else {
             assertNull("Row " + row, fieldList.get(6).val);
         }
@@ -830,31 +897,34 @@ public class ParquetFilterPushDownTest extends ParquetBaseTest {
         }
 
         if (columnDescriptors.get(11).isProjected() && COL12[row] != null) {
-            assertEquals("Row " + row, COL12[row], fieldList.get(11).val);
+            assertEquals("Row " + row, COL12[row], fieldList.get(11).val.toString());
         } else {
             assertNull(fieldList.get(11).val);
         }
 
         if (columnDescriptors.get(12).isProjected() && COL13[row] != null) {
-            assertEquals("Row " + row, COL13[row], fieldList.get(12).val);
+            assertEquals("Row " + row, COL13[row], fieldList.get(12).val.toString());
         } else {
             assertNull("Row " + row, fieldList.get(12).val);
         }
 
         if (columnDescriptors.get(13).isProjected() && COL14[row] != null) {
-            assertBigDecimal("Row " + row, COL14[row], fieldList.get(13).val);
+            // Direct Parquet Resolver: assertBigDecimal("Row " + row, COL14[row], fieldList.get(13).val);
+            assertEquals("Row " + row, COL14[row], fieldList.get(13).val);
         } else {
             assertNull("Row " + row, fieldList.get(13).val);
         }
 
         if (columnDescriptors.get(14).isProjected() && COL15[row] != null) {
-            assertBigDecimal("Row " + row, COL15[row], fieldList.get(14).val);
+            // Direct Parquet Resolver: assertBigDecimal("Row " + row, COL15[row], fieldList.get(14).val);
+            assertEquals("Row " + row, COL15[row], fieldList.get(14).val);
         } else {
             assertNull("Row " + row, fieldList.get(14).val);
         }
 
         if (columnDescriptors.get(15).isProjected() && COL16[row] != null) {
-            assertBigDecimal("Row " + row, COL16[row], fieldList.get(15).val);
+            // Direct Parquet Resolver: assertBigDecimal("Row " + row, COL16[row], fieldList.get(15).val);
+            assertEquals("Row " + row, COL16[row], fieldList.get(15).val);
         } else {
             assertNull("Row " + row, fieldList.get(15).val);
         }

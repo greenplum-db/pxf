@@ -6,7 +6,7 @@ import java.util.EnumSet;
 
 import static org.junit.Assert.assertEquals;
 
-public class SupportedOperatorPrunerTest {
+public class SupportedDataTypePrunerTest {
 
     private static final EnumSet<Operator> ALL_SUPPORTED = EnumSet.allOf(Operator.class);
     private static final EnumSet<Operator> NONE_SUPPORTED = EnumSet.noneOf(Operator.class);

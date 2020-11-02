@@ -25,6 +25,7 @@ import com.esotericsoftware.kryo.io.Output;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.io.IOConstants;
 import org.apache.hadoop.hive.ql.io.orc.Reader;
 import org.apache.hadoop.hive.ql.io.sarg.ConvertAstToSearchArg;
@@ -41,10 +42,11 @@ import org.greenplum.pxf.api.filter.Node;
 import org.greenplum.pxf.api.filter.OperandNode;
 import org.greenplum.pxf.api.filter.Operator;
 import org.greenplum.pxf.api.filter.OperatorNode;
+import org.greenplum.pxf.api.filter.SupportedDataTypePruner;
 import org.greenplum.pxf.api.filter.SupportedOperatorPruner;
 import org.greenplum.pxf.api.filter.ToStringTreeVisitor;
 import org.greenplum.pxf.api.filter.TreeTraverser;
-import org.greenplum.pxf.api.filter.TreeVisitor;
+import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.plugins.hdfs.HdfsSplittableDataAccessor;
@@ -92,13 +94,14 @@ import static org.greenplum.pxf.plugins.hive.HiveDataFragmenter.PXF_META_TABLE_P
 public class HiveAccessor extends HdfsSplittableDataAccessor {
 
     private static final Logger LOG = LoggerFactory.getLogger(HiveAccessor.class);
-
-    private List<HivePartition> partitions;
+    private static final String PXF_PPD_HIVE = "pxf.ppd.hive";
     private static final String HIVE_DEFAULT_PARTITION = "__HIVE_DEFAULT_PARTITION__";
+    private List<HivePartition> partitions;
     private int skipHeaderCount;
     protected List<Integer> hiveIndexes;
     private String hiveColumnsString;
     private String hiveColumnTypesString;
+    private boolean isPredicatePushdownAllowed;
 
     // ----- members for predicate pushdown handling -----
     protected Boolean filterInFragmenter;
@@ -106,7 +109,24 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
     private static final int KRYO_BUFFER_SIZE = 4 * 1024;
     private static final int KRYO_MAX_BUFFER_SIZE = 10 * 1024 * 1024;
 
-    static final EnumSet<Operator> SUPPORTED_OPERATORS =
+    static final EnumSet<Operator> PARQUET_SUPPORTED_OPERATORS =
+            EnumSet.of(
+                    Operator.NOOP,
+                    Operator.LESS_THAN,
+                    Operator.GREATER_THAN,
+                    Operator.LESS_THAN_OR_EQUAL,
+                    Operator.GREATER_THAN_OR_EQUAL,
+                    Operator.EQUALS,
+                    Operator.NOT_EQUALS,
+                    //Operator.IS_NULL,
+                    //Operator.IS_NOT_NULL,
+                    Operator.IN,
+                    Operator.OR,
+                    Operator.AND,
+                    Operator.NOT
+            );
+
+    static final EnumSet<Operator> ORC_SUPPORTED_OPERATORS =
             EnumSet.of(
                     Operator.NOOP,
                     Operator.LESS_THAN,
@@ -122,7 +142,43 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
                     Operator.AND,
                     Operator.NOT
             );
-    private static final TreeVisitor PRUNER = new SupportedOperatorPruner(SUPPORTED_OPERATORS);
+
+    static final EnumSet<DataType> PARQUET_SUPPORTED_DATATYPES =
+            EnumSet.of(
+                    DataType.BIGINT,
+                    DataType.INTEGER,
+                    DataType.SMALLINT,
+                    DataType.REAL,
+                    //DataType.NUMERIC,
+                    DataType.FLOAT8,
+                    DataType.TEXT,
+                    DataType.VARCHAR,
+                    DataType.BPCHAR,
+                    DataType.BOOLEAN,
+                    //DataType.DATE,
+                    //DataType.TIMESTAMP,
+                    DataType.TIME,
+                    DataType.BYTEA
+            );
+
+    static final EnumSet<DataType> ORC_SUPPORTED_DATATYPES =
+            EnumSet.of(
+                    DataType.BIGINT,
+                    DataType.INTEGER,
+                    DataType.SMALLINT,
+                    DataType.REAL,
+                    DataType.NUMERIC,
+                    DataType.FLOAT8,
+                    DataType.TEXT,
+                    DataType.VARCHAR,
+                    DataType.BPCHAR,
+                    DataType.BOOLEAN,
+                    DataType.DATE,
+                    DataType.TIMESTAMP,
+                    DataType.TIME,
+                    DataType.BYTEA
+            );
+
     private static final TreeTraverser TRAVERSER = new TreeTraverser();
 
     /**
@@ -156,7 +212,29 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
      */
     @Override
     public void initialize(RequestContext context) {
+
         super.initialize(context);
+
+        // determine if predicate pushdown is allowed by configuration
+        if (configuration.get(PXF_PPD_HIVE, "true").equalsIgnoreCase("true")) {
+            isPredicatePushdownAllowed = true;
+            LOG.debug("Predicate pushdown for Hive is enabled");
+            /*
+             Set the property if not explicitly specified by the user to "false" to work around the issue fixed
+             in HIVE-21407 but not yet available for distribution, where in ParquetRecordReaderWrapper
+             code "conf = new JobConf(oldJobConf)" should be "conf = new JobConf(jobConf)" otherwise predicate pushdown
+             information for Parquet file read is lost and is not used in the further processing by ParquetRecordReaderWrapper
+
+             We assume our preference is to not skip the timestamp conversion, as we assume parquet file is properly storing
+             the timestamp that was converted from local timezone to UTC. If conversion is not desired and should be skipped,
+             users can set the property value to "true" in their hive-site.xml
+            */
+            jobConf.set(HiveConf.ConfVars.HIVE_PARQUET_TIMESTAMP_SKIP_CONVERSION.varname,
+                    jobConf.get(HiveConf.ConfVars.HIVE_PARQUET_TIMESTAMP_SKIP_CONVERSION.varname, "false"));
+        } else {
+            LOG.debug("Predicate pushdown for Hive has been disabled in configuration");
+        }
+
         HiveMetadata metadata;
         Properties properties;
         try {
@@ -518,13 +596,6 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
     }
 
     /**
-     * @return ORC file reader
-     */
-    protected Reader getOrcReader() {
-        return HiveUtilities.getOrcReader(configuration, context);
-    }
-
-    /**
      * Adds the table tuple description to JobConf object
      * so only these columns will be returned.
      */
@@ -551,25 +622,37 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
      * JobConf object
      */
     private void addFilters() throws Exception {
-        if (!context.hasFilter()) {
+        if (!isPredicatePushdownAllowed || !context.hasFilter()) {
             return;
         }
 
         /* Predicate push-down configuration */
-        String filterStr = context.getFilterString();
-
         HiveSearchArgumentBuilder searchArgumentBuilder =
                 new HiveSearchArgumentBuilder(context.getTupleDescription(), configuration);
 
         // Parse the filter string into a expression tree Node
+        String filterStr = context.getFilterString();
         Node root = new FilterParser().parse(filterStr);
-        // Prune the parsed tree with valid supported operators and then
-        // traverse the pruned tree with the searchArgumentBuilder to produce a SearchArgument for ORC
-        TRAVERSER.traverse(root, PRUNER, searchArgumentBuilder);
 
-        SearchArgument.Builder filterBuilder = searchArgumentBuilder.getFilterBuilder();
-        SearchArgument searchArgument = filterBuilder.build();
-        jobConf.set(ConvertAstToSearchArg.SARG_PUSHDOWN, toKryo(searchArgument));
+        // Prune the parsed tree with valid supported datatypes and operators and then
+        // traverse the pruned tree with the searchArgumentBuilder to produce a SearchArgument for ORC
+        TRAVERSER.traverse(
+                root,
+                new SupportedDataTypePruner(context.getTupleDescription(), getSupportedDatatypesForPushdown()),
+                new SupportedOperatorPruner(getSupportedOperatorsForPushdown()),
+                searchArgumentBuilder);
+
+        String kryoString = toKryo(searchArgumentBuilder.getFilterBuilder().build());
+        jobConf.set(ConvertAstToSearchArg.SARG_PUSHDOWN, kryoString);
+        LOG.debug("Added SARG={}", kryoString);
+    }
+
+    protected EnumSet<DataType> getSupportedDatatypesForPushdown() {
+        return PARQUET_SUPPORTED_DATATYPES;
+    }
+
+    protected EnumSet<Operator> getSupportedOperatorsForPushdown() {
+        return PARQUET_SUPPORTED_OPERATORS;
     }
 
     /**

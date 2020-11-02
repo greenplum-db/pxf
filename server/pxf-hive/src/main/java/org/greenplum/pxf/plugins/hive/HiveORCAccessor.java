@@ -23,9 +23,14 @@ import org.apache.hadoop.hive.ql.io.orc.OrcInputFormat;
 import org.apache.hadoop.hive.ql.io.orc.Reader;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.StatsAccessor;
+import org.greenplum.pxf.api.filter.Operator;
+import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.EnumAggregationType;
 import org.greenplum.pxf.api.utilities.Utilities;
+import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
+
+import java.util.EnumSet;
 
 /**
  * Specialization of HiveAccessor for a Hive table that stores only ORC files.
@@ -112,6 +117,23 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
             row = rowToEmitCount;
         }
         return row;
+    }
+
+    @Override
+    protected EnumSet<Operator> getSupportedOperatorsForPushdown() {
+        return ORC_SUPPORTED_OPERATORS;
+    }
+
+    @Override
+    protected EnumSet<DataType> getSupportedDatatypesForPushdown() {
+        return ORC_SUPPORTED_DATATYPES;
+    }
+
+    /**
+     * @return ORC file reader
+     */
+    protected Reader getOrcReader() {
+        return HiveUtilities.getOrcReader(configuration, context);
     }
 
 }

@@ -17,7 +17,7 @@ import org.junit.rules.ExpectedException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.greenplum.pxf.plugins.hive.HiveORCAccessor.SUPPORTED_OPERATORS;
+import static org.greenplum.pxf.plugins.hive.HiveAccessor.ORC_SUPPORTED_OPERATORS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -26,7 +26,7 @@ public class HiveSearchArgumentBuilderTest {
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
-    private static final TreeVisitor PRUNER = new SupportedOperatorPruner(SUPPORTED_OPERATORS);
+    private static final TreeVisitor PRUNER = new SupportedOperatorPruner(ORC_SUPPORTED_OPERATORS);
     private static final TreeTraverser TRAVERSER = new TreeTraverser();
     private List<ColumnDescriptor> columnDescriptors;
 
