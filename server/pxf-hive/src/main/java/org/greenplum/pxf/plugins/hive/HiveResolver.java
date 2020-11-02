@@ -672,6 +672,7 @@ public class HiveResolver extends HivePlugin implements Resolver {
                 String.valueOf(input.getGreenplumCSV().getDelimiter()) : null;
 
         if (userDelim == null) {
+            // TODO: this code path does not seem to be ever executed. Remove if unnecessary
             /* No DELIMITER in URL, try to get it from fragment's user data*/
             delimiter = (char) HiveUtilities.getDelimiterCode(metastoreProperties);
         } else {
