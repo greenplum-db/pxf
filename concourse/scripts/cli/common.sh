@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
 
 export PXF_CONF=~gpadmin/pxf
-GPHOME=/usr/local/greenplum-db-devel
-export PATH=$PATH:${GPHOME}/pxf/bin
+export GPHOME=/usr/local/greenplum-db
+export PXF_HOME=$(find /usr/local/ -name "pxf-gp*" -type d)
+export PATH=$PATH:${PXF_HOME}/bin
+
+echo "Using GPHOME:   $GPHOME"
+echo "Using PXF_HOME: $PXF_HOME"
+echo "Using PXF_CONF: $PXF_CONF"
 
 red="\033[0;31m"
 green="\033[0;32m"

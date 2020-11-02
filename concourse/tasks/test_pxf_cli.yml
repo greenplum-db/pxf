@@ -5,10 +5,9 @@ image_resource:
 inputs:
 - name: pxf_src
 - name: cluster_env_files
-- name: bin_gpdb
-- name: pxf_tarball
 params:
   ACCEPTANCE:
+  PGPORT: 5432
   PXF_JVM_OPTS:
   TARGET_OS: centos
   TARGET_OS_VERSION: 6

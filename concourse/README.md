@@ -127,20 +127,3 @@ Expose the `pg_regress` pipeline:
 ```shell
 fly -t ud expose-pipeline -p pg_regress
 ```
-
-# Deploy the PXF CLI pipeline
-
-```shell
-fly -t ud set-pipeline \
-    -c ~/workspace/pxf/concourse/pipelines/pxf_cli_pipeline.yml \
-    -l ~/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
-    -l ~/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
-    -l ~/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud.yml \
-    -v gcs-bucket-resources-prod=pivotal-gpdb-concourse-resources-prod \
-    -v icw_green_bucket_gpdb5=gpdb5-stable-concourse-builds \
-    -v icw_green_bucket_gpdb6=gpdb6-stable-concourse-builds \
-    -v pgport_gpdb5=5432 \
-    -v pgport_gpdb6=6000 \
-    -v pxf-git-branch=master \
-    -p pxf_cli
-```
