@@ -61,7 +61,7 @@ sed -i "s|module_pathname =.*|module_pathname = '%{prefix}/gpextable/pxf'|g" %{p
 %config(noreplace) %{prefix}/conf/pxf-log4j2.xml
 %config(noreplace) %{prefix}/conf/pxf-profiles.xml
 
-%preun
+%pre
 # cleanup files and directories created by 'pxf init' command
 # only applies for old installations (pre 6.0.0)
 %__rm -f %{prefix}/conf/pxf-private.classpath
