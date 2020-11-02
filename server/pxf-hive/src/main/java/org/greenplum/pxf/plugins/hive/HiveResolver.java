@@ -61,7 +61,6 @@ import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
-import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -97,7 +96,6 @@ public class HiveResolver extends HivePlugin implements Resolver {
     protected Deserializer deserializer;
     protected String serdeClassName;
     protected List<Integer> hiveIndexes;
-    protected Properties metastoreProperties;
     protected HiveMetadata metadata;
 
     private int numberOfPartitions;
@@ -158,7 +156,6 @@ public class HiveResolver extends HivePlugin implements Resolver {
         collectionDelim = StringUtils.defaultString(context.getOption("COLLECTION_DELIM"), COLLECTION_DELIM);
         mapkeyDelim = StringUtils.defaultString(context.getOption("MAPKEY_DELIM"), MAPKEY_DELIM);
         hiveIndexes = metadata.getHiveIndexes();
-        metastoreProperties = getSerdeProperties();
         serdeClassName = metadata.getProperties().getProperty(SERIALIZATION_LIB);
     }
 
@@ -169,7 +166,7 @@ public class HiveResolver extends HivePlugin implements Resolver {
     void initSerde() throws Exception {
         Class<?> c = Class.forName(serdeClassName, true, JavaUtils.getClassLoader());
         deserializer = (Deserializer) c.getDeclaredConstructor().newInstance();
-        deserializer.initialize(getJobConf(), metastoreProperties);
+        deserializer.initialize(getJobConf(), getSerdeProperties());
     }
 
     protected JobConf getJobConf() {
@@ -671,40 +668,37 @@ public class HiveResolver extends HivePlugin implements Resolver {
         String userDelim = input.getGreenplumCSV().getDelimiter() != null ?
                 String.valueOf(input.getGreenplumCSV().getDelimiter()) : null;
 
-        if (userDelim == null) {
-            // TODO: this code path does not seem to be ever executed. Remove if unnecessary
-            /* No DELIMITER in URL, try to get it from fragment's user data*/
-            delimiter = (char) HiveUtilities.getDelimiterCode(metastoreProperties);
-        } else {
-            final int VALID_LENGTH = 1;
-            final int VALID_LENGTH_HEX = 4;
-            if (userDelim.startsWith("\\x")) { // hexadecimal sequence
-                if (userDelim.length() != VALID_LENGTH_HEX) {
-                    throw new IllegalArgumentException(
-                            "Invalid hexdecimal value for delimiter (got"
-                                    + userDelim + ")");
-                }
-                delimiter = (char) Integer.parseInt(
-                        userDelim.substring(2, VALID_LENGTH_HEX), 16);
-                if (!CharUtils.isAscii(delimiter)) {
-                    throw new IllegalArgumentException(
-                            "Invalid delimiter value. Must be a single ASCII character, or a hexadecimal sequence (got non ASCII "
-                                    + delimiter + ")");
-                }
-                return;
-            }
-            if (userDelim.length() != VALID_LENGTH) {
+        if (userDelim == null)
+            return;
+
+        final int VALID_LENGTH = 1;
+        final int VALID_LENGTH_HEX = 4;
+        if (userDelim.startsWith("\\x")) { // hexadecimal sequence
+            if (userDelim.length() != VALID_LENGTH_HEX) {
                 throw new IllegalArgumentException(
-                        "Invalid delimiter value. Must be a single ASCII character, or a hexadecimal sequence (got "
+                        "Invalid hexdecimal value for delimiter (got"
                                 + userDelim + ")");
             }
-            if (!CharUtils.isAscii(userDelim.charAt(0))) {
+            delimiter = (char) Integer.parseInt(
+                    userDelim.substring(2, VALID_LENGTH_HEX), 16);
+            if (!CharUtils.isAscii(delimiter)) {
                 throw new IllegalArgumentException(
                         "Invalid delimiter value. Must be a single ASCII character, or a hexadecimal sequence (got non ASCII "
-                                + userDelim + ")");
+                                + delimiter + ")");
             }
-            delimiter = userDelim.charAt(0);
+            return;
         }
+        if (userDelim.length() != VALID_LENGTH) {
+            throw new IllegalArgumentException(
+                    "Invalid delimiter value. Must be a single ASCII character, or a hexadecimal sequence (got "
+                            + userDelim + ")");
+        }
+        if (!CharUtils.isAscii(userDelim.charAt(0))) {
+            throw new IllegalArgumentException(
+                    "Invalid delimiter value. Must be a single ASCII character, or a hexadecimal sequence (got non ASCII "
+                            + userDelim + ")");
+        }
+        delimiter = userDelim.charAt(0);
     }
 
     protected Properties getSerdeProperties() {

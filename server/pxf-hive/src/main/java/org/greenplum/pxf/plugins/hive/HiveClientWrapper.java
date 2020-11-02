@@ -11,9 +11,7 @@ import org.apache.hadoop.hive.metastore.RetryingMetaStoreClient;
 import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.MetaException;
-import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
-import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.thrift.TException;
 import org.greenplum.pxf.api.UnsupportedTypeException;
@@ -165,7 +163,6 @@ public class HiveClientWrapper {
         }
 
         Properties properties = partData.properties;
-        addDelimiterInformation(properties, partData.storageDesc);
         addPartitionValuesInformation(properties, partData);
         removeUnusedProperties(properties);
         return serializeProperties(properties);
@@ -320,31 +317,6 @@ public class HiveClientWrapper {
         properties.remove("transient_lastDdlTime");
         properties.remove("last_modified_time");
         properties.remove("last_modified_by");
-    }
-
-    /**
-     * Adds field delimiter information to the properties object
-     *
-     * @param properties the properties
-     * @param sd         the storage descriptor
-     */
-    private void addDelimiterInformation(Properties properties, StorageDescriptor sd) {
-        String delimiter = getSerdeParameter(sd, serdeConstants.FIELD_DELIM);
-        if (delimiter != null) {
-            properties.put(serdeConstants.FIELD_DELIM, delimiter);
-        }
-        delimiter = getSerdeParameter(sd, serdeConstants.SERIALIZATION_FORMAT);
-        if (delimiter != null) {
-            properties.put(serdeConstants.SERIALIZATION_FORMAT, delimiter);
-        }
-    }
-
-    private String getSerdeParameter(StorageDescriptor sd, String parameterKey) {
-        String parameterValue = null;
-        if (sd != null && sd.getSerdeInfo() != null && sd.getSerdeInfo().getParameters() != null && sd.getSerdeInfo().getParameters().get(parameterKey) != null) {
-            parameterValue = sd.getSerdeInfo().getParameters().get(parameterKey);
-        }
-        return parameterValue;
     }
 
     /*

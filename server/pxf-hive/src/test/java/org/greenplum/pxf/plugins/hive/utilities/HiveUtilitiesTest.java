@@ -334,26 +334,4 @@ public class HiveUtilitiesTest {
             assertNull(result.getModifiers());
         }
     }
-
-    @Test
-    public void getDelimiterCode() {
-        Properties properties = new Properties();
-
-        //Default delimiter code should be 44(comma)
-        int delimiterCode = HiveUtilities.getDelimiterCode(properties);
-        char defaultDelim = ',';
-        assertEquals(delimiterCode, (int) defaultDelim);
-
-        //Some serdes use FIELD_DELIM key
-        char expectedDelim = '%';
-        properties.put(serdeConstants.FIELD_DELIM, String.valueOf(expectedDelim));
-        delimiterCode = HiveUtilities.getDelimiterCode(properties);
-        assertEquals(delimiterCode, (int) expectedDelim);
-
-        //Some serdes use SERIALIZATION_FORMAT key
-        properties = new Properties();
-        properties.put(serdeConstants.SERIALIZATION_FORMAT, String.valueOf((int) expectedDelim));
-        delimiterCode = HiveUtilities.getDelimiterCode(properties);
-        assertEquals(delimiterCode, (int) expectedDelim);
-    }
 }

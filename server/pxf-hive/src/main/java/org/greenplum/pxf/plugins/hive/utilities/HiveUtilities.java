@@ -249,27 +249,6 @@ public class HiveUtilities {
     }
 
     /**
-     * The method which extracts field delimiter from the metastore properties.
-     * When unable to extract delimiter from storage descriptor, default value is used
-     *
-     * @param properties the properties that we received from the fragmenter
-     * @return ASCII code of delimiter
-     */
-    public static int getDelimiterCode(Properties properties) {
-        String delimiter = properties.getProperty(serdeConstants.FIELD_DELIM);
-        if (delimiter != null) {
-            return delimiter.charAt(0);
-        }
-
-        delimiter = properties.getProperty(serdeConstants.SERIALIZATION_FORMAT);
-        if (delimiter != null) {
-            return Integer.parseInt(delimiter);
-        }
-
-        return DEFAULT_DELIMITER_CODE;
-    }
-
-    /**
      * Returns a new Kryo from ThreadLocal
      *
      * @return a new Kryo from ThreadLocal
