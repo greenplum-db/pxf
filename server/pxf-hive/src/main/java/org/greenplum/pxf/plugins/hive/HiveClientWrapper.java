@@ -1,7 +1,5 @@
 package org.greenplum.pxf.plugins.hive;
 
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.io.Output;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -25,7 +23,6 @@ import org.greenplum.pxf.api.security.SecureLogin;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hive.utilities.EnumHiveToGpdbType;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
-import org.greenplum.pxf.plugins.hive.utilities.PropertiesSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +33,6 @@ import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 import static org.apache.hadoop.hive.metastore.api.hive_metastoreConstants.FILE_OUTPUT_FORMAT;
@@ -44,6 +40,7 @@ import static org.apache.hadoop.hive.metastore.api.hive_metastoreConstants.META_
 import static org.greenplum.pxf.api.model.ConfigurationFactory.PXF_CONFIG_RESOURCE_PATH_PROPERTY;
 import static org.greenplum.pxf.plugins.hive.HiveDataFragmenter.HIVE_PARTITIONS_DELIM;
 import static org.greenplum.pxf.plugins.hive.HiveDataFragmenter.PXF_META_TABLE_PARTITION_COLUMN_VALUES;
+import static org.greenplum.pxf.plugins.hive.utilities.HiveUtilities.serializeProperties;
 
 public class HiveClientWrapper {
 
@@ -52,15 +49,6 @@ public class HiveClientWrapper {
     private static final Logger LOG = LoggerFactory.getLogger(HiveClientWrapper.class);
 
     private static final String WILDCARD = "*";
-
-    // The Kryo instance is not thread safe, and quite expensive to build,
-    // storing it on a ThreadLocal is a recommended way to make sure that the
-    // serializer is thread safe.
-    private static final ThreadLocal<Kryo> kryo = ThreadLocal.withInitial(() -> {
-        Kryo k = new Kryo();
-        k.addDefaultSerializer(Map.class, PropertiesSerializer.class);
-        return k;
-    });
 
     private static final String STR_RC_FILE_INPUT_FORMAT = "org.apache.hadoop.hive.ql.io.RCFileInputFormat";
     private static final String STR_TEXT_FILE_INPUT_FORMAT = "org.apache.hadoop.mapred.TextInputFormat";
@@ -312,14 +300,6 @@ public class HiveClientWrapper {
             }
         }
         return hiveConf;
-    }
-
-    /* Turns a Properties class into a string */
-    private byte[] serializeProperties(Properties properties) {
-        Output out = new Output(4 * 1024, 10 * 1024 * 1024);
-        kryo.get().writeObject(out, properties);
-        out.close();
-        return out.toBytes();
     }
 
     /* Turns the partition values into a string and adds them to the properties */

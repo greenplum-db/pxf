@@ -19,7 +19,6 @@ package org.greenplum.pxf.plugins.hive;
  * under the License.
  */
 
-import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
@@ -43,7 +42,6 @@ import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.plugins.hdfs.HdfsSplittableDataAccessor;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
-import org.greenplum.pxf.plugins.hive.utilities.PropertiesSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,12 +84,6 @@ import static org.greenplum.pxf.plugins.hive.HiveDataFragmenter.PXF_META_TABLE_P
 public class HiveAccessor extends HdfsSplittableDataAccessor {
 
     private static final Logger LOG = LoggerFactory.getLogger(HiveAccessor.class);
-
-    private static final ThreadLocal<Kryo> kryo = ThreadLocal.withInitial(() -> {
-        Kryo k = new Kryo();
-        k.addDefaultSerializer(Map.class, PropertiesSerializer.class);
-        return k;
-    });
 
     private List<HivePartition> partitions;
     private static final String HIVE_DEFAULT_PARTITION = "__HIVE_DEFAULT_PARTITION__";
@@ -509,6 +501,6 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
     protected Properties getSerdeProperties(byte[] userData) {
         if (userData == null)
             throw new IllegalArgumentException("propsString is mandatory to initialize serde.");
-        return kryo.get().readObject(new Input(userData), Properties.class);
+        return HiveUtilities.getKryo().readObject(new Input(userData), Properties.class);
     }
 }

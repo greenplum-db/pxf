@@ -1,7 +1,5 @@
 package org.greenplum.pxf.plugins.hive;
 
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.io.Output;
 import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
@@ -17,10 +15,9 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.Properties;
 
+import static org.greenplum.pxf.plugins.hive.utilities.HiveUtilities.serializeProperties;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -120,12 +117,5 @@ public class HiveAccessorTest {
         accessor.readNextObject();
 
         verify(reader, times(1)).next(any(), any());
-    }
-
-    private byte[] serializeProperties(Properties properties) {
-        Output out = new Output(4 * 1024, 10 * 1024 * 1024);
-        new Kryo().writeObject(out, properties);
-        out.close();
-        return out.toBytes();
     }
 }

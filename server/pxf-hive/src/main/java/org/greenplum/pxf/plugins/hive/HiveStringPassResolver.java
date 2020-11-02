@@ -45,6 +45,13 @@ public class HiveStringPassResolver extends HiveResolver {
     }
 
     @Override
+    void initSerde() throws Exception {
+        if (context.getOutputFormat() == OutputFormat.GPDBWritable) {
+            super.initSerde();
+        }
+    }
+
+    @Override
     void initPartitionFields() {
         if (context.getOutputFormat() == OutputFormat.TEXT) {
             initTextPartitionFields(parts);
@@ -61,7 +68,6 @@ public class HiveStringPassResolver extends HiveResolver {
     @Override
     public List<OneField> getFields(OneRow onerow) throws Exception {
         if (context.getOutputFormat() == OutputFormat.TEXT) {
-            ensureInitialized();
             String line = (onerow.getData()).toString();
             /* We follow Hive convention. Partition fields are always added at the end of the record */
             return Collections.singletonList(new OneField(VARCHAR.getOID(), line + parts));
@@ -69,24 +75,4 @@ public class HiveStringPassResolver extends HiveResolver {
             return super.getFields(onerow);
         }
     }
-
-    /**
-     * Make sure the required fields have been initialized
-     */
-    private void ensureInitialized() {
-        if (metadata != null) return;
-        // HiveMetadata is passed from accessor
-        metadata = (HiveMetadata) context.getMetadata();
-        if (metadata == null) {
-            throw new RuntimeException("No hive metadata detected in request context");
-        }
-
-        try {
-            parseUserData(context);
-            initPartitionFields();
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to initialize HiveStringPassResolver", e);
-        }
-    }
-
 }

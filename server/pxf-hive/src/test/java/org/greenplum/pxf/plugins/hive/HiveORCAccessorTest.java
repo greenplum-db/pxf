@@ -34,6 +34,7 @@ import org.junit.Test;
 import java.util.Properties;
 
 import static org.apache.hadoop.hive.ql.io.sarg.ConvertAstToSearchArg.SARG_PUSHDOWN;
+import static org.greenplum.pxf.plugins.hive.utilities.HiveUtilities.serializeProperties;
 import static org.junit.Assert.assertEquals;
 
 public class HiveORCAccessorTest {
@@ -124,12 +125,5 @@ public class HiveORCAccessorTest {
         new Kryo().writeObject(out, sarg);
         out.close();
         return Base64.encodeBase64String(out.toBytes());
-    }
-
-    private byte[] serializeProperties(Properties properties) {
-        Output out = new Output(4 * 1024, 10 * 1024 * 1024);
-        new Kryo().writeObject(out, properties);
-        out.close();
-        return out.toBytes();
     }
 }

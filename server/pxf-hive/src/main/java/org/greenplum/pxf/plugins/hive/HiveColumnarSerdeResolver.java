@@ -22,7 +22,6 @@ package org.greenplum.pxf.plugins.hive;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.serde.serdeConstants;
-import org.apache.hadoop.hive.serde2.Deserializer;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.PrimitiveObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.StructField;
@@ -96,7 +95,8 @@ public class HiveColumnarSerdeResolver extends HiveResolver {
     @Override
     void initTextPartitionFields(StringBuilder parts) {
         partitionColumnNames = metadata.getPartitions().stream()
-                .collect(Collectors.toMap(HivePartition::getName, partition -> partition));
+                .collect(Collectors.toMap(partition -> StringUtils.lowerCase(partition.getName()),
+                        partition -> partition));
     }
 
     /**
@@ -107,7 +107,6 @@ public class HiveColumnarSerdeResolver extends HiveResolver {
     @Override
     public List<OneField> getFields(OneRow onerow) throws Exception {
         if (context.getOutputFormat() == OutputFormat.TEXT) {
-            Deserializer deserializer = getDeserializer();
             firstColumn = true;
             builder = new StringBuilder();
             Object tuple = deserializer.deserialize((Writable) onerow.getData());

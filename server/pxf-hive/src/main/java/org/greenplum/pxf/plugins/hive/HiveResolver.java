@@ -94,7 +94,7 @@ public class HiveResolver extends HivePlugin implements Resolver {
     protected char delimiter;
     protected String collectionDelim;
     protected String mapkeyDelim;
-    protected Deserializer d;
+    protected Deserializer deserializer;
     protected String serdeClassName;
     protected List<Integer> hiveIndexes;
     protected Properties metastoreProperties;
@@ -115,11 +115,18 @@ public class HiveResolver extends HivePlugin implements Resolver {
     public void initialize(RequestContext context) {
         super.initialize(context);
         hiveDefaultPartName = HiveConf.getVar(configuration, HiveConf.ConfVars.DEFAULTPARTITIONNAME);
+
+        try {
+            parseUserData(context);
+            initPartitionFields();
+            initSerde();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to initialize HiveResolver", e);
+        }
     }
 
     @Override
     public List<OneField> getFields(OneRow onerow) throws Exception {
-        Deserializer deserializer = getDeserializer();
         Object tuple = deserializer.deserialize((Writable) onerow.getData());
         // Each Hive record is a Struct
         StructObjectInspector soi = (StructObjectInspector) deserializer.getObjectInspector();
@@ -143,11 +150,26 @@ public class HiveResolver extends HivePlugin implements Resolver {
 
     /* Parses user data string (received from fragmenter). */
     void parseUserData(RequestContext context) {
+        // HiveMetadata is passed from accessor
+        metadata = (HiveMetadata) context.getMetadata();
+        if (metadata == null) {
+            throw new RuntimeException("No hive metadata detected in request context");
+        }
         collectionDelim = StringUtils.defaultString(context.getOption("COLLECTION_DELIM"), COLLECTION_DELIM);
         mapkeyDelim = StringUtils.defaultString(context.getOption("MAPKEY_DELIM"), MAPKEY_DELIM);
         hiveIndexes = metadata.getHiveIndexes();
         metastoreProperties = getSerdeProperties();
         serdeClassName = metadata.getProperties().getProperty(SERIALIZATION_LIB);
+    }
+
+    /*
+     * Gets and init the deserializer for the records of this Hive data
+     * fragment.
+     */
+    void initSerde() throws Exception {
+        Class<?> c = Class.forName(serdeClassName, true, JavaUtils.getClassLoader());
+        deserializer = (Deserializer) c.getDeclaredConstructor().newInstance();
+        deserializer.initialize(getJobConf(), metastoreProperties);
     }
 
     protected JobConf getJobConf() {
@@ -249,7 +271,8 @@ public class HiveResolver extends HivePlugin implements Resolver {
             }
 
             if (columnDescriptorContainsColumn(columnName)) {
-                partitionColumnNames.put(columnName, new OneField(convertedType.getOID(), convertedValue));
+                partitionColumnNames.put(StringUtils.lowerCase(columnName),
+                        new OneField(convertedType.getOID(), convertedValue));
             }
         }
         numberOfPartitions = partitionColumnNames.size();
@@ -687,30 +710,9 @@ public class HiveResolver extends HivePlugin implements Resolver {
         return metadata.getProperties();
     }
 
-    protected Deserializer getDeserializer() {
-        if (d == null) {
-            // HiveUserData is passed from accessor
-            metadata = (HiveMetadata) context.getMetadata();
-            if (metadata == null) {
-                throw new RuntimeException("No hive metadata detected in request context");
-            }
-
-            try {
-                parseUserData(context);
-                initPartitionFields();
-                Class<?> c = Class.forName(serdeClassName, true, JavaUtils.getClassLoader());
-                d = (Deserializer) c.getDeclaredConstructor().newInstance();
-                d.initialize(getJobConf(), metastoreProperties);
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to initialize HiveResolver", e);
-            }
-        }
-        return d;
-    }
-
     private boolean columnDescriptorContainsColumn(String columnName) {
         return context.getTupleDescription()
                 .stream()
-                .anyMatch(cd -> columnName.equals(cd.columnName()));
+                .anyMatch(cd -> StringUtils.equalsIgnoreCase(columnName, cd.columnName()));
     }
 }

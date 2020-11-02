@@ -12,8 +12,6 @@ import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
-import org.apache.hive.com.esotericsoftware.kryo.Kryo;
-import org.apache.hive.com.esotericsoftware.kryo.io.Output;
 import org.greenplum.pxf.api.model.BaseFragmenter;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.Metadata;
@@ -26,6 +24,8 @@ import java.io.ObjectOutputStream;
 import java.util.List;
 import java.util.Properties;
 
+import static org.greenplum.pxf.plugins.hive.utilities.HiveUtilities.serializeProperties;
+
 
 /**
  * Fragmenter which splits one file into multiple fragments. Helps to simulate a
@@ -37,7 +37,6 @@ import java.util.Properties;
 public class MultipleHiveFragmentsPerFileFragmenter extends BaseFragmenter {
     private static final Log LOG = LogFactory.getLog(MultipleHiveFragmentsPerFileFragmenter.class);
 
-    private static final ThreadLocal<Kryo> kryo = ThreadLocal.withInitial(Kryo::new);
     private static final long SPLIT_SIZE = 1024;
     private JobConf jobConf;
     private IMetaStoreClient client;
@@ -112,13 +111,5 @@ public class MultipleHiveFragmentsPerFileFragmenter extends BaseFragmenter {
             return fsp.getPath().toString();
         }
         throw new RuntimeException("Unable to get file path for table.");
-    }
-
-    /* Turns a Properties class into a string */
-    private byte[] serializeProperties(Properties properties) {
-        Output out = new Output(4 * 1024, 10 * 1024 * 1024);
-        kryo.get().writeObject(out, properties);
-        out.close();
-        return out.toBytes();
     }
 }
