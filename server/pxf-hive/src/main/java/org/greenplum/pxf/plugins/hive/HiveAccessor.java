@@ -19,7 +19,6 @@ package org.greenplum.pxf.plugins.hive;
  * under the License.
  */
 
-import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import org.apache.commons.codec.binary.Base64;
