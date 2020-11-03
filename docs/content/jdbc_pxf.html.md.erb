@@ -77,7 +77,7 @@ The specific keywords and values used in the Greenplum Database [CREATE EXTERNAL
 | \<external&#8209;table&#8209;name\>    | The full name of the external table. Depends on the external SQL database, may include a schema name and a table name. |
 | query:\<query_name\>    | The name of the query to execute in the remote SQL database. |
 | PROFILE    | The `PROFILE` keyword value must specify `Jdbc`. |
-| SERVER=\<server_name\>   | The named server configuration that PXF uses to access the data. Optional; PXF uses the `default` server if not specified. |
+| SERVER=\<server_name\>   | The named server configuration that PXF uses to access the data. PXF uses the `default` server if not specified. |
 | \<custom&#8209;option\>=\<value\>  | \<custom-option\> is profile-specific. `Jdbc` profile-specific options are discussed in the next section.|
 | FORMAT 'CUSTOM' | The JDBC `CUSTOM` `FORMAT` supports the built-in `'pxfwritable_import'` `FORMATTER` function for read operations and the built-in `'pxfwritable_export'` function for write operations. |
 

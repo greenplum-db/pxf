@@ -103,7 +103,7 @@ The specific keywords and values used in the Greenplum Database [CREATE EXTERNAL
 |-------|-------------------------------------|
 | \<file&#8209;path\>    | The path to a directory or file on the network file system. PXF considers this file or path as being relative to the [`pxf.fs.basePath`](cfg_server.html#pxf-fs-basepath) property value specified in \<server_name\>'s server configuration.  \<file&#8209;path\> must not specify a relative path nor include the dollar sign (`$`) character. |
 | PROFILE    | The `PROFILE` keyword value must specify a `file:<file-type>` identified in the table above. |
-| SERVER=\<server_name\>   | The named server configuration that PXF uses to access the network file system. Optional; PXF uses the `default` server if not specified. |
+| SERVER=\<server_name\>   | The named server configuration that PXF uses to access the network file system. PXF uses the `default` server if not specified. |
 | \<custom&#8209;option\>=\<value\>  | \<custom-option\> is profile-specific.|
 | FORMAT&nbsp;\<value\>| PXF profiles support the `TEXT`, `CSV`, and `CUSTOM` formats.  |
 | \<formatting&#8209;properties\> | Formatting properties supported by the profile; for example, the `FORMATTER` or `delimiter`. |

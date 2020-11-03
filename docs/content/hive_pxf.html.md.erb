@@ -196,7 +196,7 @@ Hive connector-specific keywords and values used in the Greenplum Database [CREA
 | \<hive&#8209;db&#8209;name\>    | The name of the Hive database. If omitted, defaults to the Hive database named `default`. |
 | \<hive&#8209;table&#8209;name\>    | The name of the Hive table. |
 | PROFILE    | The `PROFILE` keyword must specify one of the values `Hive`, `HiveText`, `HiveRC`, `HiveORC`, or `HiveVectorizedORC`. |
-| SERVER=\<server_name\>    | The named server configuration that PXF uses to access the data. Optional; PXF uses the `default` server if not specified. |
+| SERVER=\<server_name\>    | The named server configuration that PXF uses to access the data. PXF uses the `default` server if not specified. |
 | FORMAT (`Hive`, `HiveORC`, and `HiveVectorizedORC` profiles)   | The `FORMAT` clause must specify `'CUSTOM'`. The `CUSTOM` format requires the built-in `pxfwritable_import` `formatter`.   |
 | FORMAT (`HiveText` and `HiveRC` profiles) | The `FORMAT` clause must specify `TEXT`. Specify the single ascii character field delimiter in the `delimiter='<delim>'` formatting option. |
 
