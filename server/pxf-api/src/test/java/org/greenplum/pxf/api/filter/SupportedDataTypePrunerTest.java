@@ -1,180 +1,520 @@
 package org.greenplum.pxf.api.filter;
 
+import org.greenplum.pxf.api.io.DataType;
+import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
 public class SupportedDataTypePrunerTest {
 
-    private static final EnumSet<Operator> ALL_SUPPORTED = EnumSet.allOf(Operator.class);
-    private static final EnumSet<Operator> NONE_SUPPORTED = EnumSet.noneOf(Operator.class);
     private static final TreeTraverser TRAVERSER = new TreeTraverser();
+    private static final Integer[] TM = new Integer[]{}; // type modifiers
 
+    private static final List<ColumnDescriptor> oneTextColumn = Arrays.asList(
+            new ColumnDescriptor("c0", DataType.TEXT.getOID(), 0, "", TM)
+    );
+
+    private static final List<ColumnDescriptor> oneBooleanColumn = Arrays.asList(
+            new ColumnDescriptor("c0", DataType.BOOLEAN.getOID(), 0, "", TM)
+    );
+
+    private static final List<ColumnDescriptor> twoColumns = Arrays.asList(
+            new ColumnDescriptor("c0", DataType.TEXT.getOID(), 0, "", TM),
+            new ColumnDescriptor("c1", DataType.INTEGER.getOID(), 1, "", TM)
+    );
+
+    private static final List<ColumnDescriptor> threeColumns = Arrays.asList(
+            new ColumnDescriptor("c0", DataType.TEXT.getOID(), 0, "", TM),
+            new ColumnDescriptor("c1", DataType.INTEGER.getOID(), 1, "", TM),
+            new ColumnDescriptor("c2", DataType.FLOAT8.getOID(), 2, "", TM)
+    );
+
+    private static final List<ColumnDescriptor> fourColumns = Arrays.asList(
+            new ColumnDescriptor("c0", DataType.TEXT.getOID(), 0, "", TM),
+            new ColumnDescriptor("c1", DataType.INTEGER.getOID(), 1, "", TM),
+            new ColumnDescriptor("c2", DataType.FLOAT8.getOID(), 2, "", TM),
+            new ColumnDescriptor("c3", DataType.BPCHAR.getOID(), 3, "", TM)
+    );
+
+    private EnumSet<DataType> supportedTypes;
+
+    // ---------- TEST SIMPLE OPERATORS ----------
     @Test
-    public void testGreaterThanOperatorSupported() throws Exception {
-        EnumSet<Operator> supportedOperators = EnumSet.of(Operator.GREATER_THAN_OR_EQUAL);
-        helper("_1_ >= 2016-01-03", "a1c25s10d2016-01-03o4", supportedOperators);
+    public void test_simpleOperator_SupportedType() throws Exception {
+        supportedTypes = EnumSet.of(DataType.TEXT);
+        helper("_0_ >= bar", "a0c25s3dbaro4", oneTextColumn, supportedTypes);
     }
 
     @Test
-    public void testGreaterThanOperatorNotSupported() throws Exception {
-        helper("", "a1c25s10d2016-01-03o4", NONE_SUPPORTED);
+    public void test_simpleOperator_UnsupportedType() throws Exception {
+        supportedTypes = EnumSet.of(DataType.BOOLEAN);
+        helper("", "a0c25s3dbaro4", oneTextColumn, supportedTypes);
     }
 
     @Test
-    public void testAndedAndOrOperatorSupported() throws Exception {
-        EnumSet<Operator> supportedOperators = EnumSet.of(
-                Operator.EQUALS,
-                Operator.NOT_EQUALS,
-                Operator.AND,
-                Operator.OR
+    public void test_simpleOperator_InvalidType() throws Exception {
+        supportedTypes = EnumSet.of(DataType.TEXT);
+        List<ColumnDescriptor> invalidColumn = Arrays.asList(
+                new ColumnDescriptor("c0", 12345678, 0, "", TM)
         );
-        // (P1 AND P2) AND (P1 OR P3)
-        helper("((_1_ = foobar AND _2_ <> 999) AND (_1_ = foobar OR _3_ <> 999))",
-                "a1c25s6dfoobaro5a2c23s3d999o6l0a1c25s6dfoobaro5a3c20s3d999o6l1l0",
-                supportedOperators);
+        helper("", "a0c25s3dbaro4", invalidColumn, supportedTypes);
+    }
+
+    // ---------- TEST SINGLE LEVEL FILTERING WITH LOGICAL OPERATORS ----------
+    // --- when child got pruned from AND, the other one gets promoted
+    // --- when child got pruned from OR , the other one gets removed as well
+
+    // ---------- (P1 AND P2) ----------
+    @Test
+    public void test_AND_Prune_None() throws Exception {
+        supportedTypes = EnumSet.of(DataType.TEXT, DataType.INTEGER);
+        helper("(_0_ = bar AND _1_ <> 999)", "a0c25s3dbaro5a1c23s3d999o6l0", twoColumns, supportedTypes);
     }
 
     @Test
-    public void testOrOperatorNotSupported() throws Exception {
-        EnumSet<Operator> supportedOperators = EnumSet.of(
-                Operator.EQUALS,
-                Operator.NOT_EQUALS,
-                Operator.AND
-        );
-        // (P1 AND P2) AND (P1 OR P3)
-        helper("(_1_ = foobar AND _2_ <> 999)",
-                "a1c25s6dfoobaro5a2c23s3d999o6l0a1c25s6dfoobaro5a3c20s3d999o6l1l0",
-                supportedOperators);
+    public void test_AND_Prune_1() throws Exception {
+        supportedTypes = EnumSet.of(DataType.INTEGER);
+        helper("_1_ <> 999", "a0c25s3dbaro5a1c23s3d999o6l0", twoColumns, supportedTypes);
     }
 
     @Test
-    public void testAndOperatorIsNotSupported() throws Exception {
-        EnumSet<Operator> supportedOperators = EnumSet.of(
-                Operator.EQUALS,
-                Operator.NOT_EQUALS,
-                Operator.OR
-        );
-        // (P1 AND P2) AND (P1 OR P3)
-        helper("",
-                "a1c25s6dfoobaro5a2c23s3d999o6l0a1c25s6dfoobaro5a3c20s3d999o6l1l0",
-                supportedOperators);
+    public void test_AND_Prune_2() throws Exception {
+        supportedTypes = EnumSet.of(DataType.TEXT);
+        helper("_0_ = bar", "a0c25s3dbaro5a1c23s3d999o6l0", twoColumns, supportedTypes);
     }
 
     @Test
-    public void testAllSupportedOperators() throws Exception {
-        // _1_ > '2008-02-01' and _1_ < '2008-12-01' and _2_ > 1200
-        helper("((_1_ > 2008-02-01 AND _1_ < 2008-12-01) AND _2_ > 1200)",
-                "a1c25s10d2008-02-01o2a1c25s10d2008-12-01o1l0a2c20s4d1200o2l0",
-                ALL_SUPPORTED);
+    public void test_AND_Prune_Both() throws Exception {
+        supportedTypes = EnumSet.of(DataType.BOOLEAN);
+        helper("", "a0c25s3dbaro5a1c23s3d999o6l0", twoColumns, supportedTypes);
+    }
+
+    // ---------- (P1 OR P2) ----------
+    @Test
+    public void test_OR_Prune_None() throws Exception {
+        supportedTypes = EnumSet.of(DataType.TEXT, DataType.INTEGER);
+        helper("(_0_ = bar OR _1_ <> 999)", "a0c25s3dbaro5a1c23s3d999o6l1", twoColumns, supportedTypes);
     }
 
     @Test
-    public void testLessThanNotOperators() throws Exception {
-        EnumSet<Operator> supportedOperators = EnumSet.of(
-                Operator.GREATER_THAN,
-                Operator.AND
-        );
-        // _1_ > '2008-02-01' and _1_ < '2008-12-01' and _2_ > 1200
-        helper("(_1_ > 2008-02-01 AND _2_ > 1200)",
-                "a1c25s10d2008-02-01o2a1c25s10d2008-12-01o1l0a2c20s4d1200o2l0",
-                supportedOperators);
+    public void test_OR_Prune_1() throws Exception {
+        supportedTypes = EnumSet.of(DataType.INTEGER);
+        helper("", "a0c25s3dbaro5a1c23s3d999o6l1", twoColumns, supportedTypes);
     }
 
     @Test
-    public void testPruningOrOperatorWhenOneBranchIsPruned() throws Exception {
-        EnumSet<Operator> supportedOperators = EnumSet.of(
-                Operator.GREATER_THAN,
-                Operator.AND
-        );
-        // (_1_ > '2008-02-01' or _1_ < '2008-12-01') and _2_ > 1200
-        helper("_2_ > 1200",
-                "a1c25s10d2008-02-01o2a1c25s10d2008-12-01o1l1a2c20s4d1200o2l0",
-                supportedOperators);
+    public void test_OR_Prune_2() throws Exception {
+        supportedTypes = EnumSet.of(DataType.TEXT);
+        helper("", "a0c25s3dbaro5a1c23s3d999o6l1", twoColumns, supportedTypes);
     }
 
     @Test
-    public void testNotOperatorSupported() throws Exception {
-        helper("NOT (_1_ = 0)", "a1c20s1d0o5l2", ALL_SUPPORTED);
+    public void test_OR_Prune_All() throws Exception {
+        supportedTypes = EnumSet.of(DataType.BOOLEAN);
+        helper("", "a0c25s3dbaro5a1c23s3d999o6l1", twoColumns, supportedTypes);
+    }
+
+    // ---------- (P1 AND P2) AND P3 ----------
+    @Test
+    public void test_AND_AND_LeftDeep_Prune_None() throws Exception {
+        supportedTypes = EnumSet.of(DataType.TEXT, DataType.INTEGER, DataType.FLOAT8);
+        helper("((_0_ = bar AND _1_ <> 999) AND _2_ < 123)", "a0c25s3dbaro5a1c23s3d999o6l0a2c701s3d123o1l0", threeColumns, supportedTypes);
     }
 
     @Test
-    public void testNotOperatorNOTSupported() throws Exception {
-        helper("", "a1c20s1d0o5l2", NONE_SUPPORTED);
+    public void test_AND_AND_LeftDeep_Prune_1() throws Exception {
+        supportedTypes = EnumSet.of(DataType.INTEGER, DataType.FLOAT8);
+        helper("(_1_ <> 999 AND _2_ < 123)", "a0c25s3dbaro5a1c23s3d999o6l0a2c701s3d123o1l0", threeColumns, supportedTypes);
     }
 
     @Test
-    public void testTwoNotWithOrAndAnd() throws Exception {
-        helper("(_1_ >= 9 AND (NOT (_3_ = 4) OR NOT (_2_ = s_9)))",
-                "a1c701s1d9o4a3c23s1d4o5l2a2c25s3ds_9o5l2l1l0",
-                ALL_SUPPORTED);
+    public void test_AND_AND_LeftDeep_Prune_2() throws Exception {
+        supportedTypes = EnumSet.of(DataType.TEXT, DataType.FLOAT8);
+        helper("(_0_ = bar AND _2_ < 123)", "a0c25s3dbaro5a1c23s3d999o6l0a2c701s3d123o1l0", threeColumns, supportedTypes);
     }
 
     @Test
-    public void testTwoNotWithOrAndAndOperatorNOTNotSupported() throws Exception {
-        helper("(_1_ >= 9 AND (NOT (_3_ = 4) OR NOT (_2_ = s_9)))",
-                "a1c701s1d9o4a3c23s1d4o5l2a2c25s3ds_9o5l2l1l0",
-                ALL_SUPPORTED);
+    public void test_AND_AND_LeftDeep_Prune_3() throws Exception {
+        supportedTypes = EnumSet.of(DataType.TEXT, DataType.INTEGER);
+        helper("(_0_ = bar AND _1_ <> 999)", "a0c25s3dbaro5a1c23s3d999o6l0a2c701s3d123o1l0", threeColumns, supportedTypes);
     }
 
     @Test
-    public void testSupportedIsNotNullOperator() throws Exception {
-        // a3 IS NOT NULL
-        helper("_3_ IS NOT NULL", "a3o9", ALL_SUPPORTED);
+    public void test_AND_AND_LeftDeep_Prune_12() throws Exception {
+        supportedTypes = EnumSet.of(DataType.FLOAT8);
+        helper("_2_ < 123", "a0c25s3dbaro5a1c23s3d999o6l0a2c701s3d123o1l0", threeColumns, supportedTypes);
     }
 
     @Test
-    public void testNotSupportedIsNotNullOperator() throws Exception {
-        // a3 IS NOT NULL
-        helper("", "a3o9", NONE_SUPPORTED);
+    public void test_AND_AND_LeftDeep_Prune_23() throws Exception {
+        supportedTypes = EnumSet.of(DataType.TEXT);
+        helper("_0_ = bar", "a0c25s3dbaro5a1c23s3d999o6l0a2c701s3d123o1l0", threeColumns, supportedTypes);
     }
 
     @Test
-    public void testNotBoolean() throws Exception {
-        // NOT a4
-        helper("NOT (_4_)", "a4c16s4dtrueo0l2", ALL_SUPPORTED);
+    public void test_AND_AND_LeftDeep_Prune_13() throws Exception {
+        supportedTypes = EnumSet.of(DataType.INTEGER);
+        helper("_1_ <> 999", "a0c25s3dbaro5a1c23s3d999o6l0a2c701s3d123o1l0", threeColumns, supportedTypes);
     }
 
     @Test
-    public void testInSupported() throws Exception {
-        EnumSet<Operator> supportedOperators = EnumSet.of(Operator.IN);
-        helper("_3_ IN bad", "a3c25s3dbado10", supportedOperators);
+    public void test_AND_AND_LeftDeep_Prune_All() throws Exception {
+        supportedTypes = EnumSet.of(DataType.BOOLEAN);
+        helper("", "a0c25s3dbaro5a1c23s3d999o6l0a2c701s3d123o1l0", threeColumns, supportedTypes);
+    }
+
+    // ---------- P1 AND (P2 AND P3) ----------
+    @Test
+    public void test_AND_AND_RightDeep_Prune_None() throws Exception {
+        supportedTypes = EnumSet.of(DataType.TEXT, DataType.INTEGER, DataType.FLOAT8);
+        helper("(_0_ = bar AND (_1_ <> 999 AND _2_ < 123))", "a0c25s3dbaro5a1c23s3d999o6a2c701s3d123o1l0l0", threeColumns, supportedTypes);
     }
 
     @Test
-    public void testInNotSupported() throws Exception {
-        helper("", "a3c25s3dbado10", NONE_SUPPORTED);
+    public void test_AND_AND_RightDeep_Prune_1() throws Exception {
+        supportedTypes = EnumSet.of(DataType.INTEGER, DataType.FLOAT8);
+        helper("(_1_ <> 999 AND _2_ < 123)", "a0c25s3dbaro5a1c23s3d999o6a2c701s3d123o1l0l0", threeColumns, supportedTypes);
     }
 
     @Test
-    public void twoBranchesAreRemovedInOr() throws Exception {
-        EnumSet<Operator> supportedOperators = EnumSet.of(
-                Operator.EQUALS,
-                Operator.OR
-        );
-        // (NOT (_3_ = 4) OR NOT (_2_ = s_9))
-        helper("", "a3c23s1d4o5l2a2c25s3ds_9o5l2l1", supportedOperators);
+    public void test_AND_AND_RightDeep_Prune_2() throws Exception {
+        supportedTypes = EnumSet.of(DataType.TEXT, DataType.FLOAT8);
+        helper("(_0_ = bar AND _2_ < 123)", "a0c25s3dbaro5a1c23s3d999o6a2c701s3d123o1l0l0", threeColumns, supportedTypes);
     }
 
     @Test
-    public void testNotInWithNotSupportedIn() throws Exception {
-        EnumSet<Operator> supportedOperators = EnumSet.of(
-                Operator.NOT
-        );
-        // NOT (_8_)
-        helper("", "a8c16s4dtrueo0l2", supportedOperators);
+    public void test_AND_AND_RightDeep_Prune_3() throws Exception {
+        supportedTypes = EnumSet.of(DataType.TEXT, DataType.INTEGER);
+        helper("(_0_ = bar AND _1_ <> 999)", "a0c25s3dbaro5a1c23s3d999o6a2c701s3d123o1l0l0", threeColumns, supportedTypes);
+    }
+
+    @Test
+    public void test_AND_AND_RightDeep_Prune_12() throws Exception {
+        supportedTypes = EnumSet.of(DataType.FLOAT8);
+        helper("_2_ < 123", "a0c25s3dbaro5a1c23s3d999o6a2c701s3d123o1l0l0", threeColumns, supportedTypes);
+    }
+
+    @Test
+    public void test_AND_AND_RightDeep_Prune_23() throws Exception {
+        supportedTypes = EnumSet.of(DataType.TEXT);
+        helper("_0_ = bar", "a0c25s3dbaro5a1c23s3d999o6a2c701s3d123o1l0l0", threeColumns, supportedTypes);
+    }
+
+    @Test
+    public void test_AND_AND_RightDeep_Prune_13() throws Exception {
+        supportedTypes = EnumSet.of(DataType.INTEGER);
+        helper("_1_ <> 999", "a0c25s3dbaro5a1c23s3d999o6a2c701s3d123o1l0l0", threeColumns, supportedTypes);
+    }
+
+    @Test
+    public void test_AND_AND_RightDeep_Prune_All() throws Exception {
+        supportedTypes = EnumSet.of(DataType.BOOLEAN);
+        helper("", "a0c25s3dbaro5a1c23s3d999o6a2c701s3d123o1l0l0", threeColumns, supportedTypes);
+    }
+
+    // ---------- (P1 AND P2) OR P3 ----------
+    @Test
+    public void test_AND_OR_LeftDeep_Prune_None() throws Exception {
+        supportedTypes = EnumSet.of(DataType.TEXT, DataType.INTEGER, DataType.FLOAT8);
+        helper("((_0_ = bar AND _1_ <> 999) OR _2_ < 123)", "a0c25s3dbaro5a1c23s3d999o6l0a2c701s3d123o1l1", threeColumns, supportedTypes);
+    }
+
+    @Test
+    public void test_AND_OR_LeftDeep_Prune_1() throws Exception {
+        supportedTypes = EnumSet.of(DataType.INTEGER, DataType.FLOAT8);
+        helper("(_1_ <> 999 OR _2_ < 123)", "a0c25s3dbaro5a1c23s3d999o6l0a2c701s3d123o1l1", threeColumns, supportedTypes);
+    }
+
+    @Test
+    public void test_AND_OR_LeftDeep_Prune_2() throws Exception {
+        supportedTypes = EnumSet.of(DataType.TEXT, DataType.FLOAT8);
+        helper("(_0_ = bar OR _2_ < 123)", "a0c25s3dbaro5a1c23s3d999o6l0a2c701s3d123o1l1", threeColumns, supportedTypes);
+    }
+
+    @Test
+    public void test_AND_OR_LeftDeep_Prune_3() throws Exception {
+        supportedTypes = EnumSet.of(DataType.TEXT, DataType.INTEGER);
+        helper("", "a0c25s3dbaro5a1c23s3d999o6l0a2c701s3d123o1l1", threeColumns, supportedTypes);
+    }
+
+    @Test
+    public void test_AND_OR_LeftDeep_Prune_12() throws Exception {
+        supportedTypes = EnumSet.of(DataType.FLOAT8);
+        helper("", "a0c25s3dbaro5a1c23s3d999o6l0a2c701s3d123o1l1", threeColumns, supportedTypes);
+    }
+
+    @Test
+    public void test_AND_OR_LeftDeep_Prune_23() throws Exception {
+        supportedTypes = EnumSet.of(DataType.TEXT);
+        helper("", "a0c25s3dbaro5a1c23s3d999o6l0a2c701s3d123o1l1", threeColumns, supportedTypes);
+    }
+
+    @Test
+    public void test_AND_OR_LeftDeep_Prune_13() throws Exception {
+        supportedTypes = EnumSet.of(DataType.INTEGER);
+        helper("", "a0c25s3dbaro5a1c23s3d999o6l0a2c701s3d123o1l1", threeColumns, supportedTypes);
+    }
+
+    @Test
+    public void test_AND_OR_LeftDeep_Prune_All() throws Exception {
+        supportedTypes = EnumSet.of(DataType.BOOLEAN);
+        helper("", "a0c25s3dbaro5a1c23s3d999o6l0a2c701s3d123o1l1", threeColumns, supportedTypes);
+    }
+
+    // ---------- P1 AND (P2 OR P3) ----------
+    @Test
+    public void test_AND_OR_RightDeep_Prune_None() throws Exception {
+        supportedTypes = EnumSet.of(DataType.TEXT, DataType.INTEGER, DataType.FLOAT8);
+        helper("(_0_ = bar AND (_1_ <> 999 OR _2_ < 123))", "a0c25s3dbaro5a1c23s3d999o6a2c701s3d123o1l1l0", threeColumns, supportedTypes);
+    }
+
+    @Test
+    public void test_AND_OR_RightDeep_Prune_1() throws Exception {
+        supportedTypes = EnumSet.of(DataType.INTEGER, DataType.FLOAT8);
+        helper("(_1_ <> 999 OR _2_ < 123)", "a0c25s3dbaro5a1c23s3d999o6a2c701s3d123o1l1l0", threeColumns, supportedTypes);
+    }
+
+    @Test
+    public void test_AND_OR_RightDeep_Prune_2() throws Exception {
+        supportedTypes = EnumSet.of(DataType.TEXT, DataType.FLOAT8);
+        helper("_0_ = bar", "a0c25s3dbaro5a1c23s3d999o6a2c701s3d123o1l1l0", threeColumns, supportedTypes);
+    }
+
+    @Test
+    public void test_AND_OR_RightDeep_Prune_3() throws Exception {
+        supportedTypes = EnumSet.of(DataType.TEXT, DataType.INTEGER);
+        helper("_0_ = bar", "a0c25s3dbaro5a1c23s3d999o6a2c701s3d123o1l1l0", threeColumns, supportedTypes);
+    }
+
+    @Test
+    public void test_AND_OR_RightDeep_Prune_12() throws Exception {
+        supportedTypes = EnumSet.of(DataType.FLOAT8);
+        helper("", "a0c25s3dbaro5a1c23s3d999o6a2c701s3d123o1l1l0", threeColumns, supportedTypes);
+    }
+
+    @Test
+    public void test_AND_OR_RightDeep_Prune_23() throws Exception {
+        supportedTypes = EnumSet.of(DataType.TEXT);
+        helper("_0_ = bar", "a0c25s3dbaro5a1c23s3d999o6a2c701s3d123o1l1l0", threeColumns, supportedTypes);
+    }
+
+    @Test
+    public void test_AND_OR_RightDeep_Prune_13() throws Exception {
+        supportedTypes = EnumSet.of(DataType.INTEGER);
+        helper("", "a0c25s3dbaro5a1c23s3d999o6a2c701s3d123o1l1l0", threeColumns, supportedTypes);
+    }
+
+    @Test
+    public void test_AND_OR_RightDeep_Prune_All() throws Exception {
+        supportedTypes = EnumSet.of(DataType.BOOLEAN);
+        helper("", "a0c25s3dbaro5a1c23s3d999o6a2c701s3d123o1l1l0", threeColumns, supportedTypes);
+    }
+
+    // ---------- (P1 OR P2) OR P3 ----------
+    @Test
+    public void test_OR_OR_LeftDeep_Prune_None() throws Exception {
+        supportedTypes = EnumSet.of(DataType.TEXT, DataType.INTEGER, DataType.FLOAT8);
+        helper("((_0_ = bar OR _1_ <> 999) OR _2_ < 123)", "a0c25s3dbaro5a1c23s3d999o6l1a2c701s3d123o1l1", threeColumns, supportedTypes);
+    }
+
+    @Test
+    public void test_OR_OR_LeftDeep_Prune_1() throws Exception {
+        supportedTypes = EnumSet.of(DataType.INTEGER, DataType.FLOAT8);
+        helper("", "a0c25s3dbaro5a1c23s3d999o6l1a2c701s3d123o1l1", threeColumns, supportedTypes);
+    }
+
+    @Test
+    public void test_OR_OR_LeftDeep_Prune_2() throws Exception {
+        supportedTypes = EnumSet.of(DataType.TEXT, DataType.FLOAT8);
+        helper("", "a0c25s3dbaro5a1c23s3d999o6l1a2c701s3d123o1l1", threeColumns, supportedTypes);
+    }
+
+    @Test
+    public void test_OR_OR_LeftDeep_Prune_3() throws Exception {
+        supportedTypes = EnumSet.of(DataType.TEXT, DataType.INTEGER);
+        helper("", "a0c25s3dbaro5a1c23s3d999o6l1a2c701s3d123o1l1", threeColumns, supportedTypes);
+    }
+
+    @Test
+    public void test_OR_OR_LeftDeep_Prune_12() throws Exception {
+        supportedTypes = EnumSet.of(DataType.FLOAT8);
+        helper("", "a0c25s3dbaro5a1c23s3d999o6l1a2c701s3d123o1l1", threeColumns, supportedTypes);
+    }
+
+    @Test
+    public void test_OR_OR_LeftDeep_Prune_23() throws Exception {
+        supportedTypes = EnumSet.of(DataType.TEXT);
+        helper("", "a0c25s3dbaro5a1c23s3d999o6l1a2c701s3d123o1l1", threeColumns, supportedTypes);
+    }
+
+    @Test
+    public void test_OR_OR_LeftDeep_Prune_13() throws Exception {
+        supportedTypes = EnumSet.of(DataType.INTEGER);
+        helper("", "a0c25s3dbaro5a1c23s3d999o6l1a2c701s3d123o1l1", threeColumns, supportedTypes);
+    }
+
+    @Test
+    public void test_OR_OR_LeftDeep_Prune_All() throws Exception {
+        supportedTypes = EnumSet.of(DataType.BOOLEAN);
+        helper("", "a0c25s3dbaro5a1c23s3d999o6l1a2c701s3d123o1l1", threeColumns, supportedTypes);
+    }
+
+    // ---------- P1 OR (P2 OR P3) ----------
+    @Test
+    public void test_OR_OR_RightDeep_Prune_None() throws Exception {
+        supportedTypes = EnumSet.of(DataType.TEXT, DataType.INTEGER, DataType.FLOAT8);
+        helper("(_0_ = bar OR (_1_ <> 999 OR _2_ < 123))", "a0c25s3dbaro5a1c23s3d999o6a2c701s3d123o1l1l1", threeColumns, supportedTypes);
+    }
+
+    @Test
+    public void test_OR_OR_RightDeep_Prune_1() throws Exception {
+        supportedTypes = EnumSet.of(DataType.INTEGER, DataType.FLOAT8);
+        helper("", "a0c25s3dbaro5a1c23s3d999o6a2c701s3d123o1l1l1", threeColumns, supportedTypes);
+    }
+
+    @Test
+    public void test_OR_OR_RightDeep_Prune_2() throws Exception {
+        supportedTypes = EnumSet.of(DataType.TEXT, DataType.FLOAT8);
+        helper("", "a0c25s3dbaro5a1c23s3d999o6a2c701s3d123o1l1l1", threeColumns, supportedTypes);
+    }
+
+    @Test
+    public void test_OR_OR_RightDeep_Prune_3() throws Exception {
+        supportedTypes = EnumSet.of(DataType.TEXT, DataType.INTEGER);
+        helper("", "a0c25s3dbaro5a1c23s3d999o6a2c701s3d123o1l1l1", threeColumns, supportedTypes);
+    }
+
+    @Test
+    public void test_OR_OR_RightDeep_Prune_12() throws Exception {
+        supportedTypes = EnumSet.of(DataType.FLOAT8);
+        helper("", "a0c25s3dbaro5a1c23s3d999o6a2c701s3d123o1l1l1", threeColumns, supportedTypes);
+    }
+
+    @Test
+    public void test_OR_OR_RightDeep_Prune_23() throws Exception {
+        supportedTypes = EnumSet.of(DataType.TEXT);
+        helper("", "a0c25s3dbaro5a1c23s3d999o6a2c701s3d123o1l1l1", threeColumns, supportedTypes);
+    }
+
+    @Test
+    public void test_OR_OR_RightDeep_Prune_13() throws Exception {
+        supportedTypes = EnumSet.of(DataType.INTEGER);
+        helper("", "a0c25s3dbaro5a1c23s3d999o6a2c701s3d123o1l1l1", threeColumns, supportedTypes);
+    }
+
+    @Test
+    public void test_OR_OR_RightDeep_Prune_All() throws Exception {
+        supportedTypes = EnumSet.of(DataType.BOOLEAN);
+        helper("", "a0c25s3dbaro5a1c23s3d999o6a2c701s3d123o1l1l1", threeColumns, supportedTypes);
+    }
+
+    // ---------- Some more random combination of predicates ----------
+
+    @Test
+    public void test_AND_AND_OR_Prune_None() throws Exception {
+        supportedTypes = EnumSet.of(DataType.TEXT, DataType.INTEGER, DataType.FLOAT8, DataType.BPCHAR);
+        helper("((_0_ = bar AND _1_ <> 999) AND (_2_ < 123 OR _3_ <> USD))",
+                "a0c25s3dbaro5a1c23s3d999o6l0a2c701s3d123o1a3c1042s3dUSDo6l1l0", fourColumns, supportedTypes);
+    }
+
+    @Test
+    public void test_AND_AND_OR_Prune_1() throws Exception {
+        supportedTypes = EnumSet.of(DataType.INTEGER, DataType.FLOAT8, DataType.BPCHAR);
+        helper("(_1_ <> 999 AND (_2_ < 123 OR _3_ <> USD))",
+                "a0c25s3dbaro5a1c23s3d999o6l0a2c701s3d123o1a3c1042s3dUSDo6l1l0", fourColumns, supportedTypes);
+    }
+
+    @Test
+    public void test_AND_AND_OR_Prune_4() throws Exception {
+        supportedTypes = EnumSet.of(DataType.TEXT, DataType.INTEGER, DataType.FLOAT8);
+        helper("(_0_ = bar AND _1_ <> 999)",
+                "a0c25s3dbaro5a1c23s3d999o6l0a2c701s3d123o1a3c1042s3dUSDo6l1l0", fourColumns, supportedTypes);
+    }
+
+    @Test
+    public void test_AND_AND_OR_Prune_23() throws Exception {
+        supportedTypes = EnumSet.of(DataType.TEXT, DataType.BPCHAR);
+        helper("_0_ = bar",
+                "a0c25s3dbaro5a1c23s3d999o6l0a2c701s3d123o1a3c1042s3dUSDo6l1l0", fourColumns, supportedTypes);
+    }
+
+    @Test
+    public void test_NOT_Simple_Prune_None() throws Exception {
+        supportedTypes = EnumSet.of(DataType.TEXT);
+        helper("NOT (_0_ = bar)", "a0c25s3dbaro5l2", oneTextColumn, supportedTypes);
+    }
+
+    @Test
+    public void test_NOT_Simple_Prune_1() throws Exception {
+        supportedTypes = EnumSet.of(DataType.BOOLEAN);
+        helper("", "a0c25s3dbaro5l2", oneTextColumn, supportedTypes);
+    }
+
+    @Test
+    public void test_AND_NOT_OR_NOT_Prune_None() throws Exception {
+        supportedTypes = EnumSet.of(DataType.TEXT, DataType.INTEGER, DataType.FLOAT8);
+        helper("(_0_ = bar AND (NOT (_1_ <> 999) OR NOT (_2_ < 123)))",
+                "a0c25s3dbaro5a1c23s3d999o6l2a2c701s3d123o1l2l1l0", threeColumns, supportedTypes);
+    }
+
+    @Test
+    public void test_AND_NOT_OR_NOT_Prune_1() throws Exception {
+        supportedTypes = EnumSet.of(DataType.INTEGER, DataType.FLOAT8);
+        helper("(NOT (_1_ <> 999) OR NOT (_2_ < 123))",
+                "a0c25s3dbaro5a1c23s3d999o6l2a2c701s3d123o1l2l1l0", threeColumns, supportedTypes);
+    }
+
+    @Test
+    public void test_AND_NOT_OR_NOT_Prune_2() throws Exception {
+        supportedTypes = EnumSet.of(DataType.TEXT, DataType.FLOAT8);
+        helper("_0_ = bar",
+                "a0c25s3dbaro5a1c23s3d999o6l2a2c701s3d123o1l2l1l0", threeColumns, supportedTypes);
+    }
+
+    @Test
+    public void test_AND_NOT_OR_NOT_Prune_3() throws Exception {
+        supportedTypes = EnumSet.of(DataType.TEXT, DataType.INTEGER);
+        helper("_0_ = bar",
+                "a0c25s3dbaro5a1c23s3d999o6l2a2c701s3d123o1l2l1l0", threeColumns, supportedTypes);
+    }
+
+    @Test
+    public void test_IS_NOT_NULL_Prune_None() throws Exception {
+        supportedTypes = EnumSet.of(DataType.TEXT);
+        helper("_0_ IS NOT NULL", "a0o9", oneTextColumn, supportedTypes);
+    }
+
+    @Test
+    public void test_IS_NOT_NULL_Prune_1() throws Exception {
+        supportedTypes = EnumSet.of(DataType.BOOLEAN);
+        helper("", "a0o9", oneTextColumn, supportedTypes);
+    }
+
+    @Test
+    public void test_NOT_Boolean_Prune_None() throws Exception {
+        supportedTypes = EnumSet.of(DataType.BOOLEAN);
+        helper("NOT (_0_)", "a0c16s4dtrueo0l2", oneBooleanColumn, supportedTypes);
+    }
+
+    @Test
+    public void test_NOT_Boolean_Prune_1() throws Exception {
+        supportedTypes = EnumSet.of(DataType.TEXT);
+        helper("", "a0c16s4dtrueo0l2", oneBooleanColumn, supportedTypes);
     }
 
     private void helper(String expected,
                         String filterString,
-                        EnumSet<Operator> supportedOperators) throws Exception {
+                        List<ColumnDescriptor> columns,
+                        EnumSet<DataType> supportedDataTypes) throws Exception {
         Node root = new FilterParser().parse(filterString);
-        SupportedOperatorPruner supportedOperatorPruner = new SupportedOperatorPruner(supportedOperators);
+        SupportedDataTypePruner supportedDataTypePruner = new SupportedDataTypePruner(columns, supportedDataTypes);
         ToStringTreeVisitor toStringTreeVisitor = new ToStringTreeVisitor();
-        TRAVERSER.traverse(root, supportedOperatorPruner, toStringTreeVisitor);
+        TRAVERSER.traverse(root, supportedDataTypePruner, toStringTreeVisitor);
         assertEquals(expected, toStringTreeVisitor.toString());
     }
-
 }

@@ -3,7 +3,7 @@ package org.greenplum.pxf.api.filter;
 import java.util.EnumSet;
 
 /**
- * A tree pruner that removed operator nodes for non-supported operators.
+ * A tree pruner that removes operator nodes for non-supported operators.
  */
 public class SupportedOperatorPruner extends BaseTreePruner {
 

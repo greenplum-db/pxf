@@ -7,7 +7,7 @@ import java.util.EnumSet;
 import java.util.List;
 
 /**
- * A tree pruner that prunes a tree based on the supported column data types.
+ * A tree pruner that removes operator nodes for non-supported column data types.
  */
 public class SupportedDataTypePruner extends BaseTreePruner {
 
