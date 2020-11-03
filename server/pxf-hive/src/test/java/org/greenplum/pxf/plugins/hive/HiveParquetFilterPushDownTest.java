@@ -13,18 +13,16 @@ import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
+import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.ByteArrayOutputStream;
-import java.math.BigDecimal;
 import java.sql.Date;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,7 +67,6 @@ public class HiveParquetFilterPushDownTest {
     private Resolver resolver;
     private RequestContext context;
 
-    private Map<String, Type> originalFieldsMap;
     private List<ColumnDescriptor> columnDescriptors;
 
     @Before
@@ -113,29 +110,12 @@ public class HiveParquetFilterPushDownTest {
                 "  optional int32 num1;\n" +
                 "}");
 
-        originalFieldsMap = getOriginalFieldsMap(schema);
         // Hive User Data
         Properties props = new Properties();
+        props.put("file.inputformat", INPUT_FORMAT_NAME);
+        props.put("serialization.lib", SERDE_CLASS_NAME);
         props.put(serdeConstants.LIST_COLUMNS, COLUMN_NAMES);
         props.put(serdeConstants.LIST_COLUMN_TYPES, COLUMN_TYPES);
-        String propString;
-        try (ByteArrayOutputStream outStream = new ByteArrayOutputStream()) {
-            props.store(outStream, "");
-            propString = outStream.toString();
-        }
-
-        String hud = new HiveUserData(INPUT_FORMAT_NAME, SERDE_CLASS_NAME,
-                propString,
-                "!HNPT!",
-                false,
-                "1",
-                COLUMN_TYPES,
-                0,
-                Arrays.asList(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16),
-                COLUMN_NAMES,
-                COLUMN_TYPES)
-                .toString();
-
 
         accessor = new HiveAccessor();
         resolver = new HiveResolver();
@@ -151,7 +131,7 @@ public class HiveParquetFilterPushDownTest {
         context.setRequestType(RequestContext.RequestType.READ_BRIDGE);
         context.setDataSource(path);
         context.setFragmentMetadata(HdfsUtilities.prepareFragmentMetadata(0, 4196, Fragment.HOSTS));
-        context.setFragmentUserData(hud.getBytes());
+        context.setFragmentUserData(HiveUtilities.serializeProperties(props));
         context.setTupleDescription(columnDescriptors);
 
         accessor.initialize(context);
@@ -934,13 +914,6 @@ public class HiveParquetFilterPushDownTest {
         } else {
             assertNull("Row " + row, fieldList.get(16).val);
         }
-    }
-
-    private void assertBigDecimal(String message, Double expectedDouble, Object actual) {
-        assertTrue(message, actual instanceof BigDecimal);
-        BigDecimal expected = BigDecimal.valueOf(expectedDouble);
-        expected = expected.setScale(((BigDecimal) actual).scale());
-        assertEquals(message, expected, actual);
     }
 
 }

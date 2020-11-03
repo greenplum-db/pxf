@@ -19,8 +19,8 @@ package org.greenplum.pxf.plugins.hive;
  * under the License.
  */
 
-import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
@@ -95,6 +95,7 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
     private static final Logger LOG = LoggerFactory.getLogger(HiveAccessor.class);
     private static final String PXF_PPD_HIVE = "pxf.ppd.hive";
     private static final String HIVE_DEFAULT_PARTITION = "__HIVE_DEFAULT_PARTITION__";
+
     private List<HivePartition> partitions;
     private int skipHeaderCount;
     protected List<Integer> hiveIndexes;
@@ -103,8 +104,6 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
     private boolean isPredicatePushdownAllowed;
 
     // ----- members for predicate pushdown handling -----
-    protected Boolean filterInFragmenter;
-
     private static final int KRYO_BUFFER_SIZE = 4 * 1024;
     private static final int KRYO_MAX_BUFFER_SIZE = 10 * 1024 * 1024;
 
@@ -234,7 +233,6 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
             LOG.debug("Predicate pushdown for Hive has been disabled in configuration");
         }
 
-        HiveMetadata metadata;
         Properties properties;
         try {
             properties = getSerdeProperties(context.getFragmentUserData());
@@ -252,9 +250,7 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
         hiveColumnsString = properties.getProperty(META_TABLE_COLUMNS);
         hiveColumnTypesString = properties.getProperty(META_TABLE_COLUMN_TYPES);
 
-        metadata = new HiveMetadata(properties, partitions, hiveIndexes);
-
-        context.setMetadata(metadata);
+        context.setMetadata(new HiveMetadata(properties, partitions, hiveIndexes));
     }
 
     /**
@@ -599,7 +595,6 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
      * so only these columns will be returned.
      */
     protected void addColumns() {
-
         List<Integer> colIds = new ArrayList<>();
         List<String> colNames = new ArrayList<>();
         List<ColumnDescriptor> tupleDescription = context.getTupleDescription();
