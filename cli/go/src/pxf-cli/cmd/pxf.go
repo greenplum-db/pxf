@@ -83,6 +83,9 @@ func (cmd *command) GetFunctionToExecute() (func(string) string, error) {
 		if cmd.name == reset {
 			pxfCommand += " --force" // there is a prompt for local reset as well
 		}
+		if cmd.name == pxfInit && SkipRegisterOnInit {
+			pxfCommand += " --skip-register"
+		}
 		return func(_ string) string { return pxfCommand }, nil
 	}
 }

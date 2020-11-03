@@ -312,7 +312,7 @@ doHelp() {
     cat <<-EOF
 
 	${bold}List of commands${normal}:
-	  init                initialize the local PXF server instance, install PXF extension under \$GPHOME
+	  init                initialize the local PXF server instance, install PXF extension under \$GPHOME. Use --skip-register to skip PXF extension installation
 	  start               start the local PXF server instance
 	  stop                stop the local PXF server instance
 	  restart             restart the local PXF server instance (not supported for cluster)
@@ -400,7 +400,11 @@ function doInit()
     deployWebapp || return 1
     createLogsDir || return 1
     createRunDir  || return 1
-    installExternalTableExtension || return 1
+    if [[ $skipRegister == false ]]; then
+      installExternalTableExtension || return 1
+    else
+      echo "Skipping PXF extension installation"
+    fi
 }
 
 function editPxfEnvSh()
@@ -499,20 +503,24 @@ function checkPxfConf()
 pxf_script_command=$1
 
 silent=false
+skipRegister=false
 
 validate_user
 validate_system
 
 case $pxf_script_command in
     'init')
-        if [[ $2 == -y || $2 == -Y ]]; then
+        if [[ $2 == -y || $2 == -Y || $3 == -y || $3 == -Y ]]; then
             silent=true
+        fi
+        if [[ $2 == -s || $2 == --skip-register || $3 == -s || $3 == --skip-register ]]; then
+            skipRegister=true
         fi
         doInit
         ;;
     'register')
         installExternalTableExtension
-	;;
+        ;;
     'start')
         doStart
         ;;

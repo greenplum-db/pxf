@@ -39,7 +39,7 @@ func createCobraCommand(use string, short string, cmd *command) *cobra.Command {
 
 var (
 	clusterCmd  = createCobraCommand("cluster", "Perform <command> on each segment host in the cluster", nil)
-	initCmd     = createCobraCommand("init", "Initialize the PXF server instance and install PXF extension under $GPHOME on master, standby master, and all segment hosts", &InitCommand)
+	initCmd     = createCobraCommand("init", "Initialize the PXF server instance and install PXF extension under $GPHOME on master, standby master, and all segment hosts. Use --skip-register to skip PXF extension installation", &InitCommand)
 	startCmd    = createCobraCommand("start", "Start the PXF server instances on all segment hosts", &StartCommand)
 	stopCmd     = createCobraCommand("stop", "Stop the PXF server instances on all segment hosts", &StopCommand)
 	statusCmd   = createCobraCommand("status", "Get status of PXF servers on all segment hosts", &StatusCommand)
@@ -49,10 +49,13 @@ var (
 	restartCmd  = createCobraCommand("restart", "Restart the PXF server on all segment hosts", &RestartCommand)
 	// DeleteOnSync is a boolean for determining whether to use rsync with --delete, exported for tests
 	DeleteOnSync bool
+	// SkipRegisterOnInit determines whether the PXF extension installation is skipped or not
+	SkipRegisterOnInit bool
 )
 
 func init() {
 	rootCmd.AddCommand(clusterCmd)
+	initCmd.Flags().BoolVarP(&SkipRegisterOnInit, "skip-register", "s", false, "skips PXF extension installation during the PXF initialization process")
 	clusterCmd.AddCommand(initCmd)
 	clusterCmd.AddCommand(startCmd)
 	clusterCmd.AddCommand(stopCmd)

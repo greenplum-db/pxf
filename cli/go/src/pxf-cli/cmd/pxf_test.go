@@ -134,6 +134,24 @@ var _ = Describe("CommandFunc", func() {
 			cmd.DeleteOnSync = false
 		})
 	})
+	Context("when user specifies --skip-register flag during initialization", func() {
+		BeforeEach(func() {
+			_ = os.Setenv("PXF_CONF", "/test/somewhere/pxf_conf")
+			_ = os.Setenv("PXF_HOME", "/test/pxfhome")
+			_ = os.Setenv("JAVA_HOME", "/etc/java/home")
+			cmd.SkipRegisterOnInit = true
+		})
+		It("initializes PXF with the --skip-register flag", func() {
+			commandFunc, err := cmd.InitCommand.GetFunctionToExecute()
+			expected := "GPHOME=/test/gphome PXF_CONF=/test/somewhere/pxf_conf JAVA_HOME=/etc/java/home /test/pxfhome/bin/pxf init --skip-register"
+			Expect(err).To(BeNil())
+			Expect(commandFunc("sdw1")).To(Equal(expected))
+			Expect(commandFunc("sdw2")).To(Equal(expected))
+		})
+		AfterEach(func() {
+			cmd.SkipRegisterOnInit = false
+		})
+	})
 	Context("when only PXF_CONF is set", func() {
 		BeforeEach(func() {
 			_ = os.Unsetenv("GPHOME")
