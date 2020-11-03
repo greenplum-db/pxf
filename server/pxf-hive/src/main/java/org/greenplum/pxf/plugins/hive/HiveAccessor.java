@@ -660,7 +660,7 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
 
     private String toKryo(SearchArgument sarg) {
         Output out = new Output(KRYO_BUFFER_SIZE, KRYO_MAX_BUFFER_SIZE);
-        new Kryo().writeObject(out, sarg);
+        HiveUtilities.getKryo().writeObject(out, sarg);
         out.close();
         return Base64.encodeBase64String(out.toBytes());
     }
