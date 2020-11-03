@@ -51,7 +51,7 @@ The PXF server runs on Java 8 or 11. You identify the PXF `$JAVA_HOME` and `$PXF
 
 Initializing PXF:
 
-- Copies PXF extension files from `$PXF_HOME/gpextable` to the Greenplum Database install directory when the `$GPHOME` environment variable is set.
+- Copies PXF extension files from `$PXF_HOME/gpextable` to the Greenplum Database install directory when the `$GPHOME` environment variable is set. Specify the `--skip-register` option to the `init` command to instruct PXF to skip this initialization step.
 - Creates the PXF Java web application.
 - Generates PXF internal configuration files, setting default properties specific to your configuration.
 

@@ -47,7 +47,7 @@ You can copy the extension files from a PXF installation on the host to the Gree
 <dd>Display the `pxf` management utility help message and then exit.</dd>
 
 <dt>init</dt>
-<dd>Initialize the PXF service instance on the host. When you initialize PXF, you must identify the PXF user configuration directory via an environment variable named `$PXF_CONF`. If you do not set `$PXF_CONF` prior to initializing PXF, PXF prompts you to accept or decline the default user configuration directory, `$HOME/pxf`, during the initialization process. See [Options](pxf.html#options).</dd>
+<dd>Initialize the PXF service instance on the host. The command also copies the PXF extension files from the PXF installation to the Greenplum installation on the host. (Specify the `--skip-register` option to instruct PXF to skip this initialization step.) When you initialize PXF, you must identify the PXF user configuration directory via an environment variable named `$PXF_CONF`. If you do not set `$PXF_CONF` prior to initializing PXF, PXF prompts you to accept or decline the default user configuration directory, `$HOME/pxf`, during the initialization process. See [Options](pxf.html#options).</dd>
 
 <dt>register</dt>
 <dd>Copy the PXF extension files from the PXF installation on the host to the Greenplum installation on the host. This command requires that `$GPHOME` be set, and is typically run after you upgrade your Greenplum Database installation.</dd>
@@ -75,10 +75,13 @@ You can copy the extension files from a PXF installation on the host to the Gree
 
 ## <a id="options"></a>Options
 
-The `pxf init` command takes the following option:
+The `pxf init` command takes the following options:
 
 <dt>&#8211;y </dt>
 <dd>Do not prompt, use the default `$PXF_CONF` directory location if the environment variable is not set.</dd>
+
+<dt>&#8211;&#8211;skip-register </dt>
+<dd>Do not copy the PXF extension files to the Greenplum installation directory on the segment host.</dd>
 
 The `pxf reset` command takes the following option:
 
