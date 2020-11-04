@@ -61,8 +61,15 @@ sed -i "s|module_pathname =.*|module_pathname = '%{prefix}/gpextable/pxf'|g" %{p
 %config(noreplace) %{prefix}/conf/pxf-log4j2.xml
 %config(noreplace) %{prefix}/conf/pxf-profiles.xml
 
-%preun
+%pre
 # cleanup files and directories created by 'pxf init' command
 # only applies for old installations (pre 6.0.0)
 %__rm -f %{prefix}/conf/pxf-private.classpath
 %__rm -rf %{prefix}/pxf-service
+
+%posttrans
+# PXF v5 RPM installation removes the run directory during the %preun step.
+# The lack of run directory prevents PXF v6+ from starting up.
+# %posttrans of the new package is the only step that runs after the %preun
+# of the old package
+%{__install} -d -m 700 %{prefix}/run
