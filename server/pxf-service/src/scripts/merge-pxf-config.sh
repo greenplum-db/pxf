@@ -2,13 +2,15 @@
 
 # This script runs on a bash with minimal environment variables loaded, for
 # example:
-# env -i "$BASH" -c "PXF_BASE=$PXF_BASE PXF_CONF=$PXF_CONF $PXF_HOME/bin/merge-pxf-config.sh"
+# env -i "$BASH" -c "PXF_HOME=$PXF_HOME PXF_BASE=$PXF_BASE PXF_CONF=$PXF_CONF $PXF_HOME/bin/merge-pxf-config.sh"
 # The script will look at the environment variables loaded from
 # ${PXF_CONF}/conf/pxf-env.sh and merges those configurations into
-# "${PXF_BASE}/conf/pxf-env.sh" and "${PXF_BASE}/conf/pxf-application.properties"
+# ${PXF_BASE}/conf/pxf-env.sh, ${PXF_BASE}/conf/pxf-application.properties,
+# and ${PXF_BASE}/servers/default/pxf-site.xml
 
 : "${PXF_CONF:?PXF_CONF must be set}"
 : "${PXF_BASE:?PXF_BASE must be set}"
+: "${PXF_HOME:?PXF_HOME must be set}"
 
 # ANSI Colors
 echoRed() { echo $'\e[0;31m'"$1"$'\e[0m'; }
@@ -16,8 +18,7 @@ echoGreen() { echo $'\e[0;32m'"$1"$'\e[0m'; }
 echoYellow() { echo $'\e[0;33m'"$1"$'\e[0m'; }
 
 # print error message and return with error code
-function fail()
-{
+function fail() {
   echoRed "ERROR: $1"
   exit 1
 }
@@ -31,8 +32,7 @@ function fail()
 header_added_to_properties=false
 header_added_to_env=false
 
-function addHeader()
-{
+function addHeader() {
   echo "
 
 ######################################################
@@ -42,16 +42,14 @@ function addHeader()
 " >> "$1"
 }
 
-function ensureHeaderAddedToProperties()
-{
+function ensureHeaderAddedToProperties() {
   if [[ $header_added_to_properties == false ]]; then
     header_added_to_properties=true
     addHeader "${PXF_BASE}/conf/pxf-application.properties"
   fi
 }
 
-function ensureHeaderAddedToEnv()
-{
+function ensureHeaderAddedToEnv() {
   if [[ $header_added_to_env == false ]]; then
     header_added_to_env=true
     addHeader "${PXF_BASE}/conf/pxf-env.sh"
@@ -59,8 +57,7 @@ function ensureHeaderAddedToEnv()
 }
 
 # Add the value to the pxf-env.sh file
-function addToEnv()
-{
+function addToEnv() {
   local var=$1
   echoGreen " - Migrating $var=${!var} to "${PXF_BASE}/conf/pxf-env.sh""
   ensureHeaderAddedToEnv
@@ -68,8 +65,7 @@ function addToEnv()
 }
 
 # Add the value to the pxf-application.properties file
-function addToProperties()
-{
+function addToProperties() {
   local var=$1
   local newName=$2
   echoGreen " - Migrating $var=${!var} to '${PXF_BASE}/conf/pxf-application.properties' as \"$newName\""
@@ -77,8 +73,29 @@ function addToProperties()
   echo "$newName=${!var}" >> "${PXF_BASE}/conf/pxf-application.properties"
 }
 
-function warnRemovedProperties()
-{
+# If the default/pxf-site.xml file does not exist copy it from template
+# then add the value to pxf-site.xml if the existing value is different from
+# the default value
+function addToDefaultPxfSite() {
+  local var=$1
+  local propertyName=$2
+  local defaultValue=$3
+
+  if [[ ! -f ${PXF_BASE}/servers/default/pxf-site.xml ]]; then
+    echoGreen " - Creating pxf-site.xml in ${PXF_BASE}/servers/default/"
+    cp "${PXF_HOME}/templates/pxf-site.xml" "${PXF_BASE}/servers/default/pxf-site.xml"
+  fi
+
+  existingValue=$(sed -ne "/<name>${propertyName}<\/name>/{n;s/.*<value>\(.*\)<\/value>.*/\1/p;q;}" "${PXF_BASE}/servers/default/pxf-site.xml")
+  if [[ "${existingValue}" == "${defaultValue}" ]]; then
+    echoGreen " - Migrating $var=${!var} to '${PXF_BASE}/servers/default/pxf-site.xml' as \"$propertyName\""
+    sed -i "/<name>${propertyName}<\/name>/ {n;s|<value>.*</value>|<value>${!var}</value>|g;}" "${PXF_BASE}/servers/default/pxf-site.xml"
+  else
+    echoYellow " - Not migrating $var=${!var} because the existing value (${existingValue}) is not the default value (${defaultValue}) in ${PXF_BASE}/servers/default/pxf-site.xml"
+  fi
+}
+
+function warnRemovedProperties() {
   local var=$1
   # We don't migrate removed properties because the configuration has changed
   echoYellow "The $var property has been removed and it won't be automatically migrated."
@@ -99,7 +116,9 @@ function warnRemovedProperties()
 [[ -n $PXF_MAX_THREADS ]] && addToProperties "PXF_MAX_THREADS" "pxf.max.threads"
 [[ -n $PXF_FRAGMENTER_CACHE ]] && addToProperties "PXF_FRAGMENTER_CACHE" "pxf.metadata-cache-enabled"
 
+# Properties migrated to pxf-site.xml of the default server
+[[ -n $PXF_KEYTAB ]] && addToDefaultPxfSite 'PXF_KEYTAB' 'pxf.service.kerberos.keytab' '${pxf.conf}/keytabs/pxf.service.keytab'
+[[ -n $PXF_PRINCIPAL ]] && addToDefaultPxfSite 'PXF_PRINCIPAL' 'pxf.service.kerberos.principal' 'gpadmin/_HOST@EXAMPLE.COM'
+
 # Removed properties
-[[ -n $PXF_KEYTAB ]] && warnRemovedProperties "PXF_KEYTAB"
-[[ -n $PXF_PRINCIPAL ]] && warnRemovedProperties "PXF_PRINCIPAL"
 [[ -n $PXF_USER_IMPERSONATION ]] && warnRemovedProperties "PXF_USER_IMPERSONATION"

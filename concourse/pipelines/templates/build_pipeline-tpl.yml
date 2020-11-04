@@ -1180,6 +1180,8 @@ jobs:
     - get: pxf_src
       passed: [Testing Gate for PXF-GP]
       trigger: true
+    - get: pxf_artifact
+      resource: pxf5_gp6_rhel7_released # for upgrade test
     - get: pxf_tarball
       resource: pxf_gp[[gp_ver]]_tarball_rhel7
       passed: [Testing Gate for PXF-GP]
@@ -1265,9 +1267,10 @@ jobs:
         NO_ADDRESS: false
         PROXY_USER: gpuser
         SECRETS_BUCKET: data-gpdb-ud-kerberos-pxf-secrets
-  - task: Setup PXF
+  - task: Setup PXF 5 Latest
     input_mapping:
       terraform: terraform_gpdb
+      pxf_tarball: pxf_tarball_ignore # do not install from the artifact
     file: pxf_src/concourse/tasks/install_pxf_on_ccp.yml
     image: ccp-7-image
     params:
@@ -1275,8 +1278,17 @@ jobs:
       IMPERSONATION: true
       INSTALL_GPHDFS: false
       KERBEROS: ((kerberos-enabled))
-      PXF_BASE_DIR: /home/gpadmin/pxf
       PXF_JVM_OPTS: ((pxf-jvm-opts))
+      PXF_VERSION: 5
+  - task: Upgrade to PXF 6
+    input_mapping:
+      terraform: terraform_gpdb
+    file: pxf_src/concourse/tasks/upgrade_pxf_on_ccp.yml
+    image: ccp-7-image
+    params:
+      GOOGLE_PROJECT_ID: ((google-project-id))
+      GP_VER: [[gp_ver]]
+      PXF_BASE_DIR: /home/gpadmin/pxf-boot
   - task: Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-IMPERS on RHEL7
     image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     file: pxf_src/concourse/tasks/test_pxf_on_ccp.yml
@@ -1290,7 +1302,7 @@ jobs:
       GOOGLE_PROJECT_ID: ((google-project-id))
       GP_VER: [[gp_ver]]
       GROUP: security,proxySecurity,multiClusterSecurity
-      PXF_BASE_DIR: /home/gpadmin/pxf
+      PXF_BASE_DIR: /home/gpadmin/pxf-boot
       PXF_JVM_OPTS: ((pxf-jvm-opts))
       TARGET_OS: centos
   - task: Test PXF CLI

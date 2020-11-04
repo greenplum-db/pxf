@@ -323,7 +323,7 @@ function doPrepare()
 # run the migration script on a shell with minimal environment variables loaded
 function migrateMergeConfiguration()
 {
-    env -i "$BASH" -c "PXF_BASE=$PXF_BASE PXF_CONF=$PXF_CONF $PXF_HOME/bin/merge-pxf-config.sh"
+    env -i "$BASH" -c "PXF_HOME=$PXF_HOME PXF_BASE=$PXF_BASE PXF_CONF=$PXF_CONF $PXF_HOME/bin/merge-pxf-config.sh"
 }
 
 # doMigrate migrates old configurations of PXF to a Spring Boot based configuration of PXF

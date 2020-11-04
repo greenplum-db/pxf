@@ -1,11 +1,14 @@
 platform: linux
 
 image_resource:
-  type: docker-image
+  type: registry-image
 
 inputs:
 - name: pxf_src
 - name: pxf_tarball
+  optional: true
+- name: pxf_artifact
+  optional: true
 - name: ccp_src
 - name: cluster_env_files
 - name: terraform
@@ -24,6 +27,7 @@ params:
   PXF_BASE_DIR:
   PXF_COMPONENT: true
   PXF_JVM_OPTS:
+  PXF_VERSION: 6
   SKIP_HADOOP_SETUP:
 
 run:

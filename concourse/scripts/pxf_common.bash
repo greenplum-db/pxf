@@ -4,12 +4,21 @@ GPHOME=${GPHOME:=/usr/local/greenplum-db-devel}
 PXF_HOME=${PXF_HOME:=${GPHOME}/pxf}
 MDD_VALUE=/data/gpdata/master/gpseg-1
 PXF_COMMON_SRC_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+PXF_VERSION=${PXF_VERSION:=6}
 PROXY_USER=${PROXY_USER:-pxfuser}
 PROTOCOL=${PROTOCOL:-}
 GOOGLE_PROJECT_ID=${GOOGLE_PROJECT_ID:-data-gpdb-ud}
 
-# on purpose do not call this PXF_CONF so that it is not set during pxf operations
-PXF_BASE_DIR=${PXF_BASE_DIR:-$PXF_HOME}
+# on purpose do not call this PXF_CONF|PXF_BASE so that it is not set during pxf operations
+if [[ ${PXF_VERSION} == 5 ]]; then
+	BASE_DIR=~gpadmin/pxf
+	SHARE_DIR="${PXF_HOME}/lib"
+	TEMPLATES_DIR=${BASE_DIR}
+else
+	BASE_DIR=${PXF_BASE_DIR:-$PXF_HOME}
+	SHARE_DIR="${PXF_HOME}/share"
+	TEMPLATES_DIR=${PXF_HOME}
+fi
 
 if [[ -f ~/.pxfrc ]]; then
 	source <(grep JAVA_HOME ~/.pxfrc)
@@ -377,7 +386,7 @@ function setup_impersonation() {
 		exit 1
 	fi
 	if ! find "${GPHD_ROOT}/hbase/lib" -name 'pxf-hbase-*.jar' | grep pxf-hbase; then
-		cp "${PXF_HOME}"/share/pxf-hbase-*.jar "${GPHD_ROOT}/hbase/lib"
+		cp "${SHARE_DIR}"/pxf-hbase-*.jar "${GPHD_ROOT}/hbase/lib"
 	fi
 }
 
@@ -443,6 +452,15 @@ function start_hadoop_services() {
 	fi
 }
 
+function init_pxf() {
+	echo 'Ensure pxf version can be run before pxf init'
+	su gpadmin -c "${PXF_HOME}/bin/pxf version | grep -E '^PXF version [0-9]+.[0-9]+.[0-9]+'" || exit 1
+
+	echo 'Initializing PXF service'
+	# requires a login shell to source startup scripts (JAVA_HOME)
+	su --login gpadmin -c "PXF_CONF=${BASE_DIR} ${PXF_HOME}/bin/pxf init"
+}
+
 function configure_pxf_server() {
 	echo 'Ensure pxf version can be run before configuring pxf'
 	su gpadmin -c "${PXF_HOME}/bin/pxf version | grep -E '^PXF version [0-9]+.[0-9]+.[0-9]+'" || exit 1
@@ -451,28 +469,29 @@ function configure_pxf_server() {
 	# requires a login shell to source startup scripts (JAVA_HOME)
 	su --login gpadmin -c "${PXF_HOME}/bin/pxf register"
 
-	# prepare pxf if PXF_BASE_DIR is different from PXF_HOME
-	if [[ "$PXF_BASE_DIR" != "$PXF_HOME" ]]; then
-		echo "Prepare PXF in $PXF_BASE_DIR"
-		su --login gpadmin -c "PXF_BASE=${PXF_BASE_DIR} pxf prepare"
-		export PXF_BASE=${PXF_BASE_DIR}
-		echo "export PXF_BASE=${PXF_BASE_DIR}" >> ~/.pxfrc
+	# prepare pxf if BASE_DIR is different from PXF_HOME
+	if [[ "$BASE_DIR" != "$PXF_HOME" ]]; then
+		echo "Prepare PXF in $BASE_DIR"
+		su --login gpadmin -c "PXF_BASE=${BASE_DIR} pxf prepare"
+		export PXF_BASE=${BASE_DIR}
+		echo "export PXF_BASE=${BASE_DIR}" >> ~/.pxfrc
+		echo "export PXF_BASE=${BASE_DIR}" >> ~gpadmin/.bashrc
 	fi
 
 	# update impersonation value based on CI parameter
 	if [[ ! ${IMPERSONATION} == true ]]; then
 		echo 'Impersonation is disabled, updating pxf-site.xml property'
-		if [[ ! -f ${PXF_BASE_DIR}/servers/default/pxf-site.xml ]]; then
-			cp ${PXF_HOME}/templates/pxf-site.xml ${PXF_BASE_DIR}/servers/default/pxf-site.xml
+		if [[ ! -f ${BASE_DIR}/servers/default/pxf-site.xml ]]; then
+			cp ${PXF_HOME}/templates/pxf-site.xml ${BASE_DIR}/servers/default/pxf-site.xml
 		fi
-		sed -i -e "s|<value>true</value>|<value>false</value>|g" ${PXF_BASE_DIR}/servers/default/pxf-site.xml
+		sed -i -e "s|<value>true</value>|<value>false</value>|g" ${BASE_DIR}/servers/default/pxf-site.xml
 	elif [[ -z ${PROTOCOL} ]]; then
 		# Copy pxf-site.xml to the server configuration and update the
 		# pxf.service.user.name property value to use the PROXY_USER
 		# Only copy this file when testing against non-cloud
-		if [[ ! -f ${PXF_BASE_DIR}/servers/default/pxf-site.xml ]]; then
-			cp ${PXF_HOME}/templates/pxf-site.xml ${PXF_BASE_DIR}/servers/default/pxf-site.xml
-			sed -i -e "s|</configuration>|<property><name>pxf.service.user.name</name><value>${PROXY_USER}</value></property></configuration>|g" ${PXF_BASE_DIR}/servers/default/pxf-site.xml
+		if [[ ! -f ${BASE_DIR}/servers/default/pxf-site.xml ]]; then
+			cp ${TEMPLATES_DIR}/templates/pxf-site.xml ${BASE_DIR}/servers/default/pxf-site.xml
+			sed -i -e "s|</configuration>|<property><name>pxf.service.user.name</name><value>${PROXY_USER}</value></property></configuration>|g" ${BASE_DIR}/servers/default/pxf-site.xml
 		fi
 	fi
 
@@ -480,7 +499,7 @@ function configure_pxf_server() {
 	RUN_JDK_VERSION=${RUN_JDK_VERSION:-8}
 	if [[ $RUN_JDK_VERSION == 11 ]]; then
 		echo 'JDK 11 requested for runtime, setting PXF JAVA_HOME=/usr/lib/jvm/jdk-11 in pxf-env.sh'
-		su gpadmin -c "echo 'export JAVA_HOME=/usr/lib/jvm/jdk-11' >> ${PXF_BASE_DIR}/conf/pxf-env.sh"
+		su gpadmin -c "echo 'export JAVA_HOME=/usr/lib/jvm/jdk-11' >> ${BASE_DIR}/conf/pxf-env.sh"
 	fi
 }
 
@@ -591,69 +610,73 @@ function configure_hdfs_client_for_wasbs() {
 }
 
 function configure_pxf_gs_server() {
-	mkdir -p ${PXF_BASE_DIR}/servers/gs
+	mkdir -p ${BASE_DIR}/servers/gs
 	GOOGLE_KEYFILE=$(mktemp)
 	echo "${GOOGLE_CREDENTIALS}" > "${GOOGLE_KEYFILE}"
 	chown gpadmin "${GOOGLE_KEYFILE}"
 	sed -e "s|YOUR_GOOGLE_STORAGE_KEYFILE|${GOOGLE_KEYFILE}|" \
-		${PXF_HOME}/templates/gs-site.xml >"${PXF_BASE_DIR}/servers/gs/gs-site.xml"
+		${TEMPLATES_DIR}/templates/gs-site.xml >"${BASE_DIR}/servers/gs/gs-site.xml"
 }
 
 function configure_pxf_s3_server() {
-	mkdir -p ${PXF_BASE_DIR}/servers/s3
+	mkdir -p ${BASE_DIR}/servers/s3
 	sed -e "s|YOUR_AWS_ACCESS_KEY_ID|${ACCESS_KEY_ID}|" \
 		-e "s|YOUR_AWS_SECRET_ACCESS_KEY|${SECRET_ACCESS_KEY}|" \
-		${PXF_HOME}/templates/s3-site.xml >${PXF_BASE_DIR}/servers/s3/s3-site.xml
+		${TEMPLATES_DIR}/templates/s3-site.xml >${BASE_DIR}/servers/s3/s3-site.xml
 
-	mkdir -p ${PXF_BASE_DIR}/servers/s3-invalid
-	cp ${PXF_HOME}/templates/s3-site.xml ${PXF_BASE_DIR}/servers/s3-invalid/s3-site.xml
-	chown -R gpadmin:gpadmin "${PXF_BASE_DIR}/servers/s3" "${PXF_BASE_DIR}/servers/s3-invalid"
+	mkdir -p ${BASE_DIR}/servers/s3-invalid
+	cp ${TEMPLATES_DIR}/templates/s3-site.xml ${BASE_DIR}/servers/s3-invalid/s3-site.xml
+	chown -R gpadmin:gpadmin "${BASE_DIR}/servers/s3" "${BASE_DIR}/servers/s3-invalid"
 }
 
 function configure_pxf_minio_server() {
-	mkdir -p ${PXF_BASE_DIR}/servers/minio
+	mkdir -p ${BASE_DIR}/servers/minio
 	sed -e "s|YOUR_AWS_ACCESS_KEY_ID|${ACCESS_KEY_ID}|" \
 		-e "s|YOUR_AWS_SECRET_ACCESS_KEY|${SECRET_ACCESS_KEY}|" \
 		-e "s|YOUR_MINIO_URL|http://localhost:9000|" \
-		${PXF_HOME}/templates/minio-site.xml >${PXF_BASE_DIR}/servers/minio/minio-site.xml
+		${TEMPLATES_DIR}/templates/minio-site.xml >${BASE_DIR}/servers/minio/minio-site.xml
 }
 
 function configure_pxf_adl_server() {
-	mkdir -p "${PXF_BASE_DIR}/servers/adl"
+	mkdir -p "${BASE_DIR}/servers/adl"
 	sed -e "s|YOUR_ADL_REFRESH_URL|${ADL_OAUTH2_REFRESH_URL}|g" \
 		-e "s|YOUR_ADL_CLIENT_ID|${ADL_OAUTH2_CLIENT_ID}|g" \
 		-e "s|YOUR_ADL_CREDENTIAL|${ADL_OAUTH2_CREDENTIAL}|g" \
-		"${PXF_HOME}/templates/adl-site.xml" >"${PXF_BASE_DIR}/servers/adl/adl-site.xml"
+		"${TEMPLATES_DIR}/templates/adl-site.xml" >"${BASE_DIR}/servers/adl/adl-site.xml"
 }
 
 function configure_pxf_wasbs_server() {
-	mkdir -p ${PXF_BASE_DIR}/servers/wasbs
+	mkdir -p ${BASE_DIR}/servers/wasbs
 	sed -e "s|YOUR_AZURE_BLOB_STORAGE_ACCOUNT_NAME|${WASBS_ACCOUNT_NAME}|g" \
 		-e "s|YOUR_AZURE_BLOB_STORAGE_ACCOUNT_KEY|${WASBS_ACCOUNT_KEY}|g" \
-		"${PXF_HOME}/templates/wasbs-site.xml" >"${PXF_BASE_DIR}/servers/wasbs/wasbs-site.xml"
+		"${TEMPLATES_DIR}/templates/wasbs-site.xml" >"${BASE_DIR}/servers/wasbs/wasbs-site.xml"
 }
 
 function configure_pxf_default_server() {
 	AMBARI_DIR=$(find /tmp/build/ -name ambari_env_files)
 	if [[ -n $AMBARI_DIR  ]]; then
 	  AMBARI_KEYTAB_FILE=$(find "$AMBARI_DIR" -name "*.keytab")
-		cp "${AMBARI_DIR}"/conf/*-site.xml "${PXF_BASE_DIR}/servers/default"
+		cp "${AMBARI_DIR}"/conf/*-site.xml "${BASE_DIR}/servers/default"
 
 		if [[ -n $AMBARI_KEYTAB_FILE ]]; then
 			REALM=$(cat "$AMBARI_DIR"/REALM)
 			HADOOP_USER=$(cat "$AMBARI_DIR"/HADOOP_USER)
-			cp ${PXF_HOME}/templates/mapred-site.xml ${PXF_BASE_DIR}/servers/default/mapred1-site.xml
-			cp ${PXF_HOME}/templates/pxf-site.xml ${PXF_BASE_DIR}/servers/default/pxf-site.xml
-			sed -i -e "s|gpadmin/_HOST@EXAMPLE.COM|${HADOOP_USER}@${REALM}|g" ${PXF_BASE_DIR}/servers/default/pxf-site.xml
-			sed -i -e "s|\${pxf.base}/keytabs/pxf.service.keytab|$AMBARI_KEYTAB_FILE|g" ${PXF_BASE_DIR}/servers/default/pxf-site.xml
-			sed -i -e "s|\${user.name}||g" ${PXF_BASE_DIR}/servers/default/pxf-site.xml
+			cp ${TEMPLATES_DIR}/templates/mapred-site.xml ${BASE_DIR}/servers/default/mapred1-site.xml
+			cp ${TEMPLATES_DIR}/templates/pxf-site.xml ${BASE_DIR}/servers/default/pxf-site.xml
+			sed -i -e "s|gpadmin/_HOST@EXAMPLE.COM|${HADOOP_USER}@${REALM}|g" ${BASE_DIR}/servers/default/pxf-site.xml
+			if [[ ${PXF_VERSION} == 5 ]]; then
+				sed -i -e "s|\${pxf.conf}/keytabs/pxf.service.keytab|$AMBARI_KEYTAB_FILE|g" ${BASE_DIR}/servers/default/pxf-site.xml
+			else
+				sed -i -e "s|\${pxf.base}/keytabs/pxf.service.keytab|$AMBARI_KEYTAB_FILE|g" ${BASE_DIR}/servers/default/pxf-site.xml
+			fi
+			sed -i -e "s|\${user.name}||g" ${BASE_DIR}/servers/default/pxf-site.xml
 			sudo mkdir -p /etc/security/keytabs/
 			sudo cp "$AMBARI_KEYTAB_FILE" /etc/security/keytabs/"${HADOOP_USER}".headless.keytab
 			sudo chown gpadmin:gpadmin /etc/security/keytabs/"${HADOOP_USER}".headless.keytab
 
-			mkdir -p ${PXF_BASE_DIR}/servers/db-hive/
-			cp ${PXF_BASE_DIR}/servers/default/pxf-site.xml ${PXF_BASE_DIR}/servers/db-hive/
-			cp ${PXF_HOME}/templates/jdbc-site.xml ${PXF_BASE_DIR}/servers/db-hive/
+			mkdir -p ${BASE_DIR}/servers/db-hive/
+			cp ${BASE_DIR}/servers/default/pxf-site.xml ${BASE_DIR}/servers/db-hive/
+			cp ${TEMPLATES_DIR}/templates/jdbc-site.xml ${BASE_DIR}/servers/db-hive/
 
 			REALM=$(cat "$AMBARI_DIR"/REALM)
 			HIVE_HOSTNAME=$(grep < "$AMBARI_DIR"/etc_hostfile ambari-2 | awk '{print $2}')
@@ -663,37 +686,37 @@ function configure_pxf_default_server() {
 				-e 's|YOUR_DATABASE_JDBC_USER||' \
 				-e 's|YOUR_DATABASE_JDBC_PASSWORD||' \
 				-e 's|</configuration>|<property><name>hadoop.security.authentication</name><value>kerberos</value></property></configuration>|g' \
-				${PXF_BASE_DIR}/servers/db-hive/jdbc-site.xml
+				${BASE_DIR}/servers/db-hive/jdbc-site.xml
 
 			PXF_SRC_DIR=$(find /tmp/build/ -name pxf_src)
-			cp "${PXF_SRC_DIR}"/automation/src/test/resources/hive-report.sql ${PXF_BASE_DIR}/servers/db-hive/
+			cp "${PXF_SRC_DIR}"/automation/src/test/resources/hive-report.sql ${BASE_DIR}/servers/db-hive/
 		fi
 	else
-		# copy hadoop config files to PXF_BASE_DIR/servers/default
+		# copy hadoop config files to BASE_DIR/servers/default
 		if [[ -d /etc/hadoop/conf/ ]]; then
-			cp /etc/hadoop/conf/*-site.xml "${PXF_BASE_DIR}/servers/default"
+			cp /etc/hadoop/conf/*-site.xml "${BASE_DIR}/servers/default"
 		fi
 		if [[ -d /etc/hive/conf/ ]]; then
-			cp /etc/hive/conf/*-site.xml "${PXF_BASE_DIR}/servers/default"
+			cp /etc/hive/conf/*-site.xml "${BASE_DIR}/servers/default"
 		fi
 		if [[ -d /etc/hbase/conf/ ]]; then
-			cp /etc/hbase/conf/*-site.xml "${PXF_BASE_DIR}/servers/default"
+			cp /etc/hbase/conf/*-site.xml "${BASE_DIR}/servers/default"
 		fi
 	fi
 
 	if [[ ${IMPERSONATION} == true ]]; then
-		cp -r ${PXF_BASE_DIR}/servers/default ${PXF_BASE_DIR}/servers/default-no-impersonation
+		cp -r ${BASE_DIR}/servers/default ${BASE_DIR}/servers/default-no-impersonation
 
-		if [[ ! -f ${PXF_BASE_DIR}/servers/default-no-impersonation/pxf-site.xml ]]; then
-			cp ${PXF_HOME}/templates/pxf-site.xml ${PXF_BASE_DIR}/servers/default-no-impersonation/pxf-site.xml
+		if [[ ! -f ${BASE_DIR}/servers/default-no-impersonation/pxf-site.xml ]]; then
+			cp ${TEMPLATES_DIR}/templates/pxf-site.xml ${BASE_DIR}/servers/default-no-impersonation/pxf-site.xml
 		fi
 
 		sed -i \
 			-e "/<name>pxf.service.user.impersonation<\/name>/ {n;s|<value>.*</value>|<value>false</value>|g;}" \
 			-e "s|</configuration>|<property><name>pxf.service.user.name</name><value>foobar</value></property></configuration>|g" \
-			${PXF_BASE_DIR}/servers/default-no-impersonation/pxf-site.xml
+			${BASE_DIR}/servers/default-no-impersonation/pxf-site.xml
 	fi
-	chown -R gpadmin:gpadmin "${PXF_BASE_DIR}/servers"
+	chown -R gpadmin:gpadmin "${BASE_DIR}/servers"
 }
 
 function start_pxf_server() {
@@ -703,7 +726,11 @@ function start_pxf_server() {
 	echo 'Starting PXF service'
 	su --login gpadmin -c "${PXF_HOME}/bin/pxf start"
 	# grep with regex to avoid catching grep process itself
-	ps -aef | grep '[p]xf-app'
+	if [[ ${PXF_VERSION} == 5 ]]; then
+		ps -aef | grep '[t]omcat'
+	else
+		ps -aef | grep '[p]xf-app'
+	fi
 }
 
 function setup_s3_for_pg_regress() {
