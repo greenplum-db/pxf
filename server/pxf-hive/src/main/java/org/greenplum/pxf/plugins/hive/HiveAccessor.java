@@ -20,7 +20,6 @@ package org.greenplum.pxf.plugins.hive;
  */
 
 import com.esotericsoftware.kryo.io.Input;
-import com.esotericsoftware.kryo.io.Output;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
@@ -103,9 +102,6 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
     private boolean isPredicatePushdownAllowed;
 
     // ----- members for predicate pushdown handling -----
-    private static final int KRYO_BUFFER_SIZE = 4 * 1024;
-    private static final int KRYO_MAX_BUFFER_SIZE = 10 * 1024 * 1024;
-
     static final EnumSet<Operator> PARQUET_SUPPORTED_OPERATORS =
             EnumSet.of(
                     Operator.NOOP,
@@ -349,7 +345,7 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
      */
     protected boolean shouldAddProjectionsAndFilters() {
         return true;
-    };
+    }
 
     /*
      * The partition fields are initialized one time base on userData provided
