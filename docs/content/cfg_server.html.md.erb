@@ -108,6 +108,9 @@ You configure properties in the `pxf-site.xml` file for a PXF server when one or
 | pxf.service.user.name | The log in user for the remote system. | The operating system user that starts the pxf process, typically `gpadmin`. |
 | pxf.service.user.impersonation | Enables/disables user impersonation on the remote system. | The value of the (deprecated) `PXF_USER_IMPERSONATION` property when that property is set. If the `PXF_USER_IMPERSONATION` property does not exist and the `pxf.service.user.impersonation` property is missing from `pxf-site.xml`, the default is `false`, user impersonation is disabled on the remote system. |
 | pxf.fs.basePath | Identifies the base path or share point on the remote file system. This property is applicable when the server configuration is used with a profile that accesses a file. | None; this property is commented out by default. |
+| pxf.ppd.hive<sup>1</sup> | Specifies whether or not predicate pushdown is enabled for queries on external tables that specify the `Hive`, `HiveRC`, and `HiveORC` profiles. | True; predicate pushdown is enabled. |
+
+</br><sup>1</sup>&nbsp;Should you need to, you can override this setting on a per-table basis by specifying the `&PPD=<boolean>` option in the `LOCATION` clause when you create the external table.
 
 Refer to [Configuring PXF Hadoop Connectors ](client_instcfg.html) and [Configuring the JDBC Connector ](jdbc_cfg.html) for information about relevant `pxf-site.xml` property settings for Hadoop and JDBC server configurations, respectively. See [Configuring a PXF Network File System Server](nfs_pxf.html#ex_fscfg) for information about relevant `pxf-site.xml` property settings when you configure a PXF server to access a network file system.
 
