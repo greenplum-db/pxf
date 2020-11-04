@@ -2,7 +2,7 @@
 
 export PXF_CONF=~gpadmin/pxf
 export GPHOME=/usr/local/greenplum-db
-export PXF_HOME=/usr/local/pxf-gp?
+export PXF_HOME="/usr/local/pxf-gp?"
 export PATH=$PATH:${PXF_HOME}/bin
 
 echo "Using GPHOME:   $GPHOME"
