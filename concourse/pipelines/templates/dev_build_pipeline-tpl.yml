@@ -1075,15 +1075,7 @@ jobs:
       GP_VER: [[gp_ver]]
       KERBEROS: ((kerberos-enabled))
       PXF_JVM_OPTS: ((pxf-jvm-opts))
-  - task: Test PXF CLI
-    image: gpdb[[gp_ver]]-pxf-dev-centos7-image
-    file: pxf_src/concourse/tasks/test_pxf_cli.yml
-    params:
-      TARGET_OS: centos
-      TARGET_OS_VERSION: 7
   - task: Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-IMPERS on RHEL7
-    on_success:
-      <<: *destroy_clusters
     image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     file: pxf_src/concourse/tasks/test_pxf_on_ccp.yml
     attempts: 2
@@ -1098,6 +1090,14 @@ jobs:
       GROUP: security,proxySecurity,multiClusterSecurity
       PXF_JVM_OPTS: ((pxf-jvm-opts))
       TARGET_OS: centos
+  - task: Test PXF CLI
+    on_success:
+      <<: *destroy_clusters
+    image: gpdb[[gp_ver]]-pxf-dev-centos7-image
+    file: pxf_src/concourse/tasks/test_pxf_cli.yml
+    params:
+      TARGET_OS: centos
+      TARGET_OS_VERSION: 7
 {% if slack_notification %}
     <<: *slack_alert
 {% endif %}
