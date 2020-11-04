@@ -24,7 +24,7 @@ import java.io.ObjectOutputStream;
 import java.util.List;
 import java.util.Properties;
 
-import static org.greenplum.pxf.plugins.hive.utilities.HiveUtilities.serializeProperties;
+import static org.greenplum.pxf.plugins.hive.utilities.HiveUtilities.toKryo;
 
 
 /**
@@ -66,7 +66,7 @@ public class MultipleHiveFragmentsPerFileFragmenter extends BaseFragmenter {
 
         for (int i = 0; i < fragmentsNum; i++) {
 
-            byte[] userData = serializeProperties(properties);
+            byte[] userData = toKryo(properties);
 
             ByteArrayOutputStream bas = new ByteArrayOutputStream();
             ObjectOutputStream os = new ObjectOutputStream(bas);
