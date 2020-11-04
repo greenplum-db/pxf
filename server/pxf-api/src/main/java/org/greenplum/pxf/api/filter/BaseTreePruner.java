@@ -34,15 +34,14 @@ public abstract class BaseTreePruner implements TreeVisitor {
             if (AND == operator && childCount == 1) {
                 Node promoted = Optional.ofNullable(operatorNode.getLeft()).orElse(operatorNode.getRight());
                 LOG.debug("Child {} was promoted higher in the tree", promoted);
-                // AND need at least two children. If the operator has a
-                // single child node left, we promote the child one level up
-                // the tree
+                // AND needs at least two children. If the operator has a single child node left,
+                // we promote the child one level up the tree
                 return promoted;
             } else if (OR == operator && childCount <= 1) {
                 LOG.debug("Child with operator {} will be pruned because it has {} children", operator, childCount);
                 operatorNode.setLeft(null);
                 operatorNode.setRight(null);
-                // OR need two or more children
+                // OR needs two or more children
                 return null;
             } else if ((AND == operator || NOT == operator) && childCount == 0) {
                 LOG.debug("Child with operator {} will be pruned because it has no children", operator);

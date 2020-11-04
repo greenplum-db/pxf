@@ -24,7 +24,7 @@ import java.util.Properties;
 
 import static org.apache.hadoop.hive.metastore.api.hive_metastoreConstants.META_TABLE_PARTITION_COLUMNS;
 import static org.apache.hadoop.hive.metastore.api.hive_metastoreConstants.META_TABLE_PARTITION_COLUMN_TYPES;
-import static org.greenplum.pxf.plugins.hive.utilities.HiveUtilities.serializeProperties;
+import static org.greenplum.pxf.plugins.hive.utilities.HiveUtilities.toKryo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -77,7 +77,7 @@ public class HiveAccessorTest {
     @Test
     public void testSkipHeaderCountGreaterThanZero() throws Exception {
         properties.put("skip.header.line.count", "2");
-        context.setFragmentUserData(serializeProperties(properties));
+        context.setFragmentUserData(toKryo(properties));
 
         accessor.initialize(context);
         accessor.openForRead();
@@ -89,7 +89,7 @@ public class HiveAccessorTest {
     @Test
     public void testSkipHeaderCountGreaterThanZeroFirstFragment() throws Exception {
         properties.put("skip.header.line.count", "2");
-        context.setFragmentUserData(serializeProperties(properties));
+        context.setFragmentUserData(toKryo(properties));
 
         accessor.initialize(context);
         accessor.openForRead();
@@ -102,7 +102,7 @@ public class HiveAccessorTest {
     public void testSkipHeaderCountGreaterThanZeroNotFirstFragment() throws Exception {
         properties.put("skip.header.line.count", "2");
         context.setFragmentIndex(2);
-        context.setFragmentUserData(serializeProperties(properties));
+        context.setFragmentUserData(toKryo(properties));
 
         accessor.initialize(context);
         accessor.openForRead();
@@ -113,7 +113,7 @@ public class HiveAccessorTest {
 
     @Test
     public void testSkipHeaderCountZeroFirstFragment() throws Exception {
-        context.setFragmentUserData(serializeProperties(properties));
+        context.setFragmentUserData(toKryo(properties));
 
         accessor.initialize(context);
         accessor.openForRead();
@@ -125,7 +125,7 @@ public class HiveAccessorTest {
     @Test
     public void testSkipHeaderCountNegativeFirstFragment() throws Exception {
         properties.put("skip.header.line.count", "-1");
-        context.setFragmentUserData(serializeProperties(properties));
+        context.setFragmentUserData(toKryo(properties));
 
         accessor.initialize(context);
         accessor.openForRead();
@@ -137,7 +137,7 @@ public class HiveAccessorTest {
     // ---------- Column Projection Setup tests ----------
     @Test
     public void testColumnProjection() throws Exception {
-        context.setFragmentUserData(serializeProperties(properties));
+        context.setFragmentUserData(toKryo(properties));
 
         accessor = new HiveAccessor();
         accessor.initialize(context);
@@ -162,7 +162,7 @@ public class HiveAccessorTest {
         properties.put(META_TABLE_PARTITION_COLUMNS, "id");
         properties.put(META_TABLE_PARTITION_COLUMN_TYPES, "int");
         properties.put("pxf.pcv", "1");
-        context.setFragmentUserData(serializeProperties(properties));
+        context.setFragmentUserData(toKryo(properties));
 
         accessor = new HiveAccessor();
         accessor.initialize(context);
@@ -182,7 +182,7 @@ public class HiveAccessorTest {
     // ---------- Predicate Pushdown Setup tests ----------
     @Test
     public void testPPDEnabledNoFilter() throws Exception {
-        context.setFragmentUserData(serializeProperties(properties));
+        context.setFragmentUserData(toKryo(properties));
 
         accessor = new HiveAccessor();
         accessor.initialize(context);
@@ -200,7 +200,7 @@ public class HiveAccessorTest {
 
     @Test
     public void testPPDEnabledWithFilter() throws Exception {
-        context.setFragmentUserData(serializeProperties(properties));
+        context.setFragmentUserData(toKryo(properties));
         context.setFilterString("a0c20s1d1o5");
 
         accessor = new HiveAccessor();
@@ -222,7 +222,7 @@ public class HiveAccessorTest {
         Map<String,String> additionalProps = new HashMap<>();
         additionalProps.put("pxf.ppd.hive", "false");
         context.setAdditionalConfigProps(additionalProps);
-        context.setFragmentUserData(serializeProperties(properties));
+        context.setFragmentUserData(toKryo(properties));
         context.setFilterString("a0c20s1d1o5");
 
         accessor = new HiveAccessor();

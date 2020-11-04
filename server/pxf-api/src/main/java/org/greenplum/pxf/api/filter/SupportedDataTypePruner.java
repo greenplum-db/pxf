@@ -7,21 +7,12 @@ import java.util.EnumSet;
 import java.util.List;
 
 /**
- * A tree pruner that removes operator nodes for non-supported column data types.
+ * A tree pruner that removes operator nodes for non-supported Greenplum column data types.
  */
 public class SupportedDataTypePruner extends BaseTreePruner {
 
     private final List<ColumnDescriptor> columnDescriptors;
     private final EnumSet<DataType> supportedDataTypes;
-
-    /**
-     * Constructor, assumes all possible predicate pushdown datatypes will be supported
-     *
-     * @param columnDescriptors  the list of column descriptors for the table
-     */
-    public SupportedDataTypePruner(List<ColumnDescriptor> columnDescriptors) {
-        this(columnDescriptors, FilterParser.SUPPORTED_DATA_TYPES);
-    }
 
     /**
      * Constructor
@@ -43,24 +34,16 @@ public class SupportedDataTypePruner extends BaseTreePruner {
         if (node instanceof OperatorNode) {
             OperatorNode operatorNode = (OperatorNode) node;
             if (!operatorNode.getOperator().isLogical()) {
-                DataType datatype = getColumnType(operatorNode);
+                ColumnDescriptor columnDescriptor = columnDescriptors.get(operatorNode.getColumnIndexOperand().index());
+                DataType datatype = columnDescriptor.getDataType();
                 if (!supportedDataTypes.contains(datatype)) {
                     // prune the operator node if its operand is a column of unsupported type
-                    LOG.debug("DataType oid={} is not supported", datatype.getOID());
+                    LOG.debug("DataType oid={} for column=(index:{} name:{}) is not supported",
+                            datatype.getOID(), columnDescriptor.columnIndex(), columnDescriptor.columnName());
                     return null;
                 }
             }
         }
         return node;
-    }
-
-    /**
-     * Returns the data type for the given column index
-     *
-     * @param operatorNode the operator node
-     * @return the data type for the given column index
-     */
-    private DataType getColumnType(OperatorNode operatorNode) {
-        return columnDescriptors.get(operatorNode.getColumnIndexOperand().index()).getDataType();
     }
 }

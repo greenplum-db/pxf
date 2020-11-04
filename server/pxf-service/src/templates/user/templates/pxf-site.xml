@@ -48,12 +48,10 @@
     </property>
     !-->
 
-    <!--
     <property>
         <name>pxf.ppd.hive</name>
         <value>true</value>
         <description>Specifies whether Predicate Pushdown feature is enabled for Hive profiles.</description>
     </property>
-    !-->
 
 </configuration>

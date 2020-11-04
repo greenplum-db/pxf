@@ -259,14 +259,14 @@ public class HiveUtilities {
 
 
     /**
-     * Serializer a {@link Properties} object into a byte array
+     * Serializer an object into a byte array using Kryo serialization
      *
-     * @param properties the properties to serialize
-     * @return the serialized properties as a byte array
+     * @param object the object to serialize
+     * @return the serialized object as a byte array
      */
-    public static byte[] serializeProperties(Properties properties) {
+    public static byte[] toKryo(Object object) {
         Output out = new Output(4 * 1024, 10 * 1024 * 1024);
-        getKryo().writeObject(out, properties);
+        getKryo().writeObject(out, object);
         out.close();
         return out.toBytes();
     }

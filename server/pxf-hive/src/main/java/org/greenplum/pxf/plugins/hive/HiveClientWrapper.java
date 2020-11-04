@@ -38,7 +38,7 @@ import static org.apache.hadoop.hive.metastore.api.hive_metastoreConstants.META_
 import static org.greenplum.pxf.api.model.ConfigurationFactory.PXF_CONFIG_RESOURCE_PATH_PROPERTY;
 import static org.greenplum.pxf.plugins.hive.HiveDataFragmenter.HIVE_PARTITIONS_DELIM;
 import static org.greenplum.pxf.plugins.hive.HiveDataFragmenter.PXF_META_TABLE_PARTITION_COLUMN_VALUES;
-import static org.greenplum.pxf.plugins.hive.utilities.HiveUtilities.serializeProperties;
+import static org.greenplum.pxf.plugins.hive.utilities.HiveUtilities.toKryo;
 
 public class HiveClientWrapper {
 
@@ -165,7 +165,7 @@ public class HiveClientWrapper {
         Properties properties = partData.properties;
         addPartitionValuesInformation(properties, partData);
         removeUnusedProperties(properties);
-        return serializeProperties(properties);
+        return toKryo(properties);
     }
 
     /**

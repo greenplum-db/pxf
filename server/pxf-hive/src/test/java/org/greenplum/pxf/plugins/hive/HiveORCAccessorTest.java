@@ -28,13 +28,13 @@ import org.apache.hadoop.hive.ql.io.sarg.SearchArgumentFactory;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
+import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Properties;
 
 import static org.apache.hadoop.hive.ql.io.sarg.ConvertAstToSearchArg.SARG_PUSHDOWN;
-import static org.greenplum.pxf.plugins.hive.utilities.HiveUtilities.serializeProperties;
 import static org.junit.Assert.assertEquals;
 
 public class HiveORCAccessorTest {
@@ -53,7 +53,7 @@ public class HiveORCAccessorTest {
         context.setDataSource("foo");
         context.setProfileScheme("localfile");
         context.setFragmentMetadata(HdfsUtilities.prepareFragmentMetadata(0, 0, new String[]{"localhost"}));
-        context.setFragmentUserData(serializeProperties(properties));
+        context.setFragmentUserData(HiveUtilities.toKryo(properties));
         context.getTupleDescription().add(new ColumnDescriptor("col1", 25, 0, "TEXT", null));
         context.getTupleDescription().add(new ColumnDescriptor("FOO", 25, 1, "TEXT", null));
         context.setAccessor(HiveORCAccessor.class.getName());

@@ -213,8 +213,8 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
         super.initialize(context);
 
         // determine if predicate pushdown is allowed by configuration
-        if (configuration.get(PXF_PPD_HIVE, "true").equalsIgnoreCase("true")) {
-            isPredicatePushdownAllowed = true;
+        isPredicatePushdownAllowed = configuration.get(PXF_PPD_HIVE, "true").equalsIgnoreCase("true");
+        if (isPredicatePushdownAllowed) {
             LOG.debug("Predicate pushdown for Hive is enabled");
             /*
              Set the property if not explicitly specified by the user to "false" to work around the issue fixed
@@ -635,7 +635,9 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
                 new SupportedOperatorPruner(getSupportedOperatorsForPushdown()),
                 searchArgumentBuilder);
 
-        String kryoString = toKryo(searchArgumentBuilder.getFilterBuilder().build());
+        String kryoString = Base64.encodeBase64String(
+                HiveUtilities.toKryo(searchArgumentBuilder.getFilterBuilder().build())
+        );
         jobConf.set(ConvertAstToSearchArg.SARG_PUSHDOWN, kryoString);
         LOG.debug("Added SARG={}", kryoString);
     }
@@ -655,13 +657,6 @@ public class HiveAccessor extends HdfsSplittableDataAccessor {
      */
     JobConf getJobConf() {
         return jobConf;
-    }
-
-    private String toKryo(SearchArgument sarg) {
-        Output out = new Output(KRYO_BUFFER_SIZE, KRYO_MAX_BUFFER_SIZE);
-        HiveUtilities.getKryo().writeObject(out, sarg);
-        out.close();
-        return Base64.encodeBase64String(out.toBytes());
     }
 
     protected Properties getSerdeProperties(byte[] userData) {

@@ -78,7 +78,7 @@ public class FilterParser {
 
     public static final String DEFAULT_CHARSET = "UTF-8";
 
-    public static final EnumSet<DataType> SUPPORTED_DATA_TYPES = EnumSet.of(
+    private static final EnumSet<DataType> SUPPORTED_DATA_TYPES = EnumSet.of(
             DataType.BIGINT,
             DataType.INTEGER,
             DataType.SMALLINT,

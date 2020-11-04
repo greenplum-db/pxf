@@ -131,7 +131,7 @@ public class HiveParquetFilterPushDownTest {
         context.setRequestType(RequestContext.RequestType.READ_BRIDGE);
         context.setDataSource(path);
         context.setFragmentMetadata(HdfsUtilities.prepareFragmentMetadata(0, 4196, Fragment.HOSTS));
-        context.setFragmentUserData(HiveUtilities.serializeProperties(props));
+        context.setFragmentUserData(HiveUtilities.toKryo(props));
         context.setTupleDescription(columnDescriptors);
 
         accessor.initialize(context);
