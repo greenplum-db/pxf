@@ -429,7 +429,7 @@ under the License.
         <plugins>
             <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
             <accessor>org.greenplum.pxf.plugins.hdfs.orc.ORCVectorizedAccessor</accessor>
-            <resolver>org.greenplum.pxf.plugins.hdfs.ParquetResolver</resolver>
+            <resolver>org.greenplum.pxf.plugins.hdfs.orc.ORCVectorizedResolver</resolver>
         </plugins>
         <protocol>s3a</protocol>
         <handler>org.greenplum.pxf.plugins.s3.S3ProtocolHandler</handler>
@@ -445,7 +445,7 @@ under the License.
         <plugins>
             <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
             <accessor>org.greenplum.pxf.plugins.hdfs.orc.ORCVectorizedAccessor</accessor>
-            <resolver>org.greenplum.pxf.plugins.hdfs.ParquetResolver</resolver>
+            <resolver>org.greenplum.pxf.plugins.hdfs.orc.ORCVectorizedResolver</resolver>
         </plugins>
         <protocol>adl</protocol>
     </profile>
@@ -456,7 +456,7 @@ under the License.
         <plugins>
             <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
             <accessor>org.greenplum.pxf.plugins.hdfs.orc.ORCVectorizedAccessor</accessor>
-            <resolver>org.greenplum.pxf.plugins.hdfs.ParquetResolver</resolver>
+            <resolver>org.greenplum.pxf.plugins.hdfs.orc.ORCVectorizedResolver</resolver>
         </plugins>
         <protocol>gs</protocol>
     </profile>
@@ -467,7 +467,7 @@ under the License.
         <plugins>
             <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
             <accessor>org.greenplum.pxf.plugins.hdfs.orc.ORCVectorizedAccessor</accessor>
-            <resolver>org.greenplum.pxf.plugins.hdfs.ParquetResolver</resolver>
+            <resolver>org.greenplum.pxf.plugins.hdfs.orc.ORCVectorizedResolver</resolver>
         </plugins>
         <protocol>wasbs</protocol>
     </profile>
@@ -478,7 +478,7 @@ under the License.
         <plugins>
             <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
             <accessor>org.greenplum.pxf.plugins.hdfs.orc.ORCVectorizedAccessor</accessor>
-            <resolver>org.greenplum.pxf.plugins.hdfs.ParquetResolver</resolver>
+            <resolver>org.greenplum.pxf.plugins.hdfs.orc.ORCVectorizedResolver</resolver>
         </plugins>
     </profile>
     <!-- AVRO PROFILES -->
