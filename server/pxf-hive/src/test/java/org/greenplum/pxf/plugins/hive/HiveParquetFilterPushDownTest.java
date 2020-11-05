@@ -3,7 +3,6 @@ package org.greenplum.pxf.plugins.hive;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.MessageTypeParser;
-import org.apache.parquet.schema.Type;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.io.DataType;
@@ -23,9 +22,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -701,23 +698,6 @@ public class HiveParquetFilterPushDownTest {
         int[] expectedRows = {11, 12, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25};
         context.setFilterString("a16m1007s2d11s2d12o10");
         assertRowsReturned(expectedRows);
-    }
-
-    private Map<String, Type> getOriginalFieldsMap(MessageType originalSchema) {
-        Map<String, Type> originalFields = new HashMap<>(originalSchema.getFieldCount() * 2);
-
-        // We need to add the original name and lower cased name to
-        // the map to support mixed case where in GPDB the column name
-        // was created with quotes i.e "mIxEd CaSe". When quotes are not
-        // used to create a table in GPDB, the name of the column will
-        // always come in lower-case
-        originalSchema.getFields().forEach(t -> {
-            String columnName = t.getName();
-            originalFields.put(columnName, t);
-            originalFields.put(columnName.toLowerCase(), t);
-        });
-
-        return originalFields;
     }
 
     private void assertRowsReturned(int[] expectedRows) throws Exception {
