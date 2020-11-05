@@ -55,6 +55,8 @@ In this configuration, PXF accesses Hadoop as the Greenplum user proxied
 by the Kerberos principal. The Kerberos principal is the Hadoop proxy user and
 accesses Hadoop as the Greenplum user.
 
+<img alt="Accessing Hadoop as the Greenplum User Proxied by the Kerberos Principal" src="graphics/impersonation_cases/impersonation-case-1-kerberos.png" class="image" />
+
 | Impersonation  | Service&nbsp;User |  PXF Configuration | Hadoop&nbsp;Configuration&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |
 |----------------|-------------------|--------------------|-----------|
 |  true          | Kerberos principal | Perform the [Configuration Procedure](#procedure) in this topic. | Set the Kerberos principal as the Hadoop proxy user as described in [Configure Hadoop Proxying](pxfuserimpers.html#hadoop). |
@@ -63,6 +65,8 @@ accesses Hadoop as the Greenplum user.
 
 In this configuration, PXF accesses Hadoop as the Kerberos principal. A query initiated by
 any Greenplum user appears on the Hadoop side as originating from the Kerberos principal.
+
+<img alt="Accessing Hadoop as the Kerberos Principal" src="graphics/impersonation_cases/impersonation-case-2-kerberos.png" class="image" />
 
 | Impersonation  | Service&nbsp;User |  PXF Configuration | Hadoop&nbsp;Configuration&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |
 |----------------|-------------------|--------------------|-----------|
@@ -73,6 +77,8 @@ any Greenplum user appears on the Hadoop side as originating from the Kerberos p
 In this configuration, PXF accesses Hadoop as a \<custom> user (for example, `hive`).
 The Kerberos principal is the Hadoop proxy user. A query initiated by any Greenplum
 user appears on the Hadoop side as originating from the \<custom> user.
+
+<img alt="Accessing Hadoop as a custom User" src="graphics/impersonation_cases/impersonation-case-3-kerberos.png" class="image" />
 
 | Impersonation  | Service&nbsp;User |  PXF Configuration | Hadoop&nbsp;Configuration&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |
 |----------------|-------------------|--------------------|-----------|
