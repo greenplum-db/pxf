@@ -56,13 +56,12 @@ PXF accesses data sources using profiles exposed by different connectors, and fi
 | *:parquet | Y<sup>1</sup> | N | Y<sup>1</sup> | N | Y<sup>1</sup> | Y<sup>1</sup> | Y<sup>1</sup> |
 | s3:parquet and s3:text with S3-Select | Y |  N | Y | Y | Y | Y | Y |
 | HBase | Y | N | Y | N | Y | Y | N |
-| Hive | Y<sup>2</sup> | N | N | N | Y<sup>2</sup> | Y<sup>2</sup> | N |
 | Hive (accessing stored as Parquet) | Y, Y<sup>2</sup> | N | N | Y | Y, Y<sup>2</sup> | Y, Y<sup>2</sup> | Y |
 | Hive (accessing stored as RCFile or ORC) | Y, Y<sup>2</sup> | N | Y | Y | Y, Y<sup>2</sup> | Y, Y<sup>2</sup> | Y |
 | HiveText | Y<sup>2</sup> | N | N | N | Y<sup>2</sup> | Y<sup>2</sup> | N |
 | HiveRC | Y, Y<sup>2</sup> |  N | Y | Y | Y, Y<sup>2</sup> | Y, Y<sup>2</sup> | Y |
 | HiveORC | Y, Y<sup>2</sup> |  N | Y | Y | Y, Y<sup>2</sup> | Y, Y<sup>2</sup> | Y |
-| HiveVectorizedORC | Y, Y<sup>2</sup> |  N | Y | Y | Y, Y<sup>2</sup> | Y, Y<sup>2</sup> | Y |
+| HiveVectorizedORC | Y<sup>2</sup> |  N | N | N | Y<sup>2</sup> | Y<sup>2</sup> | N |
 
 </br><sup>1</sup>&nbsp;PXF applies the predicate, rather than the remote system, reducing CPU usage and the memory footprint.
 </br><sup>2</sup>&nbsp;PXF supports partition pruning based on partition keys.
