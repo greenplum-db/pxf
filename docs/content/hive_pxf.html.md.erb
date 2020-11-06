@@ -662,9 +662,9 @@ In the following example, you will create and populate a Hive table stored in OR
 
     `intarray` and `propmap` are again serialized as text strings.
 
-## <a id="partitionfiltering"></a>Partition Filter Pushdown
+## <a id="partitionfiltering"></a>Partition Pruning
 
-The PXF Hive connector supports Hive partitioning pruning and the Hive partition directory structure. This enables partition exclusion on selected HDFS files comprising a Hive table. To use the partition filtering feature to reduce network traffic and I/O, run a query on a PXF external table using a `WHERE` clause that refers to a specific partition column in a partitioned Hive table.
+The PXF Hive connector supports Hive partition pruning and the Hive partition directory structure. This enables partition exclusion on selected HDFS files comprising a Hive table. To use the partition filtering feature to reduce network traffic and I/O, run a query on a PXF external table using a `WHERE` clause that refers to a specific partition column in a partitioned Hive table.
 
 The PXF Hive Connector partition filtering support for Hive string and integral types is described below:
 
