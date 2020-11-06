@@ -166,19 +166,19 @@ You can set other HikariCP-specific connection pooling properties for a server c
 
 #### <a id="jdbcconpool_tune"></a>Tuning the Maximum Connection Pool Size
 
-To not exceed the maximum number of connections allowed by the target database, and at the same time ensure that each PXF JVM services a fair share of the JDBC connections, determine the maximum value of `maxPoolSize` based on the size of the Greenplum Database cluster as follows:
+To not exceed the maximum number of connections allowed by the target database, and at the same time ensure that each PXF JVM services a fair share of the JDBC connections, determine the maximum value of `maximumPoolSize` based on the size of the Greenplum Database cluster as follows:
 
 ``` pre
 max_conns_allowed_by_remote_db / #_greenplum_segment_hosts
 ```
 
-For example, if your Greenplum Database cluster has 16 segment hosts and the target database allows 160 concurrent connections, calculate `maxPoolSize` as follows:
+For example, if your Greenplum Database cluster has 16 segment hosts and the target database allows 160 concurrent connections, calculate `maximumPoolSize` as follows:
 
 ``` pre
 160 / 16 = 10
 ```
 
-In practice, you may choose to set `maxPoolSize` to a lower value, since the number of concurrent connections per JDBC query depends on the number of partitions used in the query. When a query uses no partitions, a single PXF JVM services the query. If a query uses 12 partitions, PXF establishes 12 concurrent JDBC connections to the remote database. Ideally, these connections are distributed equally among the PXF JVMs, but that is not guaranteed.
+In practice, you may choose to set `maximumPoolSize` to a lower value, since the number of concurrent connections per JDBC query depends on the number of partitions used in the query. When a query uses no partitions, a single PXF JVM services the query. If a query uses 12 partitions, PXF establishes 12 concurrent JDBC connections to the remote database. Ideally, these connections are distributed equally among the PXF JVMs, but that is not guaranteed.
 
 
 ## <a id="jdbcimpers"></a>JDBC User Impersonation
