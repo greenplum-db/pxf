@@ -45,11 +45,12 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
                     Operator.GREATER_THAN_OR_EQUAL,
                     Operator.EQUALS,
                     Operator.NOT_EQUALS,
+                    // Operator.LIKE,
                     Operator.IS_NULL,
                     Operator.IS_NOT_NULL,
                     Operator.IN,
-                    Operator.OR,
                     Operator.AND,
+                    Operator.OR,
                     Operator.NOT
             );
     private static final TreeVisitor PRUNER = new SupportedOperatorPruner(SUPPORTED_OPERATORS);
