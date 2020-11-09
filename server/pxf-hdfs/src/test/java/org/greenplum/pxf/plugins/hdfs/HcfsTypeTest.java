@@ -530,4 +530,15 @@ public class HcfsTypeTest {
         assertEquals("the provided path '$HOME/secret-files-in-gpadmin-home' is invalid. The dollar sign character ($) is not allowed by PXF", e.getMessage());
     }
 
+    @Test
+    public void testDfsUserHomeBaseDirPropertyHasNoSideEffectInURI() {
+        configuration.set("fs.defaultFS", "hdfs://abc:8020/");
+        configuration.set("dfs.user.home.base.dir", "/home/francisco/");
+        context.setDataSource("foo/bar.txt");
+
+        HcfsType type = HcfsType.getHcfsType(context);
+        String dataUri = type.getDataUri(context);
+        assertEquals("hdfs://abc:8020/foo/bar.txt", dataUri);
+    }
+
 }

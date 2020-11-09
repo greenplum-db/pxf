@@ -608,7 +608,7 @@ public class JdbcBasePluginTestInitialize {
         Properties poolConfiguration = (Properties) getInternalState(plugin, "poolConfiguration");
         assertNotNull(poolConfiguration);
         assertEquals(4, poolConfiguration.size());
-        assertEquals("5", poolConfiguration.getProperty("maximumPoolSize"));
+        assertEquals("15", poolConfiguration.getProperty("maximumPoolSize"));
         assertEquals("30000", poolConfiguration.getProperty("connectionTimeout"));
         assertEquals("30000", poolConfiguration.getProperty("idleTimeout"));
         assertEquals("0", poolConfiguration.getProperty("minimumIdle"));
@@ -641,7 +641,7 @@ public class JdbcBasePluginTestInitialize {
         assertEquals(6, poolProps.size());
 
         Properties expectedProps = new Properties();
-        expectedProps.setProperty("maximumPoolSize", "5");
+        expectedProps.setProperty("maximumPoolSize", "15");
         expectedProps.setProperty("connectionTimeout", "30000");
         expectedProps.setProperty("idleTimeout", "30000");
         expectedProps.setProperty("minimumIdle", "0");

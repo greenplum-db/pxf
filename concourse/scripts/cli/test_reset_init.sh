@@ -5,27 +5,27 @@ dir=$( cd "$(dirname "${BASH_SOURCE[0]}")" && pwd )
 source "${dir}/common.sh"
 
 # all these things come from pxf init, removed by pxf reset
-pxf_home_contents="${GPHOME}/pxf/conf/pxf-private.classpath
-${GPHOME}/pxf/run
-${GPHOME}/pxf/pxf-service/conf/logging.properties
-${GPHOME}/pxf/pxf-service/conf/server.xml
-${GPHOME}/pxf/pxf-service/conf/web.xml
-${GPHOME}/pxf/pxf-service/lib
-${GPHOME}/pxf/pxf-service/webapps/pxf.war
-${GPHOME}/pxf/pxf-service/bin/catalina.sh
-${GPHOME}/pxf/pxf-service/bin/kill-pxf.sh
-${GPHOME}/pxf/pxf-service/bin/setenv.sh"
+pxf_home_contents="${PXF_HOME}/conf/pxf-private.classpath
+${PXF_HOME}/run
+${PXF_HOME}/pxf-service/conf/logging.properties
+${PXF_HOME}/pxf-service/conf/server.xml
+${PXF_HOME}/pxf-service/conf/web.xml
+${PXF_HOME}/pxf-service/lib
+${PXF_HOME}/pxf-service/webapps/pxf.war
+${PXF_HOME}/pxf-service/bin/catalina.sh
+${PXF_HOME}/pxf-service/bin/kill-pxf.sh
+${PXF_HOME}/pxf-service/bin/setenv.sh"
 pxf_home_empty="export PXF_CONF=\${PXF_CONF:-NOT_INITIALIZED}"
 list_pxf_home() {
 	local usage='list_pxf_home <host>' host=${1:?${usage}}
 	ssh "${host}" "
-		[[ -e $GPHOME/pxf/conf/pxf-private.classpath ]] && ls $GPHOME/pxf/conf/pxf-private.classpath
-		[[ -d $GPHOME/pxf/run ]] && echo $GPHOME/pxf/run
-		[[ -d $GPHOME/pxf/pxf-service/conf ]] && ls $GPHOME/pxf/pxf-service/conf/{logging.properties,{server,web}.xml}
-		[[ -d $GPHOME/pxf/pxf-service/lib ]] && echo $GPHOME/pxf/pxf-service/lib
-		[[ -d $GPHOME/pxf/pxf-service/webapps ]] && ls $GPHOME/pxf/pxf-service/webapps/pxf.war
-		[[ -d $GPHOME/pxf/pxf-service/bin ]] && ls $GPHOME/pxf/pxf-service/bin/{catalina,kill-pxf,setenv}.sh
-		grep NOT_INITIALIZED ${GPHOME}/pxf/conf/pxf-env-default.sh
+		[[ -e $PXF_HOME/conf/pxf-private.classpath ]] && ls $PXF_HOME/conf/pxf-private.classpath
+		[[ -d $PXF_HOME/run ]] && echo $PXF_HOME/run
+		[[ -d $PXF_HOME/pxf-service/conf ]] && ls $PXF_HOME/pxf-service/conf/{logging.properties,{server,web}.xml}
+		[[ -d $PXF_HOME/pxf-service/lib ]] && echo $PXF_HOME/pxf-service/lib
+		[[ -d $PXF_HOME/pxf-service/webapps ]] && ls $PXF_HOME/pxf-service/webapps/pxf.war
+		[[ -d $PXF_HOME/pxf-service/bin ]] && ls $PXF_HOME/pxf-service/bin/{catalina,kill-pxf,setenv}.sh
+		grep NOT_INITIALIZED ${PXF_HOME}/conf/pxf-env-default.sh
 	"
 }
 
@@ -98,14 +98,14 @@ sdw1 ==> Instance already exists. Use 'pxf [cluster] reset' before attempting to
 sdw2 ==> Instance already exists. Use 'pxf [cluster] reset' before attempting to re-initialize PXF"
 compare "${failed_init_message}" "$(pxf cluster init 2>&1)" "pxf cluster init should fail on sdw{1,2}"
 
-expected_reset_sdw_message="Cleaning ${GPHOME}/pxf/conf/pxf-private.classpath...
+expected_reset_sdw_message="Cleaning ${PXF_HOME}/conf/pxf-private.classpath...
 Ignoring ${PXF_CONF}...
-Cleaning ${GPHOME}/pxf/pxf-service...
-Cleaning ${GPHOME}/pxf/run...
-Reverting changes to ${GPHOME}/pxf/conf/pxf-env-default.sh...
+Cleaning ${PXF_HOME}/pxf-service...
+Cleaning ${PXF_HOME}/run...
+Reverting changes to ${PXF_HOME}/conf/pxf-env-default.sh...
 Finished cleaning PXF instance directories"
-compare "${expected_reset_sdw_message}" "$(ssh sdw1 "${GPHOME}/pxf/bin/pxf" reset --force)" "pxf reset on sdw1 should succeed"
-compare "${expected_reset_sdw_message}" "$(ssh sdw2 "${GPHOME}/pxf/bin/pxf" reset --force)" "pxf reset on sdw2 should succeed"
+compare "${expected_reset_sdw_message}" "$(ssh sdw1 "${PXF_HOME}/bin/pxf" reset --force)" "pxf reset on sdw1 should succeed"
+compare "${expected_reset_sdw_message}" "$(ssh sdw2 "${PXF_HOME}/bin/pxf" reset --force)" "pxf reset on sdw2 should succeed"
 
 for host in sdw{1,2}; do
 	compare "${pxf_home_empty}" "$(list_pxf_home "${host}")" "${host} should not have \$PXF_HOME populated"
@@ -163,16 +163,21 @@ done
 gpinitstandby -as smdw >/dev/null
 
 successful_host_init_message="Using ${PXF_CONF} as a location for user-configurable files
-Generating ${GPHOME}/pxf/conf/pxf-private.classpath file from ${GPHOME}/pxf/templates/pxf/pxf-private.classpath.template ...
+Generating ${PXF_HOME}/conf/pxf-private.classpath file from ${PXF_HOME}/templates/pxf/pxf-private.classpath.template ...
 Directory ${PXF_CONF} already exists, no update required
 Directory ${PXF_CONF}/conf already exists, no update required
 Directory ${PXF_CONF}/keytabs already exists, no update required
 Directory ${PXF_CONF}/lib already exists, no update required
+Directory ${PXF_CONF}/lib/native already exists, no update required
 Directory ${PXF_CONF}/servers/default already exists, no update required
-Updating configurations from ${GPHOME}/pxf/templates/user/templates to ${PXF_CONF}/templates ...
-Creating PXF runtime directory ${GPHOME}/pxf/run ..."
+Updating configurations from ${PXF_HOME}/templates/user/templates to ${PXF_CONF}/templates ...
+Creating PXF runtime directory ${PXF_HOME}/run ...
+Installing Greenplum External Table PXF Extension into ${GPHOME}
+‘${PXF_HOME}/gpextable/lib/postgresql/pxf.so’ -> ‘${GPHOME}/lib/postgresql/pxf.so’
+‘${PXF_HOME}/gpextable/share/postgresql/extension/pxf--1.0.sql’ -> ‘${GPHOME}/share/postgresql/extension/pxf--1.0.sql’
+‘${PXF_HOME}/gpextable/share/postgresql/extension/pxf.control’ -> ‘${GPHOME}/share/postgresql/extension/pxf.control’"
 
-compare "${successful_host_init_message}" "$(ssh smdw "PXF_CONF=${PXF_CONF} ${GPHOME}/pxf/bin/pxf init")" "pxf init should succeed on smdw"
+compare "${successful_host_init_message}" "$(ssh smdw "GPHOME=${GPHOME} PXF_CONF=${PXF_CONF} ${PXF_HOME}/bin/pxf init")" "pxf init should succeed on smdw"
 compare "${successful_start_message}" "$(pxf cluster start)" "pxf cluster start should succeed"
 
 exit_with_err "${BASH_SOURCE[0]}"

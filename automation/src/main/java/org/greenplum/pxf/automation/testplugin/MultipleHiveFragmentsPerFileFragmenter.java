@@ -16,14 +16,12 @@ import org.greenplum.pxf.api.model.BaseFragmenter;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.Metadata;
 import org.greenplum.pxf.plugins.hive.HiveClientWrapper;
-import org.greenplum.pxf.plugins.hive.HiveDataFragmenter;
 import org.greenplum.pxf.plugins.hive.HiveFragmentMetadata;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 import java.util.Properties;
-
 
 /**
  * Fragmenter which splits one file into multiple fragments. Helps to simulate a
@@ -80,20 +78,9 @@ public class MultipleHiveFragmentsPerFileFragmenter extends BaseFragmenter {
         Properties properties = getSchema(tbl);
 
         for (int i = 0; i < fragmentsNum; i++) {
-            HiveFragmentMetadata.Builder builder = HiveFragmentMetadata.Builder
-                    .aHiveFragmentMetadata()
-                    .withInputFormatName("inputFormatName")
-                    .withSerdeClassName(tbl.getSd().getSerdeInfo().getSerializationLib())
-                    .withProperties(new Properties())
-                    .withPartitionKeys(HiveDataFragmenter.HIVE_NO_PART_TBL)
-                    .withFilterInFragmenter(true)
-                    .withDelimiter("delimiter")
-                    .withColTypes(properties.getProperty("columns.types"))
-                    .withStart(i * SPLIT_SIZE)
-                    .withLength(SPLIT_SIZE);
-
+            byte[] userData = hiveUtilities.toKryo(properties);
             String filePath = getFilePath(tbl);
-            fragments.add(new Fragment(filePath, localHosts, builder.build()));
+            fragments.add(new Fragment(filePath, localHosts, new HiveFragmentMetadata(i * SPLIT_SIZE, SPLIT_SIZE, userData)));
         }
 
         return fragments;

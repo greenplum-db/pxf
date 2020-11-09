@@ -32,23 +32,18 @@ and HDP3. The generated tarballs are then published to an S3 and GCS bucket.
 The produced tarballs can then be consumed in the pxf-build pipelines.
 
 ```shell script
-make singlecluster
+make -C "${HOME}/workspace/pxf/concourse" singlecluster
 ```
 
 # Deploy the cloudbuild pipeline
 
-```shell
-fly -t ud set-pipeline \
-    -c /Users/fguerrero/workspace/pxf/concourse/pipelines/cloudbuild_pipeline.yml \
-    -l ~/workspace/gp-continuous-integration/secrets/gp-image-baking-dockerfiles.prod.yml \
-    -l ~/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
-    -l ~/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud.yml \
-    -v pxf-git-branch=master -p cloudbuild
+```shell script
+make -C "${HOME}/workspace/pxf/concourse" cloudbuild
 ```
 
 # Deploy the pull-request pipeline
 
-```shell
+```shell script
 make -C "${HOME}/workspace/pxf/concourse" pr
 ```
 
@@ -56,8 +51,8 @@ make -C "${HOME}/workspace/pxf/concourse" pr
 
 10G Performance pipeline:
 
-```shell
-make SCALE=10 perf
+```shell script
+make SCALE=10 -C "${HOME}/workspace/pxf/concourse" perf
 ```
 
 You can deploy a development version of the perf pipeline by substituting the name
@@ -66,28 +61,14 @@ the name of your development pipeline (i.e. `-p dev:<YOUR-PIPELINE>`).
 
 50G Performance pipeline:
 
-```shell
-make SCALE=50 perf
+```shell script
+make SCALE=50 -C "${HOME}/workspace/pxf/concourse" perf
 ```
 
 500G Performance pipeline:
 
-```shell
-make SCALE=500 perf
-```
-
-# Deploy a PXF acceptance pipeline
-Acceptance pipelines can be deployed for feature testing purposes.
-```shell
-./deploy dev master -a -n acceptance
-```
-For 5x:
-```shell
-./deploy dev 5x -a -n acceptance
-```
-After acceptance, the pipeline can be cleaned up as follows:
-```shell
-fly -t ud dp -p acceptance
+```shell script
+make SCALE=500 -C "${HOME}/workspace/pxf/concourse" perf
 ```
 
 # Deploy development PXF pipelines
@@ -145,21 +126,4 @@ Expose the `pg_regress` pipeline:
 
 ```shell
 fly -t ud expose-pipeline -p pg_regress
-```
-
-# Deploy the PXF CLI pipeline
-
-```shell
-fly -t ud set-pipeline \
-    -c ~/workspace/pxf/concourse/pipelines/pxf_cli_pipeline.yml \
-    -l ~/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
-    -l ~/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
-    -l ~/workspace/gp-continuous-integration/secrets/ccp_ci_secrets_ud.yml \
-    -v gcs-bucket-resources-prod=pivotal-gpdb-concourse-resources-prod \
-    -v icw_green_bucket_gpdb5=gpdb5-stable-concourse-builds \
-    -v icw_green_bucket_gpdb6=gpdb6-stable-concourse-builds \
-    -v pgport_gpdb5=5432 \
-    -v pgport_gpdb6=6000 \
-    -v pxf-git-branch=master \
-    -p pxf_cli
 ```

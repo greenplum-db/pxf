@@ -46,14 +46,14 @@ import java.util.stream.Collectors;
  * ..endNot
  * endAnd
  */
-public class HiveORCSearchArgumentBuilder implements TreeVisitor {
+public class HiveSearchArgumentBuilder implements TreeVisitor {
 
-    private static final Logger LOG = LoggerFactory.getLogger(HiveORCSearchArgumentBuilder.class);
+    private static final Logger LOG = LoggerFactory.getLogger(HiveSearchArgumentBuilder.class);
 
     private final SearchArgument.Builder filterBuilder;
     private final List<ColumnDescriptor> columnDescriptors;
 
-    public HiveORCSearchArgumentBuilder(List<ColumnDescriptor> tupleDescription, Configuration configuration) {
+    public HiveSearchArgumentBuilder(List<ColumnDescriptor> tupleDescription, Configuration configuration) {
         this.filterBuilder = SearchArgumentFactory.newBuilder(configuration);
         this.columnDescriptors = tupleDescription;
     }

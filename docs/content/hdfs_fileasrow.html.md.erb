@@ -33,9 +33,9 @@ The keywords and values used in the Greenplum Database [CREATE EXTERNAL TABLE](h
 
 | Keyword  | Value |
 |-------|-------------------------------------|
-| \<path&#8209;to&#8209;files\>    | The absolute path to the directory or files in the HDFS data store. |
+| \<path&#8209;to&#8209;files\>    | The path to the directory or files in the HDFS data store. When the `<server_name>` configuration includes a [`pxf.fs.basePath`](cfg_server.html#pxf-fs-basepath) property setting, PXF considers \<path&#8209;to&#8209;hdfs&#8209;files\> to be relative to the base path specified. Otherwise, PXF considers it to be an absolute path. \<path&#8209;to&#8209;files\> must not specify a relative path nor include the dollar sign (`$`) character. |
 | PROFILE    | The `PROFILE` keyword must specify `hdfs:text:multi`. |
-| SERVER=\<server_name\>    | The named server configuration that PXF uses to access the data. Optional; PXF uses the `default` server if not specified. |
+| SERVER=\<server_name\>    | The named server configuration that PXF uses to access the data. PXF uses the `default` server if not specified. |
 | FILE\_AS\_ROW=true    | The required option that instructs PXF to read each file into a single table row. |
 | IGNORE_MISSING_PATH=\<boolean\> | Specify the action to take when \<path-to-files\> is missing or invalid. The default value is `false`, PXF returns an error in this situation. When the value is `true`, PXF ignores missing path errors and returns an empty fragment. |
 | FORMAT | The `FORMAT` must specify `'CSV'`.  |

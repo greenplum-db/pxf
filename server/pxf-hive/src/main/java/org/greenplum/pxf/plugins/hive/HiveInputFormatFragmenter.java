@@ -71,28 +71,16 @@ public class HiveInputFormatFragmenter extends HiveDataFragmenter {
      * - A Greenplum column does not match any columns or partitions on the
      * Hive table definition
      * - The hive fields types do not match the Greenplum fields.
-     * Then return a list of indexes corresponding to the matching columns in
-     * Greenplum, ordered by the Greenplum schema order. It excludes any
-     * partition column
      *
      * @param tbl the hive table
-     * @return a list of indexes
      */
     @Override
-    List<Integer> verifySchema(Table tbl) {
-
-        List<Integer> indexes = new ArrayList<>();
+    void verifySchema(Table tbl) {
         List<FieldSchema> hiveColumns = tbl.getSd().getCols();
         List<FieldSchema> hivePartitions = tbl.getPartitionKeys();
-
         Map<String, FieldSchema> columnNameToFieldSchema =
                 Stream.concat(hiveColumns.stream(), hivePartitions.stream())
                         .collect(Collectors.toMap(FieldSchema::getName, fieldSchema -> fieldSchema));
-
-        Map<String, Integer> columnNameToColsIndexMap =
-                IntStream.range(0, hiveColumns.size())
-                        .boxed()
-                        .collect(Collectors.toMap(i -> hiveColumns.get(i).getName(), i -> i));
 
         FieldSchema fieldSchema;
         for (ColumnDescriptor cd : context.getTupleDescription()) {
@@ -110,13 +98,6 @@ public class HiveInputFormatFragmenter extends HiveDataFragmenter {
                     cd.columnTypeModifiers(),
                     fieldSchema.getType(),
                     cd.columnName());
-
-            // The index of the column on the Hive schema
-            Integer index =
-                    defaultIfNull(columnNameToColsIndexMap.get(cd.columnName()),
-                            columnNameToColsIndexMap.get(cd.columnName().toLowerCase()));
-            indexes.add(index);
         }
-        return indexes;
     }
 }

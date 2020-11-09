@@ -84,17 +84,20 @@ To configure a PXF server, refer to the connector configuration topic:
 - To configure a PXF server for Hadoop, refer to [Configuring PXF Hadoop Connectors ](client_instcfg.html).
 - To configure a PXF server for an  object store, refer to [Configuring Connectors to Minio and S3 Object Stores](s3_objstore_cfg.html) and [Configuring Connectors to Azure and Google Cloud Storage Object Stores](objstore_cfg.html).
 - To configure a PXF JDBC server, refer to [Configuring the JDBC Connector ](jdbc_cfg.html).
+- [Configuring a PXF Network File System Server](nfs_pxf.html#ex_fscfg) describes the process of configuring a PXF server for network file system access.
 
-## <a id="pxf-site"></a>About Kerberos and User Impersonation Configuration (pxf-site.xml)
+## <a id="pxf-site"></a>About the pxf-site.xml Configuration File
 
-PXF includes a template file named `pxf-site.xml`. You use the `pxf-site.xml` template file to specify Kerberos and/or user impersonation settings for a server configuration.
+PXF includes a template file named `pxf-site.xml` for PXF-specific configuration parameters. You can use the `pxf-site.xml` template file to specify Kerberos and/or user impersonation settings for server configurations, or to specify a base directory for file access.
 
-<div class="note">The settings in this file apply only to Hadoop and JDBC server configurations; they do not apply to object store server configurations.</div>
+<div class="note">The Kerberos and user impersonation settings in this file apply only to Hadoop and JDBC server configurations; they do not apply to file system or object store server configurations.</div>
 
 You configure properties in the `pxf-site.xml` file for a PXF server when one or more of the following conditions hold:
 
 - The remote Hadoop system utilizes Kerberos authentication.
 - You want to enable/disable user impersonation on the remote Hadoop or external database system.
+- You will access a network file system with the server configuration.
+- You will access a remote Hadoop or object store file system with the server configuration, and you want to allow a user to access only a specific directory and subdirectories.
 
 `pxf-site.xml` includes the following properties:
 
@@ -102,10 +105,22 @@ You configure properties in the `pxf-site.xml` file for a PXF server when one or
 |----------------|--------------------------------------------|---------------|
 | pxf.service.kerberos.principal | The Kerberos principal name. | gpadmin/\_HOST@EXAMPLE.COM |
 | pxf.service.kerberos.keytab | The file system path to the Kerberos keytab file. | $PXF_CONF/keytabs/pxf.service.keytab |
-| pxf.service.user.name | The log in user for the remote system. | The operating system user that starts the pxf process, typically `gpadmin`. |
 | pxf.service.user.impersonation | Enables/disables user impersonation on the remote system. | The value of the (deprecated) `PXF_USER_IMPERSONATION` property when that property is set. If the `PXF_USER_IMPERSONATION` property does not exist and the `pxf.service.user.impersonation` property is missing from `pxf-site.xml`, the default is `false`, user impersonation is disabled on the remote system. |
+| pxf.service.user.name | The log in user for the remote system. | This property is commented out by default. When the property is unset, the default value is the operating system user that starts the pxf process, typically `gpadmin`. When the property is set, the default value depends on the user impersonation setting and, if you are accessing Hadoop, whether or not you are accessing a Kerberos-secured cluster; see the [Use Cases and Configuration Scenarios](pxfuserimpers.html#pxf_cfg_scenarios) section in the *Configuring the Hadoop User, User Impersonation, and Proxying* topic. |
+| pxf.fs.basePath | Identifies the base path or share point on the remote file system. This property is applicable when the server configuration is used with a profile that accesses a file. | None; this property is commented out by default. |
+| pxf.ppd.hive<sup>1</sup> | Specifies whether or not predicate pushdown is enabled for queries on external tables that specify the `Hive`, `HiveRC`, and `HiveORC` profiles. | True; predicate pushdown is enabled. |
 
-Refer to [Configuring PXF Hadoop Connectors ](client_instcfg.html) and [Configuring the JDBC Connector ](jdbc_cfg.html) for information about relevant `pxf-site.xml` property settings for Hadoop and JDBC server configurations, respectively.
+</br><sup>1</sup>&nbsp;Should you need to, you can override this setting on a per-table basis by specifying the `&PPD=<boolean>` option in the `LOCATION` clause when you create the external table.
+
+Refer to [Configuring PXF Hadoop Connectors ](client_instcfg.html) and [Configuring the JDBC Connector ](jdbc_cfg.html) for information about relevant `pxf-site.xml` property settings for Hadoop and JDBC server configurations, respectively. See [Configuring a PXF Network File System Server](nfs_pxf.html#ex_fscfg) for information about relevant `pxf-site.xml` property settings when you configure a PXF server to access a network file system.
+
+### <a id="pxf-fs-basepath"></a>About the pxf.fs.basePath Property
+
+You can use the `pxf.fs.basePath` property to restrict a user's access to files in a specific remote directory. When set, this property applies to any profile that accesses a file, including `*:text`, `*:parquet`, `*:json`, etc.
+
+When you configure the `pxf.fs.basePath` property for a server, PXF considers the file path specified in the `CREATE EXTERNAL TABLE` `LOCATION` clause to be relative to this base path setting, and constructs the remote path accordingly.
+
+<div class="note info">You must set <code>pxf.fs.basePath</code> when you configure a PXF server for access to a network file system with a <code>file:*</code> profile. This property is optional for a PXF server that accesses a file in Hadoop or in an object store.</div>
 
 
 ## <a id="usercfg"></a>Configuring a PXF User

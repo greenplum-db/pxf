@@ -23,31 +23,38 @@ changes to `pxf-build-base` and is also in charge of tagging the images as
 <table>
   <tr>
     <td>&nbsp;</td>
-    <td colspan="2">Greenplum 5</td>
-    <td colspan="3">Greenplum 6</td>
+    <td>Greenplum 5</td>
+    <td>Greenplum 6</td>
+    <td>Greenplum 7</td>
   </tr>
   <tr>
-    <td>&nbsp;</td>
     <td>CentOS6</td>
-    <td>CentOS7</td>
-    <td>CentOS7</td>
-    <td>Ubuntu 18.04</td>
-    <td>OEL7</td>
+    <td> <a href="https://console.cloud.google.com/gcr/images/${GCR_PROJECT_ID}/GLOBAL/gpdb-pxf-dev/gpdb5-centos6-test-pxf">gpdb5-centos6-test-pxf</a> </td>
+    <td> N/A </td>
+    <td> N/A </td>
   </tr>
   <tr>
-    <td>Base Image</td>
-    <td> <a href="https://console.cloud.google.com/gcr/images/${GCR_PROJECT_ID}/GLOBAL/gpdb-pxf-dev/gpdb5-centos6-test-pxf">gpdb5-centos6-test-pxf</a> </td>
+    <td>CentOS7</td>
     <td> <a href="https://console.cloud.google.com/gcr/images/${GCR_PROJECT_ID}/GLOBAL/gpdb-pxf-dev/gpdb5-centos7-test-pxf">gpdb5-centos7-test-pxf</a> </td>
     <td> <a href="https://console.cloud.google.com/gcr/images/${GCR_PROJECT_ID}/GLOBAL/gpdb-pxf-dev/gpdb6-centos7-test-pxf">gpdb6-centos7-test-pxf</a> </td>
-    <td> <a href="https://console.cloud.google.com/gcr/images/${GCR_PROJECT_ID}/GLOBAL/gpdb-pxf-dev/gpdb6-ubuntu18.04-test-pxf">gpdb6-ubuntu18.04-test-pxf</a> </td>
-    <td> <a href="https://console.cloud.google.com/gcr/images/${GCR_PROJECT_ID}/GLOBAL/gpdb-pxf-dev/gpdb6-oel7-test-pxf">gpdb6-oel7-test-pxf</a> </td>
+    <td> <a href="https://console.cloud.google.com/gcr/images/${GCR_PROJECT_ID}/GLOBAL/gpdb-pxf-dev/gpdb7-centos7-test-pxf">gpdb7-centos7-test-pxf</a> </td>
   </tr>
   <tr>
-    <td>MapR</td>
+    <td>OEL7</td>
     <td> N/A </td>
+    <td> <a href="https://console.cloud.google.com/gcr/images/${GCR_PROJECT_ID}/GLOBAL/gpdb-pxf-dev/gpdb6-oel7-test-pxf">gpdb6-oel7-test-pxf</a> </td>
+    <td> N/A </td>
+  </tr>
+  <tr>
+    <td>Ubuntu 18.04</td>
+    <td> N/A </td>
+    <td> <a href="https://console.cloud.google.com/gcr/images/${GCR_PROJECT_ID}/GLOBAL/gpdb-pxf-dev/gpdb6-ubuntu18.04-test-pxf">gpdb6-ubuntu18.04-test-pxf</a> </td>
+    <td> <a href="https://console.cloud.google.com/gcr/images/${GCR_PROJECT_ID}/GLOBAL/gpdb-pxf-dev/gpdb7-ubuntu18.04-test-pxf">gpdb7-ubuntu18.04-test-pxf</a> </td>
+  </tr>
+  <tr>
+    <td>MapR on CentOS7</td>
     <td> <a href="https://console.cloud.google.com/gcr/images/${GCR_PROJECT_ID}/GLOBAL/gpdb-pxf-dev/gpdb5-centos7-test-pxf-mapr">gpdb5-centos7-test-pxf-mapr</a> </td>
     <td> <a href="https://console.cloud.google.com/gcr/images/${GCR_PROJECT_ID}/GLOBAL/gpdb-pxf-dev/gpdb6-centos7-test-pxf-mapr">gpdb6-centos7-test-pxf-mapr</a> </td>
-    <td> N/A </td>
     <td> N/A </td>
   </tr>
 </table>

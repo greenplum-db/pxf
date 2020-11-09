@@ -10,7 +10,7 @@ PXF supports simultaneous access to multiple Kerberos-secured Hadoop clusters.
 
 When Kerberos is enabled, you access Hadoop with the PXF principal and keytab. You can also choose to access Hadoop using the identity of the Greenplum Database user.
 
-You configure the impersonation setting and the Kerberos principal and keytab for a Hadoop server via the `pxf-site.xml` server-specific configuration file. Refer to [About Kerberos and User Impersonation Configuration (pxf-site.xml)](cfg_server.html#pxf-site) for more information about the configuration properties in this file.
+You configure the impersonation setting and the Kerberos principal and keytab for a Hadoop server via the `pxf-site.xml` server-specific configuration file. Refer to [About the pxf-site.xml Configuration File](cfg_server.html#pxf-site) for more information about the configuration properties in this file.
 
 Configure the Kerberos principal and keytab using the following `pxf-site.xml` properties:
 
@@ -18,14 +18,6 @@ Configure the Kerberos principal and keytab using the following `pxf-site.xml` p
 |----------------|--------------------------------------------|---------------|
 | pxf.service.kerberos.principal | The Kerberos principal name. | gpadmin/\_HOST@EXAMPLE.COM |
 | pxf.service.kerberos.keytab | The file system path to the Kerberos keytab file. | $PXF_CONF/keytabs/pxf.service.keytab |
-
-The following table describes two scenarios for accessing Hadoop when Kerberos authentication is enabled:
-
-| Scenario |   Required Configuration |
-|----------|---------------|
-| PXF accesses Hadoop using the identity of the configured principal. | Set the `pxf.service.user.impersonation` property setting to `false` in the `pxf-site.xml` file to disable user impersonation. |
-| PXF accesses Hadoop using the identity of the Greenplum Database user. | Set the `pxf.service.user.impersonation`  property setting to `true` in the `pxf-site.xml` file to enable user impersonation. You must also configure Hadoop proxying for the Hadoop user identity specified in the *primary* component of the Kerberos principal. |
-
 
 ## <a id="prereq"></a>Prerequisites
 
@@ -50,6 +42,57 @@ Before you configure PXF for access to a secure HDFS filesystem, ensure that you
     root@gphost$ yum install krb5-libs krb5-workstation
     ```
 
+## <a id="scenarios"></a>Use Cases and Configuration Scenarios
+
+The following scenarios describe the use cases and configuration required when
+you use PXF to access a Kerberos-secured Hadoop cluster.
+
+**Note**: These scenarios assume that `gpadmin` is the PXF process owner.
+
+### <a id="principal_proxy"></a>Accessing Hadoop as the Greenplum User Proxied by the Kerberos Principal
+
+In this configuration, PXF accesses Hadoop as the Greenplum user proxied
+by the Kerberos principal. The Kerberos principal is the Hadoop proxy user and
+accesses Hadoop as the Greenplum user.
+
+<img alt="Accessing Hadoop as the Greenplum User Proxied by the Kerberos Principal" src="graphics/impersonation_cases/impersonation-case-1-kerberos.png" class="image" />
+
+The following table identifies the `pxf.service.user.impersonation` and `pxf.service.user.name` settings, and the PXF and Hadoop configuration required for this use case:
+
+| Impersonation  | Service&nbsp;User |  PXF Configuration | Hadoop&nbsp;Configuration&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |
+|----------------|-------------------|--------------------|-----------|
+|  true          | Kerberos principal | Perform the [Configuration Procedure](#procedure) in this topic. | Set the Kerberos principal as the Hadoop proxy user as described in [Configure Hadoop Proxying](pxfuserimpers.html#hadoop). |
+
+### <a id="principal_hadoop"></a>Accessing Hadoop as the Kerberos Principal
+
+In this configuration, PXF accesses Hadoop as the Kerberos principal. A query initiated by
+any Greenplum user appears on the Hadoop side as originating from the Kerberos principal.
+
+<img alt="Accessing Hadoop as the Kerberos Principal" src="graphics/impersonation_cases/impersonation-case-2-kerberos.png" class="image" />
+
+The following table identifies the `pxf.service.user.impersonation` and `pxf.service.user.name` settings, and the PXF and Hadoop configuration required for this use case:
+
+| Impersonation  | Service&nbsp;User |  PXF Configuration | Hadoop&nbsp;Configuration&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |
+|----------------|-------------------|--------------------|-----------|
+|  false         | Kerberos principal | Perform the [Configuration Procedure](#procedure.html) in this topic, and then turn off user impersonation as described in [Configure PXF User Impersonation](pxfuserimpers.html#pxf_cfg_impers). | None required. |
+
+### <a id="custom_hadoop"></a>Accessing Hadoop as a &lt;custom> User
+
+In this configuration, PXF accesses Hadoop as a \<custom> user (for example, `hive`).
+The Kerberos principal is the Hadoop proxy user. A query initiated by any Greenplum
+user appears on the Hadoop side as originating from the \<custom> user.
+
+<img alt="Accessing Hadoop as a custom User" src="graphics/impersonation_cases/impersonation-case-3-kerberos.png" class="image" />
+
+The following table identifies the `pxf.service.user.impersonation` and `pxf.service.user.name` settings, and the PXF and Hadoop configuration required for this use case:
+
+| Impersonation  | Service&nbsp;User |  PXF Configuration | Hadoop&nbsp;Configuration&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |
+|----------------|-------------------|--------------------|-----------|
+|  false         |  \<custom>        | Perform the [Configuration Procedure](#procedure) in this topic, turn off user impersonation as described in [Configure PXF User Impersonation](pxfuserimpers.html#pxf_cfg_impers), and [Configure the Hadoop User](pxfuserimpers.html#pxf_cfg_user) to the \<custom> user name. | Set the Kerberos principal as the Hadoop proxy user as described in [Configure Hadoop Proxying](pxfuserimpers.html#hadoop). |
+
+**Note:** PXF does not support accessing a Kerberos-secured Hadoop cluster
+with a &lt;custom> user impersonating Greenplum users. PXF requires that you
+impersonate Greenplum users using the Kerberos principal.
 
 ## <a id="procedure"></a>Procedure
 
@@ -240,7 +283,11 @@ When you configure PXF for secure HDFS using an MIT Kerberos KDC server, you wil
 
 7. If you want to access Hadoop using the identity of the Kerberos principal, disable user impersonation as described in [Configure PXF User Impersonation](pxfuserimpers.html#pxf_cfg_impers).
 
-8. PXF ignores the `pxf.service.user.name` property when it uses Kerberos authentication to Hadoop. You may choose to remove this property from the `pxf-site.xml` file.
+8. If you want to access Hadoop as a custom user:
+
+    1. Disable user impersonation as described in [Configure PXF User Impersonation](pxfuserimpers.html#pxf_cfg_impers).
+    2. Configure the custom user name as described in [Configure the Hadoop User](pxfuserimpers.html#pxf_cfg_user).
+    3. Configure Hadoop proxying for the *primary* component of the Kerberos principal as described in [Configure Hadoop Proxying](pxfuserimpers.html#hadoop). For example, if your principal is `gpadmin/_HOST@EXAMPLE.COM`, configure proxying for the Hadoop user `gpadmin`.
 
 8. Save the file and exit the editor.
 

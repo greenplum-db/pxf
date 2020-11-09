@@ -37,9 +37,9 @@ PXF filter pushdown can be used with these data types (connector- and profile-sp
 - `INT2`, `INT4`, `INT8`
 - `CHAR`, `TEXT`
 - `FLOAT`
-- `NUMERIC` (not available with the S3 connector when using S3 Select)
+- `NUMERIC` (not available with the S3 connector when using S3 Select, nor with the `Hive` profile when accessing `STORED AS Parquet`)
 - `BOOL`
-- `DATE`, `TIMESTAMP` (available only with the JDBC connector and the S3 connector when using S3 Select)
+- `DATE`, `TIMESTAMP` (available only with the JDBC connector, the S3 connector when using S3 Select, the `HiveRC` and `HiveORC` profiles, and the `Hive` profile when accessing `STORED AS` `RCFile` or `ORC`)
 
 You can use PXF filter pushdown with these arithmetic and logical operators (connector- and profile-specific):
 
@@ -56,11 +56,12 @@ PXF accesses data sources using profiles exposed by different connectors, and fi
 | *:parquet | Y<sup>1</sup> | N | Y<sup>1</sup> | N | Y<sup>1</sup> | Y<sup>1</sup> | Y<sup>1</sup> |
 | s3:parquet and s3:text with S3-Select | Y |  N | Y | Y | Y | Y | Y |
 | HBase | Y | N | Y | N | Y | Y | N |
-| Hive | Y<sup>2</sup> | N | N | N | Y<sup>2</sup> | Y<sup>2</sup> | N |
+| Hive (accessing stored as Parquet) | Y, Y<sup>2</sup> | N | N | Y | Y, Y<sup>2</sup> | Y, Y<sup>2</sup> | Y |
+| Hive (accessing stored as RCFile or ORC) | Y, Y<sup>2</sup> | N | Y | Y | Y, Y<sup>2</sup> | Y, Y<sup>2</sup> | Y |
 | HiveText | Y<sup>2</sup> | N | N | N | Y<sup>2</sup> | Y<sup>2</sup> | N |
-| HiveRC | Y<sup>2</sup> |  N | N | N | Y<sup>2</sup> | Y<sup>2</sup> | N |
+| HiveRC | Y, Y<sup>2</sup> |  N | Y | Y | Y, Y<sup>2</sup> | Y, Y<sup>2</sup> | Y |
 | HiveORC | Y, Y<sup>2</sup> |  N | Y | Y | Y, Y<sup>2</sup> | Y, Y<sup>2</sup> | Y |
-| HiveVectorizedORC | Y, Y<sup>2</sup> |  N | Y | Y | Y, Y<sup>2</sup> | Y, Y<sup>2</sup> | Y |
+| HiveVectorizedORC | Y<sup>2</sup> |  N | N | N | Y<sup>2</sup> | Y<sup>2</sup> | N |
 
 </br><sup>1</sup>&nbsp;PXF applies the predicate, rather than the remote system, reducing CPU usage and the memory footprint.
 </br><sup>2</sup>&nbsp;PXF supports partition pruning based on partition keys.
@@ -72,7 +73,7 @@ To summarize, all of the following criteria must be met for filter pushdown to o
 * You enable external table filter pushdown by setting the `gp_external_enable_filter_pushdown` server configuration parameter to `'on'`.
 * The Greenplum Database protocol that you use to access external data source must support filter pushdown. The `pxf` external table protocol supports pushdown.
 * The external data source that you are accessing must support pushdown. For example, HBase and Hive support pushdown.
-* For queries on external tables that you create with the `pxf` protocol, the underlying PXF connector must also support filter pushdown. For example, the PXF Hive, HBase, and JDBC connectors support pushdown.
+* For queries on external tables that you create with the `pxf` protocol, the underlying PXF connector must also support filter pushdown. For example, the PXF Hive, HBase, and JDBC connectors support pushdown, as do the PXF connectors that support reading Parquet data.
 
-    - Refer to Hive [Partition Filter Pushdown](hive_pxf.html#partitionfiltering) for more information about Hive support for this feature.
+    - Refer to Hive [Partition Pruning](hive_pxf.html#partitionfiltering) for more information about Hive support for this feature.
 

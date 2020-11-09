@@ -28,8 +28,8 @@ dependencies {
     implementation("commons-lang:commons-lang")
     implementation("org.apache.hive:hive-exec:${hiveVersion}:core") { transitive = false }
     implementation("org.apache.hive:hive-metastore:${hiveVersion}") { transitive = false }
-    implementation("org.apache.hive:hive-serde:${hiveVersion}")     { transitive = false }
-    implementation("com.esotericsoftware:kryo:3.0.3")               { transitive = false }
+    implementation("org.apache.hive:hive-serde:${hiveVersion}") { transitive = false }
+    implementation("com.esotericsoftware:kryo:3.0.3") { transitive = false }
 
     /*******************************
      * Transitive dependencies for hive-exec-core. Instead of bundling

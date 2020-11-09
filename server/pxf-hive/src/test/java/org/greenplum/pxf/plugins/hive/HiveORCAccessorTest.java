@@ -32,33 +32,25 @@ import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
+import java.util.Properties;
 
 import static org.apache.hadoop.hive.ql.io.sarg.ConvertAstToSearchArg.SARG_PUSHDOWN;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class HiveORCAccessorTest {
+class HiveORCAccessorTest {
 
     private RequestContext context;
     private HiveORCAccessor accessor;
 
     @BeforeEach
     public void setup() {
-        HiveFragmentMetadata.Builder builder = HiveFragmentMetadata.Builder
-                .aHiveFragmentMetadata()
-                .withInputFormatName("")
-                .withSerdeClassName("")
-                .withPartitionKeys(HiveDataFragmenter.HIVE_NO_PART_TBL)
-                .withFilterInFragmenter(true)
-                .withDelimiter("1")
-                .withColTypes("")
-                .withSkipHeader(0)
-                .withHiveIndexes(Arrays.asList(0, 1))
-                .withAllColumnNames("col1,FOO")
-                .withAllColumnTypes("string, string")
-                .withStart(0)
-                .withLength(0);
+        HiveUtilities hiveUtilities = new HiveUtilities();
+
+        Properties properties = new Properties();
+        properties.put("columns", "");
+
+        HiveFragmentMetadata metadata = new HiveFragmentMetadata(0, 0, hiveUtilities.toKryo(properties));
 
         Configuration configuration = new Configuration();
         configuration.set("pxf.fs.basePath", "/");
@@ -67,13 +59,13 @@ public class HiveORCAccessorTest {
         context.setConfig("default");
         context.setUser("test-user");
         context.setDataSource("foo");
-        context.setFragmentMetadata(builder.build());
-        context.getTupleDescription().add(new ColumnDescriptor("col1", 1, 1, "TEXT", null));
-        context.getTupleDescription().add(new ColumnDescriptor("FOO", 1, 1, "TEXT", null));
+        context.setFragmentMetadata(metadata);
+        context.getTupleDescription().add(new ColumnDescriptor("col1", 25, 0, "TEXT", null));
+        context.getTupleDescription().add(new ColumnDescriptor("FOO", 25, 1, "TEXT", null));
         context.setAccessor(HiveORCAccessor.class.getName());
         context.setConfiguration(configuration);
 
-        accessor = new HiveORCAccessor(new HiveUtilities());
+        accessor = new HiveORCAccessor(hiveUtilities);
         accessor.setRequestContext(context);
         accessor.afterPropertiesSet();
     }

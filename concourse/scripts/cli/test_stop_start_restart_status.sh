@@ -15,15 +15,15 @@ compare "${expected_stop_message}" "$(pxf cluster stop)" "pxf cluster stop shoul
 compare "${expected_start_message}" "$(pxf cluster start)" "pxf cluster start should succeed"
 compare "${expected_restart_message}" "$(pxf cluster restart)" "pxf cluster restart should succeed"
 
-compare "Tomcat stopped." "$(ssh sdw1 ${GPHOME}/pxf/bin/pxf stop)" "pxf stop on sdw1 should succeed"
-sdw2_pid=$(ssh sdw2 "cat ${GPHOME}/pxf/run/catalina.pid")
+compare "Tomcat stopped." "$(ssh sdw1 ${PXF_HOME}/bin/pxf stop)" "pxf stop on sdw1 should succeed"
+sdw2_pid=$(ssh sdw2 "cat ${PXF_HOME}/run/catalina.pid")
 expected_start_message="Starting PXF on 2 segment hosts...
 ERROR: PXF failed to start on 1 out of 2 hosts
 sdw2 ==> Existing PID file found during start.
 Tomcat appears to still be running with PID ${sdw2_pid}. Start aborted...."
 compare "${expected_start_message}" "$(pxf cluster start 2>&1)" "pxf cluster start should fail on sdw2"
 
-compare "Tomcat stopped." "$(ssh sdw1 ${GPHOME}/pxf/bin/pxf stop)" "pxf stop on sdw1 should succeed"
+compare "Tomcat stopped." "$(ssh sdw1 ${PXF_HOME}/bin/pxf stop)" "pxf stop on sdw1 should succeed"
 expected_stop_message="Stopping PXF on 2 segment hosts...
 ERROR: PXF failed to stop on 1 out of 2 hosts
 sdw1 ==> \$CATALINA_PID was set but the specified file does not exist. Is Tomcat running? Stop aborted."
@@ -35,7 +35,7 @@ expected_status_message="Checking status of PXF servers on 2 segment hosts...
 PXF is running on 2 out of 2 hosts"
 compare "${expected_status_message}" "$(pxf cluster status)" "pxf cluster status should succeed"
 
-compare "Tomcat stopped." "$(ssh sdw1 ${GPHOME}/pxf/bin/pxf stop)" "pxf stop on sdw1 should succeed"
+compare "Tomcat stopped." "$(ssh sdw1 ${PXF_HOME}/bin/pxf stop)" "pxf stop on sdw1 should succeed"
 expected_status_message="Checking status of PXF servers on 2 segment hosts...
 ERROR: PXF is not running on 1 out of 2 hosts
 sdw1 ==> Checking if tomcat is up and running...
@@ -47,7 +47,7 @@ Checking if tomcat is up and running...
 Server: PXF Server
 Checking if PXF webapp is up and running...
 PXF webapp is listening on port 5888"
-compare "${expected_start_message}" "$(ssh sdw1 ${GPHOME}/pxf/bin/pxf start)" "pxf start on sdw1 should succeed"
+compare "${expected_start_message}" "$(ssh sdw1 ${PXF_HOME}/bin/pxf start)" "pxf start on sdw1 should succeed"
 
 expected_status_message="Checking status of PXF servers on 2 segment hosts...
 PXF is running on 2 out of 2 hosts"

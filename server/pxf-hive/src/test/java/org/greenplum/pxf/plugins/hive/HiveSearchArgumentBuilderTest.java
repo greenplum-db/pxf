@@ -15,14 +15,14 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.greenplum.pxf.plugins.hive.HiveORCAccessor.SUPPORTED_OPERATORS;
+import static org.greenplum.pxf.plugins.hive.HiveAccessor.ORC_SUPPORTED_OPERATORS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class HiveORCSearchArgumentBuilderTest {
+public class HiveSearchArgumentBuilderTest {
 
-    private static final TreeVisitor PRUNER = new SupportedOperatorPruner(SUPPORTED_OPERATORS);
+    private static final TreeVisitor PRUNER = new SupportedOperatorPruner(ORC_SUPPORTED_OPERATORS);
     private static final TreeTraverser TRAVERSER = new TreeTraverser();
     private List<ColumnDescriptor> columnDescriptors;
 
@@ -149,8 +149,8 @@ public class HiveORCSearchArgumentBuilderTest {
     }
 
     private SearchArgument.Builder helper(String filterString, List<ColumnDescriptor> columnDescriptors) throws Exception {
-        HiveORCSearchArgumentBuilder treeVisitor =
-                new HiveORCSearchArgumentBuilder(columnDescriptors, new Configuration());
+        HiveSearchArgumentBuilder treeVisitor =
+                new HiveSearchArgumentBuilder(columnDescriptors, new Configuration());
         // Parse the filter string into a expression tree Node
         Node root = new FilterParser().parse(filterString);
         TRAVERSER.traverse(root, PRUNER, treeVisitor);

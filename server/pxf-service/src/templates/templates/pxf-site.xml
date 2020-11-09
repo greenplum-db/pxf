@@ -41,10 +41,17 @@
         <name>pxf.fs.basePath</name>
         <value></value>
         <description>
-            Sets the base path when constructing a URI for read and write
-            operations. This property must be configured on servers that
-            access file profiles.
+            Sets the base path when constructing a file URI for read and write
+            operations. This property MUST be configured for any server that
+            accesses a file using a file:* profile.
         </description>
     </property>
     !-->
+
+    <property>
+        <name>pxf.ppd.hive</name>
+        <value>true</value>
+        <description>Specifies whether Predicate Pushdown feature is enabled for Hive profiles.</description>
+    </property>
+
 </configuration>

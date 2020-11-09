@@ -28,6 +28,7 @@ import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.JobConf;
 import org.greenplum.pxf.api.error.UnsupportedTypeException;
+import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.Metadata;
 import org.greenplum.pxf.api.model.MetadataFetcher;
 import org.greenplum.pxf.api.model.OutputFormat;
@@ -45,7 +46,7 @@ import java.util.Set;
 /**
  * Class for connecting to Hive's MetaStore and getting schema of Hive tables.
  */
-public class HiveMetadataFetcher extends HivePlugin implements MetadataFetcher {
+public class HiveMetadataFetcher extends BasePlugin implements MetadataFetcher {
 
     private static final String DELIM_FIELD = "DELIMITER";
 
@@ -53,13 +54,14 @@ public class HiveMetadataFetcher extends HivePlugin implements MetadataFetcher {
     private IMetaStoreClient client;
     private JobConf jobConf;
     private final HiveClientWrapper hiveClientWrapper;
+    protected final HiveUtilities hiveUtilities;
 
     public HiveMetadataFetcher() {
         this(SpringContext.getBean(HiveUtilities.class), SpringContext.getBean(HiveClientWrapper.class));
     }
 
     HiveMetadataFetcher(HiveUtilities hiveUtilities, HiveClientWrapper hiveClientWrapper) {
-        super(hiveUtilities);
+        this.hiveUtilities = hiveUtilities;
         this.hiveClientWrapper = hiveClientWrapper;
     }
 
@@ -123,8 +125,8 @@ public class HiveMetadataFetcher extends HivePlugin implements MetadataFetcher {
                 }
                 metadata.setOutputFormats(formats);
                 Map<String, String> outputParameters = new HashMap<>();
-                Integer delimiterCode = hiveClientWrapper.getDelimiterCode(tbl.getSd());
-                outputParameters.put(DELIM_FIELD, delimiterCode.toString());
+                int delimiterCode = hiveUtilities.getDelimiterCode(tbl.getSd());
+                outputParameters.put(DELIM_FIELD, Integer.toString(delimiterCode));
                 metadata.setOutputParameters(outputParameters);
             } catch (UnsupportedTypeException | UnsupportedOperationException e) {
                 if (ignoreErrors) {

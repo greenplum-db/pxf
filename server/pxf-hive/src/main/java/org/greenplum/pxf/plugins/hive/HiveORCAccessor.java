@@ -19,36 +19,18 @@ package org.greenplum.pxf.plugins.hive;
  * under the License.
  */
 
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.io.Output;
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.ql.io.orc.OrcInputFormat;
 import org.apache.hadoop.hive.ql.io.orc.Reader;
-import org.apache.hadoop.hive.ql.io.sarg.ConvertAstToSearchArg;
-import org.apache.hadoop.hive.ql.io.sarg.SearchArgument;
-import org.apache.hadoop.mapred.JobConf;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.StatsAccessor;
-import org.greenplum.pxf.api.filter.FilterParser;
-import org.greenplum.pxf.api.filter.Node;
 import org.greenplum.pxf.api.filter.Operator;
-import org.greenplum.pxf.api.filter.SupportedOperatorPruner;
-import org.greenplum.pxf.api.filter.TreeTraverser;
-import org.greenplum.pxf.api.filter.TreeVisitor;
-import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.utilities.EnumAggregationType;
 import org.greenplum.pxf.api.utilities.SpringContext;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 
-import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.List;
-
-import static org.apache.hadoop.hive.serde2.ColumnProjectionUtils.READ_ALL_COLUMNS;
-import static org.apache.hadoop.hive.serde2.ColumnProjectionUtils.READ_COLUMN_IDS_CONF_STR;
-import static org.apache.hadoop.hive.serde2.ColumnProjectionUtils.READ_COLUMN_NAMES_CONF_STR;
 
 /**
  * Specialization of HiveAccessor for a Hive table that stores only ORC files.
@@ -56,28 +38,6 @@ import static org.apache.hadoop.hive.serde2.ColumnProjectionUtils.READ_COLUMN_NA
  * Use together with {@link HiveInputFormatFragmenter}/{@link HiveColumnarSerdeResolver}
  */
 public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
-
-    private static final int KRYO_BUFFER_SIZE = 4 * 1024;
-    private static final int KRYO_MAX_BUFFER_SIZE = 10 * 1024 * 1024;
-
-    static final EnumSet<Operator> SUPPORTED_OPERATORS =
-            EnumSet.of(
-                    Operator.NOOP,
-                    Operator.LESS_THAN,
-                    Operator.GREATER_THAN,
-                    Operator.LESS_THAN_OR_EQUAL,
-                    Operator.GREATER_THAN_OR_EQUAL,
-                    Operator.EQUALS,
-                    Operator.NOT_EQUALS,
-                    Operator.IS_NULL,
-                    Operator.IS_NOT_NULL,
-                    Operator.IN,
-                    Operator.OR,
-                    Operator.AND,
-                    Operator.NOT
-            );
-    private static final TreeVisitor PRUNER = new SupportedOperatorPruner(SUPPORTED_OPERATORS);
-    private static final TreeTraverser TRAVERSER = new TreeTraverser();
 
     Reader orcReader;
 
@@ -113,58 +73,13 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
                 return false;
             }
             objectsEmitted = 0;
-        } else {
-            addColumns();
-            addFilters();
         }
         return super.openForRead();
     }
 
-    /**
-     * Adds the table tuple description to JobConf object
-     * so only these columns will be returned.
-     */
-    private void addColumns() {
-
-        List<Integer> colIds = new ArrayList<>();
-        List<String> colNames = new ArrayList<>();
-        List<ColumnDescriptor> tupleDescription = context.getTupleDescription();
-        for (int i = 0; i < tupleDescription.size(); i++) {
-            ColumnDescriptor col = tupleDescription.get(i);
-            if (col.isProjected() && hiveIndexes.get(i) != null) {
-                colIds.add(hiveIndexes.get(i));
-                colNames.add(col.columnName());
-            }
-        }
-        jobConf.set(READ_ALL_COLUMNS, "false");
-        jobConf.set(READ_COLUMN_IDS_CONF_STR, StringUtils.join(colIds, ","));
-        jobConf.set(READ_COLUMN_NAMES_CONF_STR, StringUtils.join(colNames, ","));
-    }
-
-    /**
-     * Uses {@link HivePartitionFilterBuilder} to translate a filter string into a
-     * Hive {@link SearchArgument} object. The result is added as a filter to
-     * JobConf object
-     */
-    private void addFilters() throws Exception {
-        if (!context.hasFilter()) {
-            return;
-        }
-
-        /* Predicate push-down configuration */
-        String filterStr = context.getFilterString();
-
-        HiveORCSearchArgumentBuilder searchArgumentBuilder = new HiveORCSearchArgumentBuilder(context.getTupleDescription(), configuration);
-
-        // Parse the filter string into a expression tree Node
-        Node root = new FilterParser().parse(filterStr);
-        // Prune the parsed tree with valid supported operators and then
-        // traverse the pruned tree with the searchArgumentBuilder to produce a SearchArgument for ORC
-        TRAVERSER.traverse(root, PRUNER, searchArgumentBuilder);
-
-        SearchArgument.Builder filterBuilder = searchArgumentBuilder.getFilterBuilder();
-        SearchArgument searchArgument = filterBuilder.build();
-        jobConf.set(ConvertAstToSearchArg.SARG_PUSHDOWN, toKryo(searchArgument));
+    @Override
+    protected boolean shouldAddProjectionsAndFilters() {
+        return !useStats;
     }
 
     /**
@@ -208,20 +123,21 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
         return row;
     }
 
-    /**
-     * Package private for unit testing
-     *
-     * @return the jobConf
-     */
-    JobConf getJobConf() {
-        return jobConf;
+    @Override
+    protected EnumSet<Operator> getSupportedOperatorsForPushdown() {
+        return ORC_SUPPORTED_OPERATORS;
     }
 
-    private String toKryo(SearchArgument sarg) {
-        Output out = new Output(KRYO_BUFFER_SIZE, KRYO_MAX_BUFFER_SIZE);
-        new Kryo().writeObject(out, sarg);
-        out.close();
-        return Base64.encodeBase64String(out.toBytes());
+    @Override
+    protected EnumSet<DataType> getSupportedDatatypesForPushdown() {
+        return ORC_SUPPORTED_DATATYPES;
+    }
+
+    /**
+     * @return ORC file reader
+     */
+    protected Reader getOrcReader() {
+        return hiveUtilities.getOrcReader(context);
     }
 
 }

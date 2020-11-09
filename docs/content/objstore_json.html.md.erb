@@ -58,7 +58,7 @@ The specific keywords and values used in the Greenplum Database [CREATE EXTERNAL
 
 | Keyword  | Value |
 |-------|-------------------------------------|
-| \<path&#8209;to&#8209;file\>    | The absolute path to the directory or file in the object store. |
+| \<path&#8209;to&#8209;file\>    | The path to the directory or file in the object store. When the `<server_name>` configuration includes a [`pxf.fs.basePath`](cfg_server.html#pxf-fs-basepath) property setting, PXF considers \<path&#8209;to&#8209;file\> to be relative to the base path specified. Otherwise, PXF considers it to be an absolute path. \<path&#8209;to&#8209;file\> must not specify a relative path nor include the dollar sign (`$`) character. |
 | PROFILE=\<objstore\>:json    | The `PROFILE` keyword must identify the specific object store. For example, `s3:json`. |
 | SERVER=\<server_name\>    | The named server configuration that PXF uses to access the data. |
 | \<custom&#8209;option\>=\<value\> | JSON supports the custom option named `IDENTIFIER` as described in the [PXF HDFS JSON documentation](hdfs_json.html#customopts). |

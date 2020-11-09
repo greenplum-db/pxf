@@ -136,6 +136,17 @@ public class ParquetFilterPushDownTest extends ParquetBaseTest {
         expectedRows = new int[]{2, 4, 6, 8, 10, 19};
         context.setFilterString("a5c16s5dfalseo6");
         assertRowsReturned(expectedRows);
+
+        // a5 IS NULL
+        expectedRows = new int[]{19};
+        context.setFilterString("a5o8");
+        assertRowsReturned(expectedRows);
+
+        // a5 IS NOT NULL
+        expectedRows = new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21, 22, 23, 24, 25};
+        context.setFilterString("a5o9");
+        assertRowsReturned(expectedRows);
+
     }
 
     @Test

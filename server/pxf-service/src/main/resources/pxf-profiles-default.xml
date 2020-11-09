@@ -50,6 +50,9 @@ under the License.
             <metadata>org.greenplum.pxf.plugins.hive.HiveMetadataFetcher</metadata>
             <outputFormat>org.greenplum.pxf.api.io.GPDBWritable</outputFormat>
         </plugins>
+        <optionMappings>
+            <mapping option="ppd" property="pxf.ppd.hive"/>
+        </optionMappings>
     </profile>
     <profile>
         <name>HiveRC</name>
@@ -66,6 +69,9 @@ under the License.
             <metadata>org.greenplum.pxf.plugins.hive.HiveMetadataFetcher</metadata>
             <outputFormat>org.greenplum.pxf.api.io.Text</outputFormat>
         </plugins>
+        <optionMappings>
+            <mapping option="ppd" property="pxf.ppd.hive"/>
+        </optionMappings>
     </profile>
     <profile>
         <name>HiveText</name>
@@ -96,6 +102,9 @@ under the License.
             <metadata>org.greenplum.pxf.plugins.hive.HiveMetadataFetcher</metadata>
             <outputFormat>org.greenplum.pxf.api.io.GPDBWritable</outputFormat>
         </plugins>
+        <optionMappings>
+            <mapping option="ppd" property="pxf.ppd.hive"/>
+        </optionMappings>
     </profile>
     <profile>
         <name>HiveVectorizedORC</name>

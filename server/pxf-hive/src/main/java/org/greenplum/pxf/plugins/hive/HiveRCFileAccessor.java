@@ -26,12 +26,15 @@ import org.apache.hadoop.hive.ql.io.RCFileRecordReader;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
+import org.greenplum.pxf.api.filter.Operator;
+import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.SpringContext;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 
 import static org.apache.hadoop.hive.serde2.ColumnProjectionUtils.READ_ALL_COLUMNS;
@@ -53,34 +56,17 @@ public class HiveRCFileAccessor extends HiveAccessor {
     }
 
     @Override
-    public boolean openForRead() throws Exception {
-        addColumns();
-        return super.openForRead();
-    }
-
-    /**
-     * Adds the table tuple description to JobConf object
-     * so only these columns will be returned.
-     */
-    private void addColumns() {
-
-        List<Integer> colIds = new ArrayList<>();
-        List<String> colNames = new ArrayList<>();
-        List<ColumnDescriptor> tupleDescription = context.getTupleDescription();
-        for (int i = 0; i < tupleDescription.size(); i++) {
-            ColumnDescriptor col = tupleDescription.get(i);
-            if (col.isProjected() && hiveIndexes.get(i) != null) {
-                colIds.add(hiveIndexes.get(i));
-                colNames.add(col.columnName());
-            }
-        }
-        jobConf.set(READ_ALL_COLUMNS, "false");
-        jobConf.set(READ_COLUMN_IDS_CONF_STR, StringUtils.join(colIds, ","));
-        jobConf.set(READ_COLUMN_NAMES_CONF_STR, StringUtils.join(colNames, ","));
+    protected Object getReader(JobConf jobConf, InputSplit split) throws IOException {
+        return new RCFileRecordReader(jobConf, (FileSplit) split);
     }
 
     @Override
-    protected Object getReader(JobConf jobConf, InputSplit split) throws IOException {
-        return new RCFileRecordReader(jobConf, (FileSplit) split);
+    protected EnumSet<Operator> getSupportedOperatorsForPushdown() {
+        return ORC_SUPPORTED_OPERATORS; // RC same as ORC
+    }
+
+    @Override
+    protected EnumSet<DataType> getSupportedDatatypesForPushdown() {
+        return ORC_SUPPORTED_DATATYPES; // RC same as ORC
     }
 }

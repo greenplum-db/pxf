@@ -185,7 +185,7 @@ Use the following syntax to create a Greenplum Database external table that refe
 CREATE EXTERNAL TABLE <table_name>
     ( <column_name> <data_type> [, ...] | LIKE <other_table> )
 LOCATION ('pxf://<hive-db-name>.<hive-table-name>
-    ?PROFILE=Hive|HiveText|HiveRC|HiveORC|HiveVectorizedORC[&SERVER=<server_name>]'])
+    ?PROFILE=Hive|HiveText|HiveRC|HiveORC|HiveVectorizedORC[&SERVER=<server_name>][&PPD=<boolean>]')
 FORMAT 'CUSTOM|TEXT' (FORMATTER='pxfwritable_import' | delimiter='<delim>')
 ```
 
@@ -196,7 +196,8 @@ Hive connector-specific keywords and values used in the Greenplum Database [CREA
 | \<hive&#8209;db&#8209;name\>    | The name of the Hive database. If omitted, defaults to the Hive database named `default`. |
 | \<hive&#8209;table&#8209;name\>    | The name of the Hive table. |
 | PROFILE    | The `PROFILE` keyword must specify one of the values `Hive`, `HiveText`, `HiveRC`, `HiveORC`, or `HiveVectorizedORC`. |
-| SERVER=\<server_name\>    | The named server configuration that PXF uses to access the data. Optional; PXF uses the `default` server if not specified. |
+| SERVER=\<server_name\>    | The named server configuration that PXF uses to access the data. PXF uses the `default` server if not specified. |
+| PPD=\<boolean\>    | Enable or disable predicate pushdown for all queries on this table; this option applies only to the `Hive`, `HiveORC`, and `HiveRC` profiles, and overrides a `pxf.ppd.hive` property setting in the \<server_name\> configuration. |
 | FORMAT (`Hive`, `HiveORC`, and `HiveVectorizedORC` profiles)   | The `FORMAT` clause must specify `'CUSTOM'`. The `CUSTOM` format requires the built-in `pxfwritable_import` `formatter`.   |
 | FORMAT (`HiveText` and `HiveRC` profiles) | The `FORMAT` clause must specify `TEXT`. Specify the single ascii character field delimiter in the `delimiter='<delim>'` formatting option. |
 
@@ -477,9 +478,6 @@ And query the table:
 postgres=# SELECT month, number_of_orders FROM pxf_parquet_table;
 ```
 
-<div class="note">PXF does not support reading a Hive table stored as Parquet if the table is backed by more than one Parquet file and the columns are in a different order. This limitation applies even when the Parquet files have the same column names in their schema.</div>
-
-
 ## <a id="hive_complex"></a>Working with Complex Data Types
 
 ### <a id="hive_complex_hive" class="no-quick-link"></a>Example: Using the Hive Profile with Complex Data Types
@@ -664,9 +662,9 @@ In the following example, you will create and populate a Hive table stored in OR
 
     `intarray` and `propmap` are again serialized as text strings.
 
-## <a id="partitionfiltering"></a>Partition Filter Pushdown
+## <a id="partitionfiltering"></a>Partition Pruning
 
-The PXF Hive connector supports Hive partitioning pruning and the Hive partition directory structure. This enables partition exclusion on selected HDFS files comprising a Hive table. To use the partition filtering feature to reduce network traffic and I/O, run a query on a PXF external table using a `WHERE` clause that refers to a specific partition column in a partitioned Hive table.
+The PXF Hive connector supports Hive partition pruning and the Hive partition directory structure. This enables partition exclusion on selected HDFS files comprising a Hive table. To use the partition filtering feature to reduce network traffic and I/O, run a query on a PXF external table using a `WHERE` clause that refers to a specific partition column in a partitioned Hive table.
 
 The PXF Hive Connector partition filtering support for Hive string and integral types is described below:
 

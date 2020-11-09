@@ -45,7 +45,7 @@ The `pxf cluster` utility command manages PXF on the master, standby master, and
 <dd>Display the `pxf cluster` help message and then exit.</dd>
 
 <dt>init</dt>
-<dd>Initialize the PXF service instance on the master, standby master, and on all segment hosts. When you initialize PXF across your Greenplum Database cluster, you must identify the PXF user configuration directory via an environment variable named `$PXF_CONF`. If you do not set `$PXF_CONF` prior to initializing PXF, PXF returns an error.</dd>
+<dd>Initialize the PXF service instance on the master, standby master, and on all segment hosts. The command also copies the PXF extension files from the PXF installation to the Greenplum installation on each segment host. (Specify the `--skip-register` option to instruct PXF to skip this initialization step.) When you initialize PXF across your Greenplum Database cluster, you must identify the PXF user configuration directory via an environment variable named `$PXF_CONF`. If you do not set `$PXF_CONF` prior to initializing PXF, PXF returns an error.</dd>
 
 <dt>register</dt>
 <dd>Copy the PXF extension files from the PXF installation on each host to the Greenplum installation on the host. This command requires that `$GPHOME` be set, and is typically run after you upgrade your Greenplum Database installation.</dd>
@@ -70,6 +70,11 @@ The `pxf cluster` utility command manages PXF on the master, standby master, and
 <dd>If you have updated the PXF user configuration or added JAR files, you must also restart PXF after you synchronize the PXF configuration.</dd>
 
 ## <a id="options"></a>Options
+
+The `pxf cluster init` command takes the following option:
+
+<dt>&#8211;&#8211;skip-register </dt>
+<dd>Do not copy the PXF extension files to the Greenplum installation directory on the hosts.</dd>
 
 The `pxf cluster sync` command takes the following option:
 

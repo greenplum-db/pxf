@@ -8,15 +8,76 @@ When user impersonation is enabled (the default), PXF accesses Hadoop services u
 
 When user impersonation is disabled, PXF executes all Hadoop service requests as the PXF process owner (usually `gpadmin`) or the Hadoop user identity that you specify. This behavior provides no means to control access to Hadoop services for different Greenplum Database users. It requires that this user have access to all files and directories in HDFS, and all tables in Hive and HBase that are referenced in PXF external table definitions.
 
-You configure the Hadoop user and PXF user impersonation setting for a server via the `pxf-site.xml` server configuration file. Refer to [About Kerberos and User Impersonation Configuration (pxf-site.xml)](cfg_server.html#pxf-site) for more information about the configuration properties in this file.
+You configure the Hadoop user and PXF user impersonation setting for a server via the `pxf-site.xml` server configuration file. Refer to [About the pxf-site.xml Configuration File](cfg_server.html#pxf-site) for more information about the configuration properties in this file.
 
-The following table describes some of the PXF configuration scenarios for Hadoop access:
+## <a id="pxf_cfg_scenarios"></a>Use Cases and Configuration Scenarios
 
-| Scenario | pxf-site.xml Required  | Impersonation Setting |  Required Configuration |
-|----------------|--------------|---------|---------------|
-| PXF accesses Hadoop using the identity of the Greenplum Database user. | yes | true  | Enable user impersonation, identify the Hadoop proxy user in the `pxf.service.user.name`, and configure Hadoop proxying for this Hadoop user identity. |
-| PXF accesses Hadoop using the identity of the operating system user that started the PXF process. | yes | false | Disable user impersonation. |
-| PXF accesses Hadoop using a user identity that you specify. | yes | false | Disable user impersonation and identify the Hadoop user identity in the `pxf.service.user.name` property setting.  |
+User, user impersonation, and proxy configuration for Hadoop depends on how you use PXF to access Hadoop, and whether or not the Hadoop cluster is secured with Kerberos.
+
+The following scenarios describe the use cases and configuration required when
+you use PXF to access *non-secured Hadoop*.
+If you are using PXF to access a *Kerberos-secured Hadoop cluster*, refer to the [Use Cases and Configuration Scenarios](pxf_kerbhdfs.html#scenarios) section in the *Configuring PXF for Secure HDFS* topic.
+
+**Note**: These scenarios assume that `gpadmin` is the PXF process owner.
+
+### <a id="default_case"></a>Accessing Hadoop as the Greenplum User Proxied by gpadmin
+
+This is the default configuration for PXF. The `gpadmin` user proxies Greenplum
+queries on behalf of Greenplum users. The effective user in Hadoop is the
+Greenplum user that runs the query.
+
+<img alt="Accessing Hadoop as the Greenplum User Proxied by gpadmin" src="graphics/impersonation_cases/impersonation-case-1.png" class="image" />
+
+The following table identifies the `pxf.service.user.impersonation` and `pxf.service.user.name` settings, and the PXF and Hadoop configuration required for this use case:
+
+| Impersonation  | Service&nbsp;User |  PXF Configuration | Hadoop&nbsp;Configuration&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |
+|----------------|-------------------|--------------------|-----------|
+|  true           |  `gpadmin`        | None; this is the default configuration. | Set the `gpadmin` user as the Hadoop proxy user as described in [Configure Hadoop Proxying](#hadoop). |
+
+
+### <a id="custom_proxy"></a>Accessing Hadoop as the Greenplum User Proxied by a &lt;custom> User
+
+In this configuration, PXF accesses Hadoop as the Greenplum user proxied
+by \<custom> user. A query initiated by a Greenplum user appears on the Hadoop side
+as originating from the (\<custom> user.
+
+This configuration might be desirable when Hadoop is already configured with a
+proxy user, or when you want a user different than `gpadmin` to proxy Greenplum queries.
+
+<img alt="Accessing Hadoop as the Greenplum User Proxied by a custom User" src="graphics/impersonation_cases/impersonation-case-2.png" class="image" />
+
+The following table identifies the `pxf.service.user.impersonation` and `pxf.service.user.name` settings, and the PXF and Hadoop configuration required for this use case:
+
+| Impersonation  | Service&nbsp;User |  PXF Configuration | Hadoop&nbsp;Configuration&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |
+|----------------|-------------------|--------------------|-----------|
+|  true          |  \<custom>        | [Configure the Hadoop User](#pxf_cfg_user) to the \<custom> user name. | Set the \<custom>  user as the Hadoop proxy user as described in [Configure Hadoop Proxying](#hadoop). |
+
+
+### <a id="gpadmin_hadoop"></a>Accessing Hadoop as the gpadmin User
+
+In this configuration, PXF accesses Hadoop as the `gpadmin` user. A query initiated by
+any Greenplum user appears on the Hadoop side as originating from the `gpadmin` user.
+
+<img alt="Accessing Hadoop as the gpadmin User" src="graphics/impersonation_cases/impersonation-case-3.png" class="image" />
+
+The following table identifies the `pxf.service.user.impersonation` and `pxf.service.user.name` settings, and the PXF and Hadoop configuration required for this use case:
+
+| Impersonation  | Service&nbsp;User |  PXF Configuration | Hadoop&nbsp;Configuration&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |
+|----------------|-------------------|--------------------|-----------|
+|  false         |  `gpadmin`        | Turn off user impersonation as described in [Configure PXF User Impersonation](#pxf_cfg_impers). | None required. |
+
+### <a id="custom_hadoop"></a>Accessing Hadoop as a &lt;custom> User
+
+In this configuration, PXF accesses Hadoop as a \<custom> user. A query initiated by
+any Greenplum user appears on the Hadoop side as originating from the \<custom> user.
+
+<img alt="Accessing Hadoop as a custom User" src="graphics/impersonation_cases/impersonation-case-4.png" class="image" />
+
+The following table identifies the `pxf.service.user.impersonation` and `pxf.service.user.name` settings, and the PXF and Hadoop configuration required for this use case:
+
+| Impersonation  | Service&nbsp;User |  PXF Configuration | Hadoop&nbsp;Configuration&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |
+|----------------|-------------------|--------------------|-----------|
+|  false         |  \<custom>        |  Turn off user impersonation as described in [Configure PXF User Impersonation](#pxf_cfg_impers) and [Configure the Hadoop User](#pxf_cfg_user) to the \<custom> user name. | None required. |
 
 
 ## <a id="pxf_cfg_user"></a>Configure the Hadoop User
@@ -45,7 +106,7 @@ Perform the following procedure to configure the Hadoop user:
     gpadmin@gpmaster$ cp $PXF_CONF/templates/pxf-site.xml .
     ```
 
-5. Open the `pxf-site.xml` file in the editor of your choice, and configure the Hadoop user name. When impersonation is disabled, this name identifies the Hadoop user identity that PXF will use to access the Hadoop system. When user impersonation is enabled, this name identifies the PXF proxy Hadoop user. For example, if you want to access Hadoop as the user `hdfsuser1`:
+5. Open the `pxf-site.xml` file in the editor of your choice, and configure the Hadoop user name. When impersonation is disabled, this name identifies the Hadoop user identity that PXF will use to access the Hadoop system. When user impersonation is enabled, this name identifies the PXF proxy Hadoop user. For example, if you want to access Hadoop as the user `hdfsuser1`, uncomment the property and set it as follows:
 
     ``` xml
     <property>
@@ -116,7 +177,7 @@ When PXF user impersonation is enabled for a Hadoop server configuration, you mu
 
 1. Log in to your Hadoop cluster and open the `core-site.xml` configuration file using a text editor, or use Ambari or another Hadoop cluster manager to add or edit the Hadoop property values described in this procedure.
 
-2. Set the property `hadoop.proxyuser.<name>.hosts` to specify the list of PXF host names from which proxy requests are permitted. Substitute the PXF proxy Hadoop user for `<name>`. The PXF proxy Hadoop user is the `pxf.service.user.name` that you configured in the procedure above, or, if you are using Kerberos authentication to Hadoop, the proxy user identity is the *primary* component of the Kerberos principal. If you have not configured `pxf.service.user.name`, the proxy user is the operating system user that started PXF. Provide multiple PXF host names in a comma-separated list. For example, if the PXF proxy user is named `hdfsuser2`:
+2. Set the property `hadoop.proxyuser.<name>.hosts` to specify the list of PXF host names from which proxy requests are permitted. Substitute the PXF proxy Hadoop user for `<name>`. The PXF proxy Hadoop user is the `pxf.service.user.name` that you configured in the procedure above, or, if you are using Kerberos authentication to Hadoop, the proxy user identity is the *primary* component of the Kerberos principal. If you have not explicitly configured `pxf.service.user.name`, the proxy user is the operating system user that started PXF. Provide multiple PXF host names in a comma-separated list. For example, if the PXF proxy user is named `hdfsuser2`:
 
     ``` xml
     <property>

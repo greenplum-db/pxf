@@ -46,7 +46,7 @@ import java.util.List;
  */
 public class HdfsUtilities {
 
-    private static Logger LOG = LoggerFactory.getLogger(HdfsUtilities.class);
+    private static final Logger LOG = LoggerFactory.getLogger(HdfsUtilities.class);
 
     /**
      * Parses fragment metadata and return matching {@link FileSplit}. If the

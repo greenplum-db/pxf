@@ -38,23 +38,16 @@ public class HiveStringPassResolver extends HiveResolver {
     private StringBuilder parts;
 
     @Override
-    void parseUserData(RequestContext input) {
-        HiveFragmentMetadata metadata = context.getFragmentMetadata();
-        parseDelimiterChar(input);
+    void parseUserData(RequestContext context) {
+        super.parseUserData(context);
+        parseDelimiterChar(context);
         parts = new StringBuilder();
-        partitionKeys = metadata.getPartitionKeys();
-        serdeClassName = metadata.getSerdeClassName();
-
-        /* Needed only for GPDBWritable format*/
-        if (context.getOutputFormat() == OutputFormat.GPDBWritable) {
-            properties = metadata.getProperties();
-        }
     }
 
     @Override
-    void initSerde(RequestContext input) throws Exception {
+    void initSerde() throws Exception {
         if (context.getOutputFormat() == OutputFormat.GPDBWritable) {
-            super.initSerde(input);
+            super.initSerde();
         }
     }
 

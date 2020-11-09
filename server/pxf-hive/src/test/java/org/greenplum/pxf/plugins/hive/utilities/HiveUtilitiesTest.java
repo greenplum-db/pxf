@@ -65,7 +65,7 @@ public class HiveUtilitiesTest {
             {"Struct<street:string, city:string, state:string, zip:int>", "text"},
             {"UnionType<array<string>, string,int>", "text"}
     };
-    
+
     private final HiveUtilities hiveUtilities = new HiveUtilities();
 
     @Test

@@ -1,0 +1,214 @@
+---
+title: Accessing Files on a Network File System with PXF
+---
+
+You can use PXF to read data that resides on a network file system mounted on your Greenplum Database hosts. PXF supports reading and writing the following file types from a network file system:
+
+| File Type | Profile Name | Operations Supported |
+|-------------|--------------|------------|
+| delimited single line text | file:text | read, write |
+| delimited text with quoted linefeeds | file:text:multi | read |
+| Avro | file:avro | read, write |
+| JSON | file:json | read |
+| Parquet | file:parquet | read, write |
+
+PXF does not support user impersonation when you access a network file system. PXF accesses a file as the operating system user that started the PXF process, usually `gpadmin`.
+
+<div class="note">Reading from, and writing to (where supported), a file of these types on a network file system is similar to reading/writing the file type on Hadoop.</div>
+
+
+## <a id="prereq"></a>Prerequisites
+
+Before you use PXF to access files on a network file system, ensure that:
+
+- You have configured and initialized PXF, and PXF is running on each Greenplum Database segment host. See [Configuring PXF](instcfg_pxf.html) for additional information.
+- You can identify the PXF user configuration directory (`$PXF_CONF`).
+- All files are accessible by `gpadmin` or by the operating system user that started the PXF process.
+- The network file system is correctly mounted at the same local mount point on every Greenplum Database segment host.
+- You can identify the mount or share point of the network file system.
+- You have created one or more named PXF server configurations as described in [Configuring a PXF Network File System Server](#ex_fscfg).
+
+## <a id="ex_fscfg"></a>Configuring a PXF Network File System Server
+
+Before you use PXF to access a file on a network file system, you must create a server configuration and then synchronize the PXF configuration to all Greenplum hosts.  This procedure will typically be performed by the Greenplum Database administrator.
+
+Use the server template configuration file `$PXF_CONF/templates/pxf-site.xml` when you configure a network file system server for PXF. This template file includes the mandatory property `pxf.fs.basePath` that you configure to identify the network file system share path. PXF considers the file path that you specify in a `CREATE EXTERNAL TABLE` `LOCATION` clause that uses this server to be relative to this share path.
+
+PXF does not support user impersonation when you access a network file system; you must explicitly turn off user impersonation in a network file system server configuration.
+
+1. Log in to the Greenplum Database master node:
+
+    ``` shell
+    $ ssh gpadmin@<gpmaster>
+    ```
+
+2. Choose a name for the file system server. You will provide the name to Greenplum users that you choose to allow to read from or write to files on the network file system.
+
+    **Note**: The server name `default` is reserved.
+
+3. Create the `$PXF_CONF/servers/<server_name>` directory. For example, use the following command to create a file system server configuration named `nfssrvcfg`:
+
+    ``` shell
+    gpadmin@gpmaster$ mkdir $PXF_CONF/servers/nfssrvcfg
+    ````
+
+4. Copy the PXF `pxf-site.xml` template file to the `nfssrvcfg` server configuration directory. For example:
+
+    ``` shell
+    gpadmin@gpmaster$ cp $PXF_CONF/templates/pxf-site.xml $PXF_CONF/servers/nfssrvcfg/
+    ```
+
+5. Open the template server configuration file in the editor of your choice, and uncomment and provide property values appropriate for your environment. For example, if the file system share point is the directory named `/mnt/extdata/pxffs`, uncomment and set these server properties:
+
+    ``` xml
+    <?xml version="1.0" encoding="UTF-8"?>
+    <configuration>
+    ...
+        <property>
+            <name>pxf.service.user.impersonation</name>
+            <value>false</value>
+        </property>
+
+        <property>
+            <name>pxf.fs.basePath</name>
+            <value>/mnt/extdata/pxffs</value>
+        </property>
+    ...
+    </configuration>
+    ```
+
+6. Save your changes and exit the editor.
+
+7. Synchronize the PXF server configuration to the Greenplum Database cluster:
+
+    ``` shell
+    gpadmin@gpmaster$ pxf cluster sync
+    ``` 
+
+## <a id="queryextdata"></a>Creating the External Table
+
+The following syntax creates a Greenplum Database external table that references a file on a network file system. Use the appropriate `file:*` profile for the file type that you want to access.
+
+<pre>
+CREATE [READABLE | WRITABLE] EXTERNAL TABLE &lt;table_name>
+    ( &lt;column_name> &lt;data_type> [, ...] | LIKE &lt;other_table> )
+LOCATION ('pxf://&lt;file-path>?PROFILE=file:&lt;file-type>[&SERVER=&lt;server_name>][&&lt;custom-option>=&lt;value>[...]]')
+FORMAT '[TEXT|CSV|CUSTOM]' (&lt;formatting-properties>);
+</pre>
+
+
+The specific keywords and values used in the Greenplum Database [CREATE EXTERNAL TABLE](https://gpdb.docs.pivotal.io/latest/ref_guide/sql_commands/CREATE_EXTERNAL_TABLE.html) command are described in the table below.
+
+| Keyword  | Value |
+|-------|-------------------------------------|
+| \<file&#8209;path\>    | The path to a directory or file on the network file system. PXF considers this file or path as being relative to the [`pxf.fs.basePath`](cfg_server.html#pxf-fs-basepath) property value specified in \<server_name\>'s server configuration.  \<file&#8209;path\> must not specify a relative path nor include the dollar sign (`$`) character. |
+| PROFILE    | The `PROFILE` keyword value must specify a `file:<file-type>` identified in the table above. |
+| SERVER=\<server_name\>   | The named server configuration that PXF uses to access the network file system. PXF uses the `default` server if not specified. |
+| \<custom&#8209;option\>=\<value\>  | \<custom-option\> is profile-specific.|
+| FORMAT&nbsp;\<value\>| PXF profiles support the `TEXT`, `CSV`, and `CUSTOM` formats.  |
+| \<formatting&#8209;properties\> | Formatting properties supported by the profile; for example, the `FORMATTER` or `delimiter`. |
+
+<div class="note">The &lt;custom-option>s, FORMAT, and &lt;formatting&#8209;properties> that you specify when accessing a file on a network file system are dependent on the &lt;file-type>. Refer to the <a href="access_hdfs.html#hadoop_connectors">Hadoop documentation</a> for the &lt;file-type> of interest for these settings.</div>
+
+## <a id="example_nfscsv"></a>Example: Reading From and Writing to a CSV File on a Network File System
+
+This example assumes that you have configured and mounted a network file system with the share point `/mnt/extdata/pxffs` on the Greenplum Database master, standby master, and on each segment host.
+
+In this example, you:
+
+- Create a CSV file on the network file system and add data to the file.
+- Configure a network file system server for the share point.
+- Create a PXF readable external table that references the directory containing the CSV file, and read the data.
+- Create a PXF writable external table that references the directory containing the CSV file, and write some data.
+- Read from the original readable external table again.
+
+
+### <a id="ex_create_csvfile"></a>Create a CSV File
+
+1.  Create a directory (relative to the network file system share point) named `/mnt/extdata/pxffs/ex1`:
+
+    ``` shell
+    gpadmin@gpmaster$ mkdir -p /mnt/extdata/pxffs/ex1
+    ````
+
+2. Create a CSV file named `somedata.csv` in the directory:
+
+    ``` shell
+    $ echo 'Prague,Jan,101,4875.33
+Rome,Mar,87,1557.39
+Bangalore,May,317,8936.99
+Beijing,Jul,411,11600.67' > /mnt/extdata/pxffs/ex1/somedata.csv
+    ```
+
+### <a id="ex_create_server"></a>Create the Network File System Server
+
+Create a server configuration named `nfssrvcfg` with share point `/mnt/extdata/pxffs` as described in [Configuring a PXF Network File System Server](#ex_fscfg).
+
+
+### <a id="ex_read"></a>Read Data
+
+Perform the following procedure to create a PXF external table that references the `ex1` directory that you created in a previous section, and then read the data in the `somedata.csv` file in that directory:
+
+1. Create a PXF external table that references `ex1` and that specifies the `file:text` profile. For example:
+
+    ``` sql
+    gpadmin=# CREATE EXTERNAL TABLE pxf_read_nfs(location text, month text, num_orders int, total_sales float8)
+                LOCATION ('pxf://ex1/?PROFILE=file:text&SERVER=nfssrvcfg')
+                FORMAT 'CSV';
+    ```
+
+    Because the `nfssrvcfg` server configuration `pxf.fs.basePath` property value is `/mnt/exdata/pxffs`, PXF constructs the path `/mnt/extdata/pxffs/ex1` to read the file.
+
+2. Display all rows of the `pxf_read_nfs` table:
+
+    ``` sql
+    gpadmin=# SELECT * FROM pxf_read_nfs ORDER_BY num_orders DESC;
+     location  | month | num_orders | total_sales 
+    -----------+-------+------------+-------------
+     Beijing   | Jul   |        411 |    11600.67
+     Bangalore | May   |        317 |     8936.99
+     Prague    | Jan   |        101 |     4875.33
+     Rome      | Mar   |         87 |     1557.39
+    (4 rows)
+    ```
+
+### <a id="ex_write"></a>Write Data and Read Again
+
+Perform the following procedure to insert some data into the `ex1` directory and then read the data again. You must create a new external table for the write operation.
+
+1. Create a writable PXF external table that references `ex1` and that specifies the `file:text` profile. For example:
+
+    ``` sql
+    gpadmin=# CREATE WRITABLE EXTERNAL TABLE pxf_write_nfs(location text, month text, num_orders int, total_sales float8)
+                LOCATION ('pxf://ex1/?PROFILE=file:text&SERVER=nfssrvcfg')
+              FORMAT 'CSV' (delimiter=',');
+    ```
+
+4. Insert some data into the `pxf_write_nfs` table. For example:
+
+    ``` sql
+    gpadmin=# INSERT INTO pxf_write_nfs VALUES ( 'Frankfurt', 'Mar', 777, 3956.98 );
+    INSERT 0 1
+    gpadmin=# INSERT INTO pxf_write_nfs VALUES ( 'Cleveland', 'Oct', 3812, 96645.37 );
+    INSERT 0 1
+    ```
+
+    PXF writes one or more files to the `ex1/` directory when you insert into the `pxf_write_nfs` table.
+
+5. Use the `pxf_read_nfs` readable external table that you created in the previous section to view the new data you inserted into the `pxf_write_nfs` table:
+
+    ``` sql
+    gpadmin=# SELECT * FROM pxf_read_nfs ORDER BY num_orders DESC;
+     location  | month | num_orders | total_sales 
+    -----------+-------+------------+-------------
+     Cleveland | Oct   |       3812 |    96645.37
+     Frankfurt | Mar   |        777 |     3956.98
+     Beijing   | Jul   |        411 |    11600.67
+     Bangalore | May   |        317 |     8936.99
+     Prague    | Jan   |        101 |     4875.33
+     Rome      | Mar   |         87 |     1557.39
+    (6 rows)
+    ```
+
+    When you select from the `pxf_read_nfs` table here, PXF reads the `somedata.csv` file and the new files that it added to the `ex1/` directory in the previous step.
+

@@ -1,8 +1,0 @@
----
-# DEFAULT YML FILE #
-
-gpdb-git-remote: https://github.com/greenplum-db/gpdb.git
-gpdb-git-branch: master
-
-pxf-git-remote: https://github.com/greenplum-db/pxf.git
-pxf-git-branch: master
