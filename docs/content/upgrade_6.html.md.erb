@@ -1,0 +1,58 @@
+---
+title: Upgrading from an Earlier PXF 6 Release
+---
+
+If you have installed a PXF 6.x `rpm` or `deb` package and have initialized, configured, and are using PXF in your current Greenplum Database 5.21.2+ or 6.x installation, you must perform some upgrade actions when you install a new version of PXF 6.
+
+The PXF upgrade procedure has two parts. You perform one procedure before, and one procedure after, you install a new version to upgrade PXF:
+
+-   [Step 1: Perform the PXF Pre-Upgrade Actions](#pxfpre)
+-   Install the new version of PXF
+-   [Step 2: Complete the Upgrade to a Newer PXF 6](#pxfup)
+
+
+## <a id="pxfpre"></a>Step 1: Perform the PXF Pre-Upgrade Actions
+
+Perform this procedure before you upgrade to a new version of PXF 6:
+
+1. Log in to the Greenplum Database master node. For example:
+
+    ``` shell
+    $ ssh gpadmin@<gpmaster>
+    ```
+
+1. Identify and note the version of PXF currently running in your Greenplum cluster:
+
+    ``` shell
+    gpadmin@gpmaster$ pxf version
+    ```
+
+1. next step
+
+1. Stop PXF on each segment host as described in [Stopping PXF](cfginitstart_pxf.html#stop_pxf).
+
+1. Install the new version of PXF, identify and note the new PXF version number, and then continue your PXF upgrade with [Step 2: Complete the Upgrade to a Newere PXF 6](#pxfup).
+
+
+## <a id="pxfup"></a>Step 2: Completing the Upgrade to a Newer PXF 6
+
+After you install the new version of PXF, perform the following procedure:
+
+1. Log in to the Greenplum Database master node. For example:
+
+    ``` shell
+    $ ssh gpadmin@<gpmaster>
+    ```
+
+1. next step
+
+1. next step
+
+1. Synchronize the PXF configuration from the master host to the standby master and each Greenplum Database segment host. For example:
+
+    ``` shell
+    gpadmin@gpmaster$ pxf cluster sync
+    ```
+ 
+1. Start PXF on each segment host as described in [Starting PXF](cfginitstart_pxf.html#start_pxf).
+
