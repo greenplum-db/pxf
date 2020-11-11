@@ -58,7 +58,7 @@ public class HiveORCVectorizedAccessor extends HiveORCAccessor {
      * @param options reader options to modify
      */
     private void addFragments(Reader.Options options) {
-        FileSplit fileSplit = HdfsUtilities.parseFileSplit(context);
+        FileSplit fileSplit = HdfsUtilities.parseFileSplit(context.getDataSource(), context.getFragmentMetadata());
         options.range(fileSplit.getStart(), fileSplit.getLength());
     }
 

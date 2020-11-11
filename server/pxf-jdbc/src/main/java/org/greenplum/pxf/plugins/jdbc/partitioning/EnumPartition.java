@@ -19,21 +19,21 @@ package org.greenplum.pxf.plugins.jdbc.partitioning;
  * under the License.
  */
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
 
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@NoArgsConstructor
 public class EnumPartition extends BasePartition implements JdbcFragmentMetadata {
 
     @Getter
-    private final String value;
+    private String value;
 
     @Getter
-    private final String[] excluded;
+    private String[] excluded;
 
     /**
      * Construct an EnumPartition with given column and constraint
@@ -52,7 +52,7 @@ public class EnumPartition extends BasePartition implements JdbcFragmentMetadata
      * Construct an EnumPartition with given column and a special (exclusion) constraint.
      * The partition created by this constructor contains all values that differ from the given ones.
      *
-     * @param column
+     * @param column   column name to use as a partition column
      * @param excluded array of values this partition must NOT include
      */
     public EnumPartition(String column, String[] excluded) {
@@ -65,10 +65,7 @@ public class EnumPartition extends BasePartition implements JdbcFragmentMetadata
         }
     }
 
-    @JsonCreator
-    public EnumPartition(@JsonProperty("column") String column,
-                         @JsonProperty("value") String value,
-                         @JsonProperty("excluded") String[] excluded) {
+    public EnumPartition(String column, String value, String[] excluded) {
         super(column);
         this.value = value;
         this.excluded = excluded;
@@ -81,7 +78,6 @@ public class EnumPartition extends BasePartition implements JdbcFragmentMetadata
         }
 
         StringBuilder sb = new StringBuilder();
-
         String quotedColumn = quoteString + column + quoteString;
 
         if (excluded == null) {

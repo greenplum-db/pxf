@@ -1,7 +1,6 @@
 package org.greenplum.pxf.plugins.hive;
 
 import org.apache.hadoop.mapred.FileSplit;
-import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -15,20 +14,20 @@ import static org.mockito.Mockito.when;
 class HiveFragmentMetadataTest {
 
     private HiveFragmentMetadata metadata;
-    private byte[] kryoProperties;
+    private Properties properties;
 
     @BeforeEach
     public void setup() {
-        kryoProperties = new HiveUtilities().toKryo(new Properties());
-        metadata = new HiveFragmentMetadata(5L, 25L, kryoProperties);
+        properties = new Properties();
+        metadata = new HiveFragmentMetadata(5L, 25L, properties);
     }
 
     @Test
-    public void testJsonCreatorConstructor() {
+    public void testConstructor() {
 
         assertEquals(5L, metadata.getStart());
         assertEquals(25L, metadata.getLength());
-        assertSame(kryoProperties, metadata.getKryoProperties());
+        assertSame(properties, metadata.getProperties());
     }
 
     @Test
@@ -38,10 +37,10 @@ class HiveFragmentMetadataTest {
         when(mockFileSplit.getStart()).thenReturn(25L);
         when(mockFileSplit.getLength()).thenReturn(150L);
 
-        HiveFragmentMetadata metadata = new HiveFragmentMetadata(mockFileSplit, kryoProperties);
+        HiveFragmentMetadata metadata = new HiveFragmentMetadata(mockFileSplit, properties);
 
         assertEquals(25L, metadata.getStart());
         assertEquals(150L, metadata.getLength());
-        assertSame(kryoProperties, metadata.getKryoProperties());
+        assertSame(properties, metadata.getProperties());
     }
 }

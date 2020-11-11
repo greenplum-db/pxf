@@ -110,7 +110,7 @@ public class FragmentsResponse implements StreamingResponseBody {
         for (Fragment fragment : fragments) {
             result.setLength(0);
 
-            /* metaData and userData are automatically converted to Base64 */
+            /* metadata is automatically converted to Base64 */
             result.append(prefix).append(mapper.writeValueAsString(fragment));
             prefix = COMMA_PREFIX;
             dos.write(result.toString().getBytes());

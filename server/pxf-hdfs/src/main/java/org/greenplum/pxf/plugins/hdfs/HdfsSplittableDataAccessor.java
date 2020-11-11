@@ -31,8 +31,6 @@ import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 
 import java.io.IOException;
-import java.util.LinkedList;
-import java.util.ListIterator;
 
 /**
  * Accessor for accessing a splittable HDFS data sources. HDFS will divide the
@@ -67,7 +65,7 @@ public abstract class HdfsSplittableDataAccessor extends BasePlugin implements A
         hcfsType = HcfsType.getHcfsType(context);
 
         // Parse fileSplit from context
-        fileSplit = HdfsUtilities.parseFileSplit(context);
+        fileSplit = HdfsUtilities.parseFileSplit(context.getDataSource(), context.getFragmentMetadata());
     }
 
     /**
@@ -128,5 +126,4 @@ public abstract class HdfsSplittableDataAccessor extends BasePlugin implements A
             reader.close();
         }
     }
-
 }

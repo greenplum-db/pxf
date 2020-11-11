@@ -1,11 +1,10 @@
 package org.greenplum.pxf.api.utilities;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.greenplum.pxf.api.examples.DemoFragmentMetadata;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,7 +22,7 @@ class FragmentMetadataSerDeTest {
 
     @BeforeEach
     public void setup() {
-        metadataSerDe = new FragmentMetadataSerDe();
+        metadataSerDe = new FragmentMetadataSerDe(new SerializationService());
     }
 
     @Test
@@ -36,60 +35,48 @@ class FragmentMetadataSerDeTest {
         mapper.registerModule(module);
 
         DemoFragmentMetadata metadata = new DemoFragmentMetadata("abc");
-        assertEquals("\"{\\\"path\\\":\\\"abc\\\",\\\"className\\\":\\\"org.greenplum.pxf.api.examples.DemoFragmentMetadata\\\"}\"", mapper.writeValueAsString(metadata));
+        assertEquals("\"AQBvcmcuZ3JlZW5wbHVtLnB4Zi5hcGkuZXhhbXBsZXMuRGVtb0ZyYWdtZW50TWV0YWRhdOEBAWFi4w==\"",
+                mapper.writeValueAsString(metadata));
 
         TestFragmentMetadata testMetadata = new TestFragmentMetadata("test", 5, 10, new Date(1590649200000L), "foo".getBytes(StandardCharsets.UTF_8));
-        assertEquals("\"{\\\"a\\\":\\\"test\\\",\\\"b\\\":5,\\\"c\\\":10,\\\"d\\\":1590649200000,\\\"e\\\":\\\"Zm9v\\\",\\\"className\\\":\\\"org.greenplum.pxf.api.utilities.FragmentMetadataSerDeTest$TestFragmentMetadata\\\"}\"",
+        assertEquals("\"AQDPAW9yZy5ncmVlbnBsdW0ucHhmLmFwaS51dGlsaXRpZXMuRnJhZ21lbnRNZXRhZGF0YVNlckRlVGVzdCRUZXN0RnJhZ21lbnRNZXRhZGF0YQEBdGVz9AoUAQFqYXZhLnNxbC5EYXTlAYC70tClLgEEZm9v\"",
                 mapper.writeValueAsString(testMetadata));
     }
 
     @Test
-    public void testDeserialize() throws JsonProcessingException {
+    public void testDeserialize() {
 
-        String metadataJson = "{\"path\": \"deserialize me\", \"className\": \"org.greenplum.pxf.api.examples.DemoFragmentMetadata\" }";
+        String metadataJson = "\"AQBvcmcuZ3JlZW5wbHVtLnB4Zi5hcGkuZXhhbXBsZXMuRGVtb0ZyYWdtZW50TWV0YWRhdOEBAWFi4w==\"";
 
         FragmentMetadata metadata = metadataSerDe.deserialize(metadataJson);
         assertNotNull(metadata);
         assertTrue(metadata instanceof DemoFragmentMetadata);
-        assertEquals("deserialize me", ((DemoFragmentMetadata) metadata).getPath());
+        assertEquals("abc", ((DemoFragmentMetadata) metadata).getPath());
 
-        String testMetadataJson = "{\"b\": 25, \"c\": 150, \"a\": \"test me\", \"d\": \"1590649200000\", \"e\": \"Zm9v\", \"className\": \"org.greenplum.pxf.api.utilities.FragmentMetadataSerDeTest$TestFragmentMetadata\"}";
+        String testMetadataJson = "\"AQDPAW9yZy5ncmVlbnBsdW0ucHhmLmFwaS51dGlsaXRpZXMuRnJhZ21lbnRNZXRhZGF0YVNlckRlVGVzdCRUZXN0RnJhZ21lbnRNZXRhZGF0YQEBdGVz9AoUAQFqYXZhLnNxbC5EYXTlAYC70tClLgEEZm9v\"";
 
         FragmentMetadata testMetadata = metadataSerDe.deserialize(testMetadataJson);
         assertNotNull(testMetadata);
         assertTrue(testMetadata instanceof TestFragmentMetadata);
         TestFragmentMetadata testFragmentMetadata = (TestFragmentMetadata) testMetadata;
-        assertEquals("test me", testFragmentMetadata.getA());
-        assertEquals(25, testFragmentMetadata.getB());
-        assertEquals(150, testFragmentMetadata.getC());
+        assertEquals("test", testFragmentMetadata.getA());
+        assertEquals(5, testFragmentMetadata.getB());
+        assertEquals(10, testFragmentMetadata.getC());
         assertEquals(new Date(1590649200000L), testFragmentMetadata.getD());
         assertEquals("foo", new String(testFragmentMetadata.getE(), StandardCharsets.UTF_8));
     }
 
+    @NoArgsConstructor
+    @Getter
     static class TestFragmentMetadata implements FragmentMetadata {
 
-        @Getter
-        private final String a;
+        private String a;
+        private int b;
+        private int c;
+        private Date d;
+        private byte[] e;
 
-        @Getter
-        private final int b;
-
-        @Getter
-        private final int c;
-
-        @Getter
-        private final Date d;
-
-        @Getter
-        private final byte[] e;
-
-        @JsonCreator
-        public TestFragmentMetadata(
-                @JsonProperty("a") String a,
-                @JsonProperty("b") int b,
-                @JsonProperty("c") int c,
-                @JsonProperty("d") Date d,
-                @JsonProperty("e") byte[] e) {
+        public TestFragmentMetadata(String a, int b, int c, Date d, byte[] e) {
             this.a = a;
             this.b = b;
             this.c = c;

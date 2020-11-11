@@ -20,6 +20,10 @@ package org.greenplum.pxf.service;
  */
 
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.KryoException;
+import com.esotericsoftware.kryo.io.Output;
+import org.apache.commons.codec.binary.Base64;
 import org.greenplum.pxf.api.examples.DemoFragmentMetadata;
 import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.PluginConf;
@@ -28,6 +32,7 @@ import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.RequestContext.RequestType;
 import org.greenplum.pxf.api.utilities.FragmentMetadata;
 import org.greenplum.pxf.api.utilities.FragmentMetadataSerDe;
+import org.greenplum.pxf.api.utilities.SerializationService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -63,6 +68,23 @@ public class HttpRequestParserTest {
     public void setUp() {
         mockPluginConf = mock(PluginConf.class);
 
+        SerializationService serializationService = new SerializationService();
+        FragmentMetadataSerDe serDe = new FragmentMetadataSerDe(serializationService);
+
+        DemoFragmentMetadata demoFragmentMetadata = new DemoFragmentMetadata();
+        demoFragmentMetadata.setPath("I like kryo");
+
+        Output out = new Output(4 * 1024, 10 * 1024 * 1024);
+        Kryo kryo = serializationService.borrowKryo();
+        String kryoString;
+        try {
+            kryo.writeClassAndObject(out, demoFragmentMetadata);
+            out.close();
+            kryoString = Base64.encodeBase64String(out.toBytes());
+        } finally {
+            serializationService.releaseKryo(kryo);
+        }
+
         parameters = new LinkedMultiValueMap<>();
         parameters.add("X-GP-ALIGNMENT", "all");
         parameters.add("X-GP-SEGMENT-ID", "-44");
@@ -76,14 +98,14 @@ public class HttpRequestParserTest {
         parameters.add("X-GP-OPTIONS-ACCESSOR", "are");
         parameters.add("X-GP-OPTIONS-RESOLVER", "packed");
         parameters.add("X-GP-DATA-DIR", "i'm/ready/to/go");
-        parameters.add("X-GP-FRAGMENT-METADATA", "{\"path\": \"i'm a json\", \"className\": \"org.greenplum.pxf.api.examples.DemoFragmentMetadata\"}");
+        parameters.add("X-GP-FRAGMENT-METADATA", kryoString);
         parameters.add("X-GP-OPTIONS-I'M-STANDING-HERE", "outside-your-door");
         parameters.add("X-GP-USER", "alex");
         parameters.add("X-GP-OPTIONS-SERVER", "custom_server");
         parameters.add("X-GP-XID", "transaction:id");
 
         parser = new HttpRequestParser(mockPluginConf);
-        parser.setMetadataSerDe(new FragmentMetadataSerDe());
+        parser.setMetadataSerDe(serDe);
     }
 
     @AfterEach
@@ -166,7 +188,7 @@ public class HttpRequestParserTest {
         assertNull(context.getProfileScheme());
         assertTrue(context.getAdditionalConfigProps().isEmpty());
         assertTrue(context.getFragmentMetadata() instanceof DemoFragmentMetadata);
-        assertEquals("i'm a json", ((DemoFragmentMetadata) context.getFragmentMetadata()).getPath());
+        assertEquals("I like kryo", ((DemoFragmentMetadata) context.getFragmentMetadata()).getPath());
         assertFalse(context.isLastFragment());
     }
 
@@ -256,7 +278,7 @@ public class HttpRequestParserTest {
         RequestContext context = parser.parseRequest(parameters, RequestType.FRAGMENTER);
         FragmentMetadata metadata = context.getFragmentMetadata();
         assertTrue(metadata instanceof DemoFragmentMetadata);
-        assertEquals("i'm a json", ((DemoFragmentMetadata) metadata).getPath());
+        assertEquals("I like kryo", ((DemoFragmentMetadata) metadata).getPath());
     }
 
     @Test

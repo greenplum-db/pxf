@@ -1,6 +1,7 @@
 package org.greenplum.pxf.plugins.jdbc.partitioning;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
@@ -9,6 +10,7 @@ import lombok.RequiredArgsConstructor;
  * <p>
  * All partitions use some column as a partition column. It is processed by this class.
  */
+@NoArgsConstructor
 @RequiredArgsConstructor
 public abstract class BasePartition implements JdbcFragmentMetadata {
 
@@ -17,7 +19,7 @@ public abstract class BasePartition implements JdbcFragmentMetadata {
      */
     @Getter
     @NonNull
-    protected final String column;
+    protected String column;
 
     /**
      * Generate a range-based SQL constraint

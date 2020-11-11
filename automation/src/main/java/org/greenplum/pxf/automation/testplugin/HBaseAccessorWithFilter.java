@@ -170,20 +170,12 @@ public class HBaseAccessorWithFilter extends BasePlugin implements Accessor {
      * This assumption is made through HBase's code as well
      */
     private void selectTableSplits() {
-
         HBaseFragmentMetadata metadata = context.getFragmentMetadata();
-        if (metadata == null) {
-            throw new IllegalArgumentException("Missing fragment metadata information");
-        }
-        try {
-            byte[] startKey = metadata.getStartKey();
-            byte[] endKey = metadata.getEndKey();
+        byte[] startKey = metadata.getStartKey();
+        byte[] endKey = metadata.getEndKey();
 
-            if (withinScanRange(startKey, endKey)) {
-                splits.add(new SplitBoundary(startKey, endKey));
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Exception while reading expected fragment metadata", e);
+        if (withinScanRange(startKey, endKey)) {
+            splits.add(new SplitBoundary(startKey, endKey));
         }
     }
 

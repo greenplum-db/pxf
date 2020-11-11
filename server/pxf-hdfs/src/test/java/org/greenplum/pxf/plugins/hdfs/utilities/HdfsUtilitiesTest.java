@@ -47,7 +47,7 @@ public class HdfsUtilitiesTest {
         RequestContext context = new RequestContext();
         context.setDataSource("/abc/path/to/data/source");
         context.setFragmentMetadata(new HcfsFragmentMetadata(10, 100));
-        FileSplit fileSplit = HdfsUtilities.parseFileSplit(context);
+        FileSplit fileSplit = HdfsUtilities.parseFileSplit(context.getDataSource(), context.getFragmentMetadata());
         assertEquals(fileSplit.getStart(), 10);
         assertEquals(fileSplit.getLength(), 100);
         assertEquals(fileSplit.getPath().toString(), "/abc/path/to/data/source");

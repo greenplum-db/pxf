@@ -22,7 +22,6 @@ package org.greenplum.pxf.api.examples;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.BasePlugin;
-import org.greenplum.pxf.api.utilities.FragmentMetadata;
 
 /**
  * Internal interface that would defined the access to a file on HDFS, but in
@@ -55,13 +54,8 @@ public class DemoAccessor extends BasePlugin implements Accessor {
         if (fragmentNumber > 0)
             return null; /* signal EOF, close will be called */
         int fragment = context.getDataFragment();
-        FragmentMetadata metadata = context.getFragmentMetadata();
+        DemoFragmentMetadata demoMetadata = context.getFragmentMetadata();
         int colCount = context.getColumns();
-
-        if (!(metadata instanceof DemoFragmentMetadata))
-            throw new IllegalArgumentException("invalid metadata");
-
-        DemoFragmentMetadata demoMetadata = (DemoFragmentMetadata) metadata;
 
         /* generate row with (colCount) columns */
         StringBuilder colValue = new StringBuilder(demoMetadata.getPath() + " row" + (rowNumber + 1));

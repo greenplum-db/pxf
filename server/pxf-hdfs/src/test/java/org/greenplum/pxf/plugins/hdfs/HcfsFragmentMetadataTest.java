@@ -13,7 +13,6 @@ class HcfsFragmentMetadataTest {
         HcfsFragmentMetadata metadata = new HcfsFragmentMetadata(new FileSplit(new Path("foo"), 5, 25, (String[]) null));
         assertEquals(5, metadata.getStart());
         assertEquals(25, metadata.getLength());
-        assertEquals("org.greenplum.pxf.plugins.hdfs.HcfsFragmentMetadata", metadata.getClassName());
     }
 
     @Test
@@ -21,6 +20,5 @@ class HcfsFragmentMetadataTest {
         HcfsFragmentMetadata metadata = new HcfsFragmentMetadata(10, 200);
         assertEquals(10, metadata.getStart());
         assertEquals(200, metadata.getLength());
-        assertEquals("org.greenplum.pxf.plugins.hdfs.HcfsFragmentMetadata", metadata.getClassName());
     }
 }

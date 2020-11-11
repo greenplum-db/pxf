@@ -19,21 +19,12 @@ package org.greenplum.pxf.plugins.hdfs.utilities;
  * under the License.
  */
 
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.compress.BZip2Codec;
-import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.mapred.FileSplit;
-import org.apache.parquet.hadoop.codec.CompressionCodecNotSupportedException;
-import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.io.DataType;
-import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.api.utilities.FragmentMetadata;
 import org.greenplum.pxf.api.utilities.Utilities;
-import org.greenplum.pxf.plugins.hdfs.CodecFactory;
 import org.greenplum.pxf.plugins.hdfs.HcfsFragmentMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,18 +44,16 @@ public class HdfsUtilities {
      * fragment metadata is null, a {@link FileSplit} with zero start and length
      * is returned.
      *
-     * @param context request input data
+     * @param file     the file name for the split
+     * @param metadata the fragment metadataa
      * @return FileSplit with fragment metadata
      */
-    public static FileSplit parseFileSplit(RequestContext context) {
-        HcfsFragmentMetadata metadata = context.getFragmentMetadata();
-
+    public static FileSplit parseFileSplit(String file, HcfsFragmentMetadata metadata) {
         long start = metadata == null ? 0 : metadata.getStart();
         long length = metadata == null ? 0 : metadata.getLength();
 
-        LOG.debug("Parsed split: path={} start={} length={}", context.getDataSource(), start, length);
-
-        return new FileSplit(new Path(context.getDataSource()), start, length, (String[]) null);
+        LOG.debug("Parsed split: path={} start={} length={}", file, start, length);
+        return new FileSplit(new Path(file), start, length, (String[]) null);
     }
 
     /**

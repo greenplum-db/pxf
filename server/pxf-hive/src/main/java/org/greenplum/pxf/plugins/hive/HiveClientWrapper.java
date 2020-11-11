@@ -165,7 +165,7 @@ public class HiveClientWrapper {
      * @param partData            partition data
      * @throws ClassNotFoundException when the fragmenter class is not found
      */
-    public byte[] buildFragmentMetadata(String fragmenterClassName, HiveTablePartition partData)
+    public Properties buildFragmentProperties(String fragmenterClassName, HiveTablePartition partData)
             throws ClassNotFoundException {
 
         if (fragmenterClassName == null) {
@@ -180,7 +180,7 @@ public class HiveClientWrapper {
         Properties properties = partData.properties;
         addPartitionValuesInformation(properties, partData);
         removeUnusedProperties(properties);
-        return hiveUtilities.toKryo(properties);
+        return properties;
     }
 
     /**

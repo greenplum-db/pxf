@@ -52,7 +52,7 @@ public abstract class HdfsAtomicDataAccessor extends BasePlugin implements Acces
 
     @Override
     public void afterPropertiesSet() {
-        fileSplit = HdfsUtilities.parseFileSplit(context);
+        fileSplit = HdfsUtilities.parseFileSplit(context.getDataSource(), context.getFragmentMetadata());
     }
 
     /**

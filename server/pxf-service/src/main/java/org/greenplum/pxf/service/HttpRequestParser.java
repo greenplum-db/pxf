@@ -1,6 +1,5 @@
 package org.greenplum.pxf.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.PluginConf;
@@ -117,13 +116,12 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
             context.setFragmentIndex(Integer.parseInt(fragmentIndexStr));
         }
 
-        String jsonFragmentMetadata = params.removeOptionalProperty("FRAGMENT-METADATA");
+        String base64FragmentMetadata = params.removeOptionalProperty("FRAGMENT-METADATA");
         FragmentMetadata fragmentMetadata;
-
         try {
-            fragmentMetadata = deserializeFragmentMetadata(jsonFragmentMetadata);
-        } catch (JsonProcessingException e) {
-            throw new IllegalArgumentException(String.format("unable to deserialize fragment meta '%s'", jsonFragmentMetadata), e);
+            fragmentMetadata = deserializeFragmentMetadata(base64FragmentMetadata);
+        } catch (RuntimeException e) {
+            throw new IllegalArgumentException(String.format("unable to deserialize fragment meta '%s'", base64FragmentMetadata), e);
         }
         context.setFragmentMetadata(fragmentMetadata);
 
@@ -245,15 +243,14 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
     }
 
     /**
-     * Deserializes the JSON string into a {@link FragmentMetadata}
+     * Deserializes the Base64 encoded Kryo string into a {@link FragmentMetadata}
      *
-     * @param jsonFragmentMetadata the fragment metadata
+     * @param metadata the fragment metadata
      * @return the {@link FragmentMetadata}
-     * @throws JsonProcessingException when the JSON deserialization fails
      */
-    private FragmentMetadata deserializeFragmentMetadata(String jsonFragmentMetadata) throws JsonProcessingException {
-        return StringUtils.isBlank(jsonFragmentMetadata) ? null :
-                metadataSerDe.deserialize(jsonFragmentMetadata);
+    private FragmentMetadata deserializeFragmentMetadata(String metadata) {
+        return StringUtils.isBlank(metadata) ? null :
+                metadataSerDe.deserialize(metadata);
     }
 
     /**

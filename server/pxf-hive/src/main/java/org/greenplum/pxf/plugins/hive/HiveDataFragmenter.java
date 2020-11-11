@@ -323,9 +323,9 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
         for (InputSplit split : splits) {
             FileSplit fileSplit = (FileSplit) split;
             String filepath = fileSplit.getPath().toString();
-            byte[] kryoProperties = hiveClientWrapper.buildFragmentMetadata(fragmenterForProfile, tablePartition);
+            Properties properties = hiveClientWrapper.buildFragmentProperties(fragmenterForProfile, tablePartition);
 
-            HiveFragmentMetadata metadata = new HiveFragmentMetadata(fileSplit, kryoProperties);
+            HiveFragmentMetadata metadata = new HiveFragmentMetadata(fileSplit, properties);
             Fragment fragment = new Fragment(filepath, HOSTS, metadata, profile);
             fragments.add(fragment);
         }

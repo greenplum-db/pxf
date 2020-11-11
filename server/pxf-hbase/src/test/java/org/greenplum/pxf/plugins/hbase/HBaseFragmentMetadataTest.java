@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.apache.hadoop.hbase.HRegionInfo;
 import org.greenplum.pxf.api.utilities.FragmentMetadata;
 import org.greenplum.pxf.api.utilities.FragmentMetadataSerDe;
+import org.greenplum.pxf.api.utilities.SerializationService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -20,6 +22,13 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class HBaseFragmentMetadataTest {
+
+    FragmentMetadataSerDe serde;
+
+    @BeforeEach
+    void setup() {
+        serde = new FragmentMetadataSerDe(new SerializationService());
+    }
 
     @Test
     public void testHRegionInfoConstructor() {
@@ -72,28 +81,28 @@ class HBaseFragmentMetadataTest {
 
         ObjectMapper mapper = new ObjectMapper();
         SimpleModule module = new SimpleModule();
-        module.addSerializer(FragmentMetadata.class, new FragmentMetadataSerDe());
+        module.addSerializer(FragmentMetadata.class, serde);
         mapper.registerModule(module);
 
-        assertEquals("\"{\\\"startKey\\\":\\\"YQ==\\\",\\\"endKey\\\":\\\"Yg==\\\",\\\"columnMapping\\\":{\\\"1\\\":\\\"ZW50cnktMQ==\\\",\\\"2\\\":\\\"ZW50cnktMg==\\\"},\\\"className\\\":\\\"org.greenplum.pxf.plugins.hbase.HBaseFragmentMetadata\\\"}\"",
+        assertEquals("\"AQBvcmcuZ3JlZW5wbHVtLnB4Zi5wbHVnaW5zLmhiYXNlLkhCYXNlRnJhZ21lbnRNZXRhZGF04QEBAWphdmEudXRpbC5IYXNoTWHwAQIBgjEBCGVudHJ5LTEBgjIBCGVudHJ5LTIBAmIBAmE=\"",
                 mapper.writeValueAsString(metadata));
     }
 
     @Test
-    public void testDeserialization() throws JsonProcessingException {
-        String json = "{\"startKey\":\"YQ==\",\"endKey\":\"Yg==\",\"columnMapping\":{\"f\":\"RnJhbmNpc2Nv\",\"g\":\"UFhG\"},\"className\":\"org.greenplum.pxf.plugins.hbase.HBaseFragmentMetadata\"}";
+    public void testDeserialization() {
+        String base64metadata = "\"AQBvcmcuZ3JlZW5wbHVtLnB4Zi5wbHVnaW5zLmhiYXNlLkhCYXNlRnJhZ21lbnRNZXRhZGF04QEBAWphdmEudXRpbC5IYXNoTWHwAQIBgjEBCGVudHJ5LTEBgjIBCGVudHJ5LTIBAmIBAmE=\"";
 
-        FragmentMetadata testMetadata = new FragmentMetadataSerDe().deserialize(json);
+        FragmentMetadata testMetadata = serde.deserialize(base64metadata);
         assertNotNull(testMetadata);
         assertTrue(testMetadata instanceof HBaseFragmentMetadata);
         HBaseFragmentMetadata metadata = (HBaseFragmentMetadata) testMetadata;
         assertEquals("a", new String(metadata.getStartKey()));
         assertEquals("b", new String(metadata.getEndKey()));
         assertNotNull(metadata.getColumnMapping());
-        assertTrue(metadata.getColumnMapping().containsKey("f"));
-        assertTrue(metadata.getColumnMapping().containsKey("g"));
-        assertEquals("Francisco", new String(metadata.getColumnMapping().get("f")));
-        assertEquals("PXF", new String(metadata.getColumnMapping().get("g")));
+        assertTrue(metadata.getColumnMapping().containsKey("1"));
+        assertTrue(metadata.getColumnMapping().containsKey("2"));
+        assertEquals("entry-1", new String(metadata.getColumnMapping().get("1")));
+        assertEquals("entry-2", new String(metadata.getColumnMapping().get("2")));
     }
 
 }

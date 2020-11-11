@@ -45,12 +45,10 @@ class HiveORCAccessorTest {
 
     @BeforeEach
     public void setup() {
-        HiveUtilities hiveUtilities = new HiveUtilities();
-
         Properties properties = new Properties();
         properties.put("columns", "");
 
-        HiveFragmentMetadata metadata = new HiveFragmentMetadata(0, 0, hiveUtilities.toKryo(properties));
+        HiveFragmentMetadata metadata = new HiveFragmentMetadata(0, 0, properties);
 
         Configuration configuration = new Configuration();
         configuration.set("pxf.fs.basePath", "/");
@@ -65,7 +63,7 @@ class HiveORCAccessorTest {
         context.setAccessor(HiveORCAccessor.class.getName());
         context.setConfiguration(configuration);
 
-        accessor = new HiveORCAccessor(hiveUtilities);
+        accessor = new HiveORCAccessor(new HiveUtilities());
         accessor.setRequestContext(context);
         accessor.afterPropertiesSet();
     }

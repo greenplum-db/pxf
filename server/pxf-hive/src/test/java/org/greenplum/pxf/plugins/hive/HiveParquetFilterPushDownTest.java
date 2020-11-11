@@ -61,11 +61,9 @@ public class HiveParquetFilterPushDownTest {
     private Resolver resolver;
     private RequestContext context;
 
-    private List<ColumnDescriptor> columnDescriptors;
-
     @BeforeEach
     public void setup() {
-        columnDescriptors = new ArrayList<>();
+        List<ColumnDescriptor> columnDescriptors = new ArrayList<>();
         columnDescriptors.add(new ColumnDescriptor("id", DataType.INTEGER.getOID(), 0, "int4", null));
         columnDescriptors.add(new ColumnDescriptor("name", DataType.TEXT.getOID(), 1, "text", null));
         columnDescriptors.add(new ColumnDescriptor("cdate", DataType.DATE.getOID(), 2, "date", null));
@@ -106,7 +104,7 @@ public class HiveParquetFilterPushDownTest {
         context.setProfileScheme("localfile");
         context.setRequestType(RequestContext.RequestType.READ_BRIDGE);
         context.setDataSource(path);
-        context.setFragmentMetadata(new HiveFragmentMetadata(0, 4196, new HiveUtilities().toKryo(props)));
+        context.setFragmentMetadata(new HiveFragmentMetadata(0, 4196, props));
         context.setTupleDescription(columnDescriptors);
         context.setConfiguration(new Configuration());
 

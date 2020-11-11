@@ -19,16 +19,9 @@
 
 package org.greenplum.pxf.api.utilities;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
 /**
  * Interface that represents Fragment metadata. Each profile can implement it's
  * own metadata object
  */
-@JsonIgnoreProperties(value={ "className" }, allowGetters=true)
 public interface FragmentMetadata {
-
-    default String getClassName() {
-        return this.getClass().getName();
-    }
 }

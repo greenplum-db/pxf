@@ -21,7 +21,6 @@ package org.greenplum.pxf.plugins.hive.utilities;
 
 
 import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.io.Output;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.JavaUtils;
@@ -57,7 +56,6 @@ public class HiveUtilities {
     // serializer is thread safe.
     private final ThreadLocal<Kryo> kryo = ThreadLocal.withInitial(() -> {
         Kryo k = new Kryo();
-        k.addDefaultSerializer(Map.class, PropertiesSerializer.class);
         return k;
     });
 
@@ -259,20 +257,6 @@ public class HiveUtilities {
      */
     public Kryo getKryo() {
         return kryo.get();
-    }
-
-
-    /**
-     * Serializer an object into a byte array using Kryo serialization
-     *
-     * @param object the object to serialize
-     * @return the serialized object as a byte array
-     */
-    public byte[] toKryo(Object object) {
-        Output out = new Output(4 * 1024, 10 * 1024 * 1024);
-        getKryo().writeObject(out, object);
-        out.close();
-        return out.toBytes();
     }
 
     /**

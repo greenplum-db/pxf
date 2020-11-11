@@ -19,19 +19,19 @@ package org.greenplum.pxf.plugins.jdbc.partitioning;
  * under the License.
  */
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
 
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.stream.Stream;
 
+@NoArgsConstructor
 class DatePartition extends BasePartition implements JdbcFragmentMetadata {
 
     @Getter
-    private final Date[] boundaries;
+    private Date[] boundaries;
 
     /**
      * Construct a DatePartition covering a range of values from 'start' to 'end'
@@ -55,9 +55,7 @@ class DatePartition extends BasePartition implements JdbcFragmentMetadata {
         }
     }
 
-    @JsonCreator
-    public DatePartition(@JsonProperty("column") String column,
-                         @JsonProperty("boundaries") Date[] boundaries) {
+    public DatePartition(String column, Date[] boundaries) {
         super(column);
         this.boundaries = boundaries;
     }

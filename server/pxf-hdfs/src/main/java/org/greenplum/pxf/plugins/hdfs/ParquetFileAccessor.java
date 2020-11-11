@@ -57,7 +57,6 @@ import org.greenplum.pxf.api.filter.TreeVisitor;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.BasePlugin;
-import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.SpringContext;
 import org.greenplum.pxf.plugins.hdfs.parquet.ParquetOperatorPrunerAndTransformer;
@@ -160,7 +159,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
     @Override
     public boolean openForRead() throws IOException {
         file = new Path(context.getDataSource());
-        FileSplit fileSplit = HdfsUtilities.parseFileSplit(context);
+        FileSplit fileSplit = HdfsUtilities.parseFileSplit(context.getDataSource(), context.getFragmentMetadata());
 
         // Read the original schema from the parquet file
         MessageType originalSchema = getSchema(file, fileSplit);

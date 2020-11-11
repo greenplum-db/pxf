@@ -19,17 +19,17 @@ package org.greenplum.pxf.plugins.jdbc.partitioning;
  * under the License.
  */
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.greenplum.pxf.plugins.jdbc.utils.DbProduct;
 
 import java.util.stream.Stream;
 
+@NoArgsConstructor
 public class IntPartition extends BasePartition implements JdbcFragmentMetadata {
 
     @Getter
-    private final Long[] boundaries;
+    private Long[] boundaries;
 
     /**
      * @param column the partition column
@@ -43,9 +43,7 @@ public class IntPartition extends BasePartition implements JdbcFragmentMetadata 
         }
     }
 
-    @JsonCreator
-    public IntPartition(@JsonProperty("column") String column,
-                        @JsonProperty("boundaries") Long[] boundaries) {
+    public IntPartition(String column, Long[] boundaries) {
         super(column);
         this.boundaries = boundaries;
     }

@@ -318,9 +318,6 @@ public class SQLQueryBuilder {
             return;
         }
 
-        if (!(context.getFragmentMetadata() instanceof JdbcFragmentMetadata))
-            throw new IllegalArgumentException("invalid metadata for JDBC");
-
         // determine if we need to add WHERE statement if not a single WHERE is in the query
         // or subquery is used and there are no WHERE statements after subquery alias
         int startIndexToSearchForWHERE = 0;

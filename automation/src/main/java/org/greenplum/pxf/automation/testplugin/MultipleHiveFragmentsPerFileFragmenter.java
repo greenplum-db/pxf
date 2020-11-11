@@ -78,9 +78,8 @@ public class MultipleHiveFragmentsPerFileFragmenter extends BaseFragmenter {
         Properties properties = getSchema(tbl);
 
         for (int i = 0; i < fragmentsNum; i++) {
-            byte[] userData = hiveUtilities.toKryo(properties);
             String filePath = getFilePath(tbl);
-            fragments.add(new Fragment(filePath, localHosts, new HiveFragmentMetadata(i * SPLIT_SIZE, SPLIT_SIZE, userData)));
+            fragments.add(new Fragment(filePath, localHosts, new HiveFragmentMetadata(i * SPLIT_SIZE, SPLIT_SIZE, properties)));
         }
 
         return fragments;

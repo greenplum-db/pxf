@@ -10,6 +10,5 @@ class DemoFragmentMetadataTest {
     public void testDemoFragmentMetadata() {
         DemoFragmentMetadata fragmentMetadata = new DemoFragmentMetadata("my-path");
         assertEquals("my-path", fragmentMetadata.getPath());
-        assertEquals("org.greenplum.pxf.api.examples.DemoFragmentMetadata", fragmentMetadata.getClassName());
     }
 }
