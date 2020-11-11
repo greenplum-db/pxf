@@ -17,7 +17,7 @@ Configure the Kerberos principal and keytab using the following `pxf-site.xml` p
 | Property       | Description                                | Default Value |
 |----------------|--------------------------------------------|---------------|
 | pxf.service.kerberos.principal | The Kerberos principal name. | gpadmin/\_HOST@EXAMPLE.COM |
-| pxf.service.kerberos.keytab | The file system path to the Kerberos keytab file. | $PXF_CONF/keytabs/pxf.service.keytab |
+| pxf.service.kerberos.keytab | The file system path to the Kerberos keytab file. | $PXF_BASE/keytabs/pxf.service.keytab |
 
 ## <a id="prereq"></a>Prerequisites
 
@@ -132,13 +132,13 @@ When you configure PXF for secure HDFS using an AD Kerberos KDC server, you will
 2. Identify the name of the PXF Hadoop server configuration, and navigate to the server configuration directory. For example, if the server is named `hdp3`:
 
     ```shell
-    gpadmin@gpmaster$ cd $PXF_CONF/servers/hdp3
+    gpadmin@gpmaster$ cd $PXF_BASE/servers/hdp3
     ```
 
 3. If the server configuration does not yet include a `pxf-site.xml` file, copy the template file to the directory. For example:
 
     ``` shell
-    gpadmin@gpmaster$ cp $PXF_CONF/templates/pxf-site.xml .
+    gpadmin@gpmaster$ cp $PXF_HOME/templates/pxf-site.xml .
     ```
 
 4. Open the `pxf-site.xml` file in the editor of your choice, and update the keytab and principal property settings, if required. Specify the location of the keytab file and the Kerberos principal, substituting your realm. For example:
@@ -165,11 +165,11 @@ When you configure PXF for secure HDFS using an AD Kerberos KDC server, you will
     gpadmin@master$ pxf cluster restart
     ```
 
-6. Step 7 does not synchronize the keytabs in `$PXF_CONF`. You must distribute the keytab file to `$PXF_CONF/keytabs/`. Locate the keytab file, copy the file to the `$PXF_CONF` user configuration directory, and set required permissions. For example:
+6. Step 7 does not synchronize the keytabs in `$PXF_BASE`. You must distribute the keytab file to `$PXF_BASE/keytabs/`. Locate the keytab file, copy the file to the `$PXF_BASE` user configuration directory, and set required permissions. For example:
 	
     ``` shell
-    gpadmin@gpmaster$ gpscp -f hostfile_all pxf.service.keytab =:$PXF_CONF/keytabs/
-    gpadmin@gpmaster$ gpssh -f hostfile_all chmod 400 $PXF_CONF/keytabs/pxf.service.keytab
+    gpadmin@gpmaster$ gpscp -f hostfile_all pxf.service.keytab =:$PXF_BASE/keytabs/
+    gpadmin@gpmaster$ gpssh -f hostfile_all chmod 400 $PXF_BASE/keytabs/pxf.service.keytab
     ```
 
 
@@ -218,7 +218,7 @@ When you configure PXF for secure HDFS using an MIT Kerberos KDC server, you wil
     root@kdc-server$ kadmin.local -q "listprincs"
     ```
 
-6.  Copy the keytab file for each PXF service principal to its respective segment host. For example, the following commands copy each principal generated in step 4 to the PXF default keytab directory on the segment host when `PXF_CONF=/usr/local/greenplum-pxf`:
+6.  Copy the keytab file for each PXF service principal to its respective segment host. For example, the following commands copy each principal generated in step 4 to the PXF default keytab directory on the segment host when `PXF_BASE=/usr/local/greenplum-pxf`:
 
     ``` shell
     root@kdc-server$ scp /etc/security/keytabs/pxf-host1.service.keytab host1.example.com:/usr/local/greenplum-pxf/keytabs/pxf.service.keytab
@@ -252,13 +252,13 @@ When you configure PXF for secure HDFS using an MIT Kerberos KDC server, you wil
 3. Navigate to the server configuration directory. For example, if the server is named `hdp3`:
 
     ```shell
-    gpadmin@gpmaster$ cd $PXF_CONF/servers/hdp3
+    gpadmin@gpmaster$ cd $PXF_BASE/servers/hdp3
     ```
 
 4. If the server configuration does not yet include a `pxf-site.xml` file, copy the template file to the directory. For example:
 
     ``` shell
-    gpadmin@gpmaster$ cp $PXF_CONF/templates/pxf-site.xml .
+    gpadmin@gpmaster$ cp $PXF_HOME/templates/pxf-site.xml .
     ```
 
 5. Open the `pxf-site.xml` file in the editor of your choice, and update the keytab and principal property settings, if required. Specify the location of the keytab file and the Kerberos principal, substituting your realm. *The default values for these settings are identified below*:

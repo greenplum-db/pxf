@@ -16,6 +16,7 @@ where \<command\> is:
 cluster
 help
 init
+prepare
 register
 reset
 restart
@@ -34,9 +35,9 @@ You can initialize or reset PXF on the master, master standby, or a specific seg
 
 You can start, stop, or restart the PXF service instance on a specific segment host, or display the status of the PXF service instance running on a segment host.
 
-You can copy the extension files from a PXF installation on the host to the Greenplum installation on the host after a Greenplum upgrade.
+You can prepare a new `$PXF_BASE` runtime configuration directory on the host, or copy the extension files from a PXF installation on the host to the Greenplum installation on the host after a Greenplum upgrade.
 
-(Use the [`pxf cluster`](pxf-cluster.html#topic1) command to copy extension files to, initialize, or reset PXF on all hosts, synchronize the PXF configuration to the Greenplum Database cluster, or to start, stop, or display the status of the PXF service instance on all segment hosts in the cluster.)
+(Use the [`pxf cluster`](pxf-cluster.html#topic1) command to prepare a new `$PXF_BASE`, copy extension files to, initialize, or reset PXF on all hosts, synchronize the PXF configuration to the Greenplum Database cluster, or to start, stop, or display the status of the PXF service instance on all segment hosts in the cluster.)
 
 ## <a id="commands"></a>Commands
 
@@ -48,6 +49,9 @@ You can copy the extension files from a PXF installation on the host to the Gree
 
 <dt>init</dt>
 <dd>Initialize the PXF service instance on the host. The command also copies the PXF extension files from the PXF installation to the Greenplum installation on the host. (Specify the `--skip-register` option to instruct PXF to skip this initialization step.) When you initialize PXF, you must identify the PXF user configuration directory via an environment variable named `$PXF_CONF`. If you do not set `$PXF_CONF` prior to initializing PXF, PXF prompts you to accept or decline the default user configuration directory, `$HOME/pxf`, during the initialization process. See [Options](pxf.html#options).</dd>
+
+<dt>prepare</dt>
+<dd>Prepare a new `$PXF_BASE` directory on the host. When you run the command, you must identify the new PXF runtime configuration directory via an environment variable named `PXF_BASE`. PXF copies template runtime configuration files and directories to this `$PXF_BASE`.</dd>
 
 <dt>register</dt>
 <dd>Copy the PXF extension files from the PXF installation on the host to the Greenplum installation on the host. This command requires that `$GPHOME` be set, and is typically run after you upgrade your Greenplum Database installation.</dd>

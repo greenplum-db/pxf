@@ -40,7 +40,7 @@ Enabling more verbose logging may aid PXF troubleshooting efforts. PXF provides 
 
 ### <a id="pxfsvclogmsg"></a>Service-Level Logging
 
-PXF utilizes `log4j` for service-level logging. PXF-service-related log messages are captured in a log file specified by PXF's `log4j` properties file, `$PXF_CONF/conf/pxf-log4j.properties`. The default PXF logging configuration will write `INFO` and more severe level logs to `$PXF_CONF/logs/pxf-service.log`. You can configure the logging level and the log file location.
+PXF utilizes `log4j` for service-level logging. PXF-service-related log messages are captured in a log file specified by PXF's `log4j` properties file, `$PXF_BASE/conf/pxf-log4j.properties`. The default PXF logging configuration will write `INFO` and more severe level logs to `$PXF_BASE/logs/pxf-service.log`. You can configure the logging level and the log file location.
 
 PXF provides more detailed logging when the `DEBUG` level is enabled. To configure PXF `DEBUG` logging and examine the output:
 
@@ -50,7 +50,7 @@ PXF provides more detailed logging when the `DEBUG` level is enabled. To configu
     $ ssh gpadmin@<gpmaster>
     ```
 
-1. Open `$PXF_CONF/conf/pxf-log4j.properties` in an editor, uncomment the following line, save the file, and exit the editor:
+1. Open `$PXF_BASE/conf/pxf-log4j.properties` in an editor, uncomment the following line, save the file, and exit the editor:
 
     ``` shell
     #log4j.logger.org.greenplum.pxf=DEBUG
@@ -64,7 +64,7 @@ PXF provides more detailed logging when the `DEBUG` level is enabled. To configu
 
 3. Restart PXF on each Greenplum Database segment host as described in [Restarting PXF](cfginitstart_pxf.html#restart_pxf).
 
-4. With `DEBUG` level logging now enabled, you can perform your PXF operations. Be sure to make note of the time; this will direct you to the relevant log messages in `$PXF_CONF/logs/pxf-service.log`.
+4. With `DEBUG` level logging now enabled, you can perform your PXF operations. Be sure to make note of the time; this will direct you to the relevant log messages in `$PXF_BASE/logs/pxf-service.log`.
 
     ``` shell
     $ date
@@ -146,7 +146,7 @@ By default, PXF is configured such that when the PXF JVM detects an out of memor
 
 When auto-kill is enabled and the PXF JVM detects an OOM condition and kills the PXF server on the segment host:
 
-- PXF logs the following messages to `$PXF_CONF/logs/catalina.out` on the segment host:
+- PXF logs the following messages to `$PXF_BASE/logs/catalina.out` on the segment host:
 
     ``` shell
     =====> <date> PXF Out of memory detected <======
@@ -188,10 +188,10 @@ Auto-kill of the PXF server on OOM is enabled by default. Heap dump generation o
     $ ssh gpadmin@<gpmaster>
     ```
 
-2. Edit the `$PXF_CONF/conf/pxf-env.sh` file. For example:
+2. Edit the `$PXF_BASE/conf/pxf-env.sh` file. For example:
 
     ``` shell
-    gpadmin@gpmaster$ vi $PXF_CONF/conf/pxf-env.sh
+    gpadmin@gpmaster$ vi $PXF_BASE/conf/pxf-env.sh
     ```
 
 3. If you want to configure (i.e. turn off, or turn back on) auto-kill of the PXF server on OOM, locate the `PXF_OOM_KILL` property in the `pxf-env.sh` file. If the setting is commented out, uncomment it, and then update the value. For example, to turn off this behavior, set the value to `false`:
@@ -237,10 +237,10 @@ Perform the following procedure to increase the heap size for the PXF agent runn
     $ ssh gpadmin@<gpmaster>
     ```
 
-2. Edit the `$PXF_CONF/conf/pxf-env.sh` file. For example:
+2. Edit the `$PXF_BASE/conf/pxf-env.sh` file. For example:
 
     ``` shell
-    gpadmin@gpmaster$ vi $PXF_CONF/conf/pxf-env.sh
+    gpadmin@gpmaster$ vi $PXF_BASE/conf/pxf-env.sh
     ```
 
 3. Locate the `PXF_JVM_OPTS` setting in the `pxf-env.sh` file, and update the `-Xmx` and/or `-Xms` options to the desired value. For example:
@@ -277,10 +277,10 @@ Perform the following procedure to set the maximum number of Tomcat threads for 
     $ ssh gpadmin@<gpmaster>
     ```
 
-2. Edit the `$PXF_CONF/conf/pxf-env.sh` file. For example:
+2. Edit the `$PXF_BASE/conf/pxf-env.sh` file. For example:
 
     ``` shell
-    gpadmin@gpmaster$ vi $PXF_CONF/conf/pxf-env.sh
+    gpadmin@gpmaster$ vi $PXF_BASE/conf/pxf-env.sh
     ```
 
 3. Locate the `PXF_MAX_THREADS` setting in the `pxf-env.sh` file. Uncomment the setting and update it to the desired value. For example, to set the maximum number of Tomcat threads to 100:
@@ -312,7 +312,7 @@ java.io.IOException: ORA-00604: error occurred at recursive SQL level 1
 ORA-01882: timezone region not found
 ```
 
-Should you encounter this error, you can set default time zone option(s) for the PXF server in the `$PXF_CONF/conf/pxf-env.sh` configuration file, `PXF_JVM_OPTS` property setting. For example, to set the time zone:
+Should you encounter this error, you can set default time zone option(s) for the PXF server in the `$PXF_BASE/conf/pxf-env.sh` configuration file, `PXF_JVM_OPTS` property setting. For example, to set the time zone:
 
 ``` pre
 export PXF_JVM_OPTS="<current_settings> -Duser.timezone=America/Chicago"
@@ -334,10 +334,10 @@ PXF fragment metadata caching is enabled by default. To turn off fragment metada
     $ ssh gpadmin@<gpmaster>
     ```
 
-2. Edit the `$PXF_CONF/conf/pxf-env.sh` file. For example:
+2. Edit the `$PXF_BASE/conf/pxf-env.sh` file. For example:
 
     ``` shell
-    gpadmin@gpmaster$ vi $PXF_CONF/conf/pxf-env.sh
+    gpadmin@gpmaster$ vi $PXF_BASE/conf/pxf-env.sh
     ```
 
 3. Locate the `PXF_FRAGMENTER_CACHE` setting in the `pxf-env.sh` file. If the setting is commented out, uncomment it, and then update the value. For example, to turn off fragment metadata caching, set the value to `false`:

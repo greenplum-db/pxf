@@ -19,13 +19,13 @@ In previous releases of Greenplum Database, you may have specified the JDBC driv
 
 ## <a id="cfg_jar"></a>JDBC Driver JAR Registration
 
-The PXF JDBC Connector is installed with the `postgresql-42.2.5.jar` JAR file. If you require a different JDBC driver, ensure that you install the JDBC driver JAR file for the external SQL database in the `$PXF_CONF/lib` directory on each segment host. Be sure to install JDBC driver JAR files that are compatible with your JRE version. See [Registering PXF JAR Dependencies](reg_jar_depend.html) for additional information.
+PXF is bundled with the `postgresql-42.2.14.jar` JAR file. If you require a different JDBC driver, ensure that you install the JDBC driver JAR file for the external SQL database in the `$PXF_BASE/lib` directory on each segment host. Be sure to install JDBC driver JAR files that are compatible with your JRE version. See [Registering PXF JAR Dependencies](reg_jar_depend.html) for additional information.
 
 ## <a id="cfg_server"></a>JDBC Server Configuration
 
 When you configure the PXF JDBC Connector, you add at least one named PXF server configuration for the connector as described in [Configuring PXF Servers](cfg_server.html). You can also configure one or more statically-defined queries to run against the remote SQL database.
 
-PXF provides a template configuration file for the JDBC Connector. This server template configuration file, located in `$PXF_CONF/templates/jdbc-site.xml`, identifies properties that you can configure to establish a connection to the external SQL database. The template also includes optional properties that you can set before executing query or insert commands in the external database session.
+PXF provides a template configuration file for the JDBC Connector. This server template configuration file, located in `$PXF_HOME/templates/jdbc-site.xml`, identifies properties that you can configure to establish a connection to the external SQL database. The template also includes optional properties that you can set before executing query or insert commands in the external database session.
 
 The required properties in the `jdbc-site.xml` server template file follow:
 
@@ -209,7 +209,7 @@ By default, PXF JDBC user impersonation is disabled.  Perform the following proc
 3. Navigate to the server configuration directory. For example, if the server is named `mysqldb`:
 
     ```shell
-    gpadmin@gpmaster$ cd $PXF_CONF/servers/mysqldb
+    gpadmin@gpmaster$ cd $PXF_BASE/servers/mysqldb
     ```
 
 5. Open the `jdbc-site.xml` file in the editor of your choice, and add or uncomment the user impersonation property and setting. For example, if you require user impersonation for this server configuration, set the `pxf.service.user.impersonation` property to `true`:
@@ -316,7 +316,7 @@ Named queries are associated with a specific JDBC server configuration. You will
 
 #### <a id="namedquery_ref"></a>Referencing a Named Query
 
-The Greenplum Database user specifies `query:<query_name>` rather than the name of a remote SQL database table when they create the external table. For example, if the query is defined in the file `$PXF_CONF/servers/mydb/report.sql`, the `CREATE EXTERNAL TABLE` `LOCATION` clause would include the following components:
+The Greenplum Database user specifies `query:<query_name>` rather than the name of a remote SQL database table when they create the external table. For example, if the query is defined in the file `$PXF_BASE/servers/mydb/report.sql`, the `CREATE EXTERNAL TABLE` `LOCATION` clause would include the following components:
 
 ``` sql
 LOCATION ('pxf://query:report?PROFILE=JDBC&SERVER=mydb ...')
@@ -350,16 +350,16 @@ In this procedure, you name and add a PXF JDBC server configuration for a Postgr
 
     **Note**: The server name `default` is reserved.
 
-3. Create the `$PXF_CONF/servers/<server_name>` directory. For example, use the following command to create a JDBC server configuration named `pg_user1_testdb`:
+3. Create the `$PXF_BASE/servers/<server_name>` directory. For example, use the following command to create a JDBC server configuration named `pg_user1_testdb`:
 
     ``` shell
-    gpadmin@gpmaster$ mkdir $PXF_CONF/servers/pg_user1_testdb
+    gpadmin@gpmaster$ mkdir $PXF_BASE/servers/pg_user1_testdb
     ````
 
 4. Copy the PXF JDBC server template file to the server configuration directory. For example:
 
     ``` shell
-    gpadmin@gpmaster$ cp $PXF_CONF/templates/jdbc-site.xml $PXF_CONF/servers/pg_user1_testdb/
+    gpadmin@gpmaster$ cp $PXF_HOME/templates/jdbc-site.xml $PXF_BASE/servers/pg_user1_testdb/
     ```
         
 5. Open the template server configuration file in the editor of your choice, and provide appropriate property values for your environment. For example, if you are configuring access to a PostgreSQL database named `testdb` on a PostgreSQL instance running on the host named `pgserverhost` for the user named `user1`:

@@ -108,7 +108,7 @@ You can specify an Avro schema on both read and write operations to HDFS. You ca
 
 When you provide the Avro schema file to PXF, the file must reside in the same location on each Greenplum Database segment host **or** the file may reside on the Hadoop file system. PXF first searches for an absolute file path on the Greenplum segment hosts. If PXF does not find the schema file there, it searches for the file relative to the PXF classpath. If PXF cannot find the schema file locally, it searches for the file on HDFS.
 
-The `$PXF_CONF/conf` directory is in the PXF classpath. PXF can locate an Avro schema file that you add to this directory on every Greenplum Database segment host.
+The `$PXF_BASE/conf` directory is in the PXF classpath. PXF can locate an Avro schema file that you add to this directory on every Greenplum Database segment host.
 
 See [Writing Avro Data](#topic_avro_writedata) for additional schema considerations when writing Avro data to HDFS.
 
