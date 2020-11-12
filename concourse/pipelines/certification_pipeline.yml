@@ -57,7 +57,7 @@ resources:
   type: git
   icon: git
   source:
-    branch: {{pxf-git-branch}}
+    tag_filter: release-*
     uri: {{pxf-git-remote}}
 
 ## ---------- Docker Images ----------
