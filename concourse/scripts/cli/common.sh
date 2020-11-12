@@ -1,13 +1,22 @@
 #!/usr/bin/env bash
 
-export PXF_CONF=~gpadmin/pxf
+#export PXF_CONF=~gpadmin/pxf
 export GPHOME=/usr/local/greenplum-db
 export PXF_HOME=$(find /usr/local/ -name "pxf-gp*" -type d)
 export PATH=$PATH:${PXF_HOME}/bin
 
-echo "Using GPHOME:   $GPHOME"
-echo "Using PXF_HOME: $PXF_HOME"
-echo "Using PXF_CONF: $PXF_CONF"
+echo "Using GPHOME       :   $GPHOME"
+echo "Using PXF_HOME     : $PXF_HOME"
+
+# export PXF_BASE only if explicitly specified
+if [[ -n "${PXF_BASE_DIR}" ]]; then
+  export PXF_BASE=${PXF_BASE_DIR}
+  echo "Using PXF_BASE     : $PXF_BASE"
+else
+  # for tests only, pxf product scripts do not look at this variable
+  export PXF_BASE_DIR=${PXF_HOME}
+fi
+echo "Using PXF_BASE_DIR : $PXF_BASE_DIR"
 
 red="\033[0;31m"
 green="\033[0;32m"
