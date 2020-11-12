@@ -27,16 +27,16 @@ PXF provides two management commands:
 - `pxf cluster` - manage all PXF service instances in the Greenplum Database cluster
 - `pxf` - manage the PXF service instance on a specific Greenplum Database host
 
-The [`pxf cluster`](ref/pxf-cluster.html) command supports `init`, `reset`, `start`, `restart`, `status`, `stop`, and `sync` subcommands. When you run a `pxf cluster` subcommand on the Greenplum Database master host, you perform the operation on all segment hosts in the Greenplum Database cluster. PXF also runs the `init`, `register`, and `sync` commands on the standby master host.
+The [`pxf cluster`](ref/pxf-cluster.html) command supports `init` (deprecated), `reset` (deprecated), `register`, `prepare`, `start`, `restart`, `status`, `stop`, and `sync` subcommands. When you run a `pxf cluster` subcommand on the Greenplum Database master host, you perform the operation on all segment hosts in the Greenplum Database cluster. PXF also runs the `prepare`, `register`, and `sync` commands on the standby master host.
 
-The [`pxf`](ref/pxf.html) command supports `init`, `reset`, `start`, `stop`, `restart`, `status`, and `register`  operations. These operations run locally. That is, if you want to start or stop the PXF agent on a specific Greenplum Database segment host, you log in to the host and run the command. 
+The [`pxf`](ref/pxf.html) command supports `init` (deprecated), `reset` (deprecated), `prepare`, `start`, `stop`, `restart`, `status`, and `register`  operations. These operations run locally. That is, if you want to start or stop the PXF agent on a specific Greenplum Database segment host, you log in to the host and run the command.
 
 <div class="note">The procedures in this topic assume that you have added the <code>$PXF_HOME/bin</code> directory to your <code>$PATH</code>.</div>
 
 
 ## <a id="start_pxf"></a>Starting PXF
 
-After initializing PXF, you must start PXF on each segment host in your Greenplum Database cluster. The PXF service, once started, runs as the `gpadmin` user on default port 5888. Only the `gpadmin` user can start and stop the PXF service.
+After configuring PXF, you must start PXF on each segment host in your Greenplum Database cluster. The PXF service, once started, runs as the `gpadmin` user on default port 5888. Only the `gpadmin` user can start and stop the PXF service.
 
 If you want to change the default PXF configuration, you must update the configuration before you start PXF.
 
@@ -65,7 +65,7 @@ You must synchronize any changes that you make to `pxf-env.sh`, `pxf-log4j.prope
 Before you start PXF in your Greenplum Database cluster, ensure that:
 
 - Your Greenplum Database cluster is up and running.
-- You have previously initialized PXF.
+- You have previously configured PXF.
  
 ### <a id="start_pxf_proc" class="no-quick-link"></a>Procedure
 
