@@ -70,11 +70,30 @@ source "${dir}/common.sh"
 #	compare "${pxf_home_contents}" "$(list_pxf_home "${host}")" "${host} should have \$PXF_HOME populated"
 #	compare "${pxf_conf_contents}" "$(list_pxf_conf "${host}")" "${host} should have \$PXF_CONF populated"
 #done
+expected_extension_files="\
+${GPHOME}/share/postgresql/extension/pxf.control
+${GPHOME}/share/postgresql/extension/pxf--1.0.sql
+${GPHOME}/lib/postgresql/pxf.so"
 
-# === Test "pxf cluster reset" - does nothing on the remote nodes, PXF can be running, no state changes ===
-# given: <nothing>
-# when : "pxf cluster reset" command is run
-# then : it succeeds and prints the expected message
+list_extension_files() {
+	local usage='list_extension_files <host>' host=${1:?${usage}}
+	ssh "${host}" "
+		[[ -f ${GPHOME}/share/postgresql/extension/pxf.control ]] && ls ${GPHOME}/share/postgresql/extension/pxf.control
+		[[ -f ${GPHOME}/share/postgresql/extension/pxf--1.0.sql]] && ls ${GPHOME}/share/postgresql/extension/pxf--1.0.sql
+		[[ -f ${GPHOME}/lib/postgresql/pxf.so ]] && ls ${GPHOME}/lib/postgresql/pxf.so
+	"
+}
+
+remove_extension_files() {
+	local usage='remove_extension_files <host>' host=${1:?${usage}}
+	ssh "${host}" "
+		rm -f ${GPHOME}/share/postgresql/extension/pxf.control
+		rm -f ${GPHOME}/share/postgresql/extension/pxf--1.0.sql
+		rm -f ${GPHOME}/lib/postgresql/pxf.so
+	"
+}
+
+# === Test "pxf cluster reset" - does nothing on the remote nodes, PXF can be running, no state changes ======
 successful_reset_message=\
 "*****************************************************************************
 * DEPRECATION NOTICE:
@@ -83,16 +102,18 @@ successful_reset_message=\
 *****************************************************************************
 
 Resetting PXF on master host, standby master host, and 2 segment hosts...
-PXF has been reset on 4 out of 4 hosts
-"
-compare "${successful_reset_message}" "$(pxf cluster reset)" "pxf cluster reset should succeed"
-# ==========
+PXF has been reset on 4 out of 4 hosts"
+reset_succeeds() {
+  # given: <nothing>
+  # when : "pxf cluster reset" command is run
+  local result="$(pxf cluster reset)"
+  # then : it succeeds and prints the expected message
+  assert_equals "${successful_reset_message}" "${result}" "pxf cluster reset should succeed"
+}
+run_test reset_succeeds "pxf cluster reset should succeed"
+# ============================================================================================================
 
-# === Test "pxf cluster init" - registers PXF extension into GPHOME, PXF can be running ===
-# given: extension files do not exist under GPHOME
-
-# when : "pxf cluster init" command is run
-# then : it succeeds and prints the expected message
+# === Test "pxf cluster init" - registers PXF extension into GPHOME, PXF can be running ======================
 successful_init_message=\
 "*****************************************************************************
 * DEPRECATION NOTICE:
@@ -104,11 +125,22 @@ successful_init_message=\
 *****************************************************************************
 
 Initializing PXF on master host, standby master host, and 2 segment hosts...
-PXF has been reset on 4 out of 4 hosts
-"
-compare "${successful_init_message}" "$(pxf cluster init)" "pxf cluster init (no extension) should succeed"
-#      : AND the extension files are copied to GPHOME
-# ==========
+PXF initialized successfully on 4 out of 4 hosts"
+init_no_extension_succeeds() {
+  # given: extension files do not exist under GPHOME
+  for host in {s,}mdw sdw{1,2}; do
+    remove_extension_files "${host}"
+    assert_equals "" "$(list_extension_files ${host})" "remote extension files should NOT exist on host ${host}"
+  done
+  # when : "pxf cluster init" command is run
+  local result="$(pxf cluster init)"
+  # then : it succeeds and prints the expected message
+  compare "${successful_init_message}" "${result}" "pxf cluster init (no extension) should succeed"
+  #      : AND the extension files are copied to GPHOME
+  assert_equals "${expected_extension_files}" "$(list_extension_files ${host})" "remote extension files should exist on host ${host}"
+}
+run_test init_no_extension_succeeds "pxf cluster init (no extension) should succeed"
+# ============================================================================================================
 
 #successful_stop_message="Stopping PXF on 2 segment hosts...
 #PXF stopped successfully on 2 out of 2 hosts"
