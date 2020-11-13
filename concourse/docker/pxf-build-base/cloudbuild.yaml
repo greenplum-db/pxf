@@ -5,40 +5,108 @@
 timeout: 1200s
 
 steps:
-# Write the PXF commit SHA-1 to a file
-- name: 'gcr.io/cloud-builders/docker'
-  entrypoint: 'bash'
-  args:
-    - '-c'
-    - |
-      echo "${COMMIT_SHA}" > pxf_commit_sha
+  # download and extract the existing dependencies
+  - name: 'gcr.io/cloud-builders/gsutil'
+    id: retrieve-pxf-build-dependencies
+    args: [ 'cp', 'gs://${_PXF_BUILD_BUCKET}/build-dependencies/pxf-build-dependencies.tar.gz', 'pxf-build-dependencies.tar.gz' ]
+    waitFor: [ '-' ]
+  - name: 'gcr.io/$PROJECT_ID/tar'
+    id: untar-pxf-build-dependencies
+    args: [ '-xzf', 'pxf-build-dependencies.tar.gz' ]
+    waitFor: [ 'retrieve-pxf-build-dependencies' ]
 
-# Build the docker image
-- name: 'gcr.io/cloud-builders/docker'
-  id: pxf-build-dependencies
-  args:
-  - 'build'
-  - '--tag=pxf-build-dev'
-  - '-f'
-  - 'concourse/docker/pxf-build-base/Dockerfile'
-  - '.'
+  - name: 'gcr.io/cloud-builders/gsutil'
+    id: retrieve-pxf-automation-dependencies
+    args: [ 'cp', 'gs://${_PXF_BUILD_BUCKET}/automation-dependencies/pxf-automation-dependencies.tar.gz', 'pxf-automation-dependencies.tar.gz' ]
+    waitFor: [ '-' ]
+  - name: 'gcr.io/$PROJECT_ID/tar'
+    id: untar-pxf-automation-dependencies
+    args: [ '-xzf', 'pxf-automation-dependencies.tar.gz' ]
+    waitFor: [ 'retrieve-pxf-automation-dependencies' ]
 
-# Copy the pxf-build-dependencies.tar.gz to the host
-- name: 'gcr.io/cloud-builders/docker'
-  id: pxf-build-dependencies-copy
-  entrypoint: 'bash'
-  args:
-  - '-c'
-  - |
-    mkdir /workspace/build
-    docker run --rm -v /workspace/build:/tmp/build/ pxf-build-dev /bin/bash -c "cp /tmp/pxf-{build,automation}-dependencies.tar.gz /tmp/build/"
+  # use gradle image with JDK8 to build the project
+  - name: gradle:6.6.1-jdk8
+    id: gradle-build
+    entrypoint: gradle
+    args: [ '--gradle-user-home=/workspace/.gradle', '-Dorg.gradle.daemon=false', '-b', './server/build.gradle', 'test', 'stage' ]
+    waitFor: [ 'untar-pxf-build-dependencies' ]
 
-# Push the pxf-build-dependencies.tar.gz tarball to Google Cloud Storage
-- name: 'gcr.io/cloud-builders/gsutil'
-  id: pxf-build-dependencies-tarball
-  args: ['cp', '/workspace/build/pxf-build-dependencies.tar.gz', 'gs://${_PXF_BUILD_BUCKET}/build-dependencies/pxf-build-dependencies.tar.gz']
+  - name: golang:1.15.3
+    id: golang-build
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        mkdir -p ./.go-dep-cached-sources
+        cp ./.go-dep-cached-sources ./cli/go/pkg/dep/sources
+        go get github.com/golang/dep/cmd/dep
+        go get github.com/onsi/ginkgo/ginkgo
+        make -C ./cli/go/src/pxf-cli build
+        rm -rf ./.go-dep-cached-sources
+        mv ./cli/go/pkg/dep/sources ./.go-dep-cached-sources
+    waitFor: [ 'untar-pxf-build-dependencies' ]
 
-# Push the pxf-automation-dependencies.tar.gz tarball to Google Cloud Storage
-- name: 'gcr.io/cloud-builders/gsutil'
-  id: pxf-automation-dependencies-tarball
-  args: ['cp', '/workspace/build/pxf-automation-dependencies.tar.gz', 'gs://${_PXF_BUILD_BUCKET}/automation-dependencies/pxf-automation-dependencies.tar.gz']
+  # create an updated tarball with build dependencies and upload it
+  - name: 'gcr.io/$PROJECT_ID/tar'
+    id: tar-pxf-build-dependencies
+    args: [ '-czf', 'pxf-build-dependencies.tar.gz', '.gradle', '.go-dep-cached-sources' ]
+    waitFor: [ 'gradle-build', 'golang-build' ]
+  # Push the pxf-build-dependencies.tar.gz tarball to Google Cloud Storage
+  - name: 'gcr.io/cloud-builders/gsutil'
+    args: [ 'cp', '/workspace/pxf-build-dependencies.tar.gz', 'gs://${_PXF_BUILD_BUCKET}/build-dependencies/pxf-build-dependencies.tar.gz' ]
+    waitFor: [ 'tar-pxf-build-dependencies' ]
+
+  # Prepare automation dependencies
+  - name: 'gcr.io/cloud-builders/docker'
+    id: prepare-automation-deps
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        mkdir -p /workspace/automation_tmp_lib/
+        cp ./server/pxf-api/build/libs/pxf-api-*.jar /workspace/automation_tmp_lib/pxf-api.jar
+        cp ./server/pxf-hbase/build/libs/pxf-hbase-*.jar /workspace/automation_tmp_lib/pxf-hbase.jar
+        cp ./server/pxf-hdfs/build/libs/pxf-hdfs-*.jar /workspace/automation_tmp_lib/pxf-hdfs.jar
+        cp ./server/pxf-hive/build/libs/pxf-hive-*.jar /workspace/automation_tmp_lib/pxf-hive.jar
+        touch /workspace/automation_tmp_lib/pxf-extras.jar
+        ls /workspace/automation_tmp_lib
+    waitFor: [ 'gradle-build' ]
+
+  # Package the automation project
+  - name: maven:3-jdk-8
+    id: mvn-dev-build
+    entrypoint: mvn
+    args:
+      - '-Dmaven.repo.local=/workspace/.m2/repository'
+      - '-Djava.awt.headless=true'
+      - '-DskipTests=true'
+      - '-Dpxf.lib=/workspace/automation_tmp_lib'
+      - '-B'
+      - '-e'
+      - '-f'
+      - './automation/pom.xml'
+      - 'package'
+    waitFor: [ 'prepare-automation-deps', 'untar-pxf-automation-dependencies' ]
+
+  # Run a test in the automation project for additional caching
+  - name: maven:3-jdk-8
+    id: mvn-test-build
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        mkdir -p /root/pxf/servers/database/ && cp ./server/pxf-service/src/templates/templates/jdbc-site.xml /root/pxf/servers/database/
+        mkdir -p /root/pxf/servers/db-session-params/ && cp ./server/pxf-service/src/templates/templates/jdbc-site.xml /root/pxf/servers/db-session-params/
+        mkdir -p /root/pxf/servers/db-hive/ && cp ./server/pxf-service/src/templates/templates/jdbc-site.xml /root/pxf/servers/db-hive/
+        GPHD_ROOT=/tmp PXF_HOME=/tmp/pxf mvn -B -e -Dpxf.lib=/workspace/automation_tmp_lib -Dtest=HdfsSmokeTest -Djava.awt.headless=true -Dmaven.repo.local=/workspace/.m2/repository -f ./automation/pom.xml -U test || true 
+    waitFor: [ 'mvn-dev-build' ]
+
+  # create an updated tarball with automation dependencies and upload it
+  - name: 'gcr.io/$PROJECT_ID/tar'
+    id: tar-pxf-automation-dependencies
+    args: [ '-czf', 'pxf-automation-dependencies.tar.gz', '.m2' ]
+    waitFor: [ 'mvn-test-build' ]
+  # Push the pxf-automation-dependencies.tar.gz tarball to Google Cloud Storage
+  - name: 'gcr.io/cloud-builders/gsutil'
+    args: [ 'cp', '/workspace/pxf-automation-dependencies.tar.gz', 'gs://${_PXF_BUILD_BUCKET}/automation-dependencies/pxf-automation-dependencies.tar.gz' ]
+    waitFor: [ 'tar-pxf-automation-dependencies' ]
