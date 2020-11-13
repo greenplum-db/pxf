@@ -12,7 +12,6 @@ if [[ -n "${PXF_BASE_DIR}" ]]; then
   PXF_BASE_DIR_OPT="PXF_BASE_DIR=${PXF_BASE_DIR} "
 fi
 
-PXF_BASE_DIR_OPT=${PXF_BASE_DIR:}
 err_cnt=0
 for script in "${SCRIPT_DIR}/cli/"test_*.sh; do
 	scp "${script}" mdw:
