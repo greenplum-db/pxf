@@ -30,17 +30,18 @@ failed_tests_cnt=0
 
 run_test() {
 	local usage='test <func> <message>'
-	local func=${1:?${usage}} message="$(( ++test_cnt ))) ${2:?${usage}}"
+	local func=${1:?${usage}} message="$((++test_cnt))) ${2:?${usage}}"
 	echo -e "${yellow}${msg}${white}:"
 	# call the test function
-	(${func})
+	echo "calling function ${func}"
+	${func}
 	# check if there were assertion errors
 	if (( err_cnt == 0 )); then
 		echo -e "${green}pass${reset}"
 		return
 	fi
 	# update count of failed tests
-	(( failed_tests_cnt++ ))
+	((failed_tests_cnt++))
 	# reset error count back to 0 for the new test
 	err_cnt=0
 	echo -e "${red}fail${white}"
@@ -55,7 +56,9 @@ exit_with_err() {
 	else
 		echo -e "${green}${test_name}${white}: all tests passed!${reset}"
 	fi
-	exit "${failed_tests_cnt}"
+	echo "failed_tests_cnt=${failed_tests_cnt}"
+	# exit "${failed_tests_cnt}"
+	exit 1
 }
 
 assert_equals() {
@@ -66,6 +69,7 @@ assert_equals() {
 		return
 	fi
 	((err_cnt++))
+	echo "error count = ${err_cnt}"
 	echo -e "${red}--- assertion failed : ${yellow}${msg}${white}"
 	diff <(echo "${expected}") <(echo "${text}")
 	cmp -b <(echo "${expected}") <(echo "${text}")

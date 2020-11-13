@@ -78,9 +78,9 @@ ${GPHOME}/lib/postgresql/pxf.so"
 list_extension_files() {
 	local usage='list_extension_files <host>' host=${1:?${usage}}
 	ssh "${host}" "
-		[[ -f ${GPHOME}/share/postgresql/extension/pxf.control ]] && ls ${GPHOME}/share/postgresql/extension/pxf.control
-		[[ -f ${GPHOME}/share/postgresql/extension/pxf--1.0.sql]] && ls ${GPHOME}/share/postgresql/extension/pxf--1.0.sql
-		[[ -f ${GPHOME}/lib/postgresql/pxf.so ]] && ls ${GPHOME}/lib/postgresql/pxf.so
+		[[ -f "${GPHOME}/share/postgresql/extension/pxf.control" ]] && ls "${GPHOME}/share/postgresql/extension/pxf.control"
+		[[ -f "${GPHOME}/share/postgresql/extension/pxf--1.0.sql" ]] && ls "${GPHOME}/share/postgresql/extension/pxf--1.0.sql"
+		[[ -f "${GPHOME}/lib/postgresql/pxf.so" ]] && ls "${GPHOME}/lib/postgresql/pxf.so"
 	"
 }
 
