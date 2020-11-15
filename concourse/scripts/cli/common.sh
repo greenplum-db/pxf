@@ -5,7 +5,7 @@ export GPHOME=/usr/local/greenplum-db
 export PXF_HOME=$(find /usr/local/ -name "pxf-gp*" -type d)
 export PATH=$PATH:${PXF_HOME}/bin
 
-echo "Using GPHOME       :   $GPHOME"
+echo "Using GPHOME       : $GPHOME"
 echo "Using PXF_HOME     : $PXF_HOME"
 
 # export PXF_BASE only if explicitly specified
@@ -17,6 +17,7 @@ else
   export PXF_BASE_DIR=${PXF_HOME}
 fi
 echo "Using PXF_BASE_DIR : $PXF_BASE_DIR"
+echo
 
 red="\033[0;31m"
 green="\033[0;32m"
@@ -31,13 +32,13 @@ failed_tests_cnt=0
 run_test() {
 	local usage='test <func> <message>'
 	local func=${1:?${usage}} message="$((++test_cnt))) ${2:?${usage}}"
-	echo -e "${yellow}${msg}${white}:"
+	echo -e "${yellow}${message}${white}:"
 	# call the test function
-	echo "calling function ${func}"
 	${func}
 	# check if there were assertion errors
 	if (( err_cnt == 0 )); then
 		echo -e "${green}pass${reset}"
+		echo
 		return
 	fi
 	# update count of failed tests
@@ -45,6 +46,7 @@ run_test() {
 	# reset error count back to 0 for the new test
 	err_cnt=0
 	echo -e "${red}fail${white}"
+	echo
 	echo -e "${reset}" && return 1
 }
 
@@ -63,14 +65,32 @@ exit_with_err() {
 
 assert_equals() {
 	local usage='assert_equals <expected_text> <text_to_compare> <msg>'
-	local expected=${1:?${usage}} text=${2:?${usage}} msg="${3:?${usage}}"
-	if [[ ${expected} == "${text//
-/}" ]]; then # clean up any carriage returns
-		return
-	fi
+	local expected=${1:?${usage}} text=${2:?${usage}} message="${3:?${usage}}"
+
+	#echo "--- expected:"
+	#echo "${expected}"
+
+	#echo "--- text:"
+	#echo "${text}"
+
+	#diff <(echo "${expected}") <(echo "${text}")
+
+	[[ "${expected}" == "${text//[$'\r']}" ]] && return
+	assertion_error "${expected}" "${text}" "${message}"
+}
+
+assert_empty() {
+	local usage='assert_empty <text_to_compare> <msg>'
+	local text=${1} message="${2:?${usage}}"
+	[[ -z "${text//[$'\r']}" ]] && return
+	assertion_error "" "${text}" "${message}"
+}
+
+assertion_error() {
+	local usage='assertion_error <expected_text> <text_to_compare> <msg>'
+	local expected=${1} text=${2:?${usage}} message="${3:?${usage}}"
 	((err_cnt++))
-	echo "error count = ${err_cnt}"
-	echo -e "${red}--- assertion failed : ${yellow}${msg}${white}"
+	echo -e "${red}--- assertion failed : ${yellow}${message}${white}"
 	diff <(echo "${expected}") <(echo "${text}")
 	cmp -b <(echo "${expected}") <(echo "${text}")
 	echo -e "${reset}" && return 1
