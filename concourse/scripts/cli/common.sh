@@ -11,10 +11,12 @@ echo "Using PXF_HOME     : $PXF_HOME"
 # export PXF_BASE only if explicitly specified
 if [[ -n "${PXF_BASE_DIR}" ]]; then
   export PXF_BASE=${PXF_BASE_DIR}
+  export PXF_BASE_OPTION="PXF_BASE=${PXF_BASE} "
   echo "Using PXF_BASE     : $PXF_BASE"
 else
   # for tests only, pxf product scripts do not look at this variable
   export PXF_BASE_DIR=${PXF_HOME}
+  export PXF_BASE_OPTION=""
 fi
 echo "Using PXF_BASE_DIR : $PXF_BASE_DIR"
 echo

@@ -116,6 +116,39 @@ test_restart_succeeds() {
 run_test test_restart_succeeds "pxf cluster restart should succeed"
 # ============================================================================================================
 
+# === Test "pxf cluster start (one running)" =================================================================
+expected_start_message=\
+"Starting PXF on 2 segment hosts...
+PXF started successfully on 2 out of 2 hosts"
+test_start_one_running_succeeds() {
+  # given: PXF is running on segment host 1
+  local sdw1_pid="$(list_remote_pxf_running_pid sdw1)"
+  assert_not_empty "${sdw1_pid}" "PXF should be running on host sdw1"
+  #      : AND PXF is not running on segment host 2
+  ssh sdw2 "${PXF_BASE_OPTION}${PXF_HOME}/bin/pxf stop"
+  assert_empty "$(list_remote_pxf_running_pid sdw2)" "PXF should not be running on host sdw2"
+  # when : "pxf cluster start" command is run
+  local result="$(pxf cluster start)"
+  # then : it succeeds and prints the expected message
+  assert_equals "${expected_start_message}" "${result}" "pxf cluster start should succeed"
+  for host in sdw{1,2}; do
+    #    : AND PXF is running
+    local running_pid="$(list_remote_pxf_running_pid ${host})"
+    echo "running pid=${running_pid}"
+    assert_not_empty "${running_pid}" "PXF should be running on host ${host}"
+    #    : AND the process pid file exists
+    local file_pid="$(cat_remote_file ${host} "${PXF_BASE_DIR}"/run/pxf-app.pid)"
+    echo "file pid=${file_pid}"
+    assert_not_empty "${file_pid}" "PXF pid file should exist on host ${host}"
+    #    : AND the pids match
+    assert_equals "${running_pid}" "${file_pid}" "pid files should match on host ${host}"
+    #    : AND the pid on sdw1 should still be the same
+    [[ "${host}" == "sdw1" ]] && assert_equals "${sdw1_pid}" "${running_pid}" "pid should not change on host sdw1"
+  done
+}
+run_test test_start_one_running_succeeds "pxf cluster start (one running) should succeed"
+# ============================================================================================================
+
 compare "Tomcat stopped." "$(ssh sdw1 ${PXF_HOME}/bin/pxf stop)" "pxf stop on sdw1 should succeed"
 sdw2_pid=$(ssh sdw2 "cat ${PXF_HOME}/run/catalina.pid")
 expected_start_message="Starting PXF on 2 segment hosts...
