@@ -11,15 +11,15 @@ PXF stopped successfully on 2 out of 2 hosts"
 test_stop_succeeds() {
   # given:
   for host in sdw{1,2}; do
-    #    : pxf is running
+    #    : PXF is running
     local running_pid="$(list_remote_pxf_running_pid ${host})"
     echo "running pid=${running_pid}"
     assert_not_empty "${running_pid}" "PXF should be running on host ${host}"
-    #    :AND the process pid file exists
+    #    : AND the process pid file exists
     local file_pid="$(cat_remote_file ${host} "${PXF_BASE_DIR}"/run/pxf-app.pid)"
     echo "file pid=${file_pid}"
     assert_not_empty "${file_pid}" "PXF pid file should exist on host ${host}"
-    #    :AND the pids match
+    #    : AND the pids match
     assert_equals "${running_pid}" "${file_pid}" "pid files should match on host ${host}"
   done
   # when : "pxf cluster stop" command is run
@@ -29,7 +29,7 @@ test_stop_succeeds() {
   for host in sdw{1,2}; do
     #    : AND there are no PXF processes left running
     local running_pid="$(list_remote_pxf_running_pid ${host})"
-    assert_empty "${running_pid}" "PXF should be running on host ${host}"
+    assert_empty "${running_pid}" "PXF should not be running on host ${host}"
     #    :AND the process pid file no longer exists
     local pid_file="$(list_remote_file ${host} "${PXF_BASE_DIR}"/run/pxf-app.pid)"
     assert_empty "${pid_file}" "PXF pid file should not exist on host ${host}"
@@ -38,19 +38,36 @@ test_stop_succeeds() {
 run_test test_stop_succeeds "pxf cluster stop should succeed"
 # ============================================================================================================
 
-# === Test "pxf cluster stop" ================================================================================
+# === Test "pxf cluster start" ================================================================================
 expected_start_message=\
 "Starting PXF on 2 segment hosts...
 PXF started successfully on 2 out of 2 hosts"
 test_start_succeeds() {
-  # given: there are no PXF processes running TODO
-  #      : AND the process pid file does not exists TODO
+  # given:
+  for host in sdw{1,2}; do
+    #    : there are no PXF processes running
+    local running_pid="$(list_remote_pxf_running_pid ${host})"
+    assert_empty "${running_pid}" "PXF should not be running on host ${host}"
+    #    : AND the process pid file does not exist
+    local pid_file="$(list_remote_file ${host} "${PXF_BASE_DIR}"/run/pxf-app.pid)"
+    assert_empty "${pid_file}" "PXF pid file should not exist on host ${host}"
+  done
   # when : "pxf cluster start" command is run
   local result="$(pxf cluster start)"
   # then : it succeeds and prints the expected message
   assert_equals "${expected_start_message}" "${result}" "pxf cluster start should succeed"
-  #      : AND there are PXF processes running TODO
-  #      : AND the process pid file is created TODO
+  for host in sdw{1,2}; do
+    #    : AND PXF is running
+    local running_pid="$(list_remote_pxf_running_pid ${host})"
+    echo "running pid=${running_pid}"
+    assert_not_empty "${running_pid}" "PXF should be running on host ${host}"
+    #    : AND the process pid file exists
+    local file_pid="$(cat_remote_file ${host} "${PXF_BASE_DIR}"/run/pxf-app.pid)"
+    echo "file pid=${file_pid}"
+    assert_not_empty "${file_pid}" "PXF pid file should exist on host ${host}"
+    #    : AND the pids match
+    assert_equals "${running_pid}" "${file_pid}" "pid files should match on host ${host}"
+  done
 }
 run_test test_start_succeeds "pxf cluster start should succeed"
 # ============================================================================================================
@@ -60,16 +77,43 @@ expected_restart_message=\
 "Restarting PXF on 2 segment hosts...
 PXF restarted successfully on 2 out of 2 hosts"
 test_restart_succeeds() {
-  # given: pxf is running TODO
-  #      : AND the process pid file exists TODO
+  local index=0
+  declare -a old_pids
+  # given:
+  for host in sdw{1,2}; do
+    #    : PXF is running
+    local running_pid="$(list_remote_pxf_running_pid ${host})"
+    echo "running pid=${running_pid}"
+    assert_not_empty "${running_pid}" "PXF should be running on host ${host}"
+    #    : AND the process pid file exists
+    local file_pid="$(cat_remote_file ${host} "${PXF_BASE_DIR}"/run/pxf-app.pid)"
+    echo "file pid=${file_pid}"
+    assert_not_empty "${file_pid}" "PXF pid file should exist on host ${host}"
+    #    : AND the pids match
+    assert_equals "${running_pid}" "${file_pid}" "pid files should match on host ${host}"
+    old_pids[${index}]="${running_pid}"
+    ((index++))
+  done
   # when : "pxf cluster restart" command is run
   local result="$(pxf cluster restart)"
   # then : it succeeds and prints the expected message
   assert_equals "${expected_restart_message}" "${result}" "pxf cluster restart should succeed"
-  #      : AND there are PXF processes running TODO
-  #      : AND the process pid file content is different from the previous one TODO
+  for host in sdw{1,2}; do
+    #    : AND PXF is running
+    local running_pid="$(list_remote_pxf_running_pid ${host})"
+    echo "running pid=${running_pid}"
+    assert_not_empty "${running_pid}" "PXF should be running on host ${host}"
+    #    : AND the process pid file exists
+    local file_pid="$(cat_remote_file ${host} "${PXF_BASE_DIR}"/run/pxf-app.pid)"
+    echo "file pid=${file_pid}"
+    assert_not_empty "${file_pid}" "PXF pid file should exist on host ${host}"
+    #    : AND the pids match
+    assert_equals "${running_pid}" "${file_pid}" "pid files should match on host ${host}"
+    #    : AND the process pid file content is different from the previous one
+    assert_not_equals "${old_pids[${index}]}" "${running_pid}" "PXF pid should change after restart on host ${host}"
+  done
 }
-run_test test_start_succeeds "pxf cluster restart should succeed"
+run_test test_restart_succeeds "pxf cluster restart should succeed"
 # ============================================================================================================
 
 compare "Tomcat stopped." "$(ssh sdw1 ${PXF_HOME}/bin/pxf stop)" "pxf stop on sdw1 should succeed"

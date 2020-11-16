@@ -79,6 +79,13 @@ assert_equals() {
 	assertion_error "${expected}" "${text}" "${message}"
 }
 
+assert_not_equals() {
+	local usage='assert_not_equals <expected_text> <text_to_compare> <msg>'
+	local expected=${1} text=${2} message="${3:?${usage}}"
+	[[ "${expected}" != "${text//[$'\r']}" ]] && return
+	assertion_error "${expected}" "${text}" "${message}"
+}
+
 assert_empty() {
 	local usage='assert_empty <text_to_compare> <msg>'
 	local text=${1} message="${2:?${usage}}"
