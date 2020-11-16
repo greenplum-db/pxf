@@ -65,7 +65,7 @@ exit_with_err() {
 
 assert_equals() {
 	local usage='assert_equals <expected_text> <text_to_compare> <msg>'
-	local expected=${1:?${usage}} text=${2:?${usage}} message="${3:?${usage}}"
+	local expected=${1} text=${2} message="${3:?${usage}}"
 
 	#echo "--- expected:"
 	#echo "${expected}"
@@ -86,9 +86,16 @@ assert_empty() {
 	assertion_error "" "${text}" "${message}"
 }
 
+assert_not_empty() {
+	local usage='assert_not_empty <text_to_compare> <msg>'
+	local text=${1} message="${2:?${usage}}"
+	[[ -n "${text//[$'\r']}" ]] && return
+	assertion_error "<NOT_EMPTY>" "${text}" "${message}"
+}
+
 assertion_error() {
 	local usage='assertion_error <expected_text> <text_to_compare> <msg>'
-	local expected=${1} text=${2:?${usage}} message="${3:?${usage}}"
+	local expected=${1} text=${2} message="${3:?${usage}}"
 	((err_cnt++))
 	echo -e "${red}--- assertion failed : ${yellow}${message}${white}"
 	diff <(echo "${expected}") <(echo "${text}")
@@ -101,5 +108,14 @@ remove_remote_file() {
 }
 
 list_remote_file() {
-  ssh "${1}" "ls "${2}" 2>&1"
+  ssh "${1}" "[[ -f ${2} ]] && ls ${2}"
 }
+
+cat_remote_file() {
+  ssh "${1}" "[[ -f ${2} ]] && cat ${2}"
+}
+
+list_remote_pxf_running_pid() {
+  ssh "${1}" "ps -aef | grep pxf | grep -v grep | tr -s ' ' | cut -d ' ' -f 2"
+}
+
