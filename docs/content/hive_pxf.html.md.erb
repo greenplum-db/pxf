@@ -25,6 +25,8 @@ Apache Hive is a distributed data warehousing infrastructure. Hive facilitates m
 
 The PXF Hive connector reads data stored in a Hive table. This section describes how to use the PXF Hive connector. 
 
+<div class="note">When accessing Hive 3, the PXF Hive connector supports using the <code>Hive*</code> profiles described below to access Hive 3 external tables only. The Connector does not support using the <code>Hive*</code> profiles to access Hive 3 managed (CRUD and insert-only transactional, and temporary) tables. Use the PXF JDBC Connector to access Hive 3 managed tables instead.</div>
+
 ## <a id="prereq"></a>Prerequisites
 
 Before working with Hive table data using PXF, ensure that you have met the PXF Hadoop [Prerequisites](access_hdfs.html#hadoop_prereq).
