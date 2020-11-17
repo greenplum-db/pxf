@@ -37,7 +37,7 @@ under the License.
         </plugins>
     </profile>
     <profile>
-        <name>Hive</name>
+        <name>hive</name>
         <description>
             This profile is suitable for using when connecting to Hive. Supports GPDBWritable output
             format, as specified in FORMAT header parameter. It auto-detects actual file storage
@@ -74,7 +74,41 @@ under the License.
         </optionMappings>
     </profile>
     <profile>
+        <name>hive:rc</name>
+        <description>This profile is suitable only for Hive tables stored in RC files and serialized
+            with either the ColumnarSerDe or the LazyBinaryColumnarSerDe. It is much faster than the
+            general purpose Hive profile. DELIMITER parameter is mandatory. Supports both
+            GPDBWritable and TEXT output formats, as specified in FORMAT header parameter. Primary
+            optimized for TEXT output format.
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hive.HiveInputFormatFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hive.HiveRCFileAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hive.HiveColumnarSerdeResolver</resolver>
+            <metadata>org.greenplum.pxf.plugins.hive.HiveMetadataFetcher</metadata>
+            <outputFormat>org.greenplum.pxf.api.io.Text</outputFormat>
+        </plugins>
+        <optionMappings>
+            <mapping option="ppd" property="pxf.ppd.hive"/>
+        </optionMappings>
+    </profile>
+    <profile>
         <name>HiveText</name>
+        <description>This profile is suitable only for Hive tables stored as Text files. It is much
+            faster than the general purpose Hive profile. DELIMITER parameter is mandatory. Supports
+            both GPDBWritable and TEXT output formats, as specified in FORMAT header parameter.
+            Primary optimized for TEXT output format.
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hive.HiveInputFormatFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hive.HiveLineBreakAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hive.HiveStringPassResolver</resolver>
+            <metadata>org.greenplum.pxf.plugins.hive.HiveMetadataFetcher</metadata>
+            <outputFormat>org.greenplum.pxf.api.io.Text</outputFormat>
+        </plugins>
+    </profile>
+    <profile>
+        <name>hive:text</name>
         <description>This profile is suitable only for Hive tables stored as Text files. It is much
             faster than the general purpose Hive profile. DELIMITER parameter is mandatory. Supports
             both GPDBWritable and TEXT output formats, as specified in FORMAT header parameter.
@@ -107,7 +141,38 @@ under the License.
         </optionMappings>
     </profile>
     <profile>
+        <name>hive:orc</name>
+        <description>This profile is suitable only for Hive tables stored in ORC files and
+            serialized with either the ColumnarSerDe or the LazyBinaryColumnarSerDe. It is much
+            faster than the general purpose Hive profile. Supports GPDBWritable output format, as
+            specified in FORMAT header parameter.
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hive.HiveInputFormatFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hive.HiveORCAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hive.HiveORCSerdeResolver</resolver>
+            <metadata>org.greenplum.pxf.plugins.hive.HiveMetadataFetcher</metadata>
+            <outputFormat>org.greenplum.pxf.api.io.GPDBWritable</outputFormat>
+        </plugins>
+        <optionMappings>
+            <mapping option="ppd" property="pxf.ppd.hive"/>
+        </optionMappings>
+    </profile>
+    <profile>
         <name>HiveVectorizedORC</name>
+        <description>This profile is same as HiveORC profile, but operates on batches of rows
+            instead of one row at a time, leading to faster reading and resolution phases.
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hive.HiveInputFormatFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hive.HiveORCVectorizedAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hive.HiveORCVectorizedResolver</resolver>
+            <metadata>org.greenplum.pxf.plugins.hive.HiveMetadataFetcher</metadata>
+            <outputFormat>org.greenplum.pxf.api.io.GPDBWritable</outputFormat>
+        </plugins>
+    </profile>
+    <profile>
+        <name>hive:vectorizedorc</name>
         <description>This profile is same as HiveORC profile, but operates on batches of rows
             instead of one row at a time, leading to faster reading and resolution phases.
         </description>
