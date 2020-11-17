@@ -53,9 +53,7 @@ dependencies {
     testCompileOnly("org.apache.hadoop:hadoop-annotations:${hadoopVersion}")
 
     testImplementation('org.mockito:mockito-inline:3.1.0')
-    testImplementation('org.springframework.boot:spring-boot-starter-test') {
-        exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
-    }
+    testImplementation('org.springframework.boot:spring-boot-starter-test')
 }
 
 test {
