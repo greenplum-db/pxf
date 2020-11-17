@@ -74,6 +74,42 @@ test_stop_succeeds_none_running() {
 run_test test_stop_succeeds_none_running "pxf cluster stop (none running) should succeed"
 # ============================================================================================================
 
+# === Test "pxf cluster start (none running)" ================================================================
+expected_start_message=\
+"Starting PXF on 2 segment hosts...
+PXF started successfully on 2 out of 2 hosts"
+test_start_succeeds_none_running() {
+  # given:
+  for host in sdw{1,2}; do
+    #    : PXF is not running
+    local running_pid="$(list_remote_pxf_running_pid ${host})"
+    echo "running pid=${running_pid}"
+    assert_empty "${running_pid}" "PXF should not be running on host ${host}"
+    #    : AND the process pid file does not exist
+    local file_pid="$(cat_remote_file ${host} "${PXF_BASE_DIR}"/run/pxf-app.pid)"
+    echo "file pid=${file_pid}"
+    assert_empty "${file_pid}" "PXF pid file should not exist on host ${host}"
+  done
+  # when : "pxf cluster start" command is run
+  local result="$(pxf cluster start)"
+  # then : it succeeds and prints the expected message
+  assert_equals "${expected_start_message}" "${result}" "pxf cluster start should succeed"
+  for host in sdw{1,2}; do
+    #    : AND PXF is running
+    local running_pid="$(list_remote_pxf_running_pid ${host})"
+    echo "running pid=${running_pid}"
+    assert_not_empty "${running_pid}" "PXF should be running on host ${host}"
+    #    : AND the process pid file exists
+    local file_pid="$(cat_remote_file ${host} "${PXF_BASE_DIR}"/run/pxf-app.pid)"
+    echo "file pid=${file_pid}"
+    assert_not_empty "${file_pid}" "PXF pid file should exist on host ${host}"
+    #    : AND the pids match
+    assert_equals "${running_pid}" "${file_pid}" "pid files should match on host ${host}"
+  done
+}
+run_test test_start_succeeds_none_running "pxf cluster start (none running) should succeed"
+# ============================================================================================================
+
 # === Test "pxf cluster start (all running)" =================================================================
 expected_start_message=\
 "Starting PXF on 2 segment hosts...
@@ -162,7 +198,7 @@ test_restart_succeeds_all_running() {
 run_test test_restart_succeeds_all_running "pxf cluster restart (all running) should succeed"
 # ============================================================================================================
 
-# === Test "pxf cluster restart (none running)" ===============================================================
+# === Test "pxf cluster restart (none running)" ==============================================================
 expected_restart_message=\
 "Restarting PXF on 2 segment hosts...
 PXF restarted successfully on 2 out of 2 hosts"
