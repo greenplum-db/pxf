@@ -165,15 +165,6 @@ under the License.
         </plugins>
     </profile>
     <profile>
-        <name>GemFireXD</name>
-        <description>This profile is suitable for using when connecting to GemFireXD</description>
-        <plugins>
-            <fragmenter>org.greenplum.pxf.plugins.gemfirexd.GemFireXDFragmenter</fragmenter>
-            <accessor>org.greenplum.pxf.plugins.gemfirexd.GemFireXDAccessor</accessor>
-            <resolver>org.greenplum.pxf.plugins.gemfirexd.GemFireXDResolver</resolver>
-        </plugins>
-    </profile>
-    <profile>
         <name>Json</name>
         <description>
             Access JSON data either as:

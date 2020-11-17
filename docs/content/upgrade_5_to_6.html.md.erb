@@ -106,7 +106,16 @@ After you install the new version of PXF, perform the following procedure:
 
 1. **If you are upgrading to PXF version 6.0**:
 
-    1. step 1
+    1. Ensure that you no longer reference previously deprecated features that were removed in PXF 6.0:
+
+        | Deprecated Feature | Use Instead |
+        | -------------------|-------------|
+        | Hadoop profile names | hdfs:\<profile> as noted [here](access_hdfs.html#hadoop_connectors) |
+        | `jdbc.user.impersonation` property | `pxf.service.user.impersonation` property in the [jdbc&#8209;site.xml](jdbc_cfg.html#jdbcimpers) server configuration file |
+        | `PXF_KEYTAB` configuration property | `pxf.service.kerberos.keytab` property in the [pxf&#8209;site.xml](cfg_server.html#pxf-site) server configuration file |
+        | `PXF_PRINCIPAL` configuration property | `pxf.service.kerberos.principal` property in the [pxf&#8209;site.xml](cfg_server.html#pxf-site) server configuration file |
+        | `PXF_USER_IMPERSONATION` configuration property | `pxf.service.user.impersonation` property in the [pxf&#8209;site.xml](cfg_server.html#pxf-site) server configuration file |
+
     2. step 2
     3. step 3
 

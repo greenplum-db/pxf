@@ -103,21 +103,21 @@ The PXF Hadoop connectors provide built-in profiles to support the following dat
 
 The PXF Hadoop connectors expose the following profiles to read, and in many cases write, these supported data formats:
 
-| Data Source | Data Format | Profile Name(s) | Deprecated Profile Name |
-|-----|------|---------|------------|
-| HDFS | delimited single line [text](hdfs_text.html#profile_text) | hdfs:text | HdfsTextSimple |
-| HDFS | delimited [text with quoted linefeeds](hdfs_text.html#profile_textmulti) | hdfs:text:multi | HdfsTextMulti |
-| HDFS | [Avro](hdfs_avro.html) | hdfs:avro | Avro |
-| HDFS | [JSON](hdfs_json.html) | hdfs:json | Json |
-| HDFS | [Parquet](hdfs_parquet.html) | hdfs:parquet | Parquet |
-| HDFS | AvroSequenceFile | hdfs:AvroSequenceFile | n/a |
-| HDFS | [SequenceFile](hdfs_seqfile.html) | hdfs:SequenceFile | SequenceWritable |
-| [Hive](hive_pxf.html) | stored as TextFile | Hive, [HiveText](hive_pxf.html#hive_text) | n/a |
-| [Hive](hive_pxf.html) | stored as SequenceFile | Hive | n/a |
-| [Hive](hive_pxf.html) | stored as RCFile | Hive, [HiveRC](hive_pxf.html#hive_hiverc) | n/a |
-| [Hive](hive_pxf.html) | stored as ORC | Hive, [HiveORC](hive_pxf.html#hive_orc), HiveVectorizedORC | n/a |
-| [Hive](hive_pxf.html) | stored as Parquet | Hive | n/a |
-| [HBase](hbase_pxf.html) | Any | HBase | n/a |
+| Data Source | Data Format | Profile Name(s) |
+|-------------|------|---------|
+| HDFS | delimited single line [text](hdfs_text.html#profile_text) | hdfs:text |
+| HDFS | delimited [text with quoted linefeeds](hdfs_text.html#profile_textmulti) |
+| HDFS | [Avro](hdfs_avro.html) | hdfs:avro |
+| HDFS | [JSON](hdfs_json.html) | hdfs:json |
+| HDFS | [Parquet](hdfs_parquet.html) | hdfs:parquet |
+| HDFS | AvroSequenceFile | hdfs:AvroSequenceFile |
+| HDFS | [SequenceFile](hdfs_seqfile.html) | hdfs:SequenceFile |
+| [Hive](hive_pxf.html) | stored as TextFile | Hive, [HiveText](hive_pxf.html#hive_text) |
+| [Hive](hive_pxf.html) | stored as SequenceFile | Hive |
+| [Hive](hive_pxf.html) | stored as RCFile | Hive, [HiveRC](hive_pxf.html#hive_hiverc) |
+| [Hive](hive_pxf.html) | stored as ORC | Hive, [HiveORC](hive_pxf.html#hive_orc), HiveVectorizedORC |
+| [Hive](hive_pxf.html) | stored as Parquet | Hive |
+| [HBase](hbase_pxf.html) | Any | HBase |
 
 
 ### <a id="choose_profile"></a>Choosing the Profile
