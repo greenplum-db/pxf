@@ -17,8 +17,8 @@ The following PXF files and directories are installed to `$PXF_HOME` when you in
 | application/                | The PXF Spring Boot application JAR file.   |
 | bin/                | The PXF command line executable directory.   |
 | commit.sha          | The commit identifier for this PXF release.   |
-| gpextable/           | The PXF extension files. PXF copies the `pxf.control` file in this directory to the Greenplum installation (`$GPHOME`) on a single host or all hosts in the cluster when you run the `pxf [cluster] register` command.   |
-| share/                | The directory for shared PXF files that you may require depending on the external data stores that you access. `share/` currently includes only the PXF HBase JAR file. |
+| gpextable/           | The PXF extension files. PXF copies the `pxf.control` file in this directory to the Greenplum installation (`$GPHOME`) on a single host or on all hosts in the cluster when you run the `pxf [cluster] register` command.   |
+| share/                | The directory for shared PXF files that you may require depending on the external data stores that you access. `share/` initially includes only the PXF HBase JAR file. |
 | templates/  | The PXF directory for template server configuration files. |
 | version              | The PXF version.             |
 
@@ -30,7 +30,7 @@ The following PXF directories are installed to `$PXF_BASE` when you install Gree
 | keytabs/  | The default location for the PXF service Kerberos principal keytab file.  The `keytabs/` directory and contained files are readable only by the `gpadmin` user. |
 | lib/     | The default PXF directory for user-added runtime JAR dependencies. The `native/` subdirectory is the default PXF runtime directory for native libraries. |
 | logs/                | The PXF runtime log file directory. The `logs/` directory and log files are readable only by the `gpadmin` user. |
-| run/         | The default PXF run directory. After starting PXF, contains a PXF process id file. The default `$PXF_OOM_DUMP_PATH` resides in a `pxf_heap_dump/` subdirectory. `run/` and contained files and directories are readable only by the `gpadmin` user. |
+| run/         | The default PXF run directory. After starting PXF, this directory contains a PXF process id file. The default `$PXF_OOM_DUMP_PATH` resides in a `pxf_heap_dump/` subdirectory. `run/` and contained files and directories are readable only by the `gpadmin` user. |
 | servers/  | The configuration directory for PXF servers; each subdirectory contains a server definition, and the name of the subdirectory identifies the name of the server. The default server is named `default`. The Greenplum Database administrator may configure other servers. |
 
 Refer to [Configuring PXF](instcfg_pxf.html) and [Starting PXF](cfginitstart_pxf.html#start_pxf) for detailed information about the PXF configuration and startup commands and procedures.
