@@ -88,7 +88,7 @@ To build PXF, you must have:
     export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
     ```
 
-    Once you have installed Go, you will need the `dep` and `ginkgo` tools, which install Go dependencies and run Go tests,
+    Once you have installed Go, you will need the `ginkgo` tool which runs Go tests,
     respectively. Assuming `go` is on your `PATH`, you can run:
     ```
     go get github.com/onsi/ginkgo/ginkgo
