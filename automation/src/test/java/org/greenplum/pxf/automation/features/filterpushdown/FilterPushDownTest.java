@@ -1,14 +1,15 @@
 package org.greenplum.pxf.automation.features.filterpushdown;
 
-import java.io.File;
-
 import org.greenplum.pxf.automation.components.cluster.PhdCluster;
+import org.greenplum.pxf.automation.features.BaseFeature;
 import org.greenplum.pxf.automation.structures.tables.pxf.ReadableExternalTable;
 import org.testng.annotations.Test;
 
-import org.greenplum.pxf.automation.features.BaseFeature;
+import java.io.File;
 
-/** Functional PXF filter pushdown cases */
+/**
+ * Functional PXF filter pushdown cases
+ */
 public class FilterPushDownTest extends BaseFeature {
 
     String testPackageLocation = "/org/greenplum/pxf/automation/testplugin/";
@@ -41,12 +42,31 @@ public class FilterPushDownTest extends BaseFeature {
     public void checkFilterPushDown() throws Exception {
 
         // Create PXF external table for filter testing
-        ReadableExternalTable pxfExternalTable = new ReadableExternalTable("test_filter", new String[] {
+        ReadableExternalTable pxfExternalTable = new ReadableExternalTable("test_filter", new String[]{
                 "t0    text",
                 "a1    integer",
                 "b2    boolean",
                 "filterValue  text"
-        }, "dummy_path","TEXT");
+        }, "dummy_path", "TEXT");
+
+        pxfExternalTable.setFragmenter(testPackage + "FilterVerifyFragmenter");
+        pxfExternalTable.setAccessor(testPackage + "UserDataVerifyAccessor");
+        pxfExternalTable.setResolver("org.greenplum.pxf.plugins.hdfs.StringPassResolver");
+        pxfExternalTable.setDelimiter(",");
+        pxfExternalTable.setHost(pxfHost);
+        pxfExternalTable.setPort(pxfPort);
+
+        gpdb.createTableAndVerify(pxfExternalTable);
+
+        runTincTest("pxf.features.filterpushdown.checkFilterPushDown.runTest");
+
+        // Recreate the table with the first column as varchar instead of text
+        pxfExternalTable = new ReadableExternalTable("test_filter", new String[]{
+                "t0    varchar(1)",
+                "a1    integer",
+                "b2    boolean",
+                "filterValue  text"
+        }, "dummy_path", "TEXT");
 
         pxfExternalTable.setFragmenter(testPackage + "FilterVerifyFragmenter");
         pxfExternalTable.setAccessor(testPackage + "UserDataVerifyAccessor");
@@ -70,12 +90,12 @@ public class FilterPushDownTest extends BaseFeature {
     public void checkFilterPushDownDisabled() throws Exception {
 
         // Create PXF external table for filter testing
-        ReadableExternalTable pxfExternalTable = new ReadableExternalTable("test_filter", new String[] {
+        ReadableExternalTable pxfExternalTable = new ReadableExternalTable("test_filter", new String[]{
                 "t0    text",
                 "a1    integer",
                 "b2    boolean",
                 "filterValue  text"
-        }, "dummy_path","TEXT");
+        }, "dummy_path", "TEXT");
 
         pxfExternalTable.setFragmenter(testPackage + "FilterVerifyFragmenter");
         pxfExternalTable.setAccessor(testPackage + "UserDataVerifyAccessor");
@@ -99,12 +119,31 @@ public class FilterPushDownTest extends BaseFeature {
     public void checkFilterStringHexDelimiter() throws Exception {
 
         // Create PXF external table for filter testing
-        ReadableExternalTable pxfExternalTable = new ReadableExternalTable("test_filter", new String[] {
+        ReadableExternalTable pxfExternalTable = new ReadableExternalTable("test_filter", new String[]{
                 "t0    text",
                 "a1    integer",
                 "b2    boolean",
                 "filterValue  text"
-        }, "dummy_path","TEXT");
+        }, "dummy_path", "TEXT");
+
+        pxfExternalTable.setFragmenter(testPackage + "FilterVerifyFragmenter");
+        pxfExternalTable.setAccessor(testPackage + "UserDataVerifyAccessor");
+        pxfExternalTable.setResolver("org.greenplum.pxf.plugins.hdfs.StringPassResolver");
+        pxfExternalTable.setDelimiter("E'\\x01'");
+        pxfExternalTable.setHost(pxfHost);
+        pxfExternalTable.setPort(pxfPort);
+
+        gpdb.createTableAndVerify(pxfExternalTable);
+
+        // Recreate the table with the first column as varchar instead of text
+        runTincTest("pxf.features.filterpushdown.checkFilterPushDownHexDelimiter.runTest");
+
+        pxfExternalTable = new ReadableExternalTable("test_filter", new String[]{
+                "t0    varchar(1)",
+                "a1    integer",
+                "b2    boolean",
+                "filterValue  text"
+        }, "dummy_path", "TEXT");
 
         pxfExternalTable.setFragmenter(testPackage + "FilterVerifyFragmenter");
         pxfExternalTable.setAccessor(testPackage + "UserDataVerifyAccessor");
