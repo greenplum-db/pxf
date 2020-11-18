@@ -6,38 +6,38 @@ PXF may be installed to `$GPHOME/pxf` on your master and segment nodes when you 
 
 In PXF 5.x, you specified a `$PXF_CONF` directory for configuration and runtime files when you initialized PXF.  In PXF 6.x, configuration and runtime files are located in `$PXF_BASE`, and no initialization is required.
 
-When you install PXF 6, the default `$PXF_BASE` is `$PXF_HOME`.
+When you install PXF 6.x, the default `$PXF_BASE` is `$PXF_HOME`.
 
 ## <a id="installed"></a>PXF Installation Directories
 
-The following PXF files and directories are installed to `$PXF_HOME` when you install Greenplum Database or the PXF 6 `rpm` or `deb` package:
+The following PXF files and directories are installed to `$PXF_HOME` when you install Greenplum Database or the PXF 6.x `rpm` or `deb` package:
 
 | Directory | Description                                                                                                   |
 |--------------------------------|------------------------------------------------------------------------------------------|
-| application/                | The PXF Spring Boot application JAR file.   |
+| application/                | The PXF Server application JAR file.   |
 | bin/                | The PXF command line executable directory.   |
 | commit.sha          | The commit identifier for this PXF release.   |
-| gpextable/           | The PXF extension files. PXF copies the `pxf.control` file in this directory to the Greenplum installation (`$GPHOME`) on a single host or on all hosts in the cluster when you run the `pxf [cluster] register` command.   |
+| gpextable/           | The PXF extension files. PXF copies the `pxf.control` file from this directory to the Greenplum installation (`$GPHOME`) on a single host when you run the `pxf register` command, or on all hosts in the cluster when you run the `pxf [cluster] register` command from the Greenplum master host.   |
 | share/                | The directory for shared PXF files that you may require depending on the external data stores that you access. `share/` initially includes only the PXF HBase JAR file. |
-| templates/  | The PXF directory for template server configuration files. |
+| templates/  | The PXF directory for server configuration file templates. |
 | version              | The PXF version.             |
 
-The following PXF directories are installed to `$PXF_BASE` when you install Greenplum Database or the PXF 6 `rpm` or `deb` package:
+The following PXF directories are installed to `$PXF_BASE` when you install Greenplum Database or the PXF 6.x `rpm` or `deb` package:
 
 | Directory | Description                                                                                                                                                                                                                                |
 |--------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | conf/                | The location of user-customizable PXF configuration files for PXF runtime and logging configuration settings. This directory contains the `pxf-application.properties`, `pxf-env.sh`, `pxf-log4j2.xml`, and `pxf-profiles.xml` files. |
-| keytabs/  | The default location for the PXF service Kerberos principal keytab file.  The `keytabs/` directory and contained files are readable only by the `gpadmin` user. |
-| lib/     | The default PXF directory for user-added runtime JAR dependencies. The `native/` subdirectory is the default PXF runtime directory for native libraries. |
-| logs/                | The PXF runtime log file directory. The `logs/` directory and log files are readable only by the `gpadmin` user. |
-| run/         | The default PXF run directory. After starting PXF, this directory contains a PXF process id file. The default `$PXF_OOM_DUMP_PATH` resides in a `pxf_heap_dump/` subdirectory. `run/` and contained files and directories are readable only by the `gpadmin` user. |
+| keytabs/  | The default location of the PXF service Kerberos principal keytab file.  The `keytabs/` directory and contained files are readable only by the Greenplum Database installation user, typically `gpadmin`. |
+| lib/     | The location of user-added runtime JAR dependencies. The `native/` subdirectory is the default PXF runtime directory for native libraries. |
+| logs/                | The PXF runtime log file directory. The `logs/` directory and log files are readable only by the Greenplum Database installation user, typically `gpadmin`. |
+| run/         | The default PXF run directory. After starting PXF, this directory contains a PXF process id file, `pxf-app.pid`. The default `$PXF_OOM_DUMP_PATH` resides in a `pxf_heap_dump/` subdirectory. `run/` and contained files and directories are readable only by the Greenplum Database installation user, typically `gpadmin`. |
 | servers/  | The configuration directory for PXF servers; each subdirectory contains a server definition, and the name of the subdirectory identifies the name of the server. The default server is named `default`. The Greenplum Database administrator may configure other servers. |
 
 Refer to [Configuring PXF](instcfg_pxf.html) and [Starting PXF](cfginitstart_pxf.html#start_pxf) for detailed information about the PXF configuration and startup commands and procedures.
 
 ## <a id="movebase"></a>Relocating $PXF_BASE
 
-If you require that `$PXF_BASE` reside in a directory distinct from `$PXF_HOME`, you can change it from the default location to a location of your choosing after you install PXF 6.
+If you require that `$PXF_BASE` reside in a directory distinct from `$PXF_HOME`, you can change it from the default location to a location of your choosing after you install PXF 6.x.
 
 PXF provides the `pxf [cluster] prepare` command to prepare a new `$PXF_BASE` location. The command copies the runtime and configuration directories identified above to the file system location that you specify in a `PXF_BASE` environment variable.
 

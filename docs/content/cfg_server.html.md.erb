@@ -58,7 +58,7 @@ For example, the contents of the `s3-site.xml` template file follow:
 
 ## <a id="default"></a>About the Default Server
 
-PXF defines a special server named `default`. Installing PXF creates a `$PXF_BASE/servers/default/` directory. This directory, initially empty, identifies the default PXF server configuration. You can configure and assign the default PXF server to any external data source. For example, you can assign the PXF default server to a Hadoop cluster, or to a MySQL database that your users frequently access.
+PXF defines a special server named `default`. The PXF installation creates a `$PXF_BASE/servers/default/` directory. This directory, initially empty, identifies the default PXF server configuration. You can configure and assign the default PXF server to any external data source. For example, you can assign the PXF default server to a Hadoop cluster, or to a MySQL database that your users frequently access.
 
 PXF automatically uses the `default` server configuration if you omit the `SERVER=<server_name>` setting in the `CREATE EXTERNAL TABLE` command `LOCATION` clause.
 
