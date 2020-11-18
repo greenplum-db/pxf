@@ -46,16 +46,16 @@ class FragmentMetadataSerDeTest {
     @Test
     public void testDeserialize() {
 
-        String metadataJson = "\"AQBvcmcuZ3JlZW5wbHVtLnB4Zi5hcGkuZXhhbXBsZXMuRGVtb0ZyYWdtZW50TWV0YWRhdOEBAWFi4w==\"";
+        String metadataString = "\"AQBvcmcuZ3JlZW5wbHVtLnB4Zi5hcGkuZXhhbXBsZXMuRGVtb0ZyYWdtZW50TWV0YWRhdOEBAWFi4w==\"";
 
-        FragmentMetadata metadata = metadataSerDe.deserialize(metadataJson);
+        FragmentMetadata metadata = metadataSerDe.deserialize(metadataString);
         assertNotNull(metadata);
         assertTrue(metadata instanceof DemoFragmentMetadata);
         assertEquals("abc", ((DemoFragmentMetadata) metadata).getPath());
 
-        String testMetadataJson = "\"AQDPAW9yZy5ncmVlbnBsdW0ucHhmLmFwaS51dGlsaXRpZXMuRnJhZ21lbnRNZXRhZGF0YVNlckRlVGVzdCRUZXN0RnJhZ21lbnRNZXRhZGF0YQEBdGVz9AoUAQFqYXZhLnNxbC5EYXTlAYC70tClLgEEZm9v\"";
+        String testMetadataString = "\"AQDPAW9yZy5ncmVlbnBsdW0ucHhmLmFwaS51dGlsaXRpZXMuRnJhZ21lbnRNZXRhZGF0YVNlckRlVGVzdCRUZXN0RnJhZ21lbnRNZXRhZGF0YQEBdGVz9AoUAQFqYXZhLnNxbC5EYXTlAYC70tClLgEEZm9v\"";
 
-        FragmentMetadata testMetadata = metadataSerDe.deserialize(testMetadataJson);
+        FragmentMetadata testMetadata = metadataSerDe.deserialize(testMetadataString);
         assertNotNull(testMetadata);
         assertTrue(testMetadata instanceof TestFragmentMetadata);
         TestFragmentMetadata testFragmentMetadata = (TestFragmentMetadata) testMetadata;
