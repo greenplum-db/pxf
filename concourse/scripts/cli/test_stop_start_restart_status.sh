@@ -102,11 +102,11 @@ run_test test_stop_succeeds_none_running "pxf cluster stop (none running) should
 
 # === Test "pxf cluster status (none running)" ===============================================================
 expected_status_message=\
-"Checking status of PXF servers on 2 segment hosts...
-ERROR: PXF is not running on 2 out of 2 hosts
-sdw1 ==> ${yellow}Checking if PXF is up and running${reset}...
-${red}ERROR: PXF is down - the application is not running${reset}...
-sdw2 ==> ${yellow}Checking if PXF is up and running${reset}...
+"Checking status of PXF servers on 2 segment hosts...\n\
+ERROR: PXF is not running on 2 out of 2 hosts\n\
+sdw1 ==> ${yellow}Checking if PXF is up and running...${reset}\n\
+${red}ERROR: PXF is down - the application is not running${reset}...\n\
+sdw2 ==> ${yellow}Checking if PXF is up and running...${reset}\n\
 ${red}ERROR: PXF is down - the application is not running${reset}..."
 test_status_succeeds_none_running() {
   for host in sdw{1,2}; do
@@ -122,7 +122,7 @@ test_status_succeeds_none_running() {
   # when : "pxf cluster status" command is run
   local result="$(pxf cluster status 2>&1)"
   # then : it succeeds and prints the expected message
-  assert_equals "${expected_status_message}" "${result}" "pxf cluster status should succeed"
+  assert_equals "$(echo -e "${expected_status_message}")" "${result}" "pxf cluster status should succeed"
 }
 run_test test_status_succeeds_none_running "pxf cluster status (none running) should succeed"
 # ============================================================================================================
@@ -357,9 +357,9 @@ run_test test_start_succeeds_one_running "pxf cluster start (one running) should
 
 # === Test "pxf cluster status (one running)" ================================================================
 expected_status_message=\
-"Checking status of PXF servers on 2 segment hosts...
-ERROR: PXF is not running on 1 out of 2 hosts
-sdw2 ==> ${yellow}Checking if PXF is up and running${reset}...
+"Checking status of PXF servers on 2 segment hosts...\n\
+ERROR: PXF is not running on 1 out of 2 hosts\n\
+sdw2 ==> ${yellow}Checking if PXF is up and running...${reset}\n\
 ${red}ERROR: PXF is down - the application is not running${reset}..."
 test_status_succeeds_none_running() {
   # given: PXF is running on segment host 1
@@ -371,7 +371,7 @@ test_status_succeeds_none_running() {
   # when : "pxf cluster status" command is run
   local result="$(pxf cluster status 2>&1)"
   # then : it succeeds and prints the expected message
-  assert_equals "${expected_status_message}" "${result}" "pxf cluster status should succeed"
+  assert_equals "$(echo -e "${expected_status_message}")" "${result}" "pxf cluster status should succeed"
 }
 run_test test_status_succeeds_none_running "pxf cluster status (one running) should succeed"
 # ===========================================================================================================
