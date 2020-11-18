@@ -23,11 +23,25 @@ under the License.
 
 You use PXF to access data stored on external systems. Depending upon the external data store, this access may require that you install and/or configure additional components or services for the external data store.
 
-PXF depends on JAR files and other configuration information provided by these additional components. The `$PXF_HOME/conf/pxf-private.classpath` file identifies PXF internal JAR dependencies. In most cases, PXF manages the `pxf-private.classpath` file, adding entries as necessary based on the connectors that you use.
+PXF depends on JAR files and other configuration information provided by these additional components. In most cases, PXF manages internal JAR dependencies as necessary based on the connectors that you use.
 
-Should you need to add additional JAR or native library dependencies, you must register these dependencies with PXF.
+Should you need to register a JAR or native library dependency with PXF, you copy the library to a location known to PXF *or* you inform PXF of a custom location, and then you must synchronize and restart PXF.
+
 
 ## <a id="reg_jar"></a> Registering a JAR Dependency
+
+PXF loads JAR dependencies from the following directories, in this order:
+
+1. The directories that you specify in the `$PXF_BASE/conf/pxf-env.sh` configuration file, `PXF_LOADER_PATH` environment variable. The `pxf-env.sh` file includes this commented-out block:
+
+    ``` pre
+    # Additional locations to be class-loaded by PXF
+    # export PXF_LOADER_PATH=
+    ```
+
+    You would uncomment the `PXF_LOADER_PATH` setting and specify one or more colon-separated directory names.
+
+2. The default PXF JAR directory `$PXF_BASE/lib`.
 
 To add a JAR dependency for PXF, for example a MySQL driver JAR file, you must log in to the Greenplum Database master host, copy the JAR file to the PXF user configuration runtime library directory (`$PXF_BASE/lib`), sync the PXF configuration to the Greenplum Database cluster, and then restart PXF on each segment host. For example:
 
@@ -38,27 +52,30 @@ gpadmin@gpmaster$ pxf cluster sync
 gpadmin@gpmaster$ pxf cluster restart
 ```
 
+Alternatively, you could have identified the file system location of the JAR in the `pxf-env.sh` `PXF_LOADER_PATH` environment variable. If you choose this registration option, you must ensure that you copy the JAR file to the same location on the Greenplum Database standby and segment hosts before you synchronize and restart PXF.
+
+
 ## <a id="reg_native"></a> Registering a Native Library Dependency
 
-PXF loads native libraries from the following directories in this order:
+PXF loads native libraries from the following directories, in this order:
 
-1. The directories that you specify in the `$PXF_BASE/conf/pxf-env.sh` user configuration file `LD_LIBRARY_PATH` setting. Starting in PXF version 5.15.1, the `pxf-env.sh` file includes this commented-out block:
+1. The directories that you specify in the `$PXF_BASE/conf/pxf-env.sh` configuration file, `LD_LIBRARY_PATH` environment variable. The `pxf-env.sh` file includes this commented-out block:
 
     ``` pre
     # Additional native libraries to be loaded by PXF
     # export LD_LIBRARY_PATH=
     ```
 
+    You would uncomment the `LD_LIBRARY_PATH` setting and specify one or more colon-sperated directory names.
+
 2. The default PXF native library directory `$PXF_BASE/lib/native`.
 3. The default Hadoop native library directory `/usr/lib/hadoop/lib/native`.
 
-When you register a native library dependency with PXF, for example [Hadoop native libraries](https://hadoop.apache.org/docs/r2.9.2/hadoop-project-dist/hadoop-common/NativeLibraries.html), you copy the native library to a location known to PXF *or* inform PXF of a custom location, and then you must synchronize and restart PXF.
-
-You have three file location options when you register a native library with PXF:
+As such, you have three file location options when you register a native library with PXF:
 
 - Copy the library to the default PXF native library directory, `$PXF_BASE/lib/native`, on only the Greenplum Database master host. When you next synchronize PXF, PXF copies the native library to all hosts in the Greenplum cluster.
 - Copy the library to the default Hadoop native library directory, `/usr/lib/hadoop/lib/native`, on the Greenplum master, standby, and each segment host.
-- Copy the library to the same, custom location on the Greenplum master, standby, and each segment host, and uncomment and add the directory to the `pxf-env.sh` `LD_LIBRARY_PATH` setting.
+- Copy the library to the same, custom location on the Greenplum master, standby, and each segment host, and uncomment and add the directory path to the `pxf-env.sh` `LD_LIBRARY_PATH` environment variable.
 
 
 ### <a id="reg_native_proc"></a> Procedure
@@ -77,7 +94,7 @@ You have three file location options when you register a native library with PXF
         export LD_LIBRARY_PATH=
         ```
 
-    2. Specify the custom location in the `LD_LIBRARY_PATH` setting. For example, if you copied a library named `dependent_native_lib.so` to `/usr/local/lib` on all Greenplum hosts, your `LD_LIBRARY_PATH` setting would look as follows:
+    2. Specify the custom location in the `LD_LIBRARY_PATH` environment variable. For example, if you copied a library named `dependent_native_lib.so` to `/usr/local/lib` on all Greenplum hosts, you would set `LD_LIBRARY_PATH` as follows:
 
         ``` shell
         export LD_LIBRARY_PATH=/usr/local/lib
@@ -93,7 +110,7 @@ You have three file location options when you register a native library with PXF
 
     If you copied the native library to the `$PXF_BASE/lib/native` directory, this command copies the library to the same location on the Greenplum Database standby and segment hosts.
 
-    If you updated the `pxf-env.sh` `LD_LIBRARY_PATH` setting, this command copies the configuration change to the Greenplum Database standby and segment hosts.
+    If you updated the `pxf-env.sh` `LD_LIBRARY_PATH` environment variable, this command copies the configuration change to the Greenplum Database standby and segment hosts.
 
 4. Restart PXF on all segment hosts:
 

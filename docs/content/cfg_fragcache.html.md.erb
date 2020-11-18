@@ -1,0 +1,36 @@
+---
+title: Fragment Metadata Caching
+---
+
+A PXF connector *Fragmenter* uses metadata from the external data source to split data into a list of fragments (blocks, files, etc.) that can be read in parallel. PXF caches the fragment metadata on a per-query basis: the first thread to access a fragment's metadata stores the information in a cache, and other threads reuse this cached metadata. Caching of this nature reduces query memory requirements for external data sources with a large number of fragments.
+
+PXF fragment metadata caching is enabled by default. To turn off fragment metadata caching, or to re-enable it after turning it off, perform the following procedure:
+
+1. Log in to your Greenplum Database master node:
+
+    ``` shell
+    $ ssh gpadmin@<gpmaster>
+    ```
+
+2. Edit the `$PXF_BASE/conf/pxf-applicaton.properties` file. For example:
+
+    ``` shell
+    gpadmin@gpmaster$ vi $PXF_BASE/conf/pxf-application.properties
+    ```
+
+3. Locate the `pxf.metadata-cache-enabled` setting in the `pxf-application.properties` file. If the setting is commented out, uncomment it, and then update the value. For example, to turn off fragment metadata caching, set the value to `false`:
+
+    ``` shell
+    pxf.metadata-cache-enabled=false
+    ```
+
+3. Save the file and exit the editor.
+
+4. Use the `pxf cluster sync` command to copy the updated `pxf-application.properties` file to the Greenplum Database cluster. For example:
+
+    ``` shell
+    gpadmin@gpmaster$ pxf cluster sync
+    ```
+
+5. Restart PXF on each Greenplum Database segment host as described in [Restarting PXF](cfginitstart_pxf.html#restart_pxf).
+

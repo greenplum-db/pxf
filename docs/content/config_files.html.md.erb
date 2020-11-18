@@ -1,0 +1,77 @@
+---
+title: About the PXF Configuration Files
+---
+
+`$PXF_BASE/conf` includes these user-customizable configuration files:
+
+- `pxf-application.properties` - PXF server application configuration properties
+- `pxf-env.sh` - PXF command and JVM-specific runtime configuration properties
+- `pxf-log4j2.xml` - PXF logging configuration properties
+- `pxf-profiles.xml` - Custom PXF profile definitions
+
+## <a id="pxfappprops"></a>pxf-application.properties
+
+The `pxf-application.properties` file exposes these PXF server application configuration properties:
+
+| Parameter  | Description | Default Value |
+|-----------|---------------| ------------|
+| pxf.connection.timeout | The Tomcat server connection timeout. (-1 for infinite timeout.) | 5m (5 minutes) |
+| [pxf.max.threads](cfg_mem.html#pxf-threadcfg) | The maximum number of PXF tomcat threads. | 200 |
+| pxf.task.pool.allow&#8209;core&#8209;thread&#8209;timeout | Identifies whether or not core streaming threads are allowed to time out. | false |
+| pxf.task.pool.core-size | The number of core streaming threads. | 8 |
+| pxf.task.pool.queue-capacity | The capacity of the core streaming thread pool queue. | 0 |
+| pxf.task.pool.max-size | The maximum allowed number of core streaming threads. | pxf.max.threads if set, or 200 |
+| [pxf.metadata-cache-enabled](cfg_fragcache.html)  | Enable/disable fragment metadata caching. | true (enabled) |
+
+To set a new value for a PXF server application property, you may first need to uncomment the property in the `pxf-application.properties` file before you set the new value.
+
+
+## <a id="pxfenvsh"></a>pxf-env.sh
+
+The `pxf-env.sh` file exposes these PXF JVM configuration properties:
+
+| Parameter  | Description | Default Value |
+|-----------|---------------| ------------|
+| JAVA_HOME    | The path to the Java JRE home directory. | /usr/java/default |
+| PXF_LOGDIR   | The PXF log directory. | $PXF_BASE/logs |
+| PXF_RUNDIR   | The PXF run directory. | $PXF_BASE/run |
+| [PXF_JVM_OPTS](cfg_mem.html#pxf-heapcfg)  | The default options for the PXF Java virtual machine. | -Xmx2g -Xms1g |
+| [PXF_OOM_KILL](cfg_mem.html#pxf-cfgoom)  | Enable/disable PXF auto-kill on OutOfMemoryError (OOM). | true (enabled) |
+| [PXF_OOM_DUMP_PATH](cfg_mem.html#pxf-cfgoom)  | The absolute path to the dump file that PXF generates on OOM. | No dump file (empty) |
+| [PXF_LOADER_PATH](reg_jar_depend.html)  | Additional directories and JARs for PXF to class-load. | (empty) |
+| [LD_LIBRARY_PATH](reg_jar_depend.html)  | Additional directories and native libraries for PXF to load. | (empty) |
+
+To set a new value for a PXF JVM configuration property, you may first need to uncomment the property in the `pxf-env.sh` file before you set the new value.
+
+
+## <a id="pxflog4j2"></a>pxf-log4j2.xml
+
+The `pxf-log4j2.xml` file configures PXF and subcomponent logging. By default, PXF is configured to log at the `warn` or `error` levels and more severe.
+
+The [Logging](cfg_logging.html) advanced configuration topic describes how to enable more verbose client- and server-level logging for PXF.
+
+## <a id="pxfprofiledef"></a>pxf-profiles.xml
+
+PXF defines its default profiles in the [`pxf-profiles-default.xml`](https://github.com/greenplum-db/pxf/blob/master/server/pxf-service/src/main/resources/pxf-profiles-default.xml) file. If you choose to add a custom profile, you configure the profile in `pxf-profiles.xml`.
+
+
+## <a id="chg_config"></a>Modifying the PXF Configuration
+
+When you update a PXF configuration file, you must sychronize the changes to all hosts in the Greenplum Database cluster and then restart PXF for the changes to take effect.
+
+Procedure:
+
+1. Update the configuration file(s) of interest.
+
+1. Synchronize the PXF configuration to all hosts in the Greenplum Database cluster:
+
+    ``` shell
+    gpadmin@gpmaster$ pxf cluster sync
+    ```
+
+1. (Re)start PXF on each segment host:
+
+    ``` shell
+    gpadmin@gpmaster$ pxf cluster restart
+    ```
+
