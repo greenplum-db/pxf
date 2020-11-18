@@ -3,8 +3,7 @@ ARG BASE_IMAGE=pivotaldata/gpdb-dev:centos6
 FROM ${BASE_IMAGE}
 
 # install Go utilities
-RUN GOPATH=/opt/go /usr/local/go/bin/go get github.com/golang/dep/cmd/dep \
-    && GOPATH=/opt/go /usr/local/go/bin/go get github.com/onsi/ginkgo/ginkgo
+RUN GOPATH=/opt/go /usr/local/go/bin/go get github.com/onsi/ginkgo/ginkgo
 
 # add Java 8, Java 11 and rpm-build
 RUN yum install -y rpm-build java-1.8.0-openjdk-devel && yum clean all \

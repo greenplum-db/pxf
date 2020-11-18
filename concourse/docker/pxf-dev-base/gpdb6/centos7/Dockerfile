@@ -6,7 +6,6 @@ FROM ${BASE_IMAGE}
 RUN mkdir -p /tmp/pxf_src/ && cd /tmp \
     && wget -O go.tgz -q https://dl.google.com/go/go1.14.2.linux-amd64.tar.gz \
     && tar -C /usr/local -xzf go.tgz && rm go.tgz \
-    && GOPATH=/opt/go /usr/local/go/bin/go get github.com/golang/dep/cmd/dep \
     && GOPATH=/opt/go /usr/local/go/bin/go get github.com/onsi/ginkgo/ginkgo
 
 # add Java 11

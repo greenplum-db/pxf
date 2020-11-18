@@ -91,7 +91,6 @@ To build PXF, you must have:
     Once you have installed Go, you will need the `dep` and `ginkgo` tools, which install Go dependencies and run Go tests,
     respectively. Assuming `go` is on your `PATH`, you can run:
     ```
-    go get github.com/golang/dep/cmd/dep
     go get github.com/onsi/ginkgo/ginkgo
     ```
 

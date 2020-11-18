@@ -10,6 +10,7 @@ PXF_CLI_DIR := ${PXF_ROOT_DIR}/cli
 PXF_VERSION ?= $(shell cat $(PXF_ROOT_DIR)/version)
 
 LDFLAGS := -ldflags "-X ${TARGET}/cmd.version=${PXF_VERSION}"
+GO_MOD_CACHE := ${PXF_ROOT_DIR}/cli/go/pkg
 GOPATH := ${PXF_ROOT_DIR}/cli/go
 
 help:
@@ -25,6 +26,10 @@ help:
 all: test stage install
 
 build:
+	@if [ -d $(HOME)/.go-dep-cached-sources ] && [ ! -d ${GO_MOD_CACHE}/mod ]; then \
+		mkdir -p ${GO_MOD_CACHE}; \
+		ln -s $(HOME)/.go-dep-cached-sources ${GO_MOD_CACHE}/mod; \
+	fi
 	go build -v ${LDFLAGS}
 	go install ${LDFLAGS}
 

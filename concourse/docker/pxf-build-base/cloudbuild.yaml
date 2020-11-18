@@ -38,12 +38,11 @@ steps:
       - '-c'
       - |
         mkdir -p ./.go-dep-cached-sources
-        cp ./.go-dep-cached-sources ./cli/go/pkg/dep/sources
-        go get github.com/golang/dep/cmd/dep
+        cp -r ./.go-dep-cached-sources ./cli/go/pkg/mod
         go get github.com/onsi/ginkgo/ginkgo
         make -C ./cli/go/src/pxf-cli build
         rm -rf ./.go-dep-cached-sources
-        mv ./cli/go/pkg/dep/sources ./.go-dep-cached-sources
+        mv ./cli/go/pkg/mod ./.go-dep-cached-sources
     waitFor: [ 'untar-pxf-build-dependencies' ]
 
   # create an updated tarball with build dependencies and upload it
