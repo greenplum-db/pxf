@@ -739,8 +739,36 @@ opexpr_to_pxffilter(OpExpr *expr, PxfFilterDesc * filter)
 	if (!supported_operator_type_op_expr(expr->opno, filter))
 		return false;
 
+	if (IsA(leftop, RelabelType))
+	{
+		/*
+		 * Checks if the arg is of type Var, and if it is uses the Var as the left operator
+		 */
+		RelabelType *relabelType = (RelabelType *) leftop;
+		Expr *exprNode = relabelType->arg;
+
+		if (IsA(exprNode, Var))
+		{
+			leftop = (Node *)exprNode;
+		}
+	}
+
+	if (IsA(rightop, RelabelType))
+	{
+		/*
+		 * Checks if the arg is of type Var, and if it is uses the Var as the right operator
+		 */
+		RelabelType *relabelType = (RelabelType *) rightop;
+		Expr *exprNode = relabelType->arg;
+
+		if (IsA(exprNode, Var))
+		{
+			rightop = (Node *)exprNode;
+		}
+	}
+
 	/* arguments must be VAR and CONST */
-	if (IsA(leftop, Var) &&IsA(rightop, Const))
+	if (IsA(leftop, Var) && IsA(rightop, Const))
 	{
 		filter->l.opcode = PXF_ATTR_CODE;
 		filter->l.attnum = ((Var *) leftop)->varattno;
@@ -754,7 +782,7 @@ opexpr_to_pxffilter(OpExpr *expr, PxfFilterDesc * filter)
 		scalar_const_to_str((Const *) rightop, filter->r.conststr);
 		filter->r.consttype = ((Const *) rightop)->consttype;
 	}
-	else if (IsA(leftop, Const) &&IsA(rightop, Var))
+	else if (IsA(leftop, Const) && IsA(rightop, Var))
 	{
 		filter->l.opcode = PXF_SCALAR_CONST_CODE;
 		filter->l.attnum = InvalidAttrNumber;
