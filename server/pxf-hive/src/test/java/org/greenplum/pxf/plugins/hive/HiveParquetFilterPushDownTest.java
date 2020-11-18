@@ -9,6 +9,7 @@ import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.api.utilities.SerializationService;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -91,7 +92,7 @@ public class HiveParquetFilterPushDownTest {
 
         HiveUtilities hiveUtilities = new HiveUtilities();
 
-        accessor = new HiveAccessor(null, hiveUtilities);
+        accessor = new HiveAccessor(null, hiveUtilities, new SerializationService());
         resolver = new HiveResolver(hiveUtilities);
         context = new RequestContext();
 

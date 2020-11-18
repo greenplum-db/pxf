@@ -26,6 +26,7 @@ import org.greenplum.pxf.api.StatsAccessor;
 import org.greenplum.pxf.api.filter.Operator;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.utilities.EnumAggregationType;
+import org.greenplum.pxf.api.utilities.SerializationService;
 import org.greenplum.pxf.api.utilities.SpringContext;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
@@ -52,11 +53,12 @@ public class HiveORCAccessor extends HiveAccessor implements StatsAccessor {
      * Constructs a HiveORCFileAccessor.
      */
     public HiveORCAccessor() {
-        this(SpringContext.getBean(HiveUtilities.class));
+        this(SpringContext.getBean(HiveUtilities.class),
+                SpringContext.getBean(SerializationService.class));
     }
 
-    public HiveORCAccessor(HiveUtilities hiveUtilities) {
-        super(new OrcInputFormat(), hiveUtilities);
+    public HiveORCAccessor(HiveUtilities hiveUtilities, SerializationService serializationService) {
+        super(new OrcInputFormat(), hiveUtilities, serializationService);
     }
 
     @Override

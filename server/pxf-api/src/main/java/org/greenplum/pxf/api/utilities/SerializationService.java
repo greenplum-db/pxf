@@ -5,6 +5,10 @@ import com.esotericsoftware.kryo.pool.KryoFactory;
 import com.esotericsoftware.kryo.pool.KryoPool;
 import org.springframework.stereotype.Service;
 
+/**
+ * The SerializationService class provides {@link Kryo} instances from a
+ * {@link KryoPool} for serialization/deserialization of objects.
+ */
 @Service
 public class SerializationService {
 
@@ -17,9 +21,12 @@ public class SerializationService {
     }
 
     /**
-     * By default, kryo pool uses ConcurrentLinkedQueue which is unbounded. To facilitate reuse of
-     * kryo object call releaseKryo() after done using the kryo instance. The class loader for the
-     * kryo instance will be set to current thread's context class loader.
+     * By default, kryo pool uses ConcurrentLinkedQueue which is unbounded.
+     * To facilitate reuse of kryo object call releaseKryo() after done using
+     * the kryo instance. The class loader for the kryo instance will be set
+     * to current thread's context class loader. The KryoPool uses soft
+     * references that ensures instances in the queue are deleted when there
+     * is GC memory pressure.
      *
      * @return kryo instance
      */
