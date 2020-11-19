@@ -4,113 +4,190 @@ dir=$( cd "$(dirname "${BASH_SOURCE[0]}")" && pwd )
 [[ -e ${dir}/common.sh ]] || exit 1
 source "${dir}/common.sh"
 
-get_status() {
-	for i in {s,}mdw sdw{1,2}; do
-		echo $i:
-		ssh $i "
-			[[ -d ${PXF_CONF}/servers/foo ]] && ls ${PXF_CONF}/servers/foo
-			[[ -e ${PXF_CONF}/conf/foo.jar ]] && ls ${PXF_CONF}/conf/foo.jar
-		"
+list_cluster_configs() {
+	for host in {s,}mdw sdw{1,2}; do
+		echo ${host}:
+		list_remote_configs "${host}"
 	done
 }
 
-expected_cluster_output="Syncing PXF configuration files from master host to standby master host and 2 segment hosts...
+
+# === Test "pxf cluster sync " ===============================================================================
+expected_sync_message=\
+"Syncing PXF configuration files from master host to standby master host and 2 segment hosts...
 PXF configs synced successfully on 3 out of 3 hosts"
-
-mkdir -p ${PXF_CONF}/servers/foo
-touch ${PXF_CONF}/servers/foo/{1..3} ${PXF_CONF}/conf/foo.jar
-compare "${expected_cluster_output}" "$(pxf cluster sync)" "pxf cluster sync should succeed"
-
-expected="smdw:
+expected_cluster_configs=\
+"smdw:
 1
 2
 3
-${PXF_CONF}/conf/foo.jar
+${PXF_BASE_DIR}/conf/foo.jar
 mdw:
 1
 2
 3
-${PXF_CONF}/conf/foo.jar
+${PXF_BASE_DIR}/conf/foo.jar
 sdw1:
 1
 2
 3
-${PXF_CONF}/conf/foo.jar
+${PXF_BASE_DIR}/conf/foo.jar
 sdw2:
 1
 2
 3
-${PXF_CONF}/conf/foo.jar"
-compare "${expected}" "$(get_status)" "all files should be present on all servers"
+${PXF_BASE_DIR}/conf/foo.jar"
+test_sync_succeeds() {
+  # given:
+  for host in smdw sdw{1,2}; do
+    #    : files do not exist on remote hosts
+    remove_remote_configs "${host}"
+    assert_empty "$(list_remote_configs ${host})" "config files should not exist on host ${host}"
+  done
+  #      : AND new files are created on master host
+  rm -rf "${PXF_BASE_DIR}/servers/foo"
+  rm -f  "${PXF_BASE_DIR}/conf/foo.jar"
+  mkdir -p "${PXF_BASE_DIR}/servers/foo"
+  touch ${PXF_BASE_DIR}/servers/foo/{1..3} "${PXF_BASE_DIR}/conf/foo.jar"
+  # when : "pxf cluster sync" command is run
+  local result="$(pxf cluster sync)"
+  # then : it succeeds and prints the expected message
+  assert_equals "${expected_sync_message}" "${result}" "pxf cluster sync should succeed"
+  #      : AND files show be copied to remote hosts
+  assert_equals "${expected_cluster_configs}" "$(list_cluster_configs)" "files should be copied to remote hosts"
+}
+run_test test_sync_succeeds "pxf cluster sync should succeed"
+# ============================================================================================================
 
-rm ${PXF_CONF}/conf/foo.jar
-compare "${expected_cluster_output}" "$(pxf cluster sync)" "pxf cluster sync should succeed"
-expected="smdw:
+# === Test "pxf cluster sync (no delete)" ====================================================================
+expected_sync_message=\
+"Syncing PXF configuration files from master host to standby master host and 2 segment hosts...
+PXF configs synced successfully on 3 out of 3 hosts"
+expected_cluster_configs=\
+"smdw:
 1
 2
 3
-${PXF_CONF}/conf/foo.jar
+${PXF_BASE_DIR}/conf/foo.jar
 mdw:
 1
-2
-3
-sdw1:
-1
-2
-3
-${PXF_CONF}/conf/foo.jar
-sdw2:
-1
-2
-3
-${PXF_CONF}/conf/foo.jar"
-compare "${expected}" "$(get_status)" "${PXF_CONF}/conf/foo.jar should be missing from mdw"
-
-pxf sync --delete sdw1
-pxf sync sdw2
-expected="smdw:
-1
-2
-3
-${PXF_CONF}/conf/foo.jar
-mdw:
-1
-2
-3
-sdw1:
-1
-2
-3
-sdw2:
-1
-2
-3
-${PXF_CONF}/conf/foo.jar"
-compare "${expected}" "$(get_status)" "sdw1 should now also be missing ${PXF_CONF}/conf/foo.jar"
-
-rm ${PXF_CONF}/servers/foo/1
-compare "${expected_cluster_output}" "$(pxf cluster sync)" "pxf cluster sync should succeed"
-expected="smdw:
-1
-2
-3
-${PXF_CONF}/conf/foo.jar
-mdw:
 2
 3
 sdw1:
 1
 2
 3
+${PXF_BASE_DIR}/conf/foo.jar
 sdw2:
 1
 2
 3
-${PXF_CONF}/conf/foo.jar"
-compare "${expected}" "$(get_status)" "only mdw should be missing ${PXF_CONF}/servers/foo/1"
+${PXF_BASE_DIR}/conf/foo.jar"
+test_sync_succeeds_no_delete() {
+  # given:
+  for host in smdw sdw{1,2}; do
+    #    : files exist on remote hosts
+    assert_equals "${PXF_BASE_DIR}/conf/foo.jar" "$(list_remote_file ${host} "${PXF_BASE_DIR}/conf/foo.jar")" "foo.jar should exist on host ${host}"
+  done
+  #      : AND the file is removed from the master host
+  rm -f "${PXF_BASE_DIR}/conf/foo.jar"
+  # when : "pxf cluster sync" command is run
+  local result="$(pxf cluster sync)"
+  # then : it succeeds and prints the expected message
+  assert_equals "${expected_sync_message}" "${result}" "pxf cluster sync should succeed"
+  #      : AND foo.jar should still exist on remote hosts
+  assert_equals "${expected_cluster_configs}" "$(list_cluster_configs)" "foo.jar should be missing from mdw"
+}
+run_test test_sync_succeeds_no_delete "pxf cluster sync (no delete) should succeed"
+# ============================================================================================================
 
-compare "${expected_cluster_output}" "$(pxf cluster sync --delete)" "pxf cluster sync should succeed"
-expected="smdw:
+# === Test "pxf cluster sync (delete one host)" ==============================================================
+expected_cluster_configs=\
+"smdw:
+1
+2
+3
+${PXF_BASE_DIR}/conf/foo.jar
+mdw:
+1
+2
+3
+sdw1:
+1
+2
+3
+sdw2:
+1
+2
+3
+${PXF_BASE_DIR}/conf/foo.jar"
+test_sync_succeeds_delete_one_host() {
+  # given:
+  for host in smdw sdw{1,2}; do
+    #    : files exist on remote hosts
+    assert_equals "${PXF_BASE_DIR}/conf/foo.jar" "$(list_remote_file ${host} "${PXF_BASE_DIR}/conf/foo.jar")" "foo.jar should exist on host ${host}"
+  done
+  #      : AND the file is removed from the master host
+  rm -f "${PXF_BASE_DIR}/conf/foo.jar"
+  # when : "pxf sync --delete" command is run for one host
+  local result1="$(pxf sync --delete sdw1)"
+  #      : AND "pxf sync" command is run for another host
+  local result2="$(pxf sync sdw2)"
+  # then : they should succeed
+  assert_empty "${result1}" "pxf sync --delete sdw1 should succeed"
+  assert_empty "${result2}" "pxf sync sdw2 should succeed"
+  #      : AND foo.jar should be removed from sdw1 only
+  assert_equals "${expected_cluster_configs}" "$(list_cluster_configs)" "foo.jar should be missing from mdw and sdw1"
+}
+run_test test_sync_succeeds_delete_one_host "pxf cluster sync (delete one host) should succeed"
+# ============================================================================================================
+
+# === Test "pxf cluster sync (no delete server conf)" ========================================================
+expected_sync_message=\
+"Syncing PXF configuration files from master host to standby master host and 2 segment hosts...
+PXF configs synced successfully on 3 out of 3 hosts"
+expected_cluster_configs=\
+"smdw:
+1
+2
+3
+${PXF_BASE_DIR}/conf/foo.jar
+mdw:
+2
+3
+sdw1:
+1
+2
+3
+sdw2:
+1
+2
+3
+${PXF_BASE_DIR}/conf/foo.jar"
+test_sync_succeeds_no_delete_server_conf() {
+  # given:
+  for host in smdw sdw{1,2}; do
+    #    : files exist on remote hosts
+    assert_equals "${PXF_BASE_DIR}/servers/foo/1" "$(list_remote_file ${host} "${PXF_BASE_DIR}/servers/foo/1")" "servers/foo/1 should exist on host ${host}"
+  done
+  #      : AND the file is removed from the master host
+  rm -f "${PXF_BASE_DIR}/servers/foo/1"
+  # when : "pxf cluster sync" command is run
+  local result="$(pxf cluster sync)"
+  # then : it succeeds and prints the expected message
+  assert_equals "${expected_sync_message}" "${result}" "pxf cluster sync should succeed"
+  #      : AND servers/foo/1 should still exist on remote hosts
+  assert_equals "${expected_cluster_configs}" "$(list_cluster_configs)" "servers/foo/1 should be missing from mdw"
+}
+run_test test_sync_succeeds_no_delete_server_conf "pxf cluster sync (no delete server conf) should succeed"
+# ============================================================================================================
+
+# === Test "pxf cluster sync (delete server conf)" ===========================================================
+expected_sync_message=\
+"Syncing PXF configuration files from master host to standby master host and 2 segment hosts...
+PXF configs synced successfully on 3 out of 3 hosts"
+expected_cluster_configs=\
+"smdw:
 2
 3
 mdw:
@@ -122,15 +199,50 @@ sdw1:
 sdw2:
 2
 3"
-compare "${expected}" "$(get_status)" "all nodes should now have just ${PXF_CONF}/servers/foo/{2,3}"
+test_sync_succeeds_delete_server_conf() {
+  # given:
+  for host in smdw sdw{1,2}; do
+    #    : files exist on remote hosts
+    assert_equals "${PXF_BASE_DIR}/servers/foo/1" "$(list_remote_file ${host} "${PXF_BASE_DIR}/servers/foo/1")" "servers/foo/1 should exist on host ${host}"
+  done
+  #      : AND the file is removed from the master host
+  rm -f "${PXF_BASE_DIR}/servers/foo/1"
+  # when : "pxf cluster sync --delete" command is run
+  local result="$(pxf cluster sync --delete)"
+  # then : it succeeds and prints the expected message
+  assert_equals "${expected_sync_message}" "${result}" "pxf cluster sync should succeed"
+  #      : AND servers/foo/1 should not exist on remote hosts
+  assert_equals "${expected_cluster_configs}" "$(list_cluster_configs)" "servers/foo/1 should be missing from all hosts"
+}
+run_test test_sync_succeeds_delete_server_conf "pxf cluster sync (delete server conf) should succeed"
+# ============================================================================================================
 
-rm -rf ${PXF_CONF}/servers/foo
-compare "${expected_cluster_output}" "$(pxf cluster sync --delete)" "pxf cluster sync should succeed"
-expected="smdw:
+# === Test "pxf cluster sync (delete server)" ================================================================
+expected_sync_message=\
+"Syncing PXF configuration files from master host to standby master host and 2 segment hosts...
+PXF configs synced successfully on 3 out of 3 hosts"
+expected_cluster_configs=\
+"smdw:
 mdw:
 sdw1:
 sdw2:"
-compare "${expected}" "$(get_status)" "all nodes should be cleaned out completely"
+test_sync_succeeds_delete_server_conf() {
+  # given:
+  for host in smdw sdw{1,2}; do
+    #    : server directory exists on remote hosts
+    assert_equals "${PXF_BASE_DIR}/servers/foo" "$(echo_remote_dir ${host} "${PXF_BASE_DIR}/servers/foo")" "servers/foo should exist on host ${host}"
+  done
+  #      : AND the server directory is removed from the master host
+  rm -rf "${PXF_BASE_DIR}/servers/foo"
+  # when : "pxf cluster sync --delete" command is run
+  local result="$(pxf cluster sync --delete)"
+  # then : it succeeds and prints the expected message
+  assert_equals "${expected_sync_message}" "${result}" "pxf cluster sync should succeed"
+  #      : AND servers/foo should not exist on remote hosts
+  assert_equals "${expected_cluster_configs}" "$(list_cluster_configs)" "servers/foo should be missing from all hosts"
+}
+run_test test_sync_succeeds_delete_server_conf "pxf cluster sync (delete server conf) should succeed"
+# ============================================================================================================
 
 # put standby master on sdw1
 source "${GPHOME}/greenplum_path.sh"

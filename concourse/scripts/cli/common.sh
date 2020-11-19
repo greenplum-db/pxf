@@ -113,11 +113,29 @@ assertion_error() {
 }
 
 remove_remote_file() {
-  ssh "${1}" "rm -f "${2}""
+  ssh "${1}" "rm -rf "${2}""
 }
 
 list_remote_file() {
   ssh "${1}" "[[ -f ${2} ]] && ls ${2}"
+}
+
+echo_remote_dir() {
+  ssh "${1}" "[[ -d ${2} ]] && echo ${2}"
+}
+
+list_remote_configs() {
+	ssh "${1}" "
+			[[ -d ${PXF_BASE_DIR}/servers/foo ]] && ls ${PXF_BASE_DIR}/servers/foo
+			[[ -e ${PXF_BASE_DIR}/conf/foo.jar ]] && ls ${PXF_BASE_DIR}/conf/foo.jar
+	"
+}
+
+remove_remote_configs() {
+	ssh "${1}" "
+			rm -rf ${PXF_BASE_DIR}/servers/foo
+			rm -f  ${PXF_BASE_DIR}/conf/foo.jar
+	"
 }
 
 cat_remote_file() {
