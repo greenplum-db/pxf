@@ -4,9 +4,9 @@ title: About the PXF Installation and Configuration Directories
 
 PXF may be installed to `$GPHOME/pxf` on your master and segment nodes when you install Greenplum Database. If you install the PXF `rpm` or `deb` package, PXF is installed to `/usr/local/pxf-gp<greenplum-major-version>`, or to a directory of your choosing (CentOS/RHEL only). This documentation uses `$PXF_HOME` to refer to the PXF installation directory.
 
-In PXF 5.x, you specified a `$PXF_CONF` directory for configuration and runtime files when you initialized PXF.  In PXF 6.x, configuration and runtime files are located in `$PXF_BASE`, and no initialization is required.
+After you install PXF 6.x, `$PXF_HOME` includes the both the PXF executables and the PXF runtime configuration files and directories. In PXF 5.x, you specified a `$PXF_CONF` directory for the runtime configuration when you initialized PXF.  In PXF 6.x, no initialization is required, `$PXF_BASE` now identifies the runtime configuration directory, and the default `$PXF_BASE` is `$PXF_HOME`.
 
-When you install PXF 6.x, the default `$PXF_BASE` is `$PXF_HOME`.
+If you want to store your configuration and runtime files in a different location, see [Relocating $PXF_BASE](#movebase).
 
 ## <a id="installed"></a>PXF Installation Directories
 
@@ -47,7 +47,13 @@ For example, to relocate `$PXF_BASE` to the `/path/to/dir` directory on all Gree
 gpadmin@gpmaster$ PXF_BASE=/path/to/dir pxf cluster prepare
 ```
 
-You must inform PXF when you relocate `$PXF_BASE` by setting the environment variable in the `.bashrc` shell initialization script for the `gpadmin` user as follows:
+When your `$PXF_BASE` is different than `$PXF_HOME`, inform PXF by setting the `PXF_BASE` environment variable when you run a `pxf` command:
+
+``` pre
+gpadmin@gpmaster$ PXF_BASE=/path/to/dir pxf cluster start
+```
+
+Or, set the environment variable in the `.bashrc` shell initialization script for the PXF installation owner (typically the `gpadmin` user) as follows:
 
 ``` pre
 export PXF_BASE=/path/to/dir
