@@ -7,9 +7,9 @@ export PATH=$PATH:${PXF_HOME}/bin
 echo "Using GPHOME       : $GPHOME"
 echo "Using PXF_HOME     : $PXF_HOME"
 
-# export PXF_BASE only if explicitly specified
-if [[ -n "${PXF_BASE_DIR}" ]]; then
-  export PXF_BASE=${PXF_BASE_DIR}
+# export PXF_BASE_DIR
+if [[ -n "${PXF_BASE}" ]]; then
+  export PXF_BASE_DIR=${PXF_BASE}
   export PXF_BASE_OPTION="PXF_BASE=${PXF_BASE} "
   echo "Using PXF_BASE     : $PXF_BASE"
 else
