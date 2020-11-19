@@ -672,11 +672,12 @@ public class ParquetFilterPushDownTest extends ParquetBaseTest {
     }
 
     @Test
-    public void testUnsupportedInOperationFilter() throws Exception {
+    public void testInOperationFilter() throws Exception {
         // a16 in (11, 12)
+        int[] expectedRows = {11, 12, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25};
         context.setFilterString("a16m1007s2d11s2d12o10");
         // all rows are expected
-        assertRowsReturned(ALL);
+        assertRowsReturned(expectedRows);
     }
 
     private void assertRowsReturned(int[] expectedRows) throws Exception {
