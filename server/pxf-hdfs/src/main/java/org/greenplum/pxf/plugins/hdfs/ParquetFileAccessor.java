@@ -50,6 +50,7 @@ import org.apache.parquet.schema.Types;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.error.UnsupportedTypeException;
 import org.greenplum.pxf.api.filter.FilterParser;
+import org.greenplum.pxf.api.filter.InOperatorTransformer;
 import org.greenplum.pxf.api.filter.Node;
 import org.greenplum.pxf.api.filter.Operator;
 import org.greenplum.pxf.api.filter.TreeTraverser;
@@ -128,6 +129,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
     );
 
     private static final TreeTraverser TRAVERSER = new TreeTraverser();
+    private static final TreeVisitor IN_OPERATOR_TRANSFORMER = new InOperatorTransformer();
 
     private ParquetReader<Group> fileReader;
     private CompressionCodecName codecName;
@@ -319,10 +321,11 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
         try {
             // Parse the filter string into a expression tree Node
             Node root = new FilterParser().parse(filterString);
-            // Prune the parsed tree with valid supported operators and then
+            // Transform IN operators into a chain of ORs, then
+            // prune the parsed tree with valid supported operators and then
             // traverse the pruned tree with the ParquetRecordFilterBuilder to
             // produce a record filter for parquet
-            TRAVERSER.traverse(root, pruner, bpCharTransformer, filterBuilder);
+            TRAVERSER.traverse(root, IN_OPERATOR_TRANSFORMER, pruner, bpCharTransformer, filterBuilder);
             return filterBuilder.getRecordFilter();
         } catch (Exception e) {
             LOG.error(String.format("%s-%d: %s--%s Unable to generate Parquet Record Filter for filter",
