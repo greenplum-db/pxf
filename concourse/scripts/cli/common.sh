@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-#export PXF_CONF=~gpadmin/pxf
 export GPHOME=/usr/local/greenplum-db
 export PXF_HOME=$(find /usr/local/ -name "pxf-gp*" -type d)
 export PATH=$PATH:${PXF_HOME}/bin
@@ -61,22 +60,12 @@ exit_with_err() {
 		echo -e "${green}${test_name}${white}: all tests passed!${reset}"
 	fi
 	echo "failed_tests_cnt=${failed_tests_cnt}"
-	# exit "${failed_tests_cnt}"
-	exit 1
+	exit "${failed_tests_cnt}"
 }
 
 assert_equals() {
 	local usage='assert_equals <expected_text> <text_to_compare> <msg>'
 	local expected=${1} text=${2} message="${3:?${usage}}"
-
-	#echo "--- expected:"
-	#echo "${expected}"
-
-	#echo "--- text:"
-	#echo "${text}"
-
-	#diff <(echo "${expected}") <(echo "${text}")
-
 	[[ "${expected}" == "${text//[$'\r']}" ]] && return
 	assertion_error "${expected}" "${text}" "${message}"
 }

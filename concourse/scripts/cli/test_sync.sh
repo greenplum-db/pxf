@@ -226,7 +226,7 @@ expected_cluster_configs=\
 mdw:
 sdw1:
 sdw2:"
-test_sync_succeeds_delete_server_conf() {
+test_sync_succeeds_delete_server() {
   # given:
   for host in smdw sdw{1,2}; do
     #    : server directory exists on remote hosts
@@ -241,31 +241,44 @@ test_sync_succeeds_delete_server_conf() {
   #      : AND servers/foo should not exist on remote hosts
   assert_equals "${expected_cluster_configs}" "$(list_cluster_configs)" "servers/foo should be missing from all hosts"
 }
-run_test test_sync_succeeds_delete_server_conf "pxf cluster sync (delete server conf) should succeed"
+run_test test_sync_succeeds_delete_server "pxf cluster sync (delete server) should succeed"
 # ============================================================================================================
 
-# put standby master on sdw1
-source "${GPHOME}/greenplum_path.sh"
-gpinitstandby -ar >/dev/null
-ssh sdw1 'mkdir /data/gpdata/master'
-gpinitstandby -as sdw1 >/dev/null
-
-# files should not sync to smdw anymore
-expected_cluster_output="Syncing PXF configuration files from master host to 2 segment hosts...
+# === Test "pxf cluster sync (no standby)" ================================================================
+expected_sync_message=\
+"Syncing PXF configuration files from master host to 2 segment hosts...
 PXF configs synced successfully on 2 out of 2 hosts"
-touch ${PXF_CONF}/conf/foo.jar
-compare "${expected_cluster_output}" "$(pxf cluster sync)" "pxf cluster sync should succeed"
-expected="smdw:
+expected_cluster_configs=\
+"smdw:
 mdw:
-${PXF_CONF}/conf/foo.jar
+${PXF_BASE_DIR}/conf/foo.jar
 sdw1:
-${PXF_CONF}/conf/foo.jar
+${PXF_BASE_DIR}/conf/foo.jar
 sdw2:
-${PXF_CONF}/conf/foo.jar"
-compare "${expected}" "$(get_status)" "all nodes but smdw should have ${PXF_CONF}/conf/foo.jar"
+${PXF_BASE_DIR}/conf/foo.jar"
+test_sync_succeeds_no_standby() {
+  # given:
+  for host in smdw sdw{1,2}; do
+    #    : files do not exist on remote hosts
+    remove_remote_configs "${host}"
+    assert_empty "$(list_remote_configs ${host})" "config files should not exist on host ${host}"
+  done
+  #      : AND new file is created on master host
+  touch "${PXF_BASE_DIR}/conf/foo.jar"
+  #      : AND the standby master is no longer on smdw
+  source "${GPHOME}/greenplum_path.sh"
+  gpinitstandby -ar >/dev/null
+  # when : "pxf cluster sync" command is run
+  local result="$(pxf cluster sync)"
+  # then : it succeeds and prints the expected message
+  assert_equals "${expected_sync_message}" "${result}" "pxf cluster sync should succeed"
+  #      : AND the files appear on segment hosts, but not on the former standby host
+  assert_equals "${expected_cluster_configs}" "$(list_cluster_configs)" "foo.jar should be missing from smdw"
+}
+run_test test_sync_succeeds_no_standby "pxf cluster sync (no standby) should succeed"
+# ============================================================================================================
 
 # put standby master back on smdw
-gpinitstandby -ar >/dev/null
 gpinitstandby -as smdw >/dev/null
 
 exit_with_err "${BASH_SOURCE[0]}"
