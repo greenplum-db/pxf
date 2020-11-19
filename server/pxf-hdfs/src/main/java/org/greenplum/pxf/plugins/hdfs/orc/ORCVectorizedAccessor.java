@@ -83,7 +83,7 @@ public class ORCVectorizedAccessor extends BasePlugin implements Accessor {
     @Override
     public boolean openForRead() throws IOException {
         Path file = new Path(context.getDataSource());
-        FileSplit fileSplit = HdfsUtilities.parseFileSplit(context);
+        FileSplit fileSplit = HdfsUtilities.parseFileSplit(context.getDataSource(), context.getFragmentMetadata());
 
         fileReader = OrcFile.createReader(file, OrcFile
                 .readerOptions(configuration)
