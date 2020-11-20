@@ -25,10 +25,10 @@ steps:
     waitFor: [ 'retrieve-pxf-automation-dependencies' ]
 
   # use gradle image with JDK8 to build the project
-  - name: gradle:6.6.1-jdk8
+  - name: openjdk:8-jdk
     id: gradle-build
-    entrypoint: gradle
-    args: [ '--gradle-user-home=/workspace/.gradle', '-Dorg.gradle.daemon=false', '-b', './server/build.gradle', 'test', 'stage' ]
+    entrypoint: bash
+    args: [ './server/gradlew', '--gradle-user-home=/workspace/.gradle', '-Dorg.gradle.daemon=false', '-b', './server/build.gradle', 'test', 'stage' ]
     waitFor: [ 'untar-pxf-build-dependencies' ]
 
   - name: golang:1.15.3
