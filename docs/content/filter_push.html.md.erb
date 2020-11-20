@@ -53,7 +53,7 @@ PXF accesses data sources using profiles exposed by different connectors, and fi
 |Profile | <,&nbsp;&nbsp; >,</br><=,&nbsp;&nbsp; >=,</br>=,&nbsp;&nbsp;<> | LIKE | IS [NOT] NULL | IN | AND | OR | NOT |
 |-------|:------------------------:|:----:|:----:|:----:|:----:|:----:|:----:|:----:|
 | Jdbc | Y | Y | Y | Y | Y | Y | Y | Y | N | Y | Y | Y |
-| *:parquet | Y<sup>1</sup> | N | Y<sup>1</sup> | N | Y<sup>1</sup> | Y<sup>1</sup> | Y<sup>1</sup> |
+| *:parquet | Y<sup>1</sup> | N | Y<sup>1</sup> | Y<sup>1</sup> | Y<sup>1</sup> | Y<sup>1</sup> | Y<sup>1</sup> |
 | s3:parquet and s3:text with S3-Select | Y |  N | Y | Y | Y | Y | Y |
 | HBase | Y | N | Y | N | Y | Y | N |
 | Hive (accessing stored as Parquet) | Y, Y<sup>2</sup> | N | N | Y | Y, Y<sup>2</sup> | Y, Y<sup>2</sup> | Y |
