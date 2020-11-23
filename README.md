@@ -71,7 +71,7 @@ To build PXF, you must have:
     source /usr/local/greenplum-db/greenplum_path.sh
     ```
 
-3. JDK 1.8 to compile (PXF runs on Java 8 and Java 11)
+3. JDK 1.8 or JDK 11 to compile/run
 
     Export your `JAVA_HOME`:
     ```
