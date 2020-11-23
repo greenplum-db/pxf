@@ -56,4 +56,4 @@ CREATE FOREIGN DATA WRAPPER wasbs_pxf_fdw
 CREATE FOREIGN DATA WRAPPER file_pxf_fdw
     HANDLER pxf_fdw_handler
     VALIDATOR pxf_fdw_validator
-    OPTIONS ( protocol 'localfile', mpp_execute 'all segments' );
+    OPTIONS ( protocol 'file', mpp_execute 'all segments' );

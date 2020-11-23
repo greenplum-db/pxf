@@ -27,5 +27,7 @@ INSERT INTO writable_smoke_test_foreign_table
 SELECT * FROM writable_smoke_test_foreign_table ORDER BY name;
 SELECT name, num FROM writable_smoke_test_foreign_table WHERE num > 50 ORDER BY name;
 
+-- start_ignore
 {{ CLEAN_UP }}-- clean up HCFS
 {{ CLEAN_UP }}\!{{ HCFS_CMD }} dfs -rm -r -f {{ HCFS_SCHEME }}{{ HCFS_BUCKET }}{{ TEST_LOCATION }}
+-- end_ignore

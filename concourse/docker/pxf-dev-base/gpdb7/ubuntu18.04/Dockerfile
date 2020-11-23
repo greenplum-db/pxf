@@ -8,15 +8,9 @@ RUN mkdir -p /tmp/pxf_src/ && cd /tmp \
     && tar -C /usr/local -xzf go.tgz && rm go.tgz \
     && GOPATH=/opt/go /usr/local/go/bin/go get github.com/onsi/ginkgo/ginkgo
 
-# add Java 11
-RUN wget -q https://download.java.net/openjdk/jdk11/ri/openjdk-11+28_linux-x64_bin.tar.gz \
-    && mkdir -p /usr/lib/jvm \
-    && tar -C /usr/lib/jvm -xzf openjdk-11+28_linux-x64_bin.tar.gz \
-    && rm -f openjdk-11+28_linux-x64_bin.tar.gz
-
-# install dependencies that are missing on the base images
+# install java 11 and dependencies that are missing on the base images
 RUN apt-get update -y \
-    && DEBIAN_FRONTEND=noninteractive apt-get install -y curl sudo \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y curl sudo openjdk-11-jdk \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 

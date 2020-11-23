@@ -161,7 +161,7 @@ resources:
     password: ((pxf-cloudbuild-service-account-key))
 {% set gp_ver = None %}
 
-{% for gp_ver in range(5, 7) %}
+{% for gp_ver in range(5, 8) %}
 - name: gpdb[[gp_ver]]-pxf-dev-centos7-image
   type: registry-image
   icon: docker
@@ -170,7 +170,7 @@ resources:
     tag: latest
     username: _json_key
     password: ((pxf-cloudbuild-service-account-key))
-{% endfor %} {# gp5 and gp6 #}
+{% endfor %} {# gp5, gp6, and gp7 #}
 
 {% if oel7 %}
 - name: gpdb6-pxf-dev-oel7-image
@@ -258,6 +258,15 @@ resources:
     regexp: latest-0_gpdb[[gp_ver]]/greenplum-db-(.*)-ubuntu18.04-amd64.deb
 {% set gp_ver = None %}
 
+## ---------- Greenplum 7 Alpha Builds ----------
+- name: gpdb7_rhel7_rpm_latest-0
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: ((pxf-releng-gp6-drop-bucket))
+    json_key: ((concourse-gcs-resources-service-account-key))
+    regexp: server/published/master/greenplum-db-(7.*)-rhel7-x86_64.rpm
+
 ## ---------- PXF Build Artifacts ----------
 {% set gp_ver = 5 %}
 - name: pxf_gp[[gp_ver]]_tarball_rhel6
@@ -269,7 +278,7 @@ resources:
     versioned_file: dev/[[user]]-[[branch]]/snapshots/pxf-gp[[gp_ver]].el6.tar.gz
 {% set gp_ver = None %}
 
-{% for gp_ver in range(5, 7) %}
+{% for gp_ver in range(5, 8) %}
 - name: pxf_gp[[gp_ver]]_tarball_rhel7
   type: gcs
   icon: google-drive
@@ -369,7 +378,7 @@ jobs:
 {% set gp_ver = None %}
 
 ## ---------- Centos 7 Swimlane ----------
-{% for gp_ver in range(5, 7) %}
+{% for gp_ver in range(5, 8) %}
 - name: Build PXF-GP[[gp_ver]] on RHEL7
   plan:
   - in_parallel:
@@ -389,7 +398,9 @@ jobs:
   - put: pxf_gp[[gp_ver]]_tarball_rhel7
     params:
       file: dist/pxf-gp[[gp_ver]]-*.el7.tar.gz
+{% endfor %}
 
+{% for gp_ver in range(5, 7) %}
 - name: Test PXF-GP[[gp_ver]]-HDP2 on RHEL7
   plan:
   - in_parallel:

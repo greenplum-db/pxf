@@ -187,7 +187,8 @@ function install_gpdb_package() {
 	# get version from the package file name
 	: "${pkg_file#*greenplum-db-}"
 	version=${_%%-*}
-	ln -sf "/usr/local/greenplum-db-${version}" /usr/local/greenplum-db-devel
+	gphome_dir=$(find /usr/local/ -name "greenplum-db-${version}*" -type d)
+	ln -sf "${gphome_dir}" /usr/local/greenplum-db-devel
 	# change permissions to gpadmin
 	chown -R gpadmin:gpadmin /usr/local/greenplum-db*
 }

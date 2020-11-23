@@ -10,8 +10,13 @@
 
 #include "access/formatter.h"
 #include "commands/copy.h"
+#if PG_VERSION_NUM >= 90600
+#include "nodes/pathnodes.h"
+#endif
 #include "nodes/pg_list.h"
+#if PG_VERSION_NUM < 90600
 #include "nodes/relation.h"
+#endif
 #include "utils/rel.h"
 
 #ifndef PXF_FDW_H

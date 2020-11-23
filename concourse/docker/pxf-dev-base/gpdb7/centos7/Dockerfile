@@ -8,12 +8,6 @@ RUN mkdir -p /tmp/pxf_src/ && cd /tmp \
     && tar -C /usr/local -xzf go.tgz && rm go.tgz \
     && GOPATH=/opt/go /usr/local/go/bin/go get github.com/onsi/ginkgo/ginkgo
 
-# add Java 11
-RUN wget -q https://download.java.net/openjdk/jdk11/ri/openjdk-11+28_linux-x64_bin.tar.gz \
-    && mkdir -p /usr/lib/jvm \
-    && tar -C /usr/lib/jvm -xzf openjdk-11+28_linux-x64_bin.tar.gz \
-    && rm -f openjdk-11+28_linux-x64_bin.tar.gz
-
 # add minio software
 RUN useradd -s /sbin/nologin -d /opt/minio minio \
     && mkdir -p /opt/minio/bin \
@@ -23,8 +17,8 @@ RUN useradd -s /sbin/nologin -d /opt/minio minio \
     && chmod +x /opt/minio/bin/minio \
     && chown -R minio:minio /opt/minio
 
-# install dependencies that are missing on the base images
-RUN yum install -y rpm-build sudo
+# install java 11 and dependencies that are missing on the base images
+RUN yum install -y rpm-build sudo java-11-openjdk-devel
 
 # create user gpadmin since GPDB cannot run under root
 RUN ssh-keygen -t rsa -N "" -f /root/.ssh/id_rsa \
@@ -61,7 +55,7 @@ RUN ssh-keygen -t rsa -N "" -f /root/.ssh/id_rsa \
     && echo >> ~gpadmin/.pxfrc 'export GPHD_ROOT=/singlecluster' \
     && echo >> ~gpadmin/.pxfrc 'export PXF_HOME=/usr/local/pxf-gp7' \
     && echo >> ~gpadmin/.pxfrc 'export PXF_CONF=/home/gpadmin/pxf' \
-    && echo >> ~gpadmin/.pxfrc 'export JAVA_HOME=/usr/lib/jvm/jdk-11' \
+    && echo >> ~gpadmin/.pxfrc 'export JAVA_HOME=/usr/lib/jvm/java-11' \
     && echo >> ~gpadmin/.pxfrc 'export PATH=${GPHOME}/bin:${PXF_HOME}/bin:${GOPATH}/bin:/usr/local/go/bin:$JAVA_HOME/bin:$PATH' \
     && ln -s ~gpadmin/.pxfrc ~root \
     && echo >> ~gpadmin/.bashrc 'source ~/.pxfrc' \

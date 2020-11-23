@@ -26,7 +26,11 @@
 static void BuildUriForRead(PxfFdwScanState *pxfsstate);
 static void BuildUriForWrite(PxfFdwModifyState *pxfmstate);
 static void SetCurrentFragmentHeaders(PxfFdwScanState *pxfsstate);
+#if PG_VERSION_NUM >= 90600
+static size_t FillBuffer(PxfFdwScanState *pxfsstate, char *start, int minlen, int maxlen);
+#else
 static size_t FillBuffer(PxfFdwScanState *pxfsstate, char *start, size_t size);
+#endif
 
 /*
  * Clean up churl related data structures from the PXF FDW modify state.
@@ -43,12 +47,15 @@ PxfBridgeCleanup(PxfFdwModifyState *pxfmstate)
 	churl_headers_cleanup(pxfmstate->churl_headers);
 	pxfmstate->churl_headers = NULL;
 
-	/* TODO: do we need to cleanup filter_str for foreign scan? */
-/*	if (pxfmstate->filter_str != NULL)
+	if (pxfmstate->uri.data)
 	{
-		pfree(pxfmstate->filter_str);
-		pxfmstate->filter_str = NULL;
-	}*/
+		pfree(pxfmstate->uri.data);
+	}
+
+	if (pxfmstate->options)
+	{
+		pfree(pxfmstate->options);
+	}
 }
 
 /*
@@ -97,15 +104,23 @@ PxfBridgeExportStart(PxfFdwModifyState *pxfmstate)
  * Reads data from the PXF server into the given buffer of a given size
  */
 int
+#if PG_VERSION_NUM >= 90600
+PxfBridgeRead(void *outbuf, int minlen, int maxlen, void *extra)
+#else
 PxfBridgeRead(void *outbuf, int datasize, void *extra)
+#endif
 {
 	size_t		n = 0;
 	PxfFdwScanState *pxfsstate = (PxfFdwScanState *) extra;
 
 	if (!pxfsstate->fragments)
 		return (int) n;
-
+		
+#if PG_VERSION_NUM >= 90600
+	while ((n = FillBuffer(pxfsstate, outbuf, minlen, maxlen)) == 0)
+#else
 	while ((n = FillBuffer(pxfsstate, outbuf, datasize)) == 0)
+#endif
 	{
 		/*
 		 * done processing all data for current fragment - check if the
@@ -222,15 +237,28 @@ SetCurrentFragmentHeaders(PxfFdwScanState *pxfsstate)
  * Read data from churl until the buffer is full or there is no more data to be read
  */
 static size_t
+#if PG_VERSION_NUM >= 90600
+FillBuffer(PxfFdwScanState *pxfsstate, char *start, int minlen, int maxlen)
+#else
 FillBuffer(PxfFdwScanState *pxfsstate, char *start, size_t size)
+#endif
 {
 	size_t		n = 0;
 	char	   *ptr = start;
+#if PG_VERSION_NUM >= 90600
+	char	   *minend = ptr + minlen;
+	char	   *maxend = ptr + maxlen;
+
+	while (ptr < minend)
+	{
+		n = churl_read(pxfsstate->churl_handle, ptr, maxend - ptr);
+#else
 	char	   *end = ptr + size;
 
 	while (ptr < end)
 	{
 		n = churl_read(pxfsstate->churl_handle, ptr, end - ptr);
+#endif
 		if (n == 0)
 			break;
 

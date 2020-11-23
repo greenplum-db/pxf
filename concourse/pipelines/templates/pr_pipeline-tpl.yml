@@ -54,7 +54,7 @@ resources:
     password: ((pxf-cloudbuild-service-account-key))
 {% set gp_ver = None %}
 
-{% for gp_ver in range(5, 7) %}
+{% for gp_ver in range(5, 8) %}
 - name: gpdb[[gp_ver]]-pxf-dev-centos7-image
   type: registry-image
   icon: docker
@@ -63,7 +63,7 @@ resources:
     tag: latest
     username: _json_key
     password: ((pxf-cloudbuild-service-account-key))
-{% endfor %} {# gp5 and gp6 #}
+{% endfor %} {# gp5, gp6, and gp7 #}
 
 {% set gp_ver = 6 %}
 - name: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image
@@ -116,6 +116,15 @@ resources:
     regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-(.*)-ubuntu18.04-amd64.deb
 {% endfor %} {# range(num_gpdb6_versions) #}
 {% set gp_ver = None %}
+
+## ---------- Greenplum 7 Alpha Builds ----------
+- name: gpdb7_rhel7_rpm_latest-0
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: pivotal-gpdb-concourse-resources-prod
+    json_key: {{concourse-gcs-resources-service-account-key}}
+    regexp: server/published/master/greenplum-db-(7.*)-rhel7-x86_64.rpm
 
 ## ======================================================================
 ## JOBS
@@ -178,7 +187,7 @@ jobs:
 {% set gp_ver = None %}
 
 ## ---------- Centos 7 Swimlane ----------
-{% for gp_ver in range(5, 7) %}
+{% for gp_ver in range(5, 8) %}
 - name: Build and Test PXF-GP[[gp_ver]] on RHEL7
   public: true
   on_failure:
@@ -222,7 +231,11 @@ jobs:
       params:
         GPDB_PKG_DIR: gpdb_package
         GP_VER: [[gp_ver]]
+{% if gp_ver == 7 %}
+        GROUP: FDW_HdfsSmokeTest,FDW_WritableSmokeTest
+{% else %}
         GROUP: HdfsSmokeTest,WritableSmokeTest
+{% endif %}
         HADOOP_CLIENT: hdp
         IMPERSONATION: true
         PGPORT: 5432
@@ -230,7 +243,7 @@ jobs:
         PXF_PKG_DIR: dist
       run:
         path: pxf_src/concourse/scripts/test.bash
-{% endfor %} {# gp_ver 5 and 6 #}
+{% endfor %} {# gp_ver 5, 6, and 7 #}
 
 ## ---------- Ubuntu 18 Swimlane ----------
 {% set gp_ver = 6 %}

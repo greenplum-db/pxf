@@ -14,6 +14,9 @@
 #include "pxf_fragment.h"
 
 #include "access/reloptions.h"
+#if PG_VERSION_NUM >= 90600
+#include "access/table.h"
+#endif
 #include "cdb/cdbsreh.h"
 #include "cdb/cdbvars.h"
 #include "commands/copy.h"
@@ -22,11 +25,16 @@
 #include "foreign/fdwapi.h"
 #include "foreign/foreign.h"
 #include "nodes/pg_list.h"
+#if PG_VERSION_NUM >= 90600
+#include "optimizer/optimizer.h"
+#endif
 #include "optimizer/paths.h"
 #include "optimizer/pathnode.h"
 #include "optimizer/planmain.h"
 #include "optimizer/restrictinfo.h"
+#if PG_VERSION_NUM < 90600
 #include "optimizer/var.h"
+#endif
 #include "parser/parsetree.h"
 #include "utils/lsyscache.h"
 #include "utils/memutils.h"
@@ -198,7 +206,11 @@ pxfGetForeignRelSize(PlannerInfo *root, RelOptInfo *baserel, Oid foreigntableid)
 	 */
 	RangeTblEntry *rte = planner_rt_fetch(baserel->relid, root);
 
+#if PG_VERSION_NUM >= 90600
+	rel = table_open(rte->relid, NoLock);
+#else
 	rel = heap_open(rte->relid, NoLock);
+#endif
 
 	/*
 	 * Identify which baserestrictinfo clauses can be sent to the remote
@@ -373,7 +385,11 @@ pxfBeginForeignScan(ForeignScanState *node, int eflags)
 	List*	 fragments;
 	ForeignTable *rel = GetForeignTable(RelationGetRelid(node->ss.ss_currentRelation));
 
+#if PG_VERSION_NUM >= 90600
+	ExprState  *quals             = node->ss.ps.qual;
+#else
 	List	   *quals             = node->ss.ps.qual;
+#endif
 	Oid			foreigntableid = RelationGetRelid(node->ss.ss_currentRelation);
 	PxfFdwScanState *pxfsstate    = NULL;
 	Relation	relation          = node->ss.ss_currentRelation;
@@ -485,9 +501,16 @@ pxfIterateForeignScan(ForeignScanState *node)
 
 	found = NextCopyFrom(pxfsstate->cstate,
 						 NULL,
+#if PG_VERSION_NUM >= 90600
+						 slot->tts_values,
+						 slot->tts_isnull
+#else
 						 slot_get_values(slot),
 						 slot_get_isnull(slot),
-						 NULL);
+						 NULL
+#endif
+						 );
+
 	if (found)
 	{
 		if (pxfsstate->cstate->cdbsreh)
@@ -569,6 +592,8 @@ pxfBeginForeignModify(ModifyTableState *mtstate,
 {
 	elog(DEBUG5, "pxf_fdw: pxfBeginForeignModify starts on segment: %d", PXF_SEGMENT_ID);
 
+	ForeignTable *rel;
+	Oid			foreigntableid;
 	PxfOptions *options = NULL;
 	PxfFdwModifyState *pxfmstate = NULL;
 	Relation	relation = resultRelInfo->ri_RelationDesc;
@@ -577,15 +602,24 @@ pxfBeginForeignModify(ModifyTableState *mtstate,
 	if (eflags & EXEC_FLAG_EXPLAIN_ONLY)
 		return;
 
+	foreigntableid = RelationGetRelid(relation);
+	rel = GetForeignTable(foreigntableid);
+
+	if (Gp_role == GP_ROLE_DISPATCH && rel->exec_location == FTEXECLOCATION_ALL_SEGMENTS)
+		/* master does not process any data when exec_location is all segments */
+		return;
+
 	tupDesc = RelationGetDescr(relation);
-	options = PxfGetOptions(RelationGetRelid(relation));
+	options = PxfGetOptions(foreigntableid);
 	pxfmstate = palloc(sizeof(PxfFdwModifyState));
 
 	initStringInfo(&pxfmstate->uri);
 	pxfmstate->relation = relation;
 	pxfmstate->options = options;
+#if PG_VERSION_NUM < 90600
 	pxfmstate->values = (Datum *) palloc(tupDesc->natts * sizeof(Datum));
 	pxfmstate->nulls = (bool *) palloc(tupDesc->natts * sizeof(bool));
+#endif
 
 	InitCopyStateForModify(pxfmstate);
 
@@ -607,16 +641,27 @@ pxfExecForeignInsert(EState *estate,
 	elog(DEBUG5, "pxf_fdw: pxfExecForeignInsert starts on segment: %d", PXF_SEGMENT_ID);
 
 	PxfFdwModifyState *pxfmstate = (PxfFdwModifyState *) resultRelInfo->ri_FdwState;
+
+	/* If pxfmstate is NULL, we are in MASTER when exec_location is all segments; nothing to do */
+	if (pxfmstate == NULL)
+		return NULL;
+
 	CopyState	cstate = pxfmstate->cstate;
+#if PG_VERSION_NUM < 90600
 	Relation	relation = resultRelInfo->ri_RelationDesc;
 	TupleDesc	tupDesc = RelationGetDescr(relation);
 	HeapTuple	tuple = ExecMaterializeSlot(slot);
 	Datum	   *values = pxfmstate->values;
 	bool	   *nulls = pxfmstate->nulls;
 
-	/* TEXT or CSV */
 	heap_deform_tuple(tuple, tupDesc, values, nulls);
 	CopyOneRowTo(cstate, HeapTupleGetOid(tuple), values, nulls);
+#else
+
+	/* TEXT or CSV */
+	slot_getallattrs(slot);
+	CopyOneRowTo(cstate, slot);
+#endif
 	CopySendEndOfRow(cstate);
 
 	StringInfo	fe_msgbuf = cstate->fe_msgbuf;
@@ -652,11 +697,12 @@ pxfEndForeignModify(EState *estate,
 
 	PxfFdwModifyState *pxfmstate = (PxfFdwModifyState *) resultRelInfo->ri_FdwState;
 
-	/* If pxfmstate is NULL, we are in EXPLAIN; nothing to do */
+	/* If pxfmstate is NULL, we are in EXPLAIN or MASTER when exec_location is all segments; nothing to do */
 	if (pxfmstate == NULL)
 		return;
 
 	EndCopyFrom(pxfmstate->cstate);
+	pxfmstate->cstate = NULL;
 	PxfBridgeCleanup(pxfmstate);
 
 	elog(DEBUG5, "pxf_fdw: pxfEndForeignModify ends on segment: %d", PXF_SEGMENT_ID);
@@ -691,14 +737,21 @@ InitCopyState(PxfFdwScanState *pxfsstate)
 	 * Create CopyState from FDW options.  We always acquire all columns, so
 	 * as to match the expected ScanTupleSlot signature.
 	 */
-	cstate = BeginCopyFrom(pxfsstate->relation,
+	cstate = BeginCopyFrom(
+#if PG_VERSION_NUM >= 90600
+						   NULL,
+#endif
+						   pxfsstate->relation,
 						   NULL,
 						   false,	/* is_program */
 						   &PxfBridgeRead,	/* data_source_cb */
 						   pxfsstate,	/* data_source_cb_extra */
 						   NIL, /* attnamelist */
-						   pxfsstate->options->copy_options,	/* copy options */
-						   NIL);	/* ao_segnos */
+						   pxfsstate->options->copy_options	/* copy options */
+#if PG_VERSION_NUM < 90600
+						   ,NIL	/* ao_segnos */
+#endif
+						   );
 
 
 	if (pxfsstate->options->reject_limit == -1)
@@ -720,7 +773,11 @@ InitCopyState(PxfFdwScanState *pxfsstate)
 									  pxfsstate->options->is_reject_limit_rows,
 									  pxfsstate->options->resource,
 									  (char *) cstate->cur_relname,
+#if PG_VERSION_NUM >= 90600
+									  pxfsstate->options->log_errors ? LOG_ERRORS_ENABLE : LOG_ERRORS_DISABLE);
+#else
 									  pxfsstate->options->log_errors);
+#endif
 
 		cstate->cdbsreh->relid = RelationGetRelid(pxfsstate->relation);
 	}
@@ -764,8 +821,12 @@ InitCopyStateForModify(PxfFdwModifyState *pxfmstate)
 
 	/* Initialize 'out_functions', like CopyTo() would. */
 
-	TupleDesc	tupDesc = RelationGetDescr(cstate->rel);
+	TupleDesc	tupDesc = RelationGetDescr(pxfmstate->relation);
+#if PG_VERSION_NUM >= 90600
+	Form_pg_attribute attr = tupDesc->attrs;
+#else
 	Form_pg_attribute *attr = tupDesc->attrs;
+#endif
 	int			num_phys_attrs = tupDesc->natts;
 
 	cstate->out_functions = (FmgrInfo *) palloc(num_phys_attrs * sizeof(FmgrInfo));
@@ -777,7 +838,11 @@ InitCopyStateForModify(PxfFdwModifyState *pxfmstate)
 		Oid			out_func_oid;
 		bool		isvarlena;
 
+#if PG_VERSION_NUM >= 90600
+		getTypeOutputInfo(attr[attnum - 1].atttypid,
+#else
 		getTypeOutputInfo(attr[attnum - 1]->atttypid,
+#endif
 						  &out_func_oid,
 						  &isvarlena);
 		fmgr_info(out_func_oid, &cstate->out_functions[attnum - 1]);
@@ -809,16 +874,9 @@ BeginCopyTo(Relation forrel, List *options)
 {
 	CopyState	cstate;
 
-	Assert(RelationIsForeign(forrel));
+	Assert(forrel->rd_rel->relkind == RELKIND_FOREIGN_TABLE);
 
-#if (PG_VERSION_NUM <= 90500)
-	/* cstate = BeginCopy(false, forrel, NULL, NULL, NIL, options, NULL); */
-	ereport(ERROR,
-		(errcode(ERRCODE_UNDEFINED_FUNCTION),
-				errmsg("BeginCopy is not defined yet: %m")));
-#else
-	cstate = BeginCopy(false, forrel, NULL, NULL, forrel->rd_id, NIL, options, NULL);
-#endif
+	cstate = BeginCopyToForeignTable(forrel, options);
 	cstate->dispatch_mode = COPY_DIRECT;
 
 	/*

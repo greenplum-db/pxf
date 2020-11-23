@@ -268,6 +268,18 @@ function installExternalTableExtension()
             cp -Lv "${parent_script_dir}/gpextable/pxf.control" "${target_control_file}"
             chmod 644 "${target_control_file}"
         fi
+    elif [[ -d ${parent_script_dir}/fdw ]]; then
+        if [[ -z "${GPHOME}" ]]; then
+            echoYellow 'WARNING: environment variable GPHOME is not set, skipping install of Greenplum Foreign Data Wrapper PXF Extension'
+        elif [[ ! -f ${GPHOME}/greenplum_path.sh ]]; then
+            echoYellow "WARNING: environment variable GPHOME (${GPHOME}) must be set to a valid Greenplum installation, skipping install of Greenplum Foreign Data Wrapper PXF Extension'"
+        else
+            echoGreen "Installing Greenplum Foreign Data Wrapper PXF Extension into '${GPHOME}'"
+
+            local target_control_file="${GPHOME}/share/postgresql/extension/pxf_fdw.control"
+            cp -Lv "${parent_script_dir}/fdw/pxf_fdw.control" "${target_control_file}"
+            chmod 644 "${target_control_file}"
+        fi
     fi
 }
 

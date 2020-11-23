@@ -890,16 +890,18 @@ public class ParquetWriteTest {
         Type type = schema.getType(0);
         assertEquals(PrimitiveType.PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY, type.asPrimitiveType().getPrimitiveTypeName());
         assertTrue(type.getLogicalTypeAnnotation() instanceof DecimalLogicalTypeAnnotation);
-        assertEquals(new BigDecimal("1.2").setScale(18, ROUND_UNNECESSARY), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), 18));
-        assertEquals(new BigDecimal("22.2345").setScale(18, ROUND_UNNECESSARY), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), 18));
-        assertEquals(new BigDecimal("333.34567").setScale(18, ROUND_UNNECESSARY), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), 18));
-        assertEquals(new BigDecimal("4444.456789").setScale(18, ROUND_UNNECESSARY), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), 18));
-        assertEquals(new BigDecimal("55555.5678901").setScale(18, ROUND_UNNECESSARY), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), 18));
-        assertEquals(new BigDecimal("666666.67890123").setScale(18, ROUND_UNNECESSARY), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), 18));
-        assertEquals(new BigDecimal("7777777.789012345").setScale(18, ROUND_UNNECESSARY), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), 18));
-        assertEquals(new BigDecimal("88888888.8901234567").setScale(18, ROUND_UNNECESSARY), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), 18));
-        assertEquals(new BigDecimal("999999999.90123456789").setScale(18, ROUND_UNNECESSARY), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), 18));
-        assertEquals(new BigDecimal("12345678901234567890.123456789012345678").setScale(18, ROUND_UNNECESSARY), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), 18));
+
+
+        assertEquals(new BigDecimal("1.200000000000000000"), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), 18));
+        assertEquals(new BigDecimal("22.234500000000000000"), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), 18));
+        assertEquals(new BigDecimal("333.345670000000000000"), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), 18));
+        assertEquals(new BigDecimal("4444.456789000000000000"), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), 18));
+        assertEquals(new BigDecimal("55555.567890100000000000"), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), 18));
+        assertEquals(new BigDecimal("666666.678901230000000000"), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), 18));
+        assertEquals(new BigDecimal("7777777.789012345000000000"), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), 18));
+        assertEquals(new BigDecimal("88888888.890123456700000000"), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), 18));
+        assertEquals(new BigDecimal("999999999.901234567890000000"), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), 18));
+        assertEquals(new BigDecimal("12345678901234567890.123456789012345678"), new BigDecimal(new BigInteger(fileReader.read().getBinary(0, 0).getBytes()), 18));
         assertNull(fileReader.read());
         fileReader.close();
     }
@@ -972,9 +974,9 @@ public class ParquetWriteTest {
         Group row1 = fileReader.read();
         Group row2 = fileReader.read();
 
-        assertEquals(new BigDecimal("1.2").setScale(18, ROUND_UNNECESSARY), new BigDecimal(new BigInteger(row0.getBinary(0, 0).getBytes()), 18));
-        assertEquals(new BigDecimal("2.3").setScale(18, ROUND_UNNECESSARY), new BigDecimal(new BigInteger(row1.getBinary(0, 0).getBytes()), 18));
-        assertEquals(new BigDecimal("3.4").setScale(18, ROUND_UNNECESSARY), new BigDecimal(new BigInteger(row2.getBinary(0, 0).getBytes()), 18));
+        assertEquals(new BigDecimal("1.200000000000000000"), new BigDecimal(new BigInteger(row0.getBinary(0, 0).getBytes()), 18));
+        assertEquals(new BigDecimal("2.300000000000000000"), new BigDecimal(new BigInteger(row1.getBinary(0, 0).getBytes()), 18));
+        assertEquals(new BigDecimal("3.400000000000000000"), new BigDecimal(new BigInteger(row2.getBinary(0, 0).getBytes()), 18));
 
         assertEquals("", row0.getString(1, 0));
         assertEquals("d", row1.getString(1, 0));

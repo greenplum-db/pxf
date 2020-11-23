@@ -1,4 +1,5 @@
 -- data prep
+-- start_ignore
 {{ GPDB_REMOTE }}\!ssh {{ PGHOST }} mkdir -p {{ TEST_LOCATION }}
 \!mkdir -p {{ TEST_LOCATION }}
 COPY (
@@ -14,6 +15,7 @@ COPY (
 {{ GPDB_REMOTE }}\!scp {{ PGHOST }}:{{ TEST_LOCATION }}/data.csv {{ TEST_LOCATION }}
 \!{{ HCFS_CMD }} dfs -mkdir -p '{{ HCFS_SCHEME }}{{ HCFS_BUCKET }}{{ TEST_LOCATION }}'
 \!{{ HCFS_CMD }} dfs -copyFromLocal '{{ TEST_LOCATION }}/data.csv' '{{ HCFS_SCHEME }}{{ HCFS_BUCKET }}{{ TEST_LOCATION }}'
+-- end_ignore
 
 -- FDW test
 CREATE SERVER hdfs_smoke_test_hdfs_server
@@ -31,7 +33,9 @@ CREATE FOREIGN TABLE hdfs_smoke_test_foreign_table (
 SELECT * FROM hdfs_smoke_test_foreign_table ORDER BY name;
 SELECT name, num FROM hdfs_smoke_test_foreign_table WHERE num > 50 ORDER BY name;
 
+-- start_ignore
 {{ CLEAN_UP }}-- clean up HCFS and local disk
 {{ CLEAN_UP }}\!{{ HCFS_CMD }} dfs -rm -r -f {{ HCFS_SCHEME }}{{ HCFS_BUCKET }}{{ TEST_LOCATION }}
 {{ CLEAN_UP }}\!rm -rf {{ TEST_LOCATION }}
 {{ CLEAN_UP }}{{ GPDB_REMOTE }}\!ssh {{ PGHOST }} rm -rf {{ TEST_LOCATION }}
+-- end_ignore
