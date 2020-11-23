@@ -263,7 +263,7 @@ resources:
   type: gcs
   icon: google-drive
   source:
-    bucket: ((pxf-releng-gp6-drop-bucket))
+    bucket: pivotal-gpdb-concourse-resources-prod
     json_key: ((concourse-gcs-resources-service-account-key))
     regexp: server/published/master/greenplum-db-(7.*)-rhel7-x86_64.rpm
 

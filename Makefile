@@ -5,14 +5,15 @@ PG_CONFIG = pg_config
 PXF_VERSION ?= $(shell cat version)
 export PXF_VERSION
 
+FDW_SUPPORT = $(shell $(PG_CONFIG) --version | egrep "PostgreSQL 12")
+
 SOURCE_EXTENSION_DIR = external-table
 TARGET_EXTENSION_DIR = gpextable
-ifneq ($(shell $(PG_CONFIG) --version | egrep "PostgreSQL 12"),)
+ifneq ($(FDW_SUPPORT),)
 	SOURCE_EXTENSION_DIR = fdw
 	TARGET_EXTENSION_DIR = fdw
 endif
 
-FDW_SUPPORT = $(shell $(PG_CONFIG) --version | egrep "PostgreSQL 12")
 
 LICENSE ?= ASL 2.0
 VENDOR ?= Open Source
