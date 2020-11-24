@@ -35,7 +35,7 @@ SET gp_external_enable_filter_pushdown TO 'on';
 PXF filter pushdown can be used with these data types (connector- and profile-specific):
 
 - `INT2`, `INT4`, `INT8`
-- `CHAR`, `TEXT`
+- `CHAR`, `TEXT`, `VARCHAR`
 - `FLOAT`
 - `NUMERIC` (not available with the S3 connector when using S3 Select, nor with the `Hive` profile when accessing `STORED AS Parquet`)
 - `BOOL`
