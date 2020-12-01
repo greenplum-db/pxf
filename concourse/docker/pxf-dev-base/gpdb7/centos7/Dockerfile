@@ -17,8 +17,9 @@ RUN useradd -s /sbin/nologin -d /opt/minio minio \
     && chmod +x /opt/minio/bin/minio \
     && chown -R minio:minio /opt/minio
 
-# install java 11 and dependencies that are missing on the base images
-RUN yum install -y rpm-build sudo java-11-openjdk-devel
+# install java 8 and 11 and dependencies that are missing on the base images
+# java 8 is required to run hadoop. Do not use java 8 to build / run PXF
+RUN yum install -y rpm-build sudo java-1.8.0-openjdk java-11-openjdk-devel
 
 # create user gpadmin since GPDB cannot run under root
 RUN ssh-keygen -t rsa -N "" -f /root/.ssh/id_rsa \

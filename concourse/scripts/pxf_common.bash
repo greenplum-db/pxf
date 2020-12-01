@@ -18,6 +18,9 @@ else
 	JAVA_HOME=$(find /usr/lib/jvm -name 'java-1.8.0-openjdk*' | head -1)
 fi
 
+# java home for hadoop services
+HADOOP_JAVA_HOME=${HADOOP_JAVA_HOME:-$JAVA_HOME}
+
 if [[ -d gpdb_src/gpAux/extensions/pxf ]]; then
 	PXF_EXTENSIONS_DIR=gpdb_src/gpAux/extensions/pxf
 else
@@ -424,17 +427,17 @@ function start_hadoop_services() {
 	local GPHD_ROOT=${1}
 
 	# Start all hadoop services
-	"${GPHD_ROOT}/bin/init-gphd.sh"
-	"${GPHD_ROOT}/bin/start-hdfs.sh"
-	"${GPHD_ROOT}/bin/start-zookeeper.sh"
-	"${GPHD_ROOT}/bin/start-yarn.sh" &
-	"${GPHD_ROOT}/bin/start-hbase.sh" &
-	"${GPHD_ROOT}/bin/start-hive.sh" &
+	JAVA_HOME=${HADOOP_JAVA_HOME} "${GPHD_ROOT}/bin/init-gphd.sh"
+	JAVA_HOME=${HADOOP_JAVA_HOME} "${GPHD_ROOT}/bin/start-hdfs.sh"
+	JAVA_HOME=${HADOOP_JAVA_HOME} "${GPHD_ROOT}/bin/start-zookeeper.sh"
+	JAVA_HOME=${HADOOP_JAVA_HOME} "${GPHD_ROOT}/bin/start-yarn.sh" &
+	JAVA_HOME=${HADOOP_JAVA_HOME} "${GPHD_ROOT}/bin/start-hbase.sh" &
+	JAVA_HOME=${HADOOP_JAVA_HOME} "${GPHD_ROOT}/bin/start-hive.sh" &
 	wait
 	export PATH=$PATH:${GPHD_ROOT}/bin
 
 	# list running Hadoop daemons
-	jps
+	JAVA_HOME=${HADOOP_JAVA_HOME} jps
 
 	# grant gpadmin user admin privilege for feature tests to be able to run on secured cluster
 	if [[ ${IMPERSONATION} == true ]]; then
