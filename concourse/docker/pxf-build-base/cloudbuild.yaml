@@ -98,7 +98,20 @@ steps:
         mkdir -p /root/pxf/servers/db-session-params/ && cp ./server/pxf-service/src/templates/templates/jdbc-site.xml /root/pxf/servers/db-session-params/
         mkdir -p /root/pxf/servers/db-hive/ && cp ./server/pxf-service/src/templates/templates/jdbc-site.xml /root/pxf/servers/db-hive/
         GPHD_ROOT=/tmp PXF_HOME=/tmp/pxf mvn -B -e -Dpxf.lib=/workspace/automation_tmp_lib -Dtest=HdfsSmokeTest -Djava.awt.headless=true -Dmaven.repo.local=/workspace/.m2/repository -f ./automation/pom.xml -U test || true 
+        # create pxf-tools directory and copy jars needed by pxf
+        mkdir -p pxf-tools
+        cp $(find . -name avro-tools*.jar) pxf-tools
     waitFor: [ 'mvn-dev-build' ]
+
+  # create a tarball with tools used by PXF, for example avro-tools
+  - name: 'gcr.io/$PROJECT_ID/tar'
+    id: tar-pxf-tools
+    args: [ '-czf', 'pxf-tools.tar.gz', 'pxf-tools' ]
+    waitFor: [ 'mvn-test-build' ]
+  # Push the pxf-tools.tar.gz tarball to Google Cloud Storage
+  - name: 'gcr.io/cloud-builders/gsutil'
+    args: [ 'cp', '/workspace/pxf-tools.tar.gz', 'gs://${_PXF_BUILD_BUCKET}/regression-dependencies/pxf-tools.tar.gz' ]
+    waitFor: [ 'tar-pxf-tools' ]
 
   # create an updated tarball with automation dependencies and upload it
   - name: 'gcr.io/$PROJECT_ID/tar'
