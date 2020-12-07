@@ -46,8 +46,8 @@ function inflate_dependencies() {
 		tarballs+=(pxf-automation-dependencies/pxf-automation-dependencies.tar.gz)
 		files_to_link+=(~gpadmin/.m2)
 	fi
-	if [[ -f pxf-tools/pxf-tools.tar.gz ]]; then
-		tarballs+=(pxf-tools/pxf-tools.tar.gz)
+	if [[ -f regression-tools/regression-tools.tar.gz ]]; then
+		tarballs+=(regression-tools/regression-tools.tar.gz)
 	fi
 	(( ${#tarballs[@]} == 0 )) && return
 	for t in "${tarballs[@]}"; do
