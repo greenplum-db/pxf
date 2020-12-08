@@ -267,7 +267,7 @@ All tests use a database named `pxfautomation`.
 pushd ~/workspace/pxf/automation
 
 # Initialize default server configs using template
-cp ~/pxf/templates/{hdfs,mapred,yarn,core,hbase,hive}-site.xml ~/pxf/servers/default
+cp ${PXF_HOME}/templates/{hdfs,mapred,yarn,core,hbase,hive}-site.xml ${PXF_BASE}/servers/default
 
 # Run specific tests. Example: Hdfs Smoke Test
 make TEST=HdfsSmokeTest
