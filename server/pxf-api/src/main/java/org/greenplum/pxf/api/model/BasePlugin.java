@@ -43,17 +43,18 @@ public class BasePlugin implements Plugin {
      * @param totalReadTimeInNanos the total nanoseconds it took to read the file
      */
     protected void logReadStats(long totalRowsRead, long totalReadTimeInNanos) {
-        if (LOG.isDebugEnabled()) {
-            final long millis = TimeUnit.NANOSECONDS.toMillis(totalReadTimeInNanos);
-            long tuplesPerNanos = totalReadTimeInNanos == 0 ? 0 : totalRowsRead / totalReadTimeInNanos;
-            LOG.debug("{}-{}: Read TOTAL of {} rows from file {} on server {} in {} ms. Average speed: {} tuples/nanoseconds",
-                    context.getTransactionId(),
-                    context.getSegmentId(),
-                    totalRowsRead,
-                    context.getDataSource(),
-                    context.getServerName(),
-                    millis,
-                    tuplesPerNanos);
-        }
+        if (!LOG.isDebugEnabled())
+            return;
+
+        final long millis = TimeUnit.NANOSECONDS.toMillis(totalReadTimeInNanos);
+        long tuplesPerMillis = millis == 0 ? 0 : totalRowsRead / millis;
+        LOG.debug("{}-{}: Read TOTAL of {} rows from file {} on server {} in {} ms. Average speed: {} tuples/ms",
+                context.getTransactionId(),
+                context.getSegmentId(),
+                totalRowsRead,
+                context.getDataSource(),
+                context.getServerName(),
+                millis,
+                tuplesPerMillis);
     }
 }
