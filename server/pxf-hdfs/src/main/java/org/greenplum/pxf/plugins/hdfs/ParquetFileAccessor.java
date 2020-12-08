@@ -59,7 +59,8 @@ import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.SpringContext;
-import org.greenplum.pxf.plugins.hdfs.parquet.ParquetOperatorPrunerAndTransformer;
+import org.greenplum.pxf.plugins.hdfs.filter.BPCharOperatorTransformer;
+import org.greenplum.pxf.plugins.hdfs.parquet.ParquetOperatorPruner;
 import org.greenplum.pxf.plugins.hdfs.parquet.ParquetRecordFilterBuilder;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 
@@ -214,18 +215,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
 
         totalRowsRead += rowsRead;
 
-        if (LOG.isDebugEnabled()) {
-            final long millis = TimeUnit.NANOSECONDS.toMillis(totalReadTimeInNanos);
-            long average = totalReadTimeInNanos / totalRowsRead;
-            LOG.debug("{}-{}: Read TOTAL of {} rows from file {} on server {} in {} ms. Average speed: {} nanoseconds",
-                    context.getTransactionId(),
-                    context.getSegmentId(),
-                    totalRowsRead,
-                    context.getDataSource(),
-                    context.getServerName(),
-                    millis,
-                    average);
-        }
+        logReadStats(totalRowsRead, totalReadTimeInNanos);
         if (fileReader != null) {
             fileReader.close();
         }
@@ -322,8 +312,9 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
         List<ColumnDescriptor> tupleDescription = context.getTupleDescription();
         ParquetRecordFilterBuilder filterBuilder = new ParquetRecordFilterBuilder(
                 tupleDescription, originalFieldsMap);
-        TreeVisitor pruner = new ParquetOperatorPrunerAndTransformer(
+        TreeVisitor pruner = new ParquetOperatorPruner(
                 tupleDescription, originalFieldsMap, SUPPORTED_OPERATORS);
+        TreeVisitor bpCharTransformer = new BPCharOperatorTransformer(tupleDescription);
 
         try {
             // Parse the filter string into a expression tree Node
@@ -331,7 +322,7 @@ public class ParquetFileAccessor extends BasePlugin implements Accessor {
             // Prune the parsed tree with valid supported operators and then
             // traverse the pruned tree with the ParquetRecordFilterBuilder to
             // produce a record filter for parquet
-            TRAVERSER.traverse(root, pruner, filterBuilder);
+            TRAVERSER.traverse(root, pruner, bpCharTransformer, filterBuilder);
             return filterBuilder.getRecordFilter();
         } catch (Exception e) {
             LOG.error(String.format("%s-%d: %s--%s Unable to generate Parquet Record Filter for filter",

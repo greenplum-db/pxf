@@ -1,7 +1,6 @@
 package org.greenplum.pxf.plugins.hdfs.parquet;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import org.apache.hadoop.hive.serde2.io.DateWritable;
 import org.apache.parquet.example.data.Group;
 import org.apache.parquet.example.data.simple.NanoTime;
 import org.apache.parquet.io.api.Binary;
@@ -87,11 +86,12 @@ public enum ParquetTypeConverter {
         }
 
         @Override
+        @SuppressWarnings("deprecation")
         public Object getValue(Group group, int columnIndex, int repeatIndex, Type type) {
             int result = group.getInteger(columnIndex, repeatIndex);
             LogicalTypeAnnotation originalType = type.getLogicalTypeAnnotation();
             if (originalType instanceof DateLogicalTypeAnnotation) {
-                return new DateWritable(result).get(true);
+                return new org.apache.hadoop.hive.serde2.io.DateWritable(result).get(true);
             } else if (originalType instanceof DecimalLogicalTypeAnnotation) {
                 return ParquetTypeConverter.bigDecimalFromLong((DecimalLogicalTypeAnnotation) originalType, result);
             } else if (originalType instanceof IntLogicalTypeAnnotation) {

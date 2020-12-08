@@ -4,6 +4,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * Base class for all plugin types (Accessor, Resolver, Fragmenter, ...).
  * Manages the meta data.
@@ -30,5 +32,28 @@ public class BasePlugin implements Plugin {
      */
     @Override
     public void afterPropertiesSet() {
+    }
+
+    /**
+     * When DEBUG mode is enabled, logs the total number of rows read, the
+     * amount of time it took to read the file, and the average read speed
+     * in nanoseconds
+     *
+     * @param totalRowsRead        the total number of rows read
+     * @param totalReadTimeInNanos the total nanoseconds it took to read the file
+     */
+    protected void logReadStats(long totalRowsRead, long totalReadTimeInNanos) {
+        if (LOG.isDebugEnabled()) {
+            final long millis = TimeUnit.NANOSECONDS.toMillis(totalReadTimeInNanos);
+            long tuplesPerNanos = totalReadTimeInNanos == 0 ? 0 : totalRowsRead / totalReadTimeInNanos;
+            LOG.debug("{}-{}: Read TOTAL of {} rows from file {} on server {} in {} ms. Average speed: {} tuples/nanoseconds",
+                    context.getTransactionId(),
+                    context.getSegmentId(),
+                    totalRowsRead,
+                    context.getDataSource(),
+                    context.getServerName(),
+                    millis,
+                    tuplesPerNanos);
+        }
     }
 }
