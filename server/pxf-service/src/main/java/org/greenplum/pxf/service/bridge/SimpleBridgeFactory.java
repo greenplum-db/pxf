@@ -39,7 +39,7 @@ public class SimpleBridgeFactory implements BridgeFactory {
     }
 
     /**
-     * Determines whether use vectorization
+     * Determines whether to use vectorization
      *
      * @param requestContext input protocol data
      * @return true if vectorization is applicable in a current context

@@ -413,6 +413,74 @@ under the License.
         </plugins>
         <protocol>gs</protocol>
     </profile>
+    <!-- ORC PROFILES -->
+    <profile>
+        <name>hdfs:orc</name>
+        <description>A profile for reading ORC data from HDFS</description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.orc.ORCVectorizedAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.orc.ORCVectorizedResolver</resolver>
+        </plugins>
+    </profile>
+    <profile>
+        <name>s3:orc</name>
+        <description>A profile for reading ORC data from S3</description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.orc.ORCVectorizedAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.orc.ORCVectorizedResolver</resolver>
+        </plugins>
+        <protocol>s3a</protocol>
+        <handler>org.greenplum.pxf.plugins.s3.S3ProtocolHandler</handler>
+        <optionMappings>
+            <mapping option="accesskey" property="fs.s3a.access.key"/>
+            <mapping option="secretkey" property="fs.s3a.secret.key"/>
+        </optionMappings>
+    </profile>
+    <profile>
+        <name>adl:orc</name>
+        <description>A profile for reading ORC data from Azure Data Lake
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.orc.ORCVectorizedAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.orc.ORCVectorizedResolver</resolver>
+        </plugins>
+        <protocol>adl</protocol>
+    </profile>
+    <profile>
+        <name>gs:orc</name>
+        <description>A profile for reading ORC data from Google Cloud Storage
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.orc.ORCVectorizedAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.orc.ORCVectorizedResolver</resolver>
+        </plugins>
+        <protocol>gs</protocol>
+    </profile>
+    <profile>
+        <name>wasbs:orc</name>
+        <description>A profile for reading ORC data from Azure Blob Storage
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.orc.ORCVectorizedAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.orc.ORCVectorizedResolver</resolver>
+        </plugins>
+        <protocol>wasbs</protocol>
+    </profile>
+    <profile>
+        <name>file:orc</name>
+        <description>A profile for reading ORC data from Azure Blob Storage
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.orc.ORCVectorizedAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.orc.ORCVectorizedResolver</resolver>
+        </plugins>
+    </profile>
     <!-- AVRO PROFILES -->
     <profile>
         <name>Avro</name>

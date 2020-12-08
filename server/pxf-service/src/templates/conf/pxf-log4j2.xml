@@ -34,6 +34,7 @@
     <Logger name="com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystemBase" level="warn"/>
     <Logger name="org.apache.hadoop" level="warn"/>
     <Logger name="org.apache.parquet" level="warn"/>
+    <Logger name="org.apache.orc" level="error"/>
     <Logger name="org.apache.zookeeper" level="warn"/>
     <Logger name="hive.metastore" level="warn"/>
     <Logger name="org.apache.catalina.startup.DigesterFactory" level="error"/>

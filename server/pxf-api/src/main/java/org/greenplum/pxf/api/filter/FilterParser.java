@@ -22,6 +22,8 @@ package org.greenplum.pxf.api.filter;
 
 import org.greenplum.pxf.api.io.DataType;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -67,7 +69,7 @@ import java.util.Stack;
 public class FilterParser {
     private int index;
     private byte[] filterByteArr;
-    private Stack<Node> operandsStack;
+    private final Stack<Node> operandsStack;
     private static final char COL_OP = 'a';
     private static final char SCALAR_CONST_OP = 'c';
     private static final char LIST_CONST_OP = 'm';
@@ -118,7 +120,7 @@ public class FilterParser {
     /**
      * Thrown when a filter's parsing exception occurs.
      */
-    class FilterStringSyntaxException extends Exception {
+    class FilterStringSyntaxException extends IOException {
         FilterStringSyntaxException(String desc) {
             super(String.format("%s (%s)", desc, filterByteArr != null ?
                     "filter string: '" + new String(filterByteArr) + "'" : "null filter string"));
@@ -137,9 +139,11 @@ public class FilterParser {
      *
      * @param filterString the filter string to parse
      * @return the parsed filter
-     * @throws Exception if the filter string was invalid
+     * @throws FilterStringSyntaxException  if the filter string was invalid
+     * @throws UnsupportedEncodingException if the named charset is not supported
      */
-    public Node parse(String filterString) throws Exception {
+    public Node parse(String filterString)
+            throws FilterStringSyntaxException, UnsupportedEncodingException {
 
         if (filterString == null) {
             throw new FilterStringSyntaxException("filter parsing ended with no result");
@@ -153,9 +157,11 @@ public class FilterParser {
      *
      * @param filter the filter to parse
      * @return the parsed filter
-     * @throws Exception if the filter string had wrong syntax
+     * @throws FilterStringSyntaxException  if the filter string had wrong syntax
+     * @throws UnsupportedEncodingException if the named charset is not supported
      */
-    private Node parse(byte[] filter) throws Exception {
+    private Node parse(byte[] filter)
+            throws FilterStringSyntaxException, UnsupportedEncodingException {
         index = 0;
         filterByteArr = filter;
 
@@ -216,7 +222,7 @@ public class FilterParser {
         return value.intValue();
     }
 
-    private int parseConstDataType() throws Exception {
+    private int parseConstDataType() throws FilterStringSyntaxException {
         if (!Character.isDigit((char) filterByteArr[index])) {
             throw new FilterStringSyntaxException("datatype OID should follow at " + index);
         }
@@ -230,7 +236,7 @@ public class FilterParser {
         }
     }
 
-    private int parseDataLength() throws Exception {
+    private int parseDataLength() throws FilterStringSyntaxException {
         if (((char) filterByteArr[index]) != CONST_LEN) {
             throw new FilterStringSyntaxException("data length delimiter 's' expected at " + index);
         }
@@ -239,7 +245,7 @@ public class FilterParser {
         return parseInt();
     }
 
-    private int parseInt() throws Exception {
+    private int parseInt() throws FilterStringSyntaxException {
         if (index == filterByteArr.length) {
             throw new FilterStringSyntaxException("numeric argument expected at " + index);
         }
@@ -253,7 +259,8 @@ public class FilterParser {
         }
     }
 
-    private String convertDataType(byte[] byteData, int start, int end, DataType dataType) throws Exception {
+    private String convertDataType(byte[] byteData, int start, int end, DataType dataType)
+            throws FilterStringSyntaxException, UnsupportedEncodingException {
 
         if (byteData.length < end)
             throw new FilterStringSyntaxException("filter string is shorter than expected");
@@ -269,16 +276,17 @@ public class FilterParser {
      * Parses the column index operand
      *
      * @return a {@link ColumnIndexOperandNode}
-     * @throws Exception when parsing fails
+     * @throws FilterStringSyntaxException when parsing fails
      */
-    private Node parseColumnIndex() throws Exception {
+    private Node parseColumnIndex() throws FilterStringSyntaxException {
         return new ColumnIndexOperandNode(safeLongToInt(parseNumber()));
     }
 
     /**
      * Parses either a number or a string.
      */
-    private ScalarOperandNode parseScalarParameter() throws Exception {
+    private ScalarOperandNode parseScalarParameter()
+            throws FilterStringSyntaxException, UnsupportedEncodingException {
         validateNotEndOfArray();
 
         DataType dataType = DataType.get(parseConstDataType());
@@ -298,9 +306,11 @@ public class FilterParser {
      * Parses parameters with a list of values.
      *
      * @return the parsed {@link CollectionOperandNode}
-     * @throws Exception when parsing fails
+     * @throws FilterStringSyntaxException  when parsing fails
+     * @throws UnsupportedEncodingException if the named charset is not supported
      */
-    private CollectionOperandNode parseListParameter() throws Exception {
+    private CollectionOperandNode parseListParameter()
+            throws FilterStringSyntaxException, UnsupportedEncodingException {
         validateNotEndOfArray();
 
         DataType dataType = DataType.get(parseConstDataType());
@@ -328,9 +338,9 @@ public class FilterParser {
      * Parses the comparison operator
      *
      * @return the parsed {@link Node}
-     * @throws Exception when parsing fails
+     * @throws FilterStringSyntaxException when parsing fails
      */
-    private Node parseComparisonOperator() throws Exception {
+    private Node parseComparisonOperator() throws FilterStringSyntaxException {
         int opNumber = safeLongToInt(parseNumber());
         Operator operator = getOperatorFromArray(OPERATOR_ARRAY, opNumber);
         if (operator == null) {
@@ -374,9 +384,9 @@ public class FilterParser {
      * Parses the logical operator
      *
      * @return the parsed {@link Node}
-     * @throws Exception when parsing fails
+     * @throws FilterStringSyntaxException when parsing fails
      */
-    private Node parseLogicalOperator() throws Exception {
+    private Node parseLogicalOperator() throws FilterStringSyntaxException {
         int opNumber = safeLongToInt(parseNumber());
         Operator operator = getOperatorFromArray(LOGICAL_OPERATOR_ARRAY, opNumber);
 
@@ -403,7 +413,7 @@ public class FilterParser {
         return result;
     }
 
-    private Long parseNumber() throws Exception {
+    private Long parseNumber() throws FilterStringSyntaxException {
         if (index == filterByteArr.length) {
             throw new FilterStringSyntaxException("numeric argument expected at " + index);
         }
@@ -434,7 +444,7 @@ public class FilterParser {
      * Parses the longest sequence of digits into a number
      * advances the index accordingly
      */
-    private String parseDigits() throws Exception {
+    private String parseDigits() throws FilterStringSyntaxException {
         String result;
         int i = index;
         int filterLength = filterByteArr.length;

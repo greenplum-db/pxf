@@ -1,0 +1,64 @@
+-- start_ignore
+-- end_ignore
+-- @description query01 for ORC with Greenplum table as a subset of the ORC file
+SELECT * FROM pxf_orc_primitive_types_subset ORDER BY name;
+         name         | num1 | amt  |  r   | b |  vc1  | bin 
+----------------------+------+------+------+---+-------+-----
+ row1                 |    1 | 1200 |  7.7 | f | s_6   | 1
+ row10                |   10 | 2100 |  7.7 | t | s_15  | 0
+ row11                |   11 | 2200 |  7.7 | f | s_16  | 1
+ row12_text_null      |   11 | 2300 |  7.7 | f | s_16  | 1
+ row13_int_null       |      | 2400 |  7.7 | f | s_16  | 1
+ row14_double_null    |   11 |      |  7.7 | f | s_16  | 1
+ row15_decimal_null   |   12 | 2500 |  7.7 | f | s_17  | 1
+ row16_timestamp_null |   11 | 2550 |  7.7 | f | s_160 | 1
+ row17_real_null      |   11 | 2600 |      | f | s_161 | 1
+ row18_bigint_null    |   11 | 2600 |  7.7 | f | s_162 | 1
+ row19_bool_null      |   11 | 2600 |  7.7 |   | s_163 | 1
+ row2                 |    2 | 1300 |  8.7 | t | s_7   | 2
+ row20                |   11 | 2600 |  7.7 | f | s_164 | 1
+ row21_smallint_null  |   11 | 2600 |  7.7 | f | s_165 | 1
+ row22_date_null      |   11 | 2600 |  7.7 | f | s_166 | 1
+ row23_varchar_null   |   11 | 2600 |  7.7 | f |       | 1
+ row24_char_null      |   11 | 2600 |  7.7 | f | s_168 | 1
+ row25_binary_null    |   11 | 2600 |  7.7 | f | s_169 | 
+ row3                 |    3 | 1400 |  9.7 | f | s_8   | 3
+ row4                 |    4 | 1500 | 10.7 | t | s_9   | 4
+ row5                 |    5 | 1600 | 11.7 | f | s_10  | 5
+ row6                 |    6 | 1700 | 12.7 | t | s_11  | 6
+ row7                 |    7 | 1800 |  7.7 | f | s_12  | 7
+ row8                 |    8 | 1900 |  7.7 | t | s_13  | 8
+ row9                 |    9 | 2000 |  7.7 | f | s_14  | 9
+(25 rows)
+
+-- name, num1, vc1 are projected columns
+SELECT num1, vc1 FROM pxf_orc_primitive_types_subset ORDER BY name;
+ num1 |  vc1  
+------+-------
+    1 | s_6
+   10 | s_15
+   11 | s_16
+   11 | s_16
+      | s_16
+   11 | s_16
+   12 | s_17
+   11 | s_160
+   11 | s_161
+   11 | s_162
+   11 | s_163
+    2 | s_7
+   11 | s_164
+   11 | s_165
+   11 | s_166
+   11 | 
+   11 | s_168
+   11 | s_169
+    3 | s_8
+    4 | s_9
+    5 | s_10
+    6 | s_11
+    7 | s_12
+    8 | s_13
+    9 | s_14
+(25 rows)
+

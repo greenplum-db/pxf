@@ -20,6 +20,7 @@ package org.greenplum.pxf.plugins.hive.utilities;
  */
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.JavaUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -35,6 +36,7 @@ import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.Metadata;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.EnumGpdbType;
+import org.greenplum.pxf.plugins.hive.orc.PxfReaderImpl;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
@@ -209,8 +211,12 @@ public class HiveUtilities {
      */
     public Reader getOrcReader(RequestContext context) {
         try {
+            Configuration configuration = context.getConfiguration();
             Path path = new Path(context.getDataSource());
-            return OrcFile.createReader(path.getFileSystem(context.getConfiguration()), path);
+            // similar to OrcFile.createReader(path.getFileSystem(context.getConfiguration()), path);
+            OrcFile.ReaderOptions opts = new OrcFile.ReaderOptions(configuration);
+            opts.filesystem(path.getFileSystem(configuration));
+            return new PxfReaderImpl(path, opts);
         } catch (Exception e) {
             throw new RuntimeException("Exception while getting orc reader", e);
         }

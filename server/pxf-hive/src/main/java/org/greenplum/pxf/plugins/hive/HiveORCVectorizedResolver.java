@@ -27,7 +27,6 @@ import org.apache.hadoop.hive.ql.exec.vector.DecimalColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DoubleColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
-import org.apache.hadoop.hive.serde2.io.DateWritable;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector.Category;
 import org.apache.hadoop.hive.serde2.objectinspector.PrimitiveObjectInspector;
@@ -133,6 +132,7 @@ public class HiveORCVectorizedResolver extends HiveResolver implements ReadVecto
         row.set(columnIndex, field);
     }
 
+    @SuppressWarnings("deprecation")
     private void populatePrimitiveColumn(PrimitiveCategory primitiveCategory, ObjectInspector oi, VectorizedRowBatch vectorizedBatch, int columnIndex) {
         ColumnVector columnVector = vectorizedBatch.cols[columnIndex];
         Object fieldValue;
@@ -319,7 +319,7 @@ public class HiveORCVectorizedResolver extends HiveResolver implements ReadVecto
                     if (lcv != null) {
                         int rowId = lcv.isRepeating ? 0 : rowIndex;
                         if (!lcv.isNull[rowId]) {
-                            fieldValue = new Date(DateWritable.daysToMillis((int) lcv.vector[rowIndex]));
+                            fieldValue = new Date(org.apache.hadoop.hive.serde2.io.DateWritable.daysToMillis((int) lcv.vector[rowIndex]));
                         }
                     }
                     addValueToColumn(columnIndex, rowIndex, new OneField(fieldType.getOID(), fieldValue));
