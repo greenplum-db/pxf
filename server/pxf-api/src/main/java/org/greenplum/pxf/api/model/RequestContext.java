@@ -20,7 +20,6 @@ package org.greenplum.pxf.api.model;
  */
 
 import lombok.AccessLevel;
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
@@ -40,7 +39,8 @@ import java.util.TreeMap;
  * Common configuration available to all PXF plugins. Represents input data
  * coming from client applications, such as GPDB.
  */
-@Data
+@Getter
+@Setter
 public class RequestContext {
 
     /**
@@ -254,7 +254,7 @@ public class RequestContext {
 
     /**
      * The name of the server to access. The name will be used to build
-     * a path for the config files (i.e. $PXF_CONF/servers/$serverName/*.xml)
+     * a path for the config files (i.e. $PXF_BASE/servers/$serverName/*.xml)
      */
     @Setter(AccessLevel.NONE)
     private String serverName = "default";
