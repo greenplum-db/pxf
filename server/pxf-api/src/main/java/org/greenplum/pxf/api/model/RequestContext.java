@@ -19,7 +19,11 @@ package org.greenplum.pxf.api.model;
  * under the License.
  */
 
-import org.apache.commons.lang.StringUtils;
+import lombok.AccessLevel;
+import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.EnumAggregationType;
@@ -36,6 +40,7 @@ import java.util.TreeMap;
  * Common configuration available to all PXF plugins. Represents input data
  * coming from client applications, such as GPDB.
  */
+@Data
 public class RequestContext {
 
     /**
@@ -63,25 +68,101 @@ public class RequestContext {
     }
 
     // ----- NAMED PROPERTIES -----
+
+    /**
+     * The fully-qualified class name for the java class that was defined as
+     * Accessor.
+     */
     private String accessor;
+
+    /**
+     * The aggregate type, i.e - count, min, max, etc
+     */
     private EnumAggregationType aggType;
+
+    /**
+     * The name of the server configuration for this request.
+     */
+    @Setter(AccessLevel.NONE)
     private String config;
+
+    /**
+     * The server configuration associated to the server that this request is
+     * accessing
+     */
     private Configuration configuration;
-    private int dataFragment = -1; /* should be deprecated */
+
+    /**
+     * The data source of the required resource (i.e a file path or a table
+     * name).
+     */
     private String dataSource;
+
+    /**
+     * The fully-qualified class name for the java class that was defined as
+     * Fragmenter or null if no fragmenter was defined.
+     */
     private String fragmenter;
+
+    /**
+     * The index of a fragment in a file
+     */
     private int fragmentIndex;
+
+    /**
+     * Metadata for a fragment
+     */
+    @Getter(AccessLevel.NONE)
     private FragmentMetadata fragmentMetadata;
+
+    /**
+     * The filter string, <tt>null</tt> if #hasFilter is <tt>false</tt>.
+     */
     private String filterString;
+
+    /**
+     * A boolean that indicates whether this is the last fragment being
+     * processed by the segment. True if this is the last fragment, false
+     * otherwise.
+     */
     private boolean lastFragment;
-    // Profile-centric metadata
+
+    /**
+     * Profile-centric metadata
+     */
     private Object metadata;
 
+    /**
+     * The current output format, either {@link OutputFormat#TEXT} or
+     * {@link OutputFormat#GPDBWritable}.
+     */
     private OutputFormat outputFormat;
-    private int port;
+
+    /**
+     * The server name providing the service.
+     */
     private String host;
+
+    /**
+     * The Kerberos token information.
+     */
     private String token;
+
+    /**
+     * Statistics parameter. Returns the max number of fragments to return for
+     * ANALYZE sampling. The value is set in Greenplum side using the GUC
+     * pxf_stats_max_fragments.
+     */
+    @Setter(AccessLevel.NONE)
     private int statsMaxFragments = 0;
+
+    /**
+     * Statistics parameter. Returns a number between 0.0001 and 1.0,
+     * representing the sampling ratio on each fragment for ANALYZE sampling.
+     * The value is set in Greenplum side based on ANALYZE computations and the
+     * number of sampled fragments.
+     */
+    @Setter(AccessLevel.NONE)
     private float statsSampleRatio = 0;
 
     /**
@@ -94,15 +175,46 @@ public class RequestContext {
      */
     private int numAttrsProjected;
 
+    /**
+     * The plugin configuration
+     */
+    private PluginConf pluginConf;
+
+    /**
+     * The server port providing the service.
+     */
+    private int port;
+
+    /**
+     * The name of the profile associated to this request.
+     */
     private String profile;
+
+    /**
+     * The scheme defined at the profile level
+     */
     private String profileScheme;
 
-    // The protocol defined at the foreign data wrapper (FDW) level
+    /**
+     * The protocol defined at the foreign data wrapper (FDW) level
+     */
+    @Getter(AccessLevel.NONE)
     private String protocol;
-    // The format defined at the FDW foreign table level
+
+    /**
+     * The fully-qualified class name for the java class that was defined as
+     * Resolver.
+     */
+    private String resolver;
+
+    /**
+     * The format defined at the FDW foreign table level
+     */
     private String format;
 
-    // Encapsulates CSV parsing information
+    /**
+     * Encapsulates CSV parsing information
+     */
     private GreenplumCSV greenplumCSV = new GreenplumCSV();
 
     /**
@@ -118,26 +230,62 @@ public class RequestContext {
      */
     private ColumnDescriptor recordkeyColumn;
 
+    /**
+     * The contents of pxf_remote_service_login set in Greenplum. Should the
+     * user set it to an empty string this function will return null.
+     */
     private String remoteLogin;
+
+    /**
+     * The contents of pxf_remote_service_secret set in Greenplum. Should the
+     * user set it to an empty string this function will return null.
+     */
     private String remoteSecret;
-    private String resolver;
+
+    /**
+     * The current segment ID in Greenplum.
+     */
     private int segmentId;
+
+    /**
+     * The transaction ID for the current Greenplum query.
+     */
     private String transactionId;
+
     /**
      * The name of the server to access. The name will be used to build
-     * a path for the config files (i.e. $PXF_BASE/servers/$serverName/*.xml)
+     * a path for the config files (i.e. $PXF_CONF/servers/$serverName/*.xml)
      */
+    @Setter(AccessLevel.NONE)
     private String serverName = "default";
+
+    /**
+     * The number of segments in Greenplum.
+     */
     private int totalSegments;
 
+    /**
+     * The list of column descriptors
+     */
     private List<ColumnDescriptor> tupleDescription = new ArrayList<>();
+
+    /**
+     * The identity of the end-user making the request.
+     */
     private String user;
 
-    // ----- Additional Configuration Properties to be added to configuration for the request
+    /**
+     * Additional Configuration Properties to be added to configuration for
+     * the request
+     */
     private Map<String, String> additionalConfigProps;
-    // ----- USER-DEFINED OPTIONS other than NAMED PROPERTIES -----
-    private final Map<String, String> options = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-    private PluginConf pluginConf;
+
+    /**
+     * USER-DEFINED OPTIONS other than NAMED PROPERTIES
+     */
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    private Map<String, String> options = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
     /**
      * Returns a String value of the given option or a default value if the option was not provided
@@ -244,22 +392,6 @@ public class RequestContext {
         return Collections.unmodifiableMap(options);
     }
 
-    public String getRemoteLogin() {
-        return remoteLogin;
-    }
-
-    public void setRemoteLogin(String remoteLogin) {
-        this.remoteLogin = remoteLogin;
-    }
-
-    public String getRemoteSecret() {
-        return remoteSecret;
-    }
-
-    public void setRemoteSecret(String remoteSecret) {
-        this.remoteSecret = remoteSecret;
-    }
-
     /**
      * The data fragment.
      *
@@ -268,41 +400,6 @@ public class RequestContext {
     @SuppressWarnings("unchecked")
     public <T extends FragmentMetadata> T getFragmentMetadata() {
         return (T) fragmentMetadata;
-    }
-
-    /**
-     * Sets the fragment meta data.
-     *
-     * @param fragmentMetadata start, len, and location of the fragment
-     */
-    public void setFragmentMetadata(FragmentMetadata fragmentMetadata) {
-        this.fragmentMetadata = fragmentMetadata;
-    }
-
-    /**
-     * Returns the number of segments in GPDB.
-     *
-     * @return number of segments
-     */
-    public int getTotalSegments() {
-        return totalSegments;
-    }
-
-    public void setTotalSegments(int totalSegments) {
-        this.totalSegments = totalSegments;
-    }
-
-    /**
-     * Returns the current segment ID in GPDB.
-     *
-     * @return current segment ID
-     */
-    public int getSegmentId() {
-        return segmentId;
-    }
-
-    public void setSegmentId(int segmentId) {
-        this.segmentId = segmentId;
     }
 
     /**
@@ -321,50 +418,6 @@ public class RequestContext {
      */
     public boolean hasColumnProjection() {
         return numAttrsProjected > 0 && numAttrsProjected < tupleDescription.size();
-    }
-
-    /**
-     * Returns the filter string, <tt>null</tt> if #hasFilter is <tt>false</tt>.
-     *
-     * @return the filter string or null
-     */
-    public String getFilterString() {
-        return filterString;
-    }
-
-    public void setFilterString(String filterString) {
-        this.filterString = filterString;
-    }
-
-    /**
-     * Returns true if this is the last fragment being processed by the segment, false otherwise
-     *
-     * @return true if this is the last fragment being processed by the segment, false otherwise
-     */
-    public boolean isLastFragment() {
-        return lastFragment;
-    }
-
-    /**
-     * Indicates whether this is the last fragment being processed by a segment
-     *
-     * @param lastFragment the last fragment value
-     */
-    public void setLastFragment(boolean lastFragment) {
-        this.lastFragment = lastFragment;
-    }
-
-    /**
-     * Returns tuple description.
-     *
-     * @return tuple description
-     */
-    public List<ColumnDescriptor> getTupleDescription() {
-        return tupleDescription;
-    }
-
-    public void setTupleDescription(List<ColumnDescriptor> tupleDescription) {
-        this.tupleDescription = tupleDescription;
     }
 
     /**
@@ -387,15 +440,6 @@ public class RequestContext {
     }
 
     /**
-     * Returns the name of the server configuration for this request.
-     *
-     * @return (optional) the name of the server configuration for this request
-     */
-    public String getConfig() {
-        return config;
-    }
-
-    /**
      * Sets the name of the server configuration for this request.
      *
      * @param config the directory name for the configuration
@@ -405,126 +449,6 @@ public class RequestContext {
             fail("invalid CONFIG directory name '%s'", config);
         }
         this.config = config;
-    }
-
-    /**
-     * Returns the server configuration associated to the server that this
-     * request is accessing
-     *
-     * @return the server configuration
-     */
-    public Configuration getConfiguration() {
-        return configuration;
-    }
-
-    /**
-     * Sets the server configuration associated to this request.
-     *
-     * @param configuration the server configuration for this request
-     */
-    public void setConfiguration(Configuration configuration) {
-        this.configuration = configuration;
-    }
-
-    /**
-     * Returns the column descriptor of the recordkey column. If the recordkey
-     * column was not specified by the user in the create table statement will
-     * return null.
-     *
-     * @return column of record key or null
-     */
-    public ColumnDescriptor getRecordkeyColumn() {
-        return recordkeyColumn;
-    }
-
-    public void setRecordkeyColumn(ColumnDescriptor recordkeyColumn) {
-        this.recordkeyColumn = recordkeyColumn;
-    }
-
-    /**
-     * Returns the data source of the required resource (i.e a file path or a
-     * table name).
-     *
-     * @return data source
-     */
-    public String getDataSource() {
-        return dataSource;
-    }
-
-    /**
-     * Sets the data source for the required resource.
-     *
-     * @param dataSource data source to be set
-     */
-    public void setDataSource(String dataSource) {
-        this.dataSource = dataSource;
-    }
-
-    /**
-     * Returns the profile name.
-     *
-     * @return name of profile
-     */
-    public String getProfile() {
-        return profile;
-    }
-
-    public void setProfile(String profile) {
-        this.profile = profile;
-    }
-
-    /**
-     * Returns the ClassName for the java class that was defined as Accessor.
-     *
-     * @return class name for Accessor
-     */
-    public String getAccessor() {
-        return accessor;
-    }
-
-    public void setAccessor(String accessor) {
-        this.accessor = accessor;
-    }
-
-    /**
-     * Returns the ClassName for the java class that was defined as Resolver.
-     *
-     * @return class name for Resolver
-     */
-    public String getResolver() {
-        return resolver;
-    }
-
-    public void setResolver(String resolver) {
-        this.resolver = resolver;
-    }
-
-    /**
-     * Returns the ClassName for the java class that was defined as Fragmenter
-     * or null if no fragmenter was defined.
-     *
-     * @return class name for Fragmenter or null
-     */
-    public String getFragmenter() {
-        return fragmenter;
-    }
-
-    public void setFragmenter(String fragmenter) {
-        this.fragmenter = fragmenter;
-    }
-
-    /**
-     * Returns the ClassName for the java class that was defined as Metadata
-     * or null if no metadata was defined.
-     *
-     * @return class name for METADATA or null
-     */
-    public Object getMetadata() {
-        return metadata;
-    }
-
-    public void setMetadata(Object metadata) {
-        this.metadata = metadata;
     }
 
     /**
@@ -548,101 +472,6 @@ public class RequestContext {
     }
 
     /**
-     * Returns a data fragment index. plan to deprecate it in favor of using
-     * getFragmentMetadata().
-     *
-     * @return data fragment index
-     */
-    public int getDataFragment() {
-        return dataFragment;
-    }
-
-    public void setDataFragment(int dataFragment) {
-        this.dataFragment = dataFragment;
-    }
-
-    /**
-     * Returns aggregate type, i.e - count, min, max, etc
-     *
-     * @return aggregate type
-     */
-    public EnumAggregationType getAggType() {
-        return aggType;
-    }
-
-    /**
-     * Sets aggregate type, one of @see EnumAggregationType value
-     *
-     * @param aggType aggregate type
-     */
-    public void setAggType(EnumAggregationType aggType) {
-        this.aggType = aggType;
-    }
-
-    /**
-     * Returns the format of the external file
-     *
-     * @return format of the external file
-     */
-    public String getFormat() {
-        return format;
-    }
-
-    /**
-     * Sets the format of the external file
-     *
-     * @param format of the external file
-     */
-    public void setFormat(String format) {
-        this.format = format;
-    }
-
-    /**
-     * Returns index of a fragment in a file
-     *
-     * @return index of a fragment
-     */
-    public int getFragmentIndex() {
-        return fragmentIndex;
-    }
-
-    /**
-     * Sets index of a fragment in a file
-     *
-     * @param fragmentIndex index of a fragment
-     */
-    public void setFragmentIndex(int fragmentIndex) {
-        this.fragmentIndex = fragmentIndex;
-    }
-
-    /**
-     * Returns number of attributes projected in a query
-     *
-     * @return number of attributes projected
-     */
-    public int getNumAttrsProjected() {
-        return numAttrsProjected;
-    }
-
-    /**
-     * Sets number of attributes projected
-     *
-     * @param numAttrsProjected number of attributes projected
-     */
-    public void setNumAttrsProjected(int numAttrsProjected) {
-        this.numAttrsProjected = numAttrsProjected;
-    }
-
-    /**
-     * Returns the name of the server in a multi-server setup
-     *
-     * @return the name of the server
-     */
-    public String getServerName() {
-        return serverName;
-    }
-
-    /**
      * Sets the name of the server in a multi-server setup.
      * If the name is blank, it is defaulted to "default"
      *
@@ -659,102 +488,6 @@ public class RequestContext {
         }
     }
 
-    /**
-     * Returns identity of the end-user making the request.
-     *
-     * @return userid
-     */
-    public String getUser() {
-        return user;
-    }
-
-    public void setUser(String user) {
-        this.user = user;
-    }
-
-    /**
-     * Returns the server port providing the service.
-     *
-     * @return server port
-     */
-    public int getPort() {
-        return port;
-    }
-
-    /**
-     * @param port sets the port
-     */
-    public void setPort(int port) {
-        this.port = port;
-    }
-
-    /**
-     * Returns the GreenplumCSV object encapsulating the CSV information
-     *
-     * @return the {@link GreenplumCSV} object
-     */
-    public GreenplumCSV getGreenplumCSV() {
-        return greenplumCSV;
-    }
-
-    /**
-     * @param greenplumCSV the {@link GreenplumCSV} object
-     */
-    public void setGreenplumCSV(GreenplumCSV greenplumCSV) {
-        this.greenplumCSV = greenplumCSV;
-    }
-
-    /**
-     * Returns the current output format, either {@link OutputFormat#TEXT} or
-     * {@link OutputFormat#GPDBWritable}.
-     *
-     * @return output format
-     */
-    public OutputFormat getOutputFormat() {
-        return outputFormat;
-    }
-
-    public void setOutputFormat(OutputFormat outputFormat) {
-        this.outputFormat = outputFormat;
-    }
-
-    /**
-     * Returns the server name providing the service.
-     *
-     * @return server name
-     */
-    public String getHost() {
-        return host;
-    }
-
-    public void setHost(String host) {
-        this.host = host;
-    }
-
-    /**
-     * Returns Kerberos token information.
-     *
-     * @return token
-     */
-    public String getToken() {
-        return token;
-    }
-
-    public void setToken(String token) {
-        this.token = token;
-    }
-
-    /**
-     * Statistics parameter. Returns the max number of fragments to return for
-     * ANALYZE sampling. The value is set in GPDB side using the GUC
-     * pxf_stats_max_fragments.
-     *
-     * @return max number of fragments to be processed by analyze
-     */
-    public int getStatsMaxFragments() {
-        return statsMaxFragments;
-    }
-
     public void setStatsMaxFragments(int statsMaxFragments) {
         this.statsMaxFragments = statsMaxFragments;
         if (statsMaxFragments <= 0) {
@@ -762,18 +495,6 @@ public class RequestContext {
                     .format("Wrong value '%d'. STATS-MAX-FRAGMENTS must be a positive integer",
                             statsMaxFragments));
         }
-    }
-
-    /**
-     * Statistics parameter. Returns a number between 0.0001 and 1.0,
-     * representing the sampling ratio on each fragment for ANALYZE sampling.
-     * The value is set in GPDB side based on ANALYZE computations and the
-     * number of sampled fragments.
-     *
-     * @return sampling ratio
-     */
-    public float getStatsSampleRatio() {
-        return statsSampleRatio;
     }
 
     public void setStatsSampleRatio(float statsSampleRatio) {
@@ -814,44 +535,8 @@ public class RequestContext {
         throw new IllegalArgumentException(errorMessage);
     }
 
-    public PluginConf getPluginConf() {
-        return pluginConf;
-    }
-
-    public void setPluginConf(PluginConf pluginConf) {
-        this.pluginConf = pluginConf;
-    }
-
-    public String getProfileScheme() {
-        return profileScheme;
-    }
-
-    public void setProfileScheme(String profileScheme) {
-        this.profileScheme = profileScheme;
-    }
-
     public String getProtocol() {
         return StringUtils.isNotBlank(protocol) ? protocol : inferProtocolName();
-    }
-
-    public void setProtocol(String protocol) {
-        this.protocol = protocol;
-    }
-
-    public Map<String, String> getAdditionalConfigProps() {
-        return additionalConfigProps;
-    }
-
-    public void setAdditionalConfigProps(Map<String, String> additionalConfigProps) {
-        this.additionalConfigProps = additionalConfigProps;
-    }
-
-    public String getTransactionId() {
-        return transactionId;
-    }
-
-    public void setTransactionId(String transactionId) {
-        this.transactionId = transactionId;
     }
 
     /**

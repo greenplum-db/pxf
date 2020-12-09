@@ -173,7 +173,6 @@ public class HttpRequestParserTest {
         assertFalse(context.hasFilter());
         assertNull(context.getFilterString());
         assertEquals(context.getColumns(), 0);
-        assertEquals(context.getDataFragment(), -1);
         assertNull(context.getRecordkeyColumn());
         assertEquals(context.getAccessor(), "are");
         assertEquals(context.getResolver(), "packed");

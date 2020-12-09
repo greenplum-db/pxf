@@ -253,7 +253,7 @@ public abstract class PxfUnit {
             context = getContext(input);
             context.setDataSource(fragment.getSourceName());
             context.setFragmentMetadata(fragment.getMetadata());
-            context.setDataFragment(i);
+            context.setFragmentIndex(i);
             inputs.add(context);
         }
     }

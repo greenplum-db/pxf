@@ -38,7 +38,7 @@ public class BridgeResponse implements StreamingResponseBody {
     }
 
     private Void writeToInternal(OutputStream out) throws IOException {
-        final int fragment = context.getDataFragment();
+        final int fragment = context.getFragmentIndex();
         final String dataDir = context.getDataSource();
         long recordCount = 0;
 

@@ -31,7 +31,7 @@ public class DummyAccessor extends BasePlugin implements Accessor {
             return null; /* signal EOF, close will be called */
         }
 
-        int fragment = context.getDataFragment();
+        int fragment = context.getFragmentIndex();
         DummyFragmentMetadata metadata = context.getFragmentMetadata();
         /* generate row */
         OneRow row = new OneRow(fragment + "." + rowNumber, /* key */

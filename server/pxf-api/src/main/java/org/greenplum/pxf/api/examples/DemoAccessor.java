@@ -53,7 +53,7 @@ public class DemoAccessor extends BasePlugin implements Accessor {
         /* check for EOF */
         if (fragmentNumber > 0)
             return null; /* signal EOF, close will be called */
-        int fragment = context.getDataFragment();
+        int fragment = context.getFragmentIndex();
         DemoFragmentMetadata demoMetadata = context.getFragmentMetadata();
         int colCount = context.getColumns();
 

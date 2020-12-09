@@ -91,14 +91,6 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
         context.setAccessor(params.removeUserProperty("ACCESSOR"));
         context.setAggType(EnumAggregationType.getAggregationType(params.removeOptionalProperty("AGG-TYPE")));
 
-        /*
-         * Some resources don't require a fragment, hence the list can be empty.
-         */
-        String fragmentStr = params.removeOptionalProperty("DATA-FRAGMENT");
-        if (StringUtils.isNotBlank(fragmentStr)) {
-            context.setDataFragment(Integer.parseInt(fragmentStr));
-        }
-
         context.setDataSource(params.removeProperty("DATA-DIR"));
 
         String filterString = params.removeOptionalProperty("FILTER");

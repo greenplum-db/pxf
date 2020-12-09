@@ -45,7 +45,7 @@ public class DemoAccessorTest {
 
     @Test
     public void testRowsWithSingleColumn() {
-        context.setDataFragment(0);
+        context.setFragmentIndex(0);
         context.setFragmentMetadata(new DemoFragmentMetadata("fragment1"));
 
         int numRows = 2;
@@ -58,7 +58,7 @@ public class DemoAccessorTest {
 
     @Test
     public void testRowsWithMultipleColumns() {
-        context.setDataFragment(0);
+        context.setFragmentIndex(0);
         context.setFragmentMetadata(new DemoFragmentMetadata("fragment1"));
         context.getTupleDescription().add(new ColumnDescriptor("col1", 1, 1, "TEXT", null));
         context.getTupleDescription().add(new ColumnDescriptor("col2", 1, 1, "TEXT", null));
