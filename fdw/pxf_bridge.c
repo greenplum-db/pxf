@@ -206,7 +206,6 @@ SetCurrentFragmentHeaders(PxfFdwScanState *pxfsstate)
 		 frag_data->source_name, frag_data->index, frag_data->user_data ? "TRUE" : "FALSE");
 
 	churl_headers_override(pxfsstate->churl_headers, "X-GP-DATA-DIR", frag_data->source_name);
-	churl_headers_override(pxfsstate->churl_headers, "X-GP-DATA-FRAGMENT", frag_data->index);
 	churl_headers_override(pxfsstate->churl_headers, "X-GP-FRAGMENT-METADATA", frag_data->fragment_md);
 	churl_headers_override(pxfsstate->churl_headers, "X-GP-FRAGMENT-INDEX", frag_data->index);
 
