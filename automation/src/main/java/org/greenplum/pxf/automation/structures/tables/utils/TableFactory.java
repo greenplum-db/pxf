@@ -159,7 +159,7 @@ public abstract class TableFactory {
                                                                  HBaseTable hbaseTable) {
         ReadableExternalTable exTable = new ReadableExternalTable(tableName,
                 fields, hbaseTable.getName(), "CUSTOM");
-        exTable.setProfile("hbaase");
+        exTable.setProfile("hbase");
         exTable.setFormatter("pxfwritable_import");
         return exTable;
     }
@@ -398,7 +398,7 @@ public abstract class TableFactory {
             userParameters.add(customParameters);
         }
         exTable.setUserParameters(userParameters.toArray(new String[userParameters.size()]));
-        exTable.setProfile("Jdbc");
+        exTable.setProfile("jdbc");
         exTable.setFormatter("pxfwritable_import");
 
         return exTable;
@@ -434,7 +434,7 @@ public abstract class TableFactory {
             userParameters.add(customParameters);
         }
         exTable.setUserParameters(userParameters.toArray(new String[userParameters.size()]));
-        exTable.setProfile("Jdbc");
+        exTable.setProfile("jdbc");
         exTable.setFormatter("pxfwritable_export");
 
         return exTable;
