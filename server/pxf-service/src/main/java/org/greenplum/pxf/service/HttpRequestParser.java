@@ -75,7 +75,8 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
         context.setRequestType(requestType);
 
         // first of all, set profile and enrich parameters with information from specified profile
-        String profile = params.removeUserProperty("PROFILE");
+        String profileUserValue = params.removeUserProperty("PROFILE");
+        String profile = profileUserValue == null ? null : profileUserValue.toLowerCase();
         context.setProfile(profile);
         addProfilePlugins(profile, params);
 

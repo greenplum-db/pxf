@@ -32,33 +32,40 @@ public class ProfileFactoryTest {
     @Test
     public void get() throws Exception {
 
+        // if user specified vectorized ORC, no matter what the input format is, the profile should be used
+        String profileName = ProfileFactory.get(new TextInputFormat(), false, "HiveVectorizedORC");
+        assertEquals("hive:orc:vectorized", profileName);
+
+        profileName = ProfileFactory.get(new TextInputFormat(), false, "hive:orc:vectorized");
+        assertEquals("hive:orc:vectorized", profileName);
+
         // For TextInputFormat when table has no complex types, HiveText profile should be used
-        String profileName = ProfileFactory.get(new TextInputFormat(), false);
-        assertEquals("HiveText", profileName);
+        profileName = ProfileFactory.get(new TextInputFormat(), false);
+        assertEquals("hive:text", profileName);
 
         // For TextInputFormat when table has complex types, Hive profile should be used, HiveText doesn't support complex types yet
         profileName = ProfileFactory.get(new TextInputFormat(), true);
-        assertEquals("Hive", profileName);
+        assertEquals("hive", profileName);
 
         // For RCFileInputFormat when table has complex types, HiveRC profile should be used
         profileName = ProfileFactory.get(new RCFileInputFormat(), true);
-        assertEquals("HiveRC", profileName);
+        assertEquals("hive:rc", profileName);
 
         // For RCFileInputFormat when table has no complex types, HiveRC profile should be used
         profileName = ProfileFactory.get(new RCFileInputFormat(), false);
-        assertEquals("HiveRC", profileName);
+        assertEquals("hive:rc", profileName);
 
         // For OrcInputFormat when table has complex types, HiveORC profile should be used
         profileName = ProfileFactory.get(new OrcInputFormat(), true);
-        assertEquals("HiveORC", profileName);
+        assertEquals("hive:orc", profileName);
 
         // For OrcInputFormat when table has no complex types, HiveORC profile should be used
         profileName = ProfileFactory.get(new OrcInputFormat(), false);
-        assertEquals("HiveORC", profileName);
+        assertEquals("hive:orc", profileName);
 
         // For other formats Hive profile should be used
         profileName = ProfileFactory.get(new SequenceFileInputFilter(), false);
-        assertEquals("Hive", profileName);
+        assertEquals("hive", profileName);
     }
 
 }

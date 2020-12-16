@@ -38,7 +38,7 @@ public abstract class TableFactory {
                 fields, hiveTable.getName(), "CUSTOM");
 
         if (useProfile) {
-            exTable.setProfile("Hive");
+            exTable.setProfile("hive");
         } else {
             exTable.setFragmenter("org.greenplum.pxf.plugins.hive.HiveDataFragmenter");
             exTable.setAccessor("org.greenplum.pxf.plugins.hive.HiveAccessor");
@@ -159,7 +159,7 @@ public abstract class TableFactory {
                                                                  HBaseTable hbaseTable) {
         ReadableExternalTable exTable = new ReadableExternalTable(tableName,
                 fields, hbaseTable.getName(), "CUSTOM");
-        exTable.setProfile("HBase");
+        exTable.setProfile("hbaase");
         exTable.setFormatter("pxfwritable_import");
         return exTable;
     }

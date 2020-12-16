@@ -25,8 +25,30 @@ under the License.
     For adding new custom profiles please edit pxf-profiles.xml
 -->
 <profiles>
+
+    <!-- ==================== JDBC PROFILE ==================== -->
     <profile>
-        <name>HBase</name>
+        <name>jdbc</name>
+        <description>A profile for reading and writing data via JDBC</description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.jdbc.JdbcPartitionFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.jdbc.JdbcAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.jdbc.JdbcResolver</resolver>
+        </plugins>
+        <optionMappings>
+            <mapping option="jdbc_driver" property="jdbc.driver"/>
+            <mapping option="db_url" property="jdbc.url"/>
+            <mapping option="user" property="jdbc.user"/>
+            <mapping option="pass" property="jdbc.password"/>
+            <mapping option="batch_size" property="jdbc.statement.batchSize"/>
+            <mapping option="fetch_size" property="jdbc.statement.fetchSize"/>
+            <mapping option="query_timeout" property="jdbc.statement.queryTimeout"/>
+        </optionMappings>
+    </profile>
+
+    <!-- ==================== HBASE PROFILE ==================== -->
+    <profile>
+        <name>hbase</name>
         <description>This profile is suitable for using when connecting to an HBase data store
             engine
         </description>
@@ -36,6 +58,8 @@ under the License.
             <resolver>org.greenplum.pxf.plugins.hbase.HBaseResolver</resolver>
         </plugins>
     </profile>
+
+    <!-- ==================== HIVE PROFILES ==================== -->
     <profile>
         <name>hive</name>
         <description>
@@ -54,6 +78,7 @@ under the License.
             <mapping option="ppd" property="pxf.ppd.hive"/>
         </optionMappings>
     </profile>
+    <!-- this profile is obsolete in favor of hive:rc -->
     <profile>
         <name>HiveRC</name>
         <description>This profile is suitable only for Hive tables stored in RC files and serialized
@@ -92,6 +117,7 @@ under the License.
             <mapping option="ppd" property="pxf.ppd.hive"/>
         </optionMappings>
     </profile>
+    <!-- this profile is obsolete in favor of hive:text -->
     <profile>
         <name>HiveText</name>
         <description>This profile is suitable only for Hive tables stored as Text files. It is much
@@ -122,6 +148,7 @@ under the License.
             <outputFormat>org.greenplum.pxf.api.io.Text</outputFormat>
         </plugins>
     </profile>
+    <!-- this profile is obsolete in favor of hive:orc -->
     <profile>
         <name>HiveORC</name>
         <description>This profile is suitable only for Hive tables stored in ORC files and
@@ -158,6 +185,7 @@ under the License.
             <mapping option="ppd" property="pxf.ppd.hive"/>
         </optionMappings>
     </profile>
+    <!-- this profile is obsolete in favor of hive:orc with VECTORIZE=true user option -->
     <profile>
         <name>HiveVectorizedORC</name>
         <description>This profile is same as HiveORC profile, but operates on batches of rows
@@ -172,7 +200,7 @@ under the License.
         </plugins>
     </profile>
     <profile>
-        <name>hive:vectorizedorc</name>
+        <name>hive:orc:vectorized</name>
         <description>This profile is same as HiveORC profile, but operates on batches of rows
             instead of one row at a time, leading to faster reading and resolution phases.
         </description>
@@ -184,6 +212,9 @@ under the License.
             <outputFormat>org.greenplum.pxf.api.io.GPDBWritable</outputFormat>
         </plugins>
     </profile>
+
+    <!-- ==================== TEXT PROFILES ==================== -->
+    <!-- this profile is obsolete in favor of hdfs:text -->
     <profile>
         <name>HdfsTextSimple</name>
         <description>This profile is suitable for using when reading delimited single line records
@@ -195,6 +226,7 @@ under the License.
             <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
         </plugins>
     </profile>
+    <!-- this profile is obsolete in favor of hdfs:text:multi -->
     <profile>
         <name>HdfsTextMulti</name>
         <description>This profile is suitable for using when reading delimited single or multi line
@@ -207,70 +239,6 @@ under the License.
             <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
         </plugins>
     </profile>
-    <profile>
-        <name>SequenceWritable</name>
-        <description>
-            Profile for accessing Sequence files serialized with a custom Writable class
-        </description>
-        <plugins>
-            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
-            <accessor>org.greenplum.pxf.plugins.hdfs.SequenceFileAccessor</accessor>
-            <resolver>org.greenplum.pxf.plugins.hdfs.WritableResolver</resolver>
-        </plugins>
-    </profile>
-    <profile>
-        <name>SequenceText</name>
-        <description>
-            Profile for accessing Sequence files serialized with a custom Writable class
-        </description>
-        <plugins>
-            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
-            <accessor>org.greenplum.pxf.plugins.hdfs.SequenceFileAccessor</accessor>
-            <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
-        </plugins>
-    </profile>
-    <profile>
-        <name>Json</name>
-        <description>
-            Access JSON data either as:
-            * one JSON record per line (default)
-            * or multiline JSON records with an IDENTIFIER parameter indicating a member name used
-            to determine the encapsulating json object to return
-        </description>
-        <plugins>
-            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
-            <accessor>org.greenplum.pxf.plugins.json.JsonAccessor</accessor>
-            <resolver>org.greenplum.pxf.plugins.json.JsonResolver</resolver>
-        </plugins>
-    </profile>
-    <profile>
-        <name>Jdbc</name>
-        <description>A profile for reading and writing data via JDBC</description>
-        <plugins>
-            <fragmenter>org.greenplum.pxf.plugins.jdbc.JdbcPartitionFragmenter</fragmenter>
-            <accessor>org.greenplum.pxf.plugins.jdbc.JdbcAccessor</accessor>
-            <resolver>org.greenplum.pxf.plugins.jdbc.JdbcResolver</resolver>
-        </plugins>
-        <optionMappings>
-            <mapping option="jdbc_driver" property="jdbc.driver"/>
-            <mapping option="db_url" property="jdbc.url"/>
-            <mapping option="user" property="jdbc.user"/>
-            <mapping option="pass" property="jdbc.password"/>
-            <mapping option="batch_size" property="jdbc.statement.batchSize"/>
-            <mapping option="fetch_size" property="jdbc.statement.fetchSize"/>
-            <mapping option="query_timeout" property="jdbc.statement.queryTimeout"/>
-        </optionMappings>
-    </profile>
-    <profile>
-        <name>Parquet</name>
-        <description>A profile for reading and writing Parquet data from HDFS</description>
-        <plugins>
-            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
-            <accessor>org.greenplum.pxf.plugins.hdfs.ParquetFileAccessor</accessor>
-            <resolver>org.greenplum.pxf.plugins.hdfs.ParquetResolver</resolver>
-        </plugins>
-    </profile>
-    <!-- TEXT PROFILES -->
     <profile>
         <name>hdfs:text</name>
         <description>This profile is suitable for using when reading delimited single line records
@@ -356,7 +324,6 @@ under the License.
             <mapping option="secretkey" property="fs.s3a.secret.key"/>
         </optionMappings>
     </profile>
-
     <profile>
         <name>adl:text</name>
         <description>This profile is suitable for using when reading delimited single line records
@@ -395,6 +362,43 @@ under the License.
         <protocol>adl</protocol>
     </profile>
     <profile>
+        <name>wasbs:text</name>
+        <description>This profile is suitable for using when reading delimited single line records
+            from plain text, tab-delimited, files on Azure Blob Storage
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.LineBreakAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
+        </plugins>
+        <protocol>wasbs</protocol>
+    </profile>
+    <profile>
+        <name>wasbs:csv</name>
+        <description>This profile is suitable for using when reading delimited single line records
+            from plain text CSV files on Azure Blob Storage
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.LineBreakAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
+        </plugins>
+        <protocol>wasbs</protocol>
+    </profile>
+    <profile>
+        <name>wasbs:text:multi</name>
+        <description>This profile is suitable for using when reading delimited single or multi line
+            records (with quoted linefeeds) from plain text files on Azure Blob Storage. It is not
+            splittable (non parallel) and slower than HdfsTextSimple.
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsFileFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.QuotedLineBreakAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
+        </plugins>
+        <protocol>wasbs</protocol>
+    </profile>
+    <profile>
         <name>gs:text</name>
         <description>This profile is suitable for using when reading delimited single line records
             from plain text, tab-delimited, files on Azure Data Lake
@@ -431,7 +435,52 @@ under the License.
         </plugins>
         <protocol>gs</protocol>
     </profile>
-    <!-- PARQUET PROFILES -->
+    <profile>
+        <name>file:text</name>
+        <description>This profile is suitable for using when reading delimited single line records
+            from plain text, tab-delimited, files
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.LineBreakAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
+        </plugins>
+    </profile>
+    <profile>
+        <name>file:csv</name>
+        <description>This profile is suitable for using when reading delimited single line records
+            from plain text CSV files
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.LineBreakAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
+        </plugins>
+    </profile>
+    <profile>
+        <name>file:text:multi</name>
+        <description>This profile is suitable for using when reading delimited single or multi line
+            records (with quoted linefeeds) from plain text files. It is not splittable (non
+            parallel) and slower than HdfsTextSimple.
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsFileFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.QuotedLineBreakAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
+        </plugins>
+    </profile>
+
+    <!-- ==================== PARQUET PROFILES ==================== -->
+    <!-- this profile is obsolete in favor of hdfs:parquet -->
+    <profile>
+        <name>parquet</name>
+        <description>A profile for reading and writing Parquet data from HDFS</description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.ParquetFileAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.ParquetResolver</resolver>
+        </plugins>
+    </profile>
     <profile>
         <name>hdfs:parquet</name>
         <description>A profile for reading and writing Parquet data from HDFS</description>
@@ -468,6 +517,17 @@ under the License.
         <protocol>adl</protocol>
     </profile>
     <profile>
+        <name>wasbs:parquet</name>
+        <description>A profile for reading and writing Parquet data from Azure Blob Storage
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.ParquetFileAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.ParquetResolver</resolver>
+        </plugins>
+        <protocol>wasbs</protocol>
+    </profile>
+    <profile>
         <name>gs:parquet</name>
         <description>A profile for reading and writing Parquet data from Google Cloud Storage
         </description>
@@ -478,7 +538,18 @@ under the License.
         </plugins>
         <protocol>gs</protocol>
     </profile>
-    <!-- ORC PROFILES -->
+    <profile>
+        <name>file:parquet</name>
+        <description>A profile for reading and writing Parquet files
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.ParquetFileAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.ParquetResolver</resolver>
+        </plugins>
+    </profile>
+
+    <!-- ==================== ORC PROFILES ==================== -->
     <profile>
         <name>hdfs:orc</name>
         <description>A profile for reading ORC data from HDFS</description>
@@ -546,9 +617,11 @@ under the License.
             <resolver>org.greenplum.pxf.plugins.hdfs.orc.ORCVectorizedResolver</resolver>
         </plugins>
     </profile>
-    <!-- AVRO PROFILES -->
+
+    <!-- ==================== AVRO PROFILES ==================== -->
+    <!-- this profile is obsolete in favor of hdfs:avro -->
     <profile>
-        <name>Avro</name>
+        <name>avro</name>
         <description>This profile is suitable for using when reading Avro files (i.e
             fileName.avro)
         </description>
@@ -598,6 +671,18 @@ under the License.
         <protocol>adl</protocol>
     </profile>
     <profile>
+        <name>wasbs:avro</name>
+        <description>This profile is suitable for using when reading Avro files (i.e
+            fileName.avro)
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.AvroFileAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.AvroResolver</resolver>
+        </plugins>
+        <protocol>wasbs</protocol>
+    </profile>
+    <profile>
         <name>gs:avro</name>
         <description>This profile is suitable for using when reading Avro files (i.e
             fileName.avro)
@@ -609,7 +694,34 @@ under the License.
         </plugins>
         <protocol>gs</protocol>
     </profile>
-    <!-- JSON PROFILES -->
+    <profile>
+        <name>file:avro</name>
+        <description>This profile is suitable for using when reading Avro files (i.e
+            fileName.avro)
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.AvroFileAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.AvroResolver</resolver>
+        </plugins>
+    </profile>
+
+    <!-- ==================== JSON PROFILES ==================== -->
+    <!-- this profile is obsolete in favor of hdfs:json -->
+    <profile>
+        <name>json</name>
+        <description>
+            Access JSON data either as:
+            * one JSON record per line (default)
+            * or multiline JSON records with an IDENTIFIER parameter indicating a member name used
+            to determine the encapsulating json object to return
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.json.JsonAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.json.JsonResolver</resolver>
+        </plugins>
+    </profile>
     <profile>
         <name>hdfs:json</name>
         <description>
@@ -660,6 +772,21 @@ under the License.
         <protocol>adl</protocol>
     </profile>
     <profile>
+        <name>wasbs:json</name>
+        <description>
+            Access JSON data either as:
+            * one JSON record per line (default)
+            * or multiline JSON records with an IDENTIFIER parameter indicating a member name used
+            to determine the encapsulating json object to return
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.json.JsonAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.json.JsonResolver</resolver>
+        </plugins>
+        <protocol>wasbs</protocol>
+    </profile>
+    <profile>
         <name>gs:json</name>
         <description>
             Access JSON data either as:
@@ -674,7 +801,110 @@ under the License.
         </plugins>
         <protocol>gs</protocol>
     </profile>
-    <!-- AVRO SEQUENCEFILE PROFILES -->
+    <profile>
+        <name>file:json</name>
+        <description>
+            Access JSON data either as:
+            * one JSON record per line (default)
+            * or multiline JSON records with an IDENTIFIER parameter indicating a member name used
+            to determine the encapsulating json object to return
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.json.JsonAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.json.JsonResolver</resolver>
+        </plugins>
+    </profile>
+
+    <!-- ==================== SEQUENCE FILE PROFILES ==================== -->
+    <!-- this profile is obsolete in favor of hdfs:SequenceFile -->
+    <profile>
+        <name>SequenceWritable</name>
+        <description>
+            Profile for accessing Sequence files serialized with a custom Writable class
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.SequenceFileAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.WritableResolver</resolver>
+        </plugins>
+    </profile>
+    <profile>
+        <name>SequenceText</name>
+        <description>
+            Profile for accessing Sequence files serialized with a custom Writable class
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.SequenceFileAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
+        </plugins>
+    </profile>
+    <profile>
+        <name>hdfs:SequenceFile</name>
+        <description>
+            Profile for accessing Sequence files serialized with a custom Writable class
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.SequenceFileAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.WritableResolver</resolver>
+        </plugins>
+    </profile>
+    <profile>
+        <name>s3:SequenceFile</name>
+        <description>
+            Profile for accessing Sequence files serialized with a custom Writable class
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.SequenceFileAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.WritableResolver</resolver>
+        </plugins>
+        <protocol>s3a</protocol>
+        <optionMappings>
+            <mapping option="accesskey" property="fs.s3a.access.key"/>
+            <mapping option="secretkey" property="fs.s3a.secret.key"/>
+        </optionMappings>
+    </profile>
+    <profile>
+        <name>adl:SequenceFile</name>
+        <description>
+            Profile for accessing Sequence files serialized with a custom Writable class
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.SequenceFileAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.WritableResolver</resolver>
+        </plugins>
+        <protocol>adl</protocol>
+    </profile>
+    <profile>
+        <name>wasbs:SequenceFile</name>
+        <description>
+            Profile for accessing Sequence files serialized with a custom Writable class
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.SequenceFileAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.WritableResolver</resolver>
+        </plugins>
+        <protocol>wasbs</protocol>
+    </profile>
+    <profile>
+        <name>gs:SequenceFile</name>
+        <description>
+            Profile for accessing Sequence files serialized with a custom Writable class
+        </description>
+        <plugins>
+            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
+            <accessor>org.greenplum.pxf.plugins.hdfs.SequenceFileAccessor</accessor>
+            <resolver>org.greenplum.pxf.plugins.hdfs.WritableResolver</resolver>
+        </plugins>
+        <protocol>gs</protocol>
+    </profile>
+
+    <!-- ==================== AVRO SEQUENCE FILES PROFILES ==================== -->
     <profile>
         <name>hdfs:AvroSequenceFile</name>
         <description>
@@ -716,148 +946,6 @@ under the License.
         <protocol>adl</protocol>
     </profile>
     <profile>
-        <name>gs:AvroSequenceFile</name>
-        <description>
-            Read an Avro format stored in sequence file, with separated schema file from Google
-            Cloud Storage
-        </description>
-        <plugins>
-            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
-            <accessor>org.greenplum.pxf.plugins.hdfs.SequenceFileAccessor</accessor>
-            <resolver>org.greenplum.pxf.plugins.hdfs.AvroResolver</resolver>
-        </plugins>
-        <protocol>gs</protocol>
-    </profile>
-    <!-- SEQUENCEFILE PROFILES -->
-    <profile>
-        <name>hdfs:SequenceFile</name>
-        <description>
-            Profile for accessing Sequence files serialized with a custom Writable class
-        </description>
-        <plugins>
-            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
-            <accessor>org.greenplum.pxf.plugins.hdfs.SequenceFileAccessor</accessor>
-            <resolver>org.greenplum.pxf.plugins.hdfs.WritableResolver</resolver>
-        </plugins>
-    </profile>
-    <profile>
-        <name>s3:SequenceFile</name>
-        <description>
-            Profile for accessing Sequence files serialized with a custom Writable class
-        </description>
-        <plugins>
-            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
-            <accessor>org.greenplum.pxf.plugins.hdfs.SequenceFileAccessor</accessor>
-            <resolver>org.greenplum.pxf.plugins.hdfs.WritableResolver</resolver>
-        </plugins>
-        <protocol>s3a</protocol>
-        <optionMappings>
-            <mapping option="accesskey" property="fs.s3a.access.key"/>
-            <mapping option="secretkey" property="fs.s3a.secret.key"/>
-        </optionMappings>
-    </profile>
-    <profile>
-        <name>adl:SequenceFile</name>
-        <description>
-            Profile for accessing Sequence files serialized with a custom Writable class
-        </description>
-        <plugins>
-            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
-            <accessor>org.greenplum.pxf.plugins.hdfs.SequenceFileAccessor</accessor>
-            <resolver>org.greenplum.pxf.plugins.hdfs.WritableResolver</resolver>
-        </plugins>
-        <protocol>adl</protocol>
-    </profile>
-    <profile>
-        <name>gs:SequenceFile</name>
-        <description>
-            Profile for accessing Sequence files serialized with a custom Writable class
-        </description>
-        <plugins>
-            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
-            <accessor>org.greenplum.pxf.plugins.hdfs.SequenceFileAccessor</accessor>
-            <resolver>org.greenplum.pxf.plugins.hdfs.WritableResolver</resolver>
-        </plugins>
-        <protocol>gs</protocol>
-    </profile>
-
-    <!-- WASBS - Azure Blob Storage -->
-    <profile>
-        <name>wasbs:text</name>
-        <description>This profile is suitable for using when reading delimited single line records
-            from plain text, tab-delimited, files on Azure Blob Storage
-        </description>
-        <plugins>
-            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
-            <accessor>org.greenplum.pxf.plugins.hdfs.LineBreakAccessor</accessor>
-            <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
-        </plugins>
-        <protocol>wasbs</protocol>
-    </profile>
-    <profile>
-        <name>wasbs:csv</name>
-        <description>This profile is suitable for using when reading delimited single line records
-            from plain text CSV files on Azure Blob Storage
-        </description>
-        <plugins>
-            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
-            <accessor>org.greenplum.pxf.plugins.hdfs.LineBreakAccessor</accessor>
-            <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
-        </plugins>
-        <protocol>wasbs</protocol>
-    </profile>
-    <profile>
-        <name>wasbs:text:multi</name>
-        <description>This profile is suitable for using when reading delimited single or multi line
-            records (with quoted linefeeds) from plain text files on Azure Blob Storage. It is not
-            splittable (non parallel) and slower than HdfsTextSimple.
-        </description>
-        <plugins>
-            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsFileFragmenter</fragmenter>
-            <accessor>org.greenplum.pxf.plugins.hdfs.QuotedLineBreakAccessor</accessor>
-            <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
-        </plugins>
-        <protocol>wasbs</protocol>
-    </profile>
-    <profile>
-        <name>wasbs:parquet</name>
-        <description>A profile for reading and writing Parquet data from Azure Blob Storage
-        </description>
-        <plugins>
-            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
-            <accessor>org.greenplum.pxf.plugins.hdfs.ParquetFileAccessor</accessor>
-            <resolver>org.greenplum.pxf.plugins.hdfs.ParquetResolver</resolver>
-        </plugins>
-        <protocol>wasbs</protocol>
-    </profile>
-    <profile>
-        <name>wasbs:avro</name>
-        <description>This profile is suitable for using when reading Avro files (i.e
-            fileName.avro)
-        </description>
-        <plugins>
-            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
-            <accessor>org.greenplum.pxf.plugins.hdfs.AvroFileAccessor</accessor>
-            <resolver>org.greenplum.pxf.plugins.hdfs.AvroResolver</resolver>
-        </plugins>
-        <protocol>wasbs</protocol>
-    </profile>
-    <profile>
-        <name>wasbs:json</name>
-        <description>
-            Access JSON data either as:
-            * one JSON record per line (default)
-            * or multiline JSON records with an IDENTIFIER parameter indicating a member name used
-            to determine the encapsulating json object to return
-        </description>
-        <plugins>
-            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
-            <accessor>org.greenplum.pxf.plugins.json.JsonAccessor</accessor>
-            <resolver>org.greenplum.pxf.plugins.json.JsonResolver</resolver>
-        </plugins>
-        <protocol>wasbs</protocol>
-    </profile>
-    <profile>
         <name>wasbs:AvroSequenceFile</name>
         <description>
             Read an Avro format stored in sequence file, with separated schema file from Azure Blob
@@ -871,87 +959,17 @@ under the License.
         <protocol>wasbs</protocol>
     </profile>
     <profile>
-        <name>wasbs:SequenceFile</name>
+        <name>gs:AvroSequenceFile</name>
         <description>
-            Profile for accessing Sequence files serialized with a custom Writable class
+            Read an Avro format stored in sequence file, with separated schema file from Google
+            Cloud Storage
         </description>
         <plugins>
             <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
             <accessor>org.greenplum.pxf.plugins.hdfs.SequenceFileAccessor</accessor>
-            <resolver>org.greenplum.pxf.plugins.hdfs.WritableResolver</resolver>
-        </plugins>
-        <protocol>wasbs</protocol>
-    </profile>
-
-    <!-- File profiles for file systems mounted on the Greenplum cluster -->
-    <profile>
-        <name>file:text</name>
-        <description>This profile is suitable for using when reading delimited single line records
-            from plain text, tab-delimited, files
-        </description>
-        <plugins>
-            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
-            <accessor>org.greenplum.pxf.plugins.hdfs.LineBreakAccessor</accessor>
-            <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
-        </plugins>
-    </profile>
-    <profile>
-        <name>file:csv</name>
-        <description>This profile is suitable for using when reading delimited single line records
-            from plain text CSV files
-        </description>
-        <plugins>
-            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
-            <accessor>org.greenplum.pxf.plugins.hdfs.LineBreakAccessor</accessor>
-            <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
-        </plugins>
-    </profile>
-    <profile>
-        <name>file:text:multi</name>
-        <description>This profile is suitable for using when reading delimited single or multi line
-            records (with quoted linefeeds) from plain text files. It is not splittable (non
-            parallel) and slower than HdfsTextSimple.
-        </description>
-        <plugins>
-            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsFileFragmenter</fragmenter>
-            <accessor>org.greenplum.pxf.plugins.hdfs.QuotedLineBreakAccessor</accessor>
-            <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
-        </plugins>
-    </profile>
-    <profile>
-        <name>file:parquet</name>
-        <description>A profile for reading and writing Parquet files
-        </description>
-        <plugins>
-            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
-            <accessor>org.greenplum.pxf.plugins.hdfs.ParquetFileAccessor</accessor>
-            <resolver>org.greenplum.pxf.plugins.hdfs.ParquetResolver</resolver>
-        </plugins>
-    </profile>
-    <profile>
-        <name>file:avro</name>
-        <description>This profile is suitable for using when reading Avro files (i.e
-            fileName.avro)
-        </description>
-        <plugins>
-            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
-            <accessor>org.greenplum.pxf.plugins.hdfs.AvroFileAccessor</accessor>
             <resolver>org.greenplum.pxf.plugins.hdfs.AvroResolver</resolver>
         </plugins>
-    </profile>
-    <profile>
-        <name>file:json</name>
-        <description>
-            Access JSON data either as:
-            * one JSON record per line (default)
-            * or multiline JSON records with an IDENTIFIER parameter indicating a member name used
-            to determine the encapsulating json object to return
-        </description>
-        <plugins>
-            <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
-            <accessor>org.greenplum.pxf.plugins.json.JsonAccessor</accessor>
-            <resolver>org.greenplum.pxf.plugins.json.JsonResolver</resolver>
-        </plugins>
+        <protocol>gs</protocol>
     </profile>
 
     <!-- SYSTEM PROFILES -->
@@ -967,4 +985,5 @@ under the License.
             <resolver>org.greenplum.pxf.plugins.hdfs.StringPassResolver</resolver>
         </plugins>
     </profile>
+
 </profiles>

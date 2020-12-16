@@ -21,7 +21,6 @@ package org.greenplum.pxf.service;
 
 
 import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.KryoException;
 import com.esotericsoftware.kryo.io.Output;
 import org.apache.commons.codec.binary.Base64;
 import org.greenplum.pxf.api.examples.DemoFragmentMetadata;
@@ -432,7 +431,25 @@ public class HttpRequestParserTest {
         RequestContext context = parser.parseRequest(parameters, RequestType.FRAGMENTER);
 
         assertEquals("test-protocol", context.getProfileScheme());
+    }
 
+    @Test
+    public void protocolIsSetWhenProfileIsSpecifiedInMixedCase() {
+        parameters.add("X-GP-OPTIONS-PROFILE", "teST-pROFile");
+        when(mockPluginConf.getProtocol("test-profile")).thenReturn("test-protocol");
+
+        RequestContext context = parser.parseRequest(parameters, RequestType.FRAGMENTER);
+
+        assertEquals("test-protocol", context.getProfileScheme());
+    }
+
+    @Test
+    public void profileIsSetInLowerCase() {
+        parameters.add("X-GP-OPTIONS-PROFILE", "teST-pROFile");
+
+        RequestContext context = parser.parseRequest(parameters, RequestType.FRAGMENTER);
+
+        assertEquals("test-profile", context.getProfile());
     }
 
     @Test
