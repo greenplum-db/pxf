@@ -66,7 +66,7 @@ public class HiveMetadataFetcherTest {
 
         context = new RequestContext();
         context.setPluginConf(mockPluginConf);
-        when(mockPluginConf.getPlugins("HiveText")).thenReturn(mockProfileMap);
+        when(mockPluginConf.getPlugins("hive:text")).thenReturn(mockProfileMap);
         when(mockProfileMap.get("OUTPUTFORMAT")).thenReturn("org.greenplum.pxf.api.io.Text");
 
         mockHiveClient = mock(HiveMetaStoreClient.class);
