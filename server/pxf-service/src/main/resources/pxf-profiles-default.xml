@@ -960,7 +960,7 @@ under the License.
         <protocol>gs</protocol>
     </profile>
 
-    <!-- SYSTEM PROFILES -->
+    <!-- ==================== SYSTEM PROFILES ==================== -->
     <profile>
         <name>system:filter</name>
         <description>
