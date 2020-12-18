@@ -34,10 +34,7 @@ public class ProfileFactoryTest {
 
         // if user specified vectorized ORC, no matter what the input format is, the profile should be used
         String profileName = ProfileFactory.get(new TextInputFormat(), false, "HiveVectorizedORC");
-        assertEquals("hive:orc:vectorized", profileName);
-
-        profileName = ProfileFactory.get(new TextInputFormat(), false, "hive:orc:vectorized");
-        assertEquals("hive:orc:vectorized", profileName);
+        assertEquals("hive:orc", profileName);
 
         // For TextInputFormat when table has no complex types, HiveText profile should be used
         profileName = ProfileFactory.get(new TextInputFormat(), false);

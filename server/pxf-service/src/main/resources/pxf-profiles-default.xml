@@ -181,26 +181,14 @@ under the License.
             <metadata>org.greenplum.pxf.plugins.hive.HiveMetadataFetcher</metadata>
             <outputFormat>org.greenplum.pxf.api.io.GPDBWritable</outputFormat>
         </plugins>
+        <handler>org.greenplum.pxf.plugins.hive.HiveProtocolHandler</handler>
         <optionMappings>
             <mapping option="ppd" property="pxf.ppd.hive"/>
         </optionMappings>
     </profile>
-    <!-- this profile is obsolete in favor of hive:orc with VECTORIZE=true user option -->
+    <!-- this profile is deprecated in favor of hive:orc with VECTORIZE=true user option -->
     <profile>
         <name>HiveVectorizedORC</name>
-        <description>This profile is same as HiveORC profile, but operates on batches of rows
-            instead of one row at a time, leading to faster reading and resolution phases.
-        </description>
-        <plugins>
-            <fragmenter>org.greenplum.pxf.plugins.hive.HiveInputFormatFragmenter</fragmenter>
-            <accessor>org.greenplum.pxf.plugins.hive.HiveORCVectorizedAccessor</accessor>
-            <resolver>org.greenplum.pxf.plugins.hive.HiveORCVectorizedResolver</resolver>
-            <metadata>org.greenplum.pxf.plugins.hive.HiveMetadataFetcher</metadata>
-            <outputFormat>org.greenplum.pxf.api.io.GPDBWritable</outputFormat>
-        </plugins>
-    </profile>
-    <profile>
-        <name>hive:orc:vectorized</name>
         <description>This profile is same as HiveORC profile, but operates on batches of rows
             instead of one row at a time, leading to faster reading and resolution phases.
         </description>
