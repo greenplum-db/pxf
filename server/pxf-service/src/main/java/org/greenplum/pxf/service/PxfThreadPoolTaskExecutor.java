@@ -18,7 +18,7 @@ import static org.greenplum.pxf.api.configuration.PxfServerProperties.PXF_BASE_P
 public class PxfThreadPoolTaskExecutor extends ThreadPoolTaskExecutor {
 
     private static final String PXF_SERVER_PROCESSING_CAPACITY_EXCEEDED_MESSAGE = "PXF Server processing capacity exceeded.";
-    private static final String PXF_SERVER_PROCESSING_CAPACITY_EXCEEDED_HINT = "Consider increasing the values of PXF_TASK_POOL_MAX_SIZE and/or PXF_TASK_POOL_QUEUE_CAPACITY in '%s/conf/pxf-env.sh'";
+    private static final String PXF_SERVER_PROCESSING_CAPACITY_EXCEEDED_HINT = "Consider increasing the values of 'pxf.task.pool.max-size' and/or 'pxf.task.pool.queue-capacity' in '%s/conf/pxf-application.properties'";
 
     /**
      * Submits a {@link Runnable} to the executor. Handles
