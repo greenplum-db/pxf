@@ -3,6 +3,7 @@ package org.greenplum.pxf.plugins.hive;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.io.ArrayWritable;
+import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.greenplum.pxf.api.io.DataType;
@@ -22,8 +23,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(MockitoExtension.class)
 public class HiveResolverTest {
@@ -66,7 +66,7 @@ public class HiveResolverTest {
         columnDescriptors.add(new ColumnDescriptor("name", DataType.TEXT.getOID(), 1, "text", null));
         columnDescriptors.add(new ColumnDescriptor("amt", DataType.FLOAT8.getOID(), 3, "float8", null));
 
-        ArrayWritable aw = new ArrayWritable(Text.class, new Writable[]{new Text("plain string\u00011000")});
+        ArrayWritable aw = new ArrayWritable(Text.class, new Writable[]{new Text("plain string"), new DoubleWritable(1000)});
         OneRow row = new OneRow(aw);
 
         context.setConfiguration(configuration);
@@ -77,7 +77,10 @@ public class HiveResolverTest {
         resolver.afterPropertiesSet();
         List<OneField> output = resolver.getFields(row);
 
-        assertThat(output.get(0).toString(), is("plain string\u00011000"));
+        assertThat(output.get(0).val).isEqualTo("plain string");
+        assertThat(output.get(0).type).isEqualTo(DataType.TEXT.getOID());
+        assertThat(output.get(1).val).isEqualTo(1000.0);
+        assertThat(output.get(1).type).isEqualTo(DataType.FLOAT8.getOID());
     }
 
     @Test
@@ -89,7 +92,7 @@ public class HiveResolverTest {
         columnDescriptors.add(new ColumnDescriptor("name", DataType.TEXT.getOID(), 1, "text", null));
         columnDescriptors.add(new ColumnDescriptor("amt", DataType.FLOAT8.getOID(), 3, "float8", null));
 
-        ArrayWritable aw = new ArrayWritable(Text.class, new Writable[]{new Text("a really \"fancy\" string? *wink*\u00011000")});
+        ArrayWritable aw = new ArrayWritable(Text.class, new Writable[]{new Text("a really \"fancy\" string? *wink*"), new DoubleWritable(1000)});
         OneRow row = new OneRow(aw);
 
         context.setConfiguration(configuration);
@@ -100,7 +103,10 @@ public class HiveResolverTest {
         resolver.afterPropertiesSet();
         List<OneField> output = resolver.getFields(row);
 
-        assertThat(output.get(0).toString(), is("a really \"fancy\" string? *wink*\u00011000"));
+        assertThat(output.get(0).val).isEqualTo("a really \"fancy\" string? *wink*");
+        assertThat(output.get(0).type).isEqualTo(DataType.TEXT.getOID());
+        assertThat(output.get(1).val).isEqualTo(1000.0);
+        assertThat(output.get(1).type).isEqualTo(DataType.FLOAT8.getOID());
     }
 
     @Test
@@ -120,7 +126,7 @@ public class HiveResolverTest {
         resolver.afterPropertiesSet();
         List<OneField> output = resolver.getFields(row);
 
-        assertThat(output.get(0).toString(), is("{\"street\":\"plain string\",\"zipcode\":1001}"));
+        assertThat(output.get(0).toString()).isEqualTo("{\"street\":\"plain string\",\"zipcode\":1001}");
     }
 
     @Test
@@ -140,7 +146,7 @@ public class HiveResolverTest {
         resolver.afterPropertiesSet();
         List<OneField> output = resolver.getFields(row);
 
-        assertThat(output.get(0).toString(), is("{\"street\":\"a really \\\"fancy\\\" string\",\"zipcode\":1001}"));
+        assertThat(output.get(0).toString()).isEqualTo("{\"street\":\"a really \\\"fancy\\\" string\",\"zipcode\":1001}");
     }
 
     @Test
@@ -160,6 +166,6 @@ public class HiveResolverTest {
         resolver.afterPropertiesSet();
         List<OneField> output = resolver.getFields(row);
 
-        assertThat(output.get(0).toString(), is("{\"line1\":{\"number\":1000,\"street_name\":\"a really \\\"fancy\\\" string\"},\"line2\":{\"city\":\"plain string\",\"zipcode\":1001}}"));
+        assertThat(output.get(0).toString()).isEqualTo("{\"line1\":{\"number\":1000,\"street_name\":\"a really \\\"fancy\\\" string\"},\"line2\":{\"city\":\"plain string\",\"zipcode\":1001}}");
     }
 }
