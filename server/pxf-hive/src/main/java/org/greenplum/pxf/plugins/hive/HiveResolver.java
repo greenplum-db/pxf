@@ -612,7 +612,9 @@ public class HiveResolver extends BasePlugin implements Resolver {
             case STRING: {
                 val = (o != null) ? ((StringObjectInspector) oi).getPrimitiveJavaObject(o)
                         : null;
-                val = toFlatten ? String.format("\"%s\"", StringEscapeUtils.escapeJava(val.toString())) : val;
+                val = toFlatten
+                        ? val != null ? String.format("\"%s\"", StringEscapeUtils.escapeJava(val.toString())) : "null"
+                        : val;
                 addOneFieldToRecord(record, DataType.TEXT, val);
                 break;
             }
