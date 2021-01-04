@@ -63,8 +63,8 @@ public class HiveResolverTest {
         properties.put("serialization.lib", SERDE_CLASS_NAME);
         properties.put(serdeConstants.LIST_COLUMNS, COL_NAMES_SIMPLE);
         properties.put(serdeConstants.LIST_COLUMN_TYPES, COL_TYPES_SIMPLE);
-        columnDescriptors.add(new ColumnDescriptor("name", DataType.TEXT.getOID(), 1, "text", null));
-        columnDescriptors.add(new ColumnDescriptor("amt", DataType.FLOAT8.getOID(), 3, "float8", null));
+        columnDescriptors.add(new ColumnDescriptor("name", DataType.TEXT.getOID(), 0, "text", null));
+        columnDescriptors.add(new ColumnDescriptor("amt", DataType.FLOAT8.getOID(), 1, "float8", null));
 
         ArrayWritable aw = new ArrayWritable(Text.class, new Writable[]{new Text("plain string"), new DoubleWritable(1000)});
         OneRow row = new OneRow(aw);
@@ -89,8 +89,8 @@ public class HiveResolverTest {
         properties.put("serialization.lib", SERDE_CLASS_NAME);
         properties.put(serdeConstants.LIST_COLUMNS, COL_NAMES_SIMPLE);
         properties.put(serdeConstants.LIST_COLUMN_TYPES, COL_TYPES_SIMPLE);
-        columnDescriptors.add(new ColumnDescriptor("name", DataType.TEXT.getOID(), 1, "text", null));
-        columnDescriptors.add(new ColumnDescriptor("amt", DataType.FLOAT8.getOID(), 3, "float8", null));
+        columnDescriptors.add(new ColumnDescriptor("name", DataType.TEXT.getOID(), 0, "text", null));
+        columnDescriptors.add(new ColumnDescriptor("amt", DataType.FLOAT8.getOID(), 1, "float8", null));
 
         ArrayWritable aw = new ArrayWritable(Text.class, new Writable[]{new Text("a really \"fancy\" string? *wink*"), new DoubleWritable(1000)});
         OneRow row = new OneRow(aw);
@@ -114,7 +114,7 @@ public class HiveResolverTest {
         properties.put("serialization.lib", SERDE_CLASS_NAME_STRUCT);
         properties.put(serdeConstants.LIST_COLUMNS, COL_NAMES_STRUCT);
         properties.put(serdeConstants.LIST_COLUMN_TYPES, COL_TYPES_STRUCT);
-        columnDescriptors.add(new ColumnDescriptor("address", DataType.TEXT.getOID(), 3, "struct", null));
+        columnDescriptors.add(new ColumnDescriptor("address", DataType.TEXT.getOID(), 0, "struct", null));
 
         OneRow row = new OneRow(0, new Text("plain string\u00021001"));
 
@@ -134,7 +134,7 @@ public class HiveResolverTest {
         properties.put("serialization.lib", SERDE_CLASS_NAME_STRUCT);
         properties.put(serdeConstants.LIST_COLUMNS, COL_NAMES_STRUCT);
         properties.put(serdeConstants.LIST_COLUMN_TYPES, COL_TYPES_STRUCT);
-        columnDescriptors.add(new ColumnDescriptor("address", DataType.TEXT.getOID(), 3, "struct", null));
+        columnDescriptors.add(new ColumnDescriptor("address", DataType.TEXT.getOID(), 0, "struct", null));
 
         OneRow row = new OneRow(0, new Text("a really \"fancy\" string\u00021001"));
 
@@ -154,7 +154,7 @@ public class HiveResolverTest {
         properties.put("serialization.lib", SERDE_CLASS_NAME_STRUCT);
         properties.put(serdeConstants.LIST_COLUMNS, COL_NAMES_NESTED_STRUCT);
         properties.put(serdeConstants.LIST_COLUMN_TYPES, COL_TYPES_NESTED_STRUCT);
-        columnDescriptors.add(new ColumnDescriptor("address", DataType.TEXT.getOID(), 3, "struct", null));
+        columnDescriptors.add(new ColumnDescriptor("address", DataType.TEXT.getOID(), 0, "struct", null));
 
         OneRow row = new OneRow(0, new Text("1000\u0003a really \"fancy\" string\u0002plain string\u00031001"));
 

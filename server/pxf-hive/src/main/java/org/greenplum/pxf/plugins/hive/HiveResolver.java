@@ -612,6 +612,7 @@ public class HiveResolver extends BasePlugin implements Resolver {
             case STRING: {
                 val = (o != null) ? ((StringObjectInspector) oi).getPrimitiveJavaObject(o)
                         : null;
+                // for more complex types, we need to properly handle special characters by escaping the val
                 val = toFlatten
                         ? val != null ? String.format("\"%s\"", StringEscapeUtils.escapeJava(val.toString())) : "null"
                         : val;
