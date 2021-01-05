@@ -1,0 +1,161 @@
+---
+title: Reading ORC Data
+---
+
+Use the PXF HDFS connector `hdfs:orc` profile to read ORC-format data when the data resides in a Hadoop file system. This section describes how to read HDFS files that are stored in ORC format, including how to create and query an external table that references these files in the HDFS data store.
+
+The `hdfs:orc` profile:
+
+- Reads 1024 rows of data at a time.
+- Supports column projection.
+- Supports filter pushdown based on file-level, stripe-level, and row-level ORC statistics.
+- Does not support complex types.
+
+The `hdfs:orc` profile currently supports reading scalar data types from ORC files. If the data resides in a Hive table, and you want to read complex types or the Hive table is partitioned, use the [`hive:orc`](hive_pxf.html#hive_orc) profile.
+
+
+## <a id="prereq"></a>Prerequisites
+
+Ensure that you have met the PXF Hadoop [Prerequisites](access_hdfs.html#hadoop_prereq) before you attempt to read data from HDFS.
+
+
+## <a id="about_orc"></a>About the ORC Data Format
+
+The Optimized Row Columnar (ORC) file format is a columnar file format that provides a highly efficient way to both store and access HDFS data. ORC format offers improvements over text and RCFile formats in terms of both compression and performance. PXF supports ORC version 1.5.12.
+
+ORC is type-aware and specifically designed for Hadoop workloads. ORC files store both the type of, and encoding information for, the data in the file. All columns within a single group of row data (also known as stripe) are stored together on disk in ORC format files. The columnar nature of the ORC format type enables read projection, helping avoid accessing unnecessary columns during a query.
+
+ORC also supports predicate pushdown with built-in indexes at the file, stripe, and row levels, moving the filter operation to the data loading phase.
+
+Refer to the [Apache orc](https://orc.apache.org/docs/) documentation for detailed information about the ORC file format.
+
+
+## <a id="datatype_map"></a>Data Type Mapping
+
+To read ORC scalar data types in Greenplum Database, map ORC data values to Greenplum Database columns of the same type. PXF uses the following data type mapping when it reads ORC data:
+
+| ORC Physical Type | ORC Logical Type | PXF/Greenplum Data Type |
+|-------------------|---------------|--------------------------|
+| binary | decimal | Numeric |
+| binary | timestamp | Timestamp |
+| byte[] | string | Text |
+| byte[] | char | Bpchar |
+| byte[] | varchar | Varchar |
+| byte[] | binary | Bytea |
+| Double | float | Real |
+| Double | double | Float8 |
+| Integer | boolean (1 bit) | Boolean |
+| Integer | tinyint (8 bit) | Smallint |
+| Integer | smallint (16 bit) | Smallint |
+| Integer | int (32 bit) | Integer |
+| Integer | bigint (64 bit) | Bigint |
+| Integer | date | Date |
+
+
+## <a id="createexttbl"></a>Creating the External Table
+
+The PXF HDFS connector `hdfs:orc` profile supports reading ORC-format HDFS files. Use the following syntax to create a Greenplum Database external table that references a file or directory:
+
+``` sql
+CREATE EXTERNAL TABLE <table_name>
+    ( <column_name> <data_type> [, ...] | LIKE <other_table> )
+LOCATION ('pxf://<path-to-hdfs-file>
+    ?PROFILE=hdfs:orc[&SERVER=<server_name>][&<custom-option>=<value>[...]]')
+FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import')
+```
+
+The specific keywords and values used in the Greenplum Database [CREATE EXTERNAL TABLE](https://gpdb.docs.pivotal.io/latest/ref_guide/sql_commands/CREATE_EXTERNAL_TABLE.html) command are described below.
+
+| Keyword  | Value |
+|-------|-------------------------------------|
+| \<path&#8209;to&#8209;hdfs&#8209;file\>    | The path to the file or directory in the HDFS data store. When the `<server_name>` configuration includes a [`pxf.fs.basePath`](cfg_server.html#pxf-fs-basepath) property setting, PXF considers \<path&#8209;to&#8209;hdfs&#8209;file\> to be relative to the base path specified. Otherwise, PXF considers it to be an absolute path. \<path&#8209;to&#8209;hdfs&#8209;file\> must not specify a relative path nor include the dollar sign (`$`) character. |
+| PROFILE    | The `PROFILE` keyword must specify `hdfs:orc`. |
+| SERVER=\<server_name\>    | The named server configuration that PXF uses to access the data. PXF uses the `default` server if not specified. |
+| \<custom-option\>    | \<custom-option\>s are described below. |
+| FORMAT | Use `FORMAT 'CUSTOM'`; the `CUSTOM` format requires the built-in `pxfwritable_import` `formatter`.   |
+
+<a id="customopts"></a>
+The PXF `hdfs:orc` profile supports the following read options. You specify this option in the `LOCATION` clause:
+
+| Read Option  | Value Description |
+|-------|-------------------------------------|
+| IGNORE_MISSING_PATH | A Boolean value that specifies the action to take when \<path-to-hdfs-file\> is missing or invalid. The default value is `false`, PXF returns an error in this situation. When the value is `true`, PXF ignores missing path errors and returns an empty fragment. |
+| MAP_BY_POSITION | A Boolean value that, when set to `true`, specifies that PXF should map an ORC column to a Greenplum Database column by position. The default value is `false`, PXF maps an ORC column to a Greenplum column by name. |
+
+
+## <a id="read_example"></a>Example: Reading an ORC File on HDFS
+
+This example operates on a simple data set that models a retail sales operation. The data includes fields with the following names and types:
+
+| Column Name  | Data Type |
+|--------------|---------------|
+| location | text |
+| month | text |
+| num\_orders | integer |
+| total\_sales | numeric(10,2) |
+
+In this example, you:
+
+- Create a sample data set in CSV format, use the `orc-tools` JAR utilities to convert the CSV file into an ORC-format file, and then copy the ORC file to HDFS.
+- Create a Greenplum Database readable external table that references the ORC file and that specifies the `hdfs:orc` profile.
+- Query the external table.
+
+You must have administrative privileges to both a Hadoop cluster and a Greenplum Database cluster to run the example. You must also have configured a PXF server to access Hadoop.
+
+
+Procedure:
+
+1. Create a CSV file named `sampledata.csv` in the `/tmp` directory:
+
+    ``` shell
+    hdfsclient$ echo 'Prague,Jan,101,4875.33
+Rome,Mar,87,1557.39
+Bangalore,May,317,8936.99
+Beijing,Jul,411,11600.67' > /tmp/sampledata.csv
+
+1. [Download](https://repo1.maven.org/maven2/org/apache/orc/orc-tools/1.6.2/orc-tools-1.6.2-uber.jar) the `orc-tools` JAR.
+
+1. Run the `orc-tools` `convert` command to convert `sampledata.csv` to the ORC file `/tmp/sampledata.orc`; provide the schema to the command:
+
+    ``` shell
+    hdfsclient$ java -jar orc-tools-1.6.2-uber.jar convert /tmp/sampledata.csv \
+      --schema 'struct<location:string,month:string,num_orders:int,total_sales:decimal(10,2)>' \
+      -o /tmp/sampledata.orc
+    ```
+
+1. Copy the ORC file to HDFS. The following command copies the file to the `/data/pxf_examples` directory:
+
+    ``` shell
+    hdfsclient$ hdfs dfs -put /tmp/sampledata.orc /data/pxf_examples/
+    ```
+
+1. Log in to the Greenplum Database master host and connect to a database. This command connects to the database named `testdb` as the `gpadmin` user:
+
+    ``` shell
+    gpadmin@gpmaster$ psql -d testdb
+    ```
+
+1. Create an external table named `sample_orc` that references the `/data/pxf_examples/sampledata.orc` file on HDFS. This command creates the table with the column names specified in the ORC schema, and uses the `default` PXF server:
+
+    ``` sql
+    testdb=# CREATE EXTERNAL TABLE sample_orc(location text, month text, num_orders int, total_sales numeric(10,2))
+               LOCATION ('pxf://data/pxf_examples/sampledata.orc?PROFILE=hdfs:orc')
+             FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
+    ```
+
+1. Read the data in the file by querying the `sample_orc` table:
+
+    ``` sql
+    testdb=# SELECT * FROM sample_orc;
+    ```
+
+    ``` shell
+       location    | month | num_orders | total_sales 
+    ---------------+-------+------------+-------------
+     Prague        | Jan   |        101 |     4875.33
+     Rome          | Mar   |         87 |     1557.39
+     Bangalore     | May   |        317 |     8936.99
+     Beijing       | Jul   |        411 |    11600.67
+    (4 rows)
+    ```
+

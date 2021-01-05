@@ -12,13 +12,13 @@ Column projection is automatically enabled for the `pxf` external table protocol
 |-------------|---------------|---------|
 | External SQL database | JDBC Connector | jdbc |
 | Hive | Hive Connector | hive (accessing tables stored as Text, Parquet, RCFile, and ORC), hive:rc, hive:orc |
-| Hadoop | HDFS Connector | hdfs:parquet |
-| Network File System | File Connector | file:parquet |
-| Amazon S3 | S3-Compatible Object Store Connectors | s3:parquet |
+| Hadoop | HDFS Connector | hdfs:orc, hdfs:parquet |
+| Network File System | File Connector | file:orc, file:parquet |
+| Amazon S3 | S3-Compatible Object Store Connectors | s3:orc, s3:parquet |
 | Amazon S3 using S3 Select | S3-Compatible Object Store Connectors | s3:parquet, s3:text |
-| Google Cloud Storage | GCS Object Store Connector | gs:parquet |
-| Azure Blob Storage | Azure Object Store Connector | wasbs:parquet |
-| Azure Data Lake | Azure Object Store Connector | adl:parquet |
+| Google Cloud Storage | GCS Object Store Connector | gs:orc, gs:parquet |
+| Azure Blob Storage | Azure Object Store Connector | wasbs:orc, wasbs:parquet |
+| Azure Data Lake | Azure Object Store Connector | adl:orc, adl:parquet |
 
 **Note:** PXF may disable column projection in cases where it cannot successfully serialize a query filter; for example, when the `WHERE` clause resolves to a `boolean` type.
 

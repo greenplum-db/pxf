@@ -109,6 +109,7 @@ The PXF Hadoop connectors expose the following profiles to read, and in many cas
 | HDFS | delimited [text with quoted linefeeds](hdfs_text.html#profile_textmulti) | hdfs:text:multi | n/a |
 | HDFS | [Avro](hdfs_avro.html) | hdfs:avro | n/a |
 | HDFS | [JSON](hdfs_json.html) | hdfs:json | n/a |
+| HDFS | [ORC](hdfs_orc.html) | hdfs:orc | n/a |
 | HDFS | [Parquet](hdfs_parquet.html) | hdfs:parquet | n/a |
 | HDFS | AvroSequenceFile | hdfs:AvroSequenceFile | n/a |
 | HDFS | [SequenceFile](hdfs_seqfile.html) | hdfs:SequenceFile | n/a |
@@ -120,7 +121,6 @@ The PXF Hadoop connectors expose the following profiles to read, and in many cas
 | [Hive](hive_pxf.html) | stored as Avro | hive | Hive |
 | [HBase](hbase_pxf.html) | Any | hbase | HBase |
 
-
 ### <a id="choose_profile"></a>Choosing the Profile
 
 PXF provides more than one profile to access text and Parquet data on Hadoop. Here are some things to consider as you determine which profile to choose.
@@ -131,6 +131,11 @@ Choose the `hive` profile when:
 - The data resides in a Hive table, and the Hive table is partitioned.
 
 Choose the `hdfs:text` profile when the file is text and you know the location of the file in the HDFS file system.
+
+When accessing ORC-format data:
+
+- Choose the `hdfs:orc` profile when the file is ORC, you know the location of the file in the HDFS file system, and the file is not managed by Hive or you do not want to use the Hive Metastore.
+- Choose the `hive:orc` profile when the table is ORC and the table is managed by Hive, and the data is partitioned or the data includes complex types.
 
 Choose the `hdfs:parquet` profile when the file is Parquet, you know the location of the file in the HDFS file system, and you want to take advantage of extended filter pushdown support for additional data types and operators.
 

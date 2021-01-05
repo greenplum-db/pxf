@@ -62,9 +62,11 @@ PXF accesses data sources using profiles exposed by different connectors, and fi
 | hive:rc | Y, Y<sup>2</sup> |  N | Y | Y | Y, Y<sup>2</sup> | Y, Y<sup>2</sup> | Y |
 | hive:orc | Y, Y<sup>2</sup> |  N | Y | Y | Y, Y<sup>2</sup> | Y, Y<sup>2</sup> | Y |
 | hive:orc and VECTORIZE=true | Y<sup>2</sup> |  N | N | N | Y<sup>2</sup> | Y<sup>2</sup> | N |
+| *:orc (all except hive:orc) | Y<sup>1,3</sup> | N | Y<sup>1,3</sup> | Y<sup>1,3</sup> | Y<sup>1,3</sup> | Y<sup>1,3</sup> | Y<sup>1,3</sup> |
 
 </br><sup>1</sup>&nbsp;PXF applies the predicate, rather than the remote system, reducing CPU usage and the memory footprint.
 </br><sup>2</sup>&nbsp;PXF supports partition pruning based on partition keys.
+</br><sup>3</sup>&nbsp;PXF filtering is based on file-level, stripe-level, and row-level ORC statistics.
 
 PXF does not support filter pushdown for any profile not mentioned in the table above, including: *:avro, *:AvroSequenceFile, *:SequenceFile, *:json, *:text, and *:text:multi.
 
@@ -73,7 +75,7 @@ To summarize, all of the following criteria must be met for filter pushdown to o
 * You enable external table filter pushdown by setting the `gp_external_enable_filter_pushdown` server configuration parameter to `'on'`.
 * The Greenplum Database protocol that you use to access external data source must support filter pushdown. The `pxf` external table protocol supports pushdown.
 * The external data source that you are accessing must support pushdown. For example, HBase and Hive support pushdown.
-* For queries on external tables that you create with the `pxf` protocol, the underlying PXF connector must also support filter pushdown. For example, the PXF Hive, HBase, and JDBC connectors support pushdown, as do the PXF connectors that support reading Parquet data.
+* For queries on external tables that you create with the `pxf` protocol, the underlying PXF connector must also support filter pushdown. For example, the PXF Hive, HBase, and JDBC connectors support pushdown, as do the PXF connectors that support reading ORC and Parquet data.
 
     - Refer to Hive [Partition Pruning](hive_pxf.html#partitionfiltering) for more information about Hive support for this feature.
 
