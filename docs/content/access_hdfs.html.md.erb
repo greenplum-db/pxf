@@ -103,28 +103,29 @@ The PXF Hadoop connectors provide built-in profiles to support the following dat
 
 The PXF Hadoop connectors expose the following profiles to read, and in many cases write, these supported data formats:
 
-| Data Source | Data Format | Profile Name(s) |
-|-------------|------|---------|
-| HDFS | delimited single line [text](hdfs_text.html#profile_text) | hdfs:text |
-| HDFS | delimited [text with quoted linefeeds](hdfs_text.html#profile_textmulti) |
-| HDFS | [Avro](hdfs_avro.html) | hdfs:avro |
-| HDFS | [JSON](hdfs_json.html) | hdfs:json |
-| HDFS | [Parquet](hdfs_parquet.html) | hdfs:parquet |
-| HDFS | AvroSequenceFile | hdfs:AvroSequenceFile |
-| HDFS | [SequenceFile](hdfs_seqfile.html) | hdfs:SequenceFile |
-| [Hive](hive_pxf.html) | stored as TextFile | Hive, [HiveText](hive_pxf.html#hive_text) |
-| [Hive](hive_pxf.html) | stored as SequenceFile | Hive |
-| [Hive](hive_pxf.html) | stored as RCFile | Hive, [HiveRC](hive_pxf.html#hive_hiverc) |
-| [Hive](hive_pxf.html) | stored as ORC | Hive, [HiveORC](hive_pxf.html#hive_orc), HiveVectorizedORC |
-| [Hive](hive_pxf.html) | stored as Parquet | Hive |
-| [HBase](hbase_pxf.html) | Any | HBase |
+| Data Source | Data Format | Profile Name(s) | Deprecated Profile Name |
+|-------------|------|---------|-----|
+| HDFS | delimited single line [text](hdfs_text.html#profile_text) | hdfs:text | n/a |
+| HDFS | delimited [text with quoted linefeeds](hdfs_text.html#profile_textmulti) | hdfs:text:multi |
+| HDFS | [Avro](hdfs_avro.html) | hdfs:avro | n/a |
+| HDFS | [JSON](hdfs_json.html) | hdfs:json | n/a |
+| HDFS | [Parquet](hdfs_parquet.html) | hdfs:parquet | n/a |
+| HDFS | AvroSequenceFile | hdfs:AvroSequenceFile | n/a |
+| HDFS | [SequenceFile](hdfs_seqfile.html) | hdfs:SequenceFile | n/a |
+| [Hive](hive_pxf.html) | stored as TextFile | hive, [hive:text](hive_pxf.html#hive_text) | Hive, HiveText |
+| [Hive](hive_pxf.html) | stored as SequenceFile | hive | Hive |
+| [Hive](hive_pxf.html) | stored as RCFile | hive, [hive:rc](hive_pxf.html#hive_hiverc) | Hive, HiveRC |
+| [Hive](hive_pxf.html) | stored as ORC | hive, [hive:orc](hive_pxf.html#hive_orc) | Hive, HiveORC, HiveVectorizedORC |
+| [Hive](hive_pxf.html) | stored as Parquet | hive | Hive |
+| [Hive](hive_pxf.html) | stored as Avro | hive | Hive |
+| [HBase](hbase_pxf.html) | Any | hbase | HBase |
 
 
 ### <a id="choose_profile"></a>Choosing the Profile
 
 PXF provides more than one profile to access text and Parquet data on Hadoop. Here are some things to consider as you determine which profile to choose.
 
-Choose the `Hive` profile when:
+Choose the `hive` profile when:
 
 - The data resides in a Hive table, and you do not know the underlying file type of the table up front.
 - The data resides in a Hive table, and the Hive table is partitioned.

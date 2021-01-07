@@ -83,14 +83,14 @@ Create a sample HBase table.
 
 ## <a id="syntax3"></a>Querying External HBase Data
 
-The PXF HBase connector supports a single profile named `HBase`.
+The PXF HBase connector supports a single profile named `hbase`.
 
 Use the following syntax to create a Greenplum Database external table that references an HBase table:
 
 ``` sql
 CREATE EXTERNAL TABLE <table_name>
     ( <column_name> <data_type> [, ...] | LIKE <other_table> )
-LOCATION ('pxf://<hbase-table-name>?PROFILE=HBase[&SERVER=<server_name>]')
+LOCATION ('pxf://<hbase-table-name>?PROFILE=hbase[&SERVER=<server_name>]')
 FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
 ```
 
@@ -99,7 +99,7 @@ HBase connector-specific keywords and values used in the Greenplum Database [CRE
 | Keyword  | Value |
 |-------|-------------------------------------|
 | \<hbase&#8209;table&#8209;name\>    | The name of the HBase table. |
-| PROFILE    | The `PROFILE` keyword must specify `HBase`. |
+| PROFILE    | The `PROFILE` keyword must specify `hbase`. |
 | SERVER=\<server_name\>    | The named server configuration that PXF uses to access the data. PXF uses the `default` server if not specified. |
 | FORMAT  | The `FORMAT` clause must specify `'CUSTOM' (FORMATTER='pxfwritable_import')`.   |
 
@@ -129,7 +129,7 @@ from the `order_info` HBase table that you created in [Example: Creating an HBa
 
 ``` sql
 CREATE EXTERNAL TABLE orderinfo_hbase ("product:name" varchar, "shipping_info:zipcode" int)
-    LOCATION ('pxf://order_info?PROFILE=HBase')                                     
+    LOCATION ('pxf://order_info?PROFILE=hbase')
     FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
 ```
 
@@ -164,7 +164,7 @@ Then create a Greenplum Database external table using the following `CREATE EXTE
 
 ``` sql
 CREATE EXTERNAL TABLE orderinfo_map (pname varchar, zip int)
-    LOCATION ('pxf://order_info?PROFILE=HBase')
+    LOCATION ('pxf://order_info?PROFILE=hbase')
     FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
 ```
 
@@ -180,7 +180,7 @@ For example:
 
 ``` sql
 CREATE EXTERNAL TABLE <table_name> (recordkey bytea, ... ) 
-    LOCATION ('pxf://<hbase_table_name>?PROFILE=HBase')
+    LOCATION ('pxf://<hbase_table_name>?PROFILE=hbase')
     FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
 ```
 

@@ -317,7 +317,7 @@ Named queries are associated with a specific JDBC server configuration. You will
 The Greenplum Database user specifies `query:<query_name>` rather than the name of a remote SQL database table when they create the external table. For example, if the query is defined in the file `$PXF_BASE/servers/mydb/report.sql`, the `CREATE EXTERNAL TABLE` `LOCATION` clause would include the following components:
 
 ``` sql
-LOCATION ('pxf://query:report?PROFILE=JDBC&SERVER=mydb ...')
+LOCATION ('pxf://query:report?PROFILE=jdbc&SERVER=mydb ...')
 ```
 
 Refer to [About Using Named Queries](jdbc_pxf.html#about_nq) for information about using PXF JDBC named queries.

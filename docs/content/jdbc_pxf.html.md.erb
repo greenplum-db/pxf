@@ -56,7 +56,7 @@ Any data type not listed above is not supported by the PXF JDBC connector.
 **Note**: The JDBC connector does not support reading or writing Hive data stored as a byte array (`byte[]`).
 
 ## <a id="queryextdata"></a>Accessing an External SQL Database
-The PXF JDBC connector supports a single profile named `Jdbc`. You can both read data from and write data to an external SQL database table with this profile. You can also use the connector to run a static, named query in external SQL database and read the results.
+The PXF JDBC connector supports a single profile named `jdbc`. You can both read data from and write data to an external SQL database table with this profile. You can also use the connector to run a static, named query in external SQL database and read the results.
 
 To access data in a remote SQL database, you create a readable or writable Greenplum Database external table that references the remote database table. The Greenplum Database external table and the remote database table or query result tuple must have the same definition; the column names and types must match.
 
@@ -65,7 +65,7 @@ Use the following syntax to create a Greenplum Database external table that refe
 <pre>
 CREATE [READABLE | WRITABLE] EXTERNAL TABLE &lt;table_name>
     ( &lt;column_name> &lt;data_type> [, ...] | LIKE &lt;other_table> )
-LOCATION ('pxf://&lt;external-table-name>|query:&lt;query_name>?<b>PROFILE=Jdbc[&SERVER=&lt;server_name>]</b>[&&lt;custom-option>=&lt;value>[...]]')
+LOCATION ('pxf://&lt;external-table-name>|query:&lt;query_name>?<b>PROFILE=jdbc[&SERVER=&lt;server_name>]</b>[&&lt;custom-option>=&lt;value>[...]]')
 FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import'|'pxfwritable_export');
 </pre>
 
@@ -76,9 +76,9 @@ The specific keywords and values used in the Greenplum Database [CREATE EXTERNAL
 |-------|-------------------------------------|
 | \<external&#8209;table&#8209;name\>    | The full name of the external table. Depends on the external SQL database, may include a schema name and a table name. |
 | query:\<query_name\>    | The name of the query to execute in the remote SQL database. |
-| PROFILE    | The `PROFILE` keyword value must specify `Jdbc`. |
+| PROFILE    | The `PROFILE` keyword value must specify `jdbc`. |
 | SERVER=\<server_name\>   | The named server configuration that PXF uses to access the data. PXF uses the `default` server if not specified. |
-| \<custom&#8209;option\>=\<value\>  | \<custom-option\> is profile-specific. `Jdbc` profile-specific options are discussed in the next section.|
+| \<custom&#8209;option\>=\<value\>  | \<custom-option\> is profile-specific. `jdbc` profile-specific options are discussed in the next section.|
 | FORMAT 'CUSTOM' | The JDBC `CUSTOM` `FORMAT` supports the built-in `'pxfwritable_import'` `FORMATTER` function for read operations and the built-in `'pxfwritable_export'` function for write operations. |
 
 **Note**: You cannot use the `HEADER` option in your `FORMAT` specification when you create a PXF external table.
@@ -86,7 +86,7 @@ The specific keywords and values used in the Greenplum Database [CREATE EXTERNAL
 
 ### <a id="jdbcoptions"></a>JDBC Custom Options
 
-You include JDBC connector custom options in the `LOCATION` URI, prefacing each option with an ampersand `&`. `CREATE EXTERNAL TABLE` \<custom-option\>s supported by the `Jdbc` profile include:
+You include JDBC connector custom options in the `LOCATION` URI, prefacing each option with an ampersand `&`. `CREATE EXTERNAL TABLE` \<custom-option\>s supported by the `jdbc` profile include:
 
 | Option Name   | Operation | Description
 |---------------|------------|--------|
@@ -274,11 +274,11 @@ This procedure will typically be performed by the Greenplum Database administrat
 
 Perform the following procedure to create a PXF external table that references the `forpxf_table1` PostgreSQL table that you created in the previous section, and read the data in the table:
 
-1. Create the PXF external table specifying the `Jdbc` profile. For example:
+1. Create the PXF external table specifying the `jdbc` profile. For example:
 
     ``` sql
     gpadmin=# CREATE EXTERNAL TABLE pxf_tblfrompg(id int)
-                LOCATION ('pxf://public.forpxf_table1?PROFILE=Jdbc&SERVER=pgsrvcfg')
+                LOCATION ('pxf://public.forpxf_table1?PROFILE=jdbc&SERVER=pgsrvcfg')
                 FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
     ```
 
@@ -298,11 +298,11 @@ Perform the following procedure to create a PXF external table that references t
 
 Perform the following procedure to insert some data into the `forpxf_table1` Postgres table and then read from the table. You must create a new external table for the write operation.
 
-1. Create a writable PXF external table specifying the `Jdbc` profile. For example:
+1. Create a writable PXF external table specifying the `jdbc` profile. For example:
 
     ``` sql
     gpadmin=# CREATE WRITABLE EXTERNAL TABLE pxf_writeto_postgres(id int)
-                LOCATION ('pxf://public.forpxf_table1?PROFILE=Jdbc&SERVER=pgsrvcfg')
+                LOCATION ('pxf://public.forpxf_table1?PROFILE=jdbc&SERVER=pgsrvcfg')
               FORMAT 'CUSTOM' (FORMATTER='pxfwritable_export');
     ```
 
@@ -365,7 +365,7 @@ This query returns tuples of type `(name text, total int, month int)`. If the `o
 
 ``` sql
 CREATE EXTERNAL TABLE orderrpt_frompg(name text, total int, month int)
-  LOCATION ('pxf://query:order_rpt?PROFILE=Jdbc&SERVER=pgserver&PARTITION_BY=month:int&RANGE=1:13&INTERVAL=3')
+  LOCATION ('pxf://query:order_rpt?PROFILE=jdbc&SERVER=pgserver&PARTITION_BY=month:int&RANGE=1:13&INTERVAL=3')
 FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
 ```
 
@@ -474,11 +474,11 @@ This procedure will typically be performed by the Greenplum Database administrat
 
 Perform the following procedure on your Greenplum Database cluster to create a PXF external table that references the query file that you created in the previous section, and then reads the query result data:
 
-1. Create the PXF external table specifying the `Jdbc` profile. For example:
+1. Create the PXF external table specifying the `jdbc` profile. For example:
 
     ``` sql
     CREATE EXTERNAL TABLE pxf_queryres_frompg(name text, city text, total int, month int)
-      LOCATION ('pxf://query:pg_order_report?PROFILE=Jdbc&SERVER=pgsrvcfg&PARTITION_BY=month:int&RANGE=1:13&INTERVAL=3')
+      LOCATION ('pxf://query:pg_order_report?PROFILE=jdbc&SERVER=pgsrvcfg&PARTITION_BY=month:int&RANGE=1:13&INTERVAL=3')
     FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
     ```
 
@@ -549,7 +549,7 @@ Example JDBC connection strings specified via custom options:
 ```
 For example:
 <pre>CREATE EXTERNAL TABLE pxf_pgtbl(name text, orders int)
-  LOCATION ('pxf://public.forpxf_table1?PROFILE=Jdbc<b>&JDBC_DRIVER=org.postgresql.Driver&DB_URL=jdbc:postgresql://pgserverhost:5432/pgtestdb&USER=pxfuser1&PASS=changeme</b>')
+  LOCATION ('pxf://public.forpxf_table1?PROFILE=jdbc<b>&JDBC_DRIVER=org.postgresql.Driver&DB_URL=jdbc:postgresql://pgserverhost:5432/pgtestdb&USER=pxfuser1&PASS=changeme</b>')
 FORMAT 'CUSTOM' (FORMATTER='pxfwritable_export');</pre>
 
 <div class="note warning">Credentials that you provide in this manner are visible as part of the external table definition. Do not use this method of passing credentials in a production environment.</div>

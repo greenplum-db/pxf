@@ -37,9 +37,9 @@ PXF filter pushdown can be used with these data types (connector- and profile-sp
 - `INT2`, `INT4`, `INT8`
 - `CHAR`, `TEXT`, `VARCHAR`
 - `FLOAT`
-- `NUMERIC` (not available with the S3 connector when using S3 Select, nor with the `Hive` profile when accessing `STORED AS Parquet`)
+- `NUMERIC` (not available with the S3 connector when using S3 Select, nor with the `hive` profile when accessing `STORED AS Parquet`)
 - `BOOL`
-- `DATE`, `TIMESTAMP` (available only with the JDBC connector, the S3 connector when using S3 Select, the `HiveRC` and `HiveORC` profiles, and the `Hive` profile when accessing `STORED AS` `RCFile` or `ORC`)
+- `DATE`, `TIMESTAMP` (available only with the JDBC connector, the S3 connector when using S3 Select, the `hive:rc` and `hive:orc` profiles, and the `hive` profile when accessing `STORED AS` `RCFile` or `ORC`)
 
 You can use PXF filter pushdown with these arithmetic and logical operators (connector- and profile-specific):
 
@@ -52,16 +52,16 @@ PXF accesses data sources using profiles exposed by different connectors, and fi
 
 |Profile | <,&nbsp;&nbsp; >,</br><=,&nbsp;&nbsp; >=,</br>=,&nbsp;&nbsp;<> | LIKE | IS [NOT] NULL | IN | AND | OR | NOT |
 |-------|:------------------------:|:----:|:----:|:----:|:----:|:----:|:----:|:----:|
-| Jdbc | Y | Y | Y | Y | Y | Y | Y | Y | N | Y | Y | Y |
+| jdbc | Y | Y | Y | Y | Y | Y | Y | Y | N | Y | Y | Y |
 | *:parquet | Y<sup>1</sup> | N | Y<sup>1</sup> | Y<sup>1</sup> | Y<sup>1</sup> | Y<sup>1</sup> | Y<sup>1</sup> |
 | s3:parquet and s3:text with S3-Select | Y |  N | Y | Y | Y | Y | Y |
-| HBase | Y | N | Y | N | Y | Y | N |
-| Hive (accessing stored as Parquet) | Y, Y<sup>2</sup> | N | N | Y | Y, Y<sup>2</sup> | Y, Y<sup>2</sup> | Y |
-| Hive (accessing stored as RCFile or ORC) | Y, Y<sup>2</sup> | N | Y | Y | Y, Y<sup>2</sup> | Y, Y<sup>2</sup> | Y |
-| HiveText | Y<sup>2</sup> | N | N | N | Y<sup>2</sup> | Y<sup>2</sup> | N |
-| HiveRC | Y, Y<sup>2</sup> |  N | Y | Y | Y, Y<sup>2</sup> | Y, Y<sup>2</sup> | Y |
-| HiveORC | Y, Y<sup>2</sup> |  N | Y | Y | Y, Y<sup>2</sup> | Y, Y<sup>2</sup> | Y |
-| HiveVectorizedORC | Y<sup>2</sup> |  N | N | N | Y<sup>2</sup> | Y<sup>2</sup> | N |
+| hbase | Y | N | Y | N | Y | Y | N |
+| hive (accessing stored as Parquet) | Y, Y<sup>2</sup> | N | N | Y | Y, Y<sup>2</sup> | Y, Y<sup>2</sup> | Y |
+| hive (accessing stored as RCFile or ORC) | Y, Y<sup>2</sup> | N | Y | Y | Y, Y<sup>2</sup> | Y, Y<sup>2</sup> | Y |
+| hive:text | Y<sup>2</sup> | N | N | N | Y<sup>2</sup> | Y<sup>2</sup> | N |
+| hive:rc | Y, Y<sup>2</sup> |  N | Y | Y | Y, Y<sup>2</sup> | Y, Y<sup>2</sup> | Y |
+| hive:orc | Y, Y<sup>2</sup> |  N | Y | Y | Y, Y<sup>2</sup> | Y, Y<sup>2</sup> | Y |
+| hive:orc and VECTORIZE=true | Y<sup>2</sup> |  N | N | N | Y<sup>2</sup> | Y<sup>2</sup> | N |
 
 </br><sup>1</sup>&nbsp;PXF applies the predicate, rather than the remote system, reducing CPU usage and the memory footprint.
 </br><sup>2</sup>&nbsp;PXF supports partition pruning based on partition keys.

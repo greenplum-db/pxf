@@ -25,7 +25,7 @@ Apache Hive is a distributed data warehousing infrastructure. Hive facilitates m
 
 The PXF Hive connector reads data stored in a Hive table. This section describes how to use the PXF Hive connector. 
 
-<div class="note">When accessing Hive 3, the PXF Hive connector supports using the <code>Hive*</code> profiles described below to access Hive 3 external tables only. The Connector does not support using the <code>Hive*</code> profiles to access Hive 3 managed (CRUD and insert-only transactional, and temporary) tables. Use the <a href="jdbc_pxf.html">PXF JDBC Connector</a> to access Hive 3 managed tables instead.</div>
+<div class="note">When accessing Hive 3, the PXF Hive connector supports using the <code>hive[:*]</code> profiles described below to access Hive 3 external tables only. The Connector does not support using the <code>hive[:*]</code> profiles to access Hive 3 managed (CRUD and insert-only transactional, and temporary) tables. Use the <a href="jdbc_pxf.html">PXF JDBC Connector</a> to access Hive 3 managed tables instead.</div>
 
 ## <a id="prereq"></a>Prerequisites
 
@@ -40,13 +40,13 @@ The PXF Hive connector supports several data formats, and has defined the follow
 
 | File Format  | Description | Profile |
 |-------|---------------------------|-------|
-| TextFile | Flat file with data in comma-, tab-, or space-separated value format or JSON notation. | Hive, HiveText |
-| SequenceFile | Flat file consisting of binary key/value pairs. | Hive |
-| RCFile | Record columnar data consisting of binary key/value pairs; high row compression rate. | Hive, HiveRC |
-| ORC | Optimized row columnar data with stripe, footer, and postscript sections; reduces data size. | Hive, HiveORC, HiveVectorizedORC |
-| Parquet | Compressed columnar data representation. | Hive |
+| TextFile | Flat file with data in comma-, tab-, or space-separated value format or JSON notation. | hive, hive:text |
+| SequenceFile | Flat file consisting of binary key/value pairs. | hive |
+| RCFile | Record columnar data consisting of binary key/value pairs; high row compression rate. | hive, hive:rc |
+| ORC | Optimized row columnar data with stripe, footer, and postscript sections; reduces data size. | hive, hive:orc |
+| Parquet | Compressed columnar data representation. | hive |
 
-**Note**: The `Hive` profile supports all file storage formats. It will use the optimal `Hive*` profile for the underlying file format type.
+**Note**: The `hive` profile supports all file storage formats. It will use the optimal `hive[:*]` profile for the underlying file format type.
 
 ## <a id="hive_datatypemap"></a>Data Type Mapping
 
@@ -71,15 +71,15 @@ The following table summarizes external mapping rules for Hive primitive types.
 | timestamp   | timestamp |
 
 
-**Note**: The `HiveVectorizedORC` profile does not support the timestamp data type.
+**Note**: The `hive:orc` profile does not support the timestamp data type when you specify vectorized query execution (`VECTORIZE=true`).
 
 ### <a id="hive_datatypemap_complex" class="no-quick-link"></a>Complex Data Types
 
 Hive supports complex data types including array, struct, map, and union. PXF maps each of these complex types to `text`. You can create Greenplum Database functions or application code to extract subcomponents of these complex data types.
 
-Examples using complex data types with the `Hive` and `HiveORC` profiles are provided later in this topic.
+Examples using complex data types with the `hive` and `hive:orc` profiles are provided later in this topic.
 
-**Note**: The `HiveVectorizedORC` profile does not support complex types.
+**Note**: The `hive:orc` profile does not support complex types when you specify vectorized query execution (`VECTORIZE=true`).
 
 ## <a id="hive_sampledset"></a>Sample Data Set
 
@@ -175,11 +175,12 @@ location:hdfs://<namenode>:<port>/apps/hive/warehouse/sales_info
 
 ## <a id="hive_queryextdata"></a>Querying External Hive Data
 
-You can create a Greenplum Database external table to access Hive table data.   As described previously, the PXF Hive connector defines specific profiles to support different file formats. These profiles are named `Hive`, `HiveText`, and `HiveRC`, `HiveORC`, and `HiveVectorizedORC`. 
+You can create a Greenplum Database external table to access Hive table data.   As described previously, the PXF Hive connector defines specific profiles to support different file formats. These profiles are named `hive`, `hive:text`, `hive:rc`, and `hive:orc`. 
 
-The `HiveText` and `HiveRC` profiles are specifically optimized for text and RCFile formats, respectively. The `HiveORC` and `HiveVectorizedORC` profiles are optimized for ORC file formats. The `Hive` profile is optimized for all file storage types; you can use the `Hive` profile when the underlying Hive table is composed of multiple partitions with differing file formats.
 
-PXF uses column projection to increase query performance when you access a Hive table using the `Hive`, `HiveRC`, `HiveORC`, or `HiveVectorizedORC` profiles.
+The `hive:text` and `hive:rc` profiles are specifically optimized for text and RCFile formats, respectively. The `hive:orc` profile is optimized for ORC file formats. The `hive` profile is optimized for all file storage types; you can use the `hive` profile when the underlying Hive table is composed of multiple partitions with differing file formats.
+
+PXF uses column projection to increase query performance when you access a Hive table using the `hive`, `hive:rc`, or `hive:orc` profiles.
 
 Use the following syntax to create a Greenplum Database external table that references a Hive table:
 
@@ -187,7 +188,7 @@ Use the following syntax to create a Greenplum Database external table that refe
 CREATE EXTERNAL TABLE <table_name>
     ( <column_name> <data_type> [, ...] | LIKE <other_table> )
 LOCATION ('pxf://<hive-db-name>.<hive-table-name>
-    ?PROFILE=Hive|HiveText|HiveRC|HiveORC|HiveVectorizedORC[&SERVER=<server_name>][&PPD=<boolean>]')
+    ?PROFILE=<profile_name>[&SERVER=<server_name>][&PPD=<boolean>][&VECTORIZE=<boolean>]')
 FORMAT 'CUSTOM|TEXT' (FORMATTER='pxfwritable_import' | delimiter='<delim>')
 ```
 
@@ -197,11 +198,12 @@ Hive connector-specific keywords and values used in the Greenplum Database [CREA
 |-------|-------------------------------------|
 | \<hive&#8209;db&#8209;name\>    | The name of the Hive database. If omitted, defaults to the Hive database named `default`. |
 | \<hive&#8209;table&#8209;name\>    | The name of the Hive table. |
-| PROFILE    | The `PROFILE` keyword must specify one of the values `Hive`, `HiveText`, `HiveRC`, `HiveORC`, or `HiveVectorizedORC`. |
+| PROFILE=\<profile_name\>    | `<profile_name>` must specify one of the values `hive`, `hive:text`, `hive:rc`, or `hive:orc`. |
 | SERVER=\<server_name\>    | The named server configuration that PXF uses to access the data. PXF uses the `default` server if not specified. |
-| PPD=\<boolean\>    | Enable or disable predicate pushdown for all queries on this table; this option applies only to the `Hive`, `HiveORC`, and `HiveRC` profiles, and overrides a `pxf.ppd.hive` property setting in the \<server_name\> configuration. |
-| FORMAT (`Hive`, `HiveORC`, and `HiveVectorizedORC` profiles)   | The `FORMAT` clause must specify `'CUSTOM'`. The `CUSTOM` format requires the built-in `pxfwritable_import` `formatter`.   |
-| FORMAT (`HiveText` and `HiveRC` profiles) | The `FORMAT` clause must specify `TEXT`. Specify the single ascii character field delimiter in the `delimiter='<delim>'` formatting option. |
+| PPD=\<boolean\>    | Enable or disable predicate pushdown for all queries on this table; this option applies only to the `hive`, `hive:orc`, and `hive:rc` profiles, and overrides a `pxf.ppd.hive` property setting in the \<server_name\> configuration. |
+| VECTORIZE=\<boolean\>    | When `PROFILE=hive:orc`, a Boolean value that specifies whether or not PXF uses vectorized query execution when accessing the Hive table. The default value is `false`, does not use vectorized query execution. |
+| FORMAT (`hive` and `hive:orc` profiles)   | The `FORMAT` clause must specify `'CUSTOM'`. The `CUSTOM` format requires the built-in `pxfwritable_import` `formatter`.   |
+| FORMAT (`hive:text` and `hive:rc` profiles) | The `FORMAT` clause must specify `TEXT`. Specify the single ascii character field delimiter in the `delimiter='<delim>'` formatting option. |
 
 <div class="note">Because Hive tables can be backed by one or more files and each file can have a unique layout or schema, PXF requires that the column names that you specify when you create the external table match the column names defined for the Hive table. This allows you to:<ul>
 <li>Create the PXF external table with columns in a different order than the Hive table.</li>
@@ -211,17 +213,17 @@ Hive connector-specific keywords and values used in the Greenplum Database [CREA
 
 ## <a id="hive_text"></a>Accessing TextFile-Format Hive Tables
 
-You can use the `Hive` and `HiveText` profiles to access Hive table data stored in TextFile format.
+You can use the `hive` and `hive:text` profiles to access Hive table data stored in TextFile format.
 
-### <a id="hive_hive_example" class="no-quick-link"></a>Example: Using the Hive Profile
+### <a id="hive_hive_example" class="no-quick-link"></a>Example: Using the hive Profile
 
-Use the `Hive` profile to create a readable Greenplum Database external table that references the Hive `sales_info` textfile format table that you created earlier.
+Use the `hive` profile to create a readable Greenplum Database external table that references the Hive `sales_info` textfile format table that you created earlier.
 
 1. Create the external table:
 
     ``` sql
     postgres=# CREATE EXTERNAL TABLE salesinfo_hiveprofile(location text, month text, number_of_orders int, total_sales float8)
-                LOCATION ('pxf://default.sales_info?PROFILE=Hive')
+                LOCATION ('pxf://default.sales_info?PROFILE=hive')
               FORMAT 'custom' (FORMATTER='pxfwritable_import');
     ```
 
@@ -240,15 +242,15 @@ Use the `Hive` profile to create a readable Greenplum Database external table th
      ...
     ```
 
-### <a id="hive_hivetext_example" class="no-quick-link"></a>Example: Using the HiveText Profile
+### <a id="hive_hivetext_example" class="no-quick-link"></a>Example: Using the hive:text Profile
 
-Use the PXF `HiveText` profile to create a readable Greenplum Database external table from the Hive `sales_info` textfile format table that you created earlier.
+Use the PXF `hive:text` profile to create a readable Greenplum Database external table from the Hive `sales_info` textfile format table that you created earlier.
 
 1. Create the external table:
 
     ``` sql
     postgres=# CREATE EXTERNAL TABLE salesinfo_hivetextprofile(location text, month text, number_of_orders int, total_sales float8)
-                 LOCATION ('pxf://default.sales_info?PROFILE=HiveText')
+                 LOCATION ('pxf://default.sales_info?PROFILE=hive:text')
                FORMAT 'TEXT' (delimiter=E',');
     ```
 
@@ -271,12 +273,12 @@ Use the PXF `HiveText` profile to create a readable Greenplum Database external 
 
 ## <a id="hive_hiverc"></a>Accessing RCFile-Format Hive Tables 
 
-The RCFile Hive table format is used for row columnar formatted data. The PXF `HiveRC` profile provides access to RCFile data.
+The RCFile Hive table format is used for row columnar formatted data. The PXF `hive:rc` profile provides access to RCFile data.
 
 
-### <a id="hive_hiverc_example" class="no-quick-link"></a>Example: Using the HiveRC Profile
+### <a id="hive_hiverc_example" class="no-quick-link"></a>Example: Using the hive:rc Profile
 
-Use the `HiveRC` profile to query RCFile-formatted data in a Hive table.
+Use the `hive:rc` profile to query RCFile-formatted data in a Hive table.
 
 1. Start the `hive` command line and create a Hive table stored in RCFile format:
 
@@ -305,11 +307,11 @@ Use the `HiveRC` profile to query RCFile-formatted data in a Hive table.
     hive> SELECT * FROM sales_info_rcfile;
     ```
 
-4. Use the PXF `HiveRC` profile to create a readable Greenplum Database external table that references the Hive `sales_info_rcfile` table that you created in the previous steps. For example:
+4. Use the PXF `hive:rc` profile to create a readable Greenplum Database external table that references the Hive `sales_info_rcfile` table that you created in the previous steps. For example:
 
     ``` sql
     postgres=# CREATE EXTERNAL TABLE salesinfo_hivercprofile(location text, month text, number_of_orders int, total_sales float8)
-                 LOCATION ('pxf://default.sales_info_rcfile?PROFILE=HiveRC')
+                 LOCATION ('pxf://default.sales_info_rcfile?PROFILE=hive:rc')
                FORMAT 'TEXT' (delimiter=E',');
     ```
 
@@ -343,19 +345,19 @@ Refer to the [Apache orc](https://orc.apache.org/docs/) and the Apache Hive [Lan
 
 When choosing an ORC-supporting profile, consider the following:
 
-- The `HiveORC` profile:
+- The `hive:orc` profile:
     - Reads a single row of data at a time.
     - Supports column projection. 
     - Supports complex types. You can access Hive tables composed of array, map, struct, and union data types. PXF serializes each of these complex types to `text`.  
 
-- The `HiveVectorizedORC` profile:
+- The `hive:orc` profile with `VECTORIZE=true`:
     - Reads up to 1024 rows of data at once.
-    - Does not support column projection.
+    - Supports column projection. 
     - Does not support complex types or the timestamp data type.
 
-### <a id="hive_hiveorc_example" class="no-quick-link"></a>Example: Using the HiveORC Profile
+### <a id="hive_hiveorc_example" class="no-quick-link"></a>Example: Using the hive:orc Profile
 
-In the following example, you will create a Hive table stored in ORC format and use the `HiveORC` profile to query this Hive table.
+In the following example, you will create a Hive table stored in ORC format and use the `hive:orc` profile to query this Hive table.
 
 1. Create a Hive table with ORC file format:
 
@@ -394,11 +396,11 @@ In the following example, you will create a Hive table stored in ORC format and 
     Timing is on.
     ```
 
-4. Use the PXF `HiveORC` profile to create a Greenplum Database external table that references the Hive table named `sales_info_ORC` you created in Step 1. The `FORMAT` clause must specify `'CUSTOM'`. The `HiveORC` `CUSTOM` format supports only the built-in `'pxfwritable_import'` `formatter`.
+4. Use the PXF `hive:orc` profile to create a Greenplum Database external table that references the Hive table named `sales_info_ORC` you created in Step 1. The `FORMAT` clause must specify `'CUSTOM'`. The `hive:orc` `CUSTOM` format supports only the built-in `'pxfwritable_import'` `formatter`.
 
     ``` sql
     postgres=> CREATE EXTERNAL TABLE salesinfo_hiveORCprofile(location text, month text, number_of_orders int, total_sales float8)
-                 LOCATION ('pxf://default.sales_info_ORC?PROFILE=HiveORC')
+                 LOCATION ('pxf://default.sales_info_ORC?PROFILE=hive:orc')
                  FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
     ```
 
@@ -420,9 +422,9 @@ In the following example, you will create a Hive table stored in ORC format and 
     ```
 
 
-### <a id="hive_hivevectorizedorc_example" class="no-quick-link"></a>Example: Using the HiveVectorizedORC Profile
+### <a id="hive_hivevectorizedorc_example" class="no-quick-link"></a>Example: Using the Vectorized hive:orc Profile
 
-In the following example, you will use the `HiveVectorizedORC` profile to query the `sales_info_ORC` Hive table that you created in the previous example.
+In the following example, you will use the vectorized `hive:orc` profile to query the `sales_info_ORC` Hive table that you created in the previous example.
 
 1. Start the `psql` subsystem:
 
@@ -430,11 +432,11 @@ In the following example, you will use the `HiveVectorizedORC` profile to query 
     $ psql -d postgres
     ```
 
-2. Use the PXF `HiveVectorizedORC` profile to create a readable Greenplum Database external table that references the Hive table named `sales_info_ORC` that you created in Step 1 of the previous example. The `FORMAT` clause must specify `'CUSTOM'`. The `HiveVectorizedORC` `CUSTOM` format supports only the built-in `'pxfwritable_import'` `formatter`.
+2. Use the PXF `hive:orc` profile to create a readable Greenplum Database external table that references the Hive table named `sales_info_ORC` that you created in Step 1 of the previous example. The `FORMAT` clause must specify `'CUSTOM'`. The `hive:orc` `CUSTOM` format supports only the built-in `'pxfwritable_import'` `formatter`.
 
     ``` sql
     postgres=> CREATE EXTERNAL TABLE salesinfo_hiveVectORC(location text, month text, number_of_orders int, total_sales float8)
-                 LOCATION ('pxf://default.sales_info_ORC?PROFILE=HiveVectorizedORC')
+                 LOCATION ('pxf://default.sales_info_ORC?PROFILE=hive:orc&VECTORIZE=true')
                  FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
     ```
 
@@ -458,7 +460,7 @@ In the following example, you will use the `HiveVectorizedORC` profile to query 
 
 ## <a id="hive_parquet"></a>Accessing Parquet-Format Hive Tables
 
-The PXF `Hive` profile supports both non-partitioned and partitioned Hive tables that use the Parquet storage format. Map the table columns using equivalent Greenplum Database data types. For example, if a Hive table is created in the `default` schema using:
+The PXF `hive` profile supports both non-partitioned and partitioned Hive tables that use the Parquet storage format. Map the table columns using equivalent Greenplum Database data types. For example, if a Hive table is created in the `default` schema using:
 
 ``` sql
 hive> CREATE TABLE hive_parquet_table (location string, month string,
@@ -470,7 +472,7 @@ Define the Greenplum Database external table:
 
 ``` sql
 postgres=# CREATE EXTERNAL TABLE pxf_parquet_table (location text, month text, number_of_orders int, total_sales double precision)
-    LOCATION ('pxf://default.hive_parquet_table?profile=Hive')
+    LOCATION ('pxf://default.hive_parquet_table?profile=hive')
     FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
 ```
 
@@ -482,9 +484,9 @@ postgres=# SELECT month, number_of_orders FROM pxf_parquet_table;
 
 ## <a id="hive_complex"></a>Working with Complex Data Types
 
-### <a id="hive_complex_hive" class="no-quick-link"></a>Example: Using the Hive Profile with Complex Data Types
+### <a id="hive_complex_hive" class="no-quick-link"></a>Example: Using the hive Profile with Complex Data Types
 
-This example employs the `Hive` profile and the array and map complex types, specifically an array of integers and a string key/value pair map.
+This example employs the `hive` profile and the array and map complex types, specifically an array of integers and a string key/value pair map.
 
 The data schema for this example includes fields with the following names and data types:
 
@@ -556,11 +558,11 @@ When you specify an array field in a Hive table, you must identify the terminato
     ...
     ```
 
-6. Use the PXF `Hive` profile to create a readable Greenplum Database external table that references the Hive table named `table_complextypes`:
+6. Use the PXF `hive` profile to create a readable Greenplum Database external table that references the Hive table named `table_complextypes`:
 
     ``` sql
     postgres=# CREATE EXTERNAL TABLE complextypes_hiveprofile(index int, name text, intarray text, propmap text)
-                 LOCATION ('pxf://table_complextypes?PROFILE=Hive')
+                 LOCATION ('pxf://table_complextypes?PROFILE=hive')
                FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
     ```
 
@@ -590,9 +592,9 @@ When you specify an array field in a Hive table, you must identify the terminato
 
     `intarray` and `propmap` are each serialized as text strings.
 
-### <a id="hive_complex_hiveorc" class="no-quick-link"></a>Example: Using the HiveORC Profile with Complex Data Types
+### <a id="hive_complex_hiveorc" class="no-quick-link"></a>Example: Using the hive:orc Profile with Complex Data Types
 
-In the following example, you will create and populate a Hive table stored in ORC format. You will use the `HiveORC` profile to query the complex types in this Hive table.
+In the following example, you will create and populate a Hive table stored in ORC format. You will use the `hive:orc` profile to query the complex types in this Hive table.
 
 1. Create a Hive table with ORC storage format:
 
@@ -636,11 +638,11 @@ In the following example, you will create and populate a Hive table stored in OR
     $ psql -d postgres
     ```
 
-4. Use the PXF `HiveORC` profile to create a readable Greenplum Database external table from the Hive table named `table_complextypes_ORC` you created in Step 1. The `FORMAT` clause must specify `'CUSTOM'`. The `HiveORC` `CUSTOM` format supports only the built-in `'pxfwritable_import'` `formatter`.
+4. Use the PXF `hive:orc` profile to create a readable Greenplum Database external table from the Hive table named `table_complextypes_ORC` you created in Step 1. The `FORMAT` clause must specify `'CUSTOM'`. The `hive:orc` `CUSTOM` format supports only the built-in `'pxfwritable_import'` `formatter`.
 
     ``` sql
     postgres=> CREATE EXTERNAL TABLE complextypes_hiveorc(index int, name text, intarray text, propmap text)
-               LOCATION ('pxf://default.table_complextypes_ORC?PROFILE=HiveORC')
+               LOCATION ('pxf://default.table_complextypes_ORC?PROFILE=hive:orc')
                  FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
     ```
 
@@ -682,9 +684,9 @@ To take advantage of PXF partition filtering pushdown, the Hive and PXF partitio
 PXF filter pushdown is enabled by default. You configure PXF filter pushdown as described in [About Filter Pushdown](filter_push.html).
 
 
-### <a id="hive_homog_part"></a>Example: Using the Hive Profile to Access Partitioned Homogenous Data
+### <a id="hive_homog_part"></a>Example: Using the hive Profile to Access Partitioned Homogenous Data
 
-In this example, you use the `Hive` profile to query a Hive table named `sales_part` that you partition on the `delivery_state` and `delivery_city` fields. You then create a Greenplum Database external table to query `sales_part`. The procedure includes specific examples that illustrate filter pushdown.
+In this example, you use the `hive` profile to query a Hive table named `sales_part` that you partition on the `delivery_state` and `delivery_city` fields. You then create a Greenplum Database external table to query `sales_part`. The procedure includes specific examples that illustrate filter pushdown.
 
 1. Create a Hive table named `sales_part` with two partition columns, `delivery_state` and `delivery_city:`
 
@@ -740,7 +742,7 @@ In this example, you use the `Hive` profile to query a Hive table named `sales_p
                  cname TEXT, itype TEXT,
                  supplier_key INTEGER, price DOUBLE PRECISION,
                  delivery_state TEXT, delivery_city TEXT)
-               LOCATION ('pxf://sales_part?Profile=Hive')
+               LOCATION ('pxf://sales_part?PROFILE=hive')
                FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
     ```
 
@@ -768,11 +770,11 @@ In this example, you use the `Hive` profile to query a Hive table named `sales_p
     This query reads all of the data in the `CALIFORNIA` `delivery_state` partition, regardless of the city.
 
 
-### <a id="hive_heter_part"></a>Example: Using the Hive Profile to Access Partitioned Heterogeneous Data
+### <a id="hive_heter_part"></a>Example: Using the hive Profile to Access Partitioned Heterogeneous Data
 
-You can use the PXF `Hive` profile with any Hive file storage types. With the `Hive` profile, you can access heterogeneous format data in a single Hive table where the partitions may be stored in different file formats.
+You can use the PXF `hive` profile with any Hive file storage types. With the `hive` profile, you can access heterogeneous format data in a single Hive table where the partitions may be stored in different file formats.
 
-In this example, you create a partitioned Hive external table. The table is composed of the HDFS data files associated with the `sales_info` (text format) and `sales_info_rcfile` (RC format) Hive tables that you created in previous exercises. You will partition the data by year, assigning the data from `sales_info` to the year 2013, and the data from `sales_info_rcfile` to the year 2016. (Ignore at the moment the fact that the tables contain the same data.) You will then use the PXF `Hive` profile to query this partitioned Hive external table.
+In this example, you create a partitioned Hive external table. The table is composed of the HDFS data files associated with the `sales_info` (text format) and `sales_info_rcfile` (RC format) Hive tables that you created in previous exercises. You will partition the data by year, assigning the data from `sales_info` to the year 2013, and the data from `sales_info_rcfile` to the year 2016. (Ignore at the moment the fact that the tables contain the same data.) You will then use the PXF `hive` profile to query this partitioned Hive external table.
 
 1. Create a Hive external table named `hive_multiformpart` that is partitioned by a string field named `year`:
 
@@ -837,11 +839,11 @@ In this example, you create a partitioned Hive external table. The table is comp
     $ psql -d postgres
     ```
 
-8. Use the PXF `Hive` profile to create a readable Greenplum Database external table that references the Hive `hive_multiformpart` external table that you created in the previous steps:
+8. Use the PXF `hive` profile to create a readable Greenplum Database external table that references the Hive `hive_multiformpart` external table that you created in the previous steps:
 
     ``` sql
     postgres=# CREATE EXTERNAL TABLE pxf_multiformpart(location text, month text, number_of_orders int, total_sales float8, year text)
-                 LOCATION ('pxf://default.hive_multiformpart?PROFILE=Hive')
+                 LOCATION ('pxf://default.hive_multiformpart?PROFILE=hive')
                FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
     ```
 
