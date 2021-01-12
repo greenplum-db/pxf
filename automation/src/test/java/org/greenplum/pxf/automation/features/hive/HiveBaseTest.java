@@ -229,6 +229,13 @@ public class HiveBaseTest extends BaseFeature {
             "dcm          DECIMAL(38,12)", // 1.0
             "ext_hive_par STRING"          // ext_hive_par_10
     };
+    // PXF Table columns for testing string escaping of complex types with nulls
+    static final String[] PXF_HIVE_NESTED_STRUCT_COLS = {
+            "t1    TEXT"
+    };
+    static final String[] HIVE_NESTED_STRUCT_COLS = {
+            "t1    STRUCT<field1:STRUCT<subfield1:STRING, subfield2:STRING>, field2:INT>"
+    };
 
     static final String HIVE_TYPES_DATA_FILE_NAME = "hive_types.txt";
     static final String HIVE_COLLECTIONS_FILE_NAME = "hive_collections.txt";
@@ -269,6 +276,8 @@ public class HiveBaseTest extends BaseFeature {
     static final String PXF_HIVE_HETEROGEN_TABLE = "pxf_hive_heterogen";
     static final String GPDB_SMALL_DATA_TABLE = "gpdb_small_data";
     static final String GPDB_HIVE_TYPES_TABLE = "gpdb_hive_types";
+    static final String HIVE_NESTED_STRUCT_TABLE = "hive_nested_struct";
+    static final String PXF_HIVE_NESTED_STRUCT_TABLE = "pxf_hive_nested_struct";
 
     static final String HIVE_SCHEMA = "userdb";
     static final String AVRO = "AVRO";
@@ -305,6 +314,7 @@ public class HiveBaseTest extends BaseFeature {
     HiveTable hiveNonDefaultSchemaTable;
     HiveTable hiveOpenCsvTable;
     Table comparisonDataTable;
+    HiveTable hiveNestedStructTable;
 
     String configuredNameNodeAddress;
     String hdfsBaseDir;

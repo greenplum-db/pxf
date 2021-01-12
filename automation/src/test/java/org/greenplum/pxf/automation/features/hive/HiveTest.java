@@ -1098,4 +1098,43 @@ public class HiveTest extends HiveBaseTest {
         runTincTest("pxf.features.hive.parquet_mismatch.runTest");
     }
 
+    /**
+     * Queries a Hive table consisting of several partitions with backing Parquet or text files having
+     * a nested struct type column. It tests both null cases as well as special characters.
+     *
+     * @throws Exception if test fails to run
+     */
+    @Test(groups = {"hive", "features", "gpdb", "security"})
+    public void hiveNestedStruct() throws Exception {
+        // create Hive readable table with data stored as PARQUET
+        hiveNestedStructTable = new HiveTable(HIVE_NESTED_STRUCT_TABLE, HIVE_NESTED_STRUCT_COLS);
+        hiveNestedStructTable.setStoredAs(PARQUET);
+        hive.createTableAndVerify(hiveNestedStructTable);
+
+        hive.runQuery("INSERT INTO TABLE " + hiveNestedStructTable.getName() +
+                " SELECT NAMED_STRUCT('field1', NAMED_STRUCT('subfield1', cast(NULL AS STRING), 'subfield2', 'test string'), 'field2', 1002) as t1" +
+                " FROM " + HIVE_SMALL_DATA_TABLE + " LIMIT 1");
+        hive.runQuery("INSERT INTO TABLE " + hiveNestedStructTable.getName() +
+                " SELECT NAMED_STRUCT('field1', NAMED_STRUCT('subfield1', 'a really \"fancy\" string', 'subfield2', 'test string'), 'field2', 1002) as t1" +
+                " FROM " + HIVE_SMALL_DATA_TABLE + " LIMIT 1");
+
+        createExternalTable(PXF_HIVE_NESTED_STRUCT_TABLE, PXF_HIVE_NESTED_STRUCT_COLS, hiveNestedStructTable);
+
+        runTincTest("pxf.features.hive.nested_struct.runTest");
+
+        // recreate table stored as TEXTFILE
+        hiveNestedStructTable = new HiveTable(HIVE_NESTED_STRUCT_TABLE, HIVE_NESTED_STRUCT_COLS);
+        hiveNestedStructTable.setStoredAs(TEXTFILE);
+        hive.createTableAndVerify(hiveNestedStructTable);
+
+        hive.runQuery("INSERT INTO TABLE " + hiveNestedStructTable.getName() +
+                " SELECT NAMED_STRUCT('field1', NAMED_STRUCT('subfield1', cast(NULL AS STRING), 'subfield2', 'test string'), 'field2', 1002) as t1" +
+                " FROM " + HIVE_SMALL_DATA_TABLE + " LIMIT 1");
+        hive.runQuery("INSERT INTO TABLE " + hiveNestedStructTable.getName() +
+                " SELECT NAMED_STRUCT('field1', NAMED_STRUCT('subfield1', 'a really \"fancy\" string', 'subfield2', 'test string'), 'field2', 1002) as t1" +
+                " FROM " + HIVE_SMALL_DATA_TABLE + " LIMIT 1");
+
+        runTincTest("pxf.features.hive.nested_struct.runTest");
+    }
+
 }

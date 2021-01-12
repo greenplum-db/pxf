@@ -20,6 +20,7 @@ package org.greenplum.pxf.plugins.hive;
  */
 
 import org.apache.commons.lang.CharUtils;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.common.JavaUtils;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
@@ -601,8 +602,11 @@ public class HiveResolver extends BasePlugin implements Resolver {
             case STRING: {
                 val = (o != null) ? ((StringObjectInspector) oi).getPrimitiveJavaObject(o)
                         : null;
-                addOneFieldToRecord(record, DataType.TEXT,
-                        toFlatten ? String.format("\"%s\"", val) : val);
+                // for more complex types, we need to properly handle special characters by escaping the val
+                val = toFlatten
+                        ? val != null ? String.format("\"%s\"", StringEscapeUtils.escapeJava(val.toString())) : "null"
+                        : val;
+                addOneFieldToRecord(record, DataType.TEXT, val);
                 break;
             }
             case VARCHAR:
