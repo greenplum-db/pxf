@@ -5,7 +5,7 @@ CONCOURSE ?= ud
 BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD)
 
 SHELL                        = /bin/bash
-BUILD_PIPELINE_NAME         ?= pxf-build
+BUILD_PIPELINE_NAME         ?= pxf-5-build
 DEV_BUILD_PIPELINE_NAME     ?= dev:$(USER)-$(BRANCH)
 PR_BUILD_PIPELINE_NAME      ?= pxf_pr_pipeline
 CERTIFICATION_PIPELINE_NAME ?= pxf-certification
@@ -62,7 +62,7 @@ set-build-pipeline:
 		--load-vars-from=$(SECRETS_HOME)/pxf-secrets.yml \
 		--load-vars-from=$(SECRETS_HOME)/pxf-common.yml \
 		--load-vars-from=$(SECRETS_HOME)/pxf-prod.yml \
-		--var=pxf-git-branch=master \
+		--var=pxf-git-branch=branch-5.16 \
 		${FLY_OPTION_NON-INTERACTIVE} || echo "Generated yaml has errors: check $${PIPELINE_FILE}"
 
 	@echo using the following command to unpause the pipeline:

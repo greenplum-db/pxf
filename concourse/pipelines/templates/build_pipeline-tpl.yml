@@ -205,7 +205,7 @@ resources:
   source:
     bucket: data-gpdb-ud-pxf-build-resources
     json_key: ((pxf-storage-service-account-key))
-    versioned_file: build-dependencies/pxf-build-dependencies.tar.gz
+    versioned_file: build-dependencies/pxf-5/pxf-build-dependencies.tar.gz
 
 - name: pxf-automation-dependencies
   type: gcs
@@ -213,7 +213,7 @@ resources:
   source:
     bucket: data-gpdb-ud-pxf-build-resources
     json_key: ((pxf-storage-service-account-key))
-    versioned_file: automation-dependencies/pxf-automation-dependencies.tar.gz
+    versioned_file: automation-dependencies/pxf-5/pxf-automation-dependencies.tar.gz
 
 ## ---------- Single Cluster tarballs ----------
 - name: singlecluster-hdp2
