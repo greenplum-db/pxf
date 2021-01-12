@@ -28,6 +28,10 @@ function install_gpdb() {
     fi
 }
 
+function install_dep() {
+    GOPATH=/opt/go /usr/local/go/bin/go get github.com/golang/dep/cmd/dep
+}
+
 function compile_pxf() {
     source "${GPHOME}/greenplum_path.sh"
     if [[ ${TARGET_OS} == "rhel6" ]]; then
@@ -67,5 +71,6 @@ function package_pxf() {
 
 install_gpdb
 inflate_dependencies
+install_dep
 compile_pxf
 package_pxf
