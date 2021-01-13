@@ -12,24 +12,15 @@ import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.plugins.hive.utilities.HiveUtilities;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.Before;
+import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
 
-@ExtendWith(MockitoExtension.class)
 public class HiveResolverTest {
-
-    @Mock
-    HiveUtilities mockHiveUtilities;
 
     private static final String SERDE_CLASS_NAME = "org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe";
     private static final String COL_NAMES_SIMPLE = "name,amt";
@@ -47,14 +38,19 @@ public class HiveResolverTest {
     RequestContext context;
     List<Integer> hiveIndexes;
 
-    @BeforeEach
+    @Before
     public void setup() {
         properties = new Properties();
         configuration = new Configuration();
         columnDescriptors = new ArrayList<>();
         context = new RequestContext();
-        // metadata usually set in accessor
+        context.setConfig("fakeConfig");
+        context.setServerName("fakeServerName");
+        context.setUser("test-user");
+
         hiveIndexes = Arrays.asList(0, 1);
+
+        resolver = new HiveResolver();
     }
 
     @Test
@@ -69,18 +65,15 @@ public class HiveResolverTest {
         ArrayWritable aw = new ArrayWritable(Text.class, new Writable[]{new Text("plain string"), new DoubleWritable(1000)});
         OneRow row = new OneRow(aw);
 
-        context.setConfiguration(configuration);
         context.setMetadata(new HiveMetadata(properties, null /*List<HivePartition>*/, hiveIndexes));
         context.setTupleDescription(columnDescriptors);
-        resolver = new HiveResolver(mockHiveUtilities);
-        resolver.setRequestContext(context);
-        resolver.afterPropertiesSet();
+        resolver.initialize(context);
         List<OneField> output = resolver.getFields(row);
 
-        assertThat(output.get(0).val).isEqualTo("plain string");
-        assertThat(output.get(0).type).isEqualTo(DataType.TEXT.getOID());
-        assertThat(output.get(1).val).isEqualTo(1000.0);
-        assertThat(output.get(1).type).isEqualTo(DataType.FLOAT8.getOID());
+        assertEquals("plain string", output.get(0).val);
+        assertEquals(DataType.TEXT.getOID(), output.get(0).type);
+        assertEquals(1000.0,output.get(1).val);
+        assertEquals(DataType.FLOAT8.getOID(), output.get(1).type);
     }
 
     @Test
@@ -95,18 +88,15 @@ public class HiveResolverTest {
         ArrayWritable aw = new ArrayWritable(Text.class, new Writable[]{new Text("a really \"fancy\" string? *wink*"), new DoubleWritable(1000)});
         OneRow row = new OneRow(aw);
 
-        context.setConfiguration(configuration);
         context.setMetadata(new HiveMetadata(properties, null /*List<HivePartition>*/, hiveIndexes));
         context.setTupleDescription(columnDescriptors);
-        resolver = new HiveResolver(mockHiveUtilities);
-        resolver.setRequestContext(context);
-        resolver.afterPropertiesSet();
+        resolver.initialize(context);
         List<OneField> output = resolver.getFields(row);
 
-        assertThat(output.get(0).val).isEqualTo("a really \"fancy\" string? *wink*");
-        assertThat(output.get(0).type).isEqualTo(DataType.TEXT.getOID());
-        assertThat(output.get(1).val).isEqualTo(1000.0);
-        assertThat(output.get(1).type).isEqualTo(DataType.FLOAT8.getOID());
+        assertEquals("a really \"fancy\" string? *wink*", output.get(0).val);
+        assertEquals(DataType.TEXT.getOID(), output.get(0).type);
+        assertEquals(1000.0, output.get(1).val);
+        assertEquals(DataType.FLOAT8.getOID(), output.get(1).type);
     }
 
     @Test
@@ -118,15 +108,12 @@ public class HiveResolverTest {
 
         OneRow row = new OneRow(0, new Text("plain string\u00021001"));
 
-        context.setConfiguration(configuration);
         context.setMetadata(new HiveMetadata(properties, null /*List<HivePartition>*/, hiveIndexes));
         context.setTupleDescription(columnDescriptors);
-        resolver = new HiveResolver(mockHiveUtilities);
-        resolver.setRequestContext(context);
-        resolver.afterPropertiesSet();
+        resolver.initialize(context);
         List<OneField> output = resolver.getFields(row);
 
-        assertThat(output.get(0).toString()).isEqualTo("{\"street\":\"plain string\",\"zipcode\":1001}");
+        assertEquals("{\"street\":\"plain string\",\"zipcode\":1001}", output.get(0).toString());
     }
 
     @Test
@@ -138,15 +125,12 @@ public class HiveResolverTest {
 
         OneRow row = new OneRow(0, new Text("a really \"fancy\" string\u00021001"));
 
-        context.setConfiguration(configuration);
         context.setMetadata(new HiveMetadata(properties, null /*List<HivePartition>*/, hiveIndexes));
         context.setTupleDescription(columnDescriptors);
-        resolver = new HiveResolver(mockHiveUtilities);
-        resolver.setRequestContext(context);
-        resolver.afterPropertiesSet();
+        resolver.initialize(context);
         List<OneField> output = resolver.getFields(row);
 
-        assertThat(output.get(0).toString()).isEqualTo("{\"street\":\"a really \\\"fancy\\\" string\",\"zipcode\":1001}");
+        assertEquals("{\"street\":\"a really \\\"fancy\\\" string\",\"zipcode\":1001}", output.get(0).toString());
     }
 
     @Test
@@ -158,14 +142,11 @@ public class HiveResolverTest {
 
         OneRow row = new OneRow(0, new Text("1000\u0003a really \"fancy\" string\u0002plain string\u00031001"));
 
-        context.setConfiguration(configuration);
         context.setMetadata(new HiveMetadata(properties, null /*List<HivePartition>*/, hiveIndexes));
         context.setTupleDescription(columnDescriptors);
-        resolver = new HiveResolver(mockHiveUtilities);
-        resolver.setRequestContext(context);
-        resolver.afterPropertiesSet();
+        resolver.initialize(context);
         List<OneField> output = resolver.getFields(row);
 
-        assertThat(output.get(0).toString()).isEqualTo("{\"line1\":{\"number\":1000,\"street_name\":\"a really \\\"fancy\\\" string\"},\"line2\":{\"city\":\"plain string\",\"zipcode\":1001}}");
+        assertEquals("{\"line1\":{\"number\":1000,\"street_name\":\"a really \\\"fancy\\\" string\"},\"line2\":{\"city\":\"plain string\",\"zipcode\":1001}}", output.get(0).toString());
     }
 }
