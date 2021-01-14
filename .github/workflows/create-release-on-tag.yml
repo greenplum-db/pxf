@@ -22,27 +22,11 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: PXF Version ${{ github.ref }}
           body: |
-            ## 5.16.0 (11/05/2020)
-
-            ### Enhancements:
-
-            - [#480](https://github.com/greenplum-db/pxf/pull/480) Enable predicate pushdown for Hive profile when accessing Parquet backed tables
-            - [#477](https://github.com/greenplum-db/pxf/pull/477) CLI: Add --skip-register flag for pxf [cluster] init
-            - [#474](https://github.com/greenplum-db/pxf/pull/474) Optimize hive metadata
-            - [#467](https://github.com/greenplum-db/pxf/pull/467) clarify the pxf.fs.basePath description
-            - [#472](https://github.com/greenplum-db/pxf/pull/472) Enable column projection for Parquet files read via Hive profile
-            - [#461](https://github.com/greenplum-db/pxf/pull/461) Increase default maximumPoolSize property in jdbc-site.xml
-            - [#469](https://github.com/greenplum-db/pxf/pull/469) Specify Hive schema column names and types in HiveAccessor when creating RecordReaders
-            - [#456](https://github.com/greenplum-db/pxf/pull/456) Add support for File Storage (Attached to every segment host)
-            - [#453](https://github.com/greenplum-db/pxf/pull/453) Remove Configuration from SessionId
-            - [#453](https://github.com/greenplum-db/pxf/pull/453) Release UGI if there is an error during the filter execution
-            - [#451](https://github.com/greenplum-db/pxf/pull/451) Support dropping columns in PXF writable external tables
-            - [#451](https://github.com/greenplum-db/pxf/pull/451) Support dropping columns in PXF readable external tables
-            - [#445](https://github.com/greenplum-db/pxf/pull/445) pxf.service.user.name is commented out by default in pxf-site.xml
+            ## 5.16.1 (01/14/2021)
 
             ### Bug Fixes:
 
-            - [#460](https://github.com/greenplum-db/pxf/pull/460) Avro: fixing NullPointerException for writing NULL values for SMALLINT and BYTEA columns
+            - [#526](https://github.com/greenplum-db/pxf/pull/526) pxf-hive: properly escape strings in complex data types
 
           draft: false
           prerelease: false

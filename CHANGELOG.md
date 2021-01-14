@@ -1,5 +1,11 @@
 # Changelog
 
+## 5.16.1 (01/14/2021)
+
+### Bug Fixes:
+
+- [#526](https://github.com/greenplum-db/pxf/pull/526) pxf-hive: properly escape strings in complex data types
+
 ## 5.16.0 (11/05/2020)
 
 ### Enhancements:
