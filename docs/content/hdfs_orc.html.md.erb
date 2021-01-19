@@ -21,7 +21,7 @@ Ensure that you have met the PXF Hadoop [Prerequisites](access_hdfs.html#hadoop_
 
 ## <a id="about_orc"></a>About the ORC Data Format
 
-The Optimized Row Columnar (ORC) file format is a columnar file format that provides a highly efficient way to both store and access HDFS data. ORC format offers improvements over text and RCFile formats in terms of both compression and performance. PXF supports ORC version 1.5.12.
+The Optimized Row Columnar (ORC) file format is a columnar file format that provides a highly efficient way to both store and access HDFS data. ORC format offers improvements over text and RCFile formats in terms of both compression and performance. PXF supports ORC file versions v0 and v1.
 
 ORC is type-aware and specifically designed for Hadoop workloads. ORC files store both the type of, and encoding information for, the data in the file. All columns within a single group of row data (also known as stripe) are stored together on disk in ORC format files. The columnar nature of the ORC format type enables read projection, helping avoid accessing unnecessary columns during a query.
 
