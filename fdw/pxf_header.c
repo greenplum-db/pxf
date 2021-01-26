@@ -109,6 +109,10 @@ BuildHttpHeaders(CHURL_HEADERS headers,
 	churl_headers_append(headers, "X-GP-DATA-DIR", options->resource);
 	churl_headers_append(headers, "X-GP-OPTIONS-SERVER", options->server);
 
+	/* encoding options */
+	churl_headers_append(headers, "X-GP-DATA-ENCODING", options->data_encoding);
+	churl_headers_append(headers, "X-GP-DATABASE-ENCODING", options->database_encoding);
+
 	/* extra options */
 	AddOptionsToHttpHeader(headers, options->options);
 

@@ -51,6 +51,10 @@ typedef struct PxfOptions
 	List	   *options;		/* merged options, excluding COPY, protocol,
 								 * resource, format, wire_format, pxf_port,
 								 * pxf_host, and pxf_protocol */
+
+	/* Encoding options */
+	char	   *data_encoding;	/* The encoding of the data on the external system */
+	const char *database_encoding;	/* The database encoding */
 } PxfOptions;
 
 /* Functions prototypes for pxf_option.c file */

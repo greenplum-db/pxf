@@ -19,6 +19,7 @@
 #include "commands/defrem.h"
 #include "nodes/makefuncs.h"
 #include "foreign/foreign.h"
+#include "mb/pg_wchar.h"
 
 #define FDW_OPTION_WIRE_FORMAT_TEXT "text"
 #define FDW_OPTION_WIRE_FORMAT_CSV "csv"
@@ -393,6 +394,7 @@ ValidateCopyOptions(List *options_list, Oid catalog)
 PxfOptions *
 PxfGetOptions(Oid foreigntableid)
 {
+	char				*encoding = NULL;
 	Node *wireFormat;
 	UserMapping *user;
 	ForeignTable *table;
@@ -422,6 +424,8 @@ PxfGetOptions(Oid foreigntableid)
 	server = GetForeignServer(table->serverid);
 	user = GetUserMapping(GetUserId(), server->serverid);
 	wrapper = GetForeignDataWrapper(server->fdwid);
+
+	encoding = GetDatabaseEncodingName();
 
 	options = NIL;
 	/* order matters here for precedence enforcement */
@@ -458,6 +462,14 @@ PxfGetOptions(Oid foreigntableid)
 		{
 			opt->format = defGetString(def);
 		}
+		else if (strcmp(def->defname, FDW_COPY_OPTION_ENCODING) == 0)
+		{
+			/*
+			 * Encoding is a copy option, but we need to get the value of the encoding
+			 */
+			encoding = defGetString(def);
+			copy_options = lappend(copy_options, def);
+		}
 		else if (IsCopyOption(def->defname))
 			copy_options = lappend(copy_options, def);
 		else
@@ -475,6 +487,12 @@ PxfGetOptions(Oid foreigntableid)
 			other_option_name_strings = lappend(other_option_name_strings, val);
 		}
 	}							/* foreach */
+
+	/*
+	 * The source/target encoding is the same for TEXT/CSV wire format
+	 */
+	opt->data_encoding = encoding;
+	opt->database_encoding = GetDatabaseEncodingName();
 
 	/* The profile corresponds to protocol[:format] */
 	opt->profile = opt->protocol;
