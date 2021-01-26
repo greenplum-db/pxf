@@ -63,7 +63,10 @@ get_fragments(GPHDUri *uri,
 	 */
 	data_fragments = get_data_fragment_list(uri, &client_context);
 	if (data_fragments == NIL)
+	{
+		elog(FRAGDEBUG, "The fragment data list is NIL");
 		return;
+	}
 
 	if ((FRAGDEBUG >= log_min_messages) || (FRAGDEBUG >= client_min_messages))
 	{
@@ -77,7 +80,10 @@ get_fragments(GPHDUri *uri,
 	 */
 	data_fragments = filter_fragments_for_segment(data_fragments);
 	if (data_fragments == NIL)
+	{
+		elog(FRAGDEBUG, "No fragments allocated for this segment");
 		return;
+	}
 
 	/*
 	 * Assign PXF location for the allocated fragments

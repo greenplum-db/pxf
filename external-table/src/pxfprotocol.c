@@ -128,6 +128,7 @@ pxfprotocol_import(PG_FUNCTION_ARGS)
 	/* last call -- cleanup */
 	if (EXTPROTOCOL_IS_LAST_CALL(fcinfo))
 	{
+		elog(DEBUG2, "pxfprotocol_import: last call");
 		cleanup_context(context);
 		EXTPROTOCOL_SET_USER_CTX(fcinfo, NULL);
 		PG_RETURN_INT32(0);
@@ -135,12 +136,19 @@ pxfprotocol_import(PG_FUNCTION_ARGS)
 	/* first call -- do any desired init */
 	if (context == NULL)
 	{
+		elog(DEBUG2, "pxfprotocol_import: first call: creating context");
 		context = create_context(fcinfo, true);
 		EXTPROTOCOL_SET_USER_CTX(fcinfo, context);
 		gpbridge_import_start(context);
 	}
+	else
+	{
+		elog(DEBUG2, "pxfprotocol_import: context already exists");
+	}
 	/* Read data */
 	int			bytes_read = gpbridge_read(context, EXTPROTOCOL_GET_DATABUF(fcinfo), EXTPROTOCOL_GET_DATALEN(fcinfo));
+
+	elog(DEBUG2, "pxfprotocol_import: read %d bytes", bytes_read);
 
 	PG_RETURN_INT32(bytes_read);
 }

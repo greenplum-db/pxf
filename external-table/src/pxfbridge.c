@@ -67,6 +67,13 @@ gpbridge_import_start(gphadoop_context *context)
 		return;
 
 	context->current_fragment = list_head(context->gphd_uri->fragments);
+
+	if (context->current_fragment == NULL)
+	{
+		int fragment_count = list_length(context->gphd_uri->fragments);
+		elog(DEBUG2, "pxf: gpbridge_import_start: context->current_fragment is NULL and context->gphd_uri->fragments has %d elements", fragment_count);
+	}
+
 	build_uri_for_read(context);
 	context->churl_headers = churl_headers_init();
 	add_querydata_to_http_headers(context);
@@ -101,21 +108,40 @@ gpbridge_read(gphadoop_context *context, char *databuf, int datalen)
 {
 	size_t		n = 0;
 
+	elog(DEBUG2, "gpbridge_read: called");
 	if (context->gphd_uri->fragments == NULL)
 		return (int) n;
 
+	if (context->current_fragment == NULL)
+	{
+		elog(DEBUG2, "pxf: gpbridge_read: context->current_fragment is NULL -- before while loop THIS IS NOT EXPECTED");
+	}
+
 	while ((n = fill_buffer(context, databuf, datalen)) == 0)
 	{
+		if (context->current_fragment == NULL)
+		{
+			elog(DEBUG2, "pxf: gpbridge_read: context->current_fragment is NULL -- 1. THIS IS NOT EXPECTED");
+		}
+
 		/*
 		 * done processing all data for current fragment - check if the
 		 * connection terminated with an error
 		 */
 		churl_read_check_connectivity(context->churl_handle);
 
+		if (context->current_fragment == NULL)
+		{
+			elog(DEBUG2, "pxf: gpbridge_read: context->current_fragment is NULL -- 2. THIS IS NOT EXPECTED");
+		}
+
 		/* start processing next fragment */
 		context->current_fragment = lnext(context->current_fragment);
 		if (context->current_fragment == NULL)
+		{
+			elog(DEBUG2, "pxf: gpbridge_read: context->current_fragment is NULL -- returning with 0");
 			return 0;
+		}
 
 		set_current_fragment_headers(context);
 		churl_download_restart(context->churl_handle, context->uri.data, context->churl_headers);
