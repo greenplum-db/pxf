@@ -109,12 +109,10 @@ gpbridge_read(gphadoop_context *context, char *databuf, int datalen)
 	size_t		n = 0;
 
 	elog(DEBUG2, "gpbridge_read: called");
-	if (context->gphd_uri->fragments == NULL)
-		return (int) n;
-
 	if (context->current_fragment == NULL)
 	{
 		elog(DEBUG2, "pxf: gpbridge_read: context->current_fragment is NULL -- before while loop THIS IS NOT EXPECTED");
+		return (int) n;
 	}
 
 	while ((n = fill_buffer(context, databuf, datalen)) == 0)
