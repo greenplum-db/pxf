@@ -10,7 +10,9 @@ data_dirs=(~gpadmin/data{1..3}/primary)
 dirs=(~gpadmin/{gpconfigs,data/master} "${data_dirs[@]}")
 mkdir -p "${dirs[@]}"
 
+# cdw is the new name for the coordinator host (previously master)
 sed -e "s/MASTER_HOSTNAME=mdw/MASTER_HOSTNAME=\$(hostname -f)/g" \
+	-e "s/MASTER_HOSTNAME=cdw/MASTER_HOSTNAME=\$(hostname -f)/g" \
 	-e "s|declare -a DATA_DIRECTORY.*|declare -a DATA_DIRECTORY=( ${data_dirs[*]} )|g" \
 	-e "s|MASTER_DIRECTORY=.*|MASTER_DIRECTORY=~gpadmin/data/master|g" \
 	-e "s|MASTER_PORT=.*|MASTER_PORT=${PGPORT:-5432}|g" \
