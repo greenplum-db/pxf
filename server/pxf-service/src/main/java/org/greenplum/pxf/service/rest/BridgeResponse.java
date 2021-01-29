@@ -3,8 +3,10 @@ package org.greenplum.pxf.service.rest;
 import lombok.SneakyThrows;
 import org.apache.catalina.connector.ClientAbortException;
 import org.greenplum.pxf.api.io.Writable;
+import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.service.bridge.Bridge;
+import org.greenplum.pxf.service.bridge.BridgeFactory;
 import org.greenplum.pxf.service.security.SecurityService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,20 +16,23 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.security.PrivilegedExceptionAction;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.List;
 
 public class BridgeResponse implements StreamingResponseBody {
 
     protected final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
-    private final Bridge bridge;
+    private final BridgeFactory bridgeFactory;
     private final RequestContext context;
+    private final List<Fragment> fragments;
     private final SecurityService securityService;
 
-    public BridgeResponse(SecurityService securityService, Bridge bridge, RequestContext context) {
+    public BridgeResponse(SecurityService securityService, BridgeFactory bridgeFactory,
+                          RequestContext context, List<Fragment> fragments) {
         this.securityService = securityService;
-        this.bridge = bridge;
+        this.bridgeFactory = bridgeFactory;
         this.context = context;
+        this.fragments = fragments;
     }
 
     @SneakyThrows
@@ -38,23 +43,41 @@ public class BridgeResponse implements StreamingResponseBody {
     }
 
     private Void writeToInternal(OutputStream out) throws IOException {
-        final int fragment = context.getFragmentIndex();
+        int fragmentIndex = 1;
         final String dataDir = context.getDataSource();
         long recordCount = 0;
 
         try {
-            if (!bridge.beginIteration()) {
-                return null;
-            }
-            Writable record;
-            DataOutputStream dos = new DataOutputStream(out);
+            for (Fragment fragment : fragments) {
+                context.setDataSource(fragment.getSourceName());
+                context.setFragmentIndex(fragmentIndex);
+                context.setFragmentMetadata(fragment.getMetadata());
 
-            LOG.debug("Starting streaming fragment {} of resource {}", fragment, dataDir);
-            while ((record = bridge.getNext()) != null) {
-                record.write(dos);
-                ++recordCount;
+                Bridge bridge = bridgeFactory.getBridge(context);
+
+                try {
+                    if (!bridge.beginIteration()) {
+                        return null;
+                    }
+                    Writable record;
+                    DataOutputStream dos = new DataOutputStream(out);
+
+                    LOG.debug("Starting streaming fragment {} of resource {}", fragmentIndex, dataDir);
+                    while ((record = bridge.getNext()) != null) {
+                        record.write(dos);
+                        ++recordCount;
+                    }
+                    LOG.debug("Finished streaming fragment {} of resource {}, {} records.", fragmentIndex, dataDir, recordCount);
+                } finally {
+                    LOG.debug("Stopped streaming fragment {} of resource {}, {} records.", fragmentIndex, dataDir, recordCount);
+                    try {
+                        bridge.endIteration();
+                    } catch (Exception e) {
+                        LOG.warn("Ignoring error encountered during bridge.endIteration()", e);
+                    }
+                }
+                fragmentIndex++;
             }
-            LOG.debug("Finished streaming fragment {} of resource {}, {} records.", fragment, dataDir, recordCount);
         } catch (ClientAbortException e) {
             // Occurs whenever client (GPDB) decides to end the connection
             if (LOG.isDebugEnabled()) {
@@ -69,13 +92,6 @@ public class BridgeResponse implements StreamingResponseBody {
             throw e;
         } catch (Exception e) {
             throw new IOException(e.getMessage(), e);
-        } finally {
-            LOG.debug("Stopped streaming fragment {} of resource {}, {} records.", fragment, dataDir, recordCount);
-            try {
-                bridge.endIteration();
-            } catch (Exception e) {
-                LOG.warn("Ignoring error encountered during bridge.endIteration()", e);
-            }
         }
         return null;
     }

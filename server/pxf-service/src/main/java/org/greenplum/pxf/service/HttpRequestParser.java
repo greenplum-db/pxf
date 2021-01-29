@@ -109,15 +109,6 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
             context.setFragmentIndex(Integer.parseInt(fragmentIndexStr));
         }
 
-        String base64FragmentMetadata = params.removeOptionalProperty("FRAGMENT-METADATA");
-        FragmentMetadata fragmentMetadata;
-        try {
-            fragmentMetadata = deserializeFragmentMetadata(base64FragmentMetadata);
-        } catch (RuntimeException e) {
-            throw new IllegalArgumentException(String.format("unable to deserialize fragment meta '%s'", base64FragmentMetadata), e);
-        }
-        context.setFragmentMetadata(fragmentMetadata);
-
         context.setLastFragment(params.removeOptionalBoolProperty("LAST-FRAGMENT"));
         context.setHost(params.removeProperty("URL-HOST"));
         context.setMetadata(params.removeUserProperty("METADATA"));
@@ -159,6 +150,16 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
             if (context.getTupleDescription().size() != 1 && context.getGreenplumCSV().getDelimiter() == null) {
                 throw new IllegalArgumentException(String.format("using no delimiter is only possible for a single column table. %d columns found", context.getTupleDescription().size()));
             }
+        }
+
+        String gpSessionId = params.removeOptionalProperty("SESSION-ID");
+        if (StringUtils.isNotBlank(gpSessionId)) {
+            context.setGpSessionId(Integer.parseInt(gpSessionId));
+        }
+
+        String gpCommandCount = params.removeOptionalProperty("COMMAND-COUNT");
+        if (StringUtils.isNotBlank(gpCommandCount)) {
+            context.setGpCommandCount(Integer.parseInt(gpCommandCount));
         }
 
         context.setUser(params.removeProperty("USER"));
@@ -233,17 +234,6 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
         context.validate();
 
         return context;
-    }
-
-    /**
-     * Deserializes the Base64 encoded Kryo string into a {@link FragmentMetadata}
-     *
-     * @param metadata the fragment metadata
-     * @return the {@link FragmentMetadata}
-     */
-    private FragmentMetadata deserializeFragmentMetadata(String metadata) {
-        return StringUtils.isBlank(metadata) ? null :
-                metadataSerDe.deserialize(metadata);
     }
 
     /**

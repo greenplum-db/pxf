@@ -62,7 +62,6 @@ public class RequestContext {
     }
 
     public enum RequestType {
-        FRAGMENTER,
         READ_BRIDGE,
         WRITE_BRIDGE,
     }
@@ -137,6 +136,16 @@ public class RequestContext {
      * {@link OutputFormat#GPDBWritable}.
      */
     private OutputFormat outputFormat;
+
+    /**
+     * The Greenplum command count
+     */
+    private Integer gpCommandCount;
+
+    /**
+     * The Greenplum session ID
+     */
+    private Integer gpSessionId;
 
     /**
      * The server name providing the service.
@@ -513,7 +522,7 @@ public class RequestContext {
             fail("Missing parameter: STATS-SAMPLE-RATIO and STATS-MAX-FRAGMENTS must be set together");
         }
 
-        if (requestType == RequestType.FRAGMENTER) {
+        if (requestType == RequestType.READ_BRIDGE) {
             // fragmenter is required for fragmentation call only (PXF write
             // does not require a fragmenter)
             ensureNotNull("FRAGMENTER", fragmenter);
