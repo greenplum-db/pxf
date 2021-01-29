@@ -167,7 +167,6 @@ public class HttpRequestParserTest {
         assertNull(context.getProfile());
         assertNull(context.getProfileScheme());
         assertTrue(context.getAdditionalConfigProps().isEmpty());
-        assertFalse(context.isLastFragment());
     }
 
     @Test
@@ -575,14 +574,6 @@ public class HttpRequestParserTest {
         assertEquals(context.getResolver(), "packed");
         assertEquals(context.getOption("i'm-standing-here"), "outside-your-door");
         assertEquals(context.getUser(), "alex");
-    }
-
-    @Test
-    public void testLastFragment() {
-        parameters.add("X-GP-LAST-FRAGMENT", "true");
-
-        RequestContext context = parser.parseRequest(parameters, RequestType.READ_BRIDGE);
-        assertTrue(context.isLastFragment());
     }
 
     @Test

@@ -120,13 +120,6 @@ public class RequestContext {
     private String filterString;
 
     /**
-     * A boolean that indicates whether this is the last fragment being
-     * processed by the segment. True if this is the last fragment, false
-     * otherwise.
-     */
-    private boolean lastFragment;
-
-    /**
      * Profile-centric metadata
      */
     private Object metadata;

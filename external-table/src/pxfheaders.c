@@ -150,6 +150,8 @@ build_http_headers(PxfInputData *input)
 	}
 	else
 		churl_headers_append(headers, "X-GP-HAS-FILTER", "0");
+
+	churl_headers_override(headers, "Connection", "close");
 }
 
 /* Report alignment size to remote component

@@ -2,6 +2,7 @@ package org.greenplum.pxf.service.rest;
 
 import lombok.SneakyThrows;
 import org.apache.catalina.connector.ClientAbortException;
+import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.api.io.Writable;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.RequestContext;
@@ -39,7 +40,7 @@ public class BridgeResponse implements StreamingResponseBody {
     @Override
     public void writeTo(OutputStream out) {
         PrivilegedExceptionAction<Void> action = () -> writeToInternal(out);
-        securityService.doAs(context, context.isLastFragment(), action);
+        securityService.doAs(context, true, action);
     }
 
     private Void writeToInternal(OutputStream out) throws IOException {
@@ -52,6 +53,10 @@ public class BridgeResponse implements StreamingResponseBody {
                 context.setDataSource(fragment.getSourceName());
                 context.setFragmentIndex(fragmentIndex);
                 context.setFragmentMetadata(fragment.getMetadata());
+
+                if (StringUtils.isNotBlank(fragment.getProfile())) {
+                    context.setProfile(fragment.getProfile());
+                }
 
                 Bridge bridge = bridgeFactory.getBridge(context);
 

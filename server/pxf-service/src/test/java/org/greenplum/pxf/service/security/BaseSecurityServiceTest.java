@@ -83,14 +83,14 @@ public class BaseSecurityServiceTest {
     @Test
     public void determineRemoteUser_IsLoginUser_NoKerberos_NoImpersonation_NoServiceUser() throws Exception {
         expectScenario(false, false, false);
-        service.doAs(context, context.isLastFragment(), EMPTY_ACTION);
+        service.doAs(context, false, EMPTY_ACTION);
         verifyScenario("login-user", false);
     }
 
     @Test
     public void determineRemoteUser_IsServiceUser_NoKerberos_NoImpersonation_ServiceUser() throws Exception {
         expectScenario(false, false, true);
-        service.doAs(context, context.isLastFragment(), EMPTY_ACTION);
+        service.doAs(context, false, EMPTY_ACTION);
         // you would expect to find "service-user" here, and SecureLogin would set it as such
         // but our mocking logic is simple and always returns "login-user"
         // we are proving that we do not over-ride whatever SecureLogin returns in this case
@@ -100,42 +100,42 @@ public class BaseSecurityServiceTest {
     @Test
     public void determineRemoteUser_IsGpdbUser_NoKerberos_Impersonation_NoServiceUser() throws Exception {
         expectScenario(false, true, false);
-        service.doAs(context, context.isLastFragment(), EMPTY_ACTION);
+        service.doAs(context, false, EMPTY_ACTION);
         verifyScenario("gpdb-user", true);
     }
 
     @Test
     public void determineRemoteUser_IsGpdbUser_NoKerberos_Impersonation_ServiceUser() throws Exception {
         expectScenario(false, true, true);
-        service.doAs(context, context.isLastFragment(), EMPTY_ACTION);
+        service.doAs(context, false, EMPTY_ACTION);
         verifyScenario("gpdb-user", true);
     }
 
     @Test
     public void determineRemoteUser_IsLoginUser_Kerberos_NoImpersonation_NoServiceUser() throws Exception {
         expectScenario(true, false, false);
-        service.doAs(context, context.isLastFragment(), EMPTY_ACTION);
+        service.doAs(context, false, EMPTY_ACTION);
         verifyScenario("login-user", false);
     }
 
     @Test
     public void determineRemoteUser_IsServiceUser_Kerberos_NoImpersonation_ServiceUser() throws Exception {
         expectScenario(true, false, true);
-        service.doAs(context, context.isLastFragment(), EMPTY_ACTION);
+        service.doAs(context, false, EMPTY_ACTION);
         verifyScenario("service-user", false);
     }
 
     @Test
     public void determineRemoteUser_IsGpdbUser_Kerberos_Impersonation_NoServiceUser() throws Exception {
         expectScenario(true, true, false);
-        service.doAs(context, context.isLastFragment(), EMPTY_ACTION);
+        service.doAs(context, false, EMPTY_ACTION);
         verifyScenario("gpdb-user", true);
     }
 
     @Test
     public void determineRemoteUser_IsGpdbUser_Kerberos_Impersonation_ServiceUser() throws Exception {
         expectScenario(true, true, true);
-        service.doAs(context, context.isLastFragment(), EMPTY_ACTION);
+        service.doAs(context, false, EMPTY_ACTION);
         verifyScenario("gpdb-user", true);
     }
 
@@ -144,16 +144,15 @@ public class BaseSecurityServiceTest {
     @Test
     public void doesNotCleanTheUGICacheOnNonLastCalls() throws Exception {
         expectScenario(false, false, false);
-        service.doAs(context, context.isLastFragment(), EMPTY_ACTION);
+        service.doAs(context, false, EMPTY_ACTION);
         verifyScenario("login-user", false);
         verify(mockUGICache).release(any(SessionId.class), eq(false));
     }
 
     @Test
     public void tellsTheUGICacheToCleanItselfOnTheLastCallForASegment() throws Exception {
-        context.setLastFragment(true);
         expectScenario(false, false, false);
-        service.doAs(context, context.isLastFragment(), EMPTY_ACTION);
+        service.doAs(context, true, EMPTY_ACTION);
         verifyScenario("login-user", false);
         verify(mockUGICache).release(any(SessionId.class), eq(true));
     }
@@ -164,7 +163,7 @@ public class BaseSecurityServiceTest {
         expectScenario(false, false, false);
         doThrow(UndeclaredThrowableException.class).when(mockProxyUGI).doAs(any(PrivilegedExceptionAction.class));
         assertThrows(IOException.class,
-                () -> service.doAs(context, context.isLastFragment(), EMPTY_ACTION));
+                () -> service.doAs(context, false, EMPTY_ACTION));
         verifyScenario("login-user", false);
         verify(mockUGICache).release(any(SessionId.class), eq(true));
     }
@@ -175,7 +174,7 @@ public class BaseSecurityServiceTest {
         expectScenario(false, false, false);
         doThrow(InterruptedException.class).when(mockProxyUGI).doAs(any(PrivilegedExceptionAction.class));
         assertThrows(IOException.class,
-                () -> service.doAs(context, context.isLastFragment(), EMPTY_ACTION));
+                () -> service.doAs(context, false, EMPTY_ACTION));
         verifyScenario("login-user", false);
         verify(mockUGICache).release(any(SessionId.class), eq(true));
     }

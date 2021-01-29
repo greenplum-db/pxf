@@ -109,7 +109,6 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
             context.setFragmentIndex(Integer.parseInt(fragmentIndexStr));
         }
 
-        context.setLastFragment(params.removeOptionalBoolProperty("LAST-FRAGMENT"));
         context.setHost(params.removeProperty("URL-HOST"));
         context.setMetadata(params.removeUserProperty("METADATA"));
         context.setPort(params.removeIntProperty("URL-PORT"));

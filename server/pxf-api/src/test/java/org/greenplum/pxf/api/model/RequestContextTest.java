@@ -24,7 +24,6 @@ public class RequestContextTest {
         assertEquals("default", context.getServerName());
         assertEquals(0, context.getStatsMaxFragments());
         assertEquals(0, context.getStatsSampleRatio(), 0.1);
-        assertFalse(context.isLastFragment());
     }
 
     @Test
@@ -232,11 +231,5 @@ public class RequestContextTest {
     public void testSucceedsWhenConfigOptionIsTwoDirectories() {
         context.setConfig("foo/bar");
         assertEquals("foo/bar", context.getConfig());
-    }
-
-    @Test
-    public void testIsLastFragment() {
-        context.setLastFragment(true);
-        assertTrue(context.isLastFragment());
     }
 }
