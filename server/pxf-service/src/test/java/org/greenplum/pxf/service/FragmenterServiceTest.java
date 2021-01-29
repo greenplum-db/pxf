@@ -39,7 +39,7 @@
 //import static org.mockito.Mockito.verify;
 //import static org.mockito.Mockito.when;
 //
-//public class FragmenterResourceTest {
+//public class FragmenterServiceTest {
 //
 //    private BasePluginFactory mockPluginFactory;
 //    private MultiValueMap<String, String> mockRequestHeaders1;
@@ -50,7 +50,7 @@
 //    private FakeTicker fakeTicker;
 //    private RequestParser<MultiValueMap<String, String>> mockParser;
 //    private PxfServerProperties mockPxfServerProperties;
-//    private FragmenterResource fragmenterResource;
+//    private FragmenterService fragmenterResource;
 //
 //    @BeforeEach
 //    @SuppressWarnings("unchecked")
