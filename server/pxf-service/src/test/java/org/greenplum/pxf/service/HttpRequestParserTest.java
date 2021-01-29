@@ -27,8 +27,6 @@ import org.greenplum.pxf.api.model.ProtocolHandler;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.RequestContext.RequestType;
 import org.greenplum.pxf.api.utilities.FragmentMetadata;
-import org.greenplum.pxf.api.utilities.FragmentMetadataSerDe;
-import org.greenplum.pxf.api.utilities.SerializationService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -64,9 +62,6 @@ public class HttpRequestParserTest {
     public void setUp() {
         mockPluginConf = mock(PluginConf.class);
 
-        SerializationService serializationService = new SerializationService();
-        FragmentMetadataSerDe serDe = new FragmentMetadataSerDe(serializationService);
-
         parameters = new LinkedMultiValueMap<>();
         parameters.add("X-GP-ALIGNMENT", "all");
         parameters.add("X-GP-SEGMENT-ID", "-44");
@@ -86,7 +81,6 @@ public class HttpRequestParserTest {
         parameters.add("X-GP-XID", "transaction:id");
 
         parser = new HttpRequestParser(mockPluginConf);
-        parser.setMetadataSerDe(serDe);
     }
 
     @AfterEach
