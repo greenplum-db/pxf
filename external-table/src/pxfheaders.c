@@ -27,6 +27,7 @@
 #else
 #include "nodes/makefuncs.h"
 #endif
+#include "cdb/cdbvars.h"
 
 /* helper function declarations */
 static void add_alignment_size_httpheader(CHURL_HEADERS headers);
@@ -54,6 +55,7 @@ build_http_headers(PxfInputData *input)
 	GPHDUri        *gphduri   = input->gphduri;
 	Relation       rel        = input->rel;
 	char           *filterstr = input->filterstr;
+	char           long_number[sizeof(int32) * 8];
 	ProjectionInfo *proj_info = input->proj_info;
 
 	if (rel != NULL)
@@ -121,6 +123,11 @@ build_http_headers(PxfInputData *input)
 	churl_headers_append(headers, "X-GP-SEGMENT-ID", ev.GP_SEGMENT_ID);
 	churl_headers_append(headers, "X-GP-SEGMENT-COUNT", ev.GP_SEGMENT_COUNT);
 	churl_headers_append(headers, "X-GP-XID", ev.GP_XID);
+
+	pg_ltoa(gp_session_id, long_number);
+	churl_headers_append(headers, "X-GP-SESSION-ID", long_number);
+	pg_ltoa(gp_command_count, long_number);
+	churl_headers_append(headers, "X-GP-COMMAND-COUNT", long_number);
 
 	add_alignment_size_httpheader(headers);
 

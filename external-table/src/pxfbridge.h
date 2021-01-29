@@ -22,11 +22,12 @@
 #define _PXFBRIDGE_H
 
 #include "libchurl.h"
-#include "pxffragment.h"
 #include "pxfuriparser.h"
 
 #include "cdb/cdbvars.h"
+#include "nodes/execnodes.h"
 #include "nodes/pg_list.h"
+#include "utils/relcache.h"
 
 /*
  * Context for single query execution by PXF bridge
@@ -37,7 +38,6 @@ typedef struct
 	CHURL_HANDLE   churl_handle;
 	GPHDUri        *gphd_uri;
 	StringInfoData uri;
-	ListCell       *current_fragment;
 	Relation       relation;
 	char           *filterstr;
 	ProjectionInfo *proj_info;

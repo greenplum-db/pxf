@@ -171,12 +171,6 @@ create_context(PG_FUNCTION_ARGS, bool is_import)
 		}
 	}
 
-	if (is_import)
-	{
-		/* fetch data fragments */
-		get_fragments(uri, relation, filterstr, proj_info, filter_quals);
-	}
-
 	/* set context */
 	gphadoop_context *context = palloc0(sizeof(gphadoop_context));
 

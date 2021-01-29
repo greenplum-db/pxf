@@ -53,7 +53,6 @@ typedef struct GPHDUri
 	char	   *port;			/* port number as string    */
 	char	   *data;			/* data location (path)     */
 	char	   *profile;		/* profile option           */
-	List	   *fragments;		/* list of fragments        */
 	List	   *options;		/* list of OptionData       */
 } GPHDUri;
 

@@ -18,7 +18,8 @@
  */
 
 #include "pxfuriparser.h"
-#include "pxffragment.h"
+#include "pxfutils.h"
+
 #include "utils/formatting.h"
 
 static const char *PTC_SEP = "://";
@@ -31,7 +32,6 @@ static void GPHDUri_parse_data(GPHDUri *uri, char **cursor);
 static void GPHDUri_parse_options(GPHDUri *uri, char **cursor);
 static List *GPHDUri_parse_option(char *pair, GPHDUri *uri);
 static void GPHDUri_free_options(GPHDUri *uri);
-static void GPHDUri_free_fragments(GPHDUri *uri);
 
 /* parseGPHDUri
  *
@@ -92,7 +92,6 @@ freeGPHDUri(GPHDUri *uri)
 	if (uri->profile)
 		pfree(uri->profile);
 
-	GPHDUri_free_fragments(uri);
 	GPHDUri_free_options(uri);
 	pfree(uri);
 }
@@ -256,24 +255,6 @@ GPHDUri_free_options(GPHDUri *uri)
 	}
 	list_free(uri->options);
 	uri->options = NIL;
-}
-
-/*
- * Free fragments list
- */
-static void
-GPHDUri_free_fragments(GPHDUri *uri)
-{
-	ListCell   *fragment = NULL;
-
-	foreach(fragment, uri->fragments)
-	{
-		FragmentData *data = (FragmentData *) lfirst(fragment);
-
-		free_fragment(data);
-	}
-	list_free(uri->fragments);
-	uri->fragments = NIL;
 }
 
 /*
