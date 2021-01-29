@@ -29,8 +29,6 @@ import org.greenplum.pxf.api.utilities.FragmentMetadata;
  */
 public class Fragment {
 
-    public static final String[] HOSTS = new String[]{"localhost"};
-
     /**
      * File path+name, table name, etc.
      */
@@ -43,13 +41,6 @@ public class Fragment {
     @Getter
     @Setter
     private int index;
-
-    /**
-     * Fragment replicas (1 or more).
-     */
-    @Getter
-    @Setter
-    private String[] replicas;
 
     /**
      * Fragment metadata information (starting point + length, region location, etc.).
@@ -71,36 +62,31 @@ public class Fragment {
      * @param sourceName the resource uri (File path+name, table name, etc.)
      */
     public Fragment(String sourceName) {
-        this(sourceName, HOSTS, null);
+        this(sourceName, null);
     }
 
     /**
      * Constructs a Fragment.
      *
      * @param sourceName the resource uri (File path+name, table name, etc.)
-     * @param hosts      the replicas
      * @param metadata   the metadata for this fragment
      */
     public Fragment(String sourceName,
-                    String[] hosts,
                     FragmentMetadata metadata) {
-        this(sourceName, hosts, metadata, null);
+        this(sourceName, metadata, null);
     }
 
     /**
      * Contructs a Fragment.
      *
      * @param sourceName the resource uri (File path+name, table name, etc.)
-     * @param hosts      the replicas
      * @param metadata   the metadata for this fragment
      * @param profile    the profile to use for the query
      */
     public Fragment(String sourceName,
-                    String[] hosts,
                     FragmentMetadata metadata,
                     String profile) {
         this.sourceName = sourceName;
-        this.replicas = hosts;
         this.metadata = metadata;
         this.profile = profile;
     }

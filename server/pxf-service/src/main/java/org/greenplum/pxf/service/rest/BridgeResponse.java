@@ -6,11 +6,13 @@ import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.api.io.Writable;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.service.RequestParser;
 import org.greenplum.pxf.service.bridge.Bridge;
 import org.greenplum.pxf.service.bridge.BridgeFactory;
 import org.greenplum.pxf.service.security.SecurityService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.io.DataOutputStream;
@@ -21,19 +23,29 @@ import java.util.List;
 
 public class BridgeResponse implements StreamingResponseBody {
 
+    private static final String PROFILE_KEY = "X-GP-PROFILE";
+
     protected final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
     private final BridgeFactory bridgeFactory;
+    private final RequestParser<MultiValueMap<String, String>> parser;
     private final RequestContext context;
     private final List<Fragment> fragments;
+    private final MultiValueMap<String, String> headers;
     private final SecurityService securityService;
 
-    public BridgeResponse(SecurityService securityService, BridgeFactory bridgeFactory,
-                          RequestContext context, List<Fragment> fragments) {
+    public BridgeResponse(BridgeFactory bridgeFactory,
+                          SecurityService securityService,
+                          RequestParser<MultiValueMap<String, String>> parser,
+                          RequestContext context,
+                          List<Fragment> fragments,
+                          MultiValueMap<String, String> headers) {
         this.securityService = securityService;
         this.bridgeFactory = bridgeFactory;
+        this.parser = parser;
         this.context = context;
         this.fragments = fragments;
+        this.headers = headers;
     }
 
     @SneakyThrows
@@ -48,20 +60,40 @@ public class BridgeResponse implements StreamingResponseBody {
         long recordCount = 0;
 
         try {
-            for (Fragment fragment : fragments) {
+            for (int i = 0; i < fragments.size(); i++) {
+                RequestContext context = this.context;
+                Fragment fragment = fragments.get(i);
                 context.setDataSource(fragment.getSourceName());
                 context.setFragmentIndex(fragment.getIndex());
                 context.setFragmentMetadata(fragment.getMetadata());
 
-                if (StringUtils.isNotBlank(fragment.getProfile())) {
-                    context.setProfile(fragment.getProfile());
+                String profile = fragment.getProfile();
+                if (StringUtils.isNotBlank(profile) &&
+                        !StringUtils.equalsIgnoreCase(profile, context.getProfile())) {
+
+                    LOG.debug("Using profile: {}", profile);
+
+                    // Remember the value of the original profile defined in
+                    // the table LOCATION, so we can restore it later to its
+                    // original value
+                    List<String> profileHeaderValue = headers.get(PROFILE_KEY);
+                    headers.set(PROFILE_KEY, profile);
+                    context = parser.parseRequest(headers, context.getRequestType());
+                    context.setConfiguration(this.context.getConfiguration());
+
+                    // Restore the original value of the profile if it was
+                    // present
+                    headers.remove(PROFILE_KEY);
+                    if (profileHeaderValue != null) {
+                        headers.addAll(PROFILE_KEY, profileHeaderValue);
+                    }
                 }
 
                 Bridge bridge = bridgeFactory.getBridge(context);
 
                 try {
                     if (!bridge.beginIteration()) {
-                        return null;
+                        continue;
                     }
                     Writable record;
                     DataOutputStream dos = new DataOutputStream(out);
@@ -80,6 +112,7 @@ public class BridgeResponse implements StreamingResponseBody {
                         LOG.warn("Ignoring error encountered during bridge.endIteration()", e);
                     }
                 }
+                fragments.set(i, null);
             }
         } catch (ClientAbortException e) {
             // Occurs whenever client (GPDB) decides to end the connection

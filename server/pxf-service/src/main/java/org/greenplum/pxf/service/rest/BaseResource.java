@@ -19,7 +19,7 @@ public abstract class BaseResource {
     protected final RequestContext.RequestType requestType;
 
     private ConfigurationFactory configurationFactory;
-    private RequestParser<MultiValueMap<String, String>> parser;
+    protected RequestParser<MultiValueMap<String, String>> parser;
 
     /**
      * Creates an instance of the resource with a given request parser.

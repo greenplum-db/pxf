@@ -60,8 +60,6 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.greenplum.pxf.api.model.Fragment.HOSTS;
-
 /**
  * Fragmenter class for HIVE tables. <br>
  * Given a Hive table and its partitions divide the data into fragments (here a
@@ -320,13 +318,13 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
             return;
         }
 
+        Properties properties = hiveClientWrapper.buildFragmentProperties(fragmenterForProfile, tablePartition);
         for (InputSplit split : splits) {
             FileSplit fileSplit = (FileSplit) split;
             String filepath = fileSplit.getPath().toString();
-            Properties properties = hiveClientWrapper.buildFragmentProperties(fragmenterForProfile, tablePartition);
 
             HiveFragmentMetadata metadata = new HiveFragmentMetadata(fileSplit, properties);
-            Fragment fragment = new Fragment(filepath, HOSTS, metadata, profile);
+            Fragment fragment = new Fragment(filepath, metadata, profile);
             fragments.add(fragment);
         }
     }

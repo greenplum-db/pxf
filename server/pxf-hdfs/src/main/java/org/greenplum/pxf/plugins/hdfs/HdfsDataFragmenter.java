@@ -78,14 +78,13 @@ public class HdfsDataFragmenter extends BaseFragmenter {
         for (InputSplit split : splits) {
             FileSplit fsp = (FileSplit) split;
             String filepath = fsp.getPath().toString();
-            String[] hosts = fsp.getLocations();
 
             /*
              * metadata information includes: file split's start, length and
              * hosts (locations).
              */
 
-            Fragment fragment = new Fragment(filepath, hosts, new HcfsFragmentMetadata(fsp));
+            Fragment fragment = new Fragment(filepath, new HcfsFragmentMetadata(fsp));
             fragments.add(fragment);
         }
 

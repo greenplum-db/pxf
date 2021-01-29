@@ -27,8 +27,6 @@ import org.greenplum.pxf.plugins.jdbc.partitioning.PartitionType;
 
 import java.util.List;
 
-import static org.greenplum.pxf.api.model.Fragment.HOSTS;
-
 /**
  * JDBC fragmenter
  * <p>
@@ -71,7 +69,7 @@ public class JdbcPartitionFragmenter extends BaseFragmenter {
         } else {
             List<JdbcFragmentMetadata> fragmentsMetadata = partitionType.getFragmentsMetadata(column, range, interval);
             for (JdbcFragmentMetadata fragmentMetadata : fragmentsMetadata) {
-                fragments.add(new Fragment(context.getDataSource(), HOSTS, fragmentMetadata));
+                fragments.add(new Fragment(context.getDataSource(), fragmentMetadata));
             }
         }
         return fragments;

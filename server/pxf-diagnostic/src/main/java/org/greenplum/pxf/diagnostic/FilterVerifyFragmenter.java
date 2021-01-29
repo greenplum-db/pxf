@@ -32,10 +32,8 @@ public class FilterVerifyFragmenter extends BaseFragmenter {
             new FilterParser().parse(filter);
         }
 
-        String[] hosts = {"localhost", "localhost", "localhost"};
-
         // Set filter value as returned user data.
-        Fragment fragment = new Fragment("dummy_file_path", hosts,
+        Fragment fragment = new Fragment("dummy_file_path",
                 new FilterVerifyFragmentMetadata(filter));
         fragments.add(fragment);
 

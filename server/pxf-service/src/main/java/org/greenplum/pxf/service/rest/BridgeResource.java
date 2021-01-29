@@ -77,7 +77,7 @@ public class BridgeResource extends BaseResource {
         // Create a streaming class which will iterate over the records and put
         // them on the output stream
         StreamingResponseBody response =
-                new BridgeResponse(securityService, bridgeFactory, context, fragments);
+                new BridgeResponse(bridgeFactory, securityService, parser, context, fragments, headers);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
