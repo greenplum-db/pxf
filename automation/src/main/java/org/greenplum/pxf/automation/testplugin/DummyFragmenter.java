@@ -4,7 +4,6 @@ import org.greenplum.pxf.api.model.BaseFragmenter;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.FragmentStats;
 
-import java.net.InetAddress;
 import java.util.List;
 
 /*
@@ -21,23 +20,18 @@ public class DummyFragmenter extends BaseFragmenter {
      * returns the data fragments - identifiers of data and a list of available hosts
      */
     @Override
-    public List<Fragment> getFragments() throws Exception {
-        String localhostname = InetAddress.getLocalHost().getHostName();
-        String[] localHosts = new String[]{localhostname, localhostname};
+    public List<Fragment> getFragments() {
         fragments.add(new Fragment(context.getDataSource() + ".1" /* source name */,
-                localHosts /* available hosts list */,
                 new DummyFragmentMetadata("fragment1")));
         fragments.add(new Fragment(context.getDataSource() + ".2" /* source name */,
-                localHosts /* available hosts list */,
                 new DummyFragmentMetadata("fragment2")));
         fragments.add(new Fragment(context.getDataSource() + ".3" /* source name */,
-                localHosts /* available hosts list */,
                 new DummyFragmentMetadata("fragment3")));
         return fragments;
     }
 
     @Override
-    public FragmentStats getFragmentStats() throws Exception {
+    public FragmentStats getFragmentStats() {
         return new FragmentStats(3, 10000000, 100000000L);
     }
 }

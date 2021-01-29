@@ -68,9 +68,6 @@ public class MultipleHiveFragmentsPerFileFragmenter extends BaseFragmenter {
 
     @Override
     public List<Fragment> getFragments() throws Exception {
-        String localhostname = java.net.InetAddress.getLocalHost().getHostName();
-        String[] localHosts = new String[]{localhostname, localhostname};
-
         // TODO whitelist property
         int fragmentsNum = Integer.parseInt(context.getOption("TEST-FRAGMENTS-NUM"));
         Metadata.Item tblDesc = hiveClientWrapper.extractTableFromName(context.getDataSource());
@@ -79,7 +76,7 @@ public class MultipleHiveFragmentsPerFileFragmenter extends BaseFragmenter {
 
         for (int i = 0; i < fragmentsNum; i++) {
             String filePath = getFilePath(tbl);
-            fragments.add(new Fragment(filePath, localHosts, new HiveFragmentMetadata(i * SPLIT_SIZE, SPLIT_SIZE, properties)));
+            fragments.add(new Fragment(filePath, new HiveFragmentMetadata(i * SPLIT_SIZE, SPLIT_SIZE, properties)));
         }
 
         return fragments;

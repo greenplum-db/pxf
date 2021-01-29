@@ -32,9 +32,8 @@ public class ColumnProjectionVerifyFragmenter extends BaseFragmenter {
                     .collect(Collectors.joining("|"));
         }
 
-        String[] hosts = {"localhost", "localhost", "localhost"};
         // Set filter value as returned user data.
-        Fragment fragment = new Fragment("dummy_file_path", hosts,
+        Fragment fragment = new Fragment("dummy_file_path",
                 new ColumnProjectionVerifyFragmentMetadata(columnProjection));
         fragments.add(fragment);
 
