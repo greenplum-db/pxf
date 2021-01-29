@@ -1,4 +1,4 @@
-package org.greenplum.pxf.service;
+package org.greenplum.pxf.service.security;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -21,6 +21,7 @@ package org.greenplum.pxf.service;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
@@ -29,6 +30,7 @@ import java.io.IOException;
  * in tests to be able to detect when a UGI is created/destroyed, and to isolate our tests from
  * creating/destroying real UGI instances.
  */
+@Component
 class UGIProvider {
 
     /**
@@ -46,13 +48,14 @@ class UGIProvider {
     /**
      * Wrapper for {@link UserGroupInformation} creation of remote users
      *
-     * @param user    the name of the remote user
-     * @param session session containing information on current configuration and login user
+     * @param user              the name of the remote user
+     * @param loginUser         the login user
+     * @param isSecurityEnabled whether we are accessing a secure server or not
      * @return a remote {@link UserGroupInformation}.
      */
-    UserGroupInformation createRemoteUser(String user, SessionId session) throws IOException {
-        if (session.isSecurityEnabled()) {
-            UserGroupInformation proxyUGI = createProxyUGI(user, session.getLoginUser());
+    UserGroupInformation createRemoteUser(String user, UserGroupInformation loginUser, boolean isSecurityEnabled) throws IOException {
+        if (isSecurityEnabled) {
+            UserGroupInformation proxyUGI = createProxyUGI(user, loginUser);
             proxyUGI.setAuthenticationMethod(UserGroupInformation.AuthenticationMethod.KERBEROS);
             return proxyUGI;
         }

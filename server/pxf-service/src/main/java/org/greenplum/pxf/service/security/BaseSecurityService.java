@@ -6,8 +6,6 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.security.SecureLogin;
 import org.greenplum.pxf.api.utilities.Utilities;
-import org.greenplum.pxf.service.SessionId;
-import org.greenplum.pxf.service.UGICache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -26,11 +24,11 @@ public class BaseSecurityService implements SecurityService {
 
     private final SecureLogin secureLogin;
 
-    private final UGICache ugiCache;
+    private final UGIProvider ugiProvider;
 
-    public BaseSecurityService(SecureLogin secureLogin, UGICache ugiCache) {
+    public BaseSecurityService(SecureLogin secureLogin, UGIProvider ugiProvider) {
         this.secureLogin = secureLogin;
-        this.ugiCache = ugiCache;
+        this.ugiProvider = ugiProvider;
     }
 
     /**
@@ -47,7 +45,7 @@ public class BaseSecurityService implements SecurityService {
      * @param action  the action to be executed
      * @throws IOException when an IO error occurs
      */
-    public <T> T doAs(RequestContext context, final boolean lastCallForSegment, PrivilegedExceptionAction<T> action) throws IOException {
+    public <T> T doAs(RequestContext context, final boolean shouldReleaseUgi, PrivilegedExceptionAction<T> action) throws IOException {
         // retrieve user header and make sure header is present and is not empty
         final String gpdbUser = context.getUser();
         final String transactionId = context.getTransactionId();
@@ -76,20 +74,19 @@ public class BaseSecurityService implements SecurityService {
         }
 
         String remoteUser = (isUserImpersonation ? gpdbUser : serviceUser);
-
-        SessionId session = new SessionId(
-                segmentId,
-                transactionId,
-                remoteUser,
-                serverName,
-                isSecurityEnabled,
-                loginUser);
+        String session = remoteUser + ":" + transactionId + ":" + segmentId + ":" + serverName;
 
         boolean exceptionDetected = false;
+        UserGroupInformation userGroupInformation = null;
         try {
             // Retrieve proxy user UGI from the UGI of the logged in user
-            UserGroupInformation userGroupInformation = ugiCache
-                    .getUserGroupInformation(session, isUserImpersonation);
+            if (isUserImpersonation) {
+                LOG.debug("{} Creating proxy user = {}", session, remoteUser);
+                userGroupInformation = ugiProvider.createProxyUGI(remoteUser, loginUser);
+            } else {
+                LOG.debug("{} Creating remote user = {}", session, remoteUser);
+                userGroupInformation = ugiProvider.createRemoteUser(remoteUser, loginUser, isSecurityEnabled);
+            }
 
             LOG.debug("Retrieved proxy user {} for server {} and session {}", userGroupInformation, serverName, session);
             LOG.debug("Performing request for gpdb_user = {} as [remote_user = {} service_user = {} login_user ={}] with{} impersonation",
@@ -105,13 +102,15 @@ public class BaseSecurityService implements SecurityService {
             throw new IOException(ie);
         } finally {
             // Optimization to cleanup the cache if it is the last fragment
-            boolean releaseUgi = lastCallForSegment || exceptionDetected;
+            boolean releaseUgi = shouldReleaseUgi || exceptionDetected;
             LOG.debug("Releasing UGI from cache for session: {}. {}",
                     session, exceptionDetected
                             ? " Exception while processing"
-                            : (lastCallForSegment ? " Processed last fragment for segment" : ""));
+                            : (shouldReleaseUgi ? " Processed last fragment for segment" : ""));
             try {
-                ugiCache.release(session, releaseUgi);
+                if (releaseUgi && userGroupInformation != null) {
+                    ugiProvider.destroy(userGroupInformation);
+                }
             } catch (Throwable t) {
                 LOG.error("Error releasing UGI from cache for session: {}", session, t);
             }

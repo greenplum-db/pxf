@@ -26,7 +26,6 @@ import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.Fragmenter;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.FragmenterCacheFactory;
-import org.greenplum.pxf.service.SessionId;
 import org.greenplum.pxf.service.security.SecurityService;
 import org.greenplum.pxf.service.utilities.AnalyzeUtils;
 import org.greenplum.pxf.service.utilities.BasePluginFactory;
@@ -189,7 +188,8 @@ public class FragmenterService {
     private void logFragmentStatistics(Level level, RequestContext context, List<Fragment> fragments) {
 
         int numberOfFragments = fragments.size();
-        SessionId session = new SessionId(context.getSegmentId(), context.getTransactionId(), context.getUser(), context.getServerName());
+        String session = context.getUser() + ":" + context.getTransactionId() + ":" + context.getSegmentId() + ":" + context.getServerName();
+
         long elapsedMillis = System.currentTimeMillis() - startTime;
 
         if (level == Level.INFO) {

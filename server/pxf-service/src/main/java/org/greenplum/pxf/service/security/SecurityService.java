@@ -29,14 +29,14 @@ public interface SecurityService {
     /**
      * Do as the user provide in the context
      *
-     * @param context            the request context
-     * @param lastCallForSegment true if it is the last call for a segment
-     * @param action             the action to perform
-     * @param <T>                the type
+     * @param context          the request context
+     * @param shouldReleaseUgi true if it is the last call for a segment
+     * @param action           the action to perform
+     * @param <T>              the type
      * @return the action result
      * @throws IOException          when an error occurs
      * @throws InterruptedException when interrupted
      */
-    <T> T doAs(RequestContext context, final boolean lastCallForSegment, PrivilegedExceptionAction<T> action)
+    <T> T doAs(RequestContext context, final boolean shouldReleaseUgi, PrivilegedExceptionAction<T> action)
             throws IOException, InterruptedException;
 }

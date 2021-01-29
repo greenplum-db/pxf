@@ -63,10 +63,6 @@ public class BridgeResponse implements StreamingResponseBody {
             for (int i = 0; i < fragments.size(); i++) {
                 RequestContext context = this.context;
                 Fragment fragment = fragments.get(i);
-                context.setDataSource(fragment.getSourceName());
-                context.setFragmentIndex(fragment.getIndex());
-                context.setFragmentMetadata(fragment.getMetadata());
-
                 String profile = fragment.getProfile();
                 if (StringUtils.isNotBlank(profile) &&
                         !StringUtils.equalsIgnoreCase(profile, context.getProfile())) {
@@ -88,6 +84,9 @@ public class BridgeResponse implements StreamingResponseBody {
                         headers.addAll(PROFILE_KEY, profileHeaderValue);
                     }
                 }
+                context.setDataSource(fragment.getSourceName());
+                context.setFragmentIndex(fragment.getIndex());
+                context.setFragmentMetadata(fragment.getMetadata());
 
                 Bridge bridge = bridgeFactory.getBridge(context);
 
