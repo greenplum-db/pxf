@@ -104,11 +104,6 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
 
         context.setFragmenter(params.removeUserProperty("FRAGMENTER"));
 
-        String fragmentIndexStr = params.removeOptionalProperty("FRAGMENT-INDEX");
-        if (StringUtils.isNotBlank(fragmentIndexStr)) {
-            context.setFragmentIndex(Integer.parseInt(fragmentIndexStr));
-        }
-
         context.setHost(params.removeProperty("URL-HOST"));
         context.setMetadata(params.removeUserProperty("METADATA"));
         context.setPort(params.removeIntProperty("URL-PORT"));

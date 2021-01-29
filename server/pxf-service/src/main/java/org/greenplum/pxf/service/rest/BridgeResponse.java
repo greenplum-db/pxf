@@ -44,14 +44,13 @@ public class BridgeResponse implements StreamingResponseBody {
     }
 
     private Void writeToInternal(OutputStream out) throws IOException {
-        int fragmentIndex = 0;
         final String dataDir = context.getDataSource();
         long recordCount = 0;
 
         try {
             for (Fragment fragment : fragments) {
                 context.setDataSource(fragment.getSourceName());
-                context.setFragmentIndex(fragmentIndex);
+                context.setFragmentIndex(fragment.getIndex());
                 context.setFragmentMetadata(fragment.getMetadata());
 
                 if (StringUtils.isNotBlank(fragment.getProfile())) {
@@ -67,21 +66,20 @@ public class BridgeResponse implements StreamingResponseBody {
                     Writable record;
                     DataOutputStream dos = new DataOutputStream(out);
 
-                    LOG.debug("Starting streaming fragment {} of resource {}", fragmentIndex, dataDir);
+                    LOG.debug("Starting streaming fragment {} of resource {}", fragment.getIndex(), dataDir);
                     while ((record = bridge.getNext()) != null) {
                         record.write(dos);
                         ++recordCount;
                     }
-                    LOG.debug("Finished streaming fragment {} of resource {}, {} records.", fragmentIndex, dataDir, recordCount);
+                    LOG.debug("Finished streaming fragment {} of resource {}, {} records.", fragment.getIndex(), dataDir, recordCount);
                 } finally {
-                    LOG.debug("Stopped streaming fragment {} of resource {}, {} records.", fragmentIndex, dataDir, recordCount);
+                    LOG.debug("Stopped streaming fragment {} of resource {}, {} records.", fragment.getIndex(), dataDir, recordCount);
                     try {
                         bridge.endIteration();
                     } catch (Exception e) {
                         LOG.warn("Ignoring error encountered during bridge.endIteration()", e);
                     }
                 }
-                fragmentIndex++;
             }
         } catch (ClientAbortException e) {
             // Occurs whenever client (GPDB) decides to end the connection

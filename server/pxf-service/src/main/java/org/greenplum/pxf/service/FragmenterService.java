@@ -103,6 +103,7 @@ public class FragmenterService {
 
                         /* Create a fragmenter instance with API level parameters */
                         fragmentList = AnalyzeUtils.getSampleFragments(fragmentList, context);
+                        updateFragmentIndex(fragmentList);
                         return fragmentList;
                     });
         } catch (UncheckedExecutionException | ExecutionException e) {
@@ -202,4 +203,24 @@ public class FragmenterService {
         }
     }
 
+    /**
+     * Updates the fragments' indexes so that it is incremented by sourceName.
+     * (E.g.: {"a", 0}, {"a", 1}, {"b", 0} ... )
+     *
+     * @param fragments fragments to be updated
+     */
+    private void updateFragmentIndex(List<Fragment> fragments) {
+
+        String sourceName = null;
+        int index = 0;
+        for (Fragment fragment : fragments) {
+
+            String currentSourceName = fragment.getSourceName();
+            if (!currentSourceName.equals(sourceName)) {
+                index = 0;
+                sourceName = currentSourceName;
+            }
+            fragment.setIndex(index++);
+        }
+    }
 }
