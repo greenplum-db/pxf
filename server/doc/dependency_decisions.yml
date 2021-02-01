@@ -17,3 +17,33 @@
     :why:
     :versions: []
     :when: 2020-08-27 06:42:22.806546000 Z
+- - :ignore
+  - org.greenplum.pxf:pxf-hive
+  - :who:
+    :why:
+    :versions: []
+    :when: 2021-02-01 06:42:22.806546000 Z
+- - :ignore
+  - org.greenplum.pxf:pxf-json
+  - :who:
+    :why:
+    :versions: []
+    :when: 2021-02-01 06:42:22.806546000 Z
+- - :ignore
+  - org.greenplum.pxf:pxf-hbase
+  - :who:
+    :why:
+    :versions: []
+    :when: 2021-02-01 06:42:22.806546000 Z
+- - :ignore
+  - org.greenplum.pxf:pxf-s3
+  - :who:
+    :why:
+    :versions: []
+    :when: 2021-02-01 06:42:22.806546000 Z
+- - :ignore
+  - org.greenplum.pxf:pxf-diagnostic
+  - :who:
+    :why:
+    :versions: []
+    :when: 2021-02-01 06:42:22.806546000 Z
