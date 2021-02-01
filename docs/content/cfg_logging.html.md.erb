@@ -13,9 +13,13 @@ Enabling more verbose service- or client-level logging for PXF may aid troublesh
 
 ## <a id="pxfsvclogmsg"></a>Configuring Service-Level Logging
 
-PXF utilizes `log4j2` for service-level logging. PXF service-related log messages are captured in a log file specified by PXF's `log4j2` properties file, `$PXF_BASE/conf/pxf-log4j2.xml`. The default PXF logging configuration will write `warn` or `error` and more severe level log messages to `$PXF_BASE/logs/pxf-service.log`.
+PXF utilizes `log4j2` for service-level logging. PXF service-related log messages are captured in a log file specified by the PXF `log4j2` properties file, `$PXF_BASE/conf/pxf-log4j2.xml`. The default PXF logging configuration writes `warn` or `error` and more severe level log messages to `$PXF_BASE/logs/pxf-service.log`.
 
-PXF provides more detailed logging when the `debug` log level is enabled. To configure PXF `debug` logging and examine the output:
+PXF provides more detailed logging when the `debug` log level is enabled.
+
+**Note**: `debug` logging is quite verbose and has a performance impact.  Remember to turn off PXF service `debug` level logging after you have collected the desired information.
+
+To configure PXF `debug` logging and examine the output:
 
 1. Log in to your Greenplum Database master node:
 
@@ -23,13 +27,13 @@ PXF provides more detailed logging when the `debug` log level is enabled. To con
     $ ssh gpadmin@<gpmaster>
     ```
 
-1. Open `$PXF_BASE/conf/pxf-log4j2.xml` in an editor, uncomment the following line, save the file, and exit the editor:
+1. Use a text editor to uncomment the following line in `$PXF_BASE/conf/pxf-log4j2.xml`:
 
     ``` xml
     <Logger name="org.greenplum.pxf" level="debug"/>
     ```
 
-2. Use the `pxf cluster sync` command to copy the updated `pxf-log4j2.xml` file to all hosts in the Greenplum Database cluster. For example:
+2. Use the `pxf cluster sync` command to copy the updated `pxf-log4j2.xml` file to all hosts in the Greenplum Database cluster:
 
     ``` shell
     gpadmin@gpmaster$ pxf cluster sync
@@ -55,16 +59,14 @@ PXF provides more detailed logging when the `debug` log level is enabled. To con
     <select output>
     ```
 
-5. Finally, examine/collect the log messages from `pxf-service.log`.
-
-**Note**: `debug` logging is quite verbose and has a performance impact.  Remember to turn off PXF service `debug` level logging after you have collected the desired information.
+5. Finally, collect and examine the log messages from `pxf-service.log`.
 
 
 ## <a id="pxfdblogmsg"></a>Configuring Client-Level Logging
 
 Database-level client session logging may provide insight into internal PXF service operations.
 
-Enable Greenplum Database client debug message logging by setting the `client_min_messages` server configuration parameter to `DEBUG2` in your `psql` session. This logging configuration writes messages to `stdout`, and will apply to all operations that you perform in the session, including operations on PXF external tables.
+Enable Greenplum Database client debug message logging by setting the `client_min_messages` server configuration parameter to `DEBUG2` in your `psql` session. This logging configuration writes messages to `stdout`, and will apply to all operations that you perform in the session, including operations on PXF external tables. For example:
 
 ``` shell
 $ psql -d <dbname>
@@ -85,7 +87,7 @@ CONTEXT:  External table hdfstest
 ...
 ```
 
-Examine/collect the log messages written to `stdout`.
+Collect and examine the log messages written to `stdout`.
 
 **Note**: `DEBUG2` database client session logging has a performance impact.  Remember to turn off `DEBUG2` logging after you have collected the desired information.
 

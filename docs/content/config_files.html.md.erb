@@ -46,7 +46,7 @@ To set a new value for a PXF JVM configuration property, you may first need to u
 
 ## <a id="pxflog4j2"></a>pxf-log4j2.xml
 
-The `pxf-log4j2.xml` file configures PXF and subcomponent logging. By default, PXF is configured to log at the `warn` or `error` levels and more severe.
+The `pxf-log4j2.xml` file configures PXF and subcomponent logging. By default, PXF is configured to log at the `info` level, and logs at the `warn` or `error` levels for some third-party libraries to reduce verbosity.
 
 The [Logging](cfg_logging.html) advanced configuration topic describes how to enable more verbose client- and server-level logging for PXF.
 
@@ -69,7 +69,7 @@ Procedure:
     gpadmin@gpmaster$ pxf cluster sync
     ```
 
-1. (Re)start PXF on each segment host:
+1. (Re)start PXF on all segment hosts:
 
     ``` shell
     gpadmin@gpmaster$ pxf cluster restart

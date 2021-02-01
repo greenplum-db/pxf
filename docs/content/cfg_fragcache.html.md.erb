@@ -2,7 +2,7 @@
 title: Fragment Metadata Caching
 ---
 
-A PXF connector *Fragmenter* uses metadata from the external data source to split data into a list of fragments (blocks, files, etc.) that can be read in parallel. PXF caches the fragment metadata on a per-query basis: the first thread to access a fragment's metadata stores the information in a cache, and other threads reuse this cached metadata. Caching of this nature reduces query memory requirements for external data sources with a large number of fragments.
+A PXF connector *Fragmenter* uses metadata from the external data source to split data into a list of fragments (blocks, files, and so forth) that can be read in parallel. PXF caches the fragment metadata on a per-query basis: the first thread to access a fragment's metadata stores the information in a cache, and other threads reuse this cached metadata. Caching of this nature reduces query memory requirements for external data sources that have a large number of fragments.
 
 PXF fragment metadata caching is enabled by default. To turn off fragment metadata caching, or to re-enable it after turning it off, perform the following procedure:
 

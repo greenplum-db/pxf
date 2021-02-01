@@ -2,7 +2,7 @@
 title: Memory and Threading
 ---
 
-Because a single PXF agent (JVM) serves multiple segments on a segment host, the PXF heap size can be a limiting runtime factor. This will be more evident under concurrent workloads and/or queries against large files. You may run into situations where a query will hang or fail due to insufficient memory or the Java garbage collector impacting response times. To avert or remedy these situations, first try increasing the Java maximum heap size or decreasing the Tomcat maximum number of threads, depending upon what works best for your system configuration. You may also choose to configure PXF to perform specific actions when it detects an out of memory condition.
+Because a single PXF agent (JVM) serves multiple segments on a segment host, the PXF heap size can be a limiting runtime factor. This becomes more evident under concurrent workloads or with queries against large files. You may run into situations where a query hangs or fails due to insufficient memory or the Java garbage collector impacting response times. To avert or remedy these situations, first try increasing the Java maximum heap size or decreasing the Tomcat maximum number of threads, depending upon what works best for your system configuration. You may also choose to configure PXF to perform specific actions when it detects an out of memory condition.
 
 
 ## <a id="pxf-heapcfg"></a>Increasing the JVM Memory for PXF
@@ -78,7 +78,7 @@ Refer to the configuration [procedure](#pxf-cfgoom_proc) below for the instructi
  
 ### <a id="pxf-cfgoom-heapdump"></a>Dumping the Java Heap
 
-In an out of memory situation, it may be useful to capture the Java heap dump to help determine what factors contributed to the resource exhaustion. You can configure PXF to write the heap dump to a file when it detects an OOM condition by settin the `PXF_OOM_DUMP_PATH` environment variable in the `$PXF_BASE/conf/pxf-env.sh` configuration file. By default, PXF does not dump the Java heap on OOM.
+In an out of memory situation, it may be useful to capture the Java heap dump to help determine what factors contributed to the resource exhaustion. You can configure PXF to write the heap dump to a file when it detects an OOM condition by setting the `PXF_OOM_DUMP_PATH` environment variable in the `$PXF_BASE/conf/pxf-env.sh` configuration file. By default, PXF does not dump the Java heap on OOM.
 
 If you choose to enable the heap dump on OOM, you must set `PXF_OOM_DUMP_PATH` to the absolute path to a file or directory:
 
@@ -140,9 +140,9 @@ Auto-kill of the PXF server on OOM is enabled by default. Heap dump generation o
 
 ## <a id="pxf-threadcfg"></a>Another Option for Resource-Constrained PXF Segment Hosts
 
-If increasing the maximum heap size is not suitable for your Greenplum Database deployment, try decreasing the number of concurrent working threads configured for PXF's underlying Tomcat web application. A decrease in the number of running threads will prevent any PXF node from exhausting its memory, while ensuring that current queries run to completion (albeit a bit slower). Tomcat's default behavior is to queue requests until a thread is free, or the queue is exhausted.
+If increasing the maximum heap size is not suitable for your Greenplum Database deployment, try decreasing the number of concurrent working threads configured for PXF's embedded Tomcat web server. A decrease in the number of running threads will prevent any PXF node from exhausting its memory, while ensuring that current queries run to completion (albeit a bit slower). Tomcat's default behavior is to queue requests until a thread is free, or the queue is exhausted.
 
-The default maximum number of Tomcat threads for PXF is 200. The `pxf.max.threads` property in the `pxf-env.sh` configuration file controls this setting.
+The default maximum number of Tomcat threads for PXF is 200. The `pxf.max.threads` property in the `pxf-application.properties` configuration file controls this setting.
 
 PXF thread capacity is determined by the profile and whether or not the data is compressed. If you plan to run large workloads on a large number of files in an external Hive data store, or you are reading compressed ORC or Parquet data, consider specifying a lower `pxf.max.threads` value.
 
