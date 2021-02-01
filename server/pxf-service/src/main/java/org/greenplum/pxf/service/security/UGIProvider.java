@@ -39,9 +39,8 @@ class UGIProvider {
      * @param effectiveUser the name of the user that we want to impersonate
      * @param loginUser     the UGI of the login user (or Kerberos principal)
      * @return a {@link UserGroupInformation} for impersonation.
-     * @throws IOException
      */
-    UserGroupInformation createProxyUGI(String effectiveUser, UserGroupInformation loginUser) throws IOException {
+    UserGroupInformation createProxyUGI(String effectiveUser, UserGroupInformation loginUser) {
         return UserGroupInformation.createProxyUser(effectiveUser, loginUser);
     }
 

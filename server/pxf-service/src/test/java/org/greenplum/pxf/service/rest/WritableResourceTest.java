@@ -39,7 +39,6 @@ import java.security.PrivilegedExceptionAction;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -73,8 +72,8 @@ public class WritableResourceTest {
         writableResource.setRequestParser(mockParser);
         writableResource.setConfigurationFactory(mockConfigurationFactory);
 
-        when(mockSecurityService.doAs(any(), anyBoolean(), any())).thenAnswer(invocation ->
-                invocation.getArgument(2, PrivilegedExceptionAction.class).run());
+        when(mockSecurityService.doAs(any(), any())).thenAnswer(invocation ->
+                invocation.getArgument(1, PrivilegedExceptionAction.class).run());
         when(mockConfigurationFactory.initConfiguration(any(), any(), any(), any())).thenReturn(configuration);
         when(mockParser.parseRequest(mockHeaders, RequestType.WRITE_BRIDGE)).thenReturn(context);
         when(mockFactory.getBridge(context)).thenReturn(mockBridge);

@@ -19,7 +19,6 @@ package org.greenplum.pxf.service.rest;
  * under the License.
  */
 
-import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.service.FragmenterService;
 import org.greenplum.pxf.service.bridge.BridgeFactory;
@@ -33,8 +32,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
-
-import java.util.List;
 
 /*
  * This class handles the subpath /<version>/Bridge/ of this
@@ -72,12 +69,10 @@ public class BridgeResource extends BaseResource {
 
         RequestContext context = parseRequest(headers);
 
-        List<Fragment> fragments = fragmenterService.getFragmentsForSegment(context);
-
         // Create a streaming class which will iterate over the records and put
         // them on the output stream
         StreamingResponseBody response =
-                new BridgeResponse(bridgeFactory, securityService, parser, context, fragments, headers);
+                new BridgeResponse(bridgeFactory, securityService, fragmenterService, context);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

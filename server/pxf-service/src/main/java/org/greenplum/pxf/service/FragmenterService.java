@@ -20,61 +20,48 @@ package org.greenplum.pxf.service;
  */
 
 import com.google.common.util.concurrent.UncheckedExecutionException;
-import org.apache.logging.log4j.Level;
-import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.Fragmenter;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.FragmenterCacheFactory;
-import org.greenplum.pxf.service.security.SecurityService;
 import org.greenplum.pxf.service.utilities.AnalyzeUtils;
 import org.greenplum.pxf.service.utilities.BasePluginFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.security.PrivilegedExceptionAction;
+import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 /**
- * Class enhances the API of the WEBHDFS REST server. Returns the data fragments
- * that a data resource is made of, enabling parallel processing of the data
- * resource. Example for querying API FRAGMENTER from a web client
- * {@code curl -i "http://localhost:51200/pxf/{version}/Fragmenter/getFragments"}
- * <code>/pxf/</code> is made part of the path when there is a webapp by that
- * name in tomcat.
+ * The {@link FragmenterService} returns fragments for a given segment. It
+ * performs caching of Fragment for a unique query. The first segment to
+ * request the list of fragments will populate it, while the rest of the
+ * segments will wait until the list of fragments is populated.
  */
 @Component
 public class FragmenterService {
 
-    protected final Logger LOG = LoggerFactory.getLogger(this.getClass());
+    private final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
     private final BasePluginFactory pluginFactory;
 
-    private final SecurityService securityService;
-
     private final FragmenterCacheFactory fragmenterCacheFactory;
 
-    // Records the startTime of the fragmenter call
-    private long startTime;
-
-    // this flag is set to true when the thread processes the fragment call
-    private boolean didThreadProcessFragmentCall;
-
     public FragmenterService(FragmenterCacheFactory fragmenterCacheFactory,
-                             BasePluginFactory pluginFactory,
-                             SecurityService securityService) {
+                             BasePluginFactory pluginFactory) {
         this.fragmenterCacheFactory = fragmenterCacheFactory;
         this.pluginFactory = pluginFactory;
-        this.securityService = securityService;
     }
 
-    public List<Fragment> getFragmentsForSegment(RequestContext context) throws Throwable {
+    public List<Fragment> getFragmentsForSegment(RequestContext context) throws IOException {
 
-        LOG.debug("Received FRAGMENTER call");
-        startTime = System.currentTimeMillis();
+        LOG.trace("{} Received FRAGMENTER call", context.getId());
+        Instant startTime = Instant.now();
         final String path = context.getDataSource();
         final String fragmenterCacheKey = getFragmenterCacheKey(context);
 
@@ -84,38 +71,54 @@ public class FragmenterService {
                     fragmenterCacheFactory.getCache().stats().toString());
         }
 
-        LOG.debug("FRAGMENTER started for path \"{}\"", path);
+        LOG.debug("{} FRAGMENTER started for path \"{}\"", context.getId(), path);
 
         List<Fragment> fragments;
 
         try {
-            // We can't support lambdas here because asm version doesn't support it
             fragments = fragmenterCacheFactory.getCache()
                     .get(fragmenterCacheKey, () -> {
-                        didThreadProcessFragmentCall = true;
                         LOG.debug("Caching fragments for transactionId={} from segmentId={} with key={}",
                                 context.getTransactionId(), context.getSegmentId(), fragmenterCacheKey);
-                        PrivilegedExceptionAction<List<Fragment>> action = () ->
-                                getFragmenter(context).getFragments();
-
-                        List<Fragment> fragmentList = securityService.doAs(context, false, action);
+                        List<Fragment> fragmentList = getFragmenter(context).getFragments();
 
                         /* Create a fragmenter instance with API level parameters */
                         fragmentList = AnalyzeUtils.getSampleFragments(fragmentList, context);
                         updateFragmentIndex(fragmentList);
+
+                        int numberOfFragments = fragmentList.size();
+                        long elapsedMillis = Duration.between(startTime, Instant.now()).toMillis();
+                        LOG.info("{} returns {} fragment{} for path {} in {} ms for {} [profile {} filter is{} available]",
+                                context.getFragmenter(), numberOfFragments, numberOfFragments == 1 ? "" : "s",
+                                context.getDataSource(), elapsedMillis, context.getId(), context.getProfile(), context.hasFilter() ? "" : " not");
+
                         return fragmentList;
                     });
         } catch (UncheckedExecutionException | ExecutionException e) {
+            IOException exception;
             // Unwrap the error
-            if (e.getCause() != null)
-                throw e.getCause();
-            throw e;
+            if (e.getCause() != null) {
+                exception = e.getCause() instanceof IOException ? (IOException) e.getCause() : new IOException(e.getCause());
+            } else {
+                exception = new IOException(e);
+            }
+            throw exception;
         }
 
-        logFragmentStatistics(didThreadProcessFragmentCall ? Level.INFO : Level.DEBUG,
-                context, fragments);
+        List<Fragment> filteredFragments = filterFragments(fragments,
+                context.getSegmentId(),
+                context.getTotalSegments(),
+                context.getGpSessionId(),
+                context.getGpCommandCount());
 
-        return filterFragments(fragments, context);
+        int numberOfFragments = filteredFragments.size();
+        long elapsedMillis = Duration.between(startTime, Instant.now()).toMillis();
+
+        LOG.debug("Segment {} returns {}/{} fragment{} for path {} in {} ms for {} [profile {} filter is{} available]",
+                context.getSegmentId(), numberOfFragments, fragments.size(), numberOfFragments == 1 ? "" : "s",
+                context.getDataSource(), elapsedMillis, context.getId(), context.getProfile(), context.hasFilter() ? "" : " not");
+
+        return filteredFragments;
     }
 
     /**
@@ -130,26 +133,20 @@ public class FragmenterService {
      * as a randomizer, as it is different for every query, while being the
      * same across all segments for a given query.
      *
-     * @param fragments the list of fragments
-     * @param context   the request context
+     * @param fragments      the list of fragments
+     * @param segmentId      the identifier for the segment processing the request
+     * @param totalSegments  the total number of segments
+     * @param gpSessionId    the Greenplum session ID
+     * @param gpCommandCount the command number for this Greenplum Session ID
      * @return the filtered list of fragments for the given segment
      */
-    private List<Fragment> filterFragments(List<Fragment> fragments, RequestContext context) {
-
-        if (context.getGpSessionId() == null || context.getGpCommandCount() == null) {
-            throw new PxfRuntimeException("Using an incompatible PXF extension with this server.",
-                    "Please make sure the correct PXF extension is installed on your Greenplum cluster");
-        }
-
-        int gpSessionId = context.getGpSessionId();
-        int gpCommandCount = context.getGpCommandCount();
-        int totalSegments = context.getTotalSegments();
+    private List<Fragment> filterFragments(List<Fragment> fragments, int segmentId, int totalSegments, int gpSessionId, int gpCommandCount) {
         int shift = gpSessionId % totalSegments;
         int fragmentCount = fragments.size();
 
         List<Fragment> filteredFragments = new ArrayList<>((int) Math.ceil(fragmentCount / totalSegments));
         for (int i = 0; i < fragmentCount; i++) {
-            if (context.getSegmentId() == ((i + shift + gpCommandCount) % totalSegments)) {
+            if (segmentId == ((i + shift + gpCommandCount) % totalSegments)) {
                 filteredFragments.add(fragments.get(i));
             }
         }
@@ -185,24 +182,6 @@ public class FragmenterService {
                 context.getFilterString());
     }
 
-    private void logFragmentStatistics(Level level, RequestContext context, List<Fragment> fragments) {
-
-        int numberOfFragments = fragments.size();
-        String session = context.getUser() + ":" + context.getTransactionId() + ":" + context.getSegmentId() + ":" + context.getServerName();
-
-        long elapsedMillis = System.currentTimeMillis() - startTime;
-
-        if (level == Level.INFO) {
-            LOG.info("{} returns {} fragment{} for path {} in {} ms for {} [profile {} filter is{} available]",
-                    context.getFragmenter(), numberOfFragments, numberOfFragments == 1 ? "" : "s",
-                    context.getDataSource(), elapsedMillis, session, context.getProfile(), context.hasFilter() ? "" : " not");
-        } else if (level == Level.DEBUG) {
-            LOG.debug("{} returns {} fragment{} for path {} in {} ms for {} [profile {} filter is{} available]",
-                    context.getFragmenter(), numberOfFragments, numberOfFragments == 1 ? "" : "s",
-                    context.getDataSource(), elapsedMillis, session, context.getProfile(), context.hasFilter() ? "" : " not");
-        }
-    }
-
     /**
      * Updates the fragments' indexes so that it is incremented by sourceName.
      * (E.g.: {"a", 0}, {"a", 1}, {"b", 0} ... )
@@ -210,9 +189,8 @@ public class FragmenterService {
      * @param fragments fragments to be updated
      */
     private void updateFragmentIndex(List<Fragment> fragments) {
-
-        String sourceName = null;
         int index = 0;
+        String sourceName = null;
         for (Fragment fragment : fragments) {
 
             String currentSourceName = fragment.getSourceName();

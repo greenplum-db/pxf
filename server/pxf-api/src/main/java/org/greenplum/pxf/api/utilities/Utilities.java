@@ -24,6 +24,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.SecurityUtil;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.greenplum.pxf.api.StatsAccessor;
+import org.greenplum.pxf.api.model.ProtocolHandler;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -332,5 +333,29 @@ public class Utilities {
         }
 
         return (end > start) ? uri.substring(start, end) : null;
+    }
+
+    /**
+     * If the {@code handlerClassName} is provided, initialize it and update
+     * the fragmenter, accessor and resolver to the context with the
+     * protocol provided plugins.
+     *
+     * @param context          the request context
+     * @param handlerClassName the class name of the handler
+     */
+    public static void updatePlugins(RequestContext context, String handlerClassName) {
+        if (StringUtils.isBlank(handlerClassName)) return;
+
+        Class<?> clazz;
+        try {
+            clazz = Class.forName(handlerClassName);
+            ProtocolHandler handler = (ProtocolHandler) clazz.getDeclaredConstructor().newInstance();
+            context.setFragmenter(handler.getFragmenterClassName(context));
+            context.setAccessor(handler.getAccessorClassName(context));
+            context.setResolver(handler.getResolverClassName(context));
+        } catch (ClassNotFoundException | NoSuchMethodException | InvocationTargetException |
+                InstantiationException | IllegalAccessException e) {
+            throw new RuntimeException(String.format("Error when invoking handlerClass '%s' : %s", handlerClassName, e), e);
+        }
     }
 }

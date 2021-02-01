@@ -7,6 +7,7 @@ import org.greenplum.pxf.api.model.ProtocolHandler;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.EnumAggregationType;
+import org.greenplum.pxf.api.utilities.Utilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -137,16 +138,8 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
             }
         }
 
-        String gpSessionId = params.removeOptionalProperty("SESSION-ID");
-        if (StringUtils.isNotBlank(gpSessionId)) {
-            context.setGpSessionId(Integer.parseInt(gpSessionId));
-        }
-
-        String gpCommandCount = params.removeOptionalProperty("COMMAND-COUNT");
-        if (StringUtils.isNotBlank(gpCommandCount)) {
-            context.setGpCommandCount(Integer.parseInt(gpCommandCount));
-        }
-
+        context.setGpSessionId(params.removeIntProperty("SESSION-ID"));
+        context.setGpCommandCount(params.removeIntProperty("COMMAND-COUNT"));
         context.setUser(params.removeProperty("USER"));
 
         // Store alignment for global use as a system property
@@ -200,20 +193,14 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
         // Call the protocol handler for any protocol-specific logic handling
         if (StringUtils.isNotBlank(profile)) {
             String handlerClassName = pluginConf.getHandler(profile);
-            if (StringUtils.isNotBlank(handlerClassName)) {
-                Class<?> clazz;
-                try {
-                    clazz = Class.forName(handlerClassName);
-                    ProtocolHandler handler = (ProtocolHandler) clazz.getDeclaredConstructor().newInstance();
-                    context.setFragmenter(handler.getFragmenterClassName(context));
-                    context.setAccessor(handler.getAccessorClassName(context));
-                    context.setResolver(handler.getResolverClassName(context));
-                } catch (ClassNotFoundException | NoSuchMethodException | InvocationTargetException |
-                        InstantiationException | IllegalAccessException e) {
-                    throw new RuntimeException(String.format("Error when invoking handlerClass '%s' : %s", handlerClassName, e), e);
-                }
-            }
+            Utilities.updatePlugins(context, handlerClassName);
         }
+
+        context.setId(String.format("%s:%s:%s:%s",
+                context.getUser(),
+                context.getTransactionId(),
+                context.getSegmentId(),
+                context.getServerName()));
 
         // validate that the result has all required fields, and values are in valid ranges
         context.validate();

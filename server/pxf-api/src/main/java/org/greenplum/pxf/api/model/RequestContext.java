@@ -69,6 +69,12 @@ public class RequestContext {
     // ----- NAMED PROPERTIES -----
 
     /**
+     * A unique identifier for the RequestContext. The identifier is a
+     * combination of the user:transactionId:segmentId:serverName
+     */
+    private String id;
+
+    /**
      * The fully-qualified class name for the java class that was defined as
      * Accessor.
      */
@@ -133,12 +139,12 @@ public class RequestContext {
     /**
      * The Greenplum command count
      */
-    private Integer gpCommandCount;
+    private int gpCommandCount;
 
     /**
      * The Greenplum session ID
      */
-    private Integer gpSessionId;
+    private int gpSessionId;
 
     /**
      * The server name providing the service.
@@ -516,7 +522,7 @@ public class RequestContext {
         }
 
         if (requestType == RequestType.READ_BRIDGE) {
-            // fragmenter is required for fragmentation call only (PXF write
+            // fragmenter is required for PXF read call only (PXF write
             // does not require a fragmenter)
             ensureNotNull("FRAGMENTER", fragmenter);
         }

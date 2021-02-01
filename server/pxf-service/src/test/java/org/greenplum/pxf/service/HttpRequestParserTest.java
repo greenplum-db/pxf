@@ -79,6 +79,8 @@ public class HttpRequestParserTest {
         parameters.add("X-GP-USER", "alex");
         parameters.add("X-GP-OPTIONS-SERVER", "custom_server");
         parameters.add("X-GP-XID", "transaction:id");
+        parameters.add("X-GP-SESSION-ID", "0");
+        parameters.add("X-GP-COMMAND-COUNT", "0");
 
         parser = new HttpRequestParser(mockPluginConf);
     }
@@ -616,7 +618,7 @@ public class HttpRequestParserTest {
         assertEquals("Property RESOLVER has no value in the current request", e.getMessage());
     }
 
-    static class TestHandler implements ProtocolHandler {
+    public static class TestHandler implements ProtocolHandler {
 
         @Override
         public String getFragmenterClassName(RequestContext context) {

@@ -139,6 +139,12 @@ pxfprotocol_import(PG_FUNCTION_ARGS)
 		EXTPROTOCOL_SET_USER_CTX(fcinfo, context);
 		gpbridge_import_start(context);
 	}
+	/* sometimes an additional call can be executed even when we completed reading data from the stream */
+	if (context->completed)
+	{
+		PG_RETURN_INT32(0);
+	}
+
 	/* Read data */
 	int			bytes_read = gpbridge_read(context, EXTPROTOCOL_GET_DATABUF(fcinfo), EXTPROTOCOL_GET_DATALEN(fcinfo));
 
@@ -180,6 +186,7 @@ create_context(PG_FUNCTION_ARGS, bool is_import)
 	context->filterstr = filterstr;
 	context->proj_info = proj_info;
 	context->quals     = filter_quals;
+	context->completed = false;
 	return context;
 }
 

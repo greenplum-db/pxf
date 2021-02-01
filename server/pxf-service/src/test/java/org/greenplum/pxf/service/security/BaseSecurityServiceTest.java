@@ -75,14 +75,14 @@ public class BaseSecurityServiceTest {
     @Test
     public void determineRemoteUser_IsLoginUser_NoKerberos_NoImpersonation_NoServiceUser() throws Exception {
         expectScenario("login-user", false, false, false);
-        service.doAs(context, false, EMPTY_ACTION);
+        service.doAs(context, EMPTY_ACTION);
         verifyScenario("login-user", false, false);
     }
 
     @Test
     public void determineRemoteUser_IsServiceUser_NoKerberos_NoImpersonation_ServiceUser() throws Exception {
         expectScenario("login-user", false, false, true);
-        service.doAs(context, false, EMPTY_ACTION);
+        service.doAs(context, EMPTY_ACTION);
         // you would expect to find "service-user" here, and SecureLogin would set it as such
         // but our mocking logic is simple and always returns "login-user"
         // we are proving that we do not over-ride whatever SecureLogin returns in this case
@@ -92,60 +92,51 @@ public class BaseSecurityServiceTest {
     @Test
     public void determineRemoteUser_IsGpdbUser_NoKerberos_Impersonation_NoServiceUser() throws Exception {
         expectScenario("gpdb-user", false, true, false);
-        service.doAs(context, false, EMPTY_ACTION);
+        service.doAs(context, EMPTY_ACTION);
         verifyScenario("gpdb-user", false, true);
     }
 
     @Test
     public void determineRemoteUser_IsGpdbUser_NoKerberos_Impersonation_ServiceUser() throws Exception {
         expectScenario("gpdb-user", false, true, true);
-        service.doAs(context, false, EMPTY_ACTION);
+        service.doAs(context, EMPTY_ACTION);
         verifyScenario("gpdb-user", false, true);
     }
 
     @Test
     public void determineRemoteUser_IsLoginUser_Kerberos_NoImpersonation_NoServiceUser() throws Exception {
         expectScenario("login-user", true, false, false);
-        service.doAs(context, false, EMPTY_ACTION);
+        service.doAs(context, EMPTY_ACTION);
         verifyScenario("login-user", true, false);
     }
 
     @Test
     public void determineRemoteUser_IsServiceUser_Kerberos_NoImpersonation_ServiceUser() throws Exception {
         expectScenario("service-user", true, false, true);
-        service.doAs(context, false, EMPTY_ACTION);
+        service.doAs(context, EMPTY_ACTION);
         verifyScenario("service-user", true, false);
     }
 
     @Test
     public void determineRemoteUser_IsGpdbUser_Kerberos_Impersonation_NoServiceUser() throws Exception {
         expectScenario("gpdb-user", true, true, false);
-        service.doAs(context, false, EMPTY_ACTION);
+        service.doAs(context, EMPTY_ACTION);
         verifyScenario("gpdb-user", true, true);
     }
 
     @Test
     public void determineRemoteUser_IsGpdbUser_Kerberos_Impersonation_ServiceUser() throws Exception {
         expectScenario("gpdb-user", true, true, true);
-        service.doAs(context, false, EMPTY_ACTION);
+        service.doAs(context, EMPTY_ACTION);
         verifyScenario("gpdb-user", true, true);
     }
 
     /* ----------- methods that test cleaning UGI cache ----------- */
 
     @Test
-    public void doesNotCleanTheUGICacheOnNonLastCalls() throws Exception {
-        expectScenario("login-user", false, false, false);
-        service.doAs(context, false, EMPTY_ACTION);
-        verifyScenario("login-user", false, false);
-        verify(mockUGIProvider, never()).destroy(any(UserGroupInformation.class));
-
-    }
-
-    @Test
     public void tellsTheUGICacheToCleanItselfOnTheLastCallForASegment() throws Exception {
         expectScenario("login-user", false, false, false);
-        service.doAs(context, true, EMPTY_ACTION);
+        service.doAs(context, EMPTY_ACTION);
         verifyScenario("login-user", false, false);
         verify(mockUGIProvider).destroy(any(UserGroupInformation.class));
     }
@@ -156,7 +147,7 @@ public class BaseSecurityServiceTest {
         expectScenario("login-user", false, false, false);
         doThrow(UndeclaredThrowableException.class).when(mockProxyUGI).doAs(any(PrivilegedExceptionAction.class));
         assertThrows(IOException.class,
-                () -> service.doAs(context, false, EMPTY_ACTION));
+                () -> service.doAs(context, EMPTY_ACTION));
         verifyScenario("login-user", false, false);
         verify(mockUGIProvider).destroy(any(UserGroupInformation.class));
     }
@@ -167,7 +158,7 @@ public class BaseSecurityServiceTest {
         expectScenario("login-user", false, false, false);
         doThrow(InterruptedException.class).when(mockProxyUGI).doAs(any(PrivilegedExceptionAction.class));
         assertThrows(IOException.class,
-                () -> service.doAs(context, false, EMPTY_ACTION));
+                () -> service.doAs(context, EMPTY_ACTION));
         verifyScenario("login-user", false, false);
         verify(mockUGIProvider).destroy(any(UserGroupInformation.class));
     }

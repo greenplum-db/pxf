@@ -42,6 +42,7 @@ typedef struct
 	char           *filterstr;
 	ProjectionInfo *proj_info;
 	List           *quals;
+	bool           completed;
 } gphadoop_context;
 
 /*

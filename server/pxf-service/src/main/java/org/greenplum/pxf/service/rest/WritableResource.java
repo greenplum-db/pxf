@@ -115,11 +115,11 @@ public class WritableResource extends BaseResource {
                                          HttpServletRequest request) throws Exception {
 
         RequestContext context = parseRequest(headers);
-        Bridge bridge = securityService.doAs(context, false,
-                () -> bridgeFactory.getBridge(context));
         InputStream inputStream = request.getInputStream();
 
         PrivilegedExceptionAction<Long> action = () -> {
+            Bridge bridge = bridgeFactory.getBridge(context);
+
             // Open the output file
             bridge.beginIteration();
             long totalWritten = 0;
@@ -160,7 +160,7 @@ public class WritableResource extends BaseResource {
             return totalWritten;
         };
 
-        Long totalWritten = securityService.doAs(context, true, action);
+        Long totalWritten = securityService.doAs(context, action);
         String censuredPath = Utilities.maskNonPrintables(context.getDataSource());
         String returnMsg = String.format("wrote %d bulks to %s", totalWritten, censuredPath);
         LOG.debug(returnMsg);

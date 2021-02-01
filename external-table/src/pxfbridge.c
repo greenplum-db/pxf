@@ -99,9 +99,13 @@ gpbridge_read(gphadoop_context *context, char *databuf, int datalen)
 
 	if (n == 0)
 	{
+		context->completed = true;
 		/* check if the connection terminated with an error */
 		churl_read_check_connectivity(context->churl_handle);
 	}
+
+	elog(DEBUG5, "pxf gpbridge_read: segment %d read %zu bytes from %s",
+		 GpIdentity.segindex, n, context->gphd_uri->data);
 
 	return (int) n;
 }
