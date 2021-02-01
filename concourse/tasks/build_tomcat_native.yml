@@ -1,0 +1,15 @@
+---
+platform: linux
+
+image_resource:
+  type: registry-image
+
+inputs:
+  - name: pxf_src
+  - name: tomcat_native
+
+outputs:
+  - name: dist_native
+
+run:
+  path: pxf_src/concourse/scripts/build_tomcat_native.bash
