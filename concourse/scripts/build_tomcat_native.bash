@@ -33,7 +33,7 @@ cd tomcat_native
 # Extract the tarball
 tar xzf tomcat-native-*.tar.gz
 
-cd cd tomcat-native-*/native
+cd tomcat-native-*/native
 
 # Configure
 ./configure
