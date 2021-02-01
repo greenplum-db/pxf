@@ -2,6 +2,8 @@
 
 set -eox pipefail
 
+BUILD=${PWD}
+
 # Apache Tomcat Native Library requires:
 # 1. OpenSSL version 1.0.2 or higher
 # 2. APR version 1.4.0 or higher
@@ -24,10 +26,14 @@ fi
 
 # Sources JAVA_HOME
 source ~/.pxfrc
-
 echo "JAVA_HOME=$JAVA_HOME"
 
-cd tomcat_native/native
+cd tomcat_native
+
+# Extract the tarball
+tar xzf tomcat-native-*.tar.gz
+
+cd cd tomcat-native-*/native
 
 # Configure
 ./configure
@@ -36,4 +42,4 @@ cd tomcat_native/native
 make
 
 # Copy the so file to the dist_native directory
-cp ./.libs/libtcnative-1.so ../../dist_native/
+cp ./.libs/libtcnative-1.so "${BUILD}/dist_native/"
