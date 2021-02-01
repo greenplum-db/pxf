@@ -114,7 +114,6 @@ function warnRemovedProperties() {
 
 # Properties migrated to pxf-application.properties
 [[ -n $PXF_MAX_THREADS ]] && addToProperties "PXF_MAX_THREADS" "pxf.max.threads"
-[[ -n $PXF_FRAGMENTER_CACHE ]] && addToProperties "PXF_FRAGMENTER_CACHE" "pxf.metadata-cache-enabled"
 
 # Properties migrated to pxf-site.xml of the default server
 [[ -n $PXF_KEYTAB ]] && addToDefaultPxfSite 'PXF_KEYTAB' 'pxf.service.kerberos.keytab' '${pxf.conf}/keytabs/pxf.service.keytab'

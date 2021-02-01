@@ -67,7 +67,7 @@ public class BridgeResponse implements StreamingResponseBody {
                 if (StringUtils.isNotBlank(profile) &&
                         !StringUtils.equalsIgnoreCase(profile, context.getProfile())) {
 
-                    LOG.debug("Using profile: {}", profile);
+                    LOG.debug("Fragment {} of resource {} using profile: {}", fragment.getIndex(), dataDir, profile);
 
                     // Remember the value of the original profile defined in
                     // the table LOCATION, so we can restore it later to its

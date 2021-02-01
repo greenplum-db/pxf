@@ -19,7 +19,6 @@ class PxfServerPropertiesTest {
     @Test
     public void testDefaults() {
         assertThat(this.properties.getBase()).isNull();
-        assertThat(this.properties.isMetadataCacheEnabled()).isEqualTo(true);
         assertThat(this.properties.getTomcat()).isNotNull();
         assertThat(this.properties.getTomcat().getMaxHeaderCount()).isEqualTo(30000);
     }
@@ -28,15 +27,6 @@ class PxfServerPropertiesTest {
     public void testPxfConfBinding() {
         bind("pxf.base", "/path/to/pxf/conf");
         assertThat(this.properties.getBase()).isEqualTo("/path/to/pxf/conf");
-    }
-
-    @Test
-    public void testMetadataCacheEnabledBinding() {
-        bind("pxf.metadata-cache-enabled", "false");
-        assertThat(this.properties.isMetadataCacheEnabled()).isEqualTo(false);
-
-        bind("pxf.metadata-cache-enabled", "true");
-        assertThat(this.properties.isMetadataCacheEnabled()).isEqualTo(true);
     }
 
     @Test
