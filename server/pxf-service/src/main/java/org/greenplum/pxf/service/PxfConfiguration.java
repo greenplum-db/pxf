@@ -1,5 +1,7 @@
 package org.greenplum.pxf.service;
 
+import org.apache.catalina.LifecycleListener;
+import org.apache.catalina.core.AprLifecycleListener;
 import org.greenplum.pxf.api.configuration.PxfServerProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,6 +11,8 @@ import org.springframework.boot.autoconfigure.task.TaskExecutionProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.task.TaskExecutorBuilder;
 import org.springframework.boot.task.TaskExecutorCustomizer;
+import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
+import org.springframework.boot.web.servlet.server.ServletWebServerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.AsyncTaskExecutor;
@@ -99,5 +103,16 @@ public class PxfConfiguration implements WebMvcConfigurer {
                 shutdown.getAwaitTerminationPeriod());
 
         return builder.build(PxfThreadPoolTaskExecutor.class);
+    }
+
+    @Bean
+    public ServletWebServerFactory servletContainer(PxfServerProperties properties) {
+        TomcatServletWebServerFactory container = new TomcatServletWebServerFactory();
+        if (!properties.isAprDisabled()) {
+            LifecycleListener aprLifecycle = new AprLifecycleListener();
+            container.setProtocol("org.apache.coyote.http11.Http11AprProtocol");
+            container.addContextLifecycleListeners(aprLifecycle);
+        }
+        return container;
     }
 }

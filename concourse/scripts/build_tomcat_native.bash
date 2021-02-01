@@ -28,7 +28,7 @@ fi
 source ~/.pxfrc
 echo "JAVA_HOME=$JAVA_HOME"
 
-cd tomcat_native
+cd tomcat-native
 
 # Extract the tarball
 tar xzf tomcat-native-*.tar.gz

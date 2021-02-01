@@ -40,6 +40,15 @@ class PxfServerPropertiesTest {
     }
 
     @Test
+    public void testAprDisabledBinding() {
+        bind("pxf.apr-disabled", "false");
+        assertThat(this.properties.isAprDisabled()).isEqualTo(false);
+
+        bind("pxf.apr-disabled", "true");
+        assertThat(this.properties.isAprDisabled()).isEqualTo(true);
+    }
+
+    @Test
     public void testTomcatMaxHeaderCountBinding() {
         bind("pxf.tomcat.max-header-count", "50");
         assertThat(this.properties.getTomcat().getMaxHeaderCount()).isEqualTo(50);
