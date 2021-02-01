@@ -13,7 +13,7 @@ Enabling more verbose service- or client-level logging for PXF may aid troublesh
 
 ## <a id="pxfsvclogmsg"></a>Configuring Service-Level Logging
 
-PXF utilizes `log4j2` for service-level logging. PXF service-related log messages are captured in a log file specified by the PXF `log4j2` properties file, `$PXF_BASE/conf/pxf-log4j2.xml`. The default PXF logging configuration writes `warn` or `error` and more severe level log messages to `$PXF_BASE/logs/pxf-service.log`.
+PXF utilizes Apache Log4j 2 for service-level logging. PXF service-related log messages are captured in a log file specified by the PXF Log4j 2 configuration file, `$PXF_BASE/conf/pxf-log4j2.xml`. The default PXF logging configuration writes `warn`, `error`, and more severe level log messages to `$PXF_BASE/logs/pxf-service.log`.
 
 PXF provides more detailed logging when the `debug` log level is enabled.
 
