@@ -132,7 +132,7 @@ resources:
     versioned_file: singlecluster/HDP3/singlecluster-HDP3.tar.gz
 {% endif %}
 
-- name: tomcat_native
+- name: tomcat-native
   type: gcs
   icon: google-drive
   source:
@@ -351,7 +351,7 @@ jobs:
       resource: gpdb[[gp_ver]]_rhel6_rpm_latest-0
     - get: gpdb[[gp_ver]]-pxf-dev-centos6-image
     - get: pxf-build-dependencies
-    - get: tomcat_native
+    - get: tomcat-native
   - task: Build Tomcat Native on RHEL6
     image: gpdb[[gp_ver]]-pxf-dev-centos6-image
     file: pxf_src/concourse/tasks/build_tomcat_native.yml
@@ -410,7 +410,7 @@ jobs:
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
     - get: pxf-build-dependencies
-    - get: tomcat_native
+    - get: tomcat-native
   - task: Build Tomcat Native on RHEL7
     image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     file: pxf_src/concourse/tasks/build_tomcat_native.yml
@@ -506,7 +506,7 @@ jobs:
       resource: gpdb[[gp_ver]]_ubuntu18_deb_latest-0
     - get: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image
     - get: pxf-build-dependencies
-    - get: tomcat_native
+    - get: tomcat-native
   - task: Build Tomcat Native on Ubuntu18
     image: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image
     file: pxf_src/concourse/tasks/build_tomcat_native.yml
