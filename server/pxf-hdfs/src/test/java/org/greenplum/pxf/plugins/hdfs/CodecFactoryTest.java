@@ -46,4 +46,34 @@ public class CodecFactoryTest {
         assertNotNull(codec);
         assertEquals(".gz", codec.getDefaultExtension());
     }
+
+    @Test
+    public void getCodecGzipShortName() {
+        Configuration conf = new Configuration();
+        String name = "gzip";
+
+        CompressionCodec codec = factory.getCodec(name, conf);
+        assertNotNull(codec);
+        assertEquals(".gz", codec.getDefaultExtension());
+    }
+
+    @Test
+    public void getCodeDefaultShortName() {
+        Configuration conf = new Configuration();
+        String name = "default";
+
+        CompressionCodec codec = factory.getCodec(name, conf);
+        assertNotNull(codec);
+        assertEquals(".deflate", codec.getDefaultExtension());
+    }
+
+    @Test
+    public void getCodeSnappyShortName() {
+        Configuration conf = new Configuration();
+        String name = "snappy";
+
+        CompressionCodec codec = factory.getCodec(name, conf);
+        assertNotNull(codec);
+        assertEquals(".snappy", codec.getDefaultExtension());
+    }
 }

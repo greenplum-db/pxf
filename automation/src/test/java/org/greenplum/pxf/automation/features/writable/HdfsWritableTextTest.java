@@ -28,7 +28,7 @@ import static java.lang.Thread.sleep;
  */
 public class HdfsWritableTextTest extends BaseWritableFeature {
 
-    private static final String COMPRESSION_CODEC = "org.apache.hadoop.io.compress.DefaultCodec";
+    private static final String COMPRESSION_CODEC = "default";
     private Table dataTable;
     private String[] gpdbTableFields;
     private String hdfsWorkingDataDir;
