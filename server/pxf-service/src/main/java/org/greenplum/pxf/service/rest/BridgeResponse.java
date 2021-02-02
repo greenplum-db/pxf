@@ -94,6 +94,8 @@ public class BridgeResponse implements StreamingResponseBody {
                 fragments.set(i, null);
 
                 if (restoreOriginalValues) {
+                    // Restore the original values so that the next
+                    // fragment will use the default profile settings
                     context.setProfile(originalProfile);
                     context.setFragmenter(originalFragmenter);
                     context.setAccessor(originalAccessor);
