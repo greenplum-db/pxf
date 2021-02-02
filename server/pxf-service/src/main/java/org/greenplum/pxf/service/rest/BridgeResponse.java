@@ -5,7 +5,6 @@ import org.apache.catalina.connector.ClientAbortException;
 import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.api.io.Writable;
 import org.greenplum.pxf.api.model.Fragment;
-import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.PluginConf;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.Utilities;
@@ -60,11 +59,9 @@ public class BridgeResponse implements StreamingResponseBody {
         boolean restoreOriginalValues;
 
         String originalProfile = context.getProfile();
-        String originalFragmenter = context.getFragmenter();
         String originalAccessor = context.getAccessor();
         String originalResolver = context.getResolver();
         String originalProfileScheme = context.getProfileScheme();
-        OutputFormat originalOutputFormat = context.getOutputFormat();
 
         List<Fragment> fragments = fragmenterService.getFragmentsForSegment(context);
 
@@ -79,7 +76,7 @@ public class BridgeResponse implements StreamingResponseBody {
                         !StringUtils.equalsIgnoreCase(profile, context.getProfile())) {
                     restoreOriginalValues = true;
                     LOG.debug("Fragment {} of resource {} using profile: {}", fragment.getIndex(), dataDir, profile);
-                    updateProfile(context, profile, originalOutputFormat);
+                    updateProfile(context, profile);
                 }
                 context.setDataSource(fragment.getSourceName());
                 context.setFragmentIndex(fragment.getIndex());
@@ -97,10 +94,8 @@ public class BridgeResponse implements StreamingResponseBody {
                     // Restore the original values so that the next
                     // fragment will use the default profile settings
                     context.setProfile(originalProfile);
-                    context.setFragmenter(originalFragmenter);
                     context.setAccessor(originalAccessor);
                     context.setResolver(originalResolver);
-                    context.setOutputFormat(originalOutputFormat);
                     context.setProfileScheme(originalProfileScheme);
                 }
             }
@@ -156,16 +151,12 @@ public class BridgeResponse implements StreamingResponseBody {
         return recordCount;
     }
 
-    private void updateProfile(RequestContext context, String profile, OutputFormat originalOutputFormat) {
+    private void updateProfile(RequestContext context, String profile) {
         context.setProfile(profile);
         PluginConf pluginConf = context.getPluginConf();
         Map<String, String> pluginMap = pluginConf.getPlugins(profile);
-        context.setFragmenter(pluginMap.get("FRAGMENTER"));
         context.setAccessor(pluginMap.get("ACCESSOR"));
         context.setResolver(pluginMap.get("RESOLVER"));
-        context.setOutputFormat(pluginMap.containsKey("OUTPUTFORMAT")
-                ? OutputFormat.getOutputFormat(pluginMap.get("OUTPUTFORMAT"))
-                : originalOutputFormat);
 
         String handlerClassName = pluginConf.getHandler(profile);
         Utilities.updatePlugins(context, handlerClassName);

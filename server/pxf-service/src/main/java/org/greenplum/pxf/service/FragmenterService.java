@@ -58,7 +58,7 @@ public class FragmenterService {
         this.pluginFactory = pluginFactory;
     }
 
-    public List<Fragment> getFragmentsForSegment(RequestContext context) throws IOException {
+    public List<Fragment> getFragmentsForSegment(RequestContext context) throws RuntimeException {
 
         LOG.trace("{} Received FRAGMENTER call", context.getId());
         Instant startTime = Instant.now();
@@ -95,12 +95,12 @@ public class FragmenterService {
                         return fragmentList;
                     });
         } catch (UncheckedExecutionException | ExecutionException e) {
-            IOException exception;
+            RuntimeException exception;
             // Unwrap the error
             if (e.getCause() != null) {
-                exception = e.getCause() instanceof IOException ? (IOException) e.getCause() : new IOException(e.getCause());
+                exception = e.getCause() instanceof RuntimeException ? (RuntimeException) e.getCause() : new RuntimeException(e.getCause());
             } else {
-                exception = new IOException(e);
+                exception = e instanceof RuntimeException ? (RuntimeException) e : new RuntimeException(e);
             }
             throw exception;
         }
