@@ -35,6 +35,14 @@ resources:
     json_key: ((pxf-storage-service-account-key))
     versioned_file: singlecluster/HDP2/singlecluster-HDP2.tar.gz
 
+- name: tomcat-native
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: data-gpdb-ud-pxf-build-resources
+    json_key: ((pxf-storage-service-account-key))
+    regexp: tomcat-native/tomcat-native-(.*)-src.tar.gz
+
 ## ---------- Github Repos ----------
 - name: pxf_src
   type: pull-request
@@ -141,6 +149,10 @@ jobs:
     - get: pxf-build-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
+    - get: tomcat-native
+  - task: Build Tomcat Native on RHEL7
+    image: gpdb[[gp_ver]]-pxf-dev-centos7-image
+    file: pxf_src/concourse/tasks/build_tomcat_native.yml
   - task: Build PXF-GP[[gp_ver]] on RHEL7
     image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     file: pxf_src/concourse/tasks/build.yml
@@ -200,6 +212,10 @@ jobs:
     - get: pxf-build-dependencies
     - get: singlecluster
       resource: singlecluster-hdp2
+    - get: tomcat-native
+  - task: Build Tomcat Native on Ubuntu18
+    image: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image
+    file: pxf_src/concourse/tasks/build_tomcat_native.yml
   - task: Build PXF-GP[[gp_ver]] on Ubuntu18
     image: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image
     file: pxf_src/concourse/tasks/build.yml

@@ -143,6 +143,14 @@ resources:
     json_key: ((pxf-storage-service-account-key))
     versioned_file: singlecluster/HDP2/singlecluster-HDP2.tar.gz
 
+- name: tomcat-native
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: data-gpdb-ud-pxf-build-resources
+    json_key: ((pxf-storage-service-account-key))
+    regexp: tomcat-native/tomcat-native-(.*)-src.tar.gz
+
 - name: terraform
   type: terraform
   icon: terraform
@@ -189,6 +197,10 @@ jobs:
     - get: gpdb_package
       resource: gpdb6_rhel7
     - get: pxf-build-dependencies
+    - get: tomcat-native
+  - task: Build Tomcat Native on RHEL7
+    image: gpdb[[gp_ver]]-pxf-dev-centos7-image
+    file: pxf_src/concourse/tasks/build_tomcat_native.yml
   - task: Build PXF-GP6 on RHEL7
     image: gpdb6-pxf-dev-centos7-image
     file: pxf_src/concourse/tasks/build.yml
