@@ -45,7 +45,7 @@ export PXF_BASE=${PXF_BASE:=$PXF_HOME}
 [[ -f ${PXF_BASE}/conf/pxf-env.sh ]] && source "${PXF_BASE}/conf/pxf-env.sh"
 
 # Path to HDFS native libraries
-export LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}${PXF_BASE}/lib/native:/usr/lib/hadoop/lib/native
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}${PXF_HOME}/application/native:${PXF_BASE}/lib/native:/usr/lib/hadoop/lib/native
 
 # Path to JAVA
 export JAVA_HOME=${JAVA_HOME:=/usr/java/default}
