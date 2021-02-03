@@ -14,17 +14,17 @@ GPHOME=/usr/local/greenplum-db-${GPDB_VERSION}
 function install_gpdb() {
     local pkg_file
     if command -v rpm; then
-	    pkg_file=$(find "${GPDB_PKG_DIR}" -name "greenplum-db-${GPDB_VERSION}-rhel*-x86_64.rpm")
-	    echo "Installing RPM ${pkg_file}..."
-	    rpm --quiet -ivh "${pkg_file}" >/dev/null
+        pkg_file=$(find "${GPDB_PKG_DIR}" -name "greenplum-db-${GPDB_VERSION}-rhel*-x86_64.rpm")
+        echo "Installing RPM ${pkg_file}..."
+        rpm --quiet -ivh "${pkg_file}" >/dev/null
     elif command -v apt-get; then
-	    # apt-get wants a full path
-	    pkg_file=$(find "${PWD}/${GPDB_PKG_DIR}" -name "greenplum-db-${GPDB_VERSION}-ubuntu18.04-amd64.deb")
-	    echo "Installing DEB ${pkg_file}..."
-	    apt-get install -qq "${pkg_file}" >/dev/null
+        # apt-get wants a full path
+        pkg_file=$(find "${PWD}/${GPDB_PKG_DIR}" -name "greenplum-db-${GPDB_VERSION}-ubuntu18.04-amd64.deb")
+        echo "Installing DEB ${pkg_file}..."
+        apt-get install -qq "${pkg_file}" >/dev/null
     else
-	    echo "Unsupported operating system ${TARGET_OS}. Exiting..."
-	    exit 1
+        echo "Unsupported operating system ${TARGET_OS}. Exiting..."
+        exit 1
     fi
 }
 
