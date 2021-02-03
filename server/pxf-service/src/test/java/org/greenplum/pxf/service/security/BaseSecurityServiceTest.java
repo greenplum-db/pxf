@@ -37,7 +37,6 @@ import java.security.PrivilegedExceptionAction;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -131,10 +130,10 @@ public class BaseSecurityServiceTest {
         verifyScenario("gpdb-user", true, true);
     }
 
-    /* ----------- methods that test cleaning UGI cache ----------- */
+    /* ----------- methods that test destroying UGI ----------- */
 
     @Test
-    public void tellsTheUGICacheToCleanItselfOnTheLastCallForASegment() throws Exception {
+    public void testDestroyUGI() throws Exception {
         expectScenario("login-user", false, false, false);
         service.doAs(context, EMPTY_ACTION);
         verifyScenario("login-user", false, false);
@@ -143,7 +142,7 @@ public class BaseSecurityServiceTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    public void cleansUGICacheWhenTheFilterExecutionThrowsAnUndeclaredThrowableException() throws Exception {
+    public void destroysUGIWhenTheFilterExecutionThrowsAnUndeclaredThrowableException() throws Exception {
         expectScenario("login-user", false, false, false);
         doThrow(UndeclaredThrowableException.class).when(mockProxyUGI).doAs(any(PrivilegedExceptionAction.class));
         assertThrows(IOException.class,
@@ -154,7 +153,7 @@ public class BaseSecurityServiceTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    public void cleansUGICacheWhenTheFilterExecutionThrowsAnInterruptedException() throws Exception {
+    public void destroysUGIWhenTheFilterExecutionThrowsAnInterruptedException() throws Exception {
         expectScenario("login-user", false, false, false);
         doThrow(InterruptedException.class).when(mockProxyUGI).doAs(any(PrivilegedExceptionAction.class));
         assertThrows(IOException.class,
@@ -179,7 +178,7 @@ public class BaseSecurityServiceTest {
         when(mockSecureLogin.getLoginUser("server", "config", configuration)).thenReturn(mockLoginUGI);
 
         if (impersonation) {
-            when(mockUGIProvider.createProxyUGI(user, mockLoginUGI)).thenReturn(mockProxyUGI);
+            when(mockUGIProvider.createProxyUser(user, mockLoginUGI)).thenReturn(mockProxyUGI);
         } else {
             when(mockUGIProvider.createRemoteUser(user, mockLoginUGI, kerberos)).thenReturn(mockProxyUGI);
         }
@@ -187,7 +186,7 @@ public class BaseSecurityServiceTest {
 
     private void verifyScenario(String user, boolean kerberos, boolean impersonation) throws Exception {
         if (impersonation) {
-            verify(mockUGIProvider).createProxyUGI(user, mockLoginUGI);
+            verify(mockUGIProvider).createProxyUser(user, mockLoginUGI);
         } else {
             verify(mockUGIProvider).createRemoteUser(user, mockLoginUGI, kerberos);
         }

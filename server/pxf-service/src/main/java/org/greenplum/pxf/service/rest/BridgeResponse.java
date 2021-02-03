@@ -75,7 +75,7 @@ public class BridgeResponse implements StreamingResponseBody {
                 if (StringUtils.isNotBlank(profile) &&
                         !StringUtils.equalsIgnoreCase(profile, context.getProfile())) {
                     restoreOriginalValues = true;
-                    LOG.debug("Fragment {} of resource {} using profile: {}", fragment.getIndex(), dataDir, profile);
+                    LOG.debug("{} Fragment {} of resource {} using profile: {}", context.getId(), fragment.getIndex(), dataDir, profile);
                     updateProfile(context, profile);
                 }
                 context.setDataSource(fragment.getSourceName());
@@ -100,14 +100,18 @@ public class BridgeResponse implements StreamingResponseBody {
                 }
             }
 
-            long durationMs = Duration.between(startTime, Instant.now()).toMillis();
-            double rate = durationMs == 0 ? 0 : (1000.0 * recordCount / durationMs);
-            LOG.info("{} completed streaming {} tuple{} in {}ms. {} tuples/sec",
-                    context.getId(),
-                    recordCount,
-                    recordCount == 1 ? "" : "s",
-                    durationMs,
-                    String.format("%.2f", rate));
+            if (recordCount > 0) {
+                long durationMs = Duration.between(startTime, Instant.now()).toMillis();
+                double rate = durationMs == 0 ? 0 : (1000.0 * recordCount / durationMs);
+                LOG.info("{} completed streaming {} tuple{} in {}ms. {} tuples/sec",
+                        context.getId(),
+                        recordCount,
+                        recordCount == 1 ? "" : "s",
+                        durationMs,
+                        String.format("%.2f", rate));
+            } else {
+                LOG.info("{} completed", context.getId());
+            }
 
         } catch (ClientAbortException e) {
             // Occurs whenever client (GPDB) decides to end the connection
@@ -134,18 +138,18 @@ public class BridgeResponse implements StreamingResponseBody {
         try {
             if (!bridge.beginIteration()) return 0;
 
-            LOG.debug("Starting streaming fragment {} of resource {}", fragment.getIndex(), dataDir);
+            LOG.debug("{} Starting streaming fragment {} of resource {}", context.getId(), fragment.getIndex(), dataDir);
             while ((record = bridge.getNext()) != null) {
                 record.write(dos);
                 ++recordCount;
             }
-            LOG.debug("Finished streaming fragment {} of resource {}, {} records.", fragment.getIndex(), dataDir, recordCount);
+            LOG.debug("{} Finished streaming fragment {} of resource {}, {} records.", context.getId(), fragment.getIndex(), dataDir, recordCount);
         } finally {
-            LOG.debug("Stopped streaming fragment {} of resource {}, {} records.", fragment.getIndex(), dataDir, recordCount);
+            LOG.debug("{} Stopped streaming fragment {} of resource {}, {} records.", context.getId(), fragment.getIndex(), dataDir, recordCount);
             try {
                 bridge.endIteration();
             } catch (Exception e) {
-                LOG.warn("Ignoring error encountered during bridge.endIteration()", e);
+                LOG.warn("{} Ignoring error encountered during bridge.endIteration()", context.getId(), e);
             }
         }
         return recordCount;

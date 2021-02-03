@@ -46,7 +46,7 @@ import java.util.concurrent.ExecutionException;
 @Component
 public class FragmenterService {
 
-    private final Logger LOG = LoggerFactory.getLogger(this.getClass());
+    private static final Logger LOG = LoggerFactory.getLogger(FragmenterService.class);
 
     private final BasePluginFactory pluginFactory;
 
@@ -58,12 +58,11 @@ public class FragmenterService {
         this.pluginFactory = pluginFactory;
     }
 
-    public List<Fragment> getFragmentsForSegment(RequestContext context) throws RuntimeException {
+    public List<Fragment> getFragmentsForSegment(RequestContext context) throws IOException, RuntimeException {
 
         LOG.trace("{} Received FRAGMENTER call", context.getId());
         Instant startTime = Instant.now();
         final String path = context.getDataSource();
-        final String fragmenterCacheKey = getFragmenterCacheKey(context);
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("fragmentCache size={}, stats={}",
@@ -76,33 +75,11 @@ public class FragmenterService {
         List<Fragment> fragments;
 
         try {
-            fragments = fragmenterCacheFactory.getCache()
-                    .get(fragmenterCacheKey, () -> {
-                        LOG.debug("Caching fragments for transactionId={} from segmentId={} with key={}",
-                                context.getTransactionId(), context.getSegmentId(), fragmenterCacheKey);
-                        List<Fragment> fragmentList = getFragmenter(context).getFragments();
-
-                        /* Create a fragmenter instance with API level parameters */
-                        fragmentList = AnalyzeUtils.getSampleFragments(fragmentList, context);
-                        updateFragmentIndex(fragmentList);
-
-                        int numberOfFragments = fragmentList.size();
-                        long elapsedMillis = Duration.between(startTime, Instant.now()).toMillis();
-                        LOG.info("{} returns {} fragment{} for path {} in {} ms for {} [profile {} filter is{} available]",
-                                context.getFragmenter(), numberOfFragments, numberOfFragments == 1 ? "" : "s",
-                                context.getDataSource(), elapsedMillis, context.getId(), context.getProfile(), context.hasFilter() ? "" : " not");
-
-                        return fragmentList;
-                    });
-        } catch (UncheckedExecutionException | ExecutionException e) {
-            RuntimeException exception;
-            // Unwrap the error
-            if (e.getCause() != null) {
-                exception = e.getCause() instanceof RuntimeException ? (RuntimeException) e.getCause() : new RuntimeException(e.getCause());
-            } else {
-                exception = e instanceof RuntimeException ? (RuntimeException) e : new RuntimeException(e);
-            }
-            throw exception;
+            fragments = getFragmentsFromCache(context, startTime);
+        } catch (RuntimeException | IOException e) {
+            throw e;
+        } catch (Throwable e) {
+            throw new IOException(e);
         }
 
         List<Fragment> filteredFragments = filterFragments(fragments,
@@ -111,14 +88,58 @@ public class FragmenterService {
                 context.getGpSessionId(),
                 context.getGpCommandCount());
 
-        int numberOfFragments = filteredFragments.size();
-        long elapsedMillis = Duration.between(startTime, Instant.now()).toMillis();
+        if (LOG.isDebugEnabled()) {
+            int numberOfFragments = filteredFragments.size();
+            long elapsedMillis = Duration.between(startTime, Instant.now()).toMillis();
 
-        LOG.debug("Segment {} returns {}/{} fragment{} for path {} in {} ms for {} [profile {} filter is{} available]",
-                context.getSegmentId(), numberOfFragments, fragments.size(), numberOfFragments == 1 ? "" : "s",
-                context.getDataSource(), elapsedMillis, context.getId(), context.getProfile(), context.hasFilter() ? "" : " not");
+            LOG.debug("{} returns {}/{} fragment{} for path {} in {} ms for {} [profile {} predicate is{} available]",
+                    context.getId(), numberOfFragments, fragments.size(), numberOfFragments == 1 ? "" : "s",
+                    context.getDataSource(), elapsedMillis, context.getId(), context.getProfile(), context.hasFilter() ? "" : " not");
+        }
 
         return filteredFragments;
+    }
+
+    /**
+     * Returns the list of fragments from the fragmenter cache. If the cache is
+     * empty, it populates the cache with the list of fragments. When
+     * concurrent requests are made to the cache with the same key, the first
+     * request will populate the cache, while the other requests will wait
+     * until the cache entry is populated.
+     *
+     * @param context   the request context
+     * @param startTime the start time of the request
+     * @return the list of fragments for the request
+     * @throws Throwable when an exception occurs
+     */
+    private List<Fragment> getFragmentsFromCache(RequestContext context, Instant startTime) throws Throwable {
+        final String fragmenterCacheKey = getFragmenterCacheKey(context);
+        try {
+            return fragmenterCacheFactory.getCache()
+                    .get(fragmenterCacheKey, () -> {
+                        LOG.debug("{} caching fragments from segmentId={} with key={}",
+                                context.getId(), context.getSegmentId(), fragmenterCacheKey);
+                        List<Fragment> fragmentList = getFragmenter(context).getFragments();
+
+                        /* Create a fragmenter instance with API level parameters */
+                        fragmentList = AnalyzeUtils.getSampleFragments(fragmentList, context);
+                        updateFragmentIndex(fragmentList);
+
+                        int numberOfFragments = fragmentList.size();
+                        long elapsedMillis = Duration.between(startTime, Instant.now()).toMillis();
+                        LOG.info("{} returns {} fragment{} for path {} in {} ms [fragmenter {} profile {} predicate is{} available]",
+                                context.getId(), numberOfFragments, numberOfFragments == 1 ? "" : "s",
+                                context.getDataSource(), elapsedMillis, context.getFragmenter(),
+                                context.getProfile(), context.hasFilter() ? "" : " not");
+
+                        return fragmentList;
+                    });
+        } catch (UncheckedExecutionException | ExecutionException e) {
+            // Unwrap the error
+            if (e.getCause() != null)
+                throw e.getCause();
+            throw e;
+        }
     }
 
     /**

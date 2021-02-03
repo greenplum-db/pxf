@@ -80,7 +80,7 @@ public class BaseSecurityService implements SecurityService {
             // Retrieve proxy user UGI from the UGI of the logged in user
             if (isUserImpersonation) {
                 LOG.debug("{} Creating proxy user = {}", contextId, remoteUser);
-                userGroupInformation = ugiProvider.createProxyUGI(remoteUser, loginUser);
+                userGroupInformation = ugiProvider.createProxyUser(remoteUser, loginUser);
             } else {
                 LOG.debug("{} Creating remote user = {}", contextId, remoteUser);
                 userGroupInformation = ugiProvider.createRemoteUser(remoteUser, loginUser, isSecurityEnabled);
@@ -99,7 +99,6 @@ public class BaseSecurityService implements SecurityService {
             exceptionDetected = true;
             throw new IOException(ie);
         } finally {
-            // Optimization to cleanup the cache if it is the last fragment
             LOG.debug("{} Releasing UGI resources. {}",
                     contextId, exceptionDetected ? " Exception while processing" : "");
             try {

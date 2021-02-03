@@ -40,7 +40,7 @@ class UGIProvider {
      * @param loginUser     the UGI of the login user (or Kerberos principal)
      * @return a {@link UserGroupInformation} for impersonation.
      */
-    UserGroupInformation createProxyUGI(String effectiveUser, UserGroupInformation loginUser) {
+    UserGroupInformation createProxyUser(String effectiveUser, UserGroupInformation loginUser) {
         return UserGroupInformation.createProxyUser(effectiveUser, loginUser);
     }
 
@@ -54,7 +54,7 @@ class UGIProvider {
      */
     UserGroupInformation createRemoteUser(String user, UserGroupInformation loginUser, boolean isSecurityEnabled) throws IOException {
         if (isSecurityEnabled) {
-            UserGroupInformation proxyUGI = createProxyUGI(user, loginUser);
+            UserGroupInformation proxyUGI = createProxyUser(user, loginUser);
             proxyUGI.setAuthenticationMethod(UserGroupInformation.AuthenticationMethod.KERBEROS);
             return proxyUGI;
         }

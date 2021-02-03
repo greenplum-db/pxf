@@ -117,54 +117,55 @@ public class WritableResource extends BaseResource {
         RequestContext context = parseRequest(headers);
         InputStream inputStream = request.getInputStream();
 
-        PrivilegedExceptionAction<Long> action = () -> {
-            Bridge bridge = bridgeFactory.getBridge(context);
-
-            // Open the output file
-            bridge.beginIteration();
-            long totalWritten = 0;
-            Exception ex = null;
-
-            // dataStream will close automatically in the end of the try.
-            // inputStream is closed by dataStream.close().
-            try (DataInputStream dataStream = new DataInputStream(inputStream)) {
-                while (bridge.setNext(dataStream)) {
-                    ++totalWritten;
-                }
-            } catch (ClientAbortException cae) {
-                // Occurs whenever client (GPDB) decides to end the connection
-                if (LOG.isDebugEnabled()) {
-                    // Stacktrace in debug
-                    LOG.warn(String.format("Remote connection closed by GPDB (segment %s)", context.getSegmentId()), cae);
-                } else {
-                    LOG.warn("Remote connection closed by GPDB (segment {}) (Enable debug for stacktrace)", context.getSegmentId());
-                }
-                ex = cae;
-                // Re-throw the exception so Spring MVC is aware that an IO error has occurred
-                throw cae;
-            } catch (Exception e) {
-                LOG.error(String.format("Exception: totalWritten so far %d to %s", totalWritten, context.getDataSource()), e);
-                ex = e;
-                throw ex;
-            } finally {
-                try {
-                    bridge.endIteration();
-                } catch (Exception e) {
-                    ex = (ex == null) ? e : ex;
-                }
-            }
-
-            // Report any errors we might have encountered
-            if (ex != null) throw ex;
-
-            return totalWritten;
-        };
-
+        PrivilegedExceptionAction<Long> action = () -> readStream(context, inputStream);
         Long totalWritten = securityService.doAs(context, action);
         String censuredPath = Utilities.maskNonPrintables(context.getDataSource());
         String returnMsg = String.format("wrote %d bulks to %s", totalWritten, censuredPath);
         LOG.debug(returnMsg);
 
         return new ResponseEntity<>(returnMsg, HttpStatus.OK);
+    }
+
+    private Long readStream(RequestContext context, InputStream inputStream) throws Exception {
+        Bridge bridge = bridgeFactory.getBridge(context);
+
+        // Open the output file
+        bridge.beginIteration();
+        long totalWritten = 0;
+        Exception ex = null;
+
+        // dataStream will close automatically in the end of the try.
+        // inputStream is closed by dataStream.close().
+        try (DataInputStream dataStream = new DataInputStream(inputStream)) {
+            while (bridge.setNext(dataStream)) {
+                ++totalWritten;
+            }
+        } catch (ClientAbortException cae) {
+            // Occurs whenever client (GPDB) decides to end the connection
+            if (LOG.isDebugEnabled()) {
+                // Stacktrace in debug
+                LOG.warn(String.format("Remote connection closed by GPDB (segment %s)", context.getSegmentId()), cae);
+            } else {
+                LOG.warn("Remote connection closed by GPDB (segment {}) (Enable debug for stacktrace)", context.getSegmentId());
+            }
+            ex = cae;
+            // Re-throw the exception so Spring MVC is aware that an IO error has occurred
+            throw cae;
+        } catch (Exception e) {
+            LOG.error(String.format("Exception: totalWritten so far %d to %s", totalWritten, context.getDataSource()), e);
+            ex = e;
+            throw ex;
+        } finally {
+            try {
+                bridge.endIteration();
+            } catch (Exception e) {
+                ex = (ex == null) ? e : ex;
+            }
+        }
+
+        // Report any errors we might have encountered
+        if (ex != null) throw ex;
+
+        return totalWritten;
     }
 }
