@@ -16,19 +16,6 @@ directory. The `cloudbuild.yaml` file produces the following docker images:
 
 ## Greenplum 5 Images
 
-### Docker gpdb5-centos6-test-pxf-image image
-
-Build this image for Greenplum 5 running on CentOS 6. Run the following
-command to build the image:
-
-    pushd ~/workspace/pxf/concourse/docker/pxf-dev-base/
-    docker build \
-      --build-arg=BASE_IMAGE=pivotaldata/centos-gpdb-dev:6-gcc6.2-llvm3.7 \
-      --tag=gpdb5-centos6-test-pxf \
-      -f ~/workspace/pxf/concourse/docker/pxf-dev-base/gpdb5/centos6/Dockerfile \
-      .
-    popd
-
 ### Docker gpdb5-centos7-test-pxf-image image
 
 Build this image for Greenplum 5 running on CentOS 7. Run the following

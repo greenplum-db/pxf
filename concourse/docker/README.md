@@ -28,12 +28,6 @@ changes to `pxf-build-base` and is also in charge of tagging the images as
     <td>Greenplum 7</td>
   </tr>
   <tr>
-    <td>CentOS6</td>
-    <td> <a href="https://console.cloud.google.com/gcr/images/${GCR_PROJECT_ID}/GLOBAL/gpdb-pxf-dev/gpdb5-centos6-test-pxf">gpdb5-centos6-test-pxf</a> </td>
-    <td> N/A </td>
-    <td> N/A </td>
-  </tr>
-  <tr>
     <td>CentOS7</td>
     <td> <a href="https://console.cloud.google.com/gcr/images/${GCR_PROJECT_ID}/GLOBAL/gpdb-pxf-dev/gpdb5-centos7-test-pxf">gpdb5-centos7-test-pxf</a> </td>
     <td> <a href="https://console.cloud.google.com/gcr/images/${GCR_PROJECT_ID}/GLOBAL/gpdb-pxf-dev/gpdb6-centos7-test-pxf">gpdb6-centos7-test-pxf</a> </td>

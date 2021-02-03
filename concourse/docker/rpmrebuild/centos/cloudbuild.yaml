@@ -3,18 +3,6 @@
 
 steps:
 
-# Builds the rpmrebuild-centos6 image
-- name: 'gcr.io/cloud-builders/docker'
-  id: rpmrebuild-centos6-image
-  args:
-    - 'build'
-    - '--build-arg=BASE_IMAGE=centos:6'
-    - '--tag=gcr.io/$PROJECT_ID/rpmrebuild-centos6:latest'
-    - '-f'
-    - 'concourse/docker/rpmrebuild/centos/Dockerfile'
-    - 'concourse/docker/rpmrebuild/centos'
-  waitFor: ['-']
-
 # Builds the rpmrebuild-centos7 image
 - name: 'gcr.io/cloud-builders/docker'
   id: rpmrebuild-centos7-image
@@ -29,6 +17,5 @@ steps:
 
 # Push images from Cloud Build to Container Registry
 images:
-  - 'gcr.io/$PROJECT_ID/rpmrebuild-centos6:latest'
   - 'gcr.io/$PROJECT_ID/rpmrebuild-centos7:latest'
 

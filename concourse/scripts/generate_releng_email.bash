@@ -19,7 +19,6 @@ function fail() {
 version=$(<pxf_shipit_file/version)
 
 # compute artifact URLs
-pxf_gp5_el6_releng_url="${RELENG_GP5_DROP_URL}/pxf-gp5-${version}-2.el6.x86_64.rpm"
 pxf_gp5_el7_releng_url="${RELENG_GP5_DROP_URL}/pxf-gp5-${version}-2.el7.x86_64.rpm"
 pxf_gp6_el7_releng_url="${RELENG_GP6_DROP_URL}/pxf-gp6-${version}-2.el7.x86_64.rpm"
 pxf_gp6_ubuntu18_releng_url="${RELENG_GP6_DROP_URL}/pxf-gp6-${version}-2-ubuntu18.04-amd64.deb"
@@ -44,7 +43,6 @@ The new PXF release ${version} is ready to be published to VMware Tanzu Network.
 We have uploaded PXF release artifacts to the following RelEng locations:
 
 ${pxf_gp5_tarball_releng_url}
-${pxf_gp5_el6_releng_url}
 ${pxf_gp5_el7_releng_url}
 ${pxf_gp6_tarball_releng_url}
 ${pxf_gp6_el7_releng_url}

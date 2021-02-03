@@ -9,9 +9,6 @@ groups:
 - name: All
   jobs:
   - Testing Gate for PXF-GP
-{% set gp_ver = 5 %}
-  - Build PXF-GP[[gp_ver]] on RHEL6
-  - Test PXF-GP[[gp_ver]]-HDP2 on RHEL6
 {% set gp_ver = None %}
 {% for gp_ver in range(5, 8) %}
   - Build PXF-GP[[gp_ver]] on RHEL7
@@ -21,9 +18,6 @@ groups:
 {% set gp_ver = 6 %}
   - Test PXF-GP[[gp_ver]]-HDP2 on Ubuntu18
   - Build PXF-GP[[gp_ver]] on Ubuntu18
-{% set gp_ver = None %}
-{% set gp_ver = 5 %}
-  - Test PXF-GP[[gp_ver]] Backward Compatibility on RHEL6
 {% set gp_ver = None %}
 {% for gp_ver in range(5, 7) %}
   - Test PXF-GP[[gp_ver]] Backward Compatibility on RHEL7
@@ -49,11 +43,6 @@ groups:
   - Promote PXF-GP5 and PXF-GP6 Artifacts
   - Publish_PXF-GP5_and_PXF-GP6_Artifacts_to_GP-RelEng
 
-{% set gp_ver = 5 %}
-- name: GP[[gp_ver]] on RHEL6
-  jobs:
-  - Build PXF-GP[[gp_ver]] on RHEL6
-  - Test PXF-GP[[gp_ver]]-HDP2 on RHEL6
 {% set gp_ver = None %}
 {% for gp_ver in range(5, 8) %}
 - name: GP[[gp_ver]] on RHEL7
@@ -91,8 +80,6 @@ groups:
 {% set gp_ver = None %}
 - name: Backwards Compatibility
   jobs:
-{% set gp_ver = 5 %}
-  - Test PXF-GP[[gp_ver]] Backward Compatibility on RHEL6
 {% set gp_ver = None %}
 {% for gp_ver in range(5, 7) %}
   - Test PXF-GP[[gp_ver]] Backward Compatibility on RHEL7
@@ -261,13 +248,6 @@ resources:
     uri: ((ccp-git-remote))
 
 ## ---------- RelEng Drop Artifacts ----------
-- name: pxf_gp5_rhel6_release_to_releng
-  type: gcs
-  source:
-    bucket: ((pxf-releng-gp5-drop-bucket))
-    json_key: ((concourse-gcs-resources-service-account-key))
-    regexp: ((pxf-releng-gp5-drop-path))/pxf-gp5-(.*)-2.el6.x86_64.rpm
-
 - name: pxf_gp5_rhel7_release_to_releng
   type: gcs
   source:
@@ -340,15 +320,6 @@ resources:
 {% endif %}
 
 ## ---------- Docker Images ----------
-{% set gp_ver = 5 %}
-- name: gpdb[[gp_ver]]-pxf-dev-centos6-image
-  type: registry-image
-  icon: docker
-  source:
-    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-centos6-test-pxf
-    tag: latest
-    username: _json_key
-    password: ((pxf-cloudbuild-service-account-key))
 {% set gp_ver = None %}
 
 {% for gp_ver in range(5, 8) %}
@@ -391,15 +362,6 @@ resources:
     password: ((pxf-cloudbuild-service-account-key))
 {% set gp_ver = None %}
 
-- name: rpmrebuild-centos6-image
-  type: registry-image
-  icon: docker
-  source:
-    repository: gcr.io/data-gpdb-ud/rpmrebuild-centos6
-    tag: latest
-    username: _json_key
-    password: ((pxf-cloudbuild-service-account-key))
-
 - name: rpmrebuild-centos7-image
   type: registry-image
   icon: docker
@@ -433,14 +395,6 @@ resources:
 ## ---------- Product Packages ----------
 {% set gp_ver = 5 %}
 {% for i in range(num_gpdb5_versions) %}
-- name: gpdb[[gp_ver]]_rhel6_rpm_latest-[[i]]
-  type: gcs
-  icon: google-drive
-  source:
-    bucket: data-gpdb-ud-pivnet-artifacts
-    json_key: ((pxf-storage-service-account-key))
-    regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-(.*)-rhel6-x86_64.rpm
-
 - name: gpdb[[gp_ver]]_rhel7_rpm_latest-[[i]]
   type: gcs
   icon: google-drive
@@ -489,14 +443,6 @@ resources:
     regexp: ((pxf-releng-gp6-drop-path))/pxf-gp6-5.(.*)-2.el7.x86_64.rpm
 
 ## ---------- PXF Build Artifacts ----------
-{% set gp_ver = 5 %}
-- name: pxf_gp[[gp_ver]]_tarball_rhel6
-  type: gcs
-  icon: google-drive
-  source:
-    bucket: data-gpdb-ud-pxf-build
-    json_key: ((pxf-storage-service-account-key))
-    versioned_file: ((pxf-build-bucket-prefix))/snapshots/pxf-gp[[gp_ver]].el6.tar.gz
 {% set gp_ver = None %}
 
 {% for gp_ver in range(5, 8) %}
@@ -540,59 +486,6 @@ resources:
 ## JOBS
 ## ======================================================================
 jobs:
-
-## ---------- Centos 6 Swimlane ----------
-{% set gp_ver = 5 %}
-- name: Build PXF-GP[[gp_ver]] on RHEL6
-  plan:
-  - in_parallel:
-    - get: pxf_src
-      trigger: true
-    - get: gpdb_package
-      resource: gpdb[[gp_ver]]_rhel6_rpm_latest-0
-    - get: gpdb[[gp_ver]]-pxf-dev-centos6-image
-    - get: pxf-build-dependencies
-  - task: Build PXF on RHEL6
-    image: gpdb[[gp_ver]]-pxf-dev-centos6-image
-    file: pxf_src/concourse/tasks/build.yml
-    params:
-      LICENSE: ((pxf-rpm-license))
-      TARGET_OS: rhel6
-      VENDOR: ((pxf-rpm-vendor))
-  - put: pxf_gp[[gp_ver]]_tarball_rhel6
-    params:
-      file: dist/pxf-gp[[gp_ver]]-*.el6.tar.gz
-
-- name: Test PXF-GP[[gp_ver]]-HDP2 on RHEL6
-  plan:
-  - in_parallel:
-    - get: pxf_src
-      passed: [Build PXF-GP[[gp_ver]] on RHEL6]
-      trigger: true
-    - get: pxf_tarball
-      resource: pxf_gp[[gp_ver]]_tarball_rhel6
-      passed: [Build PXF-GP[[gp_ver]] on RHEL6]
-    - get: gpdb_package
-      resource: gpdb[[gp_ver]]_rhel6_rpm_latest-0
-      passed: [Build PXF-GP[[gp_ver]] on RHEL6]
-    - get: gpdb[[gp_ver]]-pxf-dev-centos6-image
-      passed: [Build PXF-GP[[gp_ver]] on RHEL6]
-    - get: pxf-automation-dependencies
-    - get: singlecluster
-      resource: singlecluster-hdp2
-  - task: Test PXF-GP[[gp_ver]]-HDP2 on RHEL6
-    file: pxf_src/concourse/tasks/test.yml
-    image: gpdb[[gp_ver]]-pxf-dev-centos6-image
-    params:
-      ACCESS_KEY_ID: ((tf-machine-access-key-id))
-      GP_VER: [[gp_ver]]
-      GROUP: gpdb,proxy,profile
-      PXF_BASE_DIR: /home/gpadmin/pxf
-      SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-      TARGET_OS: centos
-      TARGET_OS_VERSION: 6
-{% set gp_ver = None %}
-
 ## ---------- Centos 7 Swimlane ----------
 {% for gp_ver in range(5, 8) %}
 - name: Build PXF-GP[[gp_ver]] on RHEL7
@@ -736,8 +629,6 @@ jobs:
     - get: pxf_src
       trigger: true
       passed:
-{% set gp_ver = 5 %}
-      - Test PXF-GP[[gp_ver]]-HDP2 on RHEL6
 {% for gp_ver in range(5, 7) %}
       - Test PXF-GP[[gp_ver]]-HDP2 on RHEL7
 {% endfor %}
@@ -748,19 +639,12 @@ jobs:
 {% set gp_ver = 6 %}
     - get: pxf_gp[[gp_ver]]_tarball_ubuntu18
       passed: [Test PXF-GP[[gp_ver]]-HDP2 on Ubuntu18]
-{% set gp_ver = 5 %}
-    - get: pxf_gp[[gp_ver]]_tarball_rhel6
-      passed:
-      - Test PXF-GP[[gp_ver]]-HDP2 on RHEL6
     - get: pxf_gp5_tarball_rhel7
       passed: [Test PXF-GP5-HDP2 on RHEL7]
     - get: pxf_gp6_tarball_rhel7
       passed:
       - Test PXF-GP6-HDP2 on RHEL7
       - Test PXF-GP6-HDP2 on OEL7
-{% set gp_ver = 5 %}
-    - get: gpdb[[gp_ver]]_rhel6_rpm_latest-0
-      passed: [Test PXF-GP[[gp_ver]]-HDP2 on RHEL6]
 {% set gp_ver = 6 %}
     - get: gpdb[[gp_ver]]_ubuntu18_deb_latest-0
       passed: [Test PXF-GP[[gp_ver]]-HDP2 on Ubuntu18]
@@ -1468,9 +1352,6 @@ jobs:
       - Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-NO-IMPERS on RHEL7
       trigger: true
 {% set gp_ver = 5 %}
-    - get: pxf_gp[[gp_ver]]_tarball_rhel6
-      passed:
-      - Testing Gate for PXF-GP
     - get: pxf_gp[[gp_ver]]_tarball_rhel7
       passed:
       - Testing Gate for PXF-GP
@@ -1495,49 +1376,6 @@ jobs:
       - Test PXF-GP[[gp_ver]]-HDP2-SECURE-MULTI-NO-IMPERS on RHEL7
 
 ## ---------- Compatibility Testing ----------
-{% set gp_ver = 5 %}
-- name: Test PXF-GP[[gp_ver]] Backward Compatibility on RHEL6
-  plan:
-  - in_parallel:
-    - get: pxf_src
-      passed: [Compatibility Gate for PXF-GP]
-      trigger: true
-    - get: pxf_tarball
-      resource: pxf_gp[[gp_ver]]_tarball_rhel6
-      passed: [Compatibility Gate for PXF-GP]
-    - get: gpdb[[gp_ver]]-pxf-dev-centos6-image
-    - get: singlecluster
-      resource: singlecluster-hdp2
-{% for i in range(1, num_gpdb5_versions) %}
-    - get: gpdb_package_latest-[[i]]
-      resource: gpdb[[gp_ver]]_rhel6_rpm_latest-[[i]]
-{% endfor %}
-  - in_parallel:
-      limit: [[max_concurrent_bc_tasks]]
-      fail_fast: false
-      steps:
-{% for i in range(1, num_gpdb5_versions) %}
-      - task: Test Against Greenplum Latest - [[i]] RHEL6
-        image: gpdb[[gp_ver]]-pxf-dev-centos6-image
-        config:
-          platform: linux
-          inputs:
-          - name: gpdb_package_latest-[[i]]
-          - name: pxf_src
-          - name: pxf_tarball
-          - name: singlecluster
-          params:
-            GPDB_PKG_DIR: gpdb_package_latest-[[i]]
-            GROUP: HdfsSmokeTest,WritableSmokeTest
-            HADOOP_CLIENT: hdp
-            IMPERSONATION: true
-            PGPORT: 5432
-            PG_REGRESS: true
-            GP_VER: [[gp_ver]]
-          run:
-            path: pxf_src/concourse/scripts/test.bash
-{% endfor %}
-
 {% for gp_ver in range(5, 7) %}
 {% set num_versions = num_gpdb5_versions %}
 {% if gp_ver == 6 %}
@@ -1637,8 +1475,6 @@ jobs:
   - in_parallel:
     - get: pxf_src
       passed:
-{% set gp_ver = 5 %}
-      - Test PXF-GP[[gp_ver]] Backward Compatibility on RHEL6
 {% for gp_ver in range(5, 7) %}
       - Test PXF-GP[[gp_ver]] Backward Compatibility on RHEL7
 {% endfor %}
@@ -1646,11 +1482,6 @@ jobs:
 {% set gp_ver = 6 %}
       - Test PXF-GP[[gp_ver]] Backward Compatibility on Ubuntu18
 {% set gp_ver = None %}
-{% set gp_ver = 5 %}
-    - get: pxf_gp[[gp_ver]]_tarball_rhel6
-      trigger: true
-      passed:
-      - Test PXF-GP[[gp_ver]] Backward Compatibility on RHEL6
 {% for gp_ver in range(5, 7) %}
     - get: pxf_gp[[gp_ver]]_tarball_rhel7
       trigger: true
@@ -1690,7 +1521,6 @@ jobs:
     - get: pxf_shipit_file
       trigger: true
     - get: google-cloud-sdk-slim-image
-    - get: rpmrebuild-centos6-image
     - get: rpmrebuild-centos7-image
     - get: gpdb6-pxf-dev-ubuntu18-image
   - task: Get PXF-GP5 and PXF-GP6 Artifacts from Releases Directory
@@ -1703,12 +1533,6 @@ jobs:
       GCS_RELEASES_PATH: ((pxf-releases-bucket-prefix))/releases
       GOOGLE_CREDENTIALS: ((pxf-storage-service-account-key))
   #  - in_parallel: does not work since all tasks modify pxf_artifacts
-  - task: Add OSL file to PXF-GP5 RPM on RHEL6
-    image: rpmrebuild-centos6-image
-    file: pxf_src/concourse/tasks/add_osl_rpm.yml
-    params:
-      GP_VER: 5
-      TARGET_OS_VERSION: 6
 {% for gp_ver in range(5, 7) %}
   - task: Add OSL file to PXF-GP[[gp_ver]] RPM on RHEL7
     image: rpmrebuild-centos7-image
@@ -1723,12 +1547,6 @@ jobs:
     params:
       GP_VER: 6
       TARGET_OS_VERSION: ubuntu18.04
-  - task: Generate PXF binary tarball from PXF-GP5 on RHEL6 RPM
-    file: pxf_src/concourse/tasks/generate_tarball_from_rpm.yml
-    image: rpmrebuild-centos6-image
-    params:
-      GP_VER: 5
-      TARGET_OS_VERSION: 6
   - task: Generate PXF binary tarball from PXF-GP6 on RHEL7 RPM
     file: pxf_src/concourse/tasks/generate_tarball_from_rpm.yml
     image: rpmrebuild-centos7-image
@@ -1750,9 +1568,6 @@ jobs:
       RELENG_OSL_DROP_URL: gs://((pxf-releng-osl-drop-bucket))/((pxf-releng-osl-drop-path))
       RELENG_ODP_DROP_URL: gs://((pxf-releng-odp-drop-bucket))/((pxf-releng-odp-drop-path))
   - in_parallel:
-    - put: pxf_gp5_rhel6_release_to_releng
-      params:
-        file: pxf_artifacts/licensed/pxf-gp5-*-2.el6.x86_64.rpm
     - put: pxf_gp5_rhel7_release_to_releng
       params:
         file: pxf_artifacts/licensed/pxf-gp5-*-2.el7.x86_64.rpm

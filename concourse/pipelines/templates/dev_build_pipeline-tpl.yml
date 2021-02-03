@@ -150,15 +150,6 @@ resources:
 {% endif %}
 
 ## ---------- Docker Images ----------
-{% set gp_ver = 5 %}
-- name: gpdb[[gp_ver]]-pxf-dev-centos6-image
-  type: registry-image
-  icon: docker
-  source:
-    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-centos6-test-pxf
-    tag: latest
-    username: _json_key
-    password: ((pxf-cloudbuild-service-account-key))
 {% set gp_ver = None %}
 
 {% for gp_ver in range(5, 8) %}
@@ -223,14 +214,6 @@ resources:
 
 ## ---------- Product Packages ----------
 {% set gp_ver = 5 %}
-- name: gpdb[[gp_ver]]_rhel6_rpm_latest-0
-  type: gcs
-  icon: google-drive
-  source:
-    bucket: data-gpdb-ud-pivnet-artifacts
-    json_key: ((pxf-storage-service-account-key))
-    regexp: latest-0_gpdb[[gp_ver]]/greenplum-db-(.*)-rhel6-x86_64.rpm
-
 - name: gpdb[[gp_ver]]_rhel7_rpm_latest-0
   type: gcs
   icon: google-drive
@@ -278,14 +261,6 @@ resources:
 {% endif %}
 
 ## ---------- PXF Build Artifacts ----------
-{% set gp_ver = 5 %}
-- name: pxf_gp[[gp_ver]]_tarball_rhel6
-  type: gcs
-  icon: google-drive
-  source:
-    bucket: data-gpdb-ud-pxf-build
-    json_key: ((pxf-storage-service-account-key))
-    versioned_file: dev/[[user]]-[[branch]]/snapshots/pxf-gp[[gp_ver]].el6.tar.gz
 {% set gp_ver = None %}
 
 {% for gp_ver in range(5, 8) %}
@@ -331,61 +306,6 @@ resources:
 ## JOBS
 ## ======================================================================
 jobs:
-
-## ---------- Centos 6 Swimlane ----------
-{% set gp_ver = 5 %}
-- name: Build PXF-GP[[gp_ver]] on RHEL6
-  plan:
-  - in_parallel:
-    - get: pxf_src
-      trigger: true
-    - get: gpdb_package
-      resource: gpdb[[gp_ver]]_rhel6_rpm_latest-0
-    - get: gpdb[[gp_ver]]-pxf-dev-centos6-image
-    - get: pxf-build-dependencies
-  - task: Build PXF on RHEL6
-    image: gpdb[[gp_ver]]-pxf-dev-centos6-image
-    file: pxf_src/concourse/tasks/build.yml
-    params:
-      LICENSE: ((pxf-rpm-license))
-      TARGET_OS: rhel6
-      VENDOR: ((pxf-rpm-vendor))
-  - put: pxf_gp[[gp_ver]]_tarball_rhel6
-    params:
-      file: dist/pxf-gp[[gp_ver]]-*.el6.tar.gz
-
-- name: Test PXF-GP[[gp_ver]]-HDP2 on RHEL6
-  plan:
-  - in_parallel:
-    - get: pxf_src
-      passed: [Build PXF-GP[[gp_ver]] on RHEL6]
-      trigger: true
-    - get: pxf_tarball
-      resource: pxf_gp[[gp_ver]]_tarball_rhel6
-      passed: [Build PXF-GP[[gp_ver]] on RHEL6]
-    - get: gpdb_package
-      resource: gpdb[[gp_ver]]_rhel6_rpm_latest-0
-      passed: [Build PXF-GP[[gp_ver]] on RHEL6]
-    - get: gpdb[[gp_ver]]-pxf-dev-centos6-image
-      passed: [Build PXF-GP[[gp_ver]] on RHEL6]
-    - get: pxf-automation-dependencies
-    - get: singlecluster
-      resource: singlecluster-hdp2
-  - task: Test PXF-GP[[gp_ver]]-HDP2 on RHEL6
-    file: pxf_src/concourse/tasks/test.yml
-    image: gpdb[[gp_ver]]-pxf-dev-centos6-image
-    params:
-      ACCESS_KEY_ID: ((tf-machine-access-key-id))
-      GP_VER: [[gp_ver]]
-      GROUP: gpdb,proxy,profile
-      PXF_BASE_DIR: /home/gpadmin/pxf
-      SECRET_ACCESS_KEY: ((tf-machine-secret-access-key))
-      TARGET_OS: centos
-      TARGET_OS_VERSION: 6
-{% if slack_notification %}
-    <<: *slack_alert
-{% endif %}
-{% set gp_ver = None %}
 
 ## ---------- Centos 7 Swimlane ----------
 {% for gp_ver in range(5, 8) %}

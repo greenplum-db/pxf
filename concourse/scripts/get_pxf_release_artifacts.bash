@@ -40,7 +40,6 @@ echo "Ship directive for PXF-${version} from : $(<pxf_shipit_file/*.txt)"
 
 # define artifacts to copy
 artifacts=(
-  "${GCS_RELEASES_PATH}/gp5/pxf-gp5-${version}-1.el6.x86_64.rpm"
   "${GCS_RELEASES_PATH}/gp5/pxf-gp5-${version}-1.el7.x86_64.rpm"
   "${GCS_RELEASES_PATH}/gp6/pxf-gp6-${version}-1.el7.x86_64.rpm"
   "${GCS_RELEASES_PATH}/gp6/pxf-gp6-${version}-1-ubuntu18.04-amd64.deb"
