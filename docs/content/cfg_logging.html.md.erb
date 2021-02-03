@@ -4,16 +4,42 @@ title: Logging
 
 PXF provides two categories of message logging: service-level and client-level.
 
-PXF manages service-level logging. The default configuration for the PXF server logs `warn` or `error` level and more severe messages to the `$PXF_BASE/logs/pxf-service.log` file.
+PXF manages service-level logging. The default configuration for the PXF server logs `warn` or `error` level and more severe messages to the `$PXF_LOGDIR/pxf-service.log` file. You can change the PXF log directory if you choose.
 
 Client-level logging is managed by the Greenplum Database client; this topic details configuring logging for a `psql` client.
 
 Enabling more verbose service- or client-level logging for PXF may aid troubleshooting efforts.
 
+## <a id="cfglogdir"></a>Configuring the Log Directory
+
+The default PXF logging configuration writes log messages to `$PXF_LOGDIR/pxf-service.log`, where the default log directory is `PXF_LOGDIR=$PXF_BASE/logs`.
+
+To change the PXF log directory, you must update the `$PXF_LOGDIR` property in the `pxf-env.sh` configuration file, synchronize the configuration change to the Greenplum Database cluster, and then restart PXF:
+
+1. Log in to your Greenplum Database master node:
+
+    ``` shell
+    $ ssh gpadmin@<gpmaster>
+    ```
+
+1. Use a text editor to uncomment the `export PXF_LOGDIR` line in `$PXF_BASE/conf/pxf-env.sh`, and replace the value with the new PXF log directory. For example:
+
+    ``` xml
+    # Path to Log directory
+    export PXF_LOGDIR="/new/log/dir"
+    ```
+
+2. Use the `pxf cluster sync` command to copy the updated `pxf-env.sh` file to all hosts in the Greenplum Database cluster:
+
+    ``` shell
+    gpadmin@gpmaster$ pxf cluster sync
+    ```
+
+3. Restart PXF on each Greenplum Database segment host as described in [Restarting PXF](cfginitstart_pxf.html#restart_pxf).
 
 ## <a id="pxfsvclogmsg"></a>Configuring Service-Level Logging
 
-PXF utilizes Apache Log4j 2 for service-level logging. PXF service-related log messages are captured in a log file specified by the PXF Log4j 2 configuration file, `$PXF_BASE/conf/pxf-log4j2.xml`. The default PXF logging configuration writes `warn`, `error`, and more severe level log messages to `$PXF_BASE/logs/pxf-service.log`.
+PXF utilizes Apache Log4j 2 for service-level logging. PXF service-related log messages are captured in a log file specified by the PXF Log4j 2 configuration file, `$PXF_BASE/conf/pxf-log4j2.xml`. The default PXF logging configuration writes `warn`, `error`, and more severe level log messages to `$PXF_LOGDIR/pxf-service.log`.
 
 PXF provides more detailed logging when the `debug` log level is enabled.
 
