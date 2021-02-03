@@ -30,9 +30,6 @@ function install_gpdb() {
 
 function compile_pxf() {
     source "${GPHOME}/greenplum_path.sh"
-    if [[ ${TARGET_OS} == "rhel6" ]]; then
-        source /opt/gcc_env.sh
-    fi
 
     case "${TARGET_OS}" in
     rhel*) MAKE_TARGET="rpm-tar" ;;

@@ -37,14 +37,6 @@ resources:
     versioned_file: pivotal-cf/pivnet-cli/pivnet
 
 {% for i in range(num_gpdb5_versions) %}
-- name: gpdb5_rhel6_rpm_latest-[[i]]
-  type: gcs
-  icon: google-drive
-  source:
-    bucket: data-gpdb-ud-pivnet-artifacts
-    json_key: ((pxf-storage-service-account-key))
-    regexp: latest-[[i]]_gpdb5/greenplum-db-(.*)-rhel6-x86_64.rpm
-
 - name: gpdb5_rhel7_rpm_latest-[[i]]
   type: gcs
   icon: google-drive
@@ -109,7 +101,6 @@ jobs:
       passed: [Download Latest PivNet CLI]
       trigger: true
 {% for i in range(num_gpdb5_versions) %}
-    - get: gpdb5_rhel6_rpm_latest-[[i]]
     - get: gpdb5_rhel7_rpm_latest-[[i]]
 {% endfor %}
 {% for i in range(num_gpdb5_versions - 1, -1, -1) %}
@@ -122,29 +113,23 @@ jobs:
       inputs:
         - name: pxf_src
         - name: pivnet_cli
-        - name: gpdb5_rhel6_rpm_latest-[[i]]
         - name: gpdb5_rhel7_rpm_latest-[[i]]
         {% if i > 0 %}
         # save a download from pivnet if not fetching latest
-        - name: gpdb5_rhel6_rpm_latest-[[i - 1]]
         - name: gpdb5_rhel7_rpm_latest-[[i - 1]]
         {% endif %}
       outputs:
-        - name: gpdb5_rhel6_rpm_latest-[[i]]
         - name: gpdb5_rhel7_rpm_latest-[[i]]
       params:
         GPDB_VERSION: 5
-        LIST_OF_DIRS: gpdb5_rhel6_rpm_latest-[[i]],gpdb5_rhel7_rpm_latest-[[i]]
-        LIST_OF_PRODUCTS: greenplum-db-GPDB_VERSION-rhel6-x86_64.rpm,greenplum-db-GPDB_VERSION-rhel7-x86_64.rpm
+        LIST_OF_DIRS: gpdb5_rhel7_rpm_latest-[[i]]
+        LIST_OF_PRODUCTS: greenplum-db-GPDB_VERSION-rhel7-x86_64.rpm
         PIVNET_API_TOKEN: ((pxf-pivnet-uaa-refresh-token))
         PIVNET_CLI_DIR: pivnet_cli
         PRODUCT_SLUG: pivotal-gpdb
         VERSIONS_BEFORE_LATEST: [[i]]
       run:
         path: pxf_src/concourse/scripts/get_product_files.bash
-  - put: gpdb5_rhel6_rpm_latest-[[i]]
-    params:
-      file: gpdb5_rhel6_rpm_latest-[[i]]/greenplum-db-5.*-rhel6-x86_64.rpm
   - put: gpdb5_rhel7_rpm_latest-[[i]]
     params:
       file: gpdb5_rhel7_rpm_latest-[[i]]/greenplum-db-5.*-rhel7-x86_64.rpm

@@ -43,15 +43,6 @@ resources:
     access_token: {{pxf-bot-access-token}}
 
 ## ---------- Docker Images ----------
-{% set gp_ver = 5 %}
-- name: gpdb[[gp_ver]]-pxf-dev-centos6-image
-  type: registry-image
-  icon: docker
-  source:
-    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb[[gp_ver]]-centos6-test-pxf
-    tag: latest
-    username: _json_key
-    password: ((pxf-cloudbuild-service-account-key))
 {% set gp_ver = None %}
 
 {% for gp_ver in range(5, 8) %}
@@ -79,14 +70,6 @@ resources:
 ## ---------- Product Packages ----------
 {% set gp_ver = 5 %}
 {% for i in range(num_gpdb5_versions) %}
-- name: gpdb[[gp_ver]]_rhel6_rpm_latest-[[i]]
-  type: gcs
-  icon: google-drive
-  source:
-    bucket: data-gpdb-ud-pivnet-artifacts
-    json_key: ((pxf-storage-service-account-key))
-    regexp: latest-[[i]]_gpdb[[gp_ver]]/greenplum-db-(.*)-rhel6-x86_64.rpm
-
 - name: gpdb[[gp_ver]]_rhel7_rpm_latest-[[i]]
   type: gcs
   icon: google-drive
@@ -131,61 +114,7 @@ resources:
 ## ======================================================================
 jobs:
 
-## ---------- Centos 6 Swimlane ----------
-{% set gp_ver = 5 %}
-- name: Build and Test PXF-GP[[gp_ver]] on RHEL6
-  public: true
-  on_failure:
-    put: pxf_src
-    params:
-      path: pxf_src
-      status: failure
-      context: Build and Test PXF-GP[[gp_ver]] on RHEL6
-  on_success:
-    put: pxf_src
-    params:
-      path: pxf_src
-      status: success
-      context: Build and Test PXF-GP[[gp_ver]] on RHEL6
-  plan:
-  - in_parallel:
-    - get: pxf_src
-      trigger: true
-    - get: gpdb_package
-      resource: gpdb[[gp_ver]]_rhel6_rpm_latest-0
-    - get: gpdb[[gp_ver]]-pxf-dev-centos6-image
-    - get: pxf-build-dependencies
-    - get: singlecluster
-      resource: singlecluster-hdp2
-  - task: Build PXF on RHEL6
-    image: gpdb[[gp_ver]]-pxf-dev-centos6-image
-    file: pxf_src/concourse/tasks/build.yml
-    params:
-      LICENSE: ((pxf-rpm-license))
-      TARGET_OS: rhel6
-      VENDOR: ((pxf-rpm-vendor))
-  - task: Test Against Greenplum Latest RHEL6
-    image: gpdb[[gp_ver]]-pxf-dev-centos6-image
-    config:
-      platform: linux
-      inputs:
-      - name: gpdb_package
-      - name: pxf_src
-      - name: dist
-      - name: singlecluster
-      params:
-        GPDB_PKG_DIR: gpdb_package
-        GP_VER: [[gp_ver]]
-        GROUP: HdfsSmokeTest,WritableSmokeTest
-        HADOOP_CLIENT: hdp
-        IMPERSONATION: true
-        PGPORT: 5432
-        PG_REGRESS: true
-        PXF_PKG_DIR: dist
-      run:
-        path: pxf_src/concourse/scripts/test.bash
 {% set gp_ver = None %}
-
 ## ---------- Centos 7 Swimlane ----------
 {% for gp_ver in range(5, 8) %}
 - name: Build and Test PXF-GP[[gp_ver]] on RHEL7

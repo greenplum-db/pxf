@@ -6,7 +6,7 @@ image_resource:
 
 inputs:
   - name: pxf_src
-  - name: tomcat_native
+  - name: tomcat-native
 
 outputs:
   - name: dist_native
