@@ -9,6 +9,7 @@ inputs:
   optional: true
 - name: pxf_src
 - name: gpdb_package
+- name: dist_native
 
 outputs:
 - name: dist

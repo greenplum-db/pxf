@@ -42,7 +42,7 @@ function compile_pxf() {
 
     bash -c "
         source ~/.pxfrc
-        VENDOR='${VENDOR}' LICENSE='${LICENSE}' make -C '${PWD}/pxf_src' ${MAKE_TARGET}
+        VENDOR='${VENDOR}' LICENSE='${LICENSE}' NATIVE_LIBRARY_PATH='${PWD}/dist_native' make -C '${PWD}/pxf_src' ${MAKE_TARGET}
     "
 }
 
