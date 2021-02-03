@@ -19,6 +19,7 @@ package org.greenplum.pxf.service;
  * under the License.
  */
 
+import com.google.common.util.concurrent.ExecutionError;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.Fragmenter;
@@ -134,7 +135,7 @@ public class FragmenterService {
 
                         return fragmentList;
                     });
-        } catch (UncheckedExecutionException | ExecutionException e) {
+        } catch (UncheckedExecutionException | ExecutionException | ExecutionError e) {
             // Unwrap the error
             if (e.getCause() != null)
                 throw e.getCause();
