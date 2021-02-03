@@ -18,6 +18,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 
+import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTH_TO_LOCAL;
+
 @Component
 public class BaseConfigurationFactory implements ConfigurationFactory {
 
@@ -107,6 +109,14 @@ public class BaseConfigurationFactory implements ConfigurationFactory {
         } catch (NoSuchMethodError e) {
             // Expected exception for MapR
         }
+
+        // Starting with Hadoop 2.10.0, the "DEFAULT" rule will throw an
+        // exception when no rules are applied while getting the principal
+        // name translation into operating system user name. See
+        // org.apache.hadoop.security.authentication.util.KerberosName#getShortName
+        // We add a default rule that will return the service name as the
+        // short name, i.e. gpadmin/_HOST@REALM will map to gpadmin
+        configuration.set(HADOOP_SECURITY_AUTH_TO_LOCAL, "RULE:[1:$1] RULE:[2:$1] DEFAULT");
 
         return configuration;
     }

@@ -80,6 +80,9 @@ public class PxfUserGroupInformation {
             // create a new Subject to use for login, so that we can remember reference to Subject in LoginSession
             Subject subject = subjectProvider.get();
 
+            // set the configuration on the HadoopKerberosName
+            HadoopKerberosName.setConfiguration(configuration);
+
             // create login context with the given subject, using Kerberos principal and keytab filename; then login
             LoginContext login = loginContextProvider.newLoginContext(HadoopConfiguration.KEYTAB_KERBEROS_CONFIG_NAME,
                     subject, new HadoopConfiguration(principal, keytabFilename));
