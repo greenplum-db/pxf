@@ -2,14 +2,14 @@
 title: Memory and Threading
 ---
 
-Because a single PXF agent (JVM) serves multiple segments on a segment host, the PXF heap size can be a limiting runtime factor. This becomes more evident under concurrent workloads or with queries against large files. You may run into situations where a query hangs or fails due to insufficient memory or the Java garbage collector impacting response times. To avert or remedy these situations, first try increasing the Java maximum heap size or decreasing the Tomcat maximum number of threads, depending upon what works best for your system configuration. You may also choose to configure PXF to perform specific actions when it detects an out of memory condition.
+Because a single PXF Service (JVM) serves multiple segments on a segment host, the PXF heap size can be a limiting runtime factor. This becomes more evident under concurrent workloads or with queries against large files. You may run into situations where a query hangs or fails due to insufficient memory or the Java garbage collector impacting response times. To avert or remedy these situations, first try increasing the Java maximum heap size or decreasing the Tomcat maximum number of threads, depending upon what works best for your system configuration. You may also choose to configure PXF to perform specific actions when it detects an out of memory condition.
 
 
 ## <a id="pxf-heapcfg"></a>Increasing the JVM Memory for PXF
 
-Each PXF agent running on a segment host is configured with a default maximum Java heap size of 2GB and an initial heap size of 1GB. If the segment hosts in your Greenplum Database cluster have an ample amount of memory, try increasing the maximum heap size to a value between 3-4GB. Set the initial and maximum heap size to the same value if possible.
+Each PXF Service running on a segment host is configured with a default maximum Java heap size of 2GB and an initial heap size of 1GB. If the segment hosts in your Greenplum Database cluster have an ample amount of memory, try increasing the maximum heap size to a value between 3-4GB. Set the initial and maximum heap size to the same value if possible.
 
-Perform the following procedure to increase the heap size for the PXF agent running on each segment host in your Greenplum Database cluster.
+Perform the following procedure to increase the heap size for the PXF Service running on each segment host in your Greenplum Database cluster.
 
 1. Log in to your Greenplum Database master node:
 
@@ -148,7 +148,7 @@ If you plan to run large workloads on a large number of files in an external Hiv
 
 **Note**: Keep in mind that an increase in the thread count correlates with an increase in memory consumption.
 
-Perform the following procedure to set the maximum number of Tomcat threads for the PXF agent running on each segment host in your Greenplum Database deployment.
+Perform the following procedure to set the maximum number of Tomcat threads for the PXF Service running on each segment host in your Greenplum Database deployment.
 
 1. Log in to your Greenplum Database master node:
 
