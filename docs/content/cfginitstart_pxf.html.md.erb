@@ -24,8 +24,8 @@ under the License.
 
 PXF provides two management commands:
 
-- `pxf cluster` - manage all PXF service instances in the Greenplum Database cluster
-- `pxf` - manage the PXF service instance on a specific Greenplum Database host
+- `pxf cluster` - manage all PXF Service instances in the Greenplum Database cluster
+- `pxf` - manage the PXF Service instance on a specific Greenplum Database host
 
 The [`pxf cluster`](ref/pxf-cluster.html) command supports `init` (deprecated), `reset` (deprecated), `register`, `prepare`, `start`, `restart`, `status`, `stop`, and `sync` subcommands. When you run a `pxf cluster` subcommand on the Greenplum Database master host, you perform the operation on all segment hosts in the Greenplum Database cluster. PXF also runs the `prepare`, `register`, and `sync` commands on the standby master host.
 
@@ -36,7 +36,7 @@ The [`pxf`](ref/pxf.html) command supports `init` (deprecated), `reset` (depreca
 
 ## <a id="start_pxf"></a>Starting PXF
 
-After configuring PXF, you must start PXF on each segment host in your Greenplum Database cluster. The PXF service, once started, runs as the `gpadmin` user on default port 5888. Only the `gpadmin` user can start and stop the PXF service.
+After configuring PXF, you must start PXF on each segment host in your Greenplum Database cluster. The PXF Service, once started, runs as the `gpadmin` user on default port 5888. Only the `gpadmin` user can start and stop the PXF Service.
 
 If you want to change the default PXF configuration, you must update the configuration before you start PXF, or restart PXF if it is already running. See [About the PXF Configuration Files](config_files.html) for information about the user-customizable PXF configuration properties and the configuration update procedure.
 
@@ -66,7 +66,7 @@ Perform the following procedure to start PXF on each segment host in your Greenp
 
 ## <a id="stop_pxf"></a>Stopping PXF
 
-If you must stop PXF, for example if you are upgrading PXF, you must stop PXF on each segment host in your Greenplum Database cluster. Only the `gpadmin` user can stop the PXF service.
+If you must stop PXF, for example if you are upgrading PXF, you must stop PXF on each segment host in your Greenplum Database cluster. Only the `gpadmin` user can stop the PXF Service.
 
 ### <a id="stop_pxf_prereq" class="no-quick-link"></a>Prerequisites
 
@@ -92,7 +92,7 @@ Perform the following procedure to stop PXF on each segment host in your Greenpl
 
 If you must restart PXF, for example if you updated PXF user configuration files in `$PXF_BASE/conf`, you run `pxf cluster restart` to stop, and then start, PXF on all segment hosts in your Greenplum Database cluster.
 
-Only the `gpadmin` user can restart the PXF service.
+Only the `gpadmin` user can restart the PXF Service.
 
 ### <a id="restart_pxf_prereq" class="no-quick-link"></a>Prerequisites
 

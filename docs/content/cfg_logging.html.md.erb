@@ -48,11 +48,11 @@ To change the PXF log directory, you must update the `$PXF_LOGDIR` property in t
 
 ## <a id="pxfsvclogmsg"></a>Configuring Service-Level Logging
 
-PXF utilizes Apache Log4j 2 for service-level logging. PXF service-related log messages are captured in a log file specified by the PXF Log4j 2 configuration file, `$PXF_BASE/conf/pxf-log4j2.xml`. The default PXF logging configuration writes `warn`, `error`, and more severe level log messages to `$PXF_LOGDIR/pxf-service.log`.
+PXF utilizes Apache Log4j 2 for service-level logging. PXF Service-related log messages are captured in a log file specified by the PXF Log4j 2 configuration file, `$PXF_BASE/conf/pxf-log4j2.xml`. The default PXF logging configuration writes `warn`, `error`, and more severe level log messages to `$PXF_LOGDIR/pxf-service.log`.
 
 PXF provides more detailed logging when the `debug` log level is enabled.
 
-**Note**: `debug` logging is quite verbose and has a performance impact.  Remember to turn off PXF service `debug` level logging after you have collected the desired information.
+**Note**: `debug` logging is quite verbose and has a performance impact.  Remember to turn off PXF Service `debug` level logging after you have collected the desired information.
 
 To configure PXF `debug` logging and examine the output:
 
@@ -99,7 +99,7 @@ To configure PXF `debug` logging and examine the output:
 
 ## <a id="pxfdblogmsg"></a>Configuring Client-Level Logging
 
-Database-level client session logging may provide insight into internal PXF service operations.
+Database-level client session logging may provide insight into internal PXF Service operations.
 
 Enable Greenplum Database client debug message logging by setting the `client_min_messages` server configuration parameter to `DEBUG2` in your `psql` session. This logging configuration writes messages to `stdout`, and will apply to all operations that you perform in the session, including operations on PXF external tables. For example:
 

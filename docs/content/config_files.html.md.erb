@@ -4,14 +4,14 @@ title: About the PXF Configuration Files
 
 `$PXF_BASE/conf` includes these user-customizable configuration files:
 
-- `pxf-application.properties` - PXF server application configuration properties
+- `pxf-application.properties` - PXF Service application configuration properties
 - `pxf-env.sh` - PXF command and JVM-specific runtime configuration properties
 - `pxf-log4j2.xml` - PXF logging configuration properties
 - `pxf-profiles.xml` - Custom PXF profile definitions
 
 ## <a id="pxfappprops"></a>pxf-application.properties
 
-The `pxf-application.properties` file exposes these PXF server application configuration properties:
+The `pxf-application.properties` file exposes these PXF Service application configuration properties:
 
 | Parameter  | Description | Default Value |
 |-----------|---------------| ------------|
@@ -22,7 +22,7 @@ The `pxf-application.properties` file exposes these PXF server application confi
 | pxf.task.pool.queue-capacity | The capacity of the core streaming thread pool queue. | 0 |
 | pxf.task.pool.max-size | The maximum allowed number of core streaming threads. | pxf.max.threads if set, or 200 |
 
-To set a new value for a PXF server application property, you may first need to uncomment the property in the `pxf-application.properties` file before you set the new value.
+To set a new value for a PXF Service application property, you may first need to uncomment the property in the `pxf-application.properties` file before you set the new value.
 
 
 ## <a id="pxfenvsh"></a>pxf-env.sh
