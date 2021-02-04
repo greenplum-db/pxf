@@ -19,7 +19,6 @@ package org.greenplum.pxf.service;
  * under the License.
  */
 
-import com.google.common.util.concurrent.ExecutionError;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.Fragmenter;
@@ -59,7 +58,7 @@ public class FragmenterService {
         this.pluginFactory = pluginFactory;
     }
 
-    public List<Fragment> getFragmentsForSegment(RequestContext context) throws IOException, RuntimeException {
+    public List<Fragment> getFragmentsForSegment(RequestContext context) throws IOException {
 
         LOG.trace("{} Received FRAGMENTER call", context.getId());
         Instant startTime = Instant.now();
@@ -73,15 +72,7 @@ public class FragmenterService {
 
         LOG.debug("{} FRAGMENTER started for path \"{}\"", context.getId(), path);
 
-        List<Fragment> fragments;
-
-        try {
-            fragments = getFragmentsFromCache(context, startTime);
-        } catch (RuntimeException | IOException e) {
-            throw e;
-        } catch (Throwable e) {
-            throw new IOException(e);
-        }
+        List<Fragment> fragments = getFragmentsFromCache(context, startTime);
 
         List<Fragment> filteredFragments = filterFragments(fragments,
                 context.getSegmentId(),
@@ -111,9 +102,9 @@ public class FragmenterService {
      * @param context   the request context
      * @param startTime the start time of the request
      * @return the list of fragments for the request
-     * @throws Throwable when an exception occurs
+     * @throws IOException when an exception occurs
      */
-    private List<Fragment> getFragmentsFromCache(RequestContext context, Instant startTime) throws Throwable {
+    private List<Fragment> getFragmentsFromCache(RequestContext context, Instant startTime) throws IOException {
         final String fragmenterCacheKey = getFragmenterCacheKey(context);
         try {
             return fragmenterCacheFactory.getCache()
@@ -135,11 +126,12 @@ public class FragmenterService {
 
                         return fragmentList;
                     });
-        } catch (UncheckedExecutionException | ExecutionException | ExecutionError e) {
+        } catch (UncheckedExecutionException | ExecutionException e) {
             // Unwrap the error
-            if (e.getCause() != null)
-                throw e.getCause();
-            throw e;
+            Exception exception = e.getCause() != null ? (Exception) e.getCause() : e;
+            if (exception instanceof IOException)
+                throw (IOException) exception;
+            throw new IOException(exception);
         }
     }
 

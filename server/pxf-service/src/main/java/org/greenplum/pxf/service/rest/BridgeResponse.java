@@ -63,9 +63,8 @@ public class BridgeResponse implements StreamingResponseBody {
         String originalResolver = context.getResolver();
         String originalProfileScheme = context.getProfileScheme();
 
-        List<Fragment> fragments = fragmenterService.getFragmentsForSegment(context);
-
         try {
+            List<Fragment> fragments = fragmenterService.getFragmentsForSegment(context);
             DataOutputStream dos = new DataOutputStream(out);
             RequestContext context = this.context;
             for (int i = 0; i < fragments.size(); i++) {
