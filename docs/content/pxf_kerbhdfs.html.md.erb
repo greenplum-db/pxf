@@ -2,7 +2,7 @@
 title: Configuring PXF for Secure HDFS
 ---
 
-When Kerberos is enabled for your HDFS filesystem, PXF, as an HDFS client, requires a principal and keytab file to authenticate access to HDFS. To read or write files on a secure HDFS, you must create and deploy Kerberos principals and keytabs for PXF, and ensure that Kerberos authentication is enabled and functioning.
+When Kerberos is enabled for your HDFS filesystem, the PXF Service, as an HDFS client, requires a principal and keytab file to authenticate access to HDFS. To read or write files on a secure HDFS, you must create and deploy Kerberos principals and keytabs for PXF, and ensure that Kerberos authentication is enabled and functioning.
 
 PXF supports simultaneous access to multiple Kerberos-secured Hadoop clusters.
 
@@ -190,9 +190,9 @@ When you configure PXF for secure HDFS using an MIT Kerberos KDC server, you wil
     root@kdc-server$ scp /etc/krb5.conf seghost:/etc/krb5.conf
     ```
 
-3.  Use the `kadmin.local` command to create a Kerberos PXF service principal for **each** Greenplum Database segment host. The service principal should be of the form `gpadmin/<seghost>@<realm>` where \<seghost\> is the DNS resolvable, fully-qualified hostname of the segment host system \(output of the `hostname -f` command\).
+3.  Use the `kadmin.local` command to create a Kerberos PXF Service principal for **each** Greenplum Database segment host. The service principal should be of the form `gpadmin/<seghost>@<realm>` where \<seghost\> is the DNS resolvable, fully-qualified hostname of the segment host system \(output of the `hostname -f` command\).
 
-    For example, these commands create PXF service principals for the hosts named host1.example.com, host2.example.com, and host3.example.com in the Kerberos realm named `EXAMPLE.COM`:
+    For example, these commands create Kerberos PXF Service principals for the hosts named host1.example.com, host2.example.com, and host3.example.com in the Kerberos realm named `EXAMPLE.COM`:
 
     ``` shell
     root@kdc-server$ kadmin.local -q "addprinc -randkey -pw changeme gpadmin/host1.example.com@EXAMPLE.COM"
@@ -200,7 +200,7 @@ When you configure PXF for secure HDFS using an MIT Kerberos KDC server, you wil
     root@kdc-server$ kadmin.local -q "addprinc -randkey -pw changeme gpadmin/host3.example.com@EXAMPLE.COM"
     ```
 
-4.  Generate a keytab file for each PXF service principal that you created in the previous step. Save the keytab files in any convenient location (this example uses the directory `/etc/security/keytabs`). You will deploy the keytab files to their respective Greenplum Database segment host machines in a later step. For example:
+4.  Generate a keytab file for each PXF Service principal that you created in the previous step. Save the keytab files in any convenient location (this example uses the directory `/etc/security/keytabs`). You will deploy the keytab files to their respective Greenplum Database segment host machines in a later step. For example:
 
     ``` shell
     root@kdc-server$ kadmin.local -q "xst -norandkey -k /etc/security/keytabs/pxf-host1.service.keytab gpadmin/host1.example.com@EXAMPLE.COM"
@@ -208,7 +208,7 @@ When you configure PXF for secure HDFS using an MIT Kerberos KDC server, you wil
     root@kdc-server$ kadmin.local -q "xst -norandkey -k /etc/security/keytabs/pxf-host3.service.keytab gpadmin/host3.example.com@EXAMPLE.COM"
     ```
 
-    Repeat the `xst` command as necessary to generate a keytab for each PXF service principal that you created in the previous step.
+    Repeat the `xst` command as necessary to generate a keytab for each PXF Service principal that you created in the previous step.
 
 5.  List the principals. For example:
 
@@ -216,7 +216,7 @@ When you configure PXF for secure HDFS using an MIT Kerberos KDC server, you wil
     root@kdc-server$ kadmin.local -q "listprincs"
     ```
 
-6.  Copy the keytab file for each PXF service principal to its respective segment host. For example, the following commands copy each principal generated in step 4 to the PXF default keytab directory on the segment host when `PXF_BASE=/usr/local/greenplum-pxf`:
+6.  Copy the keytab file for each PXF Service principal to its respective segment host. For example, the following commands copy each principal generated in step 4 to the PXF default keytab directory on the segment host when `PXF_BASE=/usr/local/greenplum-pxf`:
 
     ``` shell
     root@kdc-server$ scp /etc/security/keytabs/pxf-host1.service.keytab host1.example.com:/usr/local/greenplum-pxf/keytabs/pxf.service.keytab
