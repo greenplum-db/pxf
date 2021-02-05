@@ -29,6 +29,8 @@ import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.EOFException;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 
 /**
@@ -90,7 +92,6 @@ public class GPDBWritable implements Writable {
      */
     private static final int PREV_VERSION = 1;
     private static final int VERSION = 2; /* for backward compatibility */
-    private static final String CHARSET = "UTF-8";
 
     /*
      * Local variables
@@ -100,6 +101,7 @@ public class GPDBWritable implements Writable {
     private int alignmentOfEightBytes = 8;
     private byte errorFlag = 0;
     private int pktlen = EOF;
+    private final Charset databaseEncoding;
 
     public int[] getColType() {
         return colType;
@@ -116,9 +118,11 @@ public class GPDBWritable implements Writable {
     }
 
     /**
-     * Empty Constructor
+     * Constructs a {@link GPDBWritable} object with a given
+     * {@code databaseEncoding}
      */
-    public GPDBWritable() {
+    public GPDBWritable(Charset databaseEncoding) {
+        this.databaseEncoding = databaseEncoding;
         initializeEightByteAlignment();
     }
 
@@ -127,7 +131,8 @@ public class GPDBWritable implements Writable {
      *
      * @param columnType the table column types
      */
-    public GPDBWritable(int[] columnType) {
+    public GPDBWritable(int[] columnType, Charset databaseEncoding) {
+        this.databaseEncoding = databaseEncoding;
         initializeEightByteAlignment();
         colType = columnType;
         colValue = new Object[columnType.length];
@@ -139,11 +144,11 @@ public class GPDBWritable implements Writable {
      * @param data a record in the serialized form
      * @throws IOException if the data is malformatted.
      */
-    public GPDBWritable(byte[] data) throws IOException {
+    public GPDBWritable(byte[] data, Charset databaseEncoding) throws IOException {
+        this.databaseEncoding = databaseEncoding;
         initializeEightByteAlignment();
         ByteArrayInputStream bis = new ByteArrayInputStream(data);
         DataInputStream dis = new DataInputStream(bis);
-
         readFields(dis);
     }
 
@@ -305,7 +310,7 @@ public class GPDBWritable implements Writable {
                     case TEXT: {
                         byte[] data = new byte[varcollen];
                         in.readFully(data, 0, varcollen);
-                        colValue[i] = new String(data, 0, varcollen - 1, CHARSET);
+                        colValue[i] = new String(data, 0, varcollen - 1, databaseEncoding);
                         break;
                     }
 
@@ -392,7 +397,7 @@ public class GPDBWritable implements Writable {
                 } else if (!isTextForm(colType[i])) {
                     colLength[i] = ((byte[]) colValue[i]).length;
                 } else {
-                    colLength[i] = ((String) colValue[i]).getBytes(CHARSET).length;
+                    colLength[i] = ((String) colValue[i]).getBytes(databaseEncoding).length;
                 }
 
                 /* calculate and add the type alignment padding */
@@ -463,10 +468,10 @@ public class GPDBWritable implements Writable {
                         out.write((byte[]) colValue[i]);
                         break;
 
-					/* For text format, add 4byte length header. string is already '\0' terminated */
+                    /* For text format, add 4byte length header. string is already '\0' terminated */
                     default: {
+                        byte[] data = ((String) colValue[i]).getBytes(databaseEncoding);
                         out.writeInt(colLength[i]);
-                        byte[] data = ((String) colValue[i]).getBytes(CHARSET);
                         out.write(data);
                         break;
                     }

@@ -24,7 +24,7 @@ import org.greenplum.pxf.automation.utils.jsystem.report.ReportUtils;
  * System object for interacting with a DB via JDBC. Every System Object that represents JDBC DB
  * should extend from it.
  */
-public class DbSystemObject extends BaseSystemObject implements IDbFunctionality {
+public abstract class DbSystemObject extends BaseSystemObject implements IDbFunctionality {
 	protected String db;
 	protected String host;
 	protected String masterHost;
@@ -33,11 +33,14 @@ public class DbSystemObject extends BaseSystemObject implements IDbFunctionality
     protected String kerberosPrincipal;
 	protected String driver;
 	protected String address;
+	protected String encoding;
+	protected String localeCollate;
+	protected String localeCollateType;
 	protected Connection dbConnection;
 	protected Statement stmt;
 	// retries for create JDBC connection
 	private int connectionRetries = 10;
-	private final long RETRY_INTERVAL = 1000 * 10;
+	private static final long RETRY_INTERVAL = 1000 * 10;
 
 	public DbSystemObject() {
 	}
@@ -397,6 +400,30 @@ public class DbSystemObject extends BaseSystemObject implements IDbFunctionality
 
 	public void setMasterHost(String masterHost) {
 		this.masterHost = masterHost;
+	}
+
+	public String getEncoding() {
+		return encoding;
+	}
+
+	public void setEncoding(String encoding) {
+		this.encoding = encoding;
+	}
+
+	public String getLocaleCollate() {
+		return localeCollate;
+	}
+
+	public void setLocaleCollate(String localeCollate) {
+		this.localeCollate = localeCollate;
+	}
+
+	public String getLocaleCollateType() {
+		return localeCollateType;
+	}
+
+	public void setLocaleCollateType(String localeCollateType) {
+		this.localeCollateType = localeCollateType;
 	}
 
 	@Override

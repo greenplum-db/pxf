@@ -52,7 +52,17 @@ public class Gpdb extends DbSystemObject {
 		connect();
 
 		if (!checkDataBaseExists(getDb())) {
-			createDataBase(getDb(), true);
+			String encoding = getEncoding();
+			String localeCollate = getLocaleCollate();
+			String localeCollateType = getLocaleCollateType();
+
+			if (StringUtils.isNotBlank(encoding)
+					&& StringUtils.isNotBlank(localeCollate)
+					&& StringUtils.isNotBlank(localeCollateType)) {
+				createDataBase(getDb(), true, encoding, localeCollate, localeCollateType);
+			} else {
+				createDataBase(getDb(), true);
+			}
 		}
 
 		super.close();
@@ -87,7 +97,6 @@ public class Gpdb extends DbSystemObject {
 	 * @param target
 	 * @throws Exception
 	 */
-
     public void copyData(Table source, Table target) throws Exception {
 
 
@@ -99,6 +108,23 @@ public class Gpdb extends DbSystemObject {
 	public void createDataBase(String schemaName, boolean ignoreFail) throws Exception {
 
 		runQuery("CREATE DATABASE " + schemaName, ignoreFail, false);
+		runQuery("ALTER DATABASE " + schemaName + " SET bytea_output TO 'escape'", ignoreFail, false);
+	}
+
+	@Override
+	public void createDataBase(String schemaName, boolean ignoreFail, String encoding, String localeCollate, String localeCollateType) throws Exception {
+
+		String createStatement;
+		if (StringUtils.equals(dbConnection.getMetaData().getDatabaseProductVersion(), "8.3.23")) {
+			// Greenplum 5
+			ReportUtils.startLevel(report, getClass(), "Unable to create database with encoding that does not match server's locale in Greenplum 5");
+			createStatement = String.format("CREATE DATABASE %s", schemaName);
+		} else {
+			createStatement = String.format("CREATE DATABASE %s TEMPLATE = template0 ENCODING = '%s' LC_COLLATE = '%s' LC_CTYPE = '%s'",
+					schemaName, encoding, localeCollate, localeCollateType);
+		}
+
+		runQuery(createStatement, ignoreFail, false);
 		runQuery("ALTER DATABASE " + schemaName + " SET bytea_output TO 'escape'", ignoreFail, false);
 	}
 

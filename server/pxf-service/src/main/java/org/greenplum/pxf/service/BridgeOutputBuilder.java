@@ -39,6 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Array;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.util.Arrays;
@@ -62,6 +63,7 @@ public class BridgeOutputBuilder {
     private static final Logger LOG = LoggerFactory.getLogger(BridgeOutputBuilder.class);
 
     private static final byte DELIM = 10; /* (byte)'\n'; */
+    private final Charset databaseEncoding;
     private final String newLine;
     private final byte[] newLineBytes;
     private Writable output = null;
@@ -87,6 +89,7 @@ public class BridgeOutputBuilder {
         newLine = context.getGreenplumCSV().getNewline();
         newLineBytes = newLine.getBytes(StandardCharsets.UTF_8);
         outputFormat = context.getOutputFormat();
+        databaseEncoding = context.getDatabaseEncoding();
         outputList = new LinkedList<>();
         makeErrorRecord();
         samplingEnabled = (context.getStatsSampleRatio() > 0);
@@ -110,7 +113,7 @@ public class BridgeOutputBuilder {
             return;
         }
 
-        errorRecord = new GPDBWritable(errSchema);
+        errorRecord = new GPDBWritable(errSchema, databaseEncoding);
         errorRecord.setError(true);
     }
 
@@ -194,7 +197,7 @@ public class BridgeOutputBuilder {
             colNames[i] = columnDescriptors.get(i).columnName();
         }
 
-        output = new GPDBWritable(schema);
+        output = new GPDBWritable(schema, databaseEncoding);
 
         return (GPDBWritable) output;
     }

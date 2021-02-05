@@ -55,6 +55,7 @@ build_http_headers(PxfInputData *input)
 	GPHDUri        *gphduri   = input->gphduri;
 	Relation       rel        = input->rel;
 	char           *filterstr = input->filterstr;
+	char           *data_encoding = NULL;
 	char           long_number[sizeof(int32) * 8];
 	ProjectionInfo *proj_info = input->proj_info;
 
@@ -83,7 +84,15 @@ build_http_headers(PxfInputData *input)
 		foreach(option, copyFmtOpts)
 		{
 			DefElem    *def = (DefElem *) lfirst(option);
-			churl_headers_append(headers, normalize_key_name(def->defname), defGetString(def));
+
+			if (strcmp(def->defname, "encoding") == 0)
+			{
+				data_encoding = defGetString(def);
+			}
+			else
+			{
+				churl_headers_append(headers, normalize_key_name(def->defname), defGetString(def));
+			}
 		}
 
 		/* Record fields - name and type of each field */
@@ -135,6 +144,10 @@ build_http_headers(PxfInputData *input)
 	churl_headers_append(headers, "X-GP-URL-HOST", gphduri->host);
 	churl_headers_append(headers, "X-GP-URL-PORT", gphduri->port);
 	churl_headers_append(headers, "X-GP-DATA-DIR", gphduri->data);
+
+	/* encoding options */
+	churl_headers_append(headers, "X-GP-DATA-ENCODING", data_encoding);
+	churl_headers_append(headers, "X-GP-DATABASE-ENCODING", GetDatabaseEncodingName());
 
 	/* location options */
 	add_location_options_httpheader(headers, gphduri);

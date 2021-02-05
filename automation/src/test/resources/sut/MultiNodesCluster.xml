@@ -34,6 +34,18 @@
 		<userName>gpadmin</userName>
 		<db>pxfautomation</db>
 	</gpdb>
+
+	<gpdb2>
+		<class>org.greenplum.pxf.automation.components.gpdb.Gpdb</class>
+		<host>localhost</host>
+		<masterHost>mdw</masterHost>
+		<userName>gpadmin</userName>
+		<db>pxfautomation_encoding</db>
+		<encoding>WIN1251</encoding>
+		<localeCollate>ru_RU.CP1251</localeCollate>
+		<localeCollateType>ru_RU.CP1251</localeCollateType>
+	</gpdb2>
+
 	<hdfs>
 		<class>org.greenplum.pxf.automation.components.hdfs.Hdfs</class>
 		<host>hadoop</host>

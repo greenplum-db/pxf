@@ -31,6 +31,7 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
@@ -60,7 +61,7 @@ public class BridgeInputBuilderTest {
 
         prepareInput(data);
 
-        List<OneField> record = inputBuilder.makeInput(OutputFormat.TEXT, inputStream);
+        List<OneField> record = inputBuilder.makeInput(StandardCharsets.UTF_8, OutputFormat.TEXT, inputStream);
 
         // the inputStream is exhausted completely, so we check line breaks too
         verifyRecord(record, Arrays.copyOfRange(data, 0, 8));
@@ -80,7 +81,7 @@ public class BridgeInputBuilderTest {
 
         prepareInput(bigArray);
 
-        List<OneField> record = inputBuilder.makeInput(OutputFormat.TEXT, inputStream);
+        List<OneField> record = inputBuilder.makeInput(StandardCharsets.UTF_8, OutputFormat.TEXT, inputStream);
 
         verifyRecord(record, bigArray);
     }
@@ -98,7 +99,7 @@ public class BridgeInputBuilderTest {
 
         prepareInput(bigArray);
 
-        List<OneField> record = inputBuilder.makeInput(OutputFormat.TEXT, inputStream);
+        List<OneField> record = inputBuilder.makeInput(StandardCharsets.UTF_8, OutputFormat.TEXT, inputStream);
 
         verifyRecord(record, bigArray);
     }
@@ -113,7 +114,7 @@ public class BridgeInputBuilderTest {
 
         prepareInput(empty);
 
-        List<OneField> record = inputBuilder.makeInput(OutputFormat.TEXT, inputStream);
+        List<OneField> record = inputBuilder.makeInput(StandardCharsets.UTF_8, OutputFormat.TEXT, inputStream);
 
         verifyRecord(record, empty);
     }

@@ -195,4 +195,9 @@ public class Hive extends DbSystemObject {
 
         return false;
     }
+
+    @Override
+    public void createDataBase(String schemaName, boolean ignoreFail, String encoding, String localeCollate, String localeCollateType) {
+        throw new UnsupportedOperationException();
+    }
 }

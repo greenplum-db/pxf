@@ -38,6 +38,7 @@ public abstract class BaseTestParent {
     protected PhdCluster cluster;
     protected Tinc tinc;
     protected Gpdb gpdb;
+    protected Gpdb nonUtf8Gpdb;
     protected Hdfs hdfs;
     // When running against multiple hadoop environments, we need to test against
     // a non-kerberized (secured) hadoop.
@@ -89,16 +90,19 @@ public abstract class BaseTestParent {
             tinc = (Tinc) systemManager.getSystemObject("tinc");
             // Initialize GPDB System Object
             gpdb = (Gpdb) systemManager.getSystemObject("gpdb");
+            // Initialize GPDB2 System Object -- database with non-utf8 encoding
+            nonUtf8Gpdb = (Gpdb) systemManager.getSystemObject("gpdb2");
+
             // Check if userName data base exists if not create it (TINC requirement)
             String userName = System.getProperty("user.name");
             if (!gpdb.checkDataBaseExists(userName)) {
                 gpdb.createDataBase(userName, false);
             }
 
-            initializeWorkingDirectory(gpdb, hdfs);
+            initializeWorkingDirectory(hdfs, gpdb.getUserName());
 
             if (hdfsNonSecure != null) {
-                initializeWorkingDirectory(gpdb, hdfsNonSecure);
+                initializeWorkingDirectory(hdfsNonSecure, gpdb.getUserName());
             }
 
             // get pxfHost
@@ -326,13 +330,12 @@ public abstract class BaseTestParent {
         hdfs.init();
     }
 
-    protected void initializeWorkingDirectory(Gpdb gpdb, Hdfs hdfs) throws Exception {
+    protected void initializeWorkingDirectory(Hdfs hdfs, String userName) throws Exception {
         hdfs.removeDirectory(hdfs.getWorkingDirectory());
         hdfs.createDirectory(hdfs.getWorkingDirectory());
-        if (gpdb.getUserName() != null) {
+        if (userName != null) {
             hdfs.setOwner("/" + StringUtils.removeStart(hdfs.getWorkingDirectory(), "/"),
-                    gpdb.getUserName(),
-                    gpdb.getUserName());
+                    userName, userName);
         }
     }
 

@@ -3,8 +3,8 @@ package org.greenplum.pxf.service;
 import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.PluginConf;
-import org.greenplum.pxf.api.model.ProtocolHandler;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.api.utilities.CharsetUtils;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.api.utilities.EnumAggregationType;
 import org.greenplum.pxf.api.utilities.Utilities;
@@ -14,7 +14,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.MultiValueMap;
 
 import java.io.UnsupportedEncodingException;
-import java.lang.reflect.InvocationTargetException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -38,15 +37,18 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
     private static final String FALSE_LCASE = "false";
     private static final String PROFILE_SCHEME = "PROFILE-SCHEME";
 
+    private final CharsetUtils charsetUtils;
     private final PluginConf pluginConf;
 
     /**
      * Create a new instance of the HttpRequestParser with the given PluginConf
      *
-     * @param pluginConf the plugin conf
+     * @param pluginConf   the plugin conf
+     * @param charsetUtils utilities for Charset
      */
-    public HttpRequestParser(PluginConf pluginConf) {
+    public HttpRequestParser(PluginConf pluginConf, CharsetUtils charsetUtils) {
         this.pluginConf = pluginConf;
+        this.charsetUtils = charsetUtils;
     }
 
     @Override
@@ -93,6 +95,9 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
         } else if ("1".equals(hasFilter)) {
             LOG.info("Original query has filter, but it was not propagated to PXF");
         }
+
+        context.setDataEncoding(charsetUtils.forName(params.removeProperty("DATA-ENCODING")));
+        context.setDatabaseEncoding(charsetUtils.forName(params.removeProperty("DATABASE-ENCODING")));
 
         context.setFragmenter(params.removeUserProperty("FRAGMENTER"));
 
