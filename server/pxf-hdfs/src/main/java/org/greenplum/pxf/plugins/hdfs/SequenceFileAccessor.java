@@ -23,6 +23,7 @@ package org.greenplum.pxf.plugins.hdfs;
 import org.apache.hadoop.fs.CreateFlag;
 import org.apache.hadoop.fs.FileContext;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Options;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.SequenceFile;
@@ -177,7 +178,8 @@ public class SequenceFileAccessor extends HdfsSplittableDataAccessor {
             // create writer - do not allow overwriting existing file
             writer = SequenceFile.createWriter(fc, configuration, file, keyClass,
                     valueClass, compressionType, codec,
-                    new SequenceFile.Metadata(), EnumSet.of(CreateFlag.CREATE));
+                    new SequenceFile.Metadata(), EnumSet.of(CreateFlag.CREATE),
+                    Options.CreateOpts.createParent());
         }
 
         try {
