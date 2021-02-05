@@ -37,8 +37,8 @@ select * from hcfs_glob_match_string_from_string_set_10 order by name, num;
 -- m/Illegal file pattern: Unclosed group near index.*/
 -- s/Illegal file pattern: Unclosed group near index.*/Unclosed group near index xxx/
 --
--- m/Unclosed group near index.*/
--- s/Unclosed group near index.*/Unclosed group near index xxx/
+-- m/java.util.regex.PatternSyntaxException: Unclosed group near index.*/
+-- s/java.util.regex.PatternSyntaxException: Unclosed group near index.*/Unclosed group near index xxx/
 --
 -- m/DETAIL/
 -- s/DETAIL/CONTEXT/
