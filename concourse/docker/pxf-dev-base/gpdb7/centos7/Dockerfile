@@ -47,6 +47,8 @@ RUN ssh-keygen -t rsa -N "" -f /root/.ssh/id_rsa \
     && echo >> /etc/security/limits.d/gpadmin-limits.conf 'gpadmin soft core unlimited' \
     && echo >> /etc/security/limits.d/gpadmin-limits.conf 'gpadmin soft nproc 131072' \
     && echo >> /etc/security/limits.d/gpadmin-limits.conf 'gpadmin soft nofile 65536' \
+    # add locale for testing
+    && localedef -c -i ru_RU -f CP1251 ru_RU.CP1251 \
     # create .pxfrc
     && echo >> ~gpadmin/.pxfrc 'export LANG=en_US.UTF-8' \
     && echo >> ~gpadmin/.pxfrc 'export PGPORT=5432' \

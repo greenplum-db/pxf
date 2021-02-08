@@ -13,13 +13,14 @@ ARG USER_HOME_DIR="/root"
 ARG BASE_URL=https://apache.osuosl.org/maven/maven-3/${MAVEN_VERSION}/binaries
 
 # install dependencies that are missing on the base images
+# glibc-common is for adding locales
 RUN curl -fsSL -o /tmp/apache-maven.tar.gz ${BASE_URL}/apache-maven-${MAVEN_VERSION}-bin.tar.gz \
     && mkdir -p /usr/share/maven \
     && tar -xzf /tmp/apache-maven.tar.gz -C /usr/share/maven --strip-components=1 \
     && rm -f /tmp/apache-maven.tar.gz \
     && ln -s /usr/share/maven/bin/mvn /usr/bin/mvn \
-    && yum install -y rpm-build python-devel sudo && yum clean all \
-    && cd /tmp && /usr/bin/pip install --upgrade pip \
+    && yum install -y rpm-build python-devel glibc-common sudo && yum clean all \
+    && cd /tmp && /usr/bin/pip install --upgrade pip==20.2.4 \
     && /usr/bin/pip install psi paramiko --no-cache-dir
 
 # create user gpadmin since GPDB cannot run under root
@@ -48,6 +49,8 @@ RUN ssh-keygen -t rsa -N "" -f /root/.ssh/id_rsa \
     && echo >> /etc/security/limits.d/gpadmin-limits.conf 'gpadmin soft core unlimited' \
     && echo >> /etc/security/limits.d/gpadmin-limits.conf 'gpadmin soft nproc 131072' \
     && echo >> /etc/security/limits.d/gpadmin-limits.conf 'gpadmin soft nofile 65536' \
+    # add locale for testing
+    && localedef -c -i ru_RU -f CP1251 ru_RU.CP1251 \
     # create .pxfrc
     && echo >> ~gpadmin/.pxfrc 'export LANG=en_US.UTF-8' \
     && echo >> ~gpadmin/.pxfrc 'export PGPORT=5432' \
