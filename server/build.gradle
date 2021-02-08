@@ -79,6 +79,8 @@ configure(javaProjects) {
             dependency("com.fasterxml.jackson.core:jackson-core:2.11.0")
             dependency("com.fasterxml.jackson.core:jackson-annotations:2.11.0")
 
+            dependency("io.micrometer:micrometer-registry-prometheus:1.6.2")
+
             dependency("joda-time:joda-time:2.8.1")
 
             dependency("org.apache.commons:commons-lang3:3.10")
