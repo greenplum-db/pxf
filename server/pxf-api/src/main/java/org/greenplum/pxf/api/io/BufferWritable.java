@@ -8,9 +8,9 @@ package org.greenplum.pxf.api.io;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -31,7 +31,8 @@ import java.lang.UnsupportedOperationException;
  */
 public class BufferWritable implements Writable {
 
-    byte[] buf = null;
+    byte[] buf;
+    int length;
 
     /**
      * Constructs a BufferWritable. Copies the buffer reference and not the
@@ -39,10 +40,25 @@ public class BufferWritable implements Writable {
      * through the Bridge framework without copying the data each time the
      * buffer is passed between the Bridge objects.
      *
-     * @param inBuf buffer
+     * @param inBuf buffer reference
      */
     public BufferWritable(byte[] inBuf) {
-        buf = inBuf;
+        this(inBuf, inBuf.length);
+    }
+
+    /**
+     * Constructs a BufferWritable. Copies the buffer reference (not the
+     * actual bytes) and the length of bytes.
+     * This class is used when we intend to transport a buffer through the
+     * Bridge framework without copying the data each time the buffer is passed
+     * between the Bridge objects.
+     *
+     * @param inBuf  buffer reference
+     * @param length the length of data within the buffer
+     */
+    public BufferWritable(byte[] inBuf, int length) {
+        this.buf = inBuf;
+        this.length = length;
     }
 
     /**
@@ -55,7 +71,7 @@ public class BufferWritable implements Writable {
     public void write(DataOutput out) throws IOException {
         if (buf == null)
             throw new IOException("BufferWritable was not set");
-        out.write(buf);
+        out.write(buf, 0, length);
     }
 
     /**
@@ -84,6 +100,7 @@ public class BufferWritable implements Writable {
     public void append(byte[] app) {
         if (buf == null) {
             buf = app;
+            length = buf.length;
             return;
         }
         if (app == null) {
@@ -94,5 +111,6 @@ public class BufferWritable implements Writable {
         System.arraycopy(buf, 0, newbuf, 0, buf.length);
         System.arraycopy(app, 0, newbuf, buf.length, app.length);
         buf = newbuf;
+        length = newbuf.length;
     }
 }

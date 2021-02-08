@@ -126,6 +126,29 @@ public class LineBreakAccessorTest {
     }
 
     @Test
+    public void testMixedNewLineCharacters() throws Exception {
+        prepareTest("csv/csv_with_mixed_new_lines.csv");
+        context.getGreenplumCSV().withNewline("\r");
+
+        accessor.setRequestContext(context);
+        accessor.afterPropertiesSet();
+        accessor.openForRead();
+
+        OneRow oneRow = accessor.readNextObject();
+        assertNotNull(oneRow);
+        assertEquals("this,\nfile", oneRow.getData().toString());
+
+        oneRow = accessor.readNextObject();
+        assertNotNull(oneRow);
+        assertEquals("has,line feeds\n", oneRow.getData().toString());
+
+        oneRow = accessor.readNextObject();
+        assertNull(oneRow);
+
+        accessor.closeForRead();
+    }
+
+    @Test
     public void testSkipHeaderCountIsNotANumber() {
         context.setDataSource("/foo");
         context.addOption("SKIP_HEADER_COUNT", "foo");

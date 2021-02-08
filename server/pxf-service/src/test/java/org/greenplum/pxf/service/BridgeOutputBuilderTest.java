@@ -34,6 +34,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.DataOutput;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.sql.Timestamp;
@@ -232,6 +233,61 @@ public class BridgeOutputBuilderTest {
                 () -> builder.fillGPDBWritable(complete),
                 "testRecordBiggerThanSchema should have failed on - Record has 5 fields but the schema size is 4");
         assertEquals("Record has 5 fields but the schema size is 4", e.getMessage());
+    }
+
+    @Test
+    public void testLineBreakInDifferentEncodings() {
+        String lf = "\n";
+        String cr = "\r";
+        String crlf = "\r\n";
+
+        byte[] lfBytes = {10};
+        byte[] crBytes = {13};
+        byte[] crlfBytes = {13, 10};
+
+        assertArrayEquals(lfBytes, lf.getBytes());
+        assertArrayEquals(crBytes, cr.getBytes());
+        assertArrayEquals(crlfBytes, crlf.getBytes());
+
+        assertArrayEquals(lfBytes, lf.getBytes(StandardCharsets.UTF_8));
+        assertArrayEquals(crBytes, cr.getBytes(StandardCharsets.UTF_8));
+        assertArrayEquals(crlfBytes, crlf.getBytes(StandardCharsets.UTF_8));
+
+        assertArrayEquals(lfBytes, lf.getBytes(StandardCharsets.ISO_8859_1));
+        assertArrayEquals(crBytes, cr.getBytes(StandardCharsets.ISO_8859_1));
+        assertArrayEquals(crlfBytes, crlf.getBytes(StandardCharsets.ISO_8859_1));
+
+        assertArrayEquals(lfBytes, lf.getBytes(Charset.forName("windows-1251")));
+        assertArrayEquals(crBytes, cr.getBytes(Charset.forName("windows-1251")));
+        assertArrayEquals(crlfBytes, crlf.getBytes(Charset.forName("windows-1251")));
+
+        assertArrayEquals(lfBytes, lf.getBytes(Charset.forName("Big5")));
+        assertArrayEquals(crBytes, cr.getBytes(Charset.forName("Big5")));
+        assertArrayEquals(crlfBytes, crlf.getBytes(Charset.forName("Big5")));
+
+        assertArrayEquals(lfBytes, lf.getBytes(Charset.forName("GB18030")));
+        assertArrayEquals(crBytes, cr.getBytes(Charset.forName("GB18030")));
+        assertArrayEquals(crlfBytes, crlf.getBytes(Charset.forName("GB18030")));
+
+        assertArrayEquals(lfBytes, lf.getBytes(Charset.forName("MS936")));
+        assertArrayEquals(crBytes, cr.getBytes(Charset.forName("MS936")));
+        assertArrayEquals(crlfBytes, crlf.getBytes(Charset.forName("MS936")));
+
+        assertArrayEquals(lfBytes, lf.getBytes(Charset.forName("Windows-932")));
+        assertArrayEquals(crBytes, cr.getBytes(Charset.forName("Windows-932")));
+        assertArrayEquals(crlfBytes, crlf.getBytes(Charset.forName("Windows-932")));
+
+        assertArrayEquals(lfBytes, lf.getBytes(Charset.forName("KOI8")));
+        assertArrayEquals(crBytes, cr.getBytes(Charset.forName("KOI8")));
+        assertArrayEquals(crlfBytes, crlf.getBytes(Charset.forName("KOI8")));
+
+        assertArrayEquals(lfBytes, lf.getBytes(Charset.forName("Windows-949")));
+        assertArrayEquals(crBytes, cr.getBytes(Charset.forName("Windows-949")));
+        assertArrayEquals(crlfBytes, crlf.getBytes(Charset.forName("Windows-949")));
+
+        assertArrayEquals(lfBytes, lf.getBytes(Charset.forName("Cyrillic")));
+        assertArrayEquals(crBytes, cr.getBytes(Charset.forName("Cyrillic")));
+        assertArrayEquals(crlfBytes, crlf.getBytes(Charset.forName("Cyrillic")));
     }
 
     @Test

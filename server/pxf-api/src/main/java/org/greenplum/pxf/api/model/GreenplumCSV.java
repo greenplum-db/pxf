@@ -139,11 +139,29 @@ public class GreenplumCSV {
             // Greenplum only supports LF (Line feed, 0x0A), CR
             // (Carriage return, 0x0D), or CRLF (Carriage return plus line
             // feed, 0x0D 0x0A) as newline characters
-            if (newline.equals("\n") || newline.equals("\r") || newline.equals("\r\n")) {
-                this.newline = newline;
-            } else {
-                throw new IllegalArgumentException(String.format(
-                        "invalid newline character '%s'. Only LF, CR, or CRLF are supported for newline.", newline));
+
+            switch (newline.toLowerCase()) {
+                case "cr":
+                    this.newline = "\r";
+                    break;
+
+                case "lf":
+                    this.newline = "\n";
+                    break;
+
+                case "crlf":
+                    this.newline = "\r\n";
+                    break;
+
+                case "\n":
+                case "\r":
+                case "\r\n":
+                    this.newline = newline;
+                    break;
+
+                default:
+                    throw new IllegalArgumentException(String.format(
+                            "invalid newline character '%s'. Only LF, CR, or CRLF are supported for newline.", newline));
             }
         }
         this.newlineLength = newline != null ? newline.length() : 0;

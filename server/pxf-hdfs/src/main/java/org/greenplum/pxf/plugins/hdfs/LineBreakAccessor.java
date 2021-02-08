@@ -37,6 +37,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 
 /**
  * A PXF Accessor for reading delimited plain text records.
@@ -83,7 +84,8 @@ public class LineBreakAccessor extends HdfsSplittableDataAccessor {
                 LOG.debug("Failed to use ChunkRecordReader, falling back to LineRecordReader : " + e.getMessage());
             }
         }
-        return new LineRecordReader(jobConf, (FileSplit) split);
+        return new LineRecordReader(jobConf, (FileSplit) split,
+                context.getGreenplumCSV().getNewline().getBytes(StandardCharsets.UTF_8));
     }
 
     @Override

@@ -33,6 +33,8 @@ public abstract class ExternalTable extends Table {
 
     private String escape;
 
+    private String newLine;
+
     private String[] userParameters;
 
     private String server;
@@ -184,9 +186,10 @@ public abstract class ExternalTable extends Table {
             createStatment += " (formatter='" + getFormatter() + "')";
         }
 
-        boolean hasDelimiterOrEscape = getDelimiter() != null || getEscape() != null;
+        boolean hasDelimiterOrEscapeOrNewLine =
+                getDelimiter() != null || getEscape() != null || getNewLine() != null;
 
-        if (hasDelimiterOrEscape) {
+        if (hasDelimiterOrEscapeOrNewLine) {
             createStatment += " (";
         }
 
@@ -210,7 +213,13 @@ public abstract class ExternalTable extends Table {
             createStatment += " ESCAPE " + parsedEscapeCharacter;
         }
 
-        if (hasDelimiterOrEscape) {
+        if (getNewLine() != null) {
+
+            String newLineCharacter = getNewLine();
+            createStatment += " NEWLINE '" + newLineCharacter + "'";
+        }
+
+        if (hasDelimiterOrEscapeOrNewLine) {
             createStatment += ")";
         }
 
@@ -261,6 +270,14 @@ public abstract class ExternalTable extends Table {
 
     public void setEscape(String escape) {
         this.escape = escape;
+    }
+
+    public void setNewLine(String newLine) {
+        this.newLine = newLine;
+    }
+
+    public String getNewLine() {
+        return newLine;
     }
 
     public String getProfile() {
