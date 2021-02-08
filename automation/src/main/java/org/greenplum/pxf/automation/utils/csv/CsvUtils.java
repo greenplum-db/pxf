@@ -58,7 +58,7 @@ public abstract class CsvUtils {
 			throws IOException {
 
 		// create CsvWriter using FileWriter
-		CSVWriter csvWriter = new CSVWriter(new FileWriter(new File(targetCsvFile)));
+		CSVWriter csvWriter = new CSVWriter(new FileWriter(targetCsvFile));
 
 		try {
 			// go over list and write each inner list to csv file
