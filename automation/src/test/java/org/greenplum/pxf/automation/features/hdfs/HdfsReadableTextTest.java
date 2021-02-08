@@ -34,6 +34,8 @@ import static org.greenplum.pxf.automation.features.tpch.LineItem.LINEITEM_SCHEM
  */
 public class HdfsReadableTextTest extends BaseFeature {
 
+    private static final String SUFFIX_CLASS = ".class";
+
     public static final String[] SMALL_DATA_FIELDS = {
             "name text",
             "num integer",
@@ -49,10 +51,6 @@ public class HdfsReadableTextTest extends BaseFeature {
     // path for storing data on HDFS
     String hdfsFilePath = "";
 
-    private String resourcePath;
-
-    private final String SUFFIX_CLASS = ".class";
-
     String testPackageLocation = "/org/greenplum/pxf/automation/testplugin/";
     String testPackage = "org.greenplum.pxf.automation.testplugin.";
 
@@ -64,7 +62,7 @@ public class HdfsReadableTextTest extends BaseFeature {
     @Override
     public void beforeClass() throws Exception {
         // location of test plugin files
-        resourcePath = "target/classes" + testPackageLocation;
+        String resourcePath = "target/classes" + testPackageLocation;
 
         String newPath = "/tmp/publicstage/pxf";
         // copy additional plugins classes to cluster nodes, used for filter
@@ -84,8 +82,6 @@ public class HdfsReadableTextTest extends BaseFeature {
      * Before every method determine default hdfs data Path, default data, and
      * default external table structure. Each case change it according to it
      * needs.
-     *
-     * @throws Exception
      */
     @Override
     protected void beforeMethod() throws Exception {
@@ -130,8 +126,6 @@ public class HdfsReadableTextTest extends BaseFeature {
     /**
      * Read delimited text file from HDFS using explicit plugins and TEXT
      * format.
-     *
-     * @throws Exception
      */
     @Test(groups = {"features", "sanity", "gpdb", "security"})
     public void readDelimitedTextUsingTextFormat() throws Exception {
@@ -150,8 +144,6 @@ public class HdfsReadableTextTest extends BaseFeature {
 
     /**
      * Read quoted CSV file from HDFS using explicit plugins and CSV format.
-     *
-     * @throws Exception
      */
     @Test(groups = {"features", "gpdb", "security"})
     public void readCsvUsingCsvFormat() throws Exception {
@@ -172,10 +164,7 @@ public class HdfsReadableTextTest extends BaseFeature {
     }
 
     /**
-     * Read quoted CSV file from HDFS using *:text profile and CSV
-     * format.
-     *
-     * @throws Exception
+     * Read quoted CSV file from HDFS using *:text profile and CSV format.
      */
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void readCsvUsingProfile() throws Exception {
@@ -253,10 +242,7 @@ public class HdfsReadableTextTest extends BaseFeature {
     }
 
     /**
-     * Create multi lined CSV data, use
-     * QuotedLineBreakAccessor to read.
-     *
-     * @throws Exception
+     * Create multi lined CSV data, use QuotedLineBreakAccessor to read.
      */
     @Test(groups = {"features", "gpdb", "security"})
     public void readMultiBlockedMultiLinedCsv() throws Exception {
@@ -267,8 +253,6 @@ public class HdfsReadableTextTest extends BaseFeature {
     /**
      * Create multi lined CSV data, use HdfsTextMulti pxf
      * profile to read.
-     *
-     * @throws Exception
      */
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void readMultiBlockedMultiLinedCsvUsingProfile() throws Exception {
@@ -279,8 +263,6 @@ public class HdfsReadableTextTest extends BaseFeature {
     /**
      * Create multi lined CSV data, use HdfsTextMulti pxf
      * profile to read.
-     *
-     * @throws Exception
      */
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void readMultiBlockedMultiLinedCsvWildcardLocation() throws Exception {
@@ -322,8 +304,6 @@ public class HdfsReadableTextTest extends BaseFeature {
     /**
      * Create 2 files located under the same HDFS directory and read it using
      * wildcard
-     *
-     * @throws Exception
      */
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void wildcardLocation() throws Exception {
@@ -350,8 +330,6 @@ public class HdfsReadableTextTest extends BaseFeature {
      * Create "recursive" directory structure in HDFS, copy files to different
      * directories, read all data by specifying parent directory as the
      * location.
-     *
-     * @throws Exception
      */
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void recursiveHdfsDirectories() throws Exception {
@@ -377,8 +355,6 @@ public class HdfsReadableTextTest extends BaseFeature {
 
     /**
      * Create empty file in HDFS and read it.
-     *
-     * @throws Exception
      */
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void emptyTextFile() throws Exception {
@@ -396,16 +372,13 @@ public class HdfsReadableTextTest extends BaseFeature {
     /**
      * Create HDFS text file using "ISO_8859_1" encoding, define external table
      * with same encoding (called LATIN1 in gpdb) and read data.
-     *
-     * @throws Exception
      */
-    @Test(groups = {"features"})//, "gpdb", "hcfs" })
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void differentEncoding() throws Exception {
+        ProtocolEnum protocol = ProtocolUtils.getProtocol();
         // define and create external table
         exTable.setFields(new String[]{"num1 int", "word text"});
-        exTable.setFragmenter("org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter");
-        exTable.setAccessor("org.greenplum.pxf.plugins.hdfs.LineBreakAccessor");
-        exTable.setResolver("org.greenplum.pxf.plugins.hdfs.StringPassResolver");
+        exTable.setProfile(protocol.value() + ":text");
         exTable.setDelimiter(",");
         exTable.setEncoding("LATIN1");
         gpdb.createTableAndVerify(exTable);
@@ -442,8 +415,6 @@ public class HdfsReadableTextTest extends BaseFeature {
      * pxf_enable_stat_collection=false to see default values, and than with
      * pxf_enable_stat_collection=true to see estimates results written to
      * pg_class table.
-     *
-     * @throws Exception
      */
     @Test(groups = "features")
     public void analyze() throws Exception {
@@ -496,8 +467,6 @@ public class HdfsReadableTextTest extends BaseFeature {
      * a case when the errors breach the limit. It also tests the cleanup of
      * segwork and metadata information in the filename parameter (the pxf URI)
      * in the error table (GPSQL-1708).
-     *
-     * @throws Exception
      */
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void errorTable() throws Exception {
