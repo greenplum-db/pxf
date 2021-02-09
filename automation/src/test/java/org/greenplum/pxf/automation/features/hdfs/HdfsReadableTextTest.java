@@ -610,7 +610,7 @@ public class HdfsReadableTextTest extends BaseFeature {
     public void unterminatedQuotedFieldAtEndOfFile() throws Exception {
 
         Table smallDataTable = getSmallData("foo", 3);
-        List<String> firstRow = smallDataTable.getData().get(1);
+        List<String> secondRow = smallDataTable.getData().get(1);
         // add a quote to the first field of the second row without closing the quote
         firstRow.set(0, firstRow.get(0) + "\"");
 
