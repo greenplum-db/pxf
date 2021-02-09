@@ -22,6 +22,7 @@ import org.testng.annotations.Test;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 import static org.greenplum.pxf.automation.features.tpch.LineItem.LINEITEM_SCHEMA;
 
@@ -32,6 +33,15 @@ import static org.greenplum.pxf.automation.features.tpch.LineItem.LINEITEM_SCHEM
  * "HDFS Readable - Text/CSV" section.
  */
 public class HdfsReadableTextTest extends BaseFeature {
+
+    public static final String[] SMALL_DATA_FIELDS = {
+            "name text",
+            "num integer",
+            "dub double precision",
+            "longNum bigint",
+            "bool boolean"
+    };
+
     // holds data for file generation
     Table dataTable = null;
     // path for storing data on HDFS
@@ -230,13 +240,8 @@ public class HdfsReadableTextTest extends BaseFeature {
         }
 
         exTable =
-                TableFactory.getPxfReadableTextTable("pxf_hdfs_small_data_bzip2", new String[]{
-                        "name text",
-                        "num integer",
-                        "dub double precision",
-                        "longNum bigint",
-                        "bool boolean"
-                }, protocol.getExternalTablePath(hdfs.getBasePath(), hdfs.getWorkingDirectory()) + "/bzip2/", ",");
+                TableFactory.getPxfReadableTextTable("pxf_hdfs_small_data_bzip2", SMALL_DATA_FIELDS,
+                        protocol.getExternalTablePath(hdfs.getBasePath(), hdfs.getWorkingDirectory()) + "/bzip2/", ",");
         exTable.setHost(pxfHost);
         exTable.setPort(pxfPort);
         exTable.setFormat("CSV");
@@ -593,6 +598,32 @@ public class HdfsReadableTextTest extends BaseFeature {
         gpdb.createTableAndVerify(exTable);
 
         runTincTest("pxf.features.hdfs.readable.text.errors.wrong_type.runTest");
+    }
+
+    /**
+     * When an unterminated quoted field at the end of the file is being read
+     * from a PXF external table with SEGMENT REJECT LIMIT for the table
+     * definition, a segmentation fault was being thrown by PXF. This test
+     * makes sure that the segfault does not occur.
+     */
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    public void unterminatedQuotedFieldAtEndOfFile() throws Exception {
+
+        Table smallDataTable = getSmallData("foo", 3);
+        List<String> secondRow = smallDataTable.getData().get(1);
+        // add a quote to the first field of the second row without closing the quote
+        secondRow.set(0, secondRow.get(0) + "\"");
+
+        String path = hdfs.getWorkingDirectory() + "/unterminated_quoted_field";
+        hdfs.writeTableToFile(path, smallDataTable, ",");
+
+        prepareReadableTable("unterminated_quoted_field", SMALL_DATA_FIELDS, path, exTable.getFormat());
+        exTable.setSegmentRejectLimit(10);
+        exTable.setDelimiter(",");
+        exTable.setFormat("csv");
+
+        gpdb.createTableAndVerify(exTable);
+        runTincTest("pxf.features.hdfs.readable.text.errors.unterminated_quoted_field.runTest");
     }
 
     /**
