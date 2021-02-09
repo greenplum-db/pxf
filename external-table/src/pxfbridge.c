@@ -101,7 +101,7 @@ gpbridge_read(gphadoop_context *context, char *databuf, int datalen)
 {
 	size_t		n = 0;
 
-	if (context->gphd_uri->fragments == NULL)
+	if (context->current_fragment == NULL)
 		return (int) n;
 
 	while ((n = fill_buffer(context, databuf, datalen)) == 0)
