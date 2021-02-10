@@ -1,12 +1,10 @@
 package org.greenplum.pxf.service;
 
-import io.micrometer.core.instrument.MeterRegistry;
 import org.greenplum.pxf.api.configuration.PxfServerProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.actuate.autoconfigure.metrics.MeterRegistryCustomizer;
 import org.springframework.boot.autoconfigure.task.TaskExecutionProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.task.TaskExecutorBuilder;
@@ -101,10 +99,5 @@ public class PxfConfiguration implements WebMvcConfigurer {
                 shutdown.getAwaitTerminationPeriod());
 
         return builder.build(PxfThreadPoolTaskExecutor.class);
-    }
-
-    @Bean
-    MeterRegistryCustomizer<MeterRegistry> metricsCommonTags() {
-        return registry -> registry.config().commonTags("application", "pxf-service");
     }
 }
