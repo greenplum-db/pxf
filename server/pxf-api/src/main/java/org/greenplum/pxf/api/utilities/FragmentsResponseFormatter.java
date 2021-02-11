@@ -23,9 +23,6 @@ import org.greenplum.pxf.api.model.Fragment;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -41,13 +38,11 @@ public class FragmentsResponseFormatter {
      * their respective IPs.
      *
      * @param fragments list of fragments
-     * @param data data (e.g. path) related to the fragments
+     * @param data      data (e.g. path) related to the fragments
      * @return FragmentsResponse with given fragments
-     * @throws UnknownHostException if converting host names to IP fails
      */
     public static FragmentsResponse formatResponse(List<Fragment> fragments,
-                                                   String data)
-            throws UnknownHostException {
+                                                   String data) {
         /* print the raw fragment list to log when in debug level */
         if (LOG.isDebugEnabled()) {
             LOG.debug("Fragments before conversion to IP list:");
@@ -90,36 +85,13 @@ public class FragmentsResponseFormatter {
 
     /**
      * Converts hosts to their matching IP addresses.
-     *
-     * @throws UnknownHostException if converting host name to IP fails
      */
-    private static void convertHostsToIPs(List<Fragment> fragments)
-            throws UnknownHostException {
-        /* host converted to IP map. Used to limit network calls. */
-        HashMap<String, String> hostToIpMap = new HashMap<String, String>();
-
+    private static void convertHostsToIPs(List<Fragment> fragments) {
         for (Fragment fragment : fragments) {
-            String[] hosts = fragment.getReplicas();
-            if (hosts == null) {
-                continue;
-            }
-            String[] ips = new String[hosts.length];
-            int index = 0;
-
-            for (String host : hosts) {
-                String convertedIp = hostToIpMap.get(host);
-                if (convertedIp == null) {
-                    /* find host's IP, and add to map */
-                    InetAddress addr = InetAddress.getByName(host);
-                    convertedIp = addr.getHostAddress();
-                    hostToIpMap.put(host, convertedIp);
-                }
-
-                /* update IPs array */
-                ips[index] = convertedIp;
-                ++index;
-            }
-            fragment.setReplicas(ips);
+            // We hardcode the IP address to 127.0.0.1 since this information
+            // is no longer used. We avoid performing a reverse DNS lookup,
+            // which can be expensive, so we skip doing unnecessary work.
+            fragment.setReplicas(new String[]{"127.0.0.1"});
         }
     }
 
@@ -145,7 +117,7 @@ public class FragmentsResponseFormatter {
 
             if (fragment.getMetadata() != null) {
                 result.append(", Metadata: ").append(
-                    new String(fragment.getMetadata()));
+                        new String(fragment.getMetadata()));
             }
 
             if (fragment.getUserData() != null) {
