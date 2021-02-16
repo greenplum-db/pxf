@@ -26,8 +26,7 @@
 
     <repositories>
         <repository>
-            <id>pivotal-releases</id>
-            <name>pivotal-releases</name>
+            <id>test-dependencies</id>
             <url>https://repo.pivotal.io/artifactory/gpdb-ud/</url>
         </repository>
     </repositories>
