@@ -26,8 +26,8 @@
 
     <repositories>
         <repository>
-            <id>jcenter</id>
-            <url>https://jcenter.bintray.com/</url>
+            <id>test-dependencies</id>
+            <url>https://repo.pivotal.io/artifactory/gpdb-ud/</url>
         </repository>
     </repositories>
 
