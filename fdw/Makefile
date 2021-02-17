@@ -1,7 +1,7 @@
 # fdw/Makefile
 
 MODULE_big = pxf_fdw
-OBJS = pxf_fdw.o pxf_bridge.o pxf_deparse.o pxf_filter.o pxf_fragment.o pxf_header.o pxf_option.o libchurl.o
+OBJS = pxf_fdw.o pxf_bridge.o pxf_deparse.o pxf_filter.o pxf_header.o pxf_option.o libchurl.o
 
 SHLIB_LINK += -lcurl
 

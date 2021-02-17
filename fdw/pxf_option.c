@@ -8,7 +8,7 @@
 
 #include "postgres.h"
 
-#include "pxf_fdw.h"
+#include "pxf_option.h"
 
 #include "access/reloptions.h"
 #include "catalog/pg_foreign_data_wrapper.h"

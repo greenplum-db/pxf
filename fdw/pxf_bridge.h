@@ -22,10 +22,17 @@
 #define _PXFBRIDGE_H
 
 #include "libchurl.h"
-#include "pxf_fragment.h"
 
+#include "pxf_option.h"
+
+#include "commands/copy.h"
 #include "cdb/cdbvars.h"
+#include "nodes/execnodes.h"
+#include "nodes/parsenodes.h"
 #include "nodes/pg_list.h"
+
+#define PXF_SEGMENT_ID                 GpIdentity.segindex
+#define PXF_SEGMENT_COUNT              getgpsegmentCount()
 
 /*
  * Execution state of a foreign scan using pxf_fdw.
@@ -35,7 +42,6 @@ typedef struct PxfFdwScanState
 	CHURL_HEADERS churl_headers;
 	CHURL_HANDLE churl_handle;
 	StringInfoData uri;
-	ListCell   *current_fragment;
 	Relation	relation;
 	char	   *filter_str;
 #if PG_VERSION_NUM >= 90600
@@ -43,7 +49,6 @@ typedef struct PxfFdwScanState
 #else
 	List	   *quals;
 #endif
-	List	   *fragments;
 	List	   *retrieved_attrs;
 	PxfOptions *options;
 	CopyState	cstate;

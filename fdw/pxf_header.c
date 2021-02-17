@@ -27,6 +27,7 @@
 #include "access/fileam.h"
 #include "catalog/pg_exttable.h"
 #endif
+#include "cdb/cdbvars.h"
 #include "commands/defrem.h"
 #include "utils/builtins.h"
 #include "utils/formatting.h"
@@ -56,6 +57,7 @@ BuildHttpHeaders(CHURL_HEADERS headers,
 {
 	extvar_t	ev;
 	char		pxfPortString[sizeof(int32) * 8];
+	char		long_number[sizeof(int32) * 8];
 
 	if (relation != NULL)
 	{
@@ -87,6 +89,11 @@ BuildHttpHeaders(CHURL_HEADERS headers,
 	churl_headers_append(headers, "X-GP-SEGMENT-COUNT", ev.GP_SEGMENT_COUNT);
 	churl_headers_append(headers, "X-GP-XID", ev.GP_XID);
 
+	pg_ltoa(gp_session_id, long_number);
+	churl_headers_append(headers, "X-GP-SESSION-ID", long_number);
+	pg_ltoa(gp_command_count, long_number);
+	churl_headers_append(headers, "X-GP-COMMAND-COUNT", long_number);
+
 	AddAlignmentSizeHttpHeader(headers);
 
 	/* Convert the number of attributes to a string */
@@ -116,6 +123,8 @@ BuildHttpHeaders(CHURL_HEADERS headers,
 	}
 	else
 		churl_headers_append(headers, "X-GP-HAS-FILTER", "0");
+
+	churl_headers_override(headers, "Connection", "close");
 }
 
 /* Report alignment size to remote component

@@ -26,6 +26,7 @@
 #include "libchurl.h"
 
 #include "pxf_fdw.h"
+#include "pxf_option.h"
 
 #include "nodes/execnodes.h"
 #include "nodes/nodeFuncs.h"

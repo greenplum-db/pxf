@@ -11,7 +11,6 @@
 #include "pxf_fdw.h"
 #include "pxf_bridge.h"
 #include "pxf_filter.h"
-#include "pxf_fragment.h"
 
 #include "access/reloptions.h"
 #if PG_VERSION_NUM >= 90600
@@ -178,9 +177,7 @@ enum FdwScanPrivateIndex
 	/* WHERE clauses to be sent to PXF (as a String node) */
 	FdwScanPrivateWhereClauses,
 	/* Integer list of attribute numbers retrieved by the SELECT */
-	FdwScanPrivateRetrievedAttrs,
-	/* List of fragments to be processed by the segments */
-	FdwScanPrivateFragmentList
+	FdwScanPrivateRetrievedAttrs
 };
 
 /*
@@ -385,10 +382,6 @@ pxfBeginForeignScan(ForeignScanState *node, int eflags)
 	if (eflags & EXEC_FLAG_EXPLAIN_ONLY)
 		return;
 
-	List* serializedFragmentList;
-	List*	 fragments;
-	ForeignTable *rel = GetForeignTable(RelationGetRelid(node->ss.ss_currentRelation));
-
 #if PG_VERSION_NUM >= 90600
 	ExprState  *quals             = node->ss.ps.qual;
 #else
@@ -404,46 +397,10 @@ pxfBeginForeignScan(ForeignScanState *node, int eflags)
 	char *filter_str              = strVal(list_nth(foreignScan->fdw_private, FdwScanPrivateWhereClauses));
 	List *retrieved_attrs = (List *) list_nth(foreignScan->fdw_private, FdwScanPrivateRetrievedAttrs);
 
-	/*
-	 * When running queries on all segments, master makes the fragmenter call
-	 * and segments receive a List of FragmentData from master. When the query
-	 * only runs on master or any, the fragment list is retrieved by the
-	 * executing process.
-	 */
-	if (rel->exec_location != FTEXECLOCATION_ALL_SEGMENTS || Gp_role == GP_ROLE_DISPATCH)
+	if (Gp_role == GP_ROLE_DISPATCH)
 	{
-		fragments = GetFragmentList(options,
-									relation,
-									filter_str,
-									retrieved_attrs);
-
-		if (Gp_role == GP_ROLE_DISPATCH)
-		{
-			/*
-			 * serialize fragment list and pass it down to segments
-			 * by appending it to foreignScan->fdw_private
-			 */
-			serializedFragmentList = SerializeFragmentList(fragments);
-			foreignScan->fdw_private = lappend(foreignScan->fdw_private, serializedFragmentList);
-
-			/* master does not process any fragments */
-			return;
-		}
+		return;
 	}
-	else
-	{
-		serializedFragmentList = (List *) list_nth(foreignScan->fdw_private, FdwScanPrivateFragmentList);
-		fragments = DeserializeFragmentList(serializedFragmentList);
-
-		/*
-		 * Call the work allocation algorithm when execution happens on all
-		 * segments
-		 */
-		fragments = FilterFragmentsForSegment(fragments);
-	}
-
-	/* Assign PXF location for the allocated fragments */
-	AssignPxfLocationToFragments(options, fragments);
 
 	/*
 	 * Save state in node->fdw_state.  We must save enough information to call
@@ -453,7 +410,6 @@ pxfBeginForeignScan(ForeignScanState *node, int eflags)
 	initStringInfo(&pxfsstate->uri);
 
 	pxfsstate->filter_str = filter_str;
-	pxfsstate->fragments = fragments;
 	pxfsstate->options = options;
 	pxfsstate->quals = quals;
 	pxfsstate->relation = relation;

@@ -19,13 +19,14 @@
  */
 
 #include "pxf_bridge.h"
+#include "pxf_header.h"
+
 #include "cdb/cdbtm.h"
 #include "cdb/cdbvars.h"
 
 /* helper function declarations */
 static void BuildUriForRead(PxfFdwScanState *pxfsstate);
 static void BuildUriForWrite(PxfFdwModifyState *pxfmstate);
-static void SetCurrentFragmentHeaders(PxfFdwScanState *pxfsstate);
 #if PG_VERSION_NUM >= 90600
 static size_t FillBuffer(PxfFdwScanState *pxfsstate, char *start, int minlen, int maxlen);
 #else
@@ -64,10 +65,6 @@ PxfBridgeCleanup(PxfFdwModifyState *pxfmstate)
 void
 PxfBridgeImportStart(PxfFdwScanState *pxfsstate)
 {
-	if (!pxfsstate->fragments)
-		return;
-
-	pxfsstate->current_fragment = list_head(pxfsstate->fragments);
 	pxfsstate->churl_headers = churl_headers_init();
 
 	BuildUriForRead(pxfsstate);
@@ -76,7 +73,6 @@ PxfBridgeImportStart(PxfFdwScanState *pxfsstate)
 					 pxfsstate->relation,
 					 pxfsstate->filter_str,
 					 pxfsstate->retrieved_attrs);
-	SetCurrentFragmentHeaders(pxfsstate);
 
 	pxfsstate->churl_handle = churl_init_download(pxfsstate->uri.data, pxfsstate->churl_headers);
 
@@ -113,32 +109,20 @@ PxfBridgeRead(void *outbuf, int datasize, void *extra)
 	size_t		n = 0;
 	PxfFdwScanState *pxfsstate = (PxfFdwScanState *) extra;
 
-	if (!pxfsstate->fragments)
-		return (int) n;
-		
 #if PG_VERSION_NUM >= 90600
-	while ((n = FillBuffer(pxfsstate, outbuf, minlen, maxlen)) == 0)
+	n = FillBuffer(pxfsstate, outbuf, minlen, maxlen);
 #else
-	while ((n = FillBuffer(pxfsstate, outbuf, datasize)) == 0)
+	n = FillBuffer(pxfsstate, outbuf, datasize);
 #endif
+
+	if (n == 0)
 	{
-		/*
-		 * done processing all data for current fragment - check if the
-		 * connection terminated with an error
-		 */
-		churl_read_check_connectivity(pxfsstate->churl_handle);
-
-		/* start processing next fragment */
-		pxfsstate->current_fragment = lnext(pxfsstate->current_fragment);
-		if (pxfsstate->current_fragment == NULL)
-			return 0;
-
-		SetCurrentFragmentHeaders(pxfsstate);
-		churl_download_restart(pxfsstate->churl_handle, pxfsstate->uri.data, pxfsstate->churl_headers);
-
-		/* read some bytes to make sure the connection is established */
+		/* check if the connection terminated with an error */
 		churl_read_check_connectivity(pxfsstate->churl_handle);
 	}
+
+	elog(DEBUG5, "pxf PxfBridgeRead: segment %d read %zu bytes from %s",
+		 PXF_SEGMENT_ID, n, pxfsstate->options->resource);
 
 	return (int) n;
 }
@@ -166,10 +150,10 @@ PxfBridgeWrite(PxfFdwModifyState *pxfmstate, char *databuf, int datalen)
 static void
 BuildUriForRead(PxfFdwScanState *pxfsstate)
 {
-	FragmentData *data = (FragmentData *) lfirst(pxfsstate->current_fragment);
+	PxfOptions *options = pxfsstate->options;
 
 	resetStringInfo(&pxfsstate->uri);
-	appendStringInfo(&pxfsstate->uri, "http://%s/%s/%s/Bridge", data->authority, PXF_SERVICE_PREFIX, PXF_VERSION);
+	appendStringInfo(&pxfsstate->uri, "http://%s:%d/%s/%s/Bridge", options->pxf_host, options->pxf_port, PXF_SERVICE_PREFIX, PXF_VERSION);
 	elog(DEBUG2, "pxf_fdw: uri %s for read", pxfsstate->uri.data);
 }
 
@@ -184,52 +168,6 @@ BuildUriForWrite(PxfFdwModifyState *pxfmstate)
 	resetStringInfo(&pxfmstate->uri);
 	appendStringInfo(&pxfmstate->uri, "http://%s:%d/%s/%s/Writable/stream", options->pxf_host, options->pxf_port, PXF_SERVICE_PREFIX, PXF_VERSION);
 	elog(DEBUG2, "pxf_fdw: uri %s with file name for write: %s", pxfmstate->uri.data, options->resource);
-}
-
-/*
- * Change the headers with current fragment information:
- * 1. X-GP-DATA-DIR header is changed to the source name of the current fragment.
- * We reuse the same http header to send all requests for specific fragments.
- * The original header's value contains the name of the general path of the query
- * (can be with wildcard or just a directory name), and this value is changed here
- * to the specific source name of each fragment name.
- * 2. X-GP-FRAGMENT-USER-DATA header is changed to the current fragment's user data.
- * If the fragment doesn't have user data, the header will be removed.
- */
-static void
-SetCurrentFragmentHeaders(PxfFdwScanState *pxfsstate)
-{
-	FragmentData *frag_data = (FragmentData *) lfirst(pxfsstate->current_fragment);
-	int			fragment_count = list_length(pxfsstate->fragments);
-
-	elog(DEBUG2, "pxf_fdw: set_current_fragment_source_name: source_name %s, index %s, has user data: %s ",
-		 frag_data->source_name, frag_data->index, frag_data->user_data ? "TRUE" : "FALSE");
-
-	churl_headers_override(pxfsstate->churl_headers, "X-GP-DATA-DIR", frag_data->source_name);
-	churl_headers_override(pxfsstate->churl_headers, "X-GP-FRAGMENT-METADATA", frag_data->fragment_md);
-	churl_headers_override(pxfsstate->churl_headers, "X-GP-FRAGMENT-INDEX", frag_data->index);
-
-	if (frag_data->fragment_idx == fragment_count)
-	{
-		churl_headers_override(pxfsstate->churl_headers, "X-GP-LAST-FRAGMENT", "true");
-	}
-
-	if (frag_data->user_data)
-	{
-		churl_headers_override(pxfsstate->churl_headers, "X-GP-FRAGMENT-USER-DATA", frag_data->user_data);
-	}
-	else
-	{
-		churl_headers_remove(pxfsstate->churl_headers, "X-GP-FRAGMENT-USER-DATA", true);
-	}
-
-	if (frag_data->profile)
-	{
-		/* if current fragment has optimal profile set it */
-		churl_headers_override(pxfsstate->churl_headers, "X-GP-PROFILE", frag_data->profile);
-		elog(DEBUG2, "pxf_fdw: SetCurrentFragmentHeaders: using profile: %s", frag_data->profile);
-
-	}
 }
 
 /*
