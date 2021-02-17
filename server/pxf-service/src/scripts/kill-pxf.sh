@@ -1,7 +1,7 @@
 #!/bin/bash
 
 log() {
-  echo "=====> $(date) $* <======"
+  echo "=====> $(date) $* <======" >> "${PXF_LOGDIR}/pxf-oom.log"
 }
 
 _main() {
