@@ -68,7 +68,7 @@ public class HdfsFileFragmenterTest {
         fragmenter.initialize(context);
         List<Fragment> fragmentList = fragmenter.getFragments();
         assertNotNull(fragmentList);
-        assertEquals(8, fragmentList.size());
+        assertEquals(9, fragmentList.size());
     }
 
     @Test
@@ -79,7 +79,7 @@ public class HdfsFileFragmenterTest {
         fragmenter.initialize(context);
         List<Fragment> fragmentList = fragmenter.getFragments();
         assertNotNull(fragmentList);
-        assertEquals(8, fragmentList.size());
+        assertEquals(9, fragmentList.size());
     }
 
     @Test

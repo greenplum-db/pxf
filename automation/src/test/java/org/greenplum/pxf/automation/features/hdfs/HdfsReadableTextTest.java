@@ -42,6 +42,8 @@ public class HdfsReadableTextTest extends BaseFeature {
             "bool boolean"
     };
 
+    ProtocolEnum protocol;
+
     // holds data for file generation
     Table dataTable = null;
     // path for storing data on HDFS
@@ -74,6 +76,8 @@ public class HdfsReadableTextTest extends BaseFeature {
         // add new path to classpath file and restart PXF service
         cluster.addPathToPxfClassPath(newPath);
         cluster.restart(PhdCluster.EnumClusterServices.pxf);
+
+        protocol = ProtocolUtils.getProtocol();
     }
 
     /**
@@ -86,7 +90,6 @@ public class HdfsReadableTextTest extends BaseFeature {
     @Override
     protected void beforeMethod() throws Exception {
         super.beforeMethod();
-        ProtocolEnum protocol = ProtocolUtils.getProtocol();
         // path for storing data on HDFS
         hdfsFilePath = hdfs.getWorkingDirectory() + "/data";
         // prepare data in table
@@ -177,7 +180,7 @@ public class HdfsReadableTextTest extends BaseFeature {
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void readCsvUsingProfile() throws Exception {
         // set profile and format
-        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":text");
+        exTable.setProfile(protocol.value() + ":text");
         exTable.setFormat("CSV");
         // create external table
         gpdb.createTableAndVerify(exTable);
@@ -228,7 +231,6 @@ public class HdfsReadableTextTest extends BaseFeature {
      */
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void readBzip2CompressedCsv() throws Exception {
-        ProtocolEnum protocol = ProtocolUtils.getProtocol();
         BZip2Codec codec = new BZip2Codec();
         codec.setConf(hdfs.getConfiguration());
         char c = 'a';
@@ -287,8 +289,6 @@ public class HdfsReadableTextTest extends BaseFeature {
     }
 
     private void runMultiBlockedMultiLinedCsvTest(String locationPath, String hdfsPath, boolean useProfile) throws Exception {
-
-        ProtocolEnum protocol = ProtocolUtils.getProtocol();
         // prepare local CSV file
         dataTable = new Table("dataTable", null);
         String tempLocalDataPath = dataTempFolder + "/data.csv";
@@ -382,7 +382,6 @@ public class HdfsReadableTextTest extends BaseFeature {
      */
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void emptyTextFile() throws Exception {
-        ProtocolEnum protocol = ProtocolUtils.getProtocol();
         // define and create external table
         exTable.setProfile(protocol.value() + ":text");
         exTable.setDelimiter(",");
@@ -421,6 +420,21 @@ public class HdfsReadableTextTest extends BaseFeature {
                 StandardCharsets.ISO_8859_1);
         // verify results
         runTincTest("pxf.features.hdfs.readable.text.encoding.runTest");
+    }
+
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    public void lineFeedForNewLineCharacter() throws Exception {
+        runNewLineTestScenario("LF", "\n");
+    }
+
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    public void carriageReturnLineFeedForNewLineCharacter() throws Exception {
+        runNewLineTestScenario("CRLF", "\r\n");
+    }
+
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    public void carriageReturnForNewLineCharacter() throws Exception {
+        runNewLineTestScenario("CR", "\r");
     }
 
     /**
@@ -518,7 +532,7 @@ public class HdfsReadableTextTest extends BaseFeature {
 
         exTable.setName("err_table_test");
         exTable.setFields(fields);
-        exTable.setProfile(ProtocolUtils.getProtocol().value() + ":text");
+        exTable.setProfile(protocol.value() + ":text");
         exTable.setDelimiter(",");
         exTable.setErrorTable(errorTable.getName());
         exTable.setSegmentRejectLimit(10);
@@ -662,11 +676,31 @@ public class HdfsReadableTextTest extends BaseFeature {
     }
 
     private void prepareReadableTable(String name, String[] fields, String path, String format) {
-        ProtocolEnum protocol = ProtocolUtils.getProtocol();
         exTable.setName(name);
         exTable.setFormat(format);
         exTable.setPath(protocol.getExternalTablePath(hdfs.getBasePath(), path));
         exTable.setFields(fields);
         exTable.setProfile(protocol.value() + ":text");
+    }
+
+    private void runNewLineTestScenario(String newLineType, String newLineChar) throws Exception {
+        Table smallDataTable = getSmallData("newline", 10);
+        String path = hdfs.getWorkingDirectory() + "/" + newLineType + "_newline_char";
+        hdfs.writeTableToFile(path, smallDataTable, ",", StandardCharsets.UTF_8, null, newLineChar);
+
+        prepareReadableTable("pxf_newline_char", SMALL_DATA_FIELDS, path, exTable.getFormat());
+        exTable.setSegmentRejectLimit(10);
+        exTable.setDelimiter(",");
+        exTable.setNewLine(newLineType);
+        exTable.setFormat("csv");
+
+        gpdb.createTableAndVerify(exTable);
+        runTincTest("pxf.features.hdfs.readable.text.newline_char.runTest");
+
+        // re-run the test with text format
+        exTable.setFormat("text");
+
+        gpdb.createTableAndVerify(exTable);
+        runTincTest("pxf.features.hdfs.readable.text.newline_char.runTest");
     }
 }

@@ -38,6 +38,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 
 /**
  * A PXF Accessor for reading delimited plain text records.

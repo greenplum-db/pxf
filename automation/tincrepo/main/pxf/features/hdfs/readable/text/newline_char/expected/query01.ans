@@ -1,0 +1,17 @@
+-- start_ignore
+-- end_ignore
+-- @description query01 for PXF HDFS Readable newline character
+SELECT * from pxf_newline_char;
+      name      | num | dub |    longnum    | bool 
+----------------+-----+-----+---------------+------
+ newline_row_1  |   1 |   1 |  100000000000 | f
+ newline_row_2  |   2 |   2 |  200000000000 | t
+ newline_row_3  |   3 |   3 |  300000000000 | f
+ newline_row_4  |   4 |   4 |  400000000000 | t
+ newline_row_5  |   5 |   5 |  500000000000 | f
+ newline_row_6  |   6 |   6 |  600000000000 | t
+ newline_row_7  |   7 |   7 |  700000000000 | f
+ newline_row_8  |   8 |   8 |  800000000000 | t
+ newline_row_9  |   9 |   9 |  900000000000 | f
+ newline_row_10 |  10 |  10 | 1000000000000 | t
+(10 rows)

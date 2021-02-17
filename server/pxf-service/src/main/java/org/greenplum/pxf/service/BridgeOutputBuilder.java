@@ -38,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Array;
+import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -60,16 +61,17 @@ public class BridgeOutputBuilder {
     private static final Logger LOG = LoggerFactory.getLogger(BridgeOutputBuilder.class);
 
     private static final byte DELIM = 10; /* (byte)'\n'; */
-    private RequestContext context;
+    private final String newLine;
+    private final byte[] newLineBytes;
+    private final RequestContext context;
     private Writable output = null;
-    private LinkedList<Writable> outputList;
+    private final LinkedList<Writable> outputList;
     private Writable partialLine = null;
     private GPDBWritable errorRecord = null;
     private int[] schema;
     private String[] colNames;
-    private boolean samplingEnabled;
-    private boolean isPartialLine = false;
-    private GreenplumCSV greenplumCSV;
+    private final boolean samplingEnabled;
+    private final GreenplumCSV greenplumCSV;
 
     /**
      * Constructs a BridgeOutputBuilder.
@@ -80,6 +82,8 @@ public class BridgeOutputBuilder {
     public BridgeOutputBuilder(RequestContext context) {
         this.context = context;
         greenplumCSV = context.getGreenplumCSV();
+        newLine = greenplumCSV.getNewline();
+        newLineBytes = newLine.getBytes(StandardCharsets.UTF_8);
         outputList = new LinkedList<>();
         makeErrorRecord();
         samplingEnabled = (this.context.getStatsSampleRatio() > 0);
@@ -125,7 +129,7 @@ public class BridgeOutputBuilder {
             return new Text(
                     StringUtils.repeat(String.valueOf(greenplumCSV.getDelimiter()), context.getTupleDescription().size()) +
                             greenplumCSV.toCsvField(ex.getMessage(), true, true, true) +
-                            greenplumCSV.getNewline());
+                            newLine);
         }
     }
 
@@ -300,10 +304,20 @@ public class BridgeOutputBuilder {
                 output = new BufferWritable((byte[]) val);
             }
         } else {
-            String textRec = (recFields.size() == 1 && val instanceof String) ?
-                    val + greenplumCSV.getNewline() :
-                    fieldListToCSVString(recFields);
-            output = new Text(textRec);
+
+            if (recFields.size() == 1 && val instanceof org.apache.hadoop.io.Text) {
+                org.apache.hadoop.io.Text text = (org.apache.hadoop.io.Text) val;
+                text.append(newLineBytes, 0, newLineBytes.length);
+
+                // Note that text.getLength() might be different from the size
+                // of the underlying byte[] used by Text.
+                // text.getBytes().length not necessarily equals to text.getLength()
+                output = new BufferWritable(text.getBytes(), text.getLength());
+            } else if (recFields.size() == 1 && val instanceof String) {
+                output = new Text(val + newLine);
+            } else {
+                output = new Text(fieldListToCSVString(recFields));
+            }
         }
 
         outputList.add(output);
@@ -325,12 +339,13 @@ public class BridgeOutputBuilder {
     void convertTextDataToLines(byte[] val) {
         int len = val.length;
         int start = 0;
-        int end = 0;
+        int end;
         byte[] line;
         BufferWritable writable;
 
         while (start < len) {
             end = ArrayUtils.indexOf(val, DELIM, start);
+            boolean isPartialLine;
             if (end == ArrayUtils.INDEX_NOT_FOUND) {
                 // data finished in the middle of the line
                 end = len;
@@ -445,6 +460,6 @@ public class BridgeOutputBuilder {
                     else
                         return greenplumCSV.toCsvField((String) field.val, true, true, true);
                 })
-                .collect(Collectors.joining(String.valueOf(greenplumCSV.getDelimiter()), "", greenplumCSV.getNewline()));
+                .collect(Collectors.joining(String.valueOf(greenplumCSV.getDelimiter()), "", newLine));
     }
 }

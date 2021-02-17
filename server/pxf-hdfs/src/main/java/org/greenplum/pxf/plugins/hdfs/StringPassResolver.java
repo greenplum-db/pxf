@@ -62,7 +62,7 @@ public class StringPassResolver extends BasePlugin implements Resolver {
         if (data instanceof ChunkWritable) {
             record.add(new OneField(BYTEA.getOID(), ((ChunkWritable) data).box));
         } else {
-            record.add(new OneField(VARCHAR.getOID(), data.toString()));
+            record.add(new OneField(VARCHAR.getOID(), data));
         }
         return record;
     }

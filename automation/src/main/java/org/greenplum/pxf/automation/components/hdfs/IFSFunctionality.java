@@ -85,7 +85,7 @@ public interface IFSFunctionality extends SystemObject {
      * @throws Exception
      */
     void writeTableToFile(String destPath, Table dataTable,
-                                 String delimiter) throws Exception;
+                          String delimiter) throws Exception;
 
     /***
      * Write Data Table to file using different encodings
@@ -114,6 +114,21 @@ public interface IFSFunctionality extends SystemObject {
                           Charset encoding, CompressionCodec codec) throws Exception;
 
     /**
+     * Write Data Table to file using different encodings and using different
+     * codecs
+     *
+     * @param destPath  destination file
+     * @param dataTable {@link Table} with List of data
+     * @param delimiter between fields
+     * @param encoding  to use to write the file
+     * @param codec     to use for compression, or null to disable compression
+     * @param newLine   CR, LF or CRLF
+     */
+    void writeTableToFile(String destPath, Table dataTable,
+                          String delimiter, Charset encoding,
+                          CompressionCodec codec, String newLine) throws Exception;
+
+    /**
      * Write Dequence Object to file
      *
      * @param writableData
@@ -135,7 +150,7 @@ public interface IFSFunctionality extends SystemObject {
      * @throws Exception
      */
     void writeAvroFile(String pathToFile, String schemaName,
-                              String codecName, IAvroSchema[] data)
+                       String codecName, IAvroSchema[] data)
             throws Exception;
 
     /**
@@ -144,14 +159,14 @@ public interface IFSFunctionality extends SystemObject {
      * file will be compressed using the given codecName. Supported types are
      * specified in {@code CodecFactory}.
      *
-     * @param pathToFile path to file in hdfs
-     * @param schemaName path to local schema file
+     * @param pathToFile   path to file in hdfs
+     * @param schemaName   path to local schema file
      * @param jsonFileName path to local data file
-     * @param codecName codec name
+     * @param codecName    codec name
      * @throws Exception
      */
     void writeAvroFileFromJson(String pathToFile, String schemaName,
-                                      String jsonFileName, String codecName)
+                               String jsonFileName, String codecName)
             throws Exception;
 
     /**
@@ -164,7 +179,7 @@ public interface IFSFunctionality extends SystemObject {
      * @throws Exception
      */
     void writeAvroInSequenceFile(String pathToFile, String schemaName,
-                                        IAvroSchema[] data) throws Exception;
+                                 IAvroSchema[] data) throws Exception;
 
     /**
      * @return Replication Size
@@ -208,7 +223,7 @@ public interface IFSFunctionality extends SystemObject {
      * @throws Exception
      */
     void writeProtocolBufferFile(String filePath,
-                                        com.google.protobuf.GeneratedMessage generatedMessages)
+                                 com.google.protobuf.GeneratedMessage generatedMessages)
             throws Exception;
 
     boolean doesFileExist(String pathToFile) throws Exception;

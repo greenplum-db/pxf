@@ -55,7 +55,7 @@ public class HdfsDataFragmenterTest {
         List<Fragment> fragmentList = fragmenter.getFragments();
         assertNotNull(fragmentList);
         // empty.csv gets ignored
-        assertEquals(7, fragmentList.size());
+        assertEquals(8, fragmentList.size());
     }
 
     @Test
@@ -68,7 +68,7 @@ public class HdfsDataFragmenterTest {
         List<Fragment> fragmentList = fragmenter.getFragments();
         assertNotNull(fragmentList);
         // empty.csv gets ignored
-        assertEquals(7, fragmentList.size());
+        assertEquals(8, fragmentList.size());
     }
 
     @Test

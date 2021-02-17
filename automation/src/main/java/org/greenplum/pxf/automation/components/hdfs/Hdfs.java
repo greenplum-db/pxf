@@ -428,9 +428,16 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
     public void writeTableToFile(String destPath, Table dataTable,
                                  String delimiter, Charset encoding,
                                  CompressionCodec codec) throws Exception {
+        writeTableToFile(destPath, dataTable, delimiter, encoding, codec, "\n");
+    }
+
+    @Override
+    public void writeTableToFile(String destPath, Table dataTable,
+                                 String delimiter, Charset encoding,
+                                 CompressionCodec codec, String newLine) throws Exception {
 
         ReportUtils.startLevel(report, getClass(),
-                "Write Text File (Delimiter = '" + delimiter + "') to "
+                "Write Text File (Delimiter = '" + delimiter + "', NewLine = '" + newLine + "') to "
                         + destPath
                         + ((encoding != null) ? " encoding: " + encoding : ""));
 
@@ -442,7 +449,7 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
             dos = new DataOutputStream(codec.createOutputStream(out));
         }
 
-        writeTableToStream(dos, dataTable, delimiter, encoding);
+        writeTableToStream(dos, dataTable, delimiter, encoding, newLine);
         ReportUtils.stopLevel(report);
     }
 
@@ -459,12 +466,12 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
 
         FSDataOutputStream out = fs.append(getDatapath(pathToFile));
         out.writeBytes("\n"); // Need to start on a new line
-        writeTableToStream(out, dataTable, delimiter, encoding);
+        writeTableToStream(out, dataTable, delimiter, encoding, "\n");
         ReportUtils.stopLevel(report);
     }
 
     private void writeTableToStream(DataOutputStream stream, Table dataTable,
-                                    String delimiter, Charset encoding) throws Exception {
+                                    String delimiter, Charset encoding, String newLine) throws Exception {
         BufferedWriter bufferedWriter = new BufferedWriter(
                 new OutputStreamWriter(stream, encoding));
         List<List<String>> data = dataTable.getData();
@@ -479,7 +486,7 @@ public class Hdfs extends BaseSystemObject implements IFSFunctionality {
                 }
             }
             if (i != data.size() - 1) {
-                sBuilder.append("\n");
+                sBuilder.append(newLine);
             }
             bufferedWriter.append(sBuilder.toString());
             if (flushThreshold > ROW_BUFFER) {

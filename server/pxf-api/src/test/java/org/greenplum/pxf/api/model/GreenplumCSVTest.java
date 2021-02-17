@@ -262,6 +262,12 @@ public class GreenplumCSVTest {
         assertEquals("\r", gpCSV.getNewline());
         gpCSV.withNewline("\r\n");
         assertEquals("\r\n", gpCSV.getNewline());
+        gpCSV.withNewline("LF");
+        assertEquals("\n", gpCSV.getNewline());
+        gpCSV.withNewline("CR");
+        assertEquals("\r", gpCSV.getNewline());
+        gpCSV.withNewline("CRLF");
+        assertEquals("\r\n", gpCSV.getNewline());
     }
 
     @Test
