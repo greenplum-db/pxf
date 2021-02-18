@@ -13,7 +13,7 @@ PXF manages its service-level logging, and supports the following log levels (mo
 - debug
 - trace
 
-The default configuration for the PXF Service logs at the `info` and more severe levels, and logs at the `warn` or `error` and more severe levels for some third-party libraries to reduce verbosity. Log messages are written to the `$PXF_LOGDIR/pxf-service.log` file. You can change the PXF log directory if you choose.
+The default configuration for the PXF Service logs at the `info` and more severe levels. For some third-party libraries, the PXF Service logs at the `warn` or `error` and more severe levels to reduce verbosity. Log messages are written to the `$PXF_LOGDIR/pxf-service.log` file. You can change the PXF log directory if you choose.
 
 Client-level logging is managed by the Greenplum Database client; this topic details configuring logging for a `psql` client.
 
