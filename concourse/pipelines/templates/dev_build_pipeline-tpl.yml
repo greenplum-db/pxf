@@ -132,6 +132,26 @@ resources:
     versioned_file: singlecluster/HDP3/singlecluster-HDP3.tar.gz
 {% endif %}
 
+{% set gp_ver = None %}
+{% for gp_ver in range(5, 8) %}
+- name: tomcat-native-centos7-gpdb[[gp_ver]]
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: data-gpdb-ud-pxf-build-resources
+    json_key: ((pxf-storage-service-account-key))
+    versioned_file: tomcat-native/centos7/gpdb[[gp_ver]]/tomcat-native.tar.gz
+{% endfor %} # gp5, gp6, and gp7
+
+{% set gp_ver = 6 %}
+- name: tomcat-native-ubuntu18-gpdb[[gp_ver]]
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: data-gpdb-ud-pxf-build-resources
+    json_key: ((pxf-storage-service-account-key))
+    versioned_file: tomcat-native/ubuntu18.04/gpdb[[gp_ver]]/tomcat-native.tar.gz
+
 ## ---------- Github Repos ----------
 - name: pxf_src
   type: git
@@ -318,6 +338,8 @@ jobs:
       resource: gpdb[[gp_ver]]_rhel7_rpm_latest-0
     - get: gpdb[[gp_ver]]-pxf-dev-centos7-image
     - get: pxf-build-dependencies
+    - get: tomcat-native
+      resource: tomcat-native-centos7-gpdb[[gp_ver]]
   - task: Build PXF-GP[[gp_ver]] on RHEL7
     image: gpdb[[gp_ver]]-pxf-dev-centos7-image
     file: pxf_src/concourse/tasks/build.yml
@@ -410,6 +432,8 @@ jobs:
       resource: gpdb[[gp_ver]]_ubuntu18_deb_latest-0
     - get: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image
     - get: pxf-build-dependencies
+    - get: tomcat-native
+      resource: tomcat-native-ubuntu18-gpdb[[gp_ver]]
   - task: Build PXF-GP[[gp_ver]] on Ubuntu18
     image: gpdb[[gp_ver]]-pxf-dev-ubuntu18-image
     file: pxf_src/concourse/tasks/build.yml

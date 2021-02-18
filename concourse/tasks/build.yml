@@ -9,6 +9,7 @@ inputs:
   optional: true
 - name: pxf_src
 - name: gpdb_package
+- name: tomcat-native
 
 outputs:
 - name: dist

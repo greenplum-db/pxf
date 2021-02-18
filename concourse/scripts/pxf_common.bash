@@ -46,6 +46,10 @@ function inflate_dependencies() {
 		tarballs+=(pxf-automation-dependencies/pxf-automation-dependencies.tar.gz)
 		files_to_link+=(~gpadmin/.m2)
 	fi
+	if [[ -f tomcat-native/tomcat-native.tar.gz ]]; then
+		tarballs+=(tomcat-native/tomcat-native.tar.gz)
+		files_to_link+=(~gpadmin/tomcat-native)
+	fi
 	if [[ -f regression-tools/regression-tools.tar.gz ]]; then
 		tarballs+=(regression-tools/regression-tools.tar.gz)
 	fi

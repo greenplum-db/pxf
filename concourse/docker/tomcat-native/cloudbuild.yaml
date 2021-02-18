@@ -1,0 +1,173 @@
+# In this directory, run the following command to build this builder.
+# $ gcloud builds submit . --config=cloudbuild.yaml \
+#     --substitutions=_PXF_BUILD_BUCKET=<YOUR_BUCKET_NAME>
+
+# We build one artifact per OS + Greenplum combination. This is because in some
+# cases Greenplum vendors libraries for OpenSSL, so we prefer to build against
+# the dependency shipped inside Greenplum.
+
+steps:
+  # This build step clones a remote public repository from Github; no
+  # credentials are required.
+  - name: gcr.io/cloud-builders/git
+    id: git-tomcat-native
+    args: [ 'clone', 'https://github.com/apache/tomcat-native' ]
+    waitFor: [ '-' ]
+
+  - name: gcr.io/cloud-builders/git
+    id: git-apr
+    args: [ 'clone', 'https://github.com/apache/apr' ]
+    waitFor: [ '-' ]
+
+  # Checkout the specified tomcat-native version
+  - name: gcr.io/cloud-builders/git
+    id: git-tomcat-native-tag
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        ls
+        cd tomcat-native
+        git checkout $(cat ../version)
+    waitFor: [ 'git-tomcat-native' ]
+
+  # Checkout the minimum required version of apr (not used for linking)
+  - name: gcr.io/cloud-builders/git
+    id: git-apr-tag
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        ls
+        cd apr
+        git checkout 1.4.0
+    waitFor: [ 'git-tomcat-native' ]
+
+  # build tomcat-native for Greenplum 5 on CentOS 7
+  - name: 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb5-centos7-test-pxf:latest'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        cd tomcat-native/native
+        make clean
+        export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk
+        sh buildconf --with-apr=../../apr
+        ./configure
+        make
+        ls .libs/
+        mkdir -p ../../output
+        cp .libs/*.so* ../../output
+        cd ../../
+        cp version output
+        ls output
+  # create a tarball with tomcat-native libraries
+  - name: 'gcr.io/$PROJECT_ID/tar'
+    args: [ '-czf', 'tomcat-native.tar.gz', 'output', '--transform', 's/output/tomcat-native/' ]
+  # push the tomcat-native.tar.gz tarball to Google Cloud Storage
+  - name: 'gcr.io/cloud-builders/gsutil'
+    args: [ 'cp', 'tomcat-native.tar.gz', 'gs://${_PXF_BUILD_BUCKET}/tomcat-native/centos7/gpdb5/tomcat-native.tar.gz' ]
+
+  # build tomcat-native for Greenplum 6 on CentOS 7
+  - name: 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-test-pxf:latest'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        rm -rf output tomcat-native.tar.gz
+        cd tomcat-native/native
+        make clean
+        export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk
+        sh buildconf --with-apr=../../apr
+        ./configure
+        make
+        ls .libs/
+        mkdir -p ../../output
+        cp .libs/*.so* ../../output
+        cd ../../
+        cp version output
+        ls output
+  # create a tarball with tomcat-native libraries
+  - name: 'gcr.io/$PROJECT_ID/tar'
+    args: [ '-czf', 'tomcat-native.tar.gz', 'output', '--transform', 's/output/tomcat-native/' ]
+  # push the tomcat-native.tar.gz tarball to Google Cloud Storage
+  - name: 'gcr.io/cloud-builders/gsutil'
+    args: [ 'cp', 'tomcat-native.tar.gz', 'gs://${_PXF_BUILD_BUCKET}/tomcat-native/centos7/gpdb6/tomcat-native.tar.gz' ]
+
+   # build tomcat-native for Greenplum 6 on Ubuntu 18.04
+  - name: 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-ubuntu18.04-test-pxf:latest'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        rm -rf output tomcat-native.tar.gz
+        cd tomcat-native/native
+        make clean
+        export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-amd64
+        sh buildconf --with-apr=../../apr
+        ./configure
+        make
+        ls .libs/
+        mkdir -p ../../output
+        cp .libs/*.so* ../../output
+        cd ../../
+        cp version output
+        ls output
+  # create a tarball with tomcat-native libraries
+  - name: 'gcr.io/$PROJECT_ID/tar'
+    args: [ '-czf', 'tomcat-native.tar.gz', 'output', '--transform', 's/output/tomcat-native/' ]
+  # push the tomcat-native.tar.gz tarball to Google Cloud Storage
+  - name: 'gcr.io/cloud-builders/gsutil'
+    args: [ 'cp', 'tomcat-native.tar.gz', 'gs://${_PXF_BUILD_BUCKET}/tomcat-native/ubuntu18.04/gpdb6/tomcat-native.tar.gz' ]
+
+  # build tomcat-native for Greenplum 7 on CentOS 7
+  - name: 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb7-centos7-test-pxf:latest'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        rm -rf output tomcat-native.tar.gz
+        cd tomcat-native/native
+        make clean
+        export JAVA_HOME=/usr/lib/jvm/java-11
+        sh buildconf --with-apr=../../apr
+        ./configure
+        make
+        ls .libs/
+        mkdir -p ../../output
+        cp .libs/*.so* ../../output
+        cd ../../
+        cp version output
+        ls output
+  # create a tarball with tomcat-native libraries
+  - name: 'gcr.io/$PROJECT_ID/tar'
+    args: [ '-czf', 'tomcat-native.tar.gz', 'output', '--transform', 's/output/tomcat-native/' ]
+  # push the tomcat-native.tar.gz tarball to Google Cloud Storage
+  - name: 'gcr.io/cloud-builders/gsutil'
+    args: [ 'cp', 'tomcat-native.tar.gz', 'gs://${_PXF_BUILD_BUCKET}/tomcat-native/centos7/gpdb7/tomcat-native.tar.gz' ]
+
+  # build tomcat-native for Greenplum 7 on Ubuntu 18.04
+  - name: 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb7-ubuntu18.04-test-pxf:latest'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        rm -rf output tomcat-native.tar.gz
+        cd tomcat-native/native
+        make clean
+        export JAVA_HOME=/usr/lib/jvm/jdk-11
+        sh buildconf --with-apr=../../apr
+        ./configure
+        make
+        ls .libs/
+        mkdir -p ../../output
+        cp .libs/*.so* ../../output
+        cd ../../
+        cp version output
+        ls output
+  # create a tarball with tomcat-native libraries
+  - name: 'gcr.io/$PROJECT_ID/tar'
+    args: [ '-czf', 'tomcat-native.tar.gz', 'output', '--transform', 's/output/tomcat-native/' ]
+  # push the tomcat-native.tar.gz tarball to Google Cloud Storage
+  - name: 'gcr.io/cloud-builders/gsutil'
+    args: [ 'cp', 'tomcat-native.tar.gz', 'gs://${_PXF_BUILD_BUCKET}/tomcat-native/ubuntu18.04/gpdb7/tomcat-native.tar.gz' ]

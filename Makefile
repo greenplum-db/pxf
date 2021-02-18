@@ -74,7 +74,11 @@ stage:
 	cp -a cli/build/stage/* build/stage/$${PXF_PACKAGE_NAME} ;\
 	cp -a server/build/stage/* build/stage/$${PXF_PACKAGE_NAME} ;\
 	echo $$(git rev-parse --verify HEAD) > build/stage/$${PXF_PACKAGE_NAME}/pxf/commit.sha ;\
-	cp package/install_binary build/stage/$${PXF_PACKAGE_NAME}/install_component
+	cp package/install_binary build/stage/$${PXF_PACKAGE_NAME}/install_component ;\
+	if [ -n "$(NATIVE_LIBRARY_PATH)" ] && [ -d "$(NATIVE_LIBRARY_PATH)" ]; then \
+		mkdir -p build/stage/$${PXF_PACKAGE_NAME}/pxf/application/native && \
+		cp $(NATIVE_LIBRARY_PATH)/* build/stage/$${PXF_PACKAGE_NAME}/pxf/application/native/; \
+	fi
 
 tar: stage
 	rm -rf build/dist
@@ -97,6 +101,10 @@ rpm:
 	cp -a server/build/stage/pxf/* build/rpmbuild/SOURCES ;\
 	echo $$(git rev-parse --verify HEAD) > build/rpmbuild/SOURCES/commit.sha ;\
 	cp package/*.spec build/rpmbuild/SPECS/ ;\
+	if [ -n "$(NATIVE_LIBRARY_PATH)" ] && [ -d "$(NATIVE_LIBRARY_PATH)" ]; then \
+		mkdir -p build/rpmbuild/SOURCES/application/native && \
+		cp $(NATIVE_LIBRARY_PATH)/* build/rpmbuild/SOURCES/application/native/; \
+	fi; \
 	rpmbuild \
 	--define "_topdir $${PWD}/build/rpmbuild" \
 	--define "pxf_version $${PXF_MAIN_VERSION}" \
@@ -132,6 +140,10 @@ deb:
 	cp -a cli/build/stage/pxf/* build/debbuild/usr/local/pxf-gp$${GP_MAJOR_VERSION} ;\
 	cp -a server/build/stage/pxf/* build/debbuild/usr/local/pxf-gp$${GP_MAJOR_VERSION} ;\
 	echo $$(git rev-parse --verify HEAD) > build/debbuild/usr/local/pxf-gp$${GP_MAJOR_VERSION}/commit.sha ;\
+	if [ -n "$(NATIVE_LIBRARY_PATH)" ] && [ -d "$(NATIVE_LIBRARY_PATH)" ]; then \
+		mkdir -p build/debbuild/usr/local/pxf-gp$${GP_MAJOR_VERSION}/application/native && \
+		cp $(NATIVE_LIBRARY_PATH)/* build/debbuild/usr/local/pxf-gp$${GP_MAJOR_VERSION}/application/native/; \
+	fi; \
 	mkdir build/debbuild/DEBIAN ;\
 	cp -a package/DEBIAN/* build/debbuild/DEBIAN/ ;\
 	sed -i -e "s/%VERSION%/$${PXF_MAIN_VERSION}-$${PXF_RELEASE}/" -e "s/%MAINTAINER%/${VENDOR}/" build/debbuild/DEBIAN/control ;\

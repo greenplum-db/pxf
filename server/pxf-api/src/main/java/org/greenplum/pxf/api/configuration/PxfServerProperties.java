@@ -26,6 +26,14 @@ public class PxfServerProperties {
     private String base;
 
     /**
+     * Enable/disable the Apache Portable Runtime (APR) based Native library
+     * for Tomcat (enabled by default)
+     */
+    @Getter
+    @Setter
+    private boolean aprEnabled = true;
+
+    /**
      * Customizable settings for tomcat through PXF
      */
     @Getter
