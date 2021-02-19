@@ -35,7 +35,7 @@ public class PxfServiceApplication {
             URL[] urls = urlClassLoader.getURLs();
             if (urls != null) {
                 for (URL url : urls) {
-                    LOG.info("Repository {} added", url);
+                    LOG.info("Added repository {}", url);
                 }
             }
         }
