@@ -29,8 +29,8 @@ sync
 
 The `pxf cluster` utility command manages PXF on the master, standby master, and on all Greenplum Database segment hosts. You can use the utility to:
 
-- Start, stop, and restart the PXF Service instance on all segment hosts.
-- Display the status of the PXF Service instance on all segment hosts.
+- Start, stop, and restart the PXF Service instance on the master, standby master, and all segment hosts.
+- Display the status of the PXF Service instance on the master, standby master, and all segment hosts.
 - Synchronize the PXF configuration from the Greenplum Database master host to the standby master and to all segment hosts.
 - Copy the PXF extension control file from the PXF installation on each host to the Greenplum installation on the host after a Greenplum upgrade.
 - Prepare a new `$PXF_BASE` runtime configuration directory.
@@ -57,16 +57,16 @@ The `pxf cluster` utility command manages PXF on the master, standby master, and
 <dd>The command is a no-op.</dd>
 
 <dt>restart</dt>
-<dd>Stop, and then start, the PXF Service instance on all segment hosts.</dd>
+<dd>Stop, and then start, the PXF Service instance on the master, standby master, and all segment hosts.</dd>
 
 <dt>start</dt>
-<dd>Start the PXF Service instance on all segment hosts.</dd>
+<dd>Start the PXF Service instance on the master, standby master, and all segment hosts.</dd>
 
 <dt>status  </dt>
-<dd>Display the status of the PXF Service instance on all segment hosts.</dd>
+<dd>Display the status of the PXF Service instance on the master, standby master, and all segment hosts.</dd>
 
 <dt>stop  </dt>
-<dd>Stop the PXF Service instance on all segment hosts.</dd>
+<dd>Stop the PXF Service instance on the master, standby master, and all segment hosts.</dd>
 
 <dt>sync  </dt>
 <dd>Synchronize the PXF configuration (`$PXF_BASE`) from the master to the standby master and to all Greenplum Database segment hosts. By default, this command updates files on and copies files to the remote. You can instruct PXF to also delete files during the synchronization; see [Options](#options).</dd>
@@ -81,7 +81,7 @@ The `pxf cluster sync` command takes the following option:
 
 ## <a id="topic1__section5"></a>Examples
 
-Stop the PXF Service instance on all segment hosts:
+Stop the PXF Service instance on the master, standby master, and all segment hosts:
 
 ``` shell
 $ pxf cluster stop

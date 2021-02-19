@@ -229,7 +229,7 @@ public class PxfExample_CustomWritable implements Writable {
     gpadmin@gpmaster$ pxf cluster sync
     ```
 
-3. Restart PXF on each Greenplum Database segment host as described in [Restarting PXF](cfginitstart_pxf.html#restart_pxf).
+3. Restart PXF on each Greenplum Database host as described in [Restarting PXF](cfginitstart_pxf.html#restart_pxf).
 
 5. Use the PXF `hdfs:SequenceFile` profile to create a Greenplum Database writable external table. Identify the serialization/deserialization Java class you created above in the `DATA-SCHEMA` \<custom-option\>. Use `BLOCK` mode compression with `BZip2` when you create the writable table.
 

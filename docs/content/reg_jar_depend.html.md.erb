@@ -43,7 +43,7 @@ PXF loads JAR dependencies from the following directories, in this order:
 
 2. The default PXF JAR directory `$PXF_BASE/lib`.
 
-To add a JAR dependency for PXF, for example a MySQL driver JAR file, you must log in to the Greenplum Database master host, copy the JAR file to the PXF user configuration runtime library directory (`$PXF_BASE/lib`), sync the PXF configuration to the Greenplum Database cluster, and then restart PXF on each segment host. For example:
+To add a JAR dependency for PXF, for example a MySQL driver JAR file, you must log in to the Greenplum Database master host, copy the JAR file to the PXF user configuration runtime library directory (`$PXF_BASE/lib`), sync the PXF configuration to the Greenplum Database cluster, and then restart PXF on each host. For example:
 
 ``` shell
 $ ssh gpadmin@<gpmaster>
@@ -112,7 +112,7 @@ As such, you have three file location options when you register a native library
 
     If you updated the `pxf-env.sh` `LD_LIBRARY_PATH` environment variable, this command copies the configuration change to the Greenplum Database standby and segment hosts.
 
-4. Restart PXF on all segment hosts:
+4. Restart PXF on all Greenplum hosts:
 
     ``` shell
     gpadmin@gpmaster$ pxf cluster restart

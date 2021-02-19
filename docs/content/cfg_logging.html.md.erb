@@ -44,7 +44,7 @@ To change the PXF log directory, you must update the `$PXF_LOGDIR` property in t
     gpadmin@gpmaster$ pxf cluster sync
     ```
 
-3. Restart PXF on each Greenplum Database segment host as described in [Restarting PXF](cfginitstart_pxf.html#restart_pxf).
+3. Restart PXF on each Greenplum Database host as described in [Restarting PXF](cfginitstart_pxf.html#restart_pxf).
 
 ## <a id="pxfsvclogmsg"></a>Configuring Service-Level Logging
 
@@ -74,7 +74,7 @@ To configure PXF `debug` logging and examine the output:
     gpadmin@gpmaster$ pxf cluster sync
     ```
 
-3. Restart PXF on each Greenplum Database segment host as described in [Restarting PXF](cfginitstart_pxf.html#restart_pxf).
+3. Restart PXF on each Greenplum Database host as described in [Restarting PXF](cfginitstart_pxf.html#restart_pxf).
 
 4. With `debug` level logging enabled, now perform PXF operations. Be sure to make note of the time; this will direct you to the relevant log messages in `$PXF_BASE/logs/pxf-service.log`.
 
