@@ -40,6 +40,7 @@ resources:
   type: pull-request
   source:
     repository: greenplum-db/pxf
+    base_branch: "master"
     access_token: {{pxf-bot-access-token}}
 
 ## ---------- Docker Images ----------
