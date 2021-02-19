@@ -46,7 +46,11 @@ After you install the new version of PXF, perform the following procedure:
     $ ssh gpadmin@<gpmaster>
     ```
 
-1. You must run the `pxf` commands specified in subsequent steps using the binaries from your PXF 6.x installation. Ensure that the PXF 6.x installation `bin/` directory is in your `$PATH`, or provide the full path to the `pxf` command.
+1. You must run the `pxf` commands specified in subsequent steps using the binaries from your PXF 6.x installation. Ensure that the PXF 6.x installation `bin/` directory is in your `$PATH`, or provide the full path to the `pxf` command. You can run the following command to check the `pxf` version:
+
+    ``` shell
+    gpadmin@gpmaster$ pxf version
+    ```
 
 1. (Optional, Advanced) If you want to relocate `$PXF_BASE` outside of `$PXF_HOME`, perform the procedure described in [Relocating $PXF_BASE](about_pxf_dir.html#movebase).
 
