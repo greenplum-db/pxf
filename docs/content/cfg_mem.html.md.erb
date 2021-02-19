@@ -59,11 +59,12 @@ By default, PXF is configured such that when the PXF JVM detects an out of memor
 
 When auto-kill is enabled and the PXF JVM detects an OOM condition and kills the PXF Service on the segment host:
 
-- PXF logs the following messages to XXX`$PXF_BASE/logs/pxf-service.log`XXX on the segment host:
+- PXF logs the following messages to `$PXF_LOGDIR/pxf-oom.log` on the segment host:
 
     ``` shell
     =====> <date> PXF Out of memory detected <======
     =====> <date> PXF shutdown scheduled <======
+    =====> <date> Stopping PXF <======
     ```
 
 - Any query that you run on a PXF external table will fail with the following error until you restart the PXF Service on the segment host:
