@@ -61,7 +61,7 @@ After you install the new version of PXF, perform the following procedure:
 
         The command copies PXF 5 `conf/pxf-profiles.xml`, `servers/*`, `lib/*`, and `keytabs/*` to the PXF 6.x `$PXF_BASE` directory. The command also merges configuration changes in the PXF 5 `conf/pxf-env.sh` into the PXF 6.x file of the same name.
 
-1. The `migrate` command does not migrate PXF 5 `$PXF_CONF/conf/pxf-log4j.properties` customizations; you must manually migrate any changes that you made to this file to `$PXF_BASE/conf/pxf-log4j2.xml`.  Note that PXF 5 `pxf-log4j.properties` is in properties format, and PXF 6 `pxf-log4j2.xml` is `xml` format.
+1. The `migrate` command does not migrate PXF 5 `$PXF_CONF/conf/pxf-log4j.properties` customizations; you must manually migrate any changes that you made to this file to `$PXF_BASE/conf/pxf-log4j2.xml`.  Note that PXF 5 `pxf-log4j.properties` is in properties format, and PXF 6 `pxf-log4j2.xml` is `xml` format. See the [Configuration with XML](https://logging.apache.org/log4j/2.x/manual/configuration.html#XML) topic in the Apache Log4j 2 documentation for more information.
 
 1. *Where applicable, be sure to apply any changes identified in subsequent steps to your migrated PXF 6.x `$PXF_BASE` configuration.*
 
