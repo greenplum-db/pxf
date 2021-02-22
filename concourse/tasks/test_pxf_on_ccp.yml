@@ -3,9 +3,9 @@ image_resource:
   type: docker-image
 inputs:
 - name: pxf_src
+- name: pxf_tarball
 - name: cluster_env_files
 - name: gpdb_package
-- name: pxf_tarball
 - name: dataproc_env_files
   optional: true
 - name: dataproc_2_env_files
