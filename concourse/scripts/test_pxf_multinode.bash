@@ -76,6 +76,16 @@ function update_pghba_conf() {
 	"
 }
 
+function add_testing_encoding() {
+	# install new encoding and restart Greenplum so that the new encoding is picked up by Greenplum
+	ssh "${SSH_OPTS[@]}" gpadmin@mdw "
+		source ${GPHOME}/greenplum_path.sh &&
+		gpssh -f ~gpadmin/hostfile_all -v -u centos -s -e 'sudo localedef -c -i ru_RU -f CP1251 ru_RU.CP1251' &&
+		export MASTER_DATA_DIRECTORY=/data/gpdata/master/gpseg-1 &&
+		gpstop -air
+	"
+}
+
 function setup_pxf_on_cluster() {
 	# drop named query file for JDBC test to gpadmin's home on mdw
 	scp "${SSH_OPTS[@]}" pxf_src/automation/src/test/resources/{,hive-}report.sql gpadmin@mdw:
@@ -469,6 +479,9 @@ function _main() {
 
 	# widen access to mdw to all nodes in the cluster for JDBC test
 	update_pghba_conf "${gpdb_segments[@]}"
+
+	# Add the ru_RU.CP1251 encoding for testing
+	add_testing_encoding
 
 	setup_pxf_on_cluster
 
