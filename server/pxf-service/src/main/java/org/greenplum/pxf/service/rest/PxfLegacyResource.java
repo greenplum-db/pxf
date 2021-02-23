@@ -28,6 +28,10 @@ import static org.greenplum.pxf.api.model.RequestContext.RequestType;
 public class PxfLegacyResource {
 
     //TODO: this is temporary, very soon this will return exception one new API version logic is developed.
+    private static final String ERROR_MESSAGE_HINT =
+            "upgrade PXF extension (run 'pxf [cluster] register' and then 'ALTER EXTENSION pxf UPDATE')";
+    private static final String ERROR_MESSAGE_TEMPLATE =
+            "%s API (v15) is no longer supported by the server, " + ERROR_MESSAGE_HINT;
 
     private final RequestParser<MultiValueMap<String, String>> parser;
     private final ReadService readService;
@@ -50,13 +54,13 @@ public class PxfLegacyResource {
 
     /**
      * REST endpoint for getting a list of fragments.
+     *
      * @param headers http headers from request that carry all parameters
      * @return response
      */
     @GetMapping(value = "/Fragmenter/getFragments", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> getFragments(@RequestHeader MultiValueMap<String, String> headers) {
-        throw new PxfRuntimeException("getFragments API (v15) is no longer supported by the server",
-                "Upgrade PXF client library, did you run 'pxf register' ?");
+        throw new PxfRuntimeException(String.format(ERROR_MESSAGE_TEMPLATE, "getFragments"), ERROR_MESSAGE_HINT);
     }
 
     /**

@@ -82,9 +82,9 @@ public class PxfResourceIT {
                 .andExpect(status().isInternalServerError());
         Thread.sleep(200);
         result.andExpect(r -> assertTrue(r.getResolvedException() instanceof PxfRuntimeException))
-                .andExpect(r -> assertEquals("getFragments API (v15) is no longer supported by the server",
+                .andExpect(r -> assertEquals("getFragments API (v15) is no longer supported by the server, upgrade PXF extension (run 'pxf [cluster] register' and then 'ALTER EXTENSION pxf UPDATE')",
                         r.getResolvedException().getMessage()));
-        result.andExpect(content().string("Upgrade PXF client library, did you run 'pxf register' ?"));
+        result.andExpect(content().string("upgrade PXF extension (run 'pxf [cluster] register' and then 'ALTER EXTENSION pxf UPDATE')"));
     }
 
     @Test
