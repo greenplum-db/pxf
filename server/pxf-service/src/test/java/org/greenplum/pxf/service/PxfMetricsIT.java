@@ -57,9 +57,10 @@ public class PxfMetricsIT {
         mockServices();
         // call PXF read API
         client.get().uri("/pxf/read")
+                .header("X-GP-ENCODED-HEADER-VALUES", "true")
                 .header("X-GP-USER", "reader")
                 .header("X-GP-SEGMENT-ID", "77")
-                .header("X-GP-OPTIONS-PROFILE", "profile:test")
+                .header("X-GP-OPTIONS-PROFILE", "profile%3Atest")
                 .header("X-GP-OPTIONS-SERVER", "speedy")
                 .exchange().expectStatus().isOk()
                 .expectBody(String.class).isEqualTo("Hello from read!");

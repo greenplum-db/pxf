@@ -85,7 +85,7 @@ public class HttpRequestParserTest {
         parameters.add("X-GP-DATA-ENCODING", "UTF8");
         parameters.add("X-GP-DATABASE-ENCODING", "UTF8");
 
-        parser = new HttpRequestParser(mockPluginConf, new CharsetUtils());
+        parser = new HttpRequestParser(mockPluginConf, new CharsetUtils(), new HttpHeaderDecoder());
     }
 
     @AfterEach
@@ -106,7 +106,7 @@ public class HttpRequestParserTest {
 
         assertEquals(multivaluedMap.keySet().size(), multiCaseKeys.size(), "All keys should have existed");
 
-        Map<String, String> caseInsensitiveMap = new HttpRequestParser.RequestMap(multivaluedMap);
+        Map<String, String> caseInsensitiveMap = new HttpRequestParser.RequestMap(multivaluedMap, new HttpHeaderDecoder());
 
         assertEquals(caseInsensitiveMap.keySet().size(), 1, "Only one key should have exist");
 
@@ -132,7 +132,7 @@ public class HttpRequestParserTest {
         MultiValueMap<String, String> multivaluedMap = new LinkedMultiValueMap<>();
         multivaluedMap.put("one", Collections.singletonList(value));
 
-        Map<String, String> caseInsensitiveMap = new HttpRequestParser.RequestMap(multivaluedMap);
+        Map<String, String> caseInsensitiveMap = new HttpRequestParser.RequestMap(multivaluedMap, new HttpHeaderDecoder());
 
         assertEquals(caseInsensitiveMap.keySet().size(), 1, "Only one key should have exist");
 

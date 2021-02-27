@@ -13,9 +13,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.MultiValueMap;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collections;
@@ -39,22 +36,37 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
 
     private final CharsetUtils charsetUtils;
     private final PluginConf pluginConf;
+    private final HttpHeaderDecoder headerDecoder;
 
     /**
      * Create a new instance of the HttpRequestParser with the given PluginConf
      *
-     * @param pluginConf   the plugin conf
-     * @param charsetUtils utilities for Charset
+     * @param pluginConf    the plugin conf
+     * @param charsetUtils  utilities for Charset
+     * @param headerDecoder decoder of http headers
      */
-    public HttpRequestParser(PluginConf pluginConf, CharsetUtils charsetUtils) {
+    public HttpRequestParser(PluginConf pluginConf, CharsetUtils charsetUtils, HttpHeaderDecoder headerDecoder) {
         this.pluginConf = pluginConf;
         this.charsetUtils = charsetUtils;
+        this.headerDecoder = headerDecoder;
+    }
+
+    /**
+     * Throws an exception when the given property value is missing in request.
+     *
+     * @param property missing property name
+     * @throws IllegalArgumentException throws an exception with the property
+     *                                  name in the error message
+     */
+    private static void protocolViolation(String property) {
+        String error = String.format("Property %s has no value in the current request", property);
+        throw new IllegalArgumentException(error);
     }
 
     @Override
     public RequestContext parseRequest(MultiValueMap<String, String> requestHeaders, RequestContext.RequestType requestType) {
 
-        RequestMap params = new RequestMap(requestHeaders);
+        RequestMap params = new RequestMap(requestHeaders, headerDecoder);
 
         if (LOG.isDebugEnabled()) {
             // Logging only keys to prevent sensitive data to be logged
@@ -213,18 +225,6 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
         return context;
     }
 
-    /**
-     * Throws an exception when the given property value is missing in request.
-     *
-     * @param property missing property name
-     * @throws IllegalArgumentException throws an exception with the property
-     *                                  name in the error message
-     */
-    private static void protocolViolation(String property) {
-        String error = String.format("Property %s has no value in the current request", property);
-        throw new IllegalArgumentException(error);
-    }
-
     private void parseGreenplumCSV(RequestMap params, RequestContext context) {
         context.getGreenplumCSV()
                 .withDelimiter(params.removeUserProperty("DELIMITER"))
@@ -358,53 +358,20 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
         private static final String PROP_PREFIX = "X-GP-";
         private static final String USER_PROP_PREFIX = "X-GP-OPTIONS-";
         private static final String USER_PROP_PREFIX_LOWERCASE = "x-gp-options-";
-        private static final String ENCODED_HEADER_VALUES_NAME = PROP_PREFIX + "ENCODED-HEADER-VALUES";
 
-        RequestMap(MultiValueMap<String, String> requestHeaders) {
+
+        RequestMap(MultiValueMap<String, String> requestHeaders, HttpHeaderDecoder headerDecoder) {
             super(String.CASE_INSENSITIVE_ORDER);
 
-            boolean decodeHeaderValue = false;
+            boolean headersEncoded = headerDecoder.areHeadersEncoded(requestHeaders);
             for (Map.Entry<String, List<String>> entry : requestHeaders.entrySet()) {
-                if (StringUtils.equalsIgnoreCase(ENCODED_HEADER_VALUES_NAME, entry.getKey())) {
-                    String value = getValue(entry.getValue());
-                    decodeHeaderValue = StringUtils.equalsIgnoreCase(TRUE_LCASE, value);
-                    break;
-                }
-            }
-
-            for (Map.Entry<String, List<String>> entry : requestHeaders.entrySet()) {
-                String value = getValue(entry.getValue());
-                if (value == null) continue;
-
                 String key = entry.getKey();
-                if (decodeHeaderValue && StringUtils.startsWithIgnoreCase(key, PROP_PREFIX)) {
-                    try {
-                        value = URLDecoder.decode(value, StandardCharsets.UTF_8.name());
-                    } catch (UnsupportedEncodingException e) {
-                        throw new RuntimeException(String.format("Error while URL decoding value '%s'", value), e);
-                    }
+                String value = headerDecoder.getHeaderValue(key, entry.getValue(), headersEncoded);
+                if (value != null) {
+                    LOG.trace("Key: {} Value: {}", key, value);
+                    put(key, value);
                 }
-                LOG.trace("Key: {} Value: {}", key, value);
-                put(key, value);
             }
-        }
-
-        /**
-         * Returns the value from the list of values. If the list has 1 element,
-         * it returns the element. If the list has more than one element, it
-         * returns a flattened string joined with a comma.
-         *
-         * @param values the list of values
-         * @return the value
-         */
-        private String getValue(List<String> values) {
-            if (values == null) return null;
-
-            String value = values.size() > 1 ? StringUtils.join(values, ",") : values.get(0);
-            if (value == null) return null;
-
-            // Converting to value UTF-8 encoding
-            return new String(value.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
         }
 
         /**

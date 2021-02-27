@@ -1,14 +1,10 @@
 package org.greenplum.pxf.service;
 
-import io.micrometer.core.instrument.Tag;
-import io.micrometer.core.instrument.Tags;
-import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.api.configuration.PxfServerProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.actuate.metrics.web.servlet.WebMvcTagsContributor;
 import org.springframework.boot.autoconfigure.task.TaskExecutionProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.task.TaskExecutorBuilder;
@@ -22,9 +18,6 @@ import org.springframework.scheduling.annotation.AsyncAnnotationBeanPostProcesso
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.web.servlet.config.annotation.AsyncSupportConfigurer;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * Configures the {@link AsyncTaskExecutor} for tasks that will stream data to
@@ -105,37 +98,6 @@ public class PxfConfiguration implements WebMvcConfigurer {
                 shutdown.getAwaitTerminationPeriod());
 
         return builder.build(PxfThreadPoolTaskExecutor.class);
-    }
-
-    /**
-     * Custom {@link WebMvcTagsContributor} that adds PXF specific tags to metrics for Spring MVC (REST endpoints)
-     *
-     * @return the {@link WebMvcTagsContributor} instance
-     */
-    @Bean
-    public WebMvcTagsContributor webMvcTagsContributor() {
-        return new WebMvcTagsContributor() {
-
-            private static final String UNKNOWN_VALUE = "unknown";
-
-            @Override
-            public Iterable<Tag> getTags(HttpServletRequest request, HttpServletResponse response, Object handler, Throwable exception) {
-                // default server tag value to "default" if the request is from a PXF Client
-                // if request is not from PXF client, apply the same tags wth the value "unknown"
-                // because the Prometheus Metrics Registry requires a metric to have a consistent set of tags
-                String defaultServer = StringUtils.isNotBlank(request.getHeader("X-GP-USER")) ? "default" : UNKNOWN_VALUE;
-                return Tags.empty()
-                        .and("user", StringUtils.defaultIfBlank(request.getHeader("X-GP-USER"), UNKNOWN_VALUE))
-                        .and("segment", StringUtils.defaultIfBlank(request.getHeader("X-GP-SEGMENT-ID"), UNKNOWN_VALUE))
-                        .and("profile", StringUtils.defaultIfBlank(request.getHeader("X-GP-OPTIONS-PROFILE"), UNKNOWN_VALUE))
-                        .and("server", StringUtils.defaultIfBlank(request.getHeader("X-GP-OPTIONS-SERVER"), defaultServer));
-            }
-
-            @Override
-            public Iterable<Tag> getLongRequestTags(HttpServletRequest request, Object handler) {
-                return Tags.empty();
-            }
-        };
     }
 
 }
