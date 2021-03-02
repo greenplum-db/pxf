@@ -23,11 +23,9 @@
 #if PG_VERSION_NUM >= 90600
 #include "access/external.h"
 #include "access/url.h"
-#include "common/md5.h"
 #else
 #include "access/fileam.h"
 #include "catalog/pg_exttable.h"
-#include "libpq/md5.h"
 #endif
 #include "cdb/cdbvars.h"
 #include "commands/defrem.h"
@@ -45,8 +43,6 @@ static void AddProjectionDescHttpHeader(CHURL_HEADERS headers, List *retrieved_a
 static void AddProjectionIndexHeader(CHURL_HEADERS headers, int attno, char *long_number);
 static char *NormalizeKeyName(const char *key);
 static char *TypeOidGetTypename(Oid typid);
-static char *GetTraceId(char* xid, char* filter, char* relnamespace, const char* relname, char* user);
-static char *GetSpanId(char* traceId, char* segmentId);
 static char *GetNamespaceName(Oid nsp_oid);
 
 /*
@@ -64,7 +60,6 @@ BuildHttpHeaders(CHURL_HEADERS headers,
 	extvar_t	 ev;
 	char		 pxfPortString[sizeof(int32) * 8];
 	char		 long_number[sizeof(int32) * 8];
-	char		*traceId;
 	const char	*relname = NULL;
 	char		*relnamespace = NULL;
 
@@ -141,13 +136,8 @@ BuildHttpHeaders(CHURL_HEADERS headers,
 	else
 		churl_headers_append(headers, "X-GP-HAS-FILTER", "0");
 
-	// Add trace id = xid : filterstr : schema : tablename : user
-	traceId = GetTraceId(ev.GP_XID, filter_string, relnamespace, relname, ev.GP_USER);
-	churl_headers_append(headers, "X-B3-TraceId", traceId);
-
-	// Add span id = traceId : segId
-	churl_headers_append(headers, "X-B3-SpanId", GetSpanId(traceId, ev.GP_SEGMENT_ID));
-
+	// Since we only establish a single connection per segment, we can safely close the connection after
+	// the segment completes streaming data.
 	churl_headers_override(headers, "Connection", "close");
 }
 
@@ -388,60 +378,6 @@ TypeOidGetTypename(Oid typid)
 	ReleaseSysCache(typtup);
 
 	return typname;
-}
-
-/* Returns the 128-bit trace id to be propagated
- * to the PXF Service
- */
-static char *
-GetTraceId(char* xid, char* filter, char* relnamespace, const char* relname, char* user)
-{
-	char	   *traceId,
-			*md5Hash;
-
-	traceId = psprintf("%s:%s:%s:%s:%s", xid, filter, relnamespace, relname, user);
-	elog(DEBUG3, "GetTraceId: generated traceId %s", traceId);
-
-	md5Hash = palloc0(33);
-
-	if (!pg_md5_hash(traceId, strlen(traceId), md5Hash))
-	{
-		elog(DEBUG3, "GetTraceId: Unable to calculate pg_md5_hash for traceId '%s'", traceId);
-		return NULL;
-	}
-
-	elog(DEBUG3, "GetTraceId: generated md5 hash for traceId %s", md5Hash);
-
-	return md5Hash;
-}
-
-/* Returns the 64-bit span id to be propagated
- * to the PXF Service
- */
-static char *
-GetSpanId(char* traceId, char* segmentId)
-{
-	char	   *spanId,
-			*md5Hash,
-			*res;
-
-	spanId = psprintf("%s:%s", traceId, segmentId);
-	elog(DEBUG3, "GetSpanId: generated spanId %s", spanId);
-
-	md5Hash = palloc0(33);
-	res = palloc0(17);
-
-	if (!pg_md5_hash(spanId, strlen(spanId), md5Hash))
-	{
-		elog(DEBUG3, "GetSpanId: Unable to calculate pg_md5_hash for spanId '%s'", spanId);
-		return NULL;
-	}
-
-	strncpy(res, md5Hash, 16);
-	elog(DEBUG3, "GetSpanId: generated md5 hash for spanId %s", res);
-	pfree(md5Hash);
-
-	return res;
 }
 
 /* Returns the namespace (schema) name for a given namespace oid */

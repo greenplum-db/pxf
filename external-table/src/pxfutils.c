@@ -5,7 +5,6 @@
 #include "catalog/pg_type.h"
 #endif
 #include "catalog/pg_namespace.h"
-#include "libpq/md5.h"
 #include "utils/formatting.h"
 #include "utils/syscache.h"
 
@@ -119,60 +118,6 @@ get_pxf_port(void)
 	}
 
 	return port;
-}
-
-/* Returns the 128-bit trace id to be propagated
- * to the PXF Service
- */
-char *
-GetTraceId(char* xid, char* filter, char* relnamespace, const char* relname, char* user)
-{
-	char	   *traceId,
-			   *md5Hash;
-
-	traceId = psprintf("%s:%s:%s:%s:%s", xid, filter, relnamespace, relname, user);
-	elog(DEBUG3, "GetTraceId: generated traceId %s", traceId);
-
-	md5Hash = palloc0(33);
-
-	if (!pg_md5_hash(traceId, strlen(traceId), md5Hash))
-	{
-		elog(DEBUG3, "GetTraceId: Unable to calculate pg_md5_hash for traceId '%s'", traceId);
-		return NULL;
-	}
-
-	elog(DEBUG3, "GetTraceId: generated md5 hash for traceId %s", md5Hash);
-
-	return md5Hash;
-}
-
-/* Returns the 64-bit span id to be propagated
- * to the PXF Service
- */
-char *
-GetSpanId(char* traceId, char* segmentId)
-{
-	char	   *spanId,
-			   *md5Hash,
-			   *res;
-
-	spanId = psprintf("%s:%s", traceId, segmentId);
-	elog(DEBUG3, "GetSpanId: generated spanId %s", spanId);
-
-	md5Hash = palloc0(33);
-	res = palloc0(17);
-
-	if (!pg_md5_hash(spanId, strlen(spanId), md5Hash))
-	{
-		elog(DEBUG3, "GetSpanId: Unable to calculate pg_md5_hash for spanId '%s'", spanId);
-		return NULL;
-	}
-
-	strncpy(res, md5Hash, 16);
-	elog(DEBUG3, "GetSpanId: generated md5 hash for spanId %s", res);
-	pfree(md5Hash);
-
-	return res;
 }
 
 /* Returns the namespace (schema) name for a given namespace oid */

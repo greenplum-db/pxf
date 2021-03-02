@@ -25,16 +25,6 @@ const char *get_pxf_host(void);
  */
 const int  get_pxf_port(void);
 
-/* Returns the 128-bit trace id to be propagated
- * to the PXF Service
- */
-char	   *GetTraceId(char* xid, char* filter, char* relnamespace, const char* relname, char* user);
-
-/* Returns the 64-bit span id to be propagated
- * to the PXF Service
- */
-char	   *GetSpanId(char* traceId, char* segmentId);
-
 /* Returns the namespace (schema) name for a given namespace oid */
 char	   *GetNamespaceName(Oid nsp_oid);
 
