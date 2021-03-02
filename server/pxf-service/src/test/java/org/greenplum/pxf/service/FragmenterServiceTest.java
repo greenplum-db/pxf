@@ -89,13 +89,30 @@ class FragmenterServiceTest {
     }
 
     @Test
-    public void testFragmenterCallIsNotCachedForDifferentDataSources() throws Throwable {
+    public void testFragmenterCallIsNotCachedForDifferentSchemas() throws Throwable {
         context1.setTransactionId("XID-XYZ-123456");
-        context1.setDataSource("foo.bar");
+        context1.setSchemaName("foo1");
+        context1.setTableName("bar");
         context1.setFilterString("a3c25s10d2016-01-03o6");
 
         context2.setTransactionId("XID-XYZ-123456");
-        context2.setDataSource("bar.foo");
+        context2.setSchemaName("foo2");
+        context2.setTableName("bar");
+        context2.setFilterString("a3c25s10d2016-01-03o6");
+
+        testContextsAreNotCached(context1, context2);
+    }
+
+    @Test
+    public void testFragmenterCallIsNotCachedForDifferentTables() throws Throwable {
+        context1.setTransactionId("XID-XYZ-123456");
+        context1.setSchemaName("foo");
+        context1.setTableName("bar1");
+        context1.setFilterString("a3c25s10d2016-01-03o6");
+
+        context2.setTransactionId("XID-XYZ-123456");
+        context2.setSchemaName("foo");
+        context2.setTableName("bar2");
         context2.setFilterString("a3c25s10d2016-01-03o6");
 
         testContextsAreNotCached(context1, context2);

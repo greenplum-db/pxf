@@ -3,6 +3,7 @@ package org.greenplum.pxf.service.rest;
 import com.google.common.base.Charsets;
 import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.service.HttpHeaderDecoder;
 import org.greenplum.pxf.service.RequestParser;
 import org.greenplum.pxf.service.controller.ReadService;
 import org.greenplum.pxf.service.controller.WriteService;
@@ -46,6 +47,9 @@ public class PxfResourceIT {
 
     @MockBean
     private WriteService mockWriteService;
+
+    @MockBean
+    private HttpHeaderDecoder mockHttpHeaderDecoder;
 
     @Mock
     private RequestContext mockContext;
