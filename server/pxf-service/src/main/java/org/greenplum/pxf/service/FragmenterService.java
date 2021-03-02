@@ -84,9 +84,9 @@ public class FragmenterService {
             int numberOfFragments = filteredFragments.size();
             long elapsedMillis = Duration.between(startTime, Instant.now()).toMillis();
 
-            LOG.debug("{} returns {}/{} fragment{} for path {} in {} ms for {} [profile {} predicate is{} available]",
+            LOG.debug("{} returns {}/{} fragment{} for path {} in {} ms [profile {} predicate is{} available]",
                     context.getId(), numberOfFragments, fragments.size(), numberOfFragments == 1 ? "" : "s",
-                    context.getDataSource(), elapsedMillis, context.getId(), context.getProfile(), context.hasFilter() ? "" : " not");
+                    context.getDataSource(), elapsedMillis, context.getProfile(), context.hasFilter() ? "" : " not");
         }
 
         return filteredFragments;
