@@ -1,5 +1,6 @@
 package org.greenplum.pxf.service.spring;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.service.HttpHeaderDecoder;
 import org.slf4j.MDC;
@@ -16,6 +17,7 @@ import java.io.IOException;
  * A servlet filter that enhances MDC with request headers that provide
  * PXF session/segment IDs (if available).
  */
+@Slf4j
 @Component
 public class PxfContextMdcLogEnhancerFilter extends OncePerRequestFilter {
 
@@ -55,10 +57,13 @@ public class PxfContextMdcLogEnhancerFilter extends OncePerRequestFilter {
         }
 
         // xid : server
-        String serverName = StringUtils.defaultString(decoder.getHeaderValue("X-GP-OPTIONS-SERVER", request, encoded), "default");
+        String serverName = StringUtils.defaultIfBlank(decoder.getHeaderValue("X-GP-OPTIONS-SERVER", request, encoded), "default");
         String sessionId = String.format("%s:%s", xid, serverName);
+        String segmentId = decoder.getHeaderValue("X-GP-SEGMENT-ID", request, encoded);
         MDC.put(MDC_SESSION_ID, sessionId);
-        MDC.put(MDC_SEGMENT_ID, decoder.getHeaderValue("X-GP-SEGMENT-ID", request, encoded));
+        MDC.put(MDC_SEGMENT_ID, segmentId);
+        log.debug("MDC: Added {}={}", MDC_SESSION_ID, sessionId);
+        log.debug("MDC: Added {}={}", MDC_SEGMENT_ID, segmentId);
     }
 
     /**
