@@ -5,6 +5,7 @@ import org.apache.catalina.connector.ClientAbortException;
 import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.Utilities;
+import org.greenplum.pxf.service.MetricsReporter;
 import org.greenplum.pxf.service.bridge.Bridge;
 import org.greenplum.pxf.service.bridge.BridgeFactory;
 import org.greenplum.pxf.service.security.SecurityService;
@@ -30,8 +31,9 @@ public class WriteServiceImpl extends BaseServiceImpl implements WriteService {
      */
     public WriteServiceImpl(ConfigurationFactory configurationFactory,
                             BridgeFactory bridgeFactory,
-                            SecurityService securityService) {
-        super("Write", configurationFactory, bridgeFactory, securityService);
+                            SecurityService securityService,
+                            MetricsReporter metricsReporter) {
+        super("Write", configurationFactory, bridgeFactory, securityService, metricsReporter);
     }
 
     @Override

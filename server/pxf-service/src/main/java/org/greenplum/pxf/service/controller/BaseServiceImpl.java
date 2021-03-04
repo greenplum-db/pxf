@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.conf.Configuration;
 import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.service.MetricsReporter;
 import org.greenplum.pxf.service.bridge.Bridge;
 import org.greenplum.pxf.service.bridge.BridgeFactory;
 import org.greenplum.pxf.service.security.SecurityService;
@@ -20,6 +21,7 @@ import java.time.Instant;
 @Slf4j
 public abstract class BaseServiceImpl {
 
+    protected final MetricsReporter metricsReporter;
     private final String serviceName;
     private final ConfigurationFactory configurationFactory;
     private final BridgeFactory bridgeFactory;
@@ -27,25 +29,30 @@ public abstract class BaseServiceImpl {
 
     /**
      * Creates a new instance of the service with auto-wired dependencies.
-     * @param serviceName name of the service
+     *
+     * @param serviceName          name of the service
      * @param configurationFactory configuration factory
-     * @param bridgeFactory bridge factory
-     * @param securityService security service
+     * @param bridgeFactory        bridge factory
+     * @param securityService      security service
+     * @param metricsReporter      metrics reporter service
      */
     protected BaseServiceImpl(String serviceName,
                               ConfigurationFactory configurationFactory,
                               BridgeFactory bridgeFactory,
-                              SecurityService securityService) {
+                              SecurityService securityService,
+                              MetricsReporter metricsReporter) {
         this.serviceName = serviceName;
         this.configurationFactory = configurationFactory;
         this.bridgeFactory = bridgeFactory;
         this.securityService = securityService;
+        this.metricsReporter = metricsReporter;
     }
 
     /**
      * Executes an action with the identity determined by the PXF security service.
+     *
      * @param context request context
-     * @param action action to execute
+     * @param action  action to execute
      * @return operation statistics
      * @throws IOException if an error occurs during the operation
      */

@@ -10,6 +10,7 @@ import org.greenplum.pxf.api.model.PluginConf;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.service.FragmenterService;
+import org.greenplum.pxf.service.MetricsReporter;
 import org.greenplum.pxf.service.bridge.Bridge;
 import org.greenplum.pxf.service.bridge.BridgeFactory;
 import org.greenplum.pxf.service.security.SecurityService;
@@ -18,6 +19,8 @@ import org.springframework.stereotype.Service;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -37,12 +40,14 @@ public class ReadServiceImpl extends BaseServiceImpl implements ReadService {
      * @param bridgeFactory        bridge factory
      * @param securityService      security service
      * @param fragmenterService    fragmenter service
+     * @param metricsReporter      metrics reporter service
      */
     public ReadServiceImpl(ConfigurationFactory configurationFactory,
                            BridgeFactory bridgeFactory,
                            SecurityService securityService,
-                           FragmenterService fragmenterService) {
-        super("Read", configurationFactory, bridgeFactory, securityService);
+                           FragmenterService fragmenterService,
+                           MetricsReporter metricsReporter) {
+        super("Read", configurationFactory, bridgeFactory, securityService, metricsReporter);
         this.fragmenterService = fragmenterService;
     }
 
@@ -127,26 +132,33 @@ public class ReadServiceImpl extends BaseServiceImpl implements ReadService {
     private int processFragment(DataOutputStream dos, RequestContext context, Fragment fragment) throws Exception {
         Writable record;
         int recordCount = 0;
-        Bridge bridge = getBridge(context);
+        boolean success = false;
+        Instant startTime = Instant.now();
+        Bridge bridge = null;
         try {
-            if (!bridge.beginIteration()) return 0;
-
-            log.debug("{} Starting streaming fragment {} of resource {}",
-                    context.getId(), fragment.getIndex(), context.getDataSource());
-            while ((record = bridge.getNext()) != null) {
-                record.write(dos);
-                ++recordCount;
+            bridge = getBridge(context);
+            if (!bridge.beginIteration()) {
+                log.debug("{} Skipping streaming fragment {} of resource {}",
+                        context.getId(), fragment.getIndex(), context.getDataSource());
+            } else {
+                log.debug("{} Starting streaming fragment {} of resource {}",
+                        context.getId(), fragment.getIndex(), context.getDataSource());
+                while ((record = bridge.getNext()) != null) {
+                    record.write(dos);
+                    ++recordCount;
+                }
             }
-            log.debug("{} Finished streaming fragment {} of resource {}, {} records.",
-                    context.getId(), fragment.getIndex(), context.getDataSource(), recordCount);
+            success = true;
         } finally {
-            log.debug("{} Stopped streaming fragment {} of resource {}, {} records.",
-                    context.getId(), fragment.getIndex(), context.getDataSource(), recordCount);
             try {
                 bridge.endIteration();
             } catch (Exception e) {
                 log.warn("{} Ignoring error encountered during bridge.endIteration()", context.getId(), e);
             }
+            Duration duration = Duration.between(startTime, Instant.now());
+            log.debug("{} Finished streaming fragment {} of resource {}, {} records in {} ms.",
+                    context.getId(), fragment.getIndex(), context.getDataSource(), recordCount, duration.toMillis());
+            metricsReporter.reportTimer(MetricsReporter.PxfMetric.FRAGMENTS_SENT, duration, context, success);
         }
         return recordCount;
     }
