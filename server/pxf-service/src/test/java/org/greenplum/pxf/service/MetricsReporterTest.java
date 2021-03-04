@@ -41,7 +41,7 @@ public class MetricsReporterTest {
 
     @Test
     public void testFragmentsSentMetricDisabled() {
-        when(mockEnvironment.getProperty("pxf.metrics.fragments.enabled", Boolean.class, Boolean.FALSE)).thenReturn(false);
+        disableFragmentMetrics();
 
         reporter.reportTimer(MetricsReporter.PxfMetric.FRAGMENTS_SENT, Duration.ofMillis(100), mockContext);
         assertTrue(registry.getMeters().isEmpty());
@@ -49,7 +49,7 @@ public class MetricsReporterTest {
 
     @Test
     public void testFragmentsSentMetricEnabled() {
-        when(mockEnvironment.getProperty("pxf.metrics.fragments.enabled", Boolean.class, Boolean.FALSE)).thenReturn(true);
+        enableFragmentMetrics();
         when(mockContext.getUser()).thenReturn("Alex");
         when(mockContext.getSegmentId()).thenReturn(5);
         when(mockContext.getProfile()).thenReturn("test:text");
@@ -71,7 +71,7 @@ public class MetricsReporterTest {
 
     @Test
     public void testFragmentsSentMetricEnabledWithOutcome() {
-        when(mockEnvironment.getProperty("pxf.metrics.fragments.enabled", Boolean.class, Boolean.FALSE)).thenReturn(true);
+        enableFragmentMetrics();
         when(mockContext.getUser()).thenReturn("Alex");
         when(mockContext.getSegmentId()).thenReturn(5);
         when(mockContext.getProfile()).thenReturn("test:text");
@@ -98,7 +98,7 @@ public class MetricsReporterTest {
 
     @Test
     public void testFragmentsSentMetricEnabledDefaultTagValues() {
-        when(mockEnvironment.getProperty("pxf.metrics.fragments.enabled", Boolean.class, Boolean.FALSE)).thenReturn(true);
+        enableFragmentMetrics();
         when(mockContext.getSegmentId()).thenReturn(5);
         Tags expectedTags = Tags.of("user", "unknown").and("segment", "5").and("profile", "unknown").and("server", "default");
 
@@ -107,6 +107,14 @@ public class MetricsReporterTest {
         assertNotNull(timer);
         assertEquals(1, timer.count());
         assertEquals(100, timer.totalTime(TimeUnit.MILLISECONDS));
+    }
+
+    private void enableFragmentMetrics() {
+        when(mockEnvironment.getProperty("pxf.metrics.fragments.enabled", Boolean.class, Boolean.FALSE)).thenReturn(true);
+    }
+
+    private void disableFragmentMetrics() {
+        when(mockEnvironment.getProperty("pxf.metrics.fragments.enabled", Boolean.class, Boolean.FALSE)).thenReturn(false);
     }
 
 }

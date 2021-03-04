@@ -151,7 +151,9 @@ public class ReadServiceImpl extends BaseServiceImpl implements ReadService {
             success = true;
         } finally {
             try {
-                bridge.endIteration();
+                if (bridge != null) {
+                    bridge.endIteration();
+                }
             } catch (Exception e) {
                 log.warn("{} Ignoring error encountered during bridge.endIteration()", context.getId(), e);
             }
