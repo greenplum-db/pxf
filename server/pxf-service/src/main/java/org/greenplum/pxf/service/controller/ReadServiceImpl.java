@@ -158,7 +158,7 @@ public class ReadServiceImpl extends BaseServiceImpl implements ReadService {
                 log.warn("{} Ignoring error encountered during bridge.endIteration()", context.getId(), e);
             }
             Duration duration = Duration.between(startTime, Instant.now());
-            log.debug("{} Finished streaming fragment {} of resource {}, {} records in {} ms.",
+            log.debug("{} Finished processing fragment {} of resource {}, {} records in {} ms.",
                     context.getId(), fragment.getIndex(), context.getDataSource(), recordCount, duration.toMillis());
             metricsReporter.reportTimer(MetricsReporter.PxfMetric.FRAGMENTS_SENT, duration, context, success);
         }
