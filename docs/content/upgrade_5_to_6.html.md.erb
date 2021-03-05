@@ -132,7 +132,7 @@ After you install the new version of PXF, perform the following procedure:
     The `register` command copies only the `pxf.control` extension file to the Greenplum cluster. In PXF 6.x, the PXF extension `.sql` file and library `pxf.so` reside in `$PXF_HOME`. You may choose to remove these now-unused files from the Greenplum Database installation *on the Greenplum Database master, standby master, and all segment hosts*. For example, to remove the files on the master host:
 
     ``` shell
-    gpadmin@gpmaster$ rm $GPHOME/share/postgresql/extension/pxf--1.9.sql
+    gpadmin@gpmaster$ rm $GPHOME/share/postgresql/extension/pxf--1.0.sql
     gpadmin@gpmaster$ rm $GPHOME/lib/postgresql/pxf.so
     ```
 
