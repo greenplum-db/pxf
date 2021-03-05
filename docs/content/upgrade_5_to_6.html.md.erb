@@ -129,11 +129,10 @@ After you install the new version of PXF, perform the following procedure:
     gpadmin@gpmaster$ pxf cluster register
     ```
 
-1. PXF 6.x includes a new version of the `pxf` extension. You must drop and re-create the extension in every Greenplum database in which you are using PXF. A database superuser or the database owner must run these SQL commands in the `psql` subsystem or in an SQL script:
+1. PXF 6.x includes a new version of the `pxf` extension. You must update the extension in every Greenplum database in which you are using PXF. A database superuser or the database owner must run this SQL command in the `psql` subsystem or in an SQL script:
 
     ``` sql
-    DROP EXTENSION pxf;
-    CREATE EXTENSION pxf;
+    ALTER EXTENSION pxf UPDATE;
     ```
 
 1. Ensure that you no longer reference previously-deprecated features that were removed in PXF 6.0:
