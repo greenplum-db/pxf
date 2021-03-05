@@ -83,7 +83,7 @@ In this procedure, you use the `default`, or create a new, PXF server configurat
 
 5. Grant read permission to the HDFS files and directories that will be accessed as external tables in Greenplum Database. If user impersonation is enabled (the default), you must grant this permission to each Greenplum Database user/role name that will use external tables that reference the HDFS files. If user impersonation is not enabled, you must grant this permission to the `gpadmin` user.
 
-6. If your Hadoop cluster is secured with Kerberos, you must configure PXF and generate Kerberos principals and keytabs for each segment host as described in [Configuring PXF for Secure HDFS](pxf_kerbhdfs.html).
+6. If your Hadoop cluster is secured with Kerberos, you must configure PXF and generate Kerberos principals and keytabs for each Greenplum Database host as described in [Configuring PXF for Secure HDFS](pxf_kerbhdfs.html).
 
 
 ## <a id="client-cfg-update"></a>About Updating the Hadoop Configuration

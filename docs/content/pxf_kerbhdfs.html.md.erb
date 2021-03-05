@@ -29,11 +29,11 @@ Before you configure PXF for access to a secure HDFS filesystem, ensure that you
 
 - Verified that the HDFS configuration parameter `dfs.block.access.token.enable` is set to `true`. You can find this setting in the `hdfs-site.xml` configuration file on a host in your Hadoop cluster.
 
-- Noted the host name or IP address of each Greenplum Database segment host (\<seghost\>) and the Kerberos Key Distribution Center \(KDC\) \<kdc-server\> host.
+- Noted the host name or IP address of each Greenplum Database host (\<gphost\>) and the Kerberos Key Distribution Center \(KDC\) \<kdc-server\> host.
 
 - Noted the name of the Kerberos \<realm\> in which your cluster resides.
 
-- Installed the Kerberos client packages on **each** Greenplum Database segment host if they are not already installed. You must have superuser permissions to install operating system packages. For example:
+- Installed the Kerberos client packages on **each** Greenplum Database host if they are not already installed. You must have superuser permissions to install operating system packages. For example:
 
     ``` shell
     root@gphost$ rpm -qa | grep krb
@@ -115,7 +115,7 @@ When you configure PXF for secure HDFS using an AD Kerberos KDC server, you will
     powershell#>ktpass -out pxf.service.keytab -princ gpadmin@EXAMPLE.COM -mapUser ServiceGreenplumPROD1 -pass ******* -crypto all -ptype KRB5_NT_PRINCIPAL
     ```
 
-    With Active Directory, the principal and the keytab file are shared by all Greenplum Database segment hosts. 
+    With Active Directory, the principal and the keytab file are shared by all Greenplum Database hosts. 
 	
 8. Copy the `pxf.service.keytab` file to the Greenplum master host.
 
@@ -184,13 +184,13 @@ When you configure PXF for secure HDFS using an MIT Kerberos KDC server, you wil
     root@kdc-server$ 
     ```
 
-2. Distribute the `/etc/krb5.conf` Kerberos configuration file on the KDC server host to **each** segment host in your Greenplum Database cluster if not already present. For example:
+2. Distribute the `/etc/krb5.conf` Kerberos configuration file on the KDC server host to **each** host in your Greenplum Database cluster if not already present. For example:
 
     ``` shell
-    root@kdc-server$ scp /etc/krb5.conf seghost:/etc/krb5.conf
+    root@kdc-server$ scp /etc/krb5.conf gphost:/etc/krb5.conf
     ```
 
-3.  Use the `kadmin.local` command to create a Kerberos PXF Service principal for **each** Greenplum Database segment host. The service principal should be of the form `gpadmin/<seghost>@<realm>` where \<seghost\> is the DNS resolvable, fully-qualified hostname of the segment host system \(output of the `hostname -f` command\).
+3.  Use the `kadmin.local` command to create a Kerberos PXF Service principal for **each** Greenplum Database host. The service principal should be of the form `gpadmin/<gphost>@<realm>` where \<gphost\> is the DNS resolvable, fully-qualified hostname of the host system \(output of the `hostname -f` command\).
 
     For example, these commands create Kerberos PXF Service principals for the hosts named host1.example.com, host2.example.com, and host3.example.com in the Kerberos realm named `EXAMPLE.COM`:
 
@@ -200,7 +200,7 @@ When you configure PXF for secure HDFS using an MIT Kerberos KDC server, you wil
     root@kdc-server$ kadmin.local -q "addprinc -randkey -pw changeme gpadmin/host3.example.com@EXAMPLE.COM"
     ```
 
-4.  Generate a keytab file for each PXF Service principal that you created in the previous step. Save the keytab files in any convenient location (this example uses the directory `/etc/security/keytabs`). You will deploy the keytab files to their respective Greenplum Database segment host machines in a later step. For example:
+4.  Generate a keytab file for each PXF Service principal that you created in the previous step. Save the keytab files in any convenient location (this example uses the directory `/etc/security/keytabs`). You will deploy the keytab files to their respective Greenplum Database host machines in a later step. For example:
 
     ``` shell
     root@kdc-server$ kadmin.local -q "xst -norandkey -k /etc/security/keytabs/pxf-host1.service.keytab gpadmin/host1.example.com@EXAMPLE.COM"
@@ -216,7 +216,7 @@ When you configure PXF for secure HDFS using an MIT Kerberos KDC server, you wil
     root@kdc-server$ kadmin.local -q "listprincs"
     ```
 
-6.  Copy the keytab file for each PXF Service principal to its respective segment host. For example, the following commands copy each principal generated in step 4 to the PXF default keytab directory on the segment host when `PXF_BASE=/usr/local/greenplum-pxf`:
+6.  Copy the keytab file for each PXF Service principal to its respective host. For example, the following commands copy each principal generated in step 4 to the PXF default keytab directory on the host when `PXF_BASE=/usr/local/greenplum-pxf`:
 
     ``` shell
     root@kdc-server$ scp /etc/security/keytabs/pxf-host1.service.keytab host1.example.com:/usr/local/greenplum-pxf/keytabs/pxf.service.keytab
@@ -272,7 +272,7 @@ When you configure PXF for secure HDFS using an MIT Kerberos KDC server, you wil
     </property>
     ```
     
-    PXF automatically replaces ` _HOST` with the FQDN of the segment host.
+    PXF automatically replaces ` _HOST` with the FQDN of the host.
 
 6. If you want to access Hadoop as the Greenplum Database user:
 
@@ -292,6 +292,6 @@ When you configure PXF for secure HDFS using an MIT Kerberos KDC server, you wil
 9. Synchronize the PXF configuration to your Greenplum Database cluster:
 
     ``` shell
-    gpadmin@seghost$ pxf cluster sync
+    gpadmin@gpmaster$ pxf cluster sync
     ```
 
