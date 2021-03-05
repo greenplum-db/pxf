@@ -157,7 +157,8 @@ function checkWebapp()
 }
 
 # determines whether the application is running
-function isRunning() {
+function isRunning()
+{
     ps -o pid,command -p "$1" | grep 'pxf-app' &> /dev/null
 }
 
@@ -207,7 +208,8 @@ function printUsage()
 }
 
 # doHelp handles the help command
-doHelp() {
+function doHelp()
+{
     local normal bold
     normal=$(tput sgr0)
     bold=$(tput bold)
@@ -238,7 +240,8 @@ doHelp() {
     exit 0
 }
 
-function promptUser() {
+function promptUser()
+{
     echoGreen "$1"
     read -r answer
     [[ $answer == y || $answer == Y ]]
@@ -378,7 +381,8 @@ function doStart()
     do_start
 }
 
-function do_start() {
+function do_start()
+{
     if [[ -f "$pid_file" ]]; then
         pid=$(cat "$pid_file")
         isRunning "$pid" && { echoYellow "PXF is already running [pid=$pid]"; return 0; }
@@ -454,7 +458,8 @@ function doStop()
     rm -f $pid_file
 }
 
-do_stop() {
+function do_stop()
+{
   local killcmd=(kill)
   [[ $3 == -f ]] && killcmd+=(-9)
   killcmd+=("$1")
