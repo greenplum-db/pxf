@@ -9,8 +9,8 @@ If you have installed, configured, and are using PXF 5.x in your Greenplum Datab
 The PXF upgrade procedure has three steps. You perform one pre-install procedure, the install itself, and then a post-install procedure to upgrade to PXF 6.x:
 
 -   [Step 1: Perform the PXF Pre-Upgrade Actions](#pxfpre)
--   Install PXF 6.x
--   [Step 2: Complete the Upgrade to PXF 6.x](#pxfup)
+-   Step 2: Install PXF 6.x
+-   [Step 3: Complete the Upgrade to PXF 6.x](#pxfup)
 
 
 ## <a id="pxfpre"></a>Step 1: Performing the PXF Pre-Upgrade Actions
@@ -33,10 +33,10 @@ Perform this procedure before you upgrade to a new version of PXF:
 
 1. Stop PXF on each segment host as described in [Stopping PXF](cfginitstart_pxf.html#stop_pxf).
 
-1. [Install PXF 6.x](installing.html), identify and note the new PXF version number, and then continue your PXF upgrade with [Step 2: Complete the Upgrade to PXF 6.x](#pxfup).
+1. [Install PXF 6.x](installing.html), identify and note the new PXF version number, and then continue your PXF upgrade with [Step 3: Complete the Upgrade to PXF 6.x](#pxfup).
 
 
-## <a id="pxfup"></a>Step 2: Completing the Upgrade to PXF 6.x
+## <a id="pxfup"></a>Step 3: Completing the Upgrade to PXF 6.x
 
 After you install the new version of PXF, perform the following procedure:
 
@@ -127,6 +127,13 @@ After you install the new version of PXF, perform the following procedure:
 
     ``` shell
     gpadmin@gpmaster$ pxf cluster register
+    ```
+
+    The `register` command copies only the `pxf.control` extension file to the Greenplum cluster. In PXF 6.x, the PXF extension `.sql` file and library `pxf.so` reside in `$PXF_HOME`. You may choose to remove these now-unused files from the Greenplum Database installation *on the Greenplum Database master, standby master, and all segment hosts*. For example, to remove the files on the master host:
+
+    ``` shell
+    gpadmin@gpmaster$ rm $GPHOME/share/postgresql/extension/pxf--1.9.sql
+    gpadmin@gpmaster$ rm $GPHOME/lib/postgresql/pxf.so
     ```
 
 1. PXF 6.x includes a new version of the `pxf` extension. You must update the extension in every Greenplum database in which you are using PXF. A database superuser or the database owner must run this SQL command in the `psql` subsystem or in an SQL script:
