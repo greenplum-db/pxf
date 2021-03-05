@@ -6,7 +6,7 @@ If you have installed, configured, and are using PXF 5.x in your Greenplum Datab
 
 <div class="note">If you are using PXF with Greenplum Database 5, you must upgrade Greenplum to version 5.21.2 or newer before you upgrade to PXF 6.x.</div>
 
-The PXF upgrade procedure has two parts. You perform one procedure before, and one procedure after, you install a new version to upgrade to PXF 6.x:
+The PXF upgrade procedure has three steps. You perform one pre-install procedure, the install itself, and then a post-install procedure to upgrade to PXF 6.x:
 
 -   [Step 1: Perform the PXF Pre-Upgrade Actions](#pxfpre)
 -   Install PXF 6.x
@@ -63,7 +63,7 @@ After you install the new version of PXF, perform the following procedure:
         gpadmin@gpmaster$ PXF_CONF=/path/to/dir pxf cluster migrate
         ```
 
-        The command copies PXF 5.x `conf/pxf-profiles.xml`, `servers/*`, `lib/*`, and `keytabs/*` to the PXF 6.x `$PXF_BASE` directory. The command also merges configuration changes in the PXF 5.x `conf/pxf-env.sh` into the PXF 6.x file of the same name.
+        The command copies PXF 5.x `conf/pxf-profiles.xml`, `servers/*`, `lib/*`, and `keytabs/*` to the PXF 6.x `$PXF_BASE` directory. The command also merges configuration changes in the PXF 5.x `conf/pxf-env.sh` into the PXF 6.x file of the same name and `pxf-application.properties`.
 
 1. The `migrate` command does not migrate PXF 5.x `$PXF_CONF/conf/pxf-log4j.properties` customizations; you must manually migrate any changes that you made to this file to `$PXF_BASE/conf/pxf-log4j2.xml`.  Note that PXF 5.x `pxf-log4j.properties` is in properties format, and PXF 6 `pxf-log4j2.xml` is `xml` format. See the [Configuration with XML](https://logging.apache.org/log4j/2.x/manual/configuration.html#XML) topic in the Apache Log4j 2 documentation for more information.
 
