@@ -158,7 +158,7 @@ function checkWebapp()
 
 # determines whether the application is running
 function isRunning() {
-    ps -p "$1" &> /dev/null
+    ps -o pid,command -p "$1" | grep '[p]xf-app' &> /dev/null
 }
 
 # creates the runtime directory structure inside $PXF_BASE
