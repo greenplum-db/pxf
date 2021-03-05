@@ -1,5 +1,6 @@
 package org.greenplum.pxf.service;
 
+import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.Timer;
@@ -72,16 +73,52 @@ public class MetricsReporter {
     private void reportTimer(PxfMetric metric, Duration duration, RequestContext context, Tags extraTags) {
         String metricName = metric.getMetricName();
         long durationMs = duration.toMillis();
-        if (env.getProperty(metric.getEnabledPropertyName(), Boolean.class, Boolean.FALSE)) {
-            Tags tags = (extraTags == null) ? getTags(context) : getTags(context).and(extraTags);
-            Timer timer = Timer.builder(metric.getMetricName()).tags(tags).register(registry);
-            timer.record(duration);
-            if (log.isTraceEnabled()) {
-                log.trace("Reported timer {}{} with duration={}ms", metricName, tags, durationMs);
-            }
-        } else {
-            log.trace("Skipping reporting metric {} with duration {}ms", metricName, durationMs);
+        if (!env.getProperty(metric.getEnabledPropertyName(), Boolean.class, Boolean.FALSE)) {
+            log.trace("Skipping reporting metric {} with duration={}ms", metricName, durationMs);
+            return;
         }
+
+        Tags tags = (extraTags == null) ? getTags(context) : getTags(context).and(extraTags);
+        Timer timer = Timer.builder(metricName).tags(tags).register(registry);
+        timer.record(duration);
+        if (log.isTraceEnabled()) {
+            log.trace("Reported timer {}{} with duration={}ms", metricName, tags, durationMs);
+        }
+    }
+
+    /**
+     * Reports counter metric with a given name and the increment to the registry.
+     * Reports with any tags given by the context and adds a success outcome tag.
+     *
+     * @param metric
+     * @param increment
+     * @param context
+     */
+    public void reportCounter(PxfMetric metric, long increment, RequestContext context) {
+        String metricName = metric.getMetricName();
+        if (!env.getProperty(metric.getEnabledPropertyName(), Boolean.class, Boolean.FALSE)) {
+            log.trace("Skipping reporting metric {} with increment={}", metricName, increment);
+            return;
+        }
+
+        Double incrementCount = Long.valueOf(increment).doubleValue();
+        Tags tags = getTags(context);
+        Counter counter = Counter.builder(metricName).tags(tags).register(registry);
+        counter.increment(incrementCount);
+        if (log.isTraceEnabled()) {
+            log.trace("Reported counter {}{} with increment={}", metricName, tags, increment);
+        }
+    }
+
+    /**
+     * Pulls the value for reporting frequency for the given metric from the environment.
+     * If no value found, the default reporting frequency is 1000.
+     *
+     * @param metric
+     */
+    public int getReportFrequency(PxfMetric metric) {
+        String metricFrequencyName = metric.getFrequencyName();
+        return env.getProperty(metricFrequencyName, Integer.class, 1000);
     }
 
     /**
@@ -102,20 +139,24 @@ public class MetricsReporter {
      * Enum that has information about all custom metrics for PXF.
      */
     public enum PxfMetric {
-        FRAGMENTS_SENT("fragments.sent", "pxf.metrics.fragments.enabled");
+        FRAGMENTS_SENT("fragments.sent", "pxf.metrics.fragments.enabled", null),
+        RECORDS_SENT("records.sent", "pxf.metrics.records.enabled", "pxf.metrics.records.report-frequency");
 
         private final String metricName;
         private final String enabledPropertyName;
+        private final String frequencyName;
 
         /**
          * Creates a new instance.
          *
          * @param metricName          name of the metric as will be seen by the registry
          * @param enabledPropertyName property name that manages whether reporting of this metric is turned on / off
+         * @param frequencyName           property name that manages how often we report the metric
          */
-        PxfMetric(String metricName, String enabledPropertyName) {
+        PxfMetric(String metricName, String enabledPropertyName, String frequencyName) {
             this.metricName = metricName;
             this.enabledPropertyName = enabledPropertyName;
+            this.frequencyName = frequencyName;
         }
 
         public String getMetricName() {
@@ -124,6 +165,10 @@ public class MetricsReporter {
 
         public String getEnabledPropertyName() {
             return enabledPropertyName;
+        }
+
+        public String getFrequencyName() {
+            return frequencyName;
         }
     }
 }

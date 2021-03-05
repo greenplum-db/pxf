@@ -74,6 +74,8 @@ public class ReadServiceImpl extends BaseServiceImpl implements ReadService {
         String originalResolver = context.getResolver();
         String originalProfileScheme = context.getProfileScheme();
 
+        int recordReportFrequency = metricsReporter.getReportFrequency(MetricsReporter.PxfMetric.RECORDS_SENT);
+
         try {
             List<Fragment> fragments = fragmenterService.getFragmentsForSegment(context);
             DataOutputStream dos = new DataOutputStream(outputStream);
@@ -92,7 +94,7 @@ public class ReadServiceImpl extends BaseServiceImpl implements ReadService {
                 context.setFragmentIndex(fragment.getIndex());
                 context.setFragmentMetadata(fragment.getMetadata());
 
-                recordCount += processFragment(dos, context, fragment);
+                recordCount += processFragment(dos, context, fragment, recordReportFrequency);
 
                 // In cases where we have hundreds of thousands of fragments,
                 // we want to release the fragment reference as soon as we are
@@ -129,7 +131,7 @@ public class ReadServiceImpl extends BaseServiceImpl implements ReadService {
         return OperationStats.builder().operation("read").recordCount(recordCount).build();
     }
 
-    private int processFragment(DataOutputStream dos, RequestContext context, Fragment fragment) throws Exception {
+    private int processFragment(DataOutputStream dos, RequestContext context, Fragment fragment, int recordReportFrequency) throws Exception {
         Writable record;
         int recordCount = 0;
         boolean success = false;
@@ -146,16 +148,26 @@ public class ReadServiceImpl extends BaseServiceImpl implements ReadService {
                 while ((record = bridge.getNext()) != null) {
                     record.write(dos);
                     ++recordCount;
+                    // report records based off the recordReportFrequency
+                    if (recordCount % recordReportFrequency == 0) {
+                        metricsReporter.reportCounter(MetricsReporter.PxfMetric.RECORDS_SENT, recordReportFrequency, context);
+                    }
+                }
+                // report the remaining records that have yet to be reported
+                int remainder = recordCount % recordReportFrequency;
+                if (remainder != 0) {
+                    metricsReporter.reportCounter(MetricsReporter.PxfMetric.RECORDS_SENT, remainder, context);
                 }
             }
             success = true;
         } finally {
-            try {
-                if (bridge != null) {
+            if (bridge != null) {
+                try {
                     bridge.endIteration();
+                } catch (Exception e) {
+                    log.warn("{} Ignoring error encountered during bridge.endIteration()", context.getId(), e);
                 }
-            } catch (Exception e) {
-                log.warn("{} Ignoring error encountered during bridge.endIteration()", context.getId(), e);
+
             }
             Duration duration = Duration.between(startTime, Instant.now());
             log.debug("{} Finished processing fragment {} of resource {}, {} records in {} ms.",
