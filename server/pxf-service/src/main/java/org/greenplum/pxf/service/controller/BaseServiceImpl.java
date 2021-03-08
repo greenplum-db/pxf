@@ -75,7 +75,7 @@ public abstract class BaseServiceImpl {
         if (recordCount > 0) {
             long durationMs = Duration.between(startTime, Instant.now()).toMillis();
             double rate = durationMs == 0 ? 0 : (1000.0 * recordCount / durationMs);
-            log.info("{} completed {} operation for {} tuple{} in {} ms. rate = {} tuples/sec",
+            log.info("{} completed {} operation for {} record{} in {} ms. rate = {} records/sec",
                     context.getId(),
                     stats.getOperation(),
                     recordCount,

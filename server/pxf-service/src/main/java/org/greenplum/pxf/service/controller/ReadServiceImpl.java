@@ -74,7 +74,7 @@ public class ReadServiceImpl extends BaseServiceImpl implements ReadService {
         String originalResolver = context.getResolver();
         String originalProfileScheme = context.getProfileScheme();
 
-        int recordReportFrequency = metricsReporter.getReportFrequency(MetricsReporter.PxfMetric.RECORDS_SENT);
+        long recordReportFrequency = metricsReporter.getReportFrequency(MetricsReporter.PxfMetric.RECORDS_SENT);
 
         try {
             List<Fragment> fragments = fragmenterService.getFragmentsForSegment(context);
@@ -131,9 +131,9 @@ public class ReadServiceImpl extends BaseServiceImpl implements ReadService {
         return OperationStats.builder().operation("read").recordCount(recordCount).build();
     }
 
-    private int processFragment(DataOutputStream dos, RequestContext context, Fragment fragment, int recordReportFrequency) throws Exception {
+    private long processFragment(DataOutputStream dos, RequestContext context, Fragment fragment, long recordReportFrequency) throws Exception {
         Writable record;
-        int recordCount = 0;
+        long recordCount = 0;
         boolean success = false;
         Instant startTime = Instant.now();
         Bridge bridge = null;
@@ -154,7 +154,7 @@ public class ReadServiceImpl extends BaseServiceImpl implements ReadService {
                     }
                 }
                 // report the remaining records that have yet to be reported
-                int remainder = recordCount % recordReportFrequency;
+                long remainder = recordCount % recordReportFrequency;
                 if (remainder != 0) {
                     metricsReporter.reportCounter(MetricsReporter.PxfMetric.RECORDS_SENT, remainder, context);
                 }

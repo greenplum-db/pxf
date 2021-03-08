@@ -127,6 +127,30 @@ public class MetricsReporterTest {
         assertEquals(1051, counter.count());
     }
 
+    @Test
+    public void testRecordsReceivedMetricDisabled() {
+        disableRecordsMetrics();
+
+        reporter.reportCounter(MetricsReporter.PxfMetric.RECORDS_RECEIVED, 100, mockContext);
+        assertTrue(registry.getMeters().isEmpty());
+    }
+
+    @Test
+    public void testRecordsReceivedMetricEnabled() {
+        enableRecordsMetrics();
+        setContext();
+
+        reporter.reportCounter(MetricsReporter.PxfMetric.RECORDS_RECEIVED, 1000, mockContext);
+        Counter counter = registry.get("records.received").tags(expectedTags).counter();
+        assertNotNull(counter);
+        assertEquals(1000, counter.count());
+
+        reporter.reportCounter(MetricsReporter.PxfMetric.RECORDS_RECEIVED, 51, mockContext);
+        counter = registry.get("records.received").tags(expectedTags).counter();
+        assertNotNull(counter);
+        assertEquals(1051, counter.count());
+    }
+
     private void setContext() {
         when(mockContext.getUser()).thenReturn("Alex");
         when(mockContext.getSegmentId()).thenReturn(5);

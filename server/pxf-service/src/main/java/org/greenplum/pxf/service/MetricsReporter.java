@@ -116,9 +116,9 @@ public class MetricsReporter {
      *
      * @param metric
      */
-    public int getReportFrequency(PxfMetric metric) {
+    public long getReportFrequency(PxfMetric metric) {
         String metricFrequencyName = metric.getFrequencyName();
-        return env.getProperty(metricFrequencyName, Integer.class, 1000);
+        return env.getProperty(metricFrequencyName, Long.class, 1000L);
     }
 
     /**
@@ -140,7 +140,8 @@ public class MetricsReporter {
      */
     public enum PxfMetric {
         FRAGMENTS_SENT("fragments.sent", "pxf.metrics.fragments.enabled", null),
-        RECORDS_SENT("records.sent", "pxf.metrics.records.enabled", "pxf.metrics.records.report-frequency");
+        RECORDS_SENT("records.sent", "pxf.metrics.records.enabled", "pxf.metrics.records.report-frequency"),
+        RECORDS_RECEIVED("records.received", "pxf.metrics.records.enabled", "pxf.metrics.records.report-frequency");
 
         private final String metricName;
         private final String enabledPropertyName;
