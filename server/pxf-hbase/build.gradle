@@ -28,8 +28,8 @@ dependencies {
     implementation("org.apache.hbase:hbase-protocol:${hbaseVersion}") { transitive = false }
     implementation("org.apache.htrace:htrace-core:3.1.0-incubating")  { transitive = false }
     implementation("org.apache.zookeeper:zookeeper:3.4.6")            { transitive = false }
-    implementation("io.netty:netty-common:4.0.56.Final")              { transitive = false }
-    implementation("io.netty:netty-transport:4.0.56.Final")           { transitive = false }
+    implementation("io.netty:netty-common:4.1.59.Final")              { transitive = false }
+    implementation("io.netty:netty-transport:4.1.59.Final")           { transitive = false }
     implementation("com.yammer.metrics:metrics-core:2.2.0")           { transitive = false }
 
     implementation("org.springframework.boot:spring-boot-starter-log4j2")
