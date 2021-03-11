@@ -88,7 +88,7 @@ To change the log level for the PXF Service running on a specific Greenplum Data
 
 5. Collect and examine the log messages in `pxf-service.log`.
 
-6. Reinstate `info`-level logging on the host with the same procedure described above.
+6. Reinstate `info`-level logging on the host - comment out the line or set the property value back to `info`, and then restart PXF on the host.
 
 
 ### <a id="cfg_cluster"></a>Configuring for the Cluster
@@ -121,7 +121,7 @@ To change the log level for the PXF service running on every host in the Greenpl
 
 1. Perform operations that exercise the PXF Service, and then collect and examine the information in `$PXF_LOGDIR/pxf-service.log`.
 
-1. Reinstate `info`-level logging.
+1. Reinstate `info`-level logging - comment out the line or set the property value back to `info`, and then sync the update to and restart PXF on the cluster.
 
 
 ## <a id="pxfdblogmsg"></a>Configuring Client-Level Logging
