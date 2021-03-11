@@ -111,14 +111,14 @@ $ psql -d <dbname>
 dbname=# SET client_min_messages=DEBUG2;
 dbname=# SELECT * FROM hdfstest;
 ...
-DEBUG2:  churl http header: cell #19: X-GP-URL-HOST: seghost1  (seg0 slice1 127.0.0.1:40000 pid=3981)
-CONTEXT:  External table hdfstest
-DEBUG2:  churl http header: cell #20: X-GP-URL-PORT: 5888  (seg0 slice1 127.0.0.1:40000 pid=3981)
-CONTEXT:  External table hdfstest
-DEBUG2:  churl http header: cell #21: X-GP-DATA-DIR: data/dir/hdfsfile  (seg0 slice1 127.0.0.1:40000 pid=3981)
-CONTEXT:  External table hdfstest
-DEBUG2:  churl http header: cell #22: X-GP-OPTIONS-PROFILE: hdfs:text  (seg0 slice1 127.0.0.1:40000 pid=3981)
-CONTEXT:  External table hdfstest
+DEBUG2:  churl http header: cell #26: X-GP-URL-HOST: localhost  (seg0 slice1 127.0.0.1:7002 pid=10659)
+CONTEXT:  External table pxf_hdfs_textsimple, line 1 of file pxf://data/pxf_examples/pxf_hdfs_simple.txt?PROFILE=hdfs:text
+DEBUG2:  churl http header: cell #27: X-GP-URL-PORT: 5888  (seg0 slice1 127.0.0.1:7002 pid=10659)
+CONTEXT:  External table pxf_hdfs_textsimple, line 1 of file pxf://data/pxf_examples/pxf_hdfs_simple.txt?PROFILE=hdfs:text
+DEBUG2:  churl http header: cell #28: X-GP-DATA-DIR: data%2Fpxf_examples%2Fpxf_hdfs_simple.txt  (seg0 slice1 127.0.0.1:7002 pid=10659)
+CONTEXT:  External table pxf_hdfs_textsimple, line 1 of file pxf://data/pxf_examples/pxf_hdfs_simple.txt?PROFILE=hdfs:text
+DEBUG2:  churl http header: cell #29: X-GP-TABLE-NAME: pxf_hdfs_textsimple  (seg0 slice1 127.0.0.1:7002 pid=10659)
+CONTEXT:  External table pxf_hdfs_textsimple, line 1 of file pxf://data/pxf_examples/pxf_hdfs_simple.txt?PROFILE=hdfs:text
 ...
 ```
 
