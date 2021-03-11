@@ -158,6 +158,8 @@ After you install the new version of PXF, perform the following procedure:
     1. Add the location of this JAR to `$HBASE_CLASSPATH` on each HBase node.
     1. Restart HBase on each node.
 
+1. In PXF 6.x, the PXF Service runs on all Greenplum Database hosts. If you used PXF 5.x to access Kerberos-secured HDFS, you must now generate principals and keytabs for the Greenplum master and standby master hosts, and distribute these to the hosts as described in [Configuring PXF for Secure HDFS](pxf_kerbhdfs.html#procedure).
+
 4. Synchronize the PXF 6.x configuration from the master host to the standby master and each Greenplum Database segment host. For example:
 
     ``` shell
