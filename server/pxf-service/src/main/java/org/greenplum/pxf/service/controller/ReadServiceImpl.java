@@ -1,5 +1,6 @@
 package org.greenplum.pxf.service.controller;
 
+import com.google.common.io.CountingOutputStream;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.connector.ClientAbortException;
 import org.apache.commons.lang.StringUtils;
@@ -66,7 +67,6 @@ public class ReadServiceImpl extends BaseServiceImpl implements ReadService {
      * @throws IOException if error occurs when reading data
      */
     private OperationStats writeStream(RequestContext context, OutputStream outputStream) throws IOException {
-        long recordCount = 0;
         boolean restoreOriginalValues;
 
         String originalProfile = context.getProfile();
@@ -74,11 +74,12 @@ public class ReadServiceImpl extends BaseServiceImpl implements ReadService {
         String originalResolver = context.getResolver();
         String originalProfileScheme = context.getProfileScheme();
 
-        long recordReportFrequency = metricsReporter.getReportFrequency(MetricsReporter.PxfMetric.RECORDS_SENT);
+        OperationStats queryStats = new OperationStats(OperationStats.Operation.READ, metricsReporter, context);
 
+        // dataStream (and outputStream as the result) will close automatically at the end of the try block
+        CountingOutputStream countingOutputStream = new CountingOutputStream(outputStream);
         try {
             List<Fragment> fragments = fragmenterService.getFragmentsForSegment(context);
-            DataOutputStream dos = new DataOutputStream(outputStream);
             for (int i = 0; i < fragments.size(); i++) {
                 Fragment fragment = fragments.get(i);
                 String profile = fragment.getProfile();
@@ -93,8 +94,8 @@ public class ReadServiceImpl extends BaseServiceImpl implements ReadService {
                 context.setDataSource(fragment.getSourceName());
                 context.setFragmentIndex(fragment.getIndex());
                 context.setFragmentMetadata(fragment.getMetadata());
-
-                recordCount += processFragment(dos, context, fragment, recordReportFrequency);
+                OperationStats fragmentStats = processFragment(countingOutputStream, context);
+                queryStats.update(fragmentStats);
 
                 // In cases where we have hundreds of thousands of fragments,
                 // we want to release the fragment reference as soon as we are
@@ -128,12 +129,15 @@ public class ReadServiceImpl extends BaseServiceImpl implements ReadService {
         } catch (Exception e) {
             throw new IOException(e.getMessage(), e);
         }
-        return OperationStats.builder().operation("read").recordCount(recordCount).build();
+        return queryStats;
     }
 
-    private long processFragment(DataOutputStream dos, RequestContext context, Fragment fragment, long recordReportFrequency) throws Exception {
+    private OperationStats processFragment(CountingOutputStream countingOutputStream, RequestContext context) throws Exception {
         Writable record;
-        long recordCount = 0;
+        DataOutputStream dos = new DataOutputStream(countingOutputStream);
+
+        OperationStats fragmentStats = new OperationStats(OperationStats.Operation.READ, metricsReporter, context);
+        long previousStreamByteCount = countingOutputStream.getCount();
         boolean success = false;
         Instant startTime = Instant.now();
         Bridge bridge = null;
@@ -141,22 +145,14 @@ public class ReadServiceImpl extends BaseServiceImpl implements ReadService {
             bridge = getBridge(context);
             if (!bridge.beginIteration()) {
                 log.debug("{} Skipping streaming fragment {} of resource {}",
-                        context.getId(), fragment.getIndex(), context.getDataSource());
+                        context.getId(), context.getFragmentIndex(), context.getDataSource());
             } else {
                 log.debug("{} Starting streaming fragment {} of resource {}",
-                        context.getId(), fragment.getIndex(), context.getDataSource());
+                        context.getId(), context.getFragmentIndex(), context.getDataSource());
                 while ((record = bridge.getNext()) != null) {
                     record.write(dos);
-                    ++recordCount;
-                    // report records based off the recordReportFrequency
-                    if (recordCount % recordReportFrequency == 0) {
-                        metricsReporter.reportCounter(MetricsReporter.PxfMetric.RECORDS_SENT, recordReportFrequency, context);
-                    }
-                }
-                // report the remaining records that have yet to be reported
-                long remainder = recordCount % recordReportFrequency;
-                if (remainder != 0) {
-                    metricsReporter.reportCounter(MetricsReporter.PxfMetric.RECORDS_SENT, remainder, context);
+                    // fragment's current byte count is relative to the previous stream's byte count
+                    fragmentStats.reportCompletedRecord(countingOutputStream.getCount() - previousStreamByteCount);
                 }
             }
             success = true;
@@ -167,14 +163,20 @@ public class ReadServiceImpl extends BaseServiceImpl implements ReadService {
                 } catch (Exception e) {
                     log.warn("{} Ignoring error encountered during bridge.endIteration()", context.getId(), e);
                 }
-
             }
             Duration duration = Duration.between(startTime, Instant.now());
-            log.debug("{} Finished processing fragment {} of resource {}, {} records in {} ms.",
-                    context.getId(), fragment.getIndex(), context.getDataSource(), recordCount, duration.toMillis());
+
+            // fragment's current byte count is relative to the previous stream's byte count
+            // in the case where we fail to report a record due to an exception,
+            // report the number of bytes that we were able to write before failure
+            fragmentStats.setByteCount(countingOutputStream.getCount() - previousStreamByteCount);
+            fragmentStats.flushStats();
+
+            log.debug("{} Finished processing fragment {} of resource {} in {} ms, wrote {} records and {} bytes.",
+                    context.getId(), context.getFragmentIndex(), context.getDataSource(), duration.toMillis(), fragmentStats.getRecordCount(), fragmentStats.getByteCount());
             metricsReporter.reportTimer(MetricsReporter.PxfMetric.FRAGMENTS_SENT, duration, context, success);
         }
-        return recordCount;
+        return fragmentStats;
     }
 
     private void updateProfile(RequestContext context, String profile) {

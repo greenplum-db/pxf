@@ -151,6 +151,18 @@ public class MetricsReporterTest {
         assertEquals(1051, counter.count());
     }
 
+    @Test
+    public void testGetReportFrequency() {
+        when(mockEnvironment.getProperty("pxf.metrics.report-frequency", Long.class, 1000L)).thenReturn(5L);
+        assertEquals(5L, reporter.getReportFrequency());
+    }
+
+    @Test
+    public void testGetReportFrequencyNegativeValue() {
+        when(mockEnvironment.getProperty("pxf.metrics.report-frequency", Long.class, 1000L)).thenReturn(-5L);
+        assertEquals(0L, reporter.getReportFrequency());
+    }
+
     private void setContext() {
         when(mockContext.getUser()).thenReturn("Alex");
         when(mockContext.getSegmentId()).thenReturn(5);

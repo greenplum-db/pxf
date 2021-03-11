@@ -1,5 +1,6 @@
 package org.greenplum.pxf.service.controller;
 
+import com.google.common.io.CountingInputStream;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.connector.ClientAbortException;
 import org.greenplum.pxf.api.model.ConfigurationFactory;
@@ -58,26 +59,17 @@ public class WriteServiceImpl extends BaseServiceImpl implements WriteService {
     private OperationStats readStream(RequestContext context, InputStream inputStream) throws IOException {
         Bridge bridge = getBridge(context);
 
-        long recordCount = 0;
+        OperationStats operationStats = new OperationStats(OperationStats.Operation.WRITE, metricsReporter, context);
         IOException ex = null;
 
-        long recordReportFrequency = metricsReporter.getReportFrequency(MetricsReporter.PxfMetric.RECORDS_RECEIVED);
-
         // dataStream (and inputStream as the result) will close automatically at the end of the try block
-        try (DataInputStream dataStream = new DataInputStream(inputStream)) {
-            // open the output file
+        CountingInputStream countingInputStream = new CountingInputStream(inputStream);
+        long previousByteCount = 0L;
+        try (DataInputStream dataStream = new DataInputStream(countingInputStream)) {
+            // open the output file, returns true or throws an error
             bridge.beginIteration();
             while (bridge.setNext(dataStream)) {
-                ++recordCount;
-                // report records based off the recordReportFrequency
-                if (recordCount % recordReportFrequency == 0) {
-                    metricsReporter.reportCounter(MetricsReporter.PxfMetric.RECORDS_RECEIVED, recordReportFrequency, context);
-                }
-            }
-            // report the remaining records that have yet to be reported
-            long remainder = recordCount % recordReportFrequency;
-            if (remainder != 0) {
-                metricsReporter.reportCounter(MetricsReporter.PxfMetric.RECORDS_RECEIVED, remainder, context);
+                operationStats.reportCompletedRecord(countingInputStream.getCount());
             }
         } catch (ClientAbortException cae) {
             // Occurs whenever client (GPDB) decides to end the connection
@@ -96,8 +88,6 @@ public class WriteServiceImpl extends BaseServiceImpl implements WriteService {
             ex = ioe;
             throw ioe;
         } catch (Exception e) {
-            log.error(String.format("%s Exception: totalWritten so far %d to %s",
-                    context.getId(), recordCount, context.getDataSource()), e);
             ex = new IOException(e.getMessage(), e);
             throw ex;
         } finally {
@@ -108,11 +98,30 @@ public class WriteServiceImpl extends BaseServiceImpl implements WriteService {
             } catch (Exception e) {
                 ex = (ex == null) ? new IOException(e.getMessage(), e) : ex;
             }
+
+            // in the case where we fail to report a record due to an exception,
+            // report the number of bytes that we were able to read before failure
+            operationStats.setByteCount(countingInputStream.getCount());
+            operationStats.flushStats();
+
+            if (ex != null) {
+                // FIXME: should we include the exception and log at the error level?
+                // currently, if we include the exception in the error log, the stack trace will be printed twice: once
+                // when we log it and again by the servlet container when we re-throw that exception.
+                // the problem with letting the servlet container print the exception is that it is after the
+                // request context (MDC) has been cleared by PXF filter.
+                // 1. In the PXF filter, log any exceptions we see coming; if we don't re-throw it, the container does
+                // does not give us HTTP 5xx for free, we'd have to implement returning internal server error codes.
+                // 2. Log the error in BaseServiceImpl, re-throw exception, configure container to not log the exception.
+                //    - see https://stackoverflow.com/questions/33790452/how-to-filter-an-exception-out-of-tomcat-7-logging-java-util-logging
+                log.error(String.format("%s Exception: totalWritten so far %d records (%d bytes) to %s",
+                        context.getId(), operationStats.getRecordCount(), operationStats.getByteCount(), context.getDataSource()), ex);
+            }
         }
 
         // Report any errors we might have encountered
         if (ex != null) throw ex;
 
-        return OperationStats.builder().operation("write").recordCount(recordCount).build();
+        return operationStats;
     }
 }
