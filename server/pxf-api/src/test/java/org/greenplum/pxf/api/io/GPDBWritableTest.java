@@ -21,10 +21,15 @@ package org.greenplum.pxf.api.io;
 
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.OngoingStubbing;
 
 import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.EOFException;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -32,10 +37,15 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.inOrder;
 
+@ExtendWith(MockitoExtension.class)
 public class GPDBWritableTest {
 
     private DataInput inputStream;
+    private DataOutput mockOutput;
 
     /*
      * Test the readFields method: empty stream
@@ -153,6 +163,45 @@ public class GPDBWritableTest {
 
         typeName = GPDBWritable.getTypeName(DataType.NUMERIC.getOID());
         assertEquals(typeName, DataType.NUMERIC.name());
+    }
+
+    @Test
+    public void testWriteBytes() throws IOException {
+        int[] schema = new int[2];
+        schema[0] = DataType.INTEGER.getOID();
+        schema[1] = DataType.VARCHAR.getOID();
+
+        GPDBWritable gw = new GPDBWritable(schema, StandardCharsets.UTF_8);
+        gw.setInt(0, 123);
+        gw.setString(1, "hello");
+
+        mockOutput = mock(DataOutput.class);
+        long bytes = gw.write(mockOutput);
+        assertEquals(32, bytes);
+
+        InOrder inOrder = inOrder(mockOutput);
+        // total length
+        inOrder.verify(mockOutput).writeInt(32);
+        // version
+        inOrder.verify(mockOutput).writeShort(2);
+        // error flag
+        inOrder.verify(mockOutput).writeByte(0);
+        // number of columns
+        inOrder.verify(mockOutput).writeShort(2);
+        // column type
+        inOrder.verify(mockOutput).writeByte(3);
+        // column type
+        inOrder.verify(mockOutput).writeByte(7);
+        // null bits
+        inOrder.verify(mockOutput).write(new byte[]{0});
+        // integer column value
+        inOrder.verify(mockOutput).writeInt(123);
+        // varchar column value
+        inOrder.verify(mockOutput).writeInt(6);
+        inOrder.verify(mockOutput).write(new byte[]{104, 101, 108, 108, 111, 0});
+        // padding
+        inOrder.verify(mockOutput).write(any(), eq(0), eq(6));
+        inOrder.verifyNoMoreInteractions();
     }
 
     /*

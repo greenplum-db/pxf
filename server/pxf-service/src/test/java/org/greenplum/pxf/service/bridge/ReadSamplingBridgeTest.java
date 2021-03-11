@@ -59,7 +59,7 @@ public class ReadSamplingBridgeTest {
         }
 
         @Override
-        public void write(DataOutput out) throws IOException {
+        public long write(DataOutput out) throws IOException {
             throw new IOException("not implemented");
         }
 

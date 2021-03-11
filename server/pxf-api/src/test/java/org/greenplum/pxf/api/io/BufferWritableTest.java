@@ -21,10 +21,22 @@ package org.greenplum.pxf.api.io;
 
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.io.DataOutput;
+import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.verify;
 
+@ExtendWith(MockitoExtension.class)
 public class BufferWritableTest {
+
+    @Mock
+    private DataOutput mockOutput;
 
     @Test
     public void append() throws Exception {
@@ -38,5 +50,15 @@ public class BufferWritableTest {
         bw1.append(data2.getBytes());
 
         assertArrayEquals((data1+data2).getBytes(), bw1.buf);
+    }
+
+    @Test
+    public void testWriteBytes() throws IOException {
+        String data1 = "hello world";
+
+        BufferWritable bw = new BufferWritable(data1.getBytes());
+        long bytes = bw.write(mockOutput);
+        assertEquals(11,bytes);
+        verify(mockOutput).write(data1.getBytes(), 0, 11);
     }
 }

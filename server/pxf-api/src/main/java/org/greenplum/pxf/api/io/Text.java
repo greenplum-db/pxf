@@ -339,9 +339,11 @@ public class Text implements Writable {
     }
 
     @Override
-    public void write(DataOutput out) throws IOException {
+    public long write(DataOutput out) throws IOException {
         byte[] bytes = getBytes();
-        out.write(bytes, 0, getLength());
+        int length = getLength();
+        out.write(bytes, 0, length);
+        return length;
     }
 
     /**

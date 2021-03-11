@@ -332,7 +332,7 @@ public class GPDBWritable implements Writable {
     }
 
     @Override
-    public void write(DataOutput out) throws IOException {
+    public long write(DataOutput out) throws IOException {
         int numCol = colType.length;
         boolean[] nullBits = new boolean[numCol];
         int[] colLength = new int[numCol];
@@ -465,7 +465,8 @@ public class GPDBWritable implements Writable {
                     /* For BYTEA format, add 4byte length header at the beginning  */
                     case BYTEA:
                         out.writeInt(colLength[i]);
-                        out.write((byte[]) colValue[i]);
+                        byte[] value = (byte[]) colValue[i];
+                        out.write(value);
                         break;
 
                     /* For text format, add 4byte length header. string is already '\0' terminated */
@@ -481,6 +482,7 @@ public class GPDBWritable implements Writable {
 
         /* End padding */
         out.write(padbytes, 0, endpadding);
+        return datlen;
     }
 
     /**

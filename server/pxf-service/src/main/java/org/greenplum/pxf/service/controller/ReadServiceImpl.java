@@ -74,6 +74,8 @@ public class ReadServiceImpl extends BaseServiceImpl implements ReadService {
         String originalResolver = context.getResolver();
         String originalProfileScheme = context.getProfileScheme();
 
+        OperationStats queryStats = OperationStats.builder().operation("read").build();
+
         long recordReportFrequency = metricsReporter.getReportFrequency(MetricsReporter.PxfMetric.RECORDS_SENT);
 
         try {
@@ -93,8 +95,8 @@ public class ReadServiceImpl extends BaseServiceImpl implements ReadService {
                 context.setDataSource(fragment.getSourceName());
                 context.setFragmentIndex(fragment.getIndex());
                 context.setFragmentMetadata(fragment.getMetadata());
-
-                recordCount += processFragment(dos, context, fragment, recordReportFrequency);
+                OperationStats fragStats = processFragment(dos, context, fragment, recordReportFrequency);
+                queryStats.update(fragStats);
 
                 // In cases where we have hundreds of thousands of fragments,
                 // we want to release the fragment reference as soon as we are
@@ -128,12 +130,13 @@ public class ReadServiceImpl extends BaseServiceImpl implements ReadService {
         } catch (Exception e) {
             throw new IOException(e.getMessage(), e);
         }
-        return OperationStats.builder().operation("read").recordCount(recordCount).build();
+        return queryStats;
     }
 
-    private long processFragment(DataOutputStream dos, RequestContext context, Fragment fragment, long recordReportFrequency) throws Exception {
+    private OperationStats processFragment(DataOutputStream dos, RequestContext context, Fragment fragment, long reportFrequency) throws Exception {
         Writable record;
         long recordCount = 0;
+        long byteCount = 0;
         boolean success = false;
         Instant startTime = Instant.now();
         Bridge bridge = null;
@@ -143,20 +146,27 @@ public class ReadServiceImpl extends BaseServiceImpl implements ReadService {
                 log.debug("{} Skipping streaming fragment {} of resource {}",
                         context.getId(), fragment.getIndex(), context.getDataSource());
             } else {
+                long byteBatch = 0;
                 log.debug("{} Starting streaming fragment {} of resource {}",
                         context.getId(), fragment.getIndex(), context.getDataSource());
                 while ((record = bridge.getNext()) != null) {
-                    record.write(dos);
+                    long bytesWritten = record.write(dos);
                     ++recordCount;
-                    // report records based off the recordReportFrequency
-                    if (recordCount % recordReportFrequency == 0) {
-                        metricsReporter.reportCounter(MetricsReporter.PxfMetric.RECORDS_SENT, recordReportFrequency, context);
+                    byteBatch += bytesWritten;
+                    // report records based off the reportFrequency
+                    if (recordCount % reportFrequency == 0) {
+                        metricsReporter.reportCounter(MetricsReporter.PxfMetric.RECORDS_SENT, reportFrequency, context);
+                        metricsReporter.reportCounter(MetricsReporter.PxfMetric.BYTES_SENT, byteBatch, context);
+                        byteCount += byteBatch;
+                        byteBatch = 0;
                     }
                 }
                 // report the remaining records that have yet to be reported
-                long remainder = recordCount % recordReportFrequency;
+                long remainder = recordCount % reportFrequency;
                 if (remainder != 0) {
                     metricsReporter.reportCounter(MetricsReporter.PxfMetric.RECORDS_SENT, remainder, context);
+                    metricsReporter.reportCounter(MetricsReporter.PxfMetric.BYTES_SENT, byteBatch, context);
+                    byteCount += byteBatch;
                 }
             }
             success = true;
@@ -170,11 +180,11 @@ public class ReadServiceImpl extends BaseServiceImpl implements ReadService {
 
             }
             Duration duration = Duration.between(startTime, Instant.now());
-            log.debug("{} Finished processing fragment {} of resource {}, {} records in {} ms.",
-                    context.getId(), fragment.getIndex(), context.getDataSource(), recordCount, duration.toMillis());
+            log.debug("{} Finished processing fragment {} of resource {} in {} ms, wrote {} records and {} bytes.",
+                    context.getId(), fragment.getIndex(), context.getDataSource(), duration.toMillis(), recordCount, byteCount);
             metricsReporter.reportTimer(MetricsReporter.PxfMetric.FRAGMENTS_SENT, duration, context, success);
         }
-        return recordCount;
+        return OperationStats.builder().recordCount(recordCount).byteCount(byteCount).build();
     }
 
     private void updateProfile(RequestContext context, String profile) {

@@ -68,10 +68,11 @@ public class BufferWritable implements Writable {
      * @throws IOException if the buffer was not set
      */
     @Override
-    public void write(DataOutput out) throws IOException {
+    public long write(DataOutput out) throws IOException {
         if (buf == null)
             throw new IOException("BufferWritable was not set");
         out.write(buf, 0, length);
+        return length;
     }
 
     /**

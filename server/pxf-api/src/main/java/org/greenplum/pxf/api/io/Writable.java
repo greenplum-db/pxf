@@ -8,9 +8,9 @@ package org.greenplum.pxf.api.io;
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -34,9 +34,10 @@ public interface Writable {
      * Serialize the fields of this object to <code>out</code>.
      *
      * @param out <code>DataOutput</code> to serialize this object into.
+     * @return number of bytes written
      * @throws IOException if I/O error occurs
      */
-    void write(DataOutput out) throws IOException;
+    long write(DataOutput out) throws IOException;
 
     /**
      * Deserialize the fields of this object from <code>in</code>.

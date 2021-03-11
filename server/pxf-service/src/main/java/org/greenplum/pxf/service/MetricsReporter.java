@@ -140,8 +140,9 @@ public class MetricsReporter {
      */
     public enum PxfMetric {
         FRAGMENTS_SENT("fragments.sent", "pxf.metrics.fragments.enabled", null),
-        RECORDS_SENT("records.sent", "pxf.metrics.records.enabled", "pxf.metrics.records.report-frequency"),
-        RECORDS_RECEIVED("records.received", "pxf.metrics.records.enabled", "pxf.metrics.records.report-frequency");
+        RECORDS_SENT("records.sent", "pxf.metrics.records.enabled", "pxf.metrics.report-frequency"),
+        RECORDS_RECEIVED("records.received", "pxf.metrics.records.enabled", "pxf.metrics.report-frequency"),
+        BYTES_SENT("bytes.sent", "pxf.metrics.bytes.enabled", "pxf.metrics.bytes.report-frequency");
 
         private final String metricName;
         private final String enabledPropertyName;
