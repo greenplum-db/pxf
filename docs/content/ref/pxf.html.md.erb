@@ -16,6 +16,7 @@ where \<command\> is:
 cluster
 help
 init (deprecated)
+migrate
 prepare
 register
 reset (deprecated)
@@ -48,6 +49,9 @@ The `pxf` utility manages the PXF configuration and the PXF Service instance on 
 
 <dt>init (deprecated)</dt>
 <dd>The command is equivalent to the `register` command.</dd>
+
+<dt>migrate</dt>
+<dd>Migrate the configuration in a PXF 5 `$PXF_CONF` directory to `$PXF_BASE` on the host. When you run the command, you must identify the PXF 5 configuration directory via an environment variable named `PXF_CONF`. PXF migrates the version 5 configuration to the current `$PXF_BASE`, copying and merging files and directories as necessary. <div class="note">You must manually migrate any <code>pxf-log4j.properties</code> customizations to the <code>pxf-log4j2.xml</code> file.</div></dd>
 
 <dt>prepare</dt>
 <dd>Prepare a new `$PXF_BASE` directory on the host. When you run the command, you must identify the new PXF runtime configuration directory via an environment variable named `PXF_BASE`. PXF copies runtime configuration file templates and directories to this `$PXF_BASE`.</dd>

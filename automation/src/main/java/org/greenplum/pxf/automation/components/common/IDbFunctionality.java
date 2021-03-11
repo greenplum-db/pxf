@@ -1,15 +1,15 @@
 package org.greenplum.pxf.automation.components.common;
 
-import java.util.ArrayList;
-
 import org.greenplum.pxf.automation.structures.tables.basic.Table;
+
+import java.util.ArrayList;
 
 /**
  * Define functionality over Data bases
  */
 public interface IDbFunctionality {
 
-	public void createTable(Table table) throws Exception;
+	void createTable(Table table) throws Exception;
 
 	/**
 	 * Convenient method for creating table - will drop the old table if exists create it and check
@@ -18,11 +18,11 @@ public interface IDbFunctionality {
 	 * @param table
 	 * @throws Exception
 	 */
-	public void createTableAndVerify(Table table) throws Exception;
+	void createTableAndVerify(Table table) throws Exception;
 
-	public void dropTable(Table table, boolean cascade) throws Exception;
+	void dropTable(Table table, boolean cascade) throws Exception;
 
-	public void dropDataBase(String schemaName, boolean cascade, boolean ignoreFail)
+	void dropDataBase(String schemaName, boolean cascade, boolean ignoreFail)
 			throws Exception;
 
 	/**
@@ -32,9 +32,21 @@ public interface IDbFunctionality {
 	 * @param target table to get the required table to insert to
 	 * @throws Exception
 	 */
-	public void insertData(Table source, Table target) throws Exception;
+	void insertData(Table source, Table target) throws Exception;
 
-	public void createDataBase(String schemaName, boolean ignoreFail) throws Exception;
+	void createDataBase(String schemaName, boolean ignoreFail) throws Exception;
+
+	/**
+	 * Creates a database with a given encoding, lc_collate, and lc_types values
+	 *
+	 * @param schemaName        the name of the database to be created
+	 * @param ignoreFail        ignore on error creation
+	 * @param encoding          the encoding
+	 * @param localeCollate     the lc_collate
+	 * @param localeCollateType the lc_ctype
+	 * @throws Exception when a database creation error occurs
+	 */
+	void createDataBase(String schemaName, boolean ignoreFail, String encoding, String localeCollate, String localeCollateType) throws Exception;
 
 	/**
 	 * Gets tables list for data base
@@ -43,7 +55,7 @@ public interface IDbFunctionality {
 	 * @return List of Table names for data base
 	 * @throws Exception
 	 */
-	public ArrayList<String> getTableList(String dataBaseName) throws Exception;
+	ArrayList<String> getTableList(String dataBaseName) throws Exception;
 
 	/**
 	 * Queries Data into Table Object.
@@ -52,7 +64,7 @@ public interface IDbFunctionality {
 	 * @param query
 	 * @throws Exception
 	 */
-	public void queryResults(Table table, String query) throws Exception;
+	void queryResults(Table table, String query) throws Exception;
 
 	/**
 	 * Checks if Table exists in specific Schema.
@@ -61,7 +73,7 @@ public interface IDbFunctionality {
 	 * @return true if exists.
 	 * @throws Exception
 	 */
-	public boolean checkTableExists(Table table) throws Exception;
+	boolean checkTableExists(Table table) throws Exception;
 
 	/**
 	 * Checks if Database exists, if so return true.
@@ -70,7 +82,7 @@ public interface IDbFunctionality {
 	 * @return if exists or not
 	 * @throws Exception
 	 */
-	public boolean checkDataBaseExists(String dbName) throws Exception;
+	boolean checkDataBaseExists(String dbName) throws Exception;
 
 	/**
 	 * Gets list of all existing Data Bases.
@@ -78,7 +90,7 @@ public interface IDbFunctionality {
 	 * @return list of existing DBs
 	 * @throws Exception
 	 */
-	public ArrayList<String> getDataBasesList() throws Exception;
+	ArrayList<String> getDataBasesList() throws Exception;
 
     /**
      * Grant read permissions on a table
@@ -86,7 +98,7 @@ public interface IDbFunctionality {
      * @param user
      * @throws Exception
      */
-    public void grantReadOnTable(Table table, String user) throws Exception;
+    void grantReadOnTable(Table table, String user) throws Exception;
 
     /**
      * Grant write permissions on a table
@@ -94,5 +106,5 @@ public interface IDbFunctionality {
      * @param user
      * @throws Exception
      */
-    public void grantWriteOnTable(Table table, String user) throws Exception;
+    void grantWriteOnTable(Table table, String user) throws Exception;
 }

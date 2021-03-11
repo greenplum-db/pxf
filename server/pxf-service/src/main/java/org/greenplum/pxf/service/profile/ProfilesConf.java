@@ -132,7 +132,7 @@ public class ProfilesConf implements PluginConf {
             Profiles profiles = (Profiles) unmarshaller.unmarshal(url);
 
             if (profiles == null || profiles.getProfiles() == null || profiles.getProfiles().isEmpty()) {
-                LOG.warn("Profile file '{}' is empty", fileName);
+                LOG.info("Profile file '{}' is empty", fileName);
                 return;
             }
 

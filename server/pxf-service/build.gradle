@@ -60,12 +60,17 @@ dependencies {
     testCompileOnly("org.apache.hadoop:hadoop-annotations:${hadoopVersion}")
     testImplementation("com.esotericsoftware:kryo:3.0.3")
     testImplementation("commons-io:commons-io")
+    testImplementation("org.simplify4u:slf4j-mock:2.1.0") // for MDC mocking
 
-    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    developmentOnly('org.springframework.boot:spring-boot-devtools')
     testImplementation('org.springframework.boot:spring-boot-starter-test')
+    testImplementation('org.springframework.boot:spring-boot-starter-webflux')
 }
 
 bootJar {
+    layered {
+        enabled = false
+    }
     manifest {
         attributes("Implementation-Title": project.name)
         attributes("Implementation-Version": project.version)
@@ -75,7 +80,13 @@ bootJar {
 
 springBoot {
     mainClass = "org.greenplum.pxf.service.PxfServiceApplication"
-    buildInfo()
+    buildInfo {
+        properties {
+            additional = [
+                    "pxfApiVersion" : "${apiVersion}"
+            ]
+        }
+    }
 }
 
 test {

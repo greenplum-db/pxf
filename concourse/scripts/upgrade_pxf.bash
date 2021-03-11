@@ -55,6 +55,9 @@ function upgrade_pxf() {
 
 	echoGreen "Starting PXF 6"
 	ssh "${MASTER_HOSTNAME}" "PXF_BASE=${PXF_BASE_DIR} ${PXF_HOME}/bin/pxf cluster start"
+
+	echoGreen "ALTER EXTENSION pxf UPDATE - for testupgrade database"
+	ssh "${MASTER_HOSTNAME}" "source ${GPHOME}/greenplum_path.sh && psql -d testupgrade -c 'ALTER EXTENSION pxf UPDATE'"
 }
 
 function _main() {

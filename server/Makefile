@@ -23,6 +23,9 @@ default: stage-notest
 
 PXF_ROOT_DIR := $(shell cd .. && pwd)
 PXF_VERSION ?= $(shell cat $(PXF_ROOT_DIR)/version)
+PXF_API_VERSION ?= $(shell cat $(PXF_ROOT_DIR)/api_version)
+
+PXF_GRADLE_PROPERTIES = -Pversion=$(PXF_VERSION) -PapiVersion=$(PXF_API_VERSION)
 
 help:
 	@echo
@@ -36,10 +39,10 @@ help:
 	@echo	"  - doc - creates aggregate javadoc under docs"
 
 all:
-	./gradlew -Pversion=$(PXF_VERSION) clean stage
+	./gradlew $(PXF_GRADLE_PROPERTIES) clean stage
 
 compile:
-	./gradlew -Pversion=$(PXF_VERSION) compileJava
+	./gradlew $(PXF_GRADLE_PROPERTIES) compileJava
 
 GRADLEW_TEST_PARAMS = test
 ifneq "$(TEST)" ""
@@ -57,11 +60,11 @@ test unittest:
 		echo 'Test $(TEST) was not found'; \
 		exit 1; \
 	fi
-	./gradlew -Pversion=$(PXF_VERSION) ${GRADLEW_TEST_PARAMS}
+	./gradlew $(PXF_GRADLE_PROPERTIES) ${GRADLEW_TEST_PARAMS}
 
 .PHONY: stage
 stage:
-	./gradlew -Pversion=$(PXF_VERSION) test stage
+	./gradlew $(PXF_GRADLE_PROPERTIES) test stage
 	install -m 744 -d "build/stage/pxf/lib"
 	install -m 744 -d "build/stage/pxf/lib/native"
 	install -m 744 -d "build/stage/pxf/servers"
@@ -72,7 +75,7 @@ stage:
 
 .PHONY: stage-notest
 stage-notest:
-	./gradlew -Pversion=$(PXF_VERSION) stage -x test
+	./gradlew $(PXF_GRADLE_PROPERTIES) stage -x test
 	install -m 744 -d "build/stage/pxf/lib"
 	install -m 744 -d "build/stage/pxf/lib/native"
 	install -m 744 -d "build/stage/pxf/servers"
@@ -88,7 +91,7 @@ clean:
 distclean maintainer-clean: clean
 
 doc:
-	./gradlew -Pversion=$(PXF_VERSION) aggregateJavadoc
+	./gradlew $(PXF_GRADLE_PROPERTIES) aggregateJavadoc
 
 .PHONY: install
 install: stage

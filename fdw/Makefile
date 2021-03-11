@@ -13,6 +13,9 @@ REGRESS = pxf_fdw_wrapper pxf_fdw_server pxf_fdw_user_mapping pxf_fdw_foreign_ta
 PG_CONFIG = pg_config
 PGXS := $(shell $(PG_CONFIG) --pgxs)
 
+PXF_API_VERSION := $(shell cat ../api_version)
+PG_CPPFLAGS := -DPXF_API_VERSION=\"$(PXF_API_VERSION)\"
+
 ifndef PGXS
     $(error Make sure the Greenplum installation binaries are in your PATH. i.e. export PATH=<path to your greenplum installation>/bin:$$PATH)
 endif

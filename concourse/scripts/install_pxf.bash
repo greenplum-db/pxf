@@ -251,6 +251,15 @@ function run_pxf_installer_scripts() {
 			'
 		fi
 	"
+
+	# Create a database for PXF extension upgrade testing
+	if [[ ${PXF_VERSION} == 5 ]]; then
+		ssh "${MASTER_HOSTNAME}" "
+			source ${GPHOME}/greenplum_path.sh &&
+			createdb testupgrade &&
+			psql -d testupgrade -c 'CREATE EXTENSION IF NOT EXISTS pxf'
+		"
+	fi
 }
 
 function _main() {

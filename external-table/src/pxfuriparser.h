@@ -26,10 +26,9 @@
 
 /*
  * Path constants for accessing PXF.
- * All PXF's resources are under /PXF_SERVICE_PREFIX/PXF_VERSION/...
+ * All PXF's resources are under /PXF_SERVICE_PREFIX/...
  */
 #define PXF_SERVICE_PREFIX "pxf"
-#define PXF_VERSION "v15"		/* PXF version */
 #define PROTOCOL_PXF "pxf://"
 #define IS_PXF_URI(uri_str) (pg_strncasecmp(uri_str, PROTOCOL_PXF, strlen(PROTOCOL_PXF)) == 0)
 

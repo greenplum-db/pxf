@@ -55,9 +55,13 @@ build_http_headers(PxfInputData *input)
 	GPHDUri        *gphduri   = input->gphduri;
 	Relation       rel        = input->rel;
 	char           *filterstr = input->filterstr;
+	char           *data_encoding = NULL;
 	char           long_number[sizeof(int32) * 8];
 	ProjectionInfo *proj_info = input->proj_info;
+	const char	   *relname;
+	char		   *relnamespace = NULL;
 
+	relname = gphduri->data;
 	if (rel != NULL)
 	{
 		/* format */
@@ -83,11 +87,22 @@ build_http_headers(PxfInputData *input)
 		foreach(option, copyFmtOpts)
 		{
 			DefElem    *def = (DefElem *) lfirst(option);
-			churl_headers_append(headers, normalize_key_name(def->defname), defGetString(def));
+
+			if (strcmp(def->defname, "encoding") == 0)
+			{
+				data_encoding = defGetString(def);
+			}
+			else
+			{
+				churl_headers_append(headers, normalize_key_name(def->defname), defGetString(def));
+			}
 		}
 
 		/* Record fields - name and type of each field */
 		add_tuple_desc_httpheader(headers, rel);
+
+		relname = RelationGetRelationName(rel);
+		relnamespace = GetNamespaceName(RelationGetNamespace(rel));
 	}
 
 	if (proj_info != NULL)
@@ -123,6 +138,7 @@ build_http_headers(PxfInputData *input)
 	churl_headers_append(headers, "X-GP-SEGMENT-ID", ev.GP_SEGMENT_ID);
 	churl_headers_append(headers, "X-GP-SEGMENT-COUNT", ev.GP_SEGMENT_COUNT);
 	churl_headers_append(headers, "X-GP-XID", ev.GP_XID);
+	churl_headers_append(headers, "X-GP-PXF-API-VERSION", PXF_API_VERSION);
 
 	pg_ltoa(gp_session_id, long_number);
 	churl_headers_append(headers, "X-GP-SESSION-ID", long_number);
@@ -135,6 +151,12 @@ build_http_headers(PxfInputData *input)
 	churl_headers_append(headers, "X-GP-URL-HOST", gphduri->host);
 	churl_headers_append(headers, "X-GP-URL-PORT", gphduri->port);
 	churl_headers_append(headers, "X-GP-DATA-DIR", gphduri->data);
+	churl_headers_append(headers, "X-GP-TABLE-NAME", relname);
+	churl_headers_append(headers, "X-GP-SCHEMA-NAME", relnamespace);
+
+	/* encoding options */
+	churl_headers_append(headers, "X-GP-DATA-ENCODING", data_encoding);
+	churl_headers_append(headers, "X-GP-DATABASE-ENCODING", GetDatabaseEncodingName());
 
 	/* location options */
 	add_location_options_httpheader(headers, gphduri);
@@ -151,6 +173,8 @@ build_http_headers(PxfInputData *input)
 	else
 		churl_headers_append(headers, "X-GP-HAS-FILTER", "0");
 
+	// Since we only establish a single connection per segment, we can safely close the connection after
+	// the segment completes streaming data.
 	churl_headers_override(headers, "Connection", "close");
 }
 

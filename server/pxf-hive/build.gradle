@@ -41,7 +41,7 @@ dependencies {
     implementation("org.apache.hive:hive-common:${hiveVersion}") { transitive = false }
     implementation("org.apache.hive.shims:hive-shims-common:${hiveVersion}") { transitive = false }
     implementation("org.apache.hive.shims:hive-shims-0.23:${hiveVersion}") { transitive = false }
-    implementation("org.apache.commons:commons-lang3:3.1") { transitive = false }
+    implementation("org.apache.commons:commons-lang3:3.10") { transitive = false }
     implementation("org.apache.hive:hive-storage-api:${hiveStorageApiVersion}") { transitive = false }
     implementation("org.apache.orc:orc-core:${orcVersion}") { transitive = false }
     implementation("io.airlift:aircompressor:0.8") { transitive = false }

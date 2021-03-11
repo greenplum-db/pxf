@@ -44,7 +44,7 @@ import org.testng.annotations.Test;
         if (hdfs2 == null) return;
 
         trySecureLogin(hdfs2, hdfs2.getTestKerberosPrincipal());
-        initializeWorkingDirectory(gpdb, hdfs2);
+        initializeWorkingDirectory(hdfs2, gpdb.getUserName());
         hive2 = (Hive) SystemManagerImpl.getInstance().getSystemObject("hive2");
 
         HiveTable hiveSmallDataTable2 =

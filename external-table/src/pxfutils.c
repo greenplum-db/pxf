@@ -1,8 +1,10 @@
 #include "pxfutils.h"
+
 #if PG_VERSION_NUM >= 90400
 #include "access/htup_details.h"
 #include "catalog/pg_type.h"
 #endif
+#include "catalog/pg_namespace.h"
 #include "utils/formatting.h"
 #include "utils/syscache.h"
 
@@ -116,4 +118,26 @@ get_pxf_port(void)
 	}
 
 	return port;
+}
+
+/* Returns the namespace (schema) name for a given namespace oid */
+char *
+GetNamespaceName(Oid nsp_oid)
+{
+	HeapTuple	tuple;
+	Datum		nspnameDatum;
+	bool		isNull;
+
+	tuple = SearchSysCache1(NAMESPACEOID, ObjectIdGetDatum(nsp_oid));
+	if (!HeapTupleIsValid(tuple))
+		ereport(ERROR,
+				(errcode(ERRCODE_UNDEFINED_SCHEMA),
+						errmsg("schema with OID %u does not exist", nsp_oid)));
+
+	nspnameDatum = SysCacheGetAttr(NAMESPACEOID, tuple, Anum_pg_namespace_nspname,
+								   &isNull);
+
+	ReleaseSysCache(tuple);
+
+	return DatumGetCString(nspnameDatum);
 }

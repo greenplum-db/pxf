@@ -29,6 +29,8 @@ import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.EOFException;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 
 /**
@@ -38,14 +40,14 @@ import java.io.IOException;
 public class GPDBWritable implements Writable {
     /*
      * GPDBWritable is using the following serialization form:
-	 * Total Length | Version | Error Flag | # of columns | Col type |...| Col type | Null Bit array            |   Col val...
+     * Total Length | Version | Error Flag | # of columns | Col type |...| Col type | Null Bit array            |   Col val...
      * 4 byte		| 2 byte  |	1 byte     |   2 byte     |  1 byte  |...|  1 byte  | ceil(# of columns/8) byte |   Fixed or Var length
      *
      * For fixed length type, we know the length.
      * In the col val, we align pad according to the alignment requirement of the type.
      * For var length type, the alignment is always 4 byte.
      * For var length type, col val is <4 byte length><payload val>
-	 */
+     */
 
     private static final Log LOG = LogFactory.getLog(GPDBWritable.class);
     private static final int EOF = -1;
@@ -90,7 +92,6 @@ public class GPDBWritable implements Writable {
      */
     private static final int PREV_VERSION = 1;
     private static final int VERSION = 2; /* for backward compatibility */
-    private static final String CHARSET = "UTF-8";
 
     /*
      * Local variables
@@ -100,6 +101,7 @@ public class GPDBWritable implements Writable {
     private int alignmentOfEightBytes = 8;
     private byte errorFlag = 0;
     private int pktlen = EOF;
+    private final Charset databaseEncoding;
 
     public int[] getColType() {
         return colType;
@@ -109,16 +111,18 @@ public class GPDBWritable implements Writable {
      * An exception class for column type definition and
      * set/get value mismatch.
      */
-    public class TypeMismatchException extends IOException {
+    public static class TypeMismatchException extends IOException {
         TypeMismatchException(String msg) {
             super(msg);
         }
     }
 
     /**
-     * Empty Constructor
+     * Constructs a {@link GPDBWritable} object with a given
+     * {@code databaseEncoding}
      */
-    public GPDBWritable() {
+    public GPDBWritable(Charset databaseEncoding) {
+        this.databaseEncoding = databaseEncoding;
         initializeEightByteAlignment();
     }
 
@@ -127,7 +131,8 @@ public class GPDBWritable implements Writable {
      *
      * @param columnType the table column types
      */
-    public GPDBWritable(int[] columnType) {
+    public GPDBWritable(int[] columnType, Charset databaseEncoding) {
+        this.databaseEncoding = databaseEncoding;
         initializeEightByteAlignment();
         colType = columnType;
         colValue = new Object[columnType.length];
@@ -139,11 +144,11 @@ public class GPDBWritable implements Writable {
      * @param data a record in the serialized form
      * @throws IOException if the data is malformatted.
      */
-    public GPDBWritable(byte[] data) throws IOException {
+    public GPDBWritable(byte[] data, Charset databaseEncoding) throws IOException {
+        this.databaseEncoding = databaseEncoding;
         initializeEightByteAlignment();
         ByteArrayInputStream bis = new ByteArrayInputStream(data);
         DataInputStream dis = new DataInputStream(bis);
-
         readFields(dis);
     }
 
@@ -171,23 +176,23 @@ public class GPDBWritable implements Writable {
     public void readFields(DataInput in) throws IOException {
         /*
          * extract pkt len.
-		 *
-		 * GPSQL-1107:
-		 * The DataInput might already be empty (EOF), but we can't check it beforehand.
-		 * If that's the case, pktlen is updated to -1, to mark that the object is still empty.
-		 * (can be checked with isEmpty()).
-		 */
+         *
+         * GPSQL-1107:
+         * The DataInput might already be empty (EOF), but we can't check it beforehand.
+         * If that's the case, pktlen is updated to -1, to mark that the object is still empty.
+         * (can be checked with isEmpty()).
+         */
         pktlen = readPktLen(in);
         if (isEmpty()) {
             return;
         }
 
-		/* extract the version and col cnt */
+        /* extract the version and col cnt */
         int version = in.readShort();
         int curOffset = 4 + 2;
         int colCnt;
 
-		/* !!! Check VERSION !!! */
+        /* !!! Check VERSION !!! */
         if (version != GPDBWritable.VERSION && version != GPDBWritable.PREV_VERSION) {
             throw new IOException("Current GPDBWritable version(" +
                     GPDBWritable.VERSION + ") does not match input version(" +
@@ -202,7 +207,7 @@ public class GPDBWritable implements Writable {
         colCnt = in.readShort();
         curOffset += 2;
 
-		/* Extract Column Type */
+        /* Extract Column Type */
         colType = new int[colCnt];
         DBType[] coldbtype = new DBType[colCnt];
         for (int i = 0; i < colCnt; i++) {
@@ -237,13 +242,13 @@ public class GPDBWritable implements Writable {
             }
         }
 
-		/* Extract null bit array */
+        /* Extract null bit array */
         byte[] nullbytes = new byte[getNullByteArraySize(colCnt)];
         in.readFully(nullbytes);
         curOffset += nullbytes.length;
         boolean[] colIsNull = byteArrayToBooleanArray(nullbytes, colCnt);
 
-		/* extract column value */
+        /* extract column value */
         colValue = new Object[colCnt];
         for (int i = 0; i < colCnt; i++) {
             if (!colIsNull[i]) {
@@ -254,10 +259,10 @@ public class GPDBWritable implements Writable {
                 }
                 curOffset += skipbytes;
 
-				/* For fixed length type, increment the offset according to type type length here.
+                /* For fixed length type, increment the offset according to type type length here.
                  * For var length type (BYTEA, TEXT), we'll read 4 byte length header and the
-				 * actual payload.
-				 */
+                 * actual payload.
+                 */
                 int varcollen = -1;
                 if (coldbtype[i].isVarLength()) {
                     varcollen = in.readInt();
@@ -292,7 +297,7 @@ public class GPDBWritable implements Writable {
                         break;
                     }
 
-					/* For BYTEA column, it has a 4 byte var length header. */
+                    /* For BYTEA column, it has a 4 byte var length header. */
                     case BYTEA: {
                         colValue[i] = new byte[varcollen];
                         in.readFully((byte[]) colValue[i]);
@@ -300,12 +305,12 @@ public class GPDBWritable implements Writable {
                     }
                     /* For text formatted column, it has a 4 byte var length header
                      * and it's always null terminated string.
-					 * So, we can remove the last "\0" when constructing the string.
-					 */
+                     * So, we can remove the last "\0" when constructing the string.
+                     */
                     case TEXT: {
                         byte[] data = new byte[varcollen];
                         in.readFully(data, 0, varcollen);
-                        colValue[i] = new String(data, 0, varcollen - 1, CHARSET);
+                        colValue[i] = new String(data, 0, varcollen - 1, databaseEncoding);
                         break;
                     }
 
@@ -315,12 +320,11 @@ public class GPDBWritable implements Writable {
             }
         }
 
-		/* Skip the ending alignment padding */
+        /* Skip the ending alignment padding */
         int skipbytes = roundUpAlignment(curOffset, 8) - curOffset;
         for (int j = 0; j < skipbytes; j++) {
             in.readByte();
         }
-        curOffset += skipbytes;
 
         if (errorFlag != 0) {
             throw new IOException("Received error value " + errorFlag + " from format");
@@ -376,31 +380,31 @@ public class GPDBWritable implements Writable {
             }
             enumType[i] = (byte) (coldbtype.ordinal());
 
-			/* Get the actual value, and set the null bit */
+            /* Get the actual value, and set the null bit */
             if (colValue[i] == null) {
                 nullBits[i] = true;
                 colLength[i] = 0;
             } else {
                 nullBits[i] = false;
 
-				/*
+                /*
                  * For fixed length type, we get the fixed length.
-				 * For var len binary format, the length is in the col value.
-				 * For text format, we must convert encoding first.
-				 */
+                 * For var len binary format, the length is in the col value.
+                 * For text format, we must convert encoding first.
+                 */
                 if (!coldbtype.isVarLength()) {
                     colLength[i] = coldbtype.getTypeLength();
                 } else if (!isTextForm(colType[i])) {
                     colLength[i] = ((byte[]) colValue[i]).length;
                 } else {
-                    colLength[i] = ((String) colValue[i]).getBytes(CHARSET).length;
+                    colLength[i] = ((String) colValue[i]).getBytes(databaseEncoding).length;
                 }
 
-				/* calculate and add the type alignment padding */
+                /* calculate and add the type alignment padding */
                 padLength[i] = roundUpAlignment(datlen, coldbtype.getAlignment()) - datlen;
                 datlen += padLength[i];
 
-				/* for variable length type, we add a 4 byte length header */
+                /* for variable length type, we add a 4 byte length header */
                 if (coldbtype.isVarLength()) {
                     datlen += 4;
                 }
@@ -408,36 +412,36 @@ public class GPDBWritable implements Writable {
             datlen += colLength[i];
         }
 
-		/*
-		 * Add the final alignment padding for the next record
-		 */
+        /*
+         * Add the final alignment padding for the next record
+         */
         int endpadding = roundUpAlignment(datlen, 8) - datlen;
         datlen += endpadding;
 
-		/* Construct the packet header */
+        /* Construct the packet header */
         out.writeInt(datlen);
         out.writeShort(VERSION);
         out.writeByte(errorFlag);
         out.writeShort(numCol);
 
-		/* Write col type */
+        /* Write col type */
         for (int i = 0; i < numCol; i++) {
             out.writeByte(enumType[i]);
         }
 
-		/* Nullness */
+        /* Nullness */
         byte[] nullBytes = boolArrayToByteArray(nullBits);
         out.write(nullBytes);
 
-		/* Column Value */
+        /* Column Value */
         for (int i = 0; i < numCol; i++) {
             if (!nullBits[i]) {
-				/* Pad the alignment byte first */
+                /* Pad the alignment byte first */
                 if (padLength[i] > 0) {
                     out.write(padbytes, 0, padLength[i]);
                 }
 
-				/* Now, write the actual column value */
+                /* Now, write the actual column value */
                 switch (DataType.get(colType[i])) {
                     case BIGINT:
                         out.writeLong(((Long) colValue[i]));
@@ -458,16 +462,16 @@ public class GPDBWritable implements Writable {
                         out.writeShort(((Short) colValue[i]));
                         break;
 
-					/* For BYTEA format, add 4byte length header at the beginning  */
+                    /* For BYTEA format, add 4byte length header at the beginning  */
                     case BYTEA:
                         out.writeInt(colLength[i]);
                         out.write((byte[]) colValue[i]);
                         break;
 
-					/* For text format, add 4byte length header. string is already '\0' terminated */
+                    /* For text format, add 4byte length header. string is already '\0' terminated */
                     default: {
+                        byte[] data = ((String) colValue[i]).getBytes(databaseEncoding);
                         out.writeInt(colLength[i]);
-                        byte[] data = ((String) colValue[i]).getBytes(CHARSET);
                         out.write(data);
                         break;
                     }
@@ -475,7 +479,7 @@ public class GPDBWritable implements Writable {
             }
         }
 
-		/* End padding */
+        /* End padding */
         out.write(padbytes, 0, endpadding);
     }
 
@@ -578,7 +582,7 @@ public class GPDBWritable implements Writable {
     public void setString(int colIdx, String val)
             throws TypeMismatchException {
         checkType(DataType.TEXT, colIdx, true);
-        colValue[colIdx] = (val != null) ? val + "\0": null;
+        colValue[colIdx] = (val != null) ? val + "\0" : null;
     }
 
     /**
@@ -630,16 +634,6 @@ public class GPDBWritable implements Writable {
     public void setShort(int colIdx, Short val)
             throws TypeMismatchException {
         checkType(DataType.SMALLINT, colIdx, true);
-        colValue[colIdx] = val;
-    }
-
-    /**
-     * Sets the column value of the record.
-     *
-     * @param colIdx the column index
-     * @param val    the value
-     */
-    public void setObject(int colIdx, Object val) {
         colValue[colIdx] = val;
     }
 
@@ -745,16 +739,6 @@ public class GPDBWritable implements Writable {
             throws TypeMismatchException {
         checkType(DataType.SMALLINT, colIdx, false);
         return (Short) colValue[colIdx];
-    }
-
-    /**
-     * Gets the column value of the record.
-     *
-     * @param colIdx the column index
-     * @return column value
-     */
-    public Object getObject(int colIdx) {
-        return colValue[colIdx];
     }
 
     /**

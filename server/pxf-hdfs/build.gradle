@@ -48,7 +48,7 @@ dependencies {
     implementation("org.apache.parquet:parquet-jackson:${parquetVersion}") { transitive = false }
     implementation("org.apache.hive:hive-storage-api:${hiveStorageApiVersion}") { transitive = false }// for parquet writing
 
-    implementation("org.codehaus.jackson:jackson-core-asl:1.9.13") { transitive = false }
+    implementation("org.codehaus.jackson:jackson-core-asl:1.9.13")   { transitive = false }
     implementation("org.codehaus.jackson:jackson-mapper-asl:1.9.13") { transitive = false }
 
     implementation("org.apache.avro:avro:1.7.7")                  { transitive = false }
@@ -57,8 +57,12 @@ dependencies {
     implementation("org.apache.commons:commons-compress:1.20")    { transitive = false }
     implementation("org.tukaani:xz:1.8")                          { transitive = false }
 
-    // Dependency in hadoop 2.9.2
-    implementation("log4j:log4j:1.2.17")                         { transitive = false }
+    // Hadoop 2.10.1 uses log4j:1.2.17, but since we are using slf4j
+    // we bring log4j-over-slf4j which provides compatibility for log4j
+    // using underlying slf4j functionality (i.e MDC).
+    implementation("org.slf4j:log4j-over-slf4j:1.7.30")          { transitive = false }
+
+    // Dependency in hadoop 2.10.1
     implementation("com.fasterxml.woodstox:woodstox-core:5.0.3") { transitive = false }
     implementation("org.codehaus.woodstox:stax2-api:3.1.4")      { transitive = false }
 

@@ -25,6 +25,9 @@ const char *get_pxf_host(void);
  */
 const int  get_pxf_port(void);
 
+/* Returns the namespace (schema) name for a given namespace oid */
+char	   *GetNamespaceName(Oid nsp_oid);
+
 #define PXF_PROFILE       "PROFILE"
 #define FRAGMENTER        "FRAGMENTER"
 #define ACCESSOR          "ACCESSOR"

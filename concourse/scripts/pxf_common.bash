@@ -8,6 +8,7 @@ PXF_VERSION=${PXF_VERSION:=6}
 PROXY_USER=${PROXY_USER:-pxfuser}
 PROTOCOL=${PROTOCOL:-}
 GOOGLE_PROJECT_ID=${GOOGLE_PROJECT_ID:-data-gpdb-ud}
+PXF_SRC=$(find /tmp/build -name pxf_src -type d)
 
 # on purpose do not call this PXF_CONF|PXF_BASE so that it is not set during pxf operations
 if [[ ${PXF_VERSION} == 5 ]]; then
@@ -145,7 +146,7 @@ function install_gpdb_binary() {
 		export_pythonpath+=:/usr/local/lib/$python_dir
 	fi
 
-	echo "$export_pythonpath" >> "${PXF_COMMON_SRC_DIR}/../../automation/tinc/main/tinc_env.sh"
+	echo "$export_pythonpath" >> "${PXF_SRC}/automation/tinc/main/tinc_env.sh"
 }
 
 function install_gpdb_package() {
@@ -195,7 +196,7 @@ function install_gpdb_package() {
 		exit 1
 	fi
 
-	echo "$export_pythonpath" >> "${PXF_COMMON_SRC_DIR}/../../automation/tinc/main/tinc_env.sh"
+	echo "$export_pythonpath" >> "${PXF_SRC}/automation/tinc/main/tinc_env.sh"
 
 	# create symlink to allow pgregress to run (hardcoded to look for /usr/local/greenplum-db-devel/psql)
 	rm -rf /usr/local/greenplum-db-devel
@@ -313,10 +314,10 @@ function install_pxf_server() {
 }
 
 function install_pxf_tarball() {
-    local tarball_dir=${PXF_PKG_DIR:-pxf_tarball}
-    tar -xzf "${tarball_dir}/"pxf-*.tar.gz -C /tmp
-    /tmp/pxf*/install_component
-    chown -R gpadmin:gpadmin "${PXF_HOME}"
+	local tarball_dir=${PXF_PKG_DIR:-pxf_tarball}
+	tar -xzf "${tarball_dir}/"pxf-*.tar.gz -C /tmp
+	/tmp/pxf*/install_component
+	chown -R gpadmin:gpadmin "${PXF_HOME}"
 }
 
 function install_pxf_package() {
@@ -694,8 +695,7 @@ function configure_pxf_default_server() {
 				-e 's|</configuration>|<property><name>hadoop.security.authentication</name><value>kerberos</value></property></configuration>|g' \
 				${BASE_DIR}/servers/db-hive/jdbc-site.xml
 
-			PXF_SRC_DIR=$(find /tmp/build/ -name pxf_src)
-			cp "${PXF_SRC_DIR}"/automation/src/test/resources/hive-report.sql ${BASE_DIR}/servers/db-hive/
+			cp "${PXF_SRC}"/automation/src/test/resources/hive-report.sql ${BASE_DIR}/servers/db-hive/
 		fi
 	else
 		# copy hadoop config files to BASE_DIR/servers/default

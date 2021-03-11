@@ -20,8 +20,8 @@ dependencies {
     implementation("commons-codec:commons-codec")
     implementation("commons-lang:commons-lang")
     implementation("org.apache.commons:commons-lang3")
-    implementation("org.apache.httpcomponents:httpclient:4.5.9") { transitive = false }
-    implementation("org.apache.httpcomponents:httpcore:4.4.13") { transitive = false }
+    implementation("org.apache.httpcomponents:httpclient:4.5.13") { transitive = false }
+    implementation("org.apache.httpcomponents:httpcore:4.4.14") { transitive = false }
     implementation("org.apache.hadoop:hadoop-aws:${hadoopVersion}") { transitive = false }
     implementation("com.amazonaws:aws-java-sdk-core:${awsJavaSdk}") { transitive = false }
     implementation("com.amazonaws:aws-java-sdk-kms:${awsJavaSdk}") { transitive = false }

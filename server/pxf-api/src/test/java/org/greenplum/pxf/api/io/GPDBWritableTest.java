@@ -25,6 +25,7 @@ import org.mockito.stubbing.OngoingStubbing;
 
 import java.io.DataInput;
 import java.io.EOFException;
+import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -38,7 +39,7 @@ public class GPDBWritableTest {
 
     /*
      * Test the readFields method: empty stream
-	 */
+     */
     @Test
     public void testReadFieldsEmpty() throws Exception {
 
@@ -157,9 +158,8 @@ public class GPDBWritableTest {
     /*
      * helpers functions
      */
-    private GPDBWritable buildGPDBWritable()
-            throws Exception {
-        return new GPDBWritable();
+    private GPDBWritable buildGPDBWritable() {
+        return new GPDBWritable(StandardCharsets.UTF_8);
     }
 
     // add data to stream, end with EOFException on demand.

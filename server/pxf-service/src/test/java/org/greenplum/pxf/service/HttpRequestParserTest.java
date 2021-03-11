@@ -20,16 +20,19 @@ package org.greenplum.pxf.service;
  */
 
 
+import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.greenplum.pxf.api.examples.DemoFragmentMetadata;
 import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.PluginConf;
 import org.greenplum.pxf.api.model.ProtocolHandler;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.RequestContext.RequestType;
+import org.greenplum.pxf.api.utilities.CharsetUtils;
 import org.greenplum.pxf.api.utilities.FragmentMetadata;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.info.BuildProperties;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
@@ -49,6 +52,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -57,10 +61,17 @@ public class HttpRequestParserTest {
     private HttpRequestParser parser;
     private MultiValueMap<String, String> parameters;
     private PluginConf mockPluginConf;
+    private BuildProperties mockBuildProperties;
+    private PxfApiVersionChecker mockApiVersionChecker;
 
     @BeforeEach
     public void setUp() {
         mockPluginConf = mock(PluginConf.class);
+        mockBuildProperties = mock(BuildProperties.class);
+        when(mockBuildProperties.get("pxfApiVersion")).thenReturn("16");
+
+        mockApiVersionChecker = mock(PxfApiVersionChecker.class);
+        when(mockApiVersionChecker.isCompatible(anyString(), anyString())).thenReturn(true);
 
         parameters = new LinkedMultiValueMap<>();
         parameters.add("X-GP-ALIGNMENT", "all");
@@ -71,6 +82,7 @@ public class HttpRequestParserTest {
         parameters.add("X-GP-URL-HOST", "my://bags");
         parameters.add("X-GP-URL-PORT", "-8020");
         parameters.add("X-GP-ATTRS", "-1");
+        parameters.add("X-GP-PXF-API-VERSION", "16");
         parameters.add("X-GP-OPTIONS-FRAGMENTER", "we");
         parameters.add("X-GP-OPTIONS-ACCESSOR", "are");
         parameters.add("X-GP-OPTIONS-RESOLVER", "packed");
@@ -81,8 +93,13 @@ public class HttpRequestParserTest {
         parameters.add("X-GP-XID", "transaction:id");
         parameters.add("X-GP-SESSION-ID", "0");
         parameters.add("X-GP-COMMAND-COUNT", "0");
+        parameters.add("X-GP-DATA-ENCODING", "UTF8");
+        parameters.add("X-GP-DATABASE-ENCODING", "UTF8");
+        parameters.add("X-GP-SCHEMA-NAME", "public");
+        parameters.add("X-GP-TABLE-NAME", "foobar");
 
-        parser = new HttpRequestParser(mockPluginConf);
+        parser = new HttpRequestParser(mockPluginConf, new CharsetUtils(), new HttpHeaderDecoder(), mockBuildProperties, mockApiVersionChecker);
+
     }
 
     @AfterEach
@@ -103,7 +120,7 @@ public class HttpRequestParserTest {
 
         assertEquals(multivaluedMap.keySet().size(), multiCaseKeys.size(), "All keys should have existed");
 
-        Map<String, String> caseInsensitiveMap = new HttpRequestParser.RequestMap(multivaluedMap);
+        Map<String, String> caseInsensitiveMap = new HttpRequestParser.RequestMap(multivaluedMap, new HttpHeaderDecoder());
 
         assertEquals(caseInsensitiveMap.keySet().size(), 1, "Only one key should have exist");
 
@@ -129,7 +146,7 @@ public class HttpRequestParserTest {
         MultiValueMap<String, String> multivaluedMap = new LinkedMultiValueMap<>();
         multivaluedMap.put("one", Collections.singletonList(value));
 
-        Map<String, String> caseInsensitiveMap = new HttpRequestParser.RequestMap(multivaluedMap);
+        Map<String, String> caseInsensitiveMap = new HttpRequestParser.RequestMap(multivaluedMap, new HttpHeaderDecoder());
 
         assertEquals(caseInsensitiveMap.keySet().size(), 1, "Only one key should have exist");
 
@@ -163,6 +180,8 @@ public class HttpRequestParserTest {
         assertNull(context.getProfile());
         assertNull(context.getProfileScheme());
         assertTrue(context.getAdditionalConfigProps().isEmpty());
+        assertEquals(StandardCharsets.UTF_8, context.getDataEncoding());
+        assertEquals(StandardCharsets.UTF_8, context.getDatabaseEncoding());
     }
 
     @Test
@@ -616,6 +635,30 @@ public class HttpRequestParserTest {
         e = assertThrows(IllegalArgumentException.class,
                 () -> parser.parseRequest(parameters, RequestType.WRITE_BRIDGE));
         assertEquals("Property RESOLVER has no value in the current request", e.getMessage());
+    }
+
+    @Test
+    public void testPxfApiVersion() {
+        RequestContext context = parser.parseRequest(parameters, RequestType.READ_BRIDGE);
+        assertEquals("16", context.getClientApiVersion());
+    }
+
+    @Test
+    public void testMisingPxfApiVersion() {
+        parameters.remove("X-GP-PXF-API-VERSION");
+        PxfRuntimeException e = assertThrows(PxfRuntimeException.class,
+                () -> parser.parseRequest(parameters, RequestType.READ_BRIDGE));
+        assertEquals("Property PXF-API-VERSION has no value in the current request", e.getMessage());
+        assertEquals("upgrade PXF extension (run 'pxf [cluster] register' and then 'ALTER EXTENSION pxf UPDATE')", e.getHint());
+    }
+
+    @Test
+    public void testDifferentPxfApiVersions() {
+        parameters.set("X-GP-PXF-API-VERSION", "15");
+        when(mockApiVersionChecker.isCompatible("16", "15")).thenReturn(false);
+        Exception e = assertThrows(PxfRuntimeException.class,
+                () -> parser.parseRequest(parameters, RequestType.READ_BRIDGE));
+        assertEquals("API version mismatch; server implements v16 and client implements v15", e.getMessage());
     }
 
     public static class TestHandler implements ProtocolHandler {

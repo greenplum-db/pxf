@@ -46,11 +46,11 @@ public class MultiServerTest extends BaseFeature {
     public void beforeClass() throws Exception {
         // Initialize an additional HDFS system object (optional system object)
         hdfs2 = (Hdfs) systemManager.
-                getSystemObject("/sut", "hdfs2", -1, (SystemObject) null, false, (String) null, SutFactory.getInstance().getSutInstance());
+                getSystemObject("/sut", "hdfs2", -1, null, false, null, SutFactory.getInstance().getSutInstance());
 
         if (hdfs2 != null) {
             trySecureLogin(hdfs2, hdfs2.getTestKerberosPrincipal());
-            initializeWorkingDirectory(gpdb, hdfs2);
+            initializeWorkingDirectory(hdfs2, gpdb.getUserName());
         }
 
         String hdfsWorkingDirectory = hdfs.getWorkingDirectory();
@@ -70,8 +70,6 @@ public class MultiServerTest extends BaseFeature {
      * Before every method determine default hdfs data Path, default data, and
      * default external table structure. Each case change it according to it
      * needs.
-     *
-     * @throws Exception
      */
     @Override
     protected void beforeMethod() throws Exception {

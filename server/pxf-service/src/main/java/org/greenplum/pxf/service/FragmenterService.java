@@ -84,9 +84,9 @@ public class FragmenterService {
             int numberOfFragments = filteredFragments.size();
             long elapsedMillis = Duration.between(startTime, Instant.now()).toMillis();
 
-            LOG.debug("{} returns {}/{} fragment{} for path {} in {} ms for {} [profile {} predicate is{} available]",
+            LOG.debug("{} returns {}/{} fragment{} for path {} in {} ms [profile {} predicate is{} available]",
                     context.getId(), numberOfFragments, fragments.size(), numberOfFragments == 1 ? "" : "s",
-                    context.getDataSource(), elapsedMillis, context.getId(), context.getProfile(), context.hasFilter() ? "" : " not");
+                    context.getDataSource(), elapsedMillis, context.getProfile(), context.hasFilter() ? "" : " not");
         }
 
         return filteredFragments;
@@ -119,10 +119,17 @@ public class FragmenterService {
 
                         int numberOfFragments = fragmentList.size();
                         long elapsedMillis = Duration.between(startTime, Instant.now()).toMillis();
-                        LOG.info("{} returns {} fragment{} for path {} in {} ms [fragmenter {} profile {} predicate is{} available]",
-                                context.getId(), numberOfFragments, numberOfFragments == 1 ? "" : "s",
-                                context.getDataSource(), elapsedMillis, context.getFragmenter(),
-                                context.getProfile(), context.hasFilter() ? "" : " not");
+                        LOG.info("{} returns {} fragment{} for '{}.{}' resource {} in {} ms [fragmenter {} profile {} predicate is{} available]",
+                                context.getId(),
+                                numberOfFragments,
+                                numberOfFragments == 1 ? "" : "s",
+                                context.getSchemaName(),
+                                context.getTableName(),
+                                context.getDataSource(),
+                                elapsedMillis,
+                                context.getFragmenter(),
+                                context.getProfile(),
+                                context.hasFilter() ? "" : " not");
 
                         return fragmentList;
                     });
@@ -178,21 +185,22 @@ public class FragmenterService {
     }
 
     /**
-     * Returns a key for the fragmenter cache. TransactionID is not sufficient to key
-     * the cache. For the case where we have multiple slices (i.e select a, b from c
-     * where a = 'part1' union all select a, b from c where a = 'part2'), the list of
-     * fragments for each slice in the query will be different, but the transactionID
-     * will be the same. For that reason we must include the server name, data source
-     * and the filter string as part of the fragmenter cache.
+     * Returns a key for the fragmenter cache. TransactionID is not sufficient
+     * to key the cache. For the case where we have multiple scans (i.e
+     * select a, b from c where a = 'part1' union all select a, b from c
+     * where a = 'part2'), the list of fragments for each scan in the query
+     * will be different, but the transactionID will be the same. For that
+     * reason we must include the schema name, table name, and the filter
+     * string as part of the fragmenter cache key.
      *
      * @param context the request context
      * @return the key for the fragmenter cache
      */
     private String getFragmenterCacheKey(RequestContext context) {
         return String.format("%s:%s:%s:%s",
-                context.getServerName(),
                 context.getTransactionId(),
-                context.getDataSource(),
+                context.getSchemaName(),
+                context.getTableName(),
                 context.getFilterString());
     }
 

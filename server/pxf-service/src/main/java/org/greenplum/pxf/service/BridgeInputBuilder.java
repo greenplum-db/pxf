@@ -29,16 +29,16 @@ import org.greenplum.pxf.api.io.GPDBWritable;
 import org.greenplum.pxf.api.model.OutputFormat;
 
 import java.io.DataInput;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
 public class BridgeInputBuilder {
 
     private static final Log LOG = LogFactory.getLog(BridgeInputBuilder.class);
 
-    public List<OneField> makeInput(OutputFormat outputFormat, DataInput inputStream) throws Exception {
+    public List<OneField> makeInput(Charset databaseEncoding, OutputFormat outputFormat, DataInput inputStream) throws Exception {
         if (outputFormat == OutputFormat.TEXT) {
             // Avoid copying the bytes from the inputStream directly. This
             // code used to use the Text class to read bytes until a line
@@ -52,7 +52,7 @@ public class BridgeInputBuilder {
             return Collections.singletonList(new OneField(DataType.BYTEA.getOID(), inputStream));
         }
 
-        GPDBWritable gpdbWritable = new GPDBWritable();
+        GPDBWritable gpdbWritable = new GPDBWritable(databaseEncoding);
         gpdbWritable.readFields(inputStream);
 
         if (gpdbWritable.isEmpty()) {

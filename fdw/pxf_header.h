@@ -21,7 +21,6 @@
 #define _PXFHEADERS_H_
 
 #define PXF_SERVICE_PREFIX "pxf"
-#define PXF_VERSION "v15"
 
 #include "libchurl.h"
 

@@ -29,6 +29,7 @@
 #endif
 #include "cdb/cdbvars.h"
 #include "commands/defrem.h"
+#include "catalog/pg_namespace.h"
 #include "utils/builtins.h"
 #include "utils/formatting.h"
 #include "utils/timestamp.h"
@@ -42,6 +43,7 @@ static void AddProjectionDescHttpHeader(CHURL_HEADERS headers, List *retrieved_a
 static void AddProjectionIndexHeader(CHURL_HEADERS headers, int attno, char *long_number);
 static char *NormalizeKeyName(const char *key);
 static char *TypeOidGetTypename(Oid typid);
+static char *GetNamespaceName(Oid nsp_oid);
 
 /*
  * Add key/value pairs to connection header.
@@ -55,14 +57,18 @@ BuildHttpHeaders(CHURL_HEADERS headers,
 				 char *filter_string,
 				 List *retrieved_attrs)
 {
-	extvar_t	ev;
-	char		pxfPortString[sizeof(int32) * 8];
-	char		long_number[sizeof(int32) * 8];
+	extvar_t	 ev;
+	char		 pxfPortString[sizeof(int32) * 8];
+	char		 long_number[sizeof(int32) * 8];
+	const char	*relname = NULL;
+	char		*relnamespace = NULL;
 
 	if (relation != NULL)
 	{
 		/* Record fields - name and type of each field */
 		AddTupleDescriptionToHttpHeader(headers, relation);
+		relname = RelationGetRelationName(relation);
+		relnamespace = GetNamespaceName(RelationGetNamespace(relation));
 	}
 
 	if (retrieved_attrs != NULL)
@@ -88,6 +94,7 @@ BuildHttpHeaders(CHURL_HEADERS headers,
 	churl_headers_append(headers, "X-GP-SEGMENT-ID", ev.GP_SEGMENT_ID);
 	churl_headers_append(headers, "X-GP-SEGMENT-COUNT", ev.GP_SEGMENT_COUNT);
 	churl_headers_append(headers, "X-GP-XID", ev.GP_XID);
+	churl_headers_append(headers, "X-GP-PXF-API-VERSION", PXF_API_VERSION);
 
 	pg_ltoa(gp_session_id, long_number);
 	churl_headers_append(headers, "X-GP-SESSION-ID", long_number);
@@ -108,6 +115,12 @@ BuildHttpHeaders(CHURL_HEADERS headers,
 	churl_headers_append(headers, "X-GP-FORMAT", "TEXT");
 	churl_headers_append(headers, "X-GP-DATA-DIR", options->resource);
 	churl_headers_append(headers, "X-GP-OPTIONS-SERVER", options->server);
+	churl_headers_append(headers, "X-GP-TABLE-NAME", relname);
+	churl_headers_append(headers, "X-GP-SCHEMA-NAME", relnamespace);
+
+	/* encoding options */
+	churl_headers_append(headers, "X-GP-DATA-ENCODING", options->data_encoding);
+	churl_headers_append(headers, "X-GP-DATABASE-ENCODING", options->database_encoding);
 
 	/* extra options */
 	AddOptionsToHttpHeader(headers, options->options);
@@ -124,6 +137,8 @@ BuildHttpHeaders(CHURL_HEADERS headers,
 	else
 		churl_headers_append(headers, "X-GP-HAS-FILTER", "0");
 
+	// Since we only establish a single connection per segment, we can safely close the connection after
+	// the segment completes streaming data.
 	churl_headers_override(headers, "Connection", "close");
 }
 
@@ -364,4 +379,26 @@ TypeOidGetTypename(Oid typid)
 	ReleaseSysCache(typtup);
 
 	return typname;
+}
+
+/* Returns the namespace (schema) name for a given namespace oid */
+static char *
+GetNamespaceName(Oid nsp_oid)
+{
+	HeapTuple	tuple;
+	Datum		nspnameDatum;
+	bool		isNull;
+
+	tuple = SearchSysCache1(NAMESPACEOID, ObjectIdGetDatum(nsp_oid));
+	if (!HeapTupleIsValid(tuple))
+		ereport(ERROR,
+				(errcode(ERRCODE_UNDEFINED_SCHEMA),
+						errmsg("schema with OID %u does not exist", nsp_oid)));
+
+	nspnameDatum = SysCacheGetAttr(NAMESPACEOID, tuple, Anum_pg_namespace_nspname,
+								   &isNull);
+
+	ReleaseSysCache(tuple);
+
+	return DatumGetCString(nspnameDatum);
 }

@@ -381,7 +381,7 @@ test_call_rest(void **state)
 	StringInfoData expected_url;
 
 	initStringInfo(&expected_url);
-	appendStringInfo(&expected_url, "http://host:123/%s/%s", PXF_SERVICE_PREFIX, PXF_VERSION);
+	appendStringInfo(&expected_url, "http://host:123/%s/v15", PXF_SERVICE_PREFIX);
 
 	expect_string(churl_init_download, url, expected_url.data);
 	expect_value(churl_init_download, headers, client_context->http_headers);

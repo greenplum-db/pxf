@@ -519,6 +519,11 @@ public class HBase extends BaseSystemObject implements IDbFunctionality {
         this.grantPermissions(table, user, Action.WRITE);
     }
 
+    @Override
+    public void createDataBase(String schemaName, boolean ignoreFail, String encoding, String localeCollate, String localeCollateType) {
+        throw new UnsupportedOperationException();
+    }
+
     public void grantCreateReadOnTable(Table table,
                                        String user) throws Exception {
         // each subsequent grant call overrides previous grants, so use this one to grant both permissions at once

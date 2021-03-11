@@ -25,7 +25,7 @@ buildscript {
 
 plugins {
     id "io.franzbecker.gradle-lombok" version "3.3.0"
-    id "org.springframework.boot" version "${spring_boot_version}" apply false
+    id "org.springframework.boot" version "${springBootVersion}" apply false
     id 'io.spring.dependency-management' version '1.0.11.RELEASE'
 }
 
@@ -64,7 +64,7 @@ configure(javaProjects) {
 
     dependencyManagement {
         imports {
-            mavenBom("org.springframework.boot:spring-boot-dependencies:${spring_boot_version}")
+            mavenBom("org.springframework.boot:spring-boot-dependencies:${springBootVersion}")
         }
         dependencies {
             dependency("com.google.guava:guava:20.0")
@@ -79,7 +79,7 @@ configure(javaProjects) {
             dependency("com.fasterxml.jackson.core:jackson-core:2.11.0")
             dependency("com.fasterxml.jackson.core:jackson-annotations:2.11.0")
 
-            dependency("io.micrometer:micrometer-registry-prometheus:1.6.2")
+            dependency("io.micrometer:micrometer-registry-prometheus:1.6.4")
 
             dependency("joda-time:joda-time:2.8.1")
 

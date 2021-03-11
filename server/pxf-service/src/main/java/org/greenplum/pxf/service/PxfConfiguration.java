@@ -27,12 +27,11 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @EnableConfigurationProperties(PxfServerProperties.class)
 public class PxfConfiguration implements WebMvcConfigurer {
 
-    private static final Logger LOG = LoggerFactory.getLogger(PxfConfiguration.class);
-
     /**
      * Bean name of PXF's {@link TaskExecutor}.
      */
     public static final String PXF_RESPONSE_STREAM_TASK_EXECUTOR = "pxfResponseStreamTaskExecutor";
+    private static final Logger LOG = LoggerFactory.getLogger(PxfConfiguration.class);
 
     private final ListableBeanFactory beanFactory;
 
@@ -100,4 +99,5 @@ public class PxfConfiguration implements WebMvcConfigurer {
 
         return builder.build(PxfThreadPoolTaskExecutor.class);
     }
+
 }

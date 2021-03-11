@@ -34,8 +34,7 @@ public interface SecurityService {
      * @param <T>     the type
      * @return the action result
      * @throws IOException          when an error occurs
-     * @throws InterruptedException when interrupted
      */
     <T> T doAs(RequestContext context, PrivilegedExceptionAction<T> action)
-            throws IOException, InterruptedException;
+            throws IOException;
 }

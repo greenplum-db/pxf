@@ -29,6 +29,8 @@ import org.greenplum.pxf.api.utilities.EnumAggregationType;
 import org.greenplum.pxf.api.utilities.FragmentMetadata;
 import org.greenplum.pxf.api.utilities.Utilities;
 
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -256,6 +258,16 @@ public class RequestContext {
     private int segmentId;
 
     /**
+     * The name of the origin Greenplum schema name.
+     */
+    private String schemaName;
+
+    /**
+     * The name of the origin Greenplum table name.
+     */
+    private String tableName;
+
+    /**
      * The transaction ID for the current Greenplum query.
      */
     private String transactionId;
@@ -281,6 +293,21 @@ public class RequestContext {
      * The identity of the end-user making the request.
      */
     private String user;
+
+    /**
+     * The encoding of the source data
+     */
+    private Charset dataEncoding;
+
+    /**
+     * The encoding of the database
+     */
+    private Charset databaseEncoding;
+
+    /**
+     * The version of the PXF API the client implements
+     */
+    private String clientApiVersion;
 
     /**
      * Additional Configuration Properties to be added to configuration for
