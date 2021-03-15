@@ -1,24 +1,46 @@
 ---
 title: Configuring PXF
 ---
-
 Your Greenplum Database deployment consists of a master node, standby master, and multiple segment hosts. After you configure the Greenplum Platform Extension Framework (PXF), you start a single PXF JVM process (PXF Service) on each Greenplum Database host.
 
 PXF provides connectors to Hadoop, Hive, HBase, object stores, network file systems, and external SQL data stores. You must configure PXF to support the connectors that you plan to use.
 
 To configure PXF, you must:
 
-1. Install Java 8 or 11 on each Greenplum Database host as described in [Installing Java for PXF](install_java.html).
+1. Install Java 8 or 11 on each Greenplum Database host as described in [Installing Java for PXF](install_java.html). Then use the value of `$JAVA_HOME` you identified on Step 4 and add it to the `pxf-env.sh` [configuration file](config_files.html). For example:
+    - Edit the `$PXF_BASE/conf/pxf-env.sh` file on the Greenplum master node.
 
-2. Register the PXF extension with Greenplum Database (see [pxf cluster register](ref/pxf-cluster.html)). Run this command after your first installation of a PXF version 6.x, and/or after you upgrade your Greenplum Database installation.
+        ```        
+        vi /usr/local/pxf-gp6/conf/pxf-env.xml
+        ```
+    - Locate the `JAVA_HOME` setting in the `pxf-env.xml` file, and update it with the corresponding path.
 
-3. If you plan to use the Hadoop, Hive, or HBase PXF connectors, you must perform the configuration procedure described in [Configuring PXF Hadoop Connectors](client_instcfg.html).
+        ```
+        export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.282.b08-1.el7_9.x86_64/
+        ```
 
-3. If you plan to use the PXF connectors to access the Azure, Google Cloud Storage, Minio, or S3 object store(s), you must perform the configuration procedure described in [Configuring Connectors to Azure, Google Cloud Storage, Minio, and S3 Object Stores](objstore_cfg.html).
+1. Register the PXF extension with Greenplum Database (see [pxf cluster register](ref/pxf-cluster.html)). Run this command after your first installation of a PXF version 6.x, and/or after you upgrade your Greenplum Database installation:
 
-3. If you plan to use the PXF JDBC Connector to access an external SQL database, perform the configuration procedure described in [Configuring the JDBC Connector](jdbc_cfg.html).
+    ``` shell
+    [gpadmin@<gpmaster>]$ pxf cluster register
+    Installing PXF extension on master host, standby master host, and 2 segment hosts...
+    PXF extension has been installed on 4 out of 4 hosts        
+    ```
 
-3. If you plan to use PXF to access a network file system, perform the configuration procedure described in [Configuring a PXF Network File System Server](nfs_pxf.html#ex_fscfg).
+1. If you plan to use the Hadoop, Hive, or HBase PXF connectors, you must perform the configuration procedure described in [Configuring PXF Hadoop Connectors](client_instcfg.html).
 
-After you complete PXF configuration, you [Start PXF](cfginitstart_pxf.html).
+1. If you plan to use the PXF connectors to access the Azure, Google Cloud Storage, Minio, or S3 object store(s), you must perform the configuration procedure described in [Configuring Connectors to Azure, Google Cloud Storage, Minio, and S3 Object Stores](objstore_cfg.html).
 
+1. If you plan to use the PXF JDBC Connector to access an external SQL database, perform the configuration procedure described in [Configuring the JDBC Connector](jdbc_cfg.html).
+
+1. If you plan to use PXF to access a network file system, perform the configuration procedure described in [Configuring a PXF Network File System Server](nfs_pxf.html#ex_fscfg).
+1. Make sure that the cluster configuration has been synchronized:
+
+    ``` shell
+    [gpadmin@<gpmaster>]$ pxf cluster sync
+    Syncing PXF configuration files from master host to standby master host and 2 segment hosts...
+    PXF configs synced successfully on 3 out of 3 hosts
+    ```
+
+1. After you complete PXF configuration, you [Start PXF](cfginitstart_pxf.html).
+2. Once PXF service has been started, enable the [PXF Greenplum Database extension](using_pxf.html).
