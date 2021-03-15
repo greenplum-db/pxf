@@ -56,7 +56,12 @@ You can change the log level for the PXF Service on a single Greenplum Database 
 
 ### <a id="cfg_host"></a>Configuring for a Specific Host
 
-To change the log level for the PXF Service running on a specific Greenplum Database host:
+You can change the log level for the PXF Service running on a specific Greenplum Database host in two ways:
+
+- Setting the `PXF_LOG_LEVEL` environment variable on the `pxf restart` command line.
+- Setting the log level via a property update.
+
+**Procedure**:
 
 1. Log in to the Greenplum Database host:
 
@@ -64,17 +69,23 @@ To change the log level for the PXF Service running on a specific Greenplum Data
     $ ssh gpadmin@<gphost>
     ```
 
-1. Use a text editor to uncomment the following line in the `$PXF_BASE/conf/pxf-application.properties` file and set the desired log level.  For example, to change the log level from `info` (the default) to `debug`:
+1. Choose one of the following methods:
+    - Set the log level on the `pxf restart` command line. For example, to change the log level from `info` (the default) to `debug`:
 
-    ``` xml
-    pxf.log.level=debug
-    ```
+        ``` shell
+        gpadmin@gphost$ PXF_LOG_LEVEL=debug pxf restart
+        ```
+    - Set the log level in the `pxf-application.properties` file:
+        1. Use a text editor to uncomment the following line in the `$PXF_BASE/conf/pxf-application.properties` file and set the desired log level.  For example, to change the log level from `info` (the default) to `debug`:
 
-3. Restart PXF on the host:
+            ``` xml
+            pxf.log.level=debug
+            ```
+        1. Restart PXF on the host:
 
-    ``` shell
-    gpadmin@gphost$ pxf restart
-    ```
+            ``` shell
+            gpadmin@gphost$ pxf restart
+            ```
 
 4. `debug` logging is now enabled. Make note of the time; this will direct you to the relevant log messages in `$PXF_LOGDIR/pxf-service.log`.
 
@@ -88,7 +99,13 @@ To change the log level for the PXF Service running on a specific Greenplum Data
 
 5. Collect and examine the log messages in `pxf-service.log`.
 
-6. Reinstate `info`-level logging on the host - comment out the line or set the property value back to `info`, and then restart PXF on the host.
+6. Depending upon how you originally set the log level, reinstate `info`-level logging on the host:
+    - Command line method:
+
+        ``` shell
+        gpadmin@gphost$ PXF_LOG_LEVEL=info pxf restart
+        ```
+    - Properties file method: comment out the line or set the property value back to `info`, and then restart PXF on the host.
 
 
 ### <a id="cfg_cluster"></a>Configuring for the Cluster
