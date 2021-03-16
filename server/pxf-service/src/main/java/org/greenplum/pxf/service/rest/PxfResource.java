@@ -19,6 +19,9 @@ package org.greenplum.pxf.service.rest;
  * under the License.
  */
 
+import lombok.extern.slf4j.Slf4j;
+import org.greenplum.pxf.api.error.PxfIOException;
+import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.service.RequestParser;
 import org.greenplum.pxf.service.controller.ReadService;
@@ -43,6 +46,7 @@ import static org.greenplum.pxf.api.model.RequestContext.RequestType;
  */
 @RestController
 @RequestMapping("/pxf")
+@Slf4j
 public class PxfResource {
 
     private final RequestParser<MultiValueMap<String, String>> parser;
@@ -74,8 +78,17 @@ public class PxfResource {
     public ResponseEntity<StreamingResponseBody> read(
             @RequestHeader MultiValueMap<String, String> headers) {
 
-        // parse incoming HTTP request
-        RequestContext context = parser.parseRequest(headers, RequestType.READ_BRIDGE);
+        // parse incoming HTTP request, make sure exception is logged and converted to PxfRuntimeException
+        RequestContext context;
+        try {
+            context = parser.parseRequest(headers, RequestType.READ_BRIDGE);
+        } catch (PxfRuntimeException e) {
+            log.error(e.getMessage(), e);
+            throw e;
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            throw new PxfRuntimeException(e.getMessage(), e);
+        }
 
         // create a streaming class that will iterate over the records and write them to the output stream
         StreamingResponseBody response = os -> readService.readData(context, os);
@@ -90,17 +103,25 @@ public class PxfResource {
      * @param headers http headers from request that carry all parameters
      * @param request the HttpServletRequest
      * @return ok response if the operation finished successfully
-     * @throws Exception in case of wrong request parameters or failure to write data
      */
     @PostMapping(value = "/write", consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity<String> stream(@RequestHeader MultiValueMap<String, String> headers,
-                                         HttpServletRequest request) throws Exception {
+                                         HttpServletRequest request) throws PxfIOException {
 
-        // parse incoming HTTP request
-        RequestContext context = parser.parseRequest(headers, RequestType.WRITE_BRIDGE);
-
-        // write data and get a response message
-        String returnMsg = writeService.writeData(context, request.getInputStream());
+        // parse incoming HTTP request, make sure exception is logged and converted to PxfRuntimeException
+        RequestContext context;
+        String returnMsg;
+        try {
+            context = parser.parseRequest(headers, RequestType.WRITE_BRIDGE);
+            // write data and get a response message
+            returnMsg = writeService.writeData(context, request.getInputStream());
+        } catch (PxfIOException | PxfRuntimeException | Error e) {
+            log.error(e.getMessage(), e);
+            throw e;
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            throw new PxfRuntimeException(e.getMessage(), e);
+        }
 
         // send the response to the client
         return new ResponseEntity<>(returnMsg, HttpStatus.OK);

@@ -2,6 +2,7 @@ package org.greenplum.pxf.service.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.conf.Configuration;
+import org.greenplum.pxf.api.error.PxfIOException;
 import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.service.MetricsReporter;
@@ -54,42 +55,53 @@ public abstract class BaseServiceImpl {
      * @param context request context
      * @param action  action to execute
      * @return operation statistics
-     * @throws IOException if an error occurs during the operation
+     * @throws PxfIOException if an error occurs during the operation
      */
-    protected OperationStats processData(RequestContext context, PrivilegedExceptionAction<OperationStats> action) throws IOException {
+    protected OperationStats processData(RequestContext context, PrivilegedExceptionAction<OperationStats> action) throws PxfIOException {
         log.debug("{} {} service is called for resource {} using profile {}",
                 context.getId(), serviceName, context.getDataSource(), context.getProfile());
 
-        // Initialize the configuration for this request
-        Configuration configuration = configurationFactory.
-                initConfiguration(
-                        context.getConfig(),
-                        context.getServerName(),
-                        context.getUser(),
-                        context.getAdditionalConfigProps());
-        context.setConfiguration(configuration);
-
         Instant startTime = Instant.now();
-        OperationStats stats = securityService.doAs(context, action);
-        long recordCount = stats.getRecordCount();
-        long byteCount = stats.getByteCount();
-        if (recordCount > 0) {
-            long durationMs = Duration.between(startTime, Instant.now()).toMillis();
-            double rate = durationMs == 0 ? 0 : (1000.0 * recordCount / durationMs);
-            double byteRate = durationMs == 0 ? 0 : (1000.0 * byteCount / durationMs);
-            log.info("{} completed {} operation in {} ms for {} record{} ({} records/sec) and {} bytes ({} bytes/sec)",
-                    context.getId(),
-                    stats.getOperation().name().toLowerCase(),
-                    durationMs,
-                    recordCount,
-                    recordCount == 1 ? "" : "s",
-                    String.format("%.2f", rate),
-                    byteCount,
-                    String.format("%.2f", byteRate));
-        } else {
-            log.info("{} completed", context.getId());
+        // Any exception thrown must be logged, as this method is called asynchronously (for read) and is the last
+        // opportunity to log the exception while having MDC logging context defined
+        try {
+            // initialize the configuration for this request
+            Configuration configuration = configurationFactory.
+                    initConfiguration(
+                            context.getConfig(),
+                            context.getServerName(),
+                            context.getUser(),
+                            context.getAdditionalConfigProps());
+            context.setConfiguration(configuration);
+
+            // execute processing action with a proper identity
+            OperationStats stats = securityService.doAs(context, action);
+            long recordCount = stats.getRecordCount();
+            long byteCount = stats.getByteCount();
+            if (recordCount > 0) {
+                long durationMs = Duration.between(startTime, Instant.now()).toMillis();
+                double rate = durationMs == 0 ? 0 : (1000.0 * recordCount / durationMs);
+                double byteRate = durationMs == 0 ? 0 : (1000.0 * byteCount / durationMs);
+                log.info("{} completed {} operation in {} ms for {} record{} ({} records/sec) and {} bytes ({} bytes/sec)",
+                        context.getId(),
+                        stats.getOperation().name().toLowerCase(),
+                        durationMs,
+                        recordCount,
+                        recordCount == 1 ? "" : "s",
+                        String.format("%.2f", rate),
+                        byteCount,
+                        String.format("%.2f", byteRate));
+            } else {
+                log.info("{} completed", context.getId());
+            }
+            return stats;
+        } catch (PxfIOException | Error e) {
+            log.error(e.getMessage(), e);
+            throw e;
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            throw new PxfIOException(e);
         }
-        return stats;
     }
 
     /**

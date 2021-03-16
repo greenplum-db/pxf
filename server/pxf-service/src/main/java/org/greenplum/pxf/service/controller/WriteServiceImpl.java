@@ -3,6 +3,7 @@ package org.greenplum.pxf.service.controller;
 import com.google.common.io.CountingInputStream;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.connector.ClientAbortException;
+import org.greenplum.pxf.api.error.PxfIOException;
 import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.Utilities;
@@ -38,7 +39,8 @@ public class WriteServiceImpl extends BaseServiceImpl implements WriteService {
     }
 
     @Override
-    public String writeData(RequestContext context, InputStream inputStream) throws IOException {
+    public String writeData(RequestContext context, InputStream inputStream) throws PxfIOException {
+        // can only call processData as it handles logging of any errors
         OperationStats stats = processData(context, () -> readStream(context, inputStream));
 
         String censuredPath = Utilities.maskNonPrintables(context.getDataSource());

@@ -4,6 +4,7 @@ import com.google.common.io.CountingOutputStream;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.connector.ClientAbortException;
 import org.apache.commons.lang.StringUtils;
+import org.greenplum.pxf.api.error.PxfIOException;
 import org.greenplum.pxf.api.io.Writable;
 import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.model.Fragment;
@@ -53,7 +54,8 @@ public class ReadServiceImpl extends BaseServiceImpl implements ReadService {
     }
 
     @Override
-    public void readData(RequestContext context, OutputStream outputStream) throws IOException {
+    public void readData(RequestContext context, OutputStream outputStream) throws PxfIOException {
+        // can only call processData as it handles logging of any errors
         processData(context, () -> writeStream(context, outputStream));
     }
 
