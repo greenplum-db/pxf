@@ -23,7 +23,7 @@ under the License.
 
 The PXF HDFS connector supports SequenceFile format binary data. This section describes how to use PXF to read and write HDFS SequenceFile data, including how to create, insert, and query data in external tables that reference files in the HDFS data store.
 
-PXF supports reading or writing SequenceFile files compressed with the `bzip2` and `gzip` codecs.
+PXF supports reading or writing SequenceFile files compressed with the `default`, `bzip2`, and `gzip` codecs.
 
 ## <a id="prereq"></a>Prerequisites
 
@@ -58,11 +58,11 @@ The specific keywords and values used in the Greenplum Database [CREATE EXTERNAL
 | DISTRIBUTED BY    | If you want to load data from an existing Greenplum Database table into the writable external table, consider specifying the same distribution policy or \<column_name\> on both tables. Doing so will avoid extra motion of data between segments on the load operation. |
 
 <a id="customopts"></a>
-SequenceFile format data can optionally employ record or block compression. You specify the compression type and codec via custom options to the `CREATE EXTERNAL TABLE` `LOCATION` clause.
+SequenceFile format data can optionally employ record or block compression and a specific compression codec.
 
-When you use the `hdfs:SequenceFile` profile to write SequenceFile format data, you must provide the name of the Java class to use for serializing/deserializing the binary data. This class must provide read and write methods for each data type referenced in the data schema. You also specify the Java serialization class via a custom option to the `CREATE EXTERNAL TABLE` `LOCATION` clause.
+When you use the `hdfs:SequenceFile` profile to write SequenceFile format data, you must provide the name of the Java class to use for serializing/deserializing the binary data. This class must provide read and write methods for each data type referenced in the data schema.
 
-The `hdfs:SequenceFile` profile supports the following custom options:
+You specify the compression type and codec, and the Java serialization/deserialization class, via custom options to the `CREATE EXTERNAL TABLE` `LOCATION` clause. The `hdfs:SequenceFile` profile supports the following custom options:
 
 | Option  | Value Description |
 |-------|-------------------------------------|
