@@ -3,6 +3,7 @@ package org.greenplum.pxf.service.controller;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.conf.Configuration;
 import org.greenplum.pxf.api.error.PxfIOException;
+import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.service.MetricsReporter;
@@ -95,7 +96,7 @@ public abstract class BaseServiceImpl {
                 log.info("{} completed", context.getId());
             }
             return stats;
-        } catch (PxfIOException | Error e) {
+        } catch (PxfIOException | PxfRuntimeException | Error e) {
             log.error(e.getMessage(), e);
             throw e;
         } catch (Exception e) {
