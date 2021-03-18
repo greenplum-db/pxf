@@ -93,6 +93,7 @@ $ hdfs dfs -cat /data/exampledir/example.txt
 The PXF Hadoop connectors provide built-in profiles to support the following data formats:
 
 - Text
+- CSV
 - Avro
 - JSON
 - ORC
@@ -106,6 +107,7 @@ The PXF Hadoop connectors expose the following profiles to read, and in many cas
 | Data Source | Data Format | Profile Name(s) | Deprecated Profile Name | Supported Operations |
 |-------------|------|---------|-----|-----|
 | HDFS | delimited single line [text](hdfs_text.html#profile_text) | hdfs:text | n/a | Read, Write |
+| HDFS | delimited single line comma-separated values of [text](hdfs_text.html#profile_text) | hdfs:csv | n/a | Read, Write |
 | HDFS | delimited [text with quoted linefeeds](hdfs_text.html#profile_textmulti) | hdfs:text:multi | n/a | Read |
 | HDFS | [Avro](hdfs_avro.html) | hdfs:avro | n/a | Read, Write |
 | HDFS | [JSON](hdfs_json.html) | hdfs:json | n/a | Read |
@@ -130,7 +132,7 @@ Choose the `hive` profile when:
 - The data resides in a Hive table, and you do not know the underlying file type of the table up front.
 - The data resides in a Hive table, and the Hive table is partitioned.
 
-Choose the `hdfs:text` profile when the file is text and you know the location of the file in the HDFS file system.
+Choose the `hdfs:text`, `hdfs:csv` profiles when the file is text and you know the location of the file in the HDFS file system.
 
 When accessing ORC-format data:
 

@@ -29,12 +29,12 @@ Ensure that you have met the PXF Hadoop [Prerequisites](access_hdfs.html#hadoop_
 
 ## <a id="profile_text"></a>Reading Text Data
 
-Use the `hdfs:text` profile when you read plain text delimited or .csv data where each row is a single record. The following syntax creates a Greenplum Database readable external table that references such a text file on HDFS: 
+Use the `hdfs:text` profile when you read plain text delimited, and either `hdfs:text` or `hdfs:csv` when reading .csv data where each row is a single record. The following syntax creates a Greenplum Database readable external table that references such a text file on HDFS: 
 
 ``` sql
 CREATE EXTERNAL TABLE <table_name> 
     ( <column_name> <data_type> [, ...] | LIKE <other_table> )
-LOCATION ('pxf://<path-to-hdfs-file>?PROFILE=hdfs:text[&SERVER=<server_name>][&IGNORE_MISSING_PATH=<boolean>][&SKIP_HEADER_COUNT=<numlines>]')
+LOCATION ('pxf://<path-to-hdfs-file>?PROFILE=hdfs:text|csv[&SERVER=<server_name>][&IGNORE_MISSING_PATH=<boolean>][&SKIP_HEADER_COUNT=<numlines>]')
 FORMAT '[TEXT|CSV]' (delimiter[=|<space>][E]'<delim_value>');
 ```
 
@@ -43,7 +43,7 @@ The specific keywords and values used in the Greenplum Database [CREATE EXTERNAL
 | Keyword  | Value |
 |-------|-------------------------------------|
 | \<path&#8209;to&#8209;hdfs&#8209;file\>    | The path to the directory or file in the HDFS data store. When the `<server_name>` configuration includes a [`pxf.fs.basePath`](cfg_server.html#pxf-fs-basepath) property setting, PXF considers \<path&#8209;to&#8209;hdfs&#8209;file\> to be relative to the base path specified. Otherwise, PXF considers it to be an absolute path. \<path&#8209;to&#8209;hdfs&#8209;file\> must not specify a relative path nor include the dollar sign (`$`) character. |
-| PROFILE    | The `PROFILE` keyword must specify `hdfs:text`. |
+| PROFILE    | Use `PROFILE` `hdfs:text` when \<path-to-hdfs-file\> references plain text delimited data.<br> Use `PROFILE` `hdfs:text` or `hdfs:csv` when \<path-to-hdfs-file\> references comma-separated value data. |
 | SERVER=\<server_name\>    | The named server configuration that PXF uses to access the data. PXF uses the `default` server if not specified. |
 | IGNORE_MISSING_PATH=\<boolean\> | Specify the action to take when \<path-to-hdfs-file\> is missing or invalid. The default value is `false`, PXF returns an error in this situation. When the value is `true`, PXF ignores missing path errors and returns an empty fragment. |
 | SKIP_HEADER_COUNT=\<numlines\> | Specify the number of header lines that PXF should skip in the first split of each \<hdfs-file\> before reading the data. The default value is 0, do not skip any lines. |
@@ -54,7 +54,7 @@ The specific keywords and values used in the Greenplum Database [CREATE EXTERNAL
 
 ### <a id="profile_text_query"></a>Example: Reading Text Data on HDFS
 
-Perform the following procedure to create a sample text file, copy the file to HDFS, and use the `hdfs:text` profile and the default PXF server to create two PXF external tables to query the data:
+Perform the following procedure to create a sample text file, copy the file to HDFS, and use the `hdfs:text` and `hdfs:csv` profiles and the default PXF server to create two PXF external tables to query the data:
 
 1. Create an HDFS directory for PXF example data files. For example:
 
@@ -115,11 +115,11 @@ Beijing,Jul,411,11600.67' > /tmp/pxf_hdfs_simple.txt
     (4 rows)
     ```
 
-2. Create a second external table that references `pxf_hdfs_simple.txt`, this time specifying the `CSV` `FORMAT`:
+2. Create a second external table that references `pxf_hdfs_simple.txt`, this time specifying the `hdfs:csv` `PROFILE`:
 
     ``` sql
     postgres=# CREATE EXTERNAL TABLE pxf_hdfs_textsimple_csv(location text, month text, num_orders int, total_sales float8)
-                LOCATION ('pxf://data/pxf_examples/pxf_hdfs_simple.txt?PROFILE=hdfs:text')
+                LOCATION ('pxf://data/pxf_examples/pxf_hdfs_simple.txt?PROFILE=hdfs:csv')
               FORMAT 'CSV';
     postgres=# SELECT * FROM pxf_hdfs_textsimple_csv;          
     ```
@@ -218,7 +218,7 @@ Perform the following steps to create a sample text file, copy the file to HDFS,
 
 ## <a id="hdfswrite_text"></a>Writing Text Data to HDFS
 
-The PXF HDFS connector "hdfs:text" profile supports writing single line plain text data to HDFS. When you create a writable external table with the PXF HDFS connector, you specify the name of a directory on HDFS. When you insert records into a writable external table, the block(s) of data that you insert are written to one or more files in the directory that you specified.
+The PXF HDFS connector profiles `hdfs:text` and `hdfs:csv` support writing single line plain text data to HDFS. When you create a writable external table with the PXF HDFS connector, you specify the name of a directory on HDFS. When you insert records into a writable external table, the block(s) of data that you insert are written to one or more files in the directory that you specified.
 
 **Note**: External tables that you create with a writable profile can only be used for `INSERT` operations. If you want to query the data that you inserted, you must create a separate readable external table that references the HDFS directory.
 
@@ -228,7 +228,7 @@ Use the following syntax to create a Greenplum Database writable external table 
 CREATE WRITABLE EXTERNAL TABLE <table_name> 
     ( <column_name> <data_type> [, ...] | LIKE <other_table> )
 LOCATION ('pxf://<path-to-hdfs-dir>
-    ?PROFILE=hdfs:text[&SERVER=<server_name>][&<custom-option>=<value>[...]]')
+    ?PROFILE=hdfs:text|csv[&SERVER=<server_name>][&<custom-option>=<value>[...]]')
 FORMAT '[TEXT|CSV]' (delimiter[=|<space>][E]'<delim_value>');
 [DISTRIBUTED BY (<column_name> [, ... ] ) | DISTRIBUTED RANDOMLY];
 ```
@@ -238,20 +238,20 @@ The specific keywords and values used in the [CREATE EXTERNAL TABLE](https://gpd
 | Keyword  | Value |
 |-------|-------------------------------------|
 | \<path&#8209;to&#8209;hdfs&#8209;dir\>    | The path to the directory in the HDFS data store. When the `<server_name>` configuration includes a [`pxf.fs.basePath`](cfg_server.html#pxf-fs-basepath) property setting, PXF considers \<path&#8209;to&#8209;hdfs&#8209;dir\> to be relative to the base path specified. Otherwise, PXF considers it to be an absolute path. \<path&#8209;to&#8209;hdfs&#8209;dir\> must not specify a relative path nor include the dollar sign (`$`) character. |
-| PROFILE    | The `PROFILE` keyword must specify `hdfs:text` |
+| PROFILE    | Use `PROFILE` `hdfs:text` to write plain, delimited text to \<path-to-hdfs-file\>.<br> Use `PROFILE` `hdfs:text` or `hdfs:csv` to write comma-separated value text to \<path-to-hdfs-dir\>. |
 | SERVER=\<server_name\>    | The named server configuration that PXF uses to access the data. PXF uses the `default` server if not specified. |
 | \<custom&#8209;option\>  | \<custom-option\>s are described below.|
 | FORMAT | Use `FORMAT` `'TEXT'` to write plain, delimited text to \<path-to-hdfs-dir\>.<br> Use `FORMAT` `'CSV'` to write comma-separated value text to \<path-to-hdfs-dir\>. |
 | delimiter    | The delimiter character in the data. For `FORMAT` `'CSV'`, the default \<delim_value\> is a comma `,`. Preface the \<delim_value\> with an `E` when the value is an escape sequence. Examples: `(delimiter=E'\t')`, `(delimiter ':')`. |
 | DISTRIBUTED BY    | If you want to load data from an existing Greenplum Database table into the writable external table, consider specifying the same distribution policy or \<column_name\> on both tables. Doing so will avoid extra motion of data between segments on the load operation. |
 
-Writable external tables that you create using the `hdfs:text` profile can optionally use record or block compression. The PXF `hdfs:text` profile supports the following compression codecs:
+Writable external tables that you create using the `hdfs:text` or the `hdfs:csv` profiles can optionally use record or block compression. The PXF `hdfs:text` and `hdfs:csv` profiles support the following compression codecs:
 
 - org.apache.hadoop.io.compress.DefaultCodec
 - org.apache.hadoop.io.compress.GzipCodec
 - org.apache.hadoop.io.compress.BZip2Codec
 
-You specify the compression codec via custom options in the `CREATE EXTERNAL TABLE` `LOCATION` clause. The `hdfs:text` profile support the following custom write options:
+You specify the compression codec via custom options in the `CREATE EXTERNAL TABLE` `LOCATION` clause. The `hdfs:text` and `hdfs:csv` profiles support the following custom write options:
 
 | Option  | Value Description |
 |-------|-------------------------------------|
