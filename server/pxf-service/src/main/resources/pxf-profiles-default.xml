@@ -426,7 +426,7 @@ under the License.
     <profile>
         <name>file:text</name>
         <description>This profile is suitable for using when reading delimited single line records
-            from plain text, tab-delimited, files
+            from plain text, tab-delimited files on network mounted filesystems.
         </description>
         <plugins>
             <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
@@ -437,7 +437,7 @@ under the License.
     <profile>
         <name>file:csv</name>
         <description>This profile is suitable for using when reading delimited single line records
-            from plain text CSV files
+            from plain text CSV files on network mounted filesystems.
         </description>
         <plugins>
             <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
@@ -448,8 +448,8 @@ under the License.
     <profile>
         <name>file:text:multi</name>
         <description>This profile is suitable for using when reading delimited single or multi line
-            records (with quoted linefeeds) from plain text files. It is not splittable (non
-            parallel) and slower than HdfsTextSimple.
+            records (with quoted linefeeds) from plain text files on network mounted filesystems. It
+            is not splittable (non-parallel) and slower than HdfsTextSimple.
         </description>
         <plugins>
             <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsFileFragmenter</fragmenter>
@@ -528,7 +528,7 @@ under the License.
     </profile>
     <profile>
         <name>file:parquet</name>
-        <description>A profile for reading and writing Parquet files
+        <description>A profile for reading and writing Parquet files on network mounted filesystems.
         </description>
         <plugins>
             <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
@@ -597,7 +597,7 @@ under the License.
     </profile>
     <profile>
         <name>file:orc</name>
-        <description>A profile for reading ORC data from Azure Blob Storage
+        <description>A profile for reading ORC data from network mounted files.
         </description>
         <plugins>
             <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
@@ -661,7 +661,7 @@ under the License.
     <profile>
         <name>wasbs:avro</name>
         <description>This profile is suitable for using when reading Avro files (i.e
-            fileName.avro)
+            fileName.avro) on network mounted filesystems.
         </description>
         <plugins>
             <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
@@ -685,7 +685,7 @@ under the License.
     <profile>
         <name>file:avro</name>
         <description>This profile is suitable for using when reading Avro files (i.e
-            fileName.avro)
+            fileName.avro) on network mounted filesystems.
         </description>
         <plugins>
             <fragmenter>org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter</fragmenter>
@@ -792,7 +792,7 @@ under the License.
     <profile>
         <name>file:json</name>
         <description>
-            Access JSON data either as:
+            Access JSON data on network mounted filesystems either as:
             * one JSON record per line (default)
             * or multiline JSON records with an IDENTIFIER parameter indicating a member name used
             to determine the encapsulating json object to return
