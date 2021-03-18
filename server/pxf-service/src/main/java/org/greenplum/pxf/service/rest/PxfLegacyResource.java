@@ -32,25 +32,6 @@ public class PxfLegacyResource {
     private static final String ERROR_MESSAGE_TEMPLATE =
             "%s API (v15) is no longer supported by the server, " + ERROR_MESSAGE_HINT;
 
-    private final RequestParser<MultiValueMap<String, String>> parser;
-    private final ReadService readService;
-    private final WriteService writeService;
-
-    /**
-     * Creates a new instance of the resource with Request parser and read service implementation.
-     *
-     * @param parser       http request parser
-     * @param readService  read service implementation
-     * @param writeService write service implementation
-     */
-    public PxfLegacyResource(RequestParser<MultiValueMap<String, String>> parser,
-                             ReadService readService,
-                             WriteService writeService) {
-        this.parser = parser;
-        this.readService = readService;
-        this.writeService = writeService;
-    }
-
     /**
      * REST endpoint for getting a list of fragments.
      *
