@@ -15,6 +15,7 @@ where `<command>` is:
 ``` pre
 help
 init (deprecated)
+migrate
 prepare
 register
 reset (deprecated)
@@ -29,11 +30,12 @@ sync
 
 The `pxf cluster` utility command manages PXF on the master, standby master, and on all Greenplum Database segment hosts. You can use the utility to:
 
-- Start, stop, and restart the PXF Service instance on all segment hosts.
-- Display the status of the PXF Service instance on all segment hosts.
+- Start, stop, and restart the PXF Service instance on the master, standby master, and all segment hosts.
+- Display the status of the PXF Service instance on the master, standby master, and all segment hosts.
 - Synchronize the PXF configuration from the Greenplum Database master host to the standby master and to all segment hosts.
 - Copy the PXF extension control file from the PXF installation on each host to the Greenplum installation on the host after a Greenplum upgrade.
 - Prepare a new `$PXF_BASE` runtime configuration directory.
+- Migrate PXF 5 `$PXF_CONF` configuration to `$PXF_BASE`.
 
 `pxf cluster` requires a running Greenplum Database cluster. You must run the utility on the Greenplum Database master host.
 
@@ -47,6 +49,9 @@ The `pxf cluster` utility command manages PXF on the master, standby master, and
 <dt>init (deprecated)</dt>
 <dd>The command is equivalent to the `register` command.</dd>
 
+<dt>migrate</dt>
+<dd>Migrate the configuration in a PXF 5 `$PXF_CONF` directory to `$PXF_BASE` on each Greenplum Database host. When you run the command, you must identify the PXF 5 configuration directory via an environment variable named `PXF_CONF`. PXF migrates the version 5 configuration to `$PXF_BASE`, copying and merging files and directories as necessary. <div class="note">You must manually migrate any <code>pxf-log4j.properties</code> customizations to the <code>pxf-log4j2.xml</code> file.</div></dd>
+
 <dt>prepare</dt>
 <dd>Prepare a new `$PXF_BASE` directory on each Greenplum Database host. When you run the command, you must identify the new PXF runtime configuration directory via an environment variable named `PXF_BASE`. PXF copies runtime configuration file templates and directories to this `$PXF_BASE`.</dd>
 
@@ -57,16 +62,16 @@ The `pxf cluster` utility command manages PXF on the master, standby master, and
 <dd>The command is a no-op.</dd>
 
 <dt>restart</dt>
-<dd>Stop, and then start, the PXF Service instance on all segment hosts.</dd>
+<dd>Stop, and then start, the PXF Service instance on the master, standby master, and all segment hosts.</dd>
 
 <dt>start</dt>
-<dd>Start the PXF Service instance on all segment hosts.</dd>
+<dd>Start the PXF Service instance on the master, standby master, and all segment hosts.</dd>
 
 <dt>status  </dt>
-<dd>Display the status of the PXF Service instance on all segment hosts.</dd>
+<dd>Display the status of the PXF Service instance on the master, standby master, and all segment hosts.</dd>
 
 <dt>stop  </dt>
-<dd>Stop the PXF Service instance on all segment hosts.</dd>
+<dd>Stop the PXF Service instance on the master, standby master, and all segment hosts.</dd>
 
 <dt>sync  </dt>
 <dd>Synchronize the PXF configuration (`$PXF_BASE`) from the master to the standby master and to all Greenplum Database segment hosts. By default, this command updates files on and copies files to the remote. You can instruct PXF to also delete files during the synchronization; see [Options](#options).</dd>
@@ -81,7 +86,7 @@ The `pxf cluster sync` command takes the following option:
 
 ## <a id="topic1__section5"></a>Examples
 
-Stop the PXF Service instance on all segment hosts:
+Stop the PXF Service instance on the master, standby master, and all segment hosts:
 
 ``` shell
 $ pxf cluster stop

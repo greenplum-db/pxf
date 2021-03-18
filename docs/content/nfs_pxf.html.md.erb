@@ -23,9 +23,9 @@ PXF does not support user impersonation when you access a network file system. P
 Before you use PXF to access files on a network file system, ensure that:
 
 - You can identify the PXF runtime configuration directory (`$PXF_BASE`).
-- You have configured PXF, and PXF is running on each Greenplum Database segment host. See [Configuring PXF](instcfg_pxf.html) for additional information.
+- You have configured PXF, and PXF is running on each Greenplum Database host. See [Configuring PXF](instcfg_pxf.html) for additional information.
 - All files are accessible by `gpadmin` or by the operating system user that started the PXF process.
-- The network file system is correctly mounted at the same local mount point on every Greenplum Database segment host.
+- The network file system is correctly mounted at the same local mount point on every Greenplum Database host.
 - You can identify the mount or share point of the network file system.
 - You have created one or more named PXF server configurations as described in [Configuring a PXF Network File System Server](#ex_fscfg).
 

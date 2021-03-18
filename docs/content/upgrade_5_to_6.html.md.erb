@@ -1,16 +1,16 @@
 ---
-title: Upgrading from PXF 5
+title: Upgrading from PXF 5.x
 ---
 
-If you have installed, configured, and are using PXF in your Greenplum Database 5 or 6 cluster, you must perform some upgrade actions when you install PXF 6.x.
+If you have installed, configured, and are using PXF 5.x in your Greenplum Database 5 or 6 cluster, you must perform some upgrade actions when you install PXF 6.x.
 
-<div class="note">If you are using PXF with Greenplum Database 5, you must upgrade Greenplum to version 5.21.2 or newer before you upgrade to PXF 6.</div>
+<div class="note">If you are using PXF with Greenplum Database 5, you must upgrade Greenplum to version 5.21.2 or newer before you upgrade to PXF 6.x.</div>
 
-The PXF upgrade procedure has two parts. You perform one procedure before, and one procedure after, you install a new version to upgrade to PXF 6:
+The PXF upgrade procedure has three steps. You perform one pre-install procedure, the install itself, and then a post-install procedure to upgrade to PXF 6.x:
 
 -   [Step 1: Perform the PXF Pre-Upgrade Actions](#pxfpre)
--   Install the new version of PXF
--   [Step 2: Complete the Upgrade to PXF 6](#pxfup)
+-   Step 2: Install PXF 6.x
+-   [Step 3: Complete the Upgrade to PXF 6.x](#pxfup)
 
 
 ## <a id="pxfpre"></a>Step 1: Performing the PXF Pre-Upgrade Actions
@@ -29,14 +29,14 @@ Perform this procedure before you upgrade to a new version of PXF:
     gpadmin@gpmaster$ pxf version
     ```
 
-1. add other steps here - TBD like backing up $PXF_HOME, $PXF_CONF
+1. Identify the file system location of the `$PXF_CONF` setting in your PXF 5.x PXF installation; you will need this later.
 
-1. Stop PXF on each segment host as described in [Stopping PXF](cfginitstart_pxf.html#stop_pxf).
+1. Stop PXF on each Greenplum host as described in [Stopping PXF](cfginitstart_pxf.html#stop_pxf).
 
-1. Install the new version of PXF, identify and note the new PXF version number, and then continue your PXF upgrade with [Step 2: Complete the Upgrade to PXF 6](#pxfup).
+1. [Install PXF 6.x](installing.html), identify and note the new PXF version number, and then continue your PXF upgrade with [Step 3: Complete the Upgrade to PXF 6.x](#pxfup).
 
 
-## <a id="pxfup"></a>Step 2: Completing the Upgrade to PXF 6
+## <a id="pxfup"></a>Step 3: Completing the Upgrade to PXF 6.x
 
 After you install the new version of PXF, perform the following procedure:
 
@@ -46,9 +46,28 @@ After you install the new version of PXF, perform the following procedure:
     $ ssh gpadmin@<gpmaster>
     ```
 
-1. other steps here
+1. You must run the `pxf` commands specified in subsequent steps using the binaries from your PXF 6.x installation. Ensure that the PXF 6.x installation `bin/` directory is in your `$PATH`, or provide the full path to the `pxf` command. You can run the following command to check the `pxf` version:
 
-1. THE STEPS BELOW ARE FOR CONFIG PARITY WITH 5.16, TBD WHERE THEY END UP IN THIS SECTION.
+    ``` shell
+    gpadmin@gpmaster$ pxf version
+    ```
+
+1. (Optional, Advanced) If you want to relocate `$PXF_BASE` outside of `$PXF_HOME`, perform the procedure described in [Relocating $PXF_BASE](about_pxf_dir.html#movebase).
+
+1. Auto-migrate your PXF 5.x configuration to PXF 6.x `$PXF_BASE`:
+
+    1. Recall your PXF 5.x `$PXF_CONF` setting.
+    2. Run the `migrate` command. You must provide `PXF_CONF`. (If you relocated `$PXF_BASE`, provide that setting as well.)
+
+        ``` shell
+        gpadmin@gpmaster$ PXF_CONF=/path/to/dir pxf cluster migrate
+        ```
+
+        The command copies PXF 5.x `conf/pxf-profiles.xml`, `servers/*`, `lib/*`, and `keytabs/*` to the PXF 6.x `$PXF_BASE` directory. The command also merges configuration changes in the PXF 5.x `conf/pxf-env.sh` into the PXF 6.x file of the same name and `pxf-application.properties`.
+
+1. The `migrate` command does not migrate PXF 5.x `$PXF_CONF/conf/pxf-log4j.properties` customizations; you must manually migrate any changes that you made to this file to `$PXF_BASE/conf/pxf-log4j2.xml`.  Note that PXF 5.x `pxf-log4j.properties` is in properties format, and PXF 6 `pxf-log4j2.xml` is `xml` format. See the [Configuration with XML](https://logging.apache.org/log4j/2.x/manual/configuration.html#XML) topic in the Apache Log4j 2 documentation for more information.
+
+1. *Where applicable, be sure to apply any changes identified in subsequent steps to your migrated PXF 6.x `$PXF_BASE` configuration.*
 
 3. **If you are upgrading from PXF version 5.9.x or earlier** and you have configured any JDBC servers that access Kerberos-secured Hive, you must now set the `hadoop.security.authentication` property to the `jdbc-site.xml` file to explicitly identify use of the Kerberos authentication method. Perform the following for each of these server configs:
 
@@ -104,28 +123,50 @@ After you install the new version of PXF, perform the following procedure:
 
             You may need to add this property block to the `pxf-site.xml` file.
 
-1. **If you are upgrading to PXF version 6.0**:
+1. Register the PXF 6.x extension files with Greenplum Database (see [pxf cluster register](ref/pxf-cluster.html)). `$GPHOME` must be set when you run this command.
 
-    1. Ensure that you no longer reference previously deprecated features that were removed in PXF 6.0:
+    ``` shell
+    gpadmin@gpmaster$ pxf cluster register
+    ```
 
-        | Deprecated Feature | Use Instead |
-        | -------------------|-------------|
-        | Hadoop profile names | hdfs:\<profile> as noted [here](access_hdfs.html#hadoop_connectors) |
-        | `jdbc.user.impersonation` property | `pxf.service.user.impersonation` property in the [jdbc&#8209;site.xml](jdbc_cfg.html#jdbcimpers) server configuration file |
-        | `PXF_KEYTAB` configuration property | `pxf.service.kerberos.keytab` property in the [pxf&#8209;site.xml](cfg_server.html#pxf-site) server configuration file |
-        | `PXF_PRINCIPAL` configuration property | `pxf.service.kerberos.principal` property in the [pxf&#8209;site.xml](cfg_server.html#pxf-site) server configuration file |
-        | `PXF_USER_IMPERSONATION` configuration property | `pxf.service.user.impersonation` property in the [pxf&#8209;site.xml](cfg_server.html#pxf-site) server configuration file |
+    The `register` command copies only the `pxf.control` extension file to the Greenplum cluster. In PXF 6.x, the PXF extension `.sql` file and library `pxf.so` reside in `$PXF_HOME`. You may choose to remove these now-unused files from the Greenplum Database installation *on the Greenplum Database master, standby master, and all segment hosts*. For example, to remove the files on the master host:
 
-    2. step 2
-    3. step 3
+    ``` shell
+    gpadmin@gpmaster$ rm $GPHOME/share/postgresql/extension/pxf--1.0.sql
+    gpadmin@gpmaster$ rm $GPHOME/lib/postgresql/pxf.so
+    ```
 
-1. next step
+1. PXF 6.x includes a new version of the `pxf` extension. You must update the extension in every Greenplum database in which you are using PXF. A database superuser or the database owner must run this SQL command in the `psql` subsystem or in an SQL script:
 
-4. Synchronize the PXF configuration from the master host to the standby master and each Greenplum Database segment host. For example:
+    ``` sql
+    ALTER EXTENSION pxf UPDATE;
+    ```
+
+1. Ensure that you no longer reference previously-deprecated features that were removed in PXF 6.0:
+
+    | Deprecated Feature | Use Instead |
+    | -------------------|-------------|
+    | Hadoop profile names | `hdfs:<profile>` as noted [here](access_hdfs.html#hadoop_connectors) |
+    | `jdbc.user.impersonation` property | `pxf.service.user.impersonation` property in the [jdbc&#8209;site.xml](jdbc_cfg.html#jdbcimpers) server configuration file |
+    | `PXF_KEYTAB` configuration property | `pxf.service.kerberos.keytab` property in the [pxf&#8209;site.xml](cfg_server.html#pxf-site) server configuration file |
+    | `PXF_PRINCIPAL` configuration property | `pxf.service.kerberos.principal` property in the [pxf&#8209;site.xml](cfg_server.html#pxf-site) server configuration file |
+    | `PXF_USER_IMPERSONATION` configuration property | `pxf.service.user.impersonation` property in the [pxf&#8209;site.xml](cfg_server.html#pxf-site) server configuration file |
+
+1. PXF 6.x distributes a single JAR file that includes all of its dependencies, and separately makes its HBase JAR file available in `$PXF_HOME/share`. If you have configured a PXF Hadoop server for HBase access, you must register the new `pxf-hbase-<version>.jar` with Hadoop and HBase as follows:
+
+    1. Copy `$PXF_HOME/share/pxf-hbase-<version>.jar` to each node in your HBase cluster.
+    1. Add the location of this JAR to `$HBASE_CLASSPATH` on each HBase node.
+    1. Restart HBase on each node.
+
+1. In PXF 6.x, the PXF Service runs on all Greenplum Database hosts. If you used PXF 5.x to access Kerberos-secured HDFS, you must now generate principals and keytabs for the Greenplum master and standby master hosts, and distribute these to the hosts as described in [Configuring PXF for Secure HDFS](pxf_kerbhdfs.html#procedure).
+
+4. Synchronize the PXF 6.x configuration from the master host to the standby master and each Greenplum Database segment host. For example:
 
     ``` shell
     gpadmin@gpmaster$ pxf cluster sync
     ```
  
-5. Start PXF on each segment host as described in [Starting PXF](cfginitstart_pxf.html#start_pxf).
+5. Start PXF on each Greenplum host as described in [Starting PXF](cfginitstart_pxf.html#start_pxf).
+
+1. Verify that PXF can access each external data source by querying external tables that specify each PXF server.
 

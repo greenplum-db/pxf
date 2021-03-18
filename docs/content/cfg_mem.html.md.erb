@@ -7,9 +7,9 @@ Because a single PXF Service (JVM) serves multiple segments on a segment host, t
 
 ## <a id="pxf-heapcfg"></a>Increasing the JVM Memory for PXF
 
-Each PXF Service running on a segment host is configured with a default maximum Java heap size of 2GB and an initial heap size of 1GB. If the segment hosts in your Greenplum Database cluster have an ample amount of memory, try increasing the maximum heap size to a value between 3-4GB. Set the initial and maximum heap size to the same value if possible.
+Each PXF Service running on a Greenplum Database host is configured with a default maximum Java heap size of 2GB and an initial heap size of 1GB. If the hosts in your Greenplum Database cluster have an ample amount of memory, try increasing the maximum heap size to a value between 3-4GB. Set the initial and maximum heap size to the same value if possible.
 
-Perform the following procedure to increase the heap size for the PXF Service running on each segment host in your Greenplum Database cluster.
+Perform the following procedure to increase the heap size for the PXF Service running on each host in your Greenplum Database cluster.
 
 1. Log in to your Greenplum Database master node:
 
@@ -37,7 +37,7 @@ Perform the following procedure to increase the heap size for the PXF Service ru
     gpadmin@gpmaster$ pxf cluster sync
     ```
 
-5. Restart PXF on each Greenplum Database segment host as described in [Restarting PXF](cfginitstart_pxf.html#restart_pxf).
+5. Restart PXF on each Greenplum Database host as described in [Restarting PXF](cfginitstart_pxf.html#restart_pxf).
 
 
 ## <a id="pxf-cfgoom"></a>Configuring Out of Memory Condition Actions
@@ -55,9 +55,9 @@ You can configure the PXF JVM to enable/disable the following actions when it de
 
 ### <a id="pxf-cfgoom-autokill"></a>Auto-Killing the PXF Server
 
-By default, PXF is configured such that when the PXF JVM detects an out of memory condition on a segment host, it automatically runs a script that kills the PXF Service running on the host. The `PXF_OOM_KILL` environment variable in the `$PXF_BASE/conf/pxf-env.sh` configuration file governs this auto-kill behavior.
+By default, PXF is configured such that when the PXF JVM detects an out of memory condition on a Greenplum host, it automatically runs a script that kills the PXF Service running on the host. The `PXF_OOM_KILL` environment variable in the `$PXF_BASE/conf/pxf-env.sh` configuration file governs this auto-kill behavior.
 
-When auto-kill is enabled and the PXF JVM detects an OOM condition and kills the PXF Service on the segment host:
+When auto-kill is enabled and the PXF JVM detects an OOM condition and kills the PXF Service on the host:
 
 - PXF logs the following messages to `$PXF_LOGDIR/pxf-oom.log` on the segment host:
 
@@ -67,13 +67,13 @@ When auto-kill is enabled and the PXF JVM detects an OOM condition and kills the
     =====> <date> Stopping PXF <======
     ```
 
-- Any query that you run on a PXF external table will fail with the following error until you restart the PXF Service on the segment host:
+- Any query that you run on a PXF external table will fail with the following error until you restart the PXF Service on the host:
 
     ``` shell
     ... Failed to connect to <host> port 5888: Connection refused
     ```
 
-**When the PXF Service on a segment host is shut down in this manner, you must explicitly restart the PXF Service on the host.** See the [pxf](ref/pxf.html) reference page for more information on the `pxf start` command.
+**When the PXF Service on a host is shut down in this manner, you must explicitly restart the PXF Service on the host.** See the [pxf](ref/pxf.html) reference page for more information on the `pxf start` command.
 
 Refer to the configuration [procedure](#pxf-cfgoom_proc) below for the instructions to disable/enable this PXF configuration property.
  
@@ -136,7 +136,7 @@ Auto-kill of the PXF Service on OOM is enabled by default. Heap dump generation 
     gpadmin@gpmaster$ pxf cluster sync
     ```
 
-7. Restart PXF on each Greenplum Database segment host as described in [Restarting PXF](cfginitstart_pxf.html#restart_pxf).
+7. Restart PXF on each Greenplum Database host as described in [Restarting PXF](cfginitstart_pxf.html#restart_pxf).
 
 
 ## <a id="pxf-threadcfg"></a>Another Option for Resource-Constrained PXF Segment Hosts
@@ -149,7 +149,7 @@ If you plan to run large workloads on a large number of files in an external Hiv
 
 **Note**: Keep in mind that an increase in the thread count correlates with an increase in memory consumption.
 
-Perform the following procedure to set the maximum number of Tomcat threads for the PXF Service running on each segment host in your Greenplum Database deployment.
+Perform the following procedure to set the maximum number of Tomcat threads for the PXF Service running on each host in your Greenplum Database deployment.
 
 1. Log in to your Greenplum Database master node:
 
@@ -177,5 +177,5 @@ Perform the following procedure to set the maximum number of Tomcat threads for 
     gpadmin@gpmaster$ pxf cluster sync
     ```
 
-5. Restart PXF on each Greenplum Database segment host as described in [Restarting PXF](cfginitstart_pxf.html#restart_pxf).
+5. Restart PXF on each Greenplum Database host as described in [Restarting PXF](cfginitstart_pxf.html#restart_pxf).
 

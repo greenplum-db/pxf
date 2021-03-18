@@ -2,13 +2,13 @@
 title: Configuring PXF
 ---
 
-Your Greenplum Database deployment consists of a master node and multiple segment hosts. After you configure the Greenplum Platform Extension Framework (PXF), you start a single PXF JVM process on each Greenplum Database segment host.
+Your Greenplum Database deployment consists of a master node, standby master, and multiple segment hosts. After you configure the Greenplum Platform Extension Framework (PXF), you start a single PXF JVM process (PXF Service) on each Greenplum Database host.
 
 PXF provides connectors to Hadoop, Hive, HBase, object stores, network file systems, and external SQL data stores. You must configure PXF to support the connectors that you plan to use.
 
 To configure PXF, you must:
 
-1. Install Java 8 or 11 on each Greenplum Database segment host as described in [Installing Java for PXF](install_java.html).
+1. Install Java 8 or 11 on each Greenplum Database host as described in [Installing Java for PXF](install_java.html).
 
 2. Register the PXF extension with Greenplum Database (see [pxf cluster register](ref/pxf-cluster.html)). Run this command after your first installation of a PXF version 6.x, and/or after you upgrade your Greenplum Database installation.
 

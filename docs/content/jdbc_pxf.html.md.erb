@@ -32,9 +32,9 @@ This section describes how to use the PXF JDBC connector to access data in an ex
 Before you access an external SQL database using the PXF JDBC connector, ensure that:
 
 - You can identify the PXF runtime configuration directory (`$PXF_BASE`).
-- You have configured PXF, and PXF is running on each Greenplum Database segment host. See [Configuring PXF](instcfg_pxf.html) for additional information.
-- Connectivity exists between all Greenplum Database segment hosts and the external SQL database.
-- You have configured your external SQL database for user access from all Greenplum Database segment hosts.
+- You have configured PXF, and PXF is running on each Greenplum Database host. See [Configuring PXF](instcfg_pxf.html) for additional information.
+- Connectivity exists between all Greenplum Database hosts and the external SQL database.
+- You have configured your external SQL database for user access from all Greenplum Database hosts.
 - You have registered any JDBC driver JAR dependencies.
 - (Recommended) You have created one or more named PXF JDBC connector server configurations as described in [Configuring the PXF JDBC Connector](jdbc_cfg.html).
 
@@ -140,7 +140,7 @@ To disable or enable a thread pool and set the pool size, create the PXF externa
 
 #### <a id="partitioning"></a>Partitioning (Read)
 
-The PXF JDBC connector supports simultaneous read access from PXF instances running on multiple segment hosts to an external SQL table. This feature is referred to as partitioning. Read partitioning is not enabled by default. To enable read partitioning, set the `PARTITION_BY`, `RANGE`, and `INTERVAL` custom options when you create the PXF external table.
+The PXF JDBC connector supports simultaneous read access from PXF instances running on multiple Greenplum Database hosts to an external SQL table. This feature is referred to as partitioning. Read partitioning is not enabled by default. To enable read partitioning, set the `PARTITION_BY`, `RANGE`, and `INTERVAL` custom options when you create the PXF external table.
 
 PXF uses the `RANGE` and `INTERVAL` values and the `PARTITON_BY` column that you specify to assign specific data rows in the external table to PXF instances running on the Greenplum Database segment hosts. This column selection is specific to PXF processing, and has no relationship to a partition column that you may have specified for the table in the external SQL database.
 
@@ -225,7 +225,7 @@ Perform the following steps to create a PostgreSQL table named `forpxf_table1` i
 
     With these privileges, `pxfuser1` can read from and write to the `forpxf_table1` table.
 
-7. Update the PostgreSQL configuration to allow user `pxfuser1` to access `pgtestdb` from each Greenplum Database segment host. This configuration is specific to your PostgreSQL environment. You will update the `/var/lib/pgsql/pg_hba.conf` file and then restart the PostgreSQL server.
+7. Update the PostgreSQL configuration to allow user `pxfuser1` to access `pgtestdb` from each Greenplum Database host. This configuration is specific to your PostgreSQL environment. You will update the `/var/lib/pgsql/pg_hba.conf` file and then restart the PostgreSQL server.
 
 
 #### <a id="ex_jdbconfig"></a>Configure the JDBC Connector 

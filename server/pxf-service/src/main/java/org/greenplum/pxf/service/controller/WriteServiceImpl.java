@@ -61,12 +61,23 @@ public class WriteServiceImpl extends BaseServiceImpl implements WriteService {
         long recordCount = 0;
         IOException ex = null;
 
+        long recordReportFrequency = metricsReporter.getReportFrequency(MetricsReporter.PxfMetric.RECORDS_RECEIVED);
+
         // dataStream (and inputStream as the result) will close automatically at the end of the try block
         try (DataInputStream dataStream = new DataInputStream(inputStream)) {
             // open the output file
             bridge.beginIteration();
             while (bridge.setNext(dataStream)) {
                 ++recordCount;
+                // report records based off the recordReportFrequency
+                if (recordCount % recordReportFrequency == 0) {
+                    metricsReporter.reportCounter(MetricsReporter.PxfMetric.RECORDS_RECEIVED, recordReportFrequency, context);
+                }
+            }
+            // report the remaining records that have yet to be reported
+            long remainder = recordCount % recordReportFrequency;
+            if (remainder != 0) {
+                metricsReporter.reportCounter(MetricsReporter.PxfMetric.RECORDS_RECEIVED, remainder, context);
             }
         } catch (ClientAbortException cae) {
             // Occurs whenever client (GPDB) decides to end the connection
