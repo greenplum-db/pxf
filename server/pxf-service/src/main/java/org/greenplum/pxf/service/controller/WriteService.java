@@ -1,6 +1,5 @@
 package org.greenplum.pxf.service.controller;
 
-import org.greenplum.pxf.api.error.PxfIOException;
 import org.greenplum.pxf.api.model.RequestContext;
 
 import java.io.InputStream;
@@ -17,7 +16,6 @@ public interface WriteService {
      * @param context     request context
      * @param inputStream input stream to read data from
      * @return text response to send back to the client
-     * @throws PxfIOException if an error occurs
      */
-    String writeData(RequestContext context, InputStream inputStream) throws PxfIOException;
+    String writeData(RequestContext context, InputStream inputStream);
 }

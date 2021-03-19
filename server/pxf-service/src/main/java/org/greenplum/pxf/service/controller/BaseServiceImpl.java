@@ -55,7 +55,6 @@ public abstract class BaseServiceImpl {
      * @param context request context
      * @param action  action to execute
      * @return operation statistics
-     * @throws PxfIOException if an error occurs during the operation
      */
     protected OperationStats processData(RequestContext context, PrivilegedAction<OperationResult> action) {
         log.debug("{} {} service is called for resource {} using profile {}",

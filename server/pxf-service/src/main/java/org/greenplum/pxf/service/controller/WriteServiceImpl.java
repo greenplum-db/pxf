@@ -55,7 +55,6 @@ public class WriteServiceImpl extends BaseServiceImpl implements WriteService {
      * @param context     request context
      * @param inputStream input stream
      * @return operation statistics
-     * @throws IOException if error occurs when writing data
      */
     private OperationResult readStream(RequestContext context, InputStream inputStream) {
         Bridge bridge = getBridge(context);

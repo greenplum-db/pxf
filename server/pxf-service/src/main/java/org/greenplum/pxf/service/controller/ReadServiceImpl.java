@@ -65,7 +65,6 @@ public class ReadServiceImpl extends BaseServiceImpl implements ReadService {
      * @param context      request context
      * @param outputStream output stream
      * @return operation statistics
-     * @throws IOException if error occurs when reading data
      */
     private OperationResult writeStream(RequestContext context, OutputStream outputStream) {
         boolean restoreOriginalValues;
