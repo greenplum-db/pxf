@@ -3,7 +3,6 @@ package org.greenplum.pxf.service.controller;
 import com.google.common.io.CountingInputStream;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.connector.ClientAbortException;
-import org.greenplum.pxf.api.error.PxfIOException;
 import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.Utilities;
