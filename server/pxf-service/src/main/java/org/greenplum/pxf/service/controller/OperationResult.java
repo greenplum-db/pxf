@@ -10,22 +10,4 @@ import lombok.Setter;
 public class OperationResult {
     private Exception exception;
     private OperationStats stats;
-
-//    public OperationResult(OperationStats stats) {
-//        this.e = null;
-//        this.stats = stats;
-//    }
-//
-//    public OperationResult(Exception e, OperationStats stats) {
-//        this.e = e;
-//        this.stats = stats;
-//    }
-//
-////    public boolean isError() {
-////        return this.e != null;
-////    }
-////
-////    public  boolean isSuccess() {
-////        return this.e == null;
-////    }
 }
