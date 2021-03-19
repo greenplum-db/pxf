@@ -3,6 +3,7 @@ package org.greenplum.pxf.service.security;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.security.SecureLogin;
 import org.greenplum.pxf.api.utilities.Utilities;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.lang.reflect.UndeclaredThrowableException;
+import java.security.PrivilegedAction;
 import java.security.PrivilegedExceptionAction;
 
 /**
@@ -45,7 +47,7 @@ public class BaseSecurityService implements SecurityService {
      * @param action  the action to be executed
      * @throws IOException when an IO error occurs
      */
-    public <T> T doAs(RequestContext context, PrivilegedExceptionAction<T> action) throws IOException {
+    public <T> T doAs(RequestContext context, PrivilegedAction<T> action) {
         // retrieve user header and make sure header is present and is not empty
         final String gpdbUser = context.getUser();
         final String serverName = context.getServerName();
@@ -55,28 +57,28 @@ public class BaseSecurityService implements SecurityService {
         final boolean isSecurityEnabled = Utilities.isSecurityEnabled(configuration);
 
         // Establish the UGI for the login user or the Kerberos principal for the given server, if applicable
-        UserGroupInformation loginUser = secureLogin.getLoginUser(serverName, configDirectory, configuration);
-
-        String serviceUser = loginUser.getUserName();
-
-        if (!isUserImpersonation && isSecurityEnabled) {
-            // When impersonation is disabled and security is enabled
-            // we check whether the pxf.service.user.name property was provided
-            // and if provided we use the value as the remote user instead of
-            // the principal defined in pxf.service.kerberos.principal. However,
-            // the principal will need to have proxy privileges on hadoop.
-            String pxfServiceUserName = configuration.get(SecureLogin.CONFIG_KEY_SERVICE_USER_NAME);
-            if (StringUtils.isNotBlank(pxfServiceUserName)) {
-                serviceUser = pxfServiceUserName;
-            }
-        }
-
-        String remoteUser = (isUserImpersonation ? gpdbUser : serviceUser);
-        String contextId = context.getId();
-
         boolean exceptionDetected = false;
+        String contextId = context.getId();
         UserGroupInformation userGroupInformation = null;
         try {
+            UserGroupInformation loginUser = secureLogin.getLoginUser(serverName, configDirectory, configuration);
+
+            String serviceUser = loginUser.getUserName();
+
+            if (!isUserImpersonation && isSecurityEnabled) {
+                // When impersonation is disabled and security is enabled
+                // we check whether the pxf.service.user.name property was provided
+                // and if provided we use the value as the remote user instead of
+                // the principal defined in pxf.service.kerberos.principal. However,
+                // the principal will need to have proxy privileges on hadoop.
+                String pxfServiceUserName = configuration.get(SecureLogin.CONFIG_KEY_SERVICE_USER_NAME);
+                if (StringUtils.isNotBlank(pxfServiceUserName)) {
+                    serviceUser = pxfServiceUserName;
+                }
+            }
+
+            String remoteUser = (isUserImpersonation ? gpdbUser : serviceUser);
+
             // Retrieve proxy user UGI from the UGI of the logged in user
             if (isUserImpersonation) {
                 LOG.debug("{} Creating proxy user = {}", contextId, remoteUser);
@@ -94,10 +96,10 @@ public class BaseSecurityService implements SecurityService {
         } catch (UndeclaredThrowableException ute) {
             exceptionDetected = true;
             // unwrap the real exception thrown by the action
-            throw new IOException(ute.getCause());
-        } catch (InterruptedException ie) {
+            throw new PxfRuntimeException(ute.getCause());
+        } catch (Exception e) {
             exceptionDetected = true;
-            throw new IOException(ie);
+            throw new PxfRuntimeException(e);
         } finally {
             LOG.debug("{} Releasing UGI resources. {}",
                     contextId, exceptionDetected ? " Exception while processing" : "");

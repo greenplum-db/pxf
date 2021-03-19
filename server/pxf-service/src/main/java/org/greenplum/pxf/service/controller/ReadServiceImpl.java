@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.security.PrivilegedAction;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -54,7 +55,7 @@ public class ReadServiceImpl extends BaseServiceImpl implements ReadService {
     }
 
     @Override
-    public void readData(RequestContext context, OutputStream outputStream) throws PxfIOException {
+    public void readData(RequestContext context, OutputStream outputStream) {
         // can only call processData as it handles logging of any errors
         processData(context, () -> writeStream(context, outputStream));
     }
@@ -68,7 +69,7 @@ public class ReadServiceImpl extends BaseServiceImpl implements ReadService {
      * @return operation statistics
      * @throws IOException if error occurs when reading data
      */
-    private OperationStats writeStream(RequestContext context, OutputStream outputStream) throws IOException {
+    private OperationResult writeStream(RequestContext context, OutputStream outputStream) {
         boolean restoreOriginalValues;
 
         String originalProfile = context.getProfile();
@@ -77,6 +78,7 @@ public class ReadServiceImpl extends BaseServiceImpl implements ReadService {
         String originalProfileScheme = context.getProfileScheme();
 
         OperationStats queryStats = new OperationStats(OperationStats.Operation.READ, metricsReporter, context);
+        OperationResult queryResult = new OperationResult();
 
         // dataStream (and outputStream as the result) will close automatically at the end of the try block
         CountingOutputStream countingOutputStream = new CountingOutputStream(outputStream);
@@ -125,13 +127,14 @@ public class ReadServiceImpl extends BaseServiceImpl implements ReadService {
                         context.getId(), context.getSegmentId());
             }
             // Re-throw the exception so Spring MVC is aware that an IO error has occurred
-            throw e;
-        } catch (IOException e) {
-            throw e;
+            queryResult.setException(e);
         } catch (Exception e) {
-            throw new IOException(e.getMessage(), e);
+            queryResult.setException(e);
+        } finally {
+            queryResult.setStats(queryStats);
         }
-        return queryStats;
+
+        return queryResult;
     }
 
     private OperationStats processFragment(CountingOutputStream countingOutputStream, RequestContext context) throws Exception {

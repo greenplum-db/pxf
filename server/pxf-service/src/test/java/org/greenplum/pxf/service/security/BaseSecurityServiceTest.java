@@ -21,6 +21,7 @@ package org.greenplum.pxf.service.security;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.security.SecureLogin;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,8 +31,8 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.io.IOException;
 import java.lang.reflect.UndeclaredThrowableException;
+import java.security.PrivilegedAction;
 import java.security.PrivilegedExceptionAction;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -43,7 +44,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 public class BaseSecurityServiceTest {
 
-    private static final PrivilegedExceptionAction<Boolean> EMPTY_ACTION = () -> true;
+    private static final PrivilegedAction<Boolean> EMPTY_ACTION = () -> true;
 
     private Configuration configuration;
     private RequestContext context;
@@ -145,7 +146,7 @@ public class BaseSecurityServiceTest {
     public void destroysUGIWhenTheFilterExecutionThrowsAnUndeclaredThrowableException() throws Exception {
         expectScenario("login-user", false, false, false);
         doThrow(UndeclaredThrowableException.class).when(mockProxyUGI).doAs(any(PrivilegedExceptionAction.class));
-        assertThrows(IOException.class,
+        assertThrows(PxfRuntimeException.class,
                 () -> service.doAs(context, EMPTY_ACTION));
         verifyScenario("login-user", false, false);
         verify(mockUGIProvider).destroy(any(UserGroupInformation.class));
@@ -156,7 +157,7 @@ public class BaseSecurityServiceTest {
     public void destroysUGIWhenTheFilterExecutionThrowsAnInterruptedException() throws Exception {
         expectScenario("login-user", false, false, false);
         doThrow(InterruptedException.class).when(mockProxyUGI).doAs(any(PrivilegedExceptionAction.class));
-        assertThrows(IOException.class,
+        assertThrows(PxfRuntimeException.class,
                 () -> service.doAs(context, EMPTY_ACTION));
         verifyScenario("login-user", false, false);
         verify(mockUGIProvider).destroy(any(UserGroupInformation.class));
@@ -190,6 +191,6 @@ public class BaseSecurityServiceTest {
         } else {
             verify(mockUGIProvider).createRemoteUser(user, mockLoginUGI, kerberos);
         }
-        verify(mockProxyUGI).doAs(ArgumentMatchers.<PrivilegedExceptionAction<Object>>any());
+        verify(mockProxyUGI).doAs(ArgumentMatchers.<PrivilegedAction<Object>>any());
     }
 }

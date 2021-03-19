@@ -1,6 +1,7 @@
 package org.greenplum.pxf.service.controller;
 
 import org.apache.hadoop.conf.Configuration;
+import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.service.MetricsReporter;
@@ -18,7 +19,7 @@ import org.mockito.stubbing.Answer;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.PrivilegedExceptionAction;
+import java.security.PrivilegedAction;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -56,8 +57,8 @@ public class WriteServiceImplTest {
     public void setup() throws IOException {
         when(mockConfigurationFactory.initConfiguration(any(), any(), any(), any())).thenReturn(mockConfiguration);
         when(mockSecurityService.doAs(same(mockContext), any())).thenAnswer(invocation -> {
-            PrivilegedExceptionAction<OperationStats> action = invocation.getArgument(1);
-            OperationStats result = action.run();
+            PrivilegedAction<OperationResult> action = invocation.getArgument(1);
+            OperationResult result = action.run();
             return result;
         });
         when(mockBridgeFactory.getBridge(mockContext)).thenReturn(mockBridge);
@@ -174,7 +175,7 @@ public class WriteServiceImplTest {
         when(mockMetricReporter.getReportFrequency()).thenReturn(1L);
         when(mockBridge.beginIteration()).thenThrow(Exception.class);
 
-        assertThrows(IOException.class, () -> writeService.writeData(mockContext, mockInputStream));
+        assertThrows(PxfRuntimeException.class, () -> writeService.writeData(mockContext, mockInputStream));
         verifyNoMoreInteractions(mockMetricReporter);
     }
 

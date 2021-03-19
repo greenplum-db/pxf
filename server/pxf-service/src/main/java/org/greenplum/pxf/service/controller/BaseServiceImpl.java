@@ -11,8 +11,7 @@ import org.greenplum.pxf.service.bridge.Bridge;
 import org.greenplum.pxf.service.bridge.BridgeFactory;
 import org.greenplum.pxf.service.security.SecurityService;
 
-import java.io.IOException;
-import java.security.PrivilegedExceptionAction;
+import java.security.PrivilegedAction;
 import java.time.Duration;
 import java.time.Instant;
 
@@ -58,11 +57,10 @@ public abstract class BaseServiceImpl {
      * @return operation statistics
      * @throws PxfIOException if an error occurs during the operation
      */
-    protected OperationStats processData(RequestContext context, PrivilegedExceptionAction<OperationStats> action) throws PxfIOException {
+    protected OperationStats processData(RequestContext context, PrivilegedAction<OperationResult> action) {
         log.debug("{} {} service is called for resource {} using profile {}",
                 context.getId(), serviceName, context.getDataSource(), context.getProfile());
 
-        Instant startTime = Instant.now();
         // Any exception thrown must be logged, as this method is called asynchronously (for read) and is the last
         // opportunity to log the exception while having MDC logging context defined
         try {
@@ -75,33 +73,37 @@ public abstract class BaseServiceImpl {
                             context.getAdditionalConfigProps());
             context.setConfiguration(configuration);
 
+            Instant startTime = Instant.now();
+
             // execute processing action with a proper identity
-            OperationStats stats = securityService.doAs(context, action);
+            OperationResult result = securityService.doAs(context, action);
+            OperationStats stats = result.getStats();
             long recordCount = stats.getRecordCount();
             long byteCount = stats.getByteCount();
-            if (recordCount > 0) {
-                long durationMs = Duration.between(startTime, Instant.now()).toMillis();
-                double rate = durationMs == 0 ? 0 : (1000.0 * recordCount / durationMs);
-                double byteRate = durationMs == 0 ? 0 : (1000.0 * byteCount / durationMs);
-                log.info("{} completed {} operation in {} ms for {} record{} ({} records/sec) and {} bytes ({} bytes/sec)",
-                        context.getId(),
-                        stats.getOperation().name().toLowerCase(),
-                        durationMs,
-                        recordCount,
-                        recordCount == 1 ? "" : "s",
-                        String.format("%.2f", rate),
-                        byteCount,
-                        String.format("%.2f", byteRate));
-            } else {
-                log.info("{} completed", context.getId());
+            long durationMs = Duration.between(startTime, Instant.now()).toMillis();
+            double rate = durationMs == 0 ? 0 : (1000.0 * recordCount / durationMs);
+            double byteRate = durationMs == 0 ? 0 : (1000.0 * byteCount / durationMs);
+            Exception operationException = result.getException();
+            // TODO: word-smith this
+            log.info("{} {} operation in {} ms for {} record{} ({} records/sec) and {} bytes ({} bytes/sec)",
+                    operationException == null ? "Completed" : "Failed",
+                    stats.getOperation().name().toLowerCase(),
+                    durationMs,
+                    recordCount,
+                    recordCount == 1 ? "" : "s",
+                    String.format("%.2f", rate),
+                    byteCount,
+                    String.format("%.2f", byteRate));
+            if (operationException != null) {
+                throw operationException;
             }
             return stats;
-        } catch (PxfIOException | PxfRuntimeException | Error e) {
+        } catch (PxfRuntimeException | Error e) {
             log.error(e.getMessage(), e);
             throw e;
         } catch (Exception e) {
             log.error(e.getMessage(), e);
-            throw new PxfIOException(e);
+            throw new PxfRuntimeException(e.getMessage(), e);
         }
     }
 

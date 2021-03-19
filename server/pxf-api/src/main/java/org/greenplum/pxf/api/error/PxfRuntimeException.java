@@ -19,6 +19,10 @@ public class PxfRuntimeException extends RuntimeException {
         this(message, hint, null);
     }
 
+    public PxfRuntimeException(Throwable cause) {
+        this(cause.getMessage(), cause);
+    }
+
     public PxfRuntimeException(String message, Throwable cause) {
         this(message, null, cause);
     }
