@@ -29,7 +29,7 @@ Ensure that you have met the PXF Hadoop [Prerequisites](access_hdfs.html#hadoop_
 
 ## <a id="profile_text"></a>Reading Text Data
 
-Use the `hdfs:text` profile when you read plain text delimited, and either `hdfs:text` or `hdfs:csv` when reading .csv data where each row is a single record. The following syntax creates a Greenplum Database readable external table that references such a text file on HDFS: 
+Use the `hdfs:text` profile when you read plain text delimited, and `hdfs:csv` when reading .csv data where each row is a single record. The following syntax creates a Greenplum Database readable external table that references such a text file on HDFS: 
 
 ``` sql
 CREATE EXTERNAL TABLE <table_name> 
@@ -43,7 +43,7 @@ The specific keywords and values used in the Greenplum Database [CREATE EXTERNAL
 | Keyword  | Value |
 |-------|-------------------------------------|
 | \<path&#8209;to&#8209;hdfs&#8209;file\>    | The path to the directory or file in the HDFS data store. When the `<server_name>` configuration includes a [`pxf.fs.basePath`](cfg_server.html#pxf-fs-basepath) property setting, PXF considers \<path&#8209;to&#8209;hdfs&#8209;file\> to be relative to the base path specified. Otherwise, PXF considers it to be an absolute path. \<path&#8209;to&#8209;hdfs&#8209;file\> must not specify a relative path nor include the dollar sign (`$`) character. |
-| PROFILE    | Use `PROFILE` `hdfs:text` when \<path-to-hdfs-file\> references plain text delimited data.<br> Use `PROFILE` `hdfs:text` or `hdfs:csv` when \<path-to-hdfs-file\> references comma-separated value data. |
+| PROFILE    | Use `PROFILE` `hdfs:text` when \<path-to-hdfs-file\> references plain text delimited data.<br> Use `PROFILE` `hdfs:csv` when \<path-to-hdfs-file\> references comma-separated value data. |
 | SERVER=\<server_name\>    | The named server configuration that PXF uses to access the data. PXF uses the `default` server if not specified. |
 | IGNORE_MISSING_PATH=\<boolean\> | Specify the action to take when \<path-to-hdfs-file\> is missing or invalid. The default value is `false`, PXF returns an error in this situation. When the value is `true`, PXF ignores missing path errors and returns an empty fragment. |
 | SKIP_HEADER_COUNT=\<numlines\> | Specify the number of header lines that PXF should skip in the first split of each \<hdfs-file\> before reading the data. The default value is 0, do not skip any lines. |
@@ -238,7 +238,7 @@ The specific keywords and values used in the [CREATE EXTERNAL TABLE](https://gpd
 | Keyword  | Value |
 |-------|-------------------------------------|
 | \<path&#8209;to&#8209;hdfs&#8209;dir\>    | The path to the directory in the HDFS data store. When the `<server_name>` configuration includes a [`pxf.fs.basePath`](cfg_server.html#pxf-fs-basepath) property setting, PXF considers \<path&#8209;to&#8209;hdfs&#8209;dir\> to be relative to the base path specified. Otherwise, PXF considers it to be an absolute path. \<path&#8209;to&#8209;hdfs&#8209;dir\> must not specify a relative path nor include the dollar sign (`$`) character. |
-| PROFILE    | Use `PROFILE` `hdfs:text` to write plain, delimited text to \<path-to-hdfs-file\>.<br> Use `PROFILE` `hdfs:text` or `hdfs:csv` to write comma-separated value text to \<path-to-hdfs-dir\>. |
+| PROFILE    | Use `PROFILE` `hdfs:text` to write plain, delimited text to \<path-to-hdfs-file\>.<br> Use `PROFILE` `hdfs:csv` to write comma-separated value text to \<path-to-hdfs-dir\>. |
 | SERVER=\<server_name\>    | The named server configuration that PXF uses to access the data. PXF uses the `default` server if not specified. |
 | \<custom&#8209;option\>  | \<custom-option\>s are described below.|
 | FORMAT | Use `FORMAT` `'TEXT'` to write plain, delimited text to \<path-to-hdfs-dir\>.<br> Use `FORMAT` `'CSV'` to write comma-separated value text to \<path-to-hdfs-dir\>. |
