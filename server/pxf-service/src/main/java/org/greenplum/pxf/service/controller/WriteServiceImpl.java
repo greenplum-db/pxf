@@ -100,20 +100,6 @@ public class WriteServiceImpl extends BaseServiceImpl implements WriteService {
             operationStats.setByteCount(countingInputStream.getCount());
             operationStats.flushStats();
             operationResult.setStats(operationStats);
-
-//            if (ex != null) {
-//                // FIXME: should we include the exception and log at the error level?
-//                // currently, if we include the exception in the error log, the stack trace will be printed twice: once
-//                // when we log it and again by the servlet container when we re-throw that exception.
-//                // the problem with letting the servlet container print the exception is that it is after the
-//                // request context (MDC) has been cleared by PXF filter.
-//                // 1. In the PXF filter, log any exceptions we see coming; if we don't re-throw it, the container does
-//                // does not give us HTTP 5xx for free, we'd have to implement returning internal server error codes.
-//                // 2. Log the error in BaseServiceImpl, re-throw exception, configure container to not log the exception.
-//                //    - see https://stackoverflow.com/questions/33790452/how-to-filter-an-exception-out-of-tomcat-7-logging-java-util-logging
-//                log.error(String.format("%s Exception: totalWritten so far %d records (%d bytes) to %s",
-//                        context.getId(), operationStats.getRecordCount(), operationStats.getByteCount(), context.getDataSource()), ex);
-//            }
         }
 
         return operationResult;
