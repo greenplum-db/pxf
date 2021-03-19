@@ -80,18 +80,18 @@ public class PxfResource {
 
         // parse incoming HTTP request, make sure exception is logged and converted to PxfRuntimeException
         RequestContext context;
+        StreamingResponseBody response;
         try {
             context = parser.parseRequest(headers, RequestType.READ_BRIDGE);
-        } catch (PxfRuntimeException e) {
+            // create a streaming class that will iterate over the records and write them to the output stream
+            response = os -> readService.readData(context, os);
+        } catch (PxfRuntimeException | Error e) {
             log.error(e.getMessage(), e);
             throw e;
         } catch (Exception e) {
             log.error(e.getMessage(), e);
-            throw new PxfRuntimeException(e.getMessage(), e);
+            throw new PxfRuntimeException(e);
         }
-
-        // create a streaming class that will iterate over the records and write them to the output stream
-        StreamingResponseBody response = os -> readService.readData(context, os);
 
         // return response entity that will use streaming response asynchronously
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -110,20 +110,20 @@ public class PxfResource {
 
         // parse incoming HTTP request, make sure exception is logged and converted to PxfRuntimeException
         RequestContext context;
-        String returnMsg;
+        String response;
         try {
             context = parser.parseRequest(headers, RequestType.WRITE_BRIDGE);
             // write data and get a response message
-            returnMsg = writeService.writeData(context, request.getInputStream());
-        } catch (PxfIOException | PxfRuntimeException | Error e) {
+            response = writeService.writeData(context, request.getInputStream());
+        } catch (PxfRuntimeException | Error e) {
             log.error(e.getMessage(), e);
             throw e;
         } catch (Exception e) {
             log.error(e.getMessage(), e);
-            throw new PxfRuntimeException(e.getMessage(), e);
+            throw new PxfRuntimeException(e);
         }
 
         // send the response to the client
-        return new ResponseEntity<>(returnMsg, HttpStatus.OK);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

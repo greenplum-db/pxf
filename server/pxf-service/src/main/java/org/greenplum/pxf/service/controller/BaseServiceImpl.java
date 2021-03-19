@@ -60,50 +60,46 @@ public abstract class BaseServiceImpl {
         log.debug("{} {} service is called for resource {} using profile {}",
                 context.getId(), serviceName, context.getDataSource(), context.getProfile());
 
-        // Any exception thrown must be logged, as this method is called asynchronously (for read) and is the last
-        // opportunity to log the exception while having MDC logging context defined
-        try {
-            // initialize the configuration for this request
-            Configuration configuration = configurationFactory.
-                    initConfiguration(
-                            context.getConfig(),
-                            context.getServerName(),
-                            context.getUser(),
-                            context.getAdditionalConfigProps());
-            context.setConfiguration(configuration);
 
-            Instant startTime = Instant.now();
 
-            // execute processing action with a proper identity
-            OperationResult result = securityService.doAs(context, action);
-            OperationStats stats = result.getStats();
-            long recordCount = stats.getRecordCount();
-            long byteCount = stats.getByteCount();
-            long durationMs = Duration.between(startTime, Instant.now()).toMillis();
-            double rate = durationMs == 0 ? 0 : (1000.0 * recordCount / durationMs);
-            double byteRate = durationMs == 0 ? 0 : (1000.0 * byteCount / durationMs);
-            Exception operationException = result.getException();
-            // TODO: word-smith this
-            log.info("{} {} operation in {} ms for {} record{} ({} records/sec) and {} bytes ({} bytes/sec)",
-                    operationException == null ? "Completed" : "Failed",
-                    stats.getOperation().name().toLowerCase(),
-                    durationMs,
-                    recordCount,
-                    recordCount == 1 ? "" : "s",
-                    String.format("%.2f", rate),
-                    byteCount,
-                    String.format("%.2f", byteRate));
-            if (operationException != null) {
-                throw operationException;
+        // initialize the configuration for this request
+        Configuration configuration = configurationFactory.
+                initConfiguration(
+                        context.getConfig(),
+                        context.getServerName(),
+                        context.getUser(),
+                        context.getAdditionalConfigProps());
+        context.setConfiguration(configuration);
+
+        Instant startTime = Instant.now();
+
+        // execute processing action with a proper identity
+        OperationResult result = securityService.doAs(context, action);
+        OperationStats stats = result.getStats();
+        long recordCount = stats.getRecordCount();
+        long byteCount = stats.getByteCount();
+        long durationMs = Duration.between(startTime, Instant.now()).toMillis();
+        double rate = durationMs == 0 ? 0 : (1000.0 * recordCount / durationMs);
+        double byteRate = durationMs == 0 ? 0 : (1000.0 * byteCount / durationMs);
+        Exception operationException = result.getException();
+        // TODO: word-smith this
+        log.info("{} {} operation in {} ms for {} record{} ({} records/sec) and {} bytes ({} bytes/sec)",
+                operationException == null ? "Completed" : "Failed",
+                stats.getOperation().name().toLowerCase(),
+                durationMs,
+                recordCount,
+                recordCount == 1 ? "" : "s",
+                String.format("%.2f", rate),
+                byteCount,
+                String.format("%.2f", byteRate));
+        if (operationException != null) {
+            if (operationException instanceof RuntimeException) {
+                throw (RuntimeException) operationException;
+            } else {
+                throw new PxfRuntimeException(operationException);
             }
-            return stats;
-        } catch (PxfRuntimeException | Error e) {
-            log.error(e.getMessage(), e);
-            throw e;
-        } catch (Exception e) {
-            log.error(e.getMessage(), e);
-            throw new PxfRuntimeException(e.getMessage(), e);
         }
+        return stats;
     }
 
     /**
