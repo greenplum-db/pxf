@@ -2,9 +2,14 @@
 title: About the PXF Installation and Configuration Directories
 ---
 
-PXF may be installed to `$GPHOME/pxf` on your master, standby master, and segment nodes when you install Greenplum Database. If you install the PXF `rpm` or `deb` package, PXF is installed to `/usr/local/pxf-gp<greenplum-major-version>`, or to a directory of your choosing (CentOS/RHEL only). This documentation uses `$PXF_HOME` to refer to the PXF installation directory.
+This documentation uses `$PXF_HOME` to refer to the PXF installation directory. Its value depends on how PXF has been installed:
 
-After you install PXF 6.x, `$PXF_HOME` includes the both the PXF executables and the PXF runtime configuration files and directories. In PXF 5.x, you specified a `$PXF_CONF` directory for the runtime configuration when you initialized PXF.  In PXF 6.x, no initialization is required, `$PXF_BASE` now identifies the runtime configuration directory, and the default `$PXF_BASE` is `$PXF_HOME`.
+ - If you install PXF as part of Greenplum Database, its value will be `$GPHOME/pxf`.
+ - If you install the PXF rpm or deb package, its value will be `/usr/local/pxf-gp<greenplum-major-version>`, or the directory of your choosing (CentOS/RHEL only). 
+
+`$PXF_HOME` includes both the PXF executables and the PXF runtime configuration files and directories. In PXF 5.x, you needed to specify a `$PXF_CONF` directory for the runtime configuration when you initialized PXF. In PXF 6.x, however, no initialization is required: `$PXF_BASE` now identifies the runtime configuration directory, and the default `$PXF_BASE` is `$PXF_HOME`.
+
+<div class="note">This documentation uses the <code>$PXF_HOME</code> and <code>$PXF_BASE</code> environment variables to <i>reference</i> the PXF installation and runtime configuration directories. PXF uses these variables internally at runtime; they are not set in your shell environment, and will display as empty if you attempt to <code>echo</code> their value.</div>
 
 If you want to store your configuration and runtime files in a different location, see [Relocating $PXF_BASE](#movebase).
 
