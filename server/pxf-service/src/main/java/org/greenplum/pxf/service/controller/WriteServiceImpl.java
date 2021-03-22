@@ -71,7 +71,7 @@ public class WriteServiceImpl extends BaseServiceImpl implements WriteService {
             }
         } catch (ClientAbortException cae) {
             // Occurs whenever client (GPDB) decides to end the connection
-            // TODO: move to Base?
+            // TODO: review whether this is still needed
             if (log.isDebugEnabled()) {
                 // Stacktrace in debug
                 log.warn(String.format("Remote connection closed by GPDB (segment %s)",
