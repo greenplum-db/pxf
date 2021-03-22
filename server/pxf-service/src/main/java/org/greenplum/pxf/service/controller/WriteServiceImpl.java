@@ -13,7 +13,6 @@ import org.greenplum.pxf.service.security.SecurityService;
 import org.springframework.stereotype.Service;
 
 import java.io.DataInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 
 /**

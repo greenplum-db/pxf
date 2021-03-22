@@ -2,7 +2,6 @@ package org.greenplum.pxf.service.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.conf.Configuration;
-import org.greenplum.pxf.api.error.PxfIOException;
 import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.model.RequestContext;
@@ -59,8 +58,6 @@ public abstract class BaseServiceImpl {
     protected OperationStats processData(RequestContext context, PrivilegedAction<OperationResult> action) {
         log.debug("{} {} service is called for resource {} using profile {}",
                 context.getId(), serviceName, context.getDataSource(), context.getProfile());
-
-
 
         // initialize the configuration for this request
         Configuration configuration = configurationFactory.
