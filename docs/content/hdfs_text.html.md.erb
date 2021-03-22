@@ -115,7 +115,7 @@ Beijing,Jul,411,11600.67' > /tmp/pxf_hdfs_simple.txt
     (4 rows)
     ```
 
-2. Create a second external table that references `pxf_hdfs_simple.txt`, this time specifying the `hdfs:csv` `PROFILE`:
+2. Create a second external table that references `pxf_hdfs_simple.txt`, this time specifying the `hdfs:csv` `PROFILE` and the `CSV` `FORMAT`:
 
     ``` sql
     postgres=# CREATE EXTERNAL TABLE pxf_hdfs_textsimple_csv(location text, month text, num_orders int, total_sales float8)

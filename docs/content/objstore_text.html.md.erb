@@ -139,7 +139,7 @@ Beijing,Jul,411,11600.67' > /tmp/pxf_s3_simple.txt
     (4 rows)
     ```
 
-2. Create a second external table that references `pxf_s3_simple.txt`, this time specifying the `s3:csv` `PROFILE`:
+2. Create a second external table that references `pxf_s3_simple.txt`, this time specifying the `s3:csv` `PROFILE` and the `CSV` `FORMAT`:
 
     ``` sql
     postgres=# CREATE EXTERNAL TABLE pxf_s3_textsimple_csv(location text, month text, num_orders int, total_sales float8)
