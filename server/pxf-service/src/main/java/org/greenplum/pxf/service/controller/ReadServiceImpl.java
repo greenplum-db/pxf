@@ -97,8 +97,8 @@ public class ReadServiceImpl extends BaseServiceImpl implements ReadService {
                 if (StringUtils.isNotBlank(profile) &&
                         !StringUtils.equalsIgnoreCase(profile, context.getProfile())) {
                     restoreOriginalValues = true;
-                    log.debug("{} Fragment {} of resource {} will be using profile: {}",
-                            context.getId(), fragment.getIndex(), fragment.getSourceName(), profile);
+                    log.debug("Fragment {} of resource {} will be using profile: {}",
+                            fragment.getIndex(), fragment.getSourceName(), profile);
                     updateProfile(context, profile);
                 }
                 context.setDataSource(fragment.getSourceName());
@@ -126,11 +126,11 @@ public class ReadServiceImpl extends BaseServiceImpl implements ReadService {
             // Occurs whenever client (GPDB) decides to end the connection
             if (log.isDebugEnabled()) {
                 // Stacktrace in debug
-                log.warn(String.format("%s Remote connection closed by GPDB (segment %s)",
-                        context.getId(), context.getSegmentId()), e);
+                log.warn(String.format("Remote connection closed by GPDB (segment %s)",
+                        context.getSegmentId()), e);
             } else {
-                log.warn("{} Remote connection closed by GPDB (segment {}) (Enable debug for stacktrace)",
-                        context.getId(), context.getSegmentId());
+                log.warn("Remote connection closed by GPDB (segment {}) (Enable debug for stacktrace)",
+                        context.getSegmentId());
             }
             // Re-throw the exception so Spring MVC is aware that an IO error has occurred
             queryResult.setException(e);
@@ -155,11 +155,11 @@ public class ReadServiceImpl extends BaseServiceImpl implements ReadService {
         try {
             bridge = getBridge(context);
             if (!bridge.beginIteration()) {
-                log.debug("{} Skipping streaming fragment {} of resource {}",
-                        context.getId(), context.getFragmentIndex(), context.getDataSource());
+                log.debug("Skipping streaming fragment {} of resource {}",
+                        context.getFragmentIndex(), context.getDataSource());
             } else {
-                log.debug("{} Starting streaming fragment {} of resource {}",
-                        context.getId(), context.getFragmentIndex(), context.getDataSource());
+                log.debug("Starting streaming fragment {} of resource {}",
+                        context.getFragmentIndex(), context.getDataSource());
                 while ((record = bridge.getNext()) != null) {
                     record.write(dos);
                     // fragment's current byte count is relative to the previous stream's byte count
@@ -172,7 +172,7 @@ public class ReadServiceImpl extends BaseServiceImpl implements ReadService {
                 try {
                     bridge.endIteration();
                 } catch (Exception e) {
-                    log.warn("{} Ignoring error encountered during bridge.endIteration()", context.getId(), e);
+                    log.warn("Ignoring error encountered during bridge.endIteration()", e);
                 }
             }
             Duration duration = Duration.between(startTime, Instant.now());
@@ -183,8 +183,8 @@ public class ReadServiceImpl extends BaseServiceImpl implements ReadService {
             fragmentStats.setByteCount(countingOutputStream.getCount() - previousStreamByteCount);
             fragmentStats.flushStats();
 
-            log.debug("{} Finished processing fragment {} of resource {} in {} ms, wrote {} records and {} bytes.",
-                    context.getId(), context.getFragmentIndex(), context.getDataSource(), duration.toMillis(), fragmentStats.getRecordCount(), fragmentStats.getByteCount());
+            log.debug("Finished processing fragment {} of resource {} in {} ms, wrote {} records and {} bytes.",
+                    context.getFragmentIndex(), context.getDataSource(), duration.toMillis(), fragmentStats.getRecordCount(), fragmentStats.getByteCount());
             metricsReporter.reportTimer(MetricsReporter.PxfMetric.FRAGMENTS_SENT, duration, context, success);
         }
         return fragmentStats;

@@ -56,8 +56,8 @@ public abstract class BaseServiceImpl {
      * @return operation statistics
      */
     protected OperationStats processData(RequestContext context, PrivilegedAction<OperationResult> action) {
-        log.debug("{} {} service is called for resource {} using profile {}",
-                context.getId(), serviceName, context.getDataSource(), context.getProfile());
+        log.debug("{} service is called for resource {} using profile {}",
+                serviceName, context.getDataSource(), context.getProfile());
 
         // initialize the configuration for this request
         Configuration configuration = configurationFactory.
@@ -79,8 +79,7 @@ public abstract class BaseServiceImpl {
         double rate = durationMs == 0 ? 0 : (1000.0 * recordCount / durationMs);
         double byteRate = durationMs == 0 ? 0 : (1000.0 * byteCount / durationMs);
         Exception operationException = result.getException();
-        // TODO: word-smith this
-        log.info("{} {} operation in {} ms for {} record{} ({} records/sec) and {} bytes ({} bytes/sec)",
+        log.info("{} {} operation [{} ms, {} record{}, {} records/sec, {} bytes, {} bytes/sec]",
                 operationException == null ? "Completed" : "Failed",
                 stats.getOperation().name().toLowerCase(),
                 durationMs,

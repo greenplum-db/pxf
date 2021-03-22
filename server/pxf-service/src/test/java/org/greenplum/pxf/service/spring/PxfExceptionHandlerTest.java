@@ -1,6 +1,5 @@
 package org.greenplum.pxf.service.spring;
 
-import org.greenplum.pxf.api.error.PxfIOException;
 import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,13 +23,6 @@ public class PxfExceptionHandlerTest {
     @BeforeEach
     public void setup() {
         handler = new PxfExceptionHandler();
-    }
-
-    @Test
-    public void testHandlePxfIOException() throws IOException {
-        handler.handlePxfIOException(new PxfIOException(new IOException("foo")), mockResponse);
-        verify(mockResponse).sendError(500);
-        verifyNoMoreInteractions(mockResponse);
     }
 
     @Test

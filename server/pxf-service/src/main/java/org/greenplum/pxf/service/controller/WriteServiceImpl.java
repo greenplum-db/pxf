@@ -42,8 +42,8 @@ public class WriteServiceImpl extends BaseServiceImpl implements WriteService {
         OperationStats stats = processData(context, () -> readStream(context, inputStream));
 
         String censuredPath = Utilities.maskNonPrintables(context.getDataSource());
-        String returnMsg = String.format("wrote %d bulks to %s", stats.getRecordCount(), censuredPath);
-        log.debug("{} {}", context.getId(), returnMsg);
+        String returnMsg = String.format("wrote %d records to %s", stats.getRecordCount(), censuredPath);
+        log.debug(returnMsg);
 
         return returnMsg;
     }
@@ -63,7 +63,6 @@ public class WriteServiceImpl extends BaseServiceImpl implements WriteService {
 
         // dataStream (and inputStream as the result) will close automatically at the end of the try block
         CountingInputStream countingInputStream = new CountingInputStream(inputStream);
-        long previousByteCount = 0L;
         try (DataInputStream dataStream = new DataInputStream(countingInputStream)) {
             // open the output file, returns true or throws an error
             bridge.beginIteration();
@@ -75,11 +74,11 @@ public class WriteServiceImpl extends BaseServiceImpl implements WriteService {
             // TODO: move to Base?
             if (log.isDebugEnabled()) {
                 // Stacktrace in debug
-                log.warn(String.format("%s Remote connection closed by GPDB (segment %s)",
-                        context.getId(), context.getSegmentId()), cae);
+                log.warn(String.format("Remote connection closed by GPDB (segment %s)",
+                        context.getSegmentId()), cae);
             } else {
-                log.warn("{} Remote connection closed by GPDB (segment {}) (Enable debug for stacktrace)",
-                        context.getId(), context.getSegmentId());
+                log.warn("Remote connection closed by GPDB (segment {}) (Enable debug for stacktrace)",
+                        context.getSegmentId());
             }
             // Re-throw the exception so Spring MVC is aware that an IO error has occurred
             operationResult.setException(cae);

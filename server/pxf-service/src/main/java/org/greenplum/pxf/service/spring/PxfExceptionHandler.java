@@ -1,6 +1,5 @@
 package org.greenplum.pxf.service.spring;
 
-import org.greenplum.pxf.api.error.PxfIOException;
 import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -21,11 +20,6 @@ import java.io.IOException;
  */
 @ControllerAdvice
 public class PxfExceptionHandler {
-
-    @ExceptionHandler({PxfIOException.class})
-    public void handlePxfIOException(PxfIOException e, HttpServletResponse response) throws IOException {
-        response.sendError(HttpStatus.INTERNAL_SERVER_ERROR.value());
-    }
 
     @ExceptionHandler({PxfRuntimeException.class})
     public void handlePxfRuntimeException(PxfRuntimeException e, HttpServletResponse response) throws IOException {

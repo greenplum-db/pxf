@@ -52,7 +52,7 @@ class UGIProvider {
      * @param isSecurityEnabled whether we are accessing a secure server or not
      * @return a remote {@link UserGroupInformation}.
      */
-    UserGroupInformation createRemoteUser(String user, UserGroupInformation loginUser, boolean isSecurityEnabled) throws IOException {
+    UserGroupInformation createRemoteUser(String user, UserGroupInformation loginUser, boolean isSecurityEnabled) {
         if (isSecurityEnabled) {
             UserGroupInformation proxyUGI = createProxyUser(user, loginUser);
             proxyUGI.setAuthenticationMethod(UserGroupInformation.AuthenticationMethod.KERBEROS);

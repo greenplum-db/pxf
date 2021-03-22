@@ -60,7 +60,7 @@ public class FragmenterService {
 
     public List<Fragment> getFragmentsForSegment(RequestContext context) throws IOException {
 
-        LOG.trace("{} Received FRAGMENTER call", context.getId());
+        LOG.trace("Received FRAGMENTER call");
         Instant startTime = Instant.now();
         final String path = context.getDataSource();
 
@@ -70,7 +70,7 @@ public class FragmenterService {
                     fragmenterCacheFactory.getCache().stats().toString());
         }
 
-        LOG.debug("{} FRAGMENTER started for path \"{}\"", context.getId(), path);
+        LOG.debug("FRAGMENTER started for path \"{}\"", path);
 
         List<Fragment> fragments = getFragmentsFromCache(context, startTime);
 
@@ -84,9 +84,9 @@ public class FragmenterService {
             int numberOfFragments = filteredFragments.size();
             long elapsedMillis = Duration.between(startTime, Instant.now()).toMillis();
 
-            LOG.debug("{} returns {}/{} fragment{} for path {} in {} ms [profile {} predicate is{} available]",
-                    context.getId(), numberOfFragments, fragments.size(), numberOfFragments == 1 ? "" : "s",
-                    context.getDataSource(), elapsedMillis, context.getProfile(), context.hasFilter() ? "" : " not");
+            LOG.debug("Returning {}/{} fragment{} for path {} in {} ms [profile={}, predicate {}available]",
+                    numberOfFragments, fragments.size(), numberOfFragments == 1 ? "" : "s",
+                    context.getDataSource(), elapsedMillis, context.getProfile(), context.hasFilter() ? "" : "un");
         }
 
         return filteredFragments;
@@ -109,8 +109,8 @@ public class FragmenterService {
         try {
             return fragmenterCacheFactory.getCache()
                     .get(fragmenterCacheKey, () -> {
-                        LOG.debug("{} caching fragments from segmentId={} with key={}",
-                                context.getId(), context.getSegmentId(), fragmenterCacheKey);
+                        LOG.debug("Caching fragments from segmentId={} with key={}",
+                                context.getSegmentId(), fragmenterCacheKey);
                         List<Fragment> fragmentList = getFragmenter(context).getFragments();
 
                         /* Create a fragmenter instance with API level parameters */
@@ -119,17 +119,18 @@ public class FragmenterService {
 
                         int numberOfFragments = fragmentList.size();
                         long elapsedMillis = Duration.between(startTime, Instant.now()).toMillis();
-                        LOG.info("{} returns {} fragment{} for '{}.{}' resource {} in {} ms [fragmenter {} profile {} predicate is{} available]",
-                                context.getId(),
+                        String fragmenterClassName = context.getFragmenter();
+                        LOG.info("Returning {} fragment{} in {} ms [user={}, table={}.{}, resource={}, fragmenter={}, profile={}, predicate {}available]",
                                 numberOfFragments,
                                 numberOfFragments == 1 ? "" : "s",
+                                elapsedMillis,
+                                context.getUser(),
                                 context.getSchemaName(),
                                 context.getTableName(),
                                 context.getDataSource(),
-                                elapsedMillis,
-                                context.getFragmenter(),
+                                fragmenterClassName.substring(fragmenterClassName.lastIndexOf(".") + 1),
                                 context.getProfile(),
-                                context.hasFilter() ? "" : " not");
+                                context.hasFilter() ? "" : "un");
 
                         return fragmentList;
                     });

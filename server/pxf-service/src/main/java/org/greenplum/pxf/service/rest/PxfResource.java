@@ -20,7 +20,6 @@ package org.greenplum.pxf.service.rest;
  */
 
 import lombok.extern.slf4j.Slf4j;
-import org.greenplum.pxf.api.error.PxfIOException;
 import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.service.RequestParser;
@@ -106,7 +105,7 @@ public class PxfResource {
      */
     @PostMapping(value = "/write", consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity<String> stream(@RequestHeader MultiValueMap<String, String> headers,
-                                         HttpServletRequest request) throws PxfIOException {
+                                         HttpServletRequest request) {
 
         // parse incoming HTTP request, make sure exception is logged and converted to PxfRuntimeException
         RequestContext context;

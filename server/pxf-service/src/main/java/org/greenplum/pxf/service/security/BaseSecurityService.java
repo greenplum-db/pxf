@@ -11,10 +11,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.security.PrivilegedAction;
-import java.security.PrivilegedExceptionAction;
 
 /**
  * Security Service
@@ -45,7 +43,6 @@ public class BaseSecurityService implements SecurityService {
      *
      * @param context the context for the given request
      * @param action  the action to be executed
-     * @throws IOException when an IO error occurs
      */
     public <T> T doAs(RequestContext context, PrivilegedAction<T> action) {
         // retrieve user header and make sure header is present and is not empty
@@ -58,7 +55,6 @@ public class BaseSecurityService implements SecurityService {
 
         // Establish the UGI for the login user or the Kerberos principal for the given server, if applicable
         boolean exceptionDetected = false;
-        String contextId = context.getId();
         UserGroupInformation userGroupInformation = null;
         try {
             UserGroupInformation loginUser = secureLogin.getLoginUser(serverName, configDirectory, configuration);
@@ -81,14 +77,14 @@ public class BaseSecurityService implements SecurityService {
 
             // Retrieve proxy user UGI from the UGI of the logged in user
             if (isUserImpersonation) {
-                LOG.debug("{} Creating proxy user = {}", contextId, remoteUser);
+                LOG.debug("Creating proxy user = {}", remoteUser);
                 userGroupInformation = ugiProvider.createProxyUser(remoteUser, loginUser);
             } else {
-                LOG.debug("{} Creating remote user = {}", contextId, remoteUser);
+                LOG.debug("Creating remote user = {}", remoteUser);
                 userGroupInformation = ugiProvider.createRemoteUser(remoteUser, loginUser, isSecurityEnabled);
             }
 
-            LOG.debug("{} Retrieved proxy user {} for server {}", contextId, userGroupInformation, serverName);
+            LOG.debug("Retrieved proxy user {} for server {}", userGroupInformation, serverName);
             LOG.debug("Performing request for gpdb_user = {} as [remote_user = {} service_user = {} login_user ={}] with{} impersonation",
                     gpdbUser, remoteUser, serviceUser, loginUser.getUserName(), isUserImpersonation ? "" : "out");
             // Execute the servlet chain as that user
@@ -101,14 +97,13 @@ public class BaseSecurityService implements SecurityService {
             exceptionDetected = true;
             throw new PxfRuntimeException(e);
         } finally {
-            LOG.debug("{} Releasing UGI resources. {}",
-                    contextId, exceptionDetected ? " Exception while processing" : "");
+            LOG.debug("Releasing UGI resources. {}", exceptionDetected ? " Exception while processing" : "");
             try {
                 if (userGroupInformation != null) {
                     ugiProvider.destroy(userGroupInformation);
                 }
             } catch (Throwable t) {
-                LOG.error("{} Error releasing UGI resources", contextId, t);
+                LOG.error("Error releasing UGI resources, ignored.", t);
             }
         }
     }
