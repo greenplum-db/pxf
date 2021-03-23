@@ -187,7 +187,7 @@ When you configure PXF for secure HDFS using an MIT Kerberos KDC server, you wil
 2. Distribute the `/etc/krb5.conf` Kerberos configuration file on the KDC server host to **each** host in your Greenplum Database cluster if not already present. For example:
 
     ``` shell
-    root@kdc-server$ scp /etc/krb5.conf gphost:/etc/krb5.conf
+    root@kdc-server$ scp /etc/krb5.conf <gphost>:/etc/krb5.conf
     ```
 
 3.  Use the `kadmin.local` command to create a Kerberos PXF Service principal for **each** Greenplum Database host. The service principal should be of the form `gpadmin/<gphost>@<realm>` where \<gphost\> is the DNS resolvable, fully-qualified hostname of the host system \(output of the `hostname -f` command\).
