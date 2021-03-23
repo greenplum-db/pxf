@@ -5,6 +5,17 @@ import org.apache.catalina.connector.ClientAbortException;
 import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.greenplum.pxf.service.utilities.ThrowingSupplier;
 
+/**
+ * Base class that allows executing an action that returns a result or throws an exception. The exception
+ * is logged into a log file and wrapped into a PxfRuntimeException that can be later handled
+ * by the PxfExceptionHandler. This is the only place where any exception thrown within PXF should be logged.
+ * <p>
+ * In the future, this logic should be implemented by an Spring AOP annotation-driven aspect and the corresponding
+ * annotation can be specified for the endpoint methods that must have any exceptions they throw be reported before
+ * propagating them to the container.
+ *
+ * @param <T> type of data the action returns
+ */
 @Slf4j
 public abstract class PxfErrorReporter<T> {
 
