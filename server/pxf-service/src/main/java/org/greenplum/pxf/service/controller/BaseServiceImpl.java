@@ -71,17 +71,21 @@ public abstract class BaseServiceImpl {
 
         Instant startTime = Instant.now();
         OperationStats stats = securityService.doAs(context, action);
-        Long recordCount = stats.getRecordCount();
+        long recordCount = stats.getRecordCount();
+        long byteCount = stats.getByteCount();
         if (recordCount > 0) {
             long durationMs = Duration.between(startTime, Instant.now()).toMillis();
             double rate = durationMs == 0 ? 0 : (1000.0 * recordCount / durationMs);
-            log.info("{} completed {} operation for {} record{} in {} ms. rate = {} records/sec",
+            double byteRate = durationMs == 0 ? 0 : (1000.0 * byteCount / durationMs);
+            log.info("{} completed {} operation in {} ms for {} record{} ({} records/sec) and {} bytes ({} bytes/sec)",
                     context.getId(),
-                    stats.getOperation(),
+                    stats.getOperation().name().toLowerCase(),
+                    durationMs,
                     recordCount,
                     recordCount == 1 ? "" : "s",
-                    durationMs,
-                    String.format("%.2f", rate));
+                    String.format("%.2f", rate),
+                    byteCount,
+                    String.format("%.2f", byteRate));
         } else {
             log.info("{} completed", context.getId());
         }

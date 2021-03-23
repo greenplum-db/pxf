@@ -23,6 +23,8 @@ under the License.
 
 The PXF HDFS connector supports SequenceFile format binary data. This section describes how to use PXF to read and write HDFS SequenceFile data, including how to create, insert, and query data in external tables that reference files in the HDFS data store.
 
+PXF supports reading or writing SequenceFile files compressed with the `default`, `bzip2`, and `gzip` codecs.
+
 ## <a id="prereq"></a>Prerequisites
 
 Ensure that you have met the PXF Hadoop [Prerequisites](access_hdfs.html#hadoop_prereq) before you attempt to read data from or write data to HDFS.
@@ -56,20 +58,15 @@ The specific keywords and values used in the Greenplum Database [CREATE EXTERNAL
 | DISTRIBUTED BY    | If you want to load data from an existing Greenplum Database table into the writable external table, consider specifying the same distribution policy or \<column_name\> on both tables. Doing so will avoid extra motion of data between segments on the load operation. |
 
 <a id="customopts"></a>
-SequenceFile format data can optionally employ record or block compression. The PXF `hdfs:SequenceFile` profile supports the following compression codecs:
-
-- org.apache.hadoop.io.compress.DefaultCodec
-- org.apache.hadoop.io.compress.BZip2Codec
+SequenceFile format data can optionally employ record or block compression and a specific compression codec.
 
 When you use the `hdfs:SequenceFile` profile to write SequenceFile format data, you must provide the name of the Java class to use for serializing/deserializing the binary data. This class must provide read and write methods for each data type referenced in the data schema.
 
-You specify the compression codec and Java serialization class via custom options in the `CREATE EXTERNAL TABLE` `LOCATION` clause.
-
-The `hdfs:SequenceFile` profile supports the following custom options:
+You specify the compression type and codec, and the Java serialization/deserialization class, via custom options to the `CREATE EXTERNAL TABLE` `LOCATION` clause. The `hdfs:SequenceFile` profile supports the following custom options:
 
 | Option  | Value Description |
 |-------|-------------------------------------|
-| COMPRESSION_CODEC    | The compression codec Java class name. If this option is not provided, Greenplum Database performs no data compression. Supported compression codecs include:<br>`org.apache.hadoop.io.compress.DefaultCodec`<br>`org.apache.hadoop.io.compress.BZip2Codec`<br>`org.apache.hadoop.io.compress.GzipCodec` |
+| COMPRESSION_CODEC    | The compression codec alias. Supported compression codecs include: `default`, `bzip2`, `gzip`, and `uncompressed`. If this option is not provided, Greenplum Database performs no data compression. |
 | COMPRESSION_TYPE    | The compression type to employ; supported values are `RECORD` (the default) or `BLOCK`. |
 | DATA-SCHEMA    | The name of the writer serialization/deserialization class. The jar file in which this class resides must be in the PXF classpath. This option is required for the `hdfs:SequenceFile` profile and has no default value. |
 | IGNORE_MISSING_PATH | A Boolean value that specifies the action to take when \<path-to-hdfs-dir\> is missing or invalid. The default value is `false`, PXF returns an error in this situation. When the value is `true`, PXF ignores missing path errors and returns an empty fragment. |
@@ -231,11 +228,11 @@ public class PxfExample_CustomWritable implements Writable {
 
 3. Restart PXF on each Greenplum Database host as described in [Restarting PXF](cfginitstart_pxf.html#restart_pxf).
 
-5. Use the PXF `hdfs:SequenceFile` profile to create a Greenplum Database writable external table. Identify the serialization/deserialization Java class you created above in the `DATA-SCHEMA` \<custom-option\>. Use `BLOCK` mode compression with `BZip2` when you create the writable table.
+5. Use the PXF `hdfs:SequenceFile` profile to create a Greenplum Database writable external table. Identify the serialization/deserialization Java class you created above in the `DATA-SCHEMA` \<custom-option\>. Use `BLOCK` mode compression with `bzip2` when you create the writable table.
 
     ``` sql
     postgres=# CREATE WRITABLE EXTERNAL TABLE pxf_tbl_seqfile (location text, month text, number_of_orders integer, total_sales real)
-                LOCATION ('pxf://data/pxf_examples/pxf_seqfile?PROFILE=hdfs:SequenceFile&DATA-SCHEMA=com.example.pxf.hdfs.writable.dataschema.PxfExample_CustomWritable&COMPRESSION_TYPE=BLOCK&COMPRESSION_CODEC=org.apache.hadoop.io.compress.BZip2Codec')
+                LOCATION ('pxf://data/pxf_examples/pxf_seqfile?PROFILE=hdfs:SequenceFile&DATA-SCHEMA=com.example.pxf.hdfs.writable.dataschema.PxfExample_CustomWritable&COMPRESSION_TYPE=BLOCK&COMPRESSION_CODEC=bzip2')
               FORMAT 'CUSTOM' (FORMATTER='pxfwritable_export');
     ```
 
