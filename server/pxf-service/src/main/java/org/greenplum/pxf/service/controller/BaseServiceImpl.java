@@ -19,7 +19,7 @@ import java.time.Instant;
  * using provided request context and the identity determined by the security service.
  */
 @Slf4j
-public abstract class BaseServiceImpl {
+public abstract class BaseServiceImpl<T> extends PxfErrorReporter<T> {
 
     protected final MetricsReporter metricsReporter;
     private final String serviceName;

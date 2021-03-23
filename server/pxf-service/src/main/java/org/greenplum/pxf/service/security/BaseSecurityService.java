@@ -42,6 +42,7 @@ public class BaseSecurityService implements SecurityService {
      *
      * @param context the context for the given request
      * @param action  the action to be executed
+     * @throws Exception if the operation fails
      */
     public <T> T doAs(RequestContext context, PrivilegedAction<T> action) throws Exception {
         // retrieve user header and make sure header is present and is not empty
@@ -88,14 +89,6 @@ public class BaseSecurityService implements SecurityService {
                     gpdbUser, remoteUser, serviceUser, loginUser.getUserName(), isUserImpersonation ? "" : "out");
             // Execute the servlet chain as that user
             return userGroupInformation.doAs(action);
-        } catch (UndeclaredThrowableException ute) {
-            exceptionDetected = true;
-            // unwrap the real exception thrown by the action
-            if (ute.getCause() instanceof Exception) {
-                throw (Exception) ute.getCause();
-            } else {
-                throw (Error) ute.getCause();
-            }
         } catch (Exception e) {
             exceptionDetected = true;
             throw e;

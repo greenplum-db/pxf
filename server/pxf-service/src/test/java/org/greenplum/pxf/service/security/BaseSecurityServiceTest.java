@@ -33,7 +33,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.lang.reflect.UndeclaredThrowableException;
 import java.security.PrivilegedAction;
-import java.security.PrivilegedExceptionAction;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -50,10 +49,14 @@ public class BaseSecurityServiceTest {
     private RequestContext context;
     private SecurityService service;
 
-    @Mock private SecureLogin mockSecureLogin;
-    @Mock private UGIProvider mockUGIProvider;
-    @Mock private UserGroupInformation mockLoginUGI;
-    @Mock private UserGroupInformation mockProxyUGI;
+    @Mock
+    private SecureLogin mockSecureLogin;
+    @Mock
+    private UGIProvider mockUGIProvider;
+    @Mock
+    private UserGroupInformation mockLoginUGI;
+    @Mock
+    private UserGroupInformation mockProxyUGI;
 
     @BeforeEach
     public void setup() {
@@ -143,22 +146,10 @@ public class BaseSecurityServiceTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    public void destroysUGIWhenTheFilterExecutionThrowsAnUndeclaredThrowableException() throws Exception {
+    public void destroysUGIWhenTheActionExecutionThrowsRuntimeException() throws Exception {
         expectScenario("login-user", false, false, false);
-        doThrow(UndeclaredThrowableException.class).when(mockProxyUGI).doAs(any(PrivilegedExceptionAction.class));
-        assertThrows(PxfRuntimeException.class,
-                () -> service.doAs(context, EMPTY_ACTION));
-        verifyScenario("login-user", false, false);
-        verify(mockUGIProvider).destroy(any(UserGroupInformation.class));
-    }
-
-    @Test
-    @SuppressWarnings("unchecked")
-    public void destroysUGIWhenTheFilterExecutionThrowsAnInterruptedException() throws Exception {
-        expectScenario("login-user", false, false, false);
-        doThrow(InterruptedException.class).when(mockProxyUGI).doAs(any(PrivilegedExceptionAction.class));
-        assertThrows(PxfRuntimeException.class,
-                () -> service.doAs(context, EMPTY_ACTION));
+        doThrow(RuntimeException.class).when(mockProxyUGI).doAs(any(PrivilegedAction.class));
+        assertThrows(RuntimeException.class, () -> service.doAs(context, EMPTY_ACTION));
         verifyScenario("login-user", false, false);
         verify(mockUGIProvider).destroy(any(UserGroupInformation.class));
     }

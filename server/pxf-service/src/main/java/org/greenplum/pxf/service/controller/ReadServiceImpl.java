@@ -2,9 +2,7 @@ package org.greenplum.pxf.service.controller;
 
 import com.google.common.io.CountingOutputStream;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.catalina.connector.ClientAbortException;
 import org.apache.commons.lang.StringUtils;
-import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.greenplum.pxf.api.io.Writable;
 import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.model.Fragment;
@@ -30,7 +28,7 @@ import java.util.Map;
  */
 @Service
 @Slf4j
-public class ReadServiceImpl extends BaseServiceImpl implements ReadService {
+public class ReadServiceImpl extends BaseServiceImpl<OperationStats> implements ReadService {
 
     private final FragmenterService fragmenterService;
 
@@ -54,22 +52,16 @@ public class ReadServiceImpl extends BaseServiceImpl implements ReadService {
 
     @Override
     public void readData(RequestContext context, OutputStream outputStream) {
-        // Any exception thrown must be logged, as this method is called asynchronously and is the last
-        // opportunity to log the exception while having MDC logging context defined
-        try {
-            processData(context, () -> writeStream(context, outputStream));
-        } catch (PxfRuntimeException | Error e) {
-            log.error(e.getMessage(), e);
-            throw e;
-        } catch (Exception e) {
-            log.error(e.getMessage(), e);
-            throw new PxfRuntimeException(e);
-        }
+        // wrapping the invocation of processData(..) with the error reporting logic
+        // since any exception thrown from it must be logged, as this method is called asynchronously
+        // and is the last opportunity to log the exception while having MDC logging context defined
+        invokeWithErrorHandling(() -> processData(context, () -> writeStream(context, outputStream)));
     }
 
     /**
      * Calls Fragmenter service to get a list of fragments for the resource, then reads records for each fragment
-     * and writes them to the output stream.
+     * and writes them to the output stream. Maintains the satistics about the progress of the query and reports
+     * it to the caller even if the operation failed or aborted.
      *
      * @param context      request context
      * @param outputStream output stream
@@ -104,8 +96,7 @@ public class ReadServiceImpl extends BaseServiceImpl implements ReadService {
                 context.setDataSource(fragment.getSourceName());
                 context.setFragmentIndex(fragment.getIndex());
                 context.setFragmentMetadata(fragment.getMetadata());
-                OperationStats fragmentStats = processFragment(countingOutputStream, context);
-                queryStats.update(fragmentStats);
+                processFragment(countingOutputStream, context, queryStats);
 
                 // In cases where we have hundreds of thousands of fragments,
                 // we want to release the fragment reference as soon as we are
@@ -122,19 +113,9 @@ public class ReadServiceImpl extends BaseServiceImpl implements ReadService {
                     context.setProfileScheme(originalProfileScheme);
                 }
             }
-        } catch (ClientAbortException e) {
-            // Occurs whenever client (GPDB) decides to end the connection
-            if (log.isDebugEnabled()) {
-                // Stacktrace in debug
-                log.warn(String.format("Remote connection closed by GPDB (segment %s)",
-                        context.getSegmentId()), e);
-            } else {
-                log.warn("Remote connection closed by GPDB (segment {}) (Enable debug for stacktrace)",
-                        context.getSegmentId());
-            }
-            // Re-throw the exception so Spring MVC is aware that an IO error has occurred
-            queryResult.setException(e);
         } catch (Exception e) {
+            // the exception is not re-thrown but passed to the caller in the queryResult so that
+            // the caller has a chance to inspect / report query stats before re-throwing the exception
             queryResult.setException(e);
         } finally {
             queryResult.setStats(queryStats);
@@ -143,7 +124,17 @@ public class ReadServiceImpl extends BaseServiceImpl implements ReadService {
         return queryResult;
     }
 
-    private OperationStats processFragment(CountingOutputStream countingOutputStream, RequestContext context) throws Exception {
+    /**
+     * Processes a single fragment identified in the RequestContext and updates query statistics.
+     *
+     * @param countingOutputStream output stream to write data to
+     * @param context              request context
+     * @param queryStats           query statistics
+     * @throws Exception if operation fails
+     */
+    private void processFragment(CountingOutputStream countingOutputStream,
+                                 RequestContext context,
+                                 OperationStats queryStats) throws Exception {
         Writable record;
         DataOutputStream dos = new DataOutputStream(countingOutputStream);
 
@@ -183,11 +174,14 @@ public class ReadServiceImpl extends BaseServiceImpl implements ReadService {
             fragmentStats.setByteCount(countingOutputStream.getCount() - previousStreamByteCount);
             fragmentStats.flushStats();
 
+            // update query stats even if there was an exception so that they can be properly reported by the
+            // error reporter
+            queryStats.update(fragmentStats);
+
             log.debug("Finished processing fragment {} of resource {} in {} ms, wrote {} records and {} bytes.",
                     context.getFragmentIndex(), context.getDataSource(), duration.toMillis(), fragmentStats.getRecordCount(), fragmentStats.getByteCount());
             metricsReporter.reportTimer(MetricsReporter.PxfMetric.FRAGMENTS_SENT, duration, context, success);
         }
-        return fragmentStats;
     }
 
     private void updateProfile(RequestContext context, String profile) {

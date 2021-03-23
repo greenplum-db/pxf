@@ -32,7 +32,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest({PxfResource.class, PxfLegacyResource.class})
+@WebMvcTest({PxfReadResource.class, PxfWriteResource.class, PxfLegacyResource.class})
 public class PxfResourceIT {
 
     @Autowired

@@ -157,7 +157,7 @@ public class WriteServiceImplTest {
     }
 
     @Test
-    public void testReadDataZeroReportFrequency() throws Exception {
+    public void testWriteDataZeroReportFrequency() throws Exception {
         when(mockMetricReporter.getReportFrequency()).thenReturn(0L);
         when(mockBridge.beginIteration()).thenReturn(true);
         when(mockInputStream.read(any(), eq(0), eq(10))).thenReturn(4);
@@ -171,11 +171,11 @@ public class WriteServiceImplTest {
     }
 
     @Test
-    public void testReadDataBeginIterationException() throws Exception {
+    public void testWriteDataBeginIterationException() throws Exception {
         when(mockMetricReporter.getReportFrequency()).thenReturn(1L);
         when(mockBridge.beginIteration()).thenThrow(Exception.class);
 
-        assertThrows(PxfRuntimeException.class, () -> writeService.writeData(mockContext, mockInputStream));
+        assertThrows(Exception.class, () -> writeService.writeData(mockContext, mockInputStream));
         verifyNoMoreInteractions(mockMetricReporter);
     }
 
