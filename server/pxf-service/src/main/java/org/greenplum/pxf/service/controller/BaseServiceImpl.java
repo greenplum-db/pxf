@@ -1,8 +1,8 @@
 package org.greenplum.pxf.service.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.catalina.connector.ClientAbortException;
 import org.apache.hadoop.conf.Configuration;
-import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.service.MetricsReporter;
@@ -55,7 +55,7 @@ public abstract class BaseServiceImpl {
      * @param action  action to execute
      * @return operation statistics
      */
-    protected OperationStats processData(RequestContext context, PrivilegedAction<OperationResult> action) {
+    protected OperationStats processData(RequestContext context, PrivilegedAction<OperationResult> action) throws Exception {
         log.debug("{} service is called for resource {} using profile {}",
                 serviceName, context.getDataSource(), context.getProfile());
 
@@ -72,15 +72,22 @@ public abstract class BaseServiceImpl {
 
         // execute processing action with a proper identity
         OperationResult result = securityService.doAs(context, action);
+
+        // obtain results after executing the action
         OperationStats stats = result.getStats();
+        Exception exception = result.getException();
+        String status = (exception == null) ? "Completed" :
+                (exception instanceof ClientAbortException) ? "Aborted" : "Failed";
+
+        // log action status and stats
         long recordCount = stats.getRecordCount();
         long byteCount = stats.getByteCount();
         long durationMs = Duration.between(startTime, Instant.now()).toMillis();
         double rate = durationMs == 0 ? 0 : (1000.0 * recordCount / durationMs);
         double byteRate = durationMs == 0 ? 0 : (1000.0 * byteCount / durationMs);
-        Exception operationException = result.getException();
+
         log.info("{} {} operation [{} ms, {} record{}, {} records/sec, {} bytes, {} bytes/sec]",
-                operationException == null ? "Completed" : "Failed",
+                status,
                 stats.getOperation().name().toLowerCase(),
                 durationMs,
                 recordCount,
@@ -88,13 +95,13 @@ public abstract class BaseServiceImpl {
                 String.format("%.2f", rate),
                 byteCount,
                 String.format("%.2f", byteRate));
-        if (operationException != null) {
-            if (operationException instanceof RuntimeException) {
-                throw (RuntimeException) operationException;
-            } else {
-                throw new PxfRuntimeException(operationException);
-            }
+
+        // re-throw the exception if the operation failed
+        if (exception != null) {
+            throw exception;
         }
+
+        // return operation stats
         return stats;
     }
 

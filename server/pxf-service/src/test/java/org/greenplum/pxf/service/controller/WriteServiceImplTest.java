@@ -54,7 +54,7 @@ public class WriteServiceImplTest {
     private WriteServiceImpl writeService;
 
     @BeforeEach
-    public void setup() throws IOException {
+    public void setup() throws Exception {
         when(mockConfigurationFactory.initConfiguration(any(), any(), any(), any())).thenReturn(mockConfiguration);
         when(mockSecurityService.doAs(same(mockContext), any())).thenAnswer(invocation -> {
             PrivilegedAction<OperationResult> action = invocation.getArgument(1);

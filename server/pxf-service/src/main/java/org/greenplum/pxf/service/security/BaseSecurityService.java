@@ -3,7 +3,6 @@ package org.greenplum.pxf.service.security;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.security.SecureLogin;
 import org.greenplum.pxf.api.utilities.Utilities;
@@ -44,7 +43,7 @@ public class BaseSecurityService implements SecurityService {
      * @param context the context for the given request
      * @param action  the action to be executed
      */
-    public <T> T doAs(RequestContext context, PrivilegedAction<T> action) {
+    public <T> T doAs(RequestContext context, PrivilegedAction<T> action) throws Exception {
         // retrieve user header and make sure header is present and is not empty
         final String gpdbUser = context.getUser();
         final String serverName = context.getServerName();
@@ -85,17 +84,21 @@ public class BaseSecurityService implements SecurityService {
             }
 
             LOG.debug("Retrieved proxy user {} for server {}", userGroupInformation, serverName);
-            LOG.debug("Performing request for gpdb_user = {} as [remote_user = {} service_user = {} login_user ={}] with{} impersonation",
+            LOG.debug("Performing request for gpdb_user = {} as [remote_user={} service_user={} login_user={}] with{} impersonation",
                     gpdbUser, remoteUser, serviceUser, loginUser.getUserName(), isUserImpersonation ? "" : "out");
             // Execute the servlet chain as that user
             return userGroupInformation.doAs(action);
         } catch (UndeclaredThrowableException ute) {
             exceptionDetected = true;
             // unwrap the real exception thrown by the action
-            throw new PxfRuntimeException(ute.getCause());
+            if (ute.getCause() instanceof Exception) {
+                throw (Exception) ute.getCause();
+            } else {
+                throw (Error) ute.getCause();
+            }
         } catch (Exception e) {
             exceptionDetected = true;
-            throw new PxfRuntimeException(e);
+            throw e;
         } finally {
             LOG.debug("Releasing UGI resources. {}", exceptionDetected ? " Exception while processing" : "");
             try {
@@ -103,7 +106,7 @@ public class BaseSecurityService implements SecurityService {
                     ugiProvider.destroy(userGroupInformation);
                 }
             } catch (Throwable t) {
-                LOG.error("Error releasing UGI resources, ignored.", t);
+                LOG.warn("Error releasing UGI resources, ignored.", t);
             }
         }
     }

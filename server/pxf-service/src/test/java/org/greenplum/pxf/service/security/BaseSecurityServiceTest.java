@@ -185,7 +185,7 @@ public class BaseSecurityServiceTest {
         }
     }
 
-    private void verifyScenario(String user, boolean kerberos, boolean impersonation) throws Exception {
+    private void verifyScenario(String user, boolean kerberos, boolean impersonation) {
         if (impersonation) {
             verify(mockUGIProvider).createProxyUser(user, mockLoginUGI);
         } else {

@@ -43,8 +43,8 @@ import static org.greenplum.pxf.api.model.RequestContext.RequestType;
 /**
  * PXF REST endpoint mapped to /pxf path
  */
-@RestController
-@RequestMapping("/pxf")
+//@RestController
+//@RequestMapping("/pxf")
 @Slf4j
 public class PxfResource {
 
@@ -73,7 +73,7 @@ public class PxfResource {
      * @param headers http headers from request that carry all parameters
      * @return response object containing stream that will output records
      */
-    @GetMapping(value = "/read", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    //@GetMapping(value = "/read", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity<StreamingResponseBody> read(
             @RequestHeader MultiValueMap<String, String> headers) {
 
@@ -103,7 +103,7 @@ public class PxfResource {
      * @param request the HttpServletRequest
      * @return ok response if the operation finished successfully
      */
-    @PostMapping(value = "/write", consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    //@PostMapping(value = "/write", consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity<String> stream(@RequestHeader MultiValueMap<String, String> headers,
                                          HttpServletRequest request) {
 

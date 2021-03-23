@@ -16,6 +16,7 @@ public interface WriteService {
      * @param context     request context
      * @param inputStream input stream to read data from
      * @return text response to send back to the client
+     * @throws Exception if any error happened during processing
      */
-    String writeData(RequestContext context, InputStream inputStream);
+    String writeData(RequestContext context, InputStream inputStream) throws Exception;
 }

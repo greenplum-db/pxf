@@ -23,7 +23,6 @@ import org.greenplum.pxf.api.model.RequestContext;
 
 import java.io.IOException;
 import java.security.PrivilegedAction;
-import java.security.PrivilegedExceptionAction;
 
 public interface SecurityService {
 
@@ -34,7 +33,7 @@ public interface SecurityService {
      * @param action  the action to perform
      * @param <T>     the type
      * @return the action result
-     * @throws IOException          when an error occurs
+     * @throws IOException when an error occurs
      */
-    <T> T doAs(RequestContext context, PrivilegedAction<T> action);
+    <T> T doAs(RequestContext context, PrivilegedAction<T> action) throws Exception;
 }

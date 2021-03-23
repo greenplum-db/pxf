@@ -121,7 +121,7 @@ public class PxfMetricsIT {
         assertTrue(prometheusResponse.contains("http_server_requests_seconds_count{application=\"pxf-service\",exception=\"None\",method=\"GET\",outcome=\"SUCCESS\",profile=\"unknown\",segment=\"unknown\",server=\"unknown\",status=\"200\",uri=\"/actuator/health\",user=\"unknown\",} 1.0\n"));
     }
 
-    private void mockServices() throws IOException {
+    private void mockServices() throws Exception {
         // mock ReadService
         when(mockParser.parseRequest(any(), eq(RequestContext.RequestType.READ_BRIDGE))).thenReturn(mockContext);
         Answer<Void> readAnswer = invocation -> {

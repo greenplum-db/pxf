@@ -37,7 +37,7 @@ public class WriteServiceImpl extends BaseServiceImpl implements WriteService {
     }
 
     @Override
-    public String writeData(RequestContext context, InputStream inputStream) {
+    public String writeData(RequestContext context, InputStream inputStream) throws Exception {
         // can only call processData as it handles logging of any errors
         OperationStats stats = processData(context, () -> readStream(context, inputStream));
 
@@ -69,19 +69,6 @@ public class WriteServiceImpl extends BaseServiceImpl implements WriteService {
             while (bridge.setNext(dataStream)) {
                 operationStats.reportCompletedRecord(countingInputStream.getCount());
             }
-        } catch (ClientAbortException cae) {
-            // Occurs whenever client (GPDB) decides to end the connection
-            // TODO: review whether this is still needed
-            if (log.isDebugEnabled()) {
-                // Stacktrace in debug
-                log.warn(String.format("Remote connection closed by GPDB (segment %s)",
-                        context.getSegmentId()), cae);
-            } else {
-                log.warn("Remote connection closed by GPDB (segment {}) (Enable debug for stacktrace)",
-                        context.getSegmentId());
-            }
-            // Re-throw the exception so Spring MVC is aware that an IO error has occurred
-            operationResult.setException(cae);
         } catch (Exception e) {
             operationResult.setException(e);
         } finally {

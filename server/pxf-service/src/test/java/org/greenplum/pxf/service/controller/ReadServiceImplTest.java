@@ -67,7 +67,7 @@ public class ReadServiceImplTest {
     private ReadServiceImpl readService;
 
     @BeforeEach
-    public void setup() throws IOException {
+    public void setup() throws Exception {
         when(mockConfigurationFactory.initConfiguration(any(), any(), any(), any())).thenReturn(mockConfiguration);
         when(mockFragmenterService.getFragmentsForSegment(mockContext)).thenReturn(mockFragmentList);
         when(mockSecurityService.doAs(same(mockContext), any())).thenAnswer(invocation -> {
