@@ -29,7 +29,7 @@ Perform this procedure before you upgrade to a new version of PXF:
     gpadmin@gpmaster$ pxf version
     ```
 
-1. Identify the file system location of the `$PXF_CONF` setting in your PXF 5.x PXF installation; you will need this later. If you didn't set an environment variable, you can check its value in `pxf-env-default.sh`.
+1. Identify the file system location of the `$PXF_CONF` setting in your PXF 5.x PXF installation; you will need this later. If you are unsure of the location, you can find the value in `pxf-env-default.sh`.
 
 1. Stop PXF on each Greenplum host as described in [Stopping PXF](cfginitstart_pxf.html#stop_pxf).
 
@@ -67,10 +67,9 @@ After you install the new version of PXF, perform the following procedure:
         ```
 
         The command copies PXF 5.x `conf/pxf-profiles.xml`, `servers/*`, `lib/*`, and `keytabs/*` to the PXF 6.x `$PXF_BASE` directory. The command also merges configuration changes in the PXF 5.x `conf/pxf-env.sh` into the PXF 6.x file of the same name and `pxf-application.properties`.
+    3. The `migrate` command does not migrate PXF 5.x `$PXF_CONF/conf/pxf-log4j.properties` customizations; you must manually migrate any changes that you made to this file to `$PXF_BASE/conf/pxf-log4j2.xml`.  Note that PXF 5.x `pxf-log4j.properties` is in properties format, and PXF 6 `pxf-log4j2.xml` is `xml` format. See the [Configuration with XML](https://logging.apache.org/log4j/2.x/manual/configuration.html#XML) topic in the Apache Log4j 2 documentation for more information.
 
-1. The `migrate` command does not migrate PXF 5.x `$PXF_CONF/conf/pxf-log4j.properties` customizations; you must manually migrate any changes that you made to this file to `$PXF_BASE/conf/pxf-log4j2.xml`.  Note that PXF 5.x `pxf-log4j.properties` is in properties format, and PXF 6 `pxf-log4j2.xml` is `xml` format. See the [Configuration with XML](https://logging.apache.org/log4j/2.x/manual/configuration.html#XML) topic in the Apache Log4j 2 documentation for more information.
-
-1. *If you migrated your PXF 6.x `$PXF_BASE` configuration, be sure to apply any changes identified in subsequent steps to the new, migrated directory*.
+1. *If you migrated your PXF 6.x `$PXF_BASE` configuration (see previous step), be sure to apply any changes identified in subsequent steps to the new, migrated directory*.
 
 3. **If you are upgrading from PXF version 5.9.x or earlier** and you have configured any JDBC servers that access Kerberos-secured Hive, you must now set the `hadoop.security.authentication` property to the `jdbc-site.xml` file to explicitly identify use of the Kerberos authentication method. Perform the following for each of these server configs:
 
