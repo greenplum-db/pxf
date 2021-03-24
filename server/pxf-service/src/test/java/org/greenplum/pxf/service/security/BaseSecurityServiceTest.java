@@ -21,7 +21,6 @@ package org.greenplum.pxf.service.security;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.security.SecureLogin;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,7 +30,6 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.lang.reflect.UndeclaredThrowableException;
 import java.security.PrivilegedAction;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;

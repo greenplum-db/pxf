@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.lang.reflect.UndeclaredThrowableException;
 import java.security.PrivilegedAction;
 
 /**
@@ -85,7 +84,7 @@ public class BaseSecurityService implements SecurityService {
             }
 
             LOG.debug("Retrieved proxy user {} for server {}", userGroupInformation, serverName);
-            LOG.debug("Performing request for gpdb_user = {} as [remote_user={} service_user={} login_user={}] with{} impersonation",
+            LOG.debug("Performing request for gpdb_user = {} as [remote_user={}, service_user={}, login_user={}] with{} impersonation",
                     gpdbUser, remoteUser, serviceUser, loginUser.getUserName(), isUserImpersonation ? "" : "out");
             // Execute the servlet chain as that user
             return userGroupInformation.doAs(action);
@@ -93,7 +92,7 @@ public class BaseSecurityService implements SecurityService {
             exceptionDetected = true;
             throw e;
         } finally {
-            LOG.debug("Releasing UGI resources. {}", exceptionDetected ? " Exception while processing" : "");
+            LOG.debug("Releasing UGI resources. {}", exceptionDetected ? " Exception while processing." : "");
             try {
                 if (userGroupInformation != null) {
                     ugiProvider.destroy(userGroupInformation);

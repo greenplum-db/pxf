@@ -1,11 +1,6 @@
 package org.greenplum.pxf.service.rest;
 
 import org.greenplum.pxf.api.error.PxfRuntimeException;
-import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.service.RequestParser;
-import org.greenplum.pxf.service.controller.ReadService;
-import org.greenplum.pxf.service.controller.WriteService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
@@ -17,8 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import javax.servlet.http.HttpServletRequest;
-
-import static org.greenplum.pxf.api.model.RequestContext.RequestType;
 
 /**
  * Legacy PXF REST endpoint mapped to /pxf/v15 path

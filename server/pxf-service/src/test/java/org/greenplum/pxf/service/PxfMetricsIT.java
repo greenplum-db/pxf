@@ -15,7 +15,6 @@ import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.util.MultiValueMap;
 
-import java.io.IOException;
 import java.io.OutputStream;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
