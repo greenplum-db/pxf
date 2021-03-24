@@ -148,11 +148,11 @@ public class MetricsReporter {
      * Enum that has information about all custom metrics for PXF.
      */
     public enum PxfMetric {
-        FRAGMENTS_SENT("fragments.sent", "pxf.metrics.fragments.enabled"),
-        RECORDS_SENT("records.sent", "pxf.metrics.records.enabled"),
-        RECORDS_RECEIVED("records.received", "pxf.metrics.records.enabled"),
-        BYTES_SENT("bytes.sent", "pxf.metrics.bytes.enabled"),
-        BYTES_RECEIVED("bytes.received", "pxf.metrics.bytes.enabled");
+        FRAGMENTS_SENT("pxf.fragments.sent", "pxf.metrics.fragments.enabled"),
+        RECORDS_SENT("pxf.records.sent", "pxf.metrics.records.enabled"),
+        RECORDS_RECEIVED("pxf.records.received", "pxf.metrics.records.enabled"),
+        BYTES_SENT("pxf.bytes.sent", "pxf.metrics.bytes.enabled"),
+        BYTES_RECEIVED("pxf.bytes.received", "pxf.metrics.bytes.enabled");
 
         private final String metricName;
         private final String enabledPropertyName;

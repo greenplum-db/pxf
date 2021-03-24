@@ -56,13 +56,13 @@ public class MetricsReporterTest {
         setContext();
 
         reporter.reportTimer(MetricsReporter.PxfMetric.FRAGMENTS_SENT, Duration.ofMillis(100), mockContext);
-        Timer timer = registry.get("fragments.sent").tags(expectedTags).timer();
+        Timer timer = registry.get("pxf.fragments.sent").tags(expectedTags).timer();
         assertNotNull(timer);
         assertEquals(1, timer.count());
         assertEquals(100, timer.totalTime(TimeUnit.MILLISECONDS));
 
         reporter.reportTimer(MetricsReporter.PxfMetric.FRAGMENTS_SENT, Duration.ofMillis(51), mockContext);
-        timer = registry.get("fragments.sent").tags(expectedTags).timer();
+        timer = registry.get("pxf.fragments.sent").tags(expectedTags).timer();
         assertNotNull(timer);
         assertEquals(2, timer.count());
         assertEquals(151, timer.totalTime(TimeUnit.MILLISECONDS));
@@ -75,7 +75,7 @@ public class MetricsReporterTest {
 
         // success outcome
         reporter.reportTimer(MetricsReporter.PxfMetric.FRAGMENTS_SENT, Duration.ofMillis(100), mockContext, true);
-        Timer timer = registry.get("fragments.sent").tags(expectedTags).timer();
+        Timer timer = registry.get("pxf.fragments.sent").tags(expectedTags).timer();
         assertNotNull(timer);
         assertEquals(1, timer.count());
         assertEquals(100, timer.totalTime(TimeUnit.MILLISECONDS));
@@ -84,7 +84,7 @@ public class MetricsReporterTest {
         Tags expectedErrorTags = Tags.of("user", "Alex").and("segment", "5").and("profile", "test:text")
                 .and("server", "test_server").and("outcome", "error");
         reporter.reportTimer(MetricsReporter.PxfMetric.FRAGMENTS_SENT, Duration.ofMillis(51), mockContext, false);
-        timer = registry.get("fragments.sent").tags(expectedErrorTags).timer();
+        timer = registry.get("pxf.fragments.sent").tags(expectedErrorTags).timer();
         assertNotNull(timer);
         assertEquals(1, timer.count());
         assertEquals(51, timer.totalTime(TimeUnit.MILLISECONDS));
@@ -97,7 +97,7 @@ public class MetricsReporterTest {
         Tags expectedTags = Tags.of("user", "unknown").and("segment", "5").and("profile", "unknown").and("server", "default");
 
         reporter.reportTimer(MetricsReporter.PxfMetric.FRAGMENTS_SENT, Duration.ofMillis(100), mockContext);
-        Timer timer = registry.get("fragments.sent").tags(expectedTags).timer();
+        Timer timer = registry.get("pxf.fragments.sent").tags(expectedTags).timer();
         assertNotNull(timer);
         assertEquals(1, timer.count());
         assertEquals(100, timer.totalTime(TimeUnit.MILLISECONDS));
@@ -117,12 +117,12 @@ public class MetricsReporterTest {
         setContext();
 
         reporter.reportCounter(MetricsReporter.PxfMetric.RECORDS_SENT, 1000, mockContext);
-        Counter counter = registry.get("records.sent").tags(expectedTags).counter();
+        Counter counter = registry.get("pxf.records.sent").tags(expectedTags).counter();
         assertNotNull(counter);
         assertEquals(1000, counter.count());
 
         reporter.reportCounter(MetricsReporter.PxfMetric.RECORDS_SENT, 51, mockContext);
-        counter = registry.get("records.sent").tags(expectedTags).counter();
+        counter = registry.get("pxf.records.sent").tags(expectedTags).counter();
         assertNotNull(counter);
         assertEquals(1051, counter.count());
     }
@@ -141,12 +141,60 @@ public class MetricsReporterTest {
         setContext();
 
         reporter.reportCounter(MetricsReporter.PxfMetric.RECORDS_RECEIVED, 1000, mockContext);
-        Counter counter = registry.get("records.received").tags(expectedTags).counter();
+        Counter counter = registry.get("pxf.records.received").tags(expectedTags).counter();
         assertNotNull(counter);
         assertEquals(1000, counter.count());
 
         reporter.reportCounter(MetricsReporter.PxfMetric.RECORDS_RECEIVED, 51, mockContext);
-        counter = registry.get("records.received").tags(expectedTags).counter();
+        counter = registry.get("pxf.records.received").tags(expectedTags).counter();
+        assertNotNull(counter);
+        assertEquals(1051, counter.count());
+    }
+
+    @Test
+    public void testBytesSentMetricDisabled() {
+        disableBytesMetrics();
+
+        reporter.reportCounter(MetricsReporter.PxfMetric.BYTES_SENT, 100, mockContext);
+        assertTrue(registry.getMeters().isEmpty());
+    }
+
+    @Test
+    public void testBytesSentMetricEnabled() {
+        enableBytesMetrics();
+        setContext();
+
+        reporter.reportCounter(MetricsReporter.PxfMetric.BYTES_SENT, 1000, mockContext);
+        Counter counter = registry.get("pxf.bytes.sent").tags(expectedTags).counter();
+        assertNotNull(counter);
+        assertEquals(1000, counter.count());
+
+        reporter.reportCounter(MetricsReporter.PxfMetric.BYTES_SENT, 51, mockContext);
+        counter = registry.get("pxf.bytes.sent").tags(expectedTags).counter();
+        assertNotNull(counter);
+        assertEquals(1051, counter.count());
+    }
+
+    @Test
+    public void testBytesReceivedMetricDisabled() {
+        disableBytesMetrics();
+
+        reporter.reportCounter(MetricsReporter.PxfMetric.BYTES_RECEIVED, 100, mockContext);
+        assertTrue(registry.getMeters().isEmpty());
+    }
+
+    @Test
+    public void testBytesReceivedMetricEnabled() {
+        enableBytesMetrics();
+        setContext();
+
+        reporter.reportCounter(MetricsReporter.PxfMetric.BYTES_RECEIVED, 1000, mockContext);
+        Counter counter = registry.get("pxf.bytes.received").tags(expectedTags).counter();
+        assertNotNull(counter);
+        assertEquals(1000, counter.count());
+
+        reporter.reportCounter(MetricsReporter.PxfMetric.BYTES_RECEIVED, 51, mockContext);
+        counter = registry.get("pxf.bytes.received").tags(expectedTags).counter();
         assertNotNull(counter);
         assertEquals(1051, counter.count());
     }
@@ -185,4 +233,13 @@ public class MetricsReporterTest {
     private void disableRecordsMetrics() {
         when(mockEnvironment.getProperty("pxf.metrics.records.enabled", Boolean.class, Boolean.FALSE)).thenReturn(false);
     }
+
+    private void enableBytesMetrics() {
+        when(mockEnvironment.getProperty("pxf.metrics.bytes.enabled", Boolean.class, Boolean.FALSE)).thenReturn(true);
+    }
+
+    private void disableBytesMetrics() {
+        when(mockEnvironment.getProperty("pxf.metrics.bytes.enabled", Boolean.class, Boolean.FALSE)).thenReturn(false);
+    }
+
 }
