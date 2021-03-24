@@ -1,5 +1,61 @@
 # Changelog
 
+## 6.0.0 (03/25/2021)
+
+### Enhancements:
+
+- [#404](https://github.com/greenplum-db/pxf/pull/404) Migrate PXF to Spring Boot
+- [#491](https://github.com/greenplum-db/pxf/pull/491) Remove invalid GemFireXD Profile
+- [#486](https://github.com/greenplum-db/pxf/pull/486) Serialize fragment metadata using kryo instead of json for better optimization
+- [#457](https://github.com/greenplum-db/pxf/pull/457) Convert PXF-CLI to use go modules instead of dep
+- [#498](https://github.com/greenplum-db/pxf/pull/498) Support pushing predicates of type varchar
+- [#506](https://github.com/greenplum-db/pxf/pull/506) Restore FDW build
+- [#470](https://github.com/greenplum-db/pxf/pull/470) Add support for reading ORC without Hive
+- [#500](https://github.com/greenplum-db/pxf/pull/500) Add the InOperatorTransformer TreeVisitor (transform IN operator into chain of ORs)
+- [#514](https://github.com/greenplum-db/pxf/pull/514) Improve logging of read stats(ms instead of ns)
+- [#512](https://github.com/greenplum-db/pxf/pull/512) Encode header values for custom headers, add disable_ppd option for PXF FDW extension, and add pushing predicates of type varchar down for the PXF FDW extension
+- [#495](https://github.com/greenplum-db/pxf/pull/495) Hive profile names now split "protocol" and "format"
+- [#521](https://github.com/greenplum-db/pxf/pull/521) Bump Hadoop version to 2.10.1
+- [#538](https://github.com/greenplum-db/pxf/pull/538) Add createParent option for SequenceFile during PXF write
+- [#535](https://github.com/greenplum-db/pxf/pull/535) Add shortnames and "uncompressed" option for text compression codecs
+- [#548](https://github.com/greenplum-db/pxf/pull/548) Update PXF CLI to support PXF on master
+- [#546](https://github.com/greenplum-db/pxf/pull/546) Add Prometheus metrics endpoint
+- [#555](https://github.com/greenplum-db/pxf/pull/555) Remove fragmenter call from PXF FDW extension
+- [#557](https://github.com/greenplum-db/pxf/pull/557) Log OOM issues to PXF_LOGDIR
+- [#542](https://github.com/greenplum-db/pxf/pull/542) Pass data encoding and database encoding from PXF client to server
+- [#568](https://github.com/greenplum-db/pxf/pull/568) Support different charsets in PXF FDW extension
+- [#573](https://github.com/greenplum-db/pxf/pull/573) Add trace and table headers to the request
+- [#572](https://github.com/greenplum-db/pxf/pull/572) Add custom tags for MVC
+- [#575](https://github.com/greenplum-db/pxf/pull/575) Add charset to Console and RollingFile appender
+- [#576](https://github.com/greenplum-db/pxf/pull/576) Log empty profile message at INFO level
+- [#569](https://github.com/greenplum-db/pxf/pull/569) Bump PXF external-table extension to 2.0
+- [#574](https://github.com/greenplum-db/pxf/pull/574) Add application property for configuring logging level
+- [#577](https://github.com/greenplum-db/pxf/pull/577) Enhance MDC with PXF context
+- [#579](https://github.com/greenplum-db/pxf/pull/579) Report fragments.sent PXF metric
+- [#571](https://github.com/greenplum-db/pxf/pull/571) Add PXF version header to request
+- [#583](https://github.com/greenplum-db/pxf/pull/583) Report records.sent metric
+- [#586](https://github.com/greenplum-db/pxf/pull/586) Report records.received metric
+- [#595](https://github.com/greenplum-db/pxf/pull/595) Add bytes monitoring to PXF
+- [#604](https://github.com/greenplum-db/pxf/pull/604) Log error messages with context
+
+### Bug Fixes:
+
+- [#519](https://github.com/greenplum-db/pxf/pull/519) Update the error message when capacity exceeded in PXF
+
+## 5.16.2 (02/23/2021)
+
+### Bug Fixes:
+
+- [#554](https://github.com/greenplum-db/pxf/pull/554) Fix different encoding when using LineRecordReader
+- [#553](https://github.com/greenplum-db/pxf/pull/553) Hardcode replicas in fragment
+- [#549](https://github.com/greenplum-db/pxf/pull/549) pxfbridge: Return early when context->current_fragment is NULL
+
+## 5.16.1 (01/14/2021)
+
+### Bug Fixes:
+
+- [#526](https://github.com/greenplum-db/pxf/pull/526) pxf-hive: properly escape strings in complex data types
+
 ## 5.16.0 (11/05/2020)
 
 ### Enhancements:
