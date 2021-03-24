@@ -48,14 +48,14 @@ Perform the following procedure to request the PXF status of your Greenplum Data
 
 ## <a id="about_rtm"></a> About PXF Service Runtime Monitoring
 
-PXF exposes the following HTTP actuator endpoints that you can use to monitor a running PXF Service on the local host:
+PXF exposes the following HTTP endpoints that you can use to monitor a running PXF Service on the local host:
 
 - `health` - Returns the status of the PXF Service.
 - `info` - Returns build information for the PXF Service.
 - `metrics` - Returns JVM, extended Tomcat, system, process, Log4j2, and PXF-specific metrics for the PXF Service.
 - `prometheus` - Returns all metrics in a format that can be scraped by a Prometheus server.
 
-Any user can access the HTTP endpoints and view the information that PXF returns.
+Any user can access the HTTP endpoints and view the monitoring information that PXF returns.
 
 You can view the data associated with a specific endpoint by navigating to the desired URL in a browser window:
 
@@ -81,7 +81,7 @@ build:
     time:          "2021-03-24T22:26:22.780Z"
 ```
 
-Alternatively, you can use the `curl` command to examine the PXF information. For example, to view the status of the PXF Service running on `localhost`, query the `health` endpoint:
+Alternatively, you can use the `curl` command to examine the PXF information. For example, to view the status of the PXF Service running on the local Greenplum Database host, query the `health` endpoint:
 
 ``` shell
 gpadmin@gphost$ curl -S http://localhost:5888/actuator/health
@@ -104,7 +104,7 @@ PXF also exposes metrics that are specific to its processing, including:
 
 The information that PXF returns when you query a metric is the aggregate data collected since the last (re)start of the PXF Service.
 
-To view a list of all of the metrics (names) available from the PXF Service, query just the `metrics` actuator endpoint:
+To view a list of all of the metrics (names) available from the PXF Service, query just the `metrics` endpoint:
 
 ``` pre
 http://localhost:5888/actuator/metrics
