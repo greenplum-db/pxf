@@ -1,4 +1,4 @@
-package org.greenplum.pxf.service;
+package org.greenplum.pxf.service.spring;
 
 import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.springframework.core.task.TaskRejectedException;
