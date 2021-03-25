@@ -16,9 +16,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
 
 import java.io.DataInputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.security.PrivilegedExceptionAction;
+import java.security.PrivilegedAction;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -53,11 +52,11 @@ public class WriteServiceImplTest {
     private WriteServiceImpl writeService;
 
     @BeforeEach
-    public void setup() throws IOException {
+    public void setup() throws Exception {
         when(mockConfigurationFactory.initConfiguration(any(), any(), any(), any())).thenReturn(mockConfiguration);
         when(mockSecurityService.doAs(same(mockContext), any())).thenAnswer(invocation -> {
-            PrivilegedExceptionAction<OperationStats> action = invocation.getArgument(1);
-            OperationStats result = action.run();
+            PrivilegedAction<OperationResult> action = invocation.getArgument(1);
+            OperationResult result = action.run();
             return result;
         });
         when(mockBridgeFactory.getBridge(mockContext)).thenReturn(mockBridge);
@@ -156,7 +155,7 @@ public class WriteServiceImplTest {
     }
 
     @Test
-    public void testReadDataZeroReportFrequency() throws Exception {
+    public void testWriteDataZeroReportFrequency() throws Exception {
         when(mockMetricReporter.getReportFrequency()).thenReturn(0L);
         when(mockBridge.beginIteration()).thenReturn(true);
         when(mockInputStream.read(any(), eq(0), eq(10))).thenReturn(4);
@@ -170,11 +169,11 @@ public class WriteServiceImplTest {
     }
 
     @Test
-    public void testReadDataBeginIterationException() throws Exception {
+    public void testWriteDataBeginIterationException() throws Exception {
         when(mockMetricReporter.getReportFrequency()).thenReturn(1L);
         when(mockBridge.beginIteration()).thenThrow(Exception.class);
 
-        assertThrows(IOException.class, () -> writeService.writeData(mockContext, mockInputStream));
+        assertThrows(Exception.class, () -> writeService.writeData(mockContext, mockInputStream));
         verifyNoMoreInteractions(mockMetricReporter);
     }
 

@@ -10,17 +10,17 @@ In order to run PXF automation tests the following are needed
 
 1. Running Hadoop cluster 
 2. Running GPDB
-3. JRE 1.7
+3. JRE 1.8
 
 Build & Test
 ===================================
 
-Set necessary Environment Vars##
+Set necessary Environment Vars
 ```
 export GPHD_ROOT=<parent directory containing hadoop,hive,etc>
 export PGPORT=<gpdb port>
 export GPHOME=<your gphome>
-export PXF_HOME=$GPHOME/pxf
+export PXF_HOME=/usr/local/pxf
 ```
 
 Run all tests for GPDB

@@ -1,4 +1,4 @@
-package org.greenplum.pxf.service;
+package org.greenplum.pxf.service.spring;
 
 import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.api.configuration.PxfServerProperties;

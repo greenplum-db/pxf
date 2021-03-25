@@ -1,4 +1,4 @@
-package org.greenplum.pxf.service;
+package org.greenplum.pxf.service.spring;
 
 import org.apache.coyote.ProtocolHandler;
 import org.apache.coyote.http11.AbstractHttp11Protocol;

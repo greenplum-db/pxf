@@ -2,7 +2,6 @@ package org.greenplum.pxf.service.controller;
 
 import org.greenplum.pxf.api.model.RequestContext;
 
-import java.io.IOException;
 import java.io.InputStream;
 
 /**
@@ -17,7 +16,7 @@ public interface WriteService {
      * @param context     request context
      * @param inputStream input stream to read data from
      * @return text response to send back to the client
-     * @throws IOException if an error occurs
+     * @throws Exception if any error happened during processing
      */
-    String writeData(RequestContext context, InputStream inputStream) throws IOException;
+    String writeData(RequestContext context, InputStream inputStream) throws Exception;
 }

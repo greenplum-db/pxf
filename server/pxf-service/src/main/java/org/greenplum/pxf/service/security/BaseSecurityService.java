@@ -10,9 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-import java.lang.reflect.UndeclaredThrowableException;
-import java.security.PrivilegedExceptionAction;
+import java.security.PrivilegedAction;
 
 /**
  * Security Service
@@ -43,9 +41,9 @@ public class BaseSecurityService implements SecurityService {
      *
      * @param context the context for the given request
      * @param action  the action to be executed
-     * @throws IOException when an IO error occurs
+     * @throws Exception if the operation fails
      */
-    public <T> T doAs(RequestContext context, PrivilegedExceptionAction<T> action) throws IOException {
+    public <T> T doAs(RequestContext context, PrivilegedAction<T> action) throws Exception {
         // retrieve user header and make sure header is present and is not empty
         final String gpdbUser = context.getUser();
         final String serverName = context.getServerName();
@@ -55,58 +53,52 @@ public class BaseSecurityService implements SecurityService {
         final boolean isSecurityEnabled = Utilities.isSecurityEnabled(configuration);
 
         // Establish the UGI for the login user or the Kerberos principal for the given server, if applicable
-        UserGroupInformation loginUser = secureLogin.getLoginUser(serverName, configDirectory, configuration);
-
-        String serviceUser = loginUser.getUserName();
-
-        if (!isUserImpersonation && isSecurityEnabled) {
-            // When impersonation is disabled and security is enabled
-            // we check whether the pxf.service.user.name property was provided
-            // and if provided we use the value as the remote user instead of
-            // the principal defined in pxf.service.kerberos.principal. However,
-            // the principal will need to have proxy privileges on hadoop.
-            String pxfServiceUserName = configuration.get(SecureLogin.CONFIG_KEY_SERVICE_USER_NAME);
-            if (StringUtils.isNotBlank(pxfServiceUserName)) {
-                serviceUser = pxfServiceUserName;
-            }
-        }
-
-        String remoteUser = (isUserImpersonation ? gpdbUser : serviceUser);
-        String contextId = context.getId();
-
         boolean exceptionDetected = false;
         UserGroupInformation userGroupInformation = null;
         try {
+            UserGroupInformation loginUser = secureLogin.getLoginUser(serverName, configDirectory, configuration);
+
+            String serviceUser = loginUser.getUserName();
+
+            if (!isUserImpersonation && isSecurityEnabled) {
+                // When impersonation is disabled and security is enabled
+                // we check whether the pxf.service.user.name property was provided
+                // and if provided we use the value as the remote user instead of
+                // the principal defined in pxf.service.kerberos.principal. However,
+                // the principal will need to have proxy privileges on hadoop.
+                String pxfServiceUserName = configuration.get(SecureLogin.CONFIG_KEY_SERVICE_USER_NAME);
+                if (StringUtils.isNotBlank(pxfServiceUserName)) {
+                    serviceUser = pxfServiceUserName;
+                }
+            }
+
+            String remoteUser = (isUserImpersonation ? gpdbUser : serviceUser);
+
             // Retrieve proxy user UGI from the UGI of the logged in user
             if (isUserImpersonation) {
-                LOG.debug("{} Creating proxy user = {}", contextId, remoteUser);
+                LOG.debug("Creating proxy user = {}", remoteUser);
                 userGroupInformation = ugiProvider.createProxyUser(remoteUser, loginUser);
             } else {
-                LOG.debug("{} Creating remote user = {}", contextId, remoteUser);
+                LOG.debug("Creating remote user = {}", remoteUser);
                 userGroupInformation = ugiProvider.createRemoteUser(remoteUser, loginUser, isSecurityEnabled);
             }
 
-            LOG.debug("{} Retrieved proxy user {} for server {}", contextId, userGroupInformation, serverName);
-            LOG.debug("Performing request for gpdb_user = {} as [remote_user = {} service_user = {} login_user ={}] with{} impersonation",
+            LOG.debug("Retrieved proxy user {} for server {}", userGroupInformation, serverName);
+            LOG.debug("Performing request for gpdb_user = {} as [remote_user={}, service_user={}, login_user={}] with{} impersonation",
                     gpdbUser, remoteUser, serviceUser, loginUser.getUserName(), isUserImpersonation ? "" : "out");
             // Execute the servlet chain as that user
             return userGroupInformation.doAs(action);
-        } catch (UndeclaredThrowableException ute) {
+        } catch (Exception e) {
             exceptionDetected = true;
-            // unwrap the real exception thrown by the action
-            throw new IOException(ute.getCause());
-        } catch (InterruptedException ie) {
-            exceptionDetected = true;
-            throw new IOException(ie);
+            throw e;
         } finally {
-            LOG.debug("{} Releasing UGI resources. {}",
-                    contextId, exceptionDetected ? " Exception while processing" : "");
+            LOG.debug("Releasing UGI resources. {}", exceptionDetected ? " Exception while processing." : "");
             try {
                 if (userGroupInformation != null) {
                     ugiProvider.destroy(userGroupInformation);
                 }
             } catch (Throwable t) {
-                LOG.error("{} Error releasing UGI resources", contextId, t);
+                LOG.warn("Error releasing UGI resources, ignored.", t);
             }
         }
     }

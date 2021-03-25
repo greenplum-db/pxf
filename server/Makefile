@@ -34,6 +34,7 @@ help:
 	@echo	"  - clean - cleans the workspace of all produced artifacts"
 	@echo	"  - compile - compiles all PXF modules and builds their JAR files"
 	@echo	"  - test - runs unit tests for all PXF modules"
+	@echo   "  - coverage - runs unit tests for all PXF modules and gives a coverage report"
 	@echo	"  - install - setup PXF in the configured deployPath"
 	@echo	"  - stage - build PXF server and stage resulting artifacts for packaging"
 	@echo	"  - doc - creates aggregate javadoc under docs"
@@ -61,6 +62,12 @@ test unittest:
 		exit 1; \
 	fi
 	./gradlew $(PXF_GRADLE_PROPERTIES) ${GRADLEW_TEST_PARAMS}
+
+coverage:
+	./gradlew $(PXF_GRADLE_PROPERTIES) ${GRADLEW_TEST_PARAMS} jacocoTestReport
+	@echo
+	@echo  "Coverage reports can be found within each server module under <module-name>/build/reports/jacoco"
+	@echo  "For example, the pxf-service coverage report is located at $(shell pwd)/pxf-service/build/reports/jacoco/test/html/index.html"
 
 .PHONY: stage
 stage:

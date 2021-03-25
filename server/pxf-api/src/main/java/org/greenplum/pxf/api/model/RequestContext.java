@@ -71,12 +71,6 @@ public class RequestContext {
     // ----- NAMED PROPERTIES -----
 
     /**
-     * A unique identifier for the RequestContext. The identifier is a
-     * combination of the user:transactionId:segmentId:serverName
-     */
-    private String id;
-
-    /**
      * The fully-qualified class name for the java class that was defined as
      * Accessor.
      */

@@ -30,9 +30,7 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.io.IOException;
-import java.lang.reflect.UndeclaredThrowableException;
-import java.security.PrivilegedExceptionAction;
+import java.security.PrivilegedAction;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -43,16 +41,20 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 public class BaseSecurityServiceTest {
 
-    private static final PrivilegedExceptionAction<Boolean> EMPTY_ACTION = () -> true;
+    private static final PrivilegedAction<Boolean> EMPTY_ACTION = () -> true;
 
     private Configuration configuration;
     private RequestContext context;
     private SecurityService service;
 
-    @Mock private SecureLogin mockSecureLogin;
-    @Mock private UGIProvider mockUGIProvider;
-    @Mock private UserGroupInformation mockLoginUGI;
-    @Mock private UserGroupInformation mockProxyUGI;
+    @Mock
+    private SecureLogin mockSecureLogin;
+    @Mock
+    private UGIProvider mockUGIProvider;
+    @Mock
+    private UserGroupInformation mockLoginUGI;
+    @Mock
+    private UserGroupInformation mockProxyUGI;
 
     @BeforeEach
     public void setup() {
@@ -142,22 +144,10 @@ public class BaseSecurityServiceTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    public void destroysUGIWhenTheFilterExecutionThrowsAnUndeclaredThrowableException() throws Exception {
+    public void destroysUGIWhenTheActionExecutionThrowsRuntimeException() throws Exception {
         expectScenario("login-user", false, false, false);
-        doThrow(UndeclaredThrowableException.class).when(mockProxyUGI).doAs(any(PrivilegedExceptionAction.class));
-        assertThrows(IOException.class,
-                () -> service.doAs(context, EMPTY_ACTION));
-        verifyScenario("login-user", false, false);
-        verify(mockUGIProvider).destroy(any(UserGroupInformation.class));
-    }
-
-    @Test
-    @SuppressWarnings("unchecked")
-    public void destroysUGIWhenTheFilterExecutionThrowsAnInterruptedException() throws Exception {
-        expectScenario("login-user", false, false, false);
-        doThrow(InterruptedException.class).when(mockProxyUGI).doAs(any(PrivilegedExceptionAction.class));
-        assertThrows(IOException.class,
-                () -> service.doAs(context, EMPTY_ACTION));
+        doThrow(RuntimeException.class).when(mockProxyUGI).doAs(any(PrivilegedAction.class));
+        assertThrows(RuntimeException.class, () -> service.doAs(context, EMPTY_ACTION));
         verifyScenario("login-user", false, false);
         verify(mockUGIProvider).destroy(any(UserGroupInformation.class));
     }
@@ -184,12 +174,12 @@ public class BaseSecurityServiceTest {
         }
     }
 
-    private void verifyScenario(String user, boolean kerberos, boolean impersonation) throws Exception {
+    private void verifyScenario(String user, boolean kerberos, boolean impersonation) {
         if (impersonation) {
             verify(mockUGIProvider).createProxyUser(user, mockLoginUGI);
         } else {
             verify(mockUGIProvider).createRemoteUser(user, mockLoginUGI, kerberos);
         }
-        verify(mockProxyUGI).doAs(ArgumentMatchers.<PrivilegedExceptionAction<Object>>any());
+        verify(mockProxyUGI).doAs(ArgumentMatchers.<PrivilegedAction<Object>>any());
     }
 }

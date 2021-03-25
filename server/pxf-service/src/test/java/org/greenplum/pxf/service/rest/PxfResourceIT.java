@@ -14,16 +14,12 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.bind.annotation.ControllerAdvice;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
+
+import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -36,7 +32,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest({PxfResource.class, PxfLegacyResource.class})
+@WebMvcTest({PxfReadResource.class, PxfWriteResource.class, PxfLegacyResource.class})
 public class PxfResourceIT {
 
     @Autowired
@@ -80,8 +76,9 @@ public class PxfResourceIT {
                 .andExpect(status().isInternalServerError());
         result.andExpect(r -> assertTrue(r.getResolvedException() instanceof PxfRuntimeException))
                 .andExpect(r -> assertEquals("/Fragmenter/getFragments API (v15) is no longer supported by the server, upgrade PXF extension (run 'pxf [cluster] register' and then 'ALTER EXTENSION pxf UPDATE')",
-                        r.getResolvedException().getMessage()));
-        result.andExpect(content().string("upgrade PXF extension (run 'pxf [cluster] register' and then 'ALTER EXTENSION pxf UPDATE')"));
+                        r.getResolvedException().getMessage()))
+                .andExpect(r -> assertEquals("upgrade PXF extension (run 'pxf [cluster] register' and then 'ALTER EXTENSION pxf UPDATE')",
+                        ((PxfRuntimeException) r.getResolvedException()).getHint()));
     }
 
     @Test
@@ -89,7 +86,11 @@ public class PxfResourceIT {
         when(mockParser.parseRequest(any(), eq(RequestContext.RequestType.READ_BRIDGE))).thenReturn(mockContext);
 
         ResultActions result = mvc.perform(get("/pxf/v15/Bridge")).andExpect(status().isInternalServerError());
-        result.andExpect(content().string("upgrade PXF extension (run 'pxf [cluster] register' and then 'ALTER EXTENSION pxf UPDATE')"));
+        result.andExpect(r -> assertTrue(r.getResolvedException() instanceof PxfRuntimeException))
+                .andExpect(r -> assertEquals("/Bridge API (v15) is no longer supported by the server, upgrade PXF extension (run 'pxf [cluster] register' and then 'ALTER EXTENSION pxf UPDATE')",
+                        r.getResolvedException().getMessage()))
+                .andExpect(r -> assertEquals("upgrade PXF extension (run 'pxf [cluster] register' and then 'ALTER EXTENSION pxf UPDATE')",
+                        ((PxfRuntimeException) r.getResolvedException()).getHint()));
     }
 
     @Test
@@ -97,28 +98,25 @@ public class PxfResourceIT {
         when(mockParser.parseRequest(any(), eq(RequestContext.RequestType.WRITE_BRIDGE))).thenReturn(mockContext);
         when(mockWriteService.writeData(same(mockContext), any())).thenReturn("Hello from write!");
 
-        mvc.perform(post("/pxf/v15/Writable/stream"))
-                .andExpect(status().isInternalServerError())
-                .andExpect(content().string("upgrade PXF extension (run 'pxf [cluster] register' and then 'ALTER EXTENSION pxf UPDATE')"));
+        ResultActions result = mvc.perform(post("/pxf/v15/Writable/stream")).andExpect(status().isInternalServerError());
+        result.andExpect(r -> assertTrue(r.getResolvedException() instanceof PxfRuntimeException))
+                .andExpect(r -> assertEquals("/Writable/stream API (v15) is no longer supported by the server, upgrade PXF extension (run 'pxf [cluster] register' and then 'ALTER EXTENSION pxf UPDATE')",
+                        r.getResolvedException().getMessage()))
+                .andExpect(r -> assertEquals("upgrade PXF extension (run 'pxf [cluster] register' and then 'ALTER EXTENSION pxf UPDATE')",
+                        ((PxfRuntimeException) r.getResolvedException()).getHint()));
     }
 
     @TestConfiguration
     static class PxfResourceTestConfiguration {
         @Bean
         ReadService createReadService() {
-            return (ctx, out) -> out.write("Hello from read!".getBytes(Charsets.UTF_8));
-        }
-
-        @ControllerAdvice
-        public class ExceptionController {
-
-            @ExceptionHandler(PxfRuntimeException.class)
-            @ResponseStatus(value = HttpStatus.INTERNAL_SERVER_ERROR)
-            @ResponseBody
-            public ResponseEntity<String> handleException(PxfRuntimeException ex) {
-                // print hint into the body so we can assert this in the tests
-                return new ResponseEntity<>(ex.getHint(), HttpStatus.INTERNAL_SERVER_ERROR);
-            }
+            return (ctx, out) -> {
+                try {
+                    out.write("Hello from read!".getBytes(Charsets.UTF_8));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            };
         }
     }
 }

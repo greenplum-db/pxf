@@ -1,4 +1,4 @@
-package org.greenplum.pxf.service;
+package org.greenplum.pxf.service.spring;
 
 import org.greenplum.pxf.api.configuration.PxfServerProperties;
 import org.slf4j.Logger;

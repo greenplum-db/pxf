@@ -1,6 +1,7 @@
 package org.greenplum.pxf.service.controller;
 
 import org.apache.hadoop.conf.Configuration;
+import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.greenplum.pxf.api.io.Writable;
 import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.model.Fragment;
@@ -19,10 +20,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
 
 import java.io.DataOutputStream;
-import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.security.PrivilegedExceptionAction;
+import java.security.PrivilegedAction;
 import java.time.Duration;
 import java.util.List;
 
@@ -66,12 +66,12 @@ public class ReadServiceImplTest {
     private ReadServiceImpl readService;
 
     @BeforeEach
-    public void setup() throws IOException {
+    public void setup() throws Exception {
         when(mockConfigurationFactory.initConfiguration(any(), any(), any(), any())).thenReturn(mockConfiguration);
         when(mockFragmenterService.getFragmentsForSegment(mockContext)).thenReturn(mockFragmentList);
         when(mockSecurityService.doAs(same(mockContext), any())).thenAnswer(invocation -> {
-            PrivilegedExceptionAction<OperationStats> action = invocation.getArgument(1);
-            OperationStats result = action.run();
+            PrivilegedAction<OperationResult> action = invocation.getArgument(1);
+            OperationResult result = action.run();
             return result;
         });
 
@@ -178,7 +178,7 @@ public class ReadServiceImplTest {
         when(mockBridge1.getNext()).thenReturn(mockRecord1).thenThrow(new Exception());
         doAnswer(writeTestData("hello")).when(mockRecord1).write(any(DataOutputStream.class));
 
-        assertThrows(Exception.class, () -> readService.readData(mockContext, mockOutputStream));
+        assertThrows(PxfRuntimeException.class, () -> readService.readData(mockContext, mockOutputStream));
         InOrder inOrder = inOrder(mockOutputStream, mockMetricReporter);
         inOrder.verify(mockOutputStream).write("hello".getBytes(StandardCharsets.UTF_8), 0, 5);
         inOrder.verify(mockMetricReporter).reportCounter(MetricsReporter.PxfMetric.RECORDS_SENT, 1, mockContext);

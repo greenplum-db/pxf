@@ -2,11 +2,16 @@
 title: About the PXF Installation and Configuration Directories
 ---
 
-PXF may be installed to `$GPHOME/pxf` on your master, standby master, and segment nodes when you install Greenplum Database. If you install the PXF `rpm` or `deb` package, PXF is installed to `/usr/local/pxf-gp<greenplum-major-version>`, or to a directory of your choosing (CentOS/RHEL only). This documentation uses `$PXF_HOME` to refer to the PXF installation directory.
+This documentation uses `$PXF_HOME` to refer to the PXF installation directory. Its value depends on how you have installed PXF:
 
-After you install PXF 6.x, `$PXF_HOME` includes the both the PXF executables and the PXF runtime configuration files and directories. In PXF 5.x, you specified a `$PXF_CONF` directory for the runtime configuration when you initialized PXF.  In PXF 6.x, no initialization is required, `$PXF_BASE` now identifies the runtime configuration directory, and the default `$PXF_BASE` is `$PXF_HOME`.
+ - If you install PXF as part of Greenplum Database, its value is `$GPHOME/pxf`.
+ - If you install the PXF `rpm` or `deb` package, its value is `/usr/local/pxf-gp<greenplum-major-version>`, or the directory of your choosing (CentOS/RHEL only). 
+
+`$PXF_HOME` includes both the PXF executables and the PXF runtime configuration files and directories. In PXF 5.x, you needed to specify a `$PXF_CONF` directory for the runtime configuration when you initialized PXF. In PXF 6.x, however, no initialization is required: `$PXF_BASE` now identifies the runtime configuration directory, and the default `$PXF_BASE` is `$PXF_HOME`.
 
 If you want to store your configuration and runtime files in a different location, see [Relocating $PXF_BASE](#movebase).
+
+<div class="note">This documentation uses the <code>$PXF_HOME</code> environment variable to reference the PXF installation directory. PXF uses this variable internally at runtime; it is not set in your shell environment, and will display as empty if you attempt to <code>echo</code> its value. Similarly, this documentation uses the <code>$PXF_BASE</code> environment variable to reference the PXF runtime configuration directory. PXF uses the variable internally. it only needs to be set in your shell environment if you explicitly relocate the directory.</div>
 
 ## <a id="installed"></a>PXF Installation Directories
 

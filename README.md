@@ -336,11 +336,14 @@ $PXF_HOME/bin/pxf start
 
 - Start IntelliJ. Click "Open" and select the directory to which you cloned the `pxf` repo.
 - Select `File > Project Structure`.
-- Make sure you have a JDK selected.
-- In the `Project Settings > Modules` section, import two modules for the `pxf/server` and `pxf/automation` directories. The first time you'll get an error saying that there's
+- Make sure you have a JDK (version 1.8) selected.
+- In the `Project Settings > Modules` section, select `Import Module`, pick the `pxf/server` directory and import as a Gradle module. You may see an error saying that there's
 no JDK set for Gradle. Just cancel and retry. It goes away the second time.
+- Import a second module, giving the `pxf/automation` directory, select "Import module from external model", pick `Maven` then click Finish.
 - Restart IntelliJ
-- Check that it worked by running a test (Cmd+O)
+- Check that it worked by running a unit test (cannot currently run automation tests from IntelliJ) and making sure that imports, variables, and auto-completion function in the two modules.
+- Optionally you can replace `${PXF_TMP_DIR}` with `${GPHOME}/pxf/tmp` in `automation/pom.xml`
+- Select `Tools > Create Command-line Launcher...` to enable starting Intellij with the `idea` command, e.g. `cd ~/workspace/pxf && idea .`.
 
 ## Debugging the locally running instance of PXF server using IntelliJ
 

@@ -1,6 +1,7 @@
 package org.greenplum.pxf.service.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.catalina.connector.ClientAbortException;
 import org.apache.hadoop.conf.Configuration;
 import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.model.RequestContext;
@@ -9,8 +10,7 @@ import org.greenplum.pxf.service.bridge.Bridge;
 import org.greenplum.pxf.service.bridge.BridgeFactory;
 import org.greenplum.pxf.service.security.SecurityService;
 
-import java.io.IOException;
-import java.security.PrivilegedExceptionAction;
+import java.security.PrivilegedAction;
 import java.time.Duration;
 import java.time.Instant;
 
@@ -19,7 +19,7 @@ import java.time.Instant;
  * using provided request context and the identity determined by the security service.
  */
 @Slf4j
-public abstract class BaseServiceImpl {
+public abstract class BaseServiceImpl<T> extends PxfErrorReporter<T> {
 
     protected final MetricsReporter metricsReporter;
     private final String serviceName;
@@ -54,13 +54,12 @@ public abstract class BaseServiceImpl {
      * @param context request context
      * @param action  action to execute
      * @return operation statistics
-     * @throws IOException if an error occurs during the operation
      */
-    protected OperationStats processData(RequestContext context, PrivilegedExceptionAction<OperationStats> action) throws IOException {
-        log.debug("{} {} service is called for resource {} using profile {}",
-                context.getId(), serviceName, context.getDataSource(), context.getProfile());
+    protected OperationStats processData(RequestContext context, PrivilegedAction<OperationResult> action) throws Exception {
+        log.debug("{} service is called for resource {} using profile {}",
+                serviceName, context.getDataSource(), context.getProfile());
 
-        // Initialize the configuration for this request
+        // initialize the configuration for this request
         Configuration configuration = configurationFactory.
                 initConfiguration(
                         context.getConfig(),
@@ -70,25 +69,39 @@ public abstract class BaseServiceImpl {
         context.setConfiguration(configuration);
 
         Instant startTime = Instant.now();
-        OperationStats stats = securityService.doAs(context, action);
+
+        // execute processing action with a proper identity
+        OperationResult result = securityService.doAs(context, action);
+
+        // obtain results after executing the action
+        OperationStats stats = result.getStats();
+        Exception exception = result.getException();
+        String status = (exception == null) ? "Completed" :
+                (exception instanceof ClientAbortException) ? "Aborted" : "Failed";
+
+        // log action status and stats
         long recordCount = stats.getRecordCount();
         long byteCount = stats.getByteCount();
-        if (recordCount > 0) {
-            long durationMs = Duration.between(startTime, Instant.now()).toMillis();
-            double rate = durationMs == 0 ? 0 : (1000.0 * recordCount / durationMs);
-            double byteRate = durationMs == 0 ? 0 : (1000.0 * byteCount / durationMs);
-            log.info("{} completed {} operation in {} ms for {} record{} ({} records/sec) and {} bytes ({} bytes/sec)",
-                    context.getId(),
-                    stats.getOperation().name().toLowerCase(),
-                    durationMs,
-                    recordCount,
-                    recordCount == 1 ? "" : "s",
-                    String.format("%.2f", rate),
-                    byteCount,
-                    String.format("%.2f", byteRate));
-        } else {
-            log.info("{} completed", context.getId());
+        long durationMs = Duration.between(startTime, Instant.now()).toMillis();
+        double rate = durationMs == 0 ? 0 : (1000.0 * recordCount / durationMs);
+        double byteRate = durationMs == 0 ? 0 : (1000.0 * byteCount / durationMs);
+
+        log.info("{} {} operation [{} ms, {} record{}, {} records/sec, {} bytes, {} bytes/sec]",
+                status,
+                stats.getOperation().name().toLowerCase(),
+                durationMs,
+                recordCount,
+                recordCount == 1 ? "" : "s",
+                String.format("%.2f", rate),
+                byteCount,
+                String.format("%.2f", byteRate));
+
+        // re-throw the exception if the operation failed
+        if (exception != null) {
+            throw exception;
         }
+
+        // return operation stats
         return stats;
     }
 

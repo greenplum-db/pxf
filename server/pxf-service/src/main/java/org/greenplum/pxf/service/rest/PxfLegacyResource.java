@@ -1,11 +1,6 @@
 package org.greenplum.pxf.service.rest;
 
 import org.greenplum.pxf.api.error.PxfRuntimeException;
-import org.greenplum.pxf.api.model.RequestContext;
-import org.greenplum.pxf.service.RequestParser;
-import org.greenplum.pxf.service.controller.ReadService;
-import org.greenplum.pxf.service.controller.WriteService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
@@ -18,8 +13,6 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 
 import javax.servlet.http.HttpServletRequest;
 
-import static org.greenplum.pxf.api.model.RequestContext.RequestType;
-
 /**
  * Legacy PXF REST endpoint mapped to /pxf/v15 path
  */
@@ -31,25 +24,6 @@ public class PxfLegacyResource {
             "upgrade PXF extension (run 'pxf [cluster] register' and then 'ALTER EXTENSION pxf UPDATE')";
     private static final String ERROR_MESSAGE_TEMPLATE =
             "%s API (v15) is no longer supported by the server, " + ERROR_MESSAGE_HINT;
-
-    private final RequestParser<MultiValueMap<String, String>> parser;
-    private final ReadService readService;
-    private final WriteService writeService;
-
-    /**
-     * Creates a new instance of the resource with Request parser and read service implementation.
-     *
-     * @param parser       http request parser
-     * @param readService  read service implementation
-     * @param writeService write service implementation
-     */
-    public PxfLegacyResource(RequestParser<MultiValueMap<String, String>> parser,
-                             ReadService readService,
-                             WriteService writeService) {
-        this.parser = parser;
-        this.readService = readService;
-        this.writeService = writeService;
-    }
 
     /**
      * REST endpoint for getting a list of fragments.

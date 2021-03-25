@@ -1,6 +1,6 @@
-package org.greenplum.pxf.service;
+package org.greenplum.pxf.service.spring;
 
-import org.greenplum.pxf.service.spring.PxfContextMdcLogEnhancerFilter;
+import org.greenplum.pxf.service.HttpHeaderDecoder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

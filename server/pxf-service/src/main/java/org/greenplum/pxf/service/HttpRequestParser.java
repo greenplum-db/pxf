@@ -237,12 +237,6 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
             Utilities.updatePlugins(context, handlerClassName);
         }
 
-        context.setId(String.format("%s:%s:%s:%s",
-                context.getUser(),
-                context.getTransactionId(),
-                context.getSegmentId(),
-                context.getServerName()));
-
         // validate that the result has all required fields, and values are in valid ranges
         context.validate();
 
