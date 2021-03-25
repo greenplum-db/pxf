@@ -96,11 +96,13 @@ PXF also exposes metrics that are specific to its processing, including:
 
 | Metric Name  | Description |
 |---------|-------------|
-| pxf.fragments.sent  | The number of fragments and the time that it takes to send data for a single fragment to Greenplum Database. |
+| pxf.fragments.sent  | The number of fragments, and the total time it took to send all fragments to Greenplum Database. |
 | pxf.records.sent  | The number of records that PXF sends to Greenplum Database. |
 | pxf.records.received  | The number of records that PXF receives from Greenplum Database. |
 | pxf.bytes.sent  | The number of bytes that PXF sends to Greenplum Database. |
 | pxf.bytes.received  | The number of bytes that PXF receives from Greenplum Database. |
+| http.server.requests | Standard metric augmented with PXF tags. |
+
 
 The information that PXF returns when you query a metric is the aggregate data collected since the last (re)start of the PXF Service.
 
