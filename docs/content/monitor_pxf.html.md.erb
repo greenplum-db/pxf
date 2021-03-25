@@ -95,11 +95,11 @@ PXF also exposes metrics that are specific to its processing, including:
 
 | Metric Name  | Description |
 |---------|-------------|
-| pxf.fragments.sent  | The number of fragments, and the total time it took to send all fragments to Greenplum Database. |
-| pxf.records.sent  | The number of records that PXF sends to Greenplum Database. |
-| pxf.records.received  | The number of records that PXF receives from Greenplum Database. |
-| pxf.bytes.sent  | The number of bytes that PXF sends to Greenplum Database. |
-| pxf.bytes.received  | The number of bytes that PXF receives from Greenplum Database. |
+| pxf.fragments.sent  | The number of fragments, and the total time that it took to send all fragments to Greenplum Database. |
+| pxf.records.sent  | The number of records that PXF sent to Greenplum Database. |
+| pxf.records.received  | The number of records that PXF received from Greenplum Database. |
+| pxf.bytes.sent  | The number of bytes that PXF sent to Greenplum Database. |
+| pxf.bytes.received  | The number of bytes that PXF received from Greenplum Database. |
 | http.server.requests | Standard metric augmented with PXF tags. |
 
 
@@ -117,7 +117,7 @@ PXF tags all metrics that it returns with an `application` label; the value of t
 
 PXF tags its specific metrics with the additional labels: `user`, `segment`, `profile`, and `server`. All of these tags are present for each PXF metric.  PXF returns the tag value `unknown` when the value cannot be determined.
 
-You can use the tags to filter the information returned for PXF-specific metrics. For example, to examine the `pxf.records.received` metric for the PXF server named `hadoop1` located on `segment` 1 on the  local host:
+You can use the tags to filter the information returned for PXF-specific metrics. For example, to examine the `pxf.records.received` metric for the PXF server named `hadoop1` located on `segment` 1 on the local host:
 
 ``` pre
 http://localhost:5888/actuator/metrics/pxf.records.received?tag=segment:1&tag=server:hadoop1
