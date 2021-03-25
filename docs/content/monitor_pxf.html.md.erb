@@ -50,41 +50,40 @@ Perform the following procedure to request the PXF status of your Greenplum Data
 
 PXF exposes the following HTTP endpoints that you can use to monitor a running PXF Service on the local host:
 
-- `health` - Returns the status of the PXF Service.
-- `info` - Returns build information for the PXF Service.
-- `metrics` - Returns JVM, extended Tomcat, system, process, Log4j2, and PXF-specific metrics for the PXF Service.
-- `prometheus` - Returns all metrics in a format that can be scraped by a Prometheus server.
+- `actuator/health` - Returns the status of the PXF Service.
+- `actuator/info` - Returns build information for the PXF Service.
+- `actuator/metrics` - Returns JVM, extended Tomcat, system, process, Log4j2, and PXF-specific metrics for the PXF Service.
+- `actuator/prometheus` - Returns all metrics in a format that can be scraped by a Prometheus server.
 
 Any user can access the HTTP endpoints and view the monitoring information that PXF returns.
 
-You can view the data associated with a specific endpoint by navigating to the desired URL in a browser window:
+You can view the data associated with a specific endpoint by viewing in a browser, or `curl`-ing, a URL of the following format:
 
 ``` pre
-http://localhost:5888/actuator/<endpoint>[/<name>]
+http://localhost:5888/<endpoint>[/<name>]
 ```
 
-For example, to view the build information for the PXF service running on `localhost`, query the `info` endpoint:
+For example, to view the build information for the PXF service running on `localhost`, query the `actuator/info` endpoint:
 
 ``` pre
 http://localhost:5888/actuator/info
 ```
 
-Sample JSON output:
+Sample output:
 
 ``` pre
-build:
-    version:       "6.0.0"
-    artifact:      "pxf-service"
-    name:          "pxf-service"
-    pxfApiVersion: "16"
-    group:         "org.greenplum.pxf"
-    time:          "2021-03-24T22:26:22.780Z"
+{"build":{"version":"6.0.0","artifact":"pxf-service","name":"pxf-service","pxfApiVersion":"16","group":"org.greenplum.pxf","time":"2021-03-29T22:26:22.780Z"}}
 ```
 
-Alternatively, you can use the `curl` command to examine the PXF information. For example, to view the status of the PXF Service running on the local Greenplum Database host, query the `health` endpoint:
+To view the status of the PXF Service running on the local Greenplum Database host, query the `actuator/health` endpoint:
 
-``` shell
-gpadmin@gphost$ curl -S http://localhost:5888/actuator/health
+``` pre
+http://localhost:5888/actuator/health
+```
+
+Sample output:
+
+``` pre
 {"status":"UP","groups":["liveness","readiness"]}
 ```
 
