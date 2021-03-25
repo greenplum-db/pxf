@@ -12,45 +12,6 @@ ccp_destroy_anchor: &ccp_destroy
     get_params:
       action: destroy
 
-dataproc_timed_destroy_anchor: &dataproc_timed_destroy
-  do:
-  - task: debug_sleep
-    image: ccp-7
-    config:
-      run:
-        path: /bin/sleep
-        args: [{{dataproc-destroy-timeout}}]
-      platform: linux
-  - in_parallel:
-    - task: Cleanup Dataproc 1
-      config:
-        run:
-          path: pxf_src/concourse/scripts/cleanup_dataproc_cluster.bash
-        inputs:
-          - name: pxf_src
-          - name: dataproc_env_files
-        platform: linux
-      image: ccp-7
-      params:
-        GOOGLE_CREDENTIALS: {{google-service-account-key}}
-        GOOGLE_PROJECT_ID: {{google-project-id}}
-        GOOGLE_ZONE: {{google-zone}}
-    - task: Cleanup Dataproc 2
-      input_mapping:
-        dataproc_env_files: dataproc_2_env_files
-      config:
-        run:
-          path: pxf_src/concourse/scripts/cleanup_dataproc_cluster.bash
-        inputs:
-          - name: pxf_src
-          - name: dataproc_env_files
-        platform: linux
-      image: ccp-7
-      params:
-        GOOGLE_CREDENTIALS: ((data-gpdb-ud-kerberos-google-service-account-key))
-        GOOGLE_PROJECT_ID: ((data-gpdb-ud-kerberos-google-project-id))
-        GOOGLE_ZONE: ((data-gpdb-ud-kerberos-google-zone))
-
 ## ======================================================================
 ## RESOURCE TYPES
 ## ======================================================================
@@ -314,8 +275,6 @@ jobs:
       KERBEROS: {{kerberos-enabled}}
       PLATFORM: centos7
       PXF_JVM_OPTS: {{pxf-jvm-opts}}
-    on_failure:
-      <<: *dataproc_timed_destroy
   - in_parallel:
     - do:
       - task: Archive Cluster Configs
