@@ -55,6 +55,6 @@ tar xvzf "\${CWDIR}/pxf.tar.gz" -C \$GPHOME
 EOF
 chmod +x /tmp/pxf_tarball/install_gpdb_component
 
-echo "create the pxf installer tarball in pxf_artifacts/licensed/gp${GP_VER}/pxf-${pxf_version}.tar.gz"
+echo "create the pxf installer tarball in pxf_artifacts/licensed/gp${GP_VER}/pxf-gp${GP_VER}-${pxf_version}-el${TARGET_OS_VERSION}.x86_64.tar.gz"
 mkdir -p "pxf_artifacts/licensed/gp${GP_VER}/"
-tar -czf "pxf_artifacts/licensed/gp${GP_VER}/pxf-${pxf_version}.tar.gz" -C /tmp/pxf_tarball .
+tar -czf "pxf_artifacts/licensed/gp${GP_VER}/pxf-gp${GP_VER}-${pxf_version}-el${TARGET_OS_VERSION}.x86_64.tar.gz" -C /tmp/pxf_tarball .
