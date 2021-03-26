@@ -101,7 +101,7 @@ fly -t ud set-pipeline \
     -c ~/workspace/pxf/concourse/pipelines/longevity_pipeline.yml \
     -l ~/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
     -l ~/workspace/pxf/concourse/settings/pxf-multinode-params.yml \
-    -l ~/workspace/gp-continuous-integration/secrets/pxf_secrets.yml \
+    -l ~/workspace/gp-continuous-integration/secrets/pxf-secrets.yml \
     -v folder-prefix=dev/pivotal -v test-env=dev \
     -v icw_green_bucket=gpdb5-assert-concourse-builds \
     -v gcs-bucket-intermediates=pivotal-gpdb-concourse-resources-intermediates-prod \
