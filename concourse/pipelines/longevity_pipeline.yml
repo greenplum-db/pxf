@@ -70,34 +70,22 @@ resources:
     repository: pivotaldata/ccp
     tag: 7
 
-- name: gpdb-pxf-dev-centos6
-  type: docker-image
+- name: gpdb6-pxf-dev-centos7-image
+  type: registry-image
   icon: docker
   source:
-    repository: pivotaldata/gpdb-pxf-dev
-    tag: centos6
+    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb6-centos7-test-pxf
+    tag: latest
+    username: _json_key
+    password: ((pxf-cloudbuild-service-account-key))
 
-- name: gpdb-pxf-dev-centos6-hdp2-server
-  type: docker-image
-  icon: docker
-  source:
-    repository: pivotaldata/gpdb-pxf-dev
-    tag: centos6-hdp2-server
-
-- name: bin_gpdb_centos6
+- name: gpdb6_rhel7_rpm_latest-0
   type: gcs
-  icon: archive
+  icon: google-drive
   source:
-    bucket: ((gcs-bucket-resources-prod))
-    json_key: ((concourse-gcs-resources-service-account-key))
-    regexp: server/published/gpdb6/server-rc-(.*)-rhel6_x86_64.tar.gz
-
-- name: gpdb_src
-  type: git
-  icon: github-circle
-  source:
-    branch: 6X_STABLE
-    uri: {{gpdb-git-remote}}
+    bucket: data-gpdb-ud-pivnet-artifacts
+    json_key: ((pxf-storage-service-account-key))
+    regexp: latest-0_gpdb6/greenplum-db-(.*)-rhel7-x86_64.rpm
 
 - name: pxf_src_tag
   type: git
@@ -122,7 +110,7 @@ resources:
     bucket: {{pxf-aws-bucket-name}}
     region_name: {{aws-region}}
     secret_access_key: {{bucket-secret-access-key}}
-    versioned_file: pxf_artifacts/longevity/((pxf-tag))/pxf.tar.gz
+    versioned_file: pxf_artifacts/longevity/((pxf-tag))/pxf-gp6.el7.tar.gz
 
 - name: cluster_env_files_tar
   type: s3
@@ -154,6 +142,22 @@ resources:
     secret_access_key: {{bucket-secret-access-key}}
     versioned_file: pxf_artifacts/longevity/((pxf-tag))/dataproc_2_env_files.tar.gz
 
+- name: singlecluster-hdp2
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: data-gpdb-ud-pxf-build-resources
+    json_key: ((pxf-storage-service-account-key))
+    versioned_file: singlecluster/HDP2/singlecluster-HDP2.tar.gz
+
+- name: pxf-automation-dependencies
+  type: gcs
+  icon: google-drive
+  source:
+    bucket: data-gpdb-ud-pxf-build-resources
+    json_key: ((pxf-storage-service-account-key))
+    versioned_file: automation-dependencies/pxf-automation-dependencies.tar.gz
+
 ## ======================================================================
 ## JOBS
 ## ======================================================================
@@ -164,29 +168,35 @@ jobs:
   - in_parallel:
     - get: pxf_src
       resource: pxf_src_tag
-    - get: gpdb-pxf-dev-centos6
+    - get: gpdb_package
+      resource: gpdb6_rhel7_rpm_latest-0
+    - get: gpdb6-pxf-dev-centos7-image
   - task: compile_pxf
-    image: gpdb-pxf-dev-centos6
-    file: pxf_src/concourse/tasks/compile_pxf.yml
+    image: gpdb6-pxf-dev-centos7-image
+    file: pxf_src/concourse/tasks/build.yml
+    params:
+      TARGET_OS: rhel7
   - put: pxf_tarball
     params:
-      file: pxf_artifacts/pxf.tar.gz
+      file: dist/pxf-gp6-*.el7.tar.gz
 
 - name: provision_clusters_((pxf-tag))
   max_in_flight: 1
   plan:
   - in_parallel:
     - get: ccp_src
-    - get: gpdb_src
-    - get: gpdb_binary
-      resource: bin_gpdb_centos6
+    - get: gpdb_package
+      resource: gpdb6_rhel7_rpm_latest-0
     - get: pxf_src
     - get: pxf_tarball
       passed:
       - compile_pxf_((pxf-tag))
       trigger: true
     - get: ccp-7
-    - get: gpdb-pxf-dev-centos6-hdp2-server
+    - get: gpdb6-pxf-dev-centos7-image
+    - get: pxf-automation-dependencies
+    - get: singlecluster
+      resource: singlecluster-hdp2
   - in_parallel:
     - do:
       - put: terraform_gpdb
@@ -201,10 +211,11 @@ jobs:
             number_of_nodes: {{number_of_gpdb_nodes}}
             extra_nodes: 1
             segments_per_host: 4
-            instance_type: n1-standard-2
+            instance_type: n1-standard-4
             ccp_reap_minutes: 262800
       - task: Generate Greenplum Cluster
         input_mapping:
+          gpdb_rpm: gpdb_package
           terraform: terraform_gpdb
         file: ccp_src/ci/tasks/gen_cluster.yml
         image: ccp-7
@@ -216,12 +227,13 @@ jobs:
           BUCKET_NAME: {{tf-bucket-name}}
           PLATFORM: centos7
           CLOUD_PROVIDER: google
+          GPDB_RPM: true
       - in_parallel:
         - task: Initialize Greenplum
           file: ccp_src/ci/tasks/gpinitsystem.yml
         - task: Install Hadoop
           file: pxf_src/concourse/tasks/install_hadoop.yml
-          image: gpdb-pxf-dev-centos6-hdp2-server
+          image: gpdb6-pxf-dev-centos7-image
           params:
             ACCESS_KEY_ID: {{tf-machine-access-key-id}}
             SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
@@ -237,6 +249,7 @@ jobs:
         GOOGLE_ZONE: {{google-zone}}
         IMAGE_VERSION: {{dataproc-image-version}}
         KERBEROS: {{kerberos-enabled}}
+        ccp_reap_minutes: 20160
     - task: Generate Hadoop Cluster 2
       file: pxf_src/concourse/tasks/install_dataproc.yml
       image: ccp-7
@@ -254,14 +267,14 @@ jobs:
         KERBEROS: {{kerberos-enabled}}
         KEY: dataproc-kerberos-key
         KEYRING: dataproc-kerberos
+        ccp_reap_minutes: 20160
         NO_ADDRESS: false
         PROXY_USER: gpuser
         SECRETS_BUCKET: data-gpdb-ud-kerberos-pxf-secrets
   - task: Setup PXF
     input_mapping:
       terraform: terraform_gpdb
-      bin_gpdb: gpdb_binary
-    file: pxf_src/concourse/tasks/install_pxf.yml
+    file: pxf_src/concourse/tasks/install_pxf_on_ccp.yml
     image: ccp-7
     params:
       AWS_ACCESS_KEY_ID: {{tf-machine-access-key-id}}
@@ -270,6 +283,7 @@ jobs:
       BUCKET_PATH: {{tf-bucket-path}}
       BUCKET_NAME: {{tf-bucket-name}}
       CLOUD_PROVIDER: google
+      GP_VER: 6
       IMPERSONATION: {{enable-impersonation-multinode}}
       INSTALL_GPHDFS: false
       KERBEROS: {{kerberos-enabled}}
@@ -321,11 +335,8 @@ jobs:
   - get: every-15mins
     trigger: true
   - in_parallel:
-    - get: gpdb_src
-      passed:
-      - provision_clusters_((pxf-tag))
-    - get: gpdb_binary
-      resource: bin_gpdb_centos6
+    - get: gpdb_package
+      resource: gpdb6_rhel7_rpm_latest-0
       passed:
       - provision_clusters_((pxf-tag))
     - get: pxf_src
@@ -352,12 +363,15 @@ jobs:
       - provision_clusters_((pxf-tag))
       params:
         unpack: true
-    - get: gpdb-pxf-dev-centos6-hdp2-server
+    - get: gpdb6-pxf-dev-centos7-image
+    - get: pxf-automation-dependencies
+    - get: singlecluster
+      resource: singlecluster-hdp2
   - task: Longevity Test PXF Multinode
     input_mapping:
       bin_gpdb: gpdb_binary
-    image: gpdb-pxf-dev-centos6-hdp2-server
-    file: pxf_src/concourse/tasks/test_pxf_multinode.yml
+    image: gpdb6-pxf-dev-centos7-image
+    file: pxf_src/concourse/tasks/test_pxf_on_ccp.yml
     params:
       ACCESS_KEY_ID: {{tf-machine-access-key-id}}
       SECRET_ACCESS_KEY: {{tf-machine-secret-access-key}}
@@ -365,6 +379,7 @@ jobs:
       IMPERSONATION: {{enable-impersonation-multinode}}
       KERBEROS: {{kerberos-enabled}}
       GOOGLE_PROJECT_ID: {{google-project-id}}
+      GP_VER: 6
       GROUP: multiClusterSecurity
       PXF_JVM_OPTS: {{pxf-jvm-opts}}
       TARGET_OS: centos
