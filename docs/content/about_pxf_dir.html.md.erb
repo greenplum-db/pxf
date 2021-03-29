@@ -4,14 +4,14 @@ title: About the PXF Installation and Configuration Directories
 
 This documentation uses `$PXF_HOME` to refer to the PXF installation directory. Its value depends on how you have installed PXF:
 
- - If you install PXF as part of Greenplum Database, its value is `$GPHOME/pxf`.
- - If you install the PXF `rpm` or `deb` package, its value is `/usr/local/pxf-gp<greenplum-major-version>`, or the directory of your choosing (CentOS/RHEL only). 
+ - If you installed PXF as part of Greenplum Database, its value is `$GPHOME/pxf`.
+ - If you installed the PXF `rpm` or `deb` package, its value is `/usr/local/pxf-gp<greenplum-major-version>`, or the directory of your choosing (CentOS/RHEL only). 
 
 `$PXF_HOME` includes both the PXF executables and the PXF runtime configuration files and directories. In PXF 5.x, you needed to specify a `$PXF_CONF` directory for the runtime configuration when you initialized PXF. In PXF 6.x, however, no initialization is required: `$PXF_BASE` now identifies the runtime configuration directory, and the default `$PXF_BASE` is `$PXF_HOME`.
 
 If you want to store your configuration and runtime files in a different location, see [Relocating $PXF_BASE](#movebase).
 
-<div class="note">This documentation uses the <code>$PXF_HOME</code> environment variable to reference the PXF installation directory. PXF uses this variable internally at runtime; it is not set in your shell environment, and will display as empty if you attempt to <code>echo</code> its value. Similarly, this documentation uses the <code>$PXF_BASE</code> environment variable to reference the PXF runtime configuration directory. PXF uses the variable internally. it only needs to be set in your shell environment if you explicitly relocate the directory.</div>
+<div class="note">This documentation uses the <code>$PXF_HOME</code> environment variable to reference the PXF installation directory. PXF uses this variable internally at runtime; it is not set in your shell environment, and will display as empty if you attempt to <code>echo</code> its value. Similarly, this documentation uses the <code>$PXF_BASE</code> environment variable to reference the PXF runtime configuration directory. PXF uses the variable internally. It only needs to be set in your shell environment if you explicitly relocate the directory.</div>
 
 ## <a id="installed"></a>PXF Installation Directories
 
@@ -34,7 +34,7 @@ The following PXF directories are installed to `$PXF_BASE` when you install Gree
 | conf/                | The location of [user-customizable PXF configuration files](config_files.html) for PXF runtime and logging configuration settings. This directory contains the `pxf-application.properties`, `pxf-env.sh`, `pxf-log4j2.xml`, and `pxf-profiles.xml` files. |
 | keytabs/  | The default location of the PXF Service Kerberos principal keytab file.  The `keytabs/` directory and contained files are readable only by the Greenplum Database installation user, typically `gpadmin`. |
 | lib/     | The location of [user-added runtime dependencies](reg_jar_depend.html). The `native/` subdirectory is the default PXF runtime directory for native libraries. |
-| logs/                | The PXF runtime log file directory. The `logs/` directory and log files are readable only by the Greenplum Database installation user, typically `gpadmin`. |
+| logs/                | The PXF runtime [log file](cfg_logging.html) directory. The `logs/` directory and log files are readable only by the Greenplum Database installation user, typically `gpadmin`. |
 | run/         | The default PXF run directory. After starting PXF, this directory contains a PXF process id file, `pxf-app.pid`. `run/` and contained files and directories are readable only by the Greenplum Database installation user, typically `gpadmin`. |
 | servers/  | The configuration directory for [PXF servers](cfg_server.html); each subdirectory contains a server definition, and the name of the subdirectory identifies the name of the server. The default server is named `default`. The Greenplum Database administrator may configure other servers. |
 
@@ -58,7 +58,7 @@ When your `$PXF_BASE` is different than `$PXF_HOME`, inform PXF by setting the `
 gpadmin@gpmaster$ PXF_BASE=/path/to/dir pxf cluster start
 ```
 
-Or, set the environment variable in the `.bashrc` shell initialization script for the PXF installation owner (typically the `gpadmin` user) as follows:
+Set the environment variable in the `.bashrc` shell initialization script for the PXF installation owner (typically the `gpadmin` user) as follows:
 
 ``` pre
 export PXF_BASE=/path/to/dir
