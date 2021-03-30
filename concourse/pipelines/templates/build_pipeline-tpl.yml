@@ -325,7 +325,7 @@ resources:
   source:
     bucket: data-gpdb-ud-pxf-releases
     json_key: ((pxf-storage-service-account-key))
-    regexp: ((pxf-releases-bucket-prefix))/shipit/greenplum-pxf-(.*).txt
+    regexp: ((pxf-releases-bucket-prefix))/shipit/greenplum-pxf-(5\..*).txt
 
 {% if email_notification %}
 - name: send-an-email
