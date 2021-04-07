@@ -61,7 +61,7 @@ After you install the new version of PXF, perform the following procedure:
 1. Auto-migrate your PXF 5.x configuration to PXF 6.x `$PXF_BASE`:
 
     1. Recall your PXF 5.x `$PXF_CONF` setting.
-    2. Run the `migrate` command. You must provide `PXF_CONF`. If you relocated `$PXF_BASE`, provide that setting as well.
+    2. Run the `migrate` command (see [pxf cluster migrate](ref/pxf-cluster.html)). You must provide `PXF_CONF`. If you relocated `$PXF_BASE`, provide that setting as well.
 
         ``` shell
         gpadmin@gpmaster$ PXF_CONF=/path/to/dir pxf cluster migrate

@@ -44,7 +44,7 @@ Refer to [Configuring PXF](instcfg_pxf.html) and [Starting PXF](cfginitstart_pxf
 
 If you require that `$PXF_BASE` reside in a directory distinct from `$PXF_HOME`, you can change it from the default location to a location of your choosing after you install PXF 6.x.
 
-PXF provides the `pxf [cluster] prepare` command to prepare a new `$PXF_BASE` location. The command copies the runtime and configuration directories identified above to the file system location that you specify in a `PXF_BASE` environment variable.
+PXF provides the [pxf [cluster] prepare](ref/pxf-cluster.html) command to prepare a new `$PXF_BASE` location. The command copies the runtime and configuration directories identified above to the file system location that you specify in a `PXF_BASE` environment variable.
 
 For example, to relocate `$PXF_BASE` to the `/path/to/dir` directory on all Greenplum hosts, run the command as follows:
 
