@@ -481,6 +481,30 @@ And query the table:
 ``` sql
 postgres=# SELECT month, number_of_orders FROM pxf_parquet_table;
 ```
+## <a id="hive_avro"></a>Accessing Avro-Format Hive Tables
+
+The PXF `hive` profile supports accessing Hive tables that use the Avro storage format. Map the table columns using equivalent Greenplum Database data types. For example, if a Hive table is created in the `default` schema using:
+
+```sql
+hive> CREATE TABLE hive_avro_data_table (id int, name string, user_id string)
+	ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.avro.AvroSerDe'
+	STORED AS INPUTFORMAT 'org.apache.hadoop.hive.ql.io.avro.AvroContainerInputFormat'
+	OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.avro.AvroContainerOutputFormat';
+```
+
+Define the Greenplum Database external table:
+
+```sql
+postgres=# CREATE EXTERNAL TABLE salesinfo_hiveavroprofile(id int, name text, user_id text)
+	LOCATION ('pxf://default.hive_avro_data_table?profile=Hive')
+	FORMAT 'custom' (FORMATTER='pxfwritable_import');
+```
+
+And query the table:
+
+```sql
+postgres=# SELECT * FROM salesinfo_hiveavroprofile;
+```
 
 ## <a id="hive_complex"></a>Working with Complex Data Types
 
