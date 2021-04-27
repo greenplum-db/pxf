@@ -495,15 +495,15 @@ hive> CREATE TABLE hive_avro_data_table (id int, name string, user_id string)
 Define the Greenplum Database external table:
 
 ```sql
-postgres=# CREATE EXTERNAL TABLE salesinfo_hiveavroprofile(id int, name text, user_id text)
-	LOCATION ('pxf://default.hive_avro_data_table?profile=Hive')
+postgres=# CREATE EXTERNAL TABLE userinfo_hiveavro(id int, name text, user_id text)
+	LOCATION ('pxf://default.hive_avro_data_table?profile=hive')
 	FORMAT 'custom' (FORMATTER='pxfwritable_import');
 ```
 
 And query the table:
 
 ```sql
-postgres=# SELECT * FROM salesinfo_hiveavroprofile;
+postgres=# SELECT * FROM userinfo_hiveavro;
 ```
 
 ## <a id="hive_complex"></a>Working with Complex Data Types
