@@ -46,10 +46,9 @@ public class ProfileFactory {
      */
     public static String get(InputFormat inputFormat, boolean hasComplexTypes, String userProfileName) {
         String profileName;
-        if (HIVE_ORC_VECTORIZED_PROFILE_OLD.equals(userProfileName))
-            // specialized Vectorized ORC profile is deprecated, fallback onto hive:orc profile
-            // that will apply vectorized execution logic if appropriate
-            return HIVE_ORC_PROFILE;
+        if (HIVE_ORC_VECTORIZED_PROFILE_OLD.equalsIgnoreCase(userProfileName))
+            // specialized Vectorized ORC profile is deprecated, but still needs to be supported for now
+            return userProfileName;
         if (inputFormat instanceof TextInputFormat && !hasComplexTypes) {
             profileName = HIVE_TEXT_PROFILE;
         } else if (inputFormat instanceof RCFileInputFormat) {

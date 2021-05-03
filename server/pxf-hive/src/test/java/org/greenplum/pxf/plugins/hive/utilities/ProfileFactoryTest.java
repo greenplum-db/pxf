@@ -30,11 +30,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class ProfileFactoryTest {
 
     @Test
-    public void get() throws Exception {
+    public void get() {
 
-        // if user specified vectorized ORC, no matter what the input format is, the profile should be used
+        // if user specified vectorized ORC, no matter what the input format is, the profile (as in parameter) should be used
         String profileName = ProfileFactory.get(new TextInputFormat(), false, "HiveVectorizedORC");
-        assertEquals("hive:orc", profileName);
+        assertEquals("HiveVectorizedORC", profileName);
+        profileName = ProfileFactory.get(new TextInputFormat(), false, "hivevectorizedorc");
+        assertEquals("hivevectorizedorc", profileName);
 
         // For TextInputFormat when table has no complex types, HiveText profile should be used
         profileName = ProfileFactory.get(new TextInputFormat(), false);
