@@ -397,7 +397,7 @@ This procedure will typically be performed by the Greenplum Database administrat
 1. Download the MySQL JDBC driver and place it in the PXF user configuration directory under the `lib` subdirectory. You can download a MySQL JDBC driver from your preferred download location. For example, you can download it from Maven Central using the following command:
 
     ```shell
-    $ cd /usr/local/pxf-gp-<version>/lib
+    $ cd /usr/local/pxf-gp<version>/lib
     $ wget https://repo1.maven.org/maven2/mysql/mysql-connector-java/8.0.21/mysql-connector-java-8.0.21.jar
     ```
 
@@ -420,7 +420,7 @@ This procedure will typically be performed by the Greenplum Database administrat
         </property>
         <property>
             <name>jdbc.url</name>
-            <value>jdbc:mysql://mysqlserverhost:3306/mysql</value>
+            <value>jdbc:mysql://mysqlserverhost:3306/mysqltestdb</value>
             <description>The URL that the JDBC driver can use to connect to the database (e.g. jdbc:postgresql://localhost/postgres)</description>
         </property>
         <property>
