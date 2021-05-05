@@ -174,8 +174,8 @@ class ORCVectorizedMappingFunctions {
             rowId = m * rowIndex;
 
             value = bcv.noNulls || !bcv.isNull[rowId] ?
-                    new String(bcv.vector[rowIndex], bcv.start[rowIndex],
-                            bcv.length[rowIndex], StandardCharsets.UTF_8) : null;
+                    new String(bcv.vector[rowId], bcv.start[rowId],
+                            bcv.length[rowId], StandardCharsets.UTF_8) : null;
             result[rowIndex] = new OneField(oid, value);
         }
         return result;
