@@ -371,13 +371,13 @@ Perform the following steps to create a MySQL table named `names` in a database 
 5. Create a MySQL user named `mysql-user` and assign the password `my-secret-pw` to it:
 
     ``` sql
-    > CREATE USER 'mysql-user'@'localhost' IDENTIFIED BY 'my-secret-pw';
+    > CREATE USER 'mysql-user' IDENTIFIED BY 'my-secret-pw';
     ```
 
 6. Assign user `mysql-user` all privileges on table `names`, and exit the `mysql` subsystem:
 
     ``` sql
-    > GRANT ALL PRIVILEGES ON mysqltestdb.names TO 'mysql-user'@'localhost';
+    > GRANT ALL PRIVILEGES ON mysqltestdb.names TO 'mysql-user';
     > exit
     ```
 
@@ -394,7 +394,7 @@ This procedure will typically be performed by the Greenplum Database administrat
     ``` shell
     $ ssh gpadmin@<gpmaster>
     ```
-1. Download the MySQL JDBC driver and place it in the PXF user configuration directory under the `lib` subdirectory. You can download a MySQL JDBC driver from your preferred download location. For example, you can download it from Maven Central using the following command:
+1. Download the MySQL JDBC driver and place it under `$PXF_HOME/lib`. If you [relocated $PXF_BASE](about_pxf_dir.html#movebase), you can also place the driver under `$PXF_BASE/lib`. You can download a MySQL JDBC driver from your preferred download location. The following example downloads the driver from Maven Central and places it under `$PXF_HOME/lib`:
 
     ```shell
     $ cd /usr/local/pxf-gp<version>/lib
@@ -416,22 +416,22 @@ This procedure will typically be performed by the Greenplum Database administrat
         <property>
             <name>jdbc.driver</name>
             <value>com.mysql.jdbc.Driver</value>
-            <description>Class name of the JDBC driver (e.g. org.postgresql.Driver)</description>
+            <description>Class name of the JDBC driver</description>
         </property>
         <property>
             <name>jdbc.url</name>
             <value>jdbc:mysql://mysqlserverhost:3306/mysqltestdb</value>
-            <description>The URL that the JDBC driver can use to connect to the database (e.g. jdbc:postgresql://localhost/postgres)</description>
+            <description>The URL that the JDBC driver can use to connect to the database</description>
         </property>
         <property>
             <name>jdbc.user</name>
             <value>mysql-user</value>
-            <description>User name for connecting to the database (e.g. postgres)</description>
+            <description>User name for connecting to the database</description>
         </property>
         <property>
             <name>jdbc.password</name>
             <value>my-secret-pw</value>
-            <description>Password for connecting to the database (e.g. postgres)</description>
+            <description>Password for connecting to the database</description>
         </property>
     </configuration>  
     ```
