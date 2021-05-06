@@ -29,6 +29,7 @@ public class ORCVectorizedBaseTest {
     static final Byte[] COL15 = {0b00110001, 0b00110010, 0b00110011, 0b00110100, 0b00110101, 0b00110110, 0b00110111, 0b00111000, 0b00111001, 0b00110000, 0b00110001, 0b00110001, 0b00110001, 0b00110001, 0b00110001, 0b00110001, 0b00110001, 0b00110001, 0b00110001, 0b00110001, 0b00110001, 0b00110001, 0b00110001, 0b00110001, null};
     static final int[] ALL_ROWS = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25};
     static final int[] NO_ROWS = {};
+    static final Object[][] ORC_TYPES_DATASET = {COL1, COL2, COL3, COL4, COL5, COL6, COL7, COL8, COL9, COL10, COL11, COL12, COL13, COL14, COL15};
 
     // From resources/orc/orc_types_unordered_subset.csv
     static final String[] COL1_SUBSET = {"row1_file2", "row2_file2", "row3_file2", "row4_file2", "row5_file2", "row6_file2", "row7_file2", "row8_file2", "row9_file2", "row10_file2", "row11_file2", "row12_file2", "row13_int_null_file2", "row14_decimal_null_file2", "row15_timestamp_null_file2", "row16_bool_null_file2", "row17_varchar_null_file2"};
@@ -38,6 +39,24 @@ public class ORCVectorizedBaseTest {
     static final Boolean[] COL9_SUBSET = {false, true, false, true, false, true, false, true, false, true, false, false, false, false, false, null, false};
     static final Short[] COL11_SUBSET = {10, 20, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1100, 1100, 1100, 1100, 1100, 1100};
     static final String[] COL13_SUBSET = {"abcd", "abcde", "abcde", "abcde", "abcde", "abcde", "abcde", "abcde", "abcde", "abcde", "abcde", "abcde", "abcde", "abcde", "abcde", "abcde", null};
+
+    // From resources/orc/orc_types_repeated.csv
+    static final String[] COL1_REPEATED = {"row1", "row2", "row3"};
+    static final String[] COL2_REPEATED = {"s_6", "s_6", "s_6"};
+    static final Integer[] COL3_REPEATED = {1, 1, 1};
+    static final Double[] COL4_REPEATED = {6.0, 6.0, 6.0};
+    static final String[] COL5_REPEATED = {"1.23456", "1.23456", "1.23456"};
+    static final String[] COL6_REPEATED = {"2013-07-13 21:00:05", "2013-07-13 21:00:05", "2013-07-13 21:00:05"};
+    static final Float[] COL7_REPEATED = {7.7f, 7.7f, 7.7f};
+    static final Long[] COL8_REPEATED = {23456789L, 23456789L, 23456789L};
+    static final Boolean[] COL9_REPEATED = {true, true, true};
+    static final Short[] COL10_REPEATED = {null, null, null};
+    static final Short[] COL11_REPEATED = {10, 10, 10};
+    static final String[] COL12_REPEATED = {"2015-03-06", "2015-03-06", "2015-03-06"};
+    static final String[] COL13_REPEATED = {"abcd", "abcd", "abcd"};
+    static final String[] COL14_REPEATED = {"abc", "abc", "abc"};
+    static final Byte[] COL15_REPEATED = {0b00110001, 0b00110001, 0b00110001};
+    static final Object[][] ORC_TYPES_REPEATED_DATASET = {COL1_REPEATED, COL2_REPEATED, COL3_REPEATED, COL4_REPEATED, COL5_REPEATED, COL6_REPEATED, COL7_REPEATED, COL8_REPEATED, COL9_REPEATED, COL10_REPEATED, COL11_REPEATED, COL12_REPEATED, COL13_REPEATED, COL14_REPEATED, COL15_REPEATED};
 
     @BeforeEach
     public void setup() {

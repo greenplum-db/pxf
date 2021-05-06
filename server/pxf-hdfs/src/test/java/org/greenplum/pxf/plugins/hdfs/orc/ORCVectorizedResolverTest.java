@@ -34,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ORCVectorizedResolverTest extends ORCVectorizedBaseTest {
 
+    private static final String ORC_TYPES_SCHEMA = "struct<t1:string,t2:string,num1:int,dub1:double,dec1:decimal(38,18),tm:timestamp,r:float,bg:bigint,b:boolean,tn:tinyint,sml:smallint,dt:date,vc1:varchar(5),c1:char(3),bin:binary>";
     private ORCVectorizedResolver resolver;
     private RequestContext context;
 
@@ -98,7 +99,7 @@ class ORCVectorizedResolverTest extends ORCVectorizedBaseTest {
     @Test
     public void testGetFieldsForBatchPrimitive() throws IOException {
         // This schema matches the columnDescriptors schema
-        TypeDescription schema = TypeDescription.fromString("struct<t1:string,t2:string,num1:int,dub1:double,dec1:decimal(38,18),tm:timestamp,r:float,bg:bigint,b:boolean,tn:tinyint,sml:smallint,dt:date,vc1:varchar(5),c1:char(3),bin:binary>");
+        TypeDescription schema = TypeDescription.fromString(ORC_TYPES_SCHEMA);
         context.setMetadata(schema);
 
         resolver.setRequestContext(context);
@@ -111,7 +112,7 @@ class ORCVectorizedResolverTest extends ORCVectorizedBaseTest {
         assertNotNull(fieldsForBatch);
         assertEquals(25, fieldsForBatch.size());
 
-        assertDataReturned(fieldsForBatch);
+        assertDataReturned(ORC_TYPES_DATASET, fieldsForBatch);
     }
 
     @Test
@@ -137,7 +138,7 @@ class ORCVectorizedResolverTest extends ORCVectorizedBaseTest {
         assertNotNull(fieldsForBatch);
         assertEquals(25, fieldsForBatch.size());
 
-        assertDataReturned(fieldsForBatch);
+        assertDataReturned(ORC_TYPES_DATASET, fieldsForBatch);
     }
 
     @Test
@@ -171,7 +172,7 @@ class ORCVectorizedResolverTest extends ORCVectorizedBaseTest {
     @Test
     public void testGetFieldsForBatchPrimitiveUnorderedSubset() throws IOException {
         // This schema matches the columnDescriptors schema
-        TypeDescription schema = TypeDescription.fromString("struct<t1:string,t2:string,num1:int,dub1:double,dec1:decimal(38,18),tm:timestamp,r:float,bg:bigint,b:boolean,tn:tinyint,sml:smallint,dt:date,vc1:varchar(5),c1:char(3),bin:binary>");
+        TypeDescription schema = TypeDescription.fromString(ORC_TYPES_SCHEMA);
         context.setMetadata(schema);
 
         resolver.setRequestContext(context);
@@ -188,12 +189,31 @@ class ORCVectorizedResolverTest extends ORCVectorizedBaseTest {
     }
 
     @Test
+    public void testGetFieldsForBatchRepeatedPrimitive() throws IOException {
+        // This schema matches the columnDescriptors schema
+        TypeDescription schema = TypeDescription.fromString(ORC_TYPES_SCHEMA);
+        context.setMetadata(schema);
+
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+
+        VectorizedRowBatch batch = readOrcFile("orc_types_repeated.orc", 3, schema);
+
+        OneRow batchOfRows = new OneRow(batch);
+        List<List<OneField>> fieldsForBatch = resolver.getFieldsForBatch(batchOfRows);
+        assertNotNull(fieldsForBatch);
+        assertEquals(3, fieldsForBatch.size());
+
+        assertDataReturned(ORC_TYPES_REPEATED_DATASET, fieldsForBatch);
+    }
+
+    @Test
     public void testUnsupportedFunctionality() {
         assertThrows(UnsupportedOperationException.class, () -> resolver.getFields(new OneRow()));
         assertThrows(UnsupportedOperationException.class, () -> resolver.setFields(Collections.singletonList(new OneField())));
     }
 
-    private void assertDataReturned(List<List<OneField>> fieldsForBatch) {
+    private void assertDataReturned(Object[][] expected, List<List<OneField>> fieldsForBatch) {
         for (int rowNum = 0; rowNum < fieldsForBatch.size(); rowNum++) {
             List<OneField> row = fieldsForBatch.get(rowNum);
             assertNotNull(row);
@@ -204,53 +224,11 @@ class ORCVectorizedResolverTest extends ORCVectorizedBaseTest {
                 ColumnDescriptor columnDescriptor = tupleDescription.get(colNum);
                 Object value = row.get(colNum).val;
                 if (columnDescriptor.isProjected()) {
-                    Object expectedValue = null;
-                    switch (colNum) {
-                        case 0:
-                            expectedValue = COL1[rowNum];
-                            break;
-                        case 1:
-                            expectedValue = COL2[rowNum];
-                            break;
-                        case 2:
-                            expectedValue = COL3[rowNum];
-                            break;
-                        case 3:
-                            expectedValue = COL4[rowNum];
-                            break;
-                        case 4:
-                            expectedValue = COL5[rowNum] == null ? null : new HiveDecimalWritable(COL5[rowNum]);
-                            break;
-                        case 5:
-                            expectedValue = COL6[rowNum];
-                            break;
-                        case 6:
-                            expectedValue = COL7[rowNum];
-                            break;
-                        case 7:
-                            expectedValue = COL8[rowNum];
-                            break;
-                        case 8:
-                            expectedValue = COL9[rowNum];
-                            break;
-                        case 9:
-                            expectedValue = COL10[rowNum];
-                            break;
-                        case 10:
-                            expectedValue = COL11[rowNum];
-                            break;
-                        case 11:
-                            expectedValue = COL12[rowNum] == null ? null : Date.valueOf(COL12[rowNum]);
-                            break;
-                        case 12:
-                            expectedValue = COL13[rowNum];
-                            break;
-                        case 13:
-                            expectedValue = COL14[rowNum];
-                            break;
-                        case 14:
-                            expectedValue = COL15[rowNum];
-                            break;
+                    Object expectedValue = expected[colNum][rowNum];
+                    if (colNum == 4 && expectedValue != null) {
+                        expectedValue = new HiveDecimalWritable(String.valueOf(expectedValue));
+                    } else if (colNum == 11 && expectedValue != null) {
+                        expectedValue = Date.valueOf(String.valueOf(expectedValue));
                     }
                     if (colNum == 14) {
                         if (expectedValue == null) {

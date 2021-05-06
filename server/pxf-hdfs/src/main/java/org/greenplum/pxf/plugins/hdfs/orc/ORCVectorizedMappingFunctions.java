@@ -236,7 +236,7 @@ class ORCVectorizedMappingFunctions {
         for (int rowIndex = 0; rowIndex < batch.size; rowIndex++) {
             rowId = m * rowIndex;
             value = (lcv.noNulls || !lcv.isNull[rowId])
-                    ? Date.valueOf(LocalDate.ofEpochDay(lcv.vector[rowIndex]))
+                    ? Date.valueOf(LocalDate.ofEpochDay(lcv.vector[rowId]))
                     : null;
             result[rowIndex] = new OneField(oid, value);
         }
