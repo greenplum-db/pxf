@@ -4,7 +4,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
-import org.apache.hadoop.io.Text;
 import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
 import org.apache.orc.RecordReader;
@@ -208,6 +207,33 @@ class ORCVectorizedResolverTest extends ORCVectorizedBaseTest {
     }
 
     @Test
+    public void testGetFieldsForMultipleBatches() throws IOException {
+        // This schema matches the columnDescriptors schema
+        TypeDescription schema = TypeDescription.fromString(ORC_TYPES_SCHEMA);
+        context.setMetadata(schema);
+
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+
+        List<VectorizedRowBatch> batches = readBatchesFromOrcFile("orc_types.orc", 24, 2, schema);
+
+        OneRow firstBatchOfRows = new OneRow(batches.get(0));
+        List<List<OneField>> fieldsForBatch1 = resolver.getFieldsForBatch(firstBatchOfRows);
+        assertNotNull(fieldsForBatch1);
+        assertEquals(24, fieldsForBatch1.size());
+
+        OneRow batchOfRows = new OneRow(batches.get(1));
+        List<List<OneField>> fieldsForBatch2 = resolver.getFieldsForBatch(batchOfRows);
+        assertNotNull(fieldsForBatch2);
+        assertEquals(1, fieldsForBatch2.size());
+
+        List<List<OneField>> fields = new ArrayList<>();
+        fields.addAll(fieldsForBatch1);
+        fields.addAll(fieldsForBatch2);
+        assertDataReturned(ORC_TYPES_DATASET, fields);
+    }
+
+    @Test
     public void testUnsupportedFunctionality() {
         assertThrows(UnsupportedOperationException.class, () -> resolver.getFields(new OneRow()));
         assertThrows(UnsupportedOperationException.class, () -> resolver.setFields(Collections.singletonList(new OneField())));
@@ -369,5 +395,45 @@ class ORCVectorizedResolverTest extends ORCVectorizedBaseTest {
         assertTrue(recordReader.nextBatch(batch));
         assertEquals(expectedSize, batch.size);
         return batch;
+    }
+
+    /**
+     * Helper method for returning a list of batches from a single ORC file
+     * @param filename name of ORC file to read
+     * @param rowBatchMaxSize max size of batch to read from file
+     * @param expectedNumberOfBatches expected number of batches that should be returned by this method
+     * @param readSchema description of types in ORC file
+     * @return
+     * @throws IOException
+     */
+    private List<VectorizedRowBatch> readBatchesFromOrcFile(String filename, int rowBatchMaxSize, int expectedNumberOfBatches, TypeDescription readSchema)
+            throws IOException {
+        String orcFile = Objects.requireNonNull(getClass().getClassLoader().getResource("orc/" + filename)).getPath();
+        Path file = new Path(orcFile);
+        Configuration configuration = new Configuration();
+
+        Reader fileReader = OrcFile.createReader(file, OrcFile
+                .readerOptions(configuration)
+                .filesystem(file.getFileSystem(configuration)));
+
+        // Build the reader options
+        Reader.Options options = fileReader
+                .options()
+                .schema(readSchema);
+
+        RecordReader recordReader = fileReader.rows(options);
+        List<VectorizedRowBatch> batches = new ArrayList<>();
+        boolean hasMore = true;
+        while (hasMore) {
+            VectorizedRowBatch batch = readSchema.createRowBatch(rowBatchMaxSize);
+            hasMore = recordReader.nextBatch(batch);
+            if (hasMore) {
+                batches.add(batch);
+            }
+        }
+
+        assertEquals(expectedNumberOfBatches, batches.size());
+
+        return batches;
     }
 }
