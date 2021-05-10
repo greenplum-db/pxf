@@ -1,5 +1,14 @@
 # Changelog
 
+## 6.0.1 (05/11/2021)
+
+### Bug Fixes:
+
+- [#624](https://github.com/greenplum-db/pxf/pull/624) Deprecated HiveVectorizedORC profile should follow vectorized execution path
+- [#626](https://github.com/greenplum-db/pxf/pull/626) Hive connector should clone SerDe properties per fragment
+- [#627](https://github.com/greenplum-db/pxf/pull/627) Fix NullPointerException for ORC textMapper function when the column is repeating
+- [#630](https://github.com/greenplum-db/pxf/pull/630) Fix the inconsistency between row count in external table and ORC file
+
 ## 6.0.0 (03/25/2021)
 
 ### Enhancements:
