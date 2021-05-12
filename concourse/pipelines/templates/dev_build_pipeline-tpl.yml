@@ -257,9 +257,9 @@ resources:
 - name: pxf5_gp6_rhel7_released
   type: gcs
   source:
-    bucket: ((pxf-releng-gp6-drop-bucket))
+    bucket: ((pxf-releng-drop-bucket))
     json_key: ((concourse-gcs-resources-service-account-key))
-    regexp: ((pxf-releng-gp6-drop-path))/pxf-gp6-5.(.*)-2.el7.x86_64.rpm
+    regexp: ((pxf-releng-drop-path))/gpdb6/pxf-gp6-5.(.*)-2.el7.x86_64.rpm
 {% endif %}
 
 ## ---------- PXF Build Artifacts ----------
