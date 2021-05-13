@@ -21,7 +21,7 @@ dependencies {
 
     implementation(project(':pxf-api'))
     implementation("com.google.guava:guava")
-    implementation("com.zaxxer:HikariCP:3.4.2")
+    implementation("com.zaxxer:HikariCP:3.4.5")
     implementation("commons-collections:commons-collections")
     implementation("commons-io:commons-io")
     implementation("commons-lang:commons-lang")
