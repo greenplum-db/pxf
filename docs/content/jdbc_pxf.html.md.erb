@@ -394,7 +394,7 @@ This procedure will typically be performed by the Greenplum Database administrat
     ``` shell
     $ ssh gpadmin@<gpmaster>
     ```
-1. Download the MySQL JDBC driver and place it under `$PXF_HOME/lib`. If you [relocated $PXF_BASE](about_pxf_dir.html#movebase), you can also place the driver under `$PXF_BASE/lib`. You can download a MySQL JDBC driver from your preferred download location. The following example downloads the driver from Maven Central and places it under `$PXF_HOME/lib`:
+1. Download the MySQL JDBC driver and place it under `$PXF_BASE/lib`. If you [relocated $PXF_BASE](about_pxf_dir.html#movebase), make sure you use the updated location. You can download a MySQL JDBC driver from your preferred download location. The following example downloads the driver from Maven Central and places it under `$PXF_BASE/lib`:
 
     ```shell
     $ cd /usr/local/pxf-gp<version>/lib
@@ -460,8 +460,8 @@ Perform the following procedure to create a PXF external table that references t
     gpadmin=# SELECT * FROM names_in_mysql;
      id |   name    |   last   
     ----+-----------+----------
-    1 | John | Smith
-    2 | Mary | Blake
+      1 |   John    |   Smith
+      2 |   Mary    |   Blake
     (2 rows)    
     ```
 
@@ -487,11 +487,11 @@ Perform the following procedure to insert some data into the `names` MySQL table
 
     ``` sql
     gpadmin=#  SELECT * FROM names_in_mysql;
-     id |   name    |   last   
-    ----+-----------+----------
-      1 | John | Smith
-      2 | Mary | Blake
-      3 | Muhammad | Ali
+     id |   name     |   last   
+    ----+------------+--------
+      1 |   John     |   Smith
+      2 |   Mary     |   Blake
+      3 |   Muhammad |   Ali
     (3 rows)
     ```
 
