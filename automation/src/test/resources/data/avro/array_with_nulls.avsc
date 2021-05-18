@@ -1,0 +1,23 @@
+{
+  "type" : "record",
+  "name" : "testTableName",
+  "namespace" : "com.example",
+  "doc" : "",
+  "fields" : [ {
+    "name" : "type_int",
+    "type" : "int",
+    "doc" : "int type"
+  }, {
+    "name" : "type_long_array",
+    "type" : ["null", {"type": "array", "items": ["null", "long"]}],
+    "doc" : "long array type"
+  }, {
+    "name" : "type_numeric_array",
+    "type" : ["null", {"type": "array", "items": ["null", "string"]}],
+    "doc" : "numeric array type"
+  }, {
+    "name" : "type_string_array",
+    "type" : ["null", {"type": "array", "items": ["null","string"]}],
+    "doc" : "string array type"
+  } ]
+}

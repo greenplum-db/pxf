@@ -13,7 +13,7 @@
 SET bytea_output='escape';
 SET
 SELECT * from pxf_alter_avro_table ORDER BY type_int;
-ERROR:  Record has 7 fields but the schema size is 8
+ERROR:  Avro record has 7 fields but GPDB table has 8 columns.
 CONTEXT:  External table pxf_alter_avro_table
 -- Drop one of the columns
 ALTER EXTERNAL TABLE pxf_alter_avro_table DROP COLUMN col_does_not_exist;

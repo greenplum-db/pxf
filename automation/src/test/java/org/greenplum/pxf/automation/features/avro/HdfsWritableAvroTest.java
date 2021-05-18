@@ -27,54 +27,80 @@ public class HdfsWritableAvroTest extends BaseFeature {
     private ReadableExternalTable readableExternalTable;
     private ArrayList<File> filesToDelete;
     private static final String[] AVRO_PRIMITIVE_WRITABLE_TABLE_COLS = new String[]{
-            "type_int int",
-            "type_smallint smallint", // smallint
-            "type_long bigint",
-            "type_float real",
-            "type_double float8",
-            "type_string text",
-            "type_bytes bytea",
-            "type_boolean bool",
-            "type_char character(20)",
-            "type_varchar varchar(32)"
+            "type_int         int",
+            "type_smallint    smallint", // smallint
+            "type_long        bigint",
+            "type_float       real",
+            "type_double      float8",
+            "type_string      text",
+            "type_bytes       bytea",
+            "type_boolean     bool",
+            "type_char        character(20)",
+            "type_varchar     varchar(32)"
     };
     // values that were written from a smallint column (see above type_smallint)
     // must be read back into integer columns
     private static final String[] AVRO_PRIMITIVE_READABLE_TABLE_COLS = new String[]{
-            "type_int int",
-            "type_smallint int", // int
-            "type_long bigint",
-            "type_float real",
-            "type_double float8",
-            "type_string text",
-            "type_bytes bytea",
-            "type_boolean bool",
-            "type_char character(20)",
-            "type_varchar varchar(32)"
+            "type_int        int",
+            "type_smallint   int", // int
+            "type_long       bigint",
+            "type_float      real",
+            "type_double     float8",
+            "type_string     text",
+            "type_bytes      bytea",
+            "type_boolean    bool",
+            "type_char       character(20)",
+            "type_varchar    varchar(32)"
     };
     private static final String[] AVRO_COMPLEX_TABLE_COLS_WRITABLE = new String[]{
-            "type_int int",
-            "type_record struct",
-            "type_enum_mood mood",
-            "type_long_array BIGINT[]",
-            "type_numeric_array NUMERIC(8,1)[]",
-            "type_string_array TEXT[]",
-            "type_date DATE",
-            "type_time TIME",
-            "type_timestamp TIMESTAMP",
-            "type_timestampz TIMESTAMP WITH TIME ZONE"
+            "type_int             INT",
+            "type_record          STRUCT", // see createComplexTypes()
+            "type_enum_mood       MOOD", // see createComplexTypes()
+            "type_long_array      BIGINT[]",
+            "type_numeric_array   NUMERIC(8,1)[]",
+            "type_string_array    TEXT[]",
+            "type_date            DATE",
+            "type_time            TIME",
+            "type_timestamp       TIMESTAMP",
+            "type_timestampz      TIMESTAMP WITH TIME ZONE"
     };
-    private static final String[] AVRO_COMPLEX_TABLE_COLS_READABLE = new String[]{
-            "type_int int",
-            "type_record TEXT",
-            "type_enum_mood TEXT",
-            "type_long_array TEXT",
-            "type_numeric_array TEXT",
-            "type_string_array TEXT",
-            "type_date TEXT",
-            "type_time TEXT",
-            "type_timestamp TEXT",
-            "type_timestampz TEXT"
+    // before pxf 6, we did not support arrays and all complex types were written as text. keep this behavior here
+    private static final String[] AVRO_COMPLEX_TABLE_COLS_AS_TEXT_READABLE = new String[]{
+            "type_int             INT",
+            "type_record          TEXT",
+            "type_enum_mood       TEXT",
+            "type_long_array      TEXT",
+            "type_numeric_array   TEXT",
+            "type_string_array    TEXT",
+            "type_date            TEXT",
+            "type_time            TEXT",
+            "type_timestamp       TEXT",
+            "type_timestampz      TEXT"
+    };
+    // pxf autogenerates a schema with arrays for type long and string. read that back appropriately using this schema
+    private static final String[] AVRO_COMPLEX_TABLE_COLS_W_ARRAYS_READABLE = new String[]{
+            "type_int             INT",
+            "type_record          TEXT",
+            "type_enum_mood       TEXT",
+            "type_long_array      BIGINT[]",
+            "type_numeric_array   TEXT",
+            "type_string_array    TEXT[]",
+            "type_date            TEXT",
+            "type_time            TEXT",
+            "type_timestamp       TEXT",
+            "type_timestampz      TEXT"
+    };
+    private static final String[] AVRO_ARRAY_TABLE_COLS_WRITABLE = new String[]{
+            "type_int             INT",
+            "type_long_array      BIGINT[]",
+            "type_numeric_array   NUMERIC(8,1)[]",
+            "type_string_array    TEXT[]"
+    };
+    private static final String[] AVRO_ARRAY_TABLE_COLS_READABLE = new String[]{
+            "type_int             INT",
+            "type_long_array      BIGINT[]",
+            "type_numeric_array   TEXT[]",
+            "type_string_array    TEXT[]"
     };
     private String gpdbTable;
     private String hdfsPath;
@@ -153,7 +179,7 @@ public class HdfsWritableAvroTest extends BaseFeature {
         prepareWritableExternalTable(gpdbTable, AVRO_COMPLEX_TABLE_COLS_WRITABLE, fullTestPath);
         exTable.setUserParameters(new String[]{"COMPRESSION_CODEC=bzip2"});
 
-        prepareReadableExternalTable(gpdbTable, AVRO_COMPLEX_TABLE_COLS_READABLE, fullTestPath);
+        prepareReadableExternalTable(gpdbTable, AVRO_COMPLEX_TABLE_COLS_W_ARRAYS_READABLE, fullTestPath);
 
         gpdb.createTableAndVerify(readableExternalTable);
         gpdb.createTableAndVerify(exTable);
@@ -200,7 +226,7 @@ public class HdfsWritableAvroTest extends BaseFeature {
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    public void userProvidedSchemaFileOnClasspathComplex() throws Exception {
+    public void userProvidedSchemaFileOnClasspathComplexTypesAsText() throws Exception {
         createComplexTypes();
         gpdbTable = "writable_avro_complex_user_schema_on_classpath";
         fullTestPath = hdfsPath + "complex_user_schema_on_classpath";
@@ -209,7 +235,7 @@ public class HdfsWritableAvroTest extends BaseFeature {
                 fullTestPath);
 
         prepareReadableExternalTable(gpdbTable,
-                AVRO_COMPLEX_TABLE_COLS_READABLE,
+                AVRO_COMPLEX_TABLE_COLS_AS_TEXT_READABLE,
                 fullTestPath);
         gpdb.createTableAndVerify(readableExternalTable);
 
@@ -239,13 +265,43 @@ public class HdfsWritableAvroTest extends BaseFeature {
     }
 
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
-    public void nullValues() throws Exception {
+    public void userProvidedSchemaFileGPDBArraysAsAvroArraysWithNulls() throws Exception {
+        gpdbTable = "writable_avro_array_user_schema_w_nulls";
+        fullTestPath = hdfsPath + "array_user_schema_w_nulls";
+        prepareWritableExternalTable(gpdbTable,
+                AVRO_ARRAY_TABLE_COLS_WRITABLE,
+                fullTestPath);
+
+        prepareReadableExternalTable(gpdbTable,
+                AVRO_ARRAY_TABLE_COLS_READABLE,
+                fullTestPath);
+        gpdb.createTableAndVerify(readableExternalTable);
+
+        cluster.copyFileToNodes(new File(resourcePath + "array_with_nulls.avsc").getAbsolutePath(),
+                cluster.getPxfConfLocation(),
+                false, false);
+        exTable.setExternalDataSchema("array_with_nulls.avsc");
+        gpdb.createTableAndVerify(exTable);
+
+        insertComplexNullArrays(gpdbTable);
+
+        publicStage += "userProvidedSchemaArrayWithNullsComplex/";
+        // fetch all the segment-generated avro files and make them into json records
+        // confirm that the lines generated by the segments match what we expect
+        fetchAndVerifyAvroHcfsFiles("array_with_nulls.json", "deflate");
+
+        // check using GPDB readable external table that what went into HCFS is correct
+        runTincTest("pxf.features.hdfs.writable.avro.array_user_schema_w_nulls.runTest");
+    }
+
+    @Test(groups = {"features", "gpdb", "hcfs", "security"})
+    public void generateSchemaWithNullValuesComplex() throws Exception {
         gpdbTable = "writable_avro_null_values";
         createComplexTypes();
         fullTestPath = hdfsPath + "null_values";
         prepareWritableExternalTable(gpdbTable, AVRO_COMPLEX_TABLE_COLS_WRITABLE, fullTestPath);
 
-        prepareReadableExternalTable(gpdbTable, AVRO_COMPLEX_TABLE_COLS_READABLE, fullTestPath);
+        prepareReadableExternalTable(gpdbTable, AVRO_COMPLEX_TABLE_COLS_W_ARRAYS_READABLE, fullTestPath);
 
         gpdb.createTableAndVerify(readableExternalTable);
         gpdb.createTableAndVerify(exTable);
@@ -329,6 +385,19 @@ public class HdfsWritableAvroTest extends BaseFeature {
                 "TIMESTAMP '2001-09-28 01:00' + (i::VARCHAR(255) || ' days')::interval + (i::VARCHAR(255) || ' hours')::interval, " +
                 "TIMESTAMP WITH TIME ZONE '2001-09-28 01:00-07' + (i::VARCHAR(255) || ' days')::interval + (i::VARCHAR(255) || ' hours')::interval " +
                 "FROM generate_series(1, 100) s(i);");
+    }
+
+    private void
+    insertComplexNullArrays(String gpdbTable) throws Exception {
+        gpdb.runQuery("INSERT INTO " + gpdbTable + "_writable " + " VALUES " +
+                "(1, NULL,            '{1.0001,10.00001,100.000001}',  '{\"item 0\",\"item 10\",\"item 20\"}')," +
+                "(2, '{2,20,200}',    NULL,                            '{\"item 0\",\"item 10\",\"item 20\"}')," +
+                "(3, '{3,30,300}',    '{3.0001,30.00001,300.000001}',  NULL                                  )," +
+                "(4, '{NULL,40,400}', '{4.0001,40.00001,400.000001}',  '{\"item 0\",\"item 10\",\"item 20\"}')," +
+                "(5, '{5,50,500}',    '{5.0001,NULL,500.000001}',      '{\"item 0\",\"item 10\",\"item 20\"}')," +
+                "(6, '{6,60,600}',    '{6.0001,60.00001,600.000001}',  '{\"item 0\",\"item 10\",NULL}'       )," +
+                "(7, '{7,70,700}',    '{7.0001,70.00001,700.000001}',  '{\"item 0\",\"item 10\",\"item 20\"}');"
+        );
     }
 
     private void fetchAndVerifyAvroHcfsFiles(String compareFile, String codec) throws Exception {

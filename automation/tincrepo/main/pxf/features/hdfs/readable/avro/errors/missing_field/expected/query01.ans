@@ -9,5 +9,5 @@
 --
 -- end_matchsubs
 SELECT * from avro_missing_field;
-ERROR:  Record has 2 fields but the schema size is 1
+ERROR:  Avro record has 2 fields but GPDB table has 1 columns.
 DETAIL:  External table avro_missing_field

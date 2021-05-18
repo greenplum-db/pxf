@@ -23,6 +23,7 @@ dependencies {
      *******************************/
 
     implementation("com.google.guava:guava")
+    implementation("commons-codec:commons-codec")
     implementation("commons-configuration:commons-configuration")
     implementation("commons-io:commons-io")
     implementation("commons-lang:commons-lang")

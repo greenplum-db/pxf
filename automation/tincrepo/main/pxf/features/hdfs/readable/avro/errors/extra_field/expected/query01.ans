@@ -9,5 +9,5 @@
 --
 -- end_matchsubs
 SELECT * from avro_extra_field ORDER BY age;
-ERROR:  Record has 2 fields but the schema size is 3
+ERROR:  Avro record has 2 fields but GPDB table has 3 columns.
 DETAIL:  External table avro_extra_field

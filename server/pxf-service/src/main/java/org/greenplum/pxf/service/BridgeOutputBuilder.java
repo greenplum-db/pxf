@@ -280,6 +280,7 @@ public class BridgeOutputBuilder {
      */
     boolean isTypeInSchema(int recType, int schemaType) {
         DataType dtRec = DataType.get(recType);
+        // schema from GPDB table
         DataType dtSchema = DataType.get(schemaType);
 
         return (dtSchema == DataType.UNSUPPORTED_TYPE || dtRec == dtSchema || (isStringType(dtRec) && isStringType(dtSchema)));
@@ -430,10 +431,24 @@ public class BridgeOutputBuilder {
                 case NUMERIC:
                 case TIMESTAMP:
                 case DATE:
+                case BOOLARRAY:
+                case BYTEAARRAY:
+                case INT2ARRAY:
+                case INT4ARRAY:
+                case INT8ARRAY:
+                case FLOAT4ARRAY:
+                case FLOAT8ARRAY:
+                case TEXTARRAY:
+                    /*
+                     * If resolvers support sending arrays to GPDB, they are expected to serialize arrays into Postgres
+                     * array external text representation.
+                     * see https://www.postgresql.org/docs/9.4/arrays.html for details of this format.
+                     */
                     gpdbOutput.setString(colIdx,
                             ObjectUtils.toString(val, null));
                     break;
                 default:
+                    LOG.debug("Data type OID is {}", type);
                     String valClassName = (val != null) ? val.getClass().getSimpleName()
                             : null;
                     throw new UnsupportedOperationException(valClassName

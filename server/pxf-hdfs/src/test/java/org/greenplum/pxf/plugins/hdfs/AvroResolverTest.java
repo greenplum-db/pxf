@@ -8,12 +8,15 @@ import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.plugins.hdfs.avro.AvroUtilities;
+import org.greenplum.pxf.plugins.hdfs.utilities.PgUtilities;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -31,9 +34,16 @@ public class AvroResolverTest {
     private RequestContext context;
     private Schema schema;
 
+    List<DataType> primitiveDataTypes = Arrays.asList(DataType.BOOLEAN, DataType.BYTEA, DataType.BIGINT, DataType.INTEGER, DataType.REAL, DataType.FLOAT8, DataType.TEXT);
+    // complex datatypes order is: union of nulls and bytea, record, string array, enum, fixed length bytes, map of string to long
+    List<DataType> complexDataTypes = Arrays.asList(DataType.BYTEA, DataType.TEXT, DataType.TEXTARRAY, DataType.INTEGER, DataType.BYTEA, DataType.TEXT);
+
     @BeforeEach
     public void setup() {
-        resolver = new AvroResolver(new AvroUtilities());
+        PgUtilities pgUtilities = new PgUtilities();
+        AvroUtilities avroUtilities = new AvroUtilities();
+        avroUtilities.setPgUtilities(pgUtilities);
+        resolver = new AvroResolver(avroUtilities, pgUtilities);
         Configuration configuration = new Configuration();
         configuration.set("pxf.fs.basePath", "/");
         context = new RequestContext();
@@ -120,7 +130,7 @@ public class AvroResolverTest {
         List<OneField> fields = new ArrayList<>();
         fields.add(new OneField(DataType.BYTEA.getOID(), new byte[]{65, 66, 67, 68}));               // union of null and bytes
         fields.add(new OneField(DataType.TEXT.getOID(), "{float:7.7,int:7,string:seven}"));      // record (composite type)
-        fields.add(new OneField(DataType.TEXT.getOID(), "[one,two,three]"));                     // array
+        fields.add(new OneField(DataType.TEXT.getOID(), "{one,two,three}"));                     // array
         fields.add(new OneField(DataType.TEXT.getOID(), "DIAMONDS"));                            // enum
         fields.add(new OneField(DataType.BYTEA.getOID(), new byte[]{'F', 'O', 'O', 'B', 'A', 'R'})); // fixed length bytes
         fields.add(new OneField(DataType.TEXT.getOID(), "{key1:123456789,key2:234567890}"));     // map of string to long
@@ -135,7 +145,7 @@ public class AvroResolverTest {
         // assert column values
         assertEquals(ByteBuffer.wrap(new byte[]{65, 66, 67, 68}), genericRecord.get(0));
         assertEquals("{float:7.7,int:7,string:seven}", genericRecord.get(1));
-        assertEquals("[one,two,three]", genericRecord.get(2));
+        assertEquals(Arrays.asList("one", "two", "three"), genericRecord.get(2));
         assertEquals("DIAMONDS", genericRecord.get(3));
         assertEquals(ByteBuffer.wrap(new byte[]{'F', 'O', 'O', 'B', 'A', 'R'}), genericRecord.get(4));
         assertEquals("{key1:123456789,key2:234567890}", genericRecord.get(5));
@@ -143,6 +153,8 @@ public class AvroResolverTest {
 
     @Test
     public void testGetFields_Primitive() throws Exception {
+        List<ColumnDescriptor> columnDescriptors = createColumnDescriptors(primitiveDataTypes);
+        context.setTupleDescription(columnDescriptors);
         schema = getAvroSchemaForPrimitiveTypes();
         context.setMetadata(schema);
         resolver.setRequestContext(context);
@@ -169,6 +181,8 @@ public class AvroResolverTest {
 
     @Test
     public void testGetFields_PrimitiveNulls() throws Exception {
+        List<ColumnDescriptor> columnDescriptors = createColumnDescriptors(primitiveDataTypes);
+        context.setTupleDescription(columnDescriptors);
         schema = getAvroSchemaForPrimitiveTypes();
         context.setMetadata(schema);
         resolver.setRequestContext(context);
@@ -193,8 +207,109 @@ public class AvroResolverTest {
         assertField(fields, 6, null, DataType.TEXT);
     }
 
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testGetFieldsEscapesTextArrayElements() throws Exception {
+        List<ColumnDescriptor> columnDescriptors = Collections.singletonList(
+                new ColumnDescriptor("testCol0", DataType.TEXTARRAY.getOID(), 0, "test", null)
+        );
+        context.setTupleDescription(columnDescriptors);
+        schema = Schema.createRecord("tableName", "", "public.avro", false);
+        Schema stringArraySchema = Schema.createArray(Schema.create(Schema.Type.STRING));
+        Schema.Field stringArrayField = new Schema.Field(Schema.Type.ARRAY.getName(), stringArraySchema, "", null);
+        schema.setFields(Collections.singletonList(stringArrayField));
+        context.setMetadata(schema);
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+        GenericRecord genericRecord = new GenericData.Record(schema);
+        genericRecord.put(0, new GenericData.Array(stringArraySchema, Arrays.asList("first string", "second-string", "string with a \"quote\" inside")));
+
+        List<OneField> fields = resolver.getFields(new OneRow(null, genericRecord));
+
+        assertField(fields, 0, "{\"first string\",second-string,\"string with a \\\"quote\\\" inside\"}", DataType.TEXTARRAY);
+
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testGetFieldsEscapesByteaArrayElements() throws Exception {
+        List<ColumnDescriptor> columnDescriptors = Collections.singletonList(
+                new ColumnDescriptor("testCol0", DataType.BYTEAARRAY.getOID(), 0, "test", null)
+        );
+        context.setTupleDescription(columnDescriptors);
+        schema = Schema.createRecord("tableName", "", "public.avro", false);
+        Schema bytesArraySchema = Schema.createArray(Schema.create(Schema.Type.BYTES));
+        Schema.Field stringArrayField = new Schema.Field(Schema.Type.ARRAY.getName(), bytesArraySchema, "", null);
+        schema.setFields(Collections.singletonList(stringArrayField));
+        context.setMetadata(schema);
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+        GenericRecord genericRecord = new GenericData.Record(schema);
+
+        byte[] data1 = new byte[]{0x01};
+        byte[] data2 = new byte[]{0x23, 0x45};
+        byte[] data3 = new byte[]{0x67, (byte) 0x89, (byte) 0xAB};
+        ByteBuffer buffer1 = ByteBuffer.wrap(data1);
+        ByteBuffer buffer2 = ByteBuffer.wrap(data2);
+        ByteBuffer buffer3 = ByteBuffer.wrap(data3);
+        genericRecord.put(0, new GenericData.Array(bytesArraySchema, Arrays.asList(buffer1, buffer2, buffer3)));
+
+        List<OneField> fields = resolver.getFields(new OneRow(null, genericRecord));
+
+        assertField(fields, 0, "{\"\\\\x01\",\"\\\\x2345\",\"\\\\x6789ab\"}", DataType.BYTEAARRAY);
+
+        GenericData.Fixed fixed1 = new GenericData.Fixed(Schema.createFixed("fixed1", "", "", 1), data1);
+        GenericData.Fixed fixed2 = new GenericData.Fixed(Schema.createFixed("fixed2", "", "", 2), data2);
+        GenericData.Fixed fixed3 = new GenericData.Fixed(Schema.createFixed("fixed3", "", "", 3), data3);
+
+        // reverse the order of the fixed array elements
+        genericRecord.put(0, new GenericData.Array(bytesArraySchema, Arrays.asList(fixed3, fixed2, fixed1)));
+        fields = resolver.getFields(new OneRow(null, genericRecord));
+        assertField(fields, 0, "{\"\\\\x6789ab\",\"\\\\x2345\",\"\\\\x01\"}", DataType.BYTEAARRAY);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testGetFieldsByteaArrayAsTextColumn() throws Exception {
+        List<ColumnDescriptor> columnDescriptors = Collections.singletonList(
+                new ColumnDescriptor("testCol0", DataType.TEXT.getOID(), 0, "test", null)
+        );
+        context.setTupleDescription(columnDescriptors);
+        schema = Schema.createRecord("tableName", "", "public.avro", false);
+        Schema bytesArraySchema = Schema.createArray(Schema.create(Schema.Type.BYTES));
+        Schema.Field stringArrayField = new Schema.Field(Schema.Type.ARRAY.getName(), bytesArraySchema, "", null);
+        schema.setFields(Collections.singletonList(stringArrayField));
+        context.setMetadata(schema);
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+        GenericRecord genericRecord = new GenericData.Record(schema);
+
+        byte[] data1 = new byte[]{0x01};
+        byte[] data2 = new byte[]{0x23, 0x45};
+        byte[] data3 = new byte[]{0x67, (byte) 0x89, (byte) 0xAB};
+        ByteBuffer buffer1 = ByteBuffer.wrap(data1);
+        ByteBuffer buffer2 = ByteBuffer.wrap(data2);
+        ByteBuffer buffer3 = ByteBuffer.wrap(data3);
+        genericRecord.put(0, new GenericData.Array(bytesArraySchema, Arrays.asList(buffer1, buffer2, buffer3)));
+
+        List<OneField> fields = resolver.getFields(new OneRow(null, genericRecord));
+
+        assertField(fields, 0, "[\\\\001,\\\\043\\\\105,\\\\147\\\\211\\\\253]", DataType.TEXT);
+
+        GenericData.Fixed fixed1 = new GenericData.Fixed(Schema.createFixed("fixed1", "", "", 1), data1);
+        GenericData.Fixed fixed2 = new GenericData.Fixed(Schema.createFixed("fixed2", "", "", 2), data2);
+        GenericData.Fixed fixed3 = new GenericData.Fixed(Schema.createFixed("fixed3", "", "", 3), data3);
+
+        // reverse the order of the fixed array elements
+        genericRecord.put(0, new GenericData.Array(bytesArraySchema, Arrays.asList(fixed3, fixed2, fixed1)));
+        fields = resolver.getFields(new OneRow(null, genericRecord));
+        assertField(fields, 0, "[\\\\147\\\\211\\\\253,\\\\043\\\\105,\\\\001]", DataType.TEXT);
+    }
+
     @Test
     public void getFields_ComplexTypes() throws Exception {
+        List<ColumnDescriptor> columnDescriptors = createColumnDescriptors(complexDataTypes);
+        context.setTupleDescription(columnDescriptors);
         schema = getAvroSchemaForComplexTypes();
         context.setMetadata(schema);
         resolver.setRequestContext(context);
@@ -240,7 +355,7 @@ public class AvroResolverTest {
 
         assertField(fields, 0, new byte[]{'A', 'B', 'C', 'D'}, DataType.BYTEA); // union of null and bytes
         assertField(fields, 1, "{float:7.7,int:7,string:seven}", DataType.TEXT); // record
-        assertField(fields, 2, "[one,two,three]", DataType.TEXT); // array
+        assertField(fields, 2, "{one,two,three}", DataType.TEXTARRAY); // array
         assertField(fields, 3, "DIAMONDS", DataType.TEXT); // enum
         assertField(fields, 4, new byte[]{'F', 'O', 'O', 'B', 'A', 'R'}, DataType.BYTEA); // fixed length bytes
         assertField(fields, 5, "{key1:123456789,key2:234567890}", DataType.TEXT); // map of string to long
@@ -248,6 +363,8 @@ public class AvroResolverTest {
 
     @Test
     public void getFields_ComplexTypesNulls() throws Exception {
+        List<ColumnDescriptor> columnDescriptors = createColumnDescriptors(complexDataTypes);
+        context.setTupleDescription(columnDescriptors);
         schema = getAvroSchemaForComplexTypes();
         context.setMetadata(schema);
         resolver.setRequestContext(context);
@@ -274,7 +391,7 @@ public class AvroResolverTest {
         List<OneField> fields = resolver.getFields(new OneRow(null, genericRecord));
         assertField(fields, 0, null, DataType.BYTEA);
         assertField(fields, 1, null, DataType.TEXT);
-        assertField(fields, 2, null, DataType.TEXT);
+        assertField(fields, 2, null, DataType.TEXTARRAY);
         assertField(fields, 3, null, DataType.TEXT);
         assertField(fields, 4, null, DataType.BYTEA);
         assertField(fields, 5, null, DataType.TEXT);
@@ -386,6 +503,14 @@ public class AvroResolverTest {
         unionList.add(Schema.create(Schema.Type.NULL));
         unionList.add(Schema.create(Schema.Type.BYTES));
         return Schema.createUnion(unionList);
+    }
+
+    private List<ColumnDescriptor> createColumnDescriptors(List<DataType> dataTypes) {
+        List<ColumnDescriptor> columnDescriptors = new ArrayList<>();
+        for (int i = 0; i < dataTypes.size(); i++) {
+            columnDescriptors.add(new ColumnDescriptor("testCol" + i, dataTypes.get(i).getOID(), i, "test", null));
+        }
+        return columnDescriptors;
     }
 
 }

@@ -37,6 +37,69 @@ public class HdfsReadableAvroTest extends BaseFeature {
     private static final String complexAvroFile = "complex.avro";
     private String remotePublicStage;
 
+
+    private static final String[] AVRO_ALL_TYPES_FIELDS = new String[]{
+            "type_long     bigint",
+            "type_string   text",
+            "type_array    text",
+            "type_union    text",
+            "type_map      text",
+            "type_record   text",
+            "type_enum     text",
+            "type_fixed    bytea"
+    };
+
+    private static final String[] AVRO_SEQUENCE_FILE_FIELDS = new String[]{
+            "num      text",
+            "int1     integer",
+            "int2     integer",
+            "strings  text",
+            "st1      text",
+            "dubs     text",
+            "dub      double precision",
+            "fts      text",
+            "ft       real",
+            "longs    text",
+            "lng      bigint",
+            "bls      text",
+            "bl       boolean",
+            "bts      bytea"
+    };
+
+    private static final String[] AVRO_ARRAYS_AS_TEXT_FIELDS = new String[]{
+            "type_int             int",
+            "type_int_array       text",
+            "type_double          float8",
+            "type_double_array    text",
+            "type_string          text",
+            "type_string_array    text",
+            "type_float           real",
+            "type_float_array     text",
+            "type_long            bigint",
+            "type_long_array      text",
+            "type_bytes           bytea",
+            "type_bytes_array     text",
+            "type_boolean         bool",
+            "type_boolean_array   text"
+    };
+
+    private static final String[] AVRO_ARRAYS_AS_ARRAY_FIELDS = new String[]{
+            "type_int             int",
+            "type_int_array       int[]",
+            "type_double          float8",
+            "type_double_array    float8[]",
+            "type_string          text",
+            "type_string_array    text[]",
+            "type_float           real",
+            "type_float_array     real[]",
+            "type_long            bigint",
+            "type_long_array      bigint[]",
+            "type_bytes           bytea",
+            "type_bytes_array     bytea[]",
+            "type_boolean         bool",
+            "type_boolean_array   bool[]"
+    };
+
     @Override
     public void beforeClass() throws Exception {
         // path for storing data on HDFS (for processing by PXF)
@@ -92,41 +155,31 @@ public class HdfsReadableAvroTest extends BaseFeature {
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void avroSupportedPrimitives() throws Exception {
         prepareReadableTable("avrotest_supported_primitive_types", new String[]{
-                "type_int int",
-                "type_double float8",
-                "type_string text",
-                "type_float real",
-                "type_long bigint",
-                "type_bytes bytea",
-                "type_boolean bool"}, hdfsPath + avroTypesFileName + SUFFIX_AVRO);
+                "type_int      int",
+                "type_double   float8",
+                "type_string   text",
+                "type_float    real",
+                "type_long     bigint",
+                "type_bytes    bytea",
+                "type_boolean  bool"}, hdfsPath + avroTypesFileName + SUFFIX_AVRO);
         gpdb.createTableAndVerify(exTable);
         // Verify results
         runTincTest("pxf.features.hdfs.readable.avro.supported_primitive_types.runTest");
     }
 
     /**
-     * Read an Avro file that includes all supported array types.
+     * Read an Avro file that includes all supported array types as text.
      *
      * @throws Exception
      */
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void avroArrays() throws Exception {
-        prepareReadableTable("avrotest_arrays", new String[]{
-                "type_int int",
-                "type_int_array text",
-                "type_double float8",
-                "type_double_array text",
-                "type_string text",
-                "type_string_array text",
-                "type_float real",
-                "type_float_array text",
-                "type_long bigint",
-                "type_long_array text",
-                "type_bytes bytea",
-                "type_bytes_array text",
-                "type_boolean bool",
-                "type_boolean_array text",}, hdfsPath + avroArrayFileName + SUFFIX_AVRO);
+        prepareReadableTable("avrotest_arrays", AVRO_ARRAYS_AS_TEXT_FIELDS, hdfsPath + avroArrayFileName + SUFFIX_AVRO);
         gpdb.createTableAndVerify(exTable);
+
+        prepareReadableTable("avrotest_arrays_gpdb_arrays", AVRO_ARRAYS_AS_ARRAY_FIELDS, hdfsPath + avroArrayFileName + SUFFIX_AVRO);
+        gpdb.createTableAndVerify(exTable);
+
         // Verify results
         runTincTest("pxf.features.hdfs.readable.avro.array_types.runTest");
     }
@@ -138,15 +191,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
      */
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void avroComplex() throws Exception {
-        prepareReadableTable("avrotest_complex", new String[]{
-                "type_long bigint",
-                "type_string text",
-                "type_array text",
-                "type_union text",
-                "type_map text",
-                "type_record text",
-                "type_enum text",
-                "type_fixed bytea"}, hdfsPath + avroComplexFileName + SUFFIX_AVRO);
+        prepareReadableTable("avrotest_complex", AVRO_ALL_TYPES_FIELDS, hdfsPath + avroComplexFileName + SUFFIX_AVRO);
         gpdb.createTableAndVerify(exTable);
         // Verify results
         runTincTest("pxf.features.hdfs.readable.avro.complex_types.runTest");
@@ -160,15 +205,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void avroComplexReadSchemaFromHcfs() throws Exception {
         hdfs.copyFromLocal(resourcePath + complexAvroFile, hdfsPath + "schema/" + complexAvroFile);
-        prepareReadableTable("avrotest_complex", new String[]{
-                "type_long bigint",
-                "type_string text",
-                "type_array text",
-                "type_union text",
-                "type_map text",
-                "type_record text",
-                "type_enum text",
-                "type_fixed bytea"}, hdfsPath + avroComplexFileName + SUFFIX_AVRO);
+        prepareReadableTable("avrotest_complex", AVRO_ALL_TYPES_FIELDS, hdfsPath + avroComplexFileName + SUFFIX_AVRO);
         String schemaPath = "/" + hdfsPath + "schema/" + complexAvroFile;
         exTable.setExternalDataSchema(schemaPath);
         gpdb.createTableAndVerify(exTable);
@@ -183,15 +220,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
      */
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void avroComplexReadSchemaFromSegmentHosts() throws Exception {
-        prepareReadableTable("avrotest_complex", new String[]{
-                "type_long bigint",
-                "type_string text",
-                "type_array text",
-                "type_union text",
-                "type_map text",
-                "type_record text",
-                "type_enum text",
-                "type_fixed bytea"}, hdfsPath + avroComplexFileName + SUFFIX_AVRO);
+        prepareReadableTable("avrotest_complex", AVRO_ALL_TYPES_FIELDS, hdfsPath + avroComplexFileName + SUFFIX_AVRO);
         String schemaPath = remotePublicStage + "/" + complexAvroFile;
         exTable.setExternalDataSchema(schemaPath);
         gpdb.createTableAndVerify(exTable);
@@ -206,15 +235,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
      */
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void avroNull() throws Exception {
-        prepareReadableTable("avrotest_null", new String[]{
-                "type_long bigint",
-                "type_string text",
-                "type_array text",
-                "type_union text",
-                "type_map text",
-                "type_record text",
-                "type_enum text",
-                "type_fixed bytea"}, hdfsPath + avroComplexFileName + SUFFIX_AVRO);
+        prepareReadableTable("avrotest_null", AVRO_ALL_TYPES_FIELDS, hdfsPath + avroComplexFileName + SUFFIX_AVRO);
         gpdb.createTableAndVerify(exTable);
         // Verify results
         runTincTest("pxf.features.hdfs.readable.avro.null_values.runTest");
@@ -228,32 +249,32 @@ public class HdfsReadableAvroTest extends BaseFeature {
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void avroComplexNull() throws Exception {
         prepareReadableTable("avrotest_complex_null", new String[]{
-                "sourcetimestamp bigint",
-                "sourceagent varchar(200)",
-                "sourceip_address varchar(20)",
-                "meetmeuser_id bigint",
-                "meetmeinterested_uid bigint",
-                "meetmevote varchar(4)",
-                "meetmeis_match int",
-                "meetmenetwork_score bigint",
-                "meetmeresponsiveness_score bigint",
-                "meetmesession_id varchar(32)",
-                "meetmefriends int",
-                "meetmeprevious_view varchar(32)",
-                "meetmemodel bigint",
-                "meetmescore float8",
-                "meetmemethod int",
-                "meetmecontributions varchar(120)",
-                "meetmeclicksource varchar(20)",
-                "meetmeclickaction varchar(20)",
-                "meetmeprofileview_ts bigint",
-                "meetmeplatform varchar(20)",
-                "metatopic_name varchar(100)",
-                "metarequest_user_agent varchar(200)",
-                "metarequest_session_id varchar(50)",
-                "metarequest_id text",
-                "metakvpairs varchar(1000)",
-                "meta_handlers varchar(1000)"}, hdfsPath + avroComplexNullFileName + SUFFIX_AVRO);
+                "sourcetimestamp              bigint",
+                "sourceagent                  varchar(200)",
+                "sourceip_address             varchar(20)",
+                "meetmeuser_id                bigint",
+                "meetmeinterested_uid         bigint",
+                "meetmevote                   varchar(4)",
+                "meetmeis_match               int",
+                "meetmenetwork_score          bigint",
+                "meetmeresponsiveness_score   bigint",
+                "meetmesession_id             varchar(32)",
+                "meetmefriends                int",
+                "meetmeprevious_view          varchar(32)",
+                "meetmemodel                  bigint",
+                "meetmescore                  float8",
+                "meetmemethod                 int",
+                "meetmecontributions          varchar(120)",
+                "meetmeclicksource            varchar(20)",
+                "meetmeclickaction            varchar(20)",
+                "meetmeprofileview_ts         bigint",
+                "meetmeplatform               varchar(20)",
+                "metatopic_name               varchar(100)",
+                "metarequest_user_agent       varchar(200)",
+                "metarequest_session_id       varchar(50)",
+                "metarequest_id               text",
+                "metakvpairs                  varchar(1000)",
+                "meta_handlers                varchar(1000)"}, hdfsPath + avroComplexNullFileName + SUFFIX_AVRO);
         gpdb.createTableAndVerify(exTable);
         // Verify results
         runTincTest("pxf.features.hdfs.readable.avro.complex_null_values.runTest");
@@ -266,21 +287,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
      */
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void avroInSequenceFileArrays() throws Exception {
-        prepareReadableTable("avro_in_seq_arrays", new String[]{
-                "num  text",
-                "int1  integer",
-                "int2  integer",
-                "strings  text",
-                "st1    text",
-                "dubs    text",
-                "dub    double precision",
-                "fts   text",
-                "ft   real",
-                "longs  text",
-                "lng   bigint",
-                "bls   text",
-                "bl   boolean",
-                "bts   bytea",}, hdfsPath + avroInSequenceArraysFileName);
+        prepareReadableTable("avro_in_seq_arrays", AVRO_SEQUENCE_FILE_FIELDS, hdfsPath + avroInSequenceArraysFileName);
         exTable.setProfile(ProtocolUtils.getProtocol().value() + ":AvroSequenceFile");
         exTable.setExternalDataSchema(avroInSequenceArraysSchemaFile);
         gpdb.createTableAndVerify(exTable);
@@ -295,21 +302,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
      */
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void avroFileNameWithSpaces() throws Exception {
-        prepareReadableTable("avro_in_seq_arrays", new String[]{
-                "num  text",
-                "int1  integer",
-                "int2  integer",
-                "strings  text",
-                "st1    text",
-                "dubs    text",
-                "dub    double precision",
-                "fts   text",
-                "ft   real",
-                "longs  text",
-                "lng   bigint",
-                "bls   text",
-                "bl   boolean",
-                "bts   bytea",}, hdfsPath + avroInSequenceArraysFileName);
+        prepareReadableTable("avro_in_seq_arrays", AVRO_SEQUENCE_FILE_FIELDS, hdfsPath + avroInSequenceArraysFileName);
         exTable.setProfile(ProtocolUtils.getProtocol().value() + ":AvroSequenceFile");
         exTable.setExternalDataSchema(avroInSequenceArraysSchemaFileWithSpaces);
         exTable.setFormatter("pxfwritable_import");
@@ -327,21 +320,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void avroFileNameWithSpacesOnHcfs() throws Exception {
         hdfs.copyFromLocal(resourcePath + avroInSequenceArraysSchemaFileWithSpaces, hdfsPath + avroInSequenceArraysSchemaFileWithSpaces);
-        prepareReadableTable("avro_in_seq_arrays", new String[]{
-                "num  text",
-                "int1  integer",
-                "int2  integer",
-                "strings  text",
-                "st1    text",
-                "dubs    text",
-                "dub    double precision",
-                "fts   text",
-                "ft   real",
-                "longs  text",
-                "lng   bigint",
-                "bls   text",
-                "bl   boolean",
-                "bts   bytea",}, hdfsPath + avroInSequenceArraysFileName);
+        prepareReadableTable("avro_in_seq_arrays", AVRO_SEQUENCE_FILE_FIELDS, hdfsPath + avroInSequenceArraysFileName);
         exTable.setProfile(ProtocolUtils.getProtocol().value() + ":AvroSequenceFile");
         String schemaPath = "/" + hdfsPath + avroInSequenceArraysSchemaFileWithSpaces;
         exTable.setExternalDataSchema(schemaPath);
@@ -373,21 +352,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
                     + SUFFIX_AVRO, schemaName, null, (IAvroSchema[]) data);
         }
 
-        prepareReadableTable("avro_multi", new String[]{
-                "num  text",
-                "int1  integer",
-                "int2  integer",
-                "strings  text",
-                "st1    text",
-                "dubs    text",
-                "dub    double precision",
-                "fts   text",
-                "ft   real",
-                "longs  text",
-                "lng   bigint",
-                "bls   text",
-                "bl   boolean",
-                "bts   bytea",}, hdfsPath + avroMultiBlockDir);
+        prepareReadableTable("avro_multi", AVRO_SEQUENCE_FILE_FIELDS, hdfsPath + avroMultiBlockDir);
         gpdb.createTableAndVerify(exTable);
 
         // Verify results
@@ -412,21 +377,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
                     new CustomAvroPreparer(schemaName), 50, dataTable);
             hdfs.writeAvroFile(fileName, schemaName, codec,
                     (IAvroSchema[]) data);
-            prepareReadableTable("avro_codec", new String[]{
-                    "num  text",
-                    "int1  integer",
-                    "int2  integer",
-                    "strings  text",
-                    "st1    text",
-                    "dubs    text",
-                    "dub    double precision",
-                    "fts   text",
-                    "ft   real",
-                    "longs  text",
-                    "lng   bigint",
-                    "bls   text",
-                    "bl   boolean",
-                    "bts   bytea",}, fileName);
+            prepareReadableTable("avro_codec", AVRO_SEQUENCE_FILE_FIELDS, fileName);
             gpdb.createTableAndVerify(exTable);
             // Verify results
             runTincTest("pxf.features.hdfs.readable.avro.codec.runTest");
@@ -473,21 +424,8 @@ public class HdfsReadableAvroTest extends BaseFeature {
      */
     @Test(groups = {"features", "gpdb", "hcfs", "security"})
     public void noSchemaFile() throws Exception {
-        prepareReadableTable("avro_in_seq_no_schema", new String[]{
-                "num  text",
-                "int1  integer",
-                "int2  integer",
-                "strings  text",
-                "st1    text",
-                "dubs    text",
-                "dub    double precision",
-                "fts   text",
-                "ft   real",
-                "longs  text",
-                "long   bigint",
-                "bls   text",
-                "bl   boolean",
-                "bts   bytea",}, hdfsPath + avroInSequenceArraysFileName);
+        prepareReadableTable("avro_in_seq_no_schema", AVRO_SEQUENCE_FILE_FIELDS, hdfsPath + avroInSequenceArraysFileName);
+
 
         exTable.setProfile(ProtocolUtils.getProtocol().value() + ":AvroSequenceFile");
         exTable.setExternalDataSchema("i_do_not_exist");
