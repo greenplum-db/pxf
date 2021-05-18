@@ -23,6 +23,7 @@ public class JsonTest extends BaseFeature {
     private final String FILENAME_PRETTY_PRINT_W_DELETE = "tweets-pp-with-delete";
     private final String FILENAME_BROKEN = "tweets-broken";
     private final String FILENAME_MISMATCHED_TYPES = "supported_primitive_mismatched_types";
+    private final String FILENAME_JSON_ARRAY = "simple_array";
 
     private final String[] tweetsFields = new String[]{
             "created_at text",
@@ -74,7 +75,8 @@ public class JsonTest extends BaseFeature {
                 hdfsPath + FILENAME_BROKEN + SUFFIX_JSON);
         hdfs.copyFromLocal(resourcePath + FILENAME_MISMATCHED_TYPES + SUFFIX_JSON,
                 hdfsPath + FILENAME_MISMATCHED_TYPES + SUFFIX_JSON);
-        hdfs.copyFromLocal(resourcePath + "simple_array.json", hdfsPath + "simple_array.json");
+        hdfs.copyFromLocal(resourcePath + FILENAME_JSON_ARRAY + SUFFIX_JSON,
+                hdfsPath + FILENAME_JSON_ARRAY + SUFFIX_JSON);
     }
 
     /**
@@ -267,7 +269,7 @@ public class JsonTest extends BaseFeature {
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void jsonArrayAsGpdbText() throws Exception {
-        prepareExternalTable("jsontest_array_as_text", new String[]{"id INTEGER", "values TEXT"}, hdfsPath + "simple_array.json", "custom");
+        prepareExternalTable("jsontest_array_as_text", new String[]{"id INTEGER", "values TEXT"}, hdfsPath + FILENAME_JSON_ARRAY + SUFFIX_JSON, "custom");
         gpdb.createTableAndVerify(exTable);
         runTincTest("pxf.features.hdfs.readable.json.array_as_text.runTest");
     }
