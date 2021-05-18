@@ -264,6 +264,13 @@ public class JsonTest extends BaseFeature {
         runTincTest("pxf.features.hdfs.readable.json.mismatched_types_with_reject_limit.runTest");
     }
 
+    @Test(groups = {"features", "gpdb", "security", "hcfs"})
+    public void jsonArrayAsGpdbText() throws Exception {
+        prepareExternalTable("jsontest_array_as_text", new String[]{"id INTEGER", "values TEXT"}, hdfsPath + "simple_array.json", "custom");
+        gpdb.createTableAndVerify(exTable);
+        runTincTest("pxf.features.hdfs.readable.json.array_as_text.runTest");
+    }
+
     private void prepareExternalTable(String name, String[] fields, String path, String format) {
         ProtocolEnum protocol = ProtocolUtils.getProtocol();
         exTable = new ReadableExternalTable(name, fields,
