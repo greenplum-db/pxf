@@ -1,6 +1,6 @@
 -- @description query01 for PXF HDFS Readable Json arrays as text test cases
 
-SELECT * from jsontest_array_as_text ORDER BY age;
+SELECT * from jsontest_array_as_text ORDER BY id;
  id |    values
 ----+---------------
   1 | ["abc","123"]

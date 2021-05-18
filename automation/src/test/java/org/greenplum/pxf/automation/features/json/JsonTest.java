@@ -74,6 +74,7 @@ public class JsonTest extends BaseFeature {
                 hdfsPath + FILENAME_BROKEN + SUFFIX_JSON);
         hdfs.copyFromLocal(resourcePath + FILENAME_MISMATCHED_TYPES + SUFFIX_JSON,
                 hdfsPath + FILENAME_MISMATCHED_TYPES + SUFFIX_JSON);
+        hdfs.copyFromLocal(resourcePath + "simple_array.json", hdfsPath + "simple_array.json");
     }
 
     /**
