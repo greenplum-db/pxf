@@ -2,6 +2,7 @@ package org.greenplum.pxf.service.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.connector.ClientAbortException;
+import org.apache.commons.lang.StringUtils;
 import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.greenplum.pxf.service.utilities.ThrowingSupplier;
 
@@ -40,7 +41,7 @@ public abstract class PxfErrorReporter<T> {
             log.error(e.getMessage(), e);
             throw e;
         } catch (Exception e) {
-            log.error(e.getMessage(), e);
+            log.error(StringUtils.defaultIfBlank(e.getMessage(), e.getClass().getName()), e);
             // wrap into PxfRuntimeException so that it can be handled by the PxfExceptionHandler
             throw new PxfRuntimeException(e);
         }

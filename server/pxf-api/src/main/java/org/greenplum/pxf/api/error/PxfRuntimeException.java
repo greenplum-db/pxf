@@ -1,6 +1,7 @@
 package org.greenplum.pxf.api.error;
 
 import lombok.Getter;
+import org.apache.commons.lang.StringUtils;
 
 public class PxfRuntimeException extends RuntimeException {
 
@@ -20,7 +21,7 @@ public class PxfRuntimeException extends RuntimeException {
     }
 
     public PxfRuntimeException(Throwable cause) {
-        this(cause.getMessage(), cause);
+        this(StringUtils.defaultIfBlank(cause.getMessage(), cause.getClass().getName()), cause);
     }
 
     public PxfRuntimeException(String message, Throwable cause) {
