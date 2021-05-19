@@ -268,11 +268,38 @@ public class JsonTest extends BaseFeature {
     }
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
-    public void jsonArrayAsGpdbText() throws Exception {
+    public void jsonStringArrayAsGpdbText() throws Exception {
         prepareExternalTable("jsontest_array_as_text", new String[]{"id INTEGER", "values TEXT"}, hdfsPath + FILENAME_JSON_ARRAY + SUFFIX_JSON, "custom");
         gpdb.createTableAndVerify(exTable);
+
         runTincTest("pxf.features.hdfs.readable.json.array_as_text.runTest");
     }
+
+    // TODO: JSON array of other primitive types (e.g., int/float/bool)
+
+    // TODO: JSON array of objects
+    // TODO: test index into JSON array and then JSON object
+
+    // TODO: JSON array of arrays
+
+    // TODO: JSON array of mixed types (e.g., `[ture, 123, "a string"]`)
+
+    // TODO: special characters in strings (`{"key": "This is a quote \"a quote.\" from foo."}`)
+    /*
+     * {"id": 1, "values": "This is a string with an embedded quote \"Hello, World!\""}
+     * {"id": 2, "values": [{"key": "foo"}, {"key": "bizz"}, {"key": "The Fonz says \"Eh!\"."}]}
+     * {"id": 3, "values": "{1,2} this is a valid JSON string that looks like a postgres array"}
+     *
+     * 1. Should be no problem reading this data into GPDB as text
+     * 2. SELECT id, ((values::json)->2)->>'key' FROM pxf_json WHERE id = 2;
+ id |       ?column?
+----+----------------------
+  2 | The Fonz says "Eh!".
+     */
+
+    // TODO: test using BPCHAR and/or VARCHAR
+
+    // TODO: test for varchar(n)
 
     private void prepareExternalTable(String name, String[] fields, String path, String format) {
         ProtocolEnum protocol = ProtocolUtils.getProtocol();
