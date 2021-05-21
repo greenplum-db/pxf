@@ -14,6 +14,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -55,12 +56,25 @@ public class JsonResolverTest {
                 "\"type_string3\":\"testing all supported types in JsonResolver 3\"," +
                 "\"type_char\":\"z\"," +
                 "\"type_boolean\":true," +
-                "\"type_array\":[\"member 1\", \"member 2\"]" +
+                "\"type_array\":[\"member 1\", \"member 2\"]," +
+                "\"type_int_arr_as_text\":[1,2,3]," +
+                "\"type_bigint_arr_as_text\":[null,10101010101]," +
+                "\"type_smallint_arr_as_text\":[5,null]," +
+                "\"type_float_arr_as_text\":[1.1]," +
+                "\"type_double_arr_as_text\":[1.1,2.2]," +
+                "\"type_string_arr_as_text\":[\"hello\",\"world\"]," +
+                "\"type_boolean_arr_as_text\":[true,false,null]," +
+                "\"type_string_arr_arr_as_text\":[[\"good\",\"morning\"],null,[\"guten\",\"morgen\"]]," +
+                "\"type_object_arr_as_text\":[{\"id\":1,\"val\":\"a\"},{\"id\":2,\"val\":\"b\"}]," +
+                "\"type_object_as_text\":{\"id\":1,\"val\":\"a\",\"arr\":[1,2],\"obj\":{\"a\":55}}," +
+                "\"type_null_as_text\":null," +
+                "\"type_empty_arr_as_text\":[]," +
+                "\"type_empty_object_as_text\":{}" +
                 "}";
 
         OneRow row = new OneRow(123, jsonStr);
 
-        List<OneField> fields = assertRow(row, 12);
+        List<OneField> fields = assertRow(row, 26);
         assertField(fields, 0, 100000001, DataType.INTEGER);
         assertField(fields, 1, 10101010101L, DataType.BIGINT);
         assertField(fields, 2, (short) 13, DataType.SMALLINT);
@@ -73,6 +87,20 @@ public class JsonResolverTest {
         assertField(fields, 9, true, DataType.BOOLEAN);
         assertField(fields, 10, "member 1", DataType.TEXT);
         assertField(fields, 11, "member 2", DataType.TEXT);
+        assertField(fields, 12, "[\"member 1\",\"member 2\"]", DataType.TEXT);
+        assertField(fields, 13, "[1,2,3]", DataType.TEXT);
+        assertField(fields, 14, "[null,10101010101]", DataType.TEXT);
+        assertField(fields, 15, "[5,null]", DataType.TEXT);
+        assertField(fields, 16, "[1.1]", DataType.TEXT);
+        assertField(fields, 17, "[1.1,2.2]", DataType.TEXT);
+        assertField(fields, 18, "[\"hello\",\"world\"]", DataType.TEXT);
+        assertField(fields, 19, "[true,false,null]", DataType.TEXT);
+        assertField(fields, 20, "[[\"good\",\"morning\"],null,[\"guten\",\"morgen\"]]", DataType.TEXT);
+        assertField(fields, 21, "[{\"id\":1,\"val\":\"a\"},{\"id\":2,\"val\":\"b\"}]", DataType.TEXT);
+        assertField(fields, 22, "{\"id\":1,\"val\":\"a\",\"arr\":[1,2],\"obj\":{\"a\":55}}", DataType.TEXT);
+        assertField(fields, 23, null, DataType.TEXT);
+        assertField(fields, 24, "[]", DataType.TEXT);
+        assertField(fields, 25, "{}", DataType.TEXT);
     }
 
     @Test
@@ -89,12 +117,25 @@ public class JsonResolverTest {
                 "\"type_string3\":\"testing all supported types in JsonResolver C\"," +
                 "\"type_char\":\"1\"," +
                 "\"type_boolean\":\"false\"," +
-                "\"type_array\":[\"member 1\", \"member 2\"]" +
+                "\"type_array\":[\"member 1\", \"member 2\"]," +
+                "\"type_int_arr_as_text\":[\"1\",\"2\",\"3\"]," +
+                "\"type_bigint_arr_as_text\":[null,\"10101010101\"]," +
+                "\"type_smallint_arr_as_text\":[\"5\",\"null\"]," +
+                "\"type_float_arr_as_text\":[\"1.1\"]," +
+                "\"type_double_arr_as_text\":[\"1.1\",\"2.2\"]," +
+                "\"type_string_arr_as_text\":[\"hello\",\"world\"]," +
+                "\"type_boolean_arr_as_text\":[\"true\",\"false\",null]," +
+                "\"type_string_arr_arr_as_text\":[[\"good\",\"morning\"],null,[\"guten\",\"morgen\"]]," +
+                "\"type_object_arr_as_text\":[{\"id\":1,\"val\":\"a\"},{\"id\":2,\"val\":\"b\"}]," +
+                "\"type_object_as_text\":{\"id\":1,\"val\":\"a\",\"arr\":[1,2],\"obj\":{\"a\":55}}," +
+                "\"type_null_as_text\":\"null\"," +
+                "\"type_empty_arr_as_text\":[]," +
+                "\"type_empty_object_as_text\":{}" +
                 "}";
 
         OneRow row = new OneRow(123, jsonStr);
 
-        List<OneField> fields = assertRow(row, 12);
+        List<OneField> fields = assertRow(row, 26);
         assertField(fields, 0, -200000002, DataType.INTEGER);
         assertField(fields, 1, 20202020202L, DataType.BIGINT);
         assertField(fields, 2, (short) 26, DataType.SMALLINT);
@@ -107,6 +148,20 @@ public class JsonResolverTest {
         assertField(fields, 9, false, DataType.BOOLEAN);
         assertField(fields, 10, "member 1", DataType.TEXT);
         assertField(fields, 11, "member 2", DataType.TEXT);
+        assertField(fields, 12, "[\"member 1\",\"member 2\"]", DataType.TEXT);
+        assertField(fields, 13, "[\"1\",\"2\",\"3\"]", DataType.TEXT);
+        assertField(fields, 14, "[null,\"10101010101\"]", DataType.TEXT);
+        assertField(fields, 15, "[\"5\",\"null\"]", DataType.TEXT); // that is not quite correct, but input is incorrect as well
+        assertField(fields, 16, "[\"1.1\"]", DataType.TEXT);
+        assertField(fields, 17, "[\"1.1\",\"2.2\"]", DataType.TEXT);
+        assertField(fields, 18, "[\"hello\",\"world\"]", DataType.TEXT);
+        assertField(fields, 19, "[\"true\",\"false\",null]", DataType.TEXT);
+        assertField(fields, 20, "[[\"good\",\"morning\"],null,[\"guten\",\"morgen\"]]", DataType.TEXT);
+        assertField(fields, 21, "[{\"id\":1,\"val\":\"a\"},{\"id\":2,\"val\":\"b\"}]", DataType.TEXT);
+        assertField(fields, 22, "{\"id\":1,\"val\":\"a\",\"arr\":[1,2],\"obj\":{\"a\":55}}", DataType.TEXT);
+        assertField(fields, 23, "null", DataType.TEXT);
+        assertField(fields, 24, "[]", DataType.TEXT);
+        assertField(fields, 25, "{}", DataType.TEXT);
     }
 
     @Test
@@ -302,10 +357,13 @@ public class JsonResolverTest {
 
     private void assertField(List<OneField> fields, int index, Object value, DataType type) {
         assertEquals(type.getOID(), fields.get(index).type);
-        if (type == DataType.BYTEA) {
-            assertArrayEquals((byte[]) value, (byte[]) fields.get(index).val);
+        Object fieldValue = fields.get(index).val;
+        if (value == null) {
+            assertNull(fieldValue);
+        } else if (type == DataType.BYTEA) {
+            assertArrayEquals((byte[]) value, (byte[]) fieldValue);
         } else {
-            assertEquals(value, fields.get(index).val);
+            assertEquals(value, fieldValue);
         }
     }
 
@@ -323,6 +381,22 @@ public class JsonResolverTest {
         cd.add(new ColumnDescriptor("type_boolean", DataType.BOOLEAN.getOID(), 9, "bool", null, true));
         cd.add(new ColumnDescriptor("type_array[0]", DataType.TEXT.getOID(), 10, "text", null, true));
         cd.add(new ColumnDescriptor("type_array[1]", DataType.TEXT.getOID(), 11, "text", null, true));
+        // complex types serialized as strings for Greenplum
+        cd.add(new ColumnDescriptor("type_array", DataType.TEXT.getOID(), 12, "text", null, true));
+        cd.add(new ColumnDescriptor("type_int_arr_as_text", DataType.TEXT.getOID(), 13, "text", null, true));
+        cd.add(new ColumnDescriptor("type_bigint_arr_as_text", DataType.TEXT.getOID(), 14, "text", null, true));
+        cd.add(new ColumnDescriptor("type_smallint_arr_as_text", DataType.TEXT.getOID(), 15, "text", null, true));
+        cd.add(new ColumnDescriptor("type_float_arr_as_text", DataType.TEXT.getOID(), 16, "text", null, true));
+        cd.add(new ColumnDescriptor("type_double_arr_as_text", DataType.TEXT.getOID(), 17, "text", null, true));
+        cd.add(new ColumnDescriptor("type_string_arr_as_text", DataType.TEXT.getOID(), 18, "text", null, true));
+        cd.add(new ColumnDescriptor("type_boolean_arr_as_text", DataType.TEXT.getOID(), 19, "text", null, true));
+        cd.add(new ColumnDescriptor("type_string_arr_arr_as_text", DataType.TEXT.getOID(), 20, "text", null, true));
+        cd.add(new ColumnDescriptor("type_object_arr_as_text", DataType.TEXT.getOID(), 21, "text", null, true));
+        cd.add(new ColumnDescriptor("type_object_as_text", DataType.TEXT.getOID(), 22, "text", null, true));
+        cd.add(new ColumnDescriptor("type_null_as_text", DataType.TEXT.getOID(), 23, "text", null, true));
+        cd.add(new ColumnDescriptor("type_empty_arr_as_text", DataType.TEXT.getOID(), 24, "text", null, true));
+        cd.add(new ColumnDescriptor("type_empty_object_as_text", DataType.TEXT.getOID(), 25, "text", null, true));
+
         return cd;
     }
 }
