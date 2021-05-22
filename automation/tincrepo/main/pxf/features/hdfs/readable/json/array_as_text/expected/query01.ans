@@ -1,6 +1,8 @@
 -- start_ignore
 -- end_ignore
 -- @description query01 for PXF HDFS Readable Json arrays as text test cases
+\pset null 'NIL'
+Null display is "NIL".
 SELECT * FROM jsontest_array_as_text ORDER BY id;
  id | emp_arr | emp_obj |             num_arr              |     bool_arr      |         str_arr          |        arr_arr         |        obj_arr         |                                                 obj
 ----+---------+---------+----------------------------------+-------------------+--------------------------+------------------------+------------------------+-----------------------------------------------------------------------------------------------------
@@ -16,4 +18,12 @@ SELECT id, (num_arr::json)->0 "num", (bool_arr::json)->1 "bool", (str_arr::json)
   0 | null | true  | "wor\"ld" | null      | {"a":1} | "x"
   1 | 2    | null  | "wor\"ld" | ["a","b"] | null    | "y"
   2 | 3    | false | null      | ["a","b"] | {"a":2} | "z"
+(3 rows)
+
+SELECT * FROM jsontest_array_as_text_projections ORDER BY id;
+ id | emp_arr[0] | emp_arr[1] | num_arr[0] | num_arr[1] | num_arr[100] | bool_arr[0] | str_arr[0] | arr_arr[0] | arr_arr[1] | arr_arr[100] | obj_arr[0] | obj_arr[1] | obj_arr[100] | obj_arr[0].a | obj.data.data.data | obj.data.data.data[0] |               obj.data.data
+----+------------+------------+------------+------------+--------------+-------------+------------+------------+------------+--------------+------------+------------+--------------+--------------+--------------------+-----------------------+-------------------------------------------
+  0 | NIL        | NIL        | NIL        | 1          | NIL          | NIL         | NIL        | NIL        | ["a","b"]  | NIL          | NIL        | {"a":1}    | NIL          | NIL          | ["wow",null]       | wow                   | {"level":2,"key":"x","data":["wow",null]}
+  1 | NIL        | NIL        | 2          | NIL        | NIL          | true        | hello      | ["a","b"]  | NIL        | NIL          | {"a":1}    | NIL        | NIL          | NIL          | ["wow",null]       | wow                   | {"level":2,"key":"y","data":["wow",null]}
+  2 | NIL        | NIL        | 3          | -3.3       | NIL          | true        | hello      | ["a","b"]  | [1,2]      | NIL          | {"a":1}    | {"a":2}    | NIL          | NIL          | ["wow",null]       | wow                   | {"level":2,"key":"z","data":["wow",null]}
 (3 rows)

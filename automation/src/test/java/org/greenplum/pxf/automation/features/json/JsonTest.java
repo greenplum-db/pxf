@@ -60,6 +60,27 @@ public class JsonTest extends BaseFeature {
             "obj     text"
     };
 
+    private static final String[] ARRAYS_AS_TEXT_PROJECTIONS_FIELDS = new String[]{
+            "id int",
+            "\"emp_arr[0]\" text",
+            "\"emp_arr[1]\" text", // out of bounds
+            "\"num_arr[0]\" text",
+            "\"num_arr[1]\" text",
+            "\"num_arr[100]\" text",  // out of bounds
+            "\"bool_arr[0]\" text",
+            "\"str_arr[0]\" text",
+            "\"arr_arr[0]\" text",
+            "\"arr_arr[1]\" text",
+            "\"arr_arr[100]\" text",  // out of bounds
+            "\"obj_arr[0]\" text",
+            "\"obj_arr[1]\" text",
+            "\"obj_arr[100]\" text",  // out of bounds
+            "\"obj_arr[0].a\" text", // this returns NULL now, not the actual value
+            "\"obj.data.data.data\" text",
+            "\"obj.data.data.data[0]\" text",
+            "\"obj.data.data\" text"
+    };
+
     @Override
     public void beforeClass() throws Exception {
         // path for storing data on HDFS (for processing by PXF)
@@ -281,7 +302,12 @@ public class JsonTest extends BaseFeature {
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void jsonStringArrayAsGpdbText() throws Exception {
+        // table where columns do not reference inside JSON arrays
         prepareExternalTable("jsontest_array_as_text", ARRAYS_AS_TEXT_FIELDS, hdfsPath + FILENAME_JSON_ARRAY + SUFFIX_JSON, "custom");
+        gpdb.createTableAndVerify(exTable);
+
+        // table where columns reference inside JSON arrays
+        prepareExternalTable("jsontest_array_as_text_projections", ARRAYS_AS_TEXT_PROJECTIONS_FIELDS, hdfsPath + FILENAME_JSON_ARRAY + SUFFIX_JSON, "custom");
         gpdb.createTableAndVerify(exTable);
 
         runTincTest("pxf.features.hdfs.readable.json.array_as_text.runTest");
