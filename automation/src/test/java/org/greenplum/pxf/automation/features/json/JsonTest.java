@@ -60,6 +60,30 @@ public class JsonTest extends BaseFeature {
             "obj     text"
     };
 
+    private static final String[] ARRAYS_AS_VARCHAR_FIELDS = new String[]{
+            "id int",
+            "emp_arr varchar", // unlimited
+            "emp_obj varchar(10)", // more than actual
+            "num_arr varchar(40)", // actual zise
+            "bool_arr varchar(255)", // way more than actual
+            "str_arr varchar",
+            "arr_arr varchar",
+            "obj_arr varchar",
+            "obj     varchar"
+    };
+
+    private static final String[] ARRAYS_AS_BPCHAR_FIELDS = new String[]{
+            "id int",
+            "emp_arr bpchar(4)",
+            "emp_obj bpchar(10)",
+            "num_arr bpchar(42)", // 2 more than actual size of data
+            "bool_arr bpchar(17)", // actual size
+            "str_arr bpchar(25)", // 1 more than actual
+            "arr_arr bpchar(25)", // 3 more than actual
+            "obj_arr bpchar(23)", // 1 more than actual
+            "obj     bpchar(100)" // actual size
+    };
+
     private static final String[] ARRAYS_AS_TEXT_PROJECTIONS_FIELDS = new String[]{
             "id int",
             "\"emp_arr[0]\" text",
@@ -302,8 +326,14 @@ public class JsonTest extends BaseFeature {
 
     @Test(groups = {"features", "gpdb", "security", "hcfs"})
     public void jsonStringArrayAsGpdbText() throws Exception {
-        // table where columns do not reference inside JSON arrays
+        // tables where columns do not reference inside JSON arrays
         prepareExternalTable("jsontest_array_as_text", ARRAYS_AS_TEXT_FIELDS, hdfsPath + FILENAME_JSON_ARRAY + SUFFIX_JSON, "custom");
+        gpdb.createTableAndVerify(exTable);
+
+        prepareExternalTable("jsontest_array_as_varchar", ARRAYS_AS_VARCHAR_FIELDS, hdfsPath + FILENAME_JSON_ARRAY + SUFFIX_JSON, "custom");
+        gpdb.createTableAndVerify(exTable);
+
+        prepareExternalTable("jsontest_array_as_bpchar", ARRAYS_AS_BPCHAR_FIELDS, hdfsPath + FILENAME_JSON_ARRAY + SUFFIX_JSON, "custom");
         gpdb.createTableAndVerify(exTable);
 
         // table where columns reference inside JSON arrays
@@ -312,32 +342,6 @@ public class JsonTest extends BaseFeature {
 
         runTincTest("pxf.features.hdfs.readable.json.array_as_text.runTest");
     }
-
-    // TODO: JSON array of other primitive types (e.g., int/float/bool)
-
-    // TODO: JSON array of objects
-    // TODO: test index into JSON array and then JSON object
-
-    // TODO: JSON array of arrays
-
-    // TODO: JSON array of mixed types (e.g., `[ture, 123, "a string"]`)
-
-    // TODO: special characters in strings (`{"key": "This is a quote \"a quote.\" from foo."}`)
-    /*
-     * {"id": 1, "values": "This is a string with an embedded quote \"Hello, World!\""}
-     * {"id": 2, "values": [{"key": "foo"}, {"key": "bizz"}, {"key": "The Fonz says \"Eh!\"."}]}
-     * {"id": 3, "values": "{1,2} this is a valid JSON string that looks like a postgres array"}
-     *
-     * 1. Should be no problem reading this data into GPDB as text
-     * 2. SELECT id, ((values::json)->2)->>'key' FROM pxf_json WHERE id = 2;
- id |       ?column?
-----+----------------------
-  2 | The Fonz says "Eh!".
-     */
-
-    // TODO: test using BPCHAR and/or VARCHAR
-
-    // TODO: test for varchar(n)
 
     private void prepareExternalTable(String name, String[] fields, String path, String format) {
         ProtocolEnum protocol = ProtocolUtils.getProtocol();
