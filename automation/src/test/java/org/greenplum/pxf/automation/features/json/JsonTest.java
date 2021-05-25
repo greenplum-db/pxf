@@ -64,7 +64,7 @@ public class JsonTest extends BaseFeature {
             "id int",
             "emp_arr varchar", // unlimited
             "emp_obj varchar(10)", // more than actual
-            "num_arr varchar(40)", // actual zise
+            "num_arr varchar(40)", // actual size
             "bool_arr varchar(255)", // way more than actual
             "str_arr varchar",
             "arr_arr varchar",
