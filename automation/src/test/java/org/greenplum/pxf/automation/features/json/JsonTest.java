@@ -26,83 +26,83 @@ public class JsonTest extends BaseFeature {
     private final String FILENAME_JSON_ARRAY = "simple_array";
 
     private static final String[] TWEETS_FIELDS = new String[]{
-            "created_at text",
-            "id bigint",
-            "text text",
-            "\"user.screen_name\" text",
-            "\"entities.hashtags[0]\" text",
+            "created_at                     text",
+            "id                             bigint",
+            "text                           text",
+            "\"user.screen_name\"           text",
+            "\"entities.hashtags[0]\"       text",
             "\"coordinates.coordinates[0]\" float8",
             "\"coordinates.coordinates[1]\" float8",
     };
 
     private static final String[] SUPPORTED_PRIMITIVE_FIELDS = new String[]{
-            "type_int int",
-            "type_bigint bigint",
+            "type_int      int",
+            "type_bigint   bigint",
             "type_smallint smallint",
-            "type_float real",
-            "type_double float8",
-            "type_string1 text",
-            "type_string2 varchar",
-            "type_string3 bpchar",
-            "type_char char",
-            "type_boolean bool",
+            "type_float    real",
+            "type_double   float8",
+            "type_string1  text",
+            "type_string2  varchar",
+            "type_string3  bpchar",
+            "type_char     char",
+            "type_boolean  bool",
     };
 
     private static final String[] ARRAYS_AS_TEXT_FIELDS = new String[]{
-            "id int",
-            "emp_arr text",
-            "emp_obj text",
-            "num_arr text",
+            "id       int",
+            "emp_arr  text",
+            "emp_obj  text",
+            "num_arr  text",
             "bool_arr text",
-            "str_arr text",
-            "arr_arr text",
-            "obj_arr text",
-            "obj     text"
+            "str_arr  text",
+            "arr_arr  text",
+            "obj_arr  text",
+            "obj      text"
     };
 
     private static final String[] ARRAYS_AS_VARCHAR_FIELDS = new String[]{
-            "id int",
-            "emp_arr varchar", // unlimited
-            "emp_obj varchar(10)", // more than actual
-            "num_arr varchar(40)", // actual size
+            "id       int",
+            "emp_arr  varchar",      // unlimited
+            "emp_obj  varchar(10)",  // more than actual
+            "num_arr  varchar(40)",  // actual size
             "bool_arr varchar(255)", // way more than actual
-            "str_arr varchar",
-            "arr_arr varchar",
-            "obj_arr varchar",
-            "obj     varchar"
+            "str_arr  varchar",
+            "arr_arr  varchar",
+            "obj_arr  varchar",
+            "obj      varchar"
     };
 
     private static final String[] ARRAYS_AS_BPCHAR_FIELDS = new String[]{
-            "id int",
-            "emp_arr bpchar(4)",
-            "emp_obj bpchar(10)",
-            "num_arr bpchar(42)", // 2 more than actual size of data
+            "id       int",
+            "emp_arr  bpchar(4)",
+            "emp_obj  bpchar(10)",
+            "num_arr  bpchar(42)", // 2 more than actual size of data
             "bool_arr bpchar(17)", // actual size
-            "str_arr bpchar(25)", // 1 more than actual
-            "arr_arr bpchar(25)", // 3 more than actual
-            "obj_arr bpchar(23)", // 1 more than actual
-            "obj     bpchar(100)" // actual size
+            "str_arr  bpchar(25)", // 1 more than actual
+            "arr_arr  bpchar(25)", // 3 more than actual
+            "obj_arr  bpchar(23)", // 1 more than actual
+            "obj      bpchar(100)" // actual size
     };
 
     private static final String[] ARRAYS_AS_TEXT_PROJECTIONS_FIELDS = new String[]{
-            "id int",
-            "\"emp_arr[0]\" text",
-            "\"emp_arr[1]\" text", // out of bounds
-            "\"num_arr[0]\" text",
-            "\"num_arr[1]\" text",
-            "\"num_arr[100]\" text",  // out of bounds
-            "\"bool_arr[0]\" text",
-            "\"str_arr[0]\" text",
-            "\"arr_arr[0]\" text",
-            "\"arr_arr[1]\" text",
-            "\"arr_arr[100]\" text",  // out of bounds
-            "\"obj_arr[0]\" text",
-            "\"obj_arr[1]\" text",
-            "\"obj_arr[100]\" text",  // out of bounds
-            "\"obj_arr[0].a\" text", // this returns NULL now, not the actual value
-            "\"obj.data.data.data\" text",
+            "id                        int",
+            "\"emp_arr[0]\"            text",
+            "\"emp_arr[1]\"            text",     // out of bounds
+            "\"num_arr[0]\"            real",
+            "\"num_arr[1]\"            real",
+            "\"num_arr[100]\"          real",     // out of bounds
+            "\"bool_arr[0]\"           boolean",
+            "\"str_arr[2]\"            text",     // quoted value
+            "\"arr_arr[0]\"            text",
+            "\"arr_arr[1]\"            text",
+            "\"arr_arr[100]\"          text",     // out of bounds
+            "\"obj_arr[0]\"            text",
+            "\"obj_arr[1]\"            text",
+            "\"obj_arr[100]\"          text",     // out of bounds
+            "\"obj_arr[0].a\"          text",     // this returns NULL now, not the actual value
+            "\"obj.data.data.data\"    text",
             "\"obj.data.data.data[0]\" text",
-            "\"obj.data.data\" text"
+            "\"obj.data.data\"         text"
     };
 
     @Override
