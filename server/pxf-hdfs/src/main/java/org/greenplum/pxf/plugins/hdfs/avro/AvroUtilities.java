@@ -36,7 +36,6 @@ public final class AvroUtilities {
     private static final Logger LOG = LoggerFactory.getLogger(AvroUtilities.class);
     private static final String COMMON_NAMESPACE = "public.avro";
 
-    private String schemaPath;
     private AvroSchemaFileReaderFactory schemaFileReaderFactory;
     private final FileSearcher fileSearcher;
     private PgUtilities pgUtilities;
@@ -82,11 +81,14 @@ public final class AvroUtilities {
         if (schema != null) {
             return schema;
         }
+
+        String userProvidedSchema = context.getOption("SCHEMA");
+        String schemaFile = userProvidedSchema != null ? userProvidedSchema : context.getDataSource();
+
         try {
-            schemaPath = context.getDataSource();
-            schema = readOrGenerateAvroSchema(context, hcfsType);
+            schema = readOrGenerateAvroSchema(context, hcfsType, userProvidedSchema);
         } catch (Exception e) {
-            throw new RuntimeException(String.format("Failed to obtain Avro schema from '%s'", schemaPath), e);
+            throw new RuntimeException(String.format("Failed to obtain Avro schema from '%s'", schemaFile), e);
         }
         context.setMetadata(schema);
         return schema;
@@ -102,7 +104,7 @@ public final class AvroUtilities {
      * @param isTopLevel
      * @return
      */
-    public Object decodeString(Schema schema, String value, boolean isTopLevel) {
+    public Object decodeString(Schema schema, String value, boolean isTopLevel, boolean hasUserProvidedSchema) {
         LOG.debug("schema={}, value={}, isTopLevel={}", schema, value, isTopLevel);
 
         Schema.Type fieldType = schema.getType();
@@ -113,14 +115,23 @@ public final class AvroUtilities {
 
             List<Object> list = new ArrayList<>();
             String[] splits = pgUtilities.splitArray(value);
-            for (String s : splits) {
+            Schema elementType = schema.getElementType();
+            for (String split : splits) {
                 try {
-                    list.add(decodeString(schema.getElementType(), s, false));
+                    list.add(decodeString(elementType, split, false, hasUserProvidedSchema));
                 } catch (NumberFormatException | PxfRuntimeException e) {
-                    String hint = StringUtils.startsWith(s, "{") ?
-                            String.format("'%s' might be a multi-dimensional array, provide or modify an AVRO schema.", value) :
-                            String.format("'%s' is not of the expected type, check that the AVRO and GPDB schemas are correct.", s);
-                   throw new PxfRuntimeException("Error parsing array literal", hint, e);
+                    String hint = "";
+                    if (StringUtils.startsWith(split, "{")) {
+                        hint = hasUserProvidedSchema ?
+                                "Value is a multi-dimensional array, please check that the provided AVRO schema has the correct dimensions." :
+                                "Value is a multi-dimensional array, user is required to provide an AVRO schema with matching dimensions.";
+
+                    } else {
+                        hint = hasUserProvidedSchema ?
+                                "Check that the AVRO and GPDB schemas are correct." :
+                                "Unexpected state since PXF generated the AVRO schema.";
+                    }
+                   throw new PxfRuntimeException(String.format("Error parsing array element: %s was not of expected type %s", split, elementType), hint, e);
                 }
             }
             return list;
@@ -130,7 +141,7 @@ public final class AvroUtilities {
 
                 fieldType = schema.getType();
                 if (fieldType == Schema.Type.ARRAY) {
-                    return decodeString(schema, value, isTopLevel);
+                    return decodeString(schema, value, isTopLevel, hasUserProvidedSchema);
                 }
             }
             if (value == null && !isTopLevel) {
@@ -161,11 +172,9 @@ public final class AvroUtilities {
         }
     }
 
-    private Schema readOrGenerateAvroSchema(RequestContext context, HcfsType hcfsType) throws IOException {
+    private Schema readOrGenerateAvroSchema(RequestContext context, HcfsType hcfsType, String userProvidedSchemaFile) throws IOException {
         // user-provided schema trumps everything
-        String userProvidedSchemaFile = context.getOption("SCHEMA");
         if (userProvidedSchemaFile != null) {
-            schemaPath = userProvidedSchemaFile;
             AvroSchemaFileReader schemaFileReader = schemaFileReaderFactory.getAvroSchemaFileReader(userProvidedSchemaFile);
             return schemaFileReader.readSchema(context.getConfiguration(), userProvidedSchemaFile, hcfsType, fileSearcher);
         }

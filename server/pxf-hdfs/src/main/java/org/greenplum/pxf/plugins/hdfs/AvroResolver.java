@@ -68,6 +68,7 @@ public class AvroResolver extends BasePlugin implements Resolver {
     private Schema schema;
     private final AvroUtilities avroUtilities;
     private final PgUtilities pgUtilities;
+    private boolean hasUserProvidedSchema;
 
     /**
      * Constructs a new instance of the AvroFileAccessor
@@ -93,6 +94,7 @@ public class AvroResolver extends BasePlugin implements Resolver {
     public void afterPropertiesSet() {
         HcfsType hcfsType = HcfsType.getHcfsType(context);
         Schema schema = avroUtilities.obtainSchema(context, hcfsType);
+        hasUserProvidedSchema = context.getOption("SCHEMA") != null;
 
         reader = new GenericDatumReader<>(schema);
 
@@ -161,7 +163,7 @@ public class AvroResolver extends BasePlugin implements Resolver {
                 field.val = field.val != null ? (int) (short) field.val : null;
             } else if (field.type == DataType.TEXT.getOID()) {
                 // when field.type is TEXT, it might be an actual TEXT field or an array type
-                field.val = avroUtilities.decodeString(schema.getFields().get(cnt).schema(), (String) field.val, true);
+                field.val = avroUtilities.decodeString(schema.getFields().get(cnt).schema(), (String) field.val, true, hasUserProvidedSchema);
             }
             genericRecord.put(cnt++, field.val);
         }

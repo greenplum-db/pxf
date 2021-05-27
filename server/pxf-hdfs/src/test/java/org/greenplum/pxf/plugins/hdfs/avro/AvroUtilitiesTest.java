@@ -417,7 +417,7 @@ public class AvroUtilitiesTest {
     @Test
     public void testDecodeIntegerArray() {
         Schema arraySchema = Schema.createArray(Schema.create(Schema.Type.INT));
-        Object result = avroUtilities.decodeString(arraySchema, "{1,2,3}", true);
+        Object result = avroUtilities.decodeString(arraySchema, "{1,2,3}", true, false);
         assertEquals(Arrays.asList(1, 2, 3), result);
     }
 
@@ -429,7 +429,7 @@ public class AvroUtilitiesTest {
                                 Schema.create(Schema.Type.NULL),
                                 Schema.create(Schema.Type.INT))));
 
-        Object result = avroUtilities.decodeString(arraySchema, "{1,NULL,3}", true);
+        Object result = avroUtilities.decodeString(arraySchema, "{1,NULL,3}", true, false);
         assertEquals(Arrays.asList(1, null, 3), result);
     }
 
@@ -440,10 +440,10 @@ public class AvroUtilitiesTest {
                         Schema.create(Schema.Type.NULL),
                         Schema.createArray(Schema.create(Schema.Type.INT))));
 
-        Object result = avroUtilities.decodeString(nullableArray, "{1,2,3}", true);
+        Object result = avroUtilities.decodeString(nullableArray, "{1,2,3}", true, false);
         assertEquals(Arrays.asList(1, 2, 3), result);
 
-        result = avroUtilities.decodeString(nullableArray, null, true);
+        result = avroUtilities.decodeString(nullableArray, null, true, false);
         assertNull(result);
     }
 
@@ -454,7 +454,7 @@ public class AvroUtilitiesTest {
                         Schema.create(Schema.Type.NULL)
                 ));
         Exception exception = assertThrows(PxfRuntimeException.class,
-                () -> avroUtilities.decodeString(schema, "", true));
+                () -> avroUtilities.decodeString(schema, "", true, false));
         assertEquals("Avro union schema only contains null types", exception.getMessage());
     }
 
@@ -463,7 +463,7 @@ public class AvroUtilitiesTest {
         Schema schema = Schema.createArray(Schema.create(Schema.Type.DOUBLE));
         String value = "{-1.79769E+308,-2.225E-307,0,2.225E-307,1.79769E+308}";
 
-        Object result = avroUtilities.decodeString(schema, value, true);
+        Object result = avroUtilities.decodeString(schema, value, true, false);
         assertEquals(Arrays.asList(-1.79769E308, -2.225E-307, 0.0, 2.225E-307, 1.79769E308), result);
     }
 
@@ -472,7 +472,7 @@ public class AvroUtilitiesTest {
         Schema schema = Schema.createArray(Schema.create(Schema.Type.STRING));
         String value = "{fizz,buzz,fizzbuzz}";
 
-        Object result = avroUtilities.decodeString(schema, value, true);
+        Object result = avroUtilities.decodeString(schema, value, true, false);
         assertEquals(Arrays.asList("fizz", "buzz", "fizzbuzz"), result);
     }
 
@@ -482,7 +482,7 @@ public class AvroUtilitiesTest {
         String value = "{\"\\\\001\",\"\\\\001#\"}";
 
         @SuppressWarnings("unchecked")
-        List<ByteBuffer> result = (List<ByteBuffer>) avroUtilities.decodeString(schema, value, true);
+        List<ByteBuffer> result = (List<ByteBuffer>) avroUtilities.decodeString(schema, value, true, false);
         assertEquals(2, result.size());
 
         ByteBuffer buffer1 = result.get(0);
@@ -497,7 +497,7 @@ public class AvroUtilitiesTest {
         String value = "{\"\\\"#$\"}";
 
         @SuppressWarnings("unchecked")
-        List<ByteBuffer> result = (List<ByteBuffer>) avroUtilities.decodeString(schema, value, true);
+        List<ByteBuffer> result = (List<ByteBuffer>) avroUtilities.decodeString(schema, value, true, false);
         assertEquals(1, result.size());
 
         ByteBuffer buffer1 = result.get(0);
@@ -510,7 +510,7 @@ public class AvroUtilitiesTest {
         String value = "{\"\\\\x01\",\"\\\\x0123\"}";
 
         @SuppressWarnings("unchecked")
-        List<ByteBuffer> result = (List<ByteBuffer>) avroUtilities.decodeString(schema, value, true);
+        List<ByteBuffer> result = (List<ByteBuffer>) avroUtilities.decodeString(schema, value, true, false);
         assertEquals(2, result.size());
 
         ByteBuffer buffer1 = result.get(0);
@@ -524,7 +524,7 @@ public class AvroUtilitiesTest {
         Schema schema = Schema.create(Schema.Type.BYTES);
         String value = "\\xGG";
 
-        Exception exception = assertThrows(PxfRuntimeException.class, () -> avroUtilities.decodeString(schema, value, true));
+        Exception exception = assertThrows(PxfRuntimeException.class, () -> avroUtilities.decodeString(schema, value, true, false));
         assertEquals("malformed bytea literal \"\\xGG\"", exception.getMessage());
     }
 
@@ -533,18 +533,29 @@ public class AvroUtilitiesTest {
         Schema schema = Schema.createArray(Schema.create(Schema.Type.BOOLEAN));
         String value = "{t,f,t}";
 
-        Object result = avroUtilities.decodeString(schema, value, true);
+        Object result = avroUtilities.decodeString(schema, value, true, false);
         assertEquals(Arrays.asList(true, false, true), result);
     }
 
     @Test
-    public void testDecodeStringInValidBooleanArray() {
+    public void testDecodeStringInValidBooleanArrayPXFGeneratedSchema() {
         Schema schema = Schema.createArray(Schema.create(Schema.Type.BOOLEAN));
+        // this situation should never happen as the toString method of booleans (boolout) should not return a string in this format
         String value = "{true,false,true}";
 
-        Exception exception = assertThrows(PxfRuntimeException.class, () -> avroUtilities.decodeString(schema, value, true));
-        assertEquals("Error parsing array literal", exception.getMessage());
-        assertEquals("'true' is not of the expected type, check that the AVRO and GPDB schemas are correct.", ((PxfRuntimeException) exception).getHint());
+        Exception exception = assertThrows(PxfRuntimeException.class, () -> avroUtilities.decodeString(schema, value, true, false));
+        assertEquals("Error parsing array element: true was not of expected type \"boolean\"", exception.getMessage());
+        assertEquals("Unexpected state since PXF generated the AVRO schema.", ((PxfRuntimeException) exception).getHint());
+    }
+
+    @Test
+    public void testDecodeStringInValidBooleanArrayUserProvidedSchema() {
+        Schema schema = Schema.createArray(Schema.create(Schema.Type.BOOLEAN));
+        String value = "{t,f,5}";
+
+        Exception exception = assertThrows(PxfRuntimeException.class, () -> avroUtilities.decodeString(schema, value, true, true));
+        assertEquals("Error parsing array element: 5 was not of expected type \"boolean\"", exception.getMessage());
+        assertEquals("Check that the AVRO and GPDB schemas are correct.", ((PxfRuntimeException) exception).getHint());
     }
 
     @Test
@@ -553,9 +564,20 @@ public class AvroUtilitiesTest {
         Schema schema = Schema.createArray(Schema.create(Schema.Type.INT));
         String value = "{{1,2},{3,4}}";
 
-        Exception exception = assertThrows(PxfRuntimeException.class, () -> avroUtilities.decodeString(schema, value, true));
-        assertEquals("Error parsing array literal", exception.getMessage());
-        assertEquals("'{{1,2},{3,4}}' might be a multi-dimensional array, provide or modify an AVRO schema.", ((PxfRuntimeException) exception).getHint());
+        Exception exception = assertThrows(PxfRuntimeException.class, () -> avroUtilities.decodeString(schema, value, true, false));
+        assertEquals("Error parsing array element: {1,2} was not of expected type \"int\"", exception.getMessage());
+        assertEquals("Value is a multi-dimensional array, user is required to provide an AVRO schema with matching dimensions.", ((PxfRuntimeException) exception).getHint());
+
+    }
+
+    @Test
+    public void testDecodeStringMismatchedMultiDimensionalArrayWithUserProvidedSchema() {
+        Schema schema = Schema.createArray(Schema.createArray(Schema.create(Schema.Type.INT)));
+        String value = "{{{1,2},{3,4}},{{5,6},{7,8}}}";
+
+        Exception exception = assertThrows(PxfRuntimeException.class, () -> avroUtilities.decodeString(schema, value, true, true));
+        assertEquals("Error parsing array element: {{1,2},{3,4}} was not of expected type {\"type\":\"array\",\"items\":\"int\"}", exception.getMessage());
+        assertEquals("Value is a multi-dimensional array, please check that the provided AVRO schema has the correct dimensions.", ((PxfRuntimeException) exception).getHint());
 
     }
 
@@ -564,7 +586,7 @@ public class AvroUtilitiesTest {
         Schema schema = Schema.createArray(Schema.createArray(Schema.create(Schema.Type.INT)));
         String value = "{{1,2},{3,4}}";
 
-        Object result = avroUtilities.decodeString(schema, value, true);
+        Object result = avroUtilities.decodeString(schema, value, true, false);
 
         assertEquals(Arrays.asList(Arrays.asList(1, 2), Arrays.asList(3, 4)), result);
     }
