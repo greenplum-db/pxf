@@ -91,4 +91,17 @@ Refer to [Loading the Sample JSON Data to HDFS](hdfs_json.html#jsontohdfs) and [
       LOCATION('pxf://BUCKET/pxf_examples/singleline.json?PROFILE=s3:json&SERVER=s3srvcfg')
     FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
     ```
+If you need to retrieve all values of the entire array within a single column, you must define the array field as `TEXT`:
+
+    ``` sql
+    CREATE EXTERNAL TABLE singleline_json_s3(
+      created_at TEXT,
+      id_str TEXT,
+      "user.id" INTEGER,
+      "user.location" TEXT,
+      "coordinates.values" TEXT
+    )
+      LOCATION('pxf://BUCKET/pxf_examples/singleline.json?PROFILE=s3:json&SERVER=s3srvcfg')
+    FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
+    ```
 
