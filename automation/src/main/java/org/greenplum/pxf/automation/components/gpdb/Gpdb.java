@@ -16,14 +16,13 @@ import java.util.List;
  */
 public class Gpdb extends DbSystemObject {
 
-	private String sshUserName;
-
-	private String sshPassword;
-
 	private static final String DEFAULT_PORT = "5432";
 
-	public Gpdb() {
+	private String sshUserName;
+	private String sshPassword;
+	private int version;
 
+	public Gpdb() {
 	}
 
 	public Gpdb(boolean silenceReport) {
@@ -71,7 +70,19 @@ public class Gpdb extends DbSystemObject {
 
 		connect();
 
+		String pgVersion = dbConnection.getMetaData().getDatabaseProductVersion();
+		if (pgVersion.startsWith("8.3.")) {
+			version = 5; // Greenplum 5
+		} else if (pgVersion.startsWith("9.4.")) {
+			version = 6; // Greenplum 6
+		}
+		ReportUtils.report(report, getClass(), "Determined Greenplum version: " + version + " from Postgres version: " + pgVersion);
+
 		ReportUtils.stopLevel(report);
+	}
+
+	public int getVersion() {
+		return version;
 	}
 
 	/**
@@ -115,7 +126,7 @@ public class Gpdb extends DbSystemObject {
 	public void createDataBase(String schemaName, boolean ignoreFail, String encoding, String localeCollate, String localeCollateType) throws Exception {
 
 		String createStatement;
-		if (StringUtils.equals(dbConnection.getMetaData().getDatabaseProductVersion(), "8.3.23")) {
+		if (version == 5) {
 			// Greenplum 5
 			ReportUtils.startLevel(report, getClass(), "Unable to create database with encoding that does not match server's locale in Greenplum 5");
 			createStatement = String.format("CREATE DATABASE %s", schemaName);

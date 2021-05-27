@@ -341,6 +341,11 @@ public class JsonTest extends BaseFeature {
         gpdb.createTableAndVerify(exTable);
 
         runTincTest("pxf.features.hdfs.readable.json.array_as_text.runTest");
+
+        // test using JSON functions (available in Greenplum 6+) to convert from TEXT fields into native arrays
+        if (gpdb.getVersion() >= 6) {
+            runTincTest("pxf.features.hdfs.readable.json.json_functions.runTest");
+        }
     }
 
     private void prepareExternalTable(String name, String[] fields, String path, String format) {
