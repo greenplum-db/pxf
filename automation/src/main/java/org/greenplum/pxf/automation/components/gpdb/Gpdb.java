@@ -50,6 +50,14 @@ public class Gpdb extends DbSystemObject {
 
 		connect();
 
+		String pgVersion = dbConnection.getMetaData().getDatabaseProductVersion();
+		if (pgVersion.startsWith("8.3.")) {
+			version = 5; // Greenplum 5
+		} else if (pgVersion.startsWith("9.4.")) {
+			version = 6; // Greenplum 6
+		}
+		ReportUtils.report(report, getClass(), "Determined Greenplum version: " + version + " from Postgres version: " + pgVersion);
+
 		if (!checkDataBaseExists(getDb())) {
 			String encoding = getEncoding();
 			String localeCollate = getLocaleCollate();
@@ -69,14 +77,6 @@ public class Gpdb extends DbSystemObject {
 		address = "jdbc:postgresql://" + getHost() + ":" + getPort() + "/" + getDb();
 
 		connect();
-
-		String pgVersion = dbConnection.getMetaData().getDatabaseProductVersion();
-		if (pgVersion.startsWith("8.3.")) {
-			version = 5; // Greenplum 5
-		} else if (pgVersion.startsWith("9.4.")) {
-			version = 6; // Greenplum 6
-		}
-		ReportUtils.report(report, getClass(), "Determined Greenplum version: " + version + " from Postgres version: " + pgVersion);
 
 		ReportUtils.stopLevel(report);
 	}
