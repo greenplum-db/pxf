@@ -15,7 +15,8 @@ The `pxf-application.properties` file exposes these PXF Service application conf
 
 | Parameter  | Description | Default Value |
 |-----------|---------------| ------------|
-| pxf.connection.timeout | The Tomcat server connection timeout. (-1 for infinite timeout.) | 5m (5 minutes) |
+| pxf.connection.timeout | The Tomcat server connection timeout for read and write operations (-1 for infinite timeout). | 5m (5 minutes) |
+| pxf.connection.upload-timeout | The Tomcat server connection timeout for write operations only (-1 for infinite timeout). | 5m (5 minutes) |
 | [pxf.max.threads](cfg_mem.html#pxf-threadcfg) | The maximum number of PXF tomcat threads. | 200 |
 | pxf.task.pool.allow&#8209;core&#8209;thread&#8209;timeout | Identifies whether or not core streaming threads are allowed to time out. | false |
 | pxf.task.pool.core-size | The number of core streaming threads. | 8 |
