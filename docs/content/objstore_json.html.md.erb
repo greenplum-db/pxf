@@ -91,7 +91,7 @@ Refer to [Loading the Sample JSON Data to HDFS](hdfs_json.html#jsontohdfs) and [
     FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
     ```
 
-- If you need to identify specific elements of the `user.coordinates` array in different columns, use `[]` brackets to define the JSON array:
+- If you need to identify specific elements of the `user.coordinates` array in different columns, use `[]` brackets to identify the JSON array:
 
     ``` sql
     CREATE EXTERNAL TABLE singleline_json_s3(

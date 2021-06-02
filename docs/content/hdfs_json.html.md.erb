@@ -64,7 +64,7 @@ user.location
 
 In order to retrieve all the values of the `values` array within a single column, define the corresponding Greenplum Database external table column with one of the following types: `TEXT`, `VARCHAR` or `BPCHAR`.
 
-Alternatively, use `[]` to identify specific elements of the `values` array as separate Greenplum Database external table columns:
+Alternatively, use <code>[<i>n</i>]</code> to identify specific elements of the `values` array as separate Greenplum Database external table columns:
 
 ``` pre
 coordinates.values[0]
@@ -220,7 +220,7 @@ LOCATION('pxf://data/pxf_examples/singleline.json?PROFILE=hdfs:json')
 FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
 ```
 
-If you need to identify specific elements of the `user.coordinates` array in different columns, use `[]` brackets to define the JSON array:
+If you need to identify specific elements of the `user.coordinates` array in different columns, use `[]` brackets to identify the JSON array:
 
 ``` sql
 CREATE EXTERNAL TABLE singleline_json_tbl(
@@ -252,7 +252,7 @@ FROM singleline_json_tbl;
 
 Note that this is only possible when using Greenplum Database 6.x, as the function `json_array_elements_text()` is not available with 5.x versions of Greenplum.
 
-## <a id="jsonexample2" class="no-quick-link"></a>Example: Reading a JSON file with Multi-Line Records
+## <a id="jsonexample2"></a>Example: Reading a JSON file with Multi-Line Records
 
 The SQL command to create a readable external table from the multi-line-per-record JSON file is very similar to that of the single line data set above. You must additionally specify the `LOCATION` clause `IDENTIFIER` keyword and an associated value when you want to read multi-line JSON records. For example:
 
