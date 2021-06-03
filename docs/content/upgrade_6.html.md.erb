@@ -55,7 +55,13 @@ After you install the new version of PXF, perform the following procedure:
     $ ssh gpadmin@<gpmaster>
     ```
 
-1. PXF 6.x includes a new version of the `pxf` extension. You must update the `pxf` extension in every Greenplum database in which you are using PXF. A database superuser or the database owner must run this SQL command in the `psql` subsystem or in an SQL script:
+1. PXF 6.x includes a new version of the `pxf` extension. Register the extension files with Greenplum Database (see [pxf cluster register](ref/pxf-cluster.html)). `$GPHOME` must be set when you run this command:
+
+    ``` shell
+    gpadmin@gpmaster$ pxf cluster register
+    ```
+
+1. You must update the `pxf` extension in every Greenplum database in which you are using PXF. A database superuser or the database owner must run this SQL command in the `psql` subsystem or in an SQL script:
 
     ``` sql
     ALTER EXTENSION pxf UPDATE;
