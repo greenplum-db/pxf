@@ -64,9 +64,7 @@ class SimpleWriterCallable implements WriterCallable {
         JdbcResolver.decodeOneRowToPreparedStatement(row, statement);
 
         try {
-            if (statement.executeUpdate() != 1) {
-                throw new SQLException("The number of rows affected by INSERT query is not equal to the number of rows provided");
-            }
+            statement.executeUpdate();
         } catch (SQLException e) {
             return e;
         } finally {
