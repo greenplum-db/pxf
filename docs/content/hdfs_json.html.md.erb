@@ -62,7 +62,7 @@ user.location
 
 `coordinates` is an object composed of a text field named `type` and an array of integers named `values`. 
 
-In order to retrieve all the values of the `values` array within a single column, define the corresponding Greenplum Database external table column with one of the following types: `TEXT`, `VARCHAR` or `BPCHAR`.
+In order to retrieve all the values of the `values` array within a single column, define the corresponding Greenplum Database external table column with one of the following types: `TEXT`, `VARCHAR`, or `BPCHAR`.
 
 Alternatively, use <code>[<i>n</i>]</code> to identify specific elements of the `values` array as separate Greenplum Database external table columns:
 
@@ -87,7 +87,7 @@ The following table summarizes external mapping rules for JSON data.
 | JSON Data Type                                                    | PXF/Greenplum Data Type                                                                                                                                                                                            |
 |-------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Primitive type (integer, float, string, boolean, null) | Use the corresponding Greenplum Database built-in data type; see [Greenplum Database Data Types](https://gpdb.docs.pivotal.io/latest/ref_guide/data_types.html). |
-| Array                         | Use `TEXT`, `VARCHAR` or `BPCHAR` to retrieve the contents of the array in one column.<br>Use <code>[<i>n</i>]</code> brackets to identify a specific array index to a member of primitive type.<br>                                                                                           |
+| Array                         | Use `TEXT`, `VARCHAR`, or `BPCHAR` to retrieve the contents of the array in one column.<br>Use <code>[<i>n</i>]</code> brackets to identify a specific array index to a member of primitive type.<br>                                                                                           |
 | Object                | Use dot `.` notation to specify each level of projection (nesting) to a member of a primitive type.                                                                                         |
 
 ### <a id="topic_jsonreadmodes"></a>JSON Data Read Modes
