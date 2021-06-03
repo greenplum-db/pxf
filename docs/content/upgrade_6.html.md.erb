@@ -27,12 +27,16 @@ Perform this procedure before you upgrade to a new version of PXF 6.x:
     gpadmin@gpmaster$ pxf version
     ```
 
-1. ANY NEXT STEP HERE??
-
 1. Stop PXF on each Greenplum host as described in [Stopping PXF](cfginitstart_pxf.html#stop_pxf):
 
     ``` shell
     gpadmin@gpmaster$ pxf cluster stop
+    ```
+
+1. Back up the PXF user configuration files; for example, if `PXF_BASE=/usr/local/pxf-gp6`:
+
+    ``` shell
+    gpadmin@gpmaster$ cp -avi /usr/local/pxf-gp6 pxf_base.bak
     ```
 
 
