@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=pivotaldata/gpdb-pxf-dev:centos7
+ARG BASE_IMAGE=gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb6-centos7-test-pxf:latest
 
 FROM ${BASE_IMAGE} as scratch
 

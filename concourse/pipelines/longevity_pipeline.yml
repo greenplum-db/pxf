@@ -25,7 +25,7 @@ resource_types:
     password: ((pxf-cloudbuild-service-account-key))
 
 - name: gcs
-  type: docker-image
+  type: registry-image
   source:
     repository: frodenas/gcs-resource
 
@@ -66,11 +66,11 @@ resources:
     uri: {{ccp-git-remote}}
 
 - name: ccp-7
-  type: docker-image
+  type: registry-image
   icon: docker
   source:
-    repository: pivotaldata/ccp
-    tag: 7
+    repository: gcr.io/data-gpdb-public-images/ccp
+    tag: latest
 
 - name: gpdb6-pxf-dev-centos7-image
   type: registry-image

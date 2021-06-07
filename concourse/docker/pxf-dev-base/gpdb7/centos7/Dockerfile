@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=pivotaldata/gpdb7-centos7-test:latest
+ARG BASE_IMAGE=gcr.io/data-gpdb-public-images/gpdb7-centos7-test:latest
 
 FROM ${BASE_IMAGE}
 

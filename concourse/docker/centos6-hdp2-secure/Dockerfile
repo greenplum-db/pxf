@@ -1,6 +1,7 @@
-ARG BASE_IMAGE=gpdb-dev:centos6
+# FIXME: this file does not appear to be used anymore; can we delete it (and the containing directory)?
+ARG BASE_IMAGE
 
-FROM pivotaldata/${BASE_IMAGE}
+FROM gcr.io/data-gpdb-public-images/${BASE_IMAGE}
 
 ARG TERM=xterm-256color
 ARG CLUSTER_NAME=hdp

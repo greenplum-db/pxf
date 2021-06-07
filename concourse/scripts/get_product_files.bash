@@ -12,6 +12,11 @@ set -e
 PATH=${PIVNET_CLI_DIR}:${PATH}
 chmod +x "${PIVNET_CLI_DIR}/pivnet"
 
+if ! type jq &> /dev/null; then
+	apt-get update --quiet=1
+	apt-get install --quiet=1 --yes jq
+fi
+
 # log in to pivnet
 pivnet login "--api-token=${PIVNET_API_TOKEN}"
 
