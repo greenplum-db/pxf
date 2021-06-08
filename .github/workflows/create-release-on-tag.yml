@@ -22,14 +22,15 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: PXF Version ${{ github.ref }}
           body: |
-            ## 6.0.1 (05/11/2021)
+            ## 6.1.0 (06/08/2021)
 
-            ### Bug Fixes:
+            ### Enhancements:
 
-            [#624](https://github.com/greenplum-db/pxf/pull/624) Deprecated HiveVectorizedORC profile should follow vectorized execution path
-            [#626](https://github.com/greenplum-db/pxf/pull/626) Hive connector should clone SerDe properties per fragment
-            [#627](https://github.com/greenplum-db/pxf/pull/627) Fix NullPointerException for ORC textMapper function when the column is repeating
-            [#630](https://github.com/greenplum-db/pxf/pull/630) Fix the inconsistency between row count in external table and ORC file
+            [#633](https://github.com/greenplum-db/pxf/pull/633) Upgrade go dependencies
+            [#636](https://github.com/greenplum-db/pxf/pull/636) Add support for reading and writing arrays in AVRO
+            [#638](https://github.com/greenplum-db/pxf/pull/638) Report exception class if there's no exception message
+            [#640](https://github.com/greenplum-db/pxf/pull/640) Support reading JSON arrays and objects into Greenplum text columns
+            [#644](https://github.com/greenplum-db/pxf/pull/644) Allow configuring connection timeout for data uploads to PXF
 
           draft: false
           prerelease: false

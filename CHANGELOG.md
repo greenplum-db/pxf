@@ -1,5 +1,15 @@
 # Changelog
 
+## 6.1.0 (06/08/2021)
+
+### Enhancements:
+
+- [#633](https://github.com/greenplum-db/pxf/pull/633) Upgrade go dependencies
+- [#636](https://github.com/greenplum-db/pxf/pull/636) Add support for reading and writing arrays in AVRO
+- [#638](https://github.com/greenplum-db/pxf/pull/638) Report exception class if there's no exception message
+- [#640](https://github.com/greenplum-db/pxf/pull/640) Support reading JSON arrays and objects into Greenplum text columns
+- [#644](https://github.com/greenplum-db/pxf/pull/644) Allow configuring connection timeout for data uploads to PXF
+
 ## 6.0.1 (05/11/2021)
 
 ### Bug Fixes:
