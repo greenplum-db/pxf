@@ -68,9 +68,8 @@ After you install the new version of PXF, perform the following procedure:
     ```
 
 1. **If you are upgrading <i>from</i> PXF version 6.0.x**:
-    - upgrade step for config property
-    - (tbd?) upgrade step for external tables accessing avro arrays
-    - (tbd?) upgrade step for external tables accessing json objects
+    - If you previously set the `pxf.connection.timeout` property to change the write/upload timeout, you must now set the `pxf.connection.upload-timeout` property for this purpose.
+    - Existing external tables that access Avro arrays and JSON objects will continue to work as-is. If you want to take advantage of the new Avro array read/write functionality or the new JSON object support, create a new external with the adjusted DDL. If you can access the data with the new external table as you expect, you may choose to drop and recreate the existing external table.
 
 1. Synchronize the PXF configuration from the master host to the standby master and each Greenplum Database segment host. For example:
 
