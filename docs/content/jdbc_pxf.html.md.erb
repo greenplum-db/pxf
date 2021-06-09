@@ -83,6 +83,11 @@ The specific keywords and values used in the Greenplum Database [CREATE EXTERNAL
 
 **Note**: You cannot use the `HEADER` option in your `FORMAT` specification when you create a PXF external table.
 
+Refer to the following sections for examples on how to read from and write to specific SQL databases:
+
+- [Reading From and Writing to a PostgreSQL Table](jdbc_pxf_postgresql.html)
+- [Reading From and Writing to a MySQL Table](jdbc_pxf_mysql.html)
+- [Reading From and Writing to an Oracle Table](jdbc_pxf_oracle.html)
 
 ### <a id="jdbcoptions"></a>JDBC Custom Options
 
@@ -210,6 +215,8 @@ FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
 ```
 
 This command references a query named `order_rpt` defined in the `pgserver` server configuration. It also specifies JDBC read partitioning options that provide PXF with the information that it uses to split/partition the query result data across its servers/segments.
+
+For a more detailed example see [Example: Using a Named Query with PostgreSQL](jdbc_pxf_named.html).
 
 The PXF JDBC connector automatically applies column projection and filter pushdown to external tables that reference named queries.
 

@@ -69,8 +69,8 @@ Perform the following steps to create an Oracle table named `countries` in the s
 
     ``` sql
     > CREATE TABLE countries (country_id int, country_name varchar(40), population float);
-    > INSERT INTO countries (country_id, country_ values (3, 'Portugal', 10.28);
-    > INSERT INTO countries (country_id, country_ values (24, 'Zambia', 17.86);
+    > INSERT INTO countries (country_id, country_name, population) values (3, 'Portugal', 10.28);
+    > INSERT INTO countries (country_id, country_name, population) values (24, 'Zambia', 17.86);
     > COMMIT;
     ```
 
@@ -144,7 +144,7 @@ Perform the following procedure to create a PXF external table that references t
     ``` sql
     gpadmin=# SELECT * FROM oracle_countries ;
     country_id | country_name | population 
-    ------------+--------------+------------
+    -----------+--------------+------------
              3 | Portugal     |      10.28
             24 | Zambia       |      17.86
     (2 rows)
