@@ -38,9 +38,9 @@ Apache Avro is a data serialization framework where the data is serialized in a 
 
 Avro supports both primitive and complex data types. 
 
-To represent Avro primitive data types in Greenplum Database, map data values to Greenplum Database columns of the same type. 
+To represent Avro primitive data types and Avro arrays of primitive types in Greenplum Database, map data values to Greenplum Database columns of the same type. 
 
-Avro supports complex data types including arrays, maps, records, enumerations, and fixed types. Map top-level fields of these complex data types to the Greenplum Database `TEXT` type. While Greenplum Database does not natively support reading these types, you can create Greenplum Database functions or application code to extract or further process subcomponents of these complex data types.
+Avro supports other complex data types including arrays of non-primitive types, maps, records, enumerations, and fixed types. Map top-level fields of these complex data types to the Greenplum Database `text` type. While PXF does not natively support reading these types, you can create Greenplum Database functions or application code to extract or further process subcomponents of these complex data types.
 
 ### <a id="datatype_map_read "></a>Read Mapping
 
@@ -57,13 +57,15 @@ PXF uses the following data type mapping when reading Avro data:
 | int | int |
 | long | bigint |
 | string | text |
-| Complex type: Array, Map, Record, or Enum  | text, with delimiters inserted between collection items, mapped key-value pairs, and record data.   |
+| Complex type: Array (any dimension) of type boolean, bytes, double, float, int, long, string | array (any dimension) of type boolean, bytea, double, real, bigint, text   |
+| Complex type: Array of other types **and** *Avro schema is provided* | text[]   |
+| Complex type: Map, Record, or Enum  | text, with delimiters inserted between collection items, mapped key-value pairs, and record data.   |
 | Complex type: Fixed     | bytea (supported for read operations only).   |
 | Union      | Follows the above conventions for primitive or complex data types, depending on the union; must contain 2 elements, one of which must be null.  |
 
-### <a id="datatype_map_Write "></a>Write Mapping
+### <a id="datatype_map_Write"></a>Write Mapping
 
-PXF supports writing only Avro primitive data types. It does not support writing complex types to Avro.
+PXF supports writing only Avro primitive types and arrays of Avro primitive types. PXF supports writing other complex types to Avro as string.
 
 PXF uses the following data type mapping when writing Avro data:
 
@@ -82,8 +84,11 @@ PXF uses the following data type mapping when writing Avro data:
 | smallint<sup>2</sup> | int |
 | text | string |
 | varchar | string |
-| array ([]), enum, record | string |
-| date, time, timestamp, timestamptz | string |
+| date, numeric, time, timestamp, timestamptz **and** *no Avro schema is provided* | string |
+| array (any dimension) of type bigint, boolean, bytea, double, int, real, text **and** *Avro is schema is provided* | Array (any dimension) of type long, boolean, bytes, double, int, float, string |
+| bigint[], boolean[], bytea[], double[], int[], real[], text[] **and** *no Avro schema is provided* | long[], boolean[], bytes[], double[], int[], float[], string[] |
+| date[], numeric[], time[], timestamp[], timestamptz[] **and** *Avro is schema is provided* | string[] |
+| enum, record | string |
 
 </br><sup>1</sup>&nbsp;PXF right-pads <code>char[<i>n</i>]</code> types to length <code><i>n</i></code>, if required, with white space.
 </br><sup>2</sup>&nbsp;PXF converts Greenplum <code>smallint</code> types to <code>int</code> before it writes the Avro data. Be sure to read the field into an <code>int</code>.
@@ -163,7 +168,7 @@ The examples in this section will operate on Avro data with the following field 
 
 - id - long
 - username - string
-- followers - array of string
+- followers - array of string (string[])
 - fmap - map of long
 - relationship - enumerated type
 - address - record comprised of street number (int), street name (string), and city (string)
@@ -265,6 +270,7 @@ Perform the following operations to create and query an external table that refe
 
 -  Use the PXF default server.
 -  Map the top-level primitive fields, `id` (type long) and `username` (type string), to their equivalent Greenplum Database types (bigint and text). 
+-  Map the `followers` field to a text array (text[]).
 -  Map the remaining complex fields to type text.
 -  Explicitly set the record, map, and collection delimiters using the `hdfs:avro` profile custom options.
 
@@ -272,7 +278,7 @@ Perform the following operations to create and query an external table that refe
 1. Use the `hdfs:avro` profile to create a queryable external table from the `pxf_avro.avro` file:
 
     ``` sql
-    postgres=# CREATE EXTERNAL TABLE pxf_hdfs_avro(id bigint, username text, followers text, fmap text, relationship text, address text)
+    postgres=# CREATE EXTERNAL TABLE pxf_hdfs_avro(id bigint, username text, followers text[], fmap text, relationship text, address text)
                 LOCATION ('pxf://data/pxf_examples/pxf_avro.avro?PROFILE=hdfs:avro&COLLECTION_DELIM=,&MAPKEY_DELIM=:&RECORDKEY_DELIM=:')
               FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
     ```
@@ -286,34 +292,24 @@ Perform the following operations to create and query an external table that refe
     ``` pre
      id | username |   followers    |        fmap         | relationship |                      address                      
     ----+----------+----------------+--------------------+--------------+---------------------------------------------------
-      1 | john     | [kate,santosh] | {kate:10,santosh:4} | FRIEND       | {number:1,street:renaissance drive,city:san jose}
-      2 | jim      | [john,pam]     | {pam:3,john:3}      | COLLEAGUE    | {number:9,street:deer creek,city:palo alto}
+      1 | john     | {kate,santosh} | {kate:10,santosh:4} | FRIEND       | {number:1,street:renaissance drive,city:san jose}
+      2 | jim      | {john,pam}     | {pam:3,john:3}      | COLLEAGUE    | {number:9,street:deer creek,city:palo alto}
     (2 rows)
     ```
 
     The simple query of the external table shows the components of the complex type data separated with the delimiters specified in the `CREATE EXTERNAL TABLE` call.
 
 
-3. Process the delimited components in the text columns as necessary for your application. For example, the following command uses the Greenplum Database internal `string_to_array` function to convert entries in the `followers` field to a text array column in a new view.
+3. Query the table, displaying the `id` and the first element of the `followers` text array:
 
     ``` sql
-    postgres=# CREATE VIEW followers_view AS 
-  SELECT username, address, string_to_array(substring(followers FROM 2 FOR (char_length(followers) - 2)), ',')::text[] 
-        AS followers 
-      FROM pxf_hdfs_avro;
+    postgres=# SELECT id, followers[1] FROM pxf_hdfs_avro;
+     id | followers 
+    ----+-----------
+      1 | kate
+      2 | john
     ```
 
-4. Query the view to filter rows based on whether a particular follower appears in the view:
-
-    ``` sql
-    postgres=# SELECT username, address FROM followers_view WHERE followers @> '{john}';
-    ```
-
-    ``` pre
-     username |                   address                   
-    ----------+---------------------------------------------
-     jim      | {number:9,street:deer creek,city:palo alto}
-    ```
 
 ## <a id="topic_avro_writedata"></a>Writing Avro Data
 
@@ -329,10 +325,10 @@ If you do not specify a `SCHEMA` file, PXF generates a schema for the Avro file 
 
 PXF returns an error if you provide a schema that does not include a `union` of the field data type with `null`, and PXF encounters a NULL data field.
 
-PXF supports writing only Avro primitive data types. It does not support writing complex types to Avro:
+PXF supports writing only Avro primitive data types and Avro Arrays of the types identified in [Data Type Write Mapping](#datatype_map_Write). PXF does not support writing complex types to Avro:
 
 - When you specify a `SCHEMA` file in the `LOCATION`, the schema must include only primitive data types.
-- When PXF generates the schema, it writes any complex type that you specify in the writable external table column definition to the Avro file as a single Avro `string` type. For example, if you write an array of integers, PXF converts the array to a `string`, and you must read this data with a Greenplum `text`-type column.
+- When PXF generates the schema, it writes any complex type that you specify in the writable external table column definition to the Avro file as a single Avro `string` type. For example, if you write an array of numerics, PXF converts the array to a `string`, and you must read this data with a Greenplum `text`-type column.
 
 
 ### <a id="topic_avrowrite_example"></a>Example: Writing Avro Data
@@ -366,26 +362,22 @@ Example procedure:
 3. Create an external table to read the Avro data that you just inserted into the table:
 
     ``` sql
-    postgres=# CREATE EXTERNAL TABLE read_pxfwrite(id int, username text, followers text)
+    postgres=# CREATE EXTERNAL TABLE read_pxfwrite(id int, username text, followers text[])
                 LOCATION ('pxf://data/pxf_examples/pxfwrite.avro?PROFILE=hdfs:avro')
               FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
     ```
 
-    Notice that the `followers` column is of type `text`.
-
 4. Read the Avro data by querying the `read_pxfwrite` table:
 
     ``` sql
-    postgres=# SELECT * FROM read_pxfwrite;
+    postgres=# SELECT id, followers[1], followers[2] FROM read_pxfwrite ORDER BY id;
     ```
 
     ``` pre
-     id | username |  followers   
-    ----+----------+--------------
-     77 | lisa     | {tom,mary}
-     33 | oliver   | {alex,frank}
+     id | followers | followers 
+    ----+-----------+-----------
+     33 | alex      | frank
+     77 | tom       | mary
     (2 rows)
     ```
-
-    `followers` is a single string comprised of the `text` array elements that you inserted into the table.
 
