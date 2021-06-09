@@ -83,12 +83,6 @@ The specific keywords and values used in the Greenplum Database [CREATE EXTERNAL
 
 **Note**: You cannot use the `HEADER` option in your `FORMAT` specification when you create a PXF external table.
 
-Refer to the following sections for examples on how to read from and write to specific SQL databases:
-
-- [Reading From and Writing to a PostgreSQL Table](jdbc_pxf_postgresql.html)
-- [Reading From and Writing to a MySQL Table](jdbc_pxf_mysql.html)
-- [Reading From and Writing to an Oracle Table](jdbc_pxf_oracle.html)
-
 ### <a id="jdbcoptions"></a>JDBC Custom Options
 
 You include JDBC connector custom options in the `LOCATION` URI, prefacing each option with an ampersand `&`. `CREATE EXTERNAL TABLE` \<custom-option\>s supported by the `jdbc` profile include:
@@ -173,6 +167,13 @@ PXF distributes the fragments among Greenplum Database segments. A PXF instance 
 
 When you specify the `PARTITION_BY` option, tune the `INTERVAL` value and unit based upon the optimal number of JDBC connections to the target database and the optimal distribution of external data across Greenplum Database segments. The `INTERVAL` low boundary is driven by the number of Greenplum Database segments while the high boundary is driven by the acceptable number of JDBC connections to the target database. The `INTERVAL` setting influences the number of fragments, and should ideally not be set too high nor too low. Testing with multiple values may help you select the optimal settings. 
 
+## <a id="examples"></a>Examples
+
+Refer to the following sections for examples on how to read from and write to specific SQL databases:
+
+- [Reading From and Writing to a PostgreSQL Table](jdbc_pxf_postgresql.html)
+- [Reading From and Writing to a MySQL Table](jdbc_pxf_mysql.html)
+- [Reading From and Writing to an Oracle Table](jdbc_pxf_oracle.html)
 
 ## <a id="about_nq"></a>About Using Named Queries
 
