@@ -85,7 +85,7 @@ PXF uses the following data type mapping when writing Avro data:
 | text | string |
 | varchar | string |
 | date, numeric, time, timestamp, timestamptz **and** *no Avro schema is provided* | string |
-| array (any dimension) of type bigint, boolean, bytea, double, int, real, text **and** *Avro is schema is provided* | Array (any dimension) of type long, boolean, bytes, double, int, float, string |
+| array (any dimension) of type bigint, boolean, bytea, double, int, real, text **and** *Avro schema is provided* | Array (any dimension) of type long, boolean, bytes, double, int, float, string |
 | bigint[], boolean[], bytea[], double[], int[], real[], text[] **and** *no Avro schema is provided* | long[], boolean[], bytes[], double[], int[], float[], string[] |
 | date[], numeric[], time[], timestamp[], timestamptz[] **and** *Avro is schema is provided* | string[] |
 | enum, record | string |
@@ -370,14 +370,14 @@ Example procedure:
 4. Read the Avro data by querying the `read_pxfwrite` table:
 
     ``` sql
-    postgres=# SELECT id, followers[1], followers[2] FROM read_pxfwrite ORDER BY id;
+    postgres=# SELECT id, followers, followers[1], followers[2] FROM read_pxfwrite ORDER BY id;
     ```
 
     ``` pre
-     id | followers | followers 
-    ----+-----------+-----------
-     33 | alex      | frank
-     77 | tom       | mary
+     id |  followers   | followers | followers 
+    ----+--------------+-----------+-----------
+     33 | {alex,frank} | alex      | frank
+     77 | {tom,mary}   | tom       | mary
     (2 rows)
     ```
 
