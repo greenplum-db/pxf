@@ -36,11 +36,13 @@ Apache Avro is a data serialization framework where the data is serialized in a 
 
 ### <a id="profile_hdfsavrodatamap"></a>Data Type Mapping
 
-Avro supports both primitive and complex data types. 
+The Avro specification defines [primitive](https://avro.apache.org/docs/current/spec.html#schema_primitive), [complex](https://avro.apache.org/docs/current/spec.html#schema_complex), and [logical](https://avro.apache.org/docs/current/spec.html#Logical+Types) types.
 
 To represent Avro primitive data types and Avro arrays of primitive types in Greenplum Database, map data values to Greenplum Database columns of the same type. 
 
 Avro supports other complex data types including arrays of non-primitive types, maps, records, enumerations, and fixed types. Map top-level fields of these complex data types to the Greenplum Database `text` type. While PXF does not natively support reading these types, you can create Greenplum Database functions or application code to extract or further process subcomponents of these complex data types.
+
+Avro supports logical data types including include decimal, date, time, and duration types. You must similarly map these data types to the Greenplum Database `text` type.
 
 ### <a id="datatype_map_read "></a>Read Mapping
 
@@ -57,15 +59,17 @@ PXF uses the following data type mapping when reading Avro data:
 | int | int |
 | long | bigint |
 | string | text |
-| Complex type: Array (any dimension) of type boolean, bytes, double, float, int, long, string | array (any dimension) of type boolean, bytea, double, real, bigint, text   |
-| Complex type: Array of other types **and** *Avro schema is provided* | text[]   |
+| Complex type: Array (any dimension) of type: boolean, bytes, double, float, int, long, string | array (any dimension) of type: boolean, bytea, double, real, bigint, text   |
+| Complex type: Array of {union of null with type}: boolean, bytes, double, float, int, long, string | boolean[], bytea[], double[], real[], bigint[], text[]   |
+| Complex type: Array of other types<br>(*Avro schema is provided*) | text[]   |
 | Complex type: Map, Record, or Enum  | text, with delimiters inserted between collection items, mapped key-value pairs, and record data.   |
 | Complex type: Fixed     | bytea (supported for read operations only).   |
 | Union      | Follows the above conventions for primitive or complex data types, depending on the union; must contain 2 elements, one of which must be null.  |
+| Logical type: decimal, date, time, timestamp, duration | text |
 
 ### <a id="datatype_map_Write"></a>Write Mapping
 
-PXF supports writing only Avro primitive types and arrays of Avro primitive types. PXF supports writing other complex types to Avro as string.
+PXF supports writing Avro primitive types and arrays of Avro primitive types. PXF supports writing other complex types to Avro as string.
 
 PXF uses the following data type mapping when writing Avro data:
 
@@ -84,10 +88,10 @@ PXF uses the following data type mapping when writing Avro data:
 | smallint<sup>2</sup> | int |
 | text | string |
 | varchar | string |
-| date, numeric, time, timestamp, timestamptz **and** *no Avro schema is provided* | string |
-| array (any dimension) of type bigint, boolean, bytea, double, int, real, text **and** *Avro schema is provided* | Array (any dimension) of type long, boolean, bytes, double, int, float, string |
-| bigint[], boolean[], bytea[], double[], int[], real[], text[] **and** *no Avro schema is provided* | long[], boolean[], bytes[], double[], int[], float[], string[] |
-| date[], numeric[], time[], timestamp[], timestamptz[] **and** *Avro is schema is provided* | string[] |
+| numeric, date, time, timestamp, timestamptz<br>(*no Avro schema is provided*) | string |
+| array (any dimension) of type: bigint, boolean, bytea, double, int, real, text <br>(*Avro schema is provided*) | Array (any dimension) of type: long, boolean, bytes, double, int, float, string |
+| bigint[], boolean[], bytea[], double[], int[], real[], text[] <br>(*no Avro schema is provided*) | long[], boolean[], bytes[], double[], int[], float[], string[] |
+| numeric[], date[], time[], timestamp[], timestamptz[] <br> (*Avro is schema is provided*) | string[] |
 | enum, record | string |
 
 </br><sup>1</sup>&nbsp;PXF right-pads <code>char[<i>n</i>]</code> types to length <code><i>n</i></code>, if required, with white space.
@@ -328,7 +332,7 @@ PXF returns an error if you provide a schema that does not include a `union` of 
 PXF supports writing only Avro primitive data types and Avro Arrays of the types identified in [Data Type Write Mapping](#datatype_map_Write). PXF does not support writing complex types to Avro:
 
 - When you specify a `SCHEMA` file in the `LOCATION`, the schema must include only primitive data types.
-- When PXF generates the schema, it writes any complex type that you specify in the writable external table column definition to the Avro file as a single Avro `string` type. For example, if you write an array of numerics, PXF converts the array to a `string`, and you must read this data with a Greenplum `text`-type column.
+- When PXF generates the schema, it writes any complex type that you specify in the writable external table column definition to the Avro file as a single Avro `string` type. For example, if you write an array of the Greenplum `numeric` type, PXF converts the array to a `string`, and you must read this data with a Greenplum `text`-type column.
 
 
 ### <a id="topic_avrowrite_example"></a>Example: Writing Avro Data
