@@ -64,6 +64,10 @@ user.location
 
 In order to retrieve all the values of the `values` array within a single column, define the corresponding Greenplum Database external table column with one of the following types: `TEXT`, `VARCHAR`, or `BPCHAR`.
 
+``` pre
+coordinates.values
+```
+
 Alternatively, use <code>[<i>n</i>]</code> to identify specific elements of the `values` array as separate Greenplum Database external table columns:
 
 ``` pre
@@ -220,7 +224,7 @@ LOCATION('pxf://data/pxf_examples/singleline.json?PROFILE=hdfs:json')
 FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
 ```
 
-If you need to identify specific elements of the `user.coordinates` array in different columns, use `[]` brackets to identify the JSON array:
+If you need to identify specific elements of the `coordinates.values` array in different columns, use `[]` brackets to identify the JSON array:
 
 ``` sql
 CREATE EXTERNAL TABLE singleline_json_tbl(
@@ -270,7 +274,7 @@ FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
 
 `created_at` identifies the member name of the first field in the JSON record `record_obj` in the sample data schema.
 
-If you need to identify specific elements of the `user.coordinates` array in different columns, use `[]` brackets to define the JSON array:
+If you need to identify specific elements of the `coordinates.values` array in different columns, use `[]` brackets to define the JSON array:
 
 ``` sql
 CREATE EXTERNAL TABLE multiline_json_tbl(
