@@ -17,6 +17,7 @@ import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Admin;
+import org.apache.hadoop.hbase.client.ClusterConnection;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.ConnectionFactory;
 import org.apache.hadoop.hbase.client.Delete;
@@ -24,6 +25,7 @@ import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.ipc.PayloadCarryingRpcController;
 import org.apache.hadoop.hbase.mapreduce.ImportTsv;
 import org.apache.hadoop.hbase.protobuf.ProtobufUtil;
 import org.apache.hadoop.hbase.protobuf.generated.AccessControlProtos;
@@ -581,10 +583,11 @@ public class HBase extends BaseSystemObject implements IDbFunctionality {
         try {
             BlockingRpcChannel service = acl.coprocessorService(HConstants.EMPTY_START_ROW);
             AccessControlProtos.AccessControlService.BlockingInterface protocol = AccessControlProtos.AccessControlService.newBlockingStub(service);
+            PayloadCarryingRpcController controller = ((ClusterConnection) connection).getRpcControllerFactory().newController();
             if (table == null) {
-                ProtobufUtil.grant(protocol, user, actions);
+                ProtobufUtil.grant(controller, protocol, user, actions);
             } else {
-                ProtobufUtil.grant(protocol, user, TableName.valueOf(table.getName()), null, null, actions);
+                ProtobufUtil.grant(controller, protocol, user, TableName.valueOf(table.getName()), null, null, actions);
             }
         } finally {
             acl.close();
