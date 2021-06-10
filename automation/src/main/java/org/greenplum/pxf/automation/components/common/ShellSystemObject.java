@@ -59,7 +59,8 @@ public class ShellSystemObject extends BaseSystemObject {
             "MASTER_DATA_DIRECTORY",
             "PGPORT",
             "PGHOST",
-            "PGDATABASE"
+            "PGDATABASE",
+            "TERM"
     };
 
     public ShellSystemObject() {
