@@ -38,7 +38,7 @@ resources:
 - name: gpdb-pxf-dev-centos7
   type: registry-image
   source:
-    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb6-centos7-test-pxf
+    repository: gcr.io/((project-id))/gpdb-pxf-dev/gpdb6-centos7-test-pxf
     tag: latest
 
 - name: gpdb6-centos7-build
@@ -50,7 +50,7 @@ resources:
 - name: gpdb-pxf-dev-centos7-hdp2-server
   type: registry-image
   source:
-    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb6-centos7-test-pxf-hdp2
+    repository: gcr.io/((project-id))/gpdb-pxf-dev/gpdb6-centos7-test-pxf-hdp2
     tag: latest
 
 # ~/workspace/gp-continuous-integration/secrets/gpdb6-integration-testing.dev.yml
