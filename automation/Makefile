@@ -100,7 +100,9 @@ symlink_pxf_jars: check-env
 				cp "$${jar}" "$${link}"; \
 			fi; \
 		done; \
-		touch $(PXF_TMP_LIB)/pxf-extras.jar && \
+		empty_dir=$$(mktemp -d) && \
+		jar cf $(PXF_TMP_LIB)/pxf-extras.jar -C $${empty_dir} . && \
+		rmdir $${empty_dir} && \
 		if [ -f "/tmp/pxf-extras-1.0.0.jar" ]; then cp /tmp/pxf-extras-1.0.0.jar $(PXF_TMP_LIB)/pxf-extras.jar; fi && \
 		rm -rf $(PXF_TMP_LIB)/tmp; \
 	fi
