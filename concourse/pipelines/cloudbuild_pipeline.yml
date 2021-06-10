@@ -10,7 +10,7 @@ pxf_dev_mapr_image_check: &pxf_dev_mapr_image
       GOOGLE_CREDENTIALS: {{pxf-cloudbuild-service-account-key}}
       GOOGLE_PROJECT_ID: {{google-project-id}}
       GOOGLE_ZONE: {{google-zone}}
-      IMAGE_LIST: "gpdb5-centos7-test-pxf-mapr gpdb6-centos7-test-pxf-mapr"
+      IMAGE_LIST: "gpdb6-centos7-test-pxf-mapr"
     config:
       platform: linux
       inputs:

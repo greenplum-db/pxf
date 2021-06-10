@@ -4,15 +4,6 @@ Build the docker images on your local system.
 
 ### CentOS 7
 
-#### Greenplum 5
-
-```
-docker build \
-  --build-arg=BASE_IMAGE=gcr.io/$GCR_PROJECT_ID/gpdb-pxf-dev/gpdb5-centos7-test-pxf:latest \
-  --tag=gpdb5-centos7-test-pxf-mapr \
-  -f ~/workspace/pxf/concourse/docker/mapr/Dockerfile .
-```
-
 #### Greenplum 6
 
 ```

@@ -5,31 +5,6 @@
 timeout: 2400s
 
 steps:
-# Builds the gpdb5-centos7-test-pxf-mapr-image image
-- name: 'gcr.io/cloud-builders/docker'
-  id: gpdb5-centos7-test-pxf-mapr-image-cache
-  entrypoint: 'bash'
-  args:
-  - '-c'
-  - |
-    mkdir -p /workspace/none
-    docker pull gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb5-centos7-test-pxf-mapr:latest || exit 0
-  waitFor: ['-']
-
-- name: 'gcr.io/cloud-builders/docker'
-  id: gpdb5-centos7-test-pxf-mapr-image
-  args:
-  - 'build'
-  - '--build-arg=BASE_IMAGE=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb5-centos7-test-pxf:latest'
-  - '--tag=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb5-centos7-test-pxf-mapr:$COMMIT_SHA'
-  - '--cache-from'
-  - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb5-centos7-test-pxf-mapr:latest'
-  - '-f'
-  - 'concourse/docker/mapr/Dockerfile'
-  - '/workspace/none'
-  waitFor:
-    - gpdb5-centos7-test-pxf-mapr-image-cache
-
 # Builds the gpdb6-centos7-test-pxf-mapr-image image
 - name: 'gcr.io/cloud-builders/docker'
   id: gpdb6-centos7-test-pxf-mapr-image-cache
@@ -56,5 +31,4 @@ steps:
 
 # Push images to Cloud Build to Container Registry
 images:
-- 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb5-centos7-test-pxf-mapr:$COMMIT_SHA'
 - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-test-pxf-mapr:$COMMIT_SHA'
