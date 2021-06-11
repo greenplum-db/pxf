@@ -37,6 +37,9 @@ import java.util.List;
 @Component
 public class PgUtilities {
 
+    private static String QUOTED_ARRAY_ELEMENT_FORMAT = "\"%s\"";
+    private static String UNQUOTED_ARRAY_ELEMENT_FORMAT = "%s";
+
     /**
      * Split the outer-most Postgres array into its constituent elements using the default delimiter
      *
@@ -197,8 +200,7 @@ public class PgUtilities {
             }
         }
 
-        String fmtStr = needsQuote ? "\"%s\"" : "%s";
-        return String.format(fmtStr, writer);
+        return String.format(needsQuote ? QUOTED_ARRAY_ELEMENT_FORMAT : UNQUOTED_ARRAY_ELEMENT_FORMAT, writer);
     }
 
     /**

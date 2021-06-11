@@ -19,13 +19,23 @@ package org.greenplum.pxf.plugins.json;
  * under the License.
  */
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.greenplum.pxf.api.OneField;
+import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.error.BadRecordException;
 import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.Accessor;
+import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.Fragmenter;
+import org.greenplum.pxf.api.model.OutputFormat;
+import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
+import org.greenplum.pxf.api.utilities.ColumnDescriptor;
 import org.greenplum.pxf.plugins.hdfs.HdfsDataFragmenter;
+import org.greenplum.pxf.plugins.hdfs.utilities.PgUtilities;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,17 +43,21 @@ import org.junit.jupiter.api.Test;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringJoiner;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class JsonExtensionTest extends PxfUnit {
+public class JsonExtensionTest {
 
+    private static final Log LOG = LogFactory.getLog(JsonExtensionTest.class);
     private static final String IDENTIFIER = JsonAccessor.IDENTIFIER_PARAM;
     private List<Pair<String, DataType>> columnDefs = null;
     private final List<Pair<String, String>> extraParams = new ArrayList<>();
     private final List<String> output = new ArrayList<>();
+    private List<RequestContext> inputs;
 
     @BeforeEach
     public void before() {
@@ -76,7 +90,7 @@ public class JsonExtensionTest extends PxfUnit {
         output.add("Fri Jun 07 22:45:02 +0000 2013,343136547123646465,text2,patronusdeadly,,,");
         output.add("Fri Jun 07 22:45:02 +0000 2013,343136547136233472,text3,NoSecrets_Vagas,,,");
 
-        super.assertOutput(new Path(System.getProperty("user.dir") + File.separator
+        assertOutput(new Path(System.getProperty("user.dir") + File.separator
                 + "src/test/resources/tweets.tar.gz"), output);
     }
 
@@ -95,7 +109,7 @@ public class JsonExtensionTest extends PxfUnit {
         // skip the large object2 XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         output.add("small object3");
 
-        super.assertOutput(new Path(System.getProperty("user.dir") + File.separator
+        assertOutput(new Path(System.getProperty("user.dir") + File.separator
                 + "src/test/resources/variable-size-objects.json"), output);
     }
 
@@ -127,7 +141,7 @@ public class JsonExtensionTest extends PxfUnit {
 
         output.add(",varcharType,bpcharType,777,999,3.15,3.14,true,666");
 
-        super.assertOutput(new Path(System.getProperty("user.dir") + File.separator
+        assertOutput(new Path(System.getProperty("user.dir") + File.separator
                 + "src/test/resources/datatypes-test.json"), output);
     }
 
@@ -143,7 +157,7 @@ public class JsonExtensionTest extends PxfUnit {
         columnDefs.add(new Pair<>("user[0]", DataType.TEXT));
 
         assertThrows(IllegalStateException.class,
-                () -> super.assertOutput(new Path(System.getProperty("user.dir") + File.separator
+                () -> assertOutput(new Path(System.getProperty("user.dir") + File.separator
                         + "src/test/resources/tweets-with-missing-text-attribtute.json"), output));
     }
 
@@ -155,7 +169,7 @@ public class JsonExtensionTest extends PxfUnit {
         // Missing attributes are substituted by an empty field
         output.add("Fri Jun 07 22:45:02 +0000 2013,343136547115253761,,SpreadButter,tweetCongress,,");
 
-        super.assertOutput(new Path(System.getProperty("user.dir") + File.separator
+        assertOutput(new Path(System.getProperty("user.dir") + File.separator
                 + "src/test/resources/tweets-with-missing-text-attribtute.json"), output);
     }
 
@@ -165,7 +179,7 @@ public class JsonExtensionTest extends PxfUnit {
         extraParams.add(new Pair<>(IDENTIFIER, "created_at"));
 
         BadRecordException e = assertThrows(BadRecordException.class,
-                () -> super.assertOutput(new Path(System.getProperty("user.dir") + File.separator
+                () -> assertOutput(new Path(System.getProperty("user.dir") + File.separator
                         + "src/test/resources/tweets-broken.json"), output));
         assertTrue(e.getMessage().contains("error while parsing json record 'Unexpected character (':' (code 58)): was expecting comma to separate"));
     }
@@ -174,7 +188,7 @@ public class JsonExtensionTest extends PxfUnit {
     public void testMismatchedTypes() {
 
         BadRecordException e = assertThrows(BadRecordException.class,
-                () -> super.assertOutput(new Path(System.getProperty("user.dir") + File.separator
+                () -> assertOutput(new Path(System.getProperty("user.dir") + File.separator
                         + "src/test/resources/mismatched-types.json"), output));
         assertEquals("invalid BIGINT input value '\"[\"'", e.getMessage());
     }
@@ -187,7 +201,7 @@ public class JsonExtensionTest extends PxfUnit {
         output.add("Fri Jun 07 22:45:02 +0000 2013,343136547136233472,text3,NoSecrets_Vagas,,,");
         output.add("Fri Jun 07 22:45:03 +0000 2013,343136551322136576,text4,SevenStonesBuoy,,-6.1,50.103");
 
-        super.assertOutput(new Path(System.getProperty("user.dir") + File.separator
+        assertOutput(new Path(System.getProperty("user.dir") + File.separator
                 + "src/test/resources/tweets-small.json"), output);
     }
 
@@ -197,7 +211,7 @@ public class JsonExtensionTest extends PxfUnit {
         output.add("Fri Jun 07 22:45:02 +0000 2013,,text1,SpreadButter,tweetCongress,,");
         output.add("Fri Jun 07 22:45:02 +0000 2013,,text2,patronusdeadly,,,");
 
-        super.assertOutput(new Path(System.getProperty("user.dir") + File.separator
+        assertOutput(new Path(System.getProperty("user.dir") + File.separator
                 + "src/test/resources/null-tweets.json"), output);
     }
 
@@ -209,7 +223,7 @@ public class JsonExtensionTest extends PxfUnit {
         output.add("Fri Jun 07 22:45:02 +0000 2013,343136547123646465,text2,patronusdeadly,,,");
         output.add("Fri Jun 07 22:45:02 +0000 2013,343136547136233472,text3,NoSecrets_Vagas,,,");
 
-        super.assertOutput(new Path(System.getProperty("user.dir") + File.separator
+        assertOutput(new Path(System.getProperty("user.dir") + File.separator
                 + "src/test/resources/tweets-small-with-delete.json"), output);
     }
 
@@ -222,7 +236,7 @@ public class JsonExtensionTest extends PxfUnit {
         output.add("Fri Jun 07 22:45:02 +0000 2013,343136547123646465,text2,patronusdeadly,,,");
         output.add("Fri Jun 07 22:45:02 +0000 2013,343136547136233472,text3,NoSecrets_Vagas,,,");
 
-        super.assertOutput(new Path(System.getProperty("user.dir") + File.separator
+        assertOutput(new Path(System.getProperty("user.dir") + File.separator
                 + "src/test/resources/tweets-pp.json"), output);
     }
 
@@ -235,7 +249,7 @@ public class JsonExtensionTest extends PxfUnit {
         output.add("Fri Jun 07 22:45:02 +0000 2013,343136547123646465,text2,patronusdeadly,,,");
         output.add("Fri Jun 07 22:45:02 +0000 2013,343136547136233472,text3,NoSecrets_Vagas,,,");
 
-        super.assertOutput(new Path(System.getProperty("user.dir") + File.separator
+        assertOutput(new Path(System.getProperty("user.dir") + File.separator
                 + "src/test/resources/tweets-pp-with-delete.json"), output);
     }
 
@@ -251,32 +265,240 @@ public class JsonExtensionTest extends PxfUnit {
         output.add("Fri Jun 07 22:45:02 +0000 2013,343136547123646465,text2,patronusdeadly,,,");
         output.add("Fri Jun 07 22:45:02 +0000 2013,343136547136233472,text3,NoSecrets_Vagas,,,");
 
-        super.assertUnorderedOutput(new Path(System.getProperty("user.dir") + File.separator
+        assertUnorderedOutput(new Path(System.getProperty("user.dir") + File.separator
                 + "src/test/resources/tweets-small*.json"), output);
     }
 
-    @Override
-    public List<Pair<String, String>> getExtraParams() {
-        return extraParams;
+    /**
+     * Uses the given input directory to run through the PXF unit testing framework. Uses the lines in the given
+     * parameter for output testing.
+     *
+     * @param input          Input records
+     * @param expectedOutput File containing output to check
+     * @throws Exception
+     */
+    private void assertOutput(Path input, List<String> expectedOutput) throws Exception {
+        setup(input);
+        List<String> actualOutput = new ArrayList<>();
+        for (RequestContext data : inputs) {
+            Accessor accessor = getReadAccessor(data);
+            Resolver resolver = getReadResolver(data);
+
+            actualOutput.addAll(getAllOutput(accessor, resolver));
+        }
+
+        assertFalse(compareOutput(expectedOutput, actualOutput), "Output did not match expected output");
     }
 
-    @Override
-    public Class<? extends Fragmenter> getFragmenterClass() {
-        return HdfsDataFragmenter.class;
+    /**
+     * Uses the given input directory to run through the PXF unit testing framework. Uses the lines in the file for
+     * output testing.<br>
+     * <br>
+     * Ignores order of records.
+     *
+     * @param input          Input records
+     * @param expectedOutput File containing output to check
+     * @throws Exception
+     */
+    private void assertUnorderedOutput(Path input, List<String> expectedOutput) throws Exception {
+
+        setup(input);
+
+        List<String> actualOutput = new ArrayList<>();
+        for (RequestContext data : inputs) {
+            Accessor accessor = getReadAccessor(data);
+            Resolver resolver = getReadResolver(data);
+
+            actualOutput.addAll(getAllOutput(accessor, resolver));
+        }
+
+        assertFalse(compareUnorderedOutput(expectedOutput, actualOutput), "Output did not match expected output");
     }
 
-    @Override
-    public Class<? extends Accessor> getAccessorClass() {
-        return JsonAccessor.class;
+    /**
+     * Set all necessary parameters for GPXF framework to function. Uses the given path as a single input split.
+     *
+     * @param input The input path, relative or absolute.
+     * @throws Exception when an error occurs
+     */
+    private void setup(Path input) throws Exception {
+
+        RequestContext context = getContext(input);
+        List<Fragment> fragments = getFragmenter(context).getFragments();
+
+        inputs = new ArrayList<>();
+
+        for (int i = 0; i < fragments.size(); i++) {
+            Fragment fragment = fragments.get(i);
+            context = getContext(input);
+            context.setDataSource(fragment.getSourceName());
+            context.setFragmentMetadata(fragment.getMetadata());
+            context.setFragmentIndex(i);
+            inputs.add(context);
+        }
     }
 
-    @Override
-    public Class<? extends Resolver> getResolverClass() {
-        return JsonResolver.class;
+    private RequestContext getContext(Path input) {
+        Configuration configuration = new Configuration();
+        configuration.set("pxf.fs.basePath", "/");
+
+        RequestContext context = new RequestContext();
+        context.setConfiguration(configuration);
+
+        // 2.1.0 Properties
+        // HDMetaData parameters
+        context.setConfig("default");
+        context.setUser("who");
+        System.setProperty("greenplum.alignment", "what");
+        context.setSegmentId(1);
+        context.setTotalSegments(1);
+        context.setOutputFormat(OutputFormat.GPDBWritable);
+        context.setHost("localhost");
+        context.setPort(50070);
+        context.setDataSource(input.toString());
+
+        for (int i = 0; i < columnDefs.size(); ++i) {
+            Pair<String, DataType> columnDef = columnDefs.get(i);
+            ColumnDescriptor column = new ColumnDescriptor(columnDef.first, columnDef.second.getOID(), i, columnDef.second.name(), null);
+            context.getTupleDescription().add(column);
+        }
+
+        // HDFSMetaData properties
+        context.setFragmenter(HdfsDataFragmenter.class.getName());
+        context.setAccessor(JsonAccessor.class.getName());
+        context.setResolver(JsonResolver.class.getName());
+
+        for (Pair<String, String> param : extraParams) {
+            context.addOption(param.first, param.second);
+        }
+
+        return context;
     }
 
-    @Override
-    public List<Pair<String, DataType>> getColumnDefinitions() {
-        return columnDefs;
+    /**
+     * Compares the expected and actual output, printing out any errors.
+     *
+     * @param expectedOutput The expected output
+     * @param actualOutput   The actual output
+     * @return True if no errors, false otherwise.
+     */
+    private boolean compareOutput(List<String> expectedOutput, List<String> actualOutput) {
+        return compareOutput(expectedOutput, actualOutput, false);
+    }
+
+    /**
+     * Compares the expected and actual output, printing out any errors.
+     *
+     * @param expectedOutput The expected output
+     * @param actualOutput   The actual output
+     * @return True if no errors, false otherwise.
+     */
+    private boolean compareUnorderedOutput(List<String> expectedOutput, List<String> actualOutput) {
+        return compareOutput(expectedOutput, actualOutput, true);
+    }
+
+    private boolean compareOutput(List<String> expectedOutput, List<String> actualOutput, boolean ignoreOrder) {
+        boolean error = false;
+        for (int i = 0; i < expectedOutput.size(); ++i) {
+            boolean match = false;
+            for (int j = 0; j < actualOutput.size(); ++j) {
+                if (expectedOutput.get(i).equals(actualOutput.get(j))) {
+                    match = true;
+                    if (!ignoreOrder && i != j) {
+                        LOG.error("Expected (" + expectedOutput.get(i) + ") matched (" + actualOutput.get(j)
+                                + ") but in wrong place.  " + j + " instead of " + i);
+                        error = true;
+                    }
+
+                    break;
+                }
+            }
+
+            if (!match) {
+                LOG.error("Missing expected output: (" + expectedOutput.get(i) + ")");
+                error = true;
+            }
+        }
+
+        for (String anActualOutput : actualOutput) {
+            boolean match = false;
+            for (String anExpectedOutput : expectedOutput) {
+                if (anActualOutput.equals(anExpectedOutput)) {
+                    match = true;
+                    break;
+                }
+            }
+
+            if (!match) {
+                LOG.error("Received unexpected output: (" + anActualOutput + ")");
+                error = true;
+            }
+        }
+
+        return error;
+    }
+
+    /**
+     * Opens the accessor and reads all output, giving it to the resolver to retrieve the list of fields. These fields
+     * are then added to a string, delimited by commas, and returned in a list.
+     *
+     * @param accessor The accessor instance to use
+     * @param resolver The resolver instance to use
+     * @return The list of output strings
+     * @throws Exception when an error occurs
+     */
+    private List<String> getAllOutput(Accessor accessor, Resolver resolver) throws Exception {
+
+        assertTrue(accessor.openForRead(), "Accessor failed to open");
+
+        List<String> output = new ArrayList<>();
+
+        OneRow row;
+        while ((row = accessor.readNextObject()) != null) {
+
+            StringJoiner stringJoiner = new StringJoiner(",");
+            for (OneField field : resolver.getFields(row)) {
+                stringJoiner.add(field != null && field.val != null ? field.val.toString() : "");
+            }
+
+            output.add(stringJoiner.toString());
+        }
+
+        accessor.closeForRead();
+
+        return output;
+    }
+
+    private Fragmenter getFragmenter(RequestContext meta) {
+        HdfsDataFragmenter hdfsDataFragmenter = new HdfsDataFragmenter();
+        hdfsDataFragmenter.setRequestContext(meta);
+        hdfsDataFragmenter.afterPropertiesSet();
+        return hdfsDataFragmenter;
+
+    }
+
+    private Accessor getReadAccessor(RequestContext data)  {
+        JsonAccessor jsonAccessor = new JsonAccessor();
+        jsonAccessor.setRequestContext(data);
+        jsonAccessor.afterPropertiesSet();
+        return jsonAccessor;
+
+    }
+
+    private Resolver getReadResolver(RequestContext data) {
+        JsonResolver jsonResolver = new JsonResolver(new PgUtilities());
+        jsonResolver.setRequestContext(data);
+        jsonResolver.afterPropertiesSet();
+        return jsonResolver;
+    }
+
+    private static class Pair<FIRST, SECOND> {
+        public FIRST first;
+        public SECOND second;
+
+        public Pair(FIRST f, SECOND s) {
+            first = f;
+            second = s;
+        }
     }
 }

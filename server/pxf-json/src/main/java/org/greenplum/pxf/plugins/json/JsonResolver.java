@@ -19,6 +19,7 @@ package org.greenplum.pxf.plugins.json;
  * under the License.
  */
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.greenplum.pxf.api.OneField;
@@ -28,11 +29,14 @@ import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
+import org.greenplum.pxf.api.utilities.SpringContext;
+import org.greenplum.pxf.plugins.hdfs.utilities.PgUtilities;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.StringJoiner;
 
 /**
  * This JSON resolver for PXF will decode a given object from the {@link JsonAccessor} into a row for GPDB. It will
@@ -43,8 +47,18 @@ public class JsonResolver extends BasePlugin implements Resolver {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
+    private PgUtilities pgUtilities;
+
     private ArrayList<OneField> oneFieldList;
     private ColumnDescriptorCache[] columnDescriptorCache;
+
+    public JsonResolver() {
+        this(SpringContext.getBean(PgUtilities.class));
+    }
+
+    JsonResolver(PgUtilities pgUtilities) {
+        this.pgUtilities = pgUtilities;
+    }
 
     @Override
     public void afterPropertiesSet() {
@@ -84,17 +98,16 @@ public class JsonResolver extends BasePlugin implements Resolver {
             if (node == null || node.isMissingNode()) {
                 addNullField(columnMetadata.getColumnType());
             } else if (columnMetadata.isArray()) {
-                // If this column is an array index, ex. "tweet.hashtags[0]"
+                // If this column name is an array index, ex. "tweet.hashtags[0]"
                 if (node.isArray()) {
                     // If the JSON node is an array, then add it to our list
-                    addFieldFromJsonArray(columnMetadata.getColumnType(), node, columnMetadata.getArrayNodeIndex());
+                    addFieldFromJsonArray(columnMetadata, node, columnMetadata.getArrayNodeIndex());
                 } else {
                     throw new IllegalStateException(columnMetadata.getColumnName() + " is not an array node");
                 }
             } else {
-                // This column is not an array type
                 // Add the value to the record
-                addFieldFromJsonNode(columnMetadata.getColumnType(), node);
+                addFieldFromJsonNode(columnMetadata, node);
             }
         }
 
@@ -134,12 +147,12 @@ public class JsonResolver extends BasePlugin implements Resolver {
     /**
      * Iterates through the given JSON node to the proper index and adds the field of corresponding type
      *
-     * @param type  The {@link DataType} type
+     * @param columnMetadata  The {@link ColumnDescriptorCache} for the current column
      * @param node  The JSON array node
      * @param index The array index to iterate to
      * @throws IOException, BadRecordException
      */
-    private void addFieldFromJsonArray(DataType type, JsonNode node, int index) throws IOException, BadRecordException {
+    private void addFieldFromJsonArray(ColumnDescriptorCache columnMetadata, JsonNode node, int index) throws IOException, BadRecordException {
 
         int count = 0;
         boolean added = false;
@@ -148,7 +161,7 @@ public class JsonResolver extends BasePlugin implements Resolver {
 
             if (count == index) {
                 added = true;
-                addFieldFromJsonNode(type, arrayNode);
+                addFieldFromJsonNode(columnMetadata, arrayNode);
                 break;
             }
 
@@ -157,18 +170,19 @@ public class JsonResolver extends BasePlugin implements Resolver {
 
         // if we reached the end of the array without adding a field, add null
         if (!added) {
-            addNullField(type);
+            addNullField(columnMetadata.getColumnType());
         }
     }
 
     /**
      * Adds a field from a given {@link JsonNode} value based on the {@link DataType} type.
      *
-     * @param type The DataType type
+     * @param columnMetadata The {@link ColumnDescriptorCache} for the current GPDB column
      * @param val  The JSON node to extract the value.
      * @throws IOException, BadRecordException when there is bad data in the {@link JsonNode}
      */
-    private void addFieldFromJsonNode(DataType type, JsonNode val) throws IOException, BadRecordException {
+    private void addFieldFromJsonNode(ColumnDescriptorCache columnMetadata, JsonNode val) throws IOException, BadRecordException {
+        DataType type = columnMetadata.getColumnType();
         if (val.isNull()) {
             addNullField(type);
             return;
@@ -218,6 +232,12 @@ public class JsonResolver extends BasePlugin implements Resolver {
             case VARCHAR:
                 oneField.val = val.isTextual() ? val.asText() : MAPPER.writeValueAsString(val);
                 break;
+            case TEXTARRAY:
+                if (!val.isArray()) {
+                    throw new BadRecordException(String.format("error while reading column '%s': invalid array value '%s'", columnMetadata.getColumnName(), val));
+                }
+                oneField.val = addAllFromJsonArray(val);
+                break;
             default:
                 throw new IOException("Unsupported type " + type);
         }
@@ -265,5 +285,35 @@ public class JsonResolver extends BasePlugin implements Resolver {
      */
     private void addNullField(DataType type) {
         oneFieldList.add(new OneField(type.getOID(), null));
+    }
+
+    /**
+     * Format the given JSON array in Postgres array syntax
+     *
+     * @param jsonNode the {@link JsonNode} to serialize in Postgres array syntax
+     * @return a {@link String} containing the array elements in Postgre array syntax
+     * @throws JsonProcessingException
+     */
+    private String addAllFromJsonArray(JsonNode jsonNode) throws JsonProcessingException {
+        StringJoiner stringJoiner = new StringJoiner(",", "{", "}");
+        for (Iterator<JsonNode> i = jsonNode.elements(); i.hasNext();) {
+            JsonNode element = i.next();
+            switch (element.getNodeType()) {
+                case NULL:
+                    stringJoiner.add(pgUtilities.escapeArrayElement(null));
+                    break;
+                case ARRAY:
+                    stringJoiner.add(addAllFromJsonArray(element));
+                    break;
+                case STRING:
+                    stringJoiner.add(pgUtilities.escapeArrayElement(element.asText()));
+                    break;
+                default:
+                    stringJoiner.add(pgUtilities.escapeArrayElement(MAPPER.writeValueAsString(element)));
+                    break;
+            }
+        }
+
+        return stringJoiner.toString();
     }
 }
