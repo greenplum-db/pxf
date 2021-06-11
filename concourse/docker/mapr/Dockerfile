@@ -1,4 +1,3 @@
-# FIXME: it looks like the MapR images are not used anymore; can we delete them?
 ARG BASE_IMAGE
 
 FROM ${BASE_IMAGE} as scratch
