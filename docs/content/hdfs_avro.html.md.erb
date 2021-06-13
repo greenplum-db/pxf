@@ -90,7 +90,7 @@ PXF uses the following data type mapping when writing Avro data:
 | varchar | string |
 | numeric, date, time, timestamp, timestamptz<br>(*no Avro schema is provided*) | string |
 | array (any dimension) of type: bigint, boolean, bytea, double, int, real, text <br>(*Avro schema is provided*) | Array (any dimension) of type: long, boolean, bytes, double, int, float, string |
-| bigint[], boolean[], bytea[], double[], int[], real[], text[] <br>(*no Avro schema is provided*) | long[], boolean[], bytes[], double[], int[], float[], string[] |
+| bigint[], boolean[], bytea[], double[], int[], real[], text[] <br>(*no Avro schema is provided*) | long[], boolean[], bytes[], double[], int[], float[], string[] (one-dimensional array) |
 | numeric[], date[], time[], timestamp[], timestamptz[] <br> (*Avro is schema is provided*) | string[] |
 | enum, record | string |
 
