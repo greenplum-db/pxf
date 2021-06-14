@@ -3,7 +3,7 @@
 ## ======================================================================
 resource_types:
 - name: google-cloud-storage
-  type: docker-image
+  type: registry-image
   source:
     repository: frodenas/gcs-resource
 
@@ -87,7 +87,7 @@ resources:
     type: registry-image
     icon: docker
     source:
-      repository: pivotaldata/gpdb6-centos7-test
+      repository: gcr.io/data-gpdb-public-images/gpdb6-centos7-test
       tag: latest
 
 ## ======================================================================

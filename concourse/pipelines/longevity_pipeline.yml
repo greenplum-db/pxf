@@ -62,7 +62,7 @@ resource_types:
     tag: 0.11.14
 
 - name: gcs
-  type: docker-image
+  type: registry-image
   source:
     repository: frodenas/gcs-resource
 
@@ -103,11 +103,11 @@ resources:
     uri: {{ccp-git-remote}}
 
 - name: ccp-7
-  type: docker-image
+  type: registry-image
   icon: docker
   source:
-    repository: pivotaldata/ccp
-    tag: 7
+    repository: gcr.io/data-gpdb-public-images/ccp
+    tag: latest
 
 - name: gpdb-pxf-dev-centos6
   type: docker-image

@@ -54,7 +54,7 @@ steps:
   id: gpdb5-centos7-test-pxf-image
   args:
   - 'build'
-  - '--build-arg=BASE_IMAGE=${_BASE_IMAGE_REPOSITORY}/centos-gpdb-dev:7-gcc6.2-llvm3.7'
+  - '--build-arg=BASE_IMAGE=${_BASE_IMAGE_REPOSITORY}/gpdb5-centos7-build-test:latest'
   - '--tag=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb5-centos7-test-pxf:$COMMIT_SHA'
   - '--cache-from'
   - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb5-centos7-test-pxf:latest'

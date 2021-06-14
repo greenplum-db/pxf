@@ -4,11 +4,6 @@
 
 - docker 1.13 (with 3-4 GB allocated for docker host)
 
-Map-R 5.2 Image
-```
-docker run --rm --privileged -p 8443:8443 -it pivotaldata/gpdb-dev:centos6-mapr5.2
-```
-
 PXF uses [Google Cloud Build](https://cloud.google.com/cloud-build) to produce
 development images that reside in
 [Google Container Registry (GCR)](https://cloud.google.com/container-registry).

@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=pivotaldata/gpdb6-ubuntu18.04-test:latest
+ARG BASE_IMAGE=gcr.io/data-gpdb-public-images/gpdb6-ubuntu18.04-test:latest
 
 FROM ${BASE_IMAGE}
 

@@ -1,7 +1,7 @@
 ---
 resource_types:
 - name: gcs
-  type: docker-image
+  type: registry-image
   source:
     repository: frodenas/gcs-resource
 
@@ -36,22 +36,26 @@ resources:
     private_key: ((ccp-git-key))
 
 - name: gpdb-pxf-dev-centos7
-  type: docker-image
+  type: registry-image
   source:
-    repository: pivotaldata/gpdb-pxf-dev
-    tag: centos7
+    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb6-centos7-test-pxf
+    tag: latest
+    username: _json_key
+    password: ((pxf-cloudbuild-service-account-key))
 
 - name: gpdb6-centos7-build
-  type: docker-image
+  type: registry-image
   source:
-    repository: pivotaldata/gpdb7-centos7-build
+    repository: gcr.io/data-gpdb-public-images/gpdb7-centos7-build
     tag: latest
 
 - name: gpdb-pxf-dev-centos7-hdp2-server
-  type: docker-image
+  type: registry-image
   source:
-    repository: pivotaldata/gpdb-pxf-dev
-    tag: centos7-hdp2-server
+    repository: gcr.io/data-gpdb-ud/gpdb-pxf-dev/gpdb6-centos7-test-pxf-hdp2
+    tag: latest
+    username: _json_key
+    password: ((pxf-cloudbuild-service-account-key))
 
 # ~/workspace/gp-continuous-integration/secrets/gpdb6-integration-testing.dev.yml
 - name: libquicklz-centos7

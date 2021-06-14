@@ -36,7 +36,7 @@ command to build the image:
 
     pushd ~/workspace/pxf/concourse/docker/pxf-dev-base/
     docker build \
-      --build-arg=BASE_IMAGE=pivotaldata/centos-gpdb-dev:7-gcc6.2-llvm3.7 \
+      --build-arg=BASE_IMAGE=gcr.io/data-gpdb-public-images/gpdb5-centos7-build-test:latest \
       --tag=gpdb5-centos7-test-pxf \
       -f ~/workspace/pxf/concourse/docker/pxf-dev-base/gpdb5/centos7/Dockerfile \
       .
@@ -51,7 +51,7 @@ command to build the image:
 
     pushd ~/workspace/pxf/concourse/docker/pxf-dev-base/
     docker build \
-      --build-arg=BASE_IMAGE=pivotaldata/gpdb6-centos7-test:latest \
+      --build-arg=BASE_IMAGE=gcr.io/data-gpdb-public-images/gpdb6-centos7-test:latest \
       --tag=gpdb6-centos7-test-pxf \
       -f ~/workspace/pxf/concourse/docker/pxf-dev-base/gpdb6/centos7/Dockerfile \
       .
@@ -64,7 +64,7 @@ command to build the image:
 
     pushd ~/workspace/pxf/concourse/docker/pxf-dev-base/
     docker build \
-      --build-arg=BASE_IMAGE=pivotaldata/gpdb6-ubuntu18.04-test:latest \
+      --build-arg=BASE_IMAGE=gcr.io/data-gpdb-public-images/gpdb6-ubuntu18.04-test:latest \
       --tag=gpdb6-ubuntu18.04-test-pxf \
       -f ~/workspace/pxf/concourse/docker/pxf-dev-base/gpdb6/ubuntu18.04/Dockerfile \
       .
@@ -77,7 +77,7 @@ following command to build the image:
 
     pushd ~/workspace/pxf/concourse/docker/pxf-dev-base/
     docker build \
-      --build-arg=BASE_IMAGE=pivotaldata/gpdb6-oel7-test:latest \
+      --build-arg=BASE_IMAGE=gcr.io/data-gpdb-public-images/gpdb6-oel7-test:latest \
       --tag=gpdb6-oel7-test-pxf \
       -f ~/workspace/pxf/concourse/docker/pxf-dev-base/gpdb6/oel7/Dockerfile \
       .
@@ -92,7 +92,7 @@ command to build the image:
 
     pushd ~/workspace/pxf/concourse/docker/pxf-dev-base/
     docker build \
-      --build-arg=BASE_IMAGE=pivotaldata/gpdb7-centos7-test:latest \
+      --build-arg=BASE_IMAGE=gcr.io/data-gpdb-public-images/gpdb7-centos7-test:latest \
       --tag=gpdb7-centos7-test-pxf \
       -f ~/workspace/pxf/concourse/docker/pxf-dev-base/gpdb7/centos7/Dockerfile \
       .
@@ -105,7 +105,7 @@ command to build the image:
 
     pushd ~/workspace/pxf/concourse/docker/pxf-dev-base/
     docker build \
-      --build-arg=BASE_IMAGE=pivotaldata/gpdb7-ubuntu18.04-test:latest \
+      --build-arg=BASE_IMAGE=gcr.io/data-gpdb-public-images/gpdb7-ubuntu18.04-test:latest \
       --tag=gpdb7-ubuntu18.04-test-pxf \
       -f ~/workspace/pxf/concourse/docker/pxf-dev-base/gpdb7/ubuntu18.04/Dockerfile \
       .

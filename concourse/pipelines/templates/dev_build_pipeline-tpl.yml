@@ -77,7 +77,7 @@ resource_types:
 
 {% if slack_notification %}
 - name: slack-notification
-  type: docker-image
+  type: registry-image
   source:
     repository: cfcommunity/slack-notification-resource
     tag: latest
@@ -210,8 +210,8 @@ resources:
   type: registry-image
   icon: docker
   source:
-    repository: pivotaldata/ccp
-    tag: 7
+    repository: gcr.io/data-gpdb-public-images/ccp
+    tag: latest
 {% endif %}
 
 {% if slack_notification %}

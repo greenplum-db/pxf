@@ -26,7 +26,7 @@ resource_types:
     repository: frodenas/gcs-resource
 
 - name: slack-notification
-  type: docker-image
+  type: registry-image
   source:
     repository: cfcommunity/slack-notification-resource
     tag: latest
@@ -101,8 +101,8 @@ resources:
   type: registry-image
   icon: docker
   source:
-    repository: pivotaldata/ccp
-    tag: 7
+    repository: gcr.io/data-gpdb-public-images/ccp
+    tag: latest
 
 ## ---------- Greenplum Release Candidate Tarballs ----------
 - name: gpdb5_tarball_rhel6

@@ -39,7 +39,7 @@ steps:
   id: gpdb6-centos7-test-pxf-hdp2-image
   args:
   - 'build'
-  - '--build-arg=BASE_IMAGE=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-test-pxf:latest'
+  - '--build-arg=PROJECT_ID=$PROJECT_ID'
   - '--tag=gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-test-pxf-hdp2:$COMMIT_SHA'
   - '--cache-from'
   - 'gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-test-pxf-hdp2:latest'
