@@ -28,6 +28,8 @@ import reporters.CustomAutomationReport;
 import java.io.File;
 import java.lang.reflect.Method;
 
+import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTH_TO_LOCAL;
+
 /**
  * PXF Automation tests Base class, using {@link CustomAutomationLogger} testNG listener for custom
  * logging
@@ -323,6 +325,15 @@ public abstract class BaseTestParent {
         config.addResource(new Path(hdfs.getHadoopRoot() + "/conf/core-site.xml"));
         config.reloadConfiguration();
         config.set("hadoop.security.authentication", "Kerberos");
+
+        // Starting with Hadoop 2.10.0, the "DEFAULT" rule will throw an
+        // exception when no rules are applied while getting the principal
+        // name translation into operating system user name. See
+        // org.apache.hadoop.security.authentication.util.KerberosName#getShortName
+        // We add a default rule that will return the service name as the
+        // short name, i.e. gpadmin/_HOST@REALM will map to gpadmin
+        config.set(HADOOP_SECURITY_AUTH_TO_LOCAL, "RULE:[1:$1] RULE:[2:$1] DEFAULT");
+
         UserGroupInformation.setConfiguration(config);
         UserGroupInformation.loginUserFromKeytab(kerberosPrincipal, testUserKeytabPath);
 
