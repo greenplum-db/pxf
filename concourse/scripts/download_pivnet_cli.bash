@@ -7,11 +7,6 @@ set -e
 PATH=${PIVNET_CLI_DIR}:${PATH}
 chmod +x "${PIVNET_CLI_DIR}/pivnet"
 
-if ! type jq &> /dev/null; then
-	apt-get update --quiet=1
-	apt-get install --quiet=1 --yes jq
-fi
-
 pivnet_cli_repo=pivotal-cf/pivnet-cli
 latest_pivnet_cli_tag=$(curl --silent "https://api.github.com/repos/${pivnet_cli_repo}/releases/latest" | jq -r .tag_name)
 if [[ ${latest_pivnet_cli_tag#v} == $(pivnet --version) ]]; then
