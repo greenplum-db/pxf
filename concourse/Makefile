@@ -216,6 +216,15 @@ set-pivnet-pipeline:
 	@echo using the following command to unpause the pipeline:
 	@echo -e "\t$(FLY_CMD) -t ${CONCOURSE} unpause-pipeline --pipeline ${PIVNET_PIPELINE_NAME}"
 
+.PHONY: singlecluster
+singlecluster:
+	fly -t ud set-pipeline \
+		-c ~/workspace/pxf/concourse/pipelines/singlecluster-pipeline.yml \
+		-l ~/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
+		-v pxf-git-branch=master -p pxf-singlecluster
+
+# ============================= PERFORMANCE PIPELINE TARGETS =============================
+
 .PHONY: perf
 perf:
 	@if [ -z '$(SCALE)' ]; then \
@@ -235,13 +244,29 @@ perf:
 		--pipeline $(PERF_PIPELINE_NAME) \
 		${FLY_OPTION_NON-INTERACTIVE}
 
-.PHONY: singlecluster
-singlecluster:
-	fly -t ud set-pipeline \
-		-c ~/workspace/pxf/concourse/pipelines/singlecluster-pipeline.yml \
-		-l ~/workspace/gp-continuous-integration/secrets/gpdb_common-ci-secrets.yml \
-		-v pxf-git-branch=master -p pxf-singlecluster
+.PHONY: data-gen-1g
+data-gen-1g:
+	@if ! [ -d ~/workspace/gp-performance-testing ]; then \
+		echo 'Please clone the gp-performance-testing repository to your workspace.'; \
+		exit 1; \
+	fi
+	make -C ~/workspace/gp-performance-testing \
+		FLY_TARGET=ud \
+		data-gen-pxf-parquet-tpc-h-1g-6X \
+		INPUT_FILE=data-gen-6x-pxf.yml \
+		TEAM_SECRETS="--load-vars-from=${HOME}/workspace/gp-continuous-integration/secrets/pxf-perf-secrets.yml"
 
+.PHONY: query-execution-parquet
+query-execution-parquet-1g:
+	@if ! [ -d ~/workspace/gp-performance-testing ]; then \
+		echo 'Please clone the gp-performance-testing repository to your workspace.'; \
+		exit 1; \
+	fi
+	make -C ~/workspace/gp-performance-testing \
+		FLY_TARGET=ud \
+		query-execution-pxf-parquet-tpc-h-1g-6X \
+		INPUT_FILE=ccp-provision-from-release-pxf.yml \
+		TEAM_SECRETS="--load-vars-from=${HOME}/workspace/gp-continuous-integration/secrets/pxf-perf-secrets.yml"
 ## ----------------------------------------------------------------------
 ## List explicit rules
 ## ----------------------------------------------------------------------
