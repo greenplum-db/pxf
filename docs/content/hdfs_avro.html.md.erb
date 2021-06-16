@@ -65,7 +65,10 @@ PXF uses the following data type mapping when reading Avro data:
 | Complex type: Map, Record, or Enum  | text, with delimiters inserted between collection items, mapped key-value pairs, and record data.   |
 | Complex type: Fixed     | bytea (supported for read operations only).   |
 | Union      | Follows the above conventions for primitive or complex data types, depending on the union; must contain 2 elements, one of which must be null.  |
-| Logical type: decimal, date, time, timestamp, duration | text |
+| Logical type: date | int |
+| Logical type: time-millis, timestamp-millis, or local-timestamp-millis | int |
+| Logical type: time-micros, timestamp-micros, or local-timestamp-micros | long |
+| Logical type: duration | bytea |
 
 ### <a id="datatype_map_Write"></a>Write Mapping
 
