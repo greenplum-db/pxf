@@ -12,6 +12,7 @@ steps:
   args:
   - '-c'
   - |
+    mkdir -p /workspace/none
     docker pull gcr.io/$PROJECT_ID/gpdb-pxf-dev/gpdb6-centos7-test-pxf-mapr:latest || exit 0
   waitFor: ['-']
 
