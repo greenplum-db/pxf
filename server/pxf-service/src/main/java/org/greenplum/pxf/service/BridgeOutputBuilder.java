@@ -272,6 +272,21 @@ public class BridgeOutputBuilder {
     }
 
     /**
+     * Tests if data type is a string array type. String array type is a type that can be
+     * serialized as string array, such as varchar[], bpchar[] and text[]
+     *
+     * @param type data type
+     * @return whether data type is compatible string array type
+     */
+    boolean isStringArrayType (DataType type) {
+        return  Arrays.asList(
+                DataType.BPCHARARRAY,
+                DataType.VARCHARARRAY,
+                DataType.TEXTARRAY)
+                .contains(type);
+    }
+
+    /**
      * Tests if record field type and schema type correspond.
      *
      * @param recType    record type code
@@ -283,7 +298,9 @@ public class BridgeOutputBuilder {
         // schema from GPDB table
         DataType dtSchema = DataType.get(schemaType);
 
-        return (dtSchema == DataType.UNSUPPORTED_TYPE || dtRec == dtSchema || (isStringType(dtRec) && isStringType(dtSchema)));
+        return (dtSchema == DataType.UNSUPPORTED_TYPE || dtRec == dtSchema
+                || (isStringType(dtRec) && isStringType(dtSchema))
+                || (isStringArrayType(dtRec) && isStringArrayType(dtSchema)));
     }
 
     /**
@@ -439,6 +456,8 @@ public class BridgeOutputBuilder {
                 case FLOAT4ARRAY:
                 case FLOAT8ARRAY:
                 case TEXTARRAY:
+                case BPCHARARRAY:
+                case VARCHARARRAY:
                     /*
                      * If resolvers support sending arrays to GPDB, they are expected to serialize arrays into Postgres
                      * array external text representation.

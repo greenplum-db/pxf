@@ -52,3 +52,54 @@ Finally, run the script to generate the `orc_types_unordered_subset.orc` file:
 
 The `orc_types_unordered_subset.orc` file will be copied to the directory
 where you ran the script.
+
+## Generate the orc_list_types.orc and orc_multidim_list_types.orc files
+
+The `orc_list_types.orc` file contains a table with compound types.
+The columns contained in this file are `id`, `bool_arr`, `smallint_arr`, `int_arr`, `bigint_arr`, `float_arr`, `double_arr`, `text_arr` and `bytea_arr`.
+
+```shell script
+export HDFS_CMD=$(which hdfs)
+export HIVE_CMD=$(which hive)
+export HIVE_WAREHOUSE_PATH=/hive/warehouse/hive_orc_all_types
+export CSV_FILENAME=orc_list_types.csv
+export HQL_FILENAME=generate_orc_list_types.hql
+export ORC_FILENAME=orc_list_types.orc
+```
+
+Finally, run the script to generate the `orc_list_types.orc` file:
+
+```shell script
+./generate_orc_types.bash
+```
+
+The `orc_list_types.orc` file will be copied to the directory
+where you ran the script. The `orc_list_types.orc` file is generated through insert statements in the HQL.
+If desired, you can copy down the CSV file by running the following command:
+```
+mv "./orc_list_types/000000_0" "./${CSV_FILENAME}"
+```
+
+The `orc_multidim_list_types.orc` file contains a table similar to the `orc_list_types.orc`.
+The main difference is that it contains nested arrays instead of 1-dimensional arrays.
+
+```shell script
+export HDFS_CMD=$(which hdfs)
+export HIVE_CMD=$(which hive)
+export HIVE_WAREHOUSE_PATH=/hive/warehouse/hive_orc_all_types
+export CSV_FILENAME=orc_multidim_list_types.csv
+export HQL_FILENAME=generate_orc_multidim_list_types.hql
+export ORC_FILENAME=orc_multidim_list_types.orc
+```
+
+Finally, run the script to generate the `orc_multidim_list_types.orc` file:
+
+```shell script
+./generate_orc_types.bash
+```
+Similar to the files listed above, the `orc_multidim_list_types.orc` file is generated through insert statements in the HQL.
+If desired, you can copy down the CSV file by running the following command:
+```
+mv "./orc_multidim_list_types/000000_0" "./${CSV_FILENAME}"
+```
+

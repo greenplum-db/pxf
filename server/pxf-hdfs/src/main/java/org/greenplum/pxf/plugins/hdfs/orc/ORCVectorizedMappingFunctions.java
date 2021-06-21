@@ -4,15 +4,20 @@ import org.apache.hadoop.hive.ql.exec.vector.BytesColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.ColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DecimalColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.DoubleColumnVector;
+import org.apache.hadoop.hive.ql.exec.vector.ListColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.TimestampColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.greenplum.pxf.api.GreenplumDateTime;
 import org.greenplum.pxf.api.OneField;
+import org.greenplum.pxf.api.io.DataType;
+import org.greenplum.pxf.plugins.hdfs.utilities.PgArrayBuilder;
+import org.greenplum.pxf.plugins.hdfs.utilities.PgUtilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.sql.Date;
 import java.sql.Timestamp;
@@ -47,6 +52,10 @@ class ORCVectorizedMappingFunctions {
 
     private static final Logger LOG = LoggerFactory.getLogger(ORCVectorizedMappingFunctions.class);
 
+    // we intentionally create a new instance of PgUtilities here due to unnecessary complexity
+    // required for dependency injection
+    private static PgUtilities pgUtilities = new PgUtilities();
+
     public static OneField[] booleanMapper(VectorizedRowBatch batch, ColumnVector columnVector, int oid) {
         LongColumnVector lcv = (LongColumnVector) columnVector;
         if (lcv == null)
@@ -64,6 +73,91 @@ class ORCVectorizedMappingFunctions {
             result[rowIndex] = new OneField(oid, value);
         }
         return result;
+    }
+
+    /**
+     * Serializes ORC lists of PXF-supported primitives into Postgres array syntax
+     * @param batch the column batch to be processed
+     * @param columnVector the ListColumnVector that contains another ColumnVector containing the actual data
+     * @param oid the destination GPDB column OID
+     * @return returns an array of OneFields, where each element in the array contains data from an entire row as a String
+     */
+    public static OneField[] listMapper(VectorizedRowBatch batch, ColumnVector columnVector, int oid) {
+        ListColumnVector listColumnVector = (ListColumnVector) columnVector;
+        if (listColumnVector == null) {
+            return getNullResultSet(oid, batch.size);
+        }
+
+        OneField[] result = new OneField[batch.size];
+        // if the row is repeated, then we only need to serialize the row once.
+        String repeatedRow = listColumnVector.isRepeating ? serializeListRow(listColumnVector,0, oid) : null;
+        for (int rowIndex = 0; rowIndex < batch.size; rowIndex++) {
+            String value = listColumnVector.isRepeating ? repeatedRow : serializeListRow(listColumnVector, rowIndex, oid);
+            result[rowIndex] = new OneField(oid, value);
+        }
+
+        return result;
+    }
+
+    /**
+     * Helper method for handling the underlying data of ORC list compound types
+     * @param columnVector the ListColumnVector containing the array data
+     * @param row the row of data to pull out from the ColumnVector
+     * @param oid the GPDB mapping of the ORC list compound type
+     * @return the data of the given row as a string
+     */
+    public static String serializeListRow(ListColumnVector columnVector, int row, int oid) {
+        if (columnVector.isNull[row]) {
+            return null;
+        }
+
+        int length = (int) columnVector.lengths[row];
+        int offset = (int) columnVector.offsets[row];
+
+        PgArrayBuilder pgArrayBuilder = new PgArrayBuilder(pgUtilities);
+        pgArrayBuilder.startArray();
+        for (int i = 0; i < length; i++) {
+            int childRow = offset + i;
+
+            switch (columnVector.child.type) {
+                case LIST:
+                    pgArrayBuilder.addElementNoEscaping(serializeListRow((ListColumnVector) columnVector.child, childRow, oid));
+                    break;
+                case BYTES:
+                    // if the type of the column vector is BYTES, then the underlying datatype could be any
+                    // ORC string type. This could map to GPDB bytea array, text array or even varchar/bpchar.
+                    if (oid == DataType.BYTEAARRAY.getOID()) {
+                        // bytea arrays require special handling due to the encoding type. Handle that here.
+                        ByteBuffer byteBuffer = getByteBuffer((BytesColumnVector) columnVector.child, childRow);
+                        pgArrayBuilder.addElementNoEscaping(byteBuffer == null ? "NULL" : pgUtilities.encodeAndEscapeByteaHex(byteBuffer));
+                    } else {
+                        // the type here could be something like TEXT, BPCHAR, VARCHAR
+                        pgArrayBuilder.addElement(((BytesColumnVector) columnVector.child).toString(childRow));
+                    }
+                    break;
+                default:
+                    pgArrayBuilder.addElement(buf -> columnVector.child.stringifyValue(buf, childRow));
+            }
+        }
+        pgArrayBuilder.endArray();
+        return pgArrayBuilder.toString();
+    }
+
+    /**
+     * Wraps a byte array for a given row index into a byte buffer
+     * @param bytesColumnVector the ColumnVector containing the byte array data
+     * @param row the index of a row of data to pull out from the ColumnVector
+     * @return the ByteBuffer for the given row
+     */
+    private static ByteBuffer getByteBuffer(BytesColumnVector bytesColumnVector, int row) {
+        if (bytesColumnVector.isRepeating) {
+            row = 0;
+        }
+        if (bytesColumnVector.noNulls || !bytesColumnVector.isNull[row]) {
+            return ByteBuffer.wrap(bytesColumnVector.vector[row], bytesColumnVector.start[row], bytesColumnVector.length[row]);
+        } else {
+            return null;
+        }
     }
 
     public static OneField[] shortMapper(VectorizedRowBatch batch, ColumnVector columnVector, int oid) {

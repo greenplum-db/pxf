@@ -8,6 +8,7 @@ import org.apache.orc.OrcFile;
 import org.apache.orc.Reader;
 import org.apache.orc.RecordReader;
 import org.apache.orc.TypeDescription;
+import org.apache.orc.impl.SchemaEvolution;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.error.UnsupportedTypeException;
@@ -34,6 +35,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class ORCVectorizedResolverTest extends ORCVectorizedBaseTest {
 
     private static final String ORC_TYPES_SCHEMA = "struct<t1:string,t2:string,num1:int,dub1:double,dec1:decimal(38,18),tm:timestamp,r:float,bg:bigint,b:boolean,tn:tinyint,sml:smallint,dt:date,vc1:varchar(5),c1:char(3),bin:binary>";
+    private static final String ORC_TYPES_SCHEMA_COMPOUND = "struct<id:int,bool_arr:array<boolean>,int2_arr:array<smallint>,int_arr:array<int>,int8_arr:array<bigint>,float_arr:array<float>,float8_arr:array<double>,text_arr:array<string>,bytea_arr:array<binary>,char_arr:array<char(15)>,varchar_arr:array<varchar(15)>>";
+    private static final String ORC_TYPES_SCHEMA_COMPOUND_MULTI = "struct<id:int,bool_arr:array<array<boolean>>,int2_arr:array<array<smallint>>,int_arr:array<array<int>>,int8_arr:array<array<bigint>>,float_arr:array<array<float>>,float8_arr:array<array<double>>,text_arr:array<array<string>>,bytea_arr:array<array<binary>>,char_arr:array<array<char(15)>>,varchar_arr:array<array<varchar(15)>>>";
     private ORCVectorizedResolver resolver;
     private RequestContext context;
 
@@ -115,6 +118,94 @@ class ORCVectorizedResolverTest extends ORCVectorizedBaseTest {
     }
 
     @Test
+    public void testGetFieldsForBatchCompound() throws IOException {
+        // This schema matches the columnDescriptors schema
+        TypeDescription schema = TypeDescription.fromString(ORC_TYPES_SCHEMA_COMPOUND);
+        context.setMetadata(schema);
+
+
+        context.setTupleDescription(columnDescriptorsCompound);
+
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+
+        VectorizedRowBatch batch = readOrcFile("orc_types_compound.orc", 6, schema);
+
+        OneRow batchOfRows = new OneRow(batch);
+        List<List<OneField>> fieldsForBatch = resolver.getFieldsForBatch(batchOfRows);
+        assertNotNull(fieldsForBatch);
+        assertEquals(6, fieldsForBatch.size());
+
+        assertCompoundDataReturned(ORC_COMPOUND_TYPES_DATASET, fieldsForBatch);
+    }
+
+    @Test
+    public void testGetFieldsForBatchCompoundWithProjection() throws IOException {
+        // Only project indexes 1, 4, 5, 8
+        IntStream.range(0, columnDescriptorsCompound.size()).forEach(idx ->
+                columnDescriptorsCompound
+                        .get(idx)
+                        .setProjected(idx == 1 || idx == 4 || idx == 5 || idx == 8));
+
+        // This schema matches the columnDescriptors schema
+        TypeDescription schema = TypeDescription.fromString("struct<bool_arr:array<boolean>,int8_arr:array<bigint>,float_arr:array<float>,bytea_arr:array<binary>>");
+        context.setMetadata(schema);
+
+        context.setTupleDescription(columnDescriptorsCompound);
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+
+        VectorizedRowBatch batch = readOrcFile("orc_types_compound.orc", 6, schema);
+
+        OneRow batchOfRows = new OneRow(batch);
+        List<List<OneField>> fieldsForBatch = resolver.getFieldsForBatch(batchOfRows);
+        assertNotNull(fieldsForBatch);
+        assertEquals(6, fieldsForBatch.size());
+
+        assertCompoundDataReturned(ORC_COMPOUND_TYPES_DATASET, fieldsForBatch);
+    }
+
+    @Test
+    public void testGetFieldsForBatchCompoundMultiDimensional() throws IOException {
+        // This schema matches the columnDescriptors schema
+        TypeDescription schema = TypeDescription.fromString(ORC_TYPES_SCHEMA_COMPOUND_MULTI);
+        context.setMetadata(schema);
+
+
+        context.setTupleDescription(columnDescriptorsCompound);
+
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+
+        VectorizedRowBatch batch = readOrcFile("orc_types_compound_multi.orc", 6, schema);
+
+        OneRow batchOfRows = new OneRow(batch);
+        List<List<OneField>> fieldsForBatch = resolver.getFieldsForBatch(batchOfRows);
+        assertNotNull(fieldsForBatch);
+        assertEquals(6, fieldsForBatch.size());
+
+        assertCompoundDataReturned(ORC_COMPOUND_MULTI_TYPES_DATASET, fieldsForBatch);
+    }
+
+    @Test
+    public void testGetFieldsForBatchCompoundMixedType() throws IOException {
+        // This schema matches the columnDescriptors schema
+        TypeDescription schema = TypeDescription.fromString("struct<id:int,bool_arr:array<struct<completed:boolean>>,int_arr:array<uniontype<int,int>>>");
+        context.setMetadata(schema);
+
+
+        context.setTupleDescription(columnDescriptorsCompound);
+
+        resolver.setRequestContext(context);
+        resolver.afterPropertiesSet();
+
+        // this should fail on the child columnvector not being of type listcolumnvector (see OrcVectorizedMappingFunctions::listMapper line 75
+        SchemaEvolution.IllegalEvolutionException e = assertThrows(SchemaEvolution.IllegalEvolutionException.class,
+                () -> readOrcFile("orc_types_compound_multi.orc", 5, schema));
+        assertEquals("ORC does not support type conversion from file type array<boolean> (3) to reader type struct<completed:boolean> (3)", e.getMessage());
+    }
+
+    @Test
     public void testGetFieldsForBatchPrimitiveWithProjection() throws IOException {
 
         // Only project indexes 1,2,5,6,9,13
@@ -162,7 +253,7 @@ class ORCVectorizedResolverTest extends ORCVectorizedBaseTest {
 
         UnsupportedTypeException e = assertThrows(UnsupportedTypeException.class,
                 () -> resolver.getFieldsForBatch(batchOfRows));
-        assertEquals("Unable to resolve column 'actor' with category 'STRUCT'. Only primitive types are supported.", e.getMessage());
+        assertEquals("Unable to resolve column 'actor' with category 'STRUCT'. Only primitive and lists of primitive types are supported.", e.getMessage());
     }
 
     /**
@@ -272,6 +363,26 @@ class ORCVectorizedResolverTest extends ORCVectorizedBaseTest {
         }
     }
 
+    private void assertCompoundDataReturned(Object[][] expected, List<List<OneField>> fieldsForBatch) {
+        for (int rowNum = 0; rowNum < fieldsForBatch.size(); rowNum++) {
+            List<OneField> row = fieldsForBatch.get(rowNum);
+            assertNotNull(row);
+            assertTypes(row);
+
+            List<ColumnDescriptor> tupleDescription = context.getTupleDescription();
+            for (int colNum = 0; colNum < tupleDescription.size(); colNum++) {
+                ColumnDescriptor columnDescriptor = tupleDescription.get(colNum);
+                Object value = row.get(colNum).val;
+                if (columnDescriptor.isProjected()) {
+                    Object expectedValue = expected[colNum][rowNum];
+                    assertEquals(expectedValue, value, "Row " + rowNum + ", COL" + (colNum + 1));
+                } else {
+                    assertNull(value);
+                }
+            }
+        }
+    }
+
     private void assertSubsetOfDataReturned(List<List<OneField>> fieldsForBatch) {
         for (int rowNum = 0; rowNum < fieldsForBatch.size(); rowNum++) {
             List<OneField> row = fieldsForBatch.get(rowNum);
@@ -328,50 +439,10 @@ class ORCVectorizedResolverTest extends ORCVectorizedBaseTest {
     private void assertTypes(List<OneField> fieldList) {
         List<ColumnDescriptor> columnDescriptors = context.getTupleDescription();
 
-        if (columnDescriptors.get(0).isProjected()) {
-            assertEquals(DataType.TEXT.getOID(), fieldList.get(0).type);
-        }
-        if (columnDescriptors.get(1).isProjected()) {
-            assertEquals(DataType.TEXT.getOID(), fieldList.get(1).type);
-        }
-        if (columnDescriptors.get(2).isProjected()) {
-            assertEquals(DataType.INTEGER.getOID(), fieldList.get(2).type);
-        }
-        if (columnDescriptors.get(3).isProjected()) {
-            assertEquals(DataType.FLOAT8.getOID(), fieldList.get(3).type);
-        }
-        if (columnDescriptors.get(4).isProjected()) {
-            assertEquals(DataType.NUMERIC.getOID(), fieldList.get(4).type);
-        }
-        if (columnDescriptors.get(5).isProjected()) {
-            assertEquals(DataType.TIMESTAMP.getOID(), fieldList.get(5).type);
-        }
-        if (columnDescriptors.get(6).isProjected()) {
-            assertEquals(DataType.REAL.getOID(), fieldList.get(6).type);
-        }
-        if (columnDescriptors.get(7).isProjected()) {
-            assertEquals(DataType.BIGINT.getOID(), fieldList.get(7).type);
-        }
-        if (columnDescriptors.get(8).isProjected()) {
-            assertEquals(DataType.BOOLEAN.getOID(), fieldList.get(8).type);
-        }
-        if (columnDescriptors.get(9).isProjected()) {
-            assertEquals(DataType.SMALLINT.getOID(), fieldList.get(9).type);
-        }
-        if (columnDescriptors.get(10).isProjected()) {
-            assertEquals(DataType.SMALLINT.getOID(), fieldList.get(10).type);
-        }
-        if (columnDescriptors.get(11).isProjected()) {
-            assertEquals(DataType.DATE.getOID(), fieldList.get(11).type);
-        }
-        if (columnDescriptors.get(12).isProjected()) {
-            assertEquals(DataType.VARCHAR.getOID(), fieldList.get(12).type);
-        }
-        if (columnDescriptors.get(13).isProjected()) {
-            assertEquals(DataType.BPCHAR.getOID(), fieldList.get(13).type);
-        }
-        if (columnDescriptors.get(14).isProjected()) {
-            assertEquals(DataType.BYTEA.getOID(), fieldList.get(14).type);
+        for (int i = 0; i < columnDescriptors.size(); i++) {
+            if (columnDescriptors.get(i).isProjected()) {
+                assertEquals(columnDescriptors.get(i).columnTypeCode(), fieldList.get(i).type);
+            }
         }
     }
 

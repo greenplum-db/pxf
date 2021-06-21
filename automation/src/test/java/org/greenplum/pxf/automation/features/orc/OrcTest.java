@@ -11,6 +11,8 @@ public class OrcTest extends BaseFeature {
     private static final String ORC_PRIMITIVE_TYPES = "orc_types.orc";
     private static final String PXF_ORC_TABLE = "pxf_orc_primitive_types";
     private static final String ORC_PRIMITIVE_TYPES_UNORDERED_SUBSET = "orc_types_unordered_subset.orc";
+    private static final String ORC_LIST_TYPES = "orc_list_types.orc";
+    private static final String ORC_MULTIDIM_LIST_TYPES = "orc_multidim_list_types.orc";
 
     private static final String[] ORC_TABLE_COLUMNS = {
             "id      integer",
@@ -42,6 +44,35 @@ public class OrcTest extends BaseFeature {
             "bin     BYTEA"
     };
 
+    private static final String[] ORC_LIST_TYPES_TABLE_COLUMNS = new String[]{
+            "id           integer",
+            "bool_arr     boolean[]",
+            "int2_arr     smallint[]",
+            "int_arr      int[]",
+            "int8_arr     bigint[]",
+            "float_arr    real[]",
+            "float8_arr   float[]",
+            "text_arr     text[]",
+            "bytea_arr    bytea[]",
+            "char_arr     bpchar(15)[]",
+            "varchar_arr  varchar(15)[]"
+    };
+
+    // char arrays and varchar arrays should also be allowed as text arrays
+    private static final String[] ORC_LIST_TYPES_TABLE_COLUMNS_TEXT = new String[]{
+            "id           integer",
+            "bool_arr     boolean[]",
+            "int2_arr     smallint[]",
+            "int_arr      int[]",
+            "int8_arr     bigint[]",
+            "float_arr    real[]",
+            "float8_arr   float[]",
+            "text_arr     text[]",
+            "bytea_arr    bytea[]",
+            "char_arr     text[]",
+            "varchar_arr  text[]"
+    };
+
     private String hdfsPath;
     private ProtocolEnum protocol;
 
@@ -54,6 +85,8 @@ public class OrcTest extends BaseFeature {
         String resourcePath = localDataResourcesFolder + "/orc/";
         hdfs.copyFromLocal(resourcePath + ORC_PRIMITIVE_TYPES, hdfsPath + ORC_PRIMITIVE_TYPES);
         hdfs.copyFromLocal(resourcePath + ORC_PRIMITIVE_TYPES_UNORDERED_SUBSET, hdfsPath + ORC_PRIMITIVE_TYPES_UNORDERED_SUBSET);
+        hdfs.copyFromLocal(resourcePath + ORC_LIST_TYPES, hdfsPath + ORC_LIST_TYPES);
+        hdfs.copyFromLocal(resourcePath + ORC_MULTIDIM_LIST_TYPES, hdfsPath + ORC_MULTIDIM_LIST_TYPES);
 
         prepareReadableExternalTable(PXF_ORC_TABLE, ORC_TABLE_COLUMNS, hdfsPath + ORC_PRIMITIVE_TYPES);
     }
@@ -93,6 +126,24 @@ public class OrcTest extends BaseFeature {
     public void orcPredicatePushDownMapByPosition() throws Exception {
         prepareReadableExternalTable(PXF_ORC_TABLE, ORC_TABLE_COLUMNS, hdfsPath + ORC_PRIMITIVE_TYPES, true);
         runTincTest("pxf.features.orc.pushdown.runTest");
+    }
+
+    @Test(groups = {"features", "gpdb", "security", "hcfs"})
+    public void orcReadLists() throws Exception {
+        prepareReadableExternalTable("pxf_orc_list_types", ORC_LIST_TYPES_TABLE_COLUMNS, hdfsPath + ORC_LIST_TYPES);
+        runTincTest("pxf.features.orc.list_types.runTest");
+    }
+
+    @Test(groups = {"features", "gpdb", "security", "hcfs"})
+    public void orcReadBpCharAndVarCharListsAsTextArr() throws Exception {
+        prepareReadableExternalTable("pxf_orc_bpchar_varchar_list_types_as_textarr", ORC_LIST_TYPES_TABLE_COLUMNS_TEXT, hdfsPath + ORC_LIST_TYPES);
+        runTincTest("pxf.features.orc.bpchar_varchar_list_types_as_textarr.runTest");
+    }
+
+    @Test(groups = {"features", "gpdb", "security", "hcfs"})
+    public void orcReadMultiDimensionalLists() throws Exception {
+        prepareReadableExternalTable("pxf_orc_multidim_list_types", ORC_LIST_TYPES_TABLE_COLUMNS, hdfsPath + ORC_MULTIDIM_LIST_TYPES);
+        runTincTest("pxf.features.orc.multidim_list_types.runTest");
     }
 
     private void prepareReadableExternalTable(String name, String[] fields, String path) throws Exception {

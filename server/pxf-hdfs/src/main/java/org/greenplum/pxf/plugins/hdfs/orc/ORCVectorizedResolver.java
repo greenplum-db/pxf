@@ -9,6 +9,7 @@ import org.greenplum.pxf.api.ReadVectorizedResolver;
 import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.greenplum.pxf.api.error.UnsupportedTypeException;
 import org.greenplum.pxf.api.function.TriFunction;
+import org.greenplum.pxf.api.io.DataType;
 import org.greenplum.pxf.api.model.BasePlugin;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.ColumnDescriptor;
@@ -20,24 +21,35 @@ import java.util.Map;
 import java.util.stream.IntStream;
 
 import static org.greenplum.pxf.api.io.DataType.BIGINT;
+import static org.greenplum.pxf.api.io.DataType.BOOLARRAY;
 import static org.greenplum.pxf.api.io.DataType.BOOLEAN;
 import static org.greenplum.pxf.api.io.DataType.BPCHAR;
+import static org.greenplum.pxf.api.io.DataType.BPCHARARRAY;
 import static org.greenplum.pxf.api.io.DataType.BYTEA;
+import static org.greenplum.pxf.api.io.DataType.BYTEAARRAY;
 import static org.greenplum.pxf.api.io.DataType.DATE;
+import static org.greenplum.pxf.api.io.DataType.FLOAT4ARRAY;
 import static org.greenplum.pxf.api.io.DataType.FLOAT8;
+import static org.greenplum.pxf.api.io.DataType.FLOAT8ARRAY;
+import static org.greenplum.pxf.api.io.DataType.INT2ARRAY;
+import static org.greenplum.pxf.api.io.DataType.INT4ARRAY;
+import static org.greenplum.pxf.api.io.DataType.INT8ARRAY;
 import static org.greenplum.pxf.api.io.DataType.INTEGER;
 import static org.greenplum.pxf.api.io.DataType.NUMERIC;
 import static org.greenplum.pxf.api.io.DataType.REAL;
 import static org.greenplum.pxf.api.io.DataType.SMALLINT;
 import static org.greenplum.pxf.api.io.DataType.TEXT;
+import static org.greenplum.pxf.api.io.DataType.TEXTARRAY;
 import static org.greenplum.pxf.api.io.DataType.TIMESTAMP;
+import static org.greenplum.pxf.api.io.DataType.UNSUPPORTED_TYPE;
 import static org.greenplum.pxf.api.io.DataType.VARCHAR;
+import static org.greenplum.pxf.api.io.DataType.VARCHARARRAY;
 import static org.greenplum.pxf.plugins.hdfs.orc.ORCVectorizedAccessor.MAP_BY_POSITION_OPTION;
 
 /**
- * Resolves ORC VectorizedRowBatch into lists of List<OneField>. Only primitive
- * types are supported. Currently, Timestamp and Timestamp with TimeZone are
- * not supported. The supported mapping is as follows:
+ * Resolves ORC VectorizedRowBatch into lists of List<OneField>. Currently,
+ * Timestamp and Timestamp with TimeZone are not supported. The supported
+ * scalar mapping is as follows:
  * <p>
  * ---------------------------------------------------------------------------
  * | ORC Physical Type | ORC Logical Type   | Greenplum Type | Greenplum OID |
@@ -57,6 +69,26 @@ import static org.greenplum.pxf.plugins.hdfs.orc.ORCVectorizedAccessor.MAP_BY_PO
  * |  binary           |  decimal           |  NUMERIC       |  1700         |
  * |  binary           |  timestamp         |  TIMESTAMP     |  1114         |
  * ---------------------------------------------------------------------------
+ *
+ * Lists are the only supported compound type and only lists of the following scalar
+ * types are supported. The supported compound mapping is as follows:
+ * <p>
+ * ------------------------------------------------------
+ * | ORC Compound Type | Greenplum Type | Greenplum OID |
+ * ------------------------------------------------------
+ * | array<boolean>    | BOOLEAN[]      | 1000          |
+ * | array<tinyint>    | SMALLINT[]     | 1005          |
+ * | array<smallint>   | SMALLINT[]     | 1005          |
+ * | array<int>        | INTEGER[]      | 1007          |
+ * | array<bigint>     | BIGINT[]       | 1016          |
+ * | array<float>      | FLOAT[]        | 1021          |
+ * | array<double>     | FLOAT8[]       | 1022          |
+ * | array<string>     | TEXT[]         | 1009          |
+ * | array<char>       | BPCHAR[]       | 1014          |
+ * | array<varchar>    | VARCHAR[]      | 1015          |
+ * | array<binary>     | BYTEA[]        | 1001          |
+ * ------------------------------------------------------
+ *
  */
 public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedResolver, Resolver {
 
@@ -144,13 +176,13 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
                     // will have 5 columns
                     oneFields = ORCVectorizedMappingFunctions
                             .getNullResultSet(columnDescriptor.columnTypeCode(), batchSize);
-                } else if (orcColumn.getCategory().isPrimitive()) {
+                } else if (orcColumn.getCategory().isPrimitive() || orcColumn.getCategory() == TypeDescription.Category.LIST) {
                     oneFields = functions[columnIndex]
                             .apply(vectorizedBatch, vectorizedBatch.cols[columnIndex], typeOidMappings[columnIndex]);
                     columnIndex++;
                 } else {
                     throw new UnsupportedTypeException(
-                            String.format("Unable to resolve column '%s' with category '%s'. Only primitive types are supported.",
+                            String.format("Unable to resolve column '%s' with category '%s'. Only primitive and lists of primitive types are supported.",
                                     readSchema.getFieldNames().get(columnIndex), orcColumn.getCategory()));
                 }
             }
@@ -263,6 +295,10 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
                     functions[i] = ORCVectorizedMappingFunctions::textMapper;
                     typeOidMappings[i] = BPCHAR.getOID();
                     break;
+                case LIST:
+                    functions[i] = ORCVectorizedMappingFunctions::listMapper;
+                    typeOidMappings[i] = getArrayDataType(t.getChildren().get(0)).getOID();
+                    break;
             }
         }
     }
@@ -296,5 +332,40 @@ public class ORCVectorizedResolver extends BasePlugin implements ReadVectorizedR
         }
 
         return cachedBatch;
+    }
+
+    /**
+     * This helper function returns the array DataType for the given primitive type
+     * @param typeDescription must be a child of a list TypeDescription
+     * @return the DataType for the array containing elements of the given TypeDescription
+     */
+    private DataType getArrayDataType(TypeDescription typeDescription) {
+        switch (typeDescription.getCategory()) {
+            case BOOLEAN:
+                return BOOLARRAY;
+            case BYTE:
+            case SHORT:
+                return INT2ARRAY;
+            case INT:
+                return INT4ARRAY;
+            case LONG:
+                return INT8ARRAY;
+            case FLOAT:
+                return FLOAT4ARRAY;
+            case DOUBLE:
+                return FLOAT8ARRAY;
+            case STRING:
+                return TEXTARRAY;
+            case VARCHAR:
+                return VARCHARARRAY;
+            case CHAR:
+                return BPCHARARRAY;
+            case BINARY:
+                return BYTEAARRAY;
+            case LIST:
+                return getArrayDataType(typeDescription.getChildren().get(0));
+            default:
+                return UNSUPPORTED_TYPE;
+        }
     }
 }

@@ -10,6 +10,7 @@ import java.util.List;
 public class ORCVectorizedBaseTest {
 
     protected List<ColumnDescriptor> columnDescriptors;
+    protected List<ColumnDescriptor> columnDescriptorsCompound;
 
     // From resources/orc/orc_types.csv
     static final String[] COL1 = {"row1", "row2", "row3", "row4", "row5", "row6", "row7", "row8", "row9", "row10", "row11", "row12_text_null", "row13_int_null", "row14_double_null", "row15_decimal_null", "row16_timestamp_null", "row17_real_null", "row18_bigint_null", "row19_bool_null", "row20_tinyint_null", "row21_smallint_null", "row22_date_null", "row23_varchar_null", "row24_char_null", "row25_binary_null"};
@@ -58,6 +59,42 @@ public class ORCVectorizedBaseTest {
     static final Byte[] COL15_REPEATED = {0b00110001, 0b00110001, 0b00110001};
     static final Object[][] ORC_TYPES_REPEATED_DATASET = {COL1_REPEATED, COL2_REPEATED, COL3_REPEATED, COL4_REPEATED, COL5_REPEATED, COL6_REPEATED, COL7_REPEATED, COL8_REPEATED, COL9_REPEATED, COL10_REPEATED, COL11_REPEATED, COL12_REPEATED, COL13_REPEATED, COL14_REPEATED, COL15_REPEATED};
 
+    // From resources/orc/generate_orc_types_compound.hql
+    static final Integer[] COL1_COMPOUND = {1, 2, 3, 4, 5, 6};
+    static final String[] BOOL_LIST = {"{}", "{0,1,1,0}", "{1}", null, "{1,0}", "{1,0,null}"}; // orc uses long to store bool values
+    static final String[] INT2_LIST = {"{50}", "{}", "{-128}", "{10,20}", null, "{0,127,-128}"};
+    static final String[] INTEGER_LIST = {"{1}", "{2,3}", null, "{7,null,8}", "{}", "{2147483647,-2147483648}"};
+    static final String[] INT8_LIST = {"{1}", null, "{}", "{-9223372036854775808,0}", "{null,9223372036854775807}", "{1,null,300}"};
+    static final String[] FLOAT_LIST = {null, "{}", "{-123456.984375,9.007199254740992E15}", "{2.299999952316284,4.5}", "{6.699999809265137,-8.0,null}", "{9.9999998245167E-15}"};
+    static final String[] FLOAT8_LIST = {"{1.7E308}", "{1.0}", "{5.678,9.10234}", null, "{}", "{null,8.431,-1.56}"};
+    // for text, there is a bug in Hive which inserts in an empty array from another table as an array with an empty string.
+    static final String[] TEXT_LIST = {"{\"this is a test string\"}", "{\"this is a string with \\\"special\\\" characters\",\"this is a string without\"}","{hello,\"the next element is a string that says null\",\"null\"}", "{NULL,\"\"}", null, "{\"this is a test string with \\\\ and \\\"\",NULL}"};
+    static final String[] BYTEA_LIST = {null, "{}", "{\"\\\\xdeadbeef\"}", "{NULL,\"\\\\x5c22\"}", "{\"\\\\x5c5c5c\",NULL}", "{\"\\\\x313233\",\"\\\\x343536\"}"};
+    // for bpchar and varchar as well, there is a bug in Hive which inserts in an empty array from another table as an array with an empty string.
+    // for bpchar and varchar, ORC knows about the character limit in the schema, but will only store the original string in the file (without the additional whitespaces appended)
+    static final String[] BPCHAR_LIST = {"{hello}", "{\"this is exactly\",\" fifteen chars.\"}", "{\"\"}", null, "{\"specials \\\\ \\\"\"}", "{\"test string\",NULL}"};
+    static final String[] VARCHAR_LIST = {"{hello}", "{\"this is exactly\",\" fifteen chars.\"}", "{\"\"}", null, "{\"specials \\\\ \\\"\"}", "{\"test string\",NULL}"};
+
+    static final Object[][] ORC_COMPOUND_TYPES_DATASET = {COL1_COMPOUND, BOOL_LIST, INT2_LIST, INTEGER_LIST, INT8_LIST, FLOAT_LIST, FLOAT8_LIST, TEXT_LIST, BYTEA_LIST, BPCHAR_LIST, VARCHAR_LIST};
+
+    // From resources/orc/generate_orc_types_compound_multi.hql
+    // postgres cannot support multi-dimensional arrays with subarrays of different sizes nor can it support nulls in the form of {{2,3},null,{4,5}}
+    // while PXF can handle that sort of data, we will just allow it to error out on the GPDB side
+    static final Integer[] COL1_COMPOUND_MULTI = {1, 2, 3, 4, 5, 6};
+    static final String[] BOOL_LIST_MULTI = {"{}", "{{0,1},{1,0}}", "{{1}}", null, "{{1,0}}", "{{1,0},null}"}; // orc uses long to store bool values
+    static final String[] INT2_LIST_MULTI = {"{{50}}", "{}", "{{-128}}", "{{10,20}}", null, "{{0,127},null}"};
+    static final String[] INTEGER_LIST_MULTI = {"{{1}}", "{{2,3},null,{4,5}}", null, "{{7,null},{8}}", "{}", "{{2147483647,-2147483648}}"};
+    static final String[] INT8_LIST_MULTI = {"{{1}}", null, "{}", "{{-9223372036854775808,0}}", "{null,{9223372036854775807}}", "{{1,null},{300}}"};
+    static final String[] FLOAT_LIST_MULTI = {null, "{}", "{{-123456.984375,9.007199254740992E15}}", "{{2.299999952316284},{4.5}}", "{{6.699999809265137,-8.0},null}", "{{9.9999998245167E-15}}"};
+    static final String[] FLOAT8_LIST_MULTI = {"{{1.7E308}}", "{{1.0}}", "{{5.678},{9.10234}}", null, "{}", "{{null,8.431},{-1.56,0.001}}"};
+    static final String[] TEXT_LIST_MULTI = {"{{\"this is a test string\"}}", "{{\"this is a string with \\\"special\\\" characters\"},{\"this is a string without\"}}","{{hello,world},{\"the next element is a string that says null\",\"null\"}}", "{}", null, "{{\"this is a test string with \\\\ and \\\"\",NULL}}"};
+    static final String[] BYTEA_LIST_MULTI = {null, "{}", "{{\"\\\\xdeadbeef\"}}", "{{NULL,\"\\\\x5c22\"}}", "{{\"\\\\x5c5c5c\",\"\\\\x5b48495d\"},null}", "{{\"\\\\x313233\"},{\"\\\\x343536\"}}"};
+    static final String[] BPCHAR_LIST_MULTI = {"{{hello}}", "{{\"this is exactly\"},{\" fifteen chars.\"}}", "{}", null, "{{\"specials \\\\ \\\"\"},null}", "{{\"test string\",NULL},{\"2 whitespace\",\"no whitespace\"}}"};
+    static final String[] VARCHAR_LIST_MULTI = {"{{hello}}", "{{\"this is exactly\"},{\" fifteen chars.\"}}", "{}", null, "{{\"specials \\\\ \\\"\"},null}", "{{\"test string\",NULL},{\"2 whitespace  \",\"no whitespace\"}}"};
+
+    static final Object[][] ORC_COMPOUND_MULTI_TYPES_DATASET = {COL1_COMPOUND_MULTI, BOOL_LIST_MULTI, INT2_LIST_MULTI, INTEGER_LIST_MULTI, INT8_LIST_MULTI, FLOAT_LIST_MULTI, FLOAT8_LIST_MULTI, TEXT_LIST_MULTI, BYTEA_LIST_MULTI, BPCHAR_LIST_MULTI, VARCHAR_LIST_MULTI};
+
+
     @BeforeEach
     public void setup() {
         columnDescriptors = new ArrayList<>();
@@ -76,5 +113,22 @@ public class ORCVectorizedBaseTest {
         columnDescriptors.add(new ColumnDescriptor("vc1", DataType.VARCHAR.getOID(), 12, "varchar", new Integer[]{5}));
         columnDescriptors.add(new ColumnDescriptor("c1", DataType.BPCHAR.getOID(), 13, "bpchar", new Integer[]{3}));
         columnDescriptors.add(new ColumnDescriptor("bin", DataType.BYTEA.getOID(), 14, "bin", null));
+
+        columnDescriptorsCompound = new ArrayList<>();
+        columnDescriptorsCompound.add(new ColumnDescriptor("id", DataType.INTEGER.getOID(), 0, "int", null));
+        columnDescriptorsCompound.add(new ColumnDescriptor("bool_arr", DataType.BOOLARRAY.getOID(), 1, "bool[]", null));
+        columnDescriptorsCompound.add(new ColumnDescriptor("int2_arr", DataType.INT2ARRAY.getOID(), 2, "smallint[]", null));
+        columnDescriptorsCompound.add(new ColumnDescriptor("int_arr", DataType.INT4ARRAY.getOID(), 3, "int[]", null));
+        columnDescriptorsCompound.add(new ColumnDescriptor("int8_arr", DataType.INT8ARRAY.getOID(), 4, "bigint[]", null));
+        columnDescriptorsCompound.add(new ColumnDescriptor("float_arr", DataType.FLOAT4ARRAY.getOID(), 5, "float[]", null));
+        columnDescriptorsCompound.add(new ColumnDescriptor("float8_arr", DataType.FLOAT8ARRAY.getOID(), 6, "float8[]", null));
+        columnDescriptorsCompound.add(new ColumnDescriptor("text_arr", DataType.TEXTARRAY.getOID(), 7, "text[]", null));
+        columnDescriptorsCompound.add(new ColumnDescriptor("bytea_arr", DataType.BYTEAARRAY.getOID(), 8, "bytea[]", null));
+        columnDescriptorsCompound.add(new ColumnDescriptor("char_arr", DataType.BPCHARARRAY.getOID(), 9, "bpchar(15)[]", null));
+        columnDescriptorsCompound.add(new ColumnDescriptor("varchar_arr", DataType.VARCHARARRAY.getOID(), 10, "varchar(15)[]", null));
+
+
+
     }
+
 }
