@@ -48,6 +48,10 @@ If you wish to run with cache
 make OFFLINE=true
 ```
 
+Note: if you get an error saying that the jar does not exist, ensure that you have
+a) installed the PXF server, and
+b) only have 1 jar file inside `/usr/local/pxf/application/`
+
 ### Project structure
 _**src/main/java**_ - contains related classes and utilities for the test
 

@@ -73,6 +73,9 @@ public class Gpdb extends DbSystemObject {
 
 		connect();
 
+		// Create the extensions if they don't exist
+		createExtension("pxf", true);
+
 		ReportUtils.stopLevel(report);
 	}
 
@@ -132,6 +135,10 @@ public class Gpdb extends DbSystemObject {
 
 		runQuery(createStatement, ignoreFail, false);
 		runQuery("ALTER DATABASE " + schemaName + " SET bytea_output TO 'escape'", ignoreFail, false);
+	}
+
+	private void createExtension(String extensionName, boolean ignoreFail) throws Exception {
+		runQuery("CREATE EXTENSION IF NOT EXISTS " + extensionName, ignoreFail, false);
 	}
 
 	@Override

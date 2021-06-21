@@ -54,7 +54,7 @@ class PSQL(Command):
             if not os.path.exists(sql_file):
                 raise PSQLException('SQL file %s does not exist. ' %sql_file)
 
-            cmd_str = '%s psql %s %s %s %s %s -f %s' \
+            cmd_str = '%s psql %s %s %s %s %s --no-psqlrc -f %s' \
                 % (PGOPTIONS, dbname_option, username_option, hostname_option, port_option,
                    flags, sql_file)
 
