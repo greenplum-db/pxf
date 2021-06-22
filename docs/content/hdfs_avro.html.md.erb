@@ -60,7 +60,6 @@ PXF uses the following data type mapping when reading Avro data:
 | long | bigint |
 | string | text |
 | Complex type: Array (any dimension) of type: boolean, bytes, double, float, int, long, string | array (any dimension) of type: boolean, bytea, double, real, bigint, text   |
-| Complex type: Array of {union of null with type}: boolean, bytes, double, float, int, long, string | boolean[], bytea[], double[], real[], bigint[], text[]   |
 | Complex type: Array of other types<br>(*Avro schema is provided*) | text[]   |
 | Complex type: Map, Record, or Enum  | text, with delimiters inserted between collection items, mapped key-value pairs, and record data.   |
 | Complex type: Fixed     | bytea (supported for read operations only).   |
