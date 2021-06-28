@@ -106,7 +106,7 @@ This procedure will typically be performed by the Greenplum Database administrat
    cp <path-to-trino-server-certificate> `$PXF_BASE/servers/trino`
    ```
 
-   Add the following connection properties to the `jdc-site.xml` you created in the previous step:
+   Add the following connection properties to the `jdbc-site.xml` you created in the previous step; here `trino.cert` is the filename of the certifacte copied into `$PXF_BASE/servers/trino`:
 
    ```xml
    <configuration>
@@ -176,27 +176,27 @@ Perform the following procedure to create a PXF external table that references t
 1. Query the data in `pxf_prest_tpch_lineitem` using column project, aggregates, and predicates.
 
     ```sql
-    gpadmin=# SELECT
-    gpadmin-#     l.returnflag,
-    gpadmin-#     l.linestatus,
-    gpadmin-#     sum(l.quantity)                                       AS sum_qty,
-    gpadmin-#     sum(l.extendedprice)                                  AS sum_base_price,
-    gpadmin-#     sum(l.extendedprice * (1 - l.discount))               AS sum_disc_price,
-    gpadmin-#     sum(l.extendedprice * (1 - l.discount) * (1 + l.tax)) AS sum_charge,
-    gpadmin-#     avg(l.quantity)                                       AS avg_qty,
-    gpadmin-#     avg(l.extendedprice)                                  AS avg_price,
-    gpadmin-#     avg(l.discount)                                       AS avg_disc,
-    gpadmin-#     count(*)                                              AS count_order
-    gpadmin-# FROM
-    gpadmin-#   pxf_trino_tpch_lineitem AS l
-    gpadmin-# WHERE
-    gpadmin-#   l.shipdate <= DATE '1998-12-01' - INTERVAL '90' DAY
-    gpadmin-# GROUP BY
-    gpadmin-#   l.returnflag,
-    gpadmin-#   l.linestatus
-    gpadmin-# ORDER BY
-    gpadmin-#   l.returnflag,
-    gpadmin-#   l.linestatus;
+    SELECT
+        l.returnflag,
+        l.linestatus,
+        sum(l.quantity)                                       AS sum_qty,
+        sum(l.extendedprice)                                  AS sum_base_price,
+        sum(l.extendedprice * (1 - l.discount))               AS sum_disc_price,
+        sum(l.extendedprice * (1 - l.discount) * (1 + l.tax)) AS sum_charge,
+        avg(l.quantity)                                       AS avg_qty,
+        avg(l.extendedprice)                                  AS avg_price,
+        avg(l.discount)                                       AS avg_disc,
+        count(*)                                              AS count_order
+    FROM
+      pxf_trino_tpch_lineitem AS l
+    WHERE
+      l.shipdate <= DATE '1998-12-01' - INTERVAL '90' DAY
+    GROUP BY
+      l.returnflag,
+      l.linestatus
+    ORDER BY
+      l.returnflag,
+      l.linestatus;
     returnflag | linestatus | sum_qty |  sum_base_price  |  sum_disc_price  |    sum_charge    |     avg_qty      |    avg_price     |      avg_disc      | count_order
     ------------+------------+---------+------------------+------------------+------------------+------------------+------------------+--------------------+-------------
     A          | F          |  380456 | 532348211.649998 | 505822441.486101 | 526165934.000838 | 25.5751546114547 | 35785.7093069372 | 0.0500813390696396 |       14876
