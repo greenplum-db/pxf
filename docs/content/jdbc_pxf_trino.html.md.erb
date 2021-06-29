@@ -23,14 +23,25 @@ under the License.
 
 In this example, you:
 
+- Create an in-memory Trino table and insert data into the table
 - Configure the PXF JDBC connector to access the Trino database
 - Create a PXF readable external table that references the Trino table
 - Read the data in the Trino table using PXF
+- Create a PXF writable external table the references the Trino table
+- Write data to the Trino table using PXF
+- Read the data in the Trino table again
 
-## <a id="ex_create_trinotbl"></a>Enable the Trino TPCH Catalog
+## <a id="ex_create_trinotbl"></a>Enable the Trino Memory Connector
 
-In the examples below, we assume that your Trino server has been configured with the included `tpch` connector.
-See [Trino Documentation - TPCH Connector](https://trino.io/docs/current/connector/tpch.html) for instructions on configuring this connector.
+In the examples below, we assume that your Trino server has been configured with the included `memory` connector.
+See [Trino Documentation - Memory Connector](https://trino.io/docs/current/connector/memory.html) for instructions on configuring this connector.
+
+1. Create a Trino table named 'names' and insert some data into this table:
+
+```shell
+CREATE TABLE memory.default.names(id int, name varchar, last varchar);
+INSERT INTO memory.default.names(1, 'John', 'Smith'), (2, 'Mary', 'Blake');
+```
 
 ## <a id="ex_jdbconfig"></a>Configure the Trino Connector
 
@@ -98,38 +109,39 @@ This procedure will typically be performed by the Greenplum Database administrat
     ```
 
 1. (**Optional:** If your Trino server has been configured with a [Globally Trusted Certificate](https://trino.io/docs/current/security/tls.html#add-a-tls-certificate), you can skip this step.)
+
    If your Trino server has been configured to use _corporate trusted certificates_ or _generated self-signed certificates_, then PXF will need a copy of the server's certificate in a PEM-encoded file or a Java Keystore (JKS) file.
    **Note:** You do not need the Trino server's private key.
    Copy the certificate to `$PXF_BASE/servers/trino`; storing the server's certificate inside `$PXF_BASE/servers/trino` ensures that `pxf cluster sync` copies the certificate to all segment hosts.
 
-   ```shell
-   cp <path-to-trino-server-certificate> `$PXF_BASE/servers/trino`
-   ```
+    ```shell
+    $ cp <path-to-trino-server-certificate> `$PXF_BASE/servers/trino`
+    ```
 
-   Add the following connection properties to the `jdbc-site.xml` you created in the previous step; here `trino.cert` is the filename of the certifacte copied into `$PXF_BASE/servers/trino`:
+   Add the following connection properties to the file `jdbc-site.xml` you created in the previous step; here `trino.cert` is the filename of the certificate copied into `$PXF_BASE/servers/trino`:
 
-   ```xml
-   <configuration>
-   ...
-       <property>
-           <name>jdbc.connection.property.SSLTrustStorePath</name>
-           <value>$PXF_BASE/servers/trino/trino.cert</value>
-           <description>The location of the Java TrustStore file that will be used to validate HTTPS server certificates.</description>
-       </property>
-       <!-- the following property is only required if the server's certificate is stored in a JKS file; if using a PEM-encoded file, it should be omitted.-->
-       <!--
-       <property>
-           <name>jdbc.connection.property.SSLTrustStorePassword</name>
-           <value>java-keystore-password</value>
-           <description>The password for the TrustStore.</description>
-       </property>
-       -->
-   </configuration>
-   ```
+    ```xml
+    <configuration>
+    ...
+        <property>
+            <name>jdbc.connection.property.SSLTrustStorePath</name>
+            <value>$PXF_BASE/servers/trino/trino.cert</value>
+            <description>The location of the Java TrustStore file that will be used to validate HTTPS server certificates.</description>
+        </property>
+        <!-- the following property is only required if the server's certificate is stored in a JKS file; if using a PEM-encoded file, it should be omitted.-->
+        <!--
+        <property>
+            <name>jdbc.connection.property.SSLTrustStorePassword</name>
+            <value>java-keystore-password</value>
+            <description>The password for the TrustStore.</description>
+        </property>
+        -->
+    </configuration>
+    ```
 
 1. Synchronize the PXF server configuration to the Greenplum Database cluster:
 
-    ``` shell
+    ```shell
     gpadmin@gpmaster$ pxf cluster sync
     ```
 
@@ -138,70 +150,53 @@ This procedure will typically be performed by the Greenplum Database administrat
 Perform the following procedure to create a PXF external table that references the `lineitem` Trino table and reads the data in the table:
 
 1. Create the PXF external table specifying the `jdbc` profile.
-   The Trino _catalog_ and _schema_ can be referenced in the `LOCATION` URL; for example, to read the `lineitem` table in the `tiny` schema of the `tpch` catalog:
+   The Trino _catalog_ and _schema_ can be referenced in the `LOCATION` URL; the following example reads the `names` table in the `default` schema of the `memory` catalog:
 
     ``` sql
-    CREATE EXTERNAL TABLE pxf_trino_tpch_lineitem (
-        orderkey       bigint,
-        partkey        bigint,
-        suppkey        bigint,
-        linenumber     integer,
-        quantity       double precision,
-        extendedprice  double precision,
-        discount       double precision,
-        tax            double precision,
-        returnflag     varchar(1),
-        linestatus     varchar(1),
-        shipdate       date,
-        commitdate     date,
-        receiptdate    date,
-        shipinstruct   varchar(25),
-        shipmode       varchar(10),
-        comment        varchar(44)
-    )
-    LOCATION('pxf://tpch.tiny.lineitem?PROFILE=jdbc&SERVER=trino')
+    CREATE EXTERNAL TABLE pxf_trino_memory_names (id int, name text, last text)
+    LOCATION('pxf://memory.default.names?PROFILE=jdbc&SERVER=trino')
     FORMAT 'CUSTOM' (formatter='pxfwritable_import');
     ```
 
-1. Count the number of rows in the `pxf_trino_tpch_lineitem` table:
-
-    ``` sql
-    gpadmin=# SELECT COUNT(*) FROM pxf_trino_tpch_lineitem;
-     count
-    -------
-     60175
-    (1 row)
-    ```
-
-1. Query the data in `pxf_prest_tpch_lineitem` using column project, aggregates, and predicates.
+1. Display all rows of the `pxf_trino_memory_names` table:
 
     ```sql
-    SELECT
-        l.returnflag,
-        l.linestatus,
-        sum(l.quantity)                                       AS sum_qty,
-        sum(l.extendedprice)                                  AS sum_base_price,
-        sum(l.extendedprice * (1 - l.discount))               AS sum_disc_price,
-        sum(l.extendedprice * (1 - l.discount) * (1 + l.tax)) AS sum_charge,
-        avg(l.quantity)                                       AS avg_qty,
-        avg(l.extendedprice)                                  AS avg_price,
-        avg(l.discount)                                       AS avg_disc,
-        count(*)                                              AS count_order
-    FROM
-      pxf_trino_tpch_lineitem AS l
-    WHERE
-      l.shipdate <= DATE '1998-12-01' - INTERVAL '90' DAY
-    GROUP BY
-      l.returnflag,
-      l.linestatus
-    ORDER BY
-      l.returnflag,
-      l.linestatus;
-    returnflag | linestatus | sum_qty |  sum_base_price  |  sum_disc_price  |    sum_charge    |     avg_qty      |    avg_price     |      avg_disc      | count_order
-    ------------+------------+---------+------------------+------------------+------------------+------------------+------------------+--------------------+-------------
-    A          | F          |  380456 | 532348211.649998 | 505822441.486101 | 526165934.000838 | 25.5751546114547 | 35785.7093069372 | 0.0500813390696396 |       14876
-    N          | F          |    8971 |      12384801.37 |     11798257.208 |  12282485.056933 | 25.7787356321839 | 35588.5096839081 | 0.0477586206896551 |         348
-    N          | O          |  742802 |    1041502841.45 | 989737518.634603 | 1029418531.52335 | 25.4549878345499 | 35691.1292090744 | 0.0499311195640845 |       29181
-    R          | F          |  381449 | 534594445.350002 | 507996454.406698 | 528524219.358904 | 25.5971681653469 | 35874.0065326803 | 0.0498275399275238 |       14902
-    (4 rows)
+    gpadmin=# SELECT * FROM pxf_trino_memory_names;
+     id | name | last
+    ----+------+-------
+      1 | John | Smith
+      2 | Mary | Blake
+    (2 rows)
+    ```
+
+## <a id="ex_writejdbc"></a>Write to the Trino Table
+
+Perform the following procedure to insert some data into the `names` Trino table and then read from the table.
+You must create a new external table for the write operation.
+
+1. Create a writable PXF external table specifying the `jdbc` profile. For example:
+
+    ```sql
+    gpadmin=# CREATE WRITABLE EXTERNAL TABLE pxf_trino_memory_names_w (id int, name text, last text)
+              LOCATION('pxf://memory.default.names?PROFILE=jdbc&SERVER=trino')
+              FORMAT 'CUSTOM' (formatter='pxfwritable_export');
+    ```
+
+1. Insert some data into the `names_in_mysql_w` table. For example:
+
+    ```sql
+    gpadmin=# INSERT INTO pxf_trino_memory_names_w VALUES (3, 'Muhammad', 'Ali');
+    INSERT 0 1
+    ```
+
+1. Use the `pxf_trino_memory_names` readable external table that you created in the previous section to view the new data in the `names` Trino table:
+
+    ```sql
+    gpadmin=# SELECT * FROM pxf_trino_memory_names;
+     id |   name   | last
+    ----+----------+-------
+      1 | John     | Smith
+      2 | Mary     | Blake
+      3 | Muhammad | Ali
+    (3 rows)
     ```
