@@ -13,7 +13,7 @@ dependencies {
      * Compile Only Dependencies
      *******************************/
 
-    compileOnly("org.apache.hadoop:hadoop-annotations:${hadoopVersion}") { transitive = false }
+    compileOnly("org.apache.hadoop:hadoop-annotations")              { transitive = false }
 
     /*******************************
      * Implementation Dependencies
@@ -21,31 +21,29 @@ dependencies {
 
     implementation(project(':pxf-api'))
     implementation("com.google.guava:guava")
-    implementation("com.zaxxer:HikariCP:3.4.5")
+    implementation("com.zaxxer:HikariCP")
     implementation("commons-collections:commons-collections")
     implementation("commons-io:commons-io")
     implementation("commons-lang:commons-lang")
-    implementation("org.postgresql:postgresql") { transitive = false }
+    implementation("org.postgresql:postgresql")                      { transitive = false }
 
     /*******************************
      * Transitive Dependencies for JDBC Hive Access
      *******************************/
 
-    implementation("org.apache.hive:hive-jdbc:1.1.0")    { transitive = false }  // 1.2.2 breaks on CDH-5.x
-    implementation("org.apache.hive:hive-service:1.1.0") { transitive = false }  // 1.2.2 breaks on CDH-5.x
-    implementation("org.apache.thrift:libthrift:0.9.3")  { transitive = false }
-    implementation("org.apache.hive:hive-common:${hiveVersion}")             { transitive = false }
-    implementation("org.apache.hive.shims:hive-shims-0.23:${hiveVersion}")   { transitive = false }
-    implementation("org.apache.hive.shims:hive-shims-common:${hiveVersion}") { transitive = false }
-
+    implementation("org.apache.hive:hive-jdbc")                      { transitive = false }
+    implementation("org.apache.hive:hive-service")                   { transitive = false }
+    implementation("org.apache.thrift:libthrift")                    { transitive = false }
+    implementation("org.apache.hive:hive-common")                    { transitive = false }
+    implementation("org.apache.hive.shims:hive-shims-0.23")          { transitive = false }
+    implementation("org.apache.hive.shims:hive-shims-common")        { transitive = false }
     implementation("org.springframework.boot:spring-boot-starter-log4j2")
 
     /*******************************
      * Test Dependencies
      *******************************/
 
-    testImplementation("org.apache.parquet:parquet-pig:${parquetVersion}")
-
+    testImplementation("org.apache.parquet:parquet-pig")
     testImplementation('org.springframework.boot:spring-boot-starter-test')
 }
 

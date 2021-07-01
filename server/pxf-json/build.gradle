@@ -13,7 +13,7 @@ dependencies {
      * Compile Only Dependencies
      *******************************/
 
-    compileOnly("org.apache.hadoop:hadoop-annotations:${hadoopVersion}") { transitive = false }
+    compileOnly("org.apache.hadoop:hadoop-annotations")              { transitive = false }
 
     /*******************************
      * Implementation Dependencies
@@ -29,8 +29,7 @@ dependencies {
      * Test Dependencies
      *******************************/
 
-    testCompileOnly("org.apache.hadoop:hadoop-annotations:${hadoopVersion}")
-
+    testCompileOnly("org.apache.hadoop:hadoop-annotations")
     testImplementation('org.springframework.boot:spring-boot-starter-test')
 }
 

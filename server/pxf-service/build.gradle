@@ -16,7 +16,7 @@ dependencies {
      * Compile Only Dependencies
      *******************************/
 
-    compileOnly("org.apache.hadoop:hadoop-annotations:${hadoopVersion}") { transitive = false }
+    compileOnly("org.apache.hadoop:hadoop-annotations")              { transitive = false }
 
     /*******************************
      * Implementation Dependencies
@@ -39,7 +39,7 @@ dependencies {
     implementation('org.springframework.boot:spring-boot-starter-actuator')
     implementation('io.micrometer:micrometer-registry-prometheus')
 
-    implementation("org.apache.hadoop:hadoop-hdfs-client:${hadoopVersion}") { transitive = false }
+    implementation("org.apache.hadoop:hadoop-hdfs-client")           { transitive = false }
 
     /*******************************
      * These JARs below are needed for Java 11
@@ -57,8 +57,8 @@ dependencies {
      * Test Dependencies
      *******************************/
 
-    testCompileOnly("org.apache.hadoop:hadoop-annotations:${hadoopVersion}")
-    testImplementation("com.esotericsoftware:kryo:3.0.3")
+    testCompileOnly("org.apache.hadoop:hadoop-annotations")
+    testImplementation("com.esotericsoftware:kryo")
     testImplementation("commons-io:commons-io")
     testImplementation("org.simplify4u:slf4j-mock:2.1.0") // for MDC mocking
 

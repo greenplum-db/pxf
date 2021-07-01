@@ -67,28 +67,140 @@ configure(javaProjects) {
             mavenBom("org.springframework.boot:spring-boot-dependencies:${springBootVersion}")
         }
         dependencies {
+            dependency("com.esotericsoftware:kryo:3.0.3")
+            dependency("com.esotericsoftware:minlog:1.3.0")
+            dependency("com.esotericsoftware:reflectasm:1.11.6")
+            dependency("com.fasterxml.woodstox:woodstox-core:5.0.3")
+            dependency("com.google.code.findbugs:annotations:1.3.9")
             dependency("com.google.guava:guava:20.0")
+            dependency("com.google.protobuf:protobuf-java:2.5.0")
+            //dependency("com.google.cloud.bigdataoss:gcs-connector:hadoop2-1.9.17:shaded")
+            dependency("com.microsoft.azure:azure-storage:5.4.0")
+            dependency("com.microsoft.azure:azure-data-lake-store-sdk:2.3.9")
+            dependency("com.yammer.metrics:metrics-core:2.2.0")
+            dependency("com.zaxxer:HikariCP:3.4.5")
+            dependency("commons-codec:commons-codec:1.14")
+            dependency("commons-collections:commons-collections:3.2.2")
+            dependency("commons-configuration:commons-configuration:1.10")
             dependency("commons-io:commons-io:2.7")
             dependency("commons-lang:commons-lang:2.6")
             dependency("commons-logging:commons-logging:1.1.3")
-            dependency("commons-collections:commons-collections:3.2.2")
-            dependency("commons-configuration:commons-configuration:1.10")
-            dependency("commons-codec:commons-codec:1.14")
-
-            dependency("com.fasterxml.jackson.core:jackson-databind:2.11.0")
-            dependency("com.fasterxml.jackson.core:jackson-core:2.11.0")
-            dependency("com.fasterxml.jackson.core:jackson-annotations:2.11.0")
-
-            dependency("io.micrometer:micrometer-registry-prometheus:1.6.4")
-
+            dependency("io.airlift:aircompressor:0.8")
+            //dependency("io.netty:netty-common:4.1.59.Final")
+            //dependency("io.netty:netty-transport:4.1.59.Final")
+            dependency("javax.jdo:jdo-api:3.0.1")
             dependency("joda-time:joda-time:2.8.1")
+            dependency("net.sf.opencsv:opencsv:2.3")
+            dependency("org.antlr:antlr-runtime:3.5.2")
+            dependency("org.apache.commons:commons-compress:1.20")
+            dependency("org.apache.htrace:htrace-core:3.1.0-incubating")
+            dependency("org.apache.htrace:htrace-core4:4.0.1-incubating")
+            dependency("org.apache.zookeeper:zookeeper:3.4.6")
+            dependency("org.codehaus.woodstox:stax2-api:3.1.4")
+            dependency("org.datanucleus:datanucleus-api-jdo:4.2.4")
+            dependency("org.datanucleus:datanucleus-core:4.1.17")
+            dependency("org.jodd:jodd-core:3.5.2")
+            dependency("org.json:json:20090211")
+            dependency("org.mortbay.jetty:jetty-util:6.1.26")
+            dependency("org.objenesis:objenesis:2.1")
+            dependency("org.simplify4u:slf4j-mock:2.1.0")
+            dependency("org.threeten:threeten-extra:1.5.0")
+            dependency("org.tukaani:xz:1.8")
+            dependency("org.wildfly.openssl:wildfly-openssl:1.0.7.Final")
+            dependency("org.xerial.snappy:snappy-java:1.0.5")
 
-            dependency("org.apache.commons:commons-lang3:3.10")
+            // Hadoop dependencies
+            dependencySet(group:"org.apache.hadoop", version:"${hadoopVersion}") {
+                entry("hadoop-annotations")
+                entry("hadoop-auth")
+                entry("hadoop-aws")
+                entry("hadoop-azure")
+                entry("hadoop-azure-datalake")
+                entry("hadoop-common")
+                entry("hadoop-hdfs")
+                entry("hadoop-hdfs-client")
+                entry("hadoop-mapreduce-client-core")
+                entry("hadoop-yarn-api")
+                entry("hadoop-yarn-client")
+            }
 
-            dependency("org.slf4j:slf4j-api:1.7.30")
-            dependency("org.slf4j:slf4j-log4j12:1.7.30")
+            // HBase dependencies
+            dependencySet(group:"org.apache.hbase", version:"${hbaseVersion}") {
+                entry("hbase-annotations")
+                entry("hbase-client")
+                entry("hbase-common")
+                entry("hbase-protocol")
+            }
 
-            dependency("org.postgresql:postgresql:42.2.14")
+            // Hive dependencies
+            dependency("org.apache.hive:hive-storage-api:${hiveStorageApiVersion}")
+            dependencySet(group:"org.apache.hive", version:"${hiveVersion}") {
+                entry("hive-exec")
+                entry("hive-metastore")
+                entry("hive-serde")
+                entry("hive-common")
+            }
+            // 1.2.2 breaks on CDH-5.x
+            dependencySet(group:"org.apache.hive", version:"1.1.0") {
+                entry("hive-jdbc")
+                entry("hive-service")
+            }
+            dependencySet(group:"org.apache.hive.shims", version:"${hiveVersion}") {
+                entry("hive-shims-common")
+                entry("hive-shims-0.23")
+            }
+
+            // Parquet dependencies
+            dependency("org.apache.parquet:parquet-format:2.7.0")
+            dependencySet(group:"org.apache.parquet", version:"${parquetVersion}") {
+                entry("parquet-column")
+                entry("parquet-common")
+                entry("parquet-encoding")
+                entry("parquet-generator")
+                entry("parquet-hadoop")
+                entry("parquet-jackson")
+                entry("parquet-pig")
+            }
+
+            // Thrift dependencies
+            dependencySet(group:"org.apache.thrift", version:"0.9.3") {
+                entry("libfb303")
+                entry("libthrift")
+            }
+
+            // ORC dependencies
+            dependencySet(group:"org.apache.orc", version:"${orcVersion}") {
+                entry("orc-core")
+                entry("orc-shims")
+            }
+
+            // Avro dependencies
+            dependencySet(group:"org.apache.avro", version:"1.7.7") {
+                entry("avro")
+                entry("avro-mapred")
+            }
+
+            // Jackson 1.x dependencies
+            dependencySet(group:"org.codehaus.jackson", version:"1.9.13") {
+                entry("jackson-core-asl")
+                entry("jackson-mapper-asl")
+            }
+
+            // AWS SDK dependencies
+            dependencySet(group:"com.amazonaws", version:"${awsJavaSdk}") {
+                entry("aws-java-sdk-core")
+                entry("aws-java-sdk-kms")
+                entry("aws-java-sdk-s3")
+            }
+
+            //dependency("com.fasterxml.jackson.core:jackson-databind:2.11.0")
+            //dependency("com.fasterxml.jackson.core:jackson-core:2.11.0")
+            //dependency("com.fasterxml.jackson.core:jackson-annotations:2.11.0")
+            //dependency("io.micrometer:micrometer-registry-prometheus:1.6.4")
+            //dependency("org.apache.commons:commons-lang3:3.10")
+            //dependency("org.slf4j:slf4j-api:1.7.30")
+            //dependency("org.slf4j:slf4j-log4j12:1.7.30")
+            //dependency("org.postgresql:postgresql:42.2.14")
         }
     }
 

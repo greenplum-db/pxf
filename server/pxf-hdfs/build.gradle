@@ -10,13 +10,13 @@ dependencies {
      *******************************/
 
     api(project(':pxf-api'))
-    api("org.apache.hadoop:hadoop-mapreduce-client-core:${hadoopVersion}") { transitive = false }
+    api("org.apache.hadoop:hadoop-mapreduce-client-core") { transitive = false }
 
     /*******************************
      * Compile Only Dependencies
      *******************************/
 
-    compileOnly("org.apache.hadoop:hadoop-annotations:${hadoopVersion}") { transitive = false }
+    compileOnly("org.apache.hadoop:hadoop-annotations")              { transitive = false }
 
     /*******************************
      * Implementation Dependencies
@@ -30,63 +30,63 @@ dependencies {
     implementation("org.apache.commons:commons-lang3")
     implementation("org.slf4j:slf4j-api")
 
-    implementation("org.apache.avro:avro-mapred:1.7.7") { transitive = false }
-    implementation("com.fasterxml.jackson.core:jackson-databind") { transitive = false }
-    implementation("com.fasterxml.jackson.core:jackson-core") { transitive = false }
+    implementation("org.apache.avro:avro-mapred")                    { transitive = false }
+    implementation("com.fasterxml.jackson.core:jackson-databind")    { transitive = false }
+    implementation("com.fasterxml.jackson.core:jackson-core")        { transitive = false }
     implementation("com.fasterxml.jackson.core:jackson-annotations") { transitive = false }
-    implementation("org.apache.hadoop:hadoop-yarn-api:${hadoopVersion}") { transitive = false } // Kerberos dependency
-    implementation("org.apache.hadoop:hadoop-yarn-client:${hadoopVersion}") { transitive = false } // Kerberos dependency
-    implementation("org.apache.hadoop:hadoop-common:${hadoopVersion}") { transitive = false }
-    implementation("org.apache.htrace:htrace-core4:${htraceVersion}") { transitive = false }
-    implementation("org.apache.hadoop:hadoop-hdfs:${hadoopVersion}") { transitive = false }
-    implementation("org.apache.hadoop:hadoop-hdfs-client:${hadoopVersion}") { transitive = false }
-    implementation("org.apache.parquet:parquet-format:2.7.0") { transitive = false }
-    implementation("org.apache.parquet:parquet-column:${parquetVersion}") { transitive = false }
-    implementation("org.apache.parquet:parquet-common:${parquetVersion}") { transitive = false }
-    implementation("org.apache.parquet:parquet-encoding:${parquetVersion}") { transitive = false }
-    implementation("org.apache.parquet:parquet-generator:${parquetVersion}") { transitive = false }
-    implementation("org.apache.parquet:parquet-hadoop:${parquetVersion}") { transitive = false }
-    implementation("org.apache.parquet:parquet-jackson:${parquetVersion}") { transitive = false }
-    implementation("org.apache.hive:hive-storage-api:${hiveStorageApiVersion}") { transitive = false }// for parquet writing
+    implementation("org.apache.hadoop:hadoop-yarn-api")              { transitive = false } // Kerberos dependency
+    implementation("org.apache.hadoop:hadoop-yarn-client")           { transitive = false } // Kerberos dependency
+    implementation("org.apache.hadoop:hadoop-common")                { transitive = false }
+    implementation("org.apache.htrace:htrace-core4")                 { transitive = false }
+    implementation("org.apache.hadoop:hadoop-hdfs")                  { transitive = false }
+    implementation("org.apache.hadoop:hadoop-hdfs-client")           { transitive = false }
+    implementation("org.apache.parquet:parquet-format")              { transitive = false }
+    implementation("org.apache.parquet:parquet-column")              { transitive = false }
+    implementation("org.apache.parquet:parquet-common")              { transitive = false }
+    implementation("org.apache.parquet:parquet-encoding")            { transitive = false }
+    implementation("org.apache.parquet:parquet-generator")           { transitive = false }
+    implementation("org.apache.parquet:parquet-hadoop")              { transitive = false }
+    implementation("org.apache.parquet:parquet-jackson")             { transitive = false }
+    implementation("org.apache.hive:hive-storage-api")               { transitive = false } // for parquet writing
 
-    implementation("org.codehaus.jackson:jackson-core-asl:1.9.13")   { transitive = false }
-    implementation("org.codehaus.jackson:jackson-mapper-asl:1.9.13") { transitive = false }
+    implementation("org.codehaus.jackson:jackson-core-asl")          { transitive = false }
+    implementation("org.codehaus.jackson:jackson-mapper-asl")        { transitive = false }
 
-    implementation("org.apache.avro:avro:1.7.7")                  { transitive = false }
+    implementation("org.apache.avro:avro")                           { transitive = false }
 
     // Dependencies for writing Avro files with compression
-    implementation("org.apache.commons:commons-compress:1.20")    { transitive = false }
-    implementation("org.tukaani:xz:1.8")                          { transitive = false }
+    implementation("org.apache.commons:commons-compress")            { transitive = false }
+    implementation("org.tukaani:xz")                                 { transitive = false }
 
     // Hadoop 2.10.1 uses log4j:1.2.17, but since we are using slf4j
     // we bring log4j-over-slf4j which provides compatibility for log4j
     // using underlying slf4j functionality (i.e MDC).
-    implementation("org.slf4j:log4j-over-slf4j:1.7.30")          { transitive = false }
+    implementation("org.slf4j:log4j-over-slf4j")                     { transitive = false }
 
     // Dependency in hadoop 2.10.1
-    implementation("com.fasterxml.woodstox:woodstox-core:5.0.3") { transitive = false }
-    implementation("org.codehaus.woodstox:stax2-api:3.1.4")      { transitive = false }
+    implementation("com.fasterxml.woodstox:woodstox-core")           { transitive = false }
+    implementation("org.codehaus.woodstox:stax2-api")                { transitive = false }
 
     // ORC dependencies
-    implementation("org.apache.orc:orc-core:${orcVersion}")      { transitive = false }
-    implementation("org.apache.orc:orc-shims:${orcVersion}")     { transitive = false }
-    implementation("org.apache.hive:hive-common:${hiveVersion}") { transitive = false }
-    implementation("com.google.protobuf:protobuf-java:2.5.0")    { transitive = false }
-    implementation("org.threeten:threeten-extra:1.5.0")          { transitive = false }
+    implementation("org.apache.orc:orc-core")                        { transitive = false }
+    implementation("org.apache.orc:orc-shims")                       { transitive = false }
+    implementation("org.apache.hive:hive-common")                    { transitive = false }
+    implementation("com.google.protobuf:protobuf-java")              { transitive = false }
+    implementation("org.threeten:threeten-extra")                    { transitive = false }
 
     /*******************************
      * Dependencies for Supported Hadoop-Compatible Filesystems
      *******************************/
 
     // Azure Data Blob
-    implementation("org.apache.hadoop:hadoop-azure:${hadoopVersion}")  { transitive = false }
-    implementation("com.microsoft.azure:azure-storage:5.4.0")          { transitive = false }
+    implementation("org.apache.hadoop:hadoop-azure")                 { transitive = false }
+    implementation("com.microsoft.azure:azure-storage")              { transitive = false }
 
     // Azure Datalake jars
-    implementation("org.apache.hadoop:hadoop-azure-datalake:${hadoopVersion}") { transitive = false }
-    implementation("com.microsoft.azure:azure-data-lake-store-sdk:2.3.9")      { transitive = false }
-    implementation("org.wildfly.openssl:wildfly-openssl:1.0.7.Final")          { transitive = false }
-    implementation("org.mortbay.jetty:jetty-util:6.1.26")                      { transitive = false }
+    implementation("org.apache.hadoop:hadoop-azure-datalake")        { transitive = false }
+    implementation("com.microsoft.azure:azure-data-lake-store-sdk")  { transitive = false }
+    implementation("org.wildfly.openssl:wildfly-openssl")            { transitive = false }
+    implementation("org.mortbay.jetty:jetty-util")                   { transitive = false }
 
     // GCS jars and dependencies
     implementation("com.google.cloud.bigdataoss:gcs-connector:hadoop2-1.9.17:shaded") { transitive = false }
@@ -95,14 +95,10 @@ dependencies {
      * Test Dependencies
      *******************************/
 
-    testCompileOnly("org.apache.hadoop:hadoop-annotations:${hadoopVersion}")
+    testCompileOnly("org.apache.hadoop:hadoop-annotations")
 
-    // Used by HcfsTypeTest when testing the write URI when using LzopCodec
-    testImplementation("io.airlift:aircompressor:0.8")
-
-    // for parquet tests
-    testImplementation("org.apache.parquet:parquet-pig:${parquetVersion}")
-
+    testImplementation("io.airlift:aircompressor")       // for HcfsTypeTest for testing write URI with LzopCodec
+    testImplementation("org.apache.parquet:parquet-pig") // for parquet tests
     testImplementation('org.springframework.boot:spring-boot-starter-test')
 }
 
