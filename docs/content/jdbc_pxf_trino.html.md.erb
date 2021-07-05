@@ -36,12 +36,12 @@ In this example, you:
 In the examples below, we assume that your Trino server has been configured with the included `memory` connector.
 See [Trino Documentation - Memory Connector](https://trino.io/docs/current/connector/memory.html) for instructions on configuring this connector.
 
-1. Create a Trino table named 'names' and insert some data into this table:
+1. Create a Trino table named `names` and insert some data into this table:
 
-```shell
-CREATE TABLE memory.default.names(id int, name varchar, last varchar);
-INSERT INTO memory.default.names(1, 'John', 'Smith'), (2, 'Mary', 'Blake');
-```
+    ```sql
+    > CREATE TABLE memory.default.names(id int, name varchar, last varchar);
+    > INSERT INTO memory.default.names(1, 'John', 'Smith'), (2, 'Mary', 'Blake');
+    ```
 
 ## <a id="ex_jdbconfig"></a>Configure the Trino Connector
 
@@ -108,24 +108,24 @@ This procedure will typically be performed by the Greenplum Database administrat
     </configuration>
     ```
 
-1. (**Optional:** If your Trino server has been configured with a [Globally Trusted Certificate](https://trino.io/docs/current/security/tls.html#add-a-tls-certificate), you can skip this step.)
+1. If your Trino server has been configured with a [Globally Trusted Certificate](https://trino.io/docs/current/security/tls.html#add-a-tls-certificate), you can skip this step. If your Trino server has been configured to use Corporate trusted certificates or Generated self-signed certificates, PXF will need a copy of the server's certificate in a PEM-encoded file or a Java Keystore (JKS) file.
+ 
+    **Note:** You do not need the Trino server's private key.
 
-   If your Trino server has been configured to use _corporate trusted certificates_ or _generated self-signed certificates_, then PXF will need a copy of the server's certificate in a PEM-encoded file or a Java Keystore (JKS) file.
-   **Note:** You do not need the Trino server's private key.
-   Copy the certificate to `$PXF_BASE/servers/trino`; storing the server's certificate inside `$PXF_BASE/servers/trino` ensures that `pxf cluster sync` copies the certificate to all segment hosts.
+    Copy the certificate to `$PXF_BASE/servers/trino`; storing the server's certificate inside `$PXF_BASE/servers/trino` ensures that `pxf cluster sync` copies the certificate to all segment hosts.
 
     ```shell
-    $ cp <path-to-trino-server-certificate> `$PXF_BASE/servers/trino`
+    $ cp <path-to-trino-server-certificate> /usr/local/pxf-gp<version>/servers/trino
     ```
 
-   Add the following connection properties to the file `jdbc-site.xml` you created in the previous step; here `trino.cert` is the filename of the certificate copied into `$PXF_BASE/servers/trino`:
+    Add the following connection properties to the file `jdbc-site.xml` you created in the previous step. Here, `trino.cert` is the filename of the certificate copied into `$PXF_BASE/servers/trino`:
 
     ```xml
     <configuration>
     ...
         <property>
             <name>jdbc.connection.property.SSLTrustStorePath</name>
-            <value>$PXF_BASE/servers/trino/trino.cert</value>
+            <value>/usr/local/pxf-gp<version>/servers/trino/trino.cert</value>
             <description>The location of the Java TrustStore file that will be used to validate HTTPS server certificates.</description>
         </property>
         <!-- the following property is only required if the server's certificate is stored in a JKS file; if using a PEM-encoded file, it should be omitted.-->
@@ -147,10 +147,10 @@ This procedure will typically be performed by the Greenplum Database administrat
 
 ## <a id="ex_readjdbc"></a>Read from a Trino Table
 
-Perform the following procedure to create a PXF external table that references the `lineitem` Trino table and reads the data in the table:
+Perform the following procedure to create a PXF external table that references the `names` Trino table and reads the data in the table:
 
 1. Create the PXF external table specifying the `jdbc` profile.
-   The Trino _catalog_ and _schema_ can be referenced in the `LOCATION` URL; the following example reads the `names` table in the `default` schema of the `memory` catalog:
+   The Trino catalog and schema can be referenced in the `LOCATION` URL. The following example reads the `names` table in the `default` schema of the `memory` catalog:
 
     ``` sql
     CREATE EXTERNAL TABLE pxf_trino_memory_names (id int, name text, last text)
@@ -182,11 +182,10 @@ You must create a new external table for the write operation.
               FORMAT 'CUSTOM' (formatter='pxfwritable_export');
     ```
 
-1. Insert some data into the `names_in_mysql_w` table. For example:
+1. Insert some data into the `pxf_trino_memory_names_w` table. For example:
 
     ```sql
     gpadmin=# INSERT INTO pxf_trino_memory_names_w VALUES (3, 'Muhammad', 'Ali');
-    INSERT 0 1
     ```
 
 1. Use the `pxf_trino_memory_names` readable external table that you created in the previous section to view the new data in the `names` Trino table:
