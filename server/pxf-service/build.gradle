@@ -42,16 +42,13 @@ dependencies {
     implementation("org.apache.hadoop:hadoop-hdfs-client")           { transitive = false }
 
     /*******************************
-     * These JARs below are needed for Java 11
-     * jcenter doesn't have full com.sun.xml.bind:jaxb-core/jaxb-impl packages,
-     * using glassfish distro
+     * These JARs below (and its transitive dependencies, other than txw2 [for writing XML docs]) are needed for Java 11
+     * jcenter doesn't have full com.sun.xml.bind:jaxb-core/jaxb-impl packages, using glassfish distro
      *******************************/
 
-    implementation("javax.xml.bind:jaxb-api:2.3.0") { transitive = false }
-    implementation("org.glassfish.jaxb:jaxb-core:2.3.0") { transitive = false }
-    implementation("org.glassfish.jaxb:jaxb-runtime:2.3.0") { transitive = false }
-    implementation("com.sun.istack:istack-commons-runtime:3.0.8") { transitive = false }
-    implementation("javax.activation:activation:1.1.1") { transitive = false }
+    implementation("org.glassfish.jaxb:jaxb-runtime")   {
+        exclude module: 'txw2'
+    }
 
     /*******************************
      * Test Dependencies
@@ -60,7 +57,7 @@ dependencies {
     testCompileOnly("org.apache.hadoop:hadoop-annotations")
     testImplementation("com.esotericsoftware:kryo")
     testImplementation("commons-io:commons-io")
-    testImplementation("org.simplify4u:slf4j-mock:2.1.0") // for MDC mocking
+    testImplementation("org.simplify4u:slf4j-mock") // for MDC mocking
 
     developmentOnly('org.springframework.boot:spring-boot-devtools')
     testImplementation('org.springframework.boot:spring-boot-starter-test')

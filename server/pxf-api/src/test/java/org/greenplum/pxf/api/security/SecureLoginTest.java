@@ -53,6 +53,7 @@ public class SecureLoginTest {
         resetProperty(PROPERTY_KEY_SERVICE_KEYTAB, kerberosKeytab);
         resetProperty(PROPERTY_KEY_KERBEROS_KDC, kdcDefault);
         resetProperty(PROPERTY_KEY_KERBEROS_REALM, realmDefault);
+        UserGroupInformation.reset(); // clean up so that downstream tests in the same JVM are not affected
     }
 
     private static final String hostname;
