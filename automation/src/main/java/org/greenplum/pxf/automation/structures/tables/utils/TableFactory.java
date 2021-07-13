@@ -566,4 +566,18 @@ public abstract class TableFactory {
         return getPxfJdbcReadableTable(tableName, fields, dataSourcePath, null,
                 dbUrl, false, null, null, null, null, null, server, null);
     }
+
+    /**
+     * Generate an External Writable Table using JDBC profile.
+     *
+     * @param tableName name of the external table which will be generated
+     * @param fields fields of the external table
+     * @param dataSourcePath path to the data object i.e. schema_name.table_name
+     * @param server name of configuration server
+     * @return External Writable Table
+     */
+    public static ExternalTable getPxfJdbcWritableTable(String tableName, String[] fields, String dataSourcePath, String server) {
+        String customParameter = server != null ? "SERVER=" + server : null;
+        return getPxfJdbcWritableTable(tableName, fields, dataSourcePath, null, null, null, customParameter);
+    }
 }
