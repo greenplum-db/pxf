@@ -77,10 +77,12 @@ set_failed_gpdb_anchor: &set_failed
 
 resource_types:
 - name: terraform
-  type: docker-image
+  type: registry-image
   source:
-    repository: ljfranklin/terraform-resource
-    tag: 0.11.14
+    repository: gcr.io/data-gpdb-ud/terraform-resource
+    tag: 0.11.15
+    username: _json_key
+    password: ((pxf-cloudbuild-service-account-key))
 
 - name: gcs
   type: registry-image
