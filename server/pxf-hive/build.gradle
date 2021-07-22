@@ -26,8 +26,7 @@ dependencies {
     implementation("com.google.guava:guava")
     implementation("commons-codec:commons-codec")
     implementation("commons-lang:commons-lang")
-    implementation("org.apache.hive:hive-exec")                      { transitive = false
-        artifact { classifier = "core" }                                                  }
+    implementation("org.apache.hive:hive-exec:${hiveVersion}:core")  { transitive = false }
     implementation("org.apache.hive:hive-metastore")                 { transitive = false }
     implementation("org.apache.hive:hive-serde")                     { transitive = false }
     implementation("com.esotericsoftware:kryo")                      { transitive = false }
