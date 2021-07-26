@@ -53,14 +53,16 @@ The PXF JDBC connector supports the following data types:
 
 Any data type not listed above is not supported by the PXF JDBC connector.
 
-**Note**: PXF includes Hive JDBC driver version 1.1.0 which does **not** support the following data types when reading from or writing to Hive tables.
+### <a id="datatypes_hive"></a>About Accessing Hive via JDBC
 
-| Data Type | Fixed in Hive JDBC Driver | Upstream Issue |
-|-----------|---------------------------|----------------|
-| NUMERIC   | 2.3.0                     | [HIVE-13614](https://issues.apache.org/jira/browse/HIVE-13614) |
-| TIMESTAMP | 2.0.0                     | [HIVE-11748](https://issues.apache.org/jira/browse/HIVE-11748) |
-| DATE      | 1.3.0, 2.0.0              | [HIVE-11024](https://issues.apache.org/jira/browse/HIVE-11024) |
-| BYTEA     | N/A                       | N/A |
+PXF includes version 1.1.0 of the Hive JDBC driver. This version does **not** support the following data types when you use the PXF JDBC connector to operate on a Hive table:
+
+| Data Type | Fixed in Hive JDBC Driver | Upstream Issue | Operations Not Supported |
+|-----------|---------------------------|----------------| ---------- |
+| NUMERIC   | 2.3.0                     | [HIVE-13614](https://issues.apache.org/jira/browse/HIVE-13614) | Write |
+| TIMESTAMP | 2.0.0                     | [HIVE-11748](https://issues.apache.org/jira/browse/HIVE-11748) | Write |
+| DATE      | 1.3.0, 2.0.0              | [HIVE-11024](https://issues.apache.org/jira/browse/HIVE-11024) | Write |
+| BYTEA     | N/A                       | N/A | Read, Write |
 
 ## <a id="queryextdata"></a>Accessing an External SQL Database
 The PXF JDBC connector supports a single profile named `jdbc`. You can both read data from and write data to an external SQL database table with this profile. You can also use the connector to run a static, named query in external SQL database and read the results.
