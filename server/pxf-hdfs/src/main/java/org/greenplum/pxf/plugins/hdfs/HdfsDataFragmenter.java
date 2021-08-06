@@ -94,7 +94,7 @@ public class HdfsDataFragmenter extends BaseFragmenter {
         List<Fragment> result = null;
         for (int attempt = 0; attempt < maxAttempts; attempt++) {
             try {
-                LOG.debug("Fetching fragments attempt #{} of {}", attempt, maxAttempts);
+                LOG.debug("Fetching fragments attempt #{} of {}", attempt, maxAttempts - 1);
                 result = fetchFragments();
                 break;
             } catch (IOException e) {

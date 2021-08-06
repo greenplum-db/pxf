@@ -89,7 +89,7 @@ public class ReadBridge extends BaseBridge {
         boolean result = false;
         for (int attempt = 0; attempt < maxAttempts; attempt++) {
             try {
-                LOG.debug("Beginning iteration attempt #{} of {}", attempt, maxAttempts);
+                LOG.debug("Beginning iteration attempt #{} of {}", attempt, maxAttempts - 1);
                 result = accessor.openForRead();
                 break;
             } catch (IOException e) {

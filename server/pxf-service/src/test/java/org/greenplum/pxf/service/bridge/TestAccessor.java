@@ -1,5 +1,6 @@
 package org.greenplum.pxf.service.bridge;
 
+import org.apache.hadoop.conf.Configuration;
 import org.greenplum.pxf.api.OneRow;
 import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.RequestContext;
@@ -39,6 +40,11 @@ public class TestAccessor implements Accessor {
     @Override
     public void initialize(RequestContext requestContext) {
 
+    }
+
+    @Override
+    public Configuration getConfiguration() {
+        return null;
     }
 
 }

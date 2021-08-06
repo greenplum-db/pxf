@@ -91,6 +91,11 @@ public class UtilitiesTest {
         @Override
         public void initialize(RequestContext requestContext) {
         }
+
+        @Override
+        public Configuration getConfiguration() {
+            return null;
+        }
     }
 
     class NonStatsAccessorImpl implements Accessor {
@@ -126,6 +131,11 @@ public class UtilitiesTest {
         @Override
         public void initialize(RequestContext requestContext) {
         }
+
+        @Override
+        public Configuration getConfiguration() {
+            return null;
+        }
     }
 
     class ReadVectorizedResolverImpl implements ReadVectorizedResolver {
@@ -150,6 +160,11 @@ public class UtilitiesTest {
 
         @Override
         public void initialize(RequestContext requestContext) {
+        }
+
+        @Override
+        public Configuration getConfiguration() {
+            return null;
         }
     }
 
