@@ -31,12 +31,14 @@ import org.greenplum.pxf.api.model.ConfigurationFactory;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.FragmentStats;
 import org.greenplum.pxf.api.model.RequestContext;
+import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.HdfsUtilities;
 import org.greenplum.pxf.plugins.hdfs.utilities.PxfInputFormat;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 /**
  * Fragmenter class for HDFS data resources.
@@ -48,6 +50,7 @@ import java.util.List;
 public class HdfsDataFragmenter extends BaseFragmenter {
 
     protected static final String IGNORE_MISSING_PATH_OPTION = "IGNORE_MISSING_PATH";
+    private static final int MAX_BACKOFF = 1000;
 
     protected JobConf jobConf;
     protected HcfsType hcfsType;
@@ -68,13 +71,58 @@ public class HdfsDataFragmenter extends BaseFragmenter {
         jobConf = new JobConf(configuration, this.getClass());
     }
 
+    @Override
+    public List<Fragment> getFragments() throws Exception {
+
+        /*
+            HCFS-based fragmenters need to use retry logic in Kerberos secured clusters
+            to overcome potential error with GSS initiate failures related to replay attacks.
+         */
+        return fetchFragmentsWithRetry();
+    }
+
+    protected List<Fragment> fetchFragmentsWithRetry() throws Exception {
+        // max attempts to fetch fragments is 1 unless we have Kerberos-secured cluster that needs retries to
+        // oversome potential SASL AUTH failures
+        boolean securityEnabled = Utilities.isSecurityEnabled(configuration);
+        int maxAttempts = securityEnabled ?
+                configuration.getInt("pxf.sasl.connection.retries", 0) + 1 : 1;
+
+        LOG.debug("Before fetching fragments, security = {}, max attempts = {}", securityEnabled, maxAttempts);
+
+        // retry upto max allowed number
+        List<Fragment> result = null;
+        for (int attempt = 0; attempt < maxAttempts; attempt++) {
+            try {
+                LOG.debug("Fetching fragments attempt #{} of {}", attempt, maxAttempts);
+                result = fetchFragments();
+                break;
+            } catch (IOException e) {
+                if (StringUtils.contains(e.getMessage(), "GSS initiate failed")) {
+                    LOG.warn(String.format("Attempt #%d failed to fetch fragments: ", attempt), e.getMessage());
+                    if (attempt < maxAttempts - 1) {
+                        int backoffMs = new Random().nextInt(MAX_BACKOFF) + 1;
+                        LOG.debug("Backing off for {} ms before the next attempt", backoffMs);
+                        Thread.sleep(backoffMs);
+                    } else {
+                        // reached the max allowed number of retires, re-throw the exception to the caller
+                        throw e;
+                    }
+                } else {
+                    // non-GSS initiate failed IOException needs to be rethrown.
+                    throw e;
+                }
+            }
+        }
+        return result;
+    }
+
     /**
      * Gets the fragments for a data source URI that can appear as a file name,
      * a directory name or a wildcard. Returns the data fragments in JSON
      * format.
      */
-    @Override
-    public List<Fragment> getFragments() throws Exception {
+    protected List<Fragment> fetchFragments() throws Exception {
         Path path = new Path(hcfsType.getDataUri(jobConf, context));
         List<InputSplit> splits;
         try {
@@ -141,4 +189,5 @@ public class HdfsDataFragmenter extends BaseFragmenter {
 
         return result;
     }
+
 }
