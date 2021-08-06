@@ -56,6 +56,11 @@ public class BasePlugin implements Plugin {
         this.initialized = true;
     }
 
+    @Override
+    public Configuration getConfiguration() {
+        return configuration;
+    }
+
     /**
      * Determines if the plugin is initialized
      *

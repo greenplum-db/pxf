@@ -83,10 +83,10 @@ public class HdfsDataFragmenter extends BaseFragmenter {
 
     protected List<Fragment> fetchFragmentsWithRetry() throws Exception {
         // max attempts to fetch fragments is 1 unless we have Kerberos-secured cluster that needs retries to
-        // oversome potential SASL AUTH failures
+        // overcome potential SASL AUTH failures
         boolean securityEnabled = Utilities.isSecurityEnabled(configuration);
         int maxAttempts = securityEnabled ?
-                configuration.getInt("pxf.sasl.connection.retries", 0) + 1 : 1;
+                configuration.getInt("pxf.sasl.connection.retries", 5) + 1 : 1;
 
         LOG.debug("Before fetching fragments, security = {}, max attempts = {}", securityEnabled, maxAttempts);
 

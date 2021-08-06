@@ -16,8 +16,11 @@ public abstract class BaseBridge implements Bridge {
 
     protected final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
+    protected RequestContext context;
+    protected AccessorFactory accessorFactory;
     protected Accessor accessor;
     protected Resolver resolver;
+
 
     /**
      * Creates a new instance for a given request context. Uses default singleton instances of
@@ -36,6 +39,8 @@ public abstract class BaseBridge implements Bridge {
      * @param resolverFactory resolver factory
      */
     BaseBridge(RequestContext context, AccessorFactory accessorFactory, ResolverFactory resolverFactory) {
+        this.context = context;
+        this.accessorFactory = accessorFactory;
         this.accessor = accessorFactory.getPlugin(context);
         this.resolver = resolverFactory.getPlugin(context);
     }
