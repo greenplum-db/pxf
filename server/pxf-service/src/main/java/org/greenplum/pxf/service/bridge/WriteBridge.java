@@ -20,6 +20,8 @@ package org.greenplum.pxf.service.bridge;
  */
 
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.greenplum.pxf.api.BadRecordException;
 import org.greenplum.pxf.api.OneField;
 import org.greenplum.pxf.api.OneRow;
@@ -27,10 +29,13 @@ import org.greenplum.pxf.api.io.Writable;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.AccessorFactory;
 import org.greenplum.pxf.api.utilities.ResolverFactory;
+import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.service.BridgeInputBuilder;
 
 import java.io.DataInputStream;
+import java.io.IOException;
 import java.util.List;
+import java.util.Random;
 
 /*
  * WriteBridge class creates appropriate accessor and resolver.
@@ -39,6 +44,7 @@ import java.util.List;
  */
 public class WriteBridge extends BaseBridge {
 
+    private static final int MAX_BACKOFF = 1000;
     private final BridgeInputBuilder inputBuilder;
 
     /*
@@ -56,7 +62,42 @@ public class WriteBridge extends BaseBridge {
 
     @Override
     public boolean beginIteration() throws Exception {
-        return accessor.openForWrite();
+        Configuration configuration = accessor.getConfiguration();
+        // max attempts to fetch fragments is 1 unless we have Kerberos-secured cluster that needs retries to
+        // overcome potential SASL auth failures
+        boolean securityEnabled = Utilities.isSecurityEnabled(configuration);
+        int maxAttempts = securityEnabled ?
+                configuration.getInt("pxf.sasl.connection.retries", 5) + 1 : 1;
+
+        LOG.debug("Before beginning iteration, security = {}, max attempts = {}", securityEnabled, maxAttempts);
+
+        // retry up to max allowed number
+        boolean result = false;
+        for (int attempt = 0; attempt < maxAttempts; attempt++) {
+            try {
+                LOG.debug("Beginning iteration attempt #{} of {}", attempt, maxAttempts);
+                result = accessor.openForWrite();
+                break;
+            } catch (IOException e) {
+                if (StringUtils.contains(e.getMessage(), "GSS initiate failed")) {
+                    LOG.warn(String.format("Attempt #%d failed to begin iteration: ", attempt), e.getMessage());
+                    if (attempt < maxAttempts - 1) {
+                        int backoffMs = new Random().nextInt(MAX_BACKOFF) + 1;
+                        LOG.debug("Backing off for {} ms before the next attempt", backoffMs);
+                        Thread.sleep(backoffMs);
+                        // get a new instance of the accessor as openForWrite() might not be idempotent
+                        accessor = accessorFactory.getPlugin(context);
+                    } else {
+                        // reached the max allowed number of retries, re-throw the exception to the caller
+                        throw e;
+                    }
+                } else {
+                    // non-GSS initiate failed IOException needs to be rethrown.
+                    throw e;
+                }
+            }
+        }
+        return result;
     }
 
     /*

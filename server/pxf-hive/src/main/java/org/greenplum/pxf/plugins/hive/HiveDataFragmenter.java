@@ -123,7 +123,7 @@ public class HiveDataFragmenter extends HdfsDataFragmenter {
     }
 
     @Override
-    public List<Fragment> getFragments() throws Exception {
+    public List<Fragment> fetchFragments() throws Exception {
         Metadata.Item tblDesc = hiveClientWrapper.extractTableFromName(context.getDataSource());
 
         fetchTableMetaData(tblDesc);
