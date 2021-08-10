@@ -10,7 +10,6 @@ public enum EnumPxfDefaultProfiles {
 	HdfsTextMulti,
 	Avro,
 	SequenceWritable,
-	GemFireXD,
 	HiveRC,
 	HiveText,
 	HiveORC;
