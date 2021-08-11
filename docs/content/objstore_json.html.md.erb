@@ -29,7 +29,7 @@ The PXF object store connectors support reading JSON-format data. This section d
 
 Ensure that you have met the PXF Object Store [Prerequisites](access_objstore.html#objstore_prereq) before you attempt to read data from an object store.
 
-## <a id="avro_work"></a>Working with Avro Data
+## <a id="avro_work"></a>Working with JSON Data
 
 Refer to [Working with JSON Data](hdfs_json.html#hdfsjson_work) in the PXF HDFS JSON documentation for a description of the JSON text-based data-interchange format.
 
@@ -85,25 +85,15 @@ Refer to [Loading the Sample JSON Data to HDFS](hdfs_json.html#jsontohdfs) and [
       id_str TEXT,
       "user.id" INTEGER,
       "user.location" TEXT,
-      "coordinates.values" TEXT
+      "coordinates.values" TEXT[]
     )
       LOCATION('pxf://BUCKET/pxf_examples/singleline.json?PROFILE=s3:json&SERVER=s3srvcfg')
     FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
     ```
 
-- If you need to identify specific elements of the `coordinates.values` array in different columns, use `[]` brackets to identify the JSON array:
+- If you want to access specific elements of the `coordinates.values` array, you can specify the array subscript number in square brackets:
 
     ``` sql
-    CREATE EXTERNAL TABLE singleline_json_s3(
-      created_at TEXT,
-      id_str TEXT,
-      "user.id" INTEGER,
-      "user.location" TEXT,
-      "coordinates.values[0]" INTEGER,
-      "coordinates.values[1]" INTEGER
-    )
-    LOCATION('pxf://BUCKET/pxf_examples/singleline.json?PROFILE=s3:json&SERVER=s3srvcfg')
-    FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
+    SELECT "coordinates.values"[1], "coordinates.values"[2] FROM singleline_json_s3;
     ``` 
-
 

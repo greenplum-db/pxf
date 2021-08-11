@@ -62,10 +62,10 @@ user.location
 
 `coordinates` is an object composed of a text field named `type` and an array of integers named `values`. 
 
-In order to retrieve all the values of the `values` array within a single column, define the corresponding Greenplum Database external table column as `TEXT[]`.
+To retrieve all of the elements of the `values` array in a single column, define the corresponding Greenplum Database external table column as type `TEXT[]`.
 
 ``` pre
-coordinates.values
+"coordinates.values" TEXT[]
 ```
 
 Refer to [Introducing JSON](http://www.json.org/) for detailed information on JSON syntax.
@@ -84,7 +84,7 @@ The following table summarizes external mapping rules for JSON data.
 |-------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Primitive type (integer, float, string, boolean, null) | Use the corresponding Greenplum Database built-in data type; see [Greenplum Database Data Types](https://gpdb.docs.pivotal.io/latest/ref_guide/data_types.html). |
 | Array                         | Use `TEXT[]` to retrieve the contents of the array in one column.                                                                                           |
-| Object                | Use dot `.` notation to specify each level of projection (nesting) to a member of a primitive type.                                                                                         |
+| Object                | Use dot `.` notation to specify each level of projection (nesting) to a member of a primitive or Array type.                                                                                         |
 
 ### <a id="topic_jsonreadmodes"></a>JSON Data Read Modes
 
@@ -224,25 +224,24 @@ To query the JSON data in the external table:
 SELECT * FROM singleline_json_tbl;
 ```
 
-If you want to access specific elements of the `coordinates.values` array, you can specify the array subscript number in square brackets:
+To access specific elements of the `coordinates.values` array, you can specify the array subscript number in square brackets:
 
 ```sql
 SELECT "coordinates.values"[1], "coordinates.values"[2] FROM singleline_json_tbl;
 ```
 
-If you need to access the array elements as some type other than `TEXT`, you can either cast the whole column:
+To access the array elements as some type other than `TEXT`, you can either cast the whole column:
 
 ```sql
 SELECT "coordinates.values"::int[] FROM singleline_json_tbl;
 ```
 
-or specific elements:
+or cast specific elements:
 
 ```sql
 SELECT "coordinates.values"[1]::int, "coordinates.values"[2]::float FROM singleline_json_tbl;
 ```
 
-Note that this is only possible when using Greenplum Database 6.x, as the function `json_array_elements_text()` is not available with 5.x versions of Greenplum.
 
 ## <a id="jsonexample2"></a>Example: Reading a JSON file with Multi-Line Records
 
@@ -254,7 +253,7 @@ CREATE EXTERNAL TABLE multiline_json_tbl(
   id_str TEXT,
   "user.id" INTEGER,
   "user.location" TEXT,
-  "coordinates.values" TEXT
+  "coordinates.values" TEXT[]
 )
 LOCATION('pxf://data/pxf_examples/multiline.json?PROFILE=hdfs:json&IDENTIFIER=created_at')
 FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
@@ -262,33 +261,22 @@ FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
 
 `created_at` identifies the member name of the first field in the JSON record `record_obj` in the sample data schema.
 
-If you need to identify specific elements of the `coordinates.values` array in different columns, use `[]` brackets to define the JSON array:
-
-``` sql
-CREATE EXTERNAL TABLE multiline_json_tbl(
-  created_at TEXT,
-  id_str TEXT,
-  "user.id" INTEGER,
-  "user.location" TEXT,
-  "coordinates.values[0]" INTEGER,
-  "coordinates.values[1]" INTEGER
-)
-LOCATION('pxf://data/pxf_examples/multiline.json?PROFILE=hdfs:json&IDENTIFIER=created_at')
-FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
-```
-
 To query the JSON data in this external table:
 
 ``` sql
 SELECT * FROM multiline_json_tbl;
 ```
 
-## <a id="jsonarray1"></a> Alternate Array Access -- Array Element Projection (Deprecated)
+## <a id="array_other"></a> Other Methods to Read a JSON Array
 
-PXF supports access specific elements of a JSON array, using the syntax `[n]` in the table defintion to identify the specific element.
+Starting in version 6.2.0, PXF supports reading a JSON array into a `TEXT[]` column. PXF previously, and still, supports using array element projection or a single text-type column to read a JSON array. These access methods are described here.
+
+### <a id="arrayelproj"></a>Using Array Element Projection
+
+PXF supports accessing specific elements of a JSON array using the syntax `[n]` in the table definition to identify the specific element.
 
 ```sql
-CREATE EXTERNAL TABLE singleline_json_tbl(
+CREATE EXTERNAL TABLE singleline_json_tbl_aep(
   created_at TEXT,
   id_str TEXT,
   "user.id" INTEGER,
@@ -300,25 +288,22 @@ LOCATION('pxf://data/pxf_examples/singleline.json?PROFILE=hdfs:json')
 FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
 ```
 
-Using this method of identifying specific array elements means that PXF provides _only_ those values to GPDB instead of the whole JSON array.
+**Note**: When you use this method to identify specific array elements, PXF provides _only_ those values to Greenplum Database, not the whole JSON array.
 
-### Upgrading Existing Tables
-
-If you have an existing external table with one or more columns accessing specific JSON array elements, you can upgrade by using the `ALTER EXTERNAL TABLE` command.
-For example:
+If your existing external table definition uses array element projection and you want to read the array into a `TEXT[]` column, you can use the `ALTER EXTERNAL TABLE` command to update the table definition. For example:
 
 ```sql
-ALTER EXTERNAL TABLE singleline_json_tbl DROP COLUMN "coordinates.values[0]", DROP COLUMN "coordinates.values[1]", ADD COLUMN "coordinates.values" TEXT[];
+ALTER EXTERNAL TABLE singleline_json_tbl_aep DROP COLUMN "coordinates.values[0]", DROP COLUMN "coordinates.values[1]", ADD COLUMN "coordinates.values" TEXT[];
 ```
 
-Any of your existing quries will need to be updated to account for the changes in column name and type.
+If you choose to alter the external table definition in this manner, be sure to update any existing queries on the external table to account for the changes to column name and type.
 
-## <a id="jsonarray2"></a> Alternate Array Access -- Using `TEXT` Column (Deprecated)
+### <a id="singletextcol"></a> Specifying a Single Text-type Column
 
-PXF supports accessing all the elements within an array as a single column by defining the corresponding table column with one of the following types: `TEXT`, `VARCHAR`, or `BPCHAR`.
+PXF supports accessing all of the elements within an array as a single column by defining the corresponding Greenplum table column with one of the following data types: `TEXT`, `VARCHAR`, or `BPCHAR`.
 
 ```sql
-CREATE EXTERNAL TABLE singleline_json_tbl(
+CREATE EXTERNAL TABLE singleline_json_tbl_stc(
   created_at TEXT,
   id_str TEXT,
   "user.id" INTEGER,
@@ -329,23 +314,21 @@ LOCATION('pxf://data/pxf_examples/singleline.json?PROFILE=hdfs:json')
 FORMAT 'CUSTOM' (FORMATTER='pxfwritable_import');
 ```
 
-If you use this option to retrieve the JSON array in a single `TEXT` column and wish to convert the JSON array serialized as `TEXT` back into a native Greenplum array type, you can use the example below:
+If you retrieve the JSON array in a single text-type column and wish to convert the JSON array serialized as `TEXT` back into a native Greenplum array type, you can use the example query below:
 
 ```sql
 SELECT user.id,
        ARRAY(SELECT json_array_elements_text(coordinates.values::json))::int[] AS coords
-FROM singleline_json_tbl;
+FROM singleline_json_tbl_stc;
 ```
 
-Note that this is only possible when using Greenplum Database 6.x, as the function json_array_elements_text() is not available with 5.x versions of Greenplum
+**Note**: This conversion is possible only when you are using PXF with Greenplum Database 6.x; the function `json_array_elements_text()` is not available in Greenplum 5.x.
 
-### Upgrading Existing Tables
-
-If you have an existing external table that has a single `TEXT` column, you can upgrade by using the `ALTER EXTERNAL TABLE` command.
-For example;
+If your external table definition uses a single text-type column for a JSON array and you want to read the array into a `TEXT[]` column, you can use the `ALTER EXTERNAL TABLE` command to update the table definition. For example:
 
 ```sql
-ALTER EXTERNAL TABLE singleline_json_tbl ALTER COLUMN "coordinates.values" TYPE text[];
+ALTER EXTERNAL TABLE singleline_json_tbl_stc ALTER COLUMN "coordinates.values" TYPE TEXT[];
 ```
 
-Any of your existing quries will need to be updated to account for the change in the column type.
+If you choose to alter the external table definition in this manner, be sure to update any existing queries on the external table to account for the change in column type.
+
