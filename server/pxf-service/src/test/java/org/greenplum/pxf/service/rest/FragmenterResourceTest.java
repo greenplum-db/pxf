@@ -2,6 +2,7 @@ package org.greenplum.pxf.service.rest;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import org.apache.hadoop.conf.Configuration;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.Fragmenter;
 import org.greenplum.pxf.api.model.RequestContext;
@@ -12,6 +13,7 @@ import org.greenplum.pxf.api.utilities.FragmentsResponse;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.greenplum.pxf.service.FakeTicker;
 import org.greenplum.pxf.service.RequestParser;
+import org.greenplum.pxf.service.utilities.GSSFailureHandler;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -47,8 +49,11 @@ public class FragmenterResourceTest {
     @Mock private HttpHeaders headersFromRequest2;
     @Mock private Fragmenter fragmenter1;
     @Mock private Fragmenter fragmenter2;
+
     private Cache<String, List<Fragment>> fragmentCache;
+    private Configuration configuration;
     private FakeTicker fakeTicker;
+    private GSSFailureHandler handler;
 
     private String PROPERTY_KEY_FRAGMENTER_CACHE = "pxf.service.fragmenter.cache.enabled";
 
@@ -62,6 +67,8 @@ public class FragmenterResourceTest {
 
         when(fragmenterCacheFactory.getCache()).thenReturn(fragmentCache);
         System.clearProperty(PROPERTY_KEY_FRAGMENTER_CACHE);
+        configuration = new Configuration();
+        handler = GSSFailureHandler.getInstance();
     }
 
     @SuppressWarnings("unchecked")
@@ -73,8 +80,9 @@ public class FragmenterResourceTest {
 
         when(parser.parseRequest(headersFromRequest1, RequestType.FRAGMENTER)).thenReturn(context);
         when(fragmenterFactory.getPlugin(context)).thenReturn(fragmenter1);
+        when(fragmenter1.getConfiguration()).thenReturn(configuration);
 
-        new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory)
+        new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory, handler)
                 .getFragments(servletContext, headersFromRequest1);
         verify(fragmenter1, times(1)).getFragments();
     }
@@ -154,10 +162,11 @@ public class FragmenterResourceTest {
         when(fragmenterFactory.getPlugin(context1)).thenReturn(fragmenter1);
 
         when(fragmenter1.getFragments()).thenReturn(fragmentList);
+        when(fragmenter1.getConfiguration()).thenReturn(configuration);
 
-        Response response1 = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory)
+        Response response1 = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory, handler)
                 .getFragments(servletContext, headersFromRequest1);
-        Response response2 = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory)
+        Response response2 = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory, handler)
                 .getFragments(servletContext, headersFromRequest2);
 
         verify(fragmenter1, times(1)).getFragments();
@@ -196,10 +205,13 @@ public class FragmenterResourceTest {
         when(fragmenter1.getFragments()).thenReturn(fragmentList1);
         when(fragmenter2.getFragments()).thenReturn(fragmentList2);
 
-        Response response1 = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory)
+        when(fragmenter1.getConfiguration()).thenReturn(configuration);
+        when(fragmenter2.getConfiguration()).thenReturn(configuration);
+
+        Response response1 = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory, handler)
                 .getFragments(servletContext, headersFromRequest1);
         fakeTicker.advanceTime(11 * 1000);
-        Response response2 = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory)
+        Response response2 = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory, handler)
                 .getFragments(servletContext, headersFromRequest2);
 
         verify(fragmenter1, times(1)).getFragments();
@@ -224,6 +236,7 @@ public class FragmenterResourceTest {
         int threadCount = 100;
         Thread[] threads = new Thread[threadCount];
         final Fragmenter fragmenter = mock(Fragmenter.class);
+        when(fragmenter.getConfiguration()).thenReturn(configuration);
 
         for (int i = 0; i < threads.length; i++) {
             int index = i;
@@ -243,7 +256,7 @@ public class FragmenterResourceTest {
                 when(factory.getPlugin(context)).thenReturn(fragmenter);
 
                 try {
-                    new FragmenterResource(requestParser, factory, cacheFactory)
+                    new FragmenterResource(requestParser, factory, cacheFactory, handler)
                             .getFragments(servletContext, httpHeaders);
 
                     finishedCount.incrementAndGet();
@@ -293,9 +306,12 @@ public class FragmenterResourceTest {
         when(fragmenter1.getFragments()).thenReturn(fragmentList1);
         when(fragmenter2.getFragments()).thenReturn(fragmentList2);
 
-        Response response1 = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory)
+        when(fragmenter1.getConfiguration()).thenReturn(configuration);
+        when(fragmenter2.getConfiguration()).thenReturn(configuration);
+
+        Response response1 = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory, handler)
                 .getFragments(servletContext, headersFromRequest1);
-        Response response2 = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory)
+        Response response2 = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory, handler)
                 .getFragments(servletContext, headersFromRequest2);
 
         verify(fragmenter1, times(1)).getFragments();

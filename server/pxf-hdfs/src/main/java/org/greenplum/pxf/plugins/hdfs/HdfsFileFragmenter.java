@@ -33,7 +33,7 @@ public class HdfsFileFragmenter extends HdfsDataFragmenter {
      * format.
      */
     @Override
-    protected List<Fragment> fetchFragments() throws Exception {
+    public List<Fragment> getFragments() throws Exception {
         String fileName = hcfsType.getDataUri(jobConf, context);
         Path path = new Path(fileName);
 

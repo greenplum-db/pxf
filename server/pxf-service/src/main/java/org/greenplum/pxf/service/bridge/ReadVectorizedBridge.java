@@ -26,6 +26,7 @@ import org.greenplum.pxf.api.io.Writable;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.AccessorFactory;
 import org.greenplum.pxf.api.utilities.ResolverFactory;
+import org.greenplum.pxf.service.utilities.GSSFailureHandler;
 
 import java.util.Deque;
 import java.util.List;
@@ -34,11 +35,11 @@ import java.util.List;
 public class ReadVectorizedBridge extends ReadBridge {
 
     public ReadVectorizedBridge(RequestContext context) {
-        this(context, AccessorFactory.getInstance(), ResolverFactory.getInstance());
+        this(context, AccessorFactory.getInstance(), ResolverFactory.getInstance(), GSSFailureHandler.getInstance());
     }
 
-    ReadVectorizedBridge(RequestContext context, AccessorFactory accessorFactory, ResolverFactory resolverFactory) {
-        super(context, accessorFactory, resolverFactory);
+    ReadVectorizedBridge(RequestContext context, AccessorFactory accessorFactory, ResolverFactory resolverFactory, GSSFailureHandler failureHandler) {
+        super(context, accessorFactory, resolverFactory, failureHandler);
     }
 
     @Override

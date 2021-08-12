@@ -6,6 +6,7 @@ import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.api.utilities.AccessorFactory;
 import org.greenplum.pxf.api.utilities.ResolverFactory;
+import org.greenplum.pxf.service.utilities.GSSFailureHandler;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -63,8 +64,8 @@ public class BaseBridgeTest {
             super(context);
         }
 
-        public TestBridge(RequestContext context, AccessorFactory accessorFactory, ResolverFactory resolverFactory) {
-            super(context, accessorFactory, resolverFactory);
+        public TestBridge(RequestContext context, AccessorFactory accessorFactory, ResolverFactory resolverFactory, GSSFailureHandler failureHandler) {
+            super(context, accessorFactory, resolverFactory, failureHandler);
         }
 
         @Override
