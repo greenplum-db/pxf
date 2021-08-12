@@ -73,14 +73,6 @@ public class ReadBridge extends BaseBridge {
         return failureHandler.execute(accessor.getConfiguration(), "begin iteration", accessor::openForRead, this::beforeRetryCallback);
     }
 
-    /**
-     * A function that is called by the failure handler before a new retry attempt after a failure.
-     * It re-creates the accessor from the factory in case the accessor implementation is not idempotent.
-     */
-    public void beforeRetryCallback() {
-        accessor = accessorFactory.getPlugin(context);
-    }
-
     protected Deque<Writable> makeOutput(OneRow oneRow) throws Exception {
         return outputBuilder.makeOutput(resolver.getFields(oneRow));
     }
