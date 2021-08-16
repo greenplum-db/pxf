@@ -2,7 +2,6 @@ package org.greenplum.pxf.service.utilities;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.greenplum.pxf.api.utilities.FragmenterFactory;
 import org.greenplum.pxf.api.utilities.Utilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,8 +53,14 @@ public class GSSFailureHandler {
          */
 
         boolean securityEnabled = Utilities.isSecurityEnabled(configuration);
-        int maxAttempts = securityEnabled ? configuration.getInt(RETRIES_PROPERTY_NAME, MAX_RETRIES_DEFAULT) + 1 : 1;
+        int configuredRetries = securityEnabled ? configuration.getInt(RETRIES_PROPERTY_NAME, MAX_RETRIES_DEFAULT) : 0;
+        if (configuredRetries < 0) {
+            throw new RuntimeException(String.format("Property %s can not be set to a negative value %d",
+                    RETRIES_PROPERTY_NAME, configuredRetries));
+        }
 
+        // will attempt to execute the logic at least once
+        int maxAttempts = configuredRetries + 1;
         LOG.debug("Before [{}] operation, security = {}, max attempts = {}", operationName, securityEnabled, maxAttempts);
 
         // retry upto max allowed number of attempts
