@@ -12,7 +12,7 @@ The `hdfs:orc` profile:
 - Supports the compound list type for a subset of ORC scalar types.
 - Does not support the map, union or struct compound types.
 
-The `hdfs:orc` profile currently supports reading scalar data types from ORC files. If the data resides in a Hive table, and you want to read complex types or the Hive table is partitioned, use the [`hive:orc`](hive_pxf.html#hive_orc) profile.
+The `hdfs:orc` profile currently supports reading scalar data types and lists of certain scalar types from ORC files. If the data resides in a Hive table, and you want to read complex types or the Hive table is partitioned, use the [`hive:orc`](hive_pxf.html#hive_orc) profile.
 
 
 ## <a id="prereq"></a>Prerequisites
@@ -52,19 +52,19 @@ To read ORC scalar data types in Greenplum Database, map ORC data values to Gree
 | Integer | bigint (64 bit) | Bigint |
 | Integer | date | Date |
 
-Lists are the only supported compound type and only for a subset of the ORC scalar types. The supported compound mapping is as follows:
+PXF supports only the list ORC compound type, and only for a subset of the ORC scalar types. The supported mappings follow:
 
 | ORC Compound Type | PXF/Greenplum Data Type |
 |-------------------|-------------------------|
-| array<string> | Text[] |
-| array<binary> | Bytea[] |
-| array<float> | Real[] |
-| array<double> | Float8[] |
-| array<boolean> | Boolean[] |
-| array<tinyint> | Smallint[] |
-| array<smallint> | Smallint[] |
-| array<int> | Integer[] |
-| array<bigint> | Bigint[] |
+| array\<string> | Text[] |
+| array\<binary> | Bytea[] |
+| array\<float> | Real[] |
+| array\<double> | Float8[] |
+| array\<boolean> | Boolean[] |
+| array\<tinyint> | Smallint[] |
+| array\<smallint> | Smallint[] |
+| array\<int> | Integer[] |
+| array\<bigint> | Bigint[] |
 
 ## <a id="createexttbl"></a>Creating the External Table
 
@@ -178,7 +178,7 @@ Procedure:
     (5 rows)
     ```
 
-1. The data can be queried on any column including the array column. For example, this query returns the rows where the items sold include boots and/or pants:
+1. You can query the data on any column, including the `items_sold` array column. For example, this query returns the rows where the items sold include `boots` and/or `pants`:
 
     ``` sql
     testdb=# SELECT * FROM sample_orc WHERE items_sold && '{"boots", "pants"}';
@@ -191,4 +191,17 @@ Procedure:
      Bangalore | May   |        317 |     8936.99 | {"winter socks","long-sleeved shirts",boots}
      Beijing   | Jul   |        411 |    11600.67 | {hoodies/sweaters,pants}
     (3 rows)
+    ```
+
+1. This query returns the rows where the first item sold is `boots`:
+
+    ``` sql
+    testdb=# SELECT * FROM sample_orc WHERE items_sold[0] = 'boots';
+    ```
+
+    ``` shell
+     location  | month | num_orders | total_sales |                  items_sold
+    -----------+-------+------------+-------------+----------------------------------------------
+     Prague    | Jan   |        101 |     4875.33 | {boots,hats}
+    (1 row)
     ```
