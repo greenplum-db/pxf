@@ -83,7 +83,7 @@ The following table summarizes external mapping rules for JSON data.
 | JSON Data Type                                                    | PXF/Greenplum Data Type                                                                                                                                                                                            |
 |-------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Primitive type (integer, float, string, boolean, null) | Use the corresponding Greenplum Database built-in data type; see [Greenplum Database Data Types](https://gpdb.docs.pivotal.io/latest/ref_guide/data_types.html). |
-| Array                         | Use `TEXT[]` to retrieve the contents of the array in one column.                                                                                           |
+| Array                         | Use `TEXT[]` to retrieve the JSON array as a Greenplum text array.                                                                                           |
 | Object                | Use dot `.` notation to specify each level of projection (nesting) to a member of a primitive or Array type.                                                                                         |
 
 ### <a id="topic_jsonreadmodes"></a>JSON Data Read Modes
@@ -300,7 +300,7 @@ If you choose to alter the external table definition in this manner, be sure to 
 
 ### <a id="singletextcol"></a> Specifying a Single Text-type Column
 
-PXF supports accessing all of the elements within an array as a single column by defining the corresponding Greenplum table column with one of the following data types: `TEXT`, `VARCHAR`, or `BPCHAR`.
+PXF supports accessing all of the elements within an array as a single string containing the serialized JSON array by defining the corresponding Greenplum table column with one of the following data types: `TEXT`, `VARCHAR`, or `BPCHAR`.
 
 ```sql
 CREATE EXTERNAL TABLE singleline_json_tbl_stc(
