@@ -29,12 +29,10 @@ Once inside the container run the following commands:
 
 ```shell script
 bundle install
-bundle update nokogiri
-bundle update kramdown
-bundle update bookbindery
 bundle exec bookbinder bind local
 cd final_app
-rackup
+bundle install
+bundle exec rackup --host=0.0.0.0
 ```
 
 At this point, you can go to a browser window and type
