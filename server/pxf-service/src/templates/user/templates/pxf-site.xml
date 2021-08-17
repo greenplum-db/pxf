@@ -54,4 +54,10 @@
         <description>Specifies whether Predicate Pushdown feature is enabled for Hive profiles.</description>
     </property>
 
+    <property>
+        <name>pxf.sasl.connection.retries</name>
+        <value>5</value>
+        <description>Specifies the number of retries to perform when a SASL connection is refused by a Namenode due to 'GSS initiate failed' error.</description>
+    </property>
+
 </configuration>
