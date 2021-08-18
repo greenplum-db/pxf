@@ -11,7 +11,7 @@ import java.util.Random;
 import java.util.concurrent.Callable;
 
 /**
- * A class that executes and operation and retries it upto a maximum allowed number of times
+ * A class that executes an operation and retries it upto a maximum allowed number of times
  * in case the operation throws a specific GSS exception.
  */
 public class GSSFailureHandler {
