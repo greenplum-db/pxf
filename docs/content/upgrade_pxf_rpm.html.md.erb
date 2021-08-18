@@ -107,6 +107,20 @@ After you install the new version of PXF, perform the following procedure:
 
             You may need to add this property block to the `pxf-site.xml` file.
 
+1. **If you are upgrading to PXF version 5.16.3 to resolve the erroneous replay attack issue in a Kerberos-secured environment**, add the following property to the `$PXF_CONF/servers/<server-name>/pxf-site.xml` file for your PXF Hadoop server:
+
+    ``` pre
+    <property>
+      <name>pxf.sasl.connection.retries</name>
+      <value>5</value>
+      <description>
+        Specifies the number of retries to perform when a SASL connection is refused by a Namenode due to 'GSS initiate failed' error.
+      </description>
+    </property>
+    ```
+
+    You may choose to update the default value.
+
 4. Synchronize the PXF configuration from the master host to the standby master and each Greenplum Database segment host. For example:
 
     ``` shell
