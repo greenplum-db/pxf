@@ -15,4 +15,5 @@ import lombok.Setter;
 public class OperationResult {
     private Exception exception;
     private OperationStats stats;
+    private String sourceName;
 }

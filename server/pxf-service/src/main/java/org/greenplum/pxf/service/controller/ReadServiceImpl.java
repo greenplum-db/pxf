@@ -80,10 +80,12 @@ public class ReadServiceImpl extends BaseServiceImpl<OperationStats> implements 
 
         // dataStream (and outputStream as the result) will close automatically at the end of the try block
         CountingOutputStream countingOutputStream = new CountingOutputStream(outputStream);
+        String sourceName = null;
         try {
             List<Fragment> fragments = fragmenterService.getFragmentsForSegment(context);
             for (int i = 0; i < fragments.size(); i++) {
                 Fragment fragment = fragments.get(i);
+                sourceName = fragment.getSourceName();
                 String profile = fragment.getProfile();
                 restoreOriginalValues = false;
                 if (StringUtils.isNotBlank(profile) &&
@@ -117,6 +119,7 @@ public class ReadServiceImpl extends BaseServiceImpl<OperationStats> implements 
             // the exception is not re-thrown but passed to the caller in the queryResult so that
             // the caller has a chance to inspect / report query stats before re-throwing the exception
             queryResult.setException(e);
+            queryResult.setSourceName(sourceName);
         } finally {
             queryResult.setStats(queryStats);
         }

@@ -86,7 +86,7 @@ public abstract class BaseServiceImpl<T> extends PxfErrorReporter<T> {
         double rate = durationMs == 0 ? 0 : (1000.0 * recordCount / durationMs);
         double byteRate = durationMs == 0 ? 0 : (1000.0 * byteCount / durationMs);
 
-        log.info("{} {} operation [{} ms, {} record{}, {} records/sec, {} bytes, {} bytes/sec]",
+        log.info("{} {} operation [{} ms, {} record{}, {} records/sec, {} bytes, {} bytes/sec]{}",
                 status,
                 stats.getOperation().name().toLowerCase(),
                 durationMs,
@@ -94,7 +94,8 @@ public abstract class BaseServiceImpl<T> extends PxfErrorReporter<T> {
                 recordCount == 1 ? "" : "s",
                 String.format("%.2f", rate),
                 byteCount,
-                String.format("%.2f", byteRate));
+                String.format("%.2f", byteRate),
+                (exception == null) ? "" : " for " + result.getSourceName());
 
         // re-throw the exception if the operation failed
         if (exception != null) {
