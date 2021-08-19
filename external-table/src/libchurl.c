@@ -344,21 +344,19 @@ churl_init(const char *url, CHURL_HEADERS headers)
 #endif
 
 /* Required for resolving localhost on some docker environments that
- * had intermittent networking issues when using pxf on HAWQ
- * However, CURLOPT_RESOLVE is only available in curl versions 7.21 and above */
-#ifdef CURLOPT_RESOLVE
+ * had intermittent networking issues when using pxf on HAWQ.
+ */
 	if (strstr(url, LocalhostIpV4) != NULL)
 	{
 		struct curl_slist *resolve_hosts = NULL;
-		char	   *pxf_host_entry = (char *) palloc0(strlen(PxfServiceAddress) + strlen(LocalhostIpV4Entry) + 1);
+		char	   *pxf_host_entry = (char *) palloc0(LOCAL_HOST_RESOLVE_STRING_MAX_LENGTH);
 
-		strcat(pxf_host_entry, PxfServiceAddress);
-		strcat(pxf_host_entry, LocalhostIpV4Entry);
+		snprintf(pxf_host_entry, LOCAL_HOST_RESOLVE_STRING_MAX_LENGTH, LOCAL_HOST_RESOLVE_STRING_FORMAT, get_pxf_port());
+		elog(DEBUG3, "adding CURLOPT_RESOLVE with entry '%s'", pxf_host_entry);
 		resolve_hosts = curl_slist_append(NULL, pxf_host_entry);
 		set_curl_option(context, CURLOPT_RESOLVE, resolve_hosts);
 		pfree(pxf_host_entry);
 	}
-#endif
 
 	set_curl_option(context, CURLOPT_URL, url);
 	set_curl_option(context, CURLOPT_VERBOSE, (const void *) FALSE);
