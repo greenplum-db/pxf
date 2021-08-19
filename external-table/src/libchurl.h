@@ -143,6 +143,11 @@ void		churl_cleanup(CHURL_HANDLE handle, bool after_error);
  */
 void		print_http_headers(CHURL_HEADERS headers);
 
+#define LOCAL_HOST_RESOLVE_STRING_FORMAT "localhost:%d:127.0.0.1"
+/* PORT can be at most five digits giving a total length for the resolve string
+ * of 25 plus one for the trailing '\0'
+ */
+#define LOCAL_HOST_RESOLVE_STRING_MAX_LENGTH 26
 #define LocalhostIpV4Entry ":127.0.0.1"
 #define LocalhostIpV4 "localhost"
 #define REST_HEADER_JSON_RESPONSE "Accept: application/json"
