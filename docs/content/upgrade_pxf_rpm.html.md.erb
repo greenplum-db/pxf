@@ -107,7 +107,7 @@ After you install the new version of PXF, perform the following procedure:
 
             You may need to add this property block to the `pxf-site.xml` file.
 
-1. **If you are upgrading to PXF version 5.16.3 to resolve the erroneous replay attack issue in a Kerberos-secured environment and you want to change the default value of the new `pxf.sasl.connection.retries` property**, add the following to the `$PXF_CONF/servers/<server-name>/pxf-site.xml` file for your PXF Hadoop server:
+1. **If you are upgrading to PXF version 5.16.3 to resolve an erroneous replay attack issue in a Kerberos-secured environment and you want to change the default value of the new `pxf.sasl.connection.retries` property**, add the following to the `$PXF_CONF/servers/<server-name>/pxf-site.xml` file on your PXF server:
 
     ``` pre
     <property>
