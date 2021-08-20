@@ -5,6 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
 import org.greenplum.pxf.api.configuration.PxfServerProperties;
+import org.greenplum.pxf.api.error.PxfRuntimeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -117,6 +118,18 @@ public class BaseConfigurationFactory implements ConfigurationFactory {
         // We add a default rule that will return the service name as the
         // short name, i.e. gpadmin/_HOST@REALM will map to gpadmin
         configuration.set(HADOOP_SECURITY_AUTH_TO_LOCAL, "RULE:[1:$1] RULE:[2:$1] DEFAULT");
+
+        // TODO: is this the right place, introduces coupling to the service package, even if only for the classname ?
+        // if the server is configured to use Kerberos Constrained Delegation, configure PxfSaslPropertiesResolver
+        if (configuration.get("pxf.kerberos.constrained.delegation", "false").equalsIgnoreCase("true")) {
+            if (!configuration.get("pxf.service.user.impersonation", "false").equalsIgnoreCase("true")) {
+                throw new PxfRuntimeException("User impersonation is not enabled for Kerberos constrained delegation.",
+                        String.format("Set the value of pxf.service.user.impersonation property to true in %s/pxf-site.xml file.",
+                                serverDirectories[0].getAbsolutePath()));
+            }
+            configuration.set("hadoop.security.saslproperties.resolver.class", "org.greenplum.pxf.service.security.PxfSaslPropertiesResolver");
+            LOG.debug("Kerberos constrained delegation and user impersonation are enabled, setting up PxfSaslPropertiesResolver");
+        }
 
         return configuration;
     }
