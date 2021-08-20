@@ -22,13 +22,12 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: PXF Version ${{ github.ref }}
           body: |
-            ## 5.16.2 (02/23/2021)
+            ## 5.16.3 (08/20/2021)
 
             ### Bug Fixes:
 
-            - [#554](https://github.com/greenplum-db/pxf/pull/554) Fix different encoding when using LineRecordReader
-            - [#553](https://github.com/greenplum-db/pxf/pull/553) Hardcode replicas in fragment
-            - [#549](https://github.com/greenplum-db/pxf/pull/549) pxfbridge: Return early when context->current_fragment is NULL
+            - [#682](https://github.com/greenplum-db/pxf/pull/682) fix CURLOPT_RESOLVE optimization
+            - [#681](https://github.com/greenplum-db/pxf/pull/681) Introduced operation retries when GSS connection failures are encountered
 
           draft: false
           prerelease: false

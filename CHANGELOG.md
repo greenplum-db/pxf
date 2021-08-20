@@ -1,5 +1,12 @@
 # Changelog
 
+## 5.16.3 (08/20/2021)
+
+### Bug Fixes:
+
+- [#682](https://github.com/greenplum-db/pxf/pull/682) fix CURLOPT_RESOLVE optimization
+- [#681](https://github.com/greenplum-db/pxf/pull/681) Introduced operation retries when GSS connection failures are encountered
+
 ## 5.16.2 (02/23/2021)
 
 ### Bug Fixes:
