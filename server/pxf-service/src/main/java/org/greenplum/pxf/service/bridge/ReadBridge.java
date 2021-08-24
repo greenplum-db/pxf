@@ -25,6 +25,7 @@ import org.greenplum.pxf.api.io.Writable;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.service.BridgeOutputBuilder;
 import org.greenplum.pxf.service.utilities.BasePluginFactory;
+import org.greenplum.pxf.service.utilities.GSSFailureHandler;
 
 import java.io.CharConversionException;
 import java.io.DataInputStream;
@@ -49,8 +50,8 @@ public class ReadBridge extends BaseBridge {
     protected BridgeOutputBuilder outputBuilder;
     protected Deque<Writable> outputQueue = new LinkedList<>();
 
-    public ReadBridge(BasePluginFactory pluginFactory, RequestContext context) {
-        super(pluginFactory, context);
+    public ReadBridge(BasePluginFactory pluginFactory, RequestContext context, GSSFailureHandler failureHandler) {
+        super(pluginFactory, context, failureHandler);
         this.outputBuilder = new BridgeOutputBuilder(context);
     }
 
@@ -59,7 +60,7 @@ public class ReadBridge extends BaseBridge {
      */
     @Override
     public boolean beginIteration() throws Exception {
-        return accessor.openForRead();
+        return failureHandler.execute(context.getConfiguration(), "begin iteration", accessor::openForRead, this::beforeRetryCallback);
     }
 
     protected Deque<Writable> makeOutput(OneRow oneRow) throws Exception {

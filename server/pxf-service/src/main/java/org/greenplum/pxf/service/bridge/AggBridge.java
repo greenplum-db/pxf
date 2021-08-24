@@ -25,6 +25,7 @@ import org.greenplum.pxf.api.StatsAccessor;
 import org.greenplum.pxf.api.io.Writable;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.service.utilities.BasePluginFactory;
+import org.greenplum.pxf.service.utilities.GSSFailureHandler;
 
 import java.util.LinkedList;
 
@@ -36,8 +37,8 @@ public class AggBridge extends ReadBridge implements Bridge {
     /* Avoid resolving rows with the same key twice */
     private LRUMap outputCache;
 
-    public AggBridge(BasePluginFactory pluginFactory, RequestContext context) {
-        super(pluginFactory, context);
+    public AggBridge(BasePluginFactory pluginFactory, RequestContext context, GSSFailureHandler failureHandler) {
+        super(pluginFactory, context, failureHandler);
     }
 
     /**
@@ -45,6 +46,7 @@ public class AggBridge extends ReadBridge implements Bridge {
      */
     @Override
     public boolean beginIteration() throws Exception {
+        // TODO: enhance with failureHandler, for now this bridge is not actually used
         /* Initialize LRU cache with 100 items*/
         outputCache = new LRUMap();
         boolean openForReadStatus = accessor.openForRead();

@@ -3,12 +3,14 @@ package org.greenplum.pxf.service;
 import com.google.common.base.Ticker;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import org.apache.hadoop.conf.Configuration;
 import org.greenplum.pxf.api.examples.DemoFragmentMetadata;
 import org.greenplum.pxf.api.model.Fragment;
 import org.greenplum.pxf.api.model.Fragmenter;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.FragmenterCacheFactory;
 import org.greenplum.pxf.service.utilities.BasePluginFactory;
+import org.greenplum.pxf.service.utilities.GSSFailureHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -34,12 +36,14 @@ class FragmenterServiceTest {
     private Cache<String, List<Fragment>> fragmentCache;
     private FakeTicker fakeTicker;
     private FragmenterService fragmenterService;
+    private Configuration configuration;
 
     private RequestContext context1;
     private RequestContext context2;
 
     @BeforeEach
     public void setup() {
+        configuration = new Configuration();
         context1 = new RequestContext();
         context1.setTransactionId("XID-XYZ-123456");
         context1.setFragmenter("org.greenplum.pxf.api.model.Fragmenter1");
@@ -48,6 +52,7 @@ class FragmenterServiceTest {
         context1.setGpSessionId(1);
         context1.setTotalSegments(1);
         context1.setDataSource("foo.bar");
+        context1.setConfiguration(configuration);
 
         context2 = new RequestContext();
         context2.setTransactionId("XID-XYZ-654321");
@@ -57,6 +62,7 @@ class FragmenterServiceTest {
         context2.setGpSessionId(1);
         context2.setTotalSegments(1);
         context2.setDataSource("foo.bar");
+        context2.setConfiguration(configuration);
 
         mockPluginFactory = mock(BasePluginFactory.class);
         FragmenterCacheFactory fragmenterCacheFactory = mock(FragmenterCacheFactory.class);
@@ -71,8 +77,9 @@ class FragmenterServiceTest {
 
         when(fragmenterCacheFactory.getCache()).thenReturn(fragmentCache);
 
+        // use a real handler to ensure pass-through calls on default configuration
         fragmenterService = new FragmenterService(fragmenterCacheFactory,
-                mockPluginFactory);
+                mockPluginFactory, new GSSFailureHandler());
     }
 
     @Test

@@ -27,6 +27,7 @@ import org.greenplum.pxf.api.model.OutputFormat;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.service.BridgeInputBuilder;
 import org.greenplum.pxf.service.utilities.BasePluginFactory;
+import org.greenplum.pxf.service.utilities.GSSFailureHandler;
 
 import java.io.DataInputStream;
 import java.nio.charset.Charset;
@@ -43,8 +44,8 @@ public class WriteBridge extends BaseBridge {
     private final OutputFormat outputFormat;
     private final Charset databaseEncoding;
 
-    public WriteBridge(BasePluginFactory pluginFactory, RequestContext context) {
-        super(pluginFactory, context);
+    public WriteBridge(BasePluginFactory pluginFactory, RequestContext context, GSSFailureHandler failureHandler) {
+        super(pluginFactory, context, failureHandler);
         this.inputBuilder = new BridgeInputBuilder();
         this.outputFormat = context.getOutputFormat();
         this.databaseEncoding = context.getDatabaseEncoding();
@@ -55,7 +56,7 @@ public class WriteBridge extends BaseBridge {
      */
     @Override
     public boolean beginIteration() throws Exception {
-        return accessor.openForWrite();
+        return failureHandler.execute(context.getConfiguration(), "begin iteration", accessor::openForWrite, this::beforeRetryCallback);
     }
 
     /*

@@ -25,14 +25,15 @@ import org.greenplum.pxf.api.ReadVectorizedResolver;
 import org.greenplum.pxf.api.io.Writable;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.service.utilities.BasePluginFactory;
+import org.greenplum.pxf.service.utilities.GSSFailureHandler;
 
 import java.util.Deque;
 import java.util.List;
 
 public class ReadVectorizedBridge extends ReadBridge {
 
-    public ReadVectorizedBridge(BasePluginFactory pluginFactory, RequestContext context) {
-        super(pluginFactory, context);
+    public ReadVectorizedBridge(BasePluginFactory pluginFactory, RequestContext context, GSSFailureHandler failureHandler) {
+        super(pluginFactory, context, failureHandler);
     }
 
     /**

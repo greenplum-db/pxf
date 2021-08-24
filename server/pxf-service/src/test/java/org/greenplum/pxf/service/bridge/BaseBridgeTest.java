@@ -6,6 +6,7 @@ import org.greenplum.pxf.api.model.Accessor;
 import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.model.Resolver;
 import org.greenplum.pxf.service.utilities.BasePluginFactory;
+import org.greenplum.pxf.service.utilities.GSSFailureHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -19,6 +20,7 @@ public class BaseBridgeTest {
 
     private RequestContext context;
     private BasePluginFactory pluginFactory;
+    private GSSFailureHandler failureHandler;
 
     @BeforeEach
     public void setup() {
@@ -26,6 +28,7 @@ public class BaseBridgeTest {
         context.setConfiguration(new Configuration());
 
         pluginFactory = new BasePluginFactory();
+        failureHandler = new GSSFailureHandler();
     }
 
     @Test
@@ -33,7 +36,7 @@ public class BaseBridgeTest {
         context.setAccessor("org.greenplum.pxf.service.bridge.TestAccessor");
         context.setResolver("org.greenplum.pxf.service.bridge.TestResolver");
 
-        TestBridge bridge = new TestBridge(pluginFactory, context);
+        TestBridge bridge = new TestBridge(pluginFactory, context, failureHandler);
         assertTrue(bridge.getAccessor() instanceof TestAccessor);
         assertTrue(bridge.getResolver() instanceof TestResolver);
     }
@@ -43,7 +46,7 @@ public class BaseBridgeTest {
         context.setAccessor("org.greenplum.pxf.unknown-accessor");
         context.setResolver("org.greenplum.pxf.service.bridge.TestResolver");
 
-        RuntimeException e = assertThrows(RuntimeException.class, () -> new TestBridge(pluginFactory, context));
+        RuntimeException e = assertThrows(RuntimeException.class, () -> new TestBridge(pluginFactory, context, failureHandler));
         assertEquals("Class org.greenplum.pxf.unknown-accessor is not found", e.getMessage());
     }
 
@@ -52,14 +55,14 @@ public class BaseBridgeTest {
         context.setAccessor("org.greenplum.pxf.service.bridge.TestAccessor");
         context.setResolver("org.greenplum.pxf.unknown-resolver");
 
-        Exception e = assertThrows(RuntimeException.class, () -> new TestBridge(pluginFactory, context));
+        Exception e = assertThrows(RuntimeException.class, () -> new TestBridge(pluginFactory, context, failureHandler));
         assertEquals("Class org.greenplum.pxf.unknown-resolver is not found", e.getMessage());
     }
 
     static class TestBridge extends BaseBridge {
 
-        public TestBridge(BasePluginFactory pluginFactory, RequestContext context) {
-            super(pluginFactory, context);
+        public TestBridge(BasePluginFactory pluginFactory, RequestContext context, GSSFailureHandler failureHandler) {
+            super(pluginFactory, context, failureHandler);
         }
 
         @Override

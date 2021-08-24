@@ -26,6 +26,7 @@ import org.greenplum.pxf.api.model.RequestContext;
 import org.greenplum.pxf.api.utilities.FragmenterCacheFactory;
 import org.greenplum.pxf.service.utilities.AnalyzeUtils;
 import org.greenplum.pxf.service.utilities.BasePluginFactory;
+import org.greenplum.pxf.service.utilities.GSSFailureHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -49,13 +50,15 @@ public class FragmenterService {
     private static final Logger LOG = LoggerFactory.getLogger(FragmenterService.class);
 
     private final BasePluginFactory pluginFactory;
-
     private final FragmenterCacheFactory fragmenterCacheFactory;
+    private final GSSFailureHandler failureHandler;
 
     public FragmenterService(FragmenterCacheFactory fragmenterCacheFactory,
-                             BasePluginFactory pluginFactory) {
+                             BasePluginFactory pluginFactory,
+                             GSSFailureHandler failureHandler) {
         this.fragmenterCacheFactory = fragmenterCacheFactory;
         this.pluginFactory = pluginFactory;
+        this.failureHandler = failureHandler;
     }
 
     public List<Fragment> getFragmentsForSegment(RequestContext context) throws IOException {
@@ -111,7 +114,8 @@ public class FragmenterService {
                     .get(fragmenterCacheKey, () -> {
                         LOG.debug("Caching fragments from segmentId={} with key={}",
                                 context.getSegmentId(), fragmenterCacheKey);
-                        List<Fragment> fragmentList = getFragmenter(context).getFragments();
+
+                        List<Fragment> fragmentList = failureHandler.execute(context.getConfiguration(), "get fragments", () -> getFragmenter(context).getFragments());
 
                         /* Create a fragmenter instance with API level parameters */
                         fragmentList = AnalyzeUtils.getSampleFragments(fragmentList, context);
