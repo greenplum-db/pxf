@@ -51,7 +51,7 @@ class FragmenterServiceTest {
         context1.setGpCommandCount(1);
         context1.setGpSessionId(1);
         context1.setTotalSegments(1);
-        context1.setDataSource("foo.bar");
+        context1.setDataSource("path.A");
         context1.setConfiguration(configuration);
 
         context2 = new RequestContext();
@@ -61,7 +61,7 @@ class FragmenterServiceTest {
         context2.setGpCommandCount(1);
         context2.setGpSessionId(1);
         context2.setTotalSegments(1);
-        context2.setDataSource("foo.bar");
+        context2.setDataSource("path.A");
         context2.setConfiguration(configuration);
 
         mockPluginFactory = mock(BasePluginFactory.class);
@@ -100,11 +100,13 @@ class FragmenterServiceTest {
         context1.setTransactionId("XID-XYZ-123456");
         context1.setSchemaName("foo1");
         context1.setTableName("bar");
+        context1.setDataSource("path");
         context1.setFilterString("a3c25s10d2016-01-03o6");
 
         context2.setTransactionId("XID-XYZ-123456");
         context2.setSchemaName("foo2");
         context2.setTableName("bar");
+        context2.setDataSource("path");
         context2.setFilterString("a3c25s10d2016-01-03o6");
 
         testContextsAreNotCached(context1, context2);
@@ -115,11 +117,30 @@ class FragmenterServiceTest {
         context1.setTransactionId("XID-XYZ-123456");
         context1.setSchemaName("foo");
         context1.setTableName("bar1");
+        context1.setDataSource("path");
         context1.setFilterString("a3c25s10d2016-01-03o6");
 
         context2.setTransactionId("XID-XYZ-123456");
         context2.setSchemaName("foo");
         context2.setTableName("bar2");
+        context2.setDataSource("path");
+        context2.setFilterString("a3c25s10d2016-01-03o6");
+
+        testContextsAreNotCached(context1, context2);
+    }
+
+    @Test
+    public void testFragmenterCallIsNotCachedForDifferentDataSources() throws Throwable {
+        context1.setTransactionId("XID-XYZ-123456");
+        context1.setSchemaName("foo");
+        context1.setTableName("bar");
+        context1.setDataSource("path1");
+        context1.setFilterString("a3c25s10d2016-01-03o6");
+
+        context2.setTransactionId("XID-XYZ-123456");
+        context2.setSchemaName("foo");
+        context2.setTableName("bar");
+        context2.setDataSource("path2");
         context2.setFilterString("a3c25s10d2016-01-03o6");
 
         testContextsAreNotCached(context1, context2);

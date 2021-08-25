@@ -115,7 +115,8 @@ public class FragmenterService {
                         LOG.debug("Caching fragments from segmentId={} with key={}",
                                 context.getSegmentId(), fragmenterCacheKey);
 
-                        List<Fragment> fragmentList = failureHandler.execute(context.getConfiguration(), "get fragments", () -> getFragmenter(context).getFragments());
+                        List<Fragment> fragmentList = failureHandler.execute(context.getConfiguration(),
+                                "get fragments", () -> getFragmenter(context).getFragments());
 
                         /* Create a fragmenter instance with API level parameters */
                         fragmentList = AnalyzeUtils.getSampleFragments(fragmentList, context);
@@ -190,22 +191,23 @@ public class FragmenterService {
     }
 
     /**
-     * Returns a key for the fragmenter cache. TransactionID is not sufficient
-     * to key the cache. For the case where we have multiple scans (i.e
-     * select a, b from c where a = 'part1' union all select a, b from c
-     * where a = 'part2'), the list of fragments for each scan in the query
-     * will be different, but the transactionID will be the same. For that
-     * reason we must include the schema name, table name, and the filter
-     * string as part of the fragmenter cache key.
+     * Returns a key for the fragmenter cache. TransactionID is not sufficient to key the cache.
+     * For the case where we have multiple scans
+     * (i.e select a, b from c where a = 'part1' union all select a, b from c where a = 'part2'),
+     * the list of fragments for each scan in the query will be different, but the transactionID will be the same.
+     * For that reason we must include the schema name, table name, and the filter string as part
+     * of the fragmenter cache key. We also include dataSource for a case where the table is recreated during
+     * the same transaction (in a PLSQL function, for example) and now points to a different location.
      *
      * @param context the request context
      * @return the key for the fragmenter cache
      */
     private String getFragmenterCacheKey(RequestContext context) {
-        return String.format("%s:%s:%s:%s",
+        return String.format("%s:%s:%s:%s:%s",
                 context.getTransactionId(),
                 context.getSchemaName(),
                 context.getTableName(),
+                context.getDataSource(),
                 context.getFilterString());
     }
 
