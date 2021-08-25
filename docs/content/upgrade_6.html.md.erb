@@ -71,17 +71,28 @@ After you install the new version of PXF, perform the following procedure:
     - If you previously set the `pxf.connection.timeout` property to change the write/upload timeout, you must now set the `pxf.connection.upload-timeout` property for this purpose.
     - Existing external tables that access Avro arrays and JSON objects will continue to work as-is. If you want to take advantage of the new Avro array read/write functionality or the new JSON object support, create a new external table with the adjusted DDL. If you can access the data with the new external table as you expect, you may choose to drop and recreate the existing external table.
 
-1. **If you are upgrading <i>to</i> PXF version 6.2.0 to resolve an erroneous replay attack issue in a Kerberos-secured environment and you want to change the default value of the new `pxf.sasl.connection.retries` property**, add the following to the `pxf-site.xml` file for your PXF server:
+1. **If you are upgrading <i>to</i> PXF version 6.2.0 to resolve an erroneous replay attack issue in a Kerberos-secured environment**:
 
-    ``` pre
-    <property>
-      <name>pxf.sasl.connection.retries</name>
-      <value><new-value></value>
-      <description>
-        Specifies the number of retries to perform when a SASL connection is refused by a Namenode due to 'GSS initiate failed' error.
-      </description>
-    </property>
-    ```
+    1. If you want to change the default value of the new `pxf.sasl.connection.retries` property, add the following to the `pxf-site.xml` file for your PXF server:
+
+        ``` pre
+        <property>
+          <name>pxf.sasl.connection.retries</name>
+          <value><new-value></value>
+          <description>
+            Specifies the number of retries to perform when a SASL connection is refused by a Namenode due to 'GSS initiate failed' error.
+          </description>
+        </property>
+        ```
+
+    1. (Recommended) Configure PXF to use a host-specific Kerberos principal for each segment host. If you specify the following `pxf.service.kerberos.principal` property setting in the PXF server's `pxf-site.xml` file, PXF automatically replaces ` _HOST` with the FQDN of the segment host:
+
+        ``` pre
+        <property>
+          <name>pxf.service.kerberos.principal</name>
+          <value>gpadmin/_HOST@REALM.COM</value>
+        </property>
+        ```
 
 1. Synchronize the PXF configuration from the master host to the standby master and each Greenplum Database segment host. For example:
 
