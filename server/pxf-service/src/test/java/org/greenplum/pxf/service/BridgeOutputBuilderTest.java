@@ -127,6 +127,7 @@ public class BridgeOutputBuilderTest {
         addColumn(context, 11, DataType.TIMESTAMP, "col11");
         addColumn(context, 12, DataType.DATE, "col12");
         addColumn(context, 13, DataType.VARCHAR, "col13");
+        addColumn(context, 14, DataType.VARCHAR, "col14");
 
         BridgeOutputBuilder builder = makeBuilder(context);
 
@@ -144,7 +145,8 @@ public class BridgeOutputBuilderTest {
                 new OneField(DataType.NUMERIC.getOID(), "0"),
                 new OneField(DataType.TIMESTAMP.getOID(), new Timestamp(0)),
                 new OneField(DataType.DATE.getOID(), new Date(1)),
-                new OneField(DataType.VARCHAR.getOID(), null)
+                new OneField(DataType.VARCHAR.getOID(), null),
+                new OneField(DataType.VARCHAR.getOID(), DataType.VARCHAR)
         );
 
         List<Writable> outputQueue = builder.makeOutput(recFields);
@@ -156,7 +158,7 @@ public class BridgeOutputBuilderTest {
         String date = new Date(1).toString();
 
         outputQueue.get(0).write(dos);
-        assertEquals("0,0.0,0.0,0,0,true,\\x00,value,value,\"va\"\"lue\",0," + datetime + "," + date + ",\n",
+        assertEquals("0,0.0,0.0,0,0,true,\\\\x00,value,value,\"va\"\"lue\",0," + datetime + "," + date + ",,VARCHAR\n",
                 new String(dos.getOutput(), StandardCharsets.UTF_8));
     }
 
