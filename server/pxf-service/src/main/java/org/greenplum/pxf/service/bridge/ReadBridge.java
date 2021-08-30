@@ -70,7 +70,8 @@ public class ReadBridge extends BaseBridge {
      */
     @Override
     public boolean beginIteration() throws Exception {
-        return failureHandler.execute(accessor.getConfiguration(), "begin iteration", accessor::openForRead, this::beforeRetryCallback);
+        // using lambda and not a method reference accessor::openForRead as the accessor will be changed by the retry function
+        return failureHandler.execute(accessor.getConfiguration(), "begin iteration", () -> accessor.openForRead(), this::beforeRetryCallback);
     }
 
     protected Deque<Writable> makeOutput(OneRow oneRow) throws Exception {
