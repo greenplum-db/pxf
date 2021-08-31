@@ -15,14 +15,18 @@ import org.greenplum.pxf.service.FakeTicker;
 import org.greenplum.pxf.service.RequestParser;
 import org.greenplum.pxf.service.utilities.GSSFailureHandler;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -41,6 +45,9 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class FragmenterResourceTest {
 
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
+
     @Mock private RequestParser parser;
     @Mock private FragmenterFactory fragmenterFactory;
     @Mock private FragmenterCacheFactory fragmenterCacheFactory;
@@ -49,11 +56,14 @@ public class FragmenterResourceTest {
     @Mock private HttpHeaders headersFromRequest2;
     @Mock private Fragmenter fragmenter1;
     @Mock private Fragmenter fragmenter2;
+    @Mock private Fragmenter fragmenter3;
 
     private Cache<String, List<Fragment>> fragmentCache;
     private Configuration configuration;
     private FakeTicker fakeTicker;
     private GSSFailureHandler handler;
+    private List<Fragment> fragmentList1;
+    private List<Fragment> fragmentList2;
 
     private String PROPERTY_KEY_FRAGMENTER_CACHE = "pxf.service.fragmenter.cache.enabled";
 
@@ -69,7 +79,11 @@ public class FragmenterResourceTest {
         System.clearProperty(PROPERTY_KEY_FRAGMENTER_CACHE);
         configuration = new Configuration();
         handler = GSSFailureHandler.getInstance();
+        fragmentList1 = new ArrayList<>();
+        fragmentList2 = new ArrayList<>();
     }
+
+    // ----- TESTS for caching of fragments -----
 
     @SuppressWarnings("unchecked")
     @Test
@@ -81,9 +95,12 @@ public class FragmenterResourceTest {
         when(parser.parseRequest(headersFromRequest1, RequestType.FRAGMENTER)).thenReturn(context);
         when(fragmenterFactory.getPlugin(context)).thenReturn(fragmenter1);
         when(fragmenter1.getConfiguration()).thenReturn(configuration);
+        when(fragmenter1.getFragments()).thenReturn(fragmentList1);
 
-        new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory, handler)
+        Response response = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory, handler)
                 .getFragments(servletContext, headersFromRequest1);
+        assertResponse(fragmentList1, response);
+
         verify(fragmenter1, times(1)).getFragments();
     }
 
@@ -166,29 +183,18 @@ public class FragmenterResourceTest {
 
         Response response1 = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory, handler)
                 .getFragments(servletContext, headersFromRequest1);
+        assertResponse(fragmentList, response1);
         Response response2 = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory, handler)
                 .getFragments(servletContext, headersFromRequest2);
+        assertResponse(fragmentList, response2);
 
         verify(fragmenter1, times(1)).getFragments();
         verify(fragmenterFactory, never()).getPlugin(context2);
-
-        assertNotNull(response1);
-        assertNotNull(response2);
-        assertNotNull(response1.getEntity());
-        assertNotNull(response2.getEntity());
-        assertTrue(response1.getEntity() instanceof FragmentsResponse);
-        assertTrue(response2.getEntity() instanceof FragmentsResponse);
-
-        assertSame(fragmentList, ((FragmentsResponse) response1.getEntity()).getFragments());
-        assertSame(fragmentList, ((FragmentsResponse) response2.getEntity()).getFragments());
     }
 
     @SuppressWarnings("unchecked")
     @Test
     public void testFragmenterCallExpiresAfterTimeout() throws Throwable {
-        List<Fragment> fragmentList1 = new ArrayList<>();
-        List<Fragment> fragmentList2 = new ArrayList<>();
-
         RequestContext context1 = new RequestContext();
         context1.setTransactionId("XID-XYZ-123456");
         context1.setSegmentId(0);
@@ -210,22 +216,16 @@ public class FragmenterResourceTest {
 
         Response response1 = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory, handler)
                 .getFragments(servletContext, headersFromRequest1);
+        assertResponse(fragmentList1, response1);
+
         fakeTicker.advanceTime(11 * 1000);
+
         Response response2 = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory, handler)
                 .getFragments(servletContext, headersFromRequest2);
+        assertResponse(fragmentList2, response2);
 
         verify(fragmenter1, times(1)).getFragments();
         verify(fragmenter2, times(1)).getFragments();
-        assertNotNull(response1);
-        assertNotNull(response2);
-        assertNotNull(response1.getEntity());
-        assertNotNull(response2.getEntity());
-        assertTrue(response1.getEntity() instanceof FragmentsResponse);
-        assertTrue(response2.getEntity() instanceof FragmentsResponse);
-
-        // Checks for reference
-        assertSame(fragmentList1, ((FragmentsResponse) response1.getEntity()).getFragments());
-        assertSame(fragmentList2, ((FragmentsResponse) response2.getEntity()).getFragments());
     }
 
     @SuppressWarnings("unchecked")
@@ -295,9 +295,6 @@ public class FragmenterResourceTest {
     private void testContextsAreNotCached(RequestContext context1, RequestContext context2)
             throws Throwable {
 
-        List<Fragment> fragmentList1 = new ArrayList<>();
-        List<Fragment> fragmentList2 = new ArrayList<>();
-
         when(parser.parseRequest(headersFromRequest1, RequestType.FRAGMENTER)).thenReturn(context1);
         when(parser.parseRequest(headersFromRequest2, RequestType.FRAGMENTER)).thenReturn(context2);
         when(fragmenterFactory.getPlugin(context1)).thenReturn(fragmenter1);
@@ -311,21 +308,14 @@ public class FragmenterResourceTest {
 
         Response response1 = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory, handler)
                 .getFragments(servletContext, headersFromRequest1);
+        assertResponse(fragmentList1, response1);
+
         Response response2 = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory, handler)
                 .getFragments(servletContext, headersFromRequest2);
+        assertResponse(fragmentList2, response2);
 
         verify(fragmenter1, times(1)).getFragments();
         verify(fragmenter2, times(1)).getFragments();
-
-        assertNotNull(response1);
-        assertNotNull(response2);
-        assertNotNull(response1.getEntity());
-        assertNotNull(response2.getEntity());
-        assertTrue(response1.getEntity() instanceof FragmentsResponse);
-        assertTrue(response2.getEntity() instanceof FragmentsResponse);
-
-        assertSame(fragmentList1, ((FragmentsResponse) response1.getEntity()).getFragments());
-        assertSame(fragmentList2, ((FragmentsResponse) response2.getEntity()).getFragments());
 
         if (Utilities.isFragmenterCacheEnabled()) {
             assertEquals(2, fragmentCache.size());
@@ -344,4 +334,88 @@ public class FragmenterResourceTest {
             assertEquals(0, fragmentCache.size());
         }
     }
+
+    // ----- TESTS for operation retries due to 'GSS initiate failed' errors -----
+
+    @Test
+    public void testBeginIterationFailureNoRetries() throws Throwable {
+        expectedException.expect(IOException.class);
+        expectedException.expectMessage("Something Else");
+
+        RequestContext context = new RequestContext();
+        context.setTransactionId("XID-XYZ-123456");
+        context.setSegmentId(0);
+        configuration.set("hadoop.security.authentication", "kerberos");
+
+        List<Fragment> fragmentList = new ArrayList<>();
+        when(parser.parseRequest(headersFromRequest1, RequestType.FRAGMENTER)).thenReturn(context);
+        when(fragmenterFactory.getPlugin(context)).thenReturn(fragmenter1);
+        when(fragmenter1.getConfiguration()).thenReturn(configuration);
+        when(fragmenter1.getFragments()).thenThrow(new IOException("Something Else"));
+
+        FragmenterResource resource = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory, handler);
+        resource.getFragments(servletContext, headersFromRequest1);
+        verify(fragmenterFactory).getPlugin(context);
+    }
+
+    @Test
+    public void testGetFragmentsGSSFailureRetriedOnce() throws Throwable {
+        RequestContext context = new RequestContext();
+        context.setTransactionId("XID-XYZ-123456");
+        context.setSegmentId(0);
+        configuration.set("hadoop.security.authentication", "kerberos");
+
+        when(parser.parseRequest(headersFromRequest1, RequestType.FRAGMENTER)).thenReturn(context);
+        when(fragmenterFactory.getPlugin(context)).thenReturn(fragmenter1).thenReturn(fragmenter2);
+        when(fragmenter1.getConfiguration()).thenReturn(configuration);
+        when(fragmenter1.getFragments()).thenThrow(new IOException("GSS initiate failed"));
+        when(fragmenter2.getFragments()).thenReturn(fragmentList1);
+
+        FragmenterResource resource = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory, handler);
+        Response response = resource.getFragments(servletContext, headersFromRequest1);
+        assertResponse(fragmentList1, response);
+
+        // verify proper number of interactions
+        verify(fragmenterFactory, times(2)).getPlugin(context);
+        verify(fragmenter1).getFragments(); // first  attempt on fragmenter #1
+        verify(fragmenter2).getFragments(); // second attempt on fragmenter #2
+    }
+
+    @Test
+    public void testBeginIterationGSSFailureRetriedTwice() throws Throwable {
+        RequestContext context = new RequestContext();
+        context.setTransactionId("XID-XYZ-123456");
+        context.setSegmentId(0);
+        configuration.set("hadoop.security.authentication", "kerberos");
+
+        when(parser.parseRequest(headersFromRequest1, RequestType.FRAGMENTER)).thenReturn(context);
+        when(fragmenterFactory.getPlugin(context))
+                .thenReturn(fragmenter1)
+                .thenReturn(fragmenter2)
+                .thenReturn(fragmenter3);
+        when(fragmenter1.getConfiguration()).thenReturn(configuration);
+        when(fragmenter1.getFragments()).thenThrow(new IOException("GSS initiate failed"));
+        when(fragmenter2.getFragments()).thenThrow(new IOException("GSS initiate failed"));
+        when(fragmenter3.getFragments()).thenReturn(fragmentList1);
+
+        FragmenterResource resource = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory, handler);
+        Response response = resource.getFragments(servletContext, headersFromRequest1);
+        assertResponse(fragmentList1, response);
+
+        // verify proper number of interactions
+        verify(fragmenterFactory, times(3)).getPlugin(context);
+        verify(fragmenter1).getFragments(); // first  attempt on fragmenter #1
+        verify(fragmenter2).getFragments(); // second attempt on fragmenter #2
+        verify(fragmenter3).getFragments(); // second attempt on fragmenter #2
+    }
+
+    private void assertResponse(List<Fragment> fragmentList, Response response) {
+        // assert correct return type, fragments obtained are returned
+        assertEquals(200, response.getStatus());
+        assertTrue(response.getMetadata().containsKey("Content-Type"));
+        assertEquals(MediaType.APPLICATION_JSON_TYPE, response.getMetadata().get("Content-Type").get(0));
+        assertTrue(response.getEntity() instanceof FragmentsResponse);
+        assertSame(fragmentList, ((FragmentsResponse) response.getEntity()).getFragments());
+    }
+
 }

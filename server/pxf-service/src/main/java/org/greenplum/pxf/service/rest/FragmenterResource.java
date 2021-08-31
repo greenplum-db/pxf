@@ -186,15 +186,11 @@ public class FragmenterResource extends BaseResource {
     }
 
     private List<Fragment> getFragments(RequestContext context) throws Exception {
-        /* Create a fragmenter instance with API level parameters */
-        Fragmenter fragmenter = fragmenterFactory.getPlugin(context);
+        // create a fragmenter holder that will get a fragmenter from the factory based on the request context
+        FragmenterHolder holder = new FragmenterHolder(context);
         // We can't support lambdas here because asm version doesn't support it
-        List<Fragment> fragments = failureHandler.execute(fragmenter.getConfiguration(), "get fragments", new Callable<List<Fragment>>() {
-            @Override
-            public List<Fragment> call() throws Exception {
-                return fragmenter.getFragments();
-            }
-        });
+        // use the holder that has both an operation to run  to fetch fragments and a callback to reset the fragmenter before retries
+        List<Fragment> fragments = failureHandler.execute(holder.getFragmenter().getConfiguration(), "get fragments", holder, holder);
         fragments = AnalyzeUtils.getSampleFragments(fragments, context);
 
         logFragmentStatistics(Level.INFO, context, fragments);
@@ -237,4 +233,49 @@ public class FragmenterResource extends BaseResource {
         }
     }
 
+    /**
+     * Helper class to hold a reference to a request-specific fragmenter and implements methods to perform the operation
+     * of getting a list of fragments and an operation to reset the fragmenter.
+     */
+    class FragmenterHolder implements Callable<List<Fragment>>, Runnable {
+        private Fragmenter fragmenter;
+        private RequestContext context;
+
+        /**
+         * Creates a new instance of the holder for the specific request. Initializes intself with a fragmenter instance
+         * obtained from the factory of the parent class based on the provided context.
+         * @param context request context
+         */
+        public FragmenterHolder(RequestContext context) {
+            this.context = context; // remember the context, this instance is scoped per request
+            resetFragmenter();      // create the fragmenter from the factory
+        }
+
+        /**
+         * Get fragmenter instance associated with this holder.
+         * @return fragmenter instance
+         */
+        public Fragmenter getFragmenter() {
+            return fragmenter;
+        }
+
+        /**
+         * Resets the fragmenter instance associated with this holder by requesting a new instance from the factory.
+         */
+        public void resetFragmenter() {
+            this.fragmenter = fragmenterFactory.getPlugin(context);
+        }
+
+        /* The operation that can be retried by the failure handler */
+        @Override
+        public List<Fragment> call() throws Exception {
+            return fragmenter.getFragments();
+        }
+
+        /* The callback that is performaedcan be retried by the failure handler */
+        @Override
+        public void run() {
+            resetFragmenter();
+        }
+    }
 }
