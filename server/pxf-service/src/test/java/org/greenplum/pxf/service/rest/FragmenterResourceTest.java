@@ -19,6 +19,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
@@ -33,13 +34,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -356,6 +358,9 @@ public class FragmenterResourceTest {
         FragmenterResource resource = new FragmenterResource(parser, fragmenterFactory, fragmenterCacheFactory, handler);
         resource.getFragments(servletContext, headersFromRequest1);
         verify(fragmenterFactory).getPlugin(context);
+        verify(fragmenter1.getConfiguration());
+        verify(fragmenter1).getFragments();
+        verifyNoMoreInteractions();
     }
 
     @Test
@@ -377,8 +382,10 @@ public class FragmenterResourceTest {
 
         // verify proper number of interactions
         verify(fragmenterFactory, times(2)).getPlugin(context);
-        verify(fragmenter1).getFragments(); // first  attempt on fragmenter #1
-        verify(fragmenter2).getFragments(); // second attempt on fragmenter #2
+        InOrder inOrder = inOrder(fragmenter1, fragmenter2);
+        inOrder.verify(fragmenter1).getFragments(); // first  attempt on fragmenter #1
+        inOrder.verify(fragmenter2).getFragments(); // second attempt on fragmenter #2
+        inOrder.verifyNoMoreInteractions();
     }
 
     @Test
@@ -404,9 +411,11 @@ public class FragmenterResourceTest {
 
         // verify proper number of interactions
         verify(fragmenterFactory, times(3)).getPlugin(context);
-        verify(fragmenter1).getFragments(); // first  attempt on fragmenter #1
-        verify(fragmenter2).getFragments(); // second attempt on fragmenter #2
-        verify(fragmenter3).getFragments(); // second attempt on fragmenter #2
+        InOrder inOrder = inOrder(fragmenter1, fragmenter2, fragmenter3);
+        inOrder.verify(fragmenter1).getFragments(); // first  attempt on fragmenter #1
+        inOrder.verify(fragmenter2).getFragments(); // second attempt on fragmenter #2
+        inOrder.verify(fragmenter3).getFragments(); // second attempt on fragmenter #3
+        inOrder.verifyNoMoreInteractions();
     }
 
     private void assertResponse(List<Fragment> fragmentList, Response response) {

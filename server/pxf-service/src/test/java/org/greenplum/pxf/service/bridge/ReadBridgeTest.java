@@ -11,14 +11,17 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import java.io.IOException;
 
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -63,6 +66,9 @@ public class ReadBridgeTest {
         bridge = new ReadBridge(context, mockAccessorFactory, mockResolverFactory, handler);
         bridge.beginIteration();
         verify(mockAccessorFactory).getPlugin(context);
+        verify(mockAccessor1.getConfiguration());
+        verify(mockAccessor1).openForRead();
+        verifyNoMoreInteractions();
     }
 
     @Test
@@ -78,8 +84,10 @@ public class ReadBridgeTest {
 
         assertTrue(result);
         verify(mockAccessorFactory, times(2)).getPlugin(context);
-        verify(mockAccessor1).openForRead(); // first  attempt on accessor #1
-        verify(mockAccessor2).openForRead(); // second attempt on accessor #2
+        InOrder inOrder = inOrder(mockAccessor1, mockAccessor2);
+        inOrder.verify(mockAccessor1).openForRead(); // first  attempt on accessor #1
+        inOrder.verify(mockAccessor2).openForRead(); // second attempt on accessor #2
+        inOrder.verifyNoMoreInteractions();
     }
 
     @Test
@@ -99,9 +107,11 @@ public class ReadBridgeTest {
 
         assertTrue(result);
         verify(mockAccessorFactory, times(3)).getPlugin(context);
-        verify(mockAccessor1).openForRead(); // first  attempt on accessor #1
-        verify(mockAccessor2).openForRead(); // second attempt on accessor #2
-        verify(mockAccessor3).openForRead(); // second attempt on accessor #3
+        InOrder inOrder = inOrder(mockAccessor1, mockAccessor2, mockAccessor3);
+        inOrder.verify(mockAccessor1).openForRead(); // first  attempt on accessor #1
+        inOrder.verify(mockAccessor2).openForRead(); // second attempt on accessor #2
+        inOrder.verify(mockAccessor3).openForRead(); // second attempt on accessor #3
+        inOrder.verifyNoMoreInteractions();
     }
 
 }

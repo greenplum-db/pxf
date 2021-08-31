@@ -189,7 +189,7 @@ public class FragmenterResource extends BaseResource {
         // create a fragmenter holder that will get a fragmenter from the factory based on the request context
         FragmenterHolder holder = new FragmenterHolder(context);
         // We can't support lambdas here because asm version doesn't support it
-        // use the holder that has both an operation to run  to fetch fragments and a callback to reset the fragmenter before retries
+        // use the holder that has both an operation to run to fetch fragments and a callback to reset the fragmenter before retries
         List<Fragment> fragments = failureHandler.execute(holder.getFragmenter().getConfiguration(), "get fragments", holder, holder);
         fragments = AnalyzeUtils.getSampleFragments(fragments, context);
 
@@ -272,7 +272,7 @@ public class FragmenterResource extends BaseResource {
             return fragmenter.getFragments();
         }
 
-        /* The callback that is performaedcan be retried by the failure handler */
+        /* The callback that is performed before a retry attempt by the failure handler */
         @Override
         public void run() {
             resetFragmenter();
