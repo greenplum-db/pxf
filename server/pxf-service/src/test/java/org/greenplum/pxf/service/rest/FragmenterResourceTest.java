@@ -414,7 +414,7 @@ public class FragmenterResourceTest {
         InOrder inOrder = inOrder(fragmenter1, fragmenter2, fragmenter3);
         inOrder.verify(fragmenter1).getFragments(); // first  attempt on fragmenter #1
         inOrder.verify(fragmenter2).getFragments(); // second attempt on fragmenter #2
-        inOrder.verify(fragmenter3).getFragments(); // second attempt on fragmenter #3
+        inOrder.verify(fragmenter3).getFragments(); // third  attempt on fragmenter #3
         inOrder.verifyNoMoreInteractions();
     }
 

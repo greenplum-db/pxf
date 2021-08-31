@@ -110,7 +110,7 @@ public class ReadBridgeTest {
         InOrder inOrder = inOrder(mockAccessor1, mockAccessor2, mockAccessor3);
         inOrder.verify(mockAccessor1).openForRead(); // first  attempt on accessor #1
         inOrder.verify(mockAccessor2).openForRead(); // second attempt on accessor #2
-        inOrder.verify(mockAccessor3).openForRead(); // second attempt on accessor #3
+        inOrder.verify(mockAccessor3).openForRead(); // third  attempt on accessor #3
         inOrder.verifyNoMoreInteractions();
     }
 

@@ -110,7 +110,7 @@ public class WriteBridgeTest {
         InOrder inOrder = inOrder(mockAccessor1, mockAccessor2, mockAccessor3);
         inOrder.verify(mockAccessor1).openForWrite(); // first  attempt on accessor #1
         inOrder.verify(mockAccessor2).openForWrite(); // second attempt on accessor #2
-        inOrder.verify(mockAccessor3).openForWrite(); // second attempt on accessor #3
+        inOrder.verify(mockAccessor3).openForWrite(); // third  attempt on accessor #3
         inOrder.verifyNoMoreInteractions();
     }
 
