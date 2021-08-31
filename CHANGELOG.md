@@ -1,5 +1,11 @@
 # Changelog
 
+## 5.16.4 (08/31/2021)
+
+### Bug Fixes:
+
+- [#693](https://github.com/greenplum-db/pxf/pull/693) Fixed GSS failure handler retry logic
+
 ## 5.16.3 (08/20/2021)
 
 ### Bug Fixes:

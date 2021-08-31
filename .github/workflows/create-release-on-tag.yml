@@ -22,12 +22,11 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: PXF Version ${{ github.ref }}
           body: |
-            ## 5.16.3 (08/20/2021)
+            ## 5.16.4 (08/31/2021)
 
             ### Bug Fixes:
 
-            - [#682](https://github.com/greenplum-db/pxf/pull/682) fix CURLOPT_RESOLVE optimization
-            - [#681](https://github.com/greenplum-db/pxf/pull/681) Introduced operation retries when GSS connection failures are encountered
+            - [#693](https://github.com/greenplum-db/pxf/pull/693) Fixed GSS failure handler retry logic
 
           draft: false
           prerelease: false
