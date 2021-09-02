@@ -83,3 +83,59 @@ make installcheck
 
 This will connect to the running database, and run the regression
 tests located in the `regress` directory.
+
+## Measuring Coverage
+
+1. (Re-)Build the external table extension with `gcc`'s `--coverage flag
+
+    ```bash
+    make clean
+    make CFLAGS=--coverage
+    make install
+    ```
+
+2. Run some queries via `psql`
+    - Define a readable or writable external table
+    - Select from a readable table with and without projection and/or predicates
+    - Insert into a writable table
+
+3. After exiting `psql`, you should find `*.gcda` and `*.gcno` files in the `src/` directory
+
+    ```bash
+    $ ls -l src/*.gc*
+    -rw------- 1 bboyle bboyle  2796 Sep  2 14:47 src/gpdbwritableformatter.gcda
+    -rw-r--r-- 1 bboyle bboyle 36308 Sep  2 14:47 src/gpdbwritableformatter.gcno
+    -rw------- 1 bboyle bboyle  4672 Sep  2 14:47 src/libchurl.gcda
+    -rw-r--r-- 1 bboyle bboyle 44172 Sep  2 14:47 src/libchurl.gcno
+    -rw------- 1 bboyle bboyle   724 Sep  2 14:47 src/pxfbridge.gcda
+    -rw-r--r-- 1 bboyle bboyle  5888 Sep  2 14:47 src/pxfbridge.gcno
+    -rw------- 1 bboyle bboyle  3732 Sep  2 14:47 src/pxffilters.gcda
+    -rw-r--r-- 1 bboyle bboyle 42644 Sep  2 14:47 src/pxffilters.gcno
+    -rw------- 1 bboyle bboyle  1792 Sep  2 14:47 src/pxfheaders.gcda
+    -rw-r--r-- 1 bboyle bboyle 19276 Sep  2 14:47 src/pxfheaders.gcno
+    -rw------- 1 bboyle bboyle   984 Sep  2 14:47 src/pxfprotocol.gcda
+    -rw-r--r-- 1 bboyle bboyle  9216 Sep  2 14:47 src/pxfprotocol.gcno
+    -rw------- 1 bboyle bboyle  1576 Sep  2 14:47 src/pxfuriparser.gcda
+    -rw-r--r-- 1 bboyle bboyle 15808 Sep  2 14:47 src/pxfuriparser.gcno
+    -rw------- 1 bboyle bboyle   772 Sep  2 14:47 src/pxfutils.gcda
+    -rw-r--r-- 1 bboyle bboyle  6980 Sep  2 14:47 src/pxfutils.gcno
+    ```
+
+4. Generate an HTML report
+
+    ```bash
+    # macOS: brew install lcov
+    # Debian/Ubuntu: apt install lcov
+    lcov --no-external -d src -c -o lcov.info
+    genhtml --show-details --legend --output-directory=coverage --title=PXF --num-spaces=4 --prefix=src lcov.info
+    ```
+
+5. View the coverage report in `./coverage/index.html`
+
+6. When you are done, re-build and re-install the extension _without_ `--coverage`
+
+    ```bash
+    make clean
+    make
+    make install
+    ```
