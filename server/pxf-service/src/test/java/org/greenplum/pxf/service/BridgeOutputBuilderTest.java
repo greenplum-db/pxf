@@ -55,6 +55,7 @@ public class BridgeOutputBuilderTest {
     private static final int UN_SUPPORTED_TYPE = -1;
     private GPDBWritable output = null;
     private final DataOutputToBytes dos = new DataOutputToBytes();
+    private enum TestEnum { HELLO };
 
     @Test
     public void testFillGPDBWritable() throws Exception {

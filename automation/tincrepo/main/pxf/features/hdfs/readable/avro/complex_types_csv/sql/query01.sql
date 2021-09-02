@@ -1,10 +1,10 @@
--- @description query01 for PXF HDFS Readable Avro supported array type for FORMAT "TEXT" test cases
+-- @description query01 for PXF HDFS Readable Avro supported array type for FORMAT "CSV" test cases
 
-SELECT type_long, type_string, type_array, type_union, type_enum, type_fixed from avrotest_complex_text ORDER BY type_long;
+SELECT type_long, type_string, type_array, type_union, type_enum, type_fixed from avrotest_complex_csv ORDER BY type_long;
 
 CREATE view avro_view
 as select type_string, string_to_array(substring(type_map from 2 for (char_length(type_map) - 2)),',')::text[]
-as type_map, string_to_array(substring(type_record from 2 for (char_length(type_record) - 2)),',')::text[] as type_record from avrotest_complex_text;
+as type_map, string_to_array(substring(type_record from 2 for (char_length(type_record) - 2)),',')::text[] as type_record from avrotest_complex_csv;
 
 select exists(select type_map from avro_view where type_map <@ '{caleb:3,parham:3}' and type_map @> '{caleb:3,parham:3}');
 select exists(select type_map from avro_view where type_map <@ '{kate:10,santosh:4}' and type_map @> '{kate:10,santosh:4}');
