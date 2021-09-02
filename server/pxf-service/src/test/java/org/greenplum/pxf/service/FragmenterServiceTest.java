@@ -13,7 +13,12 @@ import org.greenplum.pxf.service.utilities.BasePluginFactory;
 import org.greenplum.pxf.service.utilities.GSSFailureHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -22,17 +27,23 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class FragmenterServiceTest {
 
-    private BasePluginFactory mockPluginFactory;
-    private Fragmenter fragmenter1;
-    private Fragmenter fragmenter2;
+    @Mock private BasePluginFactory mockPluginFactory;
+    @Mock private Fragmenter fragmenter1;
+    @Mock private Fragmenter fragmenter2;
+    @Mock private Fragmenter fragmenter3;
     private Cache<String, List<Fragment>> fragmentCache;
     private FakeTicker fakeTicker;
     private FragmenterService fragmenterService;
@@ -64,10 +75,7 @@ class FragmenterServiceTest {
         context2.setDataSource("path.A");
         context2.setConfiguration(configuration);
 
-        mockPluginFactory = mock(BasePluginFactory.class);
         FragmenterCacheFactory fragmenterCacheFactory = mock(FragmenterCacheFactory.class);
-        fragmenter1 = mock(Fragmenter.class);
-        fragmenter2 = mock(Fragmenter.class);
 
         fakeTicker = new FakeTicker();
         fragmentCache = CacheBuilder.newBuilder()
@@ -176,8 +184,6 @@ class FragmenterServiceTest {
         context2.setTotalSegments(2);
 
         when(mockPluginFactory.getPlugin(context1, context1.getFragmenter())).thenReturn(fragmenter1);
-        when(mockPluginFactory.getPlugin(context2, context2.getFragmenter())).thenReturn(fragmenter2);
-
         when(fragmenter1.getFragments()).thenReturn(fragmentList);
 
         List<Fragment> response1 = fragmenterService.getFragmentsForSegment(context1);
@@ -202,8 +208,6 @@ class FragmenterServiceTest {
         context2.setTransactionId("XID-XYZ-123456");
 
         when(mockPluginFactory.getPlugin(context1, context1.getFragmenter())).thenReturn(fragmenter1);
-        when(mockPluginFactory.getPlugin(context2, context2.getFragmenter())).thenReturn(fragmenter2);
-
         when(fragmenter1.getFragments()).thenReturn(fragmentList);
 
         List<Fragment> response1 = fragmenterService.getFragmentsForSegment(context1);
@@ -333,5 +337,98 @@ class FragmenterServiceTest {
         public void advanceTime(long milliseconds) {
             nanos.addAndGet(milliseconds * NANOS_PER_MILLIS);
         }
+    }
+
+    // ----- TESTS for operation retries due to 'GSS initiate failed' errors -----
+
+    @Test
+    public void testGetFragmentsFailureNoRetries() throws Throwable {
+        configuration.set("hadoop.security.authentication", "kerberos");
+        when(mockPluginFactory.getPlugin(context1, context1.getFragmenter())).thenReturn(fragmenter1);
+        when(fragmenter1.getFragments()).thenThrow(new IOException("Something Else"));
+
+        Exception e = assertThrows(IOException.class, () -> fragmenterService.getFragmentsForSegment(context1));
+        assertEquals("Something Else", e.getMessage());
+
+        // verify got fragmenter and fragments only once
+        verify(mockPluginFactory).getPlugin(context1, context1.getFragmenter());
+        verify(fragmenter1).getFragments();
+        verifyNoMoreInteractions(mockPluginFactory, fragmenter1);
+    }
+
+    @Test
+    public void testGetFragmentsGSSFailureRetriedOnce() throws Throwable {
+        List<Fragment> fragmentList = new ArrayList<>();
+        configuration.set("hadoop.security.authentication", "kerberos");
+
+        when(mockPluginFactory.getPlugin(context1, context1.getFragmenter()))
+                .thenReturn(fragmenter1)
+                .thenReturn(fragmenter2);
+        when(fragmenter1.getFragments()).thenThrow(new IOException("GSS initiate failed"));
+        when(fragmenter2.getFragments()).thenReturn(fragmentList);
+
+        List<Fragment> result = fragmenterService.getFragmentsForSegment(context1);
+        assertNotNull(result);
+
+        // verify proper number of interactions
+        verify(mockPluginFactory, times(2)).getPlugin(context1, context1.getFragmenter());
+        InOrder inOrder = inOrder(fragmenter1, fragmenter2);
+        inOrder.verify(fragmenter1).getFragments(); // first  attempt on fragmenter #1
+        inOrder.verify(fragmenter2).getFragments(); // second attempt on fragmenter #2
+        inOrder.verifyNoMoreInteractions();
+        verifyNoMoreInteractions(mockPluginFactory);
+    }
+
+    @Test
+    public void testBeginIterationGSSFailureRetriedTwice() throws Throwable {
+        List<Fragment> fragmentList = new ArrayList<>();
+        configuration.set("hadoop.security.authentication", "kerberos");
+
+        when(mockPluginFactory.getPlugin(context1, context1.getFragmenter()))
+                .thenReturn(fragmenter1)
+                .thenReturn(fragmenter2)
+                .thenReturn(fragmenter3);
+        when(fragmenter1.getFragments()).thenThrow(new IOException("GSS initiate failed"));
+        when(fragmenter2.getFragments()).thenThrow(new IOException("GSS initiate failed"));
+        when(fragmenter3.getFragments()).thenReturn(fragmentList);
+
+        List<Fragment> result = fragmenterService.getFragmentsForSegment(context1);
+        assertNotNull(result);
+
+        // verify proper number of interactions
+        verify(mockPluginFactory, times(3)).getPlugin(context1, context1.getFragmenter());
+        InOrder inOrder = inOrder(fragmenter1, fragmenter2, fragmenter3);
+        inOrder.verify(fragmenter1).getFragments(); // first  attempt on fragmenter #1
+        inOrder.verify(fragmenter2).getFragments(); // second attempt on fragmenter #2
+        inOrder.verify(fragmenter3).getFragments(); // third  attempt on fragmenter #3
+        inOrder.verifyNoMoreInteractions();
+        verifyNoMoreInteractions(mockPluginFactory);
+    }
+
+    @Test
+    public void testBeginIterationGSSFailureAfterMaxRetries() throws Throwable {
+        List<Fragment> fragmentList = new ArrayList<>();
+        configuration.set("hadoop.security.authentication", "kerberos");
+        configuration.set("pxf.sasl.connection.retries", "2");
+
+        when(mockPluginFactory.getPlugin(context1, context1.getFragmenter()))
+                .thenReturn(fragmenter1)
+                .thenReturn(fragmenter2)
+                .thenReturn(fragmenter3);
+        when(fragmenter1.getFragments()).thenThrow(new IOException("GSS initiate failed"));
+        when(fragmenter2.getFragments()).thenThrow(new IOException("GSS initiate failed"));
+        when(fragmenter3.getFragments()).thenThrow(new IOException("GSS initiate failed"));
+
+        Exception e = assertThrows(IOException.class, () -> fragmenterService.getFragmentsForSegment(context1));
+        assertEquals("GSS initiate failed", e.getMessage());
+
+        // verify proper number of interactions
+        verify(mockPluginFactory, times(3)).getPlugin(context1, context1.getFragmenter());
+        InOrder inOrder = inOrder(fragmenter1, fragmenter2, fragmenter3);
+        inOrder.verify(fragmenter1).getFragments(); // first  attempt on fragmenter #1
+        inOrder.verify(fragmenter2).getFragments(); // second attempt on fragmenter #2
+        inOrder.verify(fragmenter3).getFragments(); // third  attempt on fragmenter #3
+        inOrder.verifyNoMoreInteractions();
+        verifyNoMoreInteractions(mockPluginFactory);
     }
 }

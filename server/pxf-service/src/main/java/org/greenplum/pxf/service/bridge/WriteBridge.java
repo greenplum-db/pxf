@@ -56,7 +56,8 @@ public class WriteBridge extends BaseBridge {
      */
     @Override
     public boolean beginIteration() throws Exception {
-        return failureHandler.execute(context.getConfiguration(), "begin iteration", accessor::openForWrite, this::beforeRetryCallback);
+        // using lambda and not a method reference accessor::openForRead as the accessor will be changed by the retry function
+        return failureHandler.execute(context.getConfiguration(), "begin iteration", () -> accessor.openForWrite(), this::beforeRetryCallback);
     }
 
     /*
