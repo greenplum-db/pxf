@@ -350,7 +350,10 @@ no JDK set for Gradle. Just cancel and retry. It goes away the second time.
 - In IntelliJ, click `Edit Configuration` and add a new one of type `Remote`
 - Change the name to `PXF Service Boot`
 - Change the port number to `2020`
-- Save and run a query in GPDB that uses PXF to debug with IntelliJ
+- Save the configuration
+- Restart PXF in DEBUG Mode `PXF_DEBUG=true pxf restart`
+- Debug the new configuration in IntelliJ
+- Run a query in GPDB that uses PXF to debug with IntelliJ
 
 # To run a Kerberized Hadoop Cluster
 
