@@ -45,7 +45,6 @@ import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static org.greenplum.pxf.api.io.DataType.TEXT;

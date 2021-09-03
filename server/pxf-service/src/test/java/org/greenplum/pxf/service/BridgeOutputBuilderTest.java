@@ -55,7 +55,7 @@ public class BridgeOutputBuilderTest {
     private static final int UN_SUPPORTED_TYPE = -1;
     private GPDBWritable output = null;
     private final DataOutputToBytes dos = new DataOutputToBytes();
-    private enum TestEnum { HELLO };
+    private enum TestEnum { HELLO }
 
     @Test
     public void testFillGPDBWritable() throws Exception {
@@ -113,7 +113,7 @@ public class BridgeOutputBuilderTest {
     @Test
     public void testCSVSerialization() throws Exception {
         RequestContext context = new RequestContext();
-        context.setFormat("TEXT");
+        context.setFormat("CSV");
         addColumn(context, 0, DataType.INTEGER, "col0");
         addColumn(context, 1, DataType.FLOAT8, "col1");
         addColumn(context, 2, DataType.REAL, "col2");
@@ -159,7 +159,7 @@ public class BridgeOutputBuilderTest {
         String date = new Date(1).toString();
 
         outputQueue.get(0).write(dos);
-        assertEquals("0,0.0,0.0,0,0,true,\\\\x00,value,value,\"va\"\"lue\",0," + datetime + "," + date + ",,HELLO\n",
+        assertEquals("0,0.0,0.0,0,0,true,\\x00,value,value,\"va\"\"lue\",0," + datetime + "," + date + ",,HELLO\n",
                 new String(dos.getOutput(), StandardCharsets.UTF_8));
     }
 
