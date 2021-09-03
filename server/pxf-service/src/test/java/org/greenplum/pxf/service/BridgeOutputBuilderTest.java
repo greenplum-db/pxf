@@ -113,7 +113,7 @@ public class BridgeOutputBuilderTest {
     @Test
     public void testCSVSerialization() throws Exception {
         RequestContext context = new RequestContext();
-
+        context.setFormat("TEXT");
         addColumn(context, 0, DataType.INTEGER, "col0");
         addColumn(context, 1, DataType.FLOAT8, "col1");
         addColumn(context, 2, DataType.REAL, "col2");
@@ -147,7 +147,7 @@ public class BridgeOutputBuilderTest {
                 new OneField(DataType.TIMESTAMP.getOID(), new Timestamp(0)),
                 new OneField(DataType.DATE.getOID(), new Date(1)),
                 new OneField(DataType.VARCHAR.getOID(), null),
-                new OneField(DataType.VARCHAR.getOID(), DataType.VARCHAR)
+                new OneField(DataType.VARCHAR.getOID(), TestEnum.HELLO)
         );
 
         List<Writable> outputQueue = builder.makeOutput(recFields);
@@ -159,7 +159,7 @@ public class BridgeOutputBuilderTest {
         String date = new Date(1).toString();
 
         outputQueue.get(0).write(dos);
-        assertEquals("0,0.0,0.0,0,0,true,\\\\x00,value,value,\"va\"\"lue\",0," + datetime + "," + date + ",,VARCHAR\n",
+        assertEquals("0,0.0,0.0,0,0,true,\\\\x00,value,value,\"va\"\"lue\",0," + datetime + "," + date + ",,HELLO\n",
                 new String(dos.getOutput(), StandardCharsets.UTF_8));
     }
 

@@ -76,7 +76,7 @@ public class BridgeOutputBuilder {
     private final GreenplumCSV greenplumCSV;
     private final OutputFormat outputFormat;
     private final List<ColumnDescriptor> columnDescriptors;
-    private final String format;
+    private final String gpdbTableformat;
     /**
      * Constructs a BridgeOutputBuilder.
      *
@@ -93,7 +93,7 @@ public class BridgeOutputBuilder {
         outputList = new LinkedList<>();
         makeErrorRecord();
         samplingEnabled = (context.getStatsSampleRatio() > 0);
-        format = context.getFormat();
+        gpdbTableformat = context.getFormat();
     }
 
     /**
@@ -475,9 +475,9 @@ public class BridgeOutputBuilder {
                     else if (field.type == DataType.BYTEA.getOID())
                     {
                         // check for Format Type here. if the Format Type is CSV, we should escape using single \
-                        // for Text or Custom Format types, it should \\ 
-                        String encodedStr = Hex.encodeHexString((byte[]) field.val);
-                        return (format != null && format.equalsIgnoreCase("csv")) ? "\\x" + encodedStr : "\\\\x" + encodedStr;
+                        // for Text or Custom Format types, it should \\
+                        String hexPrepend = gpdbTableformat.equalsIgnoreCase("csv") ? "\\x"  : "\\\\x" ;
+                        return hexPrepend + Hex.encodeHexString((byte[]) field.val);
                     }
                     else if (field.type == DataType.NUMERIC.getOID() || !DataType.isTextForm(field.type))
                         return field.val.toString();

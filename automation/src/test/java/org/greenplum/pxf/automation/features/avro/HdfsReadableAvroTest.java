@@ -217,7 +217,7 @@ public class HdfsReadableAvroTest extends BaseFeature {
         runTincTest("pxf.features.hdfs.readable.avro.complex_types_csv.runTest");
     }
 
-    /**PivotalSshRsa
+    /**
      * Read an Avro file that includes all supported complex types, reading the schema from another file.
      *
      * @throws Exception
