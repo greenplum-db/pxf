@@ -38,7 +38,6 @@ public class HttpRequestParser implements RequestParser<MultiValueMap<String, St
     private static final Logger LOG = LoggerFactory.getLogger(HttpRequestParser.class);
 
     private static final String TRUE_LCASE = "true";
-    private static final String FALSE_LCASE = "false";
     private static final String PROFILE_SCHEME = "PROFILE-SCHEME";
     private static final String PXF_API_VERSION = "pxfApiVersion";
 

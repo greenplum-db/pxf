@@ -57,8 +57,5 @@ public class DataSchemaException extends RuntimeException {
         super(String.format(msgFormat.getFormat(), (Object[]) msgArgs));
         this.msgFormat = msgFormat;
     }
-
-    public MessageFmt getMsgFormat() {
-        return msgFormat;
-    }
+    
 }

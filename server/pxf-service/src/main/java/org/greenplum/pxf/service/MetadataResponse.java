@@ -22,8 +22,6 @@ package org.greenplum.pxf.service;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.greenplum.pxf.api.model.Metadata;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
@@ -41,7 +39,6 @@ import java.util.List;
  */
 public class MetadataResponse implements StreamingResponseBody {
 
-    private static final Log Log = LogFactory.getLog(MetadataResponse.class);
     private static final String METADATA_DEFAULT_RESPONSE = "{\"PXFMetadata\":[]}";
 
     private List<Metadata> metadataList;

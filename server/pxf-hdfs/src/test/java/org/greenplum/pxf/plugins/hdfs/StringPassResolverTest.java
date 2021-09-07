@@ -85,7 +85,7 @@ public class StringPassResolverTest {
     }
 
     /*
-     * helpers functions
+     * Helper functions
      */
     private StringPassResolver buildResolver() {
         context = new RequestContext();

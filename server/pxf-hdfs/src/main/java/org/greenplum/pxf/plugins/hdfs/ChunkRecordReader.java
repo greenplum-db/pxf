@@ -25,8 +25,6 @@ import static org.apache.hadoop.mapreduce.lib.input.LineRecordReader.MAX_LINE_LE
 import java.io.InputStream;
 import java.io.IOException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -55,7 +53,6 @@ import org.apache.hadoop.mapred.RecordReader;
  */
 public class ChunkRecordReader implements
         RecordReader<LongWritable, ChunkWritable> {
-    private static final Log LOG = LogFactory.getLog(ChunkRecordReader.class.getName());
 
     private CompressionCodecFactory compressionCodecs = null;
     private long start;

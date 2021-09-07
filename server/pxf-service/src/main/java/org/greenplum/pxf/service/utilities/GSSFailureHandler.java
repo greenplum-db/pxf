@@ -18,7 +18,6 @@ import java.util.concurrent.Callable;
 @Component
 public class GSSFailureHandler {
 
-    private static final GSSFailureHandler instance = new GSSFailureHandler();
     private static final Logger LOG = LoggerFactory.getLogger(GSSFailureHandler.class);
     private static final String RETRIES_PROPERTY_NAME = "pxf.sasl.connection.retries";
     private static final int MAX_RETRIES_DEFAULT = 5;

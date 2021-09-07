@@ -86,7 +86,7 @@ public class ChunkReader implements Closeable {
      *         or if some other I/O error occurs.
      */
     public int readChunk(Writable str, int maxBytesToConsume) throws IOException
-           {
+    {
         ChunkWritable cw = (ChunkWritable) str;
         List<Node> list = new LinkedList<Node>();
 
@@ -116,17 +116,28 @@ public class ChunkReader implements Closeable {
 
         } while (bytesConsumed < maxBytesToConsume);
 
-        if (list.size() > 0) {
+        copyListToCW(cw,list,bytesConsumed);
+
+        return (int) bytesConsumed;
+    }
+
+    /**
+     * This function iterates Node List and copy to ChunkWritable.box array
+     * @param cw
+     * @param nodeList
+     * @param bytesConsumed
+     */
+    private void copyListToCW(ChunkWritable cw,List<Node> nodeList, long bytesConsumed)
+    {
+        if (nodeList.size() > 0) {
             cw.box = new byte[(int) bytesConsumed];
             int pos = 0;
-            for (int i = 0; i < list.size(); i++) {
-                Node n = list.get(i);
+            for (int i = 0; i < nodeList.size(); i++) {
+                Node n = nodeList.get(i);
                 System.arraycopy(n.slice, 0, cw.box, pos, n.len);
                 pos += n.len;
             }
         }
-
-        return (int) bytesConsumed;
     }
 
     /**
@@ -180,15 +191,7 @@ public class ChunkReader implements Closeable {
             }
         } while (!newLine && bytesConsumed < maxBytesToConsume);
 
-        if (list.size() > 0) {
-            cw.box = new byte[(int) bytesConsumed];
-            int pos = 0;
-            for (int i = 0; i < list.size(); i++) {
-                Node n = list.get(i);
-                System.arraycopy(n.slice, 0, cw.box, pos, n.len);
-                pos += n.len;
-            }
-        }
+        copyListToCW(cw,list,bytesConsumed);
 
         return (int) bytesConsumed;
     }

@@ -129,7 +129,7 @@ public class PgUtilities {
      * If the value is enclosed in double quotes, they are removed. Backslash-escaped double quotes and backslashes
      * embedded in the string will unescaped.
      * @param str
-     * @return
+     * @return String
      */
     public String unescapeArrayElement(String str) {
         if (StringUtils.equals(str, "NULL")) {
