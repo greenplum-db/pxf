@@ -131,30 +131,6 @@ static char	   *build_header_str(const char *format, const char *key, const char
 static bool	IsValidJson(text *json);
 
 
-/*
- * Debug function - print the http headers
- */
-void
-print_http_headers(CHURL_HEADERS headers)
-{
-	if ((DEBUG2 >= log_min_messages) || (DEBUG2 >= client_min_messages))
-	{
-		churl_settings *settings = (churl_settings *) headers;
-		struct curl_slist *header_cell = settings->headers;
-		char	   *header_data;
-		int			count = 0;
-
-		while (header_cell != NULL)
-		{
-			header_data = header_cell->data;
-			elog(DEBUG2, "churl http header: cell #%d: %s",
-				 count, header_data ? header_data : "NONE");
-			header_cell = header_cell->next;
-			++count;
-		}
-	}
-}
-
 CHURL_HEADERS
 churl_headers_init(void)
 {
@@ -335,6 +311,44 @@ churl_headers_cleanup(CHURL_HEADERS headers)
 	pfree(settings);
 }
 
+/*
+ * debug callback for CURLOPT_DEBUGFUNCTION
+ * logs debug information via postgres' logging mechanism
+ */
+static int
+log_curl_debug(CURL *handle, curl_infotype type, char *data, size_t size, void *userp)
+{
+	static const char prefix_map[CURLINFO_END][13] = {
+		"info: ",
+		"header in: ",
+		"header out: ",
+		"data in: ",
+		"data out: ",
+		"data in: ",
+		"data out: "
+	};
+
+	switch(type) {
+	case CURLINFO_TEXT:
+	case CURLINFO_HEADER_IN:
+	case CURLINFO_HEADER_OUT:
+		ereport(DEBUG3,
+			(errmsg("curl debug - %s%s", prefix_map[type], data)));
+		break;
+	case CURLINFO_DATA_IN:
+	case CURLINFO_DATA_OUT:
+	case CURLINFO_SSL_DATA_IN:
+	case CURLINFO_SSL_DATA_OUT:
+		ereport(DEBUG3,
+			(errmsg("curl debug - %s%zu bytes", prefix_map[type], size)));
+		break;
+	default:
+		break;
+	}
+
+	return 0;
+}
+
 static CHURL_HANDLE
 churl_init(const char *url, CHURL_HEADERS headers)
 {
@@ -358,8 +372,11 @@ churl_init(const char *url, CHURL_HEADERS headers)
 		pfree(pxf_host_entry);
 	}
 
+	long curl_verbose = (DEBUG3 >= log_min_messages) || (DEBUG3 >= client_min_messages);
+
 	set_curl_option(context, CURLOPT_URL, url);
-	set_curl_option(context, CURLOPT_VERBOSE, (const void *) FALSE);
+	set_curl_option(context, CURLOPT_DEBUGFUNCTION, log_curl_debug);
+	set_curl_option(context, CURLOPT_VERBOSE, (const void *) curl_verbose);
 	set_curl_option(context, CURLOPT_ERRORBUFFER, context->curl_error_buffer);
 	set_curl_option(context, CURLOPT_IPRESOLVE, (const void *) CURL_IPRESOLVE_V4);
 	set_curl_option(context, CURLOPT_WRITEFUNCTION, write_callback);
@@ -385,7 +402,6 @@ churl_init_upload(const char *url, CHURL_HEADERS headers)
 	churl_headers_append(headers, "Transfer-Encoding", "chunked");
 	churl_headers_append(headers, "Expect", "100-continue");
 
-	print_http_headers(headers);
 	setup_multi_handle(context);
 	return (CHURL_HANDLE) context;
 }
@@ -397,7 +413,6 @@ churl_init_download(const char *url, CHURL_HEADERS headers)
 
 	context->upload = false;
 
-	print_http_headers(headers);
 	setup_multi_handle(context);
 	return (CHURL_HANDLE) context;
 }
@@ -892,6 +907,11 @@ check_response_status(churl_context *context)
 
 			initStringInfo(&err);
 
+			/* if the request did not complete correctly, show the error
+			 * information. If no detailed error information was written to errbuf
+			 * show the more generic information from curl_easy_strerror instead.
+			 */
+
 			appendStringInfo(&err, "transfer error (%ld): %s",
 							 status, curl_easy_strerror(status));
 
@@ -900,9 +920,22 @@ check_response_status(churl_context *context)
 				appendStringInfo(&err, " from %s", addr);
 				pfree(addr);
 			}
-			elog(ERROR, "%s", err.data);
+
+			size_t len = strlen(context->curl_error_buffer);
+			if (len > 0)
+			{
+				ereport(ERROR,
+					(errmsg("%s", err.data),
+					errdetail("curl error buffer: %s", context->curl_error_buffer)));
+			}
+			else
+			{
+				ereport(ERROR,
+					(errmsg("%s", err.data)));
+			}
 		}
-		elog(DEBUG2, "check_response_status: msg %d done with status OK", i++);
+		ereport(DEBUG2,
+			(errmsg("check_response_status: msg %d done with status OK", i++)));
 	}
 }
 
