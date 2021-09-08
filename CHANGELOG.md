@@ -1,5 +1,23 @@
 # Changelog
 
+## 6.2.0 (09/08/2021)
+
+### Enhancements:
+
+- [#662](https://github.com/greenplum-db/pxf/pull/662) Remove the error-causing check
+- [#670](https://github.com/greenplum-db/pxf/pull/670) Upgrade Spring Boot to 2.5.2, Gradle to 7
+- [#675](https://github.com/greenplum-db/pxf/pull/675) pxf-hdfs: support for reading lists from ORC files
+- [#688](https://github.com/greenplum-db/pxf/pull/688) Introduced operation retries when GSS connection failures are encountered
+- [#687](https://github.com/greenplum-db/pxf/pull/687) Enhanced logging to include fragment info and minor alignment changes
+- [#689](https://github.com/greenplum-db/pxf/pull/689) external-table: add simple cURL debug callback function
+
+### Bug Fixes:
+
+- [#680](https://github.com/greenplum-db/pxf/pull/680) fix CURLOPT_RESOLVE optimization
+- [#691](https://github.com/greenplum-db/pxf/pull/691) Added dataSource to Fragmenter Cache key, made cache expiration configurable
+- [#696](https://github.com/greenplum-db/pxf/pull/696) Enum and bytea types are now handled properly for external tables using FORMAT "TEXT" or FORMAT "CSV"
+- [#697](https://github.com/greenplum-db/pxf/pull/697) Fixed NullPointerException in GSS failure handling retry logic
+
 ## 6.1.0 (06/08/2021)
 
 ### Enhancements:
